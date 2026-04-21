@@ -1,0 +1,6 @@
+{
+  "name": "@hangul-route/backend",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Hangul Route backend (Cloudflare Workers) — scaffolded in a later session"
+}
