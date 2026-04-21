@@ -2,5 +2,11 @@
   "name": "@hangul-route/web",
   "version": "0.0.0",
   "private": true,
-  "description": "Hangul Route web app (Next.js) — scaffolded in a later session"
+  "description": "Hangul Route web app (Next.js) — scaffolded in a later session",
+  "scripts": {
+    "lint": "echo '(no lint yet — @hangul-route/web)'",
+    "test": "echo '(no tests yet — @hangul-route/web)'",
+    "typecheck": "echo '(no typecheck yet — @hangul-route/web)'",
+    "build": "echo '(no build output yet — @hangul-route/web)'"
+  }
 }

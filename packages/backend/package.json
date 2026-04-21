@@ -2,5 +2,11 @@
   "name": "@hangul-route/backend",
   "version": "0.0.0",
   "private": true,
-  "description": "Hangul Route backend (Cloudflare Workers) — scaffolded in a later session"
+  "description": "Hangul Route backend (Cloudflare Workers) — scaffolded in a later session",
+  "scripts": {
+    "lint": "echo '(no lint yet — @hangul-route/backend)'",
+    "test": "echo '(no tests yet — @hangul-route/backend)'",
+    "typecheck": "echo '(no typecheck yet — @hangul-route/backend)'",
+    "build": "echo '(no build output yet — @hangul-route/backend)'"
+  }
 }

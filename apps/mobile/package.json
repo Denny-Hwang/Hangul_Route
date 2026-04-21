@@ -2,5 +2,11 @@
   "name": "@hangul-route/mobile",
   "version": "0.0.0",
   "private": true,
-  "description": "Hangul Route mobile app (Expo React Native) — scaffolded in a later session"
+  "description": "Hangul Route mobile app (Expo React Native) — scaffolded in a later session",
+  "scripts": {
+    "lint": "echo '(no lint yet — @hangul-route/mobile)'",
+    "test": "echo '(no tests yet — @hangul-route/mobile)'",
+    "typecheck": "echo '(no typecheck yet — @hangul-route/mobile)'",
+    "build": "echo '(no build output yet — @hangul-route/mobile)'"
+  }
 }
