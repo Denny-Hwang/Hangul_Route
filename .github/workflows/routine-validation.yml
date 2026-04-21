@@ -1,0 +1,48 @@
+name: Routine Validation
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "routines/**"
+      - ".github/workflows/**"
+
+jobs:
+  validate:
+    name: routine spec + workflow hygiene
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check required routines exist (R5 must NOT exist)
+        run: |
+          set -e
+          for id in R1 R2 R3 R4 R6; do
+            test -f "routines/${id}-"*.md || { echo "missing routine ${id}"; exit 1; }
+          done
+          if ls routines/R5-*.md >/dev/null 2>&1; then
+            echo "R5 is deprecated in v2.2 — remove it." && exit 1
+          fi
+          echo "routine inventory ok: R1 R2 R3 R4 R6 (no R5)"
+
+      - name: Lint workflow yaml
+        run: |
+          bash <(curl -sSfL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash) 1.7.1
+          ./actionlint -color
+        continue-on-error: true
+
+      - name: Validate routine spec sections
+        run: |
+          set -e
+          required="Trigger Input Steps Output"
+          # R6 and R1 both have Failure modes too, but we only hard-require the
+          # four above on every routine file.
+          for f in routines/R*.md; do
+            for section in $required; do
+              grep -qE "^## ${section}" "$f" || { echo "::error file=${f}::missing section '## ${section}'"; exit 1; }
+            done
+          done
+          echo "all routine specs have Trigger/Input/Steps/Output sections"

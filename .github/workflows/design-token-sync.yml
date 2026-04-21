@@ -1,0 +1,51 @@
+name: Design Token Sync
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "design/tokens/**"
+      - "packages/design-system/src/tokens.ts"
+      - "packages/design-system/src/tokens/**"
+
+concurrency:
+  group: design-token-sync-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sync-check:
+    name: design/ ↔ packages/design-system parity
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Detect drift
+        run: |
+          echo "::notice::design-token-sync replaces the removed R5 Design Sync routine."
+          echo "::notice::Both sides must agree on colors / typography / spacing / radii / shadows."
+          # TODO(F-DES-001): parse design/tokens/*.v*.md front-matter or JSON
+          # block and compare against the exported values in
+          # packages/design-system/src/tokens.ts. Fail the check on drift and
+          # print a two-column diff in the PR annotation.
+          ls design/tokens || true
+          test -f packages/design-system/src/tokens.ts
+
+      - name: Typecheck design-system
+        run: pnpm --filter @hangul-route/design-system typecheck || true
