@@ -19,3 +19,5 @@ importers:
   packages/design-system: {}
 
   packages/shared-types: {}
+
+  packages/test-utils: {}
