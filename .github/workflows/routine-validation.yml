@@ -38,9 +38,9 @@ jobs:
         run: |
           set -e
           required="Trigger Input Steps Output"
-          # R6 and R1 both have Failure modes too, but we only hard-require the
-          # four above on every routine file.
-          for f in routines/R*.md; do
+          # Glob is R[0-9]*.md on purpose — R*.md would also match README.md,
+          # which does not (and should not) carry the routine-spec sections.
+          for f in routines/R[0-9]*.md; do
             for section in $required; do
               grep -qE "^## ${section}" "$f" || { echo "::error file=${f}::missing section '## ${section}'"; exit 1; }
             done
