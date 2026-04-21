@@ -6,5 +6,11 @@
   "type": "module",
   "exports": {
     "./tokens": "./src/tokens.ts"
+  },
+  "scripts": {
+    "lint": "echo '(no lint yet — @hangul-route/design-system)'",
+    "test": "echo '(no tests yet — @hangul-route/design-system)'",
+    "typecheck": "echo '(no typecheck yet — @hangul-route/design-system)'",
+    "build": "echo '(no build output yet — @hangul-route/design-system)'"
   }
 }

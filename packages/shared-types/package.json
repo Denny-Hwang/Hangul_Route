@@ -2,5 +2,11 @@
   "name": "@hangul-route/shared-types",
   "version": "0.0.0",
   "private": true,
-  "description": "Types shared between backend and frontend — filled in a later session"
+  "description": "Types shared between backend and frontend — filled in a later session",
+  "scripts": {
+    "lint": "echo '(no lint yet — @hangul-route/shared-types)'",
+    "test": "echo '(no tests yet — @hangul-route/shared-types)'",
+    "typecheck": "echo '(no typecheck yet — @hangul-route/shared-types)'",
+    "build": "echo '(no build output yet — @hangul-route/shared-types)'"
+  }
 }

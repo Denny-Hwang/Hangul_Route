@@ -2,5 +2,11 @@
   "name": "@hangul-route/content-schema",
   "version": "0.0.0",
   "private": true,
-  "description": "Episode / Card / Grid schemas (zod) — filled in a later session"
+  "description": "Episode / Card / Grid schemas (zod) — filled in a later session",
+  "scripts": {
+    "lint": "echo '(no lint yet — @hangul-route/content-schema)'",
+    "test": "echo '(no tests yet — @hangul-route/content-schema)'",
+    "typecheck": "echo '(no typecheck yet — @hangul-route/content-schema)'",
+    "build": "echo '(no build output yet — @hangul-route/content-schema)'"
+  }
 }
