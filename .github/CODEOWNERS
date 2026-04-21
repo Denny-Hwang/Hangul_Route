@@ -1,0 +1,7 @@
+# CODEOWNERS — Hangul Route
+#
+# Solo-dev project. Everything is owned by @Denny-Hwang until the team grows.
+# This file exists so that PRs are automatically requesting the right reviewer
+# and so that GitHub branch protection can enforce "owner approval before merge".
+
+*                                       @Denny-Hwang
