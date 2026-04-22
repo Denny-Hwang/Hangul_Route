@@ -502,7 +502,7 @@
 
 ### 7.5 Stage 7 졸업 = Final Certificate
 - 한국 초등 고학년 일상 회화 가능 수준
-- "KoreanKids Master" 인증서 발급
+- "Hangul Route Master" 인증서 발급
 - 한국에 가서 또래 친구와 대화할 수 있는 수준
 
 ---

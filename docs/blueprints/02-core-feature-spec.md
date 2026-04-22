@@ -1,6 +1,6 @@
 # 핵심 기능 설계 명세서 (Core Feature Specification)
 
-> **프로젝트명(가칭)**: KoreanKids
+> **프로젝트명(가칭)**: Hangul Route
 > **문서 버전**: v1.0 (핵심 기능 6개 구체화)
 > **선행 문서**: 경쟁앱 와이어프레임 분석보고서 v1
 > **작성 기준일**: 2026년 4월
@@ -92,7 +92,7 @@
 │ Level 4 — Read & Write (읽기·쓰기)          │  목표 10~12주
 │  · 짧은 동화 → 일기 → 편지                   │
 │  · 목표: 초등 2학년 수준 문해력              │
-│  · 🎓 Final Certificate: "KoreanKids 졸업장"│
+│  · 🎓 Final Certificate: "Hangul Route 졸업장"│
 └─────────────────────────────────────────────┘
          ↓
 [END] 졸업 의식 + SNS 공유 + 초등 3학년 한국 교과 연계 추천
@@ -397,7 +397,7 @@ Level 4 (최종) 완료 시:
      전체 여정 하이라이트 영상 자동 생성
 
 [2] Final Certificate
-     "KoreanKids Graduate"
+     "Hangul Route Graduate"
      · 총 학습 기간
      · 배운 자모·단어·문장·시나리오 전체 요약
      · 부모·교사 서명 필드 (디지털 서명 가능)
@@ -419,7 +419,7 @@ Level 4 (최종) 완료 시:
 - 공유는 **부모 계정**에서만 가능.
 - 공유 콘텐츠는:
   - 인증서 이미지 (아이 이름만, 얼굴·음성 제외)
-  - "우리 아이가 KoreanKids에서 한국어를 배우고 있어요" 마케팅 카피 (커스터마이즈)
+  - "우리 아이가 Hangul Route에서 한국어를 배우고 있어요" 마케팅 카피 (커스터마이즈)
 - 플랫폼: Instagram Stories, Facebook, KakaoTalk 공유 지원.
 - 부모 동의 없이는 이미지 생성 자체가 비활성.
 
