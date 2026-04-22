@@ -1,3 +1,11 @@
+---
+title: 미니게임 카탈로그 v1
+version: v1
+migrated: 2026-04-21
+status: reference
+note: 참조용 문서. 구현 명세는 docs/specs/ 를 따름.
+---
+
 # 미니게임 카탈로그 v1
 ## 격자 전체를 커버하는 학습 인터랙션 도구상자
 

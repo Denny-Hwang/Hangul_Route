@@ -1,3 +1,11 @@
+---
+title: 메인 학습 컨텐츠 아웃라인 & 계획 v1
+version: v1
+migrated: 2026-04-21
+status: reference
+note: 참조용 문서. 구현 명세는 docs/specs/ 를 따름.
+---
+
 # 메인 학습 컨텐츠 아웃라인 & 계획 v1
 ## Heritage Journey — 확장 가능한 격자 구조
 

@@ -1,4 +1,12 @@
-# KoreanKids — Engineering Blueprint v2
+---
+title: Hangul Route — Engineering Blueprint v2
+version: v2
+migrated: 2026-04-21
+status: reference
+note: 참조용 문서. 구현 명세는 docs/specs/ 를 따름.
+---
+
+# Hangul Route — Engineering Blueprint v2
 ## 유지비 $0 · 1인 개발 · 한국 문화유산 테마
 
 > **v2 주요 변경사항**
@@ -260,7 +268,7 @@ JSON 스키마: [...]
                   (문화 맥락 깊이)
                          │
                          │
-                         │  ★ 우리 (KoreanKids Heritage)
+                         │  ★ 우리 (Hangul Route Heritage)
                          │  · 문화유산 여행 = 학습
                          │  · 단순 어휘 앱이 아님
                          │  · 부모·교사가 "의미 있는" 앱으로 인식
@@ -572,7 +580,7 @@ v1의 1,200~3,500만 원 대비 **극적으로 축소**.
 
 ### 미결정 (본인 답변 필요)
 
-- 브랜드명(최종): KoreanKids / Hoya's Hangul / Sejong's Cat / ...
+- 브랜드명(최종): Hangul Route / Hoya's Hangul / Sejong's Cat / ...
 - 캐릭터 호야의 세부 설정 (성별·성격·복장)
 - 베타 첫 5가정 확보 경로
 

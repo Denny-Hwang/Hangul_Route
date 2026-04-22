@@ -1,3 +1,11 @@
+---
+title: Episode별 학습 목표 명세서 v1
+version: v1
+migrated: 2026-04-21
+status: reference
+note: 참조용 문서. 구현 명세는 docs/specs/ 를 따름.
+---
+
 # Episode별 학습 목표 명세서 v1
 ## 한글 자모 → 한국 초등 고학년 회화까지의 격자 전체 청사진
 
@@ -502,7 +510,7 @@
 
 ### 7.5 Stage 7 졸업 = Final Certificate
 - 한국 초등 고학년 일상 회화 가능 수준
-- "KoreanKids Master" 인증서 발급
+- "Hangul Route Master" 인증서 발급
 - 한국에 가서 또래 친구와 대화할 수 있는 수준
 
 ---
