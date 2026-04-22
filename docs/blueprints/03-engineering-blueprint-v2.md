@@ -1,3 +1,11 @@
+---
+title: Hangul Route — Engineering Blueprint v2
+version: v2
+migrated: 2026-04-21
+status: reference
+note: 참조용 문서. 구현 명세는 docs/specs/ 를 따름.
+---
+
 # Hangul Route — Engineering Blueprint v2
 ## 유지비 $0 · 1인 개발 · 한국 문화유산 테마
 

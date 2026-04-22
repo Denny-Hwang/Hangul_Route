@@ -1,3 +1,11 @@
+---
+title: 핵심 기능 설계 명세서 (Core Feature Specification)
+version: v1
+migrated: 2026-04-21
+status: reference
+note: 참조용 문서. 구현 명세는 docs/specs/ 를 따름.
+---
+
 # 핵심 기능 설계 명세서 (Core Feature Specification)
 
 > **프로젝트명(가칭)**: Hangul Route

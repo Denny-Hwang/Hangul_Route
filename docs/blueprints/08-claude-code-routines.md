@@ -1,3 +1,11 @@
+---
+title: Claude Code Routines 활용 계획 v1
+version: v1
+migrated: 2026-04-21
+status: reference
+note: 참조용 문서. 구현 명세는 docs/specs/ 를 따름.
+---
+
 # Claude Code Routines 활용 계획 v1
 ## "매일 자동 개발"의 현실과 실용적 로드맵
 

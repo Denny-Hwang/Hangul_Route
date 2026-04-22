@@ -1,3 +1,11 @@
+---
+title: 한국어 학습 앱 경쟁 와이어프레임 분석 보고서
+version: v1
+migrated: 2026-04-21
+status: reference
+note: 참조용 문서. 구현 명세는 docs/specs/ 를 따름.
+---
+
 # 한국어 학습 앱 경쟁 와이어프레임 분석 보고서
 
 > **프로젝트명(가칭)**: *Hangul Route* (최종 네이밍 추후)

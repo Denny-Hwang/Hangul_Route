@@ -1,3 +1,11 @@
+---
+title: Episode별 학습 목표 명세서 v1
+version: v1
+migrated: 2026-04-21
+status: reference
+note: 참조용 문서. 구현 명세는 docs/specs/ 를 따름.
+---
+
 # Episode별 학습 목표 명세서 v1
 ## 한글 자모 → 한국 초등 고학년 회화까지의 격자 전체 청사진
 

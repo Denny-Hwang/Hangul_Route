@@ -1,3 +1,11 @@
+---
+title: 1인 개발 워크플로우 설계 v1
+version: v1
+migrated: 2026-04-21
+status: reference
+note: 참조용 문서. 구현 명세는 docs/specs/ 를 따름.
+---
+
 # 1인 개발 워크플로우 설계 v1
 ## Claude 생태계로 어린이 한국어 앱 만들기
 
