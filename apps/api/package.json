@@ -1,0 +1,26 @@
+{
+  "name": "@hangul-route/api",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Hangul Route API entry (Cloudflare Workers, powered by Hono)",
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "lint": "echo '(no lint yet — @hangul-route/api)'",
+    "test": "echo '(no tests yet — @hangul-route/api)'",
+    "typecheck": "tsc --noEmit",
+    "build": "echo '(no build output yet — @hangul-route/api)'",
+    "dev": "echo '(wrangler dev once Cloudflare account is bound — @hangul-route/api)'"
+  },
+  "dependencies": {
+    "@hangul-route/backend": "workspace:*",
+    "hono": "^4.6.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241127.0",
+    "@hangul-route/test-utils": "workspace:*",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.8",
+    "wrangler": "^3.90.0"
+  }
+}

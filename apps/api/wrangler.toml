@@ -1,0 +1,7 @@
+name = "hangul-route-api"
+main = "src/index.ts"
+compatibility_date = "2024-11-12"
+compatibility_flags = ["nodejs_compat"]
+
+# D1 / R2 / KV bindings land with subsequent F-XXX specs.
+# See docs/specs/F-INFRA-001-cloudflare-workers-bootstrap.md.
