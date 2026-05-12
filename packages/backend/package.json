@@ -2,11 +2,26 @@
   "name": "@hangul-route/backend",
   "version": "0.0.0",
   "private": true,
-  "description": "Hangul Route backend (Cloudflare Workers) — scaffolded in a later session",
+  "description": "Hangul Route backend handlers (Cloudflare Workers + Hono)",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "scripts": {
     "lint": "echo '(no lint yet — @hangul-route/backend)'",
     "test": "echo '(no tests yet — @hangul-route/backend)'",
-    "typecheck": "echo '(no typecheck yet — @hangul-route/backend)'",
+    "typecheck": "tsc --noEmit",
     "build": "echo '(no build output yet — @hangul-route/backend)'"
+  },
+  "dependencies": {
+    "@hangul-route/content-schema": "workspace:*",
+    "@hangul-route/shared-types": "workspace:*",
+    "hono": "^4.6.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241127.0",
+    "@hangul-route/test-utils": "workspace:*",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.8"
   }
 }

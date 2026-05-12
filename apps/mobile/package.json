@@ -2,11 +2,24 @@
   "name": "@hangul-route/mobile",
   "version": "0.0.0",
   "private": true,
-  "description": "Hangul Route mobile app (Expo React Native) — scaffolded in a later session",
+  "description": "Hangul Route mobile app (Expo React Native)",
+  "main": "index.ts",
   "scripts": {
     "lint": "echo '(no lint yet — @hangul-route/mobile)'",
     "test": "echo '(no tests yet — @hangul-route/mobile)'",
-    "typecheck": "echo '(no typecheck yet — @hangul-route/mobile)'",
+    "typecheck": "echo '(no typecheck yet — @hangul-route/mobile; tsconfig lands with first src/)'",
     "build": "echo '(no build output yet — @hangul-route/mobile)'"
+  },
+  "dependencies": {
+    "expo": "~52.0.0",
+    "expo-status-bar": "~2.0.0",
+    "react": "18.3.1",
+    "react-native": "0.76.5"
+  },
+  "devDependencies": {
+    "@hangul-route/test-utils": "workspace:*",
+    "@types/react": "^18.3.12",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.8"
   }
 }
