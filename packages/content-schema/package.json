@@ -9,7 +9,7 @@
   },
   "scripts": {
     "lint": "echo '(no lint yet — @hangul-route/content-schema)'",
-    "test": "echo '(no tests yet — @hangul-route/content-schema)'",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "build": "echo '(no build output yet — @hangul-route/content-schema)'"
   },
