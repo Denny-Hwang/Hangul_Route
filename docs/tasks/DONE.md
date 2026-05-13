@@ -11,6 +11,8 @@
 - [x] T-001 F-001 "Hangul Tile Game" spec 초안 작성 (Stage 1, Theme A, Match Sound) — PR #8 (squashed `5fb507b`)
 - [x] T-004 vitest 워크스페이스 설정 + 첫 4 passing tests (zod sanity ×2, Hono router ×2) — PR #8
 - [x] T-005 design playbook week-02 본문 작성 (5 일치 + README) — PR #8
-- [x] T-006 F-COV-001 coverage gate enforcement (`scripts/coverage-gate.mjs` + `docs/tests/coverage-targets.json` + `coverage-gate.yml` 갱신) — this PR
-- [x] T-007 F-CNT-001 content language policy validator (`scripts/validate-content.mjs` + `content-validation.yml` 갱신) — this PR
-- [x] T-008 F-DES-001 design token drift detector (`scripts/check-token-drift.mjs` + `design-token-sync.yml` 갱신) — this PR
+- [x] T-006 F-COV-001 coverage gate enforcement (`scripts/coverage-gate.mjs` + `coverage-targets.json` + `coverage-gate.yml` 갱신) — PR #9 (squashed `7d6ae7a`)
+- [x] T-007 F-CNT-001 content language policy validator (`scripts/validate-content.mjs` + `content-validation.yml` 갱신) — PR #9
+- [x] T-008 F-DES-001 design token drift detector (`scripts/check-token-drift.mjs` + `design-token-sync.yml` 갱신) — PR #9
+- [x] T-009 design playbook week-03 본문 작성 (5 일치 + README) — this PR
+- [x] T-010 F-002 "Hoya Feedback Bubble" component spec 작성 (status: ready, props surface 닫힘, anti-shame 계약 명문화) — this PR
