@@ -38,14 +38,5 @@ jobs:
       - name: Run content-schema tests (zod fixtures)
         run: pnpm --filter @hangul-route/content-schema test
 
-      - name: Validate language policy
-        env:
-          POLICY: .claude/skills/content-skill/SKILL.md
-        run: |
-          echo "::notice::Language policy source of truth: $POLICY"
-          echo "::notice::Content validator script lands with F-CNT-001."
-          # TODO(F-CNT-001): walk content/**/*.json and enforce:
-          #   - UI strings in English (CEFR Pre-A1)
-          #   - Korean only on learning target fields
-          #   - romanization present alongside every Korean string
-          #   - English gloss present for every Korean learning item
+      - name: Validate language policy (F-CNT-001)
+        run: node scripts/validate-content.mjs
