@@ -45,12 +45,5 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
-      - name: Enforce rolling targets (business vs platform split)
-        env:
-          TARGETS_FILE: docs/tests/coverage-targets.md
-        run: |
-          echo "::notice::Coverage gate uses $TARGETS_FILE as source of truth."
-          echo "::notice::Enforcement script lands with the first real test suite."
-          # TODO(F-COV-001): parse coverage-summary.json per package and compare
-          # against the W4 column in $TARGETS_FILE. Split apps/mobile into
-          # src/logic (business) and src/platform (platform-dependent) lanes.
+      - name: Enforce rolling targets (F-COV-001)
+        run: node scripts/coverage-gate.mjs

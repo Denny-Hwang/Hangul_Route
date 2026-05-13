@@ -1,0 +1,12 @@
+{
+  "$comment": "Machine-readable mirror of docs/tests/coverage-targets.md (W4 column). Source of truth for scripts/coverage-gate.mjs. apps/mobile business-vs-platform split per the markdown §'분리 규칙' is deferred to F-COV-002 — treated as a single workspace target here.",
+  "rollingWindow": "W4 (alpha)",
+  "targets": {
+    "packages/content-schema": 100,
+    "packages/backend": 90,
+    "packages/design-system": 85,
+    "apps/api": 90,
+    "apps/mobile": 80,
+    "apps/web": 90
+  }
+}
