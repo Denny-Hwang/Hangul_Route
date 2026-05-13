@@ -9,7 +9,7 @@
   },
   "scripts": {
     "lint": "echo '(no lint yet — @hangul-route/backend)'",
-    "test": "echo '(no tests yet — @hangul-route/backend)'",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "build": "echo '(no build output yet — @hangul-route/backend)'"
   },

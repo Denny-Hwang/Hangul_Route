@@ -7,7 +7,7 @@
   "main": "src/index.ts",
   "scripts": {
     "lint": "echo '(no lint yet — @hangul-route/api)'",
-    "test": "echo '(no tests yet — @hangul-route/api)'",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "build": "echo '(no build output yet — @hangul-route/api)'",
     "dev": "echo '(wrangler dev once Cloudflare account is bound — @hangul-route/api)'"
