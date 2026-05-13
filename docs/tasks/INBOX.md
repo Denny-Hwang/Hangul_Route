@@ -12,12 +12,13 @@
 ### Week 2 (foundations) — remaining
 - [ ] T-002 F-INFRA-001 wrangler dev 로컬 기동 + Cloudflare 계정 바인딩 — 0.5d
 
-### Week 3 (first component + validators)
-- [ ] T-006 F-COV-001 coverage gate enforcement script (parse coverage-summary.json) — 1d
-- [ ] T-007 F-CNT-001 content language policy validator (UI=EN, 학습=KO+romanization+gloss) — 1d
-- [ ] T-008 F-DES-001 design token drift detector (design/tokens ↔ packages/design-system) — 1d
+### Week 3 (first component + remaining validators)
 - [ ] T-009 design playbook week-03 본문 작성 — 0.5d
 - [ ] T-010 F-002 "Hoya Feedback Bubble" component spec — 0.5d
+- [ ] T-019 scripts/__tests__/ 단위 테스트 (3개 enforcement script 의 positive / negative path) — 1d
+- [ ] T-020 `@vitest/coverage-v8` 설치 + per-package coverage 활성화 → F-COV-001 gate 가 실제 % 측정 — 0.5d
+- [ ] T-021 F-COV-002 `docs/tests/coverage-targets.md` ↔ `coverage-targets.json` drift 검출 — 0.5d
+- [ ] T-022 F-COV-003 apps/mobile business / platform 2-lane 분리 (`src/logic/` vs `src/platform/`) — 1d
 
 ### Week 4 (Stage 1 game shells)
 - [ ] T-011 F-003 "Match Sound" minigame spec (Stage 1 family Recognition) — 0.5d
@@ -26,7 +27,7 @@
 - [ ] T-014 Parent dashboard wireframe v0 (4 screens) — 1d
 - [ ] T-015 i18n / a11y / telemetry 3종 스펙 초안 (F-I18N-001, F-A11Y-001, F-TEL-001) — 1d
 
-### Follow-ups discovered (this sprint)
+### Follow-ups
 - [ ] T-016 packages/content-schema 의 Quest / Card / Episode zod schema 첫 구현 (vitest 가 이미 통과 중인 sanity.test.ts 를 실제 스키마 테스트로 확장) — 1d
 - [ ] T-017 F-001 외부 의존: 30 개 jamo 음성 MP3 녹음 (24 자모 + 6 받침, 단일 native speaker) — 1d
 - [ ] T-018 apps/api ↔ @hangul-route/backend 통합 (현재 apps/api 의 라우트가 직접 정의됨; backend 패키지로 핸들러 이전) — 0.5d
