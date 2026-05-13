@@ -11,10 +11,12 @@
 // Source of truth: CLAUDE.md §5 ("동기화는 CI").
 
 import { existsSync, readdirSync, readFileSync } from "node:fs";
-import { basename, dirname, extname, join, relative } from "node:path";
+import { basename, dirname, extname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
+const ROOT = process.env.HANGUL_ROUTE_ROOT
+  ? resolve(process.env.HANGUL_ROUTE_ROOT)
+  : join(dirname(fileURLToPath(import.meta.url)), "..");
 const TOKENS_DIR = join(ROOT, "design", "tokens");
 const TOKENS_TS = join(
   ROOT,

@@ -43,5 +43,8 @@ jobs:
       - name: Test
         run: pnpm run test
 
+      - name: Test enforcement scripts (T-019)
+        run: pnpm run test:scripts
+
       - name: Build
         run: pnpm run build
