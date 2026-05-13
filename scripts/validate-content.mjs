@@ -11,10 +11,12 @@
 // Source of truth: .claude/skills/content-skill/SKILL.md §3.3.
 
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
-import { extname, join, relative, dirname } from "node:path";
+import { dirname, extname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
+const ROOT = process.env.HANGUL_ROUTE_ROOT
+  ? resolve(process.env.HANGUL_ROUTE_ROOT)
+  : join(dirname(fileURLToPath(import.meta.url)), "..");
 const CONTENT_DIR = join(ROOT, "content");
 
 const KOREAN_RE = /[ㄱ-㆏가-힣]/;

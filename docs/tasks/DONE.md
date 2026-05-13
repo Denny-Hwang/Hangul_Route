@@ -14,5 +14,7 @@
 - [x] T-006 F-COV-001 coverage gate enforcement (`scripts/coverage-gate.mjs` + `coverage-targets.json` + `coverage-gate.yml` 갱신) — PR #9 (squashed `7d6ae7a`)
 - [x] T-007 F-CNT-001 content language policy validator (`scripts/validate-content.mjs` + `content-validation.yml` 갱신) — PR #9
 - [x] T-008 F-DES-001 design token drift detector (`scripts/check-token-drift.mjs` + `design-token-sync.yml` 갱신) — PR #9
-- [x] T-009 design playbook week-03 본문 작성 (5 일치 + README) — this PR
-- [x] T-010 F-002 "Hoya Feedback Bubble" component spec 작성 (status: ready, props surface 닫힘, anti-shame 계약 명문화) — this PR
+- [x] T-009 design playbook week-03 본문 작성 (5 일치 + README) — PR #10 (squashed `974bfa4`)
+- [x] T-010 F-002 "Hoya Feedback Bubble" component spec 작성 (status: ready, props surface 닫힘, anti-shame 계약 명문화) — PR #10
+- [x] T-019 scripts/__tests__/ 단위 테스트 (3 enforcement script × 8 positive/negative cases = 24 passing tests via Node built-in `node:test`, HANGUL_ROUTE_ROOT env override) + ci.yml 통합 — this PR
+- [x] T-020 `@vitest/coverage-v8` 설치 + per-package coverage 활성화 (content-schema / backend / api) + `test:coverage` turbo task + coverage-gate.yml 갱신. coverage-gate.mjs 가 처음으로 진짜 % 측정: 3 pass · 3 skip · 0 fail (W4 alpha) — this PR

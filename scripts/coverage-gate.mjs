@@ -10,10 +10,12 @@
 // Drift between the two is detected by F-COV-002 (not yet implemented).
 
 import { existsSync, readFileSync } from "node:fs";
-import { join, dirname } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
+const ROOT = process.env.HANGUL_ROUTE_ROOT
+  ? resolve(process.env.HANGUL_ROUTE_ROOT)
+  : join(dirname(fileURLToPath(import.meta.url)), "..");
 const CONFIG = join(ROOT, "docs", "tests", "coverage-targets.json");
 
 if (!existsSync(CONFIG)) {
