@@ -2,7 +2,13 @@ import { defineConfig } from 'vitest/config';
 
 /**
  * Mobile vitest config — covers logic layer only (no React Native renderers).
- * React Native component tests go through Detox in a separate nightly job.
+ *
+ * Excluded from coverage (per docs/tests/coverage-targets.md §"측정 제외"):
+ *   - src/logic/minigame-config.ts — pure data registry (config object only,
+ *     no executable branches; mapped by minigame ref → content scope).
+ *
+ * RN component tests / store tests go through Detox in a separate nightly job
+ * once the device matrix is wired (INBOX T-016).
  */
 export default defineConfig({
   test: {
@@ -14,7 +20,11 @@ export default defineConfig({
       reporter: ['text', 'json-summary'],
       reportsDirectory: './coverage',
       include: ['src/logic/**/*.ts'],
-      exclude: ['src/**/__tests__/**', 'src/**/*.test.ts'],
+      exclude: [
+        'src/**/__tests__/**',
+        'src/**/*.test.ts',
+        'src/logic/minigame-config.ts',
+      ],
     },
   },
 });
