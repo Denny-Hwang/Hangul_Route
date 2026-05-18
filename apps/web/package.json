@@ -2,14 +2,20 @@
   "name": "@hangul-route/web",
   "version": "0.0.0",
   "private": true,
-  "description": "Hangul Route web app (Next.js App Router)",
+  "description": "Hangul Route web app (Next.js App Router) — landing + Parent Dashboard",
   "scripts": {
+    "dev": "next dev",
+    "start": "next start",
     "lint": "echo '(no lint yet — @hangul-route/web)'",
-    "test": "echo '(no tests yet — @hangul-route/web)'",
-    "typecheck": "echo '(no typecheck yet — @hangul-route/web; tsconfig lands with first src/)'",
-    "build": "echo '(no build output yet — @hangul-route/web)'"
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit",
+    "build": "next build"
   },
   "dependencies": {
+    "@hangul-route/content-schema": "workspace:*",
+    "@hangul-route/design-system": "workspace:*",
+    "@hangul-route/shared-types": "workspace:*",
     "next": "^14.2.18",
     "react": "18.3.1",
     "react-dom": "18.3.1"
@@ -19,6 +25,7 @@
     "@types/node": "^22.10.0",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
+    "@vitest/coverage-v8": "^2.1.8",
     "typescript": "^5.6.3",
     "vitest": "^2.1.8"
   }
