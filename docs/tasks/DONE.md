@@ -18,3 +18,17 @@
 - [x] T-010 F-002 "Hoya Feedback Bubble" component spec 작성 (status: ready, props surface 닫힘, anti-shame 계약 명문화) — PR #10
 - [x] T-019 scripts/__tests__/ 단위 테스트 (3 enforcement script × 8 positive/negative cases = 24 passing tests via Node built-in `node:test`, HANGUL_ROUTE_ROOT env override) + ci.yml 통합 — this PR
 - [x] T-020 `@vitest/coverage-v8` 설치 + per-package coverage 활성화 (content-schema / backend / api) + `test:coverage` turbo task + coverage-gate.yml 갱신. coverage-gate.mjs 가 처음으로 진짜 % 측정: 3 pass · 3 skip · 0 fail (W4 alpha) — this PR
+
+### 2026-05 / W3 (v1.0 full-vision prototype)
+
+- [x] T-V1 design tokens v1 실값 (단청 orange + Hoya sky blue + hanji surfaces, 7 stage × 5 theme × 4 rarity tints, anti-shame nudge color, 3 touch-target sizes 64/80/96) — `feat(design-system)`
+- [x] T-V2 12 design-system components (Button / Card / Tile / Screen / Progress / StarRow / Pill / Heading / Body / Caption / Spacer / Icon × 19 / Hoya × 5 poses / HoyaBubble F-002 contract) — `feat(design-system)`
+- [x] T-V3 content-schema 8 zod modules (Jamo / HeritageCard / Episode / Quest / Grid / Minigame 12-kind / Profile / ProgressSnapshot) + shared-types (ApiEnvelope / TelemetryEvent ×10 / AuthSession) — `feat(content-schema, shared-types)`
+- [x] T-V4 Stage 1 real content seed (30 jamo + 30 Heritage cards × 5 themes + 5 episodes + 9 quests) + Stages 2–7 preview seed (30 placeholder episodes) — `content(stage1)`
+- [x] T-V5 apps/mobile full Expo shell (App.tsx + navigation: root stack + onboarding stack + 5 main tabs + 6 stack screens) — `feat(mobile)`
+- [x] T-V6 6 working minigames (Match Sound F-001 anti-shame nudge / Build a Letter / Trace Stroke / Card Match / Story Sequence / Voice Echo TTS honor-system) — `feat(mobile)`
+- [x] T-V7 zustand stores (profile / progress / quest-run / ui) + AsyncStorage wrapper + expo-speech audio / expo-haptics anti-startle / reduced-motion hook — `feat(mobile)`
+- [x] T-V8 ParentGate (multiplication challenge per Apple/Google child category) + ParentDashboard — `feat(mobile)`
+- [x] T-V9 apps/web landing + Parent Dashboard pages (/, /about, /parent, /parent/[childId]) — `feat(web)`
+- [x] T-V10 apps/api v1 router (auth / profiles / progress / cards / content / telemetry × 11 events) + Cloudflare D1 schema.sql + ApiEnvelope helpers + in-memory store — `feat(api)`
+- [x] T-V11 56 passing tests across 9 files (design-system × 10 / content-schema × 14 / mobile-logic × 18 / web × 2 / api × 8 + legacy × 2 + backend × 2); `pnpm -r run typecheck` all 8 packages green — `feat(api,tests)`
