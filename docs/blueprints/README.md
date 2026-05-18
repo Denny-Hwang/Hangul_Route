@@ -16,6 +16,7 @@ Week 1 킥오프와 함께 로컬 초안 8종을 이관했다. 전부 `status: r
 | 06 | `06-mini-game-catalog.md` | 미니게임 4 family / 12 |
 | 07 | `07-solo-dev-workflow.md` | 1인 개발 운영 |
 | 08 | `08-claude-code-routines.md` | Claude Code 루틴 운용 |
+| 09 | `09-homework-review-profiles-addendum.md` | Homework / Reviews / Multi-Profile 설계 부록 (02·04 위에 덧붙임) |
 
 각 파일 상단 frontmatter 에 `version` (v1 / v2) 과 `migrated: 2026-04-21`
-이 기록되어 있다.
+이 기록되어 있다. 09 는 2026-05-18 신규.
