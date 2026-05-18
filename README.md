@@ -2,7 +2,9 @@
 
 Korean language learning mobile app for English-speaking children ages 5–11. Primary users are Korean heritage kids (parents speak Korean, child does not) and international kids curious about K-culture. Learning unfolds on a **Heritage Journey** grid — Stage (Hangul → Word → Sentence → Dialogue → Story → Real-use → Self-expression) × Culture theme (letters · life · rites · nature · crafts) — and the child draws their own **Route** through it. Guide character is a young tiger named **Hoya (호야)**, and the main reward is a **cultural heritage card collection**.
 
-MVP scope: Stage 1 (Hangul) full build + Stage 2 / Stage 4 tastes.
+MVP scope: Stage 1 (Hangul) full build + Stage 2 / Stage 4 tastes. The
+full-vision prototype (`feat: full v1.0 build`) ships an end-to-end runnable
+app — see [`docs/build-v1-prototype.md`](./docs/build-v1-prototype.md).
 
 ## Documents
 
