@@ -7,6 +7,7 @@ export * from './components/Progress';
 export * from './components/HoyaBubble';
 export * from './components/StarRow';
 export * from './components/Hoya';
+export * from './components/HeritageCardArt';
 export * from './components/Pill';
 export * from './components/Heading';
 export * from './components/Spacer';
