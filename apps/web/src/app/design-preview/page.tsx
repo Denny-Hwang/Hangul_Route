@@ -1402,8 +1402,8 @@ function SectionHeritageCards(): JSX.Element {
     <Section>
       <SectionTitle
         id="heritage-cards"
-        title="Heritage Card art (6 of 30)"
-        subtitle="1 per theme + 1 legendary. Remaining 24 use a soft fallback until illustrated."
+        title="Heritage Card art (6 sample of 30 implemented)"
+        subtitle="All 30 Stage 1 cards ship with SVG illustrations in the mobile app's Library tab. The 6 below are the original samples kept inline for quick review here; the remaining 24 (hanji / brush / ink / origami / hangul-day · rice / chopsticks / hanbok / kimbap / family-table · chuseok / tteokguk / songpyeon / sebae / lantern · magpie / mugunghwa / sea / moon · jegi / kite / top / pottery / gayageum) are visible in the mobile app and in apps/mobile/src/screens/library/LibraryScreen.tsx via @hangul-route/design-system."
       />
       <div
         style={{
