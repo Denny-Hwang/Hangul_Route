@@ -24,3 +24,34 @@ F-XXX-<slug>.md
 - `ready` — 구현 가능
 - `in-progress` — 어느 PR 에서 작업 중
 - `shipped` — main 반영됨
+
+## 인덱스 (2026-05-21)
+
+### 기능 (MVP)
+- `F-001-hangul-tile-game.md` — Match Sound minigame · **shipped** (PR #8 spec, PR #13 code)
+- `F-002-hoya-feedback-bubble.md` — HoyaBubble component · **shipped** (PR #10 spec, PR #13 code)
+- `F-003-build-a-letter.md` — Build a Letter minigame · **shipped** (back-fill — PR #13 code)
+- `F-HOYA-001-hoya-character-system.md` — Hoya 5-pose SVG · **shipped** (PR #13 + PR #16)
+- `F-CARD-001-heritage-card-art.md` — Heritage Card Art system · **shipped** (PR #17 + PR #18)
+- `F-PREV-001-design-preview-surface.md` — /design-preview route · **shipped** (PR #15)
+
+### 인프라
+- `F-INFRA-001-cloudflare-workers-bootstrap.md` — **shipped** (PR #7)
+- `F-COV-001-coverage-gate-enforcement.md` — **shipped** (PR #9)
+- `F-CNT-001-content-language-policy-validator.md` — **shipped** (PR #9)
+- `F-DES-001-design-token-drift-detector.md` — **shipped** (PR #9, activated PR #15)
+
+### Phase 2 / planned
+- `F-PROF-001-device-profiles.md` — multi-learner · **draft** (code shipped PR #13, full spec covers cloud sync)
+- `F-HW-001-homework-page.md` — Homework tab · **draft**
+- `F-RVW-001-review-tests.md` — Reviews · **draft**
+- `F-PAR-001-parent-dashboard.md` — Parent dashboard · **draft**
+- `F-TCH-001-teacher-classroom.md` — Teacher classroom · **draft** (Phase 2 stub)
+
+### 미작성 (Phase 2 후보)
+- F-004 Trace Stroke — real gesture-path matching (currently placeholder)
+- F-005 Batchim Build — 3-component CVC syllables
+- F-CARD-002 Heritage Card back-face design
+- F-MOTION-001 Hoya pose transitions
+- F-VR-001 Visual regression coverage
+- F-CARD-S2-001 onward — per-stage card sets

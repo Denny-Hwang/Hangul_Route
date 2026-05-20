@@ -98,12 +98,15 @@ sprint per explicit user authorization; follow-up specs back-fill the work.
 
 ## Known follow-ups (post-merge)
 
-1. **Spec back-fill** — write F-003 / F-004 / F-005 / F-CARD-001 /
-   F-TEL-001 specs for code that already landed.
+1. ~~**Spec back-fill** — write F-003 / F-004 / F-005 / F-CARD-001 /~~
+   ~~F-TEL-001 specs for code that already landed.~~ → **Done** in this PR:
+   F-003 / F-CARD-001 / F-HOYA-001 / F-PREV-001 specs land. F-004 / F-005
+   / F-TEL-001 deferred (placeholder or out-of-scope).
 2. **Real audio assets** — 30 jamo MP3s sourced from a single native
    speaker. Until then, TTS fallback is the default.
-3. **Hoya illustration** — geometric SVG is placeholder. Externally
-   commissioned illustrator output (5 poses) replaces in a later sprint.
+3. ~~**Hoya illustration** — geometric SVG is placeholder.~~ → Refined to
+   the brief in PR #16. Still placeholder until commissioned illustrator
+   art lands; the SVG contract is the design specification.
 4. **STT** — real Voice Echo grading via on-device or Google Speech-to-Text
    (blocked on STT bench, INBOX T-013).
 5. **D1 binding** — `wrangler.toml` to add `[[d1_databases]]` binding and
@@ -112,3 +115,35 @@ sprint per explicit user authorization; follow-up specs back-fill the work.
    Results → Library happy path.
 7. **COPPA / PIPA / GDPR-K** — privacy policy + data minimization audit
    before any public beta.
+
+---
+
+## Post-v1.0 follow-on PRs (Week 4 design + visual polish)
+
+What landed on `main` after PR #13:
+
+| PR | Title | Highlights |
+|---|---|---|
+| **#14** | `design(brief): full Claude Design prompt library (37 docs) for v1.0` | 37 prompt-ready briefs in `design/brief/` covering foundation (3) + character (1) + illustrations (2) + components (11) + screens (20) |
+| **#15** | `design(tokens,web): activate token drift gate + add /design-preview route` | 5 `design/tokens/*.v1.md` spec docs activate the previously-dormant F-DES-001 gate. `/design-preview` Next.js route reconstructs the entire design system from tokens for browser review (17 sections) |
+| **#16** | `design(hoya): refine v1 SVG placeholder per character-sheet brief` | Hoya 5 poses differentiated: thinking looks UP-RIGHT (anti-shame), 3 stripes per side, reading adds a book, cheering adds 4-point sparkles, pose-conditional cheek visibility |
+| **#17** | `design(card-art): add HeritageCardArt SVG component — 6 illustrated cards` | First 6 Heritage card SVGs (1 per theme + 1 legendary) consumed by LibraryScreen + CardDetailScreen |
+| **#18** | `design(card-art): complete all 30 Stage 1 Heritage card illustrations` | All 30 Stage 1 cards illustrated. The Library tab now shows a true collection — every card the child can earn has unique art |
+| this PR | F-XXX spec back-fill + DONE roll-up | F-003 / F-CARD-001 / F-HOYA-001 / F-PREV-001 specs document the work that landed. CLAUDE.md §5 governance debt cleared |
+
+### What this means
+
+The v1.0 prototype (PR #13) shipped under a temporary "build everything fast, back-fill specs later" exception. As of this PR, the exception is **closed**:
+
+- All code that landed during the exception has a corresponding F-XXX spec (or is explicitly marked Phase 2 / placeholder).
+- Future code changes follow CLAUDE.md §5 strictly: spec first, then code.
+- Design briefs (`design/brief/`) and design tokens (`design/tokens/*.v1.md`) are the canonical sources of truth for visual work; both are CI-enforced.
+
+### Open INBOX items aligned to this state
+
+- F-004 Trace Stroke (real gesture-path matching, blocked on react-native-gesture-handler eval)
+- F-CARD-002 Heritage Card back-face design
+- F-MOTION-001 Hoya pose transitions
+- F-VR-001 Visual regression coverage (Storybook + screenshot diffs)
+- STT bench (T-013) — Korean child-voice STT viability
+- Real illustrator commission for Hoya 5-pose + 30 cards (replaces SVG placeholders)

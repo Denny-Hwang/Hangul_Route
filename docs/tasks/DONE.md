@@ -32,3 +32,13 @@
 - [x] T-V9 apps/web landing + Parent Dashboard pages (/, /about, /parent, /parent/[childId]) — `feat(web)`
 - [x] T-V10 apps/api v1 router (auth / profiles / progress / cards / content / telemetry × 11 events) + Cloudflare D1 schema.sql + ApiEnvelope helpers + in-memory store — `feat(api)`
 - [x] T-V11 56 passing tests across 9 files (design-system × 10 / content-schema × 14 / mobile-logic × 18 / web × 2 / api × 8 + legacy × 2 + backend × 2); `pnpm -r run typecheck` all 8 packages green — `feat(api,tests)`
+
+### 2026-05 / W4 (design system + visual polish)
+
+- [x] T-D1 Full Claude Design prompt library — 37 documents in `design/brief/` (foundation 3 + character 1 + illustrations 2 + components 11 + screens 20) — PR #14 `design(brief)`
+- [x] T-D2 `design/tokens/*.v1.md` 5 spec docs (colors / typography / spacing / radii / shadows) — activates F-DES-001 drift gate (was no-op without .v1.md files) — PR #15 `design(tokens)`
+- [x] T-D3 `/design-preview` route in apps/web — 17-section visual identity validation surface (palettes, typography, spacing, radii, shadows, touch targets, motion, z, buttons / cards / pills / tiles / Hoya placeholder, all consuming only `@hangul-route/design-system/tokens`) — PR #15 `design(web)`
+- [x] T-D4 Hoya v1 SVG placeholder refined per `design/brief/character/hoya-character-sheet.md`: thinking pose looks UP-RIGHT (anti-shame), pose-conditional cheek visibility, 3 stripes per side, eye glints on open-eye poses, reading pose adds a book, cheering adds 4-point pinwheel sparkles — PR #16 `design(hoya)`
+- [x] T-D5 Heritage Card Art SVG component — 6 cards initial (Tiger / Book / Kimchi / Seollal / Mountain / Yutnori, 1 per theme + 1 legendary) consumed by LibraryScreen + CardDetailScreen — PR #17 `design(card-art)`
+- [x] T-D6 Heritage Card Art complete — all 30 Stage 1 cards illustrated (+24: hanji / brush / ink / origami / hangul-day · rice / chopsticks / hanbok / kimbap / family-table · chuseok / tteokguk / songpyeon / sebae / lantern · magpie / mugunghwa / sea / moon · jegi / kite / top / pottery / gayageum). `supportedCardIds` exports full 30-entry list — PR #18 `design(card-art)`
+- [x] T-D7 F-XXX spec back-fill: F-003 Build a Letter / F-CARD-001 Heritage Card Art / F-HOYA-001 Hoya Character System / F-PREV-001 Design Preview Surface — this PR (fulfills the CLAUDE.md §5 promise from PR #13 to back-fill specs for code that landed under the "v1.0 prototype" exception)
