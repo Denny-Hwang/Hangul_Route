@@ -49,6 +49,7 @@ export default function DesignPreviewPage(): JSX.Element {
       <SectionPills />
       <SectionTiles />
       <SectionHoyaPlaceholder />
+      <SectionHeritageCards />
       <Footer />
     </main>
   );
@@ -1184,6 +1185,288 @@ function SectionHoyaPlaceholder(): JSX.Element {
             </div>
           </div>
         ))}
+      </div>
+    </Section>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Section: Heritage Card Art (inline SVG mirror of 6 illustrated cards)
+// ---------------------------------------------------------------------------
+
+interface CardArtCellSpec {
+  cardId: string;
+  ko: string;
+  romanization: string;
+  titleEn: string;
+  rarity: 'common' | 'uncommon' | 'rare' | 'legendary';
+}
+
+const CARD_ART_CELLS: CardArtCellSpec[] = [
+  { cardId: 'card:tiger', ko: '호랑이', romanization: 'horangi', titleEn: 'Tiger', rarity: 'legendary' },
+  { cardId: 'card:book', ko: '책', romanization: 'chaek', titleEn: 'Book', rarity: 'common' },
+  { cardId: 'card:kimchi', ko: '김치', romanization: 'gimchi', titleEn: 'Kimchi', rarity: 'common' },
+  { cardId: 'card:seollal', ko: '설날', romanization: 'seollal', titleEn: 'Lunar New Year', rarity: 'rare' },
+  { cardId: 'card:mountain', ko: '산', romanization: 'san', titleEn: 'Mountain', rarity: 'common' },
+  { cardId: 'card:yutnori', ko: '윷놀이', romanization: 'yutnori', titleEn: 'Yut Game', rarity: 'rare' },
+];
+
+function HeritageCardArtSvg({ cardId, size = 200 }: { cardId: string; size?: number }): JSX.Element {
+  // Mirrors packages/design-system/src/components/HeritageCardArt/HeritageCardArt.tsx.
+  // Both files share identical SVG shapes so /design-preview is an honest
+  // representation of what apps/mobile renders.
+  switch (cardId) {
+    case 'card:tiger':
+      return (
+        <svg width={size} height={size} viewBox="0 0 200 200" aria-label="Tiger card art">
+          <rect x={0} y={0} width={200} height={200} fill={colors.theme.nature} opacity={0.08} rx={8} />
+          <g fill={colors.feedback.nudge} opacity={0.9}>
+            <path d="M70 30 L74 40 L70 50 L66 40 Z" />
+            <path d="M60 40 L70 36 L80 40 L70 44 Z" />
+            <path d="M100 16 L104 28 L100 40 L96 28 Z" />
+            <path d="M88 28 L100 24 L112 28 L100 32 Z" />
+            <path d="M130 30 L134 40 L130 50 L126 40 Z" />
+            <path d="M120 40 L130 36 L140 40 L130 44 Z" />
+          </g>
+          <g transform="translate(36 55)">
+            <ellipse cx={64} cy={116} rx={38} ry={5} fill={colors.hoya.furDark} opacity={0.18} />
+            <path d="M22 78 Q14 60 8 46" stroke={colors.hoya.fur} strokeWidth={10} strokeLinecap="round" fill="none" />
+            <path d="M106 78 Q114 60 120 46" stroke={colors.hoya.fur} strokeWidth={10} strokeLinecap="round" fill="none" />
+            <circle cx={8} cy={46} r={7} fill={colors.hoya.fur} />
+            <circle cx={120} cy={46} r={7} fill={colors.hoya.fur} />
+            <circle cx={64} cy={64} r={44} fill={colors.hoya.fur} />
+            <circle cx={30} cy={32} r={12} fill={colors.hoya.fur} />
+            <circle cx={98} cy={32} r={12} fill={colors.hoya.fur} />
+            <circle cx={30} cy={32} r={6} fill={colors.hoya.cheek} opacity={0.85} />
+            <circle cx={98} cy={32} r={6} fill={colors.hoya.cheek} opacity={0.85} />
+            <g stroke={colors.hoya.stripes} strokeWidth={3} strokeLinecap="round" fill="none">
+              <path d="M26 54 Q30 58 26 62" />
+              <path d="M24 70 Q29 73 25 78" />
+              <path d="M102 54 Q98 58 102 62" />
+              <path d="M104 70 Q99 73 103 78" />
+              <path d="M64 24 Q66 30 64 36" />
+            </g>
+            <ellipse cx={64} cy={84} rx={26} ry={16} fill={colors.hoya.belly} />
+            <ellipse cx={50} cy={70} rx={4} ry={1.6} fill={colors.hoya.stripes} />
+            <ellipse cx={78} cy={70} rx={4} ry={1.6} fill={colors.hoya.stripes} />
+            <circle cx={42} cy={84} r={5} fill={colors.hoya.cheek} opacity={0.6} />
+            <circle cx={86} cy={84} r={5} fill={colors.hoya.cheek} opacity={0.6} />
+            <path d="M58 84 H70 L64 90 Z" fill={colors.hoya.nose} />
+            <path
+              d="M44 92 Q60 110 76 92 Q60 100 44 92 Z"
+              fill={colors.hoya.cheek}
+              stroke={colors.hoya.stripes}
+              strokeWidth={3}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </g>
+        </svg>
+      );
+    case 'card:book':
+      return (
+        <svg width={size} height={size} viewBox="0 0 200 200" aria-label="Book card art">
+          <rect x={0} y={0} width={200} height={200} fill={colors.theme.letters} opacity={0.08} rx={8} />
+          <ellipse cx={100} cy={155} rx={75} ry={6} fill={colors.hoya.furDark} opacity={0.2} />
+          <path
+            d="M40 60 Q100 50 160 60 L160 150 Q100 140 40 150 Z"
+            fill={colors.surface.paper}
+            stroke={colors.text.secondary}
+            strokeWidth={2.5}
+            strokeLinejoin="round"
+          />
+          <path d="M100 55 V145" stroke={colors.text.secondary} strokeWidth={2} />
+          <path d="M52 80 Q62 76 72 84" stroke={colors.text.primary} strokeWidth={3.5} strokeLinecap="round" fill="none" />
+          <path d="M55 100 H82" stroke={colors.text.primary} strokeWidth={3.5} strokeLinecap="round" />
+          <path d="M55 120 Q65 116 78 122" stroke={colors.text.primary} strokeWidth={3.5} strokeLinecap="round" fill="none" />
+          <path d="M118 80 Q128 76 142 84" stroke={colors.text.primary} strokeWidth={3.5} strokeLinecap="round" fill="none" />
+          <path d="M120 100 H148" stroke={colors.text.primary} strokeWidth={3.5} strokeLinecap="round" />
+          <path d="M118 120 Q130 116 144 122" stroke={colors.text.primary} strokeWidth={3.5} strokeLinecap="round" fill="none" />
+        </svg>
+      );
+    case 'card:kimchi':
+      return (
+        <svg width={size} height={size} viewBox="0 0 200 200" aria-label="Kimchi card art">
+          <rect x={0} y={0} width={200} height={200} fill={colors.theme.life} opacity={0.08} rx={8} />
+          <path
+            d="M50 90 Q60 70 80 70 Q100 60 120 70 Q140 70 150 90 Q150 110 100 110 Q50 110 50 90 Z"
+            fill={colors.brand.primary}
+            stroke={colors.brand.primaryDark}
+            strokeWidth={2.5}
+          />
+          <path
+            d="M60 95 Q75 80 100 80 Q125 80 140 95 Q140 110 100 112 Q60 110 60 95 Z"
+            fill={colors.feedback.nudge}
+            opacity={0.95}
+            stroke={colors.brand.primaryDark}
+            strokeWidth={2}
+          />
+          <path
+            d="M75 100 Q85 92 100 92 Q115 92 125 100 Q120 108 100 110 Q80 108 75 100 Z"
+            fill={colors.brand.primaryLight}
+            opacity={0.9}
+            stroke={colors.brand.primaryDark}
+            strokeWidth={1.5}
+          />
+          <path
+            d="M40 110 Q40 150 100 158 Q160 150 160 110 Z"
+            fill={colors.surface.paper}
+            stroke={colors.text.secondary}
+            strokeWidth={2.5}
+            strokeLinejoin="round"
+          />
+          <path d="M40 110 Q100 120 160 110" fill="none" stroke={colors.text.secondary} strokeWidth={2} />
+          <ellipse cx={100} cy={165} rx={50} ry={4} fill={colors.hoya.furDark} opacity={0.18} />
+        </svg>
+      );
+    case 'card:seollal':
+      return (
+        <svg width={size} height={size} viewBox="0 0 200 200" aria-label="Seollal card art">
+          <rect x={0} y={0} width={200} height={200} fill={colors.theme.rites} opacity={0.08} rx={8} />
+          <rect x={20} y={20} width={160} height={60} fill={colors.surface.paper} stroke={colors.text.secondary} strokeWidth={2} rx={4} />
+          <line x1={60} y1={20} x2={60} y2={80} stroke={colors.text.secondary} strokeWidth={2} />
+          <line x1={100} y1={20} x2={100} y2={80} stroke={colors.text.secondary} strokeWidth={2} />
+          <line x1={140} y1={20} x2={140} y2={80} stroke={colors.text.secondary} strokeWidth={2} />
+          <rect x={20} y={150} width={160} height={6} fill={colors.theme.life} opacity={0.4} rx={2} />
+          <g>
+            <path d="M60 120 Q56 140 50 152 H92 Q86 140 82 120 Z" fill={colors.theme.rites} />
+            <path d="M58 100 Q70 95 82 100 L82 122 Q70 118 60 122 Z" fill={colors.brand.primary} stroke={colors.brand.primaryDark} strokeWidth={1.5} />
+            <circle cx={70} cy={92} r={12} fill={colors.hoya.belly} stroke={colors.text.secondary} strokeWidth={1.5} />
+            <line x1={64} y1={92} x2={68} y2={92} stroke={colors.text.primary} strokeWidth={2} strokeLinecap="round" />
+            <line x1={72} y1={92} x2={76} y2={92} stroke={colors.text.primary} strokeWidth={2} strokeLinecap="round" />
+            <path d="M66 96 Q70 98 74 96" stroke={colors.text.primary} strokeWidth={1.5} strokeLinecap="round" fill="none" />
+          </g>
+          <g>
+            <path d="M125 130 Q121 140 117 150 H143 Q139 140 135 130 Z" fill={colors.brand.secondary} />
+            <path d="M123 115 Q130 112 137 115 L137 132 Q130 128 123 132 Z" fill={colors.feedback.nudge} stroke={colors.brand.primaryDark} strokeWidth={1.5} />
+            <circle cx={130} cy={108} r={10} fill={colors.hoya.belly} stroke={colors.text.secondary} strokeWidth={1.5} />
+            <line x1={126} y1={108} x2={128} y2={108} stroke={colors.text.primary} strokeWidth={2} strokeLinecap="round" />
+            <line x1={132} y1={108} x2={134} y2={108} stroke={colors.text.primary} strokeWidth={2} strokeLinecap="round" />
+            <path d="M127 112 Q130 114 133 112" stroke={colors.text.primary} strokeWidth={1.5} strokeLinecap="round" fill="none" />
+          </g>
+        </svg>
+      );
+    case 'card:mountain':
+      return (
+        <svg width={size} height={size} viewBox="0 0 200 200" aria-label="Mountain card art">
+          <rect x={0} y={0} width={200} height={200} fill={colors.theme.nature} opacity={0.08} rx={8} />
+          <circle cx={120} cy={70} r={26} fill={colors.feedback.nudge} opacity={0.7} />
+          <polygon points="40,150 90,60 140,150" fill={colors.theme.nature} opacity={0.4} stroke={colors.theme.nature} strokeWidth={2} strokeLinejoin="round" />
+          <polygon points="60,160 110,80 165,160" fill={colors.theme.nature} opacity={0.7} stroke={colors.theme.nature} strokeWidth={2} strokeLinejoin="round" />
+          <polygon points="20,170 75,100 130,170" fill={colors.theme.nature} stroke={colors.brand.primaryDark} strokeWidth={2} strokeLinejoin="round" />
+          <path d="M70 110 L75 100 L82 112 L78 108 Z" fill={colors.surface.paper} opacity={0.9} />
+          <path d="M105 90 L110 80 L116 92 L112 88 Z" fill={colors.surface.paper} opacity={0.9} />
+          <rect x={0} y={170} width={200} height={30} fill={colors.theme.life} opacity={0.3} />
+        </svg>
+      );
+    case 'card:yutnori':
+      return (
+        <svg width={size} height={size} viewBox="0 0 200 200" aria-label="Yutnori card art">
+          <rect x={0} y={0} width={200} height={200} fill={colors.theme.crafts} opacity={0.08} rx={8} />
+          <ellipse cx={100} cy={170} rx={70} ry={6} fill={colors.hoya.furDark} opacity={0.15} />
+          <g transform="rotate(-15 60 80)">
+            <rect x={28} y={73} width={64} height={14} fill={colors.surface.canvas} stroke={colors.text.secondary} strokeWidth={2} rx={6} />
+            <path d="M40 77 Q60 75 80 77" stroke={colors.text.muted} strokeWidth={1.5} fill="none" />
+          </g>
+          <g transform="rotate(20 140 80)">
+            <rect x={108} y={73} width={64} height={14} fill={colors.surface.canvas} stroke={colors.text.secondary} strokeWidth={2} rx={3} />
+            <circle cx={140} cy={80} r={4} fill={colors.brand.primary} />
+          </g>
+          <g transform="rotate(10 70 130)">
+            <rect x={38} y={123} width={64} height={14} fill={colors.surface.canvas} stroke={colors.text.secondary} strokeWidth={2} rx={6} />
+            <path d="M50 127 Q70 125 90 127" stroke={colors.text.muted} strokeWidth={1.5} fill="none" />
+          </g>
+          <g transform="rotate(-25 130 135)">
+            <rect x={98} y={128} width={64} height={14} fill={colors.surface.canvas} stroke={colors.text.secondary} strokeWidth={2} rx={6} />
+            <path d="M110 132 Q130 130 150 132" stroke={colors.text.muted} strokeWidth={1.5} fill="none" />
+          </g>
+        </svg>
+      );
+    default:
+      return (
+        <svg width={size} height={size} viewBox="0 0 200 200">
+          <rect x={0} y={0} width={200} height={200} fill={colors.surface.sunken} rx={8} />
+        </svg>
+      );
+  }
+}
+
+function SectionHeritageCards(): JSX.Element {
+  const rarityBg: Record<string, { bg: string; fg: string }> = {
+    common: { bg: colors.surface.sunken, fg: colors.text.secondary },
+    uncommon: { bg: colors.feedback.successLight, fg: '#2F6A47' },
+    rare: { bg: colors.feedback.infoLight, fg: '#2E5BC7' },
+    legendary: { bg: colors.feedback.nudgeLight, fg: '#B5862A' },
+  };
+  return (
+    <Section>
+      <SectionTitle
+        id="heritage-cards"
+        title="Heritage Card art (6 of 30)"
+        subtitle="1 per theme + 1 legendary. Remaining 24 use a soft fallback until illustrated."
+      />
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+          gap: spacing.lg,
+        }}
+      >
+        {CARD_ART_CELLS.map((c) => {
+          const { bg, fg } = rarityBg[c.rarity] ?? rarityBg.common!;
+          return (
+            <div
+              key={c.cardId}
+              style={{
+                backgroundColor: colors.surface.paper,
+                border: `4px solid ${colors.rarity[c.rarity]}`,
+                borderRadius: radii.xl,
+                padding: spacing.md,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+              }}
+            >
+              <div
+                style={{
+                  alignSelf: 'flex-end',
+                  padding: `${spacing.xxs}px ${spacing.sm}px`,
+                  backgroundColor: bg,
+                  color: fg,
+                  borderRadius: radii.pill,
+                  fontSize: typography.size.caption,
+                  fontWeight: 600,
+                  marginBottom: spacing.sm,
+                }}
+              >
+                {c.rarity}
+              </div>
+              <HeritageCardArtSvg cardId={c.cardId} size={160} />
+              <div
+                style={{
+                  marginTop: spacing.sm,
+                  fontSize: typography.size.title,
+                  fontWeight: 700,
+                  color: colors.text.primary,
+                }}
+              >
+                {c.ko}
+              </div>
+              <div
+                style={{
+                  fontSize: typography.size.caption,
+                  color: colors.text.muted,
+                  fontStyle: 'italic',
+                }}
+              >
+                {c.romanization}
+              </div>
+              <div style={{ fontSize: typography.size.bodySm, color: colors.text.secondary }}>
+                {c.titleEn}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </Section>
   );

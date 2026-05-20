@@ -4,6 +4,7 @@ import {
   Caption,
   Card,
   Heading,
+  HeritageCardArt,
   Icon,
   Pill,
   Screen,
@@ -11,6 +12,7 @@ import {
   colors,
   radii,
   spacing,
+  supportedCardIds,
   typography,
 } from '@hangul-route/design-system';
 import { useNavigation } from '@react-navigation/native';
@@ -135,7 +137,13 @@ function CardThumb({
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <Pill tone={card.rarity === 'legendary' ? 'nudge' : card.rarity === 'rare' ? 'info' : card.rarity === 'uncommon' ? 'success' : 'neutral'} label={card.rarity} size="sm" />
           </View>
-          <Spacer size="sm" />
+          <Spacer size="xs" />
+          {supportedCardIds.includes(card.id) ? (
+            <View style={{ alignItems: 'center' }}>
+              <HeritageCardArt cardId={card.id} size={96} />
+            </View>
+          ) : null}
+          <Spacer size="xs" />
           <Text style={{ fontSize: typography.size.title, fontWeight: '700', color: colors.text.primary }}>
             {card.subtitleKo ?? card.titleEn}
           </Text>

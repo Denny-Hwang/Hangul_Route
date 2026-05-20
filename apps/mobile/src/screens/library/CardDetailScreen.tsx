@@ -4,6 +4,7 @@ import {
   Caption,
   Card,
   Heading,
+  HeritageCardArt,
   Icon,
   Pill,
   Screen,
@@ -11,6 +12,7 @@ import {
   colors,
   radii,
   spacing,
+  supportedCardIds,
 } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React from 'react';
@@ -59,16 +61,25 @@ export function CardDetailScreen({ route, navigation }: Props): React.ReactEleme
               width: 200,
               height: 200,
               borderRadius: radii.xxl,
-              backgroundColor: unlocked ? colors.theme[card.theme] : colors.surface.sunken,
+              backgroundColor: unlocked
+                ? supportedCardIds.includes(card.id)
+                  ? colors.surface.paper
+                  : colors.theme[card.theme]
+                : colors.surface.sunken,
               alignItems: 'center',
               justifyContent: 'center',
-              opacity: unlocked ? 0.85 : 0.4,
+              opacity: unlocked ? (supportedCardIds.includes(card.id) ? 1 : 0.85) : 0.4,
+              overflow: 'hidden',
             }}
           >
             {unlocked ? (
-              <Text style={{ fontSize: 80, fontWeight: '800', color: colors.text.inverse }}>
-                {card.subtitleKo ?? card.titleEn.charAt(0)}
-              </Text>
+              supportedCardIds.includes(card.id) ? (
+                <HeritageCardArt cardId={card.id} size={200} />
+              ) : (
+                <Text style={{ fontSize: 80, fontWeight: '800', color: colors.text.inverse }}>
+                  {card.subtitleKo ?? card.titleEn.charAt(0)}
+                </Text>
+              )
             ) : (
               <Icon name="lock" size={80} color={colors.text.muted} />
             )}
