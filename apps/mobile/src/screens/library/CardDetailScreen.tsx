@@ -11,15 +11,25 @@ import {
   Screen,
   Spacer,
   colors,
+  motion,
   radii,
   spacing,
   supportedCardIds,
 } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
+import Animated, {
+  Easing,
+  interpolate,
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import { cardById } from '../../content';
 import { speak } from '../../platform/audio';
+import { useReducedMotion } from '../../platform/motion';
 import type { RootStackParamList } from '../../navigation/types';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
@@ -34,6 +44,23 @@ export function CardDetailScreen({ route, navigation }: Props): React.ReactEleme
   const snap = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
   const unlocked = snap?.cards.some((c) => c.cardId === route.params.cardId) ?? false;
   const [face, setFace] = useState<CardFace>('front');
+  const reducedMotion = useReducedMotion();
+
+  // F-MOTION-002 rotateY flip animation.
+  // `progress` runs 0 (flat showing current face) → 1 (edge-on at 90°, content swaps) → 0 (flat showing new face).
+  const progress = useSharedValue(0);
+  const flippingRef = useRef(false);
+
+  const swapFace = (next: CardFace): void => {
+    setFace(next);
+  };
+
+  const flipAnimatedStyle = useAnimatedStyle(() => {
+    const deg = interpolate(progress.value, [0, 1], [0, 90]);
+    return {
+      transform: [{ perspective: 1000 }, { rotateY: `${deg}deg` }],
+    };
+  });
 
   if (!card) {
     return (
@@ -55,8 +82,35 @@ export function CardDetailScreen({ route, navigation }: Props): React.ReactEleme
   const canFlip = unlocked;
   const toggleFace = (): void => {
     if (!canFlip) return;
-    setFace(face === 'front' ? 'back' : 'front');
+    if (flippingRef.current) return; // ignore taps mid-flip (F-MOTION-002 §3.3)
+    const next: CardFace = face === 'front' ? 'back' : 'front';
+    if (reducedMotion) {
+      // Reduced-motion path: instant swap, no rotation (F-MOTION-002 §3.2)
+      setFace(next);
+      return;
+    }
+    flippingRef.current = true;
+    const legMs = motion.duration.base; // 200ms each leg → ~400ms total
+    progress.value = withTiming(
+      1,
+      { duration: legMs, easing: Easing.bezier(0.2, 0, 0, 1) },
+      () => {
+        // Midpoint — card is edge-on. Swap content, then rotate back.
+        runOnJS(swapFace)(next);
+        progress.value = withTiming(
+          0,
+          { duration: legMs, easing: Easing.bezier(0.2, 0, 0, 1) },
+          () => {
+            runOnJS(setFlipping)(false);
+          },
+        );
+      },
+    );
   };
+
+  function setFlipping(value: boolean): void {
+    flippingRef.current = value;
+  }
 
   return (
     <Screen tone="canvas">
@@ -77,39 +131,43 @@ export function CardDetailScreen({ route, navigation }: Props): React.ReactEleme
           canFlip ? `Tap to flip card to ${face === 'front' ? 'back' : 'front'}` : 'Locked card'
         }
       >
-        <Card
-          padding="lg"
-          tone="paper"
-          style={{ borderWidth: 4, borderColor: colors.rarity[card.rarity], borderRadius: radii.xl }}
-        >
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <Pill tone={rarityTone} label={card.rarity} />
-            {canFlip ? (
-              <View
-                style={{
-                  paddingHorizontal: spacing.sm,
-                  paddingVertical: spacing.xxs,
-                  backgroundColor: colors.surface.sunken,
-                  borderRadius: radii.pill,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: spacing.xxs,
-                }}
-              >
-                <Icon name="replay" size={14} color={colors.text.muted} />
-                <Caption tone="muted">{face === 'front' ? 'tap to flip' : 'tap to flip back'}</Caption>
-              </View>
-            ) : null}
-          </View>
+        <Animated.View style={flipAnimatedStyle}>
+          <Card
+            padding="lg"
+            tone="paper"
+            style={{ borderWidth: 4, borderColor: colors.rarity[card.rarity], borderRadius: radii.xl }}
+          >
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <Pill tone={rarityTone} label={card.rarity} />
+              {canFlip ? (
+                <View
+                  style={{
+                    paddingHorizontal: spacing.sm,
+                    paddingVertical: spacing.xxs,
+                    backgroundColor: colors.surface.sunken,
+                    borderRadius: radii.pill,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: spacing.xxs,
+                  }}
+                >
+                  <Icon name="replay" size={14} color={colors.text.muted} />
+                  <Caption tone="muted">
+                    {face === 'front' ? 'tap to flip' : 'tap to flip back'}
+                  </Caption>
+                </View>
+              ) : null}
+            </View>
 
-          <Spacer size="md" />
+            <Spacer size="md" />
 
-          {face === 'front' ? (
-            <FrontFaceBody card={card} unlocked={unlocked} />
-          ) : (
-            <BackFaceBody card={card} />
-          )}
-        </Card>
+            {face === 'front' ? (
+              <FrontFaceBody card={card} unlocked={unlocked} />
+            ) : (
+              <BackFaceBody card={card} />
+            )}
+          </Card>
+        </Animated.View>
       </Pressable>
 
       {/* The blurb + fact card is shown only on the front face (the back face
