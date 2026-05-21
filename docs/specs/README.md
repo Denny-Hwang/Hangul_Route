@@ -54,6 +54,11 @@ F-XXX-<slug>.md
 - `F-007-animated-stroke-hint.md` — **shipped** (PR #26)
 - `F-MOTION-004-star-pop-in.md` — **shipped** (PR #27)
 
+### 스트로크 v3 + 모션 (W6)
+- `F-008-stroke-order-hard-pass.md` — **shipped** (PR #29)
+- `F-009-narrated-stroke-demo.md` — **shipped** (PR #29)
+- `F-MOTION-005-star-count-change.md` — **shipped** (PR #30)
+
 ### Phase 2 / planned
 - `F-PROF-001-device-profiles.md` — multi-learner · **draft** (code shipped PR #13, full spec covers cloud sync)
 - `F-HW-001-homework-page.md` — Homework tab · **draft**
@@ -65,10 +70,15 @@ F-XXX-<slug>.md
 - `F-VR-002-full-storybook.md` — Storybook setup · **draft** (ship when team-size or regression frequency triggers — see spec §7)
 - `F-VR-003-automated-screenshot-diff.md` — Argos/Chromatic CI diffing · **draft** (ships paired with F-VR-002)
 - `F-CARD-S2-001-stage2-card-illustrations.md` — Stage 2 cards · **draft** (blocked on Stage 2 word content authoring)
+- `F-CARD-S3-001-stage3-card-illustrations.md` — Stage 3 sentence-scene cards · **draft** (blocked on Stage 3 sentence content)
+- `F-CARD-S4-001-stage4-card-illustrations.md` — Stage 4 dialogue-exchange cards · **draft** (blocked on Stage 4 dialogue content)
+- `F-CARD-S5-001-stage5-card-illustrations.md` — Stage 5 story-scene cards · **draft** (blocked on Stage 5 folk-tale content)
+- `F-CARD-S6-001-stage6-card-illustrations.md` — Stage 6 real-world-artifact cards · **draft** (blocked on Stage 6 real-use content)
+- `F-CARD-S7-001-stage7-card-illustrations.md` — Stage 7 self-expression cards · **draft** (blocked on Stage 7 + privacy review)
 
 ### 미작성 (Phase 2 후보)
-- F-005 Batchim Build — 3-component CVC syllables
-- F-008 Stroke order as hard pass criterion
-- F-009 Narrated stroke demonstration ("first stroke", "second stroke" voice)
-- F-MOTION-005 Star count change animation
-- F-CARD-S3-001 onward — Stage 3-7 card sets
+- F-005 Batchim Build — 3-component CVC syllables (note: number conflicts with shipped F-005 stroke order; will renumber when authored)
+- F-010 Narrated full-quest playback
+- F-MOTION-006 Cross-row star count notification
+- F-PROF-002 Per-profile difficulty (activates F-008 strictMode)
+- F-AUDIO-001 Audio recording playback for Stage 7
