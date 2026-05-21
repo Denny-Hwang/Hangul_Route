@@ -71,6 +71,8 @@ export interface ScoreTraceResult {
   directionsPerTarget?: boolean[];
   /** F-006: true iff every directionsPerTarget entry is true. */
   directionsCorrect?: boolean;
+  /** F-008: coverage ≥ 0.65 AND orderCorrect. Populated when checkOrder=true. */
+  passWithOrder?: boolean;
 }
 
 export function scoreTrace({
@@ -87,7 +89,10 @@ export function scoreTrace({
       perStrokeCoverage: target.map(() => 0),
       visitedDrawn,
     };
-    if (checkOrder) base.orderCorrect = false;
+    if (checkOrder) {
+      base.orderCorrect = false;
+      base.passWithOrder = false;
+    }
     if (checkDirection) {
       base.directionsPerTarget = target.map(() => false);
       base.directionsCorrect = target.length === 0;
@@ -135,6 +140,8 @@ export function scoreTrace({
         }
       }
       result.orderCorrect = ordered;
+      // F-008: derived strict-pass field
+      result.passWithOrder = coverage >= DEFAULT_PASS_THRESHOLD && ordered;
     }
 
     if (checkDirection) {

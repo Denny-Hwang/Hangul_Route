@@ -26,10 +26,13 @@ import { StrokeHint } from './StrokeHint';
 import { speak } from '../../platform/audio';
 import { nudge, success } from '../../platform/haptics';
 import { useQuestRunStore } from '../../store/quest-run-store';
+import { useUiStore } from '../../store/ui-store';
 
 interface Props {
   scope: MinigameScope;
   onFinish: () => void;
+  /** F-008 — when true, pass requires coverage ≥ 0.65 AND correct stroke order. */
+  strictMode?: boolean;
 }
 
 type Feedback = 'idle' | 'evaluating' | 'pass' | 'fail';
@@ -45,7 +48,11 @@ const VIEWBOX = 200; // jamo skeletons authored against 200x200
  * scoreTrace() compares against the predefined skeleton; coverage ≥ 0.65
  * passes the round.
  */
-export function TraceStrokeGame({ scope, onFinish }: Props): React.ReactElement {
+export function TraceStrokeGame({
+  scope,
+  onFinish,
+  strictMode = false,
+}: Props): React.ReactElement {
   const rounds = useMemo<TraceStrokeRound[]>(
     () =>
       buildTraceStrokeRounds({
@@ -54,6 +61,8 @@ export function TraceStrokeGame({ scope, onFinish }: Props): React.ReactElement 
       }),
     [scope],
   );
+
+  const soundOn = useUiStore((s) => s.soundOn);
 
   const recordRound = useQuestRunStore((s) => s.recordRound);
   const markStepComplete = useQuestRunStore((s) => s.markStepComplete);
@@ -101,8 +110,6 @@ export function TraceStrokeGame({ scope, onFinish }: Props): React.ReactElement 
 
   const evaluate = (): void => {
     setFeedback('evaluating');
-    // F-005 + F-006 — request order + direction in the result envelope so we
-    // can surface "next time try ..." hints on a pass, without gating progress.
     const result = scoreTrace({
       target,
       drawn: strokes,
@@ -111,7 +118,11 @@ export function TraceStrokeGame({ scope, onFinish }: Props): React.ReactElement 
     });
     setOrderCorrect(result.orderCorrect ?? null);
     setDirectionsCorrect(result.directionsCorrect ?? null);
-    if (result.coverage >= DEFAULT_PASS_THRESHOLD) {
+    // F-008 — strict mode requires coverage AND order; default keeps coverage-only.
+    const passed = strictMode
+      ? result.passWithOrder === true
+      : result.coverage >= DEFAULT_PASS_THRESHOLD;
+    if (passed) {
       success();
       recordRound(true);
       setFeedback('pass');
@@ -127,12 +138,14 @@ export function TraceStrokeGame({ scope, onFinish }: Props): React.ReactElement 
       nudge();
       recordRound(false);
       setFeedback('fail');
+      // F-008 — strict-mode fail gets a longer retry window (2000ms vs 1800ms)
+      const retryDelay = strictMode && result.coverage >= DEFAULT_PASS_THRESHOLD ? 2000 : 1800;
       setTimeout(() => {
         setStrokes([]);
         setFeedback('idle');
         setOrderCorrect(null);
         setDirectionsCorrect(null);
-      }, 1800);
+      }, retryDelay);
     }
   };
 
@@ -284,6 +297,10 @@ export function TraceStrokeGame({ scope, onFinish }: Props): React.ReactElement 
           onPress={() => {
             setHintToken((t) => t + 1);
             setHintPlaying(true);
+            // F-009 — narrate the jamo at demo start (skipped if sound is muted).
+            if (soundOn) {
+              speak(round.jamo.char, { language: 'ko-KR' });
+            }
           }}
         />
         <Button
@@ -297,7 +314,10 @@ export function TraceStrokeGame({ scope, onFinish }: Props): React.ReactElement 
 
       <Spacer size="md" />
       {feedback === 'fail' ? (
-        <HoyaBubble tone="thinking" message="Try again — start at the top!" />
+        <HoyaBubble
+          tone="thinking"
+          message={failMessage(strictMode, orderCorrect)}
+        />
       ) : feedback === 'pass' ? (
         <HoyaBubble
           tone="cheering"
@@ -339,6 +359,18 @@ export function TraceStrokeGame({ scope, onFinish }: Props): React.ReactElement 
  * order + direction are auxiliary — surfaced as "next time" nudges only
  * when the child PASSED but did the auxiliary signal wrong.
  */
+/**
+ * F-008 — fail message branches. When strict mode is on AND order was the
+ * only thing wrong (coverage passed), use the order-coaching message.
+ * Otherwise use the standard "try again — start at the top!".
+ */
+function failMessage(strictMode: boolean, orderCorrect: boolean | null): string {
+  if (strictMode && orderCorrect === false) {
+    return 'Almost! Try drawing the strokes in the right order. Tap Show me to see.';
+  }
+  return 'Try again — start at the top!';
+}
+
 function passMessage(
   orderCorrect: boolean | null,
   directionsCorrect: boolean | null,
