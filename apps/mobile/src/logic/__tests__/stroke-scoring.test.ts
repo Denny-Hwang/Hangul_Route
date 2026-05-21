@@ -228,6 +228,7 @@ describe('scoreTrace with checkDirection', () => {
   });
 
   it('per-stroke direction array length matches target strokes', () => {
+    // F-006 multi-stroke check
     const twoStrokes = [
       [
         { x: 0, y: 0 },
@@ -256,6 +257,86 @@ describe('scoreTrace with checkDirection', () => {
     expect(r.directionsPerTarget?.[0]).toBe(true);
     expect(r.directionsPerTarget?.[1]).toBe(false);
     expect(r.directionsCorrect).toBe(false);
+  });
+});
+
+// ─────────────────────────────────────────
+// F-008 derived passWithOrder
+// ─────────────────────────────────────────
+
+describe('scoreTrace passWithOrder (F-008)', () => {
+  const lShape = [
+    [
+      { x: 0, y: 0 },
+      { x: 100, y: 0 },
+      { x: 100, y: 100 },
+    ],
+  ];
+
+  it('passWithOrder=true when coverage passes AND order correct', () => {
+    const densely: Array<{ x: number; y: number }> = [];
+    // Walk the L densely so coverage is well above threshold
+    for (let x = 0; x <= 100; x += 5) densely.push({ x, y: 0 });
+    for (let y = 0; y <= 100; y += 5) densely.push({ x: 100, y });
+    const r = scoreTrace({
+      target: lShape,
+      drawn: [densely],
+      checkOrder: true,
+    });
+    expect(r.coverage).toBeGreaterThan(0.9);
+    expect(r.orderCorrect).toBe(true);
+    expect(r.passWithOrder).toBe(true);
+  });
+
+  it('passWithOrder=false when coverage fails (even if drawn nothing)', () => {
+    const r = scoreTrace({
+      target: lShape,
+      drawn: [],
+      checkOrder: true,
+    });
+    expect(r.passWithOrder).toBe(false);
+  });
+
+  it('passWithOrder=false when coverage passes but order wrong', () => {
+    // Two strokes drawn in reversed order vs target
+    const twoStrokes = [
+      [
+        { x: 0, y: 0 },
+        { x: 100, y: 0 },
+      ],
+      [
+        { x: 0, y: 100 },
+        { x: 100, y: 100 },
+      ],
+    ];
+    const r = scoreTrace({
+      target: twoStrokes,
+      drawn: [
+        // Bottom drawn first (target idx 1), then top (target idx 0)
+        [
+          { x: 0, y: 100 },
+          { x: 50, y: 100 },
+          { x: 100, y: 100 },
+        ],
+        [
+          { x: 0, y: 0 },
+          { x: 50, y: 0 },
+          { x: 100, y: 0 },
+        ],
+      ],
+      checkOrder: true,
+    });
+    expect(r.orderCorrect).toBe(false);
+    expect(r.coverage).toBeGreaterThan(0.65);
+    expect(r.passWithOrder).toBe(false);
+  });
+
+  it('passWithOrder undefined when checkOrder omitted', () => {
+    const r = scoreTrace({
+      target: lShape,
+      drawn: [[{ x: 50, y: 0 }]],
+    });
+    expect(r.passWithOrder).toBeUndefined();
   });
 });
 
