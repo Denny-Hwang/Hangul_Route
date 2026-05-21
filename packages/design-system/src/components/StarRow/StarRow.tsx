@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { AccessibilityInfo, View } from 'react-native';
 import Animated, {
   Easing,
@@ -19,9 +19,10 @@ const starPath =
  * StarRow — 0-3 amber stars in a horizontal row.
  *
  * F-MOTION-004 — each filled star pops in (scale 0 → 1.2 → 1.0) over
- * ~300ms with a 120ms stagger between filled stars. Unfilled stars
- * appear statically. Reduced-motion path: instant, no pop. Animation
- * fires once on mount only.
+ * ~300ms with a 120ms stagger on initial mount.
+ * F-MOTION-005 — if the count later increases (parent rerenders without
+ * remount), the newly-filled stars pop in too. Decrements are silent.
+ * Reduced-motion path: instant, no pop. Same-count rerenders no-op.
  */
 
 export function StarRow({ stars, size = 32, testID }: StarRowProps): React.ReactElement {
@@ -39,6 +40,16 @@ export function StarRow({ stars, size = 32, testID }: StarRowProps): React.React
   );
 }
 
+function popScale(scale: ReturnType<typeof useSharedValue<number>>, delayMs: number): void {
+  scale.value = withDelay(
+    delayMs,
+    withSequence(
+      withTiming(1.2, { duration: 180, easing: Easing.bezier(0.34, 1.56, 0.64, 1) }),
+      withTiming(1.0, { duration: 120, easing: Easing.bezier(0.34, 1.56, 0.64, 1) }),
+    ),
+  );
+}
+
 function StarCell({
   index,
   filled,
@@ -49,7 +60,9 @@ function StarCell({
   size: number;
 }): React.ReactElement {
   const scale = useSharedValue(filled ? 0 : 1);
+  const prevFilledRef = useRef(filled);
 
+  // F-MOTION-004 — mount-only pop with 120ms × index stagger
   useEffect(() => {
     if (!filled) {
       scale.value = 1;
@@ -63,20 +76,7 @@ function StarCell({
           scale.value = 1;
           return;
         }
-        // Stagger: 120ms × this star's filled-index
-        scale.value = withDelay(
-          index * 120,
-          withSequence(
-            withTiming(1.2, {
-              duration: 180,
-              easing: Easing.bezier(0.34, 1.56, 0.64, 1),
-            }),
-            withTiming(1.0, {
-              duration: 120,
-              easing: Easing.bezier(0.34, 1.56, 0.64, 1),
-            }),
-          ),
-        );
+        popScale(scale, index * 120);
       })
       .catch(() => {
         scale.value = 1;
@@ -84,10 +84,40 @@ function StarCell({
     return () => {
       cancelled = true;
     };
-    // Mount-only: deliberately do not include `filled` in deps so re-renders
-    // with a different `stars` count don't re-animate (per spec §3.3).
+    // Mount-only: deliberately omit `filled` from deps
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // F-MOTION-005 — fire pop on transition false → true (newly-filled star).
+  // Skips the initial mount (prevFilledRef seeded with initial `filled`).
+  useEffect(() => {
+    if (filled === prevFilledRef.current) return;
+    prevFilledRef.current = filled;
+    if (!filled) {
+      // Decrement: silently become unfilled (out of scope per spec §3.2)
+      scale.value = 1;
+      return;
+    }
+    // Increment: newly-filled, animate immediately (no stagger delay on
+    // change — the stagger is for mount-time visual order, not increments).
+    let cancelled = false;
+    AccessibilityInfo.isReduceMotionEnabled()
+      .then((reduced) => {
+        if (cancelled) return;
+        if (reduced) {
+          scale.value = 1;
+          return;
+        }
+        scale.value = 0; // reset so the pop reads
+        popScale(scale, 0);
+      })
+      .catch(() => {
+        scale.value = 1;
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [filled, scale]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
