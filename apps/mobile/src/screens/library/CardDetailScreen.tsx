@@ -17,7 +17,7 @@ import {
   supportedCardIds,
 } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import Animated, {
   Easing,
@@ -30,6 +30,7 @@ import Animated, {
 import { cardById } from '../../content';
 import { speak } from '../../platform/audio';
 import { useReducedMotion } from '../../platform/motion';
+import { isShareAvailable, shareSnapshot } from '../../platform/sharing';
 import type { RootStackParamList } from '../../navigation/types';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
@@ -45,6 +46,19 @@ export function CardDetailScreen({ route, navigation }: Props): React.ReactEleme
   const unlocked = snap?.cards.some((c) => c.cardId === route.params.cardId) ?? false;
   const [face, setFace] = useState<CardFace>('front');
   const reducedMotion = useReducedMotion();
+  const [shareAvailable, setShareAvailable] = useState(false);
+  const [shareError, setShareError] = useState<string | null>(null);
+  const captureRef = useRef<View>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    void isShareAvailable().then((ok) => {
+      if (!cancelled) setShareAvailable(ok);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // F-MOTION-002 rotateY flip animation.
   // `progress` runs 0 (flat showing current face) → 1 (edge-on at 90°, content swaps) → 0 (flat showing new face).
@@ -131,8 +145,9 @@ export function CardDetailScreen({ route, navigation }: Props): React.ReactEleme
           canFlip ? `Tap to flip card to ${face === 'front' ? 'back' : 'front'}` : 'Locked card'
         }
       >
-        <Animated.View style={flipAnimatedStyle}>
-          <Card
+        <View ref={captureRef} collapsable={false}>
+          <Animated.View style={flipAnimatedStyle}>
+            <Card
             padding="lg"
             tone="paper"
             style={{ borderWidth: 4, borderColor: colors.rarity[card.rarity], borderRadius: radii.xl }}
@@ -161,13 +176,14 @@ export function CardDetailScreen({ route, navigation }: Props): React.ReactEleme
 
             <Spacer size="md" />
 
-            {face === 'front' ? (
-              <FrontFaceBody card={card} unlocked={unlocked} />
-            ) : (
-              <BackFaceBody card={card} />
-            )}
-          </Card>
-        </Animated.View>
+              {face === 'front' ? (
+                <FrontFaceBody card={card} unlocked={unlocked} />
+              ) : (
+                <BackFaceBody card={card} />
+              )}
+            </Card>
+          </Animated.View>
+        </View>
       </Pressable>
 
       {/* The blurb + fact card is shown only on the front face (the back face
@@ -198,6 +214,40 @@ export function CardDetailScreen({ route, navigation }: Props): React.ReactEleme
             size="lg"
             onPress={() => speak(card.subtitleKo ?? '', { language: 'ko-KR' })}
           />
+        </>
+      ) : null}
+
+      {/* F-CARD-003 — Share button. Shown only when card is unlocked AND
+          OS sharing is available. */}
+      {unlocked && shareAvailable ? (
+        <>
+          <Spacer size="sm" />
+          <Button
+            label="Share"
+            tone="ghost"
+            size="md"
+            accessibilityLabel="Share this card"
+            leading={<Icon name="card" size={18} color={colors.brand.primary} />}
+            onPress={async () => {
+              const slug = card.id.replace('card:', '');
+              const res = await shareSnapshot({
+                viewRef: captureRef,
+                filename: `hangul-route-${slug}`,
+                format: 'png',
+              });
+              if (!res.ok && res.reason === 'capture-failed') {
+                setShareError("Couldn't make the picture this time. Try again?");
+              }
+            }}
+          />
+          {shareError ? (
+            <>
+              <Spacer size="sm" />
+              <Caption tone="muted" align="center">
+                {shareError}
+              </Caption>
+            </>
+          ) : null}
         </>
       ) : null}
       <Spacer size="xl" />
