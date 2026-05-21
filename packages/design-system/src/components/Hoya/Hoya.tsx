@@ -1,4 +1,12 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
+import { AccessibilityInfo } from 'react-native';
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withTiming,
+} from 'react-native-reanimated';
 import Svg, { Circle, Ellipse, G, Line, Path, Rect } from 'react-native-svg';
 import { colors } from '../../tokens';
 import type { HoyaPose, HoyaProps } from './types';
@@ -229,14 +237,46 @@ export function Hoya({
   const eye = eyeFor(pose);
   const cheeks = showCheeks(pose);
 
+  // F-MOTION-001 pose-transition pulse — scale 1 → 1.06 → 1 over ~300ms
+  // when the `pose` prop changes (skipped on initial mount and when OS
+  // reports prefers-reduced-motion). Animates the wrapper View; the SVG
+  // content swaps instantly underneath.
+  const scale = useSharedValue(1);
+  const isFirstMount = useRef(true);
+
+  useEffect(() => {
+    if (isFirstMount.current) {
+      isFirstMount.current = false;
+      return;
+    }
+    let cancelled = false;
+    AccessibilityInfo.isReduceMotionEnabled()
+      .then((reduced) => {
+        if (cancelled || reduced) return;
+        scale.value = withSequence(
+          withTiming(1.06, { duration: 150, easing: Easing.bezier(0.34, 1.56, 0.64, 1) }),
+          withTiming(1.0, { duration: 150, easing: Easing.bezier(0.34, 1.56, 0.64, 1) }),
+        );
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [pose, scale]);
+
+  const wrapperStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
   return (
-    <Svg
-      testID={testID}
-      accessibilityLabel={accessibilityLabel ?? `Hoya the tiger, ${pose}`}
-      width={size}
-      height={size}
-      viewBox="0 0 128 128"
-    >
+    <Animated.View style={wrapperStyle}>
+      <Svg
+        testID={testID}
+        accessibilityLabel={accessibilityLabel ?? `Hoya the tiger, ${pose}`}
+        width={size}
+        height={size}
+        viewBox="0 0 128 128"
+      >
       {/* Soft radial shadow under feet (simple opacity ellipse — gradient skipped to avoid id collisions) */}
       <Ellipse cx={64} cy={116} rx={38} ry={5} fill={colors.hoya.furDark} opacity={0.18} />
 
@@ -288,6 +328,7 @@ export function Hoya({
       {pose === 'thinking' ? <ThoughtCloud /> : null}
       {pose === 'cheering' ? <CheerSparkles /> : null}
       {pose === 'reading' ? <Book /> : null}
-    </Svg>
+      </Svg>
+    </Animated.View>
   );
 }
