@@ -41,6 +41,19 @@ F-XXX-<slug>.md
 - `F-CNT-001-content-language-policy-validator.md` — **shipped** (PR #9)
 - `F-DES-001-design-token-drift-detector.md` — **shipped** (PR #9, activated PR #15)
 
+### 카드 & 모션 (W5)
+- `F-CARD-002-heritage-card-back-face.md` — **shipped** (PR #20)
+- `F-MOTION-002-card-flip-animation.md` — **shipped** (PR #21)
+- `F-MOTION-001-hoya-pose-transition.md` — **shipped** (PR #22)
+- `F-MOTION-003-card-unlock-celebration.md` — **shipped** (PR #22)
+- `F-CARD-003-card-share-export.md` — **shipped** (PR #23)
+- `F-VR-001-visual-regression-surface.md` — **shipped** (PR #24)
+- `F-004-trace-stroke.md` — **shipped** (PR #25)
+- `F-005-stroke-order-validation.md` — **shipped** (PR #26)
+- `F-006-stroke-direction-validation.md` — **shipped** (PR #26)
+- `F-007-animated-stroke-hint.md` — **shipped** (PR #26)
+- `F-MOTION-004-star-pop-in.md` — **shipped** (PR #27)
+
 ### Phase 2 / planned
 - `F-PROF-001-device-profiles.md` — multi-learner · **draft** (code shipped PR #13, full spec covers cloud sync)
 - `F-HW-001-homework-page.md` — Homework tab · **draft**
@@ -48,10 +61,14 @@ F-XXX-<slug>.md
 - `F-PAR-001-parent-dashboard.md` — Parent dashboard · **draft**
 - `F-TCH-001-teacher-classroom.md` — Teacher classroom · **draft** (Phase 2 stub)
 
+### Deferred (spec exists, ship-when triggers defined)
+- `F-VR-002-full-storybook.md` — Storybook setup · **draft** (ship when team-size or regression frequency triggers — see spec §7)
+- `F-VR-003-automated-screenshot-diff.md` — Argos/Chromatic CI diffing · **draft** (ships paired with F-VR-002)
+- `F-CARD-S2-001-stage2-card-illustrations.md` — Stage 2 cards · **draft** (blocked on Stage 2 word content authoring)
+
 ### 미작성 (Phase 2 후보)
-- F-004 Trace Stroke — real gesture-path matching (currently placeholder)
 - F-005 Batchim Build — 3-component CVC syllables
-- F-CARD-002 Heritage Card back-face design
-- F-MOTION-001 Hoya pose transitions
-- F-VR-001 Visual regression coverage
-- F-CARD-S2-001 onward — per-stage card sets
+- F-008 Stroke order as hard pass criterion
+- F-009 Narrated stroke demonstration ("first stroke", "second stroke" voice)
+- F-MOTION-005 Star count change animation
+- F-CARD-S3-001 onward — Stage 3-7 card sets
