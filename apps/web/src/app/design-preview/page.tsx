@@ -87,6 +87,34 @@ function Header(): JSX.Element {
         . If something here looks wrong, the token (or this preview) needs to change — never the
         component call site.
       </p>
+      <nav style={{ marginTop: spacing.lg, display: 'flex', gap: spacing.md, flexWrap: 'wrap' }}>
+        <Link
+          href="/design-preview/components"
+          style={{
+            padding: `${spacing.sm}px ${spacing.md}px`,
+            backgroundColor: colors.brand.primary,
+            color: colors.text.inverse,
+            borderRadius: radii.pill,
+            fontWeight: 600,
+            fontSize: typography.size.bodySm,
+          }}
+        >
+          → Components (every variant)
+        </Link>
+        <Link
+          href="/design-preview/cards"
+          style={{
+            padding: `${spacing.sm}px ${spacing.md}px`,
+            backgroundColor: colors.brand.secondary,
+            color: colors.text.inverse,
+            borderRadius: radii.pill,
+            fontWeight: 600,
+            fontSize: typography.size.bodySm,
+          }}
+        >
+          → All 30 Heritage cards
+        </Link>
+      </nav>
     </header>
   );
 }
