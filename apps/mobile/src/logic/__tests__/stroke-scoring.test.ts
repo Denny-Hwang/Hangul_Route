@@ -120,3 +120,142 @@ describe('scoreTrace', () => {
     expect(r.perStrokeCoverage).toEqual([]);
   });
 });
+
+// ─────────────────────────────────────────
+// F-005 stroke order
+// ─────────────────────────────────────────
+
+describe('scoreTrace with checkOrder', () => {
+  const twoStrokeTarget = [
+    [
+      { x: 0, y: 0 },
+      { x: 100, y: 0 },
+    ],
+    [
+      { x: 0, y: 100 },
+      { x: 100, y: 100 },
+    ],
+  ];
+
+  it('reports orderCorrect=true when strokes drawn in target order', () => {
+    const r = scoreTrace({
+      target: twoStrokeTarget,
+      drawn: [
+        [
+          { x: 0, y: 0 },
+          { x: 100, y: 0 },
+        ],
+        [
+          { x: 0, y: 100 },
+          { x: 100, y: 100 },
+        ],
+      ],
+      checkOrder: true,
+    });
+    expect(r.orderCorrect).toBe(true);
+  });
+
+  it('reports orderCorrect=false when strokes drawn out of order', () => {
+    const r = scoreTrace({
+      target: twoStrokeTarget,
+      drawn: [
+        // drew the bottom first (target index 1) then the top (target index 0)
+        [
+          { x: 0, y: 100 },
+          { x: 100, y: 100 },
+        ],
+        [
+          { x: 0, y: 0 },
+          { x: 100, y: 0 },
+        ],
+      ],
+      checkOrder: true,
+    });
+    expect(r.orderCorrect).toBe(false);
+  });
+
+  it('checkOrder omitted leaves orderCorrect undefined', () => {
+    const r = scoreTrace({
+      target: twoStrokeTarget,
+      drawn: [[{ x: 50, y: 0 }]],
+    });
+    expect(r.orderCorrect).toBeUndefined();
+  });
+});
+
+// ─────────────────────────────────────────
+// F-006 stroke direction
+// ─────────────────────────────────────────
+
+describe('scoreTrace with checkDirection', () => {
+  const ltrTarget = [
+    [
+      { x: 0, y: 50 },
+      { x: 100, y: 50 },
+    ],
+  ];
+
+  it('reports directionsCorrect=true when drawn matches target direction', () => {
+    const r = scoreTrace({
+      target: ltrTarget,
+      drawn: [
+        [
+          { x: 5, y: 50 },
+          { x: 50, y: 51 },
+          { x: 95, y: 49 },
+        ],
+      ],
+      checkDirection: true,
+    });
+    expect(r.directionsCorrect).toBe(true);
+    expect(r.directionsPerTarget).toEqual([true]);
+  });
+
+  it('reports directionsCorrect=false when drawn runs the wrong way', () => {
+    const r = scoreTrace({
+      target: ltrTarget,
+      drawn: [
+        [
+          { x: 95, y: 50 },
+          { x: 50, y: 50 },
+          { x: 5, y: 50 },
+        ],
+      ],
+      checkDirection: true,
+    });
+    expect(r.directionsCorrect).toBe(false);
+    expect(r.directionsPerTarget).toEqual([false]);
+  });
+
+  it('per-stroke direction array length matches target strokes', () => {
+    const twoStrokes = [
+      [
+        { x: 0, y: 0 },
+        { x: 100, y: 0 },
+      ],
+      [
+        { x: 100, y: 0 },
+        { x: 100, y: 100 },
+      ],
+    ];
+    const r = scoreTrace({
+      target: twoStrokes,
+      drawn: [
+        [
+          { x: 0, y: 0 },
+          { x: 100, y: 0 },
+        ],
+        [
+          { x: 100, y: 100 },
+          { x: 100, y: 0 },
+        ], // reversed
+      ],
+      checkDirection: true,
+    });
+    expect(r.directionsPerTarget).toHaveLength(2);
+    expect(r.directionsPerTarget?.[0]).toBe(true);
+    expect(r.directionsPerTarget?.[1]).toBe(false);
+    expect(r.directionsCorrect).toBe(false);
+  });
+});
+
