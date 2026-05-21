@@ -22,6 +22,7 @@ import { strokesForJamo } from '../../content/jamo-strokes';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { buildTraceStrokeRounds, type TraceStrokeRound } from '../../logic/round-builder';
 import { DEFAULT_PASS_THRESHOLD, scoreTrace } from '../../logic/stroke-scoring';
+import { StrokeHint } from './StrokeHint';
 import { speak } from '../../platform/audio';
 import { nudge, success } from '../../platform/haptics';
 import { useQuestRunStore } from '../../store/quest-run-store';
@@ -61,6 +62,13 @@ export function TraceStrokeGame({ scope, onFinish }: Props): React.ReactElement 
   const [strokes, setStrokes] = useState<JamoStrokePoint[][]>([]);
   const [feedback, setFeedback] = useState<Feedback>('idle');
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // F-005/F-006 — score result envelope for the most recent evaluate()
+  const [orderCorrect, setOrderCorrect] = useState<boolean | null>(null);
+  const [directionsCorrect, setDirectionsCorrect] = useState<boolean | null>(null);
+  // F-007 — increment to (re)play the animated demonstration
+  const [hintToken, setHintToken] = useState(0);
+  const [hintPlaying, setHintPlaying] = useState(false);
+
   const round = rounds[roundIdx];
   const target = useMemo(
     () => (round ? (strokesForJamo(round.jamo.id) ?? []) : []),
@@ -70,6 +78,10 @@ export function TraceStrokeGame({ scope, onFinish }: Props): React.ReactElement 
   useEffect(() => {
     setStrokes([]);
     setFeedback('idle');
+    setOrderCorrect(null);
+    setDirectionsCorrect(null);
+    setHintToken(0);
+    setHintPlaying(false);
     if (round) speak(round.jamo.char, { language: 'ko-KR' });
   }, [roundIdx, round]);
 
@@ -89,7 +101,16 @@ export function TraceStrokeGame({ scope, onFinish }: Props): React.ReactElement 
 
   const evaluate = (): void => {
     setFeedback('evaluating');
-    const result = scoreTrace({ target, drawn: strokes });
+    // F-005 + F-006 — request order + direction in the result envelope so we
+    // can surface "next time try ..." hints on a pass, without gating progress.
+    const result = scoreTrace({
+      target,
+      drawn: strokes,
+      checkOrder: true,
+      checkDirection: true,
+    });
+    setOrderCorrect(result.orderCorrect ?? null);
+    setDirectionsCorrect(result.directionsCorrect ?? null);
     if (result.coverage >= DEFAULT_PASS_THRESHOLD) {
       success();
       recordRound(true);
@@ -101,7 +122,7 @@ export function TraceStrokeGame({ scope, onFinish }: Props): React.ReactElement 
         } else {
           setRoundIdx(roundIdx + 1);
         }
-      }, 700);
+      }, 1100);
     } else {
       nudge();
       recordRound(false);
@@ -109,7 +130,9 @@ export function TraceStrokeGame({ scope, onFinish }: Props): React.ReactElement 
       setTimeout(() => {
         setStrokes([]);
         setFeedback('idle');
-      }, 1500);
+        setOrderCorrect(null);
+        setDirectionsCorrect(null);
+      }, 1800);
     }
   };
 
@@ -238,12 +261,31 @@ export function TraceStrokeGame({ scope, onFinish }: Props): React.ReactElement 
                 />
               ))}
             </Svg>
+            {hintPlaying ? (
+              <StrokeHint
+                target={target}
+                size={TRACE_BOX_SIZE}
+                viewBox={VIEWBOX}
+                playToken={hintToken}
+                onComplete={() => setHintPlaying(false)}
+              />
+            ) : null}
           </View>
         </GestureDetector>
       </View>
 
       <Spacer size="md" />
-      <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'center', gap: spacing.md }}>
+        <Button
+          label="Show me"
+          tone="secondary"
+          size="sm"
+          disabled={hintPlaying}
+          onPress={() => {
+            setHintToken((t) => t + 1);
+            setHintPlaying(true);
+          }}
+        />
         <Button
           label="Clear"
           tone="ghost"
@@ -256,14 +298,15 @@ export function TraceStrokeGame({ scope, onFinish }: Props): React.ReactElement 
       <Spacer size="md" />
       {feedback === 'fail' ? (
         <HoyaBubble tone="thinking" message="Try again — start at the top!" />
+      ) : feedback === 'pass' ? (
+        <HoyaBubble
+          tone="cheering"
+          message={passMessage(orderCorrect, directionsCorrect)}
+        />
       ) : (
         <HoyaBubble
-          tone={feedback === 'pass' ? 'cheering' : 'idle'}
-          message={
-            feedback === 'pass'
-              ? 'Beautiful! That looks like the letter.'
-              : 'Slowly draw the letter. Lift your finger to finish.'
-          }
+          tone="idle"
+          message="Slowly draw the letter. Lift your finger to finish."
         />
       )}
 
@@ -289,6 +332,24 @@ export function TraceStrokeGame({ scope, onFinish }: Props): React.ReactElement 
       />
     </Screen>
   );
+}
+
+/**
+ * F-005 + F-006 success-side hint copy. Coverage is the pass criterion;
+ * order + direction are auxiliary — surfaced as "next time" nudges only
+ * when the child PASSED but did the auxiliary signal wrong.
+ */
+function passMessage(
+  orderCorrect: boolean | null,
+  directionsCorrect: boolean | null,
+): string {
+  if (orderCorrect === false) {
+    return 'You got it! Next time, try drawing the top line first.';
+  }
+  if (directionsCorrect === false) {
+    return 'Nice! Try drawing left-to-right next time.';
+  }
+  return 'Beautiful! That looks like the letter.';
 }
 
 function pointsToPathD(points: JamoStrokePoint[]): string {
