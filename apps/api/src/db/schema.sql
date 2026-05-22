@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS families (
   id TEXT PRIMARY KEY,
   email TEXT UNIQUE,
   parent_pin_hash TEXT,
+  owner_id TEXT,
   created_at TEXT NOT NULL
 );
 

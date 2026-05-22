@@ -7,6 +7,7 @@ export interface Family {
   id: string;
   email?: string;
   parentPinHash?: string;
+  ownerId?: string;
   createdAt: string;
 }
 

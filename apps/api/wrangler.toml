@@ -3,6 +3,11 @@ main = "src/index.ts"
 compatibility_date = "2024-11-12"
 compatibility_flags = ["nodejs_compat"]
 
+# Auth (F-AUTH-001): bind Clerk keys as secrets (never commit them):
+#   wrangler secret put CLERK_SECRET_KEY
+#   wrangler secret put CLERK_JWT_KEY   # optional — networkless JWT verification
+# With no keys bound, getAuthUserId uses a dev fallback (bearer = user id).
+
 # D1 binding (F-INFRA-002). database_id is a deploy-time placeholder:
 #   1. wrangler d1 create hangul-route
 #   2. paste the printed database_id below
