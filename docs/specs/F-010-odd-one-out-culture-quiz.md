@@ -40,11 +40,12 @@ Both reuse the established `scope → round-builder → selection UI` pattern
   pattern (`scope` + `onFinish`, `useQuestRunStore.recordRound` /
   `markStepComplete`), with idle/correct/wrong feedback and ≥64dp targets.
 - `MinigameScreen` dispatches the two new kinds.
+- Both games are wired into Stage 1 quests (odd-one-out → letters-q3 practice,
+  culture-quiz → nature-q1 apply), replacing duplicate steps.
 - mobile typecheck + tests pass.
 
 ## 4. Out of scope
 
-- Wiring the new games into Stage 1 quest steps (content change — optional follow-up).
 - `RoundSchema` fixtures for these kinds (games are scope-driven, not fixture-driven).
 - Visual mocks (geometric placeholders until design lands).
 
