@@ -118,9 +118,9 @@ export default function HomePage(): JSX.Element {
         <h2 style={{ fontSize: typography.size.display, marginBottom: spacing.xl }}>How it works</h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: spacing.lg }}>
           {[
-            { title: '1. Heritage Journey', body: '7 stages × 5 themes. Draw your own route through Korean.' },
-            { title: '2. Mini-games', body: 'Tap, build, trace, match. Four families, twelve games.' },
-            { title: '3. Collect culture', body: 'Earn Heritage cards — from kimchi to celadon to Seollal.' },
+            { title: '1. Heritage Journey', body: '7 stages × 5 culture themes. Your child draws their own route through Korean.' },
+            { title: '2. Mini-games', body: 'Tap, build, trace, and match — short games that fit a five-minute attention span.' },
+            { title: '3. Collect culture', body: 'Earn 30 Heritage cards — from kimchi to Seollal to the gayageum.' },
           ].map((b) => (
             <article
               key={b.title}

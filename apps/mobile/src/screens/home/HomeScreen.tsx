@@ -1,21 +1,26 @@
 import {
   Body,
   Button,
+  Caption,
   Card,
   Heading,
   Hoya,
   HoyaBubble,
+  Icon,
   Pill,
   Progress,
   Screen,
   Spacer,
   StarRow,
+  colors,
+  radii,
   spacing,
+  touchTarget,
 } from '@hangul-route/design-system';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useEffect, useMemo } from 'react';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { episodesAll, questsAll } from '../../content';
 import { computeStreak } from '../../logic/streak';
 import type { RootStackParamList } from '../../navigation/types';
@@ -36,6 +41,7 @@ export function HomeScreen(): React.ReactElement {
   const completed = snap?.quests.filter((q) => q.completedAt).length ?? 0;
   const totalStage1Quests = questsAll.length;
   const cardsUnlocked = snap?.cards.length ?? 0;
+  const homeworkDue = snap?.homework?.filter((h) => !h.completedAt).length ?? 0;
 
   const streak = useMemo(() => {
     const dates = snap?.sessions.map((s) => s.startedAt) ?? [];
@@ -61,6 +67,24 @@ export function HomeScreen(): React.ReactElement {
           <Heading level="title">Hi, {profile?.displayName ?? 'friend'}!</Heading>
           <Body tone="secondary">Ready for today&apos;s quest?</Body>
         </View>
+        <Pressable
+          onPress={() => navigation.navigate('Profile')}
+          accessibilityRole="button"
+          accessibilityLabel="Profiles and settings"
+          style={{
+            width: touchTarget.min,
+            height: touchTarget.min,
+            borderRadius: radii.circle,
+            borderWidth: 2,
+            borderColor: colors.border.subtle,
+            backgroundColor: colors.surface.paper,
+            alignItems: 'center',
+            justifyContent: 'center',
+            overflow: 'hidden',
+          }}
+        >
+          <Hoya pose="idle" size={44} />
+        </Pressable>
       </View>
 
       <Spacer size="lg" />
@@ -112,6 +136,25 @@ export function HomeScreen(): React.ReactElement {
       <Heading level="prompt">Stage 1 progress</Heading>
       <Spacer size="sm" />
       <Progress value={completed} max={totalStage1Quests} tone="primary" label={`${completed} of ${totalStage1Quests} quests`} />
+
+      <Spacer size="xl" />
+      <Pressable
+        onPress={() => navigation.navigate('Homework')}
+        accessibilityRole="button"
+        accessibilityLabel="Open homework"
+      >
+        <Card padding="md" tone="sunken">
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <View style={{ flex: 1 }}>
+              <Body weight="semibold">Homework</Body>
+              <Caption tone="muted">
+                {homeworkDue > 0 ? `${homeworkDue} to do today` : 'Reviews from your grown-up'}
+              </Caption>
+            </View>
+            <Icon name="card" size={24} color={colors.text.muted} />
+          </View>
+        </Card>
+      </Pressable>
 
       <Spacer size="xl" />
       <HoyaBubble

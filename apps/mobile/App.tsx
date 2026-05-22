@@ -5,6 +5,7 @@ import React, { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { RootNavigator } from './src/navigation/root';
+import { useAccountStore } from './src/store/account-store';
 import { useProfileStore } from './src/store/profile-store';
 
 const queryClient = new QueryClient({
@@ -15,10 +16,12 @@ const queryClient = new QueryClient({
 
 export default function App(): React.ReactElement {
   const hydrate = useProfileStore((s) => s.hydrate);
+  const hydrateAccount = useAccountStore((s) => s.hydrate);
 
   useEffect(() => {
     void hydrate();
-  }, [hydrate]);
+    void hydrateAccount();
+  }, [hydrate, hydrateAccount]);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

@@ -4,6 +4,7 @@ import { cardRoutes } from './routes/cards';
 import { contentRoutes } from './routes/content';
 import { profileRoutes } from './routes/profiles';
 import { progressRoutes } from './routes/progress';
+import { subscriptionRoutes } from './routes/subscriptions';
 import { telemetryRoutes } from './routes/telemetry';
 
 const app = new Hono();
@@ -23,6 +24,7 @@ app.get('/health', (c) => c.json({ status: 'ok' }));
 app.route('/api/auth', authRoutes);
 app.route('/api/profiles', profileRoutes);
 app.route('/api/progress', progressRoutes);
+app.route('/api/subscriptions', subscriptionRoutes);
 app.route('/api/cards', cardRoutes);
 app.route('/api/content', contentRoutes);
 app.route('/api/telemetry', telemetryRoutes);
