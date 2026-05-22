@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { fail, ok } from '../envelope';
+import { statusFromVerification, verifyReceiptStub } from '../lib/receipt';
 import { store, type Subscription } from '../store';
 
 export const subscriptionRoutes = new Hono();
@@ -75,6 +76,45 @@ subscriptionRoutes.put('/:familyId', async (c) => {
     store: subStore as Subscription['store'],
     expiresAt: expiresAt as string | null,
     updatedAt: new Date().toISOString(),
+  };
+  store.subscriptions.set(familyId, subscription);
+  return ok(c, { subscription });
+});
+
+subscriptionRoutes.post('/:familyId/verify', async (c) => {
+  const familyId = c.req.param('familyId');
+  if (!store.families.has(familyId)) {
+    return fail(c, 'not_found', 'Family not found', 404);
+  }
+
+  const body = (await c.req.json().catch(() => null)) as Record<string, unknown> | null;
+  if (body === null || typeof body !== 'object') {
+    return fail(c, 'bad_request', 'JSON body required', 422);
+  }
+
+  const purchaseStore = body.store;
+  if (purchaseStore !== 'apple' && purchaseStore !== 'google') {
+    return fail(c, 'invalid_store', 'store must be apple or google', 422);
+  }
+
+  const receipt = body.receipt;
+  if (typeof receipt !== 'string' || receipt.length === 0) {
+    return fail(c, 'invalid_receipt', 'receipt must be a non-empty string', 422);
+  }
+
+  const result = verifyReceiptStub(purchaseStore, receipt);
+  if (!result.valid) {
+    return fail(c, 'receipt_invalid', 'Receipt could not be verified', 422);
+  }
+
+  const now = new Date();
+  const subscription: Subscription = {
+    familyId,
+    status: statusFromVerification(result, now),
+    plan: result.plan,
+    store: result.store,
+    expiresAt: result.expiresAt,
+    updatedAt: now.toISOString(),
   };
   store.subscriptions.set(familyId, subscription);
   return ok(c, { subscription });

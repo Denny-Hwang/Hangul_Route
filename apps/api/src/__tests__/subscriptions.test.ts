@@ -79,4 +79,56 @@ describe('apps/api subscriptions (F-INFRA-002)', () => {
     });
     expect(put.status).toBe(404);
   });
+
+  it('verifies a receipt and activates the subscription', async () => {
+    const familyId = await createFamily();
+    const res = await app.request(`/api/subscriptions/${familyId}/verify`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        store: 'apple',
+        receipt: JSON.stringify({ plan: 'yearly', expiresAt: '2027-05-22T00:00:00.000Z' }),
+      }),
+    });
+    expect(res.status).toBe(200);
+    const json = (await res.json()) as { data: { subscription: { status: string; plan: string } } };
+    expect(json.data.subscription.status).toBe('active');
+    expect(json.data.subscription.plan).toBe('yearly');
+  });
+
+  it('rejects verify with invalid store or empty receipt', async () => {
+    const familyId = await createFamily();
+    const badStore = await app.request(`/api/subscriptions/${familyId}/verify`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ store: 'amazon', receipt: 'x' }),
+    });
+    expect(badStore.status).toBe(422);
+
+    const emptyReceipt = await app.request(`/api/subscriptions/${familyId}/verify`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ store: 'apple', receipt: '' }),
+    });
+    expect(emptyReceipt.status).toBe(422);
+  });
+
+  it('rejects an unverifiable receipt', async () => {
+    const familyId = await createFamily();
+    const res = await app.request(`/api/subscriptions/${familyId}/verify`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ store: 'apple', receipt: 'garbage-not-json' }),
+    });
+    expect(res.status).toBe(422);
+  });
+
+  it('404s verify for an unknown family', async () => {
+    const res = await app.request('/api/subscriptions/family:nope/verify', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ store: 'apple', receipt: 'x' }),
+    });
+    expect(res.status).toBe(404);
+  });
 });
