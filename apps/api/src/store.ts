@@ -34,16 +34,27 @@ export interface TelemetryEvent {
   at: string;
 }
 
+export interface Subscription {
+  familyId: string;
+  status: 'none' | 'trial' | 'active' | 'expired' | 'cancelled';
+  plan: 'monthly' | 'yearly' | null;
+  store: 'apple' | 'google' | null;
+  expiresAt: string | null;
+  updatedAt: string;
+}
+
 class Store {
   families = new Map<string, Family>();
   profiles = new Map<string, Profile>();
   progress = new Map<string, ProgressRecord>();
+  subscriptions = new Map<string, Subscription>();
   events: TelemetryEvent[] = [];
 
   reset(): void {
     this.families.clear();
     this.profiles.clear();
     this.progress.clear();
+    this.subscriptions.clear();
     this.events = [];
   }
 }

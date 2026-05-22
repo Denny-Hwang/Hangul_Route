@@ -3,5 +3,13 @@ main = "src/index.ts"
 compatibility_date = "2024-11-12"
 compatibility_flags = ["nodejs_compat"]
 
-# D1 / R2 / KV bindings land with subsequent F-XXX specs.
-# See docs/specs/F-INFRA-001-cloudflare-workers-bootstrap.md.
+# D1 binding (F-INFRA-002). database_id is a deploy-time placeholder:
+#   1. wrangler d1 create hangul-route
+#   2. paste the printed database_id below
+#   3. wrangler d1 migrations apply hangul-route   (applies src/db/schema.sql)
+# Real env.DB queries replace the in-memory store in F-INFRA-003.
+# R2 / KV bindings land with later F-XXX specs.
+[[d1_databases]]
+binding = "DB"
+database_name = "hangul-route"
+database_id = "PLACEHOLDER_RUN_WRANGLER_D1_CREATE"

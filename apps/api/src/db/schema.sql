@@ -77,3 +77,14 @@ CREATE TABLE IF NOT EXISTS homework_assignments (
 );
 
 CREATE INDEX IF NOT EXISTS idx_homework_profile_due ON homework_assignments(profile_id, due_at);
+
+-- Subscription state per family (F-INFRA-002). One row per family.
+CREATE TABLE IF NOT EXISTS subscriptions (
+  family_id TEXT PRIMARY KEY,
+  status TEXT NOT NULL CHECK (status IN ('none', 'trial', 'active', 'expired', 'cancelled')),
+  plan TEXT CHECK (plan IN ('monthly', 'yearly')),
+  store TEXT CHECK (store IN ('apple', 'google')),
+  expires_at TEXT,
+  updated_at TEXT NOT NULL,
+  FOREIGN KEY (family_id) REFERENCES families(id) ON DELETE CASCADE
+);

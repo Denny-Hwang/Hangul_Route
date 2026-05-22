@@ -1,0 +1,81 @@
+import { Hono } from 'hono';
+import { fail, ok } from '../envelope';
+import { store, type Subscription } from '../store';
+
+export const subscriptionRoutes = new Hono();
+
+const STATUSES: ReadonlyArray<Subscription['status']> = [
+  'none',
+  'trial',
+  'active',
+  'expired',
+  'cancelled',
+];
+const PLANS: ReadonlyArray<NonNullable<Subscription['plan']>> = ['monthly', 'yearly'];
+const STORES: ReadonlyArray<NonNullable<Subscription['store']>> = ['apple', 'google'];
+
+function defaultSubscription(familyId: string): Subscription {
+  return {
+    familyId,
+    status: 'none',
+    plan: null,
+    store: null,
+    expiresAt: null,
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+subscriptionRoutes.get('/:familyId', (c) => {
+  const familyId = c.req.param('familyId');
+  if (!store.families.has(familyId)) {
+    return fail(c, 'not_found', 'Family not found', 404);
+  }
+  const subscription = store.subscriptions.get(familyId) ?? defaultSubscription(familyId);
+  return ok(c, { subscription });
+});
+
+subscriptionRoutes.put('/:familyId', async (c) => {
+  const familyId = c.req.param('familyId');
+  if (!store.families.has(familyId)) {
+    return fail(c, 'not_found', 'Family not found', 404);
+  }
+
+  const body = (await c.req.json().catch(() => null)) as Record<string, unknown> | null;
+  if (body === null || typeof body !== 'object') {
+    return fail(c, 'bad_request', 'JSON body required', 422);
+  }
+
+  const { status } = body;
+  if (typeof status !== 'string' || !STATUSES.includes(status as Subscription['status'])) {
+    return fail(c, 'invalid_status', `status must be one of: ${STATUSES.join(', ')}`, 422);
+  }
+
+  const plan = body.plan ?? null;
+  if (plan !== null && (typeof plan !== 'string' || !PLANS.includes(plan as NonNullable<Subscription['plan']>))) {
+    return fail(c, 'invalid_plan', `plan must be one of: ${PLANS.join(', ')} or null`, 422);
+  }
+
+  const subStore = body.store ?? null;
+  if (
+    subStore !== null &&
+    (typeof subStore !== 'string' || !STORES.includes(subStore as NonNullable<Subscription['store']>))
+  ) {
+    return fail(c, 'invalid_store', `store must be one of: ${STORES.join(', ')} or null`, 422);
+  }
+
+  const expiresAt = body.expiresAt ?? null;
+  if (expiresAt !== null && typeof expiresAt !== 'string') {
+    return fail(c, 'invalid_expires_at', 'expiresAt must be an ISO string or null', 422);
+  }
+
+  const subscription: Subscription = {
+    familyId,
+    status: status as Subscription['status'],
+    plan: plan as Subscription['plan'],
+    store: subStore as Subscription['store'],
+    expiresAt: expiresAt as string | null,
+    updatedAt: new Date().toISOString(),
+  };
+  store.subscriptions.set(familyId, subscription);
+  return ok(c, { subscription });
+});
