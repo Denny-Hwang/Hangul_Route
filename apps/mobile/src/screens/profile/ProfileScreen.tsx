@@ -17,7 +17,9 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React from 'react';
 import { Pressable, View } from 'react-native';
+import { entitlementTier } from '../../logic/entitlement';
 import type { RootStackParamList } from '../../navigation/types';
+import { useAccountStore } from '../../store/account-store';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 
@@ -27,6 +29,8 @@ export function ProfileScreen(): React.ReactElement {
   const active = useProfileStore(activeProfileSelector);
   const setActive = useProfileStore((s) => s.setActive);
   const snap = useProgressStore((s) => (active ? s.byProfile[active.id] : undefined));
+  const subscription = useAccountStore((s) => s.subscription);
+  const tier = entitlementTier(subscription, new Date());
 
   return (
     <Screen tone="canvas" scrollable>
@@ -90,6 +94,25 @@ export function ProfileScreen(): React.ReactElement {
             <Caption tone="muted">Streak</Caption>
             <Heading level="prompt">{snap?.streakDays ?? 0}</Heading>
           </View>
+        </View>
+      </Card>
+
+      <Spacer size="lg" />
+      <Card padding="md" tone={tier === 'premium' ? 'success' : 'sunken'}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md }}>
+          <View style={{ flex: 1 }}>
+            <Body weight="semibold">{tier === 'premium' ? 'Premium' : 'Free plan'}</Body>
+            <Caption tone="muted">
+              {tier === 'premium'
+                ? 'The full journey is unlocked.'
+                : 'Stage 1 is free. Subscribe for the full journey.'}
+            </Caption>
+          </View>
+          <Pill
+            tone={tier === 'premium' ? 'success' : 'neutral'}
+            label={tier === 'premium' ? 'Active' : 'Free'}
+            size="sm"
+          />
         </View>
       </Card>
 
