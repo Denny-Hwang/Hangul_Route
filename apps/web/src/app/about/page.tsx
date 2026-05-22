@@ -30,6 +30,16 @@ export default function AboutPage(): JSX.Element {
         <h3 style={{ marginTop: 0 }}>Have feedback?</h3>
         <p style={{ margin: 0 }}>Email feedback@hangulroute.example — we read everything.</p>
       </section>
+
+      <footer style={{ marginTop: spacing.jumbo, color: colors.text.muted, fontSize: typography.size.caption }}>
+        <Link href="/privacy" style={{ color: colors.text.secondary, fontWeight: 600 }}>
+          Privacy
+        </Link>{' '}
+        ·{' '}
+        <Link href="/terms" style={{ color: colors.text.secondary, fontWeight: 600 }}>
+          Terms
+        </Link>
+      </footer>
     </main>
   );
 }
