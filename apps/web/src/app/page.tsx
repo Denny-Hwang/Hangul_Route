@@ -54,12 +54,12 @@ export default function HomePage(): JSX.Element {
               marginBottom: spacing.md,
             }}
           >
-            For heritage and K-culture kids 5–11
+            For heritage &amp; K-culture kids · ages 5–11
           </span>
           <h1 style={{ fontSize: typography.size.hero, lineHeight: typography.leading.tight, margin: 0 }}>
-            Korean letters,
+            The only Korean app
             <br />
-            one tiny tap at a time.
+            for kids who don&apos;t speak it — yet.
           </h1>
           <p
             style={{
@@ -69,8 +69,8 @@ export default function HomePage(): JSX.Element {
               maxWidth: 480,
             }}
           >
-            Hoya the tiger walks your child through a 7-stage Heritage Journey — meeting Korean letters,
-            words, and culture cards along the way.
+            Hoya the tiger guides your child from ㄱ to Chuseok — five-minute quests, English all the
+            way, and Korean culture cards to collect. Played, not taught. Never a frown.
           </p>
           <div style={{ display: 'flex', gap: spacing.md, marginTop: spacing.xl }}>
             <a
