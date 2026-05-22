@@ -2,6 +2,12 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import app from '../index';
 import { store } from '../store';
 
+const OWNER = 'user_owner';
+const auth = (token = OWNER): Record<string, string> => ({
+  'content-type': 'application/json',
+  authorization: `Bearer ${token}`,
+});
+
 describe('apps/api v1 router', () => {
   beforeEach(() => {
     store.reset();
@@ -10,7 +16,7 @@ describe('apps/api v1 router', () => {
   it('creates a family then a profile', async () => {
     const familyRes = await app.request('/api/auth/family', {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: auth(),
       body: JSON.stringify({ email: 'parent@example.com' }),
     });
     expect(familyRes.status).toBe(201);
@@ -20,7 +26,7 @@ describe('apps/api v1 router', () => {
 
     const profileRes = await app.request('/api/profiles', {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: auth(),
       body: JSON.stringify({
         familyId,
         displayName: 'Mina',
@@ -61,17 +67,16 @@ describe('apps/api v1 router', () => {
   });
 
   it('progress put + get round-trips for an existing profile', async () => {
-    // Set up family + profile
     const fRes = await app.request('/api/auth/family', {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: auth(),
       body: JSON.stringify({}),
     });
     const fJson = (await fRes.json()) as { data: { family: { id: string } } };
     const familyId = fJson.data.family.id;
     const pRes = await app.request('/api/profiles', {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: auth(),
       body: JSON.stringify({
         familyId,
         displayName: 'Jun',
@@ -84,12 +89,12 @@ describe('apps/api v1 router', () => {
 
     const put = await app.request(`/api/progress/${profileId}`, {
       method: 'PUT',
-      headers: { 'content-type': 'application/json' },
+      headers: auth(),
       body: JSON.stringify({ quests: [{ questId: 'quest:x', stars: 3 }] }),
     });
     expect(put.status).toBe(200);
 
-    const get = await app.request(`/api/progress/${profileId}`);
+    const get = await app.request(`/api/progress/${profileId}`, { headers: auth() });
     expect(get.status).toBe(200);
     const getJson = (await get.json()) as {
       data: { progress: { payload: { quests: Array<{ stars: number }> } } };
