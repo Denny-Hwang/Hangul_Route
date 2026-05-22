@@ -45,7 +45,7 @@ export const stage1Quests: Quest[] = [
     steps: [
       { id: 's1', kind: 'intro', titleEn: 'Vowels are music', hoyaLineEn: 'Vowels are sounds you can sing!', durationSeconds: 8 },
       { id: 's2', kind: 'present', titleEn: 'Hear Six Vowels', minigameKind: 'match-sound', minigameRef: 'minigame:s1-letters-recognize-3', durationSeconds: 75 },
-      { id: 's3', kind: 'practice', titleEn: 'Match the Vowel', minigameKind: 'match-sound', minigameRef: 'minigame:s1-letters-match-3', durationSeconds: 90 },
+      { id: 's3', kind: 'practice', titleEn: 'Find What\'s Different', minigameKind: 'odd-one-out', minigameRef: 'minigame:s1-letters-odd-1', durationSeconds: 75 },
       { id: 's4', kind: 'apply', titleEn: 'Build "가"', minigameKind: 'build-letter', minigameRef: 'minigame:s1-letters-build-2', durationSeconds: 90 },
       { id: 's5', kind: 'reward', titleEn: 'Brush Earned', hoyaLineEn: 'Your library is growing!', durationSeconds: 8 },
     ],
@@ -108,7 +108,7 @@ export const stage1Quests: Quest[] = [
       { id: 's1', kind: 'intro', titleEn: 'I am a tiger!', hoyaLineEn: 'Hoya means tiger.', durationSeconds: 6 },
       { id: 's2', kind: 'present', titleEn: 'Animal Words', minigameKind: 'card-match', minigameRef: 'minigame:s1-nature-card-1', durationSeconds: 60 },
       { id: 's3', kind: 'practice', titleEn: 'Match Animal Sounds', minigameKind: 'match-sound', minigameRef: 'minigame:s1-nature-match-1', durationSeconds: 75 },
-      { id: 's4', kind: 'apply', titleEn: 'Nature Mix', minigameKind: 'card-match', minigameRef: 'minigame:s1-nature-card-1', durationSeconds: 75 },
+      { id: 's4', kind: 'apply', titleEn: 'What Does It Mean?', minigameKind: 'culture-quiz', minigameRef: 'minigame:s1-nature-quiz-1', durationSeconds: 75 },
       { id: 's5', kind: 'reward', titleEn: 'Magpie Card!', hoyaLineEn: 'A magpie joins your collection.', durationSeconds: 8 },
     ],
     rewardCardId: 'card:magpie',
