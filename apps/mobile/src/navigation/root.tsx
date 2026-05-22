@@ -8,6 +8,8 @@ import { EpisodeDetailScreen } from '../screens/episode/EpisodeDetailScreen';
 import { OnboardingStack } from './onboarding';
 import { ParentDashboardScreen } from '../screens/parent/ParentDashboardScreen';
 import { ParentGateScreen } from '../screens/parent/ParentGateScreen';
+import { ProfileScreen } from '../screens/profile/ProfileScreen';
+import { HomeworkScreen } from '../screens/homework/HomeworkScreen';
 import { QuestPlayerScreen } from '../screens/quest/QuestPlayerScreen';
 import { ResultsScreen } from '../screens/results/ResultsScreen';
 import { MinigameScreen } from '../screens/minigames/MinigameScreen';
@@ -33,6 +35,8 @@ export function RootNavigator(): React.ReactElement {
       <Stack.Screen name="CardDetail" component={CardDetailScreen} options={{ presentation: 'modal' }} />
       <Stack.Screen name="ParentGate" component={ParentGateScreen} options={{ presentation: 'modal' }} />
       <Stack.Screen name="ParentDashboard" component={ParentDashboardScreen} />
+      <Stack.Screen name="Profile" component={ProfileScreen} />
+      <Stack.Screen name="Homework" component={HomeworkScreen} />
     </Stack.Navigator>
   );
 }

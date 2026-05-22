@@ -9,6 +9,8 @@ export type RootStackParamList = {
   CardDetail: { cardId: string };
   ParentGate: { next: 'ParentDashboard' };
   ParentDashboard: undefined;
+  Profile: undefined;
+  Homework: undefined;
   Minigame: {
     questId: string;
     episodeId: string;
@@ -26,8 +28,6 @@ export type MainTabParamList = {
   Home: undefined;
   Journey: undefined;
   Library: undefined;
-  Homework: undefined;
-  Profile: undefined;
 };
 
 declare global {
