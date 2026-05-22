@@ -7,10 +7,17 @@ import { store } from '../store';
  * Pushes route coverage past the W4 90% target (F-COV-001).
  */
 
-async function setupFamilyAndProfile(): Promise<{ familyId: string; profileId: string }> {
+const OWNER = 'user_owner';
+const OTHER = 'user_intruder';
+const auth = (token: string): Record<string, string> => ({
+  'content-type': 'application/json',
+  authorization: `Bearer ${token}`,
+});
+
+async function setupFamilyAndProfile(token = OWNER): Promise<{ familyId: string; profileId: string }> {
   const fRes = await app.request('/api/auth/family', {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
+    headers: auth(token),
     body: JSON.stringify({}),
   });
   const fJson = (await fRes.json()) as { data: { family: { id: string } } };
@@ -18,7 +25,7 @@ async function setupFamilyAndProfile(): Promise<{ familyId: string; profileId: s
 
   const pRes = await app.request('/api/profiles', {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
+    headers: auth(token),
     body: JSON.stringify({
       familyId,
       displayName: 'Mina',
@@ -71,25 +78,33 @@ describe('extended api-v1 coverage', () => {
 
   it('profiles: GET list filters by familyId', async () => {
     const { familyId } = await setupFamilyAndProfile();
-    const res = await app.request(`/api/profiles?familyId=${familyId}`);
+    const res = await app.request(`/api/profiles?familyId=${familyId}`, { headers: auth(OWNER) });
     expect(res.status).toBe(200);
     const body = (await res.json()) as { data: { profiles: Array<{ id: string }> } };
     expect(body.data.profiles).toHaveLength(1);
   });
 
   it('profiles: GET list rejects missing familyId', async () => {
-    const res = await app.request('/api/profiles');
+    const res = await app.request('/api/profiles', { headers: auth(OWNER) });
     expect(res.status).toBe(400);
   });
 
-  it('profiles: GET by id returns profile', async () => {
+  it('profiles: GET by id returns profile for the owner', async () => {
     const { profileId } = await setupFamilyAndProfile();
-    const res = await app.request(`/api/profiles/${profileId}`);
+    const res = await app.request(`/api/profiles/${profileId}`, { headers: auth(OWNER) });
     expect(res.status).toBe(200);
   });
 
+  it('profiles: GET by id requires auth (401) and forbids non-owner (403)', async () => {
+    const { profileId } = await setupFamilyAndProfile(OWNER);
+    const noAuth = await app.request(`/api/profiles/${profileId}`);
+    expect(noAuth.status).toBe(401);
+    const wrong = await app.request(`/api/profiles/${profileId}`, { headers: auth(OTHER) });
+    expect(wrong.status).toBe(403);
+  });
+
   it('profiles: GET by unknown id 404s', async () => {
-    const res = await app.request('/api/profiles/profile:nope');
+    const res = await app.request('/api/profiles/profile:nope', { headers: auth(OWNER) });
     expect(res.status).toBe(404);
   });
 
@@ -97,13 +112,8 @@ describe('extended api-v1 coverage', () => {
     const { familyId } = await setupFamilyAndProfile();
     const res = await app.request('/api/profiles', {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        familyId,
-        displayName: 'X',
-        ageGroup: '12-14',
-        avatar: 'hoya-orange',
-      }),
+      headers: auth(OWNER),
+      body: JSON.stringify({ familyId, displayName: 'X', ageGroup: '12-14', avatar: 'hoya-orange' }),
     });
     expect(res.status).toBe(422);
   });
@@ -111,28 +121,28 @@ describe('extended api-v1 coverage', () => {
   it('profiles: POST rejects missing family', async () => {
     const res = await app.request('/api/profiles', {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        familyId: 'family:nope',
-        displayName: 'X',
-        ageGroup: '5-7',
-        avatar: 'hoya-orange',
-      }),
+      headers: auth(OWNER),
+      body: JSON.stringify({ familyId: 'family:nope', displayName: 'X', ageGroup: '5-7', avatar: 'hoya-orange' }),
     });
     expect(res.status).toBe(404);
+  });
+
+  it('profiles: POST forbids creating in someone else’s family (403)', async () => {
+    const { familyId } = await setupFamilyAndProfile(OWNER);
+    const res = await app.request('/api/profiles', {
+      method: 'POST',
+      headers: auth(OTHER),
+      body: JSON.stringify({ familyId, displayName: 'X', ageGroup: '5-7', avatar: 'hoya-orange' }),
+    });
+    expect(res.status).toBe(403);
   });
 
   it('profiles: POST rejects too-long displayName', async () => {
     const { familyId } = await setupFamilyAndProfile();
     const res = await app.request('/api/profiles', {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        familyId,
-        displayName: 'a'.repeat(25),
-        ageGroup: '5-7',
-        avatar: 'hoya-orange',
-      }),
+      headers: auth(OWNER),
+      body: JSON.stringify({ familyId, displayName: 'a'.repeat(25), ageGroup: '5-7', avatar: 'hoya-orange' }),
     });
     expect(res.status).toBe(422);
   });
@@ -140,44 +150,54 @@ describe('extended api-v1 coverage', () => {
   it('profiles: POST rejects missing required fields', async () => {
     const res = await app.request('/api/profiles', {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: auth(OWNER),
       body: JSON.stringify({ displayName: 'X' }),
     });
     expect(res.status).toBe(422);
   });
 
-  it('profiles: DELETE removes the profile', async () => {
+  it('profiles: DELETE removes the profile for the owner', async () => {
     const { profileId } = await setupFamilyAndProfile();
-    const del = await app.request(`/api/profiles/${profileId}`, { method: 'DELETE' });
+    const del = await app.request(`/api/profiles/${profileId}`, { method: 'DELETE', headers: auth(OWNER) });
     expect(del.status).toBe(200);
-    const after = await app.request(`/api/profiles/${profileId}`);
+    const after = await app.request(`/api/profiles/${profileId}`, { headers: auth(OWNER) });
     expect(after.status).toBe(404);
   });
 
   it('profiles: DELETE of unknown id 404s', async () => {
-    const res = await app.request('/api/profiles/profile:nope', { method: 'DELETE' });
+    const res = await app.request('/api/profiles/profile:nope', { method: 'DELETE', headers: auth(OWNER) });
     expect(res.status).toBe(404);
   });
 
   it('progress: GET on unknown profile 404s', async () => {
-    const res = await app.request('/api/progress/profile:nope');
+    const res = await app.request('/api/progress/profile:nope', { headers: auth(OWNER) });
     expect(res.status).toBe(404);
   });
 
   it('progress: PUT on unknown profile 404s', async () => {
     const res = await app.request('/api/progress/profile:nope', {
       method: 'PUT',
-      headers: { 'content-type': 'application/json' },
+      headers: auth(OWNER),
       body: JSON.stringify({ cards: [] }),
     });
     expect(res.status).toBe(404);
+  });
+
+  it('progress: forbids a non-owner (403)', async () => {
+    const { profileId } = await setupFamilyAndProfile(OWNER);
+    const res = await app.request(`/api/progress/${profileId}`, {
+      method: 'PUT',
+      headers: auth(OTHER),
+      body: JSON.stringify({ quests: [] }),
+    });
+    expect(res.status).toBe(403);
   });
 
   it('progress: PUT rejects non-object body', async () => {
     const { profileId } = await setupFamilyAndProfile();
     const res = await app.request(`/api/progress/${profileId}`, {
       method: 'PUT',
-      headers: { 'content-type': 'application/json' },
+      headers: auth(OWNER),
       body: 'null',
     });
     expect(res.status).toBe(422);
@@ -185,7 +205,7 @@ describe('extended api-v1 coverage', () => {
 
   it('progress: GET on profile with no record returns null', async () => {
     const { profileId } = await setupFamilyAndProfile();
-    const res = await app.request(`/api/progress/${profileId}`);
+    const res = await app.request(`/api/progress/${profileId}`, { headers: auth(OWNER) });
     expect(res.status).toBe(200);
     const body = (await res.json()) as { data: { progress: null } };
     expect(body.data.progress).toBeNull();
@@ -202,10 +222,8 @@ describe('extended api-v1 coverage', () => {
     const { profileId } = await setupFamilyAndProfile();
     await app.request(`/api/progress/${profileId}`, {
       method: 'PUT',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        cards: [{ cardId: 'card:tiger', unlockedAt: new Date().toISOString() }],
-      }),
+      headers: auth(OWNER),
+      body: JSON.stringify({ cards: [{ cardId: 'card:tiger', unlockedAt: new Date().toISOString() }] }),
     });
     const res = await app.request(`/api/cards/${profileId}/unlocked`);
     expect(res.status).toBe(200);

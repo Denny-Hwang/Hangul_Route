@@ -49,3 +49,13 @@ export async function authorizeFamily(c: Context, familyId: string): Promise<Res
   if (family.ownerId !== userId) return fail(c, 'forbidden', 'Not your family', 403);
   return userId;
 }
+
+/**
+ * Authorize the caller as the owner of the family that owns `profileId`.
+ * Returns the user id on success, or a ready-to-return error Response.
+ */
+export async function authorizeProfile(c: Context, profileId: string): Promise<Response | string> {
+  const profile = store.profiles.get(profileId);
+  if (!profile) return fail(c, 'not_found', 'Profile not found', 404);
+  return authorizeFamily(c, profile.familyId);
+}
