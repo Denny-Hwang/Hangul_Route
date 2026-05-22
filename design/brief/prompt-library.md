@@ -95,6 +95,22 @@ Run these once at the start. Everything else inherits.
 | P4-19 | [`screens/19-parent-gate.md`](./screens/19-parent-gate.md#5-claude-design-prompt) | Parent gate (math) | `design/screens/parent/gate__v1__YYYY-MM-DD.png` |
 | P4-20 | [`screens/20-parent-dashboard.md`](./screens/20-parent-dashboard.md#5-claude-design-prompt) | Parent dashboard (mobile) | `design/screens/parent/dashboard-mobile__v1__YYYY-MM-DD.png` |
 
+## Phase 5 — Launch & store assets
+
+Store / marketing layer (not in-app art). Full prompts in [`launch-assets.md`](./launch-assets.md).
+
+| # | Brief | Artifact | Output path |
+|---|---|---|---|
+| P5-1 | [`launch-assets.md`](./launch-assets.md#1-app-icon--ios) | iOS app icon | `design/illustrations/launch/app-icon/ios__1024__v1__YYYY-MM-DD.png` |
+| P5-2 | [`launch-assets.md`](./launch-assets.md#2-app-icon--android-adaptive) | Android adaptive icon (fg + bg) | `design/illustrations/launch/app-icon/android-{foreground,background}__v1__YYYY-MM-DD.png` |
+| P5-3 | [`launch-assets.md`](./launch-assets.md#3-splash--launch-screen) | Splash screen | `design/illustrations/launch/splash__v1__YYYY-MM-DD.png` |
+| P5-4 | [`launch-assets.md`](./launch-assets.md#4-app-store--play-screenshots-frame-template--run-5) | App Store screenshots (×5) | `design/illustrations/launch/store/screenshot-{1..5}__v1__YYYY-MM-DD.png` |
+| P5-5 | [`launch-assets.md`](./launch-assets.md#5-product-hunt-gallery-run-6) | Product Hunt gallery (×6) | `design/illustrations/launch/product-hunt/slide-{1..6}__v1__YYYY-MM-DD.png` |
+| P5-6 | [`launch-assets.md`](./launch-assets.md#6-product-hunt-thumbnail) | Product Hunt thumbnail | `design/illustrations/launch/product-hunt/thumbnail__v1__YYYY-MM-DD.png` |
+
+> **Launch-priority track** (the 4–6 week ship subset, P0 assets only) lives in
+> [`launch-assets.md`](./launch-assets.md#7-launch-priority-run-order-46-week-track) §7.
+
 ---
 
 ## Suggested run order (12-week playbook overlay)
