@@ -2,6 +2,7 @@ import type { AvatarKind } from '@hangul-route/content-schema';
 import {
   Body,
   Button,
+  Caption,
   Card,
   Heading,
   Hoya,
@@ -16,7 +17,9 @@ import {
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useState } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
+import { isValidEmail } from '../../logic/email';
 import type { OnboardingStackParamList } from '../../navigation/types';
+import { useAccountStore } from '../../store/account-store';
 import { useProfileStore } from '../../store/profile-store';
 
 type Props = NativeStackScreenProps<OnboardingStackParamList, 'CreateProfile'>;
@@ -30,16 +33,31 @@ const AGE_GROUPS: Array<{ value: AgeGroup; label: string; description: string }>
   { value: '10-11', label: '10–11', description: 'Stories and conversations' },
 ];
 
-export function CreateProfileScreen({ navigation }: Props): React.ReactElement {
+export function CreateProfileScreen({ navigation, route }: Props): React.ReactElement {
   const createProfile = useProfileStore((s) => s.createProfile);
+  const consentAcceptedAt = useAccountStore((s) => s.consentAcceptedAt);
+  const acceptConsent = useAccountStore((s) => s.acceptConsent);
+  const saveParentEmail = useAccountStore((s) => s.setParentEmail);
+
+  const firstRun = route.params?.firstRun ?? false;
+  const needsConsent = firstRun && !consentAcceptedAt;
+
   const [name, setName] = useState('');
   const [ageGroup, setAgeGroup] = useState<'5-7' | '8-9' | '10-11'>('5-7');
   const [avatar, setAvatar] = useState<AvatarKind>('hoya-orange');
+  const [parentEmail, setParentEmail] = useState('');
+  const [consent, setConsent] = useState(false);
 
-  const valid = name.trim().length >= 1 && name.trim().length <= 20;
+  const nameValid = name.trim().length >= 1 && name.trim().length <= 20;
+  const emailOk = parentEmail.trim() === '' || isValidEmail(parentEmail);
+  const valid = nameValid && emailOk && (!needsConsent || consent);
 
   const onSubmit = (): void => {
     if (!valid) return;
+    if (needsConsent) {
+      acceptConsent();
+      if (parentEmail.trim()) saveParentEmail(parentEmail);
+    }
     const profile = createProfile({ displayName: name.trim(), ageGroup, avatar });
     navigation.replace('FirstQuestPreview', { profileId: profile.id });
   };
@@ -140,6 +158,80 @@ export function CreateProfileScreen({ navigation }: Props): React.ReactElement {
           );
         })}
       </View>
+
+      {needsConsent ? (
+        <>
+          <Spacer size="xxl" />
+          <Card padding="md" tone="sunken">
+            <Body weight="semibold">For a grown-up</Body>
+            <Spacer size="xs" />
+            <Body tone="secondary" size="sm">
+              A parent or guardian sets up the account. We collect as little as possible and never
+              show ads.
+            </Body>
+
+            <Spacer size="md" />
+            <Body weight="semibold" size="sm">
+              Parent email (optional)
+            </Body>
+            <Caption tone="muted">For progress backup and receipts.</Caption>
+            <Spacer size="xs" />
+            <TextInput
+              value={parentEmail}
+              onChangeText={setParentEmail}
+              placeholder="grown-up@email.com"
+              placeholderTextColor={colors.text.muted}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+              maxLength={254}
+              style={{
+                backgroundColor: colors.surface.paper,
+                borderRadius: radii.lg,
+                borderWidth: 2,
+                borderColor: emailOk ? colors.border.subtle : colors.feedback.nudge,
+                paddingHorizontal: spacing.lg,
+                minHeight: touchTarget.child,
+                fontSize: typography.size.bodyLg,
+                color: colors.text.primary,
+              }}
+            />
+            {!emailOk ? (
+              <>
+                <Spacer size="xxs" />
+                <Caption tone="muted">That email looks off — check the spelling.</Caption>
+              </>
+            ) : null}
+
+            <Spacer size="md" />
+            <Pressable
+              onPress={() => setConsent((c) => !c)}
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: consent }}
+              accessibilityLabel="I am a parent or guardian and I agree to the Privacy Policy"
+              style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, minHeight: touchTarget.min }}
+            >
+              <View
+                style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: radii.sm,
+                  borderWidth: 2,
+                  borderColor: consent ? colors.brand.primary : colors.border.strong,
+                  backgroundColor: consent ? colors.brand.primary : colors.surface.paper,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                {consent ? <Text style={{ color: colors.text.inverse, fontWeight: '700' }}>✓</Text> : null}
+              </View>
+              <Body size="sm" style={{ flex: 1 }}>
+                I&apos;m a parent or guardian and I agree to the Privacy Policy.
+              </Body>
+            </Pressable>
+          </Card>
+        </>
+      ) : null}
 
       <Spacer size="xxl" />
       <Card padding="md" tone="brand">
