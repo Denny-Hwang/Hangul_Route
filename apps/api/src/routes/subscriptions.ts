@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { fail, ok } from '../envelope';
+import { authorizeFamily } from '../lib/auth';
 import { statusFromVerification, verifyReceiptStub } from '../lib/receipt';
 import { SUBSCRIPTION_EVENTS, nextStatusForEvent, type SubscriptionEvent } from '../lib/subscription-events';
 import { store, type Subscription } from '../store';
@@ -27,20 +28,18 @@ function defaultSubscription(familyId: string): Subscription {
   };
 }
 
-subscriptionRoutes.get('/:familyId', (c) => {
+subscriptionRoutes.get('/:familyId', async (c) => {
   const familyId = c.req.param('familyId');
-  if (!store.families.has(familyId)) {
-    return fail(c, 'not_found', 'Family not found', 404);
-  }
+  const auth = await authorizeFamily(c, familyId);
+  if (typeof auth !== 'string') return auth;
   const subscription = store.subscriptions.get(familyId) ?? defaultSubscription(familyId);
   return ok(c, { subscription });
 });
 
 subscriptionRoutes.put('/:familyId', async (c) => {
   const familyId = c.req.param('familyId');
-  if (!store.families.has(familyId)) {
-    return fail(c, 'not_found', 'Family not found', 404);
-  }
+  const auth = await authorizeFamily(c, familyId);
+  if (typeof auth !== 'string') return auth;
 
   const body = (await c.req.json().catch(() => null)) as Record<string, unknown> | null;
   if (body === null || typeof body !== 'object') {
@@ -84,9 +83,8 @@ subscriptionRoutes.put('/:familyId', async (c) => {
 
 subscriptionRoutes.post('/:familyId/verify', async (c) => {
   const familyId = c.req.param('familyId');
-  if (!store.families.has(familyId)) {
-    return fail(c, 'not_found', 'Family not found', 404);
-  }
+  const auth = await authorizeFamily(c, familyId);
+  if (typeof auth !== 'string') return auth;
 
   const body = (await c.req.json().catch(() => null)) as Record<string, unknown> | null;
   if (body === null || typeof body !== 'object') {
@@ -123,9 +121,8 @@ subscriptionRoutes.post('/:familyId/verify', async (c) => {
 
 subscriptionRoutes.post('/:familyId/event', async (c) => {
   const familyId = c.req.param('familyId');
-  if (!store.families.has(familyId)) {
-    return fail(c, 'not_found', 'Family not found', 404);
-  }
+  const auth = await authorizeFamily(c, familyId);
+  if (typeof auth !== 'string') return auth;
 
   const existing = store.subscriptions.get(familyId);
   if (!existing) {
