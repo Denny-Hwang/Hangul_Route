@@ -44,43 +44,55 @@ export function JourneyScreen(): React.ReactElement {
         ))}
       </View>
 
-      {stages.map((stage) => (
-        <View key={stage.key} style={{ marginBottom: spacing.lg }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.sm }}>
-            <View
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: radii.circle,
-                backgroundColor: colors.stage[stage.key],
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Text style={{ color: colors.text.inverse, fontWeight: '700' }}>{stage.order}</Text>
+      {stages.map((stage) => {
+        const isLocked = stage.key !== 'stage1';
+        return (
+          <View key={stage.key} style={{ marginBottom: spacing.lg }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.sm }}>
+              <View
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: radii.circle,
+                  backgroundColor: isLocked ? colors.surface.sunken : colors.stage[stage.key],
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Text style={{ color: isLocked ? colors.text.muted : colors.text.inverse, fontWeight: '700' }}>
+                  {stage.order}
+                </Text>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Body weight="bold" tone={isLocked ? 'secondary' : 'primary'}>
+                  {stage.titleEn}
+                </Body>
+                <Caption tone="muted">{stage.oneLinerEn}</Caption>
+              </View>
+              {isLocked ? <Pill tone="neutral" label="Soon" size="sm" /> : <Pill tone="success" label="Open" size="sm" />}
             </View>
-            <View style={{ flex: 1 }}>
-              <Body weight="bold">{stage.titleEn}</Body>
-              <Caption tone="muted">{stage.oneLinerEn}</Caption>
-            </View>
-            {stage.key !== 'stage1' ? <Pill tone="neutral" label="Soon" size="sm" /> : <Pill tone="success" label="Open" size="sm" />}
-          </View>
 
-          <View style={{ flexDirection: 'row', gap: spacing.xs }}>
-            {themes.map((theme) => (
-              <GridCell
-                key={`${stage.key}-${theme.key}`}
-                stage={stage.key}
-                theme={theme.key}
-                onOpen={(episodeId) =>
-                  navigation.navigate('EpisodeDetail', { episodeId })
-                }
-                progressSnapshot={snap}
-              />
-            ))}
+            <View style={{ flexDirection: 'row', gap: spacing.xs }}>
+              {themes.map((theme) => (
+                <GridCell
+                  key={`${stage.key}-${theme.key}`}
+                  stage={stage.key}
+                  theme={theme.key}
+                  onOpen={(episodeId) => navigation.navigate('EpisodeDetail', { episodeId })}
+                  progressSnapshot={snap}
+                />
+              ))}
+            </View>
+
+            {stage.key === 'stage2' ? (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginTop: spacing.xs }}>
+                <Icon name="lock" size={14} color={colors.text.muted} />
+                <Caption tone="muted">Finish Stage 1 to unlock the next stage.</Caption>
+              </View>
+            ) : null}
           </View>
-        </View>
-      ))}
+        );
+      })}
 
       <Card padding="md" tone="sunken">
         <Heading level="prompt">How the journey works</Heading>
