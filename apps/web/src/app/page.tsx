@@ -139,7 +139,14 @@ export default function HomePage(): JSX.Element {
       </section>
 
       <footer style={{ marginTop: spacing.jumbo, color: colors.text.muted, fontSize: typography.size.caption }}>
-        © {new Date().getFullYear()} Hangul Route · All learning data lives on your device by default.
+        <Link href="/privacy" style={{ color: colors.text.secondary, fontWeight: 600 }}>
+          Privacy
+        </Link>{' '}
+        ·{' '}
+        <Link href="/terms" style={{ color: colors.text.secondary, fontWeight: 600 }}>
+          Terms
+        </Link>{' '}
+        · © {new Date().getFullYear()} Hangul Route · All learning data lives on your device by default.
       </footer>
     </main>
   );
