@@ -185,6 +185,26 @@ export const minigameScopes: Record<string, MinigameScope> = {
       { id: 'd', labelEn: 'Win!', labelKo: '승리!' },
     ],
   },
+
+  // Stage 1 / Letters — Odd One Out (consonants vs vowels)
+  'minigame:s1-letters-odd-1': {
+    kind: 'odd-one-out',
+    jamoIds: [J('giyeok'), J('nieun'), J('digeut'), J('rieul'), J('a'), J('eo')],
+    rounds: 4,
+  },
+
+  // Stage 1 / Nature — Culture Quiz (Korean word -> English meaning)
+  'minigame:s1-nature-quiz-1': {
+    kind: 'culture-quiz',
+    cardPairs: [
+      { ko: '호랑이', en: 'Tiger', romanization: 'horangi' },
+      { ko: '까치', en: 'Magpie', romanization: 'kkachi' },
+      { ko: '달', en: 'Moon', romanization: 'dal' },
+      { ko: '산', en: 'Mountain', romanization: 'san' },
+      { ko: '바다', en: 'Sea', romanization: 'bada' },
+    ],
+    rounds: 4,
+  },
 };
 
 export function scopeFor(ref: string): MinigameScope | undefined {

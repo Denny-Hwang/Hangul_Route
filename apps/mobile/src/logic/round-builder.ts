@@ -119,3 +119,86 @@ export function buildTraceStrokeRounds(opts: {
     .slice(0, opts.rounds)
     .map((jamo) => ({ jamo }));
 }
+
+export interface OddOneOutRound {
+  tiles: Jamo[];
+  oddJamo: Jamo;
+}
+
+/**
+ * Build an Odd-One-Out minigame: each round has 3 jamo of the majority kind
+ * plus 1 of the other kind (the odd one). Scope must contain >=3 of one kind
+ * and >=1 of the other.
+ */
+export function buildOddOneOutRounds(opts: {
+  scopeJamoIds: string[];
+  rounds: number;
+  seed?: number;
+}): OddOneOutRound[] {
+  const pool = jamoAll.filter((j) => opts.scopeJamoIds.includes(j.id));
+  const consonants = pool.filter((j) => j.kind === 'consonant');
+  const vowels = pool.filter((j) => j.kind === 'vowel');
+
+  const majorityKind: Jamo['kind'] = consonants.length >= 3 ? 'consonant' : 'vowel';
+  const majors = majorityKind === 'consonant' ? consonants : vowels;
+  const minors = majorityKind === 'consonant' ? vowels : consonants;
+  if (majors.length < 3 || minors.length < 1) {
+    throw new Error('Odd-one-out needs >=3 of one kind and >=1 of the other in scope');
+  }
+
+  const out: OddOneOutRound[] = [];
+  let seed = opts.seed ?? Date.now();
+  for (let r = 0; r < opts.rounds; r++) {
+    seed += 1;
+    const three = shuffle(majors, seed).slice(0, 3);
+    const odd = shuffle(minors, seed + r + 1)[0]!;
+    const tiles = shuffle([...three, odd], seed + r + 100);
+    out.push({ tiles, oddJamo: odd });
+  }
+  return out;
+}
+
+export interface CultureQuizOption {
+  en: string;
+  isAnswer: boolean;
+}
+
+export interface CultureQuizRound {
+  promptKo: string;
+  promptRomanization?: string;
+  options: CultureQuizOption[];
+}
+
+/**
+ * Build a Culture Quiz minigame: show a Korean culture word, pick its English
+ * meaning from 4 options (1 answer + 3 distractors). Reuses card pairs.
+ */
+export function buildCultureQuizRounds(opts: {
+  cardPairs: CardMatchPair[];
+  rounds: number;
+  optionCount?: number;
+  seed?: number;
+}): CultureQuizRound[] {
+  const optionCount = opts.optionCount ?? 4;
+  if (opts.cardPairs.length < optionCount) {
+    throw new Error(`Culture quiz needs >=${optionCount} card pairs`);
+  }
+
+  const out: CultureQuizRound[] = [];
+  let seed = opts.seed ?? Date.now();
+  const prompts = shuffle(opts.cardPairs, seed).slice(0, opts.rounds);
+
+  for (const prompt of prompts) {
+    seed += 1;
+    const distractors = shuffle(
+      opts.cardPairs.filter((p) => p.en !== prompt.en),
+      seed,
+    ).slice(0, optionCount - 1);
+    const options: CultureQuizOption[] = shuffle(
+      [{ en: prompt.en, isAnswer: true }, ...distractors.map((d) => ({ en: d.en, isAnswer: false }))],
+      seed + 1,
+    );
+    out.push({ promptKo: prompt.ko, promptRomanization: prompt.romanization, options });
+  }
+  return out;
+}
