@@ -2,11 +2,13 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import app from '../index';
 import { store } from '../store';
 
+let familySeq = 0;
 async function createFamily(): Promise<string> {
+  familySeq += 1;
   const res = await app.request('/api/auth/family', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ email: 'parent@example.com' }),
+    body: JSON.stringify({ email: `parent-${familySeq}@example.com` }),
   });
   const json = (await res.json()) as { data: { family: { id: string } } };
   return json.data.family.id;
@@ -128,6 +130,84 @@ describe('apps/api subscriptions (F-INFRA-002)', () => {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ store: 'apple', receipt: 'x' }),
+    });
+    expect(res.status).toBe(404);
+  });
+
+  async function activate(familyId: string): Promise<void> {
+    await app.request(`/api/subscriptions/${familyId}/verify`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        store: 'apple',
+        receipt: JSON.stringify({ plan: 'monthly', expiresAt: '2027-01-01T00:00:00.000Z' }),
+      }),
+    });
+  }
+
+  it('marks cancelled on a cancel event but keeps the expiry', async () => {
+    const familyId = await createFamily();
+    await activate(familyId);
+    const res = await app.request(`/api/subscriptions/${familyId}/event`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ event: 'cancelled' }),
+    });
+    expect(res.status).toBe(200);
+    const json = (await res.json()) as { data: { subscription: { status: string; expiresAt: string } } };
+    expect(json.data.subscription.status).toBe('cancelled');
+    expect(json.data.subscription.expiresAt).toBe('2027-01-01T00:00:00.000Z');
+  });
+
+  it('updates expiry on a renewal event', async () => {
+    const familyId = await createFamily();
+    await activate(familyId);
+    const res = await app.request(`/api/subscriptions/${familyId}/event`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ event: 'renewed', expiresAt: '2028-01-01T00:00:00.000Z' }),
+    });
+    const json = (await res.json()) as { data: { subscription: { status: string; expiresAt: string } } };
+    expect(json.data.subscription.status).toBe('active');
+    expect(json.data.subscription.expiresAt).toBe('2028-01-01T00:00:00.000Z');
+  });
+
+  it('expires on an expired event', async () => {
+    const familyId = await createFamily();
+    await activate(familyId);
+    const res = await app.request(`/api/subscriptions/${familyId}/event`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ event: 'expired' }),
+    });
+    const json = (await res.json()) as { data: { subscription: { status: string } } };
+    expect(json.data.subscription.status).toBe('expired');
+  });
+
+  it('rejects an invalid event and a family with no subscription', async () => {
+    const familyId = await createFamily();
+    await activate(familyId);
+    const badEvent = await app.request(`/api/subscriptions/${familyId}/event`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ event: 'exploded' }),
+    });
+    expect(badEvent.status).toBe(422);
+
+    const noSub = await createFamily();
+    const noSubRes = await app.request(`/api/subscriptions/${noSub}/event`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ event: 'renewed' }),
+    });
+    expect(noSubRes.status).toBe(422);
+  });
+
+  it('404s event for an unknown family', async () => {
+    const res = await app.request('/api/subscriptions/family:nope/event', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ event: 'renewed' }),
     });
     expect(res.status).toBe(404);
   });
