@@ -30,10 +30,15 @@ describe('entitlementTier', () => {
     expect(entitlementTier(sub({ status: 'active', plan: 'yearly', expiresAt: null }), now)).toBe('premium');
   });
 
-  it('is free for none / expired / cancelled', () => {
+  it('is free for none and expired', () => {
     expect(entitlementTier(sub({ status: 'none' }), now)).toBe('free');
     expect(entitlementTier(sub({ status: 'expired', expiresAt: past }), now)).toBe('free');
-    expect(entitlementTier(sub({ status: 'cancelled', expiresAt: future }), now)).toBe('free');
+  });
+
+  it('keeps a cancelled subscription valid until its paid period ends', () => {
+    expect(entitlementTier(sub({ status: 'cancelled', expiresAt: future }), now)).toBe('premium');
+    expect(entitlementTier(sub({ status: 'cancelled', expiresAt: past }), now)).toBe('free');
+    expect(entitlementTier(sub({ status: 'cancelled', expiresAt: null }), now)).toBe('free');
   });
 });
 

@@ -17,7 +17,11 @@ const FREE_STAGES: ReadonlySet<string> = new Set(['stage1']);
 
 export function entitlementTier(subscription: SubscriptionState | null, now: Date): Tier {
   if (!subscription) return 'free';
-  if (subscription.status !== 'active' && subscription.status !== 'trial') return 'free';
+  // Ended outright — no access.
+  if (subscription.status === 'none' || subscription.status === 'expired') return 'free';
+  // Cancelled means auto-renew is off; access lasts until the paid period ends.
+  if (subscription.status === 'cancelled' && !subscription.expiresAt) return 'free';
+  // active / trial / cancelled: valid only while not past expiry.
   if (subscription.expiresAt && new Date(subscription.expiresAt).getTime() <= now.getTime()) {
     return 'free';
   }

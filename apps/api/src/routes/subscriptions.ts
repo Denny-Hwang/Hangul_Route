@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { fail, ok } from '../envelope';
 import { statusFromVerification, verifyReceiptStub } from '../lib/receipt';
+import { SUBSCRIPTION_EVENTS, nextStatusForEvent, type SubscriptionEvent } from '../lib/subscription-events';
 import { store, type Subscription } from '../store';
 
 export const subscriptionRoutes = new Hono();
@@ -115,6 +116,40 @@ subscriptionRoutes.post('/:familyId/verify', async (c) => {
     store: result.store,
     expiresAt: result.expiresAt,
     updatedAt: now.toISOString(),
+  };
+  store.subscriptions.set(familyId, subscription);
+  return ok(c, { subscription });
+});
+
+subscriptionRoutes.post('/:familyId/event', async (c) => {
+  const familyId = c.req.param('familyId');
+  if (!store.families.has(familyId)) {
+    return fail(c, 'not_found', 'Family not found', 404);
+  }
+
+  const existing = store.subscriptions.get(familyId);
+  if (!existing) {
+    return fail(c, 'no_subscription', 'No subscription to update', 422);
+  }
+
+  const body = (await c.req.json().catch(() => null)) as Record<string, unknown> | null;
+  if (body === null || typeof body !== 'object') {
+    return fail(c, 'bad_request', 'JSON body required', 422);
+  }
+
+  const event = body.event;
+  if (typeof event !== 'string' || !SUBSCRIPTION_EVENTS.includes(event as SubscriptionEvent)) {
+    return fail(c, 'invalid_event', `event must be one of: ${SUBSCRIPTION_EVENTS.join(', ')}`, 422);
+  }
+
+  const renews = event === 'renewed' || event === 'recovered';
+  const expiresAt = renews && typeof body.expiresAt === 'string' ? body.expiresAt : existing.expiresAt;
+
+  const subscription: Subscription = {
+    ...existing,
+    status: nextStatusForEvent(event as SubscriptionEvent),
+    expiresAt,
+    updatedAt: new Date().toISOString(),
   };
   store.subscriptions.set(familyId, subscription);
   return ok(c, { subscription });
