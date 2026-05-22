@@ -6,7 +6,9 @@ import { scopeFor } from '../../logic/minigame-config';
 import type { RootStackParamList } from '../../navigation/types';
 import { BuildLetterGame } from './BuildLetterGame';
 import { CardMatchGame } from './CardMatchGame';
+import { CultureQuizGame } from './CultureQuizGame';
 import { MatchSoundGame } from './MatchSoundGame';
+import { OddOneOutGame } from './OddOneOutGame';
 import { StorySequenceGame } from './StorySequenceGame';
 import { TraceStrokeGame } from './TraceStrokeGame';
 import { VoiceEchoGame } from './VoiceEchoGame';
@@ -43,6 +45,10 @@ export function MinigameScreen({ route, navigation }: Props): React.ReactElement
       return <StorySequenceGame scope={scope} onFinish={close} />;
     case 'voice-echo':
       return <VoiceEchoGame scope={scope} onFinish={close} />;
+    case 'odd-one-out':
+      return <OddOneOutGame scope={scope} onFinish={close} />;
+    case 'culture-quiz':
+      return <CultureQuizGame scope={scope} onFinish={close} />;
     default:
       return (
         <Screen>
