@@ -22,6 +22,10 @@ what's next.
   - apply: **build-letter** (build batchim syllables 물/산/달/곰)
 - 4 heritage cards (사과/우유/빵/도시락).
 
+A second taste episode `episode:stage2-nature` "Outdoor Words" follows the same
+shape (card-match / culture-quiz / build-letter; cards 하늘/꽃/나무/별), reusing
+Stage 1 nature vocab (산/바다) for review.
+
 No gating work needed: `unlockedByDefault` is unused; JourneyScreen gates on
 `episode.status === 'preview'`, and HomeScreen picks the next unfinished quest
 from `questsAll` sequentially — so Stage 2 surfaces naturally after Stage 1.
