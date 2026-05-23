@@ -13,7 +13,7 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     environment: 'node',
-    include: ['src/logic/**/*.test.ts', 'src/store/**/*.test.ts'],
+    include: ['src/logic/**/*.test.ts', 'src/store/**/*.test.ts', 'src/content/**/*.test.ts'],
     passWithNoTests: true,
     coverage: {
       provider: 'v8',

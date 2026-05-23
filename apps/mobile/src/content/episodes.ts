@@ -79,6 +79,22 @@ const stage1Episodes: Episode[] = [
   },
 ];
 
+const stage2Episodes: Episode[] = [
+  {
+    id: 'episode:stage2-life',
+    stage: 'stage2',
+    theme: 'life',
+    order: 2,
+    titleEn: 'Lunch Box Words',
+    subtitleEn: 'Read your first Korean food words.',
+    hoyaIntroEn: 'You know the letters now — let us read real words!',
+    questIds: ['quest:stage2-life-q1'],
+    rewardCardIds: ['card:sagwa', 'card:uyu', 'card:ppang', 'card:dosirak'],
+    estimatedMinutes: 6,
+    status: 'shipped',
+  },
+];
+
 function makePreviewEpisode(stage: string, theme: string, order: number, titleEn: string): Episode {
   return {
     id: `episode:${stage}-${theme}` as Episode['id'],
@@ -140,13 +156,16 @@ const upperStageTitles: Record<string, Record<string, string>> = {
   },
 };
 
+const shippedBeyondStage1 = new Set<string>(['episode:stage2-life']);
 const previewEpisodes: Episode[] = stages
   .filter((s) => s.key !== 'stage1')
   .flatMap((s) =>
-    themes.map((t, i) => makePreviewEpisode(s.key, t.key, i + 1, upperStageTitles[s.key]?.[t.key] ?? 'Coming soon')),
+    themes
+      .map((t, i) => makePreviewEpisode(s.key, t.key, i + 1, upperStageTitles[s.key]?.[t.key] ?? 'Coming soon'))
+      .filter((e) => !shippedBeyondStage1.has(e.id)),
   );
 
-export const episodesAll: Episode[] = [...stage1Episodes, ...previewEpisodes];
+export const episodesAll: Episode[] = [...stage1Episodes, ...stage2Episodes, ...previewEpisodes];
 
 export function episodeById(id: string): Episode | undefined {
   return episodesAll.find((e) => e.id === id);
