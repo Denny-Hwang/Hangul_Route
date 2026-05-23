@@ -10,6 +10,7 @@ import { CultureQuizGame } from './CultureQuizGame';
 import { MatchSoundGame } from './MatchSoundGame';
 import { OddOneOutGame } from './OddOneOutGame';
 import { StorySequenceGame } from './StorySequenceGame';
+import { TapRespondGame } from './TapRespondGame';
 import { TraceStrokeGame } from './TraceStrokeGame';
 import { VoiceEchoGame } from './VoiceEchoGame';
 
@@ -49,6 +50,8 @@ export function MinigameScreen({ route, navigation }: Props): React.ReactElement
       return <OddOneOutGame scope={scope} onFinish={close} />;
     case 'culture-quiz':
       return <CultureQuizGame scope={scope} onFinish={close} />;
+    case 'tap-respond':
+      return <TapRespondGame scope={scope} onFinish={close} />;
     default:
       return (
         <Screen>

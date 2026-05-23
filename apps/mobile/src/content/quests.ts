@@ -163,7 +163,25 @@ export const stage2Quests: Quest[] = [
   },
 ];
 
-export const questsAll: Quest[] = [...stage1Quests, ...stage2Quests];
+export const stage4Quests: Quest[] = [
+  // Stage 4 / Holidays & Traditions — taste episode
+  {
+    id: 'quest:stage4-rites-q1',
+    titleEn: 'Greeting Dialogues',
+    blurbEn: 'Say hello and meet a new friend in Korean.',
+    estimatedMinutes: 4,
+    steps: [
+      { id: 's1', kind: 'intro', titleEn: 'Meet Someone New', hoyaLineEn: 'Someone wants to say hi. Let us answer!', durationSeconds: 8 },
+      { id: 's2', kind: 'present', titleEn: 'Hello Words', minigameKind: 'card-match', minigameRef: 'minigame:s4-rites-card-1', durationSeconds: 60 },
+      { id: 's3', kind: 'practice', titleEn: 'Choose Your Reply', minigameKind: 'tap-respond', minigameRef: 'minigame:s4-rites-respond-1', durationSeconds: 90 },
+      { id: 's4', kind: 'apply', titleEn: 'What Does It Mean?', minigameKind: 'culture-quiz', minigameRef: 'minigame:s4-rites-quiz-1', durationSeconds: 60 },
+      { id: 's5', kind: 'reward', titleEn: 'Greeting Card!', hoyaLineEn: 'You had a real conversation!', durationSeconds: 8 },
+    ],
+    rewardCardId: 'card:insa',
+  },
+];
+
+export const questsAll: Quest[] = [...stage1Quests, ...stage2Quests, ...stage4Quests];
 
 export function questById(id: string): Quest | undefined {
   return questsAll.find((q) => q.id === id);

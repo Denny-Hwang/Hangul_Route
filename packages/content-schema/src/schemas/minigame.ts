@@ -21,6 +21,7 @@ export const MinigameKindSchema = z.enum([
   'trace-stroke', // Construction · ⑤
   'syllable-build', // Construction · ⑥
   'voice-echo', // Interaction · ⑦
+  'tap-respond', // Interaction · Tap to Respond (dialogue)
   'tap-rhythm', // Interaction · ⑧
   'order-it', // Interaction · ⑨
   'card-match', // Discovery · ⑩

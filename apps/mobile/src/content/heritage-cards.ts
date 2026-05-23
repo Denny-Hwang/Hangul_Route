@@ -81,7 +81,15 @@ export const stage2Cards: HeritageCard[] = [
   make('byeol', 'Star', '별', 'byeol', 'A twinkling star at night.', 'Koreans make a wish on the first star they see.', 'nature', 'stage2', 'rare', 'episode:stage2-nature'),
 ];
 
-export const heritageCardsAll: HeritageCard[] = [...stage1Cards, ...stage2Cards];
+export const stage4Cards: HeritageCard[] = [
+  // Stage 4 / Holidays & Traditions — Greeting Dialogues
+  make('annyeong', 'Hello', '안녕', 'annyeong', 'A friendly hello.', 'Annyeong means both "hi" and "bye" between friends.', 'rites', 'stage4', 'common', 'episode:stage4-rites'),
+  make('gamsa', 'Thank You', '감사', 'gamsa', 'A polite thank you.', 'Gamsahamnida is the full, polite form.', 'rites', 'stage4', 'common', 'episode:stage4-rites'),
+  make('chingu', 'Friend', '친구', 'chingu', 'A good friend to greet.', 'Close friends of the same age are called chingu.', 'rites', 'stage4', 'uncommon', 'episode:stage4-rites'),
+  make('insa', 'Greeting', '인사', 'insa', 'A bow or a hello — a greeting.', 'A small bow is a polite Korean greeting.', 'rites', 'stage4', 'rare', 'episode:stage4-rites'),
+];
+
+export const heritageCardsAll: HeritageCard[] = [...stage1Cards, ...stage2Cards, ...stage4Cards];
 
 export function cardById(id: string): HeritageCard | undefined {
   return heritageCardsAll.find((c) => c.id === id);
