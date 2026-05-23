@@ -205,6 +205,38 @@ export const minigameScopes: Record<string, MinigameScope> = {
     ],
     rounds: 4,
   },
+
+  // Stage 2 / Food & Daily Life — Lunch Box Words (taste)
+  'minigame:s2-life-card-1': {
+    kind: 'card-match',
+    cardPairs: [
+      { ko: '사과', en: 'Apple', romanization: 'sagwa' },
+      { ko: '우유', en: 'Milk', romanization: 'uyu' },
+      { ko: '빵', en: 'Bread', romanization: 'ppang' },
+      { ko: '김밥', en: 'Kimbap', romanization: 'gimbap' },
+      { ko: '밥', en: 'Rice', romanization: 'bap' },
+    ],
+  },
+  'minigame:s2-life-quiz-1': {
+    kind: 'culture-quiz',
+    cardPairs: [
+      { ko: '사과', en: 'Apple', romanization: 'sagwa' },
+      { ko: '우유', en: 'Milk', romanization: 'uyu' },
+      { ko: '빵', en: 'Bread', romanization: 'ppang' },
+      { ko: '김치', en: 'Kimchi', romanization: 'gimchi' },
+      { ko: '물', en: 'Water', romanization: 'mul' },
+    ],
+    rounds: 4,
+  },
+  'minigame:s2-life-build-1': {
+    kind: 'build-letter',
+    syllables: [
+      { ko: '물', romanization: 'mul', jamoChars: ['ㅁ', 'ㅜ', 'ㄹ'] },
+      { ko: '산', romanization: 'san', jamoChars: ['ㅅ', 'ㅏ', 'ㄴ'] },
+      { ko: '달', romanization: 'dal', jamoChars: ['ㄷ', 'ㅏ', 'ㄹ'] },
+      { ko: '곰', romanization: 'gom', jamoChars: ['ㄱ', 'ㅗ', 'ㅁ'] },
+    ],
+  },
 };
 
 export function scopeFor(ref: string): MinigameScope | undefined {

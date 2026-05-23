@@ -67,7 +67,15 @@ export const stage1Cards: HeritageCard[] = [
   make('gayageum', 'Gayageum Zither', '가야금', 'gayageum', 'A 12-string Korean zither — soft as rain.', 'The gayageum is over 1,400 years old.', 'crafts', 'stage1', 'legendary', 'stage1-complete'),
 ];
 
-export const heritageCardsAll: HeritageCard[] = [...stage1Cards];
+export const stage2Cards: HeritageCard[] = [
+  // Stage 2 / Food & Daily Life — Lunch Box Words
+  make('sagwa', 'Apple', '사과', 'sagwa', 'A sweet red apple for your lunch box.', 'Korea grows famous apples in Daegu.', 'life', 'stage2', 'common', 'episode:stage2-life'),
+  make('uyu', 'Milk', '우유', 'uyu', 'A cold glass of milk to drink.', 'Banana-flavored milk is a Korean favorite.', 'life', 'stage2', 'common', 'episode:stage2-life'),
+  make('ppang', 'Bread', '빵', 'ppang', 'Soft bread fresh from the bakery.', 'The word ppang comes from Portuguese "pão".', 'life', 'stage2', 'uncommon', 'episode:stage2-life'),
+  make('dosirak', 'Lunch Box', '도시락', 'dosirak', 'A packed lunch box to share with friends.', 'Shaking a dosirak to mix it is a fun Korean tradition.', 'life', 'stage2', 'rare', 'episode:stage2-life'),
+];
+
+export const heritageCardsAll: HeritageCard[] = [...stage1Cards, ...stage2Cards];
 
 export function cardById(id: string): HeritageCard | undefined {
   return heritageCardsAll.find((c) => c.id === id);

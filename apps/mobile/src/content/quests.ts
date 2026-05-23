@@ -131,7 +131,25 @@ export const stage1Quests: Quest[] = [
   },
 ];
 
-export const questsAll: Quest[] = [...stage1Quests];
+export const stage2Quests: Quest[] = [
+  // Stage 2 / Food & Daily Life — taste episode
+  {
+    id: 'quest:stage2-life-q1',
+    titleEn: 'Lunch Box Words',
+    blurbEn: 'Read and build your first Korean food words.',
+    estimatedMinutes: 5,
+    steps: [
+      { id: 's1', kind: 'intro', titleEn: 'Open the Lunch Box', hoyaLineEn: 'You know the letters now — let us read real words!', durationSeconds: 8 },
+      { id: 's2', kind: 'present', titleEn: 'Food Words', minigameKind: 'card-match', minigameRef: 'minigame:s2-life-card-1', durationSeconds: 75 },
+      { id: 's3', kind: 'practice', titleEn: 'What Does It Mean?', minigameKind: 'culture-quiz', minigameRef: 'minigame:s2-life-quiz-1', durationSeconds: 75 },
+      { id: 's4', kind: 'apply', titleEn: 'Build the Word', minigameKind: 'build-letter', minigameRef: 'minigame:s2-life-build-1', durationSeconds: 90 },
+      { id: 's5', kind: 'reward', titleEn: 'Lunch Box Card!', hoyaLineEn: 'You read your first words. Here is a card!', durationSeconds: 8 },
+    ],
+    rewardCardId: 'card:dosirak',
+  },
+];
+
+export const questsAll: Quest[] = [...stage1Quests, ...stage2Quests];
 
 export function questById(id: string): Quest | undefined {
   return questsAll.find((q) => q.id === id);
