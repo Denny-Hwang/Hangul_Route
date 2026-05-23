@@ -147,6 +147,20 @@ export const stage2Quests: Quest[] = [
     ],
     rewardCardId: 'card:dosirak',
   },
+  {
+    id: 'quest:stage2-nature-q1',
+    titleEn: 'Outdoor Words',
+    blurbEn: 'Name the sky, flowers, and trees in Korean.',
+    estimatedMinutes: 5,
+    steps: [
+      { id: 's1', kind: 'intro', titleEn: 'Step Outside', hoyaLineEn: 'Let us name what we see outside!', durationSeconds: 8 },
+      { id: 's2', kind: 'present', titleEn: 'Nature Words', minigameKind: 'card-match', minigameRef: 'minigame:s2-nature-card-1', durationSeconds: 75 },
+      { id: 's3', kind: 'practice', titleEn: 'What Does It Mean?', minigameKind: 'culture-quiz', minigameRef: 'minigame:s2-nature-quiz-1', durationSeconds: 75 },
+      { id: 's4', kind: 'apply', titleEn: 'Build the Word', minigameKind: 'build-letter', minigameRef: 'minigame:s2-nature-build-1', durationSeconds: 90 },
+      { id: 's5', kind: 'reward', titleEn: 'Star Card!', hoyaLineEn: 'You named the outdoors. Here is a star!', durationSeconds: 8 },
+    ],
+    rewardCardId: 'card:byeol',
+  },
 ];
 
 export const questsAll: Quest[] = [...stage1Quests, ...stage2Quests];

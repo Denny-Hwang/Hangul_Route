@@ -73,6 +73,12 @@ export const stage2Cards: HeritageCard[] = [
   make('uyu', 'Milk', '우유', 'uyu', 'A cold glass of milk to drink.', 'Banana-flavored milk is a Korean favorite.', 'life', 'stage2', 'common', 'episode:stage2-life'),
   make('ppang', 'Bread', '빵', 'ppang', 'Soft bread fresh from the bakery.', 'The word ppang comes from Portuguese "pão".', 'life', 'stage2', 'uncommon', 'episode:stage2-life'),
   make('dosirak', 'Lunch Box', '도시락', 'dosirak', 'A packed lunch box to share with friends.', 'Shaking a dosirak to mix it is a fun Korean tradition.', 'life', 'stage2', 'rare', 'episode:stage2-life'),
+
+  // Stage 2 / Nature & Animals — Outdoor Words
+  make('haneul', 'Sky', '하늘', 'haneul', 'The wide blue sky above.', 'Haneul also means "heaven" in old Korean songs.', 'nature', 'stage2', 'common', 'episode:stage2-nature'),
+  make('kkot', 'Flower', '꽃', 'kkot', 'A bright flower in the field.', 'Korea celebrates cherry blossoms — beotkkot — every spring.', 'nature', 'stage2', 'common', 'episode:stage2-nature'),
+  make('namu', 'Tree', '나무', 'namu', 'A tall green tree.', 'Korea\'s oldest tree, a ginkgo, is over 1,000 years old.', 'nature', 'stage2', 'uncommon', 'episode:stage2-nature'),
+  make('byeol', 'Star', '별', 'byeol', 'A twinkling star at night.', 'Koreans make a wish on the first star they see.', 'nature', 'stage2', 'rare', 'episode:stage2-nature'),
 ];
 
 export const heritageCardsAll: HeritageCard[] = [...stage1Cards, ...stage2Cards];

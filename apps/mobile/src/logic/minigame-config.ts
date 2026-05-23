@@ -237,6 +237,38 @@ export const minigameScopes: Record<string, MinigameScope> = {
       { ko: '곰', romanization: 'gom', jamoChars: ['ㄱ', 'ㅗ', 'ㅁ'] },
     ],
   },
+
+  // Stage 2 / Nature & Animals — Outdoor Words (taste)
+  'minigame:s2-nature-card-1': {
+    kind: 'card-match',
+    cardPairs: [
+      { ko: '하늘', en: 'Sky', romanization: 'haneul' },
+      { ko: '꽃', en: 'Flower', romanization: 'kkot' },
+      { ko: '나무', en: 'Tree', romanization: 'namu' },
+      { ko: '산', en: 'Mountain', romanization: 'san' },
+      { ko: '바다', en: 'Sea', romanization: 'bada' },
+    ],
+  },
+  'minigame:s2-nature-quiz-1': {
+    kind: 'culture-quiz',
+    cardPairs: [
+      { ko: '하늘', en: 'Sky', romanization: 'haneul' },
+      { ko: '별', en: 'Star', romanization: 'byeol' },
+      { ko: '강', en: 'River', romanization: 'gang' },
+      { ko: '봄', en: 'Spring', romanization: 'bom' },
+      { ko: '눈', en: 'Snow', romanization: 'nun' },
+    ],
+    rounds: 4,
+  },
+  'minigame:s2-nature-build-1': {
+    kind: 'build-letter',
+    syllables: [
+      { ko: '별', romanization: 'byeol', jamoChars: ['ㅂ', 'ㅕ', 'ㄹ'] },
+      { ko: '강', romanization: 'gang', jamoChars: ['ㄱ', 'ㅏ', 'ㅇ'] },
+      { ko: '봄', romanization: 'bom', jamoChars: ['ㅂ', 'ㅗ', 'ㅁ'] },
+      { ko: '돌', romanization: 'dol', jamoChars: ['ㄷ', 'ㅗ', 'ㄹ'] },
+    ],
+  },
 };
 
 export function scopeFor(ref: string): MinigameScope | undefined {

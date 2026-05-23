@@ -93,6 +93,19 @@ const stage2Episodes: Episode[] = [
     estimatedMinutes: 6,
     status: 'shipped',
   },
+  {
+    id: 'episode:stage2-nature',
+    stage: 'stage2',
+    theme: 'nature',
+    order: 4,
+    titleEn: 'Outdoor Words',
+    subtitleEn: 'Name the sky, flowers, and trees.',
+    hoyaIntroEn: 'Come outside with me — let us name the world!',
+    questIds: ['quest:stage2-nature-q1'],
+    rewardCardIds: ['card:haneul', 'card:kkot', 'card:namu', 'card:byeol'],
+    estimatedMinutes: 6,
+    status: 'shipped',
+  },
 ];
 
 function makePreviewEpisode(stage: string, theme: string, order: number, titleEn: string): Episode {
@@ -156,7 +169,7 @@ const upperStageTitles: Record<string, Record<string, string>> = {
   },
 };
 
-const shippedBeyondStage1 = new Set<string>(['episode:stage2-life']);
+const shippedBeyondStage1 = new Set<string>(['episode:stage2-life', 'episode:stage2-nature']);
 const previewEpisodes: Episode[] = stages
   .filter((s) => s.key !== 'stage1')
   .flatMap((s) =>
