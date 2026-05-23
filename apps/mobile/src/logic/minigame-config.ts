@@ -11,6 +11,12 @@ export interface MinigameScope {
   syllables?: Array<{ ko: string; romanization: string; jamoChars: string[] }>;
   cardPairs?: Array<{ ko: string; en: string; romanization?: string }>;
   storySteps?: Array<{ id: string; labelEn: string; labelKo?: string }>;
+  dialogue?: Array<{
+    npcKo: string;
+    npcRomanization?: string;
+    npcEn: string;
+    options: Array<{ ko: string; romanization?: string; en: string; isCorrect: boolean }>;
+  }>;
   rounds?: number;
 }
 
@@ -268,6 +274,64 @@ export const minigameScopes: Record<string, MinigameScope> = {
       { ko: '봄', romanization: 'bom', jamoChars: ['ㅂ', 'ㅗ', 'ㅁ'] },
       { ko: '돌', romanization: 'dol', jamoChars: ['ㄷ', 'ㅗ', 'ㄹ'] },
     ],
+  },
+
+  // Stage 4 / Holidays & Traditions — Greeting Dialogues (taste)
+  'minigame:s4-rites-respond-1': {
+    kind: 'tap-respond',
+    dialogue: [
+      {
+        npcKo: '안녕하세요!',
+        npcRomanization: 'annyeonghaseyo',
+        npcEn: 'Hello!',
+        options: [
+          { ko: '안녕하세요', romanization: 'annyeonghaseyo', en: 'Hello', isCorrect: true },
+          { ko: '잘 가요', romanization: 'jal gayo', en: 'Goodbye', isCorrect: false },
+          { ko: '고마워요', romanization: 'gomawoyo', en: 'Thank you', isCorrect: false },
+        ],
+      },
+      {
+        npcKo: '이름이 뭐예요?',
+        npcRomanization: 'ireumi mwoyeyo',
+        npcEn: "What's your name?",
+        options: [
+          { ko: '저는 호야예요', romanization: 'jeoneun hoyayeyo', en: 'I am Hoya', isCorrect: true },
+          { ko: '네, 좋아요', romanization: 'ne, joayo', en: 'Yes, good', isCorrect: false },
+          { ko: '사과 주세요', romanization: 'sagwa juseyo', en: 'Apple, please', isCorrect: false },
+        ],
+      },
+      {
+        npcKo: '만나서 반가워요!',
+        npcRomanization: 'mannaseo bangawoyo',
+        npcEn: 'Nice to meet you!',
+        options: [
+          { ko: '저도 반가워요', romanization: 'jeodo bangawoyo', en: 'Nice to meet you too', isCorrect: true },
+          { ko: '아니요', romanization: 'aniyo', en: 'No', isCorrect: false },
+          { ko: '몰라요', romanization: 'mollayo', en: "I don't know", isCorrect: false },
+        ],
+      },
+    ],
+  },
+  'minigame:s4-rites-card-1': {
+    kind: 'card-match',
+    cardPairs: [
+      { ko: '안녕', en: 'Hello', romanization: 'annyeong' },
+      { ko: '감사', en: 'Thanks', romanization: 'gamsa' },
+      { ko: '친구', en: 'Friend', romanization: 'chingu' },
+      { ko: '이름', en: 'Name', romanization: 'ireum' },
+      { ko: '인사', en: 'Greeting', romanization: 'insa' },
+    ],
+  },
+  'minigame:s4-rites-quiz-1': {
+    kind: 'culture-quiz',
+    cardPairs: [
+      { ko: '안녕', en: 'Hello', romanization: 'annyeong' },
+      { ko: '감사', en: 'Thanks', romanization: 'gamsa' },
+      { ko: '친구', en: 'Friend', romanization: 'chingu' },
+      { ko: '이름', en: 'Name', romanization: 'ireum' },
+      { ko: '인사', en: 'Greeting', romanization: 'insa' },
+    ],
+    rounds: 4,
   },
 };
 

@@ -67,4 +67,15 @@ describe('content integrity', () => {
       }
     }
   });
+
+  it('tap-respond scopes have dialogue with exactly one correct option per turn', () => {
+    for (const [ref, scope] of Object.entries(minigameScopes)) {
+      if (scope.kind !== 'tap-respond') continue;
+      expect((scope.dialogue ?? []).length, ref).toBeGreaterThanOrEqual(1);
+      for (const turn of scope.dialogue ?? []) {
+        expect(turn.options.filter((o) => o.isCorrect).length, `${ref} -> ${turn.npcKo}`).toBe(1);
+        expect(turn.options.length, `${ref} -> ${turn.npcKo}`).toBeGreaterThanOrEqual(2);
+      }
+    }
+  });
 });
