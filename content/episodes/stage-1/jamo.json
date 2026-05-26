@@ -1,0 +1,314 @@
+[
+  {
+    "id": "jamo:giyeok",
+    "ko": "ㄱ",
+    "romanization": "g (giyeok)",
+    "en": "G — sounds like the start of 'go'",
+    "kind": "consonant",
+    "order": 1,
+    "exampleWord": {
+      "ko": "강아지",
+      "romanization": "gang-a-ji",
+      "en": "puppy"
+    }
+  },
+  {
+    "id": "jamo:nieun",
+    "ko": "ㄴ",
+    "romanization": "n (nieun)",
+    "en": "N — sounds like the start of 'no'",
+    "kind": "consonant",
+    "order": 2,
+    "exampleWord": {
+      "ko": "나비",
+      "romanization": "na-bi",
+      "en": "butterfly"
+    }
+  },
+  {
+    "id": "jamo:digeut",
+    "ko": "ㄷ",
+    "romanization": "d (digeut)",
+    "en": "D — sounds like the start of 'door'",
+    "kind": "consonant",
+    "order": 3,
+    "exampleWord": {
+      "ko": "달",
+      "romanization": "dal",
+      "en": "moon"
+    }
+  },
+  {
+    "id": "jamo:rieul",
+    "ko": "ㄹ",
+    "romanization": "r/l (rieul)",
+    "en": "R or L — a soft sound between R and L",
+    "kind": "consonant",
+    "order": 4,
+    "exampleWord": {
+      "ko": "라면",
+      "romanization": "ra-myeon",
+      "en": "ramen noodles"
+    }
+  },
+  {
+    "id": "jamo:mieum",
+    "ko": "ㅁ",
+    "romanization": "m (mieum)",
+    "en": "M — sounds like the start of 'mom'",
+    "kind": "consonant",
+    "order": 5,
+    "exampleWord": {
+      "ko": "무궁화",
+      "romanization": "mu-gung-hwa",
+      "en": "rose of Sharon — Korea's flower"
+    }
+  },
+  {
+    "id": "jamo:bieup",
+    "ko": "ㅂ",
+    "romanization": "b (bieup)",
+    "en": "B — sounds like the start of 'boy'",
+    "kind": "consonant",
+    "order": 6,
+    "exampleWord": {
+      "ko": "밥",
+      "romanization": "bap",
+      "en": "rice — also means 'a meal'"
+    }
+  },
+  {
+    "id": "jamo:siot",
+    "ko": "ㅅ",
+    "romanization": "s (siot)",
+    "en": "S — sounds like the start of 'sun'",
+    "kind": "consonant",
+    "order": 7,
+    "exampleWord": {
+      "ko": "사과",
+      "romanization": "sa-gwa",
+      "en": "apple"
+    }
+  },
+  {
+    "id": "jamo:ieung",
+    "ko": "ㅇ",
+    "romanization": "silent / ng (ieung)",
+    "en": "O-shape — quiet at the start, 'ng' at the end",
+    "kind": "consonant",
+    "order": 8,
+    "exampleWord": {
+      "ko": "인형",
+      "romanization": "in-hyeong",
+      "en": "doll"
+    }
+  },
+  {
+    "id": "jamo:jieut",
+    "ko": "ㅈ",
+    "romanization": "j (jieut)",
+    "en": "J — sounds like the start of 'jump'",
+    "kind": "consonant",
+    "order": 9,
+    "exampleWord": {
+      "ko": "잠자리",
+      "romanization": "jam-ja-ri",
+      "en": "dragonfly"
+    }
+  },
+  {
+    "id": "jamo:chieut",
+    "ko": "ㅊ",
+    "romanization": "ch (chieut)",
+    "en": "CH — sounds like the start of 'chair'",
+    "kind": "consonant",
+    "order": 10,
+    "exampleWord": {
+      "ko": "책",
+      "romanization": "chaek",
+      "en": "book"
+    }
+  },
+  {
+    "id": "jamo:kieuk",
+    "ko": "ㅋ",
+    "romanization": "k (kieuk)",
+    "en": "K — strong 'k', like in 'kite'",
+    "kind": "consonant",
+    "order": 11,
+    "exampleWord": {
+      "ko": "케이팝",
+      "romanization": "K-pop",
+      "en": "K-pop music"
+    }
+  },
+  {
+    "id": "jamo:tieut",
+    "ko": "ㅌ",
+    "romanization": "t (tieut)",
+    "en": "T — sounds like the start of 'top'",
+    "kind": "consonant",
+    "order": 12,
+    "exampleWord": {
+      "ko": "토끼",
+      "romanization": "to-kki",
+      "en": "rabbit"
+    }
+  },
+  {
+    "id": "jamo:pieup",
+    "ko": "ㅍ",
+    "romanization": "p (pieup)",
+    "en": "P — sounds like the start of 'pop'",
+    "kind": "consonant",
+    "order": 13,
+    "exampleWord": {
+      "ko": "팽이",
+      "romanization": "paeng-i",
+      "en": "spinning top"
+    }
+  },
+  {
+    "id": "jamo:hieut",
+    "ko": "ㅎ",
+    "romanization": "h (hieut)",
+    "en": "H — sounds like the start of 'hi'",
+    "kind": "consonant",
+    "order": 14,
+    "exampleWord": {
+      "ko": "호랑이",
+      "romanization": "ho-rang-i",
+      "en": "tiger — that's Hoya!"
+    }
+  },
+  {
+    "id": "jamo:a",
+    "ko": "ㅏ",
+    "romanization": "a",
+    "en": "A — sounds like the 'a' in 'father'",
+    "kind": "vowel",
+    "order": 15,
+    "exampleWord": {
+      "ko": "아빠",
+      "romanization": "a-ppa",
+      "en": "dad"
+    }
+  },
+  {
+    "id": "jamo:ya",
+    "ko": "ㅑ",
+    "romanization": "ya",
+    "en": "YA — sounds like the start of 'yard'",
+    "kind": "vowel",
+    "order": 16,
+    "exampleWord": {
+      "ko": "야구",
+      "romanization": "ya-gu",
+      "en": "baseball"
+    }
+  },
+  {
+    "id": "jamo:eo",
+    "ko": "ㅓ",
+    "romanization": "eo",
+    "en": "EO — sounds like the 'u' in 'cup'",
+    "kind": "vowel",
+    "order": 17,
+    "exampleWord": {
+      "ko": "어묵",
+      "romanization": "eo-muk",
+      "en": "fish cake"
+    }
+  },
+  {
+    "id": "jamo:yeo",
+    "ko": "ㅕ",
+    "romanization": "yeo",
+    "en": "YEO — sounds like the start of 'young'",
+    "kind": "vowel",
+    "order": 18,
+    "exampleWord": {
+      "ko": "여우",
+      "romanization": "yeo-u",
+      "en": "fox"
+    }
+  },
+  {
+    "id": "jamo:o",
+    "ko": "ㅗ",
+    "romanization": "o",
+    "en": "O — sounds like the 'o' in 'open'",
+    "kind": "vowel",
+    "order": 19,
+    "exampleWord": {
+      "ko": "오리",
+      "romanization": "o-ri",
+      "en": "duck"
+    }
+  },
+  {
+    "id": "jamo:yo",
+    "ko": "ㅛ",
+    "romanization": "yo",
+    "en": "YO — sounds like the start of 'yo-yo'",
+    "kind": "vowel",
+    "order": 20,
+    "exampleWord": {
+      "ko": "용",
+      "romanization": "yong",
+      "en": "dragon"
+    }
+  },
+  {
+    "id": "jamo:u",
+    "ko": "ㅜ",
+    "romanization": "u",
+    "en": "U — sounds like the 'oo' in 'moon'",
+    "kind": "vowel",
+    "order": 21,
+    "exampleWord": {
+      "ko": "우유",
+      "romanization": "u-yu",
+      "en": "milk"
+    }
+  },
+  {
+    "id": "jamo:yu",
+    "ko": "ㅠ",
+    "romanization": "yu",
+    "en": "YU — sounds like the word 'you'",
+    "kind": "vowel",
+    "order": 22,
+    "exampleWord": {
+      "ko": "윷놀이",
+      "romanization": "yut-no-ri",
+      "en": "yut — a traditional Korean board game"
+    }
+  },
+  {
+    "id": "jamo:eu",
+    "ko": "ㅡ",
+    "romanization": "eu",
+    "en": "EU — a soft sound between 'u' and 'i'",
+    "kind": "vowel",
+    "order": 23,
+    "exampleWord": {
+      "ko": "그네",
+      "romanization": "geu-ne",
+      "en": "swing — like on a playground"
+    }
+  },
+  {
+    "id": "jamo:i",
+    "ko": "ㅣ",
+    "romanization": "i",
+    "en": "I — sounds like the 'ee' in 'see'",
+    "kind": "vowel",
+    "order": 24,
+    "exampleWord": {
+      "ko": "이불",
+      "romanization": "i-bul",
+      "en": "blanket — a warm sleeping cover"
+    }
+  }
+]
