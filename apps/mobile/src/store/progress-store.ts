@@ -1,8 +1,41 @@
 import type { ProgressSnapshot, QuestProgress } from '@hangul-route/content-schema';
 import { create } from 'zustand';
 import { readJson, writeJson } from '../platform/storage';
+import { track } from '../platform/telemetry';
 
 const key = (profileId: string): string => `progress:${profileId}`;
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function dayKey(iso: string): string {
+  return iso.slice(0, 10);
+}
+
+function daysBetween(earlierKey: string, laterKey: string): number {
+  const earlier = new Date(`${earlierKey}T00:00:00Z`).getTime();
+  const later = new Date(`${laterKey}T00:00:00Z`).getTime();
+  return Math.round((later - earlier) / DAY_MS);
+}
+
+/**
+ * Streak rule:
+ *   - Same UTC day as the last recorded session → streak unchanged
+ *     (a child returning later the same day should not double-count).
+ *   - Exactly one day later → streak + 1.
+ *   - Any larger gap → streak resets to 1 (the streak is the *new* day).
+ *   - No prior session → 1.
+ */
+export function nextStreak(
+  currentStreak: number,
+  lastSessionDay: string | undefined,
+  todayKey: string,
+): number {
+  if (!lastSessionDay) return Math.max(1, 1);
+  const diff = daysBetween(lastSessionDay, todayKey);
+  if (diff <= 0) return Math.max(currentStreak, 1);
+  if (diff === 1) return currentStreak + 1;
+  return 1;
+}
 
 interface State {
   byProfile: Record<string, ProgressSnapshot>;
@@ -105,6 +138,11 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
   beginSession: (profileId) => {
     const snap = get().byProfile[profileId] ?? blankSnapshot(profileId);
     const now = new Date().toISOString();
+    const todayKey = dayKey(now);
+    const lastSession = snap.sessions[snap.sessions.length - 1];
+    const lastDay = lastSession ? dayKey(lastSession.startedAt) : undefined;
+    const streakDays = nextStreak(snap.streakDays, lastDay, todayKey);
+
     const session = {
       id: `session:${now}`,
       profileId,
@@ -114,10 +152,16 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
     const updated: ProgressSnapshot = {
       ...snap,
       sessions: [...snap.sessions, session],
+      streakDays,
       updatedAt: now,
     };
     set((s) => ({ byProfile: { ...s.byProfile, [profileId]: updated } }));
     persist(profileId, updated);
+    void track({
+      name: 'session.start',
+      profileId,
+      payload: { streakDays, isNewDay: lastDay !== todayKey },
+    });
   },
 
   endSession: (profileId) => {
@@ -128,15 +172,17 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
     if (!last || last.endedAt) return;
     const startMs = new Date(last.startedAt).getTime();
     const endMs = new Date(now).getTime();
-    const updatedSession = {
-      ...last,
-      endedAt: now,
-      durationSeconds: Math.max(0, Math.round((endMs - startMs) / 1000)),
-    };
+    const durationSeconds = Math.max(0, Math.round((endMs - startMs) / 1000));
+    const updatedSession = { ...last, endedAt: now, durationSeconds };
     const sessions = [...snap.sessions.slice(0, -1), updatedSession];
     const updated: ProgressSnapshot = { ...snap, sessions, updatedAt: now };
     set((s) => ({ byProfile: { ...s.byProfile, [profileId]: updated } }));
     persist(profileId, updated);
+    void track({
+      name: 'session.end',
+      profileId,
+      payload: { durationSeconds, streakDays: snap.streakDays },
+    });
   },
 
   reset: (profileId) => {

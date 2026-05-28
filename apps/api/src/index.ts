@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { authRoutes } from './routes/auth';
 import { cardRoutes } from './routes/cards';
 import { contentRoutes } from './routes/content';
+import { notificationsRoutes } from './routes/notifications';
 import { profileRoutes } from './routes/profiles';
 import { progressRoutes } from './routes/progress';
 import { subscriptionRoutes } from './routes/subscriptions';
@@ -28,6 +29,7 @@ app.route('/api/subscriptions', subscriptionRoutes);
 app.route('/api/cards', cardRoutes);
 app.route('/api/content', contentRoutes);
 app.route('/api/telemetry', telemetryRoutes);
+app.route('/api/notifications', notificationsRoutes);
 
 app.notFound((c) =>
   c.json({ ok: false, error: { code: 'not_found', message: 'Route not found' } }, 404),
