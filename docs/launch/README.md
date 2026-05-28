@@ -14,6 +14,8 @@ Everything in here is **copy you can paste**, not strategy theory.
 | `reddit-seeding.md` | Posting pre-launch maker stories on Reddit & Facebook groups |
 | `faq.md` | One-line answers to every question PH commenters will ask |
 | `launch-checklist-d14-d0.md` | Daily checklist from D-14 to launch day |
+| `hallway-test-protocol.md` | 6-session script + worksheet for kids 5–11 (D-7) |
+| `parent-interview-guide.md` | 5-parent 30-min interview script + triage rules |
 
 ## Design assets — handled in-house via Claude Design
 
