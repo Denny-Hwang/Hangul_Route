@@ -27,6 +27,7 @@ import Animated, {
 import Svg, { Path } from 'react-native-svg';
 import { episodeById, questById } from '../../content';
 import { useReducedMotion } from '../../platform/motion';
+import { track } from '../../platform/telemetry';
 import type { RootStackParamList } from '../../navigation/types';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
@@ -51,8 +52,27 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
       accuracy: total > 0 ? correct / total : 0,
       attempts: 1,
     });
+    void track({
+      name: 'quest.complete',
+      profileId: profile.id,
+      payload: { questId, episodeId, stars, correct, total },
+    });
     if (quest.rewardCardId) {
+      const wasFirstCard =
+        (useProgressStore.getState().byProfile[profile.id]?.cards.length ?? 0) === 0;
       unlockCard(profile.id, quest.rewardCardId);
+      void track({
+        name: 'card.unlocked',
+        profileId: profile.id,
+        payload: { cardId: quest.rewardCardId, questId },
+      });
+      if (wasFirstCard) {
+        void track({
+          name: 'card.first_earned',
+          profileId: profile.id,
+          payload: { cardId: quest.rewardCardId },
+        });
+      }
     }
   }, [profile, quest, questId, episodeId, stars, correct, total, recordQuestComplete, unlockCard]);
 

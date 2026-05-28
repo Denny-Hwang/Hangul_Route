@@ -14,8 +14,11 @@ const ALLOWED_NAMES = new Set([
   'round.correct',
   'round.wrong',
   'card.unlocked',
+  'card.first_earned',
   'profile.switch',
   'parent.gate.opened',
+  'onboarding.started',
+  'minigame.finished',
 ]);
 
 telemetryRoutes.post('/', async (c) => {

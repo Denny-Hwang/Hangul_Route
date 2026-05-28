@@ -19,6 +19,7 @@ import React, { useState } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
 import { isValidEmail } from '../../logic/email';
 import type { OnboardingStackParamList } from '../../navigation/types';
+import { track } from '../../platform/telemetry';
 import { useAccountStore } from '../../store/account-store';
 import { useProfileStore } from '../../store/profile-store';
 
@@ -59,6 +60,11 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
       if (parentEmail.trim()) saveParentEmail(parentEmail);
     }
     const profile = createProfile({ displayName: name.trim(), ageGroup, avatar });
+    void track({
+      name: 'onboarding.started',
+      profileId: profile.id,
+      payload: { ageGroup, firstRun, hasParentEmail: parentEmail.trim().length > 0 },
+    });
     navigation.replace('FirstQuestPreview', { profileId: profile.id });
   };
 
