@@ -88,7 +88,7 @@
 - [ ] Reply to *every* comment within 2 hours
 
 ### D-1 (Fri)
-- [ ] Final QA pass — 3 full onboardings + all 9 mini-games once each
+- [ ] Final QA pass — 3 full onboardings + all 8 shipped mini-games once each
 - [ ] Schedule PH submission for 12:01 AM PT (the standard launch slot)
 - [ ] Confirm Hunter (or self-hunt) — see PH Hunter Reach
 - [ ] Send "tomorrow at 12:01 PT" reminder to 50-person squad

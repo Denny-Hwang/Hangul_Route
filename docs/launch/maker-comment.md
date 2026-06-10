@@ -26,7 +26,7 @@
 >
 > What's here today:
 > • Stage 1 fully built (24 letters + 24 culture cards)
-> • 9 mini-games, none of which feel like school
+> • 8 mini-games, none of which feel like school
 > • Mobile-first; English UI, Korean as the target language only
 >
 > Free for the first 12 cards. No ads, ever.
@@ -53,7 +53,7 @@
 > The grid: 7 stages × 5 themes. Kids draw their own *Route* through it.
 > Letters → words → sentences → dialogues → stories → real-use → self-
 > expression. Today, Stage 1 (Hangul) is fully built: 24 letters, 24
-> heritage cards, 9 mini-games, one tiger named Hoya.
+> heritage cards, 8 mini-games, one tiger named Hoya.
 >
 > Built on Expo + Cloudflare Workers. Fully type-safe content schema.
 > No red feedback colors — the anti-shame contract is in the design
@@ -83,7 +83,7 @@
 >
 > What I kept:
 >
-> • 9 mini-games, each tied to a learning-science skill family
+> • 8 mini-games, each tied to a learning-science skill family
 > • 24 heritage cards in Stage 1 — each one a small Korean cultural
 >   moment (Arirang, Chuseok's full moon, K-pop, the tiger)
 > • Hoya, a tiger guide whose dialogue pool was hand-written one line

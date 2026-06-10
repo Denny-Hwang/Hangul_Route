@@ -21,7 +21,7 @@
 > and who themselves know maybe five words.
 >
 > Stage 1 (Hangul) is now fully playable. 24 jamo, 24 heritage cards
-> (puppy → tiger → rose of Sharon → 윷놀이), 9 mini-games with a
+> (puppy → tiger → rose of Sharon → 윷놀이), 8 mini-games with a
 > dialogue-driven tiger guide named Hoya.
 >
 > Some design constraints I committed to:
