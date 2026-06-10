@@ -7,6 +7,8 @@
  *   background.
  * - Honors `flags.telemetryEnabled` (no-op if false).
  * - Honors `flags.telemetryNetwork` (runs validation but skips fetch).
+ * - Skips the network entirely while `EXPO_PUBLIC_API_BASE_URL` is unset —
+ *   the placeholder default must never receive traffic.
  *
  * Event names match the API's `ALLOWED_NAMES` whitelist exactly.
  */
@@ -40,11 +42,13 @@ export interface TelemetryClientOptions {
   fetchImpl?: typeof fetch;
 }
 
-const DEFAULT_ENDPOINT =
-  process.env.EXPO_PUBLIC_API_BASE_URL?.replace(/\/$/, '') ?? 'https://api.hangulroute.example';
+const PLACEHOLDER_ENDPOINT = 'https://api.hangulroute.example';
 
-function url(opts: TelemetryClientOptions | undefined): string {
-  return `${opts?.endpoint ?? DEFAULT_ENDPOINT}/api/telemetry`;
+const DEFAULT_ENDPOINT =
+  process.env.EXPO_PUBLIC_API_BASE_URL?.replace(/\/$/, '') ?? PLACEHOLDER_ENDPOINT;
+
+function endpointFor(opts: TelemetryClientOptions | undefined): string {
+  return opts?.endpoint ?? DEFAULT_ENDPOINT;
 }
 
 /**
@@ -63,11 +67,14 @@ export async function track(
 
   if (!flags.telemetryNetwork) return true;
 
+  const endpoint = endpointFor(options);
+  if (endpoint === PLACEHOLDER_ENDPOINT) return true;
+
   const fetchImpl = options?.fetchImpl ?? globalThis.fetch;
   if (typeof fetchImpl !== 'function') return false;
 
   try {
-    const res = await fetchImpl(url(options), {
+    const res = await fetchImpl(`${endpoint}/api/telemetry`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
