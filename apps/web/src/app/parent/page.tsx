@@ -16,20 +16,21 @@ export default function ParentPage(): JSX.Element {
             Family Dashboard
           </h1>
           <p style={{ color: colors.text.secondary, margin: `${spacing.xs}px 0 0` }}>
-            Read-only view of your kids&apos; progress on this device.
+            Demo preview — the stats below are sample data. The live dashboard
+            reads your kids&apos; progress from this device.
           </p>
         </div>
         <span
           style={{
             padding: `${spacing.xs}px ${spacing.md}px`,
-            backgroundColor: colors.feedback.successLight,
-            color: '#2F6A47',
+            backgroundColor: colors.feedback.nudgeLight,
+            color: colors.text.primary,
             borderRadius: radii.pill,
             fontWeight: 700,
             fontSize: typography.size.caption,
           }}
         >
-          Local data
+          Sample data
         </span>
       </header>
 

@@ -1,6 +1,5 @@
 import {
   Body,
-  Button,
   Caption,
   Card,
   Heading,
@@ -33,7 +32,7 @@ export function ParentDashboardScreen({ navigation }: Props): React.ReactElement
         </Pressable>
         <View style={{ flex: 1 }}>
           <Heading level="title">Family Dashboard</Heading>
-          <Caption tone="muted">Read-only — settings live on the web.</Caption>
+          <Caption tone="muted">Read-only — data stays on this device.</Caption>
         </View>
       </View>
 
@@ -102,8 +101,6 @@ export function ParentDashboardScreen({ navigation }: Props): React.ReactElement
           All learning data stays on this device unless you sign in. We do not share with third parties.
         </Body>
       </Card>
-      <Spacer size="lg" />
-      <Button label="Open settings" tone="secondary" size="md" onPress={() => undefined} />
       <Spacer size="xl" />
     </Screen>
   );

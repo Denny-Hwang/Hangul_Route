@@ -6,7 +6,7 @@ import './globals.css';
 export const metadata: Metadata = {
   title: 'Hangul Route — Korean for kids who don’t speak it yet',
   description:
-    'A Korean language learning app for English-speaking children 5–11. Heritage Journey across 7 stages and 5 culture themes, 9 mini-games, 24 collectable culture cards, and a tiger guide named Hoya. Free for the first 12 cards. No ads, ever.',
+    'A Korean language learning app for English-speaking children 5–11. Heritage Journey across 7 stages and 5 culture themes, 8 mini-games, 24 collectable culture cards, and a tiger guide named Hoya. Free for the first 12 cards. No ads, ever.',
   applicationName: 'Hangul Route',
   keywords: [
     'Korean for kids',

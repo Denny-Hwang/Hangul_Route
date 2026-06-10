@@ -19,6 +19,9 @@ export default function ChildDetailPage({ params }: { params: { childId: string 
         <p style={{ color: colors.text.secondary, margin: `${spacing.xs}px 0 0` }}>
           Age {child.ageGroup} · {child.questsCompleted} quests · {child.cards} cards
         </p>
+        <p style={{ color: colors.text.muted, fontSize: typography.size.caption, margin: `${spacing.xs}px 0 0` }}>
+          Demo preview — sample data.
+        </p>
       </header>
 
       <section style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: spacing.xl }}>

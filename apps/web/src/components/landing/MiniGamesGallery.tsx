@@ -15,6 +15,9 @@ const familyTint: Record<MinigameFamily, string> = {
   review: colors.theme.nature,
 };
 
+const shippedCount = minigameCatalog.filter((g) => g.status === 'shipped').length;
+const betaCount = minigameCatalog.length - shippedCount;
+
 export function MiniGamesGallery(): JSX.Element {
   return (
     <section
@@ -35,7 +38,7 @@ export function MiniGamesGallery(): JSX.Element {
             letterSpacing: 1,
           }}
         >
-          9 mini-games
+          {shippedCount} mini-games{betaCount > 0 ? ` + ${betaCount} in beta` : ''}
         </span>
         <h2
           id="games-heading"

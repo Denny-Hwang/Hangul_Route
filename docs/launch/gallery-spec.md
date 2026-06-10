@@ -72,7 +72,7 @@ those."
 once.
 
 **Caption**:
-> "9 mini-games. None of them feel like school."
+> "8 mini-games. None of them feel like school."
 
 **Composition**:
 - 3×3 grid of phone screenshots (each ~250 × 540 px portrait), tilted

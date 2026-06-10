@@ -47,7 +47,7 @@ Author's bet: **#1 wins overall, #10 wins comment-sentiment.**
 | # | Description | Char |
 |---|---|---|
 | A | Heritage Journey + 24 culture cards. Made for kids 5–11. | 56 |
-| B | 9 mini-games. 24 culture cards. Zero shame. Ages 5–11. | 54 |
+| B | 8 mini-games. 24 culture cards. Zero shame. Ages 5–11. | 54 |
 | C | A solo-dev Korean learning app for kids who don't speak it. | 60 |
 
 **Recommendation**: B — quantifies value, names the audience, drops the

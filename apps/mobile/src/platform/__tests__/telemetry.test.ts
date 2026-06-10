@@ -58,14 +58,27 @@ describe('track', () => {
     const fetchMock = vi.fn<typeof fetch>(async () => {
       throw new Error('network down');
     });
-    const ok = await track({ name: 'quest.complete' }, { fetchImpl: fetchMock });
+    const ok = await track(
+      { name: 'quest.complete' },
+      { endpoint: 'https://api.example.com', fetchImpl: fetchMock },
+    );
     expect(ok).toBe(false);
   });
 
   it('returns false when the server rejects (4xx/5xx)', async () => {
     const fetchMock = vi.fn(async () => new Response(null, { status: 422 }));
-    const ok = await track({ name: 'quest.complete' }, { fetchImpl: fetchMock });
+    const ok = await track(
+      { name: 'quest.complete' },
+      { endpoint: 'https://api.example.com', fetchImpl: fetchMock },
+    );
     expect(ok).toBe(false);
+  });
+
+  it('never POSTs to the unconfigured placeholder endpoint', async () => {
+    const fetchMock = vi.fn<typeof fetch>(async () => new Response(null, { status: 201 }));
+    const ok = await track({ name: 'session.start' }, { fetchImpl: fetchMock });
+    expect(ok).toBe(true);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it('rejects an empty event name', async () => {
