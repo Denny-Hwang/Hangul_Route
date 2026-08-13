@@ -5,7 +5,9 @@
     "version": "0.1.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
+    "icon": "./assets/icon.png",
     "splash": {
+      "image": "./assets/splash.png",
       "backgroundColor": "#FCF8F1",
       "resizeMode": "contain"
     },
@@ -19,7 +21,8 @@
       "package": "com.hangulroute.app",
       "versionCode": 1,
       "adaptiveIcon": {
-        "backgroundColor": "#FCF8F1"
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#E8743B"
       }
     },
     "web": {
