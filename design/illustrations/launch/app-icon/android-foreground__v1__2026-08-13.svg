@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <g transform="translate(64 64) scale(7)">
+  <g>
+    <!-- ears (outline behind) -->
+    <circle cx="30" cy="32" r="12" fill="#F2B33D" stroke="#B5862A" stroke-width="2.4"/>
+    <circle cx="98" cy="32" r="12" fill="#F2B33D" stroke="#B5862A" stroke-width="2.4"/>
+    <circle cx="30" cy="32" r="6" fill="#F8B4B4" opacity="0.85"/>
+    <circle cx="98" cy="32" r="6" fill="#F8B4B4" opacity="0.85"/>
+    <!-- head -->
+    <circle cx="64" cy="64" r="44" fill="#F2B33D" stroke="#B5862A" stroke-width="2.6"/>
+    <!-- stripes: 3 per side + forehead (Hoya.tsx Stripes()) -->
+    <g stroke="#2A1F14" stroke-width="3" stroke-linecap="round" fill="none">
+      <path d="M26 54 Q30 58 26 62"/>
+      <path d="M24 70 Q29 73 25 78"/>
+      <path d="M28 84 Q33 86 30 90"/>
+      <path d="M102 54 Q98 58 102 62"/>
+      <path d="M104 70 Q99 73 103 78"/>
+      <path d="M100 84 Q95 86 98 90"/>
+      <path d="M64 24 Q66 30 64 36"/>
+    </g>
+    <!-- cream muzzle patch -->
+    <ellipse cx="64" cy="90" rx="18" ry="13" fill="#FCF8F1"/>
+    <!-- eyes (idle) + glints -->
+    <ellipse cx="50" cy="72" rx="3.5" ry="4" fill="#2A1F14"/>
+    <ellipse cx="78" cy="72" rx="3.5" ry="4" fill="#2A1F14"/>
+    <circle cx="51.2" cy="70.7" r="0.9" fill="#FCF8F1"/>
+    <circle cx="79.2" cy="70.7" r="0.9" fill="#FCF8F1"/>
+    <!-- cheek blush -->
+    <circle cx="42" cy="84" r="5" fill="#F8B4B4" opacity="0.6"/>
+    <circle cx="86" cy="84" r="5" fill="#F8B4B4" opacity="0.6"/>
+    <!-- nose + idle mouth -->
+    <path d="M58 84 H70 L64 90 Z" fill="#2A1F14"/>
+    <path d="M54 92 Q64 100 74 92" stroke="#2A1F14" stroke-width="3" stroke-linecap="round" fill="none"/>
+  </g></g>
+</svg>
