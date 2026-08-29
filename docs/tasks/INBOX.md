@@ -12,9 +12,6 @@
 ### Week 2 (foundations) — remaining
 - [ ] T-002 F-INFRA-001 wrangler dev 로컬 기동 + Cloudflare 계정 바인딩 — 0.5d
 
-### Week 3 (remaining tooling)
-- [ ] T-022 F-COV-003 apps/mobile business / platform 2-lane 분리 (`src/logic/` vs `src/platform/`) — 1d
-
 ### Week 4 (Stage 1 game shells)
 - [ ] T-013 STT 벤치마크 보고서: Whisper / Clova / Google STT × 어린이 한국어 50샘플 — 2d
 - [ ] T-015 i18n / a11y / telemetry 3종 스펙 초안 (F-I18N-001, F-A11Y-001, F-TEL-001) — 1d
