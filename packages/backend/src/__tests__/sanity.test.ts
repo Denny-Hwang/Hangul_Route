@@ -1,8 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { Hono } from "hono";
 
-// Touch the package entry so coverage sees src/index.ts; real handlers
-// land with T-018 (apps/api ↔ backend integration).
 import "../index";
 
 describe("backend package sanity", () => {

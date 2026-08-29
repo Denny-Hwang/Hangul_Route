@@ -20,9 +20,7 @@
 - [ ] T-015 i18n / a11y / telemetry 3종 스펙 초안 (F-I18N-001, F-A11Y-001, F-TEL-001) — 1d
 
 ### Follow-ups
-- [ ] T-016 packages/content-schema 의 Quest / Card / Episode zod schema 첫 구현 (sanity.test.ts 를 실제 스키마 테스트로 확장) — 1d
 - [ ] T-017 F-001 외부 의존: 30 개 jamo 음성 MP3 녹음 (24 자모 + 6 받침, 단일 native speaker) — 1d
-- [ ] T-018 apps/api ↔ @hangul-route/backend 통합 (현재 apps/api 의 라우트가 직접 정의됨; backend 패키지로 핸들러 이전) — 0.5d
 
 ### Week 5–6 (Homework · Reviews · Profiles — addendum 09)
 

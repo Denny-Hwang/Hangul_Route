@@ -1,38 +1,5 @@
-import { Hono } from 'hono';
-import { authRoutes } from './routes/auth';
-import { cardRoutes } from './routes/cards';
-import { contentRoutes } from './routes/content';
-import { notificationsRoutes } from './routes/notifications';
-import { profileRoutes } from './routes/profiles';
-import { progressRoutes } from './routes/progress';
-import { subscriptionRoutes } from './routes/subscriptions';
-import { telemetryRoutes } from './routes/telemetry';
-
-const app = new Hono();
-
-// Legacy hello-hoya envelope (kept for F-INFRA-001 self-tests).
-app.get('/', (c) =>
-  c.json({
-    service: 'hangul-route-api',
-    status: 'ok',
-    message: 'Hello, Hoya!',
-  }),
-);
-
-app.get('/health', (c) => c.json({ status: 'ok' }));
-
-// V1 API surface
-app.route('/api/auth', authRoutes);
-app.route('/api/profiles', profileRoutes);
-app.route('/api/progress', progressRoutes);
-app.route('/api/subscriptions', subscriptionRoutes);
-app.route('/api/cards', cardRoutes);
-app.route('/api/content', contentRoutes);
-app.route('/api/telemetry', telemetryRoutes);
-app.route('/api/notifications', notificationsRoutes);
-
-app.notFound((c) =>
-  c.json({ ok: false, error: { code: 'not_found', message: 'Route not found' } }, 404),
-);
+// Worker entry (F-INFRA-001). All handlers live in @hangul-route/backend
+// (T-018) — this package owns only the deploy surface (wrangler, D1 schema).
+import app from '@hangul-route/backend';
 
 export default app;
