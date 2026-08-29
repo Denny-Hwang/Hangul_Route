@@ -52,3 +52,4 @@
 - [x] T-012 F-004 "Trace Stroke" spec — 이미 완료 (status `ready`, 구현 T-V6) · INBOX 에서 정리
 - [x] T-018 apps/api ↔ @hangul-route/backend 통합 — routes ×8 / store / envelope / lib(auth·receipt·subscription-events) + 테스트 66개를 backend 패키지로 이전, apps/api 는 Worker entry(재export) + wrangler/D1 배포 표면만 보유. coverage gate 6 pass (backend 95.66% ≥ 90) — `refactor(api,backend)`
 - [x] T-016 content-schema zod 첫 구현 — 이미 완료 (T-V3: 8 modules + schemas.test.ts, 100% coverage) · INBOX 에서 정리
+- [x] T-022 F-COV-003 apps/mobile 2-lane 커버리지 게이트 — coverage-gate.mjs lane 집계 (`apps/mobile/src/logic` 90 / `src/platform` 70), vitest platform 레인 계측 + wrapper 테스트 20개 (storage/haptics/audio/sharing), gate self-test 4개 추가. 측정: logic 97.29% · platform 100% — `ci` + `test(mobile)`
