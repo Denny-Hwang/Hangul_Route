@@ -50,3 +50,5 @@
 - [x] T-014 Parent dashboard wireframe v0 (`design/wireframes/parent/`: dashboard / voice-recorder / learner-detail; 4th 화면인 PIN gate 는 profiles/pin-entry 공유) — `design(wireframe)`
 - [x] T-011 F-003 "Build a Letter" spec — 이미 완료 (PR #19 back-fill, status `shipped`) · INBOX 에서 정리
 - [x] T-012 F-004 "Trace Stroke" spec — 이미 완료 (status `ready`, 구현 T-V6) · INBOX 에서 정리
+- [x] T-018 apps/api ↔ @hangul-route/backend 통합 — routes ×8 / store / envelope / lib(auth·receipt·subscription-events) + 테스트 66개를 backend 패키지로 이전, apps/api 는 Worker entry(재export) + wrangler/D1 배포 표면만 보유. coverage gate 6 pass (backend 95.66% ≥ 90) — `refactor(api,backend)`
+- [x] T-016 content-schema zod 첫 구현 — 이미 완료 (T-V3: 8 modules + schemas.test.ts, 100% coverage) · INBOX 에서 정리
