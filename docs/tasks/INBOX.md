@@ -13,14 +13,10 @@
 - [ ] T-002 F-INFRA-001 wrangler dev 로컬 기동 + Cloudflare 계정 바인딩 — 0.5d
 
 ### Week 3 (remaining tooling)
-- [ ] T-021 F-COV-002 `docs/tests/coverage-targets.md` ↔ `coverage-targets.json` drift 검출 — 0.5d
 - [ ] T-022 F-COV-003 apps/mobile business / platform 2-lane 분리 (`src/logic/` vs `src/platform/`) — 1d
 
 ### Week 4 (Stage 1 game shells)
-- [ ] T-011 F-003 "Build a Letter" minigame spec (Stage 1 family Construction) — 0.5d
-- [ ] T-012 F-004 "Trace Stroke" minigame spec (Stage 1 family Construction, 약식) — 0.5d
 - [ ] T-013 STT 벤치마크 보고서: Whisper / Clova / Google STT × 어린이 한국어 50샘플 — 2d
-- [ ] T-014 Parent dashboard wireframe v0 (4 screens) — 1d
 - [ ] T-015 i18n / a11y / telemetry 3종 스펙 초안 (F-I18N-001, F-A11Y-001, F-TEL-001) — 1d
 
 ### Follow-ups
@@ -35,7 +31,6 @@
 
 - [ ] T-023 F-PROF-001 draft → ready 승격: packages/hooks AsyncStorage 래퍼 의존성 확정 + bcrypt-js Hermes 호환 검증 — 0.5d
 - [ ] T-024 F-PROF-001 구현 1차: profile-store / pin-hash / session 로직 + 단위 테스트 (logic/profiles/) — 1.5d
-- [ ] T-025 F-PROF-001 Profile Picker + PIN modal 와이어프레임 (`design/wireframes/profiles/*` 5종) — 1d
 - [ ] T-026 F-PROF-001 onboarding flow + 마이그레이션 ("Default" 학습자 래핑) E2E — 1d
 - [ ] T-027 F-HW-001 draft → ready: HomeworkAssignment zod 스키마 + F-CNT-001 banned-on-learner-surface 확장 합의 — 0.5d
 - [ ] T-028 F-HW-001 mission-builder 로직 (3 카드 룰) + 단위 테스트 100% — 1d
