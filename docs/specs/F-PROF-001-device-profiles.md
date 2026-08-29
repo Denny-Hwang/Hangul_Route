@@ -93,7 +93,7 @@ Companion stories:
 
 ## 5. UI sketch
 
-To be authored in Week 4 design playbook:
+Wireframes authored (T-025 — v1, low-fi):
 
 - `design/wireframes/profiles/picker.md` — cold-launch profile picker
 - `design/wireframes/profiles/create-parent.md` — parent onboarding (name + PIN)

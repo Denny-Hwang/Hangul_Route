@@ -42,3 +42,11 @@
 - [x] T-D5 Heritage Card Art SVG component — 6 cards initial (Tiger / Book / Kimchi / Seollal / Mountain / Yutnori, 1 per theme + 1 legendary) consumed by LibraryScreen + CardDetailScreen — PR #17 `design(card-art)`
 - [x] T-D6 Heritage Card Art complete — all 30 Stage 1 cards illustrated (+24: hanji / brush / ink / origami / hangul-day · rice / chopsticks / hanbok / kimbap / family-table · chuseok / tteokguk / songpyeon / sebae / lantern · magpie / mugunghwa / sea / moon · jegi / kite / top / pottery / gayageum). `supportedCardIds` exports full 30-entry list — PR #18 `design(card-art)`
 - [x] T-D7 F-XXX spec back-fill: F-003 Build a Letter / F-CARD-001 Heritage Card Art / F-HOYA-001 Hoya Character System / F-PREV-001 Design Preview Surface — this PR (fulfills the CLAUDE.md §5 promise from PR #13 to back-fill specs for code that landed under the "v1.0 prototype" exception)
+
+### 2026-08 / W? (dev-plan progress: coverage drift gate + profile/parent wireframes)
+
+- [x] T-021 F-COV-002 coverage-targets.md ↔ coverage-targets.json drift 검출 — `scripts/check-coverage-targets-drift.mjs` + "Enforced W4 gate" 표 신설 + 7 node:test self-tests + coverage-gate.yml fail-fast step — `ci`
+- [x] T-025 F-PROF-001 Profile Picker + PIN modal 와이어프레임 5종 (`design/wireframes/profiles/`: picker / create-parent / create-learner / pin-entry / switch-button) — `design(wireframe)`
+- [x] T-014 Parent dashboard wireframe v0 (`design/wireframes/parent/`: dashboard / voice-recorder / learner-detail; 4th 화면인 PIN gate 는 profiles/pin-entry 공유) — `design(wireframe)`
+- [x] T-011 F-003 "Build a Letter" spec — 이미 완료 (PR #19 back-fill, status `shipped`) · INBOX 에서 정리
+- [x] T-012 F-004 "Trace Stroke" spec — 이미 완료 (status `ready`, 구현 T-V6) · INBOX 에서 정리
