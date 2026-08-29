@@ -33,12 +33,13 @@ coverage-gate.yml 은 vitest 설정에서 두 경로를 분리 리포트한다.
 | packages/backend | 90 |
 | packages/design-system | 85 |
 | apps/api | 90 |
-| apps/mobile | 80 |
+| apps/mobile/src/logic | 90 |
+| apps/mobile/src/platform | 70 |
 | apps/web | 90 |
 
 주석:
 - `apps/api` 는 워크스페이스가 실재해 gate 에 포함 (위 영역별 목표 표에는 백엔드로 묶여 있었음).
-- `apps/mobile` 은 business/platform 2-lane 분리 (F-COV-003, T-022) 전까지 단일 워크스페이스 80% 로 게이트한다. 분리 후 90/70 lane 별 게이트로 대체.
+- `apps/mobile` 은 F-COV-003 (T-022) 에 따라 2-lane 게이트: `src/logic` (business, 90%) / `src/platform` (wrappers, 70%). coverage-gate.mjs 가 `apps/mobile/coverage/coverage-summary.json` 의 파일별 항목을 lane 경로로 집계한다. `src/platform/motion.ts` 는 렌더러 하니스가 필요한 hook 이라 측정 제외 (Detox nightly 대상).
 
 ## Rolling 의미
 - "W4" = 알파(한글학교 베타) 직전 시점.
