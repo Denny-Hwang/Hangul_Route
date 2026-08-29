@@ -119,7 +119,7 @@ Suggestions are produced by a small rules table:
 
 ## 5. UI sketch
 
-To be authored in Week 5–6 design playbook:
+Wireframes authored (T-014 — v0, low-fi; PIN gate screen lives at `design/wireframes/profiles/pin-entry.md` per F-PROF-001):
 
 - `design/wireframes/parent/dashboard.md` — single-screen learner cards
 - `design/wireframes/parent/voice-recorder.md` — N5 message recorder
