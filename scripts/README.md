@@ -11,6 +11,7 @@
 | `coverage-gate.mjs` | F-COV-001 | `.github/workflows/coverage-gate.yml` | `docs/tests/coverage-targets.json` (mirrors `docs/tests/coverage-targets.md`) |
 | `validate-content.mjs` | F-CNT-001 | `.github/workflows/content-validation.yml` | `.claude/skills/content-skill/SKILL.md` §3.3 |
 | `check-token-drift.mjs` | F-DES-001 | `.github/workflows/design-token-sync.yml` | `design/tokens/*.v*.md` ↔ `packages/design-system/src/tokens.ts` |
+| `check-coverage-targets-drift.mjs` | F-COV-002 | `.github/workflows/coverage-gate.yml` | `docs/tests/coverage-targets.md` "Enforced W4 gate" 표 ↔ `docs/tests/coverage-targets.json` |
 
 Run locally:
 
@@ -18,6 +19,7 @@ Run locally:
 node scripts/coverage-gate.mjs
 node scripts/validate-content.mjs
 node scripts/check-token-drift.mjs
+node scripts/check-coverage-targets-drift.mjs
 ```
 
 각 스크립트는 (a) gate 충족, 또는 (b) 검사할 데이터가 아직 없을 때 (커버리지 리포트 부재 / `content/*.json` 부재 / 토큰 MD 부재) **exit 0** 으로 통과하고, 그 외에는 `::error::` annotation 과 함께 **exit 1** 로 실패한다.

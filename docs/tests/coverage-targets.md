@@ -22,6 +22,24 @@
 
 coverage-gate.yml 은 vitest 설정에서 두 경로를 분리 리포트한다.
 
+## Enforced W4 gate (machine-checked)
+
+아래 표는 `docs/tests/coverage-targets.json` 의 `targets` 와 **정확히 일치**해야 한다.
+`scripts/check-coverage-targets-drift.mjs` (F-COV-002) 가 CI 에서 검증하며, 불일치 시 Coverage Gate 가 실패한다.
+
+| Workspace | W4 gate (%) |
+|---|---|
+| packages/content-schema | 100 |
+| packages/backend | 90 |
+| packages/design-system | 85 |
+| apps/api | 90 |
+| apps/mobile | 80 |
+| apps/web | 90 |
+
+주석:
+- `apps/api` 는 워크스페이스가 실재해 gate 에 포함 (위 영역별 목표 표에는 백엔드로 묶여 있었음).
+- `apps/mobile` 은 business/platform 2-lane 분리 (F-COV-003, T-022) 전까지 단일 워크스페이스 80% 로 게이트한다. 분리 후 90/70 lane 별 게이트로 대체.
+
 ## Rolling 의미
 - "W4" = 알파(한글학교 베타) 직전 시점.
 - "6 months" = 정식 런치 목표 시점.

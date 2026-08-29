@@ -18,6 +18,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Check coverage-targets md ↔ json drift (F-COV-002)
+        run: node scripts/check-coverage-targets-drift.mjs
+
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
 
