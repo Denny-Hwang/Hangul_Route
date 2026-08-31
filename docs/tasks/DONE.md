@@ -53,3 +53,5 @@
 - [x] T-018 apps/api ↔ @hangul-route/backend 통합 — routes ×8 / store / envelope / lib(auth·receipt·subscription-events) + 테스트 66개를 backend 패키지로 이전, apps/api 는 Worker entry(재export) + wrangler/D1 배포 표면만 보유. coverage gate 6 pass (backend 95.66% ≥ 90) — `refactor(api,backend)`
 - [x] T-016 content-schema zod 첫 구현 — 이미 완료 (T-V3: 8 modules + schemas.test.ts, 100% coverage) · INBOX 에서 정리
 - [x] T-022 F-COV-003 apps/mobile 2-lane 커버리지 게이트 — coverage-gate.mjs lane 집계 (`apps/mobile/src/logic` 90 / `src/platform` 70), vitest platform 레인 계측 + wrapper 테스트 20개 (storage/haptics/audio/sharing), gate self-test 4개 추가. 측정: logic 97.29% · platform 100% — `ci` + `test(mobile)`
+- [x] T-023 F-PROF-001 draft → ready 승격 — 3개 미결정 해소 (§9 Decisions): packages/hooks 불필요 (platform/storage.ts 가 §8 계약 충족) · bcrypt-js 기각 후 injected PinHasher + expo-crypto salted SHA-256 채택 · avatar 8 → 5 (culture-theme Pillar 정렬) — `docs(spec)`
+- [x] T-024 F-PROF-001 구현 1차 — logic/profiles/ 4모듈 (profile-model / pin-hash / session / avatar-catalog) + platform/crypto.ts, 단위 테스트 68개. ProfileRole 스키마 추가, profile-store 를 순수 reducer 위임 shell 로 재배선. logic/profiles 커버리지 100% (lane 97.29% → 98.38%) — `feat(mobile)`

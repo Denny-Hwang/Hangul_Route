@@ -1,7 +1,7 @@
 # F-PROF-001 — Device-Shared Profiles
 
-**Status**: `draft`
-**Scope**: `apps/mobile` · `packages/hooks` (AsyncStorage wrapper) · `packages/content-schema` · MVP (learner × N + parent × 1, local only)
+**Status**: `ready` (promoted by T-023 — see §9 Decisions)
+**Scope**: `apps/mobile` · `packages/content-schema` · MVP (learner × N + parent × 1, local only)
 **Owner**: solo dev
 **Rollout**: MVP — local profiles, PIN-protected parent, no cloud sync. Teacher / co-parent / Clerk sync are Phase 2.
 
@@ -51,7 +51,7 @@ Companion stories:
 - **Given** a parent profile exists,
   **when** parent goes to "Add another child",
   **then** they can create additional learner profiles without re-entering PIN within the same session (15-min session window).
-- Avatars: 8 preset Hoya-stage variants (tiger cub, named after Pillars: 글이, 살이, 례이, 솔이, 솜이 — these are illustrations, not learner names). Names: free text, 1–12 chars, no emojis, no Korean/Chinese (UI is English).
+- Avatars: **5** preset Hoya variants (tiger cub), one per culture-theme Pillar — 글이 (Letters) · 살이 (Life) · 례이 (Rites) · 솔이 (Nature) · 솜이 (Crafts). These are illustrations, not learner names. Names: free text, 1–12 chars, no emojis, no Korean/Chinese (UI is English).
 
 ### 3.3 Data isolation
 
@@ -72,7 +72,7 @@ Companion stories:
 
 ### 3.5 PIN management
 
-- PIN is 4 digits. Stored as `bcrypt` hash (cost 10) in AsyncStorage under `parent.<profileId>.pin_hash`.
+- PIN is 4 digits. Stored as `<salt>:<digest>` — a per-PIN 16-byte salt from a native CSPRNG plus SHA-256 — in AsyncStorage under `parent.<profileId>.pin_hash`. The hash primitive is injected (`PinHasher`), so the choice is swappable without touching PIN logic. Rationale and the rejected bcrypt-cost-10 option are recorded in §9.2.
 - PIN reset in MVP requires reinstalling the app (data wipe). Phase 2: Clerk email recovery.
 - The PIN entry UI **never** echoes digits as text — shows ● dots only.
 
@@ -107,10 +107,14 @@ Wireframes authored (T-025 — v1, low-fi):
 
 | File | Coverage focus |
 |---|---|
-| `logic/profiles/profile-store.ts` | CRUD + key namespacing; profileId required on all writes |
-| `logic/profiles/pin-hash.ts` | bcrypt round-trip, cooldown after 5 wrong attempts |
-| `logic/profiles/session.ts` | active profile lifecycle, 15-min parent session window |
-| `logic/profiles/avatar-catalog.ts` | preset avatar enum integrity |
+| `logic/profiles/profile-model.ts` | CRUD reducers + name validation + `scopedKey` namespacing; profileId required on all writes |
+| `logic/profiles/pin-hash.ts` | `PinHasher` port, hash round-trip, sliding-window cooldown after 5 wrong attempts |
+| `logic/profiles/session.ts` | active profile lifecycle, 15-min parent session window, switch reachability |
+| `logic/profiles/avatar-catalog.ts` | preset avatar catalog integrity |
+
+Named `profile-model.ts` rather than `profile-store.ts` so it does not read as a
+second zustand store — `src/store/profile-store.ts` is the persistence shell that
+delegates to these reducers.
 
 ### Integration
 
@@ -138,7 +142,7 @@ Wireframes authored (T-025 — v1, low-fi):
 
 ### Upstream
 
-- **packages/hooks** (AsyncStorage wrapper) — Do-not-list in CLAUDE.md §8 implies this wrapper must exist. Tracked separately; F-PROF-001 will block on it.
+- **`apps/mobile/src/platform/storage.ts`** — the sanctioned AsyncStorage wrapper (see §9.1). No longer blocked on a `packages/hooks` package.
 - **packages/content-schema** — needs `Profile`, `ProfileRole` types.
 
 ### Downstream — everything in the addendum
@@ -150,4 +154,83 @@ Wireframes authored (T-025 — v1, low-fi):
 
 ### External
 
-- **bcrypt-js** (no native deps, works in Expo + Hermes). Reviewed for Hermes compat before pinning.
+- **expo-crypto** — native CSPRNG (`getRandomBytesAsync`) + `digestStringAsync(SHA-256)`. Same integration shape as the expo modules already wrapped in `src/platform/` (speech, haptics, sharing). `bcrypt-js` was evaluated and rejected — see §9.2.
+
+---
+
+## 9. Decisions (T-023 — draft → ready)
+
+Three open items blocked promotion. All three are resolved here; each records
+the residual risk it leaves behind.
+
+### 9.1 AsyncStorage wrapper — `packages/hooks` is not required for MVP
+
+CLAUDE.md §8 forbids direct `AsyncStorage` use and points at "`packages/hooks`
+의 안전 훅 (별도 PR 예정)". That package never landed, but
+`apps/mobile/src/platform/storage.ts` already **is** the single sanctioned
+read/write surface, and as of T-022 (F-COV-003) it is unit-tested at 100 %
+line coverage in the platform lane.
+
+**Decision**: `platform/storage.ts` satisfies the §8 contract for
+`apps/mobile`. `packages/hooks` is deferred until a *second* consumer needs
+the same wrapper (realistically `apps/web` in Phase 2) — creating a new
+workspace package today would add a one-line re-export package for no
+consumer, against CLAUDE.md §2 (new packages need a proposal) and §10.1
+(scope discipline).
+
+**Residual risk**: none for MVP. When `packages/hooks` does land, the import
+site is one module (`platform/storage.ts`), so the migration is mechanical.
+
+### 9.2 PIN hashing — injected `PinHasher`, salted SHA-256 over bcrypt-js
+
+The draft specified `bcrypt` cost 10 via `bcrypt-js`, pending a Hermes
+compatibility review. That review could not be completed on-device in this
+environment, so the design was changed to make the primitive swappable and
+the pure logic verifiable without it.
+
+**Why bcrypt-js was rejected as the default:**
+1. **JS-thread cost.** `bcrypt-js` is pure JS; cost 10 runs on the order of
+   hundreds of milliseconds to seconds under Hermes on mid-range Android,
+   and it blocks the JS thread — i.e. a visible hang on every PIN entry, on
+   the one screen a parent uses in a hurry.
+2. **Entropy pitfall.** React Native has no `crypto.getRandomValues` by
+   default; `bcrypt-js` silently degrades to `Math.random()` for salt
+   generation unless a polyfill (`react-native-get-random-values`) is added.
+   That failure mode is silent and easy to ship.
+3. **The work factor buys little here.** A 4-digit PIN is a 10 000-value
+   keyspace. An attacker holding the stored hash enumerates it regardless of
+   the KDF — cost 10 turns milliseconds into minutes, not into infeasibility.
+   The control that actually matters against the in-scope threat (a child
+   poking at a shared tablet) is the attempt cooldown in §3.5, plus OS-level
+   app sandboxing of AsyncStorage.
+
+**Decision**: PIN logic depends on a `PinHasher` interface
+(`hash` / `verify`), defined in `src/logic/profiles/pin-hash.ts` and fully
+unit-tested against a deterministic fake. The shipped implementation lives in
+the platform lane (`src/platform/crypto.ts`) and uses **expo-crypto**: a
+16-byte salt from the native CSPRNG, `SHA-256(salt + pin)`, stored as
+`<saltHex>:<digestHex>`. Fast, correctly seeded, no JS-thread stall.
+
+**Residual risk**: the stored hash is *not* resistant to offline enumeration
+by an attacker with filesystem access. This is accepted for a local-only,
+device-scoped 4-digit PIN. **Revisit trigger**: Phase 2 cloud sync — the
+moment a PIN hash leaves the device (Clerk / D1), re-evaluate with a native
+argon2/bcrypt binding, since the threat model then includes a server-side
+breach. Also still unverified on a physical device: `expo-crypto` behaviour
+under Hermes is expected-good (native module, Expo SDK 52) but is covered by
+mocks here, not by a device run — T-026's Detox pass is the checkpoint.
+
+### 9.3 Avatar count — 5 presets, not 8
+
+§3.2 asked for "8 preset variants" but then named only the five Pillars, and
+`AvatarKindSchema` in `packages/content-schema` has exactly five members.
+
+**Decision**: five avatars, one per culture-theme Pillar (Letters · Life ·
+Rites · Nature · Crafts). This keeps the avatar set aligned with the
+Heritage-Journey grid's culture axis instead of inventing three unanchored
+variants. §3.2 updated.
+
+**Residual risk**: on a shared weekend-school device more than five learners
+must reuse avatars. Duplicates are explicitly allowed (see
+`design/wireframes/profiles/create-learner.md` open questions) — restricting
+them would invite comparison and conflict between children.

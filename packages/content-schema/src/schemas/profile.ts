@@ -13,11 +13,20 @@ export const AvatarKindSchema = z.enum([
 ]);
 export type AvatarKind = z.infer<typeof AvatarKindSchema>;
 
+/**
+ * Who a profile belongs to (F-PROF-001 §3.1). Learner tiles enter with one
+ * tap; parent entry is PIN-gated. F-TCH-001 extends this with 'teacher'.
+ * Defaults to 'learner' so pre-F-PROF-001 persisted profiles still parse.
+ */
+export const ProfileRoleSchema = z.enum(['learner', 'parent']).default('learner');
+export type ProfileRole = z.infer<typeof ProfileRoleSchema>;
+
 export const ProfileSchema = z.object({
   id: z.string().regex(/^profile:[a-z0-9-]+$/),
   displayName: z.string().min(1).max(20),
   ageGroup: z.enum(['5-7', '8-9', '10-11']),
   avatar: AvatarKindSchema,
+  role: ProfileRoleSchema,
   createdAt: z.string(),
   lastActiveAt: z.string().optional(),
   parentPinHash: z.string().optional(),

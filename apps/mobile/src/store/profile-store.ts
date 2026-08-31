@@ -1,32 +1,51 @@
 import type { AvatarKind, Profile } from '@hangul-route/content-schema';
 import { create } from 'zustand';
+import {
+  activeProfile,
+  createProfile as createProfileReducer,
+  removeProfile as removeProfileReducer,
+  setActiveProfile,
+  type Clock,
+  type CreateProfileInput,
+  type ProfileSet,
+} from '../logic/profiles/profile-model';
 import { readJson, writeJson } from '../platform/storage';
+
+/**
+ * Persistence shell over the pure reducers in `logic/profiles/profile-model`
+ * (F-PROF-001). Decisions — validation, id shape, active-profile handling —
+ * live in the logic layer; this module only holds and persists the result.
+ */
 
 const KEY = 'profiles';
 const ACTIVE_KEY = 'profiles:active';
 
-interface State {
-  profiles: Profile[];
-  activeId: string | null;
+interface State extends ProfileSet {
   hydrated: boolean;
 }
 
 interface Actions {
   hydrate: () => Promise<void>;
-  createProfile: (input: { displayName: string; ageGroup: Profile['ageGroup']; avatar: AvatarKind }) => Profile;
+  createProfile: (input: {
+    displayName: string;
+    ageGroup: Profile['ageGroup'];
+    avatar: AvatarKind;
+    role?: CreateProfileInput['role'];
+  }) => Profile;
   setActive: (id: string) => void;
   remove: (id: string) => void;
   setParentPin: (pinHash: string) => void;
 }
 
-function persist(state: Pick<State, 'profiles' | 'activeId'>): void {
-  void writeJson(KEY, state.profiles);
-  void writeJson(ACTIVE_KEY, state.activeId);
+function persist(set: ProfileSet): void {
+  void writeJson(KEY, set.profiles);
+  void writeJson(ACTIVE_KEY, set.activeId);
 }
 
-function id(): string {
-  return `profile:${Math.random().toString(36).slice(2, 10)}`;
-}
+const clock: Clock = {
+  now: () => Date.now(),
+  nextId: () => Math.random().toString(36).slice(2, 10),
+};
 
 export const useProfileStore = create<State & Actions>((set, get) => ({
   profiles: [],
@@ -39,44 +58,36 @@ export const useProfileStore = create<State & Actions>((set, get) => ({
     set({ profiles, activeId: activeId ?? null, hydrated: true });
   },
 
-  createProfile: ({ displayName, ageGroup, avatar }) => {
-    const now = new Date().toISOString();
-    const next: Profile = {
-      id: id() as Profile['id'],
-      displayName,
-      ageGroup,
-      avatar,
-      createdAt: now,
-      lastActiveAt: now,
-    };
-    const profiles = [...get().profiles, next];
-    set({ profiles, activeId: next.id });
-    persist({ profiles, activeId: next.id });
-    return next;
+  createProfile: (input) => {
+    const { profiles, activeId } = get();
+    const result = createProfileReducer({ profiles, activeId }, input, clock);
+    set(result.set);
+    persist(result.set);
+    return result.created;
   },
 
-  setActive: (newId) => {
-    const profiles = get().profiles.map((p) =>
-      p.id === newId ? { ...p, lastActiveAt: new Date().toISOString() } : p,
-    );
-    set({ profiles, activeId: newId });
-    persist({ profiles, activeId: newId });
+  setActive: (id) => {
+    const { profiles, activeId } = get();
+    const next = setActiveProfile({ profiles, activeId }, id, Date.now());
+    set(next);
+    persist(next);
   },
 
-  remove: (delId) => {
-    const profiles = get().profiles.filter((p) => p.id !== delId);
-    const activeId = get().activeId === delId ? (profiles[0]?.id ?? null) : get().activeId;
-    set({ profiles, activeId });
-    persist({ profiles, activeId });
+  remove: (id) => {
+    const { profiles, activeId } = get();
+    const next = removeProfileReducer({ profiles, activeId }, id);
+    set(next);
+    persist(next);
   },
 
   setParentPin: (pinHash) => {
     const profiles = get().profiles.map((p) => ({ ...p, parentPinHash: pinHash }));
-    set({ profiles });
-    persist({ profiles, activeId: get().activeId });
+    const next = { profiles, activeId: get().activeId };
+    set(next);
+    persist(next);
   },
 }));
 
 export function activeProfileSelector(state: State): Profile | null {
-  return state.profiles.find((p) => p.id === state.activeId) ?? null;
+  return activeProfile(state);
 }

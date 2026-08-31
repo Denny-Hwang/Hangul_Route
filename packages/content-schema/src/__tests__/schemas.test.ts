@@ -174,6 +174,29 @@ describe('ProfileSchema', () => {
       }),
     ).toThrow();
   });
+
+  it('defaults role to learner when absent (pre-F-PROF-001 persisted data)', () => {
+    const parsed = ProfileSchema.parse({
+      id: 'profile:abc',
+      displayName: 'Suni',
+      ageGroup: '5-7',
+      avatar: 'hoya-orange',
+      createdAt: new Date().toISOString(),
+    });
+    expect(parsed.role).toBe('learner');
+  });
+
+  it('accepts an explicit parent role and rejects unknown roles', () => {
+    const base = {
+      id: 'profile:abc',
+      displayName: 'Mom',
+      ageGroup: '10-11' as const,
+      avatar: 'hoya-blue' as const,
+      createdAt: new Date().toISOString(),
+    };
+    expect(ProfileSchema.parse({ ...base, role: 'parent' }).role).toBe('parent');
+    expect(() => ProfileSchema.parse({ ...base, role: 'teacher' })).toThrow();
+  });
 });
 
 describe('FamilySchema', () => {
