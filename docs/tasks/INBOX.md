@@ -24,8 +24,6 @@
 > 부록 `docs/blueprints/09-homework-review-profiles-addendum.md` 의 5개 F-XXX 를 큐잉.
 > 의존성 순서: F-PROF-001 → F-HW-001 → F-RVW-001 → F-PAR-001 → (Phase 2) F-TCH-001.
 
-- [ ] T-023 F-PROF-001 draft → ready 승격: packages/hooks AsyncStorage 래퍼 의존성 확정 + bcrypt-js Hermes 호환 검증 — 0.5d
-- [ ] T-024 F-PROF-001 구현 1차: profile-store / pin-hash / session 로직 + 단위 테스트 (logic/profiles/) — 1.5d
 - [ ] T-026 F-PROF-001 onboarding flow + 마이그레이션 ("Default" 학습자 래핑) E2E — 1d
 - [ ] T-027 F-HW-001 draft → ready: HomeworkAssignment zod 스키마 + F-CNT-001 banned-on-learner-surface 확장 합의 — 0.5d
 - [ ] T-028 F-HW-001 mission-builder 로직 (3 카드 룰) + 단위 테스트 100% — 1d
