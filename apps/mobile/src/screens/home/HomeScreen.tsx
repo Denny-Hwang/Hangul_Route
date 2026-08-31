@@ -1,6 +1,5 @@
 import {
   Body,
-  Button,
   Caption,
   Card,
   Heading,
@@ -19,13 +18,68 @@ import {
 } from '@hangul-route/design-system';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { Pressable, View } from 'react-native';
 import { episodesAll, questsAll } from '../../content';
+import {
+  buildTodaysMission,
+  dayKey,
+  type MissionCard,
+  type MissionPlan,
+} from '../../logic/homework/mission-builder';
 import { computeStreak } from '../../logic/streak';
 import type { RootStackParamList } from '../../navigation/types';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
+
+const ICON_FOR: Record<MissionCard['kind'], 'replay' | 'play' | 'library' | 'star'> = {
+  replay: 'replay',
+  new: 'play',
+  story: 'library',
+  'daily-test': 'star',
+};
+
+/**
+ * One of the three Today's mission cards (F-HW-001 §3.1).
+ * A collected card keeps its slot and switches tone — it never disappears and
+ * the cards below it never move up (§3.2).
+ */
+function MissionTile({
+  card,
+  onPress,
+}: {
+  card: MissionCard;
+  onPress: () => void;
+}): React.ReactElement {
+  return (
+    <Card
+      padding="md"
+      tone={card.collected ? 'success' : 'paper'}
+      onPress={onPress}
+      accessibilityLabel={`${card.titleEn}. ${card.subtitleEn}.${
+        card.collected ? ' Collected.' : ''
+      }`}
+    >
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: spacing.md,
+          minHeight: touchTarget.hero,
+        }}
+      >
+        <Icon name={ICON_FOR[card.kind]} size={32} color={colors.text.secondary} />
+        <View style={{ flex: 1 }}>
+          <Body weight="semibold" size="lg">
+            {card.titleEn}
+          </Body>
+          <Caption tone="muted">{card.subtitleEn}</Caption>
+        </View>
+        {card.collected ? <Icon name="sparkle" size={28} color={colors.brand.primary} /> : null}
+      </View>
+    </Card>
+  );
+}
 
 export function HomeScreen(): React.ReactElement {
   const profile = useProfileStore(activeProfileSelector);
@@ -48,16 +102,30 @@ export function HomeScreen(): React.ReactElement {
     return computeStreak(dates);
   }, [snap]);
 
-  // Pick the next unfinished quest
-  const nextQuest = useMemo(() => {
-    const completedIds = new Set((snap?.quests ?? []).filter((q) => q.completedAt).map((q) => q.questId));
-    return questsAll.find((q) => !completedIds.has(q.id)) ?? questsAll[0];
-  }, [snap]);
+  // Today's mission — the plan is pinned for the day so finishing one card
+  // never reshuffles the other two under the learner (F-HW-001 §3.2).
+  const pinnedPlan = useRef<MissionPlan | null>(null);
+  const mission = useMemo(() => {
+    if (!profile || !snap) return null;
+    const built = buildTodaysMission({
+      profileId: profile.id,
+      snapshot: snap,
+      quests: questsAll,
+      episodes: episodesAll,
+      today: dayKey(new Date().toISOString()),
+      pinned: pinnedPlan.current,
+    });
+    pinnedPlan.current = built;
+    return built;
+  }, [profile, snap]);
 
-  const nextEpisode = useMemo(() => {
-    if (!nextQuest) return undefined;
-    return episodesAll.find((e) => e.questIds.includes(nextQuest.id));
-  }, [nextQuest]);
+  const openCard = (card: MissionCard): void => {
+    if (card.questId && card.episodeId) {
+      navigation.navigate('QuestPlayer', { questId: card.questId, episodeId: card.episodeId });
+    } else if (card.episodeId) {
+      navigation.navigate('EpisodeDetail', { episodeId: card.episodeId });
+    }
+  };
 
   return (
     <Screen tone="canvas" scrollable>
@@ -94,43 +162,18 @@ export function HomeScreen(): React.ReactElement {
         <Pill tone="success" label={`${stars3}★ quests`} />
       </View>
 
-      <Spacer size="lg" />
-      <Heading level="prompt">Today&apos;s quest</Heading>
-      <Spacer size="sm" />
-      {nextQuest && nextEpisode ? (
-        <Card padding="md">
-          <Body weight="semibold" size="lg">
-            {nextQuest.titleEn}
-          </Body>
-          {nextQuest.blurbEn ? (
-            <>
-              <Spacer size="xxs" />
-              <Body tone="secondary">{nextQuest.blurbEn}</Body>
-            </>
-          ) : null}
+      {mission && mission.cards.length > 0 ? (
+        <>
+          <Spacer size="lg" />
+          <Heading level="prompt">Today with Hoya</Heading>
           <Spacer size="sm" />
-          <Body tone="muted" size="sm">
-            From {nextEpisode.titleEn} · {nextQuest.estimatedMinutes} min
-          </Body>
-          <Spacer size="md" />
-          <Button
-            label="Start quest"
-            tone="primary"
-            size="lg"
-            fullWidth
-            onPress={() =>
-              navigation.navigate('QuestPlayer', {
-                questId: nextQuest.id,
-                episodeId: nextEpisode.id,
-              })
-            }
-          />
-        </Card>
-      ) : (
-        <Card padding="md">
-          <Body>All Stage 1 quests complete — amazing!</Body>
-        </Card>
-      )}
+          <View style={{ gap: spacing.sm }}>
+            {mission.cards.map((card) => (
+              <MissionTile key={card.slot} card={card} onPress={() => openCard(card)} />
+            ))}
+          </View>
+        </>
+      ) : null}
 
       <Spacer size="xl" />
       <Heading level="prompt">Stage 1 progress</Heading>
