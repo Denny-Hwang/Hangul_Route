@@ -7,8 +7,11 @@
 //   - Whenever a Korean string is present, the same object MUST also carry
 //     a `romanization` (Revised Romanization, not McCune-Reischauer) and an
 //     English gloss in `gloss_en` or `en`.
+//   - Learner-facing English copy never contains a shaming word
+//     (F-HW-001 §3.3 anti-shame contract).
 //
-// Source of truth: .claude/skills/content-skill/SKILL.md §3.3.
+// Source of truth: .claude/skills/content-skill/SKILL.md §3.3,
+// docs/specs/F-HW-001-homework-page.md §3.3 / §9.5.
 
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, extname, join, relative, resolve } from "node:path";
@@ -26,6 +29,35 @@ const KOREAN_TARGET_FIELDS = new Set([
   "target",
   "answer_ko",
   "lang_ko",
+]);
+
+/**
+ * Words a learner must never see (F-HW-001 §3.3). Matched case-insensitively
+ * on word boundaries, so ordinary copy containing them as substrings
+ * ("dismissed", "incompletely") does not trip the gate.
+ *
+ * The caregiver-surface list (F-PAR-001 §3.6) is deliberately separate and
+ * lands with T-037: a word banned for a child can be necessary for an adult.
+ */
+const BANNED_LEARNER_WORDS = ["missed", "incomplete", "failed", "overdue"];
+const BANNED_LEARNER_RE = new RegExp(
+  `\\b(${BANNED_LEARNER_WORDS.join("|")})\\b`,
+  "i"
+);
+
+/** English copy fields that a learner actually reads. */
+const LEARNER_TEXT_FIELDS = new Set([
+  "en",
+  "gloss_en",
+  "titleEn",
+  "blurbEn",
+  "subtitleEn",
+  "bodyEn",
+  "hoyaLineEn",
+  "hoyaIntroEn",
+  "labelEn",
+  "promptEn",
+  "messageEn",
 ]);
 
 function walk(dir) {
@@ -79,6 +111,18 @@ function visit(value, path, file, violations, parentObj) {
           file,
           path: [...path, k].join("."),
           rule: "korean-in-ui-field",
+        });
+      }
+      if (
+        typeof v === "string" &&
+        LEARNER_TEXT_FIELDS.has(k) &&
+        BANNED_LEARNER_RE.test(v)
+      ) {
+        const hit = v.match(BANNED_LEARNER_RE);
+        violations.push({
+          file,
+          path: [...path, k].join("."),
+          rule: `banned-on-learner-surface: "${hit ? hit[1] : ""}"`,
         });
       }
       visit(v, [...path, k], file, violations, obj);

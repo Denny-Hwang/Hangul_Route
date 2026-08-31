@@ -1,6 +1,6 @@
 # F-HW-001 — Homework Page (Chapter / Session)
 
-**Status**: `draft`
+**Status**: `ready` (promoted by T-027 — see §9 Decisions)
 **Scope**: `apps/mobile` · `packages/content-schema` · MVP (system-suggested only) / Phase 2 (parent + teacher assignment)
 **Owner**: solo dev
 **Rollout**: MVP — Today's mission auto-suggestion. Parent / Teacher explicit assignment lands in Phase 2 alongside F-PAR-001 / F-TCH-001.
@@ -67,11 +67,11 @@ Companion stories:
   **then** the assignment with earliest `createdAt` takes card ②; the rest move to tomorrow's queue (cap = 1 explicit / day to protect the 3-card budget).
 - **Given** an assignment targets a Quest the learner has not yet unlocked (Stage gating),
   **when** the assignment is created,
-  **then** the create call **fails fast** with a UI message on the caregiver side ("민호 아직 이 Quest 에 닿지 않았어요"). The caregiver never silently creates a blocked assignment.
+  **then** the create call **fails fast** with a UI message on the caregiver side (English, e.g. "Suni hasn't reached this quest yet"). The caregiver never silently creates a blocked assignment. (The draft carried a Korean string here — corrected per CLAUDE.md §8, see §9.1.)
 
 ### 3.5 Accessibility / multi-profile
 
-- 3 cards each ≥ 88 × 88 dp (above the 64 dp baseline — these are primary tap targets).
+- 3 cards each ≥ 88 × 88 dp (above the 64 dp baseline — these are primary tap targets). Implemented with the existing `touchTarget.hero` token (96 dp) rather than a new 88 dp token — see §9.3.
 - Card audio preview uses `platform/audio.ts` wrapper (F-001 §6).
 - Mission generation reads `currentProfileId` from the active profile (F-PROF-001) — switching profiles re-runs §3.1 from scratch.
 
@@ -91,7 +91,7 @@ To be authored in Week 5 design playbook:
 - `design/wireframes/caregiver/homework-assign.md` — parent / teacher assignment screen (Phase 2)
 - `design/screens/home/todays-mission.png` (mid-fi, Week 6)
 
-Tokens only (CLAUDE.md §4). Card state colors come from `colors.surface.celebration` / `colors.surface.idle`.
+Tokens only (CLAUDE.md §4). Card state uses the existing `Card` tones — `success` for collected, `paper` for pending (the draft named `colors.surface.celebration` / `colors.surface.idle`, which do not exist; see §9.3).
 
 ## 6. Tests
 
@@ -133,3 +133,74 @@ Tokens only (CLAUDE.md §4). Card state colors come from `colors.surface.celebra
 
 - **F-PAR-001** consumes the assignment API to create cards from the caregiver side.
 - **F-TCH-001** extends assignment to class-level fan-out.
+
+---
+
+## 9. Decisions (T-027 — draft → ready)
+
+### 9.1 Korean UI string in §3.4 — corrected
+
+The draft specified the caregiver-side gating error as a Korean sentence.
+UI copy is English everywhere (CLAUDE.md §8; Korean appears only as content
+being taught, always with romanization + gloss). §3.4 now carries an English
+message. **Residual risk**: none — no code shipped from the draft wording.
+
+### 9.2 Daily-test card ③ ships behind a capability flag
+
+§3.1 fixes card ③ as a Daily Test from **F-RVW-001**, which is still `draft`
+(its promotion is T-030). Rather than ship a card that navigates nowhere —
+the exact "dead button" class of defect cleaned up in PR #53 — the builder
+takes a `capabilities: { dailyTestAvailable: boolean }` input:
+
+- `dailyTestAvailable: false` (MVP today) → slot ③ falls back down the same
+  preference chain used for slot ①, so the learner still sees **exactly three
+  live cards**. That three-card invariant is the child-facing contract; which
+  engine backs slot ③ is not.
+- `dailyTestAvailable: true` (once F-RVW-001 lands) → slot ③ is the Daily
+  Test, exactly as §3.1 specifies. No builder change, no migration.
+
+**Residual risk**: until F-RVW-001 ships, a learner's third card is a second
+replay/story rather than a spaced-review test, so the review-interval benefit
+of §3.1 is not yet realised. Tracked by T-030–T-032, not by this feature.
+
+### 9.3 Design tokens named in §5 do not exist
+
+`colors.surface.celebration` and `colors.surface.idle` are not in
+`packages/design-system/src/tokens.ts`, and there is no 88 dp touch-target
+token. Rather than invent three tokens for one screen (which would also need
+a `design/tokens/*.v1.md` counterpart to satisfy the F-DES-001 drift gate),
+the surface uses what exists: `Card` tone `success` for a collected card,
+`paper` for a pending one, and `touchTarget.hero` (96 dp) for the minimum
+card height — 96 ≥ 88, so the acceptance criterion holds.
+
+**Residual risk**: `success` tone is shared with other celebratory surfaces,
+so a future visual pass may want a dedicated collected-card tint. That is a
+design-system change (design-system-skill + token sync), deliberately not
+bundled into this feature.
+
+### 9.4 `HomeworkAssignment` — fields added, ordering key unified
+
+`HomeworkAssignmentSchema` already existed in `packages/content-schema`
+(`schemas/progress.ts`) but lacked what §3.4 needs. Added `profileId` (an
+assignment targets one learner) and `targetDate` (the day it is *for*, which
+is not the day it was created). §3.4 speaks of ordering by `createdAt` while
+the schema carries `assignedAt`; unified on **`assignedAt`** rather than
+carrying two timestamps that mean the same thing.
+
+### 9.5 Banned-text enforcement lives in two places
+
+§3.3's list is `missed`, `incomplete`, `failed`, `overdue`. Learner-facing
+copy lives in *both* content JSON and screen code, so one mechanism cannot
+cover it:
+
+1. `scripts/validate-content.mjs` (F-CNT-001) gains a banned-substring pass
+   over learner-facing English fields in `content/**/*.json`.
+2. `logic/homework/banned-text.ts` is the pure, unit-testable guard the app
+   uses for generated copy — the mission builder's own card text is asserted
+   against it in tests.
+
+The check is case-insensitive and word-boundary aware, so legitimate copy is
+not caught by substring accident (e.g. "dismissed" must not trip `missed`).
+The caregiver-surface list (F-PAR-001 §3.6) reuses mechanism 1 and lands with
+T-037; the two lists stay separate because a word banned for a child
+("missed") is sometimes necessary for an adult.

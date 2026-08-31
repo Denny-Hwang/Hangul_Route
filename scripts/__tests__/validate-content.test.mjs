@@ -156,4 +156,62 @@ describe("validate-content.mjs", () => {
       rmSync(root, { recursive: true, force: true });
     }
   });
+
+  // --- F-HW-001 §3.3 banned-on-learner-surface -----------------------------
+
+  test("banned word in a learner-facing field: exit 1 naming the word", () => {
+    const root = makeRoot();
+    try {
+      writeContent(root, "quest.json", {
+        titleEn: "You missed yesterday's quest",
+      });
+      const r = run(root);
+      assert.equal(r.status, 1);
+      assert.match(r.stdout, /banned-on-learner-surface: "missed"/);
+      assert.match(r.stdout, /titleEn/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("all four banned words are caught, case-insensitively", () => {
+    for (const word of ["missed", "Incomplete", "FAILED", "overdue"]) {
+      const root = makeRoot();
+      try {
+        writeContent(root, "q.json", { hoyaLineEn: `This is ${word} today` });
+        const r = run(root);
+        assert.equal(r.status, 1, `expected ${word} to be caught`);
+        assert.match(r.stdout, /banned-on-learner-surface/);
+      } finally {
+        rmSync(root, { recursive: true, force: true });
+      }
+    }
+  });
+
+  test("word-boundary matching: 'dismissed' does not trip 'missed'", () => {
+    const root = makeRoot();
+    try {
+      writeContent(root, "ok.json", {
+        titleEn: "Hoya dismissed the idea",
+        blurbEn: "Incompletely drawn letters are fine",
+      });
+      const r = run(root);
+      assert.equal(r.status, 0, r.stdout);
+      assert.match(r.stdout, /0 violation\(s\)/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("a banned word outside learner-facing fields is not flagged", () => {
+    const root = makeRoot();
+    try {
+      // Internal/authoring metadata is not rendered to a child.
+      writeContent(root, "meta.json", { editorNote: "quest failed review" });
+      const r = run(root);
+      assert.equal(r.status, 0, r.stdout);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
 });
