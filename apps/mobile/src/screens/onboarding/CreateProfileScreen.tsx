@@ -18,6 +18,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useState } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
 import { isValidEmail } from '../../logic/email';
+import { NAME_MAX, validateDisplayName } from '../../logic/profiles/profile-model';
 import type { OnboardingStackParamList } from '../../navigation/types';
 import { track } from '../../platform/telemetry';
 import { useAccountStore } from '../../store/account-store';
@@ -49,9 +50,19 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
   const [parentEmail, setParentEmail] = useState('');
   const [consent, setConsent] = useState(false);
 
-  const nameValid = name.trim().length >= 1 && name.trim().length <= 20;
+  // Single source of truth with the store reducer — createProfile throws on a
+  // name this form would otherwise wave through (F-PROF-001 §3.2).
+  const nameError = validateDisplayName(name);
   const emailOk = parentEmail.trim() === '' || isValidEmail(parentEmail);
-  const valid = nameValid && emailOk && (!needsConsent || consent);
+  const valid = nameError === null && emailOk && (!needsConsent || consent);
+
+  // 'too-short' is just an unfinished field — never scold an empty input.
+  const nameHint =
+    nameError === 'too-long'
+      ? `Names can be up to ${NAME_MAX} letters.`
+      : nameError === 'non-latin'
+        ? 'Please use English letters here.'
+        : null;
 
   const onSubmit = (): void => {
     if (!valid) return;
@@ -82,7 +93,7 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
         onChangeText={setName}
         placeholder="Type your name"
         placeholderTextColor={colors.text.muted}
-        maxLength={20}
+        maxLength={NAME_MAX}
         autoCapitalize="words"
         style={{
           backgroundColor: colors.surface.paper,
@@ -95,6 +106,12 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
           color: colors.text.primary,
         }}
       />
+      {nameHint !== null && (
+        <>
+          <Spacer size="xs" />
+          <Caption tone="secondary">{nameHint}</Caption>
+        </>
+      )}
 
       <Spacer size="xl" />
       <Body weight="semibold">How old are you?</Body>

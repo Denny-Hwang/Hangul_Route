@@ -55,6 +55,17 @@ describe('validateDisplayName', () => {
     expect(validateDisplayName('수니')).toBe('non-latin');
     expect(validateDisplayName('Suni 🐯')).toBe('non-latin');
   });
+
+  // Regression guard: CreateProfileScreen caps its input at NAME_MAX and gates
+  // submit on this validator. If a name the form can produce were rejected
+  // here, createProfile would throw out of the submit handler and strand first-
+  // run onboarding — the bug Codex caught on PR #58.
+  it('accepts a name of exactly NAME_MAX Latin chars, so the form can never feed createProfile a throwing name', () => {
+    expect(validateDisplayName('a'.repeat(NAME_MAX))).toBeNull();
+    expect(() =>
+      createProfile(EMPTY, { ...learnerInput, displayName: 'a'.repeat(NAME_MAX) }, clockFrom(['k'])),
+    ).not.toThrow();
+  });
 });
 
 describe('createProfile', () => {
