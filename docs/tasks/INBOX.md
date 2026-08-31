@@ -25,9 +25,6 @@
 > 의존성 순서: F-PROF-001 → F-HW-001 → F-RVW-001 → F-PAR-001 → (Phase 2) F-TCH-001.
 
 - [ ] T-026 F-PROF-001 onboarding flow + 마이그레이션 ("Default" 학습자 래핑) E2E — 1d
-- [ ] T-027 F-HW-001 draft → ready: HomeworkAssignment zod 스키마 + F-CNT-001 banned-on-learner-surface 확장 합의 — 0.5d
-- [ ] T-028 F-HW-001 mission-builder 로직 (3 카드 룰) + 단위 테스트 100% — 1d
-- [ ] T-029 F-HW-001 Today's mission 홈 화면 (3 카드, anti-shame 카피) — 1d
 - [ ] T-030 F-RVW-001 draft → ready: ReviewAttempt / ReviewItem zod + Stage 1 item seed (`content/reviews/stage-1.json`) — 1d
 - [ ] T-031 F-RVW-001 engine: star-calc / daily-pool / stage-balance + 단위 테스트 100% — 1.5d
 - [ ] T-032 F-RVW-001 Daily Test player + Feedback Review tail (Quest 통합) — 1d
