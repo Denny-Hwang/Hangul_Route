@@ -40,12 +40,20 @@ export const SessionLogSchema = z.object({
 });
 export type SessionLog = z.infer<typeof SessionLogSchema>;
 
+/**
+ * HomeworkAssignment — an explicit caregiver assignment (F-HW-001 §3.4).
+ * `assignedAt` is the ordering key when several compete for the same day;
+ * `targetDate` (YYYY-MM-DD) is the day the assignment is *for*, which is not
+ * the day it was created.
+ */
 export const HomeworkAssignmentSchema = z.object({
   id: z.string(),
+  profileId: z.string(),
   questId: z.string(),
   episodeId: z.string(),
   assignedBy: z.enum(['parent', 'teacher', 'system']),
   assignedAt: z.string(),
+  targetDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   dueAt: z.string().optional(),
   completedAt: z.string().optional(),
 });
