@@ -5,6 +5,7 @@ import {
   Heading,
   Hoya,
   HoyaBubble,
+  Icon,
   Pill,
   Progress,
   Screen,
@@ -14,8 +15,10 @@ import {
 import { CommonActions, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect } from 'react';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { questById } from '../../content';
+import { questOutcome } from '../../logic/quest-outcome';
+import { confirm } from '../../platform/dialog';
 import type { RootStackParamList } from '../../navigation/types';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
@@ -52,18 +55,36 @@ export function QuestPlayerScreen({ route, navigation }: Props): React.ReactElem
   const step = quest?.steps[stepIndex];
 
   const finishQuest = (): void => {
-    const stars = useQuestRunStore.getState().stars();
-    const correct = useQuestRunStore.getState().correctCount;
-    const total = useQuestRunStore.getState().totalCount;
+    // Honest outcome: a quest with every game skipped is 0 / 0, not 5 / 5.
+    const run = useQuestRunStore.getState();
+    const { stars, correct, total } = questOutcome(run.correctCount, run.totalCount);
     navigation.dispatch(
       CommonActions.reset({
         index: 1,
         routes: [
           { name: 'Main' },
-          { name: 'Results', params: { questId, episodeId, stars, correct: correct || 5, total: total || 5 } },
+          { name: 'Results', params: { questId, episodeId, stars, correct, total } },
         ],
       }),
     );
+  };
+
+  // Quit control (wireframe quest/player): one-line confirm, then back to the
+  // episode page with the run discarded. Progress already saved is untouched.
+  const leaveQuest = (): void => {
+    useQuestRunStore.getState().reset();
+    navigation.replace('EpisodeDetail', { episodeId });
+  };
+  const confirmQuit = (): void => {
+    void confirm({
+      title: 'Leave this quest?',
+      message: 'Stars from this try will not be saved.',
+      confirmLabel: 'Leave',
+      cancelLabel: 'Keep playing',
+      destructive: true,
+    }).then((yes) => {
+      if (yes) leaveQuest();
+    });
   };
 
   const advance = (): void => {
@@ -79,6 +100,8 @@ export function QuestPlayerScreen({ route, navigation }: Props): React.ReactElem
     return (
       <Screen>
         <Body>Quest not found.</Body>
+        <Spacer size="lg" />
+        <Button label="Go back" tone="secondary" size="md" onPress={() => navigation.goBack()} />
       </Screen>
     );
   }
@@ -86,6 +109,15 @@ export function QuestPlayerScreen({ route, navigation }: Props): React.ReactElem
   return (
     <Screen tone="canvas">
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+        <Pressable
+          onPress={confirmQuit}
+          hitSlop={spacing.md}
+          accessibilityRole="button"
+          accessibilityLabel="Leave quest"
+          style={{ padding: spacing.xs }}
+        >
+          <Icon name="close" size={24} />
+        </Pressable>
         <View style={{ flex: 1 }}>
           <Progress value={stepIndex + 1} max={quest.steps.length} tone="primary" variant="dots" />
         </View>
