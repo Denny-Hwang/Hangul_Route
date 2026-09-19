@@ -7,7 +7,7 @@ import { CardDetailScreen } from '../screens/library/CardDetailScreen';
 import { EpisodeDetailScreen } from '../screens/episode/EpisodeDetailScreen';
 import { OnboardingStack } from './onboarding';
 import { ParentDashboardScreen } from '../screens/parent/ParentDashboardScreen';
-import { ParentGateScreen } from '../screens/parent/ParentGateScreen';
+import { PinEntryScreen } from '../screens/parent/PinEntryScreen';
 import { ProfileScreen } from '../screens/profile/ProfileScreen';
 import { HomeworkScreen } from '../screens/homework/HomeworkScreen';
 import { QuestPlayerScreen } from '../screens/quest/QuestPlayerScreen';
@@ -33,7 +33,7 @@ export function RootNavigator(): React.ReactElement {
       <Stack.Screen name="Minigame" component={MinigameScreen} />
       <Stack.Screen name="Results" component={ResultsScreen} options={{ animation: 'fade' }} />
       <Stack.Screen name="CardDetail" component={CardDetailScreen} options={{ presentation: 'modal' }} />
-      <Stack.Screen name="ParentGate" component={ParentGateScreen} options={{ presentation: 'modal' }} />
+      <Stack.Screen name="PinEntry" component={PinEntryScreen} options={{ presentation: 'modal' }} />
       <Stack.Screen name="ParentDashboard" component={ParentDashboardScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
       <Stack.Screen name="Homework" component={HomeworkScreen} />

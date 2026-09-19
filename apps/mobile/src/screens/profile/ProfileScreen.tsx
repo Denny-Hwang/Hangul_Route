@@ -5,6 +5,7 @@ import {
   Card,
   Heading,
   Hoya,
+  Icon,
   Pill,
   Screen,
   Spacer,
@@ -18,10 +19,13 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React from 'react';
 import { Pressable, View } from 'react-native';
 import { entitlementTier } from '../../logic/entitlement';
+import { isParentSessionValid } from '../../logic/profiles/session';
 import type { RootStackParamList } from '../../navigation/types';
+import { setMuted } from '../../platform/audio';
 import { useAccountStore } from '../../store/account-store';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
+import { useUiStore } from '../../store/ui-store';
 
 export function ProfileScreen(): React.ReactElement {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -31,10 +35,41 @@ export function ProfileScreen(): React.ReactElement {
   const snap = useProgressStore((s) => (active ? s.byProfile[active.id] : undefined));
   const subscription = useAccountStore((s) => s.subscription);
   const tier = entitlementTier(subscription, new Date());
+  const soundOn = useUiStore((s) => s.soundOn);
+  const toggleSound = useUiStore((s) => s.toggleSound);
+  const parentGateOpenedAt = useUiStore((s) => s.parentGateOpenedAt);
+
+  // A verified grown-up may add another child without re-entering the PIN
+  // inside the 15-minute session window (F-PROF-001 §3.2).
+  const parentSessionOpen = isParentSessionValid(
+    parentGateOpenedAt === null ? null : { openedAt: parentGateOpenedAt, profileId: 'family' },
+    Date.now(),
+  );
+  const openGrownUps = (next: 'ParentDashboard' | 'AddProfile'): void => {
+    if (parentSessionOpen) {
+      if (next === 'AddProfile') {
+        navigation.navigate('Onboarding', { screen: 'CreateProfile', params: { firstRun: false } });
+      } else {
+        navigation.navigate('ParentDashboard');
+      }
+      return;
+    }
+    navigation.navigate('PinEntry', { next });
+  };
 
   return (
     <Screen tone="canvas" scrollable>
-      <Heading level="title">Profiles</Heading>
+      <Pressable
+        onPress={() => navigation.goBack()}
+        hitSlop={spacing.md}
+        accessibilityRole="button"
+        accessibilityLabel="Go back"
+        style={{ alignSelf: 'flex-start', padding: spacing.xs }}
+      >
+        <Icon name="arrow-left" size={28} />
+      </Pressable>
+      <Spacer size="sm" />
+      <Heading level="title">Profiles & settings</Heading>
       <Spacer size="xs" />
       <Body tone="secondary">Tap a Hoya to switch.</Body>
 
@@ -74,7 +109,8 @@ export function ProfileScreen(): React.ReactElement {
         label="+ Add a profile"
         tone="secondary"
         size="md"
-        onPress={() => navigation.navigate('Onboarding', { screen: 'CreateProfile', params: { firstRun: false } })}
+        accessibilityLabel="Add a profile (grown-ups only)"
+        onPress={() => openGrownUps('AddProfile')}
       />
 
       <Spacer size="xxl" />
@@ -91,11 +127,33 @@ export function ProfileScreen(): React.ReactElement {
             <Heading level="prompt">{snap?.cards.length ?? 0}</Heading>
           </View>
           <View>
-            <Caption tone="muted">Streak</Caption>
-            <Heading level="prompt">{snap?.streakDays ?? 0}</Heading>
+            <Caption tone="muted">3-star quests</Caption>
+            <Heading level="prompt">{snap?.quests.filter((q) => q.stars === 3).length ?? 0}</Heading>
           </View>
         </View>
       </Card>
+
+      <Spacer size="lg" />
+      <Pressable
+        onPress={() => {
+          setMuted(soundOn);
+          toggleSound();
+        }}
+        accessibilityRole="switch"
+        accessibilityState={{ checked: soundOn }}
+        accessibilityLabel="Sound"
+        style={{ minHeight: touchTarget.min }}
+      >
+        <Card padding="md">
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1 }}>
+              <Icon name="speaker" size={24} color={soundOn ? colors.brand.primary : colors.text.muted} />
+              <Body weight="semibold">Sound</Body>
+            </View>
+            <Pill tone={soundOn ? 'success' : 'neutral'} label={soundOn ? 'On' : 'Off'} size="sm" />
+          </View>
+        </Card>
+      </Pressable>
 
       <Spacer size="lg" />
       <Card padding="md" tone={tier === 'premium' ? 'success' : 'sunken'}>
@@ -121,7 +179,8 @@ export function ProfileScreen(): React.ReactElement {
         label="Grown-up zone"
         tone="ghost"
         size="md"
-        onPress={() => navigation.navigate('ParentGate', { next: 'ParentDashboard' })}
+        accessibilityLabel="Grown-up zone (PIN required)"
+        onPress={() => openGrownUps('ParentDashboard')}
       />
       <Spacer size="xl" />
     </Screen>
