@@ -234,3 +234,10 @@ variants. §3.2 updated.
 must reuse avatars. Duplicates are explicitly allowed (see
 `design/wireframes/profiles/create-learner.md` open questions) — restricting
 them would invite comparison and conflict between children.
+
+## 10. Implementation notes (2026-09-19 reconciliation)
+
+- **Shipped gap**: the v1.0 onboarding creates a learner directly (consent checkbox + optional email) and there is no parent profile / PIN entry UI yet — only the logic (`logic/profiles/pin-hash.ts`, `session.ts`). The math-question `ParentGate` screen shipped as an interim gate.
+- **Ruling** (`docs/blueprints/10-app-map.md` §7): the math gate is retired. `profiles/pin-entry` is the single grown-up gate. Until parent-first onboarding (§3.2) ships, the first entry into the grown-up zone runs a **PIN setup** step (family-level PIN persisted via `account-store`), after which §3.1 cooldown rules apply.
+- PIN-gated surfaces: `parent/dashboard`, "Add a profile", `sync/save-progress` (rotate), `sync/join-space`, `paywall/upgrade`, `console/account`.
+

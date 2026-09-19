@@ -7,7 +7,8 @@ export type RootStackParamList = {
   QuestPlayer: { questId: string; episodeId: string };
   Results: { questId: string; episodeId: string; stars: 0 | 1 | 2 | 3; correct: number; total: number };
   CardDetail: { cardId: string };
-  ParentGate: { next: 'ParentDashboard' };
+  /** Grown-up gate (PIN). `AddProfile` continues into Onboarding/CreateProfile. */
+  PinEntry: { next: 'ParentDashboard' | 'AddProfile' };
   ParentDashboard: undefined;
   Profile: undefined;
   Homework: undefined;

@@ -2,7 +2,11 @@
 
 **전방 계획** 디렉토리. 회고는 `docs/weekly/` 에 분리되어 있다.
 
-## 구성 (예정)
+## 구성
+- `web-pwa-offline.md` — 웹앱(PWA) + 오프라인 전환 구상안 (proposal)
+- `multi-persona-sync-platform.md` — 개인·가정·학급·학교 페르소나, 교사 학습 계획, 동기화·복원, 결제 — 최소 DB 설계안 (proposal)
+
+### 예정
 - `2026-q2.md` — 분기 OKR / 마일스톤
 - `milestones.md` — 주요 이정표 (알파, 베타, v1)
 - `backlog-themes.md` — 큰 덩어리 테마 (Stage 축, 공간 축, 플랫폼)

@@ -1,4 +1,4 @@
-import { Body, Screen } from '@hangul-route/design-system';
+import { Body, Button, Screen, Spacer } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React from 'react';
 import { flags } from '../../config/flags';
@@ -38,12 +38,17 @@ export function MinigameScreen({ route, navigation }: Props): React.ReactElement
     navigation.goBack();
   };
 
+  // Every non-game state keeps a way out (wireframe minigame/shell: no dead ends).
+  const fallback = (message: string): React.ReactElement => (
+    <Screen>
+      <Body>{message}</Body>
+      <Spacer size="lg" />
+      <Button label="Back to quest" tone="secondary" size="md" onPress={() => navigation.goBack()} />
+    </Screen>
+  );
+
   if (!quest || !step || !scope) {
-    return (
-      <Screen>
-        <Body>Minigame not found.</Body>
-      </Screen>
-    );
+    return fallback('Minigame not found.');
   }
 
   switch (scope.kind) {
@@ -59,11 +64,7 @@ export function MinigameScreen({ route, navigation }: Props): React.ReactElement
       return <StorySequenceGame scope={scope} onFinish={close} />;
     case 'voice-echo':
       if (!flags.voiceEchoEnabled) {
-        return (
-          <Screen>
-            <Body>Voice practice is opening in our next beta.</Body>
-          </Screen>
-        );
+        return fallback('Voice practice is opening in our next beta.');
       }
       return <VoiceEchoGame scope={scope} onFinish={close} />;
     case 'odd-one-out':
@@ -73,10 +74,6 @@ export function MinigameScreen({ route, navigation }: Props): React.ReactElement
     case 'tap-respond':
       return <TapRespondGame scope={scope} onFinish={close} />;
     default:
-      return (
-        <Screen>
-          <Body>This minigame is coming soon.</Body>
-        </Screen>
-      );
+      return fallback('This minigame is coming soon.');
   }
 }

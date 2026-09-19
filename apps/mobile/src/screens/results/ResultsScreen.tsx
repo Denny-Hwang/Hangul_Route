@@ -26,6 +26,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
 import { episodeById, questById } from '../../content';
+import { shouldUnlockCard } from '../../logic/reward';
 import { useReducedMotion } from '../../platform/motion';
 import { track } from '../../platform/telemetry';
 import type { RootStackParamList } from '../../navigation/types';
@@ -45,6 +46,16 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
 
   useEffect(() => {
     if (!profile || !quest) return;
+    if (total === 0) {
+      // Every game skipped: nothing to score, nothing to complete — the quest
+      // stays available on the episode page exactly as before.
+      void track({
+        name: 'quest.complete',
+        profileId: profile.id,
+        payload: { questId, episodeId, stars: 0, correct: 0, total: 0, skipped: true },
+      });
+      return;
+    }
     recordQuestComplete(profile.id, {
       questId,
       episodeId,
@@ -57,7 +68,8 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
       profileId: profile.id,
       payload: { questId, episodeId, stars, correct, total },
     });
-    if (quest.rewardCardId) {
+    // F-MOTION-003 §3.5 — the card is written only when the banner is shown.
+    if (quest.rewardCardId && shouldUnlockCard(stars)) {
       const wasFirstCard =
         (useProgressStore.getState().byProfile[profile.id]?.cards.length ?? 0) === 0;
       unlockCard(profile.id, quest.rewardCardId);
@@ -76,14 +88,16 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
     }
   }, [profile, quest, questId, episodeId, stars, correct, total, recordQuestComplete, unlockCard]);
 
+  const played = total > 0;
   const cheerMessage = useMemo(() => {
+    if (!played) return 'Play the games next time to earn stars and a card!';
     if (stars === 3) return 'Perfect! You got every one!';
     if (stars === 2) return 'Nice work! Try one more for three stars.';
     if (stars === 1) return 'Good start. Want to play it again?';
     return 'Brave try! Let&apos;s do it together.';
-  }, [stars]);
+  }, [stars, played]);
 
-  const showCardUnlock = !!quest?.rewardCardId && stars >= 2;
+  const showCardUnlock = !!quest?.rewardCardId && shouldUnlockCard(stars);
   const showSparkles = !!quest?.rewardCardId && stars >= 3;
 
   return (
@@ -91,7 +105,9 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
       <View style={{ alignItems: 'center', paddingTop: spacing.xxl }}>
         <Hoya pose={stars >= 2 ? 'cheering' : 'thinking'} size={140} />
         <Spacer size="lg" />
-        <Heading level="display">{stars === 3 ? 'Wonderful!' : stars >= 2 ? 'Great!' : 'You tried!'}</Heading>
+        <Heading level="display">
+          {!played ? 'All done!' : stars === 3 ? 'Wonderful!' : stars >= 2 ? 'Great!' : 'You tried!'}
+        </Heading>
         <Spacer size="sm" />
         <StarRow stars={stars} size={48} />
       </View>
@@ -108,7 +124,7 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
 
       <View style={{ flex: 1 }} />
       <Button
-        label="Back to journey"
+        label="Back home"
         tone="primary"
         size="hero"
         fullWidth

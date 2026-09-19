@@ -42,7 +42,7 @@ Companion stories:
   **then** stars are awarded as: `K / N ≥ 0.8 → 3 stars`, `0.5 ≤ K / N < 0.8 → 2 stars`, `K / N < 0.5 → 1 star`.
 - **Given** the learner answered 0 / N correctly,
   **when** the result renders,
-  **then** the screen still awards **1 star** and renders Hoya in `thinking` pose with copy *"좋은 시도! 별 하나 모았어!"* — never 0 stars, never empty.
+  **then** the screen still awards **1 star** and renders Hoya in `thinking` pose with copy *"Good try! You collected a star!"* (English — CLAUDE.md §8; Korean appears only as taught content) — never 0 stars, never empty.
 - The learner result screen must not render any percentage, ratio, fraction, or comparative number. Lint: extend F-CNT-001 banned regex with `\d+\s*%`, `\d+\s*/\s*\d+`.
 
 ### 3.2 Daily Test — spaced retrieval
@@ -65,16 +65,16 @@ Companion stories:
 
 - **Given** a Quest's Step 5 Celebrate fires,
   **when** the Quest has new-element count ≥ 1,
-  **then** a 1-question Feedback Review fires inline (within the same Celebrate surface), prompting recall of the Quest's main new element.
+  **then** a 1-question Feedback Review fires inline — same route as `results/celebrate`, rendered as a second panel after the stars register (no new navigation entry; wireframe `design/wireframes/reviews/feedback-review.md`) — prompting recall of the Quest's main new element. The trigger is new-element count ≥ 1, **not** "≥ 1 wrong item": a perfect Quest still seeds tomorrow's Daily Test pool (§3.2). Ruling recorded in `docs/blueprints/10-app-map.md` §7.
 - **Given** the learner answers the Feedback Review,
   **when** the answer registers,
-  **then** Hoya delivers a recap line ("오늘 ㅂ 을 4 번 봤어!") regardless of correctness. **No extra stars** — Quest score absorbs the result.
+  **then** Hoya delivers a recap line (e.g. *"You saw ㅂ four times today!"* — English frame, the jamo is the taught content) regardless of correctness. **No extra stars** — Quest score absorbs the result.
 - Feedback Review must complete in ≤ 45 s wall-clock, including animation. If the learner doesn't answer within 15 s, the system auto-marks `skipped` (not wrong) and proceeds to Hoya recap.
 
 ### 3.4 Stage Review — anchor audit
 
 - **Given** a learner completes the last Episode of a Stage,
-  **when** the Episode results screen exits,
+  **when** the Episode results screen exits (or, later, when the learner taps the completed Stage cell on `journey/grid` — both entries lead here),
   **then** a Stage Review **invitation** appears (skippable — "Now or later?"). Default: take now.
 - **Given** the learner accepts a Stage Review,
   **when** items are built,
@@ -95,7 +95,7 @@ Companion stories:
 
 ### 3.6 Persistence
 
-- Each `ReviewAttempt` is persisted to the active profile's local store (Phase 1 — `packages/hooks` AsyncStorage wrapper).
+- Each `ReviewAttempt` is persisted to the active profile's local store (Phase 1 — through `apps/mobile/src/platform/storage.ts`, the only sanctioned AsyncStorage surface; `packages/hooks` does not exist in the tree).
 - The last 30 attempts are retained per profile; older attempts roll into a monthly `ReviewSummary` aggregate (stars histogram, misses by item).
 - Phase 2: same writes go to D1 (F-INFRA-004).
 
@@ -108,13 +108,11 @@ Companion stories:
 
 ## 5. UI sketch
 
-To be authored in Week 5–6 design playbook:
+Authored 2026-09-19 (IDs per `docs/blueprints/10-app-map.md` §3.1):
 
 - `design/wireframes/reviews/daily-test.md`
-- `design/wireframes/reviews/feedback-tail.md`
-- `design/wireframes/reviews/stage-review.md`
-- `design/wireframes/reviews/stage-certificate.md`
-- `design/wireframes/reviews/collection-wall.md`
+- `design/wireframes/reviews/feedback-review.md` — the Quest tail (§3.3)
+- `design/wireframes/reviews/stage-review.md` — invitation + review; certificate and collection wall are the certificate variant of `design/wireframes/results/celebrate.md`
 
 ## 6. Tests
 

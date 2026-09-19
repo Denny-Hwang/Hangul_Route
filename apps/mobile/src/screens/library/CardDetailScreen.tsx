@@ -6,6 +6,7 @@ import {
   Card,
   Heading,
   HeritageCardArt,
+  HoyaBubble,
   Icon,
   Pill,
   Screen,
@@ -64,6 +65,8 @@ export function CardDetailScreen({ route, navigation }: Props): React.ReactEleme
   // `progress` runs 0 (flat showing current face) → 1 (edge-on at 90°, content swaps) → 0 (flat showing new face).
   const progress = useSharedValue(0);
   const flippingRef = useRef(false);
+  // Mirrors flippingRef for rendering: Share is gated mid-flip (F-CARD-003 §8).
+  const [isFlipping, setIsFlipping] = useState(false);
 
   const swapFace = (next: CardFace): void => {
     setFace(next);
@@ -104,6 +107,7 @@ export function CardDetailScreen({ route, navigation }: Props): React.ReactEleme
       return;
     }
     flippingRef.current = true;
+    setIsFlipping(true);
     const legMs = motion.duration.base; // 200ms each leg → ~400ms total
     progress.value = withTiming(
       1,
@@ -124,6 +128,7 @@ export function CardDetailScreen({ route, navigation }: Props): React.ReactEleme
 
   function setFlipping(value: boolean): void {
     flippingRef.current = value;
+    setIsFlipping(value);
   }
 
   return (
@@ -227,8 +232,10 @@ export function CardDetailScreen({ route, navigation }: Props): React.ReactEleme
             tone="ghost"
             size="md"
             accessibilityLabel="Share this card"
+            disabled={isFlipping}
             leading={<Icon name="card" size={18} color={colors.brand.primary} />}
             onPress={async () => {
+              setShareError(null);
               const slug = card.id.replace('card:', '');
               const res = await shareSnapshot({
                 viewRef: captureRef,
@@ -243,9 +250,8 @@ export function CardDetailScreen({ route, navigation }: Props): React.ReactEleme
           {shareError ? (
             <>
               <Spacer size="sm" />
-              <Caption tone="muted" align="center">
-                {shareError}
-              </Caption>
+              {/* F-CARD-003 §3.4 — quiet Hoya bubble, button stays tappable for retry. */}
+              <HoyaBubble tone="thinking" message={shareError} />
             </>
           ) : null}
         </>

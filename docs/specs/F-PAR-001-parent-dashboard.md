@@ -103,6 +103,7 @@ Suggestions are produced by a small rules table:
   **when** the dashboard builds,
   **then** only learner profiles created **on this device** by **this parent profile** appear. Phase 1 has no cross-device link (no Clerk yet).
 - A learner without a linked parent (e.g. a teacher-created profile, Phase 2) does **not** render on this dashboard.
+- **Phase 2 note**: once F-SYNC-001 / F-SPACE-001 land (roadmap `multi-persona-sync-platform.md` §1), "linked" means *membership in this parent's family space*, so a learner who is also in a class shows here with the same `summary_json` the teacher sees. A class average is a teacher-roster number only (F-TCH-001 §3.2) and must never reach the shared read-only `parent/learner-detail` component.
 
 ### 3.6 Anti-shame contract — extends to caregivers
 
