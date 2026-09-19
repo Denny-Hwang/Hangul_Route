@@ -4,6 +4,8 @@ Spec: none (code-only surface; app-map §3.1 marks it "코드만") · store poli
 Audience: **parent** — a child will see it; it must be boring and give nothing for poking
 Code (back-filled): `apps/mobile/src/screens/parent/ParentGateScreen.tsx` — route `ParentGate { next: 'ParentDashboard' }`, `presentation: 'modal'`
 
+> **Status 2026-09-19: retired.** The math gate is replaced by `profiles/pin-entry` (PIN, with first-entry PIN setup) — 10-app-map §7 #1, F-PROF-001 §10. Kept as the record of what shipped in v1.0.
+
 ## Scenario (Given-When-Then)
 
 Given: someone tapped "Grown-up zone" on `profile/settings`

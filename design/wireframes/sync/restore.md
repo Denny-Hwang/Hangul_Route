@@ -76,7 +76,7 @@ Exit to:    `profiles/picker` · `sync/merge-notice` · `console/sign-in` · `on
 
 ## Open questions
 
-- Class students (P-C): roadmap §5 offers "join code → pick name from roster → teacher approval" as a fourth path. This wireframe routes them through `sync/join-space` instead; confirm whether restore should surface that path here too (a fourth button breaks the one-goal budget).
+- ~~Class students fourth path~~ **Resolved 2026-09-19**: restore keeps three paths; the class re-link path ("I was already in this class" → roster name → `console/relink-approval`) lives in `sync/join-space` (10-app-map §7 #14).
 - When an account has several learners, is the picker a fourth panel here, or a re-use of `profiles/picker` with a "restore" header?
 - File path on iOS Safari (PWA) uses the Files app; confirm the export format (`.hangulroute.json`) is recognised so it appears at all.
 - Rate-limit UX (5/hour/IP per roadmap §5.1): show remaining attempts or not? Leaning no — it reads as a threat to a child.

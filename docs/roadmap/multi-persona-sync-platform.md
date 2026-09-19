@@ -57,6 +57,7 @@ CREATE TABLE accounts (
   id            TEXT PRIMARY KEY,          -- Clerk user id
   email         TEXT UNIQUE,
   display_name  TEXT,
+  consent_json  TEXT,                      -- {acceptedAt, policyVersion, mode:'parent'|'school'} — console/account 가 표시
   created_at    TEXT NOT NULL
 );
 
@@ -249,7 +250,7 @@ BP09 §3.5 / F-PAR-001 §3.2 의 대시보드 숫자가 전부 이 객체에서 
 | 상황 | 어떤 사용자 | 복원 경로 | 필요한 것 |
 |---|---|---|---|
 | 앱 삭제 후 재설치 / 새 기기 | P-B 가정 | 부모 Clerk 로그인 → family space 의 learners 목록 → 아이 선택 → snapshot pull | 계정 |
-| 새 기기 | P-C 학급 학생 | 학급 join code → roster 에서 이름 선택 → **교사 승인** (roster 카드 "Allow re-link" 10분 창) 또는 Rescue Code | join code + 교사 or 코드 |
+| 새 기기 | P-C 학급 학생 | `sync/join-space` 에서 join code 입력 → "I was already in this class" → roster 에서 이름 선택 → **교사 승인** (`console/relink-approval`, 10분 창) 또는 Rescue Code. (`sync/restore` 는 3경로만 — 한 화면 한 목표) | join code + 교사 or 코드 |
 | 계정 없음 (P-A) | 혼자 하는 아이 | **Rescue Code** 입력 → `recovery_hash` 매칭 → snapshot pull | 코드 |
 | 인터넷을 한 번도 안 쓴 기기 | 누구나 | 진도 파일 내보내기/가져오기 (`.hangulroute.json`, 공유시트 / 다운로드) — 서버 불필요 | 없음 |
 
@@ -258,7 +259,7 @@ BP09 §3.5 / F-PAR-001 §3.2 의 대시보드 숫자가 전부 이 객체에서 
 - 형식: `TIGER-MOON-4821` (동물·자연 단어 2개 + 숫자 4자리, 아이가 읽을 수 있는 영어 단어 목록 256개 → 256² × 10⁴ ≈ 6.5억 조합).
 - 생성 시점: learner 첫 스냅샷 업로드 성공 직후. 프로필 화면 "Save my progress" 카드에 표시 + 부모 이메일이 있으면 발송 (Resend). Hoya: *"Write this down — it brings your cards back on any device!"*
 - 저장: 서버는 `sha256(code)` 만 (`learners.recovery_hash`). 재발급하면 이전 코드 무효.
-- 방어: `/recovery/claim` 은 IP 당 5회/시간, 실패 시 지수 백오프. 성공 시 새 device 가 이 learner 를 "소유" (기존 기기는 그대로 — 두 기기 병합은 §4 merge 가 처리).
+- 방어: `/recovery/claim` 은 IP 당 5회/시간, 실패 시 지수 백오프. **재발급(`/recovery/rotate`)은 기기 소유만으로는 안 된다** — 클라이언트는 부모 PIN 뒤에 두고, 서버는 현재 `snapshots.device_id` 와 일치하는 기기이거나 caregiver membership 을 가진 account 만 허용. 성공 시 새 device 가 이 learner 를 "소유" (기존 기기는 그대로 — 두 기기 병합은 §4 merge 가 처리).
 - 학급 학생도 자동으로 받으므로 교사 승인 없이도 복원 가능. 교사는 roster 에서 "Show rescue code" 로 잃어버린 아이에게 다시 알려줄 수 있다 (summary 만 보는 규칙에 위배되지 않음 — 코드는 진도 데이터가 아님).
 
 ### 5.2 복원 시 병합
@@ -327,7 +328,9 @@ BP09 §3.5 / F-PAR-001 §3.2 의 대시보드 숫자가 전부 이 객체에서 
 | GET | `/sync/learners/:id/inbox` | learner 기기 | plans + memberships + tier + rev |
 | GET | `/sync/learners/:id/snapshot` | learner 기기, caregiver | 전체 payload (복원) |
 | POST | `/recovery/claim` | 누구나 (코드, rate-limited) | Rescue Code → learner 바인딩 |
-| POST | `/recovery/rotate` | learner 기기 | 코드 재발급 |
+| POST | `/recovery/rotate` | learner 기기 (부모 PIN 뒤) 또는 caregiver account | 코드 재발급 (§5.1 방어 규칙) |
+| POST | `/spaces/:id/relink-requests` | 누구나 (join code + roster 이름) | 재연결 요청 생성 (10분 만료) |
+| POST | `/spaces/:id/relink-requests/:rid/approve` · `/deny` | teacher/admin | 승인 시 요청 기기에 learner 바인딩 |
 | DELETE | `/learners/:id` | caregiver/teacher(school-consent) | 삭제권 |
 | POST | `/entitlements/stripe/webhook` · `/entitlements/verify` | Stripe / 앱 | entitlement upsert |
 
@@ -341,7 +344,8 @@ BP09 §3.5 / F-PAR-001 §3.2 의 대시보드 숫자가 전부 이 객체에서 
 |---|---|
 | 아이 혼자 시작, 6개월 뒤 부모가 계정 만들어 합류 | learner 는 이미 있음 → 부모가 family 생성 → 아이 기기에서 family join code 입력 → membership 추가. 진도 이동 없음 |
 | 형제 2명이 태블릿 1대 | family 1 + learners 2 + snapshots 2. 기존 F-PROF-001 그대로 |
-| 학급 학생이 집에서 부모 대시보드로도 보임 | learner 가 family + class 양쪽 membership. summary 1개를 둘 다 읽음 |
+| 학급 학생이 집에서 부모 대시보드로도 보임 | learner 가 family + class 양쪽 membership. summary 1개를 둘 다 읽음 (F-PAR-001 §3.5 Phase 2 note) |
+| 교사 계획에 학생이 아직 못 연 퀘스트가 있다 | 학생 기기가 파생 시 건너뛰고 `summary.planProgress` 에 not-ready 로 보고. 교사 roster 각주. (부모의 단건 배정은 F-HW-001 §3.4 대로 즉시 실패) |
 | 교사가 반을 다음 학기에 새로 만듦 | 새 class space. 학생은 새 코드로 join (3개 캡 안). 옛 class 는 archive (membership 유지, join 불가) |
 | 학교가 교사 5명에게 Pro 를 주고 싶다 | school entitlement 1행. §3.2 규칙이 하위 class 전부에 전파 |
 | 아이가 학급을 떠났는데 프리미엄이 계속 보인다 | inbox 의 tier 가 free 로 → 로컬 `validUntil` 만료 후 잠금. 오프라인이면 최대 7일 유예 |

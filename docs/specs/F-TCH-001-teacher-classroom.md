@@ -35,8 +35,8 @@ Companion stories:
 
 - **Given** a teacher profile signs up via Clerk (Phase 2 — teacher onboarding is web-first),
   **when** the teacher creates a class,
-  **then** a 6-digit alphanumeric **join code** is generated (e.g. `K7M2X9`), unique across all active classes, valid for 30 days, regenerable.
-- **Given** a learner enters a join code from their mobile Profile Picker settings,
+  **then** a 6-character base32 **join code** is generated (e.g. `K7M2X9`), unique across all active classes, valid for 30 days, regenerable.
+- **Given** a learner enters a join code from `profile/settings` → `sync/join-space` (parent-gated on the learner device; wireframe `design/wireframes/sync/join-space.md`),
   **when** the code validates,
   **then** the learner profile becomes a member of that class (membership = `(profileId, classId, role: 'student')`). A learner may belong to at most **3 classes simultaneously** (MVP cap).
 - Codes use base32 (no I, O, 1, 0) to avoid confusable characters when read aloud.
@@ -68,17 +68,17 @@ Companion stories:
 
 - **Given** the teacher selects 1 assignable target (Episode / Daily Test / Story / Theme Pack) from the catalog,
   **when** the teacher confirms,
-  **then** F-HW-001 §3.4 fan-outs: one `HomeworkAssignment` is created per roster learner, with `source = 'teacher'` and shared `assignmentGroupId` for class-level tracking.
+  **then** one **plan** row is published for the class (roadmap `docs/roadmap/multi-persona-sync-platform.md` §2 `plans`); each learner device derives its own `HomeworkAssignment`s (`assignedBy = 'teacher'`) from the plan on its next sync — there is no server-side per-learner fan-out. The plan id plays the role the draft called `assignmentGroupId`.
 - **Given** any roster learner has not yet unlocked the target (Stage gating),
   **when** fan-out runs,
-  **then** that learner is **silently skipped** in the fan-out (no error to teacher, but the roster card shows "1 student not yet ready" footnote). Teacher can opt to send to *unlocked-only* with one tap.
+  **then** that learner's device skips the locked item when deriving assignments and reports it in `summary.planProgress` as not-ready; the roster shows a "1 student not yet ready" footnote. No error to the teacher. **Ruling (10-app-map §7)**: class plans skip silently on-device; a single caregiver assignment (F-HW-001 §3.4) still fails fast — the two rules coexist because they answer different questions (bulk plan vs one explicit assignment).
 - Per F-HW-001 §3.4 the per-learner cap is 1 explicit assignment per day; teacher fan-outs are subject to the same cap.
 
 ### 3.4 Projection Mode (mobile)
 
 - **Given** a teacher profile is active on a mobile device,
   **when** the teacher toggles "Projection Mode" in settings,
-  **then** all subsequent screens render with: font scale 200 %, audio volume +6 dB, tap targets ≥ 128 dp.
+  **then** all subsequent screens render with: font scale 200 %, tap targets ≥ 128 dp, and an audio boost **where the platform allows it** (Android media gain; iOS cannot exceed the system media volume, so Projection Mode instead shows a "turn up the volume" hint and a larger replay control).
 - The Projection Mode flag is per-device, not per-profile — leaving the teacher profile resets it.
 - Teacher may use a remote pause / play / next via in-screen controls; learners' on-screen prompts are unaffected (the mode is presentation, not interaction).
 
@@ -91,7 +91,7 @@ Companion stories:
 
 ### 3.6 Data residency
 
-- Phase 2 — class metadata + roster live in **Cloudflare D1** (per `03-engineering-blueprint-v2 §1.2`).
+- Phase 2 — class metadata + roster live in **Cloudflare D1** as `spaces` / `memberships` / `plans` (schema v2, roadmap `multi-persona-sync-platform.md` §2 — supersedes the five tables the draft listed).
 - Learner progress data continues to live local-first; only summary aggregates (`stage_anchor_accuracy`, week summary) are synced to D1 for class roll-up.
 - Privacy: a teacher can never read a learner's raw Quest history, only aggregates. Same lint as F-PAR-001 §3.6.
 
@@ -99,20 +99,20 @@ Companion stories:
 
 - **Class Builder** (drag-drop lesson template) → F-TCH-002.
 - **Printable worksheets** (Quest → PDF) → F-TCH-003.
-- **Paid teacher tier / Pro features** (`02-core-feature-spec §6.6`) → Phase 3.
+- **Paid teacher tier / Pro features** (`02-core-feature-spec §6.6`) → F-ENT-001 (roadmap S6, right after this spec — moved up from Phase 3).
 - **Multi-teacher per class** (co-teacher) → Phase 3.
 - **Live "screen control"** of student devices → security review needed, deferred indefinitely.
 - **In-app parent ↔ teacher messaging** → F-NOTIF-001 family.
 
 ## 5. UI sketch
 
-To be authored when Phase 2 starts:
+Authored 2026-09-19 (IDs per `docs/blueprints/10-app-map.md` §3.3):
 
-- `design/wireframes/teacher/onboarding.md` — Clerk-backed teacher signup (web)
-- `design/wireframes/teacher/class-create.md`
-- `design/wireframes/teacher/roster.md`
-- `design/wireframes/teacher/assign-class-homework.md`
-- `design/wireframes/teacher/projection-mode.md` — mobile-side toggle
+- `design/wireframes/console/sign-in.md` + `console/onboarding-role.md` — Clerk-backed teacher signup + class create (web)
+- `design/wireframes/console/roster.md`
+- `design/wireframes/console/plan-builder.md` — class-level assignment
+- `design/wireframes/console/space-settings.md` · `console/relink-approval.md`
+- `design/wireframes/classroom/projection-mode.md` — mobile-side toggle
 
 ## 6. Tests
 
@@ -165,5 +165,5 @@ To be authored when Phase 2 starts:
 
 ### External
 
-- **Cloudflare D1**: 5 new tables — `classes`, `class_members`, `assignment_groups`, `teacher_profiles`, `roster_summaries_weekly`.
+- **Cloudflare D1**: schema v2 (`spaces`, `memberships`, `plans`, `snapshots.summary_json`) — roadmap `multi-persona-sync-platform.md` §2. The draft's five bespoke tables are withdrawn.
 - **Clerk** organisation feature for school-tier accounts (Phase 3).

@@ -5,7 +5,7 @@ Audience: **learner (P4/P5 child, 5–11)**
 
 ## Scenario (Given-When-Then)
 
-Given: a learner just finished a quest, saw their stars on `results/celebrate`, and at least one item in that quest was answered wrong
+Given: a learner just finished a quest that introduced at least one new element and saw their stars on `results/celebrate` (trigger = new-element count ≥ 1, F-RVW-001 §3.3 — ruling in 10-app-map §7)
 When: they tap the primary CTA on the results screen
 Then: one quick "do you remember?" question about the quest's main new element appears, Hoya recaps regardless of the answer, and the learner is back on home within 45 s — with nothing subtracted
 
@@ -59,13 +59,13 @@ after answer / skip:
 
 ## Navigation graph
 
-Enter from: `results/celebrate` (only when the quest had ≥ 1 wrong item — otherwise results goes straight to home)
+Enter from: `results/celebrate` — same route, shown as a second panel after the stars register (only when the quest had ≥ 1 new element; otherwise results exits directly)
 Exit to:    `home/todays-mission` (done / skip) · `episode/detail` (if results passed a "next quest" intent through)
 
 ## States
 
 - **success**: question → recap → done, ≤ 45 s wall-clock including animation.
-- **empty** (quest had no wrong item, or new-element count is 0): this screen does not fire; `results/celebrate` exits directly. Not a rendered state.
+- **empty** (new-element count is 0, e.g. a replay of a fully known quest): this panel does not fire; `results/celebrate` exits directly. Not a rendered state.
 - **error** (prompt asset missing): skip straight to the recap state with a generic line ("nice work today") — never block the exit from a celebration.
 - **reduced motion**: recap appears without the Hoya pose-change animation.
 
@@ -78,7 +78,6 @@ Exit to:    `home/todays-mission` (done / skip) · `episode/detail` (if results 
 
 ## Open questions
 
-- **Trigger rule conflict**: spec §3.3 fires the tail whenever new-element count ≥ 1; the app map (§4.2) and this wireframe fire it only when ≥ 1 item was wrong. Which is authoritative? (recommend the map's rule — a perfect quest should not be followed by a quiz)
-- Inline in the Celebrate surface (spec wording) vs a separate screen after the primary CTA (this wireframe)? Separate keeps `results/celebrate` untouched; inline keeps the child on one screen. Decide before the design pass.
+- ~~Trigger rule conflict~~ **Resolved 2026-09-19**: spec rule (new-element ≥ 1) is authoritative; rendered as a second panel of `results/celebrate`, not a separate route (10-app-map §7 #2, #3). Design pass should keep the panel ≤ 45 s including the 15 s auto-skip.
 - Spec §3.3 recap copy is written in Korean — English placeholder used here per CLAUDE.md §1.
 - Should skip be tappable by the child at all, or only reachable by the 15 s timeout? (beta: measure skip-tap rate by age band)

@@ -39,7 +39,7 @@ ProfileScreen status display, since Stages 2–7 content is still preview.
 
 ## 4. Out of scope
 
-- Paywall / purchase UI and StoreKit/Play Billing → F-IAP-004.
+- Paywall / purchase UI and StoreKit/Play Billing → F-SUB-002 (to be authored; wireframe `design/wireframes/paywall/upgrade.md`, parent-gated via `profiles/pin-entry`). Web checkout (Stripe) and teacher-paid "covered by your class" state → F-ENT-001 (roadmap S6).
 - Journey grid premium lock styling → folds in when Stage 2+ content lands.
 - Fetching subscription from the API → needs deploy + auth (F-AUTH-001).
 

@@ -41,7 +41,7 @@ Then: a child can switch to their own tiger tile or mute the sound in one tap; e
 |  +----------------------------+  |
 |                                  |
 |  --- Grown-ups ------------------|  <- visual break; adult rows below
-|  [ Grown-up zone ]      >        |  -> parent/gate (today) / profiles/pin-entry (target)
+|  [ Grown-up zone ]      >        |  -> profiles/pin-entry (PIN; first entry = PIN setup)
 |  [ Save my progress ]   >        |  -> sync/save-progress (FUTURE)
 |  [ Join a class or family ] >    |  -> sync/join-space (FUTURE)
 |  [ Account ]            >        |  -> console/account (FUTURE, gated)
@@ -58,14 +58,14 @@ Then: a child can switch to their own tiger tile or mute the sound in one tap; e
 - [ + Add a profile ] → `profiles/create-learner` (`Onboarding/CreateProfile { firstRun: false }`); PIN-gated per §3.2 (15-min parent session) — **not gated in code**
 - Sound toggle → `ui-store` mute flag (planned)
 - [ Unlock the journey ] → `profiles/pin-entry` → `paywall/upgrade` (future, R)
-- [ Grown-up zone ] → `parent/gate` → `parent/dashboard` (today); target: `profiles/pin-entry`
+- [ Grown-up zone ] → `profiles/pin-entry` → `parent/dashboard` (math gate retired 2026-09-19, 10-app-map §7 #1)
 - [ Save my progress ] → `sync/save-progress` · [ Join a class or family ] → `sync/join-space` · [ Account ] → gate → `console/account` · [ Projection mode ] → `classroom/projection-mode` (all future; IDs per app-map §4.2)
 - [<- back] → `home/todays-mission`
 
 ## Navigation graph
 
 Enter from: `home/todays-mission` (avatar corner) · `profiles/switch-button` (component)
-Exit to:    `profiles/create-learner` · `parent/gate` · `parent/dashboard` · future: `paywall/upgrade` · `sync/save-progress` · `sync/join-space` · `console/account` · `classroom/projection-mode`
+Exit to:    `profiles/create-learner` (PIN-gated) · `profiles/pin-entry` · `parent/dashboard` · future: `paywall/upgrade` · `sync/save-progress` · `sync/join-space` · `console/account` · `classroom/projection-mode`
 
 ## States
 

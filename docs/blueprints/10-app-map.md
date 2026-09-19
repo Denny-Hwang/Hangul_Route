@@ -66,7 +66,7 @@ Hangul Route
 │   ├─ A5. Quest player (intro→present→practice→apply→reward) [S] content-skill
 │   │    └─ Minigame shell + 13 kinds (9 구현: 8 active + voice-echo beta)  06
 │   ├─ A6. Results & celebration (stars · card unlock)   [S] F-MOTION-003/004/005
-│   ├─ A7. Library (Heritage cards 30 · detail · share)  [S] F-CARD-001/002/003
+│   ├─ A7. Library (Heritage cards 42 = 30 Stage 1 + 12 taste · detail · share) [S] F-CARD-001/002/003
 │   ├─ A8. Reviews (Daily test · Feedback · Stage review · Certificate) [D] F-RVW-001
 │   ├─ A9. Hoya companion (5 poses · bubble · lines)     [S] F-HOYA-001, F-002
 │   ├─ A10. Settings / Profile page (plan status · mute · switch · grown-ups) [S]
@@ -131,7 +131,7 @@ Hangul Route
 
 | ID | 코드 라우트 | 목표 (한 줄) | 상태 | 스펙 | WF |
 |---|---|---|---|---|---|
-| `onboarding/welcome` | Onboarding/Welcome | 계정 없이 30초 안에 첫 퀘스트로 | S | F-PROF-001 | NEW |
+| `onboarding/welcome` | Onboarding/Welcome | 계정 없이 프로필 → 첫 퀘스트 (PIN 설정은 첫 grown-up zone 진입 시로 미룸, F-PROF-001 §10) | S | F-PROF-001 | NEW |
 | `profiles/create-parent` | Onboarding/CreateProfile(firstRun) | 부모 PIN 1회 설정 | S | F-PROF-001 | ✓ |
 | `profiles/create-learner` | Onboarding/CreateProfile | 이름·연령대·아바타 | S | F-PROF-001 | ✓ |
 | `onboarding/first-quest-preview` | Onboarding/FirstQuestPreview | Hoya 소개 + 첫 퀘스트 진입 | S | – | NEW |
@@ -149,12 +149,12 @@ Hangul Route
 | `library/gallery` | Main/Library | 모은 카드 보기 | S | F-CARD-001 | NEW |
 | `library/card-detail` | CardDetail (modal) | 카드 앞/뒤 + 공유 | S | F-CARD-002/003 | NEW |
 | `profile/settings` | Profile | 플랜 상태 · 소리 · 전환 · Grown-ups | S | F-SUB-001 | NEW |
-| `parent/gate` | ParentGate (modal) | 상거래/파괴 행동 전 어른 확인 | S | (코드만) | NEW ※ |
+| `parent/gate` | ~~ParentGate~~ → PinEntry (modal) | **retired** — `profiles/pin-entry` 로 통합 (§7 결정) | S→PIN | F-PROF-001 §10 | ✓ (기록용) |
 | `reviews/daily-test` | (신규) | 하루 1회 간격 반복 테스트 | D | F-RVW-001 §3.2 | NEW |
-| `reviews/feedback-review` | (신규, quest tail) | 퀘스트 끝 틀린 것 다시 보기 | D | F-RVW-001 §3.3 | NEW |
+| `reviews/feedback-review` | (results/celebrate 의 2번째 패널) | 퀘스트 끝 새 요소 1문항 회상 (새 요소 ≥1 이면 항상) | D | F-RVW-001 §3.3 | NEW |
 | `reviews/stage-review` | (신규) | Stage 앵커 점검 + 인증서 | D | F-RVW-001 §3.4 | NEW |
 | `sync/save-progress` | (신규) | Rescue Code 보여주기·적게 하기 | P | roadmap §5.1 | NEW |
-| `sync/restore` | (신규) | 코드 / 로그인 / 파일로 복원 | P | roadmap §5 | NEW |
+| `sync/restore` | (신규) | 코드 / 로그인 / 파일로 복원 (학급 재연결은 `sync/join-space` 쪽) | P | roadmap §5 | NEW |
 | `sync/join-space` | (신규) | 학급·가정 코드 입력 | P | roadmap §6 | NEW |
 | `sync/merge-notice` | (신규, sheet) | "옛 카드를 찾았어요" 병합 안내 | P | roadmap §5.2 | NEW |
 | `paywall/upgrade` | (신규, parent-gated) | Stage 2+ 잠금 해제 | R | F-SUB-001 | NEW |
@@ -162,7 +162,7 @@ Hangul Route
 | `pwa/system-banners` | (신규, web only) | 오프라인 준비됨 · 업데이트 · 오프라인 상태 | P | roadmap P2 | NEW |
 | `classroom/projection-mode` | (신규, teacher role) | 교실 TV 표시 토글 | D | F-TCH-001 §3.4 | NEW |
 
-※ `parent/gate` (수학 문제) 와 `profiles/pin-entry` (PIN) 가 **둘 다 존재** — 통합 대상. 와이어프레임 Open questions 에 기록.
+※ `parent/gate` (수학 문제) 는 2026-09-19 에 PIN 으로 통합됨 (§7). 파일은 결정 기록용으로 남긴다.
 
 ### 3.2 B. Caregiver Console (mobile `parent/*` + web `/parent`)
 
@@ -217,7 +217,7 @@ quest/player ─▶ minigame/shell (×3 steps: present·practice·apply) ─▶ 
 results/celebrate ─┬─▶ episode/detail (next quest)
                    └─▶ Main tabs (reset)
 
-profile/settings ─┬─▶ parent/gate (modal) ─▶ parent/dashboard
+profile/settings ─┬─▶ profiles/pin-entry (modal; 첫 진입 시 PIN 설정) ─▶ parent/dashboard
                   ├─▶ profiles/picker (switch)
                   └─▶ onboarding (add learner)
 ```
@@ -225,7 +225,7 @@ profile/settings ─┬─▶ parent/gate (modal) ─▶ parent/dashboard
 ### 4.2 Learner App — 추가 예정 (D·R·P 화면 포함)
 
 ```
-quest/player ─▶ ... ─▶ results/celebrate ─▶ reviews/feedback-review (틀린 것 ≥1 일 때만) ─▶ Main tabs
+quest/player ─▶ ... ─▶ results/celebrate ─(같은 route, 2번째 패널)─▶ reviews/feedback-review (새 요소 ≥1 이면) ─▶ Main tabs
 home/todays-mission card ③ ─▶ reviews/daily-test ─▶ results/celebrate
 journey/grid (stage 완료 셀) ─▶ reviews/stage-review ─▶ certificate (results 변형) ─▶ library/gallery
 
@@ -289,10 +289,38 @@ console/home ─┬─ [family] ─▶ parent/dashboard ─▶ parent/learner-de
 
 ---
 
-## 7. 열린 결정 (미룸 — 사용자 지시)
+## 7. 결정 기록 (2026-09-19 reconciliation) + 열린 결정
+
+와이어프레임 패스에서 드러난 문서 간 불일치는 아래처럼 **스펙 우선** 원칙으로 정리했다 (스펙이 CLAUDE.md 나 코드 현실과 충돌할 때만 스펙을 고침). 각 스펙에 같은 문구가 반영되어 있다.
+
+| # | 불일치 | 결정 | 반영 위치 |
+|---|---|---|---|
+| 1 | 부모 게이트 이중 (수학 `ParentGate` vs PIN) | **PIN 으로 통합.** 첫 진입 시 PIN 설정 (parent-first 온보딩 미출시 동안) | F-PROF-001 §10 · 코드 `PinEntryScreen` |
+| 2 | Feedback Review 트리거 (새 요소 ≥1 vs 틀림 ≥1) | **스펙 (새 요소 ≥1).** 완벽한 퀘스트도 내일 Daily Test 풀에 씨를 뿌려야 함 | F-RVW-001 §3.3 · `reviews/feedback-review.md` |
+| 3 | Feedback Review 위치 (inline vs 별도 화면) | **같은 route 의 2번째 패널** (내비게이션 항목 없음) | F-RVW-001 §3.3 · §4.2 그래프 |
+| 4 | 계획 gating (즉시 실패 vs 조용히 건너뜀 vs 기기 파생) | **둘 다 유지, 범위 분리**: 단건 배정 = 즉시 실패 (F-HW-001), 학급 계획 = 기기 파생 + 건너뜀 + not-ready 보고 | F-HW-001 §3.4 · F-TCH-001 §3.3 · roadmap §9 |
+| 5 | F-RVW-001 Hoya 대사 한국어 | 영어로 교체 (자모만 한국어) | F-RVW-001 §3.1, §3.3 |
+| 6 | F-TCH-001 D1 테이블 5개 vs roadmap schema v2 | schema v2 로 통일, 초안 테이블 철회 | F-TCH-001 §3.6, §8 |
+| 7 | 와이어프레임 경로 (`teacher/*`, `reviews/feedback-tail` 등) | 앱 맵 ID 로 스펙 갱신 | F-RVW-001 §5 · F-TCH-001 §5 |
+| 8 | 투영 모드 +6 dB | 플랫폼 허용 범위 내 부스트 + iOS 는 힌트 | F-TCH-001 §3.4 |
+| 9 | join code "6-digit" | "6-character base32" | F-TCH-001 §3.1 |
+| 10 | 학급 코드 입력 진입점 3가지 | `profile/settings` (parent-gated) → `sync/join-space` | F-TCH-001 §3.1 |
+| 11 | Rescue Code 재발급 권한 | 부모 PIN (클라) + 기기/계정 검증 (서버) | roadmap §5.1, §8 |
+| 12 | 재연결 승인 API 부재 | `/spaces/:id/relink-requests` + approve/deny 추가 | roadmap §8 |
+| 13 | 동의 기록 저장 위치 없음 | `accounts.consent_json` | roadmap §2 |
+| 14 | 학급 학생 4번째 복원 경로 | `sync/restore` 는 3경로 유지, 재연결은 `sync/join-space` | roadmap §5 |
+| 15 | 페이월 스펙 F-IAP-004 (없음) | F-SUB-002 (작성 예정) + 웹/교사는 F-ENT-001 | F-SUB-001 §4 |
+| 16 | F-PAR-001 §3.5 "이 기기에서 만든 학습자만" | Phase 2 note: family space membership 기준 | F-PAR-001 §3.5 |
+| 17 | 카드 수 30 vs 42 | 42 (30 Stage 1 + 8 Stage 2 taste + 4 Stage 4 taste) | 본 문서 A7 |
+| 18 | 교사 Free 캡 20 vs 30 | **미룸** (placeholder) | — |
+| 19 | 미니게임 enum 이름 ↔ 카탈로그 06 번호 이름 | 이름 대응표만 `minigame/families.md` 에 기록, 코드 변경 없음 | — |
+| 20 | 홈 화면 Streak 노출 | **유지** — PH 런치 결정(#51). 학습자 프로필 통계 카드에서는 제거 (F-RVW-001 §4 anti-pattern 최소화) | 코드 `ProfileScreen` |
+
+코드 ↔ 스펙 불일치 (shipped 화면) 는 같은 날 코드로 수정했다 — 각 와이어프레임의 Open questions 와 PR 본문 참조.
+
+### 열린 결정 (미룸 — 사용자 지시)
 
 roadmap 두 문서의 열린 질문 (학교 동의 모드, Rescue Code 기본 ON, 교사 Free 캡, family 가격) 은 **나중에 결정**. 이 맵의 화면 구조는 어느 쪽으로 결정돼도 바뀌지 않도록 그렸다 (예: `console/space-settings` 에 동의 모드 토글 자리만 확보).
 
 추가로 이 패스에서 드러난 것:
-- `parent/gate` (수학) vs `profiles/pin-entry` (PIN) 이중 게이트 → 하나로 통합 필요 (PIN 권장: 이미 F-PROF-001 이 규정).
 - `homework/list` 는 `home/todays-mission` 과 역할이 겹침 → 배정 큐가 3장을 넘을 때만 의미. 베타에서 진입률 측정.

@@ -68,6 +68,7 @@ Companion stories:
 - **Given** an assignment targets a Quest the learner has not yet unlocked (Stage gating),
   **when** the assignment is created,
   **then** the create call **fails fast** with a UI message on the caregiver side (English, e.g. "Suni hasn't reached this quest yet"). The caregiver never silently creates a blocked assignment. (The draft carried a Korean string here — corrected per CLAUDE.md §8, see §9.1.)
+- **Scope note (ruling, 10-app-map §7)**: the fail-fast rule covers a *single explicit* assignment by a caregiver. A **class plan** (F-TCH-001 §3.3, roadmap `plans`) is derived on the learner device and skips locked items silently, reporting them as not-ready to the teacher. Both rules use `logic/homework/gating.ts`.
 
 ### 3.5 Accessibility / multi-profile
 
