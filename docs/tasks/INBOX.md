@@ -16,6 +16,13 @@
 - [ ] T-013 STT 벤치마크 보고서: Whisper / Clova / Google STT × 어린이 한국어 50샘플 — 2d
 - [ ] T-015 i18n / a11y / telemetry 3종 스펙 초안 (F-I18N-001, F-A11Y-001, F-TEL-001) — 1d
 
+### App Store 제출 (오너 작업 — `docs/launch/app-store-submission.md`)
+- [ ] T-040 Apple Developer + App Store Connect 앱 레코드 + `eas init` → `app.json` projectId / `eas.json` submit 값 교체 — 1h
+- [ ] T-041 hangulroute.com Pages 라이브 + `/privacy` `/about` 200 확인, EFFECTIVE_DATE 갱신 — 0.5h
+- [ ] T-042 `eas build --profile production` → TestFlight 3기기 D-1 QA (submission §4 목록) — 2h
+- [ ] T-043 스크린샷 15장 (6.9" · 6.5" · iPad 13") — `app-store-metadata.md` §5 · `design/brief/launch-assets.md` §4 — 2h
+- [ ] T-044 App Store Connect 메타데이터·Privacy Label·Review Notes 입력 → Submit — 1h
+
 ### Follow-ups
 - [ ] T-017 F-001 외부 의존: 30 개 jamo 음성 MP3 녹음 (24 자모 + 6 받침, 단일 native speaker) — 1d
 

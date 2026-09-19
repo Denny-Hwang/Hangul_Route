@@ -125,7 +125,7 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
     mode === 'verify'
       ? 'Enter your 4-digit PIN to continue.'
       : mode === 'setup-1'
-        ? 'Pick 4 digits only grown-ups will know. It protects settings and purchases.'
+        ? 'Pick 4 digits only grown-ups will know. It protects settings and grown-up pages.'
         : 'Type the same 4 digits again.';
 
   return (

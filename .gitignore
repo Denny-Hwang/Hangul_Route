@@ -53,3 +53,4 @@ pnpm-debug.log*
 # Windows
 ehthumbs.db
 Thumbs.db
+apps/mobile/google-play-service-account.json

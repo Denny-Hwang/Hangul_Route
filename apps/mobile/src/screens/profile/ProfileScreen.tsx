@@ -163,7 +163,7 @@ export function ProfileScreen(): React.ReactElement {
             <Caption tone="muted">
               {tier === 'premium'
                 ? 'The full journey is unlocked.'
-                : 'Stage 1 is free. Subscribe for the full journey.'}
+                : 'Stage 1 is free. More stages are on the way.'}
             </Caption>
           </View>
           <Pill
