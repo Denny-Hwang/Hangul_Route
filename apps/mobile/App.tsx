@@ -2,9 +2,11 @@ import { NavigationContainer } from '@react-navigation/native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect } from 'react';
+import { ErrorBoundary } from 'react-error-boundary';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { RootNavigator } from './src/navigation/root';
+import { OopsScreen } from './src/screens/system/OopsScreen';
 import { useAccountStore } from './src/store/account-store';
 import { useProfileStore } from './src/store/profile-store';
 
@@ -27,10 +29,14 @@ export default function App(): React.ReactElement {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>
         <SafeAreaProvider>
-          <NavigationContainer>
-            <RootNavigator />
-            <StatusBar style="dark" />
-          </NavigationContainer>
+          {/* Production crash guard — a thrown render error shows OopsScreen
+              instead of closing the app; Try again remounts the navigator. */}
+          <ErrorBoundary fallbackRender={({ resetErrorBoundary }) => <OopsScreen onRetry={resetErrorBoundary} />}>
+            <NavigationContainer>
+              <RootNavigator />
+              <StatusBar style="dark" />
+            </NavigationContainer>
+          </ErrorBoundary>
         </SafeAreaProvider>
       </QueryClientProvider>
     </GestureHandlerRootView>
