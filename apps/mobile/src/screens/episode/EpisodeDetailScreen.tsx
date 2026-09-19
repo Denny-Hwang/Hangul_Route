@@ -14,6 +14,7 @@ import {
   colors,
   radii,
   spacing,
+  touchTarget,
 } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useMemo } from 'react';
@@ -29,6 +30,9 @@ export function EpisodeDetailScreen({ route, navigation }: Props): React.ReactEl
   const episode = episodeById(route.params.episodeId);
   const profile = useProfileStore(activeProfileSelector);
   const snap = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
+
+  // Reward cards are revealed only once earned (F-CARD-002 §3.6 spirit).
+  const unlockedCardIds = useMemo(() => new Set((snap?.cards ?? []).map((c) => c.cardId)), [snap]);
 
   const questProgress = useMemo(() => {
     if (!episode || !snap) return new Map<string, number>();
@@ -148,22 +152,37 @@ export function EpisodeDetailScreen({ route, navigation }: Props): React.ReactEl
             {episode.rewardCardIds.map((cid) => {
               const c = cardById(cid);
               if (!c) return null;
+              const earned = unlockedCardIds.has(cid);
               return (
-                <View
+                <Pressable
                   key={cid}
+                  disabled={!earned}
+                  onPress={() => navigation.navigate('CardDetail', { cardId: cid })}
+                  accessibilityRole="button"
+                  accessibilityLabel={earned ? `${c.titleEn} card` : 'A card still waiting to be earned'}
                   style={{
                     flexBasis: '47%',
                     padding: spacing.md,
-                    backgroundColor: colors.surface.paper,
+                    backgroundColor: earned ? colors.surface.paper : colors.surface.sunken,
                     borderRadius: radii.md,
                     borderWidth: 1,
                     borderColor: colors.border.subtle,
+                    minHeight: touchTarget.min,
                   }}
                 >
-                  <Body weight="semibold">{c.titleEn}</Body>
-                  {c.subtitleKo ? <Caption tone="brand">{c.subtitleKo}</Caption> : null}
-                  <Pill tone="neutral" size="sm" label={c.rarity} />
-                </View>
+                  {earned ? (
+                    <>
+                      <Body weight="semibold">{c.titleEn}</Body>
+                      {c.subtitleKo ? <Caption tone="brand">{c.subtitleKo}</Caption> : null}
+                      <Pill tone="neutral" size="sm" label={c.rarity} />
+                    </>
+                  ) : (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+                      <Icon name="lock" size={20} color={colors.text.muted} />
+                      <Caption tone="muted">Waiting for you</Caption>
+                    </View>
+                  )}
+                </Pressable>
               );
             })}
           </View>

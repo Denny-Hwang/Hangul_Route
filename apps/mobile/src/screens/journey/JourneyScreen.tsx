@@ -17,7 +17,8 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { episodeFor, stages, themes } from '../../content';
+import { episodeFor, episodesAll, stages, themes } from '../../content';
+import { isEpisodeComplete, stageAvailability, stagePillLabel } from '../../logic/journey';
 import type { RootStackParamList } from '../../navigation/types';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
@@ -45,7 +46,8 @@ export function JourneyScreen(): React.ReactElement {
       </View>
 
       {stages.map((stage) => {
-        const isLocked = stage.key !== 'stage1';
+        const availability = stageAvailability(stage.key, episodesAll);
+        const isLocked = availability === 'soon';
         return (
           <View key={stage.key} style={{ marginBottom: spacing.lg }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.sm }}>
@@ -69,7 +71,11 @@ export function JourneyScreen(): React.ReactElement {
                 </Body>
                 <Caption tone="muted">{stage.oneLinerEn}</Caption>
               </View>
-              {isLocked ? <Pill tone="neutral" label="Soon" size="sm" /> : <Pill tone="success" label="Open" size="sm" />}
+              <Pill
+                tone={availability === 'open' ? 'success' : availability === 'taste' ? 'primary' : 'neutral'}
+                label={stagePillLabel(availability)}
+                size="sm"
+              />
             </View>
 
             <View style={{ flexDirection: 'row', gap: spacing.xs }}>
@@ -84,10 +90,9 @@ export function JourneyScreen(): React.ReactElement {
               ))}
             </View>
 
-            {stage.key === 'stage2' ? (
+            {availability === 'taste' ? (
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginTop: spacing.xs }}>
-                <Icon name="lock" size={14} color={colors.text.muted} />
-                <Caption tone="muted">Finish Stage 1 to unlock the next stage.</Caption>
+                <Caption tone="muted">A taste of this stage is open now. More episodes are coming.</Caption>
               </View>
             ) : null}
           </View>
@@ -98,7 +103,7 @@ export function JourneyScreen(): React.ReactElement {
         <Heading level="prompt">How the journey works</Heading>
         <Spacer size="xs" />
         <Body tone="secondary" size="sm">
-          Each cell is one episode. Finish quests to earn Heritage cards. Stages 2-7 unlock as Stage 1 completes.
+          Each cell is one episode. Finish every quest in a cell to complete it and earn its Heritage cards. More stages open as the journey grows.
         </Body>
       </Card>
       <Spacer size="xl" />
@@ -110,13 +115,17 @@ interface GridCellProps {
   stage: StageKey;
   theme: ThemeKey;
   onOpen: (episodeId: string) => void;
-  progressSnapshot?: { episodes: Array<{ episodeId: string; completedAt?: string }>; quests: Array<{ episodeId: string; completedAt?: string }> };
+  progressSnapshot?: {
+    episodes: Array<{ episodeId: string; completedAt?: string }>;
+    quests: Array<{ questId: string; episodeId: string; completedAt?: string }>;
+  };
 }
 
 function GridCell({ stage, theme, onOpen, progressSnapshot }: GridCellProps): React.ReactElement {
   const episode = episodeFor(stage, theme);
   const isPreview = !episode || episode.status === 'preview';
-  const completed = !!progressSnapshot?.quests.some((q) => q.episodeId === episode?.id && q.completedAt);
+  // Complete only when every quest of the episode is done (wireframe journey/grid).
+  const completed = !!episode && isEpisodeComplete(episode, progressSnapshot?.quests ?? []);
   const tone = colors.stage[stage];
 
   return (
