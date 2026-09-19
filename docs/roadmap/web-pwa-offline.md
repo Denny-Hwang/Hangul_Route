@@ -154,7 +154,7 @@ Stage 1 전체가 **5 MB 미만** 이므로 "다운로드 버튼" 없이 **첫 �
 | **P1 웹 패리티** (F-WEB-001) | §2 의 `.web.ts` 5개 + IndexedDB storage + 반응형 셸 + viewport/safe-area 메타. 각 래퍼는 platform 레인 테스트 (70%) | 10개 미니게임 전부 브라우저에서 플레이 가능 | 3–4 d |
 | **P2 PWA 오프라인** (F-PWA-001) | `manifest.webmanifest` (아이콘은 `assets/icon.png` 재활용, theme color 는 토큰), Workbox `generateSW` 후처리 스크립트 (`scripts/`), 오프라인 준비 토스트, 업데이트 배너, 설치 안내 오버레이, 텔레메트리 큐, `storage.persist()` | 비행기 모드에서 Stage 1 완주 (Playwright offline 테스트로 증명) | 2–3 d |
 | **P3 배포** (F-INFRA-005) | `.github/workflows/app-deploy.yml`: `apps/mobile/**` 변경 시 PR 프리뷰 + main 머지 시 프로덕션 → Cloudflare Pages `hangul-route-app`. Lighthouse PWA 점검을 CI 에 추가. `apps/web` 랜딩 CTA "Play in your browser" | `app.hangulroute.com` 라이브 | 1 d |
-| **P4 후속** | Stripe Checkout (웹용 F-IAP-002), Clerk 웹 세션, D1 진도 동기화 (T-P2-03) 를 오프라인 큐 위에 얹기, 에피소드별 "Download" 팩, 네이티브 빌드는 같은 코드로 유지 (스토어 병행) | — | 별도 산정 |
+| **P4 후속** | 동기화·복원·교사 계획·결제 → `multi-persona-sync-platform.md` (S1–S7) 로 분리. 에피소드별 "Download" 팩, 네이티브 빌드는 같은 코드로 유지 (스토어 병행) | — | 별도 산정 |
 
 P0–P3 합계 **약 7–9 일**. 이 안이 채택되면 F-WEB-001 / F-PWA-001 / F-INFRA-005 를 `docs/specs/` 에 `draft` 로 만들고 T-XXX 로 INBOX 에 큐잉한다.
 

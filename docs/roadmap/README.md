@@ -4,6 +4,7 @@
 
 ## 구성
 - `web-pwa-offline.md` — 웹앱(PWA) + 오프라인 전환 구상안 (proposal)
+- `multi-persona-sync-platform.md` — 개인·가정·학급·학교 페르소나, 교사 학습 계획, 동기화·복원, 결제 — 최소 DB 설계안 (proposal)
 
 ### 예정
 - `2026-q2.md` — 분기 OKR / 마일스톤
