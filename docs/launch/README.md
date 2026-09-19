@@ -16,6 +16,8 @@ Everything in here is **copy you can paste**, not strategy theory.
 | `launch-checklist-d14-d0.md` | Daily checklist from D-14 to launch day |
 | `hallway-test-protocol.md` | 6-session script + worksheet for kids 5–11 (D-7) |
 | `parent-interview-guide.md` | 5-parent 30-min interview script + triage rules |
+| `app-store-submission.md` | App Store 제출 직전 체크리스트 — 저장소에서 끝낸 것 / 오너가 할 것 / Guideline 대조 |
+| `app-store-metadata.md` | App Store Connect 에 붙여넣는 이름·부제·설명·키워드·리뷰 노트·스크린샷 구성 |
 
 ## Design assets — handled in-house via Claude Design
 
@@ -59,3 +61,4 @@ If a piece of copy doesn't serve that story, cut it.
 - [ ] PH Hunter confirmed (or self-hunt)
 - [ ] Reddit + Facebook groups warmed up
 - [ ] TestFlight live + Expo Go QR ready
+- [ ] App Store: `app-store-submission.md` §2–§6 체크 완료 → Submit for Review
