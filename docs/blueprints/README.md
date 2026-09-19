@@ -17,6 +17,7 @@ Week 1 킥오프와 함께 로컬 초안 8종을 이관했다. 전부 `status: r
 | 07 | `07-solo-dev-workflow.md` | 1인 개발 운영 |
 | 08 | `08-claude-code-routines.md` | Claude Code 루틴 운용 |
 | 09 | `09-homework-review-profiles-addendum.md` | Homework / Reviews / Multi-Profile 설계 부록 (02·04 위에 덧붙임) |
+| 10 | `10-app-map.md` | 기능 트리 · 화면 인벤토리(화면 ID) · 내비게이션 그래프 · 개발 순서. 새 화면/기능 추가 시 여기부터 갱신 |
 
 각 파일 상단 frontmatter 에 `version` (v1 / v2) 과 `migrated: 2026-04-21`
-이 기록되어 있다. 09 는 2026-05-18 신규.
+이 기록되어 있다. 09 는 2026-05-18 신규, 10 은 2026-09-19 신규 (living).
