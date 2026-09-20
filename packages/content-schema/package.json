@@ -4,6 +4,7 @@
   "private": true,
   "description": "Episode / Card / Grid / Quest schemas (zod) for Hangul Route content",
   "type": "module",
+  "main": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts"
   },

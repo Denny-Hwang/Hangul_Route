@@ -234,6 +234,7 @@ export function TraceStrokeGame({
       <View style={{ alignItems: 'center' }}>
         <GestureDetector gesture={panGesture}>
           <View
+            nativeID="trace-canvas"
             accessibilityLabel={`Draw the letter ${round.jamo.romanization} with your finger`}
             style={{
               width: TRACE_BOX_SIZE,

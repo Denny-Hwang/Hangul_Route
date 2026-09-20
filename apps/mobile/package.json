@@ -13,9 +13,14 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
-    "build": "echo '(no build output yet — @hangul-route/mobile)'"
+    "build": "echo '(no build output yet — @hangul-route/mobile)'",
+    "build:web": "expo export --platform web --output-dir dist && node scripts/pwa-postbuild.mjs dist",
+    "serve:web": "node scripts/serve-dist.mjs dist",
+    "test:e2e:web": "playwright test"
   },
   "dependencies": {
+    "@babel/runtime": "^7.29.2",
+    "@expo/metro-runtime": "~4.0.1",
     "@hangul-route/content-schema": "workspace:*",
     "@hangul-route/design-system": "workspace:*",
     "@hangul-route/shared-types": "workspace:*",
@@ -30,7 +35,9 @@
     "expo-sharing": "~13.0.0",
     "expo-speech": "~13.0.0",
     "expo-status-bar": "~2.0.0",
+    "idb-keyval": "^6.3.0",
     "react": "18.3.1",
+    "react-dom": "18.3.1",
     "react-error-boundary": "^6.1.5",
     "react-native": "0.76.5",
     "react-native-gesture-handler": "~2.20.2",
@@ -39,14 +46,17 @@
     "react-native-screens": "~4.1.0",
     "react-native-svg": "15.8.0",
     "react-native-view-shot": "4.0.3",
+    "react-native-web": "~0.19.13",
     "zod": "^3.23.8",
     "zustand": "^5.0.2"
   },
   "devDependencies": {
     "@hangul-route/test-utils": "workspace:*",
+    "@playwright/test": "1.63.0",
     "@types/react": "^18.3.12",
     "@vitest/coverage-v8": "^2.1.8",
     "typescript": "^5.6.3",
-    "vitest": "^2.1.8"
+    "vitest": "^2.1.8",
+    "workbox-build": "^7.4.1"
   }
 }
