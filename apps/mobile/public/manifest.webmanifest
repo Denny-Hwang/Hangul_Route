@@ -1,0 +1,17 @@
+{
+  "name": "Hangul Route",
+  "short_name": "Hangul Route",
+  "description": "Learn the Korean alphabet with Hoya the tiger — one heritage card at a time. Works offline.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FCF8F1",
+  "theme_color": "#E8743B",
+  "lang": "en",
+  "categories": ["education", "kids"],
+  "icons": [
+    { "src": "/icon-1024.png", "sizes": "1024x1024", "type": "image/png", "purpose": "any" }
+  ]
+}

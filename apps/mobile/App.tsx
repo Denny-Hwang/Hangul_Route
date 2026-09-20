@@ -6,6 +6,7 @@ import { ErrorBoundary } from 'react-error-boundary';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { RootNavigator } from './src/navigation/root';
+import { PwaBanners } from './src/components/PwaBanners';
 import { OopsScreen } from './src/screens/system/OopsScreen';
 import { useAccountStore } from './src/store/account-store';
 import { useProfileStore } from './src/store/profile-store';
@@ -36,6 +37,7 @@ export default function App(): React.ReactElement {
               <RootNavigator />
               <StatusBar style="dark" />
             </NavigationContainer>
+            <PwaBanners />
           </ErrorBoundary>
         </SafeAreaProvider>
       </QueryClientProvider>

@@ -1,25 +1,29 @@
-name: Preview Deploy
+name: Web App (PWA) Deploy
 
 on:
   pull_request:
     branches: [main]
     paths:
-      - "apps/web/**"
-      - "packages/design-system/**"
+      - "apps/mobile/**"
+      - "packages/**"
+      - ".github/workflows/web-app-deploy.yml"
+  push:
+    branches: [main]
+    paths:
+      - "apps/mobile/**"
+      - "packages/**"
 
 concurrency:
-  group: preview-deploy-${{ github.ref }}
+  group: web-app-deploy-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  preview:
-    name: Cloudflare Pages preview
+  build-and-deploy:
+    name: Build PWA · offline e2e · Cloudflare Pages
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     env:
       CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-    # Deployment needs repo-level secrets that only maintainers configure.
-    # Forks and routine PRs run the build but skip the upload step.
     permissions:
       contents: read
       deployments: write
@@ -41,8 +45,14 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build web app
-        run: pnpm --filter @hangul-route/web build
+      - name: Build PWA (expo export + service worker)
+        run: pnpm --filter @hangul-route/mobile build:web
+
+      - name: Install Playwright Chromium
+        run: pnpm --filter @hangul-route/mobile exec playwright install --with-deps chromium
+
+      - name: Offline e2e
+        run: pnpm --filter @hangul-route/mobile test:e2e:web
 
       - name: Skip upload (secrets not configured)
         if: ${{ env.CF_API_TOKEN == '' }}
@@ -50,10 +60,10 @@ jobs:
           echo "::notice::CLOUDFLARE_API_TOKEN not set — skipping Pages upload."
           echo "::notice::Set repo secrets CLOUDFLARE_API_TOKEN + CLOUDFLARE_ACCOUNT_ID to enable."
 
-      - name: Publish to Cloudflare Pages (hangul-route-web)
+      - name: Publish to Cloudflare Pages (hangul-route-app)
         if: ${{ env.CF_API_TOKEN != '' }}
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy apps/web/.next --project-name=hangul-route-web --branch=${{ github.head_ref || github.ref_name }}
+          command: pages deploy apps/mobile/dist --project-name=hangul-route-app --branch=${{ github.head_ref || github.ref_name }}

@@ -1,3 +1,4 @@
+import { Screen } from '@hangul-route/design-system';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
 import { useProfileStore } from '../store/profile-store';
@@ -21,10 +22,18 @@ export function RootNavigator(): React.ReactElement {
   const hydrated = useProfileStore((s) => s.hydrated);
   const hasProfile = profiles.length > 0;
 
+  // `initialRouteName` is read once when the navigator mounts, so mounting
+  // before storage has hydrated would send a returning learner back to
+  // onboarding on every cold launch. Hold on a blank canvas (~1 frame on
+  // device) until the profile store has loaded.
+  if (!hydrated) {
+    return <Screen tone="canvas">{null}</Screen>;
+  }
+
   return (
     <Stack.Navigator
       screenOptions={{ headerShown: false, animation: 'fade_from_bottom' }}
-      initialRouteName={hydrated && hasProfile ? 'Main' : 'Onboarding'}
+      initialRouteName={hasProfile ? 'Main' : 'Onboarding'}
     >
       <Stack.Screen name="Onboarding" component={OnboardingStack} />
       <Stack.Screen name="Main" component={MainTabs} />

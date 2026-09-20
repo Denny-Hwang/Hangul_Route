@@ -34,7 +34,7 @@ status: reference (living — 화면·기능이 추가되면 이 문서를 먼�
 
 | Surface | 코드 위치 | 상태 |
 |---|---|---|
-| A. Learner App | `apps/mobile` (Expo). 웹은 같은 코드의 PWA 빌드 (roadmap `web-pwa-offline.md`) | Stage 1 shipped (v1.0 prototype + PH launch pack) |
+| A. Learner App | `apps/mobile` (Expo). **웹 PWA 가 주 채널** — 같은 코드의 `build:web` (roadmap `web-pwa-offline.md`, 런치: `docs/launch/web-app-launch.md`) | Stage 1 shipped · PWA P0–P3 shipped 2026-09-20 |
 | B. Caregiver Console | 모바일: `apps/mobile/src/screens/parent/*` · 웹: `apps/web/src/app/parent/*` | 모바일 MVP shipped(읽기 전용) · 웹은 mock 데이터 |
 | C. Teacher / School Console | `apps/web/src/app/teach/*` (신규) | proposal (F-TCH-001 draft + roadmap S3–S7) |
 | D. Platform | `apps/api` + `packages/backend` (Workers/D1) · service worker | 인메모리 스텁. D1 미바인딩 |
@@ -73,7 +73,7 @@ Hangul Route
 │   ├─ A11. Save & Restore  (Rescue Code · sign-in · file) [P] roadmap S1–S2
 │   ├─ A12. Join a space (class / family code)          [P] roadmap S3
 │   ├─ A13. Paywall / Upgrade (parent-gated)            [R] F-SUB-001, F-IAP-001
-│   ├─ A14. PWA shell (install · offline-ready · update) [P] roadmap P2
+│   ├─ A14. PWA shell (offline-ready · update banners · offline chip) [S] roadmap P2 (install-guide 화면은 [P])
 │   └─ A15. Projection mode (교사용 교실 표시)            [D] F-TCH-001 §3.4
 │
 ├─ B. Caregiver Console ─────────────────────────────────────────── 부모
@@ -99,12 +99,12 @@ Hangul Route
 │
 └─ D. Platform ──────────────────────────────────────────────────── 시스템
     ├─ D1. Content bundle (jamo · episodes · quests · cards, CONTENT_VERSION) [S]
-    ├─ D2. Local store (AsyncStorage → IndexedDB on web)  [S/P]
+    ├─ D2. Local store (AsyncStorage · IndexedDB on web)  [S]
     ├─ D3. Sync (snapshot PUT/GET · merge · summary)      [P] roadmap §4
     ├─ D4. Spaces & memberships & plans                   [P] roadmap §2
     ├─ D5. Entitlements (IAP · Stripe · manual)           [R/P] F-IAP-001, roadmap §7
     ├─ D6. Telemetry (fire-and-forget, offline queue)     [S/P]
-    ├─ D7. Service worker (precache · update)             [P] roadmap P2
+    ├─ D7. Service worker (precache · update)             [S] roadmap P2
     └─ D8. Auth (Clerk — adults only)                     [R] F-AUTH-001
 ```
 
@@ -119,6 +119,7 @@ Hangul Route
 | P-C 학급 학생 | ✓ + Join code | (부모가 있으면 ✓) | – | 교사가 지불 |
 | P-C 교사 | Projection mode 만 | – | ✓ C1–C6, C8 | teacher_pro |
 | P-D 학교 관리자 | – | – | ✓ C7, C8 | school_license / seat |
+| P-6 성인 초보 학습자 (외국인, 2026-09-20 추가) | ✓ 아이와 동일 화면 (Stage 1 은 성인에게도 유효) · Rescue Code | – | – | Free → family_premium 과 동일 플랜 (개인 결제) |
 
 ---
 
@@ -318,9 +319,17 @@ console/home ─┬─ [family] ─▶ parent/dashboard ─▶ parent/learner-de
 
 코드 ↔ 스펙 불일치 (shipped 화면) 는 같은 날 코드로 수정했다 — 각 와이어프레임의 Open questions 와 PR 본문 참조.
 
-### 열린 결정 (미룸 — 사용자 지시)
+### 오너 결정 (2026-09-20)
 
-roadmap 두 문서의 열린 질문 (학교 동의 모드, Rescue Code 기본 ON, 교사 Free 캡, family 가격) 은 **나중에 결정**. 이 맵의 화면 구조는 어느 쪽으로 결정돼도 바뀌지 않도록 그렸다 (예: `console/space-settings` 에 동의 모드 토글 자리만 확보).
+| 항목 | 결정 | 반영 |
+|---|---|---|
+| 학교 동의 모드 | 둘 다 지원, space 설정에서 선택 (school 모드는 법률 검토 후 활성) | roadmap §11, `console/space-settings` 토글 |
+| Rescue Code | 모든 학습자에게 자동 생성, 부모가 끌 수 있음 | roadmap §11, `sync/save-progress` |
+| 교사 Free 캡 | 20명 (베타 후 재검토) | roadmap §7, §11, `console/roster` |
+| Family 가격 | 미룸 (1.0 에 IAP 없음) | — |
+| **스토어 카테고리** | **Education (Kids Category 아님)** — 성인 외국인 학습자도 대상이므로 Kids 전용 앱으로 제출하지 않는다. 부모 게이트·무광고·로컬 저장 등 아동 보호 설계는 그대로 유지 | `docs/launch/app-store-submission.md` §5 |
+
+> **대상 사용자 확장 (charter 변경 검토 필요)**: 오너 확인 — 한국어를 배우는 **성인 외국인 (P6)** 도 대상이다. CLAUDE.md §1 은 현재 "5–11세 아동" 만을 authoritative 로 정의하고 UI 어휘를 Pre-A1(5–7세) 로 고정하고 있어, P6 를 공식 페르소나로 넣으려면 CLAUDE.md §1 · BP02 · `docs/launch/faq.md` ("Adults: P3 consideration") 를 함께 고쳐야 한다. 1.0 스토어 카피는 "kids and adult beginners" 로 넓혔고, 앱 UI 는 변경하지 않았다 (Hoya 톤이 성인에게도 무해하다는 전제. 베타에서 성인 5명 인터뷰로 확인 권장).
 
 추가로 이 패스에서 드러난 것:
 - `homework/list` 는 `home/todays-mission` 과 역할이 겹침 → 배정 큐가 3장을 넘을 때만 의미. 베타에서 진입률 측정.

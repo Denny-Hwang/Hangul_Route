@@ -4,6 +4,7 @@
   "private": true,
   "description": "Types shared between backend and frontend (no runtime deps)",
   "type": "module",
+  "main": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts"
   },

@@ -1,6 +1,6 @@
 # Web App (PWA) + Offline — 구상안
 
-**Status**: `proposal` (roadmap → 승인 시 F-WEB-001 / F-PWA-001 / F-INFRA-005 로 분해)
+**Status**: `shipped (P0–P3)` 2026-09-20 — 구현 기록은 `docs/launch/web-app-launch.md` §1. 남은 항목은 같은 문서 §4.
 **작성일**: 2026-09-19
 **질문**: "iPhone 앱으로 만든 것을 동일 기능의 웹앱으로 배포할 수 있나? 한 번 받으면 인터넷 없이도 학습되게."
 

@@ -54,3 +54,7 @@ pnpm-debug.log*
 ehthumbs.db
 Thumbs.db
 apps/mobile/google-play-service-account.json
+
+# Playwright
+test-results/
+playwright-report/
