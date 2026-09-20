@@ -1,6 +1,6 @@
 # Hangul Route
 
-Korean language learning mobile app for English-speaking children ages 5–11. Primary users are Korean heritage kids (parents speak Korean, child does not) and international kids curious about K-culture. Learning unfolds on a **Heritage Journey** grid — Stage (Hangul → Word → Sentence → Dialogue → Story → Real-use → Self-expression) × Culture theme (letters · life · rites · nature · crafts) — and the child draws their own **Route** through it. Guide character is a young tiger named **Hoya (호야)**, and the main reward is a **cultural heritage card collection**.
+Korean language learning app (web PWA first, same code on iOS/Android) for English speakers starting Korean from zero. Primary users are children ages 5–11 — Korean heritage kids (parents speak Korean, child does not) and international kids curious about K-culture; adult beginners use the same quests and cards (kids-first, never kids-only). Learning unfolds on a **Heritage Journey** grid — Stage (Hangul → Word → Sentence → Dialogue → Story → Real-use → Self-expression) × Culture theme (letters · life · rites · nature · crafts) — and the child draws their own **Route** through it. Guide character is a young tiger named **Hoya (호야)**, and the main reward is a **cultural heritage card collection**.
 
 MVP scope: Stage 1 (Hangul) full build + Stage 2 / Stage 4 tastes. The
 full-vision prototype (`feat: full v1.0 build`) ships an end-to-end runnable

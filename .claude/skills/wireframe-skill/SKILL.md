@@ -8,7 +8,7 @@ description: 저충실도 와이어프레임 작업 시 참조. 시안 전 단�
 
 저충실도 (low-fidelity) 와이어프레임 단계. 색·폰트·일러스트·최종 카피를 빼고
 **정보 구조 · 사용자 플로우 · 화면 전환 · 인터랙션 포인트** 에만 집중한다.
-영어권 어린이 5-11세 기준. 시안 (frontend-design-skill) 전 필수 단계.
+영어권 어린이 5-11세 기준 (kids-first). 성인 초보 학습자(P6)도 같은 화면을 쓰므로 유아용 톤·"for kids only" 프레이밍은 피한다 (CLAUDE.md §1). 시안 (frontend-design-skill) 전 필수 단계.
 
 근거: `docs/blueprints/01-competitor-wireframe-analysis.md`.
 

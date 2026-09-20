@@ -7,16 +7,20 @@
 
 ## 1. Project Overview
 
-**Hangul Route** is a Korean language learning mobile app for **English-speaking children, ages 5–11**.
+**Hangul Route** is a Korean language learning app (web PWA first, same code on iOS/Android) for **English speakers starting Korean from zero — children ages 5–11 first, adult beginners too**.
 
-### Target audience (authoritative)
+### Target audience (authoritative — updated 2026-09-20)
 
 - **Primary users**: English-speaking children, ages 5–11.
   - **P4**: Korean heritage children — parents speak Korean, the child does not.
   - **P5**: International children interested in K-culture (no Korean background).
+- **Secondary users**: English-speaking **adult (and teen) beginners** learning Korean from zero.
+  - **P6**: Adult beginners — K-culture fans, partners/in-laws of Korean families, travelers. They use the **same screens and content** as children; there is no separate adult mode.
+  - Design rule that follows: kids-first, **never kids-only**. Shared surfaces avoid "baby talk" and "for kids" framing (Hoya's warmth is fine; nursery tone is not). Age-gated or caregiver-only surfaces stay as they are.
+  - Store / channel consequence: shipped as **Education**, not a Kids-only category; child-safety design (parent gate, no ads, local data) stays regardless.
 - **Native language = English.**
 - **Korean = the target language** being learned (zero or near-zero baseline).
-- **UI text = English** (CEFR Pre-A1, 5–7 year old vocabulary).
+- **UI text = English** (CEFR Pre-A1, 5–7 year old vocabulary — this also reads naturally for adult beginners, which is why one UI serves both).
 - **Korean text = ONLY for content being taught** (자모, 단어, 문장).
 - **Romanization** is always shown alongside Korean as a pronunciation guide.
 - **English gloss / visual** is always shown alongside Korean for meaning.
@@ -274,4 +278,4 @@ Hangul_Route/
 
 ---
 
-_Last updated: 2026-04-21 (v2.2 pass)_
+_Last updated: 2026-09-20 (audience: kids-first + adult beginners; primary channel: web PWA)_
