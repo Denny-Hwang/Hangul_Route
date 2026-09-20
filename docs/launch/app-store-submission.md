@@ -1,5 +1,6 @@
 # App Store 제출 체크리스트 — v1.0.0 (build 1)
 
+> **2026-09-20: 주 배포 채널은 웹앱 (`web-app-launch.md`).** 이 문서는 같은 코드를 나중에 스토어에 올릴 때 쓰는 선택지다.
 > 이 문서가 끝나면 "Submit for Review" 버튼만 남는다.
 > 저장소에서 할 수 있는 것은 전부 끝냈고 (아래 §1), 나머지는 **Apple 계정·기기·스크린샷**이 필요한 오너 작업이다 (§2–§6).
 > 메타데이터 원문은 `app-store-metadata.md`, 스크린샷 프레임 프롬프트는 `design/brief/launch-assets.md` §4.

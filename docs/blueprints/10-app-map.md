@@ -34,7 +34,7 @@ status: reference (living — 화면·기능이 추가되면 이 문서를 먼�
 
 | Surface | 코드 위치 | 상태 |
 |---|---|---|
-| A. Learner App | `apps/mobile` (Expo). 웹은 같은 코드의 PWA 빌드 (roadmap `web-pwa-offline.md`) | Stage 1 shipped (v1.0 prototype + PH launch pack) |
+| A. Learner App | `apps/mobile` (Expo). **웹 PWA 가 주 채널** — 같은 코드의 `build:web` (roadmap `web-pwa-offline.md`, 런치: `docs/launch/web-app-launch.md`) | Stage 1 shipped · PWA P0–P3 shipped 2026-09-20 |
 | B. Caregiver Console | 모바일: `apps/mobile/src/screens/parent/*` · 웹: `apps/web/src/app/parent/*` | 모바일 MVP shipped(읽기 전용) · 웹은 mock 데이터 |
 | C. Teacher / School Console | `apps/web/src/app/teach/*` (신규) | proposal (F-TCH-001 draft + roadmap S3–S7) |
 | D. Platform | `apps/api` + `packages/backend` (Workers/D1) · service worker | 인메모리 스텁. D1 미바인딩 |
@@ -73,7 +73,7 @@ Hangul Route
 │   ├─ A11. Save & Restore  (Rescue Code · sign-in · file) [P] roadmap S1–S2
 │   ├─ A12. Join a space (class / family code)          [P] roadmap S3
 │   ├─ A13. Paywall / Upgrade (parent-gated)            [R] F-SUB-001, F-IAP-001
-│   ├─ A14. PWA shell (install · offline-ready · update) [P] roadmap P2
+│   ├─ A14. PWA shell (offline-ready · update banners · offline chip) [S] roadmap P2 (install-guide 화면은 [P])
 │   └─ A15. Projection mode (교사용 교실 표시)            [D] F-TCH-001 §3.4
 │
 ├─ B. Caregiver Console ─────────────────────────────────────────── 부모
@@ -99,12 +99,12 @@ Hangul Route
 │
 └─ D. Platform ──────────────────────────────────────────────────── 시스템
     ├─ D1. Content bundle (jamo · episodes · quests · cards, CONTENT_VERSION) [S]
-    ├─ D2. Local store (AsyncStorage → IndexedDB on web)  [S/P]
+    ├─ D2. Local store (AsyncStorage · IndexedDB on web)  [S]
     ├─ D3. Sync (snapshot PUT/GET · merge · summary)      [P] roadmap §4
     ├─ D4. Spaces & memberships & plans                   [P] roadmap §2
     ├─ D5. Entitlements (IAP · Stripe · manual)           [R/P] F-IAP-001, roadmap §7
     ├─ D6. Telemetry (fire-and-forget, offline queue)     [S/P]
-    ├─ D7. Service worker (precache · update)             [P] roadmap P2
+    ├─ D7. Service worker (precache · update)             [S] roadmap P2
     └─ D8. Auth (Clerk — adults only)                     [R] F-AUTH-001
 ```
 

@@ -16,7 +16,13 @@
 - [ ] T-013 STT 벤치마크 보고서: Whisper / Clova / Google STT × 어린이 한국어 50샘플 — 2d
 - [ ] T-015 i18n / a11y / telemetry 3종 스펙 초안 (F-I18N-001, F-A11Y-001, F-TEL-001) — 1d
 
-### App Store 제출 (오너 작업 — `docs/launch/app-store-submission.md`)
+### 웹앱 런치 (주 채널 — 오너 작업, `docs/launch/web-app-launch.md` §2)
+- [ ] T-045 Cloudflare Pages `hangul-route-app` 생성 + 시크릿 2개 등록 + `app.hangulroute.com` 연결 — 1h
+- [ ] T-046 설치 테스트 3종 (iOS Safari / Android Chrome / 데스크톱) + 실기기 오프라인 완주 — 0.5h
+- [ ] T-047 Lighthouse PWA 항목 통과 확인 — 0.25h
+- [ ] T-048 랜딩 CTA "Play in your browser" → app.hangulroute.com — 0.5h
+
+### App Store 제출 (선택 — 나중, `docs/launch/app-store-submission.md`)
 - [ ] T-040 Apple Developer + App Store Connect 앱 레코드 + `eas init` → `app.json` projectId / `eas.json` submit 값 교체 — 1h
 - [ ] T-041 hangulroute.com Pages 라이브 + `/privacy` `/about` 200 확인, EFFECTIVE_DATE 갱신 — 0.5h
 - [ ] T-042 `eas build --profile production` → TestFlight 3기기 D-1 QA (submission §4 목록) — 2h
@@ -24,7 +30,7 @@
 - [ ] T-044 App Store Connect 메타데이터·Privacy Label·Review Notes 입력 → Submit — 1h
 
 ### Follow-ups
-- [ ] T-017 F-001 외부 의존: 30 개 jamo 음성 MP3 녹음 (24 자모 + 6 받침, 단일 native speaker) — 1d
+- [ ] T-017 F-001 외부 의존: 30 개 jamo 음성 MP3 녹음 (24 자모 + 6 받침, 단일 native speaker) — 1d **← 웹 오프라인 발음 보장의 전제 (web-app-launch §3), 우선순위 상향**
 
 ### Week 5–6 (Homework · Reviews · Profiles — addendum 09)
 

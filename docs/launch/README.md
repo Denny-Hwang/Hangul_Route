@@ -16,7 +16,8 @@ Everything in here is **copy you can paste**, not strategy theory.
 | `launch-checklist-d14-d0.md` | Daily checklist from D-14 to launch day |
 | `hallway-test-protocol.md` | 6-session script + worksheet for kids 5–11 (D-7) |
 | `parent-interview-guide.md` | 5-parent 30-min interview script + triage rules |
-| `app-store-submission.md` | App Store 제출 직전 체크리스트 — 저장소에서 끝낸 것 / 오너가 할 것 / Guideline 대조 |
+| `web-app-launch.md` | **주 채널** — 웹앱(PWA) 런치 체크리스트: 빌드·오프라인 E2E 완료 상태, Cloudflare Pages·도메인·설치 테스트 (오너) |
+| `app-store-submission.md` | (선택, 나중) App Store 제출 체크리스트 — 저장소에서 끝낸 것 / 오너가 할 것 / Guideline 대조 |
 | `app-store-metadata.md` | App Store Connect 에 붙여넣는 이름·부제·설명·키워드·리뷰 노트·스크린샷 구성 |
 
 ## Design assets — handled in-house via Claude Design
@@ -61,4 +62,5 @@ If a piece of copy doesn't serve that story, cut it.
 - [ ] PH Hunter confirmed (or self-hunt)
 - [ ] Reddit + Facebook groups warmed up
 - [ ] TestFlight live + Expo Go QR ready
-- [ ] App Store: `app-store-submission.md` §2–§6 체크 완료 → Submit for Review
+- [ ] Web app: `web-app-launch.md` §2 체크 완료 → app.hangulroute.com 라이브
+- [ ] (선택) App Store: `app-store-submission.md` §2–§6 → Submit for Review
