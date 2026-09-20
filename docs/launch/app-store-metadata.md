@@ -8,20 +8,20 @@
 | 필드 | 값 | 글자 |
 |---|---|---|
 | Name | `Hangul Route` | 12 |
-| Subtitle | `Korean for kids, with Hoya` | 26 |
+| Subtitle | `Learn Hangul with Hoya` | 22 |
 
 대안 부제 (tagline-decision.md): `Korean for kids who don't speak it — yet.` 는 41자로 초과 → 프로모션 텍스트로 이동.
 
 ## 2. 프로모션 텍스트 (≤ 170자, 심사 없이 수정 가능)
 
 ```
-Korean for kids who don't speak it — yet. Learn the Korean alphabet with Hoya the tiger, one heritage card at a time. No ads. No red X. Plays offline.
+Learn the Korean alphabet with Hoya the tiger — for kids, heritage families and adult beginners. One heritage card at a time. No ads. No red X. Plays offline.
 ```
 
 ## 3. 설명 (≤ 4000자)
 
 ```
-Hangul Route is a Korean learning app for English-speaking children ages 5–11 — made first for heritage families, where the parents speak Korean and the child does not yet.
+Hangul Route is a Korean learning app for English speakers who are starting from zero — children ages 5–11, heritage families where the parents speak Korean and the child does not yet, and adult beginners who want a gentle first step into Hangul.
 
 MEET HOYA
 Hoya is a young tiger who guides every quest. Hoya never frowns and never says "wrong." When a child slips, Hoya thinks it over with them and tries again. There are no red marks anywhere in the app.
@@ -49,6 +49,9 @@ FOR GROWN-UPS
 • No account needed. No ads. No data sold. Everything stays on the device.
 • Works offline — on the plane, at grandma's house, anywhere
 
+FOR ADULT BEGINNERS
+The same five-minute quests work for grown-ups learning on their own: no baby talk in the letters, romanization on every word, and a collection you will actually want to finish.
+
 WHAT'S COMING
 Stages 2–7 take the journey from words to sentences, stories and real conversation, each tied to a Korean culture theme. Stage 1 is free.
 
@@ -58,9 +61,9 @@ Hangul Route is built by a solo developer and a small circle of heritage parents
 ## 4. 키워드 (≤ 100자, 쉼표 구분, 이름·부제 단어 중복 금지)
 
 ```
-hangul,korean alphabet,learn korean,kids,children,heritage,language,letters,reading,tiger,culture
+hangul,korean alphabet,learn korean,kids,beginner,heritage,language,letters,reading,tiger,culture
 ```
-(글자 수: 98)
+(글자 수: 99)
 
 ## 5. 스크린샷 구성 (5장 × 3 세트)
 
@@ -79,7 +82,7 @@ iPad 세트는 같은 5장을 iPad 에서 다시 캡처 (세로).
 ## 6. App Review Notes (붙여넣기)
 
 ```
-Hangul Route is a Kids Category app (ages 6–8 band; content suits 5–11). No account or sign-in exists.
+Hangul Route is an Education app for beginners of all ages (children 5–11 are the primary users; adult beginners use the same content). It is NOT submitted in the Kids Category, but child-safety design is kept throughout. No account or sign-in exists.
 
 How to test:
 1. On first launch, create a learner profile (any name, any age band, tick the parent consent box). The parent email field is optional and is stored on the device only.
@@ -100,4 +103,4 @@ Hoya's first adventure: learn the Korean alphabet through eight mini-games and c
 
 - Copyright: `© 2026 Hangul Route`
 - Age rating: 4+ (설문 전부 None)
-- Kids band: Ages 6–8
+- Category: Education (Kids Category 아님 — 오너 결정 2026-09-20)

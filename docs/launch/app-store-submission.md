@@ -19,7 +19,7 @@
 | 깨진 config plugin 제거 (`expo-status-bar` 는 플러그인이 아님 → `expo config`/EAS 빌드 실패 원인) | `app.json` | ✅ `npx expo config` 통과 |
 | EAS 빌드/제출 프로필 (`development` · `preview` · `production` autoIncrement) | `apps/mobile/eas.json` | ✅ placeholder 3개는 §2 |
 | 프로덕션 크래시 가드 (`OopsScreen` + `react-error-boundary`) | `apps/mobile/App.tsx` | ✅ |
-| Kids Category 요건: 부모 게이트 (PIN, F-PROF-001 §10), 외부 링크 0건, 서드파티 광고/분석 SDK 0건, 앱 내 구매 UI 없음 | 코드 grep + #61 | ✅ |
+| 아동 보호 설계 (Kids Category 가 아니어도 유지): 부모 게이트 (PIN, F-PROF-001 §10), 외부 링크 0건, 서드파티 광고/분석 SDK 0건, 앱 내 구매 UI 없음 | 코드 grep + #61 | ✅ |
 | 구매 언급 제거 ("Subscribe…" → "More stages are on the way") — 존재하지 않는 IAP 언급은 Guideline 2.3.1/3.1.1 리젝 사유 | `ProfileScreen` | ✅ |
 | 개인정보처리방침 / 이용약관 페이지 | `apps/web` `/privacy` · `/terms` | ✅ 코드 존재 — **URL 라이브는 §3** |
 | 텔레메트리: 엔드포인트 미설정 시 네트워크 0 (`EXPO_PUBLIC_API_BASE_URL`) | `platform/telemetry.ts` | ✅ |
@@ -69,9 +69,9 @@ eas submit --platform ios --profile production     # TestFlight 업로드
 `app-store-metadata.md` 의 텍스트를 그대로 붙여넣는다.
 
 - [ ] 이름 / 부제 / 프로모션 텍스트 / 설명 / 키워드 / What's New
-- [ ] 카테고리: **Primary = Education**, Secondary = Kids
-- [ ] **Kids Category 연령대 = Ages 6–8** (한 구간만 선택 가능. 5세와 9–11세는 설명·스크린샷에서 "ages 5–11" 로 커버. 근거: Stage 1 = 자모 = 프리리더 핵심 층)
-- [ ] 연령 등급 설문: 전부 "None" → **4+**
+- [ ] 카테고리: **Primary = Education**, Secondary = **Reference** (또는 비움). **Kids Category 로 제출하지 않는다** — 오너 결정 2026-09-20: 성인 외국인 학습자도 대상. Kids Category 는 "아동 전용" 앱에만 허용되고 한 연령 구간을 강제하므로 성인 대상을 포함하면 Guideline 1.3 위반으로 리젝된다.
+- [ ] 연령 등급 설문: 전부 "None" → **4+** (성인 대상이어도 4+ 가 맞다 — 등급은 콘텐츠 기준)
+- [ ] Kids 가 아니어도 **아동이 주 사용자** 이므로 5.1.4 (13세 미만 데이터) 는 그대로 적용: 부모 게이트·로컬 저장·이메일 미전송 유지
 - [ ] App Privacy (Nutrition Label):
   - Data Not Linked to You → **Product Interaction** (Analytics) — 텔레메트리 이벤트 (프로필 id 는 기기 로컬 난수, 계정 없음)
   - 그 외 수집 없음. 부모 이메일은 **기기에만 저장·전송 안 함** → "수집" 아님 (Apple 정의: 기기 밖으로 나가야 수집). v1 에서 Clerk/동기화가 켜지면 이 라벨을 다시 제출한다.
@@ -90,7 +90,7 @@ eas submit --platform ios --profile production     # TestFlight 업로드
 
 | Guideline | 확인 |
 |---|---|
-| 1.3 Kids Category | 부모 게이트 ✅ · 외부 링크 없음 ✅ · 서드파티 분석/광고 없음 ✅ · 자체 텔레메트리는 개인정보 미포함 ✅ |
+| 1.3 Kids Category | **해당 없음** (Education 으로 제출). 단, 아동 보호 설계는 5.1.4 근거로 유지: 부모 게이트 ✅ · 외부 링크 없음 ✅ · 서드파티 분석/광고 없음 ✅ · 자체 텔레메트리는 개인정보 미포함 ✅ |
 | 2.1 완성도 | 크래시 가드 ✅ · 데드엔드 화면 0 (#61) ✅ · placeholder 텍스트 0 ✅ |
 | 2.3 정확한 메타데이터 | 스크린샷 = 실제 화면 · "9 mini-games" 가 아니라 **8 active** 로 표기 (product-review §"카피 수치 정합성") |
 | 3.1.1 IAP | 구매 없음, 구매 언급 없음 ✅ |
