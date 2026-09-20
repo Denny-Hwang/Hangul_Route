@@ -44,7 +44,9 @@ A. Stage 1 will feel young for them. Stage 3 (sentences, ships later)
 is designed with 10–14 in mind.
 
 **Q. Adults learning Korean?**
-A. Not yet. Adult mode is a P3 consideration after Stage 3 ships.
+A. Yes. Same quests, same cards — Stage 1 (the alphabet) is exactly
+what an adult beginner needs first, and nothing in it is baby talk.
+There is no separate adult mode; kids-first, never kids-only.
 
 ---
 
@@ -183,8 +185,9 @@ A. Pororo is great — it's a *story* app. We're a *quest* app. The
 reward is collection, not narrative consumption.
 
 **Q. This is just Eggbun?**
-A. Eggbun is for adults and uses chat. We're for kids 5–11 and use
-mini-games + cards. Different age, different verb.
+A. Eggbun is adults-only and uses chat. We're kids-first (5–11) with
+adult beginners on the same quests, and we use mini-games + cards.
+Different verb.
 
 **Q. This is just Duolingo with a tiger?**
 A. The tiger is real (Hoya). The differences run deeper — anti-shame

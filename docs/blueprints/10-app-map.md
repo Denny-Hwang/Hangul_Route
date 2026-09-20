@@ -26,9 +26,9 @@ status: reference (living — 화면·기능이 추가되면 이 문서를 먼�
  ┌──────────────┐   ┌──────────────┐   ┌──────────────┐    ┌──────────────┐
  │ A. Learner   │   │ B. Caregiver │   │ C. Teacher / │    │ D. Platform  │
  │    App       │   │    Console   │   │    School    │    │    (API·SW)  │
- │ 아이 · 5–11  │   │ 부모 (앱+웹) │   │    Console   │    │ 동기화·결제  │
- │ Expo → iOS/  │   │              │   │ 교사·관리자  │    │ 복원·오프라인│
- │ Android/PWA  │   │              │   │ (웹 전용)    │    │              │
+ │ 아이 5–11 ·  │   │ 부모 (앱+웹) │   │    Console   │    │ 동기화·결제  │
+ │ 성인 초보 P6 │   │              │   │ 교사·관리자  │    │ 복원·오프라인│
+ │ PWA·iOS·And. │   │              │   │ (웹 전용)    │    │              │
  └──────────────┘   └──────────────┘   └──────────────┘    └──────────────┘
 ```
 
@@ -329,7 +329,7 @@ console/home ─┬─ [family] ─▶ parent/dashboard ─▶ parent/learner-de
 | Family 가격 | 미룸 (1.0 에 IAP 없음) | — |
 | **스토어 카테고리** | **Education (Kids Category 아님)** — 성인 외국인 학습자도 대상이므로 Kids 전용 앱으로 제출하지 않는다. 부모 게이트·무광고·로컬 저장 등 아동 보호 설계는 그대로 유지 | `docs/launch/app-store-submission.md` §5 |
 
-> **대상 사용자 확장 (charter 변경 검토 필요)**: 오너 확인 — 한국어를 배우는 **성인 외국인 (P6)** 도 대상이다. CLAUDE.md §1 은 현재 "5–11세 아동" 만을 authoritative 로 정의하고 UI 어휘를 Pre-A1(5–7세) 로 고정하고 있어, P6 를 공식 페르소나로 넣으려면 CLAUDE.md §1 · BP02 · `docs/launch/faq.md` ("Adults: P3 consideration") 를 함께 고쳐야 한다. 1.0 스토어 카피는 "kids and adult beginners" 로 넓혔고, 앱 UI 는 변경하지 않았다 (Hoya 톤이 성인에게도 무해하다는 전제. 베타에서 성인 5명 인터뷰로 확인 권장).
+> **대상 사용자 확장 — 반영 완료 (2026-09-20)**: CLAUDE.md §1 이 **kids-first, never kids-only** 로 갱신됨 (P6 성인 초보 = 같은 화면·같은 콘텐츠, 별도 성인 모드 없음). README · `docs/launch/faq.md` · 스토어 카피 동기화. 앱 UI 문구 중 `onboarding/welcome` 의 "Made for kids 5–11" 한 줄은 오너 결정 후 코드 변경 (제안: "Made for kids 5–11 — and grown-ups starting from zero"). 베타에서 성인 5명 인터뷰로 Hoya 톤 수용도 확인 권장.
 
 추가로 이 패스에서 드러난 것:
 - `homework/list` 는 `home/todays-mission` 과 역할이 겹침 → 배정 큐가 3장을 넘을 때만 의미. 베타에서 진입률 측정.
