@@ -27,6 +27,25 @@ test('install guide shows on the third cached open and snoozes on dismiss', asyn
   // Home stays usable underneath; "Not now" hides it for the next opens.
   await guide.getByRole('button', { name: 'Not now' }).click();
   await expect(page.getByTestId('install-guide')).toHaveCount(0);
+  // The snooze is persisted to IndexedDB asynchronously — wait for the write
+  // before reloading, otherwise a fast reload races it (seen on CI).
+  await page.waitForFunction(
+    () =>
+      new Promise<boolean>((resolve) => {
+        const req = indexedDB.open('keyval-store');
+        req.onerror = () => resolve(false);
+        req.onsuccess = () => {
+          const db = req.result;
+          if (!db.objectStoreNames.contains('keyval')) return resolve(false);
+          const get = db.transaction('keyval').objectStore('keyval').get('hr:pwa:install-guide');
+          get.onerror = () => resolve(false);
+          get.onsuccess = () => {
+            const raw = typeof get.result === 'string' ? (JSON.parse(get.result) as { snoozedUntilVisit?: number }) : null;
+            resolve(!!raw && (raw.snoozedUntilVisit ?? 0) > 0);
+          };
+        };
+      }),
+  );
   await page.reload();
   await expect(page.getByText('Hi, Mina!')).toBeVisible();
   await expect(page.getByTestId('install-guide')).toHaveCount(0);
