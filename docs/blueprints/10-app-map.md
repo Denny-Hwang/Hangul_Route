@@ -83,7 +83,7 @@ Hangul Route
 │   ├─ B4. Voice message (≤10 s)                         [R] F-PAR-001 N5
 │   ├─ B5. Plan builder (family)  = "Send homework"      [S] F-PLAN-001 §3.5 (`/teach/space/:id/plan`, class 와 공용) (T-P2-01 흡수)
 │   ├─ B6. Account (Clerk sign-in · email · consent · delete learner) [R/P] F-AUTH-001/002
-│   ├─ B7. Billing (family_premium)                      [P] roadmap S6
+│   ├─ B7. Billing (family_premium)                      [S] F-ENT-001 §3.6 (`/teach/billing`, Stripe; 가격 placeholder)
 │   └─ B8. Backup (rescue code 보기 · 파일 내보내기)      [S] F-SYNC-002 · F-RESTORE-001
 │
 ├─ C. Teacher / School Console (웹 전용) ────────────────────────── 교사·관리자
@@ -94,7 +94,7 @@ Hangul Route
 │   ├─ C5. Learner card (parent B3 재사용, 읽기 전용)      [P]
 │   ├─ C6. Re-link approval (기기 이전 승인)               [S] F-TCH-001 §10.1 (`/teach/space/:id/relink` — 승인·거절·10분 창·rescue 재발급)
 │   ├─ C7. School admin (교사 초대 · 학급 트리 · seats)     [P] roadmap S7
-│   ├─ C8. Billing (teacher_pro · school_license, Stripe)  [P] roadmap S6
+│   ├─ C8. Billing (teacher_pro · school_license, Stripe)  [S] F-ENT-001 §3.6 (`/teach/billing`; school_seat 은 Contact us)
 │   └─ C9. Worksheets PDF · Templates                     [–] F-TCH-002/003
 │
 └─ D. Platform ──────────────────────────────────────────────────── 시스템
@@ -175,7 +175,7 @@ Hangul Route
 | `console/sign-in` | web `/teach` (+ mobile 나중) | 어른 로그인 — **dev 폼** (bearer = account id, 비프로덕션 또는 `NEXT_PUBLIC_CONSOLE_DEV_AUTH`) · Clerk 위젯은 F-AUTH-002 | S (dev) | F-CONSOLE-001 §3.2 · F-AUTH-001/002 | ✓ |
 | `console/plan-builder` | web `/teach/space/:id/plan` (family·class 공용) | 계획 만들기·발행·readout | S | F-PLAN-001 §3.5 | ✓ |
 | `console/account` | web + mobile | 이메일·동의·백업·학습자 삭제 | P | roadmap §5.3 | NEW |
-| `console/billing` | web (Stripe) · mobile (IAP) | 플랜 보기·변경 | P (API S: list · checkout · portal · webhook) | F-ENT-001 §3.6 | ✓ |
+| `console/billing` | web `/teach/billing` (mobile IAP 는 F-IAP-002) | 현재 플랜 카드 · 역할별 플랜 행 (추천 1개) · Choose → Stripe Checkout · Manage → Portal · 미설정 시 조용한 안내 | S | F-ENT-001 §3.6 | ✓ |
 
 ### 3.3 C. Teacher / School Console (web `/teach`)
 
@@ -188,7 +188,7 @@ Hangul Route
 | `console/relink-approval` | web `/teach/space/:id/relink` | 기기 이전 승인 10분 창 · 학습자 rescue code 재발급 | S | F-TCH-001 §10.1–10.2 | ✓ |
 | `console/school-admin` | 학급 트리 · 교사 초대 · seat 사용량 | P | roadmap S7 | NEW |
 | `console/plan-builder` | (B 와 공용) | S | F-PLAN-001 §3.5 | ✓ |
-| `console/billing` | (B 와 공용, teacher_pro / school) | P (API S) | F-ENT-001 §3.6 | ✓ |
+| `console/billing` | (B 와 공용, teacher_pro / school) | S | F-ENT-001 §3.6 | ✓ |
 
 ### 3.4 웹 마케팅 (`apps/web`) — 와이어프레임 대상 아님
 
