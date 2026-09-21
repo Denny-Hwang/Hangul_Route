@@ -1,0 +1,10 @@
+# Static-asset headers (Workers assets / Pages convention).
+# The service worker and manifest must never be served stale, or an update
+# could take up to a day to reach installed apps.
+/sw.js
+  Cache-Control: no-cache
+/manifest.webmanifest
+  Content-Type: application/manifest+json
+  Cache-Control: no-cache
+/index.html
+  Cache-Control: no-cache

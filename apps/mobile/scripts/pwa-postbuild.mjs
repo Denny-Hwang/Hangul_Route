@@ -4,10 +4,20 @@
 // precaching every exported file so the app plays offline after one visit.
 // Colors here mirror app.json splash/theme (native config, not UI tokens).
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { generateSW } from 'workbox-build';
 
 const dist = process.argv[2] ?? 'dist';
+
+// Shell colors come from the design tokens (packages/design-system), read at
+// build time so the HTML shell never carries its own palette.
+const here = dirname(fileURLToPath(import.meta.url));
+const tokensSrc = readFileSync(join(here, '../../../packages/design-system/src/tokens.ts'), 'utf8');
+const token = (name, fallback) => tokensSrc.match(new RegExp(`\\b${name}:\\s*'(#[0-9A-Fa-f]{6})'`))?.[1] ?? fallback;
+const canvas = token('canvas', '#FCF8F1');
+const brand = token('primary', '#E8743B');
+const border = token('subtle', '#E8DFCD');
 const indexPath = join(dist, 'index.html');
 if (!existsSync(indexPath)) {
   throw new Error(`${indexPath} not found — run \`expo export --platform web\` first`);
@@ -15,7 +25,7 @@ if (!existsSync(indexPath)) {
 
 const head = `
   <link rel="manifest" href="/manifest.webmanifest">
-  <meta name="theme-color" content="#E8743B">
+  <meta name="theme-color" content="${brand}">
   <meta name="application-name" content="Hangul Route">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
@@ -27,10 +37,15 @@ const head = `
     /* Shell rules for a kids' app in a browser (wireframe pwa/system-banners):
        no pull-to-refresh mid-quest, no accidental text selection on tiles,
        and the trace canvas owns its touches. Pinch-zoom stays enabled. */
-    html, body { overscroll-behavior: none; background: #FCF8F1; }
+    html, body { overscroll-behavior: none; background: ${canvas}; }
     body { -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
     input, textarea { -webkit-user-select: text; user-select: text; }
     #trace-canvas { touch-action: none; }
+    /* Desktop / tablet: keep the phone-width column centered (roadmap §3.4)
+       until a wide layout is designed; phones are unaffected. */
+    @media (min-width: 600px) {
+      #root { max-width: 480px; margin: 0 auto; min-height: 100vh; border-left: 1px solid ${border}; border-right: 1px solid ${border}; }
+    }
   </style>`;
 
 const sw = `

@@ -1,0 +1,61 @@
+name: Web App (PWA)
+
+# Merge gate for the learner web app: build the static export + service
+# worker and run the offline Playwright e2e. Deployment itself is done by
+# Cloudflare Workers Builds (Connect GitHub) on every push to main — see
+# docs/launch/web-app-launch.md §2 — so this workflow never uploads.
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "apps/mobile/**"
+      - "packages/**"
+      - ".github/workflows/web-app.yml"
+  push:
+    branches: [main]
+    paths:
+      - "apps/mobile/**"
+      - "packages/**"
+
+concurrency:
+  group: web-app-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-e2e:
+    name: Build PWA · offline e2e
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    env:
+      WRANGLER_SEND_METRICS: "false"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build PWA (expo export + service worker)
+        run: pnpm --filter @hangul-route/mobile build:web
+
+      - name: Validate wrangler config (dry run, no upload)
+        run: pnpm --filter @hangul-route/mobile exec wrangler deploy --dry-run
+
+      - name: Install Playwright Chromium
+        run: pnpm --filter @hangul-route/mobile exec playwright install --with-deps chromium
+
+      - name: Offline e2e
+        run: pnpm --filter @hangul-route/mobile test:e2e:web

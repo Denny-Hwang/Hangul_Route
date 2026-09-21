@@ -20,10 +20,12 @@ test('onboards, enters the first quest, and keeps working offline', async ({ pag
   await page.getByRole('button', { name: 'Start my journey' }).click();
   await expect(page.getByRole('button', { name: 'Continue' })).toBeVisible();
 
-  // Wait for the service worker to finish precaching, then cut the network.
+  // Wait until the service worker has finished precaching AND controls this
+  // page (clientsClaim); `reg.active` alone can be true a tick before the
+  // claim lands, and a reload in that gap goes to the (dead) network.
   await page.waitForFunction(async () => {
     const reg = await navigator.serviceWorker.getRegistration();
-    return !!reg?.active;
+    return !!reg?.active && !!navigator.serviceWorker.controller;
   });
   await context.setOffline(true);
   await page.reload();

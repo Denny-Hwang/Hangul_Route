@@ -17,10 +17,9 @@
 - [ ] T-015 i18n / a11y / telemetry 3종 스펙 초안 (F-I18N-001, F-A11Y-001, F-TEL-001) — 1d
 
 ### 웹앱 런치 (주 채널 — 오너 작업, `docs/launch/web-app-launch.md` §2)
-- [ ] T-045 Cloudflare Pages `hangul-route-app` 생성 + 시크릿 2개 등록 + `app.hangulroute.com` 연결 — 1h
+- [ ] T-045 GitHub main 브랜치 보호(필수 체크 3개) + Cloudflare **Connect GitHub** (Workers Builds, 설정값은 `web-app-launch.md` §2-B) + `app.hangulroute.com` 연결 — 1h
 - [ ] T-046 설치 테스트 3종 (iOS Safari / Android Chrome / 데스크톱) + 실기기 오프라인 완주 — 0.5h
 - [ ] T-047 Lighthouse PWA 항목 통과 확인 — 0.25h
-- [ ] T-048 랜딩 CTA "Play in your browser" → app.hangulroute.com — 0.5h
 
 ### App Store 제출 (선택 — 나중, `docs/launch/app-store-submission.md`)
 - [ ] T-040 Apple Developer + App Store Connect 앱 레코드 + `eas init` → `app.json` projectId / `eas.json` submit 값 교체 — 1h
