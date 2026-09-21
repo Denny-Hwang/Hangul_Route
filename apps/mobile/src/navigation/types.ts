@@ -8,7 +8,9 @@ export type RootStackParamList = {
   Results: { questId: string; episodeId: string; stars: 0 | 1 | 2 | 3; correct: number; total: number };
   CardDetail: { cardId: string };
   /** Grown-up gate (PIN). `AddProfile` continues into Onboarding/CreateProfile. */
-  PinEntry: { next: 'ParentDashboard' | 'AddProfile' };
+  PinEntry: { next: 'ParentDashboard' | 'AddProfile' | 'BackupRestore' };
+  /** Parent-gated: restore a learner from a backup file (F-SYNC-002 §3.3). */
+  BackupRestore: undefined;
   ParentDashboard: undefined;
   Profile: undefined;
   Homework: undefined;

@@ -9,6 +9,7 @@ import { EpisodeDetailScreen } from '../screens/episode/EpisodeDetailScreen';
 import { OnboardingStack } from './onboarding';
 import { ParentDashboardScreen } from '../screens/parent/ParentDashboardScreen';
 import { PinEntryScreen } from '../screens/parent/PinEntryScreen';
+import { BackupRestoreScreen } from '../screens/sync/BackupRestoreScreen';
 import { ProfileScreen } from '../screens/profile/ProfileScreen';
 import { HomeworkScreen } from '../screens/homework/HomeworkScreen';
 import { QuestPlayerScreen } from '../screens/quest/QuestPlayerScreen';
@@ -46,6 +47,7 @@ export function RootNavigator(): React.ReactElement {
       <Stack.Screen name="ParentDashboard" component={ParentDashboardScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
       <Stack.Screen name="Homework" component={HomeworkScreen} />
+      <Stack.Screen name="BackupRestore" component={BackupRestoreScreen} />
     </Stack.Navigator>
   );
 }

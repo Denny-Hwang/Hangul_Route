@@ -1,5 +1,6 @@
 import type { ProgressSnapshot, QuestProgress } from '@hangul-route/content-schema';
 import { create } from 'zustand';
+import { notifyProgressPersisted } from '../logic/sync/persist-hook';
 import { readJson, writeJson } from '../platform/storage';
 import { track } from '../platform/telemetry';
 
@@ -59,6 +60,8 @@ interface Actions {
   beginSession: (profileId: string) => void;
   endSession: (profileId: string) => void;
   reset: (profileId: string) => void;
+  /** Sync / restore hand back a merged snapshot; persisted without re-notifying sync. */
+  replaceSnapshot: (profileId: string, snapshot: ProgressSnapshot) => void;
 }
 
 function blankSnapshot(profileId: string): ProgressSnapshot {
@@ -77,6 +80,7 @@ function blankSnapshot(profileId: string): ProgressSnapshot {
 
 function persist(profileId: string, snap: ProgressSnapshot): void {
   void writeJson(key(profileId), snap);
+  notifyProgressPersisted(profileId);
 }
 
 export const useProgressStore = create<State & Actions>((set, get) => ({
@@ -189,5 +193,13 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
     const fresh = blankSnapshot(profileId);
     set((s) => ({ byProfile: { ...s.byProfile, [profileId]: fresh } }));
     persist(profileId, fresh);
+  },
+
+  replaceSnapshot: (profileId, snapshot) => {
+    set((s) => ({
+      byProfile: { ...s.byProfile, [profileId]: snapshot },
+      hydratedFor: new Set([...s.hydratedFor, profileId]),
+    }));
+    void writeJson(key(profileId), snapshot);
   },
 }));
