@@ -90,6 +90,25 @@ export interface RelinkView {
 
 export type EntitlementView = Entitlement & { subjectName: string | null };
 
+export interface SchoolClassRow {
+  space: SpaceView;
+  teacher: { accountId: string; name: string } | null;
+  students: number;
+  practiced: number;
+  lastActiveAt: string | null;
+  hasPublishedPlan: boolean;
+}
+
+export interface SchoolView {
+  school: SpaceView;
+  invite: { joinCode: string | null; joinCodeExpiresAt: string | null };
+  license: (EntitlementView & { active: boolean }) | null;
+  limits: { licensed: boolean; students: number | null; teachers: number | null };
+  usage: { students: number; teachers: number };
+  thisWeek: { students: number; practiced: number; classes: number; classesWithPlan: number };
+  classes: SchoolClassRow[];
+}
+
 export type ApiError = 'unauthorized' | 'forbidden' | 'not_found' | 'invalid' | 'network' | 'unknown';
 /** `code` is the server envelope's error code when it sent one (e.g. stripe_not_configured). */
 export type ApiResult<T> = { ok: true; data: T } | { ok: false; error: ApiError; status: number; code?: string };
@@ -158,6 +177,9 @@ export function createConsoleApi(opts: ConsoleApiOptions) {
       call<{ request: RelinkView }>(`${base}/${encodeURIComponent(spaceId)}/relink-requests/${encodeURIComponent(requestId)}/${approve ? 'approve' : 'deny'}`, { method: 'POST' }, [200]).then((r) => (r.ok ? { ok: true as const, data: r.data.request } : r)),
     issueRescueCode: (learnerId: string) =>
       call<{ code: string; issuedAt: string }>(`${recovery}/issue`, { method: 'POST', body: JSON.stringify({ learnerId }) }, [201]),
+    school: (spaceId: string) => call<SchoolView>(`${base}/${encodeURIComponent(spaceId)}/school`, { method: 'GET' }, [200]),
+    addMember: (spaceId: string, accountId: string) =>
+      call<{ alreadyMember: boolean }>(`${base}/${encodeURIComponent(spaceId)}/members`, { method: 'POST', body: JSON.stringify({ accountId, role: 'teacher' }) }, [200, 201]),
     entitlements: () =>
       call<{ entitlements: EntitlementView[] }>(entitlements, { method: 'GET' }, [200]).then((r) => (r.ok ? { ok: true as const, data: r.data.entitlements } : r)),
     checkout: (body: { planKey: 'family_premium' | 'teacher_pro' | 'school_license'; interval: 'monthly' | 'yearly'; subjectKind: 'account' | 'space'; subjectId: string }) =>

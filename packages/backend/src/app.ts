@@ -11,6 +11,7 @@ import { subscriptionRoutes } from './routes/subscriptions';
 import { recoveryRoutes } from './routes/recovery';
 import { entitlementRoutes } from './routes/entitlements';
 import { relinkRoutes } from './routes/relink';
+import { schoolRoutes } from './routes/school';
 import { plansRoutes } from './routes/plans';
 import { spacesRoutes } from './routes/spaces';
 import { syncRoutes } from './routes/sync';
@@ -61,6 +62,8 @@ app.route('/api/spaces', plansRoutes);
 app.route('/api/spaces', relinkRoutes);
 // Entitlements (F-ENT-001): one table for receipts, Stripe and contracts; learners inherit through memberships.
 app.route('/api/entitlements', entitlementRoutes);
+// School admin (F-SCHOOL-001): class tree, teacher invites, seats — aggregates only.
+app.route('/api/spaces', schoolRoutes);
 
 app.notFound((c) =>
   c.json({ ok: false, error: { code: 'not_found', message: 'Route not found' } }, 404),

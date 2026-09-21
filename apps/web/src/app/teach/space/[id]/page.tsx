@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { Button, ConsoleShell, Muted, Notice, panelStyle } from '@/components/console/ui';
+import { SchoolAdmin } from '@/components/console/SchoolAdmin';
 import { useConsole } from '@/components/console/use-console';
 import type { PlanView, Roster } from '@/lib/console/api';
 import { COPY } from '@/lib/console/copy';
@@ -40,6 +41,8 @@ export default function SpacePage(): JSX.Element {
   }, [load]);
 
   if (!ready || !session) return <ConsoleShell>{null}</ConsoleShell>;
+  // School spaces get the admin view (F-SCHOOL-001 §3.3); classes and families the roster.
+  if (roster?.space.kind === 'school' && api) return <SchoolAdmin api={api} spaceId={spaceId} onSignOut={signOut} />;
 
   const regenerate = async (): Promise<void> => {
     if (!api || !roster) return;
