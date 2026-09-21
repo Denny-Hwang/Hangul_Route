@@ -5,7 +5,8 @@ import { getDeviceId } from '../platform/device';
 import { readJson, writeJson } from '../platform/storage';
 import type { DeviceCredentials, SyncApiClient } from '../platform/sync-api';
 import { track } from '../platform/telemetry';
-import { syncApi, useSyncStore } from './sync-store';
+import { usePlanStore } from './plan-store';
+import { onSynced, syncApi, useSyncStore } from './sync-store';
 
 /**
  * A learner's spaces on this device — F-SPACE-001 §3.5. Cached locally,
@@ -66,7 +67,11 @@ export const useMembershipStore = create<State & Actions>((set, get) => {
       if (!creds) return null;
       const result = await client.getInbox(learnerId, creds);
       if (result.status !== 'ok') return null;
-      return put(learnerId, result.inbox.memberships);
+      const rows = put(learnerId, result.inbox.memberships);
+      // Plans ride the same inbox (F-PLAN-001 §3.3): derive homework, then push the change back.
+      const applied = await usePlanStore.getState().applyPlans(learnerId, result.inbox.plans);
+      if (applied.changed) useSyncStore.getState().requestSync(learnerId);
+      return rows;
     },
 
     lookup: async (code) => {
@@ -109,3 +114,10 @@ export const useMembershipStore = create<State & Actions>((set, get) => {
     },
   };
 });
+
+/** Refresh the inbox after every successful sync (call once at app start; returns the unsubscribe). */
+export function registerInboxRefresh(): () => void {
+  return onSynced((learnerId) => {
+    void useMembershipStore.getState().refresh(learnerId);
+  });
+}

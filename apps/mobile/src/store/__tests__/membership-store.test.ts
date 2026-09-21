@@ -16,6 +16,7 @@ vi.mock('../../config/flags', () => ({ flags: { syncEnabled: true, telemetryEnab
 import { apiBaseUrl } from '../../platform/sync-api';
 import { track } from '../../platform/telemetry';
 import { useMembershipStore } from '../membership-store';
+import { usePlanStore } from '../plan-store';
 import { useProfileStore } from '../profile-store';
 import { useProgressStore } from '../progress-store';
 import { setSyncApiForTests, useSyncStore } from '../sync-store';
@@ -43,6 +44,7 @@ beforeEach(() => {
   mem.clear();
   vi.mocked(track).mockClear();
   useMembershipStore.setState({ byLearner: {} });
+  usePlanStore.setState({ byLearner: {}, notReady: {} });
   useSyncStore.setState({ byLearner: {} });
   useProfileStore.setState({ profiles: [{ id: 'profile:a', displayName: 'Suni', ageGroup: '5-7', avatar: 'hoya-orange', role: 'learner', createdAt: 't' }], activeId: 'profile:a', hydrated: true });
   useProgressStore.setState({ byProfile: { 'profile:a': snap }, hydratedFor: new Set(['profile:a']) });
@@ -66,6 +68,22 @@ describe('membership-store (F-SPACE-001 §3.5)', () => {
     setSyncApiForTests(fakeApi({ getInbox: vi.fn(async () => ({ status: 'error', code: 'network' })) }) as never);
     expect(await useMembershipStore.getState().refresh('profile:a')).toBeNull();
     expect(useMembershipStore.getState().byLearner['profile:a']).toEqual(rows); // last known rows stay
+  });
+
+  it('applies inbox plans on refresh and asks for a sync when homework changed', async () => {
+    useSyncStore.getState().adoptCredentials('profile:a', 'sec', 1);
+    const plan = { id: 'plan:w3', spaceId: 'space:cls', spaceKind: 'class', spaceName: 'Sunday Class A', title: 'Week 3', items: [{ kind: 'quest', id: 'quest:stage1-letters-q1' }], publishedAt: 't', updatedAt: 't' };
+    const api = fakeApi({ getInbox: vi.fn(async () => ({ status: 'ok', inbox: { rev: 1, plans: [plan], memberships: [classRow], tier: 'free', serverTime: 't' } })) });
+    setSyncApiForTests(api as never);
+    const requestSync = vi.spyOn(useSyncStore.getState(), 'requestSync');
+    await useMembershipStore.getState().refresh('profile:a');
+    expect(usePlanStore.getState().byLearner['profile:a']).toEqual([plan]);
+    expect(useProgressStore.getState().byProfile['profile:a']?.homework.map((h) => h.id)).toEqual(['plan:w3#quest:stage1-letters-q1']);
+    expect(requestSync).toHaveBeenCalledWith('profile:a');
+    requestSync.mockClear();
+    await useMembershipStore.getState().refresh('profile:a');
+    expect(requestSync).not.toHaveBeenCalled();
+    requestSync.mockRestore();
   });
 
   it('looks up a code and maps errors, including no API', async () => {

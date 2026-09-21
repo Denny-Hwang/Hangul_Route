@@ -114,3 +114,23 @@ describe('nextStreak', () => {
     expect(nextStreak(3, '2026-04-30', '2026-05-01')).toBe(4);
   });
 });
+
+describe('quest completion marks assignments (F-HW-001 §3.4, F-PLAN-001 §3.3)', () => {
+  it('sets completedAt on every open assignment for that quest only', () => {
+    const store = useProgressStore.getState();
+    const base = store.ensure('profile:hw');
+    store.replaceSnapshot('profile:hw', {
+      ...base,
+      homework: [
+        { id: 'plan:w3#quest:x', profileId: 'profile:hw', questId: 'quest:x', episodeId: 'episode:e', assignedBy: 'teacher', assignedAt: 't', targetDate: '2026-09-21' },
+        { id: 'hw:old', profileId: 'profile:hw', questId: 'quest:x', episodeId: 'episode:e', assignedBy: 'parent', assignedAt: 't', targetDate: '2026-09-01', completedAt: 'earlier' },
+        { id: 'hw:other', profileId: 'profile:hw', questId: 'quest:y', episodeId: 'episode:e', assignedBy: 'parent', assignedAt: 't', targetDate: '2026-09-21' },
+      ],
+    });
+    useProgressStore.getState().recordQuestComplete('profile:hw', { questId: 'quest:x', episodeId: 'episode:e', stars: 3, attempts: 1, accuracy: 1 });
+    const homework = useProgressStore.getState().byProfile['profile:hw']?.homework ?? [];
+    expect(homework.find((h) => h.id === 'plan:w3#quest:x')?.completedAt).toBeTruthy();
+    expect(homework.find((h) => h.id === 'hw:old')?.completedAt).toBe('earlier');
+    expect(homework.find((h) => h.id === 'hw:other')?.completedAt).toBeUndefined();
+  });
+});

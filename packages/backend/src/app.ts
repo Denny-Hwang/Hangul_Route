@@ -9,6 +9,7 @@ import { profileRoutes } from './routes/profiles';
 import { progressRoutes } from './routes/progress';
 import { subscriptionRoutes } from './routes/subscriptions';
 import { recoveryRoutes } from './routes/recovery';
+import { plansRoutes } from './routes/plans';
 import { spacesRoutes } from './routes/spaces';
 import { syncRoutes } from './routes/sync';
 import { telemetryRoutes } from './routes/telemetry';
@@ -52,6 +53,8 @@ app.route('/api/sync', syncRoutes);
 app.route('/api/recovery', recoveryRoutes);
 // Spaces & memberships (F-SPACE-001): family / class / school, join codes, roster summaries.
 app.route('/api/spaces', spacesRoutes);
+// Plans (F-PLAN-001): one row per space, derived into homework on each learner device.
+app.route('/api/spaces', plansRoutes);
 
 app.notFound((c) =>
   c.json({ ok: false, error: { code: 'not_found', message: 'Route not found' } }, 404),

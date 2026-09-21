@@ -1,4 +1,4 @@
-import type { MemberKind, Membership, Space } from '@hangul-route/content-schema';
+import type { MemberKind, Membership, Plan, Space } from '@hangul-route/content-schema';
 /**
  * In-memory store. Replaced by D1 + R2 bindings when wrangler.toml binds them.
  * Schema mirrors `db/schema.sql`.
@@ -106,6 +106,7 @@ class Store {
   accounts = new Map<string, Account>();
   spaces = new Map<string, Space>();
   memberships = new Map<string, Membership>();
+  plans = new Map<string, Plan>(); // F-PLAN-001
 
   membership(spaceId: string, kind: MemberKind, memberId: string): Membership | undefined {
     return this.memberships.get(membershipKey(spaceId, kind, memberId));
@@ -129,6 +130,10 @@ class Store {
 
   spaceByCode(code: string): Space | undefined {
     return [...this.spaces.values()].find((s) => s.joinCode === code);
+  }
+
+  plansOf(spaceId: string): Plan[] {
+    return [...this.plans.values()].filter((p) => p.spaceId === spaceId);
   }
 
   childSpaces(spaceId: string): Space[] {
@@ -155,6 +160,7 @@ class Store {
     this.accounts.clear();
     this.spaces.clear();
     this.memberships.clear();
+    this.plans.clear();
   }
 }
 

@@ -18,7 +18,7 @@ vi.mock('../../config/flags', () => ({ flags: { syncEnabled: true, telemetryEnab
 import { apiBaseUrl } from '../../platform/sync-api';
 import { useProfileStore } from '../profile-store';
 import { useProgressStore } from '../progress-store';
-import { setSyncApiForTests, useSyncStore } from '../sync-store';
+import { onSynced, setSyncApiForTests, useSyncStore } from '../sync-store';
 
 const snap = (quests: string[]): ProgressSnapshot => ({
   profileId: 'profile:a',
@@ -102,6 +102,24 @@ describe('sync-store (F-SYNC-002)', () => {
     await useSyncStore.getState().syncAll();
     expect(api.register).not.toHaveBeenCalled();
     expect(api.putSnapshot).toHaveBeenCalledWith('profile:a', expect.objectContaining({ baseRev: 4 }), expect.objectContaining({ secret: 'adopted' }));
+  });
+});
+
+describe('synced listeners (F-PLAN-001 §3.3)', () => {
+  it('fires after a successful sync and stops after unsubscribe', async () => {
+    setSyncApiForTests(fakeApi() as never);
+    const seen: string[] = [];
+    const off = onSynced((id) => seen.push(id));
+    await useSyncStore.getState().syncNow('profile:a');
+    expect(seen).toEqual(['profile:a']);
+    off();
+    await useSyncStore.getState().syncNow('profile:a');
+    expect(seen).toEqual(['profile:a']);
+    setSyncApiForTests(fakeApi({ putSnapshot: vi.fn(async () => ({ status: 'error', code: 'network' })) }) as never);
+    const late = onSynced((id) => seen.push(`late:${id}`));
+    await useSyncStore.getState().syncNow('profile:a');
+    expect(seen).toEqual(['profile:a']);
+    late();
   });
 });
 

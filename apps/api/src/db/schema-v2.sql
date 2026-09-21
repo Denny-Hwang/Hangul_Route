@@ -72,3 +72,18 @@ CREATE TABLE IF NOT EXISTS memberships (
   PRIMARY KEY (space_id, member_kind, member_id)
 );
 CREATE INDEX IF NOT EXISTS idx_memberships_member ON memberships(member_kind, member_id);
+
+-- F-PLAN-001: one plan row per space; learner devices derive their own homework.
+CREATE TABLE IF NOT EXISTS plans (
+  id                       TEXT PRIMARY KEY,   -- plan:xxxx
+  space_id                 TEXT NOT NULL REFERENCES spaces(id) ON DELETE CASCADE,
+  author_account_id        TEXT NOT NULL REFERENCES accounts(id),
+  title                    TEXT NOT NULL,
+  items_json               TEXT NOT NULL,      -- ordered [{kind, id, targetDate?, note?}]
+  target_learner_ids_json  TEXT,               -- NULL = everyone in the space
+  published_at             TEXT,               -- NULL = draft (never reaches a learner)
+  archived_at              TEXT,
+  created_at               TEXT NOT NULL,
+  updated_at               TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_plans_space_updated ON plans(space_id, updated_at);

@@ -8,3 +8,4 @@ export * from './schemas/profile';
 export * from './schemas/progress';
 export * from './schemas/sync';
 export * from './schemas/space';
+export * from './schemas/plan';

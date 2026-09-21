@@ -1,6 +1,6 @@
 import type { ProgressSnapshot } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
-import { summarize } from '../summarize';
+import { planProgressOf, summarize } from '../summarize';
 
 const NOW = new Date('2026-09-21T12:00:00.000Z');
 const snap: ProgressSnapshot = {
@@ -53,5 +53,27 @@ describe('summarize (F-SYNC-001 §3.4)', () => {
     expect(empty.stage1.anchorAccuracy).toBeNull();
     expect(empty.minutesLast7d).toBe(0);
     expect(empty.lastActiveAt).toBe(snap.updatedAt);
+  });
+});
+
+describe('plan progress (F-PLAN-001 §3.3)', () => {
+  it('counts plan-derived assignments per plan and reports skipped items', () => {
+    const withPlans: ProgressSnapshot = {
+      ...snap,
+      homework: [
+        { id: 'plan:w3#q1', profileId: 'profile:a', questId: 'q1', episodeId: 'e', assignedBy: 'teacher', assignedAt: 't', targetDate: '2026-09-21', completedAt: 't' },
+        { id: 'plan:w3#q2', profileId: 'profile:a', questId: 'q2', episodeId: 'e', assignedBy: 'teacher', assignedAt: 't', targetDate: '2026-09-21' },
+        { id: 'plan:fam#q1', profileId: 'profile:a', questId: 'q1', episodeId: 'e', assignedBy: 'parent', assignedAt: 't', targetDate: '2026-09-21' },
+        { id: 'hw:parent-1', profileId: 'profile:a', questId: 'q3', episodeId: 'e', assignedBy: 'parent', assignedAt: 't', targetDate: '2026-09-21' },
+      ],
+    };
+    expect(planProgressOf(withPlans, { 'plan:w3': 1, 'plan:other': 2, 'plan:zero': 0 })).toEqual({
+      'plan:w3': { done: 1, total: 2, notReady: 1 },
+      'plan:fam': { done: 0, total: 1, notReady: 0 },
+      'plan:other': { done: 0, total: 0, notReady: 2 },
+    });
+    const full = summarize({ snapshot: withPlans, now: NOW, stage1QuestIds: ['q1'], questJamo: {}, planNotReady: { 'plan:w3': 1 } });
+    expect(full.planProgress['plan:w3']).toEqual({ done: 1, total: 2, notReady: 1 });
+    expect(summarize({ snapshot: snap, now: NOW, stage1QuestIds: [], questJamo: {} }).planProgress).toEqual({});
   });
 });

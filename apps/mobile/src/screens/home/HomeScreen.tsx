@@ -28,6 +28,7 @@ import {
   type MissionCard,
   type MissionPlan,
 } from '../../logic/homework/mission-builder';
+import { mergeAssignments } from '../../logic/homework/assignment-merger';
 import { computeStreak } from '../../logic/streak';
 import type { RootStackParamList } from '../../navigation/types';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
@@ -108,16 +109,25 @@ export function HomeScreen(): React.ReactElement {
   const pinnedPlan = useRef<MissionPlan | null>(null);
   const mission = useMemo(() => {
     if (!profile || !snap) return null;
+    const today = dayKey(new Date().toISOString());
     const built = buildTodaysMission({
       profileId: profile.id,
       snapshot: snap,
       quests: questsAll,
       episodes: episodesAll,
-      today: dayKey(new Date().toISOString()),
+      today,
       pinned: pinnedPlan.current,
     });
-    pinnedPlan.current = built;
-    return built;
+    // A caregiver or class assignment for today takes card ② (F-HW-001 §3.4, F-PLAN-001 §3.4).
+    const merged = mergeAssignments({
+      plan: built,
+      assignments: snap.homework,
+      today,
+      enabled: true,
+      titleOf: (questId) => questsAll.find((q) => q.id === questId)?.titleEn,
+    }).plan;
+    pinnedPlan.current = merged;
+    return merged;
   }, [profile, snap]);
 
   const openCard = (card: MissionCard): void => {

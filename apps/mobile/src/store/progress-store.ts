@@ -121,7 +121,9 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
       ...snap.quests.filter((q) => q.questId !== input.questId),
       updatedQuest,
     ];
-    const updated: ProgressSnapshot = { ...snap, quests, updatedAt: now };
+    // Any open assignment for this quest is done now (F-HW-001 §3.4, F-PLAN-001 §3.3).
+    const homework = snap.homework.map((h) => (h.questId === input.questId && !h.completedAt ? { ...h, completedAt: now } : h));
+    const updated: ProgressSnapshot = { ...snap, quests, homework, updatedAt: now };
     set((s) => ({ byProfile: { ...s.byProfile, [profileId]: updated } }));
     persist(profileId, updated);
   },
