@@ -21,6 +21,7 @@
 - [ ] T-046 설치 테스트 3종 (iOS Safari / Android Chrome / 데스크톱) + 실기기 오프라인 완주 — 0.5h
 - [ ] T-047 Lighthouse PWA 항목 통과 확인 — 0.25h
 - [ ] T-050 API 연결 (`web-app-launch.md` §2-D): `hangul-route-api` 배포 + `ALLOWED_ORIGINS` + PWA `EXPO_PUBLIC_API_BASE_URL` + 웹 `NEXT_PUBLIC_API_BASE_URL` — 0.5h
+- [ ] T-051 Stripe 설정 (`web-app-launch.md` §2-D, 가격 결정 후): 가격 6개 + `STRIPE_PRICE_*`/`CONSOLE_URL` vars + `STRIPE_SECRET_KEY`/`STRIPE_WEBHOOK_SECRET` 시크릿 + 웹훅 등록 — 1h
 - [ ] T-049 Clerk 앱 생성 → `CLERK_SECRET_KEY` 시크릿 + `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` (F-AUTH-002 전제; 그 전까지 콘솔은 dev 로그인) — 0.5h
 
 ### App Store 제출 (선택 — 나중, `docs/launch/app-store-submission.md`)

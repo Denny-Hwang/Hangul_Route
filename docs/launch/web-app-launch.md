@@ -17,6 +17,7 @@
 | 데스크톱 폭 | 600px 이상에서 폰 폭(480px) 컬럼 중앙 정렬 — 토큰(canvas/border) 을 빌드 시 읽어 셸 CSS 생성 | `scripts/pwa-postbuild.mjs` |
 | 랜딩 CTA | `apps/web` 헤더·히어로·#get 섹션이 `NEXT_PUBLIC_APP_URL` (기본 app.hangulroute.com) 로 연결 | T-048 |
 | 부수 수정 | 콜드 런치 시 저장소 hydrate 전에 온보딩으로 보내던 버그 (네이티브 공통) — `RootNavigator` 가 hydrate 까지 대기 | E2E 의 오프라인 새로고침 단계가 이 버그를 잡아냄 |
+| S6 결제·권한 (2026-09-21, PR 1) | `entitlements` 1 테이블 (subject = account 또는 space) + `applyEntitlement` 하나로 영수증·Stripe·계약 수렴 (F-ENT-001). 학습자 tier 는 membership 에서 계산 (family_premium · teacher_pro · school_license/seat) → inbox `tier`/`tierSource`/`tierValidUntil` (7일 오프라인 유예) → 기기 `tier-store` → Stage 잠금 해제 · 설정 카드 "covered by <class>". Pro 학급은 20명 캡 해제. Stripe Checkout/Portal/Webhook (SDK 없이 HMAC 서명 검증). 화면 (paywall · console billing) 은 PR 2–3 | 단위 backend 125 · mobile 386 · content-schema 36; e2e 3/3 |
 | S5 콘솔 설정·승인 (2026-09-21, PR 2) | `/teach/space/:id/settings` (코드 · 동의 모드 · 익명 roster · 어른/학습자 제거 · 보관/해제 · 학습자 데이터 삭제는 이름 입력 확인) · `/teach/space/:id/relink` (대기 요청 카드 승인/거절, 10초 갱신, rescue code 재발급 1회 표시) · roster 에 요청 수 배지 (F-TCH-001 §10). `GET /spaces/:id/members` 추가 | 단위 backend 116 · web 41 (lane 99.6 %); `next build` 라우트 7개 |
 | S5 재연결·설정 (2026-09-21, PR 1) | 학급 학생의 새 기기: `sync/join-space` → "I was already in this class" → 이름 선택 → 교사 승인 (10분) → 자격 1회 수령 → 프로필·진도 복원 (F-TCH-001 §10.1). 교사·부모의 rescue code 재발급 (§10.2). space 설정 API: 익명 roster · 동의 모드 · 보관/해제 · 학습자 데이터 삭제 (§10.3). 콘솔 화면은 PR 2 | 단위 backend 115 · mobile 384 · content-schema 34; e2e 3/3 |
 | S4 계획 빌더 (2026-09-21, PR 2) | 콘솔 `/teach/space/:id/plan` (F-PLAN-001 §3.5): Stage 1 카탈로그(에피소드/퀘스트) → 순서·날짜·메모 → Spread dates (하루 1개) → 대상 (전원/일부) → 발행·초안·보관 → 발행 후 학습자별 readout (`done / total`, not ready, 최근 활동; 순위 없음). roster 카드에 최신 계획 진행 표시 | 단위 web 38 (lane 99.6 %); `next build` 라우트 5개 |
@@ -53,6 +54,7 @@
 - [ ] PWA 빌드 변수 (Workers Builds → Settings → Variables): `EXPO_PUBLIC_API_BASE_URL` = API Worker 주소
 - [ ] 랜딩/콘솔 (`apps/web`) 빌드 변수: `NEXT_PUBLIC_API_BASE_URL` = 같은 주소. `NEXT_PUBLIC_CONSOLE_DEV_AUTH=true` 는 **테스트 배포에서만** (Clerk 연결 전 임시 로그인)
 - [ ] Clerk 앱 생성 → `wrangler secret put CLERK_SECRET_KEY` + `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` (F-AUTH-002 착수 전제, T-049)
+- [ ] Stripe (T-051, 가격 결정 후): 상품·가격 6개 (family/teacher/school × 월/연) → Worker vars `STRIPE_PRICE_*` + `CONSOLE_URL`, `wrangler secret put STRIPE_SECRET_KEY`, 웹훅 엔드포인트 `POST /api/entitlements/stripe/webhook` 등록 → `wrangler secret put STRIPE_WEBHOOK_SECRET` (이벤트: checkout.session.completed, customer.subscription.created/updated/deleted). 미설정이면 결제 버튼은 "not set up" 으로 조용히 비활성
 - [ ] Lighthouse (Chrome DevTools) PWA/Installable 항목 전부 통과 확인, Performance ≥ 80 (번들 2 MB, 첫 로드 3G 에서 ~6초 예상)
 
 ## 3. 웹에서 다른 점 (사용자 안내용)
