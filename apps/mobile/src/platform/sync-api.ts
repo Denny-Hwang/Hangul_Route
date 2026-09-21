@@ -1,4 +1,4 @@
-import type { ProgressSnapshot, ProgressSummary } from '@hangul-route/content-schema';
+import { SyncInboxSchema, type LearnerMembership, type ProgressSnapshot, type ProgressSummary, type SpaceKind, type SyncInbox } from '@hangul-route/content-schema';
 import type { PutResult } from '../logic/sync/engine';
 
 /**
@@ -40,6 +40,18 @@ export type ClaimResult =
     }
   | { status: 'error'; code: 'code_not_found' | 'too_many_attempts' | 'network' | 'invalid' | 'unknown' };
 
+export type LookupResult =
+  | { status: 'ok'; space: { id: string; kind: SpaceKind; name: string }; full: boolean }
+  | { status: 'error'; code: 'code_not_found' | 'code_expired' | 'too_many_attempts' | 'network' | 'invalid' | 'unknown' };
+
+export type JoinResult =
+  | { status: 'ok'; alreadyMember: boolean; membership: LearnerMembership }
+  | { status: 'error'; code: 'code_not_found' | 'code_expired' | 'cap_learner' | 'cap_class' | 'not_joinable' | 'too_many_attempts' | 'network' | 'invalid' | 'unknown' };
+
+export type LeaveResult = { status: 'ok'; left: boolean } | { status: 'error'; code: string };
+
+export type InboxResult = { status: 'ok'; inbox: SyncInbox } | { status: 'error'; code: string };
+
 export type GetResult =
   | { status: 'ok'; rev: number; snapshot: ProgressSnapshot; summary: ProgressSummary | null }
   | { status: 'none' }
@@ -49,17 +61,23 @@ function authHeader(c: DeviceCredentials): Record<string, string> {
   return { 'Content-Type': 'application/json', Authorization: `Device ${c.deviceId}:${c.secret}` };
 }
 
+/** The envelope's error code, when the server sent one. */
+function errorCode(body: Record<string, unknown>): string | null {
+  const err = body.error;
+  return err && typeof err === 'object' && typeof (err as { code?: unknown }).code === 'string' ? (err as { code: string }).code : null;
+}
+
 async function call(
   fetchImpl: typeof fetch,
   url: string,
   init: RequestInit,
-): Promise<{ status: number; body: Record<string, unknown> } | { status: -1 }> {
+): Promise<{ status: number; body: Record<string, unknown> }> {
   try {
     const res = await fetchImpl(url, init);
     const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
     return { status: res.status, body };
   } catch {
-    return { status: -1 };
+    return { status: -1, body: {} }; // network failure; callers check status first
   }
 }
 
@@ -67,6 +85,7 @@ export function createSyncApi(opts: SyncApiOptions) {
   const fetchImpl = opts.fetchImpl ?? globalThis.fetch;
   const base = `${opts.endpoint}/api/sync`;
   const recovery = `${opts.endpoint}/api/recovery`;
+  const spaces = `${opts.endpoint}/api/spaces`;
 
   return {
     async register(
@@ -124,6 +143,53 @@ export function createSyncApi(opts: SyncApiOptions) {
       if (r.status !== 200) return { status: 'error', code: 'unknown' };
       const data = r.body.data as ClaimResult extends { status: 'ok' } ? never : { learner: { id: string; displayName: string; ageGroup: '5-7' | '8-9' | '10-11'; avatar: string }; device: { secret: string }; snapshot: { rev: number; snapshot: ProgressSnapshot; summary: ProgressSummary | null } | null };
       return { status: 'ok', learner: data.learner, secret: data.device.secret, snapshot: data.snapshot };
+    },
+
+    async lookupSpace(code: string): Promise<LookupResult> {
+      const r = await call(fetchImpl, `${spaces}/lookup`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code }) });
+      if (r.status === -1) return { status: 'error', code: 'network' };
+      if (r.status === 200) {
+        const data = r.body.data as { space: { id: string; kind: SpaceKind; name: string }; full: boolean };
+        return { status: 'ok', space: data.space, full: data.full };
+      }
+      if (r.status === 404) return { status: 'error', code: errorCode(r.body) === 'code_expired' ? 'code_expired' : 'code_not_found' };
+      if (r.status === 429) return { status: 'error', code: 'too_many_attempts' };
+      if (r.status === 422) return { status: 'error', code: 'invalid' };
+      return { status: 'error', code: 'unknown' };
+    },
+
+    async joinSpace(spaceId: string, body: { code: string; learnerId: string; displayName?: string }, creds: DeviceCredentials): Promise<JoinResult> {
+      const r = await call(fetchImpl, `${spaces}/${encodeURIComponent(spaceId)}/join`, { method: 'POST', headers: authHeader(creds), body: JSON.stringify(body) });
+      if (r.status === -1) return { status: 'error', code: 'network' };
+      const code = errorCode(r.body);
+      if (r.status === 200 || r.status === 201) {
+        const data = r.body.data as { alreadyMember: boolean; membership: { role: LearnerMembership['role']; joinedAt: string }; space: { id: string; kind: SpaceKind; name: string } };
+        return {
+          status: 'ok',
+          alreadyMember: data.alreadyMember,
+          membership: { spaceId: data.space.id, kind: data.space.kind, name: data.space.name, role: data.membership.role, joinedAt: data.membership.joinedAt },
+        };
+      }
+      if (r.status === 404) return { status: 'error', code: code === 'code_expired' ? 'code_expired' : 'code_not_found' };
+      if (r.status === 409) return { status: 'error', code: code === 'cap_class' ? 'cap_class' : 'cap_learner' };
+      if (r.status === 422) return { status: 'error', code: code === 'not_joinable' ? 'not_joinable' : 'invalid' };
+      if (r.status === 429) return { status: 'error', code: 'too_many_attempts' };
+      return { status: 'error', code: 'unknown' };
+    },
+
+    async leaveSpace(spaceId: string, learnerId: string, creds: DeviceCredentials): Promise<LeaveResult> {
+      const r = await call(fetchImpl, `${spaces}/${encodeURIComponent(spaceId)}/leave`, { method: 'POST', headers: authHeader(creds), body: JSON.stringify({ learnerId }) });
+      if (r.status === -1) return { status: 'error', code: 'network' };
+      if (r.status !== 200) return { status: 'error', code: `http_${r.status}` };
+      return { status: 'ok', left: (r.body.data as { left: boolean }).left };
+    },
+
+    async getInbox(learnerId: string, creds: DeviceCredentials): Promise<InboxResult> {
+      const r = await call(fetchImpl, `${base}/learners/${encodeURIComponent(learnerId)}/inbox`, { headers: authHeader(creds) });
+      if (r.status === -1) return { status: 'error', code: 'network' };
+      if (r.status !== 200) return { status: 'error', code: `http_${r.status}` };
+      const parsed = SyncInboxSchema.safeParse(r.body.data);
+      return parsed.success ? { status: 'ok', inbox: parsed.data } : { status: 'error', code: 'invalid' };
     },
 
     async getSnapshot(learnerId: string, creds: DeviceCredentials): Promise<GetResult> {

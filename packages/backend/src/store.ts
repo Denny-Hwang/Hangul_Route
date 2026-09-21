@@ -1,3 +1,4 @@
+import type { MemberKind, Membership, Space } from '@hangul-route/content-schema';
 /**
  * In-memory store. Replaced by D1 + R2 bindings when wrangler.toml binds them.
  * Schema mirrors `db/schema.sql`.
@@ -78,7 +79,17 @@ export interface SnapshotRecord {
   updatedAt: string;
 }
 
+/** An adult (Clerk user) — F-SPACE-001 §3.1. Never a child. */
+export interface Account {
+  id: string; // Clerk user id
+  email: string | null;
+  displayName: string | null;
+  consent: unknown;
+  createdAt: string;
+}
+
 const deviceKey = (learnerId: string, deviceId: string): string => `${learnerId}|${deviceId}`;
+const membershipKey = (spaceId: string, kind: MemberKind, memberId: string): string => `${spaceId}|${kind}|${memberId}`;
 
 class Store {
   families = new Map<string, Family>();
@@ -91,6 +102,38 @@ class Store {
   learners = new Map<string, Learner>();
   learnerDevices = new Map<string, LearnerDevice>();
   snapshots = new Map<string, SnapshotRecord>();
+  // F-SPACE-001
+  accounts = new Map<string, Account>();
+  spaces = new Map<string, Space>();
+  memberships = new Map<string, Membership>();
+
+  membership(spaceId: string, kind: MemberKind, memberId: string): Membership | undefined {
+    return this.memberships.get(membershipKey(spaceId, kind, memberId));
+  }
+
+  addMembership(m: Membership): void {
+    this.memberships.set(membershipKey(m.spaceId, m.memberKind, m.memberId), m);
+  }
+
+  removeMembership(spaceId: string, kind: MemberKind, memberId: string): boolean {
+    return this.memberships.delete(membershipKey(spaceId, kind, memberId));
+  }
+
+  membershipsOf(kind: MemberKind, memberId: string): Membership[] {
+    return [...this.memberships.values()].filter((m) => m.memberKind === kind && m.memberId === memberId);
+  }
+
+  membersOf(spaceId: string): Membership[] {
+    return [...this.memberships.values()].filter((m) => m.spaceId === spaceId);
+  }
+
+  spaceByCode(code: string): Space | undefined {
+    return [...this.spaces.values()].find((s) => s.joinCode === code);
+  }
+
+  childSpaces(spaceId: string): Space[] {
+    return [...this.spaces.values()].filter((s) => s.parentSpaceId === spaceId);
+  }
 
   device(learnerId: string, deviceId: string): LearnerDevice | undefined {
     return this.learnerDevices.get(deviceKey(learnerId, deviceId));
@@ -109,6 +152,9 @@ class Store {
     this.learners.clear();
     this.learnerDevices.clear();
     this.snapshots.clear();
+    this.accounts.clear();
+    this.spaces.clear();
+    this.memberships.clear();
   }
 }
 

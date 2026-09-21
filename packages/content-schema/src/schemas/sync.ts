@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { ProfileSchema } from './profile';
 import { ProgressSnapshotSchema } from './progress';
+import { LearnerMembershipSchema } from './space';
 
 /**
  * Sync contracts — F-SYNC-001. Shared by the Worker (validation) and the
@@ -50,11 +51,11 @@ export const LearnerRegisterSchema = z.object({
 });
 export type LearnerRegister = z.infer<typeof LearnerRegisterSchema>;
 
-/** GET /api/sync/learners/:id/inbox response (plans / memberships fill in later stages). */
+/** GET /api/sync/learners/:id/inbox response (plans fill in F-PLAN-001). */
 export const SyncInboxSchema = z.object({
   rev: z.number().int().nonnegative(),
   plans: z.array(z.unknown()),
-  memberships: z.array(z.unknown()),
+  memberships: z.array(LearnerMembershipSchema),
   tier: z.enum(['free', 'premium']),
   serverTime: z.string(),
 });

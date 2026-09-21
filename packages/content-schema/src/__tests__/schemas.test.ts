@@ -195,7 +195,7 @@ describe('ProfileSchema', () => {
       createdAt: new Date().toISOString(),
     };
     expect(ProfileSchema.parse({ ...base, role: 'parent' }).role).toBe('parent');
-    expect(() => ProfileSchema.parse({ ...base, role: 'teacher' })).toThrow();
+    expect(() => ProfileSchema.parse({ ...base, role: 'robot' })).toThrow();
   });
 });
 

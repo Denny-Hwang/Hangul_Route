@@ -30,6 +30,7 @@ import { useProgressStore } from '../../store/progress-store';
 import { usePwaStore } from '../../store/pwa-store';
 import { useUiStore } from '../../store/ui-store';
 import { BackupCard } from '../../components/BackupCard';
+import { SpacesCard } from '../../components/SpacesCard';
 
 export function ProfileScreen(): React.ReactElement {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -187,6 +188,13 @@ export function ProfileScreen(): React.ReactElement {
 
       <Spacer size="lg" />
       {active ? <BackupCard profile={active} onRestore={() => openGrownUps('Restore')} onSaveProgress={() => openGrownUps('SaveProgress')} /> : null}
+
+      {active ? (
+        <>
+          <Spacer size="lg" />
+          <SpacesCard profile={active} onJoin={() => navigation.navigate('JoinSpace')} />
+        </>
+      ) : null}
 
       {canOfferInstall ? (
         <>

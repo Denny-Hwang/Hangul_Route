@@ -87,3 +87,74 @@ describe('platform/sync-api recovery', () => {
     expect(await api.claimRescueCode('a', 'd')).toEqual({ status: 'error', code: 'network' });
   });
 });
+
+describe('platform/sync-api — spaces (F-SPACE-001)', () => {
+  const err = (status: number, code: string) => json(status, { error: { code } });
+
+  it('lookupSpace maps 200 / 404 (not found, expired) / 429 / 422 / other / network', async () => {
+    const fetchImpl = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(json(200, { data: { space: { id: 'space:c', kind: 'class', name: 'A' }, full: true } }))
+      .mockResolvedValueOnce(err(404, 'code_not_found'))
+      .mockResolvedValueOnce(err(404, 'code_expired'))
+      .mockResolvedValueOnce(err(429, 'too_many_attempts'))
+      .mockResolvedValueOnce(err(422, 'invalid_code'))
+      .mockResolvedValueOnce(json(500, {}))
+      .mockRejectedValueOnce(new Error('offline'));
+    const api = createSyncApi({ endpoint: 'https://api.example.com', fetchImpl });
+    expect(await api.lookupSpace('K7M2X9')).toEqual({ status: 'ok', space: { id: 'space:c', kind: 'class', name: 'A' }, full: true });
+    expect(await api.lookupSpace('K7M2X9')).toEqual({ status: 'error', code: 'code_not_found' });
+    expect(await api.lookupSpace('K7M2X9')).toEqual({ status: 'error', code: 'code_expired' });
+    expect(await api.lookupSpace('K7M2X9')).toEqual({ status: 'error', code: 'too_many_attempts' });
+    expect(await api.lookupSpace('K7M2X9')).toEqual({ status: 'error', code: 'invalid' });
+    expect(await api.lookupSpace('K7M2X9')).toEqual({ status: 'error', code: 'unknown' });
+    expect(await api.lookupSpace('K7M2X9')).toEqual({ status: 'error', code: 'network' });
+    expect(fetchImpl.mock.calls[0]?.[0]).toBe('https://api.example.com/api/spaces/lookup');
+  });
+
+  it('joinSpace sends the device header and maps every outcome', async () => {
+    const okBody = { data: { alreadyMember: false, membership: { role: 'student', joinedAt: 't' }, space: { id: 'space:c', kind: 'class', name: 'A' } } };
+    const fetchImpl = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(json(201, okBody))
+      .mockResolvedValueOnce(json(200, { data: { ...okBody.data, alreadyMember: true } }))
+      .mockResolvedValueOnce(err(404, 'code_expired'))
+      .mockResolvedValueOnce(err(404, 'code_not_found'))
+      .mockResolvedValueOnce(err(409, 'cap_class'))
+      .mockResolvedValueOnce(err(409, 'cap_learner'))
+      .mockResolvedValueOnce(err(422, 'not_joinable'))
+      .mockResolvedValueOnce(err(422, 'invalid_code'))
+      .mockResolvedValueOnce(err(429, 'too_many_attempts'))
+      .mockResolvedValueOnce(json(401, {}))
+      .mockRejectedValueOnce(new Error('offline'));
+    const api = createSyncApi({ endpoint: 'https://api.example.com', fetchImpl });
+    const body = { code: 'K7M2X9', learnerId: 'profile:a', displayName: 'Suni' };
+    expect(await api.joinSpace('space:c', body, creds)).toEqual({ status: 'ok', alreadyMember: false, membership: { spaceId: 'space:c', kind: 'class', name: 'A', role: 'student', joinedAt: 't' } });
+    expect(await api.joinSpace('space:c', body, creds)).toMatchObject({ status: 'ok', alreadyMember: true });
+    for (const code of ['code_expired', 'code_not_found', 'cap_class', 'cap_learner', 'not_joinable', 'invalid', 'too_many_attempts', 'unknown', 'network']) {
+      expect(await api.joinSpace('space:c', body, creds)).toEqual({ status: 'error', code });
+    }
+    const init = fetchImpl.mock.calls[0]?.[1] as RequestInit;
+    expect((init.headers as Record<string, string>).Authorization).toBe('Device device-x:s3cret');
+    expect(fetchImpl.mock.calls[0]?.[0]).toBe('https://api.example.com/api/spaces/space%3Ac/join');
+  });
+
+  it('leaveSpace and getInbox map results and validate the inbox shape', async () => {
+    const inbox = { rev: 3, plans: [], memberships: [{ spaceId: 'space:c', kind: 'class', name: 'A', role: 'student', joinedAt: 't' }], tier: 'free', serverTime: 't' };
+    const fetchImpl = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(json(200, { data: { left: true } }))
+      .mockResolvedValueOnce(json(404, {}))
+      .mockRejectedValueOnce(new Error('offline'))
+      .mockResolvedValueOnce(json(200, { data: inbox }))
+      .mockResolvedValueOnce(json(200, { data: { rev: 'nope' } }))
+      .mockResolvedValueOnce(json(401, {}))
+      .mockRejectedValueOnce(new Error('offline'));
+    const api = createSyncApi({ endpoint: 'https://api.example.com', fetchImpl });
+    expect(await api.leaveSpace('space:c', 'profile:a', creds)).toEqual({ status: 'ok', left: true });
+    expect(await api.leaveSpace('space:c', 'profile:a', creds)).toEqual({ status: 'error', code: 'http_404' });
+    expect(await api.leaveSpace('space:c', 'profile:a', creds)).toEqual({ status: 'error', code: 'network' });
+    expect(await api.getInbox('profile:a', creds)).toEqual({ status: 'ok', inbox });
+    expect(await api.getInbox('profile:a', creds)).toEqual({ status: 'error', code: 'invalid' });
+    expect(await api.getInbox('profile:a', creds)).toEqual({ status: 'error', code: 'http_401' });
+    expect(await api.getInbox('profile:a', creds)).toEqual({ status: 'error', code: 'network' });
+    expect(fetchImpl.mock.calls[3]?.[0]).toBe('https://api.example.com/api/sync/learners/profile%3Aa/inbox');
+  });
+});

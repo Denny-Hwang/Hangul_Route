@@ -17,6 +17,7 @@
 | 데스크톱 폭 | 600px 이상에서 폰 폭(480px) 컬럼 중앙 정렬 — 토큰(canvas/border) 을 빌드 시 읽어 셸 CSS 생성 | `scripts/pwa-postbuild.mjs` |
 | 랜딩 CTA | `apps/web` 헤더·히어로·#get 섹션이 `NEXT_PUBLIC_APP_URL` (기본 app.hangulroute.com) 로 연결 | T-048 |
 | 부수 수정 | 콜드 런치 시 저장소 hydrate 전에 온보딩으로 보내던 버그 (네이티브 공통) — `RootNavigator` 가 hydrate 까지 대기 | E2E 의 오프라인 새로고침 단계가 이 버그를 잡아냄 |
+| S3 스페이스 (2026-09-21) | `accounts` / `spaces` / `memberships` + join code (base32 6자, 30일) + 권한 함수 `can()` (교사는 payload 를 받을 경로가 없음) + `/api/spaces` 8 라우트 (F-SPACE-001). 학습자 앱: 설정 "Classes & family" 카드 → `sync/join-space` (코드 → 이름 확인 → 완료, PIN 없음) · Leave. 콘솔 화면은 다음 PR (F-CONSOLE-001) | 단위 backend 99 · mobile 369 · content-schema 30; 게이트 7/7 |
 | S1–S2 동기화·복원 (2026-09-21) | 서버 스냅샷 + 결정적 병합 + 30 s 디바운스 클라이언트 (F-SYNC-001/002) · 파일 백업/복원 · **Rescue Code** 자동 발급·복사·공유·재발급·새 기기 claim (F-RESTORE-001). `EXPO_PUBLIC_API_BASE_URL` 이 없으면 전부 조용히 꺼짐 (파일 백업만 동작) | 단위 (mobile 359 · backend 77) + `e2e/web/backup.spec.ts` 파일 왕복. 코드 경로 실기기 확인은 API 연결 후 T-046 에 포함 |
 
 ## 2. 오너 작업 — 약 1시간 (Connect GitHub 방식, 2026-09-21 결정)

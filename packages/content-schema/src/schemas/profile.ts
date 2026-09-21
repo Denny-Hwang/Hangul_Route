@@ -15,10 +15,11 @@ export type AvatarKind = z.infer<typeof AvatarKindSchema>;
 
 /**
  * Who a profile belongs to (F-PROF-001 §3.1). Learner tiles enter with one
- * tap; parent entry is PIN-gated. F-TCH-001 extends this with 'teacher'.
- * Defaults to 'learner' so pre-F-PROF-001 persisted profiles still parse.
+ * tap; parent entry is PIN-gated. 'teacher' / 'admin' are the console roles
+ * (F-SPACE-001, roadmap §2.2). Defaults to 'learner' so pre-F-PROF-001
+ * persisted profiles still parse.
  */
-export const ProfileRoleSchema = z.enum(['learner', 'parent']).default('learner');
+export const ProfileRoleSchema = z.enum(['learner', 'parent', 'teacher', 'admin']).default('learner');
 export type ProfileRole = z.infer<typeof ProfileRoleSchema>;
 
 export const ProfileSchema = z.object({

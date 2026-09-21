@@ -2,7 +2,7 @@ import { RescueClaimSchema } from '@hangul-route/content-schema';
 import { Hono } from 'hono';
 import { fail, ok } from '../envelope';
 import { authorizeDevice, hashSecret, newDeviceSecret } from '../lib/device-auth';
-import { createRateLimiter } from '../lib/rate-limit';
+import { clientKey, createRateLimiter } from '../lib/rate-limit';
 import { randomRescueCode } from '../lib/rescue-words';
 import { store, type Learner } from '../store';
 
@@ -21,10 +21,6 @@ function publicLearner({ id, displayName, ageGroup, avatar, createdAt, lastActiv
   return { id, displayName, ageGroup, avatar, createdAt, lastActiveAt };
 }
 
-function clientKey(headers: { get: (name: string) => string | undefined | null }): string {
-  return headers.get('cf-connecting-ip') ?? headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'anonymous';
-}
-
 recoveryRoutes.post('/issue', async (c) => {
   const body = (await c.req.json().catch(() => ({}))) as { learnerId?: string };
   const learnerId = typeof body.learnerId === 'string' ? body.learnerId : '';
@@ -39,7 +35,7 @@ recoveryRoutes.post('/issue', async (c) => {
 });
 
 recoveryRoutes.post('/claim', async (c) => {
-  const decision = claimLimiter.check(clientKey({ get: (n) => c.req.header(n) }));
+  const decision = claimLimiter.check(clientKey((n) => c.req.header(n)));
   if (!decision.allowed) {
     return c.json(
       {

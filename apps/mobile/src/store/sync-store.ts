@@ -69,6 +69,11 @@ function api(): SyncApiClient | null {
   return apiClient;
 }
 
+/** The shared transport (null when the build has no API or sync is off) — sibling stores reuse it. */
+export function syncApi(): SyncApiClient | null {
+  return api();
+}
+
 /** Test seam: swap the transport. */
 export function setSyncApiForTests(client: SyncApiClient | null): void {
   apiClient = client;

@@ -31,7 +31,11 @@ export type TelemetryEventName =
   | 'profile.switch'
   | 'parent.gate.opened'
   | 'onboarding.started'
-  | 'minigame.finished';
+  | 'minigame.finished'
+  | 'space.join.attempted'
+  | 'space.join.succeeded'
+  | 'space.join.failed'
+  | 'space.left';
 
 export interface TelemetryEvent {
   name: TelemetryEventName;

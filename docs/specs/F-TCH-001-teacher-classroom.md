@@ -33,6 +33,8 @@ Companion stories:
 
 ### 3.1 Class creation + join code
 
+> **Migrated to F-SPACE-001 (shipped 2026-09-21)** — spaces / memberships / join code / caps / `can()` and the learner's `sync/join-space` screen live there. The "parent-gated" entry below is superseded by F-SPACE-001 §3.5 (no PIN: the teacher helps in the room; app map §7 #21). This section stays as the original intent.
+
 - **Given** a teacher profile signs up via Clerk (Phase 2 — teacher onboarding is web-first),
   **when** the teacher creates a class,
   **then** a 6-character base32 **join code** is generated (e.g. `K7M2X9`), unique across all active classes, valid for 30 days, regenerable.

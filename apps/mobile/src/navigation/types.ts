@@ -13,6 +13,8 @@ export type RootStackParamList = {
   Restore: { from: 'welcome' | 'settings' } | undefined;
   /** sync/save-progress — the Rescue Code, PIN-gated (F-RESTORE-001 §3.3). */
   SaveProgress: undefined;
+  /** sync/join-space — enter a class or family code (F-SPACE-001 §3.5). Not PIN-gated. */
+  JoinSpace: undefined;
   ParentDashboard: undefined;
   Profile: undefined;
   Homework: undefined;
