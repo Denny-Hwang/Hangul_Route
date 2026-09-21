@@ -18,6 +18,15 @@ export const COPY = {
   comingWithPlans: 'Coming with plans',
   capWarning: (used: number, total: number) => `Free plan: ${used} / ${total} students`,
   capReached: 'This class is at the free limit — new students will be asked to check with you.',
+  planThisWeek: 'Plan this week',
+  publishPlan: 'Publish plan',
+  saveDraft: 'Save draft',
+  spreadDates: 'Spread dates',
+  onePerDay: 'One per day — the later item moved to the next day.',
+  draftNeverReaches: 'A draft never reaches a learner. Publishing sends it on their next sync.',
+  readoutHint: 'Most recent activity first — not a ranking. "Not ready yet" means the learner has not unlocked that item.',
+  archivePlanConfirm: 'Archive this plan? Learners keep what they finished; unfinished items disappear from their list.',
+  noPlanYet: 'No plan yet. Pick a few quests, spread the dates, and publish before class.',
 } as const;
 
 export function allCopyStrings(): string[] {

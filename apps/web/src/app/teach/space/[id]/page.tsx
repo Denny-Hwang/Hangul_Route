@@ -1,14 +1,16 @@
 'use client';
 
 import { colors, radii, spacing, typography } from '@hangul-route/design-system/tokens';
+import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { Button, ConsoleShell, Muted, Notice, panelStyle } from '@/components/console/ui';
 import { useConsole } from '@/components/console/use-console';
-import type { Roster } from '@/lib/console/api';
+import type { PlanView, Roster } from '@/lib/console/api';
 import { COPY } from '@/lib/console/copy';
 import { capState, classRollup, codeExpiry, percent, relativeDay } from '@/lib/console/rollup';
-import { KIND_LABEL, memberNoun } from '@/lib/console/routing';
+import { latestPublished, planReadout, readoutLine } from '@/lib/console/plans';
+import { KIND_LABEL, ROUTES, memberNoun } from '@/lib/console/routing';
 
 /** console/roster — F-CONSOLE-001 §3.5. Summaries only; the API never sends payloads here. */
 export default function SpacePage(): JSX.Element {
@@ -16,6 +18,7 @@ export default function SpacePage(): JSX.Element {
   const spaceId = decodeURIComponent(params.id);
   const { ready, session, api, signOut } = useConsole();
   const [roster, setRoster] = useState<Roster | null>(null);
+  const [plans, setPlans] = useState<PlanView[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -24,7 +27,8 @@ export default function SpacePage(): JSX.Element {
   const load = useCallback(async (): Promise<void> => {
     if (!api) return;
     setError(null);
-    const result = await api.roster(spaceId);
+    const [result, planList] = await Promise.all([api.roster(spaceId), api.listPlans(spaceId)]);
+    if (planList.ok) setPlans(planList.data);
     if (result.ok) setRoster(result.data);
     else setError(result.error === 'forbidden' ? "This space isn't yours to view." : result.error === 'not_found' ? 'This space is gone.' : COPY.cantReach);
   }, [api, spaceId]);
@@ -58,6 +62,8 @@ export default function SpacePage(): JSX.Element {
   const rollup = roster ? classRollup(roster.learners, now) : null;
   const cap = roster ? capState(roster.space.kind, roster.learners.length) : null;
   const empty = roster !== null && roster.learners.length === 0;
+  const latestPlan = latestPublished(plans);
+  const readout = latestPlan && roster ? new Map(planReadout(latestPlan.id, roster.learners).map((r) => [r.learnerId, r])) : null;
 
   return (
     <ConsoleShell onSignOut={signOut} title={roster ? `${roster.space.name} · ${roster.learners.length} ${memberNoun(roster.space.kind)}` : 'Loading…'}>
@@ -112,8 +118,10 @@ export default function SpacePage(): JSX.Element {
             </section>
           ) : null}
 
-          <div style={{ display: 'flex', gap: spacing.sm, marginBottom: spacing.lg, flexWrap: 'wrap' }}>
-            <Button disabled>Plan this week · {COPY.comingWithPlans}</Button>
+          <div style={{ display: 'flex', gap: spacing.sm, marginBottom: spacing.lg, flexWrap: 'wrap', alignItems: 'center' }}>
+            <Link href={`${ROUTES.space(spaceId)}/plan`}>
+              <Button tone="primary">{latestPlan ? `Plan: ${latestPlan.title}` : COPY.planThisWeek}</Button>
+            </Link>
             <Button disabled>Settings · coming soon</Button>
           </div>
 
@@ -137,6 +145,7 @@ export default function SpacePage(): JSX.Element {
                         </div>
                         <div>{l.summary.minutesLast7d} min this week</div>
                         {l.summary.needsPractice.length ? <div>Revisit: {l.summary.needsPractice.join(' · ')}</div> : null}
+                        {latestPlan && readout ? <div>{latestPlan.title}: {readoutLine(readout.get(l.id) as NonNullable<ReturnType<typeof readout.get>>)}</div> : null}
                       </div>
                     ) : (
                       <Muted>{COPY.notSyncedYet} · joined {relativeDay(l.joinedAt, now)}</Muted>
