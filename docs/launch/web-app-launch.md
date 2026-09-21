@@ -29,7 +29,7 @@
 - [ ] Root directory: `/` (리포 루트 — pnpm 워크스페이스)
 - [ ] Build command: `pnpm install --frozen-lockfile && pnpm --filter @hangul-route/mobile build:web`
 - [ ] Deploy command: `pnpm --filter @hangul-route/mobile exec wrangler deploy`
-- [ ] Build variables: 없음 (Node 20 은 `.nvmrc`, pnpm 은 `packageManager` 로 자동 감지)
+- [ ] Build variables: 없음 (Node 22 는 `.nvmrc`, pnpm 은 `packageManager` 로 자동 감지 — wrangler 4 는 Node ≥ 22 필요)
 - [ ] 첫 빌드 성공 → `https://hangul-route-app.<account>.workers.dev` 에서 열어보기
 - [ ] PR 프리뷰: 비-프로덕션 브랜치 빌드가 켜져 있으면 PR 마다 프리뷰 URL 댓글이 달린다 (선택)
 
