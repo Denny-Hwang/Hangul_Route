@@ -81,7 +81,7 @@ Hangul Route
 │   ├─ B2. Dashboard (per-learner weekly card · anti-shame) [S] F-PAR-001
 │   ├─ B3. Learner detail (journey position · week dots · collection) [S-thin]
 │   ├─ B4. Voice message (≤10 s)                         [R] F-PAR-001 N5
-│   ├─ B5. Plan builder (family)  = "Send homework"      [P] roadmap S4 (T-P2-01 흡수)
+│   ├─ B5. Plan builder (family)  = "Send homework"      [P] F-PLAN-001 §3.5 (API·기기 파생은 [S], PR 1) (T-P2-01 흡수)
 │   ├─ B6. Account (Clerk sign-in · email · consent · delete learner) [R/P] F-AUTH-001/002
 │   ├─ B7. Billing (family_premium)                      [P] roadmap S6
 │   └─ B8. Backup (rescue code 보기 · 파일 내보내기)      [S] F-SYNC-002 · F-RESTORE-001
@@ -90,7 +90,7 @@ Hangul Route
 │   ├─ C1. Onboarding (역할 선택 → space 생성)            [S] F-CONSOLE-001 §3.3 (`/teach/start`)
 │   ├─ C2. Class home / Roster (summary only)            [S-thin] F-CONSOLE-001 §3.5 (`/teach/space/:id` — 코드·롤업·학생 카드; 계획·재연결·설정은 S4–S5)
 │   ├─ C3. Join code (발급·재발급·만료)                    [S] F-SPACE-001 §3.2 (서버; 콘솔 화면은 F-CONSOLE-001)
-│   ├─ C4. Plan builder (class) + Pace helper             [P] roadmap S4
+│   ├─ C4. Plan builder (class) + Pace helper             [P] F-PLAN-001 §3.5 (API·기기 파생은 [S], PR 1)
 │   ├─ C5. Learner card (parent B3 재사용, 읽기 전용)      [P]
 │   ├─ C6. Re-link approval (기기 이전 승인)               [P] roadmap §5
 │   ├─ C7. School admin (교사 초대 · 학급 트리 · seats)     [P] roadmap S7
@@ -101,7 +101,7 @@ Hangul Route
     ├─ D1. Content bundle (jamo · episodes · quests · cards, CONTENT_VERSION) [S]
     ├─ D2. Local store (AsyncStorage · IndexedDB on web)  [S]
     ├─ D3. Sync (snapshot PUT/GET · merge · summary · rescue code) [S] F-SYNC-001 · F-RESTORE-001 (inbox 의 plans/memberships 는 S3–S4)
-    ├─ D4. Spaces & memberships [S] F-SPACE-001 (`can()` 포함) · plans [P] F-PLAN-001
+    ├─ D4. Spaces & memberships [S] F-SPACE-001 (`can()` 포함) · plans [S] F-PLAN-001 §3.1–3.3 (upsert·inbox·기기 파생·planProgress; 빌더 화면은 PR 2)
     ├─ D5. Entitlements (IAP · Stripe · manual)           [R/P] F-IAP-001, roadmap §7
     ├─ D6. Telemetry (fire-and-forget, offline queue)     [S] F-PWA-001
     ├─ D7. Service worker (precache · update)             [S] roadmap P2
@@ -173,7 +173,7 @@ Hangul Route
 | `parent/learner-detail` | web `/parent/[childId]` | 한 아이 깊이 보기 | S-thin | F-PAR-001 §5 | ✓ |
 | `parent/voice-recorder` | (신규) | 10초 음성 메시지 | R | F-PAR-001 N5 | ✓ |
 | `console/sign-in` | web `/teach` (+ mobile 나중) | 어른 로그인 — **dev 폼** (bearer = account id, 비프로덕션 또는 `NEXT_PUBLIC_CONSOLE_DEV_AUTH`) · Clerk 위젯은 F-AUTH-002 | S (dev) | F-CONSOLE-001 §3.2 · F-AUTH-001/002 | ✓ |
-| `console/plan-builder` | web (family·class 공용) | 계획 만들기·발행 | P | roadmap §6 | NEW |
+| `console/plan-builder` | web (family·class 공용) | 계획 만들기·발행 | P (API S) | F-PLAN-001 §3.5 | ✓ |
 | `console/account` | web + mobile | 이메일·동의·백업·학습자 삭제 | P | roadmap §5.3 | NEW |
 | `console/billing` | web (Stripe) · mobile (IAP) | 플랜 보기·변경 | P | roadmap §7 | NEW |
 
@@ -187,7 +187,7 @@ Hangul Route
 | `console/space-settings` | 코드 재발급 · 동의 모드 · 익명 roster · 멤버 | P (코드 재발급·멤버 제거 API S) | F-SPACE-001 §3.3 | ✓ |
 | `console/relink-approval` | 기기 이전 승인 10분 창 | P | roadmap §5 | NEW |
 | `console/school-admin` | 학급 트리 · 교사 초대 · seat 사용량 | P | roadmap S7 | NEW |
-| `console/plan-builder` | (B 와 공용) | P | roadmap §6 | NEW |
+| `console/plan-builder` | (B 와 공용) | P (API S) | F-PLAN-001 §3.5 | ✓ |
 | `console/billing` | (B 와 공용, teacher_pro / school) | P | roadmap §7 | NEW |
 
 ### 3.4 웹 마케팅 (`apps/web`) — 와이어프레임 대상 아님

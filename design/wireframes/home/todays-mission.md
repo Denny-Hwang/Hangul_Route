@@ -1,6 +1,7 @@
 # Home/Todays-Mission — the 3-card surface (wireframe v1)
 
 Spec: `docs/specs/F-HW-001-homework-page.md` §3.1–3.3
+Code (F-PLAN-001, 2026-09-21): card ② now takes the day's earliest outstanding assignment — from a parent, or derived on the device from a published class/family plan (`logic/homework/assignment-merger.ts`, enabled in `HomeScreen`). Extra assignments for the same day queue to later days.
 Audience: **learner (P4/P5 child, 5–11)** — a pre-reader must know where to tap without scanning
 
 ## Scenario (Given-When-Then)
