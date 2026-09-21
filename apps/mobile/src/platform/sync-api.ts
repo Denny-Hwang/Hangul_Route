@@ -40,8 +40,13 @@ export type ClaimResult =
     }
   | { status: 'error'; code: 'code_not_found' | 'too_many_attempts' | 'network' | 'invalid' | 'unknown' };
 
+export interface RosterName {
+  learnerId: string;
+  name: string;
+}
+
 export type LookupResult =
-  | { status: 'ok'; space: { id: string; kind: SpaceKind; name: string }; full: boolean }
+  | { status: 'ok'; space: { id: string; kind: SpaceKind; name: string }; full: boolean; roster: RosterName[] }
   | { status: 'error'; code: 'code_not_found' | 'code_expired' | 'too_many_attempts' | 'network' | 'invalid' | 'unknown' };
 
 export type JoinResult =
@@ -49,6 +54,21 @@ export type JoinResult =
   | { status: 'error'; code: 'code_not_found' | 'code_expired' | 'cap_learner' | 'cap_class' | 'not_joinable' | 'too_many_attempts' | 'network' | 'invalid' | 'unknown' };
 
 export type LeaveResult = { status: 'ok'; left: boolean } | { status: 'error'; code: string };
+
+export type RelinkCreateResult =
+  | { status: 'ok'; requestId: string; expiresAt: string }
+  | { status: 'error'; code: 'code_not_found' | 'code_expired' | 'learner_not_found' | 'already_bound' | 'too_many_attempts' | 'network' | 'invalid' | 'unknown' };
+
+export type RelinkPollResult =
+  | { status: 'ok'; state: 'pending' | 'denied' | 'expired'; expiresAt: string }
+  | {
+      status: 'ok';
+      state: 'approved';
+      learner: { id: string; displayName: string; ageGroup: '5-7' | '8-9' | '10-11'; avatar: string };
+      secret: string;
+      snapshot: { rev: number; snapshot: ProgressSnapshot; summary: ProgressSummary | null } | null;
+    }
+  | { status: 'error'; code: 'network' | 'not_found' | 'unknown' };
 
 export type InboxResult = { status: 'ok'; inbox: SyncInbox } | { status: 'error'; code: string };
 
@@ -149,8 +169,8 @@ export function createSyncApi(opts: SyncApiOptions) {
       const r = await call(fetchImpl, `${spaces}/lookup`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code }) });
       if (r.status === -1) return { status: 'error', code: 'network' };
       if (r.status === 200) {
-        const data = r.body.data as { space: { id: string; kind: SpaceKind; name: string }; full: boolean };
-        return { status: 'ok', space: data.space, full: data.full };
+        const data = r.body.data as { space: { id: string; kind: SpaceKind; name: string }; full: boolean; roster?: RosterName[] };
+        return { status: 'ok', space: data.space, full: data.full, roster: data.roster ?? [] };
       }
       if (r.status === 404) return { status: 'error', code: errorCode(r.body) === 'code_expired' ? 'code_expired' : 'code_not_found' };
       if (r.status === 429) return { status: 'error', code: 'too_many_attempts' };
@@ -175,6 +195,34 @@ export function createSyncApi(opts: SyncApiOptions) {
       if (r.status === 422) return { status: 'error', code: code === 'not_joinable' ? 'not_joinable' : 'invalid' };
       if (r.status === 429) return { status: 'error', code: 'too_many_attempts' };
       return { status: 'error', code: 'unknown' };
+    },
+
+    async createRelink(spaceId: string, body: { code: string; learnerId: string; deviceId: string; platform?: string }): Promise<RelinkCreateResult> {
+      const r = await call(fetchImpl, `${spaces}/${encodeURIComponent(spaceId)}/relink-requests`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      if (r.status === -1) return { status: 'error', code: 'network' };
+      const code = errorCode(r.body);
+      if (r.status === 200 || r.status === 201) {
+        const data = r.body.data as { request: { id: string; expiresAt: string } };
+        return { status: 'ok', requestId: data.request.id, expiresAt: data.request.expiresAt };
+      }
+      if (r.status === 404) return { status: 'error', code: code === 'code_expired' ? 'code_expired' : code === 'learner_not_found' ? 'learner_not_found' : 'code_not_found' };
+      if (r.status === 409) return { status: 'error', code: 'already_bound' };
+      if (r.status === 422) return { status: 'error', code: 'invalid' };
+      if (r.status === 429) return { status: 'error', code: 'too_many_attempts' };
+      return { status: 'error', code: 'unknown' };
+    },
+
+    async pollRelink(spaceId: string, requestId: string, deviceId: string): Promise<RelinkPollResult> {
+      const r = await call(fetchImpl, `${spaces}/${encodeURIComponent(spaceId)}/relink-requests/${encodeURIComponent(requestId)}?deviceId=${encodeURIComponent(deviceId)}`, { headers: { 'Content-Type': 'application/json' } });
+      if (r.status === -1) return { status: 'error', code: 'network' };
+      if (r.status === 404) return { status: 'error', code: 'not_found' };
+      if (r.status !== 200) return { status: 'error', code: 'unknown' };
+      const data = r.body.data as { status: 'pending' | 'approved' | 'denied' | 'expired'; expiresAt: string; learner?: { id: string; displayName: string; ageGroup: '5-7' | '8-9' | '10-11'; avatar: string }; device?: { secret: string }; snapshot?: { rev: number; snapshot: ProgressSnapshot; summary: ProgressSummary | null } | null };
+      if (data.status === 'approved' && data.learner && data.device) {
+        return { status: 'ok', state: 'approved', learner: data.learner, secret: data.device.secret, snapshot: data.snapshot ?? null };
+      }
+      if (data.status === 'approved') return { status: 'ok', state: 'pending', expiresAt: data.expiresAt }; // credentials already picked up elsewhere
+      return { status: 'ok', state: data.status, expiresAt: data.expiresAt };
     },
 
     async leaveSpace(spaceId: string, learnerId: string, creds: DeviceCredentials): Promise<LeaveResult> {

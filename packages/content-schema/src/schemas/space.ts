@@ -21,7 +21,7 @@ export function normalizeJoinCode(raw: string): string | null {
   return JOIN_CODE_RE.test(code) ? code : null;
 }
 
-const joinCodeField = z.string().transform((v, ctx) => {
+export const JoinCodeFieldSchema = z.string().transform((v, ctx) => {
   const n = normalizeJoinCode(v);
   if (!n) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, message: `Join code must be ${JOIN_CODE_LENGTH} letters or digits` });
@@ -80,12 +80,12 @@ export const SpaceCreateSchema = z.object({
 export type SpaceCreate = z.infer<typeof SpaceCreateSchema>;
 
 /** POST /api/spaces/lookup body. */
-export const SpaceLookupSchema = z.object({ code: joinCodeField });
+export const SpaceLookupSchema = z.object({ code: JoinCodeFieldSchema });
 export type SpaceLookup = z.infer<typeof SpaceLookupSchema>;
 
 /** POST /api/spaces/:id/join body. Devices send `learnerId` (siblings share a device); `displayName` is the roster name. */
 export const SpaceJoinSchema = z.object({
-  code: joinCodeField,
+  code: JoinCodeFieldSchema,
   learnerId: z.string().regex(/^profile:[a-z0-9-]+$/).optional(),
   displayName: z.string().trim().min(1).max(20).optional(),
 });

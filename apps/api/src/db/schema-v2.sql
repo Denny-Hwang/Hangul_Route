@@ -87,3 +87,18 @@ CREATE TABLE IF NOT EXISTS plans (
   updated_at               TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_plans_space_updated ON plans(space_id, updated_at);
+
+-- F-TCH-001 §10.1: a class student's new device asks to be bound to a roster learner.
+CREATE TABLE IF NOT EXISTS relink_requests (
+  id            TEXT PRIMARY KEY,   -- relink:xxxx
+  space_id      TEXT NOT NULL REFERENCES spaces(id) ON DELETE CASCADE,
+  learner_id    TEXT NOT NULL REFERENCES learners(id) ON DELETE CASCADE,
+  device_id     TEXT NOT NULL,
+  platform      TEXT,
+  requested_at  TEXT NOT NULL,
+  expires_at    TEXT NOT NULL,      -- requested_at + 10 min
+  status        TEXT NOT NULL CHECK (status IN ('pending', 'approved', 'denied', 'expired')),
+  decided_at    TEXT,
+  secret        TEXT                -- one-time pickup by the requesting device; NULL after
+);
+CREATE INDEX IF NOT EXISTS idx_relink_space_status ON relink_requests(space_id, status);

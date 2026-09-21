@@ -11,7 +11,7 @@ describe('join code helpers (F-SPACE-001 §3.5)', () => {
   });
 
   it('has calm copy for every error and tells code errors apart', () => {
-    const codes: JoinErrorCode[] = ['code_not_found', 'code_expired', 'cap_learner', 'cap_class', 'not_joinable', 'too_many_attempts', 'network', 'invalid', 'unknown', 'off'];
+    const codes: JoinErrorCode[] = ['code_not_found', 'code_expired', 'cap_learner', 'cap_class', 'not_joinable', 'learner_not_found', 'already_bound', 'too_many_attempts', 'network', 'invalid', 'unknown', 'off'];
     for (const c of codes) {
       expect(joinErrorMessage(c).length).toBeGreaterThan(10);
       expect(joinErrorMessage(c)).not.toMatch(/wrong code|failed|error/i);

@@ -95,5 +95,6 @@ export function inboxPlansFor(learnerId: string) {
           updatedAt: p.updatedAt,
         })),
     )
-    .sort((a, b) => a.publishedAt.localeCompare(b.publishedAt) || a.id.localeCompare(b.id));
+    // Stable sort: plans published in the same millisecond keep creation order.
+    .sort((a, b) => a.publishedAt.localeCompare(b.publishedAt));
 }

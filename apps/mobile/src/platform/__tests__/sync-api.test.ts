@@ -101,7 +101,7 @@ describe('platform/sync-api — spaces (F-SPACE-001)', () => {
       .mockResolvedValueOnce(json(500, {}))
       .mockRejectedValueOnce(new Error('offline'));
     const api = createSyncApi({ endpoint: 'https://api.example.com', fetchImpl });
-    expect(await api.lookupSpace('K7M2X9')).toEqual({ status: 'ok', space: { id: 'space:c', kind: 'class', name: 'A' }, full: true });
+    expect(await api.lookupSpace('K7M2X9')).toEqual({ status: 'ok', space: { id: 'space:c', kind: 'class', name: 'A' }, full: true, roster: [] });
     expect(await api.lookupSpace('K7M2X9')).toEqual({ status: 'error', code: 'code_not_found' });
     expect(await api.lookupSpace('K7M2X9')).toEqual({ status: 'error', code: 'code_expired' });
     expect(await api.lookupSpace('K7M2X9')).toEqual({ status: 'error', code: 'too_many_attempts' });
@@ -156,5 +156,55 @@ describe('platform/sync-api — spaces (F-SPACE-001)', () => {
     expect(await api.getInbox('profile:a', creds)).toEqual({ status: 'error', code: 'http_401' });
     expect(await api.getInbox('profile:a', creds)).toEqual({ status: 'error', code: 'network' });
     expect(fetchImpl.mock.calls[3]?.[0]).toBe('https://api.example.com/api/sync/learners/profile%3Aa/inbox');
+  });
+});
+
+describe('platform/sync-api — re-link (F-TCH-001 §10.1)', () => {
+  const err = (status: number, code: string) => json(status, { error: { code } });
+  const learner = { id: 'profile:m', displayName: 'Minho', ageGroup: '5-7', avatar: 'hoya-orange' };
+
+  it('lookup carries the roster; createRelink maps every outcome', async () => {
+    const fetchImpl = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(json(200, { data: { space: { id: 'space:c', kind: 'class', name: 'A' }, full: false, roster: [{ learnerId: 'profile:m', name: 'M.' }] } }))
+      .mockResolvedValueOnce(json(201, { data: { request: { id: 'relink:1', expiresAt: 'e' } } }))
+      .mockResolvedValueOnce(json(200, { data: { request: { id: 'relink:1', expiresAt: 'e' } } }))
+      .mockResolvedValueOnce(err(404, 'code_expired'))
+      .mockResolvedValueOnce(err(404, 'learner_not_found'))
+      .mockResolvedValueOnce(err(404, 'code_not_found'))
+      .mockResolvedValueOnce(err(409, 'already_bound'))
+      .mockResolvedValueOnce(err(422, 'bad_request'))
+      .mockResolvedValueOnce(err(429, 'too_many_attempts'))
+      .mockResolvedValueOnce(json(500, {}))
+      .mockRejectedValueOnce(new Error('offline'));
+    const api = createSyncApi({ endpoint: 'https://api.example.com', fetchImpl });
+    expect(await api.lookupSpace('K7M2X9')).toMatchObject({ status: 'ok', roster: [{ learnerId: 'profile:m', name: 'M.' }] });
+    const body = { code: 'K7M2X9', learnerId: 'profile:m', deviceId: 'device-x' };
+    expect(await api.createRelink('space:c', body)).toEqual({ status: 'ok', requestId: 'relink:1', expiresAt: 'e' });
+    expect(await api.createRelink('space:c', body)).toEqual({ status: 'ok', requestId: 'relink:1', expiresAt: 'e' });
+    for (const code of ['code_expired', 'learner_not_found', 'code_not_found', 'already_bound', 'invalid', 'too_many_attempts', 'unknown', 'network']) {
+      expect(await api.createRelink('space:c', body)).toEqual({ status: 'error', code });
+    }
+  });
+
+  it('pollRelink maps pending / approved (once) / denied / expired / errors', async () => {
+    const fetchImpl = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(json(200, { data: { status: 'pending', expiresAt: 'e' } }))
+      .mockResolvedValueOnce(json(200, { data: { status: 'approved', expiresAt: 'e', learner, device: { deviceId: 'device-x', secret: 's' }, snapshot: { rev: 2, snapshot, summary: null } } }))
+      .mockResolvedValueOnce(json(200, { data: { status: 'approved', expiresAt: 'e' } }))
+      .mockResolvedValueOnce(json(200, { data: { status: 'denied', expiresAt: 'e' } }))
+      .mockResolvedValueOnce(json(200, { data: { status: 'expired', expiresAt: 'e' } }))
+      .mockResolvedValueOnce(json(404, {}))
+      .mockResolvedValueOnce(json(500, {}))
+      .mockRejectedValueOnce(new Error('offline'));
+    const api = createSyncApi({ endpoint: 'https://api.example.com', fetchImpl });
+    expect(await api.pollRelink('space:c', 'relink:1', 'device-x')).toEqual({ status: 'ok', state: 'pending', expiresAt: 'e' });
+    expect(await api.pollRelink('space:c', 'relink:1', 'device-x')).toEqual({ status: 'ok', state: 'approved', learner, secret: 's', snapshot: { rev: 2, snapshot, summary: null } });
+    expect(await api.pollRelink('space:c', 'relink:1', 'device-x')).toEqual({ status: 'ok', state: 'pending', expiresAt: 'e' });
+    expect(await api.pollRelink('space:c', 'relink:1', 'device-x')).toEqual({ status: 'ok', state: 'denied', expiresAt: 'e' });
+    expect(await api.pollRelink('space:c', 'relink:1', 'device-x')).toEqual({ status: 'ok', state: 'expired', expiresAt: 'e' });
+    expect(await api.pollRelink('space:c', 'relink:1', 'device-x')).toEqual({ status: 'error', code: 'not_found' });
+    expect(await api.pollRelink('space:c', 'relink:1', 'device-x')).toEqual({ status: 'error', code: 'unknown' });
+    expect(await api.pollRelink('space:c', 'relink:1', 'device-x')).toEqual({ status: 'error', code: 'network' });
+    expect(fetchImpl.mock.calls[0]?.[0]).toBe('https://api.example.com/api/spaces/space%3Ac/relink-requests/relink%3A1?deviceId=device-x');
   });
 });

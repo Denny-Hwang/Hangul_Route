@@ -1,4 +1,4 @@
-import type { MemberKind, Membership, Plan, Space } from '@hangul-route/content-schema';
+import type { MemberKind, Membership, Plan, RelinkRequest, Space } from '@hangul-route/content-schema';
 /**
  * In-memory store. Replaced by D1 + R2 bindings when wrangler.toml binds them.
  * Schema mirrors `db/schema.sql`.
@@ -107,6 +107,8 @@ class Store {
   spaces = new Map<string, Space>();
   memberships = new Map<string, Membership>();
   plans = new Map<string, Plan>(); // F-PLAN-001
+  /** Re-link requests (F-TCH-001 §10.1); `secret` is held until the device picks it up once. */
+  relinkRequests = new Map<string, RelinkRequest & { secret: string | null }>();
 
   membership(spaceId: string, kind: MemberKind, memberId: string): Membership | undefined {
     return this.memberships.get(membershipKey(spaceId, kind, memberId));
@@ -130,6 +132,20 @@ class Store {
 
   spaceByCode(code: string): Space | undefined {
     return [...this.spaces.values()].find((s) => s.joinCode === code);
+  }
+
+  relinksOf(spaceId: string): Array<RelinkRequest & { secret: string | null }> {
+    return [...this.relinkRequests.values()].filter((r) => r.spaceId === spaceId);
+  }
+
+  /** Erase a learner everywhere (F-TCH-001 §10.3, roadmap §5.3). Returns whether anything existed. */
+  deleteLearner(learnerId: string): boolean {
+    const existed = this.learners.delete(learnerId);
+    for (const [k, d] of this.learnerDevices) if (d.learnerId === learnerId) this.learnerDevices.delete(k);
+    this.snapshots.delete(learnerId);
+    for (const [k, m] of this.memberships) if (m.memberKind === 'learner' && m.memberId === learnerId) this.memberships.delete(k);
+    for (const [k, r] of this.relinkRequests) if (r.learnerId === learnerId) this.relinkRequests.delete(k);
+    return existed;
   }
 
   plansOf(spaceId: string): Plan[] {
@@ -161,6 +177,7 @@ class Store {
     this.spaces.clear();
     this.memberships.clear();
     this.plans.clear();
+    this.relinkRequests.clear();
   }
 }
 

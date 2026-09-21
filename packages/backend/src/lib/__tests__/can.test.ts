@@ -42,8 +42,8 @@ describe('can() — F-SPACE-001 §3.4', () => {
     const mom = account('mom', [member('space:fam', 'mom', 'owner')]);
     const dad = account('dad', [member('space:fam', 'dad', 'caregiver')]);
     const ctx = { space: family, parent: null };
-    expect([...allowedOnSpace(mom as never, ctx)].sort()).toEqual(['plan.write', 'roster.manage', 'snapshot.read', 'space.manage', 'summary.read']);
-    expect([...allowedOnSpace(dad as never, ctx)].sort()).toEqual(['plan.write', 'roster.manage', 'snapshot.read', 'summary.read']);
+    expect([...allowedOnSpace(mom as never, ctx)].sort()).toEqual(['learner.delete', 'plan.write', 'roster.manage', 'snapshot.read', 'space.manage', 'summary.read']);
+    expect([...allowedOnSpace(dad as never, ctx)].sort()).toEqual(['learner.delete', 'plan.write', 'roster.manage', 'snapshot.read', 'summary.read']);
     expect(can(dad, 'snapshot.read', { kind: 'learner', learnerId: 'profile:a', spaces: [ctx] })).toBe(true);
     expect(can(dad, 'space.manage', { kind: 'space', ctx })).toBe(false);
   });
@@ -87,5 +87,20 @@ describe('can() — F-SPACE-001 §3.4', () => {
       expect(can(impostor, action, { kind: 'space', ctx: { space: family, parent: null } })).toBe(false);
     }
     expect(can(stranger, 'summary.read', { kind: 'learner', learnerId: 'profile:a', spaces: [] })).toBe(false);
+  });
+});
+
+describe('learner.delete (F-TCH-001 §10.3)', () => {
+  it('caregivers always, teachers only under school consent, admins never through the school', () => {
+    const mom = account('mom', [member('space:fam', 'mom', 'owner')]);
+    const dad = account('dad', [member('space:fam', 'dad', 'caregiver')]);
+    const teacher = account('teacher', [member('space:cls', 'teacher', 'owner')]);
+    const principal = account('principal', [member('space:sch', 'principal', 'owner')]);
+    expect(can(mom, 'learner.delete', { kind: 'space', ctx: { space: family, parent: null } })).toBe(true);
+    expect(can(dad, 'learner.delete', { kind: 'space', ctx: { space: family, parent: null } })).toBe(true);
+    expect(can(teacher, 'learner.delete', { kind: 'space', ctx: { space: klass, parent: school } })).toBe(false);
+    const schoolConsent = { ...klass, settings: { consentMode: 'school' as const, anonymizeRoster: false } };
+    expect(can(teacher, 'learner.delete', { kind: 'space', ctx: { space: schoolConsent, parent: school } })).toBe(true);
+    expect(can(principal, 'learner.delete', { kind: 'space', ctx: { space: schoolConsent, parent: school } })).toBe(false);
   });
 });

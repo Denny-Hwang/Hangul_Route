@@ -4,6 +4,8 @@ import {
   SpaceCreateSchema,
   SpaceJoinSchema,
   SpaceLookupSchema,
+  SpaceSettingsPatchSchema,
+  rosterAlias,
   type Membership,
   type Space,
   type SpaceRole,
@@ -73,10 +75,15 @@ async function requireCan(c: Context, space: Space, action: Action): Promise<Res
   return account;
 }
 
-function findSpace(c: Context, spaceId: string): Response | Space {
+function findSpace(c: Context, spaceId: string, allowArchived = false): Response | Space {
   const space = store.spaces.get(spaceId);
-  if (!space || space.archivedAt) return fail(c, 'not_found', 'Space not found', 404);
+  if (!space || (space.archivedAt && !allowArchived)) return fail(c, 'not_found', 'Space not found', 404);
   return space;
+}
+
+/** Roster names as the space wants them shown (F-TCH-001 §10.3 anonymize). */
+export function rosterName(space: Space, displayName: string): string {
+  return space.settings.anonymizeRoster ? rosterAlias(displayName) : displayName;
 }
 
 spacesRoutes.post('/', async (c) => {
@@ -156,10 +163,61 @@ spacesRoutes.post('/lookup', async (c) => {
   const space = store.spaceByCode(parsed.data.code);
   if (!space || space.archivedAt) return fail(c, 'code_not_found', 'No class or family has this code', 404);
   if (!isJoinCodeLive(space, new Date())) return fail(c, 'code_expired', 'This code has expired', 404);
+  // Class rosters (names only) let a returning student pick themselves (F-TCH-001 §10.1).
+  const roster =
+    space.kind === 'class'
+      ? store
+          .membersOf(space.id)
+          .filter((m) => m.memberKind === 'learner')
+          .map((m) => ({ m, learner: store.learners.get(m.memberId) }))
+          .filter((x): x is { m: Membership; learner: NonNullable<ReturnType<typeof store.learners.get>> } => !!x.learner)
+          .map(({ learner }) => ({ learnerId: learner.id, name: rosterName(space, learner.displayName) }))
+          .sort((a, b) => a.name.localeCompare(b.name))
+      : [];
   return ok(c, {
     space: { id: space.id, kind: space.kind, name: space.name },
     full: space.kind === 'class' && studentsIn(space.id) >= FREE_CLASS_STUDENT_CAP,
+    roster,
   });
+});
+
+spacesRoutes.patch('/:id/settings', async (c) => {
+  const space = findSpace(c, c.req.param('id'), true);
+  if (!('id' in space)) return space;
+  const account = await requireCan(c, space, 'space.manage');
+  if (!('id' in account)) return account;
+  const parsed = SpaceSettingsPatchSchema.safeParse(await c.req.json().catch(() => null));
+  if (!parsed.success) return fail(c, 'bad_request', 'Invalid settings', 422, { issues: parsed.error.issues });
+  space.settings = { ...space.settings, ...parsed.data };
+  return ok(c, { space: publicSpace(space) });
+});
+
+spacesRoutes.post('/:id/archive', async (c) => {
+  const space = findSpace(c, c.req.param('id'), true);
+  if (!('id' in space)) return space;
+  const account = await requireCan(c, space, 'space.manage');
+  if (!('id' in account)) return account;
+  space.archivedAt = space.archivedAt ?? new Date().toISOString();
+  return ok(c, { space: publicSpace(space) });
+});
+
+spacesRoutes.post('/:id/unarchive', async (c) => {
+  const space = findSpace(c, c.req.param('id'), true);
+  if (!('id' in space)) return space;
+  const account = await requireCan(c, space, 'space.manage');
+  if (!('id' in account)) return account;
+  space.archivedAt = null;
+  return ok(c, { space: publicSpace(space) });
+});
+
+spacesRoutes.delete('/:id/learners/:learnerId/data', async (c) => {
+  const space = findSpace(c, c.req.param('id'), true);
+  if (!('id' in space)) return space;
+  const learnerId = c.req.param('learnerId');
+  if (!store.membership(space.id, 'learner', learnerId)) return fail(c, 'not_found', 'Learner is not in this space', 404);
+  const account = await requireCan(c, space, 'learner.delete');
+  if (!('id' in account)) return account;
+  return ok(c, { deleted: store.deleteLearner(learnerId) });
 });
 
 spacesRoutes.post('/:id/code', async (c) => {
@@ -241,7 +299,7 @@ spacesRoutes.delete('/:id/members/:kind/:memberId', async (c) => {
 });
 
 spacesRoutes.get('/:id/roster', async (c) => {
-  const space = findSpace(c, c.req.param('id'));
+  const space = findSpace(c, c.req.param('id'), true);
   if (!('id' in space)) return space;
   const account = await requireCan(c, space, 'summary.read');
   if (!('id' in account)) return account;
@@ -257,7 +315,7 @@ spacesRoutes.get('/:id/roster', async (c) => {
       // summary only — payload_json never leaves through this route (roadmap §3.1).
       return {
         id: learner.id,
-        displayName: learner.displayName,
+        displayName: rosterName(space, learner.displayName),
         ageGroup: learner.ageGroup,
         avatar: learner.avatar,
         joinedAt: m.joinedAt,

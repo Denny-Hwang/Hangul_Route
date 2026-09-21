@@ -37,3 +37,12 @@ export function accountActor(account: Account): Actor {
 export function spaceContext(space: Space): SpaceContext {
   return { space, parent: space.parentSpaceId ? (store.spaces.get(space.parentSpaceId) ?? null) : null };
 }
+
+/** Every space a learner belongs to, with parents, for `can()` on learner targets. */
+export function learnerContexts(learnerId: string): SpaceContext[] {
+  return store
+    .membershipsOf('learner', learnerId)
+    .map((m) => store.spaces.get(m.spaceId))
+    .filter((s): s is Space => !!s)
+    .map(spaceContext);
+}

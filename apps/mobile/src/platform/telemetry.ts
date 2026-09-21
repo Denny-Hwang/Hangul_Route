@@ -35,7 +35,10 @@ export type TelemetryEventName =
   | 'space.join.attempted'
   | 'space.join.succeeded'
   | 'space.join.failed'
-  | 'space.left';
+  | 'space.left'
+  | 'space.relink.requested'
+  | 'space.relink.approved'
+  | 'space.relink.denied';
 
 export interface TelemetryEvent {
   name: TelemetryEventName;

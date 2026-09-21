@@ -50,6 +50,15 @@ interface Actions {
   issueRescueCode: (learnerId: string) => Promise<string | null>;
   /** Restore from a Rescue Code on this device. */
   claimRescueCode: (code: string) => Promise<{ ok: true; plan: RestorePlan } | { ok: false; error: 'code_not_found' | 'too_many_attempts' | 'network' | 'invalid' | 'unknown' | 'off' }>;
+  /** Take over a learner the server handed us (rescue claim, re-link approval): profile, snapshot, credentials. */
+  adoptServerLearner: (input: AdoptInput) => Promise<RestorePlan>;
+}
+
+export interface AdoptInput {
+  learner: { id: string; displayName: string; ageGroup: Profile['ageGroup']; avatar: string };
+  secret: string;
+  snapshot: { rev: number; snapshot: ProgressSnapshot } | null;
+  rescueCode?: string | null;
 }
 
 const key = (learnerId: string): string => `sync:${learnerId}`;
@@ -201,22 +210,27 @@ export const useSyncStore = create<State & Actions>((set, get) => {
       if (!client) return { ok: false, error: 'off' };
       const result = await client.claimRescueCode(code, await getDeviceId());
       if (result.status !== 'ok') return { ok: false, error: result.code };
+      // Keep the code the parent just typed: this device must show it, not mint a new one on its next sync.
+      const plan = await get().adoptServerLearner({ learner: result.learner, secret: result.secret, snapshot: result.snapshot, rescueCode: normalizeRescueCode(code) });
+      return { ok: true, plan };
+    },
 
-      const learnerId = result.learner.id;
+    adoptServerLearner: async ({ learner, secret, snapshot: server, rescueCode }) => {
+      const learnerId = learner.id;
       const profiles = useProfileStore.getState();
       const existingProfile = profiles.profiles.find((p) => p.id === learnerId) ?? null;
       const profile: Profile = existingProfile ?? {
         id: learnerId,
-        displayName: result.learner.displayName,
-        ageGroup: result.learner.ageGroup,
-        avatar: result.learner.avatar as AvatarKind,
+        displayName: learner.displayName,
+        ageGroup: learner.ageGroup,
+        avatar: learner.avatar as AvatarKind,
         role: 'learner',
         createdAt: new Date().toISOString(),
       };
       const progress = useProgressStore.getState();
       if (existingProfile) await progress.hydrate(learnerId);
       const localSnapshot = existingProfile ? progress.ensure(learnerId) : null;
-      const serverSnapshot = result.snapshot?.snapshot ?? null;
+      const serverSnapshot = server?.snapshot ?? null;
       const now = new Date();
 
       let plan: RestorePlan;
@@ -232,11 +246,10 @@ export const useSyncStore = create<State & Actions>((set, get) => {
       }
       if (!existingProfile) profiles.adoptProfile(profile);
       progress.replaceSnapshot(learnerId, plan.snapshot);
-      // Keep the code the parent just typed: this device must show it, not mint a new one on its next sync.
-      update(learnerId, { secret: result.secret, rev: result.snapshot?.rev ?? 0, status: 'idle', lastError: null, rescueCode: normalizeRescueCode(code) });
+      update(learnerId, { secret, rev: server?.rev ?? 0, status: 'idle', lastError: null, ...(rescueCode ? { rescueCode } : {}) });
       // Merging may have added local-only progress; push it back.
       get().requestSync(learnerId);
-      return { ok: true, plan };
+      return plan;
     },
   };
 });

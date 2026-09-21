@@ -111,3 +111,28 @@ describe('/api/recovery (F-RESTORE-001)', () => {
     expect((res.body.data as { snapshot: unknown }).snapshot).toBeNull();
   });
 });
+
+describe('rescue re-issue by an adult (F-TCH-001 §10.2)', () => {
+  beforeEach(() => {
+    store.reset();
+    claimLimiter.reset();
+  });
+
+  it('a teacher with roster rights can issue a new code; strangers cannot; the old code stops working', async () => {
+    const auth = await registerAndUpload();
+    const { code: first } = await issue(auth);
+    const clsRes = await app.request('/api/spaces', { method: 'POST', headers: { ...json, authorization: 'Bearer teacher' }, body: JSON.stringify({ kind: 'class', name: 'A' }) });
+    const cls = (await clsRes.json()) as { data: { space: { id: string }; joinCode: string } };
+    const joined = await app.request(`/api/spaces/${cls.data.space.id}/join`, { method: 'POST', headers: auth, body: JSON.stringify({ code: cls.data.joinCode, learnerId: 'profile:suni' }) });
+    expect(joined.status).toBe(201);
+    const denied = await app.request('/api/recovery/issue', { method: 'POST', headers: { ...json, authorization: 'Bearer stranger' }, body: JSON.stringify({ learnerId: 'profile:suni' }) });
+    expect(denied.status).toBe(403);
+    const reissued = await app.request('/api/recovery/issue', { method: 'POST', headers: { ...json, authorization: 'Bearer teacher' }, body: JSON.stringify({ learnerId: 'profile:suni' }) });
+    expect(reissued.status).toBe(201);
+    const { code: second } = ((await reissued.json()) as { data: { code: string } }).data;
+    expect(second).not.toBe(first);
+    expect((await claim(first)).status).toBe(404);
+    expect((await claim(second)).status).toBe(200);
+    expect((await app.request('/api/recovery/issue', { method: 'POST', headers: json, body: JSON.stringify({ learnerId: 'profile:suni' }) })).status).toBe(401);
+  });
+});
