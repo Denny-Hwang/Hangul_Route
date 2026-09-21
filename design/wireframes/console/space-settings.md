@@ -1,7 +1,7 @@
 # Console/Space-settings — join code, consent, members, archive, delete (wireframe v1)
 
 Spec: `docs/roadmap/multi-persona-sync-platform.md` §2 (`spaces.join_code`, `settings_json`), §5.3 (deletion), §6, §8 (`/spaces/:id/code`, `DELETE /learners/:id`) · `docs/specs/F-TCH-001-teacher-classroom.md` §3.1 · `docs/blueprints/02-core-feature-spec.md` §6.5
-Code (F-TCH-001 §10.3, 2026-09-21 — API): `PATCH /spaces/:id/settings` (anonymize, consent mode — writable now, decision (c)), `POST /spaces/:id/archive` · `/unarchive`, `DELETE /spaces/:id/learners/:id/data` (caregivers; teachers only under school consent), member removal from F-SPACE-001. The page is the next PR.
+Code (F-TCH-001 §10.3, 2026-09-21 — API): `PATCH /spaces/:id/settings` (anonymize, consent mode — writable now, decision (c)), `POST /spaces/:id/archive` · `/unarchive`, `DELETE /spaces/:id/learners/:id/data` (caregivers; teachers only under school consent), member removal from F-SPACE-001. Page `apps/web/src/app/teach/space/[id]/settings/page.tsx`: join code, consent mode (writable — decision (c)), anonymize toggle, grown-ups and learners with remove, archive / unarchive, delete a learner's data behind a typed-name confirm (or the "ask the parent" hint under parent consent). Not yet: co-teacher invite sheet, cross-link to account backup.
 Audience: **teacher / school admin** (class · school spaces) · **parent** (family space: members, delete learner; no consent-mode block)
 
 ## Scenario (Given-When-Then)

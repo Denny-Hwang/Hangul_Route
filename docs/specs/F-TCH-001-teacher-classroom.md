@@ -170,7 +170,7 @@ Authored 2026-09-19 (IDs per `docs/blueprints/10-app-map.md` §3.3):
 - **Cloudflare D1**: schema v2 (`spaces`, `memberships`, `plans`, `snapshots.summary_json`) — roadmap `multi-persona-sync-platform.md` §2. The draft's five bespoke tables are withdrawn.
 - **Clerk** organisation feature for school-tier accounts (Phase 3).
 
-## 10. S5 scope (2026-09-21, promotion to `ready`)
+## 10. S5 scope (2026-09-21, promotion to `ready`) — shipped 2026-09-21 (PR 1 server + learner flow, PR 2 console pages); §10.4 remains deferred
 
 What is already shipped: class create + join code (F-SPACE-001), roster summary view and console shell (F-CONSOLE-001), class plans with device-side derivation (F-PLAN-001). This section is the remaining, buildable scope.
 
