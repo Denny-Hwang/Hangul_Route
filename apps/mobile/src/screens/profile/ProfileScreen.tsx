@@ -21,10 +21,13 @@ import { Pressable, View } from 'react-native';
 import { entitlementTier } from '../../logic/entitlement';
 import { isParentSessionValid } from '../../logic/profiles/session';
 import type { RootStackParamList } from '../../navigation/types';
+import { installGuideVariant } from '../../logic/pwa/install-guide';
 import { setMuted } from '../../platform/audio';
+import { installEnv } from '../../platform/pwa';
 import { useAccountStore } from '../../store/account-store';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
+import { usePwaStore } from '../../store/pwa-store';
 import { useUiStore } from '../../store/ui-store';
 
 export function ProfileScreen(): React.ReactElement {
@@ -38,6 +41,9 @@ export function ProfileScreen(): React.ReactElement {
   const soundOn = useUiStore((s) => s.soundOn);
   const toggleSound = useUiStore((s) => s.toggleSound);
   const parentGateOpenedAt = useUiStore((s) => s.parentGateOpenedAt);
+  const forceInstallGuide = usePwaStore((s) => s.force);
+  const installed = usePwaStore((s) => s.installed);
+  const canOfferInstall = !installed && installGuideVariant(installEnv()) !== 'none';
 
   // A verified grown-up may add another child without re-entering the PIN
   // inside the 15-minute session window (F-PROF-001 §3.2).
@@ -173,6 +179,22 @@ export function ProfileScreen(): React.ReactElement {
           />
         </View>
       </Card>
+
+      {canOfferInstall ? (
+        <>
+          <Spacer size="lg" />
+          <Button
+            label="Install on this device"
+            tone="secondary"
+            size="md"
+            accessibilityLabel="Install Hangul Route on this device"
+            onPress={() => {
+              forceInstallGuide();
+              navigation.navigate('Main', { screen: 'Home' });
+            }}
+          />
+        </>
+      ) : null}
 
       <Spacer size="lg" />
       <Button

@@ -53,3 +53,56 @@ describe('platform/pwa.web', () => {
     expect(() => web.applyUpdate()).not.toThrow();
   });
 });
+
+describe('platform/pwa install API', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('native: no env, no prompt, always offline-ready, no clipboard', async () => {
+    const { appUrl, copyText, installEnv, isOfflineReady, promptInstall } = await import('../pwa');
+    expect(installEnv()).toEqual({ userAgent: '', standalone: true, hasPromptEvent: false, isWeb: false });
+    expect(await promptInstall()).toBe(false);
+    expect(isOfflineReady()).toBe(true);
+    expect(appUrl()).toBe('');
+    expect(await copyText('x')).toBe(false);
+  });
+
+  it('web: reads the shell prompt, service-worker controller, origin and clipboard', async () => {
+    const prompt = vi.fn(async () => {});
+    const writeText = vi.fn(async () => {});
+    vi.stubGlobal('addEventListener', vi.fn());
+    vi.stubGlobal('matchMedia', vi.fn(() => ({ matches: false })));
+    vi.stubGlobal('navigator', {
+      userAgent: 'Mozilla/5.0 (Linux; Android 14) Chrome/126.0 Mobile',
+      serviceWorker: { controller: {} },
+      clipboard: { writeText },
+    });
+    vi.stubGlobal('location', { origin: 'https://app.example.com' });
+    vi.stubGlobal('__hrInstallPrompt', { prompt, userChoice: Promise.resolve({ outcome: 'accepted' }) });
+
+    expect(web.installEnv()).toEqual({
+      userAgent: 'Mozilla/5.0 (Linux; Android 14) Chrome/126.0 Mobile',
+      standalone: false,
+      hasPromptEvent: true,
+      isWeb: true,
+    });
+    expect(web.isOfflineReady()).toBe(true);
+    expect(web.appUrl()).toBe('https://app.example.com');
+    expect(await web.copyText('hello')).toBe(true);
+    expect(writeText).toHaveBeenCalledWith('hello');
+    expect(await web.promptInstall()).toBe(true);
+    expect(prompt).toHaveBeenCalled();
+    // consumed: a second call has no prompt to fire
+    expect(await web.promptInstall()).toBe(false);
+  });
+
+  it('web: a rejected or missing prompt resolves false and clipboard errors are swallowed', async () => {
+    vi.stubGlobal('addEventListener', vi.fn());
+    vi.stubGlobal('navigator', { clipboard: { writeText: vi.fn(async () => { throw new Error('denied'); }) } });
+    vi.stubGlobal('__hrInstallPrompt', { prompt: vi.fn(async () => {}), userChoice: Promise.resolve({ outcome: 'dismissed' }) });
+    expect(await web.promptInstall()).toBe(false);
+    expect(await web.copyText('x')).toBe(false);
+    vi.stubGlobal('__hrInstallPrompt', undefined);
+    expect(await web.promptInstall()).toBe(false);
+    expect(web.isOfflineReady()).toBe(false);
+  });
+});

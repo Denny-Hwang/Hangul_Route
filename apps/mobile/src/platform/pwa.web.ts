@@ -36,3 +36,63 @@ export function applyUpdate(): void {
   const w = globalThis as unknown as (Window & { __hrApplyUpdate?: () => void }) | undefined;
   w?.__hrApplyUpdate?.();
 }
+
+interface InstallPromptEvent {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+}
+
+type ShellWindow = Window & {
+  __hrInstallPrompt?: InstallPromptEvent | null;
+  navigator: Navigator & { standalone?: boolean };
+};
+
+function shell(): ShellWindow | null {
+  const w = globalThis as unknown as ShellWindow | undefined;
+  return w && typeof w.addEventListener === 'function' ? w : null;
+}
+
+export function installEnv(): { userAgent: string; standalone: boolean; hasPromptEvent: boolean; isWeb: boolean } {
+  const w = shell();
+  return {
+    userAgent: w?.navigator?.userAgent ?? '',
+    standalone: isStandalone(),
+    hasPromptEvent: !!w?.__hrInstallPrompt,
+    isWeb: true,
+  };
+}
+
+export async function promptInstall(): Promise<boolean> {
+  const w = shell();
+  const ev = w?.__hrInstallPrompt;
+  if (!w || !ev) return false;
+  try {
+    await ev.prompt();
+    const choice = await ev.userChoice;
+    w.__hrInstallPrompt = null;
+    return choice.outcome === 'accepted';
+  } catch {
+    return false;
+  }
+}
+
+export function isOfflineReady(): boolean {
+  const w = shell();
+  return !!w?.navigator?.serviceWorker?.controller;
+}
+
+export function appUrl(): string {
+  const w = shell();
+  return w?.location?.origin ?? '';
+}
+
+export async function copyText(text: string): Promise<boolean> {
+  const w = shell();
+  try {
+    if (!w?.navigator?.clipboard?.writeText) return false;
+    await w.navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    return false;
+  }
+}

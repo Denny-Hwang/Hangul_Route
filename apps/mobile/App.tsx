@@ -8,8 +8,11 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { RootNavigator } from './src/navigation/root';
 import { PwaBanners } from './src/components/PwaBanners';
 import { OopsScreen } from './src/screens/system/OopsScreen';
+import { subscribePwa } from './src/platform/pwa';
+import { flushQueue } from './src/platform/telemetry';
 import { useAccountStore } from './src/store/account-store';
 import { useProfileStore } from './src/store/profile-store';
+import { usePwaStore } from './src/store/pwa-store';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -21,10 +24,18 @@ export default function App(): React.ReactElement {
   const hydrate = useProfileStore((s) => s.hydrate);
   const hydrateAccount = useAccountStore((s) => s.hydrate);
 
+  const countVisit = usePwaStore((s) => s.hydrateAndCountVisit);
+
   useEffect(() => {
     void hydrate();
     void hydrateAccount();
-  }, [hydrate, hydrateAccount]);
+    void countVisit();
+    // Offline telemetry (F-PWA-001 §3.2): drain on start and when back online.
+    void flushQueue();
+    return subscribePwa((event) => {
+      if (event === 'back-online') void flushQueue();
+    });
+  }, [hydrate, hydrateAccount, countVisit]);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
