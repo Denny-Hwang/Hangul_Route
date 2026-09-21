@@ -17,6 +17,7 @@
 | 데스크톱 폭 | 600px 이상에서 폰 폭(480px) 컬럼 중앙 정렬 — 토큰(canvas/border) 을 빌드 시 읽어 셸 CSS 생성 | `scripts/pwa-postbuild.mjs` |
 | 랜딩 CTA | `apps/web` 헤더·히어로·#get 섹션이 `NEXT_PUBLIC_APP_URL` (기본 app.hangulroute.com) 로 연결 | T-048 |
 | 부수 수정 | 콜드 런치 시 저장소 hydrate 전에 온보딩으로 보내던 버그 (네이티브 공통) — `RootNavigator` 가 hydrate 까지 대기 | E2E 의 오프라인 새로고침 단계가 이 버그를 잡아냄 |
+| S1–S2 동기화·복원 (2026-09-21) | 서버 스냅샷 + 결정적 병합 + 30 s 디바운스 클라이언트 (F-SYNC-001/002) · 파일 백업/복원 · **Rescue Code** 자동 발급·복사·공유·재발급·새 기기 claim (F-RESTORE-001). `EXPO_PUBLIC_API_BASE_URL` 이 없으면 전부 조용히 꺼짐 (파일 백업만 동작) | 단위 (mobile 359 · backend 77) + `e2e/web/backup.spec.ts` 파일 왕복. 코드 경로 실기기 확인은 API 연결 후 T-046 에 포함 |
 
 ## 2. 오너 작업 — 약 1시간 (Connect GitHub 방식, 2026-09-21 결정)
 
@@ -49,7 +50,7 @@
 | 카드 공유 | 공유시트 | 버튼 숨김 (view-shot 미지원) | 후속: SVG → canvas → Web Share (roadmap §2) |
 | 햅틱 | 있음 | Android 만 진동, iOS 없음 | 없음 (선택적 피드백) |
 | 퀘스트 나가기 확인 | 네이티브 Alert | 브라우저 confirm() | 후속: 토큰 스타일 시트로 교체 |
-| 저장소 | AsyncStorage | IndexedDB + persist() 요청. iOS 는 홈 화면에 추가하지 않으면 7일 미사용 시 삭제 가능 | 설치 안내 시트 (F-PWA-001, 구현됨) + 향후 Rescue Code |
+| 저장소 | AsyncStorage | IndexedDB + persist() 요청. iOS 는 홈 화면에 추가하지 않으면 7일 미사용 시 삭제 가능 | 설치 안내 시트 (F-PWA-001, 구현됨) + Rescue Code (F-RESTORE-001, 구현됨 — API 연결 시 첫 클라우드 저장 후 자동 발급) |
 | 데스크톱 | — | 폰 폭 컬럼 중앙 정렬 (600px+) | 가로 레이아웃 시안은 별도 |
 | 업데이트 | 스토어 | "New lessons are ready — Refresh" 배너, 사용자가 누를 때만 적용 (퀘스트 중 강제 새로고침 없음) | — |
 

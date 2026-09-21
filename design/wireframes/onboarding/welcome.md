@@ -28,7 +28,7 @@ Then: in one glance the child meets Hoya and the adult sees one big button; no a
 |                                  |
 |   [[ LET'S START ]]              |  <- primary CTA -> profiles/create-parent
 |                                  |
-|   [ I already have progress ]    |  <- secondary text-style -> sync/restore (FUTURE)
+|   [ I already have progress ]    |  <- secondary text-style -> sync/restore (shipped, F-RESTORE-001)
 |                                  |
 |   1 muted trust line             |  <- "made for kids 5-11" placeholder
 +----------------------------------+
@@ -41,7 +41,7 @@ Then: in one glance the child meets Hoya and the adult sees one big button; no a
 ## Interaction points
 
 - [[ LET'S START ]] → `profiles/create-parent` (code: `CreateProfile { firstRun: true }`)
-- [ I already have progress ] → `sync/restore` — **future exit (P, roadmap §5)**; not in shipped code. Then `profiles/picker`, or `sync/merge-notice` when local progress also exists (app-map §4.2).
+- [ I already have progress ] → `sync/restore` — **shipped (F-RESTORE-001, 2026-09-21)**. Then `profiles/picker`, or `sync/merge-notice` when local progress also exists (app-map §4.2).
 - Hoya tap: no-op in MVP (single waving pose, F-HOYA-001)
 
 ## Navigation graph

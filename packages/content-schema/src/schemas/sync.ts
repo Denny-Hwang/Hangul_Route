@@ -72,3 +72,31 @@ export const BackupFileSchema = z.object({
   snapshot: ProgressSnapshotSchema,
 });
 export type BackupFile = z.infer<typeof BackupFileSchema>;
+
+/** Rescue Code — F-RESTORE-001 §3.1. `WORD-WORD-1234`, upper case. */
+export const RESCUE_CODE_RE = /^[A-Z]{3,10}-[A-Z]{3,10}-\d{4}$/;
+
+/** Accepts what a parent might type (spaces, lower case) and normalizes it. */
+export function normalizeRescueCode(raw: string): string | null {
+  const parts = raw
+    .trim()
+    .toUpperCase()
+    .split(/[\s-]+/)
+    .filter(Boolean);
+  if (parts.length !== 3) return null;
+  const code = parts.join('-');
+  return RESCUE_CODE_RE.test(code) ? code : null;
+}
+
+export const RescueClaimSchema = z.object({
+  code: z.string().transform((v, ctx) => {
+    const n = normalizeRescueCode(v);
+    if (!n) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Rescue code must look like WORD-WORD-1234' });
+      return z.NEVER;
+    }
+    return n;
+  }),
+  deviceId: z.string().min(8).max(64),
+});
+export type RescueClaim = z.infer<typeof RescueClaimSchema>;

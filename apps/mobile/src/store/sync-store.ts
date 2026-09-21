@@ -1,8 +1,10 @@
-import type { Profile, ProgressSnapshot } from '@hangul-route/content-schema';
+import { normalizeRescueCode, type AvatarKind, type Profile, type ProgressSnapshot } from '@hangul-route/content-schema';
 import { create } from 'zustand';
 import { flags } from '../config/flags';
 import { questJamo, stage1QuestIds } from '../content/sync-context';
 import { syncLearner } from '../logic/sync/engine';
+import { mergeSnapshots } from '../logic/sync/merge';
+import { planRestore, type RestorePlan } from '../logic/sync/restore';
 import { createSyncScheduler } from '../logic/sync/scheduler';
 import { summarize } from '../logic/sync/summarize';
 import { getDeviceId } from '../platform/device';
@@ -25,6 +27,8 @@ export interface LearnerSyncState {
   lastSyncedAt: string | null;
   lastError: string | null;
   status: SyncStatus;
+  /** Rescue Code shown to a parent (F-RESTORE-001); kept locally, never synced. */
+  rescueCode: string | null;
 }
 
 interface State {
@@ -41,16 +45,20 @@ interface Actions {
   syncAll: () => Promise<void>;
   /** Attach the device's own copy of a learner registered elsewhere (restore paths). */
   adoptCredentials: (learnerId: string, secret: string, rev: number) => void;
+  /** Mint (or rotate) the learner's Rescue Code; requires a registered device. */
+  issueRescueCode: (learnerId: string) => Promise<string | null>;
+  /** Restore from a Rescue Code on this device. */
+  claimRescueCode: (code: string) => Promise<{ ok: true; plan: RestorePlan } | { ok: false; error: 'code_not_found' | 'too_many_attempts' | 'network' | 'invalid' | 'unknown' | 'off' }>;
 }
 
 const key = (learnerId: string): string => `sync:${learnerId}`;
 
 function blank(learnerId: string): LearnerSyncState {
-  return { learnerId, secret: null, rev: 0, lastSyncedAt: null, lastError: null, status: apiBaseUrl() ? 'idle' : 'off' };
+  return { learnerId, secret: null, rev: 0, lastSyncedAt: null, lastError: null, status: apiBaseUrl() ? 'idle' : 'off', rescueCode: null };
 }
 
-function persistable(s: LearnerSyncState): Pick<LearnerSyncState, 'secret' | 'rev' | 'lastSyncedAt'> {
-  return { secret: s.secret, rev: s.rev, lastSyncedAt: s.lastSyncedAt };
+function persistable(s: LearnerSyncState): Pick<LearnerSyncState, 'secret' | 'rev' | 'lastSyncedAt' | 'rescueCode'> {
+  return { secret: s.secret, rev: s.rev, lastSyncedAt: s.lastSyncedAt, rescueCode: s.rescueCode };
 }
 
 let apiClient: SyncApiClient | null = null;
@@ -103,7 +111,7 @@ export const useSyncStore = create<State & Actions>((set, get) => {
     hydrate: async (learnerId) => {
       const existing = get().byLearner[learnerId];
       if (existing) return existing;
-      const saved = await readJson<Pick<LearnerSyncState, 'secret' | 'rev' | 'lastSyncedAt'>>(key(learnerId));
+      const saved = await readJson<Pick<LearnerSyncState, 'secret' | 'rev' | 'lastSyncedAt' | 'rescueCode'>>(key(learnerId));
       const state: LearnerSyncState = { ...blank(learnerId), ...(saved ?? {}) };
       set((s) => ({ byLearner: { ...s.byLearner, [learnerId]: state } }));
       return state;
@@ -142,7 +150,10 @@ export const useSyncStore = create<State & Actions>((set, get) => {
         return update(learnerId, { status: 'idle', rev: outcome.rev, lastError: 'conflict' });
       }
       if (outcome.merged) useProgressStore.getState().replaceSnapshot(learnerId, outcome.snapshot);
-      return update(learnerId, { status: 'synced', rev: outcome.rev, lastSyncedAt: new Date().toISOString(), lastError: null });
+      const synced = update(learnerId, { status: 'synced', rev: outcome.rev, lastSyncedAt: new Date().toISOString(), lastError: null });
+      // Owner decision 2026-09-20: every learner gets a Rescue Code after the first cloud save.
+      if (!synced.rescueCode) await get().issueRescueCode(learnerId);
+      return get().byLearner[learnerId] ?? synced;
     },
 
     syncAll: async () => {
@@ -154,6 +165,62 @@ export const useSyncStore = create<State & Actions>((set, get) => {
 
     adoptCredentials: (learnerId, secret, rev) => {
       update(learnerId, { secret, rev, status: 'idle', lastError: null });
+    },
+
+    issueRescueCode: async (learnerId) => {
+      const client = api();
+      const state = await get().hydrate(learnerId);
+      if (!client || !state.secret) return null;
+      const result = await client.issueRescueCode(learnerId, { deviceId: await getDeviceId(), secret: state.secret });
+      if (result.status !== 'ok') {
+        update(learnerId, { lastError: result.code });
+        return null;
+      }
+      update(learnerId, { rescueCode: result.code });
+      return result.code;
+    },
+
+    claimRescueCode: async (code) => {
+      const client = api();
+      if (!client) return { ok: false, error: 'off' };
+      const result = await client.claimRescueCode(code, await getDeviceId());
+      if (result.status !== 'ok') return { ok: false, error: result.code };
+
+      const learnerId = result.learner.id;
+      const profiles = useProfileStore.getState();
+      const existingProfile = profiles.profiles.find((p) => p.id === learnerId) ?? null;
+      const profile: Profile = existingProfile ?? {
+        id: learnerId,
+        displayName: result.learner.displayName,
+        ageGroup: result.learner.ageGroup,
+        avatar: result.learner.avatar as AvatarKind,
+        role: 'learner',
+        createdAt: new Date().toISOString(),
+      };
+      const progress = useProgressStore.getState();
+      if (existingProfile) await progress.hydrate(learnerId);
+      const localSnapshot = existingProfile ? progress.ensure(learnerId) : null;
+      const serverSnapshot = result.snapshot?.snapshot ?? null;
+      const now = new Date();
+
+      let plan: RestorePlan;
+      if (serverSnapshot) {
+        plan = planRestore(
+          { format: 'hangul-route-backup', version: 1, exportedAt: now.toISOString(), profile, snapshot: serverSnapshot },
+          localSnapshot ? { profile, snapshot: localSnapshot } : null,
+          now,
+        );
+      } else {
+        const snapshot = localSnapshot ?? progress.ensure(learnerId);
+        plan = { action: existingProfile ? 'merge' : 'create', profile, snapshot: mergeSnapshots(snapshot, snapshot, { now }), added: { cards: 0, quests: 0 } };
+      }
+      if (!existingProfile) profiles.adoptProfile(profile);
+      progress.replaceSnapshot(learnerId, plan.snapshot);
+      // Keep the code the parent just typed: this device must show it, not mint a new one on its next sync.
+      update(learnerId, { secret: result.secret, rev: result.snapshot?.rev ?? 0, status: 'idle', lastError: null, rescueCode: normalizeRescueCode(code) });
+      // Merging may have added local-only progress; push it back.
+      get().requestSync(learnerId);
+      return { ok: true, plan };
     },
   };
 });
