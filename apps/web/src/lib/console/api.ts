@@ -1,4 +1,4 @@
-import type { PlanItem, ProgressSummary, SpaceKind, SpaceRole } from '@hangul-route/content-schema';
+import type { Entitlement, PlanItem, ProgressSummary, SpaceKind, SpaceRole } from '@hangul-route/content-schema';
 
 /**
  * Console transport for /api/spaces — F-CONSOLE-001. Bearer = the console
@@ -88,8 +88,11 @@ export interface RelinkView {
   status: 'pending' | 'approved' | 'denied' | 'expired';
 }
 
+export type EntitlementView = Entitlement & { subjectName: string | null };
+
 export type ApiError = 'unauthorized' | 'forbidden' | 'not_found' | 'invalid' | 'network' | 'unknown';
-export type ApiResult<T> = { ok: true; data: T } | { ok: false; error: ApiError; status: number };
+/** `code` is the server envelope's error code when it sent one (e.g. stripe_not_configured). */
+export type ApiResult<T> = { ok: true; data: T } | { ok: false; error: ApiError; status: number; code?: string };
 
 export interface ConsoleApiOptions {
   endpoint: string;
@@ -109,13 +112,17 @@ export function createConsoleApi(opts: ConsoleApiOptions) {
   const fetchImpl = opts.fetchImpl ?? globalThis.fetch;
   const base = `${opts.endpoint}/api/spaces`;
   const recovery = `${opts.endpoint}/api/recovery`;
+  const entitlements = `${opts.endpoint}/api/entitlements`;
   const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${opts.token}` };
 
   async function call<T>(url: string, init: RequestInit, okStatus: number[]): Promise<ApiResult<T>> {
     try {
       const res = await fetchImpl(url, { ...init, headers });
-      const body = (await res.json().catch(() => ({}))) as { data?: T };
-      if (!okStatus.includes(res.status) || body.data === undefined) return { ok: false, error: mapError(res.status), status: res.status };
+      const body = (await res.json().catch(() => ({}))) as { data?: T; error?: { code?: unknown } };
+      if (!okStatus.includes(res.status) || body.data === undefined) {
+        const code = typeof body.error?.code === 'string' ? body.error.code : undefined;
+        return { ok: false, error: mapError(res.status), status: res.status, ...(code ? { code } : {}) };
+      }
       return { ok: true, data: body.data };
     } catch {
       return { ok: false, error: 'network', status: -1 };
@@ -151,6 +158,12 @@ export function createConsoleApi(opts: ConsoleApiOptions) {
       call<{ request: RelinkView }>(`${base}/${encodeURIComponent(spaceId)}/relink-requests/${encodeURIComponent(requestId)}/${approve ? 'approve' : 'deny'}`, { method: 'POST' }, [200]).then((r) => (r.ok ? { ok: true as const, data: r.data.request } : r)),
     issueRescueCode: (learnerId: string) =>
       call<{ code: string; issuedAt: string }>(`${recovery}/issue`, { method: 'POST', body: JSON.stringify({ learnerId }) }, [201]),
+    entitlements: () =>
+      call<{ entitlements: EntitlementView[] }>(entitlements, { method: 'GET' }, [200]).then((r) => (r.ok ? { ok: true as const, data: r.data.entitlements } : r)),
+    checkout: (body: { planKey: 'family_premium' | 'teacher_pro' | 'school_license'; interval: 'monthly' | 'yearly'; subjectKind: 'account' | 'space'; subjectId: string }) =>
+      call<{ url: string }>(`${entitlements}/stripe/checkout`, { method: 'POST', body: JSON.stringify(body) }, [200]),
+    portal: (body: { subjectKind: 'account' | 'space'; subjectId: string }) =>
+      call<{ url: string }>(`${entitlements}/stripe/portal`, { method: 'POST', body: JSON.stringify(body) }, [200]),
   };
 }
 

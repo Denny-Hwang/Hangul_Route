@@ -94,7 +94,12 @@ export default function SpacePage(): JSX.Element {
             {empty ? <Muted>{COPY.writeOnBoard}</Muted> : null}
           </section>
 
-          {cap?.warning ? <Notice tone="nudge">{cap.reached ? COPY.capReached : COPY.capWarning(cap.used, cap.total)}</Notice> : null}
+          {cap?.warning ? (
+            <Notice tone="nudge">
+              {cap.reached ? COPY.capReached : COPY.capWarning(cap.used, cap.total)}{' '}
+              <Link href="/teach/billing">Upgrade</Link>
+            </Notice>
+          ) : null}
 
           {rollup && !empty ? (
             <section style={{ ...panelStyle, marginBottom: spacing.lg }} aria-label="This week">
