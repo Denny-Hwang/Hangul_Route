@@ -29,6 +29,7 @@ import { activeProfileSelector, useProfileStore } from '../../store/profile-stor
 import { useProgressStore } from '../../store/progress-store';
 import { usePwaStore } from '../../store/pwa-store';
 import { useUiStore } from '../../store/ui-store';
+import { BackupCard } from '../../components/BackupCard';
 
 export function ProfileScreen(): React.ReactElement {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -51,10 +52,12 @@ export function ProfileScreen(): React.ReactElement {
     parentGateOpenedAt === null ? null : { openedAt: parentGateOpenedAt, profileId: 'family' },
     Date.now(),
   );
-  const openGrownUps = (next: 'ParentDashboard' | 'AddProfile'): void => {
+  const openGrownUps = (next: 'ParentDashboard' | 'AddProfile' | 'BackupRestore'): void => {
     if (parentSessionOpen) {
       if (next === 'AddProfile') {
         navigation.navigate('Onboarding', { screen: 'CreateProfile', params: { firstRun: false } });
+      } else if (next === 'BackupRestore') {
+        navigation.navigate('BackupRestore');
       } else {
         navigation.navigate('ParentDashboard');
       }
@@ -179,6 +182,9 @@ export function ProfileScreen(): React.ReactElement {
           />
         </View>
       </Card>
+
+      <Spacer size="lg" />
+      {active ? <BackupCard profile={active} onRestore={() => openGrownUps('BackupRestore')} /> : null}
 
       {canOfferInstall ? (
         <>

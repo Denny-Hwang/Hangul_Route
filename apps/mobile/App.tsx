@@ -13,6 +13,8 @@ import { flushQueue } from './src/platform/telemetry';
 import { useAccountStore } from './src/store/account-store';
 import { useProfileStore } from './src/store/profile-store';
 import { usePwaStore } from './src/store/pwa-store';
+import { useSyncStore } from './src/store/sync-store';
+import { setProgressPersistListener } from './src/logic/sync/persist-hook';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -32,9 +34,20 @@ export default function App(): React.ReactElement {
     void countVisit();
     // Offline telemetry (F-PWA-001 §3.2): drain on start and when back online.
     void flushQueue();
-    return subscribePwa((event) => {
-      if (event === 'back-online') void flushQueue();
+    // Background progress sync (F-SYNC-002): debounced after every write,
+    // and a full pass on start / back-online.
+    setProgressPersistListener((learnerId) => useSyncStore.getState().requestSync(learnerId));
+    void hydrate().then(() => useSyncStore.getState().syncAll());
+    const off = subscribePwa((event) => {
+      if (event === 'back-online') {
+        void flushQueue();
+        void useSyncStore.getState().syncAll();
+      }
     });
+    return () => {
+      off();
+      setProgressPersistListener(null);
+    };
   }, [hydrate, hydrateAccount, countVisit]);
 
   return (

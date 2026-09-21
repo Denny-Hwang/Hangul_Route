@@ -6,3 +6,4 @@ export * from './schemas/grid';
 export * from './schemas/minigame';
 export * from './schemas/profile';
 export * from './schemas/progress';
+export * from './schemas/sync';

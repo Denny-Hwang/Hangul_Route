@@ -6,6 +6,7 @@ import { notificationsRoutes } from './routes/notifications';
 import { profileRoutes } from './routes/profiles';
 import { progressRoutes } from './routes/progress';
 import { subscriptionRoutes } from './routes/subscriptions';
+import { syncRoutes } from './routes/sync';
 import { telemetryRoutes } from './routes/telemetry';
 
 const app = new Hono();
@@ -30,6 +31,8 @@ app.route('/api/cards', cardRoutes);
 app.route('/api/content', contentRoutes);
 app.route('/api/telemetry', telemetryRoutes);
 app.route('/api/notifications', notificationsRoutes);
+// Schema v2 (F-SYNC-001): learner snapshots — the restore + caregiver summary source.
+app.route('/api/sync', syncRoutes);
 
 app.notFound((c) =>
   c.json({ ok: false, error: { code: 'not_found', message: 'Route not found' } }, 404),

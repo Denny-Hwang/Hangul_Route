@@ -35,6 +35,8 @@ interface Actions {
   setActive: (id: string) => void;
   remove: (id: string) => void;
   setParentPin: (pinHash: string) => void;
+  /** Restore paths add a profile that already exists elsewhere (keeps its id). */
+  adoptProfile: (profile: Profile) => void;
 }
 
 function persist(set: ProfileSet): void {
@@ -76,6 +78,14 @@ export const useProfileStore = create<State & Actions>((set, get) => ({
   remove: (id) => {
     const { profiles, activeId } = get();
     const next = removeProfileReducer({ profiles, activeId }, id);
+    set(next);
+    persist(next);
+  },
+
+  adoptProfile: (profile) => {
+    const { profiles, activeId } = get();
+    if (profiles.some((p) => p.id === profile.id)) return;
+    const next = { profiles: [...profiles, profile], activeId: activeId ?? profile.id };
     set(next);
     persist(next);
   },

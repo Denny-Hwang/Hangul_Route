@@ -42,18 +42,26 @@ export interface Flags {
    * still runs all its in-process logic.
    */
   telemetryNetwork: boolean;
+
+  /**
+   * Background progress sync (F-SYNC-002). ON by default, but it only
+   * sends anything once `EXPO_PUBLIC_API_BASE_URL` is configured.
+   */
+  syncEnabled: boolean;
 }
 
 const launchDefaults: Flags = {
   voiceEchoEnabled: false,
   telemetryEnabled: true,
   telemetryNetwork: true,
+  syncEnabled: true,
 };
 
 export const flags: Flags = {
   voiceEchoEnabled: readBool('EXPO_PUBLIC_VOICE_ECHO_ENABLED', launchDefaults.voiceEchoEnabled),
   telemetryEnabled: readBool('EXPO_PUBLIC_TELEMETRY_ENABLED', launchDefaults.telemetryEnabled),
   telemetryNetwork: readBool('EXPO_PUBLIC_TELEMETRY_NETWORK', launchDefaults.telemetryNetwork),
+  syncEnabled: readBool('EXPO_PUBLIC_SYNC_ENABLED', launchDefaults.syncEnabled),
 };
 
 export const launchDefaultFlags: Readonly<Flags> = launchDefaults;

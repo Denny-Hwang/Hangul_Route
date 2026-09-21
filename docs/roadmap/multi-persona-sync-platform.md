@@ -96,6 +96,18 @@ CREATE TABLE learners (
   last_active_at     TEXT NOT NULL
 );
 
+-- 아이 트래픽의 주체 (F-SYNC-001): learner 에 묶인 기기. 아이는 계정이 없으므로
+-- 등록 시 기기에 랜덤 secret 을 발급하고 서버는 SHA-256 만 보관. Rescue Code / 재연결
+-- 승인은 새 기기에 새 binding 을 만든다.
+CREATE TABLE learner_devices (
+  learner_id    TEXT NOT NULL REFERENCES learners(id) ON DELETE CASCADE,
+  device_id     TEXT NOT NULL,
+  secret_hash   TEXT NOT NULL,
+  created_at    TEXT NOT NULL,
+  last_seen_at  TEXT NOT NULL,
+  PRIMARY KEY (learner_id, device_id)
+);
+
 -- 진도 전체. learner 당 정확히 1행.
 CREATE TABLE snapshots (
   learner_id    TEXT PRIMARY KEY REFERENCES learners(id) ON DELETE CASCADE,
@@ -324,9 +336,10 @@ BP09 §3.5 / F-PAR-001 §3.2 의 대시보드 숫자가 전부 이 객체에서 
 | POST | `/spaces/:id/code` | owner/admin | join code 재발급 |
 | GET | `/spaces/:id/roster` | caregiver/teacher/admin | learners + `summary_json` (payload 없음) |
 | PUT/GET | `/spaces/:id/plans` | caregiver/teacher | 계획 upsert / 목록 |
-| PUT | `/sync/learners/:id` | learner 기기, caregiver | 스냅샷 업로드 (rev 검사) |
-| GET | `/sync/learners/:id/inbox` | learner 기기 | plans + memberships + tier + rev |
-| GET | `/sync/learners/:id/snapshot` | learner 기기, caregiver | 전체 payload (복원) |
+| POST | `/sync/learners` | 기기 (인증 없음) | learner 등록 + 기기 secret 1회 발급 (F-SYNC-001, 구현됨) |
+| PUT | `/sync/learners/:id/snapshot` | learner 기기 (`Authorization: Device <deviceId>:<secret>`), caregiver | 스냅샷 업로드 (rev 검사, 409 시 서버본 반환) — 구현됨 |
+| GET | `/sync/learners/:id/inbox` | learner 기기 | plans + memberships + tier + rev — 구현됨 (plans/memberships 는 S3–S4 까지 빈 배열) |
+| GET | `/sync/learners/:id/snapshot` | learner 기기, caregiver | 전체 payload (복원) — 구현됨 |
 | POST | `/recovery/claim` | 누구나 (코드, rate-limited) | Rescue Code → learner 바인딩 |
 | POST | `/recovery/rotate` | learner 기기 (부모 PIN 뒤) 또는 caregiver account | 코드 재발급 (§5.1 방어 규칙) |
 | POST | `/spaces/:id/relink-requests` | 누구나 (join code + roster 이름) | 재연결 요청 생성 (10분 만료) |
