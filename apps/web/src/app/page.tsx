@@ -111,6 +111,9 @@ export default function HomePage(): JSX.Element {
           <Link href="/parent" style={{ color: colors.text.secondary, fontWeight: typography.weight.semibold }}>
             Dashboard
           </Link>
+          <Link href="/teach" style={{ color: colors.text.secondary, fontWeight: typography.weight.semibold }}>
+            For teachers
+          </Link>
           <a
             href={APP_URL}
             style={{
@@ -690,6 +693,11 @@ export default function HomePage(): JSX.Element {
           <div>
             <Link href="/parent" style={{ color: colors.text.secondary }}>
               Parent dashboard
+            </Link>
+          </div>
+          <div>
+            <Link href="/teach" style={{ color: colors.text.secondary }}>
+              Teacher console
             </Link>
           </div>
         </div>

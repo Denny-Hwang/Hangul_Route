@@ -18,3 +18,8 @@ compatibility_flags = ["nodejs_compat"]
 binding = "DB"
 database_name = "hangul-route"
 database_id = "PLACEHOLDER_RUN_WRANGLER_D1_CREATE"
+
+# CORS (F-CONSOLE-001): comma-separated browser origins allowed on /api/*.
+# Unset = hangulroute.com / www / app + localhost + *.workers.dev previews.
+# [vars]
+# ALLOWED_ORIGINS = "https://hangulroute.com,https://www.hangulroute.com,https://app.hangulroute.com"

@@ -1,4 +1,6 @@
 import { Hono } from 'hono';
+import { cors } from 'hono/cors';
+import { allowedOrigin } from './lib/cors';
 import { authRoutes } from './routes/auth';
 import { cardRoutes } from './routes/cards';
 import { contentRoutes } from './routes/content';
@@ -11,7 +13,18 @@ import { spacesRoutes } from './routes/spaces';
 import { syncRoutes } from './routes/sync';
 import { telemetryRoutes } from './routes/telemetry';
 
-const app = new Hono();
+const app = new Hono<{ Bindings: { ALLOWED_ORIGINS?: string } }>();
+
+// Browser callers (PWA, console) live on other origins — F-CONSOLE-001 §3.1.
+app.use(
+  '/api/*',
+  cors({
+    origin: (origin, c) => allowedOrigin(origin, c.env?.ALLOWED_ORIGINS) ?? '',
+    allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowHeaders: ['Content-Type', 'Authorization'],
+    maxAge: 86400,
+  }),
+);
 
 // Legacy hello-hoya envelope (kept for F-INFRA-001 self-tests).
 app.get('/', (c) =>
