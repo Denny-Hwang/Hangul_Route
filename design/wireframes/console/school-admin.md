@@ -1,6 +1,7 @@
 # Console/School-admin — class tree, teacher invites, seats (wireframe v1)
 
 Spec: `docs/roadmap/multi-persona-sync-platform.md` §1 (P-D), §2 (`parent_space_id`), §3.1 (admin: summary only, invite teachers, manage entitlement), §6 (school paragraph — no individual learner cards, `anonymize_roster` default on), §7 (`school_license` / `school_seat`), §10 S7
+Code (F-SCHOOL-001, 2026-09-21): `apps/web/src/components/console/SchoolAdmin.tsx` rendered by `/teach/space/[id]` for school spaces — licence + seats (near / at limit notes), teacher invite code (copy, regenerate), this-week aggregate, class rows (teacher, students, last active, plan; Assign / Change teacher from the school's teachers; Open roster), + New class, empty state. Server: `GET /spaces/:id/school`, `POST /spaces/:id/members`, seat cap on join. Not yet: SSO, admin consent record, per-class licence.
 Audience: **school admin** (한글학교 organizer)
 
 ## Scenario (Given-When-Then)

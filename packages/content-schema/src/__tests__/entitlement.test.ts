@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CheckoutCreateSchema, EntitlementApplySchema, EntitlementSchema, ReceiptVerifySchema, SyncInboxSchema, TIER_GRACE_MS } from '../index';
+import { CheckoutCreateSchema, EntitlementApplySchema, EntitlementSchema, MemberAddSchema, ReceiptVerifySchema, SCHOOL_LICENSE_STUDENTS, SCHOOL_LICENSE_TEACHERS, SyncInboxSchema, TIER_GRACE_MS } from '../index';
 
 describe('entitlement schemas (F-ENT-001 §3.1)', () => {
   const row = { id: 'ent:abc', subjectKind: 'space', subjectId: 'space:fam', planKey: 'family_premium', status: 'active', provider: 'stripe', providerRef: 'sub_1', customerRef: 'cus_1', seats: null, expiresAt: null, updatedAt: 't' };
@@ -22,5 +22,8 @@ describe('entitlement schemas (F-ENT-001 §3.1)', () => {
     const rich = SyncInboxSchema.parse({ rev: 1, plans: [], memberships: [], tier: 'premium', tierSource: { kind: 'class', spaceId: 'space:c', name: 'A' }, tierValidUntil: 'u', serverTime: 't' });
     expect(rich.tierSource?.name).toBe('A');
     expect(TIER_GRACE_MS).toBe(604_800_000);
+    expect([SCHOOL_LICENSE_STUDENTS, SCHOOL_LICENSE_TEACHERS]).toEqual([300, 10]);
+    expect(MemberAddSchema.parse({ accountId: 't2', role: 'teacher' }).role).toBe('teacher');
+    expect(MemberAddSchema.safeParse({ accountId: 't2', role: 'admin' }).success).toBe(false);
   });
 });

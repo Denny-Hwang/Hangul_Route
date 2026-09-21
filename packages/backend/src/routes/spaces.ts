@@ -14,7 +14,7 @@ import { fail, ok } from '../envelope';
 import { accountActor, requireAccount, spaceContext } from '../lib/access';
 import { can, type Action } from '../lib/can';
 import { authorizeDevice, parseDeviceHeader } from '../lib/device-auth';
-import { classCap } from '../lib/entitlement';
+import { classCap, schoolIsFull } from '../lib/entitlement';
 import { generateJoinCode, isJoinCodeLive, joinCodeExpiry } from '../lib/join-code';
 import { clientKey, createRateLimiter } from '../lib/rate-limit';
 import { id, store, type Account } from '../store';
@@ -176,7 +176,7 @@ spacesRoutes.post('/lookup', async (c) => {
       : [];
   return ok(c, {
     space: { id: space.id, kind: space.kind, name: space.name },
-    full: space.kind === 'class' && studentsIn(space.id) >= classCap(space, new Date()),
+    full: space.kind === 'class' && (studentsIn(space.id) >= classCap(space, new Date()) || schoolIsFull(space, new Date())),
     roster,
   });
 });
@@ -268,6 +268,9 @@ spacesRoutes.post('/:id/join', async (c) => {
     }
     if (space.kind === 'class' && studentsIn(space.id) >= classCap(space, now)) {
       return fail(c, 'cap_class', 'This class is full', 409);
+    }
+    if (space.kind === 'class' && schoolIsFull(space, now, learnerId)) {
+      return fail(c, 'cap_school', 'This school has used all its seats', 409);
     }
     const membership: Membership = { spaceId: space.id, memberKind: 'learner', memberId: learnerId, role: 'student', joinedAt: now.toISOString() };
     store.addMembership(membership);

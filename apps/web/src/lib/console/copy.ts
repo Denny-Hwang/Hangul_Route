@@ -42,6 +42,12 @@ export const COPY = {
   billingSuccess: 'Thank you — the plan is active. Learners see it on their next sync.',
   billingPastDue: "A payment didn't go through. Update your card in Manage subscription; learners keep premium for a week.",
   pricePlaceholder: 'price coming soon',
+  schoolInviteHint: 'Teachers sign in, enter this code, then create their class — or you create it and assign them.',
+  schoolEmpty: 'Invite a teacher with the code, or create a class and assign one.',
+  schoolNoLicence: 'No licence yet — each class keeps the free cap of 20 students.',
+  schoolNearLimit: 'Close to the licence limit — see billing before the next class fills up.',
+  schoolAtLimit: 'At the licence limit — new students will be asked to check with their teacher.',
+  schoolLicenceLapsed: 'The licence needs attention. Classes stay readable; students keep Stage 1 either way.',
 } as const;
 
 export function allCopyStrings(): string[] {

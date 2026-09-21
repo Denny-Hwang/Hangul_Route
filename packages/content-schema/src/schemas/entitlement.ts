@@ -74,6 +74,17 @@ export type TierSource = z.infer<typeof TierSourceSchema>;
 export const TierSchema = z.enum(['free', 'premium']);
 export type Tier = z.infer<typeof TierSchema>;
 
+/** School licence limits (roadmap §7). */
+export const SCHOOL_LICENSE_STUDENTS = 300;
+export const SCHOOL_LICENSE_TEACHERS = 10;
+
+/** POST /api/spaces/:id/members body — F-SCHOOL-001 §3.2. */
+export const MemberAddSchema = z.object({
+  accountId: z.string().min(1),
+  role: z.literal('teacher'),
+});
+export type MemberAdd = z.infer<typeof MemberAddSchema>;
+
 /** Offline grace for a cached premium tier (roadmap §3.2). */
 export const TIER_GRACE_MS = 7 * 24 * 60 * 60 * 1000;
 export const PAST_DUE_GRACE_MS = 7 * 24 * 60 * 60 * 1000;

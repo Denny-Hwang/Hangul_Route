@@ -124,3 +124,18 @@ describe('console api — entitlements (F-ENT-001)', () => {
     expect(fetchImpl.mock.calls[1]?.[0]).toBe('https://api.example.com/api/entitlements/stripe/checkout');
   });
 });
+
+describe('console api — school (F-SCHOOL-001)', () => {
+  it('fetches the school view and assigns teachers', async () => {
+    const view = { school: space, invite: { joinCode: 'R4WQ2P', joinCodeExpiresAt: 't' }, license: null, limits: { licensed: false, students: null, teachers: null }, usage: { students: 0, teachers: 0 }, thisWeek: { students: 0, practiced: 0, classes: 0, classesWithPlan: 0 }, classes: [] };
+    const fetchImpl = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(json(200, { data: view }))
+      .mockResolvedValueOnce(json(201, { data: { alreadyMember: false } }))
+      .mockResolvedValueOnce(json(422, { error: { code: 'not_in_school' } }));
+    const api = createConsoleApi({ endpoint: 'https://api.example.com', token: 't', fetchImpl });
+    expect(await api.school('space:s')).toEqual({ ok: true, data: view });
+    expect(await api.addMember('space:c', 'ms-park')).toEqual({ ok: true, data: { alreadyMember: false } });
+    expect(await api.addMember('space:c', 'x')).toEqual({ ok: false, error: 'invalid', status: 422, code: 'not_in_school' });
+    expect(fetchImpl.mock.calls[1]?.[0]).toBe('https://api.example.com/api/spaces/space%3Ac/members');
+  });
+});
