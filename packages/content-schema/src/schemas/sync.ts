@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { ProfileSchema } from './profile';
 import { ProgressSnapshotSchema } from './progress';
+import { TierSourceSchema } from './entitlement';
 import { InboxPlanSchema } from './plan';
 import { LearnerMembershipSchema } from './space';
 
@@ -63,6 +64,10 @@ export const SyncInboxSchema = z.object({
   plans: z.array(InboxPlanSchema),
   memberships: z.array(LearnerMembershipSchema),
   tier: z.enum(['free', 'premium']),
+  /** Which space grants premium (F-ENT-001 §3.2); null when free. */
+  tierSource: TierSourceSchema.nullable().default(null),
+  /** Cached premium is honoured until this instant when offline (7-day grace). */
+  tierValidUntil: z.string().nullable().default(null),
   serverTime: z.string(),
 });
 export type SyncInbox = z.infer<typeof SyncInboxSchema>;

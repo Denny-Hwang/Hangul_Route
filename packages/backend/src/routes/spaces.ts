@@ -1,5 +1,4 @@
 import {
-  FREE_CLASS_STUDENT_CAP,
   LEARNER_CLASS_CAP,
   SpaceCreateSchema,
   SpaceJoinSchema,
@@ -15,6 +14,7 @@ import { fail, ok } from '../envelope';
 import { accountActor, requireAccount, spaceContext } from '../lib/access';
 import { can, type Action } from '../lib/can';
 import { authorizeDevice, parseDeviceHeader } from '../lib/device-auth';
+import { classCap } from '../lib/entitlement';
 import { generateJoinCode, isJoinCodeLive, joinCodeExpiry } from '../lib/join-code';
 import { clientKey, createRateLimiter } from '../lib/rate-limit';
 import { id, store, type Account } from '../store';
@@ -176,7 +176,7 @@ spacesRoutes.post('/lookup', async (c) => {
       : [];
   return ok(c, {
     space: { id: space.id, kind: space.kind, name: space.name },
-    full: space.kind === 'class' && studentsIn(space.id) >= FREE_CLASS_STUDENT_CAP,
+    full: space.kind === 'class' && studentsIn(space.id) >= classCap(space, new Date()),
     roster,
   });
 });
@@ -266,7 +266,7 @@ spacesRoutes.post('/:id/join', async (c) => {
     if (space.kind === 'class' && activeClassesOf(learnerId) >= LEARNER_CLASS_CAP) {
       return fail(c, 'cap_learner', `A learner can be in at most ${LEARNER_CLASS_CAP} classes`, 409);
     }
-    if (space.kind === 'class' && studentsIn(space.id) >= FREE_CLASS_STUDENT_CAP) {
+    if (space.kind === 'class' && studentsIn(space.id) >= classCap(space, now)) {
       return fail(c, 'cap_class', 'This class is full', 409);
     }
     const membership: Membership = { spaceId: space.id, memberKind: 'learner', memberId: learnerId, role: 'student', joinedAt: now.toISOString() };

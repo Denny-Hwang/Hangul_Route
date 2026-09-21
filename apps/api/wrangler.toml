@@ -23,3 +23,16 @@ database_id = "PLACEHOLDER_RUN_WRANGLER_D1_CREATE"
 # Unset = hangulroute.com / www / app + localhost + *.workers.dev previews.
 # [vars]
 # ALLOWED_ORIGINS = "https://hangulroute.com,https://www.hangulroute.com,https://app.hangulroute.com"
+
+# Stripe (F-ENT-001): web checkout for family / teacher / school plans.
+#   wrangler secret put STRIPE_SECRET_KEY
+#   wrangler secret put STRIPE_WEBHOOK_SECRET   # from the webhook endpoint (POST /api/entitlements/stripe/webhook)
+# Price ids as vars (one per plan and interval); unset = checkout answers 503 stripe_not_configured.
+# [vars]
+# STRIPE_PRICE_FAMILY_PREMIUM_MONTHLY = "price_..."
+# STRIPE_PRICE_FAMILY_PREMIUM_YEARLY  = "price_..."
+# STRIPE_PRICE_TEACHER_PRO_MONTHLY    = "price_..."
+# STRIPE_PRICE_TEACHER_PRO_YEARLY     = "price_..."
+# STRIPE_PRICE_SCHOOL_LICENSE_MONTHLY = "price_..."
+# STRIPE_PRICE_SCHOOL_LICENSE_YEARLY  = "price_..."
+# CONSOLE_URL = "https://hangulroute.com"   # checkout success / cancel return

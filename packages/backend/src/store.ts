@@ -1,4 +1,4 @@
-import type { MemberKind, Membership, Plan, RelinkRequest, Space } from '@hangul-route/content-schema';
+import type { Entitlement, EntitlementApply, MemberKind, Membership, Plan, RelinkRequest, Space } from '@hangul-route/content-schema';
 /**
  * In-memory store. Replaced by D1 + R2 bindings when wrangler.toml binds them.
  * Schema mirrors `db/schema.sql`.
@@ -109,6 +109,8 @@ class Store {
   plans = new Map<string, Plan>(); // F-PLAN-001
   /** Re-link requests (F-TCH-001 §10.1); `secret` is held until the device picks it up once. */
   relinkRequests = new Map<string, RelinkRequest & { secret: string | null }>();
+  /** Entitlements (F-ENT-001), unique per subject + plan. */
+  entitlements = new Map<string, Entitlement>();
 
   membership(spaceId: string, kind: MemberKind, memberId: string): Membership | undefined {
     return this.memberships.get(membershipKey(spaceId, kind, memberId));
@@ -132,6 +134,31 @@ class Store {
 
   spaceByCode(code: string): Space | undefined {
     return [...this.spaces.values()].find((s) => s.joinCode === code);
+  }
+
+  entitlementsFor(subjectKind: Entitlement['subjectKind'], subjectId: string): Entitlement[] {
+    return [...this.entitlements.values()].filter((e) => e.subjectKind === subjectKind && e.subjectId === subjectId);
+  }
+
+  /** The one write path for receipts, Stripe and contracts (F-ENT-001 §3.1). */
+  applyEntitlement(input: EntitlementApply, now: Date): Entitlement {
+    const k = `${input.subjectKind}|${input.subjectId}|${input.planKey}`;
+    const existing = this.entitlements.get(k);
+    const next: Entitlement = {
+      id: existing?.id ?? id('ent'),
+      subjectKind: input.subjectKind,
+      subjectId: input.subjectId,
+      planKey: input.planKey,
+      status: input.status,
+      provider: input.provider,
+      providerRef: input.providerRef ?? existing?.providerRef ?? null,
+      customerRef: input.customerRef ?? existing?.customerRef ?? null,
+      seats: input.seats === undefined ? (existing?.seats ?? null) : input.seats,
+      expiresAt: input.expiresAt === undefined ? (existing?.expiresAt ?? null) : input.expiresAt,
+      updatedAt: now.toISOString(),
+    };
+    this.entitlements.set(k, next);
+    return next;
   }
 
   relinksOf(spaceId: string): Array<RelinkRequest & { secret: string | null }> {
@@ -178,6 +205,7 @@ class Store {
     this.memberships.clear();
     this.plans.clear();
     this.relinkRequests.clear();
+    this.entitlements.clear();
   }
 }
 

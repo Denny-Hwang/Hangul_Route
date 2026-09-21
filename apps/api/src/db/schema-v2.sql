@@ -102,3 +102,19 @@ CREATE TABLE IF NOT EXISTS relink_requests (
   secret        TEXT                -- one-time pickup by the requesting device; NULL after
 );
 CREATE INDEX IF NOT EXISTS idx_relink_space_status ON relink_requests(space_id, status);
+
+-- F-ENT-001: who paid for what. Learners inherit premium through memberships (roadmap §3.2).
+CREATE TABLE IF NOT EXISTS entitlements (
+  id            TEXT PRIMARY KEY,   -- ent:xxxx
+  subject_kind  TEXT NOT NULL CHECK (subject_kind IN ('account', 'space')),
+  subject_id    TEXT NOT NULL,
+  plan_key      TEXT NOT NULL CHECK (plan_key IN ('family_premium', 'teacher_pro', 'school_license', 'school_seat')),
+  status        TEXT NOT NULL CHECK (status IN ('trial', 'active', 'past_due', 'expired', 'cancelled')),
+  provider      TEXT NOT NULL CHECK (provider IN ('apple', 'google', 'stripe', 'manual')),
+  provider_ref  TEXT,               -- receipt / Stripe subscription / contract id
+  customer_ref  TEXT,               -- Stripe customer (billing portal)
+  seats         INTEGER,            -- school_seat; NULL = unlimited
+  expires_at    TEXT,
+  updated_at    TEXT NOT NULL,
+  UNIQUE (subject_kind, subject_id, plan_key)
+);

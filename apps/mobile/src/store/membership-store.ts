@@ -7,6 +7,7 @@ import { readJson, writeJson } from '../platform/storage';
 import type { DeviceCredentials, RosterName, SyncApiClient } from '../platform/sync-api';
 import { track } from '../platform/telemetry';
 import { usePlanStore } from './plan-store';
+import { useTierStore } from './tier-store';
 import { onSynced, syncApi, useSyncStore } from './sync-store';
 
 /**
@@ -80,6 +81,8 @@ export const useMembershipStore = create<State & Actions>((set, get) => {
       const result = await client.getInbox(learnerId, creds);
       if (result.status !== 'ok') return null;
       const rows = put(learnerId, result.inbox.memberships);
+      // The server decides premium from memberships (F-ENT-001 §3.4); cache it with its grace window.
+      useTierStore.getState().applyInbox(learnerId, result.inbox);
       // Plans ride the same inbox (F-PLAN-001 §3.3): derive homework, then push the change back.
       const applied = await usePlanStore.getState().applyPlans(learnerId, result.inbox.plans);
       if (applied.changed) useSyncStore.getState().requestSync(learnerId);

@@ -18,13 +18,13 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React from 'react';
 import { Pressable, View } from 'react-native';
-import { entitlementTier } from '../../logic/entitlement';
+import { effectiveTier } from '../../store/tier-store';
 import { isParentSessionValid } from '../../logic/profiles/session';
 import type { RootStackParamList } from '../../navigation/types';
 import { installGuideVariant } from '../../logic/pwa/install-guide';
 import { setMuted } from '../../platform/audio';
 import { installEnv } from '../../platform/pwa';
-import { useAccountStore } from '../../store/account-store';
+import { useTierStore } from '../../store/tier-store';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { usePwaStore } from '../../store/pwa-store';
@@ -38,8 +38,10 @@ export function ProfileScreen(): React.ReactElement {
   const active = useProfileStore(activeProfileSelector);
   const setActive = useProfileStore((s) => s.setActive);
   const snap = useProgressStore((s) => (active ? s.byProfile[active.id] : undefined));
-  const subscription = useAccountStore((s) => s.subscription);
-  const tier = entitlementTier(subscription, new Date());
+  const cachedTier = useTierStore((s) => (active ? s.byLearner[active.id] : undefined));
+  const entitled = effectiveTier(active?.id ?? '', new Date());
+  const tier = entitled.tier;
+  void cachedTier; // subscribe so the card re-renders when the inbox updates the tier
   const soundOn = useUiStore((s) => s.soundOn);
   const toggleSound = useUiStore((s) => s.toggleSound);
   const parentGateOpenedAt = useUiStore((s) => s.parentGateOpenedAt);
@@ -174,7 +176,9 @@ export function ProfileScreen(): React.ReactElement {
             <Body weight="semibold">{tier === 'premium' ? 'Premium' : 'Free plan'}</Body>
             <Caption tone="muted">
               {tier === 'premium'
-                ? 'The full journey is unlocked.'
+                ? entitled.source
+                  ? `The full journey is unlocked — covered by ${entitled.source.name}.`
+                  : 'The full journey is unlocked.'
                 : 'Stage 1 is free. More stages are on the way.'}
             </Caption>
           </View>

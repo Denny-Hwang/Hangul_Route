@@ -1,11 +1,11 @@
 import type { InboxPlan } from '@hangul-route/content-schema';
 import { create } from 'zustand';
 import { episodesAll, questsAll, stages } from '../content';
-import { entitlementTier, isStageEntitled } from '../logic/entitlement';
+import { isStageEntitled } from '../logic/entitlement';
 import { dayKey } from '../logic/homework/mission-builder';
 import { deriveAssignments } from '../logic/homework/plan-derivation';
 import { readJson, writeJson } from '../platform/storage';
-import { useAccountStore } from './account-store';
+import { effectiveTier } from './tier-store';
 import { useProfileStore } from './profile-store';
 import { useProgressStore } from './progress-store';
 
@@ -31,8 +31,8 @@ interface Actions {
 
 const key = (learnerId: string): string => `plans:${learnerId}`;
 
-export function unlockedStagesFor(now: Date): string[] {
-  const tier = entitlementTier(useAccountStore.getState().subscription, now);
+export function unlockedStagesFor(now: Date, learnerId: string): string[] {
+  const { tier } = effectiveTier(learnerId, now);
   return stages.filter((s) => isStageEntitled(s.key, tier)).map((s) => s.key);
 }
 
@@ -62,7 +62,7 @@ export const usePlanStore = create<State & Actions>((set, get) => ({
       profileId: learnerId,
       quests: questsAll,
       episodes: episodesAll,
-      unlockedStages: unlockedStagesFor(now),
+      unlockedStages: unlockedStagesFor(now, learnerId),
       today: dayKey(now.toISOString()),
       learnerName: profile?.displayName ?? 'Your learner',
     });

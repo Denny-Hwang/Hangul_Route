@@ -9,13 +9,14 @@ import { profileRoutes } from './routes/profiles';
 import { progressRoutes } from './routes/progress';
 import { subscriptionRoutes } from './routes/subscriptions';
 import { recoveryRoutes } from './routes/recovery';
+import { entitlementRoutes } from './routes/entitlements';
 import { relinkRoutes } from './routes/relink';
 import { plansRoutes } from './routes/plans';
 import { spacesRoutes } from './routes/spaces';
 import { syncRoutes } from './routes/sync';
 import { telemetryRoutes } from './routes/telemetry';
 
-const app = new Hono<{ Bindings: { ALLOWED_ORIGINS?: string } }>();
+const app = new Hono<{ Bindings: { ALLOWED_ORIGINS?: string; STRIPE_SECRET_KEY?: string; STRIPE_WEBHOOK_SECRET?: string } }>();
 
 // Browser callers (PWA, console) live on other origins — F-CONSOLE-001 §3.1.
 app.use(
@@ -58,6 +59,8 @@ app.route('/api/spaces', spacesRoutes);
 app.route('/api/spaces', plansRoutes);
 // Re-link approval (F-TCH-001 §10.1): a class student's new device, approved by the teacher.
 app.route('/api/spaces', relinkRoutes);
+// Entitlements (F-ENT-001): one table for receipts, Stripe and contracts; learners inherit through memberships.
+app.route('/api/entitlements', entitlementRoutes);
 
 app.notFound((c) =>
   c.json({ ok: false, error: { code: 'not_found', message: 'Route not found' } }, 404),
