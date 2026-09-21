@@ -12,6 +12,7 @@ import { PinEntryScreen } from '../screens/parent/PinEntryScreen';
 import { RestoreScreen } from '../screens/sync/RestoreScreen';
 import { SaveProgressScreen } from '../screens/sync/SaveProgressScreen';
 import { JoinSpaceScreen } from '../screens/sync/JoinSpaceScreen';
+import { PaywallScreen } from '../screens/paywall/PaywallScreen';
 import { ProfileScreen } from '../screens/profile/ProfileScreen';
 import { HomeworkScreen } from '../screens/homework/HomeworkScreen';
 import { QuestPlayerScreen } from '../screens/quest/QuestPlayerScreen';
@@ -52,6 +53,7 @@ export function RootNavigator(): React.ReactElement {
       <Stack.Screen name="Restore" component={RestoreScreen} />
       <Stack.Screen name="SaveProgress" component={SaveProgressScreen} />
       <Stack.Screen name="JoinSpace" component={JoinSpaceScreen} />
+      <Stack.Screen name="Paywall" component={PaywallScreen} />
     </Stack.Navigator>
   );
 }

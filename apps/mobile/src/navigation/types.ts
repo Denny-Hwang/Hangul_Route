@@ -8,13 +8,15 @@ export type RootStackParamList = {
   Results: { questId: string; episodeId: string; stars: 0 | 1 | 2 | 3; correct: number; total: number };
   CardDetail: { cardId: string };
   /** Grown-up gate (PIN). `AddProfile` continues into Onboarding/CreateProfile. */
-  PinEntry: { next: 'ParentDashboard' | 'AddProfile' | 'Restore' | 'SaveProgress' };
+  PinEntry: { next: 'ParentDashboard' | 'AddProfile' | 'Restore' | 'SaveProgress' | 'Paywall' };
   /** sync/restore — rescue code / sign-in / file (F-RESTORE-001, F-SYNC-002). */
   Restore: { from: 'welcome' | 'settings' } | undefined;
   /** sync/save-progress — the Rescue Code, PIN-gated (F-RESTORE-001 §3.3). */
   SaveProgress: undefined;
   /** sync/join-space — enter a class or family code (F-SPACE-001 §3.5). Not PIN-gated. */
   JoinSpace: undefined;
+  /** paywall/upgrade — PIN-gated premium explainer (F-ENT-001 §3.5). */
+  Paywall: { from: 'journey' | 'settings' } | undefined;
   ParentDashboard: undefined;
   Profile: undefined;
   Homework: undefined;

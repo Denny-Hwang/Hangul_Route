@@ -18,15 +18,20 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { episodeFor, episodesAll, stages, themes } from '../../content';
+import { isStageEntitled } from '../../logic/entitlement';
 import { isEpisodeComplete, stageAvailability, stagePillLabel } from '../../logic/journey';
 import type { RootStackParamList } from '../../navigation/types';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
+import { effectiveTier, useTierStore } from '../../store/tier-store';
 
 export function JourneyScreen(): React.ReactElement {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const profile = useProfileStore(activeProfileSelector);
   const snap = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
+  const cachedTier = useTierStore((s) => (profile ? s.byLearner[profile.id] : undefined));
+  const tier = effectiveTier(profile?.id ?? '', new Date()).tier;
+  void cachedTier; // re-render when the inbox changes the tier
 
   return (
     <Screen tone="canvas" scrollable>
@@ -48,9 +53,16 @@ export function JourneyScreen(): React.ReactElement {
       {stages.map((stage) => {
         const availability = stageAvailability(stage.key, episodesAll);
         const isLocked = availability === 'soon';
+        const entitledStage = isStageEntitled(stage.key, tier);
         return (
           <View key={stage.key} style={{ marginBottom: spacing.lg }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.sm }}>
+            <Pressable
+              disabled={entitledStage}
+              onPress={() => navigation.navigate('PinEntry', { next: 'Paywall' })}
+              accessibilityRole={entitledStage ? undefined : 'button'}
+              accessibilityLabel={entitledStage ? undefined : `${stage.titleEn}: ask a grown-up to unlock`}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.sm }}
+            >
               <View
                 style={{
                   width: 32,
@@ -73,10 +85,10 @@ export function JourneyScreen(): React.ReactElement {
               </View>
               <Pill
                 tone={availability === 'open' ? 'success' : availability === 'taste' ? 'primary' : 'neutral'}
-                label={stagePillLabel(availability)}
+                label={entitledStage ? stagePillLabel(availability) : 'Premium'}
                 size="sm"
               />
-            </View>
+            </Pressable>
 
             <View style={{ flexDirection: 'row', gap: spacing.xs }}>
               {themes.map((theme) => (

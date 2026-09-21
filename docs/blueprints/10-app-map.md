@@ -72,7 +72,7 @@ Hangul Route
 │   ├─ A10. Settings / Profile page (plan status · mute · switch · grown-ups) [S]
 │   ├─ A11. Save & Restore  (Rescue Code · sign-in · file) [S] F-SYNC-002 · F-RESTORE-001 (sign-in 경로는 [P] F-AUTH-002)
 │   ├─ A12. Join a space (class / family code)          [S] F-SPACE-001 §3.5 (PIN 없음, §7 #21) · "I was already in this class" 재연결 요청 [S] F-TCH-001 §10.1
-│   ├─ A13. Paywall / Upgrade (parent-gated)            [R] F-SUB-001, F-IAP-001
+│   ├─ A13. Paywall / Upgrade (parent-gated)            [S] F-ENT-001 §3.5 (covered / premium / free 상태; 구매는 웹 콘솔로 — 스토어 IAP 는 F-IAP-002)
 │   ├─ A14. PWA shell (offline-ready · update banners · offline chip · install guide) [S] roadmap P2 · F-PWA-001
 │   └─ A15. Projection mode (교사용 교실 표시)            [D] F-TCH-001 §3.4
 │
@@ -158,7 +158,7 @@ Hangul Route
 | `sync/restore` | Restore | 코드 / 로그인 (P, F-AUTH-002) / 파일로 복원 (학급 재연결은 `sync/join-space` 쪽) | S | F-RESTORE-001 §3.4 · F-SYNC-002 §3.3 | ✓ |
 | `sync/join-space` | JoinSpace | 학급·가정 코드 입력 → 이름 확인 → 완료 (PIN 없음) | S | F-SPACE-001 §3.5 | ✓ |
 | `sync/merge-notice` | (Restore 의 결과 카드) | "옛 카드를 찾았어요" 병합 안내 | S | F-SYNC-002 | ✓ |
-| `paywall/upgrade` | (신규, parent-gated) | Stage 2+ 잠금 해제 · "covered by <class>" 상태 | R (tier API S) | F-ENT-001 §3.5 · F-SUB-001 | ✓ |
+| `paywall/upgrade` | Paywall (PIN 뒤) | Stage 2+ 잠금 해제 · "covered by <class>" 상태 · 웹 콘솔로 안내 (가격은 placeholder) | S | F-ENT-001 §3.5 | ✓ |
 | `pwa/install-guide` | InstallGuide sheet (web only) | 홈 화면 추가 안내 (iOS/Android/PC), 3회째 열 때 · 5회 스누즈 | S | F-PWA-001 | ✓ |
 | `pwa/system-banners` | (신규, web only) | 오프라인 준비됨 · 업데이트 · 오프라인 상태 | P | roadmap P2 | NEW |
 | `classroom/projection-mode` | (신규, teacher role) | 교실 TV 표시 토글 | D | F-TCH-001 §3.4 | NEW |

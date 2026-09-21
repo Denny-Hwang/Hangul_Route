@@ -1,7 +1,7 @@
 # Paywall/Upgrade — parent-gated premium (wireframe v1)
 
 Spec: `docs/specs/F-SUB-001-subscription-entitlement.md` (tier + Stage 1 free) · `docs/specs/F-IAP-001-receipt-verification.md` (activation) · `docs/roadmap/multi-persona-sync-platform.md` §3.2, §7 (who pays, platform rules)
-Code (F-ENT-001 §3.4, 2026-09-21 — tier only): `apps/mobile/src/store/tier-store.ts` caches the inbox tier (`covered by <space>` source, 7-day offline grace) and `plan-store` unlocks stages from it; the settings plan card already says "covered by <class>". The screen itself is PR 2.
+Code (F-ENT-001 §3.4, 2026-09-21 — tier only): `apps/mobile/src/store/tier-store.ts` caches the inbox tier (`covered by <space>` source, 7-day offline grace) and `plan-store` unlocks stages from it; the settings plan card already says "covered by <class>". Screen `apps/mobile/src/screens/paywall/PaywallScreen.tsx` (route `Paywall`, via `profiles/pin-entry`): covered (no prices, Back to journey) · already premium (Manage plan on the web) · free (Stage 1 free first, 4 bullets, monthly/yearly cards with placeholder prices, one button → web console billing; native says the store purchase arrives with F-IAP-002). Entries: settings plan card "Unlock the journey", journey stage rows that are not entitled (pill reads Premium). Not yet: store IAP sheet, restore purchases, grace copy.
 Audience: **parent** — reached only after `profiles/pin-entry`; a child can never land here without an adult
 
 ## Scenario (Given-When-Then)
