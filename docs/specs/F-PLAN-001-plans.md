@@ -3,7 +3,7 @@
 **Status**: `ready`
 **Scope**: `packages/content-schema` · `packages/backend` · `apps/api` (D1) · `apps/mobile` (derivation, summary, Home) · `apps/web` (plan builder — second PR)
 **Owner**: solo dev
-**Rollout**: Roadmap S4. PR 1 = server + device (§3.1–§3.4); PR 2 = console builder + readout (§3.5)
+**Rollout**: Roadmap S4 — shipped 2026-09-21 (PR 1 server + device §3.1–§3.4; PR 2 console builder + readout §3.5)
 
 Parent: F-SPACE-001 (spaces, `can()`), F-HW-001 §3.4 (assignment merge, gating ruling), F-TCH-001 §3.3 (class plan semantics), roadmap §2 `plans`, §3.3 `planProgress`, §4 (inbox) · wireframes `console/plan-builder.md`, `homework/list.md`, `home/todays-mission.md`
 
@@ -50,7 +50,8 @@ A teacher lays out next week once; thirty children each get their own homework w
 
 ### 3.5 Console (PR 2) — `console/plan-builder`
 
-- `/teach/space/:id/plan`: catalog (Stage 1 episodes → quests, from the bundled catalog mirror), ordered items with dates, **Spread dates** (`spreadDates(start, cadence, n)`, never two on one day), everyone / only these learners, Publish / Save draft, published readout from roster summaries (`done / total`, `+n not ready`, freshness; no ranking). Roster's "Plan this week" becomes live; each student card shows the latest plan's `done / total`.
+- `/teach/space/:id/plan`: catalog (Stage 1 episodes → quests, from `apps/web/src/data/stage1-catalog.ts`, a hand-kept mirror), ordered items (↑ ↓ ×, date, note), **Spread dates** (`spreadDates(start, perWeek, n)`, never two on one day; colliding manual dates slide on save with a notice), everyone / only these learners, Publish / Save draft / Archive (confirm), published readout from roster summaries (`done / total`, `n not ready yet`, "waiting for the next sync", last active; roster order, no ranking). Roster's "Plan this week" is live and each student card shows the latest published plan's line.
+- Deviations from the wireframe, on purpose: no drag handle (buttons), no client-side gating warning (every catalog item is Stage 1, which every learner has; `notReady` in the readout covers older apps and future premium stages), no "send to ready learners only", no daily-test / story items yet.
 
 ## 4. Out of scope
 
