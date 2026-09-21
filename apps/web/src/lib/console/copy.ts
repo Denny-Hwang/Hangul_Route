@@ -27,6 +27,15 @@ export const COPY = {
   readoutHint: 'Most recent activity first — not a ranking. "Not ready yet" means the learner has not unlocked that item.',
   archivePlanConfirm: 'Archive this plan? Learners keep what they finished; unfinished items disappear from their list.',
   noPlanYet: 'No plan yet. Pick a few quests, spread the dates, and publish before class.',
+  relinkApproveHint: 'Approve only if this learner is with you or you expect this device.',
+  relinkNothing: 'Nothing waiting. Requests appear here for 10 minutes after a learner asks.',
+  relinkAnotherWay: 'Another way: issue a new rescue code and read it to the learner. The old code stops working.',
+  rescueIssued: 'Read this to the learner or their grown-up now — it is shown once.',
+  archiveKeeps: 'Keeps everything, stops new joins. You can unarchive later.',
+  deleteLearnerWarn: 'Permanent. Removes this learner everywhere: devices, progress, memberships.',
+  deleteAskParent: 'Only a parent can delete a learner in this class (consent mode: parent).',
+  anonymizeHint: 'Show initials instead of names on the roster and re-link list.',
+  consentHint: 'Who consented for the children in this class. School mode lets you delete learner data yourself.',
 } as const;
 
 export function allCopyStrings(): string[] {

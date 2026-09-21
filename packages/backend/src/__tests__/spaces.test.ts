@@ -333,3 +333,23 @@ describe('settings, archive, learner data (F-TCH-001 §10.3)', () => {
     expect((await call('DELETE', `/api/spaces/${fam.space.id}/learners/${minho.learnerId}/data`, bearer('mom'))).body.data).toEqual({ deleted: true });
   });
 });
+
+describe('members listing (F-TCH-001 §10.3)', () => {
+  it('lists accounts and learners with roles and names for managers only', async () => {
+    const fam = await createSpace('mom', 'family', 'Kim family', { displayName: 'Mom' });
+    const famCode = await issueCode('mom', fam.space.id);
+    await joinAs(fam.space.id, bearer('dad'), { code: famCode });
+    const suni = await registerLearner('device-suni0001', 'Suni');
+    await joinAs(fam.space.id, suni.auth, { code: famCode, learnerId: suni.learnerId });
+    const res = await get(`/api/spaces/${fam.space.id}/members`, bearer('mom'));
+    expect(res.status).toBe(200);
+    const members = (res.body.data as { members: Array<{ memberKind: string; memberId: string; role: string; name: string; isOwner: boolean }> }).members;
+    expect(members).toEqual(expect.arrayContaining([
+      expect.objectContaining({ memberKind: 'account', memberId: 'mom', role: 'owner', name: 'Mom', isOwner: true }),
+      expect.objectContaining({ memberKind: 'account', memberId: 'dad', role: 'caregiver', name: 'dad', isOwner: false }),
+      expect.objectContaining({ memberKind: 'learner', memberId: suni.learnerId, role: 'student', name: 'Suni' }),
+    ]));
+    expect((await get(`/api/spaces/${fam.space.id}/members`, bearer('stranger'))).status).toBe(403);
+    expect((await get('/api/spaces/space:nope/members', bearer('mom'))).status).toBe(404);
+  });
+});
