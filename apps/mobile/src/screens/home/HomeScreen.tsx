@@ -20,6 +20,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useEffect, useMemo, useRef } from 'react';
 import { Pressable, View } from 'react-native';
+import { InstallGuideSheet } from '../../components/InstallGuideSheet';
 import { episodesAll, questsAll } from '../../content';
 import {
   buildTodaysMission,
@@ -128,6 +129,7 @@ export function HomeScreen(): React.ReactElement {
   };
 
   return (
+    <View style={{ flex: 1 }}>
     <Screen tone="canvas" scrollable>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
         <Hoya pose="waving" size={72} />
@@ -211,5 +213,8 @@ export function HomeScreen(): React.ReactElement {
         <StarRow stars={(snap?.quests.slice(-1)[0]?.stars ?? 0) as 0 | 1 | 2 | 3} size={28} />
       </Card>
     </Screen>
+      {/* Web only (F-PWA-001): asks a grown-up to install once the app is cached. */}
+      <InstallGuideSheet />
+    </View>
   );
 }

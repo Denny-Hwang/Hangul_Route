@@ -27,6 +27,11 @@ test('onboards, enters the first quest, and keeps working offline', async ({ pag
     const reg = await navigator.serviceWorker.getRegistration();
     return !!reg?.active && !!navigator.serviceWorker.controller;
   });
+  // One online reload so the navigation itself is proven to be served by
+  // the worker (the page loads already controlled), then cut the network.
+  await page.reload();
+  await expect(page.getByText('Hi, Suni!')).toBeVisible();
+  await page.waitForFunction(() => !!navigator.serviceWorker.controller);
   await context.setOffline(true);
   await page.reload();
   // Profile persisted (IndexedDB) → app reopens on the learner surface, offline.

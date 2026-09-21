@@ -51,6 +51,10 @@ const head = `
 const sw = `
   <script>
     (function () {
+      // Chromium fires this once, early; stash it so the in-app install
+      // guide (F-PWA-001) can call prompt() later from a tap.
+      window.__hrInstallPrompt = null;
+      window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); window.__hrInstallPrompt = e; window.dispatchEvent(new CustomEvent('hr:install-available')); });
       if (!('serviceWorker' in navigator)) return;
       // Reload only when the app explicitly applied an update — never on the
       // first install, where clientsClaim also fires controllerchange and a

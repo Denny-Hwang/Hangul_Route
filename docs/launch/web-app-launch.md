@@ -49,15 +49,15 @@
 | 카드 공유 | 공유시트 | 버튼 숨김 (view-shot 미지원) | 후속: SVG → canvas → Web Share (roadmap §2) |
 | 햅틱 | 있음 | Android 만 진동, iOS 없음 | 없음 (선택적 피드백) |
 | 퀘스트 나가기 확인 | 네이티브 Alert | 브라우저 confirm() | 후속: 토큰 스타일 시트로 교체 |
-| 저장소 | AsyncStorage | IndexedDB + persist() 요청. iOS 는 홈 화면에 추가하지 않으면 7일 미사용 시 삭제 가능 | 설치 안내 (`pwa/install-guide` 와이어프레임, 미구현) + 향후 Rescue Code |
+| 저장소 | AsyncStorage | IndexedDB + persist() 요청. iOS 는 홈 화면에 추가하지 않으면 7일 미사용 시 삭제 가능 | 설치 안내 시트 (F-PWA-001, 구현됨) + 향후 Rescue Code |
 | 데스크톱 | — | 폰 폭 컬럼 중앙 정렬 (600px+) | 가로 레이아웃 시안은 별도 |
 | 업데이트 | 스토어 | "New lessons are ready — Refresh" 배너, 사용자가 누를 때만 적용 (퀘스트 중 강제 새로고침 없음) | — |
 
 ## 4. 아직 안 한 것 (다음 PR 후보, 우선순위순)
 
 1. **T-017 자모 MP3 30개** → 프리캐시에 포함하면 오프라인 발음 보장 (0.5 d 코드 + 녹음)
-2. `pwa/install-guide` 화면 (iOS 공유시트 안내 오버레이) — 와이어프레임 있음 (1 d)
-3. 텔레메트리 오프라인 큐 (`platform/telemetry` 에 storage 기반 큐 + `online` flush) (0.5 d)
+2. ~~`pwa/install-guide` 화면~~ (F-PWA-001, 2026-09-21 완료 — 3회째 열 때 시트, 5회 스누즈, 설정에서 강제 표시)
+3. ~~텔레메트리 오프라인 큐~~ (F-PWA-001, 2026-09-21 완료 — 200개 캡, online/시작 시 flush, 4xx 는 폐기)
 4. 카드 공유 웹 구현 (SVG → PNG → Web Share) (1 d)
 5. ~~데스크톱 레이아웃 max-width 셸~~ (2026-09-21 완료 — 가로 전용 시안은 별도)
 6. ~~랜딩 CTA~~ (2026-09-21 완료) · `index.html` OG 메타 (0.25 d)
