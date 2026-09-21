@@ -36,6 +36,12 @@ export const COPY = {
   deleteAskParent: 'Only a parent can delete a learner in this class (consent mode: parent).',
   anonymizeHint: 'Show initials instead of names on the roster and re-link list.',
   consentHint: 'Who consented for the children in this class. School mode lets you delete learner data yourself.',
+  billingKidsLine: 'Kids never see billing — this page opens only after the grown-up gate.',
+  billingNotConfigured: 'Checkout is not set up yet — prices are still being decided. Nothing was charged.',
+  billingCancelled: 'Nothing was charged.',
+  billingSuccess: 'Thank you — the plan is active. Learners see it on their next sync.',
+  billingPastDue: "A payment didn't go through. Update your card in Manage subscription; learners keep premium for a week.",
+  pricePlaceholder: 'price coming soon',
 } as const;
 
 export function allCopyStrings(): string[] {

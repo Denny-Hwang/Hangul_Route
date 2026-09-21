@@ -105,3 +105,22 @@ describe('console api — settings, members, re-link, rescue (F-TCH-001 §10)', 
     expect((fetchImpl.mock.calls[2]?.[1] as RequestInit).method).toBe('PATCH');
   });
 });
+
+describe('console api — entitlements (F-ENT-001)', () => {
+  it('lists entitlements, starts checkout and portal, and surfaces server error codes', async () => {
+    const e = { id: 'ent:1', subjectKind: 'account', subjectId: 't', planKey: 'teacher_pro', status: 'active', provider: 'stripe', providerRef: null, customerRef: 'cus', seats: null, expiresAt: null, updatedAt: 't', subjectName: null };
+    const fetchImpl = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(json(200, { data: { entitlements: [e] } }))
+      .mockResolvedValueOnce(json(200, { data: { url: 'https://checkout.stripe.com/c/1' } }))
+      .mockResolvedValueOnce(json(500, { error: { code: 'stripe_not_configured' } }))
+      .mockResolvedValueOnce(json(200, { data: { url: 'https://billing.stripe.com/p/1' } }))
+      .mockResolvedValueOnce(json(404, { error: { code: 'not_found' } }));
+    const api = createConsoleApi({ endpoint: 'https://api.example.com', token: 't', fetchImpl });
+    expect(await api.entitlements()).toEqual({ ok: true, data: [e] });
+    expect(await api.checkout({ planKey: 'teacher_pro', interval: 'monthly', subjectKind: 'account', subjectId: 't' })).toEqual({ ok: true, data: { url: 'https://checkout.stripe.com/c/1' } });
+    expect(await api.checkout({ planKey: 'teacher_pro', interval: 'yearly', subjectKind: 'account', subjectId: 't' })).toEqual({ ok: false, error: 'unknown', status: 500, code: 'stripe_not_configured' });
+    expect(await api.portal({ subjectKind: 'account', subjectId: 't' })).toEqual({ ok: true, data: { url: 'https://billing.stripe.com/p/1' } });
+    expect(await api.portal({ subjectKind: 'space', subjectId: 's' })).toEqual({ ok: false, error: 'not_found', status: 404, code: 'not_found' });
+    expect(fetchImpl.mock.calls[1]?.[0]).toBe('https://api.example.com/api/entitlements/stripe/checkout');
+  });
+});

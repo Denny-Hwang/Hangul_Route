@@ -92,7 +92,9 @@ export function ConsoleShell({ children, onSignOut, title }: { children: ReactNo
         </div>
         <nav style={{ display: 'flex', gap: spacing.sm, alignItems: 'center' }}>
           <Button disabled>Account</Button>
-          <Button disabled>Billing</Button>
+          <Link href="/teach/billing">
+            <Button>Billing</Button>
+          </Link>
           {onSignOut ? <Button onClick={onSignOut}>Sign out</Button> : null}
         </nav>
       </header>
