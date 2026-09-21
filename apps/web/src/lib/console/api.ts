@@ -68,6 +68,26 @@ export interface PlanSave {
   publish: boolean;
 }
 
+export interface MemberView {
+  memberKind: 'account' | 'learner';
+  memberId: string;
+  role: SpaceRole;
+  joinedAt: string;
+  name: string;
+  isOwner: boolean;
+}
+
+export interface RelinkView {
+  id: string;
+  learnerId: string;
+  learnerName: string;
+  deviceId: string;
+  platform: string | null;
+  requestedAt: string;
+  expiresAt: string;
+  status: 'pending' | 'approved' | 'denied' | 'expired';
+}
+
 export type ApiError = 'unauthorized' | 'forbidden' | 'not_found' | 'invalid' | 'network' | 'unknown';
 export type ApiResult<T> = { ok: true; data: T } | { ok: false; error: ApiError; status: number };
 
@@ -88,6 +108,7 @@ function mapError(status: number): ApiError {
 export function createConsoleApi(opts: ConsoleApiOptions) {
   const fetchImpl = opts.fetchImpl ?? globalThis.fetch;
   const base = `${opts.endpoint}/api/spaces`;
+  const recovery = `${opts.endpoint}/api/recovery`;
   const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${opts.token}` };
 
   async function call<T>(url: string, init: RequestInit, okStatus: number[]): Promise<ApiResult<T>> {
@@ -114,6 +135,22 @@ export function createConsoleApi(opts: ConsoleApiOptions) {
       call<{ plan: PlanView }>(`${base}/${encodeURIComponent(spaceId)}/plans`, { method: 'PUT', body: JSON.stringify(body) }, [200, 201]).then((r) => (r.ok ? { ok: true as const, data: r.data.plan } : r)),
     archivePlan: (spaceId: string, planId: string) =>
       call<{ plan: PlanView }>(`${base}/${encodeURIComponent(spaceId)}/plans/${encodeURIComponent(planId)}/archive`, { method: 'POST' }, [200]).then((r) => (r.ok ? { ok: true as const, data: r.data.plan } : r)),
+    members: (spaceId: string) =>
+      call<{ members: MemberView[] }>(`${base}/${encodeURIComponent(spaceId)}/members`, { method: 'GET' }, [200]).then((r) => (r.ok ? { ok: true as const, data: r.data.members } : r)),
+    removeMember: (spaceId: string, kind: 'account' | 'learner', memberId: string) =>
+      call<{ removed: boolean }>(`${base}/${encodeURIComponent(spaceId)}/members/${kind}/${encodeURIComponent(memberId)}`, { method: 'DELETE' }, [200]),
+    patchSettings: (spaceId: string, patch: { anonymizeRoster?: boolean; consentMode?: 'parent' | 'school' }) =>
+      call<{ space: SpaceView }>(`${base}/${encodeURIComponent(spaceId)}/settings`, { method: 'PATCH', body: JSON.stringify(patch) }, [200]).then((r) => (r.ok ? { ok: true as const, data: r.data.space } : r)),
+    archiveSpace: (spaceId: string, archive: boolean) =>
+      call<{ space: SpaceView }>(`${base}/${encodeURIComponent(spaceId)}/${archive ? 'archive' : 'unarchive'}`, { method: 'POST' }, [200]).then((r) => (r.ok ? { ok: true as const, data: r.data.space } : r)),
+    deleteLearnerData: (spaceId: string, learnerId: string) =>
+      call<{ deleted: boolean }>(`${base}/${encodeURIComponent(spaceId)}/learners/${encodeURIComponent(learnerId)}/data`, { method: 'DELETE' }, [200]),
+    relinkRequests: (spaceId: string) =>
+      call<{ requests: RelinkView[] }>(`${base}/${encodeURIComponent(spaceId)}/relink-requests`, { method: 'GET' }, [200]).then((r) => (r.ok ? { ok: true as const, data: r.data.requests } : r)),
+    decideRelink: (spaceId: string, requestId: string, approve: boolean) =>
+      call<{ request: RelinkView }>(`${base}/${encodeURIComponent(spaceId)}/relink-requests/${encodeURIComponent(requestId)}/${approve ? 'approve' : 'deny'}`, { method: 'POST' }, [200]).then((r) => (r.ok ? { ok: true as const, data: r.data.request } : r)),
+    issueRescueCode: (learnerId: string) =>
+      call<{ code: string; issuedAt: string }>(`${recovery}/issue`, { method: 'POST', body: JSON.stringify({ learnerId }) }, [201]),
   };
 }
 

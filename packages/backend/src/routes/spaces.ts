@@ -181,6 +181,21 @@ spacesRoutes.post('/lookup', async (c) => {
   });
 });
 
+spacesRoutes.get('/:id/members', async (c) => {
+  const space = findSpace(c, c.req.param('id'), true);
+  if (!('id' in space)) return space;
+  const account = await requireCan(c, space, 'roster.manage');
+  if (!('id' in account)) return account;
+  const members = store.membersOf(space.id).map((m) => {
+    if (m.memberKind === 'account') {
+      const a = store.accounts.get(m.memberId);
+      return { memberKind: 'account' as const, memberId: m.memberId, role: m.role, joinedAt: m.joinedAt, name: a?.displayName ?? a?.email ?? m.memberId, isOwner: m.memberId === space.ownerAccountId };
+    }
+    return { memberKind: 'learner' as const, memberId: m.memberId, role: m.role, joinedAt: m.joinedAt, name: rosterName(space, store.learners.get(m.memberId)?.displayName ?? '?'), isOwner: false };
+  });
+  return ok(c, { members });
+});
+
 spacesRoutes.patch('/:id/settings', async (c) => {
   const space = findSpace(c, c.req.param('id'), true);
   if (!('id' in space)) return space;

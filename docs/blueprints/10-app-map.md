@@ -92,7 +92,7 @@ Hangul Route
 │   ├─ C3. Join code (발급·재발급·만료)                    [S] F-SPACE-001 §3.2 (서버; 콘솔 화면은 F-CONSOLE-001)
 │   ├─ C4. Plan builder (class) + Pace helper             [S] F-PLAN-001 §3.5 (`/teach/space/:id/plan` — 카탈로그·순서·날짜·spread·대상·발행·readout)
 │   ├─ C5. Learner card (parent B3 재사용, 읽기 전용)      [P]
-│   ├─ C6. Re-link approval (기기 이전 승인)               [S-api] F-TCH-001 §10.1 (서버 + 학습자 측 `sync/join-space` 완료; 콘솔 승인 화면은 PR 2)
+│   ├─ C6. Re-link approval (기기 이전 승인)               [S] F-TCH-001 §10.1 (`/teach/space/:id/relink` — 승인·거절·10분 창·rescue 재발급)
 │   ├─ C7. School admin (교사 초대 · 학급 트리 · seats)     [P] roadmap S7
 │   ├─ C8. Billing (teacher_pro · school_license, Stripe)  [P] roadmap S6
 │   └─ C9. Worksheets PDF · Templates                     [–] F-TCH-002/003
@@ -184,8 +184,8 @@ Hangul Route
 | `console/onboarding-role` | web `/teach/start` | 부모/교사/관리자 선택 → 첫 space 생성 → (교사) 코드 | S | F-CONSOLE-001 §3.3 | ✓ |
 | `console/home` | web `/teach/home` | 내 space 들 (가정·학급·학교) 전환 허브 — 모든 행이 `/teach/space/:id` 로 (§7 #23) | S | F-CONSOLE-001 §3.4 | ✓ |
 | `console/roster` | web `/teach/space/:id` | join code (복사·재발급) · 이번 주 롤업 · 학생 summary 카드 (계획·재연결·설정 버튼은 비활성) | S-thin | F-CONSOLE-001 §3.5 · F-TCH-001 §3.2 | ✓ |
-| `console/space-settings` | 코드 재발급 · 동의 모드 · 익명 roster · 멤버 · 보관 · 학습자 데이터 삭제 | P (API S: settings patch · archive/unarchive · learner data delete) | F-TCH-001 §10.3 | ✓ |
-| `console/relink-approval` | 기기 이전 승인 10분 창 | P (API S: `/spaces/:id/relink-requests` list · approve · deny) | F-TCH-001 §10.1 | ✓ |
+| `console/space-settings` | web `/teach/space/:id/settings` | 코드 재발급 · 동의 모드 · 익명 roster · 멤버/학습자 제거 · 보관/해제 · 학습자 데이터 삭제 (이름 입력 확인) | S | F-TCH-001 §10.3 | ✓ |
+| `console/relink-approval` | web `/teach/space/:id/relink` | 기기 이전 승인 10분 창 · 학습자 rescue code 재발급 | S | F-TCH-001 §10.1–10.2 | ✓ |
 | `console/school-admin` | 학급 트리 · 교사 초대 · seat 사용량 | P | roadmap S7 | NEW |
 | `console/plan-builder` | (B 와 공용) | S | F-PLAN-001 §3.5 | ✓ |
 | `console/billing` | (B 와 공용, teacher_pro / school) | P | roadmap §7 | NEW |

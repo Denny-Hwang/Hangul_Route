@@ -19,6 +19,7 @@ export default function SpacePage(): JSX.Element {
   const { ready, session, api, signOut } = useConsole();
   const [roster, setRoster] = useState<Roster | null>(null);
   const [plans, setPlans] = useState<PlanView[]>([]);
+  const [pendingRelinks, setPendingRelinks] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -27,8 +28,9 @@ export default function SpacePage(): JSX.Element {
   const load = useCallback(async (): Promise<void> => {
     if (!api) return;
     setError(null);
-    const [result, planList] = await Promise.all([api.roster(spaceId), api.listPlans(spaceId)]);
+    const [result, planList, relinks] = await Promise.all([api.roster(spaceId), api.listPlans(spaceId), api.relinkRequests(spaceId)]);
     if (planList.ok) setPlans(planList.data);
+    if (relinks.ok) setPendingRelinks(relinks.data.length);
     if (result.ok) setRoster(result.data);
     else setError(result.error === 'forbidden' ? "This space isn't yours to view." : result.error === 'not_found' ? 'This space is gone.' : COPY.cantReach);
   }, [api, spaceId]);
@@ -122,7 +124,12 @@ export default function SpacePage(): JSX.Element {
             <Link href={`${ROUTES.space(spaceId)}/plan`}>
               <Button tone="primary">{latestPlan ? `Plan: ${latestPlan.title}` : COPY.planThisWeek}</Button>
             </Link>
-            <Button disabled>Settings · coming soon</Button>
+            <Link href={`${ROUTES.space(spaceId)}/relink`}>
+              <Button>{pendingRelinks > 0 ? `${pendingRelinks} re-link request${pendingRelinks === 1 ? '' : 's'}` : 'Re-link requests'}</Button>
+            </Link>
+            <Link href={`${ROUTES.space(spaceId)}/settings`}>
+              <Button>Settings</Button>
+            </Link>
           </div>
 
           {!empty ? (

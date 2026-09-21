@@ -1,7 +1,7 @@
 # Console/Relink-approval — approve a student's new device (wireframe v1)
 
 Spec: `docs/roadmap/multi-persona-sync-platform.md` §5 (restore table, row "new device — class student"), §5.1 (Rescue Code), §5.2 (merge on restore) · `docs/specs/F-TCH-001-teacher-classroom.md` §3.1
-Code (F-TCH-001 §10.1, 2026-09-21 — server + learner side): `packages/backend/src/routes/relink.ts` (create · list · approve · deny · one-time pickup poll, 10-minute window) and `apps/mobile/src/screens/sync/JoinSpaceScreen.tsx` ("I was already in this class" → pick a name → waiting card polling every 4 s → restored). The teacher page itself is the next PR; "Show rescue code" ships as "Issue a new code" (app map §7 #24).
+Code (F-TCH-001 §10.1, 2026-09-21 — server + learner side): `packages/backend/src/routes/relink.ts` (create · list · approve · deny · one-time pickup poll, 10-minute window) and `apps/mobile/src/screens/sync/JoinSpaceScreen.tsx` ("I was already in this class" → pick a name → waiting card polling every 4 s → restored). Teacher page `apps/web/src/app/teach/space/[id]/relink/page.tsx`: cards newest first with Approve / Deny, coarse countdown, refresh every 10 s, empty state, and "Another way" = learner picker → **Issue a new rescue code** shown once ("Show rescue code" is impossible by design, app map §7 #24). Not yet: undo after deny, push/email.
 Audience: **teacher** (class space); **parent** only via `sync/restore` sign-in — this screen is teacher-side
 
 ## Scenario (Given-When-Then)

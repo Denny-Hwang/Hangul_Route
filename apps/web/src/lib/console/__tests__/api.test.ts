@@ -67,3 +67,41 @@ describe('console api — plans (F-PLAN-001)', () => {
     expect(fetchImpl.mock.calls[3]?.[0]).toBe('https://api.example.com/api/spaces/space%3Ac/plans/plan%3Aw3/archive');
   });
 });
+
+describe('console api — settings, members, re-link, rescue (F-TCH-001 §10)', () => {
+  it('maps every method', async () => {
+    const request = { id: 'relink:1', learnerId: 'profile:m', learnerName: 'Minho', deviceId: 'd', platform: null, requestedAt: 't', expiresAt: 'e', status: 'pending' };
+    const fetchImpl = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(json(200, { data: { members: [{ memberKind: 'account', memberId: 'mom', role: 'owner', joinedAt: 't', name: 'Mom', isOwner: true }] } }))
+      .mockResolvedValueOnce(json(200, { data: { removed: true } }))
+      .mockResolvedValueOnce(json(200, { data: { space: { ...space, settings: { consentMode: 'school', anonymizeRoster: true } } } }))
+      .mockResolvedValueOnce(json(200, { data: { space: { ...space, archivedAt: 'a' } } }))
+      .mockResolvedValueOnce(json(200, { data: { space } }))
+      .mockResolvedValueOnce(json(200, { data: { deleted: true } }))
+      .mockResolvedValueOnce(json(200, { data: { requests: [request] } }))
+      .mockResolvedValueOnce(json(200, { data: { request: { ...request, status: 'approved' } } }))
+      .mockResolvedValueOnce(json(200, { data: { request: { ...request, status: 'denied' } } }))
+      .mockResolvedValueOnce(json(201, { data: { code: 'TIGER-MOON-4821', issuedAt: 't' } }))
+      .mockResolvedValueOnce(json(403, {}));
+    const api = createConsoleApi({ endpoint: 'https://api.example.com', token: 't', fetchImpl });
+    expect(await api.members('space:c')).toMatchObject({ ok: true, data: [{ memberId: 'mom', isOwner: true }] });
+    expect(await api.removeMember('space:c', 'learner', 'profile:m')).toEqual({ ok: true, data: { removed: true } });
+    expect(await api.patchSettings('space:c', { anonymizeRoster: true, consentMode: 'school' })).toMatchObject({ ok: true, data: { settings: { anonymizeRoster: true } } });
+    expect(await api.archiveSpace('space:c', true)).toMatchObject({ ok: true, data: { archivedAt: 'a' } });
+    expect(await api.archiveSpace('space:c', false)).toMatchObject({ ok: true, data: { archivedAt: null } });
+    expect(await api.deleteLearnerData('space:c', 'profile:m')).toEqual({ ok: true, data: { deleted: true } });
+    expect(await api.relinkRequests('space:c')).toMatchObject({ ok: true, data: [{ id: 'relink:1' }] });
+    expect(await api.decideRelink('space:c', 'relink:1', true)).toMatchObject({ ok: true, data: { status: 'approved' } });
+    expect(await api.decideRelink('space:c', 'relink:1', false)).toMatchObject({ ok: true, data: { status: 'denied' } });
+    expect(await api.issueRescueCode('profile:m')).toEqual({ ok: true, data: { code: 'TIGER-MOON-4821', issuedAt: 't' } });
+    expect(await api.issueRescueCode('profile:m')).toEqual({ ok: false, error: 'forbidden', status: 403 });
+    const urls = fetchImpl.mock.calls.map((c) => c[0]);
+    expect(urls[1]).toBe('https://api.example.com/api/spaces/space%3Ac/members/learner/profile%3Am');
+    expect(urls[3]).toBe('https://api.example.com/api/spaces/space%3Ac/archive');
+    expect(urls[4]).toBe('https://api.example.com/api/spaces/space%3Ac/unarchive');
+    expect(urls[5]).toBe('https://api.example.com/api/spaces/space%3Ac/learners/profile%3Am/data');
+    expect(urls[7]).toBe('https://api.example.com/api/spaces/space%3Ac/relink-requests/relink%3A1/approve');
+    expect(urls[9]).toBe('https://api.example.com/api/recovery/issue');
+    expect((fetchImpl.mock.calls[2]?.[1] as RequestInit).method).toBe('PATCH');
+  });
+});
