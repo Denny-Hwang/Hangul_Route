@@ -70,10 +70,10 @@ Hangul Route
 │   ├─ A8. Reviews (Daily test · Feedback · Stage review · Certificate) [D] F-RVW-001
 │   ├─ A9. Hoya companion (5 poses · bubble · lines)     [S] F-HOYA-001, F-002
 │   ├─ A10. Settings / Profile page (plan status · mute · switch · grown-ups) [S]
-│   ├─ A11. Save & Restore  (Rescue Code · sign-in · file) [P] roadmap S1–S2
+│   ├─ A11. Save & Restore  (Rescue Code · sign-in · file) [S] F-SYNC-002 · F-RESTORE-001 (sign-in 경로는 [P] F-AUTH-002)
 │   ├─ A12. Join a space (class / family code)          [P] roadmap S3
 │   ├─ A13. Paywall / Upgrade (parent-gated)            [R] F-SUB-001, F-IAP-001
-│   ├─ A14. PWA shell (offline-ready · update banners · offline chip) [S] roadmap P2 (install-guide 화면은 [P])
+│   ├─ A14. PWA shell (offline-ready · update banners · offline chip · install guide) [S] roadmap P2 · F-PWA-001
 │   └─ A15. Projection mode (교사용 교실 표시)            [D] F-TCH-001 §3.4
 │
 ├─ B. Caregiver Console ─────────────────────────────────────────── 부모
@@ -84,7 +84,7 @@ Hangul Route
 │   ├─ B5. Plan builder (family)  = "Send homework"      [P] roadmap S4 (T-P2-01 흡수)
 │   ├─ B6. Account (Clerk sign-in · email · consent · delete learner) [R/P] F-AUTH-001/002
 │   ├─ B7. Billing (family_premium)                      [P] roadmap S6
-│   └─ B8. Backup (rescue code 보기 · 파일 내보내기)      [P] roadmap S1–S2
+│   └─ B8. Backup (rescue code 보기 · 파일 내보내기)      [S] F-SYNC-002 · F-RESTORE-001
 │
 ├─ C. Teacher / School Console (웹 전용) ────────────────────────── 교사·관리자
 │   ├─ C1. Onboarding (역할 선택 → space 생성)            [P] roadmap S3
@@ -100,10 +100,10 @@ Hangul Route
 └─ D. Platform ──────────────────────────────────────────────────── 시스템
     ├─ D1. Content bundle (jamo · episodes · quests · cards, CONTENT_VERSION) [S]
     ├─ D2. Local store (AsyncStorage · IndexedDB on web)  [S]
-    ├─ D3. Sync (snapshot PUT/GET · merge · summary)      [P] roadmap §4
+    ├─ D3. Sync (snapshot PUT/GET · merge · summary · rescue code) [S] F-SYNC-001 · F-RESTORE-001 (inbox 의 plans/memberships 는 S3–S4)
     ├─ D4. Spaces & memberships & plans                   [P] roadmap §2
     ├─ D5. Entitlements (IAP · Stripe · manual)           [R/P] F-IAP-001, roadmap §7
-    ├─ D6. Telemetry (fire-and-forget, offline queue)     [S/P]
+    ├─ D6. Telemetry (fire-and-forget, offline queue)     [S] F-PWA-001
     ├─ D7. Service worker (precache · update)             [S] roadmap P2
     └─ D8. Auth (Clerk — adults only)                     [R] F-AUTH-001
 ```
@@ -154,12 +154,12 @@ Hangul Route
 | `reviews/daily-test` | (신규) | 하루 1회 간격 반복 테스트 | D | F-RVW-001 §3.2 | NEW |
 | `reviews/feedback-review` | (results/celebrate 의 2번째 패널) | 퀘스트 끝 새 요소 1문항 회상 (새 요소 ≥1 이면 항상) | D | F-RVW-001 §3.3 | NEW |
 | `reviews/stage-review` | (신규) | Stage 앵커 점검 + 인증서 | D | F-RVW-001 §3.4 | NEW |
-| `sync/save-progress` | (신규) | Rescue Code 보여주기·적게 하기 | P | roadmap §5.1 | NEW |
-| `sync/restore` | (신규) | 코드 / 로그인 / 파일로 복원 (학급 재연결은 `sync/join-space` 쪽) | P | roadmap §5 | NEW |
+| `sync/save-progress` | SaveProgress (PIN 뒤) | Rescue Code 보여주기·복사·공유·재발급 | S | F-RESTORE-001 §3.3 | ✓ |
+| `sync/restore` | Restore | 코드 / 로그인 (P, F-AUTH-002) / 파일로 복원 (학급 재연결은 `sync/join-space` 쪽) | S | F-RESTORE-001 §3.4 · F-SYNC-002 §3.3 | ✓ |
 | `sync/join-space` | (신규) | 학급·가정 코드 입력 | P | roadmap §6 | NEW |
-| `sync/merge-notice` | (신규, sheet) | "옛 카드를 찾았어요" 병합 안내 | P | roadmap §5.2 | NEW |
+| `sync/merge-notice` | (Restore 의 결과 카드) | "옛 카드를 찾았어요" 병합 안내 | S | F-SYNC-002 | ✓ |
 | `paywall/upgrade` | (신규, parent-gated) | Stage 2+ 잠금 해제 | R | F-SUB-001 | NEW |
-| `pwa/install-guide` | (신규, web only) | 홈 화면 추가 안내 (iOS/Android/PC) | P | roadmap P2 | NEW |
+| `pwa/install-guide` | InstallGuide sheet (web only) | 홈 화면 추가 안내 (iOS/Android/PC), 3회째 열 때 · 5회 스누즈 | S | F-PWA-001 | ✓ |
 | `pwa/system-banners` | (신규, web only) | 오프라인 준비됨 · 업데이트 · 오프라인 상태 | P | roadmap P2 | NEW |
 | `classroom/projection-mode` | (신규, teacher role) | 교실 TV 표시 토글 | D | F-TCH-001 §3.4 | NEW |
 

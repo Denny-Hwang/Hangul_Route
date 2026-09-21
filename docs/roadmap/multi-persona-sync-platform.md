@@ -1,6 +1,6 @@
 # Multi-persona · Teacher Plans · Sync & Restore — 최소 DB 설계안
 
-**Status**: `proposal` (승인 시 F-SYNC-001 / F-SPACE-001 / F-PLAN-001 / F-ENT-001 / F-RESTORE-001 로 분해)
+**Status**: `in progress` — S1 (F-SYNC-001/002) · S2 (F-RESTORE-001) 구현됨 2026-09-21; S3–S7 (F-SPACE-001 / F-PLAN-001 / F-TCH-001 / F-ENT-001 / F-SCHOOL-001) 은 아직 proposal
 **작성일**: 2026-09-19
 **선행 문서**: `web-pwa-offline.md` (웹앱/오프라인), F-TCH-001 (draft), F-PROF-001, F-HW-001, F-SUB-001, F-AUTH-001, `apps/api/src/db/schema.sql` (v1)
 **요구**: (1) 교사가 학습 계획을 짜서 배포하고 학생 진도를 본다 (2) DB 를 최소로 (3) 개인 · 가정 · 학급 · 학교 페르소나 전부 (4) 페르소나별 결제 (5) 앱 삭제 · 기기 이전 시 데이터 복원
@@ -269,9 +269,9 @@ BP09 §3.5 / F-PAR-001 §3.2 의 대시보드 숫자가 전부 이 객체에서 
 ### 5.1 Rescue Code
 
 - 형식: `TIGER-MOON-4821` (동물·자연 단어 2개 + 숫자 4자리, 아이가 읽을 수 있는 영어 단어 목록 256개 → 256² × 10⁴ ≈ 6.5억 조합).
-- 생성 시점: learner 첫 스냅샷 업로드 성공 직후. 프로필 화면 "Save my progress" 카드에 표시 + 부모 이메일이 있으면 발송 (Resend). Hoya: *"Write this down — it brings your cards back on any device!"*
+- 생성 시점: learner 첫 스냅샷 업로드 성공 직후. 프로필 화면 "Save my progress" 카드에 표시 + 부모 이메일이 있으면 발송 (Resend — F-RESTORE-002 로 분리, 미구현). Hoya: *"Write this down — it brings your cards back on any device!"*
 - 저장: 서버는 `sha256(code)` 만 (`learners.recovery_hash`). 재발급하면 이전 코드 무효.
-- 방어: `/recovery/claim` 은 IP 당 5회/시간, 실패 시 지수 백오프. **재발급(`/recovery/rotate`)은 기기 소유만으로는 안 된다** — 클라이언트는 부모 PIN 뒤에 두고, 서버는 현재 `snapshots.device_id` 와 일치하는 기기이거나 caregiver membership 을 가진 account 만 허용. 성공 시 새 device 가 이 learner 를 "소유" (기존 기기는 그대로 — 두 기기 병합은 §4 merge 가 처리).
+- 방어: `/recovery/claim` 은 IP 당 5회/시간 (구현됨; 지수 백오프는 미구현). **재발급(`/recovery/issue` — 발급과 재발급이 같은 라우트, 구현됨)은 기기 소유만으로는 안 된다** — 클라이언트는 부모 PIN 뒤에 두고, 서버는 현재 `snapshots.device_id` 와 일치하는 기기이거나 caregiver membership 을 가진 account 만 허용. 성공 시 새 device 가 이 learner 를 "소유" (기존 기기는 그대로 — 두 기기 병합은 §4 merge 가 처리).
 - 학급 학생도 자동으로 받으므로 교사 승인 없이도 복원 가능. 교사는 roster 에서 "Show rescue code" 로 잃어버린 아이에게 다시 알려줄 수 있다 (summary 만 보는 규칙에 위배되지 않음 — 코드는 진도 데이터가 아님).
 
 ### 5.2 복원 시 병합
@@ -340,8 +340,8 @@ BP09 §3.5 / F-PAR-001 §3.2 의 대시보드 숫자가 전부 이 객체에서 
 | PUT | `/sync/learners/:id/snapshot` | learner 기기 (`Authorization: Device <deviceId>:<secret>`), caregiver | 스냅샷 업로드 (rev 검사, 409 시 서버본 반환) — 구현됨 |
 | GET | `/sync/learners/:id/inbox` | learner 기기 | plans + memberships + tier + rev — 구현됨 (plans/memberships 는 S3–S4 까지 빈 배열) |
 | GET | `/sync/learners/:id/snapshot` | learner 기기, caregiver | 전체 payload (복원) — 구현됨 |
-| POST | `/recovery/claim` | 누구나 (코드, rate-limited) | Rescue Code → learner 바인딩 |
-| POST | `/recovery/rotate` | learner 기기 (부모 PIN 뒤) 또는 caregiver account | 코드 재발급 (§5.1 방어 규칙) |
+| POST | `/recovery/claim` | 누구나 (코드, rate-limited 5회/시간/IP) | Rescue Code → learner 바인딩 + 새 기기 secret + 스냅샷 반환 — 구현됨 (F-RESTORE-001) |
+| POST | `/recovery/issue` | learner 기기 (클라이언트는 부모 PIN 뒤) | 코드 발급·재발급 (이전 코드 무효, §5.1) — 구현됨. caregiver account 경로는 F-SPACE-001 이후 |
 | POST | `/spaces/:id/relink-requests` | 누구나 (join code + roster 이름) | 재연결 요청 생성 (10분 만료) |
 | POST | `/spaces/:id/relink-requests/:rid/approve` · `/deny` | teacher/admin | 승인 시 요청 기기에 learner 바인딩 |
 | DELETE | `/learners/:id` | caregiver/teacher(school-consent) | 삭제권 |
@@ -371,8 +371,8 @@ BP09 §3.5 / F-PAR-001 §3.2 의 대시보드 숫자가 전부 이 객체에서 
 
 | Phase | 스펙 | 내용 | 예상 |
 |---|---|---|---|
-| S1 | F-SYNC-001 | schema v2 + `snapshots` PUT/GET + `merge.ts` + `summarize.ts` + 파일 내보내기/가져오기. 가정(P-B) 복원 완성 | 3 d |
-| S2 | F-RESTORE-001 | Rescue Code 생성·표시·claim + rate limit + 이메일 | 1.5 d |
+| S1 | F-SYNC-001 · F-SYNC-002 | schema v2 + `snapshots` PUT/GET + `merge.ts` + `summarize.ts` + 파일 내보내기/가져오기. 가정(P-B) 복원 완성 — **구현됨 2026-09-21** (#67) | 3 d |
+| S2 | F-RESTORE-001 | Rescue Code 생성·표시·claim + rate limit — **구현됨 2026-09-21**; 이메일 발송은 F-RESTORE-002 로 분리 | 1.5 d |
 | S3 | F-SPACE-001 | `spaces` / `memberships` / join code / `can.ts`. F-TCH-001 §3.1 을 여기로 이관 | 2 d |
 | S4 | F-PLAN-001 | `plans` + 웹 Plan Builder (family·class 공용) + 학생 측 plan → homework 파생 | 3 d |
 | S5 | F-TCH-001 (ready 로 승격) | Roster summary 뷰, 교사 온보딩, 20명 캡, re-link 승인 | 2 d |
