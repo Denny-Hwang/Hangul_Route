@@ -55,7 +55,7 @@ export function ProfileScreen(): React.ReactElement {
     parentGateOpenedAt === null ? null : { openedAt: parentGateOpenedAt, profileId: 'family' },
     Date.now(),
   );
-  const openGrownUps = (next: 'ParentDashboard' | 'AddProfile' | 'Restore' | 'SaveProgress'): void => {
+  const openGrownUps = (next: 'ParentDashboard' | 'AddProfile' | 'Restore' | 'SaveProgress' | 'Paywall'): void => {
     if (parentSessionOpen) {
       if (next === 'AddProfile') {
         navigation.navigate('Onboarding', { screen: 'CreateProfile', params: { firstRun: false } });
@@ -63,6 +63,8 @@ export function ProfileScreen(): React.ReactElement {
         navigation.navigate('Restore', { from: 'settings' });
       } else if (next === 'SaveProgress') {
         navigation.navigate('SaveProgress');
+      } else if (next === 'Paywall') {
+        navigation.navigate('Paywall', { from: 'settings' });
       } else {
         navigation.navigate('ParentDashboard');
       }
@@ -188,6 +190,12 @@ export function ProfileScreen(): React.ReactElement {
             size="sm"
           />
         </View>
+        {tier !== 'premium' ? (
+          <>
+            <Spacer size="sm" />
+            <Button label="Unlock the journey" tone="secondary" size="md" accessibilityLabel="Unlock the journey (grown-ups only)" onPress={() => openGrownUps('Paywall')} />
+          </>
+        ) : null}
       </Card>
 
       <Spacer size="lg" />

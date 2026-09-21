@@ -70,6 +70,8 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
       navigation.replace('Restore', { from: 'settings' });
     } else if (route.params.next === 'SaveProgress') {
       navigation.replace('SaveProgress');
+    } else if (route.params.next === 'Paywall') {
+      navigation.replace('Paywall', { from: 'journey' });
     } else {
       navigation.replace('ParentDashboard');
     }

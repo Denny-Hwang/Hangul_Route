@@ -38,7 +38,9 @@ export type TelemetryEventName =
   | 'space.left'
   | 'space.relink.requested'
   | 'space.relink.approved'
-  | 'space.relink.denied';
+  | 'space.relink.denied'
+  | 'paywall.viewed'
+  | 'paywall.console_opened';
 
 export interface TelemetryEvent {
   name: TelemetryEventName;
