@@ -1,6 +1,6 @@
 # Sync/Join-Space — enter a class or family code (wireframe v1)
 
-Spec: `docs/specs/F-TCH-001-teacher-classroom.md` §3.1 (join code, 3-class cap) · `docs/roadmap/multi-persona-sync-platform.md` §2 (spaces) · §6 step 2 — proposal
+Spec: `docs/specs/F-SPACE-001-spaces-memberships-join-code.md` §3.5 (shipped 2026-09-21; code `apps/mobile/src/screens/sync/JoinSpaceScreen.tsx`) · F-TCH-001 §3.1 (origin) · `docs/roadmap/multi-persona-sync-platform.md` §2, §6 step 2
 Audience: **learner** (class student, P-C, typing a code from the board), with a **parent** variant for family codes; a teacher may be helping in the room
 
 ## Scenario (Given-When-Then)
@@ -48,7 +48,7 @@ done sheet
 +----------------------------------+
 ```
 
-- Six boxes, not a text field: matches how the code is read aloud one character at a time. Confusable characters (I, O, 1, 0) are not in the alphabet, so the keyboard can reject them on entry.
+- Six boxes, not a text field: matches how the code is read aloud one character at a time. Confusable characters (I, O, 1, 0) are not in the alphabet, so the keyboard can reject them on entry. **Shipped as one wide field with box-like letter spacing** (single focus target; web + native); the keystroke filter drops non-alphabet characters.
 - Name confirmation is a single prefilled line, not a form. The only thing collected is what the roster shows.
 - The consent-mode block is a reserved slot whose contents depend on a deferred decision (see Open questions); the layout works whether it is empty or holds one email field.
 
@@ -81,8 +81,8 @@ Exit to:    `home/todays-mission` · `profile/settings` · (teacher side, not le
 
 ## Open questions
 
-- **Deferred decision — school consent mode** (roadmap §11 Q1): whether a teacher's school-level attestation suffices, or a parent email is always collected at step 2. This wireframe reserves the slot and does not decide. Legal review item.
-- **Deferred decision — teacher free cap** (roadmap §11 Q4: 20 vs 30 students). Only the error copy depends on it.
-- Entry-point conflict: F-TCH-001 §3.1 says the learner joins "from their mobile Profile Picker settings", roadmap §6 says "Profile Picker > Join a class", the app map routes it from `profile/settings`. This wireframe follows the map; `profiles/picker` may need a secondary link.
+- ~~**Deferred decision — school consent mode**~~ → decided (c) per space; **S3 collects nothing at step 2** (`consentMode` stored only; email capture is F-SPACE-002, app map §7 #22).
+- ~~**Deferred decision — teacher free cap**~~ → 20 (owner, 2026-09-20); shipped as `cap_class` → "This class is full. Ask your teacher."
+- ~~Entry-point conflict~~ → resolved: `profile/settings` "Classes & family" card → **Join a class**, no PIN (app map §7 #21). `profiles/picker` link not added.
 - Family join (co-parent invite via a family `join_code`): the same screen with "family" copy, or an adult-only flow inside `console/account`? A child should probably never type a family code.
-- Should a learner be able to leave a class from the child surface, or only via a parent/teacher? (the cap error state above assumes a learner-visible memberships list)
+- ~~Should a learner be able to leave a class from the child surface?~~ → shipped: **Leave** on the settings card behind a confirm dialog (cards and stars stay; rejoin with the code). Teachers can also remove a student (`DELETE /spaces/:id/members`).

@@ -43,7 +43,7 @@ Then: a child can switch to their own tiger tile or mute the sound in one tap; e
 |  --- Grown-ups ------------------|  <- visual break; adult rows below
 |  [ Grown-up zone ]      >        |  -> profiles/pin-entry (PIN; first entry = PIN setup)
 |  [ Save my progress ]   >        |  -> sync/save-progress (shipped, F-RESTORE-001)
-|  [ Join a class or family ] >    |  -> sync/join-space (FUTURE)
+|  [ Join a class or family ] >    |  -> sync/join-space (shipped, F-SPACE-001 — "Classes & family" card, not gated)
 |  [ Account ]            >        |  -> console/account (FUTURE, gated)
 |  [ Projection mode ]    >        |  -> classroom/projection-mode (FUTURE, teacher role only)
 +----------------------------------+
@@ -59,7 +59,7 @@ Then: a child can switch to their own tiger tile or mute the sound in one tap; e
 - Sound toggle → `ui-store` mute flag (planned)
 - [ Unlock the journey ] → `profiles/pin-entry` → `paywall/upgrade` (future, R)
 - [ Grown-up zone ] → `profiles/pin-entry` → `parent/dashboard` (math gate retired 2026-09-19, 10-app-map §7 #1)
-- [ Save my progress ] → `sync/save-progress` · [ Join a class or family ] → `sync/join-space` · [ Account ] → gate → `console/account` · [ Projection mode ] → `classroom/projection-mode` (Save my progress shipped — F-RESTORE-001; the rest future; IDs per app-map §4.2)
+- [ Save my progress ] → `sync/save-progress` · [ Join a class or family ] → `sync/join-space` · [ Account ] → gate → `console/account` · [ Projection mode ] → `classroom/projection-mode` (Save my progress · Join a class shipped — F-RESTORE-001 · F-SPACE-001; the rest future; IDs per app-map §4.2)
 - [<- back] → `home/todays-mission`
 
 ## Navigation graph
