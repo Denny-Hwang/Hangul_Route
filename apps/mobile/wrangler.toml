@@ -1,0 +1,25 @@
+# Cloudflare Workers — static-assets deploy of the learner app (web PWA).
+# Deployed by Cloudflare Workers Builds ("Connect GitHub") on every push to
+# main; GitHub Actions only gates merges (build + offline e2e). See
+# docs/launch/web-app-launch.md §2 for the dashboard settings.
+#
+#   Build command : pnpm install --frozen-lockfile && pnpm --filter @hangul-route/mobile build:web
+#   Deploy command: pnpm --filter @hangul-route/mobile exec wrangler deploy
+#
+# Assets-only Worker (no `main`): unlimited free requests, SPA fallback, and
+# the same `_headers` / `_redirects` conventions as Pages.
+name = "hangul-route-app"
+compatibility_date = "2025-09-01"
+workers_dev = true
+
+[assets]
+directory = "./dist"
+# Deep links like /journey resolve to index.html; real files are served as-is.
+not_found_handling = "single-page-application"
+html_handling = "auto-trailing-slash"
+
+# Custom domain — uncomment once hangulroute.com is on Cloudflare DNS
+# (or attach it in the dashboard: Worker → Settings → Domains & Routes).
+# [[routes]]
+# pattern = "app.hangulroute.com"
+# custom_domain = true
