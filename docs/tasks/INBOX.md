@@ -20,6 +20,8 @@
 - [ ] T-045 GitHub main 브랜치 보호(필수 체크 3개) + Cloudflare **Connect GitHub** (Workers Builds, 설정값은 `web-app-launch.md` §2-B) + `app.hangulroute.com` 연결 — 1h
 - [ ] T-046 설치 테스트 3종 (iOS Safari / Android Chrome / 데스크톱) + 실기기 오프라인 완주 — 0.5h
 - [ ] T-047 Lighthouse PWA 항목 통과 확인 — 0.25h
+- [ ] T-050 API 연결 (`web-app-launch.md` §2-D): `hangul-route-api` 배포 + `ALLOWED_ORIGINS` + PWA `EXPO_PUBLIC_API_BASE_URL` + 웹 `NEXT_PUBLIC_API_BASE_URL` — 0.5h
+- [ ] T-049 Clerk 앱 생성 → `CLERK_SECRET_KEY` 시크릿 + `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` (F-AUTH-002 전제; 그 전까지 콘솔은 dev 로그인) — 0.5h
 
 ### App Store 제출 (선택 — 나중, `docs/launch/app-store-submission.md`)
 - [ ] T-040 Apple Developer + App Store Connect 앱 레코드 + `eas init` → `app.json` projectId / `eas.json` submit 값 교체 — 1h

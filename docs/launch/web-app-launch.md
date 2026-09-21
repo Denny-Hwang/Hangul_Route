@@ -17,6 +17,7 @@
 | 데스크톱 폭 | 600px 이상에서 폰 폭(480px) 컬럼 중앙 정렬 — 토큰(canvas/border) 을 빌드 시 읽어 셸 CSS 생성 | `scripts/pwa-postbuild.mjs` |
 | 랜딩 CTA | `apps/web` 헤더·히어로·#get 섹션이 `NEXT_PUBLIC_APP_URL` (기본 app.hangulroute.com) 로 연결 | T-048 |
 | 부수 수정 | 콜드 런치 시 저장소 hydrate 전에 온보딩으로 보내던 버그 (네이티브 공통) — `RootNavigator` 가 hydrate 까지 대기 | E2E 의 오프라인 새로고침 단계가 이 버그를 잡아냄 |
+| S3 콘솔 셸 (2026-09-21) | `apps/web` `/teach` (F-CONSOLE-001): dev 로그인 (Clerk 전까지, 비프로덕션 또는 `NEXT_PUBLIC_CONSOLE_DEV_AUTH=true`) → 역할 선택·첫 space·학급 코드 → 홈 허브 → roster (코드 복사·재발급, 이번 주 롤업, 학생 summary 카드). Worker 에 **CORS allow-list** (`ALLOWED_ORIGINS`, 기본 hangulroute.com 3종 + localhost + workers.dev) — 브라우저(PWA·콘솔)에서 API 호출의 전제 | 단위 web 30 (lane 99.5 %) · backend 104; `next build` 라우트 4개 |
 | S3 스페이스 (2026-09-21) | `accounts` / `spaces` / `memberships` + join code (base32 6자, 30일) + 권한 함수 `can()` (교사는 payload 를 받을 경로가 없음) + `/api/spaces` 8 라우트 (F-SPACE-001). 학습자 앱: 설정 "Classes & family" 카드 → `sync/join-space` (코드 → 이름 확인 → 완료, PIN 없음) · Leave. 콘솔 화면은 다음 PR (F-CONSOLE-001) | 단위 backend 99 · mobile 369 · content-schema 30; 게이트 7/7 |
 | S1–S2 동기화·복원 (2026-09-21) | 서버 스냅샷 + 결정적 병합 + 30 s 디바운스 클라이언트 (F-SYNC-001/002) · 파일 백업/복원 · **Rescue Code** 자동 발급·복사·공유·재발급·새 기기 claim (F-RESTORE-001). `EXPO_PUBLIC_API_BASE_URL` 이 없으면 전부 조용히 꺼짐 (파일 백업만 동작) | 단위 (mobile 359 · backend 77) + `e2e/web/backup.spec.ts` 파일 왕복. 코드 경로 실기기 확인은 API 연결 후 T-046 에 포함 |
 
@@ -41,6 +42,13 @@
 - [ ] 랜딩의 `NEXT_PUBLIC_APP_URL` 은 기본값이 이 도메인이라 별도 설정 불필요
 - [ ] 첫 배포 후 **설치 테스트 3종**: iOS Safari 공유 → 홈 화면에 추가 / Android Chrome 설치 프롬프트 / 데스크톱 Chrome 주소창 설치 아이콘. 각각 아이콘 표시 · standalone 창 · 세로 고정(설치 후) 확인
 - [ ] **오프라인 실기기 테스트**: 설치 → 비행기 모드 → 실행 → 퀘스트 1개 완주 → 카드 획득 → 비행기 모드 해제 (텔레메트리 큐는 아직 없음 — §4)
+
+**D. API 연결 (동기화 · Rescue Code · 학급 · 콘솔)** — 지금까지의 서버 기능은 API 주소가 설정될 때만 켜진다 (없으면 앱은 로컬 전용으로 동작)
+- [ ] API Worker `hangul-route-api` 배포 (`apps/api`, T-002 — `wrangler deploy`; D1 은 아직 인메모리라 재배포 시 데이터가 사라짐 → F-INFRA-003 전까지 테스트 용도)
+- [ ] Worker 변수 `ALLOWED_ORIGINS` = `https://hangulroute.com,https://www.hangulroute.com,https://app.hangulroute.com` (미설정이면 같은 기본값 + localhost + `*.workers.dev`)
+- [ ] PWA 빌드 변수 (Workers Builds → Settings → Variables): `EXPO_PUBLIC_API_BASE_URL` = API Worker 주소
+- [ ] 랜딩/콘솔 (`apps/web`) 빌드 변수: `NEXT_PUBLIC_API_BASE_URL` = 같은 주소. `NEXT_PUBLIC_CONSOLE_DEV_AUTH=true` 는 **테스트 배포에서만** (Clerk 연결 전 임시 로그인)
+- [ ] Clerk 앱 생성 → `wrangler secret put CLERK_SECRET_KEY` + `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` (F-AUTH-002 착수 전제, T-049)
 - [ ] Lighthouse (Chrome DevTools) PWA/Installable 항목 전부 통과 확인, Performance ≥ 80 (번들 2 MB, 첫 로드 3G 에서 ~6초 예상)
 
 ## 3. 웹에서 다른 점 (사용자 안내용)

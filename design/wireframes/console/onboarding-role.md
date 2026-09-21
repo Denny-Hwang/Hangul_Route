@@ -1,6 +1,7 @@
 # Console/Onboarding-role — pick a role, create the first space (wireframe v1)
 
 Spec: `docs/roadmap/multi-persona-sync-platform.md` §1 (personas), §2 (`spaces`, `memberships`), §6 step 1, §8 `POST /spaces` · `docs/specs/F-TCH-001-teacher-classroom.md` §3.1
+Code (F-CONSOLE-001, 2026-09-21): `apps/web/src/app/teach/start/page.tsx` — three steps as drawn; parent and admin paths land on `/teach/home` (no web parent dashboard / school admin yet, app map §7 #23); teacher step 3 → `/teach/space/:id`.
 Audience: **parent / teacher / school admin** (first sign-in only)
 
 ## Scenario (Given-When-Then)
