@@ -32,11 +32,13 @@ const snap = (quests: string[]): ProgressSnapshot => ({
   streakDays: 0,
 });
 
-function fakeApi(over: Partial<{ register: unknown; putSnapshot: unknown }> = {}) {
+function fakeApi(over: Partial<{ register: unknown; putSnapshot: unknown; issueRescueCode: unknown; claimRescueCode: unknown }> = {}) {
   return {
     register: vi.fn(async () => ({ status: 'ok', learnerId: 'profile:a', secret: 'sec' })),
     putSnapshot: vi.fn(async () => ({ status: 'ok', rev: 1 })),
     getSnapshot: vi.fn(),
+    issueRescueCode: vi.fn(async () => ({ status: 'ok', code: 'TIGER-MOON-4821' })),
+    claimRescueCode: vi.fn(),
     ...over,
   };
 }
@@ -100,5 +102,94 @@ describe('sync-store (F-SYNC-002)', () => {
     await useSyncStore.getState().syncAll();
     expect(api.register).not.toHaveBeenCalled();
     expect(api.putSnapshot).toHaveBeenCalledWith('profile:a', expect.objectContaining({ baseRev: 4 }), expect.objectContaining({ secret: 'adopted' }));
+  });
+});
+
+describe('rescue code lifecycle (F-RESTORE-001)', () => {
+  beforeEach(() => {
+    mem.clear();
+    useSyncStore.setState({ byLearner: {} });
+    useProfileStore.setState({ profiles: [{ id: 'profile:a', displayName: 'Suni', ageGroup: '5-7', avatar: 'hoya-orange', role: 'learner', createdAt: 't' }], activeId: 'profile:a', hydrated: true });
+    useProgressStore.setState({ byProfile: { 'profile:a': snap(['q1']) }, hydratedFor: new Set(['profile:a']) });
+    vi.mocked(apiBaseUrl).mockReturnValue('https://api.example.com');
+  });
+
+  it('issues a rescue code after the first successful sync and keeps it locally', async () => {
+    const api = { ...fakeApi(), issueRescueCode: vi.fn(async () => ({ status: 'ok', code: 'TIGER-MOON-4821' })), claimRescueCode: vi.fn() };
+    setSyncApiForTests(api as never);
+    const state = await useSyncStore.getState().syncNow('profile:a');
+    expect(state.rescueCode).toBe('TIGER-MOON-4821');
+    expect(api.issueRescueCode).toHaveBeenCalledWith('profile:a', { deviceId: 'device-test', secret: 'sec' });
+    expect((mem.get('sync:profile:a') as { rescueCode: string }).rescueCode).toBe('TIGER-MOON-4821');
+    // a second sync does not re-issue
+    await useSyncStore.getState().syncNow('profile:a');
+    expect(api.issueRescueCode).toHaveBeenCalledTimes(1);
+    // explicit rotation does
+    const rotated = { ...api, issueRescueCode: vi.fn(async () => ({ status: 'ok', code: 'OTTER-RAIN-0001' })) };
+    setSyncApiForTests(rotated as never);
+    expect(await useSyncStore.getState().issueRescueCode('profile:a')).toBe('OTTER-RAIN-0001');
+  });
+
+  it('claim adopts a learner that is new to this device and seeds its credentials', async () => {
+    useProfileStore.setState({ profiles: [], activeId: null, hydrated: true });
+    useProgressStore.setState({ byProfile: {}, hydratedFor: new Set() });
+    const api = {
+      ...fakeApi(),
+      claimRescueCode: vi.fn(async () => ({
+        status: 'ok',
+        learner: { id: 'profile:z', displayName: 'Zed', ageGroup: '8-9', avatar: 'hoya-blue' },
+        secret: 'zs',
+        snapshot: { rev: 4, snapshot: { ...snap(['q7']), profileId: 'profile:z' }, summary: null },
+      })),
+    };
+    setSyncApiForTests(api as never);
+    const result = await useSyncStore.getState().claimRescueCode('tiger moon 4821');
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.plan.action).toBe('create');
+      expect(result.plan.added.quests).toBe(1);
+    }
+    expect(api.claimRescueCode).toHaveBeenCalledWith('tiger moon 4821', 'device-test');
+    expect(useProfileStore.getState().profiles.map((p) => p.id)).toEqual(['profile:z']);
+    expect(useProgressStore.getState().byProfile['profile:z']?.quests[0]?.questId).toBe('q7');
+    expect(useSyncStore.getState().byLearner['profile:z']).toMatchObject({ secret: 'zs', rev: 4, rescueCode: 'TIGER-MOON-4821' });
+    // The next sync must not rotate the code the parent wrote down.
+    await useSyncStore.getState().syncNow('profile:z');
+    expect(api.issueRescueCode).not.toHaveBeenCalled();
+    expect(useSyncStore.getState().byLearner['profile:z']?.rescueCode).toBe('TIGER-MOON-4821');
+  });
+
+  it('claim merges into an existing local profile and maps errors', async () => {
+    const api = {
+      ...fakeApi(),
+      claimRescueCode: vi.fn(async () => ({
+        status: 'ok',
+        learner: { id: 'profile:a', displayName: 'Suni', ageGroup: '5-7', avatar: 'hoya-orange' },
+        secret: 'as',
+        snapshot: { rev: 2, snapshot: snap(['q2']), summary: null },
+      })),
+    };
+    setSyncApiForTests(api as never);
+    const result = await useSyncStore.getState().claimRescueCode('TIGER-MOON-4821');
+    expect(result.ok && result.plan.action).toBe('merge');
+    expect(useProgressStore.getState().byProfile['profile:a']?.quests.map((q) => q.questId)).toEqual(['q1', 'q2']);
+
+    setSyncApiForTests({ ...fakeApi(), claimRescueCode: vi.fn(async () => ({ status: 'error', code: 'code_not_found' })) } as never);
+    expect(await useSyncStore.getState().claimRescueCode('X-Y-0000')).toEqual({ ok: false, error: 'code_not_found' });
+    vi.mocked(apiBaseUrl).mockReturnValue(null);
+    setSyncApiForTests(null);
+    expect(await useSyncStore.getState().claimRescueCode('X-Y-0000')).toEqual({ ok: false, error: 'off' });
+  });
+
+  it('claim with no server snapshot keeps or creates a blank local snapshot', async () => {
+    useProfileStore.setState({ profiles: [], activeId: null, hydrated: true });
+    useProgressStore.setState({ byProfile: {}, hydratedFor: new Set() });
+    setSyncApiForTests({
+      ...fakeApi(),
+      claimRescueCode: vi.fn(async () => ({ status: 'ok', learner: { id: 'profile:n', displayName: 'New', ageGroup: '5-7', avatar: 'hoya-pink' }, secret: 'ns', snapshot: null })),
+    } as never);
+    const result = await useSyncStore.getState().claimRescueCode('A-B-0000');
+    expect(result.ok && result.plan.action).toBe('create');
+    expect(useProgressStore.getState().byProfile['profile:n']?.quests).toEqual([]);
   });
 });

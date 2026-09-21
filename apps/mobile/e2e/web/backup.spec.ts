@@ -46,13 +46,13 @@ test('backup file round-trips a learner between two devices', async ({ browser }
     await b.getByRole('button', { name: 'Next' }).click();
     if (round === 0) await expect(b.getByText('Enter it once more')).toBeVisible();
   }
-  await expect(b.getByRole('heading', { name: 'Restore from a file' })).toBeVisible();
+  await expect(b.getByRole('heading', { name: 'Bring back progress' })).toBeVisible();
   const chooser = b.waitForEvent('filechooser');
-  await b.getByRole('button', { name: 'Choose a backup file' }).click();
+  await b.getByRole('button', { name: 'Open a saved file' }).click();
   await (await chooser).setFiles(path);
   await expect(b.getByTestId('restore-notice')).toBeVisible();
   await expect(b.getByText('Welcome back, Yuna! Your journey is here.')).toBeVisible();
-  await b.getByRole('button', { name: 'Done' }).click();
+  await b.getByRole('button', { name: 'Great' }).click();
   await b.getByRole('button', { name: 'Profiles and settings' }).click();
   await expect(b.getByRole('button', { name: 'Switch to Yuna' })).toBeVisible();
   await deviceB.close();

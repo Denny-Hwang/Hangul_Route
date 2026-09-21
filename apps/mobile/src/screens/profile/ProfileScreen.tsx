@@ -52,12 +52,14 @@ export function ProfileScreen(): React.ReactElement {
     parentGateOpenedAt === null ? null : { openedAt: parentGateOpenedAt, profileId: 'family' },
     Date.now(),
   );
-  const openGrownUps = (next: 'ParentDashboard' | 'AddProfile' | 'BackupRestore'): void => {
+  const openGrownUps = (next: 'ParentDashboard' | 'AddProfile' | 'Restore' | 'SaveProgress'): void => {
     if (parentSessionOpen) {
       if (next === 'AddProfile') {
         navigation.navigate('Onboarding', { screen: 'CreateProfile', params: { firstRun: false } });
-      } else if (next === 'BackupRestore') {
-        navigation.navigate('BackupRestore');
+      } else if (next === 'Restore') {
+        navigation.navigate('Restore', { from: 'settings' });
+      } else if (next === 'SaveProgress') {
+        navigation.navigate('SaveProgress');
       } else {
         navigation.navigate('ParentDashboard');
       }
@@ -184,7 +186,7 @@ export function ProfileScreen(): React.ReactElement {
       </Card>
 
       <Spacer size="lg" />
-      {active ? <BackupCard profile={active} onRestore={() => openGrownUps('BackupRestore')} /> : null}
+      {active ? <BackupCard profile={active} onRestore={() => openGrownUps('Restore')} onSaveProgress={() => openGrownUps('SaveProgress')} /> : null}
 
       {canOfferInstall ? (
         <>

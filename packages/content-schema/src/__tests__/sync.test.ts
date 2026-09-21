@@ -80,3 +80,16 @@ describe('sync schemas (F-SYNC-001)', () => {
     expect(BackupFileSchema.safeParse({ ...file, format: 'other' }).success).toBe(false);
   });
 });
+
+describe('rescue code (F-RESTORE-001)', () => {
+  it('normalizes spacing and case, rejects other shapes', async () => {
+    const { normalizeRescueCode, RescueClaimSchema } = await import('../index');
+    expect(normalizeRescueCode(' tiger moon 4821 ')).toBe('TIGER-MOON-4821');
+    expect(normalizeRescueCode('Tiger-Moon-4821')).toBe('TIGER-MOON-4821');
+    expect(normalizeRescueCode('tiger-4821')).toBeNull();
+    expect(normalizeRescueCode('tiger-moon-48')).toBeNull();
+    expect(normalizeRescueCode('t1ger-moon-4821')).toBeNull();
+    expect(RescueClaimSchema.parse({ code: 'tiger moon 4821', deviceId: 'device-12345678' }).code).toBe('TIGER-MOON-4821');
+    expect(RescueClaimSchema.safeParse({ code: 'nope', deviceId: 'device-12345678' }).success).toBe(false);
+  });
+});

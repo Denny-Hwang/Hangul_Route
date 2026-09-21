@@ -29,6 +29,17 @@ export type RegisterResult =
   | { status: 'conflict' }
   | { status: 'error'; code: string };
 
+export type IssueResult = { status: 'ok'; code: string } | { status: 'error'; code: string };
+
+export type ClaimResult =
+  | {
+      status: 'ok';
+      learner: { id: string; displayName: string; ageGroup: '5-7' | '8-9' | '10-11'; avatar: string };
+      secret: string;
+      snapshot: { rev: number; snapshot: ProgressSnapshot; summary: ProgressSummary | null } | null;
+    }
+  | { status: 'error'; code: 'code_not_found' | 'too_many_attempts' | 'network' | 'invalid' | 'unknown' };
+
 export type GetResult =
   | { status: 'ok'; rev: number; snapshot: ProgressSnapshot; summary: ProgressSummary | null }
   | { status: 'none' }
@@ -55,6 +66,7 @@ async function call(
 export function createSyncApi(opts: SyncApiOptions) {
   const fetchImpl = opts.fetchImpl ?? globalThis.fetch;
   const base = `${opts.endpoint}/api/sync`;
+  const recovery = `${opts.endpoint}/api/recovery`;
 
   return {
     async register(
@@ -90,6 +102,28 @@ export function createSyncApi(opts: SyncApiOptions) {
         return { status: 'conflict', rev: data.rev, snapshot: data.snapshot };
       }
       return { status: 'error', code: `http_${r.status}` };
+    },
+
+    async issueRescueCode(learnerId: string, creds: DeviceCredentials): Promise<IssueResult> {
+      const r = await call(fetchImpl, `${recovery}/issue`, { method: 'POST', headers: authHeader(creds), body: JSON.stringify({ learnerId }) });
+      if (r.status === -1) return { status: 'error', code: 'network' };
+      if (r.status !== 201) return { status: 'error', code: `http_${r.status}` };
+      return { status: 'ok', code: (r.body.data as { code: string }).code };
+    },
+
+    async claimRescueCode(code: string, deviceId: string): Promise<ClaimResult> {
+      const r = await call(fetchImpl, `${recovery}/claim`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, deviceId }),
+      });
+      if (r.status === -1) return { status: 'error', code: 'network' };
+      if (r.status === 404) return { status: 'error', code: 'code_not_found' };
+      if (r.status === 429) return { status: 'error', code: 'too_many_attempts' };
+      if (r.status === 422) return { status: 'error', code: 'invalid' };
+      if (r.status !== 200) return { status: 'error', code: 'unknown' };
+      const data = r.body.data as ClaimResult extends { status: 'ok' } ? never : { learner: { id: string; displayName: string; ageGroup: '5-7' | '8-9' | '10-11'; avatar: string }; device: { secret: string }; snapshot: { rev: number; snapshot: ProgressSnapshot; summary: ProgressSummary | null } | null };
+      return { status: 'ok', learner: data.learner, secret: data.device.secret, snapshot: data.snapshot };
     },
 
     async getSnapshot(learnerId: string, creds: DeviceCredentials): Promise<GetResult> {

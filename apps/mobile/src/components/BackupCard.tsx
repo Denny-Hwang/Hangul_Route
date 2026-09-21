@@ -13,6 +13,7 @@ import { useSyncStore, type LearnerSyncState } from '../store/sync-store';
 export interface BackupCardProps {
   profile: Profile;
   onRestore: () => void;
+  onSaveProgress: () => void;
 }
 
 export function statusLine(state: LearnerSyncState | undefined, now: Date): string {
@@ -24,7 +25,7 @@ export function statusLine(state: LearnerSyncState | undefined, now: Date): stri
   return minutes < 1 ? 'Saved to the cloud · just now' : `Saved to the cloud · ${minutes} min ago`;
 }
 
-export function BackupCard({ profile, onRestore }: BackupCardProps): React.ReactElement {
+export function BackupCard({ profile, onRestore, onSaveProgress }: BackupCardProps): React.ReactElement {
   const snap = useProgressStore((s) => s.byProfile[profile.id]);
   const syncState = useSyncStore((s) => s.byLearner[profile.id]);
   const hydrateSync = useSyncStore((s) => s.hydrate);
@@ -47,6 +48,7 @@ export function BackupCard({ profile, onRestore }: BackupCardProps): React.React
       <Caption tone="muted">{statusLine(syncState, new Date())}</Caption>
       <Spacer size="md" />
       <View style={{ gap: spacing.sm }}>
+        <Button label="Save my progress" tone="primary" size="md" accessibilityLabel="Save my progress (rescue code, grown-ups only)" onPress={onSaveProgress} />
         <Button label="Back up to a file" tone="secondary" size="md" onPress={() => void exportFile()} />
         <Button label="Restore from a file" tone="ghost" size="md" accessibilityLabel="Restore from a file (grown-ups only)" onPress={onRestore} />
       </View>

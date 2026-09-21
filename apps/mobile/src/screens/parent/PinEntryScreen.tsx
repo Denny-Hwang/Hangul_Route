@@ -66,8 +66,10 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
     openParentGate();
     if (route.params.next === 'AddProfile') {
       navigation.replace('Onboarding', { screen: 'CreateProfile', params: { firstRun: false } });
-    } else if (route.params.next === 'BackupRestore') {
-      navigation.replace('BackupRestore');
+    } else if (route.params.next === 'Restore') {
+      navigation.replace('Restore', { from: 'settings' });
+    } else if (route.params.next === 'SaveProgress') {
+      navigation.replace('SaveProgress');
     } else {
       navigation.replace('ParentDashboard');
     }

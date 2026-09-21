@@ -2,7 +2,8 @@ import { Body, Button, Heading, Hoya, Screen, Spacer, spacing } from '@hangul-ro
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React from 'react';
 import { View } from 'react-native';
-import type { OnboardingStackParamList } from '../../navigation/types';
+import type { OnboardingStackParamList, RootStackParamList } from '../../navigation/types';
+import type { NavigationProp } from '@react-navigation/native';
 
 type Props = NativeStackScreenProps<OnboardingStackParamList, 'Welcome'>;
 
@@ -28,6 +29,12 @@ export function WelcomeScreen({ navigation }: Props): React.ReactElement {
           size="hero"
           fullWidth
           onPress={() => navigation.navigate('CreateProfile', { firstRun: true })}
+        />
+        <Button
+          label="I already have progress"
+          tone="ghost"
+          size="md"
+          onPress={() => (navigation.getParent() as NavigationProp<RootStackParamList> | undefined)?.navigate('Restore', { from: 'welcome' })}
         />
         <Body tone="muted" size="sm" align="center" style={{ maxWidth: 280 }}>
           Made for kids 5–11. Built with kids, parents, and grandparents in mind.

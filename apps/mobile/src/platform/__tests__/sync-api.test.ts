@@ -64,3 +64,26 @@ describe('platform/sync-api', () => {
     expect(await api.getSnapshot('profile:a', creds)).toEqual({ status: 'error', code: 'network' });
   });
 });
+
+describe('platform/sync-api recovery', () => {
+  it('issue and claim map their statuses', async () => {
+    const fetchImpl = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(json(201, { data: { code: 'TIGER-MOON-4821' } }))
+      .mockResolvedValueOnce(json(401, {}))
+      .mockResolvedValueOnce(json(200, { data: { learner: { id: 'profile:a', displayName: 'S', ageGroup: '5-7', avatar: 'a' }, device: { secret: 'x' }, snapshot: null } }))
+      .mockResolvedValueOnce(json(404, {}))
+      .mockResolvedValueOnce(json(429, {}))
+      .mockResolvedValueOnce(json(422, {}))
+      .mockResolvedValueOnce(json(500, {}))
+      .mockRejectedValueOnce(new Error('offline'));
+    const api = createSyncApi({ endpoint: 'https://api.example.com', fetchImpl });
+    expect(await api.issueRescueCode('profile:a', creds)).toEqual({ status: 'ok', code: 'TIGER-MOON-4821' });
+    expect(await api.issueRescueCode('profile:a', creds)).toEqual({ status: 'error', code: 'http_401' });
+    expect(await api.claimRescueCode('TIGER-MOON-4821', 'device-x')).toMatchObject({ status: 'ok', secret: 'x', snapshot: null });
+    expect(await api.claimRescueCode('a', 'd')).toEqual({ status: 'error', code: 'code_not_found' });
+    expect(await api.claimRescueCode('a', 'd')).toEqual({ status: 'error', code: 'too_many_attempts' });
+    expect(await api.claimRescueCode('a', 'd')).toEqual({ status: 'error', code: 'invalid' });
+    expect(await api.claimRescueCode('a', 'd')).toEqual({ status: 'error', code: 'unknown' });
+    expect(await api.claimRescueCode('a', 'd')).toEqual({ status: 'error', code: 'network' });
+  });
+});
