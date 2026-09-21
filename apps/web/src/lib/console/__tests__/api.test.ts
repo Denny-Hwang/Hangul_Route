@@ -46,3 +46,24 @@ describe('console api (F-CONSOLE-001)', () => {
     expect(await api.listSpaces()).toEqual({ ok: false, error: 'network', status: -1 });
   });
 });
+
+describe('console api — plans (F-PLAN-001)', () => {
+  const plan = { id: 'plan:w3', spaceId: 'space:c', authorAccountId: 't', title: 'Week 3', items: [{ kind: 'quest', id: 'quest:a' }], targetLearnerIds: null, publishedAt: null, archivedAt: null, createdAt: 't', updatedAt: 't' };
+
+  it('lists, saves and archives plans', async () => {
+    const fetchImpl = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(json(200, { data: { plans: [plan] } }))
+      .mockResolvedValueOnce(json(201, { data: { plan } }))
+      .mockResolvedValueOnce(json(200, { data: { plan: { ...plan, publishedAt: 'p' } } }))
+      .mockResolvedValueOnce(json(200, { data: { plan: { ...plan, archivedAt: 'a' } } }))
+      .mockResolvedValueOnce(json(403, {}));
+    const api = createConsoleApi({ endpoint: 'https://api.example.com', token: 't', fetchImpl });
+    expect(await api.listPlans('space:c')).toEqual({ ok: true, data: [plan] });
+    expect(await api.savePlan('space:c', { title: 'Week 3', items: plan.items as never, publish: false })).toEqual({ ok: true, data: plan });
+    expect(await api.savePlan('space:c', { id: 'plan:w3', title: 'Week 3', items: plan.items as never, publish: true })).toMatchObject({ ok: true, data: { publishedAt: 'p' } });
+    expect(await api.archivePlan('space:c', 'plan:w3')).toMatchObject({ ok: true, data: { archivedAt: 'a' } });
+    expect(await api.listPlans('space:c')).toEqual({ ok: false, error: 'forbidden', status: 403 });
+    expect(fetchImpl.mock.calls[1]?.[1]).toMatchObject({ method: 'PUT' });
+    expect(fetchImpl.mock.calls[3]?.[0]).toBe('https://api.example.com/api/spaces/space%3Ac/plans/plan%3Aw3/archive');
+  });
+});

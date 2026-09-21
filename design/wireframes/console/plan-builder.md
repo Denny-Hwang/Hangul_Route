@@ -1,6 +1,7 @@
 # Console/Plan-builder — pick, order, pace, publish a plan (wireframe v1)
 
 Spec: `docs/roadmap/multi-persona-sync-platform.md` §2 (`plans`), §3.3 (`summary.planProgress`), §4 (plan → homework derived on device), §6 step 3–4 · `docs/specs/F-TCH-001-teacher-classroom.md` §3.3, §3.5 · `docs/specs/F-HW-001-homework-page.md` §3.4 (1 explicit assignment / day, gating) · `docs/specs/F-PAR-001-parent-dashboard.md` §3.6
+Code (F-PLAN-001, 2026-09-21): `apps/web/src/app/teach/space/[id]/plan/page.tsx` — builder (catalog · ordered items with ↑↓× · date/note · Spread dates · everyone/only · Publish / Save draft) and the published readout (Edit · Archive · New plan · per-learner done / total · not ready yet · last active). Not drawn-as-shipped: drag handle (buttons instead), gating warning (Stage 1 only for now), "send to ready learners only", daily-test / story items, learner-detail tap.
 Audience: **teacher** (class space) · **parent** (family space) — same screen, space kind sets the wording ("students" / "kids")
 
 ## Scenario (Given-When-Then)

@@ -1,4 +1,4 @@
-import type { ProgressSummary, SpaceKind, SpaceRole } from '@hangul-route/content-schema';
+import type { PlanItem, ProgressSummary, SpaceKind, SpaceRole } from '@hangul-route/content-schema';
 
 /**
  * Console transport for /api/spaces — F-CONSOLE-001. Bearer = the console
@@ -47,6 +47,27 @@ export interface CreatedSpace {
   joinCodeExpiresAt: string | null;
 }
 
+export interface PlanView {
+  id: string;
+  spaceId: string;
+  authorAccountId: string;
+  title: string;
+  items: PlanItem[];
+  targetLearnerIds: string[] | null;
+  publishedAt: string | null;
+  archivedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PlanSave {
+  id?: string;
+  title: string;
+  items: PlanItem[];
+  targetLearnerIds?: string[] | null;
+  publish: boolean;
+}
+
 export type ApiError = 'unauthorized' | 'forbidden' | 'not_found' | 'invalid' | 'network' | 'unknown';
 export type ApiResult<T> = { ok: true; data: T } | { ok: false; error: ApiError; status: number };
 
@@ -87,6 +108,12 @@ export function createConsoleApi(opts: ConsoleApiOptions) {
     regenerateCode: (spaceId: string) =>
       call<{ joinCode: string; expiresAt: string }>(`${base}/${encodeURIComponent(spaceId)}/code`, { method: 'POST' }, [200]),
     roster: (spaceId: string) => call<Roster>(`${base}/${encodeURIComponent(spaceId)}/roster`, { method: 'GET' }, [200]),
+    listPlans: (spaceId: string) =>
+      call<{ plans: PlanView[] }>(`${base}/${encodeURIComponent(spaceId)}/plans`, { method: 'GET' }, [200]).then((r) => (r.ok ? { ok: true as const, data: r.data.plans } : r)),
+    savePlan: (spaceId: string, body: PlanSave) =>
+      call<{ plan: PlanView }>(`${base}/${encodeURIComponent(spaceId)}/plans`, { method: 'PUT', body: JSON.stringify(body) }, [200, 201]).then((r) => (r.ok ? { ok: true as const, data: r.data.plan } : r)),
+    archivePlan: (spaceId: string, planId: string) =>
+      call<{ plan: PlanView }>(`${base}/${encodeURIComponent(spaceId)}/plans/${encodeURIComponent(planId)}/archive`, { method: 'POST' }, [200]).then((r) => (r.ok ? { ok: true as const, data: r.data.plan } : r)),
   };
 }
 

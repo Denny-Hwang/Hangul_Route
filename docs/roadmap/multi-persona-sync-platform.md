@@ -1,6 +1,6 @@
 # Multi-persona · Teacher Plans · Sync & Restore — 최소 DB 설계안
 
-**Status**: `in progress` — S1 (F-SYNC-001/002) · S2 (F-RESTORE-001) · S3 (F-SPACE-001 서버 + 학습자 join · F-CONSOLE-001 웹 콘솔 셸: 로그인(dev)·첫 space·홈·roster) · S4 PR 1 (F-PLAN-001 서버 + 기기 파생) 구현됨 2026-09-21; S4 빌더 · S5–S7 (F-PLAN-001 / F-TCH-001 / F-ENT-001 / F-SCHOOL-001) 은 아직 proposal
+**Status**: `in progress` — S1 (F-SYNC-001/002) · S2 (F-RESTORE-001) · S3 (F-SPACE-001 서버 + 학습자 join · F-CONSOLE-001 웹 콘솔 셸: 로그인(dev)·첫 space·홈·roster) · S4 (F-PLAN-001 서버 + 기기 파생 + 웹 빌더) 구현됨 2026-09-21; S5–S7 (F-PLAN-001 / F-TCH-001 / F-ENT-001 / F-SCHOOL-001) 은 아직 proposal
 **작성일**: 2026-09-19
 **선행 문서**: `web-pwa-offline.md` (웹앱/오프라인), F-TCH-001 (draft), F-PROF-001, F-HW-001, F-SUB-001, F-AUTH-001, `apps/api/src/db/schema.sql` (v1)
 **요구**: (1) 교사가 학습 계획을 짜서 배포하고 학생 진도를 본다 (2) DB 를 최소로 (3) 개인 · 가정 · 학급 · 학교 페르소나 전부 (4) 페르소나별 결제 (5) 앱 삭제 · 기기 이전 시 데이터 복원
@@ -380,7 +380,7 @@ BP09 §3.5 / F-PAR-001 §3.2 의 대시보드 숫자가 전부 이 객체에서 
 | S1 | F-SYNC-001 · F-SYNC-002 | schema v2 + `snapshots` PUT/GET + `merge.ts` + `summarize.ts` + 파일 내보내기/가져오기. 가정(P-B) 복원 완성 — **구현됨 2026-09-21** (#67) | 3 d |
 | S2 | F-RESTORE-001 | Rescue Code 생성·표시·claim + rate limit — **구현됨 2026-09-21**; 이메일 발송은 F-RESTORE-002 로 분리 | 1.5 d |
 | S3 | F-SPACE-001 | `spaces` / `memberships` / join code / `can.ts`. F-TCH-001 §3.1 을 여기로 이관 — **구현됨 2026-09-21** (서버 + `sync/join-space`; 콘솔 화면은 F-CONSOLE-001) | 2 d |
-| S4 | F-PLAN-001 | `plans` + 웹 Plan Builder (family·class 공용) + 학생 측 plan → homework 파생 — **PR 1 구현됨 2026-09-21** (서버 + inbox + 기기 파생 + `planProgress`); 빌더 화면은 PR 2 | 3 d |
+| S4 | F-PLAN-001 | `plans` + 웹 Plan Builder (family·class 공용) + 학생 측 plan → homework 파생 — **구현됨 2026-09-21** (PR 1 서버 + inbox + 기기 파생 + `planProgress` · PR 2 웹 빌더/readout) | 3 d |
 | S5 | F-TCH-001 (ready 로 승격) | Roster summary 뷰, 교사 온보딩, 20명 캡, re-link 승인 | 2 d |
 | S6 | F-ENT-001 | `entitlements` + `tier.ts` 확장 + Stripe Checkout/webhook + F-IAP-001 수렴 | 2.5 d |
 | S7 | F-SCHOOL-001 | school space, admin 대시보드, 교사 초대, seat 카운트 | 2 d |
