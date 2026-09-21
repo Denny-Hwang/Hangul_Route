@@ -9,6 +9,7 @@ import { profileRoutes } from './routes/profiles';
 import { progressRoutes } from './routes/progress';
 import { subscriptionRoutes } from './routes/subscriptions';
 import { recoveryRoutes } from './routes/recovery';
+import { relinkRoutes } from './routes/relink';
 import { plansRoutes } from './routes/plans';
 import { spacesRoutes } from './routes/spaces';
 import { syncRoutes } from './routes/sync';
@@ -55,6 +56,8 @@ app.route('/api/recovery', recoveryRoutes);
 app.route('/api/spaces', spacesRoutes);
 // Plans (F-PLAN-001): one row per space, derived into homework on each learner device.
 app.route('/api/spaces', plansRoutes);
+// Re-link approval (F-TCH-001 §10.1): a class student's new device, approved by the teacher.
+app.route('/api/spaces', relinkRoutes);
 
 app.notFound((c) =>
   c.json({ ok: false, error: { code: 'not_found', message: 'Route not found' } }, 404),

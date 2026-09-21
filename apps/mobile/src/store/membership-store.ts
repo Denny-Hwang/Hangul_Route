@@ -1,9 +1,10 @@
 import type { LearnerMembership } from '@hangul-route/content-schema';
 import { create } from 'zustand';
 import type { JoinErrorCode } from '../logic/spaces/join-code';
+import type { RestorePlan } from '../logic/sync/restore';
 import { getDeviceId } from '../platform/device';
 import { readJson, writeJson } from '../platform/storage';
-import type { DeviceCredentials, SyncApiClient } from '../platform/sync-api';
+import type { DeviceCredentials, RosterName, SyncApiClient } from '../platform/sync-api';
 import { track } from '../platform/telemetry';
 import { usePlanStore } from './plan-store';
 import { onSynced, syncApi, useSyncStore } from './sync-store';
@@ -18,8 +19,15 @@ interface State {
 }
 
 export type LookupOutcome =
-  | { ok: true; space: { id: string; kind: LearnerMembership['kind']; name: string }; full: boolean }
+  | { ok: true; space: { id: string; kind: LearnerMembership['kind']; name: string }; full: boolean; roster: RosterName[] }
   | { ok: false; error: JoinErrorCode };
+
+export type RelinkError = 'code_not_found' | 'code_expired' | 'learner_not_found' | 'already_bound' | 'too_many_attempts' | 'network' | 'invalid' | 'unknown' | 'off';
+export type RelinkOutcome = { ok: true; requestId: string; expiresAt: string } | { ok: false; error: RelinkError };
+export type RelinkPoll =
+  | { state: 'pending' | 'denied' | 'expired' }
+  | { state: 'approved'; plan: RestorePlan }
+  | { state: 'error'; error: 'network' | 'not_found' | 'unknown' | 'off' };
 
 export type JoinOutcome = { ok: true; alreadyMember: boolean; membership: LearnerMembership } | { ok: false; error: JoinErrorCode };
 
@@ -30,6 +38,10 @@ interface Actions {
   lookup: (code: string) => Promise<LookupOutcome>;
   join: (learnerId: string, spaceId: string, code: string, displayName?: string) => Promise<JoinOutcome>;
   leave: (learnerId: string, spaceId: string) => Promise<boolean>;
+  /** Ask the teacher to bind this device to an existing roster learner (F-TCH-001 §10.1). */
+  requestRelink: (spaceId: string, code: string, learnerId: string) => Promise<RelinkOutcome>;
+  /** Poll the request; on approval the learner is adopted on this device. */
+  pollRelink: (spaceId: string, requestId: string) => Promise<RelinkPoll>;
 }
 
 const key = (learnerId: string): string => `memberships:${learnerId}`;
@@ -78,7 +90,7 @@ export const useMembershipStore = create<State & Actions>((set, get) => {
       const client = syncApi();
       if (!client) return { ok: false, error: 'off' };
       const result = await client.lookupSpace(code);
-      return result.status === 'ok' ? { ok: true, space: result.space, full: result.full } : { ok: false, error: result.code };
+      return result.status === 'ok' ? { ok: true, space: result.space, full: result.full, roster: result.roster } : { ok: false, error: result.code };
     },
 
     join: async (learnerId, spaceId, code, displayName) => {
@@ -99,6 +111,29 @@ export const useMembershipStore = create<State & Actions>((set, get) => {
       put(learnerId, [...current.filter((m) => m.spaceId !== result.membership.spaceId), result.membership]);
       void track({ name: 'space.join.succeeded', profileId: learnerId, payload: { kind: result.membership.kind, alreadyMember: result.alreadyMember } });
       return { ok: true, alreadyMember: result.alreadyMember, membership: result.membership };
+    },
+
+    requestRelink: async (spaceId, code, learnerId) => {
+      const client = syncApi();
+      if (!client) return { ok: false, error: 'off' };
+      void track({ name: 'space.relink.requested', profileId: learnerId });
+      const result = await client.createRelink(spaceId, { code, learnerId, deviceId: await getDeviceId() });
+      return result.status === 'ok' ? { ok: true, requestId: result.requestId, expiresAt: result.expiresAt } : { ok: false, error: result.code };
+    },
+
+    pollRelink: async (spaceId, requestId) => {
+      const client = syncApi();
+      if (!client) return { state: 'error', error: 'off' };
+      const result = await client.pollRelink(spaceId, requestId, await getDeviceId());
+      if (result.status !== 'ok') return { state: 'error', error: result.code };
+      if (result.state !== 'approved') {
+        if (result.state === 'denied') void track({ name: 'space.relink.denied', profileId: undefined });
+        return { state: result.state };
+      }
+      const plan = await useSyncStore.getState().adoptServerLearner({ learner: result.learner, secret: result.secret, snapshot: result.snapshot });
+      void track({ name: 'space.relink.approved', profileId: result.learner.id });
+      await get().refresh(result.learner.id);
+      return { state: 'approved', plan };
     },
 
     leave: async (learnerId, spaceId) => {

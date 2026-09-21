@@ -32,7 +32,9 @@ function fakeApi(over: Record<string, unknown> = {}) {
     issueRescueCode: vi.fn(async () => ({ status: 'ok', code: 'TIGER-MOON-4821' })),
     claimRescueCode: vi.fn(),
     getSnapshot: vi.fn(),
-    lookupSpace: vi.fn(async () => ({ status: 'ok', space: { id: 'space:cls', kind: 'class', name: 'Sunday Class A' }, full: false })),
+    lookupSpace: vi.fn(async () => ({ status: 'ok', space: { id: 'space:cls', kind: 'class', name: 'Sunday Class A' }, full: false, roster: [{ learnerId: 'profile:m', name: 'Minho' }] })),
+    createRelink: vi.fn(async () => ({ status: 'ok', requestId: 'relink:1', expiresAt: 'e' })),
+    pollRelink: vi.fn(async () => ({ status: 'ok', state: 'pending', expiresAt: 'e' })),
     joinSpace: vi.fn(async () => ({ status: 'ok', alreadyMember: false, membership: classRow })),
     leaveSpace: vi.fn(async () => ({ status: 'ok', left: true })),
     getInbox: vi.fn(async () => ({ status: 'ok', inbox: { rev: 1, plans: [], memberships: [familyRow, classRow], tier: 'free', serverTime: 't' } })),
@@ -88,7 +90,7 @@ describe('membership-store (F-SPACE-001 §3.5)', () => {
 
   it('looks up a code and maps errors, including no API', async () => {
     setSyncApiForTests(fakeApi() as never);
-    expect(await useMembershipStore.getState().lookup('K7M2X9')).toEqual({ ok: true, space: { id: 'space:cls', kind: 'class', name: 'Sunday Class A' }, full: false });
+    expect(await useMembershipStore.getState().lookup('K7M2X9')).toEqual({ ok: true, space: { id: 'space:cls', kind: 'class', name: 'Sunday Class A' }, full: false, roster: [{ learnerId: 'profile:m', name: 'Minho' }] });
     setSyncApiForTests(fakeApi({ lookupSpace: vi.fn(async () => ({ status: 'error', code: 'code_expired' })) }) as never);
     expect(await useMembershipStore.getState().lookup('K7M2X9')).toEqual({ ok: false, error: 'code_expired' });
     vi.mocked(apiBaseUrl).mockReturnValue(null);
@@ -135,5 +137,42 @@ describe('membership-store (F-SPACE-001 §3.5)', () => {
     setSyncApiForTests(fakeApi({ leaveSpace: vi.fn(async () => ({ status: 'error', code: 'http_500' })) }) as never);
     expect(await useMembershipStore.getState().leave('profile:a', 'space:fam')).toBe(false);
     expect(useMembershipStore.getState().byLearner['profile:a']).toEqual([familyRow]);
+  });
+});
+
+describe('re-link on a new device (F-TCH-001 §10.1)', () => {
+  it('requests, polls, and adopts the learner on approval', async () => {
+    useProfileStore.setState({ profiles: [], activeId: null, hydrated: true });
+    useProgressStore.setState({ byProfile: {}, hydratedFor: new Set() });
+    const api = fakeApi({
+      pollRelink: vi.fn()
+        .mockResolvedValueOnce({ status: 'ok', state: 'pending', expiresAt: 'e' })
+        .mockResolvedValueOnce({ status: 'ok', state: 'approved', learner: { id: 'profile:m', displayName: 'Minho', ageGroup: '8-9', avatar: 'hoya-blue' }, secret: 'ms', snapshot: { rev: 3, snapshot: { ...snap, profileId: 'profile:m', cards: [{ cardId: 'card:book', unlockedAt: 't', newSinceLastView: false }] }, summary: null } }),
+      getInbox: vi.fn(async () => ({ status: 'ok', inbox: { rev: 3, plans: [], memberships: [classRow], tier: 'free', serverTime: 't' } })),
+    });
+    setSyncApiForTests(api as never);
+    const req = await useMembershipStore.getState().requestRelink('space:cls', 'K7M2X9', 'profile:m');
+    expect(req).toEqual({ ok: true, requestId: 'relink:1', expiresAt: 'e' });
+    expect(api.createRelink).toHaveBeenCalledWith('space:cls', { code: 'K7M2X9', learnerId: 'profile:m', deviceId: 'device-test' });
+    expect(await useMembershipStore.getState().pollRelink('space:cls', 'relink:1')).toEqual({ state: 'pending' });
+    const approved = await useMembershipStore.getState().pollRelink('space:cls', 'relink:1');
+    expect(approved.state).toBe('approved');
+    if (approved.state === 'approved') expect(approved.plan).toMatchObject({ action: 'create', added: { cards: 1 } });
+    expect(useProfileStore.getState().profiles.map((p) => p.id)).toEqual(['profile:m']);
+    expect(useSyncStore.getState().byLearner['profile:m']).toMatchObject({ secret: 'ms', rev: 3 });
+    expect(useMembershipStore.getState().byLearner['profile:m']).toEqual([classRow]);
+    expect(vi.mocked(track).mock.calls.map((c) => c[0].name)).toEqual(['space.relink.requested', 'space.relink.approved']);
+  });
+
+  it('maps denied, expired, request errors and no API', async () => {
+    setSyncApiForTests(fakeApi({ createRelink: vi.fn(async () => ({ status: 'error', code: 'already_bound' })), pollRelink: vi.fn().mockResolvedValueOnce({ status: 'ok', state: 'denied', expiresAt: 'e' }).mockResolvedValueOnce({ status: 'ok', state: 'expired', expiresAt: 'e' }).mockResolvedValueOnce({ status: 'error', code: 'not_found' }) }) as never);
+    expect(await useMembershipStore.getState().requestRelink('space:cls', 'K7M2X9', 'profile:m')).toEqual({ ok: false, error: 'already_bound' });
+    expect(await useMembershipStore.getState().pollRelink('space:cls', 'relink:1')).toEqual({ state: 'denied' });
+    expect(await useMembershipStore.getState().pollRelink('space:cls', 'relink:1')).toEqual({ state: 'expired' });
+    expect(await useMembershipStore.getState().pollRelink('space:cls', 'relink:1')).toEqual({ state: 'error', error: 'not_found' });
+    vi.mocked(apiBaseUrl).mockReturnValue(null);
+    setSyncApiForTests(null);
+    expect(await useMembershipStore.getState().requestRelink('space:cls', 'K7M2X9', 'profile:m')).toEqual({ ok: false, error: 'off' });
+    expect(await useMembershipStore.getState().pollRelink('space:cls', 'relink:1')).toEqual({ state: 'error', error: 'off' });
   });
 });

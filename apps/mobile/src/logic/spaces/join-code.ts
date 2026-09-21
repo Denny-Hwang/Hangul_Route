@@ -21,6 +21,8 @@ export type JoinErrorCode =
   | 'cap_learner'
   | 'cap_class'
   | 'not_joinable'
+  | 'learner_not_found'
+  | 'already_bound'
   | 'too_many_attempts'
   | 'network'
   | 'invalid'
@@ -40,6 +42,10 @@ export function joinErrorMessage(code: JoinErrorCode): string {
       return 'This class is full. Ask your teacher.';
     case 'not_joinable':
       return 'That code is for grown-ups. Ask for a class code.';
+    case 'learner_not_found':
+      return 'That name is not in this class anymore. Ask your teacher.';
+    case 'already_bound':
+      return 'This device already has that learner — switch profiles instead.';
     case 'too_many_attempts':
       return "Let's wait a few minutes before trying again.";
     case 'network':

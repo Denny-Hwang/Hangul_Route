@@ -1,10 +1,13 @@
 import { RescueClaimSchema } from '@hangul-route/content-schema';
 import { Hono } from 'hono';
 import { fail, ok } from '../envelope';
-import { authorizeDevice, hashSecret, newDeviceSecret } from '../lib/device-auth';
+import { accountActor, learnerContexts, requireAccount } from '../lib/access';
+import { can } from '../lib/can';
+import { authorizeDevice, hashSecret, newDeviceSecret, parseDeviceHeader } from '../lib/device-auth';
+import { publicLearner } from '../lib/learners';
 import { clientKey, createRateLimiter } from '../lib/rate-limit';
 import { randomRescueCode } from '../lib/rescue-words';
-import { store, type Learner } from '../store';
+import { store } from '../store';
 
 /**
  * /api/recovery — F-RESTORE-001. Codes are hashed at rest; claiming from a
@@ -16,17 +19,21 @@ export const CLAIM_LIMIT = 5;
 export const CLAIM_WINDOW_MS = 60 * 60 * 1000;
 export const claimLimiter = createRateLimiter(CLAIM_LIMIT, CLAIM_WINDOW_MS);
 
-/** What a device may see about a learner — never the recovery hash. */
-function publicLearner({ id, displayName, ageGroup, avatar, createdAt, lastActiveAt }: Learner): Omit<Learner, 'recoveryHash'> {
-  return { id, displayName, ageGroup, avatar, createdAt, lastActiveAt };
-}
-
 recoveryRoutes.post('/issue', async (c) => {
   const body = (await c.req.json().catch(() => ({}))) as { learnerId?: string };
   const learnerId = typeof body.learnerId === 'string' ? body.learnerId : '';
   if (!learnerId) return fail(c, 'bad_request', 'learnerId required', 422);
-  const auth = await authorizeDevice(c, learnerId);
-  if (typeof auth !== 'string') return auth;
+  if (parseDeviceHeader(c.req.header('Authorization'))) {
+    const auth = await authorizeDevice(c, learnerId);
+    if (typeof auth !== 'string') return auth;
+  } else {
+    // Teacher / caregiver path (F-TCH-001 §10.2): an adult with roster rights re-issues the code.
+    const account = await requireAccount(c);
+    if (!('id' in account)) return account;
+    if (!can(accountActor(account), 'roster.manage', { kind: 'learner', learnerId, spaces: learnerContexts(learnerId) })) {
+      return fail(c, 'forbidden', 'Not allowed for this learner', 403);
+    }
+  }
   const learner = store.learners.get(learnerId);
   if (!learner) return fail(c, 'not_found', 'Learner not found', 404);
   const code = randomRescueCode();

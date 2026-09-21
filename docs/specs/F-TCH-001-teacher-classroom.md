@@ -1,6 +1,6 @@
 # F-TCH-001 — Teacher / Classroom Management
 
-**Status**: `draft`
+**Status**: `ready` (promoted 2026-09-21 — §10 is the authoritative S5 scope; §3.1–§3.3 are shipped through F-SPACE-001 / F-CONSOLE-001 / F-PLAN-001, §3.4 stays deferred)
 **Scope**: `apps/web` (teacher console) · `apps/mobile` (in-class projection, learner classroom join) · `packages/backend` · Phase 2
 **Owner**: solo dev
 **Rollout**: Phase 2 (post-MVP). MVP placeholder only — Profile role enum reserves `teacher` and `co-parent`, no UI ships.
@@ -169,3 +169,44 @@ Authored 2026-09-19 (IDs per `docs/blueprints/10-app-map.md` §3.3):
 
 - **Cloudflare D1**: schema v2 (`spaces`, `memberships`, `plans`, `snapshots.summary_json`) — roadmap `multi-persona-sync-platform.md` §2. The draft's five bespoke tables are withdrawn.
 - **Clerk** organisation feature for school-tier accounts (Phase 3).
+
+## 10. S5 scope (2026-09-21, promotion to `ready`)
+
+What is already shipped: class create + join code (F-SPACE-001), roster summary view and console shell (F-CONSOLE-001), class plans with device-side derivation (F-PLAN-001). This section is the remaining, buildable scope.
+
+### 10.1 Re-link approval (new device for a class student) — roadmap §5 row 2
+
+- `sync/join-space` step 2 offers **"I was already in this class"** when the lookup returns the class roster (display names, or initials when the space anonymizes its roster). Picking a name sends `POST /api/spaces/:id/relink-requests { code, learnerId, deviceId, platform? }` (no auth, rate-limited 10 per client key per hour). The device must not already be bound to that learner (409 `already_bound`); one pending request per learner + device is reused.
+- The request lives **10 minutes**. The learner device polls `GET /api/spaces/:id/relink-requests/:rid?deviceId=…` every few seconds and shows "Ask your teacher to approve on their screen" with a coarse countdown.
+- Teacher side (`roster.manage`): `GET /api/spaces/:id/relink-requests` lists pending requests with the learner name and timing; `POST …/:rid/approve` binds the device with a fresh secret (delivered **once** through the next poll, together with the learner and the snapshot); `POST …/:rid/deny` closes it. Expired requests report `expired`.
+- On approval the device adopts the learner exactly like a Rescue Code claim (`sync-store.adoptServerLearner`): creates or merges the local profile, stores the credentials, requests a sync, refreshes memberships. The temporary profile the child created on the new device stays; the restored one becomes active. Denied → "Ask your teacher." Expired → "That took too long — try again."
+- Console page `/teach/space/:id/relink` (console/relink-approval): cards newest first with Approve / Deny, empty and expired states; roster shows a pending count.
+
+### 10.2 Teacher rescue re-issue (app map §7 #24)
+
+- `POST /api/recovery/issue { learnerId }` also accepts an **account** bearer with `roster.manage` over the learner (family caregiver, class teacher, school admin) and returns the plaintext once — the old code stops working. Console: "Issue a new rescue code" on the relink page's learner picker.
+
+### 10.3 Space settings — roadmap §2 `settings_json`, §5.3, wireframe console/space-settings
+
+- `PATCH /api/spaces/:id/settings { anonymizeRoster?, consentMode? }` (`space.manage`). `anonymizeRoster` swaps names for initials in the roster, the lookup roster and the relink list. `consentMode` is writable (owner decision (c)); school mode gates learner-data deletion by teachers.
+- `POST /api/spaces/:id/archive` / `/unarchive` (`space.manage`): archived spaces refuse joins, lookups and plan writes; roster and list stay readable, rows dimmed.
+- Member removal already exists (`DELETE /:id/members/:kind/:memberId`).
+- `DELETE /api/spaces/:id/learners/:learnerId/data` (`learner.delete`: family owner/caregiver; class owner/teacher only when the space's `consentMode` is `school`): removes the learner, devices, snapshot, memberships and relink requests everywhere (GDPR-K / COPPA, roadmap §5.3).
+- Console page `/teach/space/:id/settings`: code block, anonymize toggle, consent mode radio (class/school only), members and learners with remove, archive / unarchive, delete a learner's data behind a typed-name confirm.
+
+### 10.4 Deferred
+
+- §3.4 Projection Mode needs a teacher-role profile on the device (F-PROF-001 role UI) → own spec later. Learner detail page on the console, notifications for pending requests (F-NOTIF-001), co-teachers.
+
+### 10.5 Tests
+
+| File | Coverage |
+|---|---|
+| `content-schema/__tests__/relink.test.ts` | relink create / request schemas, settings patch, roster alias |
+| `backend/lib/__tests__/can.test.ts` | `learner.delete` matrix incl. consent mode |
+| `backend/__tests__/relink.test.ts` | create (code, membership, bound device, dedupe, rate limit), list (auth), approve → device can sync, one-time pickup, deny, expiry, wrong device |
+| `backend/__tests__/spaces.test.ts` | settings patch, archive / unarchive effects, lookup roster + alias, learner data deletion rights + cascade |
+| `backend/__tests__/recovery.test.ts` | account re-issue by a teacher, stranger 403 |
+| `mobile/platform/__tests__/sync-api.test.ts` | createRelink / pollRelink mapping |
+| `mobile/store/__tests__/membership-store.test.ts` | request + poll (approved adopts and refreshes, denied, expired, errors) |
+| `mobile/store/__tests__/sync-store.test.ts` | `adoptServerLearner` shared by claim and relink |

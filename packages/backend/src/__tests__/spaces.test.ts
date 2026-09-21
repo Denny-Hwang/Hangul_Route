@@ -123,7 +123,7 @@ describe('join code lifecycle (§3.2)', () => {
     expect((await post('/api/spaces/lookup', json, { code: old })).body.error?.code).toBe('code_not_found');
     const found = await post('/api/spaces/lookup', json, { code: fresh.toLowerCase() });
     expect(found.status).toBe(200);
-    expect(found.body.data).toEqual({ space: { id: cls.space.id, kind: 'class', name: 'A' }, full: false });
+    expect(found.body.data).toEqual({ space: { id: cls.space.id, kind: 'class', name: 'A' }, full: false, roster: [] });
     expect((await post(`/api/spaces/${cls.space.id}/code`, bearer('stranger'))).status).toBe(403);
     expect((await post('/api/spaces/space:nope/code', bearer('teacher'))).status).toBe(404);
   });
@@ -280,6 +280,56 @@ describe('leave, remove, roster (§3.3, §3.4)', () => {
     expect(((await get(`/api/sync/learners/${suni.learnerId}/inbox`, suni.auth)).body.data as { memberships: unknown[] }).memberships).toEqual([]);
     expect((await post('/api/spaces/lookup', json, { code: cls.joinCode })).body.error?.code).toBe('code_not_found');
     expect((await joinAs(cls.space.id, suni.auth, { code: cls.joinCode, learnerId: suni.learnerId })).status).toBe(404);
-    expect((await get(`/api/spaces/${cls.space.id}/roster`, bearer('principal'))).status).toBe(404);
+    expect((await get(`/api/spaces/${cls.space.id}/roster`, bearer('principal'))).status).toBe(200); // archived rosters stay readable (F-TCH-001 §10.3)
+  });
+});
+
+describe('settings, archive, learner data (F-TCH-001 §10.3)', () => {
+  it('patches settings, archives and unarchives with the right effects', async () => {
+    const cls = await createSpace('teacher', 'class', 'A');
+    expect((await call('PATCH', `/api/spaces/${cls.space.id}/settings`, bearer('teacher'), {})).status).toBe(422);
+    expect((await call('PATCH', `/api/spaces/${cls.space.id}/settings`, bearer('stranger'), { anonymizeRoster: true })).status).toBe(403);
+    const patched = await call('PATCH', `/api/spaces/${cls.space.id}/settings`, bearer('teacher'), { anonymizeRoster: true, consentMode: 'school' });
+    expect((patched.body.data as { space: { settings: unknown } }).space.settings).toEqual({ consentMode: 'school', anonymizeRoster: true });
+
+    const suni = await registerLearner('device-suni0001', 'Suni Park');
+    await joinAs(cls.space.id, suni.auth, { code: cls.joinCode, learnerId: suni.learnerId });
+    const lookup = (await post('/api/spaces/lookup', json, { code: cls.joinCode })).body.data as { roster: Array<{ name: string }> };
+    expect(lookup.roster).toEqual([{ learnerId: suni.learnerId, name: 'S. P.' }]);
+
+    expect((await post(`/api/spaces/${cls.space.id}/archive`, bearer('teacher'))).status).toBe(200);
+    expect((await post('/api/spaces/lookup', json, { code: cls.joinCode })).status).toBe(404);
+    expect((await joinAs(cls.space.id, suni.auth, { code: cls.joinCode, learnerId: suni.learnerId })).status).toBe(404);
+    const roster = await get(`/api/spaces/${cls.space.id}/roster`, bearer('teacher'));
+    expect(roster.status).toBe(200); // archived rosters stay readable
+    expect((roster.body.data as { learners: Array<{ displayName: string }> }).learners[0]?.displayName).toBe('S. P.');
+    const listed = (await get('/api/spaces', bearer('teacher'))).body.data as { spaces: Array<{ space: { archivedAt: string | null } }> };
+    expect(listed.spaces[0]?.space.archivedAt).not.toBeNull();
+    expect((await post(`/api/spaces/${cls.space.id}/unarchive`, bearer('teacher'))).status).toBe(200);
+    expect((await post('/api/spaces/lookup', json, { code: cls.joinCode })).status).toBe(200);
+    expect((await post('/api/spaces/space:nope/archive', bearer('teacher'))).status).toBe(404);
+  });
+
+  it('deletes a learner everywhere for a caregiver, and for a teacher only under school consent', async () => {
+    const fam = await createSpace('mom', 'family', 'Kim family');
+    const famCode = await issueCode('mom', fam.space.id);
+    const cls = await createSpace('teacher', 'class', 'A');
+    const suni = await registerLearner('device-suni0001', 'Suni');
+    await joinAs(fam.space.id, suni.auth, { code: famCode, learnerId: suni.learnerId });
+    await joinAs(cls.space.id, suni.auth, { code: cls.joinCode, learnerId: suni.learnerId });
+
+    expect((await call('DELETE', `/api/spaces/${cls.space.id}/learners/${suni.learnerId}/data`, bearer('teacher'))).status).toBe(403);
+    expect((await call('DELETE', `/api/spaces/${cls.space.id}/learners/profile:nobody/data`, bearer('teacher'))).status).toBe(404);
+    expect((await call('DELETE', `/api/spaces/${fam.space.id}/learners/${suni.learnerId}/data`, bearer('stranger'))).status).toBe(403);
+    await call('PATCH', `/api/spaces/${cls.space.id}/settings`, bearer('teacher'), { consentMode: 'school' });
+    expect((await call('DELETE', `/api/spaces/${cls.space.id}/learners/${suni.learnerId}/data`, bearer('teacher'))).body.data).toEqual({ deleted: true });
+    expect(store.learners.has(suni.learnerId)).toBe(false);
+    expect(store.membersOf(fam.space.id).some((m) => m.memberId === suni.learnerId)).toBe(false);
+    expect(store.device(suni.learnerId, suni.deviceId)).toBeUndefined();
+    expect((await get(`/api/sync/learners/${suni.learnerId}/snapshot`, suni.auth)).status).toBe(404);
+
+    const minho = await registerLearner('device-minho001', 'Minho');
+    await joinAs(fam.space.id, minho.auth, { code: famCode, learnerId: minho.learnerId });
+    expect((await call('DELETE', `/api/spaces/${fam.space.id}/learners/${minho.learnerId}/data`, bearer('mom'))).body.data).toEqual({ deleted: true });
   });
 });

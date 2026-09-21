@@ -15,7 +15,8 @@ export type Action =
   | 'space.manage'
   | 'class.create'
   | 'teacher.invite'
-  | 'entitlement.manage';
+  | 'entitlement.manage'
+  | 'learner.delete';
 
 export type Actor =
   | { kind: 'learner'; learnerId: string }
@@ -54,6 +55,9 @@ export function allowedOnSpace(actor: AccountActor, ctx: SpaceContext): Set<Acti
     const effective = role === 'owner' ? OWNER_AS[ctx.space.kind] : role;
     for (const action of BASE[ctx.space.kind][effective] ?? []) out.add(action);
     if (role === 'owner') out.add('space.manage');
+    // Deletion rights (F-TCH-001 §10.3): caregivers always; teachers only under school consent.
+    if (ctx.space.kind === 'family' && effective === 'caregiver') out.add('learner.delete');
+    if (ctx.space.kind === 'class' && effective === 'teacher' && ctx.space.settings.consentMode === 'school') out.add('learner.delete');
   }
   if (ctx.parent?.kind === 'school') {
     const above = roleIn(actor, ctx.parent.id);
