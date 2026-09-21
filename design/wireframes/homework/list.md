@@ -1,6 +1,7 @@
 # Homework/List — the assignment queue behind Today's mission (wireframe v1)
 
 Spec: `docs/specs/F-HW-001-homework-page.md` §3.2 (completion), §3.3 (anti-shame), §3.4 (merge rules, 1 explicit / day) · `docs/blueprints/10-app-map.md` §3.1, §7
+Code (F-PLAN-001, 2026-09-21): plan-derived assignments (`<planId>#<questId>`, pill "From class" / "From home") flow into this list after each inbox refresh; finishing the quest marks them done; items a learner has not unlocked never appear here (counted as not ready for the author).
 Audience: **learner (P4/P5 child, 5–11)** — the child reads it; the assignments come from a parent / teacher / the system
 Code (back-filled): `apps/mobile/src/screens/homework/HomeworkScreen.tsx` — route `Homework`
 

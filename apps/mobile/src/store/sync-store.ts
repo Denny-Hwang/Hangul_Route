@@ -10,6 +10,7 @@ import { summarize } from '../logic/sync/summarize';
 import { getDeviceId } from '../platform/device';
 import { readJson, writeJson } from '../platform/storage';
 import { apiBaseUrl, createSyncApi, type SyncApiClient } from '../platform/sync-api';
+import { usePlanStore } from './plan-store';
 import { useProfileStore } from './profile-store';
 import { useProgressStore } from './progress-store';
 
@@ -80,7 +81,16 @@ export function setSyncApiForTests(client: SyncApiClient | null): void {
 }
 
 const summarizeFor = (snapshot: ProgressSnapshot) =>
-  summarize({ snapshot, now: new Date(), stage1QuestIds, questJamo });
+  summarize({ snapshot, now: new Date(), stage1QuestIds, questJamo, planNotReady: usePlanStore.getState().notReady[snapshot.profileId] ?? {} });
+
+/** Listeners run after every successful sync — the inbox refresh hangs off this (F-PLAN-001 §3.3). */
+const syncedListeners = new Set<(learnerId: string) => void>();
+export function onSynced(listener: (learnerId: string) => void): () => void {
+  syncedListeners.add(listener);
+  return () => {
+    syncedListeners.delete(listener);
+  };
+}
 
 export const useSyncStore = create<State & Actions>((set, get) => {
   const update = (learnerId: string, patch: Partial<LearnerSyncState>): LearnerSyncState => {
@@ -158,6 +168,7 @@ export const useSyncStore = create<State & Actions>((set, get) => {
       const synced = update(learnerId, { status: 'synced', rev: outcome.rev, lastSyncedAt: new Date().toISOString(), lastError: null });
       // Owner decision 2026-09-20: every learner gets a Rescue Code after the first cloud save.
       if (!synced.rescueCode) await get().issueRescueCode(learnerId);
+      for (const listener of syncedListeners) listener(learnerId);
       return get().byLearner[learnerId] ?? synced;
     },
 

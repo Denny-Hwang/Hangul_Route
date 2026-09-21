@@ -1,4 +1,5 @@
 import type { ProgressSnapshot, ProgressSummary } from '@hangul-route/content-schema';
+import { planIdOf } from '../homework/plan-derivation';
 
 /**
  * Client-side aggregate uploaded next to the snapshot — F-SYNC-001 §3.4.
@@ -12,13 +13,35 @@ export interface SummarizeInput {
   stage1QuestIds: readonly string[];
   /** Jamo taught per quest, used for recognized / needs-practice lists. */
   questJamo: Readonly<Record<string, readonly string[]>>;
+  /** Items per plan the device could not assign yet (F-PLAN-001 §3.3). */
+  planNotReady?: Readonly<Record<string, number>>;
+}
+
+/** done / total per plan from the plan-derived assignments, plus what was skipped. */
+export function planProgressOf(snapshot: ProgressSnapshot, planNotReady: Readonly<Record<string, number>> = {}): ProgressSummary['planProgress'] {
+  const out: ProgressSummary['planProgress'] = {};
+  for (const h of snapshot.homework) {
+    const planId = planIdOf(h.id);
+    if (!planId) continue;
+    const row = out[planId] ?? { done: 0, total: 0, notReady: 0 };
+    row.total += 1;
+    if (h.completedAt) row.done += 1;
+    out[planId] = row;
+  }
+  for (const [planId, n] of Object.entries(planNotReady)) {
+    if (n <= 0) continue;
+    const row = out[planId] ?? { done: 0, total: 0, notReady: 0 };
+    row.notReady = n;
+    out[planId] = row;
+  }
+  return out;
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 export const RECOGNIZED_ACCURACY = 0.8;
 export const PRACTICE_ACCURACY = 0.6;
 
-export function summarize({ snapshot, now, stage1QuestIds, questJamo }: SummarizeInput): ProgressSummary {
+export function summarize({ snapshot, now, stage1QuestIds, questJamo, planNotReady }: SummarizeInput): ProgressSummary {
   const completed = snapshot.quests.filter((q) => q.completedAt);
   const stage1Set = new Set(stage1QuestIds);
   const stage1Done = completed.filter((q) => stage1Set.has(q.questId));
@@ -56,6 +79,6 @@ export function summarize({ snapshot, now, stage1QuestIds, questJamo }: Summariz
     minutesLast7d: Math.round(secondsLast7d / 60),
     jamoRecognized: [...recognized].sort(),
     needsPractice,
-    planProgress: {},
+    planProgress: planProgressOf(snapshot, planNotReady),
   };
 }

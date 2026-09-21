@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { ProfileSchema } from './profile';
 import { ProgressSnapshotSchema } from './progress';
+import { InboxPlanSchema } from './plan';
 import { LearnerMembershipSchema } from './space';
 
 /**
@@ -24,7 +25,12 @@ export const ProgressSummarySchema = z.object({
   needsPractice: z.array(z.string()).max(3),
   planProgress: z.record(
     z.string(),
-    z.object({ done: z.number().int().nonnegative(), total: z.number().int().nonnegative() }),
+    z.object({
+      done: z.number().int().nonnegative(),
+      total: z.number().int().nonnegative(),
+      /** Items the device skipped because the learner has not unlocked them (F-PLAN-001 §3.3). */
+      notReady: z.number().int().nonnegative().default(0),
+    }),
   ),
 });
 export type ProgressSummary = z.infer<typeof ProgressSummarySchema>;
@@ -51,10 +57,10 @@ export const LearnerRegisterSchema = z.object({
 });
 export type LearnerRegister = z.infer<typeof LearnerRegisterSchema>;
 
-/** GET /api/sync/learners/:id/inbox response (plans fill in F-PLAN-001). */
+/** GET /api/sync/learners/:id/inbox response. */
 export const SyncInboxSchema = z.object({
   rev: z.number().int().nonnegative(),
-  plans: z.array(z.unknown()),
+  plans: z.array(InboxPlanSchema),
   memberships: z.array(LearnerMembershipSchema),
   tier: z.enum(['free', 'premium']),
   serverTime: z.string(),

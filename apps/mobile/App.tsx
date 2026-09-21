@@ -13,6 +13,7 @@ import { flushQueue } from './src/platform/telemetry';
 import { useAccountStore } from './src/store/account-store';
 import { useProfileStore } from './src/store/profile-store';
 import { usePwaStore } from './src/store/pwa-store';
+import { registerInboxRefresh } from './src/store/membership-store';
 import { useSyncStore } from './src/store/sync-store';
 import { setProgressPersistListener } from './src/logic/sync/persist-hook';
 
@@ -37,6 +38,8 @@ export default function App(): React.ReactElement {
     // Background progress sync (F-SYNC-002): debounced after every write,
     // and a full pass on start / back-online.
     setProgressPersistListener((learnerId) => useSyncStore.getState().requestSync(learnerId));
+    // Plans and memberships arrive through the inbox after each successful sync (F-PLAN-001).
+    const offInbox = registerInboxRefresh();
     void hydrate().then(() => useSyncStore.getState().syncAll());
     const off = subscribePwa((event) => {
       if (event === 'back-online') {
@@ -46,6 +49,7 @@ export default function App(): React.ReactElement {
     });
     return () => {
       off();
+      offInbox();
       setProgressPersistListener(null);
     };
   }, [hydrate, hydrateAccount, countVisit]);
