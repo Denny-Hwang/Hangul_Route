@@ -35,7 +35,7 @@ beforeEach(() => {
 
 describe('plan-store (F-PLAN-001 §3.3)', () => {
   it('free learners have Stage 1 unlocked only', () => {
-    expect(unlockedStagesFor(new Date())).toEqual(['stage1']);
+    expect(unlockedStagesFor(new Date(), 'profile:a')).toEqual(['stage1']);
   });
 
   it('applies inbox plans: derives homework, persists plans, records not-ready, syncs only on change', async () => {

@@ -1,8 +1,9 @@
-import { LearnerRegisterSchema, SnapshotPutSchema } from '@hangul-route/content-schema';
+import { LearnerRegisterSchema, SnapshotPutSchema, TIER_GRACE_MS } from '@hangul-route/content-schema';
 import { Hono } from 'hono';
 import { fail, ok } from '../envelope';
 import { authorizeDevice, hashSecret, newDeviceSecret } from '../lib/device-auth';
 import { id, store, type Learner, type SnapshotRecord } from '../store';
+import { tierForLearner } from '../lib/entitlement';
 import { inboxPlansFor } from './plans';
 import { learnerMembershipRows } from './spaces';
 
@@ -99,12 +100,15 @@ syncRoutes.get('/learners/:id/inbox', async (c) => {
   const learnerId = c.req.param('id');
   const auth = await authorizeDevice(c, learnerId);
   if (typeof auth !== 'string') return auth;
-  // tier is wired in F-ENT-001.
+  const now = new Date();
+  const { tier, source } = tierForLearner(learnerId, now);
   return ok(c, {
     rev: store.snapshots.get(learnerId)?.rev ?? 0,
     plans: inboxPlansFor(learnerId),
     memberships: learnerMembershipRows(learnerId),
-    tier: 'free',
-    serverTime: new Date().toISOString(),
+    tier,
+    tierSource: source,
+    tierValidUntil: tier === 'premium' ? new Date(now.getTime() + TIER_GRACE_MS).toISOString() : null,
+    serverTime: now.toISOString(),
   });
 });

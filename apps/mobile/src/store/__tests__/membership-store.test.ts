@@ -17,6 +17,7 @@ import { apiBaseUrl } from '../../platform/sync-api';
 import { track } from '../../platform/telemetry';
 import { useMembershipStore } from '../membership-store';
 import { usePlanStore } from '../plan-store';
+import { useTierStore } from '../tier-store';
 import { useProfileStore } from '../profile-store';
 import { useProgressStore } from '../progress-store';
 import { setSyncApiForTests, useSyncStore } from '../sync-store';
@@ -37,7 +38,7 @@ function fakeApi(over: Record<string, unknown> = {}) {
     pollRelink: vi.fn(async () => ({ status: 'ok', state: 'pending', expiresAt: 'e' })),
     joinSpace: vi.fn(async () => ({ status: 'ok', alreadyMember: false, membership: classRow })),
     leaveSpace: vi.fn(async () => ({ status: 'ok', left: true })),
-    getInbox: vi.fn(async () => ({ status: 'ok', inbox: { rev: 1, plans: [], memberships: [familyRow, classRow], tier: 'free', serverTime: 't' } })),
+    getInbox: vi.fn(async () => ({ status: 'ok', inbox: { rev: 1, plans: [], memberships: [familyRow, classRow], tier: 'premium', tierSource: { kind: 'class', spaceId: 'space:cls', name: 'Sunday Class A' }, tierValidUntil: '2099-01-01T00:00:00.000Z', serverTime: 't' } })),
     ...over,
   };
 }
@@ -47,6 +48,7 @@ beforeEach(() => {
   vi.mocked(track).mockClear();
   useMembershipStore.setState({ byLearner: {} });
   usePlanStore.setState({ byLearner: {}, notReady: {} });
+  useTierStore.setState({ byLearner: {} });
   useSyncStore.setState({ byLearner: {} });
   useProfileStore.setState({ profiles: [{ id: 'profile:a', displayName: 'Suni', ageGroup: '5-7', avatar: 'hoya-orange', role: 'learner', createdAt: 't' }], activeId: 'profile:a', hydrated: true });
   useProgressStore.setState({ byProfile: { 'profile:a': snap }, hydratedFor: new Set(['profile:a']) });
@@ -67,6 +69,7 @@ describe('membership-store (F-SPACE-001 §3.5)', () => {
     expect(rows?.map((r) => r.name)).toEqual(['Kim family', 'Sunday Class A']); // sorted by name
     expect(api.getInbox).toHaveBeenCalledWith('profile:a', { deviceId: 'device-test', secret: 'sec' });
     expect(mem.get('memberships:profile:a')).toEqual(rows);
+    expect(useTierStore.getState().byLearner['profile:a']).toMatchObject({ tier: 'premium', source: { name: 'Sunday Class A' } });
     setSyncApiForTests(fakeApi({ getInbox: vi.fn(async () => ({ status: 'error', code: 'network' })) }) as never);
     expect(await useMembershipStore.getState().refresh('profile:a')).toBeNull();
     expect(useMembershipStore.getState().byLearner['profile:a']).toEqual(rows); // last known rows stay

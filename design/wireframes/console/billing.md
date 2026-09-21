@@ -1,6 +1,7 @@
 # Console/Billing — plan, upgrade, cancel, invoices (wireframe v1)
 
 Spec: `docs/roadmap/multi-persona-sync-platform.md` §3.2 (tier), §7 (plans, web-only teacher/school), §8 (`/entitlements/*`), §10 S6 · F-SUB-001 / F-IAP-001 (mobile IAP, existing) · `docs/blueprints/02-core-feature-spec.md` §6.6
+Code (F-ENT-001 §3.1–3.3, 2026-09-21 — API): `GET /api/entitlements`, `POST /verify` (family receipt), `POST /stripe/checkout` · `/stripe/portal` (503 until keys and price ids are set), `POST /stripe/webhook` (HMAC signature, subscription lifecycle → `applyEntitlement`). Learner tier travels in the sync inbox with a 7-day grace. The page is PR 3; prices stay placeholders (decision deferred).
 Audience: **parent** (family_premium; web Stripe or native IAP) · **teacher** (teacher_pro; web only) · **school admin** (school_license / school_seat; web only)
 
 ## Scenario (Given-When-Then)

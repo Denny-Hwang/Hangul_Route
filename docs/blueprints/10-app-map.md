@@ -102,7 +102,7 @@ Hangul Route
     ├─ D2. Local store (AsyncStorage · IndexedDB on web)  [S]
     ├─ D3. Sync (snapshot PUT/GET · merge · summary · rescue code) [S] F-SYNC-001 · F-RESTORE-001 (inbox 의 plans/memberships 는 S3–S4)
     ├─ D4. Spaces & memberships [S] F-SPACE-001 (`can()` 포함) · plans [S] F-PLAN-001 (upsert·inbox·기기 파생·planProgress·빌더)
-    ├─ D5. Entitlements (IAP · Stripe · manual)           [R/P] F-IAP-001, roadmap §7
+    ├─ D5. Entitlements (IAP · Stripe · manual)           [S] F-ENT-001 §3.1–3.4 (`entitlements` 1 테이블 · membership → tier · Stripe checkout/portal/webhook · 영수증 수렴 · 기기 tier 캐시 7일 유예); 화면은 PR 2–3
     ├─ D6. Telemetry (fire-and-forget, offline queue)     [S] F-PWA-001
     ├─ D7. Service worker (precache · update)             [S] roadmap P2
     └─ D8. Auth (Clerk — adults only)                     [R] F-AUTH-001
@@ -158,7 +158,7 @@ Hangul Route
 | `sync/restore` | Restore | 코드 / 로그인 (P, F-AUTH-002) / 파일로 복원 (학급 재연결은 `sync/join-space` 쪽) | S | F-RESTORE-001 §3.4 · F-SYNC-002 §3.3 | ✓ |
 | `sync/join-space` | JoinSpace | 학급·가정 코드 입력 → 이름 확인 → 완료 (PIN 없음) | S | F-SPACE-001 §3.5 | ✓ |
 | `sync/merge-notice` | (Restore 의 결과 카드) | "옛 카드를 찾았어요" 병합 안내 | S | F-SYNC-002 | ✓ |
-| `paywall/upgrade` | (신규, parent-gated) | Stage 2+ 잠금 해제 | R | F-SUB-001 | NEW |
+| `paywall/upgrade` | (신규, parent-gated) | Stage 2+ 잠금 해제 · "covered by <class>" 상태 | R (tier API S) | F-ENT-001 §3.5 · F-SUB-001 | ✓ |
 | `pwa/install-guide` | InstallGuide sheet (web only) | 홈 화면 추가 안내 (iOS/Android/PC), 3회째 열 때 · 5회 스누즈 | S | F-PWA-001 | ✓ |
 | `pwa/system-banners` | (신규, web only) | 오프라인 준비됨 · 업데이트 · 오프라인 상태 | P | roadmap P2 | NEW |
 | `classroom/projection-mode` | (신규, teacher role) | 교실 TV 표시 토글 | D | F-TCH-001 §3.4 | NEW |
@@ -175,7 +175,7 @@ Hangul Route
 | `console/sign-in` | web `/teach` (+ mobile 나중) | 어른 로그인 — **dev 폼** (bearer = account id, 비프로덕션 또는 `NEXT_PUBLIC_CONSOLE_DEV_AUTH`) · Clerk 위젯은 F-AUTH-002 | S (dev) | F-CONSOLE-001 §3.2 · F-AUTH-001/002 | ✓ |
 | `console/plan-builder` | web `/teach/space/:id/plan` (family·class 공용) | 계획 만들기·발행·readout | S | F-PLAN-001 §3.5 | ✓ |
 | `console/account` | web + mobile | 이메일·동의·백업·학습자 삭제 | P | roadmap §5.3 | NEW |
-| `console/billing` | web (Stripe) · mobile (IAP) | 플랜 보기·변경 | P | roadmap §7 | NEW |
+| `console/billing` | web (Stripe) · mobile (IAP) | 플랜 보기·변경 | P (API S: list · checkout · portal · webhook) | F-ENT-001 §3.6 | ✓ |
 
 ### 3.3 C. Teacher / School Console (web `/teach`)
 
@@ -188,7 +188,7 @@ Hangul Route
 | `console/relink-approval` | web `/teach/space/:id/relink` | 기기 이전 승인 10분 창 · 학습자 rescue code 재발급 | S | F-TCH-001 §10.1–10.2 | ✓ |
 | `console/school-admin` | 학급 트리 · 교사 초대 · seat 사용량 | P | roadmap S7 | NEW |
 | `console/plan-builder` | (B 와 공용) | S | F-PLAN-001 §3.5 | ✓ |
-| `console/billing` | (B 와 공용, teacher_pro / school) | P | roadmap §7 | NEW |
+| `console/billing` | (B 와 공용, teacher_pro / school) | P (API S) | F-ENT-001 §3.6 | ✓ |
 
 ### 3.4 웹 마케팅 (`apps/web`) — 와이어프레임 대상 아님
 
