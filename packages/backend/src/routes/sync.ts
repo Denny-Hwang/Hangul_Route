@@ -3,6 +3,7 @@ import { Hono } from 'hono';
 import { fail, ok } from '../envelope';
 import { authorizeDevice, hashSecret, newDeviceSecret } from '../lib/device-auth';
 import { id, store, type Learner, type SnapshotRecord } from '../store';
+import { learnerMembershipRows } from './spaces';
 
 /**
  * /api/sync — F-SYNC-001 §3.2. One snapshot row per learner with
@@ -97,11 +98,11 @@ syncRoutes.get('/learners/:id/inbox', async (c) => {
   const learnerId = c.req.param('id');
   const auth = await authorizeDevice(c, learnerId);
   if (typeof auth !== 'string') return auth;
-  // plans / memberships / tier are wired in F-PLAN-001 / F-SPACE-001 / F-ENT-001.
+  // plans / tier are wired in F-PLAN-001 / F-ENT-001.
   return ok(c, {
     rev: store.snapshots.get(learnerId)?.rev ?? 0,
     plans: [],
-    memberships: [],
+    memberships: learnerMembershipRows(learnerId),
     tier: 'free',
     serverTime: new Date().toISOString(),
   });

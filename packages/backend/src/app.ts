@@ -7,6 +7,7 @@ import { profileRoutes } from './routes/profiles';
 import { progressRoutes } from './routes/progress';
 import { subscriptionRoutes } from './routes/subscriptions';
 import { recoveryRoutes } from './routes/recovery';
+import { spacesRoutes } from './routes/spaces';
 import { syncRoutes } from './routes/sync';
 import { telemetryRoutes } from './routes/telemetry';
 
@@ -36,6 +37,8 @@ app.route('/api/notifications', notificationsRoutes);
 app.route('/api/sync', syncRoutes);
 // Rescue Code (F-RESTORE-001): account-less restore.
 app.route('/api/recovery', recoveryRoutes);
+// Spaces & memberships (F-SPACE-001): family / class / school, join codes, roster summaries.
+app.route('/api/spaces', spacesRoutes);
 
 app.notFound((c) =>
   c.json({ ok: false, error: { code: 'not_found', message: 'Route not found' } }, 404),

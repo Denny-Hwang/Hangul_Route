@@ -39,3 +39,36 @@ CREATE TABLE IF NOT EXISTS snapshots (
   payload_json  TEXT NOT NULL,
   updated_at    TEXT NOT NULL
 );
+
+-- F-SPACE-001: adults, spaces (family | class | school) and who belongs where.
+CREATE TABLE IF NOT EXISTS accounts (
+  id            TEXT PRIMARY KEY,           -- Clerk user id; children are never here
+  email         TEXT UNIQUE,
+  display_name  TEXT,
+  consent_json  TEXT,
+  created_at    TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS spaces (
+  id                    TEXT PRIMARY KEY,   -- space:xxxx
+  kind                  TEXT NOT NULL CHECK (kind IN ('family', 'class', 'school')),
+  name                  TEXT NOT NULL,
+  parent_space_id       TEXT REFERENCES spaces(id) ON DELETE SET NULL,  -- class -> school
+  owner_account_id      TEXT NOT NULL REFERENCES accounts(id),
+  join_code             TEXT UNIQUE,        -- 6 x base32 (no I O 0 1), 30-day life
+  join_code_expires_at  TEXT,
+  settings_json         TEXT NOT NULL DEFAULT '{}',  -- consentMode, anonymizeRoster
+  archived_at           TEXT,
+  created_at            TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_spaces_parent ON spaces(parent_space_id);
+
+CREATE TABLE IF NOT EXISTS memberships (
+  space_id     TEXT NOT NULL REFERENCES spaces(id) ON DELETE CASCADE,
+  member_kind  TEXT NOT NULL CHECK (member_kind IN ('account', 'learner')),
+  member_id    TEXT NOT NULL,               -- accounts.id or learners.id
+  role         TEXT NOT NULL CHECK (role IN ('owner', 'caregiver', 'teacher', 'admin', 'student')),
+  joined_at    TEXT NOT NULL,
+  PRIMARY KEY (space_id, member_kind, member_id)
+);
+CREATE INDEX IF NOT EXISTS idx_memberships_member ON memberships(member_kind, member_id);

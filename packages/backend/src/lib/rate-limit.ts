@@ -28,3 +28,8 @@ export function createRateLimiter(limit: number, windowMs: number) {
     },
   };
 }
+
+/** Client key for per-IP limits: Cloudflare's header, else the first proxy hop, else one shared bucket. */
+export function clientKey(get: (name: string) => string | undefined | null): string {
+  return get('cf-connecting-ip') ?? get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'anonymous';
+}
