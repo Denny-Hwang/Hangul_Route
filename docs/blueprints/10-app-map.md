@@ -87,8 +87,8 @@ Hangul Route
 │   └─ B8. Backup (rescue code 보기 · 파일 내보내기)      [S] F-SYNC-002 · F-RESTORE-001
 │
 ├─ C. Teacher / School Console (웹 전용) ────────────────────────── 교사·관리자
-│   ├─ C1. Onboarding (역할 선택 → space 생성)            [P] F-CONSOLE-001 (API `POST /spaces` 는 F-SPACE-001 구현됨)
-│   ├─ C2. Class home / Roster (summary only)            [D] F-TCH-001 §3.2 (API `GET /spaces/:id/roster` 구현됨, F-SPACE-001)
+│   ├─ C1. Onboarding (역할 선택 → space 생성)            [S] F-CONSOLE-001 §3.3 (`/teach/start`)
+│   ├─ C2. Class home / Roster (summary only)            [S-thin] F-CONSOLE-001 §3.5 (`/teach/space/:id` — 코드·롤업·학생 카드; 계획·재연결·설정은 S4–S5)
 │   ├─ C3. Join code (발급·재발급·만료)                    [S] F-SPACE-001 §3.2 (서버; 콘솔 화면은 F-CONSOLE-001)
 │   ├─ C4. Plan builder (class) + Pace helper             [P] roadmap S4
 │   ├─ C5. Learner card (parent B3 재사용, 읽기 전용)      [P]
@@ -172,7 +172,7 @@ Hangul Route
 | `parent/dashboard` | ParentDashboard · web `/parent` | 학습자별 주간 카드 | S | F-PAR-001 | ✓ |
 | `parent/learner-detail` | web `/parent/[childId]` | 한 아이 깊이 보기 | S-thin | F-PAR-001 §5 | ✓ |
 | `parent/voice-recorder` | (신규) | 10초 음성 메시지 | R | F-PAR-001 N5 | ✓ |
-| `console/sign-in` | web + mobile (Clerk) | 어른 로그인 (동기화·결제 전제) | R/P | F-AUTH-001/002 | NEW |
+| `console/sign-in` | web `/teach` (+ mobile 나중) | 어른 로그인 — **dev 폼** (bearer = account id, 비프로덕션 또는 `NEXT_PUBLIC_CONSOLE_DEV_AUTH`) · Clerk 위젯은 F-AUTH-002 | S (dev) | F-CONSOLE-001 §3.2 · F-AUTH-001/002 | ✓ |
 | `console/plan-builder` | web (family·class 공용) | 계획 만들기·발행 | P | roadmap §6 | NEW |
 | `console/account` | web + mobile | 이메일·동의·백업·학습자 삭제 | P | roadmap §5.3 | NEW |
 | `console/billing` | web (Stripe) · mobile (IAP) | 플랜 보기·변경 | P | roadmap §7 | NEW |
@@ -181,9 +181,9 @@ Hangul Route
 
 | ID | 목표 | 상태 | 스펙 | WF |
 |---|---|---|---|---|
-| `console/onboarding-role` | 부모/교사/관리자 선택 → 첫 space 생성 | P (API S) | F-CONSOLE-001 · F-SPACE-001 §3.3 | ✓ |
-| `console/home` | 내 space 들 (가정·학급·학교) 전환 허브 | P (API S) | F-CONSOLE-001 · F-SPACE-001 §3.3 `GET /spaces` | ✓ |
-| `console/roster` | 학급 학생 summary 카드 + join code | D (API S) | F-TCH-001 §3.2 · F-SPACE-001 §3.3 | ✓ |
+| `console/onboarding-role` | web `/teach/start` | 부모/교사/관리자 선택 → 첫 space 생성 → (교사) 코드 | S | F-CONSOLE-001 §3.3 | ✓ |
+| `console/home` | web `/teach/home` | 내 space 들 (가정·학급·학교) 전환 허브 — 모든 행이 `/teach/space/:id` 로 (§7 #23) | S | F-CONSOLE-001 §3.4 | ✓ |
+| `console/roster` | web `/teach/space/:id` | join code (복사·재발급) · 이번 주 롤업 · 학생 summary 카드 (계획·재연결·설정 버튼은 비활성) | S-thin | F-CONSOLE-001 §3.5 · F-TCH-001 §3.2 | ✓ |
 | `console/space-settings` | 코드 재발급 · 동의 모드 · 익명 roster · 멤버 | P (코드 재발급·멤버 제거 API S) | F-SPACE-001 §3.3 | ✓ |
 | `console/relink-approval` | 기기 이전 승인 10분 창 | P | roadmap §5 | NEW |
 | `console/school-admin` | 학급 트리 · 교사 초대 · seat 사용량 | P | roadmap S7 | NEW |
@@ -318,6 +318,8 @@ console/home ─┬─ [family] ─▶ parent/dashboard ─▶ parent/learner-de
 | 20 | 홈 화면 Streak 노출 | **유지** — PH 런치 결정(#51). 학습자 프로필 통계 카드에서는 제거 (F-RVW-001 §4 anti-pattern 최소화) | 코드 `ProfileScreen` |
 | 21 | 학급 코드 입력의 부모 PIN 게이트 (#10 의 parent-gated) | **게이트 없음** — 교실에서 교사가 도와 입력하며 교사는 부모 PIN 을 모른다. 진도는 이동·초기화되지 않으므로 위험이 낮음. F-TCH-001 §3.1 문구는 F-SPACE-001 §3.5 로 대체 (2026-09-21) | F-SPACE-001 §3.5 · 코드 `JoinSpaceScreen` |
 | 22 | join 시 부모 이메일(동의) 수집 | **S3 에서는 수집 안 함** — `spaces.settings_json.consentMode` 만 저장. 수집 UI 는 F-SPACE-002 (F-AUTH-002 이후) | F-SPACE-001 §4 |
+| 23 | 콘솔 홈의 family/school 행 목적지 (`parent/dashboard` 웹판 · `console/school-admin` 부재) | 셋 다 **같은 summary 페이지** `/teach/space/:id` 로 (kind 별 명사만 다름). 웹 부모 대시보드는 F-PAR-001 웹판, 학교 트리는 S7 에서 분리 | F-CONSOLE-001 §3.4 |
+| 24 | roster 의 "Show rescue code" (roadmap §5.1) vs 해시만 저장 | 평문을 서버가 모르므로 **"Issue a new code" (재발급)** 로 대체 — S5 에서 caregiver/teacher 경로의 `/recovery/issue` | F-CONSOLE-001 §4 · roadmap §5.1 |
 
 코드 ↔ 스펙 불일치 (shipped 화면) 는 같은 날 코드로 수정했다 — 각 와이어프레임의 Open questions 와 PR 본문 참조.
 

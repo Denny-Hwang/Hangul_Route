@@ -1,6 +1,6 @@
 # Multi-persona · Teacher Plans · Sync & Restore — 최소 DB 설계안
 
-**Status**: `in progress` — S1 (F-SYNC-001/002) · S2 (F-RESTORE-001) · S3 (F-SPACE-001, 서버 + 학습자 join) 구현됨 2026-09-21; 콘솔 화면 (F-CONSOLE-001) · S4–S7 (F-PLAN-001 / F-TCH-001 / F-ENT-001 / F-SCHOOL-001) 은 아직 proposal
+**Status**: `in progress` — S1 (F-SYNC-001/002) · S2 (F-RESTORE-001) · S3 (F-SPACE-001 서버 + 학습자 join · F-CONSOLE-001 웹 콘솔 셸: 로그인(dev)·첫 space·홈·roster) 구현됨 2026-09-21; S4–S7 (F-PLAN-001 / F-TCH-001 / F-ENT-001 / F-SCHOOL-001) 은 아직 proposal
 **작성일**: 2026-09-19
 **선행 문서**: `web-pwa-offline.md` (웹앱/오프라인), F-TCH-001 (draft), F-PROF-001, F-HW-001, F-SUB-001, F-AUTH-001, `apps/api/src/db/schema.sql` (v1)
 **요구**: (1) 교사가 학습 계획을 짜서 배포하고 학생 진도를 본다 (2) DB 를 최소로 (3) 개인 · 가정 · 학급 · 학교 페르소나 전부 (4) 페르소나별 결제 (5) 앱 삭제 · 기기 이전 시 데이터 복원
@@ -272,7 +272,7 @@ BP09 §3.5 / F-PAR-001 §3.2 의 대시보드 숫자가 전부 이 객체에서 
 - 생성 시점: learner 첫 스냅샷 업로드 성공 직후. 프로필 화면 "Save my progress" 카드에 표시 + 부모 이메일이 있으면 발송 (Resend — F-RESTORE-002 로 분리, 미구현). Hoya: *"Write this down — it brings your cards back on any device!"*
 - 저장: 서버는 `sha256(code)` 만 (`learners.recovery_hash`). 재발급하면 이전 코드 무효.
 - 방어: `/recovery/claim` 은 IP 당 5회/시간 (구현됨; 지수 백오프는 미구현). **재발급(`/recovery/issue` — 발급과 재발급이 같은 라우트, 구현됨)은 기기 소유만으로는 안 된다** — 클라이언트는 부모 PIN 뒤에 두고, 서버는 현재 `snapshots.device_id` 와 일치하는 기기이거나 caregiver membership 을 가진 account 만 허용. 성공 시 새 device 가 이 learner 를 "소유" (기존 기기는 그대로 — 두 기기 병합은 §4 merge 가 처리).
-- 학급 학생도 자동으로 받으므로 교사 승인 없이도 복원 가능. 교사는 roster 에서 "Show rescue code" 로 잃어버린 아이에게 다시 알려줄 수 있다 (summary 만 보는 규칙에 위배되지 않음 — 코드는 진도 데이터가 아님).
+- 학급 학생도 자동으로 받으므로 교사 승인 없이도 복원 가능. 교사는 roster 에서 잃어버린 아이에게 코드를 다시 줄 수 있다 — 서버는 해시만 알므로 "보여주기" 가 아니라 **재발급** ("Issue a new code", 이전 코드 무효; S5, app map §7 #24). summary 만 보는 규칙에 위배되지 않음 — 코드는 진도 데이터가 아님.
 
 ### 5.2 복원 시 병합
 

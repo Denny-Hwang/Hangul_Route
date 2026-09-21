@@ -1,6 +1,7 @@
 # Console/Sign-in — adult sign-in via Clerk (wireframe v1)
 
 Spec: `docs/specs/F-AUTH-001-family-ownership-clerk.md` (Clerk, adults only) · F-AUTH-002 (mobile sign-in, to be written) · `docs/roadmap/multi-persona-sync-platform.md` §1, §5, §8
+Code (F-CONSOLE-001, 2026-09-21): `apps/web/src/app/teach/page.tsx` — the Clerk widget is **not** in yet: a dev sign-in form (account id · name · email) stands in outside production or with `NEXT_PUBLIC_CONSOLE_DEV_AUTH=true`; production shows a "coming soon" line. Routing after sign-in (no space → onboarding, else home) is as drawn. "I have a Rescue Code instead" is mobile-only and not shown here.
 Audience: **parent / teacher / school admin** — children never sign in (no child account exists anywhere, roadmap §2 `accounts`)
 
 ## Scenario (Given-When-Then)

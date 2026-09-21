@@ -1,6 +1,7 @@
 # Console/Home — my spaces hub (wireframe v1)
 
 Spec: `docs/roadmap/multi-persona-sync-platform.md` §1–2 (an adult can own / belong to several spaces), §4 (sync hints), §8 · `docs/blueprints/10-app-map.md` §4.3
+Code (F-CONSOLE-001, 2026-09-21): `apps/web/src/app/teach/home/page.tsx` — groups, count-only status lines, archived last, empty and error states as drawn. Every row opens `/teach/space/:id` (§7 #23); sync-freshness / plan / re-link hints arrive with S4–S5; Account · Billing are disabled.
 Audience: **parent / teacher / school admin**
 
 ## Scenario (Given-When-Then)
