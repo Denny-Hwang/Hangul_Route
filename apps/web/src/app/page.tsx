@@ -4,10 +4,13 @@ import { HeritageCardsPreview } from '../components/landing/HeritageCardsPreview
 import { MeetHoya } from '../components/landing/MeetHoya';
 import { MiniGamesGallery } from '../components/landing/MiniGamesGallery';
 
+/** The learner web app (PWA). Overridable per deployment. */
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://app.hangulroute.com';
+
 const trustItems = [
   { title: 'COPPA-compliant', body: 'No third-party tracking. Parent email is the only PII.' },
   { title: 'No ads, ever', body: 'No third-party ads. No data sold. Revenue is in-app only.' },
-  { title: 'Plays offline', body: 'After first sync, the full Stage 1 plays without a connection.' },
+  { title: 'Plays offline', body: 'After your first visit, the full Stage 1 plays without a connection.' },
   { title: 'Anti-shame design', body: 'Wrong answers use amber. No red. No streak guilt.' },
 ];
 
@@ -108,8 +111,8 @@ export default function HomePage(): JSX.Element {
           <Link href="/parent" style={{ color: colors.text.secondary, fontWeight: typography.weight.semibold }}>
             Dashboard
           </Link>
-          <Link
-            href="#get"
+          <a
+            href={APP_URL}
             style={{
               padding: `${spacing.sm}px ${spacing.lg}px`,
               backgroundColor: colors.brand.primary,
@@ -118,8 +121,8 @@ export default function HomePage(): JSX.Element {
               fontWeight: typography.weight.bold,
             }}
           >
-            Get the app
-          </Link>
+            Play now
+          </a>
         </nav>
       </header>
 
@@ -179,7 +182,7 @@ export default function HomePage(): JSX.Element {
           </p>
           <div style={{ display: 'flex', gap: spacing.md, marginTop: spacing.xl, flexWrap: 'wrap' }}>
             <a
-              href="#get"
+              href={APP_URL}
               style={{
                 padding: `${spacing.md}px ${spacing.xl}px`,
                 backgroundColor: colors.brand.primary,
@@ -189,7 +192,7 @@ export default function HomePage(): JSX.Element {
                 fontSize: typography.size.bodyLg,
               }}
             >
-              Get the app
+              Play in your browser
             </a>
             <Link
               href="#cards"
@@ -212,7 +215,7 @@ export default function HomePage(): JSX.Element {
               color: colors.text.muted,
             }}
           >
-            Free for the first 12 cards · No ads · Plays offline
+            Nothing to download · No ads · Plays offline after your first visit
           </p>
         </div>
         <div
@@ -558,9 +561,25 @@ export default function HomePage(): JSX.Element {
             lineHeight: typography.leading.relaxed,
           }}
         >
-          We&rsquo;re launching publicly on Product Hunt soon. Leave your email and
-          we&rsquo;ll send a TestFlight invite and a free family code on launch day.
+          Hangul Route runs in your browser — open it, add it to your home
+          screen, and Stage 1 plays offline. Leave your email for launch news
+          and a free family code on launch day.
         </p>
+        <a
+          href={APP_URL}
+          style={{
+            display: 'inline-block',
+            marginBottom: spacing.xl,
+            padding: `${spacing.md}px ${spacing.xxl}px`,
+            backgroundColor: colors.surface.paper,
+            color: colors.brand.primary,
+            borderRadius: radii.pill,
+            fontWeight: typography.weight.bold,
+            fontSize: typography.size.bodyLg,
+          }}
+        >
+          Play now — free
+        </a>
         <form
           action="https://buttondown.email/api/emails/embed-subscribe/hangulroute"
           method="post"
@@ -619,7 +638,7 @@ export default function HomePage(): JSX.Element {
             opacity: 0.8,
           }}
         >
-          Or scan the TestFlight QR on launch day at hangulroute.com/get.
+          Works on iPhone, Android, iPad and Chromebook — any modern browser.
         </p>
       </section>
 
