@@ -1,6 +1,7 @@
 # Sync/Join-Space — enter a class or family code (wireframe v1)
 
 Spec: `docs/specs/F-SPACE-001-spaces-memberships-join-code.md` §3.5 (shipped 2026-09-21; code `apps/mobile/src/screens/sync/JoinSpaceScreen.tsx`) · F-TCH-001 §3.1 (origin) · `docs/roadmap/multi-persona-sync-platform.md` §2, §6 step 2
+Code (F-TCH-001 §10.1, 2026-09-21): step 2 gains "I was already in this class" when the lookup returns roster names (initials when the class anonymizes) → pick → waiting card ("Waiting for your teacher to say yes", ~10 minutes, Never mind) → approved: merge notice → Back to today; denied / expired: one calm line. The temporary profile made on the new device stays (app map §7 #25).
 Audience: **learner** (class student, P-C, typing a code from the board), with a **parent** variant for family codes; a teacher may be helping in the room
 
 ## Scenario (Given-When-Then)

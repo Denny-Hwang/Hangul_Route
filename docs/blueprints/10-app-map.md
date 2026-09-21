@@ -71,7 +71,7 @@ Hangul Route
 │   ├─ A9. Hoya companion (5 poses · bubble · lines)     [S] F-HOYA-001, F-002
 │   ├─ A10. Settings / Profile page (plan status · mute · switch · grown-ups) [S]
 │   ├─ A11. Save & Restore  (Rescue Code · sign-in · file) [S] F-SYNC-002 · F-RESTORE-001 (sign-in 경로는 [P] F-AUTH-002)
-│   ├─ A12. Join a space (class / family code)          [S] F-SPACE-001 §3.5 (PIN 없음, §7 #21)
+│   ├─ A12. Join a space (class / family code)          [S] F-SPACE-001 §3.5 (PIN 없음, §7 #21) · "I was already in this class" 재연결 요청 [S] F-TCH-001 §10.1
 │   ├─ A13. Paywall / Upgrade (parent-gated)            [R] F-SUB-001, F-IAP-001
 │   ├─ A14. PWA shell (offline-ready · update banners · offline chip · install guide) [S] roadmap P2 · F-PWA-001
 │   └─ A15. Projection mode (교사용 교실 표시)            [D] F-TCH-001 §3.4
@@ -92,7 +92,7 @@ Hangul Route
 │   ├─ C3. Join code (발급·재발급·만료)                    [S] F-SPACE-001 §3.2 (서버; 콘솔 화면은 F-CONSOLE-001)
 │   ├─ C4. Plan builder (class) + Pace helper             [S] F-PLAN-001 §3.5 (`/teach/space/:id/plan` — 카탈로그·순서·날짜·spread·대상·발행·readout)
 │   ├─ C5. Learner card (parent B3 재사용, 읽기 전용)      [P]
-│   ├─ C6. Re-link approval (기기 이전 승인)               [P] roadmap §5
+│   ├─ C6. Re-link approval (기기 이전 승인)               [S-api] F-TCH-001 §10.1 (서버 + 학습자 측 `sync/join-space` 완료; 콘솔 승인 화면은 PR 2)
 │   ├─ C7. School admin (교사 초대 · 학급 트리 · seats)     [P] roadmap S7
 │   ├─ C8. Billing (teacher_pro · school_license, Stripe)  [P] roadmap S6
 │   └─ C9. Worksheets PDF · Templates                     [–] F-TCH-002/003
@@ -184,8 +184,8 @@ Hangul Route
 | `console/onboarding-role` | web `/teach/start` | 부모/교사/관리자 선택 → 첫 space 생성 → (교사) 코드 | S | F-CONSOLE-001 §3.3 | ✓ |
 | `console/home` | web `/teach/home` | 내 space 들 (가정·학급·학교) 전환 허브 — 모든 행이 `/teach/space/:id` 로 (§7 #23) | S | F-CONSOLE-001 §3.4 | ✓ |
 | `console/roster` | web `/teach/space/:id` | join code (복사·재발급) · 이번 주 롤업 · 학생 summary 카드 (계획·재연결·설정 버튼은 비활성) | S-thin | F-CONSOLE-001 §3.5 · F-TCH-001 §3.2 | ✓ |
-| `console/space-settings` | 코드 재발급 · 동의 모드 · 익명 roster · 멤버 | P (코드 재발급·멤버 제거 API S) | F-SPACE-001 §3.3 | ✓ |
-| `console/relink-approval` | 기기 이전 승인 10분 창 | P | roadmap §5 | NEW |
+| `console/space-settings` | 코드 재발급 · 동의 모드 · 익명 roster · 멤버 · 보관 · 학습자 데이터 삭제 | P (API S: settings patch · archive/unarchive · learner data delete) | F-TCH-001 §10.3 | ✓ |
+| `console/relink-approval` | 기기 이전 승인 10분 창 | P (API S: `/spaces/:id/relink-requests` list · approve · deny) | F-TCH-001 §10.1 | ✓ |
 | `console/school-admin` | 학급 트리 · 교사 초대 · seat 사용량 | P | roadmap S7 | NEW |
 | `console/plan-builder` | (B 와 공용) | S | F-PLAN-001 §3.5 | ✓ |
 | `console/billing` | (B 와 공용, teacher_pro / school) | P | roadmap §7 | NEW |
@@ -319,7 +319,8 @@ console/home ─┬─ [family] ─▶ parent/dashboard ─▶ parent/learner-de
 | 21 | 학급 코드 입력의 부모 PIN 게이트 (#10 의 parent-gated) | **게이트 없음** — 교실에서 교사가 도와 입력하며 교사는 부모 PIN 을 모른다. 진도는 이동·초기화되지 않으므로 위험이 낮음. F-TCH-001 §3.1 문구는 F-SPACE-001 §3.5 로 대체 (2026-09-21) | F-SPACE-001 §3.5 · 코드 `JoinSpaceScreen` |
 | 22 | join 시 부모 이메일(동의) 수집 | **S3 에서는 수집 안 함** — `spaces.settings_json.consentMode` 만 저장. 수집 UI 는 F-SPACE-002 (F-AUTH-002 이후) | F-SPACE-001 §4 |
 | 23 | 콘솔 홈의 family/school 행 목적지 (`parent/dashboard` 웹판 · `console/school-admin` 부재) | 셋 다 **같은 summary 페이지** `/teach/space/:id` 로 (kind 별 명사만 다름). 웹 부모 대시보드는 F-PAR-001 웹판, 학교 트리는 S7 에서 분리 | F-CONSOLE-001 §3.4 |
-| 24 | roster 의 "Show rescue code" (roadmap §5.1) vs 해시만 저장 | 평문을 서버가 모르므로 **"Issue a new code" (재발급)** 로 대체 — S5 에서 caregiver/teacher 경로의 `/recovery/issue` | F-CONSOLE-001 §4 · roadmap §5.1 |
+| 24 | roster 의 "Show rescue code" (roadmap §5.1) vs 해시만 저장 | 평문을 서버가 모르므로 **"Issue a new code" (재발급)** 로 대체 — caregiver/teacher 경로의 `/recovery/issue` (구현됨 2026-09-21) | F-CONSOLE-001 §4 · F-TCH-001 §10.2 |
+| 25 | 재연결 시 새 기기의 임시 프로필 | 새 기기에서 만든 임시 프로필은 **그대로 두고** 복원된 프로필을 활성으로 전환 (자동 삭제는 아동 데이터 손실 위험) | F-TCH-001 §10.1 · 코드 `JoinSpaceScreen` |
 
 코드 ↔ 스펙 불일치 (shipped 화면) 는 같은 날 코드로 수정했다 — 각 와이어프레임의 Open questions 와 PR 본문 참조.
 
