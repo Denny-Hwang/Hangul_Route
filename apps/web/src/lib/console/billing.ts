@@ -1,8 +1,8 @@
-import type { Entitlement, PlanKey } from '@hangul-route/content-schema';
+import { FAMILY_LIFETIME_LEARNERS, PLAN_PRICING, SCHOOL_LICENSE_STUDENTS, SCHOOL_LICENSE_TEACHERS, type Entitlement, type PlanKey } from '@hangul-route/content-schema';
 import type { EntitlementView, SpaceListItem } from './api';
 import { COPY } from './copy';
 
-/** Billing view models — F-ENT-001 §3.6 (wireframe console/billing). Prices stay placeholders. */
+/** Billing view models — F-ENT-001 §3.6 (wireframe console/billing). Two products (decision #30): family once, group yearly, contract beyond the caps. */
 const PAST_DUE_GRACE_MS = 7 * 24 * 60 * 60 * 1000;
 
 export interface PlanRow {
@@ -10,7 +10,7 @@ export interface PlanRow {
   title: string;
   includes: string;
   price: string;
-  subjectKind: 'account' | 'space' | null;
+  subjectKind: 'space' | null;
   subjectId: string | null;
   subjectName: string | null;
   action: 'choose' | 'contact' | 'current' | 'none';
@@ -19,18 +19,23 @@ export interface PlanRow {
 
 export const PLAN_TITLES: Record<PlanKey | 'free', string> = {
   free: 'Free',
-  family_premium: 'Family Premium',
-  teacher_pro: 'Teacher Pro',
-  school_license: 'School License',
-  school_seat: 'School Seats',
+  family_lifetime: 'Family Lifetime',
+  group_license: 'Group License',
+  school_seat: 'School Contract',
+};
+
+export const PLAN_PRICE: Record<PlanKey | 'free', string> = {
+  free: '$0',
+  family_lifetime: PLAN_PRICING.family_lifetime.label,
+  group_license: PLAN_PRICING.group_license.label,
+  school_seat: 'Contact us',
 };
 
 const INCLUDES: Record<PlanKey | 'free', string> = {
-  free: 'Stage 1, 4 profiles, local progress, Rescue Code, file backup',
-  family_premium: 'Stages 2–7, cloud sync, dashboard, family plans, up to 4 learners',
-  teacher_pro: 'Unlimited classes and students, every student premium while enrolled, worksheets, templates',
-  school_license: 'Up to 10 teachers / 300 students, all classes Pro, admin view',
-  school_seat: 'Per-student seats, 300+, contract',
+  free: 'Stage 1, local progress, Rescue Code, file backup; classes up to 20 students',
+  family_lifetime: `Every Stage, now and later, for one family: up to ${FAMILY_LIFETIME_LEARNERS} learners, cloud sync, grown-up dashboard and plans`,
+  group_license: `A class or school: every student premium while enrolled, no 20-student cap; a school holds up to ${SCHOOL_LICENSE_TEACHERS} teachers / ${SCHOOL_LICENSE_STUDENTS} students`,
+  school_seat: `Beyond ${SCHOOL_LICENSE_STUDENTS} students or ${SCHOOL_LICENSE_TEACHERS} teachers — seats by contract`,
 };
 
 /** Mirror of the server rule so the page can label cards without a round trip. */
@@ -55,6 +60,7 @@ export function statusLine(e: Entitlement, now: Date): string {
     case 'trial':
       return when ? `trial · ends ${when}` : 'trial';
     case 'active':
+      if (e.planKey === 'family_lifetime') return 'active · yours for good';
       return when ? `active · renews ${when}` : 'active';
     case 'past_due':
       return isActive(e, now) ? 'payment needs attention · premium kept for a week' : 'payment needs attention · premium paused';
@@ -83,28 +89,32 @@ export function currentPlanCards(entitlements: readonly EntitlementView[], now: 
     subject: e.subjectKind === 'account' ? 'your account' : (e.subjectName ?? e.subjectId),
     status: statusLine(e, now),
     active: isActive(e, now),
-    canManage: e.provider === 'stripe' && !!e.customerRef,
+    canManage: e.provider === 'stripe' && !!e.customerRef && e.planKey !== 'family_lifetime',
   }));
 }
 
-/** Rows to offer this adult: one per owned family / school plus Teacher Pro for the account. */
-export function planRowsFor(accountId: string, spaces: readonly SpaceListItem[], entitlements: readonly EntitlementView[], now: Date): PlanRow[] {
-  const has = (kind: 'account' | 'space', id: string, plan: PlanKey): boolean => entitlements.some((e) => e.subjectKind === kind && e.subjectId === id && e.planKey === plan && isActive(e, now));
+/**
+ * Rows to offer this adult: Family Lifetime per owned family, Group License per owned
+ * stand-alone class (a class inside a school is covered by the school) and per owned
+ * school, plus the contract row for each school.
+ */
+export function planRowsFor(_accountId: string, spaces: readonly SpaceListItem[], entitlements: readonly EntitlementView[], now: Date): PlanRow[] {
+  const has = (id: string, plan: PlanKey): boolean => entitlements.some((e) => e.subjectKind === 'space' && e.subjectId === id && e.planKey === plan && isActive(e, now));
   const owned = spaces.filter((s) => s.role === 'owner' && !s.space.archivedAt);
-  const rows: PlanRow[] = [{ planKey: 'free', title: PLAN_TITLES.free, includes: INCLUDES.free, price: '$0', subjectKind: null, subjectId: null, subjectName: null, action: entitlements.some((e) => isActive(e, now)) ? 'none' : 'current', recommended: false }];
+  const row = (planKey: PlanKey, s: SpaceListItem, action: PlanRow['action'], recommended: boolean): PlanRow => ({ planKey, title: PLAN_TITLES[planKey], includes: INCLUDES[planKey], price: PLAN_PRICE[planKey], subjectKind: 'space', subjectId: s.space.id, subjectName: s.space.name, action, recommended });
+  const rows: PlanRow[] = [{ planKey: 'free', title: PLAN_TITLES.free, includes: INCLUDES.free, price: PLAN_PRICE.free, subjectKind: null, subjectId: null, subjectName: null, action: entitlements.some((e) => isActive(e, now)) ? 'none' : 'current', recommended: false }];
   for (const s of owned.filter((x) => x.space.kind === 'family')) {
-    const current = has('space', s.space.id, 'family_premium');
-    rows.push({ planKey: 'family_premium', title: PLAN_TITLES.family_premium, includes: INCLUDES.family_premium, price: COPY.pricePlaceholder, subjectKind: 'space', subjectId: s.space.id, subjectName: s.space.name, action: current ? 'current' : 'choose', recommended: !current });
+    const current = has(s.space.id, 'family_lifetime');
+    rows.push(row('family_lifetime', s, current ? 'current' : 'choose', !current));
   }
-  const teaches = owned.some((x) => x.space.kind === 'class');
-  const pro = has('account', accountId, 'teacher_pro');
-  if (teaches || pro) {
-    rows.push({ planKey: 'teacher_pro', title: PLAN_TITLES.teacher_pro, includes: INCLUDES.teacher_pro, price: COPY.pricePlaceholder, subjectKind: 'account', subjectId: accountId, subjectName: null, action: pro ? 'current' : 'choose', recommended: !pro });
+  for (const s of owned.filter((x) => x.space.kind === 'class' && !x.space.parentSpaceId)) {
+    const current = has(s.space.id, 'group_license');
+    rows.push(row('group_license', s, current ? 'current' : 'choose', !current));
   }
   for (const s of owned.filter((x) => x.space.kind === 'school')) {
-    const current = has('space', s.space.id, 'school_license') || has('space', s.space.id, 'school_seat');
-    rows.push({ planKey: 'school_license', title: PLAN_TITLES.school_license, includes: INCLUDES.school_license, price: COPY.pricePlaceholder, subjectKind: 'space', subjectId: s.space.id, subjectName: s.space.name, action: current ? 'current' : 'choose', recommended: !current });
-    rows.push({ planKey: 'school_seat', title: PLAN_TITLES.school_seat, includes: INCLUDES.school_seat, price: COPY.pricePlaceholder, subjectKind: 'space', subjectId: s.space.id, subjectName: s.space.name, action: 'contact', recommended: false });
+    const current = has(s.space.id, 'group_license') || has(s.space.id, 'school_seat');
+    rows.push(row('group_license', s, current ? 'current' : 'choose', !current));
+    rows.push(row('school_seat', s, 'contact', false));
   }
   // Only the first recommendation carries the primary button (wireframe: one [[ CHOOSE ]]).
   let seen = false;

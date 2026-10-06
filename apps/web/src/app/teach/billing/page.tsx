@@ -9,7 +9,7 @@ import type { EntitlementView, SpaceListItem } from '@/lib/console/api';
 import { PROVIDER_LABEL, checkoutReturnNotice, currentPlanCards, planRowsFor, type PlanRow } from '@/lib/console/billing';
 import { COPY } from '@/lib/console/copy';
 
-/** console/billing — F-ENT-001 §3.6. Web only; one Choose per recommended row; prices are placeholders. */
+/** console/billing — F-ENT-001 §3.6. Web only; one Choose per recommended row; family once, group yearly, contract beyond the caps. */
 function BillingInner(): JSX.Element {
   const { ready, session, api, signOut } = useConsole();
   const params = useSearchParams();
@@ -18,7 +18,6 @@ function BillingInner(): JSX.Element {
   const [error, setError] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(() => checkoutReturnNotice(params.get('checkout')));
   const [busy, setBusy] = useState(false);
-  const [interval, setInterval_] = useState<'monthly' | 'yearly'>('yearly');
   const now = new Date();
 
   const load = useCallback(async (): Promise<void> => {
@@ -47,7 +46,7 @@ function BillingInner(): JSX.Element {
     if (!api || !row.subjectKind || !row.subjectId || row.planKey === 'free' || row.planKey === 'school_seat') return;
     setBusy(true);
     setNote(null);
-    const result = await api.checkout({ planKey: row.planKey, interval, subjectKind: row.subjectKind, subjectId: row.subjectId });
+    const result = await api.checkout({ planKey: row.planKey, subjectKind: row.subjectKind, subjectId: row.subjectId });
     setBusy(false);
     if (!result.ok) {
       setNote(result.code === 'stripe_not_configured' ? COPY.billingNotConfigured : "Couldn't start checkout. Try again.");
@@ -57,6 +56,7 @@ function BillingInner(): JSX.Element {
   };
 
   const manage = async (subjectKind: 'account' | 'space', subjectId: string): Promise<void> => {
+    // Only yearly group licences have a Stripe subscription to manage; lifetime has nothing to cancel.
     if (!api) return;
     setBusy(true);
     setNote(null);
@@ -86,7 +86,7 @@ function BillingInner(): JSX.Element {
         {entitlements && cards.length === 0 ? (
           <div style={panelStyle}>
             <strong>Free</strong>
-            <Muted>Stage 1, 4 profiles, local progress, Rescue Code, file backup.</Muted>
+            <Muted>Stage 1, local progress, Rescue Code, file backup. Classes hold up to 20 students.</Muted>
           </div>
         ) : null}
         <div style={{ display: 'grid', gap: spacing.sm }}>
@@ -109,16 +109,7 @@ function BillingInner(): JSX.Element {
       </section>
 
       <section aria-label="Plans" style={{ marginBottom: spacing.xl }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: spacing.md, flexWrap: 'wrap' }}>
-          <h2 style={{ fontSize: typography.size.bodyLg, margin: `0 0 ${spacing.sm}px` }}>Plans</h2>
-          <label style={{ color: colors.text.secondary, fontSize: typography.size.bodySm }}>
-            Billing{' '}
-            <select value={interval} onChange={(e) => setInterval_(e.target.value === 'monthly' ? 'monthly' : 'yearly')} aria-label="Billing interval" style={{ padding: spacing.xs }}>
-              <option value="monthly">monthly</option>
-              <option value="yearly">yearly</option>
-            </select>
-          </label>
-        </div>
+        <h2 style={{ fontSize: typography.size.bodyLg, margin: `0 0 ${spacing.sm}px` }}>Plans</h2>
         <div style={{ display: 'grid', gap: spacing.sm }}>
           {rows.map((row) => (
             <div key={`${row.planKey}:${row.subjectId ?? 'me'}`} style={{ ...panelStyle, borderColor: row.recommended ? colors.brand.primary : colors.border.subtle, display: 'flex', justifyContent: 'space-between', gap: spacing.md, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -126,14 +117,17 @@ function BillingInner(): JSX.Element {
                 <strong>{row.title}</strong>
                 {row.subjectName ? <span style={{ color: colors.text.muted }}> · {row.subjectName}</span> : null}
                 <Muted>{row.includes}</Muted>
-                <Muted>{row.price}</Muted>
+                <Muted>
+                  <strong>{row.price}</strong>
+                  {row.planKey === 'family_lifetime' ? ` · ${COPY.lifetimeLine}` : row.planKey === 'group_license' ? ` · ${COPY.groupLine}` : row.planKey === 'school_seat' ? ` · ${COPY.contactLine}` : ''}
+                </Muted>
               </div>
               {row.action === 'choose' ? (
                 <Button tone={row.recommended ? 'primary' : 'secondary'} disabled={busy || !api} onClick={() => void choose(row)}>
                   Choose
                 </Button>
               ) : row.action === 'contact' ? (
-                <a href="mailto:hello@hangulroute.com?subject=School%20seats" style={{ color: colors.text.secondary }}>
+                <a href="mailto:hello@hangulroute.com?subject=School%20contract" style={{ color: colors.text.secondary }}>
                   Contact us
                 </a>
               ) : row.action === 'current' ? (

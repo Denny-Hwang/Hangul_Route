@@ -2,7 +2,7 @@ import { Body, Button, Caption, Card, Heading, Hoya, HoyaBubble, Icon, Screen, S
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
 import { Linking, Platform, Pressable, View } from 'react-native';
-import { PLAN_LENGTHS, PREMIUM_BULLETS, consoleBillingUrl, paywallState, type PlanLength } from '../../logic/paywall';
+import { LIFETIME_OFFER, PREMIUM_BULLETS, consoleBillingUrl, paywallState } from '../../logic/paywall';
 import type { RootStackParamList } from '../../navigation/types';
 import { track } from '../../platform/telemetry';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
@@ -19,7 +19,6 @@ export function PaywallScreen({ navigation, route }: Props): React.ReactElement 
   const cached = useTierStore((s) => (profile ? s.byLearner[profile.id] : undefined));
   const entitled = effectiveTier(profile?.id ?? '', new Date());
   const state = paywallState(entitled.tier, entitled.source);
-  const [length, setLength] = useState<PlanLength>('yearly');
   const [note, setNote] = useState<string | null>(null);
   const name = profile?.displayName ?? 'Your learner';
   const from = route.params?.from ?? 'settings';
@@ -31,7 +30,7 @@ export function PaywallScreen({ navigation, route }: Props): React.ReactElement 
 
   const openConsole = async (): Promise<void> => {
     const url = consoleBillingUrl();
-    void track({ name: 'paywall.console_opened', profileId: profile?.id, payload: { length } });
+    void track({ name: 'paywall.console_opened', profileId: profile?.id, payload: { plan: LIFETIME_OFFER.key } });
     try {
       await Linking.openURL(url);
     } catch {
@@ -90,7 +89,7 @@ export function PaywallScreen({ navigation, route }: Props): React.ReactElement 
             </View>
           </View>
           <Spacer size="lg" />
-          <Heading level="prompt">What Premium unlocks</Heading>
+          <Heading level="prompt">What {LIFETIME_OFFER.label} unlocks</Heading>
           <Spacer size="xs" />
           {PREMIUM_BULLETS.map((line) => (
             <Body key={line} tone="secondary">
@@ -98,37 +97,28 @@ export function PaywallScreen({ navigation, route }: Props): React.ReactElement 
             </Body>
           ))}
           <Spacer size="lg" />
-          <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-            {PLAN_LENGTHS.map((plan) => {
-              const selected = plan.key === length;
-              return (
-                <Pressable
-                  key={plan.key}
-                  onPress={() => setLength(plan.key)}
-                  accessibilityRole="radio"
-                  accessibilityState={{ selected }}
-                  accessibilityLabel={`${plan.label} plan`}
-                  style={{
-                    flex: 1,
-                    padding: spacing.md,
-                    borderRadius: radii.lg,
-                    borderWidth: 2,
-                    borderColor: selected ? colors.brand.primary : colors.border.subtle,
-                    backgroundColor: selected ? colors.brand.primaryLight : colors.surface.paper,
-                  }}
-                >
-                  <Body weight="semibold">{plan.label}</Body>
-                  <Caption tone="muted">{plan.price}</Caption>
-                </Pressable>
-              );
-            })}
+          <View
+            accessibilityLabel={`${LIFETIME_OFFER.label}, ${LIFETIME_OFFER.price}`}
+            style={{
+              padding: spacing.md,
+              borderRadius: radii.lg,
+              borderWidth: 2,
+              borderColor: colors.brand.primary,
+              backgroundColor: colors.brand.primaryLight,
+            }}
+          >
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
+              <Body weight="semibold">{LIFETIME_OFFER.label}</Body>
+              <Body weight="semibold">{LIFETIME_OFFER.price}</Body>
+            </View>
+            <Caption tone="muted">{LIFETIME_OFFER.line}</Caption>
           </View>
           <Spacer size="lg" />
           <Card padding="md" tone="sunken">
             <Caption tone="secondary">
               {Platform.OS === 'web'
-                ? 'Grown-ups buy Premium on the web console, so no store fees reach your family. Sign in there and come back — this device updates on its next sync.'
-                : 'Buying inside this app arrives with the store update. Until then, a grown-up can subscribe on the web console.'}
+                ? 'Grown-ups buy it once on the web console, so no store fees reach your family. Sign in there and come back — this device updates on its next sync.'
+                : 'Buying inside this app arrives with the store update. Until then, a grown-up can buy it once on the web console.'}
             </Caption>
           </Card>
           <Spacer size="md" />
@@ -140,7 +130,7 @@ export function PaywallScreen({ navigation, route }: Props): React.ReactElement 
             </>
           ) : null}
           <Spacer size="md" />
-          <Caption tone="muted" align="center">Cancel any time. Terms and privacy are on the website.</Caption>
+          <Caption tone="muted" align="center">One payment, no renewal. Terms and privacy are on the website.</Caption>
         </>
       )}
       <Spacer size="xl" />

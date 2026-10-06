@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { Button, ConsoleShell, Field, Muted, Notice, panelStyle } from '@/components/console/ui';
 import type { ConsoleApi, MemberView, SchoolView } from '@/lib/console/api';
-import { statusLine as entitlementStatus } from '@/lib/console/billing';
+import { PLAN_TITLES, statusLine as entitlementStatus } from '@/lib/console/billing';
 import { COPY } from '@/lib/console/copy';
 import { codeExpiry, relativeDay } from '@/lib/console/rollup';
 import { ROUTES } from '@/lib/console/routing';
@@ -77,7 +77,7 @@ export function SchoolAdmin({ api, spaceId, onSignOut }: { api: ConsoleApi; spac
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: spacing.md, flexWrap: 'wrap' }}>
               <div>
                 <strong>Licence</strong>
-                <Muted>{view.license ? `${view.license.planKey === 'school_seat' ? 'School Seats' : 'School License'} · ${entitlementStatus(view.license, now)}` : 'none'}</Muted>
+                <Muted>{view.license ? `${PLAN_TITLES[view.license.planKey]} · ${entitlementStatus(view.license, now)}` : 'none'}</Muted>
               </div>
               <div>
                 <strong>Seats</strong>
