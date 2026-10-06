@@ -155,6 +155,7 @@ class Store {
       customerRef: input.customerRef ?? existing?.customerRef ?? null,
       seats: input.seats === undefined ? (existing?.seats ?? null) : input.seats,
       expiresAt: input.expiresAt === undefined ? (existing?.expiresAt ?? null) : input.expiresAt,
+      promoCode: input.promoCode ?? existing?.promoCode ?? null,
       updatedAt: now.toISOString(),
     };
     this.entitlements.set(k, next);

@@ -115,6 +115,7 @@ CREATE TABLE IF NOT EXISTS entitlements (
   customer_ref  TEXT,               -- Stripe customer (billing portal)
   seats         INTEGER,            -- school_seat; NULL = unlimited
   expires_at    TEXT,               -- NULL for family_lifetime (never lapses)
+  promo_code    TEXT,               -- promotion / referral code used at checkout (F-ENT-002, attribution)
   updated_at    TEXT NOT NULL,
   UNIQUE (subject_kind, subject_id, plan_key)
 );
