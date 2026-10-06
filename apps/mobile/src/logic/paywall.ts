@@ -22,6 +22,9 @@ export const LIFETIME_OFFER = {
   line: 'One payment. No subscription, nothing to cancel.',
 } as const;
 
+/** Codes are typed on the console, never in the child app (F-ENT-002 §3.4). */
+export const PROMO_HINT = 'Have a promo or referral code? A grown-up enters it on the web console.';
+
 const DEFAULT_CONSOLE = 'https://hangulroute.com';
 
 /** Where a grown-up buys on the web (checkout lives in the console, never in the child app). */

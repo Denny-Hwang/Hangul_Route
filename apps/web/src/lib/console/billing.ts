@@ -1,4 +1,4 @@
-import { FAMILY_LIFETIME_LEARNERS, PLAN_PRICING, SCHOOL_LICENSE_STUDENTS, SCHOOL_LICENSE_TEACHERS, type Entitlement, type PlanKey } from '@hangul-route/content-schema';
+import { FAMILY_LIFETIME_LEARNERS, PLAN_PRICING, SCHOOL_LICENSE_STUDENTS, SCHOOL_LICENSE_TEACHERS, discountedUsd, promoLabel, type Entitlement, type PlanKey, type Promo } from '@hangul-route/content-schema';
 import type { EntitlementView, SpaceListItem } from './api';
 import { COPY } from './copy';
 
@@ -124,6 +124,19 @@ export function planRowsFor(_accountId: string, spaces: readonly SpaceListItem[]
     seen = true;
     return r;
   });
+}
+
+/**
+ * Price line once a code is applied — "$12.24 with HOYA20 (20% off), was $15.30" (F-ENT-002 §3.3).
+ * A yearly licence on a one-charge coupon says so; null when the plan is not purchasable.
+ */
+export function promoPriceLine(planKey: PlanKey | 'free', promo: Promo | null): string | null {
+  if (!promo || (planKey !== 'family_lifetime' && planKey !== 'group_license')) return null;
+  const pricing = PLAN_PRICING[planKey];
+  const after = discountedUsd(pricing.amountUsd, promo);
+  const unit = pricing.per === 'year' ? ' / year' : ' once';
+  const scope = pricing.per === 'year' && promo.duration === 'once' ? ', first year' : '';
+  return `$${after.toFixed(2)}${unit} with ${promo.code} (${promoLabel(promo)}${scope}), was ${pricing.label}`;
 }
 
 /** Message for `?checkout=` on return from Stripe. */

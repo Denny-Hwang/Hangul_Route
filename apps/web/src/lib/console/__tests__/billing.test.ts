@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import type { EntitlementView, SpaceListItem } from '../api';
-import { checkoutReturnNotice, currentPlanCards, isActive, planRowsFor, statusLine } from '../billing';
+import { checkoutReturnNotice, currentPlanCards, isActive, planRowsFor, promoPriceLine, statusLine } from '../billing';
 
 const now = new Date('2026-09-21T12:00:00.000Z');
-const ent = (over: Partial<EntitlementView>): EntitlementView => ({ id: 'ent:1', subjectKind: 'space', subjectId: 'space:fam', planKey: 'group_license', status: 'active', provider: 'stripe', providerRef: 'sub', customerRef: 'cus', seats: null, expiresAt: '2026-10-21T00:00:00.000Z', updatedAt: '2026-09-20T00:00:00.000Z', subjectName: 'Kim family', ...over });
+const ent = (over: Partial<EntitlementView>): EntitlementView => ({ id: 'ent:1', subjectKind: 'space', subjectId: 'space:fam', planKey: 'group_license', status: 'active', provider: 'stripe', providerRef: 'sub', customerRef: 'cus', seats: null, expiresAt: '2026-10-21T00:00:00.000Z', promoCode: null, updatedAt: '2026-09-20T00:00:00.000Z', subjectName: 'Kim family', ...over });
 const space = (id: string, kind: SpaceListItem['space']['kind'], role: SpaceListItem['role'] = 'owner', archivedAt: string | null = null): SpaceListItem => ({
   space: { id, kind, name: id, parentSpaceId: id === 'space:inschool' ? 'space:sch' : null, settings: { consentMode: 'parent', anonymizeRoster: false }, archivedAt, createdAt: 't' },
   role,
@@ -55,6 +55,16 @@ describe('billing view models (F-ENT-001 §3.6)', () => {
     expect(withLicence.map((r) => [r.planKey, r.action])).toEqual([['free', 'none'], ['group_license', 'current']]);
     expect(planRowsFor('me', [], [], now).map((r) => r.planKey)).toEqual(['free']);
     expect(planRowsFor('me', [space('space:sch', 'school')], [ent({ subjectId: 'space:sch', planKey: 'school_seat', seats: 300 })], now).find((r) => r.planKey === 'group_license')?.action).toBe('current');
+  });
+
+  it('prices a plan with a promo code (F-ENT-002)', () => {
+    const pct = { id: 'promo_1', code: 'HOYA20', name: 'Launch', percentOff: 20, amountOffCents: null, duration: 'once' as const };
+    expect(promoPriceLine('family_lifetime', pct)).toBe('$12.24 once with HOYA20 (20% off), was $15.30 once');
+    expect(promoPriceLine('group_license', pct)).toBe('$122.40 / year with HOYA20 (20% off, first year), was $153 / year');
+    expect(promoPriceLine('group_license', { ...pct, duration: 'forever', percentOff: null, amountOffCents: 300 })).toBe('$150.00 / year with HOYA20 ($3.00 off), was $153 / year');
+    expect(promoPriceLine('school_seat', pct)).toBeNull();
+    expect(promoPriceLine('free', pct)).toBeNull();
+    expect(promoPriceLine('family_lifetime', null)).toBeNull();
   });
 
   it('maps the checkout return parameter', () => {

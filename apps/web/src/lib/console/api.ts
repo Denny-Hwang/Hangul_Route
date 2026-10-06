@@ -1,4 +1,4 @@
-import type { Entitlement, PlanItem, ProgressSummary, SpaceKind, SpaceRole } from '@hangul-route/content-schema';
+import type { Entitlement, PlanItem, ProgressSummary, Promo, PurchasablePlanKey, SpaceKind, SpaceRole } from '@hangul-route/content-schema';
 
 /**
  * Console transport for /api/spaces — F-CONSOLE-001. Bearer = the console
@@ -89,6 +89,12 @@ export interface RelinkView {
 }
 
 export type EntitlementView = Entitlement & { subjectName: string | null };
+
+/** What a promotion / referral code is worth on a plan — F-ENT-002. */
+export interface PromoCheckView {
+  promo: Promo;
+  price: { planKey: PurchasablePlanKey; listUsd: number; discountedUsd: number };
+}
 
 export interface SchoolClassRow {
   space: SpaceView;
@@ -182,8 +188,9 @@ export function createConsoleApi(opts: ConsoleApiOptions) {
       call<{ alreadyMember: boolean }>(`${base}/${encodeURIComponent(spaceId)}/members`, { method: 'POST', body: JSON.stringify({ accountId, role: 'teacher' }) }, [200, 201]),
     entitlements: () =>
       call<{ entitlements: EntitlementView[] }>(entitlements, { method: 'GET' }, [200]).then((r) => (r.ok ? { ok: true as const, data: r.data.entitlements } : r)),
-    checkout: (body: { planKey: 'family_lifetime' | 'group_license'; subjectKind: 'space'; subjectId: string }) =>
+    checkout: (body: { planKey: PurchasablePlanKey; subjectKind: 'space'; subjectId: string; promoCode?: string }) =>
       call<{ url: string }>(`${entitlements}/stripe/checkout`, { method: 'POST', body: JSON.stringify(body) }, [200]),
+    checkPromo: (body: { code: string; planKey: PurchasablePlanKey }) => call<PromoCheckView>(`${entitlements}/stripe/promo`, { method: 'POST', body: JSON.stringify(body) }, [200]),
     portal: (body: { subjectKind: 'account' | 'space'; subjectId: string }) =>
       call<{ url: string }>(`${entitlements}/stripe/portal`, { method: 'POST', body: JSON.stringify(body) }, [200]),
   };

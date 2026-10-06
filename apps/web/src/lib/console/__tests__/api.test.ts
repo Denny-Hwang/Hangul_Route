@@ -108,7 +108,7 @@ describe('console api — settings, members, re-link, rescue (F-TCH-001 §10)', 
 
 describe('console api — entitlements (F-ENT-001)', () => {
   it('lists entitlements, starts checkout and portal, and surfaces server error codes', async () => {
-    const e = { id: 'ent:1', subjectKind: 'account', subjectId: 't', planKey: 'group_license', status: 'active', provider: 'stripe', providerRef: null, customerRef: 'cus', seats: null, expiresAt: null, updatedAt: 't', subjectName: null };
+    const e = { id: 'ent:1', subjectKind: 'account', subjectId: 't', planKey: 'group_license', status: 'active', provider: 'stripe', providerRef: null, customerRef: 'cus', seats: null, expiresAt: null, promoCode: null, updatedAt: 't', subjectName: null };
     const fetchImpl = vi.fn<typeof fetch>()
       .mockResolvedValueOnce(json(200, { data: { entitlements: [e] } }))
       .mockResolvedValueOnce(json(200, { data: { url: 'https://checkout.stripe.com/c/1' } }))
@@ -121,6 +121,10 @@ describe('console api — entitlements (F-ENT-001)', () => {
     expect(await api.checkout({ planKey: 'family_lifetime', subjectKind: 'space', subjectId: 'space:fam' })).toEqual({ ok: false, error: 'unknown', status: 500, code: 'stripe_not_configured' });
     expect(await api.portal({ subjectKind: 'account', subjectId: 't' })).toEqual({ ok: true, data: { url: 'https://billing.stripe.com/p/1' } });
     expect(await api.portal({ subjectKind: 'space', subjectId: 's' })).toEqual({ ok: false, error: 'not_found', status: 404, code: 'not_found' });
+    const promoView = { promo: { id: 'promo_1', code: 'HOYA20', name: 'Launch', percentOff: 20, amountOffCents: null, duration: 'once' }, price: { planKey: 'family_lifetime', listUsd: 15.3, discountedUsd: 12.24 } };
+    fetchImpl.mockResolvedValueOnce(json(200, { ok: true, data: promoView })).mockResolvedValueOnce(json(404, { ok: false, error: { code: 'promo_invalid' } }));
+    expect(await api.checkPromo({ code: 'HOYA20', planKey: 'family_lifetime' })).toEqual({ ok: true, data: promoView });
+    expect(await api.checkPromo({ code: 'NOPE', planKey: 'family_lifetime' })).toEqual({ ok: false, error: 'not_found', status: 404, code: 'promo_invalid' });
     expect(fetchImpl.mock.calls[1]?.[0]).toBe('https://api.example.com/api/entitlements/stripe/checkout');
   });
 });
