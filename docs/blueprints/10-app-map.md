@@ -83,7 +83,7 @@ Hangul Route
 │   ├─ B4. Voice message (≤10 s)                         [R] F-PAR-001 N5
 │   ├─ B5. Plan builder (family)  = "Send homework"      [S] F-PLAN-001 §3.5 (`/teach/space/:id/plan`, class 와 공용) (T-P2-01 흡수)
 │   ├─ B6. Account (Clerk sign-in · email · consent · delete learner) [R/P] F-AUTH-001/002
-│   ├─ B7. Billing (family_lifetime $15.30 once)         [S] F-ENT-001 §3.6 (`/teach/billing`, Stripe one-time; 결정 #30)
+│   ├─ B7. Billing (family_lifetime $15.30 once)         [S] F-ENT-001 §3.6 (`/teach/billing`, Stripe one-time; 결정 #30) + 프로모·레퍼럴 코드 입력 (F-ENT-002)
 │   └─ B8. Backup (rescue code 보기 · 파일 내보내기)      [S] F-SYNC-002 · F-RESTORE-001
 │
 ├─ C. Teacher / School Console (웹 전용) ────────────────────────── 교사·관리자
@@ -324,6 +324,7 @@ console/home ─┬─ [family] ─▶ parent/dashboard ─▶ parent/learner-de
 | 27 | 학교 동의 모드 (c) 의 활성 시점 | **법률 검토 전까지 선택 불가** — Worker `SCHOOL_CONSENT_MODE=enabled` + 콘솔 `NEXT_PUBLIC_SCHOOL_CONSENT_MODE=enabled` 가 모두 설정될 때만 school 모드 저장 가능. 그 전에는 API 422 `consent_mode_locked`, 콘솔 라디오 비활성 (오너 결정 2026-10-06) | F-TCH-001 §10.3 · `apps/api/wrangler.toml` |
 | 28 | App Store 트랙 (T-040–T-044) 시점 | **웹앱 안정화 이후** (오너 결정 2026-10-06). 런치 채널은 웹앱 단일 | `docs/tasks/INBOX.md` |
 | 30 | 가격 모델 (3 플랜 × 월/연 placeholder) | **상품 2개 (오너 결정 2026-10-06)**: `family_lifetime` **$15.30 일회** (한 가족 space, 학습자 5명까지, 모든 Stage, 만료 없음) · `group_license` **$153/년** (단독 학급 또는 학교; 학교는 교사 10 / 학생 300 상한) · 상한 초과는 `school_seat` **Contact us** (계약). Teacher Pro · 월 결제 폐지. 가족 space 학습자 cap 5 (`cap_family`) | F-ENT-001 §3.1–3.6 · `PLAN_PRICING` |
+| 31 | 프로모션·레퍼럴 코드의 저장 위치 (자체 테이블 + 관리 화면 vs Stripe) | **Stripe Promotion Code 가 유일한 원본** (오너 요청 2026-10-06: 코드·할인율을 나중에 직접 관리). 생성·수정·만료·사용 횟수 제한은 Stripe 대시보드, API 는 조회·적용·귀속만. 자동 리워드(추천인 보상) 는 첫 코드 운영 후 별도 스펙 | F-ENT-002 |
 | 29 | 랜딩·콘솔 (`apps/web`) 호스팅 — Vercel vs Cloudflare(OpenNext) | **Cloudflare 통일, 단 어댑터 없이 Next `output: 'export'` 정적 내보내기 → assets-only Worker `hangul-route-web`** (학습자 앱과 같은 모양). 최신 OpenNext 어댑터는 Next ≥ 15.5 를 요구해 Next 14 콘솔과 맞지 않고, Vercel 무료 플랜은 상업 이용 불가. 결과로 space 주소가 `/teach/space/:id` → `/teach/space?id=` 로 바뀜 (오너 결정 2026-10-06) | F-CONSOLE-001 §3.7 · `apps/web/wrangler.toml` |
 | 25 | 재연결 시 새 기기의 임시 프로필 | 새 기기에서 만든 임시 프로필은 **그대로 두고** 복원된 프로필을 활성으로 전환 (자동 삭제는 아동 데이터 손실 위험) | F-TCH-001 §10.1 · 코드 `JoinSpaceScreen` |
 

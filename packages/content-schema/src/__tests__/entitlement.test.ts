@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CheckoutCreateSchema, EntitlementApplySchema, EntitlementSchema, FAMILY_LIFETIME_LEARNERS, MemberAddSchema, PLAN_PRICING, ReceiptVerifySchema, SCHOOL_LICENSE_STUDENTS, SCHOOL_LICENSE_TEACHERS, SyncInboxSchema, TIER_GRACE_MS } from '../index';
+import { CheckoutCreateSchema, EntitlementApplySchema, EntitlementSchema, FAMILY_LIFETIME_LEARNERS, MemberAddSchema, PLAN_PRICING, PromoCheckSchema, PromoSchema, ReceiptVerifySchema, discountedUsd, normalizePromoCode, promoLabel, SCHOOL_LICENSE_STUDENTS, SCHOOL_LICENSE_TEACHERS, SyncInboxSchema, TIER_GRACE_MS } from '../index';
 
 describe('entitlement schemas (F-ENT-001 §3.1)', () => {
   const row = { id: 'ent:abc', subjectKind: 'space', subjectId: 'space:fam', planKey: 'family_lifetime', status: 'active', provider: 'stripe', providerRef: 'sub_1', customerRef: 'cus_1', seats: null, expiresAt: null, updatedAt: 't' };
@@ -16,6 +16,28 @@ describe('entitlement schemas (F-ENT-001 §3.1)', () => {
     expect(PLAN_PRICING.family_lifetime).toEqual({ amountUsd: 15.3, per: 'once', label: '$15.30 once' });
     expect(PLAN_PRICING.group_license).toEqual({ amountUsd: 153, per: 'year', label: '$153 / year' });
     expect(FAMILY_LIFETIME_LEARNERS).toBe(5);
+    expect(EntitlementSchema.parse(row).promoCode).toBeNull();
+    expect(EntitlementSchema.parse({ ...row, promoCode: 'HOYA20' }).promoCode).toBe('HOYA20');
+  });
+
+  it('normalizes promo codes, validates the check body, and prices a discount (F-ENT-002)', () => {
+    expect(normalizePromoCode('  hoya 20 ')).toBe('HOYA20');
+    expect(PromoCheckSchema.parse({ code: 'hoya-20', planKey: 'family_lifetime' })).toEqual({ code: 'HOYA-20', planKey: 'family_lifetime' });
+    expect(PromoCheckSchema.safeParse({ code: 'x', planKey: 'family_lifetime' }).success).toBe(false);
+    expect(PromoCheckSchema.safeParse({ code: 'has!bang', planKey: 'family_lifetime' }).success).toBe(false);
+    expect(PromoCheckSchema.safeParse({ code: 'HOYA20', planKey: 'school_seat' }).success).toBe(false);
+    expect(CheckoutCreateSchema.parse({ planKey: 'group_license', subjectKind: 'space', subjectId: 's', promoCode: 'teacher10' }).promoCode).toBe('TEACHER10');
+    expect(CheckoutCreateSchema.parse({ planKey: 'group_license', subjectKind: 'space', subjectId: 's' }).promoCode).toBeUndefined();
+    const pct = PromoSchema.parse({ id: 'promo_1', code: 'HOYA20', name: 'Launch', percentOff: 20, amountOffCents: null, duration: 'once' });
+    expect(discountedUsd(15.3, pct)).toBe(12.24);
+    expect(discountedUsd(153, { percentOff: null, amountOffCents: 500 })).toBe(148);
+    expect(discountedUsd(15.3, { percentOff: null, amountOffCents: 99_999 })).toBe(0);
+    expect(discountedUsd(15.3, { percentOff: null, amountOffCents: null })).toBe(15.3);
+    expect(discountedUsd(15.3, null)).toBe(15.3);
+    expect(promoLabel(pct)).toBe('20% off');
+    expect(promoLabel({ percentOff: null, amountOffCents: 500 })).toBe('$5.00 off');
+    expect(promoLabel({ percentOff: null, amountOffCents: null })).toBe('no discount');
+    expect(PromoSchema.safeParse({ ...pct, percentOff: 120 }).success).toBe(false);
     expect(ReceiptVerifySchema.safeParse({ spaceId: 'nope', store: 'apple', receipt: 'x' }).success).toBe(false);
     expect(ReceiptVerifySchema.parse({ spaceId: 'space:fam', store: 'google', receipt: '{}' }).store).toBe('google');
   });

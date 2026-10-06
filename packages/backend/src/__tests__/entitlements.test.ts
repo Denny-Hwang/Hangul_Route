@@ -3,6 +3,7 @@ import app from '../index';
 import { signStripePayload } from '../lib/stripe';
 import { setStripeFetchForTests } from '../routes/entitlements';
 import { store } from '../store';
+import { PROMO_LIMIT, promoLimiter } from '../routes/entitlements';
 
 type Envelope = { ok: boolean; data?: Record<string, unknown>; error?: { code: string } };
 const json = { 'content-type': 'application/json' };
@@ -20,7 +21,11 @@ const STRIPE_ENV = { STRIPE_SECRET_KEY: 'sk_test', STRIPE_WEBHOOK_SECRET: 'whsec
 beforeEach(() => {
   store.reset();
   setStripeFetchForTests(null);
+  promoLimiter.reset();
 });
+
+const PROMO = { id: 'promo_1', code: 'hoya20', active: true, expires_at: null, max_redemptions: null, times_redeemed: 0, coupon: { id: 'c1', name: 'Launch', percent_off: 20, amount_off: null, currency: null, duration: 'once', valid: true } };
+const promoResponse = (rows: unknown[]) => new Response(JSON.stringify({ data: rows }), { status: 200 });
 
 describe('entitlements (F-ENT-001 §3.3)', () => {
   it('lists mine and my spaces’, verifies a family receipt, and rejects other people’s spaces', async () => {
@@ -72,6 +77,44 @@ describe('entitlements (F-ENT-001 §3.3)', () => {
     expect(String((once.mock.calls[0]?.[1] as RequestInit).body)).toContain('mode=payment');
     setStripeFetchForTests(vi.fn<typeof fetch>().mockResolvedValueOnce(new Response('{}', { status: 500 })));
     expect((await call('POST', '/api/entitlements/stripe/checkout', bearer('principal'), { planKey: 'group_license', subjectKind: 'space', subjectId: sch }, STRIPE_ENV)).body.error?.code).toBe('stripe_error');
+  });
+
+  it('checks promotion codes against Stripe and applies them at checkout (F-ENT-002)', async () => {
+    const fam = await createSpace('mom', 'family', 'Kim family');
+    const env = { ...STRIPE_ENV, STRIPE_PRICE_FAMILY_LIFETIME: 'price_fl' };
+    expect((await call('POST', '/api/entitlements/stripe/promo', json, { code: 'HOYA20', planKey: 'family_lifetime' })).status).toBe(401);
+    expect((await call('POST', '/api/entitlements/stripe/promo', bearer('mom'), { code: '!', planKey: 'family_lifetime' })).body.error?.code).toBe('promo_invalid');
+    expect((await call('POST', '/api/entitlements/stripe/promo', bearer('mom'), { code: 'HOYA20', planKey: 'family_lifetime' })).body.error?.code).toBe('stripe_not_configured');
+
+    setStripeFetchForTests(vi.fn<typeof fetch>().mockResolvedValueOnce(promoResponse([PROMO])).mockResolvedValueOnce(promoResponse([])));
+    const checked = await call('POST', '/api/entitlements/stripe/promo', bearer('mom'), { code: ' hoya 20 ', planKey: 'family_lifetime' }, env);
+    expect(checked.status).toBe(200);
+    expect(checked.body.data).toEqual({ promo: { id: 'promo_1', code: 'HOYA20', name: 'Launch', percentOff: 20, amountOffCents: null, duration: 'once' }, price: { planKey: 'family_lifetime', listUsd: 15.3, discountedUsd: 12.24 } });
+    expect((await call('POST', '/api/entitlements/stripe/promo', bearer('mom'), { code: 'NOPE', planKey: 'group_license' }, env)).status).toBe(404);
+
+    // checkout re-validates: a bad code never reaches Stripe, a good one becomes discounts[0]
+    setStripeFetchForTests(vi.fn<typeof fetch>().mockResolvedValueOnce(promoResponse([])));
+    expect((await call('POST', '/api/entitlements/stripe/checkout', bearer('mom'), { planKey: 'family_lifetime', subjectKind: 'space', subjectId: fam, promoCode: 'STALE' }, env)).body.error?.code).toBe('promo_invalid');
+    const fetchImpl = vi.fn<typeof fetch>().mockResolvedValueOnce(promoResponse([PROMO])).mockResolvedValueOnce(new Response(JSON.stringify({ url: 'https://checkout.stripe.com/c/9' }), { status: 200 }));
+    setStripeFetchForTests(fetchImpl);
+    expect((await call('POST', '/api/entitlements/stripe/checkout', bearer('mom'), { planKey: 'family_lifetime', subjectKind: 'space', subjectId: fam, promoCode: 'hoya20' }, env)).body.data).toEqual({ url: 'https://checkout.stripe.com/c/9' });
+    const posted = String((fetchImpl.mock.calls[1]?.[1] as RequestInit).body);
+    expect(posted).toContain('discounts%5B0%5D%5Bpromotion_code%5D=promo_1');
+    expect(posted).toContain('metadata%5BpromoCode%5D=HOYA20');
+    expect(posted).not.toContain('allow_promotion_codes');
+
+    // the webhook keeps the code on the entitlement for attribution
+    const ts = Math.floor(Date.now() / 1000);
+    const event = JSON.stringify({ id: 'evt_p', type: 'checkout.session.completed', data: { object: { id: 'cs_9', payment_intent: 'pi_9', customer: 'cus_9', metadata: { subjectKind: 'space', subjectId: fam, planKey: 'family_lifetime', promoCode: 'HOYA20' } } } });
+    const applied = await call('POST', '/api/entitlements/stripe/webhook', { ...json, 'stripe-signature': await signStripePayload('whsec_test', event, ts) }, event, env);
+    expect(applied.body.data).toMatchObject({ applied: true, entitlement: { planKey: 'family_lifetime', promoCode: 'HOYA20', providerRef: 'pi_9', expiresAt: null } });
+
+    // guessing is rate-limited per client
+    setStripeFetchForTests(vi.fn<typeof fetch>().mockImplementation(async () => promoResponse([])));
+    for (let i = 0; i < PROMO_LIMIT - 3; i += 1) await call('POST', '/api/entitlements/stripe/promo', bearer('mom'), { code: `GUESS${i}`, planKey: 'family_lifetime' }, env);
+    const limited = await call('POST', '/api/entitlements/stripe/promo', bearer('mom'), { code: 'GUESSX', planKey: 'family_lifetime' }, env);
+    expect(limited.status).toBe(429);
+    expect(limited.body.error?.code).toBe('too_many_attempts');
   });
 
   it('webhooks verify the signature and drive the tier that learners receive; the portal needs a Stripe customer', async () => {

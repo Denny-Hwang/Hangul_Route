@@ -1,4 +1,4 @@
-import type { EntitlementApply, EntitlementStatus, PurchasablePlanKey } from '@hangul-route/content-schema';
+import { PromoSchema, type EntitlementApply, type EntitlementStatus, type Promo, type PurchasablePlanKey } from '@hangul-route/content-schema';
 
 /**
  * Stripe without the SDK — F-ENT-001 §3.3. Webhook signatures are HMAC-SHA256
@@ -92,14 +92,21 @@ function isoFromUnix(value: unknown): string | null {
   return typeof value === 'number' && Number.isFinite(value) ? new Date(value * 1000).toISOString() : null;
 }
 
+function promoFromMeta(meta: unknown): string | null {
+  const code = meta && typeof meta === 'object' ? (meta as Record<string, unknown>).promoCode : null;
+  return typeof code === 'string' && code.length > 0 ? code : null;
+}
+
 /** What an event means for the table, or null when it is not ours. */
 export function entitlementFromStripeEvent(event: StripeEventLike): EntitlementApply | null {
   const obj = event.data.object;
   const subject = subjectFrom(obj.metadata);
   if (!subject) return null;
+  const promoCode = promoFromMeta(obj.metadata);
   if (event.type === 'checkout.session.completed') {
     return {
       ...subject,
+      promoCode,
       status: 'active',
       provider: 'stripe',
       providerRef: typeof obj.subscription === 'string' ? obj.subscription : typeof obj.payment_intent === 'string' ? obj.payment_intent : typeof obj.id === 'string' ? obj.id : null,
@@ -112,6 +119,7 @@ export function entitlementFromStripeEvent(event: StripeEventLike): EntitlementA
     if (!status) return null;
     return {
       ...subject,
+      promoCode,
       status,
       provider: 'stripe',
       providerRef: typeof obj.id === 'string' ? obj.id : null,
@@ -151,7 +159,7 @@ async function stripePost(env: StripeEnv, path: string, form: Record<string, str
   }
 }
 
-export function checkoutForm(input: { priceId: string; subjectKind: string; subjectId: string; planKey: PurchasablePlanKey; successUrl: string; cancelUrl: string; customerEmail?: string | null }): Record<string, string> {
+export function checkoutForm(input: { priceId: string; subjectKind: string; subjectId: string; planKey: PurchasablePlanKey; successUrl: string; cancelUrl: string; customerEmail?: string | null; promo?: Promo | null }): Record<string, string> {
   const mode = checkoutMode(input.planKey);
   const form: Record<string, string> = {
     mode,
@@ -163,11 +171,19 @@ export function checkoutForm(input: { priceId: string; subjectKind: string; subj
     'metadata[subjectId]': input.subjectId,
     'metadata[planKey]': input.planKey,
   };
+  if (input.promo) {
+    // A validated code is applied for the buyer; Stripe forbids its own code box alongside `discounts`.
+    form['discounts[0][promotion_code]'] = input.promo.id;
+    form['metadata[promoCode]'] = input.promo.code;
+  } else {
+    form.allow_promotion_codes = 'true';
+  }
   if (mode === 'subscription') {
     // Subscription events carry their own metadata; the session's does not propagate.
     form['subscription_data[metadata][subjectKind]'] = input.subjectKind;
     form['subscription_data[metadata][subjectId]'] = input.subjectId;
     form['subscription_data[metadata][planKey]'] = input.planKey;
+    if (input.promo) form['subscription_data[metadata][promoCode]'] = input.promo.code;
   } else {
     // One-time: keep a customer record so receipts and support have something to find.
     form.customer_creation = 'always';
@@ -182,4 +198,40 @@ export function createCheckoutSession(env: StripeEnv, form: Record<string, strin
 
 export function createPortalSession(env: StripeEnv, customer: string, returnUrl: string, fetchImpl: typeof fetch = globalThis.fetch): Promise<StripeSessionResult> {
   return stripePost(env, 'billing_portal/sessions', { customer, return_url: returnUrl }, fetchImpl);
+}
+
+/**
+ * Shape a Stripe promotion_code object into our Promo, or null when it cannot be
+ * used now: inactive, coupon invalid, expired, or fully redeemed (F-ENT-002 §3.2).
+ */
+export function promoFromStripe(obj: unknown, nowSec: number): Promo | null {
+  if (!obj || typeof obj !== 'object') return null;
+  const p = obj as Record<string, unknown>;
+  const coupon = p.coupon && typeof p.coupon === 'object' ? (p.coupon as Record<string, unknown>) : null;
+  if (!coupon || p.active !== true || coupon.valid !== true) return null;
+  if (typeof p.expires_at === 'number' && p.expires_at <= nowSec) return null;
+  if (typeof p.max_redemptions === 'number' && typeof p.times_redeemed === 'number' && p.times_redeemed >= p.max_redemptions) return null;
+  const usd = typeof coupon.currency !== 'string' || coupon.currency.toLowerCase() === 'usd';
+  const parsed = PromoSchema.safeParse({
+    id: p.id,
+    code: typeof p.code === 'string' ? p.code.toUpperCase() : '',
+    name: typeof coupon.name === 'string' ? coupon.name : null,
+    percentOff: typeof coupon.percent_off === 'number' ? coupon.percent_off : null,
+    amountOffCents: usd && typeof coupon.amount_off === 'number' ? coupon.amount_off : null,
+    duration: coupon.duration,
+  });
+  return parsed.success ? parsed.data : null;
+}
+
+/** Look a code up in Stripe (`GET /v1/promotion_codes?code=`), active only. Network trouble reads as "no such code". */
+export async function lookupPromotionCode(env: StripeEnv, code: string, fetchImpl: typeof fetch = globalThis.fetch, nowSec = Math.floor(Date.now() / 1000)): Promise<Promo | null> {
+  try {
+    const query = new URLSearchParams({ code, active: 'true', limit: '1' }).toString();
+    const res = await fetchImpl(`https://api.stripe.com/v1/promotion_codes?${query}`, { method: 'GET', headers: { Authorization: `Bearer ${env.STRIPE_SECRET_KEY ?? ''}` } });
+    if (!res.ok) return null;
+    const body = (await res.json().catch(() => ({}))) as { data?: unknown[] };
+    return promoFromStripe(body.data?.[0], nowSec);
+  } catch {
+    return null;
+  }
 }

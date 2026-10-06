@@ -2,7 +2,7 @@ import { Body, Button, Caption, Card, Heading, Hoya, HoyaBubble, Icon, Screen, S
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
 import { Linking, Platform, Pressable, View } from 'react-native';
-import { LIFETIME_OFFER, PREMIUM_BULLETS, consoleBillingUrl, paywallState } from '../../logic/paywall';
+import { LIFETIME_OFFER, PREMIUM_BULLETS, PROMO_HINT, consoleBillingUrl, paywallState } from '../../logic/paywall';
 import type { RootStackParamList } from '../../navigation/types';
 import { track } from '../../platform/telemetry';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
@@ -130,6 +130,8 @@ export function PaywallScreen({ navigation, route }: Props): React.ReactElement 
             </>
           ) : null}
           <Spacer size="md" />
+          <Caption tone="muted" align="center">{PROMO_HINT}</Caption>
+          <Spacer size="xs" />
           <Caption tone="muted" align="center">One payment, no renewal. Terms and privacy are on the website.</Caption>
         </>
       )}

@@ -3,10 +3,11 @@
 import { colors, spacing, typography } from '@hangul-route/design-system/tokens';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useState } from 'react';
-import { Button, ConsoleShell, Muted, Notice, panelStyle } from '@/components/console/ui';
+import { Button, ConsoleShell, Field, Muted, Notice, panelStyle } from '@/components/console/ui';
 import { useConsole } from '@/components/console/use-console';
+import type { Promo } from '@hangul-route/content-schema';
 import type { EntitlementView, SpaceListItem } from '@/lib/console/api';
-import { PROVIDER_LABEL, checkoutReturnNotice, currentPlanCards, planRowsFor, type PlanRow } from '@/lib/console/billing';
+import { PROVIDER_LABEL, checkoutReturnNotice, currentPlanCards, planRowsFor, promoPriceLine, type PlanRow } from '@/lib/console/billing';
 import { COPY } from '@/lib/console/copy';
 
 /** console/billing — F-ENT-001 §3.6. Web only; one Choose per recommended row; family once, group yearly, contract beyond the caps. */
@@ -18,6 +19,9 @@ function BillingInner(): JSX.Element {
   const [error, setError] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(() => checkoutReturnNotice(params.get('checkout')));
   const [busy, setBusy] = useState(false);
+  const [codeInput, setCodeInput] = useState('');
+  const [promo, setPromo] = useState<Promo | null>(null);
+  const [promoNote, setPromoNote] = useState<string | null>(null);
   const now = new Date();
 
   const load = useCallback(async (): Promise<void> => {
@@ -42,13 +46,42 @@ function BillingInner(): JSX.Element {
   const rows = spaces && entitlements ? planRowsFor(session.accountId, spaces, entitlements, now) : [];
   const pastDue = cards.some((c) => c.entitlement.status === 'past_due');
 
+  const applyCode = async (): Promise<void> => {
+    if (!api) return;
+    const code = codeInput.trim();
+    if (!code) {
+      setPromo(null);
+      setPromoNote(null);
+      return;
+    }
+    // Checked against the first purchasable row; the server re-checks at checkout.
+    const planKey = rows.find((r) => r.action === 'choose' && (r.planKey === 'family_lifetime' || r.planKey === 'group_license'))?.planKey ?? 'family_lifetime';
+    setBusy(true);
+    setPromoNote(null);
+    const result = await api.checkPromo({ code, planKey: planKey === 'group_license' ? 'group_license' : 'family_lifetime' });
+    setBusy(false);
+    if (!result.ok) {
+      setPromo(null);
+      setPromoNote(result.status === 429 ? COPY.promoTooMany : result.code === 'stripe_not_configured' ? COPY.promoNotConfigured : COPY.promoInvalid);
+      return;
+    }
+    setPromo(result.data.promo);
+    setCodeInput(result.data.promo.code);
+    setPromoNote(`${result.data.promo.code} applied${result.data.promo.name ? ` · ${result.data.promo.name}` : ''}.`);
+  };
+
   const choose = async (row: PlanRow): Promise<void> => {
     if (!api || !row.subjectKind || !row.subjectId || row.planKey === 'free' || row.planKey === 'school_seat') return;
     setBusy(true);
     setNote(null);
-    const result = await api.checkout({ planKey: row.planKey, subjectKind: row.subjectKind, subjectId: row.subjectId });
+    const result = await api.checkout({ planKey: row.planKey, subjectKind: row.subjectKind, subjectId: row.subjectId, ...(promo ? { promoCode: promo.code } : {}) });
     setBusy(false);
     if (!result.ok) {
+      if (result.code === 'promo_invalid') {
+        setPromo(null);
+        setPromoNote(COPY.promoInvalid);
+        return;
+      }
       setNote(result.code === 'stripe_not_configured' ? COPY.billingNotConfigured : "Couldn't start checkout. Try again.");
       return;
     }
@@ -110,6 +143,22 @@ function BillingInner(): JSX.Element {
 
       <section aria-label="Plans" style={{ marginBottom: spacing.xl }}>
         <h2 style={{ fontSize: typography.size.bodyLg, margin: `0 0 ${spacing.sm}px` }}>Plans</h2>
+        <form
+          aria-label="Promo code"
+          onSubmit={(e) => {
+            e.preventDefault();
+            void applyCode();
+          }}
+          style={{ ...panelStyle, marginBottom: spacing.sm }}
+        >
+          <Field label={COPY.promoLabel} name="promo" value={codeInput} onChange={setCodeInput} placeholder="HOYA20" maxLength={32} />
+          <div style={{ display: 'flex', gap: spacing.sm, alignItems: 'center', flexWrap: 'wrap' }}>
+            <Button type="submit" disabled={busy || !api}>
+              {promo ? 'Change code' : 'Apply code'}
+            </Button>
+            <Muted>{promoNote ?? COPY.promoHint}</Muted>
+          </div>
+        </form>
         <div style={{ display: 'grid', gap: spacing.sm }}>
           {rows.map((row) => (
             <div key={`${row.planKey}:${row.subjectId ?? 'me'}`} style={{ ...panelStyle, borderColor: row.recommended ? colors.brand.primary : colors.border.subtle, display: 'flex', justifyContent: 'space-between', gap: spacing.md, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -118,7 +167,7 @@ function BillingInner(): JSX.Element {
                 {row.subjectName ? <span style={{ color: colors.text.muted }}> · {row.subjectName}</span> : null}
                 <Muted>{row.includes}</Muted>
                 <Muted>
-                  <strong>{row.price}</strong>
+                  <strong>{promoPriceLine(row.planKey, promo) ?? row.price}</strong>
                   {row.planKey === 'family_lifetime' ? ` · ${COPY.lifetimeLine}` : row.planKey === 'group_license' ? ` · ${COPY.groupLine}` : row.planKey === 'school_seat' ? ` · ${COPY.contactLine}` : ''}
                 </Muted>
               </div>

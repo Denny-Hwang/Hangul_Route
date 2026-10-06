@@ -4,7 +4,7 @@ import { store } from '../../store';
 import { classCap, classIsPro, isEntitlementActive, schoolIsFull, schoolLimits, schoolUsage, tierForLearner } from '../entitlement';
 
 const now = new Date('2026-09-21T12:00:00.000Z');
-const ent = (over: Partial<Entitlement>): Entitlement => ({ id: 'ent:x', subjectKind: 'space', subjectId: 'space:fam', planKey: 'family_lifetime', status: 'active', provider: 'stripe', providerRef: null, customerRef: null, seats: null, expiresAt: null, updatedAt: '2026-09-20T00:00:00.000Z', ...over });
+const ent = (over: Partial<Entitlement>): Entitlement => ({ id: 'ent:x', subjectKind: 'space', subjectId: 'space:fam', planKey: 'family_lifetime', status: 'active', provider: 'stripe', providerRef: null, customerRef: null, seats: null, expiresAt: null, promoCode: null, updatedAt: '2026-09-20T00:00:00.000Z', ...over });
 const space = (id: string, kind: Space['kind'], owner: string, parentSpaceId: string | null = null): Space => ({ id, kind, name: id, parentSpaceId, ownerAccountId: owner, joinCode: null, joinCodeExpiresAt: null, settings: { consentMode: 'parent', anonymizeRoster: false }, archivedAt: null, createdAt: 't' });
 
 beforeEach(() => store.reset());

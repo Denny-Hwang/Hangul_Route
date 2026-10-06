@@ -29,6 +29,8 @@ export const EntitlementSchema = z.object({
   customerRef: z.string().nullable(),
   seats: z.number().int().positive().nullable(),
   expiresAt: z.string().nullable(),
+  /** Promotion / referral code used at checkout, for attribution (F-ENT-002). */
+  promoCode: z.string().nullable().default(null),
   updatedAt: z.string(),
 });
 export type Entitlement = z.infer<typeof EntitlementSchema>;
@@ -44,6 +46,7 @@ export const EntitlementApplySchema = z.object({
   customerRef: z.string().nullable().optional(),
   seats: z.number().int().positive().nullable().optional(),
   expiresAt: z.string().nullable().optional(),
+  promoCode: z.string().nullable().optional(),
 });
 export type EntitlementApply = z.infer<typeof EntitlementApplySchema>;
 
@@ -66,11 +69,60 @@ export const PLAN_PRICING: Record<PurchasablePlanKey, PlanPricing> = {
 /** A family lifetime plan covers one family space with up to this many learners. */
 export const FAMILY_LIFETIME_LEARNERS = 5;
 
+/**
+ * Promotion / referral codes — F-ENT-002. The owner creates them in the Stripe
+ * dashboard (Coupon + Promotion code); the API only looks them up and applies them.
+ */
+export const PROMO_CODE_RE = /^[A-Z0-9][A-Z0-9_-]{1,31}$/;
+
+/** Stripe matches codes case-insensitively; we store and show them upper-case. */
+export function normalizePromoCode(raw: string): string {
+  return raw.trim().toUpperCase().replace(/\s+/g, '');
+}
+
+export const PromoCodeFieldSchema = z.string().transform(normalizePromoCode).pipe(z.string().regex(PROMO_CODE_RE));
+
+export const PromoSchema = z.object({
+  /** Stripe promotion code id (promo_…), never shown. */
+  id: z.string(),
+  code: z.string(),
+  name: z.string().nullable(),
+  percentOff: z.number().min(0).max(100).nullable(),
+  /** In cents, USD only. */
+  amountOffCents: z.number().int().nonnegative().nullable(),
+  /** 'once' = one charge (the lifetime payment or the first year); 'forever' / 'repeating' = renewals too. */
+  duration: z.enum(['once', 'forever', 'repeating']),
+});
+export type Promo = z.infer<typeof PromoSchema>;
+
+/** POST /api/entitlements/stripe/promo body. */
+export const PromoCheckSchema = z.object({
+  code: PromoCodeFieldSchema,
+  planKey: PurchasablePlanKeySchema,
+});
+export type PromoCheck = z.infer<typeof PromoCheckSchema>;
+
+/** List price after a promo, rounded to cents and never below zero. */
+export function discountedUsd(listUsd: number, promo: Pick<Promo, 'percentOff' | 'amountOffCents'> | null): number {
+  if (!promo) return listUsd;
+  if (promo.percentOff !== null) return Math.max(0, Math.round(listUsd * (100 - promo.percentOff)) / 100);
+  if (promo.amountOffCents !== null) return Math.max(0, Math.round(listUsd * 100 - promo.amountOffCents) / 100);
+  return listUsd;
+}
+
+/** "20% off" · "$5 off" — what the code is worth, for the row and the paywall. */
+export function promoLabel(promo: Pick<Promo, 'percentOff' | 'amountOffCents'>): string {
+  if (promo.percentOff !== null) return `${promo.percentOff}% off`;
+  if (promo.amountOffCents !== null) return `$${(promo.amountOffCents / 100).toFixed(2)} off`;
+  return 'no discount';
+}
+
 /** POST /api/entitlements/stripe/checkout body — plans attach to a space (family, class or school). */
 export const CheckoutCreateSchema = z.object({
   planKey: PurchasablePlanKeySchema,
   subjectKind: z.literal('space'),
   subjectId: z.string().min(1),
+  promoCode: PromoCodeFieldSchema.optional(),
 });
 export type CheckoutCreate = z.infer<typeof CheckoutCreateSchema>;
 
