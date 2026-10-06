@@ -188,7 +188,7 @@ What is already shipped: class create + join code (F-SPACE-001), roster summary 
 
 ### 10.3 Space settings — roadmap §2 `settings_json`, §5.3, wireframe console/space-settings
 
-- `PATCH /api/spaces/:id/settings { anonymizeRoster?, consentMode? }` (`space.manage`). `anonymizeRoster` swaps names for initials in the roster, the lookup roster and the relink list. `consentMode` is writable (owner decision (c)); school mode gates learner-data deletion by teachers.
+- `PATCH /api/spaces/:id/settings { anonymizeRoster?, consentMode? }` (`space.manage`). `anonymizeRoster` swaps names for initials in the roster, the lookup roster and the relink list. `consentMode` is writable (owner decision (c)); school mode gates learner-data deletion by teachers. **`school` is locked** (422 `consent_mode_locked`) until the Worker var `SCHOOL_CONSENT_MODE=enabled` is set after the owner's legal review; the console mirrors it with `NEXT_PUBLIC_SCHOOL_CONSENT_MODE` (radio disabled, "not yet") — app-map decision #27 (2026-10-06).
 - `POST /api/spaces/:id/archive` / `/unarchive` (`space.manage`): archived spaces refuse joins, lookups and plan writes; roster and list stay readable, rows dimmed.
 - Member removal already exists (`DELETE /:id/members/:kind/:memberId`).
 - `DELETE /api/spaces/:id/learners/:learnerId/data` (`learner.delete`: family owner/caregiver; class owner/teacher only when the space's `consentMode` is `school`): removes the learner, devices, snapshot, memberships and relink requests everywhere (GDPR-K / COPPA, roadmap §5.3).

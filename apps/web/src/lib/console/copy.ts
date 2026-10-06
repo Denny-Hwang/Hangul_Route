@@ -36,6 +36,7 @@ export const COPY = {
   deleteAskParent: 'Only a parent can delete a learner in this class (consent mode: parent).',
   anonymizeHint: 'Show initials instead of names on the roster and re-link list.',
   consentHint: 'Who consented for the children in this class. School mode lets you delete learner data yourself.',
+  consentLocked: 'School mode opens after a legal review. Until then, a parent consents for each child.',
   billingKidsLine: 'Kids never see billing — this page opens only after the grown-up gate.',
   billingNotConfigured: 'Checkout is not set up yet — prices are still being decided. Nothing was charged.',
   billingCancelled: 'Nothing was charged.',

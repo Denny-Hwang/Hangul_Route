@@ -320,6 +320,9 @@ console/home ─┬─ [family] ─▶ parent/dashboard ─▶ parent/learner-de
 | 22 | join 시 부모 이메일(동의) 수집 | **S3 에서는 수집 안 함** — `spaces.settings_json.consentMode` 만 저장. 수집 UI 는 F-SPACE-002 (F-AUTH-002 이후) | F-SPACE-001 §4 |
 | 23 | 콘솔 홈의 family/school 행 목적지 (`parent/dashboard` 웹판 · `console/school-admin` 부재) | 셋 다 `/teach/space/:id` 로; **school 은 같은 경로에서 admin 뷰를 렌더** (F-SCHOOL-001, 2026-09-21). 웹 부모 대시보드는 F-PAR-001 웹판 | F-CONSOLE-001 §3.4 · F-SCHOOL-001 §3.3 |
 | 24 | roster 의 "Show rescue code" (roadmap §5.1) vs 해시만 저장 | 평문을 서버가 모르므로 **"Issue a new code" (재발급)** 로 대체 — caregiver/teacher 경로의 `/recovery/issue` (구현됨 2026-09-21) | F-CONSOLE-001 §4 · F-TCH-001 §10.2 |
+| 26 | `onboarding/welcome` 의 "Made for kids 5–11" 한 줄 | **"Start Korean from zero."** 로 교체 (오너 결정 2026-10-06). 랜딩 OG/Twitter description 도 동일 | 코드 `WelcomeScreen` · `apps/web layout.tsx` |
+| 27 | 학교 동의 모드 (c) 의 활성 시점 | **법률 검토 전까지 선택 불가** — Worker `SCHOOL_CONSENT_MODE=enabled` + 콘솔 `NEXT_PUBLIC_SCHOOL_CONSENT_MODE=enabled` 가 모두 설정될 때만 school 모드 저장 가능. 그 전에는 API 422 `consent_mode_locked`, 콘솔 라디오 비활성 (오너 결정 2026-10-06) | F-TCH-001 §10.3 · `apps/api/wrangler.toml` |
+| 28 | App Store 트랙 (T-040–T-044) 시점 | **웹앱 안정화 이후** (오너 결정 2026-10-06). 런치 채널은 웹앱 단일 | `docs/tasks/INBOX.md` |
 | 25 | 재연결 시 새 기기의 임시 프로필 | 새 기기에서 만든 임시 프로필은 **그대로 두고** 복원된 프로필을 활성으로 전환 (자동 삭제는 아동 데이터 손실 위험) | F-TCH-001 §10.1 · 코드 `JoinSpaceScreen` |
 
 코드 ↔ 스펙 불일치 (shipped 화면) 는 같은 날 코드로 수정했다 — 각 와이어프레임의 Open questions 와 PR 본문 참조.
@@ -328,13 +331,13 @@ console/home ─┬─ [family] ─▶ parent/dashboard ─▶ parent/learner-de
 
 | 항목 | 결정 | 반영 |
 |---|---|---|
-| 학교 동의 모드 | 둘 다 지원, space 설정에서 선택 (school 모드는 법률 검토 후 활성) | roadmap §11, `console/space-settings` 토글 |
+| 학교 동의 모드 | 둘 다 지원, space 설정에서 선택 — **school 모드는 법률 검토 전까지 잠금** (결정 #27, 2026-10-06) | roadmap §11, `console/space-settings` 토글 |
 | Rescue Code | 모든 학습자에게 자동 생성, 부모가 끌 수 있음 | roadmap §11, `sync/save-progress` |
 | 교사 Free 캡 | 20명 (베타 후 재검토) | roadmap §7, §11, `console/roster` |
 | Family 가격 | 미룸 (1.0 에 IAP 없음) | — |
 | **스토어 카테고리** | **Education (Kids Category 아님)** — 성인 외국인 학습자도 대상이므로 Kids 전용 앱으로 제출하지 않는다. 부모 게이트·무광고·로컬 저장 등 아동 보호 설계는 그대로 유지 | `docs/launch/app-store-submission.md` §5 |
 
-> **대상 사용자 확장 — 반영 완료 (2026-09-20)**: CLAUDE.md §1 이 **kids-first, never kids-only** 로 갱신됨 (P6 성인 초보 = 같은 화면·같은 콘텐츠, 별도 성인 모드 없음). README · `docs/launch/faq.md` · 스토어 카피 동기화. 앱 UI 문구 중 `onboarding/welcome` 의 "Made for kids 5–11" 한 줄은 오너 결정 후 코드 변경 (제안: "Made for kids 5–11 — and grown-ups starting from zero"). 베타에서 성인 5명 인터뷰로 Hoya 톤 수용도 확인 권장.
+> **대상 사용자 확장 — 반영 완료 (2026-09-20)**: CLAUDE.md §1 이 **kids-first, never kids-only** 로 갱신됨 (P6 성인 초보 = 같은 화면·같은 콘텐츠, 별도 성인 모드 없음). README · `docs/launch/faq.md` · 스토어 카피 동기화. 앱 UI 문구 중 `onboarding/welcome` 의 "Made for kids 5–11" 한 줄은 **"Start Korean from zero."** 로 교체됨 (결정 #26, 2026-10-06). 베타에서 성인 5명 인터뷰로 Hoya 톤 수용도 확인 권장.
 
 추가로 이 패스에서 드러난 것:
 - `homework/list` 는 `home/todays-mission` 과 역할이 겹침 → 배정 큐가 3장을 넘을 때만 의미. 베타에서 진입률 측정.

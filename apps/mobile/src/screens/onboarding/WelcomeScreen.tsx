@@ -37,7 +37,7 @@ export function WelcomeScreen({ navigation }: Props): React.ReactElement {
           onPress={() => (navigation.getParent() as NavigationProp<RootStackParamList> | undefined)?.navigate('Restore', { from: 'welcome' })}
         />
         <Body tone="muted" size="sm" align="center" style={{ maxWidth: 280 }}>
-          Made for kids 5–11. Built with kids, parents, and grandparents in mind.
+          Start Korean from zero. Built with kids, parents, and grandparents in mind.
         </Body>
       </View>
     </Screen>

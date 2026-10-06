@@ -9,8 +9,9 @@ const json = { 'content-type': 'application/json' };
 const bearer = (user: string): Record<string, string> => ({ ...json, authorization: `Bearer ${user}` });
 const deviceAuth = (deviceId: string, secret: string): Record<string, string> => ({ ...json, authorization: `Device ${deviceId}:${secret}` });
 
-async function call(method: string, path: string, headers: Record<string, string>, body?: unknown) {
-  const res = await app.request(path, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
+const SCHOOL_CONSENT = { SCHOOL_CONSENT_MODE: 'enabled' };
+async function call(method: string, path: string, headers: Record<string, string>, body?: unknown, env?: Record<string, string>) {
+  const res = await app.request(path, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) }, env);
   return { status: res.status, body: (await res.json()) as Envelope };
 }
 const post = (path: string, headers: Record<string, string>, body?: unknown) => call('POST', path, headers, body);
@@ -289,7 +290,11 @@ describe('settings, archive, learner data (F-TCH-001 §10.3)', () => {
     const cls = await createSpace('teacher', 'class', 'A');
     expect((await call('PATCH', `/api/spaces/${cls.space.id}/settings`, bearer('teacher'), {})).status).toBe(422);
     expect((await call('PATCH', `/api/spaces/${cls.space.id}/settings`, bearer('stranger'), { anonymizeRoster: true })).status).toBe(403);
-    const patched = await call('PATCH', `/api/spaces/${cls.space.id}/settings`, bearer('teacher'), { anonymizeRoster: true, consentMode: 'school' });
+    const locked = await call('PATCH', `/api/spaces/${cls.space.id}/settings`, bearer('teacher'), { consentMode: 'school' });
+    expect(locked.status).toBe(422); // school consent mode waits for legal review
+    expect(locked.body.error?.code).toBe('consent_mode_locked');
+    expect((await call('PATCH', `/api/spaces/${cls.space.id}/settings`, bearer('teacher'), { consentMode: 'parent' })).status).toBe(200);
+    const patched = await call('PATCH', `/api/spaces/${cls.space.id}/settings`, bearer('teacher'), { anonymizeRoster: true, consentMode: 'school' }, SCHOOL_CONSENT);
     expect((patched.body.data as { space: { settings: unknown } }).space.settings).toEqual({ consentMode: 'school', anonymizeRoster: true });
 
     const suni = await registerLearner('device-suni0001', 'Suni Park');
@@ -321,7 +326,7 @@ describe('settings, archive, learner data (F-TCH-001 §10.3)', () => {
     expect((await call('DELETE', `/api/spaces/${cls.space.id}/learners/${suni.learnerId}/data`, bearer('teacher'))).status).toBe(403);
     expect((await call('DELETE', `/api/spaces/${cls.space.id}/learners/profile:nobody/data`, bearer('teacher'))).status).toBe(404);
     expect((await call('DELETE', `/api/spaces/${fam.space.id}/learners/${suni.learnerId}/data`, bearer('stranger'))).status).toBe(403);
-    await call('PATCH', `/api/spaces/${cls.space.id}/settings`, bearer('teacher'), { consentMode: 'school' });
+    await call('PATCH', `/api/spaces/${cls.space.id}/settings`, bearer('teacher'), { consentMode: 'school' }, SCHOOL_CONSENT);
     expect((await call('DELETE', `/api/spaces/${cls.space.id}/learners/${suni.learnerId}/data`, bearer('teacher'))).body.data).toEqual({ deleted: true });
     expect(store.learners.has(suni.learnerId)).toBe(false);
     expect(store.membersOf(fam.space.id).some((m) => m.memberId === suni.learnerId)).toBe(false);
