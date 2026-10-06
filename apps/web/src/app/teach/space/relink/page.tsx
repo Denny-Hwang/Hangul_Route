@@ -2,19 +2,18 @@
 
 import { colors, spacing, typography } from '@hangul-route/design-system/tokens';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { Suspense, useCallback, useEffect, useState } from 'react';
 import { Button, ConsoleShell, Muted, Notice, panelStyle } from '@/components/console/ui';
 import { useConsole } from '@/components/console/use-console';
 import type { RelinkView, Roster } from '@/lib/console/api';
 import { COPY } from '@/lib/console/copy';
 import { RELINK_REFRESH_MS, expiresLabel, requestedLabel } from '@/lib/console/relink';
-import { ROUTES } from '@/lib/console/routing';
+import { ROUTES, spaceIdFrom } from '@/lib/console/routing';
 
 /** console/relink-approval — F-TCH-001 §10.1. Identity and timing only; no progress numbers. */
-export default function RelinkPage(): JSX.Element {
-  const params = useParams<{ id: string }>();
-  const spaceId = decodeURIComponent(params.id);
+function RelinkInner(): JSX.Element {
+  const spaceId = spaceIdFrom(useSearchParams());
   const { ready, session, api, signOut } = useConsole();
   const [roster, setRoster] = useState<Roster | null>(null);
   const [requests, setRequests] = useState<RelinkView[] | null>(null);
@@ -132,5 +131,13 @@ export default function RelinkPage(): JSX.Element {
         )}
       </section>
     </ConsoleShell>
+  );
+}
+
+export default function RelinkPage(): JSX.Element {
+  return (
+    <Suspense fallback={<ConsoleShell>{null}</ConsoleShell>}>
+      <RelinkInner />
+    </Suspense>
   );
 }

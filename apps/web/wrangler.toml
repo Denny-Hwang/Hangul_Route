@@ -1,0 +1,33 @@
+# Cloudflare Workers — static-assets deploy of the landing + teacher console
+# (hangulroute.com). Same shape as the learner app (apps/mobile/wrangler.toml):
+# Next.js `output: 'export'` writes ./out, this Worker serves it. No server
+# runtime, no adapter. Deployed by Cloudflare Workers Builds ("Connect GitHub")
+# on every push to main; GitHub Actions only gates merges (build + dry run).
+# See docs/launch/web-app-launch.md §2-E for the dashboard settings.
+#
+#   Build command : pnpm install --frozen-lockfile && pnpm --filter @hangul-route/web build
+#   Deploy command: pnpm --filter @hangul-route/web exec wrangler deploy
+#
+# Build variables (inlined at build time, so they live in Workers Builds → Variables):
+#   NEXT_PUBLIC_API_BASE_URL          API Worker URL (console calls /api/* from the browser)
+#   NEXT_PUBLIC_APP_URL               learner app URL (default https://app.hangulroute.com)
+#   NEXT_PUBLIC_CONSOLE_DEV_AUTH      "true" only on test deploys (dev sign-in until Clerk)
+#   NEXT_PUBLIC_SCHOOL_CONSENT_MODE   "enabled" only after the legal review (decision #27)
+name = "hangul-route-web"
+compatibility_date = "2025-09-01"
+workers_dev = true
+
+[assets]
+directory = "./out"
+# /teach/home → teach/home.html; unknown paths get Next's exported 404 page.
+not_found_handling = "404-page"
+html_handling = "auto-trailing-slash"
+
+# Custom domains — uncomment once hangulroute.com is on Cloudflare DNS
+# (or attach them in the dashboard: Worker → Settings → Domains & Routes).
+# [[routes]]
+# pattern = "hangulroute.com"
+# custom_domain = true
+# [[routes]]
+# pattern = "www.hangulroute.com"
+# custom_domain = true

@@ -6,8 +6,19 @@ export const ROUTES = {
   signIn: '/teach',
   start: '/teach/start',
   home: '/teach/home',
-  space: (id: string) => `/teach/space/${encodeURIComponent(id)}`,
+  space: (id: string) => `/teach/space?id=${encodeURIComponent(id)}`,
+  spacePlan: (id: string) => `/teach/space/plan?id=${encodeURIComponent(id)}`,
+  spaceRelink: (id: string) => `/teach/space/relink?id=${encodeURIComponent(id)}`,
+  spaceSettings: (id: string) => `/teach/space/settings?id=${encodeURIComponent(id)}`,
 } as const;
+
+/**
+ * The console is a static export (one assets-only Worker, no server), so a space
+ * is addressed by `?id=` rather than a dynamic segment — F-CONSOLE-001 §3.6.
+ */
+export function spaceIdFrom(params: { get(name: string): string | null } | null): string {
+  return params?.get('id')?.trim() ?? '';
+}
 
 export function landingAfterSignIn(spaceCount: number): string {
   return spaceCount > 0 ? ROUTES.home : ROUTES.start;

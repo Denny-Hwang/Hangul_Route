@@ -3,8 +3,8 @@
 import { colors, radii, spacing, typography } from '@hangul-route/design-system/tokens';
 import type { PlanItem } from '@hangul-route/content-schema';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { Suspense, useCallback, useEffect, useState } from 'react';
 import { Button, ConsoleShell, Field, Muted, Notice, panelStyle } from '@/components/console/ui';
 import { useConsole } from '@/components/console/use-console';
 import { catalogLabel, stage1Episodes, stage1Quests } from '@/data/stage1-catalog';
@@ -12,7 +12,7 @@ import type { PlanView, Roster } from '@/lib/console/api';
 import { COPY } from '@/lib/console/copy';
 import { currentPlan, dateKey, moveItem, oneExplicitPerDay, planReadout, planStatusLabel, readoutLine, spreadDates } from '@/lib/console/plans';
 import { relativeDay } from '@/lib/console/rollup';
-import { ROUTES, memberNoun } from '@/lib/console/routing';
+import { ROUTES, memberNoun, spaceIdFrom } from '@/lib/console/routing';
 
 interface Draft {
   id?: string;
@@ -24,9 +24,8 @@ interface Draft {
 const EMPTY: Draft = { title: '', items: [], targets: null };
 
 /** console/plan-builder — F-PLAN-001 §3.5. Builder for drafts, readout once published. */
-export default function PlanPage(): JSX.Element {
-  const params = useParams<{ id: string }>();
-  const spaceId = decodeURIComponent(params.id);
+function PlanInner(): JSX.Element {
+  const spaceId = spaceIdFrom(useSearchParams());
   const { ready, session, api, signOut } = useConsole();
   const [roster, setRoster] = useState<Roster | null>(null);
   const [plans, setPlans] = useState<PlanView[] | null>(null);
@@ -260,5 +259,13 @@ export default function PlanPage(): JSX.Element {
         </section>
       )}
     </ConsoleShell>
+  );
+}
+
+export default function PlanPage(): JSX.Element {
+  return (
+    <Suspense fallback={<ConsoleShell>{null}</ConsoleShell>}>
+      <PlanInner />
+    </Suspense>
   );
 }

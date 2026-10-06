@@ -10,7 +10,8 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
-    "build": "next build"
+    "build": "next build",
+    "deploy": "wrangler deploy"
   },
   "dependencies": {
     "@hangul-route/content-schema": "workspace:*",
@@ -23,6 +24,7 @@
   "devDependencies": {
     "@hangul-route/test-utils": "workspace:*",
     "@types/node": "^22.10.0",
+    "wrangler": "^4.135.0",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitest/coverage-v8": "^2.1.8",

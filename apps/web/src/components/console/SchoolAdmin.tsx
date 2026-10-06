@@ -11,7 +11,7 @@ import { codeExpiry, relativeDay } from '@/lib/console/rollup';
 import { ROUTES } from '@/lib/console/routing';
 import { assignableTeachers, limitNote, limitState, usageLine, weekLine } from '@/lib/console/school';
 
-/** console/school-admin — F-SCHOOL-001 §3.3. Rendered by /teach/space/[id] for school spaces. */
+/** console/school-admin — F-SCHOOL-001 §3.3. Rendered by /teach/space?id= for school spaces. */
 export function SchoolAdmin({ api, spaceId, onSignOut }: { api: ConsoleApi; spaceId: string; onSignOut: () => void }): JSX.Element {
   const [view, setView] = useState<SchoolView | null>(null);
   const [members, setMembers] = useState<MemberView[]>([]);
@@ -167,7 +167,7 @@ export function SchoolAdmin({ api, spaceId, onSignOut }: { api: ConsoleApi; spac
             </form>
           </section>
           <Muted>
-            <Link href={`${ROUTES.space(spaceId)}/settings`}>School settings</Link> · rosters opened from here show initials by default.
+            <Link href={ROUTES.spaceSettings(spaceId)}>School settings</Link> · rosters opened from here show initials by default.
           </Muted>
         </>
       ) : null}

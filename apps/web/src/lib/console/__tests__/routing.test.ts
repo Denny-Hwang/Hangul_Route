@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { SpaceListItem } from '../api';
-import { KIND_GROUP, KIND_LABEL, ROLE_CARDS, ROUTES, groupSpaces, landingAfterCreate, landingAfterSignIn, memberNoun, prefillName, statusLine } from '../routing';
+import { KIND_GROUP, KIND_LABEL, ROLE_CARDS, ROUTES, groupSpaces, landingAfterCreate, landingAfterSignIn, memberNoun, prefillName, spaceIdFrom, statusLine } from '../routing';
 
 const item = (id: string, kind: SpaceListItem['space']['kind'], createdAt: string, over: Partial<SpaceListItem> = {}, archivedAt: string | null = null): SpaceListItem => ({
   space: { id, kind, name: id, parentSpaceId: null, settings: { consentMode: 'parent', anonymizeRoster: false }, archivedAt, createdAt },
@@ -15,7 +15,14 @@ describe('console routing (F-CONSOLE-001)', () => {
   it('routes after sign-in and after creating a space', () => {
     expect(landingAfterSignIn(0)).toBe(ROUTES.start);
     expect(landingAfterSignIn(2)).toBe(ROUTES.home);
-    expect(landingAfterCreate('class', 'space:c', false)).toBe('/teach/space/space%3Ac');
+    expect(landingAfterCreate('class', 'space:c', false)).toBe('/teach/space?id=space%3Ac');
+    expect(ROUTES.spacePlan('space:c')).toBe('/teach/space/plan?id=space%3Ac');
+    expect(ROUTES.spaceRelink('space:c')).toBe('/teach/space/relink?id=space%3Ac');
+    expect(ROUTES.spaceSettings('space:c')).toBe('/teach/space/settings?id=space%3Ac');
+    expect(spaceIdFrom(new URLSearchParams('id=space%3Ac'))).toBe('space:c');
+    expect(spaceIdFrom(new URLSearchParams('id=+'))).toBe('');
+    expect(spaceIdFrom(new URLSearchParams(''))).toBe('');
+    expect(spaceIdFrom(null)).toBe('');
     expect(landingAfterCreate('family', 'space:f', false)).toBe(ROUTES.home);
     expect(landingAfterCreate('school', 'space:s', true)).toBe(ROUTES.home);
   });
