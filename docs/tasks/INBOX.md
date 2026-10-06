@@ -24,7 +24,7 @@
 - [ ] T-051 Stripe 설정 (`web-app-launch.md` §2-D, 가격 결정 후): 가격 6개 + `STRIPE_PRICE_*`/`CONSOLE_URL` vars + `STRIPE_SECRET_KEY`/`STRIPE_WEBHOOK_SECRET` 시크릿 + 웹훅 등록 — 1h
 - [ ] T-049 Clerk 앱 생성 → `CLERK_SECRET_KEY` 시크릿 + `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` (F-AUTH-002 전제; 그 전까지 콘솔은 dev 로그인) — 0.5h
 
-### App Store 제출 (선택 — 나중, `docs/launch/app-store-submission.md`)
+### App Store 제출 (선택 — **웹앱 안정화 이후**, 오너 결정 2026-10-06; `docs/launch/app-store-submission.md`)
 - [ ] T-040 Apple Developer + App Store Connect 앱 레코드 + `eas init` → `app.json` projectId / `eas.json` submit 값 교체 — 1h
 - [ ] T-041 hangulroute.com Pages 라이브 + `/privacy` `/about` 200 확인, EFFECTIVE_DATE 갱신 — 0.5h
 - [ ] T-042 `eas build --profile production` → TestFlight 3기기 D-1 QA (submission §4 목록) — 2h

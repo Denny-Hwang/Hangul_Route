@@ -53,6 +53,7 @@
 
 **D. API 연결 (동기화 · Rescue Code · 학급 · 콘솔)** — 지금까지의 서버 기능은 API 주소가 설정될 때만 켜진다 (없으면 앱은 로컬 전용으로 동작)
 - [ ] API Worker `hangul-route-api` 배포 (`apps/api`, T-002 — `wrangler deploy`; D1 은 아직 인메모리라 재배포 시 데이터가 사라짐 → F-INFRA-003 전까지 테스트 용도)
+- [ ] (법률 검토 후에만) Worker 변수 `SCHOOL_CONSENT_MODE=enabled` + 콘솔 `NEXT_PUBLIC_SCHOOL_CONSENT_MODE=enabled` → 학급 설정에서 school 동의 모드 선택 가능 (그 전엔 잠금, 결정 #27)
 - [ ] Worker 변수 `ALLOWED_ORIGINS` = `https://hangulroute.com,https://www.hangulroute.com,https://app.hangulroute.com` (미설정이면 같은 기본값 + localhost + `*.workers.dev`)
 - [ ] PWA 빌드 변수 (Workers Builds → Settings → Variables): `EXPO_PUBLIC_API_BASE_URL` = API Worker 주소
 - [ ] 랜딩/콘솔 (`apps/web`) 빌드 변수: `NEXT_PUBLIC_API_BASE_URL` = 같은 주소. `NEXT_PUBLIC_CONSOLE_DEV_AUTH=true` 는 **테스트 배포에서만** (Clerk 연결 전 임시 로그인)
