@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { apiBaseUrl, devAuthEnabled } from '../config';
+import { apiBaseUrl, devAuthEnabled, schoolConsentModeEnabled } from '../config';
 
 describe('console config (F-CONSOLE-001 §3.2)', () => {
   it('apiBaseUrl trims and rejects the placeholder', () => {
@@ -16,5 +16,12 @@ describe('console config (F-CONSOLE-001 §3.2)', () => {
     expect(devAuthEnabled({ NODE_ENV: 'development', NEXT_PUBLIC_CONSOLE_DEV_AUTH: 'false' })).toBe(false);
     expect(typeof devAuthEnabled()).toBe('boolean');
     expect(apiBaseUrl() === null || typeof apiBaseUrl() === 'string').toBe(true);
+  });
+
+  it('school consent mode is locked until explicitly enabled (legal review)', () => {
+    expect(schoolConsentModeEnabled({})).toBe(false);
+    expect(schoolConsentModeEnabled({ NEXT_PUBLIC_SCHOOL_CONSENT_MODE: 'true' })).toBe(false);
+    expect(schoolConsentModeEnabled({ NEXT_PUBLIC_SCHOOL_CONSENT_MODE: 'enabled' })).toBe(true);
+    expect(typeof schoolConsentModeEnabled()).toBe('boolean');
   });
 });

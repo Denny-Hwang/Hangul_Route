@@ -7,6 +7,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Button, ConsoleShell, Field, Muted, Notice, panelStyle } from '@/components/console/ui';
 import { useConsole } from '@/components/console/use-console';
 import type { MemberView, Roster } from '@/lib/console/api';
+import { schoolConsentModeEnabled } from '@/lib/console/config';
 import { COPY } from '@/lib/console/copy';
 import { canDeleteLearnerData } from '@/lib/console/relink';
 import { codeExpiry, relativeDay } from '@/lib/console/rollup';
@@ -60,6 +61,7 @@ export default function SettingsPage(): JSX.Element {
   const learners = members.filter((m) => m.memberKind === 'learner');
   const adults = members.filter((m) => m.memberKind === 'account');
   const mayDelete = space ? canDeleteLearnerData(space.kind, space.settings.consentMode) : false;
+  const schoolConsent = schoolConsentModeEnabled();
   const deleteCandidate = learners.find((l) => l.memberId === deleteTarget);
 
   return (
@@ -101,10 +103,12 @@ export default function SettingsPage(): JSX.Element {
               <Muted>{COPY.consentHint}</Muted>
               {(['parent', 'school'] as const).map((mode) => (
                 <label key={mode} style={{ display: 'block', marginBottom: spacing.xs }}>
-                  <input type="radio" name="consent" checked={space.settings.consentMode === mode} disabled={busy || archived} onChange={() => void run(() => api.patchSettings(spaceId, { consentMode: mode }), 'Saved.', "Didn't save.")} />{' '}
+                  <input type="radio" name="consent" checked={space.settings.consentMode === mode} disabled={busy || archived || (mode === 'school' && !schoolConsent)} onChange={() => void run(() => api.patchSettings(spaceId, { consentMode: mode }), 'Saved.', "Didn't save.")} />{' '}
                   {mode === 'parent' ? 'A parent consents (email at join — coming later)' : 'The school attests for its students'}
+                  {mode === 'school' && !schoolConsent ? <span style={{ color: colors.text.muted }}> · not yet</span> : null}
                 </label>
               ))}
+              {!schoolConsent ? <Muted>{COPY.consentLocked}</Muted> : null}
             </section>
           ) : null}
 

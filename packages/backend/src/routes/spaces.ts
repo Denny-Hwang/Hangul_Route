@@ -23,7 +23,12 @@ import { id, store, type Account } from '../store';
  * /api/spaces — F-SPACE-001 §3.3. One shape for family / class / school;
  * every route resolves the actor once and asks `can()`.
  */
-export const spacesRoutes = new Hono();
+export const spacesRoutes = new Hono<{ Bindings: { SCHOOL_CONSENT_MODE?: string } }>();
+
+/** School consent mode stays locked until the owner's legal review (app-map decision #26). */
+export function schoolConsentModeEnabled(env: { SCHOOL_CONSENT_MODE?: string } | undefined): boolean {
+  return env?.SCHOOL_CONSENT_MODE === 'enabled';
+}
 
 export const LOOKUP_LIMIT = 20;
 export const LOOKUP_WINDOW_MS = 60 * 60 * 1000;
@@ -203,6 +208,9 @@ spacesRoutes.patch('/:id/settings', async (c) => {
   if (!('id' in account)) return account;
   const parsed = SpaceSettingsPatchSchema.safeParse(await c.req.json().catch(() => null));
   if (!parsed.success) return fail(c, 'bad_request', 'Invalid settings', 422, { issues: parsed.error.issues });
+  if (parsed.data.consentMode === 'school' && !schoolConsentModeEnabled(c.env)) {
+    return fail(c, 'consent_mode_locked', 'School consent mode is not available yet', 422);
+  }
   space.settings = { ...space.settings, ...parsed.data };
   return ok(c, { space: publicSpace(space) });
 });
