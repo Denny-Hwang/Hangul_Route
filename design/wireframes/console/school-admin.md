@@ -20,7 +20,7 @@ Then: they see the class tree with aggregate activity, can invite a teacher with
 +------------------------------------------------------------+
 | [< back to home]   Seoul Hangul School         [ Settings ] |  -> console/space-settings (school)
 |                                                            |
-|  License   school_license - active - renews Jan 5          |
+|  License   group_license - active - renews Jan 5           |
 |  Seats     students 38 / 300     teachers 4 / 10           |  -> console/billing
 |  [ Manage billing ]                                        |
 |                                                            |

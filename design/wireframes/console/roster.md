@@ -58,7 +58,7 @@ Then: they see the join code, one class roll-up, and one summary card per studen
 - [ copy ] → clipboard
 - [[ PLAN THIS WEEK ]] → `console/plan-builder` (class preselected)
 - [ 1 re-link request ] → `console/relink-approval` (badge count from pending requests; hidden at 0)
-- [ Upgrade ] → `console/billing` (teacher_pro)
+- [ Upgrade ] → `console/billing` (group_license, $153/yr — decision #30)
 - [ Settings ] → `console/space-settings`
 - Student card tap → `parent/learner-detail` (read-only)
 - [ rescue code ] on a card → in-place sheet showing that learner's Rescue Code (roadmap §5.1 — not progress data, so allowed on a teacher surface)
