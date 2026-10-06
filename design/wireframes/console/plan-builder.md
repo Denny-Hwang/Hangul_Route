@@ -75,7 +75,7 @@ Published readout (same screen, plan published):
 ## Navigation graph
 
 Enter from: `console/roster` [[ PLAN THIS WEEK ]] · `parent/dashboard` "Send homework" / `parent/learner-detail` "+ Assign a quest" (the web mock's placeholder button) · `console/home` (class row when a draft exists)
-Exit to:    `console/roster` · `parent/dashboard` · `parent/learner-detail` · `console/billing` (dimmed premium item tap → parent path only; teachers see "teacher_pro")
+Exit to:    `console/roster` · `parent/dashboard` · `parent/learner-detail` · `console/billing` (dimmed premium item tap → parent path only; teachers see "group_license")
 
 ## States
 

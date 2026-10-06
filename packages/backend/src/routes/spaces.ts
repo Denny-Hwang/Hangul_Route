@@ -1,4 +1,5 @@
 import {
+  FAMILY_LIFETIME_LEARNERS,
   LEARNER_CLASS_CAP,
   SpaceCreateSchema,
   SpaceJoinSchema,
@@ -279,6 +280,9 @@ spacesRoutes.post('/:id/join', async (c) => {
     }
     if (space.kind === 'class' && schoolIsFull(space, now, learnerId)) {
       return fail(c, 'cap_school', 'This school has used all its seats', 409);
+    }
+    if (space.kind === 'family' && studentsIn(space.id) >= FAMILY_LIFETIME_LEARNERS) {
+      return fail(c, 'cap_family', `A family holds up to ${FAMILY_LIFETIME_LEARNERS} learners`, 409);
     }
     const membership: Membership = { spaceId: space.id, memberKind: 'learner', memberId: learnerId, role: 'student', joinedAt: now.toISOString() };
     store.addMembership(membership);

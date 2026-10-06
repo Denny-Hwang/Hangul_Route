@@ -15,7 +15,7 @@ async function createSpace(user: string, kind: string, name: string) {
   const r = await call('POST', '/api/spaces', bearer(user), { kind, name });
   return (r.body.data as { space: { id: string }; joinCode: string | null }).space.id;
 }
-const STRIPE_ENV = { STRIPE_SECRET_KEY: 'sk_test', STRIPE_WEBHOOK_SECRET: 'whsec_test', STRIPE_PRICE_TEACHER_PRO_MONTHLY: 'price_tp', STRIPE_PRICE_FAMILY_PREMIUM_YEARLY: 'price_fp_y', CONSOLE_URL: 'https://hangulroute.com/' };
+const STRIPE_ENV = { STRIPE_SECRET_KEY: 'sk_test', STRIPE_WEBHOOK_SECRET: 'whsec_test', STRIPE_PRICE_GROUP_LICENSE_YEARLY: 'price_gl', CONSOLE_URL: 'https://hangulroute.com/' };
 
 beforeEach(() => {
   store.reset();
@@ -32,7 +32,7 @@ describe('entitlements (F-ENT-001 §3.3)', () => {
     const receipt = JSON.stringify({ plan: 'yearly', expiresAt: '2099-01-01T00:00:00.000Z' });
     const verified = await call('POST', '/api/entitlements/verify', bearer('mom'), { spaceId: fam, store: 'apple', receipt });
     expect(verified.status).toBe(200);
-    expect(verified.body.data).toMatchObject({ entitlement: { subjectKind: 'space', subjectId: fam, planKey: 'family_premium', status: 'active', provider: 'apple', subjectName: 'Kim family' } });
+    expect(verified.body.data).toMatchObject({ entitlement: { subjectKind: 'space', subjectId: fam, planKey: 'family_lifetime', status: 'active', provider: 'apple', subjectName: 'Kim family' } });
     expect((await call('POST', '/api/entitlements/verify', bearer('dad'), { spaceId: fam, store: 'apple', receipt })).status).toBe(403);
     expect((await call('POST', '/api/entitlements/verify', bearer('teacher'), { spaceId: cls, store: 'apple', receipt })).status).toBe(422);
     expect((await call('POST', '/api/entitlements/verify', bearer('mom'), { spaceId: fam, store: 'apple', receipt: 'garbage' })).body.error?.code).toBe('receipt_invalid');
@@ -40,30 +40,38 @@ describe('entitlements (F-ENT-001 §3.3)', () => {
     expect((await call('POST', '/api/entitlements/verify', bearer('mom'), { spaceId: fam, store: 'apple', receipt: JSON.stringify({ plan: 'monthly', expiresAt: '2020-01-01T00:00:00.000Z' }) })).body.data).toMatchObject({ entitlement: { status: 'expired' } });
 
     const mine = (await call('GET', '/api/entitlements', bearer('mom'))).body.data as { entitlements: Array<{ planKey: string }> };
-    expect(mine.entitlements.map((e) => e.planKey)).toEqual(['family_premium']);
+    expect(mine.entitlements.map((e) => e.planKey)).toEqual(['family_lifetime']);
   });
 
   it('checkout enforces who may buy what and needs Stripe configuration', async () => {
     const fam = await createSpace('mom', 'family', 'Kim family');
     const sch = await createSpace('principal', 'school', 'School');
-    expect((await call('POST', '/api/entitlements/stripe/checkout', bearer('teacher'), { planKey: 'teacher_pro', subjectKind: 'account', subjectId: 'someone-else' })).status).toBe(403);
-    expect((await call('POST', '/api/entitlements/stripe/checkout', bearer('mom'), { planKey: 'family_premium', subjectKind: 'account', subjectId: 'mom' })).status).toBe(422);
-    expect((await call('POST', '/api/entitlements/stripe/checkout', bearer('dad'), { planKey: 'family_premium', subjectKind: 'space', subjectId: fam })).status).toBe(403);
-    expect((await call('POST', '/api/entitlements/stripe/checkout', bearer('mom'), { planKey: 'school_license', subjectKind: 'space', subjectId: fam })).status).toBe(422);
+    const cls = await createSpace('teacher', 'class', 'A');
+    const inSchool = (await call('POST', '/api/spaces', bearer('principal'), { kind: 'class', name: 'B', parentSpaceId: sch })).body.data as { space: { id: string } };
+    expect((await call('POST', '/api/entitlements/stripe/checkout', bearer('teacher'), { planKey: 'group_license', subjectKind: 'account', subjectId: 'teacher' })).status).toBe(422); // plans attach to spaces
+    expect((await call('POST', '/api/entitlements/stripe/checkout', bearer('dad'), { planKey: 'family_lifetime', subjectKind: 'space', subjectId: fam })).status).toBe(403);
+    expect((await call('POST', '/api/entitlements/stripe/checkout', bearer('mom'), { planKey: 'group_license', subjectKind: 'space', subjectId: fam })).status).toBe(422);
+    expect((await call('POST', '/api/entitlements/stripe/checkout', bearer('teacher'), { planKey: 'family_lifetime', subjectKind: 'space', subjectId: cls })).status).toBe(422);
     expect((await call('POST', '/api/entitlements/stripe/checkout', bearer('mom'), { planKey: 'school_seat', subjectKind: 'space', subjectId: sch })).status).toBe(422);
-    const unconfigured = await call('POST', '/api/entitlements/stripe/checkout', bearer('teacher'), { planKey: 'teacher_pro', subjectKind: 'account', subjectId: 'teacher' });
+    expect((await call('POST', '/api/entitlements/stripe/checkout', bearer('principal'), { planKey: 'group_license', subjectKind: 'space', subjectId: inSchool.space.id })).status).toBe(422); // covered by the school
+    const unconfigured = await call('POST', '/api/entitlements/stripe/checkout', bearer('teacher'), { planKey: 'group_license', subjectKind: 'space', subjectId: cls });
     expect(unconfigured.body.error?.code).toBe('stripe_not_configured');
-    expect((await call('POST', '/api/entitlements/stripe/checkout', bearer('teacher'), { planKey: 'teacher_pro', subjectKind: 'account', subjectId: 'teacher', interval: 'yearly' }, STRIPE_ENV)).body.error?.code).toBe('stripe_not_configured');
+    expect((await call('POST', '/api/entitlements/stripe/checkout', bearer('mom'), { planKey: 'family_lifetime', subjectKind: 'space', subjectId: fam }, STRIPE_ENV)).body.error?.code).toBe('stripe_not_configured'); // no lifetime price bound
 
     const fetchImpl = vi.fn<typeof fetch>().mockResolvedValueOnce(new Response(JSON.stringify({ url: 'https://checkout.stripe.com/c/1' }), { status: 200 }));
     setStripeFetchForTests(fetchImpl);
-    const session = await call('POST', '/api/entitlements/stripe/checkout', bearer('teacher'), { planKey: 'teacher_pro', subjectKind: 'account', subjectId: 'teacher' }, STRIPE_ENV);
+    const session = await call('POST', '/api/entitlements/stripe/checkout', bearer('teacher'), { planKey: 'group_license', subjectKind: 'space', subjectId: cls }, STRIPE_ENV);
     expect(session.body.data).toEqual({ url: 'https://checkout.stripe.com/c/1' });
     const posted = String((fetchImpl.mock.calls[0]?.[1] as RequestInit).body);
-    expect(posted).toContain('line_items%5B0%5D%5Bprice%5D=price_tp');
+    expect(posted).toContain('line_items%5B0%5D%5Bprice%5D=price_gl');
+    expect(posted).toContain('mode=subscription');
     expect(posted).toContain('success_url=https%3A%2F%2Fhangulroute.com%2Fteach%2Fbilling%3Fcheckout%3Dsuccess');
+    const once = vi.fn<typeof fetch>().mockResolvedValueOnce(new Response(JSON.stringify({ url: 'https://checkout.stripe.com/c/2' }), { status: 200 }));
+    setStripeFetchForTests(once);
+    expect((await call('POST', '/api/entitlements/stripe/checkout', bearer('mom'), { planKey: 'family_lifetime', subjectKind: 'space', subjectId: fam }, { ...STRIPE_ENV, STRIPE_PRICE_FAMILY_LIFETIME: 'price_fl' })).body.data).toEqual({ url: 'https://checkout.stripe.com/c/2' });
+    expect(String((once.mock.calls[0]?.[1] as RequestInit).body)).toContain('mode=payment');
     setStripeFetchForTests(vi.fn<typeof fetch>().mockResolvedValueOnce(new Response('{}', { status: 500 })));
-    expect((await call('POST', '/api/entitlements/stripe/checkout', bearer('principal'), { planKey: 'school_license', subjectKind: 'space', subjectId: sch, interval: 'monthly' }, { ...STRIPE_ENV, STRIPE_PRICE_SCHOOL_LICENSE_MONTHLY: 'price_sl' })).body.error?.code).toBe('stripe_error');
+    expect((await call('POST', '/api/entitlements/stripe/checkout', bearer('principal'), { planKey: 'group_license', subjectKind: 'space', subjectId: sch }, STRIPE_ENV)).body.error?.code).toBe('stripe_error');
   });
 
   it('webhooks verify the signature and drive the tier that learners receive; the portal needs a Stripe customer', async () => {
@@ -75,13 +83,13 @@ describe('entitlements (F-ENT-001 §3.3)', () => {
     const inboxBefore = (await call('GET', `/api/sync/learners/${reg.learner.id}/inbox`, auth)).body.data as { tier: string; tierSource: unknown; tierValidUntil: string | null };
     expect(inboxBefore).toMatchObject({ tier: 'free', tierSource: null, tierValidUntil: null });
 
-    const event = JSON.stringify({ id: 'evt_1', type: 'customer.subscription.created', data: { object: { id: 'sub_1', customer: 'cus_1', status: 'trialing', current_period_end: 4_102_444_800, metadata: { subjectKind: 'account', subjectId: 'teacher', planKey: 'teacher_pro' } } } });
+    const event = JSON.stringify({ id: 'evt_1', type: 'customer.subscription.created', data: { object: { id: 'sub_1', customer: 'cus_1', status: 'trialing', current_period_end: 4_102_444_800, metadata: { subjectKind: 'space', subjectId: cls, planKey: 'group_license' } } } });
     expect((await call('POST', '/api/entitlements/stripe/webhook', json, event)).body.error?.code).toBe('stripe_not_configured');
     expect((await call('POST', '/api/entitlements/stripe/webhook', { ...json, 'stripe-signature': 't=1,v1=bad' }, event, STRIPE_ENV)).status).toBe(400);
     const ts = Math.floor(Date.now() / 1000);
     const good = await call('POST', '/api/entitlements/stripe/webhook', { ...json, 'stripe-signature': await signStripePayload('whsec_test', event, ts) }, event, STRIPE_ENV);
     expect(good.status).toBe(200);
-    expect(good.body.data).toMatchObject({ applied: true, entitlement: { subjectId: 'teacher', planKey: 'teacher_pro', status: 'trial', customerRef: 'cus_1', expiresAt: '2100-01-01T00:00:00.000Z' } });
+    expect(good.body.data).toMatchObject({ applied: true, entitlement: { subjectId: cls, planKey: 'group_license', status: 'trial', customerRef: 'cus_1', expiresAt: '2100-01-01T00:00:00.000Z' } });
 
     const inboxAfter = (await call('GET', `/api/sync/learners/${reg.learner.id}/inbox`, auth)).body.data as { tier: string; tierSource: { name: string }; tierValidUntil: string | null };
     expect(inboxAfter).toMatchObject({ tier: 'premium', tierSource: { kind: 'class', spaceId: cls, name: 'A' } });
@@ -95,14 +103,18 @@ describe('entitlements (F-ENT-001 §3.3)', () => {
     const notJson = 'nope';
     expect((await call('POST', '/api/entitlements/stripe/webhook', { ...json, 'stripe-signature': await signStripePayload('whsec_test', notJson, ts) }, notJson, STRIPE_ENV)).status).toBe(400);
 
-    const deleted = JSON.stringify({ id: 'evt_3', type: 'customer.subscription.deleted', data: { object: { id: 'sub_1', customer: 'cus_1', status: 'canceled', metadata: { subjectKind: 'account', subjectId: 'teacher', planKey: 'teacher_pro' } } } });
+    const deleted = JSON.stringify({ id: 'evt_3', type: 'customer.subscription.deleted', data: { object: { id: 'sub_1', customer: 'cus_1', status: 'canceled', metadata: { subjectKind: 'space', subjectId: cls, planKey: 'group_license' } } } });
     await call('POST', '/api/entitlements/stripe/webhook', { ...json, 'stripe-signature': await signStripePayload('whsec_test', deleted, ts) }, deleted, STRIPE_ENV);
     expect(((await call('GET', `/api/sync/learners/${reg.learner.id}/inbox`, auth)).body.data as { tier: string }).tier).toBe('free');
 
     setStripeFetchForTests(vi.fn<typeof fetch>().mockResolvedValueOnce(new Response(JSON.stringify({ url: 'https://billing.stripe.com/p/1' }), { status: 200 })));
-    expect((await call('POST', '/api/entitlements/stripe/portal', bearer('teacher'), {}, STRIPE_ENV)).body.data).toEqual({ url: 'https://billing.stripe.com/p/1' }); // customerRef survived the deletion event
-    expect((await call('POST', '/api/entitlements/stripe/portal', bearer('stranger'), {}, STRIPE_ENV)).status).toBe(404);
+    expect((await call('POST', '/api/entitlements/stripe/portal', bearer('teacher'), { subjectKind: 'space', subjectId: cls }, STRIPE_ENV)).body.data).toEqual({ url: 'https://billing.stripe.com/p/1' }); // customerRef survived the deletion event
+    expect((await call('POST', '/api/entitlements/stripe/portal', bearer('teacher'), {}, STRIPE_ENV)).status).toBe(404); // nothing on the account itself
+    expect((await call('POST', '/api/entitlements/stripe/portal', bearer('stranger'), { subjectKind: 'space', subjectId: cls }, STRIPE_ENV)).status).toBe(403);
     expect((await call('POST', '/api/entitlements/stripe/portal', bearer('teacher'), { subjectKind: 'account', subjectId: 'other' }, STRIPE_ENV)).status).toBe(403);
-    expect((await call('POST', '/api/entitlements/stripe/portal', bearer('teacher'), {})).body.error?.code).toBe('stripe_not_configured');
+    expect((await call('POST', '/api/entitlements/stripe/portal', bearer('teacher'), { subjectKind: 'space', subjectId: cls })).body.error?.code).toBe('stripe_not_configured');
+    const fam = await createSpace('mom', 'family', 'Kim family');
+    store.applyEntitlement({ subjectKind: 'space', subjectId: fam, planKey: 'family_lifetime', status: 'active', provider: 'stripe', customerRef: 'cus_fam', providerRef: 'pi_1' }, new Date());
+    expect((await call('POST', '/api/entitlements/stripe/portal', bearer('mom'), { subjectKind: 'space', subjectId: fam }, STRIPE_ENV)).status).toBe(404); // lifetime has nothing to manage
   });
 });

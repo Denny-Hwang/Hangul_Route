@@ -5,7 +5,7 @@
 **Owner**: solo dev
 **Rollout**: Roadmap S7 — the last stage of the multi-persona platform
 
-Parent: F-SPACE-001 (spaces, `class.create`, school join code = teacher invite), F-ENT-001 (`school_license` / `school_seat`), F-CONSOLE-001 (console shell), F-TCH-001 §10 · wireframe `console/school-admin.md`
+Parent: F-SPACE-001 (spaces, `class.create`, school join code = teacher invite), F-ENT-001 (`group_license` / `school_seat`), F-CONSOLE-001 (console shell), F-TCH-001 §10 · wireframe `console/school-admin.md`
 
 ---
 
@@ -21,7 +21,7 @@ A 한글학교 organizer runs several classes taught by other teachers. The scho
 
 ### 3.1 Limits (`lib/entitlement.ts`)
 
-- `schoolLimits(school, now)`: active `school_license` → **300 students / 10 teachers**; active `school_seat` → `seats` students (null = unlimited) / unlimited teachers; nothing active → not licensed (no school-level caps; each class keeps the free cap).
+- `schoolLimits(school, now)`: active `group_license` ($153 / year, decision #30) → **300 students / 10 teachers**; active `school_seat` → `seats` students (null = unlimited) / unlimited teachers; nothing active → not licensed (no school-level caps; each class keeps the free cap).
 - `schoolUsage(schoolId)`: distinct learners across the school's live classes (a learner in two classes counts once) and distinct teaching accounts (teacher members of the school plus owners / teachers of its classes, excluding the school owner).
 - Learner join into a class under a licensed school is refused with 409 `cap_school` when the school's distinct learners already reach the student limit; the lookup's `full` reflects it.
 

@@ -83,7 +83,7 @@ Hangul Route
 │   ├─ B4. Voice message (≤10 s)                         [R] F-PAR-001 N5
 │   ├─ B5. Plan builder (family)  = "Send homework"      [S] F-PLAN-001 §3.5 (`/teach/space/:id/plan`, class 와 공용) (T-P2-01 흡수)
 │   ├─ B6. Account (Clerk sign-in · email · consent · delete learner) [R/P] F-AUTH-001/002
-│   ├─ B7. Billing (family_premium)                      [S] F-ENT-001 §3.6 (`/teach/billing`, Stripe; 가격 placeholder)
+│   ├─ B7. Billing (family_lifetime $15.30 once)         [S] F-ENT-001 §3.6 (`/teach/billing`, Stripe one-time; 결정 #30)
 │   └─ B8. Backup (rescue code 보기 · 파일 내보내기)      [S] F-SYNC-002 · F-RESTORE-001
 │
 ├─ C. Teacher / School Console (웹 전용) ────────────────────────── 교사·관리자
@@ -94,7 +94,7 @@ Hangul Route
 │   ├─ C5. Learner card (parent B3 재사용, 읽기 전용)      [P]
 │   ├─ C6. Re-link approval (기기 이전 승인)               [S] F-TCH-001 §10.1 (`/teach/space/:id/relink` — 승인·거절·10분 창·rescue 재발급)
 │   ├─ C7. School admin (교사 초대 · 학급 트리 · seats)     [S] F-SCHOOL-001 (`/teach/space/:id` school 변형 — 초대 코드 · 라이선스/seats · 이번 주 집계 · 학급 표 · 교사 배정 · 새 학급)
-│   ├─ C8. Billing (teacher_pro · school_license, Stripe)  [S] F-ENT-001 §3.6 (`/teach/billing`; school_seat 은 Contact us)
+│   ├─ C8. Billing (group_license $153/yr, Stripe)        [S] F-ENT-001 §3.6 (`/teach/billing`; 상한 초과 school_seat 은 Contact us)
 │   └─ C9. Worksheets PDF · Templates                     [–] F-TCH-002/003
 │
 └─ D. Platform ──────────────────────────────────────────────────── 시스템
@@ -115,11 +115,11 @@ Hangul Route
 | 페르소나 (roadmap §1) | A Learner | B Caregiver | C Teacher/School | 결제 |
 |---|---|---|---|---|
 | P-A 개인 학습 (어른 없음) | ✓ 전부 (Stage 1) + Rescue Code | – | – | Free |
-| P-B 가정 | ✓ | ✓ 앱+웹 | – | family_premium |
+| P-B 가정 | ✓ | ✓ 앱+웹 | – | family_lifetime ($15.30 once) |
 | P-C 학급 학생 | ✓ + Join code | (부모가 있으면 ✓) | – | 교사가 지불 |
-| P-C 교사 | Projection mode 만 | – | ✓ C1–C6, C8 | teacher_pro |
-| P-D 학교 관리자 | – | – | ✓ C7, C8 | school_license / seat |
-| P-6 성인 초보 학습자 (외국인, 2026-09-20 추가) | ✓ 아이와 동일 화면 (Stage 1 은 성인에게도 유효) · Rescue Code | – | – | Free → family_premium 과 동일 플랜 (개인 결제) |
+| P-C 교사 | Projection mode 만 | – | ✓ C1–C6, C8 | 학생 ≤ 20 무료 → group_license ($153/yr) |
+| P-D 학교 관리자 | – | – | ✓ C7, C8 | group_license ($153/yr) / 상한 초과 seat 계약 |
+| P-6 성인 초보 학습자 (외국인, 2026-09-20 추가) | ✓ 아이와 동일 화면 (Stage 1 은 성인에게도 유효) · Rescue Code | – | – | Free → family_lifetime 과 동일 플랜 (개인 결제) |
 
 ---
 
@@ -188,7 +188,7 @@ Hangul Route
 | `console/relink-approval` | web `/teach/space/:id/relink` | 기기 이전 승인 10분 창 · 학습자 rescue code 재발급 | S | F-TCH-001 §10.1–10.2 | ✓ |
 | `console/school-admin` | web `/teach/space/:id` (kind = school) | 학급 트리 · 교사 초대 · seat 사용량 · 교사 배정 (집계만, 학생 이름 없음) | S | F-SCHOOL-001 §3.3 | ✓ |
 | `console/plan-builder` | (B 와 공용) | S | F-PLAN-001 §3.5 | ✓ |
-| `console/billing` | (B 와 공용, teacher_pro / school) | S | F-ENT-001 §3.6 | ✓ |
+| `console/billing` | (B 와 공용, group_license / school) | S | F-ENT-001 §3.6 | ✓ |
 
 ### 3.4 웹 마케팅 (`apps/web`) — 와이어프레임 대상 아님
 
@@ -323,6 +323,7 @@ console/home ─┬─ [family] ─▶ parent/dashboard ─▶ parent/learner-de
 | 26 | `onboarding/welcome` 의 "Made for kids 5–11" 한 줄 | **"Start Korean from zero."** 로 교체 (오너 결정 2026-10-06). 랜딩 OG/Twitter description 도 동일 | 코드 `WelcomeScreen` · `apps/web layout.tsx` |
 | 27 | 학교 동의 모드 (c) 의 활성 시점 | **법률 검토 전까지 선택 불가** — Worker `SCHOOL_CONSENT_MODE=enabled` + 콘솔 `NEXT_PUBLIC_SCHOOL_CONSENT_MODE=enabled` 가 모두 설정될 때만 school 모드 저장 가능. 그 전에는 API 422 `consent_mode_locked`, 콘솔 라디오 비활성 (오너 결정 2026-10-06) | F-TCH-001 §10.3 · `apps/api/wrangler.toml` |
 | 28 | App Store 트랙 (T-040–T-044) 시점 | **웹앱 안정화 이후** (오너 결정 2026-10-06). 런치 채널은 웹앱 단일 | `docs/tasks/INBOX.md` |
+| 30 | 가격 모델 (3 플랜 × 월/연 placeholder) | **상품 2개 (오너 결정 2026-10-06)**: `family_lifetime` **$15.30 일회** (한 가족 space, 학습자 5명까지, 모든 Stage, 만료 없음) · `group_license` **$153/년** (단독 학급 또는 학교; 학교는 교사 10 / 학생 300 상한) · 상한 초과는 `school_seat` **Contact us** (계약). Teacher Pro · 월 결제 폐지. 가족 space 학습자 cap 5 (`cap_family`) | F-ENT-001 §3.1–3.6 · `PLAN_PRICING` |
 | 29 | 랜딩·콘솔 (`apps/web`) 호스팅 — Vercel vs Cloudflare(OpenNext) | **Cloudflare 통일, 단 어댑터 없이 Next `output: 'export'` 정적 내보내기 → assets-only Worker `hangul-route-web`** (학습자 앱과 같은 모양). 최신 OpenNext 어댑터는 Next ≥ 15.5 를 요구해 Next 14 콘솔과 맞지 않고, Vercel 무료 플랜은 상업 이용 불가. 결과로 space 주소가 `/teach/space/:id` → `/teach/space?id=` 로 바뀜 (오너 결정 2026-10-06) | F-CONSOLE-001 §3.7 · `apps/web/wrangler.toml` |
 | 25 | 재연결 시 새 기기의 임시 프로필 | 새 기기에서 만든 임시 프로필은 **그대로 두고** 복원된 프로필을 활성으로 전환 (자동 삭제는 아동 데이터 손실 위험) | F-TCH-001 §10.1 · 코드 `JoinSpaceScreen` |
 
@@ -335,7 +336,7 @@ console/home ─┬─ [family] ─▶ parent/dashboard ─▶ parent/learner-de
 | 학교 동의 모드 | 둘 다 지원, space 설정에서 선택 — **school 모드는 법률 검토 전까지 잠금** (결정 #27, 2026-10-06) | roadmap §11, `console/space-settings` 토글 |
 | Rescue Code | 모든 학습자에게 자동 생성, 부모가 끌 수 있음 | roadmap §11, `sync/save-progress` |
 | 교사 Free 캡 | 20명 (베타 후 재검토) | roadmap §7, §11, `console/roster` |
-| Family 가격 | 미룸 (1.0 에 IAP 없음) | — |
+| Family 가격 | **$15.30 Lifetime** (결정 #30, 2026-10-06) · 그룹 **$153/년** · 상한 초과 Contact us | F-ENT-001 · `console/billing` · `paywall/upgrade` |
 | **스토어 카테고리** | **Education (Kids Category 아님)** — 성인 외국인 학습자도 대상이므로 Kids 전용 앱으로 제출하지 않는다. 부모 게이트·무광고·로컬 저장 등 아동 보호 설계는 그대로 유지 | `docs/launch/app-store-submission.md` §5 |
 
 > **대상 사용자 확장 — 반영 완료 (2026-09-20)**: CLAUDE.md §1 이 **kids-first, never kids-only** 로 갱신됨 (P6 성인 초보 = 같은 화면·같은 콘텐츠, 별도 성인 모드 없음). README · `docs/launch/faq.md` · 스토어 카피 동기화. 앱 UI 문구 중 `onboarding/welcome` 의 "Made for kids 5–11" 한 줄은 **"Start Korean from zero."** 로 교체됨 (결정 #26, 2026-10-06). 베타에서 성인 5명 인터뷰로 Hoya 톤 수용도 확인 권장.

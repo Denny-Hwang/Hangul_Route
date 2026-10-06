@@ -2,7 +2,9 @@
 
 Spec: `docs/roadmap/multi-persona-sync-platform.md` §3.2 (tier), §7 (plans, web-only teacher/school), §8 (`/entitlements/*`), §10 S6 · F-SUB-001 / F-IAP-001 (mobile IAP, existing) · `docs/blueprints/02-core-feature-spec.md` §6.6
 Code (F-ENT-001 §3.1–3.3, 2026-09-21 — API): `GET /api/entitlements`, `POST /verify` (family receipt), `POST /stripe/checkout` · `/stripe/portal` (503 until keys and price ids are set), `POST /stripe/webhook` (HMAC signature, subscription lifecycle → `applyEntitlement`). Learner tier travels in the sync inbox with a 7-day grace. Page `apps/web/src/app/teach/billing/page.tsx`: current-plan cards (status line, provider, seats, Manage subscription → portal), plan rows per role with one recommended Choose (monthly / yearly selector), School Seats → Contact us, return notices for `?checkout=`, past-due note, the kids-never-see-billing line. Prices stay placeholders (decision deferred); invoices list and native IAP rows are not built (F-IAP-002).
-Audience: **parent** (family_premium; web Stripe or native IAP) · **teacher** (teacher_pro; web only) · **school admin** (school_license / school_seat; web only)
+Audience: **parent** (family_lifetime, $15.30 once; web Stripe or native IAP later) · **teacher** (group_license, $153/yr for a stand-alone class; web only) · **school admin** (group_license / school_seat contract; web only)
+
+> Code (2026-10-06, decision #30): two products replace the three-plan / monthly-yearly layout below — rows are Family Lifetime (once), Group License (yearly, per stand-alone class and per school) and School Contract (Contact us); there is no billing-interval selector and a lifetime card has no Manage button. See F-ENT-001 §3.6.
 
 ## Scenario (Given-When-Then)
 

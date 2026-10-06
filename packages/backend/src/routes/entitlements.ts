@@ -5,6 +5,9 @@ import { accountActor, requireAccount, spaceContext } from '../lib/access';
 import { can } from '../lib/can';
 import { statusFromVerification, verifyReceiptStub } from '../lib/receipt';
 import { checkoutForm, createCheckoutSession, createPortalSession, entitlementFromStripeEvent, priceIdFor, verifyStripeSignature, type StripeEnv, type StripeEventLike } from '../lib/stripe';
+
+/** Which spaces each product attaches to (F-ENT-001 §3.3). */
+const PLAN_SPACE_KINDS: Record<'family_lifetime' | 'group_license', readonly Space['kind'][]> = { family_lifetime: ['family'], group_license: ['class', 'school'] };
 import { store } from '../store';
 
 /**
@@ -51,7 +54,7 @@ entitlementRoutes.post('/verify', async (c) => {
   if (!result.valid) return fail(c, 'receipt_invalid', 'Receipt could not be verified', 422);
   const now = new Date();
   const entitlement = store.applyEntitlement(
-    { subjectKind: 'space', subjectId: space.id, planKey: 'family_premium', status: statusFromVerification(result, now) === 'active' ? 'active' : 'expired', provider: parsed.data.store, providerRef: null, expiresAt: result.expiresAt },
+    { subjectKind: 'space', subjectId: space.id, planKey: 'family_lifetime', status: statusFromVerification(result, now) === 'active' ? 'active' : 'expired', provider: parsed.data.store, providerRef: null, expiresAt: result.expiresAt },
     now,
   );
   return ok(c, { entitlement: withSpaceName(entitlement) });
@@ -62,18 +65,15 @@ entitlementRoutes.post('/stripe/checkout', async (c) => {
   if (!('id' in account)) return account;
   const parsed = CheckoutCreateSchema.safeParse(await c.req.json().catch(() => null));
   if (!parsed.success) return fail(c, 'bad_request', 'Invalid checkout body', 422, { issues: parsed.error.issues });
-  const { planKey, interval, subjectKind, subjectId } = parsed.data;
-
-  if (planKey === 'teacher_pro') {
-    if (subjectKind !== 'account' || subjectId !== account.id) return fail(c, 'forbidden', 'Teacher Pro is bought for your own account', 403);
-  } else {
-    if (subjectKind !== 'space') return fail(c, 'bad_request', 'This plan attaches to a space', 422);
-    const space = ownedSpace(c, account, subjectId, [planKey === 'family_premium' ? 'family' : 'school']);
-    if (!('id' in space)) return space;
+  const { planKey, subjectKind, subjectId } = parsed.data;
+  const space = ownedSpace(c, account, subjectId, PLAN_SPACE_KINDS[planKey]);
+  if (!('id' in space)) return space;
+  if (planKey === 'group_license' && space.kind === 'class' && space.parentSpaceId) {
+    return fail(c, 'bad_request', 'A class inside a school is covered by the school licence', 422);
   }
 
   const env = c.env ?? {};
-  const priceId = priceIdFor(env, planKey, interval);
+  const priceId = priceIdFor(env, planKey);
   if (!env.STRIPE_SECRET_KEY || !priceId) return fail(c, 'stripe_not_configured', 'Checkout is not set up on this deployment yet', 500);
   const base = (env.CONSOLE_URL ?? 'https://hangulroute.com').replace(/\/$/, '');
   const session = await createCheckoutSession(
@@ -96,7 +96,7 @@ entitlementRoutes.post('/stripe/portal', async (c) => {
     const space = ownedSpace(c, account, subjectId, ['family', 'school', 'class']);
     if (!('id' in space)) return space;
   }
-  const customer = store.entitlementsFor(subjectKind, subjectId).find((e) => e.provider === 'stripe' && e.customerRef)?.customerRef;
+  const customer = store.entitlementsFor(subjectKind, subjectId).find((e) => e.provider === 'stripe' && e.customerRef && e.planKey !== 'family_lifetime')?.customerRef;
   if (!customer) return fail(c, 'not_found', 'No Stripe subscription for this subject', 404);
   const env = c.env ?? {};
   if (!env.STRIPE_SECRET_KEY) return fail(c, 'stripe_not_configured', 'Billing portal is not set up on this deployment yet', 500);

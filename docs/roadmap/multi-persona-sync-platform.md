@@ -139,7 +139,7 @@ CREATE TABLE entitlements (
   id            TEXT PRIMARY KEY,
   subject_kind  TEXT NOT NULL CHECK (subject_kind IN ('account','space')),
   subject_id    TEXT NOT NULL,
-  plan_key      TEXT NOT NULL,      -- 'family_premium' | 'teacher_pro' | 'school_license' | 'school_seat'
+  plan_key      TEXT NOT NULL,      -- 'family_lifetime' | 'group_license' | 'school_seat' (결정 #30)
   status        TEXT NOT NULL CHECK (status IN ('trial','active','past_due','expired','cancelled')),
   provider      TEXT NOT NULL CHECK (provider IN ('apple','google','stripe','manual')),
   provider_ref  TEXT,               -- 영수증 / Stripe subscription id / 계약번호
@@ -194,9 +194,9 @@ can(actor, action, target):
 ```
 tier(learner) =
   premium  if ∃ space ∈ spaces(learner) 이고
-              (space.kind='family' and active(entitlement(space,'family_premium')))
-           or (space.kind='class'  and (active(entitlement(space.owner,'teacher_pro'))
-                                        or active(entitlement(space.parent_space,'school_license'|'school_seat'))))
+              (space.kind='family' and active(entitlement(space,'family_lifetime')))
+           or (space.kind='class'  and (active(entitlement(space,'group_license'))
+                                        or active(entitlement(space.parent_space,'group_license'|'school_seat'))))
   free     otherwise
 isStageEntitled(stage, tier)  -- 기존 그대로: stage1 은 항상 true
 ```
@@ -309,14 +309,14 @@ BP09 §3.5 / F-PAR-001 §3.2 의 대시보드 숫자가 전부 이 객체에서 
 
 ## 7. 결제 옵션
 
-| plan_key | 대상 | 가격 (제안) | 포함 | 결제 경로 |
+> **확정 (오너 결정 #30, 2026-10-06)**: 상품 2개로 통합. 아래 표가 현재 코드 (`PLAN_PRICING`).
+
+| plan_key | 대상 | 가격 | 포함 | 결제 경로 |
 |---|---|---|---|---|
-| (free) | P-A, P-B | $0 | Stage 1 전체, 프로필 4개, 로컬 진도, Rescue Code, 파일 백업 | — |
-| `family_premium` | P-B | **$5.99/월 · $39.99/년** (7일 트라이얼) | Stage 2–7, 클라우드 동기화, 부모 대시보드, 가정 계획, learner ≤ 4 | iOS/Android IAP (F-IAP-001) · 웹은 Stripe |
-| `teacher_free` (entitlement 행 없음) | P-C 자원봉사 교사 | $0 | class 1개, 학생 ≤ 20, 계획 발행, roster summary | — |
-| `teacher_pro` | P-C | **$9.99/월 · $79/년** | class 무제한, 학생 무제한, 학생 전원 프리미엄(재학 중), 워크시트 PDF, 템플릿 | Stripe (웹 전용) |
-| `school_license` | P-D 소규모 (한글학교) | **$50/월 · $450/년** | 교사 ≤ 10, 학생 ≤ 300, 전 학급 Pro, admin 대시보드 | Stripe 또는 인보이스 |
-| `school_seat` | P-D 대규모 / P-E | **$2/학생/년** (최소 300석) | 위 + 좌석 단위, SSO 검토 | `manual` (계약) |
+| (free) | P-A, P-B, 자원봉사 교사 | $0 | Stage 1 전체, 로컬 진도, Rescue Code, 파일 백업; 학급은 학생 ≤ 20 | — |
+| `family_lifetime` | P-B (성인 개인 포함) | **$15.30 일회** (만료 없음) | 모든 Stage (현재+향후), 클라우드 동기화, 부모 대시보드, 가정 계획, 한 가족 space 학습자 ≤ 5 | 웹 Stripe (일회 결제) · 네이티브는 F-IAP-002 때 non-consumable |
+| `group_license` | P-C 교사 (단독 학급) · P-D 학교 | **$153/년** | 학급: 학생 전원 프리미엄(재학 중), 20명 cap 해제 · 학교: 교사 ≤ 10, 학생 ≤ 300, 전 학급 Pro, admin 대시보드 | Stripe 연간 구독 (웹 전용) |
+| `school_seat` | 상한 초과 (P-D 대규모 / P-E) | **Contact us** (계약) | 좌석 단위, SSO 검토 | `manual` |
 
 설계 원칙:
 - **아이는 결제 주체가 아니다.** 결제는 항상 어른 계정 또는 space 에 붙는다 (`entitlements.subject`). 앱 내에 아이가 누를 수 있는 결제 버튼이 없다 (부모 게이트 뒤).
@@ -355,8 +355,8 @@ BP09 §3.5 / F-PAR-001 §3.2 의 대시보드 숫자가 전부 이 객체에서 
 | POST | `/spaces/:id/archive` · `/unarchive` | space.manage | 보관 (join·lookup·plan 쓰기 거부, roster 는 읽기 가능) — 구현됨 |
 | DELETE | `/spaces/:id/learners/:lid/data` | learner.delete (family caregiver · school-consent 학급의 teacher) | 학습자 전체 삭제 (기기·스냅샷·membership·relink) — 구현됨 (§5.3) |
 | GET | `/entitlements` | account | 내 계정 + 내가 소유한 space 의 entitlement — 구현됨 (F-ENT-001) |
-| POST | `/entitlements/verify` | family owner | 영수증 (F-IAP-001 stub) → `family_premium` upsert — 구현됨 |
-| POST | `/entitlements/stripe/checkout` · `/stripe/portal` | account (teacher_pro 는 본인, family/school 은 소유 space) | Stripe Checkout / Billing Portal 세션 (`STRIPE_SECRET_KEY` + price id 없으면 `stripe_not_configured`) — 구현됨 |
+| POST | `/entitlements/verify` | family owner | 영수증 (F-IAP-001 stub) → `family_lifetime` upsert — 구현됨 |
+| POST | `/entitlements/stripe/checkout` · `/stripe/portal` | 소유 space (family → lifetime 일회 결제, 단독 class/school → 연간 구독; portal 은 구독만) | Stripe Checkout / Billing Portal 세션 (`STRIPE_SECRET_KEY` + price id 없으면 `stripe_not_configured`) — 구현됨 |
 | POST | `/entitlements/stripe/webhook` | Stripe (서명 검증, 5분 허용) | checkout.session.completed · customer.subscription.* → `applyEntitlement` — 구현됨 |
 
 기존 `/api/auth/family`, `/api/profiles`, `/api/progress`, `/api/subscriptions` 는 위로 흡수 (인메모리 `store.ts` 도 같은 모양으로 교체 — 지금 라우트 테스트 패턴 유지).

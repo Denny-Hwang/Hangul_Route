@@ -1,4 +1,4 @@
-import type { Tier, TierSource } from '@hangul-route/content-schema';
+import { FAMILY_LIFETIME_LEARNERS, PLAN_PRICING, type Tier, type TierSource } from '@hangul-route/content-schema';
 
 /**
  * Paywall state — F-ENT-001 §3.5 (wireframe paywall/upgrade). Stage 1 is
@@ -11,14 +11,16 @@ export function paywallState(tier: Tier, source: TierSource | null): PaywallStat
   return source && source.kind !== 'family' ? 'covered' : 'premium';
 }
 
-/** What Premium adds — the same bullets for both plan lengths. */
-export const PREMIUM_BULLETS: readonly string[] = ['Stages 2–7, the full journey', 'Cloud save on every device', 'Grown-up dashboard and plans', 'Up to 4 learners'];
+/** What the family plan adds (decision #30: one payment, every Stage, one family). */
+export const PREMIUM_BULLETS: readonly string[] = ['Every Stage, now and later', 'Cloud save on every device', 'Grown-up dashboard and plans', `Up to ${FAMILY_LIFETIME_LEARNERS} learners in your family`];
 
-export const PLAN_LENGTHS = [
-  { key: 'monthly', label: 'Monthly', price: 'price coming soon' },
-  { key: 'yearly', label: 'Yearly', price: 'price coming soon' },
-] as const;
-export type PlanLength = (typeof PLAN_LENGTHS)[number]['key'];
+/** The single offer the child-side paywall shows; checkout itself lives on the web console. */
+export const LIFETIME_OFFER = {
+  key: 'family_lifetime',
+  label: 'Family Lifetime',
+  price: PLAN_PRICING.family_lifetime.label,
+  line: 'One payment. No subscription, nothing to cancel.',
+} as const;
 
 const DEFAULT_CONSOLE = 'https://hangulroute.com';
 

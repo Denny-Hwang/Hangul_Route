@@ -21,24 +21,25 @@ Who pays is an adult or a space; who benefits is every learner attached to it. O
 
 ### 3.1 Data
 
-- `entitlements` (roadmap §2): `id`, `subjectKind` (`account` | `space`), `subjectId`, `planKey` (`family_premium` | `teacher_pro` | `school_license` | `school_seat`), `status` (`trial` | `active` | `past_due` | `expired` | `cancelled`), `provider` (`apple` | `google` | `stripe` | `manual`), `providerRef` (subscription / receipt / contract id), `customerRef` (Stripe customer, for the portal), `seats` (school seats, null = unlimited), `expiresAt`, `updatedAt`. Unique per (subject, plan). `schema-v2.sql` mirrors it.
+- **Products (owner decision #30, 2026-10-06)**: `family_lifetime` — **$15.30 once**, one family space, up to 5 learners (`FAMILY_LIFETIME_LEARNERS`), every Stage now and later, never lapses (`expiresAt` null); `group_license` — **$153 / year**, a stand-alone class or a school (up to 10 teachers / 300 students); `school_seat` — beyond those caps, by contract (**Contact us**, `manual`). Teacher Pro and monthly intervals are retired. `PLAN_PRICING` in `content-schema` is the one source for the labels.
+- `entitlements` (roadmap §2): `id`, `subjectKind` (`account` | `space`), `subjectId`, `planKey` (`family_lifetime` | `group_license` | `school_seat`), `status` (`trial` | `active` | `past_due` | `expired` | `cancelled`), `provider` (`apple` | `google` | `stripe` | `manual`), `providerRef` (subscription / receipt / contract id), `customerRef` (Stripe customer, for the portal), `seats` (school seats, null = unlimited), `expiresAt`, `updatedAt`. Unique per (subject, plan). `schema-v2.sql` mirrors it.
 - `applyEntitlement(input, now)` upserts one row; every provider path calls it.
 
 ### 3.2 Rules (`lib/entitlement.ts`, pure)
 
 - `isEntitlementActive(e, now)`: `trial` / `active` while `expiresAt` is null or in the future; `cancelled` only while `expiresAt` is in the future (cancel = no renewal, not revoke); `past_due` for **7 days** after `updatedAt`; `expired` never.
-- `tierForLearner(learnerId, now)` (roadmap §3.2): **premium** when any of the learner's live spaces is a family with active `family_premium`, or a class whose owner has active `teacher_pro`, or a class under a school with active `school_license` / `school_seat`; otherwise free. Returns the covering space (`kind`, `spaceId`, `name`) as `source`.
-- `classCap(space, now)`: the free cap (20) unless the class owner has active `teacher_pro` or the parent school is licensed → unlimited. Join and lookup use it.
+- `tierForLearner(learnerId, now)` (roadmap §3.2): **premium** when any of the learner's live spaces is a family with active `family_lifetime`, or a class with its own active `group_license`, or a class under a school with active `group_license` / `school_seat`; otherwise free. Returns the covering space (`kind`, `spaceId`, `name`) as `source`.
+- `classCap(space, now)`: the free cap (20) unless the class or its parent school holds a group licence → unlimited. Join and lookup use it. A family space holds at most `FAMILY_LIFETIME_LEARNERS` (5) learners (`cap_family` on join).
 
 ### 3.3 Routes (`/api/entitlements`)
 
 | Method · path | Who | Result |
 |---|---|---|
 | `GET /` | account | entitlements for the account itself and for the spaces it owns, each with the space name |
-| `POST /verify` `{ spaceId, store, receipt }` | family owner | F-IAP-001 receipt (dev stub until F-IAP-002) → `applyEntitlement(space, family_premium, apple|google)` |
-| `POST /stripe/checkout` `{ planKey, interval, subjectKind, subjectId }` | account (`teacher_pro` → self; `family_premium` → an owned family; `school_license` → an owned school) | Stripe Checkout Session `{ url }` with the subject in metadata; 503 `stripe_not_configured` without `STRIPE_SECRET_KEY` / price ids |
-| `POST /stripe/portal` `{ subjectKind, subjectId }` | account with an active Stripe entitlement on that subject | Billing Portal `{ url }`; 503 without keys |
-| `POST /stripe/webhook` | Stripe | signature verified with `STRIPE_WEBHOOK_SECRET` (HMAC-SHA256 over `t.body`, 5-minute tolerance, constant-time compare); `checkout.session.completed` → active; `customer.subscription.created/updated` → mapped status + `current_period_end`; `…deleted` → expired; other events → 200 ignored; bad signature → 400; no secret → 503 |
+| `POST /verify` `{ spaceId, store, receipt }` | family owner | F-IAP-001 receipt (dev stub until F-IAP-002) → `applyEntitlement(space, family_lifetime, apple|google)` |
+| `POST /stripe/checkout` `{ planKey, subjectKind: 'space', subjectId }` | space owner (`family_lifetime` → an owned family; `group_license` → an owned stand-alone class or school; a class inside a school is refused 422, the school licence covers it) | Stripe Checkout Session `{ url }`: `mode=payment` for the lifetime price (`STRIPE_PRICE_FAMILY_LIFETIME`, `customer_creation=always`), `mode=subscription` for the yearly licence (`STRIPE_PRICE_GROUP_LICENSE_YEARLY`); subject in metadata; `stripe_not_configured` without `STRIPE_SECRET_KEY` / the price id |
+| `POST /stripe/portal` `{ subjectKind, subjectId }` | account with an active Stripe **subscription** on that subject (a lifetime purchase has nothing to manage → 404) | Billing Portal `{ url }`; 503 without keys |
+| `POST /stripe/webhook` | Stripe | signature verified with `STRIPE_WEBHOOK_SECRET` (HMAC-SHA256 over `t.body`, 5-minute tolerance, constant-time compare); `checkout.session.completed` → active (`providerRef` = subscription, else payment intent, else session id; lifetime keeps `expiresAt` null); `customer.subscription.created/updated` → mapped status + `current_period_end`; `…deleted` → expired; other events → 200 ignored; bad signature → 400; no secret → 503 |
 | `GET /api/sync/learners/:id/inbox` | learner device | `tier`, `tierSource`, `tierValidUntil` (= now + 7 days, the offline grace) |
 
 Legacy `/api/subscriptions/*` (v1 family subscription) stays untouched until the mobile IAP path moves over (F-IAP-002).
@@ -51,11 +52,11 @@ Legacy `/api/subscriptions/*` (v1 family subscription) stays untouched until the
 ### 3.5 Paywall (PR 2) — `paywall/upgrade`, PIN-gated
 
 - Entered from a locked Stage 2+ cell on the journey grid and from the settings plan card, through `profiles/pin-entry`.
-- States: **covered** (premium via class/school — no prices, "Back to journey"), **already premium** (family), **free** — "Stage 1 is always free" first, 3–4 bullets, monthly / yearly cards with placeholder prices, one button that opens the web console billing (`EXPO_PUBLIC_CONSOLE_URL`, web) or explains the store purchase arrives with F-IAP-002 (native). Never a teacher/school plan on the native app.
+- States: **covered** (premium via class/school — no prices, "Back to journey"), **already premium** (family), **free** — "Stage 1 is always free" first, 4 bullets (every Stage, cloud save, dashboard, up to 5 learners), **one Family Lifetime card ($15.30 once, "nothing to cancel")**, one button that opens the web console billing (`EXPO_PUBLIC_CONSOLE_URL`, web) or explains the store purchase arrives with F-IAP-002 (native). Never a teacher/school plan on the native app.
 
 ### 3.6 Console billing (PR 3) — `/teach/billing`
 
-- Current plan card(s) from `GET /entitlements`, plan rows per role with placeholder prices, **Choose** → checkout, **Manage subscription** → portal, roster cap nudge links here. Home's Billing button becomes live.
+- Current plan card(s) from `GET /entitlements` (lifetime reads "active · yours for good" and has no Manage button), plan rows: Family Lifetime per owned family, Group License per owned stand-alone class and per owned school, School Contract (Contact us) per school; no billing-interval selector. **Choose** → checkout, **Manage subscription** → portal (group licences only), roster cap nudge links here. Home's Billing button becomes live.
 
 ## 4. Out of scope
 

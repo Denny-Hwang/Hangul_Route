@@ -182,7 +182,7 @@ export function createConsoleApi(opts: ConsoleApiOptions) {
       call<{ alreadyMember: boolean }>(`${base}/${encodeURIComponent(spaceId)}/members`, { method: 'POST', body: JSON.stringify({ accountId, role: 'teacher' }) }, [200, 201]),
     entitlements: () =>
       call<{ entitlements: EntitlementView[] }>(entitlements, { method: 'GET' }, [200]).then((r) => (r.ok ? { ok: true as const, data: r.data.entitlements } : r)),
-    checkout: (body: { planKey: 'family_premium' | 'teacher_pro' | 'school_license'; interval: 'monthly' | 'yearly'; subjectKind: 'account' | 'space'; subjectId: string }) =>
+    checkout: (body: { planKey: 'family_lifetime' | 'group_license'; subjectKind: 'space'; subjectId: string }) =>
       call<{ url: string }>(`${entitlements}/stripe/checkout`, { method: 'POST', body: JSON.stringify(body) }, [200]),
     portal: (body: { subjectKind: 'account' | 'space'; subjectId: string }) =>
       call<{ url: string }>(`${entitlements}/stripe/portal`, { method: 'POST', body: JSON.stringify(body) }, [200]),
