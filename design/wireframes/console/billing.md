@@ -5,6 +5,7 @@ Code (F-ENT-001 §3.1–3.3, 2026-09-21 — API): `GET /api/entitlements`, `POST
 Audience: **parent** (family_lifetime, $15.30 once; web Stripe or native IAP later) · **teacher** (group_license, $153/yr for a stand-alone class; web only) · **school admin** (group_license / school_seat contract; web only)
 
 > Code (2026-10-06, decision #30): two products replace the three-plan / monthly-yearly layout below — rows are Family Lifetime (once), Group License (yearly, per stand-alone class and per school) and School Contract (Contact us); there is no billing-interval selector and a lifetime card has no Manage button. See F-ENT-001 §3.6.
+> Code (2026-10-06, F-ENT-002): a **Promo or referral code** box sits above the plan rows — [ Apply code ] checks it against Stripe and rewrites every purchasable row's price line ("$12.24 once with HOYA20 (20% off), was $15.30 once"); Choose carries the code to checkout. Failure copy is one calm line. Codes are managed in the Stripe dashboard, never here.
 
 ## Scenario (Given-When-Then)
 
