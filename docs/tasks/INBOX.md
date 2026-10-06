@@ -18,6 +18,7 @@
 
 ### 웹앱 런치 (주 채널 — 오너 작업, `docs/launch/web-app-launch.md` §2)
 - [ ] T-045 GitHub main 브랜치 보호(필수 체크 3개) + Cloudflare **Connect GitHub** (Workers Builds, 설정값은 `web-app-launch.md` §2-B) + `app.hangulroute.com` 연결 — 1h
+- [ ] T-052 랜딩 + 콘솔 Worker `hangul-route-web` **Connect GitHub** (설정값은 `web-app-launch.md` §2-E) + `hangulroute.com` / `www` 도메인 — 0.5h
 - [ ] T-046 설치 테스트 3종 (iOS Safari / Android Chrome / 데스크톱) + 실기기 오프라인 완주 — 0.5h
 - [ ] T-047 Lighthouse PWA 항목 통과 확인 — 0.25h
 - [ ] T-050 API 연결 (`web-app-launch.md` §2-D): `hangul-route-api` 배포 + `ALLOWED_ORIGINS` + PWA `EXPO_PUBLIC_API_BASE_URL` + 웹 `NEXT_PUBLIC_API_BASE_URL` — 0.5h
@@ -26,7 +27,7 @@
 
 ### App Store 제출 (선택 — **웹앱 안정화 이후**, 오너 결정 2026-10-06; `docs/launch/app-store-submission.md`)
 - [ ] T-040 Apple Developer + App Store Connect 앱 레코드 + `eas init` → `app.json` projectId / `eas.json` submit 값 교체 — 1h
-- [ ] T-041 hangulroute.com Pages 라이브 + `/privacy` `/about` 200 확인, EFFECTIVE_DATE 갱신 — 0.5h
+- [ ] T-041 hangulroute.com 라이브 후 `/privacy` `/about` 200 확인, EFFECTIVE_DATE 갱신 — 0.5h (호스팅 자체는 T-052)
 - [ ] T-042 `eas build --profile production` → TestFlight 3기기 D-1 QA (submission §4 목록) — 2h
 - [ ] T-043 스크린샷 15장 (6.9" · 6.5" · iPad 13") — `app-store-metadata.md` §5 · `design/brief/launch-assets.md` §4 — 2h
 - [ ] T-044 App Store Connect 메타데이터·Privacy Label·Review Notes 입력 → Submit — 1h

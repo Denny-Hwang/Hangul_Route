@@ -14,6 +14,7 @@
 | P1 플랫폼 래퍼 웹 버전 | `storage.web.ts` (IndexedDB, idb-keyval) · `audio.web.ts` (speechSynthesis, ko-KR 보이스 선택) · `haptics.web.ts` (vibrate) · `sharing.web.ts` (미지원 → Share 버튼 숨김) · `dialog.web.ts` (confirm) · `pwa.web.ts` (SW 이벤트) | 단위 테스트 16개, platform 레인 커버리지 게이트 통과 |
 | P2 PWA 오프라인 | `public/manifest.webmanifest` · `scripts/pwa-postbuild.mjs` (메타/CSS/SW 등록 주입 + Workbox `generateSW` 프리캐시) · 앱 내 배너 `PwaBanners` (offline-ready / update-ready / offline chip) · `navigator.storage.persist()` · trace 캔버스 `touch-action: none` | **Playwright 오프라인 E2E 통과** (`e2e/web/offline.spec.ts`): 온보딩 → 첫 퀘스트 → SW 설치 → 네트워크 차단 → 새로고침 → 프로필 유지 · 라이브러리 진입, pageerror 0 |
 | P3 배포 파이프라인 | **Cloudflare Workers Builds (Connect GitHub)** 가 main 푸시마다 빌드·배포. `apps/mobile/wrangler.toml` (assets-only Worker, SPA 폴백, `_headers`). GitHub Actions `web-app.yml` 은 머지 게이트 (빌드 + wrangler dry-run + 오프라인 E2E) 만 | 2026-09-21 Pages → Workers 전환 |
+| 콘솔 배포 (2026-10-06) | `apps/web` 를 Next `output: 'export'` 정적 내보내기로 전환 → `apps/web/wrangler.toml` (assets-only Worker `hangul-route-web`, 404 페이지, `_headers`). 동적 세그먼트 제거: `/teach/space?id=` · `/plan?id=` · `/relink?id=` · `/settings?id=`. `preview-deploy.yml` 은 Pages 업로드 대신 정적 빌드 + wrangler dry-run 머지 게이트 (F-CONSOLE-001 §3.7, 결정 #29) | `next build` 21 페이지 · `wrangler deploy --dry-run` 103 파일 · 단위 web 49 |
 | 데스크톱 폭 | 600px 이상에서 폰 폭(480px) 컬럼 중앙 정렬 — 토큰(canvas/border) 을 빌드 시 읽어 셸 CSS 생성 | `scripts/pwa-postbuild.mjs` |
 | 랜딩 CTA | `apps/web` 헤더·히어로·#get 섹션이 `NEXT_PUBLIC_APP_URL` (기본 app.hangulroute.com) 로 연결 | T-048 |
 | 부수 수정 | 콜드 런치 시 저장소 hydrate 전에 온보딩으로 보내던 버그 (네이티브 공통) — `RootNavigator` 가 hydrate 까지 대기 | E2E 의 오프라인 새로고침 단계가 이 버그를 잡아냄 |
@@ -51,12 +52,21 @@
 - [ ] 첫 배포 후 **설치 테스트 3종**: iOS Safari 공유 → 홈 화면에 추가 / Android Chrome 설치 프롬프트 / 데스크톱 Chrome 주소창 설치 아이콘. 각각 아이콘 표시 · standalone 창 · 세로 고정(설치 후) 확인
 - [ ] **오프라인 실기기 테스트**: 설치 → 비행기 모드 → 실행 → 퀘스트 1개 완주 → 카드 획득 → 비행기 모드 해제 (텔레메트리 큐는 아직 없음 — §4)
 
+**E. 랜딩 + 교사 콘솔 `hangulroute.com`** (`apps/web`, 2026-10-06 — Next 정적 내보내기 → assets-only Worker, F-CONSOLE-001 §3.7) — Workers & Pages → Create → **Connect GitHub** → 같은 저장소를 한 번 더
+- [ ] Project name: `hangul-route-web` · Production branch `main` · Root directory `/`
+- [ ] Build command: `pnpm install --frozen-lockfile && pnpm --filter @hangul-route/web build`
+- [ ] Deploy command: `pnpm --filter @hangul-route/web exec wrangler deploy`
+- [ ] Build variables: `NEXT_PUBLIC_API_BASE_URL` (API Worker 주소) · `NEXT_PUBLIC_CONSOLE_DEV_AUTH=true` (**테스트 배포에서만**, Clerk 전 임시 로그인) · (선택) `NEXT_PUBLIC_APP_URL` (기본 app.hangulroute.com)
+- [ ] 첫 빌드 → `https://hangul-route-web.<account>.workers.dev` 에서 랜딩 · `/teach` dev 로그인 확인
+- [ ] Worker → Settings → Domains & Routes → Custom domain `hangulroute.com` 과 `www.hangulroute.com`
+- [ ] `/privacy` `/about` `/terms` 200 확인 (T-041)
+
 **D. API 연결 (동기화 · Rescue Code · 학급 · 콘솔)** — 지금까지의 서버 기능은 API 주소가 설정될 때만 켜진다 (없으면 앱은 로컬 전용으로 동작)
 - [ ] API Worker `hangul-route-api` 배포 (`apps/api`, T-002 — `wrangler deploy`; D1 은 아직 인메모리라 재배포 시 데이터가 사라짐 → F-INFRA-003 전까지 테스트 용도)
 - [ ] (법률 검토 후에만) Worker 변수 `SCHOOL_CONSENT_MODE=enabled` + 콘솔 `NEXT_PUBLIC_SCHOOL_CONSENT_MODE=enabled` → 학급 설정에서 school 동의 모드 선택 가능 (그 전엔 잠금, 결정 #27)
 - [ ] Worker 변수 `ALLOWED_ORIGINS` = `https://hangulroute.com,https://www.hangulroute.com,https://app.hangulroute.com` (미설정이면 같은 기본값 + localhost + `*.workers.dev`)
 - [ ] PWA 빌드 변수 (Workers Builds → Settings → Variables): `EXPO_PUBLIC_API_BASE_URL` = API Worker 주소
-- [ ] 랜딩/콘솔 (`apps/web`) 빌드 변수: `NEXT_PUBLIC_API_BASE_URL` = 같은 주소. `NEXT_PUBLIC_CONSOLE_DEV_AUTH=true` 는 **테스트 배포에서만** (Clerk 연결 전 임시 로그인)
+- [ ] 랜딩/콘솔 (`apps/web`) 빌드 변수 (§2-E 의 Worker `hangul-route-web`): `NEXT_PUBLIC_API_BASE_URL` = 같은 주소. `NEXT_PUBLIC_CONSOLE_DEV_AUTH=true` 는 **테스트 배포에서만** (Clerk 연결 전 임시 로그인)
 - [ ] Clerk 앱 생성 → `wrangler secret put CLERK_SECRET_KEY` + `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` (F-AUTH-002 착수 전제, T-049)
 - [ ] Stripe (T-051, 가격 결정 후): 상품·가격 6개 (family/teacher/school × 월/연) → Worker vars `STRIPE_PRICE_*` + `CONSOLE_URL`, `wrangler secret put STRIPE_SECRET_KEY`, 웹훅 엔드포인트 `POST /api/entitlements/stripe/webhook` 등록 → `wrangler secret put STRIPE_WEBHOOK_SECRET` (이벤트: checkout.session.completed, customer.subscription.created/updated/deleted). 미설정이면 결제 버튼은 "not set up" 으로 조용히 비활성
 - [ ] Lighthouse (Chrome DevTools) PWA/Installable 항목 전부 통과 확인, Performance ≥ 80 (번들 2 MB, 첫 로드 3G 에서 ~6초 예상)
