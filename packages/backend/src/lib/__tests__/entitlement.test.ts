@@ -4,7 +4,7 @@ import { store } from '../../store';
 import { classCap, classIsPro, isEntitlementActive, schoolIsFull, schoolLimits, schoolUsage, tierForLearner } from '../entitlement';
 
 const now = new Date('2026-09-21T12:00:00.000Z');
-const ent = (over: Partial<Entitlement>): Entitlement => ({ id: 'ent:x', subjectKind: 'space', subjectId: 'space:fam', planKey: 'family_premium', status: 'active', provider: 'stripe', providerRef: null, customerRef: null, seats: null, expiresAt: null, updatedAt: '2026-09-20T00:00:00.000Z', ...over });
+const ent = (over: Partial<Entitlement>): Entitlement => ({ id: 'ent:x', subjectKind: 'space', subjectId: 'space:fam', planKey: 'family_lifetime', status: 'active', provider: 'stripe', providerRef: null, customerRef: null, seats: null, expiresAt: null, updatedAt: '2026-09-20T00:00:00.000Z', ...over });
 const space = (id: string, kind: Space['kind'], owner: string, parentSpaceId: string | null = null): Space => ({ id, kind, name: id, parentSpaceId, ownerAccountId: owner, joinCode: null, joinCodeExpiresAt: null, settings: { consentMode: 'parent', anonymizeRoster: false }, archivedAt: null, createdAt: 't' });
 
 beforeEach(() => store.reset());
@@ -33,18 +33,18 @@ describe('tierForLearner + classCap', () => {
     store.addMembership({ spaceId: 'space:solo', memberKind: 'learner', memberId: 'profile:c', role: 'student', joinedAt: 't' });
 
     expect(tierForLearner('profile:a', now)).toEqual({ tier: 'free', source: null });
-    store.applyEntitlement({ subjectKind: 'space', subjectId: 'space:fam', planKey: 'family_premium', status: 'active', provider: 'stripe' }, now);
+    store.applyEntitlement({ subjectKind: 'space', subjectId: 'space:fam', planKey: 'family_lifetime', status: 'active', provider: 'stripe' }, now);
     expect(tierForLearner('profile:a', now)).toEqual({ tier: 'premium', source: { kind: 'family', spaceId: 'space:fam', name: 'space:fam' } });
 
     expect(tierForLearner('profile:b', now).tier).toBe('free');
     expect(classCap(store.spaces.get('space:cls') as Space, now)).toBe(20);
-    store.applyEntitlement({ subjectKind: 'space', subjectId: 'space:sch', planKey: 'school_license', status: 'trial', provider: 'manual' }, now);
+    store.applyEntitlement({ subjectKind: 'space', subjectId: 'space:sch', planKey: 'group_license', status: 'trial', provider: 'manual' }, now);
     expect(tierForLearner('profile:b', now)).toMatchObject({ tier: 'premium', source: { kind: 'class', spaceId: 'space:cls' } });
     expect(classCap(store.spaces.get('space:cls') as Space, now)).toBe(Number.POSITIVE_INFINITY);
 
     expect(classIsPro(store.spaces.get('space:solo') as Space, now)).toBe(false);
-    store.applyEntitlement({ subjectKind: 'account', subjectId: 't2', planKey: 'teacher_pro', status: 'active', provider: 'stripe' }, now);
-    expect(tierForLearner('profile:c', now).tier).toBe('premium');
+    store.applyEntitlement({ subjectKind: 'space', subjectId: 'space:solo', planKey: 'group_license', status: 'active', provider: 'stripe' }, now);
+    expect(tierForLearner('profile:c', now).tier).toBe('premium'); // a solo class buys its own group licence
     expect(classIsPro(store.spaces.get('space:fam') as Space, now)).toBe(false);
 
     const solo = store.spaces.get('space:solo');
@@ -54,12 +54,12 @@ describe('tierForLearner + classCap', () => {
   });
 
   it('applyEntitlement upserts per subject and plan, keeping refs unless replaced', () => {
-    const first = store.applyEntitlement({ subjectKind: 'account', subjectId: 't', planKey: 'teacher_pro', status: 'trial', provider: 'stripe', customerRef: 'cus_1', providerRef: 'sub_1' }, now);
-    const second = store.applyEntitlement({ subjectKind: 'account', subjectId: 't', planKey: 'teacher_pro', status: 'active', provider: 'stripe', expiresAt: 'e' }, now);
+    const first = store.applyEntitlement({ subjectKind: 'space', subjectId: 'space:t', planKey: 'group_license', status: 'trial', provider: 'stripe', customerRef: 'cus_1', providerRef: 'sub_1' }, now);
+    const second = store.applyEntitlement({ subjectKind: 'space', subjectId: 'space:t', planKey: 'group_license', status: 'active', provider: 'stripe', expiresAt: 'e' }, now);
     expect(second.id).toBe(first.id);
     expect(second).toMatchObject({ status: 'active', customerRef: 'cus_1', providerRef: 'sub_1', expiresAt: 'e' });
-    expect(store.entitlementsFor('account', 't')).toHaveLength(1);
-    const cleared = store.applyEntitlement({ subjectKind: 'account', subjectId: 't', planKey: 'teacher_pro', status: 'expired', provider: 'stripe', expiresAt: null, seats: null }, now);
+    expect(store.entitlementsFor('space', 'space:t')).toHaveLength(1);
+    const cleared = store.applyEntitlement({ subjectKind: 'space', subjectId: 'space:t', planKey: 'group_license', status: 'expired', provider: 'stripe', expiresAt: null, seats: null }, now);
     expect(cleared.expiresAt).toBeNull();
   });
 });
@@ -69,9 +69,9 @@ describe('school limits and usage (F-SCHOOL-001 §3.1)', () => {
     const school = space('space:sch', 'school', 'principal');
     store.spaces.set(school.id, school);
     expect(schoolLimits(school, now)).toEqual({ licensed: false, students: null, teachers: null, license: null });
-    store.applyEntitlement({ subjectKind: 'space', subjectId: 'space:sch', planKey: 'school_license', status: 'active', provider: 'manual' }, now);
+    store.applyEntitlement({ subjectKind: 'space', subjectId: 'space:sch', planKey: 'group_license', status: 'active', provider: 'manual' }, now);
     expect(schoolLimits(school, now)).toMatchObject({ licensed: true, students: 300, teachers: 10 });
-    store.applyEntitlement({ subjectKind: 'space', subjectId: 'space:sch', planKey: 'school_license', status: 'expired', provider: 'manual' }, now);
+    store.applyEntitlement({ subjectKind: 'space', subjectId: 'space:sch', planKey: 'group_license', status: 'expired', provider: 'manual' }, now);
     store.applyEntitlement({ subjectKind: 'space', subjectId: 'space:sch', planKey: 'school_seat', status: 'active', provider: 'manual', seats: null }, now);
     expect(schoolLimits(school, now)).toMatchObject({ licensed: true, students: null, teachers: null });
 

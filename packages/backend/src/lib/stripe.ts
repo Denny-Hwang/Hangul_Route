@@ -1,4 +1,4 @@
-import type { BillingInterval, EntitlementApply, EntitlementStatus, PlanKey } from '@hangul-route/content-schema';
+import type { EntitlementApply, EntitlementStatus, PurchasablePlanKey } from '@hangul-route/content-schema';
 
 /**
  * Stripe without the SDK — F-ENT-001 §3.3. Webhook signatures are HMAC-SHA256
@@ -7,12 +7,10 @@ import type { BillingInterval, EntitlementApply, EntitlementStatus, PlanKey } fr
 export interface StripeEnv {
   STRIPE_SECRET_KEY?: string;
   STRIPE_WEBHOOK_SECRET?: string;
-  STRIPE_PRICE_FAMILY_PREMIUM_MONTHLY?: string;
-  STRIPE_PRICE_FAMILY_PREMIUM_YEARLY?: string;
-  STRIPE_PRICE_TEACHER_PRO_MONTHLY?: string;
-  STRIPE_PRICE_TEACHER_PRO_YEARLY?: string;
-  STRIPE_PRICE_SCHOOL_LICENSE_MONTHLY?: string;
-  STRIPE_PRICE_SCHOOL_LICENSE_YEARLY?: string;
+  /** One-time price ($15.30). */
+  STRIPE_PRICE_FAMILY_LIFETIME?: string;
+  /** Recurring yearly price ($153 / year). */
+  STRIPE_PRICE_GROUP_LICENSE_YEARLY?: string;
 }
 
 export const SIGNATURE_TOLERANCE_SEC = 300;
@@ -86,7 +84,7 @@ function subjectFrom(meta: unknown): Pick<EntitlementApply, 'subjectKind' | 'sub
   if (!meta || typeof meta !== 'object') return null;
   const m = meta as Record<string, unknown>;
   const kind = m.subjectKind === 'account' || m.subjectKind === 'space' ? m.subjectKind : null;
-  const planKey = m.planKey === 'family_premium' || m.planKey === 'teacher_pro' || m.planKey === 'school_license' || m.planKey === 'school_seat' ? m.planKey : null;
+  const planKey = m.planKey === 'family_lifetime' || m.planKey === 'group_license' || m.planKey === 'school_seat' ? m.planKey : null;
   return kind && planKey && typeof m.subjectId === 'string' ? { subjectKind: kind, subjectId: m.subjectId, planKey } : null;
 }
 
@@ -104,7 +102,7 @@ export function entitlementFromStripeEvent(event: StripeEventLike): EntitlementA
       ...subject,
       status: 'active',
       provider: 'stripe',
-      providerRef: typeof obj.subscription === 'string' ? obj.subscription : typeof obj.id === 'string' ? obj.id : null,
+      providerRef: typeof obj.subscription === 'string' ? obj.subscription : typeof obj.payment_intent === 'string' ? obj.payment_intent : typeof obj.id === 'string' ? obj.id : null,
       customerRef: typeof obj.customer === 'string' ? obj.customer : null,
       expiresAt: null,
     };
@@ -124,9 +122,13 @@ export function entitlementFromStripeEvent(event: StripeEventLike): EntitlementA
   return null;
 }
 
-export function priceIdFor(env: StripeEnv, planKey: Exclude<PlanKey, 'school_seat'>, interval: BillingInterval): string | null {
-  const key = `STRIPE_PRICE_${planKey.toUpperCase()}_${interval.toUpperCase()}` as keyof StripeEnv;
-  return env[key] ?? null;
+export function priceIdFor(env: StripeEnv, planKey: PurchasablePlanKey): string | null {
+  return (planKey === 'family_lifetime' ? env.STRIPE_PRICE_FAMILY_LIFETIME : env.STRIPE_PRICE_GROUP_LICENSE_YEARLY) ?? null;
+}
+
+/** Lifetime is a one-time payment; the group licence is a yearly subscription. */
+export function checkoutMode(planKey: PurchasablePlanKey): 'payment' | 'subscription' {
+  return planKey === 'family_lifetime' ? 'payment' : 'subscription';
 }
 
 export interface StripeSessionResult {
@@ -149,9 +151,10 @@ async function stripePost(env: StripeEnv, path: string, form: Record<string, str
   }
 }
 
-export function checkoutForm(input: { priceId: string; subjectKind: string; subjectId: string; planKey: string; successUrl: string; cancelUrl: string; customerEmail?: string | null }): Record<string, string> {
+export function checkoutForm(input: { priceId: string; subjectKind: string; subjectId: string; planKey: PurchasablePlanKey; successUrl: string; cancelUrl: string; customerEmail?: string | null }): Record<string, string> {
+  const mode = checkoutMode(input.planKey);
   const form: Record<string, string> = {
-    mode: 'subscription',
+    mode,
     'line_items[0][price]': input.priceId,
     'line_items[0][quantity]': '1',
     success_url: input.successUrl,
@@ -159,10 +162,16 @@ export function checkoutForm(input: { priceId: string; subjectKind: string; subj
     'metadata[subjectKind]': input.subjectKind,
     'metadata[subjectId]': input.subjectId,
     'metadata[planKey]': input.planKey,
-    'subscription_data[metadata][subjectKind]': input.subjectKind,
-    'subscription_data[metadata][subjectId]': input.subjectId,
-    'subscription_data[metadata][planKey]': input.planKey,
   };
+  if (mode === 'subscription') {
+    // Subscription events carry their own metadata; the session's does not propagate.
+    form['subscription_data[metadata][subjectKind]'] = input.subjectKind;
+    form['subscription_data[metadata][subjectId]'] = input.subjectId;
+    form['subscription_data[metadata][planKey]'] = input.planKey;
+  } else {
+    // One-time: keep a customer record so receipts and support have something to find.
+    form.customer_creation = 'always';
+  }
   if (input.customerEmail) form.customer_email = input.customerEmail;
   return form;
 }

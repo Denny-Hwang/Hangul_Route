@@ -1,8 +1,12 @@
 import { z } from 'zod';
 import { SpaceKindSchema } from './space';
 
-/** Entitlements — F-ENT-001 §3.1. Who paid for what; learners inherit through memberships. */
-export const PlanKeySchema = z.enum(['family_premium', 'teacher_pro', 'school_license', 'school_seat']);
+/**
+ * Entitlements — F-ENT-001 §3.1. Who paid for what; learners inherit through memberships.
+ * Two products (owner decision #30, 2026-10-06): a family buys **once** for good,
+ * a class or school pays **per year**; beyond the group caps it is a contract (`school_seat`).
+ */
+export const PlanKeySchema = z.enum(['family_lifetime', 'group_license', 'school_seat']);
 export type PlanKey = z.infer<typeof PlanKeySchema>;
 
 export const EntitlementStatusSchema = z.enum(['trial', 'active', 'past_due', 'expired', 'cancelled']);
@@ -43,14 +47,29 @@ export const EntitlementApplySchema = z.object({
 });
 export type EntitlementApply = z.infer<typeof EntitlementApplySchema>;
 
-export const BillingIntervalSchema = z.enum(['monthly', 'yearly']);
-export type BillingInterval = z.infer<typeof BillingIntervalSchema>;
+/** What each product costs and covers — one source for the paywall, the console and Stripe. */
+export const PurchasablePlanKeySchema = z.enum(['family_lifetime', 'group_license']);
+export type PurchasablePlanKey = z.infer<typeof PurchasablePlanKeySchema>;
 
-/** POST /api/entitlements/stripe/checkout body. */
+export interface PlanPricing {
+  amountUsd: number;
+  /** 'once' = one payment, no renewal; 'year' = renews yearly. */
+  per: 'once' | 'year';
+  label: string;
+}
+
+export const PLAN_PRICING: Record<PurchasablePlanKey, PlanPricing> = {
+  family_lifetime: { amountUsd: 15.3, per: 'once', label: '$15.30 once' },
+  group_license: { amountUsd: 153, per: 'year', label: '$153 / year' },
+};
+
+/** A family lifetime plan covers one family space with up to this many learners. */
+export const FAMILY_LIFETIME_LEARNERS = 5;
+
+/** POST /api/entitlements/stripe/checkout body — plans attach to a space (family, class or school). */
 export const CheckoutCreateSchema = z.object({
-  planKey: z.enum(['family_premium', 'teacher_pro', 'school_license']),
-  interval: BillingIntervalSchema.default('monthly'),
-  subjectKind: SubjectKindSchema,
+  planKey: PurchasablePlanKeySchema,
+  subjectKind: z.literal('space'),
   subjectId: z.string().min(1),
 });
 export type CheckoutCreate = z.infer<typeof CheckoutCreateSchema>;
@@ -74,7 +93,7 @@ export type TierSource = z.infer<typeof TierSourceSchema>;
 export const TierSchema = z.enum(['free', 'premium']);
 export type Tier = z.infer<typeof TierSchema>;
 
-/** School licence limits (roadmap §7). */
+/** Group licence limits (roadmap §7): a school on `group_license` holds this many; beyond it, `school_seat` (contact us). */
 export const SCHOOL_LICENSE_STUDENTS = 300;
 export const SCHOOL_LICENSE_TEACHERS = 10;
 

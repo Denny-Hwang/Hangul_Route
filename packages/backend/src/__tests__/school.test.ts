@@ -45,7 +45,7 @@ describe('school admin (F-SCHOOL-001)', () => {
       contentVer: '2026.09',
     });
     await call('PUT', `/api/spaces/${clsA}/plans`, bearer('ms-park'), { title: 'Week 1', items: [{ kind: 'quest', id: 'quest:stage1-letters-q1' }], publish: true });
-    store.applyEntitlement({ subjectKind: 'space', subjectId: sch, planKey: 'school_license', status: 'active', provider: 'manual' }, new Date());
+    store.applyEntitlement({ subjectKind: 'space', subjectId: sch, planKey: 'group_license', status: 'active', provider: 'manual' }, new Date());
 
     const view = (await call('GET', `/api/spaces/${sch}/school`, bearer('principal'))).body.data as {
       invite: { joinCode: string };
@@ -56,7 +56,7 @@ describe('school admin (F-SCHOOL-001)', () => {
       classes: Array<{ space: { id: string }; teacher: { accountId: string; name: string } | null; students: number; practiced: number; hasPublishedPlan: boolean; lastActiveAt: string | null }>;
     };
     expect(view.invite.joinCode).toBe(invite);
-    expect(view.license).toMatchObject({ planKey: 'school_license', active: true, subjectName: 'Seoul Hangul School' });
+    expect(view.license).toMatchObject({ planKey: 'group_license', active: true, subjectName: 'Seoul Hangul School' });
     expect(view.limits).toEqual({ licensed: true, students: 300, teachers: 10 });
     expect(view.usage).toEqual({ students: 1, teachers: 1 });
     expect(view.thisWeek).toEqual({ students: 1, practiced: 1, classes: 2, classesWithPlan: 1 });

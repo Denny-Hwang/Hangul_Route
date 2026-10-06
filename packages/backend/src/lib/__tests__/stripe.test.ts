@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { checkoutForm, createCheckoutSession, createPortalSession, entitlementFromStripeEvent, mapStripeStatus, parseStripeSignature, priceIdFor, signStripePayload, verifyStripeSignature } from '../stripe';
+import { checkoutForm, checkoutMode, createCheckoutSession, createPortalSession, entitlementFromStripeEvent, mapStripeStatus, parseStripeSignature, priceIdFor, signStripePayload, verifyStripeSignature } from '../stripe';
 
 const secret = 'whsec_test';
 const body = '{"id":"evt_1","type":"customer.subscription.updated"}';
@@ -27,9 +27,11 @@ describe('stripe helpers (F-ENT-001 §3.3)', () => {
     expect(mapStripeStatus('canceled')).toBe('cancelled');
     expect(mapStripeStatus('unpaid')).toBe('expired');
     expect(mapStripeStatus('incomplete')).toBeNull();
-    const meta = { subjectKind: 'space', subjectId: 'space:fam', planKey: 'family_premium' };
+    const meta = { subjectKind: 'space', subjectId: 'space:fam', planKey: 'family_lifetime' };
     expect(entitlementFromStripeEvent({ type: 'checkout.session.completed', data: { object: { id: 'cs_1', subscription: 'sub_1', customer: 'cus_1', metadata: meta } } })).toEqual({ ...meta, status: 'active', provider: 'stripe', providerRef: 'sub_1', customerRef: 'cus_1', expiresAt: null });
-    expect(entitlementFromStripeEvent({ type: 'checkout.session.completed', data: { object: { id: 'cs_2', metadata: meta } } })).toMatchObject({ providerRef: 'cs_2', customerRef: null });
+    expect(entitlementFromStripeEvent({ type: 'checkout.session.completed', data: { object: { id: 'cs_2', payment_intent: 'pi_1', customer: 'cus_2', metadata: meta } } })).toMatchObject({ providerRef: 'pi_1', customerRef: 'cus_2', expiresAt: null }); // one-time payment
+    expect(entitlementFromStripeEvent({ type: 'checkout.session.completed', data: { object: { id: 'cs_3', metadata: meta } } })).toMatchObject({ providerRef: 'cs_3', customerRef: null });
+    expect(entitlementFromStripeEvent({ type: 'checkout.session.completed', data: { object: { id: 'cs_4', metadata: { ...meta, planKey: 'teacher_pro' } } } })).toBeNull(); // retired plan
     expect(entitlementFromStripeEvent({ type: 'customer.subscription.updated', data: { object: { id: 'sub_1', customer: 'cus_1', status: 'past_due', current_period_end: 1_800_000_000, metadata: meta } } })).toEqual({ ...meta, status: 'past_due', provider: 'stripe', providerRef: 'sub_1', customerRef: 'cus_1', expiresAt: '2027-01-15T08:00:00.000Z' });
     expect(entitlementFromStripeEvent({ type: 'customer.subscription.deleted', data: { object: { id: 'sub_1', status: 'canceled', metadata: meta } } })).toMatchObject({ status: 'expired', expiresAt: null });
     expect(entitlementFromStripeEvent({ type: 'customer.subscription.created', data: { object: { id: 'sub_1', status: 'incomplete', metadata: meta } } })).toBeNull();
@@ -39,12 +41,19 @@ describe('stripe helpers (F-ENT-001 §3.3)', () => {
   });
 
   it('builds checkout forms, resolves price ids, and posts sessions', async () => {
-    const env = { STRIPE_SECRET_KEY: 'sk_test', STRIPE_PRICE_TEACHER_PRO_MONTHLY: 'price_tp_m' };
-    expect(priceIdFor(env, 'teacher_pro', 'monthly')).toBe('price_tp_m');
-    expect(priceIdFor(env, 'teacher_pro', 'yearly')).toBeNull();
-    const form = checkoutForm({ priceId: 'price_tp_m', subjectKind: 'account', subjectId: 'teacher', planKey: 'teacher_pro', successUrl: 's', cancelUrl: 'c', customerEmail: 'kim@example.com' });
-    expect(form).toMatchObject({ mode: 'subscription', 'line_items[0][price]': 'price_tp_m', 'metadata[planKey]': 'teacher_pro', 'subscription_data[metadata][subjectId]': 'teacher', customer_email: 'kim@example.com' });
-    expect(checkoutForm({ priceId: 'p', subjectKind: 'space', subjectId: 's', planKey: 'family_premium', successUrl: 's', cancelUrl: 'c' })).not.toHaveProperty('customer_email');
+    const env = { STRIPE_SECRET_KEY: 'sk_test', STRIPE_PRICE_GROUP_LICENSE_YEARLY: 'price_gl_y' };
+    expect(priceIdFor(env, 'group_license')).toBe('price_gl_y');
+    expect(priceIdFor(env, 'family_lifetime')).toBeNull();
+    expect(priceIdFor({ ...env, STRIPE_PRICE_FAMILY_LIFETIME: 'price_fl' }, 'family_lifetime')).toBe('price_fl');
+    expect(checkoutMode('family_lifetime')).toBe('payment');
+    expect(checkoutMode('group_license')).toBe('subscription');
+    const form = checkoutForm({ priceId: 'price_gl_y', subjectKind: 'space', subjectId: 'space:cls', planKey: 'group_license', successUrl: 's', cancelUrl: 'c', customerEmail: 'kim@example.com' });
+    expect(form).toMatchObject({ mode: 'subscription', 'line_items[0][price]': 'price_gl_y', 'metadata[planKey]': 'group_license', 'subscription_data[metadata][subjectId]': 'space:cls', customer_email: 'kim@example.com' });
+    expect(form).not.toHaveProperty('customer_creation');
+    const once = checkoutForm({ priceId: 'p', subjectKind: 'space', subjectId: 's', planKey: 'family_lifetime', successUrl: 's', cancelUrl: 'c' });
+    expect(once).toMatchObject({ mode: 'payment', customer_creation: 'always', 'metadata[planKey]': 'family_lifetime' });
+    expect(once).not.toHaveProperty('customer_email');
+    expect(once).not.toHaveProperty('subscription_data[metadata][planKey]');
 
     const fetchImpl = vi.fn<typeof fetch>()
       .mockResolvedValueOnce(new Response(JSON.stringify({ url: 'https://checkout.stripe.com/c/1' }), { status: 200 }))
