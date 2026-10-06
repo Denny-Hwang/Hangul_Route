@@ -38,7 +38,7 @@
 
 ## 3. 웹 URL 라이브 — 약 30분
 
-- [ ] `hangulroute.com` DNS → Cloudflare Pages (`preview-deploy.yml` 이 이미 빌드; `CLOUDFLARE_API_TOKEN` · `CLOUDFLARE_ACCOUNT_ID` 시크릿 등록)
+- [ ] `hangulroute.com` → Workers Builds `hangul-route-web` (T-052, `web-app-launch.md` §2-E)
 - [ ] 다음 3개 URL 이 200 을 반환하는지 확인 — App Store Connect 필수 입력:
   - Privacy Policy: `https://hangulroute.com/privacy`
   - Support: `https://hangulroute.com/about` (또는 mailto)

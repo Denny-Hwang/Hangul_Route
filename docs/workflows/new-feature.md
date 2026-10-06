@@ -31,7 +31,7 @@ F-XXX 스펙에서 PR 까지의 흐름.
 
 ## 6. 리뷰
 - 수동 리뷰 + (루틴 생성 시) R3 자동 리뷰.
-- CI 6개 (ci / coverage-gate / content-validation / design-token-sync / routine-validation / preview-deploy) 통과 필요.
+- CI 6개 (ci / coverage-gate / content-validation / design-token-sync / routine-validation / preview-deploy = 콘솔 정적 빌드 게이트) 통과 필요.
 
 ## 7. 머지
 - Squash merge 권장.

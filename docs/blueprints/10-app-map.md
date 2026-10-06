@@ -323,6 +323,7 @@ console/home ─┬─ [family] ─▶ parent/dashboard ─▶ parent/learner-de
 | 26 | `onboarding/welcome` 의 "Made for kids 5–11" 한 줄 | **"Start Korean from zero."** 로 교체 (오너 결정 2026-10-06). 랜딩 OG/Twitter description 도 동일 | 코드 `WelcomeScreen` · `apps/web layout.tsx` |
 | 27 | 학교 동의 모드 (c) 의 활성 시점 | **법률 검토 전까지 선택 불가** — Worker `SCHOOL_CONSENT_MODE=enabled` + 콘솔 `NEXT_PUBLIC_SCHOOL_CONSENT_MODE=enabled` 가 모두 설정될 때만 school 모드 저장 가능. 그 전에는 API 422 `consent_mode_locked`, 콘솔 라디오 비활성 (오너 결정 2026-10-06) | F-TCH-001 §10.3 · `apps/api/wrangler.toml` |
 | 28 | App Store 트랙 (T-040–T-044) 시점 | **웹앱 안정화 이후** (오너 결정 2026-10-06). 런치 채널은 웹앱 단일 | `docs/tasks/INBOX.md` |
+| 29 | 랜딩·콘솔 (`apps/web`) 호스팅 — Vercel vs Cloudflare(OpenNext) | **Cloudflare 통일, 단 어댑터 없이 Next `output: 'export'` 정적 내보내기 → assets-only Worker `hangul-route-web`** (학습자 앱과 같은 모양). 최신 OpenNext 어댑터는 Next ≥ 15.5 를 요구해 Next 14 콘솔과 맞지 않고, Vercel 무료 플랜은 상업 이용 불가. 결과로 space 주소가 `/teach/space/:id` → `/teach/space?id=` 로 바뀜 (오너 결정 2026-10-06) | F-CONSOLE-001 §3.7 · `apps/web/wrangler.toml` |
 | 25 | 재연결 시 새 기기의 임시 프로필 | 새 기기에서 만든 임시 프로필은 **그대로 두고** 복원된 프로필을 활성으로 전환 (자동 삭제는 아동 데이터 손실 위험) | F-TCH-001 §10.1 · 코드 `JoinSpaceScreen` |
 
 코드 ↔ 스펙 불일치 (shipped 화면) 는 같은 날 코드로 수정했다 — 각 와이어프레임의 Open questions 와 PR 본문 참조.

@@ -2,8 +2,8 @@
 
 import { colors, spacing, typography } from '@hangul-route/design-system/tokens';
 import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useCallback, useEffect, useState } from 'react';
 import { Button, ConsoleShell, Field, Muted, Notice, panelStyle } from '@/components/console/ui';
 import { useConsole } from '@/components/console/use-console';
 import type { MemberView, Roster } from '@/lib/console/api';
@@ -11,12 +11,11 @@ import { schoolConsentModeEnabled } from '@/lib/console/config';
 import { COPY } from '@/lib/console/copy';
 import { canDeleteLearnerData } from '@/lib/console/relink';
 import { codeExpiry, relativeDay } from '@/lib/console/rollup';
-import { KIND_LABEL, ROUTES, memberNoun } from '@/lib/console/routing';
+import { KIND_LABEL, ROUTES, memberNoun, spaceIdFrom } from '@/lib/console/routing';
 
 /** console/space-settings — F-TCH-001 §10.3. Housekeeping only; never progress data. */
-export default function SettingsPage(): JSX.Element {
-  const params = useParams<{ id: string }>();
-  const spaceId = decodeURIComponent(params.id);
+function SettingsInner(): JSX.Element {
+  const spaceId = spaceIdFrom(useSearchParams());
   const router = useRouter();
   const { ready, session, api, signOut } = useConsole();
   const [roster, setRoster] = useState<Roster | null>(null);
@@ -189,5 +188,13 @@ export default function SettingsPage(): JSX.Element {
         </>
       ) : null}
     </ConsoleShell>
+  );
+}
+
+export default function SettingsPage(): JSX.Element {
+  return (
+    <Suspense fallback={<ConsoleShell>{null}</ConsoleShell>}>
+      <SettingsInner />
+    </Suspense>
   );
 }

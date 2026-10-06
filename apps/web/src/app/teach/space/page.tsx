@@ -2,8 +2,8 @@
 
 import { colors, radii, spacing, typography } from '@hangul-route/design-system/tokens';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { Suspense, useCallback, useEffect, useState } from 'react';
 import { Button, ConsoleShell, Muted, Notice, panelStyle } from '@/components/console/ui';
 import { SchoolAdmin } from '@/components/console/SchoolAdmin';
 import { useConsole } from '@/components/console/use-console';
@@ -11,12 +11,11 @@ import type { PlanView, Roster } from '@/lib/console/api';
 import { COPY } from '@/lib/console/copy';
 import { capState, classRollup, codeExpiry, percent, relativeDay } from '@/lib/console/rollup';
 import { latestPublished, planReadout, readoutLine } from '@/lib/console/plans';
-import { KIND_LABEL, ROUTES, memberNoun } from '@/lib/console/routing';
+import { KIND_LABEL, ROUTES, memberNoun, spaceIdFrom } from '@/lib/console/routing';
 
 /** console/roster — F-CONSOLE-001 §3.5. Summaries only; the API never sends payloads here. */
-export default function SpacePage(): JSX.Element {
-  const params = useParams<{ id: string }>();
-  const spaceId = decodeURIComponent(params.id);
+function SpaceInner(): JSX.Element {
+  const spaceId = spaceIdFrom(useSearchParams());
   const { ready, session, api, signOut } = useConsole();
   const [roster, setRoster] = useState<Roster | null>(null);
   const [plans, setPlans] = useState<PlanView[]>([]);
@@ -129,13 +128,13 @@ export default function SpacePage(): JSX.Element {
           ) : null}
 
           <div style={{ display: 'flex', gap: spacing.sm, marginBottom: spacing.lg, flexWrap: 'wrap', alignItems: 'center' }}>
-            <Link href={`${ROUTES.space(spaceId)}/plan`}>
+            <Link href={ROUTES.spacePlan(spaceId)}>
               <Button tone="primary">{latestPlan ? `Plan: ${latestPlan.title}` : COPY.planThisWeek}</Button>
             </Link>
-            <Link href={`${ROUTES.space(spaceId)}/relink`}>
+            <Link href={ROUTES.spaceRelink(spaceId)}>
               <Button>{pendingRelinks > 0 ? `${pendingRelinks} re-link request${pendingRelinks === 1 ? '' : 's'}` : 'Re-link requests'}</Button>
             </Link>
-            <Link href={`${ROUTES.space(spaceId)}/settings`}>
+            <Link href={ROUTES.spaceSettings(spaceId)}>
               <Button>Settings</Button>
             </Link>
           </div>
@@ -173,5 +172,13 @@ export default function SpacePage(): JSX.Element {
         </>
       ) : null}
     </ConsoleShell>
+  );
+}
+
+export default function SpacePage(): JSX.Element {
+  return (
+    <Suspense fallback={<ConsoleShell>{null}</ConsoleShell>}>
+      <SpaceInner />
+    </Suspense>
   );
 }

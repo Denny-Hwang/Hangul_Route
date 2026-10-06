@@ -56,6 +56,14 @@ A teacher needs one place to make a class, read the code aloud, and see who prac
 
 - Header nav gains **For teachers** → `/teach`; footer gains **Teacher console**.
 
+### 3.7 Deployment — static export on one Worker (2026-10-06, app-map decision #29)
+
+- `apps/web` builds with Next `output: 'export'` into `apps/web/out`; `apps/web/wrangler.toml` serves it as an **assets-only Cloudflare Worker** `hangul-route-web` (same shape as the learner app). No server runtime, no adapter, free plan allows commercial use.
+- Consequence: no dynamic segments. A space is addressed by **`?id=`** — `/teach/space?id=`, `/teach/space/plan?id=`, `/teach/space/relink?id=`, `/teach/space/settings?id=` (`ROUTES.space*` in `lib/console/routing.ts`, `spaceIdFrom(searchParams)`); pages wrap their body in `Suspense` because `useSearchParams` requires it at export time. `/parent/[childId]` pre-renders the demo ids via `generateStaticParams`.
+- Build-time variables (Workers Builds → Variables): `NEXT_PUBLIC_API_BASE_URL`, `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_CONSOLE_DEV_AUTH` (test deploys only), `NEXT_PUBLIC_SCHOOL_CONSENT_MODE`.
+- F-AUTH-002 note: with no server, the Clerk integration uses the client SDK (`@clerk/clerk-react`); the Worker verifies the bearer, not Next middleware.
+- Merge gate: `.github/workflows/preview-deploy.yml` builds the export and runs `wrangler deploy --dry-run`.
+
 ## 4. Out of scope
 
 - Clerk widget and real session verification → F-AUTH-002 (also removes the dev form). Account / billing pages → F-ENT-001. Plan builder → F-PLAN-001. Re-link approval, space settings, anonymize mode, learner detail page → S5 (F-TCH-001 promotion). School admin tree → S7.

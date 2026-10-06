@@ -17,8 +17,8 @@
 | 대상 기기 | iPhone/iPad (+ Android) | 폰 · 태블릿 · Chromebook · PC — 브라우저만 있으면 |
 | 오프라인 | 기본 오프라인 | 첫 방문 후 오프라인 (service worker 프리캐시) |
 | 결제 | App Store IAP (F-IAP-001) | Stage 1 무료라 MVP 에 결제 불필요. 후에 Stripe |
-| 배포 | EAS build + 스토어 심사 | `git push` → Cloudflare Pages, 심사 없음 |
-| 비용 | Apple 개발자 $99/yr + 30% 수수료 | Cloudflare Pages 무료 티어 |
+| 배포 | EAS build + 스토어 심사 | `git push` → Cloudflare Workers Builds (assets-only Worker), 심사 없음 |
+| 비용 | Apple 개발자 $99/yr + 30% 수수료 | Cloudflare Workers 무료 플랜 (상업 이용 가능) |
 
 **왜 지금 코드가 웹으로 잘 옮겨지는가** — 조사 결과 앱이 이미 *local-first* 로 설계되어 있다.
 
@@ -41,7 +41,7 @@
                      └──────────────┬───────────────┘
                                     ▼
                      ┌──────────────────────────────┐
-                     │ Cloudflare Pages (static)    │
+                     │ Cloudflare Worker (assets)   │
                      │  app.hangulroute.com         │
                      │  ├─ index.html + JS bundle   │
                      │  ├─ manifest.webmanifest     │
@@ -68,7 +68,7 @@
 
 | 도메인 | 앱 | 역할 |
 |---|---|---|
-| `hangulroute.com` | `apps/web` (Next.js) | 랜딩, FAQ, 부모 대시보드, "Play now" CTA |
+| `hangulroute.com` | `apps/web` (Next.js 정적 내보내기 → Worker `hangul-route-web`) | 랜딩, FAQ, 교사 콘솔 `/teach`, "Play now" CTA |
 | `app.hangulroute.com` | `apps/mobile` → Expo Web export | **학습 앱 본체 (PWA)** |
 | `api.hangulroute.com` | `apps/api` (Workers) | 텔레메트리, 구독, 동기화 (후속) |
 

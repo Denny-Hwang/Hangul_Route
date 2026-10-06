@@ -3,6 +3,12 @@ import Link from 'next/link';
 import { mockFamily } from '@/data/mock-family';
 import { notFound } from 'next/navigation';
 
+/** Static export (F-CONSOLE-001 §3.6): the demo family is the only data, so its ids are the only pages. */
+export const dynamicParams = false;
+export function generateStaticParams(): Array<{ childId: string }> {
+  return mockFamily().profiles.map((p) => ({ childId: p.id }));
+}
+
 export default function ChildDetailPage({ params }: { params: { childId: string } }): JSX.Element {
   const family = mockFamily();
   const child = family.profiles.find((p) => p.id === params.childId);

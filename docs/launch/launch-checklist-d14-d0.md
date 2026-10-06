@@ -33,7 +33,7 @@
 ### D-10 (Fri)
 - [ ] Landing page (`apps/web/`) — full hero, How it works, card preview,
   mini-game gallery, FAQ, email signup, footer
-- [ ] hangulroute.com DNS → Cloudflare Pages
+- [ ] hangulroute.com → Workers Builds `hangul-route-web` (T-052)
 - [ ] Email signup wired (ConvertKit / Buttondown / mailerlite)
 
 ### D-9 (Sat)
