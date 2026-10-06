@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Hangul Route — Korean for kids who don’t speak it yet',
     description:
-      'Heritage Journey + 24 culture cards + Hoya the tiger. Made for kids 5–11. Free for the first 12 cards.',
+      'Heritage Journey + 24 culture cards + Hoya the tiger. Start Korean from zero. Free for the first 12 cards.',
     siteName: 'Hangul Route',
     type: 'website',
     locale: 'en_US',
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Hangul Route — Korean for kids who don’t speak it yet',
     description:
-      'Heritage Journey + 24 culture cards + Hoya the tiger. Made for kids 5–11.',
+      'Heritage Journey + 24 culture cards + Hoya the tiger. Start Korean from zero.',
   },
   robots: { index: true, follow: true },
 };
