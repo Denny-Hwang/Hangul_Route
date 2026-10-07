@@ -1,6 +1,6 @@
 import type { Context } from 'hono';
+import { dbFor } from '../db';
 import { fail } from '../envelope';
-import { store } from '../store';
 
 /**
  * Device principal for learner traffic (F-SYNC-001 §1). Children have no
@@ -47,16 +47,17 @@ export function parseDeviceHeader(header: string | undefined): { deviceId: strin
 export async function authorizeDevice(c: Context, learnerId: string): Promise<Response | string> {
   const creds = parseDeviceHeader(c.req.header('Authorization'));
   if (!creds) return fail(c, 'unauthorized', 'Device credentials required', 401);
-  if (!store.learners.has(learnerId)) return fail(c, 'not_found', 'Learner not found', 404);
-  const binding = store.device(learnerId, creds.deviceId);
+  const db = dbFor(c);
+  if (!(await db.getLearner(learnerId))) return fail(c, 'not_found', 'Learner not found', 404);
+  const binding = await db.getDevice(learnerId, creds.deviceId);
   if (!binding) {
     // A device that exists for another learner is a mismatch, not a guess.
-    const elsewhere = [...store.learnerDevices.values()].some((d) => d.deviceId === creds.deviceId);
+    const elsewhere = await db.deviceExists(creds.deviceId);
     return fail(c, elsewhere ? 'forbidden' : 'unauthorized', 'Device is not bound to this learner', elsewhere ? 403 : 401);
   }
   if (!constantTimeEquals(await hashSecret(creds.secret), binding.secretHash)) {
     return fail(c, 'unauthorized', 'Bad device secret', 401);
   }
-  binding.lastSeenAt = new Date().toISOString();
+  await db.putDevice({ ...binding, lastSeenAt: new Date().toISOString() });
   return creds.deviceId;
 }

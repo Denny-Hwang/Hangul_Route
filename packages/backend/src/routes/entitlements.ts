@@ -1,5 +1,7 @@
 import { CheckoutCreateSchema, PLAN_PRICING, PromoCheckSchema, ReceiptVerifySchema, discountedUsd, type Entitlement, type Space } from '@hangul-route/content-schema';
-import { Hono } from 'hono';
+import type { Account } from '../store';
+import { Hono, type Context } from 'hono';
+import { dbFor, type Db } from '../db';
 import { fail, ok } from '../envelope';
 import { accountActor, requireAccount, spaceContext } from '../lib/access';
 import { can } from '../lib/can';
@@ -13,7 +15,6 @@ export const promoLimiter = createRateLimiter(PROMO_LIMIT, 60_000);
 
 /** Which spaces each product attaches to (F-ENT-001 §3.3). */
 const PLAN_SPACE_KINDS: Record<'family_lifetime' | 'group_license', readonly Space['kind'][]> = { family_lifetime: ['family'], group_license: ['class', 'school'] };
-import { store } from '../store';
 
 /**
  * /api/entitlements — F-ENT-001 §3.3. Receipts, Stripe and contracts all
@@ -28,23 +29,26 @@ export function setStripeFetchForTests(f: typeof fetch | null): void {
   stripeFetch = f;
 }
 
-function withSpaceName(e: Entitlement): Entitlement & { subjectName: string | null } {
-  return { ...e, subjectName: e.subjectKind === 'space' ? (store.spaces.get(e.subjectId)?.name ?? null) : null };
+async function withSpaceName(db: Db, e: Entitlement): Promise<Entitlement & { subjectName: string | null }> {
+  return { ...e, subjectName: e.subjectKind === 'space' ? ((await db.getSpace(e.subjectId))?.name ?? null) : null };
 }
 
 entitlementRoutes.get('/', async (c) => {
   const account = await requireAccount(c);
   if (!('id' in account)) return account;
-  const ownedSpaces = [...store.spaces.values()].filter((s) => s.ownerAccountId === account.id);
-  const entitlements = [...store.entitlementsFor('account', account.id), ...ownedSpaces.flatMap((s) => store.entitlementsFor('space', s.id))].map(withSpaceName);
+  const db = dbFor(c);
+  const rows = [...(await db.entitlementsFor('account', account.id))];
+  for (const s of await db.spacesOwnedBy(account.id)) rows.push(...(await db.entitlementsFor('space', s.id)));
+  const entitlements = [];
+  for (const e of rows) entitlements.push(await withSpaceName(db, e));
   return ok(c, { entitlements });
 });
 
-function ownedSpace(c: Parameters<typeof requireAccount>[0], account: { id: string }, spaceId: string, kinds: readonly Space['kind'][]): Response | Space {
-  const space = store.spaces.get(spaceId);
+async function ownedSpace(c: Context, db: Db, account: Account, spaceId: string, kinds: readonly Space['kind'][]): Promise<Response | Space> {
+  const space = await db.getSpace(spaceId);
   if (!space) return fail(c, 'not_found', 'Space not found', 404);
   if (!kinds.includes(space.kind)) return fail(c, 'bad_request', `Expected a ${kinds.join(' or ')} space`, 422);
-  if (!can(accountActor(account as never), 'space.manage', { kind: 'space', ctx: spaceContext(space) })) return fail(c, 'forbidden', 'Not your space', 403);
+  if (!can(await accountActor(db, account), 'space.manage', { kind: 'space', ctx: await spaceContext(db, space) })) return fail(c, 'forbidden', 'Not your space', 403);
   return space;
 }
 
@@ -53,16 +57,17 @@ entitlementRoutes.post('/verify', async (c) => {
   if (!('id' in account)) return account;
   const parsed = ReceiptVerifySchema.safeParse(await c.req.json().catch(() => null));
   if (!parsed.success) return fail(c, 'bad_request', 'Invalid receipt body', 422, { issues: parsed.error.issues });
-  const space = ownedSpace(c, account, parsed.data.spaceId, ['family']);
+  const db = dbFor(c);
+  const space = await ownedSpace(c, db, account, parsed.data.spaceId, ['family']);
   if (!('id' in space)) return space;
   const result = verifyReceiptStub(parsed.data.store, parsed.data.receipt);
   if (!result.valid) return fail(c, 'receipt_invalid', 'Receipt could not be verified', 422);
   const now = new Date();
-  const entitlement = store.applyEntitlement(
+  const entitlement = await db.applyEntitlement(
     { subjectKind: 'space', subjectId: space.id, planKey: 'family_lifetime', status: statusFromVerification(result, now) === 'active' ? 'active' : 'expired', provider: parsed.data.store, providerRef: null, expiresAt: result.expiresAt },
     now,
   );
-  return ok(c, { entitlement: withSpaceName(entitlement) });
+  return ok(c, { entitlement: await withSpaceName(db, entitlement) });
 });
 
 entitlementRoutes.post('/stripe/checkout', async (c) => {
@@ -71,7 +76,8 @@ entitlementRoutes.post('/stripe/checkout', async (c) => {
   const parsed = CheckoutCreateSchema.safeParse(await c.req.json().catch(() => null));
   if (!parsed.success) return fail(c, 'bad_request', 'Invalid checkout body', 422, { issues: parsed.error.issues });
   const { planKey, subjectKind, subjectId, promoCode } = parsed.data;
-  const space = ownedSpace(c, account, subjectId, PLAN_SPACE_KINDS[planKey]);
+  const db = dbFor(c);
+  const space = await ownedSpace(c, db, account, subjectId, PLAN_SPACE_KINDS[planKey]);
   if (!('id' in space)) return space;
   if (planKey === 'group_license' && space.kind === 'class' && space.parentSpaceId) {
     return fail(c, 'bad_request', 'A class inside a school is covered by the school licence', 422);
@@ -120,11 +126,12 @@ entitlementRoutes.post('/stripe/portal', async (c) => {
   const subjectKind = body.subjectKind === 'space' ? 'space' : 'account';
   const subjectId = typeof body.subjectId === 'string' ? body.subjectId : account.id;
   if (subjectKind === 'account' && subjectId !== account.id) return fail(c, 'forbidden', 'Not your account', 403);
+  const db = dbFor(c);
   if (subjectKind === 'space') {
-    const space = ownedSpace(c, account, subjectId, ['family', 'school', 'class']);
+    const space = await ownedSpace(c, db, account, subjectId, ['family', 'school', 'class']);
     if (!('id' in space)) return space;
   }
-  const customer = store.entitlementsFor(subjectKind, subjectId).find((e) => e.provider === 'stripe' && e.customerRef && e.planKey !== 'family_lifetime')?.customerRef;
+  const customer = (await db.entitlementsFor(subjectKind, subjectId)).find((e) => e.provider === 'stripe' && e.customerRef && e.planKey !== 'family_lifetime')?.customerRef;
   if (!customer) return fail(c, 'not_found', 'No Stripe subscription for this subject', 404);
   const env = c.env ?? {};
   if (!env.STRIPE_SECRET_KEY) return fail(c, 'stripe_not_configured', 'Billing portal is not set up on this deployment yet', 500);
@@ -150,6 +157,7 @@ entitlementRoutes.post('/stripe/webhook', async (c) => {
   if (!event || typeof event.type !== 'string' || !event.data || typeof event.data.object !== 'object') return fail(c, 'bad_request', 'Not a Stripe event', 400);
   const apply = entitlementFromStripeEvent(event);
   if (!apply) return ok(c, { received: true, applied: false });
-  const entitlement = store.applyEntitlement(apply, new Date());
-  return ok(c, { received: true, applied: true, entitlement: withSpaceName(entitlement) });
+  const db = dbFor(c);
+  const entitlement = await db.applyEntitlement(apply, new Date());
+  return ok(c, { received: true, applied: true, entitlement: await withSpaceName(db, entitlement) });
 });
