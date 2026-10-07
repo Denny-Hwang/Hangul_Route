@@ -44,13 +44,15 @@ keep_vars = true
 # ALLOWED_ORIGINS = "https://hangulroute.com,https://www.hangulroute.com,https://app.hangulroute.com"
 
 # ---- D1 (F-INFRA-002 / F-INFRA-003) ----
-# Not bound yet: the API keeps its data in memory (packages/backend/src/store.ts
-# never reads env.DB), and a binding whose database_id does not exist in the
-# account makes `wrangler deploy` fail. Once the owner creates the database in
-# the dashboard (Storage & Databases → D1 → Create → name `hangul-route`) and
-# sends its Database ID, a PR uncomments this block with that id; the same PR
-# applies src/db/schema.sql (F-INFRA-003 then replaces the in-memory store).
-# [[d1_databases]]
-# binding = "DB"
-# database_name = "hangul-route"
-# database_id = "<paste the Database ID from the dashboard>"
+# Database created in the dashboard on 2026-10-07 (Storage & Databases → D1,
+# location automatic / WNAM, no jurisdiction). Schema files live in ./migrations
+# and are applied by the Workers Builds deploy command BEFORE the upload:
+#   pnpm --filter @hangul-route/api exec wrangler d1 migrations apply hangul-route --remote && pnpm --filter @hangul-route/api exec wrangler deploy
+# D1 records applied files in its d1_migrations table, so re-running is a no-op.
+# The Worker does not read env.DB yet (in-memory store until F-INFRA-003); the
+# binding and the applied schema only prepare that switch.
+[[d1_databases]]
+binding = "DB"
+database_name = "hangul-route"
+database_id = "4d338c01-0a0d-46c5-b7f4-16936cf32907"
+migrations_dir = "migrations"

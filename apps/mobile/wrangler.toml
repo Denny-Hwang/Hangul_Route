@@ -18,8 +18,9 @@ directory = "./dist"
 not_found_handling = "single-page-application"
 html_handling = "auto-trailing-slash"
 
-# Custom domain — uncomment once hangulroute.com is on Cloudflare DNS
-# (or attach it in the dashboard: Worker → Settings → Domains & Routes).
+# Custom domain — hangulroute.com is on Cloudflare DNS (Registrar, 2026-10-07).
+# The owner attaches it in the dashboard (Worker → Settings → Domains & Routes,
+# owner-runbook.md Step 6); uncommenting below does the same through deploys.
 # [[routes]]
 # pattern = "app.hangulroute.com"
 # custom_domain = true
