@@ -1,6 +1,6 @@
 # Multi-persona · Teacher Plans · Sync & Restore — 최소 DB 설계안
 
-**Status**: `in progress` — S1 (F-SYNC-001/002) · S2 (F-RESTORE-001) · S3 (F-SPACE-001 서버 + 학습자 join · F-CONSOLE-001 웹 콘솔 셸: 로그인(dev)·첫 space·홈·roster) · S4 (F-PLAN-001 서버 + 기기 파생 + 웹 빌더) · S5 (F-TCH-001 §10) · S6 (F-ENT-001: entitlements · tier · paywall · console billing) · S7 (F-SCHOOL-001) 구현됨 2026-09-21 — **S1–S7 전부 구현**; 남은 것은 오너 설정 (T-049/T-050/T-051), F-AUTH-002 (Clerk 위젯), F-IAP-002 (스토어 검증), Projection Mode (F-PLAN-001 / F-TCH-001 / F-ENT-001 / F-SCHOOL-001) 은 아직 proposal
+**Status**: `in progress` — S1 (F-SYNC-001/002) · S2 (F-RESTORE-001) · S3 (F-SPACE-001 서버 + 학습자 join · F-CONSOLE-001 웹 콘솔 셸: 로그인(dev)·첫 space·홈·roster) · S4 (F-PLAN-001 서버 + 기기 파생 + 웹 빌더) · S5 (F-TCH-001 §10) · S6 (F-ENT-001: entitlements · tier · paywall · console billing) · S7 (F-SCHOOL-001) 구현됨 2026-09-21 — **S1–S7 전부 구현**; F-AUTH-002 (콘솔 Clerk 로그인) · F-INFRA-003 (D1 영속화) 2026-10-07 구현; 남은 것은 오너 설정 (T-050/T-051), F-IAP-002 (스토어 검증), Projection Mode (F-PLAN-001 / F-TCH-001 / F-ENT-001 / F-SCHOOL-001) 은 아직 proposal
 **작성일**: 2026-09-19
 **선행 문서**: `web-pwa-offline.md` (웹앱/오프라인), F-TCH-001 (draft), F-PROF-001, F-HW-001, F-SUB-001, F-AUTH-001, `apps/api/src/db/schema.sql` (v1)
 **요구**: (1) 교사가 학습 계획을 짜서 배포하고 학생 진도를 본다 (2) DB 를 최소로 (3) 개인 · 가정 · 학급 · 학교 페르소나 전부 (4) 페르소나별 결제 (5) 앱 삭제 · 기기 이전 시 데이터 복원

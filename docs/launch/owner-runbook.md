@@ -46,7 +46,7 @@ D1 `hangul-route` 는 2026-10-07 에 대시보드에서 만들었고 (Database I
 3. 프로젝트 홈의 `https://hangul-route-api.<계정>.workers.dev` 가 **API 주소**다. 메모.
 4. Settings → Variables and Secrets (런타임) 는 아직 비워 둔다 (Step 6·7·8 에서 채운다).
 
-(F-INFRA-003 이 끝나기 전까지 API 는 인메모리 store 를 쓰므로 재배포마다 데이터가 초기화된다. D1 에는 빈 표만 있다.)
+(F-INFRA-003 머지 후 API 는 이 D1 에 읽고 쓴다 — 재배포해도 데이터가 남는다.)
 
 **확인**: 브라우저에서 API 주소를 열면 JSON 응답이 보이고, 대시보드 D1 → `hangul-route` → Tables 에 `learners` · `spaces` · `entitlements` 등이 보인다.
 
@@ -112,7 +112,7 @@ Stripe → Product catalog → **Coupons** → New: 퍼센트 또는 정액 · D
 
 | 오너가 보내는 것 | 저장소 쪽 다음 PR |
 |---|---|
-| Step 3 첫 배포 로그 (마이그레이션 ✅ 또는 오류) | F-INFRA-003 (인메모리 → D1, 데이터 초기화 해결) 착수 |
+| Step 3 첫 배포 로그 (마이그레이션 ✅ 또는 오류) | 오류면 수정 PR (F-INFRA-003 은 머지됨) |
 | Step 7 확인 결과 (위젯이 뜨고 학급 생성이 되는지) | F-AUTH-005 계정 페이지 (이메일·동의 기록·학습자 데이터 삭제) |
 | Step 11 빨간 항목 캡처 | 성능 수정 |
 | Step 12 녹음 파일 | 오프라인 발음 인제스트 |
