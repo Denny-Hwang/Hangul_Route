@@ -14,6 +14,7 @@
 | P1 플랫폼 래퍼 웹 버전 | `storage.web.ts` (IndexedDB, idb-keyval) · `audio.web.ts` (speechSynthesis, ko-KR 보이스 선택) · `haptics.web.ts` (vibrate) · `sharing.web.ts` (미지원 → Share 버튼 숨김) · `dialog.web.ts` (confirm) · `pwa.web.ts` (SW 이벤트) | 단위 테스트 16개, platform 레인 커버리지 게이트 통과 |
 | P2 PWA 오프라인 | `public/manifest.webmanifest` · `scripts/pwa-postbuild.mjs` (메타/CSS/SW 등록 주입 + Workbox `generateSW` 프리캐시) · 앱 내 배너 `PwaBanners` (offline-ready / update-ready / offline chip) · `navigator.storage.persist()` · trace 캔버스 `touch-action: none` | **Playwright 오프라인 E2E 통과** (`e2e/web/offline.spec.ts`): 온보딩 → 첫 퀘스트 → SW 설치 → 네트워크 차단 → 새로고침 → 프로필 유지 · 라이브러리 진입, pageerror 0 |
 | P3 배포 파이프라인 | **Cloudflare Workers Builds (Connect GitHub)** 가 main 푸시마다 빌드·배포. `apps/mobile/wrangler.toml` (assets-only Worker, SPA 폴백, `_headers`). GitHub Actions `web-app.yml` 은 머지 게이트 (빌드 + wrangler dry-run + 오프라인 E2E) 만 | 2026-09-21 Pages → Workers 전환 |
+| 대시보드 전용 배포 (2026-10-07) | 오너 PC 가 프록시로 Cloudflare API 를 못 쓰므로 로컬 wrangler 단계를 전부 제거. `apps/api/wrangler.toml`: D1 바인딩 주석 처리 (존재하지 않는 database_id 는 배포를 막고, 코드는 `env.DB` 를 읽지 않음) + `keep_vars = true` (대시보드 변수 보존) + 변수·시크릿을 대시보드에서 넣는 안내. `pnpm-workspace.yaml` `neverBuiltDependencies` (esbuild · workerd · sharp · @clerk/shared — 빌드·배포에 불필요, 경고만 제거). CI 에 API `wrangler deploy --dry-run` 게이트. 오너 순서표는 `owner-runbook.md` 로 이동 | `wrangler deploy --dry-run` (api) 통과 · `pnpm install` 경고 0 |
 | 프로모·레퍼럴 코드 (2026-10-06) | F-ENT-002: 코드·할인율은 **Stripe Promotion Code** 로 오너가 직접 관리 (테이블·관리 화면 없음). API `POST /entitlements/stripe/promo` 가 Stripe 에서 조회해 할인가를 돌려주고 (분당 20회 제한), checkout 이 서버에서 재검증 후 `discounts[0]` 로 적용, 웹훅이 entitlement 에 `promoCode` 를 남김 (레퍼럴 귀속). 콘솔 billing 에 코드 입력칸 + 할인가 표시, 페이월엔 안내 한 줄. 코드 없이도 Stripe 자체 코드 입력칸은 열려 있음 | 단위 backend 130 · web 50 · content-schema 37 · mobile 388 |
 | 가격 모델 (2026-10-06) | 상품 2개로 통합 (결정 #30): `family_lifetime` $15.30 일회 (가족 학습자 ≤ 5, 만료 없음, Stripe `mode=payment`) · `group_license` $153/년 (단독 학급 또는 학교, 구독) · 상한 초과 `school_seat` Contact us. Teacher Pro · 월 결제 · 가격 placeholder 제거. 페이월은 Lifetime 카드 1개, 콘솔 billing 은 interval 선택 없음 | 단위 backend 128 · web 49 · mobile 388 · content-schema 36 |
 | 콘솔 배포 (2026-10-06) | `apps/web` 를 Next `output: 'export'` 정적 내보내기로 전환 → `apps/web/wrangler.toml` (assets-only Worker `hangul-route-web`, 404 페이지, `_headers`). 동적 세그먼트 제거: `/teach/space?id=` · `/plan?id=` · `/relink?id=` · `/settings?id=`. `preview-deploy.yml` 은 Pages 업로드 대신 정적 빌드 + wrangler dry-run 머지 게이트 (F-CONSOLE-001 §3.7, 결정 #29) | `next build` 21 페이지 · `wrangler deploy --dry-run` 103 파일 · 단위 web 49 |
@@ -32,47 +33,26 @@
 | S3 스페이스 (2026-09-21) | `accounts` / `spaces` / `memberships` + join code (base32 6자, 30일) + 권한 함수 `can()` (교사는 payload 를 받을 경로가 없음) + `/api/spaces` 8 라우트 (F-SPACE-001). 학습자 앱: 설정 "Classes & family" 카드 → `sync/join-space` (코드 → 이름 확인 → 완료, PIN 없음) · Leave. 콘솔 화면은 다음 PR (F-CONSOLE-001) | 단위 backend 99 · mobile 369 · content-schema 30; 게이트 7/7 |
 | S1–S2 동기화·복원 (2026-09-21) | 서버 스냅샷 + 결정적 병합 + 30 s 디바운스 클라이언트 (F-SYNC-001/002) · 파일 백업/복원 · **Rescue Code** 자동 발급·복사·공유·재발급·새 기기 claim (F-RESTORE-001). `EXPO_PUBLIC_API_BASE_URL` 이 없으면 전부 조용히 꺼짐 (파일 백업만 동작) | 단위 (mobile 359 · backend 77) + `e2e/web/backup.spec.ts` 파일 왕복. 코드 경로 실기기 확인은 API 연결 후 T-046 에 포함 |
 
-## 2. 오너 작업 — 약 1시간 (Connect GitHub 방식, 2026-09-21 결정)
+## 2. 오너 작업 — 대시보드 전용 (2026-10-07 개정)
 
-**A. GitHub 브랜치 보호 (먼저)** — https://github.com/Denny-Hwang/Hangul_Route/settings/branches
-- [ ] `main` 규칙: *Require a pull request before merging* + *Require status checks to pass* → `lint · typecheck · test · build`, `Build PWA · offline e2e`, `Measure coverage vs rolling targets` 필수. 이렇게 해야 Cloudflare 가 main 을 배포할 때 항상 테스트 통과본만 나간다.
+> 순서·확인 기준·입력값은 **`owner-runbook.md`** 가 원본이다. 로컬 `wrangler` 는 쓰지 않는다 (회사 프록시가 Cloudflare API 를 막는다): 배포는 Workers Builds (GitHub 연동), 변수·시크릿·D1 은 대시보드, 저장소 변경은 PR → required checks → 머지 → 자동 재배포.
 
-**B. Cloudflare Workers Builds** — https://dash.cloudflare.com/?to=/:account/workers-and-pages → Create → **Connect GitHub** → `Denny-Hwang/Hangul_Route`
-- [ ] Project name: `hangul-route-app` (wrangler.toml 의 `name` 과 동일)
-- [ ] Production branch: `main`
-- [ ] Root directory: `/` (리포 루트 — pnpm 워크스페이스)
-- [ ] Build command: `pnpm install --frozen-lockfile && pnpm --filter @hangul-route/mobile build:web`
-- [ ] Deploy command: `pnpm --filter @hangul-route/mobile exec wrangler deploy`
-- [ ] Build variables: 없음 (Node 22 는 `.nvmrc`, pnpm 은 `packageManager` 로 자동 감지 — wrangler 4 는 Node ≥ 22 필요)
-- [ ] 첫 빌드 성공 → `https://hangul-route-app.<account>.workers.dev` 에서 열어보기
-- [ ] PR 프리뷰: 비-프로덕션 브랜치 빌드가 켜져 있으면 PR 마다 프리뷰 URL 댓글이 달린다 (선택)
+| Step | 내용 | 시간 |
+|---|---|---|
+| 1 | GitHub `main` 보호 — PR 필수 + 체크 3개 (`lint · typecheck · test · build`, `Build PWA · offline e2e`, `Measure coverage vs rolling targets`) | 10분 |
+| 2 | `hangul-route-app` Import a repository (학습자 PWA) | 20분 |
+| 3 | `hangul-route-api` Import a repository (D1 바인딩 없이 배포됨) + D1 을 대시보드에서 생성 → Database ID 전달 → 바인딩 PR | 25분 |
+| 4 | `hangul-route-web` Import a repository (랜딩 + 콘솔, 정적 내보내기) | 15분 |
+| 5 | 앱 빌드 변수 `EXPO_PUBLIC_API_BASE_URL` → Retry deployment → Rescue Code · 학급 코드 왕복 확인 | 10분 |
+| 6 | 도메인 `app.hangulroute.com` · `hangulroute.com` · `www` + API `ALLOWED_ORIGINS` | 15분 + DNS |
+| 7 | Clerk → Secret `CLERK_SECRET_KEY` (API) + 빌드 변수 `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` (web) → F-AUTH-002 착수 | 20분 |
+| 8 | Stripe → Price 2개 → Text 변수 `STRIPE_PRICE_FAMILY_LIFETIME` / `STRIPE_PRICE_GROUP_LICENSE_YEARLY` / `CONSOLE_URL` + Secret `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` + 웹훅 4 이벤트 | 40분 |
+| 9 | 프로모·레퍼럴 코드 (Stripe Coupons → Promotion code, 배포 불필요) | 15분 |
+| 10 | 설치 3종 + 오프라인 실기기 완주 | 30분 |
+| 11 | Lighthouse (설치 가능 전부 녹색, Performance ≥ 80) | 15분 |
+| 12 | 자모 MP3 30개 녹음 | 1일 |
 
-**C. 도메인** `app.hangulroute.com`
-- [ ] `hangulroute.com` 을 Cloudflare DNS 로 (아직이면): https://developers.cloudflare.com/dns/zone-setups/full-setup/
-- [ ] Worker → Settings → Domains & Routes → Add → Custom domain `app.hangulroute.com` (DNS 레코드 자동 생성). 또는 `wrangler.toml` 의 `[[routes]]` 주석 해제 후 다음 배포
-- [ ] 랜딩의 `NEXT_PUBLIC_APP_URL` 은 기본값이 이 도메인이라 별도 설정 불필요
-- [ ] 첫 배포 후 **설치 테스트 3종**: iOS Safari 공유 → 홈 화면에 추가 / Android Chrome 설치 프롬프트 / 데스크톱 Chrome 주소창 설치 아이콘. 각각 아이콘 표시 · standalone 창 · 세로 고정(설치 후) 확인
-- [ ] **오프라인 실기기 테스트**: 설치 → 비행기 모드 → 실행 → 퀘스트 1개 완주 → 카드 획득 → 비행기 모드 해제 (텔레메트리 큐는 아직 없음 — §4)
-
-**E. 랜딩 + 교사 콘솔 `hangulroute.com`** (`apps/web`, 2026-10-06 — Next 정적 내보내기 → assets-only Worker, F-CONSOLE-001 §3.7) — Workers & Pages → Create → **Connect GitHub** → 같은 저장소를 한 번 더
-- [ ] Project name: `hangul-route-web` · Production branch `main` · Root directory `/`
-- [ ] Build command: `pnpm install --frozen-lockfile && pnpm --filter @hangul-route/web build`
-- [ ] Deploy command: `pnpm --filter @hangul-route/web exec wrangler deploy`
-- [ ] Build variables: `NEXT_PUBLIC_API_BASE_URL` (API Worker 주소) · `NEXT_PUBLIC_CONSOLE_DEV_AUTH=true` (**테스트 배포에서만**, Clerk 전 임시 로그인) · (선택) `NEXT_PUBLIC_APP_URL` (기본 app.hangulroute.com)
-- [ ] 첫 빌드 → `https://hangul-route-web.<account>.workers.dev` 에서 랜딩 · `/teach` dev 로그인 확인
-- [ ] Worker → Settings → Domains & Routes → Custom domain `hangulroute.com` 과 `www.hangulroute.com`
-- [ ] `/privacy` `/about` `/terms` 200 확인 (T-041)
-
-**D. API 연결 (동기화 · Rescue Code · 학급 · 콘솔)** — 지금까지의 서버 기능은 API 주소가 설정될 때만 켜진다 (없으면 앱은 로컬 전용으로 동작)
-- [ ] API Worker `hangul-route-api` 배포 (`apps/api`, T-002 — `wrangler deploy`; D1 은 아직 인메모리라 재배포 시 데이터가 사라짐 → F-INFRA-003 전까지 테스트 용도)
-- [ ] (법률 검토 후에만) Worker 변수 `SCHOOL_CONSENT_MODE=enabled` + 콘솔 `NEXT_PUBLIC_SCHOOL_CONSENT_MODE=enabled` → 학급 설정에서 school 동의 모드 선택 가능 (그 전엔 잠금, 결정 #27)
-- [ ] Worker 변수 `ALLOWED_ORIGINS` = `https://hangulroute.com,https://www.hangulroute.com,https://app.hangulroute.com` (미설정이면 같은 기본값 + localhost + `*.workers.dev`)
-- [ ] PWA 빌드 변수 (Workers Builds → Settings → Variables): `EXPO_PUBLIC_API_BASE_URL` = API Worker 주소
-- [ ] 랜딩/콘솔 (`apps/web`) 빌드 변수 (§2-E 의 Worker `hangul-route-web`): `NEXT_PUBLIC_API_BASE_URL` = 같은 주소. `NEXT_PUBLIC_CONSOLE_DEV_AUTH=true` 는 **테스트 배포에서만** (Clerk 연결 전 임시 로그인)
-- [ ] Clerk 앱 생성 → `wrangler secret put CLERK_SECRET_KEY` + `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` (F-AUTH-002 착수 전제, T-049)
-- [ ] Stripe (T-051, 가격 확정 2026-10-06): 상품 2개 → Price 2개: **Family Lifetime $15.30 (one-time)** → `STRIPE_PRICE_FAMILY_LIFETIME`, **Group License $153 / year (recurring, yearly)** → `STRIPE_PRICE_GROUP_LICENSE_YEARLY`; Worker var `CONSOLE_URL`; `wrangler secret put STRIPE_SECRET_KEY`; 웹훅 엔드포인트 `POST /api/entitlements/stripe/webhook` 등록 → `wrangler secret put STRIPE_WEBHOOK_SECRET` (이벤트: checkout.session.completed, customer.subscription.created/updated/deleted). 미설정이면 결제 버튼은 "not set up" 으로 조용히 비활성
-- [ ] **프로모션·레퍼럴 코드 (F-ENT-002, 배포 불필요)**: Stripe → Product catalog → **Coupons** → New (퍼센트 또는 정액, duration: Lifetime 과 라이선스 첫 해는 `once`, 매년 갱신까지 깎으려면 `forever`, 사용 횟수·만료 선택) → **Add promotion code** 에 고객이 입력할 문자열 (예 `HOYA20`, 추천 교사별 `MSPARK`) + 코드별 제한 (최대 사용, 만료, 첫 구매만, 최소 금액). 코드 끄기 = promotion code 를 inactive. 구매에 쓰인 코드는 entitlement 의 `promoCode` 와 Stripe 결제 메타데이터에 남아 누가 데려왔는지 보인다
-- [ ] Lighthouse (Chrome DevTools) PWA/Installable 항목 전부 통과 확인, Performance ≥ 80 (번들 2 MB, 첫 로드 3G 에서 ~6초 예상)
+프로젝트 3개의 Project name / Build / Deploy command / Build variables / 런타임 변수·시크릿 표는 `owner-runbook.md` §0.
 
 ## 3. 웹에서 다른 점 (사용자 안내용)
 
