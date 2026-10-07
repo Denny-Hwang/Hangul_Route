@@ -55,13 +55,13 @@ https://github.com/Denny-Hwang/Hangul_Route/settings/branches → Add rule (또�
 **확인 1**: 앱에서 프로필 생성 → 설정 → Backup 카드에 Rescue Code (단어-단어-숫자) 가 생긴다.
 **확인 2**: 콘솔 `/teach` → 교사로 로그인 → 학급 생성 → 6자리 코드 → 앱 설정 *Classes & family* 에 입력 → 콘솔 roster 에 학생이 보인다.
 
-### Step 6. 도메인 (15분 + DNS 전파 최대 24시간)
-1. `hangulroute.com` 이 Cloudflare DNS 가 아니면: 대시보드 → Add a domain → Free → 안내된 네임서버 2개를 도메인 등록업체에 입력.
-2. `hangul-route-app` → Settings → Domains & Routes → Add → Custom domain `app.hangulroute.com`
-3. `hangul-route-web` → 같은 메뉴 → `hangulroute.com` 과 `www.hangulroute.com`
-4. `hangul-route-api` → Settings → Variables and Secrets → Add → Type **Text** → `ALLOWED_ORIGINS` = `https://hangulroute.com,https://www.hangulroute.com,https://app.hangulroute.com` → Deploy. (비워 두면 같은 기본값 + localhost + `*.workers.dev` 가 허용되므로 도메인 전엔 생략해도 된다.)
+### Step 6. 도메인 (10분)
+`hangulroute.com` 은 Cloudflare Registrar 로 구매해 이미 Cloudflare DNS 에 있다 (2026-10-07). 네임서버 변경·전파 대기는 없다. Custom domain 을 붙이면 DNS 레코드와 인증서가 자동으로 만들어진다 (보통 몇 분).
+1. `hangul-route-app` → Settings → Domains & Routes → Add → Custom domain `app.hangulroute.com`
+2. `hangul-route-web` → 같은 메뉴 → `hangulroute.com`, 그리고 한 번 더 `www.hangulroute.com`
+3. `hangul-route-api` → Settings → Variables and Secrets → Add → Type **Text** → `ALLOWED_ORIGINS` = `https://hangulroute.com,https://www.hangulroute.com,https://app.hangulroute.com` → Deploy. (비워 두면 같은 기본값 + localhost + `*.workers.dev` 가 허용되므로 도메인 전엔 생략해도 된다.)
 
-**확인**: https://app.hangulroute.com 과 https://hangulroute.com/teach 가 열린다. Step 5 의 `EXPO_PUBLIC_CONSOLE_URL` 은 지워도 된다 (지우면 Retry deployment).
+**확인**: https://app.hangulroute.com 과 https://hangulroute.com/teach 가 열린다 (DNS 탭에 Worker 가 만든 레코드가 보인다). Step 5 의 `EXPO_PUBLIC_CONSOLE_URL` 은 지워도 된다 (지우면 Retry deployment).
 
 ## B. 외부 키 (Step 7–9)
 

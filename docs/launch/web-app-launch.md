@@ -44,7 +44,7 @@
 | 3 | `hangul-route-api` Import a repository (D1 바인딩 없이 배포됨) + D1 을 대시보드에서 생성 → Database ID 전달 → 바인딩 PR | 25분 |
 | 4 | `hangul-route-web` Import a repository (랜딩 + 콘솔, 정적 내보내기) | 15분 |
 | 5 | 앱 빌드 변수 `EXPO_PUBLIC_API_BASE_URL` → Retry deployment → Rescue Code · 학급 코드 왕복 확인 | 10분 |
-| 6 | 도메인 `app.hangulroute.com` · `hangulroute.com` · `www` + API `ALLOWED_ORIGINS` | 15분 + DNS |
+| 6 | Custom domain `app.hangulroute.com` · `hangulroute.com` · `www` (도메인은 Cloudflare Registrar 구매, DNS 이미 Cloudflare — 네임서버 단계 없음) + API `ALLOWED_ORIGINS` | 10분 |
 | 7 | Clerk → Secret `CLERK_SECRET_KEY` (API) + 빌드 변수 `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` (web) → F-AUTH-002 착수 | 20분 |
 | 8 | Stripe → Price 2개 → Text 변수 `STRIPE_PRICE_FAMILY_LIFETIME` / `STRIPE_PRICE_GROUP_LICENSE_YEARLY` / `CONSOLE_URL` + Secret `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` + 웹훅 4 이벤트 | 40분 |
 | 9 | 프로모·레퍼럴 코드 (Stripe Coupons → Promotion code, 배포 불필요) | 15분 |
