@@ -3,7 +3,7 @@ import app from '../index';
 import { hashSecret } from '../lib/device-auth';
 import { RESCUE_WORDS, randomRescueCode } from '../lib/rescue-words';
 import { CLAIM_LIMIT, claimLimiter } from '../routes/recovery';
-import { store } from '../store';
+import { testDb as db } from './helpers/db';
 
 const DEVICE_A = 'device-aaaaaaaa';
 const DEVICE_B = 'device-bbbbbbbb';
@@ -42,8 +42,8 @@ async function claim(code: string, headers: Record<string, string> = {}) {
 }
 
 describe('/api/recovery (F-RESTORE-001)', () => {
-  beforeEach(() => {
-    store.reset();
+  beforeEach(async () => {
+    await db.reset();
     claimLimiter.reset();
   });
 
@@ -62,7 +62,7 @@ describe('/api/recovery (F-RESTORE-001)', () => {
     const first = await issue(auth);
     expect(first.status).toBe(201);
     expect(first.code).toMatch(/^[A-Z]+-[A-Z]+-\d{4}$/);
-    expect(store.learners.get('profile:suni')?.recoveryHash).toBe(await hashSecret(first.code));
+    expect((await db.getLearner('profile:suni'))?.recoveryHash).toBe(await hashSecret(first.code));
   });
 
   it('claim binds a new device and returns learner + snapshot; rotation invalidates the old code', async () => {
@@ -113,8 +113,8 @@ describe('/api/recovery (F-RESTORE-001)', () => {
 });
 
 describe('rescue re-issue by an adult (F-TCH-001 §10.2)', () => {
-  beforeEach(() => {
-    store.reset();
+  beforeEach(async () => {
+    await db.reset();
     claimLimiter.reset();
   });
 

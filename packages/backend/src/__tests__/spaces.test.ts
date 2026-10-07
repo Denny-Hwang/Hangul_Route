@@ -2,7 +2,7 @@ import { JOIN_CODE_RE } from '@hangul-route/content-schema';
 import { beforeEach, describe, expect, it } from 'vitest';
 import app from '../index';
 import { LOOKUP_LIMIT, lookupLimiter } from '../routes/spaces';
-import { store } from '../store';
+import { testDb as db } from './helpers/db';
 
 type Envelope = { ok: boolean; data?: Record<string, unknown>; error?: { code: string; details?: Record<string, unknown> } };
 const json = { 'content-type': 'application/json' };
@@ -50,8 +50,8 @@ const snapshotFor = (profileId: string) => ({
 });
 const summary = { schemaVersion: 1, lastActiveAt: '2026-09-21T00:00:00.000Z', streakDays: 0, stage1: { questsDone: 1, questsTotal: 11, anchorAccuracy: null }, cardsUnlocked: 2, minutesLast7d: 5, jamoRecognized: [], needsPractice: [], planProgress: {} };
 
-beforeEach(() => {
-  store.reset();
+beforeEach(async () => {
+  await db.reset();
   lookupLimiter.reset();
 });
 
@@ -60,7 +60,7 @@ describe('POST /api/spaces + GET /api/spaces (F-SPACE-001 §3.1, §3.3)', () => 
     const fam = await createSpace('mom', 'family', 'Kim family', { email: 'mom@example.com', displayName: 'Mom' });
     expect(fam.joinCode).toBeNull();
     expect(fam.membership.role).toBe('owner');
-    expect(store.accounts.get('mom')).toMatchObject({ email: 'mom@example.com', displayName: 'Mom' });
+    expect(await db.getAccount('mom')).toMatchObject({ email: 'mom@example.com', displayName: 'Mom' });
 
     const cls = await createSpace('teacher', 'class', 'Sunday Class A');
     expect(cls.joinCode).toMatch(JOIN_CODE_RE);
@@ -73,7 +73,7 @@ describe('POST /api/spaces + GET /api/spaces (F-SPACE-001 §3.1, §3.3)', () => 
     expect(sch.space.settings.anonymizeRoster).toBe(true);
     // a second create keeps the first email
     await createSpace('mom', 'family', 'Second', { email: 'other@example.com' });
-    expect(store.accounts.get('mom')?.email).toBe('mom@example.com');
+    expect((await db.getAccount('mom'))?.email).toBe('mom@example.com');
   });
 
   it('rejects unauthenticated and malformed creates', async () => {
@@ -131,8 +131,8 @@ describe('join code lifecycle (§3.2)', () => {
 
   it('lookup reports expired and malformed codes and rate-limits guessing', async () => {
     const cls = await createSpace('teacher', 'class', 'A');
-    const space = store.spaces.get(cls.space.id);
-    if (space) space.joinCodeExpiresAt = '2020-01-01T00:00:00.000Z';
+    const space = await db.getSpace(cls.space.id);
+    if (space) await db.putSpace({ ...space, joinCodeExpiresAt: '2020-01-01T00:00:00.000Z' });
     expect((await post('/api/spaces/lookup', json, { code: cls.joinCode })).body.error?.code).toBe('code_expired');
     expect((await post('/api/spaces/lookup', json, { code: 'nope' })).status).toBe(422);
     lookupLimiter.reset();
@@ -154,7 +154,7 @@ describe('learner join (§3.3)', () => {
     const again = await joinAs(cls.space.id, suni.auth, { code: cls.joinCode, learnerId: suni.learnerId });
     expect(again.status).toBe(200);
     expect(again.body.data).toMatchObject({ alreadyMember: true });
-    expect(store.learners.get(suni.learnerId)?.displayName).toBe('Suni K');
+    expect((await db.getLearner(suni.learnerId))?.displayName).toBe('Suni K');
 
     const inbox = (await get(`/api/sync/learners/${suni.learnerId}/inbox`, suni.auth)).body.data as { memberships: unknown[] };
     expect(inbox.memberships).toEqual([{ spaceId: cls.space.id, kind: 'class', name: 'Sunday Class A', role: 'student', joinedAt: expect.any(String) }]);
@@ -167,8 +167,8 @@ describe('learner join (§3.3)', () => {
     expect((await joinAs(cls.space.id, suni.auth, { code: cls.joinCode })).status).toBe(422);
     expect((await joinAs(cls.space.id, deviceAuth(suni.deviceId, 'bad'), { code: cls.joinCode, learnerId: suni.learnerId })).status).toBe(401);
     expect((await joinAs(cls.space.id, suni.auth, { code: 'nope', learnerId: suni.learnerId })).status).toBe(422);
-    const space = store.spaces.get(cls.space.id);
-    if (space) space.joinCodeExpiresAt = '2020-01-01T00:00:00.000Z';
+    const space = await db.getSpace(cls.space.id);
+    if (space) await db.putSpace({ ...space, joinCodeExpiresAt: '2020-01-01T00:00:00.000Z' });
     expect((await joinAs(cls.space.id, suni.auth, { code: cls.joinCode, learnerId: suni.learnerId })).body.error?.code).toBe('code_expired');
 
     const sch = await createSpace('principal', 'school', 'School');
@@ -188,7 +188,7 @@ describe('learner join (§3.3)', () => {
 
     const full = await createSpace('t-full', 'class', 'Full');
     for (let i = 0; i < 20; i += 1) {
-      store.addMembership({ spaceId: full.space.id, memberKind: 'learner', memberId: `profile:s${i}`, role: 'student', joinedAt: 't' });
+      await db.addMembership({ spaceId: full.space.id, memberKind: 'learner', memberId: `profile:s${i}`, role: 'student', joinedAt: 't' });
     }
     const late = await registerLearner('device-late00001', 'Late');
     expect((await joinAs(full.space.id, late.auth, { code: full.joinCode, learnerId: late.learnerId })).body.error?.code).toBe('cap_class');
@@ -276,8 +276,8 @@ describe('leave, remove, roster (§3.3, §3.4)', () => {
     expect(roster.status).toBe(200);
     expect(roster.body.data).toMatchObject({ joinCode: null, learners: [{ id: suni.learnerId }] });
 
-    const space = store.spaces.get(cls.space.id);
-    if (space) space.archivedAt = '2026-09-21T00:00:00.000Z';
+    const space = await db.getSpace(cls.space.id);
+    if (space) await db.putSpace({ ...space, archivedAt: '2026-09-21T00:00:00.000Z' });
     expect(((await get(`/api/sync/learners/${suni.learnerId}/inbox`, suni.auth)).body.data as { memberships: unknown[] }).memberships).toEqual([]);
     expect((await post('/api/spaces/lookup', json, { code: cls.joinCode })).body.error?.code).toBe('code_not_found');
     expect((await joinAs(cls.space.id, suni.auth, { code: cls.joinCode, learnerId: suni.learnerId })).status).toBe(404);
@@ -328,9 +328,9 @@ describe('settings, archive, learner data (F-TCH-001 §10.3)', () => {
     expect((await call('DELETE', `/api/spaces/${fam.space.id}/learners/${suni.learnerId}/data`, bearer('stranger'))).status).toBe(403);
     await call('PATCH', `/api/spaces/${cls.space.id}/settings`, bearer('teacher'), { consentMode: 'school' }, SCHOOL_CONSENT);
     expect((await call('DELETE', `/api/spaces/${cls.space.id}/learners/${suni.learnerId}/data`, bearer('teacher'))).body.data).toEqual({ deleted: true });
-    expect(store.learners.has(suni.learnerId)).toBe(false);
-    expect(store.membersOf(fam.space.id).some((m) => m.memberId === suni.learnerId)).toBe(false);
-    expect(store.device(suni.learnerId, suni.deviceId)).toBeUndefined();
+    expect(await db.getLearner(suni.learnerId)).toBeNull();
+    expect((await db.membersOf(fam.space.id)).some((m) => m.memberId === suni.learnerId)).toBe(false);
+    expect(await db.getDevice(suni.learnerId, suni.deviceId)).toBeNull();
     expect((await get(`/api/sync/learners/${suni.learnerId}/snapshot`, suni.auth)).status).toBe(404);
 
     const minho = await registerLearner('device-minho001', 'Minho');

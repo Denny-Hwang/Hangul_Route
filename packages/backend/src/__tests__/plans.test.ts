@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import app from '../index';
-import { store } from '../store';
+import { testDb as db } from './helpers/db';
 
 type Envelope = { ok: boolean; data?: Record<string, unknown>; error?: { code: string; details?: Record<string, unknown> } };
 const json = { 'content-type': 'application/json' };
@@ -26,7 +26,7 @@ async function registerAndJoin(spaceId: string, code: string, deviceId: string, 
 const item = { kind: 'quest', id: 'quest:stage1-letters-q1', targetDate: '2026-09-28' };
 const put = (spaceId: string, user: string, body: unknown) => call('PUT', `/api/spaces/${spaceId}/plans`, bearer(user), body);
 
-beforeEach(() => store.reset());
+beforeEach(async () => db.reset());
 
 describe('plans (F-PLAN-001 §3.2)', () => {
   it('creates a draft, publishes it, keeps it published on later saves, archives', async () => {
@@ -89,8 +89,8 @@ describe('plans (F-PLAN-001 §3.2)', () => {
     const minhoInbox = (await call('GET', `/api/sync/learners/${minho.learnerId}/inbox`, minho.auth)).body.data as { plans: Array<{ id: string }> };
     expect(minhoInbox.plans.map((p) => p.id)).toEqual([everyone.plan.id, onlyMinho.plan.id]);
 
-    const space = store.spaces.get(cls.id);
-    if (space) space.archivedAt = '2026-09-21T00:00:00.000Z';
+    const space = await db.getSpace(cls.id);
+    if (space) await db.putSpace({ ...space, archivedAt: '2026-09-21T00:00:00.000Z' });
     expect(((await call('GET', `/api/sync/learners/${minho.learnerId}/inbox`, minho.auth)).body.data as { plans: unknown[] }).plans).toEqual([]);
   });
 });

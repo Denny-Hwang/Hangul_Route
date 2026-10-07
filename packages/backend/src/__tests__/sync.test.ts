@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import app from '../index';
 import { hashSecret, parseDeviceHeader } from '../lib/device-auth';
-import { store } from '../store';
+import { testDb as db } from './helpers/db';
 
 const DEVICE_A = 'device-aaaaaaaa';
 const DEVICE_B = 'device-bbbbbbbb';
@@ -65,14 +65,14 @@ async function put(learnerId: string, auth: Record<string, string>, body: Record
 }
 
 describe('/api/sync (F-SYNC-001)', () => {
-  beforeEach(() => store.reset());
+  beforeEach(async () => db.reset());
 
   it('registers a learner keeping the client id and returns a one-time device secret', async () => {
     const r = await register(DEVICE_A, 'profile:local-1');
     expect(r.status).toBe(201);
     expect(r.learnerId).toBe('profile:local-1');
     expect(r.secret).toHaveLength(64);
-    expect(store.device('profile:local-1', DEVICE_A)?.secretHash).toBe(await hashSecret(r.secret));
+    expect((await db.getDevice('profile:local-1', DEVICE_A))?.secretHash).toBe(await hashSecret(r.secret));
     // a taken id is a conflict, not a silent rename
     const dup = await app.request('/api/sync/learners', {
       method: 'POST',
@@ -160,7 +160,7 @@ describe('/api/sync (F-SYNC-001)', () => {
     });
     expect(merged.status).toBe(200);
     expect(merged.json.data?.rev).toBe(2);
-    expect(store.learners.get(r.learnerId)?.lastActiveAt).toBe(merged.json.data?.updatedAt);
+    expect((await db.getLearner(r.learnerId))?.lastActiveAt).toBe(merged.json.data?.updatedAt);
   });
 
   it('inbox carries the fixed shape with empty plans until later stages', async () => {
