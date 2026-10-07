@@ -50,10 +50,6 @@
 - [ ] T-035 F-PAR-001 Dashboard 카드 + suggestion 룰 테이블 (max 3) — 1d
 - [ ] T-036 F-PAR-001 N5 voice message recorder (≤ 10 s, queue depth 1) — 0.5d
 - [ ] T-037 F-CNT-001 확장: caregiver-surface 금칙어 (`behind`, `falling behind`, `should have`, `missed too many`, `compared to`) — 0.5d
-- [ ] T-038 F-TCH-001 placeholder: Profile role enum 에 `teacher` / `co-parent` 예약 (Phase 2 UI 미구현, 데이터 모델만) — 0.25d
 
 ### Phase 2 (post-MVP — schedule placeholder)
 - [ ] T-P2-01 F-PAR-001 explicit homework assignment 와이어업 (suggestion 탭 → F-HW-001 assignment 생성) — 1d
-- [ ] T-P2-02 F-TCH-001 Class create + 6-digit join code (web + mobile) — 3d
-- [ ] T-P2-03 F-INFRA-004 D1 sync — 프로필 / 진도 / homework / review aggregate — 3d
-- [ ] T-P2-04 Clerk 통합 (teacher onboarding) — 2d

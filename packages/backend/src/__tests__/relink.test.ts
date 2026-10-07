@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import app from '../index';
 import { RELINK_LIMIT, relinkLimiter } from '../routes/relink';
-import { store } from '../store';
+import { testDb as db } from './helpers/db';
 
 type Envelope = { ok: boolean; data?: Record<string, unknown>; error?: { code: string } };
 const json = { 'content-type': 'application/json' };
@@ -30,8 +30,8 @@ async function setup() {
 const create = (spaceId: string, body: Record<string, unknown>, headers: Record<string, string> = json) => call('POST', `/api/spaces/${spaceId}/relink-requests`, headers, body);
 const poll = (spaceId: string, rid: string, deviceId: string) => call('GET', `/api/spaces/${spaceId}/relink-requests/${rid}?deviceId=${deviceId}`, json);
 
-beforeEach(() => {
-  store.reset();
+beforeEach(async () => {
+  await db.reset();
   relinkLimiter.reset();
 });
 
@@ -79,8 +79,8 @@ describe('re-link requests (F-TCH-001 §10.1)', () => {
     expect((await create(s.spaceId, { code: s.code, learnerId: s.learnerId, deviceId: DEVICE_A })).body.error?.code).toBe('already_bound');
     expect((await create(s.spaceId, { code: 'nope', learnerId: s.learnerId, deviceId: DEVICE_B })).status).toBe(422);
     expect((await create('space:nope', { code: s.code, learnerId: s.learnerId, deviceId: DEVICE_B })).status).toBe(404);
-    const space = store.spaces.get(s.spaceId);
-    if (space) space.joinCodeExpiresAt = '2020-01-01T00:00:00.000Z';
+    const space = await db.getSpace(s.spaceId);
+    if (space) await db.putSpace({ ...space, joinCodeExpiresAt: '2020-01-01T00:00:00.000Z' });
     expect((await create(s.spaceId, { code: s.code, learnerId: s.learnerId, deviceId: DEVICE_B })).body.error?.code).toBe('code_expired');
     relinkLimiter.reset();
     for (let i = 0; i < RELINK_LIMIT; i += 1) await create(s.spaceId, { code: 'K7M2X9', learnerId: s.learnerId, deviceId: DEVICE_B });
@@ -92,11 +92,11 @@ describe('re-link requests (F-TCH-001 §10.1)', () => {
     const req = ((await create(s.spaceId, { code: s.code, learnerId: s.learnerId, deviceId: DEVICE_B })).body.data as { request: { id: string } }).request;
     expect((await call('POST', `/api/spaces/${s.spaceId}/relink-requests/${req.id}/deny`, bearer('teacher'))).body.data).toMatchObject({ request: { status: 'denied' } });
     expect((await poll(s.spaceId, req.id, DEVICE_B)).body.data).toMatchObject({ status: 'denied' });
-    expect(store.device(s.learnerId, DEVICE_B)).toBeUndefined();
+    expect(await db.getDevice(s.learnerId, DEVICE_B)).toBeNull();
 
     const again = ((await create(s.spaceId, { code: s.code, learnerId: s.learnerId, deviceId: 'device-cccccccc' })).body.data as { request: { id: string } }).request;
-    const stored = store.relinkRequests.get(again.id);
-    if (stored) stored.expiresAt = '2020-01-01T00:00:00.000Z';
+    const stored = await db.getRelink(again.id);
+    if (stored) await db.putRelink({ ...stored, expiresAt: '2020-01-01T00:00:00.000Z' });
     expect((await poll(s.spaceId, again.id, 'device-cccccccc')).body.data).toMatchObject({ status: 'expired' });
     expect((await call('POST', `/api/spaces/${s.spaceId}/relink-requests/${again.id}/approve`, bearer('teacher'))).body.error?.code).toBe('expired');
     expect((await call('POST', `/api/spaces/${s.spaceId}/relink-requests/relink:nope/deny`, bearer('teacher'))).status).toBe(404);

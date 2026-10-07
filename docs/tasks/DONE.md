@@ -58,3 +58,4 @@
 - [x] T-027 F-HW-001 draft → ready 승격 — §9 Decisions 5건 (초안 결함 3건 포함: §3.4 한국어 UI 문자열 → 영어, §5 미존재 토큰 → 기존 Card tone/touchTarget.hero, 카드 ③ F-RVW-001 미착수 → capability gate). HomeworkAssignment 에 profileId/targetDate 추가, ordering key 를 assignedAt 으로 통일. F-CNT-001 에 banned-on-learner-surface 검사 추가 (self-test 4개) — `docs(spec)` + `ci`
 - [x] T-028 F-HW-001 mission-builder 로직 — logic/homework/ 4모듈 (mission-builder / assignment-merger / gating / banned-text), 단위 테스트 50개, 라인·브랜치·함수 모두 100%. Journey 커서가 preview 에피소드로 라우팅하던 버그 수정 — `feat(mobile)`
 - [x] T-029 F-HW-001 Today's mission 홈 화면 — 3카드 surface (touchTarget.hero 96dp, collected = success tone + sparkle, 위치 고정), 와이어프레임 `design/wireframes/home/todays-mission.md` 선행 — `design(wireframe)` + `feat(mobile)`
+- [x] T-P2-02 학급 생성 + join code (F-SPACE-001, 2026-09-21) · T-P2-04 Clerk 통합 (F-AUTH-002, 2026-10-07) · T-038 profile role enum (F-PROF-001) · T-P2-03 D1 영속화 → F-INFRA-003 (2026-10-07) — 정리 2026-10-07

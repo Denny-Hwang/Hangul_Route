@@ -1,7 +1,8 @@
 import type { Space } from '@hangul-route/content-schema';
 import type { Context } from 'hono';
+import { dbFor, type Db } from '../db';
 import { fail } from '../envelope';
-import { store, type Account } from '../store';
+import type { Account } from '../store';
 import { getAuthUserId } from './auth';
 import type { Actor, SpaceContext } from './can';
 
@@ -13,10 +14,19 @@ import type { Actor, SpaceContext } from './can';
 export async function requireAccount(c: Context, seed: { email?: string; displayName?: string } = {}): Promise<Response | Account> {
   const userId = await getAuthUserId(c);
   if (!userId) return fail(c, 'unauthorized', 'Sign in required', 401);
-  const existing = store.accounts.get(userId);
+  const db = dbFor(c);
+  const existing = await db.getAccount(userId);
   if (existing) {
-    if (seed.email && !existing.email) existing.email = seed.email;
-    if (seed.displayName && !existing.displayName) existing.displayName = seed.displayName;
+    let changed = false;
+    if (seed.email && !existing.email) {
+      existing.email = seed.email;
+      changed = true;
+    }
+    if (seed.displayName && !existing.displayName) {
+      existing.displayName = seed.displayName;
+      changed = true;
+    }
+    if (changed) await db.putAccount(existing);
     return existing;
   }
   const account: Account = {
@@ -26,23 +36,24 @@ export async function requireAccount(c: Context, seed: { email?: string; display
     consent: null,
     createdAt: new Date().toISOString(),
   };
-  store.accounts.set(userId, account);
+  await db.putAccount(account);
   return account;
 }
 
-export function accountActor(account: Account): Actor {
-  return { kind: 'account', accountId: account.id, memberships: store.membershipsOf('account', account.id) };
+export async function accountActor(db: Db, account: Account): Promise<Actor> {
+  return { kind: 'account', accountId: account.id, memberships: await db.membershipsOf('account', account.id) };
 }
 
-export function spaceContext(space: Space): SpaceContext {
-  return { space, parent: space.parentSpaceId ? (store.spaces.get(space.parentSpaceId) ?? null) : null };
+export async function spaceContext(db: Db, space: Space): Promise<SpaceContext> {
+  return { space, parent: space.parentSpaceId ? await db.getSpace(space.parentSpaceId) : null };
 }
 
 /** Every space a learner belongs to, with parents, for `can()` on learner targets. */
-export function learnerContexts(learnerId: string): SpaceContext[] {
-  return store
-    .membershipsOf('learner', learnerId)
-    .map((m) => store.spaces.get(m.spaceId))
-    .filter((s): s is Space => !!s)
-    .map(spaceContext);
+export async function learnerContexts(db: Db, learnerId: string): Promise<SpaceContext[]> {
+  const contexts: SpaceContext[] = [];
+  for (const m of await db.membershipsOf('learner', learnerId)) {
+    const space = await db.getSpace(m.spaceId);
+    if (space) contexts.push(await spaceContext(db, space));
+  }
+  return contexts;
 }

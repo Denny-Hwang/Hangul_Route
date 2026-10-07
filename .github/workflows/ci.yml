@@ -41,6 +41,9 @@ jobs:
       - name: Test
         run: pnpm run test
 
+      - name: Test the API against SQLite (real D1 migrations, F-INFRA-003)
+        run: pnpm --filter @hangul-route/backend test:sqlite
+
       - name: Test enforcement scripts (T-019)
         run: pnpm run test:scripts
 

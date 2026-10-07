@@ -11,6 +11,7 @@ import {
   type SpaceRole,
 } from '@hangul-route/content-schema';
 import { Hono, type Context } from 'hono';
+import { dbFor, type Db } from '../db';
 import { fail, ok } from '../envelope';
 import { accountActor, requireAccount, spaceContext } from '../lib/access';
 import { can, type Action } from '../lib/can';
@@ -18,7 +19,7 @@ import { authorizeDevice, parseDeviceHeader } from '../lib/device-auth';
 import { classCap, schoolIsFull } from '../lib/entitlement';
 import { generateJoinCode, isJoinCodeLive, joinCodeExpiry } from '../lib/join-code';
 import { clientKey, createRateLimiter } from '../lib/rate-limit';
-import { id, store, type Account } from '../store';
+import { id, type Account } from '../store';
 
 /**
  * /api/spaces — F-SPACE-001 §3.3. One shape for family / class / school;
@@ -52,37 +53,47 @@ function liveCode(space: Space, now: Date): { joinCode: string | null; joinCodeE
   return isJoinCodeLive(space, now) ? { joinCode: space.joinCode, joinCodeExpiresAt: space.joinCodeExpiresAt } : { joinCode: null, joinCodeExpiresAt: null };
 }
 
-function studentsIn(spaceId: string): number {
-  return store.membersOf(spaceId).filter((m) => m.memberKind === 'learner').length;
+async function studentsIn(db: Db, spaceId: string): Promise<number> {
+  return (await db.membersOf(spaceId)).filter((m) => m.memberKind === 'learner').length;
 }
 
-function activeClassesOf(learnerId: string): number {
-  return store
-    .membershipsOf('learner', learnerId)
-    .map((m) => store.spaces.get(m.spaceId))
-    .filter((s): s is Space => !!s && s.kind === 'class' && !s.archivedAt).length;
+async function activeClassesOf(db: Db, learnerId: string): Promise<number> {
+  let n = 0;
+  for (const m of await db.membershipsOf('learner', learnerId)) {
+    const s = await db.getSpace(m.spaceId);
+    if (s && s.kind === 'class' && !s.archivedAt) n += 1;
+  }
+  return n;
 }
 
-function issueCode(space: Space, now: Date): void {
-  space.joinCode = generateJoinCode((code) => {
-    const holder = store.spaceByCode(code);
-    return !!holder && isJoinCodeLive(holder, now);
-  });
-  space.joinCodeExpiresAt = joinCodeExpiry(now);
+/** A fresh code no other space holds (the column is unique, live or not). */
+async function issueCode(db: Db, space: Space, now: Date): Promise<void> {
+  const taken = new Set<string>();
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const code = generateJoinCode((candidate) => taken.has(candidate));
+    const holder = await db.spaceByCode(code);
+    if (!holder || holder.id === space.id) {
+      space.joinCode = code;
+      space.joinCodeExpiresAt = joinCodeExpiry(now);
+      return;
+    }
+    taken.add(code);
+  }
+  throw new Error('join code space exhausted');
 }
 
 /** Authorize an account for `action` on `space`; returns the account or an error Response. */
-async function requireCan(c: Context, space: Space, action: Action): Promise<Response | Account> {
+async function requireCan(c: Context, db: Db, space: Space, action: Action): Promise<Response | Account> {
   const account = await requireAccount(c);
   if (!('id' in account)) return account;
-  if (!can(accountActor(account), action, { kind: 'space', ctx: spaceContext(space) })) {
+  if (!can(await accountActor(db, account), action, { kind: 'space', ctx: await spaceContext(db, space) })) {
     return fail(c, 'forbidden', 'Not allowed for this space', 403);
   }
   return account;
 }
 
-function findSpace(c: Context, spaceId: string, allowArchived = false): Response | Space {
-  const space = store.spaces.get(spaceId);
+async function findSpace(c: Context, db: Db, spaceId: string, allowArchived = false): Promise<Response | Space> {
+  const space = await db.getSpace(spaceId);
   if (!space || (space.archivedAt && !allowArchived)) return fail(c, 'not_found', 'Space not found', 404);
   return space;
 }
@@ -98,13 +109,14 @@ spacesRoutes.post('/', async (c) => {
   const input = parsed.data;
   const account = await requireAccount(c, { email: input.email, displayName: input.displayName });
   if (!('id' in account)) return account;
+  const db = dbFor(c);
 
   let parent: Space | null = null;
   if (input.parentSpaceId) {
-    parent = store.spaces.get(input.parentSpaceId) ?? null;
+    parent = await db.getSpace(input.parentSpaceId);
     if (!parent || parent.archivedAt) return fail(c, 'not_found', 'Parent space not found', 404);
     if (parent.kind !== 'school' || input.kind !== 'class') return fail(c, 'bad_request', 'Only a class can sit under a school', 422);
-    if (!can(accountActor(account), 'class.create', { kind: 'space', ctx: spaceContext(parent) })) {
+    if (!can(await accountActor(db, account), 'class.create', { kind: 'space', ctx: await spaceContext(db, parent) })) {
       return fail(c, 'forbidden', 'Not allowed to add a class to this school', 403);
     }
   }
@@ -122,37 +134,40 @@ spacesRoutes.post('/', async (c) => {
     archivedAt: null,
     createdAt: now.toISOString(),
   };
-  if (space.kind === 'class') issueCode(space, now);
-  store.spaces.set(space.id, space);
+  if (space.kind === 'class') await issueCode(db, space, now);
+  await db.putSpace(space);
   const membership: Membership = { spaceId: space.id, memberKind: 'account', memberId: account.id, role: 'owner', joinedAt: space.createdAt };
-  store.addMembership(membership);
+  await db.addMembership(membership);
   return ok(c, { space: publicSpace(space), membership, ...liveCode(space, now) }, 201);
 });
 
 spacesRoutes.get('/', async (c) => {
   const account = await requireAccount(c);
   if (!('id' in account)) return account;
-  const actor = accountActor(account);
+  const db = dbFor(c);
+  const actor = await accountActor(db, account);
   const now = new Date();
-  const spaces = store
-    .membershipsOf('account', account.id)
-    .map((m) => ({ m, space: store.spaces.get(m.spaceId) }))
-    .filter((x): x is { m: Membership; space: Space } => !!x.space)
-    .sort((a, b) => b.space.createdAt.localeCompare(a.space.createdAt))
-    .map(({ m, space }) => {
-      const members = store.membersOf(space.id);
-      const manage = can(actor, 'space.manage', { kind: 'space', ctx: spaceContext(space) });
-      return {
-        space: publicSpace(space),
-        role: m.role,
-        counts: {
-          learners: members.filter((x) => x.memberKind === 'learner').length,
-          accounts: members.filter((x) => x.memberKind === 'account').length,
-          classes: store.childSpaces(space.id).length,
-        },
-        ...(manage ? liveCode(space, now) : { joinCode: null, joinCodeExpiresAt: null }),
-      };
+  const rows: Array<{ m: Membership; space: Space }> = [];
+  for (const m of await db.membershipsOf('account', account.id)) {
+    const space = await db.getSpace(m.spaceId);
+    if (space) rows.push({ m, space });
+  }
+  rows.sort((a, b) => b.space.createdAt.localeCompare(a.space.createdAt));
+  const spaces = [];
+  for (const { m, space } of rows) {
+    const members = await db.membersOf(space.id);
+    const manage = can(actor, 'space.manage', { kind: 'space', ctx: await spaceContext(db, space) });
+    spaces.push({
+      space: publicSpace(space),
+      role: m.role,
+      counts: {
+        learners: members.filter((x) => x.memberKind === 'learner').length,
+        accounts: members.filter((x) => x.memberKind === 'account').length,
+        classes: (await db.childSpaces(space.id)).length,
+      },
+      ...(manage ? liveCode(space, now) : { joinCode: null, joinCodeExpiresAt: null }),
     });
+  }
   return ok(c, { spaces });
 });
 
@@ -166,46 +181,49 @@ spacesRoutes.post('/lookup', async (c) => {
   }
   const parsed = SpaceLookupSchema.safeParse(await c.req.json().catch(() => null));
   if (!parsed.success) return fail(c, 'invalid_code', 'Join code must be 6 letters or digits', 422);
-  const space = store.spaceByCode(parsed.data.code);
+  const db = dbFor(c);
+  const space = await db.spaceByCode(parsed.data.code);
   if (!space || space.archivedAt) return fail(c, 'code_not_found', 'No class or family has this code', 404);
-  if (!isJoinCodeLive(space, new Date())) return fail(c, 'code_expired', 'This code has expired', 404);
+  const now = new Date();
+  if (!isJoinCodeLive(space, now)) return fail(c, 'code_expired', 'This code has expired', 404);
   // Class rosters (names only) let a returning student pick themselves (F-TCH-001 §10.1).
-  const roster =
-    space.kind === 'class'
-      ? store
-          .membersOf(space.id)
-          .filter((m) => m.memberKind === 'learner')
-          .map((m) => ({ m, learner: store.learners.get(m.memberId) }))
-          .filter((x): x is { m: Membership; learner: NonNullable<ReturnType<typeof store.learners.get>> } => !!x.learner)
-          .map(({ learner }) => ({ learnerId: learner.id, name: rosterName(space, learner.displayName) }))
-          .sort((a, b) => a.name.localeCompare(b.name))
-      : [];
-  return ok(c, {
-    space: { id: space.id, kind: space.kind, name: space.name },
-    full: space.kind === 'class' && (studentsIn(space.id) >= classCap(space, new Date()) || schoolIsFull(space, new Date())),
-    roster,
-  });
+  const roster: Array<{ learnerId: string; name: string }> = [];
+  if (space.kind === 'class') {
+    for (const m of await db.membersOf(space.id)) {
+      if (m.memberKind !== 'learner') continue;
+      const learner = await db.getLearner(m.memberId);
+      if (learner) roster.push({ learnerId: learner.id, name: rosterName(space, learner.displayName) });
+    }
+    roster.sort((a, b) => a.name.localeCompare(b.name));
+  }
+  const full = space.kind === 'class' && ((await studentsIn(db, space.id)) >= (await classCap(db, space, now)) || (await schoolIsFull(db, space, now)));
+  return ok(c, { space: { id: space.id, kind: space.kind, name: space.name }, full, roster });
 });
 
 spacesRoutes.get('/:id/members', async (c) => {
-  const space = findSpace(c, c.req.param('id'), true);
+  const db = dbFor(c);
+  const space = await findSpace(c, db, c.req.param('id'), true);
   if (!('id' in space)) return space;
-  const account = await requireCan(c, space, 'roster.manage');
+  const account = await requireCan(c, db, space, 'roster.manage');
   if (!('id' in account)) return account;
-  const members = store.membersOf(space.id).map((m) => {
+  const members = [];
+  for (const m of await db.membersOf(space.id)) {
     if (m.memberKind === 'account') {
-      const a = store.accounts.get(m.memberId);
-      return { memberKind: 'account' as const, memberId: m.memberId, role: m.role, joinedAt: m.joinedAt, name: a?.displayName ?? a?.email ?? m.memberId, isOwner: m.memberId === space.ownerAccountId };
+      const a = await db.getAccount(m.memberId);
+      members.push({ memberKind: 'account' as const, memberId: m.memberId, role: m.role, joinedAt: m.joinedAt, name: a?.displayName ?? a?.email ?? m.memberId, isOwner: m.memberId === space.ownerAccountId });
+    } else {
+      const learner = await db.getLearner(m.memberId);
+      members.push({ memberKind: 'learner' as const, memberId: m.memberId, role: m.role, joinedAt: m.joinedAt, name: rosterName(space, learner?.displayName ?? '?'), isOwner: false });
     }
-    return { memberKind: 'learner' as const, memberId: m.memberId, role: m.role, joinedAt: m.joinedAt, name: rosterName(space, store.learners.get(m.memberId)?.displayName ?? '?'), isOwner: false };
-  });
+  }
   return ok(c, { members });
 });
 
 spacesRoutes.patch('/:id/settings', async (c) => {
-  const space = findSpace(c, c.req.param('id'), true);
+  const db = dbFor(c);
+  const space = await findSpace(c, db, c.req.param('id'), true);
   if (!('id' in space)) return space;
-  const account = await requireCan(c, space, 'space.manage');
+  const account = await requireCan(c, db, space, 'space.manage');
   if (!('id' in account)) return account;
   const parsed = SpaceSettingsPatchSchema.safeParse(await c.req.json().catch(() => null));
   if (!parsed.success) return fail(c, 'bad_request', 'Invalid settings', 422, { issues: parsed.error.issues });
@@ -213,49 +231,58 @@ spacesRoutes.patch('/:id/settings', async (c) => {
     return fail(c, 'consent_mode_locked', 'School consent mode is not available yet', 422);
   }
   space.settings = { ...space.settings, ...parsed.data };
+  await db.putSpace(space);
   return ok(c, { space: publicSpace(space) });
 });
 
 spacesRoutes.post('/:id/archive', async (c) => {
-  const space = findSpace(c, c.req.param('id'), true);
+  const db = dbFor(c);
+  const space = await findSpace(c, db, c.req.param('id'), true);
   if (!('id' in space)) return space;
-  const account = await requireCan(c, space, 'space.manage');
+  const account = await requireCan(c, db, space, 'space.manage');
   if (!('id' in account)) return account;
   space.archivedAt = space.archivedAt ?? new Date().toISOString();
+  await db.putSpace(space);
   return ok(c, { space: publicSpace(space) });
 });
 
 spacesRoutes.post('/:id/unarchive', async (c) => {
-  const space = findSpace(c, c.req.param('id'), true);
+  const db = dbFor(c);
+  const space = await findSpace(c, db, c.req.param('id'), true);
   if (!('id' in space)) return space;
-  const account = await requireCan(c, space, 'space.manage');
+  const account = await requireCan(c, db, space, 'space.manage');
   if (!('id' in account)) return account;
   space.archivedAt = null;
+  await db.putSpace(space);
   return ok(c, { space: publicSpace(space) });
 });
 
 spacesRoutes.delete('/:id/learners/:learnerId/data', async (c) => {
-  const space = findSpace(c, c.req.param('id'), true);
+  const db = dbFor(c);
+  const space = await findSpace(c, db, c.req.param('id'), true);
   if (!('id' in space)) return space;
   const learnerId = c.req.param('learnerId');
-  if (!store.membership(space.id, 'learner', learnerId)) return fail(c, 'not_found', 'Learner is not in this space', 404);
-  const account = await requireCan(c, space, 'learner.delete');
+  if (!(await db.membership(space.id, 'learner', learnerId))) return fail(c, 'not_found', 'Learner is not in this space', 404);
+  const account = await requireCan(c, db, space, 'learner.delete');
   if (!('id' in account)) return account;
-  return ok(c, { deleted: store.deleteLearner(learnerId) });
+  return ok(c, { deleted: await db.deleteLearner(learnerId) });
 });
 
 spacesRoutes.post('/:id/code', async (c) => {
-  const space = findSpace(c, c.req.param('id'));
+  const db = dbFor(c);
+  const space = await findSpace(c, db, c.req.param('id'));
   if (!('id' in space)) return space;
-  const account = await requireCan(c, space, 'space.manage');
+  const account = await requireCan(c, db, space, 'space.manage');
   if (!('id' in account)) return account;
   const now = new Date();
-  issueCode(space, now);
+  await issueCode(db, space, now);
+  await db.putSpace(space);
   return ok(c, { joinCode: space.joinCode, expiresAt: space.joinCodeExpiresAt });
 });
 
 spacesRoutes.post('/:id/join', async (c) => {
-  const space = findSpace(c, c.req.param('id'));
+  const db = dbFor(c);
+  const space = await findSpace(c, db, c.req.param('id'));
   if (!('id' in space)) return space;
   const parsed = SpaceJoinSchema.safeParse(await c.req.json().catch(() => null));
   if (!parsed.success) return fail(c, 'invalid_code', 'Join code must be 6 letters or digits', 422);
@@ -270,24 +297,26 @@ spacesRoutes.post('/:id/join', async (c) => {
     const auth = await authorizeDevice(c, learnerId);
     if (typeof auth !== 'string') return auth;
     if (space.kind === 'school') return fail(c, 'not_joinable', 'Learners join a class or a family, not a school', 422);
-    const existing = store.membership(space.id, 'learner', learnerId);
+    const existing = await db.membership(space.id, 'learner', learnerId);
     if (existing) return ok(c, { alreadyMember: true, membership: existing, space: { id: space.id, kind: space.kind, name: space.name } });
-    if (space.kind === 'class' && activeClassesOf(learnerId) >= LEARNER_CLASS_CAP) {
+    if (space.kind === 'class' && (await activeClassesOf(db, learnerId)) >= LEARNER_CLASS_CAP) {
       return fail(c, 'cap_learner', `A learner can be in at most ${LEARNER_CLASS_CAP} classes`, 409);
     }
-    if (space.kind === 'class' && studentsIn(space.id) >= classCap(space, now)) {
+    if (space.kind === 'class' && (await studentsIn(db, space.id)) >= (await classCap(db, space, now))) {
       return fail(c, 'cap_class', 'This class is full', 409);
     }
-    if (space.kind === 'class' && schoolIsFull(space, now, learnerId)) {
+    if (space.kind === 'class' && (await schoolIsFull(db, space, now, learnerId))) {
       return fail(c, 'cap_school', 'This school has used all its seats', 409);
     }
-    if (space.kind === 'family' && studentsIn(space.id) >= FAMILY_LIFETIME_LEARNERS) {
+    if (space.kind === 'family' && (await studentsIn(db, space.id)) >= FAMILY_LIFETIME_LEARNERS) {
       return fail(c, 'cap_family', `A family holds up to ${FAMILY_LIFETIME_LEARNERS} learners`, 409);
     }
     const membership: Membership = { spaceId: space.id, memberKind: 'learner', memberId: learnerId, role: 'student', joinedAt: now.toISOString() };
-    store.addMembership(membership);
-    const learner = store.learners.get(learnerId);
-    if (learner && displayName) learner.displayName = displayName;
+    await db.addMembership(membership);
+    if (displayName) {
+      const learner = await db.getLearner(learnerId);
+      if (learner) await db.putLearner({ ...learner, displayName });
+    }
     return ok(c, { alreadyMember: false, membership, space: { id: space.id, kind: space.kind, name: space.name } }, 201);
   }
 
@@ -297,72 +326,74 @@ spacesRoutes.post('/:id/join', async (c) => {
   const roleFor: Partial<Record<Space['kind'], SpaceRole>> = { family: 'caregiver', school: 'teacher' };
   const role = roleFor[space.kind];
   if (!role) return fail(c, 'co_teacher_unsupported', 'Classes have one teacher for now', 403);
-  const existing = store.membership(space.id, 'account', account.id);
+  const existing = await db.membership(space.id, 'account', account.id);
   if (existing) return ok(c, { alreadyMember: true, membership: existing, space: { id: space.id, kind: space.kind, name: space.name } });
   const membership: Membership = { spaceId: space.id, memberKind: 'account', memberId: account.id, role, joinedAt: now.toISOString() };
-  store.addMembership(membership);
+  await db.addMembership(membership);
   return ok(c, { alreadyMember: false, membership, space: { id: space.id, kind: space.kind, name: space.name } }, 201);
 });
 
 spacesRoutes.post('/:id/leave', async (c) => {
-  const space = findSpace(c, c.req.param('id'));
+  const db = dbFor(c);
+  const space = await findSpace(c, db, c.req.param('id'));
   if (!('id' in space)) return space;
   const body = (await c.req.json().catch(() => ({}))) as { learnerId?: string };
   const learnerId = typeof body.learnerId === 'string' ? body.learnerId : '';
   if (!learnerId) return fail(c, 'bad_request', 'learnerId required', 422);
   const auth = await authorizeDevice(c, learnerId);
   if (typeof auth !== 'string') return auth;
-  const removed = store.removeMembership(space.id, 'learner', learnerId);
-  return ok(c, { left: removed });
+  return ok(c, { left: await db.removeMembership(space.id, 'learner', learnerId) });
 });
 
 spacesRoutes.delete('/:id/members/:kind/:memberId', async (c) => {
-  const space = findSpace(c, c.req.param('id'));
+  const db = dbFor(c);
+  const space = await findSpace(c, db, c.req.param('id'));
   if (!('id' in space)) return space;
   const kind = c.req.param('kind');
   if (kind !== 'account' && kind !== 'learner') return fail(c, 'bad_request', 'kind must be account or learner', 422);
   const memberId = c.req.param('memberId');
-  const account = await requireCan(c, space, 'roster.manage');
+  const account = await requireCan(c, db, space, 'roster.manage');
   if (!('id' in account)) return account;
   if (kind === 'account' && memberId === space.ownerAccountId) return fail(c, 'owner', 'The owner cannot be removed', 409);
-  return ok(c, { removed: store.removeMembership(space.id, kind, memberId) });
+  return ok(c, { removed: await db.removeMembership(space.id, kind, memberId) });
 });
 
 spacesRoutes.get('/:id/roster', async (c) => {
-  const space = findSpace(c, c.req.param('id'), true);
+  const db = dbFor(c);
+  const space = await findSpace(c, db, c.req.param('id'), true);
   if (!('id' in space)) return space;
-  const account = await requireCan(c, space, 'summary.read');
+  const account = await requireCan(c, db, space, 'summary.read');
   if (!('id' in account)) return account;
   const now = new Date();
-  const learners = store
-    .membersOf(space.id)
-    .filter((m) => m.memberKind === 'learner')
-    .map((m) => ({ m, learner: store.learners.get(m.memberId) }))
-    .filter((x): x is { m: Membership; learner: NonNullable<ReturnType<typeof store.learners.get>> } => !!x.learner)
-    .sort((a, b) => b.learner.lastActiveAt.localeCompare(a.learner.lastActiveAt))
-    .map(({ m, learner }) => {
-      const snapshot = store.snapshots.get(learner.id);
-      // summary only — payload_json never leaves through this route (roadmap §3.1).
-      return {
-        id: learner.id,
-        displayName: rosterName(space, learner.displayName),
-        ageGroup: learner.ageGroup,
-        avatar: learner.avatar,
-        joinedAt: m.joinedAt,
-        lastActiveAt: learner.lastActiveAt,
-        summary: snapshot?.summary ?? null,
-        lastSyncedAt: snapshot?.updatedAt ?? null,
-      };
+  const learners = [];
+  for (const m of await db.membersOf(space.id)) {
+    if (m.memberKind !== 'learner') continue;
+    const learner = await db.getLearner(m.memberId);
+    if (!learner) continue;
+    const snapshot = await db.getSnapshot(learner.id);
+    // summary only — payload_json never leaves through this route (roadmap §3.1).
+    learners.push({
+      id: learner.id,
+      displayName: rosterName(space, learner.displayName),
+      ageGroup: learner.ageGroup,
+      avatar: learner.avatar,
+      joinedAt: m.joinedAt,
+      lastActiveAt: learner.lastActiveAt,
+      summary: snapshot?.summary ?? null,
+      lastSyncedAt: snapshot?.updatedAt ?? null,
     });
-  const manage = can(accountActor(account), 'space.manage', { kind: 'space', ctx: spaceContext(space) });
+  }
+  learners.sort((a, b) => b.lastActiveAt.localeCompare(a.lastActiveAt));
+  const manage = can(await accountActor(db, account), 'space.manage', { kind: 'space', ctx: await spaceContext(db, space) });
   return ok(c, { space: publicSpace(space), learners, ...(manage ? liveCode(space, now) : { joinCode: null, joinCodeExpiresAt: null }) });
 });
 
 /** Learner-facing rows for the sync inbox (archived spaces drop out). */
-export function learnerMembershipRows(learnerId: string) {
-  return store
-    .membershipsOf('learner', learnerId)
-    .map((m) => ({ m, space: store.spaces.get(m.spaceId) }))
-    .filter((x): x is { m: Membership; space: Space } => !!x.space && !x.space.archivedAt)
-    .map(({ m, space }) => ({ spaceId: space.id, kind: space.kind, name: space.name, role: m.role, joinedAt: m.joinedAt }));
+export async function learnerMembershipRows(db: Db, learnerId: string) {
+  const rows = [];
+  for (const m of await db.membershipsOf('learner', learnerId)) {
+    const space = await db.getSpace(m.spaceId);
+    if (space && !space.archivedAt) rows.push({ spaceId: space.id, kind: space.kind, name: space.name, role: m.role, joinedAt: m.joinedAt });
+  }
+  return rows;
 }

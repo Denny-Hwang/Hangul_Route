@@ -49,8 +49,10 @@ keep_vars = true
 # and are applied by the Workers Builds deploy command BEFORE the upload:
 #   pnpm --filter @hangul-route/api exec wrangler d1 migrations apply hangul-route --remote && pnpm --filter @hangul-route/api exec wrangler deploy
 # D1 records applied files in its d1_migrations table, so re-running is a no-op.
-# The Worker does not read env.DB yet (in-memory store until F-INFRA-003); the
-# binding and the applied schema only prepare that switch.
+# The Worker persists schema v2 through this binding (F-INFRA-003): learners,
+# devices, snapshots, accounts, spaces, memberships, plans, relink requests and
+# entitlements survive redeploys. Without the binding (local dev, tests) the
+# same code runs on an in-memory Db.
 [[d1_databases]]
 binding = "DB"
 database_name = "hangul-route"

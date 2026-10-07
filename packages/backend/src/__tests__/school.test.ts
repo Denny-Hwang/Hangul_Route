@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import app from '../index';
-import { store } from '../store';
+import { testDb as db } from './helpers/db';
 
 type Envelope = { ok: boolean; data?: Record<string, unknown>; error?: { code: string } };
 const json = { 'content-type': 'application/json' };
@@ -24,7 +24,7 @@ async function registerAndJoin(spaceId: string, code: string, deviceId: string, 
   return { learnerId: reg.learner.id, auth, status: joined.status, code: joined.body.error?.code };
 }
 
-beforeEach(() => store.reset());
+beforeEach(async () => db.reset());
 
 describe('school admin (F-SCHOOL-001)', () => {
   it('shows invite, licence, seats, classes with teachers and aggregates — to the admin only', async () => {
@@ -35,7 +35,7 @@ describe('school admin (F-SCHOOL-001)', () => {
     await call('POST', '/api/spaces', bearer('ms-park'), { kind: 'family', name: 'x', displayName: 'Ms Park' }); // seeds a display name
     const clsA = await createSpace('ms-park', 'class', 'Sunday Class A', { parentSpaceId: sch });
     const clsB = await createSpace('principal', 'class', 'Saturday K', { parentSpaceId: sch });
-    const codeA = (store.spaces.get(clsA) as { joinCode: string }).joinCode;
+    const codeA = ((await db.getSpace(clsA)) as { joinCode: string }).joinCode;
     const suni = await registerAndJoin(clsA, codeA, 'device-suni0001', 'Suni');
     await call('PUT', `/api/sync/learners/${suni.learnerId}/snapshot`, suni.auth, {
       baseRev: 0,
@@ -45,7 +45,7 @@ describe('school admin (F-SCHOOL-001)', () => {
       contentVer: '2026.09',
     });
     await call('PUT', `/api/spaces/${clsA}/plans`, bearer('ms-park'), { title: 'Week 1', items: [{ kind: 'quest', id: 'quest:stage1-letters-q1' }], publish: true });
-    store.applyEntitlement({ subjectKind: 'space', subjectId: sch, planKey: 'group_license', status: 'active', provider: 'manual' }, new Date());
+    await db.applyEntitlement({ subjectKind: 'space', subjectId: sch, planKey: 'group_license', status: 'active', provider: 'manual' }, new Date());
 
     const view = (await call('GET', `/api/spaces/${sch}/school`, bearer('principal'))).body.data as {
       invite: { joinCode: string };
@@ -87,8 +87,8 @@ describe('school admin (F-SCHOOL-001)', () => {
     expect((await call('GET', `/api/spaces/${cls}/roster`, bearer('mr-lee'))).status).toBe(200);
     expect(((await call('GET', `/api/spaces/${sch}/school`, bearer('principal'))).body.data as { usage: { teachers: number } }).usage.teachers).toBe(1);
 
-    store.applyEntitlement({ subjectKind: 'space', subjectId: sch, planKey: 'school_seat', status: 'active', provider: 'manual', seats: 2 }, new Date());
-    const code = (store.spaces.get(cls) as { joinCode: string }).joinCode;
+    await db.applyEntitlement({ subjectKind: 'space', subjectId: sch, planKey: 'school_seat', status: 'active', provider: 'manual', seats: 2 }, new Date());
+    const code = ((await db.getSpace(cls)) as { joinCode: string }).joinCode;
     expect((await registerAndJoin(cls, code, 'device-a0000001', 'A')).status).toBe(201);
     const b = await registerAndJoin(cls, code, 'device-b0000001', 'B');
     expect(b.status).toBe(201);
@@ -98,7 +98,7 @@ describe('school admin (F-SCHOOL-001)', () => {
     expect(third.code).toBe('cap_school');
     // a learner already counted in the school may join a second class
     const cls2 = await createSpace('principal', 'class', 'Second', { parentSpaceId: sch });
-    const code2 = (store.spaces.get(cls2) as { joinCode: string }).joinCode;
+    const code2 = ((await db.getSpace(cls2)) as { joinCode: string }).joinCode;
     expect((await call('POST', `/api/spaces/${cls2}/join`, b.auth, { code: code2, learnerId: b.learnerId })).status).toBe(201);
     expect(((await call('GET', `/api/spaces/${sch}/school`, bearer('principal'))).body.data as { usage: { students: number } }).usage.students).toBe(2);
   });
