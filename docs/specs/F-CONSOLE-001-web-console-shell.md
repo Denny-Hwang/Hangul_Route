@@ -27,7 +27,7 @@ A teacher needs one place to make a class, read the code aloud, and see who prac
 ### 3.2 Sign-in — `/teach` (`console/sign-in`)
 
 - Three "why sign in" rows, the "Kids don't need an account" line, and the sign-in box.
-- **Dev sign-in** (account id · your name · email optional) renders only when `devAuthEnabled`: `NEXT_PUBLIC_CONSOLE_DEV_AUTH=true`, or a non-production build. Otherwise the box says sign-in arrives with the Clerk connection (F-AUTH-002) and links back to the landing page.
+- **Dev sign-in** (account id · your name · email optional) renders only when `devAuthEnabled`: `NEXT_PUBLIC_CONSOLE_DEV_AUTH=true`, or a non-production build, and never when a Clerk publishable key is on the build. With the key, the Clerk widget renders instead (F-AUTH-002, shipped 2026-10-07). Otherwise the box says sign-in is not set up on this build and links back to the landing page.
 - Submit → session `{ token, accountId, displayName, email }` kept in `sessionStorage` through `lib/console/session.ts` (try/catch wrapper — the web stand-in for `packages/hooks`) → `GET /api/spaces` → no spaces → `/teach/start`, else `/teach/home`. Network failure → one line + Try again; nothing stored.
 
 ### 3.3 First space — `/teach/start` (`console/onboarding-role`)

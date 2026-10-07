@@ -6,12 +6,11 @@ name: Web App (PWA)
 # docs/launch/web-app-launch.md §2 — so this workflow never uploads.
 
 on:
+  # No path filter: this job is a required check on main, and a required
+  # check that never runs blocks docs-only or console-only PRs. The job runs
+  # on every PR and skips the build + e2e when nothing it covers changed.
   pull_request:
     branches: [main]
-    paths:
-      - "apps/mobile/**"
-      - "packages/**"
-      - ".github/workflows/web-app.yml"
   push:
     branches: [main]
     paths:
@@ -36,26 +35,50 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Did anything the PWA depends on change?
+        id: changes
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" != "pull_request" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          git fetch --no-tags --depth=1 origin "${{ github.event.pull_request.base.sha }}"
+          changed=$(git diff --name-only "${{ github.event.pull_request.base.sha }}" "${{ github.sha }}")
+          echo "$changed"
+          if echo "$changed" | grep -qE '^(apps/mobile/|packages/|\.github/workflows/web-app\.yml|package\.json|pnpm-lock\.yaml|pnpm-workspace\.yaml|turbo\.json|\.nvmrc)'; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::No PWA-relevant files changed — build and offline e2e skipped, check reports success."
+          fi
+
       - name: Setup pnpm
+        if: steps.changes.outputs.run == 'true'
         uses: pnpm/action-setup@v4
 
       - name: Setup Node
+        if: steps.changes.outputs.run == 'true'
         uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
           cache: pnpm
 
       - name: Install dependencies
+        if: steps.changes.outputs.run == 'true'
         run: pnpm install --frozen-lockfile
 
       - name: Build PWA (expo export + service worker)
+        if: steps.changes.outputs.run == 'true'
         run: pnpm --filter @hangul-route/mobile build:web
 
       - name: Validate wrangler config (dry run, no upload)
+        if: steps.changes.outputs.run == 'true'
         run: pnpm --filter @hangul-route/mobile exec wrangler deploy --dry-run
 
       - name: Install Playwright Chromium
+        if: steps.changes.outputs.run == 'true'
         run: pnpm --filter @hangul-route/mobile exec playwright install --with-deps chromium
 
       - name: Offline e2e
+        if: steps.changes.outputs.run == 'true'
         run: pnpm --filter @hangul-route/mobile test:e2e:web

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
+import { ConsoleAuthProvider } from '@/components/console/auth-context';
 
 export const metadata: Metadata = {
   title: 'Console — Hangul Route',
@@ -8,5 +9,5 @@ export const metadata: Metadata = {
 };
 
 export default function TeachLayout({ children }: { children: ReactNode }): JSX.Element {
-  return <>{children}</>;
+  return <ConsoleAuthProvider>{children}</ConsoleAuthProvider>;
 }

@@ -42,7 +42,7 @@ and only the parent account maps to Clerk. Child PII never leaves our D1.
 
 ## 4. Out of scope
 
-- Mobile Clerk sign-in UI (`@clerk/clerk-expo`) + sending the token on requests → F-AUTH-002.
+- Mobile Clerk sign-in UI (`@clerk/clerk-expo`) + sending the token on requests → F-AUTH-004 (F-AUTH-002 became the web console sign-in, shipped 2026-10-07).
 - Ownership gates on profiles / progress / telemetry → F-AUTH-003.
 - Real Clerk keys (provisioned by the operator via `wrangler secret`).
 
@@ -55,5 +55,5 @@ and only the parent account maps to Clerk. Child PII never leaves our D1.
 ## 6. Dependencies
 
 - **Upstream**: F-INFRA-002, F-IAP-001, F-IAP-003.
-- **Downstream**: F-AUTH-002 (mobile sign-in), F-AUTH-003 (other routes).
+- **Downstream**: F-AUTH-002 (console sign-in, web), F-AUTH-004 (mobile sign-in), F-AUTH-003 (other routes).
 - **External**: a Clerk app; `CLERK_SECRET_KEY` via `wrangler secret put`.

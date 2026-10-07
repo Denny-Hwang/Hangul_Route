@@ -14,7 +14,7 @@ Workers & Pages → **Create** → Workers 탭 → **Import a repository** → `
 | Root directory | `/` | `/` | `/` |
 | Build command | `pnpm install --frozen-lockfile && pnpm --filter @hangul-route/mobile build:web` | `pnpm install --frozen-lockfile` | `pnpm install --frozen-lockfile && pnpm --filter @hangul-route/web build` |
 | Deploy command | `pnpm --filter @hangul-route/mobile exec wrangler deploy` | `pnpm --filter @hangul-route/api exec wrangler d1 migrations apply hangul-route --remote && pnpm --filter @hangul-route/api exec wrangler deploy` | `pnpm --filter @hangul-route/web exec wrangler deploy` |
-| Build variables (빌드 시 코드에 박힘) | `NODE_VERSION` = `22` · `EXPO_PUBLIC_API_BASE_URL` = API 주소 (Step 3 후) · (선택) `EXPO_PUBLIC_CONSOLE_URL` | `NODE_VERSION` = `22` | `NODE_VERSION` = `22` · `NEXT_PUBLIC_API_BASE_URL` = API 주소 · `NEXT_PUBLIC_CONSOLE_DEV_AUTH` = `true` (Clerk 전까지만) · `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` (Step 7 후) |
+| Build variables (빌드 시 코드에 박힘) | `NODE_VERSION` = `22` · `EXPO_PUBLIC_API_BASE_URL` = API 주소 (Step 3 후) · (선택) `EXPO_PUBLIC_CONSOLE_URL` | `NODE_VERSION` = `22` | `NODE_VERSION` = `22` · `NEXT_PUBLIC_API_BASE_URL` = API 주소 · `NEXT_PUBLIC_CONSOLE_DEV_AUTH` = `true` (Step 7 전까지만, 그때 삭제) · `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` (Step 7) |
 | Runtime: Variables (Type: Text) | 없음 | `ALLOWED_ORIGINS` · `STRIPE_PRICE_FAMILY_LIFETIME` · `STRIPE_PRICE_GROUP_LICENSE_YEARLY` · `CONSOLE_URL` · (법률 검토 후) `SCHOOL_CONSENT_MODE` | 없음 |
 | Runtime: Secrets (Type: Secret) | 없음 | `CLERK_SECRET_KEY` · `STRIPE_SECRET_KEY` · `STRIPE_WEBHOOK_SECRET` | 없음 |
 | Custom domain | `app.hangulroute.com` | (workers.dev 주소 사용) | `hangulroute.com` · `www.hangulroute.com` |
@@ -69,13 +69,13 @@ D1 `hangul-route` 는 2026-10-07 에 대시보드에서 만들었고 (Database I
 
 ## B. 외부 키 (Step 7–9)
 
-### Step 7. Clerk (20분)
-https://dashboard.clerk.com → Create application → 이름 `Hangul Route`, 로그인 Email + Google → 생성 → API Keys
-- Secret key (`sk_…`) → `hangul-route-api` → Settings → Variables and Secrets → Add → Type **Secret** → 이름 `CLERK_SECRET_KEY` → Deploy
-- Publishable key (`pk_…`) → `hangul-route-web` → Settings → Build → Variables → `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` (Retry deployment 는 F-AUTH-002 머지 후에 해도 된다)
-- 끝나면 저에게 알린다 → F-AUTH-002 (진짜 로그인 위젯) 착수, 머지 후 `NEXT_PUBLIC_CONSOLE_DEV_AUTH` 를 지운다.
+### Step 7. Clerk 키 등록 (10분)
+Clerk 애플리케이션은 2026-10-07 에 만들었다 (Development 인스턴스, Consumer, Email + Google). 콘솔 코드는 Clerk 위젯을 쓴다 (F-AUTH-002, 머지됨). 키는 **대시보드에만** 넣는다 — 저장소에는 없다.
+- Clerk → API Keys → **Secret key** (`sk_test_…`) → `hangul-route-api` → Settings → Variables and Secrets → Add → Type **Secret** → 이름 `CLERK_SECRET_KEY` → Deploy. 이 순간부터 API 는 bearer 를 진짜 세션 JWT 로만 받는다 (dev 로그인 토큰은 거부됨).
+- Clerk → API Keys → **Publishable key** (`pk_test_…`) → `hangul-route-web` → Settings → Build → Variables → `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` → 같은 화면에서 `NEXT_PUBLIC_CONSOLE_DEV_AUTH` 는 **삭제** → **Retry deployment**.
+- 두 키는 같은 Clerk 인스턴스의 것이어야 한다 (둘 다 `_test_` 또는 둘 다 `_live_`). 나중에 Production 인스턴스로 바꾸면 키 두 개가 모두 바뀌고 Clerk 쪽에 `hangulroute.com` 도메인을 등록해야 한다; 코드 변경은 없다.
 
-**확인**: 두 값이 저장되어 있다 (화면 변화는 F-AUTH-002 이후).
+**확인**: 콘솔 `/teach` 에 Clerk 로그인 위젯(이메일·Google)이 뜨고, 로그인하면 `/teach/home` 으로 간다. 학급을 하나 만들어 roster 가 열리면 API 쪽 검증까지 통과.
 
 ### Step 8. Stripe (40분, Test mode 먼저)
 https://dashboard.stripe.com → Test mode
@@ -113,7 +113,7 @@ Stripe → Product catalog → **Coupons** → New: 퍼센트 또는 정액 · D
 | 오너가 보내는 것 | 저장소 쪽 다음 PR |
 |---|---|
 | Step 3 첫 배포 로그 (마이그레이션 ✅ 또는 오류) | F-INFRA-003 (인메모리 → D1, 데이터 초기화 해결) 착수 |
-| Step 7 완료 알림 | F-AUTH-002 Clerk 로그인 위젯 + dev 로그인 제거 |
+| Step 7 확인 결과 (위젯이 뜨고 학급 생성이 되는지) | F-AUTH-005 계정 페이지 (이메일·동의 기록·학습자 데이터 삭제) |
 | Step 11 빨간 항목 캡처 | 성능 수정 |
 | Step 12 녹음 파일 | 오프라인 발음 인제스트 |
 

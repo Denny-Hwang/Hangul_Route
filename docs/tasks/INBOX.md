@@ -24,7 +24,7 @@
 - [ ] T-050 API 연결 (`owner-runbook.md` Step 3·5·6): `hangul-route-api` **Import a repository** (D1 바인딩·마이그레이션은 Deploy command 가 처리) + `ALLOWED_ORIGINS` (대시보드 Text 변수) + PWA `EXPO_PUBLIC_API_BASE_URL` + 웹 `NEXT_PUBLIC_API_BASE_URL` — 0.5h
 - [ ] T-051 Stripe 설정 (`owner-runbook.md` Step 8): Price 2개 (Lifetime $15.30 one-time · Group $153/yr) + 대시보드 Text 변수 `STRIPE_PRICE_FAMILY_LIFETIME` / `STRIPE_PRICE_GROUP_LICENSE_YEARLY` / `CONSOLE_URL` + Secret `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` + 웹훅 등록 — 1h
 - [ ] T-053 첫 프로모·레퍼럴 코드 만들기 (F-ENT-002 §3.5, Stripe Coupons → Promotion code; 런치용 1개 + 추천 교사용) — 0.25h
-- [ ] T-049 Clerk 앱 생성 → 대시보드 Secret `CLERK_SECRET_KEY` (API) + 빌드 변수 `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` (web) (`owner-runbook.md` Step 7; F-AUTH-002 전제, 그 전까지 콘솔은 dev 로그인) — 0.5h
+- [ ] T-049 Clerk 키 등록 (앱은 생성됨): 대시보드 Secret `CLERK_SECRET_KEY` (API) + 빌드 변수 `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` (web) + `NEXT_PUBLIC_CONSOLE_DEV_AUTH` 삭제 → Retry (`owner-runbook.md` Step 7; F-AUTH-002 머지됨) — 0.25h
 
 ### App Store 제출 (선택 — **웹앱 안정화 이후**, 오너 결정 2026-10-06; `docs/launch/app-store-submission.md`)
 - [ ] T-040 Apple Developer + App Store Connect 앱 레코드 + `eas init` → `app.json` projectId / `eas.json` submit 값 교체 — 1h

@@ -143,3 +143,18 @@ describe('console api — school (F-SCHOOL-001)', () => {
     expect(fetchImpl.mock.calls[1]?.[0]).toBe('https://api.example.com/api/spaces/space%3Ac/members');
   });
 });
+
+describe('console api — token provider (F-AUTH-002)', () => {
+  it('asks the provider for a fresh token on every call and short-circuits when signed out', async () => {
+    const fetchImpl = vi.fn<typeof fetch>().mockImplementation(async () => json(200, { data: { spaces: [] } }));
+    const getToken = vi.fn<() => Promise<string | null>>().mockResolvedValueOnce('jwt-1').mockResolvedValueOnce('jwt-2').mockResolvedValueOnce(null).mockRejectedValueOnce(new Error('clerk down'));
+    const api = createConsoleApi({ endpoint: 'https://api.example.com', token: getToken, fetchImpl });
+    expect(await api.listSpaces()).toEqual({ ok: true, data: [] });
+    expect(await api.listSpaces()).toEqual({ ok: true, data: [] });
+    expect((fetchImpl.mock.calls[0]?.[1] as RequestInit).headers).toMatchObject({ Authorization: 'Bearer jwt-1' });
+    expect((fetchImpl.mock.calls[1]?.[1] as RequestInit).headers).toMatchObject({ Authorization: 'Bearer jwt-2' });
+    expect(await api.listSpaces()).toEqual({ ok: false, error: 'unauthorized', status: 401 });
+    expect(await api.listSpaces()).toEqual({ ok: false, error: 'unauthorized', status: 401 });
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
+});
