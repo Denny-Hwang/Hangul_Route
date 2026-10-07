@@ -1,3 +1,21 @@
 packages:
   - "apps/*"
   - "packages/*"
+
+# pnpm 10 does not run dependency build scripts unless listed. None of the
+# packages that ask for one are needed for `pnpm install` + our builds + the
+# Workers deploys (CI and Workers Builds run with exactly this policy):
+#   - esbuild  : the platform binary comes from its optional @esbuild/* package;
+#                the postinstall only short-cuts the lookup.
+#   - workerd  : binary from @cloudflare/workerd-*; the script only verifies it.
+#                Only `wrangler dev` / miniflare use it, never a deploy.
+#   - sharp    : binary from @img/sharp-*; Next only needs it for image
+#                optimization, which the static export turns off.
+#   - @clerk/shared : postinstall prints a notice, nothing is built.
+# `neverBuiltDependencies` records that decision (pnpm then skips the scripts
+# silently); `ignoredBuiltDependencies` still prints the warning on pnpm 10.33.
+neverBuiltDependencies:
+  - esbuild
+  - workerd
+  - sharp
+  - "@clerk/shared"

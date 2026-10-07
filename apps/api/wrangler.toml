@@ -1,39 +1,56 @@
+# Cloudflare Worker — the API (Hono, packages/backend). Deployed by Cloudflare
+# Workers Builds ("Connect GitHub") on every push to main; the owner never runs
+# wrangler locally. Dashboard settings (docs/launch/owner-runbook.md Step 3):
+#
+#   Project name  : hangul-route-api        (must equal `name` below)
+#   Root directory: /
+#   Build command : pnpm install --frozen-lockfile
+#   Deploy command: pnpm --filter @hangul-route/api exec wrangler deploy
+#
+# Variables vs secrets (Workers Builds redeploys on every merge):
+#   - `keep_vars = true` keeps plain-text variables entered in the dashboard
+#     (Settings → Variables and Secrets) across deploys; without it wrangler
+#     replaces the Worker's variables with the [vars] block of this file.
+#   - Secrets (Type: Secret in the dashboard) always survive a deploy; wrangler
+#     never deletes or overwrites a secret it does not define.
+#   - Bindings (D1, KV, R2) do NOT survive: a deploy replaces them with what this
+#     file declares, so bindings live here and change through a PR.
 name = "hangul-route-api"
 main = "src/index.ts"
 compatibility_date = "2024-11-12"
 compatibility_flags = ["nodejs_compat"]
+keep_vars = true
 
-# Auth (F-AUTH-001): bind Clerk keys as secrets (never commit them):
-#   wrangler secret put CLERK_SECRET_KEY
-#   wrangler secret put CLERK_JWT_KEY   # optional — networkless JWT verification
-# With no keys bound, getAuthUserId uses a dev fallback (bearer = user id).
+# ---- Secrets (dashboard → Settings → Variables and Secrets → Add → Type: Secret) ----
+# CLERK_SECRET_KEY        Clerk → API Keys → Secret key (F-AUTH-001; without it the
+#                         dev fallback treats the bearer token as the account id)
+# CLERK_JWT_KEY           optional — networkless JWT verification
+# STRIPE_SECRET_KEY       Stripe → Developers → API keys (F-ENT-001)
+# STRIPE_WEBHOOK_SECRET   Stripe → Developers → Webhooks → the endpoint's signing
+#                         secret (POST /api/entitlements/stripe/webhook)
 
-# D1 binding (F-INFRA-002). database_id is a deploy-time placeholder:
-#   1. wrangler d1 create hangul-route
-#   2. paste the printed database_id below
-#   3. wrangler d1 migrations apply hangul-route   (applies src/db/schema.sql)
-# Real env.DB queries replace the in-memory store in F-INFRA-003.
-# R2 / KV bindings land with later F-XXX specs.
-[[d1_databases]]
-binding = "DB"
-database_name = "hangul-route"
-database_id = "PLACEHOLDER_RUN_WRANGLER_D1_CREATE"
-
-# School consent mode (F-TCH-001 §10.3) stays locked until the owner's legal review
-# (app-map decision #27). Set to "enabled" to let class settings switch to school mode.
-# [vars]
-# SCHOOL_CONSENT_MODE = "enabled"
-
-# CORS (F-CONSOLE-001): comma-separated browser origins allowed on /api/*.
-# Unset = hangulroute.com / www / app + localhost + *.workers.dev previews.
+# ---- Variables (dashboard → same page → Type: Text; kept by keep_vars) ----
+# ALLOWED_ORIGINS                    comma-separated browser origins allowed on /api/*
+#                                    (F-CONSOLE-001). Unset = hangulroute.com / www / app
+#                                    + localhost + *.workers.dev previews.
+# STRIPE_PRICE_FAMILY_LIFETIME       Stripe price id — $15.30 one-off (decision #30)
+# STRIPE_PRICE_GROUP_LICENSE_YEARLY  Stripe price id — $153 / year, recurring
+# CONSOLE_URL                        checkout success / cancel return, e.g. https://hangulroute.com
+# SCHOOL_CONSENT_MODE                "enabled" only after the legal review (decision #27)
+#
+# The same keys may be set here instead; a [vars] value wins over a dashboard
+# value of the same name on the next deploy.
 # [vars]
 # ALLOWED_ORIGINS = "https://hangulroute.com,https://www.hangulroute.com,https://app.hangulroute.com"
 
-# Stripe (F-ENT-001): web checkout for the two products (decision #30).
-#   wrangler secret put STRIPE_SECRET_KEY
-#   wrangler secret put STRIPE_WEBHOOK_SECRET   # from the webhook endpoint (POST /api/entitlements/stripe/webhook)
-# Price ids as vars; unset = checkout answers stripe_not_configured.
-# [vars]
-# STRIPE_PRICE_FAMILY_LIFETIME       = "price_..."   # $15.30, one-time (Stripe price type: one-off)
-# STRIPE_PRICE_GROUP_LICENSE_YEARLY  = "price_..."   # $153 / year, recurring
-# CONSOLE_URL = "https://hangulroute.com"   # checkout success / cancel return
+# ---- D1 (F-INFRA-002 / F-INFRA-003) ----
+# Not bound yet: the API keeps its data in memory (packages/backend/src/store.ts
+# never reads env.DB), and a binding whose database_id does not exist in the
+# account makes `wrangler deploy` fail. Once the owner creates the database in
+# the dashboard (Storage & Databases → D1 → Create → name `hangul-route`) and
+# sends its Database ID, a PR uncomments this block with that id; the same PR
+# applies src/db/schema.sql (F-INFRA-003 then replaces the in-memory store).
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "hangul-route"
+# database_id = "<paste the Database ID from the dashboard>"

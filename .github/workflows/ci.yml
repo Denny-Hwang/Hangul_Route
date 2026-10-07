@@ -46,3 +46,8 @@ jobs:
 
       - name: Build
         run: pnpm run build
+
+      - name: Validate API wrangler config (dry run, no upload)
+        run: pnpm --filter @hangul-route/api exec wrangler deploy --dry-run
+        env:
+          WRANGLER_SEND_METRICS: "false"

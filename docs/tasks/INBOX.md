@@ -10,21 +10,21 @@
 ## Pending
 
 ### Week 2 (foundations) — remaining
-- [ ] T-002 F-INFRA-001 wrangler dev 로컬 기동 + Cloudflare 계정 바인딩 — 0.5d
+- [ ] T-002 F-INFRA-001 Cloudflare 계정 바인딩 — **대시보드로 대체** (`owner-runbook.md` Step 3: Import a repository + D1 Create). 로컬 `wrangler dev` 는 프록시 때문에 보류 — 0.5d
 
 ### Week 4 (Stage 1 game shells)
 - [ ] T-013 STT 벤치마크 보고서: Whisper / Clova / Google STT × 어린이 한국어 50샘플 — 2d
 - [ ] T-015 i18n / a11y / telemetry 3종 스펙 초안 (F-I18N-001, F-A11Y-001, F-TEL-001) — 1d
 
 ### 웹앱 런치 (주 채널 — 오너 작업, `docs/launch/web-app-launch.md` §2)
-- [ ] T-045 GitHub main 브랜치 보호(필수 체크 3개) + Cloudflare **Connect GitHub** (Workers Builds, 설정값은 `web-app-launch.md` §2-B) + `app.hangulroute.com` 연결 — 1h
-- [ ] T-052 랜딩 + 콘솔 Worker `hangul-route-web` **Connect GitHub** (설정값은 `web-app-launch.md` §2-E) + `hangulroute.com` / `www` 도메인 — 0.5h
+- [ ] T-045 GitHub main 브랜치 보호(필수 체크 3개) + Cloudflare **Import a repository** `hangul-route-app` (입력값은 `owner-runbook.md` §0, Step 1–2) + `app.hangulroute.com` 연결 (Step 6) — 1h
+- [ ] T-052 랜딩 + 콘솔 Worker `hangul-route-web` **Import a repository** (`owner-runbook.md` Step 4) + `hangulroute.com` / `www` 도메인 (Step 6) — 0.5h
 - [ ] T-046 설치 테스트 3종 (iOS Safari / Android Chrome / 데스크톱) + 실기기 오프라인 완주 — 0.5h
 - [ ] T-047 Lighthouse PWA 항목 통과 확인 — 0.25h
-- [ ] T-050 API 연결 (`web-app-launch.md` §2-D): `hangul-route-api` 배포 + `ALLOWED_ORIGINS` + PWA `EXPO_PUBLIC_API_BASE_URL` + 웹 `NEXT_PUBLIC_API_BASE_URL` — 0.5h
-- [ ] T-051 Stripe 설정 (`web-app-launch.md` §2-D, 가격 확정됨): Price 2개 (Lifetime $15.30 one-time · Group $153/yr) + `STRIPE_PRICE_FAMILY_LIFETIME` / `STRIPE_PRICE_GROUP_LICENSE_YEARLY` / `CONSOLE_URL` vars + `STRIPE_SECRET_KEY`/`STRIPE_WEBHOOK_SECRET` 시크릿 + 웹훅 등록 — 1h
+- [ ] T-050 API 연결 (`owner-runbook.md` Step 3·5·6): `hangul-route-api` **Import a repository** (D1 없이 배포) + D1 Create → Database ID 전달 + `ALLOWED_ORIGINS` (대시보드 Text 변수) + PWA `EXPO_PUBLIC_API_BASE_URL` + 웹 `NEXT_PUBLIC_API_BASE_URL` — 0.5h
+- [ ] T-051 Stripe 설정 (`owner-runbook.md` Step 8): Price 2개 (Lifetime $15.30 one-time · Group $153/yr) + 대시보드 Text 변수 `STRIPE_PRICE_FAMILY_LIFETIME` / `STRIPE_PRICE_GROUP_LICENSE_YEARLY` / `CONSOLE_URL` + Secret `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` + 웹훅 등록 — 1h
 - [ ] T-053 첫 프로모·레퍼럴 코드 만들기 (F-ENT-002 §3.5, Stripe Coupons → Promotion code; 런치용 1개 + 추천 교사용) — 0.25h
-- [ ] T-049 Clerk 앱 생성 → `CLERK_SECRET_KEY` 시크릿 + `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` (F-AUTH-002 전제; 그 전까지 콘솔은 dev 로그인) — 0.5h
+- [ ] T-049 Clerk 앱 생성 → 대시보드 Secret `CLERK_SECRET_KEY` (API) + 빌드 변수 `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` (web) (`owner-runbook.md` Step 7; F-AUTH-002 전제, 그 전까지 콘솔은 dev 로그인) — 0.5h
 
 ### App Store 제출 (선택 — **웹앱 안정화 이후**, 오너 결정 2026-10-06; `docs/launch/app-store-submission.md`)
 - [ ] T-040 Apple Developer + App Store Connect 앱 레코드 + `eas init` → `app.json` projectId / `eas.json` submit 값 교체 — 1h
