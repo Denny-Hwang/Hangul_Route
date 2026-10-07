@@ -1,35 +1,35 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { createConsoleApi, type ConsoleApi } from '@/lib/console/api';
 import { apiBaseUrl } from '@/lib/console/config';
 import { ROUTES } from '@/lib/console/routing';
-import { clearSession, readSession, type ConsoleSession } from '@/lib/console/session';
+import { useConsoleAuth } from './auth-context';
 
-/** Session + API for console pages; sends a signed-out visitor to /teach. */
-export function useConsole(): { ready: boolean; session: ConsoleSession | null; api: ConsoleApi | null; signOut: () => void } {
+export interface ConsoleSessionView {
+  accountId: string;
+  displayName: string;
+  email?: string;
+}
+
+/** Session + API for console pages; sends a signed-out visitor to /teach (F-CONSOLE-001 §3.2, F-AUTH-002). */
+export function useConsole(): { ready: boolean; session: ConsoleSessionView | null; api: ConsoleApi | null; signOut: () => void } {
   const router = useRouter();
-  const [ready, setReady] = useState(false);
-  const [session, setSession] = useState<ConsoleSession | null>(null);
+  const auth = useConsoleAuth();
 
   useEffect(() => {
-    const s = readSession();
-    setSession(s);
-    setReady(true);
-    if (!s) router.replace(ROUTES.signIn);
-  }, [router]);
+    if (auth.ready && !auth.session) router.replace(ROUTES.signIn);
+  }, [auth.ready, auth.session, router]);
 
   const api = useMemo(() => {
     const endpoint = apiBaseUrl();
-    return session && endpoint ? createConsoleApi({ endpoint, token: session.token }) : null;
-  }, [session]);
+    return auth.session && endpoint ? createConsoleApi({ endpoint, token: auth.getToken }) : null;
+  }, [auth.session, auth.getToken]);
 
   const signOut = (): void => {
-    clearSession();
-    setSession(null);
-    router.replace(ROUTES.signIn);
+    void auth.signOut().finally(() => router.replace(ROUTES.signIn));
   };
 
-  return { ready, session, api, signOut };
+  return { ready: auth.ready, session: auth.session, api, signOut };
 }

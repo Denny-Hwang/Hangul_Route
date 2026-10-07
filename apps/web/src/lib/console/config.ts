@@ -2,6 +2,7 @@
 export interface ConsoleEnv {
   NEXT_PUBLIC_API_BASE_URL?: string;
   NEXT_PUBLIC_CONSOLE_DEV_AUTH?: string;
+  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?: string;
   NEXT_PUBLIC_SCHOOL_CONSENT_MODE?: string;
   NODE_ENV?: string;
 }
@@ -13,8 +14,18 @@ export function apiBaseUrl(env: ConsoleEnv = process.env as ConsoleEnv): string 
   return raw && raw !== PLACEHOLDER ? raw : null;
 }
 
-/** The dev sign-in form (bearer = account id, F-AUTH-001 fallback) — never on by default in production. */
+/** Clerk publishable key (pk_…), set as a build variable — F-AUTH-002. Null = Clerk not configured on this build. */
+export function clerkPublishableKey(env: ConsoleEnv = process.env as ConsoleEnv): string | null {
+  const raw = env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?.trim();
+  return raw && /^pk_(test|live)_/.test(raw) ? raw : null;
+}
+
+/**
+ * The dev sign-in form (bearer = account id, F-AUTH-001 fallback) — never on by default in
+ * production, and never when Clerk is configured (a real sign-in always wins).
+ */
 export function devAuthEnabled(env: ConsoleEnv = process.env as ConsoleEnv): boolean {
+  if (clerkPublishableKey(env)) return false;
   if (env.NEXT_PUBLIC_CONSOLE_DEV_AUTH === 'true') return true;
   if (env.NEXT_PUBLIC_CONSOLE_DEV_AUTH === 'false') return false;
   return env.NODE_ENV !== 'production';

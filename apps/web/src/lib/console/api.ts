@@ -121,7 +121,8 @@ export type ApiResult<T> = { ok: true; data: T } | { ok: false; error: ApiError;
 
 export interface ConsoleApiOptions {
   endpoint: string;
-  token: string;
+  /** A fixed bearer (dev sign-in) or a provider that fetches a fresh Clerk session token per request (F-AUTH-002). */
+  token: string | (() => Promise<string | null>);
   fetchImpl?: typeof fetch;
 }
 
@@ -138,10 +139,13 @@ export function createConsoleApi(opts: ConsoleApiOptions) {
   const base = `${opts.endpoint}/api/spaces`;
   const recovery = `${opts.endpoint}/api/recovery`;
   const entitlements = `${opts.endpoint}/api/entitlements`;
-  const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${opts.token}` };
+  const resolveToken = async (): Promise<string | null> => (typeof opts.token === 'string' ? opts.token : opts.token().catch(() => null));
 
   async function call<T>(url: string, init: RequestInit, okStatus: number[]): Promise<ApiResult<T>> {
     try {
+      const token = await resolveToken();
+      if (!token) return { ok: false, error: 'unauthorized', status: 401 }; // signed out mid-flight: no request leaves
+      const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
       const res = await fetchImpl(url, { ...init, headers });
       const body = (await res.json().catch(() => ({}))) as { data?: T; error?: { code?: unknown } };
       if (!okStatus.includes(res.status) || body.data === undefined) {

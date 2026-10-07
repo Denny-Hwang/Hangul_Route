@@ -172,7 +172,7 @@ Hangul Route
 | `parent/dashboard` | ParentDashboard · web `/parent` | 학습자별 주간 카드 | S | F-PAR-001 | ✓ |
 | `parent/learner-detail` | web `/parent/[childId]` | 한 아이 깊이 보기 | S-thin | F-PAR-001 §5 | ✓ |
 | `parent/voice-recorder` | (신규) | 10초 음성 메시지 | R | F-PAR-001 N5 | ✓ |
-| `console/sign-in` | web `/teach` (+ mobile 나중) | 어른 로그인 — **dev 폼** (bearer = account id, 비프로덕션 또는 `NEXT_PUBLIC_CONSOLE_DEV_AUTH`) · Clerk 위젯은 F-AUTH-002 | S (dev) | F-CONSOLE-001 §3.2 · F-AUTH-001/002 | ✓ |
+| `console/sign-in` | web `/teach` (+ mobile 나중, F-AUTH-004) | 어른 로그인 — **Clerk 위젯** (publishable key 가 빌드에 있을 때, hash routing) · dev 폼은 키 없는 빌드에서만 | S | F-CONSOLE-001 §3.2 · F-AUTH-001/002 | ✓ |
 | `console/plan-builder` | web `/teach/space/:id/plan` (family·class 공용) | 계획 만들기·발행·readout | S | F-PLAN-001 §3.5 | ✓ |
 | `console/account` | web + mobile | 이메일·동의·백업·학습자 삭제 | P | roadmap §5.3 | NEW |
 | `console/billing` | web `/teach/billing` (mobile IAP 는 F-IAP-002) | 현재 플랜 카드 · 역할별 플랜 행 (추천 1개) · Choose → Stripe Checkout · Manage → Portal · 미설정 시 조용한 안내 | S | F-ENT-001 §3.6 | ✓ |

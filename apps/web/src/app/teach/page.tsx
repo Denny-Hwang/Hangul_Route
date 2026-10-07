@@ -1,19 +1,25 @@
 'use client';
 
+import { SignIn } from '@clerk/clerk-react';
 import { colors, spacing, typography } from '@hangul-route/design-system/tokens';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { useConsoleAuth } from '@/components/console/auth-context';
 import { Button, ConsoleShell, Field, Muted, Notice, panelStyle } from '@/components/console/ui';
 import { createConsoleApi } from '@/lib/console/api';
 import { apiBaseUrl, devAuthEnabled } from '@/lib/console/config';
 import { COPY } from '@/lib/console/copy';
-import { landingAfterSignIn } from '@/lib/console/routing';
-import { readSession, writeSession } from '@/lib/console/session';
+import { ROUTES, landingAfterSignIn } from '@/lib/console/routing';
 
-/** console/sign-in — F-CONSOLE-001 §3.2. Dev form until the Clerk widget (F-AUTH-002). */
+/**
+ * console/sign-in — F-CONSOLE-001 §3.2 · F-AUTH-002 §3.1. Clerk's widget when the
+ * build carries a publishable key (hash routing: no server, no catch-all route);
+ * the dev form only on builds without one.
+ */
 export default function SignInPage(): JSX.Element {
   const router = useRouter();
+  const auth = useConsoleAuth();
   const [accountId, setAccountId] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
@@ -23,11 +29,10 @@ export default function SignInPage(): JSX.Element {
   const endpoint = apiBaseUrl();
 
   useEffect(() => {
-    const existing = readSession();
-    if (existing) router.replace('/teach/home');
-  }, [router]);
+    if (auth.ready && auth.session) router.replace(ROUTES.home);
+  }, [auth.ready, auth.session, router]);
 
-  const submit = async (): Promise<void> => {
+  const submitDev = async (): Promise<void> => {
     const id = accountId.trim();
     const name = displayName.trim();
     if (!id || !name || !endpoint) return;
@@ -40,7 +45,7 @@ export default function SignInPage(): JSX.Element {
       setMessage(COPY.cantReach);
       return;
     }
-    writeSession({ token: id, accountId: id, displayName: name, email: email.trim() || undefined });
+    auth.devSignIn({ token: id, accountId: id, displayName: name, email: email.trim() || undefined });
     router.replace(landingAfterSignIn(spaces.data.length));
   };
 
@@ -56,11 +61,16 @@ export default function SignInPage(): JSX.Element {
         <section style={{ ...panelStyle, marginTop: spacing.lg }} aria-label="Sign in">
           {!endpoint ? (
             <Muted>The console needs an API address (NEXT_PUBLIC_API_BASE_URL) on this build.</Muted>
+          ) : auth.mode === 'clerk' ? (
+            <>
+              <Muted>{COPY.clerkIntro}</Muted>
+              <SignIn routing="hash" fallbackRedirectUrl={ROUTES.home} signUpFallbackRedirectUrl={ROUTES.start} />
+            </>
           ) : devAuth ? (
             <form
               onSubmit={(e) => {
                 e.preventDefault();
-                void submit();
+                void submitDev();
               }}
             >
               <Notice tone="nudge">{COPY.devSignInHint}</Notice>
