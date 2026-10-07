@@ -21,7 +21,7 @@
 - [ ] T-052 랜딩 + 콘솔 Worker `hangul-route-web` **Import a repository** (`owner-runbook.md` Step 4) + `hangulroute.com` / `www` 도메인 (Step 6) — 0.5h
 - [ ] T-046 설치 테스트 3종 (iOS Safari / Android Chrome / 데스크톱) + 실기기 오프라인 완주 — 0.5h
 - [ ] T-047 Lighthouse PWA 항목 통과 확인 — 0.25h
-- [ ] T-050 API 연결 (`owner-runbook.md` Step 3·5·6): `hangul-route-api` **Import a repository** (D1 없이 배포) + D1 Create → Database ID 전달 + `ALLOWED_ORIGINS` (대시보드 Text 변수) + PWA `EXPO_PUBLIC_API_BASE_URL` + 웹 `NEXT_PUBLIC_API_BASE_URL` — 0.5h
+- [ ] T-050 API 연결 (`owner-runbook.md` Step 3·5·6): `hangul-route-api` **Import a repository** (D1 바인딩·마이그레이션은 Deploy command 가 처리) + `ALLOWED_ORIGINS` (대시보드 Text 변수) + PWA `EXPO_PUBLIC_API_BASE_URL` + 웹 `NEXT_PUBLIC_API_BASE_URL` — 0.5h
 - [ ] T-051 Stripe 설정 (`owner-runbook.md` Step 8): Price 2개 (Lifetime $15.30 one-time · Group $153/yr) + 대시보드 Text 변수 `STRIPE_PRICE_FAMILY_LIFETIME` / `STRIPE_PRICE_GROUP_LICENSE_YEARLY` / `CONSOLE_URL` + Secret `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` + 웹훅 등록 — 1h
 - [ ] T-053 첫 프로모·레퍼럴 코드 만들기 (F-ENT-002 §3.5, Stripe Coupons → Promotion code; 런치용 1개 + 추천 교사용) — 0.25h
 - [ ] T-049 Clerk 앱 생성 → 대시보드 Secret `CLERK_SECRET_KEY` (API) + 빌드 변수 `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` (web) (`owner-runbook.md` Step 7; F-AUTH-002 전제, 그 전까지 콘솔은 dev 로그인) — 0.5h

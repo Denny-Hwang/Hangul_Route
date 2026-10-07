@@ -51,3 +51,8 @@ jobs:
         run: pnpm --filter @hangul-route/api exec wrangler deploy --dry-run
         env:
           WRANGLER_SEND_METRICS: "false"
+
+      - name: Apply D1 migrations to a local database (validates the SQL)
+        run: pnpm --filter @hangul-route/api exec wrangler d1 migrations apply hangul-route --local
+        env:
+          WRANGLER_SEND_METRICS: "false"

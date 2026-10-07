@@ -10,7 +10,7 @@
 ## 1. Context
 
 F-INFRA-001 shipped the Worker scaffold and deferred D1 to "F-INFRA-002+".
-`apps/api/src/db/schema.sql` already mirrors the in-memory store (families,
+`apps/api/migrations/0001_schema_v1.sql` (formerly `src/db/schema.sql`) already mirrors the in-memory store (families,
 profiles, progress, card_unlocks, sessions, events, homework). The
 subscription business model (월/연 구독) now needs a persisted subscription
 record per family, plus a **declared** D1 binding so the deploy path is ready.

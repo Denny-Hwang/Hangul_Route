@@ -13,7 +13,7 @@ Workers & Pages → **Create** → Workers 탭 → **Import a repository** → `
 | Production branch | `main` | `main` | `main` |
 | Root directory | `/` | `/` | `/` |
 | Build command | `pnpm install --frozen-lockfile && pnpm --filter @hangul-route/mobile build:web` | `pnpm install --frozen-lockfile` | `pnpm install --frozen-lockfile && pnpm --filter @hangul-route/web build` |
-| Deploy command | `pnpm --filter @hangul-route/mobile exec wrangler deploy` | `pnpm --filter @hangul-route/api exec wrangler deploy` | `pnpm --filter @hangul-route/web exec wrangler deploy` |
+| Deploy command | `pnpm --filter @hangul-route/mobile exec wrangler deploy` | `pnpm --filter @hangul-route/api exec wrangler d1 migrations apply hangul-route --remote && pnpm --filter @hangul-route/api exec wrangler deploy` | `pnpm --filter @hangul-route/web exec wrangler deploy` |
 | Build variables (빌드 시 코드에 박힘) | `NODE_VERSION` = `22` · `EXPO_PUBLIC_API_BASE_URL` = API 주소 (Step 3 후) · (선택) `EXPO_PUBLIC_CONSOLE_URL` | `NODE_VERSION` = `22` | `NODE_VERSION` = `22` · `NEXT_PUBLIC_API_BASE_URL` = API 주소 · `NEXT_PUBLIC_CONSOLE_DEV_AUTH` = `true` (Clerk 전까지만) · `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` (Step 7 후) |
 | Runtime: Variables (Type: Text) | 없음 | `ALLOWED_ORIGINS` · `STRIPE_PRICE_FAMILY_LIFETIME` · `STRIPE_PRICE_GROUP_LICENSE_YEARLY` · `CONSOLE_URL` · (법률 검토 후) `SCHOOL_CONSENT_MODE` | 없음 |
 | Runtime: Secrets (Type: Secret) | 없음 | `CLERK_SECRET_KEY` · `STRIPE_SECRET_KEY` · `STRIPE_WEBHOOK_SECRET` | 없음 |
@@ -21,6 +21,7 @@ Workers & Pages → **Create** → Workers 탭 → **Import a repository** → `
 
 - **Build variables** 는 프로젝트 → Settings → **Build** → Variables and Secrets. `NEXT_PUBLIC_*` / `EXPO_PUBLIC_*` 는 빌드 때 번들에 박히므로 값을 바꾸면 **Retry deployment** (또는 다음 머지) 로 다시 빌드해야 반영된다.
 - **Runtime Variables / Secrets** 는 프로젝트 → Settings → **Variables and Secrets** (런타임). API Worker 의 `wrangler.toml` 이 `keep_vars = true` 라서 재배포해도 대시보드 변수가 지워지지 않고, Secret 은 원래 지워지지 않는다. 바인딩(D1 등) 만은 toml 이 원본이라 PR 로 바꾼다.
+- **API 의 Deploy command 는 두 단계**: 먼저 `apps/api/migrations/*.sql` 을 D1 `hangul-route` 에 적용(`--remote`; D1 이 적용된 파일을 `d1_migrations` 표에 기록하므로 재배포 때는 no-op, 비대화형 환경이라 확인 프롬프트 없음), 그 다음 Worker 업로드. 마이그레이션이 실패하면 업로드도 멈추고 로그에 남는다. 한 줄로 붙여 넣는다.
 - Node: 저장소의 `.nvmrc` 가 22 다. Workers Builds 빌드 이미지는 `.nvmrc` 를 읽지만, 로그에서 다른 버전이 보이면 위 표의 `NODE_VERSION=22` 빌드 변수가 확실한 방법이다 (처음부터 넣어 두길 권장). pnpm 은 `package.json` 의 `packageManager` 로 10.33.0 이 자동 선택된다.
 
 ## A. 배포 (Step 1–6)
@@ -38,13 +39,16 @@ https://github.com/Denny-Hwang/Hangul_Route/settings/branches → Add rule (또�
 §0 표의 첫 열대로 Import a repository. Build variables 에 지금은 `NODE_VERSION=22` 만. **Save and Deploy**.
 **확인**: `https://hangul-route-app.<계정>.workers.dev` 에서 온보딩 화면이 뜬다.
 
-### Step 3. API Worker `hangul-route-api` + D1 (25분)
-1. §0 표의 둘째 열대로 Import a repository (Build command 는 `pnpm install --frozen-lockfile` 뿐 — wrangler 가 배포 때 번들한다). Build variable `NODE_VERSION=22`. **Save and Deploy**. D1 바인딩은 toml 에서 주석 처리되어 있어 **D1 없이도 배포된다** (데이터는 아직 인메모리).
-2. 출력(또는 프로젝트 홈)의 `https://hangul-route-api.<계정>.workers.dev` 가 **API 주소**다. 메모.
-3. D1 만들기: 대시보드 → **Storage & Databases → D1 SQL Database → Create** → 이름 `hangul-route` → 생성 후 상세 화면의 **Database ID** 복사 → **저에게 보낸다**. 제가 `apps/api/wrangler.toml` 의 `[[d1_databases]]` 주석을 풀어 id 를 넣는 PR 을 올리고, 머지되면 자동 재배포된다. (F-INFRA-003 이 끝나기 전까지는 재배포마다 서버 데이터가 초기화된다 — 지금은 연결 테스트용.)
+### Step 3. API Worker `hangul-route-api` (20분)
+D1 `hangul-route` 는 2026-10-07 에 대시보드에서 만들었고 (Database ID `4d338c01-0a0d-46c5-b7f4-16936cf32907`, 위치 자동 / WNAM), `apps/api/wrangler.toml` 에 바인딩되어 있다. 스키마는 `apps/api/migrations/` 의 파일이고 Deploy command 가 매 배포 때 적용한다 — 오너가 따로 할 일은 없다.
+1. §0 표의 둘째 열대로 Import a repository. Build command 는 `pnpm install --frozen-lockfile` 뿐 (wrangler 가 배포 때 번들). Deploy command 는 §0 의 **두 단계 한 줄**. Build variable `NODE_VERSION=22`. **Save and Deploy**.
+2. 첫 배포 로그에서 `0001_schema_v1.sql` · `0002_schema_v2.sql` 이 ✅ 로 적용된 뒤 Worker 가 업로드되는지 본다. 마이그레이션 단계가 권한 오류로 실패하면 로그를 보낸다 (Workers Builds 토큰에 D1 쓰기 권한이 없는 경우 — 그때는 대시보드 D1 콘솔에서 두 파일을 순서대로 실행하고 Deploy command 를 `wrangler deploy` 만으로 줄인다).
+3. 프로젝트 홈의 `https://hangul-route-api.<계정>.workers.dev` 가 **API 주소**다. 메모.
 4. Settings → Variables and Secrets (런타임) 는 아직 비워 둔다 (Step 6·7·8 에서 채운다).
 
-**확인**: 브라우저에서 API 주소를 열면 JSON 응답이 보인다.
+(F-INFRA-003 이 끝나기 전까지 API 는 인메모리 store 를 쓰므로 재배포마다 데이터가 초기화된다. D1 에는 빈 표만 있다.)
+
+**확인**: 브라우저에서 API 주소를 열면 JSON 응답이 보이고, 대시보드 D1 → `hangul-route` → Tables 에 `learners` · `spaces` · `entitlements` 등이 보인다.
 
 ### Step 4. 랜딩 + 교사 콘솔 Worker `hangul-route-web` (15분)
 §0 표의 셋째 열대로 Import a repository. Build variables: `NODE_VERSION=22` · `NEXT_PUBLIC_API_BASE_URL` = Step 3 의 API 주소 · `NEXT_PUBLIC_CONSOLE_DEV_AUTH=true`. **Save and Deploy**.
@@ -108,7 +112,7 @@ Stripe → Product catalog → **Coupons** → New: 퍼센트 또는 정액 · D
 
 | 오너가 보내는 것 | 저장소 쪽 다음 PR |
 |---|---|
-| Step 3 의 D1 **Database ID** | `wrangler.toml` 바인딩 → 머지 시 자동 재배포 → F-INFRA-003 (인메모리 → D1, 데이터 초기화 해결) |
+| Step 3 첫 배포 로그 (마이그레이션 ✅ 또는 오류) | F-INFRA-003 (인메모리 → D1, 데이터 초기화 해결) 착수 |
 | Step 7 완료 알림 | F-AUTH-002 Clerk 로그인 위젯 + dev 로그인 제거 |
 | Step 11 빨간 항목 캡처 | 성능 수정 |
 | Step 12 녹음 파일 | 오프라인 발음 인제스트 |

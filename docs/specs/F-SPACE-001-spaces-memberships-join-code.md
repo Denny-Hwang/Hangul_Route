@@ -24,7 +24,7 @@ One learner, one snapshot — but the adults around that learner differ: a paren
 - `accounts` (id = Clerk user id, email?, display_name?, consent_json?, created_at). Upserted on the first authenticated call to `/api/spaces`. Children are never accounts.
 - `spaces` (id `space:xxxx`, kind, name ≤ 40, parent_space_id?, owner_account_id, join_code?, join_code_expires_at?, settings_json, archived_at?, created_at). `settings_json` defaults: `{ consentMode: 'parent', anonymizeRoster: kind === 'school' }`.
 - `memberships` (space_id, member_kind `account|learner`, member_id, role `owner|caregiver|teacher|admin|student`, joined_at; PK on the first three). **One row per member per space** — the owner's row is `owner`, which `can()` treats as caregiver / teacher / admin according to the space kind.
-- `apps/api/src/db/schema-v2.sql` mirrors the in-memory store (`packages/backend/src/store.ts`).
+- `apps/api/migrations/0002_schema_v2.sql` (formerly `src/db/schema-v2.sql`) mirrors the in-memory store (`packages/backend/src/store.ts`).
 
 ### 3.2 Join code
 
