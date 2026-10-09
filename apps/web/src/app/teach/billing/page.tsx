@@ -7,7 +7,7 @@ import { Button, ConsoleShell, Field, Muted, Notice, panelStyle } from '@/compon
 import { useConsole } from '@/components/console/use-console';
 import type { Promo } from '@hangul-route/content-schema';
 import type { EntitlementView, SpaceListItem } from '@/lib/console/api';
-import { PROVIDER_LABEL, checkoutReturnNotice, currentPlanCards, planRowsFor, promoPriceLine, type PlanRow } from '@/lib/console/billing';
+import { checkoutReturnNotice, currentPlanCards, planRowsFor, promoPriceLine, sourceLine, type PlanRow } from '@/lib/console/billing';
 import { COPY } from '@/lib/console/copy';
 
 /** console/billing — F-ENT-001 §3.6. Web only; one Choose per recommended row; family once, group yearly, contract beyond the caps. */
@@ -132,7 +132,7 @@ function BillingInner(): JSX.Element {
                 <span style={{ color: colors.text.secondary }}>{c.status}</span>
               </div>
               <Muted>
-                paid via {PROVIDER_LABEL[c.entitlement.provider]}
+                {sourceLine(c.entitlement)}
                 {c.entitlement.seats ? ` · ${c.entitlement.seats} seats` : ''}
               </Muted>
               {c.canManage ? <Button disabled={busy} onClick={() => void manage(c.entitlement.subjectKind, c.entitlement.subjectId)}>Manage subscription</Button> : null}

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { EntitlementView, SpaceListItem } from '../api';
-import { checkoutReturnNotice, currentPlanCards, isActive, planRowsFor, promoPriceLine, statusLine } from '../billing';
+import { checkoutReturnNotice, currentPlanCards, isActive, planRowsFor, promoPriceLine, sourceLine, statusLine } from '../billing';
 
 const now = new Date('2026-09-21T12:00:00.000Z');
 const ent = (over: Partial<EntitlementView>): EntitlementView => ({ id: 'ent:1', subjectKind: 'space', subjectId: 'space:fam', planKey: 'group_license', status: 'active', provider: 'stripe', providerRef: 'sub', customerRef: 'cus', seats: null, expiresAt: '2026-10-21T00:00:00.000Z', promoCode: null, updatedAt: '2026-09-20T00:00:00.000Z', subjectName: 'Kim family', ...over });
@@ -72,5 +72,13 @@ describe('billing view models (F-ENT-001 §3.6)', () => {
     expect(checkoutReturnNotice('cancel')).toContain('Nothing was charged');
     expect(checkoutReturnNotice(null)).toBeNull();
     expect(checkoutReturnNotice('weird')).toBeNull();
+  });
+});
+
+describe('sourceLine', () => {
+  it('names the source and the code, never "paid"', () => {
+    expect(sourceLine({ provider: 'stripe', promoCode: null })).toBe('via web (Stripe)');
+    expect(sourceLine({ provider: 'stripe', promoCode: 'KPCCW2026' })).toBe('via web (Stripe) · code KPCCW2026');
+    expect(sourceLine({ provider: 'manual', promoCode: null })).toBe('via contract');
   });
 });
