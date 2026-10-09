@@ -26,7 +26,7 @@ export async function requireAccount(c: Context, seed: { email?: string; display
       existing.displayName = seed.displayName;
       changed = true;
     }
-    if (changed) await db.putAccount(existing);
+    if (changed) await saveAccount(db, existing);
     return existing;
   }
   const account: Account = {
@@ -36,8 +36,24 @@ export async function requireAccount(c: Context, seed: { email?: string; display
     consent: null,
     createdAt: new Date().toISOString(),
   };
-  await db.putAccount(account);
+  await saveAccount(db, account);
   return account;
+}
+
+/**
+ * Upsert an account, giving up the email when another account already holds it
+ * (`accounts.email` is UNIQUE). Happens when one person gets a new Clerk user id
+ * for the same address — a re-created Clerk account, or the dev → production
+ * instance switch. Signing in must not fail over a contact field.
+ */
+export async function saveAccount(db: Db, account: Account): Promise<void> {
+  try {
+    await db.putAccount(account);
+  } catch (err) {
+    if (!account.email) throw err;
+    account.email = null;
+    await db.putAccount(account);
+  }
 }
 
 export async function accountActor(db: Db, account: Account): Promise<Actor> {
