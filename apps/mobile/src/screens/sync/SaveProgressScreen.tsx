@@ -1,4 +1,4 @@
-import { Body, Button, Caption, Card, Heading, Hoya, HoyaBubble, Icon, Screen, Spacer, colors, radii, spacing } from '@hangul-route/design-system';
+import { Body, Button, Caption, Card, Heading, HoyaBubble, Icon, Screen, Spacer, colors, radii, spacing } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
@@ -63,12 +63,7 @@ export function SaveProgressScreen({ navigation }: Props): React.ReactElement {
       <Spacer size="sm" />
       <Heading level="title">Save my progress</Heading>
       <Spacer size="md" />
-      <View style={{ flexDirection: 'row', gap: spacing.md, alignItems: 'center' }}>
-        <Hoya pose="idle" size={64} />
-        <View style={{ flex: 1 }}>
-          <HoyaBubble tone="idle" message={code ? `Write this down. It brings ${profile?.displayName ?? 'your'}'s cards back on any device.` : 'Once progress is saved to the cloud, a rescue code appears here.'} />
-        </View>
-      </View>
+      <HoyaBubble tone="idle" message={code ? `Write this down. It brings ${profile?.displayName ?? 'your'}'s cards back on any device.` : 'Once progress is saved to the cloud, a rescue code appears here.'} />
 
       <Spacer size="xl" />
       {code ? (

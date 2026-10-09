@@ -73,6 +73,11 @@ export function statusLine(e: Entitlement, now: Date): string {
 
 export const PROVIDER_LABEL: Record<Entitlement['provider'], string> = { stripe: 'web (Stripe)', apple: 'App Store', google: 'Google Play', manual: 'contract' };
 
+/** How the plan was obtained — never "paid", since a 100%-off code (a sponsored class) costs nothing. */
+export function sourceLine(e: Pick<Entitlement, 'provider' | 'promoCode'>): string {
+  return `via ${PROVIDER_LABEL[e.provider]}${e.promoCode ? ` · code ${e.promoCode}` : ''}`;
+}
+
 export interface CurrentPlanCard {
   entitlement: EntitlementView;
   title: string;

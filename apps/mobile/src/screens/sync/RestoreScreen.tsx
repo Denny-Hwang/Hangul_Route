@@ -127,12 +127,7 @@ export function RestoreScreen({ navigation, route }: Props): React.ReactElement 
       <Spacer size="sm" />
       <Heading level="title">Bring back progress</Heading>
       <Spacer size="md" />
-      <View style={{ flexDirection: 'row', gap: spacing.md, alignItems: 'center' }}>
-        <Hoya pose="thinking" size={64} />
-        <View style={{ flex: 1 }}>
-          <HoyaBubble tone="thinking" message="Got a rescue code, a grown-up account, or a saved file?" />
-        </View>
-      </View>
+      <HoyaBubble tone="thinking" message="Got a rescue code, a grown-up account, or a saved file?" />
       <Spacer size="xl" />
 
       {done ? (

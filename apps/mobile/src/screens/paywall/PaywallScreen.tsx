@@ -82,12 +82,7 @@ export function PaywallScreen({ navigation, route }: Props): React.ReactElement 
         </>
       ) : (
         <>
-          <View style={{ flexDirection: 'row', gap: spacing.md, alignItems: 'center' }}>
-            <Hoya pose="idle" size={64} />
-            <View style={{ flex: 1 }}>
-              <HoyaBubble tone="idle" message="Stage 1 is always free." />
-            </View>
-          </View>
+          <HoyaBubble tone="idle" message="Stage 1 is always free." />
           <Spacer size="lg" />
           <Heading level="prompt">What {LIFETIME_OFFER.label} unlocks</Heading>
           <Spacer size="xs" />

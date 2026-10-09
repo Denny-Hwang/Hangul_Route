@@ -1,4 +1,4 @@
-import { Body, Button, Caption, Card, Heading, Hoya, HoyaBubble, Icon, Screen, Spacer, colors, radii, spacing, touchTarget, typography } from '@hangul-route/design-system';
+import { Body, Button, Caption, Card, Heading, HoyaBubble, Icon, Screen, Spacer, colors, radii, spacing, touchTarget, typography } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
 import { Pressable, TextInput, View } from 'react-native';
@@ -121,12 +121,7 @@ export function JoinSpaceScreen({ navigation }: Props): React.ReactElement {
       <Spacer size="sm" />
       <Heading level="title">Join a class</Heading>
       <Spacer size="md" />
-      <View style={{ flexDirection: 'row', gap: spacing.md, alignItems: 'center' }}>
-        <Hoya pose={done ? 'cheering' : 'idle'} size={64} />
-        <View style={{ flex: 1 }}>
-          <HoyaBubble tone={done ? 'cheering' : 'idle'} message={done ? `You're in ${done.name}!` : found ? `${found.name} found!` : 'Type the code your teacher gave you.'} />
-        </View>
-      </View>
+      <HoyaBubble tone={done ? 'cheering' : 'idle'} message={done ? `You're in ${done.name}!` : found ? `${found.name} found!` : 'Type the code your teacher gave you.'} />
       <Spacer size="xl" />
 
       {done ? (
