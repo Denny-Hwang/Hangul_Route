@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest';
-import { apiBaseUrl, clerkPublishableKey, devAuthEnabled, schoolConsentModeEnabled } from '../config';
+import { readFileSync } from 'node:fs';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { apiBaseUrl, buildEnv, clerkPublishableKey, devAuthEnabled, schoolConsentModeEnabled } from '../config';
 
 describe('console config (F-CONSOLE-001 §3.2)', () => {
   it('apiBaseUrl trims and rejects the placeholder', () => {
@@ -33,5 +34,22 @@ describe('console config (F-CONSOLE-001 §3.2)', () => {
     expect(schoolConsentModeEnabled({ NEXT_PUBLIC_SCHOOL_CONSENT_MODE: 'true' })).toBe(false);
     expect(schoolConsentModeEnabled({ NEXT_PUBLIC_SCHOOL_CONSENT_MODE: 'enabled' })).toBe(true);
     expect(typeof schoolConsentModeEnabled()).toBe('boolean');
+  });
+
+  describe('build env', () => {
+    afterEach(() => vi.unstubAllEnvs());
+
+    it('defaults read the build variables', () => {
+      vi.stubEnv('NEXT_PUBLIC_API_BASE_URL', 'https://hangul-route-api.example.workers.dev/');
+      vi.stubEnv('NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY', 'pk_test_abc');
+      expect(apiBaseUrl()).toBe('https://hangul-route-api.example.workers.dev');
+      expect(clerkPublishableKey()).toBe('pk_test_abc');
+      expect(buildEnv().NEXT_PUBLIC_API_BASE_URL).toBe('https://hangul-route-api.example.workers.dev/');
+    });
+
+    it('never hands process.env around as an object (the browser bundle would see {})', () => {
+      const source = readFileSync(new URL('../config.ts', import.meta.url), 'utf8');
+      expect(source).not.toMatch(/process\.env(?!\.[A-Z_]+)/);
+    });
   });
 });
