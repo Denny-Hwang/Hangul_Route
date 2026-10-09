@@ -28,7 +28,8 @@ export const PROMO_HINT = 'Have a promo or referral code? A grown-up enters it o
 const DEFAULT_CONSOLE = 'https://hangulroute.com';
 
 /** Where a grown-up buys on the web (checkout lives in the console, never in the child app). */
-export function consoleBillingUrl(env: { EXPO_PUBLIC_CONSOLE_URL?: string } = process.env as { EXPO_PUBLIC_CONSOLE_URL?: string }): string {
+// Expo inlines only literal `process.env.EXPO_PUBLIC_*` reads, so the default spells the key out.
+export function consoleBillingUrl(env: { EXPO_PUBLIC_CONSOLE_URL?: string } = { EXPO_PUBLIC_CONSOLE_URL: process.env.EXPO_PUBLIC_CONSOLE_URL }): string {
   const base = (env.EXPO_PUBLIC_CONSOLE_URL?.trim() || DEFAULT_CONSOLE).replace(/\/$/, '');
   return `${base}/teach/billing`;
 }
