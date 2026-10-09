@@ -179,6 +179,8 @@ export function checkoutForm(input: { priceId: string; subjectKind: string; subj
     form.allow_promotion_codes = 'true';
   }
   if (mode === 'subscription') {
+    // A 100%-off code (e.g. a sponsored class) makes the total $0 — no card needed then.
+    form.payment_method_collection = 'if_required';
     // Subscription events carry their own metadata; the session's does not propagate.
     form['subscription_data[metadata][subjectKind]'] = input.subjectKind;
     form['subscription_data[metadata][subjectId]'] = input.subjectId;
@@ -207,7 +209,10 @@ export function createPortalSession(env: StripeEnv, customer: string, returnUrl:
 export function promoFromStripe(obj: unknown, nowSec: number): Promo | null {
   if (!obj || typeof obj !== 'object') return null;
   const p = obj as Record<string, unknown>;
-  const coupon = p.coupon && typeof p.coupon === 'object' ? (p.coupon as Record<string, unknown>) : null;
+  // 2025-09-30.clover moved `coupon` under `promotion`; older API versions keep it top-level.
+  const promotion = p.promotion && typeof p.promotion === 'object' ? (p.promotion as Record<string, unknown>) : null;
+  const rawCoupon = promotion ? promotion.coupon : p.coupon;
+  const coupon = rawCoupon && typeof rawCoupon === 'object' ? (rawCoupon as Record<string, unknown>) : null;
   if (!coupon || p.active !== true || coupon.valid !== true) return null;
   if (typeof p.expires_at === 'number' && p.expires_at <= nowSec) return null;
   if (typeof p.max_redemptions === 'number' && typeof p.times_redeemed === 'number' && p.times_redeemed >= p.max_redemptions) return null;
@@ -223,11 +228,14 @@ export function promoFromStripe(obj: unknown, nowSec: number): Promo | null {
   return parsed.success ? parsed.data : null;
 }
 
+export const PROMOTION_CODES_API_VERSION = '2025-09-30.clover';
+
 /** Look a code up in Stripe (`GET /v1/promotion_codes?code=`), active only. Network trouble reads as "no such code". */
 export async function lookupPromotionCode(env: StripeEnv, code: string, fetchImpl: typeof fetch = globalThis.fetch, nowSec = Math.floor(Date.now() / 1000)): Promise<Promo | null> {
   try {
-    const query = new URLSearchParams({ code, active: 'true', limit: '1' }).toString();
-    const res = await fetchImpl(`https://api.stripe.com/v1/promotion_codes?${query}`, { method: 'GET', headers: { Authorization: `Bearer ${env.STRIPE_SECRET_KEY ?? ''}` } });
+    // Pinned so the shape does not follow the account's default version; clover no longer expands the coupon.
+    const query = new URLSearchParams({ code, active: 'true', limit: '1', 'expand[]': 'data.promotion.coupon' }).toString();
+    const res = await fetchImpl(`https://api.stripe.com/v1/promotion_codes?${query}`, { method: 'GET', headers: { Authorization: `Bearer ${env.STRIPE_SECRET_KEY ?? ''}`, 'Stripe-Version': PROMOTION_CODES_API_VERSION } });
     if (!res.ok) return null;
     const body = (await res.json().catch(() => ({}))) as { data?: unknown[] };
     return promoFromStripe(body.data?.[0], nowSec);

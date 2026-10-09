@@ -53,10 +53,12 @@ describe('stripe helpers (F-ENT-001 §3.3)', () => {
     const form = checkoutForm({ priceId: 'price_gl_y', subjectKind: 'space', subjectId: 'space:cls', planKey: 'group_license', successUrl: 's', cancelUrl: 'c', customerEmail: 'kim@example.com' });
     expect(form).toMatchObject({ mode: 'subscription', 'line_items[0][price]': 'price_gl_y', 'metadata[planKey]': 'group_license', 'subscription_data[metadata][subjectId]': 'space:cls', customer_email: 'kim@example.com' });
     expect(form).not.toHaveProperty('customer_creation');
+    expect(form.payment_method_collection).toBe('if_required'); // $0 after a 100%-off code → no card
     const once = checkoutForm({ priceId: 'p', subjectKind: 'space', subjectId: 's', planKey: 'family_lifetime', successUrl: 's', cancelUrl: 'c' });
     expect(once).toMatchObject({ mode: 'payment', customer_creation: 'always', 'metadata[planKey]': 'family_lifetime' });
     expect(once).not.toHaveProperty('customer_email');
     expect(once).not.toHaveProperty('subscription_data[metadata][planKey]');
+    expect(once).not.toHaveProperty('payment_method_collection');
     expect(once.allow_promotion_codes).toBe('true'); // no code → Stripe's own box
     const promo = { id: 'promo_1', code: 'HOYA20', name: 'Launch', percentOff: 20, amountOffCents: null, duration: 'once' as const };
     const withPromo = checkoutForm({ priceId: 'p', subjectKind: 'space', subjectId: 's', planKey: 'family_lifetime', successUrl: 's', cancelUrl: 'c', promo });
@@ -92,6 +94,11 @@ describe('stripe helpers (F-ENT-001 §3.3)', () => {
     expect(promoFromStripe({ ...live, max_redemptions: 3 }, now)).toBeNull();
     expect(promoFromStripe({ ...live, coupon: { ...live.coupon, duration: 'weird' } }, now)).toBeNull();
     expect(promoFromStripe({ ...live, coupon: null }, now)).toBeNull();
+    // 2025-09-30.clover: the coupon lives under `promotion`
+    const { coupon: liveCoupon, ...rest } = live;
+    const clover = { ...rest, promotion: { type: 'coupon', coupon: { ...liveCoupon, percent_off: 100, duration: 'forever' } } };
+    expect(promoFromStripe(clover, now)).toEqual({ id: 'promo_1', code: 'HOYA20', name: 'Launch', percentOff: 100, amountOffCents: null, duration: 'forever' });
+    expect(promoFromStripe({ ...rest, promotion: { type: 'coupon', coupon: 'c1' } }, now)).toBeNull(); // not expanded
     expect(promoFromStripe(null, now)).toBeNull();
     expect(promoFromStripe('x', now)).toBeNull();
 
@@ -104,9 +111,10 @@ describe('stripe helpers (F-ENT-001 §3.3)', () => {
       .mockRejectedValueOnce(new Error('offline'));
     expect(await lookupPromotionCode(env, 'HOYA20', fetchImpl, now)).toMatchObject({ id: 'promo_1' });
     const [url, init] = fetchImpl.mock.calls[0] as [string, RequestInit];
-    expect(url).toBe('https://api.stripe.com/v1/promotion_codes?code=HOYA20&active=true&limit=1');
+    expect(url).toBe('https://api.stripe.com/v1/promotion_codes?code=HOYA20&active=true&limit=1&expand%5B%5D=data.promotion.coupon');
     expect(init.method).toBe('GET');
     expect((init.headers as Record<string, string>).Authorization).toBe('Bearer sk_test');
+    expect((init.headers as Record<string, string>)['Stripe-Version']).toBe('2025-09-30.clover');
     expect(await lookupPromotionCode(env, 'NOPE', fetchImpl, now)).toBeNull();
     expect(await lookupPromotionCode(env, 'HOYA20', fetchImpl, now)).toBeNull();
     expect(await lookupPromotionCode(env, 'HOYA20', fetchImpl, now)).toBeNull();
