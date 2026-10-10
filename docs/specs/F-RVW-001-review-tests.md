@@ -99,11 +99,21 @@ Companion stories:
 - The last 30 attempts are retained per profile; older attempts roll into a monthly `ReviewSummary` aggregate (stars histogram, misses by item).
 - Phase 2: same writes go to D1 (F-INFRA-004).
 
+### 3.7 Motivation surfaces — anti-shame rules (revised 2026-10-09)
+
+Source: `CLAUDE.md` §1 "Feedback & motivation" (owner decision 2026-10-09) and `09-...-addendum.md` §2.2. Positive nudges are allowed; shame is not. These rules bound every learner-facing review surface — they permit the surfaces below, they do not require them.
+
+- **Session clock (allowed)** — a review may show **one** clock for the whole attempt, never one per item. When it runs out the attempt ends: unanswered items are recorded `skipped` (as in §3.3), never `wrong`, and the 1-star floor (§3.1) still holds.
+- **Fill-only meters (allowed)** — item dots, collection counts and progress meters only grow; a miss never empties or shrinks them. A combo counter that resets on a miss is a meter that drops, so it is not allowed.
+- **Encouraging streak messages (allowed)** — e.g. Hoya after a Daily Test: *"3 days in a row!"*. A missed day gets no message about the break and no "streak lost" state.
+- **Challenge mode (allowed, opt-in)** — off by default. When the learner or a caregiver turns it on, a review may show a real countdown timer. With it off, nothing else changes.
+- **Still forbidden** — red-X or red failure styling (`colors.feedback.danger` is never used on a learner's miss), any public ranking of children (§4), and taking away earned stars, cards or collection progress.
+
 ## 4. Out of scope
 
 - **Voice / pronunciation review** (speak-the-jamo) → blocked on STT bench (INBOX T-013), tracked separately.
-- **Adaptive difficulty** (raise stakes if 3-star streak) — explicit anti-pattern; competition / streak inflation conflicts with anti-shame.
-- **Multi-learner leaderboards** — explicit no, ever.
+- **Adaptive difficulty** (raise stakes after a 3-star streak) — out of scope. Encouraging streak *messages* are allowed (§3.7), but raising the stakes on a streak turns encouragement into pressure.
+- **Public ranking of children** (multi-learner leaderboards, class rankings) — explicit no, ever (§3.7).
 - **Stage 2+ Review content** — content work, this spec only covers the engine + Stage 1 question set.
 
 ## 5. UI sketch
@@ -124,7 +134,7 @@ Authored 2026-09-19 (IDs per `docs/blueprints/10-app-map.md` §3.1):
 | `logic/reviews/daily-pool.ts` | §3.2 — Pool A/B/C/D weighting, Pool C forced, anti-staleness |
 | `logic/reviews/stage-balance.ts` | §3.4 — each pillar contributes ≥ 1 |
 | `logic/reviews/banned-text.ts` | §3.1 — no %, no x/y fractions reach learner UI |
-| `logic/reviews/engine.ts` | end-to-end attempt lifecycle (started → item answer × N → completed) |
+| `logic/reviews/engine.ts` | end-to-end attempt lifecycle (started → item answer × N → completed); §3.7 — if a session clock expires, remaining items become `skipped`, never `wrong`, and earned stars / cards never decrease |
 
 ### Integration
 
