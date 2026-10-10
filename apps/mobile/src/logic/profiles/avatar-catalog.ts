@@ -6,6 +6,9 @@ import type { AvatarKind } from '@hangul-route/content-schema';
  * Five preset Hoya tiger cubs, one per culture-theme Pillar of the Heritage
  * Journey grid. The Korean Pillar name is the *illustration's* name, never a
  * learner's, and never surfaced as UI chrome — UI stays English (CLAUDE.md §8).
+ *
+ * The avatar *name* (`hoya-blue`) decides the cub's colour (F-LEARN-001 L11, see
+ * ./profile-avatar.ts); `theme` below is catalogue data and colours nothing.
  */
 
 export type PillarTheme = 'letters' | 'life' | 'rites' | 'nature' | 'crafts';
@@ -18,14 +21,14 @@ export interface AvatarPreset {
   romanization: string;
   /** Culture-theme axis this cub belongs to. */
   theme: PillarTheme;
-  /** English gloss — the label a 5-year-old actually reads. */
+  /** English gloss — the short label shown under the cub in the picker. */
   label: string;
 }
 
 export const AVATAR_PRESETS: readonly AvatarPreset[] = [
   { kind: 'hoya-orange', pillarName: '글이', romanization: 'Geuri', theme: 'letters', label: 'Book Tiger' },
   { kind: 'hoya-blue', pillarName: '살이', romanization: 'Sari', theme: 'life', label: 'Home Tiger' },
-  { kind: 'hoya-green', pillarName: '례이', romanization: 'Yeri', theme: 'rites', label: 'Feast Tiger' },
+  { kind: 'hoya-green', pillarName: '예리', romanization: 'Yeri', theme: 'rites', label: 'Feast Tiger' },
   { kind: 'hoya-purple', pillarName: '솔이', romanization: 'Sori', theme: 'nature', label: 'Mountain Tiger' },
   { kind: 'hoya-pink', pillarName: '솜이', romanization: 'Somi', theme: 'crafts', label: 'Craft Tiger' },
 ] as const;
@@ -37,12 +40,13 @@ export function findAvatar(kind: AvatarKind): AvatarPreset | null {
 }
 
 /**
- * Culture-theme tint for a learner's cub — the Home profile entry rings the
- * avatar in it (UX-05). Unknown (persisted junk) kinds read as the default
- * cub's theme, letters.
+ * English label of a cub ("Book Tiger") — the visible text under a picker tile
+ * and the second cue next to the colour (WCAG 1.4.1). `null` for a value this
+ * build does not know. When F-I18N-001 PR 5 lands the label moves to the
+ * locale catalogue, keyed by `AvatarKind`.
  */
-export function avatarTheme(kind: AvatarKind): PillarTheme {
-  return findAvatar(kind)?.theme ?? 'letters';
+export function avatarLabel(kind: AvatarKind): string | null {
+  return findAvatar(kind)?.label ?? null;
 }
 
 export function isAvatarKind(value: string): value is AvatarKind {

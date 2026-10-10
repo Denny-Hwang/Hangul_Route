@@ -270,6 +270,8 @@ Pill hidden when the stored id is unknown to this build.
      Profile        <- label and accessible name "Profile and settings" exist since PR #95
 ```
 
+The ring and the cub use the colour the avatar's **name** says (`hoya-blue` is blue), not the Pillar theme tint PR #95 used. The ring is the variant's shade (`hoya.*Dark`), so it clears 3:1 on the canvas for every cub. Component reference: `design/components/ProfileAvatar/spec.md`.
+
 ---
 
 ## Interaction points
@@ -310,5 +312,5 @@ Exit F to: the invoking destination (`parent/dashboard`, `onboarding/create-prof
 - Should the self path also be offered a nudge to save a Rescue Code, since it is the only recovery for a forgotten PIN? (default: no; the PIN is optional there)
 - Does "My child or a student" need a third answer for an adult class run by a teacher on a shared device? (default: no; the teacher chooses "My child or a student" and the PIN protects the device)
 - Level descriptions are reader-descriptions today because the level changes nothing yet; revisit wording when F-PLC-001 consumes it.
-- Final tint colours for the four non-orange cubs (design step), including a non-colour cue beyond the visible English label.
+- ~~Final tint colours for the four non-orange cubs (design step), including a non-colour cue beyond the visible English label.~~ Settled in F-LEARN-001 PR 3: tokens `hoya.furBlue` ... `hoya.furPinkDark` in `design/tokens/colors.v1.md`, component reference `design/components/ProfileAvatar/spec.md`. The non-colour cue is the English label under each cub (and the learner's name wherever the cub is shown, not picked).
 - Whether the edit screen should also expose "Hide romanization until tap" per profile (belongs to F-I18N-001).

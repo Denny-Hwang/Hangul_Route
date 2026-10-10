@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
+  HOYA_VARIANTS,
   borderWidth,
   colors,
+  hoyaVariantColors,
   motion,
   radii,
   shadows,
@@ -10,6 +12,7 @@ import {
   touchTarget,
   typography,
   z,
+  type HoyaVariant,
 } from '../tokens';
 
 describe('design tokens v1', () => {
@@ -50,7 +53,7 @@ describe('design tokens v1', () => {
     expect(spacing.lg % 4).toBe(0);
   });
 
-  it('typography body floor is ≥18sp (kids 5-7 legibility)', () => {
+  it('typography body floor is ≥18sp (young-reader legibility)', () => {
     expect(typography.size.body).toBeGreaterThanOrEqual(18);
   });
 
@@ -80,5 +83,43 @@ describe('design tokens v1', () => {
     expect(z.base).toBeLessThan(z.raised);
     expect(z.raised).toBeLessThan(z.modal);
     expect(z.modal).toBeLessThan(z.hoyaBubble);
+  });
+});
+
+describe('Hoya fur variants (F-LEARN-001 §3.6)', () => {
+  it('lists the five variants, orange first', () => {
+    expect(HOYA_VARIANTS).toEqual(['orange', 'blue', 'green', 'purple', 'pink']);
+  });
+
+  it('orange is the existing gold fur, unchanged', () => {
+    expect(hoyaVariantColors('orange')).toEqual({ fur: colors.hoya.fur, furDark: colors.hoya.furDark });
+  });
+
+  it.each([
+    ['blue', colors.hoya.furBlue, colors.hoya.furBlueDark],
+    ['green', colors.hoya.furGreen, colors.hoya.furGreenDark],
+    ['purple', colors.hoya.furPurple, colors.hoya.furPurpleDark],
+    ['pink', colors.hoya.furPink, colors.hoya.furPinkDark],
+  ] as const)('%s maps to its flat colors.hoya.fur* pair', (variant, fur, furDark) => {
+    expect(hoyaVariantColors(variant)).toEqual({ fur, furDark });
+  });
+
+  it('gives every variant a different fur and a different shade', () => {
+    const furs = HOYA_VARIANTS.map((v) => hoyaVariantColors(v).fur);
+    const darks = HOYA_VARIANTS.map((v) => hoyaVariantColors(v).furDark);
+    expect(new Set(furs).size).toBe(HOYA_VARIANTS.length);
+    expect(new Set(darks).size).toBe(HOYA_VARIANTS.length);
+  });
+
+  it('an unknown variant (persisted junk) falls back to orange', () => {
+    expect(hoyaVariantColors('teal' as HoyaVariant)).toEqual(hoyaVariantColors('orange'));
+  });
+
+  it('keeps the eight new fur keys flat inside colors.hoya so the parity test sees them', () => {
+    const keys = Object.keys(colors.hoya);
+    for (const k of ['furBlue', 'furBlueDark', 'furGreen', 'furGreenDark', 'furPurple', 'furPurpleDark', 'furPink', 'furPinkDark']) {
+      expect(keys).toContain(k);
+    }
+    expect(Object.values(colors.hoya).every((v) => typeof v === 'string')).toBe(true);
   });
 });

@@ -40,7 +40,8 @@ Then: they enter the child's name and the child picks one of 8 tiger avatars, an
 ```
 
 - Avatar grid is the child's moment — biggest visual block; no camera / photo upload (COPPA, F-PROF-001 §4).
-- Avatars are illustrations named after the Pillars (글이·살이·례이·솔이·솜이 …), never labeled with the child's name.
+- The Rites cub's name is spelled 예리 (Yeri); it was 례이 until 2026-10-10 (owner decision, F-CNT-002 C9: no Hangul spelling of 례이 reads "Yeri"). Colour per avatar and the English label under each cub: `design/components/ProfileAvatar/spec.md`.
+- Avatars are illustrations named after the Pillars (글이·살이·예리·솔이·솜이 …), never labeled with the child's name.
 
 ## Interaction points
 

@@ -1,5 +1,7 @@
 import {
+  HOYA_VARIANTS,
   colors,
+  hoyaVariantColors,
   motion,
   radii,
   shadows,
@@ -7,6 +9,7 @@ import {
   touchTarget,
   typography,
   z,
+  type HoyaVariant,
 } from '@hangul-route/design-system/tokens';
 import Link from 'next/link';
 import React from 'react';
@@ -339,6 +342,14 @@ function SectionHoyaPalette(): JSX.Element {
     ['hoya.belly', colors.hoya.belly],
     ['hoya.cheek', colors.hoya.cheek],
     ['hoya.nose', colors.hoya.nose],
+    ['hoya.furBlue', colors.hoya.furBlue],
+    ['hoya.furBlueDark', colors.hoya.furBlueDark],
+    ['hoya.furGreen', colors.hoya.furGreen],
+    ['hoya.furGreenDark', colors.hoya.furGreenDark],
+    ['hoya.furPurple', colors.hoya.furPurple],
+    ['hoya.furPurpleDark', colors.hoya.furPurpleDark],
+    ['hoya.furPink', colors.hoya.furPink],
+    ['hoya.furPinkDark', colors.hoya.furPinkDark],
   ];
   return (
     <Section>
@@ -1016,7 +1027,16 @@ function eyeFor(pose: HoyaPose): { leftCx: number; rightCx: number; y: number; r
   }
 }
 
-function HoyaSvg({ pose, size = 96 }: { pose: HoyaPose; size?: number }): JSX.Element {
+function HoyaSvg({
+  pose,
+  size = 96,
+  variant = 'orange',
+}: {
+  pose: HoyaPose;
+  size?: number;
+  variant?: HoyaVariant;
+}): JSX.Element {
+  const { fur, furDark } = hoyaVariantColors(variant);
   // Mirrors packages/design-system/src/components/Hoya/Hoya.tsx exactly.
   // Refined per design/brief/character/hoya-character-sheet.md.
   // When real Hoya art ships from design/characters/hoya/v1/, this preview will
@@ -1026,36 +1046,36 @@ function HoyaSvg({ pose, size = 96 }: { pose: HoyaPose; size?: number }): JSX.El
   return (
     <svg width={size} height={size} viewBox="0 0 128 128" aria-label={`Hoya ${pose}`}>
       {/* Foot shadow */}
-      <ellipse cx={64} cy={116} rx={38} ry={5} fill={colors.hoya.furDark} opacity={0.18} />
+      <ellipse cx={64} cy={116} rx={38} ry={5} fill={furDark} opacity={0.18} />
 
       {/* Arms / paws — pose-specific */}
       {pose === 'cheering' ? (
         <g>
-          <path d="M22 78 Q14 60 8 46" stroke={colors.hoya.fur} strokeWidth={10} strokeLinecap="round" fill="none" />
-          <path d="M106 78 Q114 60 120 46" stroke={colors.hoya.fur} strokeWidth={10} strokeLinecap="round" fill="none" />
-          <circle cx={8} cy={46} r={7} fill={colors.hoya.fur} />
-          <circle cx={120} cy={46} r={7} fill={colors.hoya.fur} />
+          <path d="M22 78 Q14 60 8 46" stroke={fur} strokeWidth={10} strokeLinecap="round" fill="none" />
+          <path d="M106 78 Q114 60 120 46" stroke={fur} strokeWidth={10} strokeLinecap="round" fill="none" />
+          <circle cx={8} cy={46} r={7} fill={fur} />
+          <circle cx={120} cy={46} r={7} fill={fur} />
         </g>
       ) : null}
       {pose === 'waving' ? (
         <g>
-          <path d="M104 76 Q116 64 122 54" stroke={colors.hoya.fur} strokeWidth={10} strokeLinecap="round" fill="none" />
-          <circle cx={122} cy={54} r={7} fill={colors.hoya.fur} />
+          <path d="M104 76 Q116 64 122 54" stroke={fur} strokeWidth={10} strokeLinecap="round" fill="none" />
+          <circle cx={122} cy={54} r={7} fill={fur} />
         </g>
       ) : null}
       {pose === 'reading' ? (
         <g>
-          <circle cx={42} cy={102} r={6} fill={colors.hoya.fur} />
-          <circle cx={86} cy={102} r={6} fill={colors.hoya.fur} />
+          <circle cx={42} cy={102} r={6} fill={fur} />
+          <circle cx={86} cy={102} r={6} fill={fur} />
         </g>
       ) : null}
 
       {/* Head */}
-      <circle cx={64} cy={64} r={44} fill={colors.hoya.fur} />
+      <circle cx={64} cy={64} r={44} fill={fur} />
 
       {/* Ears */}
-      <circle cx={30} cy={32} r={12} fill={colors.hoya.fur} />
-      <circle cx={98} cy={32} r={12} fill={colors.hoya.fur} />
+      <circle cx={30} cy={32} r={12} fill={fur} />
+      <circle cx={98} cy={32} r={12} fill={fur} />
       <circle cx={30} cy={32} r={6} fill={colors.hoya.cheek} opacity={0.85} />
       <circle cx={98} cy={32} r={6} fill={colors.hoya.cheek} opacity={0.85} />
 
@@ -1150,7 +1170,7 @@ function HoyaSvg({ pose, size = 96 }: { pose: HoyaPose; size?: number }): JSX.El
       {/* Reading — book held below */}
       {pose === 'reading' ? (
         <g>
-          <rect x={36} y={98} width={56} height={20} rx={3} ry={3} fill={colors.hoya.furDark} opacity={0.2} />
+          <rect x={36} y={98} width={56} height={20} rx={3} ry={3} fill={furDark} opacity={0.2} />
           <rect
             x={36}
             y={94}
@@ -1210,6 +1230,41 @@ function SectionHoyaPlaceholder(): JSX.Element {
               }}
             >
               {p}
+            </div>
+          </div>
+        ))}
+      </div>
+      <h3
+        style={{
+          margin: `${spacing.xl}px 0 ${spacing.sm}px`,
+          fontSize: typography.size.bodyLg,
+          color: colors.text.primary,
+        }}
+      >
+        Learner cubs (avatar variants)
+      </h3>
+      <div style={{ display: 'flex', gap: spacing.xl, flexWrap: 'wrap' }}>
+        {HOYA_VARIANTS.map((v) => (
+          <div key={v} style={{ textAlign: 'center' }}>
+            <div
+              style={{
+                backgroundColor: colors.surface.paper,
+                borderRadius: radii.lg,
+                border: `1px solid ${colors.border.subtle}`,
+                padding: spacing.md,
+              }}
+            >
+              <HoyaSvg pose="idle" size={120} variant={v} />
+            </div>
+            <div
+              style={{
+                marginTop: spacing.sm,
+                fontFamily: typography.family.mono,
+                fontSize: typography.size.caption,
+                color: colors.text.muted,
+              }}
+            >
+              {v}
             </div>
           </div>
         ))}
