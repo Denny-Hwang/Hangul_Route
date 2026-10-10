@@ -28,8 +28,15 @@ button {
   display: flex;
 }
 
-.hr-landing-nav {
+/* DOM order is visual order at every width: brand, "Play now", section
+   links. Nothing here uses `order`, so keyboard focus follows what the eye
+   sees (WCAG 2.4.3 / 1.3.2). The CTA's auto margin pushes it, and the links
+   after it, to the right of the brand. */
+.hr-landing-cta {
   margin-left: auto;
+}
+
+.hr-landing-nav {
   justify-content: flex-end;
 }
 
@@ -41,18 +48,11 @@ button {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
 }
 
-/* Brand + five links + "Play now" need ~780px. Below that, row 1 is the
+/* Brand + "Play now" + five links need ~780px. Below that, row 1 is the
    brand and "Play now"; row 2 is the section links, wrapping as needed. */
 @media (max-width: 899px) {
-  .hr-landing-cta {
-    order: 2;
-    margin-left: auto;
-  }
-
   .hr-landing-nav {
-    order: 3;
     flex-basis: 100%;
-    margin-left: 0;
     justify-content: flex-start;
   }
 }

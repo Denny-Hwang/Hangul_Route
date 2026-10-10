@@ -10,8 +10,13 @@ import HomePage from '../page';
  *
  * Inline styles beat stylesheet rules, so every property the phone layout
  * overrides must live in globals.css, not inline. This test pins that split;
- * the pixel check (no horizontal scroll at 320 / 375 / 768) runs in Playwright
- * against the static export.
+ * the pixel checks (no horizontal scroll at 320 / 375 / 768, "Play now"
+ * visible, focus order = visual order) run in Playwright against the static
+ * export (apps/web/e2e/landing-layout.spec.ts).
+ *
+ * DOM order is visual order at every width: brand, "Play now", then the nav.
+ * The header never uses CSS `order`, so keyboard focus (WCAG 2.4.3) follows
+ * what the eye sees (WCAG 1.3.2).
  */
 const here = dirname(fileURLToPath(import.meta.url));
 const css = readFileSync(join(here, '..', 'globals.css'), 'utf8');
@@ -78,15 +83,33 @@ describe('landing header — nav wraps, "Play now" stays visible', () => {
     expect(openingTag('hr-landing-nav')).toContain('aria-label="Main"');
   });
 
-  it('below 900px the CTA sits on the brand row and the nav drops to its own row', () => {
-    expect(rule(headerCss, '.hr-landing-cta')).toContain('order: 2');
-    expect(rule(headerCss, '.hr-landing-cta')).toContain('margin-left: auto');
-    expect(rule(headerCss, '.hr-landing-nav')).toContain('order: 3');
-    expect(rule(headerCss, '.hr-landing-nav')).toContain('flex-basis: 100%');
+  it('"Play now" comes before the nav in the DOM, so focus order matches the visual order', () => {
+    const header = /<header[^>]*class="[^"]*hr-landing-header[^"]*"[^>]*>([\s\S]*?)<\/header>/.exec(html)?.[1] ?? '';
+    const cta = header.indexOf('hr-landing-cta');
+    const nav = header.indexOf('<nav');
+    expect(cta).toBeGreaterThan(-1);
+    expect(nav).toBeGreaterThan(cta);
   });
 
-  it('on wide screens the nav sits between brand and CTA, pushed right', () => {
-    expect(rule(desktopCss, '.hr-landing-nav')).toContain('margin-left: auto');
+  it('no rule reorders the header — a CSS `order` would split focus order from visual order', () => {
+    const rules = css.replace(/\/\*[\s\S]*?\*\//g, '');
+    expect(rules).not.toMatch(/(^|[^-\w])order\s*:/);
+    expect(rules).not.toMatch(/(row|column)-reverse/);
+  });
+
+  it('the CTA is pushed to the right of the brand row at every width', () => {
+    expect(rule(desktopCss, '.hr-landing-cta')).toContain('margin-left: auto');
+  });
+
+  it('on wide screens the section links follow the CTA, right-aligned', () => {
+    expect(rule(desktopCss, '.hr-landing-nav')).toContain('justify-content: flex-end');
+    expect(rule(desktopCss, '.hr-landing-nav')).not.toContain('margin-left');
+  });
+
+  it('below 900px the section links drop to their own full-width row after the CTA', () => {
+    expect(rule(headerCss, '.hr-landing-nav')).toContain('flex-basis: 100%');
+    expect(rule(headerCss, '.hr-landing-nav')).toContain('justify-content: flex-start');
+    expect(headerCss).not.toContain('hr-landing-cta');
   });
 
   it('at 359px and below only the decorative logo mark is dropped — never the CTA', () => {

@@ -61,6 +61,22 @@ export default function HomePage(): JSX.Element {
             Hangul Route
           </span>
         </div>
+        {/* DOM order is visual order at every width (WCAG 2.4.3 / 1.3.2): brand,
+            "Play now", then the section links. globals.css never uses `order`. */}
+        <a
+          href={APP_URL}
+          className="hr-landing-cta"
+          style={{
+            padding: `${spacing.sm}px ${spacing.lg}px`,
+            backgroundColor: colors.brand.primary,
+            color: colors.text.onPrimary,
+            borderRadius: radii.pill,
+            fontWeight: typography.weight.bold,
+            whiteSpace: 'nowrap',
+          }}
+        >
+          Play now
+        </a>
         <nav
           aria-label="Main"
           className="hr-landing-nav"
@@ -88,20 +104,6 @@ export default function HomePage(): JSX.Element {
             For teachers
           </Link>
         </nav>
-        <a
-          href={APP_URL}
-          className="hr-landing-cta"
-          style={{
-            padding: `${spacing.sm}px ${spacing.lg}px`,
-            backgroundColor: colors.brand.primary,
-            color: colors.text.onPrimary,
-            borderRadius: radii.pill,
-            fontWeight: typography.weight.bold,
-            whiteSpace: 'nowrap',
-          }}
-        >
-          Play now
-        </a>
       </header>
 
       {/* Hero */}
