@@ -101,7 +101,7 @@ Last updated: 2026-10-09 · Version: v1 (AA contrast revision, see below)
 |---|---|---|
 | `border.subtle` | #E8DFCD | Default card borders |
 | `border.strong` | #C5B8A1 | Emphasis borders |
-| `border.focus` | #4A9DD6 | Keyboard focus ring |
+| `border.focus` | #3A7FB5 | Keyboard focus ring. 4.06:1 on canvas, 3.63:1 on sunken, 4.30:1 on paper (3:1 non-text minimum) |
 
 ---
 
@@ -126,8 +126,16 @@ text and muted captions were deepened (same hues) until every pairing the compon
 meets 4.5:1. Korean inside Hoya bubbles now uses `text.primary` instead of brand orange.
 
 `packages/design-system/src/__tests__/contrast.test.ts` enforces the pairings and
-`tokens-parity.test.ts` pins this table to `tokens.ts` value-for-value. Stage, theme, rarity and
-Hoya tints are unchanged (fills and borders, not text-bearing in the components).
+`tokens-parity.test.ts` pins this table to `tokens.ts` value-for-value.
+
+Stage, theme, rarity and Hoya tints are unchanged, and several of them are **below AA as text**
+(stage1-4 and every theme tint but rites are 1.8-3.0:1 on canvas). They are accents for fills,
+borders and small shapes only. **Rule: text is never set in a stage, theme, rarity or Hoya colour.**
+The Episode heading and the Journey grid letters use `text.primary` with the stage colour as a
+border or accent bar; the stage badge number sits on paper inside a stage-coloured ring; letters on
+a theme-coloured card tile use `text.primary` (3.5:1 or better, tested as large text). Pressed ghost
+buttons switch their label to `brand.primaryDark` (5.76:1 on `primaryLight`; `brand.primary` there
+is 4.10:1). `border.focus` was deepened from #4A9DD6 (2.80:1) to clear the 3:1 non-text minimum.
 
 ## Promotion path
 

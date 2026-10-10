@@ -58,7 +58,9 @@ export const colors = {
     danger: '#C84B3D', // RESERVED for parent/admin destructive only — never on child failure
     dangerLight: '#F8DBD8',
   },
-  // Stage axis (7) — themed accents for each Heritage Journey stage
+  // Stage axis (7) — themed accents for each Heritage Journey stage. Fills,
+  // borders and accent shapes only: stage1-4 on canvas are 2.3-3.0:1, so any
+  // text beside them is text.primary (never set text in a stage/theme/rarity colour).
   stage: {
     stage1: '#E8743B', // Hangul — primary
     stage2: '#D89B2B', // Word
@@ -96,7 +98,7 @@ export const colors = {
   border: {
     subtle: '#E8DFCD',
     strong: '#C5B8A1',
-    focus: '#4A9DD6',
+    focus: '#3A7FB5', // ≥ 3:1 (non-text) on canvas, paper and sunken
   },
 } as const;
 

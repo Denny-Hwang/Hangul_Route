@@ -74,6 +74,27 @@ describe('token contrast contract (WCAG AA)', () => {
     expect(contrastRatio(fg, bg)).toBeGreaterThanOrEqual(WCAG_AA_NORMAL);
   });
 
+  // Pressed ghost button: Button swaps its label to primaryDark on the primaryLight fill.
+  it('pressed ghost label (brand.primaryDark on brand.primaryLight) ≥ 4.5:1, resting brand.primary there is not', () => {
+    expect(contrastRatio(colors.brand.primaryDark, colors.brand.primaryLight)).toBeGreaterThanOrEqual(WCAG_AA_NORMAL);
+    expect(contrastRatio(colors.brand.primary, colors.brand.primaryLight)).toBeLessThan(WCAG_AA_NORMAL);
+  });
+
+  // Large glyphs on a theme-coloured card tile (CardDetail 80px, Results 28px bold) use text.primary.
+  it.each(Object.entries(colors.theme))('text.primary on theme.%s tile ≥ 3:1 (large text)', (_key, fill) => {
+    expect(contrastRatio(colors.text.primary, fill)).toBeGreaterThanOrEqual(WCAG_AA_LARGE);
+  });
+
+  // Stage tints are accents only (stage1-4 are 2.3-3.0:1 as text on canvas); a label on a stage fill is text.primary.
+  it.each(Object.entries(colors.stage))('text.primary on stage.%s fill ≥ 3:1 (large text)', (_key, fill) => {
+    expect(contrastRatio(colors.text.primary, fill)).toBeGreaterThanOrEqual(WCAG_AA_LARGE);
+  });
+
+  // The focus ring is a UI graphic: 3:1 against every surface it can sit on.
+  it.each(Object.entries(surfaces))('border.focus on %s ≥ 3:1 (non-text)', (_name, bg) => {
+    expect(contrastRatio(colors.border.focus, bg)).toBeGreaterThanOrEqual(WCAG_AA_LARGE);
+  });
+
   it('a correct tile label (large text) reads on its success tint', () => {
     expect(contrastRatio(colors.feedback.success, colors.feedback.successLight)).toBeGreaterThanOrEqual(WCAG_AA_LARGE);
   });
