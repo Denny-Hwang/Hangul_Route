@@ -116,6 +116,10 @@ export function RestoreScreen({ navigation, route }: Props): React.ReactElement 
                   setCodeInput(cleanRescueInput(v));
                 }}
                 onSubmitEditing={() => void claim()}
+                // Wraps instead of scrolling sideways, so the whole code is checkable at 320 px; Enter still submits.
+                multiline
+                numberOfLines={2}
+                blurOnSubmit
                 placeholder="Words, then the number"
                 placeholderTextColor={colors.text.muted}
                 autoCapitalize="characters"
@@ -129,7 +133,9 @@ export function RestoreScreen({ navigation, route }: Props): React.ReactElement 
                 style={{
                   minHeight: touchTarget.child,
                   paddingHorizontal: spacing.md,
+                  paddingVertical: spacing.sm,
                   textAlign: 'center',
+                  textAlignVertical: 'center',
                   fontSize: typography.size.bodyLg,
                   fontWeight: '700',
                   color: colors.text.primary,
