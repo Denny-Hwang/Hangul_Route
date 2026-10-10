@@ -9,7 +9,7 @@ import { fail } from '../envelope';
  */
 const SECRET_BYTES = 32;
 
-function toHex(bytes: Uint8Array): string {
+export function toHex(bytes: Uint8Array): string {
   return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
 }
 

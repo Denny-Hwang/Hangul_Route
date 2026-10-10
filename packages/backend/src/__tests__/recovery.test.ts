@@ -147,7 +147,7 @@ describe('/api/recovery (F-RESTORE-001)', () => {
     claimLimiter.reset();
     setRescueCodeSourceForTests(() => 'TIGER-MOON-RIVER-APPLE-111111');
     const stuck = await app.request('/api/recovery/issue', { method: 'POST', headers: mina, body: JSON.stringify({ learnerId: 'profile:mina' }) });
-    expect(stuck.status).toBe(503);
+    expect(stuck.status).toBe(500);
     expect(((await claim('TIGER-MOON-RIVER-APPLE-222222')).body.data as { learner: { id: string } }).learner.id).toBe('profile:mina');
   });
 

@@ -7,17 +7,50 @@ import { can } from '../lib/can';
 import { authorizeDevice, hashSecret, newDeviceSecret, parseDeviceHeader } from '../lib/device-auth';
 import { publicLearner } from '../lib/learners';
 import { clientKey, createRateLimiter } from '../lib/rate-limit';
+import { rescueHash, rescueLookupHashes, rescuePepper } from '../lib/rescue-hash';
 import { randomRescueCode } from '../lib/rescue-words';
+import type { Learner } from '../store';
 
 /**
- * /api/recovery — F-RESTORE-001. Codes are hashed at rest; claiming from a
- * new device mints a device binding and hands back the snapshot.
+ * /api/recovery — F-RESTORE-001. Codes are hashed at rest (keyed with
+ * RESCUE_PEPPER when set, SEC-5); claiming from a new device mints a device
+ * binding and hands back the snapshot.
  */
 export const recoveryRoutes = new Hono();
 
+/**
+ * Per client key, per isolate (lib/rate-limit). Not durable across isolates;
+ * with >= 50-bit codes online guessing is out of reach regardless, so a
+ * D1-backed counter is left for later (F-RESTORE-001 §3.2).
+ */
 export const CLAIM_LIMIT = 5;
 export const CLAIM_WINDOW_MS = 60 * 60 * 1000;
 export const claimLimiter = createRateLimiter(CLAIM_LIMIT, CLAIM_WINDOW_MS);
+
+/** Draws per issue before giving up: a collision needs two equal ~52-bit codes, so a second draw is already rare. */
+export const ISSUE_ATTEMPTS = 3;
+let nextCode: () => string = () => randomRescueCode();
+
+/** Tests only: script the codes `/issue` draws (null restores the crypto generator). */
+export function setRescueCodeSourceForTests(source: (() => string) | null): void {
+  nextCode = source ?? (() => randomRescueCode());
+}
+
+const isUniqueViolation = (err: unknown): boolean => err instanceof Error && /UNIQUE constraint failed/i.test(err.message);
+
+/** Stores a fresh code for the learner, drawing again if its hash is already taken. Null when every draw collided. */
+async function storeNewCode(save: (learner: Learner) => Promise<void>, learner: Learner, pepper: string | undefined): Promise<string | null> {
+  for (let attempt = 0; attempt < ISSUE_ATTEMPTS; attempt += 1) {
+    const code = nextCode();
+    try {
+      await save({ ...learner, recoveryHash: await rescueHash(code, pepper) }); // replaces any previous code
+      return code;
+    } catch (err) {
+      if (!isUniqueViolation(err)) throw err;
+    }
+  }
+  return null;
+}
 
 recoveryRoutes.post('/issue', async (c) => {
   const body = (await c.req.json().catch(() => ({}))) as { learnerId?: string };
@@ -37,8 +70,8 @@ recoveryRoutes.post('/issue', async (c) => {
   }
   const learner = await db.getLearner(learnerId);
   if (!learner) return fail(c, 'not_found', 'Learner not found', 404);
-  const code = randomRescueCode();
-  await db.putLearner({ ...learner, recoveryHash: await hashSecret(code) }); // replaces any previous code
+  const code = await storeNewCode((l) => db.putLearner(l), learner, rescuePepper(c.env));
+  if (!code) return fail(c, 'code_unavailable', 'Could not issue a code right now — try again', 500);
   return ok(c, { code, issuedAt: new Date().toISOString() }, 201);
 });
 
@@ -54,10 +87,14 @@ recoveryRoutes.post('/claim', async (c) => {
     );
   }
   const parsed = RescueClaimSchema.safeParse(await c.req.json().catch(() => null));
-  if (!parsed.success) return fail(c, 'bad_request', 'Rescue code must look like WORD-WORD-1234', 422);
+  if (!parsed.success) return fail(c, 'bad_request', 'Rescue code must look like WORD-WORD-WORD-WORD-123456', 422);
   const { code, deviceId } = parsed.data;
   const db = dbFor(c);
-  const learner = await db.learnerByRecoveryHash(await hashSecret(code));
+  let learner: Learner | null = null;
+  for (const hash of await rescueLookupHashes(code, rescuePepper(c.env))) {
+    learner = await db.learnerByRecoveryHash(hash);
+    if (learner) break;
+  }
   if (!learner) return fail(c, 'code_not_found', 'No learner matches this code', 404);
 
   const now = new Date().toISOString();

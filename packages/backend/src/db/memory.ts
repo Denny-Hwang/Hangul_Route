@@ -36,6 +36,9 @@ export class MemoryDb implements Db {
     return clone(this.learners.get(learnerId) ?? null);
   }
   async putLearner(learner: Learner): Promise<void> {
+    // learners.recovery_hash is UNIQUE on D1; mirror it so collisions surface here too.
+    const holder = learner.recoveryHash === null ? undefined : [...this.learners.values()].find((l) => l.recoveryHash === learner.recoveryHash && l.id !== learner.id);
+    if (holder) throw new Error('UNIQUE constraint failed: learners.recovery_hash');
     this.learners.set(learner.id, clone(learner));
   }
   async learnerByRecoveryHash(hash: string): Promise<Learner | null> {
