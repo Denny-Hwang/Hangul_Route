@@ -3,7 +3,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
 import { Pressable, TextInput, View } from 'react-native';
 import { cleanJoinCode, isCodeError, isCompleteJoinCode, joinErrorMessage } from '../../logic/spaces/join-code';
-import { restoreNotice } from '../../logic/sync/restore';
+import { relinkNotice } from '../../logic/sync/restore';
 import type { RootStackParamList } from '../../navigation/types';
 import { apiBaseUrl } from '../../platform/sync-api';
 import { useMembershipStore, type LookupOutcome } from '../../store/membership-store';
@@ -82,7 +82,7 @@ export function JoinSpaceScreen({ navigation }: Props): React.ReactElement {
         setMessage(joinErrorMessage(result.error === 'off' ? 'off' : result.error === 'network' ? 'network' : 'unknown'));
       } else if (result.state === 'approved') {
         setActive(result.plan.profile.id);
-        setDone({ name: found.name, alreadyMember: true, notice: restoreNotice(result.plan) });
+        setDone({ name: found.name, alreadyMember: true, notice: relinkNotice(result.plan) });
       } else if (result.state === 'denied') {
         setMessage('Your teacher said not now. Ask them in class.');
       } else {
