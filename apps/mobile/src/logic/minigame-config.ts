@@ -10,7 +10,7 @@ export interface MinigameScope {
   jamoIds?: string[];
   syllables?: Array<{ ko: string; romanization: string; jamoChars: string[] }>;
   cardPairs?: Array<{ ko: string; en: string; romanization?: string }>;
-  storySteps?: Array<{ id: string; labelEn: string; labelKo?: string }>;
+  storySteps?: Array<{ id: string; labelEn: string; labelKo?: string; romanization?: string }>;
   dialogue?: Array<{
     npcKo: string;
     npcRomanization?: string;

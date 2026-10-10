@@ -17,6 +17,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect } from 'react';
 import { Pressable, View } from 'react-native';
 import { questById } from '../../content';
+import { narrativeLine, type NarrativeLine } from '../../logic/korean-labels';
 import { questOutcome } from '../../logic/quest-outcome';
 import { questStepLabel } from '../../logic/quest-steps';
 import { confirm } from '../../platform/dialog';
@@ -145,7 +146,7 @@ export function QuestPlayerScreen({ route, navigation }: Props): React.ReactElem
         />
       ) : (
         <NarrativeStepBody
-          message={step.hoyaLineEn ?? step.bodyEn ?? "Let's keep going!"}
+          line={narrativeLine(step)}
           onContinue={advance}
           isReward={step.kind === 'reward'}
         />
@@ -155,11 +156,11 @@ export function QuestPlayerScreen({ route, navigation }: Props): React.ReactElem
 }
 
 function NarrativeStepBody({
-  message,
+  line,
   onContinue,
   isReward,
 }: {
-  message: string;
+  line: NarrativeLine;
   onContinue: () => void;
   isReward: boolean;
 }): React.ReactElement {
@@ -170,7 +171,18 @@ function NarrativeStepBody({
           <Hoya pose={isReward ? 'cheering' : 'waving'} size={120} />
         </View>
         <Spacer size="md" />
-        <HoyaBubble tone={isReward ? 'cheering' : 'idle'} message={message} />
+        <HoyaBubble
+          tone={isReward ? 'cheering' : 'idle'}
+          message={line.message}
+          korean={line.korean}
+          romanization={line.romanization}
+        />
+        {line.glossEn ? (
+          <>
+            <Spacer size="sm" />
+            <Body tone="secondary">{line.glossEn}</Body>
+          </>
+        ) : null}
       </Card>
       <View style={{ flex: 1 }} />
       <Button label={isReward ? 'See results' : 'Continue'} tone="primary" size="hero" fullWidth onPress={onContinue} />
