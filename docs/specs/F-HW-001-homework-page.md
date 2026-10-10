@@ -35,7 +35,7 @@ Companion stories:
 - **Given** a learner profile opens the home screen on day N,
   **when** the home renders,
   **then** exactly **3 mission cards** are shown in this fixed order:
-  1. **Replay** — a Quest from days N−1 or N−2 that the learner completed but had ≥ 1 wrong answer on.
+  1. **Replay** — a Quest from days N−1 or N−2 that the learner completed but had ≥ 1 wrong answer on (a missed round under first-try scoring, F-001 §3.2 revised 2026-10-10 — a wrong first answer, not a retry).
   2. **New** — the next Quest in the learner's Journey (Stage × Theme cursor).
   3. **Daily test** — a 60–90 s review attempt scoped to the last 3 days of learning (see F-RVW-001).
 - **Given** no qualifying *Replay* exists (e.g. day 1 of app use),

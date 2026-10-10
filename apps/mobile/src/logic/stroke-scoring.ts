@@ -11,7 +11,9 @@ import type { JamoStrokePoint } from '../content/jamo-strokes';
  * direction (start→end for open strokes, winding for closed loops) are
  * auxiliary signals — they ride the result envelope so
  * the UI can surface "you got it! next time try left-to-right" without
- * gating progress.
+ * gating progress. Direction is reported per target, with a closed-loop flag,
+ * so the UI can word a loop going round the wrong way differently from an
+ * open stroke drawn backwards (see logic/trace-copy.ts).
  */
 
 const DEFAULT_TOLERANCE = 24; // dp at 200 viewBox scale
@@ -125,6 +127,12 @@ export interface ScoreTraceResult {
   orderCorrect?: boolean;
   /** F-006: per-target whether the matching drawn stroke ran the right way. */
   directionsPerTarget?: boolean[];
+  /**
+   * F-006: per target, whether it is a closed loop (ㅁ ㅇ ㅎ...). Loops are
+   * judged by winding, not left-to-right, so the UI must not give them the
+   * left-to-right nudge. Parallel to `directionsPerTarget`.
+   */
+  closedPerTarget?: boolean[];
   /** F-006: true iff every directionsPerTarget entry is true. */
   directionsCorrect?: boolean;
   /** F-008: coverage ≥ 0.65 AND orderCorrect. Populated when checkOrder=true. */
@@ -151,6 +159,7 @@ export function scoreTrace({
     }
     if (checkDirection) {
       base.directionsPerTarget = target.map(() => false);
+      base.closedPerTarget = target.map((t) => isClosedStroke(t, tolerance));
       base.directionsCorrect = target.length === 0;
     }
     return base;
@@ -210,6 +219,7 @@ export function scoreTrace({
         return directionMatches(drawnStroke, targetStroke, tolerance);
       });
       result.directionsPerTarget = directionsPerTarget;
+      result.closedPerTarget = target.map((t) => isClosedStroke(t, tolerance));
       result.directionsCorrect = directionsPerTarget.every((d) => d);
     }
   }

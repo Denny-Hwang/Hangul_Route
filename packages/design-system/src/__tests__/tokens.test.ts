@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  borderWidth,
   colors,
   motion,
   radii,
@@ -33,6 +34,13 @@ describe('design tokens v1', () => {
     expect(touchTarget.min).toBeGreaterThanOrEqual(64);
     expect(touchTarget.child).toBeGreaterThanOrEqual(touchTarget.min);
     expect(touchTarget.hero).toBeGreaterThanOrEqual(touchTarget.child);
+  });
+
+  it('border widths step up from thin to thick', () => {
+    expect(borderWidth.thin).toBeGreaterThan(0);
+    expect(borderWidth.base).toBeGreaterThan(borderWidth.thin);
+    expect(borderWidth.thick).toBeGreaterThan(borderWidth.base);
+    expect(tokens.borderWidth).toBe(borderWidth);
   });
 
   it('spacing uses 4pt sub-grid floor', () => {

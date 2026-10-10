@@ -3,6 +3,8 @@ import { jamoStrokes, strokesForJamo } from '../../content/jamo-strokes';
 import {
   BADGE_RADIUS,
   buildStrokeDiagram,
+  describeStroke,
+  describeStrokeOrder,
   pointAlong,
   pointsToPathD,
   staticHintHoldMs,
@@ -141,5 +143,41 @@ describe('staticHintHoldMs', () => {
     expect(staticHintHoldMs(4)).toBeGreaterThan(staticHintHoldMs(1));
     expect(staticHintHoldMs(40)).toBeLessThanOrEqual(5000);
     expect(staticHintHoldMs(0)).toBeGreaterThanOrEqual(2000);
+  });
+});
+
+describe('describeStrokeOrder — text alternative for the still diagram', () => {
+  it('describes a bent stroke leg by leg (ㄱ goes right, then down)', () => {
+    expect(describeStroke(strokesForJamo('jamo:giyeok')![0]!)).toBe('right, then down');
+  });
+
+  it('describes a ring as a loop (ㅇ)', () => {
+    expect(describeStroke(strokesForJamo('jamo:ieung')![0]!)).toBe('a loop');
+  });
+
+  it('describes straight strokes by direction', () => {
+    expect(describeStroke([{ x: 30, y: 100 }, { x: 170, y: 100 }])).toBe('right');
+    expect(describeStroke([{ x: 100, y: 30 }, { x: 100, y: 170 }])).toBe('down');
+    expect(describeStroke([{ x: 170, y: 30 }, { x: 30, y: 170 }])).toBe('down and left');
+  });
+
+  it('numbers the strokes in writing order', () => {
+    const text = describeStrokeOrder(strokesForJamo('jamo:nieun')!);
+    expect(text).toBe('Stroke order. One stroke. 1: down, then right.');
+    const multi = describeStrokeOrder(strokesForJamo('jamo:digeut')!);
+    expect(multi).toMatch(/^Stroke order\. \d strokes\. 1: /);
+    expect(multi).toContain('2: ');
+  });
+
+  it('gives every shipped letter a non-empty description with one entry per stroke', () => {
+    for (const j of jamoStrokes) {
+      const text = describeStrokeOrder(j.strokes);
+      expect(text.length).toBeGreaterThan(10);
+      for (let n = 1; n <= j.strokes.length; n++) expect(text).toContain(`${n}: `);
+    }
+  });
+
+  it('copes with an empty target', () => {
+    expect(describeStrokeOrder([])).toBe('Stroke order guide');
   });
 });

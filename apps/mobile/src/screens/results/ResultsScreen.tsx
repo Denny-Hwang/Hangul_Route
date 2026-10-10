@@ -11,15 +11,17 @@ import {
   Screen,
   Spacer,
   StarRow,
+  borderWidth,
   colors,
   radii,
   spacing,
   supportedCardIds,
+  touchTarget,
 } from '@hangul-route/design-system';
 import { CommonActions } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useRef, useState } from 'react';
-import { View } from 'react-native';
+import { AccessibilityInfo, Platform, View } from 'react-native';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -31,7 +33,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
 import { cardById, episodeById, questById } from '../../content';
-import { decideCardAward, type CardAward } from '../../logic/reward';
+import { applyQuestResult } from '../../logic/results-award';
+import type { CardAward } from '../../logic/reward';
 import { resultsCheerMessage, resultsHeadline } from '../../logic/results-copy';
 import { useReducedMotion } from '../../platform/motion';
 import { track } from '../../platform/telemetry';
@@ -59,50 +62,38 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
     // object changes identity underneath (wireframe results/celebrate).
     if (recordedRef.current) return;
     recordedRef.current = true;
-    if (total === 0) {
-      // Every game skipped: nothing to score, nothing to complete — the quest
-      // stays available on the episode page exactly as before.
-      void track({
-        name: 'quest.complete',
+    // Score, telemetry and the one-time card award live in logic/results-award.
+    const earned = applyQuestResult(
+      {
         profileId: profile.id,
-        payload: { questId, episodeId, stars: 0, correct: 0, total: 0, skipped: true },
-      });
-      return;
-    }
-    recordQuestComplete(profile.id, {
-      questId,
-      episodeId,
-      stars,
-      accuracy: total > 0 ? correct / total : 0,
-      attempts: 1,
-    });
-    void track({
-      name: 'quest.complete',
-      profileId: profile.id,
-      payload: { questId, episodeId, stars, correct, total, retries },
-    });
-    // F-MOTION-003 §3.5 — a card is earned at 2+ stars; audit UX-03 — it is
-    // announced (reveal + card.unlocked) only the first time. A replay of a
-    // quest whose card is already in the Library says nothing about it.
-    const owned = (useProgressStore.getState().byProfile[profile.id]?.cards ?? []).map((c) => c.cardId);
-    const earned = decideCardAward({ rewardCardId: quest.rewardCardId, stars, ownedCardIds: owned });
+        questId,
+        episodeId,
+        rewardCardId: quest.rewardCardId,
+        stars,
+        correct,
+        total,
+        retries,
+      },
+      {
+        ownedCardIds: () =>
+          (useProgressStore.getState().byProfile[profile.id]?.cards ?? []).map((c) => c.cardId),
+        recordQuestComplete,
+        unlockCard,
+        track,
+      },
+    );
     setAward(earned);
-    if (earned?.isNew) {
-      unlockCard(profile.id, earned.cardId);
-      void track({
-        name: 'card.unlocked',
-        profileId: profile.id,
-        payload: { cardId: earned.cardId, questId },
-      });
-      if (earned.isFirstCard) {
-        void track({
-          name: 'card.first_earned',
-          profileId: profile.id,
-          payload: { cardId: earned.cardId },
-        });
-      }
-    }
   }, [profile, quest, questId, episodeId, stars, correct, total, retries, recordQuestComplete, unlockCard]);
+
+  // Android/web read the live region above (a second announcement would double-read);
+  // iOS VoiceOver ignores live regions, so it gets an explicit announcement.
+  const newCardId = award?.isNew ? award.cardId : undefined;
+  useEffect(() => {
+    if (!newCardId || Platform.OS !== 'ios') return;
+    const card = cardById(newCardId);
+    if (!card) return;
+    AccessibilityInfo.announceForAccessibility(`New card for your library! ${card.titleEn}`);
+  }, [newCardId]);
 
   const played = total > 0;
   const cheerMessage = resultsCheerMessage(stars, played);
@@ -122,17 +113,20 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
       <Spacer size="lg" />
       <HoyaBubble tone={stars >= 2 ? 'cheering' : 'thinking'} message={cheerMessage} />
 
-      {newCard ? (
-        <>
-          <Spacer size="lg" />
-          <CardUnlockBanner
-            card={newCard}
-            showSparkles={showSparkles}
-            reducedMotion={reducedMotion}
-            onSeeCard={() => navigation.navigate('CardDetail', { cardId: newCard.id })}
-          />
-        </>
-      ) : null}
+      {/* Always mounted so assistive tech is watching it when the card appears. */}
+      <View accessibilityRole="alert" accessibilityLiveRegion="polite">
+        {newCard ? (
+          <>
+            <Spacer size="lg" />
+            <CardUnlockBanner
+              card={newCard}
+              showSparkles={showSparkles}
+              reducedMotion={reducedMotion}
+              onSeeCard={() => navigation.navigate('CardDetail', { cardId: newCard.id })}
+            />
+          </>
+        ) : null}
+      </View>
 
       <Spacer size="xl" />
       <Button
@@ -281,7 +275,8 @@ function CardUnlockBanner({
   );
 }
 
-const CARD_THUMB = 88;
+/** The art is decorative (hidden from screen readers), so a target size is just the nearest token. */
+const CARD_THUMB = touchTarget.hero;
 
 /** The card's art, or its Korean word on the theme tint when no art ships yet. */
 function CardArtThumb({ card }: { card: HeritageCard }): React.ReactElement {
@@ -294,7 +289,7 @@ function CardArtThumb({ card }: { card: HeritageCard }): React.ReactElement {
         width: CARD_THUMB,
         height: CARD_THUMB,
         borderRadius: radii.lg,
-        borderWidth: 3,
+        borderWidth: borderWidth.thick,
         borderColor: colors.rarity[card.rarity],
         backgroundColor: hasArt ? colors.surface.paper : colors.theme[card.theme],
         alignItems: 'center',

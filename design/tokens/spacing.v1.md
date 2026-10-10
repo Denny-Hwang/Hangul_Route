@@ -36,6 +36,16 @@ Separate token family — used for tappable surface minimums. Ages 5–11 requir
 
 Inter-tile spacing: minimum 8dp (`spacing.sm`), prefer 12dp (`spacing.md`).
 
+## Border widths
+
+Separate token family (`borderWidth` export in `tokens.ts`) — outline thickness. Added 2026-10-10 so screens stop hard-coding `borderWidth: 2 | 3`.
+
+| Token | Value (dp) | Use |
+|---|---|---|
+| `borderWidth.thin` | 1 | Hairline dividers, quiet outlines |
+| `borderWidth.base` | 2 | Tiles, bubbles, selected states |
+| `borderWidth.thick` | 3 | Framed art (reward-card thumbnail), trace/draw surfaces |
+
 ---
 
 ## Rules
@@ -48,4 +58,4 @@ Inter-tile spacing: minimum 8dp (`spacing.sm`), prefer 12dp (`spacing.md`).
 
 ## Promotion path
 
-`design/tokens/spacing.v1.md` → `packages/design-system/src/tokens.ts` (`spacing` + `touchTarget` exports) → components consume via `spacing.<key>` / `touchTarget.<key>`.
+`design/tokens/spacing.v1.md` → `packages/design-system/src/tokens.ts` (`spacing` + `touchTarget` + `borderWidth` exports) → components consume via `spacing.<key>` / `touchTarget.<key>`.

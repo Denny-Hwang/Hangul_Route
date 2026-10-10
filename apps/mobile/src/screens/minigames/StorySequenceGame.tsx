@@ -17,6 +17,7 @@ import {
 import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import type { MinigameScope } from '../../logic/minigame-config';
+import { sequenceRoundKey } from '../../logic/round-keys';
 import { nudge, success } from '../../platform/haptics';
 import { useQuestRunStore } from '../../store/quest-run-store';
 
@@ -52,11 +53,11 @@ export function StorySequenceGame({ scope, onFinish }: Props): React.ReactElemen
     const expectedId = correctOrder[picked.length]?.id;
     if (id === expectedId) {
       success();
-      answerRound(picked.length, true);
+      answerRound(sequenceRoundKey(picked.length), true);
       setPicked([...picked, id]);
     } else {
       nudge();
-      answerRound(picked.length, false);
+      answerRound(sequenceRoundKey(picked.length), false);
       setWrongFlash(id);
       setTimeout(() => setWrongFlash(null), 500);
     }

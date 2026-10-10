@@ -1,6 +1,6 @@
 import { colors, motion, typography } from '@hangul-route/design-system';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { AccessibilityInfo } from 'react-native';
+import { AccessibilityInfo, Pressable } from 'react-native';
 import Animated, {
   Easing,
   runOnJS,
@@ -16,6 +16,7 @@ import type { JamoStrokePoint } from '../../content/jamo-strokes';
 import {
   BADGE_RADIUS,
   buildStrokeDiagram,
+  describeStrokeOrder,
   pointsToPathD,
   staticHintHoldMs,
 } from '../../logic/stroke-diagram';
@@ -45,9 +46,10 @@ interface Props {
  *
  * Honors prefers-reduced-motion with no motion at all: a still stroke-order
  * diagram (every stroke, numbered start badges, direction arrows) stays up
- * for `staticHintHoldMs`, then `onComplete` fires. The same still diagram is
- * the fallback when the reduced-motion query itself fails, so "Show me" can
- * never get stuck.
+ * for `staticHintHoldMs`, then `onComplete` fires. A tap anywhere on the
+ * diagram dismisses it early, and its accessibility label reads the stroke
+ * order aloud. The same still diagram is the fallback when the
+ * reduced-motion query itself fails, so "Show me" can never get stuck.
  */
 export function StrokeHint({
   target,
@@ -67,15 +69,21 @@ export function StrokeHint({
   const onCompleteRef = useRef(onComplete);
   onCompleteRef.current = onComplete;
   const finish = useCallback(() => onCompleteRef.current?.(), []);
+  // The still diagram's hold timer, so a tap can end the hold early.
+  const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dismissStill = useCallback(() => {
+    if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
+    holdTimerRef.current = null;
+    finish();
+  }, [finish]);
 
   useEffect(() => {
     if (target.length === 0) return;
     let cancelled = false;
-    let holdTimer: ReturnType<typeof setTimeout> | null = null;
 
     const showStill = (): void => {
       setMode('static');
-      holdTimer = setTimeout(finish, staticHintHoldMs(target.length));
+      holdTimerRef.current = setTimeout(finish, staticHintHoldMs(target.length));
     };
 
     AccessibilityInfo.isReduceMotionEnabled()
@@ -116,14 +124,24 @@ export function StrokeHint({
       });
     return () => {
       cancelled = true;
-      if (holdTimer) clearTimeout(holdTimer);
+      if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
+      holdTimerRef.current = null;
     };
   }, [target, playToken, sweep, opacity, finish]);
 
   if (target.length === 0) return null;
 
   if (mode === 'static') {
-    return <StrokeOrderDiagram target={target} size={size} viewBox={viewBox} />;
+    return (
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`${describeStrokeOrder(target)} Tap to close.`}
+        onPress={dismissStill}
+        style={{ position: 'absolute', top: 0, left: 0, width: size, height: size }}
+      >
+        <StrokeOrderDiagram target={target} size={size} viewBox={viewBox} />
+      </Pressable>
+    );
   }
 
   return (

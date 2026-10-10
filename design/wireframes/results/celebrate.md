@@ -77,6 +77,11 @@ Exit to:    `Main` tabs (`home/todays-mission`) · `episode/detail` · `library/
 - **empty** (0 stars, or quest without `rewardCardId`): no banner, Hoya thinking, same single CTA — never a blank middle; F-RVW-001 §3.1 asks for a 1-star floor on review surfaces (quests currently allow 0).
 - **error** (progress write fails): celebration still renders (write is fire-and-forget); retry silently on next mount; telemetry never blocks the screen.
 
+## Accessibility
+
+- The new-card block sits inside an always-mounted polite live region (`accessibilityRole="alert"`, `accessibilityLiveRegion="polite"`); iOS VoiceOver also gets `announceForAccessibility("New card for your library! <name>")`, since it ignores live regions. The card art thumbnail stays hidden from assistive tech; the name text carries the meaning.
+- Layout literals come from tokens: thumbnail edge `touchTarget.hero`, frame `borderWidth.thick`.
+
 ## Data needs
 
 - reads: `questById` (`rewardCardId`), `episodeById`, route params `stars/correct/total`

@@ -399,11 +399,23 @@ describe('scoreTrace direction on closed loops', () => {
     expect(r.directionsCorrect).toBe(true);
   });
 
-  it('going round the other way is reported as the wrong direction', () => {
+  it('going round the other way is reported at scoring level, flagged as a closed loop', () => {
+    // The scorer reports the raw winding mismatch; the closed-loop flag lets the UI
+    // word it as a loop hint instead of left-to-right (see trace-copy.test.ts).
     const reversed = [...square].reverse();
     const r = scoreTrace({ target: [square], drawn: [walk(reversed)], checkDirection: true });
     expect(r.coverage).toBeGreaterThan(0.95);
-    expect(r.directionsCorrect).toBe(false);
+    expect(r.directionsPerTarget).toEqual([false]);
+    expect(r.closedPerTarget).toEqual([true]);
+  });
+
+  it('flags open strokes as not closed', () => {
+    const line: Pt[] = [
+      { x: 40, y: 50 },
+      { x: 160, y: 50 },
+    ];
+    const r = scoreTrace({ target: [line], drawn: [walk(line)], checkDirection: true });
+    expect(r.closedPerTarget).toEqual([false]);
   });
 
   it('one straight side matched to the loop carries no winding — never nudge on it', () => {

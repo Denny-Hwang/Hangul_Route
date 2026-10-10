@@ -23,6 +23,7 @@ import type { MinigameScope } from '../../logic/minigame-config';
 import { buildTraceStrokeRounds, type TraceStrokeRound } from '../../logic/round-builder';
 import { pointsToPathD } from '../../logic/stroke-diagram';
 import { DEFAULT_PASS_THRESHOLD, scoreTrace } from '../../logic/stroke-scoring';
+import { directionNudgeFor, failMessage, passMessage, type DirectionNudge } from '../../logic/trace-copy';
 import { TRACE_IDLE_MS, createTraceEvaluator, type TraceEvaluator } from '../../logic/trace-evaluator';
 import { StrokeHint } from './StrokeHint';
 import { speak } from '../../platform/audio';
@@ -82,7 +83,7 @@ export function TraceStrokeGame({
   const finishedRef = useRef(false);
   // F-005/F-006 — score result envelope for the most recent evaluate()
   const [orderCorrect, setOrderCorrect] = useState<boolean | null>(null);
-  const [directionsCorrect, setDirectionsCorrect] = useState<boolean | null>(null);
+  const [directionNudge, setDirectionNudge] = useState<DirectionNudge>('none');
   // F-007 — increment to (re)play the animated demonstration
   const [hintToken, setHintToken] = useState(0);
   const [hintPlaying, setHintPlaying] = useState(false);
@@ -111,7 +112,7 @@ export function TraceStrokeGame({
     setStrokes([]);
     setFeedback('idle');
     setOrderCorrect(null);
-    setDirectionsCorrect(null);
+    setDirectionNudge('none');
     setHintToken(0);
     setHintPlaying(false);
     if (round) speak(round.jamo.char, { language: 'ko-KR' });
@@ -156,7 +157,7 @@ export function TraceStrokeGame({
       checkDirection: true,
     });
     setOrderCorrect(result.orderCorrect ?? null);
-    setDirectionsCorrect(result.directionsCorrect ?? null);
+    setDirectionNudge(directionNudgeFor(result));
     // F-008 — strict mode requires coverage AND order; default keeps coverage-only.
     const passed = strictMode
       ? result.passWithOrder === true
@@ -182,7 +183,7 @@ export function TraceStrokeGame({
         setStrokes([]);
         setFeedback('idle');
         setOrderCorrect(null);
-        setDirectionsCorrect(null);
+        setDirectionNudge('none');
         gateRef.current?.reopen();
       }, retryDelay);
     }
@@ -351,7 +352,7 @@ export function TraceStrokeGame({
       ) : feedback === 'pass' ? (
         <HoyaBubble
           tone="cheering"
-          message={passMessage(orderCorrect, directionsCorrect)}
+          message={passMessage(orderCorrect, directionNudge)}
         />
       ) : (
         <HoyaBubble
@@ -381,34 +382,4 @@ export function TraceStrokeGame({
       />
     </Screen>
   );
-}
-
-/**
- * F-005 + F-006 success-side hint copy. Coverage is the pass criterion;
- * order + direction are auxiliary — surfaced as "next time" nudges only
- * when the child PASSED but did the auxiliary signal wrong.
- */
-/**
- * F-008 — fail message branches. When strict mode is on AND order was the
- * only thing wrong (coverage passed), use the order-coaching message.
- * Otherwise use the standard "try again — start at the top!".
- */
-function failMessage(strictMode: boolean, orderCorrect: boolean | null): string {
-  if (strictMode && orderCorrect === false) {
-    return 'Almost! Try drawing the strokes in the right order. Tap Show me to see.';
-  }
-  return 'Try again — start at the top!';
-}
-
-function passMessage(
-  orderCorrect: boolean | null,
-  directionsCorrect: boolean | null,
-): string {
-  if (orderCorrect === false) {
-    return 'You got it! Next time, try drawing the top line first.';
-  }
-  if (directionsCorrect === false) {
-    return 'Nice! Try drawing left-to-right next time.';
-  }
-  return 'Beautiful! That looks like the letter.';
 }

@@ -197,6 +197,14 @@ export const touchTarget = {
   hero: 96, // jamo / tile prompts
 } as const;
 
+// Border widths — outlines on cards, tiles and framed art. Three steps cover
+// every border in the app; documented in design/tokens/spacing.v1.md.
+export const borderWidth = {
+  thin: 1, // hairline dividers, quiet outlines
+  base: 2, // tiles, bubbles, selected states
+  thick: 3, // framed art and trace/draw surfaces
+} as const;
+
 // Motion — durations + easings (anti-startle for kids)
 export const motion = {
   duration: {
@@ -233,6 +241,7 @@ export const tokens = {
   typography,
   shadows,
   touchTarget,
+  borderWidth,
   motion,
   z,
 } as const;
