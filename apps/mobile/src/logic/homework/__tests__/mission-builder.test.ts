@@ -304,3 +304,42 @@ describe('anti-shame copy (§3.3)', () => {
     ).toEqual([]);
   });
 });
+
+/**
+ * Golden: the private cursor `mission-builder.ts` carried before F-QUEST-002
+ * Q-2 moved it to `logic/next-quest.ts`. Home's "New" card must keep giving
+ * the same answer, including the "all done -> last quest" fallback.
+ */
+function legacyNextQuest(
+  snap: ProgressSnapshot,
+  quests: readonly Quest[],
+  episodes: readonly Episode[],
+): Quest | undefined {
+  const openIds = new Set(
+    episodes.filter((e) => e.status === 'shipped' || e.status === 'ready').flatMap((e) => e.questIds),
+  );
+  const offerable = quests.filter((q) => openIds.has(q.id));
+  const doneIds = new Set(snap.quests.filter((q) => q.completedAt).map((q) => q.questId));
+  return offerable.find((q) => !doneIds.has(q.id)) ?? offerable[offerable.length - 1];
+}
+
+describe('"New" card = the shared Journey cursor (F-QUEST-002 §3.5)', () => {
+  const quests = [...QUESTS, quest('quest:p', 'Preview one')];
+  const episodes = [...EPISODES, episode('episode:soon', ['quest:p'], 'preview')];
+
+  it('matches the pre-extraction behaviour for every subset of completed quests', () => {
+    const ids = QUESTS.map((q) => q.id);
+    for (let mask = 0; mask < 1 << ids.length; mask++) {
+      const doneQuests = ids.filter((_, i) => mask & (1 << i)).map((id) => done(id, YESTERDAY, 1));
+      const snap = snapshot(doneQuests);
+      const plan = build({ snapshot: snap, quests, episodes });
+      const newCard = plan.cards.find((c) => c.kind === 'new');
+      expect(newCard?.questId, `mask ${mask}`).toBe(legacyNextQuest(snap, quests, episodes)?.id);
+    }
+  });
+
+  it('offers no New card when no episode is playable', () => {
+    const plan = build({ quests, episodes: [episode('episode:soon', ['quest:p'], 'preview')] });
+    expect(plan.cards.find((c) => c.kind === 'new')).toBeUndefined();
+  });
+});
