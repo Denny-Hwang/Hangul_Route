@@ -16,7 +16,7 @@ Workers & Pages → **Create** → Workers 탭 → **Import a repository** → `
 | Deploy command | `pnpm --filter @hangul-route/mobile exec wrangler deploy` | `pnpm --filter @hangul-route/api exec wrangler d1 migrations apply hangul-route --remote && pnpm --filter @hangul-route/api exec wrangler deploy` | `pnpm --filter @hangul-route/web exec wrangler deploy` |
 | Build variables (빌드 시 코드에 박힘) | `NODE_VERSION` = `22` · `EXPO_PUBLIC_API_BASE_URL` = API 주소 (Step 3 후) · (선택) `EXPO_PUBLIC_CONSOLE_URL` | `NODE_VERSION` = `22` | `NODE_VERSION` = `22` · `NEXT_PUBLIC_API_BASE_URL` = API 주소 · `NEXT_PUBLIC_CONSOLE_DEV_AUTH` = `true` (Step 7 전까지만, 그때 삭제) · `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` (Step 7) |
 | Runtime: Variables (Type: Text) | 없음 | `ALLOWED_ORIGINS` · `STRIPE_PRICE_FAMILY_LIFETIME` · `STRIPE_PRICE_GROUP_LICENSE_YEARLY` · `CONSOLE_URL` · (법률 검토 후) `SCHOOL_CONSENT_MODE` | 없음 |
-| Runtime: Secrets (Type: Secret) | 없음 | `CLERK_SECRET_KEY` · `STRIPE_SECRET_KEY` · `STRIPE_WEBHOOK_SECRET` | 없음 |
+| Runtime: Secrets (Type: Secret) | 없음 | `CLERK_SECRET_KEY` · `STRIPE_SECRET_KEY` · `STRIPE_WEBHOOK_SECRET` · (권장, 한 번만) `RESCUE_PEPPER` | 없음 |
 | Custom domain | `app.hangulroute.com` | (workers.dev 주소 사용) | `hangulroute.com` · `www.hangulroute.com` |
 
 - **Build variables** 는 프로젝트 → Settings → **Build** → Variables and Secrets. `NEXT_PUBLIC_*` / `EXPO_PUBLIC_*` 는 빌드 때 번들에 박히므로 값을 바꾸면 **Retry deployment** (또는 다음 머지) 로 다시 빌드해야 반영된다.
@@ -43,6 +43,7 @@ https://github.com/Denny-Hwang/Hangul_Route/settings/branches → Add rule (또�
 D1 `hangul-route` 는 2026-10-07 에 대시보드에서 만들었고 (Database ID `4d338c01-0a0d-46c5-b7f4-16936cf32907`, 위치 자동 / WNAM), `apps/api/wrangler.toml` 에 바인딩되어 있다. 스키마는 `apps/api/migrations/` 의 파일이고 Deploy command 가 매 배포 때 적용한다 — 오너가 따로 할 일은 없다.
 1. §0 표의 둘째 열대로 Import a repository. Build command 는 `pnpm install --frozen-lockfile` 뿐 (wrangler 가 배포 때 번들). Deploy command 는 §0 의 **두 단계 한 줄**. Build variable `NODE_VERSION=22`. **Save and Deploy**.
 2. 첫 배포 로그에서 `0001_schema_v1.sql` · `0002_schema_v2.sql` 이 ✅ 로 적용된 뒤 Worker 가 업로드되는지 본다. 마이그레이션 단계가 권한 오류로 실패하면 로그를 보낸다 (Workers Builds 토큰에 D1 쓰기 권한이 없는 경우 — 그때는 대시보드 D1 콘솔에서 두 파일을 순서대로 실행하고 Deploy command 를 `wrangler deploy` 만으로 줄인다).
+   이후 PR 이 마이그레이션을 추가하면 다음 배포 로그에 새 파일 이름이 ✅ 로 이어진다 (예: audit SEC-4 의 `0003_device_scope.sql` — `learner_devices` 에 컬럼 하나를 더하고, 기존 행은 모두 `full` 로 그대로 둔다. 실패하면 업로드는 멈추고 이전 Worker 가 계속 돈다).
 3. 프로젝트 홈의 `https://hangul-route-api.<계정>.workers.dev` 가 **API 주소**다. 메모.
 4. Settings → Variables and Secrets (런타임) 는 아직 비워 둔다 (Step 6·7·8 에서 채운다).
 
@@ -56,7 +57,7 @@ D1 `hangul-route` 는 2026-10-07 에 대시보드에서 만들었고 (Database I
 
 ### Step 5. 앱과 API 연결 (10분)
 `hangul-route-app` → Settings → Build → Variables and Secrets → `EXPO_PUBLIC_API_BASE_URL` = Step 3 의 API 주소 → **Retry deployment**. (선택) `EXPO_PUBLIC_CONSOLE_URL` = 콘솔 주소 — 기본값은 hangulroute.com 이라 도메인 연결 전에는 workers.dev 주소를 넣으면 페이월 버튼이 바로 열린다.
-**확인 1**: 앱에서 프로필 생성 → 설정 → Backup 카드에 Rescue Code (단어-단어-숫자) 가 생긴다.
+**확인 1**: 앱에서 프로필 생성 → 설정 → Backup 카드 → Save my progress 에 Rescue Code (단어 4개 + 숫자 6자리, 예: `TIGER-MOON-RIVER-APPLE-482139`) 가 생긴다.
 **확인 2**: 콘솔 `/teach` → 교사로 로그인 → 학급 생성 → 6자리 코드 → 앱 설정 *Classes & family* 에 입력 → 콘솔 roster 에 학생이 보인다.
 - 참고 (audit SEC-2, 2026-10-09): 배포된 API 는 fail closed 라서, `CLERK_SECRET_KEY` 가 등록되기 전(Step 7)에는 콘솔 dev 로그인 뒤의 API 호출이 503 `auth_not_configured` 로 막힌다. 새로 배포하는 경우 확인 2 는 Step 7 뒤에 한다 (확인 1 의 학습자 기기 경로는 D1 만 있으면 된다).
 
@@ -92,6 +93,15 @@ https://dashboard.stripe.com → Test mode
 ### Step 9. 프로모·레퍼럴 코드 (15분, 배포 불필요)
 Stripe → Product catalog → **Coupons** → New: 퍼센트 또는 정액 · Duration (`once` = Lifetime 결제와 라이선스 첫 해만, `forever` = 매년 갱신까지) · 선택: 총 사용 횟수, 만료 → 그 쿠폰에서 **Add promotion code** → 고객이 입력할 문자열 (런치용 `HOYA20`, 추천 교사별 `MSPARK`) · 코드별 최대 사용 / 만료 / 첫 구매만 / 최소 금액. 끄기 = inactive.
 **확인**: 콘솔 billing 에 코드 입력 → Apply → 행의 가격이 "$12.24 once with HOYA20 (20% off), was $15.30 once" 로 바뀐다.
+
+### 권장 — Rescue Code 키 `RESCUE_PEPPER` (5분, 한 번만, audit SEC-5)
+Rescue Code 는 서버에 해시로만 저장된다. 이 키를 넣으면 **새로 발급되는** 코드가 `HMAC-SHA-256(키, 코드)` 로 저장되어, DB 사본만 유출돼도 오프라인에서 코드를 추측할 수 없다. 이미 발급된 코드(단어 2개 + 숫자 4자리, 예: `PADDLE-GLACIER-4992`)는 키를 넣기 전·후 모두 그대로 복원된다.
+1. 로컬 터미널에서 `openssl rand -hex 32` → 64자 문자열을 복사하고 비밀번호 관리자에도 저장한다 (wrangler 가 아니므로 회사 프록시와 무관).
+2. `hangul-route-api` → Settings → Variables and Secrets → Add → Type **Secret** → 이름 `RESCUE_PEPPER` → 값 붙여넣기 → Deploy.
+- **한 번 넣으면 바꾸거나 지우지 않는다.** 그 키로 저장된 코드는 키가 없거나 다르면 전부 복원되지 않는다 (404 `code_not_found`). 분실에 대비해 비밀번호 관리자에 보관한다.
+- 넣지 않으면: 지금과 똑같이 동작한다. 새 코드(단어 4개 + 숫자 6자리, 약 52비트)가 평문 SHA-256 해시로 저장될 뿐이다. 키는 나중에 언제든 추가할 수 있고, 추가 전에 발급된 코드도 계속 복원된다.
+
+**확인**: API 주소의 `/health` 가 `"bindings":{…,"rescuePepper":true}` 를 돌려준다 (값은 노출되지 않는다). 모니터가 있다면 `rescuePepper` 가 `true` → `false` 로 바뀔 때 경고하게 한다. 앱에서 코드를 새로 발급 (설정 → Save my progress → Get a new code) 한 뒤 다른 브라우저에서 그 코드로 복원되는지 본다.
 
 ## C. 검증과 콘텐츠 (Step 10–12)
 
