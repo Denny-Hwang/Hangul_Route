@@ -60,8 +60,8 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
   const nameHint =
     nameError === 'too-long'
       ? `Names can be up to ${NAME_MAX} letters.`
-      : nameError === 'non-latin'
-        ? 'Please use English letters here.'
+      : nameError === 'unsupported-character'
+        ? "Please use letters, numbers, spaces, ' or -."
         : null;
 
   const onSubmit = (): void => {

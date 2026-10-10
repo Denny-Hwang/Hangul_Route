@@ -51,9 +51,16 @@ describe('validateDisplayName', () => {
     expect(validateDisplayName('a'.repeat(NAME_MAX + 1))).toBe('too-long');
   });
 
-  it('rejects emoji and Korean/Chinese — the UI is English (§3.2)', () => {
-    expect(validateDisplayName('수니')).toBe('non-latin');
-    expect(validateDisplayName('Suni 🐯')).toBe('non-latin');
+  it('accepts names in any UI language: accents and Hangul (F-I18N-001 §3.9)', () => {
+    for (const name of ['María', 'Zoë', "D'Arcy", 'Jean-Luc', '수니', '김 민준', 'Suni 2', 'O’Neil']) {
+      expect(validateDisplayName(name)).toBeNull();
+    }
+  });
+
+  it('rejects emoji, other scripts and control characters', () => {
+    for (const name of ['Suni 🐯', '日本', 'Мария', 'Su\u0000ni', 'a\tb', '<b>', 'Suni!']) {
+      expect(validateDisplayName(name)).toBe('unsupported-character');
+    }
   });
 
   // Regression guard: CreateProfileScreen caps its input at NAME_MAX and gates
@@ -120,7 +127,8 @@ describe('profile set operations', () => {
 
   it('renameProfile validates the new name', () => {
     expect(renameProfile(seeded(), 'profile:kid1', 'Sun').profiles[1]?.displayName).toBe('Sun');
-    expect(() => renameProfile(seeded(), 'profile:kid1', '수니')).toThrow(/Invalid display name/);
+    expect(renameProfile(seeded(), 'profile:kid1', '수니').profiles[1]?.displayName).toBe('수니');
+    expect(() => renameProfile(seeded(), 'profile:kid1', 'Sun 🐯')).toThrow(/Invalid display name/);
   });
 
   it('separates learners from the parent profile', () => {
