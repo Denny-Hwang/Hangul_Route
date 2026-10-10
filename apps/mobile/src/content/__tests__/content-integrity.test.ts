@@ -3,6 +3,7 @@ import { minigameScopes, scopeFor } from '../../logic/minigame-config';
 import { cardById } from '../heritage-cards';
 import { episodesAll } from '../episodes';
 import { jamoAll } from '../jamo';
+import { strokesForJamo, type JamoStrokePoint } from '../jamo-strokes';
 import { questById, questsAll } from '../quests';
 
 describe('content integrity', () => {
@@ -77,5 +78,32 @@ describe('content integrity', () => {
         expect(turn.options.length, `${ref} -> ${turn.npcKo}`).toBeGreaterThanOrEqual(2);
       }
     }
+  });
+});
+
+describe('jamo stroke skeletons', () => {
+  /** Shoelace area on screen (y down): > 0 clockwise, < 0 counter-clockwise. */
+  const signedArea = (stroke: JamoStrokePoint[]): number =>
+    stroke.reduce((sum, a, i) => {
+      const b = stroke[(i + 1) % stroke.length]!;
+      return sum + (a.x * b.y - b.x * a.y) / 2;
+    }, 0);
+
+  // ㅇ is written from the top, counter-clockwise. The Show-me demo walks
+  // these points and F-006 compares the child's winding against them, so a
+  // clockwise skeleton would teach — and then reward — the wrong way round.
+  it.each([
+    ['jamo:ieung', 0],
+    ['jamo:ieung-batchim', 0],
+    ['jamo:hieut', 2],
+  ] as const)('%s circle starts at the top and runs counter-clockwise', (jamoId, strokeIdx) => {
+    const circle = strokesForJamo(jamoId)?.[strokeIdx];
+    expect(circle, jamoId).toBeDefined();
+    const pts = circle!;
+    const first = pts[0]!;
+    const last = pts[pts.length - 1]!;
+    expect(first).toEqual(last);
+    expect(first.y).toBe(Math.min(...pts.map((p) => p.y)));
+    expect(signedArea(pts)).toBeLessThan(0);
   });
 });
