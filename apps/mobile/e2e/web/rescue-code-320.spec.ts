@@ -59,7 +59,7 @@ function seedRescueCode(page: Page, code: string): Promise<void> {
 
 test('sync/restore: the whole longest code is visible in the field, wrapped, with no sideways scroll', async ({ page }) => {
   await onboard(page, 'Dami');
-  await page.getByRole('button', { name: 'Profiles and settings' }).click();
+  await page.getByRole('button', { name: 'Profile and settings' }).click();
   await page.getByRole('button', { name: 'Restore from a file (grown-ups only)' }).click();
   await createPin(page);
   await page.getByRole('button', { name: 'I have a rescue code' }).click();
@@ -88,7 +88,7 @@ test('sync/save-progress: a code is shown one word per row — no word breaks mi
   await seedRescueCode(page, LONGEST);
   await page.goto('/');
   await expect(page.getByText('Hi, Dami!')).toBeVisible();
-  await page.getByRole('button', { name: 'Profiles and settings' }).click();
+  await page.getByRole('button', { name: 'Profile and settings' }).click();
   await page.getByRole('button', { name: /Save my progress/ }).click();
   await createPin(page);
 
