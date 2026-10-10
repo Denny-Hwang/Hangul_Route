@@ -6,11 +6,11 @@ import { MiniGamesGallery } from '../components/landing/MiniGamesGallery';
 import {
   SITE_TAGLINE,
   audienceBadges,
-  familyPlanBullet,
   howItWorks,
   landingFaqs,
   pricingFootnote,
   pricingLines,
+  sharedDeviceBullet,
   trustItems,
 } from '../data/landing-copy';
 
@@ -417,8 +417,8 @@ export default function HomePage(): JSX.Element {
               multiplication question.
             </li>
             <li>
-              <strong style={{ color: colors.text.primary }}>{familyPlanBullet.title}</strong>{' '}
-              {familyPlanBullet.body}
+              <strong style={{ color: colors.text.primary }}>{sharedDeviceBullet.title}</strong>{' '}
+              {sharedDeviceBullet.body}
             </li>
           </ul>
         </div>

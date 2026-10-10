@@ -1,14 +1,13 @@
-import { FAMILY_LIFETIME_LEARNERS, PLAN_PRICING } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import {
   SITE_TAGLINE,
   SITE_TITLE,
   audienceBadges,
-  familyPlanBullet,
   howItWorks,
   landingFaqs,
   pricingFootnote,
   pricingLines,
+  sharedDeviceBullet,
   siteMetadata,
 } from '../landing-copy';
 import { stage1Cards } from '../stage1-cards';
@@ -115,8 +114,11 @@ describe('landing copy (UF-02)', () => {
   });
 });
 
-describe('pricing copy matches the two-product model (app-map decision #30)', () => {
-  const RETIRED = [/12 cards/i, /\$4\.99/, /\$29\b/, /\$19\b/, /card packs?/i, /subscription/i];
+describe('cost copy says only what is true today (owner decision 2026-10-10)', () => {
+  // Payments are not live and Stages 2-7 are not built, so the landing quotes
+  // no price and sells no stage. (The rendered page is scanned for prices in
+  // src/app/__tests__/landing-no-prices.test.tsx.)
+  const ONE_LINE = 'Stage 1 is free. More stages and classroom plans are coming.';
 
   it('meta descriptions say Stage 1 is free — not "the first 12 cards"', () => {
     for (const field of [siteMetadata.description, siteMetadata.openGraph?.description].map(text)) {
@@ -125,31 +127,29 @@ describe('pricing copy matches the two-product model (app-map decision #30)', ()
     }
   });
 
-  it('the cost FAQ quotes PLAN_PRICING and the family learner cap', () => {
+  it('the page description also says more stages are coming (it names a 7-stage journey)', () => {
+    expect(text(siteMetadata.description)).toMatch(/more stages are coming/i);
+  });
+
+  it('the cost FAQ is the one honest line, plus "no ads"', () => {
     const cost = landingFaqs.find((faq) => /cost/i.test(faq.q));
-    expect(cost?.a).toContain(PLAN_PRICING.family_lifetime.label);
-    expect(cost?.a).toContain(PLAN_PRICING.group_license.label);
-    expect(cost?.a).toContain(`up to ${FAMILY_LIFETIME_LEARNERS} learners`);
-    expect(cost?.a).toMatch(/Stage 1 is free/);
-    for (const re of RETIRED) expect(cost?.a).not.toMatch(re);
+    expect(cost?.a).toBe(`${ONE_LINE} No ads.`);
   });
 
-  it('the pricing card lists Stage 1 free, Family Lifetime and the Group License', () => {
-    expect(pricingLines.map((line) => line.name)).toEqual(['Stage 1', 'Family Lifetime', 'Classes & schools']);
-    const joined = pricingLines.map((line) => `${line.name} ${line.detail}`).join(' | ');
-    expect(joined).toContain(PLAN_PRICING.family_lifetime.label);
-    expect(joined).toContain(PLAN_PRICING.group_license.label);
-    expect(joined).toContain(`up to ${FAMILY_LIFETIME_LEARNERS} learners`);
-    for (const re of RETIRED) expect(joined).not.toMatch(re);
+  it('the pricing card lists Stage 1 as free and the rest as coming — no amounts', () => {
+    expect(pricingLines).toEqual([
+      { name: 'Stage 1', detail: 'free' },
+      { name: 'More stages', detail: 'coming' },
+      { name: 'Classroom plans', detail: 'coming' },
+    ]);
   });
 
-  it('the family bullet uses the real learner cap, not "three profiles"', () => {
-    expect(familyPlanBullet.title).toContain(`up to ${FAMILY_LIFETIME_LEARNERS} learners`);
-    expect(`${familyPlanBullet.title} ${familyPlanBullet.body}`).not.toMatch(/three|subscription/i);
+  it('the shared-device bullet is a product fact, not a plan or a purchase', () => {
+    expect(sharedDeviceBullet.title).toBe('Siblings share a device.');
+    expect(`${sharedDeviceBullet.title} ${sharedDeviceBullet.body}`).not.toMatch(/purchase|plan|subscription|up to \d/i);
   });
 
-  it('the pricing footnote promises no family subscription and no ads', () => {
-    expect(pricingFootnote).toMatch(/no subscription/i);
-    expect(pricingFootnote).toMatch(/no third-party ads/i);
+  it('the pricing footnote keeps only the ads promise', () => {
+    expect(pricingFootnote).toBe('No third-party ads, ever.');
   });
 });

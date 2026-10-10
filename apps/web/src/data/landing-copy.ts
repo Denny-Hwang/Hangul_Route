@@ -1,4 +1,3 @@
-import { FAMILY_LIFETIME_LEARNERS, PLAN_PRICING } from '@hangul-route/content-schema';
 import type { Metadata } from 'next';
 import { stage1Cards } from './stage1-cards';
 
@@ -10,8 +9,11 @@ import { stage1Cards } from './stage1-cards';
  * K-culture fans. Many learners are children, so the child-safety promises
  * stay; the framing never targets children only and never names an age range.
  *
- * Prices come from PLAN_PRICING (app-map decision #30): Stage 1 free, one
- * Family Lifetime purchase, one Group License for classes and schools.
+ * Cost (owner decision 2026-10-10): the landing quotes no price and sells
+ * nothing that is not built. Payments are not live and Stages 2–7 are not
+ * built, so it says only what is true today — Stage 1 is free — and that
+ * more stages and classroom plans are coming. Concrete prices come back with
+ * the launch of payments (PLAN_PRICING is their source then).
  */
 
 export const SITE_TITLE = 'Hangul Route — Learn Hangul from zero with Hoya';
@@ -21,7 +23,7 @@ export const SITE_TAGLINE = 'Learn Hangul from zero — at any age.';
 export const siteMetadata: Metadata = {
   title: SITE_TITLE,
   description:
-    'Learn Hangul from zero with Hoya the tiger — for anyone, at any age: heritage families, K-culture fans and curious beginners. Five-minute quests, 8 mini-games, Korean culture cards to collect, and a Heritage Journey across 7 stages and 5 culture themes. Stage 1 is free. No ads, ever.',
+    'Learn Hangul from zero with Hoya the tiger — for anyone, at any age: heritage families, K-culture fans and curious beginners. Five-minute quests, 8 mini-games, Korean culture cards to collect, and a Heritage Journey across 7 stages and 5 culture themes. Stage 1 is free and more stages are coming. No ads, ever.',
   applicationName: 'Hangul Route',
   keywords: [
     'learn Hangul',
@@ -84,6 +86,9 @@ export const howItWorks: readonly HowItWorksStep[] = [
   },
 ];
 
+/** The one thing the landing says about cost (owner decision 2026-10-10). */
+const COST_LINE = 'Stage 1 is free. More stages and classroom plans are coming.';
+
 export interface Faq {
   q: string;
   a: string;
@@ -112,7 +117,7 @@ export const landingFaqs: readonly Faq[] = [
   },
   {
     q: 'How much does it cost?',
-    a: `Stage 1 is free, always. Family Lifetime unlocks every stage for up to ${FAMILY_LIFETIME_LEARNERS} learners — ${PLAN_PRICING.family_lifetime.label}, nothing to cancel. Classes and schools use a Group License (${PLAN_PRICING.group_license.label}). No ads.`,
+    a: `${COST_LINE} No ads.`,
   },
 ];
 
@@ -122,17 +127,14 @@ export interface PricingLine {
 }
 
 export const pricingLines: readonly PricingLine[] = [
-  { name: 'Stage 1', detail: 'free, always' },
-  {
-    name: 'Family Lifetime',
-    detail: `${PLAN_PRICING.family_lifetime.label}, every stage, up to ${FAMILY_LIFETIME_LEARNERS} learners`,
-  },
-  { name: 'Classes & schools', detail: `Group License, ${PLAN_PRICING.group_license.label}` },
+  { name: 'Stage 1', detail: 'free' },
+  { name: 'More stages', detail: 'coming' },
+  { name: 'Classroom plans', detail: 'coming' },
 ];
 
-export const familyPlanBullet: TitledCopy = {
-  title: `One purchase, up to ${FAMILY_LIFETIME_LEARNERS} learners.`,
-  body: 'Siblings and grown-ups share. No upsell.',
+export const sharedDeviceBullet: TitledCopy = {
+  title: 'Siblings share a device.',
+  body: 'Each learner keeps their own stars and cards. No upsell.',
 };
 
-export const pricingFootnote = 'Families pay once — no subscription. No third-party ads, ever.';
+export const pricingFootnote = 'No third-party ads, ever.';
