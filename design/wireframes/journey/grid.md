@@ -20,19 +20,19 @@ Then: they can see where they are, which cells are open right now, and pick one 
 +----------------------------------+
 |  Heritage Journey                |  <- title + 1 muted line ("draw your route")
 |                                  |
-|        Let  Life Rite Nat  Craft |  <- 5 theme column labels (short)
+|   Letters Food Holidays Nat. Play|  <- 5 column labels: first word of each theme title
 |  (1) Hangul            [open]    |  <- stage row header: number badge, title,
 |      1-liner                     |     1-liner, status pill
-|      [L*] [L ] [R ] [N ] [C ]    |  <- 5 cells; * = completed look
+|      [L*] [F ] [H ] [N ] [P ]    |  <- 5 cells = header initials (all distinct); * = completed
 |                                  |
 |  (2) Words             [soon]    |
-|      [ # ] [L ] [ # ] [N ] [ # ] |  <- # = preview (lock glyph, disabled)
-|      (lock) 1-line unlock hint   |     L / N = shipped taste cells
+|      [ # ] [F ] [ # ] [N ] [ # ] |  <- # = preview (lock glyph, disabled)
+|      (lock) 1-line unlock hint   |     F / N = shipped taste cells
 |                                  |
 |  (3) Sentences         [soon]    |
 |      [ # ] [ # ] [ # ] [ # ] [ # ] |
 |  (4) Dialogue          [soon]    |
-|      [ # ] [ # ] [R ] [ # ] [ # ] |
+|      [ # ] [ # ] [H ] [ # ] [ # ] |
 |  (5)(6)(7) ... same pattern      |
 |                                  |
 |  +----------------------------+  |
@@ -41,7 +41,7 @@ Then: they can see where they are, which cells are open right now, and pick one 
 +----------------------------------+
 ```
 
-Cell looks (4): **shipped** (theme initial, stage-tinted border) · **completed** (success tint) · **preview** (lock glyph, disabled) · **premium-locked** (lock glyph + tappable, future — see below).
+Cell looks (4): **shipped** (initial of its column label — `logic/journey.themeCellInitial`, never two alike; stage-tinted border) · **completed** (success tint) · **preview** (lock glyph, disabled) · **premium-locked** (lock glyph + tappable, future — see below).
 
 - Rows scroll vertically; the 5 columns always fit one screen width (no horizontal scroll — a child must never lose a column).
 - Stage 1 row is first and open by default (`unlockedByDefault`).

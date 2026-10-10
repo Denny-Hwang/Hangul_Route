@@ -1,7 +1,13 @@
 import type { Episode } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
-import { episodesAll } from '../../content';
-import { isEpisodeComplete, stageAvailability, stagePillLabel } from '../journey';
+import { episodesAll, themes } from '../../content';
+import {
+  isEpisodeComplete,
+  stageAvailability,
+  stagePillLabel,
+  themeCellInitial,
+  themeColumnLabel,
+} from '../journey';
 
 const ep = (id: string, stage: Episode['stage'], status: Episode['status'], questIds = ['q1']): Episode => ({
   id,
@@ -66,5 +72,29 @@ describe('isEpisodeComplete', () => {
   });
   it('an episode with no quests is never complete', () => {
     expect(isEpisodeComplete(ep('e', 'stage1', 'shipped', []), [])).toBe(false);
+  });
+});
+
+describe('theme column labels (audit UX-11: two columns both read "L")', () => {
+  it('column headers are the first word of each theme title', () => {
+    expect(themes.map(themeColumnLabel)).toEqual(['Letters', 'Food', 'Holidays', 'Nature', 'Play']);
+  });
+
+  it('cell initials match their column header', () => {
+    for (const t of themes) {
+      expect(themeCellInitial(t)).toBe(themeColumnLabel(t).charAt(0).toUpperCase());
+    }
+    expect(themes.map(themeCellInitial)).toEqual(['L', 'F', 'H', 'N', 'P']);
+  });
+
+  it('every column has its own initial', () => {
+    const initials = themes.map(themeCellInitial);
+    expect(new Set(initials).size).toBe(themes.length);
+  });
+
+  it('copes with a one-word or padded title', () => {
+    expect(themeColumnLabel({ titleEn: 'Music' })).toBe('Music');
+    expect(themeColumnLabel({ titleEn: '  Sea & Sky ' })).toBe('Sea');
+    expect(themeCellInitial({ titleEn: 'music' })).toBe('M');
   });
 });

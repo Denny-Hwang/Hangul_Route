@@ -1,4 +1,4 @@
-import type { StageKey, ThemeKey } from '@hangul-route/content-schema';
+import type { StageKey, ThemeDef } from '@hangul-route/content-schema';
 import {
   Body,
   Caption,
@@ -19,7 +19,13 @@ import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { episodeFor, episodesAll, stages, themes } from '../../content';
 import { isStageEntitled } from '../../logic/entitlement';
-import { isEpisodeComplete, stageAvailability, stagePillLabel } from '../../logic/journey';
+import {
+  isEpisodeComplete,
+  stageAvailability,
+  stagePillLabel,
+  themeCellInitial,
+  themeColumnLabel,
+} from '../../logic/journey';
 import type { RootStackParamList } from '../../navigation/types';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
@@ -44,7 +50,7 @@ export function JourneyScreen(): React.ReactElement {
         {themes.map((t) => (
           <View key={t.key} style={{ flex: 1, alignItems: 'center' }}>
             <Caption tone="muted" align="center">
-              {t.titleEn.split(' ')[0]}
+              {themeColumnLabel(t)}
             </Caption>
           </View>
         ))}
@@ -95,7 +101,7 @@ export function JourneyScreen(): React.ReactElement {
                 <GridCell
                   key={`${stage.key}-${theme.key}`}
                   stage={stage.key}
-                  theme={theme.key}
+                  theme={theme}
                   onOpen={(episodeId) => navigation.navigate('EpisodeDetail', { episodeId })}
                   progressSnapshot={snap}
                 />
@@ -125,7 +131,7 @@ export function JourneyScreen(): React.ReactElement {
 
 interface GridCellProps {
   stage: StageKey;
-  theme: ThemeKey;
+  theme: ThemeDef;
   onOpen: (episodeId: string) => void;
   progressSnapshot?: {
     episodes: Array<{ episodeId: string; completedAt?: string }>;
@@ -134,7 +140,7 @@ interface GridCellProps {
 }
 
 function GridCell({ stage, theme, onOpen, progressSnapshot }: GridCellProps): React.ReactElement {
-  const episode = episodeFor(stage, theme);
+  const episode = episodeFor(stage, theme.key);
   const isPreview = !episode || episode.status === 'preview';
   // Complete only when every quest of the episode is done (wireframe journey/grid).
   const completed = !!episode && isEpisodeComplete(episode, progressSnapshot?.quests ?? []);
@@ -145,7 +151,7 @@ function GridCell({ stage, theme, onOpen, progressSnapshot }: GridCellProps): Re
       onPress={() => episode && !isPreview && onOpen(episode.id)}
       disabled={isPreview}
       accessibilityRole="button"
-      accessibilityLabel={`${theme} episode for ${stage}${isPreview ? ', coming soon' : ''}`}
+      accessibilityLabel={`${theme.titleEn} episode for ${stage}${isPreview ? ', coming soon' : ''}`}
       style={{
         flex: 1,
         aspectRatio: 1,
@@ -162,7 +168,7 @@ function GridCell({ stage, theme, onOpen, progressSnapshot }: GridCellProps): Re
         <Icon name="lock" size={20} color={colors.text.muted} />
       ) : (
         <Text style={{ fontSize: typography.size.title, fontWeight: '700', color: tone }}>
-          {theme.charAt(0).toUpperCase()}
+          {themeCellInitial(theme)}
         </Text>
       )}
     </Pressable>
