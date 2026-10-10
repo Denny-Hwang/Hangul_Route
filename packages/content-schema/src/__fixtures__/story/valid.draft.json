@@ -1,0 +1,197 @@
+{
+  "v": 1,
+  "id": "story:hangul-day-draft",
+  "state": "draft",
+  "contentVer": 1,
+  "title": {
+    "ko": "한글날",
+    "romanization": "",
+    "en": ""
+  },
+  "summaryEn": "A king gives everyone a new alphabet.",
+  "theme": "letters",
+  "kind": "documentary",
+  "recommendedStage": 1,
+  "minutes": 4,
+  "learningGoalsEn": [
+    "Meet 한글 (hangeul).",
+    "Hear why it was made."
+  ],
+  "origin": {
+    "type": "documented",
+    "noteEn": "Follows the pages cited in the facts."
+  },
+  "review": {
+    "language": "draft",
+    "culture": "draft"
+  },
+  "keywords": [
+    {
+      "id": "sejong",
+      "ko": "세종",
+      "romanization": "",
+      "en": ""
+    },
+    {
+      "id": "hangeul",
+      "ko": "한글",
+      "romanization": "hangeul",
+      "en": "",
+      "kind": "word"
+    }
+  ],
+  "cultureNotes": [],
+  "tiers": [
+    {
+      "level": "listen",
+      "scenes": [
+        {
+          "id": "s1",
+          "narrationEn": "King {kw:sejong} wanted everyone to read.",
+          "factIds": [
+            "f1"
+          ],
+          "keyword": {
+            "id": "sejong",
+            "ko": "세종",
+            "romanization": "",
+            "en": ""
+          }
+        },
+        {
+          "id": "s2",
+          "narrationEn": "He shared a new alphabet.",
+          "factIds": [
+            "f1"
+          ],
+          "keyword": {
+            "id": "hangeul",
+            "ko": "한글",
+            "romanization": "hangeul",
+            "en": ""
+          }
+        },
+        {
+          "id": "s3",
+          "narrationEn": "It was easy to learn.",
+          "factIds": [
+            "f1"
+          ],
+          "keyword": {
+            "id": "hangeul",
+            "ko": "한글",
+            "romanization": "hangeul",
+            "en": ""
+          }
+        },
+        {
+          "id": "s4",
+          "narrationEn": "Hoya has one more question.",
+          "factIds": [],
+          "framing": true,
+          "keyword": {
+            "id": "sejong",
+            "ko": "세종",
+            "romanization": "",
+            "en": ""
+          }
+        }
+      ],
+      "checks": [
+        {
+          "id": "c1",
+          "kind": "detail",
+          "promptEn": "What happened?",
+          "options": [
+            {
+              "id": "a",
+              "en": "This",
+              "isCorrect": true
+            },
+            {
+              "id": "b",
+              "en": "That",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f1"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "detail",
+          "promptEn": "What happened?",
+          "options": [
+            {
+              "id": "a",
+              "en": "This",
+              "isCorrect": true
+            },
+            {
+              "id": "b",
+              "en": "That",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f1"
+          ]
+        },
+        {
+          "id": "c3",
+          "kind": "detail",
+          "promptEn": "What happened?",
+          "options": [
+            {
+              "id": "a",
+              "en": "This",
+              "isCorrect": true
+            },
+            {
+              "id": "b",
+              "en": "That",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f1"
+          ]
+        }
+      ],
+      "sequenceSceneIds": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "newKeywordIds": []
+    }
+  ],
+  "coverSceneId": "s1",
+  "facts": [
+    {
+      "id": "f1",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "King Sejong led the creation of the Korean alphabet so that ordinary people could learn to read and write it easily.",
+      "claimKo": "세종대왕은 백성이 쉽게 배우고 쓸 수 있도록 한글을 만들었다.",
+      "sources": [
+        {
+          "title": "Hangul, the Korean alphabet",
+          "publisher": "Cultural Heritage Administration",
+          "url": "https://www.heritage.go.kr/fixture/hangul",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "Section: Creation of Hangul"
+        }
+      ]
+    }
+  ],
+  "referenceDisplay": "Sources: Cultural Heritage Administration (test fixture)",
+  "verification": {
+    "passes": 0,
+    "checkedAt": "2026-10-10",
+    "scope": "cluster",
+    "notes": "Imported from a file with no recorded verification pass."
+  }
+}
