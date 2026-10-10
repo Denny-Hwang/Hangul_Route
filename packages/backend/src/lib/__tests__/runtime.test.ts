@@ -1,6 +1,6 @@
 import { HTTPException } from 'hono/http-exception';
 import { afterEach, describe, expect, it } from 'vitest';
-import { devFallbacksAllowed, environmentName, healthReport, notConfigured, setDevFallbacksDefaultForTests } from '../runtime';
+import { devFallbacksAllowed, environmentName, healthReport, notConfigured, rescuePepper, setDevFallbacksDefaultForTests, type RuntimeEnv } from '../runtime';
 
 describe('devFallbacksAllowed (SEC-2: fail closed unless a deployment opts in)', () => {
   afterEach(() => setDevFallbacksDefaultForTests(true));
@@ -68,7 +68,7 @@ describe('healthReport (booleans only)', () => {
       status: 'misconfigured',
       environment: 'production',
       devFallbacks: false,
-      bindings: { db: false, clerk: false, stripe: false, stripeWebhook: false },
+      bindings: { db: false, clerk: false, stripe: false, stripeWebhook: false, rescuePepper: false },
     });
     expect(healthReport({ DB: {} }).status).toBe('misconfigured');
     expect(healthReport({ CLERK_SECRET_KEY: 'sk_live_secret' }).status).toBe('misconfigured');
@@ -76,14 +76,14 @@ describe('healthReport (booleans only)', () => {
 
   it('is ok once both required bindings are present, and never echoes a secret', () => {
     setDevFallbacksDefaultForTests(false);
-    const report = healthReport({ DB: {}, CLERK_SECRET_KEY: 'sk_live_secret', STRIPE_SECRET_KEY: 'sk_stripe', STRIPE_WEBHOOK_SECRET: 'whsec_x' });
+    const report = healthReport({ DB: {}, CLERK_SECRET_KEY: 'sk_live_secret', STRIPE_SECRET_KEY: 'sk_stripe', STRIPE_WEBHOOK_SECRET: 'whsec_x', RESCUE_PEPPER: 'pepper_do_not_echo' });
     expect(report).toEqual({
       status: 'ok',
       environment: 'production',
       devFallbacks: false,
-      bindings: { db: true, clerk: true, stripe: true, stripeWebhook: true },
+      bindings: { db: true, clerk: true, stripe: true, stripeWebhook: true, rescuePepper: true },
     });
-    expect(JSON.stringify(report)).not.toMatch(/sk_live_secret|sk_stripe|whsec_x/);
+    expect(JSON.stringify(report)).not.toMatch(/sk_live_secret|sk_stripe|whsec_x|pepper_do_not_echo/);
     expect(healthReport({ DB: {}, CLERK_JWT_KEY: '-----BEGIN PUBLIC KEY-----' }).bindings.clerk).toBe(true);
   });
 
@@ -109,5 +109,26 @@ describe('healthReport (booleans only)', () => {
   it('ignores a DB binding that is not an object', () => {
     setDevFallbacksDefaultForTests(false);
     expect(healthReport({ DB: 'nope', CLERK_SECRET_KEY: 'sk' }).bindings.db).toBe(false);
+  });
+});
+
+describe('rescuePepper (SEC-5)', () => {
+  afterEach(() => setDevFallbacksDefaultForTests(true));
+
+  it('is the secret when set to a non-empty string, otherwise undefined', () => {
+    expect(rescuePepper({ RESCUE_PEPPER: 'a-long-random-string' })).toBe('a-long-random-string');
+    expect(rescuePepper({ RESCUE_PEPPER: '' })).toBeUndefined();
+    expect(rescuePepper({})).toBeUndefined();
+    expect(rescuePepper(undefined)).toBeUndefined();
+    expect(rescuePepper({ RESCUE_PEPPER: 42 } as unknown as RuntimeEnv)).toBeUndefined(); // not a string: the dashboard only stores text
+  });
+
+  it('is optional: /health stays ok without it and only reports whether it is there', () => {
+    setDevFallbacksDefaultForTests(false);
+    const without = healthReport({ DB: {}, CLERK_SECRET_KEY: 'sk' });
+    expect(without.status).toBe('ok');
+    expect(without.bindings.rescuePepper).toBe(false);
+    expect(healthReport({ DB: {}, CLERK_SECRET_KEY: 'sk', RESCUE_PEPPER: 'p' }).bindings.rescuePepper).toBe(true);
+    expect(healthReport({ DB: {}, CLERK_SECRET_KEY: 'sk', RESCUE_PEPPER: '' }).bindings.rescuePepper).toBe(false);
   });
 });
