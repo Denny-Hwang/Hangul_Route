@@ -88,6 +88,26 @@ describe('/api/recovery (F-RESTORE-001)', () => {
     expect(normalizeRescueCode(a.toLowerCase().replace(/-/g, ' '))).toBe(a);
   });
 
+  it('real draws are uniform: all 256 words and every leading digit come up evenly, and 20 000 codes never repeat (SEC-5)', () => {
+    const draws = 20_000;
+    const words = new Map<string, number>();
+    const leadingDigit = Array.from({ length: 10 }, () => 0);
+    const seen = new Set<string>();
+    for (let i = 0; i < draws; i += 1) {
+      const code = randomRescueCode();
+      seen.add(code);
+      const parts = code.split('-');
+      for (const word of parts.slice(0, 4)) words.set(word, (words.get(word) ?? 0) + 1);
+      leadingDigit[Number((parts[4] as string)[0])] += 1;
+    }
+    expect(seen.size).toBe(draws); // 2^51.9 codes: a repeat in 20 000 means a broken source
+    expect(words.size).toBe(RESCUE_WORDS.length); // every word is reachable
+    // each word is expected 80 000 / 256 = 312.5 times (sd 17.6); six sd either way
+    for (const count of words.values()) expect(Math.abs(count - 312.5)).toBeLessThan(110);
+    // the number is uniform over [0, 10^6), so the leading digit is expected 2 000 times (sd 42); six sd either way
+    for (const count of leadingDigit) expect(Math.abs(count - 2_000)).toBeLessThan(255);
+  });
+
   it('issue needs device auth, returns the plaintext once, and stores only the hash', async () => {
     const auth = await registerAndUpload();
     expect((await app.request('/api/recovery/issue', { method: 'POST', headers: json, body: JSON.stringify({ learnerId: 'profile:suni' }) })).status).toBe(401);
@@ -124,6 +144,29 @@ describe('/api/recovery (F-RESTORE-001)', () => {
     const peppered = await claim('TIGER-MOON-4821', {}, { RESCUE_PEPPER: 'set-after-launch' });
     expect(peppered.status).toBe(200);
     expect((peppered.body.data as { snapshot: { rev: number } }).snapshot.rev).toBe(1);
+  });
+
+  it('a code the old Worker stored is matched byte for byte: PADDLE-GLACIER-4992 is a fixed SHA-256 vector, whatever the helpers do', async () => {
+    // sha256 of the normalized code, computed outside this codebase: printf 'PADDLE-GLACIER-4992' | shasum -a 256
+    const STORED_BY_THE_OLD_WORKER = '73fb5ede9468438ddce667718d1a0c91e73da887f47606d14e9d693f52513d75';
+    expect(await hashSecret('PADDLE-GLACIER-4992')).toBe(STORED_BY_THE_OLD_WORKER);
+    await registerAndUpload();
+    const learner = await db.getLearner('profile:suni');
+    if (!learner) throw new Error('learner missing');
+    await db.putLearner({ ...learner, recoveryHash: STORED_BY_THE_OLD_WORKER });
+
+    // every way a parent writes it down, before and after RESCUE_PEPPER is set
+    for (const env of [undefined, { RESCUE_PEPPER: 'set-after-launch' }]) {
+      for (const typed of ['PADDLE-GLACIER-4992', 'paddle glacier 4992', ' Paddle-Glacier 4992 ']) {
+        claimLimiter.reset();
+        const res = await claim(typed, {}, env);
+        expect(res.status).toBe(200);
+        expect((res.body.data as { learner: { id: string }; snapshot: { rev: number } }).learner.id).toBe('profile:suni');
+      }
+    }
+    // a near miss is still just not found
+    claimLimiter.reset();
+    expect((await claim('PADDLE-GLACIER-4993')).status).toBe(404);
   });
 
   it('a code that collides with another learner is drawn again, never shared (UNIQUE recovery_hash)', async () => {
