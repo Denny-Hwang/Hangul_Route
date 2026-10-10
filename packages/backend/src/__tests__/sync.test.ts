@@ -166,7 +166,7 @@ describe('/api/sync (F-SYNC-001)', () => {
   it('concurrent PUTs from two devices on the same base rev: exactly one wins, the other gets 409 (SYNC-1)', async () => {
     const r = await register(DEVICE_A);
     const secretB = 'b'.repeat(64);
-    await db.putDevice({ learnerId: r.learnerId, deviceId: DEVICE_B, secretHash: await hashSecret(secretB), createdAt: 't', lastSeenAt: 't' });
+    await db.putDevice({ learnerId: r.learnerId, deviceId: DEVICE_B, secretHash: await hashSecret(secretB), scope: 'full', createdAt: 't', lastSeenAt: 't' });
     const base = { summary, schemaVer: 1, contentVer: '2026.09' };
     const fromA = { ...base, snapshot: snapshotFor(r.learnerId, [{ questId: 'quest:a', stars: 3 }]) };
     const fromB = { ...base, snapshot: snapshotFor(r.learnerId, [{ questId: 'quest:b', stars: 1 }]) };

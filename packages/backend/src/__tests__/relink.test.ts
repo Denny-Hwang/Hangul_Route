@@ -36,7 +36,7 @@ beforeEach(async () => {
 });
 
 describe('re-link requests (F-TCH-001 §10.1)', () => {
-  it('a new device requests, the teacher approves, credentials are picked up once and the device can sync', async () => {
+  it('a new device requests, the teacher approves, class credentials are picked up once and reach the inbox', async () => {
     const s = await setup();
     const created = await create(s.spaceId, { code: s.code.toLowerCase(), learnerId: s.learnerId, deviceId: DEVICE_B, platform: 'tablet' });
     expect(created.status).toBe(201);
@@ -57,19 +57,73 @@ describe('re-link requests (F-TCH-001 §10.1)', () => {
     expect(approved.status).toBe(200);
     expect(JSON.stringify(approved.body)).not.toContain('secret');
 
-    const pickup = (await poll(s.spaceId, req.id, DEVICE_B)).body.data as { status: string; device: { deviceId: string; secret: string }; learner: { id: string; recoveryHash?: string }; snapshot: { rev: number } };
+    const pickup = (await poll(s.spaceId, req.id, DEVICE_B)).body.data as { status: string; device: { deviceId: string; secret: string; scope: string }; learner: { id: string; recoveryHash?: string }; snapshot: unknown };
     expect(pickup.status).toBe('approved');
-    expect(pickup.device.deviceId).toBe(DEVICE_B);
+    expect(pickup.device).toMatchObject({ deviceId: DEVICE_B, scope: 'class' });
     expect(pickup.learner.id).toBe(s.learnerId);
     expect(pickup.learner).not.toHaveProperty('recoveryHash');
-    expect(pickup.snapshot.rev).toBe(1);
+    // class approval restores identity and class, never the learner's progress (SEC-4)
+    expect(pickup.snapshot).toBeNull();
     // second pickup carries no credentials
     expect((await poll(s.spaceId, req.id, DEVICE_B)).body.data).toEqual({ status: 'approved', expiresAt: req.expiresAt });
-    const sync = await app.request(`/api/sync/learners/${s.learnerId}/snapshot`, { headers: { authorization: `Device ${DEVICE_B}:${pickup.device.secret}` } });
-    expect(sync.status).toBe(200);
+    const inbox = await app.request(`/api/sync/learners/${s.learnerId}/inbox`, { headers: { authorization: `Device ${DEVICE_B}:${pickup.device.secret}` } });
+    expect(inbox.status).toBe(200);
     // approving twice is refused; the list no longer shows it
     expect((await call('POST', `/api/spaces/${s.spaceId}/relink-requests/${req.id}/approve`, bearer('teacher'))).body.error?.code).toBe('not_pending');
     expect(((await call('GET', `/api/spaces/${s.spaceId}/relink-requests`, bearer('teacher'))).body.data as { requests: unknown[] }).requests).toEqual([]);
+  });
+
+  it('SEC-4: a class-approved device is scoped to the class — no snapshot, no rescue code, no family data — even when the teacher asked for it', async () => {
+    const s = await setup();
+    const T = '2026-10-09T00:00:00.000Z';
+    // the learner also has a family with a published plan
+    await db.putAccount({ id: 'mom', email: null, displayName: null, consent: null, createdAt: T });
+    await db.putSpace({ id: 'space:fam', kind: 'family', name: 'Kim family', parentSpaceId: null, ownerAccountId: 'mom', joinCode: null, joinCodeExpiresAt: null, settings: { consentMode: 'parent', anonymizeRoster: false }, archivedAt: null, createdAt: T });
+    await db.addMembership({ spaceId: 'space:fam', memberKind: 'account', memberId: 'mom', role: 'owner', joinedAt: T });
+    await db.addMembership({ spaceId: 'space:fam', memberKind: 'learner', memberId: s.learnerId, role: 'student', joinedAt: T });
+    await db.putPlan({ id: 'plan:home', spaceId: 'space:fam', authorAccountId: 'mom', title: 'Home', items: [{ kind: 'quest', id: 'quest:a' }], targetLearnerIds: null, publishedAt: T, archivedAt: null, createdAt: T, updatedAt: T });
+
+    // The teacher knows the join code and the roster id, so they can ask for their own device and approve it.
+    const TEACHER_DEVICE = 'device-teacher1';
+    const req = ((await create(s.spaceId, { code: s.code, learnerId: s.learnerId, deviceId: TEACHER_DEVICE })).body.data as { request: { id: string } }).request;
+    expect((await call('POST', `/api/spaces/${s.spaceId}/relink-requests/${req.id}/approve`, bearer('teacher'))).status).toBe(200);
+    const pickup = (await poll(s.spaceId, req.id, TEACHER_DEVICE)).body.data as { device: { secret: string }; snapshot: unknown };
+    expect(pickup.snapshot).toBeNull();
+    const scoped = { ...json, authorization: `Device ${TEACHER_DEVICE}:${pickup.device.secret}` };
+
+    const read = await call('GET', `/api/sync/learners/${s.learnerId}/snapshot`, scoped);
+    expect(read.status).toBe(403);
+    expect(read.body.error?.code).toBe('scope_limited');
+    const write = await call('PUT', `/api/sync/learners/${s.learnerId}/snapshot`, scoped, { baseRev: 1, snapshot: { profileId: s.learnerId, updatedAt: 't', episodes: [], quests: [], cards: [], sessions: [], homework: [], reviews: [], streakDays: 0 }, summary: { schemaVersion: 1, lastActiveAt: 't', streakDays: 0, stage1: { questsDone: 0, questsTotal: 11, anchorAccuracy: null }, cardsUnlocked: 0, minutesLast7d: 0, jamoRecognized: [], needsPractice: [], planProgress: {} }, schemaVer: 1, contentVer: '2026.09' });
+    expect(write.status).toBe(403);
+    expect((await db.getSnapshot(s.learnerId))?.rev).toBe(1); // untouched
+    expect((await call('POST', '/api/recovery/issue', scoped, { learnerId: s.learnerId })).status).toBe(403);
+    expect((await call('POST', `/api/spaces/${s.spaceId}/leave`, scoped, { learnerId: s.learnerId })).status).toBe(403);
+
+    // the inbox works, but only for class spaces
+    const inbox = (await call('GET', `/api/sync/learners/${s.learnerId}/inbox`, scoped)).body.data as { memberships: Array<{ kind: string }>; plans: Array<{ spaceKind: string }> };
+    expect(inbox.memberships.map((m) => m.kind)).toEqual(['class']);
+    expect(inbox.plans).toEqual([]);
+  });
+
+  it('a rescue code from the grown-up, claimed on a class-linked device, unlocks the learner fully there', async () => {
+    const s = await setup();
+    const req = ((await create(s.spaceId, { code: s.code, learnerId: s.learnerId, deviceId: DEVICE_B })).body.data as { request: { id: string } }).request;
+    await call('POST', `/api/spaces/${s.spaceId}/relink-requests/${req.id}/approve`, bearer('teacher'));
+    await poll(s.spaceId, req.id, DEVICE_B);
+    expect((await db.getDevice(s.learnerId, DEVICE_B))?.scope).toBe('class');
+
+    const regA = await db.getDevice(s.learnerId, DEVICE_A);
+    expect(regA?.scope).toBe('full');
+    // the learner's own device mints the code; the grown-up types it on the class device
+    const secretA = 'a'.repeat(64);
+    const { hashSecret } = await import('../lib/device-auth');
+    if (regA) await db.putDevice({ ...regA, secretHash: await hashSecret(secretA) });
+    const issued = (await call('POST', '/api/recovery/issue', { ...json, authorization: `Device ${DEVICE_A}:${secretA}` }, { learnerId: s.learnerId })).body.data as { code: string };
+    const claimed = (await call('POST', '/api/recovery/claim', json, { code: issued.code, deviceId: DEVICE_B })).body.data as { device: { secret: string }; snapshot: { rev: number } };
+    expect(claimed.snapshot.rev).toBe(1);
+    expect((await db.getDevice(s.learnerId, DEVICE_B))?.scope).toBe('full');
+    expect((await call('GET', `/api/sync/learners/${s.learnerId}/snapshot`, { ...json, authorization: `Device ${DEVICE_B}:${claimed.device.secret}` })).status).toBe(200);
   });
 
   it('rejects wrong codes, unknown learners, already-bound devices, and rate-limits guessing', async () => {

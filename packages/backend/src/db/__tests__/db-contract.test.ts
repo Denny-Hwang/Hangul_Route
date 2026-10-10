@@ -38,9 +38,14 @@ function contract(name: string, make: () => Db): void {
       expect((await db.learnerByRecoveryHash('hash-1'))?.id).toBe('profile:suni');
       expect(await db.learnerByRecoveryHash('nope')).toBeNull();
 
-      await db.putDevice({ learnerId: 'profile:suni', deviceId: 'device-a', secretHash: 'h', createdAt: T, lastSeenAt: T });
-      await db.putDevice({ learnerId: 'profile:suni', deviceId: 'device-a', secretHash: 'h2', createdAt: T, lastSeenAt: '2026-10-08T00:00:00.000Z' });
-      expect(await db.getDevice('profile:suni', 'device-a')).toMatchObject({ secretHash: 'h2', lastSeenAt: '2026-10-08T00:00:00.000Z' });
+      await db.putDevice({ learnerId: 'profile:suni', deviceId: 'device-a', secretHash: 'h', scope: 'full', createdAt: T, lastSeenAt: T });
+      await db.putDevice({ learnerId: 'profile:suni', deviceId: 'device-a', secretHash: 'h2', scope: 'full', createdAt: T, lastSeenAt: '2026-10-08T00:00:00.000Z' });
+      expect(await db.getDevice('profile:suni', 'device-a')).toMatchObject({ secretHash: 'h2', scope: 'full', lastSeenAt: '2026-10-08T00:00:00.000Z' });
+      // a class-approved binding is limited (SEC-4); a later rescue claim on the same device widens it
+      await db.putDevice({ learnerId: 'profile:suni', deviceId: 'device-c', secretHash: 'h3', scope: 'class', createdAt: T, lastSeenAt: T });
+      expect((await db.getDevice('profile:suni', 'device-c'))?.scope).toBe('class');
+      await db.putDevice({ learnerId: 'profile:suni', deviceId: 'device-c', secretHash: 'h4', scope: 'full', createdAt: T, lastSeenAt: T });
+      expect(await db.getDevice('profile:suni', 'device-c')).toMatchObject({ secretHash: 'h4', scope: 'full' });
       expect(await db.getDevice('profile:suni', 'device-b')).toBeNull();
       expect(await db.deviceExists('device-a')).toBe(true);
       expect(await db.deviceExists('device-b')).toBe(false);

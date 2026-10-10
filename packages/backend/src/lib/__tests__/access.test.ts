@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { MemoryDb } from '../../db/memory';
 import type { Account } from '../../store';
-import { saveAccount } from '../access';
+import { learnerContexts, saveAccount } from '../access';
 
 /** MemoryDb with the D1 `accounts.email UNIQUE` constraint. */
 class UniqueEmailDb extends MemoryDb {
@@ -37,5 +37,17 @@ describe('saveAccount', () => {
       throw new Error('D1 down');
     };
     await expect(saveAccount(db, account('user_x', null))).rejects.toThrow('D1 down');
+  });
+});
+
+describe('learnerContexts (SEC-4)', () => {
+  it('leaves out archived spaces, so last year\'s class grants nothing over the learner', async () => {
+    const db = new MemoryDb();
+    const T = '2026-10-09T00:00:00.000Z';
+    const base = { kind: 'class' as const, parentSpaceId: null, ownerAccountId: 't', joinCode: null, joinCodeExpiresAt: null, settings: { consentMode: 'parent' as const, anonymizeRoster: false }, createdAt: T };
+    await db.putSpace({ ...base, id: 'space:now', name: 'Now', archivedAt: null });
+    await db.putSpace({ ...base, id: 'space:old', name: 'Old', archivedAt: T });
+    for (const spaceId of ['space:now', 'space:old', 'space:gone']) await db.addMembership({ spaceId, memberKind: 'learner', memberId: 'profile:a', role: 'student', joinedAt: T });
+    expect((await learnerContexts(db, 'profile:a')).map((c) => c.space.id)).toEqual(['space:now']);
   });
 });

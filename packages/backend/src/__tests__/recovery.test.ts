@@ -198,27 +198,56 @@ describe('/api/recovery (F-RESTORE-001)', () => {
   });
 });
 
-describe('rescue re-issue by an adult (F-TCH-001 §10.2)', () => {
+describe('rescue re-issue by an adult — only who may read the snapshot (SEC-4)', () => {
   beforeEach(async () => {
     await db.reset();
     claimLimiter.reset();
   });
 
-  it('a teacher with roster rights can issue a new code; strangers cannot; the old code stops working', async () => {
+  const T = '2026-10-09T00:00:00.000Z';
+  const settings = { consentMode: 'parent' as const, anonymizeRoster: false };
+  const space = (id: string, kind: 'family' | 'class' | 'school', owner: string, parentSpaceId: string | null = null, archivedAt: string | null = null) => ({ id, kind, name: id, parentSpaceId, ownerAccountId: owner, joinCode: null, joinCodeExpiresAt: null, settings, archivedAt, createdAt: T });
+
+  /**
+   * A re-issued code is a bearer credential for the whole snapshot and a new
+   * device binding, so it follows snapshot.read: family owner and caregivers.
+   * Class and school roles hold summary.read + roster.manage only.
+   */
+  it('permission matrix: family owner and caregiver may; class and school roles, strangers and archived spaces may not', async () => {
     const auth = await registerAndUpload();
-    const { code: first } = await issue(auth);
-    const clsRes = await app.request('/api/spaces', { method: 'POST', headers: { ...json, authorization: 'Bearer teacher' }, body: JSON.stringify({ kind: 'class', name: 'A' }) });
-    const cls = (await clsRes.json()) as { data: { space: { id: string }; joinCode: string } };
-    const joined = await app.request(`/api/spaces/${cls.data.space.id}/join`, { method: 'POST', headers: auth, body: JSON.stringify({ code: cls.data.joinCode, learnerId: 'profile:suni' }) });
-    expect(joined.status).toBe(201);
-    const denied = await app.request('/api/recovery/issue', { method: 'POST', headers: { ...json, authorization: 'Bearer stranger' }, body: JSON.stringify({ learnerId: 'profile:suni' }) });
-    expect(denied.status).toBe(403);
-    const reissued = await app.request('/api/recovery/issue', { method: 'POST', headers: { ...json, authorization: 'Bearer teacher' }, body: JSON.stringify({ learnerId: 'profile:suni' }) });
-    expect(reissued.status).toBe(201);
-    const { code: second } = ((await reissued.json()) as { data: { code: string } }).data;
-    expect(second).not.toBe(first);
-    expect((await claim(first)).status).toBe(404);
-    expect((await claim(second)).status).toBe(200);
+    const { code: original } = await issue(auth);
+    for (const id of ['mom', 'dad', 'teacher', 'coteacher', 'principal', 'admin', 'schoolteacher', 'exmom', 'stranger']) {
+      await db.putAccount({ id, email: null, displayName: null, consent: null, createdAt: T });
+    }
+    await db.putSpace(space('space:fam', 'family', 'mom'));
+    await db.putSpace(space('space:sch', 'school', 'principal'));
+    await db.putSpace(space('space:cls', 'class', 'teacher', 'space:sch'));
+    await db.putSpace(space('space:old', 'family', 'exmom', null, T));
+    const member = (spaceId: string, memberId: string, role: 'owner' | 'caregiver' | 'teacher' | 'admin' | 'student', memberKind: 'account' | 'learner' = 'account') =>
+      db.addMembership({ spaceId, memberKind, memberId, role, joinedAt: T });
+    await member('space:fam', 'mom', 'owner');
+    await member('space:fam', 'dad', 'caregiver');
+    await member('space:cls', 'teacher', 'owner');
+    await member('space:cls', 'coteacher', 'teacher');
+    await member('space:sch', 'principal', 'owner');
+    await member('space:sch', 'admin', 'admin');
+    await member('space:sch', 'schoolteacher', 'teacher');
+    await member('space:old', 'exmom', 'owner');
+    for (const s of ['space:fam', 'space:cls', 'space:old']) await member(s, 'profile:suni', 'student', 'learner');
+
+    const expected: Record<string, number> = { mom: 201, dad: 201, teacher: 403, coteacher: 403, principal: 403, admin: 403, schoolteacher: 403, exmom: 403, stranger: 403 };
+    const got: Record<string, number> = {};
+    for (const who of Object.keys(expected)) {
+      got[who] = (await app.request('/api/recovery/issue', { method: 'POST', headers: { ...json, authorization: `Bearer ${who}` }, body: JSON.stringify({ learnerId: 'profile:suni' }) })).status;
+    }
+    expect(got).toEqual(expected);
     expect((await app.request('/api/recovery/issue', { method: 'POST', headers: json, body: JSON.stringify({ learnerId: 'profile:suni' }) })).status).toBe(401);
+
+    // a caregiver's re-issue rotates: the old code stops, the new one restores
+    const reissued = await app.request('/api/recovery/issue', { method: 'POST', headers: { ...json, authorization: 'Bearer mom' }, body: JSON.stringify({ learnerId: 'profile:suni' }) });
+    const { code: fresh } = ((await reissued.json()) as { data: { code: string } }).data;
+    expect(fresh).toMatch(V2_CODE);
+    expect((await claim(original)).status).toBe(404);
+    expect((await claim(fresh)).status).toBe(200);
   });
 });
