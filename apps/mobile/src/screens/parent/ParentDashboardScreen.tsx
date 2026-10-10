@@ -13,10 +13,14 @@ import {
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React from 'react';
 import { Pressable, View } from 'react-native';
+import { ProfileAvatar } from '../../components/ProfileAvatar';
 import { questsAll } from '../../content';
 import type { RootStackParamList } from '../../navigation/types';
 import { useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
+
+/** Learner's cub beside the name (F-LEARN-001 §3.6). */
+const AVATAR_SIZE = 40;
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ParentDashboard'>;
 
@@ -51,9 +55,12 @@ export function ParentDashboardScreen({ navigation }: Props): React.ReactElement
           return (
             <Card key={p.id} padding="md" style={{ marginBottom: spacing.md }}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Body weight="bold" size="lg">
-                  {p.displayName}
-                </Body>
+                <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+                  <ProfileAvatar avatar={p.avatar} size={AVATAR_SIZE} />
+                  <Body weight="bold" size="lg">
+                    {p.displayName}
+                  </Body>
+                </View>
                 <Pill tone="neutral" label={`Age ${p.ageGroup}`} size="sm" />
               </View>
               <Spacer size="sm" />

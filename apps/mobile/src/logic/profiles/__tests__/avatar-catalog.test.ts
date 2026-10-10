@@ -1,9 +1,10 @@
+import { checkRomanization, romanizeWord } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import {
   AVATAR_PRESETS,
   DEFAULT_AVATAR,
   avatarAccessibilityLabel,
-  avatarTheme,
+  avatarLabel,
   findAvatar,
   isAvatarKind,
 } from '../avatar-catalog';
@@ -55,14 +56,42 @@ describe('avatarAccessibilityLabel', () => {
   });
 });
 
-describe('avatarTheme', () => {
-  it("gives the culture-theme tint of the learner's cub (Home profile entry, UX-05)", () => {
-    expect(avatarTheme('hoya-orange')).toBe('letters');
-    expect(avatarTheme('hoya-purple')).toBe('nature');
+describe('avatar labels (the source the picker and chips read)', () => {
+  it('labels every cub in English, in catalogue order', () => {
+    expect(AVATAR_PRESETS.map((a) => avatarLabel(a.kind))).toEqual([
+      'Book Tiger',
+      'Home Tiger',
+      'Feast Tiger',
+      'Mountain Tiger',
+      'Craft Tiger',
+    ]);
   });
 
-  it('falls back to the default cub for persisted junk data', () => {
+  it('has unique labels (colour is never the only cue)', () => {
+    expect(new Set(AVATAR_PRESETS.map((a) => a.label)).size).toBe(AVATAR_PRESETS.length);
+  });
+
+  it('returns null for persisted junk instead of throwing', () => {
     // @ts-expect-error — guarding the runtime path for persisted junk data
-    expect(avatarTheme('hoya-teal')).toBe(findAvatar(DEFAULT_AVATAR)?.theme);
+    expect(avatarLabel('hoya-teal')).toBeNull();
+  });
+});
+
+describe('Rites cub name (F-CNT-002 C9, owner decision 2026-10-10)', () => {
+  it('is spelled 예리 and romanized Yeri', () => {
+    const rites = findAvatar('hoya-green');
+    expect(rites?.pillarName).toBe('예리');
+    expect(rites?.romanization).toBe('Yeri');
+  });
+
+  it('no longer contains the old 례이 spelling anywhere in the catalogue', () => {
+    expect(AVATAR_PRESETS.some((a) => a.pillarName === '례이')).toBe(false);
+  });
+
+  it('keeps the romanization consistent with the Revised Romanization of the Hangul name', () => {
+    expect(romanizeWord('예리')).toBe('yeri');
+    for (const a of AVATAR_PRESETS) {
+      expect(checkRomanization(a.pillarName, a.romanization)).toEqual([]);
+    }
   });
 });

@@ -51,7 +51,7 @@ Companion stories:
 - **Given** a parent profile exists,
   **when** parent goes to "Add another child",
   **then** they can create additional learner profiles without re-entering PIN within the same session (15-min session window).
-- Avatars: **5** preset Hoya variants (tiger cub), one per culture-theme Pillar — 글이 (Letters) · 살이 (Life) · 례이 (Rites) · 솔이 (Nature) · 솜이 (Crafts). These are illustrations, not learner names. Names: free text, 1–12 chars, no emojis, no Korean/Chinese (UI is English).
+- Avatars: **5** preset Hoya variants (tiger cub), one per culture-theme Pillar — 글이 (Letters) · 살이 (Life) · 예리 (Rites; respelled from 례이 on 2026-10-10, F-CNT-002 C9) · 솔이 (Nature) · 솜이 (Crafts). These are illustrations, not learner names. Names: free text, 1–12 chars, no emojis, no Korean/Chinese (UI is English).
 
 ### 3.3 Data isolation
 

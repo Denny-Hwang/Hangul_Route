@@ -13,7 +13,6 @@ import {
   StarRow,
   TAB_SCREEN_EDGES,
   colors,
-  radii,
   spacing,
   touchTarget,
 } from '@hangul-route/design-system';
@@ -22,6 +21,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useEffect, useMemo, useRef } from 'react';
 import { Pressable, View } from 'react-native';
 import { InstallGuideSheet } from '../../components/InstallGuideSheet';
+import { ProfileAvatar } from '../../components/ProfileAvatar';
 import { episodesAll, questsAll } from '../../content';
 import {
   buildTodaysMission,
@@ -30,7 +30,7 @@ import {
   type MissionPlan,
 } from '../../logic/homework/mission-builder';
 import { mergeAssignments } from '../../logic/homework/assignment-merger';
-import { DEFAULT_AVATAR, avatarTheme } from '../../logic/profiles/avatar-catalog';
+import { DEFAULT_AVATAR } from '../../logic/profiles/avatar-catalog';
 import { computeStreak } from '../../logic/streak';
 import type { RootStackParamList } from '../../navigation/types';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
@@ -152,9 +152,9 @@ export function HomeScreen(): React.ReactElement {
           <Heading level="title">Hi, {profile?.displayName ?? 'friend'}!</Heading>
           <Body tone="secondary">Ready for today&apos;s quest?</Body>
         </View>
-        {/* Profile entry (UX-05): the learner's own cub, ringed in its theme
-            tint, with a visible label — the only way to profiles, backup,
-            classes and the grown-up zone. */}
+        {/* Profile entry (UX-05): the learner's own cub, tinted and ringed in the
+            colour its avatar name says (not the Pillar theme), with a visible
+            label — the only way to profiles, backup, classes and the grown-up zone. */}
         <Pressable
           onPress={() => navigation.navigate('Profile')}
           accessibilityRole="button"
@@ -162,21 +162,7 @@ export function HomeScreen(): React.ReactElement {
           hitSlop={spacing.xs}
           style={{ alignItems: 'center', minWidth: touchTarget.min, gap: spacing.xxs }}
         >
-          <View
-            style={{
-              width: AVATAR_SIZE,
-              height: AVATAR_SIZE,
-              borderRadius: radii.circle,
-              borderWidth: 3,
-              borderColor: colors.theme[avatarTheme(profile?.avatar ?? DEFAULT_AVATAR)],
-              backgroundColor: colors.surface.paper,
-              alignItems: 'center',
-              justifyContent: 'center',
-              overflow: 'hidden',
-            }}
-          >
-            <Hoya pose="idle" size={AVATAR_SIZE - spacing.md} />
-          </View>
+          <ProfileAvatar avatar={profile?.avatar ?? DEFAULT_AVATAR} size={AVATAR_SIZE} ring />
           <Caption tone="secondary" weight="semibold">
             Profile
           </Caption>

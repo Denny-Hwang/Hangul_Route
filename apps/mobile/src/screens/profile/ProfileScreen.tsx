@@ -4,7 +4,6 @@ import {
   Caption,
   Card,
   Heading,
-  Hoya,
   Icon,
   Pill,
   Screen,
@@ -18,6 +17,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React from 'react';
 import { Pressable, View } from 'react-native';
+import { ProfileAvatar } from '../../components/ProfileAvatar';
 import { effectiveTier } from '../../store/tier-store';
 import { isParentSessionValid } from '../../logic/profiles/session';
 import type { RootStackParamList } from '../../navigation/types';
@@ -110,7 +110,7 @@ export function ProfileScreen(): React.ReactElement {
                 minHeight: touchTarget.hero,
               }}
             >
-              <Hoya pose={isActive ? 'cheering' : 'idle'} size={72} />
+              <ProfileAvatar avatar={p.avatar} size={72} pose={isActive ? 'cheering' : 'idle'} />
               <Spacer size="xs" />
               <Body weight="semibold">{p.displayName}</Body>
               <Caption tone="muted">Age {p.ageGroup}</Caption>

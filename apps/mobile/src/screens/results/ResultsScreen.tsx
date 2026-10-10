@@ -32,6 +32,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
+import { ProfileAvatar } from '../../components/ProfileAvatar';
 import { cardById, episodeById, questById } from '../../content';
 import { applyQuestResult } from '../../logic/results-award';
 import type { CardAward } from '../../logic/reward';
@@ -41,6 +42,9 @@ import { track } from '../../platform/telemetry';
 import type { RootStackParamList } from '../../navigation/types';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
+
+/** Learner's cub in the name chip above the guide Hoya. */
+const AVATAR_SIZE = 40;
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Results'>;
 
@@ -103,6 +107,27 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
   return (
     <Screen tone="canvas" scrollable>
       <View style={{ alignItems: 'center', paddingTop: spacing.xxl }}>
+        {profile ? (
+          // The learner's own cub and name (F-LEARN-001 §3.6); the Hoya below is the guide.
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: spacing.sm,
+              paddingVertical: spacing.xs,
+              paddingLeft: spacing.xs,
+              paddingRight: spacing.md,
+              marginBottom: spacing.md,
+              backgroundColor: colors.surface.paper,
+              borderColor: colors.border.subtle,
+              borderWidth: borderWidth.thin,
+              borderRadius: radii.pill,
+            }}
+          >
+            <ProfileAvatar avatar={profile.avatar} size={AVATAR_SIZE} />
+            <Body weight="semibold">{profile.displayName}</Body>
+          </View>
+        ) : null}
         <Hoya pose={stars >= 2 ? 'cheering' : 'thinking'} size={140} />
         <Spacer size="lg" />
         <Heading level="display">{resultsHeadline(stars, played)}</Heading>

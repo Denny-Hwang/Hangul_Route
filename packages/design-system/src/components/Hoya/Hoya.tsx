@@ -8,7 +8,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import Svg, { Circle, Ellipse, G, Line, Path, Rect } from 'react-native-svg';
-import { colors } from '../../tokens';
+import { colors, hoyaVariantColors } from '../../tokens';
 import type { HoyaPose, HoyaProps } from './types';
 
 /**
@@ -105,15 +105,15 @@ function MouthFor({ pose }: { pose: HoyaPose }): React.ReactElement {
   }
 }
 
-function ArmsFor({ pose }: { pose: HoyaPose }): React.ReactElement | null {
+function ArmsFor({ pose, fur }: { pose: HoyaPose; fur: string }): React.ReactElement | null {
   if (pose === 'cheering') {
     // Both arms raised up and out — joyful.
     return (
       <G>
-        <Path d="M22 78 Q14 60 8 46" stroke={colors.hoya.fur} strokeWidth={10} strokeLinecap="round" fill="none" />
-        <Path d="M106 78 Q114 60 120 46" stroke={colors.hoya.fur} strokeWidth={10} strokeLinecap="round" fill="none" />
-        <Circle cx={8} cy={46} r={7} fill={colors.hoya.fur} />
-        <Circle cx={120} cy={46} r={7} fill={colors.hoya.fur} />
+        <Path d="M22 78 Q14 60 8 46" stroke={fur} strokeWidth={10} strokeLinecap="round" fill="none" />
+        <Path d="M106 78 Q114 60 120 46" stroke={fur} strokeWidth={10} strokeLinecap="round" fill="none" />
+        <Circle cx={8} cy={46} r={7} fill={fur} />
+        <Circle cx={120} cy={46} r={7} fill={fur} />
       </G>
     );
   }
@@ -121,8 +121,8 @@ function ArmsFor({ pose }: { pose: HoyaPose }): React.ReactElement | null {
     // Right arm raised in a wave.
     return (
       <G>
-        <Path d="M104 76 Q116 64 122 54" stroke={colors.hoya.fur} strokeWidth={10} strokeLinecap="round" fill="none" />
-        <Circle cx={122} cy={54} r={7} fill={colors.hoya.fur} />
+        <Path d="M104 76 Q116 64 122 54" stroke={fur} strokeWidth={10} strokeLinecap="round" fill="none" />
+        <Circle cx={122} cy={54} r={7} fill={fur} />
       </G>
     );
   }
@@ -130,8 +130,8 @@ function ArmsFor({ pose }: { pose: HoyaPose }): React.ReactElement | null {
     // Two small front paws holding the book.
     return (
       <G>
-        <Circle cx={42} cy={102} r={6} fill={colors.hoya.fur} />
-        <Circle cx={86} cy={102} r={6} fill={colors.hoya.fur} />
+        <Circle cx={42} cy={102} r={6} fill={fur} />
+        <Circle cx={86} cy={102} r={6} fill={fur} />
       </G>
     );
   }
@@ -195,12 +195,12 @@ function CheerSparkles(): React.ReactElement {
   );
 }
 
-function Book(): React.ReactElement {
+function Book({ furDark }: { furDark: string }): React.ReactElement {
   // Reading pose: cream rectangle with two black calligraphy strokes.
   return (
     <G>
       {/* Book base shadow */}
-      <Rect x={36} y={98} width={56} height={20} rx={3} ry={3} fill={colors.hoya.furDark} opacity={0.2} />
+      <Rect x={36} y={98} width={56} height={20} rx={3} ry={3} fill={furDark} opacity={0.2} />
       {/* Book body */}
       <Rect
         x={36}
@@ -231,9 +231,11 @@ function showCheeks(pose: HoyaPose): boolean {
 export function Hoya({
   pose = 'idle',
   size = 96,
+  variant = 'orange',
   testID,
   accessibilityLabel,
 }: HoyaProps): React.ReactElement {
+  const { fur, furDark } = hoyaVariantColors(variant);
   const eye = eyeFor(pose);
   const cheeks = showCheeks(pose);
 
@@ -278,17 +280,17 @@ export function Hoya({
         viewBox="0 0 128 128"
       >
       {/* Soft radial shadow under feet (simple opacity ellipse — gradient skipped to avoid id collisions) */}
-      <Ellipse cx={64} cy={116} rx={38} ry={5} fill={colors.hoya.furDark} opacity={0.18} />
+      <Ellipse cx={64} cy={116} rx={38} ry={5} fill={furDark} opacity={0.18} />
 
       {/* Arms (cheering / waving / reading paws) */}
-      <ArmsFor pose={pose} />
+      <ArmsFor pose={pose} fur={fur} />
 
       {/* Head */}
-      <Circle cx={64} cy={64} r={44} fill={colors.hoya.fur} />
+      <Circle cx={64} cy={64} r={44} fill={fur} />
 
       {/* Ears (rounded, slightly larger inner pink) */}
-      <Circle cx={30} cy={32} r={12} fill={colors.hoya.fur} />
-      <Circle cx={98} cy={32} r={12} fill={colors.hoya.fur} />
+      <Circle cx={30} cy={32} r={12} fill={fur} />
+      <Circle cx={98} cy={32} r={12} fill={fur} />
       <Circle cx={30} cy={32} r={6} fill={colors.hoya.cheek} opacity={0.85} />
       <Circle cx={98} cy={32} r={6} fill={colors.hoya.cheek} opacity={0.85} />
 
@@ -327,7 +329,7 @@ export function Hoya({
       {/* Pose-specific accents */}
       {pose === 'thinking' ? <ThoughtCloud /> : null}
       {pose === 'cheering' ? <CheerSparkles /> : null}
-      {pose === 'reading' ? <Book /> : null}
+      {pose === 'reading' ? <Book furDark={furDark} /> : null}
       </Svg>
     </Animated.View>
   );
