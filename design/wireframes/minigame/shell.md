@@ -45,8 +45,9 @@ Then: the child sees the same frame they saw last time — where the prompt is, 
 ## Interaction points
 
 - Prompt replay tap → replays prompt audio (`platform/audio`)
-- **Correct** answer → tile/option switches to the correct look, light + success haptic, `recordRound(true)`; after ~0.7 s auto-advance to the next round (no "Next" button)
-- **Wrong** answer → that tile locks in the wrong look, nudge haptic, `recordRound(false)`, prompt audio replays after ~0.8 s, Hoya bubble (thinking tone) with the answer's Korean + romanization + [ Hear it ]. The round **stays open** until correct (catalog §0.3 rule 3 says reveal + auto-advance; see open questions)
+- **Correct** answer → tile/option switches to the correct look, light + success haptic, `answerRound(roundIdx, true)`; after ~0.7 s auto-advance to the next round (no "Next" button)
+- **Wrong** answer → that tile locks in the wrong look, nudge haptic, `answerRound(roundIdx, false)`, prompt audio replays after ~0.8 s, Hoya bubble (thinking tone) with the answer's Korean + romanization + [ Hear it ]. The round **stays open** until correct (catalog §0.3 rule 3 says reveal + auto-advance; see open questions)
+- **Scoring** (F-001 §3.2, audit UX-02): a round scores on its **first** answer only — right first time = correct round, wrong first time = missed round. Re-taps are retries: they never add a round or change stars, and are counted separately (`retryCount`, `quest.complete.retries`)
 - Last round done → `markStepComplete()` + `onFinish()` → `goBack()` to `quest/player`, which advances the step
 - [ Skip ] (build-letter, card-match, story-sequence, trace-stroke) → `markStepComplete()` + `onFinish()` without recording the remaining rounds
 
@@ -64,7 +65,7 @@ Exit to:    `quest/player` (always, via goBack) — never to results directly
 ## Data needs
 
 - reads: `questById().steps[stepIndex].minigameRef` → `scopeFor(ref)` (`logic/minigame-config`: kind, jamoIds, syllables, cardPairs, storySteps, dialogue, rounds) · round builders in `logic/round-builder` (pure)
-- writes: `quest-run-store.recordRound / markStepComplete`
+- writes: `quest-run-store.answerRound / markStepComplete` (first answer per `stepIndex:roundKey` scores; later answers are retries)
 - telemetry: `minigame.finished` `{ kind, questId, stepIndex }` on close (profileId attached)
 
 ## Open questions

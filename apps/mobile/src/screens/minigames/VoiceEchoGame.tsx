@@ -30,14 +30,14 @@ interface Props {
  * to listen, repeat aloud, and tap "I said it" — honor system.
  */
 export function VoiceEchoGame({ scope: _scope, onFinish }: Props): React.ReactElement {
-  const recordRound = useQuestRunStore((s) => s.recordRound);
+  const answerRound = useQuestRunStore((s) => s.answerRound);
   const markStepComplete = useQuestRunStore((s) => s.markStepComplete);
   const [acknowledged, setAcknowledged] = useState(false);
 
   const target = _scope.cardPairs?.[0]?.ko ?? '안녕';
 
   const onDone = (): void => {
-    recordRound(true);
+    answerRound(0, true);
     markStepComplete();
     onFinish();
   };

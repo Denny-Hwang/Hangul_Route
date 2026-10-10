@@ -35,7 +35,7 @@ export function StorySequenceGame({ scope, onFinish }: Props): React.ReactElemen
   const [picked, setPicked] = useState<string[]>([]);
   const [wrongFlash, setWrongFlash] = useState<string | null>(null);
 
-  const recordRound = useQuestRunStore((s) => s.recordRound);
+  const answerRound = useQuestRunStore((s) => s.answerRound);
   const markStepComplete = useQuestRunStore((s) => s.markStepComplete);
 
   useEffect(() => {
@@ -52,11 +52,11 @@ export function StorySequenceGame({ scope, onFinish }: Props): React.ReactElemen
     const expectedId = correctOrder[picked.length]?.id;
     if (id === expectedId) {
       success();
-      recordRound(true);
+      answerRound(picked.length, true);
       setPicked([...picked, id]);
     } else {
       nudge();
-      recordRound(false);
+      answerRound(picked.length, false);
       setWrongFlash(id);
       setTimeout(() => setWrongFlash(null), 500);
     }

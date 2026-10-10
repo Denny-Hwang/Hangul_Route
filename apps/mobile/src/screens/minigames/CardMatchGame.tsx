@@ -44,7 +44,7 @@ export function CardMatchGame({ scope, onFinish }: Props): React.ReactElement {
     return indexed;
   }, [pairs]);
 
-  const recordRound = useQuestRunStore((s) => s.recordRound);
+  const answerRound = useQuestRunStore((s) => s.answerRound);
   const markStepComplete = useQuestRunStore((s) => s.markStepComplete);
 
   const [selectedKo, setSelectedKo] = useState<number | null>(null);
@@ -65,12 +65,12 @@ export function CardMatchGame({ scope, onFinish }: Props): React.ReactElement {
     if (matched.has(selectedKo)) return;
     if (selectedKo === enIdx) {
       success();
-      recordRound(true);
+      answerRound(`pair-${selectedKo}`, true);
       setMatched(new Set([...matched, selectedKo]));
       setSelectedKo(null);
     } else {
       nudge();
-      recordRound(false);
+      answerRound(`pair-${selectedKo}`, false);
       setWrongFlash({ ko: selectedKo, en: enIdx });
       setTimeout(() => {
         setWrongFlash(null);

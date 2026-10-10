@@ -84,7 +84,7 @@ Per game, inherited from the shell: success (rounds advance), empty (no rounds �
 ## Data needs
 
 - reads: `MinigameScope` fields by family — `jamoIds` (recognition, trace) · `syllables` (build-letter) · `dialogue` (tap-respond) · `cardPairs` (card-match, culture-quiz, voice-echo target) · `storySteps` (story-sequence) · `rounds`
-- writes: `recordRound`, `markStepComplete` (all)
+- writes: `answerRound(roundKey, correct)`, `markStepComplete` (all). Round keys: round index (recognition, build-letter, trace, tap-respond) · Korean word of the pair being matched (card-match) · slot position (story-sequence)
 - schema kinds **not implemented** (enum only, no component, no round schema): `match-shape`, `syllable-build`, `tap-rhythm`, `order-it` — the shell falls through to "coming soon"
 
 ## Open questions

@@ -14,7 +14,7 @@ interface Props {
 export function TapRespondGame({ scope, onFinish }: Props): React.ReactElement {
   const turns = useMemo(() => scope.dialogue ?? [], [scope]);
 
-  const recordRound = useQuestRunStore((s) => s.recordRound);
+  const answerRound = useQuestRunStore((s) => s.answerRound);
   const markStepComplete = useQuestRunStore((s) => s.markStepComplete);
 
   const [turnIdx, setTurnIdx] = useState(0);
@@ -35,7 +35,7 @@ export function TapRespondGame({ scope, onFinish }: Props): React.ReactElement {
     if (isCorrect) {
       tapLight();
       success();
-      recordRound(true);
+      answerRound(turnIdx, true);
       setFeedback('correct');
       speak(ko, { language: 'ko-KR' });
       setTimeout(() => {
@@ -50,7 +50,7 @@ export function TapRespondGame({ scope, onFinish }: Props): React.ReactElement {
       }, 900);
     } else {
       nudge();
-      recordRound(false);
+      answerRound(turnIdx, false);
       setFeedback('wrong');
       setLockedWrong([...lockedWrong, ko]);
     }

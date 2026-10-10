@@ -64,7 +64,7 @@ export function TraceStrokeGame({
 
   const soundOn = useUiStore((s) => s.soundOn);
 
-  const recordRound = useQuestRunStore((s) => s.recordRound);
+  const answerRound = useQuestRunStore((s) => s.answerRound);
   const markStepComplete = useQuestRunStore((s) => s.markStepComplete);
 
   const [roundIdx, setRoundIdx] = useState(0);
@@ -124,7 +124,7 @@ export function TraceStrokeGame({
       : result.coverage >= DEFAULT_PASS_THRESHOLD;
     if (passed) {
       success();
-      recordRound(true);
+      answerRound(roundIdx, true);
       setFeedback('pass');
       setTimeout(() => {
         if (roundIdx >= rounds.length - 1) {
@@ -136,7 +136,7 @@ export function TraceStrokeGame({
       }, 1100);
     } else {
       nudge();
-      recordRound(false);
+      answerRound(roundIdx, false);
       setFeedback('fail');
       // F-008 — strict-mode fail gets a longer retry window (2000ms vs 1800ms)
       const retryDelay = strictMode && result.coverage >= DEFAULT_PASS_THRESHOLD ? 2000 : 1800;

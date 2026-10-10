@@ -17,7 +17,7 @@ export function OddOneOutGame({ scope, onFinish }: Props): React.ReactElement {
     [scope],
   );
 
-  const recordRound = useQuestRunStore((s) => s.recordRound);
+  const answerRound = useQuestRunStore((s) => s.answerRound);
   const markStepComplete = useQuestRunStore((s) => s.markStepComplete);
 
   const [roundIdx, setRoundIdx] = useState(0);
@@ -38,7 +38,7 @@ export function OddOneOutGame({ scope, onFinish }: Props): React.ReactElement {
     if (jamoId === round.oddJamo.id) {
       tapLight();
       success();
-      recordRound(true);
+      answerRound(roundIdx, true);
       setFeedback('correct');
       setTimeout(() => {
         if (roundIdx >= rounds.length - 1) {
@@ -52,7 +52,7 @@ export function OddOneOutGame({ scope, onFinish }: Props): React.ReactElement {
       }, 700);
     } else {
       nudge();
-      recordRound(false);
+      answerRound(roundIdx, false);
       setFeedback('wrong');
       setLockedWrongIds([...lockedWrongIds, jamoId]);
     }

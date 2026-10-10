@@ -36,7 +36,7 @@ import { useProgressStore } from '../../store/progress-store';
 type Props = NativeStackScreenProps<RootStackParamList, 'Results'>;
 
 export function ResultsScreen({ route, navigation }: Props): React.ReactElement {
-  const { questId, episodeId, stars, correct, total } = route.params;
+  const { questId, episodeId, stars, correct, total, retries = 0 } = route.params;
   const quest = questById(questId);
   const episode = episodeById(episodeId);
   const profile = useProfileStore(activeProfileSelector);
@@ -66,7 +66,7 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
     void track({
       name: 'quest.complete',
       profileId: profile.id,
-      payload: { questId, episodeId, stars, correct, total },
+      payload: { questId, episodeId, stars, correct, total, retries },
     });
     // F-MOTION-003 §3.5 — the card is written only when the banner is shown.
     if (quest.rewardCardId && shouldUnlockCard(stars)) {
@@ -86,7 +86,7 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
         });
       }
     }
-  }, [profile, quest, questId, episodeId, stars, correct, total, recordQuestComplete, unlockCard]);
+  }, [profile, quest, questId, episodeId, stars, correct, total, retries, recordQuestComplete, unlockCard]);
 
   const played = total > 0;
   const cheerMessage = useMemo(() => {

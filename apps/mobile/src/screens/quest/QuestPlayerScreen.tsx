@@ -56,14 +56,16 @@ export function QuestPlayerScreen({ route, navigation }: Props): React.ReactElem
 
   const finishQuest = (): void => {
     // Honest outcome: a quest with every game skipped is 0 / 0, not 5 / 5.
+    // Rounds are scored on the first try; retries ride along for telemetry.
     const run = useQuestRunStore.getState();
     const { stars, correct, total } = questOutcome(run.correctCount, run.totalCount);
+    const retries = run.retryCount;
     navigation.dispatch(
       CommonActions.reset({
         index: 1,
         routes: [
           { name: 'Main' },
-          { name: 'Results', params: { questId, episodeId, stars, correct, total } },
+          { name: 'Results', params: { questId, episodeId, stars, correct, total, retries } },
         ],
       }),
     );

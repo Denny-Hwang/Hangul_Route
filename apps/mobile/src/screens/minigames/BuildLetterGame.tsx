@@ -36,7 +36,7 @@ export function BuildLetterGame({ scope, onFinish }: Props): React.ReactElement 
   const [roundIdx, setRoundIdx] = useState(0);
   const [selected, setSelected] = useState<string[]>([]);
   const [feedback, setFeedback] = useState<'idle' | 'correct' | 'wrong'>('idle');
-  const recordRound = useQuestRunStore((s) => s.recordRound);
+  const answerRound = useQuestRunStore((s) => s.answerRound);
   const markStepComplete = useQuestRunStore((s) => s.markStepComplete);
   const round = rounds[roundIdx];
 
@@ -72,7 +72,7 @@ export function BuildLetterGame({ scope, onFinish }: Props): React.ReactElement 
     if (next.length === round.componentJamoIds.length) {
       if (isCorrectWhenComplete(next)) {
         success();
-        recordRound(true);
+        answerRound(roundIdx, true);
         setFeedback('correct');
         setTimeout(() => {
           if (roundIdx >= rounds.length - 1) {
@@ -84,7 +84,7 @@ export function BuildLetterGame({ scope, onFinish }: Props): React.ReactElement 
         }, 900);
       } else {
         nudge();
-        recordRound(false);
+        answerRound(roundIdx, false);
         setFeedback('wrong');
         setTimeout(() => {
           setSelected([]);

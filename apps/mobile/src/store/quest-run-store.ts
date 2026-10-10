@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { tallyAnswer } from '../logic/first-try';
 import { starsForAccuracy } from '../logic/score';
 
 /**
@@ -10,15 +11,24 @@ interface State {
   questId: string | null;
   episodeId: string | null;
   stepIndex: number;
+  /** Rounds answered right on the first try (logic/first-try). */
   correctCount: number;
+  /** Rounds scored — one per round, whatever the number of taps. */
   totalCount: number;
-  attempts: number;
+  /** Answers after a round's first one — analytics only, never scored. */
+  retryCount: number;
+  /** `${stepIndex}:${roundKey}` of every round already scored this run. */
+  scoredRounds: readonly string[];
   pendingAdvance: boolean;
 }
 
 interface Actions {
   beginQuest: (questId: string, episodeId: string) => void;
-  recordRound: (correct: boolean) => void;
+  /**
+   * Report one answer in a minigame round. Games call this on every answer;
+   * only the first answer for a round key (within the current step) scores.
+   */
+  answerRound: (roundKey: string | number, correct: boolean) => void;
   markStepComplete: () => void;
   goNextStep: () => void;
   consumePendingAdvance: () => void;
@@ -26,24 +36,36 @@ interface Actions {
   stars: () => 0 | 1 | 2 | 3;
 }
 
-export const useQuestRunStore = create<State & Actions>((set, get) => ({
+const blankRun = {
   questId: null,
   episodeId: null,
   stepIndex: 0,
   correctCount: 0,
   totalCount: 0,
-  attempts: 0,
+  retryCount: 0,
+  scoredRounds: [],
   pendingAdvance: false,
+} satisfies State;
 
-  beginQuest: (questId, episodeId) =>
-    set({ questId, episodeId, stepIndex: 0, correctCount: 0, totalCount: 0, attempts: 0, pendingAdvance: false }),
+export const useQuestRunStore = create<State & Actions>((set, get) => ({
+  ...blankRun,
 
-  recordRound: (correct) =>
-    set((s) => ({
-      correctCount: s.correctCount + (correct ? 1 : 0),
-      totalCount: s.totalCount + 1,
-      attempts: s.attempts + (correct ? 0 : 1),
-    })),
+  beginQuest: (questId, episodeId) => set({ ...blankRun, questId, episodeId }),
+
+  answerRound: (roundKey, correct) =>
+    set((s) => {
+      const next = tallyAnswer(
+        { correct: s.correctCount, total: s.totalCount, retries: s.retryCount, scored: s.scoredRounds },
+        `${s.stepIndex}:${roundKey}`,
+        correct,
+      );
+      return {
+        correctCount: next.correct,
+        totalCount: next.total,
+        retryCount: next.retries,
+        scoredRounds: next.scored,
+      };
+    }),
 
   markStepComplete: () => set({ pendingAdvance: true }),
 
@@ -56,16 +78,7 @@ export const useQuestRunStore = create<State & Actions>((set, get) => ({
     }
   },
 
-  reset: () =>
-    set({
-      questId: null,
-      episodeId: null,
-      stepIndex: 0,
-      correctCount: 0,
-      totalCount: 0,
-      attempts: 0,
-      pendingAdvance: false,
-    }),
+  reset: () => set({ ...blankRun }),
 
   stars: () => starsForAccuracy(get().correctCount, Math.max(1, get().totalCount)),
 }));
