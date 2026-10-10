@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { deviceLanguages, setDocumentLang, takeLangHandoff } from '../locale.web';
 
 function fakeLocation(search: string, hash = ''): { pathname: string; search: string; hash: string } {
@@ -92,5 +92,62 @@ describe('platform/locale.web setDocumentLang', () => {
 
   it('does nothing without a document', () => {
     expect(() => setDocumentLang('ko', null)).not.toThrow();
+  });
+});
+
+describe('platform/locale.web against the browser globals', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('reads navigator, location and history from the page, honouring the hidden-locale default', () => {
+    const replaceState = vi.fn();
+    vi.stubGlobal('navigator', { languages: ['es-MX'], language: 'es-MX' });
+    vi.stubGlobal('location', { pathname: '/', search: '?lang=es', hash: '' });
+    vi.stubGlobal('history', { replaceState, state: null });
+    expect(deviceLanguages()).toEqual(['es-MX']);
+    // Spanish is hidden until it ships, so the hand-off is ignored (URL still cleaned).
+    expect(takeLangHandoff()).toBeNull();
+    expect(replaceState).toHaveBeenCalledWith(null, '', '/');
+  });
+
+  it('sets lang on the page document', () => {
+    const documentElement = { lang: 'en' };
+    vi.stubGlobal('document', { documentElement });
+    setDocumentLang('es');
+    expect(documentElement.lang).toBe('es');
+  });
+
+  it('copes with a missing window entirely', () => {
+    vi.stubGlobal('navigator', undefined);
+    vi.stubGlobal('location', undefined);
+    vi.stubGlobal('history', undefined);
+    vi.stubGlobal('document', undefined);
+    expect(deviceLanguages()).toEqual([]);
+    expect(takeLangHandoff()).toBeNull();
+    expect(() => setDocumentLang('es')).not.toThrow();
+  });
+
+  it('survives a location whose search cannot be read', () => {
+    const hostile = {
+      get search(): string {
+        throw new Error('blocked');
+      },
+      pathname: '/',
+      hash: '',
+    };
+    expect(takeLangHandoff({ location: hostile, history: null, available: ['en'] })).toBeNull();
+  });
+
+  it('survives a document that refuses the write', () => {
+    const doc = {
+      documentElement: {
+        set lang(_v: string) {
+          throw new Error('frozen');
+        },
+        get lang(): string {
+          return 'en';
+        },
+      },
+    };
+    expect(() => setDocumentLang('es', doc)).not.toThrow();
   });
 });
