@@ -31,6 +31,7 @@ export const COPY = {
   relinkApproveHint: 'Approve only if this learner is with you or you expect this device.',
   relinkNothing: 'Nothing waiting. Requests appear here for 10 minutes after a learner asks.',
   relinkAnotherWay: 'Another way: issue a new rescue code and read it to the learner. The old code stops working.',
+  relinkCardsComeBack: "Approving brings the learner back into this class. Their cards come back with the rescue code their grown-up keeps in the app (Save my progress) — teachers can't see or reissue it.",
   rescueIssued: 'Read this to the learner or their grown-up now — it is shown once.',
   archiveKeeps: 'Keeps everything, stops new joins. You can unarchive later.',
   deleteLearnerWarn: 'Permanent. Removes this learner everywhere: devices, progress, memberships.',

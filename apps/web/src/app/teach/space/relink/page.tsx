@@ -8,7 +8,7 @@ import { Button, ConsoleShell, Muted, Notice, panelStyle } from '@/components/co
 import { useConsole } from '@/components/console/use-console';
 import type { RelinkView, Roster } from '@/lib/console/api';
 import { COPY } from '@/lib/console/copy';
-import { RELINK_REFRESH_MS, expiresLabel, requestedLabel } from '@/lib/console/relink';
+import { RELINK_REFRESH_MS, canReissueRescueCode, expiresLabel, requestedLabel } from '@/lib/console/relink';
 import { ROUTES, spaceIdFrom } from '@/lib/console/routing';
 
 /** console/relink-approval — F-TCH-001 §10.1. Identity and timing only; no progress numbers. */
@@ -108,28 +108,35 @@ function RelinkInner(): JSX.Element {
         ))}
       </div>
 
-      <section style={panelStyle} aria-label="Another way">
-        <h2 style={{ fontSize: typography.size.bodyLg, margin: `0 0 ${spacing.xs}px` }}>Another way</h2>
-        <Muted>{COPY.relinkAnotherWay}</Muted>
-        {issued ? (
-          <div style={{ margin: `${spacing.md}px 0` }}>
-            <div style={{ fontSize: typography.size.caption, color: colors.text.muted }}>{issued.name}</div>
-            <div data-testid="rescue-code" style={{ fontSize: typography.size.display, fontWeight: typography.weight.bold, letterSpacing: spacing.xs, fontFamily: typography.family.mono }}>{issued.code}</div>
-            <Muted>{COPY.rescueIssued}</Muted>
-            <Button onClick={() => setIssued(null)}>Done</Button>
-          </div>
-        ) : (
-          <div style={{ display: 'flex', gap: spacing.sm, alignItems: 'center', flexWrap: 'wrap', marginTop: spacing.sm }}>
-            <select value={pick} onChange={(e) => setPick(e.target.value)} aria-label="Learner" style={{ padding: spacing.xs }}>
-              <option value="">Choose a learner…</option>
-              {(roster?.learners ?? []).map((l) => (
-                <option key={l.id} value={l.id}>{l.displayName}</option>
-              ))}
-            </select>
-            <Button disabled={busy || !pick} onClick={() => void issue()}>Issue a new rescue code</Button>
-          </div>
-        )}
-      </section>
+      {/* A rescue code opens the whole snapshot: only a family re-issues one (SEC-4). */}
+      {roster === null ? null : canReissueRescueCode(roster.space.kind) ? (
+        <section style={panelStyle} aria-label="Another way">
+          <h2 style={{ fontSize: typography.size.bodyLg, margin: `0 0 ${spacing.xs}px` }}>Another way</h2>
+          <Muted>{COPY.relinkAnotherWay}</Muted>
+          {issued ? (
+            <div style={{ margin: `${spacing.md}px 0` }}>
+              <div style={{ fontSize: typography.size.caption, color: colors.text.muted }}>{issued.name}</div>
+              <div data-testid="rescue-code" style={{ fontSize: typography.size.display, fontWeight: typography.weight.bold, letterSpacing: spacing.xs, fontFamily: typography.family.mono, overflowWrap: 'anywhere' }}>{issued.code}</div>
+              <Muted>{COPY.rescueIssued}</Muted>
+              <Button onClick={() => setIssued(null)}>Done</Button>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', gap: spacing.sm, alignItems: 'center', flexWrap: 'wrap', marginTop: spacing.sm }}>
+              <select value={pick} onChange={(e) => setPick(e.target.value)} aria-label="Learner" style={{ padding: spacing.xs }}>
+                <option value="">Choose a learner…</option>
+                {(roster?.learners ?? []).map((l) => (
+                  <option key={l.id} value={l.id}>{l.displayName}</option>
+                ))}
+              </select>
+              <Button disabled={busy || !pick} onClick={() => void issue()}>Issue a new rescue code</Button>
+            </div>
+          )}
+        </section>
+      ) : (
+        <section style={panelStyle} aria-label="Cards and progress">
+          <Muted>{COPY.relinkCardsComeBack}</Muted>
+        </section>
+      )}
     </ConsoleShell>
   );
 }

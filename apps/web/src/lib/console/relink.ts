@@ -27,4 +27,13 @@ export function canDeleteLearnerData(kind: SpaceKind, consentMode: 'parent' | 's
   return kind === 'class' && consentMode === 'school';
 }
 
+/**
+ * Who may issue a new rescue code from the console (SEC-4): a code opens the
+ * learner's whole snapshot, so it follows snapshot.read — family owners and
+ * caregivers. The server refuses class and school roles with 403.
+ */
+export function canReissueRescueCode(kind: SpaceKind): boolean {
+  return kind === 'family';
+}
+
 export const RELINK_REFRESH_MS = 10_000;
