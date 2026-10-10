@@ -13,3 +13,7 @@ export * from './components/Pill';
 export * from './components/Heading';
 export * from './components/Spacer';
 export * from './components/Icon';
+export * from './components/KoreanText';
+export { KOREAN_LANGUAGE, KOREAN_TEXT_SIZES, koreanTextLabel, koreanTextView } from './korean-text';
+export type { KoreanTextSize, KoreanTextView, KoreanTextViewInput } from './korean-text';
+export * from './labels';

@@ -10,6 +10,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
 import { colors, spacing } from '../../tokens';
+import { starRowLabel } from '../../labels';
 import type { StarRowProps } from './types';
 
 const starPath =
@@ -25,11 +26,11 @@ const starPath =
  * Reduced-motion path: instant, no pop. Same-count rerenders no-op.
  */
 
-export function StarRow({ stars, size = 32, testID }: StarRowProps): React.ReactElement {
+export function StarRow({ stars, size = 32, accessibilityLabel, testID }: StarRowProps): React.ReactElement {
   return (
     <View
       testID={testID}
-      accessibilityLabel={`${stars} of 3 stars earned`}
+      accessibilityLabel={starRowLabel(stars, accessibilityLabel)}
       style={{ flexDirection: 'row', gap: spacing.sm }}
     >
       {([0, 1, 2] as const).map((i) => {

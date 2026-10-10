@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { Pressable, View } from 'react-native';
 import { colors, radii, shadows, spacing, typography } from '../../tokens';
+import { hoyaDismissLabel } from '../../labels';
 import { Body, Caption, Heading } from '../Heading/Heading';
 import { Hoya } from '../Hoya/Hoya';
 import type { HoyaPose } from '../Hoya/types';
@@ -33,6 +34,7 @@ export function HoyaBubble({
   romanization,
   ctaInline,
   onDismiss,
+  dismissLabel,
   autoDismissMs,
   testID,
 }: HoyaBubbleProps): React.ReactElement {
@@ -83,7 +85,7 @@ export function HoyaBubble({
         <Pressable
           onPress={onDismiss}
           accessibilityRole="button"
-          accessibilityLabel="Close Hoya message"
+          accessibilityLabel={hoyaDismissLabel(dismissLabel)}
           hitSlop={spacing.md}
           style={{ paddingHorizontal: spacing.xs, paddingVertical: spacing.xxs }}
         >

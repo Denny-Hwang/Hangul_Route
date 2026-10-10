@@ -67,6 +67,8 @@ describe('token contrast contract (WCAG AA)', () => {
     normalText.push([`text.primary (bubble Korean) on ${name}`, colors.text.primary, bg]);
     normalText.push([`text.secondary (bubble romanization) on ${name}`, colors.text.secondary, bg]);
   }
+  // KoreanText (F-I18N-001 §3.5): Hangul sits on the sky-blue target chip.
+  normalText.push(['text.primary (KoreanText Hangul) on brand.secondaryLight', colors.text.primary, colors.brand.secondaryLight]);
   // Muted captions also sit inside brand cards (Card tone="brand").
   normalText.push(['text.muted on brand.primaryLight', colors.text.muted, colors.brand.primaryLight]);
 
@@ -93,6 +95,15 @@ describe('token contrast contract (WCAG AA)', () => {
   // The focus ring is a UI graphic: 3:1 against every surface it can sit on.
   it.each(Object.entries(surfaces))('border.focus on %s ≥ 3:1 (non-text)', (_name, bg) => {
     expect(contrastRatio(colors.border.focus, bg)).toBeGreaterThanOrEqual(WCAG_AA_LARGE);
+  });
+
+  // KoreanText target chip border and speaker icon are UI graphics: 3:1 on the surfaces they sit on.
+  it.each(Object.entries(surfaces))('KoreanText chip border (brand.secondary) on %s ≥ 3:1 (non-text)', (_name, bg) => {
+    expect(contrastRatio(colors.brand.secondary, bg)).toBeGreaterThanOrEqual(WCAG_AA_LARGE);
+  });
+
+  it.each(Object.entries(surfaces))('KoreanText speaker icon (brand.secondaryDark) on %s ≥ 3:1 (non-text)', (_name, bg) => {
+    expect(contrastRatio(colors.brand.secondaryDark, bg)).toBeGreaterThanOrEqual(WCAG_AA_LARGE);
   });
 
   it('a correct tile label (large text) reads on its success tint', () => {
