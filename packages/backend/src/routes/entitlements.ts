@@ -1,11 +1,10 @@
-import { CheckoutCreateSchema, PLAN_PRICING, PromoCheckSchema, ReceiptVerifySchema, discountedUsd, type Entitlement, type Space } from '@hangul-route/content-schema';
+import { CheckoutCreateSchema, PLAN_PRICING, PromoCheckSchema, discountedUsd, type Entitlement, type Space } from '@hangul-route/content-schema';
 import type { Account } from '../store';
 import { Hono, type Context } from 'hono';
 import { dbFor, type Db } from '../db';
 import { fail, ok } from '../envelope';
 import { accountActor, requireAccount, spaceContext } from '../lib/access';
 import { can } from '../lib/can';
-import { statusFromVerification, verifyReceiptStub } from '../lib/receipt';
 import { clientKey, createRateLimiter } from '../lib/rate-limit';
 import { checkoutForm, createCheckoutSession, createPortalSession, entitlementFromStripeEvent, lookupPromotionCode, priceIdFor, verifyStripeSignature, type StripeEnv, type StripeEventLike } from '../lib/stripe';
 
@@ -17,8 +16,9 @@ export const promoLimiter = createRateLimiter(PROMO_LIMIT, 60_000);
 const PLAN_SPACE_KINDS: Record<'family_lifetime' | 'group_license', readonly Space['kind'][]> = { family_lifetime: ['family'], group_license: ['class', 'school'] };
 
 /**
- * /api/entitlements — F-ENT-001 §3.3. Receipts, Stripe and contracts all
- * land in `store.applyEntitlement`; nothing here talks to a child.
+ * /api/entitlements — F-ENT-001 §3.3. Stripe and contracts land in
+ * `store.applyEntitlement` (store receipts: not yet, see /verify); nothing
+ * here talks to a child.
  */
 type Env = { Bindings: StripeEnv & { CONSOLE_URL?: string } };
 export const entitlementRoutes = new Hono<Env>();
@@ -52,23 +52,12 @@ async function ownedSpace(c: Context, db: Db, account: Account, spaceId: string,
   return space;
 }
 
-entitlementRoutes.post('/verify', async (c) => {
-  const account = await requireAccount(c);
-  if (!('id' in account)) return account;
-  const parsed = ReceiptVerifySchema.safeParse(await c.req.json().catch(() => null));
-  if (!parsed.success) return fail(c, 'bad_request', 'Invalid receipt body', 422, { issues: parsed.error.issues });
-  const db = dbFor(c);
-  const space = await ownedSpace(c, db, account, parsed.data.spaceId, ['family']);
-  if (!('id' in space)) return space;
-  const result = verifyReceiptStub(parsed.data.store, parsed.data.receipt);
-  if (!result.valid) return fail(c, 'receipt_invalid', 'Receipt could not be verified', 422);
-  const now = new Date();
-  const entitlement = await db.applyEntitlement(
-    { subjectKind: 'space', subjectId: space.id, planKey: 'family_lifetime', status: statusFromVerification(result, now) === 'active' ? 'active' : 'expired', provider: parsed.data.store, providerRef: null, expiresAt: result.expiresAt },
-    now,
-  );
-  return ok(c, { entitlement: await withSpaceName(db, entitlement) });
-});
+/**
+ * App Store / Play receipts (F-IAP-001/002). Nothing verifies them yet, so this
+ * grants nothing: 501 until real store-server verification is wired (audit
+ * SEC-1 — the old dev stub accepted any JSON blob as a lifetime purchase).
+ */
+entitlementRoutes.post('/verify', (c) => fail(c, 'receipt_verification_not_configured', 'receipt verification not configured', 501));
 
 entitlementRoutes.post('/stripe/checkout', async (c) => {
   const account = await requireAccount(c);

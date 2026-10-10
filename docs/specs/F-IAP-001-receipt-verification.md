@@ -5,6 +5,11 @@
 **Owner**: solo dev
 **Rollout**: MVP (subscription activation)
 
+> **Superseded 2026-10-09 (audit SEC-1).** The dev stub and the legacy
+> `/api/subscriptions` router are removed. `POST /api/entitlements/verify`
+> answers **501 `receipt_verification_not_configured`** and grants nothing
+> until F-IAP-002 adds real App Store / Play verification.
+
 ---
 
 ## 1. Context

@@ -1,6 +1,5 @@
 import { Hono } from 'hono';
-import { fail, ok } from '../envelope';
-import { store } from '../store';
+import { ok } from '../envelope';
 
 export const cardRoutes = new Hono();
 
@@ -18,14 +17,3 @@ const CATALOG: Array<{ id: string; titleEn: string; rarity: string; theme: strin
 ];
 
 cardRoutes.get('/catalog', (c) => ok(c, { cards: CATALOG }));
-
-cardRoutes.get('/:profileId/unlocked', (c) => {
-  const profileId = c.req.param('profileId');
-  if (!store.profiles.has(profileId)) {
-    return fail(c, 'not_found', 'Profile not found', 404);
-  }
-  const record = store.progress.get(profileId);
-  const payload = (record?.payload ?? {}) as { cards?: Array<{ cardId: string; unlockedAt: string }> };
-  const cards = payload.cards ?? [];
-  return ok(c, { cards });
-});

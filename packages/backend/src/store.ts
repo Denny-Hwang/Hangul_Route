@@ -33,7 +33,10 @@ export interface TelemetryEvent {
   profileId?: string;
   name: string;
   payload?: Record<string, unknown>;
+  /** When it happened, per the client (kept for offline-queued events). */
   at: string;
+  /** When the API received it. */
+  receivedAt?: string;
 }
 
 export interface Subscription {

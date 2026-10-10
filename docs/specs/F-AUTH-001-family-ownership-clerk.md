@@ -5,6 +5,15 @@
 **Owner**: solo dev
 **Rollout**: MVP (security)
 
+> **Superseded 2026-10-09 (audit SEC-2).** The dev fallback (bearer string =
+> user id when no Clerk key is bound) now runs only when the deployment opts
+> in with `ENVIRONMENT=development|test` or `ALLOW_DEV_AUTH=true`
+> (`ENVIRONMENT=production` can never opt in). Otherwise a request without
+> `CLERK_SECRET_KEY` / `CLERK_JWT_KEY` answers **503 `auth_not_configured`**
+> (`packages/backend/src/lib/runtime.ts`). The legacy `/api/subscriptions`
+> and `/api/auth` routes this spec gated are unmounted (audit SEC-1, SEC-3);
+> the same ownership rule lives in F-ENT-001 and F-SPACE-001.
+
 ---
 
 ## 1. Context

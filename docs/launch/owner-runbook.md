@@ -58,6 +58,7 @@ D1 `hangul-route` 는 2026-10-07 에 대시보드에서 만들었고 (Database I
 `hangul-route-app` → Settings → Build → Variables and Secrets → `EXPO_PUBLIC_API_BASE_URL` = Step 3 의 API 주소 → **Retry deployment**. (선택) `EXPO_PUBLIC_CONSOLE_URL` = 콘솔 주소 — 기본값은 hangulroute.com 이라 도메인 연결 전에는 workers.dev 주소를 넣으면 페이월 버튼이 바로 열린다.
 **확인 1**: 앱에서 프로필 생성 → 설정 → Backup 카드에 Rescue Code (단어-단어-숫자) 가 생긴다.
 **확인 2**: 콘솔 `/teach` → 교사로 로그인 → 학급 생성 → 6자리 코드 → 앱 설정 *Classes & family* 에 입력 → 콘솔 roster 에 학생이 보인다.
+- 참고 (audit SEC-2, 2026-10-09): 배포된 API 는 fail closed 라서, `CLERK_SECRET_KEY` 가 등록되기 전(Step 7)에는 콘솔 dev 로그인 뒤의 API 호출이 503 `auth_not_configured` 로 막힌다. 새로 배포하는 경우 확인 2 는 Step 7 뒤에 한다 (확인 1 의 학습자 기기 경로는 D1 만 있으면 된다).
 
 ### Step 6. 도메인 (10분)
 `hangulroute.com` 은 Cloudflare Registrar 로 구매해 이미 Cloudflare DNS 에 있다 (2026-10-07). 네임서버 변경·전파 대기는 없다. Custom domain 을 붙이면 DNS 레코드와 인증서가 자동으로 만들어진다 (보통 몇 분).
@@ -71,11 +72,11 @@ D1 `hangul-route` 는 2026-10-07 에 대시보드에서 만들었고 (Database I
 
 ### Step 7. Clerk 키 등록 (10분)
 Clerk 애플리케이션은 2026-10-07 에 만들었다 (Development 인스턴스, Consumer, Email + Google). 콘솔 코드는 Clerk 위젯을 쓴다 (F-AUTH-002, 머지됨). 키는 **대시보드에만** 넣는다 — 저장소에는 없다.
-- Clerk → API Keys → **Secret key** (`sk_test_…`) → `hangul-route-api` → Settings → Variables and Secrets → Add → Type **Secret** → 이름 `CLERK_SECRET_KEY` → Deploy. 이 순간부터 API 는 bearer 를 진짜 세션 JWT 로만 받는다 (dev 로그인 토큰은 거부됨).
+- Clerk → API Keys → **Secret key** (`sk_test_…`) → `hangul-route-api` → Settings → Variables and Secrets → Add → Type **Secret** → 이름 `CLERK_SECRET_KEY` → Deploy. 이 순간부터 API 는 bearer 를 진짜 세션 JWT 로만 받는다 (dev 로그인 토큰은 거부됨). 키가 없으면 로그인이 필요한 API 는 503 `auth_not_configured` 로 닫힌다 (fail closed — `ENVIRONMENT` 변수는 프로덕션에서 설정하지 않는다).
 - Clerk → API Keys → **Publishable key** (`pk_test_…`) → `hangul-route-web` → Settings → Build → Variables → `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` → 같은 화면에서 `NEXT_PUBLIC_CONSOLE_DEV_AUTH` 는 **삭제** → **Retry deployment**.
 - 두 키는 같은 Clerk 인스턴스의 것이어야 한다 (둘 다 `_test_` 또는 둘 다 `_live_`). 나중에 Production 인스턴스로 바꾸면 키 두 개가 모두 바뀌고 Clerk 쪽에 `hangulroute.com` 도메인을 등록해야 한다; 코드 변경은 없다.
 
-**확인**: 콘솔 `/teach` 에 Clerk 로그인 위젯(이메일·Google)이 뜨고, 로그인하면 `/teach/home` 으로 간다. 학급을 하나 만들어 roster 가 열리면 API 쪽 검증까지 통과.
+**확인**: 콘솔 `/teach` 에 Clerk 로그인 위젯(이메일·Google)이 뜨고, 로그인하면 `/teach/home` 으로 간다. 학급을 하나 만들어 roster 가 열리면 API 쪽 검증까지 통과. API 주소의 `/health` 가 `"status":"ok"` 와 `"bindings":{"db":true,"clerk":true,…}` 를 돌려주면 바인딩도 정상 (값은 노출되지 않고 true/false 만).
 
 ### Step 8. Stripe (40분, Test mode 먼저)
 https://dashboard.stripe.com → Test mode

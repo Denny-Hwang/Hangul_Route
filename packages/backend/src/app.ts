@@ -1,13 +1,9 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { allowedOrigin } from './lib/cors';
-import { authRoutes } from './routes/auth';
+import { healthReport, type RuntimeEnv } from './lib/runtime';
 import { cardRoutes } from './routes/cards';
 import { contentRoutes } from './routes/content';
-import { notificationsRoutes } from './routes/notifications';
-import { profileRoutes } from './routes/profiles';
-import { progressRoutes } from './routes/progress';
-import { subscriptionRoutes } from './routes/subscriptions';
 import { recoveryRoutes } from './routes/recovery';
 import { entitlementRoutes } from './routes/entitlements';
 import { relinkRoutes } from './routes/relink';
@@ -17,14 +13,14 @@ import { spacesRoutes } from './routes/spaces';
 import { syncRoutes } from './routes/sync';
 import { telemetryRoutes } from './routes/telemetry';
 
-const app = new Hono<{ Bindings: { ALLOWED_ORIGINS?: string; STRIPE_SECRET_KEY?: string; STRIPE_WEBHOOK_SECRET?: string } }>();
+const app = new Hono<{ Bindings: RuntimeEnv & { ALLOWED_ORIGINS?: string } }>();
 
 // Browser callers (PWA, console) live on other origins — F-CONSOLE-001 §3.1.
 app.use(
   '/api/*',
   cors({
     origin: (origin, c) => allowedOrigin(origin, c.env?.ALLOWED_ORIGINS) ?? '',
-    allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], // PATCH: console space settings (BUG-1)
     allowHeaders: ['Content-Type', 'Authorization'],
     maxAge: 86400,
   }),
@@ -39,17 +35,17 @@ app.get('/', (c) =>
   }),
 );
 
-app.get('/health', (c) => c.json({ status: 'ok' }));
+// Which bindings this deployment has — booleans only (SEC-2). 503 when production lacks Clerk or D1.
+app.get('/health', (c) => {
+  const report = healthReport(c.env);
+  return c.json(report, report.status === 'ok' ? 200 : 503);
+});
 
-// V1 API surface
-app.route('/api/auth', authRoutes);
-app.route('/api/profiles', profileRoutes);
-app.route('/api/progress', progressRoutes);
-app.route('/api/subscriptions', subscriptionRoutes);
-app.route('/api/cards', cardRoutes);
-app.route('/api/content', contentRoutes);
-app.route('/api/telemetry', telemetryRoutes);
-app.route('/api/notifications', notificationsRoutes);
+// V1 API surface — only what shipped clients use. The in-memory family / profile /
+// progress / subscription / notification routes are unmounted (audit SEC-1, SEC-3).
+app.route('/api/cards', cardRoutes); // static catalog
+app.route('/api/content', contentRoutes); // static catalogs
+app.route('/api/telemetry', telemetryRoutes); // POST only — the learner app's event intake
 // Schema v2 (F-SYNC-001): learner snapshots — the restore + caregiver summary source.
 app.route('/api/sync', syncRoutes);
 // Rescue Code (F-RESTORE-001): account-less restore.

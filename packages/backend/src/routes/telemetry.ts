@@ -1,47 +1,59 @@
+import { isTelemetryEventName } from '@hangul-route/content-schema';
 import { Hono } from 'hono';
 import { fail, ok } from '../envelope';
 import { id, store, type TelemetryEvent } from '../store';
 
+/**
+ * POST /api/telemetry — write-only intake for the learner app
+ * (apps/mobile/src/platform/telemetry.ts, F-PWA-001 §3.2). Names come from
+ * the shared list in @hangul-route/content-schema. `at` is the client's
+ * timestamp (offline-queued events arrive late) when it is plausible, else
+ * ours; `receivedAt` is always ours.
+ * There is deliberately no read route (audit SEC-3).
+ */
 export const telemetryRoutes = new Hono();
 
-const ALLOWED_NAMES = new Set([
-  'session.start',
-  'session.end',
-  'episode.start',
-  'episode.complete',
-  'quest.start',
-  'quest.complete',
-  'round.correct',
-  'round.wrong',
-  'card.unlocked',
-  'card.first_earned',
-  'profile.switch',
-  'parent.gate.opened',
-  'onboarding.started',
-  'minigame.finished',
-]);
+const MAX_EVENTS = 10_000;
+
+/** ISO 8601 date-time with an explicit zone — what `new Date().toISOString()` sends. */
+const ISO_DATE_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d{1,9})?)?(Z|[+-]\d{2}:\d{2})$/;
+
+/** How far ahead of our clock a device may run (clock skew) before its time is ignored. */
+const MAX_CLIENT_AHEAD_MS = 5 * 60 * 1000;
+/** The oldest event an offline queue can plausibly still hold (F-PWA-001 §3.2). */
+const MAX_CLIENT_AGE_MS = 30 * 24 * 60 * 60 * 1000;
+
+/**
+ * The client's timestamp as UTC ISO, or null when it is missing, not a real
+ * date-time, or implausible against `nowMs` — more than 5 minutes ahead or
+ * more than 30 days old (a wrong device clock, or an anonymous caller).
+ */
+function clientTimestamp(raw: unknown, nowMs: number): string | null {
+  if (typeof raw !== 'string' || !ISO_DATE_TIME.test(raw)) return null;
+  const ms = Date.parse(raw);
+  if (Number.isNaN(ms) || ms > nowMs + MAX_CLIENT_AHEAD_MS || ms < nowMs - MAX_CLIENT_AGE_MS) return null;
+  return new Date(ms).toISOString();
+}
 
 telemetryRoutes.post('/', async (c) => {
-  const body = await c.req.json().catch(() => ({}));
-  const name = typeof body.name === 'string' ? body.name : '';
-  if (!ALLOWED_NAMES.has(name)) {
+  const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown> | null;
+  const name = body?.name;
+  if (!isTelemetryEventName(name)) {
     return fail(c, 'bad_request', 'unknown event name', 422);
   }
+  const now = new Date();
+  const receivedAt = now.toISOString();
+  const payload = body?.payload;
   const event: TelemetryEvent = {
     id: id('event'),
     name,
-    profileId: typeof body.profileId === 'string' ? body.profileId : undefined,
-    payload: body.payload && typeof body.payload === 'object' ? (body.payload as Record<string, unknown>) : undefined,
-    at: new Date().toISOString(),
+    profileId: typeof body?.profileId === 'string' ? body.profileId : undefined,
+    payload: payload && typeof payload === 'object' && !Array.isArray(payload) ? (payload as Record<string, unknown>) : undefined,
+    at: clientTimestamp(body?.at, now.getTime()) ?? receivedAt,
+    receivedAt,
   };
   store.events.push(event);
-  // Cap event log to last 10k to avoid memory growth in prototype.
-  if (store.events.length > 10_000) store.events.splice(0, store.events.length - 10_000);
+  // Cap the in-memory log so an isolate cannot grow without bound.
+  if (store.events.length > MAX_EVENTS) store.events.splice(0, store.events.length - MAX_EVENTS);
   return ok(c, { event }, 201);
-});
-
-telemetryRoutes.get('/recent', (c) => {
-  const limit = Math.min(parseInt(c.req.query('limit') ?? '50', 10), 500);
-  const events = store.events.slice(-limit).reverse();
-  return ok(c, { events });
 });

@@ -10,37 +10,18 @@
  * - Skips the network entirely while `EXPO_PUBLIC_API_BASE_URL` is unset —
  *   the placeholder default must never receive traffic.
  *
- * Event names match the API's `ALLOWED_NAMES` whitelist exactly.
+ * Event names come from `TELEMETRY_EVENT_NAMES` in @hangul-route/content-schema,
+ * the same list POST /api/telemetry accepts. The client's `at` timestamp is
+ * kept by the API, so offline-queued events keep their real time.
  */
 
+import type { TelemetryEventName } from '@hangul-route/content-schema';
 import { flags } from '../config/flags';
 import { enqueue, requeue, takeBatch, type QueuedEvent } from '../logic/telemetry/queue';
 import { readJson, writeJson } from './storage';
 
-export type TelemetryEventName =
-  | 'session.start'
-  | 'session.end'
-  | 'episode.start'
-  | 'episode.complete'
-  | 'quest.start'
-  | 'quest.complete'
-  | 'round.correct'
-  | 'round.wrong'
-  | 'card.unlocked'
-  | 'card.first_earned'
-  | 'profile.switch'
-  | 'parent.gate.opened'
-  | 'onboarding.started'
-  | 'minigame.finished'
-  | 'space.join.attempted'
-  | 'space.join.succeeded'
-  | 'space.join.failed'
-  | 'space.left'
-  | 'space.relink.requested'
-  | 'space.relink.approved'
-  | 'space.relink.denied'
-  | 'paywall.viewed'
-  | 'paywall.console_opened';
+/** The shared list the API whitelists — an event outside it cannot compile. */
+export type { TelemetryEventName };
 
 export interface TelemetryEvent {
   name: TelemetryEventName;
