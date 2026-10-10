@@ -22,7 +22,7 @@ Narrative step (intro / reward):
 | [x quit]  o o . . .   [2 / 5]    |  <- step dots + count pill (quit: see open q)
 |                                  |
 |  Step title (title)              |
-|  [kind pill: intro]              |
+|  [step pill: "Hello"]           |  <- learner label, never the raw kind
 |                                  |
 |  +----------------------------+  |
 |  |        [HOYA waving]       |  |  <- reward step: Hoya cheering, success tone
@@ -37,7 +37,7 @@ Play step (present / practice / apply):
 +----------------------------------+
 | [x quit]  o o o . .   [3 / 5]    |
 |  Step title                      |
-|  [kind pill: practice]           |
+|  [step pill: "Practice"]        |
 |                                  |
 |  "Ready for a quick game?"       |  <- 1 line + 1 muted line
 |                                  |
@@ -46,7 +46,7 @@ Play step (present / practice / apply):
 +----------------------------------+
 ```
 
-Step sequence (content-skill): intro (narrative) → present → practice → apply (each a minigame) → reward (narrative). Schema allows 3–7 steps; the dots row is driven by `quest.steps.length`.
+Step sequence (content-skill): intro (narrative) → present → practice → apply (each a minigame) → reward (narrative). The pill shows a learner label (`logic/quest-steps.questStepLabel`): Hello · Look and listen · Practice · Try it · Finish. Schema allows 3–7 steps; the dots row is driven by `quest.steps.length`.
 
 ## Interaction points
 

@@ -18,6 +18,7 @@ import React, { useCallback, useEffect } from 'react';
 import { Pressable, View } from 'react-native';
 import { questById } from '../../content';
 import { questOutcome } from '../../logic/quest-outcome';
+import { questStepLabel } from '../../logic/quest-steps';
 import { confirm } from '../../platform/dialog';
 import type { RootStackParamList } from '../../navigation/types';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
@@ -129,7 +130,7 @@ export function QuestPlayerScreen({ route, navigation }: Props): React.ReactElem
       <Spacer size="lg" />
       <Heading level="title">{step.titleEn}</Heading>
       <Spacer size="xs" />
-      <Pill tone="primary" label={step.kind} size="sm" />
+      <Pill tone="primary" label={questStepLabel(step.kind)} size="sm" />
 
       <Spacer size="lg" />
       {step.minigameKind && step.minigameRef ? (
