@@ -5,11 +5,14 @@ import { expect, test, type Locator, type Page } from '@playwright/test';
  * every primary CTA must be reachable by the learner's own scrolling, not
  * just by programmatic focus. The Expo web reset sets `body{overflow:hidden}`,
  * so a screen that does not scroll by itself clips whatever falls below the
- * fold. The grown-up PIN pad and its CTA must fit outright, without scrolling.
+ * fold. The grown-up PIN pad and its CTA must fit outright, without scrolling,
+ * and so must the Trace game (its canvas owns vertical drags, so it cannot
+ * scroll): the canvas shrinks to leave room for Done and Skip.
  */
 const VIEWPORTS = [
   { name: 'iPhone SE 1st gen', width: 320, height: 568 },
   { name: 'iPhone SE in Safari (toolbar shown)', width: 375, height: 553 },
+  { name: 'iPhone 8 / SE 2nd gen', width: 375, height: 667 },
   { name: 'iPhone 14 landscape', width: 844, height: 390 },
 ] as const;
 
@@ -85,7 +88,7 @@ for (const vp of VIEWPORTS) {
       await expect(page.getByText('Hi, Dani!')).toBeVisible();
     });
 
-    test('Profile entry is labelled, the PIN pad fits, and rescue-code fields stay on screen', async ({ page }) => {
+    test('Profile entry is labelled, the PIN pad fits, and rescue-code field stays on screen', async ({ page }) => {
       await onboard(page, 'Rio');
       await page.goto('/');
       await expect(page.getByText('Hi, Rio!')).toBeVisible();
@@ -115,17 +118,94 @@ for (const vp of VIEWPORTS) {
         if (round === 0) await expect(page.getByText('Enter it once more')).toBeVisible();
       }
 
-      // p2-L3: the three rescue-code inputs share one row inside the screen.
+      // The rescue-code field (one multiline input, #96) stays inside the screen.
       await expect(page.getByRole('heading', { name: 'Bring back progress' })).toBeVisible();
       await page.getByRole('button', { name: 'I have a rescue code' }).click();
       const width = page.viewportSize()?.width ?? vp.width;
-      for (const label of ['Rescue code first word', 'Rescue code second word', 'Rescue code digits']) {
-        const box = await page.getByLabel(label).boundingBox();
-        expect(box, label).not.toBeNull();
-        expect(box!.x, `${label} left edge`).toBeGreaterThanOrEqual(0);
-        expect(box!.x + box!.width, `${label} right edge`).toBeLessThanOrEqual(width);
-      }
+      const box = await page.getByTestId('rescue-code-input').boundingBox();
+      expect(box, 'rescue code field').not.toBeNull();
+      expect(box!.x, 'rescue code left edge').toBeGreaterThanOrEqual(0);
+      expect(box!.x + box!.width, 'rescue code right edge').toBeLessThanOrEqual(width);
       await expectReachable(page, page.getByRole('button', { name: 'Find my cards' }));
+    });
+
+    test('Trace: canvas, Done and Skip all fit the viewport and a drag does not scroll', async ({ page }) => {
+      await onboard(page, 'Tess');
+      await page.goto('/');
+      await expect(page.getByText('Hi, Tess!')).toBeVisible();
+
+      // Home → Meet the Letters → quest 2 → skip to its Trace game.
+      await page.getByRole('button', { name: /Meet the Letters/ }).click();
+      await page.getByRole('button', { name: 'Start' }).nth(1).click();
+      await page.getByRole('button', { name: 'Continue' }).click();
+      await page.getByRole('button', { name: 'Skip for now' }).click();
+      await expect(page.getByText('Trace Each Letter')).toBeVisible();
+      await page.getByRole('button', { name: 'Play minigame' }).click();
+      await expect(page.getByText(/^Trace the letter /)).toBeVisible();
+
+      const canvas = page.locator('#trace-canvas');
+      for (const name of ['Done', 'Skip', 'Show me', 'Clear']) {
+        await expect(page.getByRole('button', { name, exact: true }), name).toBeInViewport({ ratio: 1 });
+      }
+      await expect(canvas).toBeInViewport({ ratio: 1 });
+      const box = await canvas.boundingBox();
+      expect(box!.width, 'canvas stays usable').toBeGreaterThanOrEqual(160);
+      expect(box!.height).toBeCloseTo(box!.width, 0);
+
+      // Nothing scrolls: no page overflow, and a vertical drag on the canvas leaves the layout where it was.
+      const overflow = await page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight);
+      expect(overflow, 'page overflow').toBeLessThanOrEqual(0);
+      const skip = page.getByRole('button', { name: 'Skip', exact: true });
+      const before = await skip.boundingBox();
+      await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height * 0.25);
+      await page.mouse.down();
+      await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height * 0.75, { steps: 8 });
+      await page.mouse.up();
+      const after = await skip.boundingBox();
+      expect(after!.y, 'Skip did not move').toBe(before!.y);
+      await expect(page.getByRole('button', { name: 'Skip', exact: true })).toBeInViewport({ ratio: 1 });
+
+      // Feedback appearing must not resize the canvas under the child's finger.
+      const settled = await canvas.boundingBox();
+      expect(settled!.width).toBe(box!.width);
+      await page.getByRole('button', { name: 'Skip', exact: true }).click();
+    });
+
+    test('PIN pad keeps its size when the wrong-PIN hint appears', async ({ page }) => {
+      await onboard(page, 'Pia');
+      await page.goto('/');
+      await expect(page.getByText('Hi, Pia!')).toBeVisible();
+      await page.getByRole('button', { name: 'Profile and settings' }).click();
+      await page.getByRole('button', { name: 'Restore from a file (grown-ups only)' }).click();
+      for (const round of [0, 1]) {
+        for (const d of ['1', '2', '3', '4']) await page.getByRole('button', { name: `Digit ${d}` }).click();
+        await page.getByRole('button', { name: 'Next' }).click();
+        if (round === 0) await expect(page.getByText('Enter it once more')).toBeVisible();
+      }
+      await expect(page.getByRole('heading', { name: 'Bring back progress' })).toBeVisible();
+
+      // Second visit asks for the PIN (verify mode): a wrong one shows a hint.
+      await page.waitForTimeout(1000); // the PIN hash is persisted to IndexedDB asynchronously
+      await page.goto('/');
+      await expect(page.getByText('Hi, Pia!')).toBeVisible();
+      // The install guide shows from the third cached open and covers the Home tabs.
+      const guide = page.getByTestId('install-guide');
+      await page.waitForTimeout(800);
+      if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
+      await page.getByRole('button', { name: 'Profile and settings' }).click();
+      await page.getByRole('button', { name: 'Restore from a file (grown-ups only)' }).click();
+      await expect(page.getByText('Enter your 4-digit PIN to continue.')).toBeVisible();
+      const key = page.getByRole('button', { name: 'Digit 5' });
+      const unlock = page.getByRole('button', { name: 'Unlock' });
+      await page.waitForTimeout(500); // the measured header has settled the pad size
+      const keyBefore = await key.boundingBox();
+      const unlockBefore = await unlock.boundingBox();
+      for (const d of ['9', '9', '9', '9']) await page.getByRole('button', { name: `Digit ${d}` }).click();
+      await unlock.click();
+      await expect(page.getByText(/Not quite\./)).toBeVisible();
+      expect(await key.boundingBox()).toEqual(keyBefore);
+      expect(await unlock.boundingBox()).toEqual(unlockBefore);
+      await expect(unlock).toBeInViewport({ ratio: 1 });
     });
   });
 }
