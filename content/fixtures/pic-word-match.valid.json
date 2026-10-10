@@ -1,0 +1,20 @@
+{
+  "boards": [
+    {
+      "pairs": [
+        { "id": "pair:kimchi", "pictureRef": "card:kimchi", "word": { "ko": "김치", "romanization": "gimchi", "en": "kimchi", "syllables": ["gim", "chi"] } },
+        { "id": "pair:rice", "pictureRef": "card:rice", "word": { "ko": "밥", "romanization": "bap", "en": "rice" } },
+        { "id": "pair:gimbap", "pictureRef": "card:kimbap", "word": { "ko": "김밥", "romanization": "gimbap", "en": "gimbap" } }
+      ]
+    },
+    {
+      "pairs": [
+        { "id": "pair:one", "pictureRef": "card:kimchi", "word": { "ko": "김치", "romanization": "gimchi", "en": "kimchi" } },
+        { "id": "pair:two", "word": { "ko": "밥", "romanization": "bap", "en": "rice" } },
+        { "id": "pair:three", "pictureRef": "swatch:primary", "word": { "ko": "산", "romanization": "san", "en": "mountain" } },
+        { "id": "pair:four", "pictureRef": "word:tiger", "word": { "ko": "호랑이", "romanization": "horangi", "en": "tiger" } },
+        { "id": "pair:five", "word": { "ko": "달", "romanization": "dal", "en": "moon" } }
+      ]
+    }
+  ]
+}

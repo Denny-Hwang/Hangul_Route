@@ -25,6 +25,14 @@ export const ProgressSummarySchema = z.object({
   minutesLast7d: z.number().int().nonnegative(),
   jamoRecognized: z.array(z.string()),
   needsPractice: z.array(z.string()).max(3),
+  /** Verdict of the Hangul Check (F-QUEST-002 §3.9); `tricky` holds symbol keys. */
+  stage1Anchor: z
+    .object({
+      met: z.boolean(),
+      checkedAt: z.string(),
+      tricky: z.array(z.string()),
+    })
+    .optional(),
   planProgress: z.record(
     z.string(),
     z.object({

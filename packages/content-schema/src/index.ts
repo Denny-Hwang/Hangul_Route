@@ -21,3 +21,4 @@ export * from './romanization/compare';
 export * from './romanization/extract';
 export * from './romanization/exceptions';
 export * from './romanization/a11y';
+export * from './schemas/ko-text';
