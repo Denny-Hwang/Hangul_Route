@@ -28,6 +28,8 @@ describe('telemetry event names (one list for the client type and the API whitel
         'space.relink.approved',
         'space.relink.denied',
         'space.relink.requested',
+        'locale.changed',
+        'romanization.mode_changed',
       ].sort(),
     );
     expect(new Set(TELEMETRY_EVENT_NAMES).size).toBe(TELEMETRY_EVENT_NAMES.length);

@@ -30,6 +30,8 @@ export const TELEMETRY_EVENT_NAMES = [
   'space.relink.denied',
   'paywall.viewed',
   'paywall.console_opened',
+  'locale.changed',
+  'romanization.mode_changed',
 ] as const;
 
 export const TelemetryEventNameSchema = z.enum(TELEMETRY_EVENT_NAMES);
