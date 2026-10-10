@@ -11,6 +11,7 @@ import {
   Screen,
   Spacer,
   StarRow,
+  TAB_SCREEN_EDGES,
   colors,
   radii,
   spacing,
@@ -140,7 +141,7 @@ export function HomeScreen(): React.ReactElement {
 
   return (
     <View style={{ flex: 1 }}>
-    <Screen tone="canvas" scrollable>
+    <Screen tone="canvas" edges={TAB_SCREEN_EDGES}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
         <Hoya pose="waving" size={72} />
         <View style={{ flex: 1 }}>

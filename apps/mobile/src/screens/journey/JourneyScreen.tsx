@@ -8,6 +8,7 @@ import {
   Pill,
   Screen,
   Spacer,
+  TAB_SCREEN_EDGES,
   colors,
   radii,
   spacing,
@@ -40,7 +41,7 @@ export function JourneyScreen(): React.ReactElement {
   void cachedTier; // re-render when the inbox changes the tier
 
   return (
-    <Screen tone="canvas" scrollable>
+    <Screen tone="canvas" edges={TAB_SCREEN_EDGES}>
       <Heading level="title">Heritage Journey</Heading>
       <Spacer size="xs" />
       <Body tone="secondary">7 stages × 5 themes. Draw your own route.</Body>

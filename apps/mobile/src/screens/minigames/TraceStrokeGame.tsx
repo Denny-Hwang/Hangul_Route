@@ -247,7 +247,8 @@ export function TraceStrokeGame({
   };
 
   return (
-    <Screen tone="canvas">
+    // The canvas owns vertical drags, so this screen opts out of scrolling.
+    <Screen tone="canvas" scrollable={false}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
         <View style={{ flex: 1 }}>
           <Progress value={roundIdx + 1} max={rounds.length} tone="primary" />
