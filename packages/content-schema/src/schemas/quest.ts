@@ -52,6 +52,18 @@ export const QuestStepSchema = z.object({
   titleEn: z.string(),
   bodyEn: z.string().optional(),
   hoyaLineEn: z.string().optional(),
+  /**
+   * Korean Hoya says, with romanization and gloss (F-CNT-002 §3.5). A structural
+   * subset of KoTextSchema; spelled inline because zod 3 cannot `.pick()` a
+   * schema that carries a refinement.
+   */
+  hoyaLineKo: z
+    .object({
+      ko: z.string().min(1),
+      romanization: z.string().min(1),
+      en: z.string().min(1),
+    })
+    .optional(),
   minigameKind: MinigameKindSchema.optional(),
   minigameRef: z.string().optional(),
   discover: DiscoverSchema.optional(),
