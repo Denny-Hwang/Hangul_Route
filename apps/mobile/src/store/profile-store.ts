@@ -1,12 +1,14 @@
-import type { AvatarKind, Profile } from '@hangul-route/content-schema';
+import type { AvatarKind, LearnerType, Profile } from '@hangul-route/content-schema';
 import { create } from 'zustand';
 import {
   activeProfile,
   createProfile as createProfileReducer,
   removeProfile as removeProfileReducer,
   setActiveProfile,
+  updateProfile as updateProfileReducer,
   type Clock,
   type CreateProfileInput,
+  type ProfilePatch,
   type ProfileSet,
 } from '../logic/profiles/profile-model';
 import { readJson, writeJson } from '../platform/storage';
@@ -32,7 +34,10 @@ interface Actions {
     ageGroup: Profile['ageGroup'];
     avatar: AvatarKind;
     role?: CreateProfileInput['role'];
+    learnerType?: LearnerType;
   }) => Profile;
+  /** Changes name, level, avatar or who-is-learning; throws on an invalid value, ignores an unknown id. */
+  updateProfile: (id: string, patch: ProfilePatch) => void;
   setActive: (id: string) => void;
   remove: (id: string) => void;
   setParentPin: (pinHash: string) => void;
@@ -67,6 +72,14 @@ export const useProfileStore = create<State & Actions>((set, get) => ({
     set(result.set);
     persist(result.set);
     return result.created;
+  },
+
+  updateProfile: (id, patch) => {
+    const { profiles, activeId } = get();
+    const next = updateProfileReducer({ profiles, activeId }, id, patch);
+    if (next.profiles === profiles) return;
+    set(next);
+    persist(next);
   },
 
   setActive: (id) => {
