@@ -47,6 +47,9 @@ jobs:
       - name: Test enforcement scripts (T-019)
         run: pnpm run test:scripts
 
+      - name: Check i18n rules (F-I18N-001)
+        run: node scripts/check-i18n.mjs
+
       - name: Build
         run: pnpm run build
 
