@@ -96,10 +96,16 @@ export class D1Db implements Db {
   private async run(sql: string, params: unknown[]): Promise<void> {
     await this.d1.prepare(sql).bind(...params).run();
   }
-  /** Runs a write and reports how many rows it changed. */
+  /**
+   * Runs a write and reports how many rows it changed. A binding that does not
+   * say is an error, never zero: a compare-and-set read as "lost the race"
+   * every time would answer 409 to every upload without a trace.
+   */
   private async changes(sql: string, params: unknown[]): Promise<number> {
     const result = await this.d1.prepare(sql).bind(...params).run();
-    return Number(result.meta?.changes ?? 0);
+    const changed = result?.meta?.changes;
+    if (typeof changed !== 'number') throw new Error('D1 did not report meta.changes for a compare-and-set write');
+    return changed;
   }
 
   getAccount(accountId: string): Promise<Account | null> {
