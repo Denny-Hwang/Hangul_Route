@@ -3,7 +3,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { statusLine } from '../../components/BackupCard';
-import { rescueCodeHint } from '../../logic/sync/rescue-code';
+import { rescueCodeHint, rescueCodeLines } from '../../logic/sync/rescue-code';
 import type { RootStackParamList } from '../../navigation/types';
 import { confirm } from '../../platform/dialog';
 import { copyText } from '../../platform/pwa';
@@ -70,8 +70,9 @@ export function SaveProgressScreen({ navigation }: Props): React.ReactElement {
       {code ? (
         <>
           <Card padding="lg" tone="brand" testID="rescue-code">
-            <Heading level="display" align="center" style={{ letterSpacing: 2 }}>
-              {code}
+            {/* One word per row (title size): the longest code still fits a 320 px line without breaking a word. */}
+            <Heading level="title" align="center" style={{ letterSpacing: spacing.xxs }}>
+              {rescueCodeLines(code).join('\n')}
             </Heading>
             <Spacer size="xs" />
             <Caption tone="muted" align="center">

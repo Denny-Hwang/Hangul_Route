@@ -38,13 +38,13 @@ Most learners have no adult account (P-A) and many never will. When their device
 
 ### 3.3 Client — `sync/save-progress` (PIN-gated)
 
-- Shows the code as a large block, **Copy**, **Share** (text share sheet), **Save now** (forces a sync), "Last saved" line, and **Get a new code** (confirm → rotate). Copy addressed to the parent: "Write this down. It brings <name>'s cards back on any device."
+- Shows the code as a large block — one word per row, the number last, so no word breaks mid-way on a 320 px phone (the longest code is four 10-letter words) — **Copy** (the hyphenated code), **Share** (text share sheet), **Save now** (forces a sync), "Last saved" line, and **Get a new code** (confirm → rotate). Copy addressed to the parent: "Write this down. It brings <name>'s cards back on any device."
 - No code yet (never synced / no API): shows the status line from the Backup card instead and a **Save now** button.
 
 ### 3.4 Client — `sync/restore` code path
 
 - Entered from `onboarding/welcome` ("I already have progress") and from `profile/settings`.
-- One code field (typed or pasted; any case, spaces or hyphens; either code shape) → **Find my cards** → claim → local profile created (or merged when a profile with the same id exists) → credentials adopted → merge notice → `profiles/picker` / Home. (Was three WORD · WORD · 1234 fields, which could not take the four-word shape or a pasted code.)
+- One code field that wraps over three rows, so the longest code stays fully visible at 320 px (typed or pasted; any case, spaces or hyphens; either code shape) → **Find my cards** → claim → local profile created (or merged when a profile with the same id exists) → credentials adopted → merge notice → `profiles/picker` / Home. (Was three WORD · WORD · 1234 fields, which could not take the four-word shape or a pasted code.)
 - Errors: not found → "Check the code and try again." · 429 → "Let's wait a few minutes." · offline → "This needs internet." Nothing is worded at the child.
 
 ## 4. Out of scope
@@ -60,6 +60,7 @@ Most learners have no adult account (P-A) and many never will. When their device
 | `backend/__tests__/recovery.test.ts` | crypto generator (no `Math.random`, ≥ 50 bits, unbiased), issue returns plaintext once, rotation invalidates, claim binds + returns snapshot, 404 / 429, normalization, keyed hash with `RESCUE_PEPPER`, legacy codes restore with and without it, collision redraw, grown-up re-issue permission matrix |
 | `backend/db/__tests__/db-contract.test.ts` | `recovery_hash` UNIQUE on both backends |
 | `backend/lib/__tests__/rate-limit.test.ts` | sliding window |
-| `mobile/logic/sync/__tests__/rescue-code.test.ts` | parse / format / normalize |
+| `mobile/logic/sync/__tests__/rescue-code.test.ts` | parse / format / normalize, rows a code is shown in |
+| `mobile/e2e/web/rescue-code-320.spec.ts` | 320 px: the longest code is fully visible in the restore field and shown one word per row on save-progress |
 | `mobile/store/__tests__/sync-store.test.ts` | code issued after first sync, rotate, claim adopts learner |
 | `mobile/platform/__tests__/share-text.test.ts` | share / clipboard fallback |

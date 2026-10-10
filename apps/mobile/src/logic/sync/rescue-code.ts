@@ -29,6 +29,18 @@ export function rescueCodeHint(code: string): string | null {
   return `${words === 4 ? 'four' : 'two'} words + ${digits} digits`;
 }
 
+/**
+ * The rows a code is shown in on sync/save-progress: one word per row, the
+ * number last. A four-word code is up to 50 characters, and at display size a
+ * 10-letter word does not fit on one 320 px line, so a single wrapping string
+ * broke words mid-way (LIGHTHOUS / E-). Anything that is not a code is shown
+ * as stored.
+ */
+export function rescueCodeLines(code: string): string[] {
+  const normalized = normalizeRescueCode(code);
+  return normalized ? normalized.split('-') : [code];
+}
+
 export type ClaimErrorCode = 'code_not_found' | 'too_many_attempts' | 'network' | 'invalid' | 'unknown';
 
 /** Calm, adult-facing copy; never blames the child. */

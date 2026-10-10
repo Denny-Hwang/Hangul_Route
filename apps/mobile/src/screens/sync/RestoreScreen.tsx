@@ -116,9 +116,9 @@ export function RestoreScreen({ navigation, route }: Props): React.ReactElement 
                   setCodeInput(cleanRescueInput(v));
                 }}
                 onSubmitEditing={() => void claim()}
-                // Wraps instead of scrolling sideways, so the whole code is checkable at 320 px; Enter still submits.
+                // Wraps instead of scrolling sideways; three rows hold the longest code (four 10-letter words + the number) at 320 px. Enter still submits.
                 multiline
-                numberOfLines={2}
+                numberOfLines={3}
                 blurOnSubmit
                 placeholder="Words, then the number"
                 placeholderTextColor={colors.text.muted}
