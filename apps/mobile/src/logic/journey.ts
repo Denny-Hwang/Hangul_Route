@@ -43,7 +43,9 @@ export function isEpisodeComplete(
  * keyed initials gave two "L" columns (letters, life; audit UX-11).
  */
 export function themeColumnLabel(theme: Pick<ThemeDef, 'titleEn'>): string {
-  return theme.titleEn.trim().split(/\s+/)[0] ?? theme.titleEn;
+  const title = theme.titleEn.trim();
+  const gap = title.search(/\s/);
+  return gap === -1 ? title : title.slice(0, gap);
 }
 
 export function themeCellInitial(theme: Pick<ThemeDef, 'titleEn'>): string {
