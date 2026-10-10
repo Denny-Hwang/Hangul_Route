@@ -10,7 +10,7 @@ const ACCENTS: Record<string, string> = {
 
 /** `[` + accented text padded with `~` to at least +40% length + `]`. */
 export function pseudoText(text: string): string {
-  const accented = text.replace(/[aeiouycnAEIOUYCN]/g, (ch) => ACCENTS[ch]);
+  const accented = text.replace(/[aeiouycnAEIOUYCN]/g, (ch) => ACCENTS[ch]!);
   return `[${accented}${'~'.repeat(Math.ceil(text.length * 0.4))}]`;
 }
 

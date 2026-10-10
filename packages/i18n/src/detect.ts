@@ -10,7 +10,7 @@ export function detectLocale(
   available: readonly UiLocale[] = availableLocales(),
 ): UiLocale {
   for (const tag of languages) {
-    const primary = tag.split(/[-_]/)[0].toLowerCase();
+    const primary = tag.split(/[-_]/)[0]!.toLowerCase();
     const match = LOCALES.find((locale) => locale === primary);
     if (match !== undefined && available.includes(match)) return match;
   }
