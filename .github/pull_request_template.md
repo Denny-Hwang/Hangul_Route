@@ -19,7 +19,7 @@
 - [ ] Spec link present (F-XXX)
 - [ ] Tests added (TDD)
 - [ ] Design tokens only — no hardcoded colors / spacing / typography
-- [ ] Language policy respected — UI = English, Korean = content being taught only
+- [ ] Language policy respected — UI strings from the selected locale (en/es/ko); taught Korean shown with romanization + a gloss in the UI language
 - [ ] Romanization + English gloss present for every Korean learning item
 - [ ] Rolling coverage targets met (see `docs/tests/coverage-targets.md`)
 - [ ] Conventional Commit title
