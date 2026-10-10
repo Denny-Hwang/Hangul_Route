@@ -1,6 +1,7 @@
 import { Body, Button, Caption, Card, Heading, HoyaBubble, Pill, Progress, Screen, Spacer, spacing } from '@hangul-route/design-system';
 import React, { useMemo, useState } from 'react';
 import { View } from 'react-native';
+import { replyOptionLabel } from '../../logic/korean-labels';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { speak } from '../../platform/audio';
 import { nudge, success, tapLight } from '../../platform/haptics';
@@ -87,7 +88,7 @@ export function TapRespondGame({ scope, onFinish }: Props): React.ReactElement {
           return (
             <Button
               key={opt.ko}
-              label={`${opt.ko}  ·  ${opt.en}`}
+              label={replyOptionLabel(opt)}
               tone={tone}
               size="lg"
               fullWidth

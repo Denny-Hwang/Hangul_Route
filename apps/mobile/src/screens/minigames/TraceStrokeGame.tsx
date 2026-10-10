@@ -21,6 +21,7 @@ import Svg, { Path } from 'react-native-svg';
 import type { JamoStrokePoint } from '../../content/jamo-strokes';
 import { strokesForJamo } from '../../content/jamo-strokes';
 import type { LayoutChangeEvent } from 'react-native';
+import { traceCanvasA11yLabel, traceLetterA11yText } from '../../logic/korean-labels';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { buildTraceStrokeRounds, type TraceStrokeRound } from '../../logic/round-builder';
 import { pointsToPathD } from '../../logic/stroke-diagram';
@@ -267,7 +268,9 @@ export function TraceStrokeGame({
 
   const prompt = (
     <View style={{ gap: spacing.xs }}>
-      <Heading level="prompt">Trace the letter {round.jamo.romanization}</Heading>
+      <View accessible accessibilityRole="header" accessibilityLabel={traceLetterA11yText(round.jamo.romanization)}>
+        <Heading level="prompt">Trace the letter {round.jamo.romanization}</Heading>
+      </View>
       {stacked ? <Caption tone="muted">Draw the letter with your finger.</Caption> : null}
     </View>
   );
@@ -277,7 +280,7 @@ export function TraceStrokeGame({
       <GestureDetector gesture={panGesture}>
         <View
           nativeID="trace-canvas"
-          accessibilityLabel={`Draw the letter ${round.jamo.romanization} with your finger`}
+          accessibilityLabel={traceCanvasA11yLabel(round.jamo.romanization)}
           style={{
             width: canvasSize,
             height: canvasSize,
