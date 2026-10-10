@@ -114,7 +114,7 @@ test('progress earned before a reload survives it and the next write', async ({ 
 
   // First write of the new visit: replaying the quest starts a session.
   await page.getByText('Journey', { exact: true }).last().click();
-  await page.getByRole('button', { name: 'letters episode for stage1' }).click();
+  await page.getByRole('button', { name: /^Letters.* episode for stage1$/ }).click();
   await page.getByRole('button', { name: 'Play again' }).click();
   await expect(page.getByRole('button', { name: 'Leave quest' })).toBeVisible();
   await expect.poll(async () => (await savedProgress(page))?.sessions ?? 0).toBeGreaterThan(earned?.sessions ?? 0);
