@@ -1,5 +1,6 @@
 import type { ProgressSnapshot, QuestProgress } from '@hangul-route/content-schema';
 import { create } from 'zustand';
+import { mergeSnapshots } from '../logic/sync/merge';
 import { notifyProgressPersisted } from '../logic/sync/persist-hook';
 import { readJson, writeJson } from '../platform/storage';
 import { track } from '../platform/telemetry';
@@ -40,10 +41,18 @@ export function nextStreak(
 
 interface State {
   byProfile: Record<string, ProgressSnapshot>;
+  /** Profiles whose saved snapshot has been read (or replaced wholesale). Only these are written to storage. */
   hydratedFor: Set<string>;
+  /** Profiles written to before their saved snapshot was read; merged with it and saved once it loads. */
+  pendingFor: Set<string>;
 }
 
 interface Actions {
+  /**
+   * Read the profile's saved snapshot into memory (once per profile). Writes
+   * made before it lands are merged with the saved copy, never written over
+   * it (audit UX-01 / L16). Leaves no record when nothing is saved or written.
+   */
   hydrate: (profileId: string) => Promise<void>;
   ensure: (profileId: string) => ProgressSnapshot;
   recordQuestComplete: (
@@ -78,23 +87,61 @@ function blankSnapshot(profileId: string): ProgressSnapshot {
   };
 }
 
-function persist(profileId: string, snap: ProgressSnapshot): void {
+function save(profileId: string, snap: ProgressSnapshot): void {
   void writeJson(key(profileId), snap);
   notifyProgressPersisted(profileId);
+}
+
+function without(ids: Set<string>, id: string): Set<string> {
+  const next = new Set(ids);
+  next.delete(id);
+  return next;
+}
+
+/**
+ * Save a write. Until the profile's saved snapshot has been read, the write
+ * stays in memory only — saving it would replace everything stored with a
+ * record built on a blank one — and the read starts now; `hydrate` merges
+ * the two and saves the result.
+ */
+function persist(profileId: string, snap: ProgressSnapshot): void {
+  const store = useProgressStore.getState();
+  if (store.hydratedFor.has(profileId)) {
+    save(profileId, snap);
+    return;
+  }
+  useProgressStore.setState((s) => ({ pendingFor: new Set([...s.pendingFor, profileId]) }));
+  void store.hydrate(profileId);
+}
+
+/** A wholesale replacement (restore, sync, reset) is final: no read still in flight may bring older data back. */
+function settle(profileId: string, snapshot: ProgressSnapshot): void {
+  useProgressStore.setState((s) => ({
+    byProfile: { ...s.byProfile, [profileId]: snapshot },
+    hydratedFor: new Set([...s.hydratedFor, profileId]),
+    pendingFor: without(s.pendingFor, profileId),
+  }));
 }
 
 export const useProgressStore = create<State & Actions>((set, get) => ({
   byProfile: {},
   hydratedFor: new Set(),
+  pendingFor: new Set(),
 
   hydrate: async (profileId) => {
     if (get().hydratedFor.has(profileId)) return;
     const loaded = await readJson<ProgressSnapshot>(key(profileId));
-    const snap = loaded ?? blankSnapshot(profileId);
+    // Another read, a restore or a reset landed first; this read is stale.
+    if (get().hydratedFor.has(profileId)) return;
+    const { byProfile, pendingFor } = get();
+    const unsaved = pendingFor.has(profileId) ? byProfile[profileId] : undefined;
+    const snap = unsaved && loaded ? mergeSnapshots(unsaved, loaded, { now: new Date() }) : (unsaved ?? loaded ?? byProfile[profileId]);
     set((s) => ({
-      byProfile: { ...s.byProfile, [profileId]: snap },
+      byProfile: snap ? { ...s.byProfile, [profileId]: snap } : s.byProfile,
       hydratedFor: new Set([...s.hydratedFor, profileId]),
+      pendingFor: without(s.pendingFor, profileId),
     }));
+    if (unsaved && snap) save(profileId, snap);
   },
 
   ensure: (profileId) => {
@@ -193,15 +240,12 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
 
   reset: (profileId) => {
     const fresh = blankSnapshot(profileId);
-    set((s) => ({ byProfile: { ...s.byProfile, [profileId]: fresh } }));
-    persist(profileId, fresh);
+    settle(profileId, fresh);
+    save(profileId, fresh);
   },
 
   replaceSnapshot: (profileId, snapshot) => {
-    set((s) => ({
-      byProfile: { ...s.byProfile, [profileId]: snapshot },
-      hydratedFor: new Set([...s.hydratedFor, profileId]),
-    }));
+    settle(profileId, snapshot);
     void writeJson(key(profileId), snapshot);
   },
 }));
