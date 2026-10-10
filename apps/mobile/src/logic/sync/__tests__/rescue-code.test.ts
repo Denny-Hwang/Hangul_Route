@@ -1,6 +1,6 @@
 import { normalizeRescueCode } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
-import { RESCUE_INPUT_MAX, claimErrorMessage, cleanRescueInput, rescueCodeHint, rescueCodeLines } from '../rescue-code';
+import { RESCUE_INPUT_MAX, claimErrorMessage, cleanRescueInput, rescueCodeHint, rescueCodeLines, rescueInputRows } from '../rescue-code';
 
 describe('rescue code helpers (F-RESTORE-001)', () => {
   it('cleans the one code field while typing: upper case, letters, digits and single separators', () => {
@@ -39,5 +39,17 @@ describe('rescue code helpers (F-RESTORE-001)', () => {
     // the format hint shows the new shape and still names the older one
     expect(claimErrorMessage('invalid')).toContain('TIGER-MOON-RIVER-APPLE-482139');
     expect(claimErrorMessage('invalid')).toContain('TIGER-MOON-4821');
+  });
+});
+
+describe('rescueInputRows', () => {
+  it('plans one row per typed word or number, between two and five', () => {
+    expect(rescueInputRows('')).toBe(2);
+    expect(rescueInputRows('PADDLE')).toBe(2);
+    expect(rescueInputRows('PADDLE GLACIER 4992')).toBe(3);
+    expect(rescueInputRows('TIGER MOON RIVER APPLE')).toBe(4);
+    expect(rescueInputRows('TIGER MOON RIVER APPLE 482139')).toBe(5);
+    expect(rescueInputRows('  TIGER   MOON  ')).toBe(2);
+    expect(rescueInputRows('A B C D E F G')).toBe(5);
   });
 });

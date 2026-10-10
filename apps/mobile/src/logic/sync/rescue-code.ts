@@ -58,3 +58,14 @@ export function claimErrorMessage(code: ClaimErrorCode): string {
       return 'Something went wrong. Try again in a moment.';
   }
 }
+
+/**
+ * Rows the code field needs. Wide letters can leave one word per row on a
+ * narrow phone, and fonts differ per device, so plan for the worst case:
+ * one row per word-or-number typed so far (two rows while it is short,
+ * five for a full four-word code).
+ */
+export function rescueInputRows(text: string): number {
+  const parts = text.trim().split(/\s+/).filter(Boolean).length;
+  return Math.min(5, Math.max(2, parts));
+}

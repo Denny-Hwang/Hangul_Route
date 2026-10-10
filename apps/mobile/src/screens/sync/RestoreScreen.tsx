@@ -4,7 +4,7 @@ import { normalizeRescueCode } from '@hangul-route/content-schema';
 import React, { useState } from 'react';
 import { Pressable, TextInput, View } from 'react-native';
 import { decodeBackup } from '../../logic/sync/backup';
-import { RESCUE_INPUT_MAX, claimErrorMessage, cleanRescueInput } from '../../logic/sync/rescue-code';
+import { RESCUE_INPUT_MAX, claimErrorMessage, cleanRescueInput, rescueInputRows } from '../../logic/sync/rescue-code';
 import { planRestore, restoreNotice, type RestorePlan } from '../../logic/sync/restore';
 import type { RootStackParamList } from '../../navigation/types';
 import { pickTextFile } from '../../platform/file';
@@ -20,11 +20,16 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Restore'>;
  * (F-RESTORE-001 §3.4), grown-up sign-in (F-AUTH-002, not yet), a saved
  * file (F-SYNC-002 §3.3). Never overwrites; ends on the merge notice.
  */
+/** The code field's text metrics, fixed so its height can be planned for the worst case. */
+const CODE_LINE_HEIGHT = Math.round(typography.size.bodyLg * 1.3);
+const CODE_BORDER = 2;
+
 export function RestoreScreen({ navigation, route }: Props): React.ReactElement {
   const from = route.params?.from ?? 'settings';
   const profiles = useProfileStore((s) => s.profiles);
   const [showCode, setShowCode] = useState(false);
   const [codeInput, setCodeInput] = useState('');
+  const codeRows = rescueInputRows(codeInput);
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<RestorePlan | null>(null);
@@ -116,9 +121,9 @@ export function RestoreScreen({ navigation, route }: Props): React.ReactElement 
                   setCodeInput(cleanRescueInput(v));
                 }}
                 onSubmitEditing={() => void claim()}
-                // Wraps instead of scrolling sideways; three rows hold the longest code (four 10-letter words + the number) at 320 px. Enter still submits.
+                // Wraps instead of scrolling sideways. The box has a row for every word typed (worst case: one per row), so no font can clip the last one at 320 px. Enter still submits.
                 multiline
-                numberOfLines={3}
+                numberOfLines={codeRows}
                 blurOnSubmit
                 placeholder="Words, then the number"
                 placeholderTextColor={colors.text.muted}
@@ -131,16 +136,17 @@ export function RestoreScreen({ navigation, route }: Props): React.ReactElement 
                 accessibilityLabel="Rescue code"
                 testID="rescue-code-input"
                 style={{
-                  minHeight: touchTarget.child,
+                  minHeight: Math.max(touchTarget.child, codeRows * CODE_LINE_HEIGHT + 2 * spacing.sm + 2 * CODE_BORDER),
                   paddingHorizontal: spacing.md,
                   paddingVertical: spacing.sm,
                   textAlign: 'center',
                   textAlignVertical: 'center',
                   fontSize: typography.size.bodyLg,
+                  lineHeight: CODE_LINE_HEIGHT,
                   fontWeight: '700',
                   color: colors.text.primary,
                   backgroundColor: colors.surface.paper,
-                  borderWidth: 2,
+                  borderWidth: CODE_BORDER,
                   borderColor: colors.border.subtle,
                   borderRadius: radii.lg,
                 }}

@@ -64,6 +64,8 @@ test('sync/restore: the whole longest code is visible in the field, wrapped, wit
   await createPin(page);
   await page.getByRole('button', { name: 'I have a rescue code' }).click();
 
+  // Fonts differ per OS (CI is Linux); force a wide one (one word per row) so the check holds for the worst case everywhere.
+  await page.addStyleTag({ content: 'textarea { font-family: "Courier New", monospace !important; letter-spacing: 5px !important; }' });
   const field = page.getByTestId('rescue-code-input');
   await field.pressSequentially(LONGEST.replaceAll('-', ' '));
   await expect(field).toHaveValue(LONGEST.replaceAll('-', ' '));
