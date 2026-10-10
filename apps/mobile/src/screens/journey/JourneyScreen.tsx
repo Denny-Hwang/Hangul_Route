@@ -46,7 +46,8 @@ export function JourneyScreen(): React.ReactElement {
       <Body tone="secondary">7 stages × 5 themes. Draw your own route.</Body>
 
       <Spacer size="lg" />
-      <View style={{ flexDirection: 'row', gap: spacing.xs, marginBottom: spacing.sm, paddingHorizontal: spacing.md }}>
+      {/* Same row geometry as the cells below, so each label sits over its column. */}
+      <View style={{ flexDirection: 'row', gap: spacing.xs, marginBottom: spacing.sm }}>
         {themes.map((t) => (
           <View key={t.key} style={{ flex: 1, alignItems: 'center' }}>
             <Caption tone="muted" align="center">
