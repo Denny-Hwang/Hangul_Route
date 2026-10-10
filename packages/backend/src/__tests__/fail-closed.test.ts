@@ -1,7 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { D1Db } from '../db';
 import app from '../index';
 import { setDevFallbacksDefaultForTests } from '../lib/runtime';
 import { testDb as db } from './helpers/db';
+import { openSqliteD1 } from './helpers/sqlite';
 
 /**
  * Audit SEC-2 — production (ENVIRONMENT unset) must fail closed: without a
@@ -53,6 +55,29 @@ describe('fail closed when nothing opted in (SEC-2)', () => {
   it('does not block routes that need neither binding', async () => {
     const r = await call('/api/telemetry', { method: 'POST', headers: json, body: JSON.stringify({ name: 'session.start' }) }, {});
     expect(r.status).toBe(201);
+  });
+});
+
+describe('the production config (ENVIRONMENT unset, Clerk key + D1 bound) still serves', () => {
+  it('lands learner traffic in D1, rejects a forged bearer with 401 (not 503, not 200), and reports healthy', async () => {
+    const d1 = openSqliteD1();
+    const env = { DB: d1, CLERK_SECRET_KEY: 'sk_test_x' };
+    try {
+      const reg = await call('/api/sync/learners', { method: 'POST', headers: json, body: registerBody }, env);
+      expect(reg.status).toBe(201);
+      expect(await new D1Db(d1).getLearner(LEARNER_ID)).not.toBeNull(); // the binding, not the fallback
+      expect(await db.getLearner(LEARNER_ID)).toBeNull();
+
+      const forged = await call('/api/entitlements', { headers: { ...bearer('user_abc'), origin: 'https://hangulroute.com' } }, env);
+      expect(forged.status).toBe(401);
+      expect(forged.headers.get('access-control-allow-origin')).toBe('https://hangulroute.com');
+
+      const health = await app.request('/health', {}, env);
+      expect(health.status).toBe(200);
+      expect(await health.json()).toMatchObject({ status: 'ok', environment: 'production', devFallbacks: false });
+    } finally {
+      d1.close();
+    }
   });
 });
 
