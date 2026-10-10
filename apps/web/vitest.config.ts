@@ -12,6 +12,9 @@ import { defineConfig } from 'vitest/config';
  * Per docs/tests/coverage-targets.md §"측정 제외".
  */
 export default defineConfig({
+  // tsconfig keeps `jsx: preserve` for Next; tests that server-render a page
+  // (src/app/__tests__/*.test.tsx) need esbuild to compile JSX itself.
+  esbuild: { jsx: 'automatic' },
   test: {
     environment: 'node',
     include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],

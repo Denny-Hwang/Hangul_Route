@@ -17,3 +17,73 @@ button {
   font-family: inherit;
   cursor: pointer;
 }
+
+/*
+ * Landing — responsive layout (audit W1 / p2-L6, roadmap PR-21).
+ * Layout only: colours, spacing and type stay inline from design tokens.
+ * Properties overridden at the breakpoints live here, never inline,
+ * because inline styles beat stylesheet rules.
+ */
+.hr-landing-logo-mark {
+  display: flex;
+}
+
+.hr-landing-nav {
+  margin-left: auto;
+  justify-content: flex-end;
+}
+
+.hr-landing-hero {
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+}
+
+.hr-landing-split {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+}
+
+/* Brand + five links + "Play now" need ~780px. Below that, row 1 is the
+   brand and "Play now"; row 2 is the section links, wrapping as needed. */
+@media (max-width: 899px) {
+  .hr-landing-cta {
+    order: 2;
+    margin-left: auto;
+  }
+
+  .hr-landing-nav {
+    order: 3;
+    flex-basis: 100%;
+    margin-left: 0;
+    justify-content: flex-start;
+  }
+}
+
+/* Phones: the hero and Meet Hoya stack to one column. */
+@media (max-width: 719px) {
+  .hr-landing-hero {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .hr-landing-split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .hr-landing-hero-art {
+    width: 100%;
+    max-width: 360px;
+    justify-self: center;
+  }
+
+  .hr-landing-split-art {
+    width: 100%;
+    max-width: 280px;
+    justify-self: center;
+  }
+}
+
+/* 320px phones: drop the decorative logo mark so "Play now" keeps the
+   brand row. The CTA itself is never hidden. */
+@media (max-width: 359px) {
+  .hr-landing-logo-mark {
+    display: none;
+  }
+}

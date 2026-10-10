@@ -4,19 +4,20 @@ export function MeetHoya(): JSX.Element {
   return (
     <section
       aria-labelledby="hoya-heading"
+      className="hr-landing-split"
       style={{
         marginTop: spacing.jumbo,
         backgroundColor: colors.surface.sunken,
         borderRadius: radii.xxl,
         padding: spacing.xxl,
         display: 'grid',
-        gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1.4fr)',
         gap: spacing.xxl,
         alignItems: 'center',
       }}
     >
       <div
         aria-hidden="true"
+        className="hr-landing-split-art"
         style={{
           aspectRatio: '1 / 1',
           backgroundColor: colors.hoya.belly,

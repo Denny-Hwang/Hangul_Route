@@ -29,22 +29,25 @@ export default function HomePage(): JSX.Element {
     >
       {/* Top nav */}
       <header
+        className="hr-landing-header"
         style={{
           display: 'flex',
-          justifyContent: 'space-between',
+          flexWrap: 'wrap',
           alignItems: 'center',
+          columnGap: spacing.md,
+          rowGap: spacing.md,
           marginBottom: spacing.xxxl,
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}>
           <div
             aria-hidden="true"
+            className="hr-landing-logo-mark"
             style={{
               width: 44,
               height: 44,
               borderRadius: radii.circle,
               backgroundColor: colors.brand.primary,
-              display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               color: colors.text.inverse,
@@ -58,7 +61,17 @@ export default function HomePage(): JSX.Element {
             Hangul Route
           </span>
         </div>
-        <nav style={{ display: 'flex', gap: spacing.lg, alignItems: 'center' }}>
+        <nav
+          aria-label="Main"
+          className="hr-landing-nav"
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            columnGap: spacing.lg,
+            rowGap: spacing.xs,
+          }}
+        >
           <Link href="#cards" style={{ color: colors.text.secondary, fontWeight: typography.weight.semibold }}>
             Cards
           </Link>
@@ -74,26 +87,28 @@ export default function HomePage(): JSX.Element {
           <Link href="/teach" style={{ color: colors.text.secondary, fontWeight: typography.weight.semibold }}>
             For teachers
           </Link>
-          <a
-            href={APP_URL}
-            style={{
-              padding: `${spacing.sm}px ${spacing.lg}px`,
-              backgroundColor: colors.brand.primary,
-              color: colors.text.onPrimary,
-              borderRadius: radii.pill,
-              fontWeight: typography.weight.bold,
-            }}
-          >
-            Play now
-          </a>
         </nav>
+        <a
+          href={APP_URL}
+          className="hr-landing-cta"
+          style={{
+            padding: `${spacing.sm}px ${spacing.lg}px`,
+            backgroundColor: colors.brand.primary,
+            color: colors.text.onPrimary,
+            borderRadius: radii.pill,
+            fontWeight: typography.weight.bold,
+            whiteSpace: 'nowrap',
+          }}
+        >
+          Play now
+        </a>
       </header>
 
       {/* Hero */}
       <section
+        className="hr-landing-hero"
         style={{
           display: 'grid',
-          gridTemplateColumns: '1.4fr 1fr',
           gap: spacing.xxl,
           alignItems: 'center',
         }}
@@ -184,6 +199,7 @@ export default function HomePage(): JSX.Element {
         </div>
         <div
           aria-hidden="true"
+          className="hr-landing-hero-art"
           style={{
             aspectRatio: '1 / 1',
             backgroundColor: colors.brand.primaryLight,
@@ -562,6 +578,7 @@ export default function HomePage(): JSX.Element {
             placeholder="you@somewhere.com"
             style={{
               flex: '1 1 240px',
+              minWidth: 0,
               minHeight: 48,
               padding: `${spacing.sm}px ${spacing.lg}px`,
               borderRadius: radii.pill,
@@ -692,7 +709,9 @@ export default function HomePage(): JSX.Element {
           >
             Contact
           </div>
-          <div>feedback@hangulroute.example</div>
+          <div data-contact="email" style={{ overflowWrap: 'anywhere' }}>
+            feedback@hangulroute.example
+          </div>
           <div style={{ marginTop: spacing.xs, color: colors.text.muted }}>
             © {new Date().getFullYear()} Hangul Route
           </div>
