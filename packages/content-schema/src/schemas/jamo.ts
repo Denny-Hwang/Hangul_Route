@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { AudioRefSchema } from './audio';
 
 /**
  * Jamo — Korean alphabet unit (consonant / vowel / batchim).
@@ -19,10 +20,26 @@ export const JamoSchema = z.object({
   /** Revised Romanization, unhyphenated (D13). Required with exampleWordKo from F-CNT-002 PR 2b. */
   exampleWordRomanization: z.string().min(1).optional(),
   exampleWordEn: z.string().optional(),
-  audioRef: z.string().optional(),
+  /** Sound clip (F-AUDIO-004); every value written today already matches the grammar. */
+  audioRef: AudioRefSchema.optional(),
+  /** What a sound prompt says: one syllable, or the name 이응 for initial ㅇ (AD2). */
+  spokenKo: z.string().regex(/^[가-힣]{1,2}$/).optional(),
+  /** Revised Romanization of `spokenKo`, unhyphenated (D13). */
+  spokenRomanization: z.string().min(1).max(8).optional(),
+  spokenKind: z.enum(['sound', 'name']).default('sound'),
+  /** Letter name, e.g. 기역; vowels equal `spokenKo`. */
+  nameKo: z.string().regex(/^[가-힣]{1,3}$/).optional(),
+  nameAudioRef: AudioRefSchema.optional(),
   /** Base English sound hint shown in Discover (F-QUEST-002); es / ko come from the i18n overlay. */
   soundHint: z.string().max(60).optional(),
   order: z.number().int().nonnegative(),
+}).superRefine((jamo, ctx) => {
+  if (jamo.spokenRomanization !== undefined && jamo.spokenKo === undefined) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['spokenRomanization'], message: 'spokenRomanization requires spokenKo' });
+  }
+  if (jamo.nameAudioRef !== undefined && jamo.nameKo === undefined) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['nameAudioRef'], message: 'nameAudioRef requires nameKo' });
+  }
 });
 
 export type Jamo = z.infer<typeof JamoSchema>;

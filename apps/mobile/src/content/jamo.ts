@@ -25,6 +25,7 @@ const c = (
   exampleWordKo,
   exampleWordEn,
   audioRef: `audio/jamo/${id}.mp3`,
+  spokenKind: 'sound',
   order,
 });
 
@@ -47,6 +48,7 @@ const v = (
   exampleWordKo,
   exampleWordEn,
   audioRef: `audio/jamo/${id}.mp3`,
+  spokenKind: 'sound',
   order,
 });
 
@@ -57,6 +59,7 @@ const b = (id: string, char: string, romanization: string, nameEn: string, order
   nameEn,
   kind: 'batchim',
   audioRef: `audio/jamo/${id}-batchim.mp3`,
+  spokenKind: 'sound',
   order,
 });
 
