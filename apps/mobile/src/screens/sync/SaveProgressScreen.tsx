@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { statusLine } from '../../components/BackupCard';
 import { rescueCodeHint, rescueCodeLines } from '../../logic/sync/rescue-code';
+import { saveNowNote } from '../../logic/sync/status-line';
 import type { RootStackParamList } from '../../navigation/types';
 import { confirm } from '../../platform/dialog';
 import { copyText } from '../../platform/pwa';
@@ -38,7 +39,7 @@ export function SaveProgressScreen({ navigation }: Props): React.ReactElement {
     setBusy(true);
     const after = await syncNow(learnerId);
     setBusy(false);
-    setNote(after.status === 'synced' ? 'Saved to the cloud.' : after.status === 'off' ? 'Cloud saving is not set up on this build.' : "Couldn't reach the cloud — try again later.");
+    setNote(saveNowNote(after));
   };
 
   const rotate = async (): Promise<void> => {
