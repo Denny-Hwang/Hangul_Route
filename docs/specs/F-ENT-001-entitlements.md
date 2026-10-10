@@ -42,7 +42,7 @@ Who pays is an adult or a space; who benefits is every learner attached to it. O
 | `POST /stripe/webhook` | Stripe | signature verified with `STRIPE_WEBHOOK_SECRET` (HMAC-SHA256 over `t.body`, 5-minute tolerance, constant-time compare); `checkout.session.completed` → active (`providerRef` = subscription, else payment intent, else session id; lifetime keeps `expiresAt` null); `customer.subscription.created/updated` → mapped status + `current_period_end`; `…deleted` → expired; other events → 200 ignored; bad signature → 400; no secret → 503 |
 | `GET /api/sync/learners/:id/inbox` | learner device | `tier`, `tierSource`, `tierValidUntil` (= now + 7 days, the offline grace) |
 
-Legacy `/api/subscriptions/*` (v1 family subscription) stays untouched until the mobile IAP path moves over (F-IAP-002).
+Legacy `/api/subscriptions/*` (v1 family subscription) was removed on 2026-10-09 (audit SEC-1): no shipped client called it, and its receipt stub granted access for any JSON blob. The mobile IAP path arrives through `POST /verify` above with F-IAP-002.
 
 ### 3.4 Device
 

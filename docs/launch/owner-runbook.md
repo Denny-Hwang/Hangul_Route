@@ -58,6 +58,7 @@ D1 `hangul-route` 는 2026-10-07 에 대시보드에서 만들었고 (Database I
 `hangul-route-app` → Settings → Build → Variables and Secrets → `EXPO_PUBLIC_API_BASE_URL` = Step 3 의 API 주소 → **Retry deployment**. (선택) `EXPO_PUBLIC_CONSOLE_URL` = 콘솔 주소 — 기본값은 hangulroute.com 이라 도메인 연결 전에는 workers.dev 주소를 넣으면 페이월 버튼이 바로 열린다.
 **확인 1**: 앱에서 프로필 생성 → 설정 → Backup 카드에 Rescue Code (단어-단어-숫자) 가 생긴다.
 **확인 2**: 콘솔 `/teach` → 교사로 로그인 → 학급 생성 → 6자리 코드 → 앱 설정 *Classes & family* 에 입력 → 콘솔 roster 에 학생이 보인다.
+- 참고 (audit SEC-2, 2026-10-09): 배포된 API 는 fail closed 라서, `CLERK_SECRET_KEY` 가 등록되기 전(Step 7)에는 콘솔 dev 로그인 뒤의 API 호출이 503 `auth_not_configured` 로 막힌다. 새로 배포하는 경우 확인 2 는 Step 7 뒤에 한다 (확인 1 의 학습자 기기 경로는 D1 만 있으면 된다).
 
 ### Step 6. 도메인 (10분)
 `hangulroute.com` 은 Cloudflare Registrar 로 구매해 이미 Cloudflare DNS 에 있다 (2026-10-07). 네임서버 변경·전파 대기는 없다. Custom domain 을 붙이면 DNS 레코드와 인증서가 자동으로 만들어진다 (보통 몇 분).
