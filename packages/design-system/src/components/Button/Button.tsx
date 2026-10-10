@@ -23,7 +23,7 @@ const tonePressedBg: Record<ButtonTone, string> = {
   primary: colors.brand.primaryDark,
   secondary: colors.brand.secondaryDark,
   ghost: colors.brand.primaryLight,
-  success: '#3F8A5C',
+  success: colors.feedback.successDark,
   nudge: '#D89B2B',
 };
 

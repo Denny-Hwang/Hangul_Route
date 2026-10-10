@@ -67,7 +67,8 @@ export function HoyaBubble({
           {message}
         </Body>
         {korean ? (
-          <Heading level="prompt" tone="brand" style={{ marginTop: spacing.xs }}>
+          // Korean on the bubble tints uses ink, not brand orange (UX-10: 2.62:1 on nudgeLight).
+          <Heading level="prompt" tone="primary" style={{ marginTop: spacing.xs }}>
             {korean}
           </Heading>
         ) : null}
