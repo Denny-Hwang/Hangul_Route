@@ -398,8 +398,8 @@ export default function HomePage(): JSX.Element {
             Many of our learners are children, so Hangul Route is built for
             tired parents too. Hand the phone over for five minutes; come back to
             one new Korean letter and one heritage card. Learning Korean
-            yourself? Make your own profile and play the same quests. Bring it
-            on a long flight — the whole Stage 1 plays offline.
+            yourself? Play the same quests. Bring it on a long flight — the
+            whole Stage 1 plays offline.
           </p>
           <ul
             style={{

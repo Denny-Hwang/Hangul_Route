@@ -4,10 +4,15 @@ import { siteMetadata } from '../../data/landing-copy';
 import HomePage from '../page';
 
 /**
- * Owner decision 2026-10-10: the landing quotes no price and sells nothing
- * that is not built. Payments are not live and Stages 2–7 do not exist yet,
- * so the page may say only "Stage 1 is free. More stages and classroom plans
- * are coming." This scans what a visitor (and a search engine) actually sees.
+ * The landing promises only what the product does today (owner decisions
+ * 2026-10-10). This scans what a visitor (and a search engine) actually sees.
+ *
+ * 1. No price, and nothing sold that is not built. Payments are not live and
+ *    Stages 2–7 do not exist yet, so the page may say only "Stage 1 is free.
+ *    More stages and classroom plans are coming."
+ * 2. No adult sign-up flow. The learner app's first-run screen still asks
+ *    "How old are you?" with kid age bands (audit UF-05 / UF-06, PR-23), so the
+ *    page must not tell an adult to "make your own profile".
  */
 const COMMERCIAL_CLAIMS: ReadonlyArray<{ name: string; re: RegExp }> = [
   { name: 'a dollar amount', re: /\$\s?\d/ },
@@ -48,4 +53,14 @@ describe('landing page text — no prices, nothing sold that is not built', () =
       expect(metaText).not.toMatch(re);
     });
   }
+});
+
+describe('landing page text — promises no adult flow that does not exist yet', () => {
+  it('the parents blurb does not tell an adult to make their own profile', () => {
+    expect(pageText).not.toMatch(/your own profile/i);
+  });
+
+  it('it still tells an adult learner the same quests are theirs to play', () => {
+    expect(pageText).toContain('Learning Korean yourself? Play the same quests.');
+  });
 });
