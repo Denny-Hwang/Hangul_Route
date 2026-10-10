@@ -22,3 +22,6 @@ export * from './romanization/extract';
 export * from './romanization/exceptions';
 export * from './romanization/a11y';
 export * from './schemas/ko-text';
+export * from './schemas/scene-art';
+export * from './schemas/story-check';
+export * from './pillars';

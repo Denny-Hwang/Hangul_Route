@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { KoTextSchema, PictureRefSchema } from '../index';
+import { z } from 'zod';
+import { KoTextSchema, KoTextShape, PictureRefSchema, refineKoText } from '../index';
 
 const base = { ko: '아버지', romanization: 'abeoji', en: 'father' };
 
@@ -55,4 +56,41 @@ describe('PictureRefSchema', () => {
       expect(PictureRefSchema.safeParse(ref).success).toBe(false);
     },
   );
+});
+
+describe('KoTextShape and refineKoText (F-STORY-001 PR 1.1a)', () => {
+  it('exposes the un-refined object so a spec can extend it', () => {
+    const Loose = KoTextShape.extend({ romanization: z.string(), en: z.string() }).superRefine(
+      refineKoText,
+    );
+    expect(Loose.safeParse({ ko: '설날', romanization: '', en: '' }).success).toBe(true);
+    expect(
+      Loose.safeParse({ ko: '설날', romanization: 'seollal', en: '', syllables: ['seol', 'lal'] })
+        .success,
+    ).toBe(true);
+    expect(
+      Loose.safeParse({ ko: '설날', romanization: 'seollal', en: '', syllables: ['seol', 'nal'] })
+        .success,
+    ).toBe(false);
+  });
+
+  it('keeps KoTextSchema identical to the shape plus the refinement', () => {
+    const Rebuilt = KoTextShape.superRefine(refineKoText);
+    const samples = [
+      base,
+      { ...base, syllables: ['a', 'beo', 'ji'] },
+      { ...base, syllables: ['a', 'bo', 'ji'] },
+      { ...base, en: '' },
+      { ko: '', romanization: 'x', en: 'y' },
+    ];
+    for (const sample of samples) {
+      expect(Rebuilt.safeParse(sample).success).toBe(KoTextSchema.safeParse(sample).success);
+    }
+    const bad = Rebuilt.safeParse({ ...base, syllables: ['a', 'bo', 'ji'] });
+    expect(bad.success).toBe(false);
+    if (!bad.success) {
+      expect(bad.error.issues[0]?.path).toEqual(['syllables']);
+      expect(bad.error.issues[0]?.message).toBe('syllables must join to the romanization');
+    }
+  });
 });

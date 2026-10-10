@@ -5,29 +5,38 @@ import { z } from 'zod';
  * Taught Korean always travels with a romanization and a gloss (CLAUDE.md §1,
  * F-CNT-001), so no consumer needs to remember to add them.
  */
-export const KoTextSchema = z
-  .object({
-    ko: z.string().min(1),
-    /** Revised Romanization, unhyphenated, pronunciation-based (D13, F-CNT-002). */
-    romanization: z.string().min(1),
-    /** Gloss in the content base language (UI locales overlay it, F-I18N-001). */
-    en: z.string().min(1),
-    /** What the voice says when it differs from `ko` (F-AUDIO-004). */
-    spokenKo: z.string().min(1).optional(),
-    /** MP3 path; wins over TTS when present (D6). */
-    audioRef: z.string().optional(),
-    /** Teaching-UI split, e.g. ['a','beo','ji']; join('') must equal `romanization`. */
-    syllables: z.array(z.string().min(1)).optional(),
-  })
-  .superRefine((value, ctx) => {
-    if (value.syllables && value.syllables.join('') !== value.romanization) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['syllables'],
-        message: 'syllables must join to the romanization',
-      });
-    }
-  });
+export const KoTextShape = z.object({
+  ko: z.string().min(1),
+  /** Revised Romanization, unhyphenated, pronunciation-based (D13, F-CNT-002). */
+  romanization: z.string().min(1),
+  /** Gloss in the content base language (UI locales overlay it, F-I18N-001). */
+  en: z.string().min(1),
+  /** What the voice says when it differs from `ko` (F-AUDIO-004). */
+  spokenKo: z.string().min(1).optional(),
+  /** MP3 path; wins over TTS when present (D6). */
+  audioRef: z.string().optional(),
+  /** Teaching-UI split, e.g. ['a','beo','ji']; join('') must equal `romanization`. */
+  syllables: z.array(z.string().min(1)).optional(),
+});
+
+/**
+ * The syllable rule of `KoTextSchema`, exported so a spec can re-apply it to an
+ * extended `KoTextShape` (a `ZodEffects` has no `.extend`; F-STORY-001 §3.2).
+ */
+export const refineKoText = (
+  value: { romanization: string; syllables?: string[] | undefined },
+  ctx: z.RefinementCtx,
+): void => {
+  if (value.syllables && value.syllables.join('') !== value.romanization) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['syllables'],
+      message: 'syllables must join to the romanization',
+    });
+  }
+};
+
+export const KoTextSchema = KoTextShape.superRefine(refineKoText);
 export type KoText = z.infer<typeof KoTextSchema>;
 
 /**
