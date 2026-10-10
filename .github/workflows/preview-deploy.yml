@@ -1,7 +1,8 @@
 # Merge gate for the landing + teacher console (apps/web). The real deploy is
 # Cloudflare Workers Builds ("Connect GitHub") on push to main — see
 # apps/web/wrangler.toml and docs/launch/web-app-launch.md §2-E. This job only
-# proves the static export builds and the Worker config is valid.
+# proves the static export builds, the landing lays out on phones (Playwright
+# over apps/web/out) and the Worker config is valid.
 name: Web Console (static export)
 
 on:
@@ -53,6 +54,12 @@ jobs:
           test -f apps/web/out/teach/space.html
           test -f apps/web/out/teach/space/settings.html
           test -f apps/web/out/404.html
+
+      - name: Install Playwright Chromium
+        run: pnpm --filter @hangul-route/web exec playwright install --with-deps chromium
+
+      - name: Landing layout e2e (no sideways scroll, "Play now" visible, focus order)
+        run: pnpm --filter @hangul-route/web test:e2e
 
       - name: Validate wrangler config (dry run, no upload)
         run: pnpm --filter @hangul-route/web exec wrangler deploy --dry-run
