@@ -3,6 +3,7 @@
   "rollingWindow": "W4 (alpha)",
   "targets": {
     "packages/content-schema": 100,
+    "packages/i18n": 100,
     "packages/backend": 90,
     "packages/design-system": 85,
     "apps/api": 90,

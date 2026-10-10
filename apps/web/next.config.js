@@ -9,6 +9,7 @@ const nextConfig = {
     '@hangul-route/content-schema',
     '@hangul-route/shared-types',
     '@hangul-route/design-system',
+    '@hangul-route/i18n',
   ],
 };
 
