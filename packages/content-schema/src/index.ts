@@ -25,3 +25,5 @@ export * from './schemas/ko-text';
 export * from './schemas/scene-art';
 export * from './schemas/story-check';
 export * from './pillars';
+export * from './narration';
+export * from './schemas/story';
