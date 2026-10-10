@@ -41,8 +41,9 @@ describe('CORS on /api/* (F-CONSOLE-001 §3.1)', () => {
       const path = r.path.replace(/:[^/]+/g, 'x').replace(/\*/g, 'x');
       routes.set(`${r.method} ${path}`, { method: r.method, path });
     }
-    const methods = new Set([...routes.values()].map((r) => r.method));
-    expect(methods).toEqual(new Set(['GET', 'POST', 'PUT', 'PATCH', 'DELETE']));
+    // Sanity: the walk sees the real surface, PATCH included (any verb missing from allowMethods fails below).
+    expect(routes.size).toBeGreaterThan(20);
+    expect(new Set([...routes.values()].map((r) => r.method))).toContain('PATCH');
 
     for (const { method, path } of routes.values()) {
       const res = await app.request(path, {
