@@ -3,6 +3,7 @@ import { Body, Button, Caption, Card, Spacer, spacing } from '@hangul-route/desi
 import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { backupFileName, encodeBackup } from '../logic/sync/backup';
+import { cloudStatusLine } from '../logic/sync/status-line';
 import { saveTextFile } from '../platform/file';
 import { useProgressStore } from '../store/progress-store';
 import { useSyncStore, type LearnerSyncState } from '../store/sync-store';
@@ -16,13 +17,9 @@ export interface BackupCardProps {
   onSaveProgress: () => void;
 }
 
+/** Kept as the card's export for sync/save-progress; the wording lives in logic/sync/status-line (tested). */
 export function statusLine(state: LearnerSyncState | undefined, now: Date): string {
-  if (!state || state.status === 'off') return 'Saved on this device only.';
-  if (state.status === 'error') return "Couldn't reach the cloud — will retry.";
-  if (state.status === 'syncing') return 'Saving to the cloud…';
-  if (!state.lastSyncedAt) return 'Waiting for the first cloud save.';
-  const minutes = Math.max(0, Math.round((now.getTime() - new Date(state.lastSyncedAt).getTime()) / 60_000));
-  return minutes < 1 ? 'Saved to the cloud · just now' : `Saved to the cloud · ${minutes} min ago`;
+  return cloudStatusLine(state, now);
 }
 
 export function BackupCard({ profile, onRestore, onSaveProgress }: BackupCardProps): React.ReactElement {

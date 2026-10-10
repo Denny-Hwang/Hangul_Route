@@ -85,26 +85,48 @@ export const BackupFileSchema = z.object({
 });
 export type BackupFile = z.infer<typeof BackupFileSchema>;
 
-/** Rescue Code — F-RESTORE-001 §3.1. `WORD-WORD-1234`, upper case. */
-export const RESCUE_CODE_RE = /^[A-Z]{3,10}-[A-Z]{3,10}-\d{4}$/;
+/**
+ * Rescue Code shapes — F-RESTORE-001 §3.1. New codes are four list words and
+ * six digits (`TIGER-MOON-RIVER-APPLE-482139`, ≈ 51.9 bits, SEC-5). Codes
+ * issued before 2026-10 are two words and four digits (`TIGER-MOON-4821`) and
+ * keep restoring until a parent rotates them.
+ */
+export const RESCUE_CODE_FORMATS = [
+  { words: 4, digits: 6 },
+  { words: 2, digits: 4 },
+] as const;
 
-/** Accepts what a parent might type (spaces, lower case) and normalizes it. */
+/** A normalized Rescue Code of either shape, upper case, hyphen-separated. */
+export const RESCUE_CODE_RE = /^(?:[A-Z]{3,10}(?:-[A-Z]{3,10}){3}-\d{6}|[A-Z]{3,10}-[A-Z]{3,10}-\d{4})$/;
+
+const RESCUE_WORD_RE = /^[A-Z]{3,10}$/;
+
+/**
+ * Accepts what a parent might type — any case, spaces or hyphens, the number
+ * split into groups or glued to the last word — and returns the canonical
+ * `WORD-…-DIGITS` form, or null when it is not one of the shapes above.
+ */
 export function normalizeRescueCode(raw: string): string | null {
   const parts = raw
-    .trim()
     .toUpperCase()
+    .replace(/([A-Z])(\d)/g, '$1 $2')
     .split(/[\s-]+/)
     .filter(Boolean);
-  if (parts.length !== 3) return null;
-  const code = parts.join('-');
-  return RESCUE_CODE_RE.test(code) ? code : null;
+  const firstNumber = parts.findIndex((p) => /^\d+$/.test(p));
+  if (firstNumber < 0) return null;
+  const words = parts.slice(0, firstNumber);
+  const digits = parts.slice(firstNumber);
+  if (!words.every((w) => RESCUE_WORD_RE.test(w)) || !digits.every((d) => /^\d+$/.test(d))) return null;
+  const number = digits.join('');
+  const known = RESCUE_CODE_FORMATS.some((f) => f.words === words.length && f.digits === number.length);
+  return known ? [...words, number].join('-') : null;
 }
 
 export const RescueClaimSchema = z.object({
   code: z.string().transform((v, ctx) => {
     const n = normalizeRescueCode(v);
     if (!n) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Rescue code must look like WORD-WORD-1234' });
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Rescue code must look like WORD-WORD-WORD-WORD-123456' });
       return z.NEVER;
     }
     return n;

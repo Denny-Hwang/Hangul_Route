@@ -1,6 +1,6 @@
 import type { BackupFile, Profile, ProgressSnapshot } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
-import { planRestore, restoreNotice } from '../restore';
+import { planRestore, relinkNotice, restoreNotice } from '../restore';
 import { notifyProgressPersisted, setProgressPersistListener } from '../persist-hook';
 import { vi } from 'vitest';
 
@@ -39,6 +39,15 @@ describe('planRestore (F-SYNC-002 §3.3)', () => {
     expect(restoreNotice(same)).toBe('Suni already has everything from this file.');
     const both = planRestore(file, { profile, snapshot: snap([], []) }, NOW);
     expect(restoreNotice(both)).toBe("We found Suni's progress! Added 2 cards and 1 quest.");
+  });
+});
+
+describe('relinkNotice (F-TCH-001 §10.1, SEC-4)', () => {
+  it('a class re-link brings the learner back into the class, and says the cards need the rescue code', () => {
+    const fresh = { action: 'create' as const, profile, snapshot: snap([], []), added: { cards: 0, quests: 0 } };
+    expect(relinkNotice(fresh)).toBe("Welcome back, Suni! You're in the class again. Your cards come back with your grown-up's rescue code.");
+    const known = { ...fresh, action: 'merge' as const };
+    expect(relinkNotice(known)).toBe("Welcome back, Suni! You're in the class again.");
   });
 });
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { canDeleteLearnerData, expiresLabel, minutesLeft, requestedLabel } from '../relink';
+import { canDeleteLearnerData, canReissueRescueCode, expiresLabel, minutesLeft, requestedLabel } from '../relink';
 
 const now = new Date('2026-09-21T12:00:00.000Z');
 
@@ -20,5 +20,11 @@ describe('relink helpers (F-TCH-001 §10)', () => {
     expect(canDeleteLearnerData('class', 'parent')).toBe(false);
     expect(canDeleteLearnerData('class', 'school')).toBe(true);
     expect(canDeleteLearnerData('school', 'school')).toBe(false);
+  });
+
+  it('only a family re-issues rescue codes — a code opens the whole snapshot, which class roles never read (SEC-4)', () => {
+    expect(canReissueRescueCode('family')).toBe(true);
+    expect(canReissueRescueCode('class')).toBe(false);
+    expect(canReissueRescueCode('school')).toBe(false);
   });
 });

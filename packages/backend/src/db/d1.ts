@@ -2,12 +2,17 @@ import type { Entitlement, EntitlementApply, MemberKind, Membership, Plan, Space
 import { id, type Account, type Learner, type LearnerDevice, type SnapshotRecord } from '../store';
 import { mergeEntitlement, type Db, type StoredRelink } from './types';
 
+/** What `run()` resolves to on D1 (`D1Result`): `meta.changes` is the row count the statement wrote. */
+export interface D1RunResultLike {
+  meta?: { changes?: number };
+}
+
 /** The slice of Cloudflare's D1 API this package uses (also what the SQLite test shim provides). */
 export interface D1PreparedLike {
   bind(...values: unknown[]): D1PreparedLike;
   first<T = Record<string, unknown>>(): Promise<T | null>;
   all<T = Record<string, unknown>>(): Promise<{ results: T[] }>;
-  run(): Promise<unknown>;
+  run(): Promise<D1RunResultLike>;
 }
 export interface D1Like {
   prepare(sql: string): D1PreparedLike;
@@ -22,7 +27,7 @@ const json = (v: unknown): unknown => (typeof v === 'string' && v.length > 0 ? J
 
 const toAccount = (r: Row): Account => ({ id: str(r.id), email: nstr(r.email), displayName: nstr(r.display_name), consent: json(r.consent_json), createdAt: str(r.created_at) });
 const toLearner = (r: Row): Learner => ({ id: str(r.id), displayName: str(r.display_name), ageGroup: str(r.age_group) as Learner['ageGroup'], avatar: str(r.avatar), recoveryHash: nstr(r.recovery_hash), createdAt: str(r.created_at), lastActiveAt: str(r.last_active_at) });
-const toDevice = (r: Row): LearnerDevice => ({ learnerId: str(r.learner_id), deviceId: str(r.device_id), secretHash: str(r.secret_hash), createdAt: str(r.created_at), lastSeenAt: str(r.last_seen_at) });
+const toDevice = (r: Row): LearnerDevice => ({ learnerId: str(r.learner_id), deviceId: str(r.device_id), secretHash: str(r.secret_hash), scope: r.scope === 'class' ? 'class' : 'full', createdAt: str(r.created_at), lastSeenAt: str(r.last_seen_at) });
 const toSnapshot = (r: Row): SnapshotRecord => ({ learnerId: str(r.learner_id), rev: num(r.rev), schemaVer: num(r.schema_ver), contentVer: str(r.content_ver), deviceId: str(r.device_id), summary: json(r.summary_json), payload: json(r.payload_json), updatedAt: str(r.updated_at) });
 const toSpace = (r: Row): Space => ({
   id: str(r.id),
@@ -91,6 +96,17 @@ export class D1Db implements Db {
   private async run(sql: string, params: unknown[]): Promise<void> {
     await this.d1.prepare(sql).bind(...params).run();
   }
+  /**
+   * Runs a write and reports how many rows it changed. A binding that does not
+   * say is an error, never zero: a compare-and-set read as "lost the race"
+   * every time would answer 409 to every upload without a trace.
+   */
+  private async changes(sql: string, params: unknown[]): Promise<number> {
+    const result = await this.d1.prepare(sql).bind(...params).run();
+    const changed = result?.meta?.changes;
+    if (typeof changed !== 'number') throw new Error('D1 did not report meta.changes for a compare-and-set write');
+    return changed;
+  }
 
   getAccount(accountId: string): Promise<Account | null> {
     return this.one('SELECT * FROM accounts WHERE id = ?', [accountId], toAccount);
@@ -129,8 +145,8 @@ export class D1Db implements Db {
   }
   putDevice(d: LearnerDevice): Promise<void> {
     return this.run(
-      'INSERT INTO learner_devices (learner_id, device_id, secret_hash, created_at, last_seen_at) VALUES (?, ?, ?, ?, ?) ON CONFLICT(learner_id, device_id) DO UPDATE SET secret_hash = excluded.secret_hash, last_seen_at = excluded.last_seen_at',
-      [d.learnerId, d.deviceId, d.secretHash, d.createdAt, d.lastSeenAt],
+      'INSERT INTO learner_devices (learner_id, device_id, secret_hash, scope, created_at, last_seen_at) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(learner_id, device_id) DO UPDATE SET secret_hash = excluded.secret_hash, scope = excluded.scope, last_seen_at = excluded.last_seen_at',
+      [d.learnerId, d.deviceId, d.secretHash, d.scope, d.createdAt, d.lastSeenAt],
     );
   }
   async deviceExists(deviceId: string): Promise<boolean> {
@@ -140,11 +156,21 @@ export class D1Db implements Db {
   getSnapshot(learnerId: string): Promise<SnapshotRecord | null> {
     return this.one('SELECT * FROM snapshots WHERE learner_id = ?', [learnerId], toSnapshot);
   }
-  putSnapshot(s: SnapshotRecord): Promise<void> {
-    return this.run(
-      'INSERT INTO snapshots (learner_id, rev, schema_ver, content_ver, device_id, summary_json, payload_json, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(learner_id) DO UPDATE SET rev = excluded.rev, schema_ver = excluded.schema_ver, content_ver = excluded.content_ver, device_id = excluded.device_id, summary_json = excluded.summary_json, payload_json = excluded.payload_json, updated_at = excluded.updated_at',
-      [s.learnerId, s.rev, s.schemaVer, s.contentVer, s.deviceId, JSON.stringify(s.summary ?? null), JSON.stringify(s.payload ?? null), s.updatedAt],
-    );
+  async putSnapshot(s: SnapshotRecord, baseRev: number): Promise<boolean> {
+    // One statement each, so the rev check and the write cannot interleave with another isolate (SYNC-1).
+    const summary = JSON.stringify(s.summary ?? null);
+    const payload = JSON.stringify(s.payload ?? null);
+    const written =
+      baseRev === 0
+        ? await this.changes(
+            'INSERT INTO snapshots (learner_id, rev, schema_ver, content_ver, device_id, summary_json, payload_json, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(learner_id) DO NOTHING',
+            [s.learnerId, s.rev, s.schemaVer, s.contentVer, s.deviceId, summary, payload, s.updatedAt],
+          )
+        : await this.changes(
+            'UPDATE snapshots SET rev = ?, schema_ver = ?, content_ver = ?, device_id = ?, summary_json = ?, payload_json = ?, updated_at = ? WHERE learner_id = ? AND rev = ?',
+            [s.rev, s.schemaVer, s.contentVer, s.deviceId, summary, payload, s.updatedAt, s.learnerId, baseRev],
+          );
+    return written === 1;
   }
 
   getSpace(spaceId: string): Promise<Space | null> {

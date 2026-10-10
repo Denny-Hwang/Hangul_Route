@@ -92,4 +92,35 @@ describe('rescue code (F-RESTORE-001)', () => {
     expect(RescueClaimSchema.parse({ code: 'tiger moon 4821', deviceId: 'device-12345678' }).code).toBe('TIGER-MOON-4821');
     expect(RescueClaimSchema.safeParse({ code: 'nope', deviceId: 'device-12345678' }).success).toBe(false);
   });
+
+  it('accepts four words + six digits (SEC-5) and keeps accepting codes already issued as two words + four digits', async () => {
+    const { normalizeRescueCode, RescueClaimSchema, RESCUE_CODE_RE, RESCUE_CODE_FORMATS } = await import('../index');
+    expect(RESCUE_CODE_FORMATS).toEqual([
+      { words: 4, digits: 6 },
+      { words: 2, digits: 4 },
+    ]);
+    expect(normalizeRescueCode('tiger moon river apple 482139')).toBe('TIGER-MOON-RIVER-APPLE-482139');
+    // digit groups and a missing last separator are forgiven; any whitespace separates
+    expect(normalizeRescueCode(' Tiger-Moon-River-Apple-482 139 ')).toBe('TIGER-MOON-RIVER-APPLE-482139');
+    expect(normalizeRescueCode('TIGER\nMOON\tRIVER APPLE482139')).toBe('TIGER-MOON-RIVER-APPLE-482139');
+    expect(normalizeRescueCode('tiger moon4821')).toBe('TIGER-MOON-4821');
+    for (const bad of [
+      '',
+      '482139',
+      'tiger moon river 482139', // three words
+      'tiger moon river apple 4821', // new words, old digit count
+      'tiger moon 482139', // old words, new digit count
+      'tiger moon river apple 482139 cloud', // a word after the number
+      'tiger 4821 moon',
+      'ab moon 4821', // too short to be a list word
+      'tiger moon river apple seal 482139', // five words
+      'tiger-moon-river-apple-48213', // five digits
+    ]) {
+      expect(normalizeRescueCode(bad)).toBeNull();
+    }
+    expect(RESCUE_CODE_RE.test('TIGER-MOON-RIVER-APPLE-482139')).toBe(true);
+    expect(RESCUE_CODE_RE.test('TIGER-MOON-4821')).toBe(true);
+    expect(RESCUE_CODE_RE.test('TIGER-MOON-482139')).toBe(false);
+    expect(RescueClaimSchema.parse({ code: 'tiger moon river apple 482139', deviceId: 'device-12345678' }).code).toBe('TIGER-MOON-RIVER-APPLE-482139');
+  });
 });

@@ -36,6 +36,9 @@ export class MemoryDb implements Db {
     return clone(this.learners.get(learnerId) ?? null);
   }
   async putLearner(learner: Learner): Promise<void> {
+    // learners.recovery_hash is UNIQUE on D1; mirror it so collisions surface here too.
+    const holder = learner.recoveryHash === null ? undefined : [...this.learners.values()].find((l) => l.recoveryHash === learner.recoveryHash && l.id !== learner.id);
+    if (holder) throw new Error('UNIQUE constraint failed: learners.recovery_hash');
     this.learners.set(learner.id, clone(learner));
   }
   async learnerByRecoveryHash(hash: string): Promise<Learner | null> {
@@ -62,8 +65,11 @@ export class MemoryDb implements Db {
   async getSnapshot(learnerId: string): Promise<SnapshotRecord | null> {
     return clone(this.snapshots.get(learnerId) ?? null);
   }
-  async putSnapshot(record: SnapshotRecord): Promise<void> {
+  async putSnapshot(record: SnapshotRecord, baseRev: number): Promise<boolean> {
+    // No await between the check and the write: atomic on the single JS thread.
+    if ((this.snapshots.get(record.learnerId)?.rev ?? 0) !== baseRev) return false;
     this.snapshots.set(record.learnerId, clone(record));
+    return true;
   }
 
   async getSpace(spaceId: string): Promise<Space | null> {

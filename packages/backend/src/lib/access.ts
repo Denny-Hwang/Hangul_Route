@@ -64,12 +64,12 @@ export async function spaceContext(db: Db, space: Space): Promise<SpaceContext> 
   return { space, parent: space.parentSpaceId ? await db.getSpace(space.parentSpaceId) : null };
 }
 
-/** Every space a learner belongs to, with parents, for `can()` on learner targets. */
+/** Every live space a learner belongs to, with parents, for `can()` on learner targets. Archived spaces grant nothing (SEC-4). */
 export async function learnerContexts(db: Db, learnerId: string): Promise<SpaceContext[]> {
   const contexts: SpaceContext[] = [];
   for (const m of await db.membershipsOf('learner', learnerId)) {
     const space = await db.getSpace(m.spaceId);
-    if (space) contexts.push(await spaceContext(db, space));
+    if (space && !space.archivedAt) contexts.push(await spaceContext(db, space));
   }
   return contexts;
 }

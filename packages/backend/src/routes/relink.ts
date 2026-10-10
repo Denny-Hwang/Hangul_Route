@@ -115,7 +115,8 @@ async function decide(c: Context, approve: boolean): Promise<Response> {
   req.decidedAt = now.toISOString();
   if (approve) {
     const secret = newDeviceSecret();
-    await db.putDevice({ learnerId: req.learnerId, deviceId: req.deviceId, secretHash: await hashSecret(secret), createdAt: req.decidedAt, lastSeenAt: req.decidedAt });
+    // Class-scoped (SEC-4): whoever holds this device — the student, or the teacher who asked for it — gets the class inbox, not the snapshot.
+    await db.putDevice({ learnerId: req.learnerId, deviceId: req.deviceId, secretHash: await hashSecret(secret), scope: 'class', createdAt: req.decidedAt, lastSeenAt: req.decidedAt });
     req.secret = secret; // handed to the device on its next poll, once
   }
   await db.putRelink(req);
@@ -138,12 +139,12 @@ relinkRoutes.get('/:id/relink-requests/:rid', async (c) => {
   const secret = req.secret;
   req.secret = null;
   await db.putRelink(req);
-  const record = await db.getSnapshot(learner.id);
+  // No snapshot: a class role never hands out progress (SEC-4). The learner's Rescue Code brings it back.
   return ok(c, {
     status: 'approved',
     expiresAt: req.expiresAt,
     learner: publicLearner(learner),
-    device: { deviceId, secret },
-    snapshot: record ? { rev: record.rev, snapshot: record.payload, summary: record.summary } : null,
+    device: { deviceId, secret, scope: 'class' },
+    snapshot: null,
   });
 });

@@ -27,7 +27,12 @@ export interface Db {
 
   // snapshots (F-SYNC-001)
   getSnapshot(learnerId: string): Promise<SnapshotRecord | null>;
-  putSnapshot(record: SnapshotRecord): Promise<void>;
+  /**
+   * Compare-and-set (SYNC-1): writes `record` only while the stored rev still
+   * equals `baseRev` — `0` means "no row yet" (insert-if-absent). Returns
+   * whether it wrote; `false` means another device got there first.
+   */
+  putSnapshot(record: SnapshotRecord, baseRev: number): Promise<boolean>;
 
   // spaces + memberships (F-SPACE-001)
   getSpace(id: string): Promise<Space | null>;

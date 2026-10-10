@@ -25,9 +25,13 @@ Then: they see one human-readable Rescue Code, are told to write it down, can op
 |    device." (placeholder)        |
 |                                  |
 |   +--------------------------+   |
-|   |   WORD-WORD-1234         |   |  <- the code, largest text
-|   |   (two words + 4 digits) |   |     on screen; a block,
-|   +--------------------------+   |     not a text field
+|   |          WORD            |   |  <- the code, largest text
+|   |          WORD            |   |     on screen; a block,
+|   |          WORD            |   |     one word per row so no
+|   |          WORD            |   |     word breaks mid-way at
+|   |          123456          |   |     320 px; not a text field
+|   |  (four words + 6 digits) |   |     caption follows the shape
+|   +--------------------------+   |
 |   [ copy ]   [ share / print ]   |
 |                                  |
 |   [ ] Also email it to me        |  <- optional; email field
@@ -41,7 +45,7 @@ Then: they see one human-readable Rescue Code, are told to write it down, can op
 +----------------------------------+
 ```
 
-- The code is displayed, not typed: a child-readable pair of English words plus four digits (§5.1 format).
+- The code is displayed, not typed: four child-readable English words plus six digits (SEC-5, 2026-10-09), one word per row and the number last — the longest code (four 10-letter words) still fits a 320 px line without breaking a word (e2e `rescue-code-320`). A code issued earlier (two words + four digits) is shown the same way with its own caption (three rows), until a parent rotates it. Copy and Share still carry the hyphenated code.
 - Rotation is deliberately last and small: the old code stops working, and a parent who already wrote one down must understand that.
 - "Last saved" is informational. An old timestamp never gets alarm treatment or a "you haven't saved in X days" nudge.
 

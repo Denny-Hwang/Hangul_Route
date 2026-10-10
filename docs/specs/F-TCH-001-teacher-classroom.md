@@ -178,13 +178,14 @@ What is already shipped: class create + join code (F-SPACE-001), roster summary 
 
 - `sync/join-space` step 2 offers **"I was already in this class"** when the lookup returns the class roster (display names, or initials when the space anonymizes its roster). Picking a name sends `POST /api/spaces/:id/relink-requests { code, learnerId, deviceId, platform? }` (no auth, rate-limited 10 per client key per hour). The device must not already be bound to that learner (409 `already_bound`); one pending request per learner + device is reused.
 - The request lives **10 minutes**. The learner device polls `GET /api/spaces/:id/relink-requests/:rid?deviceId=…` every few seconds and shows "Ask your teacher to approve on their screen" with a coarse countdown.
-- Teacher side (`roster.manage`): `GET /api/spaces/:id/relink-requests` lists pending requests with the learner name and timing; `POST …/:rid/approve` binds the device with a fresh secret (delivered **once** through the next poll, together with the learner and the snapshot); `POST …/:rid/deny` closes it. Expired requests report `expired`.
-- On approval the device adopts the learner exactly like a Rescue Code claim (`sync-store.adoptServerLearner`): creates or merges the local profile, stores the credentials, requests a sync, refreshes memberships. The temporary profile the child created on the new device stays; the restored one becomes active. Denied → "Ask your teacher." Expired → "That took too long — try again."
+- Teacher side (`roster.manage`): `GET /api/spaces/:id/relink-requests` lists pending requests with the learner name and timing; `POST …/:rid/approve` binds the device with a fresh secret and **scope `class`** (delivered **once** through the next poll, together with the learner — **no snapshot**); `POST …/:rid/deny` closes it. Expired requests report `expired`.
+- **Scope `class` (SEC-4, 2026-10-09)**: anyone who knows the join code and a roster id — the teacher included — can ask for a device and approve it, so a class approval must not carry the learner's progress (F-SPACE-001 §3.4: class roles never hold `snapshot.read`). A `class` device reaches only `GET /api/sync/learners/:id/inbox`, with family spaces filtered out. Snapshot GET / PUT, `POST /api/recovery/issue` and space join / leave answer 403 `scope_limited`. The learner's cards come back when the grown-up's Rescue Code is claimed on that device, which rebinds it as `full` (F-RESTORE-001 §3.2). Supersedes the earlier "together with the learner and the snapshot".
+- On approval the device adopts the learner like a Rescue Code claim (`sync-store.adoptServerLearner`), without a server snapshot: creates or merges the local profile, stores the credentials, refreshes memberships. The notice says the class is back and the cards come with the grown-up's rescue code. Cloud saving on that device waits for the code (status line: "A rescue code turns on cloud saving here."). The temporary profile the child created on the new device stays; the restored one becomes active. Denied → "Ask your teacher." Expired → "That took too long — try again."
 - Console page `/teach/space/:id/relink` (console/relink-approval): cards newest first with Approve / Deny, empty and expired states; roster shows a pending count.
 
 ### 10.2 Teacher rescue re-issue (app map §7 #24)
 
-- `POST /api/recovery/issue { learnerId }` also accepts an **account** bearer with `roster.manage` over the learner (family caregiver, class teacher, school admin) and returns the plaintext once — the old code stops working. Console: "Issue a new rescue code" on the relink page's learner picker.
+- `POST /api/recovery/issue { learnerId }` also accepts an **account** bearer with **`snapshot.read`** over the learner — family owner or caregiver, in a space that is not archived — and returns the plaintext once; the old code stops working. A code is a bearer credential for the whole snapshot, so class teachers and school admins (who hold `roster.manage` but never `snapshot.read`) get 403 (SEC-4, 2026-10-09; it used to follow `roster.manage`). Console: "Issue a new rescue code" on the relink page's learner picker, shown for family spaces only; a class or school page says the cards come back with the rescue code the learner's grown-up keeps in the app.
 
 ### 10.3 Space settings — roadmap §2 `settings_json`, §5.3, wireframe console/space-settings
 
@@ -204,9 +205,9 @@ What is already shipped: class create + join code (F-SPACE-001), roster summary 
 |---|---|
 | `content-schema/__tests__/relink.test.ts` | relink create / request schemas, settings patch, roster alias |
 | `backend/lib/__tests__/can.test.ts` | `learner.delete` matrix incl. consent mode |
-| `backend/__tests__/relink.test.ts` | create (code, membership, bound device, dedupe, rate limit), list (auth), approve → device can sync, one-time pickup, deny, expiry, wrong device |
+| `backend/__tests__/relink.test.ts` | create (code, membership, bound device, dedupe, rate limit), list (auth), approve → class-scoped device (inbox only, no snapshot, no rescue code, no family data — also when the teacher asked for their own device), rescue claim widens it, one-time pickup, deny, expiry, wrong device |
 | `backend/__tests__/spaces.test.ts` | settings patch, archive / unarchive effects, lookup roster + alias, learner data deletion rights + cascade |
-| `backend/__tests__/recovery.test.ts` | account re-issue by a teacher, stranger 403 |
+| `backend/__tests__/recovery.test.ts` | account re-issue permission matrix: family owner / caregiver 201; class owner / teacher, school owner / admin / teacher, archived space, stranger 403 |
 | `mobile/platform/__tests__/sync-api.test.ts` | createRelink / pollRelink mapping |
 | `mobile/store/__tests__/membership-store.test.ts` | request + poll (approved adopts and refreshes, denied, expired, errors) |
 | `mobile/store/__tests__/sync-store.test.ts` | `adoptServerLearner` shared by claim and relink |

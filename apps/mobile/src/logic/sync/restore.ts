@@ -40,6 +40,16 @@ export function planRestore(
   };
 }
 
+/**
+ * Copy after a teacher approves a re-link (F-TCH-001 §10.1). The class link
+ * restores the learner and the class, not the cards (SEC-4): say where they
+ * come from instead of promising them.
+ */
+export function relinkNotice(plan: RestorePlan): string {
+  const back = `Welcome back, ${plan.profile.displayName}! You're in the class again.`;
+  return plan.action === 'create' ? `${back} Your cards come back with your grown-up's rescue code.` : back;
+}
+
 /** Copy for the merge notice — English, warm, never "overwritten". */
 export function restoreNotice(plan: RestorePlan): string {
   const name = plan.profile.displayName;

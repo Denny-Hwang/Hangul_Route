@@ -1,6 +1,7 @@
 /**
  * 256 child-readable English nouns for Rescue Codes (F-RESTORE-001 §3.1).
  * Short, concrete, no homophones of each other, no scary or rude words.
+ * Exactly 256, so one random byte picks one word with no modulo bias.
  */
 export const RESCUE_WORDS: readonly string[] = [
   'TIGER', 'MOON', 'RIVER', 'APPLE', 'CLOUD', 'PANDA', 'LEMON', 'MAPLE', 'OTTER', 'PEACH',
@@ -31,8 +32,33 @@ export const RESCUE_WORDS: readonly string[] = [
   'WAGON', 'WINDMILL', 'WIZARD', 'YARN', 'ZEPPELIN', 'BAGEL',
 ];
 
-export function randomRescueCode(random: () => number = Math.random): string {
-  const pick = (): string => RESCUE_WORDS[Math.floor(random() * RESCUE_WORDS.length)] as string;
-  const digits = String(Math.floor(random() * 10_000)).padStart(4, '0');
-  return `${pick()}-${pick()}-${digits}`;
+export const RESCUE_CODE_WORDS = 4;
+export const RESCUE_CODE_DIGITS = 6;
+/** ≈ 51.9 bits: 4 × log2(256) + 6 × log2(10) (SEC-5 asks for at least 50). */
+export const RESCUE_CODE_BITS = RESCUE_CODE_WORDS * Math.log2(RESCUE_WORDS.length) + RESCUE_CODE_DIGITS * Math.log2(10);
+
+/** Fills a buffer with cryptographically secure random bytes (the Workers / Node Web Crypto API). */
+export type RandomFill = (bytes: Uint8Array) => unknown;
+const secureFill: RandomFill = (bytes) => crypto.getRandomValues(bytes);
+
+const NUMBER_SPACE = 10 ** RESCUE_CODE_DIGITS;
+/** Largest multiple of 10^6 that fits in a uint32; draws at or above it are rejected so every number is equally likely. */
+const UNBIASED_LIMIT = Math.floor(2 ** 32 / NUMBER_SPACE) * NUMBER_SPACE;
+
+/**
+ * A new Rescue Code — `TIGER-MOON-RIVER-APPLE-482139` (SEC-5). Words come
+ * from one random byte each; the number is a uniform draw from [0, 10^6)
+ * by rejection sampling. `fill` is injectable for tests only.
+ */
+export function randomRescueCode(fill: RandomFill = secureFill): string {
+  const wordBytes = new Uint8Array(RESCUE_CODE_WORDS);
+  fill(wordBytes);
+  const words = Array.from(wordBytes, (b) => RESCUE_WORDS[b] as string);
+  const draw = new Uint8Array(4);
+  let n: number;
+  do {
+    fill(draw);
+    n = new DataView(draw.buffer).getUint32(0);
+  } while (n >= UNBIASED_LIMIT);
+  return [...words, String(n % NUMBER_SPACE).padStart(RESCUE_CODE_DIGITS, '0')].join('-');
 }

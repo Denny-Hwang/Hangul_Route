@@ -38,14 +38,17 @@ Then: they pick whichever of the three paths they have, and the learner's cards 
 
 Rescue Code path (inline expand under the primary button):
 +----------------------------------+
-|   [ WORD ]-[ WORD ]-[ 1 2 3 4 ]  |  <- three fields, auto-advance
+|   [ Words, then the number     ] |  <- one field: typed or pasted
+|   "Like TIGER-MOON-RIVER-APPLE-  |  <- shape hint, both shapes
+|    482139. Older codes look like |
+|    TIGER-MOON-4821."             |
 |   [[ FIND MY CARDS ]]            |
 |   (one-line hint / error)        |
 +----------------------------------+
 ```
 
 - Three paths, one screen, one tap each. No path is hidden behind a second screen because a parent on a new phone is usually in a hurry.
-- Code entry has three fields to match how the code is written on paper (word, word, number); the keyboard switches to numeric for the last field.
+- Code entry is **one field** (SEC-5, 2026-10-09): new codes are four words + six digits, codes issued earlier two words + four digits, and parents often paste the code from a message. Any case, spaces or hyphens are fine; the server-side normalizer decides validity. (Was three fields, word · word · number, which fit only the older shape.)
 - No path asks for the child's name or age: identity comes from the code / account / file, so no new PII is collected here.
 
 ## Interaction points

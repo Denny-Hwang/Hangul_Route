@@ -35,11 +35,15 @@ Then: they see *which* learner name is being claimed and *when*, and approve or 
 |  |   [[ APPROVE ]]              [ Deny ]                |  |
 |  +------------------------------------------------------+  |
 |                                                            |
-|  Another way                                               |
-|   1 line: "or read the student their Rescue Code"          |
-|   [ Show rescue code for ... ]  (learner picker)           |   <- roadmap sec 5.1, allowed for teacher
+|  Cards and progress                                        |
+|   1 line: "approving brings the learner back into the      |   <- class / school space: no rescue
+|   class; cards come back with their grown-up's code"       |      re-issue (SEC-4, 2026-10-09)
+|  (family space instead: Another way + [ Issue a new        |
+|   rescue code ] learner picker, shown once)                |
 +------------------------------------------------------------+
 ```
+
+> **SEC-4 update (2026-10-09)** — a Rescue Code opens the learner's whole snapshot, and class roles never hold `snapshot.read` (F-SPACE-001 §3.4). So the "Another way" re-issue is offered on **family** spaces only, and an approved class re-link binds a class-scoped device: identity, class and plans come back, not the cards (F-TCH-001 §10.1).
 
 - One request = one card; the newest first. Each card has exactly one primary CTA.
 - Denying is quiet: the student device shows "ask your teacher" (placeholder), never an accusation.
@@ -47,9 +51,9 @@ Then: they see *which* learner name is being claimed and *when*, and approve or 
 
 ## Interaction points
 
-- [[ APPROVE ]] → server binds the new `device_id` to the learner; the student device pulls the snapshot and merges (roadmap §5.2, "we found your old cards"); card collapses to "approved" for 5 s then disappears
+- [[ APPROVE ]] → server binds the new `device_id` to the learner with class scope; the student device gets the learner and the class back ("You're in the class again. Your cards come back with your grown-up's rescue code."); card collapses to "approved" for 5 s then disappears
 - [ Deny ] → request closed; card removed; optional 1-line undo for 5 s
-- [ Show rescue code for ... ] → learner picker sheet → code displayed large + [ copy ] (the code is not progress data — roadmap §5.1)
+- [ Issue a new rescue code ] (family spaces only) → learner picker → code displayed large, shown once. Not offered to class / school roles: the code is a key to the progress data (SEC-4)
 - Expired card → replaced by "this request expired — ask the student to try again" + [ dismiss ]
 - [< back to roster] → `console/roster`
 

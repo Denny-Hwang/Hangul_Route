@@ -103,12 +103,12 @@ describe('GET /health reports bindings as booleans', () => {
       status: 'misconfigured',
       environment: 'production',
       devFallbacks: false,
-      bindings: { db: false, clerk: false, stripe: false, stripeWebhook: false },
+      bindings: { db: false, clerk: false, stripe: false, stripeWebhook: false, rescuePepper: false },
     });
   });
 
   it('is 200 ok with both bound and never leaks a secret value', async () => {
-    const res = await app.request('/health', {}, { DB: {}, CLERK_SECRET_KEY: 'sk_live_do_not_echo', STRIPE_SECRET_KEY: 'sk_stripe_do_not_echo' });
+    const res = await app.request('/health', {}, { DB: {}, CLERK_SECRET_KEY: 'sk_live_do_not_echo', STRIPE_SECRET_KEY: 'sk_stripe_do_not_echo', RESCUE_PEPPER: 'pepper_do_not_echo' });
     expect(res.status).toBe(200);
     const text = await res.text();
     expect(text).not.toContain('do_not_echo');
@@ -116,7 +116,7 @@ describe('GET /health reports bindings as booleans', () => {
       status: 'ok',
       environment: 'production',
       devFallbacks: false,
-      bindings: { db: true, clerk: true, stripe: true, stripeWebhook: false },
+      bindings: { db: true, clerk: true, stripe: true, stripeWebhook: false, rescuePepper: true },
     });
   });
 });

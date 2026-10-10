@@ -17,6 +17,8 @@ export interface RuntimeEnv {
   DB?: unknown;
   STRIPE_SECRET_KEY?: string;
   STRIPE_WEBHOOK_SECRET?: string;
+  /** Optional Worker secret: keys the stored Rescue Code hash (HMAC) — SEC-5, see lib/rescue-hash. */
+  RESCUE_PEPPER?: string;
 }
 
 const DEV_ENVIRONMENTS: ReadonlySet<string> = new Set(['development', 'test']);
@@ -53,11 +55,21 @@ export function notConfigured(code: string, message: string): HTTPException {
   return new HTTPException(503, { res: failResponse(code, message, 503) });
 }
 
+/**
+ * The Rescue Code pepper, when this deployment has one: the non-empty string
+ * of the `RESCUE_PEPPER` secret, else undefined (codes are then stored under
+ * plain SHA-256, as before SEC-5). Once set it must never change or go away.
+ */
+export function rescuePepper(env: RuntimeEnv | undefined): string | undefined {
+  const pepper = env?.RESCUE_PEPPER;
+  return typeof pepper === 'string' && pepper.length > 0 ? pepper : undefined;
+}
+
 export interface HealthReport {
   status: 'ok' | 'misconfigured';
   environment: string;
   devFallbacks: boolean;
-  bindings: { db: boolean; clerk: boolean; stripe: boolean; stripeWebhook: boolean };
+  bindings: { db: boolean; clerk: boolean; stripe: boolean; stripeWebhook: boolean; rescuePepper: boolean };
 }
 
 /**
@@ -73,6 +85,8 @@ export function healthReport(env: RuntimeEnv | undefined): HealthReport {
     clerk: Boolean(env?.CLERK_SECRET_KEY || env?.CLERK_JWT_KEY),
     stripe: Boolean(env?.STRIPE_SECRET_KEY),
     stripeWebhook: Boolean(env?.STRIPE_WEBHOOK_SECRET),
+    // Optional, so it never makes a deployment misconfigured — but a monitor can see it vanish.
+    rescuePepper: rescuePepper(env) !== undefined,
   };
   const devFallbacks = devFallbacksAllowed(env);
   const environment = environmentName(env);
