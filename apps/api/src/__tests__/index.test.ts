@@ -13,9 +13,22 @@ describe("apps/api router", () => {
     });
   });
 
-  it("GET /health returns { status: 'ok' }", async () => {
+  it("GET /health is 503 misconfigured when the Worker has neither Clerk nor D1 (SEC-2)", async () => {
     const res = await app.request("/health");
+    expect(res.status).toBe(503);
+    expect(await res.json()).toMatchObject({
+      status: "misconfigured",
+      environment: "production",
+      devFallbacks: false,
+      bindings: { db: false, clerk: false },
+    });
+  });
+
+  it("GET /health is ok with the production bindings and reports booleans only", async () => {
+    const res = await app.request("/health", {}, { DB: {}, CLERK_SECRET_KEY: "sk_live_secret" });
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ status: "ok" });
+    const text = await res.text();
+    expect(text).not.toContain("sk_live_secret");
+    expect(JSON.parse(text)).toMatchObject({ status: "ok", bindings: { db: true, clerk: true } });
   });
 });

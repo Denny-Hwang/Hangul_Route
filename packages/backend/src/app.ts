@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { allowedOrigin } from './lib/cors';
+import { healthReport, type RuntimeEnv } from './lib/runtime';
 import { authRoutes } from './routes/auth';
 import { cardRoutes } from './routes/cards';
 import { contentRoutes } from './routes/content';
@@ -17,7 +18,7 @@ import { spacesRoutes } from './routes/spaces';
 import { syncRoutes } from './routes/sync';
 import { telemetryRoutes } from './routes/telemetry';
 
-const app = new Hono<{ Bindings: { ALLOWED_ORIGINS?: string; STRIPE_SECRET_KEY?: string; STRIPE_WEBHOOK_SECRET?: string } }>();
+const app = new Hono<{ Bindings: RuntimeEnv & { ALLOWED_ORIGINS?: string } }>();
 
 // Browser callers (PWA, console) live on other origins — F-CONSOLE-001 §3.1.
 app.use(
@@ -39,7 +40,11 @@ app.get('/', (c) =>
   }),
 );
 
-app.get('/health', (c) => c.json({ status: 'ok' }));
+// Which bindings this deployment has — booleans only (SEC-2). 503 when production lacks Clerk or D1.
+app.get('/health', (c) => {
+  const report = healthReport(c.env);
+  return c.json(report, report.status === 'ok' ? 200 : 503);
+});
 
 // V1 API surface
 app.route('/api/auth', authRoutes);

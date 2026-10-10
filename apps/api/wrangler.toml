@@ -22,8 +22,9 @@ compatibility_flags = ["nodejs_compat"]
 keep_vars = true
 
 # ---- Secrets (dashboard → Settings → Variables and Secrets → Add → Type: Secret) ----
-# CLERK_SECRET_KEY        Clerk → API Keys → Secret key (F-AUTH-001; without it the
-#                         dev fallback treats the bearer token as the account id)
+# CLERK_SECRET_KEY        Clerk → API Keys → Secret key (F-AUTH-001; without it every
+#                         signed-in route answers 503 auth_not_configured — the API
+#                         fails closed, GET /health shows bindings.clerk = false)
 # CLERK_JWT_KEY           optional — networkless JWT verification
 # STRIPE_SECRET_KEY       Stripe → Developers → API keys (F-ENT-001)
 # STRIPE_WEBHOOK_SECRET   Stripe → Developers → Webhooks → the endpoint's signing
@@ -37,6 +38,12 @@ keep_vars = true
 # STRIPE_PRICE_GROUP_LICENSE_YEARLY  Stripe price id — $153 / year, recurring
 # CONSOLE_URL                        checkout success / cancel return, e.g. https://hangulroute.com
 # SCHOOL_CONSENT_MODE                "enabled" only after the legal review (decision #27)
+# ENVIRONMENT                        leave UNSET in production (unset = production). Only
+#                                    "development" / "test" (e.g. in a local .dev.vars)
+#                                    turn on the dev fallbacks: bearer = account id and an
+#                                    in-memory Db without the D1 binding. Never set it here.
+# ALLOW_DEV_AUTH                     "true" also turns on the dev fallbacks; never in
+#                                    production (ENVIRONMENT=production always wins).
 #
 # The same keys may be set here instead; a [vars] value wins over a dashboard
 # value of the same name on the next deploy.
@@ -51,8 +58,9 @@ keep_vars = true
 # D1 records applied files in its d1_migrations table, so re-running is a no-op.
 # The Worker persists schema v2 through this binding (F-INFRA-003): learners,
 # devices, snapshots, accounts, spaces, memberships, plans, relink requests and
-# entitlements survive redeploys. Without the binding (local dev, tests) the
-# same code runs on an in-memory Db.
+# entitlements survive redeploys. Without the binding the API answers 503
+# db_not_configured, unless ENVIRONMENT=development|test (local dev, tests),
+# where the same code runs on an in-memory Db.
 [[d1_databases]]
 binding = "DB"
 database_name = "hangul-route"
