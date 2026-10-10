@@ -8,6 +8,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./tokens": "./src/tokens.ts",
+    "./choice-card-style": "./src/components/ChoiceCard/style.ts",
+    "./icon-glyphs": "./src/components/Icon/glyphs.ts",
     "./components/*": "./src/components/*/index.ts"
   },
   "scripts": {
