@@ -59,6 +59,12 @@ F-XXX-<slug>.md
 - `F-009-narrated-stroke-demo.md` — **shipped** (PR #29)
 - `F-MOTION-005-star-count-change.md` — **shipped** (PR #30)
 
+### Spec wave 2026-10 (ready — implementation follows the PR order in `docs/roadmap/spec-wave-2026-10.md`)
+- `F-I18N-001-ui-locales.md` — UI in English (default), Korean and Spanish · **ready**
+- `F-LEARN-001-all-ages-onboarding.md` — who is learning, reading level, consent, grown-up PIN, avatar variants · **ready**
+- `F-CNT-002-romanization-policy.md` — Revised Romanization policy and validator over shipped content · **ready**
+- `F-QUEST-002-discover-check-stage1-complete.md` — Discover/Check steps, full Stage 1 (15 quests, 30 symbols), Listen & Pick, Pic-Word Match · **ready**
+
 ### Phase 2 / planned
 - `F-PROF-001-device-profiles.md` — multi-learner · **draft** (code shipped PR #13, full spec covers cloud sync)
 - `F-HW-001-homework-page.md` — Homework tab · **draft**
