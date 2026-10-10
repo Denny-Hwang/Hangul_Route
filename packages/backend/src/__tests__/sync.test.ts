@@ -163,6 +163,49 @@ describe('/api/sync (F-SYNC-001)', () => {
     expect((await db.getLearner(r.learnerId))?.lastActiveAt).toBe(merged.json.data?.updatedAt);
   });
 
+  it('concurrent PUTs from two devices on the same base rev: exactly one wins, the other gets 409 (SYNC-1)', async () => {
+    const r = await register(DEVICE_A);
+    const secretB = 'b'.repeat(64);
+    await db.putDevice({ learnerId: r.learnerId, deviceId: DEVICE_B, secretHash: await hashSecret(secretB), createdAt: 't', lastSeenAt: 't' });
+    const base = { summary, schemaVer: 1, contentVer: '2026.09' };
+    const fromA = { ...base, snapshot: snapshotFor(r.learnerId, [{ questId: 'quest:a', stars: 3 }]) };
+    const fromB = { ...base, snapshot: snapshotFor(r.learnerId, [{ questId: 'quest:b', stars: 1 }]) };
+
+    // Two Worker isolates: both read the row before either writes. The barrier
+    // holds every snapshot read until both requests have made theirs.
+    const read = db.getSnapshot.bind(db);
+    for (const baseRev of [0, 1]) {
+      let arrived = 0;
+      let release = (): void => {};
+      const gate = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      db.getSnapshot = async (learnerId) => {
+        const row = await read(learnerId);
+        arrived += 1;
+        if (arrived >= 2) release();
+        await gate;
+        return row;
+      };
+      const [a, b] = await Promise.all([
+        put(r.learnerId, deviceAuth(DEVICE_A, r.secret), { ...fromA, baseRev }),
+        put(r.learnerId, deviceAuth(DEVICE_B, secretB), { ...fromB, baseRev }),
+      ]).finally(() => {
+        db.getSnapshot = read;
+      });
+      expect([a.status, b.status].sort()).toEqual([200, 409]);
+      const winner = a.status === 200 ? 'quest:a' : 'quest:b';
+      const loser = a.status === 200 ? b : a;
+      // the loser sees the winner's copy and the rev to merge onto
+      const conflict = loser.json as unknown as { data: { rev: number; snapshot: { quests: Array<{ questId: string }> } } };
+      expect(conflict.data.rev).toBe(baseRev + 1);
+      expect(conflict.data.snapshot.quests[0]?.questId).toBe(winner);
+      const stored = await db.getSnapshot(r.learnerId);
+      expect(stored?.rev).toBe(baseRev + 1);
+      expect((stored?.payload as { quests: Array<{ questId: string }> }).quests[0]?.questId).toBe(winner);
+    }
+  });
+
   it('inbox carries the fixed shape with empty plans until later stages', async () => {
     const r = await register(DEVICE_A);
     const res = await app.request(`/api/sync/learners/${r.learnerId}/inbox?since=2026-01-01`, {

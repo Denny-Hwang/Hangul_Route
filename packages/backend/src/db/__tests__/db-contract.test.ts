@@ -45,8 +45,8 @@ function contract(name: string, make: () => Db): void {
       expect(await db.deviceExists('device-a')).toBe(true);
       expect(await db.deviceExists('device-b')).toBe(false);
 
-      await db.putSnapshot({ learnerId: 'profile:suni', rev: 1, schemaVer: 1, contentVer: '2026.09', deviceId: 'device-a', summary: { stars: 3 }, payload: { profileId: 'profile:suni', cards: ['a'] }, updatedAt: T });
-      await db.putSnapshot({ learnerId: 'profile:suni', rev: 2, schemaVer: 1, contentVer: '2026.09', deviceId: 'device-a', summary: { stars: 4 }, payload: { profileId: 'profile:suni', cards: ['a', 'b'] }, updatedAt: T });
+      expect(await db.putSnapshot({ learnerId: 'profile:suni', rev: 1, schemaVer: 1, contentVer: '2026.09', deviceId: 'device-a', summary: { stars: 3 }, payload: { profileId: 'profile:suni', cards: ['a'] }, updatedAt: T }, 0)).toBe(true);
+      expect(await db.putSnapshot({ learnerId: 'profile:suni', rev: 2, schemaVer: 1, contentVer: '2026.09', deviceId: 'device-a', summary: { stars: 4 }, payload: { profileId: 'profile:suni', cards: ['a', 'b'] }, updatedAt: T }, 1)).toBe(true);
       expect(await db.getSnapshot('profile:suni')).toMatchObject({ rev: 2, summary: { stars: 4 }, payload: { cards: ['a', 'b'] } });
       expect(await db.getSnapshot('profile:nobody')).toBeNull();
 
@@ -61,6 +61,24 @@ function contract(name: string, make: () => Db): void {
       expect(await db.getSnapshot('profile:suni')).toBeNull();
       expect(await db.membersOf('space:c')).toEqual([]);
       expect(await db.relinksOf('space:c')).toEqual([]);
+    });
+
+    it('putSnapshot is compare-and-set on rev: insert only when absent, update only from the expected rev (SYNC-1)', async () => {
+      await db.putLearner({ id: 'profile:suni', displayName: 'Suni', ageGroup: '5-7', avatar: 'hoya-orange', recoveryHash: null, createdAt: T, lastActiveAt: T });
+      const snap = (rev: number, cards: string[], learnerId = 'profile:suni') => ({ learnerId, rev, schemaVer: 1, contentVer: '2026.09', deviceId: 'device-a', summary: { cards: cards.length }, payload: { profileId: learnerId, cards }, updatedAt: T });
+
+      expect(await db.putSnapshot(snap(1, ['a']), 0)).toBe(true); // first write: insert-if-absent
+      expect(await db.putSnapshot(snap(1, ['x']), 0)).toBe(false); // another device already created it
+      expect(await db.putSnapshot(snap(3, ['c']), 2)).toBe(false); // base rev from the future
+      expect(await db.getSnapshot('profile:suni')).toMatchObject({ rev: 1, payload: { cards: ['a'] } });
+
+      expect(await db.putSnapshot(snap(2, ['a', 'b']), 1)).toBe(true);
+      expect(await db.putSnapshot(snap(2, ['z']), 1)).toBe(false); // lost the race for rev 2
+      expect(await db.getSnapshot('profile:suni')).toMatchObject({ rev: 2, summary: { cards: 2 }, payload: { cards: ['a', 'b'] } });
+
+      // a non-zero base never creates a row
+      expect(await db.putSnapshot(snap(5, ['q'], 'profile:other'), 4)).toBe(false);
+      expect(await db.getSnapshot('profile:other')).toBeNull();
     });
 
     it('spaces: upsert, lookup by code, children, owner, archived flag, settings JSON', async () => {
