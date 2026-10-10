@@ -1,0 +1,13 @@
+{
+  "globs": [],
+  "pluralTernaryBaseline": {
+    "apps/mobile/src/screens/home/HomeScreen.tsx": 1,
+    "apps/mobile/src/screens/homework/HomeworkScreen.tsx": 1,
+    "apps/web/src/app/teach/space/page.tsx": 1,
+    "apps/web/src/app/teach/space/plan/page.tsx": 1,
+    "apps/web/src/components/console/SchoolAdmin.tsx": 1,
+    "apps/web/src/data/stage1-catalog.ts": 1,
+    "apps/web/src/lib/console/rollup.ts": 1,
+    "packages/content-schema/src/romanization/compare.ts": 1
+  }
+}

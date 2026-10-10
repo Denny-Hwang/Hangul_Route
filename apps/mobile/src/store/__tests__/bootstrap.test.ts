@@ -9,8 +9,10 @@ vi.mock('../../platform/storage', () => ({
   }),
 }));
 vi.mock('../../platform/telemetry', () => ({ track: vi.fn(async () => true) }));
+vi.mock('../../platform/locale', () => ({ deviceLanguages: () => [], takeLangHandoff: () => null, setDocumentLang: () => {} }));
 
 import { hydrateLearnerData } from '../bootstrap';
+import { useLocaleStore } from '../locale-store';
 import { useProfileStore } from '../profile-store';
 import { useProgressStore } from '../progress-store';
 
@@ -33,6 +35,7 @@ describe('cold start (audit UX-01 / L16)', () => {
     mem.clear();
     useProfileStore.setState({ profiles: [], activeId: null, hydrated: false });
     useProgressStore.setState({ byProfile: {}, hydratedFor: new Set(), pendingFor: new Set() });
+    useLocaleStore.setState({ detected: 'en', device: null, byProfile: {}, hydrated: false });
   });
 
   it("loads the profiles, then every profile's saved progress, before resolving", async () => {
@@ -67,5 +70,24 @@ describe('cold start (audit UX-01 / L16)', () => {
     await hydrateLearnerData();
     expect(useProfileStore.getState()).toMatchObject({ hydrated: true, profiles: [] });
     expect(useProgressStore.getState().hydratedFor.size).toBe(0);
+  });
+
+  it("loads the device and every profile's locale settings after the profiles, before resolving (F-I18N-001 §3.2)", async () => {
+    mem.set('profiles', [profile('profile:a', 'Suni'), profile('profile:b', 'Bo')]);
+    mem.set('device:settings', { uiLocale: 'ko' });
+    mem.set('settings:profile:a', { uiLocale: 'es', romanizationMode: 'tap' });
+
+    await hydrateLearnerData();
+
+    const locale = useLocaleStore.getState();
+    expect(locale.hydrated).toBe(true);
+    expect(locale.device).toBe('ko');
+    expect(locale.byProfile['profile:a']).toEqual({ uiLocale: 'es', romanizationMode: 'tap' });
+    expect(locale.byProfile['profile:b']).toBeUndefined();
+  });
+
+  it('a fresh install still marks the locale store hydrated', async () => {
+    await hydrateLearnerData();
+    expect(useLocaleStore.getState()).toMatchObject({ hydrated: true, device: null });
   });
 });

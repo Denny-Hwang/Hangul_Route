@@ -5,6 +5,7 @@ vi.mock('../../platform/storage', () => ({
   writeJson: vi.fn(),
 }));
 
+import { onProfileRemoved } from '../profile-removal';
 import { activeProfileSelector, useProfileStore } from '../profile-store';
 
 const input = { displayName: 'Mina', ageGroup: '8-9' as const, avatar: 'hoya-blue' as const };
@@ -51,6 +52,17 @@ describe('profile-store', () => {
     const b = useProfileStore.getState().createProfile({ ...input, displayName: 'Jin' });
     useProfileStore.getState().remove(a.id);
     expect(useProfileStore.getState().activeId).toBe(b.id);
+  });
+
+  it('remove announces the removed id to per-profile stores, and unsubscribing stops it', () => {
+    const a = useProfileStore.getState().createProfile(input);
+    const b = useProfileStore.getState().createProfile({ ...input, displayName: 'Jin' });
+    const seen: string[] = [];
+    const off = onProfileRemoved((id) => seen.push(id));
+    useProfileStore.getState().remove(a.id);
+    off();
+    useProfileStore.getState().remove(b.id);
+    expect(seen).toEqual([a.id]);
   });
 
   it('setParentPin sets the hash on every profile', () => {

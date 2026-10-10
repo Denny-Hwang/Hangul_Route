@@ -53,8 +53,8 @@ const DATE_OPTIONS: Record<DateKind, Intl.DateTimeFormatOptions> = {
 
 function fallbackDate(locale: UiLocale, date: Date, kind: DateKind, utc: boolean): string {
   const weekday = utc ? date.getUTCDay() : date.getDay();
-  if (kind === 'weekday') return WEEKDAYS[locale][weekday];
-  const month = MONTHS[locale][utc ? date.getUTCMonth() : date.getMonth()];
+  if (kind === 'weekday') return WEEKDAYS[locale][weekday]!;
+  const month = MONTHS[locale][utc ? date.getUTCMonth() : date.getMonth()]!;
   const day = utc ? date.getUTCDate() : date.getDate();
   if (kind === 'monthDay') return PATTERNS[locale].monthDay(month, day);
   return PATTERNS[locale].monthDayYear(month, day, utc ? date.getUTCFullYear() : date.getFullYear());
@@ -77,7 +77,7 @@ export function formatDate(locale: UiLocale, value: DateInput, kind: DateKind, o
 function groupDigits(text: string): string {
   const parts = /^(-?)(\d+)(\.\d+)?$/.exec(text);
   if (parts === null) return text;
-  return `${parts[1]}${parts[2].replace(/\B(?=(\d{3})+$)/g, ',')}${parts[3] ?? ''}`;
+  return `${parts[1]}${parts[2]!.replace(/\B(?=(\d{3})+$)/g, ',')}${parts[3] ?? ''}`;
 }
 
 export function formatNumber(locale: UiLocale, n: number): string {

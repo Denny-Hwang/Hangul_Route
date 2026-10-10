@@ -5,6 +5,7 @@
     "moduleResolution": "bundler",
     "lib": ["esnext"],
     "strict": true,
+    "noUncheckedIndexedAccess": true,
     "noImplicitAny": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
