@@ -2,12 +2,8 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { allowedOrigin } from './lib/cors';
 import { healthReport, type RuntimeEnv } from './lib/runtime';
-import { authRoutes } from './routes/auth';
 import { cardRoutes } from './routes/cards';
 import { contentRoutes } from './routes/content';
-import { notificationsRoutes } from './routes/notifications';
-import { profileRoutes } from './routes/profiles';
-import { progressRoutes } from './routes/progress';
 import { recoveryRoutes } from './routes/recovery';
 import { entitlementRoutes } from './routes/entitlements';
 import { relinkRoutes } from './routes/relink';
@@ -45,14 +41,11 @@ app.get('/health', (c) => {
   return c.json(report, report.status === 'ok' ? 200 : 503);
 });
 
-// V1 API surface
-app.route('/api/auth', authRoutes);
-app.route('/api/profiles', profileRoutes);
-app.route('/api/progress', progressRoutes);
-app.route('/api/cards', cardRoutes);
-app.route('/api/content', contentRoutes);
-app.route('/api/telemetry', telemetryRoutes);
-app.route('/api/notifications', notificationsRoutes);
+// V1 API surface — only what shipped clients use. The in-memory family / profile /
+// progress / subscription / notification routes are unmounted (audit SEC-1, SEC-3).
+app.route('/api/cards', cardRoutes); // static catalog
+app.route('/api/content', contentRoutes); // static catalogs
+app.route('/api/telemetry', telemetryRoutes); // POST only — the learner app's event intake
 // Schema v2 (F-SYNC-001): learner snapshots — the restore + caregiver summary source.
 app.route('/api/sync', syncRoutes);
 // Rescue Code (F-RESTORE-001): account-less restore.

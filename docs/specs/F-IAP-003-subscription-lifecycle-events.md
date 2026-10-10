@@ -5,6 +5,10 @@
 **Owner**: solo dev
 **Rollout**: MVP (subscription upkeep)
 
+> **Superseded 2026-10-09 (audit SEC-1).** `POST /api/subscriptions/:familyId/event`
+> is unmounted with the rest of the legacy `/api/subscriptions` router.
+> Stripe lifecycle events reach F-ENT-001 through the signed webhook.
+
 ---
 
 ## 1. Context

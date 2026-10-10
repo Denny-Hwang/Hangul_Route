@@ -5,6 +5,11 @@
 **Owner**: solo dev
 **Rollout**: MVP (subscription foundation)
 
+> **Superseded 2026-10-09 (audit SEC-1).** The legacy `/api/subscriptions`
+> router is unmounted; entitlements live in F-ENT-001. The D1 binding itself
+> stays (F-INFRA-003), and without it the API now answers 503
+> `db_not_configured` unless ENVIRONMENT=development|test (audit SEC-2).
+
 ---
 
 ## 1. Context

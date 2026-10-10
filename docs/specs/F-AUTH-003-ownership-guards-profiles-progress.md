@@ -5,6 +5,12 @@
 **Owner**: solo dev
 **Rollout**: MVP (security)
 
+> **Superseded 2026-10-09 (audit SEC-3).** The legacy in-memory `/api/auth`,
+> `/api/profiles`, `/api/progress` routes (and `/api/cards/:id/unlocked`,
+> `/api/notifications/*`, `GET /api/telemetry/recent`) are unmounted — no
+> shipped client calls them. Learner data lives in schema v2 (F-SYNC-001,
+> F-SPACE-001). Only `POST /api/telemetry` stays.
+
 ---
 
 ## 1. Context
