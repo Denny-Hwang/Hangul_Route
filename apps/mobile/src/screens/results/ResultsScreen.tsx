@@ -1,19 +1,24 @@
+import type { HeritageCard } from '@hangul-route/content-schema';
 import {
   Body,
   Button,
+  Caption,
   Card,
   Heading,
+  HeritageCardArt,
   Hoya,
   HoyaBubble,
   Screen,
   Spacer,
   StarRow,
   colors,
+  radii,
   spacing,
+  supportedCardIds,
 } from '@hangul-route/design-system';
 import { CommonActions } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
 import Animated, {
   Easing,
@@ -25,8 +30,9 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
-import { episodeById, questById } from '../../content';
-import { shouldUnlockCard } from '../../logic/reward';
+import { cardById, episodeById, questById } from '../../content';
+import { decideCardAward, type CardAward } from '../../logic/reward';
+import { resultsCheerMessage, resultsHeadline } from '../../logic/results-copy';
 import { useReducedMotion } from '../../platform/motion';
 import { track } from '../../platform/telemetry';
 import type { RootStackParamList } from '../../navigation/types';
@@ -43,9 +49,16 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
   const recordQuestComplete = useProgressStore((s) => s.recordQuestComplete);
   const unlockCard = useProgressStore((s) => s.unlockCard);
   const reducedMotion = useReducedMotion();
+  // What this run earned, decided once when the score is written.
+  const [award, setAward] = useState<CardAward | null>(null);
+  const recordedRef = useRef(false);
 
   useEffect(() => {
     if (!profile || !quest) return;
+    // The score is written once per results visit, even if the profile
+    // object changes identity underneath (wireframe results/celebrate).
+    if (recordedRef.current) return;
+    recordedRef.current = true;
     if (total === 0) {
       // Every game skipped: nothing to score, nothing to complete — the quest
       // stays available on the episode page exactly as before.
@@ -68,46 +81,40 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
       profileId: profile.id,
       payload: { questId, episodeId, stars, correct, total, retries },
     });
-    // F-MOTION-003 §3.5 — the card is written only when the banner is shown.
-    if (quest.rewardCardId && shouldUnlockCard(stars)) {
-      const wasFirstCard =
-        (useProgressStore.getState().byProfile[profile.id]?.cards.length ?? 0) === 0;
-      unlockCard(profile.id, quest.rewardCardId);
+    // F-MOTION-003 §3.5 — a card is earned at 2+ stars; audit UX-03 — it is
+    // announced (reveal + card.unlocked) only the first time. A replay of a
+    // quest whose card is already in the Library says nothing about it.
+    const owned = (useProgressStore.getState().byProfile[profile.id]?.cards ?? []).map((c) => c.cardId);
+    const earned = decideCardAward({ rewardCardId: quest.rewardCardId, stars, ownedCardIds: owned });
+    setAward(earned);
+    if (earned?.isNew) {
+      unlockCard(profile.id, earned.cardId);
       void track({
         name: 'card.unlocked',
         profileId: profile.id,
-        payload: { cardId: quest.rewardCardId, questId },
+        payload: { cardId: earned.cardId, questId },
       });
-      if (wasFirstCard) {
+      if (earned.isFirstCard) {
         void track({
           name: 'card.first_earned',
           profileId: profile.id,
-          payload: { cardId: quest.rewardCardId },
+          payload: { cardId: earned.cardId },
         });
       }
     }
   }, [profile, quest, questId, episodeId, stars, correct, total, retries, recordQuestComplete, unlockCard]);
 
   const played = total > 0;
-  const cheerMessage = useMemo(() => {
-    if (!played) return 'Play the games next time to earn stars and a card!';
-    if (stars === 3) return 'Perfect! You got every one!';
-    if (stars === 2) return 'Nice work! Try one more for three stars.';
-    if (stars === 1) return 'Good start. Want to play it again?';
-    return 'Brave try! Let&apos;s do it together.';
-  }, [stars, played]);
-
-  const showCardUnlock = !!quest?.rewardCardId && shouldUnlockCard(stars);
-  const showSparkles = !!quest?.rewardCardId && stars >= 3;
+  const cheerMessage = resultsCheerMessage(stars, played);
+  const newCard = award?.isNew ? cardById(award.cardId) : undefined;
+  const showSparkles = !!newCard && stars >= 3;
 
   return (
-    <Screen tone="canvas">
+    <Screen tone="canvas" scrollable>
       <View style={{ alignItems: 'center', paddingTop: spacing.xxl }}>
         <Hoya pose={stars >= 2 ? 'cheering' : 'thinking'} size={140} />
         <Spacer size="lg" />
-        <Heading level="display">
-          {!played ? 'All done!' : stars === 3 ? 'Wonderful!' : stars >= 2 ? 'Great!' : 'You tried!'}
-        </Heading>
+        <Heading level="display">{resultsHeadline(stars, played)}</Heading>
         <Spacer size="sm" />
         <StarRow stars={stars} size={48} />
       </View>
@@ -115,14 +122,19 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
       <Spacer size="lg" />
       <HoyaBubble tone={stars >= 2 ? 'cheering' : 'thinking'} message={cheerMessage} />
 
-      {showCardUnlock ? (
+      {newCard ? (
         <>
           <Spacer size="lg" />
-          <CardUnlockBanner showSparkles={showSparkles} reducedMotion={reducedMotion} />
+          <CardUnlockBanner
+            card={newCard}
+            showSparkles={showSparkles}
+            reducedMotion={reducedMotion}
+            onSeeCard={() => navigation.navigate('CardDetail', { cardId: newCard.id })}
+          />
         </>
       ) : null}
 
-      <View style={{ flex: 1 }} />
+      <Spacer size="xl" />
       <Button
         label="Back home"
         tone="primary"
@@ -153,19 +165,25 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
 }
 
 /**
- * F-MOTION-003 — Card unlock celebration.
+ * F-MOTION-003 — Card unlock celebration, shown only for a newly earned card.
  *
- * On mount, the banner drops in from -80px translateY with a spring (delayed
- * 400ms after screen mount so stars + Hoya bubble register first). On 3-star
- * results, 5 amber sparkles also fade in around the banner, then fade out
- * over ~600ms.
+ * The card itself is revealed — art, English name, Korean, romanization —
+ * with "See my card" into the card detail (audit UX-03 / roadmap PR-14).
+ * On mount it drops in from -80px translateY with a spring (delayed 400ms
+ * after screen mount so stars + Hoya bubble register first). On 3-star
+ * results, 5 amber sparkles also fade in around it, then fade out over
+ * ~600ms. Reduced motion: static.
  */
 function CardUnlockBanner({
+  card,
   showSparkles,
   reducedMotion,
+  onSeeCard,
 }: {
+  card: HeritageCard;
   showSparkles: boolean;
   reducedMotion: boolean;
+  onSeeCard: () => void;
 }): React.ReactElement {
   const translateY = useSharedValue(reducedMotion ? 0 : -80);
   const opacity = useSharedValue(reducedMotion ? 1 : 0);
@@ -211,10 +229,35 @@ function CardUnlockBanner({
     <View>
       <Animated.View style={bannerStyle}>
         <Card padding="md" tone="brand">
-          <Body weight="semibold">Card added to your library!</Body>
-          <Body tone="secondary" size="sm">
-            Visit Library to see all your cards.
-          </Body>
+          <Body weight="semibold">New card for your library!</Body>
+          <Spacer size="sm" />
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+            <CardArtThumb card={card} />
+            <View style={{ flex: 1 }}>
+              <Body weight="bold" size="lg">
+                {card.titleEn}
+              </Body>
+              {card.subtitleKo ? (
+                <Heading level="title" tone="brand">
+                  {card.subtitleKo}
+                </Heading>
+              ) : null}
+              {card.romanization ? (
+                <Caption tone="secondary" style={{ fontStyle: 'italic' }}>
+                  {card.romanization}
+                </Caption>
+              ) : null}
+            </View>
+          </View>
+          <Spacer size="md" />
+          <Button
+            label="See my card"
+            tone="secondary"
+            size="md"
+            fullWidth
+            accessibilityLabel={`See my card: ${card.titleEn}`}
+            onPress={onSeeCard}
+          />
         </Card>
       </Animated.View>
       {showSparkles && !reducedMotion ? (
@@ -234,6 +277,38 @@ function CardUnlockBanner({
           <Sparkles />
         </Animated.View>
       ) : null}
+    </View>
+  );
+}
+
+const CARD_THUMB = 88;
+
+/** The card's art, or its Korean word on the theme tint when no art ships yet. */
+function CardArtThumb({ card }: { card: HeritageCard }): React.ReactElement {
+  const hasArt = supportedCardIds.includes(card.id);
+  return (
+    <View
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      style={{
+        width: CARD_THUMB,
+        height: CARD_THUMB,
+        borderRadius: radii.lg,
+        borderWidth: 3,
+        borderColor: colors.rarity[card.rarity],
+        backgroundColor: hasArt ? colors.surface.paper : colors.theme[card.theme],
+        alignItems: 'center',
+        justifyContent: 'center',
+        overflow: 'hidden',
+      }}
+    >
+      {hasArt ? (
+        <HeritageCardArt cardId={card.id} size={CARD_THUMB} />
+      ) : (
+        <Heading level="title" tone="inverse">
+          {card.subtitleKo ?? card.titleEn.charAt(0)}
+        </Heading>
+      )}
     </View>
   );
 }
