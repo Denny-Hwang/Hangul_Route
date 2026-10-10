@@ -19,7 +19,8 @@ export function Screen({
   edges = ALL_SCREEN_EDGES,
   testID,
 }: ScreenProps): React.ReactElement {
-  // The context (not useSafeAreaInsets) so a missing SafeAreaProvider degrades
+  // The nearest provider's context (modal screens get their own, navigation/with-own-safe-area),
+  // not useSafeAreaInsets, so a missing SafeAreaProvider degrades
   // to plain padding instead of throwing.
   const insets = useContext(SafeAreaInsetsContext) ?? NO_INSETS;
   const padding = screenPadding(padded ? spacing.lg : 0, insets, edges);

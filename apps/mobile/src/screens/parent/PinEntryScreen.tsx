@@ -1,7 +1,6 @@
 import {
   Body,
   Button,
-  Caption,
   Heading,
   Icon,
   Screen,
@@ -191,14 +190,28 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
           </View>
         </View>
         <Spacer size="xs" />
-        <Body tone="secondary">{subtitle}</Body>
-        {/* Feedback sits by the dots, where it stays on screen on short phones. */}
-        {hintText ? (
-          <>
-            <Spacer size="sm" />
-            <Caption tone="secondary">{hintText}</Caption>
-          </>
-        ) : null}
+        {/*
+          Feedback takes the subtitle's place instead of growing the header: it
+          is never taller than the subtitle it covers (2 lines of 16sp vs 2-3 of
+          18sp on a phone, 1 vs 1 on a wide column), so the measured header, and
+          with it the keypad, keeps its size when a hint appears (p1-L1 follow-up).
+        */}
+        <View style={{ position: 'relative' }}>
+          <View
+            style={{ opacity: hintText ? 0 : 1 }}
+            accessibilityElementsHidden={Boolean(hintText)}
+            importantForAccessibility={hintText ? 'no-hide-descendants' : 'auto'}
+          >
+            <Body tone="secondary">{subtitle}</Body>
+          </View>
+          {hintText ? (
+            <View accessibilityLiveRegion="polite" style={{ position: 'absolute', top: 0, left: 0, right: 0 }}>
+              <Body tone="secondary" size="sm" weight="semibold">
+                {hintText}
+              </Body>
+            </View>
+          ) : null}
+        </View>
       </View>
 
       <Spacer size="md" />
