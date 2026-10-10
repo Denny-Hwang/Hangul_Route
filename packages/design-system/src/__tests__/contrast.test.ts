@@ -69,6 +69,13 @@ describe('token contrast contract (WCAG AA)', () => {
   }
   // KoreanText (F-I18N-001 §3.5): Hangul sits on the sky-blue target chip.
   normalText.push(['text.primary (KoreanText Hangul) on brand.secondaryLight', colors.text.primary, colors.brand.secondaryLight]);
+  // ChoiceCard (F-STORY-003 PR 3.3): option text on every state fill, and the wrong-state mark.
+  normalText.push(['text.primary (ChoiceCard idle) on surface.paper', colors.text.primary, colors.surface.paper]);
+  normalText.push(['text.primary (ChoiceCard correct) on feedback.successLight', colors.text.primary, colors.feedback.successLight]);
+  normalText.push(['text.primary (ChoiceCard wrong + mark) on feedback.nudgeLight', colors.text.primary, colors.feedback.nudgeLight]);
+  normalText.push(['text.primary (ChoiceCard disabled) on surface.sunken', colors.text.primary, colors.surface.sunken]);
+  normalText.push(['text.secondary (KoreanText gloss in ChoiceCard) on feedback.successLight', colors.text.secondary, colors.feedback.successLight]);
+  normalText.push(['text.secondary (KoreanText gloss in ChoiceCard) on feedback.nudgeLight', colors.text.secondary, colors.feedback.nudgeLight]);
   // Muted captions also sit inside brand cards (Card tone="brand").
   normalText.push(['text.muted on brand.primaryLight', colors.text.muted, colors.brand.primaryLight]);
 
@@ -104,6 +111,22 @@ describe('token contrast contract (WCAG AA)', () => {
 
   it.each(Object.entries(surfaces))('KoreanText speaker icon (brand.secondaryDark) on %s ≥ 3:1 (non-text)', (_name, bg) => {
     expect(contrastRatio(colors.brand.secondaryDark, bg)).toBeGreaterThanOrEqual(WCAG_AA_LARGE);
+  });
+
+  // ChoiceCard non-text cues (WCAG 1.4.11): the correct check on its tint, and the hint ring on the surfaces a card sits on.
+  it('ChoiceCard correct check mark (feedback.success) on feedback.successLight ≥ 3:1 (non-text)', () => {
+    expect(contrastRatio(colors.feedback.success, colors.feedback.successLight)).toBeGreaterThanOrEqual(WCAG_AA_LARGE);
+  });
+
+  // The amber nudge border alone is under 3:1 on paper (1.86:1), which is why the wrong state also carries a mark.
+  it('ChoiceCard wrong state cannot rely on the amber border alone: nudge on paper < 3:1, so the mark is required', () => {
+    expect(contrastRatio(colors.feedback.nudge, colors.surface.paper)).toBeLessThan(WCAG_AA_LARGE);
+  });
+
+  // hoya.furDark replaces the Tile literal elsewhere; on the nudge tint it is under 3:1, so ChoiceCard does not use it there.
+  it('hoya.furDark reads on surface.paper (≥ 3:1) but not on feedback.nudgeLight (< 3:1)', () => {
+    expect(contrastRatio(colors.hoya.furDark, colors.surface.paper)).toBeGreaterThanOrEqual(WCAG_AA_LARGE);
+    expect(contrastRatio(colors.hoya.furDark, colors.feedback.nudgeLight)).toBeLessThan(WCAG_AA_LARGE);
   });
 
   it('a correct tile label (large text) reads on its success tint', () => {
