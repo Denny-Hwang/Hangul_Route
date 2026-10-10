@@ -1,6 +1,7 @@
 import { Body, Heading, HoyaBubble, Pill, Progress, Screen, Spacer, Tile, spacing } from '@hangul-route/design-system';
 import React, { useMemo, useState } from 'react';
 import { View } from 'react-native';
+import { jamoTileA11yLabel } from '../../logic/korean-labels';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { buildOddOneOutRounds, type OddOneOutRound } from '../../logic/round-builder';
 import { nudge, success, tapLight } from '../../platform/haptics';
@@ -85,7 +86,7 @@ export function OddOneOutGame({ scope, onFinish }: Props): React.ReactElement {
               romanization={j.romanization}
               state={state}
               size="lg"
-              accessibilityLabel={`Korean letter ${j.romanization}, tap to select`}
+              accessibilityLabel={jamoTileA11yLabel(j.romanization)}
               onPress={() => handleTap(j.id)}
             />
           );

@@ -73,6 +73,8 @@ export const StorySequenceRoundSchema = z.object({
       id: z.string(),
       labelEn: z.string(),
       labelKo: z.string().optional(),
+      /** Revised Romanization of labelKo (F-CNT-002 §3.5; values land in PR 2b). */
+      romanization: z.string().min(1).optional(),
       illustrationRef: z.string().optional(),
     }),
   ),

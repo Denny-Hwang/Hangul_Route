@@ -14,6 +14,7 @@ import {
 } from '@hangul-route/design-system';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
+import { jamoTileA11yLabel } from '../../logic/korean-labels';
 import { buildMatchSoundRounds, type MatchSoundRound } from '../../logic/round-builder';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { playJamoSound, speak } from '../../platform/audio';
@@ -136,7 +137,7 @@ export function MatchSoundGame({ scope, onFinish }: Props): React.ReactElement {
               romanization={j.romanization}
               state={state}
               size="lg"
-              accessibilityLabel={`Korean letter ${j.romanization}, tap to select`}
+              accessibilityLabel={jamoTileA11yLabel(j.romanization)}
               onPress={() => handleTap(j.id)}
             />
           );

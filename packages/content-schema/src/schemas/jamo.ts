@@ -10,11 +10,14 @@ export type JamoKind = z.infer<typeof JamoKindSchema>;
 export const JamoSchema = z.object({
   id: z.string().regex(/^jamo:[a-z0-9-]+$/),
   char: z.string().min(1).max(2),
-  romanization: z.string().min(1).max(8),
+  /** Sound value from JAMO_SOUND_VALUES (F-CNT-002 C6), e.g. 'g/k', 'silent/ng'. */
+  romanization: z.string().min(1).max(12),
   ipa: z.string().optional(),
   kind: JamoKindSchema,
   nameEn: z.string(),
   exampleWordKo: z.string().optional(),
+  /** Revised Romanization, unhyphenated (D13). Required with exampleWordKo from F-CNT-002 PR 2b. */
+  exampleWordRomanization: z.string().min(1).optional(),
   exampleWordEn: z.string().optional(),
   audioRef: z.string().optional(),
   /** Base English sound hint shown in Discover (F-QUEST-002); es / ko come from the i18n overlay. */
