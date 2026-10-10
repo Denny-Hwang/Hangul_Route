@@ -42,9 +42,11 @@ export function parseDeviceHeader(header: string | undefined): { deviceId: strin
 /**
  * Authorize the calling device for `learnerId`. Returns the deviceId, or a
  * ready-to-return error Response (401 bad/missing credentials, 403 when the
- * device belongs to someone else, 404 unknown learner).
+ * device belongs to someone else or its scope is too narrow, 404 unknown
+ * learner). Only the inbox passes `allowClassScope`: a class-approved device
+ * reaches nothing else (SEC-4).
  */
-export async function authorizeDevice(c: Context, learnerId: string): Promise<Response | string> {
+export async function authorizeDevice(c: Context, learnerId: string, opts: { allowClassScope?: boolean } = {}): Promise<Response | string> {
   const creds = parseDeviceHeader(c.req.header('Authorization'));
   if (!creds) return fail(c, 'unauthorized', 'Device credentials required', 401);
   const db = dbFor(c);
@@ -57,6 +59,9 @@ export async function authorizeDevice(c: Context, learnerId: string): Promise<Re
   }
   if (!constantTimeEquals(await hashSecret(creds.secret), binding.secretHash)) {
     return fail(c, 'unauthorized', 'Bad device secret', 401);
+  }
+  if (binding.scope === 'class' && !opts.allowClassScope) {
+    return fail(c, 'scope_limited', "This device was linked by a class. The learner's rescue code unlocks saved progress here.", 403);
   }
   await db.putDevice({ ...binding, lastSeenAt: new Date().toISOString() });
   return creds.deviceId;

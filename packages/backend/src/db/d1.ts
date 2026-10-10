@@ -27,7 +27,7 @@ const json = (v: unknown): unknown => (typeof v === 'string' && v.length > 0 ? J
 
 const toAccount = (r: Row): Account => ({ id: str(r.id), email: nstr(r.email), displayName: nstr(r.display_name), consent: json(r.consent_json), createdAt: str(r.created_at) });
 const toLearner = (r: Row): Learner => ({ id: str(r.id), displayName: str(r.display_name), ageGroup: str(r.age_group) as Learner['ageGroup'], avatar: str(r.avatar), recoveryHash: nstr(r.recovery_hash), createdAt: str(r.created_at), lastActiveAt: str(r.last_active_at) });
-const toDevice = (r: Row): LearnerDevice => ({ learnerId: str(r.learner_id), deviceId: str(r.device_id), secretHash: str(r.secret_hash), createdAt: str(r.created_at), lastSeenAt: str(r.last_seen_at) });
+const toDevice = (r: Row): LearnerDevice => ({ learnerId: str(r.learner_id), deviceId: str(r.device_id), secretHash: str(r.secret_hash), scope: r.scope === 'class' ? 'class' : 'full', createdAt: str(r.created_at), lastSeenAt: str(r.last_seen_at) });
 const toSnapshot = (r: Row): SnapshotRecord => ({ learnerId: str(r.learner_id), rev: num(r.rev), schemaVer: num(r.schema_ver), contentVer: str(r.content_ver), deviceId: str(r.device_id), summary: json(r.summary_json), payload: json(r.payload_json), updatedAt: str(r.updated_at) });
 const toSpace = (r: Row): Space => ({
   id: str(r.id),
@@ -139,8 +139,8 @@ export class D1Db implements Db {
   }
   putDevice(d: LearnerDevice): Promise<void> {
     return this.run(
-      'INSERT INTO learner_devices (learner_id, device_id, secret_hash, created_at, last_seen_at) VALUES (?, ?, ?, ?, ?) ON CONFLICT(learner_id, device_id) DO UPDATE SET secret_hash = excluded.secret_hash, last_seen_at = excluded.last_seen_at',
-      [d.learnerId, d.deviceId, d.secretHash, d.createdAt, d.lastSeenAt],
+      'INSERT INTO learner_devices (learner_id, device_id, secret_hash, scope, created_at, last_seen_at) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(learner_id, device_id) DO UPDATE SET secret_hash = excluded.secret_hash, scope = excluded.scope, last_seen_at = excluded.last_seen_at',
+      [d.learnerId, d.deviceId, d.secretHash, d.scope, d.createdAt, d.lastSeenAt],
     );
   }
   async deviceExists(deviceId: string): Promise<boolean> {

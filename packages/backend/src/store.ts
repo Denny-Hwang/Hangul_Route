@@ -61,11 +61,20 @@ export interface Learner {
   lastActiveAt: string;
 }
 
+/**
+ * What a device binding may do (SEC-4). `full`: the learner's own device —
+ * registration or a Rescue Code claim. `class`: bound by a teacher's re-link
+ * approval — inbox only, never the snapshot or a Rescue Code, because a class
+ * role must not reach the learner's full progress (F-SPACE-001 §3.4).
+ */
+export type DeviceScope = 'full' | 'class';
+
 /** The principal for learner traffic: a device bound to a learner. */
 export interface LearnerDevice {
   learnerId: string;
   deviceId: string;
   secretHash: string;
+  scope: DeviceScope;
   createdAt: string;
   lastSeenAt: string;
 }

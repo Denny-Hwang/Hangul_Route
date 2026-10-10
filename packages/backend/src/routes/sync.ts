@@ -36,7 +36,7 @@ syncRoutes.post('/learners', async (c) => {
   await db.putLearner(learner);
 
   const secret = newDeviceSecret();
-  await db.putDevice({ learnerId: learner.id, deviceId, secretHash: await hashSecret(secret), createdAt: now, lastSeenAt: now });
+  await db.putDevice({ learnerId: learner.id, deviceId, secretHash: await hashSecret(secret), scope: 'full', createdAt: now, lastSeenAt: now });
   return ok(c, { learner, device: { deviceId, secret } }, 201);
 });
 
@@ -102,15 +102,19 @@ syncRoutes.get('/learners/:id/snapshot', async (c) => {
 
 syncRoutes.get('/learners/:id/inbox', async (c) => {
   const learnerId = c.req.param('id');
-  const auth = await authorizeDevice(c, learnerId);
+  const auth = await authorizeDevice(c, learnerId, { allowClassScope: true });
   if (typeof auth !== 'string') return auth;
   const db = dbFor(c);
   const now = new Date();
   const { tier, source } = await tierForLearner(db, learnerId, now);
+  // A class-approved device sees class and school spaces only — family plans stay with the family (SEC-4).
+  const classScoped = (await db.getDevice(learnerId, auth))?.scope === 'class';
+  const plans = await inboxPlansFor(db, learnerId);
+  const memberships = await learnerMembershipRows(db, learnerId);
   return ok(c, {
     rev: (await db.getSnapshot(learnerId))?.rev ?? 0,
-    plans: await inboxPlansFor(db, learnerId),
-    memberships: await learnerMembershipRows(db, learnerId),
+    plans: classScoped ? plans.filter((p) => p.spaceKind !== 'family') : plans,
+    memberships: classScoped ? memberships.filter((m) => m.kind !== 'family') : memberships,
     tier,
     tierSource: source,
     tierValidUntil: tier === 'premium' ? new Date(now.getTime() + TIER_GRACE_MS).toISOString() : null,

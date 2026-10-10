@@ -61,10 +61,11 @@ recoveryRoutes.post('/issue', async (c) => {
     const auth = await authorizeDevice(c, learnerId);
     if (typeof auth !== 'string') return auth;
   } else {
-    // Teacher / caregiver path (F-TCH-001 §10.2): an adult with roster rights re-issues the code.
+    // Grown-up path (F-TCH-001 §10.2, narrowed by SEC-4): a code is a bearer credential for the
+    // whole snapshot, so only an adult who may read it (family owner / caregiver) re-issues one.
     const account = await requireAccount(c);
     if (!('id' in account)) return account;
-    if (!can(await accountActor(db, account), 'roster.manage', { kind: 'learner', learnerId, spaces: await learnerContexts(db, learnerId) })) {
+    if (!can(await accountActor(db, account), 'snapshot.read', { kind: 'learner', learnerId, spaces: await learnerContexts(db, learnerId) })) {
       return fail(c, 'forbidden', 'Not allowed for this learner', 403);
     }
   }
@@ -99,7 +100,8 @@ recoveryRoutes.post('/claim', async (c) => {
 
   const now = new Date().toISOString();
   const secret = newDeviceSecret();
-  await db.putDevice({ learnerId: learner.id, deviceId, secretHash: await hashSecret(secret), createdAt: now, lastSeenAt: now });
+  // 'full' also widens a class-approved binding on this device: the code proves the grown-up's say-so.
+  await db.putDevice({ learnerId: learner.id, deviceId, secretHash: await hashSecret(secret), scope: 'full', createdAt: now, lastSeenAt: now });
   const record = await db.getSnapshot(learner.id);
   return ok(c, {
     learner: publicLearner(learner),
