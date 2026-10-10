@@ -1,10 +1,14 @@
+import { FAMILY_LIFETIME_LEARNERS, PLAN_PRICING } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import {
   SITE_TAGLINE,
   SITE_TITLE,
   audienceBadges,
+  familyPlanBullet,
   howItWorks,
   landingFaqs,
+  pricingFootnote,
+  pricingLines,
   siteMetadata,
 } from '../landing-copy';
 import { stage1Cards } from '../stage1-cards';
@@ -108,5 +112,44 @@ describe('landing copy (UF-02)', () => {
       expect(faq.q.trim().endsWith('?')).toBe(true);
       expect(faq.a.trim().length).toBeGreaterThan(0);
     }
+  });
+});
+
+describe('pricing copy matches the two-product model (app-map decision #30)', () => {
+  const RETIRED = [/12 cards/i, /\$4\.99/, /\$29\b/, /\$19\b/, /card packs?/i, /subscription/i];
+
+  it('meta descriptions say Stage 1 is free — not "the first 12 cards"', () => {
+    for (const field of [siteMetadata.description, siteMetadata.openGraph?.description].map(text)) {
+      expect(field).toMatch(/Stage 1 is free/);
+      expect(field).not.toMatch(/12 cards/i);
+    }
+  });
+
+  it('the cost FAQ quotes PLAN_PRICING and the family learner cap', () => {
+    const cost = landingFaqs.find((faq) => /cost/i.test(faq.q));
+    expect(cost?.a).toContain(PLAN_PRICING.family_lifetime.label);
+    expect(cost?.a).toContain(PLAN_PRICING.group_license.label);
+    expect(cost?.a).toContain(`up to ${FAMILY_LIFETIME_LEARNERS} learners`);
+    expect(cost?.a).toMatch(/Stage 1 is free/);
+    for (const re of RETIRED) expect(cost?.a).not.toMatch(re);
+  });
+
+  it('the pricing card lists Stage 1 free, Family Lifetime and the Group License', () => {
+    expect(pricingLines.map((line) => line.name)).toEqual(['Stage 1', 'Family Lifetime', 'Classes & schools']);
+    const joined = pricingLines.map((line) => `${line.name} ${line.detail}`).join(' | ');
+    expect(joined).toContain(PLAN_PRICING.family_lifetime.label);
+    expect(joined).toContain(PLAN_PRICING.group_license.label);
+    expect(joined).toContain(`up to ${FAMILY_LIFETIME_LEARNERS} learners`);
+    for (const re of RETIRED) expect(joined).not.toMatch(re);
+  });
+
+  it('the family bullet uses the real learner cap, not "three profiles"', () => {
+    expect(familyPlanBullet.title).toContain(`up to ${FAMILY_LIFETIME_LEARNERS} learners`);
+    expect(`${familyPlanBullet.title} ${familyPlanBullet.body}`).not.toMatch(/three|subscription/i);
+  });
+
+  it('the pricing footnote promises no family subscription and no ads', () => {
+    expect(pricingFootnote).toMatch(/no subscription/i);
+    expect(pricingFootnote).toMatch(/no third-party ads/i);
   });
 });

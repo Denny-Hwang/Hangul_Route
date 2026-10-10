@@ -3,7 +3,16 @@ import Link from 'next/link';
 import { HeritageCardsPreview } from '../components/landing/HeritageCardsPreview';
 import { MeetHoya } from '../components/landing/MeetHoya';
 import { MiniGamesGallery } from '../components/landing/MiniGamesGallery';
-import { SITE_TAGLINE, audienceBadges, howItWorks, landingFaqs, trustItems } from '../data/landing-copy';
+import {
+  SITE_TAGLINE,
+  audienceBadges,
+  familyPlanBullet,
+  howItWorks,
+  landingFaqs,
+  pricingFootnote,
+  pricingLines,
+  trustItems,
+} from '../data/landing-copy';
 
 /** The learner web app (PWA). Overridable per deployment. */
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://app.hangulroute.com';
@@ -392,8 +401,8 @@ export default function HomePage(): JSX.Element {
               multiplication question.
             </li>
             <li>
-              <strong style={{ color: colors.text.primary }}>One subscription, three profiles.</strong>{' '}
-              Siblings share. No upsell.
+              <strong style={{ color: colors.text.primary }}>{familyPlanBullet.title}</strong>{' '}
+              {familyPlanBullet.body}
             </li>
           </ul>
         </div>
@@ -407,18 +416,11 @@ export default function HomePage(): JSX.Element {
         >
           <h3 style={{ marginTop: 0, fontSize: typography.size.title }}>Pricing</h3>
           <ul style={{ paddingLeft: spacing.lg, color: colors.text.primary, lineHeight: typography.leading.relaxed }}>
-            <li>
-              <strong>First 12 cards</strong> — free
-            </li>
-            <li>
-              <strong>12-card packs</strong> — $4.99 in-app
-            </li>
-            <li>
-              <strong>Lifetime full access</strong> — $29 ($19 launch promo)
-            </li>
-            <li>
-              <strong>Family</strong> — 3 child profiles included
-            </li>
+            {pricingLines.map((line) => (
+              <li key={line.name}>
+                <strong>{line.name}</strong> — {line.detail}
+              </li>
+            ))}
           </ul>
           <p
             style={{
@@ -428,7 +430,7 @@ export default function HomePage(): JSX.Element {
               color: colors.text.secondary,
             }}
           >
-            No subscription required. No third-party ads ever.
+            {pricingFootnote}
           </p>
         </aside>
       </section>
