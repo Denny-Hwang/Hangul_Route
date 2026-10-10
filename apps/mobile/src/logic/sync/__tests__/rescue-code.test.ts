@@ -1,6 +1,6 @@
 import { normalizeRescueCode } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
-import { RESCUE_INPUT_MAX, claimErrorMessage, cleanRescueInput, rescueCodeHint } from '../rescue-code';
+import { RESCUE_INPUT_MAX, claimErrorMessage, cleanRescueInput, rescueCodeHint, rescueCodeLines } from '../rescue-code';
 
 describe('rescue code helpers (F-RESTORE-001)', () => {
   it('cleans the one code field while typing: upper case, letters, digits and single separators', () => {
@@ -22,6 +22,13 @@ describe('rescue code helpers (F-RESTORE-001)', () => {
     expect(rescueCodeHint('TIGER-MOON-RIVER-APPLE-482139')).toBe('four words + 6 digits');
     expect(rescueCodeHint('TIGER-MOON-4821')).toBe('two words + 4 digits');
     expect(rescueCodeHint('not a code')).toBeNull();
+  });
+
+  it('lays a code out one word per row, the number last, so no word breaks mid-way on a narrow phone', () => {
+    expect(rescueCodeLines('TIGER-MOON-RIVER-APPLE-482139')).toEqual(['TIGER', 'MOON', 'RIVER', 'APPLE', '482139']);
+    expect(rescueCodeLines('PADDLE-GLACIER-4992')).toEqual(['PADDLE', 'GLACIER', '4992']);
+    expect(rescueCodeLines('tiger moon 4821')).toEqual(['TIGER', 'MOON', '4821']); // stored as typed, shown tidy
+    expect(rescueCodeLines('not a code')).toEqual(['not a code']); // never hide what is stored
   });
 
   it('has calm copy for every error', () => {
