@@ -1,0 +1,34 @@
+{
+  "rounds": [
+    {
+      "id": "round:sym-eo",
+      "prompt": { "ko": "어", "romanization": "eo", "en": "the sound eo, as in sun" },
+      "options": [
+        { "id": "opt:eo", "text": { "ko": "ㅓ", "romanization": "eo", "en": "eo" } },
+        { "id": "opt:a", "text": { "ko": "ㅏ", "romanization": "a", "en": "a" } },
+        { "id": "opt:g", "text": { "ko": "ㄱ", "romanization": "g/k", "en": "g" } },
+        { "id": "opt:n", "text": { "ko": "ㄴ", "romanization": "n", "en": "n" } }
+      ],
+      "answerId": "opt:eo"
+    },
+    {
+      "id": "round:word-neo",
+      "prompt": { "ko": "너", "romanization": "neo", "en": "you", "syllables": ["neo"] },
+      "options": [
+        { "id": "opt:ga", "text": { "ko": "가", "romanization": "ga", "en": "go" } },
+        { "id": "opt:neo", "text": { "ko": "너", "romanization": "neo", "en": "you" } }
+      ],
+      "answerId": "opt:neo"
+    },
+    {
+      "id": "round:pic-kimchi",
+      "prompt": { "ko": "김치", "romanization": "gimchi", "en": "kimchi", "syllables": ["gim", "chi"] },
+      "options": [
+        { "id": "opt:kimchi", "pictureRef": "card:kimchi", "labelEn": "kimchi" },
+        { "id": "opt:rice", "pictureRef": "card:rice", "labelEn": "rice" },
+        { "id": "opt:swatch", "pictureRef": "swatch:primary", "labelEn": "a colour" }
+      ],
+      "answerId": "opt:kimchi"
+    }
+  ]
+}

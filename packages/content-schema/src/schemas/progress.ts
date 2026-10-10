@@ -69,6 +69,8 @@ export const ReviewEntrySchema = z.object({
   scope: z.string(),
   itemIds: z.array(z.string()),
   resultStars: z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3)]).optional(),
+  /** Items answered wrong on the first try (F-QUEST-002 §3.9); absent on older entries. */
+  missedItemIds: z.array(z.string()).optional(),
 });
 export type ReviewEntry = z.infer<typeof ReviewEntrySchema>;
 

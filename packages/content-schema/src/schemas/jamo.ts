@@ -17,6 +17,8 @@ export const JamoSchema = z.object({
   exampleWordKo: z.string().optional(),
   exampleWordEn: z.string().optional(),
   audioRef: z.string().optional(),
+  /** Base English sound hint shown in Discover (F-QUEST-002); es / ko come from the i18n overlay. */
+  soundHint: z.string().max(60).optional(),
   order: z.number().int().nonnegative(),
 });
 

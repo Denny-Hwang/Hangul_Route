@@ -1,0 +1,66 @@
+{
+  "cases": [
+    {
+      "name": "only two pairs",
+      "board": {
+        "pairs": [
+          { "id": "pair:a", "word": { "ko": "김치", "romanization": "gimchi", "en": "kimchi" } },
+          { "id": "pair:b", "word": { "ko": "밥", "romanization": "bap", "en": "rice" } }
+        ]
+      }
+    },
+    {
+      "name": "six pairs",
+      "board": {
+        "pairs": [
+          { "id": "pair:a", "word": { "ko": "가", "romanization": "ga", "en": "a" } },
+          { "id": "pair:b", "word": { "ko": "나", "romanization": "na", "en": "b" } },
+          { "id": "pair:c", "word": { "ko": "다", "romanization": "da", "en": "c" } },
+          { "id": "pair:d", "word": { "ko": "라", "romanization": "ra", "en": "d" } },
+          { "id": "pair:e", "word": { "ko": "마", "romanization": "ma", "en": "e" } },
+          { "id": "pair:f", "word": { "ko": "바", "romanization": "ba", "en": "f" } }
+        ]
+      }
+    },
+    {
+      "name": "two pairs share an id",
+      "board": {
+        "pairs": [
+          { "id": "pair:a", "word": { "ko": "가", "romanization": "ga", "en": "a" } },
+          { "id": "pair:a", "word": { "ko": "나", "romanization": "na", "en": "b" } },
+          { "id": "pair:c", "word": { "ko": "다", "romanization": "da", "en": "c" } }
+        ]
+      }
+    },
+    {
+      "name": "two pairs share a Korean word",
+      "board": {
+        "pairs": [
+          { "id": "pair:a", "word": { "ko": "가", "romanization": "ga", "en": "a" } },
+          { "id": "pair:b", "word": { "ko": "가", "romanization": "ga", "en": "b" } },
+          { "id": "pair:c", "word": { "ko": "다", "romanization": "da", "en": "c" } }
+        ]
+      }
+    },
+    {
+      "name": "two pairs share a picture",
+      "board": {
+        "pairs": [
+          { "id": "pair:a", "pictureRef": "card:kimchi", "word": { "ko": "가", "romanization": "ga", "en": "a" } },
+          { "id": "pair:b", "pictureRef": "card:kimchi", "word": { "ko": "나", "romanization": "na", "en": "b" } },
+          { "id": "pair:c", "word": { "ko": "다", "romanization": "da", "en": "c" } }
+        ]
+      }
+    },
+    {
+      "name": "a picture reference with the wrong scheme",
+      "board": {
+        "pairs": [
+          { "id": "pair:a", "pictureRef": "emoji:kimchi", "word": { "ko": "가", "romanization": "ga", "en": "a" } },
+          { "id": "pair:b", "word": { "ko": "나", "romanization": "na", "en": "b" } },
+          { "id": "pair:c", "word": { "ko": "다", "romanization": "da", "en": "c" } }
+        ]
+      }
+    }
+  ]
+}

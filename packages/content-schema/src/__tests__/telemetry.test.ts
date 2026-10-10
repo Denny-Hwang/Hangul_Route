@@ -22,8 +22,13 @@ describe('telemetry event names (one list for the client type and the API whitel
         'pin.reset_requested',
         'profile.switch',
         'profile.updated',
+        'quest.check_completed',
         'quest.complete',
+        'quest.discover_completed',
         'quest.start',
+        'quest.teaser_tapped',
+        'review.complete',
+        'review.start',
         'round.correct',
         'round.wrong',
         'session.end',
@@ -37,6 +42,7 @@ describe('telemetry event names (one list for the client type and the API whitel
         'space.relink.requested',
         'locale.changed',
         'romanization.mode_changed',
+        'stage.complete',
       ].sort(),
     );
     expect(new Set(TELEMETRY_EVENT_NAMES).size).toBe(TELEMETRY_EVENT_NAMES.length);

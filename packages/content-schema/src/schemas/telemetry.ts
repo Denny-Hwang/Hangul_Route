@@ -40,6 +40,13 @@ export const TELEMETRY_EVENT_NAMES = [
   'pin.created',
   'pin.reset_requested',
   'pin.reset_completed',
+  // F-QUEST-002 §3.13
+  'quest.discover_completed',
+  'quest.check_completed',
+  'quest.teaser_tapped',
+  'stage.complete',
+  'review.start',
+  'review.complete',
 ] as const;
 
 export const TelemetryEventNameSchema = z.enum(TELEMETRY_EVENT_NAMES);
