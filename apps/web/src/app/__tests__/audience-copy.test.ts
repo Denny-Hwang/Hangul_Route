@@ -22,6 +22,8 @@ const PUBLIC_SURFACES = [
   join('app', 'layout.tsx'),
   join('app', 'page.tsx'),
   join('app', 'about', 'page.tsx'),
+  join('app', 'privacy', 'page.tsx'),
+  join('app', 'terms', 'page.tsx'),
   join('data', 'landing-copy.ts'),
   ...landingComponents,
 ];
@@ -39,7 +41,7 @@ function read(rel: string): string {
   return readFileSync(join(webSrc, rel), 'utf8');
 }
 
-describe('public surfaces speak to anyone learning Hangul (UF-01..UF-03)', () => {
+describe('public surfaces speak to anyone learning Hangul (UF-01..UF-03, UF-09)', () => {
   it('scans every landing component', () => {
     expect(landingComponents.length).toBeGreaterThanOrEqual(3);
   });

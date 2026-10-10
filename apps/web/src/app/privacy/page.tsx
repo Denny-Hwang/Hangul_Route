@@ -13,20 +13,20 @@ const sections: Section[] = [
   {
     heading: 'The short version',
     paragraphs: [
-      'Hangul Route is built for children ages 5–11. We collect as little as possible, never show ads, and never sell data. Most learning data stays on the device until a parent chooses to sign in. A parent is always in control.',
+      'Hangul Route is for anyone learning Hangul, at any age — and many of our learners are children. We collect as little as possible, never show ads, and never sell data. Most learning data stays on the device until the account holder chooses to sign in. When the learner is a child, a parent is always in control.',
     ],
   },
   {
     heading: 'Who creates the account',
     paragraphs: [
-      'Accounts are created and managed by a parent or legal guardian. A child uses the app, but a grown-up sets it up, enters any billing details, and confirms consent behind a parent-gate. We do not knowingly let a child under 13 create an account without verifiable parental consent.',
+      'Accounts are created and managed by an adult. When the learner is a child, that adult is a parent or legal guardian: the child uses the app, but a grown-up sets it up, enters any billing details, and confirms consent behind a parent-gate. We do not knowingly let a child under 13 create an account without verifiable parental consent.',
     ],
   },
   {
     heading: 'What we collect',
     bullets: [
-      'Child profile: a display nickname and an age band (5–7 / 8–11). A real name is optional and only stored if a parent enters it.',
-      'Learning progress: quests completed, stars earned, cards unlocked, streaks, and which jamo a child recognizes — so the journey can resume and a parent can see progress.',
+      'Learner profile: a display nickname and an age group (5–7 / 8–9 / 10–11). A real name is optional and only stored if a parent enters it.',
+      'Learning progress: quests completed, stars earned, cards unlocked, streaks, and which jamo a learner recognizes — so the journey can resume and a parent can see progress.',
       'Account contact: a parent email, used for sign-in, receipts, and account recovery.',
       'Basic device and diagnostic data: app version, device type, and crash logs, to keep the app stable.',
     ],
@@ -43,7 +43,7 @@ const sections: Section[] = [
   {
     heading: "Children's privacy (COPPA / GDPR-K)",
     paragraphs: [
-      'Hangul Route is designed to comply with the U.S. Children’s Online Privacy Protection Act (COPPA) and similar rules for minors. We practice data minimization, require verifiable parental consent before any personal data is linked to an account, and give parents the right to review or delete their child’s data at any time.',
+      'Many of our learners are children. Hangul Route is designed to comply with the U.S. Children’s Online Privacy Protection Act (COPPA) and similar rules for minors. We practice data minimization, require verifiable parental consent before any personal data is linked to an account, and give parents the right to review or delete their child’s data at any time.',
     ],
   },
   {

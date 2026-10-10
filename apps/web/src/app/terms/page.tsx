@@ -13,13 +13,13 @@ const sections: Section[] = [
   {
     heading: 'Accepting these terms',
     paragraphs: [
-      'By using Hangul Route, you agree to these Terms of Service. If you do not agree, please do not use the app. Because the app is for children, the parent or legal guardian who sets up the account accepts these terms on the family’s behalf.',
+      'By using Hangul Route, you agree to these Terms of Service. If you do not agree, please do not use the app. Hangul Route is for learners of any age, and many learners are children: when the learner is a child, the parent or legal guardian who sets up the account accepts these terms on the family’s behalf.',
     ],
   },
   {
     heading: 'Accounts and parental responsibility',
     paragraphs: [
-      'A parent or legal guardian creates and supervises the account, keeps sign-in details secure, and is responsible for activity under it. A child may use the app under that supervision. Account changes, purchases, and other sensitive actions sit behind a parent-gate.',
+      'An adult creates the account — a parent or legal guardian when the learner is a child — supervises it, keeps sign-in details secure, and is responsible for activity under it. A child may use the app under that supervision. Account changes, purchases, and other sensitive actions sit behind a parent-gate.',
     ],
   },
   {
@@ -42,7 +42,7 @@ const sections: Section[] = [
   {
     heading: 'Our content and your data',
     paragraphs: [
-      'Hangul Route, including Hoya, the curriculum, illustrations, audio, and heritage cards, is owned by us or our licensors and protected by intellectual-property law. Your child’s learning data belongs to your family; you may export or delete it as described in our Privacy Policy.',
+      'Hangul Route, including Hoya, the curriculum, illustrations, audio, and heritage cards, is owned by us or our licensors and protected by intellectual-property law. Learning data belongs to the learner and their family; you may export or delete it as described in our Privacy Policy.',
     ],
   },
   {
