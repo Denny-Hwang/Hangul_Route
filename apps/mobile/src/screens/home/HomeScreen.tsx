@@ -30,10 +30,14 @@ import {
   type MissionPlan,
 } from '../../logic/homework/mission-builder';
 import { mergeAssignments } from '../../logic/homework/assignment-merger';
+import { DEFAULT_AVATAR, avatarTheme } from '../../logic/profiles/avatar-catalog';
 import { computeStreak } from '../../logic/streak';
 import type { RootStackParamList } from '../../navigation/types';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
+
+/** Avatar circle in the Profile entry; with its label the button clears the 64pt floor. */
+const AVATAR_SIZE = 52;
 
 const ICON_FOR: Record<MissionCard['kind'], 'replay' | 'play' | 'library' | 'star'> = {
   replay: 'replay',
@@ -148,23 +152,34 @@ export function HomeScreen(): React.ReactElement {
           <Heading level="title">Hi, {profile?.displayName ?? 'friend'}!</Heading>
           <Body tone="secondary">Ready for today&apos;s quest?</Body>
         </View>
+        {/* Profile entry (UX-05): the learner's own cub, ringed in its theme
+            tint, with a visible label — the only way to profiles, backup,
+            classes and the grown-up zone. */}
         <Pressable
           onPress={() => navigation.navigate('Profile')}
           accessibilityRole="button"
-          accessibilityLabel="Profiles and settings"
-          style={{
-            width: touchTarget.min,
-            height: touchTarget.min,
-            borderRadius: radii.circle,
-            borderWidth: 2,
-            borderColor: colors.border.subtle,
-            backgroundColor: colors.surface.paper,
-            alignItems: 'center',
-            justifyContent: 'center',
-            overflow: 'hidden',
-          }}
+          accessibilityLabel="Profile and settings"
+          hitSlop={spacing.xs}
+          style={{ alignItems: 'center', minWidth: touchTarget.min, gap: spacing.xxs }}
         >
-          <Hoya pose="idle" size={44} />
+          <View
+            style={{
+              width: AVATAR_SIZE,
+              height: AVATAR_SIZE,
+              borderRadius: radii.circle,
+              borderWidth: 3,
+              borderColor: colors.theme[avatarTheme(profile?.avatar ?? DEFAULT_AVATAR)],
+              backgroundColor: colors.surface.paper,
+              alignItems: 'center',
+              justifyContent: 'center',
+              overflow: 'hidden',
+            }}
+          >
+            <Hoya pose="idle" size={AVATAR_SIZE - spacing.md} />
+          </View>
+          <Caption tone="secondary" weight="semibold">
+            Profile
+          </Caption>
         </Pressable>
       </View>
 
