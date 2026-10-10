@@ -9,12 +9,12 @@ import {
   radii,
   spacing,
   touchTarget,
-  typography,
 } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
-import { Pressable, Text, View, useWindowDimensions } from 'react-native';
+import { Pressable, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { PIN_PAD_GAP, PinPad } from '../../components/PinPad';
 import {
   PIN_LENGTH,
   attemptsRemaining,
@@ -38,7 +38,6 @@ type Props = NativeStackScreenProps<RootStackParamList, 'PinEntry'>;
  */
 type Mode = 'setup-1' | 'setup-2' | 'verify';
 
-const KEY_GAP = spacing.sm;
 const DOT_SIZE = 20;
 /** First-frame guess for the title block until it is measured. */
 const HEADER_ESTIMATE = 120;
@@ -79,7 +78,7 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
     }),
     minKey: touchTarget.min,
     maxKey: touchTarget.child,
-    gap: KEY_GAP,
+    gap: PIN_PAD_GAP,
   });
 
   const cooldownMs = cooldownRemainingMs(attempts, now);
@@ -168,9 +167,6 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
     ? `Let's take a short break. Try again in ${Math.ceil(cooldownMs / 1000)}s.`
     : hint;
 
-  const keys: Array<number | 'delete'> = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 'delete'];
-  const gridWidth = pad.columns * pad.keySize + (pad.columns - 1) * KEY_GAP;
-
   return (
     <Screen tone="canvas">
       {/* Measured: the keypad gets whatever height this block leaves (p1-L1). */}
@@ -236,62 +232,15 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
       <Spacer size="md" />
 
       <View onLayout={(e) => setPadWidth(e.nativeEvent.layout.width)} style={{ alignItems: 'center' }}>
-        <View
-          style={{
-            width: gridWidth,
-            flexDirection: 'row',
-            flexWrap: 'wrap',
-            gap: KEY_GAP,
-            justifyContent: 'center',
+        <PinPad
+          value={entry}
+          onChange={(next) => {
+            if (next.length >= entry.length) setHint(null);
+            setEntry(next);
           }}
-        >
-          {keys.map((k) =>
-            k === 'delete' ? (
-              <Pressable
-                key={k}
-                disabled={entry.length === 0 || busy}
-                onPress={() => setEntry((e) => e.slice(0, -1))}
-                accessibilityRole="button"
-                accessibilityLabel="Delete last digit"
-                style={{
-                  width: pad.keySize,
-                  height: pad.keySize,
-                  borderRadius: radii.lg,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <Icon name="arrow-left" size={24} color={colors.text.secondary} />
-              </Pressable>
-            ) : (
-              <Pressable
-                key={k}
-                disabled={locked || busy}
-                onPress={() => {
-                  setHint(null);
-                  setEntry((e) => (e + String(k)).slice(0, PIN_LENGTH));
-                }}
-                accessibilityRole="button"
-                accessibilityLabel={`Digit ${k}`}
-                style={{
-                  width: pad.keySize,
-                  height: pad.keySize,
-                  borderRadius: radii.lg,
-                  backgroundColor: colors.surface.paper,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  borderWidth: 1,
-                  borderColor: colors.border.strong,
-                  opacity: locked ? 0.5 : 1,
-                }}
-              >
-                <Text style={{ fontSize: typography.size.title, fontWeight: '700', color: colors.text.primary }}>
-                  {k}
-                </Text>
-              </Pressable>
-            ),
-          )}
-        </View>
+          disabled={locked || busy}
+          layout={pad}
+        />
       </View>
 
       <Spacer size="md" />
