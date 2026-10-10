@@ -7,8 +7,9 @@ import { can } from '../lib/can';
 import { authorizeDevice, hashSecret, newDeviceSecret, parseDeviceHeader } from '../lib/device-auth';
 import { publicLearner } from '../lib/learners';
 import { clientKey, createRateLimiter } from '../lib/rate-limit';
-import { rescueHash, rescueLookupHashes, rescuePepper } from '../lib/rescue-hash';
+import { rescueHash, rescueLookupHashes } from '../lib/rescue-hash';
 import { randomRescueCode } from '../lib/rescue-words';
+import { rescuePepper, type RuntimeEnv } from '../lib/runtime';
 import type { Learner } from '../store';
 
 /**
@@ -71,7 +72,7 @@ recoveryRoutes.post('/issue', async (c) => {
   }
   const learner = await db.getLearner(learnerId);
   if (!learner) return fail(c, 'not_found', 'Learner not found', 404);
-  const code = await storeNewCode((l) => db.putLearner(l), learner, rescuePepper(c.env));
+  const code = await storeNewCode((l) => db.putLearner(l), learner, rescuePepper(c.env as RuntimeEnv | undefined));
   if (!code) return fail(c, 'code_unavailable', 'Could not issue a code right now — try again', 500);
   return ok(c, { code, issuedAt: new Date().toISOString() }, 201);
 });
@@ -92,7 +93,7 @@ recoveryRoutes.post('/claim', async (c) => {
   const { code, deviceId } = parsed.data;
   const db = dbFor(c);
   let learner: Learner | null = null;
-  for (const hash of await rescueLookupHashes(code, rescuePepper(c.env))) {
+  for (const hash of await rescueLookupHashes(code, rescuePepper(c.env as RuntimeEnv | undefined))) {
     learner = await db.learnerByRecoveryHash(hash);
     if (learner) break;
   }
