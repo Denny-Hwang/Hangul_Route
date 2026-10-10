@@ -7,6 +7,7 @@
 | 영역 | W4 (알파) | 6 months | 측정 도구 |
 |---|---|---|---|
 | `packages/content-schema` | 100% | 100% | vitest --coverage |
+| `packages/i18n` (message files excluded: data) | 100% | 100% | vitest --coverage |
 | `packages/backend` (Cloudflare Workers) | 90% | 90% | vitest --coverage (miniflare) |
 | `packages/design-system` | 85% | 85% | vitest --coverage |
 | `apps/mobile` — business logic | 90% | 100% | vitest --coverage |
@@ -30,6 +31,7 @@ coverage-gate.yml 은 vitest 설정에서 두 경로를 분리 리포트한다.
 | Workspace | W4 gate (%) |
 |---|---|
 | packages/content-schema | 100 |
+| packages/i18n | 100 |
 | packages/backend | 90 |
 | packages/design-system | 85 |
 | apps/api | 90 |
