@@ -1,4 +1,4 @@
-import type { Entitlement, PlanItem, ProgressSummary, Promo, PurchasablePlanKey, SpaceKind, SpaceRole } from '@hangul-route/content-schema';
+import type { Entitlement, LearnerLevelId, PlanItem, ProgressSummary, Promo, PurchasablePlanKey, SpaceKind, SpaceRole } from '@hangul-route/content-schema';
 
 /**
  * Console transport for /api/spaces — F-CONSOLE-001. Bearer = the console
@@ -25,7 +25,7 @@ export interface SpaceListItem {
 export interface RosterLearner {
   id: string;
   displayName: string;
-  ageGroup: '5-7' | '8-9' | '10-11';
+  ageGroup: LearnerLevelId;
   avatar: string;
   joinedAt: string;
   lastActiveAt: string;

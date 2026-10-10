@@ -4,6 +4,8 @@
  * D1 on the Worker, MemoryDb in tests. The v2 record types stay here.
  */
 
+import type { LearnerLevelId } from '@hangul-route/content-schema';
+
 export interface Family {
   id: string;
   email?: string;
@@ -16,7 +18,7 @@ export interface Profile {
   id: string;
   familyId: string;
   displayName: string;
-  ageGroup: '5-7' | '8-9' | '10-11';
+  ageGroup: LearnerLevelId;
   avatar: string;
   createdAt: string;
   lastActiveAt: string;
@@ -54,7 +56,7 @@ export interface Subscription {
 export interface Learner {
   id: string; // profile:xxxx — the client's local id is kept when free
   displayName: string;
-  ageGroup: '5-7' | '8-9' | '10-11';
+  ageGroup: LearnerLevelId;
   avatar: string;
   recoveryHash: string | null;
   createdAt: string;

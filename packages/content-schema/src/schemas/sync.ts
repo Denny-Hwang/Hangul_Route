@@ -4,6 +4,7 @@ import { ProgressSnapshotSchema } from './progress';
 import { TierSourceSchema } from './entitlement';
 import { InboxPlanSchema } from './plan';
 import { LearnerMembershipSchema } from './space';
+import { LearnerLevelIdSchema } from './learner-level';
 
 /**
  * Sync contracts — F-SYNC-001. Shared by the Worker (validation) and the
@@ -52,7 +53,7 @@ export const LearnerRegisterSchema = z.object({
   learner: z.object({
     id: z.string().regex(/^profile:[a-z0-9-]+$/).optional(),
     displayName: z.string().min(1).max(20),
-    ageGroup: z.enum(['5-7', '8-9', '10-11']),
+    ageGroup: LearnerLevelIdSchema,
     avatar: z.string().min(1),
   }),
 });

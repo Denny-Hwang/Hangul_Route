@@ -13,3 +13,5 @@ export * from './schemas/relink';
 export * from './schemas/entitlement';
 export * from './schemas/telemetry';
 export * from './schemas/locale';
+export * from './schemas/learner-level';
+export * from './schemas/onboarding-telemetry';

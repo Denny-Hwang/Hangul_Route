@@ -3,10 +3,12 @@
  * Real data is fetched from apps/api once cloud sync ships.
  */
 
+import type { LearnerLevelId } from '@hangul-route/content-schema';
+
 export interface MockChildProfile {
   id: string;
   displayName: string;
-  ageGroup: '5-7' | '8-9' | '10-11';
+  ageGroup: LearnerLevelId;
   questsCompleted: number;
   cards: number;
   streak: number;
