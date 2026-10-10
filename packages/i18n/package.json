@@ -1,0 +1,28 @@
+{
+  "name": "@hangul-route/i18n",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Typed UI dictionary (en/es/ko), plural + Intl helpers, banned-word lists and locale detection for Hangul Route (F-I18N-001)",
+  "type": "module",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./banned-words.json": "./src/banned-words.json"
+  },
+  "scripts": {
+    "lint": "echo '(no lint yet — @hangul-route/i18n)'",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit",
+    "build": "echo '(no build output yet — @hangul-route/i18n)'"
+  },
+  "dependencies": {
+    "@hangul-route/content-schema": "workspace:*"
+  },
+  "devDependencies": {
+    "@hangul-route/test-utils": "workspace:*",
+    "@vitest/coverage-v8": "^2.1.8",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.8"
+  }
+}
