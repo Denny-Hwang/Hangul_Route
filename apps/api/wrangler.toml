@@ -44,7 +44,9 @@ keep_vars = true
 #                                    without D1) — set those in a local .dev.vars, never on
 #                                    the deployed Worker. "production" can never opt in.
 # ALLOW_DEV_AUTH                     "true" also turns on the dev fallbacks (local only);
-#                                    ignored when ENVIRONMENT=production.
+#                                    ignored when ENVIRONMENT=production. With ENVIRONMENT
+#                                    unset and Clerk or D1 missing, GET /health answers
+#                                    503 misconfigured so a monitor catches it.
 #
 # The same keys may be set here instead; a [vars] value wins over a dashboard
 # value of the same name on the next deploy.

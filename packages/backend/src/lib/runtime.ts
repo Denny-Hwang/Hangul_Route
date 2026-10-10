@@ -43,8 +43,8 @@ export function devFallbacksAllowed(env: RuntimeEnv | undefined): boolean {
   const declared = declaredEnvironment(env);
   if (declared === 'production') return false;
   if (DEV_ENVIRONMENTS.has(declared)) return true;
-  if (env?.ALLOW_DEV_AUTH === 'true') return true;
-  if (declared) return false; // a named non-dev deployment (e.g. staging) never falls back
+  if (env?.ALLOW_DEV_AUTH === 'true') return true; // any deployment but production may opt in, staging included
+  if (declared) return false; // a named non-dev deployment (e.g. staging) without ALLOW_DEV_AUTH stays closed
   return undecidedDefault;
 }
 
@@ -60,7 +60,13 @@ export interface HealthReport {
   bindings: { db: boolean; clerk: boolean; stripe: boolean; stripeWebhook: boolean };
 }
 
-/** GET /health: which bindings are present — booleans only, never a value. */
+/**
+ * GET /health: which bindings are present — booleans only, never a value.
+ * Healthy when Clerk and D1 are both bound, or when a named non-production
+ * deployment runs the dev fallbacks. An unnamed (production) deployment with
+ * ALLOW_DEV_AUTH=true and a missing binding is the "production trusting
+ * bearers" state SEC-2 closes, so it reports misconfigured for a monitor.
+ */
 export function healthReport(env: RuntimeEnv | undefined): HealthReport {
   const bindings = {
     db: typeof env?.DB === 'object' && env.DB !== null,
@@ -69,6 +75,7 @@ export function healthReport(env: RuntimeEnv | undefined): HealthReport {
     stripeWebhook: Boolean(env?.STRIPE_WEBHOOK_SECRET),
   };
   const devFallbacks = devFallbacksAllowed(env);
-  const ready = devFallbacks || (bindings.db && bindings.clerk);
-  return { status: ready ? 'ok' : 'misconfigured', environment: environmentName(env), devFallbacks, bindings };
+  const environment = environmentName(env);
+  const ready = (bindings.db && bindings.clerk) || (devFallbacks && environment !== 'production');
+  return { status: ready ? 'ok' : 'misconfigured', environment, devFallbacks, bindings };
 }

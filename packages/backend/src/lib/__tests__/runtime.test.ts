@@ -21,6 +21,7 @@ describe('devFallbacksAllowed (SEC-2: fail closed unless a deployment opts in)',
     expect(devFallbacksAllowed({ ENVIRONMENT: 'test' })).toBe(true);
     expect(devFallbacksAllowed({ ENVIRONMENT: ' Development ' })).toBe(true);
     expect(devFallbacksAllowed({ ALLOW_DEV_AUTH: 'true' })).toBe(true);
+    expect(devFallbacksAllowed({ ENVIRONMENT: 'staging', ALLOW_DEV_AUTH: 'true' })).toBe(true); // a named non-dev deployment may still opt in
   });
 
   it('never turns on for ENVIRONMENT=production, whatever else is set', () => {
@@ -89,6 +90,20 @@ describe('healthReport (booleans only)', () => {
   it('is ok without bindings when the deployment runs the dev fallbacks', () => {
     setDevFallbacksDefaultForTests(false);
     expect(healthReport({ ENVIRONMENT: 'development' })).toMatchObject({ status: 'ok', environment: 'development', devFallbacks: true });
+  });
+
+  it('flags ALLOW_DEV_AUTH on an unnamed (production) deployment that lacks Clerk or D1', () => {
+    setDevFallbacksDefaultForTests(false);
+    expect(healthReport({ ALLOW_DEV_AUTH: 'true' })).toMatchObject({ status: 'misconfigured', environment: 'production', devFallbacks: true });
+    expect(healthReport({ ALLOW_DEV_AUTH: 'true', DB: {} }).status).toBe('misconfigured');
+    expect(healthReport({ ALLOW_DEV_AUTH: 'true', CLERK_SECRET_KEY: 'sk' }).status).toBe('misconfigured');
+    // Both bound: the fallbacks are never reached, so the Worker is healthy.
+    expect(healthReport({ ALLOW_DEV_AUTH: 'true', DB: {}, CLERK_SECRET_KEY: 'sk' }).status).toBe('ok');
+  });
+
+  it('is ok for a named non-production deployment that opted in with ALLOW_DEV_AUTH', () => {
+    setDevFallbacksDefaultForTests(false);
+    expect(healthReport({ ENVIRONMENT: 'staging', ALLOW_DEV_AUTH: 'true' })).toMatchObject({ status: 'ok', environment: 'staging', devFallbacks: true });
   });
 
   it('ignores a DB binding that is not an object', () => {
