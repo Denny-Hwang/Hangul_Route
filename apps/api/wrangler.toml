@@ -38,12 +38,13 @@ keep_vars = true
 # STRIPE_PRICE_GROUP_LICENSE_YEARLY  Stripe price id — $153 / year, recurring
 # CONSOLE_URL                        checkout success / cancel return, e.g. https://hangulroute.com
 # SCHOOL_CONSENT_MODE                "enabled" only after the legal review (decision #27)
-# ENVIRONMENT                        leave UNSET in production (unset = production). Only
-#                                    "development" / "test" (e.g. in a local .dev.vars)
-#                                    turn on the dev fallbacks: bearer = account id and an
-#                                    in-memory Db without the D1 binding. Never set it here.
-# ALLOW_DEV_AUTH                     "true" also turns on the dev fallbacks; never in
-#                                    production (ENVIRONMENT=production always wins).
+# ENVIRONMENT                        unset = production (fail closed: no Clerk key or no
+#                                    D1 binding → 503). Only "development" / "test" turn on
+#                                    the dev fallbacks (bearer = account id, in-memory Db
+#                                    without D1) — set those in a local .dev.vars, never on
+#                                    the deployed Worker. "production" can never opt in.
+# ALLOW_DEV_AUTH                     "true" also turns on the dev fallbacks (local only);
+#                                    ignored when ENVIRONMENT=production.
 #
 # The same keys may be set here instead; a [vars] value wins over a dashboard
 # value of the same name on the next deploy.
