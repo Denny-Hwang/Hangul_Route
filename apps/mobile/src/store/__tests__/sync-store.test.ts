@@ -110,7 +110,7 @@ describe('sync-store (F-SYNC-002)', () => {
     expect(body?.snapshot.quests.map((q) => q.questId)).toEqual(['q1', 'q2']);
   });
 
-  it('a learner with no saved progress is not registered or uploaded', async () => {
+  it('a learner with no progress record in memory (nothing saved, nothing written) is not registered or uploaded', async () => {
     useProgressStore.setState({ byProfile: {}, hydratedFor: new Set(), pendingFor: new Set() });
     const api = fakeApi();
     setSyncApiForTests(api as never);
