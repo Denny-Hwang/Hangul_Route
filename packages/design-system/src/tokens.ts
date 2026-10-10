@@ -9,7 +9,7 @@
  *
  * Typography:
  *   - System fallbacks; real font binding in `apps/mobile/App.tsx`
- *   - Sizes calibrated for ages 5–11 (body floor 18sp, prompt 22sp)
+ *   - Sizes calibrated for young readers and adult beginners alike (body floor 18sp, prompt 22sp)
  *
  * Spacing: 4pt sub-grid for fine, 8pt grid for layout.
  * Radii: generous, paper-card feel.
@@ -86,6 +86,16 @@ export const colors = {
     belly: '#FCF8F1',
     nose: '#2A1F14',
     cheek: '#F8B4B4',
+    // Learner cub variants (F-LEARN-001 §3.6). Flat keys on purpose: the
+    // tokens-parity test pins every colors.<group>.<key>. Orange is fur/furDark.
+    furBlue: '#4891CB',
+    furBlueDark: '#2E6A9E',
+    furGreen: '#5E9E3E',
+    furGreenDark: '#437A2A',
+    furPurple: '#7C57C0',
+    furPurpleDark: '#5B3F9A',
+    furPink: '#D0527F',
+    furPinkDark: '#A33A62',
   },
   // Card rarity (Heritage Library)
   rarity: {
@@ -101,6 +111,27 @@ export const colors = {
     focus: '#3A7FB5', // ≥ 3:1 (non-text) on canvas, paper and sunken
   },
 } as const;
+
+/** The five learner cubs; the avatar name (`hoya-blue`) is the contract for the colour. */
+export const HOYA_VARIANTS = ['orange', 'blue', 'green', 'purple', 'pink'] as const;
+export type HoyaVariant = (typeof HOYA_VARIANTS)[number];
+
+const HOYA_VARIANT_COLORS: Record<HoyaVariant, { fur: string; furDark: string }> = {
+  orange: { fur: colors.hoya.fur, furDark: colors.hoya.furDark },
+  blue: { fur: colors.hoya.furBlue, furDark: colors.hoya.furBlueDark },
+  green: { fur: colors.hoya.furGreen, furDark: colors.hoya.furGreenDark },
+  purple: { fur: colors.hoya.furPurple, furDark: colors.hoya.furPurpleDark },
+  pink: { fur: colors.hoya.furPink, furDark: colors.hoya.furPinkDark },
+};
+
+/**
+ * Fur and shade of a cub variant. Pure and React-free, so the web app can
+ * import it from `@hangul-route/design-system/tokens`. An unknown variant
+ * (persisted junk) reads as the default orange cub.
+ */
+export function hoyaVariantColors(variant: HoyaVariant): { fur: string; furDark: string } {
+  return HOYA_VARIANT_COLORS[variant] ?? HOYA_VARIANT_COLORS.orange;
+}
 
 export const spacing = {
   none: 0,
@@ -128,14 +159,14 @@ export const radii = {
 } as const;
 
 export const typography = {
-  // Family — child-friendly, high legibility. System fallbacks for now.
+  // Family — friendly, high legibility. System fallbacks for now.
   family: {
     sans: 'System',
     sansKr: 'System',
     display: 'System',
     mono: 'Menlo, Courier, monospace',
   },
-  // Size scale — body floor 18 (5–7 yo legibility)
+  // Size scale — body floor 18 (young-reader legibility)
   size: {
     caption: 14,
     bodySm: 16,
@@ -193,11 +224,11 @@ export const shadows = {
   },
 } as const;
 
-// Touch targets — children 5–11. Apple HIG recommends 75pt for children's apps;
-// we floor at 64 (CLAUDE.md §4) but expose `child` size for primary actions.
+// Touch targets — child-sized for every learner. Apple HIG recommends 75pt for
+// children's apps; we floor at 64 (CLAUDE.md §4) but expose `child` size for primary actions.
 export const touchTarget = {
   min: 64, // CLAUDE.md floor
-  child: 80, // primary actions, children 5–7
+  child: 80, // primary actions, large and easy to hit
   hero: 96, // jamo / tile prompts
 } as const;
 
@@ -209,7 +240,7 @@ export const borderWidth = {
   thick: 3, // framed art and trace/draw surfaces
 } as const;
 
-// Motion — durations + easings (anti-startle for kids)
+// Motion — durations + easings (anti-startle)
 export const motion = {
   duration: {
     instant: 60,

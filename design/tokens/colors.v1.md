@@ -3,7 +3,7 @@
 **Authoritative palette for Hangul Route.** Mirrors `packages/design-system/src/tokens.ts` (`colors` export).
 Drift between this document and `tokens.ts` is detected by `.github/workflows/design-token-sync.yml` (F-DES-001).
 
-Last updated: 2026-10-09 · Version: v1 (AA contrast revision, see below)
+Last updated: 2026-10-10 · Version: v1 (AA contrast revision, see below)
 
 ---
 
@@ -85,6 +85,28 @@ Last updated: 2026-10-09 · Version: v1 (AA contrast revision, see below)
 | `hoya.belly` | #FCF8F1 | Belly + face center |
 | `hoya.nose` | #2A1F14 | Nose triangle |
 | `hoya.cheek` | #F8B4B4 | Soft pink cheek blush |
+
+### Hoya variants (learner's cub — F-LEARN-001 §3.6)
+
+The learner picks one of five tinted cubs; the **avatar name decides the colour** (`hoya-blue` is blue), not the Pillar theme. Orange is the existing gold cub (`hoya.fur` / `hoya.furDark`, unchanged). The other four are **flat keys of the `hoya` group** so `tokens-parity.test.ts` pins every one. `hoyaVariantColors(variant)` in `tokens.ts` maps `orange | blue | green | purple | pink` to a `{ fur, furDark }` pair. Stripes, nose, cheek and belly are shared by all variants.
+
+| Token | Hex | Use |
+|---|---|---|
+| `hoya.furBlue` | #4891CB | Blue cub body fill. Stripes on it 4.7:1, on canvas 3.2:1 |
+| `hoya.furBlueDark` | #2E6A9E | Blue cub shading and avatar ring |
+| `hoya.furGreen` | #5E9E3E | Green cub body fill. Stripes on it 4.9:1, on canvas 3.1:1 |
+| `hoya.furGreenDark` | #437A2A | Green cub shading and avatar ring |
+| `hoya.furPurple` | #7C57C0 | Purple cub body fill. Stripes on it 3.1:1, on canvas 5.0:1 |
+| `hoya.furPurpleDark` | #5B3F9A | Purple cub shading and avatar ring |
+| `hoya.furPink` | #D0527F | Pink cub body fill. Stripes on it 4.0:1, on canvas 3.8:1 |
+| `hoya.furPinkDark` | #A33A62 | Pink cub shading and avatar ring |
+
+Rules for the variants:
+
+- The fur is a **fill, not text** (the rule above stands: never set text in a Hoya colour). The bar is the 3:1 non-text minimum (WCAG 1.4.11), enforced in `contrast.test.ts`: every fur against `hoya.stripes`; the four new furs and **every** `*Dark` shade against `surface.paper` and `surface.canvas`.
+- The gold orange fur is 1.8:1 on canvas, so the **avatar ring and any chip use the `*Dark` shade** (orange `furDark` is 3.1:1 on canvas, 3.3:1 on paper); the cub inside is drawn in the fur.
+- Colour is never the only cue (WCAG 1.4.1): every cub carries its English label (Book Tiger, Home Tiger, Feast Tiger, Mountain Tiger, Craft Tiger) wherever it is picked. The fur lightness differs per variant on purpose (the lightness band is limited to what the 3:1 rules allow), and a colour-blind simulation (Machado deuteranopia / protanopia, CIELAB distance) keeps every pair apart: the closest pairs are blue and purple (about 15) and orange and green under protanopia (about 22); a distance below about 10 would be unreadable and none is.
+- The avatar's Pillar `theme` colour (`theme.*`) no longer colours the learner's cub.
 
 ## Rarity (Heritage Library card borders)
 

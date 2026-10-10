@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { WCAG_AA_LARGE, WCAG_AA_NORMAL, contrastRatio, relativeLuminance } from '../contrast';
-import { colors } from '../tokens';
+import { HOYA_VARIANTS, colors, hoyaVariantColors } from '../tokens';
 
 describe('contrastRatio (WCAG 2.x)', () => {
   it('spans 1:1 to 21:1', () => {
@@ -108,5 +108,47 @@ describe('token contrast contract (WCAG AA)', () => {
   it('keeps the text hierarchy: muted is lighter than secondary, secondary lighter than primary', () => {
     expect(relativeLuminance(colors.text.muted)).toBeGreaterThan(relativeLuminance(colors.text.secondary));
     expect(relativeLuminance(colors.text.secondary)).toBeGreaterThan(relativeLuminance(colors.text.primary));
+  });
+});
+
+/**
+ * F-LEARN-001 §3.6 — Hoya fur variants. The fur is a fill, not text, so the bar
+ * is the 3:1 non-text minimum (WCAG 1.4.11): the stripes and eyes must read on
+ * the fur, and the shade used for the avatar ring / chip must read on every
+ * surface the cub sits on. Colour is never the only cue (the English label
+ * names the cub), and the five variants are checked for colour-blind
+ * distinctness in design review.
+ */
+describe('Hoya fur variant contrast (non-text, WCAG 1.4.11)', () => {
+  const surfaces = {
+    'surface.paper': colors.surface.paper,
+    'surface.canvas': colors.surface.canvas,
+  } as const;
+
+  it.each(HOYA_VARIANTS)('%s fur against hoya.stripes ≥ 3:1', (variant) => {
+    expect(contrastRatio(hoyaVariantColors(variant).fur, colors.hoya.stripes)).toBeGreaterThanOrEqual(WCAG_AA_LARGE);
+  });
+
+  for (const [name, bg] of Object.entries(surfaces)) {
+    // The ring and the chip use the shade, so every variant (orange included) is held to it.
+    it.each(HOYA_VARIANTS)(`%s ring shade (furDark) against ${name} ≥ 3:1`, (variant) => {
+      expect(contrastRatio(hoyaVariantColors(variant).furDark, bg)).toBeGreaterThanOrEqual(WCAG_AA_LARGE);
+    });
+    // The four new tints are chosen to clear it as a fill too (gold orange is
+    // the existing brand cub and cannot: it is 1.8:1 on canvas, so it uses its shade).
+    it.each(HOYA_VARIANTS.filter((v) => v !== 'orange'))(`%s fur fill against ${name} ≥ 3:1`, (variant) => {
+      expect(contrastRatio(hoyaVariantColors(variant).fur, bg)).toBeGreaterThanOrEqual(WCAG_AA_LARGE);
+    });
+  }
+
+  it.each(HOYA_VARIANTS)('%s shade is darker than its fur (the shading shows)', (variant) => {
+    const { fur, furDark } = hoyaVariantColors(variant);
+    expect(relativeLuminance(furDark)).toBeLessThan(relativeLuminance(fur));
+  });
+
+  it('the ring shade also reads on surface.sunken for the four new tints', () => {
+    for (const variant of HOYA_VARIANTS.filter((v) => v !== 'orange')) {
+      expect(contrastRatio(hoyaVariantColors(variant).furDark, colors.surface.sunken)).toBeGreaterThanOrEqual(WCAG_AA_LARGE);
+    }
   });
 });
