@@ -73,3 +73,39 @@ describe('learner PWA manifest (UF-04)', () => {
     expect(hits).toEqual([]);
   });
 });
+
+describe('App Store listing (UF-11, App Review 2.3.8 / 5.1.4)', () => {
+  // Public store metadata: outside the Kids Category it must not suggest that
+  // children are the main audience. The App Review notes (section 6) may say
+  // "many learners are children" — they are not public.
+  const metadataPath = join(webSrc, '..', '..', '..', 'docs', 'launch', 'app-store-metadata.md');
+  const metadata = readFileSync(metadataPath, 'utf8');
+
+  function listed(headingPrefix: string): string {
+    const section = metadata.split(/^## /m).find((part) => part.startsWith(headingPrefix));
+    const block = /```[^\n]*\n([\s\S]*?)```/.exec(section ?? '');
+    if (!block?.[1]) throw new Error(`no code block under "## ${headingPrefix}" in app-store-metadata.md`);
+    return block[1];
+  }
+
+  const PUBLIC_FIELDS: ReadonlyArray<[string, string]> = [
+    ['promotional text', '2.'],
+    ['description', '3.'],
+    ['keywords', '4.'],
+  ];
+
+  for (const [label, prefix] of PUBLIC_FIELDS) {
+    it(`the ${label} never says "child", "children" or "kids"`, () => {
+      expect(listed(prefix)).not.toMatch(/\bchild(ren)?\b|\bkids?\b/i);
+    });
+
+    it(`the ${label} has no kids-only framing or age range`, () => {
+      const text = listed(prefix);
+      expect(KIDS_ONLY_FRAMING.filter(({ re }) => re.test(text)).map(({ name }) => name)).toEqual([]);
+    });
+  }
+
+  it('the description fits the 4000-character App Store limit', () => {
+    expect(listed('3.').trim().length).toBeLessThanOrEqual(4000);
+  });
+});

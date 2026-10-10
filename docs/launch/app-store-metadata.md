@@ -23,7 +23,7 @@ Learn the Korean alphabet with Hoya the tiger — for anyone starting from zero,
 ## 3. 설명 (≤ 4000자)
 
 ```
-Hangul Route is a Korean learning app for anyone starting Hangul from zero, at any age — heritage families where the parents speak Korean and the children do not yet, K-culture fans, and beginners who want a gentle first step into the Korean alphabet.
+Hangul Route is a Korean learning app for anyone starting Hangul from zero, at any age — heritage families where the parents speak Korean and the next generation does not yet, K-culture fans, and beginners who want a gentle first step into the Korean alphabet.
 
 MEET HOYA
 Hoya is a young tiger who guides every quest. Hoya never frowns and never says "wrong." When you slip, Hoya thinks it over with you and you try again. There are no red marks anywhere in the app.
