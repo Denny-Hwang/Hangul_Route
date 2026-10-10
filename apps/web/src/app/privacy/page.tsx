@@ -19,7 +19,7 @@ const sections: Section[] = [
   {
     heading: 'Who creates the account',
     paragraphs: [
-      'Accounts are created and managed by an adult. When the learner is a child, that adult is a parent or legal guardian: the child uses the app, but a grown-up sets it up, enters any billing details, and confirms consent behind a parent-gate. We do not knowingly let a child under 13 create an account without verifiable parental consent.',
+      'Accounts are created and managed by the account holder (a parent or legal guardian when the learner is a child). When the learner is a child, the child uses the app, but a grown-up sets it up, enters any billing details, and confirms consent behind a parent-gate. We do not knowingly let a child under 13 create an account without verifiable parental consent.',
     ],
   },
   {

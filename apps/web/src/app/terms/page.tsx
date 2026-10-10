@@ -19,7 +19,7 @@ const sections: Section[] = [
   {
     heading: 'Accounts and parental responsibility',
     paragraphs: [
-      'An adult creates the account — a parent or legal guardian when the learner is a child — supervises it, keeps sign-in details secure, and is responsible for activity under it. A child may use the app under that supervision. Account changes, purchases, and other sensitive actions sit behind a parent-gate.',
+      'The account holder (a parent or legal guardian when the learner is a child) creates and supervises the account, keeps sign-in details secure, and is responsible for activity under it. A child may use the app under that supervision. Account changes, purchases, and other sensitive actions sit behind a parent-gate.',
     ],
   },
   {

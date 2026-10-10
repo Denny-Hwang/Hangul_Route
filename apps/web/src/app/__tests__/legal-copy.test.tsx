@@ -37,6 +37,15 @@ describe('privacy policy', () => {
     expect(privacy).not.toContain('5–7 / 8–11');
   });
 
+  it('says the account holder creates the account — not "an adult" (owner decision 2026-10-10)', () => {
+    expect(privacy).toContain(
+      'Accounts are created and managed by the account holder (a parent or legal guardian when the learner is a child).',
+    );
+    expect(privacy).not.toMatch(/created and managed by an adult/i);
+    // A grown-up still sets a child's account up behind the parent-gate.
+    expect(privacy).toMatch(/When the learner is a child, the child uses the app, but a grown-up sets it up/);
+  });
+
   it('keeps every child-privacy protection', () => {
     expect(privacy).toContain("Children's privacy (COPPA / GDPR-K)");
     expect(privacy).toContain('verifiable parental consent');
@@ -60,6 +69,13 @@ describe('terms of service', () => {
     expect(terms).toMatch(/when the learner is a child, the parent or legal guardian who sets up the account accepts these terms/i);
     expect(terms).toContain('A child may use the app under that supervision.');
     expect(terms).toContain('parent-gate');
+  });
+
+  it('says the account holder creates and supervises the account — not "an adult" (owner decision 2026-10-10)', () => {
+    expect(terms).toContain(
+      'The account holder (a parent or legal guardian when the learner is a child) creates and supervises the account',
+    );
+    expect(terms).not.toMatch(/an adult creates the account/i);
   });
 
   it('is still marked as a draft pending legal review', () => {
