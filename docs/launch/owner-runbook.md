@@ -106,6 +106,18 @@ Stripe → Product catalog → **Coupons** → New: 퍼센트 또는 정액 · D
 ### Step 12. 자모 MP3 30개 녹음 (1일, 틈날 때)
 자음 14 + 모음 10 + 받침 6. 조용한 방, 스마트폰 음성메모면 충분. 글자당 파일 하나, 앞뒤 0.3초 여백, 두 번 녹음해 좋은 것 선택. 파일명은 글자 그대로 (`ㄱ.mp3`, `ㅏ.mp3`) 로 폴더에 모아 전달 → 변환·노멀라이즈·프리캐시 등록은 저장소 쪽에서 처리.
 
+## D. 연락 주소 (Step 13)
+
+### Step 13. 문의 메일 받기 — Cloudflare Email Routing (10분, 공개 전 필수)
+**왜**: 랜딩 푸터 · About · 개인정보처리방침 · 이용약관의 연락처는 모두 `hello@hangulroute.com` 이다 (`/teach/billing` 의 학교 계약 문의 링크도 같은 주소). 지금 `hangulroute.com` 에는 메일을 받는 설정 (MX) 이 없어서 이 주소로 보낸 메일은 반송된다. 개인정보처리방침이 학부모의 열람·삭제 요청에 30일 안에 답한다고 약속하므로, 공개 전에 이 주소가 실제로 받아야 한다. 도메인이 이미 Cloudflare DNS 에 있어서 별도 메일 서비스 없이 무료로 된다 (Step 6 과 순서 무관).
+1. Cloudflare 대시보드 → `hangulroute.com` → **Email** → **Email Routing** → **Get started** (또는 Enable Email Routing).
+2. Cloudflare 가 필요한 DNS 레코드 (MX · SPF) 를 보여 준다 → **Add records and enable**.
+3. **Routing rules** → **Create address** → Custom address `hello` → Action **Send to an email** → Destination 에 **오너 본인의 받은편지함 주소** → Save.
+4. 그 받은편지함에 Cloudflare 가 보낸 확인 메일의 링크를 누른다. **Destination addresses** 에서 상태가 **Verified** 가 되기 전에는 아무것도 전달되지 않는다.
+
+**확인**: 다른 계정 (예: 개인 Gmail) 에서 `hello@hangulroute.com` 으로 메일을 보내면 몇 분 안에 4 의 받은편지함에 도착한다 (스팸함도 확인). Routing 탭에서 `hello@hangulroute.com` 규칙이 Active 로 보인다.
+- 참고: Email Routing 은 받는 것만 전달한다. 답장은 받은편지함 주소에서 나가므로, 발신자를 `hello@hangulroute.com` 으로 보이게 하려면 메일 서비스 쪽 설정 (예: Gmail 의 "다른 주소에서 메일 보내기") 이 따로 필요하다. 선택 사항이고 공개 전 필수는 아니다.
+
 ## 나중에 (법률 검토 후)
 학교 동의 모드 (c) 를 열 때만: `hangul-route-api` 런타임 변수 `SCHOOL_CONSENT_MODE=enabled` + `hangul-route-web` 빌드 변수 `NEXT_PUBLIC_SCHOOL_CONSENT_MODE=enabled` (Retry deployment). 그 전엔 콘솔에서 선택 불가로 잠겨 있다.
 

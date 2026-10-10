@@ -16,7 +16,7 @@ Everything in here is **copy you can paste**, not strategy theory.
 | `launch-checklist-d14-d0.md` | Daily checklist from D-14 to launch day |
 | `hallway-test-protocol.md` | 6-session script + worksheet for kids 5–11 (D-7) |
 | `parent-interview-guide.md` | 5-parent 30-min interview script + triage rules |
-| `owner-runbook.md` | **오너 순서표 (대시보드 전용)** — Workers Builds 프로젝트 3개 입력값, D1·변수·시크릿·도메인·Clerk·Stripe·코드·검증 Step 1–12 와 확인 기준. 로컬 wrangler 없음 |
+| `owner-runbook.md` | **오너 순서표 (대시보드 전용)** — Workers Builds 프로젝트 3개 입력값, D1·변수·시크릿·도메인·Clerk·Stripe·코드·검증·문의 메일 Step 1–13 과 확인 기준. 로컬 wrangler 없음 |
 | `web-app-launch.md` | **주 채널** — 웹앱(PWA) 런치 체크리스트: 저장소에서 끝낸 것, 오너 Step 요약 (상세는 runbook), 웹에서 다른 점, 남은 것 |
 | `app-store-submission.md` | (선택, 나중) App Store 제출 체크리스트 — 저장소에서 끝낸 것 / 오너가 할 것 / Guideline 대조 |
 | `app-store-metadata.md` | App Store Connect 에 붙여넣는 이름·부제·설명·키워드·리뷰 노트·스크린샷 구성 |

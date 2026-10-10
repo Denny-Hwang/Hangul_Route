@@ -55,6 +55,13 @@ describe('contact address', () => {
     });
   }
 
+  it('the owner runbook has the step that makes the address receive mail (Email Routing)', () => {
+    const runbook = readFileSync(join(appDir, '..', '..', '..', '..', 'docs', 'launch', 'owner-runbook.md'), 'utf8');
+    const step = /### Step 13\. [^\n]*Email Routing[^\n]*\n([\s\S]*?)(?=\n## |\n### |$)/.exec(runbook)?.[1] ?? '';
+    expect(step).toContain(CONTACT_EMAIL);
+    expect(step).toContain('Verified');
+  });
+
   it('no page source still carries a @hangulroute.example placeholder address', () => {
     const offenders = sourceFiles(appDir).filter((file) => /@hangulroute\.example/.test(readFileSync(file, 'utf8')));
     expect(offenders.map((file) => file.slice(appDir.length))).toEqual([]);
