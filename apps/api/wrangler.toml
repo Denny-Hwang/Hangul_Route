@@ -29,6 +29,11 @@ keep_vars = true
 # STRIPE_SECRET_KEY       Stripe → Developers → API keys (F-ENT-001)
 # STRIPE_WEBHOOK_SECRET   Stripe → Developers → Webhooks → the endpoint's signing
 #                         secret (POST /api/entitlements/stripe/webhook)
+# RESCUE_PEPPER           optional — a long random string (e.g. `openssl rand -hex 32`);
+#                         new Rescue Codes are stored as HMAC(pepper, code) instead of
+#                         plain SHA-256 (SEC-5). Codes issued before it was set keep
+#                         working. NEVER change or delete it once set: codes hashed
+#                         under it would stop restoring.
 
 # ---- Variables (dashboard → same page → Type: Text; kept by keep_vars) ----
 # ALLOWED_ORIGINS                    comma-separated browser origins allowed on /api/*

@@ -25,8 +25,9 @@ Then: they see one human-readable Rescue Code, are told to write it down, can op
 |    device." (placeholder)        |
 |                                  |
 |   +--------------------------+   |
-|   |   WORD-WORD-1234         |   |  <- the code, largest text
-|   |   (two words + 4 digits) |   |     on screen; a block,
+|   |   WORD-WORD-WORD-WORD-   |   |  <- the code, largest text
+|   |   123456                 |   |     on screen; a block,
+|   |   (four words + 6 digits)|   |     caption follows the shape
 |   +--------------------------+   |     not a text field
 |   [ copy ]   [ share / print ]   |
 |                                  |
@@ -41,7 +42,7 @@ Then: they see one human-readable Rescue Code, are told to write it down, can op
 +----------------------------------+
 ```
 
-- The code is displayed, not typed: a child-readable pair of English words plus four digits (§5.1 format).
+- The code is displayed, not typed: four child-readable English words plus six digits (SEC-5, 2026-10-09). A code issued earlier (two words + four digits) is shown as is, with its own caption, until a parent rotates it.
 - Rotation is deliberately last and small: the old code stops working, and a parent who already wrote one down must understand that.
 - "Last saved" is informational. An old timestamp never gets alarm treatment or a "you haven't saved in X days" nudge.
 

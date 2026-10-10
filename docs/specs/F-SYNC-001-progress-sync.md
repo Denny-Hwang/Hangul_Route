@@ -32,6 +32,7 @@ The learner device is unauthenticated (children have no accounts), so the device
 - `PUT /learners/:id/snapshot` (`Authorization: Device <deviceId>:<secret>`) `{ baseRev, snapshot, summary, schemaVer, contentVer }`
   - `baseRev` equals the stored rev (or 0 with no row) → store, `rev + 1`, 200 `{ rev, updatedAt }`
   - otherwise → **409** `{ rev, snapshot, summary }` so the client merges and retries
+  - the rev check and the write are **one compare-and-set** (SYNC-1, 2026-10-09): `INSERT … ON CONFLICT DO NOTHING` for base rev 0, `UPDATE … WHERE learner_id = ? AND rev = ?` otherwise, success only when `meta.changes === 1`. Two devices uploading on the same base rev get one 200 and one 409, never two 200s
   - body validated with `ProgressSnapshotSchema` / `ProgressSummarySchema`; `snapshot.profileId` must equal `:id`
 - `GET /learners/:id/snapshot` → `{ rev, snapshot, summary, updatedAt, schemaVer, contentVer }` or 404 `no_snapshot`
 - `GET /learners/:id/inbox?since=` → `{ rev, plans: [], memberships: [], tier: 'free', serverTime }` (plans / memberships / tier fill in S3–S6; the shape is fixed now)
@@ -80,7 +81,8 @@ Merging is idempotent and commutative on the sets above (`merge(a,b) ≡ merge(b
 | File | Coverage |
 |---|---|
 | `content-schema/__tests__/sync.test.ts` | summary / put body / backup file schemas parse and reject |
-| `backend/__tests__/sync.test.ts` | register, device auth (401/403), put/get, 409 conflict + merged retry, inbox shape |
+| `backend/__tests__/sync.test.ts` | register, device auth (401/403), put/get, 409 conflict + merged retry, concurrent PUTs on one base rev (one wins), inbox shape |
+| `backend/db/__tests__/db-contract.test.ts` | `putSnapshot(record, baseRev)` compare-and-set on both backends |
 | `mobile/logic/sync/__tests__/merge.test.ts` | every rule in §3.3, commutativity, idempotence |
 | `mobile/logic/sync/__tests__/summarize.test.ts` | §3.4 fields on fixtures |
 | `mobile/logic/sync/__tests__/engine.test.ts` | ok / conflict-then-ok / double conflict / error |
