@@ -36,7 +36,7 @@ Who pays is an adult or a space; who benefits is every learner attached to it. O
 | Method · path | Who | Result |
 |---|---|---|
 | `GET /` | account | entitlements for the account itself and for the spaces it owns, each with the space name |
-| `POST /verify` `{ spaceId, store, receipt }` | family owner | F-IAP-001 receipt (dev stub until F-IAP-002) → `applyEntitlement(space, family_lifetime, apple|google)` |
+| `POST /verify` `{ spaceId, store, receipt }` | — | **501 `receipt_verification_not_configured`** until F-IAP-002 wires real store verification (audit SEC-1, 2026-10-09: the dev stub granted `family_lifetime` for any JSON blob). Then: verified receipt → `applyEntitlement(space, family_lifetime, apple|google)` |
 | `POST /stripe/checkout` `{ planKey, subjectKind: 'space', subjectId }` | space owner (`family_lifetime` → an owned family; `group_license` → an owned stand-alone class or school; a class inside a school is refused 422, the school licence covers it) | Stripe Checkout Session `{ url }`: `mode=payment` for the lifetime price (`STRIPE_PRICE_FAMILY_LIFETIME`, `customer_creation=always`), `mode=subscription` for the yearly licence (`STRIPE_PRICE_GROUP_LICENSE_YEARLY`); subject in metadata; `stripe_not_configured` without `STRIPE_SECRET_KEY` / the price id |
 | `POST /stripe/portal` `{ subjectKind, subjectId }` | account with an active Stripe **subscription** on that subject (a lifetime purchase has nothing to manage → 404) | Billing Portal `{ url }`; 503 without keys |
 | `POST /stripe/webhook` | Stripe | signature verified with `STRIPE_WEBHOOK_SECRET` (HMAC-SHA256 over `t.body`, 5-minute tolerance, constant-time compare); `checkout.session.completed` → active (`providerRef` = subscription, else payment intent, else session id; lifetime keeps `expiresAt` null); `customer.subscription.created/updated` → mapped status + `current_period_end`; `…deleted` → expired; other events → 200 ignored; bad signature → 400; no secret → 503 |
@@ -69,6 +69,6 @@ Legacy `/api/subscriptions/*` (v1 family subscription) stays untouched until the
 | `content-schema/__tests__/entitlement.test.ts` | schemas, apply input, inbox tier fields default |
 | `backend/lib/__tests__/entitlement.test.ts` | `isEntitlementActive` matrix incl. past-due grace, `tierForLearner` for family / class-pro / school-license / none, `classCap` |
 | `backend/lib/__tests__/stripe.test.ts` | signature parse + HMAC verify (valid, tampered, stale), status mapping, event → apply input, checkout params |
-| `backend/__tests__/entitlements.test.ts` | list, verify (rights + stub), checkout (rights, 503 without keys, session via injected fetch), portal, webhook (bad signature, unknown event, subscription lifecycle → inbox tier flips), dynamic class cap |
+| `backend/__tests__/entitlements.test.ts` | list, verify (always 501, grants nothing), checkout (rights, 503 without keys, session via injected fetch), portal, webhook (bad signature, unknown event, subscription lifecycle → inbox tier flips), dynamic class cap |
 | `mobile/store/__tests__/tier-store.test.ts` | apply from inbox, grace, legacy subscription fallback |
 | `mobile/store/__tests__/membership-store.test.ts` / `plan-store.test.ts` | refresh feeds the tier store; unlocked stages follow the effective tier |

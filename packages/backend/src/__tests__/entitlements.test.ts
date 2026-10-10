@@ -28,24 +28,30 @@ const PROMO = { id: 'promo_1', code: 'hoya20', active: true, expires_at: null, m
 const promoResponse = (rows: unknown[]) => new Response(JSON.stringify({ data: rows }), { status: 200 });
 
 describe('entitlements (F-ENT-001 §3.3)', () => {
-  it('lists mine and my spaces’, verifies a family receipt, and rejects other people’s spaces', async () => {
-    const fam = await createSpace('mom', 'family', 'Kim family');
-    const cls = await createSpace('teacher', 'class', 'A');
+  it('lists mine and my spaces’, and rejects anonymous callers', async () => {
+    await createSpace('mom', 'family', 'Kim family');
     expect((await call('GET', '/api/entitlements', json)).status).toBe(401);
     expect(((await call('GET', '/api/entitlements', bearer('mom'))).body.data as { entitlements: unknown[] }).entitlements).toEqual([]);
+  });
 
-    const receipt = JSON.stringify({ plan: 'yearly', expiresAt: '2099-01-01T00:00:00.000Z' });
-    const verified = await call('POST', '/api/entitlements/verify', bearer('mom'), { spaceId: fam, store: 'apple', receipt });
-    expect(verified.status).toBe(200);
-    expect(verified.body.data).toMatchObject({ entitlement: { subjectKind: 'space', subjectId: fam, planKey: 'family_lifetime', status: 'active', provider: 'apple', subjectName: 'Kim family' } });
-    expect((await call('POST', '/api/entitlements/verify', bearer('dad'), { spaceId: fam, store: 'apple', receipt })).status).toBe(403);
-    expect((await call('POST', '/api/entitlements/verify', bearer('teacher'), { spaceId: cls, store: 'apple', receipt })).status).toBe(422);
-    expect((await call('POST', '/api/entitlements/verify', bearer('mom'), { spaceId: fam, store: 'apple', receipt: 'garbage' })).body.error?.code).toBe('receipt_invalid');
-    expect((await call('POST', '/api/entitlements/verify', bearer('mom'), { spaceId: 'space:nope', store: 'apple', receipt })).status).toBe(404);
-    expect((await call('POST', '/api/entitlements/verify', bearer('mom'), { spaceId: fam, store: 'apple', receipt: JSON.stringify({ plan: 'monthly', expiresAt: '2020-01-01T00:00:00.000Z' }) })).body.data).toMatchObject({ entitlement: { status: 'expired' } });
-
-    const mine = (await call('GET', '/api/entitlements', bearer('mom'))).body.data as { entitlements: Array<{ planKey: string }> };
-    expect(mine.entitlements.map((e) => e.planKey)).toEqual(['family_lifetime']);
+  it('never grants from a receipt: /verify is 501 until real store verification exists (SEC-1)', async () => {
+    const fam = await createSpace('mom', 'family', 'Kim family');
+    // The shape the old dev stub accepted as proof of a lifetime purchase.
+    const forged = JSON.stringify({ plan: 'yearly', expiresAt: '2099-01-01T00:00:00.000Z' });
+    for (const [user, body] of [
+      ['mom', { spaceId: fam, store: 'apple', receipt: forged }],
+      ['mom', { spaceId: fam, store: 'google', receipt: forged }],
+      ['dad', { spaceId: fam, store: 'apple', receipt: forged }],
+      ['mom', { spaceId: fam, store: 'apple', receipt: 'garbage' }],
+    ] as const) {
+      const r = await call('POST', '/api/entitlements/verify', bearer(user), body);
+      expect(r.status).toBe(501);
+      expect(r.body).toMatchObject({ ok: false, error: { code: 'receipt_verification_not_configured', message: 'receipt verification not configured' } });
+    }
+    expect((await call('POST', '/api/entitlements/verify', json, { spaceId: fam, store: 'apple', receipt: forged })).status).toBe(501);
+    const mine = (await call('GET', '/api/entitlements', bearer('mom'))).body.data as { entitlements: unknown[] };
+    expect(mine.entitlements).toEqual([]);
+    expect(await db.entitlementsFor('space', fam)).toEqual([]);
   });
 
   it('checkout enforces who may buy what and needs Stripe configuration', async () => {
