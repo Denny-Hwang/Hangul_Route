@@ -103,8 +103,8 @@ export function MeetHoya(): JSX.Element {
         >
           Hoya is a young tiger and the only voice in the app. Korean folklore
           opens with &ldquo;Long ago, when tigers smoked tobacco…&rdquo; so the tiger is
-          Korea&rsquo;s grandparent character. Hoya is a young one — so kids meet a
-          peer, not an authority.
+          Korea&rsquo;s grandparent character. Hoya is a young one — so learners meet
+          a peer, not an authority.
         </p>
         <ul
           style={{

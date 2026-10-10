@@ -9,15 +9,16 @@ export default function AboutPage(): JSX.Element {
       </Link>
       <h1 style={{ fontSize: typography.size.display, marginTop: spacing.lg }}>About Hangul Route</h1>
       <p style={{ fontSize: typography.size.bodyLg, color: colors.text.secondary }}>
-        Made by a small team (mostly one person and a tiger). For kids whose parents
-        speak Korean — or whose kids love K-pop, K-food, K-anything — and want a
-        gentle, anti-shame way in.
+        Made by a small team (mostly one person and a tiger). For anyone learning
+        Hangul from zero, at any age — heritage families whose parents or
+        grandparents speak Korean, fans of K-pop, K-food and K-anything, and
+        curious beginners — who want a gentle, anti-shame way in.
       </p>
 
       <section style={{ marginTop: spacing.xl }}>
         <h2>Our promises</h2>
         <ul style={{ lineHeight: 1.8 }}>
-          <li>UI is English (CEFR Pre-A1, 5–7 yo vocabulary).</li>
+          <li>Menus and instructions use plain, simple English (CEFR Pre-A1).</li>
           <li>Korean is only used for the content being taught.</li>
           <li>No red ❌ for wrong answers — Hoya nudges with amber.</li>
           <li>No ads, ever. No ads designed at children. Period.</li>
