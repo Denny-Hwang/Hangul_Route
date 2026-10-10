@@ -2,12 +2,17 @@ import type { Entitlement, EntitlementApply, MemberKind, Membership, Plan, Space
 import { id, type Account, type Learner, type LearnerDevice, type SnapshotRecord } from '../store';
 import { mergeEntitlement, type Db, type StoredRelink } from './types';
 
+/** What `run()` resolves to on D1 (`D1Result`): `meta.changes` is the row count the statement wrote. */
+export interface D1RunResultLike {
+  meta?: { changes?: number };
+}
+
 /** The slice of Cloudflare's D1 API this package uses (also what the SQLite test shim provides). */
 export interface D1PreparedLike {
   bind(...values: unknown[]): D1PreparedLike;
   first<T = Record<string, unknown>>(): Promise<T | null>;
   all<T = Record<string, unknown>>(): Promise<{ results: T[] }>;
-  run(): Promise<unknown>;
+  run(): Promise<D1RunResultLike>;
 }
 export interface D1Like {
   prepare(sql: string): D1PreparedLike;
@@ -91,6 +96,11 @@ export class D1Db implements Db {
   private async run(sql: string, params: unknown[]): Promise<void> {
     await this.d1.prepare(sql).bind(...params).run();
   }
+  /** Runs a write and reports how many rows it changed. */
+  private async changes(sql: string, params: unknown[]): Promise<number> {
+    const result = await this.d1.prepare(sql).bind(...params).run();
+    return Number(result.meta?.changes ?? 0);
+  }
 
   getAccount(accountId: string): Promise<Account | null> {
     return this.one('SELECT * FROM accounts WHERE id = ?', [accountId], toAccount);
@@ -140,11 +150,21 @@ export class D1Db implements Db {
   getSnapshot(learnerId: string): Promise<SnapshotRecord | null> {
     return this.one('SELECT * FROM snapshots WHERE learner_id = ?', [learnerId], toSnapshot);
   }
-  putSnapshot(s: SnapshotRecord): Promise<void> {
-    return this.run(
-      'INSERT INTO snapshots (learner_id, rev, schema_ver, content_ver, device_id, summary_json, payload_json, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(learner_id) DO UPDATE SET rev = excluded.rev, schema_ver = excluded.schema_ver, content_ver = excluded.content_ver, device_id = excluded.device_id, summary_json = excluded.summary_json, payload_json = excluded.payload_json, updated_at = excluded.updated_at',
-      [s.learnerId, s.rev, s.schemaVer, s.contentVer, s.deviceId, JSON.stringify(s.summary ?? null), JSON.stringify(s.payload ?? null), s.updatedAt],
-    );
+  async putSnapshot(s: SnapshotRecord, baseRev: number): Promise<boolean> {
+    // One statement each, so the rev check and the write cannot interleave with another isolate (SYNC-1).
+    const summary = JSON.stringify(s.summary ?? null);
+    const payload = JSON.stringify(s.payload ?? null);
+    const written =
+      baseRev === 0
+        ? await this.changes(
+            'INSERT INTO snapshots (learner_id, rev, schema_ver, content_ver, device_id, summary_json, payload_json, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(learner_id) DO NOTHING',
+            [s.learnerId, s.rev, s.schemaVer, s.contentVer, s.deviceId, summary, payload, s.updatedAt],
+          )
+        : await this.changes(
+            'UPDATE snapshots SET rev = ?, schema_ver = ?, content_ver = ?, device_id = ?, summary_json = ?, payload_json = ?, updated_at = ? WHERE learner_id = ? AND rev = ?',
+            [s.rev, s.schemaVer, s.contentVer, s.deviceId, summary, payload, s.updatedAt, s.learnerId, baseRev],
+          );
+    return written === 1;
   }
 
   getSpace(spaceId: string): Promise<Space | null> {

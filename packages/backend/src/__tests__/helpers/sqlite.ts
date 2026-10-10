@@ -1,7 +1,7 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { D1Like, D1PreparedLike } from '../../db/d1';
+import type { D1Like, D1PreparedLike, D1RunResultLike } from '../../db/d1';
 
 /**
  * A D1 look-alike over Node's built-in SQLite (tests only). It applies the real
@@ -10,7 +10,7 @@ import type { D1Like, D1PreparedLike } from '../../db/d1';
  */
 const MIGRATIONS_DIR = join(dirname(fileURLToPath(import.meta.url)), '../../../../../apps/api/migrations');
 
-type SqliteStatement = { get: (...p: unknown[]) => unknown; all: (...p: unknown[]) => unknown[]; run: (...p: unknown[]) => unknown };
+type SqliteStatement = { get: (...p: unknown[]) => unknown; all: (...p: unknown[]) => unknown[]; run: (...p: unknown[]) => { changes: number | bigint } };
 type SqliteDatabase = { exec: (sql: string) => void; prepare: (sql: string) => SqliteStatement; close: () => void };
 
 // Vite's resolver predates `node:sqlite`; asking Node for the builtin directly sidesteps it.
@@ -35,8 +35,10 @@ export function openSqliteD1(): D1Like & { close: () => void } {
         async all<T>() {
           return { results: db.prepare(sql).all(...params) as T[] };
         },
-        async run() {
-          return db.prepare(sql).run(...params);
+        async run(): Promise<D1RunResultLike> {
+          // Same shape as D1's D1Result, so callers read `meta.changes` on both.
+          const { changes } = db.prepare(sql).run(...params);
+          return { meta: { changes: Number(changes) } };
         },
       };
       return stmt;

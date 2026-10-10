@@ -62,8 +62,11 @@ export class MemoryDb implements Db {
   async getSnapshot(learnerId: string): Promise<SnapshotRecord | null> {
     return clone(this.snapshots.get(learnerId) ?? null);
   }
-  async putSnapshot(record: SnapshotRecord): Promise<void> {
+  async putSnapshot(record: SnapshotRecord, baseRev: number): Promise<boolean> {
+    // No await between the check and the write: atomic on the single JS thread.
+    if ((this.snapshots.get(record.learnerId)?.rev ?? 0) !== baseRev) return false;
     this.snapshots.set(record.learnerId, clone(record));
+    return true;
   }
 
   async getSpace(spaceId: string): Promise<Space | null> {

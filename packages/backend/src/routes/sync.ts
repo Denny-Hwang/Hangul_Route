@@ -53,18 +53,19 @@ syncRoutes.put('/learners/:id/snapshot', async (c) => {
     return fail(c, 'bad_request', 'snapshot.profileId must match the learner', 422);
   }
 
-  const current = await db.getSnapshot(learnerId);
-  const currentRev = current?.rev ?? 0;
-  if (body.baseRev !== currentRev) {
-    return c.json(
+  const conflict = (current: SnapshotRecord | null): Response =>
+    c.json(
       {
         ok: false,
         error: { code: 'conflict', message: 'Snapshot changed on the server — merge and retry' },
-        data: { rev: currentRev, snapshot: current?.payload ?? null, summary: current?.summary ?? null },
+        data: { rev: current?.rev ?? 0, snapshot: current?.payload ?? null, summary: current?.summary ?? null },
       },
       409,
     );
-  }
+
+  const current = await db.getSnapshot(learnerId);
+  const currentRev = current?.rev ?? 0;
+  if (body.baseRev !== currentRev) return conflict(current);
 
   const record: SnapshotRecord = {
     learnerId,
@@ -76,7 +77,8 @@ syncRoutes.put('/learners/:id/snapshot', async (c) => {
     payload: body.snapshot,
     updatedAt: new Date().toISOString(),
   };
-  await db.putSnapshot(record);
+  // Compare-and-set: another device may have written between the read above and here (SYNC-1).
+  if (!(await db.putSnapshot(record, currentRev))) return conflict(await db.getSnapshot(learnerId));
   const learner = await db.getLearner(learnerId);
   if (learner) await db.putLearner({ ...learner, lastActiveAt: record.updatedAt });
   return ok(c, { rev: record.rev, updatedAt: record.updatedAt });
