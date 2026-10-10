@@ -95,6 +95,31 @@ describe('sync-store (F-SYNC-002)', () => {
     expect(state).toMatchObject({ status: 'error', lastError: 'registered-elsewhere', secret: null });
   });
 
+  it('never uploads before saved progress has loaded: the saved copy goes up, not a blank one (audit UX-01)', async () => {
+    mem.set('sync:profile:a', { secret: 'sec', rev: 3, lastSyncedAt: null });
+    mem.set('progress:profile:a', snap(['q1', 'q2']));
+    // Cold start: nothing loaded yet, and a screen has put a blank record in memory.
+    useProgressStore.setState({ byProfile: {}, hydratedFor: new Set(), pendingFor: new Set() });
+    useProgressStore.getState().ensure('profile:a');
+    const putSnapshot = vi.fn(async (_id: string, _body: { baseRev: number; snapshot: ProgressSnapshot }) => ({ status: 'ok', rev: 4 }));
+    setSyncApiForTests(fakeApi({ putSnapshot }) as never);
+    await useSyncStore.getState().syncNow('profile:a');
+    expect(putSnapshot).toHaveBeenCalledTimes(1);
+    const body = putSnapshot.mock.calls[0]?.[1];
+    expect(body?.baseRev).toBe(3);
+    expect(body?.snapshot.quests.map((q) => q.questId)).toEqual(['q1', 'q2']);
+  });
+
+  it('a learner with no progress record in memory (nothing saved, nothing written) is not registered or uploaded', async () => {
+    useProgressStore.setState({ byProfile: {}, hydratedFor: new Set(), pendingFor: new Set() });
+    const api = fakeApi();
+    setSyncApiForTests(api as never);
+    const state = await useSyncStore.getState().syncNow('profile:a');
+    expect(api.register).not.toHaveBeenCalled();
+    expect(api.putSnapshot).not.toHaveBeenCalled();
+    expect(state).toMatchObject({ secret: null, rev: 0 });
+  });
+
   it('syncAll covers every learner and adoptCredentials seeds a learner', async () => {
     const api = fakeApi();
     setSyncApiForTests(api as never);

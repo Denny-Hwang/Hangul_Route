@@ -1,5 +1,6 @@
 import type { ProgressSnapshot, QuestProgress } from '@hangul-route/content-schema';
 import { create } from 'zustand';
+import { mergeSnapshots } from '../logic/sync/merge';
 import { notifyProgressPersisted } from '../logic/sync/persist-hook';
 import { readJson, writeJson } from '../platform/storage';
 import { track } from '../platform/telemetry';
@@ -40,10 +41,19 @@ export function nextStreak(
 
 interface State {
   byProfile: Record<string, ProgressSnapshot>;
+  /** Profiles whose saved snapshot has been read (or replaced wholesale). Only these are written to storage. */
   hydratedFor: Set<string>;
+  /** Profiles written to before their saved snapshot was read; merged with it and saved once it loads. */
+  pendingFor: Set<string>;
 }
 
 interface Actions {
+  /**
+   * Read the profile's saved snapshot into memory (once per profile; calls
+   * that overlap share one read). Writes made before it lands are merged with
+   * the saved copy, never written over it (audit UX-01 / L16). Leaves no
+   * record when nothing is saved or written.
+   */
   hydrate: (profileId: string) => Promise<void>;
   ensure: (profileId: string) => ProgressSnapshot;
   recordQuestComplete: (
@@ -78,23 +88,89 @@ function blankSnapshot(profileId: string): ProgressSnapshot {
   };
 }
 
-function persist(profileId: string, snap: ProgressSnapshot): void {
+function save(profileId: string, snap: ProgressSnapshot): void {
   void writeJson(key(profileId), snap);
   notifyProgressPersisted(profileId);
+}
+
+/** Any open assignment for the quest is done (F-HW-001 §3.4, F-PLAN-001 §3.3). */
+function completeAssignments(homework: ProgressSnapshot['homework'], questId: string, at: string): ProgressSnapshot['homework'] {
+  return homework.map((h) => (h.questId === questId && !h.completedAt ? { ...h, completedAt: at } : h));
+}
+
+/**
+ * Writes made before the saved copy loaded were built on a blank snapshot, so
+ * their derived effects never touched what was saved. Replay them on the
+ * merged result: a quest finished in that window completes its open
+ * assignments from the saved copy, as `recordQuestComplete` would have.
+ */
+function replayUnsaved(merged: ProgressSnapshot, unsaved: ProgressSnapshot): ProgressSnapshot {
+  const homework = unsaved.quests.reduce((hw, q) => (q.completedAt ? completeAssignments(hw, q.questId, q.completedAt) : hw), merged.homework);
+  return { ...merged, homework };
+}
+
+/** One storage read per profile at a time: callers that overlap share it. */
+const inFlight = new Map<string, Promise<void>>();
+
+function without(ids: Set<string>, id: string): Set<string> {
+  const next = new Set(ids);
+  next.delete(id);
+  return next;
+}
+
+/**
+ * Save a write. Until the profile's saved snapshot has been read, the write
+ * stays in memory only — saving it would replace everything stored with a
+ * record built on a blank one — and the read starts now; `hydrate` merges
+ * the two and saves the result.
+ */
+function persist(profileId: string, snap: ProgressSnapshot): void {
+  const store = useProgressStore.getState();
+  if (store.hydratedFor.has(profileId)) {
+    save(profileId, snap);
+    return;
+  }
+  useProgressStore.setState((s) => ({ pendingFor: new Set([...s.pendingFor, profileId]) }));
+  void store.hydrate(profileId);
+}
+
+/** A wholesale replacement (restore, sync, reset) is final: no read still in flight may bring older data back. */
+function settle(profileId: string, snapshot: ProgressSnapshot): void {
+  useProgressStore.setState((s) => ({
+    byProfile: { ...s.byProfile, [profileId]: snapshot },
+    hydratedFor: new Set([...s.hydratedFor, profileId]),
+    pendingFor: without(s.pendingFor, profileId),
+  }));
 }
 
 export const useProgressStore = create<State & Actions>((set, get) => ({
   byProfile: {},
   hydratedFor: new Set(),
+  pendingFor: new Set(),
 
-  hydrate: async (profileId) => {
-    if (get().hydratedFor.has(profileId)) return;
-    const loaded = await readJson<ProgressSnapshot>(key(profileId));
-    const snap = loaded ?? blankSnapshot(profileId);
-    set((s) => ({
-      byProfile: { ...s.byProfile, [profileId]: snap },
-      hydratedFor: new Set([...s.hydratedFor, profileId]),
-    }));
+  hydrate: (profileId) => {
+    if (get().hydratedFor.has(profileId)) return Promise.resolve();
+    const running = inFlight.get(profileId);
+    if (running) return running;
+    const load = (async () => {
+      const loaded = await readJson<ProgressSnapshot>(key(profileId));
+      // A restore or a reset landed first; this read is stale.
+      if (get().hydratedFor.has(profileId)) return;
+      const { byProfile, pendingFor } = get();
+      const unsaved = pendingFor.has(profileId) ? byProfile[profileId] : undefined;
+      const snap =
+        unsaved && loaded
+          ? replayUnsaved(mergeSnapshots(unsaved, loaded, { now: new Date() }), unsaved)
+          : (unsaved ?? loaded ?? byProfile[profileId]);
+      set((s) => ({
+        byProfile: snap ? { ...s.byProfile, [profileId]: snap } : s.byProfile,
+        hydratedFor: new Set([...s.hydratedFor, profileId]),
+        pendingFor: without(s.pendingFor, profileId),
+      }));
+      if (unsaved && snap) save(profileId, snap);
+    })().finally(() => inFlight.delete(profileId));
+    inFlight.set(profileId, load);
+    return load;
   },
 
   ensure: (profileId) => {
@@ -121,8 +197,7 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
       ...snap.quests.filter((q) => q.questId !== input.questId),
       updatedQuest,
     ];
-    // Any open assignment for this quest is done now (F-HW-001 §3.4, F-PLAN-001 §3.3).
-    const homework = snap.homework.map((h) => (h.questId === input.questId && !h.completedAt ? { ...h, completedAt: now } : h));
+    const homework = completeAssignments(snap.homework, input.questId, now);
     const updated: ProgressSnapshot = { ...snap, quests, homework, updatedAt: now };
     set((s) => ({ byProfile: { ...s.byProfile, [profileId]: updated } }));
     persist(profileId, updated);
@@ -193,15 +268,12 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
 
   reset: (profileId) => {
     const fresh = blankSnapshot(profileId);
-    set((s) => ({ byProfile: { ...s.byProfile, [profileId]: fresh } }));
-    persist(profileId, fresh);
+    settle(profileId, fresh);
+    save(profileId, fresh);
   },
 
   replaceSnapshot: (profileId, snapshot) => {
-    set((s) => ({
-      byProfile: { ...s.byProfile, [profileId]: snapshot },
-      hydratedFor: new Set([...s.hydratedFor, profileId]),
-    }));
+    settle(profileId, snapshot);
     void writeJson(key(profileId), snapshot);
   },
 }));
