@@ -151,6 +151,9 @@ export const useSyncStore = create<State & Actions>((set, get) => {
       const state = await get().hydrate(learnerId);
       if (!client) return update(learnerId, { status: 'off' });
       const profile = useProfileStore.getState().profiles.find((p) => p.id === learnerId);
+      // Never upload what is in memory before the saved snapshot has loaded:
+      // a blank record there would replace the server copy (audit UX-01).
+      await useProgressStore.getState().hydrate(learnerId);
       const local = useProgressStore.getState().byProfile[learnerId];
       if (!profile || !local) return state;
 
