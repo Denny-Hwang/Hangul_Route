@@ -24,7 +24,7 @@
 
 - **Korean = the target language** being learned (zero or near-zero baseline).
 - **UI languages**: **English (default)**, **Korean** and **Spanish** selectable. UI strings come from the **selected UI locale** — never hard-coded in another language.
-  - Until the i18n layer ships (F-I18N-001; a new `packages/i18n` needs owner approval), English is the only shipped UI locale. Do not add Korean or Spanish UI strings ad hoc.
+  - Until the i18n layer ships (F-I18N-001; `packages/i18n` is approved by the owner), English is the only shipped UI locale. Do not add Korean or Spanish UI strings ad hoc.
   - UI copy stays plain and short (English at CEFR Pre-A1), so a young reader and an adult beginner both read it easily.
 - **Taught Korean content** (자모, 단어, 문장) always shows **romanization** (pronunciation guide) and a **gloss in the UI language** (plus a visual where possible).
 - Korean as taught content is not the same thing as Korean as a UI locale: in the Korean UI the menus are Korean, and taught items still carry romanization and a gloss.
@@ -102,6 +102,7 @@ Hangul_Route/
 │
 ├── packages/
 │   ├── design-system/          # tokens, components, icons, Hoya
+│   ├── i18n/                   # typed UI dictionary (en/es/ko), plural + Intl helpers, banned-word lists, locale detection (F-I18N-001)
 │   ├── content-schema/         # Episode / Card / Grid (zod)
 │   ├── backend/                # Worker handlers
 │   ├── shared-types/           # cross-package types
@@ -109,7 +110,10 @@ Hangul_Route/
 │
 ├── content/
 │   ├── fixtures/               # test-only content
-│   └── ...                     # real episodes / cards / quests (later)
+│   ├── stories/                # story JSON, one file per tale, with sourced facts (F-STORY-001)
+│   ├── vocab/                  # vocabulary topics, one file per topic (F-VOC-001)
+│   ├── i18n/                   # locale overlays (es, ko) keyed by entity id (F-I18N-001)
+│   └── ...                     # real episodes / cards / quests
 │
 ├── design/                     # manual Claude Design working space
 │   ├── playbook/               # ★ daily guides (week-01..12)
@@ -120,6 +124,8 @@ Hangul_Route/
 │   ├── characters/
 │   ├── illustrations/
 │   └── prompts.md              # daily prompt log
+│
+├── scripts/                    # validate-content, check-i18n, build-overlays, i18n-status, coverage gates (run by CI)
 │
 ├── routines/                   # R1 / R2 / R3 / R4 / R6 (no R5)
 │
@@ -138,6 +144,7 @@ Hangul_Route/
 ```
 
 > 이 구조에서 벗어나는 새 디렉토리/패키지가 필요하면 먼저 제안하고 승인받는다.
+> 2026-10-10 오너 승인: `packages/i18n`, `content/i18n/` (F-I18N-001), `content/stories/` (F-STORY-001), `content/vocab/` (F-VOC-001).
 
 ---
 

@@ -1,7 +1,7 @@
 ---
 name: content-skill
 description: Episode·Quest·Card·캐릭터 대사 등 콘텐츠 JSON 작성 시 사용.
-  content/ 디렉토리 변경 시 트리거. 영어 UI + 한국어 학습 대상 분리, vocabulary
+  content/ 디렉토리 변경 시 트리거. UI 로케일(원본 English) + 한국어 학습 대상 분리, vocabulary
   scaffolding, Quest 5-step 타이밍 규약.
 ---
 
@@ -80,11 +80,11 @@ Card    = { pillar, title, image_url, source { institution, license, attribution
 
 ### 3.3 언어 정책 (강제)
 
-- **UI text = English** (CEFR Pre-A1, 5-7세 어휘)
+- **UI text**: English 가 원본 로케일이다 (CEFR Pre-A1, 짧고 쉬운 어휘). 번역(es/ko)은 `content/i18n/` 오버레이로 얹는다 — 콘텐츠 JSON 에 다른 언어 UI 문구를 직접 쓰지 않는다 (F-I18N-001)
 - **Character dialogue = English**
 - **Korean = 학습 대상만** (자모·단어·문장)
 - **Romanization** 항상 동반 (McCune-Reischauer 가 아닌 Revised Romanization)
-- **English gloss** 또는 visual 항상 동반
+- **Gloss** (UI 언어; 기본 English) 또는 visual 항상 동반
 
 예:
 ```
@@ -151,7 +151,7 @@ content/cards/letters/hunminjeongeum.png,국립한글박물관,KOGL Type 1,"국�
 
 ### ❌ 하지 말아야 하는 것
 
-- ❌ UI 문자열에 한국어 (예: "터치하세요")
+- ❌ 선택된 UI 로케일을 거치지 않은 UI 문자열 (예: 영어 UI 에 섞인 "터치하세요")
 - ❌ 한국어 설명 문장 (예: "사과는 빨간 과일이에요")
 - ❌ Romanization 없이 한글 단독 노출
 - ❌ 한 Quest 에 새 요소 남발 (단어 3-4 초과, 문법 2+ 등)
@@ -288,7 +288,7 @@ content/cards/letters/hunminjeongeum.png,국립한글박물관,KOGL Type 1,"국�
 
 왜 좋은가:
 - 5-step 모두 존재, 총 231초 = 3분 51초 (범위 내)
-- UI = English, Korean = jamo 학습 대상만, romanization 별도 필드
+- UI = 원본 로케일(English), Korean = jamo 학습 대상만, romanization 별도 필드
 - 호야 대사 격려 톤·짧음
 
 ### 8.2 좋은 예 — Card JSON + 라이선스
