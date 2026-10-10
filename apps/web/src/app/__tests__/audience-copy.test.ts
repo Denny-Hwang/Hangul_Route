@@ -1,5 +1,5 @@
 import { readFileSync, readdirSync } from 'node:fs';
-import { dirname, join, relative } from 'node:path';
+import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
@@ -45,10 +45,29 @@ describe('public surfaces speak to anyone learning Hangul (UF-01..UF-03)', () =>
   });
 
   for (const rel of PUBLIC_SURFACES) {
-    it(`${relative('.', rel)} has no kids-only framing`, () => {
+    it(`${rel} has no kids-only framing`, () => {
       const source = read(rel);
       const hits = KIDS_ONLY_FRAMING.filter(({ re }) => re.test(source)).map(({ name }) => name);
       expect(hits).toEqual([]);
     });
   }
+});
+
+describe('learner PWA manifest (UF-04)', () => {
+  // The manifest ships from apps/mobile/public but is public store-facing metadata.
+  const manifestPath = join(webSrc, '..', '..', 'mobile', 'public', 'manifest.webmanifest');
+  const manifest = JSON.parse(readFileSync(manifestPath, 'utf8')) as {
+    categories?: unknown;
+    description?: unknown;
+  };
+
+  it('is listed as education only — no "kids" category', () => {
+    expect(manifest.categories).toEqual(['education']);
+  });
+
+  it('description has no kids-only framing', () => {
+    const description = String(manifest.description ?? '');
+    const hits = KIDS_ONLY_FRAMING.filter(({ re }) => re.test(description)).map(({ name }) => name);
+    expect(hits).toEqual([]);
+  });
 });

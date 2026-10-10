@@ -34,7 +34,7 @@ const head = `
   <link rel="apple-touch-icon" href="/icon-1024.png">
   <meta name="description" content="Learn the Korean alphabet with Hoya the tiger — one heritage card at a time. Works offline.">
   <style>
-    /* Shell rules for a kids' app in a browser (wireframe pwa/system-banners):
+    /* Shell rules for a learning app in a browser (wireframe pwa/system-banners):
        no pull-to-refresh mid-quest, no accidental text selection on tiles,
        and the trace canvas owns its touches. Pinch-zoom stays enabled. */
     html, body { overscroll-behavior: none; background: ${canvas}; }
