@@ -157,6 +157,20 @@ describe('landing hero and Meet Hoya stack to one column on phones', () => {
     expect(art).toContain('justify-self: center');
     expect(art).toMatch(/max-width: \d+px/);
   });
+
+  it('the Meet Hoya illustration is capped and centred when stacked', () => {
+    // Without the cap an aspect-ratio 1/1 box is as tall as the phone is wide.
+    expect(openingTag('hr-landing-split-art')).toContain('aria-hidden="true"');
+    const art = rule(phoneCss, '.hr-landing-split-art');
+    expect(art).toContain('width: 100%');
+    expect(art).toContain('justify-self: center');
+    expect(art).toMatch(/max-width: \d+px/);
+  });
+
+  it('neither illustration is capped on wide screens, where it shares a row with the text', () => {
+    expect(rule(desktopCss, '.hr-landing-hero-art')).toBe('');
+    expect(rule(desktopCss, '.hr-landing-split-art')).toBe('');
+  });
 });
 
 describe('nothing forces horizontal scroll', () => {

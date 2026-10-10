@@ -74,6 +74,27 @@ describe('learner PWA manifest (UF-04)', () => {
   });
 });
 
+describe('learner PWA shell meta description (pwa-postbuild.mjs)', () => {
+  // `expo export` writes a bare index.html; apps/mobile/scripts/pwa-postbuild.mjs injects
+  // the <meta name="description"> that search engines and link previews show for
+  // app.hangulroute.com. It is public metadata like the manifest above.
+  const scriptPath = join(webSrc, '..', '..', 'mobile', 'scripts', 'pwa-postbuild.mjs');
+  const description = /<meta name="description" content="([^"]*)"/.exec(readFileSync(scriptPath, 'utf8'))?.[1] ?? '';
+
+  it('is found in the script (so this guard cannot pass by scanning nothing)', () => {
+    expect(description.length).toBeGreaterThan(20);
+  });
+
+  it('has no kids-only framing or age range', () => {
+    const hits = KIDS_ONLY_FRAMING.filter(({ re }) => re.test(description)).map(({ name }) => name);
+    expect(hits).toEqual([]);
+  });
+
+  it('never says "child", "children" or "kids"', () => {
+    expect(description).not.toMatch(/\bchild(ren)?\b|\bkids?\b/i);
+  });
+});
+
 describe('App Store listing (UF-11, App Review 2.3.8 / 5.1.4)', () => {
   // Public store metadata: outside the Kids Category it must not suggest that
   // children are the main audience. The App Review notes (section 6) may say
