@@ -1,4 +1,6 @@
-import { colors, radii, spacing, touchTarget, typography } from '@hangul-route/design-system/tokens';
+import { choiceCardStyle, CHOICE_CARD_STATES } from '@hangul-route/design-system/choice-card-style';
+import { iconGlyphs } from '@hangul-route/design-system/icon-glyphs';
+import { borderWidth, colors, radii, spacing, touchTarget, typography } from '@hangul-route/design-system/tokens';
 import Link from 'next/link';
 import React from 'react';
 
@@ -52,6 +54,7 @@ export default function ComponentsPreviewPage(): JSX.Element {
       <ButtonSection />
       <CardSection />
       <TileSection />
+      <ChoiceCardSection />
       <PillSection />
       <ProgressSection />
       <StarRowSection />
@@ -359,6 +362,112 @@ function TileVariant({
     >
       <div style={{ fontSize, fontWeight: 700, color: palette.fg, lineHeight: 1.05 }}>{char}</div>
       <div style={{ fontSize: typography.size.caption, color: colors.text.muted }}>{rom}</div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// ChoiceCard (5 states × 3 contents) — styles come from the shared pure
+// `choiceCardStyle`, so this surface cannot drift from the component.
+// ---------------------------------------------------------------------------
+
+function ChoiceCardSection(): JSX.Element {
+  const contents = ['text', 'korean', 'picture'] as const;
+  return (
+    <SectionWrapper id="choice-card" title="ChoiceCard — 5 states × 3 contents (15 cells)">
+      <Grid cols={3}>
+        {CHOICE_CARD_STATES.map((st) =>
+          contents.map((content) => (
+            <Cell key={`${st}-${content}`} label={`${st} / ${content}`}>
+              <ChoiceCardVariant state={st} content={content} />
+            </Cell>
+          )),
+        )}
+      </Grid>
+    </SectionWrapper>
+  );
+}
+
+function ChoiceCardVariant({
+  state,
+  content,
+}: {
+  state: (typeof CHOICE_CARD_STATES)[number];
+  content: 'text' | 'korean' | 'picture';
+}): JSX.Element {
+  const look = choiceCardStyle(state);
+  const markParts = look.mark ? iconGlyphs[look.mark.icon] : [];
+  return (
+    <div
+      style={{
+        width: '100%',
+        boxSizing: 'border-box',
+        minHeight: look.minHeight,
+        display: 'flex',
+        alignItems: 'center',
+        gap: spacing.md,
+        padding: `${spacing.md}px ${spacing.lg}px`,
+        backgroundColor: look.backgroundColor,
+        border: `${look.borderWidth}px solid ${look.borderColor}`,
+        borderRadius: look.borderRadius,
+        color: look.textColor,
+      }}
+    >
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: spacing.sm, textAlign: 'left' }}>
+        {content === 'picture' ? (
+          <div
+            style={{
+              alignSelf: 'center',
+              width: touchTarget.hero,
+              height: touchTarget.hero,
+              backgroundColor: colors.brand.secondaryLight,
+              border: `${borderWidth.base}px solid ${colors.brand.secondary}`,
+              borderRadius: radii.md,
+            }}
+          />
+        ) : null}
+        {content === 'korean' ? (
+          <div style={{ alignSelf: 'flex-start' }}>
+            <div
+              style={{
+                backgroundColor: colors.brand.secondaryLight,
+                border: `${borderWidth.base}px solid ${colors.brand.secondary}`,
+                borderRadius: radii.lg,
+                padding: `${spacing.md}px ${spacing.lg}px`,
+                fontSize: typography.size.title,
+                fontWeight: 700,
+                textAlign: 'center',
+              }}
+            >
+              강아지
+            </div>
+            <div style={{ fontSize: typography.size.bodySm, fontStyle: 'italic', color: colors.text.secondary }}>gangaji</div>
+            <div style={{ fontSize: typography.size.body, color: colors.text.secondary }}>puppy</div>
+          </div>
+        ) : null}
+        <div style={{ fontSize: typography.size.body, fontWeight: 600, lineHeight: typography.leading.normal }}>
+          {content === 'picture' ? 'Puppy' : content === 'korean' ? 'Which one is the puppy?' : 'A small, friendly dog that likes to play'}
+        </div>
+      </div>
+      {look.mark ? (
+        <svg width={spacing.xl} height={spacing.xl} viewBox="0 0 24 24" aria-hidden="true">
+          {markParts.map((part, i) =>
+            part.kind === 'fill' ? (
+              <path key={i} d={part.d} fill={look.mark?.color} />
+            ) : (
+              <path
+                key={i}
+                d={part.d}
+                fill="none"
+                stroke={look.mark?.color}
+                strokeWidth={part.width ?? 2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            ),
+          )}
+        </svg>
+      ) : null}
     </div>
   );
 }
