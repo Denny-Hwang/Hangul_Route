@@ -1,4 +1,4 @@
-import { SyncInboxSchema, type LearnerMembership, type ProgressSnapshot, type ProgressSummary, type SpaceKind, type SyncInbox } from '@hangul-route/content-schema';
+import { SyncInboxSchema, type LearnerLevelId, type LearnerMembership, type ProgressSnapshot, type ProgressSummary, type SpaceKind, type SyncInbox } from '@hangul-route/content-schema';
 import type { PutResult } from '../logic/sync/engine';
 
 /**
@@ -34,7 +34,7 @@ export type IssueResult = { status: 'ok'; code: string } | { status: 'error'; co
 export type ClaimResult =
   | {
       status: 'ok';
-      learner: { id: string; displayName: string; ageGroup: '5-7' | '8-9' | '10-11'; avatar: string };
+      learner: { id: string; displayName: string; ageGroup: LearnerLevelId; avatar: string };
       secret: string;
       snapshot: { rev: number; snapshot: ProgressSnapshot; summary: ProgressSummary | null } | null;
     }
@@ -64,7 +64,7 @@ export type RelinkPollResult =
   | {
       status: 'ok';
       state: 'approved';
-      learner: { id: string; displayName: string; ageGroup: '5-7' | '8-9' | '10-11'; avatar: string };
+      learner: { id: string; displayName: string; ageGroup: LearnerLevelId; avatar: string };
       secret: string;
       snapshot: { rev: number; snapshot: ProgressSnapshot; summary: ProgressSummary | null } | null;
     }
@@ -109,7 +109,7 @@ export function createSyncApi(opts: SyncApiOptions) {
 
   return {
     async register(
-      learner: { id: string; displayName: string; ageGroup: string; avatar: string },
+      learner: { id: string; displayName: string; ageGroup: LearnerLevelId; avatar: string },
       deviceId: string,
     ): Promise<RegisterResult> {
       const r = await call(fetchImpl, `${base}/learners`, {
@@ -161,7 +161,7 @@ export function createSyncApi(opts: SyncApiOptions) {
       if (r.status === 429) return { status: 'error', code: 'too_many_attempts' };
       if (r.status === 422) return { status: 'error', code: 'invalid' };
       if (r.status !== 200) return { status: 'error', code: 'unknown' };
-      const data = r.body.data as ClaimResult extends { status: 'ok' } ? never : { learner: { id: string; displayName: string; ageGroup: '5-7' | '8-9' | '10-11'; avatar: string }; device: { secret: string }; snapshot: { rev: number; snapshot: ProgressSnapshot; summary: ProgressSummary | null } | null };
+      const data = r.body.data as ClaimResult extends { status: 'ok' } ? never : { learner: { id: string; displayName: string; ageGroup: LearnerLevelId; avatar: string }; device: { secret: string }; snapshot: { rev: number; snapshot: ProgressSnapshot; summary: ProgressSummary | null } | null };
       return { status: 'ok', learner: data.learner, secret: data.device.secret, snapshot: data.snapshot };
     },
 
@@ -217,7 +217,7 @@ export function createSyncApi(opts: SyncApiOptions) {
       if (r.status === -1) return { status: 'error', code: 'network' };
       if (r.status === 404) return { status: 'error', code: 'not_found' };
       if (r.status !== 200) return { status: 'error', code: 'unknown' };
-      const data = r.body.data as { status: 'pending' | 'approved' | 'denied' | 'expired'; expiresAt: string; learner?: { id: string; displayName: string; ageGroup: '5-7' | '8-9' | '10-11'; avatar: string }; device?: { secret: string }; snapshot?: { rev: number; snapshot: ProgressSnapshot; summary: ProgressSummary | null } | null };
+      const data = r.body.data as { status: 'pending' | 'approved' | 'denied' | 'expired'; expiresAt: string; learner?: { id: string; displayName: string; ageGroup: LearnerLevelId; avatar: string }; device?: { secret: string }; snapshot?: { rev: number; snapshot: ProgressSnapshot; summary: ProgressSummary | null } | null };
       if (data.status === 'approved' && data.learner && data.device) {
         return { status: 'ok', state: 'approved', learner: data.learner, secret: data.device.secret, snapshot: data.snapshot ?? null };
       }

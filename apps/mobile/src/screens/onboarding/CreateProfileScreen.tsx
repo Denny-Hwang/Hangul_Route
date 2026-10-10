@@ -1,4 +1,4 @@
-import type { AvatarKind } from '@hangul-route/content-schema';
+import type { AvatarKind, LearnerLevelId } from '@hangul-route/content-schema';
 import {
   Body,
   Button,
@@ -27,7 +27,7 @@ import { useProfileStore } from '../../store/profile-store';
 type Props = NativeStackScreenProps<OnboardingStackParamList, 'CreateProfile'>;
 
 const AVATARS: AvatarKind[] = ['hoya-orange', 'hoya-blue', 'hoya-green', 'hoya-purple', 'hoya-pink'];
-type AgeGroup = '5-7' | '8-9' | '10-11';
+type AgeGroup = LearnerLevelId;
 
 const AGE_GROUPS: Array<{ value: AgeGroup; label: string; description: string }> = [
   { value: '5-7', label: '5–7', description: 'Big tiles, lots of pictures' },
@@ -45,7 +45,7 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
   const needsConsent = firstRun && !consentAcceptedAt;
 
   const [name, setName] = useState('');
-  const [ageGroup, setAgeGroup] = useState<'5-7' | '8-9' | '10-11'>('5-7');
+  const [ageGroup, setAgeGroup] = useState<AgeGroup>('5-7');
   const [avatar, setAvatar] = useState<AvatarKind>('hoya-orange');
   const [parentEmail, setParentEmail] = useState('');
   const [consent, setConsent] = useState(false);

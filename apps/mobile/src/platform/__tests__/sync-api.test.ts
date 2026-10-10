@@ -29,7 +29,7 @@ describe('platform/sync-api', () => {
       .mockResolvedValueOnce(json(500, {}))
       .mockRejectedValueOnce(new Error('offline'));
     const api = createSyncApi({ endpoint: 'https://api.example.com', fetchImpl });
-    const learner = { id: 'profile:a', displayName: 'Suni', ageGroup: '5-7', avatar: 'hoya-orange' };
+    const learner = { id: 'profile:a', displayName: 'Suni', ageGroup: '5-7' as const, avatar: 'hoya-orange' };
     expect(await api.register(learner, 'device-x')).toEqual({ status: 'ok', learnerId: 'profile:a', secret: 'sec' });
     expect(await api.register(learner, 'device-x')).toEqual({ status: 'conflict' });
     expect(await api.register(learner, 'device-x')).toEqual({ status: 'error', code: 'http_500' });
