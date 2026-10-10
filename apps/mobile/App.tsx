@@ -6,6 +6,7 @@ import React, { useEffect, useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { useDocumentLang } from './src/i18n/use-messages';
 import { RootNavigator } from './src/navigation/root';
 import { PwaBanners } from './src/components/PwaBanners';
 import { OopsScreen } from './src/screens/system/OopsScreen';
@@ -26,6 +27,8 @@ const queryClient = new QueryClient({
 
 export default function App(): React.ReactElement {
   const hydrateAccount = useAccountStore((s) => s.hydrate);
+  // <html lang> follows the UI locale on web (F-I18N-001 §3.4); no-op on native.
+  useDocumentLang();
 
   const countVisit = usePwaStore((s) => s.hydrateAndCountVisit);
   // Profiles and every profile's saved progress are in memory before any

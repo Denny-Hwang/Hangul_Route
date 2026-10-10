@@ -10,6 +10,7 @@ import {
   type ProfileSet,
 } from '../logic/profiles/profile-model';
 import { readJson, writeJson } from '../platform/storage';
+import { notifyProfileRemoved } from './profile-removal';
 
 /**
  * Persistence shell over the pure reducers in `logic/profiles/profile-model`
@@ -80,6 +81,7 @@ export const useProfileStore = create<State & Actions>((set, get) => ({
     const next = removeProfileReducer({ profiles, activeId }, id);
     set(next);
     persist(next);
+    notifyProfileRemoved(id);
   },
 
   adoptProfile: (profile) => {
