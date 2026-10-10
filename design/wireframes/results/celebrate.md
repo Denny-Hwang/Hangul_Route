@@ -8,7 +8,7 @@ Code (back-filled): `apps/mobile/src/screens/results/ResultsScreen.tsx` — rout
 
 Given: the quest player finished the last step and reset the stack to `Main → Results`
 When: the screen mounts
-Then: the child sees Hoya, their stars and (on 2+ stars) the card that just joined their library, and has exactly one big thing to press next; the score is written once, before anything is tapped
+Then: the child sees Hoya, their stars and (on 2+ stars, first time only) the card that just joined their library, and has exactly one big thing to press next; the score is written once, before anything is tapped
 
 ## Screen goal
 
@@ -26,8 +26,11 @@ Then: the child sees Hoya, their stars and (on 2+ stars) the card that just join
 | ( Hoya bubble: 1 line by tier )  |  <- never a %, ratio or fraction (F-RVW-001 sec.3.1)
 |                                  |
 |  +----------------------------+  |
-|  |  CARD UNLOCK BANNER        |  |  <- stars >= 2 only; drops in after 0.4 s
-|  |  "card added" + 1 muted ln |  |     (sec.3.1); sparkles only on 3 stars (sec.3.5)
+|  |  New card for your library!|  |  <- stars >= 2 AND card not owned yet;
+|  |  [art]  Book               |  |     drops in after 0.4 s (sec.3.1);
+|  |         책                 |  |     sparkles only on 3 stars (sec.3.5)
+|  |         chaek              |  |  <- English name, Korean, romanization
+|  |  [ See my card ]           |  |  -> library/card-detail (cardId)
 |  +----------------------------+  |
 |                                  |
 |  ( feedback-review slot )        |  <- FUTURE (F-RVW-001 sec.3.3): 1 question
@@ -50,14 +53,16 @@ Certificate variant (used by reviews/stage-review, FUTURE):
 +----------------------------------+
 ```
 
-- The unlock banner is a *banner*, not the card art; the art is discovered in the Library (keeps this screen short and the Library visit rewarding).
-- Reduced motion: banner and stars render statically (§3.4).
+- The unlock card shows the art (or the Korean word on the theme tint when no art ships yet), the English name, the Korean and its romanization, with [ See my card ] into the card detail (audit UX-03, roadmap PR-14 — supersedes the earlier text-only banner).
+- **Newly earned only**: replaying a quest whose card is already in the Library shows no card and fires no `card.unlocked` (audit UX-03).
+- The screen scrolls, so the exits stay reachable under the card on short phones.
+- Reduced motion: card and stars render statically (§3.4).
 
 ## Interaction points
 
 - [[ BACK TO JOURNEY ]] → `Main` tabs (stack reset; lands on `home/todays-mission`)
 - [ Episode page ] → `episode/detail` (episodeId) — the place to pick the next quest
-- Banner tap → `library/card-detail` (cardId) (nice-to-have; banner is static today)
+- [ See my card ] → `library/card-detail` (cardId); back returns here
 - **Future**: when `wrong >= 1`, the feedback-review slot asks one recall question before the CTA becomes active (F-RVW-001 §3.3); when the episode was the last of its stage, the CTA becomes "Now or later?" → `reviews/stage-review` (§3.4)
 
 ## Navigation graph
@@ -67,15 +72,21 @@ Exit to:    `Main` tabs (`home/todays-mission`) · `episode/detail` · `library/
 
 ## States
 
-- **success**: as drawn; 3 tiers of copy; banner on 2+ stars.
+- **success**: as drawn; 3 tiers of copy; card reveal on 2+ stars when the card is new.
+- **replay** (2+ stars, card already owned): no card, same copy and CTAs.
 - **empty** (0 stars, or quest without `rewardCardId`): no banner, Hoya thinking, same single CTA — never a blank middle; F-RVW-001 §3.1 asks for a 1-star floor on review surfaces (quests currently allow 0).
 - **error** (progress write fails): celebration still renders (write is fire-and-forget); retry silently on next mount; telemetry never blocks the screen.
+
+## Accessibility
+
+- The new-card block sits inside an always-mounted polite live region (`accessibilityRole="alert"`, `accessibilityLiveRegion="polite"`); iOS VoiceOver also gets `announceForAccessibility("New card for your library! <name>")`, since it ignores live regions. The card art thumbnail stays hidden from assistive tech; the name text carries the meaning.
+- Layout literals come from tokens: thumbnail edge `touchTarget.hero`, frame `borderWidth.thick`.
 
 ## Data needs
 
 - reads: `questById` (`rewardCardId`), `episodeById`, route params `stars/correct/total`
-- writes (on mount, once): `recordQuestComplete(profileId, {questId, episodeId, stars, accuracy, attempts})` · `unlockCard(profileId, rewardCardId)`
-- telemetry: `quest.complete` `{stars, correct, total}` · `card.unlocked` · `card.first_earned` (first card ever)
+- writes (on mount, once): `recordQuestComplete(profileId, {questId, episodeId, stars, accuracy, attempts})` · `unlockCard(profileId, rewardCardId)` only when the card is new (`logic/reward.decideCardAward`)
+- telemetry: `quest.complete` `{stars, correct, total, retries}` (stars from first tries; `retries` = re-taps) · `card.unlocked` (new cards only) · `card.first_earned` (first card ever)
 
 ## Open questions
 

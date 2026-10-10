@@ -1,4 +1,4 @@
-import type { Episode, QuestProgress, StageKey } from '@hangul-route/content-schema';
+import type { Episode, QuestProgress, StageKey, ThemeDef } from '@hangul-route/content-schema';
 
 /**
  * Journey grid rules (wireframe journey/grid):
@@ -35,4 +35,19 @@ export function isEpisodeComplete(
     quests.filter((q) => q.episodeId === episode.id && q.completedAt).map((q) => q.questId),
   );
   return episode.questIds.every((id) => done.has(id));
+}
+
+/**
+ * Journey column header: the theme title's first word ("Food & Daily Life"
+ * → "Food"). Cells use its initial so every column reads like its header —
+ * keyed initials gave two "L" columns (letters, life; audit UX-11).
+ */
+export function themeColumnLabel(theme: Pick<ThemeDef, 'titleEn'>): string {
+  const title = theme.titleEn.trim();
+  const gap = title.search(/\s/);
+  return gap === -1 ? title : title.slice(0, gap);
+}
+
+export function themeCellInitial(theme: Pick<ThemeDef, 'titleEn'>): string {
+  return themeColumnLabel(theme).charAt(0).toUpperCase();
 }

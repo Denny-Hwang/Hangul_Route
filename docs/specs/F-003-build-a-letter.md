@@ -40,7 +40,9 @@ Companion stories:
 - **Given** target `가`, **when** the child taps `ㅏ` first (vowel before consonant — wrong order),
   **then** after both slots fill (with wrong sequence) the screen shows a brief amber-tinted state,
   **and** after 900ms the slots auto-clear and HoyaBubble (`thinking` tone) shows: *"Not quite. Try again — letters go left to right."*,
-  **and** the round is NOT counted as failed — the child gets unlimited retries.
+  **and** the round does not end or lock — the child gets unlimited retries (see the first-try scoring revision below for how the round is scored).
+
+> **Revised 2026-10-10 (audit UX-02) — first-try scoring.** Same rule as F-001 §3.2 (read its revision note for the full definition). For Build a Letter: a round is scored **once, on the first completed attempt** (both slots filled). If that first attempt spells the target it is a *correct* round; if it is wrong (e.g. `ㅏ` before `ㄱ`) it is a *missed* round, even though the slots auto-clear and the child can retry without limit and without any failure UI. Later attempts in the same round are *retries*: they never add a round and never change `correct`, `total` or stars, and are tracked separately (`retryCount` / `quest.complete.retries`). Stars follow F-001 §3.1 exactly: `correct / total` with `>= 0.95` = 3, `>= 0.60` = 2, `>= 0.20` = 1, otherwise 0, so 5 rounds give 5/5 = 3, 3–4/5 = 2, 1–2/5 = 1. The reward card needs 2 or more stars.
 
 ### 3.3 Tile selection
 

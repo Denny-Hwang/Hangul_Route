@@ -17,6 +17,7 @@ import {
 import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import type { MinigameScope } from '../../logic/minigame-config';
+import { sequenceRoundKey } from '../../logic/round-keys';
 import { nudge, success } from '../../platform/haptics';
 import { useQuestRunStore } from '../../store/quest-run-store';
 
@@ -35,7 +36,7 @@ export function StorySequenceGame({ scope, onFinish }: Props): React.ReactElemen
   const [picked, setPicked] = useState<string[]>([]);
   const [wrongFlash, setWrongFlash] = useState<string | null>(null);
 
-  const recordRound = useQuestRunStore((s) => s.recordRound);
+  const answerRound = useQuestRunStore((s) => s.answerRound);
   const markStepComplete = useQuestRunStore((s) => s.markStepComplete);
 
   useEffect(() => {
@@ -52,11 +53,11 @@ export function StorySequenceGame({ scope, onFinish }: Props): React.ReactElemen
     const expectedId = correctOrder[picked.length]?.id;
     if (id === expectedId) {
       success();
-      recordRound(true);
+      answerRound(sequenceRoundKey(picked.length), true);
       setPicked([...picked, id]);
     } else {
       nudge();
-      recordRound(false);
+      answerRound(sequenceRoundKey(picked.length), false);
       setWrongFlash(id);
       setTimeout(() => setWrongFlash(null), 500);
     }

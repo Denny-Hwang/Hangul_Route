@@ -8,9 +8,12 @@ import type { JamoStrokePoint } from '../content/jamo-strokes';
  * F-006 adds optional stroke-direction awareness (`checkDirection`).
  *
  * Coverage still determines pass/fail at threshold 0.65. Order and
- * direction are auxiliary signals — they ride the result envelope so
+ * direction (start→end for open strokes, winding for closed loops) are
+ * auxiliary signals — they ride the result envelope so
  * the UI can surface "you got it! next time try left-to-right" without
- * gating progress.
+ * gating progress. Direction is reported per target, with a closed-loop flag,
+ * so the UI can word a loop going round the wrong way differently from an
+ * open stroke drawn backwards (see logic/trace-copy.ts).
  */
 
 const DEFAULT_TOLERANCE = 24; // dp at 200 viewBox scale
@@ -51,6 +54,61 @@ function dot(a: { x: number; y: number }, b: { x: number; y: number }): number {
   return a.x * b.x + a.y * b.y;
 }
 
+/**
+ * Shoelace area of the polyline, closed back to its first point. Positive
+ * means clockwise on screen (y grows downward), negative counter-clockwise.
+ */
+function signedArea(stroke: JamoStrokePoint[]): number {
+  let twice = 0;
+  for (let i = 0; i < stroke.length; i++) {
+    const a = stroke[i]!;
+    const b = stroke[(i + 1) % stroke.length]!;
+    twice += a.x * b.y - b.x * a.y;
+  }
+  return twice / 2;
+}
+
+/** A loop (ㅁ ㅇ ㅎ's circle) ends where it starts, so its chord is ~zero. */
+function isClosedStroke(stroke: JamoStrokePoint[], tolerance: number): boolean {
+  return stroke.length >= 3 && distSq(stroke[0]!, stroke[stroke.length - 1]!) <= tolerance * tolerance;
+}
+
+/**
+ * A drawn stroke needs at least this share of the target loop's area before
+ * its winding means anything. One straight side of ㅁ (how Korean writes it:
+ * ㅣ first) has none, and must never earn a direction nudge.
+ */
+const MIN_WINDING_AREA_RATIO = 0.25;
+
+/**
+ * F-006 direction check for one target stroke and its best-matching drawn
+ * stroke. Open strokes compare start→end vectors (§3.2). Closed loops have
+ * a zero start→end vector — comparing it would fail every loop — so they
+ * compare winding (clockwise vs counter-clockwise) instead, wherever on the
+ * loop the child began.
+ */
+function directionMatches(
+  drawnStroke: JamoStrokePoint[],
+  targetStroke: JamoStrokePoint[],
+  tolerance: number,
+): boolean {
+  if (drawnStroke.length < 2 || targetStroke.length < 2) return false;
+  if (isClosedStroke(targetStroke, tolerance)) {
+    const targetArea = signedArea(targetStroke);
+    const drawnArea = signedArea(drawnStroke);
+    if (targetArea === 0) return true; // an out-and-back line has no way round
+    if (Math.abs(drawnArea) < Math.abs(targetArea) * MIN_WINDING_AREA_RATIO) return true;
+    return Math.sign(drawnArea) === Math.sign(targetArea);
+  }
+  const dStart = drawnStroke[0]!;
+  const dEnd = drawnStroke[drawnStroke.length - 1]!;
+  const tStart = targetStroke[0]!;
+  const tEnd = targetStroke[targetStroke.length - 1]!;
+  const dVec = normalize({ x: dEnd.x - dStart.x, y: dEnd.y - dStart.y });
+  const tVec = normalize({ x: tEnd.x - tStart.x, y: tEnd.y - tStart.y });
+  return dot(dVec, tVec) > 0.5; // ~60° cone
+}
+
 export interface ScoreTraceInput {
   target: JamoStrokePoint[][];
   drawn: JamoStrokePoint[][];
@@ -69,6 +127,12 @@ export interface ScoreTraceResult {
   orderCorrect?: boolean;
   /** F-006: per-target whether the matching drawn stroke ran the right way. */
   directionsPerTarget?: boolean[];
+  /**
+   * F-006: per target, whether it is a closed loop (ㅁ ㅇ ㅎ...). Loops are
+   * judged by winding, not left-to-right, so the UI must not give them the
+   * left-to-right nudge. Parallel to `directionsPerTarget`.
+   */
+  closedPerTarget?: boolean[];
   /** F-006: true iff every directionsPerTarget entry is true. */
   directionsCorrect?: boolean;
   /** F-008: coverage ≥ 0.65 AND orderCorrect. Populated when checkOrder=true. */
@@ -95,6 +159,7 @@ export function scoreTrace({
     }
     if (checkDirection) {
       base.directionsPerTarget = target.map(() => false);
+      base.closedPerTarget = target.map((t) => isClosedStroke(t, tolerance));
       base.directionsCorrect = target.length === 0;
     }
     return base;
@@ -150,18 +215,11 @@ export function scoreTrace({
         const drawnIdx = bestMatchIndices.findIndex((bi) => bi === ti);
         if (drawnIdx === -1) return false;
         const drawnStroke = drawn.filter((s) => s.length > 0)[drawnIdx];
-        if (!drawnStroke || drawnStroke.length < 2 || targetStroke.length < 2) {
-          return false;
-        }
-        const dStart = drawnStroke[0]!;
-        const dEnd = drawnStroke[drawnStroke.length - 1]!;
-        const tStart = targetStroke[0]!;
-        const tEnd = targetStroke[targetStroke.length - 1]!;
-        const dVec = normalize({ x: dEnd.x - dStart.x, y: dEnd.y - dStart.y });
-        const tVec = normalize({ x: tEnd.x - tStart.x, y: tEnd.y - tStart.y });
-        return dot(dVec, tVec) > 0.5; // ~60° cone
+        if (!drawnStroke) return false;
+        return directionMatches(drawnStroke, targetStroke, tolerance);
       });
       result.directionsPerTarget = directionsPerTarget;
+      result.closedPerTarget = target.map((t) => isClosedStroke(t, tolerance));
       result.directionsCorrect = directionsPerTarget.every((d) => d);
     }
   }

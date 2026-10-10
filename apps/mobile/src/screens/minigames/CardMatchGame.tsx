@@ -16,6 +16,7 @@ import {
 import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import type { MinigameScope } from '../../logic/minigame-config';
+import { pairRoundKey } from '../../logic/round-keys';
 import { speak } from '../../platform/audio';
 import { nudge, success } from '../../platform/haptics';
 import { useQuestRunStore } from '../../store/quest-run-store';
@@ -44,7 +45,7 @@ export function CardMatchGame({ scope, onFinish }: Props): React.ReactElement {
     return indexed;
   }, [pairs]);
 
-  const recordRound = useQuestRunStore((s) => s.recordRound);
+  const answerRound = useQuestRunStore((s) => s.answerRound);
   const markStepComplete = useQuestRunStore((s) => s.markStepComplete);
 
   const [selectedKo, setSelectedKo] = useState<number | null>(null);
@@ -65,12 +66,12 @@ export function CardMatchGame({ scope, onFinish }: Props): React.ReactElement {
     if (matched.has(selectedKo)) return;
     if (selectedKo === enIdx) {
       success();
-      recordRound(true);
+      answerRound(pairRoundKey(selectedKo), true);
       setMatched(new Set([...matched, selectedKo]));
       setSelectedKo(null);
     } else {
       nudge();
-      recordRound(false);
+      answerRound(pairRoundKey(selectedKo), false);
       setWrongFlash({ ko: selectedKo, en: enIdx });
       setTimeout(() => {
         setWrongFlash(null);

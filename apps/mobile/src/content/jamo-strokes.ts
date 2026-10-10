@@ -79,19 +79,19 @@ export const jamoStrokes: JamoStrokes[] = [
       [p(110, 80), p(160, 150)],
     ],
   },
-  // ㅇ ieung — circle (approximated as 8-point polygon)
+  // ㅇ ieung — circle (8-point polygon), from the top, counter-clockwise as written
   {
     jamoId: 'jamo:ieung',
     strokes: [
       [
         p(100, 40),
-        p(140, 56),
-        p(160, 95),
-        p(140, 134),
-        p(100, 150),
-        p(60, 134),
-        p(40, 95),
         p(60, 56),
+        p(40, 95),
+        p(60, 134),
+        p(100, 150),
+        p(140, 134),
+        p(160, 95),
+        p(140, 56),
         p(100, 40),
       ],
     ],
@@ -143,7 +143,7 @@ export const jamoStrokes: JamoStrokes[] = [
       [p(40, 150), p(160, 150)],
     ],
   },
-  // ㅎ hieut — top tiny + horizontal + circle
+  // ㅎ hieut — top tiny + horizontal + circle (from the top, counter-clockwise)
   {
     jamoId: 'jamo:hieut',
     strokes: [
@@ -151,13 +151,13 @@ export const jamoStrokes: JamoStrokes[] = [
       [p(40, 65), p(160, 65)],
       [
         p(100, 85),
-        p(140, 100),
-        p(160, 125),
-        p(140, 145),
-        p(100, 155),
-        p(60, 145),
-        p(40, 125),
         p(60, 100),
+        p(40, 125),
+        p(60, 145),
+        p(100, 155),
+        p(140, 145),
+        p(160, 125),
+        p(140, 100),
         p(100, 85),
       ],
     ],
@@ -270,13 +270,13 @@ export const jamoStrokes: JamoStrokes[] = [
     strokes: [
       [
         p(100, 40),
-        p(140, 56),
-        p(160, 95),
-        p(140, 134),
-        p(100, 150),
-        p(60, 134),
-        p(40, 95),
         p(60, 56),
+        p(40, 95),
+        p(60, 134),
+        p(100, 150),
+        p(140, 134),
+        p(160, 95),
+        p(140, 56),
         p(100, 40),
       ],
     ],

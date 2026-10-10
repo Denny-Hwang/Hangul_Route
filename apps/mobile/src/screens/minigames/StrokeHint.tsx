@@ -1,6 +1,6 @@
-import { colors, motion } from '@hangul-route/design-system';
-import React, { useEffect } from 'react';
-import { AccessibilityInfo } from 'react-native';
+import { colors, motion, typography } from '@hangul-route/design-system';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { AccessibilityInfo, Pressable } from 'react-native';
 import Animated, {
   Easing,
   runOnJS,
@@ -11,8 +11,15 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
-import Svg, { Circle, Path } from 'react-native-svg';
+import Svg, { Circle, Path, Text as SvgText } from 'react-native-svg';
 import type { JamoStrokePoint } from '../../content/jamo-strokes';
+import {
+  BADGE_RADIUS,
+  buildStrokeDiagram,
+  describeStrokeOrder,
+  pointsToPathD,
+  staticHintHoldMs,
+} from '../../logic/stroke-diagram';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 const AnimatedPath = Animated.createAnimatedComponent(Path);
@@ -37,8 +44,12 @@ interface Props {
  * stroke from start to end in order, leaving a fading trail. After all
  * strokes complete, the whole trail fades out and `onComplete` fires.
  *
- * Honors prefers-reduced-motion: each stroke flashes at full opacity for
- * 200ms in sequence instead of the dot-walk.
+ * Honors prefers-reduced-motion with no motion at all: a still stroke-order
+ * diagram (every stroke, numbered start badges, direction arrows) stays up
+ * for `staticHintHoldMs`, then `onComplete` fires. A tap anywhere on the
+ * diagram dismisses it early, and its accessibility label reads the stroke
+ * order aloud. The same still diagram is the fallback when the
+ * reduced-motion query itself fails, so "Show me" can never get stuck.
  */
 export function StrokeHint({
   target,
@@ -51,27 +62,38 @@ export function StrokeHint({
   // For simplicity, we use a single sweep value spanning all strokes.
   const sweep = useSharedValue(0);
   const opacity = useSharedValue(0);
+  const [mode, setMode] = useState<'pending' | 'animated' | 'static'>('pending');
+
+  // The parent passes a fresh closure each render; keep the latest in a ref
+  // so a re-render mid-demo does not restart it.
+  const onCompleteRef = useRef(onComplete);
+  onCompleteRef.current = onComplete;
+  const finish = useCallback(() => onCompleteRef.current?.(), []);
+  // The still diagram's hold timer, so a tap can end the hold early.
+  const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dismissStill = useCallback(() => {
+    if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
+    holdTimerRef.current = null;
+    finish();
+  }, [finish]);
 
   useEffect(() => {
     if (target.length === 0) return;
     let cancelled = false;
 
+    const showStill = (): void => {
+      setMode('static');
+      holdTimerRef.current = setTimeout(finish, staticHintHoldMs(target.length));
+    };
+
     AccessibilityInfo.isReduceMotionEnabled()
       .then((reduced) => {
         if (cancelled) return;
         if (reduced) {
-          // Reduced-motion: flash each stroke 200ms each
-          opacity.value = withSequence(
-            ...target.flatMap(() => [
-              withTiming(0.85, { duration: 200 }),
-              withTiming(0, { duration: 200 }),
-            ]),
-            withTiming(0, { duration: 1 }, () => {
-              if (onComplete) runOnJS(onComplete)();
-            }),
-          );
+          showStill();
           return;
         }
+        setMode('animated');
         // Standard animation: sweep 0 → target.length (one per stroke),
         // then fade out.
         opacity.value = withTiming(1, { duration: 120 });
@@ -90,20 +112,37 @@ export function StrokeHint({
                 0,
                 { duration: 400 },
                 () => {
-                  if (onComplete) runOnJS(onComplete)();
+                  runOnJS(finish)();
                 },
               );
             }),
           ),
         );
       })
-      .catch(() => {});
+      .catch(() => {
+        if (!cancelled) showStill();
+      });
     return () => {
       cancelled = true;
+      if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
+      holdTimerRef.current = null;
     };
-  }, [target, playToken, sweep, opacity, onComplete]);
+  }, [target, playToken, sweep, opacity, finish]);
 
   if (target.length === 0) return null;
+
+  if (mode === 'static') {
+    return (
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`${describeStrokeOrder(target)} Tap to close.`}
+        onPress={dismissStill}
+        style={{ position: 'absolute', top: 0, left: 0, width: size, height: size }}
+      >
+        <StrokeOrderDiagram target={target} size={size} viewBox={viewBox} />
+      </Pressable>
+    );
+  }
 
   return (
     <Svg
@@ -192,15 +231,79 @@ function StrokeTrail({
   );
 }
 
-function pointsToPathD(points: JamoStrokePoint[]): string {
-  if (points.length === 0) return '';
-  const first = points[0]!;
-  let d = `M ${first.x} ${first.y}`;
-  for (let i = 1; i < points.length; i++) {
-    const pt = points[i]!;
-    d += ` L ${pt.x} ${pt.y}`;
-  }
-  return d;
+/**
+ * Reduced-motion "Show me" (F-007 §3.4): the whole letter at once — strokes
+ * in the hint colour, a numbered badge at each start, an arrow for which way
+ * each stroke goes. Nothing moves.
+ */
+function StrokeOrderDiagram({
+  target,
+  size,
+  viewBox,
+}: {
+  target: JamoStrokePoint[][];
+  size: number;
+  viewBox: number;
+}): React.ReactElement {
+  const items = buildStrokeDiagram(target);
+  return (
+    <Svg
+      pointerEvents="none"
+      width={size}
+      height={size}
+      viewBox={`0 0 ${viewBox} ${viewBox}`}
+      style={{ position: 'absolute', top: 0, left: 0 }}
+    >
+      {items.map((item) => (
+        <Path
+          key={`stroke-${item.order}`}
+          d={item.d}
+          stroke={colors.feedback.nudge}
+          strokeOpacity={0.6}
+          strokeWidth={14}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          fill="none"
+        />
+      ))}
+      {items.map((item) =>
+        item.arrow ? (
+          <Path
+            key={`arrow-${item.order}`}
+            d={`${item.arrow.d} ${item.arrow.head}`}
+            stroke={colors.text.primary}
+            strokeWidth={3}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            fill="none"
+          />
+        ) : null,
+      )}
+      {items.map((item) => (
+        <React.Fragment key={`badge-${item.order}`}>
+          <Circle
+            cx={item.badge.x}
+            cy={item.badge.y}
+            r={BADGE_RADIUS}
+            fill={colors.surface.paper}
+            stroke={colors.feedback.nudge}
+            strokeWidth={2.5}
+          />
+          <SvgText
+            x={item.badge.x}
+            y={item.badge.y}
+            dy={typography.size.caption / 3}
+            fontSize={typography.size.caption}
+            fontWeight={typography.weight.bold}
+            fill={colors.text.primary}
+            textAnchor="middle"
+          >
+            {String(item.order)}
+          </SvgText>
+        </React.Fragment>
+      ))}
+    </Svg>
+  );
 }
 
 function pointAtFraction(stroke: JamoStrokePoint[], frac: number): JamoStrokePoint {

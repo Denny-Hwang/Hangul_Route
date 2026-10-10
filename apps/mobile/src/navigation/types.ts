@@ -5,7 +5,16 @@ export type RootStackParamList = {
   Main: NavigatorScreenParams<MainTabParamList>;
   EpisodeDetail: { episodeId: string };
   QuestPlayer: { questId: string; episodeId: string };
-  Results: { questId: string; episodeId: string; stars: 0 | 1 | 2 | 3; correct: number; total: number };
+  Results: {
+    questId: string;
+    episodeId: string;
+    stars: 0 | 1 | 2 | 3;
+    /** Rounds right on the first try / rounds scored (logic/first-try). */
+    correct: number;
+    total: number;
+    /** Answers after a round's first one — telemetry only, never scored. */
+    retries?: number;
+  };
   CardDetail: { cardId: string };
   /** Grown-up gate (PIN). `AddProfile` continues into Onboarding/CreateProfile. */
   PinEntry: { next: 'ParentDashboard' | 'AddProfile' | 'Restore' | 'SaveProgress' | 'Paywall' };

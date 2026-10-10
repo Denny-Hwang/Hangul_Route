@@ -46,6 +46,8 @@ Total animation: ~`(numStrokes × 700ms) + 400ms`. For ㄱ (1 stroke): ~1.1s. Fo
 
 - If `prefers-reduced-motion: true`: skip animation. Briefly flash each target stroke at full opacity for 200ms in sequence. Total ~`(numStrokes × 300ms)`.
 
+> **Revised 2026-10-10 (audit UX-02).** With reduced motion the hint is a still stroke-order diagram (numbered start badges and direction arrows) held for 2–5 s (`staticHintHoldMs`) instead of a flash. A tap on the diagram dismisses it early. Its accessibility label reads the order aloud (for example "Stroke order. One stroke. 1: right, then down. Tap to close.").
+
 ### 3.5 Replay limit
 
 - No replay limit. Child can tap "Show me" as many times as they want.

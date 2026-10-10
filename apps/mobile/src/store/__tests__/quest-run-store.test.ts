@@ -13,28 +13,79 @@ describe('quest-run-store', () => {
     expect(s.episodeId).toBe('episode:y');
     expect(s.correctCount).toBe(0);
     expect(s.totalCount).toBe(0);
-    expect(s.attempts).toBe(0);
+    expect(s.retryCount).toBe(0);
+    expect(s.scoredRounds).toEqual([]);
     expect(s.stepIndex).toBe(0);
   });
 
-  it('recordRound(true) bumps correct + total, leaves attempts', () => {
-    const { beginQuest, recordRound } = useQuestRunStore.getState();
+  it('a right first answer scores one correct round', () => {
+    const { beginQuest, answerRound } = useQuestRunStore.getState();
     beginQuest('q', 'e');
-    recordRound(true);
+    answerRound(0, true);
     const s = useQuestRunStore.getState();
     expect(s.correctCount).toBe(1);
     expect(s.totalCount).toBe(1);
-    expect(s.attempts).toBe(0);
+    expect(s.retryCount).toBe(0);
   });
 
-  it('recordRound(false) bumps total + attempts, leaves correct', () => {
-    const { beginQuest, recordRound } = useQuestRunStore.getState();
+  it('a wrong first answer scores one missed round', () => {
+    const { beginQuest, answerRound } = useQuestRunStore.getState();
     beginQuest('q', 'e');
-    recordRound(false);
+    answerRound(0, false);
     const s = useQuestRunStore.getState();
     expect(s.correctCount).toBe(0);
     expect(s.totalCount).toBe(1);
-    expect(s.attempts).toBe(1);
+    expect(s.retryCount).toBe(0);
+  });
+
+  it('re-taps in the same round are retries, never extra failed rounds (F-001 §3.2)', () => {
+    const { beginQuest, answerRound } = useQuestRunStore.getState();
+    beginQuest('q', 'e');
+    answerRound(0, false);
+    answerRound(0, false);
+    answerRound(0, true);
+    answerRound(1, true);
+    const s = useQuestRunStore.getState();
+    expect(s.totalCount).toBe(2);
+    expect(s.correctCount).toBe(1);
+    expect(s.retryCount).toBe(2);
+  });
+
+  it('the same round number in a later step is a new round', () => {
+    const { beginQuest, answerRound, markStepComplete, consumePendingAdvance } = useQuestRunStore.getState();
+    beginQuest('q', 'e');
+    answerRound(0, true);
+    markStepComplete();
+    consumePendingAdvance();
+    useQuestRunStore.getState().answerRound(0, false);
+    const s = useQuestRunStore.getState();
+    expect(s.totalCount).toBe(2);
+    expect(s.correctCount).toBe(1);
+    expect(s.retryCount).toBe(0);
+  });
+
+  it('relaunching a game cannot re-roll a round already scored in this step', () => {
+    const { beginQuest, answerRound } = useQuestRunStore.getState();
+    beginQuest('q', 'e');
+    answerRound(0, false);
+    // Child backs out of the minigame and taps Play again: round 0 again.
+    answerRound(0, true);
+    const s = useQuestRunStore.getState();
+    expect(s.totalCount).toBe(1);
+    expect(s.correctCount).toBe(0);
+    expect(s.retryCount).toBe(1);
+  });
+
+  it('round keys may be strings (card-match pairs)', () => {
+    const { beginQuest, answerRound } = useQuestRunStore.getState();
+    beginQuest('q', 'e');
+    answerRound('pair-1', false);
+    answerRound('pair-2', true);
+    answerRound('pair-1', true);
+    const s = useQuestRunStore.getState();
+    expect(s.totalCount).toBe(2);
+    expect(s.correctCount).toBe(1);
+    expect(s.retryCount).toBe(1);
   });
 
   it('markStepComplete then consumePendingAdvance advances one step', () => {
@@ -66,10 +117,21 @@ describe('quest-run-store', () => {
   });
 
   it('stars returns 3 on a perfect run', () => {
-    const { beginQuest, recordRound, stars } = useQuestRunStore.getState();
+    const { beginQuest, answerRound, stars } = useQuestRunStore.getState();
     beginQuest('q', 'e');
-    for (let i = 0; i < 5; i++) recordRound(true);
+    for (let i = 0; i < 5; i++) answerRound(i, true);
     expect(stars()).toBe(3);
+  });
+
+  it('stars come from first tries: one shaky round of four still earns 2', () => {
+    const { beginQuest, answerRound, stars } = useQuestRunStore.getState();
+    beginQuest('q', 'e');
+    answerRound(0, true);
+    for (let i = 0; i < 4; i++) answerRound(1, false);
+    answerRound(1, true);
+    answerRound(2, true);
+    answerRound(3, true);
+    expect(stars()).toBe(2);
   });
 
   it('stars returns 0 with no rounds played', () => {
@@ -78,13 +140,27 @@ describe('quest-run-store', () => {
   });
 
   it('reset clears all run state', () => {
-    const { beginQuest, recordRound, reset } = useQuestRunStore.getState();
+    const { beginQuest, answerRound, reset } = useQuestRunStore.getState();
     beginQuest('q', 'e');
-    recordRound(true);
+    answerRound(0, false);
+    answerRound(0, true);
     reset();
     const s = useQuestRunStore.getState();
     expect(s.questId).toBeNull();
     expect(s.correctCount).toBe(0);
     expect(s.totalCount).toBe(0);
+    expect(s.retryCount).toBe(0);
+    expect(s.scoredRounds).toEqual([]);
+  });
+
+  it('beginQuest after a run starts a fresh tally', () => {
+    const { beginQuest, answerRound } = useQuestRunStore.getState();
+    beginQuest('q', 'e');
+    answerRound(0, false);
+    beginQuest('q', 'e');
+    useQuestRunStore.getState().answerRound(0, true);
+    const s = useQuestRunStore.getState();
+    expect(s.totalCount).toBe(1);
+    expect(s.correctCount).toBe(1);
   });
 });

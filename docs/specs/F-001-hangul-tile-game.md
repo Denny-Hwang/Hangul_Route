@@ -48,8 +48,17 @@ Companion stories:
   **when** the tile registers,
   **then** the tile briefly shakes (`shake.gentle`, 200 ms), Hoya switches to `thinking` pose,
   **and** an English+romanization hint appears: *"Listen again. This says **giyeok**."*
-  **and** the round is **NOT** counted as failed (re-tap allowed within the same round).
+  **and** the round does **not end or lock** — re-tap is allowed within the same round (see the first-try scoring revision below for how that round is scored).
   **and** the prompt audio replays on its own after 800 ms unless the child taps again first.
+
+> **Revised 2026-10-10 (audit UX-02) — first-try scoring.** The original text said a wrong tap "is NOT counted as failed". That left the §3.1 tiers `1–2/5 = 1 star` unreachable (a retry could never lower the score) and let a child tap through every tile for 3 stars. Scoring is now defined as follows; the *interaction* in §3.2 (no lock-out, no shame, unlimited re-taps) is unchanged.
+>
+> 1. **A round is scored once, on the learner's first answer.** Right first time = a *correct* round. Wrong first time = a *missed* round, even if the child then taps the right tile. A wrong tap still never ends the round, ends the game, or shows red/failure UI (CLAUDE.md §8).
+> 2. **Retries never add rounds.** Every answer after the first in the same round is a *retry*. It does not change `correct`, `total` or stars. Retries are tracked separately (`retryCount` in the run, `retries` on the `quest.complete` telemetry event) for analytics only. One round is identified by `stepIndex:roundKey` (the round index within the game; `pair-N` for matching games), so a repeated key within a step is a retry.
+> 3. **Stars** are computed once per Quest over all rounds answered in the run: `accuracy = correct / total`, where `correct` = rounds right on the first try and `total` = rounds answered at least once (retries excluded). `accuracy >= 0.95` is 3 stars, `>= 0.60` is 2, `>= 0.20` is 1, otherwise 0 (`logic/score.ts` `starsForAccuracy`). For a 5-round game this reproduces the §3.1 tiers exactly: 5/5 = 3, 3–4/5 = 2, 1–2/5 = 1, 0/5 = 0. For other round counts the same accuracy thresholds apply (for example 3 of 5 is 2 stars).
+> 4. **Reward card:** a Quest earns its reward card at **2 or more stars** (F-MOTION-003 §3.5). A child who needs retries on one letter therefore loses at most that round, not the card.
+>
+> Not changed by this revision: rounds that are never answered (the child skips a game) are not counted in `total`; see the follow-ups in the PR that introduced this note.
 
 ### 3.3 Audio failure path
 

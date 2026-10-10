@@ -34,6 +34,8 @@ For each target stroke and its best-matching drawn stroke:
 
 If a target stroke has no matching drawn stroke, that direction defaults to `false` (can't be correct if it wasn't drawn).
 
+> **Revised 2026-10-10 (audit UX-02).** Closed loops (ㅁ ㅇ ㅎ and their batchim forms) start and end at the same spot, so the start→end vector above is zero and would fail every loop. For a closed target stroke, direction is its **winding** (clockwise vs counter-clockwise, by signed area) instead; a drawn stroke enclosing under 25% of the loop's area (for example one straight side of ㅁ) carries no winding and is never marked wrong. The result also reports which targets are loops (`closedPerTarget`). Open strokes keep the rule above.
+
 ### 3.3 Pass criteria unchanged
 
 Direction is informational. Pass remains coverage ≥ 0.65.
@@ -44,6 +46,8 @@ If coverage passes but direction is wrong on the first stroke:
 - *"Nice! Try drawing left-to-right next time."*
 
 If F-005 order ALSO failed: order wins (it's the more important hint).
+
+> **Revised 2026-10-10 (audit UX-02).** "Left-to-right" only makes sense for open strokes. If the only wrong directions are on closed loops, the hint is *"Nice! Next time, try going around the other way."* — never left-to-right. If an open stroke is wrong too, the left-to-right hint wins. (`logic/trace-copy.ts`)
 
 ## 4. Out of scope
 
