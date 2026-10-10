@@ -1,0 +1,90 @@
+import { normalizeRescueCode } from '@hangul-route/content-schema';
+import {
+  cooldownRemainingMs,
+  isLocked,
+  registerFailure,
+  registerSuccess,
+  type AttemptState,
+} from './pin-hash';
+
+/**
+ * Forgot PIN, offline — F-LEARN-001 §3.5, L9. Pure: no storage, no React, no
+ * network. Two ways to a new PIN, both keep the learners, cards and progress:
+ *
+ *  1. Re-enter a Rescue Code that this device already stores for a synced
+ *     learner. Wrong entries count through the same throttle as PIN attempts
+ *     (`account:pinAttempts`), so the code cannot be brute-forced here.
+ *  2. Wait 24 hours (`account:pinResetRequestedAt`), then set a new PIN.
+ */
+
+/** How long the wait path holds before a new PIN may be set. */
+export const PIN_RESET_WAIT_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Normalised Rescue Codes stored on this device, one per synced learner
+ * (`useSyncStore.byLearner[id].rescueCode`). Empty when none exist, which is
+ * when the screen shows only the wait path. Values that are not a Rescue Code
+ * shape are dropped.
+ */
+export function collectRescueCodes(byLearner: Readonly<Record<string, { rescueCode: string | null }>>): string[] {
+  const codes: string[] = [];
+  for (const { rescueCode } of Object.values(byLearner)) {
+    const normalized = rescueCode === null ? null : normalizeRescueCode(rescueCode);
+    if (normalized !== null) codes.push(normalized);
+  }
+  return codes;
+}
+
+export type RescueCodeFailure = 'cooldown' | 'bad-format' | 'no-code' | 'wrong-code';
+
+export type RescueCodeResult =
+  | { ok: true; state: AttemptState }
+  | { ok: false; state: AttemptState; reason: RescueCodeFailure; cooldownRemainingMs?: number };
+
+/**
+ * Check a typed Rescue Code against the codes stored on the device. The
+ * cooldown gate comes first so a locked-out attempt is never compared. An
+ * entry that is not a Rescue Code shape, or a device with no stored code, is
+ * not a guess and does not burn an attempt; a well-formed wrong code does.
+ */
+export function attemptRescueCode(input: {
+  entry: string;
+  storedCodes: readonly string[];
+  state: AttemptState;
+  now: number;
+}): RescueCodeResult {
+  const { entry, storedCodes, state, now } = input;
+  if (isLocked(state, now)) {
+    return { ok: false, state, reason: 'cooldown', cooldownRemainingMs: cooldownRemainingMs(state, now) };
+  }
+  if (storedCodes.length === 0) return { ok: false, state, reason: 'no-code' };
+  const normalized = normalizeRescueCode(entry);
+  if (normalized === null) return { ok: false, state, reason: 'bad-format' };
+  if (storedCodes.includes(normalized)) return { ok: true, state: registerSuccess() };
+  return { ok: false, state: registerFailure(state, now), reason: 'wrong-code' };
+}
+
+export type ResetWaitState =
+  | { status: 'idle' }
+  | { status: 'waiting'; readyAt: number; remainingMs: number }
+  | { status: 'ready'; readyAt: number };
+
+/**
+ * Where the 24-hour wait stands. `readyAt` is epoch ms (the screen formats it
+ * in local time). The wait is over at the boundary instant itself. A missing
+ * or unreadable request reads as idle.
+ */
+export function resetWaitState(requestedAt: string | null, now: number): ResetWaitState {
+  const requested = requestedAt === null ? Number.NaN : Date.parse(requestedAt);
+  if (Number.isNaN(requested)) return { status: 'idle' };
+  const readyAt = requested + PIN_RESET_WAIT_MS;
+  return now >= readyAt ? { status: 'ready', readyAt } : { status: 'waiting', readyAt, remainingMs: readyAt - now };
+}
+
+/**
+ * The stamp to store when "Start the wait" is pressed: the pending one if
+ * there is one (pressing again cannot extend or restart the wait), else now.
+ */
+export function startResetWait(existing: string | null, now: number): string {
+  return existing !== null && resetWaitState(existing, now).status !== 'idle' ? existing : new Date(now).toISOString();
+}
