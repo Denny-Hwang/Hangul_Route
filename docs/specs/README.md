@@ -65,6 +65,16 @@ F-XXX-<slug>.md
 - `F-CNT-002-romanization-policy.md` — Revised Romanization policy and validator over shipped content · **ready**
 - `F-QUEST-002-discover-check-stage1-complete.md` — Discover/Check steps, full Stage 1 (15 quests, 30 symbols), Listen & Pick, Pic-Word Match · **ready**
 
+### Spec wave 2026-10, part 2 (ready — PR order in `docs/roadmap/spec-wave-2026-10-review-2.md`)
+- `F-AUDIO-004-korean-voice-quality.md` — sound-first Korean voice, capability check, visible text fallback, MP3 path · **ready**
+- `F-STORY-001-story-schema-pipeline.md` — story schema, `content/stories/` pipeline, sourced facts, verification gate · **ready**
+- `F-STORY-002-story-reader.md` — story reader, Sources screen, SVG scene art · **ready**
+- `F-STORY-003-story-checks-sequence-v2.md` — comprehension checks and sequence v2 · **ready**
+- `F-STORY-004-story-shelf-home-library.md` — story shelf, Home card, Library categories · **ready**
+- `F-STORY-005-episode-catalogue-grid.md` — 24 heritage stories placed on the 7x5 grid · **ready**
+- `F-STORY-006-card-award-model.md` — card award model (31 unearnable cards), story and set cards · **ready**
+- `F-QUEST-002` amended: initial ㅇ is spoken by its name (see F-AUDIO-004)
+
 ### Phase 2 / planned
 - `F-PROF-001-device-profiles.md` — multi-learner · **draft** (code shipped PR #13, full spec covers cloud sync)
 - `F-HW-001-homework-page.md` — Homework tab · **draft**
