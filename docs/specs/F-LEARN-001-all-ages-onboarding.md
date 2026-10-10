@@ -213,16 +213,16 @@ PR #95 (merged) set the Home entry label to "Profile" with the accessible name "
 
 | Name | Fires | Payload (no free text, no name, no email) |
 |---|---|---|
-| `onboarding.who_selected` | section 1 answered | `{ learnerType, firstRun }` |
-| `onboarding.level_selected` | level chosen (first change only, not the default) | `{ level, learnerType }` |
+| `onboarding.who_selected` | section 1 answered | `{ firstRun }` |
+| `onboarding.level_selected` | level chosen (first change only, not the default) | `{ level }` |
 | `onboarding.consent_given` | Continue pressed with a card | `{ basis: 'guardian' \| 'self_13plus', hasEmail, pinSet }` |
-| `onboarding.started` (existing, `CreateProfileScreen.tsx:74-78`) | profile created | `{ level, learnerType, firstRun, hasEmail }` — `ageGroup` and `hasParentEmail` keys are dropped |
+| `onboarding.started` (existing, `CreateProfileScreen.tsx:74-78`) | profile created | `{ level, firstRun, hasEmail }` — `ageGroup` and `hasParentEmail` keys are dropped |
 | `profile.updated` | edit saved (§3.11) | `{ field: 'level' \| 'avatar' \| 'name' \| 'learner_type' }` |
 | `pin.created` | a PIN is stored | `{ where: 'first_run' \| 'gate' \| 'reset' \| 'optional' }` |
 | `pin.reset_requested` | Rescue Code accepted or wait started | `{ method: 'rescue_code' \| 'wait' }` |
 | `pin.reset_completed` | new PIN stored after a reset | `{ method }` |
 
-`packages/content-schema/src/__tests__/telemetry.test.ts` lists the names exactly; update it. The API whitelist reads the same constant (`packages/backend/src/routes/telemetry.ts`), so no backend change. **Owner decision 2026-10-10: `learnerType` is NOT sent in any telemetry payload** (only `level`, never free text); it stays on the device (and on `ProfileSchema` locally). The privacy page therefore needs no `learnerType` disclosure (§3.12). `track()` (`platform/telemetry.ts`) already never throws and honours `flags.telemetryEnabled`.
+`packages/content-schema/src/__tests__/telemetry.test.ts` lists the names exactly; update it. The API whitelist reads the same constant (`packages/backend/src/routes/telemetry.ts`), so no backend change. **Owner decision 2026-10-10: `learnerType` is NOT sent in any telemetry payload** (only `level`, never free text); it stays on the device (and on `ProfileSchema` locally). The privacy page therefore needs no `learnerType` disclosure (§3.12). The payload shapes live in `packages/content-schema/src/schemas/onboarding-telemetry.ts` (`ONBOARDING_TELEMETRY_PAYLOADS`, strict zod objects, so a stray `learnerType`, name or email fails the sending code's tests). `track()` (`platform/telemetry.ts`) already never throws and honours `flags.telemetryEnabled`.
 
 ### 3.9 Neutral "Ask a grown-up" copy (audit UF-08)
 
@@ -293,7 +293,7 @@ Counsel reviews the switch from child-directed to mixed-audience (audit UF-09). 
 ### 3.14 Behaviours (Given / When / Then)
 
 - **Given** a fresh install, **when** Create profile opens, **then** only "Who is learning?" with two unselected cards is drawn, Continue is disabled and its caption reads "Choose who is learning".
-- **Given** the answer "My child or a student", a valid name, the default level, a chosen cub, a PIN entered twice identically and the box ticked, **when** Continue is pressed, **then** in this order `guardianConsentAcceptedAt` is stored, `parentPinHash` is stored, the profile is created with `learnerType: 'child'`, `onboarding.started` fires with `{ level, learnerType: 'child', firstRun: true, hasEmail }` (no name, no email) and the app opens `FirstQuestPreview`.
+- **Given** the answer "My child or a student", a valid name, the default level, a chosen cub, a PIN entered twice identically and the box ticked, **when** Continue is pressed, **then** in this order `guardianConsentAcceptedAt` is stored, `parentPinHash` is stored, the profile is created with `learnerType: 'child'`, `onboarding.started` fires with `{ level, firstRun: true, hasEmail }` (no name, no email) and the app opens `FirstQuestPreview`.
 - **Given** the PIN confirmation differs, **then** both entries clear, "Those didn't match. Let's start again." appears in the amber nudge style and no profile is created.
 - **Given** the answer "Me", **when** the box "I'm 13 or older and I agree to the Privacy Policy" is ticked and Continue pressed with the optional PIN row left closed, **then** `selfConsentAcceptedAt` is stored, no PIN is stored, `gateRequired` is false and tapping "Grown-up zone" in Profile opens the dashboard with no PIN screen.
 - **Given** a device with a stored Rescue Code and a PIN, **when** "Forgot PIN?" is tapped and the code is typed in any case with spaces, **then** the PIN-setup screen opens, the old hash is replaced after the new PIN is confirmed, `pinAttempts` is reset, and profiles, cards and stars are unchanged.

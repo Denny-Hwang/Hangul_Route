@@ -282,4 +282,35 @@ describe('StageDefSchema + ThemeDefSchema', () => {
       }),
     ).toThrow();
   });
+
+  it('parses with and without learnerType (F-LEARN-001, local-first, optional)', () => {
+    const base = {
+      id: 'profile:abc',
+      displayName: 'Suni',
+      ageGroup: '8-9' as const,
+      avatar: 'hoya-orange' as const,
+      createdAt: 't',
+    };
+    expect(ProfileSchema.parse(base).learnerType).toBeUndefined();
+    expect(ProfileSchema.parse({ ...base, learnerType: 'self' }).learnerType).toBe('self');
+    expect(ProfileSchema.parse({ ...base, learnerType: 'child' }).learnerType).toBe('child');
+    expect(ProfileSchema.safeParse({ ...base, learnerType: 'adult' }).success).toBe(false);
+  });
+
+  it('still parses a legacy persisted profile (no learnerType, no role)', () => {
+    const legacy = JSON.parse(
+      '{"id":"profile:old-1","displayName":"Mina","ageGroup":"10-11","avatar":"hoya-green","createdAt":"2026-05-01T00:00:00.000Z"}',
+    );
+    const parsed = ProfileSchema.parse(legacy);
+    expect(parsed.role).toBe('learner');
+    expect(parsed.ageGroup).toBe('10-11');
+    expect('learnerType' in parsed).toBe(false);
+  });
+
+  it('rejects an unknown level id', () => {
+    expect(
+      ProfileSchema.safeParse({ id: 'profile:abc', displayName: 'x', ageGroup: '12-14', avatar: 'hoya-orange', createdAt: 't' })
+        .success,
+    ).toBe(false);
+  });
 });

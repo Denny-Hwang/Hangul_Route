@@ -32,6 +32,14 @@ export const TELEMETRY_EVENT_NAMES = [
   'paywall.console_opened',
   'locale.changed',
   'romanization.mode_changed',
+  // F-LEARN-001 §3.8 (payloads: onboarding-telemetry.ts; never learnerType)
+  'onboarding.who_selected',
+  'onboarding.level_selected',
+  'onboarding.consent_given',
+  'profile.updated',
+  'pin.created',
+  'pin.reset_requested',
+  'pin.reset_completed',
 ] as const;
 
 export const TelemetryEventNameSchema = z.enum(TELEMETRY_EVENT_NAMES);

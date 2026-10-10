@@ -64,6 +64,32 @@ describe('sync schemas (F-SYNC-001)', () => {
     ).toBe(false);
   });
 
+  it('registers each level id, rejects an unknown one, strips an unknown learnerType (F-LEARN-001 L2)', () => {
+    const reg = (ageGroup: string, extra: Record<string, unknown> = {}) =>
+      LearnerRegisterSchema.safeParse({
+        deviceId: 'device-12345678',
+        learner: { displayName: 'Suni', ageGroup, avatar: 'hoya-orange', ...extra },
+      });
+    for (const id of ['5-7', '8-9', '10-11']) expect(reg(id).success).toBe(true);
+    expect(reg('12-14').success).toBe(false);
+    const withType = reg('8-9', { learnerType: 'self' });
+    expect(withType.success).toBe(true);
+    expect(withType.success && 'learnerType' in withType.data.learner).toBe(false);
+  });
+
+  it('parses an old backup file and one carrying learnerType', () => {
+    const old = {
+      format: BACKUP_FORMAT,
+      version: BACKUP_VERSION,
+      exportedAt: 't',
+      profile: { id: 'profile:abc', displayName: 'Suni', ageGroup: '8-9', avatar: 'hoya-orange', createdAt: 't' },
+      snapshot,
+    };
+    expect(BackupFileSchema.parse(old).profile.learnerType).toBeUndefined();
+    const withType = { ...old, profile: { ...old.profile, learnerType: 'self' } };
+    expect(BackupFileSchema.parse(withType).profile.learnerType).toBe('self');
+  });
+
   it('inbox shape and backup file round-trip', () => {
     expect(
       SyncInboxSchema.parse({ rev: 3, plans: [], memberships: [], tier: 'free', serverTime: 't' }).tier,

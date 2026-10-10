@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { LearnerLevelIdSchema, LearnerTypeSchema } from './learner-level';
 
 /**
  * Profile — single learner. A device may host many (F-PROF-001).
@@ -25,12 +26,15 @@ export type ProfileRole = z.infer<typeof ProfileRoleSchema>;
 export const ProfileSchema = z.object({
   id: z.string().regex(/^profile:[a-z0-9-]+$/),
   displayName: z.string().min(1).max(20),
-  ageGroup: z.enum(['5-7', '8-9', '10-11']),
+  /** Opaque level id (see LEARNER_LEVELS); despite the name it is not an age. */
+  ageGroup: LearnerLevelIdSchema,
   avatar: AvatarKindSchema,
   role: ProfileRoleSchema,
   createdAt: z.string(),
   lastActiveAt: z.string().optional(),
   parentPinHash: z.string().optional(),
+  /** Local only (F-LEARN-001 L2): never synced. Absent = treated as 'child'. */
+  learnerType: LearnerTypeSchema.optional(),
 });
 export type Profile = z.infer<typeof ProfileSchema>;
 export const ProfileListSchema = z.array(ProfileSchema);
