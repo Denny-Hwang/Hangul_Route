@@ -7,7 +7,8 @@ import { id, store, type TelemetryEvent } from '../store';
  * POST /api/telemetry — write-only intake for the learner app
  * (apps/mobile/src/platform/telemetry.ts, F-PWA-001 §3.2). Names come from
  * the shared list in @hangul-route/content-schema. `at` is the client's
- * timestamp (offline-queued events arrive late); `receivedAt` is ours.
+ * timestamp (offline-queued events arrive late) when it is plausible, else
+ * ours; `receivedAt` is always ours.
  * There is deliberately no read route (audit SEC-3).
  */
 export const telemetryRoutes = new Hono();
@@ -17,11 +18,21 @@ const MAX_EVENTS = 10_000;
 /** ISO 8601 date-time with an explicit zone — what `new Date().toISOString()` sends. */
 const ISO_DATE_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d{1,9})?)?(Z|[+-]\d{2}:\d{2})$/;
 
-/** The client's timestamp as UTC ISO, or null when it is missing or not a real date-time. */
-function clientTimestamp(raw: unknown): string | null {
+/** How far ahead of our clock a device may run (clock skew) before its time is ignored. */
+const MAX_CLIENT_AHEAD_MS = 5 * 60 * 1000;
+/** The oldest event an offline queue can plausibly still hold (F-PWA-001 §3.2). */
+const MAX_CLIENT_AGE_MS = 30 * 24 * 60 * 60 * 1000;
+
+/**
+ * The client's timestamp as UTC ISO, or null when it is missing, not a real
+ * date-time, or implausible against `nowMs` — more than 5 minutes ahead or
+ * more than 30 days old (a wrong device clock, or an anonymous caller).
+ */
+function clientTimestamp(raw: unknown, nowMs: number): string | null {
   if (typeof raw !== 'string' || !ISO_DATE_TIME.test(raw)) return null;
   const ms = Date.parse(raw);
-  return Number.isNaN(ms) ? null : new Date(ms).toISOString();
+  if (Number.isNaN(ms) || ms > nowMs + MAX_CLIENT_AHEAD_MS || ms < nowMs - MAX_CLIENT_AGE_MS) return null;
+  return new Date(ms).toISOString();
 }
 
 telemetryRoutes.post('/', async (c) => {
@@ -30,14 +41,15 @@ telemetryRoutes.post('/', async (c) => {
   if (!isTelemetryEventName(name)) {
     return fail(c, 'bad_request', 'unknown event name', 422);
   }
-  const receivedAt = new Date().toISOString();
+  const now = new Date();
+  const receivedAt = now.toISOString();
   const payload = body?.payload;
   const event: TelemetryEvent = {
     id: id('event'),
     name,
     profileId: typeof body?.profileId === 'string' ? body.profileId : undefined,
     payload: payload && typeof payload === 'object' && !Array.isArray(payload) ? (payload as Record<string, unknown>) : undefined,
-    at: clientTimestamp(body?.at) ?? receivedAt,
+    at: clientTimestamp(body?.at, now.getTime()) ?? receivedAt,
     receivedAt,
   };
   store.events.push(event);

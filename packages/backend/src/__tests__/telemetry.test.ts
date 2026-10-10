@@ -64,6 +64,20 @@ describe('POST /api/telemetry', () => {
     }
   });
 
+  it('keeps a client time a little ahead (clock skew) or weeks old (offline queue)', async () => {
+    for (const at of ['2026-10-09T12:04:59.000Z', '2026-09-09T12:00:01.000Z']) {
+      expect((await post({ name: 'session.start', at })).body.data?.event.at, at).toBe(at);
+    }
+  });
+
+  it('falls back to the server time when the client time is implausible (> 5 min ahead or > 30 days old)', async () => {
+    for (const at of ['2026-10-09T12:05:01.000Z', '2099-01-01T00:00:00Z', '2026-09-09T11:59:59.000Z', '1970-01-01T00:00:00Z']) {
+      const r = await post({ name: 'session.start', at });
+      expect(r.status).toBe(201);
+      expect(r.body.data?.event.at, at).toBe(NOW.toISOString());
+    }
+  });
+
   it('drops a non-string profile id and a non-object payload instead of rejecting the event', async () => {
     const r = await post({ name: 'session.end', profileId: 7, payload: 'nope' });
     expect(r.status).toBe(201);
