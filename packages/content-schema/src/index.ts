@@ -12,3 +12,4 @@ export * from './schemas/plan';
 export * from './schemas/relink';
 export * from './schemas/entitlement';
 export * from './schemas/telemetry';
+export * from './schemas/locale';
