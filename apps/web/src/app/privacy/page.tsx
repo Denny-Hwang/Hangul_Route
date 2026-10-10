@@ -1,5 +1,6 @@
 import { colors, radii, spacing, typography } from '@hangul-route/design-system/tokens';
 import Link from 'next/link';
+import { CONTACT_EMAIL } from '../../data/contact';
 
 const EFFECTIVE_DATE = 'May 22, 2026';
 
@@ -87,7 +88,7 @@ const sections: Section[] = [
   {
     heading: 'Contact',
     paragraphs: [
-      'Questions about privacy? Email privacy@hangulroute.example. We read everything.',
+      `Questions about privacy? Email ${CONTACT_EMAIL}. We read everything.`,
     ],
   },
 ];

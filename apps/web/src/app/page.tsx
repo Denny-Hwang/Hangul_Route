@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { HeritageCardsPreview } from '../components/landing/HeritageCardsPreview';
 import { MeetHoya } from '../components/landing/MeetHoya';
 import { MiniGamesGallery } from '../components/landing/MiniGamesGallery';
+import { CONTACT_EMAIL } from '../data/contact';
 import {
   SITE_TAGLINE,
   audienceBadges,
@@ -712,7 +713,7 @@ export default function HomePage(): JSX.Element {
             Contact
           </div>
           <div data-contact="email" style={{ overflowWrap: 'anywhere' }}>
-            feedback@hangulroute.example
+            {CONTACT_EMAIL}
           </div>
           <div style={{ marginTop: spacing.xs, color: colors.text.muted }}>
             © {new Date().getFullYear()} Hangul Route

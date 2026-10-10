@@ -1,5 +1,6 @@
 import { colors, radii, spacing, typography } from '@hangul-route/design-system/tokens';
 import Link from 'next/link';
+import { CONTACT_EMAIL } from '../../data/contact';
 
 export default function AboutPage(): JSX.Element {
   return (
@@ -29,7 +30,7 @@ export default function AboutPage(): JSX.Element {
 
       <section style={{ marginTop: spacing.xl, padding: spacing.lg, backgroundColor: colors.brand.primaryLight, borderRadius: radii.lg }}>
         <h3 style={{ marginTop: 0 }}>Have feedback?</h3>
-        <p style={{ margin: 0 }}>Email feedback@hangulroute.example — we read everything.</p>
+        <p style={{ margin: 0 }}>Email {CONTACT_EMAIL} — we read everything.</p>
       </section>
 
       <footer style={{ marginTop: spacing.jumbo, color: colors.text.muted, fontSize: typography.size.caption }}>
