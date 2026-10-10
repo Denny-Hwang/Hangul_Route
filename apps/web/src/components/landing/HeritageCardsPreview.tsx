@@ -42,15 +42,23 @@ function CardTile({ card }: { card: LandingCard }): JSX.Element {
         >
           {card.ko}
         </span>
+        {/* Rarity colour is a dot, not the text colour: it is under 3:1 on white. */}
         <span
           style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: spacing.xs,
             fontSize: typography.size.caption,
-            color: rarityBorder[card.rarity],
+            color: colors.text.secondary,
             fontWeight: typography.weight.semibold,
             textTransform: 'uppercase',
             letterSpacing: 1,
           }}
         >
+          <span
+            aria-hidden="true"
+            style={{ width: 10, height: 10, borderRadius: radii.circle, backgroundColor: rarityBorder[card.rarity] }}
+          />
           {rarityLabel[card.rarity]}
         </span>
       </header>

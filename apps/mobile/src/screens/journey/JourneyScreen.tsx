@@ -9,6 +9,7 @@ import {
   Screen,
   Spacer,
   TAB_SCREEN_EDGES,
+  borderWidth,
   colors,
   radii,
   spacing,
@@ -76,12 +77,15 @@ export function JourneyScreen(): React.ReactElement {
                   width: 32,
                   height: 32,
                   borderRadius: radii.circle,
-                  backgroundColor: isLocked ? colors.surface.sunken : colors.stage[stage.key],
+                  // The stage colour is the ring; the number stays text.primary / text.muted on a light fill.
+                  backgroundColor: isLocked ? colors.surface.sunken : colors.surface.paper,
+                  borderWidth: borderWidth.thick,
+                  borderColor: isLocked ? colors.border.subtle : colors.stage[stage.key],
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}
               >
-                <Text style={{ color: isLocked ? colors.text.muted : colors.text.inverse, fontWeight: '700' }}>
+                <Text style={{ color: isLocked ? colors.text.muted : colors.text.primary, fontWeight: '700' }}>
                   {stage.order}
                 </Text>
               </View>
@@ -169,7 +173,7 @@ function GridCell({ stage, theme, onOpen, progressSnapshot }: GridCellProps): Re
       {isPreview ? (
         <Icon name="lock" size={20} color={colors.text.muted} />
       ) : (
-        <Text style={{ fontSize: typography.size.title, fontWeight: '700', color: tone }}>
+        <Text style={{ fontSize: typography.size.title, fontWeight: '700', color: colors.text.primary }}>
           {themeCellInitial(theme)}
         </Text>
       )}

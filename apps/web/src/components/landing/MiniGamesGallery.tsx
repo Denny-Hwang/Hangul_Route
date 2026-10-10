@@ -103,15 +103,23 @@ export function MiniGamesGallery(): JSX.Element {
               >
                 {game.emoji}
               </span>
+              {/* Family tint is a dot, not the text colour: theme tints are under 3:1 on white. */}
               <span
                 style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: spacing.xs,
                   fontSize: typography.size.caption,
-                  color: familyTint[game.family],
+                  color: colors.text.secondary,
                   fontWeight: typography.weight.semibold,
                   textTransform: 'uppercase',
                   letterSpacing: 1,
                 }}
               >
+                <span
+                  aria-hidden="true"
+                  style={{ width: 10, height: 10, borderRadius: radii.circle, backgroundColor: familyTint[game.family] }}
+                />
                 {familyLabel[game.family]}
               </span>
             </div>
