@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { jamoStrokes } from '../../content/jamo-strokes';
 import { DEFAULT_PASS_THRESHOLD, scoreTrace } from '../stroke-scoring';
 
 describe('scoreTrace', () => {
@@ -340,3 +341,117 @@ describe('scoreTrace passWithOrder (F-008)', () => {
   });
 });
 
+
+// ─────────────────────────────────────────
+// F-006 closed loops (ㅁ ㅇ ㅎ + batchim): start == end, so the chord is a
+// zero vector. Direction must come from the loop's winding instead, or every
+// pass on these letters shows "Try drawing left-to-right next time."
+// ─────────────────────────────────────────
+
+type Pt = { x: number; y: number };
+
+/** Walk a polyline at ~4-unit steps, like a finger would report it. */
+function walk(points: Pt[]): Pt[] {
+  const out: Pt[] = [];
+  for (let i = 0; i < points.length - 1; i++) {
+    const a = points[i]!;
+    const b = points[i + 1]!;
+    const steps = Math.max(1, Math.round(Math.hypot(b.x - a.x, b.y - a.y) / 4));
+    for (let s = 0; s < steps; s++) {
+      out.push({ x: a.x + ((b.x - a.x) * s) / steps, y: a.y + ((b.y - a.y) * s) / steps });
+    }
+  }
+  out.push(points[points.length - 1]!);
+  return out;
+}
+
+describe('scoreTrace direction on closed loops', () => {
+  // Clockwise on screen (y grows downward): top-left → top-right → bottom-right → bottom-left.
+  const square: Pt[] = [
+    { x: 50, y: 40 },
+    { x: 150, y: 40 },
+    { x: 150, y: 150 },
+    { x: 50, y: 150 },
+    { x: 50, y: 40 },
+  ];
+
+  it('tracing the loop exactly reports the direction as correct', () => {
+    const r = scoreTrace({ target: [square], drawn: [walk(square)], checkDirection: true });
+    expect(r.coverage).toBeGreaterThan(0.95);
+    expect(r.directionsPerTarget).toEqual([true]);
+    expect(r.directionsCorrect).toBe(true);
+  });
+
+  it('the same way round from a different starting corner is still correct', () => {
+    const fromBottomRight: Pt[] = [
+      { x: 150, y: 150 },
+      { x: 50, y: 150 },
+      { x: 50, y: 40 },
+      { x: 150, y: 40 },
+      { x: 150, y: 150 },
+    ];
+    const r = scoreTrace({ target: [square], drawn: [walk(fromBottomRight)], checkDirection: true });
+    expect(r.directionsCorrect).toBe(true);
+  });
+
+  it('an open loop that stops short of closing is judged by its winding too', () => {
+    const r = scoreTrace({ target: [square], drawn: [walk(square.slice(0, 4))], checkDirection: true });
+    expect(r.directionsCorrect).toBe(true);
+  });
+
+  it('going round the other way is reported as the wrong direction', () => {
+    const reversed = [...square].reverse();
+    const r = scoreTrace({ target: [square], drawn: [walk(reversed)], checkDirection: true });
+    expect(r.coverage).toBeGreaterThan(0.95);
+    expect(r.directionsCorrect).toBe(false);
+  });
+
+  it('one straight side matched to the loop carries no winding — never nudge on it', () => {
+    // A child writing ㅁ the Korean way starts with the left side (ㅣ): a line has no winding.
+    const leftSide: Pt[] = [
+      { x: 50, y: 40 },
+      { x: 50, y: 150 },
+    ];
+    const r = scoreTrace({ target: [square], drawn: [walk(leftSide)], checkDirection: true });
+    expect(r.directionsCorrect).toBe(true);
+  });
+
+  it('open strokes keep the start→end rule (F-006 §3.2)', () => {
+    const tick: Pt[] = [
+      { x: 40, y: 50 },
+      { x: 160, y: 50 },
+      { x: 160, y: 150 },
+    ];
+    expect(scoreTrace({ target: [tick], drawn: [walk(tick)], checkDirection: true }).directionsCorrect).toBe(true);
+    expect(
+      scoreTrace({ target: [tick], drawn: [walk([...tick].reverse())], checkDirection: true }).directionsCorrect,
+    ).toBe(false);
+  });
+
+  it('a target loop with no area (out and back) has no direction to get wrong', () => {
+    const outAndBack: Pt[] = [
+      { x: 50, y: 100 },
+      { x: 150, y: 100 },
+      { x: 50, y: 100 },
+    ];
+    const r = scoreTrace({ target: [outAndBack], drawn: [walk(outAndBack)], checkDirection: true });
+    expect(r.directionsCorrect).toBe(true);
+  });
+});
+
+describe('scoreTrace on every shipped jamo skeleton', () => {
+  it.each(jamoStrokes.map((j) => [j.jamoId, j.strokes] as const))(
+    '%s traced exactly passes with the right order and direction',
+    (_id, strokes) => {
+      const r = scoreTrace({
+        target: strokes,
+        drawn: strokes.map((s) => walk(s)),
+        checkOrder: true,
+        checkDirection: true,
+      });
+      expect(r.coverage).toBeGreaterThanOrEqual(DEFAULT_PASS_THRESHOLD);
+      expect(r.orderCorrect).toBe(true);
+      expect(r.directionsCorrect).toBe(true);
+    },
+  );
+});
