@@ -24,7 +24,7 @@ app.use(
   '/api/*',
   cors({
     origin: (origin, c) => allowedOrigin(origin, c.env?.ALLOWED_ORIGINS) ?? '',
-    allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], // PATCH: console space settings (BUG-1)
     allowHeaders: ['Content-Type', 'Authorization'],
     maxAge: 86400,
   }),
