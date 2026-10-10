@@ -246,13 +246,31 @@ describe('loading saved progress (audit UX-01 / L16)', () => {
     expect(writeJson).not.toHaveBeenCalled();
   });
 
-  it('hydrate reads storage once per profile', async () => {
+  it('hydrate does not re-read storage once loaded', async () => {
     mem.set('progress:p1', savedSnapshot());
     await useProgressStore.getState().hydrate('p1');
     useProgressStore.getState().unlockCard('p1', 'card:hanji');
     await useProgressStore.getState().hydrate('p1');
     expect(readJson).toHaveBeenCalledTimes(1);
     expect(useProgressStore.getState().byProfile['p1']?.cards).toHaveLength(2);
+  });
+
+  it('hydrates that overlap share one storage read', async () => {
+    mem.set('progress:p1', savedSnapshot());
+    const first = useProgressStore.getState().hydrate('p1');
+    const second = useProgressStore.getState().hydrate('p1');
+    await Promise.all([first, second]);
+    expect(readJson).toHaveBeenCalledTimes(1);
+    expect(useProgressStore.getState().byProfile['p1']?.cards.map((c) => c.cardId)).toEqual(['card:book']);
+  });
+
+  it('two quick writes before the saved copy loads trigger one read and both are kept', async () => {
+    mem.set('progress:p1', savedSnapshot());
+    useProgressStore.getState().unlockCard('p1', 'card:hanji');
+    useProgressStore.getState().unlockCard('p1', 'card:kimchi');
+    await settle();
+    expect(readJson).toHaveBeenCalledTimes(1);
+    expect(stored()?.cards.map((c) => c.cardId).sort()).toEqual(['card:book', 'card:hanji', 'card:kimchi']);
   });
 
   it('a snapshot replaced while the read is in flight wins over the stale read', async () => {

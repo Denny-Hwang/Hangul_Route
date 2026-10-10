@@ -49,9 +49,10 @@ interface State {
 
 interface Actions {
   /**
-   * Read the profile's saved snapshot into memory (once per profile). Writes
-   * made before it lands are merged with the saved copy, never written over
-   * it (audit UX-01 / L16). Leaves no record when nothing is saved or written.
+   * Read the profile's saved snapshot into memory (once per profile; calls
+   * that overlap share one read). Writes made before it lands are merged with
+   * the saved copy, never written over it (audit UX-01 / L16). Leaves no
+   * record when nothing is saved or written.
    */
   hydrate: (profileId: string) => Promise<void>;
   ensure: (profileId: string) => ProgressSnapshot;
@@ -92,6 +93,9 @@ function save(profileId: string, snap: ProgressSnapshot): void {
   notifyProgressPersisted(profileId);
 }
 
+/** One storage read per profile at a time: callers that overlap share it. */
+const inFlight = new Map<string, Promise<void>>();
+
 function without(ids: Set<string>, id: string): Set<string> {
   const next = new Set(ids);
   next.delete(id);
@@ -128,20 +132,29 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
   hydratedFor: new Set(),
   pendingFor: new Set(),
 
-  hydrate: async (profileId) => {
-    if (get().hydratedFor.has(profileId)) return;
-    const loaded = await readJson<ProgressSnapshot>(key(profileId));
-    // Another read, a restore or a reset landed first; this read is stale.
-    if (get().hydratedFor.has(profileId)) return;
-    const { byProfile, pendingFor } = get();
-    const unsaved = pendingFor.has(profileId) ? byProfile[profileId] : undefined;
-    const snap = unsaved && loaded ? mergeSnapshots(unsaved, loaded, { now: new Date() }) : (unsaved ?? loaded ?? byProfile[profileId]);
-    set((s) => ({
-      byProfile: snap ? { ...s.byProfile, [profileId]: snap } : s.byProfile,
-      hydratedFor: new Set([...s.hydratedFor, profileId]),
-      pendingFor: without(s.pendingFor, profileId),
-    }));
-    if (unsaved && snap) save(profileId, snap);
+  hydrate: (profileId) => {
+    if (get().hydratedFor.has(profileId)) return Promise.resolve();
+    const running = inFlight.get(profileId);
+    if (running) return running;
+    const load = (async () => {
+      const loaded = await readJson<ProgressSnapshot>(key(profileId));
+      // A restore or a reset landed first; this read is stale.
+      if (get().hydratedFor.has(profileId)) return;
+      const { byProfile, pendingFor } = get();
+      const unsaved = pendingFor.has(profileId) ? byProfile[profileId] : undefined;
+      const snap =
+        unsaved && loaded
+          ? mergeSnapshots(unsaved, loaded, { now: new Date() })
+          : (unsaved ?? loaded ?? byProfile[profileId]);
+      set((s) => ({
+        byProfile: snap ? { ...s.byProfile, [profileId]: snap } : s.byProfile,
+        hydratedFor: new Set([...s.hydratedFor, profileId]),
+        pendingFor: without(s.pendingFor, profileId),
+      }));
+      if (unsaved && snap) save(profileId, snap);
+    })().finally(() => inFlight.delete(profileId));
+    inFlight.set(profileId, load);
+    return load;
   },
 
   ensure: (profileId) => {
