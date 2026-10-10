@@ -1,8 +1,9 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { normalizeRescueCode } from '@hangul-route/content-schema';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import app from '../index';
 import { hashSecret } from '../lib/device-auth';
-import { RESCUE_WORDS, randomRescueCode } from '../lib/rescue-words';
-import { CLAIM_LIMIT, claimLimiter } from '../routes/recovery';
+import { RESCUE_CODE_BITS, RESCUE_WORDS, randomRescueCode } from '../lib/rescue-words';
+import { CLAIM_LIMIT, claimLimiter, setRescueCodeSourceForTests } from '../routes/recovery';
 import { testDb as db } from './helpers/db';
 
 const DEVICE_A = 'device-aaaaaaaa';
@@ -31,14 +32,23 @@ async function registerAndUpload() {
   return auth;
 }
 
-async function issue(auth: Record<string, string>) {
-  const res = await app.request('/api/recovery/issue', { method: 'POST', headers: auth, body: JSON.stringify({ learnerId: 'profile:suni' }) });
+type Env = { RESCUE_PEPPER?: string };
+const V2_CODE = /^(?:[A-Z]{3,10}-){4}\d{6}$/;
+
+async function issue(auth: Record<string, string>, env?: Env, learnerId = 'profile:suni') {
+  const res = await app.request('/api/recovery/issue', { method: 'POST', headers: auth, body: JSON.stringify({ learnerId }) }, env);
   return { status: res.status, code: ((await res.json()) as { data?: { code: string } }).data?.code ?? '' };
 }
 
-async function claim(code: string, headers: Record<string, string> = {}) {
-  const res = await app.request('/api/recovery/claim', { method: 'POST', headers: { ...json, ...headers }, body: JSON.stringify({ code, deviceId: DEVICE_B }) });
+async function claim(code: string, headers: Record<string, string> = {}, env?: Env) {
+  const res = await app.request('/api/recovery/claim', { method: 'POST', headers: { ...json, ...headers }, body: JSON.stringify({ code, deviceId: DEVICE_B }) }, env);
   return { status: res.status, body: (await res.json()) as Record<string, unknown> };
+}
+
+async function hmacHex(key: string, message: string): Promise<string> {
+  const k = await crypto.subtle.importKey('raw', new TextEncoder().encode(key), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const sig = new Uint8Array(await crypto.subtle.sign('HMAC', k, new TextEncoder().encode(message)));
+  return Array.from(sig, (b) => b.toString(16).padStart(2, '0')).join('');
 }
 
 describe('/api/recovery (F-RESTORE-001)', () => {
@@ -47,12 +57,35 @@ describe('/api/recovery (F-RESTORE-001)', () => {
     claimLimiter.reset();
   });
 
-  it('word list is large, upper case, and codes have the WORD-WORD-1234 shape', () => {
-    expect(RESCUE_WORDS.length).toBeGreaterThanOrEqual(256);
+  afterEach(() => {
+    setRescueCodeSourceForTests(null);
+    vi.restoreAllMocks();
+  });
+
+  it('codes are four list words + six digits (>= 50 bits) drawn from crypto.getRandomValues, never Math.random (SEC-5)', () => {
+    expect(RESCUE_WORDS).toHaveLength(256); // exactly one random byte per word: no modulo bias
     expect(new Set(RESCUE_WORDS).size).toBe(RESCUE_WORDS.length);
     expect(RESCUE_WORDS.every((w) => /^[A-Z]{3,10}$/.test(w))).toBe(true);
-    expect(randomRescueCode(() => 0)).toBe('TIGER-TIGER-0000');
-    expect(randomRescueCode(() => 0.9999)).toMatch(/^[A-Z]+-[A-Z]+-9999$/);
+    expect(RESCUE_CODE_BITS).toBeGreaterThanOrEqual(50);
+
+    expect(randomRescueCode((bytes) => bytes.fill(0))).toBe('TIGER-TIGER-TIGER-TIGER-000000');
+    // The number is a uint32 reduced mod 10^6; draws past the last whole multiple are thrown away (no bias).
+    const draws = [
+      [0, 1, 2, 255],
+      [0xff, 0xff, 0xff, 0xff],
+      [0x00, 0x01, 0xe2, 0x40], // 123456
+    ];
+    let i = 0;
+    expect(randomRescueCode((bytes) => bytes.set(draws[i++] as number[]))).toBe('TIGER-MOON-RIVER-BAGEL-123456');
+    expect(i).toBe(3);
+
+    const mathRandom = vi.spyOn(Math, 'random');
+    const a = randomRescueCode();
+    const b = randomRescueCode();
+    expect(mathRandom).not.toHaveBeenCalled();
+    expect(a).toMatch(V2_CODE);
+    expect(a).not.toBe(b);
+    expect(normalizeRescueCode(a.toLowerCase().replace(/-/g, ' '))).toBe(a);
   });
 
   it('issue needs device auth, returns the plaintext once, and stores only the hash', async () => {
@@ -61,8 +94,61 @@ describe('/api/recovery (F-RESTORE-001)', () => {
     expect((await app.request('/api/recovery/issue', { method: 'POST', headers: auth, body: '{}' })).status).toBe(422);
     const first = await issue(auth);
     expect(first.status).toBe(201);
-    expect(first.code).toMatch(/^[A-Z]+-[A-Z]+-\d{4}$/);
+    expect(first.code).toMatch(V2_CODE);
+    // no RESCUE_PEPPER on the Worker: plain SHA-256, the hash every earlier code was stored under
     expect((await db.getLearner('profile:suni'))?.recoveryHash).toBe(await hashSecret(first.code));
+  });
+
+  it('with RESCUE_PEPPER the stored hash is keyed (HMAC-SHA-256), and claims find it (SEC-5)', async () => {
+    const env = { RESCUE_PEPPER: 'test-pepper-0123456789abcdef' };
+    const auth = await registerAndUpload();
+    const { status, code } = await issue(auth, env);
+    expect(status).toBe(201);
+    const stored = (await db.getLearner('profile:suni'))?.recoveryHash;
+    expect(stored).toBe(await hmacHex(env.RESCUE_PEPPER, code));
+    expect(stored).not.toBe(await hashSecret(code));
+    expect((await claim(code, {}, env)).status).toBe(200);
+    // the pepper is part of the hash: a Worker without it cannot match the code
+    expect((await claim(code)).status).toBe(404);
+  });
+
+  it('codes issued before SEC-5 (two words + four digits, plain SHA-256) still restore, with or without a pepper', async () => {
+    await registerAndUpload();
+    const learner = await db.getLearner('profile:suni');
+    if (!learner) throw new Error('learner missing');
+    await db.putLearner({ ...learner, recoveryHash: await hashSecret('TIGER-MOON-4821') });
+
+    const plain = await claim('tiger moon 4821');
+    expect(plain.status).toBe(200);
+    expect((plain.body.data as { learner: { id: string } }).learner.id).toBe('profile:suni');
+    const peppered = await claim('TIGER-MOON-4821', {}, { RESCUE_PEPPER: 'set-after-launch' });
+    expect(peppered.status).toBe(200);
+    expect((peppered.body.data as { snapshot: { rev: number } }).snapshot.rev).toBe(1);
+  });
+
+  it('a code that collides with another learner is drawn again, never shared (UNIQUE recovery_hash)', async () => {
+    const suni = await registerAndUpload();
+    const reg = await app.request('/api/sync/learners', {
+      method: 'POST',
+      headers: json,
+      body: JSON.stringify({ deviceId: 'device-cccccccc', learner: { id: 'profile:mina', displayName: 'Mina', ageGroup: '8-9', avatar: 'hoya-blue' } }),
+    });
+    const minaSecret = ((await reg.json()) as { data: { device: { secret: string } } }).data.device.secret;
+    const mina = { ...json, authorization: `Device device-cccccccc:${minaSecret}` };
+
+    const scripted = ['TIGER-MOON-RIVER-APPLE-111111', 'TIGER-MOON-RIVER-APPLE-111111', 'TIGER-MOON-RIVER-APPLE-222222'];
+    setRescueCodeSourceForTests(() => scripted.shift() ?? 'TIGER-MOON-RIVER-APPLE-999999');
+    expect((await issue(suni)).code).toBe('TIGER-MOON-RIVER-APPLE-111111');
+    expect((await issue(mina, undefined, 'profile:mina')).code).toBe('TIGER-MOON-RIVER-APPLE-222222');
+    expect(((await claim('TIGER-MOON-RIVER-APPLE-111111')).body.data as { learner: { id: string } }).learner.id).toBe('profile:suni');
+    expect(((await claim('TIGER-MOON-RIVER-APPLE-222222')).body.data as { learner: { id: string } }).learner.id).toBe('profile:mina');
+
+    // a source that keeps colliding gives up cleanly and leaves the current code in place
+    claimLimiter.reset();
+    setRescueCodeSourceForTests(() => 'TIGER-MOON-RIVER-APPLE-111111');
+    const stuck = await app.request('/api/recovery/issue', { method: 'POST', headers: mina, body: JSON.stringify({ learnerId: 'profile:mina' }) });
+    expect(stuck.status).toBe(503);
+    expect(((await claim('TIGER-MOON-RIVER-APPLE-222222')).body.data as { learner: { id: string } }).learner.id).toBe('profile:mina');
   });
 
   it('claim binds a new device and returns learner + snapshot; rotation invalidates the old code', async () => {

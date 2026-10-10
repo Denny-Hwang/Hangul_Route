@@ -63,6 +63,17 @@ function contract(name: string, make: () => Db): void {
       expect(await db.relinksOf('space:c')).toEqual([]);
     });
 
+    it('a recovery hash belongs to one learner at a time (UNIQUE, as in the D1 schema)', async () => {
+      const learner = (id: string, recoveryHash: string | null) => ({ id, displayName: id, ageGroup: '5-7' as const, avatar: 'hoya-orange', recoveryHash, createdAt: T, lastActiveAt: T });
+      await db.putLearner(learner('profile:a', 'hash-1'));
+      await db.putLearner(learner('profile:a', 'hash-1')); // re-saving the holder is fine
+      await expect(db.putLearner(learner('profile:b', 'hash-1'))).rejects.toThrow(/UNIQUE/);
+      expect(await db.getLearner('profile:b')).toBeNull();
+      await db.putLearner(learner('profile:b', null));
+      await db.putLearner(learner('profile:c', null)); // any number of learners may have no code
+      expect((await db.learnerByRecoveryHash('hash-1'))?.id).toBe('profile:a');
+    });
+
     it('putSnapshot is compare-and-set on rev: insert only when absent, update only from the expected rev (SYNC-1)', async () => {
       await db.putLearner({ id: 'profile:suni', displayName: 'Suni', ageGroup: '5-7', avatar: 'hoya-orange', recoveryHash: null, createdAt: T, lastActiveAt: T });
       const snap = (rev: number, cards: string[], learnerId = 'profile:suni') => ({ learnerId, rev, schemaVer: 1, contentVer: '2026.09', deviceId: 'device-a', summary: { cards: cards.length }, payload: { profileId: learnerId, cards }, updatedAt: T });
