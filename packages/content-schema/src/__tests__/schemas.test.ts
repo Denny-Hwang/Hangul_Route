@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import { z } from 'zod';
 import {
+  EpisodeListSchema,
+  EpisodeObjectSchema,
   EpisodeSchema,
   FamilySchema,
   HeritageCardSchema,
@@ -116,6 +119,74 @@ describe('EpisodeSchema', () => {
         status: 'shipped',
       }),
     ).toThrow();
+  });
+});
+
+describe('EpisodeSchema story fields and questIds rule (F-STORY-001 §3.9)', () => {
+  const base = {
+    id: 'episode:shelf-x',
+    stage: 'stage1',
+    theme: 'letters',
+    order: 101,
+    titleEn: 't',
+    hoyaIntroEn: 'h',
+    questIds: ['quest:story-x-listen'],
+    rewardCardIds: [],
+    estimatedMinutes: 5,
+    status: 'ready',
+  };
+
+  it('defaults format, placement and volume so an existing episode parses unchanged', () => {
+    const parsed = EpisodeSchema.parse(base);
+    expect(parsed).toEqual({ ...base, format: 'lesson', placement: 'grid', volume: 1 });
+    expect(parsed.storyIds).toBeUndefined();
+  });
+
+  it('accepts a shelf story episode with storyIds', () => {
+    const parsed = EpisodeSchema.parse({
+      ...base,
+      format: 'story',
+      placement: 'shelf',
+      volume: 2,
+      storyIds: ['story:sillok-royal-historians'],
+    });
+    expect(parsed.format).toBe('story');
+    expect(parsed.placement).toBe('shelf');
+    expect(parsed.volume).toBe(2);
+    expect(parsed.storyIds).toEqual(['story:sillok-royal-historians']);
+  });
+
+  it.each([
+    ['format', 'poem'],
+    ['placement', 'wall'],
+    ['volume', 0],
+    ['volume', 1.5],
+  ])('rejects %s = %s', (key, value) => {
+    expect(EpisodeSchema.safeParse({ ...base, [key]: value }).success).toBe(false);
+  });
+
+  it('allows empty questIds only for a preview episode', () => {
+    expect(EpisodeSchema.safeParse({ ...base, questIds: [], status: 'preview' }).success).toBe(true);
+    for (const status of ['draft', 'ready', 'shipped']) {
+      const result = EpisodeSchema.safeParse({ ...base, questIds: [], status });
+      expect(result.success).toBe(false);
+      if (!result.success) expect(result.error.issues[0]?.path).toEqual(['questIds']);
+    }
+  });
+
+  it('still accepts a preview episode that lists quests', () => {
+    expect(EpisodeSchema.safeParse({ ...base, status: 'preview' }).success).toBe(true);
+  });
+
+  it('exposes the plain object so later specs can extend it', () => {
+    const extended = EpisodeObjectSchema.extend({ extra: z.string() });
+    expect(extended.safeParse({ ...base, extra: 'x' }).success).toBe(true);
+    expect(EpisodeObjectSchema.safeParse({ ...base, questIds: [] }).success).toBe(true);
+  });
+
+  it('keeps EpisodeListSchema working over refined episodes', () => {
+    expect(EpisodeListSchema.safeParse([base, { ...base, questIds: [], status: 'preview' }]).success).toBe(true);
+    expect(EpisodeListSchema.safeParse([{ ...base, questIds: [] }]).success).toBe(false);
   });
 });
 
