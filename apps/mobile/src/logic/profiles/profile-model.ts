@@ -29,18 +29,22 @@ export interface Clock {
   nextId: () => string;
 }
 
-export type NameError = 'too-short' | 'too-long' | 'non-latin';
+export type NameError = 'too-short' | 'too-long' | 'unsupported-character';
 
 /**
- * Learner names are free text but must stay renderable in an English UI
- * (§3.2): no emoji, no Korean/Chinese. Latin letters, digits, spaces,
- * apostrophes and hyphens only.
+ * Learner names are user data, not UI text, so they are valid in every UI
+ * language: Latin letters including accents (María, Zoë), Hangul syllables
+ * (수니), digits, spaces, apostrophes and hyphens. Emoji, other scripts and
+ * control characters stay out (§3.2). Explicit ranges, not \p{…}: Hermes
+ * support for Unicode property escapes is not guaranteed (F-I18N-001 §3.9).
  */
+const NAME_CHARS = /^[A-Za-zÀ-ɏ가-힣0-9 '’-]+$/;
+
 export function validateDisplayName(raw: string): NameError | null {
   const name = raw.trim();
   if (name.length < NAME_MIN) return 'too-short';
   if (name.length > NAME_MAX) return 'too-long';
-  if (!/^[A-Za-z0-9 '-]+$/.test(name)) return 'non-latin';
+  if (!NAME_CHARS.test(name)) return 'unsupported-character';
   return null;
 }
 
