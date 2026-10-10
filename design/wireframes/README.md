@@ -27,6 +27,11 @@
 | `paywall/upgrade.md` | R | F-SUB-001 · F-IAP-001 |
 | `pwa/install-guide.md` · `pwa/system-banners.md` | P | roadmap web-pwa-offline §3 |
 | `classroom/projection-mode.md` | D | F-TCH-001 §3.4 |
+| `vocab/topics.md` · `vocab/flashcards.md` · `vocab/speed-round.md` | D | F-VOC-003 · F-VOC-004 |
+| `placement/placement.md` | D | F-PLC-001 |
+| `console/curriculum-planner.md` | D | F-PLAN-002 |
+| `classroom/lecture-presenter.md` | D | F-TCH-004 |
+| `layout/wide.md` | D | F-LAYOUT-001 |
 
 ### B/C. Caregiver · Teacher · School console (web, 일부 mobile) — 어른
 | 파일 | 상태 | 스펙 |

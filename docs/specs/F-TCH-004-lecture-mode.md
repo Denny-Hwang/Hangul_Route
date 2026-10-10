@@ -1,0 +1,412 @@
+Status: ready
+
+# F-TCH-004 — Lecture mode: a teacher's presenter for tablets, projectors and TVs
+
+**Scope**: `packages/content-schema` (`lecture` deck + codec + console-to-presenter roster message, telemetry names) · `packages/design-system` (`presenter` token group, `Screen width="bleed"` from F-LAYOUT-001) · `apps/mobile` (separate presenter root `PresenterApp`, `screens/presenter/`, `logic/lecture/`, `platform/presenter*.ts`, presenter font, shell CSS, e2e) · `apps/web` (console page `/teach/space/lecture`, `lib/console/lecture.ts`, entry buttons, catalogue mirror) · `scripts/` (presenter font subset, lecture catalogue mirror) · wireframe `design/wireframes/classroom/lecture-presenter.md`
+**Owner**: solo dev
+**Rollout**: Web PWA only (the primary channel). MVP = Stage 1 content plus shipped taste stages, stories and vocabulary as they land; PR order in §6. Server-saved decks and a short lecture code are a later phase (§3.15).
+
+Parent / siblings: F-TCH-001 §3.4 Projection Mode (**partly superseded**, §3.1) and §4 (live control of student devices stays out) · F-CONSOLE-001 (console shell, `?id=` routing) · F-PLAN-001 (plans are the deck source) · F-PLAN-002 (shared catalogue) · F-LAYOUT-001 (no `#root` cap, manifest `any`, `bleed`, guard exemption; **PR 1 and PR 2a are a hard prerequisite**) · F-AUDIO-004 (voice capability, `playPrompt`, text fallback) · F-I18N-001 (locales, `romanizationMode`, `KoreanText`) · F-CNT-002 (romanization, D13) · F-QUEST-002 (Discover letter data `soundHint`) · F-STORY-001/002/003 (story scenes, `SceneArt`, checks) · F-VOC-001..005 (vocabulary topics) · F-007 / F-009 (stroke hint, narrated demo) · blueprint 02 §6.2-6.4 · wireframe `wireframes/lecture-presenter.md` · design inputs `lecture-mode.md`, `ux-review.md` (UX-23, UX-24)
+
+---
+
+## Decisions
+
+Binding owner decisions this spec implements: **D1** (anyone, any age: a Sunday-school teacher, a school teacher, a parent with a TV; no "kids" copy on teacher surfaces) · **D2** (taught Korean always shows romanization and a gloss in the UI language; "hide romanization until tap" is the explicit teacher setting `romanization: 'tap'` for reading practice; default visible) · **D3** (as revised in CLAUDE.md 2026-10-09: positive nudges allowed; no red X, no ranking or public scoring of children, no losing earned items; teacher tools such as a countdown timer and a random picker are allowed in lecture mode by the owner answer of 2026-10-10 because they are not learner-facing mechanics, but they never show per-learner rankings or scores) · **D5** (nothing gated; no "Premium" pill; the presenter never calls the entitlement check) · **D6** (TTS with a capability check and a visible text fallback; `audioRef` clips drop in) · **D7** (hand-authored SVG, tokens only, no emoji) · **D8** (spec id) · **D12** (presenter at `app.hangulroute.com/present`, console setup at `/teach/space/lecture`, deck ids by URL fragment for the MVP, landscape, manifest `any`, class runs never touch learner progress, names default to initials / numbers when `anonymizeRoster` else first names, and **no student name or initial ever appears in any URL** (owner answer 2026-10-10 and mandatory decision (a) of this review): labels reach the presenter by `postMessage` from the console tab and live in memory only, never persisted on a shared device; F-TCH-001 §3.4 stays for a volunteer student) · **D13** (Revised Romanization strings only) · **D14** (story slides show only the story's own sourced text).
+
+Decisions taken in this spec (TD = teaching decision):
+
+| # | Decision | Why |
+|---|---|---|
+| TD1 | **The presenter is a second root of the learner web build, chosen before `App` mounts** (`index.ts:1-4` picks `PresenterApp` when the path starts with `/present`). | `App` runs `hydrateLearnerData`, `syncAll`, the inbox refresh and the visit counter on mount (`App.tsx:36-66`). A teacher's laptop must run none of that and must never open a child's profile. |
+| TD2 | **No sign-in, no profile and no account are needed to present.** The console composes decks from a plan or roster; `/present` alone offers Recent lessons and a Quick lesson picker from the bundled content. | A Chromebook in a classroom has no account; the learner bundle is the only place where all content, stroke animation, card art and Hoya exist (the console is a static export with a hand-kept id list, `stage1-catalog.ts:1-7`). |
+| TD3 | **Two channels, never mixed.** (1) The **deck** (ids, seed, options, picker mode and count; no person data) travels in the `#d=` URL fragment (D12) and the presenter strips the fragment on boot. (2) The **picker labels** (first names or initials) never touch a URL (path, query or fragment): the console opens the presenter with `window.open` (no `noopener`), the presenter announces `ready` to `window.opener`, and the console answers with a `roster` message by `postMessage` to the presenter's origin (§3.2, §3.10). Labels live in presenter memory only. A link that is copied or typed has no labels, so its picker runs in `numbers`. | Browsers may keep a URL (fragment included) in history, sync it across devices or show it on a projected address bar; a name must not be there. `postMessage` between two first-party origins keeps names in memory and off every server. |
+| TD4 | **Large Korean is drawn with a bundled OFL Hangul subset font, not from the stroke skeletons.** The stroke animation is a separate "simplified stroke guide" panel. | `jamo-strokes.ts:13-15` says the skeletons are "not perfectly anatomical"; on a projector a Hangul teacher would see a wrong stroke order or a letter shape that is not the real one. System fonts differ by OS (UX-24). |
+| TD5 | **Class timer and picker are teacher tools, outside the learner rules of D3** (owner answer 2026-10-10, mandatory decision (b)). The timer ring only fills and shows the time left; there is no alarm; the picker draws a label and nothing else: no per-learner count, ranking, score, streak or history is ever shown, kept or sent; nothing in the presenter judges a child. | CLAUDE.md allows a real countdown for a learner only in the opt-in Challenge mode, because a countdown can pressure a learner's answers. A classroom timer paces an activity for the room and scores no one; a picker is a turn-taking tool, not a leaderboard. |
+| TD6 | **Quizzes are projected questions with a teacher reveal.** Nothing is collected from student devices and nothing is tallied by student. | F-TCH-001 §4:106 keeps live control of student devices out of scope. |
+| TD7 | **No teacher notes on the projected screen in the MVP.** Plan item notes (`PlanItem.note`, `plan.ts:12`) stay in the console outline. | On one mirrored screen anything displayed is projected. Private notes need the dual-screen mode (§3.15). |
+| TD8 | **Teacher-typed text is limited to the deck title (<= 60).** Activities are presets; there is no free slide text. The title is user data like a learner name (`profile-model.ts:35-41`): Latin letters with accents, Hangul syllables, digits, spaces and `. , ! ? : ' ’ ( ) - /` only; it is shown on the start screen and the title slide, never spoken, never treated as taught Korean, and the console refuses a title that contains a roster first name or alias (§3.10), because the title travels in the URL. | Free slide text would bypass the F-CNT-001 / F-CNT-002 validators and the romanization rule; a Korean weekend-school teacher can still title a lesson in Korean; presets are translated once in the message catalogue. |
+
+---
+
+## 1. Context
+
+A weekend-school teacher stands in front of 12 learners with a tablet on an HDMI cable and a 5-letter lesson. The learner app is the wrong shape (phone UI, writes progress, a learner's profile), the existing plan is a list of homework ids, and blueprint 02 §6.2 proposed "Projection Mode" as the same learner screens at 200 %. This spec builds what a teacher actually needs: a slide deck made from content the app already has, with big type, a stroke animation, the sound, quick questions, a timer and a "who helps next" picker, controlled by a clicker, keyboard, touch or mouse, working with the Wi-Fi off.
+
+Facts verified against `/Users/ggoboogi/workspace/Hangul_Route` (`origin/main` `ecf6365`, PRs #91-#105; re-verified at review 3, 2026-10-10: the cites below were read at that commit).
+
+**Where things live today**
+
+- All teachable content is in the learner bundle: 30 jamo with `char`, `romanization`, `nameEn`, `ipa`, `exampleWordKo/En`, `audioRef` (`apps/mobile/src/content/jamo.ts:63-104`; `jamoAll :102`, `findJamo :104`); stroke skeletons in a 200 x 200 viewBox (`content/jamo-strokes.ts:17-32,286`); 11 Stage 1 quests plus taste quests (`content/quests.ts:8,134,166,184,186`); episodes (`content/episodes.ts:201,208`); heritage cards (`content/heritage-cards.ts:92,94`); per-step lesson payloads `MinigameScope` (`logic/minigame-config.ts:8-21`, `scopeFor :338`: `jamoIds`, `syllables`, `cardPairs`, `storySteps`, `dialogue`). `content/index.ts:1-5` imports no store.
+- Seeded pure round builders exist: `buildMatchSoundRounds :31`, `buildBuildLetterRounds :63`, `buildTraceStrokeRounds :112`, `buildOddOneOutRounds :133`, `buildCultureQuizRounds :176` (`logic/round-builder.ts`). They shuffle with a small LCG seeded by `opts.seed ?? Date.now()` (`:14-23`), so a stored seed replays a deck identically; they **throw** when the scope is too small (`:39-41,145-147,183-185`).
+- The stroke animation is a reusable leaf: `StrokeHint` takes `target`, `size`, `viewBox`, `playToken`, `onComplete` (`screens/minigames/StrokeHint.tsx:27-39,54`), honours reduced motion with a still diagram.
+- Speech is TTS only: `speak` / `playJamoSound` (`platform/audio.web.ts:44-77`); `pickVoice` returns `null` without a Korean voice (`:36-42`); F-AUDIO-004 replaces these with `playPrompt`, `getCapability()`, `describeKoVoice()`, `unlockAudio()`, `setMuted()` and a text-fallback reducer.
+- Games write progress: every minigame reads `useQuestRunStore` and calls `answerRound` (e.g. `screens/minigames/CultureQuizGame.tsx:20,41,55`; the same in `MatchSoundGame`, `BuildLetterGame`, `CardMatchGame`, `OddOneOutGame`, `StorySequenceGame`, `TapRespondGame`, `TraceStrokeGame`, `VoiceEchoGame`), and `QuestPlayerScreen` drives `quest-run-store` / `progress-store`; they cannot be embedded.
+- Storage: `platform/storage.web.ts:9-33` (IndexedDB through `idb-keyval`, `hr:` prefix); telemetry: `platform/telemetry.ts:129` `track()` (optional `profileId`), names from the shared `TELEMETRY_EVENT_NAMES` (`packages/content-schema/src/schemas/telemetry.ts:9`).
+- PWA shell: `scripts/pwa-postbuild.mjs` precaches every exported file including `woff2` and `mp3` (`:92-101`, glob `:94`), `navigateFallback '/index.html'` (`:96`), `skipWaiting: false` (`:98`: the app decides when to apply an update, `:59-68`); `apps/mobile/wrangler.toml:18` `not_found_handling = "single-page-application"` (so `/present` resolves online, and `:96` offline). There is no routing config in the learner app (`App.tsx:75` `NavigationContainer`, no `linking`).
+- Layout blockers that F-LAYOUT-001 removes: `#root` capped at 480 px (`pwa-postbuild.mjs:46-48`), manifest `"orientation": "portrait"` (`public/manifest.webmanifest:9`).
+- Console: static Next export (`apps/web/next.config.js`: `output: 'export'`, `transpilePackages` includes `@hangul-route/content-schema`), so a space is addressed by `?id=` (`lib/console/routing.ts:5-21`); `RosterLearner { displayName, summary }` and `Roster { space, learners, joinCode }` (`lib/console/api.ts:25-41`); the roster already returns initials when the space anonymises (`packages/backend/src/routes/spaces.ts:102-104 rosterName`, `rosterAlias` in `schemas/relink.ts:46`: "Minho Kim" -> "M. K."; `settings.anonymizeRoster`, `schemas/space.ts:45`); `classRollup().revisit` = up to 3 jamo **characters** from `ProgressSummary.needsPractice` (`lib/console/rollup.ts:18,28-36`); `latestPublished` (`lib/console/plans.ts:60`); the hand-kept Stage 1 catalogue (`data/stage1-catalog.ts:24-53`); `APP_URL` default `https://app.hangulroute.com` (`app/page.tsx:19`); action row on the roster page (`app/teach/space/page.tsx:129-140`); plan readout (`app/teach/space/plan/page.tsx:135-148`).
+- Learner display names may be Hangul or accented Latin (`profile-model.ts:41` `NAME_CHARS`).
+- F-TCH-001 §3.4 Projection Mode: font scale 200 %, targets >= 128 dp on a **teacher-role profile** (`docs/specs/F-TCH-001-teacher-classroom.md:79-85`), deferred because that role UI does not exist (`:198-200`); its wireframe leaves "whose progress does it write to" open (`design/wireframes/classroom/projection-mode.md`).
+
+## 2. User story
+
+> As a 한글학교 teacher, I want to build tomorrow's lesson from this week's plan in two minutes, open it on the classroom tablet or PC, and teach with big letters, the sound, a quick question and a timer, using my clicker, with no Wi-Fi and without anyone's progress changing.
+>
+> As a parent teaching two children at the kitchen table, I want to put one letter lesson on the TV without logging in.
+>
+> As a volunteer-student-led session, I still want Projection Mode (F-TCH-001 §3.4) later; this spec does not remove that option.
+
+## 3. Acceptance criteria
+
+### 3.1 Surfaces, routing and the fate of Projection Mode
+
+- **Presenter**: `https://app.hangulroute.com/present` in the learner web build. `apps/mobile/index.ts` becomes `registerRootComponent(isPresenterRoute() ? PresenterApp : App)` with `isPresenterRoute()` from `platform/presenter.ts` (native stub returns `false`; `.web.ts`: `location.pathname === '/present' || startsWith('/present/')`). `PresenterApp` mounts: `GestureHandlerRootView`, `SafeAreaProvider`, the error boundary (`OopsScreen`), its own tiny state machine (no React Navigation), **no** `PwaBanners`, **no** stores listed in §3.9.
+- **Setup page**: `apps/web/src/app/teach/space/lecture/page.tsx`, route `ROUTES.spaceLecture(id) = /teach/space/lecture?id=…` (`routing.ts:5-13`, `?id=` per `:15-21`). Entry points: a **"Lecture"** button in the roster action row (`space/page.tsx:129-140`), **"Present this plan"** on the plan readout (`plan/page.tsx:135-148`), and a **"Revisit together"** chip beside the roll-up line (`space/page.tsx:116-120`).
+- **Without the console**: `/present` with no fragment shows **Recent lessons** (saved decks, no names) and **Quick lesson** (§3.12). Works fully offline.
+- **F-TCH-001 §3.4**: add a dated note at the top of §3.4 and §10.4: "Teacher-led classroom presentation is F-TCH-004. Projection Mode below remains a deferred option for a volunteer student playing the ordinary learner flow on the projected device; it needs no teacher role and is not built by F-TCH-004." Update `design/wireframes/classroom/projection-mode.md` header the same way. `docs/blueprints/10-app-map.md` rows A15 (`:77`), the teacher persona (`:120`), the `classroom/projection-mode` screen row (`:164`) and the flow line (`:242`) get the presenter, plus a new console row **C10** (after C9 "Worksheets PDF · Templates", `:98`, which is unrelated and unchanged) for `/teach/space/lecture`, and a `classroom/lecture-presenter` row in the screen table. All of this lands in PR 0 (wireframe before code, CLAUDE.md §5).
+- **Given** a visitor opens `/present` on a device that also holds a learner's profile, **then** nothing about that profile is read, shown or written (§3.9).
+- **Given** an unknown path under `/present/…`, **then** the presenter home shows (no 404 page).
+
+### 3.2 Deck model and URL-fragment codec (`packages/content-schema/src/schemas/lecture.ts`, `lecture-codec.ts`; exported from `src/index.ts`)
+
+```ts
+export const LECTURE_DECK_VERSION = 1;
+export const LECTURE_MAX_BLOCKS = 30;               // PLAN_MAX_ITEMS (plan.ts:16)
+export const LECTURE_MAX_FRAGMENT_CHARS = 8192;
+export const ACTIVITY_PRESETS = ['air-write', 'say-together', 'pair-share', 'copy-on-paper', 'stretch-break'] as const;
+
+export const LectureBlockSchema = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('episode'), id: z.string().regex(/^episode:[a-z0-9-]+$/) }),
+  z.object({ kind: z.literal('quest'),   id: z.string().regex(/^quest:[a-z0-9-]+$/) }),
+  z.object({ kind: z.literal('jamo-set'), jamoIds: z.array(z.string().regex(/^jamo:[a-z-]+$/)).min(1).max(12) }),
+  z.object({ kind: z.literal('revisit'), chars: z.array(z.string().length(1)).min(1).max(6) }),   // compatibility jamo, from ProgressSummary.needsPractice
+  z.object({ kind: z.literal('vocab'), topicId: z.string().regex(/^vocab:[a-z0-9-]+$/), wordIds: z.array(z.string().max(48)).max(24).optional() }),
+  z.object({ kind: z.literal('story'), storyId: z.string().regex(/^story:[a-z0-9]+(-[a-z0-9]+)*$/), level: StoryLevelSchema.optional(), checks: z.boolean().default(true) }),
+  z.object({ kind: z.literal('cards'), cardIds: z.array(z.string().regex(/^card:[a-z0-9-]+$/)).min(1).max(12) }),
+  z.object({ kind: z.literal('quiz'), from: z.enum(['previous', 'all']), rounds: z.number().int().min(1).max(10) }),
+  z.object({ kind: z.literal('activity'), preset: z.enum(ACTIVITY_PRESETS), minutes: z.number().int().min(1).max(15) }),
+  z.object({ kind: z.literal('class-code'), code: z.string().regex(JOIN_CODE_RE) }),               // space.ts:10-12
+]);
+
+export const PickerModeSchema = z.enum(['names', 'initials', 'numbers']);
+export const DECK_ID_RE = /^lecture:[a-z0-9]{6,12}$/;
+
+export const LectureDeckSchema = z.object({
+  v: z.literal(1),
+  id: z.string().regex(DECK_ID_RE),
+  title: z.string().trim().min(1).max(60).regex(LECTURE_TITLE_RE),   // TD8: letters (Latin + accents, Hangul syllables), digits, space, . , ! ? : ' ’ ( ) - /
+  createdAt: z.string(),
+  seed: z.number().int().min(0).max(2_147_483_647),       // quiz content replays identically
+  blocks: z.array(LectureBlockSchema).min(1).max(LECTURE_MAX_BLOCKS),
+  options: z.object({
+    romanization: RomanizationModeSchema.default('always'),   // 'always' | 'tap' (schemas/locale.ts, D2)
+    strokeGuide: z.boolean().default(true),
+    quizRounds: z.number().int().min(1).max(10).default(5),
+    sound: z.boolean().default(true),
+    uiLocale: UiLocaleSchema.optional(),                     // absent = this device's locale
+  }).default({}),
+  // NO labels here: a deck is a URL (D12, owner answer 2026-10-10). `mode` says what the teacher intends; the
+  // labels themselves arrive by `postMessage` (below) and are held in memory. `.strict()` rejects a `labels` key,
+  // so a hand-built link cannot smuggle names into the fragment.
+  picker: z.object({
+    mode: PickerModeSchema,
+    count: z.number().int().min(1).max(60),                  // numbers mode: 1..count; names / initials: the roster size (labels.length must match when they arrive)
+  }).nullable().default(null),
+  source: z.enum(['plan', 'catalogue', 'revisit', 'quick']).optional(),   // telemetry only
+});
+// every z.object above is .strict()
+
+// Console -> presenter hand-off (never a URL). Same file, same strictness.
+export const LECTURE_MESSAGE_NS = 'hangul-route.lecture' as const;
+export const PICKER_LABEL_RE = /^[A-Za-zÀ-ɏ가-힣0-9 .'’?-]+$/;   // the learner-name class of profile-model.ts:41 plus "." and "?" for roster aliases
+export const LectureReadyMessageSchema = z.object({
+  ns: z.literal(LECTURE_MESSAGE_NS), v: z.literal(1), type: z.literal('ready'), deckId: z.string().regex(DECK_ID_RE),
+}).strict();                                                  // presenter -> console (opener), carries no person data
+export const LectureRosterMessageSchema = z.object({
+  ns: z.literal(LECTURE_MESSAGE_NS), v: z.literal(1), type: z.literal('roster'), deckId: z.string().regex(DECK_ID_RE),
+  mode: z.enum(['names', 'initials']),
+  labels: z.array(z.string().trim().min(1).max(20).regex(PICKER_LABEL_RE)).min(1).max(60),
+}).strict();                                                  // console -> presenter; memory only on arrival
+export const LECTURE_CONSOLE_ORIGINS = ['https://hangulroute.com', 'https://www.hangulroute.com', 'http://localhost:3000'] as const;
+```
+
+- **Codec** (pure, runs in both apps): `encodeDeck(deck): string` = `'1.' + base64url(utf8(JSON.stringify(deck)))`; `decodeDeck(fragment): { ok: true; deck } | { ok: false; reason: 'empty' | 'too_large' | 'bad_encoding' | 'bad_json' | 'unsupported_version' | 'invalid'; issues? }`. Limits: fragment <= 8192 characters, decoded JSON <= 6144 bytes; schema `.strict()` at the top level and in blocks (a typo is an error). No Buffer: `TextEncoder` + `btoa` / `atob`. The URL is `${APP_URL}/present#d=${encodeDeck(deck)}`; `APP_URL` moves into `lib/console/config.ts` `buildEnv()` (`:2-8,17-25` omit it today, `app/page.tsx:19` reads it directly).
+- **Slides are never stored or sent.** A deck is ids, a seed and options; the device expands it against its own bundle (the same principle as plans, `stage1-catalog.ts:3-6`). An id the bundle does not know becomes a counted skip, never a crash (§3.3).
+- **Given** a deck JSON that contains a `picker.labels` key (or any unknown key), **then** `decodeDeck` returns `invalid` (no person data can ride in the fragment).
+- **Given** a 30-block deck whose ids are 64 characters and a 60-character Hangul title, **then** the fragment is under 8192 characters and the decoded JSON under 6144 bytes (worst-case test; labels no longer count because they are not in the deck).
+- **Given** an oversize, malformed or wrong-version fragment, **then** `/present` shows "This link does not work" with [ Open Quick lesson ], and emits `lecture.deck_rejected { reason }`.
+- **Given** a fragment that decodes, **then** the presenter calls `history.replaceState(null, '', '/present')` before first paint so the deck leaves the address bar and the session history entry, and sets `document.title` to the fixed string from the message catalogue ("Hangul Route lecture"); the deck title is shown in the page only, never in `document.title`, and no name is ever written to `location`, `document.title`, `window.name`, `localStorage`, IndexedDB, a request URL, a header or a telemetry payload.
+
+**Roster hand-off protocol (names and initials; mandatory decision (a))**
+
+1. **Console** (`lib/console/lecture-link.ts`, pure parts unit-tested): [ Open presenter ] runs `const w = window.open(url, '_blank')` from the click (every click opens a new tab, so a fragment-only navigation of an already open presenter never has to be handled; the page keeps the opened windows in a `Set`) (no `noopener`, no `noreferrer`: the presenter needs `window.opener`; both pages are first-party). `url` is `${APP_URL}/present#d=<deck>` and contains no label. If `w` is `null` (pop-up blocked) the page says "Allow pop-ups for this site to open the presenter" and offers [ Copy link ] (a link without names; the picker will run in `numbers`).
+2. **Presenter** (`platform/presenter.web.ts` `announceReady`, pure `logic/lecture/roster-message.ts`): when the decoded deck has `picker.mode` of `names` or `initials` and `window.opener` exists, post `{ ns, v: 1, type: 'ready', deckId }` to `window.opener` once per allowed origin (`LECTURE_CONSOLE_ORIGINS` plus the build-time `EXPO_PUBLIC_CONSOLE_ORIGINS` comma list for preview deployments; a non-matching `targetOrigin` simply delivers nothing). It re-announces on every page load, so a reload while the console tab is still open gets the labels again.
+3. **Console** listens (`window.addEventListener('message')`) and answers only when `event.origin === new URL(APP_URL).origin`, `event.source` is one of the windows in that `Set`, the message parses with `LectureReadyMessageSchema` and `deckId` equals the open deck: `event.source.postMessage({ ns, v: 1, type: 'roster', deckId, mode, labels }, appOrigin)`. The `targetOrigin` is always the exact app origin, never `'*'`.
+4. **Presenter** accepts a `roster` message only when `event.source === window.opener`, `event.origin` is in the allowed list, it parses with `LectureRosterMessageSchema`, `deckId` equals the open deck, `mode` equals `deck.picker.mode` and `labels.length === deck.picker.count`. Anything else is ignored silently (no error UI, no log of the payload). Accepted labels are held in a module-level variable of `logic/lecture/picker-labels.ts` only: never in a store that persists, never in `lecture:recent`, never sent to telemetry, never written to `console.*`. Closing the tab, `Exit` or a navigation clears them.
+5. **No opener, no labels.** A link that was copied, typed, bookmarked or resumed from Recent has no opener; the picker runs in `numbers` (1..`count`) and the start screen says "Names come from the console page that opened this lesson. Using numbers." The `count` stepper (§3.12) still works.
+6. **Constraints recorded for operations**: neither `/teach/space/lecture` nor `/present` may be served with `Cross-Origin-Opener-Policy: same-origin` (it would sever `window.opener`; the current `_headers` files set only `X-Content-Type-Options` and `Referrer-Policy`); the allowed-origin list lives in the schema package so the console and the presenter cannot drift; `http://localhost:3000` is in the default list so the e2e harness and local development work against a production build, which is safe because only the opener window can deliver a message and the payload is limited to labels.
+
+### 3.3 Deck builder (`apps/mobile/src/logic/lecture/deck-builder.ts`, pure, 100 %)
+
+`expandDeck(deck, bundle, voice): ExpandedDeck` where `bundle` is an injected object of the content lookups (`jamoAll`, `scopeFor`, `questById`, `episodeById`, `cardById`, `strokesForJamo`, stories, vocab) so tests use fixtures and the module imports no screen and no store.
+
+```ts
+interface ExpandedDeck { slides: Slide[]; skipped: SkippedItem[]; taught: TaughtItem[]; minutes: number }
+interface SkippedItem { blockIndex: number; ref: string; reason: 'unknown-id' | 'not-ready' | 'no-romanization' | 'scope-too-small' | 'unsupported-step' }
+```
+
+Every slide has a stable `key` (`<blockKey>/<path>`, e.g. `quest:stage1-letters-q1/s2/jamo:giyeok`; a repeated block gets `#2`). **Rules**
+
+1. **episode** -> `title` slide (`titleEn`, `subtitleEn`, `hoyaIntroEn`; `episodes.ts`) then each quest in `questIds` order (the same expansion as plan derivation, `logic/homework/plan-derivation.ts`). An episode with `status` `preview` or no quests -> skipped `not-ready`. A **story episode** (`format: 'story'`, F-STORY-001 §3.9; ids like `episode:shelf-<slug>`) expands as its title slide plus a `story` block for each of its `storyIds` / its quest's story; a quest step whose `minigameRef` has the story grammar (`minigame:story-<read|check|seq>-<level>-<slug>`, F-STORY-003 §3.1) is expanded as that story's block once per quest (the `check` and `seq` steps add nothing new, because checks and the order slide are already part of it).
+2. **quest** -> `title` slide (quest title, first `intro` step's `hoyaLineEn`), then per step with a `minigameRef` (`scopeFor`):
+   - `match-sound`, step `present` -> one **letter** slide per `jamoIds` entry (once per jamo per deck: a `seen` set);
+   - `match-sound`, step `practice` / `apply` -> **quiz** slides (`buildMatchSoundRounds({ scopeJamoIds, rounds, tileCount: 4, seed: deck.seed + k })`; `rounds` = `min(deck.options.quizRounds, scope.rounds)`);
+   - `trace-stroke` -> letter slides (build order starts with the stroke guide);
+   - `build-letter` -> **syllable** slides from `scope.syllables`;
+   - `card-match` -> **vocab** slides from `scope.cardPairs`;
+   - `story-sequence` -> one **sequence** slide from `scope.storySteps`;
+   - `culture-quiz` -> quiz slides from `buildCultureQuizRounds`; `odd-one-out` -> quiz slides from `buildOddOneOutRounds`;
+   - any other kind (`tap-respond`, `voice-echo`, F-QUEST-002 kinds) -> skipped `unsupported-step` (counted on the start screen);
+   - `reward` step -> **card** slide (`cardById(quest.rewardCardId)`: art, title, `factEn`).
+   Builders that throw on a small scope (`round-builder.ts:39-41,145-147,183-185`) are wrapped: the failure becomes `scope-too-small` and the slide is omitted.
+3. **jamo-set** -> letter slides. **revisit** -> letter slides for the characters (`jamoAll.find(j => j.char === c && j.kind !== 'batchim')`; unknown -> skipped) then one quiz block of up to 4 rounds over those jamo (needs >= 4 distinct options; the pool is topped up with other jamo of the same kind in `jamoAll` order, otherwise the quiz is skipped).
+4. **vocab** -> topic title slide then **vocab** slides for `wordIds` (all words when absent); then, when the topic has >= 4 words, an optional quiz of `rounds` word-to-gloss questions. Word shape is read through `logic/lecture/sources/vocab.ts` (the only file that knows `content/vocab/*.json`, F-VOC-001; see §8).
+5. **story** -> `title` slide with the cover scene, one **story** slide per scene of the chosen tier (default: the lowest `level` the story has), then one **sequence** slide from the tier's `sequenceSceneIds` (scene `captionEn` + `sceneKorean`), then `checks` as quiz slides when `checks` is true. Only stories that the learner Library would list are expandable: the entries of F-STORY-004's `story-index.ts` (`buildStoryIndex`: a `ready` story that passes the review gate; the dev-only `showUnreviewedStories` widening is **not** honoured by the presenter); a draft or unverified story is skipped `not-ready`. `content-access` (`isFreeContent`) is not consulted (D5, §3.13). **D14**: slide text comes only from the story's own fields (`narrationEn` after `{kw:<id>}` tokens are resolved through F-STORY-001's `parseNarration`, `sceneKorean(scene)`, `captionEn`, `explainEn`); the builder never composes a sentence.
+6. **cards** -> card slides.
+7. **quiz** (`from: 'previous' | 'all'`) -> quiz slides built from `taught` items collected so far: letters -> Match Sound rounds; syllables / words -> word-to-gloss rounds; cards -> culture-quiz rounds. `previous` = items since the last quiz block (or the start). With fewer than 4 distinct items the block is skipped `scope-too-small` and the console warns at compose time.
+8. **activity** -> `activity` slide (preset title from the message catalogue, minutes, a timer started by the teacher, not automatically).
+9. **class-code** -> `end` slide gains the join code, large, with the "how to join" line from the message catalogue (the key follows whatever label ships for the Join entry, F-LEARN-001 / F-I18N-001), never a hard-coded path like "Settings → …" (`lib/console/copy.ts:12` is stale for the same reason).
+10. Every deck ends with an `end` slide (`taught` letters / words as `KoreanText`, "Practice at home in Hangul Route"). A deck with zero slides after skips shows the invalid-deck screen.
+11. **Romanization rule (CLAUDE.md §1)**: a Korean string with no romanization never reaches a slide; the slide is omitted and counted `no-romanization` (a CI test over all bundled scopes asserts zero such skips once F-CNT-002 PR 2b has landed; story-sequence labels are the known gap today, `minigame-config.ts` `storySteps.labelKo`).
+12. **Determinism**: same `deck` + same bundle = same `slides` (seed offsets are `deck.seed + <running slide counter>`); the builder never calls `Date.now()` or `Math.random()`. Estimated minutes = sum of quest `estimatedMinutes` + activity minutes + 1 per quiz slide.
+
+### 3.4 Slide types and builds
+
+A **build** is one teacher click inside a slide (slideware reveal). `slide.builds` is an ordered list; `reveals = builds.length - 1`; the slide starts showing build 0.
+
+| Kind | Source | Builds (in order) | Notes |
+|---|---|---|---|
+| `title` | episode / quest / topic / story | `[title]` | Hoya pose (`HoyaPose`, `Hoya/types.ts:1`) and one short line |
+| `letter` | jamo | `[ko(+rom), stroke, sound, name, example]`; with `romanization: 'tap'`: `[ko, rom, stroke, sound, name, example]` | glyph (font), then stroke guide panel (`StrokeHint`), sound (`spokenFor`), `nameEn` + `soundHint` (F-QUEST-002), example word via `KoreanText` (`exampleWordKo`, `exampleWordRomanization`, `exampleWordEn`). `strokeGuide: false` drops `stroke` |
+| `syllable` | `scope.syllables` | `[parts, join, rom, sound]` | `ㄱ + ㅏ` slide together into `가` (reduced motion: crossfade); `syllableSplit` hyphens (`rr.ts:198`, D13) only here |
+| `vocab` | cardPairs / topic word | `[ko(+rom), gloss, art]`; `tap`: `[ko, rom, gloss, art]` | picture = `HeritageCardArt` when `supportedCardIds` has the card (`HeritageCardArt/…:21`) or F-VOC `WordArt`; none -> text only; gloss in the deck's UI locale (overlays, F-I18N-001 §3.6) |
+| `sequence` | `scope.storySteps` | `[step 1 … step n, order]` | each step: Korean line + romanization + gloss; last build re-orders for "what comes first?" |
+| `story` | story scene | `[art, narration, korean]` | `StoryScene` component rendering the scene's `SceneArt` data (F-STORY-002 §3.9), narration large; Korean line via `KoreanText`; Read-to-me speaks `narration` |
+| `quiz` | match-sound / culture / odd-one-out / vocab / story check | `[question, answer]` | prompt, 2-4 options each with a **shape + number** marker (circle 1, triangle 2, square 3, star 4), reveal highlights the answer and softens the others (§3.10) |
+| `card` | heritage card | `[art, fact]` | `HeritageCardArt` large, `titleEn`, `factEn` (`heritage-cards.ts`) |
+| `activity` | preset | `[prompt]` | preset title, minutes, [ Start timer ] big |
+| `end` | deck | `[summary]` | letters / words met; optional class code |
+
+- **Match Sound quiz** prompts with `spokenFor(jamo, 'sound')` (a carrier syllable, never the letter name; F-AUDIO-004 AD1-AD2) and shows tiles with the letter glyph and its romanization; when `canPlayKorean` is false the prompt becomes the text variant F-AUDIO-004 §3.8 specifies ("Tap the letter for this sound", the spoken syllable in Hangul + romanization) and the builder marks the slide `textPrompt: true`.
+- **`romanization: 'tap'`** (D2): romanization appears at its own build (never merged into the first); the gloss is not hidden by this setting. In quizzes the option romanizations appear at the answer build. Default `always`: romanization is part of the Korean's first build.
+- Under reduced motion every build is an instant swap (`useReducedMotion`, `platform/motion.ts`); the stroke guide uses `StrokeHint`'s still diagram.
+
+### 3.5 Presenter runtime and controls
+
+**States**: `boot -> (invalid | home | ready) -> running -> ended -> home`. `ready` is the **start screen**: deck title, `n` slides, about `m` minutes, a count of skipped items ("2 items are not in this version of the app"), device checks (voice, offline, fullscreen, screen-awake), and one huge [[ Start ]]. The Start tap runs the gestures that need one: `unlockAudio()` (F-AUDIO-004 §3.6), `requestFullscreen`, `wakeLock.request('screen')`, `screen.orientation.lock('landscape')` (all feature-detected, failures ignored).
+
+`logic/lecture/controls.ts` is a pure reducer:
+
+```ts
+type Overlay = null | 'timer' | 'picker' | 'blank' | 'pause' | 'grid' | 'help' | 'exit';
+interface PresenterState { slideIdx: number; reveal: number; overlay: Overlay; timerMode: 'corner' | 'full'; skipped: ReadonlySet<string>; ended: boolean }
+type PresenterEvent = 'next' | 'prev' | 'first' | 'last' | { goto: number } | { overlay: Overlay } | 'close' | { toggleSkip: string } | 'replay-sound' | 'replay-stroke';
+export function reduce(state, event, deck: Pick<ExpandedDeck, 'slides'>): { state: PresenterState; effect?: PresenterEffect };
+```
+
+- `next`: if `reveal < reveals(slide)` -> `reveal + 1`; else the next non-skipped slide with `reveal = 0`; at the last slide it does nothing (the End slide says how to exit; no accidental exit). `prev`: if `reveal > 0` -> `reveal - 1`; else the previous non-skipped slide at **its last reveal** (so going back shows the complete slide).
+- Overlays: `blank` and `pause` swallow `next` / `prev` (the first one only clears the overlay, nothing advances); `timer` in `corner` mode lets slides advance, in `full` mode swallows navigation; `grid`, `help`, `exit` swallow it. `Esc` and `close` always close the top overlay; with none open `Esc` opens `exit`.
+- Effects (`play-sound`, `play-stroke`, `start-timer`) are returned to the screen, so the reducer stays pure.
+- **Keyboard / clicker map** (`platform/presenter.web.ts` `subscribeKeys`, which `preventDefault()`s handled keys): next = `ArrowRight`, `ArrowDown`, `PageDown`, `Space`, `Enter`; prev = `ArrowLeft`, `ArrowUp`, `PageUp`, `Backspace`; first / last = `Home` / `End`; blank = `B` or `.`; replay sound = `S`; replay stroke guide = `R`; toggle romanization = `Shift+R`; timer = `T`; picker = `P`; grid = `G`; fullscreen = `F`; help = `H` or `?`; close = `Esc`. Presentation clickers send `PageUp`, `PageDown`, `B` / `.` and `Esc`, so they work with no setup. Keys are ignored while focus is in a text input (none exist in the MVP) and with `Ctrl` / `Meta` held.
+- **Touch and mouse**: a tap on the right two thirds of the stage = `next`, left third = `prev` (not on the control bar or an overlay); a horizontal swipe >= 60 dp with `|dx| >= 1.5 |dy|` = next / prev. Double taps do nothing (no accidental zoom: `touch-action: manipulation` on the stage).
+- **Control bar** (docked, real pixels, not stage units): Prev, Next / Reveal, Sound, Timer, Picker, Blank, Grid, Fullscreen, Exit. Every button is at least `touchTarget.hero` (96) with a visible text label (remote-friendly, arm's length). It auto-hides after 3 s of no pointer / touch / key activity and returns on any of them; a focused button keeps it visible; reduced motion = no fade. A setting "Keep controls visible" is on the help overlay. The bar is the only place offline / voice / update status appears (§3.8).
+- **Grid**: thumbnails of every slide (kind label + title text, no tiny Korean) for jumping; each can be skipped for this session (`toggleSkip`, memory only, not saved in the deck).
+- **Timer** (a teacher tool, TD5; `logic/lecture/timer.ts`, pure reducer over `{ remainingMs, status: 'idle'|'running'|'paused'|'done', totalMs }` with an injected clock): presets 30 s, 1, 3, 5 min and +30 s; pause, resume, reset. Display: a ring that **fills** with elapsed time and m:ss remaining (numbers can be hidden); corner or full-screen. At zero: the ring completes, Hoya `cheering`, a soft visual pulse and a gentle two-note chime synthesised with Web Audio (`platform/presenter.web.ts` `playChime()`, using the shared context F-AUDIO-004 creates in `unlockAudio`; muted by `audio-store.muted`; **never** speech synthesis, never an alarm). An `activity` slide's [ Start timer ] opens the timer with its minutes.
+- **Picker** (`logic/lecture/picker.ts`, pure, injected `rng`): a shuffled bag drawn **without replacement**; "Who's helping next?" shows one label; `draw`, `undo` (returns the last label to the bag), `skip` (returns the label to the bag and draws another, giving no reason), `reset` (new bag). When the bag is empty: "Everyone has had a turn" and [ Start again ]. Modes: `names` (first names), `initials`, `numbers` (1..N). The labels come from the in-memory roster of §3.2 (never from the deck); when none arrived the mode degrades to `numbers`. The shuffle animation is `motion.duration.crawl` (600 ms); reduced motion = instant. The overlay never shows progress, summaries, ages, levels, how often anyone was drawn, a list of who has or has not had a turn, or who was "skipped"; it is a turn-taking tool and never a score or a ranking (TD5).
+- **Blank**: Hoya on the canvas with a short "Eyes on me" line; **Pause**: Hoya with `잠깐` rendered by `KoreanText` (`jamkkan`, gloss "wait a moment"); both leave the slide state untouched.
+- **Exit**: [ Exit ] opens a confirm (large [ Keep going ] [ Exit ]); confirming leaves fullscreen, releases the wake lock, unlocks orientation, sends `lecture.complete`, and returns to the presenter home. A page reload mid-lesson restores the deck from Recent at the slide that was open (`lecture:recent` stores `lastSlideKey`); names are re-delivered by the console tab if it is still open (§3.2 step 2), otherwise the picker falls back to numbers with the line "Names are not kept on this device".
+
+### 3.6 Stage, type and large-type rendering
+
+**Stage** (`logic/lecture/stage-scale.ts`, pure): a logical stage 1280 units wide; logical height = `clamp(1280 * h / w, 600, 960)` (4:3 up to 2:1); `unit = windowWidth / 1280` unless the height clamp binds, in which case the stage is letterboxed and `unit = windowHeight / logicalHeight`. Components size everything as `unit * n` (crisp text and SVG; no CSS `transform: scale`), except that text is never rendered below the charter body floor: `stageText(n) = max(typography.size.body, round(unit * n))` (18), so on an iPad in portrait (768 wide, `unit` 0.6) the caption row (28 units) is 18, not 17, and a window narrower than about 640 px simply letterboxes with the portrait hint. Slides lay out with flex inside the stage; they must work for logical heights 600-960.
+
+**Tokens** (`packages/design-system/src/tokens.ts` `presenter` group + `design/tokens/presenter.v1.md`, mirrored; `check-token-drift.mjs` `KNOWN_KINDS` gains `presenter`, `layout` from F-LAYOUT-001):
+
+```ts
+export const presenter = {
+  stage: { width: 1280, minHeight: 600, maxHeight: 960 },
+  size: { glyph: 380, display: 140, title: 80, prompt: 56, body: 40, caption: 28 },   // stage units; nothing projected is smaller than caption
+  font: 'HR Presenter KR',                                                              // family name of the bundled subset (below)
+  marker: { shapes: ['circle', 'triangle', 'square', 'star'] },
+  autoHideMs: 3000,
+} as const;
+```
+
+Projected colours reuse existing tokens: `colors.surface.paper` background with `colors.text.primary` (no cream canvas on a projector); a contrast test (`contrast.test.ts`) pins every presenter text / surface pair to >= 7:1 and every non-text marker to >= 3:1.
+
+**Hangul glyphs (TD4).** Large Korean (letter glyph, syllable, vocab word, story keyword, quiz option) uses **`HR Presenter KR`**: a subset of Noto Sans KR Bold (SIL Open Font License 1.1; `apps/mobile/public/fonts/OFL.txt` ships beside it), file `apps/mobile/public/fonts/hr-presenter-kr.woff2`.
+- Built by `scripts/build-presenter-font.mjs` (`pyftsubset`, a dev-time tool; the output is committed) from a glyph list the script **derives from shipped content**: the 30 compatibility jamo, every `syllables[].ko`, `exampleWordKo`, `cardPairs[].ko`, `storySteps[].labelKo`, vocab words, story keywords and titles. The glyph list used for each build is committed beside the font as `hr-presenter-kr.glyphs.txt`; `--check` re-derives the list from content and fails CI if it differs from the sidecar (a plain-text comparison, so CI needs neither Python nor a font parser; `pyftsubset` is only needed to rebuild); `--report` prints bytes. **Budget: <= 150 KB**; if exceeded, story body lines (40-unit text) fall back to the system font and only display-size strings use the subset.
+- `@font-face` is added to the shell CSS in `pwa-postbuild.mjs` (next to `:36-49`) with `font-display: block`; the file matches the existing `woff2` precache glob (`:94`), so it works offline. The start screen waits (<= 1.5 s) for `document.fonts.load('700 1em "HR Presenter KR"')` before enabling [ Start ]; failure falls back to the system stack silently.
+- Text outside the glyph list (a new word added to content) falls back per glyph to the system font; the `--check` step makes that a CI failure rather than a classroom surprise.
+- The stroke skeletons are **not** used to draw letters. The letter slide shows the font glyph and, beside it, the stroke guide panel (`StrokeHint`, `size` = `unit * 360`, `viewBox 200`). Until a jamo is listed in `reviewedStrokeIds` (new export of `content/jamo-strokes.ts`, initially empty; a native-reviewed content PR adds ids, tied to F-005 / F-008 refinements) the panel carries the caption "Simplified stroke guide" (message catalogue). The setup page states the same caveat next to the toggle. `StrokeHint` moves from `screens/minigames/` to `components/` in PR 6 (path-only change, re-exported).
+
+### 3.7 Audio, fallbacks and romanization reveal
+
+- The presenter uses only F-AUDIO-004's public surface: `playPrompt`, `spokenFor`, `getCapability` / `subscribeCapability`, `describeKoVoice`, `refreshCapability`, `unlockAudio`, `setMuted`. It adds no TTS code (`platform/audio.web.ts:36-77` is replaced by that spec).
+- On boot `refreshCapability()`; the start screen shows the result ("Korean voice: Yuna, on this device" / "No Korean voice on this device" / "Korean voice needs internet") from `describeKoVoice()` (never sent to telemetry).
+- **No Korean voice** (`tts.state === 'none'` and no bundled clip for the item): a persistent teacher chip in the control bar, "No Korean voice here. You say it!"; every `sound` build shows the **teacher-says text**: the spoken syllable in Hangul (`spokenKo`) + `spokenRomanization` (+ IPA for letters), reusing `PromptState` / `showText` (F-AUDIO-004 §3.8). Quizzes switch to their text variant (§3.4). Muted (`audio-store.muted`): the same text appears and the chip reads "Sound is off" with [ Turn sound on ].
+- **Blocked by the browser** (`blocked` result): the speaker button reads "Tap to hear"; the Start tap already unlocked audio, so this only happens after a long idle.
+- **Recorded clips**: `audioRef` clips (owner task T-017) win when present (F-AUDIO-004 AD4); nothing in this spec changes when they land.
+- **Romanization** (D2): the deck's `options.romanization` decides (`always` by default). The presenter has no profile, so no learner's `romanizationMode` is consulted; the teacher chooses on the setup page and can flip it live with `Shift+R` or the help overlay, which rebuilds the current slide's builds (`always` merges the romanization build into the first). The choice belongs to the deck and is not persisted per device.
+
+### 3.8 Offline and the PWA
+
+- **Works offline after one online visit** on the classroom device: the shell and all content are precached (`pwa-postbuild.mjs:92-101`), `/present` loads through `navigateFallback` (`:96`), the font is precached (`:94`). The fragment is parsed locally; Recent lessons reopen from IndexedDB.
+- The start screen shows **"Ready for offline"** when `navigator.serviceWorker.controller` exists (feature-detected; `platform/presenter.web.ts` `isOfflineReady()`), otherwise "Open this page once with Wi-Fi to use it offline" with the install hint (the existing `InstallGuideSheet` is not mounted; the hint is plain text).
+- **No update ever applies mid-lecture**: the presenter never calls `__hrApplyUpdate` (`pwa-postbuild.mjs:63-67`), `skipWaiting` is false (`:98`), and `PwaBanners` is not mounted. A waiting update shows a small chip in the control bar ("Update ready, applies on exit") and is applied only on the Exit confirm.
+- The console is online-only (no service worker in `apps/web`); the workflow is prepare online, present offline (stated on the setup page).
+- Wake lock: re-requested on `visibilitychange`; unsupported -> silent (the start screen says "Keep the screen awake in system settings" when `wakeLock` is missing). Fullscreen: `requestFullscreen` / `webkitRequestFullscreen`; unsupported (iPhone) -> silent; installed PWAs are already fullscreen.
+- Orientation: F-LAYOUT-001 exempts `/present` from the portrait guard (`GUARD_EXEMPT_ROUTES`); in portrait the stage letterboxes and shows a non-blocking "Turn the screen for a bigger view".
+
+### 3.9 Class runs never write learner progress
+
+- **Allowed reads**: bundled content, `audio-store` (mute, capability), the device locale only (`device:settings`; profile overrides are ignored because no profile is loaded), `pwa` lifecycle events, and `message` events from `window.opener` (§3.2, validated, memory only). `PresenterApp` hydrates exactly two things on boot: `audio-store` and the device-level locale; it never calls `hydrateLearnerData` (`store/bootstrap.ts:10-15`).
+- **Allowed writes (IndexedDB keys)**: `lecture:recent` (never holds a name), `device:audio` (when the teacher toggles mute; note this is the device-wide mute of F-AUDIO-004 AD7, so it also changes the learner app on a shared device, see §8), `telemetry:queue` (existing queue). Nothing else; in particular no picker label is written anywhere.
+- **Forbidden imports** in `apps/mobile/src/screens/presenter/**`, `logic/lecture/**` and `platform/presenter*`: `store/progress-store`, `quest-run-store`, `profile-store`, `sync-store`, `plan-store`, `membership-store`, `tier-store`, `account-store`, `pwa-store`, and any `screens/minigames/*Game.tsx`. Enforced by `logic/lecture/__tests__/presenter-isolation.test.ts` (source scan of those paths for the forbidden specifiers; it fails with the file and line).
+- **Not embedded**: no existing minigame component is reused (they read `useQuestRunStore` and call `answerRound`); the presenter has its own slide components that reuse pure logic (`round-builder`, scopes) and leaf visuals (`StrokeHint`, `HeritageCardArt`, `Hoya`, `HoyaBubble`, `StoryScene`, `KoreanText`).
+- Presenting a plan item does not mark anything in the plan readout (no "covered in class"), earns no card and no star, and adds no session to the streak.
+- E2E (§5): the IndexedDB key set before and after a full presented lesson differs only by the allowed keys.
+
+### 3.10 Names, anti-shame and copy
+
+- **Names appear in exactly one place**: the picker result, and they get there only through the `postMessage` roster of §3.2 (never a URL). Slides, grid, titles, `document.title`, the end slide and Recent never contain a learner name or initial.
+- **Console rules** (`lib/console/lecture.ts`, pure), D12: the picker defaults come from the roster as the API returns it. If `roster.space.settings.anonymizeRoster` is true the default mode is `initials`, the labels are the aliases the API already sent (`rosterName`), `names` is not offered, and the page never tries to reverse an alias. If false the default mode is `names`: the **first token** of `displayName` (split on spaces, max 20 characters, validated against `PICKER_LABEL_RE`; a Hangul or accented first name is kept as typed); the teacher can switch to `initials` (computed with `rosterAlias`) or `numbers` (`count` = roster size, no labels). **Only the labels of the chosen mode are put in the `roster` message, never in the deck or the URL**; the deck carries `mode` and `count` only. A roster label that fails `PICKER_LABEL_RE` (an old profile with another script) is replaced by its roster position number. No summaries, ages, levels, avatars or ids are ever included. A class with no learners yet defaults to `numbers` with `count = 12`.
+- **Persistence**: labels are never written by the presenter (they exist only in memory, §3.2 step 4; Recent keeps `mode` and `count` only). When the chosen mode is `names` or `initials` the setup page shows once: "Names are sent straight to the presenter tab and are not in the link. They are not saved on the classroom device. A copied link has no names."
+- **Title guard**: the deck title is part of the URL, so `lib/console/lecture.ts` rejects (inline error, [ Open presenter ] and [ Copy link ] disabled) a title that contains, case-insensitively and as a whole token, any roster first name or alias, with the line "Take the name out of the title: names are never put in the link." Titles derived from a plan title are checked the same way.
+- **Quiz reveal (D3)**: the correct option gets the success border and a check mark; the others lose emphasis (opacity, no colour of failure; `colors.feedback.danger` and the red X are never used); no "wrong", "fail", "miss", "incorrect" in any projected string; no count of right / wrong hands; no scoring. Hoya's reveal line is warm ("Hoya's answer").
+- **Copy lint**: every presenter and setup string is checked in tests against `BANNED_WORDS` (`apps/web/src/lib/console/banned-text.ts:6`) and the learner list (`apps/mobile/src/logic/homework/banned-text.ts`); presenter strings live in the message catalogue under `learner.presenter` (one sub-object per screen group, F-I18N-001 §3.4 rule 2; the console page under `console.lecture`; English first, es / ko behind the F-I18N-001 review gate). The three locales' strings are checked by the same lint.
+- Teacher-typed text: only the deck title; the schema validates it (<= 60, trimmed, `LECTURE_TITLE_RE` = the TD8 character class, no emoji, no other scripts, no control characters), it renders as plain text, and the console rejects a banned English word in it. A Korean title is allowed because it is the teacher's own label, not taught content (TD8).
+
+### 3.11 Console setup page — `/teach/space/lecture?id=` (`apps/web`)
+
+Sections (wireframe `lecture-presenter.md` screen K): **Source** (radio: this week's published plan [`latestPublished`] / pick from the catalogue / revisit together [`classRollup().revisit`]), **Outline** (ordered blocks with title, about-minutes, move up / down, remove; add Quiz, Activity preset, Class code), **Options** (romanization: always / hide until tap; stroke guide on / off with the simplified-guide note; sound on / off; presenter language), **Helper picker** (none / numbers / initials / names, defaults by the anonymize rule of §3.10), **Check the classroom device** (static list: open once with Wi-Fi, a Korean voice, HDMI / projector fit, "this link does not change anyone's progress"), and the actions [[ Open presenter ]] (`window.open(url, '_blank')` **without** `noopener`, then the roster hand-off of §3.2) and [ Copy link ] (clipboard; the same deck URL, which by construction contains no names, so a pasted link runs its picker in numbers; the page says so under the button when mode is `names` or `initials`).
+- **Given** a plan with items, **when** "Present this plan" is used, **then** the page opens with one block per plan item (`quest` / `episode`), unticking removes it, and the deck title defaults to the plan title.
+- **Given** an unknown or archived space id, **then** the standard console error + Try again (as `space/page.tsx`).
+- Visible to roles that can compose plans (`class` `teacher`, `family` `caregiver`; the space owner holds one of these roles): same predicate as the plan page (`plan.write`, `packages/backend/src/lib/can.ts:36-37`); other roles see no entry point.
+- **Catalogue**: the page lists Stage 1 quests and episodes from the existing mirror (`data/stage1-catalog.ts`) and, for stories and vocabulary topics, from `apps/web/src/data/lecture-catalogue.generated.ts` produced by `scripts/build-lecture-catalogue.mjs` from `content/stories/*.json` and `content/vocab/*.json` (titles and ids only, `--check` in CI like F-STORY-001's generator check). When F-PLAN-002's shared catalogue lands, both mirrors are replaced by it (no deck change: ids are the contract).
+- Estimates: about-minutes from catalogue `estimatedMinutes`; exact slide counts are shown on the presenter start screen (the console has no content bundle).
+- Presenter locale: a select of English / Espanol / Korean endonyms, defaulting to the console's current locale (F-I18N-001 console provider; English when the provider has not landed) and written to `options.uiLocale`. UI strings are English by default with Korean and Spanish selectable (CLAUDE.md §1).
+- **Tests of the hand-off** live in `lib/console/__tests__/lecture-link.test.ts` (pure: origin check, source check, schema check, only-`ready` answered) and in the e2e of §5.
+
+### 3.12 Quick lesson and Recent lessons (presenter home)
+
+- **Language**: three chips (English / Espanol / Korean endonyms) on the home and in the Help overlay switch the presenter chrome for this session only (memory; the persisted device locale is not written). Default = `options.uiLocale` of the deck, else the device locale.
+- **Recent**: up to 10 decks in `lecture:recent` `{ v: 1, items: [{ deck, savedAt, lastSlideKey? }] }` (the deck type has no name field, so nothing can be stripped or forgotten), newest first; [ Resume ] / [ Start over ] / remove. Corrupt storage = empty list.
+- **Quick lesson**: a grouped list from the bundle (Meet the Letters episodes, single quests, jamo sets "Consonants / Vowels", vocabulary topics and stories when present), multi-select up to 30, [[ Build lesson ]] -> a deck with `source: 'quick'`, `seed = Date.now() % 2^31`, `picker: { mode: 'numbers', count: 12 }` editable on the start screen (a stepper, 1-60). No names can be entered here.
+- The home is also the landing for exit and for an invalid link.
+
+### 3.13 Entitlement, roles, accessibility, i18n
+
+- **Entitlement (D5)**: everything shipped is presentable; the presenter and the console page never call `isFreeContent` / `isStageEntitled`. No "Premium" pill anywhere. If gating is switched on later, a `kind: 'lecture-deck'` check is added to the single registry (F-STORY-004 `logic/content-access.ts`), not here.
+- **Accessibility**: the stage is `accessibilityRole="main"` with the current slide announced politely on change (`accessibilityLiveRegion="polite"`, short: "Slide 3 of 14, letter ㄱ, g"); every control has a label and 96 dp targets; focus order is control bar then stage; Korean uses `KoreanText` with `lang="ko"` (F-I18N-001); contrast >= 7:1 for projected text; no flashing (the timer pulse is one slow fade, `motion.duration.slow`); reduced motion removes every animation (§3.4); keyboard-only operation is complete (the map in §3.5 is the full interface).
+- **i18n (CLAUDE.md §1, F-I18N-001)**: UI strings are English by default with Korean and Spanish selectable. Presenter chrome and activity presets come from the `learner.presenter` messages of the three locales; `options.uiLocale` > the session chip (§3.12) > device locale. **No Hangul lives in an `en` or `es` message** (F-I18N-001 §3.4 rule 5): the taught word on the Pause overlay (`잠깐`, `jamkkan`, gloss key `learner.presenter.pause.gloss`) is a content constant in `logic/lecture/content.ts` drawn with `KoreanText`, as is any other Korean the presenter shows outside a deck's own content; the deck title is the teacher's own text (user data like a learner name, F-I18N-001 §3.4 rule 8) and is exempt from that test. Taught Korean always carries romanization and a gloss in the presenter locale, with English fallback where an overlay is missing (F-I18N-001 §3.6). Spanish strings are about 30 % longer: control bar labels wrap to two lines at the 96 dp height.
+
+### 3.14 Telemetry (added to `TELEMETRY_EVENT_NAMES`, `schemas/telemetry.ts:9`, the exact-list test, and `specs-out/TELEMETRY-NAMES.md`; convention rule 4)
+
+| Name | Payload | When |
+|---|---|---|
+| `lecture.start` | `{ source: 'console' \| 'quick' \| 'recent', blocks, slides, skipped, picker: 'none' \| 'names' \| 'initials' \| 'numbers', romanization: 'always' \| 'tap', voice: 'ready' \| 'none' \| 'unknown', offlineReady: boolean }` | the Start tap |
+| `lecture.complete` | `{ slidesShown, minutes, reveals }` | Exit confirm or last slide + exit |
+| `lecture.tool_used` | `{ tool: 'timer' \| 'picker' \| 'blank' \| 'pause' \| 'grid' \| 'fullscreen' }` | first use of each tool per lecture |
+| `lecture.deck_rejected` | `{ reason }` (the codec reasons) | invalid fragment |
+
+No names, labels, ids of people or the deck title; no `profileId` (there is none). Events use the existing offline queue (`platform/telemetry.ts`, `flushQueue` on mount and on `back-online` — the presenter calls it itself because `App` does not run). Worker first, app second (deploy the shared list before the app that sends it).
+
+### 3.15 Later phase (recorded, not built)
+
+- **Server-saved decks and a lecture code**: D1 table `lectures` per space, `GET/PUT /api/spaces/:id/lectures` (`plan.write`), a 6-character code from `JOIN_CODE_ALPHABET`, opened at `/present?code=…` without sign-in; the code never carries names (the picker stays a fragment / in-memory concern). Additive migration only.
+- **Dual-screen**: a notes window on the teacher's laptop over `BroadcastChannel` (same origin, offline), with the next-slide preview, private notes and the picker list.
+- MP3 audio (T-017) needs nothing here; Stage 2 / 4 `tap-respond` dialogue slides; a printable handout (F-TCH-003); QR code for the class code (needs a `/join` deep link).
+
+## 4. Out of scope
+
+- Live control of, or answers from, student devices (F-TCH-001 §4:106); "show of hands" tallies; scoring or reporting any result of a lecture; leaderboards (D3).
+- Projection Mode as a rendering mode of the learner flow (F-TCH-001 §3.4; stays deferred for a volunteer student).
+- Teacher-typed Korean or free slide text; custom images / PDFs; drawing on the slide.
+- Native apps (the App Store track is deferred); a Chromecast / AirPlay integration (the OS mirrors the browser).
+- Authoring new teaching content; story illustrations for the four quest story-sequences (they render text-and-Hoya, §3.4 `sequence`); the full stroke-order refinement (F-005 / F-008).
+- Server persistence of anything (§3.15).
+
+## 5. Tests
+
+| File | Level | Coverage |
+|---|---|---|
+| `packages/content-schema/src/__tests__/lecture.test.ts` | unit, 100 % | block and deck bounds, `.strict()` rejections (including a `picker.labels` key and a `labels`-like smuggled key), defaults, picker label class in the **message** schemas (Hangul + accents + "M. K."), `ready` / `roster` message schemas (wrong ns, wrong version, extra key, 61 labels, 21-character label), title class (Hangul title ok, emoji rejected), worst-case fragment length, codec round trip, oversize, bad base64, wrong version, UTF-8 (Hangul title) |
+| `apps/mobile/src/logic/lecture/__tests__/deck-builder.test.ts` | unit, 100 % | episode order; every scope kind -> slide kind; letters once per deck; fixed-seed quiz determinism (same deck twice = identical slides); unknown id / preview episode / unsupported step / small scope / missing romanization -> counted skips; revisit chars -> jamo ids; quiz `previous` vs `all`; story slides carry only the story's fields; deck always ends with `end`; zero slides |
+| `.../controls.test.ts` | unit, 100 % | `next` reveals before advancing; `prev` lands on the last reveal; skipped slides jumped; bounds; overlay precedence (blank / pause swallow, timer corner vs full); `Esc` behaviour; goto clamp |
+| `.../keymap.test.ts` | unit | every key in §3.5 maps to the right event; modifiers ignored; clicker keys |
+| `.../picker.test.ts` | unit, 100 % | no repeat until the bag is empty, undo, skip returns the label, reset, numbers mode, empty labels, injected rng |
+| `.../timer.test.ts` | unit, 100 % | presets, +30 s, pause / resume, done, fake clock, ring fraction only increases |
+| `.../stage-scale.test.ts` | unit, 100 % | 16:9, 4:3, 16:10, 21:9 (letterbox), portrait, 0x0 |
+| `.../build-steps.test.ts` | unit | `buildsFor` per kind with `always` vs `tap`; `strokeGuide` off |
+| `.../recent.test.ts` | unit | max 10, corrupt storage, `lastSlideKey`, a saved item has no field that could hold a label |
+| `.../roster-message.test.ts`, `picker-labels.test.ts` | unit, 100 % | accept only from `window.opener` + allowed origin + schema + matching `deckId` / `mode` / `count`; every other combination ignored silently; labels cleared on exit; no storage or telemetry call (spy) |
+| `.../presenter-isolation.test.ts` | unit | forbidden imports (§3.9) fail with file + line |
+| `apps/mobile/src/platform/__tests__/presenter.web.test.ts` | platform, >= 70 % | route detection; fullscreen / wake lock / orientation feature-detect and failure tolerance; offline-ready flag; fragment read + `replaceState` + fixed `document.title`; `announceReady` posts only to `window.opener` and only to allowed origins; `playChime` mute |
+| `packages/design-system/src/__tests__/tokens-parity.test.ts`, `contrast.test.ts` (extend) | unit | `presenter.v1.md` rows = `presenter`; >= 7:1 pairs |
+| `scripts/__tests__/build-presenter-font.test.mjs` | unit | glyph list derivation from fixtures; `--check` fails on a missing glyph |
+| `apps/web/src/lib/console/__tests__/lecture.test.ts` | unit, 90 % | plan -> blocks; revisit chips; `anonymizeRoster` forces initials and hides names; first-name extraction; roster message carries only the labels of the chosen mode (`numbers` sends none); **property test: for every picker mode and a roster of awkward names (Hangul, accents, hyphen, apostrophe) the built URL (path, query and fragment, decoded) contains no label and no roster substring**; title containing a roster first name or alias is rejected; banned words in the title rejected; emoji / other scripts in the title rejected, Hangul allowed |
+| `apps/web/src/lib/console/__tests__/lecture-link.test.ts` | unit, 90 % | answers `ready` only for a window it opened, from the app origin, with a valid schema and the open deck's id; targetOrigin is the exact app origin, never `*`; popup-blocked path |
+| `apps/web/src/lib/console/__tests__/routing.test.ts` (extend) | unit | `ROUTES.spaceLecture` |
+| `apps/web/src/lib/console/__tests__/copy.test.ts` (extend) | unit | lecture strings pass the caregiver ban list |
+| `apps/mobile/e2e/web/presenter.spec.ts` (new, Playwright; per-describe `test.use({ viewport, isMobile: false, hasTouch: false })` overriding the Pixel 5 default of `playwright.config.ts:15`, at 1280x720 and 1024x768 landscape; created in PR 6 and extended by PRs 7-9) | e2e | `#root` not capped; open `/present#d=…`, address bar loses the fragment and `document.title` is the fixed string; Start; step through reveals with `ArrowRight` / `PageDown`; `B` blank and back; timer and picker; skip a slide in the grid; no Korean voice (stubbed `speechSynthesis` with no `ko` voice) shows the teacher chip and text prompt; **offline reload** of a recent deck (same pattern as `offline.spec.ts`: wait for `serviceWorker.controller`, `context.setOffline(true)`); IndexedDB key set (`idb-keyval` `keys()` read through `page.evaluate`) unchanged except allowed keys; reduced-motion emulation; no console errors |
+| `apps/mobile/e2e/web/presenter-roster.spec.ts` (new) | e2e | cross-origin hand-off without a second server: `context.route('http://localhost:3000/**')` fulfils a tiny opener page whose click handler runs `window.open('http://localhost:4173/present#d=<deck>')`, answers the presenter's `ready` with a `roster` of two fake names, then the test asserts: the picker draws one of them; **no request URL, `page.url()`, popup URL history entry or `document.title` contains either name**; a reload of the presenter gets the names again while the opener is open; opening the same URL directly (no opener) shows numbers and the "Names come from the console page" line; a message from another origin or from a non-opener window is ignored |
+| Screenshots (not a test gate) | manual | `presenter.spec.ts` and `tablet-layout.spec.ts` call a `shot(page, name)` helper that writes PNGs to `e2e/web/__shots__/` (git-ignored) only when `HR_SHOTS=1`; the PR author attaches one slide of each kind at 1280x720 and 1024x768 (CLAUDE.md §9: screenshots required for UI PRs). `/design-preview` (F-VR-001) is an `apps/web` page that re-draws design-system primitives in plain HTML and cannot render the RN presenter, so it is not used |
+| Manual (device list in the PR) | manual | iPad on HDMI (Safari tab and home-screen PWA), a Chromebook, a Windows laptop with a clicker, a TV browser; the Korean voice check on each; font rendering of the subset at 380 units on a real projector; native-speaker read of the letter slides and the stroke guide caption |
+
+Coverage: `packages/content-schema` 100 %, `apps/mobile` logic 90 %, platform 70 %, `apps/web` verification logic 90 %.
+
+## 6. Rollout and PR breakdown (dependency order)
+
+Each PR is one reviewable change with its tests; size S < 300 changed lines, M < 700, L only where stated. Every UI PR links its design mock (`design/screens/…`, produced by the owner in the manual design step, CLAUDE.md §5) and attaches screenshots; a UI PR waits for its mock.
+
+| PR | Content | Size | Depends on |
+|---|---|---|---|
+| 0 | `docs(design)`: promote `wireframes/lecture-presenter.md` to `design/wireframes/classroom/lecture-presenter.md` (split per screen when the owner wants), F-TCH-001 §3.4 / §10.4 and `projection-mode.md` header notes, `10-app-map.md` rows (A15, C10, persona, screen table, flow), `design/wireframes/README.md` index, `TELEMETRY-NAMES.md` rows | S | none |
+| 1 | `feat(content-schema)`: `lecture.ts` (deck, blocks, picker mode, ready / roster messages, `LECTURE_CONSOLE_ORIGINS`) + `lecture-codec.ts` + telemetry names (4) + tests | S | none |
+| 2 | `feat(design-system)`: `presenter` tokens + `design/tokens/presenter.v1.md` + drift script kind + contrast pairs | S | F-LAYOUT-001 PR 1 |
+| 3 | `feat(mobile)`: presenter font subset script + committed woff2 + `OFL.txt` + glyph sidecar + `@font-face` in the shell + glyph `--check` in CI | M | 2, **owner OK for the bundled font (§8)** |
+| 4 | `feat(mobile)`: pure core A, `logic/lecture/{controls,keymap,stage-scale,timer,picker,picker-labels,roster-message}.ts` + tests | M | 1 |
+| 5 | `feat(mobile)`: pure core B, `deck-builder`, `build-steps`, `recent`, `content.ts`, `presenter-isolation.test.ts` | M | 1, 4 |
+| 6 | `feat(mobile)`: presenter shell: `index.ts` branch, `PresenterApp`, `platform/presenter(.web).ts` (route, fragment, `announceReady`, key / fullscreen / wake lock / orientation), `Stage`, `ControlBar`, `StartScreen`, title / letter / end slides, `StrokeHint` moved to `components/`, `presenter.spec.ts` and `presenter-roster.spec.ts` (first cases); emits `lecture.start`, `lecture.complete`, `lecture.deck_rejected` | L (the one large PR: it is the smallest shippable shell) | 3, 5, F-LAYOUT-001 PR 2a, F-AUDIO-004 A-4a |
+| 7 | `feat(mobile)`: slides syllable, vocab (cards), sequence, card, activity | M | 6 |
+| 8 | `feat(mobile)`: presenter home (Recent + Quick lesson + language chips) | M | 6 |
+| 9 | `feat(mobile)`: quiz slides + shape markers, timer / picker / blank / pause / grid / help overlays, voice and no-Korean fallbacks; emits `lecture.tool_used` | M | 7, F-AUDIO-004 A-5a |
+| 10 | `feat(web)`: console page, `lib/console/{lecture,lecture-link}.ts`, `APP_URL` in `config.ts`, `ROUTES.spaceLecture`, entry buttons, catalogue mirror + generator, copy (`console.lecture`) | M | 1 (functionally useful after 6) |
+| 11 | `feat(mobile)`: story slides (`StoryScene`, checks) | M | 6, F-STORY-001 / 002 shipped |
+| 12 | `feat(mobile)`: vocab topics adapter (`sources/vocab.ts`) | S | 7, F-VOC-001 |
+
+PR 0, 1, 2, 10 can run in parallel with the layout PRs; the presenter (PR 6) cannot ship before F-LAYOUT-001 PR 2a (uncapped `#root`, manifest `any`). Merge `telemetry.ts` / `index.ts` changes (PR 1) serially with the other specs' name PRs (`spec-wave-2026-10.md` §5).
+
+**Shared files** (expect mechanical rebases): `packages/content-schema/src/schemas/telemetry.ts`, its exact-list test and `src/index.ts` (PR 1; all other specs) · `packages/design-system/src/tokens.ts`, `design/tokens/`, `scripts/check-token-drift.mjs`, `tokens-parity.test.ts` (PR 2; F-LAYOUT-001 PR 1, F-LEARN-001 PR 3) · `apps/mobile/index.ts` (PR 6) · `scripts/pwa-postbuild.mjs` (PR 3 font-face; F-LAYOUT-001 PR 2a, F-AUDIO-004 A-6) · `apps/mobile/src/screens/minigames/StrokeHint.tsx` path (PR 6; any open PR that imports it from `screens/minigames/`, re-exported to keep them working) · `apps/web/src/app/teach/space/page.tsx`, `plan/page.tsx`, `lib/console/{routing,config,copy}.ts` (PR 10; F-PLAN-002, F-I18N-001 PR 8-11) · `apps/mobile/src/platform/audio*.ts` and `store/audio-store.ts` (read only, via F-AUDIO-004's public surface).
+
+## 7. Dependencies
+
+- **Upstream**: F-LAYOUT-001 PR 1 and PR 2a (hard); F-AUDIO-004 A-4a / A-5a (voice capability, `audio-store`, `unlockAudio`, and the text fallback: without them PR 6 can ship only with a minimal local capability check and no quiz audio); F-I18N-001 PR 1-4 (`UiLocale`, `RomanizationMode` already in `schemas/locale.ts`; `KoreanText` PR 4; messages); F-CNT-002 (`exampleWordRomanization`, story-sequence romanization, `syllableSplit` in `romanization/rr.ts:198`); F-QUEST-002 (`soundHint`, `spokenFor`); F-STORY-001/002/003 (stories, `StoryScene`, checks) for PR 11; F-VOC-001 for PR 12; F-PLAN-001 / F-CONSOLE-001 (shipped).
+- **Downstream**: F-PLAN-002 (the catalogue replaces the two mirrors), F-TCH-002/003 (class builder, worksheets reuse the deck), dual-screen and lecture-code follow-ups.
+
+## 8. Unverified assumptions and open items
+
+- **TD5** (class timer and picker are teacher tools) is **confirmed by the owner** (answers recorded 2026-10-10). The standing limits stay in the spec: no alarm, no per-learner anything, no ranking or score.
+- **Fragment privacy (resolved)**: the deck fragment now carries ids, a seed, options and the picker mode / count only, no name and no initial, so browser history, sync or a projected address bar can leak nothing about a learner. Residual items: (1) the **deck title** is teacher-typed and travels in the URL, so the console blocks a title that contains a roster first name or alias (§3.10), but it cannot detect a name that is not in the roster; the setup page says "Do not put a student's name in the title"; (2) `window.opener` is kept only when the page is opened with `window.open` from the console and no `Cross-Origin-Opener-Policy: same-origin` is set (§3.2 step 6); on an iOS home-screen PWA the console tab and the presenter are separate contexts and the hand-off still works only if the console opened the presenter in Safari; if `window.opener` is `null` the picker runs in numbers, which is a degraded but private outcome; (3) if the owner later wants shareable links with initials, initials could be put back in the fragment: that is an owner decision, not a spec default.
+- **Font**: bundling Noto Sans KR Bold (SIL OFL 1.1) is the first third-party font in the app (`typography.family.sansKr` is `System` today, `tokens.ts:130`); D7 says "no external assets" for visuals, and a font is arguably outside that rule, so **the owner should confirm** before PR 3; without it the presenter uses the system Hangul font and the UX-24 risk (different glyph shapes per OS) stays. Size: no `pyftsubset` or Noto Sans KR file was available in this environment; the 150 KB budget and the glyph-count estimate (a few hundred to about 1,500 syllables with stories) are estimates. The fallback ladder in §3.6 is the plan if the budget fails. Licence: Noto Sans KR is OFL 1.1 (to be re-confirmed from the file shipped); the register of shipped assets gets a row in PR 3.
+- **Stroke guide accuracy** stays "simplified" until a native speaker reviews each jamo (`reviewedStrokeIds`); this may disappoint teachers on day one. Whether to default `strokeGuide` to off for unreviewed letters is an owner call; the spec defaults to on with the caption.
+- **Vocabulary and story shapes** are read through adapters because F-VOC-001 is not yet in `docs/specs/` on `main` (it is in review on the vocab branch) and the F-STORY-001/002 field names (`sceneKorean`, `tiers[].scenes`, `StoryScene`, `story-index.ts` as the review gate) are taken from the merged specs; only `logic/lecture/sources/*.ts` changes if they differ.
+- **`navigator.serviceWorker.controller`** as the "offline ready" signal is non-null only after the worker has claimed the page; `clientsClaim: true` (`pwa-postbuild.mjs:97`) should make that true on the first visit's reload — not tested.
+- **`screen.orientation.lock('landscape')`** and `requestFullscreen` behaviour on iPadOS Safari tabs and Chromebooks, and clicker key codes on specific remotes, need the manual device list.
+- **`잠깐` (jamkkan, "wait a moment")** on the Pause overlay and the activity preset names need a native-speaker and es / ko review before those locales ship.
+- The 30-block cap and 8 KB fragment limit assume short ids (<= 64 chars) and a 60-character title; the worst-case test is the guard (labels are no longer in the fragment).
+- Whether the console's Lecture button should also appear for `school` spaces (admins) is left off: a school admin has no class to teach; teachers inside a class use the class space.
+- **Teacher mute persists device-wide**: `audio-store.setMuted` writes `device:audio` (F-AUDIO-004 AD7), so a teacher who un-mutes on a shared family iPad also un-mutes the learner app. Cheap alternative if it bothers the owner: a session-only mute action in `audio-store` used by the presenter (needs an F-AUDIO-004 amendment).
+- **CI time**: the new Playwright specs run in `web-app.yml` (all `apps/mobile/e2e/web` specs on every PR that touches `apps/mobile` or `packages/`, 20-minute job). If the job nears 12 minutes, shard it (`--shard`) rather than moving specs to nightly.

@@ -73,6 +73,15 @@ F-XXX-<slug>.md
 - `F-STORY-004-story-shelf-home-library.md` — story shelf, Home card, Library categories · **ready**
 - `F-STORY-005-episode-catalogue-grid.md` — 24 heritage stories placed on the 7x5 grid · **ready**
 - `F-STORY-006-card-award-model.md` — card award model (31 unearnable cards), story and set cards · **ready**
+- `F-VOC-001-vocab-schema-pipeline.md` — vocabulary schema, `content/vocab/` pipeline, sense registry · **ready**
+- `F-VOC-002-wordart-svg-system.md` — hand-drawn WordArt SVG glyph system and vocabulary colour tokens · **ready**
+- `F-VOC-003-topic-picker-flashcards.md` — Words entry, topic picker, flashcards · **ready**
+- `F-VOC-004-speed-round.md` — speed round, spark meter, opt-in Challenge mode · **ready**
+- `F-VOC-005-word-progress-srs-sync.md` — per-word progress, Leitner boxes, sync merge, caregiver summary · **ready**
+- `F-PLC-001-placement-test.md` — level check with selectable test language, adaptive ladder, route seed · **ready**
+- `F-PLAN-002-curriculum-planner.md` — curriculum generator by level and duration, console wizard, self-route · **ready**
+- `F-TCH-004-lecture-mode.md` — teacher lecture mode for tablets and projectors · **ready**
+- `F-LAYOUT-001-responsive-tablet-landscape.md` — tablet, landscape and split-pane layout · **ready**
 - `F-QUEST-002` amended: initial ㅇ is spoken by its name (see F-AUDIO-004)
 
 ### Phase 2 / planned
