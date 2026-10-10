@@ -214,4 +214,20 @@ describe("validate-content.mjs", () => {
       rmSync(root, { recursive: true, force: true });
     }
   });
+
+  test("content/stories/research is research data, not UI: Korean fields there are not flagged, shipped story JSON still is", () => {
+    const root = makeRoot();
+    try {
+      writeContent(root, "stories/research/x.final.json", { claim_ko: "한글은 1443년에 만들어졌어요", title: "국가유산포털" });
+      let r = run(root);
+      assert.equal(r.status, 0, r.stdout);
+      assert.match(r.stdout, /no \.json files under content/); // research is skipped: nothing left to scan
+      writeContent(root, "stories/shipped.json", { claim_ko: "한글은 1443년에 만들어졌어요" });
+      r = run(root);
+      assert.notEqual(r.status, 0, r.stdout);
+      assert.match(r.stdout + r.stderr, /korean-in-ui-field/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
 });

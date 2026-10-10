@@ -1,0 +1,2449 @@
+{
+  "cluster": "records-joseon",
+  "episodes": [
+    {
+      "id": "story-sillok-royal-historians",
+      "title_en": "Hoya Meets the Royal Historians",
+      "title_ko": "호야, 사관을 만나다",
+      "theme": "letters",
+      "heritage_type": "documentary",
+      "recommended_stage": 1,
+      "minutes": 4,
+      "summary_en": "Hoya learns who wrote down the words of Joseon kings and why even the king could not read their notes. A real 1404 entry from the Annals shows how faithfully they recorded.",
+      "learning_goals": [
+        "Know that 사관 (sagwan) were royal historians who recorded what the king and officials said and did.",
+        "Know that the historians' draft notes, 사초 (sacho), were supposed to be kept secret, even from the king.",
+        "Retell the 1404 entry in which King Taejong asked that the historian not be told of his fall, and the historian recorded it anyway.",
+        "Know that the Annals (실록, sillok) cover 472 years and 25 kings, from Taejo to Cheoljong.",
+        "Recognize and read 기록, 사관, 사초, 말 and 실록 with romanization."
+      ],
+      "scenes": [
+        {
+          "n": 1,
+          "narration_en": "Hoya the little tiger has a big question: how do we know what kings said hundreds of years ago? Because people wrote it down! In the Joseon kingdom, special officials recorded the work of the royal court every day.",
+          "korean": "기록",
+          "romanization": "girok",
+          "gloss_en": "record",
+          "illustration": "A small friendly tiger cub sitting on a stack of old thread-bound books, head tilted with curiosity; warm hanji-paper background.",
+          "fact_ids": [
+            "f1"
+          ]
+        },
+        {
+          "n": 2,
+          "narration_en": "These officials were the 사관, the royal historians. Wherever the king met his officials, a historian was there, writing down what they saw and heard.",
+          "korean": "사관",
+          "romanization": "sagwan",
+          "gloss_en": "royal historian",
+          "illustration": "A Joseon palace hall: the king on a raised seat, officials kneeling in rows, and at the side a historian in official dress and a black hat writing with a brush on paper.",
+          "fact_ids": [
+            "f2"
+          ]
+        },
+        {
+          "n": 3,
+          "narration_en": "Joseon had eight full-time historians, and many other officials also served as part-time historians. Their notes were called 사초, which means 'draft history.'",
+          "korean": "사초",
+          "romanization": "sacho",
+          "gloss_en": "draft history notes",
+          "illustration": "Close-up of hands holding a calligraphy brush over sheets of handwritten paper, an inkstone and ink stick beside them.",
+          "fact_ids": [
+            "f3",
+            "f4"
+          ]
+        },
+        {
+          "n": 4,
+          "narration_en": "The rule was strict: no one was supposed to read the 사초, not even the king. This helped the historians write fairly and protected them.",
+          "korean": "사초는 왕도 볼 수 없어요.",
+          "romanization": "Sachoneun wangdo bol su eopseoyo.",
+          "gloss_en": "Even the king cannot see the sacho.",
+          "illustration": "A closed wooden document box tied with a red cord; the king, seen from behind, walking past it without opening it.",
+          "fact_ids": [
+            "f5"
+          ]
+        },
+        {
+          "n": 5,
+          "narration_en": "One day in 1404, King Taejong went hunting. His horse stumbled, and he fell off. Luckily, he was not hurt!",
+          "korean": "말",
+          "romanization": "mal",
+          "gloss_en": "horse (말 can also mean 'words')",
+          "illustration": "A gentle countryside scene: a brown horse that has stumbled on grass, and a king in plain riding clothes sitting up on the ground, unhurt, brushing off his sleeve.",
+          "fact_ids": [
+            "f6"
+          ]
+        },
+        {
+          "n": 6,
+          "narration_en": "Taejong looked around and said, 'Do not let the historian know!' But that very sentence is in the Annals today. The historian wrote down even this!",
+          "korean": "사관이 알게 하지 말라.",
+          "romanization": "Sagwani alge haji malla.",
+          "gloss_en": "Do not let the historian know.",
+          "illustration": "The king glancing over his shoulder with a finger to his lips, while in the background a historian quietly writes; Hoya peeks from behind a tree, smiling.",
+          "fact_ids": [
+            "f6",
+            "f7"
+          ]
+        },
+        {
+          "n": 7,
+          "narration_en": "The historians' notes became the most important source for the 실록, the Annals of the Joseon Dynasty. The Annals cover 472 years and 25 kings, from Taejo to Cheoljong, and are on UNESCO's Memory of the World Register.",
+          "korean": "실록",
+          "romanization": "sillok",
+          "gloss_en": "the Annals (official history of each reign)",
+          "illustration": "A long row of old thread-bound books standing in a wooden case, with Hoya proudly pointing at them.",
+          "fact_ids": [
+            "f8",
+            "f9",
+            "f10"
+          ]
+        }
+      ],
+      "facts": [
+        {
+          "id": "f1",
+          "claim_en": "In Joseon, royal historians (sagwan) wrote down the events of the royal court every day.",
+          "claim_ko": "조선의 사관은 궁중에서 일어난 일을 매일 기록하였다.",
+          "sources": [
+            {
+              "title": "조선시대의 기록 수호자 '사관'이란? (어린이 조선왕조실록)",
+              "publisher": "국가기록원 (National Archives of Korea)",
+              "url": "https://theme.archives.go.kr/next/silloc/archiveGuard.do?submenu=2",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "사초란 사관이 왕 옆에서 그날그날 일어난 일들을 빠짐없이 기록한 것입니다. 사관은 매일 사초를 작성하여 춘추관에 보고하고"
+            },
+            {
+              "title": "조선왕조실록 소개 (실록 편찬과 관리)",
+              "publisher": "국사편찬위원회 조선왕조실록 DB (National Institute of Korean History)",
+              "url": "https://sillok.history.go.kr/intro/intro.do",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "그들의 사초는 임금의 언행을 비롯하여 조정에서의 국사 논의와 집행 ... 보고 들은대로 직필하여 기록한 것이다."
+            }
+          ]
+        },
+        {
+          "id": "f2",
+          "claim_en": "Historians attended wherever the king met his officials and recorded what they saw and heard.",
+          "claim_ko": "사관은 왕과 신하들이 자리하는 곳에 늘 참석하여 보고 들은 것을 기록하였다.",
+          "sources": [
+            {
+              "title": "실록은 누가 기록했을까",
+              "publisher": "국가기록원 (National Archives of Korea), 조선왕조실록의 어제와 오늘",
+              "url": "https://theme.archives.go.kr/next/sillok/sub2_2.do",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "사관은 경연(經筵), 왕이 평상시 거처하는 편전(便殿), 주요 국정 회의, 행사 등 왕과 관료들이 자리하는 곳에 항상 참석하여 자신이 보고 들은 것을 기록하였습니다."
+            },
+            {
+              "title": "조선시대의 기록 수호자 '사관'이란? (어린이 조선왕조실록)",
+              "publisher": "국가기록원 (National Archives of Korea)",
+              "url": "https://theme.archives.go.kr/next/silloc/archiveGuard.do?submenu=2",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "사관은 국왕이 있는 곳이라면 어디라도 가서 국왕의 언행 및 행동을 기록했습니다."
+            },
+            {
+              "title": "Memory of the World Register – Nomination Form: Republic of Korea – Seungjeongwon Ilgi, The Diaries of the Royal Secretariat (PDF)",
+              "publisher": "UNESCO Memory of the World",
+              "url": "https://media.unesco.org/sites/default/files/webform/mow001/republic_of_korea_seungjeongwon_iilgi.pdf",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "§5.3: \"The meeting between king and court functionaries was never made secretly but had to be made in the presence of a secretary and a historian.\""
+            }
+          ]
+        },
+        {
+          "id": "f3",
+          "claim_en": "Joseon had eight full-time historians (two bonggyo, two daegyo and four geomyeol of the Yemungwan), and many other civil officials served concurrently as historians.",
+          "claim_ko": "조선의 전임 사관은 예문관의 봉교 2명, 대교 2명, 검열 4명으로 모두 8명이었고, 많은 문관이 사관 업무를 겸하였다.",
+          "sources": [
+            {
+              "title": "실록은 누가 기록했을까",
+              "publisher": "국가기록원 (National Archives of Korea), 조선왕조실록의 어제와 오늘",
+              "url": "https://theme.archives.go.kr/next/sillok/sub2_2.do",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "전임사관은 예문관의 하급 관리인 봉교(奉敎, 정7품) 2명, 대교(待敎, 정8품) 2명, 검열(檢閱, 정9품) 4명으로 구성되었는데 이들을 한림(翰林) 8원이라 하였습니다."
+            },
+            {
+              "title": "조선왕조실록(朝鮮王朝實錄)",
+              "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
+              "url": "https://encykorea.aks.ac.kr/Article/E0052160",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "기사관을 겸임하고 있는 예문관의 봉교(奉敎, 정7품) 2명, 대교(待敎, 정8품) 2명, 검열(檢閱, 정9품) 4명이 바로 전임 사관이었다."
+            },
+            {
+              "title": "조선왕조실록 소개 (실록 편찬과 관리)",
+              "publisher": "국사편찬위원회 조선왕조실록 DB (National Institute of Korean History)",
+              "url": "https://sillok.history.go.kr/intro/intro.do",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "예문관의 봉교(奉敎, 정7품) 2인, 대교(待敎, 정8품) 2인, 검열(檢閱, 정9품) 4인이 중심이 되었지만, 홍문관과 승정원, 규장각의 전 관원 ... 많은 문관(文官)들이 겸직하고 있었다."
+            }
+          ]
+        },
+        {
+          "id": "f4",
+          "claim_en": "The historians' draft records were called sacho (사초, 史草), 'draft history'.",
+          "claim_ko": "사관이 작성한 초고 기록을 사초(史草)라고 하였다.",
+          "sources": [
+            {
+              "title": "조선왕조실록 소개 (실록 편찬과 관리)",
+              "publisher": "국사편찬위원회 조선왕조실록 DB (National Institute of Korean History)",
+              "url": "https://sillok.history.go.kr/intro/intro.do",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "그들이 어전에 입시하여 기록한 것이나 각 관아에서 수집한 자료들이 사초가 되는 것이다."
+            },
+            {
+              "title": "조선시대의 기록 수호자 '사관'이란? (어린이 조선왕조실록)",
+              "publisher": "국가기록원 (National Archives of Korea)",
+              "url": "https://theme.archives.go.kr/next/silloc/archiveGuard.do?submenu=2",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "사초란 사관이 왕 옆에서 그날그날 일어난 일들을 빠짐없이 기록한 것입니다."
+            },
+            {
+              "title": "조선왕조실록(朝鮮王朝實錄)",
+              "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
+              "url": "https://encykorea.aks.ac.kr/Article/E0052160",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "사초는 그 극비성 때문에 사관 이외에는 아무도 보지 못하게 하였다."
+            }
+          ]
+        },
+        {
+          "id": "f5",
+          "claim_en": "By rule, no one, not even the king, was allowed to read the sacho; the rule was meant to let historians record fairly and to protect their status.",
+          "claim_ko": "규정상 왕을 포함해 누구도 사초를 볼 수 없었으며, 이는 사관이 공정하게 기록하고 신분을 보장받도록 하기 위한 것이었다.",
+          "sources": [
+            {
+              "title": "조선왕조실록 정족산사고본 (朝鮮王朝實錄 鼎足山史庫本) – 기본 정보·국가유산 설명",
+              "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, National Heritage Portal)",
+              "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?VdkVgwKey=11,01510100,11&pageNo=1_1_1_1",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "국왕이라도 함부로 실록이나 사초를 볼 수 없도록 함으로써 사관들이 공정하게 역사를 기록할 수 있는 제도적 장치를 마련하였다."
+            },
+            {
+              "title": "조선왕조실록 소개 (실록 편찬과 관리)",
+              "publisher": "국사편찬위원회 조선왕조실록 DB (National Institute of Korean History)",
+              "url": "https://sillok.history.go.kr/intro/intro.do",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "그 것을 기록한 사관들의 신분보장을 위하여 국왕을 포함 그 어느 누구도 열람하지 못하게 하였다."
+            },
+            {
+              "title": "조선왕조실록(朝鮮王朝實錄)",
+              "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
+              "url": "https://encykorea.aks.ac.kr/Article/E0052160",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "사초는 그 극비성 때문에 사관 이외에는 아무도 보지 못하게 하였다. 전제 왕권이라도 사초 열람은 불가능하였다."
+            }
+          ]
+        },
+        {
+          "id": "f6",
+          "claim_en": "In 1404 (4th year of King Taejong, 2nd lunar month, 8th day), King Taejong fell from his horse while hunting but was not hurt.",
+          "claim_ko": "1404년(태종 4년 2월 8일) 태종은 사냥하다가 말이 거꾸러져 말에서 떨어졌으나 다치지 않았다.",
+          "sources": [
+            {
+              "title": "태종실록 7권, 태종 4년 2월 8일 기묘 4번째기사 「임금이 사냥하다가 말에서 떨어졌으나 사관에게 알리지 못하게 하다」",
+              "publisher": "국사편찬위원회 조선왕조실록 DB (National Institute of Korean History)",
+              "url": "https://sillok.history.go.kr/id/kca_10402008_004",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "태종실록 7권, 태종 4년 2월 8일 기묘 4/4 기사 (1404년): \"친히 활과 화살을 가지고 말을 달려 노루를 쏘다가 말이 거꾸러짐으로 인하여 말에서 떨어졌으나 상하지는 않았다.\" 原文: \"因馬仆而墜, 不傷。\""
+            },
+            {
+              "title": "조선시대의 기록 수호자 '사관'이란? (어린이 조선왕조실록)",
+              "publisher": "국가기록원 (National Archives of Korea)",
+              "url": "https://theme.archives.go.kr/next/silloc/archiveGuard.do?submenu=2",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "1404년(태종 4년)에 태종은 사냥을 나갔다가 실수로 말에서 떨어졌습니다."
+            }
+          ]
+        },
+        {
+          "id": "f7",
+          "claim_en": "Taejong told those around him, 'Do not let the historian know,' and this sentence itself was recorded and appears in the Annals.",
+          "claim_ko": "태종은 좌우에게 \"사관이 알게 하지 말라\"고 말했지만, 사관은 이 말까지 기록하여 실록에 남았다.",
+          "sources": [
+            {
+              "title": "태종실록 7권, 태종 4년 2월 8일 기묘 4번째기사 「임금이 사냥하다가 말에서 떨어졌으나 사관에게 알리지 못하게 하다」",
+              "publisher": "국사편찬위원회 조선왕조실록 DB (National Institute of Korean History)",
+              "url": "https://sillok.history.go.kr/id/kca_10402008_004",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "\"좌우를 돌아보며 말하기를, '사관(史官)이 알게 하지 말라.' 하였다.\" 原文: \"顧左右曰: 勿令史官知之。\""
+            },
+            {
+              "title": "조선시대의 기록 수호자 '사관'이란? (어린이 조선왕조실록)",
+              "publisher": "국가기록원 (National Archives of Korea)",
+              "url": "https://theme.archives.go.kr/next/silloc/archiveGuard.do?submenu=2",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "그러나 당시 사관은 태종이 한 말까지도 사초에 기록했습니다."
+            }
+          ]
+        },
+        {
+          "id": "f8",
+          "claim_en": "The historians' sacho were the most important source used to compile the Annals (Sillok).",
+          "claim_ko": "사관의 사초는 실록 편찬에서 가장 중요한 자료였다.",
+          "sources": [
+            {
+              "title": "조선왕조실록 소개 (실록 편찬과 관리)",
+              "publisher": "국사편찬위원회 조선왕조실록 DB (National Institute of Korean History)",
+              "url": "https://sillok.history.go.kr/intro/intro.do",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "실록 편찬 자료 중에서 가장 중요한 것은 사관들의 사초였다."
+            },
+            {
+              "title": "조선왕조실록 정족산사고본 (朝鮮王朝實錄 鼎足山史庫本) – 기본 정보·국가유산 설명",
+              "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, National Heritage Portal)",
+              "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?VdkVgwKey=11,01510100,11&pageNo=1_1_1_1",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "사관(史官)이 작성한 사초(史草)와 시정기(時政記), 『승정원일기』·『일성록』 등의 정부 기록, 개인 문집 등을 이용하여 실록을 편찬하였다."
+            }
+          ]
+        },
+        {
+          "id": "f9",
+          "claim_en": "The Annals of the Joseon Dynasty cover 472 years (1392-1863) and 25 kings, from King Taejo to King Cheoljong.",
+          "claim_ko": "조선왕조실록은 태조부터 철종까지 25대 472년간(1392~1863)의 역사를 기록하였다.",
+          "sources": [
+            {
+              "title": "조선왕조실록 정족산사고본 (朝鮮王朝實錄 鼎足山史庫本) – 기본 정보·국가유산 설명",
+              "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, National Heritage Portal)",
+              "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?VdkVgwKey=11,01510100,11&pageNo=1_1_1_1",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "『조선왕조실록』은 조선 태조에서부터 조선 철종 때까지 25대 472년간(1392∼1863)의 역사를 편년체로 기록한 책이다."
+            },
+            {
+              "title": "조선왕조실록 소개 (실록 편찬과 관리)",
+              "publisher": "국사편찬위원회 조선왕조실록 DB (National Institute of Korean History)",
+              "url": "https://sillok.history.go.kr/intro/intro.do",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "《태조강헌대왕실록》으로부터 《철종대왕실록》에 이르기까지 472년간에 걸친 25대 임금들의 실록 28종을 일컫는다."
+            },
+            {
+              "title": "조선왕조실록(朝鮮王朝實錄)",
+              "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
+              "url": "https://encykorea.aks.ac.kr/Article/E0052160",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "조선시대 제1대 왕 태조로부터 제25대 왕 철종에 이르기까지 25대 472년간의 역사를 연월일 순서에 따라 편년체로 기록한 역사서."
+            },
+            {
+              "title": "The Annals of the Choson Dynasty",
+              "publisher": "UNESCO Memory of the World",
+              "url": "https://www.unesco.org/en/memory-world/annals-choson-dynasty",
+              "accessed": "2026-10-10",
+              "quote_or_locator": "Registration Year: 1997; Submission Year: 1997; Submitted by: Republic of Korea. Description: \"This collection covers more than 470 years of the history of the dynasty, from the reign of King T'aejo (r. 1392- 1398), the founder, to the reign of King Ch'olchong (r. 1849 - 1863).\" [verified 2026-10-10 on an Internet Archive snapshot of the unesco.org page]"
+            }
+          ]
+        },
+        {
+          "id": "f10",
+          "claim_en": "The Annals were inscribed on UNESCO's Memory of the World Register in 1997.",
+          "claim_ko": "조선왕조실록은 1997년 유네스코 세계기록유산에 등재되었다.",
+          "sources": [
+            {
+              "title": "The Annals of the Choson Dynasty",
+              "publisher": "UNESCO Memory of the World",
+              "url": "https://www.unesco.org/en/memory-world/annals-choson-dynasty",
+              "accessed": "2026-10-10",
+              "quote_or_locator": "Registration Year: 1997; Submitted by: Republic of Korea. [verified 2026-10-10 on an Internet Archive snapshot of the unesco.org page]"
+            },
+            {
+              "title": "조선왕조실록 정족산사고본 (朝鮮王朝實錄 鼎足山史庫本) – 기본 정보·국가유산 설명",
+              "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, National Heritage Portal)",
+              "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?VdkVgwKey=11,01510100,11&pageNo=1_1_1_1",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "1997년 10월 유네스코 세계기록유산에 등재되었다."
+            },
+            {
+              "title": "조선왕조실록(朝鮮王朝實錄)",
+              "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
+              "url": "https://encykorea.aks.ac.kr/Article/E0052160",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "1997년에는 훈민정음과 함께 유네스코 세계기록유산으로 등록되었다."
+            }
+          ]
+        }
+      ],
+      "vocab": [
+        {
+          "ko": "기록",
+          "rr": "girok",
+          "en": "record"
+        },
+        {
+          "ko": "사관",
+          "rr": "sagwan",
+          "en": "royal historian"
+        },
+        {
+          "ko": "사초",
+          "rr": "sacho",
+          "en": "draft history notes"
+        },
+        {
+          "ko": "왕",
+          "rr": "wang",
+          "en": "king"
+        },
+        {
+          "ko": "말",
+          "rr": "mal",
+          "en": "horse; also 'words'"
+        },
+        {
+          "ko": "실록",
+          "rr": "sillok",
+          "en": "annals; official history of a reign"
+        }
+      ],
+      "checks": [
+        {
+          "q_en": "By the rule, who could read the historians' draft notes (사초)?",
+          "options": [
+            "Only the king himself",
+            "No one, not even the king",
+            "Any official at court"
+          ],
+          "answer_index": 1,
+          "fact_id": "f5"
+        },
+        {
+          "q_en": "After falling from his horse, what did King Taejong say?",
+          "options": [
+            "Do not let the historian know!",
+            "Bring me a new horse!",
+            "Write this down quickly!"
+          ],
+          "answer_index": 0,
+          "fact_id": "f7"
+        },
+        {
+          "q_en": "How many years do the Annals of the Joseon Dynasty cover?",
+          "options": [
+            "100 years",
+            "1,000 years",
+            "472 years"
+          ],
+          "answer_index": 2,
+          "fact_id": "f9"
+        }
+      ],
+      "reference_display": "Sources: 국사편찬위원회 조선왕조실록 DB (태종실록 7권, 태종 4년 2월 8일 기묘 4번째기사); 국가유산청 국가유산포털; 국가기록원; 한국민족문화대백과사전; UNESCO Memory of the World",
+      "notes": "Taejong's fall is told exactly as the entry states (不傷, not hurt); the deer-shooting detail and season are omitted (lunar-to-solar conversion not verified from two sources). The secrecy rule is narrated as a rule ('supposed to'): the NIKH introduction notes that in practice some historians avoided frank writing out of fear and that leaks led to tragic purges (e.g., 1498), which are omitted as unsuitable for young learners. Revision: the English-language portal description quote ('Nobody was allowed to read the sacho...') was dropped from f4; the portal's Korean description sentence is kept in f5/f8/f9/f10 (re-checked against a saved copy of the portal page, 2026-10-09/10). The NIKH f9 quote was corrected to '일컫는다'. UNESCO Annals page is paraphrased, not quoted (unesco.org was unreachable on 2026-10-10 for re-quoting). Added 'from Taejo to Cheoljong' (the Annals do not include the Gojong/Sunjong reigns' records, so 25 kings, not 27). Alignment flag: BP05 1.A3 describes the Sillok as 'a diary people wrote every day' - inaccurate; the Sillok was compiled after each king's death from daily drafts (see story-sillok-mountain-archives). Designation numbers are deliberately not used. Narration scene 2: 'with brush and paper' removed (not stated in the cited sources)."
+    },
+    {
+      "id": "story-sillok-mountain-archives",
+      "title_en": "The Annals Hide in the Mountains",
+      "title_ko": "산으로 간 실록",
+      "theme": "letters",
+      "heritage_type": "documentary",
+      "recommended_stage": 2,
+      "minutes": 5,
+      "summary_en": "After a king died, officials turned the historians' notes into the Annals and guarded the books in archives far away in the mountains. Hoya follows the Annals from draft to mountain archive.",
+      "learning_goals": [
+        "Understand that each king's Annals were compiled after his death by a temporary office, the 실록청 (Sillokcheong).",
+        "Know that used drafts were destroyed (in early Joseon, washed in a stream: 세초) to keep secrets and reuse paper.",
+        "Know that copies were kept in several archives (사고), many deep in the mountains, and that two scholars saved the Jeonju copy during a war.",
+        "Know that historians aired the books in the sun every few years (포쇄) and packed them with herbs.",
+        "Learn the words 사고, 산, 책, 햇볕 and 약초."
+      ],
+      "scenes": [
+        {
+          "n": 1,
+          "narration_en": "When a king died, the next king's court set up a temporary office called the 실록청. Its officials collected the historians' 사초 and other court records to write the late king's Annals.",
+          "korean": "실록청",
+          "romanization": "Sillokcheong",
+          "gloss_en": "Office for Annals Compilation",
+          "illustration": "Officials in Joseon robes seated around low tables piled with papers and scrolls, sorting documents in a quiet hall.",
+          "fact_ids": [
+            "f1",
+            "f2"
+          ]
+        },
+        {
+          "n": 2,
+          "narration_en": "They wrote a first draft, corrected it in a second draft, and polished a final draft. Most of the Annals were then printed with movable type.",
+          "korean": "책",
+          "romanization": "chaek",
+          "gloss_en": "book",
+          "illustration": "Three stacks of paper growing neater from left to right, then a wooden tray of small type blocks and freshly printed pages drying.",
+          "fact_ids": [
+            "f3"
+          ]
+        },
+        {
+          "n": 3,
+          "narration_en": "And the used drafts? In early Joseon, they were soaked and washed in a stream near the government paper office. Secrets stayed safe, and the paper could be reused. This was called 세초.",
+          "korean": "세초",
+          "romanization": "secho",
+          "gloss_en": "washing away the drafts",
+          "illustration": "A clear mountain stream with flat rocks; officials gently rinsing sheets of paper as the ink swirls away, Hoya watching from a rock.",
+          "fact_ids": [
+            "f4"
+          ]
+        },
+        {
+          "n": 4,
+          "narration_en": "The finished Annals were kept in special archives called 사고. During a great war in the 1590s, the copies kept in Seoul, Chungju and Seongju were lost. Only the Jeonju copy survived.",
+          "korean": "사고",
+          "romanization": "sago",
+          "gloss_en": "archive for history books",
+          "illustration": "A traditional archive building with a tiled roof and wooden walls; one lantern-lit doorway glowing, suggesting the one surviving copy.",
+          "fact_ids": [
+            "f5"
+          ]
+        },
+        {
+          "n": 5,
+          "narration_en": "Two local scholars, An Ui and Son Hong-rok, used their own money to carry the Jeonju copy and other books to Naejangsan Mountain. They took turns guarding them until the books were handed to the government the next year.",
+          "korean": "내장산",
+          "romanization": "Naejangsan",
+          "gloss_en": "Naejangsan Mountain",
+          "illustration": "Two scholars in plain traditional clothes and wide-brimmed hats leading a small ox cart loaded with wrapped book boxes along a misty mountain path.",
+          "fact_ids": [
+            "f6"
+          ]
+        },
+        {
+          "n": 6,
+          "narration_en": "After the war, new copies were printed from the Jeonju copy, making five sets. Most went to archives deep in the mountains or on an island, such as Odaesan and Taebaeksan, where war was less likely to reach them.",
+          "korean": "산속의 사고",
+          "romanization": "sansogui sago",
+          "gloss_en": "an archive in the mountains",
+          "illustration": "A small walled archive compound nestled among pine-covered mountain ridges, clouds drifting below the peaks.",
+          "fact_ids": [
+            "f7",
+            "f8"
+          ]
+        },
+        {
+          "n": 7,
+          "narration_en": "The books were wrapped in oiled paper and red cloth, then packed in a wooden chest with herbs called cheongung and changpo, which helped protect them from bugs and rot.",
+          "korean": "약초",
+          "romanization": "yakcho",
+          "gloss_en": "medicinal herb",
+          "illustration": "An open wooden chest: books wrapped in red cloth, small cloth pouches of dried herbs tucked at the bottom and on top.",
+          "fact_ids": [
+            "f9"
+          ]
+        },
+        {
+          "n": 8,
+          "narration_en": "Every few years, a historian traveled to each mountain archive on a clear day. The books were taken out and aired in the sun and breeze. This was called 포쇄. Hoya loves sunny days, too!",
+          "korean": "책을 햇볕에 말려요.",
+          "romanization": "Chaegeul haetbyeote mallyeoyo.",
+          "gloss_en": "We dry the books in the sunshine.",
+          "illustration": "Books laid open on mats in a sunny courtyard of a mountain archive, a historian checking pages while a breeze lifts them; Hoya basking nearby.",
+          "fact_ids": [
+            "f10"
+          ]
+        }
+      ],
+      "facts": [
+        {
+          "id": "f1",
+          "claim_en": "Each king's Annals were compiled after his death, during the next reign, by a temporary office called the Sillokcheong.",
+          "claim_ko": "각 왕의 실록은 그 왕이 승하한 뒤 다음 왕 때 임시 기관인 실록청에서 편찬하였다.",
+          "sources": [
+            {
+              "title": "조선왕조실록 정족산사고본 (朝鮮王朝實錄 鼎足山史庫本) – 기본 정보·국가유산 설명",
+              "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, National Heritage Portal)",
+              "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?VdkVgwKey=11,01510100,11&pageNo=1_1_1_1",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "실록 편찬은 국왕이 서거하고 다음 왕이 즉위한 후에 이루어졌다. 실록 편찬을 담당하는 임시 기관으로 실록청을 설치하고"
+            },
+            {
+              "title": "조선왕조실록 소개 (실록 편찬과 관리)",
+              "publisher": "국사편찬위원회 조선왕조실록 DB (National Institute of Korean History)",
+              "url": "https://sillok.history.go.kr/intro/intro.do",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "조선시대의 실록 편찬은 한 왕이 승하하고 다음 왕이 그를 계승하여 즉위한 후에 시작된다. ... 임시로 실록청(實錄廳)이 설치되고"
+            },
+            {
+              "title": "조선왕조실록(朝鮮王朝實錄)",
+              "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
+              "url": "https://encykorea.aks.ac.kr/Article/E0052160",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "왕이 승하하면 다음 왕 때에 임시로 실록청(實錄廳)을 설치하여 전왕대의 실록을 편찬하는 것이 상례였다."
+            }
+          ]
+        },
+        {
+          "id": "f2",
+          "claim_en": "Compilers used the historians' sacho together with other government records such as the Sijeonggi and the Seungjeongwon Ilgi.",
+          "claim_ko": "편찬관들은 사관의 사초와 함께 시정기, 승정원일기 등 정부 기록을 이용하였다.",
+          "sources": [
+            {
+              "title": "조선왕조실록 소개 (실록 편찬과 관리)",
+              "publisher": "국사편찬위원회 조선왕조실록 DB (National Institute of Korean History)",
+              "url": "https://sillok.history.go.kr/intro/intro.do",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "춘추관 시정기(春秋館時政記)와 전왕 재위시의 사관(史官)들이 각자 작성하여 개별적으로 소장하고 있던 사초(史草)를 비롯하여, 《승정원일기》•《의정부등록》 등 정부 주요기관의 기록들이 동원되었고"
+            },
+            {
+              "title": "조선왕조실록 정족산사고본 (朝鮮王朝實錄 鼎足山史庫本) – 기본 정보·국가유산 설명",
+              "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, National Heritage Portal)",
+              "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?VdkVgwKey=11,01510100,11&pageNo=1_1_1_1",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "사관(史官)이 작성한 사초(史草)와 시정기(時政記), 『승정원일기(承政院日記)』·『일성록(日省錄)』등의 정부 기록, 개인 문집 등을 이용하여 실록을 편찬하였다."
+            }
+          ]
+        },
+        {
+          "id": "f3",
+          "claim_en": "Compilation went through three drafts (chocho, jungcho, jeongcho); the final draft was the basis for printing, and most of the Annals are printed books made with movable type.",
+          "claim_ko": "실록은 초초·중초·정초의 3단계를 거쳐 편찬되었고, 정초를 대본으로 인쇄하였으며, 대부분 활자로 인쇄한 간본이다.",
+          "sources": [
+            {
+              "title": "조선왕조실록 소개 (실록 편찬과 관리)",
+              "publisher": "국사편찬위원회 조선왕조실록 DB (National Institute of Korean History)",
+              "url": "https://sillok.history.go.kr/intro/intro.do",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "실록의 편찬은 대체로 3단계를 거치면서 이루어진다. ... 이 정초는 바로 인쇄의 대본이 된다. / 《조선왕조실록》은 대부분 목활자로 인쇄한 간본(刊本)으로 되어 있지만"
+            },
+            {
+              "title": "실록은 누가 기록했을까",
+              "publisher": "국가기록원 (National Archives of Korea), 조선왕조실록의 어제와 오늘",
+              "url": "https://theme.archives.go.kr/next/sillok/sub2_2.do",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "2차 원고인 중초(中草)를 작성하였고 ... 최종 원고인 정초(正草)가 만들어졌습니다. ... 원고가 완성되면 이를 활자로 인쇄하여 편찬이 마무리되었습니다."
+            }
+          ]
+        },
+        {
+          "id": "f4",
+          "claim_en": "In early Joseon, used drafts were washed in a stream outside Jahamun Gate, where the government paper office (Jojiseo) was, to prevent leaks and to recycle the paper; this was called secho. In later Joseon, drafts were mostly burned instead.",
+          "claim_ko": "조선 초기에는 사용한 초고를 조지서가 있던 자하문 밖 차일암 시냇물에 씻어 기밀 누설을 막고 종이를 재생하였는데, 이를 세초라 하였다. 조선 후기에는 대부분 소각하였다.",
+          "sources": [
+            {
+              "title": "조선왕조실록 소개 (실록 편찬과 관리)",
+              "publisher": "국사편찬위원회 조선왕조실록 DB (National Institute of Korean History)",
+              "url": "https://sillok.history.go.kr/intro/intro.do",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "세초는 조선초기에 종이를 재생하기 위하여 사초 등의 자료를 조지서(造紙署)가 있던 자하문(紫霞門) 밖 차일암(遮日巖) 시냇물에 담구어 씻어 내고 재활용한데서 유래하였다. 그러나 조선후기부터 종이의 공급이 원활해지면서 세초는 대부분 소각처리하는 것으로 바뀌었다."
+            },
+            {
+              "title": "조선왕조실록(朝鮮王朝實錄)",
+              "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
+              "url": "https://encykorea.aks.ac.kr/Article/E0052160",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "기밀 누설을 방지하고 동시에 종이를 재생하기 위한 조처로서, 조지서(造紙署)가 있던 자하문(紫霞門) 밖 차일암(遮日巖) 시냇물에서 세초(洗草)하였다."
+            },
+            {
+              "title": "실록은 누가 기록했을까",
+              "publisher": "국가기록원 (National Archives of Korea), 조선왕조실록의 어제와 오늘",
+              "url": "https://theme.archives.go.kr/next/sillok/sub2_2.do",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "편찬에 쓰이지 않은 초초와 중초는 물에 씻어 내용을 흘려버리는 '세초(洗草)' 과정을 거쳐 내용을 남기지 않았습니다."
+            }
+          ]
+        },
+        {
+          "id": "f5",
+          "claim_en": "The Annals were kept in archives (sago). In the Imjin War, which began in 1592, the copies at the Chunchugwan in Seoul and at Chungju and Seongju were lost; only the Jeonju copy survived.",
+          "claim_ko": "실록은 사고에 보관되었다. 1592년 일어난 임진왜란으로 춘추관·충주·성주 사고의 실록은 소실되고 전주사고본만 남았다.",
+          "sources": [
+            {
+              "title": "조선왕조실록 정족산사고본 (朝鮮王朝實錄 鼎足山史庫本) – 기본 정보·국가유산 설명",
+              "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, National Heritage Portal)",
+              "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?VdkVgwKey=11,01510100,11&pageNo=1_1_1_1",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "1592년(선조 25) 임진왜란이 발발하자 ... / 임진왜란을 거치면서 춘추관과 충주· 성주사고의 실록은 소실되었고 전주사고본만 남게 되었다."
+            },
+            {
+              "title": "실록을 보관하는 곳, 사고",
+              "publisher": "국가기록원 (National Archives of Korea), 조선왕조실록의 어제와 오늘",
+              "url": "https://theme.archives.go.kr/next/sillok/sub2_3.do",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "그러나 임진왜란으로 하나의 실록만 남게 되었으며, 유일하게 남은 전주사고본(『태조실록』~『명종실록』)을 바탕으로 ... (연표: 임진왜란 1592-98, 춘추관사고본, 충주사고본, 성주사고본 소실)"
+            },
+            {
+              "title": "조선왕조실록(朝鮮王朝實錄)",
+              "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
+              "url": "https://encykorea.aks.ac.kr/Article/E0052160",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "1592년(선조 25)에 임진왜란이 일어나 춘추관과 충주 · 성주 사고의 실록은 모두 병화(兵火)에 소실되었다."
+            }
+          ]
+        },
+        {
+          "id": "f6",
+          "claim_en": "An Ui and Son Hong-rok, local Confucian scholars, used their private funds to move the Jeonju copy and other books to Naejangsan Mountain, guarded them in turns, and handed them to the government in 1593, the following year.",
+          "claim_ko": "선비 안의와 손홍록은 사재를 털어 전주사고본 실록과 서적을 내장산으로 옮기고 번갈아 지키다가 이듬해(1593년) 정부에 넘겨주었다.",
+          "sources": [
+            {
+              "title": "조선왕조실록(朝鮮王朝實錄)",
+              "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
+              "url": "https://encykorea.aks.ac.kr/Article/E0052160",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "전라도 태인의 선비인 안의(安義)와 손홍록(孫弘祿)이 ... 사재(私財)를 털어서 『태조실록』부터 『명종실록』까지 13대의 실록 804권과 기타 소장 도서들을 모두 정읍의 내장산으로 옮겨놓았다. 그리고 이듬해 7월에 정부에 넘겨줄 때까지 1년여 동안 번갈아가며 지켜"
+            },
+            {
+              "title": "조선왕조실록 정족산사고본 (朝鮮王朝實錄 鼎足山史庫本) – 기본 정보·국가유산 설명",
+              "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, National Heritage Portal)",
+              "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?VdkVgwKey=11,01510100,11&pageNo=1_1_1_1",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "전주 유생 안의(安義), 손홍록(孫弘錄) 등이 전주사고본 실록을 내장산으로 옮김으로써 실록이 병화(兵火)를 면하게 되었다. 전주사고본 실록은 1593년에 조선 정부에 인계되었고"
+            }
+          ]
+        },
+        {
+          "id": "f7",
+          "claim_en": "After the war (1603–1606), the Annals were reprinted from the Jeonju copy, so that five sets in all were kept in five archives.",
+          "claim_ko": "전쟁 후(1603~1606년) 전주사고본을 바탕으로 실록을 다시 인쇄하여, 모두 5부를 다섯 곳의 사고에 보관하였다.",
+          "sources": [
+            {
+              "title": "조선왕조실록 정족산사고본 (朝鮮王朝實錄 鼎足山史庫本) – 기본 정보·국가유산 설명",
+              "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, National Heritage Portal)",
+              "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?VdkVgwKey=11,01510100,11&pageNo=1_1_1_1",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "1603년(선조 36) 7월부터 1606년 3월까지 전주사고본을 바탕으로 4부를 재간행하여 춘추관, 강화, 태백산, 묘향산(뒤에 적상산으로 이전), 오대산 등 5곳의 사고에 보관하였다."
+            },
+            {
+              "title": "조선왕조실록(朝鮮王朝實錄)",
+              "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
+              "url": "https://encykorea.aks.ac.kr/Article/E0052160",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "1603년 7월부터 1606년 3월까지 2년 9개월 동안에 ... 인쇄, 출판하였다. 이 때 출판한 실록은 3부였으나, 전주사고에 있던 실록 원본과 재출판시의 교정본(校正本)을 합하여 5부의 실록이 갖추어졌다."
+            }
+          ]
+        },
+        {
+          "id": "f8",
+          "claim_en": "Apart from the copy kept at the Chunchugwan in Seoul, the sets were placed in archives deep in the mountains or on an island (Manisan on Ganghwa Island, Taebaeksan, Myohyangsan, Odaesan) so they would be safer from war.",
+          "claim_ko": "서울 춘추관에 둔 1부 외의 실록은 전란을 피할 수 있도록 강화도 마니산, 태백산, 묘향산, 오대산 등 깊은 산속이나 섬의 사고에 보관하였다.",
+          "sources": [
+            {
+              "title": "조선왕조실록(朝鮮王朝實錄)",
+              "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
+              "url": "https://encykorea.aks.ac.kr/Article/E0052160",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "1부는 국가의 참고를 위하여 옛날과 같이 서울의 춘추관에 두었다. 다른 4부는 병화를 면할 수 있는 깊은 산속이나 섬을 선택하여 강화도 마니산, 경상도 봉화의 태백산, 평안도 영변의 묘향산, 강원도 평창의 오대산에 사고"
+            },
+            {
+              "title": "실록을 보관하는 곳, 사고",
+              "publisher": "국가기록원 (National Archives of Korea), 조선왕조실록의 어제와 오늘",
+              "url": "https://theme.archives.go.kr/next/sillok/sub2_3.do",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "전쟁이라는 위기상황에서 접근성이 쉬운 이유로 실록이 불에 타서 사라지는 경험을 하였기 때문에 새로 제작된 실록은 깊은 산 속에 분산 보존하였습니다."
+            },
+            {
+              "title": "조선왕조실록 소개 (실록 편찬과 관리)",
+              "publisher": "국사편찬위원회 조선왕조실록 DB (National Institute of Korean History)",
+              "url": "https://sillok.history.go.kr/intro/intro.do",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "조선시대의 실록은 오랫동안 심산유곡의 격리된 사고에 비장되었고, 일반인들이 접근할 수 없었다."
+            }
+          ]
+        },
+        {
+          "id": "f9",
+          "claim_en": "The Annals were wrapped in thick oiled paper and then in red cloth, and placed in a wooden chest together with the herbs cheongung and changpo, which were added to prevent insect damage and decay.",
+          "claim_ko": "실록은 유둔(기름 먹인 두꺼운 종이)으로 싼 다음 다시 붉은 보(홍보)로 싸서, 충해와 부식을 막기 위해 천궁·창포와 함께 궤에 넣어 보관하였다.",
+          "sources": [
+            {
+              "title": "포쇄(曝曬)",
+              "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
+              "url": "https://encykorea.aks.ac.kr/Article/E0060156",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "유둔(油芚) ... 으로 싼 다음 다시 홍보(紅褓)로 싸서 궤 속에 넣고 봉안하는데, 이때 천궁 · 창포를 함께 넣는다. 이는 충해와 부식을 방지하기 위해서이며"
+            },
+            {
+              "title": "실록을 보관하는 곳, 사고",
+              "publisher": "국가기록원 (National Archives of Korea), 조선왕조실록의 어제와 오늘",
+              "url": "https://theme.archives.go.kr/next/sillok/sub2_3.do",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "천궁(川芎)과 창포(菖蒲)라는 약재를 함께 보관하였는데 ... 습기를 막기 위해 기름을 먹인 종이에 실록을 감싸고, 다시 붉은 비단으로 포장합니다."
+            }
+          ]
+        },
+        {
+          "id": "f10",
+          "claim_en": "Historians were sent to the archives every few years to take out the Annals and air them in sunlight and wind (poswae), on a clear day; the NIKH and the Encyclopedia of Korean Culture say once every three years, the National Archives every two to three years, and the poswae entry sets the schedule in the jin-sul-chuk-mi (辰戌丑未) years, the same cycle as the civil-service examination years, which recurs every three years.",
+          "claim_ko": "사관이 몇 년마다 사고에 파견되어 맑은 날을 택해 실록을 꺼내 햇볕과 바람에 말렸다(포쇄). 국사편찬위원회와 한국민족문화대백과사전(실록)은 3년에 한 번, 국가기록원은 2~3년마다, 같은 사전의 포쇄 항목은 과거식년과 같이 진·술·축·미년(3년마다 돌아오는 해)에 시행하도록 했다고 설명한다.",
+          "sources": [
+            {
+              "title": "조선왕조실록 소개 (실록 편찬과 관리)",
+              "publisher": "국사편찬위원회 조선왕조실록 DB (National Institute of Korean History)",
+              "url": "https://sillok.history.go.kr/intro/intro.do",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "사고에 보관된 실록은 3년에 한번씩 꺼내어 포쇄(暴灑)하였다. 이때에도 전임 사관 1인이 파견되어 일정한 규례에 따라 시행하도록 하였다."
+            },
+            {
+              "title": "조선왕조실록(朝鮮王朝實錄)",
+              "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
+              "url": "https://encykorea.aks.ac.kr/Article/E0052160",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "사고에 보관된 실록은 3년에 한 번씩 꺼내어 포쇄(暴灑)하였다. 이때에도 전임 사관 1명이 파견되어"
+            },
+            {
+              "title": "실록을 보관하는 곳, 사고",
+              "publisher": "국가기록원 (National Archives of Korea), 조선왕조실록의 어제와 오늘",
+              "url": "https://theme.archives.go.kr/next/sillok/sub2_3.do",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "사관은 실록을 잘 보존된 상태로 유지하기 위해 2~3년마다 정기적으로 햇볕이 잘 드는 음력 9~10월 중 선택한 날에 방문하였습니다. 봉안된 실록을 꺼내 포쇄(曝曬)와 거풍(擧風)을 해주고"
+            },
+            {
+              "title": "포쇄(曝曬)",
+              "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
+              "url": "https://encykorea.aks.ac.kr/Article/E0060156",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "포쇄식년에는 다른 정무의 중복을 피하여 봄 · 가을에 청명한 길일(吉日)을 택하여 포쇄하였는데 ... 조선시대의 포쇄식년은 과거식년(科擧式年)과 같이 격 2년으로 진술축미년(辰戌丑未年)에 시행하도록 하였다. (격 2년 = two years skipped between; 진술축미년 recur every 3 years, as the 과거식년 子午卯酉 do)"
+            }
+          ]
+        }
+      ],
+      "vocab": [
+        {
+          "ko": "실록청",
+          "rr": "Sillokcheong",
+          "en": "Office for Annals Compilation"
+        },
+        {
+          "ko": "세초",
+          "rr": "secho",
+          "en": "washing away used drafts"
+        },
+        {
+          "ko": "사고",
+          "rr": "sago",
+          "en": "archive for history books"
+        },
+        {
+          "ko": "산",
+          "rr": "san",
+          "en": "mountain"
+        },
+        {
+          "ko": "책",
+          "rr": "chaek",
+          "en": "book"
+        },
+        {
+          "ko": "햇볕",
+          "rr": "haetbyeot",
+          "en": "sunshine"
+        },
+        {
+          "ko": "약초",
+          "rr": "yakcho",
+          "en": "medicinal herb"
+        },
+        {
+          "ko": "포쇄",
+          "rr": "poswae",
+          "en": "airing books in the sun"
+        }
+      ],
+      "checks": [
+        {
+          "q_en": "In early Joseon, why were used drafts washed in a stream?",
+          "options": [
+            "To make the old paper smell fresh again",
+            "To turn the ink into a new color",
+            "To keep secrets and reuse the paper"
+          ],
+          "answer_index": 2,
+          "fact_id": "f4"
+        },
+        {
+          "q_en": "Who saved the Jeonju copy of the Annals during the war?",
+          "options": [
+            "An Ui and Son Hong-rok",
+            "Merchants from a busy market town",
+            "Painters from the royal court"
+          ],
+          "answer_index": 0,
+          "fact_id": "f6"
+        },
+        {
+          "q_en": "What is 포쇄 (poswae)?",
+          "options": [
+            "Burning old books",
+            "Airing the books in sun and breeze",
+            "Painting pictures of the king"
+          ],
+          "answer_index": 1,
+          "fact_id": "f10"
+        }
+      ],
+      "reference_display": "Sources: 국사편찬위원회 조선왕조실록 DB (실록 소개); 국가유산청 국가유산포털; 국가기록원 「조선왕조실록의 어제와 오늘」; 한국민족문화대백과사전",
+      "notes": "Sources disagree on how many sets were newly printed in 1603-1606 (Korea Heritage Service and National Archives: four; Encyclopedia of Korean Culture: three printed plus the original and a proof copy); all agree on five sets in five archives, so narration says 'making five sets'. Poswae frequency also differs slightly (every 3 years in NIKH and the Annals entry; every 2-3 years in National Archives; the 진술축미 schedule of the Encyclopedia's poswae entry, i.e. every third year, though it often slipped), so narration says 'every few years'. Revision: 'red silk' changed to 'red cloth' (the poswae entry says 홍보 'red wrapping cloth'; only the National Archives says silk); the herbs' purpose is now stated generally ('protect from bugs and rot', per the poswae entry and the National Archives) rather than the National Archives' split into cheongung = insects and changpo = germs/fragrance; 'on a sunny day' replaced by 'on a clear day' (supported by two sources); the closing sentence 'Thanks to such care, the Annals survive today' was removed because it was not backed by a fact entry. Secho by washing is limited to early Joseon (later drafts were mostly burned). The Imjin War is mentioned only as 'a great war' with no violent detail. Omitted as out of scope or tragic: later moves to Jeongjoksan/Jeoksangsan, the Qing invasion, colonial-era removal of the Odaesan copy and its loss in the 1923 Kanto earthquake, the Korean War, and the 2006 return."
+    },
+    {
+      "id": "story-seungjeongwon-ilgi-every-day",
+      "title_en": "The Royal Secretaries' Everyday Diary",
+      "title_ko": "날마다 쓴 승정원일기",
+      "theme": "letters",
+      "heritage_type": "documentary",
+      "recommended_stage": 3,
+      "minutes": 5,
+      "summary_en": "At the Royal Secretariat, scribes wrote down the king's working day, every day, even the weather. Hoya learns why this giant diary is a treasure.",
+      "learning_goals": [
+        "Know that the 승정원 (Seungjeongwon) was the king's secretariat that passed royal orders down and officials' opinions up.",
+        "Know that scribes called 주서 (juseo) wrote the 승정원일기, which survives for 1623-1910 in 3,243 books.",
+        "Know that each day's entry noted the weather, which researchers can use today.",
+        "Know that the original is in cursive 초서 (choseo), which was later rewritten in regular script, and that fires destroyed many volumes.",
+        "Use the patterns 날씨가 맑아요 and 일기를 다시 써요."
+      ],
+      "scenes": [
+        {
+          "n": 1,
+          "narration_en": "Let's travel back in time with Hoya to the 승정원, the Royal Secretariat. This was the king's secretariat. It passed the king's orders down to officials and carried their opinions back up to the king.",
+          "korean": "승정원",
+          "romanization": "Seungjeongwon",
+          "gloss_en": "Royal Secretariat",
+          "illustration": "Hoya stepping through a palace gate into a courtyard where officials carry folded documents to and from a hall.",
+          "fact_ids": [
+            "f1"
+          ]
+        },
+        {
+          "n": 2,
+          "narration_en": "Six royal secretaries worked here, along with two scribes called 주서. The scribes wrote the office diary, the 승정원일기.",
+          "korean": "주서",
+          "romanization": "juseo",
+          "gloss_en": "scribe of the Royal Secretariat",
+          "illustration": "A row of six senior officials and two junior officials in formal court dress and black hats; the two junior ones hold brushes and paper.",
+          "fact_ids": [
+            "f2"
+          ]
+        },
+        {
+          "n": 3,
+          "narration_en": "Each day, a scribe worked in front of the king together with a historian, jotting quick notes of the discussions. Later, a neat copy was made, and each month's diary was usually bound into one book.",
+          "korean": "매일",
+          "romanization": "maeil",
+          "gloss_en": "every day",
+          "illustration": "A scribe and a historian kneeling side by side, writing fast while the king talks with ministers; in the corner, a finished thread-bound book.",
+          "fact_ids": [
+            "f3"
+          ]
+        },
+        {
+          "n": 4,
+          "narration_en": "Every day's diary also noted the weather. Today, researchers can use these weather notes to study nature in the past.",
+          "korean": "날씨가 맑아요.",
+          "romanization": "Nalssiga malgayo.",
+          "gloss_en": "The weather is clear.",
+          "illustration": "A diary page drawn as simple brush lines beside a small sun symbol and a rain-cloud symbol; a modern researcher with a laptop comparing notes.",
+          "fact_ids": [
+            "f4"
+          ]
+        },
+        {
+          "n": 5,
+          "narration_en": "The original diaries are written in a flowing cursive script called 초서, which is hard to read. In modern times, Korea's National Institute of Korean History rewrote them in clear, regular characters and published them.",
+          "korean": "초서",
+          "romanization": "choseo",
+          "gloss_en": "cursive (grass) script",
+          "illustration": "Two sheets side by side: one with loose, swirling brush strokes, the other with tidy, upright brush strokes (no readable characters).",
+          "fact_ids": [
+            "f5"
+          ]
+        },
+        {
+          "n": 6,
+          "narration_en": "Fires at the Royal Secretariat in 1744 and 1888 destroyed many diaries. Officials worked to rebuild them, partly using other records such as the court gazette.",
+          "korean": "일기를 다시 써요.",
+          "romanization": "Ilgireul dasi sseoyo.",
+          "gloss_en": "They write the diary again.",
+          "illustration": "Officials at desks surrounded by stacks of other records, carefully copying entries into new blank books; a calm scene with no flames.",
+          "fact_ids": [
+            "f6"
+          ]
+        },
+        {
+          "n": 7,
+          "narration_en": "Today, 3,243 books survive, covering 1623 to 1910. The originals are kept at Seoul National University's Gyujanggak. The diaries are a National Treasure and, since 2001, part of UNESCO's Memory of the World.",
+          "korean": "국보",
+          "romanization": "gukbo",
+          "gloss_en": "National Treasure",
+          "illustration": "Long wooden shelves filled with tall old books in a quiet modern archive, soft light, Hoya gazing up in wonder.",
+          "fact_ids": [
+            "f7",
+            "f8",
+            "f9"
+          ]
+        }
+      ],
+      "facts": [
+        {
+          "id": "f1",
+          "claim_en": "The Seungjeongwon was the king's secretariat; it handled the passing of royal orders down to officials and of officials' opinions up to the king (the 'chulnap' of royal commands).",
+          "claim_ko": "승정원은 국왕의 비서 기관으로, 왕명을 아래로 전달하고 아래의 의견을 위로 전달하는 왕명의 출납을 맡았다.",
+          "sources": [
+            {
+              "title": "승정원일기 (承政院日記) – 기본 정보·국가유산 설명",
+              "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, National Heritage Portal)",
+              "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?VdkVgwKey=11,03030000,11&pageNo=1_1_1_1",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "조선시대 국왕의 비서 기관인 승정원(承政院)에서 왕명의 출납, 각종 행정 사무와 의례(儀禮) 등에 관해 기록한 일기이다."
+            },
+            {
+              "title": "승정원일기 소개",
+              "publisher": "국사편찬위원회 승정원일기 DB (National Institute of Korean History)",
+              "url": "https://sjw.history.go.kr/intro/intro.do",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "승정원은 조선시대 왕명의 출납을 관장하던 관청으로"
+            },
+            {
+              "title": "승정원일기(承政院日記)",
+              "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
+              "url": "https://encykorea.aks.ac.kr/Article/E0032244",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "조선시대 승정원에서 왕명의 출납·제반 행정사무·의례적 사항 등을 기록한 일지. 관청일기."
+            },
+            {
+              "title": "승정원일기(承政院日記)",
+              "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
+              "url": "https://encykorea.aks.ac.kr/Article/E0032244",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "왕명의 출납, 즉 왕명을 밑으로 전달하고 하의(下意: 밑에서의 의견)를 위로 전달하는 일"
+            }
+          ]
+        },
+        {
+          "id": "f2",
+          "claim_en": "The Seungjeongwon had six royal secretaries (seungji, 3rd rank) and two scribes (juseo, 7th rank); the Seungjeongwon Ilgi was written by the juseo (the scribes also had other duties, and a temporary extra scribe could be added).",
+          "claim_ko": "승정원에는 정3품 승지 6명과 정7품 주서 2명이 있었고, 승정원일기는 주서가 맡아 작성하였다(주서는 다른 일도 하였고 임시로 가주서를 더 둘 수 있었다).",
+          "sources": [
+            {
+              "title": "승정원일기 소개",
+              "publisher": "국사편찬위원회 승정원일기 DB (National Institute of Korean History)",
+              "url": "https://sjw.history.go.kr/intro/intro.do",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "승정원의 직제는 도승지 이하 정3품의 승지 6인과 정7품의 주서(注書) 2인으로 이루어졌으며, 승정원일기는 주서가 맡아 작성했다."
+            },
+            {
+              "title": "승정원일기 (承政院日記) – 기본 정보·국가유산 설명",
+              "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, National Heritage Portal)",
+              "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?VdkVgwKey=11,03030000,11&pageNo=1_1_1_1",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "『승정원일기』의 작성은 승정원의 정7품 관원인 주서(注書)가 담당하였다. 주서는 원래 2명이었다가"
+            },
+            {
+              "title": "승정원일기(承政院日記)",
+              "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
+              "url": "https://encykorea.aks.ac.kr/Article/E0032244",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "『승정원일기』의 기술은 주서의 소임이었다."
+            },
+            {
+              "title": "Memory of the World Register – Nomination Form: Republic of Korea – Seungjeongwon Ilgi, The Diaries of the Royal Secretariat (PDF)",
+              "publisher": "UNESCO Memory of the World",
+              "url": "https://media.unesco.org/sites/default/files/webform/mow001/republic_of_korea_seungjeongwon_iilgi.pdf",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "§3.1: \"composed of six royal secretaries, or seungji (senior grade of the 3rd court rank), and two scribes, or juseo (senior grade of the 7th court rank).\""
+            }
+          ]
+        },
+        {
+          "id": "f3",
+          "claim_en": "A juseo recorded state discussions in front of the king together with a historian in a shorthand draft; a clean copy was then made, and usually one month's diary formed one book (two if long).",
+          "claim_ko": "주서는 국왕 앞에서 사관과 함께 국정 논의를 속기한 초책을 만들고, 이를 정서하였으며, 대개 한 달 치 일기를 한 책으로 묶었다(분량이 많으면 두 책).",
+          "sources": [
+            {
+              "title": "승정원일기 소개",
+              "publisher": "국사편찬위원회 승정원일기 DB (National Institute of Korean History)",
+              "url": "https://sjw.history.go.kr/intro/intro.do",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "주서는 매일 국왕이 정사를 보는 앞에서 사관(史官)과 함께 신하들과 국정을 논의하는 과정을 기록 하여 메모한 초책(草冊;속기록)을 하루치씩 하번주서(下番注書)에게 정서하게 하고"
+            },
+            {
+              "title": "승정원일기 (承政院日記) – 기본 정보·국가유산 설명",
+              "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, National Heritage Portal)",
+              "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?VdkVgwKey=11,03030000,11&pageNo=1_1_1_1",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "1개월분의 일기를 1책으로 만들었는데 분량이 많은 경우에는 2책으로 나누어 장정하기도 했다. ... 주서들은 국왕을 수행하면서 국정 운영 내용을 속기한 '초책(草冊)'을 작성한 다음"
+            }
+          ]
+        },
+        {
+          "id": "f4",
+          "claim_en": "The Seungjeongwon Ilgi recorded the weather every day, giving basic data on natural phenomena that can be used in natural-science research.",
+          "claim_ko": "승정원일기에는 날씨가 매일 기록되어 자연현상에 대한 기초 자료를 제공하며 자연과학 연구에도 활용될 수 있다.",
+          "sources": [
+            {
+              "title": "승정원일기 소개",
+              "publisher": "국사편찬위원회 승정원일기 DB (National Institute of Korean History)",
+              "url": "https://sjw.history.go.kr/intro/intro.do",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "게다가 매일 기록되는 날씨는 조선시대 자연현상에 대한 기초 자료를 제공함으로서 천문학 등의 자연과학의 연구에도 활용이 가능하다."
+            },
+            {
+              "title": "Memory of the World Register – Nomination Form: Republic of Korea – Seungjeongwon Ilgi, The Diaries of the Royal Secretariat (PDF)",
+              "publisher": "UNESCO Memory of the World",
+              "url": "https://media.unesco.org/sites/default/files/webform/mow001/republic_of_korea_seungjeongwon_iilgi.pdf",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "§5.1 Criterion 2 & 7, item (4): \"It covers 288 years of weather observation ... (scientific and statistical value).\""
+            }
+          ]
+        },
+        {
+          "id": "f5",
+          "claim_en": "The original diaries are written in cursive script (choseo) and are hard to read; the National Institute of Korean History later rewrote them in regular script (haeseo), added punctuation and published them (141 volumes; NIKH gives 1960-1977, the Encyclopedia 1961).",
+          "claim_ko": "승정원일기 원본은 초서로 쓰여 읽기 어려웠으며, 국사편찬위원회가 이를 해서로 고쳐 간행하였다.",
+          "sources": [
+            {
+              "title": "승정원일기 소개",
+              "publisher": "국사편찬위원회 승정원일기 DB (National Institute of Korean History)",
+              "url": "https://sjw.history.go.kr/intro/intro.do",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "승정원일기 원본은 초서(草書)로 되어있어 해독하기 어려운 점이 적지 않았지만 1960년부터 1977년까지 국사편찬위원회에서 이를 해서(楷書)로 고치고, 구두점을 찍어 141책으로 간행•보급함으로써"
+            },
+            {
+              "title": "승정원일기(承政院日記)",
+              "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
+              "url": "https://encykorea.aks.ac.kr/Article/E0032244",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "『승정원일기』의 원본은 초서(草書)로서 해독하기 어려운 점이 적지 않았다. 그런데 1961년 국사편찬위원회에서 이를 해서(楷書)로 고쳐 쓰고 구두점을 찍어서 출판해 이용하기에 편하게 되었다."
+            }
+          ]
+        },
+        {
+          "id": "f6",
+          "claim_en": "Fires at the Seungjeongwon in 1744 and 1888 destroyed many diaries. After the 1744 fire a special office (Ilgicheong) rebuilt part of them (548 volumes, less than one third of those lost) using the court gazette (Jobo) and other records; the 361 volumes lost in 1888 were rebuilt by 1890.",
+          "claim_ko": "1744년과 1888년 승정원 화재로 많은 일기가 소실되었다. 1744년 화재 뒤에는 일기청이 조보 등 다른 기록을 이용해 일부(548책, 소실된 책수의 3분의 1에 못 미침)를 개수하였고, 1888년에 소실된 361책은 1890년에 개수하였다.",
+          "sources": [
+            {
+              "title": "승정원일기 소개",
+              "publisher": "국사편찬위원회 승정원일기 DB (National Institute of Korean History)",
+              "url": "https://sjw.history.go.kr/intro/intro.do",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "영조 22년(1746) 일기청이 설치되어 ... 이듬해 말에 548책의 개수를 완료하였다. 이것은 본래 소실된 책수의 3분의 1에도 못 미치는 것이다. / 일기청은 개수를 위해 조보(朝報)를 비롯해 각 사(司)의 일기ㆍ등록 등 기본 사료와 관인의 일기문집 등을 널리 이용해 만전을 기하였다. / 고종 25년(1888)에도 또다시 승정원의 화재로 철종 2년(1851)에서 고종 25년(1888)까지의 일기 361책이 소실되었고, 2년 뒤인 1890년 개수하였다."
+            },
+            {
+              "title": "승정원일기(承政院日記)",
+              "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
+              "url": "https://encykorea.aks.ac.kr/Article/E0032244",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "1747년(영조 23) 말에 548책의 개수를 끝냈는데, 이것은 본래 소실된 책수의 3분의 1에도 못 미치는 것이다. / 1888년(고종 25)에 또다시 승정원의 화재로 1851년(철종 2)에서 1888년(고종 25)까지의 일기 361책이 소실되었으나, 1890년에 개수를 끝냈다."
+            }
+          ]
+        },
+        {
+          "id": "f7",
+          "claim_en": "3,243 books of the Seungjeongwon Ilgi survive, covering March 1623 to August 1910. (3,045 of them are titled Seungjeongwon Ilgi; 198 carry later office names such as Seungseonwon Ilgi, because the office was renamed after 1894.)",
+          "claim_ko": "승정원일기는 1623년 3월부터 1910년 8월까지의 기록 3,243책이 남아 있다. (이 중 3,045책의 서명이 ‘승정원일기’이고 198책은 ‘승선원일기’ 등 승정원의 이후 명칭을 따른 서명이다.)",
+          "sources": [
+            {
+              "title": "승정원일기 (承政院日記) – 기본 정보·국가유산 설명",
+              "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, National Heritage Portal)",
+              "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?VdkVgwKey=11,03030000,11&pageNo=1_1_1_1",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "현재는 1623년(인조 1) 3월부터 1910년(융희 4) 8월까지 288년간의 일기만 전해지고 있다. (수량/면적: 3,243책) / 『승정원일기』는 총 3,243책 중 서명이 ‘승정원일기’인 것이 3,045책이고 나머지 198책은 ‘승선원일기’, ‘궁내부일기’ ... 등으로 서명이 다르게 되어 있다."
+            },
+            {
+              "title": "승정원일기 소개",
+              "publisher": "국사편찬위원회 승정원일기 DB (National Institute of Korean History)",
+              "url": "https://sjw.history.go.kr/intro/intro.do",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "현재 인조 원년(1623) 3월부터 순종 융희 4년(1910) 8월까지의 기록이 3,243책의 필사본으로 남아있으며"
+            },
+            {
+              "title": "승정원일기(承政院日記)",
+              "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
+              "url": "https://encykorea.aks.ac.kr/Article/E0032244",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "현재 1623년(인조 1) 3월부터 1910년(융희 4) 8월까지의 기록이 남아있다. ... 3,243책으로 된 필사본이다."
+            },
+            {
+              "title": "Memory of the World Register – Nomination Form: Republic of Korea – Seungjeongwon Ilgi, The Diaries of the Royal Secretariat (PDF)",
+              "publisher": "UNESCO Memory of the World",
+              "url": "https://media.unesco.org/sites/default/files/webform/mow001/republic_of_korea_seungjeongwon_iilgi.pdf",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "§1.1: \"consists of 3,243 diaries\""
+            }
+          ]
+        },
+        {
+          "id": "f8",
+          "claim_en": "The original Seungjeongwon Ilgi is kept at Seoul National University's Gyujanggak (Kyujanggak Institute for Korean Studies) in Seoul.",
+          "claim_ko": "승정원일기 원본은 서울대학교 규장각(규장각한국학연구원)에 소장되어 있다.",
+          "sources": [
+            {
+              "title": "승정원일기 소개",
+              "publisher": "국사편찬위원회 승정원일기 DB (National Institute of Korean History)",
+              "url": "https://sjw.history.go.kr/intro/intro.do",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "국보 제303호로 원본은 서울대학교 규장각에 소장되어 있으며, 2001년도에 유네스코 세계기록유산(Memory of the World)으로 지정되었다."
+            },
+            {
+              "title": "승정원일기 (承政院日記) – 기본 정보",
+              "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, National Heritage Portal)",
+              "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?VdkVgwKey=11,03030000,11&pageNo=1_1_1_1",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "관리자 (관리단체): 서울대학교규장각 한국학연구원 / 소재지: 서울 관악구 관악로 1,103호 동 서울대학교 규장각한국학연구원"
+            },
+            {
+              "title": "승정원일기(承政院日記)",
+              "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
+              "url": "https://encykorea.aks.ac.kr/Article/E0032244",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "소재지: 서울 관악구 관악로 1,103호 동 서울대학교 규장각한국학연구원 (신림동,서울대학교)"
+            }
+          ]
+        },
+        {
+          "id": "f9",
+          "claim_en": "The Seungjeongwon Ilgi is a National Treasure (designated 9 April 1999) and was inscribed on UNESCO's Memory of the World Register in 2001.",
+          "claim_ko": "승정원일기는 국보(1999년 4월 9일 지정)이며 2001년 유네스코 세계기록유산에 등재되었다.",
+          "sources": [
+            {
+              "title": "승정원일기 (承政院日記) – 기본 정보·국가유산 설명",
+              "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, National Heritage Portal)",
+              "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?VdkVgwKey=11,03030000,11&pageNo=1_1_1_1",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "국보, 지정(등록)일 1999.04.09 / 2001년 9월에 유네스코 세계기록유산으로 등재되었다."
+            },
+            {
+              "title": "Seungjeongwon Ilgi, the Diaries of the Royal Secretariat",
+              "publisher": "UNESCO Memory of the World",
+              "url": "https://www.unesco.org/en/memory-world/seungjeongwon-ilgi-diaries-royal-secretariat",
+              "accessed": "2026-10-10",
+              "quote_or_locator": "Registration Year: 2001; Submission Year: 2001; Submitted by: Republic of Korea. [verified 2026-10-10 on an Internet Archive snapshot of the unesco.org page]"
+            },
+            {
+              "title": "승정원일기(承政院日記)",
+              "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
+              "url": "https://encykorea.aks.ac.kr/Article/E0032244",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "국보(1999년 04월 09일 지정)"
+            },
+            {
+              "title": "승정원일기 소개",
+              "publisher": "국사편찬위원회 승정원일기 DB (National Institute of Korean History)",
+              "url": "https://sjw.history.go.kr/intro/intro.do",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "승정원일기는 2001년 9월 유네스코 세계기록유산으로 지정되었습니다."
+            }
+          ]
+        }
+      ],
+      "vocab": [
+        {
+          "ko": "승정원",
+          "rr": "Seungjeongwon",
+          "en": "Royal Secretariat"
+        },
+        {
+          "ko": "주서",
+          "rr": "juseo",
+          "en": "scribe of the Royal Secretariat"
+        },
+        {
+          "ko": "일기",
+          "rr": "ilgi",
+          "en": "diary"
+        },
+        {
+          "ko": "매일",
+          "rr": "maeil",
+          "en": "every day"
+        },
+        {
+          "ko": "날씨",
+          "rr": "nalssi",
+          "en": "weather"
+        },
+        {
+          "ko": "맑아요",
+          "rr": "malgayo",
+          "en": "it is clear (sunny)"
+        },
+        {
+          "ko": "초서",
+          "rr": "choseo",
+          "en": "cursive (grass) script"
+        }
+      ],
+      "checks": [
+        {
+          "q_en": "Who wrote the Seungjeongwon Ilgi?",
+          "options": [
+            "The king himself",
+            "Scribes called juseo",
+            "Monks in a mountain temple"
+          ],
+          "answer_index": 1,
+          "fact_id": "f2"
+        },
+        {
+          "q_en": "What did every day's entry also record?",
+          "options": [
+            "A drawing of the palace",
+            "A poem written by the king",
+            "The weather of the day"
+          ],
+          "answer_index": 2,
+          "fact_id": "f4"
+        },
+        {
+          "q_en": "How many books of the Seungjeongwon Ilgi survive today?",
+          "options": [
+            "3,243 books",
+            "324 books",
+            "32,430 books"
+          ],
+          "answer_index": 0,
+          "fact_id": "f7"
+        }
+      ],
+      "reference_display": "Sources: 국사편찬위원회 승정원일기 DB (승정원일기 소개); 국가유산청 국가유산포털; 한국민족문화대백과사전; UNESCO Memory of the World (Seungjeongwon Ilgi, nomination form)",
+      "notes": "Character counts are omitted because sources differ (UNESCO nomination: about 242.5 million; NIKH table: 243 million). Transcription start year differs (NIKH: 1960; Encyclopedia and UNESCO nomination: 1961), so narration says 'in modern times'. Specific weather categories are not asserted; the Korean line '날씨가 맑아요' is a language example, not a quoted entry. 'Largest/greatest record in the world' claims are avoided. Revision: (1) 'one special job' removed - sources only say the juseo wrote the diary, not that it was their only duty ('junior' also dropped; juseo are 7th rank); (2) 'there is only one original set' REMOVED - it rests only on the UNESCO nomination form's rarity statement ('There is only one set of original diaries...') and no second authoritative source states it; replaced by the sourced fact that the originals are kept at Seoul National University's Gyujanggak; (3) 'rebuilt them ... and noted which sources they had used' softened to 'worked to rebuild them, partly using other records such as the court gazette' - the 1744 rebuilding restored only 548 volumes (< 1/3 of the loss) per NIKH and the Encyclopedia, and the 'sources noted' statement exists only in the UNESCO nomination form (§3.4) so it was dropped; (4) robe colours removed from the illustration brief; (5) 'scribes wrote fast' removed (not in sources); (6) goal pattern changed to 일기를 다시 써요 to match scene 6. Changes of office name after 1894 are omitted."
+    },
+    {
+      "id": "story-ilseongnok-daily-reflection",
+      "title_en": "King Jeongjo's Diary of Daily Reflection",
+      "title_ko": "하루를 돌아본 정조의 일기, 일성록",
+      "theme": "letters",
+      "heritage_type": "documentary",
+      "recommended_stage": 4,
+      "minutes": 4,
+      "summary_en": "As a young royal heir, Jeongjo kept a diary to look back on each day. It grew into the Ilseongnok, an official record of the court from 1760 to 1910.",
+      "learning_goals": [
+        "Know that the 일성록 (Ilseongnok) began from Jeongjo's personal diary, kept when he was the royal grandson and heir (세손).",
+        "Know that Jeongjo was moved by Zengzi's words in the Analects about looking back on oneself every day, and kept a diary to reflect.",
+        "Know that from 1783 it became an official court record written by Gyujanggak officials, with headlines and details for easy reading.",
+        "Use 오늘, 반성, 일기를 써요 and 오늘을 돌아봐요."
+      ],
+      "scenes": [
+        {
+          "n": 1,
+          "narration_en": "Hoya opens an old book about a young royal heir named Jeongjo. As the king's grandson and heir, he was called 세손. Even then, he kept a diary of what he said, did and studied.",
+          "korean": "세손",
+          "romanization": "seson",
+          "gloss_en": "royal grandson and heir",
+          "illustration": "A young royal heir in plain traditional clothes writing in a small book at a low desk by lamplight; Hoya reading a book about him in the foreground.",
+          "fact_ids": [
+            "f1"
+          ]
+        },
+        {
+          "n": 2,
+          "narration_en": "Why? One reason was the words of Zengzi in the Analects about looking back on yourself every day. Jeongjo was deeply moved by them and wanted to look back on himself, too.",
+          "korean": "반성",
+          "romanization": "banseong",
+          "gloss_en": "reflection; looking back on oneself",
+          "illustration": "The prince pausing with brush raised, looking thoughtfully out of a window at an evening sky.",
+          "fact_ids": [
+            "f2"
+          ]
+        },
+        {
+          "n": 3,
+          "narration_en": "His diary was called the Jonhyeongak Diary. After Jeongjo became king, he kept writing it himself. Hoya tries it too and asks, 'What did I do today?'",
+          "korean": "오늘 나는 무엇을 했지?",
+          "romanization": "Oneul naneun mueoseul haetji?",
+          "gloss_en": "What did I do today?",
+          "illustration": "Split scene: King Jeongjo in royal dress writing at night; Hoya in his den with a tiny notebook, scratching his head.",
+          "fact_ids": [
+            "f3"
+          ]
+        },
+        {
+          "n": 4,
+          "narration_en": "As state business grew, Jeongjo had too much to write himself. So in 1783, officials of the royal library, Gyujanggak, began writing the diary about state affairs, and the king approved it. His personal diary became an official record.",
+          "korean": "규장각",
+          "romanization": "Gyujanggak",
+          "gloss_en": "royal library and research institute",
+          "illustration": "Scholars at the Gyujanggak library writing at desks, then presenting a bound book to the king, who reads it carefully.",
+          "fact_ids": [
+            "f4"
+          ]
+        },
+        {
+          "n": 5,
+          "narration_en": "Its title, 일성록, is often translated 'Records of Daily Reflections.' Each entry starts with a short headline, and the details follow, which made it easy to read.",
+          "korean": "일성록",
+          "romanization": "Ilseongnok",
+          "gloss_en": "Records of Daily Reflections",
+          "illustration": "An open book page drawn with one bold line of strokes at top and smaller lines below (no readable text), a finger tracing the bold line.",
+          "fact_ids": [
+            "f5",
+            "f6"
+          ]
+        },
+        {
+          "n": 6,
+          "narration_en": "The 일성록 looks like a diary written from the king's point of view, but it was really an official government record. Today, 2,329 books covering 1760 to 1910 are kept at Seoul National University's Gyujanggak.",
+          "korean": "일기를 써요.",
+          "romanization": "Ilgireul sseoyo.",
+          "gloss_en": "I write a diary.",
+          "illustration": "A modern library stack with rows of old thread-bound books in protective cases, a curator in gloves checking one.",
+          "fact_ids": [
+            "f7",
+            "f8"
+          ]
+        },
+        {
+          "n": 7,
+          "narration_en": "The 일성록 is a National Treasure, and in 2011 UNESCO added it to the Memory of the World. Hoya decides to write one line tonight: what went well today, and what to do better.",
+          "korean": "오늘을 돌아봐요.",
+          "romanization": "Oneureul dorabwayo.",
+          "gloss_en": "Let's look back on today.",
+          "illustration": "Hoya at night writing in a notebook by a small lamp, a crescent moon in the window, smiling.",
+          "fact_ids": [
+            "f9"
+          ]
+        }
+      ],
+      "facts": [
+        {
+          "id": "f1",
+          "claim_en": "As royal grandson and heir (seson), Jeongjo kept a diary of his own words, actions and studies, and this diary was the origin of the Ilseongnok.",
+          "claim_ko": "정조는 세손 시절부터 자신의 언행과 학문을 일기로 기록하였고, 이것이 『일성록』의 모태가 되었다.",
+          "sources": [
+            {
+              "title": "일성록 (日省錄) – 기본 정보·국가유산 설명",
+              "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, National Heritage Portal)",
+              "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?VdkVgwKey=11,01530000,11&pageNo=1_1_1_1",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "『일성록』의 모태가 된 것은 정조(正祖)가 세손(世孫) 시절부터 직접 자신의 언행과 학문을 기록한 일기인 『존현각일기』였다."
+            },
+            {
+              "title": "일성록(日省錄)",
+              "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
+              "url": "https://encykorea.aks.ac.kr/Article/E0047238",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "세손 시절부터 자신의 언행과 학문을 기록한 정조의 『존현각일기』는"
+            },
+            {
+              "title": "Ilseongnok: Records of Daily Reflections",
+              "publisher": "UNESCO Memory of the World",
+              "url": "https://www.unesco.org/en/memory-world/ilseongnok-records-daily-reflections",
+              "accessed": "2026-10-10",
+              "quote_or_locator": "Description: \"Ilseongnok, Records of Daily Reflections, originated from the diaries kept by King Jeongjo, 22nd monarch of the Joseon Dynasty (1392-1910), from before his ascension to the throne in which he reflected on his daily life and academic progress.\" [verified 2026-10-10 on an Internet Archive snapshot of the unesco.org page]"
+            }
+          ]
+        },
+        {
+          "id": "f2",
+          "claim_en": "Jeongjo was deeply moved by Zengzi's words in the Analects about examining oneself every day, and wrote the diary as material for self-reflection.",
+          "claim_ko": "정조는 『논어』에서 증자가 날마다 스스로를 반성한다고 한 글귀에 깊은 감명을 받아 자신을 반성하는 자료로 삼고자 일기를 썼다.",
+          "sources": [
+            {
+              "title": "일성록 (日省錄) – 기본 정보·국가유산 설명",
+              "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, National Heritage Portal)",
+              "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?VdkVgwKey=11,01530000,11&pageNo=1_1_1_1",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "정조는 『논어(論語)』에서 증자(曾子)가 말한 “나는 날마다 세 가지 기준을 가지고 스스로에 대해 반성한다”에 깊은 감명을 받아 일찍부터 자신을 반성하는 자료로 삼기 위해 일기를 작성하였다."
+            },
+            {
+              "title": "일성록(日省錄)",
+              "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
+              "url": "https://encykorea.aks.ac.kr/Article/E0047238",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "『논어』에서 증자가 말한, \"나는 날마다 세 가지 기준을 가지고 스스로에 대해 반성한다.\"는 글귀를 쫓아 정조 자신이 반성하는 자료로 활용하기 위해 작성되었다."
+            }
+          ]
+        },
+        {
+          "id": "f3",
+          "claim_en": "This diary was the Jonhyeongak Diary (존현각일기), and Jeongjo kept writing a diary himself after he became king (1776).",
+          "claim_ko": "이 일기는 『존현각일기』이며, 정조는 즉위한 뒤에도 직접 일기를 썼다.",
+          "sources": [
+            {
+              "title": "일성록 (日省錄) – 기본 정보·국가유산 설명",
+              "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, National Heritage Portal)",
+              "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?VdkVgwKey=11,01530000,11&pageNo=1_1_1_1",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "정조(正祖)가 세손(世孫) 시절부터 직접 자신의 언행과 학문을 기록한 일기인 『존현각일기』 ... 1776년 즉위 후에도 직접 일기를 작성하던 정조는"
+            },
+            {
+              "title": "일성록(日省錄)",
+              "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
+              "url": "https://encykorea.aks.ac.kr/Article/E0047238",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "세손으로 있을 때는 직접 일기를 써서 이를 『존현각일기(尊賢閣日記)』라고 하였으며 ... 정조의 일기는 즉위 후에도 계속되었는데"
+            }
+          ]
+        },
+        {
+          "id": "f4",
+          "claim_en": "As state business grew, from 1783 Gyujanggak officials wrote the diary, focusing on government affairs, and submitted it for the king's approval; the king's personal diary thus became an official state journal.",
+          "claim_ko": "국정이 늘어나자 1783년부터 규장각 관원들이 시정에 관한 내용을 작성하고 왕의 재가를 받게 하여, 국왕의 개인 일기가 공식 국정 일기로 바뀌었다.",
+          "sources": [
+            {
+              "title": "일성록 (日省錄) – 기본 정보·국가유산 설명",
+              "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, National Heritage Portal)",
+              "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?VdkVgwKey=11,01530000,11&pageNo=1_1_1_1",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "1776년 즉위 후에도 직접 일기를 작성하던 정조는 직접 처결할 국정 업무가 점차 늘어나 일기 작성이 어려워지자 1783년(정조 7)부터 규장각 관원들이 시정(施政)에 관한 내용을 중심으로 일기를 작성하고, 작성된 일기를 5일마다 왕에게 올려 재가를 받도록 하였다. 이로써 『일성록』은 국왕의 개인 일기에서 공식적인 국정 일기로 전환되었다."
+            },
+            {
+              "title": "일성록(日省錄)",
+              "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
+              "url": "https://encykorea.aks.ac.kr/Article/E0047238",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "이 책은 1783년(정조 7)부터 국왕의 개인 일기에서 규장각 관원들이 시정(施政)에 관한 내용을 작성한 후에 왕의 재가를 받은 공식적인 국정 일기로 전환되었다. / 1783년부터 국무가 늘어나고 그에 따라 자신이 직접 기록하기에는 양이 너무 많아져서 규장각신에게 명하여 편찬하게 하였다고 (『홍재전서』 「군서표기」 인용)"
+            },
+            {
+              "title": "Ilseongnok: Records of Daily Reflections",
+              "publisher": "UNESCO Memory of the World",
+              "url": "https://www.unesco.org/en/memory-world/ilseongnok-records-daily-reflections",
+              "accessed": "2026-10-10",
+              "quote_or_locator": "Description: \"After his accession, it was transformed from the personal diary of a monarch to an official daily journal of state affairs.\" [verified 2026-10-10 on an Internet Archive snapshot of the unesco.org page]"
+            }
+          ]
+        },
+        {
+          "id": "f5",
+          "claim_en": "The work is titled Ilseongnok (日省錄); UNESCO renders the name as 'Records of Daily Reflections'. (Who chose the final title cannot be confirmed from the sources.)",
+          "claim_ko": "이 책의 제목은 『일성록(日省錄)』이며, 유네스코는 이를 'Records of Daily Reflections'로 옮긴다(최종 제목을 누가 정했는지는 자료로 확인되지 않는다).",
+          "sources": [
+            {
+              "title": "Ilseongnok: Records of Daily Reflections",
+              "publisher": "UNESCO Memory of the World",
+              "url": "https://www.unesco.org/en/memory-world/ilseongnok-records-daily-reflections",
+              "accessed": "2026-10-10",
+              "quote_or_locator": "Page title: \"Ilseongnok: Records of Daily Reflections\"; Description begins \"Ilseongnok, Records of Daily Reflections, ...\" [verified 2026-10-10 on an Internet Archive snapshot of the unesco.org page]"
+            },
+            {
+              "title": "일성록(日省錄)",
+              "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
+              "url": "https://encykorea.aks.ac.kr/Article/E0047238",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "Entry title: 일성록(日省錄). Note: 이때 제목을 ‘일성록’ 또는 ‘월계록(月計錄)’이라 하고 그것을 합하여 ‘일월통편(日月通編)’으로 하자는 의견이 있었다 ... 그 뒤 결론이 어떠하였는가는 확인할 수 없다 (who made the final choice is not stated)."
+            },
+            {
+              "title": "일성록 (日省錄) – 기본 정보·국가유산 설명",
+              "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, National Heritage Portal)",
+              "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?VdkVgwKey=11,01530000,11&pageNo=1_1_1_1",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "책의 제목은 ‘일성록(日省錄)’으로 하였다."
+            }
+          ]
+        },
+        {
+          "id": "f6",
+          "claim_en": "Each Ilseongnok entry has a headline (gang, 綱) summarizing the point, followed by detailed items (mok, 目), which made it easy to read.",
+          "claim_ko": "『일성록』은 기사마다 요점을 딴 강(綱)을 제목처럼 세우고 그 아래 목(目)으로 세부 내용을 적어 열람에 편리하게 하였다.",
+          "sources": [
+            {
+              "title": "일성록(日省錄)",
+              "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
+              "url": "https://encykorea.aks.ac.kr/Article/E0047238",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "하나의 사건 또는 일이 독립된 하나의 기사를 이루게 하고 그 요점을 따서 강(綱)을 세웠는데 이것이 기사에 대한 제목의 구실을 하여 열람에 편리하게 하였다. / 하나의 강으로 구분되는 하나의 기사 안에는 필요한 경우 여러 개의 목(目)을 두어 그 사실을 자세히 알 수 있도록 하였다."
+            },
+            {
+              "title": "일성록 (日省錄) – 기본 정보·국가유산 설명",
+              "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, National Heritage Portal)",
+              "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?VdkVgwKey=11,01530000,11&pageNo=1_1_1_1",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "일목요연한 체재를 갖춘 일기를 편찬하도록 명하였고"
+            }
+          ]
+        },
+        {
+          "id": "f7",
+          "claim_en": "The Ilseongnok takes the form of a diary written from the king's standpoint, but it is in substance an official government record.",
+          "claim_ko": "『일성록』은 왕의 입장에서 쓴 일기 형식이지만 실질적으로는 정부의 공식 기록이다.",
+          "sources": [
+            {
+              "title": "일성록(日省錄)",
+              "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
+              "url": "https://encykorea.aks.ac.kr/Article/E0047238",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "『일성록』은 왕의 입장에서 편찬한 일기의 형식을 갖추고 있으나 실질적으로는 정부의 공식기록이다."
+            },
+            {
+              "title": "일성록 (日省錄) – 기본 정보·국가유산 설명",
+              "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, National Heritage Portal)",
+              "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?VdkVgwKey=11,01530000,11&pageNo=1_1_1_1",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "이로써 『일성록』은 국왕의 개인 일기에서 공식적인 국정 일기로 전환되었다. (Korean description section)"
+            }
+          ]
+        },
+        {
+          "id": "f8",
+          "claim_en": "2,329 books of the Ilseongnok survive, covering January 1760 to August 1910; they are managed by Seoul National University's Kyujanggak Institute for Korean Studies in Seoul.",
+          "claim_ko": "『일성록』은 1760년 1월부터 1910년 8월까지의 기록 2,329책이 남아 있으며, 서울대학교 규장각한국학연구원이 관리한다.",
+          "sources": [
+            {
+              "title": "일성록 (日省錄) – 기본 정보·국가유산 설명",
+              "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, National Heritage Portal)",
+              "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?VdkVgwKey=11,01530000,11&pageNo=1_1_1_1",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "1760년(영조 36) 1월부터 1910년(융희 4) 8월까지 조선후기 151년간의 국정에 관한 제반 사항들이 기록 (수량/면적: 2,329책; 관리자: 서울대학교규장각 한국학연구원)"
+            },
+            {
+              "title": "일성록(日省錄)",
+              "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
+              "url": "https://encykorea.aks.ac.kr/Article/E0047238",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "『일성록』은 1760년(영조 36) 1월부터 1910년(융희 4) 8월까지 151년간의 국정에 관한 제반 사항들이 기록되어 있는 일기로, 필사본이며, 총 2,329책이다."
+            },
+            {
+              "title": "승정원일기 소개",
+              "publisher": "국사편찬위원회 승정원일기 DB (National Institute of Korean History)",
+              "url": "https://sjw.history.go.kr/intro/intro.do",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "표 '세계기록유산으로서의 승정원일기의 가치': 일성록 국보 제153호 총 2,329책/약 6,000만자"
+            }
+          ]
+        },
+        {
+          "id": "f9",
+          "claim_en": "The Ilseongnok was designated a National Treasure on 31 December 1973 and inscribed on UNESCO's Memory of the World Register in 2011.",
+          "claim_ko": "『일성록』은 1973년 12월 31일 국보로 지정되었고 2011년 유네스코 세계기록유산에 등재되었다.",
+          "sources": [
+            {
+              "title": "일성록 (日省錄) – 기본 정보·국가유산 설명",
+              "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, National Heritage Portal)",
+              "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?VdkVgwKey=11,01530000,11&pageNo=1_1_1_1",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "국보, 지정(등록)일 1973.12.31 / 2011년 5월에 유네스코 세계기록유산에 등재되었다."
+            },
+            {
+              "title": "일성록(日省錄)",
+              "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
+              "url": "https://encykorea.aks.ac.kr/Article/E0047238",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "1973년 12월 31일에 국보로 지정되었고, 서울대학교 규장각에서 관리하고 있다. ... 이후 2011년 5월에 유네스코 세계기록유산에 등재되었다."
+            },
+            {
+              "title": "Ilseongnok: Records of Daily Reflections",
+              "publisher": "UNESCO Memory of the World",
+              "url": "https://www.unesco.org/en/memory-world/ilseongnok-records-daily-reflections",
+              "accessed": "2026-10-10",
+              "quote_or_locator": "Registration Year: 2011; Submission Year: 2010; Submitted by: Republic of Korea. [verified 2026-10-10 on an Internet Archive snapshot of the unesco.org page]"
+            }
+          ]
+        }
+      ],
+      "vocab": [
+        {
+          "ko": "세손",
+          "rr": "seson",
+          "en": "royal grandson and heir"
+        },
+        {
+          "ko": "반성",
+          "rr": "banseong",
+          "en": "reflection; looking back on oneself"
+        },
+        {
+          "ko": "일기",
+          "rr": "ilgi",
+          "en": "diary"
+        },
+        {
+          "ko": "오늘",
+          "rr": "oneul",
+          "en": "today"
+        },
+        {
+          "ko": "규장각",
+          "rr": "Gyujanggak",
+          "en": "royal library and research institute"
+        },
+        {
+          "ko": "일성록",
+          "rr": "Ilseongnok",
+          "en": "Records of Daily Reflections"
+        }
+      ],
+      "checks": [
+        {
+          "q_en": "Who first kept the diary that grew into the Ilseongnok?",
+          "options": [
+            "Jeongjo, the young royal heir",
+            "A scribe of the Royal Secretariat",
+            "A historian at the royal court"
+          ],
+          "answer_index": 0,
+          "fact_id": "f1"
+        },
+        {
+          "q_en": "UNESCO translates the name Ilseongnok as what?",
+          "options": [
+            "Records of Royal Weddings",
+            "Records of Mountain Archives",
+            "Records of Daily Reflections"
+          ],
+          "answer_index": 2,
+          "fact_id": "f5"
+        },
+        {
+          "q_en": "From 1783, who wrote the diary about state affairs?",
+          "options": [
+            "Merchants from the market town",
+            "Officials of the Gyujanggak library",
+            "Monks from a mountain temple"
+          ],
+          "answer_index": 1,
+          "fact_id": "f4"
+        }
+      ],
+      "reference_display": "Sources: 국가유산청 국가유산포털 (일성록); 한국민족문화대백과사전 (일성록); UNESCO Memory of the World (Ilseongnok); 국사편찬위원회 승정원일기 DB",
+      "notes": "The Analects line: the Korean portal and Encyclopedia texts say '세 가지 기준' ('three standards'), Legge translates Analects 1.4 as 'on three points', and the Encyclopedia also glosses 日三省吾身 as 'three times a day'; because translations differ, the number is DROPPED from narration and the claim, and the Korean quotes in the sources are kept as printed. 'Why?' now says 'One reason': the Encyclopedia also records other readings (the word 省 may echo Yeongjo's 어제자성편; a political motive is also suggested). Naming: 한국민족문화대백과사전 says the final decision on the title cannot be confirmed (in 1781 others proposed 일성록 or 월계록, and Jeongjo objected only to the combined 일월통편), so 'Jeongjo named it' was REMOVED; the story says only that the title is 일성록 and UNESCO translates it as 'Records of Daily Reflections'. The 1783 transition and 'state business grew' are supported by the portal's Korean description and by the Encyclopedia (quoting Jeongjo's 군서표기 in the 홍재전서). The post-accession diary claim (f3) is supported by the portal and by the Encyclopedia ('정조의 일기는 즉위 후에도 계속되었는데'). The Chinese- and Japanese-language machine-translated portal descriptions were removed as sources (f6, f7). 'Every five days' and the 1776 accession year appear only in the portal text and are not in narration. UNESCO page wording is paraphrased (unesco.org unreachable for re-quoting). Framing 'Hoya opens an old book' keeps the story from presenting an imagined meeting with Jeongjo as fact. Omitted: 21 months of missing records; Jeongjo's father's story (tragic)."
+    },
+    {
+      "id": "story-uigwe-royal-birthday",
+      "title_en": "A Picture Record of a Royal Birthday",
+      "title_ko": "왕실 잔치를 그림으로 남긴 의궤",
+      "theme": "rites",
+      "heritage_type": "documentary",
+      "recommended_stage": 5,
+      "minutes": 5,
+      "summary_en": "Uigwe were detailed reports, full of pictures, of royal ceremonies and projects. Hoya opens the Wonhaeng Eulmyo Jeongni Uigwe, the record of King Jeongjo's 1795 celebration for his mother's 60th birthday.",
+      "learning_goals": [
+        "Know that an 의궤 (uigwe) recorded a royal ceremony or project in words and pictures so later generations could follow it.",
+        "Know that uigwe list the people who took part, including craftspeople.",
+        "Describe a 반차도 (banchado): a long picture of a procession, usually drawn as if seen from above.",
+        "Know that the 1795 feast for Lady Hyegyeong at Bongsudang is recorded in the Annals and in the Wonhaeng Eulmyo Jeongni Uigwe, which was printed with metal type.",
+        "Learn 잔치, 그림, 어머니, 환갑 and 장인."
+      ],
+      "scenes": [
+        {
+          "n": 1,
+          "narration_en": "When the Joseon court held a big event, such as a royal wedding, a banquet or the rebuilding of a palace, officials made an 의궤: a detailed report in words and pictures.",
+          "korean": "의궤",
+          "romanization": "uigwe",
+          "gloss_en": "illustrated record of a royal event",
+          "illustration": "An open old book with a colorful painted page of a ceremony beside a page of neat brush writing (no readable text); Hoya leaning in to look.",
+          "fact_ids": [
+            "f1"
+          ]
+        },
+        {
+          "n": 2,
+          "narration_en": "Why? So that next time, people could hold the same kind of event properly. Each uigwe recorded the steps, the people, the costs and the materials, like a final report.",
+          "korean": "그림이 있는 보고서",
+          "romanization": "geurimi inneun bogoseo",
+          "gloss_en": "a report with pictures",
+          "illustration": "Officials checking items off against an open uigwe: bolts of cloth, bowls, flags and lanterns laid out in a courtyard.",
+          "fact_ids": [
+            "f2"
+          ]
+        },
+        {
+          "n": 3,
+          "narration_en": "Uigwe even listed the people who took part, from high officials to skilled craftspeople. Their names and roles were written down, too.",
+          "korean": "장인",
+          "romanization": "jangin",
+          "gloss_en": "artisan, craftsperson",
+          "illustration": "A carpenter, a painter and an embroiderer at work in a palace workshop, each proud of their craft.",
+          "fact_ids": [
+            "f3"
+          ]
+        },
+        {
+          "n": 4,
+          "narration_en": "In 1795, King Jeongjo traveled with his mother, Lady Hyegyeong, to the new city of Hwaseong in Suwon for a grand celebration of her 60th birthday.",
+          "korean": "어머니의 환갑",
+          "romanization": "eomeoniui hwangap",
+          "gloss_en": "mother's 60th birthday",
+          "illustration": "A long, colorful royal procession winding along a road toward a fortress city; two ornate palanquins at the center.",
+          "fact_ids": [
+            "f4"
+          ]
+        },
+        {
+          "n": 5,
+          "narration_en": "By the old lunar calendar, 1795 had an extra 'leap' month after the second month. On its 13th day, the king gave a grand feast for his mother at Bongsudang Hall in the Hwaseong temporary palace. The Annals record that day.",
+          "korean": "잔치",
+          "romanization": "janchi",
+          "gloss_en": "feast, celebration",
+          "illustration": "A festive palace hall with tables of food, musicians and dancers in bright costumes, and an honored elderly lady seated under a canopy.",
+          "fact_ids": [
+            "f5"
+          ]
+        },
+        {
+          "n": 6,
+          "narration_en": "The king also gave gifts of silk to elderly people who took part in the celebration.",
+          "korean": "어르신",
+          "romanization": "eoreusin",
+          "gloss_en": "elders (respectful word)",
+          "illustration": "Smiling elderly men in plain traditional clothes receiving folded bolts of silk in a sunny courtyard.",
+          "fact_ids": [
+            "f6"
+          ]
+        },
+        {
+          "n": 7,
+          "narration_en": "The record of this trip, the 원행을묘정리의궤 (Wonhaeng Eulmyo Jeongni Uigwe), is full of pictures. Some are 반차도: long pictures of a royal procession, usually drawn as if seen from high above, showing where everyone walked or stood.",
+          "korean": "반차도",
+          "romanization": "banchado",
+          "gloss_en": "procession picture",
+          "illustration": "A bird's-eye view of a long procession: rows of tiny figures, horses, flags and palanquins arranged neatly along a path.",
+          "fact_ids": [
+            "f7"
+          ]
+        },
+        {
+          "n": 8,
+          "narration_en": "Unusually, this uigwe was printed with metal movable type, so more copies could be shared. Its pictures are prints, too. In 2007, UNESCO added the Joseon uigwe to the Memory of the World.",
+          "korean": "활자",
+          "romanization": "hwalja",
+          "gloss_en": "movable type",
+          "illustration": "Small metal type pieces in a tray next to a freshly printed picture page and the printing tools beside it.",
+          "fact_ids": [
+            "f8",
+            "f9"
+          ]
+        }
+      ],
+      "facts": [
+        {
+          "id": "f1",
+          "claim_en": "Uigwe record, in text and illustrations, major royal ceremonies and state projects such as royal weddings, banquets, funerals, receptions of envoys and the rebuilding of palaces.",
+          "claim_ko": "의궤는 왕실의 혼인, 잔치, 장례, 사신 접대, 궁궐 중건 같은 국가 의례와 행사를 글과 그림으로 기록한 것이다.",
+          "sources": [
+            {
+              "title": "의궤란 무엇인가 (국가유산이야기 > 의궤정보)",
+              "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, National Heritage Portal)",
+              "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=/mem/uigweInfo.jsp&pageNo=3_4_1_0",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "Q1: 대표적으로 국왕 및 왕세자 등의 혼인이나 책봉, 장례, 특별한 경우의 사신 접대, 궁궐의 대대적인 중건 같은 일들이 이에 해당한다."
+            },
+            {
+              "title": "Uigwe: The Royal Protocols of the Joseon Dynasty",
+              "publisher": "UNESCO Memory of the World",
+              "url": "https://www.unesco.org/en/memory-world/uigwe-royal-protocols-joseon-dynasty",
+              "accessed": "2026-10-10",
+              "quote_or_locator": "Description: \"A unique form of documentary heritage, the Uigwe is a collection of Royal Protocols of the over 500 year-long Joseon Dynasty (1392 - 1910), that both records and prescribes through prose and illustration the major ceremonies and rites of the royal family.\" [verified 2026-10-10 on an Internet Archive snapshot of the unesco.org page]"
+            },
+            {
+              "title": "Memory of the World Register – Uigwe: The Royal Protocols of the Joseon Dynasty, Ref N° 2006-48 (nomination form, PDF)",
+              "publisher": "UNESCO Memory of the World",
+              "url": "https://media.unesco.org/sites/default/files/webform/mow001/republic_of_korea_uigwe.pdf",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "§1 Summary: \"important ceremonies such as weddings, funerals, banquets and receiving foreign missions, it also includes details on the construction of royal buildings and tombs\""
+            }
+          ]
+        },
+        {
+          "id": "f2",
+          "claim_en": "Uigwe were made so later generations could refer to them when holding similar events, and they summarized the participants, materials and costs, serving like a settlement report.",
+          "claim_ko": "의궤는 후대에 비슷한 행사를 치를 때 참고하도록 만들었으며, 참여 인원·물품·비용을 정리해 결산 보고서 역할도 하였다.",
+          "sources": [
+            {
+              "title": "의궤란 무엇인가 (국가유산이야기 > 의궤정보)",
+              "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, National Heritage Portal)",
+              "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=/mem/uigweInfo.jsp&pageNo=3_4_1_0",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "Q2: 후대에 비슷한 종류의 행사를 치를 때 참고할 수 자료로 삼게 하였다. ... 여기에 참여한 인원들, 사용된 물목들과 비용들을 총 정리함으로써 일종의 결산보고서의 기능까지 수행하였던 것이 의궤이다."
+            },
+            {
+              "title": "Memory of the World Register – Uigwe: The Royal Protocols of the Joseon Dynasty, Ref N° 2006-48 (nomination form, PDF)",
+              "publisher": "UNESCO Memory of the World",
+              "url": "https://media.unesco.org/sites/default/files/webform/mow001/republic_of_korea_uigwe.pdf",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "§3.2: \"Each one provides a detailed description of a particular ceremony, including the expenses and implements needed, so that later generations could refer to it as a guide in performing the ceremony the same way.\""
+            }
+          ]
+        },
+        {
+          "id": "f3",
+          "claim_en": "Uigwe list the participants in detail, including artisans, with the name and role of each person.",
+          "claim_ko": "의궤에는 장인까지 포함한 참여 인원의 이름과 역할이 자세히 실려 있다.",
+          "sources": [
+            {
+              "title": "의궤란 무엇인가 (국가유산이야기 > 의궤정보)",
+              "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, National Heritage Portal)",
+              "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=/mem/uigweInfo.jsp&pageNo=3_4_1_0",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "의궤에는 화려하고 다양한 도설과 함께 장인층까지도 포괄하는 상세한 참여인원의 명단 ... 이 담겨 있다."
+            },
+            {
+              "title": "Memory of the World Register – Uigwe: The Royal Protocols of the Joseon Dynasty, Ref N° 2006-48 (nomination form, PDF)",
+              "publisher": "UNESCO Memory of the World",
+              "url": "https://media.unesco.org/sites/default/files/webform/mow001/republic_of_korea_uigwe.pdf",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "§4.3(c): \"The Uigwe disclosed the name and role of each person involved from the most powerful to skilled craftsmen of the lowest class.\""
+            }
+          ]
+        },
+        {
+          "id": "f4",
+          "claim_en": "In 1795, King Jeongjo went to the new city of Hwaseong with his mother, Lady Hyegyeong, for the celebration of her 60th birthday (hoegap).",
+          "claim_ko": "1795년 정조는 어머니 혜경궁 홍씨의 회갑을 기념하여 어머니를 모시고 새 도시 화성에 행차하였다.",
+          "sources": [
+            {
+              "title": "원행을묘정리의궤(園幸乙卯整理儀軌)",
+              "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
+              "url": "https://encykorea.aks.ac.kr/Article/E0040890",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "『원행을묘정리의궤』는 1797년 정리소에서 혜경궁 홍씨의 회갑연 행사를 날짜별로 정리해 간행한 의궤이다. 1795년 윤2월 9일 정조가 회갑을 맞은 혜경궁 홍씨를 모시고 현륭원과 화성 행궁에 행차하여 올린 진연 및 환궁 후의 행사 등을 정리소에서 날짜별로 기록한 책이다."
+            },
+            {
+              "title": "봉수당진찬도(奉壽堂進饌圖)",
+              "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
+              "url": "https://encykorea.aks.ac.kr/Contents/Item/E0075663",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "1795년 윤2월 13일 화성행궁의 봉수당에서 거행된 혜경궁 홍씨의 회갑연을 그린 조선시대 기록화."
+            },
+            {
+              "title": "Hwaseong Fortress (World Heritage)",
+              "publisher": "Korea Heritage Service (국가유산청), English website",
+              "url": "https://english.khs.go.kr/cop/bbs/selectBoardArticle.do?ctgryLrcls=CTGRY209&nttId=57995&bbsId=BBSMSTR_1205&uniq=0&mn=EN_03_01",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "\"In February 1795, when the construction was in its final phase, the king visited Hwaseong with his mother Lady Hyegyeong to hold a banquet to celebrate her 60th birthday. The new city was selected as the venue for the grand event\""
+            }
+          ]
+        },
+        {
+          "id": "f5",
+          "claim_en": "The banquet for Lady Hyegyeong was held at Bongsudang in the Hwaseong temporary palace on the 13th day of the leap 2nd lunar month (yun-2-wol, the extra month inserted after the 2nd month) of 1795, as recorded in the Annals of King Jeongjo.",
+          "claim_ko": "혜경궁을 위한 진찬은 1795년(정조 19) 윤2월 13일 화성행궁의 봉수당에서 열렸으며, 정조실록에 기록되어 있다.",
+          "sources": [
+            {
+              "title": "정조실록 42권, 정조 19년 윤2월 13일 을미 1번째기사 「봉수당에 나아가 혜경궁을 위해 연회를 베풀다」",
+              "publisher": "국사편찬위원회 조선왕조실록 DB (National Institute of Korean History)",
+              "url": "https://sillok.history.go.kr/id/kva_11902113_001",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "정조실록 42권, 정조 19년 윤2월 13일 을미 1/4 기사 (1795년): \"봉수당(奉壽堂)에 나아가 혜경궁을 위해 연회를 베풀었다.\" 原文: \"御奉壽堂, 進饌于惠慶宮。\""
+            },
+            {
+              "title": "봉수당진찬도(奉壽堂進饌圖)",
+              "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
+              "url": "https://encykorea.aks.ac.kr/Contents/Item/E0075663",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "진찬은 정조 일행이 화성에 도착한지 3일째 되는 윤2월 13일에 화성행궁의 내당인 봉수당에서 거행되었다."
+            }
+          ]
+        },
+        {
+          "id": "f6",
+          "claim_en": "On that day the king ordered gifts of silk for elderly people who had taken part in the banquet.",
+          "claim_ko": "같은 날 정조는 연회에 참여한 노인들에게 비단을 내리도록 명하였다.",
+          "sources": [
+            {
+              "title": "정조실록 42권, 정조 19년 윤2월 13일 을미 3번째기사 「연회의 반열에 참여한 노인들에게 비단 등을 주고 수원부 성 내외에 급복을 명하다」",
+              "publisher": "국사편찬위원회 조선왕조실록 DB (National Institute of Korean History)",
+              "url": "https://sillok.history.go.kr/id/kva_11902113_003",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "정조실록 42권, 정조 19년 윤2월 13일 을미 3/4 기사: \"연회를 베풀 때 반열에 참여한 노인으로서 70세 이상이 되는 자 및 61세가 되는 사람들에게 각각 비단 1필(匹)씩을 하사하는 동시에\" 原文: \"命進饌時參班老人, 七十以上及六十一歲人, 各賜帛一匹\""
+            }
+          ]
+        },
+        {
+          "id": "f7",
+          "claim_en": "Banchado are pictures of court ceremonies and processions that show the placement of participants, generally drawn from a high, bird's-eye viewpoint; the Wonhaeng Eulmyo Jeongni Uigwe includes 63 pages of banchado among 112 illustrated pages.",
+          "claim_ko": "반차도는 궁중 행사와 행렬에서 참여자의 배치를 보여 주는 그림으로, 대개 높은 곳에서 내려다보는 부감법으로 그렸으며, 『원행을묘정리의궤』에는 반차도 63면을 포함해 도식 112면이 실려 있다.",
+          "sources": [
+            {
+              "title": "반차도 (국가유산이야기 > 의궤정보)",
+              "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, National Heritage Portal)",
+              "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=/mem/uigweBanCha.jsp&pageNo=3_4_4_0",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "궁중 행사의 의식과 늘어선 관원들의 배치 상황이 정확히 묘사되어 있어 ... 높은 위치에서 내려다보는 식의 부감법(俯瞰法)을 사용하여 그리는 것이 일반적이다."
+            },
+            {
+              "title": "원행을묘정리의궤(園幸乙卯整理儀軌)",
+              "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
+              "url": "https://encykorea.aks.ac.kr/Article/E0040890",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "「화성행행도(華城行幸圖)」를 비롯하여 「봉수당진찬도(奉壽堂進饌圖)」 ... 등 도식 49면, 반차도 63면으로 총 112면이 판화로 제작되어 실려 있다."
+            },
+            {
+              "title": "Memory of the World Register – Uigwe: The Royal Protocols of the Joseon Dynasty, Ref N° 2006-48 (nomination form, PDF)",
+              "publisher": "UNESCO Memory of the World",
+              "url": "https://media.unesco.org/sites/default/files/webform/mow001/republic_of_korea_uigwe.pdf",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "§1 Summary: \"In particular, the pictorial materials, such as “Banchado” and “Doseol” illustrate the rituals and ceremonies of the time with a sophistication and vividness that matches the visual materials of the present day.\""
+            }
+          ]
+        },
+        {
+          "id": "f8",
+          "claim_en": "The Wonhaeng Eulmyo Jeongni Uigwe was printed with metal movable type (Jeongnija); this was unusual because most uigwe were handwritten, and printed uigwe circulated more widely. Its 112 pages of pictures, including the banchado, were made as prints (panhwa).",
+          "claim_ko": "『원행을묘정리의궤』는 금속활자(정리자)로 간행되었는데, 의궤 대부분이 필사본이었던 데 비해 드문 경우이며 활자본은 더 널리 배포되었다. 그림 112면은 판화로 제작되었다.",
+          "sources": [
+            {
+              "title": "원행을묘정리의궤(園幸乙卯整理儀軌)",
+              "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
+              "url": "https://encykorea.aks.ac.kr/Article/E0040890",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "최초의 활자본 의궤로 금속활자로 간행되었다. ... 총 112면이 판화로 제작되어 실려 있다."
+            },
+            {
+              "title": "의궤란 무엇인가 (국가유산이야기 > 의궤정보)",
+              "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, National Heritage Portal)",
+              "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=/mem/uigweInfo.jsp&pageNo=3_4_1_0",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "제작 부수가 많지 않은 의궤는 거의 절대 다수가 필사본이다. 그런데 이 시기에 \"원행을묘정리의궤\"나 \"화성성역의궤\" 등이 정리자라는 금속활자로 특별 제작되었다."
+            },
+            {
+              "title": "Memory of the World Register – Uigwe: The Royal Protocols of the Joseon Dynasty, Ref N° 2006-48 (nomination form, PDF)",
+              "publisher": "UNESCO Memory of the World",
+              "url": "https://media.unesco.org/sites/default/files/webform/mow001/republic_of_korea_uigwe.pdf",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "§4.2: \"Uigwe created during the 18th century related to the royal family and those concerning the construction of Hwaseong (fortress) were published using movable type, and therefore had a circulation larger than the hand-scribed Uigwe.\""
+            },
+            {
+              "title": "「원행을묘정리의궤」의 판화사적 연구 (「園幸乙卯整理儀軌」의 板畫史的 硏究) — 정병모 (Jeong Byeong-mo)",
+              "publisher": "한국정신문화연구원 편찬부 (Academy of Korean Studies), via KoreaScience",
+              "url": "https://www.koreascience.or.kr/article/JAKO198971663777327.pdf",
+              "accessed": "2026-10-10",
+              "quote_or_locator": "Ⅲ. 서지학적 특징: 「정리의궤」는 판화로 찍었고 활자로 간행하였다. 그림은 목판화로 새겼고, 글씨는 ... 금속활자인 정리자(整理字)를 사용하였다. / Ⅵ. 맺음말: 필사가 아니고 판화로 대량제작하였다."
+            }
+          ]
+        },
+        {
+          "id": "f9",
+          "claim_en": "The Uigwe were inscribed on UNESCO's Memory of the World Register in 2007.",
+          "claim_ko": "조선왕조 의궤는 2007년 유네스코 세계기록유산에 등재되었다.",
+          "sources": [
+            {
+              "title": "Uigwe: The Royal Protocols of the Joseon Dynasty",
+              "publisher": "UNESCO Memory of the World",
+              "url": "https://www.unesco.org/en/memory-world/uigwe-royal-protocols-joseon-dynasty",
+              "accessed": "2026-10-10",
+              "quote_or_locator": "Registration Year: 2007; Submission Year: 2006; Submitted by: Republic of Korea. [verified 2026-10-10 on an Internet Archive snapshot of the unesco.org page]"
+            },
+            {
+              "title": "의궤란 무엇인가 (국가유산이야기 > 의궤정보)",
+              "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, National Heritage Portal)",
+              "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=/mem/uigweInfo.jsp&pageNo=3_4_1_0",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "의궤는 조선 시기의 대표적인 기록 문화유산으로 인정받아 2007년 8월 유네스코 세계기록문화유산으로 등재되었다."
+            },
+            {
+              "title": "승정원일기 소개",
+              "publisher": "국사편찬위원회 승정원일기 DB (National Institute of Korean History)",
+              "url": "https://sjw.history.go.kr/intro/intro.do",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "표 '한국의 세계기록유산 목록': 조선왕조실록 1997 / 승정원일기 2001 / 조선왕조의궤 2007 / 일성록 2011"
+            }
+          ]
+        }
+      ],
+      "vocab": [
+        {
+          "ko": "의궤",
+          "rr": "uigwe",
+          "en": "illustrated record of a royal event"
+        },
+        {
+          "ko": "잔치",
+          "rr": "janchi",
+          "en": "feast, celebration"
+        },
+        {
+          "ko": "그림",
+          "rr": "geurim",
+          "en": "picture"
+        },
+        {
+          "ko": "어머니",
+          "rr": "eomeoni",
+          "en": "mother"
+        },
+        {
+          "ko": "환갑",
+          "rr": "hwangap",
+          "en": "60th birthday"
+        },
+        {
+          "ko": "장인",
+          "rr": "jangin",
+          "en": "artisan, craftsperson"
+        },
+        {
+          "ko": "반차도",
+          "rr": "banchado",
+          "en": "procession picture"
+        }
+      ],
+      "checks": [
+        {
+          "q_en": "What is an uigwe?",
+          "options": [
+            "A crown worn only at royal weddings",
+            "A royal event report with words and pictures",
+            "A cookbook of royal palace snacks"
+          ],
+          "answer_index": 1,
+          "fact_id": "f1"
+        },
+        {
+          "q_en": "Why did the Joseon court make uigwe?",
+          "options": [
+            "To sell copies to merchants at the market",
+            "To give the palace walls a new decoration",
+            "So later people could hold the same event properly"
+          ],
+          "answer_index": 2,
+          "fact_id": "f2"
+        },
+        {
+          "q_en": "What does a banchado show?",
+          "options": [
+            "A procession, usually seen from above",
+            "A song written for the king",
+            "A map showing the mountains near Seoul"
+          ],
+          "answer_index": 0,
+          "fact_id": "f7"
+        }
+      ],
+      "reference_display": "Sources: 국사편찬위원회 조선왕조실록 DB (정조실록 42권, 정조 19년 윤2월 13일); 국가유산청 국가유산포털 (의궤정보); 한국민족문화대백과사전; Korea Heritage Service; UNESCO Memory of the World (Uigwe)",
+      "notes": "Narration omits the ages in the silk-gift entry (70+ and those turning 61) because they come from a single source; the Korean line '어르신' is a vocabulary item. 회갑 (source term) and 환갑 (everyday term) both mean the 60th birthday; 환갑 is taught. The feast date is given on the lunar calendar as recorded; the KHS English page says 'February 1795', which refers to the lunar leap 2nd month. The leap-month wording was rewritten simply ('an extra leap month after the second month'). The Hwaseong feast (13th of the leap 2nd month) took place during the 1795 trip celebrating her 60th year; her actual birthday fell in the 6th lunar month and the Encyclopedia notes a formal feast on 6/18 in Seoul, so narration says 'a celebration of her 60th birthday' and never says the Hwaseong feast was on the birthday itself. Revision: the uigwe is now named (원행을묘정리의궤); banchado described as 'long pictures' not paintings; 'woodblock' was REMOVED - Korean authorities (Encyclopedia of Korean Culture) say only 판화 (prints), and no Korean institutional source found says woodblock specifically (a Cambridge/Amsterdam UP page suggested by a checker did not mention woodcuts when re-fetched). The encyclopedia calls this 'the first uigwe printed with movable type'; narration says 'unusually' to stay conservative. UNESCO page text is paraphrased (unesco.org unreachable for re-quoting); UNESCO nomination-form quotes were re-checked against a saved copy of the PDF; the draft's banchado caption quote ('Banchado in color ... excellent clarity') could not be found in the PDF text and was replaced by the §1 Summary sentence on Banchado and Doseol. Omitted: the length of a painting (15.4 m, single source), page counts beyond f7, the story of Prince Sado (tragic), and the 1866 removal of Oegyujanggak uigwe to France and their 2011 return (war-related). PASS 3: second source for 판화 found (정병모, 판화사적 연구: 'prints' - and specifically 목판화, woodblock prints, with 정리자 metal type); narration stays at the more general 'prints'. Silk gifts (f6) confirmed directly in the original Annals entry text (命進饌時參班老人, 七十以上及六十一歲人, 各賜帛一匹); single primary source kept, no numbers in narration."
+    },
+    {
+      "id": "story-joseon-records-today",
+      "title_en": "Old Records, New Discoveries",
+      "title_ko": "오래된 기록, 새로운 발견",
+      "theme": "letters",
+      "heritage_type": "documentary",
+      "recommended_stage": 6,
+      "minutes": 4,
+      "summary_en": "How do Joseon records help people today? Hoya sees a fortress repaired from uigwe drawings, a festival that recreates a royal procession, scientists reading old weather notes, and the Annals open to everyone online.",
+      "learning_goals": [
+        "Give at least two ways people use Joseon records today (restoring Hwaseong, recreating a procession, studying past weather, reading the Annals online).",
+        "Know that the Annals, Seungjeongwon Ilgi, Uigwe and Ilseongnok are all on UNESCO's Memory of the World Register.",
+        "Say 기록은 보물이에요 and recognize 화성, 성, 행렬 and 날씨."
+      ],
+      "scenes": [
+        {
+          "n": 1,
+          "narration_en": "Hoya has one more question: what do these old records do for us today? Let's visit some places where Joseon records are still at work.",
+          "korean": "왜 기록할까요?",
+          "romanization": "Wae girokalkkayo?",
+          "gloss_en": "Why do we keep records?",
+          "illustration": "Hoya with a small backpack standing at a crossroads with signposts shaped like a book, a fortress and a cloud (no text).",
+          "fact_ids": []
+        },
+        {
+          "n": 2,
+          "narration_en": "Suwon Hwaseong fortress was finished in 1796. Every step of the building work was recorded in the Hwaseong Seongyeok Uigwe, with drawings of buildings and machines, and the sizes and amounts of materials.",
+          "korean": "화성",
+          "romanization": "Hwaseong",
+          "gloss_en": "Hwaseong Fortress (in Suwon)",
+          "illustration": "A stone-and-brick fortress wall with a gate tower; beside it, an open book showing a drawing of a lifting machine with pulleys.",
+          "fact_ids": [
+            "f1"
+          ]
+        },
+        {
+          "n": 3,
+          "narration_en": "Later, parts of the fortress were damaged. Workers followed the uigwe to restore it to its original shape, and repairs still rely on this record today.",
+          "korean": "성을 고쳐요.",
+          "romanization": "Seongeul gochyeoyo.",
+          "gloss_en": "They repair the fortress.",
+          "illustration": "Modern workers in helmets fitting stones into a fortress wall while one checks a page of old drawings on a tablet.",
+          "fact_ids": [
+            "f2"
+          ]
+        },
+        {
+          "n": 4,
+          "narration_en": "Today, Suwon's Hwaseong Cultural Festival, the 수원화성문화제, includes a recreation of King Jeongjo's grand royal procession, based on the uigwe of his trip.",
+          "korean": "행렬",
+          "romanization": "haengnyeol",
+          "gloss_en": "procession",
+          "illustration": "A modern street festival: people in colorful Joseon costumes marching with flags and a palanquin, families watching and waving.",
+          "fact_ids": [
+            "f3"
+          ]
+        },
+        {
+          "n": 5,
+          "narration_en": "Scientists can study the weather notes in the Seungjeongwon Ilgi, written day after day for nearly 300 years, to learn about nature in the past.",
+          "korean": "날씨 기록",
+          "romanization": "nalssi girok",
+          "gloss_en": "weather records",
+          "illustration": "A scientist at a computer showing a simple line chart, with an old diary open on the desk and a window showing rain clouds.",
+          "fact_ids": [
+            "f4"
+          ]
+        },
+        {
+          "n": 6,
+          "narration_en": "The Annals were written in classical Chinese, which is hard for most people today. Translators turned them into modern Korean, and now anyone can read the translation online, along with the original text.",
+          "korean": "누구나 읽을 수 있어요.",
+          "romanization": "Nuguna ilgeul su isseoyo.",
+          "gloss_en": "Anyone can read it.",
+          "illustration": "A child and a grandparent looking at a tablet showing two columns of text shapes, one old style and one modern (no readable characters).",
+          "fact_ids": [
+            "f5"
+          ]
+        },
+        {
+          "n": 7,
+          "narration_en": "All four records you met, the Annals, the Seungjeongwon Ilgi, the uigwe and the Ilseongnok, are on UNESCO's Memory of the World Register.",
+          "korean": "유네스코",
+          "romanization": "Yuneseuko",
+          "gloss_en": "UNESCO",
+          "illustration": "Four old books standing side by side on a shelf with a soft glow, each a different cover color.",
+          "fact_ids": [
+            "f6"
+          ]
+        },
+        {
+          "n": 8,
+          "narration_en": "Hoya smiles. Thanks to people who wrote carefully long ago, we can still learn from the past. 'Records are treasures!' What will you write down today?",
+          "korean": "기록은 보물이에요.",
+          "romanization": "Girogeun bomurieyo.",
+          "gloss_en": "Records are treasures.",
+          "illustration": "Hoya holding up a small notebook and brush, grinning, with the fortress, books and a sunny sky behind him.",
+          "fact_ids": []
+        }
+      ],
+      "facts": [
+        {
+          "id": "f1",
+          "claim_en": "Suwon Hwaseong was completed in 1796, and the whole construction process was recorded in the Hwaseong Seongyeok Uigwe, including architectural drawings, pictures of construction machines, and the sizes and quantities of materials.",
+          "claim_ko": "수원 화성은 1796년에 완성되었으며, 축성의 모든 과정이 건축 도면, 축성 기계 그림, 재료의 치수와 수량까지 『화성성역의궤』에 기록되었다.",
+          "sources": [
+            {
+              "title": "사적 수원 화성 (水原 華城) – 기본 정보·국가유산 설명",
+              "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, National Heritage Portal)",
+              "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1333100030000&pageNo=1_1_2_0",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "1794년(정조 18) 축성을 시작해 1796년에 완성했다. ... 축성의 모든 과정은 『화성성역의궤』라는 공사보고서에 꼼꼼하게 기록했다. 건축도면과 축성기계의 그림, 사용한 재료의 치수와 수량까지 수록되어 있어"
+            },
+            {
+              "title": "수원 화성 (유네스코 등재유산 > 한국의 세계유산)",
+              "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, National Heritage Portal)",
+              "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=/unesco/Heritage/Heritage_05.jsp&pageNo=1_3_2_0",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "1794년 1월에 착공에 들어가 1796년 9월에 완공하였다. ... 1801년에 발간된 「화성성역의궤」에는 축성계획, 제도, 법식뿐 아니라 ... 시공기계, 재료가공법, 공사일지 등이 상세히 기록되어 있어"
+            },
+            {
+              "title": "Hwaseong Fortress (World Heritage)",
+              "publisher": "Korea Heritage Service (국가유산청), English website",
+              "url": "https://english.khs.go.kr/cop/bbs/selectBoardArticle.do?ctgryLrcls=CTGRY209&nttId=57995&bbsId=BBSMSTR_1205&uniq=0&mn=EN_03_01",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "\"The construction of the fortress was successfully completed in the summer of 1796.\" / \"recorded the construction process in great detail, including the design, actual shape, size and characteristic features of every building\""
+            }
+          ]
+        },
+        {
+          "id": "f2",
+          "claim_en": "After parts of Hwaseong were damaged, the fortress was restored to its original shape based on the Hwaseong Seongyeok Uigwe, and repairs are still carried out based on it today.",
+          "claim_ko": "화성은 일부가 훼손된 뒤 『화성성역의궤』에 의거하여 축성 당시 모습대로 복원되었고, 지금도 이를 바탕으로 수리·보수가 이루어진다.",
+          "sources": [
+            {
+              "title": "Hwaseong Fortress (World Heritage)",
+              "publisher": "Korea Heritage Service (국가유산청), English website",
+              "url": "https://english.khs.go.kr/cop/bbs/selectBoardArticle.do?ctgryLrcls=CTGRY209&nttId=57995&bbsId=BBSMSTR_1205&uniq=0&mn=EN_03_01",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "\"The fortress was restored to its original shape, after the damage and destruction ... was repaired, based on another court document, Hwaseong seongyeok uigwe\""
+            },
+            {
+              "title": "수원 화성 (유네스코 등재유산 > 한국의 세계유산)",
+              "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, National Heritage Portal)",
+              "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=/unesco/Heritage/Heritage_05.jsp&pageNo=1_3_2_0",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "축성 후 발간된 \"화성성역의궤(1801년)\"에 의거하여 대부분 축성 당시 모습대로 보수·복원(1975~1979년)하여 현재에 이르고 있다."
+            },
+            {
+              "title": "사적 수원 화성 (水原 華城) – 기본 정보·국가유산 설명",
+              "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, National Heritage Portal)",
+              "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1333100030000&pageNo=1_1_2_0",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "현재까지도 『화성성역의궤』를 바탕으로 수리 보수가 이루어지고 있다."
+            }
+          ]
+        },
+        {
+          "id": "f3",
+          "claim_en": "Suwon's Hwaseong Cultural Festival (Suwon Hwaseong Munhwaje, 수원화성문화제) includes a reenactment of King Jeongjo's royal procession (neunghaengcha), based on the Wonhaeng Eulmyo Jeongni Uigwe.",
+          "claim_ko": "수원화성문화제에서는 『원행을묘정리의궤』를 바탕으로 정조대왕 능행차를 재현한다.",
+          "sources": [
+            {
+              "title": "Hwaseong Fortress (World Heritage)",
+              "publisher": "Korea Heritage Service (국가유산청), English website",
+              "url": "https://english.khs.go.kr/cop/bbs/selectBoardArticle.do?ctgryLrcls=CTGRY209&nttId=57995&bbsId=BBSMSTR_1205&uniq=0&mn=EN_03_01",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "\"Every year in October, the Suwon municipal government holds the Hwaseong Culture Festival, in which the 18th-century royal procession is reenacted based on this document.\" (this document = Wonhaeng eulmyo jeongni uigwe)"
+            },
+            {
+              "title": "정조대왕능행차 (수원관광 > 축제)",
+              "publisher": "수원시 (Suwon City) 공식 누리집",
+              "url": "https://www.suwon.go.kr/sw-www/sw-visitsuwon/sw-visitsuwon-03/sw-visitsuwon-03-02.jsp",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "기록유산 「원행을묘정리의궤」를 기반으로 재현하는 '을묘년 화성원행' 이라고도 불리는 정조대왕 능행차는 (the Suwon City page lists 수원화성문화제 and 정조대왕능행차 as separate menu items; the festival's own site includes the procession as a program category)"
+            },
+            {
+              "title": "화성문화제(水原華城文化祭)",
+              "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
+              "url": "https://encykorea.aks.ac.kr/Article/E0064678",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "최근에는 서울특별시, 수원시, 화성시가 함께 여는 정조대왕 능 행차 시연과 연계하여 열리고 있다. (항목 이름: 화성문화제(水原華城文化祭) / 수원화성문화제)"
+            },
+            {
+              "title": "제63회 수원화성문화제 공식 누리집 (프로그램: 카테고리 '능행차', '정조대왕 능행차')",
+              "publisher": "수원화성문화제 (Suwon Hwaseong Cultural Festival official site)",
+              "url": "https://shfestival.com/",
+              "accessed": "2026-10-10",
+              "quote_or_locator": "프로그램 > 카테고리별: ALL 능행차 공연 체험 전시/포럼 글로벌빌리지 기타 ... 정조대왕 능행차 장소별 프로그램 · 시간별 프로그램 · 능행차 행렬도"
+            }
+          ]
+        },
+        {
+          "id": "f4",
+          "claim_en": "The Seungjeongwon Ilgi recorded the weather daily over 288 years (1623–1910), and these records can be used for natural-science research.",
+          "claim_ko": "승정원일기는 288년간(1623~1910) 날씨를 매일 기록하였으며, 이는 자연과학 연구에 활용될 수 있다.",
+          "sources": [
+            {
+              "title": "승정원일기 (承政院日記) – 기본 정보·국가유산 설명",
+              "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, National Heritage Portal)",
+              "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?VdkVgwKey=11,03030000,11&pageNo=1_1_1_1",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "현재는 1623년(인조 1) 3월부터 1910년(융희 4) 8월까지 288년간의 일기만 전해지고 있다."
+            },
+            {
+              "title": "승정원일기 소개",
+              "publisher": "국사편찬위원회 승정원일기 DB (National Institute of Korean History)",
+              "url": "https://sjw.history.go.kr/intro/intro.do",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "매일 기록되는 날씨는 조선시대 자연현상에 대한 기초 자료를 제공함으로서 천문학 등의 자연과학의 연구에도 활용이 가능하다."
+            },
+            {
+              "title": "Memory of the World Register – Nomination Form: Republic of Korea – Seungjeongwon Ilgi, The Diaries of the Royal Secretariat (PDF)",
+              "publisher": "UNESCO Memory of the World",
+              "url": "https://media.unesco.org/sites/default/files/webform/mow001/republic_of_korea_seungjeongwon_iilgi.pdf",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "§5.1 item (4): \"It covers 288 years of weather observation\""
+            }
+          ]
+        },
+        {
+          "id": "f5",
+          "claim_en": "The Annals, written in classical Chinese, were translated into Korean, and the National Institute of Korean History's website publishes the translation and the original text.",
+          "claim_ko": "한문으로 쓰인 실록은 한국어로 번역되었으며, 국사편찬위원회 누리집에서 번역문과 원문을 공개하고 있다.",
+          "sources": [
+            {
+              "title": "조선왕조실록 소개 (실록 편찬과 관리)",
+              "publisher": "국사편찬위원회 조선왕조실록 DB (National Institute of Korean History)",
+              "url": "https://sillok.history.go.kr/intro/intro.do",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "《조선왕조실록》은 한문으로 기록되어 일반인들이 읽기 어려웠으나, 1968년부터 세종대왕기념사업회가, 1972년부터는 민족문화추진회가 국역사업을 시작하여 1993년에 완성하였다. ... 이제 누구나 읽을 수 있게 되었다."
+            },
+            {
+              "title": "정종실록(定宗實錄)",
+              "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
+              "url": "https://encykorea.aks.ac.kr/Article/E0050890",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "현재 국사편찬위원회 홈페이지(http://sillok.history.go.kr/)에서 번역본과 원문을 공개하고 있다."
+            }
+          ]
+        },
+        {
+          "id": "f6",
+          "claim_en": "The Annals of the Joseon Dynasty (1997), the Seungjeongwon Ilgi (2001), the Uigwe (2007) and the Ilseongnok (2011) are all inscribed on UNESCO's Memory of the World Register.",
+          "claim_ko": "조선왕조실록(1997), 승정원일기(2001), 조선왕조 의궤(2007), 일성록(2011)은 모두 유네스코 세계기록유산에 등재되어 있다.",
+          "sources": [
+            {
+              "title": "The Annals of the Choson Dynasty",
+              "publisher": "UNESCO Memory of the World",
+              "url": "https://www.unesco.org/en/memory-world/annals-choson-dynasty",
+              "accessed": "2026-10-10",
+              "quote_or_locator": "Registration Year: 1997; Submission Year: 1997; Submitted by: Republic of Korea. Description: \"This collection covers more than 470 years of the history of the dynasty, from the reign of King T'aejo (r. 1392- 1398), the founder, to the reign of King Ch'olchong (r. 1849 - 1863).\" [verified 2026-10-10 on an Internet Archive snapshot of the unesco.org page]"
+            },
+            {
+              "title": "Seungjeongwon Ilgi, the Diaries of the Royal Secretariat",
+              "publisher": "UNESCO Memory of the World",
+              "url": "https://www.unesco.org/en/memory-world/seungjeongwon-ilgi-diaries-royal-secretariat",
+              "accessed": "2026-10-10",
+              "quote_or_locator": "Registration Year: 2001; Submission Year: 2001; Submitted by: Republic of Korea. [verified 2026-10-10 on an Internet Archive snapshot of the unesco.org page]"
+            },
+            {
+              "title": "Uigwe: The Royal Protocols of the Joseon Dynasty",
+              "publisher": "UNESCO Memory of the World",
+              "url": "https://www.unesco.org/en/memory-world/uigwe-royal-protocols-joseon-dynasty",
+              "accessed": "2026-10-10",
+              "quote_or_locator": "Registration Year: 2007; Submission Year: 2006; Submitted by: Republic of Korea. [verified 2026-10-10 on an Internet Archive snapshot of the unesco.org page]"
+            },
+            {
+              "title": "Ilseongnok: Records of Daily Reflections",
+              "publisher": "UNESCO Memory of the World",
+              "url": "https://www.unesco.org/en/memory-world/ilseongnok-records-daily-reflections",
+              "accessed": "2026-10-10",
+              "quote_or_locator": "Registration Year: 2011; Submission Year: 2010; Submitted by: Republic of Korea. [verified 2026-10-10 on an Internet Archive snapshot of the unesco.org page]"
+            },
+            {
+              "title": "승정원일기 소개",
+              "publisher": "국사편찬위원회 승정원일기 DB (National Institute of Korean History)",
+              "url": "https://sjw.history.go.kr/intro/intro.do",
+              "accessed": "2026-10-09",
+              "quote_or_locator": "표 '한국의 세계기록유산 목록': 조선왕조실록 1997 / 승정원일기 2001 / 조선왕조의궤 2007 / 일성록 2011"
+            }
+          ]
+        }
+      ],
+      "vocab": [
+        {
+          "ko": "기록",
+          "rr": "girok",
+          "en": "record"
+        },
+        {
+          "ko": "화성",
+          "rr": "Hwaseong",
+          "en": "Hwaseong Fortress"
+        },
+        {
+          "ko": "성",
+          "rr": "seong",
+          "en": "fortress, castle wall"
+        },
+        {
+          "ko": "행렬",
+          "rr": "haengnyeol",
+          "en": "procession"
+        },
+        {
+          "ko": "날씨",
+          "rr": "nalssi",
+          "en": "weather"
+        },
+        {
+          "ko": "보물",
+          "rr": "bomul",
+          "en": "treasure"
+        },
+        {
+          "ko": "유네스코",
+          "rr": "Yuneseuko",
+          "en": "UNESCO"
+        }
+      ],
+      "checks": [
+        {
+          "q_en": "How was Suwon Hwaseong restored to its original shape?",
+          "options": [
+            "By guessing from stories told by villagers",
+            "By copying a fortress from another country",
+            "By following the records and drawings in its uigwe"
+          ],
+          "answer_index": 2,
+          "fact_id": "f2"
+        },
+        {
+          "q_en": "What can scientists study in the Seungjeongwon Ilgi?",
+          "options": [
+            "Weather records from long ago",
+            "Dinosaur bones from the palace",
+            "Photographs of the kings' faces"
+          ],
+          "answer_index": 0,
+          "fact_id": "f4"
+        },
+        {
+          "q_en": "Which UNESCO register includes all four Joseon records in this story?",
+          "options": [
+            "Intangible Cultural Heritage list",
+            "Memory of the World Register",
+            "List of natural World Heritage sites"
+          ],
+          "answer_index": 1,
+          "fact_id": "f6"
+        }
+      ],
+      "reference_display": "Sources: 국가유산청 국가유산포털 (수원 화성); Korea Heritage Service; 수원시 (정조대왕능행차); 국사편찬위원회 조선왕조실록·승정원일기 DB; 한국민족문화대백과사전; UNESCO Memory of the World",
+      "notes": "The restoration years (1975-1979) appear in only one Korean source, so narration gives no year. Causes of the fortress damage (colonial period and Korean War) are omitted as out of scope; narration says only 'parts were damaged'. Festival: the official Korean name is 수원화성문화제 (the draft's '화성문화제' was the English-page rendering and the Encyclopedia headword); the claim is now backed by the KHS English page, the Suwon City page for the procession (which states it is based on the uigwe) and the Encyclopedia entry on the festival; 'every year in October' and any dates are left out of narration because the schedule can change (2026 events were held in early October). The translation completion year (1993) is single-source and omitted. Scenes 1 and 8 are story framing with no factual claims. UNESCO register pages are cited for registration years only (page wording not quoted; unesco.org was unreachable on 2026-10-10), and the NIKH list of Korean Memory of the World items is a second source for all four years. PASS 3: the festival-includes-procession link is now backed by the festival's own official site (63rd festival, 2026) in addition to the KHS English page and the Encyclopedia; Suwon City's tourism site lists the two as separate menu items, so the narration keeps the neutral 'includes'."
+    }
+  ],
+  "verification": {
+    "passes": 3,
+    "checked_at": "2026-10-10",
+    "notes": "Third independent pass. All Sillok entries (Taejong 4/2/8 #4; Jeongjo 19/leap2/13 #1 and #3) re-fetched from sillok.history.go.kr and compared to original Chinese/Korean text. Every non-UNESCO URL cited was re-fetched fresh and every quote segment machine-matched, plus heritage.go.kr 국가유산 설명 text loaded from the portal's own ajax file (DATA1/heritage/hub_img/html/cul_*.html). UNESCO register pages for all four items verified via Internet Archive (registration years 1997/2001/2007/2011 with exact wording); Uigwe nomination PDF re-extracted and quotes/section numbers verified; Seungjeongwon nomination PDF could not be re-fetched (captcha) so the author's saved text was used, with other sources backing each fact. Corrections this pass: poswae schedule mistranslation (격 2년 = every third year, not every other year), 'dried herbs' removed, ep5 f4 quote exactified, 3 vocab words not appearing in scenes removed, ep5 f8 second source (정병모 판화사적 연구) and ep6 f3 festival official site added, UNESCO locators replaced by exact page wording, ep3 f7 3,045+198 clarification."
+  }
+}
