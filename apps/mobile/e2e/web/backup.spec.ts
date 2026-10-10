@@ -18,7 +18,7 @@ test('backup file round-trips a learner between two devices', async ({ browser }
   await expect(a.getByText('Hi, Yuna!')).toBeVisible();
 
   // Settings → Back up to a file → a .hangulroute.json download.
-  await a.getByRole('button', { name: 'Profiles and settings' }).click();
+  await a.getByRole('button', { name: 'Profile and settings' }).click();
   const download = a.waitForEvent('download');
   await a.getByRole('button', { name: 'Back up to a file' }).click();
   const file = await download;
@@ -38,7 +38,7 @@ test('backup file round-trips a learner between two devices', async ({ browser }
   await b.getByRole('button', { name: 'Continue' }).click();
   await b.getByRole('button', { name: 'Start my journey' }).click();
   await b.goto('/');
-  await b.getByRole('button', { name: 'Profiles and settings' }).click();
+  await b.getByRole('button', { name: 'Profile and settings' }).click();
   await b.getByRole('button', { name: 'Restore from a file (grown-ups only)' }).click();
   // First grown-up entry creates the PIN (F-PROF-001 §10): 1234, twice.
   for (const round of [0, 1]) {
@@ -53,7 +53,7 @@ test('backup file round-trips a learner between two devices', async ({ browser }
   await expect(b.getByTestId('restore-notice')).toBeVisible();
   await expect(b.getByText('Welcome back, Yuna! Your journey is here.')).toBeVisible();
   await b.getByRole('button', { name: 'Great' }).click();
-  await b.getByRole('button', { name: 'Profiles and settings' }).click();
+  await b.getByRole('button', { name: 'Profile and settings' }).click();
   await expect(b.getByRole('button', { name: 'Switch to Yuna' })).toBeVisible();
   await deviceB.close();
 });

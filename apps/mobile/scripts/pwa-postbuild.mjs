@@ -2,7 +2,7 @@
 // --platform web`. 1) injects manifest / meta / shell CSS / service-worker
 // registration into dist/index.html, 2) generates dist/sw.js with Workbox
 // precaching every exported file so the app plays offline after one visit.
-// Colors here mirror app.json splash/theme (native config, not UI tokens).
+// app.json (adaptive icon) and public/manifest.webmanifest keep a copy of brand.primary: keep them equal to the token.
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -16,7 +16,7 @@ const here = dirname(fileURLToPath(import.meta.url));
 const tokensSrc = readFileSync(join(here, '../../../packages/design-system/src/tokens.ts'), 'utf8');
 const token = (name, fallback) => tokensSrc.match(new RegExp(`\\b${name}:\\s*'(#[0-9A-Fa-f]{6})'`))?.[1] ?? fallback;
 const canvas = token('canvas', '#FCF8F1');
-const brand = token('primary', '#E8743B');
+const brand = token('primary', '#B24915');
 const border = token('subtle', '#E8DFCD');
 const indexPath = join(dist, 'index.html');
 if (!existsSync(indexPath)) {

@@ -3,6 +3,7 @@ import {
   AVATAR_PRESETS,
   DEFAULT_AVATAR,
   avatarAccessibilityLabel,
+  avatarTheme,
   findAvatar,
   isAvatarKind,
 } from '../avatar-catalog';
@@ -51,5 +52,17 @@ describe('avatar catalog', () => {
 describe('avatarAccessibilityLabel', () => {
   it('reads a tile as "<name>\'s tiger, stage N. Tap to enter." (§3.6)', () => {
     expect(avatarAccessibilityLabel('Suni', 1)).toBe("Suni's tiger, stage 1. Tap to enter.");
+  });
+});
+
+describe('avatarTheme', () => {
+  it("gives the culture-theme tint of the learner's cub (Home profile entry, UX-05)", () => {
+    expect(avatarTheme('hoya-orange')).toBe('letters');
+    expect(avatarTheme('hoya-purple')).toBe('nature');
+  });
+
+  it('falls back to the default cub for persisted junk data', () => {
+    // @ts-expect-error — guarding the runtime path for persisted junk data
+    expect(avatarTheme('hoya-teal')).toBe(findAvatar(DEFAULT_AVATAR)?.theme);
   });
 });

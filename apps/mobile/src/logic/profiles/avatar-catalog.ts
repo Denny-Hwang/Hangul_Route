@@ -36,6 +36,15 @@ export function findAvatar(kind: AvatarKind): AvatarPreset | null {
   return AVATAR_PRESETS.find((a) => a.kind === kind) ?? null;
 }
 
+/**
+ * Culture-theme tint for a learner's cub — the Home profile entry rings the
+ * avatar in it (UX-05). Unknown (persisted junk) kinds read as the default
+ * cub's theme, letters.
+ */
+export function avatarTheme(kind: AvatarKind): PillarTheme {
+  return findAvatar(kind)?.theme ?? 'letters';
+}
+
 export function isAvatarKind(value: string): value is AvatarKind {
   return AVATAR_PRESETS.some((a) => a.kind === value);
 }

@@ -19,11 +19,18 @@ const toneFg: Record<ButtonTone, string> = {
   nudge: colors.text.primary,
 };
 
+// Ghost text darkens while pressed: brand.primary on the primaryLight press
+// fill is 4.10:1, primaryDark on it 5.76:1 (UX-10, contrast.test.ts).
+const tonePressedFg: Record<ButtonTone, string> = {
+  ...toneFg,
+  ghost: colors.brand.primaryDark,
+};
+
 const tonePressedBg: Record<ButtonTone, string> = {
   primary: colors.brand.primaryDark,
   secondary: colors.brand.secondaryDark,
   ghost: colors.brand.primaryLight,
-  success: '#3F8A5C',
+  success: colors.feedback.successDark,
   nudge: '#D89B2B',
 };
 
@@ -88,18 +95,22 @@ export function Button({
         alignSelf: fullWidth ? 'stretch' : 'flex-start',
       })}
     >
-      {leading ? <View style={{ marginRight: spacing.sm }}>{leading}</View> : null}
-      <Text
-        style={{
-          color: disabled ? colors.text.muted : toneFg[tone],
-          fontSize: sizeFont[size],
-          fontWeight: typography.weight.semibold,
-          letterSpacing: typography.tracking.normal,
-        }}
-      >
-        {label}
-      </Text>
-      {trailing ? <View style={{ marginLeft: spacing.sm }}>{trailing}</View> : null}
+      {({ pressed }) => (
+        <>
+          {leading ? <View style={{ marginRight: spacing.sm }}>{leading}</View> : null}
+          <Text
+            style={{
+              color: disabled ? colors.text.muted : pressed ? tonePressedFg[tone] : toneFg[tone],
+              fontSize: sizeFont[size],
+              fontWeight: typography.weight.semibold,
+              letterSpacing: typography.tracking.normal,
+            }}
+          >
+            {label}
+          </Text>
+          {trailing ? <View style={{ marginLeft: spacing.sm }}>{trailing}</View> : null}
+        </>
+      )}
     </Pressable>
   );
 }

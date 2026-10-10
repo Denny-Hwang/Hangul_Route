@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { ScrollView, View } from 'react-native';
+import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
+import { ALL_SCREEN_EDGES, NO_INSETS, screenPadding } from '../../layout';
 import { colors, spacing } from '../../tokens';
 import type { ScreenProps } from './types';
 
@@ -11,31 +13,35 @@ const toneBg = {
 
 export function Screen({
   children,
-  scrollable = false,
+  scrollable = true,
   padded = true,
   tone = 'canvas',
+  edges = ALL_SCREEN_EDGES,
   testID,
 }: ScreenProps): React.ReactElement {
-  const containerStyle = {
-    flex: 1,
-    backgroundColor: toneBg[tone],
-    padding: padded ? spacing.lg : 0,
-  };
+  // The nearest provider's context (modal screens get their own, navigation/with-own-safe-area),
+  // not useSafeAreaInsets, so a missing SafeAreaProvider degrades
+  // to plain padding instead of throwing.
+  const insets = useContext(SafeAreaInsetsContext) ?? NO_INSETS;
+  const padding = screenPadding(padded ? spacing.lg : 0, insets, edges);
+  const backgroundColor = toneBg[tone];
 
-  if (scrollable) {
+  if (!scrollable) {
     return (
-      <ScrollView
-        testID={testID}
-        contentContainerStyle={{ padding: padded ? spacing.lg : 0 }}
-        style={{ flex: 1, backgroundColor: toneBg[tone] }}
-      >
+      <View testID={testID} style={{ flex: 1, backgroundColor, ...padding }}>
         {children}
-      </ScrollView>
+      </View>
     );
   }
   return (
-    <View testID={testID} style={containerStyle}>
+    <ScrollView
+      testID={testID}
+      style={{ flex: 1, backgroundColor }}
+      // flexGrow keeps short content full-height so bottom-pinned CTAs stay put.
+      contentContainerStyle={{ flexGrow: 1, ...padding }}
+      keyboardShouldPersistTaps="handled"
+    >
       {children}
-    </View>
+    </ScrollView>
   );
 }

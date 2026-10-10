@@ -300,7 +300,7 @@ function CardArtThumb({ card }: { card: HeritageCard }): React.ReactElement {
       {hasArt ? (
         <HeritageCardArt cardId={card.id} size={CARD_THUMB} />
       ) : (
-        <Heading level="title" tone="inverse">
+        <Heading level="title">
           {card.subtitleKo ?? card.titleEn.charAt(0)}
         </Heading>
       )}

@@ -72,9 +72,12 @@ export function EpisodeDetailScreen({ route, navigation }: Props): React.ReactEl
       </View>
 
       <Spacer size="md" />
-      <Heading level="display" style={{ color: stageColor }}>
-        {episode.titleEn}
-      </Heading>
+      {/* The stage colour is an accent bar, not the text colour: stage1-4 are below 3:1 as text. */}
+      <View
+        style={{ width: spacing.xxxl, height: spacing.sm, borderRadius: radii.pill, backgroundColor: stageColor }}
+      />
+      <Spacer size="sm" />
+      <Heading level="display">{episode.titleEn}</Heading>
       {episode.subtitleEn ? (
         <>
           <Spacer size="xs" />

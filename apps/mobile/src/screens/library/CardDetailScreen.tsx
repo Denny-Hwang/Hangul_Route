@@ -290,7 +290,7 @@ function FrontFaceBody({
           supportedCardIds.includes(card.id) ? (
             <HeritageCardArt cardId={card.id} size={200} />
           ) : (
-            <Text style={{ fontSize: 80, fontWeight: '800', color: colors.text.inverse }}>
+            <Text style={{ fontSize: 80, fontWeight: '800', color: colors.text.primary }}>
               {card.subtitleKo ?? card.titleEn.charAt(0)}
             </Text>
           )

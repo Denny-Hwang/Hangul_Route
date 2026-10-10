@@ -3,7 +3,7 @@
 **Authoritative palette for Hangul Route.** Mirrors `packages/design-system/src/tokens.ts` (`colors` export).
 Drift between this document and `tokens.ts` is detected by `.github/workflows/design-token-sync.yml` (F-DES-001).
 
-Last updated: 2026-05-19 · Version: v1
+Last updated: 2026-10-09 · Version: v1 (AA contrast revision, see below)
 
 ---
 
@@ -11,11 +11,11 @@ Last updated: 2026-05-19 · Version: v1
 
 | Token | Hex | Notes |
 |---|---|---|
-| `brand.primary` | #E8743B | 단청(dancheong) warm orange — primary CTAs, Hoya accents |
-| `brand.primaryDark` | #B5562A | Pressed state |
+| `brand.primary` | #B24915 | 단청(dancheong) deep vermilion orange — primary CTAs, ghost-button text, Hoya accents. White on it 5.44:1, it on canvas 5.14:1 |
+| `brand.primaryDark` | #8D3A11 | Pressed state; Pill text on `primaryLight` (5.76:1) |
 | `brand.primaryLight` | #FAD9C6 | Tinted surfaces, brand cards |
-| `brand.secondary` | #4A9DD6 | Hoya sky blue — secondary CTAs, info |
-| `brand.secondaryDark` | #2E72A3 | Pressed |
+| `brand.secondary` | #2672A6 | Hoya sky blue — secondary CTAs, info. White on it 5.20:1 |
+| `brand.secondaryDark` | #1D5881 | Pressed; Pill text on `secondaryLight` (5.83:1) |
 | `brand.secondaryLight` | #CDE5F4 | Tinted secondary surfaces |
 
 ## Surface (hanji layering)
@@ -34,7 +34,7 @@ Last updated: 2026-05-19 · Version: v1
 |---|---|---|
 | `text.primary` | #2A1F14 | Body text |
 | `text.secondary` | #5C4A36 | Supporting text |
-| `text.muted` | #8A7860 | Captions, helper |
+| `text.muted` | #6F614D | Captions, helper, placeholders, inactive tabs. ≥ 4.5:1 on canvas (5.68), paper (6.01), sunken (5.07), primaryLight (4.52) |
 | `text.inverse` | #FFFFFF | Text on primary/secondary fills |
 | `text.onPrimary` | #FFFFFF | Specifically for primary-fill backgrounds |
 | `text.onSecondary` | #FFFFFF | Specifically for secondary-fill backgrounds |
@@ -43,7 +43,8 @@ Last updated: 2026-05-19 · Version: v1
 
 | Token | Hex | Use |
 |---|---|---|
-| `feedback.success` | #4FA871 | Correct answers, completion |
+| `feedback.success` | #397952 | Correct answers, completion. White on it 5.21:1 |
+| `feedback.successDark` | #2C5E3F | Pressed success fill |
 | `feedback.successLight` | #D6EFDF | Success card tint |
 | `feedback.nudge` | #F2B33D | Amber. **The wrong-answer color.** Warm, never alarming |
 | `feedback.nudgeLight` | #FCEED1 | Nudge surface tint |
@@ -100,7 +101,7 @@ Last updated: 2026-05-19 · Version: v1
 |---|---|---|
 | `border.subtle` | #E8DFCD | Default card borders |
 | `border.strong` | #C5B8A1 | Emphasis borders |
-| `border.focus` | #4A9DD6 | Keyboard focus ring |
+| `border.focus` | #3A7FB5 | Keyboard focus ring. 4.06:1 on canvas, 3.63:1 on sunken, 4.30:1 on paper (3:1 non-text minimum) |
 
 ---
 
@@ -115,6 +116,26 @@ Last updated: 2026-05-19 · Version: v1
    - Update `packages/design-system/src/tokens.ts` in the same PR
    - Update brief docs that reference it
    - CI gate (`design-token-sync.yml`) blocks merge if the structural drift is unresolved.
+
+## Contrast (WCAG AA) — 2026-10-09 revision
+
+Audit UX-10 measured the v1 palette below AA: white on `brand.primary` #E8743B 3.0:1, on
+`brand.secondary` #4A9DD6 2.96:1, on `feedback.success` #4FA871 2.93:1; ghost text (primary on
+canvas) 2.84:1; `text.muted` #8A7860 4.02:1 on canvas and 3.59:1 on sunken. The fills, ghost
+text and muted captions were deepened (same hues) until every pairing the components render
+meets 4.5:1. Korean inside Hoya bubbles now uses `text.primary` instead of brand orange.
+
+`packages/design-system/src/__tests__/contrast.test.ts` enforces the pairings and
+`tokens-parity.test.ts` pins this table to `tokens.ts` value-for-value.
+
+Stage, theme, rarity and Hoya tints are unchanged, and several of them are **below AA as text**
+(stage1-4 and every theme tint but rites are 1.8-3.0:1 on canvas). They are accents for fills,
+borders and small shapes only. **Rule: text is never set in a stage, theme, rarity or Hoya colour.**
+The Episode heading and the Journey grid letters use `text.primary` with the stage colour as a
+border or accent bar; the stage badge number sits on paper inside a stage-coloured ring; letters on
+a theme-coloured card tile use `text.primary` (3.5:1 or better, tested as large text). Pressed ghost
+buttons switch their label to `brand.primaryDark` (5.76:1 on `primaryLight`; `brand.primary` there
+is 4.10:1). `border.focus` was deepened from #4A9DD6 (2.80:1) to clear the 3:1 non-text minimum.
 
 ## Promotion path
 

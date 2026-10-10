@@ -19,13 +19,14 @@
  */
 
 export const colors = {
-  // Brand
+  // Brand — fills carry white labels and the primary doubles as ghost/brand
+  // text, so both meet WCAG AA 4.5:1 (UX-10; see contrast.test.ts).
   brand: {
-    primary: '#E8743B', // 단청 warm orange — main CTAs, Hoya accents
-    primaryDark: '#B5562A',
+    primary: '#B24915', // 단청 deep vermilion orange — main CTAs, ghost text, Hoya accents
+    primaryDark: '#8D3A11',
     primaryLight: '#FAD9C6',
-    secondary: '#4A9DD6', // Hoya sky blue
-    secondaryDark: '#2E72A3',
+    secondary: '#2672A6', // Hoya sky blue, deepened for white labels
+    secondaryDark: '#1D5881',
     secondaryLight: '#CDE5F4',
   },
   // Surface — hanji-inspired cream layering
@@ -40,14 +41,15 @@ export const colors = {
   text: {
     primary: '#2A1F14',
     secondary: '#5C4A36',
-    muted: '#8A7860',
+    muted: '#6F614D', // ≥ 4.5:1 on canvas, paper, sunken and brand tints
     inverse: '#FFFFFF',
     onPrimary: '#FFFFFF',
     onSecondary: '#FFFFFF',
   },
   // Feedback (anti-shame contract — no red for child failure)
   feedback: {
-    success: '#4FA871', // green — correct answer
+    success: '#397952', // green — correct answer; carries white labels
+    successDark: '#2C5E3F', // pressed success fill
     successLight: '#D6EFDF',
     nudge: '#F2B33D', // amber — wrong-but-encouraging
     nudgeLight: '#FCEED1',
@@ -56,7 +58,9 @@ export const colors = {
     danger: '#C84B3D', // RESERVED for parent/admin destructive only — never on child failure
     dangerLight: '#F8DBD8',
   },
-  // Stage axis (7) — themed accents for each Heritage Journey stage
+  // Stage axis (7) — themed accents for each Heritage Journey stage. Fills,
+  // borders and accent shapes only: stage1-4 on canvas are 2.3-3.0:1, so any
+  // text beside them is text.primary (never set text in a stage/theme/rarity colour).
   stage: {
     stage1: '#E8743B', // Hangul — primary
     stage2: '#D89B2B', // Word
@@ -94,7 +98,7 @@ export const colors = {
   border: {
     subtle: '#E8DFCD',
     strong: '#C5B8A1',
-    focus: '#4A9DD6',
+    focus: '#3A7FB5', // ≥ 3:1 (non-text) on canvas, paper and sunken
   },
 } as const;
 

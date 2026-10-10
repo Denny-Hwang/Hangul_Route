@@ -192,7 +192,7 @@ function ButtonVariant({
     primary: colors.brand.primaryDark,
     secondary: colors.brand.secondaryDark,
     ghost: colors.brand.primaryLight,
-    success: '#3F8A5C',
+    success: colors.feedback.successDark,
     nudge: '#D89B2B',
   };
   const fg: Record<string, string> = {
@@ -206,7 +206,12 @@ function ButtonVariant({
   const sizeFs = { sm: typography.size.bodySm, md: typography.size.body, lg: typography.size.bodyLg, hero: typography.size.prompt };
   const sizePadX = { sm: spacing.lg, md: spacing.xl, lg: spacing.xl, hero: spacing.xxl };
   const fillColor = state === 'disabled' ? colors.surface.sunken : state === 'pressed' ? pressedBg[tone] : bg[tone];
-  const labelColor = state === 'disabled' ? colors.text.muted : fg[tone];
+  const labelColor =
+    state === 'disabled'
+      ? colors.text.muted
+      : state === 'pressed' && tone === 'ghost'
+        ? colors.brand.primaryDark // brand.primary on primaryLight is 4.10:1
+        : fg[tone];
   return (
     <button
       type="button"

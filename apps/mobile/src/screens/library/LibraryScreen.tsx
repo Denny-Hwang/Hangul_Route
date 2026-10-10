@@ -9,6 +9,7 @@ import {
   Pill,
   Screen,
   Spacer,
+  TAB_SCREEN_EDGES,
   colors,
   radii,
   spacing,
@@ -37,7 +38,7 @@ export function LibraryScreen(): React.ReactElement {
   }, [filter]);
 
   return (
-    <Screen tone="canvas" scrollable>
+    <Screen tone="canvas" edges={TAB_SCREEN_EDGES}>
       <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: spacing.sm }}>
         <View style={{ flex: 1 }}>
           <Heading level="title">Heritage Library</Heading>
