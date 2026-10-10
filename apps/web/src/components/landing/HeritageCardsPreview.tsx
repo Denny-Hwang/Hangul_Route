@@ -124,10 +124,10 @@ export function HeritageCardsPreview(): JSX.Element {
             lineHeight: typography.leading.tight,
           }}
         >
-          24 Heritage Cards. One Korea, one child at a time.
+          {stage1Cards.length} Heritage Cards. One Korea, one card at a time.
         </h2>
         <p style={{ color: colors.text.secondary, fontSize: typography.size.bodyLg, maxWidth: 720, margin: 0 }}>
-          Every letter your child learns earns a real piece of Korean culture — a
+          Every letter you learn earns a real piece of Korean culture — a
           ramyeon bowl, a Chuseok moon, a swing from a Dano painting. Stage 1
           ships {stage1Cards.length} cards: {rarityCounts.common} common, {rarityCounts.uncommon} uncommon,{' '}
           {rarityCounts.rare} rare, and {rarityCounts.legendary} legendary.

@@ -7,23 +7,42 @@
 
 ## 1. Project Overview
 
-**Hangul Route** is a Korean language learning app (web PWA first, same code on iOS/Android) for **English speakers starting Korean from zero — children ages 5–11 first, adult beginners too**.
+**Hangul Route** is a Korean language learning app (web PWA first, same code on iOS/Android) for **anyone learning Hangul from zero — at any age**.
 
-### Target audience (authoritative — updated 2026-09-20)
+### Target audience (authoritative — updated 2026-10-09)
 
-- **Primary users**: English-speaking children, ages 5–11.
-  - **P4**: Korean heritage children — parents speak Korean, the child does not.
-  - **P5**: International children interested in K-culture (no Korean background).
-- **Secondary users**: English-speaking **adult (and teen) beginners** learning Korean from zero.
-  - **P6**: Adult beginners — K-culture fans, partners/in-laws of Korean families, travelers. They use the **same screens and content** as children; there is no separate adult mode.
-  - Design rule that follows: kids-first, **never kids-only**. Shared surfaces avoid "baby talk" and "for kids" framing (Hoya's warmth is fine; nursery tone is not). Age-gated or caregiver-only surfaces stay as they are.
-  - Store / channel consequence: shipped as **Education**, not a Kids-only category; child-safety design (parent gate, no ads, local data) stays regardless.
-- **Native language = English.**
+- **Users**: anyone learning Hangul from zero (or near zero), at **any age** — kids, teens and adults.
+  - **P4**: Korean heritage families — parents or grandparents speak Korean; the learner (child or adult) does not yet.
+  - **P5**: K-culture fans with no Korean background — children, teens and adults.
+  - **P6**: Adult beginners — partners/in-laws of Korean families, travelers, self-learners.
+  - Everyone uses the **same screens and content**; there is no separate kids mode or adult mode.
+- **Many learners are children**, so child-safety design stays everywhere: parent gate, no ads, local-first data, verifiable parental consent before personal data is linked to an account. Child-sized touch targets and type (`touchTarget`, body floor 18) stay as accessibility defaults — they serve every age.
+- Copy rule that follows: shared surfaces never say "for kids", never name an age range ("ages 5–11"), and avoid baby talk (Hoya's warmth is fine; nursery tone is not). Caregiver and teacher surfaces (parent dashboard, `/teach`) may address parents and teachers directly.
+- Store / channel consequence: shipped as **Education**, not the Kids Category. Store metadata must not imply children are the main audience (App Review 2.3.8 / 5.1.4).
+
+### Languages (updated 2026-10-09)
+
 - **Korean = the target language** being learned (zero or near-zero baseline).
-- **UI text = English** (CEFR Pre-A1, 5–7 year old vocabulary — this also reads naturally for adult beginners, which is why one UI serves both).
-- **Korean text = ONLY for content being taught** (자모, 단어, 문장).
-- **Romanization** is always shown alongside Korean as a pronunciation guide.
-- **English gloss / visual** is always shown alongside Korean for meaning.
+- **UI languages**: **English (default)**, **Korean** and **Spanish** selectable. UI strings come from the **selected UI locale** — never hard-coded in another language.
+  - Until the i18n layer ships (F-I18N-001; a new `packages/i18n` needs owner approval), English is the only shipped UI locale. Do not add Korean or Spanish UI strings ad hoc.
+  - UI copy stays plain and short (English at CEFR Pre-A1), so a young reader and an adult beginner both read it easily.
+- **Taught Korean content** (자모, 단어, 문장) always shows **romanization** (pronunciation guide) and a **gloss in the UI language** (plus a visual where possible).
+- Korean as taught content is not the same thing as Korean as a UI locale: in the Korean UI the menus are Korean, and taught items still carry romanization and a gloss.
+
+### Feedback & motivation — anti-shame rules (revised 2026-10-09)
+
+Positive nudges are allowed. Shame is not.
+
+- **Allowed**
+  - **One session clock** per session (e.g. one clock for a whole Daily Test). No per-question fail: time running out ends the session and never marks an item wrong.
+  - **Meters that only fill** — progress, collection and effort meters grow and **never drop on a miss**. (A combo counter that resets on a miss is a meter that drops, so it is not allowed.)
+  - **Encouraging streak messages** ("3 days in a row — Hoya is proud!"). A missed day is never punished or guilted.
+  - **Challenge mode** — optional, opt-in, off by default — may show a **real countdown timer**.
+- **Still forbidden**
+  - Red-X / red failure shaming. Wrong answers use the amber nudge (`colors.feedback.nudge`) and Hoya's `thinking` pose; `colors.feedback.danger` is never used on a learner's miss.
+  - Public ranking of children — leaderboards, class rankings, learner-vs-learner comparisons.
+  - Losing earned items — stars, cards and collection progress are never taken away.
+- Details: `docs/blueprints/09-homework-review-profiles-addendum.md` §2.2, `docs/specs/F-RVW-001-review-tests.md` §3.7.
 
 ### Core concept — "Heritage Journey"
 
@@ -206,7 +225,7 @@ Hangul_Route/
 - ❌ `main` 브랜치 직접 push. 모든 변경은 PR.
 - ❌ `--no-verify` / `--force` 계열 옵션으로 훅·검증 우회.
 - ❌ 명시적으로 지정되지 않은 파일/패키지에 "겸사겸사" 수정.
-- ❌ UI 문자열을 한국어로. **UI = English**, **Korean = content being taught only**.
+- ❌ 선택된 UI 로케일을 거치지 않은 UI 문자열 (예: 영어 UI 에 섞인 한국어 문구). **UI 문자열 = 선택된 UI 로케일** (기본 English, Korean · Spanish 선택 — i18n 레이어 F-I18N-001 전까지는 English 만), **학습 대상 한국어 = 항상 로마자 + UI 언어 gloss** (§1 Languages).
 
 ---
 
@@ -278,4 +297,4 @@ Hangul_Route/
 
 ---
 
-_Last updated: 2026-09-20 (audience: kids-first + adult beginners; primary channel: web PWA)_
+_Last updated: 2026-10-09 (audience: anyone learning Hangul, any age; UI languages EN default + KO/ES; anti-shame rules revised; primary channel: web PWA)_

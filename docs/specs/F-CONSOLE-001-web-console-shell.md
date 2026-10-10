@@ -62,7 +62,7 @@ A teacher needs one place to make a class, read the code aloud, and see who prac
 - Consequence: no dynamic segments. A space is addressed by **`?id=`** — `/teach/space?id=`, `/teach/space/plan?id=`, `/teach/space/relink?id=`, `/teach/space/settings?id=` (`ROUTES.space*` in `lib/console/routing.ts`, `spaceIdFrom(searchParams)`); pages wrap their body in `Suspense` because `useSearchParams` requires it at export time. `/parent/[childId]` pre-renders the demo ids via `generateStaticParams`.
 - Build-time variables (Workers Builds → Variables): `NEXT_PUBLIC_API_BASE_URL`, `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_CONSOLE_DEV_AUTH` (test deploys only), `NEXT_PUBLIC_SCHOOL_CONSENT_MODE`.
 - F-AUTH-002 note: with no server, the Clerk integration uses the client SDK (`@clerk/clerk-react`); the Worker verifies the bearer, not Next middleware.
-- Merge gate: `.github/workflows/preview-deploy.yml` builds the export and runs `wrangler deploy --dry-run`.
+- Merge gate: `.github/workflows/preview-deploy.yml` builds the export, runs the landing layout e2e over it (Playwright, `apps/web/e2e/`, §5) and runs `wrangler deploy --dry-run`.
 
 ## 4. Out of scope
 
@@ -80,3 +80,4 @@ A teacher needs one place to make a class, read the code aloud, and see who prac
 | `web/src/lib/console/__tests__/rollup.test.ts` | roll-up counts, accuracy mean ignoring null, revisit ranking, not-synced rule, relative day, code expiry, cap banner thresholds |
 | `web/src/lib/console/__tests__/routing.test.ts` | landing after sign-in / create, grouping + ordering + archived last, status lines, prefills |
 | `web/src/lib/console/__tests__/copy.test.ts` | every console string is caregiver-safe; `devAuthEnabled` matrix |
+| `web/e2e/landing-layout.spec.ts` (Playwright, Chromium, over `apps/web/out`; `pnpm --filter @hangul-route/web test:e2e` after a build) | landing + About / privacy / terms at 320 / 375 / 768: no sideways scroll; "Play now" visible; Tab order = visual order; hero and Meet Hoya art capped and centred when stacked |

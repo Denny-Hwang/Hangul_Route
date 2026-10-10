@@ -9,7 +9,8 @@
     "lint": "echo '(no lint yet — @hangul-route/web)'",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "typecheck": "tsc --noEmit",
+    "test:e2e": "playwright test",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p e2e/tsconfig.json",
     "build": "next build",
     "deploy": "wrangler deploy"
   },
@@ -24,6 +25,7 @@
   },
   "devDependencies": {
     "@hangul-route/test-utils": "workspace:*",
+    "@playwright/test": "1.63.0",
     "@types/node": "^22.10.0",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",

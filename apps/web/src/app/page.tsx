@@ -3,59 +3,20 @@ import Link from 'next/link';
 import { HeritageCardsPreview } from '../components/landing/HeritageCardsPreview';
 import { MeetHoya } from '../components/landing/MeetHoya';
 import { MiniGamesGallery } from '../components/landing/MiniGamesGallery';
+import { CONTACT_EMAIL } from '../data/contact';
+import {
+  SITE_TAGLINE,
+  audienceBadges,
+  howItWorks,
+  landingFaqs,
+  pricingFootnote,
+  pricingLines,
+  sharedDeviceBullet,
+  trustItems,
+} from '../data/landing-copy';
 
 /** The learner web app (PWA). Overridable per deployment. */
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://app.hangulroute.com';
-
-const trustItems = [
-  { title: 'COPPA-compliant', body: 'No third-party tracking. Parent email is the only PII.' },
-  { title: 'No ads, ever', body: 'No third-party ads. No data sold. Revenue is in-app only.' },
-  { title: 'Plays offline', body: 'After your first visit, the full Stage 1 plays without a connection.' },
-  { title: 'Anti-shame design', body: 'Wrong answers use amber. No red. No streak guilt.' },
-];
-
-const howItWorks = [
-  {
-    step: '1',
-    title: 'Heritage Journey',
-    body: '7 stages × 5 culture themes. Your child draws their own route through Korean.',
-  },
-  {
-    step: '2',
-    title: 'Mini-games',
-    body: 'Tap, build, trace, and match — five-minute games that fit a child’s attention span.',
-  },
-  {
-    step: '3',
-    title: 'Collect culture',
-    body: 'Earn 24 Heritage Cards in Stage 1 — from kimchi to Chuseok to the gayageum.',
-  },
-];
-
-const faqs = [
-  {
-    q: 'What makes this different from Duolingo Kids?',
-    a: 'Duolingo teaches vocab. We teach a child’s relationship with their heritage — one collectable culture card at a time. And no red feedback, ever.',
-  },
-  {
-    q: 'How old is this for?',
-    a: 'Designed for ages 5–11. Stage 1 (Hangul) works for fluent English readers and pre-readers alike — every screen has voice and visuals.',
-  },
-  {
-    q: 'My kid doesn’t speak any Korean. Will it work?',
-    a: 'Yes — that is the audience we built for. The UI is English at a 5–7 year old reading level. Korean only appears as the thing being learned.',
-  },
-  {
-    q: 'How long is a session?',
-    a: 'One quest takes about 5 minutes. Most kids do 1–3 quests per sitting. You can stop any time — no streak shame.',
-  },
-  {
-    q: 'How much does it cost?',
-    a: 'The first 12 cards are free. After that, 12-card packs at $4.99, or lifetime full access at $29. No ads. No subscription required.',
-  },
-];
-
-const ageBadges = ['Ages 5–11', 'Heritage families', 'K-culture curious'];
 
 export default function HomePage(): JSX.Element {
   return (
@@ -69,22 +30,25 @@ export default function HomePage(): JSX.Element {
     >
       {/* Top nav */}
       <header
+        className="hr-landing-header"
         style={{
           display: 'flex',
-          justifyContent: 'space-between',
+          flexWrap: 'wrap',
           alignItems: 'center',
+          columnGap: spacing.md,
+          rowGap: spacing.md,
           marginBottom: spacing.xxxl,
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}>
           <div
             aria-hidden="true"
+            className="hr-landing-logo-mark"
             style={{
               width: 44,
               height: 44,
               borderRadius: radii.circle,
               backgroundColor: colors.brand.primary,
-              display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               color: colors.text.inverse,
@@ -98,7 +62,33 @@ export default function HomePage(): JSX.Element {
             Hangul Route
           </span>
         </div>
-        <nav style={{ display: 'flex', gap: spacing.lg, alignItems: 'center' }}>
+        {/* DOM order is visual order at every width (WCAG 2.4.3 / 1.3.2): brand,
+            "Play now", then the section links. globals.css never uses `order`. */}
+        <a
+          href={APP_URL}
+          className="hr-landing-cta"
+          style={{
+            padding: `${spacing.sm}px ${spacing.lg}px`,
+            backgroundColor: colors.brand.primary,
+            color: colors.text.onPrimary,
+            borderRadius: radii.pill,
+            fontWeight: typography.weight.bold,
+            whiteSpace: 'nowrap',
+          }}
+        >
+          Play now
+        </a>
+        <nav
+          aria-label="Main"
+          className="hr-landing-nav"
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            columnGap: spacing.lg,
+            rowGap: spacing.xs,
+          }}
+        >
           <Link href="#cards" style={{ color: colors.text.secondary, fontWeight: typography.weight.semibold }}>
             Cards
           </Link>
@@ -114,33 +104,21 @@ export default function HomePage(): JSX.Element {
           <Link href="/teach" style={{ color: colors.text.secondary, fontWeight: typography.weight.semibold }}>
             For teachers
           </Link>
-          <a
-            href={APP_URL}
-            style={{
-              padding: `${spacing.sm}px ${spacing.lg}px`,
-              backgroundColor: colors.brand.primary,
-              color: colors.text.onPrimary,
-              borderRadius: radii.pill,
-              fontWeight: typography.weight.bold,
-            }}
-          >
-            Play now
-          </a>
         </nav>
       </header>
 
       {/* Hero */}
       <section
+        className="hr-landing-hero"
         style={{
           display: 'grid',
-          gridTemplateColumns: '1.4fr 1fr',
           gap: spacing.xxl,
           alignItems: 'center',
         }}
       >
         <div>
           <div style={{ display: 'flex', gap: spacing.sm, flexWrap: 'wrap', marginBottom: spacing.md }}>
-            {ageBadges.map((badge) => (
+            {audienceBadges.map((badge) => (
               <span
                 key={badge}
                 style={{
@@ -166,9 +144,9 @@ export default function HomePage(): JSX.Element {
               color: colors.text.primary,
             }}
           >
-            Korean for kids who
+            Learn Hangul from zero —
             <br />
-            don&apos;t speak it — yet.
+            at any age.
           </h1>
           <p
             style={{
@@ -179,9 +157,10 @@ export default function HomePage(): JSX.Element {
               lineHeight: typography.leading.relaxed,
             }}
           >
-            Hoya the tiger guides your child from ㄱ to Chuseok — five-minute
-            quests, English all the way, and 24 Korean culture cards to collect
-            in Stage 1 alone. Played, not taught. Never a frown.
+            Hoya the tiger guides you from ㄱ to Chuseok — five-minute quests,
+            plain-English instructions, and Korean culture cards to collect along
+            the way. Kids, teens and grown-ups play the same quests. Played, not
+            taught. Never a frown.
           </p>
           <div style={{ display: 'flex', gap: spacing.md, marginTop: spacing.xl, flexWrap: 'wrap' }}>
             <a
@@ -223,6 +202,7 @@ export default function HomePage(): JSX.Element {
         </div>
         <div
           aria-hidden="true"
+          className="hr-landing-hero-art"
           style={{
             aspectRatio: '1 / 1',
             backgroundColor: colors.brand.primaryLight,
@@ -415,10 +395,11 @@ export default function HomePage(): JSX.Element {
               lineHeight: typography.leading.relaxed,
             }}
           >
-            Hangul Route is built for tired parents. Hand the phone to your kid
-            for five minutes; come back to one new Korean letter, one heritage
-            card, and a quiet child. Bring it on a long flight — the whole
-            Stage 1 plays offline.
+            Many of our learners are children, so Hangul Route is built for
+            tired parents too. Hand the phone over for five minutes; come back to
+            one new Korean letter and one heritage card. Learning Korean
+            yourself? Play the same quests. Bring it on a long flight — the
+            whole Stage 1 plays offline.
           </p>
           <ul
             style={{
@@ -439,8 +420,8 @@ export default function HomePage(): JSX.Element {
               multiplication question.
             </li>
             <li>
-              <strong style={{ color: colors.text.primary }}>One subscription, three profiles.</strong>{' '}
-              Siblings share. No upsell.
+              <strong style={{ color: colors.text.primary }}>{sharedDeviceBullet.title}</strong>{' '}
+              {sharedDeviceBullet.body}
             </li>
           </ul>
         </div>
@@ -454,18 +435,11 @@ export default function HomePage(): JSX.Element {
         >
           <h3 style={{ marginTop: 0, fontSize: typography.size.title }}>Pricing</h3>
           <ul style={{ paddingLeft: spacing.lg, color: colors.text.primary, lineHeight: typography.leading.relaxed }}>
-            <li>
-              <strong>First 12 cards</strong> — free
-            </li>
-            <li>
-              <strong>12-card packs</strong> — $4.99 in-app
-            </li>
-            <li>
-              <strong>Lifetime full access</strong> — $29 ($19 launch promo)
-            </li>
-            <li>
-              <strong>Family</strong> — 3 child profiles included
-            </li>
+            {pricingLines.map((line) => (
+              <li key={line.name}>
+                <strong>{line.name}</strong> — {line.detail}
+              </li>
+            ))}
           </ul>
           <p
             style={{
@@ -475,7 +449,7 @@ export default function HomePage(): JSX.Element {
               color: colors.text.secondary,
             }}
           >
-            No subscription required. No third-party ads ever.
+            {pricingFootnote}
           </p>
         </aside>
       </section>
@@ -493,7 +467,7 @@ export default function HomePage(): JSX.Element {
           Common questions
         </h2>
         <div style={{ display: 'grid', gap: spacing.md }}>
-          {faqs.map((faq) => (
+          {landingFaqs.map((faq) => (
             <details
               key={faq.q}
               style={{
@@ -607,6 +581,7 @@ export default function HomePage(): JSX.Element {
             placeholder="you@somewhere.com"
             style={{
               flex: '1 1 240px',
+              minWidth: 0,
               minHeight: 48,
               padding: `${spacing.sm}px ${spacing.lg}px`,
               borderRadius: radii.pill,
@@ -668,7 +643,7 @@ export default function HomePage(): JSX.Element {
           >
             Hangul Route
           </div>
-          <div>Korean for kids who don&rsquo;t speak it — yet.</div>
+          <div>{SITE_TAGLINE}</div>
         </div>
         <div>
           <div
@@ -737,7 +712,9 @@ export default function HomePage(): JSX.Element {
           >
             Contact
           </div>
-          <div>feedback@hangulroute.example</div>
+          <div data-contact="email" style={{ overflowWrap: 'anywhere' }}>
+            {CONTACT_EMAIL}
+          </div>
           <div style={{ marginTop: spacing.xs, color: colors.text.muted }}>
             © {new Date().getFullYear()} Hangul Route
           </div>

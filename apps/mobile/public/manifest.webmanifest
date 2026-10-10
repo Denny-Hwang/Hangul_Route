@@ -10,7 +10,7 @@
   "background_color": "#FCF8F1",
   "theme_color": "#E8743B",
   "lang": "en",
-  "categories": ["education", "kids"],
+  "categories": ["education"],
   "icons": [
     { "src": "/icon-1024.png", "sizes": "1024x1024", "type": "image/png", "purpose": "any" }
   ]

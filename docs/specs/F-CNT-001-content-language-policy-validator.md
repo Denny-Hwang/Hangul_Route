@@ -9,10 +9,28 @@
 
 ## 1. Context
 
-The CLAUDE.md "UI = English, Korean = content being taught only" rule
-(`CLAUDE.md` §1, §8) is the cultural and pedagogical spine of the product.
-A single Korean string leaking into a UI field, or a Korean learning item
-shipped without romanization or English gloss, breaks the contract.
+The CLAUDE.md language rule (`CLAUDE.md` §1 "Languages", §8) is the
+cultural and pedagogical spine of the product. A Korean string leaking into
+an English UI field, or a Korean learning item shipped without romanization
+or a gloss, breaks the contract.
+
+### 1.1 Language policy (revised 2026-10-09, owner decision)
+
+- **UI strings come from the selected UI locale.** English is the default;
+  Korean and Spanish are selectable UI locales.
+- **Taught Korean content always shows romanization and a gloss in the UI
+  language** (English gloss in the English UI, Spanish gloss in the Spanish
+  UI, Korean gloss in the Korean UI).
+- Korean as a UI locale is not taught content: in the Korean UI, menus are
+  Korean strings from the `ko` locale, and taught items still carry
+  romanization and a gloss.
+- **Until the i18n layer ships (F-I18N-001)**, English is the only shipped
+  UI locale and `content/**/*.json` is the English source. This validator
+  therefore keeps enforcing the English source as written below: Korean
+  only in Korean-target fields, romanization on every Korean item, and an
+  English gloss (`gloss_en` / `en`). Per-locale glosses and UI strings will
+  live in locale overlays that F-I18N-001 specifies, with their own rules;
+  this spec changes only its policy text, not the validator's behaviour.
 
 `.github/workflows/content-validation.yml` shipped with a TODO marker
 instead of enforcement. This spec replaces that TODO with a small Node
@@ -66,8 +84,10 @@ behind the schema's own parsing.
   Revised-Romanization-vs-McCune-Reischauer enforcement, romanization
   spelling accuracy. Tracked as F-CNT-002.
 - **CEFR Pre-A1 vocabulary cap on English fields.** Today the validator
-  flags Korean-in-UI; it does NOT yet flag English vocabulary that's too
-  advanced for 5–7 yo. F-CNT-003.
+  flags Korean-in-UI; it does NOT yet flag English vocabulary above CEFR
+  Pre-A1 (plain, short words a young reader and an adult beginner both
+  read easily). F-CNT-003.
+- **Locale overlays** (Korean / Spanish UI strings and glosses) — F-I18N-001.
 - **Zod schema validation** of Episode / Quest / Card shapes. Lives in
   the schema package itself (T-016). The two layers are complementary.
 - **Romanization standard auto-fix** — validator only reports.

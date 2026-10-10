@@ -4,19 +4,20 @@ export function MeetHoya(): JSX.Element {
   return (
     <section
       aria-labelledby="hoya-heading"
+      className="hr-landing-split"
       style={{
         marginTop: spacing.jumbo,
         backgroundColor: colors.surface.sunken,
         borderRadius: radii.xxl,
         padding: spacing.xxl,
         display: 'grid',
-        gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1.4fr)',
         gap: spacing.xxl,
         alignItems: 'center',
       }}
     >
       <div
         aria-hidden="true"
+        className="hr-landing-split-art"
         style={{
           aspectRatio: '1 / 1',
           backgroundColor: colors.hoya.belly,
@@ -103,8 +104,8 @@ export function MeetHoya(): JSX.Element {
         >
           Hoya is a young tiger and the only voice in the app. Korean folklore
           opens with &ldquo;Long ago, when tigers smoked tobacco…&rdquo; so the tiger is
-          Korea&rsquo;s grandparent character. Hoya is a young one — so kids meet a
-          peer, not an authority.
+          Korea&rsquo;s grandparent character. Hoya is a young one — so learners meet
+          a peer, not an authority.
         </p>
         <ul
           style={{
