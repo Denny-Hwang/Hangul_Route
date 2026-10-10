@@ -11,10 +11,14 @@ export function questStepLabel(kind: QuestStepKind): string {
       return 'Hello';
     case 'present':
       return 'Look and listen';
+    case 'discover':
+      return 'Look and learn';
     case 'practice':
       return 'Practice';
     case 'apply':
       return 'Try it';
+    case 'check':
+      return 'Quick check';
     case 'reward':
       return 'Finish';
   }

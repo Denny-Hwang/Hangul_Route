@@ -17,6 +17,11 @@ describe('questStepLabel (audit UX-17: raw step kinds on the quest player)', () 
     expect(questStepLabel('reward')).toBe('Finish');
   });
 
+  it('labels the F-QUEST-002 step kinds in plain words', () => {
+    expect(questStepLabel('discover')).toBe('Look and learn');
+    expect(questStepLabel('check')).toBe('Quick check');
+  });
+
   it('gives every kind its own short English label', () => {
     const labels = kinds.map(questStepLabel);
     expect(new Set(labels).size).toBe(kinds.length);
