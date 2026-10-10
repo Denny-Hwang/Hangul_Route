@@ -22,6 +22,11 @@ const ROOT = process.env.HANGUL_ROUTE_ROOT
   : join(dirname(fileURLToPath(import.meta.url)), "..");
 const CONTENT_DIR = join(ROOT, "content");
 
+// Research data that no screen reads (verified story drafts: Korean fields such as
+// claim_ko and source titles are data, not UI text). Shipped story content under
+// content/stories/*.json is scanned; F-STORY-001 adds its own story rules.
+const SKIPPED_DIRS = [join("content", "stories", "research")];
+
 const KOREAN_RE = /[ㄱ-㆏가-힣]/;
 const KOREAN_TARGET_FIELDS = new Set([
   "ko",
@@ -66,6 +71,7 @@ function walk(dir) {
     if (entry.startsWith(".")) continue;
     const full = join(dir, entry);
     if (statSync(full).isDirectory()) {
+      if (SKIPPED_DIRS.some((skip) => full.endsWith(skip))) continue;
       out.push(...walk(full));
       continue;
     }
