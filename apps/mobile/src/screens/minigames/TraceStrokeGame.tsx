@@ -21,7 +21,9 @@ import type { JamoStrokePoint } from '../../content/jamo-strokes';
 import { strokesForJamo } from '../../content/jamo-strokes';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { buildTraceStrokeRounds, type TraceStrokeRound } from '../../logic/round-builder';
+import { pointsToPathD } from '../../logic/stroke-diagram';
 import { DEFAULT_PASS_THRESHOLD, scoreTrace } from '../../logic/stroke-scoring';
+import { TRACE_IDLE_MS, createTraceEvaluator, type TraceEvaluator } from '../../logic/trace-evaluator';
 import { StrokeHint } from './StrokeHint';
 import { speak } from '../../platform/audio';
 import { nudge, success } from '../../platform/haptics';
@@ -46,7 +48,8 @@ const VIEWBOX = 200; // jamo skeletons authored against 200x200
  * Replaces the v1 3-tap placeholder. Child draws the jamo with their
  * finger; PanGestureHandler captures stroke points; on Done / 1.5s idle,
  * scoreTrace() compares against the predefined skeleton; coverage ≥ 0.65
- * passes the round.
+ * passes the round. Done and the idle timer share one gate
+ * (logic/trace-evaluator), so a drawing is scored once.
  */
 export function TraceStrokeGame({
   scope,
@@ -70,7 +73,13 @@ export function TraceStrokeGame({
   const [roundIdx, setRoundIdx] = useState(0);
   const [strokes, setStrokes] = useState<JamoStrokePoint[][]>([]);
   const [feedback, setFeedback] = useState<Feedback>('idle');
-  const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Done and the idle timer share one gate; its idle timer calls the latest
+  // evaluate() so it sees the current strokes.
+  const evaluateRef = useRef<() => void>(() => {});
+  const gateRef = useRef<TraceEvaluator | null>(null);
+  // Pass-advance / fail-reset timer, and a guard so the step finishes once.
+  const resultTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const finishedRef = useRef(false);
   // F-005/F-006 — score result envelope for the most recent evaluate()
   const [orderCorrect, setOrderCorrect] = useState<boolean | null>(null);
   const [directionsCorrect, setDirectionsCorrect] = useState<boolean | null>(null);
@@ -85,6 +94,20 @@ export function TraceStrokeGame({
   );
 
   useEffect(() => {
+    const gate = createTraceEvaluator({
+      idleMs: TRACE_IDLE_MS,
+      onEvaluate: () => evaluateRef.current(),
+    });
+    gateRef.current = gate;
+    return () => {
+      gate.dispose();
+      gateRef.current = null;
+      if (resultTimerRef.current) clearTimeout(resultTimerRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    gateRef.current?.nextRound();
     setStrokes([]);
     setFeedback('idle');
     setOrderCorrect(null);
@@ -94,12 +117,6 @@ export function TraceStrokeGame({
     if (round) speak(round.jamo.char, { language: 'ko-KR' });
   }, [roundIdx, round]);
 
-  useEffect(() => {
-    return () => {
-      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
-    };
-  }, []);
-
   if (!round) {
     return (
       <Screen>
@@ -108,7 +125,29 @@ export function TraceStrokeGame({
     );
   }
 
+  const afterResult = (fn: () => void, ms: number): void => {
+    if (resultTimerRef.current) clearTimeout(resultTimerRef.current);
+    resultTimerRef.current = setTimeout(() => {
+      resultTimerRef.current = null;
+      fn();
+    }, ms);
+  };
+
+  const finishStep = (): void => {
+    if (finishedRef.current) return;
+    finishedRef.current = true;
+    gateRef.current?.dispose();
+    if (resultTimerRef.current) clearTimeout(resultTimerRef.current);
+    markStepComplete();
+    onFinish();
+  };
+
   const evaluate = (): void => {
+    if (strokes.length === 0) {
+      // Nothing drawn (e.g. cleared just before the timer): not an answer.
+      gateRef.current?.reopen();
+      return;
+    }
     setFeedback('evaluating');
     const result = scoreTrace({
       target,
@@ -126,10 +165,9 @@ export function TraceStrokeGame({
       success();
       answerRound(roundIdx, true);
       setFeedback('pass');
-      setTimeout(() => {
+      afterResult(() => {
         if (roundIdx >= rounds.length - 1) {
-          markStepComplete();
-          onFinish();
+          finishStep();
         } else {
           setRoundIdx(roundIdx + 1);
         }
@@ -140,21 +178,20 @@ export function TraceStrokeGame({
       setFeedback('fail');
       // F-008 — strict-mode fail gets a longer retry window (2000ms vs 1800ms)
       const retryDelay = strictMode && result.coverage >= DEFAULT_PASS_THRESHOLD ? 2000 : 1800;
-      setTimeout(() => {
+      afterResult(() => {
         setStrokes([]);
         setFeedback('idle');
         setOrderCorrect(null);
         setDirectionsCorrect(null);
+        gateRef.current?.reopen();
       }, retryDelay);
     }
   };
+  evaluateRef.current = evaluate;
 
   const beginStroke = (point: JamoStrokePoint): void => {
     setStrokes((prev) => [...prev, [point]]);
-    if (idleTimerRef.current) {
-      clearTimeout(idleTimerRef.current);
-      idleTimerRef.current = null;
-    }
+    gateRef.current?.strokeStarted();
   };
 
   const appendStrokePoint = (point: JamoStrokePoint): void => {
@@ -168,12 +205,7 @@ export function TraceStrokeGame({
   };
 
   const endStroke = (): void => {
-    if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
-    idleTimerRef.current = setTimeout(() => {
-      if (feedback === 'idle') {
-        evaluate();
-      }
-    }, 1500);
+    gateRef.current?.strokeEnded();
   };
 
   const toViewBoxPoint = (x: number, y: number): JamoStrokePoint => {
@@ -197,10 +229,7 @@ export function TraceStrokeGame({
   const handleClear = (): void => {
     setStrokes([]);
     setFeedback('idle');
-    if (idleTimerRef.current) {
-      clearTimeout(idleTimerRef.current);
-      idleTimerRef.current = null;
-    }
+    gateRef.current?.clear();
   };
 
   const traceFillByFeedback: Record<Feedback, string> = {
@@ -338,7 +367,9 @@ export function TraceStrokeGame({
         size="lg"
         fullWidth
         disabled={strokes.length === 0 || feedback !== 'idle'}
-        onPress={evaluate}
+        onPress={() => {
+          gateRef.current?.done();
+        }}
       />
       <Spacer size="sm" />
       <Button
@@ -346,10 +377,7 @@ export function TraceStrokeGame({
         tone="ghost"
         size="md"
         fullWidth
-        onPress={() => {
-          markStepComplete();
-          onFinish();
-        }}
+        onPress={finishStep}
       />
     </Screen>
   );
@@ -383,15 +411,4 @@ function passMessage(
     return 'Nice! Try drawing left-to-right next time.';
   }
   return 'Beautiful! That looks like the letter.';
-}
-
-function pointsToPathD(points: JamoStrokePoint[]): string {
-  if (points.length === 0) return '';
-  const first = points[0]!;
-  let d = `M ${first.x} ${first.y}`;
-  for (let i = 1; i < points.length; i++) {
-    const pt = points[i]!;
-    d += ` L ${pt.x} ${pt.y}`;
-  }
-  return d;
 }
