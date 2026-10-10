@@ -1,0 +1,14 @@
+{
+  "en": {
+    "learner": ["missed", "incomplete", "failed", "overdue"],
+    "caregiver": ["behind", "lazy"]
+  },
+  "es": {
+    "learner": ["fallaste", "fallido", "incompleto", "incompleta", "atrasado", "atrasada", "vencido", "vencida", "perdiste"],
+    "caregiver": ["retrasado", "retrasada", "vago", "perezoso", "flojo"]
+  },
+  "ko": {
+    "learner": ["실패", "미완료", "놓친", "밀린", "기한 초과"],
+    "caregiver": ["뒤처", "게으른"]
+  }
+}
