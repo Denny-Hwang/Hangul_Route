@@ -1,9 +1,10 @@
-import { Body, Button, Caption, Card, Heading, Hoya, HoyaBubble, Icon, Screen, Spacer, colors, radii, spacing, touchTarget, typography } from '@hangul-route/design-system';
+import { Button, Caption, Card, Heading, Hoya, HoyaBubble, Icon, Screen, Spacer, colors, radii, spacing, touchTarget, typography } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useRef, useState } from 'react';
+import { normalizeRescueCode } from '@hangul-route/content-schema';
+import React, { useState } from 'react';
 import { Pressable, TextInput, View } from 'react-native';
 import { decodeBackup } from '../../logic/sync/backup';
-import { claimErrorMessage, cleanDigits, cleanWord, joinRescueCode } from '../../logic/sync/rescue-code';
+import { RESCUE_INPUT_MAX, claimErrorMessage, cleanRescueInput } from '../../logic/sync/rescue-code';
 import { planRestore, restoreNotice, type RestorePlan } from '../../logic/sync/restore';
 import type { RootStackParamList } from '../../navigation/types';
 import { pickTextFile } from '../../platform/file';
@@ -23,14 +24,10 @@ export function RestoreScreen({ navigation, route }: Props): React.ReactElement 
   const from = route.params?.from ?? 'settings';
   const profiles = useProfileStore((s) => s.profiles);
   const [showCode, setShowCode] = useState(false);
-  const [first, setFirst] = useState('');
-  const [second, setSecond] = useState('');
-  const [digits, setDigits] = useState('');
+  const [codeInput, setCodeInput] = useState('');
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<RestorePlan | null>(null);
-  const secondRef = useRef<TextInput>(null);
-  const digitsRef = useRef<TextInput>(null);
   const cloudAvailable = !!apiBaseUrl();
 
   const finish = (plan: RestorePlan): void => {
@@ -39,7 +36,8 @@ export function RestoreScreen({ navigation, route }: Props): React.ReactElement 
   };
 
   const claim = async (): Promise<void> => {
-    const code = joinRescueCode({ first, second, digits });
+    if (busy || !cloudAvailable) return;
+    const code = normalizeRescueCode(codeInput);
     if (!code) {
       setMessage(claimErrorMessage('invalid'));
       return;
@@ -84,41 +82,6 @@ export function RestoreScreen({ navigation, route }: Props): React.ReactElement 
     navigation.navigate('Main', { screen: 'Home' });
   };
 
-  const field = (
-    value: string,
-    onChange: (v: string) => void,
-    placeholder: string,
-    opts: { label: string; numeric?: boolean; ref?: React.RefObject<TextInput>; next?: React.RefObject<TextInput>; maxLength: number },
-  ): React.ReactElement => (
-    <TextInput
-      ref={opts.ref}
-      value={value}
-      onChangeText={(v) => {
-        onChange(v);
-        if (opts.next && v.length >= opts.maxLength) opts.next.current?.focus();
-      }}
-      placeholder={placeholder}
-      placeholderTextColor={colors.text.muted}
-      autoCapitalize="characters"
-      autoCorrect={false}
-      keyboardType={opts.numeric ? 'number-pad' : 'default'}
-      maxLength={opts.maxLength}
-      accessibilityLabel={opts.label}
-      style={{
-        flex: 1,
-        minHeight: touchTarget.child,
-        textAlign: 'center',
-        fontSize: typography.size.title,
-        fontWeight: '700',
-        color: colors.text.primary,
-        backgroundColor: colors.surface.paper,
-        borderWidth: 2,
-        borderColor: colors.border.subtle,
-        borderRadius: radii.lg,
-      }}
-    />
-  );
-
   return (
     <Screen tone="canvas" scrollable>
       <Pressable onPress={() => navigation.goBack()} hitSlop={spacing.md} accessibilityRole="button" accessibilityLabel="Go back" style={{ alignSelf: 'flex-start', padding: spacing.xs }}>
@@ -146,13 +109,38 @@ export function RestoreScreen({ navigation, route }: Props): React.ReactElement 
           {showCode ? (
             <>
               <Spacer size="md" />
-              <View style={{ flexDirection: 'row', gap: spacing.sm, alignItems: 'center' }}>
-                {field(first, (v) => setFirst(cleanWord(v)), 'WORD', { label: 'Rescue code first word', next: secondRef, maxLength: 10 })}
-                <Body weight="bold">-</Body>
-                {field(second, (v) => setSecond(cleanWord(v)), 'WORD', { label: 'Rescue code second word', ref: secondRef, next: digitsRef, maxLength: 10 })}
-                <Body weight="bold">-</Body>
-                {field(digits, (v) => setDigits(cleanDigits(v)), '1234', { label: 'Rescue code digits', ref: digitsRef, numeric: true, maxLength: 4 })}
-              </View>
+              <TextInput
+                value={codeInput}
+                onChangeText={(v) => {
+                  setMessage(null);
+                  setCodeInput(cleanRescueInput(v));
+                }}
+                onSubmitEditing={() => void claim()}
+                placeholder="Words, then the number"
+                placeholderTextColor={colors.text.muted}
+                autoCapitalize="characters"
+                autoCorrect={false}
+                autoComplete="off"
+                spellCheck={false}
+                returnKeyType="go"
+                maxLength={RESCUE_INPUT_MAX}
+                accessibilityLabel="Rescue code"
+                testID="rescue-code-input"
+                style={{
+                  minHeight: touchTarget.child,
+                  paddingHorizontal: spacing.md,
+                  textAlign: 'center',
+                  fontSize: typography.size.bodyLg,
+                  fontWeight: '700',
+                  color: colors.text.primary,
+                  backgroundColor: colors.surface.paper,
+                  borderWidth: 2,
+                  borderColor: colors.border.subtle,
+                  borderRadius: radii.lg,
+                }}
+              />
+              <Spacer size="xs" />
+              <Caption tone="muted" align="center">Like TIGER-MOON-RIVER-APPLE-482139. Older codes look like TIGER-MOON-4821.</Caption>
               <Spacer size="md" />
               <Button label={busy ? 'Looking…' : 'Find my cards'} tone="primary" size="lg" fullWidth disabled={busy || !cloudAvailable} onPress={() => void claim()} />
               {!cloudAvailable ? (

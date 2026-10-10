@@ -3,6 +3,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { statusLine } from '../../components/BackupCard';
+import { rescueCodeHint } from '../../logic/sync/rescue-code';
 import type { RootStackParamList } from '../../navigation/types';
 import { confirm } from '../../platform/dialog';
 import { copyText } from '../../platform/pwa';
@@ -74,7 +75,7 @@ export function SaveProgressScreen({ navigation }: Props): React.ReactElement {
             </Heading>
             <Spacer size="xs" />
             <Caption tone="muted" align="center">
-              two words + 4 digits
+              {rescueCodeHint(code) ?? ''}
             </Caption>
           </Card>
           <Spacer size="md" />
