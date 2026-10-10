@@ -93,6 +93,22 @@ function save(profileId: string, snap: ProgressSnapshot): void {
   notifyProgressPersisted(profileId);
 }
 
+/** Any open assignment for the quest is done (F-HW-001 §3.4, F-PLAN-001 §3.3). */
+function completeAssignments(homework: ProgressSnapshot['homework'], questId: string, at: string): ProgressSnapshot['homework'] {
+  return homework.map((h) => (h.questId === questId && !h.completedAt ? { ...h, completedAt: at } : h));
+}
+
+/**
+ * Writes made before the saved copy loaded were built on a blank snapshot, so
+ * their derived effects never touched what was saved. Replay them on the
+ * merged result: a quest finished in that window completes its open
+ * assignments from the saved copy, as `recordQuestComplete` would have.
+ */
+function replayUnsaved(merged: ProgressSnapshot, unsaved: ProgressSnapshot): ProgressSnapshot {
+  const homework = unsaved.quests.reduce((hw, q) => (q.completedAt ? completeAssignments(hw, q.questId, q.completedAt) : hw), merged.homework);
+  return { ...merged, homework };
+}
+
 /** One storage read per profile at a time: callers that overlap share it. */
 const inFlight = new Map<string, Promise<void>>();
 
@@ -144,7 +160,7 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
       const unsaved = pendingFor.has(profileId) ? byProfile[profileId] : undefined;
       const snap =
         unsaved && loaded
-          ? mergeSnapshots(unsaved, loaded, { now: new Date() })
+          ? replayUnsaved(mergeSnapshots(unsaved, loaded, { now: new Date() }), unsaved)
           : (unsaved ?? loaded ?? byProfile[profileId]);
       set((s) => ({
         byProfile: snap ? { ...s.byProfile, [profileId]: snap } : s.byProfile,
@@ -181,8 +197,7 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
       ...snap.quests.filter((q) => q.questId !== input.questId),
       updatedQuest,
     ];
-    // Any open assignment for this quest is done now (F-HW-001 §3.4, F-PLAN-001 §3.3).
-    const homework = snap.homework.map((h) => (h.questId === input.questId && !h.completedAt ? { ...h, completedAt: now } : h));
+    const homework = completeAssignments(snap.homework, input.questId, now);
     const updated: ProgressSnapshot = { ...snap, quests, homework, updatedAt: now };
     set((s) => ({ byProfile: { ...s.byProfile, [profileId]: updated } }));
     persist(profileId, updated);

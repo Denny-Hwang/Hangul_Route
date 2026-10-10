@@ -273,6 +273,18 @@ describe('loading saved progress (audit UX-01 / L16)', () => {
     expect(stored()?.cards.map((c) => c.cardId).sort()).toEqual(['card:book', 'card:hanji', 'card:kimchi']);
   });
 
+  it('a quest finished before the saved copy loads completes its open assignment there', async () => {
+    const assignment = (id: string, questId: string) => ({ id, profileId: 'p1', questId, episodeId: 'episode:e', assignedBy: 'parent' as const, assignedAt: '2026-10-01T08:00:00.000Z', targetDate: '2026-10-02' });
+    mem.set('progress:p1', { ...savedSnapshot(), homework: [assignment('hw:b', 'quest:b'), assignment('hw:other', 'quest:other')] });
+    useProgressStore.getState().recordQuestComplete('p1', { questId: 'quest:b', episodeId: 'episode:e', stars: 2, accuracy: 0.8, attempts: 1 });
+    await settle();
+    const homework = stored()?.homework ?? [];
+    const completedAt = stored()?.quests.find((q) => q.questId === 'quest:b')?.completedAt;
+    expect(completedAt).toBeTruthy();
+    expect(homework.find((h) => h.id === 'hw:b')?.completedAt).toBe(completedAt);
+    expect(homework.find((h) => h.id === 'hw:other')?.completedAt).toBeUndefined();
+  });
+
   it('a snapshot replaced while the read is in flight wins over the stale read', async () => {
     mem.set('progress:p1', savedSnapshot());
     const loading = useProgressStore.getState().hydrate('p1');
