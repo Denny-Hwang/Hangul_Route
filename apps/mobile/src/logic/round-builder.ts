@@ -1,5 +1,5 @@
 import type { Jamo } from '@hangul-route/content-schema';
-import { jamoAll, jamoConsonants, jamoVowels } from '../content/jamo';
+import { jamoAll, jamoBatchim, jamoConsonants, jamoVowels } from '../content/jamo';
 
 export interface MatchSoundRound {
   promptJamo: Jamo;
@@ -92,30 +92,48 @@ export function buildMatchSoundRounds(opts: {
 }
 
 /**
- * Build a Build-a-Letter minigame: assemble a Korean syllable from 2-3 jamo.
- * Simple syllables only (initial + medial vowel ± final).
+ * Build a Build-a-Letter minigame: assemble a Korean syllable from 2-3 jamo
+ * (initial + medial vowel, plus a batchim for a closed syllable).
+ *
+ * `jamoIds`, when present, are the components in reading order and replace the
+ * character lookup, so a final consonant is its `jamo:*-batchim` tile rather
+ * than the initial with the same glyph (F-QUEST-002 §3.7). A syllable that
+ * repeats a jamo id throws: tiles and slots are keyed by id.
  */
 export function buildBuildLetterRounds(opts: {
-  syllables: Array<{ ko: string; romanization: string; jamoChars: string[] }>;
+  syllables: Array<{ ko: string; romanization: string; jamoChars: string[]; jamoIds?: string[] }>;
   seed?: number;
 }): BuildLetterRound[] {
   const seed = opts.seed ?? Date.now();
   return opts.syllables.map((s, i) => {
-    const components: string[] = [];
-    for (const ch of s.jamoChars) {
-      const found = jamoAll.find((j) => j.char === ch);
-      if (found) components.push(found.id);
+    const components = resolveComponents(s);
+    const hasFinal = components.length === 3 && jamoAll.find((j) => j.id === components[2])?.kind === 'batchim';
+    const chars = components.map((id) => jamoAll.find((j) => j.id === id)!.char);
+    // A distractor never shares a glyph with a target tile (initial ㄹ next to a final ㄹ).
+    const lookAlike = (j: Jamo): boolean => chars.includes(j.char);
+
+    let distractors: string[];
+    if (hasFinal) {
+      // 3-part: 1 initial consonant + 1 other batchim.
+      const consonant = shuffle(
+        jamoConsonants.filter((j) => !components.includes(j.id) && !lookAlike(j)),
+        seed + i,
+      )[0]!;
+      const batchim = shuffle(
+        jamoBatchim.filter((j) => !components.includes(j.id) && !lookAlike(j)),
+        seed + i + 50,
+      )[0]!;
+      distractors = [consonant.id, batchim.id];
+    } else {
+      // 2 distractor jamo of the other kind family
+      const targetKind = jamoAll.find((j) => j.id === components[0])?.kind ?? 'consonant';
+      const distractorPool =
+        targetKind === 'vowel' ? jamoConsonants.map((j) => j.id) : jamoVowels.map((j) => j.id);
+      distractors = shuffle(
+        distractorPool.filter((id) => !components.includes(id)),
+        seed + i,
+      ).slice(0, 2);
     }
-    // Add 2 distractor jamo of the same kind family
-    const targetKind = jamoAll.find((j) => j.id === components[0])?.kind ?? 'consonant';
-    const distractorPool =
-      targetKind === 'vowel'
-        ? jamoConsonants.map((j) => j.id)
-        : jamoVowels.map((j) => j.id);
-    const distractors = shuffle(
-      distractorPool.filter((id) => !components.includes(id)),
-      seed + i,
-    ).slice(0, 2);
     const tileJamoIds = shuffle([...components, ...distractors], seed + i + 100);
     return {
       targetSyllable: s.ko,
@@ -124,6 +142,26 @@ export function buildBuildLetterRounds(opts: {
       tileJamoIds,
     };
   });
+}
+
+function resolveComponents(s: { ko: string; jamoChars: string[]; jamoIds?: string[] }): string[] {
+  let components: string[];
+  if (s.jamoIds) {
+    for (const id of s.jamoIds) {
+      if (!jamoAll.some((j) => j.id === id)) throw new Error(`Syllable ${s.ko} uses unknown jamo ${id}`);
+    }
+    components = [...s.jamoIds];
+  } else {
+    components = [];
+    for (const ch of s.jamoChars) {
+      const found = jamoAll.find((j) => j.char === ch);
+      if (found) components.push(found.id);
+    }
+  }
+  if (new Set(components).size !== components.length) {
+    throw new Error(`Syllable ${s.ko} repeats a jamo id`);
+  }
+  return components;
 }
 
 export interface CardMatchPair {

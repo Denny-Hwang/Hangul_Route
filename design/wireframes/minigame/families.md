@@ -34,8 +34,8 @@ Family 2 . CONSTRUCTION ("make it yourself")           shipped: build-letter, tr
 |  slots: [ _ ][ _ ]           |  |  +------------------------+  |
 |  pieces: [ㄱ] [ㅏ] [ㄴ] [ㅗ]   |  |  |   large trace canvas   |  |
 |  tap piece -> fills next slot|  |  |   (skeleton hint below)|  |
-|  wrong -> "letters go left   |  |  +------------------------+  |
-|   to right"                  |  |  [Show me] [Clear]  [[ DONE ]]|
+|  wrong -> block-shape hint   |  |  +------------------------+  |
+|   (build-letter.md)          |  |  [Show me] [Clear]  [[ DONE ]]|
 |  [ Skip ]                    |  |  [ Skip ]   pass = coverage  |
 +------------------------------+  +------------------------------+
 

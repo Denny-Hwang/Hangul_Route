@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { jamoConsonants, jamoVowels } from '../../content/jamo';
+import { jamoAll, jamoConsonants, jamoVowels } from '../../content/jamo';
 import {
   buildBuildLetterRounds,
   buildCultureQuizRounds,
@@ -204,5 +204,74 @@ describe('buildMatchSoundRounds: cyclic prompts and focus ids (F-QUEST-002 §3.4
     expect(() =>
       buildMatchSoundRounds({ scopeJamoIds: scope4, rounds: 4, focusJamoIds: ['jamo:a'], seed: 1 }),
     ).toThrow(/focus/i);
+  });
+});
+
+describe('buildBuildLetterRounds: explicit jamoIds and batchim (F-QUEST-002 §3.7)', () => {
+  const bap = { ko: '밥', romanization: 'bap', jamoChars: ['ㅂ', 'ㅏ', 'ㅂ'], jamoIds: ['jamo:bieup', 'jamo:a', 'jamo:bieup-batchim'] };
+  const mul = { ko: '물', romanization: 'mul', jamoChars: ['ㅁ', 'ㅜ', 'ㄹ'], jamoIds: ['jamo:mieum', 'jamo:u', 'jamo:rieul-batchim'] };
+
+  it('uses explicit jamoIds instead of the character lookup (final ㄹ is the batchim tile)', () => {
+    const [r] = buildBuildLetterRounds({ syllables: [mul], seed: 3 });
+    expect(r!.componentJamoIds).toEqual(['jamo:mieum', 'jamo:u', 'jamo:rieul-batchim']);
+    expect(r!.tileJamoIds).toContain('jamo:rieul-batchim');
+    expect(r!.tileJamoIds).not.toContain('jamo:rieul');
+  });
+
+  it('keeps a syllable that repeats a letter (밥) as three distinct tiles', () => {
+    const [r] = buildBuildLetterRounds({ syllables: [bap], seed: 4 });
+    expect(r!.componentJamoIds).toEqual(['jamo:bieup', 'jamo:a', 'jamo:bieup-batchim']);
+    expect(new Set(r!.tileJamoIds).size).toBe(r!.tileJamoIds.length);
+  });
+
+  it('still uses the character lookup when jamoIds is absent', () => {
+    const [r] = buildBuildLetterRounds({ syllables: [{ ko: '가', romanization: 'ga', jamoChars: ['ㄱ', 'ㅏ'] }], seed: 1 });
+    expect(r!.componentJamoIds).toEqual(['jamo:giyeok', 'jamo:a']);
+  });
+
+  it('rejects a syllable that repeats a jamo id (explicit ids)', () => {
+    expect(() =>
+      buildBuildLetterRounds({
+        syllables: [{ ko: '밥', romanization: 'bap', jamoChars: ['ㅂ', 'ㅏ', 'ㅂ'], jamoIds: ['jamo:bieup', 'jamo:a', 'jamo:bieup'] }],
+        seed: 1,
+      }),
+    ).toThrow(/repeats/);
+  });
+
+  it('rejects a syllable that repeats a jamo id (character lookup)', () => {
+    expect(() =>
+      buildBuildLetterRounds({ syllables: [{ ko: '밥', romanization: 'bap', jamoChars: ['ㅂ', 'ㅏ', 'ㅂ'] }], seed: 1 }),
+    ).toThrow(/repeats/);
+  });
+
+  it('rejects an unknown explicit jamo id', () => {
+    expect(() =>
+      buildBuildLetterRounds({
+        syllables: [{ ko: '가', romanization: 'ga', jamoChars: ['ㄱ', 'ㅏ'], jamoIds: ['jamo:giyeok', 'jamo:nope'] }],
+        seed: 1,
+      }),
+    ).toThrow(/jamo:nope/);
+  });
+
+  it('3-part syllables get 1 initial consonant + 1 other batchim distractor, for every seed', () => {
+    for (let seed = 1; seed <= 40; seed++) {
+      for (const s of [bap, mul]) {
+        const [r] = buildBuildLetterRounds({ syllables: [s], seed });
+        const distractors = r!.tileJamoIds.filter((id) => !r!.componentJamoIds.includes(id));
+        expect(r!.tileJamoIds).toHaveLength(5);
+        expect(distractors).toHaveLength(2);
+        const kinds = distractors.map((id) => jamoAll.find((j) => j.id === id)!.kind).sort();
+        expect(kinds).toEqual(['batchim', 'consonant']);
+        // never a look-alike of a target tile (same glyph, other role)
+        const targetChars = r!.componentJamoIds.map((id) => jamoAll.find((j) => j.id === id)!.char);
+        for (const d of distractors) expect(targetChars).not.toContain(jamoAll.find((j) => j.id === d)!.char);
+        expect(new Set(r!.tileJamoIds).size).toBe(5);
+      }
+    }
+  });
+
+  it('2-part rounds keep the vowel/consonant distractors', () => {
+    const [r] = buildBuildLetterRounds({ syllables: [{ ko: '가', romanization: 'ga', jamoChars: ['ㄱ', 'ㅏ'] }], seed: 2 });
+    expect(r!.tileJamoIds).toHaveLength(4);
   });
 });
