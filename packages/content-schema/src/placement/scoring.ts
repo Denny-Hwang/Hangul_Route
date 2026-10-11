@@ -23,16 +23,23 @@ export type GateOutcome = Pick<GateResult, 'asked' | 'correct' | 'assisted' | 'r
  * rest cannot help); otherwise not-run (undecided). `asked` defaults to the
  * number of responses. The stored `result` is authoritative: consumers never
  * recompute it from `correct`, because the bar depends on the mode.
+ *
+ * A prompt that could not play (`noSound`, section 3.11) is not asked: it is
+ * left out of `asked` and `correct`, and it counts as one that could still
+ * have been right, so it never turns a rung into a fail. A rung it leaves
+ * undecided stays not-run.
  */
 export const gateResult = (
   responses: readonly AssessmentResponse[],
   asked: number = responses.length,
   passAt: 2 | 3 = 2,
 ): GateOutcome => {
-  const correct = responses.filter((r) => r.outcome === 'correct' && !r.assisted).length;
-  const assisted = responses.filter((r) => r.assisted).length;
-  const result = correct >= passAt ? 'pass' : correct + (QUESTIONS_PER_RUNG - asked) < passAt ? 'fail' : 'not-run';
-  return { asked, correct, assisted, result };
+  const heard = responses.filter((r) => r.noSound !== true);
+  const scoredAsked = asked - (responses.length - heard.length);
+  const correct = heard.filter((r) => r.outcome === 'correct' && !r.assisted).length;
+  const assisted = heard.filter((r) => r.assisted).length;
+  const result = correct >= passAt ? 'pass' : correct + (QUESTIONS_PER_RUNG - scoredAsked) < passAt ? 'fail' : 'not-run';
+  return { asked: scoredAsked, correct, assisted, result };
 };
 
 /**

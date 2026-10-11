@@ -9,10 +9,12 @@ import { useStoryStore } from '../../store/story-store';
  * bookmarks (§3.8, PR 4.4b): device-local, per profile, scene level,
  * `story:bookmarks:<profileId>`. On mount it reads the profile's bookmark of
  * the story once and opens on its scene (`readerStart`: same level only,
- * clamped to `sceneCount`), firing `story.bookmark.resumed` when that is a
- * restored scene. `save(index)` writes through `useStoryStore`, which keeps
- * only scene 2 on. The reader calls `save` only in quest mode
- * (`planSceneChange`); the replay route never uses this hook.
+ * clamped to `sceneCount`; a bookmark of a (story, level) already finished,
+ * for example on another device, is ignored: `getResumableBookmark`),
+ * firing `story.bookmark.resumed` when that is a restored scene.
+ * `save(index)` writes through `useStoryStore`, which keeps only scene 2 on.
+ * The reader calls `save` only in quest mode (`planSceneChange`); the replay
+ * route never uses this hook.
  */
 export interface ReaderBookmark {
   initialIndex: number;
@@ -28,7 +30,7 @@ export function useReaderBookmark(
   // Read once per mount: the reader takes its first scene from it only when it mounts.
   const [start] = useState(() => {
     const target = bookmarkTarget(profileId, storyId);
-    const bookmark = target ? useStoryStore.getState().getBookmark(target.profileId, target.storyId) : undefined;
+    const bookmark = target ? useStoryStore.getState().getResumableBookmark(target.profileId, target.storyId) : undefined;
     return readerStart(bookmark, level, sceneCount);
   });
 

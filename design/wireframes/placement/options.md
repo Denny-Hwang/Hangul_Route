@@ -43,6 +43,8 @@ C2. Everyone else: Standard pre-selected (any levelOrder), after Change, or afte
 │  ( ) Show it only when I tap      │
 │  one neutral line (consequence)   │
 │ [ ] Take my time (no time limits) │  <- on by default with a screen reader
+│ [ ] I use a screen reader         │  <- on when the device reports one; the only way to say so on the web;
+│     (questions play on a tap)     │     turning it on also turns on Take my time (post-merge #258)
 │ Why Korean? (optional) [family] [K-culture] [curious] [friend] [ Skip ]
 │ [[ NEXT ]]                        │  <- disabled until the sound guide is answered (Standard, Deep)
 └──────────────────────────────────┘

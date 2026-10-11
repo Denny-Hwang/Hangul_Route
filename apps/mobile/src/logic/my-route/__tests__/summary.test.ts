@@ -1,6 +1,7 @@
+import { JourneySummarySchema, ProgressSnapshotSchema } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { buildMyRoute } from '../model';
-import { summarizeJourney } from '../summary';
+import { journeySummaryOf, summarizeJourney, type JourneyContent } from '../summary';
 import { BUNDLE_15, BUNDLE_8, STAGE1_8, STAGE_DEFS, THEME_DEFS, catalogOf, snapshotWith, type Bundle } from './fixtures/bundle-2026-10';
 import { seed } from './fixtures/route';
 
@@ -57,5 +58,47 @@ describe('summarizeJourney (F-ROUTE-001 section 3.12)', () => {
     const summary = summarizeJourney(model(STAGE1_8));
     expect(JSON.stringify(summary).length).toBeLessThan(600);
     expect(Object.keys(summary).sort()).toEqual(['here', 'stages', 'v']);
+  });
+});
+
+describe('the wire shape (F-ROUTE-001 R-8)', () => {
+  it('parses with JourneySummarySchema unchanged, at most seven entries', () => {
+    for (const m of [model([]), model(STAGE1_8), model([], BUNDLE_8, {}, seed(STAGE1_8)), model(STAGE1_8, BUNDLE_15, { stageDoneAt: { stage1: '2026-10-01T00:00:00.000Z' } })]) {
+      const summary = summarizeJourney(m);
+      expect(JourneySummarySchema.parse(summary)).toEqual(summary);
+      expect(summary.stages.length).toBeLessThanOrEqual(7);
+    }
+  });
+});
+
+describe('journeySummaryOf: the sync-store input (F-ROUTE-001 R-8)', () => {
+  const content = (bundle: Bundle = BUNDLE_8): JourneyContent => ({
+    catalog: catalogOf(bundle),
+    episodes: bundle.episodes,
+    quests: bundle.quests,
+    cards: [],
+    stages: STAGE_DEFS,
+    themes: THEME_DEFS,
+    isEntitled: () => true,
+  });
+  const now = new Date('2026-10-11T00:00:00.000Z');
+
+  it('equals summarizeJourney(buildMyRoute(...)) with no route until R-7a', () => {
+    const snapshot = snapshotWith(['quest:stage1-letters-q1', 'quest:stage1-letters-q2', 'quest:stage1-letters-q3', 'quest:stage1-life-q1']);
+    const summary = journeySummaryOf(snapshot, content(), now);
+    expect(summary).toEqual(summarizeJourney(buildMyRoute({ snapshot, ...content(), route: null, now })));
+    expect(summary?.stages[0]).toEqual({ stage: 'stage1', state: 'open', done: 4, known: 0, total: 8 });
+  });
+
+  it('a fresh learner sends seven stages, here on Stage 1, nothing done', () => {
+    const summary = journeySummaryOf(ProgressSnapshotSchema.parse(snapshotWith([])), content(), now);
+    expect(summary?.here).toBe('stage1');
+    expect(summary?.stages).toHaveLength(7);
+    expect(summary?.stages.every((s) => s.done === 0 && s.known === 0)).toBe(true);
+  });
+
+  it('never throws: a snapshot it cannot read gives no journey, so the upload goes on without it', () => {
+    const broken = { ...snapshotWith([]), quests: null } as unknown as Parameters<typeof journeySummaryOf>[0];
+    expect(journeySummaryOf(broken, content(), now)).toBeUndefined();
   });
 });

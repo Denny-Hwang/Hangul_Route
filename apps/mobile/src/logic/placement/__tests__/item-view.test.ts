@@ -8,6 +8,7 @@ import {
   NO_SOUND_SKIP,
   audioFallback,
   choiceColumns,
+  fallbackRomanization,
   instructionOnTap,
   promptOutcome,
   estimatedPromptMs,
@@ -108,17 +109,26 @@ describe('audioFallback (section 3.11)', () => {
 
 describe('promptOutcome (section 3.11: played, muted, unavailable)', () => {
   it('a played prompt changes nothing', () => {
-    expect(promptOutcome('played', 'hear-pick-written')).toBe('played');
-    expect(promptOutcome('played', 'reply-pick')).toBe('played');
+    expect(promptOutcome('played', 'hear-pick-written', 0)).toBe('played');
+    expect(promptOutcome('played', 'reply-pick', 0)).toBe('played');
   });
 
-  it('sound switched off or not playable: words and replies are read, a heard letter or syllable is skipped', () => {
+  it('sound switched off or not playable: words and replies are read at once', () => {
     for (const result of ['muted', 'unavailable'] as const) {
-      expect(promptOutcome(result, 'hear-pick-picture')).toBe('text');
-      expect(promptOutcome(result, 'reply-pick')).toBe('text');
-      expect(promptOutcome(result, 'hear-pick-written')).toBe('skip');
-      expect(promptOutcome(result, 'build-syllable')).toBe('skip');
+      expect(promptOutcome(result, 'hear-pick-picture', 0)).toBe('text');
+      expect(promptOutcome(result, 'reply-pick', 0)).toBe('text');
     }
+  });
+
+  it('a heard letter or syllable is never skipped on the first failure: the speaker asks for a tap; a second failure skips it', () => {
+    for (const result of ['muted', 'unavailable'] as const) {
+      for (const format of ['hear-pick-written', 'build-syllable'] as const) {
+        expect(promptOutcome(result, format, 0)).toBe('retry');
+        expect(promptOutcome(result, format, 1)).toBe('skip');
+        expect(promptOutcome(result, format, 2)).toBe('skip');
+      }
+    }
+    expect(promptOutcome('played', 'hear-pick-written', 1)).toBe('played');
   });
 
   it('a skipped prompt is recorded as skipped without counting as the learner\'s "not sure"', () => {
@@ -128,12 +138,42 @@ describe('promptOutcome (section 3.11: played, muted, unavailable)', () => {
 
 describe('instructionOnTap (section 3.2, 3.12)', () => {
   it('a spoken-only instruction is heard before the prompt when a screen reader is on (nothing auto-plays)', () => {
-    expect(instructionOnTap({ visible: null, spoken: 'Listen' }, true)).toBe('Listen');
+    expect(instructionOnTap({ visible: null, spoken: 'Listen' }, { screenReader: true, needsGesture: false })).toBe('Listen');
+    expect(instructionOnTap({ visible: null, spoken: 'Listen' }, { screenReader: true, needsGesture: true })).toBe('Listen');
+  });
+
+  it('the first tap after a resume says the instruction that playing on open would have said (Short shows none written)', () => {
+    expect(instructionOnTap({ visible: null, spoken: 'Listen' }, { screenReader: false, needsGesture: true })).toBe('Listen');
+    expect(instructionOnTap({ visible: 'Listen', spoken: 'Listen' }, { screenReader: false, needsGesture: true })).toBe('Listen');
   });
 
   it('otherwise the speaker plays the prompt only', () => {
-    expect(instructionOnTap({ visible: null, spoken: 'Listen' }, false)).toBeNull();
-    expect(instructionOnTap({ visible: 'Listen', spoken: 'Listen' }, true)).toBeNull();
+    expect(instructionOnTap({ visible: null, spoken: 'Listen' }, { screenReader: false, needsGesture: false })).toBeNull();
+    expect(instructionOnTap({ visible: 'Listen', spoken: 'Listen' }, { screenReader: true, needsGesture: false })).toBeNull();
+    // A screen reader reads the written line itself.
+    expect(instructionOnTap({ visible: 'Listen', spoken: 'Listen' }, { screenReader: true, needsGesture: true })).toBeNull();
+  });
+});
+
+describe('fallbackRomanization ("No sound? Read it here.", section 3.2, CLAUDE.md section 1)', () => {
+  it('a word or reply that gives nothing away shows its romanization in every sound-guide setting', () => {
+    expect(HEAR_PICTURE.leaks).toBe(false);
+    expect(HEAR_PICTURE.promptRomanization).toBeDefined();
+    for (const revealMode of ['tap', 'always'] as const) {
+      expect(fallbackRomanization(HEAR_PICTURE, { revealMode, revealed: false })).toBe(HEAR_PICTURE.promptRomanization);
+    }
+  });
+
+  it('a leaking prompt keeps it hidden until revealed, unless the run always shows the guide', () => {
+    const leaking: AssessmentQuestion = { ...REPLY, leaks: true, promptRomanization: 'annyeonghaseyo' };
+    expect(fallbackRomanization(leaking, { revealMode: 'tap', revealed: false })).toBe('');
+    expect(fallbackRomanization(leaking, { revealMode: 'tap', revealed: true })).toBe('annyeonghaseyo');
+    expect(fallbackRomanization(leaking, { revealMode: 'always', revealed: false })).toBe('annyeonghaseyo');
+  });
+
+  it('nothing to show without a romanization', () => {
+    const { promptRomanization: _r, ...bare } = HEAR_PICTURE;
+    expect(fallbackRomanization(bare, { revealMode: 'always', revealed: true })).toBe('');
   });
 });
 

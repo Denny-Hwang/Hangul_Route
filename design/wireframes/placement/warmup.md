@@ -20,7 +20,8 @@ Then: audio is unlocked for the run and nothing is scored
 
 ```
 ┌──────────────────────────────────┐
-│  [Hoya: "Listen, then tap the     │
+│ [x]                               │  <- exit icon, as on C3; nothing recorded (no run yet)
+│  [Hoya: "Listen, then tap the     │  <- the line is spoken on open (not with a screen reader)
 │          picture."]               │
 │        [ ( ) speaker ]            │  <- first audio needs a tap
 │ ┌────────┐ ┌────────┐             │

@@ -1,5 +1,6 @@
 import { PLACEMENT_MODES, SpeechLangSchema, type Motivation, type PlacementMode, type SpeechLang, type UiLocale } from '@hangul-route/content-schema';
 import { LOCALE_META, type Messages } from '@hangul-route/i18n';
+import type { AudioCapability } from '../audio/capability';
 import { modeTileCopy, type ModeTileCopy } from './copy';
 import type { FlowCapability, FlowState } from './flow';
 
@@ -72,4 +73,22 @@ export function flowCapability(input: {
     instructionVoice: input.hasVoiceFor(speechLangOf(input.testLocale)),
     koreanInstructionVoice: input.hasVoiceFor(speechLangOf('ko')),
   };
+}
+
+/** Whether any prompt of the placement bank or its warm-up has a bundled clip (`audioRef`). */
+export function bankHasClips(
+  bank: { templates: ReadonlyArray<{ question: { audioRef?: string } }> },
+  warmup: { question: { audioRef?: string } },
+): boolean {
+  return warmup.question.audioRef !== undefined || bank.templates.some((t) => t.question.audioRef !== undefined);
+}
+
+/**
+ * Whether the level check can play its Korean prompts (section 3.1 steps 2 and
+ * 3, section 3.11): a ready Korean voice, or bundled clips when the placement
+ * bank carries them. `canPlayKorean` alone also counts clips the bank does not
+ * use, which would offer Short on a device that cannot play its prompts.
+ */
+export function placementKoreanAudio(cap: AudioCapability, hasClips: boolean): boolean {
+  return cap.tts.state === 'ready' || (cap.clips && hasClips);
 }

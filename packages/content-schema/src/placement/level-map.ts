@@ -44,7 +44,8 @@ export const coveredSymbols = (
 
   const doubtful = new Set<string>();
   for (const response of evidence.responses) {
-    if (response.outcome === 'correct' && !response.assisted) continue;
+    // A prompt that could not play says nothing about its symbols (section 3.11).
+    if (response.noSound === true || (response.outcome === 'correct' && !response.assisted)) continue;
     for (const tag of tagsOf(response.questionId)) {
       if (tag.startsWith('sym:')) doubtful.add(tag.slice(4));
     }

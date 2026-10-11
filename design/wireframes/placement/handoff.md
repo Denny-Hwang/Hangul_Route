@@ -20,7 +20,7 @@ Then: the learner starts by tapping Hoya, with no text to read
 
 ```
 ┌──────────────────────────────────┐
-│                                   │
+│ [x]                               │  <- exit icon (spoken "Let us start learning"); leaves, nothing recorded
 │        [[ (Hoya, big) ]]          │  <- the whole Hoya is the button; spoken:
 │   "Ready? Tap Hoya to start."     │     "Ready? Tap Hoya to start."
 │                                   │

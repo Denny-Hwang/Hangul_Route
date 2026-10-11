@@ -186,10 +186,23 @@ describe('locale pages are the English pages with locale links', () => {
       const loc = (await import(locPath)) as { default: (p: PageProps) => JSX.Element };
       const enHtml = renderToStaticMarkup(en.default());
       const locHtml = renderToStaticMarkup(loc.default({ params: { locale } }));
+      // "Play now" carries the locale to the learner app (`?lang=`, PR 11c).
       const toLocale = (href: string): string =>
-        href === '/' ? `/${locale}` : ['/about', '/privacy', '/terms'].includes(href) ? `/${locale}${href}` : href;
+        href === '/'
+          ? `/${locale}`
+          : ['/about', '/privacy', '/terms'].includes(href)
+            ? `/${locale}${href}`
+            : href === 'https://app.hangulroute.com'
+              ? `${href}?lang=${locale}`
+              : href;
       expect(hrefs(locHtml)).toEqual(hrefs(enHtml).map(toLocale));
-      const strip = (html: string): string => html.replace(/href="[^"]*"/g, '');
+      // The legal pages add the localized English-authoritative notice and mark the English document `lang="en"`
+      // (decision L10, PR 11c; checked in landing-locales.test.tsx); the rest is the same.
+      const strip = (html: string): string =>
+        html
+          .replace(/href="[^"]*"/g, '')
+          .replace(/<p role="note" data-testid="english-authoritative"[^>]*>[^<]*<\/p>/, '')
+          .replace(/ lang="en"/g, '');
       expect(strip(locHtml)).toBe(strip(enHtml));
     });
   }

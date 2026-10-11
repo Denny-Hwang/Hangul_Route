@@ -20,7 +20,7 @@ import type { ApproximationView, CorrectionView, FactCardView, SourceView, Sourc
 
 /**
  * The presentational pieces of the Sources screen (F-STORY-002 §3.8,
- * wireframe design/wireframes/story/reader.md I-J, screen spec
+ * wireframe design/wireframes/story/sources.md I-J, screen spec
  * design/components/StorySourcesScreen/spec.md). No state and no rules: each
  * piece draws what `StorySourcesScreen` passes in. Tokens only.
  */

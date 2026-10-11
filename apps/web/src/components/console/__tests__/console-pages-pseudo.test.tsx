@@ -84,6 +84,21 @@ describe('console pages render only dictionary text (en-XA)', () => {
     expectAllPseudo(html);
   });
 
+  it('lecture setup while lecture mode is off: coming soon (F-TCH-004 PR 10)', async () => {
+    const html = await render('@/app/(console)/teach/space/lecture/page');
+    expect(html).toContain('href="/teach/space?id=space%3Ac1"');
+    expect(html).not.toContain('data-testid="open-presenter"');
+    expectAllPseudo(html);
+  });
+
+  it('lecture setup, first paint with lecture mode on', async () => {
+    vi.stubEnv('NEXT_PUBLIC_LECTURE_MODE', 'enabled');
+    const html = await render('@/app/(console)/teach/space/lecture/page');
+    vi.stubEnv('NEXT_PUBLIC_LECTURE_MODE', '');
+    expect(html).toContain('href="/teach/space?id=space%3Ac1"');
+    expectAllPseudo(html, [], 3);
+  });
+
   it('relink, loading', async () => {
     const html = await render('@/app/(console)/teach/space/relink/page');
     expect(html).toContain('href="/teach/space?id=space%3Ac1"');

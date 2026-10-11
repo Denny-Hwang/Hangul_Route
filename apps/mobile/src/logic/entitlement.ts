@@ -30,3 +30,11 @@ export function entitlementTier(subscription: SubscriptionState | null, now: Dat
 export function isStageEntitled(stageKey: string, tier: Tier): boolean {
   return tier === 'premium' || isFreeContent('stage', stageKey);
 }
+
+/**
+ * The one route predicate (F-ROUTE-001 OD-4 default): every shipped stage is
+ * playable, which is the rule Journey cells and Home already follow. My route
+ * and `summary.journey` (`content/sync-context.ts` `journeyContent`) bind this
+ * function, never a rule of their own, so R-4a changes every surface at once.
+ */
+export const isStagePlayable: (stageKey: string) => boolean = () => true;

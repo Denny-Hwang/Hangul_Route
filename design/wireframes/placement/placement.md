@@ -16,7 +16,7 @@ This file is the flow overview. The placement screens were promoted to one file 
 | D | [`warmup.md`](warmup.md) | Warm-up question |
 | E | [`item.md`](item.md) | Items: the question frame and the five formats |
 | E2 | [`item-short.md`](item-short.md) | Short items: 2 x 2 picture and sound cards |
-| F | [`pause.md`](pause.md) | Pause sheet and the Deep rest card |
+| F | [`pause.md`](pause.md) | Pause sheet, the sound pause (F3) and the Deep rest card |
 | G | [`result.md`](result.md) | Result: where the route starts |
 | H | [`home-entry.md`](home-entry.md) | Entry points: Home card and Profile row |
 | J | [`report.md`](report.md) | Parent report and "Choose a different start" |
@@ -66,6 +66,7 @@ Then: Hoya shows where their route starts, the Journey cursor skips what they kn
 
 - Bank cannot load: the Home card, the Profile row and the fork disappear; nothing else changes.
 - No sound: in Standard or Deep (not listen-first) D says so; audio-only questions are left out; the report names it. In Short or for a listen-first learner, L2 opens.
+- Sound that stops mid-run: words and replies show "No sound? Read it here." with the word (and its romanization unless it would give the answer away); a heard letter or syllable asks for a tap first, then F3 opens (see F).
 - L2. Sound needed: [`sound-needed.md`](sound-needed.md).
 - Links ("Check without sound", "Change", "For grown-ups") have a hit area of at least `touchTarget.min`.
 - A rung with fewer than three questions available: it is skipped and reported as not tested.

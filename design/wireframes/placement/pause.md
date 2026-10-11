@@ -34,6 +34,19 @@ Then: they can keep going or end with what is known so far, and nothing is lost
 - The hidden backstop clock does not run while F or F2 is open (W-6).
 
 ```
+F3. Sound stopped (post-merge #258): the same sheet when prompts stop playing mid-run
+┌──────────────────────────────────┐
+│ [icon: speaker off]               │
+│ "Turn on sound to play"           │  <- after the first silent prompt in Short or a listen-first run,
+│ [[ (icon) TRY AGAIN ]]            │     two in a row in Standard and Deep; Try again = Keep going
+│ [ (icon) That is enough, start learning ]
+│ [ For grown-ups: finish now ]     │
+└──────────────────────────────────┘
+```
+
+- Before a heard letter or syllable is skipped, E shows the speaker as "Tap to hear it." (written under it too); only a tap that fails again skips it, and that skip never counts as a miss.
+
+```
 F2. Rest card (Deep, once, after 18 answers)
 ┌──────────────────────────────────┐
 │ [Hoya stretching]                 │
