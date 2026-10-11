@@ -6,6 +6,7 @@ const EXPECTED_NAMES: IconName[] = [
   'play',
   'pause',
   'speaker',
+  'speaker-off',
   'replay',
   'check',
   'close',
@@ -75,5 +76,12 @@ describe('icon glyphs', () => {
         }
       }
     }
+  });
+
+  it('speaker-off keeps the speaker body and swaps the waves for a cross (a mute sign, not a miss)', () => {
+    const body = iconGlyphs.speaker[0];
+    expect(iconGlyphs['speaker-off'][0]).toEqual(body);
+    const strokes = iconGlyphs['speaker-off'].filter((part) => part.kind === 'stroke');
+    expect(strokes).toHaveLength(2);
   });
 });

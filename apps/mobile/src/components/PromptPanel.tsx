@@ -18,10 +18,12 @@ interface Props {
   ko: string;
   romanization: string;
   onAction: (action: FallbackAction) => void;
+  /** Opens the "Add a Korean voice" sheet; shown as a link only when there is no Korean voice (W3). */
+  onHelp?: () => void;
   testID?: string;
 }
 
-export function PromptPanel({ view, ko, romanization, onAction, testID = 'prompt-panel' }: Props): React.ReactElement {
+export function PromptPanel({ view, ko, romanization, onAction, onHelp, testID = 'prompt-panel' }: Props): React.ReactElement {
   return (
     <View accessibilityLiveRegion="polite" testID={testID}>
       {view.textShown ? (
@@ -41,6 +43,9 @@ export function PromptPanel({ view, ko, romanization, onAction, testID = 'prompt
                   testID={`${testID}-action`}
                 />
               </>
+            ) : null}
+            {view.helpLabel !== null && onHelp ? (
+              <Button label={view.helpLabel} tone="ghost" size="md" onPress={onHelp} testID={`${testID}-help`} />
             ) : null}
           </View>
         </Card>

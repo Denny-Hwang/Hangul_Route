@@ -56,7 +56,16 @@ describe('promptPanelView', () => {
       action: 'none',
       actionLabel: null,
       heading: 'Tap the letter for this sound',
+      helpLabel: 'How to add a voice',
     });
+  });
+
+  it('only the no-voice reason offers the how-to link (A-4b)', () => {
+    expect(promptPanelView(INITIAL_PROMPT_STATE, readyCap, false, false).helpLabel).toBeNull();
+    expect(promptPanelView(INITIAL_PROMPT_STATE, readyCap, true, false).helpLabel).toBeNull();
+    expect(promptPanelView(run(['play', { result: 'unavailable', failure: 'error' }]), readyCap, false, false).helpLabel).toBeNull();
+    expect(promptPanelView(run(['play', { result: 'unavailable', failure: 'blocked' }]), readyCap, false, false).helpLabel).toBeNull();
+    expect(promptPanelView(INITIAL_PROMPT_STATE, unknownCap, false, false).helpLabel).toBeNull();
   });
 
   it('a bundled clip keeps the audio prompt even with no voice', () => {
