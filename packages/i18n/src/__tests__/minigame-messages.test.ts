@@ -156,6 +156,18 @@ describe('Tap & Respond (English wording as shipped)', () => {
   });
 });
 
+describe('Voice Echo (English wording as shipped, emoji dropped)', () => {
+  it('keeps the heading, Hoya line, check box, note and button', () => {
+    expect(m.learner.minigame.voiceEcho).toEqual({
+      heading: 'Say it out loud',
+      bubble: "Listen to me, then say it back out loud. Tap 'I said it' when done.",
+      saidIt: 'I said it!',
+      note: "Voice grading is coming soon — for now it's honor system",
+      continue: { cta: 'Continue' },
+    });
+  });
+});
+
 describe('learner.audio (F-AUDIO-004 §3.7-3.8, English wording as shipped)', () => {
   const a = m.learner.audio;
 

@@ -352,6 +352,17 @@ export const learner = {
         start: 'Try again — start at the top!',
       },
     },
+    /**
+     * Voice Echo (behind `flags.voiceEchoEnabled`, off at launch): listen, say it back, confirm.
+     * The shipped caption ended in a tiger emoji; the dictionary carries no emoji (CLAUDE.md), so it is dropped.
+     */
+    voiceEcho: {
+      heading: 'Say it out loud',
+      bubble: "Listen to me, then say it back out loud. Tap 'I said it' when done.",
+      saidIt: 'I said it!',
+      note: "Voice grading is coming soon — for now it's honor system",
+      continue: { cta: 'Continue' },
+    },
     /** Tap & Respond: someone speaks, the learner picks a reply. */
     tapRespond: {
       noDialogue: 'No dialogue.',

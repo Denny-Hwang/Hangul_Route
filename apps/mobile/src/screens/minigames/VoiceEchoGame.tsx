@@ -15,6 +15,7 @@ import {
 } from '@hangul-route/design-system';
 import React, { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
+import { useMessages } from '../../i18n/use-messages';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { speak } from '../../platform/audio';
 import { useQuestRunStore } from '../../store/quest-run-store';
@@ -30,6 +31,7 @@ interface Props {
  * to listen, repeat aloud, and tap "I said it" — honor system.
  */
 export function VoiceEchoGame({ scope: _scope, onFinish }: Props): React.ReactElement {
+  const copy = useMessages().learner.minigame.voiceEcho;
   const answerRound = useQuestRunStore((s) => s.answerRound);
   const markStepComplete = useQuestRunStore((s) => s.markStepComplete);
   const [acknowledged, setAcknowledged] = useState(false);
@@ -46,7 +48,7 @@ export function VoiceEchoGame({ scope: _scope, onFinish }: Props): React.ReactEl
     <Screen tone="canvas">
       <Spacer size="xl" />
       <Heading level="prompt" align="center">
-        Say it out loud
+        {copy.heading}
       </Heading>
       <Spacer size="md" />
 
@@ -70,10 +72,7 @@ export function VoiceEchoGame({ scope: _scope, onFinish }: Props): React.ReactEl
       </View>
 
       <Spacer size="lg" />
-      <HoyaBubble
-        tone="idle"
-        message="Listen to me, then say it back out loud. Tap 'I said it' when done."
-      />
+      <HoyaBubble tone="idle" message={copy.bubble} />
 
       <View style={{ flex: 1 }} />
       <Pressable
@@ -105,14 +104,14 @@ export function VoiceEchoGame({ scope: _scope, onFinish }: Props): React.ReactEl
         >
           {acknowledged ? <Icon name="check" size={20} color={colors.text.inverse} /> : null}
         </View>
-        <Body weight="semibold">I said it!</Body>
+        <Body weight="semibold">{copy.saidIt}</Body>
       </Pressable>
       <Spacer size="md" />
       <Caption tone="muted" align="center">
-        Voice grading is coming soon — for now it&apos;s honor system 🐯
+        {copy.note}
       </Caption>
       <Spacer size="md" />
-      <Button label="Continue" tone="primary" size="hero" fullWidth disabled={!acknowledged} onPress={onDone} />
+      <Button label={copy.continue.cta} tone="primary" size="hero" fullWidth disabled={!acknowledged} onPress={onDone} />
       <Spacer size="lg" />
     </Screen>
   );
