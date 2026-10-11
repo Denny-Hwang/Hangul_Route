@@ -162,3 +162,61 @@ export function fillTones(glyph: WordArtGlyph): string[] {
   for (const s of glyph) if (s.f !== undefined && s.f !== INK && !isShadow(s)) tones.add(s.f);
   return [...tones];
 }
+
+/** C3: generated families may stroke dots at 1.5; a hand glyph uses 3 (outline) and 2 (detail) only. */
+export const HAND_WIDTHS: readonly number[] = [2, 3];
+export const GENERATED_WIDTHS: readonly number[] = [1.5, 2, 3];
+
+/** C2: the subject covers 60-70 % of the width or height, with a 10 % tolerance, centred within 8 units. */
+export const BBOX_MIN = 60 * 0.9;
+export const BBOX_MAX = 70 * 1.1;
+export const CENTRE_TOLERANCE = 8;
+
+export interface GlyphCheckOptions {
+  /** A generated family (`color`, `count`, `body`): 48 shapes, dots at 1.5, and the sticker halo (C3, C7). */
+  generated?: boolean;
+  /** Fill-tone allowance (C4); default 4. */
+  maxTones?: number;
+  /** C2 waiver. */
+  bboxWaived?: boolean;
+  /** The width of a paper halo stroke a generated glyph may draw behind a sticker or a ring. */
+  haloWidth?: number;
+}
+
+/**
+ * Every §3.5 rule a glyph's data can be tested for, as readable messages
+ * (empty when the glyph passes). `glyphs.test.ts` runs the same rules one
+ * `it` per rule on the registry; this runs them on generator output that is
+ * not registered yet (the colour, count and body batches, W-3 and W-4).
+ */
+export function glyphViolations(glyph: WordArtGlyph, options: GlyphCheckOptions, isTone: (s: string) => boolean): string[] {
+  const out: string[] = [];
+  const widths = options.generated ? GENERATED_WIDTHS : HAND_WIDTHS;
+  const maxShapes = options.generated ? 48 : 32;
+  if (glyph.length === 0 || glyph.length > maxShapes) out.push(`C7: ${glyph.length} shapes (1..${maxShapes})`);
+  for (const [i, s] of glyph.entries()) {
+    if (s.f === undefined && s.s === undefined) out.push(`shape ${i} is not painted`);
+    if (s.f !== undefined && !isTone(s.f)) out.push(`shape ${i} fill ${s.f} is not a word-art tone`);
+    if (s.s !== undefined && !isTone(s.s)) out.push(`shape ${i} stroke ${s.s} is not a word-art tone`);
+    if (s.t === 'path' && parsePath(s.d) === null) out.push(`shape ${i} path outside the grammar`);
+    if (s.o !== undefined && (s.o < 0.1 || s.o > 1)) out.push(`shape ${i} opacity ${s.o}`);
+    if (s.sw !== undefined) {
+      const halo = options.generated === true && s.sw === options.haloWidth && s.s === 'surface.paper' && s.f === undefined;
+      if (!halo && !widths.includes(s.sw)) out.push(`C3: shape ${i} stroke width ${s.sw}`);
+      if (s.s === undefined) out.push(`shape ${i} has a width without a stroke`);
+    }
+  }
+  const tones = fillTones(glyph).length;
+  if (tones > (options.maxTones ?? 4)) out.push(`C4: ${tones} fill tones`);
+  if (out.length > 0) return out;
+  const box = glyphExtent(glyph);
+  if (box.minX < -6 || box.minY < -6 || box.maxX > 106 || box.maxY > 106) out.push(`C1: extent ${JSON.stringify(box)}`);
+  if (!options.bboxWaived) {
+    const sub = subjectBox(glyph);
+    const size = Math.max(sub.maxX - sub.minX, sub.maxY - sub.minY);
+    if (size < BBOX_MIN || size > BBOX_MAX) out.push(`C2: subject size ${size.toFixed(1)}`);
+    const [cx, cy] = [(sub.minX + sub.maxX) / 2, (sub.minY + sub.maxY) / 2];
+    if (Math.abs(cx - 50) > CENTRE_TOLERANCE || Math.abs(cy - 50) > CENTRE_TOLERANCE) out.push(`C2: centre ${cx.toFixed(1)}, ${cy.toFixed(1)}`);
+  }
+  return out;
+}

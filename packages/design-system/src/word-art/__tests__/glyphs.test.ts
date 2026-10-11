@@ -3,6 +3,7 @@ import { isWordArtPath } from '../path';
 import { WORD_ART, WORD_ART_KEYS } from '../registry';
 import { isWordArtTone } from '../tones';
 import type { WordArtGlyph, WordArtShape } from '../types';
+import { HALO_TONE, HALO_WIDTH } from '../generated/halo';
 import { fillTones, glyphExtent, shapeBox, subjectBox } from './glyph-checks';
 
 /**
@@ -84,8 +85,10 @@ describe.each(entries)('%s', (key, glyph, meta) => {
 
   it('strokes at 3 (outline) or 2 (detail), never thinner (C3)', () => {
     const allowed = GENERATED.has(meta.family) ? [1.5, 2, 3] : [2, 3];
+    // a generated sticker or ring stands on a wide paper halo with no fill (§3.6.1, §3.6.3)
+    const isHalo = (shape: WordArtShape): boolean => GENERATED.has(meta.family) && shape.s === HALO_TONE && shape.sw === HALO_WIDTH && shape.f === undefined;
     for (const shape of glyph) {
-      if (shape.sw !== undefined) expect(allowed).toContain(shape.sw);
+      if (shape.sw !== undefined && !isHalo(shape)) expect(allowed).toContain(shape.sw);
       if (shape.sw !== undefined) expect(shape.s, `${key}: sw without a stroke`).toBeDefined();
     }
   });

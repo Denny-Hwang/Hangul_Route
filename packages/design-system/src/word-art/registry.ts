@@ -3,9 +3,9 @@
  * Keys are written WITHOUT the `word:` prefix. Merging throws at import on a
  * duplicate or malformed key, so a test that imports this module catches it.
  *
- * The generated families (`color`, `count`, `body`, and the `figure` builder
- * for `family`) join in PR W-1c; the hand-drawn batches fill `glyphs/*.ts`
- * (W-3..W-6).
+ * The generators (`generated/{color,count,body,figure}.ts`) and the four
+ * props land in PR W-1c; the batches register the generated keys (colours
+ * and counts in W-3, body in W-4) and fill `glyphs/*.ts` (W-3..W-6).
  */
 import { ANIMAL_GLYPHS } from './glyphs/animal';
 import { CULTURE_GLYPHS } from './glyphs/culture';
@@ -70,6 +70,10 @@ const META: WordArtMetaOverrides = {
   'school-chair': { status: 'review' },
   'travel-bus': { status: 'review' },
   'sport-soccer': { status: 'review' },
+  'prop-tangerine': { status: 'review' },
+  'prop-leaf': { status: 'review' },
+  'prop-grapes': { status: 'review' },
+  'prop-crow': { status: 'review' },
 };
 
 /** One glyph file: the family it holds, and its glyphs by key. */

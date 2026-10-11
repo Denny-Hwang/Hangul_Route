@@ -10,10 +10,13 @@ import type { WordArtFamily } from '../types';
  * (W-3..W-6, or W-1c for the generated families and props) adds its families
  * here; until then a family may only grow towards its plan.
  */
-const COMPLETE_FAMILIES: readonly WordArtFamily[] = [];
+const COMPLETE_FAMILIES: readonly WordArtFamily[] = ['prop'];
 
 /** The six sample glyphs of PR W-1b, one per family that has a hand-drawn sample. */
 const W1B_SAMPLES = ['food-apple', 'animal-cat', 'nature-cloud', 'school-chair', 'travel-bus', 'sport-soccer'];
+
+/** The four colour-swatch props of PR W-1c (§3.6.1). */
+const W1C_PROPS = ['prop-tangerine', 'prop-leaf', 'prop-grapes', 'prop-crow'];
 
 describe('key grammar', () => {
   it('is the spec regex over the thirteen families', () => {
@@ -53,6 +56,10 @@ describe('WORD_ART', () => {
 
   it('the W-1b samples wait for the owner (status review)', () => {
     for (const key of W1B_SAMPLES) expect(WORD_ART[key]!.meta.status).toBe('review');
+  });
+
+  it('holds the four W-1c props, waiting for the owner (status review)', () => {
+    for (const key of W1C_PROPS) expect(WORD_ART[key]?.meta, key).toEqual({ family: 'prop', status: 'review' });
   });
 });
 

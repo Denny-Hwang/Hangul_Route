@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { arcPoints, fillTones, glyphExtent, pathPoints, subjectBox } from './glyph-checks';
+import { arcPoints, fillTones, glyphExtent, glyphViolations, pathPoints, subjectBox } from './glyph-checks';
 
 /** The test-only measurements are themselves checked, so a glyph test cannot pass by a broken ruler. */
 
@@ -71,5 +71,45 @@ describe('boxes and tones', () => {
 
   it('ink used as a fill (eyes, wheels) belongs to the outline ink, not a tone (§3.3)', () => {
     expect(fillTones([{ t: 'circle', x: 32, y: 76, r: 8, f: 'text.primary', s: 'text.primary', sw: 3 }])).toEqual([]);
+  });
+});
+
+describe('glyphViolations', () => {
+  const isTone = (s: string): boolean => s.includes('.') && s !== 'feedback.danger';
+  const ok = [{ t: 'circle', x: 50, y: 50, r: 32, f: 'vocab.red', s: 'text.primary', sw: 3 }] as const;
+
+  it('passes a well-formed glyph', () => {
+    expect(glyphViolations(ok, {}, isTone)).toEqual([]);
+  });
+
+  it('names each broken rule', () => {
+    expect(glyphViolations([], {}, isTone)).toEqual(['C7: 0 shapes (1..32)']);
+    expect(glyphViolations([{ t: 'circle', x: 50, y: 50, r: 32 }], {}, isTone)).toEqual(['shape 0 is not painted']);
+    expect(glyphViolations([{ t: 'circle', x: 50, y: 50, r: 32, f: 'feedback.danger' as 'vocab.red', s: 'red' as 'vocab.red' }], {}, isTone)).toEqual([
+      'shape 0 fill feedback.danger is not a word-art tone',
+      'shape 0 stroke red is not a word-art tone',
+    ]);
+    expect(glyphViolations([{ t: 'path', d: 'm 1 1', f: 'vocab.red' }], {}, isTone)).toEqual(['shape 0 path outside the grammar']);
+    expect(glyphViolations([{ ...ok[0], o: 0.05 }], {}, isTone)).toEqual(['shape 0 opacity 0.05']);
+    expect(glyphViolations([{ ...ok[0], sw: 1.5 }], {}, isTone)).toEqual(['C3: shape 0 stroke width 1.5']);
+    expect(glyphViolations([{ t: 'circle', x: 50, y: 50, r: 32, f: 'vocab.red', sw: 2 }], {}, isTone)).toEqual(['shape 0 has a width without a stroke']);
+    const tones = (['vocab.red', 'vocab.blue', 'vocab.green', 'vocab.pink', 'vocab.gray'] as const).map((f, i) => ({ t: 'circle' as const, x: 30 + i * 10, y: 50, r: 5, f }));
+    expect(glyphViolations(tones, { bboxWaived: true }, isTone)).toEqual(['C4: 5 fill tones']);
+    expect(glyphViolations(tones, { bboxWaived: true, maxTones: 5 }, isTone)).toEqual([]);
+    expect(glyphViolations([{ ...ok[0], x: 80 }], {}, isTone)).toEqual(['C1: extent {"minX":48,"minY":18,"maxX":112,"maxY":82}', 'C2: centre 80.0, 50.0']);
+    expect(glyphViolations([{ ...ok[0], r: 10 }], {}, isTone)).toEqual(['C2: subject size 20.0']);
+    expect(glyphViolations([{ ...ok[0], r: 10 }], { bboxWaived: true }, isTone)).toEqual([]);
+  });
+
+  it('allows generated dots at 1.5, 48 shapes and the paper halo of the given width', () => {
+    expect(glyphViolations([{ ...ok[0], sw: 1.5 }], { generated: true }, isTone)).toEqual([]);
+    const halo = { t: 'circle', x: 50, y: 50, r: 32, s: 'surface.paper', sw: 8 } as const;
+    expect(glyphViolations([halo, ...ok], { generated: true, haloWidth: 8 }, isTone)).toEqual([]);
+    expect(glyphViolations([halo, ...ok], { generated: true }, isTone)).toEqual(['C3: shape 0 stroke width 8']);
+    expect(glyphViolations([halo, ...ok], { haloWidth: 8 }, isTone)).toEqual(['C3: shape 0 stroke width 8']);
+    expect(glyphViolations([{ ...halo, f: 'vocab.red' }], { generated: true, haloWidth: 8 }, isTone)).toEqual(['C3: shape 0 stroke width 8']);
+    const many = Array.from({ length: 40 }, () => ok[0]);
+    expect(glyphViolations(many, {}, isTone)).toEqual(['C7: 40 shapes (1..32)']);
+    expect(glyphViolations(many, { generated: true }, isTone)).toEqual([]);
   });
 });
