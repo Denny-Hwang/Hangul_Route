@@ -48,6 +48,8 @@ Companion stories:
   **when** the tile registers,
   **then** the tile briefly shakes (`shake.gentle`, 200 ms), Hoya switches to `thinking` pose,
   **and** an English+romanization hint appears: *"Listen again. This says **giyeok**."*
+
+> **Revised 2026-10-10 (F-AUDIO-004 §3.2, §3.8; PR A-5a) — sound first, not the letter name.** The prompt sound and the wrong-answer hint use the *sound* of the letter, never its name, so what the learner hears is what they will read: ㄱ is played and shown as **가 (ga)**, not 기역 (giyeok). The hint reads *"Listen again. This one says"* + the spoken syllable and its romanization (**가 · ga**); the initial ㅇ, which has no sound, is played and shown by its name **이응 (ieung)**. Its **Hear it** button plays the same sound prompt. The 800 ms replay after a wrong tap is skipped while the text prompt stands in for a sound that is off or unavailable (§3.3). The tiles keep their sound value (`g/k`).
   **and** the round does **not end or lock** — re-tap is allowed within the same round (see the first-try scoring revision below for how that round is scored).
   **and** the prompt audio replays on its own after 800 ms unless the child taps again first.
 
@@ -67,6 +69,8 @@ Companion stories:
   **then** Hoya shows the prompt as **text** ("Tap the letter that says **giyeok**.") with romanization,
   **and** a small replay icon retries fetching the audio,
   **and** the round still scores normally if the child taps the correct tile.
+
+> **Revised 2026-10-10 (F-AUDIO-004 §3.8, AD13; PR A-5a) — the text prompt.** "Audio fails" now also means sound is off (F-001 §3.4) or the device has no usable Korean voice, and the text prompt is shown *at once* in those two cases, not after a failed play (while the voice check is still running the audio prompt is shown, so nothing flashes). In the prompt zone it is the spoken syllable in Hangul with its romanization (**가 · ga**) and the line "No sound? Read it here."; the heading changes to "Tap the letter for this sound". The tiles keep their romanization (D2). The panel offers **Turn sound on** (sound off), **Try again** (engine error) or **Tap to hear** (browser blocked the sound); the speaker button is always present. The round scores normally; nothing is marked as worth less. Component: `design/components/PromptPanel/spec.md`; wireframe: `design/wireframes/minigame/audio-fallback.md` W2-W4.
 
 ### 3.4 Accessibility
 

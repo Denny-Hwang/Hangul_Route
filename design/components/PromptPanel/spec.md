@@ -1,0 +1,59 @@
+# PromptPanel (component spec v1)
+
+Spec: `docs/specs/F-AUDIO-004-korean-voice-quality.md` §3.8 and PR A-5a in §6 · wireframe: `design/wireframes/minigame/audio-fallback.md` screens W2, W3, W4 (state machine W8) · Korean content is drawn with `design/components/KoreanText/spec.md`
+Code: `apps/mobile/src/components/PromptPanel.tsx` (paint), `use-prompt-slot.ts` (hook), `apps/mobile/src/logic/audio/prompt-view.ts` (pure view model, tested), copy in `logic/audio/copy.ts`
+
+## What it is
+
+The one visible text fallback for a sound prompt: when a letter's sound cannot be heard (sound is off, no Korean voice on the device, the browser blocked the sound, the engine failed) the learner reads the same sound on screen and plays on. Match Sound uses it now; Discover, Listen & Pick and the story chips reuse it. It is a panel, not a dialog: it never takes focus and nothing about it looks like a miss.
+
+## Anatomy
+
+```
+ +------------------------------------+
+ |             가   (KoreanText md)   |   spoken syllable, taught content
+ |             ga                      |   its romanization (D2)
+ |     No sound? Read it here.        |   body, muted
+ |     Sound is off.                  |   caption, muted: why (not for "blocked")
+ |        [ Turn sound on ]           |   secondary button, only when there is an action
+ +------------------------------------+
+```
+
+The speaker button stays on the screen that owns the prompt (Match Sound keeps its own); the panel never replaces it. Its label states the state ("Play sound", "Play sound, sound is off", "Tap to hear").
+
+## States (from `promptPanelView`)
+
+| Reason | Detail line | Action | Heading above the speaker |
+|---|---|---|---|
+| `muted` | Sound is off. | Turn sound on | Tap the letter for this sound |
+| `no_voice` | No Korean voice on this device. | none | Tap the letter for this sound |
+| `error` | The sound did not play. | Try again | Tap the letter you hear |
+| `blocked` | none (the speaker reads "Tap to hear") | Tap to hear | Tap the letter you hear |
+| none (sound turned back on, text kept for the round) | none | none | Tap the letter for this sound |
+
+Not shown while the voice check is still running (no flash). Once shown it stays for the round and resets with the next round.
+
+## Tokens (no literals)
+
+| Part | Token |
+|---|---|
+| Surface | `Card` tone `paper`, elevation `flat`, padding `lg` (neutral card tone; no red, no amber, no X) |
+| Gap between lines | `spacing.sm` |
+| Hangul + romanization | `KoreanText` size `md` |
+| Lines | `Body` (18 floor) and `Caption`, `colors.text.muted` via the `tone` prop |
+| Action | `Button` secondary, size `md` (`touchTarget.min` 64) |
+
+## Accessibility
+
+- The wrapper is a polite live region that stays mounted, so the arrival of the text is announced; focus does not move.
+- No audio-only information: the panel is the text of the sound.
+- Button label is the visible label; targets at least 64.
+- Under 200 % text the card grows and the tiles below wrap (F-LAYOUT-001).
+
+## Copy
+
+English until F-I18N-001's catalog exists (`logic/audio/copy.ts`, then `learner.audio.*`). Pre-A1, no emoji, no age words.
+
+## Not in this component
+
+"How to add a voice" link and sheet (A-4b); the Profile Sound card line (A-4b); Discover's Letter name chip (F-QUEST-002).
