@@ -74,3 +74,19 @@ The first settings and props, for the flagship stories (`sejong-new-letters`, `s
 - Every item has an `accuracyNote`; every heritage artefact and every figure in historical dress has a `sourceRef` (Encyclopedia of Korean Culture, National Archives of Korea, Federation of Korean Cultural Centers), and the note says what is simplified and what the source does not show.
 - Palette headroom: `scene:palace-hall` keeps to the tokens the court figures already use, so the king, officials and historian fit the 8-token scene palette (a registry test composes that scene). Its five peaks are a muted grey rather than mineral blue-green for that reason.
 - Hoya palette exemption: Hoya is a character, not a prop. His pose palettes use 7 to 9 tokens (the shipped `Hoya.tsx` palette), over the 5-token prop cap (item rule `I-palette`); `checkItem` exempts a `hoya:<pose>` item that draws only that pose's palette from that one rule, and `registry.test.ts` asserts no library item needs it. The scene-level cap (rule R-S5, 8 tokens) leaves Hoya's palette out too (decision 15 in F-STORY-002 §8, 2026-10-11): it counts every token drawn by the setting and the other layers, a token Hoya shares with another item still counts through that item, and a colour a layer `tint` brings onto Hoya counts (`cappedPalette` in `rules.ts`).
+
+## Library batch 2: records-joseon (PR 2.10a)
+
+Settings and props for `sillok-royal-historians`, `sillok-mountain-archives`, `seungjeongwon-ilgi-every-day`, `ilseongnok-daily-reflection`, `uigwe-royal-birthday` and `joseon-records-today`, and the `art` of their 45 scenes.
+
+| Group | Ids |
+|---|---|
+| Settings | `scene:hanji-backdrop` (close-ups, horizon 152), `scene:hanok-room`, `scene:countryside` (two colours, to leave palette room), `scene:mountains`, `scene:mountain-stream`, `scene:modern-room` |
+| People | `prop:fig-officials-kneeling` (seen from behind), `prop:fig-king-seated`, `prop:fig-writer-seated`, `prop:fig-artisan`, `prop:fig-dancer`, `prop:fig-modern`, `prop:fig-worker`, `prop:fig-researcher` |
+| Books and records | `prop:books-stack`, `prop:book-bundle`, `prop:book-chest-open`, `prop:books-airing`, `prop:book-open-entry`, `prop:uigwe-open`, `prop:book-geojunggi`, `prop:banchado-strip`, `prop:paper-stack`, `prop:papers-loose`, `prop:sheet-cursive`, `prop:print-sheet`, `prop:type-tray` |
+| Nature, buildings | `prop:horse`, `prop:pine-tree`, `prop:flat-rock`, `prop:sago-archive` (door tintable), `prop:fortress-gate`, `prop:fortress-wall`, `prop:night-window` |
+| Objects, ceremony | `prop:oil-lamp`, `prop:tablet`, `prop:weather-signs`, `prop:signpost`, `prop:archive-shelf`, `prop:craft-wood`, `prop:craft-embroidery`, `prop:craft-painting`, `prop:palanquin` (the 1795 gagyo), `prop:procession-row`, `prop:feast-table`, `prop:bead-curtain`, `prop:silk-bolts`, `prop:ceremony-goods` |
+
+- Heritage artefacts and buildings carry a `sourceRef` to the page that shows them (Encyclopedia of Korean Culture, National Archives, National Heritage Portal, Annals DB); every item has an `accuracyNote` saying what is simplified. Heritage buildings are allowed by the registry test (§3.9.10: object or architecture).
+- Palette headroom drove several choices: the countryside is two tokens, the palanquin roof is drawn near black, the procession wears the attendants' yellow, the dancer's hair is dark brown.
+- Deviations from the briefs (all in the PR): no close-up hands; the king shown front-on; the 1404 fall not drawn (advisory scene, setting and objects only, §3.9.5 R-S10); fewer people than the narration counts (the narration keeps the numbers); one palanquin (the source supports Lady Hyegyeong's); no ox cart (the sources do not say how the Annals were carried); Lady Hyegyeong behind a curtain (as the 1795 feast picture shows); the four books share one cover colour.
