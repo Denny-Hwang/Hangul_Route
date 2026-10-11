@@ -62,8 +62,8 @@ There is no mailer in this repository. When launch news is ready, import `waitli
 
 ## Before launch (owner items)
 
-- The privacy policy should mention that launch-news email addresses are collected and how to be removed. Legal text waits for counsel; this PR does not edit `/privacy` or `/terms`.
-- The sentence above the form still reads "...launch news and a free family code on launch day." It was already on the page and is unchanged. It is a commercial promise, so it needs owner approval (PNNL outside-activity and commercial-claims hold) before launch.
+- The privacy policy has a "Launch-news email list" section (what is collected, why, who stores it, how long, how to be removed). It is still a draft pending counsel review, like the rest of `/privacy`.
+- The sentence above the form promises launch news only: "Leave your email and we'll send you the launch news." It makes no other offer (no free code, no launch-day claim). Keep it that way unless the owner decides otherwise; `landing-waitlist.test.tsx` pins it.
 - Production check after the deploy: submit a real address on https://hangulroute.com, then run the count query above.
 
 ## Reference

@@ -1,6 +1,7 @@
-import { ProfileSchema } from '@hangul-route/content-schema';
+import { LEARNER_LEVELS } from '@hangul-route/content-schema';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
+import { CONTACT_EMAIL } from '../../data/contact';
 import PrivacyPage from '../privacy/page';
 import TermsPage from '../terms/page';
 
@@ -31,10 +32,57 @@ describe('privacy policy', () => {
     expect(privacy).not.toMatch(/\b5\s*[–-]\s*11\b/);
   });
 
-  it('lists the age groups the app actually stores', () => {
-    const groups = ProfileSchema.shape.ageGroup.options.map((g) => g.replace('-', '–'));
-    expect(privacy).toContain(`age group (${groups.join(' / ')})`);
-    expect(privacy).not.toContain('5–7 / 8–11');
+  it('describes the learner level as a self-chosen reading level, never an age', () => {
+    const labels = LEARNER_LEVELS.map((l) => l.label);
+    expect(labels.length).toBeGreaterThan(0);
+    expect(privacy).toContain(`starting level the learner picks (${labels.join(' / ')})`);
+    expect(privacy).toMatch(/It describes how much the learner reads, not how old they are/);
+    expect(privacy).not.toMatch(/age group/i);
+    expect(privacy).not.toMatch(/\b5\s*[–-]\s*7\b|\b8\s*[–-]\s*9\b|\b10\s*[–-]\s*11\b/);
+    expect(terms).not.toMatch(/age group/i);
+  });
+
+  it('says the privacy page was last updated 2026-10-10', () => {
+    expect(privacy).toContain('Effective October 10, 2026');
+  });
+
+  describe('launch-news email list', () => {
+    it('has its own section', () => {
+      expect(privacy).toContain('Launch-news email list');
+    });
+
+    it('says what is collected and what is not', () => {
+      expect(privacy).toContain('the email address you type into the launch form');
+      expect(privacy).toContain('the date you signed up');
+      expect(privacy).toContain('which form on our site it came from');
+      expect(privacy).toContain('your language setting');
+      expect(privacy).toContain('which version of the consent text you saw');
+      expect(privacy).toMatch(/We do not store your IP address or any browser details/);
+    });
+
+    it('says why, who stores it, and that it is never sold or shared', () => {
+      expect(privacy).toMatch(/only to send you Hangul Route launch news/);
+      expect(privacy).toMatch(/never sold or shared/i);
+      expect(privacy).toMatch(/our own database on Cloudflare/);
+    });
+
+    it('says how long it is kept and how to be removed or erased', () => {
+      expect(privacy).toMatch(/until the launch news ends or you ask us to remove it/);
+      expect(privacy).toContain(`email ${CONTACT_EMAIL} from the address you signed up with`);
+      expect(privacy).toMatch(/we will remove it/i);
+    });
+
+    it('says signing up is optional and the app does not need an email', () => {
+      expect(privacy).toMatch(/Signing up is optional/);
+      expect(privacy).toMatch(/does not depend on using the app/);
+      expect(privacy).toMatch(/The app itself does not require an email address/);
+    });
+
+    it('promises no response time for removal requests in this section', () => {
+      const section = /Launch-news email list(.*?)Where your data lives/.exec(privacy)?.[1] ?? '';
+      expect(section.length).toBeGreaterThan(200);
+      expect(section).not.toMatch(/within \d+|\bdays\b|\bhours\b|immediately/i);
+    });
   });
 
   it('says the account holder creates the account — not "an adult" (owner decision 2026-10-10)', () => {

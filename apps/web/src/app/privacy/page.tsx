@@ -1,8 +1,9 @@
+import { LEARNER_LEVELS } from '@hangul-route/content-schema';
 import { colors, radii, spacing, typography } from '@hangul-route/design-system/tokens';
 import Link from 'next/link';
 import { CONTACT_EMAIL } from '../../data/contact';
 
-const EFFECTIVE_DATE = 'May 22, 2026';
+const EFFECTIVE_DATE = 'October 10, 2026';
 
 interface Section {
   heading: string;
@@ -26,7 +27,7 @@ const sections: Section[] = [
   {
     heading: 'What we collect',
     bullets: [
-      'Learner profile: a display nickname and an age group (5–7 / 8–9 / 10–11). A real name is optional and only stored if a parent enters it.',
+      `Learner profile: a display nickname and a starting level the learner picks (${LEARNER_LEVELS.map((l) => l.label).join(' / ')}). It describes how much the learner reads, not how old they are, and we do not need a birth date to use it. A real name is optional and only stored if a parent enters it.`,
       'Learning progress: quests completed, stars earned, cards unlocked, streaks, and which jamo a learner recognizes — so the journey can resume and a parent can see progress.',
       'Account contact: a parent email, used for sign-in, receipts, and account recovery.',
       'Basic device and diagnostic data: app version, device type, and crash logs, to keep the app stable.',
@@ -45,6 +46,18 @@ const sections: Section[] = [
     heading: "Children's privacy (COPPA / GDPR-K)",
     paragraphs: [
       'Many of our learners are children. Hangul Route is designed to comply with the U.S. Children’s Online Privacy Protection Act (COPPA) and similar rules for minors. We practice data minimization, require verifiable parental consent before any personal data is linked to an account, and give parents the right to review or delete their child’s data at any time.',
+    ],
+  },
+  {
+    heading: 'Launch-news email list',
+    paragraphs: [
+      'On our website you can leave your email address to get Hangul Route launch news. This list is separate from the app and from any account.',
+      'What we collect: the email address you type into the launch form, the date you signed up, which form on our site it came from, your language setting, and which version of the consent text you saw. We do not store your IP address or any browser details.',
+      'Why: only to send you Hangul Route launch news. Your address is never sold or shared.',
+      'Who stores it: our own database on Cloudflare. We do not pass it to a third-party newsletter service.',
+      'How long: until the launch news ends or you ask us to remove it.',
+      `Removal and erasure: to be taken off the list, or to have your address erased, email ${CONTACT_EMAIL} from the address you signed up with and we will remove it.`,
+      'Signing up is optional and does not depend on using the app. The app itself does not require an email address to learn.',
     ],
   },
   {
