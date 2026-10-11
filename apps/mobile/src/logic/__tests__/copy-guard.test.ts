@@ -12,17 +12,6 @@ import { describe, expect, it } from 'vitest';
 const REPO = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..', '..');
 const ROOTS = ['apps/mobile/src', 'apps/web/src'];
 
-/**
- * Web files that still print the age and belong to F-LEARN-001 PR 7 (console
- * roster, parent demo pages). Each entry must still contain a match: when PR 7
- * fixes the file the stale entry fails here, so it is removed with the fix.
- */
-const PENDING_PR7 = new Set([
-  'apps/web/src/app/parent/page.tsx',
-  'apps/web/src/app/parent/[childId]/page.tsx',
-  'apps/web/src/app/teach/space/page.tsx',
-]);
-
 const BANNED: Array<[string, RegExp]> = [
   ['Age ${…} template', /Age \$\{/],
   ['"Age " + ageGroup', /['"`]Age ['"`]\s*\+/],
@@ -64,13 +53,7 @@ describe('copy guard: no age wording in rendered source (F-LEARN-001 §3.7)', ()
   it('no mobile or web source builds an "Age X" label or asks how old the learner is', () => {
     const offenders = files
       .map((f) => ({ file: posix(f), hits: matches(f) }))
-      .filter((o) => o.hits.length > 0 && !PENDING_PR7.has(o.file));
+      .filter((o) => o.hits.length > 0);
     expect(offenders).toEqual([]);
-  });
-
-  it('every pending PR 7 exception still has a match (remove it with the fix)', () => {
-    for (const file of PENDING_PR7) {
-      expect(matches(join(REPO, file)), file).not.toEqual([]);
-    }
   });
 });
