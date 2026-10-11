@@ -23,11 +23,13 @@ import { Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
 import { cheerLine } from '../../logic/placement/copy';
 import { acknowledgement, choicesEnabled, choicesFallbackMs, pauseSheet, promptPlayback, speaksInstruction } from '../../logic/placement/flow';
 import {
-  audioFallback,
+  NO_SOUND_SKIP,
   choiceColumns,
   estimatedPromptMs,
   instructionFor,
+  instructionOnTap,
   optionViews,
+  promptOutcome,
   promptView,
   questionLabel,
   revealAvailable,
@@ -36,6 +38,7 @@ import {
 } from '../../logic/placement/item-view';
 import { rungPosition } from '../../logic/placement/session';
 import { playPrompt, stop } from '../../platform/audio';
+import { focusForScreenReader } from '../../platform/screen-reader';
 import { PictureArt } from '../minigames/PictureArt';
 import { usePlacement } from './context';
 import { PauseSheet } from './PauseSheet';
@@ -43,11 +46,6 @@ import { ChoiceGrid, FootstepTrail, SpeakerButton } from './parts';
 
 /** How long the neutral "Got it" stays (Standard and Deep). */
 const ACK_MS = 900;
-
-/** Focus target for assistive tech when a question opens (web; a no-op where the node has no `focus`). */
-interface Focusable {
-  focus?: () => void;
-}
 
 /**
  * Items (F-PLC-001 section 3.1 step 5, wireframe placement E and E2): one
@@ -91,7 +89,7 @@ function ItemView({ question, ack, onAck }: { question: AssessmentQuestion; ack:
   const [shownAt] = useState(() => Date.now());
   const [now, setNow] = useState(shownAt);
   const playing = useRef(false);
-  const promptRef = useRef<Focusable | null>(null);
+  const promptRef = useRef<object | null>(null);
 
   const instruction = instructionFor(m, question.format, flow.testLocale);
   const options = optionViews(question, { revealed, mode, testLocale: flow.testLocale, m });
@@ -116,16 +114,17 @@ function ItemView({ question, ack, onAck }: { question: AssessmentQuestion; ack:
     }).then((result) => {
       playing.current = false;
       setPlaybackEnded(true);
-      if (result !== 'unavailable') return;
-      // Section 3.11: read the words or the reply instead; a heard letter or syllable would be the answer.
-      if (audioFallback(question.format) === 'text') setTextFallback(true);
-      else applyRun({ type: 'notSure' });
+      // Section 3.11 (sound switched off or not playable): read the words or the reply
+      // instead; a heard letter or syllable would be the answer, so it is skipped.
+      const outcome = promptOutcome(result, question.format);
+      if (outcome === 'text') setTextFallback(true);
+      else if (outcome === 'skip') applyRun(NO_SOUND_SKIP);
     });
   };
 
   // On open: a cheer every few answers, the instruction (Short: first item of a rung only), then the prompt.
   useEffect(() => {
-    promptRef.current?.focus?.();
+    focusForScreenReader(promptRef.current);
     if (promptPlayback({ screenReader, needsGesture }) !== 'auto') return;
     let alive = true;
     void (async () => {
@@ -148,23 +147,32 @@ function ItemView({ question, ack, onAck }: { question: AssessmentQuestion; ack:
     return () => clearTimeout(id);
   }, [short, playbackEnded, heard, prompt]);
 
+  // Any tap is the gesture that unlocks audio after a resume, so later prompts play on open again.
   const hear = (): void => {
     markGesture();
     applyRun({ type: 'touch' });
-    playKorean();
+    const spokenFirst = instructionOnTap(instruction, screenReader);
+    if (spokenFirst === null) {
+      playKorean();
+      return;
+    }
+    void say(spokenFirst).then(() => playKorean());
   };
   const reveal = (): void => {
+    markGesture();
     applyRun({ type: 'touch' });
     setRevealed(true);
   };
   const choose = (option: OptionView): void => {
     if (!enabled || sheet !== null) return;
+    markGesture();
     stop();
     if (acknowledgement(mode) === 'got-it') onAck();
     applyRun({ type: 'answer', optionId: option.id, assisted: revealed });
   };
   const notSure = (): void => {
     if (sheet !== null) return;
+    markGesture();
     stop();
     applyRun({ type: 'notSure' });
   };
@@ -201,7 +209,7 @@ function ItemView({ question, ack, onAck }: { question: AssessmentQuestion; ack:
   const announced = (children: React.ReactNode): React.ReactElement => (
     <View
       ref={(node) => {
-        promptRef.current = node as unknown as Focusable | null;
+        promptRef.current = node;
       }}
       accessible
       accessibilityRole="header"
@@ -255,7 +263,8 @@ function ItemView({ question, ack, onAck }: { question: AssessmentQuestion; ack:
       accessibilityRole="button"
       accessibilityLabel={copy.notSure}
       style={({ pressed }) => ({
-        minHeight: short ? touchTarget.child : touchTarget.min,
+        // The same size as a choice (section 3.1 step 5).
+        minHeight: touchTarget.child,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
@@ -273,6 +282,7 @@ function ItemView({ question, ack, onAck }: { question: AssessmentQuestion; ack:
   );
 
   // Short (wireframe E2): Hoya beside the speaker, nothing to read; the instruction and cheers are spoken.
+  // Standard and Deep: Hoya says the cheer, and the written instruction stays on the item whenever there is one.
   const hoyaLine = cheer ?? instruction.visible;
   const hoya = short ? (
     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.lg }}>
@@ -280,7 +290,16 @@ function ItemView({ question, ack, onAck }: { question: AssessmentQuestion; ack:
       {promptBlock}
     </View>
   ) : (
-    announced(hoyaLine === null ? <Hoya pose="idle" size={touchTarget.min} /> : <HoyaBubble tone={cheer === null ? 'idle' : 'cheering'} message={hoyaLine} />)
+    announced(
+      <View style={{ gap: spacing.sm }}>
+        {hoyaLine === null ? <Hoya pose="idle" size={touchTarget.min} /> : <HoyaBubble tone={cheer === null ? 'idle' : 'cheering'} message={hoyaLine} />}
+        {cheer !== null && instruction.visible !== null ? (
+          <Body align="center" testID="placement-instruction">
+            {instruction.visible}
+          </Body>
+        ) : null}
+      </View>,
+    )
   );
   const topBar = (
     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md }}>

@@ -11,6 +11,14 @@ describe('platform/screen-reader.web', () => {
     expect(off()).toBeUndefined();
   });
 
+  it('focuses the DOM node so assistive tech lands on it; tolerates a node without focus', () => {
+    const focus = vi.fn();
+    web.focusForScreenReader({ focus });
+    expect(focus).toHaveBeenCalledTimes(1);
+    expect(() => web.focusForScreenReader({})).not.toThrow();
+    expect(() => web.focusForScreenReader(null)).not.toThrow();
+  });
+
   it('has the same surface as the native file', () => {
     expect(Object.keys(web).sort()).toEqual(Object.keys(native).sort());
   });

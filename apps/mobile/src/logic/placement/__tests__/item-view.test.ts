@@ -5,8 +5,11 @@ import { PLACEMENT_BANK } from '../../../content/placement.generated';
 import {
   KO_SPOKEN_ONLY_FORMATS,
   TWO_COLUMN_MIN_WIDTH,
+  NO_SOUND_SKIP,
   audioFallback,
   choiceColumns,
+  instructionOnTap,
+  promptOutcome,
   estimatedPromptMs,
   instructionFor,
   optionViews,
@@ -100,6 +103,37 @@ describe('audioFallback (section 3.11)', () => {
     expect(audioFallback('reply-pick')).toBe('text');
     expect(audioFallback('hear-pick-written')).toBe('skip');
     expect(audioFallback('build-syllable')).toBe('skip');
+  });
+});
+
+describe('promptOutcome (section 3.11: played, muted, unavailable)', () => {
+  it('a played prompt changes nothing', () => {
+    expect(promptOutcome('played', 'hear-pick-written')).toBe('played');
+    expect(promptOutcome('played', 'reply-pick')).toBe('played');
+  });
+
+  it('sound switched off or not playable: words and replies are read, a heard letter or syllable is skipped', () => {
+    for (const result of ['muted', 'unavailable'] as const) {
+      expect(promptOutcome(result, 'hear-pick-picture')).toBe('text');
+      expect(promptOutcome(result, 'reply-pick')).toBe('text');
+      expect(promptOutcome(result, 'hear-pick-written')).toBe('skip');
+      expect(promptOutcome(result, 'build-syllable')).toBe('skip');
+    }
+  });
+
+  it('a skipped prompt is recorded as skipped without counting as the learner\'s "not sure"', () => {
+    expect(NO_SOUND_SKIP).toEqual({ type: 'notSure', cause: 'no-sound' });
+  });
+});
+
+describe('instructionOnTap (section 3.2, 3.12)', () => {
+  it('a spoken-only instruction is heard before the prompt when a screen reader is on (nothing auto-plays)', () => {
+    expect(instructionOnTap({ visible: null, spoken: 'Listen' }, true)).toBe('Listen');
+  });
+
+  it('otherwise the speaker plays the prompt only', () => {
+    expect(instructionOnTap({ visible: null, spoken: 'Listen' }, false)).toBeNull();
+    expect(instructionOnTap({ visible: 'Listen', spoken: 'Listen' }, true)).toBeNull();
   });
 });
 

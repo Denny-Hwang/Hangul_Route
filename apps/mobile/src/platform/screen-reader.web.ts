@@ -15,3 +15,9 @@ export function isScreenReaderEnabled(): Promise<boolean> {
 export function subscribeScreenReader(_fn: (on: boolean) => void): () => void {
   return () => undefined;
 }
+
+/** On the web the DOM node takes the focus, and assistive tech follows it (F-PLC-001 section 3.12). */
+export function focusForScreenReader(node: object | null): void {
+  const focusable = node as { focus?: () => void } | null;
+  focusable?.focus?.();
+}

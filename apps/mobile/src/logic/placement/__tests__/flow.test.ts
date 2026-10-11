@@ -20,6 +20,7 @@ import {
   resumeClocks,
   resumedFlow,
   withGuideHidden,
+  retakeFlow,
   selectableLocale,
   runConfig,
   shortAvailable,
@@ -338,11 +339,26 @@ describe('the warm-up and sound-needed (section 3.1 step 4)', () => {
     expect(item.warmupDone).toBe(true);
   });
 
-  it('a played (or muted) warm-up keeps audio on', () => {
+  it('a played warm-up keeps audio on', () => {
     const s = toWarmup({}, { type: 'setRevealMode', revealMode: 'tap' });
     expect(run(s, { type: 'warmupAudio', result: 'played' }).audio).toBe(true);
-    expect(run(s, { type: 'warmupAudio', result: 'muted' }).audio).toBe(true);
     expect(run(s, { type: 'warmupAnswer' }).audio).toBe(true);
+  });
+
+  it('sound switched off (muted) at the warm-up leaves the heard questions out of the draw (section 3.11)', () => {
+    const standard = run(toWarmup({}, { type: 'setRevealMode', revealMode: 'tap' }), { type: 'warmupAudio', result: 'muted' });
+    expect(standard.screen).toBe('warmup');
+    expect(standard.audio).toBe(false);
+    expect(standard.noSoundNote).toBe(true);
+    expect(run(standard, { type: 'warmupAnswer' }).audio).toBe(false);
+    // Short and a listen-first run need sound: "Turn on sound to play".
+    expect(run(toWarmup({ levelOrder: 0 }), { type: 'warmupAudio', result: 'muted' }).screen).toBe('sound-needed');
+    const listenFirstStandard = run(
+      toWarmup({ levelOrder: 0, capability: NO_VOICE }, { type: 'setRevealMode', revealMode: 'tap' }),
+      { type: 'warmupAudio', result: 'muted' },
+    );
+    expect(listenFirstStandard.mode).toBe('standard');
+    expect(listenFirstStandard.screen).toBe('sound-needed');
   });
 
   it('Short or a listen-first learner without sound: the run does not start', () => {
@@ -706,5 +722,32 @@ describe('withGuideHidden (section 3.1 step 7, the one-tap retake)', () => {
     expect(withGuideHidden(options, 'short')).toBe(options);
     const invite = start({ source: 'onboarding' });
     expect(withGuideHidden(invite, 'standard')).toBe(invite);
+  });
+});
+
+describe('retakeFlow (section 3.1 step 7: "Try it with the sound guide hidden" is a one-tap retake)', () => {
+  const capability = () => SOUND;
+
+  it('starts at once: the warm-up, or the hand-off for a Pictures first learner', () => {
+    expect(retakeFlow(start(), 'standard', capability)).toMatchObject({ screen: 'warmup', mode: 'standard', revealMode: 'tap' });
+    expect(retakeFlow(start({ levelOrder: 0 }), 'deep', capability)).toMatchObject({ screen: 'handoff', mode: 'deep', revealMode: 'tap' });
+  });
+
+  it('with more than one shipped locale it keeps the last check\'s language instead of asking again', () => {
+    const placements = [placementResult({ testLocale: 'es' })];
+    const lang = start({ locales: ['en', 'es'], uiLocale: 'en', placements });
+    expect(lang.screen).toBe('language');
+    expect(retakeFlow(lang, 'standard', capability)).toMatchObject({ screen: 'warmup', testLocale: 'es', revealMode: 'tap' });
+    // No earlier check, or its language is no longer shipped: the current test language.
+    expect(retakeFlow(start({ locales: ['en', 'es'], uiLocale: 'es' }), 'standard', capability).testLocale).toBe('es');
+    const gone = start({ locales: ['en', 'es'], uiLocale: 'en', placements: [placementResult({ testLocale: 'ko' })] });
+    expect(retakeFlow(gone, 'standard', capability)).toMatchObject({ screen: 'warmup', testLocale: 'en' });
+  });
+
+  it('leaves Short and the invite as they are', () => {
+    const options = start();
+    expect(retakeFlow(options, 'short', capability)).toBe(options);
+    const invite = start({ source: 'onboarding' });
+    expect(retakeFlow(invite, 'standard', capability)).toBe(invite);
   });
 });

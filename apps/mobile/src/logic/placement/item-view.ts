@@ -1,4 +1,11 @@
-import { localize, type AssessmentQuestion, type Overlays, type PlacementMode, type UiLocale } from '@hangul-route/content-schema';
+import {
+  localize,
+  type AssessmentQuestion,
+  type Overlays,
+  type PlacementEvent,
+  type PlacementMode,
+  type UiLocale,
+} from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
 
 /**
@@ -76,6 +83,28 @@ export function promptView(question: AssessmentQuestion, revealed: boolean): Pro
  */
 export function audioFallback(format: AssessmentFormat): 'text' | 'skip' {
   return format === 'hear-pick-picture' || format === 'reply-pick' ? 'text' : 'skip';
+}
+
+/**
+ * What the item does once its heard prompt reports (section 3.11). `muted`
+ * (sound switched off) and `unavailable` are handled alike mid-run: the words
+ * or the reply are shown as text, and a heard letter or syllable, which would
+ * be the answer, is skipped.
+ */
+export function promptOutcome(result: 'played' | 'muted' | 'unavailable', format: AssessmentFormat): 'played' | 'text' | 'skip' {
+  return result === 'played' ? 'played' : audioFallback(format);
+}
+
+/** A prompt that cannot play: recorded skipped (not wrong), never a "not sure" of the learner. */
+export const NO_SOUND_SKIP: PlacementEvent = { type: 'notSure', cause: 'no-sound' };
+
+/**
+ * With a screen reader on nothing auto-plays, so an instruction that is spoken
+ * only (Korean as the test language, letter formats) is heard on the speaker
+ * tap, before the Korean prompt.
+ */
+export function instructionOnTap(instruction: Instruction, screenReader: boolean): string | null {
+  return screenReader && instruction.visible === null ? instruction.spoken : null;
 }
 
 export interface OptionView {

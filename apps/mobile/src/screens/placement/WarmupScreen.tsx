@@ -15,7 +15,8 @@ const WARMUP_QUESTION = { id: PLACEMENT_WARMUP.id, ...PLACEMENT_WARMUP.question 
  * unscored question (hear a word, tap the picture). Its speaker tap unlocks
  * audio for the run and checks it: `unavailable` turns sound off for the
  * whole run, and Short or a listen-first learner then sees the grown-up
- * sound-needed screen instead. The pictures wait for that check; any answer
+ * sound-needed screen instead; sound switched off (`muted`) counts the same
+ * for the draw. The pictures wait for that check; any answer
  * opens the first scored question. Nothing here is recorded.
  */
 export function WarmupScreen(): React.ReactElement {

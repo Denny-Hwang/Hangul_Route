@@ -4,9 +4,15 @@ const rn = vi.hoisted(() => ({
   enabled: vi.fn<() => Promise<boolean>>(),
   listeners: [] as Array<(on: boolean) => void>,
   removed: 0,
+  focused: [] as number[],
+  handles: new Map<object, number | null>(),
 }));
 vi.mock('react-native', () => ({
+  findNodeHandle: (node: object | null) => (node === null ? null : (rn.handles.get(node) ?? null)),
   AccessibilityInfo: {
+    setAccessibilityFocus: (tag: number) => {
+      rn.focused.push(tag);
+    },
     isScreenReaderEnabled: rn.enabled,
     addEventListener: (_type: string, fn: (on: boolean) => void) => {
       rn.listeners.push(fn);
@@ -19,12 +25,14 @@ vi.mock('react-native', () => ({
   },
 }));
 
-import { isScreenReaderEnabled, subscribeScreenReader } from '../screen-reader';
+import { focusForScreenReader, isScreenReaderEnabled, subscribeScreenReader } from '../screen-reader';
 
 beforeEach(() => {
   rn.enabled.mockReset();
   rn.listeners.length = 0;
   rn.removed = 0;
+  rn.focused.length = 0;
+  rn.handles.clear();
 });
 
 describe('platform/screen-reader (F-PLC-001 section 3.1 step 3, assumption 5)', () => {
@@ -51,5 +59,18 @@ describe('platform/screen-reader (F-PLC-001 section 3.1 step 3, assumption 5)', 
     expect(seen).toEqual([true]);
     off();
     expect(rn.removed).toBe(1);
+  });
+
+  it('moves VoiceOver / TalkBack focus to a view (section 3.12: focus moves to the prompt on each question)', () => {
+    const node = {};
+    rn.handles.set(node, 42);
+    focusForScreenReader(node);
+    expect(rn.focused).toEqual([42]);
+  });
+
+  it('does nothing without a mounted view', () => {
+    focusForScreenReader(null);
+    focusForScreenReader({});
+    expect(rn.focused).toEqual([]);
   });
 });
