@@ -14,7 +14,7 @@ Spec: `docs/specs/F-STORY-005-episode-catalogue-grid.md` §3.6 · wireframe: `de
 
 Top to bottom, one scrolling column:
 
-1. Back (top-left); "Stage 2 · Words" (stage title · theme title on one line), the theme name, and the line "Heritage stories for this cell".
+1. Back (top-left); "Words · Food & Daily Life" (stage title · theme title on one line, F-STORY-005 §3.6), then the line "Heritage stories for this cell".
 2. **Lesson row** (only when the cell has a lesson or book): a secondary full-width row "<episode title> — the lesson for this cell".
 3. **Story tiles** (`StoryTile`, as in the Library): cover 4:3, English title, Korean with romanization, "about N min", the state line (New / Keep reading / Finished with stars), the "Traditional tale" pill for tales. 1 column at 320, 2 at 360-767, 3-4 from 768.
 
@@ -53,13 +53,13 @@ Tokens by name: canvas surface.canvas, tiles surface.paper with the "card" shado
 radii.lg, text text.primary / text.secondary, a small theme.letters accent beside the
 theme name. Every control at least 64 tall. No primary button: tiles are equal.
 
-Frame 1 (stories-only cell): back arrow; "Stage 2 · Words"; "Letters & Books"; the line
+Frame 1 (stories-only cell): back arrow; "Words · Letters & Books" on one line; the line
 "Heritage stories for this cell"; a 2-column grid of two story tiles (4:3 flat cover
 illustration, English title, Korean title with romanization, "about 5 min", state lines):
 "Jikji: Printed with Metal Type" / 직지, 금속활자로 찍은 책 / Jikji, geumsokhwaljaro jjigeun
 chaek / "New", and "The Annals Hide in the Mountains" / 산으로 간 실록 / Saneuro gan sillok /
 "Finished" with three small stars.
-Frame 2 (lesson cell): "Stage 2 · Words"; "Food & Daily Life"; the same line; a full-width
+Frame 2 (lesson cell): "Words · Food & Daily Life"; the same line; a full-width
 secondary row "Lunch Box Words — the lesson for this cell"; one tile "Gimjang Day: Sharing
 Kimchi, Singing Arirang" / 김장하는 날과 아리랑 / Gimjanghaneun nalgwa Arirang / "Keep
 reading".

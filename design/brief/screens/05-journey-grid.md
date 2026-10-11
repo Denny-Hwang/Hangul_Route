@@ -172,7 +172,7 @@ With heritage stories in the bundle the grid gains two cell looks and one mark; 
 - **Placeholder**: unchanged (lock, disabled, "coming soon").
 - One muted caption under a stage row that has a stories-only cell: **"Heritage stories are open in the cells with books."**; the explainer card adds **"Cells with books also have heritage stories."** No fractions.
 
-Prompt addition (append to the §5 prompt): "In Stage 1 add a small count mark circle (surface.sunken fill, border.subtle ring, caption-size number) to the top-right of four cells (5, 1, 2, 1). In Stage 2 draw three stories-only cells: a book icon in a paper cell with a subtle border and a count mark. Under Stage 2 add the muted caption 'Heritage stories are open in the cells with books.'"
+Prompt addition (append to the §5 prompt): "In Stage 1 add a small count mark circle (surface.sunken fill, border.subtle ring, caption-size number) to the top-right of all five cells (5, 1, 2, 1, 1). In Stage 2 draw three stories-only cells: a book icon in a paper cell with a subtle border and a count mark. Under Stage 2 add the muted caption 'Heritage stories are open in the cells with books.'"
 
 Acceptance additions:
 

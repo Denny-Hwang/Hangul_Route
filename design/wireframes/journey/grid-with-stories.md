@@ -1,16 +1,16 @@
 # Journey / Grid with stories: where the heritage stories live on the map (wireframe v2)
 
-Specs: `docs/specs/F-STORY-005-episode-catalogue-grid.md` (§3.1 model, §3.4 when a story is offered, §3.5 grid capacity, §3.6 map surfaces, §3.12 accessibility) · the card surfaces below (D-G) are `docs/specs/F-STORY-006-card-award-model.md` §3.5, §3.7, §3.8
+Specs: `docs/specs/F-STORY-005-episode-catalogue-grid.md` (§3.1 model, §3.4 when a story is offered, §3.5 grid capacity, §3.6 map surfaces, §3.12 accessibility) · the card surfaces D-G belong to `docs/specs/F-STORY-006-card-award-model.md` §3.5, §3.7, §3.8 (their screen files are listed below)
 Audience: anyone learning Hangul, any age (CLAUDE.md §1). Nothing says a learner is behind; every locked thing says how to open it; a story cell is never routed through the grown-up PIN.
-Code: built so far: `apps/mobile/src/logic/journey.ts` (`episodesFor`, cell-based `stageAvailability`, `MAX_EPISODES_PER_CELL`, PR 5.2), the pillar registry (PR 5.1); planned: `apps/mobile/src/logic/journey-cells.ts` (`cellModel`, `cellLabel`) and the `GridCell` looks in `screens/journey/JourneyScreen.tsx` (PR 5.5a), `logic/story/home-cell.ts` (PR 5.3). Base screen: `journey/grid.md`; two panes on wide windows: `layout/wide.md` C. Brief: `design/brief/screens/05-journey-grid.md` (story cells section) and `27-cell-stories.md`.
+Code: built so far (PRs 5.1-5.2): `apps/mobile/src/content/episodes.ts` (`episodesFor`, `MAX_EPISODES_PER_CELL`, `cellsOverCapacity`), `apps/mobile/src/logic/journey.ts` (cell-based `stageAvailability`, `isCellComplete`), the pillar registry; planned: `apps/mobile/src/logic/journey-cells.ts` (`cellModel`, `cellLabel`) and the `GridCell` looks in `screens/journey/JourneyScreen.tsx` (PR 5.5a), `logic/story/home-cell.ts` (PR 5.3). Base screen: `journey/grid.md`; two panes on wide windows: `layout/wide.md` C. Brief: `design/brief/screens/05-journey-grid.md` (story cells section) and `27-cell-stories.md`.
 Notation: `[[ X ]]` the one primary action, `[ X ]` secondary or ghost, `(tab)` a section tab, `~~ ko ~~` taught Korean drawn with `KoreanText` (Korean + romanization + gloss), `#n` a small count mark.
 
-Promoted by F-STORY-005 PR 5.0 from the one-file draft `wireframes/story-catalogue.md`. The panel letters are kept so references still resolve:
+Promoted by F-STORY-005 PR 5.0 from the one-file draft (this file, v1). The panel letters are kept so references still resolve:
 
 - A. Journey with stories: the cell looks (this file)
 - B. Cell page: **moved to `story/cell-stories.md`**
 - C. Lesson page stories row: **moved to `episode/detail-cell-stories-row.md`**
-- D-G. The card surfaces of F-STORY-006 (Results extra cards, Home catch-up card, Library earn hints, story card back face): below until F-STORY-006 PR 6.0 promotes them to `results/extra-cards.md`, `home/cards-catch-up.md`, `library/earn-hints.md` and `library/card-back-citation.md`
+- D-G. The card surfaces of F-STORY-006 (Results extra cards, Home catch-up card, Library earn hints, story card back face): their screen files are `results/extra-cards.md`, `home/cards-catch-up.md`, `library/earn-hints.md` and `library/card-back-citation.md`, promoted by F-STORY-006 PR 6.0 (until that PR merges they are still drawn in this file)
 - H. Future: Stage 5 book cell (this file)
 - I. States (this file)
 
@@ -49,7 +49,7 @@ The map keeps its single job (pick a cell); a cell with stories adds a count mar
 │      in the cells with books."   │   <- one muted caption, shown when the row has a stories-only cell
 │ (3) Sentences            [Soon]  │
 │     [lib #2] [lib #1] [lock] [lock] [lock]
-│ (4) Dialogue             [Soon]  │
+│ (4) Dialogue            [Taste]  │
 │     [lib #1] [lock] [H ] [lock] [lock]
 │ (5) Stories              [Soon]  │
 │     [lock] [lock] [lib #1] [lock] [lock]
@@ -223,7 +223,7 @@ Earn hints by rule: episode → "Finish the episode: …" · story → "Finish t
 - **No reviewed story in the bundle**: the Journey is exactly today's `journey/grid` (no marks, no stories-only or book cells; the golden test in `episodes.test.ts`).
 - **Error**: a story or cover that fails to load never changes a cell's look beyond its count; progress unreadable renders cells without the complete look and the usual muted line.
 - **Offline**: everything works from bundled content and the local snapshot.
-- **Small phone (320 wide), 200 % text**: cells keep the 64 floor (about 54 dp of art plus the hit slop of today's grid); the count mark stays inside the cell label; the column labels wrap.
+- **Small phone (320 wide), 200 % text**: five columns leave each cell about 54 x 54 (no hit slop), below the 64 floor: a known exception owned by audit UX-25 and out of scope here (F-STORY-005 §3.12). This spec adds no smaller target: the count mark is not a target and its number stays in the cell label. The column labels wrap. The touch-target audit measures 375 and wider, where the cells are about 65.
 - **Wide window**: grid in the master pane, the selected cell's content in the detail pane (`layout/wide.md` C); a stories-only cell navigates as on one pane until its view is extracted.
 - **Reduced motion**: no cell press animation.
 

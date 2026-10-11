@@ -27,8 +27,7 @@ No single primary button: each tile is one button and none is singled out (the L
 
 ```
 ┌──────────────────────────────────┐
-│ [<]  Stage 2 · Words             │   <- back; stage title · theme title
-│      "Food & Daily Life"         │
+│ [<]  Words · Food & Daily Life   │   <- back; "<Stage title> · <Theme title>" on one line
 │      "Heritage stories for this  │
 │       cell"                      │
 │                                  │

@@ -64,6 +64,7 @@ Run these once at the start. Everything else inherits.
 |---|---|---|---|
 | P4-04 | [`screens/04-home-today.md`](./screens/04-home-today.md#5-claude-design-prompt) | Home / Today | `design/screens/home/today__v1__YYYY-MM-DD.png` |
 | P4-05 | [`screens/05-journey-grid.md`](./screens/05-journey-grid.md#5-claude-design-prompt) | Journey grid (7×5) | `design/screens/journey/grid__v1__YYYY-MM-DD.png` |
+| P4-27 | [`screens/27-cell-stories.md`](./screens/27-cell-stories.md#6-claude-design-prompt) | Cell page: stories-only cell, lesson cell, tablet (F-STORY-005; story cells on the grid in §8 of 05 and 06) | `design/screens/story/cell-stories__v1__YYYY-MM-DD.png` |
 | P4-15 | [`screens/15-library-overview.md`](./screens/15-library-overview.md#5-claude-design-prompt) | Heritage Library overview | `design/screens/library/overview__v1__YYYY-MM-DD.png` |
 | P4-17 | [`screens/17-homework.md`](./screens/17-homework.md#5-claude-design-prompt) | Homework (due + empty) | `design/screens/homework/due__v1__YYYY-MM-DD.png` + `empty` |
 | P4-18 | [`screens/18-profile-switcher.md`](./screens/18-profile-switcher.md#5-claude-design-prompt) | Profile switcher (Me tab) | `design/screens/profile/switcher__v1__YYYY-MM-DD.png` |
