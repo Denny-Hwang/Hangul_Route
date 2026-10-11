@@ -11,7 +11,7 @@ import {
   type MissionPlan,
 } from '../mission-builder';
 
-const mission = getMessages('en').learner.home.mission;
+const learner = getMessages('en').learner;
 const TODAY = '2026-05-20';
 const YESTERDAY = '2026-05-19';
 const TWO_DAYS_AGO = '2026-05-18';
@@ -112,8 +112,8 @@ describe('buildTodaysMission — card count and order', () => {
   it('returns 3 cards even on day one with no history at all', () => {
     const plan = build({ snapshot: snapshot() });
     expect(plan.cards).toHaveLength(3);
-    // No replay is possible yet, so slot ① falls back to Story Time (§3.1).
-    expect(plan.cards[0]?.kind).toBe('story');
+    // No replay and no story is possible yet, so slot ① falls back to the explore card (F-STORY-004 §3.7).
+    expect(plan.cards[0]?.kind).toBe('explore');
   });
 
   it('stamps the plan with its date and profile', () => {
@@ -136,12 +136,12 @@ describe('slot ① — replay selection (§3.1)', () => {
 
   it('ignores quests older than the replay window', () => {
     const plan = build({ snapshot: snapshot([done('quest:a', FOUR_DAYS_AGO, 0.6)]) });
-    expect(plan.cards[0]?.kind).toBe('story');
+    expect(plan.cards[0]?.kind).toBe('explore');
   });
 
   it('ignores a quest answered perfectly — nothing to revisit', () => {
     const plan = build({ snapshot: snapshot([done('quest:a', YESTERDAY, 1)]) });
-    expect(plan.cards[0]?.kind).toBe('story');
+    expect(plan.cards[0]?.kind).toBe('explore');
   });
 
   it('prefers the lowest accuracy when several qualify', () => {
@@ -264,10 +264,11 @@ describe('slot ③ — daily test capability gate (§9.2)', () => {
     expect(plan.cards[2]?.questId).toBe('quest:b');
   });
 
-  it('two story fallbacks never point at the same episode', () => {
+  it('two explore fallbacks never point at the same episode', () => {
     const plan = build({ snapshot: snapshot() });
-    const stories = plan.cards.filter((c) => c.kind === 'story');
-    expect(new Set(stories.map((c) => c.episodeId)).size).toBe(stories.length);
+    const explore = plan.cards.filter((c) => c.kind === 'explore');
+    expect(explore).toHaveLength(2);
+    expect(new Set(explore.map((c) => c.episodeId)).size).toBe(explore.length);
   });
 });
 
@@ -275,23 +276,23 @@ describe('resilience to partial or stale progress data', () => {
   it('ignores a quest that was started but never finished', () => {
     const inProgress = { ...done('quest:a', YESTERDAY, 0.4), completedAt: undefined };
     const plan = build({ snapshot: snapshot([inProgress]) });
-    expect(plan.cards[0]?.kind).toBe('story');
+    expect(plan.cards[0]?.kind).toBe('explore');
   });
 
   it('skips a progress record whose quest no longer exists in the content', () => {
     const plan = build({ snapshot: snapshot([done('quest:removed', YESTERDAY, 0.4)]) });
     expect(plan.cards).toHaveLength(3);
-    expect(plan.cards[0]?.kind).toBe('story');
+    expect(plan.cards[0]?.kind).toBe('explore');
   });
 });
 
-describe('story fallback', () => {
+describe('explore fallback (F-STORY-004 §3.7: replaces the old "Story time" episode card)', () => {
   it('offers an episode that is ready but not yet marked shipped', () => {
     const plan = build({
       episodes: [episode('episode:ready', ['quest:a'], 'ready')],
       snapshot: snapshot(),
     });
-    expect(plan.cards[0]).toMatchObject({ kind: 'story', episodeId: 'episode:ready' });
+    expect(plan.cards[0]).toMatchObject({ kind: 'explore', subtitle: 'explore', titleEn: 'Episode episode:ready', episodeId: 'episode:ready' });
   });
 
   it('never offers an episode that is only a preview placeholder', () => {
@@ -403,10 +404,10 @@ describe('anti-shame copy (§3.3)', () => {
       snapshot(QUESTS.map((q) => done(q.id, YESTERDAY, 1))),
     ];
     for (const snap of cases) {
-      expect(scanLearnerCopy(missionCopy(build({ snapshot: snap }), mission))).toEqual([]);
+      expect(scanLearnerCopy(missionCopy(build({ snapshot: snap }), learner))).toEqual([]);
     }
     expect(
-      scanLearnerCopy(missionCopy(build({ capabilities: { dailyTestAvailable: true } }), mission)),
+      scanLearnerCopy(missionCopy(build({ capabilities: { dailyTestAvailable: true } }), learner)),
     ).toEqual([]);
   });
 });
@@ -414,7 +415,7 @@ describe('anti-shame copy (§3.3)', () => {
 describe('mission card words come from the dictionary (F-I18N-001 §3.4 rule 3)', () => {
   it('cards carry a subtitle code, never prose', () => {
     const cards = build({ snapshot: snapshot([done('quest:a', YESTERDAY, 0.2)]) }).cards;
-    expect(cards.map((c) => c.subtitle)).toEqual(['replay', 'new', 'story']);
+    expect(cards.map((c) => c.subtitle)).toEqual(['replay', 'new', 'explore']);
     expect(build({ capabilities: { dailyTestAvailable: true } }).cards[2]).toMatchObject({
       kind: 'daily-test',
       titleEn: null,
@@ -427,13 +428,13 @@ describe('mission card words come from the dictionary (F-I18N-001 §3.4 rule 3)'
       snapshot: snapshot([done('quest:a', YESTERDAY, 0.2)]),
       capabilities: { dailyTestAvailable: true },
     }).cards;
-    expect(cards.map((c) => missionCardText(c, mission))).toEqual([
+    expect(cards.map((c) => missionCardText(c, learner))).toEqual([
       { title: 'Meet g, n, d', subtitle: 'One more go with Hoya' },
       { title: 'Meet m, b, s', subtitle: 'Something new today' },
       { title: 'Quick review', subtitle: 'About a minute with Hoya' },
     ]);
-    expect(missionCardText({ ...cards[1]!, subtitle: 'assigned' }, mission).subtitle).toBe('Picked just for you');
-    expect(missionCardText({ ...cards[1]!, subtitle: 'story' }, mission).subtitle).toBe('Story time');
+    expect(missionCardText({ ...cards[1]!, subtitle: 'assigned' }, learner).subtitle).toBe('Picked just for you');
+    expect(missionCardText({ ...cards[1]!, subtitle: 'explore' }, learner).subtitle).toBe('Take a look');
   });
 });
 
