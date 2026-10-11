@@ -88,13 +88,27 @@ export async function schoolIsFull(db: Db, cls: Space, now: Date, joiningLearner
   return (await schoolUsage(db, school)).students >= limits.students;
 }
 
-/** Premium when any live space the learner belongs to grants it (roadmap §3.2). */
-export async function tierForLearner(db: Db, learnerId: string, now: Date): Promise<{ tier: Tier; source: TierSource | null }> {
-  for (const m of await db.membershipsOf('learner', learnerId)) {
-    const space = await db.getSpace(m.spaceId);
-    if (!space || space.archivedAt) continue;
+/**
+ * The tier rule, in one place (F-SPACE-002 T7): premium when any live space in
+ * `spaces` grants it — a family with an active lifetime plan, or a pro class.
+ * The first covering space, in the order given, is the source. Archived
+ * spaces are skipped.
+ */
+export async function tierFromSpaces(db: Db, spaces: readonly Space[], now: Date): Promise<{ tier: Tier; source: TierSource | null }> {
+  for (const space of spaces) {
+    if (space.archivedAt) continue;
     const covered = (space.kind === 'family' && (await hasActive(db, 'space', space.id, ['family_lifetime'], now))) || (await classIsPro(db, space, now));
     if (covered) return { tier: 'premium', source: { kind: space.kind, spaceId: space.id, name: space.name } };
   }
   return { tier: 'free', source: null };
+}
+
+/** Premium when any live space the learner belongs to grants it (roadmap §3.2). */
+export async function tierForLearner(db: Db, learnerId: string, now: Date): Promise<{ tier: Tier; source: TierSource | null }> {
+  const spaces: Space[] = [];
+  for (const m of await db.membershipsOf('learner', learnerId)) {
+    const space = await db.getSpace(m.spaceId);
+    if (space) spaces.push(space);
+  }
+  return tierFromSpaces(db, spaces, now);
 }
