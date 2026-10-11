@@ -67,7 +67,8 @@ describe('scripts/overlay-fields.mjs mirrors the TypeScript allow-list', () => {
       ['planet:x', 'title'],
     ];
     const i18n = join(REPO_ROOT, 'content', 'i18n');
-    for (const locale of readdirSync(i18n)) {
+    const locales = readdirSync(i18n, { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name);
+    for (const locale of locales) {
       for (const name of readdirSync(join(i18n, locale)).filter((n) => n.endsWith('.json'))) {
         const file = JSON.parse(readFileSync(join(i18n, locale, name), 'utf8')) as { entries: Record<string, Rec> };
         for (const [id, entry] of Object.entries(file.entries)) for (const field of Object.keys(entry)) cases.push([id, field]);
