@@ -333,6 +333,16 @@ describe('storyCoverArt (the Home card thumbnail, F-STORY-004 §3.7)', () => {
     expect(storyCoverArt({ ...story, tiers })).toBeNull();
   });
 
+  it('is null when the cover scene still carries placeholder art marked pending (as the reader draws it)', () => {
+    const story = readyStory();
+    const tiers = story.tiers.map((t) => ({
+      ...t,
+      scenes: t.scenes.map((s) => (s.id === story.coverSceneId ? { ...s, artPending: true } : s)),
+    }));
+    expect(tiers.flatMap((t) => t.scenes).find((s) => s.id === story.coverSceneId)?.art).toBeDefined();
+    expect(storyCoverArt({ ...story, tiers })).toBeNull();
+  });
+
   it('is null when no tier holds the cover scene', () => {
     expect(storyCoverArt({ ...readyStory(), coverSceneId: 's99' })).toBeNull();
   });

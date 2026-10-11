@@ -228,7 +228,8 @@ export function buildSceneView(
 export function storyCoverArt(story: Pick<Story, 'coverSceneId' | 'tiers'>): SceneArt | null {
   for (const tier of story.tiers) {
     const scene = tier.scenes.find((s) => s.id === story.coverSceneId);
-    if (scene) return scene.art ?? null;
+    // Placeholder art marked pending is no art, as in `buildSceneView`.
+    if (scene) return scene.artPending === true ? null : (scene.art ?? null);
   }
   return null;
 }

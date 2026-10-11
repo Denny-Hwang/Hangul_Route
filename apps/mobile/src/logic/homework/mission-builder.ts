@@ -2,8 +2,8 @@ import type { Episode, ProgressSnapshot, Quest } from '@hangul-route/content-sch
 import type { Messages } from '@hangul-route/i18n';
 import { nextQuestAfter, offerableQuests, playableEpisodes } from '../next-quest';
 import type { BookmarkFile } from '../story/bookmarks';
-import type { StoryIndexEntry } from '../story/story-index';
-import type { OpenStoryMode } from '../story/open-story';
+import { entryForQuest, type StoryIndexEntry } from '../story/story-index';
+import { planOpenStory, type OpenStoryMode, type OpenStoryPlan } from '../story/open-story';
 import { pickStoryForHome, type StoryPick, type StoryReason } from '../story/story-pick';
 import { storyStatus, type StoryStatus } from '../story/story-status';
 
@@ -314,10 +314,13 @@ function isCollected(card: MissionCard, snapshot: ProgressSnapshot, today: strin
 
 /**
  * A pinned story card keeps its story all day; only its reason line may
- * refresh: a `next` story the learner left mid-way now reads "Keep reading".
+ * refresh from the story's status: a `next` story the learner left mid-way
+ * now reads "Keep reading", and a "Keep reading" story finished today (or
+ * whose bookmark is gone) reads "A short story" again, like a collected
+ * `next` card. An `again` card keeps its reason.
  */
 function refreshedReason(card: MissionCard, input: BuildMissionInput): StoryReason | undefined {
-  if (card.storyReason !== 'next' || !input.stories) return card.storyReason;
+  if (card.storyReason === 'again' || !input.stories) return card.storyReason;
   const entry = input.stories.entries.find((e) => e.questId === card.questId);
   if (!entry) return card.storyReason;
   return storyStatus(entry, input.snapshot, input.stories.bookmarks).state === 'in-progress' ? 'continue' : 'next';
@@ -346,7 +349,9 @@ export function buildTodaysMission(input: BuildMissionInput): MissionPlan {
   // ② New — the Journey cursor. Chosen first so slot ①'s story never repeats its quest.
   const upcoming = nextQuest(input);
   const second: MissionCard | null = upcoming ? newCard(upcoming, episodes) : null;
-  if (upcoming) used.quests.add(upcoming.id);
+  // It takes its quest and, for a book story quest, its story, so no other card offers that story. Not its
+  // episode: the explore card may still name the learner's current episode, so the row keeps three cards.
+  if (second) use(used, { ...second, episodeId: undefined }, input);
 
   // ① continue story → replay → next story → again story → explore.
   const first = firstOf(SLOT_1_CHAIN, 1, input, used);
@@ -432,4 +437,26 @@ export function storyCardOpenMode(card: Pick<MissionCard, 'storyMode'>, status: 
   if (card.storyMode === 'replay') return 'read-again';
   if (status.state === 'finished') return 'play-again';
   return status.state === 'in-progress' ? 'continue' : 'start';
+}
+
+/**
+ * How Home opens a tapped story card (F-STORY-004 §3.2, §3.7): the one
+ * story-open plan for its entry, or null when the card is not a story in the
+ * index (Home then opens it as a quest card). Until PR 4.4b adds the
+ * `QuestPlayer` `resume` param, "Keep reading" starts the quest at step 0, so
+ * it opens — and reports `story.opened` — as a `start`, never a resume that
+ * does not happen.
+ */
+export function planHomeStoryOpen(input: {
+  card: MissionCard;
+  entries: readonly StoryIndexEntry[];
+  snapshot: Pick<ProgressSnapshot, 'quests'> | undefined;
+  bookmarks: BookmarkFile;
+}): OpenStoryPlan | null {
+  const { card } = input;
+  const entry = card.kind === 'story' && card.questId ? entryForQuest(input.entries, card.questId) : undefined;
+  if (!entry) return null;
+  const status = storyStatus(entry, input.snapshot, input.bookmarks);
+  const mode = storyCardOpenMode(card, status);
+  return planOpenStory({ entry, status, source: 'home', mode: mode === 'continue' ? 'start' : mode });
 }

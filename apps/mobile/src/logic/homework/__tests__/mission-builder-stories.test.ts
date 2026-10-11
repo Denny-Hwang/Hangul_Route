@@ -20,6 +20,7 @@ import {
   buildTodaysMission,
   missionCardText,
   missionCopy,
+  planHomeStoryOpen,
   storyCardOpenMode,
   storyCardShownEvent,
   type BuildMissionInput,
@@ -310,6 +311,32 @@ describe('the Journey card and a book story never collide', () => {
     // Every grid quest of Stage 1 is done: the cursor is the first book quest.
     expect(plan.cards[1]).toMatchObject({ kind: 'new', questId: questId('tiger', 'read-along') });
     expect(plan.cards[0]).toMatchObject({ kind: 'story', questId: questId('sun', 'read-along'), storyReason: 'next' });
+    // Slot ② holds the tiger story, so slot ③ does not read it again either.
+    expect(plan.cards[2]).toMatchObject({ kind: 'story', storyId: 'story:seollal', storyReason: 'again' });
+  });
+
+  it('a book story on the Journey card keeps its shelf entry off slots ① and ③', () => {
+    const book = bookEpisode('episode:stage5-letters', [questId('tiger', 'read-along'), questId('sun', 'read-along')]);
+    const entries = shelfIndex(STORIES, { episodes: [book], quests: [storyQuest('tiger', 'read-along'), storyQuest('sun', 'read-along')] });
+    const plan = build(
+      {
+        quests: [...GRID_QUESTS, ...SHELF_QUESTS, fullStoryQuest('tiger', 'read-along'), fullStoryQuest('sun', 'read-along')],
+        episodes: [...GRID_EPISODES, ...SHELF_EPISODES, book],
+        snapshot: snapshot(GRID_QUESTS.map((q) => done(q.id, LONG_AGO, 1))),
+      },
+      { entries },
+    );
+    expect(plan.cards[1]).toMatchObject({ kind: 'new', questId: questId('tiger', 'read-along') });
+    expect(plan.cards[0]).toMatchObject({ kind: 'story', storyId: 'story:sun', questId: questId('sun'), storyReason: 'next' });
+    expect(plan.cards[2]).toMatchObject({ kind: 'story', storyId: 'story:seollal', storyReason: 'next' });
+    expect(plan.cards.filter((c) => c.storyId === 'story:tiger')).toEqual([]);
+  });
+
+  it("the explore card may still name slot ②'s episode, so the row keeps three cards", () => {
+    const plan = build({}, { entries: [] });
+    expect(plan.cards[1]).toMatchObject({ kind: 'new', episodeId: 'episode:one' });
+    expect(plan.cards[0]).toMatchObject({ kind: 'explore', episodeId: 'episode:one' });
+    expect(plan.cards[2]).toMatchObject({ kind: 'explore', episodeId: 'episode:two' });
   });
 });
 
@@ -345,6 +372,28 @@ describe('collected look and pinning (§3.2, §3.7)', () => {
       { bookmarks: bookmarks({ 'story:tiger': { sceneIndex: 2 } }) },
     );
     expect(after.cards[0]).toMatchObject({ storyReason: 'next', collected: true });
+  });
+
+  it('a pinned "Keep reading" card finished today reads "A short story", like a collected `next` card', () => {
+    const first = build({}, { bookmarks: bookmarks({ 'story:sun': { sceneIndex: 3 } }) });
+    expect(first.cards[0]).toMatchObject({ storyId: 'story:sun', storyReason: 'continue' });
+    const after = build(
+      { pinned: first, snapshot: snapshot([done(questId('sun'), TODAY, 1, 'episode:shelf-sun')]) },
+      { bookmarks: bookmarks({ 'story:sun': { sceneIndex: 3 } }) },
+    );
+    expect(after.cards[0]).toMatchObject({ storyId: 'story:sun', storyReason: 'next', collected: true });
+    expect(missionCardText(after.cards[0]!, learner).subtitle).toBe('A short story');
+  });
+
+  it('a pinned "Keep reading" card whose bookmark is gone reads "A short story" again', () => {
+    const first = build({}, { bookmarks: bookmarks({ 'story:sun': { sceneIndex: 3 } }) });
+    expect(build({ pinned: first }).cards[0]).toMatchObject({ storyId: 'story:sun', storyReason: 'next' });
+  });
+
+  it('a pinned `again` card keeps its reason', () => {
+    const first = build({ snapshot: snapshot(allShelfFinished()) });
+    const after = build({ pinned: first, snapshot: snapshot(allShelfFinished()) }, { bookmarks: bookmarks({ 'story:tiger': {} }) });
+    expect(after.cards[0]).toMatchObject({ storyId: 'story:tiger', storyReason: 'again' });
   });
 
   it('a pinned story card whose story left the index keeps its reason', () => {
@@ -455,5 +504,59 @@ describe('storyCardOpenMode (how a tapped story card opens, §3.7)', () => {
   it('a story with a bookmark at its level continues; otherwise it starts', () => {
     expect(storyCardOpenMode(card({ storyReason: 'continue' }), { state: 'in-progress' })).toBe('continue');
     expect(storyCardOpenMode(card({}), { state: 'new' })).toBe('start');
+  });
+});
+
+describe('planHomeStoryOpen (a tapped Home story card, §3.2, §3.7)', () => {
+  const world = { entries: INDEX, snapshot: snapshot(), bookmarks: emptyBookmarks() };
+
+  it('a `next` card starts the scored quest and reports `story.opened` from home', () => {
+    const card = build().cards[0]!;
+    expect(planHomeStoryOpen({ card, ...world })).toEqual({
+      route: 'QuestPlayer',
+      params: { questId: questId('tiger'), episodeId: 'episode:shelf-tiger' },
+      clearBookmark: false,
+      event: { name: 'story.opened', payload: { storyId: 'story:tiger', source: 'home', mode: 'start' } },
+    });
+  });
+
+  it('an `again` card opens the unscored reader', () => {
+    const finished = snapshot(allShelfFinished());
+    const card = build({ snapshot: finished }).cards[0]!;
+    expect(planHomeStoryOpen({ card, ...world, snapshot: finished })).toMatchObject({
+      route: 'StoryReader',
+      params: { storyId: 'story:tiger', level: 'listen', mode: 'replay' },
+      event: { payload: { mode: 'read-again' } },
+    });
+  });
+
+  it('a collected card plays again (scored)', () => {
+    const today = snapshot([done(questId('tiger'), TODAY, 1, 'episode:shelf-tiger')]);
+    const card = build({ snapshot: today, pinned: build() }).cards[0]!;
+    expect(planHomeStoryOpen({ card, ...world, snapshot: today })).toMatchObject({
+      route: 'QuestPlayer',
+      event: { payload: { mode: 'play-again' } },
+    });
+  });
+
+  it('"Keep reading" starts at step 0 and reports a start until the quest player can resume (PR 4.4b)', () => {
+    const marks = bookmarks({ 'story:sun': { sceneIndex: 3 } });
+    const card = build({}, { bookmarks: marks }).cards[0]!;
+    expect(card.storyReason).toBe('continue');
+    const plan = planHomeStoryOpen({ card, ...world, bookmarks: marks });
+    expect(plan).toEqual({
+      route: 'QuestPlayer',
+      params: { questId: questId('sun'), episodeId: 'episode:shelf-sun' },
+      clearBookmark: false,
+      event: { name: 'story.opened', payload: { storyId: 'story:sun', source: 'home', mode: 'start' } },
+    });
+  });
+
+  it('is null for a card that is not a story in the index', () => {
+    const plan = build({}, { entries: [] });
+    expect(planHomeStoryOpen({ card: plan.cards[1]!, ...world })).toBeNull();
+    const story = build().cards[0]!;
+    expect(planHomeStoryOpen({ card: story, ...world, entries: [] })).toBeNull();
+    expect(planHomeStoryOpen({ card: { ...story, questId: undefined }, ...world })).toBeNull();
   });
 });

@@ -35,7 +35,7 @@ import {
   buildTodaysMission,
   missionCardText,
   dayKey,
-  storyCardOpenMode,
+  planHomeStoryOpen,
   storyCardShownEvent,
   type MissionCard,
   type MissionPlan,
@@ -47,11 +47,9 @@ import { homeColumns } from '../../logic/layout/home-columns';
 import { DEFAULT_AVATAR } from '../../logic/profiles/avatar-catalog';
 import { computeStreak } from '../../logic/streak';
 import { emptyBookmarks } from '../../logic/story/bookmarks';
-import { planOpenStory } from '../../logic/story/open-story';
 import { storyCoverArt } from '../../logic/story/scene-view';
 import { defaultStoryIndex, entryForQuest } from '../../logic/story/story-index';
 import { storyLockFor } from '../../logic/story/story-pick';
-import { storyStatus } from '../../logic/story/story-status';
 import type { RootStackParamList } from '../../navigation/types';
 import { track } from '../../platform/telemetry';
 import { useAudience } from '../../store/audience';
@@ -78,7 +76,10 @@ const ICON_FOR: Record<MissionCard['kind'], 'replay' | 'play' | 'library' | 'sta
 /** The story card's cover thumbnail (F-STORY-004 §3.7), drawn where the icon sits. */
 const COVER_THUMB = 48;
 const NO_BOOKMARKS = emptyBookmarks();
-/** `home.story_card.shown` goes once per profile and day (`<profileId>|<date>`), when the plan is first pinned. */
+/**
+ * `home.story_card.shown` goes once per profile, day and app session (`<profileId>|<date>`), when the plan is
+ * first pinned — the plan itself is pinned per session too (F-STORY-004 §3.7, §3.11).
+ */
 const storyCardShownSent = new Set<string>();
 
 /**
@@ -224,10 +225,8 @@ export function HomeScreen(): React.ReactElement {
   // A story card opens through the one story-open plan (F-STORY-004 §3.2): the quest player, or the
   // unscored reader for "Read it again". Resuming at the bookmark arrives with PR 4.4b.
   const openStory = (card: MissionCard): boolean => {
-    const entry = card.questId ? entryForQuest(storyIndex, card.questId) : undefined;
-    if (!entry) return false;
-    const status = storyStatus(entry, snap, bookmarks);
-    const plan = planOpenStory({ entry, status, source: 'home', mode: storyCardOpenMode(card, status) });
+    const plan = planHomeStoryOpen({ card, entries: storyIndex, snapshot: snap, bookmarks });
+    if (!plan) return false;
     void track({ name: plan.event.name, profileId: profile?.id, payload: plan.event.payload });
     if (plan.route === 'StoryReader') navigation.navigate('StoryReader', plan.params);
     else navigation.navigate('QuestPlayer', { questId: plan.params.questId, episodeId: plan.params.episodeId });
