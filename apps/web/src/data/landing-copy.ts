@@ -1,8 +1,11 @@
+import { DEFAULT_LOCALE, getMessages, type UiLocale } from '@hangul-route/i18n';
 import type { Metadata } from 'next';
 import { stage1Cards } from './stage1-cards';
 
 /**
- * Landing copy — one source for the site metadata and the landing page.
+ * Landing copy — one source for the site metadata and the landing page. The words live in
+ * `@hangul-route/i18n` (`messages/en/landing.ts`, F-I18N-001 PR 11a); this module shapes them
+ * into the lists the page renders, in a fixed order, for a locale (English by default).
  *
  * Audience (owner decision 2026-10-09, CLAUDE.md §1): anyone learning Hangul
  * from zero, at any age — kids, teens, adults, heritage families and
@@ -16,125 +19,97 @@ import { stage1Cards } from './stage1-cards';
  * the launch of payments (PLAN_PRICING is their source then).
  */
 
-export const SITE_TITLE = 'Hangul Route — Learn Hangul from zero with Hoya';
-
-export const SITE_TAGLINE = 'Learn Hangul from zero — at any age.';
-
-export const siteMetadata: Metadata = {
-  title: SITE_TITLE,
-  description:
-    'Learn Hangul from zero with Hoya the tiger — for anyone, at any age: heritage families, K-culture fans and curious beginners. Five-minute quests, 8 mini-games, Korean culture cards to collect, and a Heritage Journey across 7 stages and 5 culture themes. Stage 1 is free and more stages are coming. No ads, ever.',
-  applicationName: 'Hangul Route',
-  keywords: [
-    'learn Hangul',
-    'Korean alphabet',
-    'learn Korean',
-    'Korean for beginners',
-    'heritage Korean',
-    'K-culture learning',
-    'Hoya',
-  ],
-  openGraph: {
-    title: SITE_TITLE,
-    description:
-      'Heritage Journey + Korean culture cards + Hoya the tiger. Start Korean from zero, at any age. Stage 1 is free.',
-    siteName: 'Hangul Route',
-    type: 'website',
-    locale: 'en_US',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: SITE_TITLE,
-    description: 'Heritage Journey + Korean culture cards + Hoya the tiger. Start Korean from zero, at any age.',
-  },
-  robots: { index: true, follow: true },
-};
-
-export const audienceBadges: readonly string[] = ['All ages', 'Heritage families', 'K-culture fans'];
-
 export interface TitledCopy {
   title: string;
   body: string;
 }
 
-export const trustItems: readonly TitledCopy[] = [
-  { title: 'COPPA-compliant', body: 'No third-party tracking. Parent email is the only PII.' },
-  { title: 'No ads, ever', body: 'No third-party ads. No data sold. Revenue is in-app only.' },
-  { title: 'Plays offline', body: 'After your first visit, the full Stage 1 plays without a connection.' },
-  { title: 'Anti-shame design', body: 'Wrong answers use amber. No red. No streak guilt.' },
-];
-
 export interface HowItWorksStep extends TitledCopy {
   step: string;
 }
-
-export const howItWorks: readonly HowItWorksStep[] = [
-  {
-    step: '1',
-    title: 'Heritage Journey',
-    body: '7 stages × 5 culture themes. Every learner draws their own route through Korean.',
-  },
-  {
-    step: '2',
-    title: 'Mini-games',
-    body: 'Tap, build, trace, and match — five-minute games that fit into any day, at any age.',
-  },
-  {
-    step: '3',
-    title: 'Collect culture',
-    body: `Earn ${stage1Cards.length} Heritage Cards in Stage 1 — from kimchi to Chuseok to the gayageum.`,
-  },
-];
-
-/** The one thing the landing says about cost (owner decision 2026-10-10). */
-const COST_LINE = 'Stage 1 is free. More stages and classroom plans are coming.';
 
 export interface Faq {
   q: string;
   a: string;
 }
 
-export const landingFaqs: readonly Faq[] = [
-  {
-    q: 'Who is Hangul Route for?',
-    a: 'Anyone learning Hangul from zero, at any age — kids, teens and adults, heritage families and K-culture fans. Everyone plays the same quests. Stage 1 (Hangul) works for confident readers and pre-readers alike — every screen has voice and visuals.',
-  },
-  {
-    q: 'I’m an adult beginner. Will it feel too young?',
-    a: 'No. Stage 1 teaches exactly what any beginner needs first — the letters and their sounds — with no baby talk. Hoya is friendly, and the culture cards are worth collecting at any age.',
-  },
-  {
-    q: 'What makes this different from other language apps?',
-    a: 'Most apps start with vocabulary drills. We start with the alphabet and Korean culture — one collectable heritage card at a time. And no red feedback, ever.',
-  },
-  {
-    q: 'Do I need to know any Korean?',
-    a: 'No — starting from zero is what we built it for. Instructions are in plain, simple English. Korean only appears as the thing being learned.',
-  },
-  {
-    q: 'How long is a session?',
-    a: 'One quest takes about 5 minutes. Most learners do 1–3 quests per sitting. You can stop any time — no streak shame.',
-  },
-  {
-    q: 'How much does it cost?',
-    a: `${COST_LINE} No ads.`,
-  },
-];
-
 export interface PricingLine {
   name: string;
   detail: string;
 }
 
-export const pricingLines: readonly PricingLine[] = [
-  { name: 'Stage 1', detail: 'free' },
-  { name: 'More stages', detail: 'coming' },
-  { name: 'Classroom plans', detail: 'coming' },
-];
+export interface LandingCopy {
+  title: string;
+  tagline: string;
+  metadata: Metadata;
+  audienceBadges: readonly string[];
+  trustItems: readonly TitledCopy[];
+  howItWorks: readonly HowItWorksStep[];
+  faqs: readonly Faq[];
+  pricingLines: readonly PricingLine[];
+  sharedDeviceBullet: TitledCopy;
+  pricingFootnote: string;
+}
 
-export const sharedDeviceBullet: TitledCopy = {
-  title: 'Siblings share a device.',
-  body: 'Each learner keeps their own stars and cards. No upsell.',
-};
+/** The landing's lists and metadata in `locale`; the order of each list is fixed here. */
+export function landingCopy(locale: UiLocale = DEFAULT_LOCALE): LandingCopy {
+  const t = getMessages(locale).landing;
+  const { meta } = t;
+  return {
+    title: meta.title,
+    tagline: meta.tagline,
+    metadata: {
+      title: meta.title,
+      description: meta.description,
+      applicationName: t.brand.name,
+      keywords: [...meta.keywords],
+      openGraph: {
+        title: meta.title,
+        description: meta.ogDescription,
+        siteName: t.brand.name,
+        type: 'website',
+        locale: 'en_US',
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: meta.title,
+        description: meta.twitterDescription,
+      },
+      robots: { index: true, follow: true },
+    },
+    audienceBadges: [t.hero.badges.allAges, t.hero.badges.heritage, t.hero.badges.fans],
+    trustItems: [t.trust.items.coppa, t.trust.items.ads, t.trust.items.offline, t.trust.items.antiShame],
+    howItWorks: [
+      { step: '1', ...t.how.steps.journey },
+      { step: '2', ...t.how.steps.games },
+      { step: '3', title: t.how.steps.collect.title, body: t.how.steps.collect.body(stage1Cards.length) },
+    ],
+    faqs: [t.faq.items.who, t.faq.items.adult, t.faq.items.different, t.faq.items.korean, t.faq.items.session, t.faq.items.cost],
+    pricingLines: [t.pricing.lines.stage1, t.pricing.lines.stages, t.pricing.lines.classroom],
+    sharedDeviceBullet: t.parents.points.shared,
+    pricingFootnote: t.pricing.footnote,
+  };
+}
 
-export const pricingFootnote = 'No third-party ads, ever.';
+const english = landingCopy();
+
+export const SITE_TITLE = english.title;
+
+export const SITE_TAGLINE = english.tagline;
+
+export const siteMetadata: Metadata = english.metadata;
+
+export const audienceBadges: readonly string[] = english.audienceBadges;
+
+export const trustItems: readonly TitledCopy[] = english.trustItems;
+
+export const howItWorks: readonly HowItWorksStep[] = english.howItWorks;
+
+/** The one thing the landing says about cost (owner decision 2026-10-10): the last FAQ and the pricing card. */
+export const landingFaqs: readonly Faq[] = english.faqs;
+
+export const pricingLines: readonly PricingLine[] = english.pricingLines;
+
+export const sharedDeviceBullet: TitledCopy = english.sharedDeviceBullet;
+
+export const pricingFootnote = english.pricingFootnote;

@@ -2,10 +2,11 @@
 
 import { colors, radii, spacing, typography } from '@hangul-route/design-system/tokens';
 import Link from 'next/link';
+import { DEFAULT_LOCALE, getMessages, type Messages, type UiLocale } from '@hangul-route/i18n';
 import { useState, type CSSProperties, type FormEvent } from 'react';
 import { CONTACT_EMAIL } from '../../data/contact';
 import { apiBaseUrl } from '../../lib/console/config';
-import { WAITLIST_COPY, submitSignup, type WaitlistState } from '../../lib/waitlist';
+import { submitSignup, type WaitlistState } from '../../lib/waitlist';
 
 /**
  * Launch-invite signup on the landing page (#get). First-party: posts JSON to
@@ -21,16 +22,18 @@ const onPrimary: CSSProperties = { color: colors.text.onPrimary };
 const visuallyHidden: CSSProperties = { position: 'absolute', left: -9999, width: 1, height: 1, overflow: 'hidden' };
 const mailto = `mailto:${CONTACT_EMAIL}`;
 
-const messageFor = (state: WaitlistState): string | null => {
+type WaitlistWords = Messages['landing']['waitlist'];
+
+const messageFor = (state: WaitlistState, words: WaitlistWords): string | null => {
   switch (state.kind) {
     case 'invalid':
-      return WAITLIST_COPY.invalid;
+      return words.invalid;
     case 'error':
-      return WAITLIST_COPY.error;
+      return words.error;
     case 'rate_limited':
-      return WAITLIST_COPY.rateLimited;
+      return words.rateLimited;
     case 'unavailable':
-      return WAITLIST_COPY.unavailable;
+      return words.unavailable;
     default:
       return null;
   }
@@ -43,18 +46,21 @@ export interface WaitlistFormViewProps {
   onEmailChange: (value: string) => void;
   onWebsiteChange: (value: string) => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  /** UI locale of the words (`landing.waitlist`); English by default. */
+  locale?: UiLocale;
 }
 
-export function WaitlistFormView({ state, email, website, onEmailChange, onWebsiteChange, onSubmit }: WaitlistFormViewProps): JSX.Element {
+export function WaitlistFormView({ state, email, website, onEmailChange, onWebsiteChange, onSubmit, locale = DEFAULT_LOCALE }: WaitlistFormViewProps): JSX.Element {
+  const words = getMessages(locale).landing.waitlist;
   const sending = state.kind === 'sending';
-  const message = messageFor(state);
+  const message = messageFor(state, words);
   const done = state.kind === 'success';
 
   return (
     <div style={{ maxWidth: 480, margin: '0 auto' }}>
       {/* Polite live region: always in the DOM, so the confirmation is announced when it appears. */}
       <div role="status" aria-live="polite" style={{ ...onPrimary, fontSize: typography.size.bodyLg, fontWeight: typography.weight.bold, lineHeight: typography.leading.relaxed }}>
-        {done ? WAITLIST_COPY.success : null}
+        {done ? words.success : null}
       </div>
       {done ? null : (
         <>
@@ -65,7 +71,7 @@ export function WaitlistFormView({ state, email, website, onEmailChange, onWebsi
             style={{ display: 'flex', gap: spacing.sm, justifyContent: 'center', flexWrap: 'wrap' }}
           >
             <label htmlFor={EMAIL_ID} style={{ position: 'absolute', left: -9999 }}>
-              {WAITLIST_COPY.label}
+              {words.label}
             </label>
             <input
               id={EMAIL_ID}
@@ -77,7 +83,7 @@ export function WaitlistFormView({ state, email, website, onEmailChange, onWebsi
               aria-required="true"
               aria-invalid={state.kind === 'invalid' ? true : undefined}
               aria-describedby={message ? `${MESSAGE_ID} ${CONSENT_ID}` : CONSENT_ID}
-              placeholder={WAITLIST_COPY.placeholder}
+              placeholder={words.placeholder}
               value={email}
               onChange={(e) => onEmailChange(e.target.value)}
               style={{
@@ -94,7 +100,7 @@ export function WaitlistFormView({ state, email, website, onEmailChange, onWebsi
             />
             {/* Honeypot: people never see or reach it; a script that fills every field gets silently dropped by the API. */}
             <div aria-hidden="true" style={visuallyHidden}>
-              <label htmlFor="waitlist-website">Leave this field empty</label>
+              <label htmlFor="waitlist-website">{words.honeypot}</label>
               <input id="waitlist-website" type="text" name="website" tabIndex={-1} autoComplete="off" value={website} onChange={(e) => onWebsiteChange(e.target.value)} />
             </div>
             <button
@@ -112,7 +118,7 @@ export function WaitlistFormView({ state, email, website, onEmailChange, onWebsi
                 cursor: sending ? 'progress' : 'pointer',
               }}
             >
-              {sending ? WAITLIST_COPY.sending : state.kind === 'error' || state.kind === 'rate_limited' ? WAITLIST_COPY.retry : WAITLIST_COPY.submit}
+              {sending ? words.sending : state.kind === 'error' || state.kind === 'rate_limited' ? words.retry : words.submit}
             </button>
           </form>
           {message ? (
@@ -144,13 +150,13 @@ export function WaitlistFormView({ state, email, website, onEmailChange, onWebsi
             </p>
           ) : null}
           <p id={CONSENT_ID} style={{ ...onPrimary, marginTop: spacing.md, marginBottom: 0, fontSize: typography.size.bodySm, lineHeight: typography.leading.relaxed }}>
-            {WAITLIST_COPY.consentLead}
+            {words.consentLead}
             <a href={mailto} style={{ ...onPrimary, textDecoration: 'underline' }}>
-              {WAITLIST_COPY.contactLink}
+              {words.contactLink}
             </a>
             {'. '}
             <Link href="/privacy" style={{ ...onPrimary, textDecoration: 'underline' }}>
-              {WAITLIST_COPY.privacyLink}
+              {words.privacyLink}
             </Link>
             .
           </p>

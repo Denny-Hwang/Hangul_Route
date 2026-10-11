@@ -34,7 +34,12 @@
     "apps/mobile/src/screens/sync/JoinSpaceScreen.tsx",
     "apps/mobile/src/components/InstallGuideSheet.tsx",
     "apps/mobile/src/components/PwaBanners.tsx",
-    "apps/mobile/src/screens/system/OopsScreen.tsx"
+    "apps/mobile/src/screens/system/OopsScreen.tsx",
+    "apps/web/src/app/page.tsx",
+    "apps/web/src/app/about/page.tsx",
+    "apps/web/src/app/privacy/page.tsx",
+    "apps/web/src/app/terms/page.tsx",
+    "apps/web/src/components/landing/**"
   ],
   "pluralTernaryBaseline": {
     "apps/web/src/app/teach/space/page.tsx": 1,

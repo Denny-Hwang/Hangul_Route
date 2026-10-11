@@ -1,12 +1,6 @@
 import { colors, radii, spacing, typography } from '@hangul-route/design-system/tokens';
+import { DEFAULT_LOCALE, getMessages, type UiLocale } from '@hangul-route/i18n';
 import { minigameCatalog, type MinigameFamily } from '../../data/minigame-catalog';
-
-const familyLabel: Record<MinigameFamily, string> = {
-  recognition: 'Recognition',
-  production: 'Production',
-  application: 'Application',
-  review: 'Review',
-};
 
 const familyTint: Record<MinigameFamily, string> = {
   recognition: colors.theme.letters,
@@ -18,7 +12,8 @@ const familyTint: Record<MinigameFamily, string> = {
 const shippedCount = minigameCatalog.filter((g) => g.status === 'shipped').length;
 const betaCount = minigameCatalog.length - shippedCount;
 
-export function MiniGamesGallery(): JSX.Element {
+export function MiniGamesGallery({ locale = DEFAULT_LOCALE }: { locale?: UiLocale }): JSX.Element {
+  const t = getMessages(locale).landing.games;
   return (
     <section
       aria-labelledby="games-heading"
@@ -38,7 +33,7 @@ export function MiniGamesGallery(): JSX.Element {
             letterSpacing: 1,
           }}
         >
-          {shippedCount} mini-games{betaCount > 0 ? ` + ${betaCount} in beta` : ''}
+          {t.eyebrow(shippedCount, betaCount)}
         </span>
         <h2
           id="games-heading"
@@ -48,7 +43,7 @@ export function MiniGamesGallery(): JSX.Element {
             lineHeight: typography.leading.tight,
           }}
         >
-          None of them feel like school.
+          {t.title}
         </h2>
         <p
           style={{
@@ -58,14 +53,13 @@ export function MiniGamesGallery(): JSX.Element {
             margin: 0,
           }}
         >
-          Four families of practice — recognition, production, application,
-          review — wrapped in 90-second loops. Hoya never says &ldquo;wrong.&rdquo;
+          {t.body}
         </p>
       </header>
 
       <div
         role="list"
-        aria-label="Stage 1 mini-games"
+        aria-label={t.listLabel}
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
@@ -120,7 +114,7 @@ export function MiniGamesGallery(): JSX.Element {
                   aria-hidden="true"
                   style={{ width: 10, height: 10, borderRadius: radii.circle, backgroundColor: familyTint[game.family] }}
                 />
-                {familyLabel[game.family]}
+                {t.family[game.family]}
               </span>
             </div>
             <h3
@@ -157,7 +151,7 @@ export function MiniGamesGallery(): JSX.Element {
                   fontWeight: typography.weight.semibold,
                 }}
               >
-                Beta — opt in
+                {t.beta}
               </span>
             ) : null}
           </article>

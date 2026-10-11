@@ -1,4 +1,5 @@
 import { colors, radii, shadows, spacing, typography } from '@hangul-route/design-system/tokens';
+import { DEFAULT_LOCALE, getMessages } from '@hangul-route/i18n';
 import Link from 'next/link';
 import { HeritageCardsPreview } from '../components/landing/HeritageCardsPreview';
 import { MeetHoya } from '../components/landing/MeetHoya';
@@ -19,7 +20,11 @@ import {
 /** The learner web app (PWA). Overridable per deployment. */
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://app.hangulroute.com';
 
+/** The first letter Hoya introduces: taught Korean, passed into the hero sentences (never written into a message). */
+const FIRST_LETTER = 'ㄱ';
+
 export default function HomePage(): JSX.Element {
+  const t = getMessages(DEFAULT_LOCALE).landing;
   return (
     <main
       style={{
@@ -57,10 +62,10 @@ export default function HomePage(): JSX.Element {
               fontSize: typography.size.bodyLg,
             }}
           >
-            HR
+            {t.brand.mark}
           </div>
           <span style={{ fontWeight: typography.weight.bold, fontSize: typography.size.bodyLg }}>
-            Hangul Route
+            {t.brand.name}
           </span>
         </div>
         {/* DOM order is visual order at every width (WCAG 2.4.3 / 1.3.2): brand,
@@ -77,10 +82,10 @@ export default function HomePage(): JSX.Element {
             whiteSpace: 'nowrap',
           }}
         >
-          Play now
+          {t.nav.playNow.cta}
         </a>
         <nav
-          aria-label="Main"
+          aria-label={t.nav.label}
           className="hr-landing-nav"
           style={{
             display: 'flex',
@@ -91,19 +96,19 @@ export default function HomePage(): JSX.Element {
           }}
         >
           <Link href="#cards" style={{ color: colors.text.secondary, fontWeight: typography.weight.semibold }}>
-            Cards
+            {t.nav.cards}
           </Link>
           <Link href="#games" style={{ color: colors.text.secondary, fontWeight: typography.weight.semibold }}>
-            Games
+            {t.nav.games}
           </Link>
           <Link href="#parents" style={{ color: colors.text.secondary, fontWeight: typography.weight.semibold }}>
-            For parents
+            {t.nav.parents}
           </Link>
           <Link href="/parent" style={{ color: colors.text.secondary, fontWeight: typography.weight.semibold }}>
-            Dashboard
+            {t.nav.dashboard}
           </Link>
           <Link href="/teach" style={{ color: colors.text.secondary, fontWeight: typography.weight.semibold }}>
-            For teachers
+            {t.nav.teachers}
           </Link>
         </nav>
       </header>
@@ -145,9 +150,9 @@ export default function HomePage(): JSX.Element {
               color: colors.text.primary,
             }}
           >
-            Learn Hangul from zero —
+            {t.hero.titleLines[0]}
             <br />
-            at any age.
+            {t.hero.titleLines[1]}
           </h1>
           <p
             style={{
@@ -158,10 +163,7 @@ export default function HomePage(): JSX.Element {
               lineHeight: typography.leading.relaxed,
             }}
           >
-            Hoya the tiger guides you from ㄱ to Chuseok — five-minute quests,
-            plain-English instructions, and Korean culture cards to collect along
-            the way. Kids, teens and grown-ups play the same quests. Played, not
-            taught. Never a frown.
+            {t.hero.lead(FIRST_LETTER)}
           </p>
           <div style={{ display: 'flex', gap: spacing.md, marginTop: spacing.xl, flexWrap: 'wrap' }}>
             <a
@@ -175,7 +177,7 @@ export default function HomePage(): JSX.Element {
                 fontSize: typography.size.bodyLg,
               }}
             >
-              Play in your browser
+              {t.hero.play.cta}
             </a>
             <Link
               href="#cards"
@@ -188,7 +190,7 @@ export default function HomePage(): JSX.Element {
                 fontSize: typography.size.bodyLg,
               }}
             >
-              See the cards
+              {t.hero.seeCards.cta}
             </Link>
           </div>
           <p
@@ -198,7 +200,7 @@ export default function HomePage(): JSX.Element {
               color: colors.text.muted,
             }}
           >
-            Nothing to download · No ads · Plays offline after your first visit
+            {t.hero.facts}
           </p>
         </div>
         <div
@@ -233,14 +235,14 @@ export default function HomePage(): JSX.Element {
               boxShadow: `0 ${shadows.card.shadowOffset.height}px ${shadows.card.shadowRadius}px rgba(42, 31, 20, ${shadows.card.shadowOpacity})`,
             }}
           >
-            Annyeong! Let&apos;s meet ㄱ.
+            {t.hero.bubble(FIRST_LETTER)}
           </div>
         </div>
       </section>
 
       {/* Trust strip */}
       <section
-        aria-label="Trust"
+        aria-label={t.trust.label}
         style={{
           marginTop: spacing.xxl,
           padding: spacing.lg,
@@ -284,7 +286,7 @@ export default function HomePage(): JSX.Element {
             lineHeight: typography.leading.tight,
           }}
         >
-          How it works
+          {t.how.title}
         </h2>
         <div
           style={{
@@ -376,7 +378,7 @@ export default function HomePage(): JSX.Element {
               letterSpacing: 1,
             }}
           >
-            For parents
+            {t.parents.eyebrow}
           </span>
           <h2
             id="parents-heading"
@@ -386,7 +388,7 @@ export default function HomePage(): JSX.Element {
               lineHeight: typography.leading.tight,
             }}
           >
-            Five minutes a day. Nothing creepy.
+            {t.parents.title}
           </h2>
           <p
             style={{
@@ -396,11 +398,7 @@ export default function HomePage(): JSX.Element {
               lineHeight: typography.leading.relaxed,
             }}
           >
-            Many of our learners are children, so Hangul Route is built for
-            tired parents too. Hand the phone over for five minutes; come back to
-            one new Korean letter and one heritage card. Learning Korean
-            yourself? Play the same quests. Bring it on a long flight — the
-            whole Stage 1 plays offline.
+            {t.parents.body}
           </p>
           <ul
             style={{
@@ -412,13 +410,12 @@ export default function HomePage(): JSX.Element {
             }}
           >
             <li>
-              <strong style={{ color: colors.text.primary }}>Local-first by default.</strong>{' '}
-              All learning data stays on the device until you sign in.
+              <strong style={{ color: colors.text.primary }}>{t.parents.points.localFirst.title}</strong>{' '}
+              {t.parents.points.localFirst.body}
             </li>
             <li>
-              <strong style={{ color: colors.text.primary }}>Parent-gate.</strong>{' '}
-              Anything that costs money or deletes data is behind a simple
-              multiplication question.
+              <strong style={{ color: colors.text.primary }}>{t.parents.points.gate.title}</strong>{' '}
+              {t.parents.points.gate.body}
             </li>
             <li>
               <strong style={{ color: colors.text.primary }}>{sharedDeviceBullet.title}</strong>{' '}
@@ -434,7 +431,7 @@ export default function HomePage(): JSX.Element {
             padding: spacing.xl,
           }}
         >
-          <h3 style={{ marginTop: 0, fontSize: typography.size.title }}>Pricing</h3>
+          <h3 style={{ marginTop: 0, fontSize: typography.size.title }}>{t.pricing.title}</h3>
           <ul style={{ paddingLeft: spacing.lg, color: colors.text.primary, lineHeight: typography.leading.relaxed }}>
             {pricingLines.map((line) => (
               <li key={line.name}>
@@ -465,7 +462,7 @@ export default function HomePage(): JSX.Element {
             lineHeight: typography.leading.tight,
           }}
         >
-          Common questions
+          {t.faq.title}
         </h2>
         <div style={{ display: 'grid', gap: spacing.md }}>
           {landingFaqs.map((faq) => (
@@ -525,7 +522,7 @@ export default function HomePage(): JSX.Element {
             color: colors.text.onPrimary,
           }}
         >
-          Try Hangul Route this week.
+          {t.get.title}
         </h2>
         <p
           style={{
@@ -539,9 +536,7 @@ export default function HomePage(): JSX.Element {
             lineHeight: typography.leading.relaxed,
           }}
         >
-          Hangul Route runs in your browser — open it, add it to your home
-          screen, and Stage 1 plays offline. Leave your email and we&apos;ll send
-          you the launch news.
+          {t.get.body}
         </p>
         <a
           href={APP_URL}
@@ -556,7 +551,7 @@ export default function HomePage(): JSX.Element {
             fontSize: typography.size.bodyLg,
           }}
         >
-          Play now — free
+          {t.get.play.cta}
         </a>
         <WaitlistForm />
         <p
@@ -567,7 +562,7 @@ export default function HomePage(): JSX.Element {
             opacity: 0.8,
           }}
         >
-          Works on iPhone, Android, iPad and Chromebook — any modern browser.
+          {t.get.devices}
         </p>
       </section>
 
@@ -592,7 +587,7 @@ export default function HomePage(): JSX.Element {
               marginBottom: spacing.xs,
             }}
           >
-            Hangul Route
+            {t.brand.name}
           </div>
           <div>{SITE_TAGLINE}</div>
         </div>
@@ -604,26 +599,26 @@ export default function HomePage(): JSX.Element {
               marginBottom: spacing.xs,
             }}
           >
-            Product
+            {t.footer.product}
           </div>
           <div>
             <Link href="#cards" style={{ color: colors.text.secondary }}>
-              Heritage cards
+              {t.footer.cards}
             </Link>
           </div>
           <div>
             <Link href="#games" style={{ color: colors.text.secondary }}>
-              Mini-games
+              {t.footer.games}
             </Link>
           </div>
           <div>
             <Link href="/parent" style={{ color: colors.text.secondary }}>
-              Parent dashboard
+              {t.footer.dashboard}
             </Link>
           </div>
           <div>
             <Link href="/teach" style={{ color: colors.text.secondary }}>
-              Teacher console
+              {t.footer.console}
             </Link>
           </div>
         </div>
@@ -635,21 +630,21 @@ export default function HomePage(): JSX.Element {
               marginBottom: spacing.xs,
             }}
           >
-            Company
+            {t.footer.company}
           </div>
           <div>
             <Link href="/about" style={{ color: colors.text.secondary }}>
-              About
+              {t.footer.about}
             </Link>
           </div>
           <div>
             <Link href="/privacy" style={{ color: colors.text.secondary }}>
-              Privacy
+              {t.footer.privacy}
             </Link>
           </div>
           <div>
             <Link href="/terms" style={{ color: colors.text.secondary }}>
-              Terms
+              {t.footer.terms}
             </Link>
           </div>
         </div>
@@ -661,13 +656,13 @@ export default function HomePage(): JSX.Element {
               marginBottom: spacing.xs,
             }}
           >
-            Contact
+            {t.footer.contact}
           </div>
           <div data-contact="email" style={{ overflowWrap: 'anywhere' }}>
             {CONTACT_EMAIL}
           </div>
           <div style={{ marginTop: spacing.xs, color: colors.text.muted }}>
-            © {new Date().getFullYear()} Hangul Route
+            {t.footer.copyright(new Date().getFullYear())}
           </div>
         </div>
       </footer>
