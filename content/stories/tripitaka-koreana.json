@@ -15,9 +15,9 @@
   "minutes": 5,
   "learningGoalsEn": [
     "Know that the Tripitaka Koreana (Palman Daejanggyeong) is a set of more than 80,000 woodblocks of Buddhist scriptures carved in Goryeo between 1237 and 1248.",
-    "Explain why the blocks were carved: a wish for the Buddha's protection during the Mongol invasions.",
+    "Understand why the blocks were carved: a wish for the Buddha's protection during the Mongol invasions.",
     "Know that the woodblocks are kept at Haeinsa Temple and were inscribed on UNESCO's Memory of the World Register in 2007.",
-    "Read and say 해인사, 대장경, 팔만, 나무, 경판 and 글자 with romanization."
+    "Read and recognize 해인사 (Haeinsa), 대장경 (Daejanggyeong), 팔만 (palman), 나무 (namu), 경판 (gyeongpan) and 글자 (geulja)."
   ],
   "origin": {
     "type": "documented",
@@ -237,7 +237,7 @@
         },
         {
           "id": "s8",
-          "narrationEn": "Almost 800 years later, the blocks are still kept safe at Haeinsa. Hoya whispers, \"Sojunghaeyo, they're precious.\" Next time, let's find out how the buildings protect them!",
+          "narrationEn": "Almost 800 years later, the blocks are still kept safe at Haeinsa. Hoya whispers, \"Sojunghaeyo, they're precious.\"",
           "keyword": {
             "id": "sojunghaeyo",
             "ko": "소중해요",
@@ -335,7 +335,7 @@
           "options": [
             {
               "id": "a",
-              "en": "To build a bridge",
+              "en": "To record the king's laws for the future",
               "isCorrect": false
             },
             {
@@ -350,7 +350,7 @@
             },
             {
               "id": "d",
-              "en": "Hoping the Buddha's power would protect the country",
+              "en": "To ask the Buddha to protect the land",
               "isCorrect": true
             }
           ],
@@ -648,6 +648,6 @@
     "scope": "cluster",
     "notes": "Third independent pass. Every cited URL for all 6 episodes (52 facts) was re-opened (UNESCO pages via Wayback copies when the live site resets connections) and quotes/locators were compared; the one exception is unesco.org/en/prizes/literacy (unreachable from here; its claim is now also backed by a Korean MCST press release). Eight minimal corrections were made: (1) Hangeul Day f3 no longer says 'Gregorian' (no cited source says the October 9 conversion was Gregorian; encykorea separates Julian/Gregorian only for 1932-45) and dates the October 29/28 observances; (2) f10 gains a third source (SBS 2018 with 국립한글박물관 curator); (3) Shapes scene 8, learning goal and f7 now say 'South Korea's spelling rules' count 24 (North Korea counts 40, 국립한글박물관 webzine 59); (4) Sejong scene 4/f4: 백성 is 'an old-fashioned word' with 표준국어대사전 added; (5) Jikji f8 quote no longer repeats a prize amount that differs between UNESCO page versions; (6) Tripitaka f6 wood and corner plates now have two further sources (정책브리핑; 박상진 wood-identification study); (8) Hangeul Day f9 gains a second source (문화체육관광부 press release); (7) Panjeon scene 8/f9: 'visitors cannot walk inside' replaced by 'visitor entry is restricted' because Haeinsa has run pre-booked tours inside Beopbojeon since June 2021. See hangul-printing.signoff.md."
   },
-  "authorNotes": "The carving period follows 국가유산포털, 한국민족문화대백과사전 and UNESCO WHC (1237–1248). Some accounts count the whole project, preparation included, as about 16 years ending in 1251, so the narration gives only 1237–1248. The count of 81,258 comes from a survey made under Japanese rule and includes some blocks re-carved in Joseon (국가유산포털), so the narration says 'more than 80,000'. Where the carving took place (Ganghwa versus Namhae) is treated differently across sources and is left out. The 1398 move to Haeinsa appears only on 국가유산포털 pages, so it is left out too. The earlier set of blocks lost to fire in 1232 is left out to keep the war content mild. UNESCO's Memory of the World page places Haeinsa in the 'southwest' of the peninsula, but Haeinsa is in South Gyeongsang Province in the southeast, so that phrase was not used. 'Almost 800 years later' is worked out from 1248. The official heritage name is 합천 해인사 대장경판 (Hapcheon Haeinsa Daejanggyeongpan). REVISED: scene 1 no longer puts Hoya 'inside' the hall (visitor entry is restricted, see story-janggyeong-panjeon). f5 attributes the exact figure 81,258 to UNESCO (verified on the Memory of the World page) and records the Korea Heritage Service caveat; other published counts (about 81,350; 81,352) were reported by one fact-checker but not verified here, so no exact number appears in the narration. Second sources added for lacquer (f6) and the tens of millions of characters (f7: 5,200여 만자, 국가유산포털). The wild-cherry wood and corner metal plates (f6) still rest on one authoritative source (한국민족문화대백과사전; spelled 산벗나무 there). The UNESCO WHC page blocks automated access; its text was re-read on an Internet Archive snapshot. Vocab 새기다 dropped and 경판 added to scene 5 so every vocab word appears in a scene. FINAL PASS (3rd check): wild cherry wood (about 64-70% of blocks) and corner metal plates (copper) now rest on three sources (한국민족문화대백과사전, 정책브리핑, 박상진 study). The purpose of the lacquer is stated by 한국민족문화대백과사전 and the 국가유산포털 MoW page (preserves the carving); 박상진 doubts its protective effect, so treat 'to protect them' as the official wording.",
+  "authorNotes": "The carving period follows 국가유산포털, 한국민족문화대백과사전 and UNESCO WHC (1237–1248). Some accounts count the whole project, preparation included, as about 16 years ending in 1251, so the narration gives only 1237–1248. The count of 81,258 comes from a survey made under Japanese rule and includes some blocks re-carved in Joseon (국가유산포털), so the narration says 'more than 80,000'. Where the carving took place (Ganghwa versus Namhae) is treated differently across sources and is left out. The 1398 move to Haeinsa appears only on 국가유산포털 pages, so it is left out too. The earlier set of blocks lost to fire in 1232 is left out to keep the war content mild. UNESCO's Memory of the World page places Haeinsa in the 'southwest' of the peninsula, but Haeinsa is in South Gyeongsang Province in the southeast, so that phrase was not used. 'Almost 800 years later' is worked out from 1248. The official heritage name is 합천 해인사 대장경판 (Hapcheon Haeinsa Daejanggyeongpan). REVISED: scene 1 no longer puts Hoya 'inside' the hall (visitor entry is restricted, see story-janggyeong-panjeon). f5 attributes the exact figure 81,258 to UNESCO (verified on the Memory of the World page) and records the Korea Heritage Service caveat; other published counts (about 81,350; 81,352) were reported by one fact-checker but not verified here, so no exact number appears in the narration. Second sources added for lacquer (f6) and the tens of millions of characters (f7: 5,200여 만자, 국가유산포털). The wild-cherry wood and corner metal plates (f6) still rest on one authoritative source (한국민족문화대백과사전; spelled 산벗나무 there). The UNESCO WHC page blocks automated access; its text was re-read on an Internet Archive snapshot. Vocab 새기다 dropped and 경판 added to scene 5 so every vocab word appears in a scene. FINAL PASS (3rd check): wild cherry wood (about 64-70% of blocks) and corner metal plates (copper) now rest on three sources (한국민족문화대백과사전, 정책브리핑, 박상진 study). The purpose of the lacquer is stated by 한국민족문화대백과사전 and the 국가유산포털 MoW page (preserves the carving); 박상진 doubts its protective effect, so treat 'to protect them' as the official wording. REVIEW PASS (PR 1.8b): s8 no longer points to a 'next time' story (shelf stories open in any order).",
   "errata": []
 }
