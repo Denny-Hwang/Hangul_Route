@@ -67,6 +67,8 @@ export interface BuildMissionInput {
    * is recomputed. A plan from another day is ignored.
    */
   pinned?: MissionPlan | null;
+  /** Placed-out quests of the learner's route seed (F-PLC-001 section 3.7); omitted without a level check. */
+  skipQuestIds?: ReadonlySet<string>;
 }
 
 /** How far back a Quest counts as replayable (§3.1 — days N−1, N−2). */
@@ -116,9 +118,10 @@ function nextQuest(
   snapshot: ProgressSnapshot,
   quests: readonly Quest[],
   episodes: readonly Episode[],
+  skipQuestIds: ReadonlySet<string> | undefined,
 ): Quest | undefined {
   const offerable = offerableQuests(quests, episodes);
-  return nextQuestAfter({ snapshot, quests, episodes }) ?? offerable[offerable.length - 1];
+  return nextQuestAfter({ snapshot, quests, episodes, skipQuestIds }) ?? offerable[offerable.length - 1];
 }
 
 function completedToday(snapshot: ProgressSnapshot, questId: string, today: string): boolean {
@@ -205,7 +208,7 @@ export function buildTodaysMission(input: BuildMissionInput): MissionPlan {
   }
 
   // ② New — the Journey cursor.
-  const upcoming = nextQuest(snapshot, quests, episodes);
+  const upcoming = nextQuest(snapshot, quests, episodes, input.skipQuestIds);
   if (upcoming) {
     usedQuestIds.add(upcoming.id);
     cards.push({

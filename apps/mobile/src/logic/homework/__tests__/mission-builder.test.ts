@@ -182,6 +182,24 @@ describe('slot ② — the Journey cursor', () => {
     });
     expect(plan.cards[1]?.questId).toBe('quest:c');
   });
+
+  it('skips placed-out quests when a route seed is given (F-PLC-001 section 3.7)', () => {
+    const plan = build({ snapshot: snapshot([]), skipQuestIds: new Set(['quest:a']) });
+    expect(plan.cards[1]).toMatchObject({ slot: 2, kind: 'new', questId: 'quest:b' });
+  });
+
+  it('a placed-out quest stays playable: once every other quest is done it falls back as before', () => {
+    const plan = build({
+      snapshot: snapshot([done('quest:b', YESTERDAY, 1), done('quest:c', YESTERDAY, 1)]),
+      skipQuestIds: new Set(['quest:a']),
+    });
+    expect(plan.cards[1]?.questId).toBe('quest:c');
+  });
+
+  it('without a route seed the cursor is unchanged', () => {
+    expect(build({ snapshot: snapshot([]) }).cards[1]?.questId).toBe('quest:a');
+    expect(build({ snapshot: snapshot([]), skipQuestIds: new Set() }).cards[1]?.questId).toBe('quest:a');
+  });
 });
 
 describe('slot ③ — daily test capability gate (§9.2)', () => {

@@ -49,6 +49,20 @@ describe('offerableQuests', () => {
   });
 });
 
+describe('nextQuestAfter skipQuestIds (placed-out quests, F-PLC-001 section 3.7)', () => {
+  it('skips placed-out quests without marking them done', () => {
+    expect(nextQuestAfter({ ...base, snapshot: done(), skipQuestIds: new Set(['quest:a', 'quest:b']) })?.id).toBe('quest:c');
+  });
+
+  it('is undefined when every offerable quest is done or placed out', () => {
+    expect(nextQuestAfter({ ...base, snapshot: done('a', 'b'), skipQuestIds: new Set(['quest:c', 'quest:e']) })).toBeUndefined();
+  });
+
+  it('ignores ids that are not offerable', () => {
+    expect(nextQuestAfter({ ...base, snapshot: done(), skipQuestIds: new Set(['quest:zzz']) })?.id).toBe('quest:a');
+  });
+});
+
 describe('nextQuestAfter (the Journey cursor)', () => {
   it('is the first quest for a fresh learner', () => {
     expect(nextQuestAfter({ ...base, snapshot: done() })?.id).toBe('quest:a');
