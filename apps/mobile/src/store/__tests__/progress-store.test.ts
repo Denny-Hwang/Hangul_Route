@@ -657,8 +657,18 @@ describe('card awards in the store (F-STORY-006 PR 6.4a)', () => {
       expect(notified).toEqual(['profile:a']);
     });
 
-    it('is silent: no per-card telemetry for a card that arrives by reconcile', () => {
+    it('sends one card.catchup_granted with the counts by source and no per-card telemetry (§3.5)', () => {
       useProgressStore.setState({ byProfile: { 'profile:a': ritesDone(1) }, hydratedFor: new Set(['profile:a']) });
+      useProgressStore.getState().reconcileAwards('profile:a');
+      expect(vi.mocked(track).mock.calls.map(([e]) => e)).toEqual([
+        { name: 'card.catchup_granted', profileId: 'profile:a', payload: { count: 6, episode: 5, stage: 0, welcome: 1, quest: 0, set: 0 } },
+      ]);
+    });
+
+    it('a second run sends nothing', () => {
+      useProgressStore.setState({ byProfile: { 'profile:a': ritesDone(1) }, hydratedFor: new Set(['profile:a']) });
+      useProgressStore.getState().reconcileAwards('profile:a');
+      vi.mocked(track).mockClear();
       useProgressStore.getState().reconcileAwards('profile:a');
       expect(track).not.toHaveBeenCalled();
     });
@@ -711,7 +721,10 @@ describe('card awards in the store (F-STORY-006 PR 6.4a)', () => {
       expect(added.find((c) => c.cardId === 'card:tiger')?.unlockedAt).toBe(CREATED);
       expect(storedA()?.cards).toHaveLength(30);
       expect([...(useProgressStore.getState().catchUp['profile:a'] ?? [])].sort()).toEqual(added.map((c) => c.cardId).sort());
-      expect(track).not.toHaveBeenCalled();
+      // One aggregate event, never a per-card card.unlocked for a retro card.
+      expect(vi.mocked(track).mock.calls.map(([e]) => e)).toEqual([
+        { name: 'card.catchup_granted', profileId: 'profile:a', payload: { count: 22, episode: 18, stage: 3, welcome: 1, quest: 0, set: 0 } },
+      ]);
     });
 
     it('the next launch adds nothing and shows no catch-up', async () => {
@@ -725,13 +738,15 @@ describe('card awards in the store (F-STORY-006 PR 6.4a)', () => {
       expect(useProgressStore.getState().byProfile['profile:a']).toEqual(first);
       expect(useProgressStore.getState().catchUp['profile:a']).toBeUndefined();
       expect(writeJson).not.toHaveBeenCalled();
+      expect(vi.mocked(track).mock.calls.filter(([e]) => e.name === 'card.catchup_granted')).toHaveLength(1);
     });
 
-    it('a reconcile that adds only the welcome card is not a catch-up', async () => {
+    it('a reconcile that adds only the welcome card is not a catch-up and sends no event', async () => {
       mem.set('progress:profile:a', snapshotWith());
       await useProgressStore.getState().hydrate('profile:a');
       expect(cardsOf(useProgressStore.getState().byProfile['profile:a'])).toEqual(['card:tiger']);
       expect(useProgressStore.getState().catchUp['profile:a']).toBeUndefined();
+      expect(track).not.toHaveBeenCalled();
     });
 
     it('lists the welcome card with the others when it arrives in the same catch-up', async () => {
@@ -794,6 +809,7 @@ describe('card awards in the store (F-STORY-006 PR 6.4a)', () => {
       store.unlockCards('profile:a', RITES.map((cardId) => ({ cardId })));
       expect(store.reconcileAwards('profile:a')).toEqual([]);
       expect(useProgressStore.getState().catchUp['profile:a']).toBeUndefined();
+      expect(vi.mocked(track).mock.calls.filter(([e]) => e.name === 'card.catchup_granted')).toEqual([]);
     });
 
     it('an old saved snapshot keeps its shape: no new key is added', async () => {
@@ -809,6 +825,18 @@ describe('card awards in the store (F-STORY-006 PR 6.4a)', () => {
       useProgressStore.getState().replaceSnapshot('profile:a', ritesDone(1));
       expect(cardsOf(useProgressStore.getState().byProfile['profile:a'])).toEqual([...RITES, 'card:tiger'].sort());
       expect(cardsOf(storedA())).toEqual([...RITES, 'card:tiger'].sort());
+      expect(vi.mocked(track).mock.calls.map(([e]) => e.name)).toEqual(['card.catchup_granted']);
+    });
+
+    it('a completion by sync is a catch-up: one aggregate event, the next pass sends none', () => {
+      const withTiger = snapshotWith({ cards: [{ cardId: 'card:tiger', unlockedAt: CREATED, newSinceLastView: false }] });
+      useProgressStore.getState().replaceSnapshot('profile:a', { ...withTiger, quests: [quest('quest:stage1-crafts-q1', 'episode:stage1-crafts', 3)] });
+      expect(vi.mocked(track).mock.calls.map(([e]) => e)).toEqual([
+        { name: 'card.catchup_granted', profileId: 'profile:a', payload: { count: 5, episode: 4, stage: 0, welcome: 0, quest: 1, set: 0 } },
+      ]);
+      vi.mocked(track).mockClear();
+      useProgressStore.getState().replaceSnapshot('profile:a', useProgressStore.getState().byProfile['profile:a'] as ProgressSnapshot);
+      expect(track).not.toHaveBeenCalled();
     });
 
     it('a replacement that adds cards is saved with one write and asks sync once; the next pass adds nothing', () => {
@@ -842,6 +870,7 @@ describe('card awards in the store (F-STORY-006 PR 6.4a)', () => {
       expect(writeJson).not.toHaveBeenCalled();
       expect(notified).toEqual([]);
       expect(useProgressStore.getState().catchUp['profile:a']).toBeUndefined();
+      expect(track).not.toHaveBeenCalled();
     });
 
     it('the first real write saves the welcome card with it', () => {

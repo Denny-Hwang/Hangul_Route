@@ -4,6 +4,7 @@ import { episodesAll } from '../content/episodes';
 import { latchSnapshot } from '../logic/my-route/latch';
 import { awardWorld, welcomeCardIds } from '../content/award-world';
 import { applyAwards } from '../logic/awards/apply';
+import { catchUpGrantedPayload } from '../logic/awards/catch-up';
 import { missingAwards } from '../logic/awards/derive';
 import type { DerivedAward } from '../logic/awards/types';
 import { recordBestQuest } from '../logic/quest-progress';
@@ -87,24 +88,37 @@ interface Actions {
       attempts: number;
     },
   ) => void;
+  /**
+   * @deprecated No production caller since F-STORY-006 PR 6.4b: use
+   * `unlockCards`, which writes deterministic `unlockedAt` times (§3.1 rule 3)
+   * and adds several cards with one write. This one stamps the current time.
+   */
   unlockCard: (profileId: string, cardId: string) => void;
   /**
    * Add several cards with one storage write (F-STORY-006 §3.3, the live
    * path). Owned and repeated ids are skipped; returns the ids it added.
-   * The live path (6.4b) calls it in the same synchronous tick as
+   * The live path (`applyQuestResult`) calls it in the same synchronous tick as
    * `recordQuestComplete`: a reconcile that lands in between (a hydrate or a
    * sync) would add those cards silently, as a catch-up with no Results moment.
    */
   unlockCards: (profileId: string, cards: readonly CardUnlock[]) => string[];
   /**
    * Add the cards the award rules say this snapshot should hold and does not
-   * (F-STORY-006 §3.3, §3.5). Silent: no per-card telemetry. Only ever adds.
+   * (F-STORY-006 §3.3, §3.5). Silent: no banner and no per-card telemetry,
+   * one aggregate `card.catchup_granted` when it added more than the welcome
+   * card. Only ever adds.
    * Returns the awards it added; a profile with no snapshot in memory or no
    * profile record (no creation time for the welcome card) is left alone, and
    * a record the rules cannot read (malformed or very old) gains nothing.
    * Cards a quest just earned belong to the live path (see `unlockCards`).
    */
   reconcileAwards: (profileId: string) => DerivedAward[];
+  /**
+   * Announce cards that were already owed before a Results visit and arrived
+   * with its write (`unlockCards`): the Home catch-up list and one aggregate
+   * `card.catchup_granted`, never a per-card event (§3.5). Writes nothing.
+   */
+  recordCatchUp: (profileId: string, added: readonly DerivedAward[]) => void;
   /**
    * Clear the "New" flag of owned cards (CardDetail, the catch-up card's "See
    * my cards") and take them off the catch-up list. The list is cleared even
@@ -230,6 +244,12 @@ function catchUpAfter(catchUp: Record<string, string[]>, profileId: string, adde
   return { ...catchUp, [profileId]: unionIds(catchUp[profileId] ?? [], ids) };
 }
 
+/** One `card.catchup_granted` per reconcile that added more than the welcome card (§3.5); never a per-card event. */
+function announceCatchUp(profileId: string, added: readonly DerivedAward[]): void {
+  const payload = catchUpGrantedPayload(added);
+  if (payload) void track({ name: 'card.catchup_granted', profileId, payload });
+}
+
 function withoutCatchUp(catchUp: Record<string, string[]>, profileId: string): Record<string, string[]> {
   if (!(profileId in catchUp)) return catchUp;
   const { [profileId]: _dropped, ...others } = catchUp;
@@ -279,6 +299,7 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
         pendingFor: without(s.pendingFor, profileId),
         catchUp: catchUpAfter(s.catchUp, profileId, added),
       }));
+      announceCatchUp(profileId, added);
       // One write for the pending writes, an added latch and the cards they
       // earned. Cards are saved only onto a record that was read or written:
       // nothing loaded also means "the read failed", and a blank record holding
@@ -305,6 +326,7 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
     // deterministic (`profile.createdAt`), and the next real write saves it.
     const { snap, added } = withAwards(profileId, fresh);
     set((s) => ({ byProfile: { ...s.byProfile, [profileId]: snap }, catchUp: catchUpAfter(s.catchUp, profileId, added) }));
+    announceCatchUp(profileId, added);
     return snap;
   },
 
@@ -362,7 +384,14 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
     if (added.length === 0) return [];
     set((s) => ({ byProfile: { ...s.byProfile, [profileId]: snap }, catchUp: catchUpAfter(s.catchUp, profileId, added) }));
     persist(profileId, snap);
+    announceCatchUp(profileId, added);
     return added;
+  },
+
+  recordCatchUp: (profileId, added) => {
+    if (added.length === 0) return;
+    set((s) => ({ catchUp: catchUpAfter(s.catchUp, profileId, added) }));
+    announceCatchUp(profileId, added);
   },
 
   markCardsSeen: (profileId, cardIds) => {
@@ -462,6 +491,7 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
     const { snap, added } = withAwards(profileId, latched);
     settle(profileId, snap);
     if (added.length > 0) set((s) => ({ catchUp: catchUpAfter(s.catchUp, profileId, added) }));
+    announceCatchUp(profileId, added);
     void writeJson(key(profileId), snap);
     if (snap !== snapshot) notifyProgressPersisted(profileId);
   },
