@@ -22,25 +22,26 @@ interface Props {
  * `design/wireframes/layout/wide.md` A: "controls beside the content"). The two
  * columns share the width and are top-aligned: Hoya's feedback grows the prompt
  * column, and the answers must not move under the learner's finger when it does.
+ *
+ * Both arrangements render the same tree (only styles change), so a rotation,
+ * a Split View resize or a Chromebook window crossing the boundary does not
+ * remount the prompt or the answers: focus, a running pulse and an open sheet
+ * survive. Only the feedback moves between the columns.
  */
 export function GameColumns({ arrangement, prompt, answers, feedback = null, stackedGap = 'xl' }: Props): React.ReactElement {
-  if (arrangement === 'side') {
-    return (
-      <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.xl }}>
-        <View style={{ flex: 1, minWidth: 0 }}>
-          {prompt}
-          {feedback}
-        </View>
-        <View style={{ flex: 1, minWidth: 0 }}>{answers}</View>
-      </View>
-    );
-  }
+  const side = arrangement === 'side';
+  const column = side ? { flex: 1, minWidth: 0 } : null;
   return (
-    <>
-      {prompt}
-      <Spacer size={stackedGap} />
-      {answers}
-      {feedback}
-    </>
+    <View style={side ? { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.xl } : null}>
+      <View key="prompt" style={column}>
+        {prompt}
+        {side ? feedback : null}
+      </View>
+      {side ? null : <Spacer key="gap" size={stackedGap} />}
+      <View key="answers" style={column}>
+        {answers}
+        {side ? null : feedback}
+      </View>
+    </View>
   );
 }

@@ -34,7 +34,7 @@ import {
   type FlowEvent,
   type ListenPickFlowState,
 } from '../../logic/listen-pick-flow';
-import { pictureTextArrangement } from '../../logic/layout/game-layout';
+import { answersColumnWidth, pictureTextArrangement, twoUpFits } from '../../logic/layout/game-layout';
 import { shuffleOptions, validRounds } from '../../logic/listen-pick';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { playPrompt, stop } from '../../platform/audio';
@@ -61,6 +61,12 @@ interface Props {
   /** Leave an empty scope (never a dead end). */
   onBack?: () => void;
 }
+
+/**
+ * What a `ChoiceCard` adds around its art: horizontal padding, the thickest state border, and the
+ * status mark with its gap (ChoiceCard.tsx).
+ */
+const CARD_CHROME = 2 * spacing.lg + 2 * borderWidth.thick + spacing.xl + spacing.md;
 
 /** Focus target for assistive tech when a round advances (web; a no-op where the node has no `focus`). */
 interface Focusable {
@@ -192,7 +198,16 @@ export function ListenPickGame({ scope, host, onBack }: Props): React.ReactEleme
 
   const header = headerView(host.mode, state, copy);
   const prompt = promptView(round, state, host.mode);
-  const columns = optionColumns(round, width);
+  const arrangement = pictureTextArrangement(layoutClass);
+  // Beside the sound the answers get half the reading column (348 at 1180 x 820 and 844 x 390), so two cards
+  // sit side by side only while each still holds its art (or a phone-size text card) next to the status mark;
+  // stacked, the phone rule on the window width is unchanged.
+  const art = round.options.some((o) => o.pictureRef !== undefined) ? pictureSize : touchTarget.hero;
+  const columns =
+    arrangement === 'side' &&
+    !twoUpFits(answersColumnWidth(layoutClass, arrangement, spacing.xl), spacing.md, art + CARD_CHROME)
+      ? 1
+      : optionColumns(round, width);
   const showMissHoya = host.mode !== 'review' && state.status === 'asking' && state.wrongIds.length > 0;
 
   return (
@@ -211,7 +226,7 @@ export function ListenPickGame({ scope, host, onBack }: Props): React.ReactEleme
 
       <Spacer size="lg" />
       <GameColumns
-        arrangement={pictureTextArrangement(layoutClass)}
+        arrangement={arrangement}
         prompt={
           <>
             <Heading level="prompt">{copy.listenPick.heading}</Heading>
