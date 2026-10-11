@@ -9,22 +9,45 @@ import {
   Pill,
   Screen,
   Spacer,
+  SplitPane,
   TAB_SCREEN_EDGES,
+  borderWidth,
   colors,
+  layout,
   radii,
   spacing,
   supportedCardIds,
   typography,
+  useLayoutClass,
+  useMediaSize,
 } from '@hangul-route/design-system';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { useMemo, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Pressable, Text, View, type ViewStyle } from 'react-native';
 import { heritageCardsAll, themes } from '../../content';
 import { useMessages } from '../../i18n/use-messages';
+import { initialCard, reconcileSelection } from '../../logic/layout/pane-selection';
+import {
+  cardGalleryColumns,
+  cardThumbArtSize,
+  contentWidth,
+  gridCellWidth,
+  gridRows,
+} from '../../logic/layout/pane-sizes';
 import type { RootStackParamList } from '../../navigation/types';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
+import { CardDetailView } from './CardDetailView';
+
+/** Card art in a gallery thumb at scale 1 (phones), and the thumb's padding plus its thickest border on both sides. */
+const THUMB_ART = 96;
+const THUMB_PADDING = spacing.md;
+const THUMB_CHROME = 2 * THUMB_PADDING + 2 * borderWidth.thick;
+const GALLERY_GAP = spacing.sm;
+/** The phone gallery: two cards a row at 47 %, exactly as before F-LAYOUT-001. */
+const PHONE_CELL: ViewStyle = { flexBasis: '47%' };
+const ROW_CELL: ViewStyle = { flex: 1 };
 
 export function LibraryScreen(): React.ReactElement {
   const m = useMessages().learner.library;
@@ -39,8 +62,39 @@ export function LibraryScreen(): React.ReactElement {
     return filter === 'all' ? heritageCardsAll : heritageCardsAll.filter((c) => c.theme === filter);
   }, [filter]);
 
-  return (
-    <Screen tone="canvas" edges={TAB_SCREEN_EDGES}>
+  // Two panes (wide window, F-LAYOUT-001 §3.6, §3.7): a card tap selects it and the right pane shows the
+  // card page; one pane: a tap opens the card screen as always. 3 columns on regular and in the master pane.
+  const lc = useLayoutClass();
+  const paneMode = lc.panes === 2;
+  const columns = cardGalleryColumns(lc, layout.columns.cards.compact);
+  const phoneGallery = columns === layout.columns.cards.compact;
+  const [selected, setSelected] = useState<string | null>(null);
+  const selectedId = reconcileSelection(selected, visible, initialCard(visible, snap?.cards ?? []));
+  // Latch the first selection (the latest earned card) so earning another one does not move it; it
+  // survives rotation as screen state. A filter that hides it shows another card without forgetting it.
+  useEffect(() => {
+    if (paneMode && selected === null && selectedId !== null) setSelected(selectedId);
+  }, [paneMode, selected, selectedId]);
+
+  const screenWidth = phoneGallery ? 'reading' : 'full';
+  const gridWidth = paneMode ? layout.pane.master : contentWidth(lc.windowWidth, lc.gutter, lc.maxWidth[screenWidth]);
+  const artSize = cardThumbArtSize(useMediaSize(THUMB_ART), gridCellWidth(gridWidth, columns, GALLERY_GAP), THUMB_CHROME);
+
+  const thumb = (card: HeritageCard, cellStyle: ViewStyle): React.ReactElement => (
+    <CardThumb
+      key={card.id}
+      card={card}
+      unlocked={unlockedIds.has(card.id)}
+      cellStyle={cellStyle}
+      artSize={artSize}
+      narrow={paneMode}
+      selected={paneMode ? card.id === selectedId : undefined}
+      onPress={() => (paneMode ? setSelected(card.id) : navigation.navigate('CardDetail', { cardId: card.id }))}
+    />
+  );
+
+  const gallery = (
+    <>
       <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: spacing.sm }}>
         <View style={{ flex: 1 }}>
           <Heading level="title">{m.title}</Heading>
@@ -63,16 +117,20 @@ export function LibraryScreen(): React.ReactElement {
       </View>
 
       <Spacer size="lg" />
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
-        {visible.map((card) => (
-          <CardThumb
-            key={card.id}
-            card={card}
-            unlocked={unlockedIds.has(card.id)}
-            onPress={() => navigation.navigate('CardDetail', { cardId: card.id })}
-          />
-        ))}
-      </View>
+      {phoneGallery ? (
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: GALLERY_GAP }}>
+          {visible.map((card) => thumb(card, PHONE_CELL))}
+        </View>
+      ) : (
+        // Rows of `columns` equal cells; the last row is padded so its cards keep the same width.
+        <View style={{ gap: GALLERY_GAP }}>
+          {gridRows(visible, columns).map((row, r) => (
+            <View key={r} style={{ flexDirection: 'row', gap: GALLERY_GAP }}>
+              {row.map((card, i) => (card ? thumb(card, ROW_CELL) : <View key={`pad-${i}`} style={ROW_CELL} />))}
+            </View>
+          ))}
+        </View>
+      )}
       <Spacer size="xl" />
 
       <Card padding="md" tone="brand">
@@ -83,6 +141,15 @@ export function LibraryScreen(): React.ReactElement {
         </Body>
       </Card>
       <Spacer size="xl" />
+    </>
+  );
+
+  // The card page as the stack screen shows it, without its close button; a locked card also says how it is earned.
+  const detail = selectedId ? <CardDetailView key={selectedId} cardId={selectedId} showHowToEarn /> : null;
+
+  return (
+    <Screen tone="canvas" edges={TAB_SCREEN_EDGES} width={screenWidth} scrollable={!paneMode}>
+      <SplitPane master={gallery} detail={detail} masterLabel={m.panes.master} detailLabel={m.panes.detail} detailScrolls={false} />
     </Screen>
   );
 }
@@ -109,10 +176,21 @@ function FilterChip({ label, active, onPress }: { label: string; active: boolean
 function CardThumb({
   card,
   unlocked,
+  cellStyle,
+  artSize,
+  narrow,
+  selected,
   onPress,
 }: {
   card: HeritageCard;
   unlocked: boolean;
+  /** `flexBasis: '47%'` in the phone gallery, `flex: 1` in a row of the 3-column gallery. */
+  cellStyle: ViewStyle;
+  artSize: number;
+  /** A 128-wide master-pane cell: the Korean line steps down one size so a four-syllable word stays on one line. */
+  narrow: boolean;
+  /** Two panes only: the card shown in the detail pane (focus border, `aria-selected`). */
+  selected?: boolean;
   onPress: () => void;
 }): React.ReactElement {
   const messages = useMessages();
@@ -121,14 +199,15 @@ function CardThumb({
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
+      aria-selected={selected}
       accessibilityLabel={unlocked ? card.titleEn : messages.a11y.lockedCard}
       style={{
-        flexBasis: '47%',
+        ...cellStyle,
         backgroundColor: unlocked ? colors.surface.paper : colors.surface.sunken,
         borderRadius: radii.lg,
-        borderWidth: 2,
-        borderColor: unlocked ? colors.rarity[card.rarity] : colors.border.subtle,
-        padding: spacing.md,
+        borderWidth: selected ? borderWidth.thick : 2,
+        borderColor: selected ? colors.border.focus : unlocked ? colors.rarity[card.rarity] : colors.border.subtle,
+        padding: THUMB_PADDING,
         minHeight: 140,
       }}
     >
@@ -145,11 +224,11 @@ function CardThumb({
           <Spacer size="xs" />
           {supportedCardIds.includes(card.id) ? (
             <View style={{ alignItems: 'center' }}>
-              <HeritageCardArt cardId={card.id} size={96} accessibilityLabel={messages.a11y.cardArt(card.titleEn)} />
+              <HeritageCardArt cardId={card.id} size={artSize} accessibilityLabel={messages.a11y.cardArt(card.titleEn)} />
             </View>
           ) : null}
           <Spacer size="xs" />
-          <Text style={{ fontSize: typography.size.title, fontWeight: '700', color: colors.text.primary }}>
+          <Text style={{ fontSize: narrow ? typography.size.prompt : typography.size.title, fontWeight: '700', color: colors.text.primary }}>
             {card.subtitleKo ?? card.titleEn}
           </Text>
           {card.romanization ? (

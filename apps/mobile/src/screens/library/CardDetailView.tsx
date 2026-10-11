@@ -27,8 +27,9 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { cardById } from '../../content';
+import { cardById, episodesAll, questsAll } from '../../content';
 import { useMessages } from '../../i18n/use-messages';
+import { cardEarnHint } from '../../logic/card-earn';
 import { speak } from '../../platform/audio';
 import { useReducedMotion } from '../../platform/motion';
 import { isShareAvailable, shareSnapshot } from '../../platform/sharing';
@@ -41,9 +42,11 @@ export interface CardDetailViewProps {
   cardId: string;
   /** Renders the close button when given (the modal screen passes it; a split pane does not). */
   onClose?: () => void;
+  /** A locked card says how it is earned (the Library pane, F-LAYOUT-001 §3.6); the stack screen leaves it out. */
+  showHowToEarn?: boolean;
 }
 
-export function CardDetailView({ cardId, onClose }: CardDetailViewProps): React.ReactElement {
+export function CardDetailView({ cardId, onClose, showHowToEarn = false }: CardDetailViewProps): React.ReactElement {
   const messages = useMessages();
   const m = messages.learner.cardDetail;
   const card = cardById(cardId);
@@ -204,6 +207,8 @@ export function CardDetailView({ cardId, onClose }: CardDetailViewProps): React.
         </View>
       </Pressable>
 
+      {showHowToEarn && !unlocked ? <HowToEarn cardId={card.id} /> : null}
+
       {/* The blurb + fact card is shown only on the front face (the back face
           already contains this content). Keeps the back face from duplicating. */}
       {face === 'front' && unlocked ? (
@@ -274,6 +279,22 @@ export function CardDetailView({ cardId, onClose }: CardDetailViewProps): React.
       ) : null}
       <Spacer size="xl" />
     </Screen>
+  );
+}
+
+/** Where a locked card is earned: the quest and the stars it takes, or "later" (no paywall, no Premium pill; D5). */
+function HowToEarn({ cardId }: { cardId: string }): React.ReactElement {
+  const m = useMessages().learner.cardDetail.earn;
+  const hint = cardEarnHint(cardId, questsAll, episodesAll);
+  return (
+    <>
+      <Spacer size="lg" />
+      <Card padding="md" tone="sunken">
+        <Heading level="prompt">{m.title}</Heading>
+        <Spacer size="xs" />
+        <Body tone="secondary">{hint.kind === 'quest' ? m.quest(hint.questTitle, hint.minStars) : m.later}</Body>
+      </Card>
+    </>
   );
 }
 

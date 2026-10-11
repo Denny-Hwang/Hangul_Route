@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { onboardChild } from './helpers';
+import { onboardChild, readStored, seedStored } from './helpers';
 
 /**
  * Tablet / desktop web shell (F-LAYOUT-001 §3.3, PR 2a): the window is the
@@ -266,3 +266,164 @@ test('install guide sheet is a centred reading column above the tab bar at 1180x
   expect(Math.abs(sheet.x - (1180 - sheet.x - sheet.width))).toBeLessThanOrEqual(1);
   expect(sheet.y + sheet.height).toBeLessThanOrEqual(tabBar!.y);
 });
+
+// --- Part 3: the Library pane and card columns (PR 5b) ---
+
+/** Cold start of a learner who has earned Book, then Paper Folding, then Kimchi (the latest), on the Library tab. */
+async function openLibrary(page: Page): Promise<void> {
+  await onboardChild(page, { name: 'Dani', startJourney: false });
+  const profiles = await readStored<Array<{ id: string }>>(page, 'profiles');
+  const id = profiles?.[0]?.id ?? '';
+  const card = (cardId: string, unlockedAt: string) => ({ cardId, unlockedAt, newSinceLastView: false });
+  await seedStored(page, `progress:${id}`, {
+    profileId: id,
+    updatedAt: '2026-10-10T09:00:00.000Z',
+    episodes: [],
+    quests: [],
+    cards: [
+      card('card:book', '2026-10-08T09:00:00.000Z'),
+      card('card:kimchi', '2026-10-10T09:00:00.000Z'),
+      card('card:origami', '2026-10-09T09:00:00.000Z'),
+    ],
+    sessions: [],
+    homework: [],
+    reviews: [],
+    streakDays: 1,
+  });
+  await expect(page.getByText('Hi, Dani!')).toBeVisible();
+  await page.getByText('Library', { exact: true }).last().click();
+  await expect(page.getByRole('heading', { name: 'Heritage Library' })).toBeVisible();
+  await expect(page.getByText('3 of 42 collected')).toBeVisible();
+}
+
+const galleryPane = (page: Page) => page.getByRole('region', { name: 'Card gallery' });
+const cardPane = (page: Page) => page.getByRole('region', { name: 'Card details' });
+/** Gallery thumbs in content order: the first row is Book, then two locked Letters cards. */
+const thumbs = (scope: Page | ReturnType<Page['locator']>) => scope.getByRole('button', { name: /^(Book|Kimchi|Paper Folding|Locked card)$/ });
+
+/** How many thumbs share the first row (same top edge). */
+async function firstRowColumns(scope: Page | ReturnType<Page['locator']>): Promise<number> {
+  const boxes = await Promise.all((await thumbs(scope).all()).slice(0, 4).map((t) => t.boundingBox()));
+  const top = boxes[0]!.y;
+  return boxes.filter((b) => Math.abs(b!.y - top) < 1).length;
+}
+
+test.describe('Library at 1180x820: two panes', () => {
+  test.use({ viewport: { width: 1180, height: 820 } });
+
+  test('a 3-column gallery left, the latest earned card right; a tap selects without navigating', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(String(e)));
+    await openLibrary(page);
+
+    await expect(galleryPane(page)).toBeVisible();
+    await expect(cardPane(page)).toBeVisible();
+    const gallery = (await galleryPane(page).boundingBox())!;
+    const detail = (await cardPane(page).boundingBox())!;
+    expect(gallery.width).toBeGreaterThanOrEqual(399);
+    expect(gallery.width).toBeLessThanOrEqual(401);
+    expect(detail.x).toBeGreaterThanOrEqual(gallery.x + gallery.width);
+    expect(await firstRowColumns(galleryPane(page))).toBe(3);
+    // Every thumb clears the touch target floor.
+    for (const t of (await thumbs(galleryPane(page)).all()).slice(0, 6)) {
+      const b = (await t.boundingBox())!;
+      expect(Math.min(b.width, b.height)).toBeGreaterThanOrEqual(64);
+    }
+
+    // First selection = the most recently earned card, with its page (no close button) on the right.
+    await expect(galleryPane(page).getByRole('button', { name: 'Kimchi', exact: true })).toHaveAttribute('aria-selected', 'true');
+    await expect(galleryPane(page).getByRole('button', { name: 'Book', exact: true })).toHaveAttribute('aria-selected', 'false');
+    await expect(cardPane(page).getByRole('heading', { name: 'Kimchi', exact: true })).toBeVisible();
+    await expect(cardPane(page).getByRole('button', { name: 'Hear it' })).toBeVisible();
+
+    // A tap selects: the right pane changes, the gallery stays, no navigation.
+    const url = page.url();
+    await galleryPane(page).getByRole('button', { name: 'Book', exact: true }).click();
+    await expect(cardPane(page).getByRole('heading', { name: 'Book', exact: true })).toBeVisible();
+    await expect(galleryPane(page).getByRole('button', { name: 'Book', exact: true })).toHaveAttribute('aria-selected', 'true');
+    await expect(galleryPane(page).getByRole('button', { name: 'Kimchi', exact: true })).toHaveAttribute('aria-selected', 'false');
+    // The card still flips in the pane.
+    await cardPane(page).getByRole('button', { name: 'Tap to flip card to back' }).click();
+    await expect(cardPane(page).getByRole('button', { name: 'Tap to flip card to front' })).toBeVisible();
+    expect(page.url()).toBe(url);
+    expect(await overflowsSideways(page)).toBe(false);
+    expect(errors).toEqual([]);
+  });
+
+  test('a locked card shows where it is earned, with no paywall', async ({ page }) => {
+    await openLibrary(page);
+    // The second Letters card (Hanji Paper) is the reward of the second Letters quest.
+    await thumbs(galleryPane(page)).nth(1).click();
+    await expect(thumbs(galleryPane(page)).nth(1)).toHaveAttribute('aria-selected', 'true');
+    await expect(cardPane(page).getByRole('heading', { name: 'Hanji Paper' })).toBeVisible();
+    await expect(cardPane(page).getByText('How to earn it')).toBeVisible();
+    await expect(cardPane(page).getByText('Get 2 or more stars in Meet m, b, s, ng to earn this card.')).toBeVisible();
+    await expect(cardPane(page).getByText('Premium')).toHaveCount(0);
+    await expect(cardPane(page).getByRole('button', { name: 'Hear it' })).toHaveCount(0);
+    // A card no quest awards yet says so instead of promising one.
+    await thumbs(galleryPane(page)).nth(5).click(); // Hangul Day (stage1-complete)
+    await expect(cardPane(page).getByRole('heading', { name: 'Hangul Day' })).toBeVisible();
+    await expect(cardPane(page).getByText('This card comes in a later quest.')).toBeVisible();
+  });
+
+  test('a filter that hides the selected card shows one it keeps; clearing it brings the selection back', async ({ page }) => {
+    await openLibrary(page);
+    await galleryPane(page).getByRole('button', { name: 'Book', exact: true }).click();
+    await galleryPane(page).getByRole('button', { name: 'Food', exact: true }).click();
+    // Kimchi is the latest earned card of the Food theme.
+    await expect(cardPane(page).getByRole('heading', { name: 'Kimchi', exact: true })).toBeVisible();
+    await expect(galleryPane(page).getByRole('button', { name: 'Kimchi', exact: true })).toHaveAttribute('aria-selected', 'true');
+    await galleryPane(page).getByRole('button', { name: 'All', exact: true }).click();
+    await expect(cardPane(page).getByRole('heading', { name: 'Book', exact: true })).toBeVisible();
+    await expect(galleryPane(page).getByRole('button', { name: 'Book', exact: true })).toHaveAttribute('aria-selected', 'true');
+  });
+});
+
+test.describe('Library at 768x1024: 3 columns, one pane, a tap navigates', () => {
+  test.use({ viewport: { width: 768, height: 1024 } });
+
+  test('no panes; 3 columns; tapping a card opens the card screen', async ({ page }) => {
+    await openLibrary(page);
+    await expect(galleryPane(page)).toHaveCount(0);
+    await expect(cardPane(page)).toHaveCount(0);
+    expect(await firstRowColumns(page)).toBe(3);
+    await expect(page.getByRole('button', { name: 'Book', exact: true })).not.toHaveAttribute('aria-selected', /.*/);
+    expect(await overflowsSideways(page)).toBe(false);
+    await page.getByRole('button', { name: 'Book', exact: true }).click();
+    await expect(page.getByRole('heading', { name: 'Book', exact: true })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Heritage Library' })).toBeHidden();
+  });
+
+  test('rotating between 768x1024 and 1024x768 keeps the selected card and never navigates', async ({ page }) => {
+    await openLibrary(page);
+    await page.setViewportSize({ width: 1024, height: 768 });
+    await expect(cardPane(page)).toBeVisible();
+    await galleryPane(page).getByRole('button', { name: 'Book', exact: true }).click();
+    await expect(cardPane(page).getByRole('heading', { name: 'Book', exact: true })).toBeVisible();
+
+    await page.setViewportSize({ width: 768, height: 1024 });
+    await expect(cardPane(page)).toHaveCount(0);
+    await expect(page.getByRole('heading', { name: 'Heritage Library' })).toBeVisible();
+
+    await page.setViewportSize({ width: 1024, height: 768 });
+    await expect(cardPane(page).getByRole('heading', { name: 'Book', exact: true })).toBeVisible();
+    await expect(galleryPane(page).getByRole('button', { name: 'Book', exact: true })).toHaveAttribute('aria-selected', 'true');
+    expect(await overflowsSideways(page)).toBe(false);
+  });
+});
+
+for (const vp of [
+  { name: 'phone portrait', width: 390, height: 844 },
+  { name: 'phone landscape', width: 844, height: 390 },
+] as const) {
+  test.describe(`Library at ${vp.name} ${vp.width}x${vp.height}: 2 columns, one pane`, () => {
+    test.use({ viewport: { width: vp.width, height: vp.height } });
+
+    test('2 columns, no panes and no sideways scrolling', async ({ page }) => {
+      await openLibrary(page);
+      await expect(cardPane(page)).toHaveCount(0);
+      expect(await firstRowColumns(page)).toBe(2);
+      expect(await overflowsSideways(page)).toBe(false);
+    });
+  });
+}
