@@ -97,7 +97,7 @@ type StoryRow = [slug: string, title: string, stage: number, theme: ThemeKey, mi
 const storyRows: StoryRow[] = [
   ['sejong-new-letters', "King Sejong's New Letters", 1, 'letters', 4, null, true],
   ['shapes-of-hangeul', 'The Secret in the Shapes', 1, 'letters', 5],
-  ['hangeul-day', 'Happy Hangeul Day!', 1, 'letters', 4, 'hangeul-day', true],
+  ['hangeul-day', 'Happy Hangul Day!', 1, 'letters', 4, 'hangeul-day', true],
   ['tripitaka-koreana', 'Eighty Thousand Woodblocks', 1, 'letters', 5],
   ['sillok-royal-historians', 'Hoya Meets the Royal Historians', 1, 'letters', 4],
   ['kim-hongdo-genre-paintings', "Kim Hong-do's Pictures of Everyday Life", 1, 'life', 5],
