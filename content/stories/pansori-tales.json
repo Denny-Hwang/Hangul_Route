@@ -1,0 +1,748 @@
+{
+  "v": 1,
+  "id": "story:pansori-tales",
+  "state": "draft",
+  "contentVer": 1,
+  "title": {
+    "ko": "판소리 이야기: 흥부와 놀부, 토끼와 자라",
+    "romanization": "",
+    "en": "Pansori Tales: Heungbu's Swallow and the Clever Rabbit (Traditional Tales)"
+  },
+  "summaryEn": "Hoya visits a pansori performance (UNESCO 2003/2008) and hears two traditional stories from its five surviving works: kind Heungbu and the grateful swallow, and the clever rabbit who escapes the Dragon King's palace. This Korean rabbit-and-turtle tale is a different story from Aesop's 'The Tortoise and the Hare'.",
+  "theme": "crafts",
+  "kind": "folk-tale",
+  "recommendedStage": 2,
+  "minutes": 6,
+  "learningGoalsEn": [
+    "Describe pansori: one singer, one drummer with a buk, and chuimsae cheers like 'Eolssigu!'.",
+    "Know that five pansori works survive today, including Heungboga and Sugungga, which also exist as old novels.",
+    "Retell the main events of Heungbu and Nolbu and of the rabbit and the turtle (jara), and know that this rabbit-and-turtle tale is not Aesop's 'The Tortoise and the Hare'.",
+    "Recognize and say 판소리, 북, 추임새, 얼씨구, 제비, 박, 토끼 and 자라."
+  ],
+  "origin": {
+    "type": "traditional",
+    "noteEn": "One version of a traditional tale; the Sources screen lists the versions this retelling follows.",
+    "retellingNoteEn": "Shortened and made gentler; versions differ."
+  },
+  "review": {
+    "language": "draft",
+    "culture": "draft",
+    "advisory": [
+      "mild-peril",
+      "trickery"
+    ],
+    "advisoryNoteEn": "A trickster and a moment of danger, told gently; the scariest parts are left out."
+  },
+  "keywords": [
+    {
+      "id": "pansori",
+      "ko": "판소리",
+      "romanization": "pansori",
+      "en": "pansori (musical storytelling)",
+      "kind": "word"
+    },
+    {
+      "id": "buk",
+      "ko": "북",
+      "romanization": "buk",
+      "en": "barrel drum",
+      "kind": "word"
+    },
+    {
+      "id": "chuimsae",
+      "ko": "추임새",
+      "romanization": "chuimsae",
+      "en": "a cheer shouted by the drummer",
+      "kind": "word"
+    },
+    {
+      "id": "eolssigu",
+      "ko": "얼씨구",
+      "romanization": "eolssigu",
+      "en": "a joyful cheer",
+      "kind": "word"
+    },
+    {
+      "id": "jebi",
+      "ko": "제비",
+      "romanization": "jebi",
+      "en": "swallow (bird)",
+      "kind": "word"
+    },
+    {
+      "id": "bak",
+      "ko": "박",
+      "romanization": "bak",
+      "en": "gourd",
+      "kind": "word"
+    },
+    {
+      "id": "tokki",
+      "ko": "토끼",
+      "romanization": "tokki",
+      "en": "rabbit",
+      "kind": "word"
+    },
+    {
+      "id": "jara",
+      "ko": "자라",
+      "romanization": "jara",
+      "en": "soft-shelled turtle",
+      "kind": "word"
+    },
+    {
+      "id": "hyeongje",
+      "ko": "형제",
+      "romanization": "hyeongje",
+      "en": "brothers",
+      "kind": "word"
+    },
+    {
+      "id": "yonggung",
+      "ko": "용궁",
+      "romanization": "yonggung",
+      "en": "the Dragon King's undersea palace",
+      "kind": "word"
+    },
+    {
+      "id": "ganeul-yukjie-dugo-watseumnida",
+      "ko": "간을 육지에 두고 왔습니다",
+      "romanization": "Ganeul yukjie dugo watseumnida",
+      "en": "I left my liver on land.",
+      "kind": "phrase"
+    }
+  ],
+  "cultureNotes": [],
+  "tiers": [
+    {
+      "level": "listen",
+      "scenes": [
+        {
+          "id": "s1",
+          "narrationEn": "Hoya takes a seat for pansori! One singer, the sorikkun, tells a long story by singing, speaking and acting. A drummer, the gosu, keeps the rhythm on a barrel drum called a buk.",
+          "keyword": {
+            "id": "pansori",
+            "ko": "판소리",
+            "romanization": "pansori",
+            "en": "pansori (musical storytelling)",
+            "kind": "word"
+          },
+          "factIds": [
+            "f1"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A singer in a white hanbok holding a folding fan, standing on a straw mat; a seated drummer with a round barrel drum beside her; Hoya in the audience."
+        },
+        {
+          "id": "s2",
+          "narrationEn": "The drummer shouts cheers called chuimsae, like 'Eolssigu!' and 'Jota!' Long ago there were twelve pansori stories; five are still sung today. UNESCO named pansori a masterpiece in 2003 and added it to its Representative List in 2008. Let's hear two!",
+          "keyword": {
+            "id": "eolssigu",
+            "ko": "얼씨구",
+            "romanization": "eolssigu",
+            "en": "a joyful cheer (a chuimsae, like \"Yeah!\")",
+            "kind": "word"
+          },
+          "factIds": [
+            "f2",
+            "f3",
+            "f4"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "The drummer mid-shout with one hand raised, the singer opening her fan; five small scroll shapes floating above, two of them glowing."
+        },
+        {
+          "id": "s3",
+          "narrationEn": "First, Heungboga, also told as the old novel Heungbu-jeon. Nolbu, the older brother, was greedy. Heungbu, the younger, was poor but kind. One spring, Heungbu found a baby swallow with a broken leg and gently bound it up.",
+          "keyword": {
+            "id": "jebi",
+            "ko": "제비",
+            "romanization": "jebi",
+            "en": "swallow (bird)",
+            "kind": "word"
+          },
+          "factIds": [
+            "f5"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A kind man in patched clothes cupping a baby swallow and tying a tiny strip of cloth around its leg outside a humble straw hut."
+        },
+        {
+          "id": "s4",
+          "narrationEn": "The next spring, the swallow returned with a gourd seed. Heungbu planted it, and huge gourds grew. When his family sawed them open, out poured money, rice and treasures!",
+          "keyword": {
+            "id": "bak",
+            "ko": "박",
+            "romanization": "bak",
+            "en": "gourd",
+            "kind": "word"
+          },
+          "factIds": [
+            "f6"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Huge round white gourds on a thatched roof; a family sawing one open with a two-person saw as rice and shining treasures spill out; a swallow circling."
+        },
+        {
+          "id": "s5",
+          "narrationEn": "Greedy Nolbu wanted treasure too, so he hurt a swallow on purpose. But his gourds brought only trouble! In well-known versions, Nolbu was sorry and became kind, and the brothers lived in peace.",
+          "keyword": {
+            "id": "hyeongje",
+            "ko": "형제",
+            "romanization": "hyeongje",
+            "en": "brothers",
+            "kind": "word"
+          },
+          "factIds": [
+            "f7"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Two brothers in hanbok embracing in front of a modest house, one looking ashamed and grateful; a swallow perched on the eaves."
+        },
+        {
+          "id": "s6",
+          "narrationEn": "Next, Sugungga, also told as the novel Tokki-jeon. It is a different story from Aesop's race! The Dragon King is sick, and a sage says a rabbit's liver can cure him. A loyal jara, a soft-shelled turtle titled Byeoljubu, volunteers to fetch one.",
+          "keyword": {
+            "id": "jara",
+            "ko": "자라",
+            "romanization": "jara",
+            "en": "soft-shelled turtle",
+            "kind": "word"
+          },
+          "factIds": [
+            "f8",
+            "f11"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "An undersea palace of coral and seaweed; a dragon king resting on a cushion; a small soft-shelled turtle in an official's hat bowing and volunteering."
+        },
+        {
+          "id": "s7",
+          "narrationEn": "On land, the turtle tells the rabbit about a high post waiting for him at the sea palace. The rabbit is fooled and follows him down. But at the palace, the king demands his liver! Don't worry: clever Rabbit has a plan.",
+          "keyword": {
+            "id": "yonggung",
+            "ko": "용궁",
+            "romanization": "yonggung",
+            "en": "the Dragon King's undersea palace",
+            "kind": "word"
+          },
+          "factIds": [
+            "f9"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "The rabbit arriving wide-eyed in the undersea palace beside the turtle, fish courtiers watching; the king pointing; bubbles everywhere, nothing frightening."
+        },
+        {
+          "id": "s8",
+          "narrationEn": "Rabbit thinks fast: 'I left my liver back on land!' The king believes him and sends him home with the turtle. On the shore, Rabbit hops off into the forest. Eolssigu! An early form of this tale is even recorded in the Samguk sagi.",
+          "line": {
+            "ko": "간을 육지에 두고 왔습니다",
+            "romanization": "Ganeul yukjie dugo watseumnida",
+            "en": "I left my liver on land.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f10",
+            "f12"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A rabbit bounding happily into a green forest from a sandy shore while the turtle watches from the waves; Hoya in the audience cheering with raised paws."
+        }
+      ],
+      "checks": [
+        {
+          "id": "c1",
+          "kind": "detail",
+          "promptEn": "Who keeps the rhythm in pansori?",
+          "options": [
+            {
+              "id": "a",
+              "en": "A small orchestra",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "A dancer with a fan",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "A choir of singers",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "A drummer, called a gosu",
+              "isCorrect": true
+            }
+          ],
+          "factIds": [
+            "f1"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "detail",
+          "promptEn": "What did the swallow bring to Heungbu?",
+          "options": [
+            {
+              "id": "a",
+              "en": "A gold ring",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "A gourd seed",
+              "isCorrect": true
+            },
+            {
+              "id": "c",
+              "en": "A silver coin",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "A bag of rice",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f6"
+          ]
+        },
+        {
+          "id": "c3",
+          "kind": "detail",
+          "promptEn": "How did the rabbit escape from the palace?",
+          "options": [
+            {
+              "id": "a",
+              "en": "He said he had left his liver on land",
+              "isCorrect": true
+            },
+            {
+              "id": "b",
+              "en": "He swam faster than the turtle",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "He found a secret tunnel",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "He promised the king a gift of gold",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f10"
+          ]
+        }
+      ],
+      "checkpoints": [],
+      "sequenceSceneIds": [
+        "s1",
+        "s3",
+        "s6",
+        "s8"
+      ],
+      "newKeywordIds": [
+        "pansori",
+        "eolssigu",
+        "jebi",
+        "bak"
+      ]
+    }
+  ],
+  "coverSceneId": "s1",
+  "pillarTags": [],
+  "companionId": "hoya",
+  "facts": [
+    {
+      "id": "f1",
+      "rev": 1,
+      "scope": "in-the-tale",
+      "claimEn": "In pansori, one singer (sorikkun) tells a long story by singing, speaking and gesturing, accompanied by a drummer (gosu) who keeps the rhythm on a barrel drum (buk).",
+      "claimKo": "판소리는 한 명의 소리꾼이 고수(북치는 사람)의 장단에 맞추어 창·아니리·너름새를 섞어가며 긴 이야기를 엮어가는 공연이다.",
+      "sources": [
+        {
+          "title": "국가무형유산 판소리 (Pansori)",
+          "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0000050000000&ccbaCtcd=ZZ&ccbaCpno=1279900050000",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘판소리는 한 명의 소리꾼이 고수(북치는 사람)의 장단에 맞추어 창(소리), 말(아니리), 몸짓(너름새)을 섞어가며 긴 이야기를 엮어가는 것을 말한다.’"
+        },
+        {
+          "title": "Pansori epic chant",
+          "publisher": "UNESCO Intangible Cultural Heritage (ich.unesco.org)",
+          "url": "https://ich.unesco.org/en/RL/00070",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘Pansori is a genre of musical storytelling performed by a vocalist and a drummer.’"
+        },
+        {
+          "title": "판소리",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0059663",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "정의: ‘한 명의 창자(唱者)가 고수(鼓手)의 북장단에 맞추어 서사적인 이야기를 소리와 아니리로 엮어 발림을 곁들이며 구연하는 전통 공연 예술.’"
+        },
+        {
+          "title": "판소리 (한국민속문학사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/1226",
+          "accessed": "2026-10-10",
+          "quoteOrLocator": "정의: ‘줄거리가 있는 이야기를 한 사람의 연창자가 고수의 장단에 맞추어 창(唱)과 아니리를 교체하면서 연행하는 전통 공연 예술의 하나.’"
+        }
+      ]
+    },
+    {
+      "id": "f2",
+      "rev": 1,
+      "scope": "in-the-tale",
+      "claimEn": "The drummer calls out exclamations such as 'Eolssigu!' and 'Jota!' to lift the performance; these are called chuimsae.",
+      "claimKo": "고수는 “얼씨구”, “좋다” 같은 감탄사로 흥을 돋우는데, 이를 추임새라고 한다.",
+      "sources": [
+        {
+          "title": "국가무형유산 판소리",
+          "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0000050000000&ccbaCtcd=ZZ&ccbaCpno=1279900050000",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘고수의 반주는 … “얼씨구”, “좋다”, “으이”, “그렇지” 등의 감탄사를 내는데, 이를 추임새라고 한다.’"
+        },
+        {
+          "title": "추임새",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%B6%94%EC%9E%84%EC%83%88",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘판소리에서, 장단을 짚는 고수(鼓手)가 창(唱)의 사이사이에 흥을 돋우기 위하여 삽입하는 소리. ‘좋지’, ‘얼씨구’, ‘흥’ 따위이다.’"
+        },
+        {
+          "title": "추임새 (한국민속문학사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/1224",
+          "accessed": "2026-10-10",
+          "quoteOrLocator": "정의: ‘판소리 공연 중에 고수와 청관중이 … ‘얼씨구·좋다·어이·그렇지·잘 헌다·하아’ 등의 감탄사를 발하여 메꾸어 나아가는 공연 행위.’"
+        }
+      ]
+    },
+    {
+      "id": "f3",
+      "rev": 1,
+      "scope": "in-the-tale",
+      "claimEn": "Pansori once had twelve works (madang); five are still performed today: Chunhyangga, Simcheongga, Sugungga, Heungboga and Jeokbyeokga.",
+      "claimKo": "판소리는 한때 열두 마당이 있었으나, 오늘날 춘향가·심청가·수궁가·흥보가·적벽가 다섯 마당이 전승된다.",
+      "sources": [
+        {
+          "title": "국가무형유산 판소리",
+          "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0000050000000&ccbaCtcd=ZZ&ccbaCpno=1279900050000",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘판소리 열두 마당이라 하여 … 그 수가 많았다.’ / ‘춘향가, 심청가, 수궁가, 흥보가, 적벽가만이 보다 예술적인 음악으로 가다듬어져 판소리 다섯마당으로 정착되었다.’"
+        },
+        {
+          "title": "판소리",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0059663",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘판소리는 현재 전승되는 다섯 바탕 외에도 … 『관우희(觀優戱)』에는 … 열두 바탕이 기록되어 있고’"
+        }
+      ]
+    },
+    {
+      "id": "f4",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Pansori was proclaimed a UNESCO Masterpiece of the Oral and Intangible Heritage of Humanity in 2003 and incorporated into the Representative List in 2008.",
+      "claimKo": "판소리는 2003년 유네스코 걸작으로 선정되고 2008년 인류무형문화유산 대표목록에 통합 등재되었다.",
+      "sources": [
+        {
+          "title": "Pansori epic chant",
+          "publisher": "UNESCO Intangible Cultural Heritage (ich.unesco.org)",
+          "url": "https://ich.unesco.org/en/RL/00070",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘Inscribed in 2008 (3.COM) on the Representative List of the Intangible Cultural Heritage of Humanity (originally proclaimed in 2003)’"
+        },
+        {
+          "title": "한국의 인류무형유산 (23건) 목록",
+          "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+          "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FkorInCulHeritage.jsp&pageNo=5_3_2_0",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘판소리 (2003/2008)’"
+        },
+        {
+          "title": "판소리",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0059663",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘2003년에는 판소리가 유네스코 인류 무형 문화유산에 등재되었다.’"
+        }
+      ]
+    },
+    {
+      "id": "f5",
+      "rev": 1,
+      "scope": "in-the-tale",
+      "claimEn": "Heungboga is one of the five pansori works; the same story exists as the late-Joseon novel Heungbu-jeon (author and date unknown), in which the greedy older brother Nolbu and the poor, kind younger brother Heungbu appear, and Heungbu binds the broken leg of a fallen baby swallow.",
+      "claimKo": "흥보가는 판소리 다섯 마당의 하나이며, 같은 이야기가 작자·연대 미상의 조선 후기 소설 「흥부전」으로도 전한다. 욕심 많은 형 놀부와 가난하고 착한 아우 흥부가 등장하고, 흥부는 떨어져 다리가 부러진 새끼 제비의 다리를 매어 준다.",
+      "sources": [
+        {
+          "title": "흥보가",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0066005",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "정의: ‘판소리 다섯마당 가운데 하나.’ / ‘가난하고 착한 아우 흥보는 부러진 제비다리를 고쳐주고’"
+        },
+        {
+          "title": "흥부전",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0066012",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘작자·연대 미상의 고전소설.’ ‘조선 후기 판소리계 소설로’ / ‘악하고 사나운 형 놀부와 순하고 착한 아우 흥부가 살았는데’ / ‘새끼 한 마리가 땅에 떨어져 다리가 부러졌다. 흥부가 새끼 제비를 불쌍히 여겨 그 다리를 매어 주니’"
+        },
+        {
+          "title": "놀보박타령 (한국민속문학사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/1117",
+          "accessed": "2026-10-10",
+          "quoteOrLocator": "내용: ‘<놀보박타령>은 놀보가 자신의 욕심을 못 이겨 박을 타다 결국 박 속에서 등장한 군상들에 의해 몰락하기에 이른다는 내용’ / ‘놀보의 끝없는 물욕’ (supports calling Nolbu greedy)"
+        }
+      ]
+    },
+    {
+      "id": "f6",
+      "rev": 1,
+      "scope": "in-the-tale",
+      "claimEn": "In the story, the swallow returns the next spring with a gourd seed; Heungbu plants it, grows large gourds, and when they are sawn open, money, rice and treasures pour out.",
+      "claimKo": "이듬해 봄 제비가 박씨를 물어다 주고, 흥부가 심어 큰 박을 타자 돈과 쌀, 금은보화가 나온다.",
+      "sources": [
+        {
+          "title": "흥부전",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0066012",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘제비는 그 이듬해 봄에 돌아올 때 박의 씨 하나를 물어다 주었다. 흥부는 그 박의 씨를 심어 가을에 큰 박을 많이 땄다. 그런데 박 속에서 금은보화가 나와 흥부는 큰 부자가 되었다.’"
+        },
+        {
+          "title": "흥보가",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0066005",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘‘박타령’이라고도 한다.’ / ‘‘박통 속에서 돈과 쌀을 정신없이 퍼내는 휘모리 대목’’"
+        },
+        {
+          "title": "타다 (표제어, 「5」)",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%ED%83%80%EB%8B%A4",
+          "accessed": "2026-10-10",
+          "quoteOrLocator": "타다 5 「동사」 「1」 ‘박 따위를 톱 같은 기구를 써서 밀었다 당겼다 하여 갈라지게 하다.’ (supports ‘sawed/sawn open’ for 박을 타다)"
+        }
+      ]
+    },
+    {
+      "id": "f7",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "In the story, Nolbu deliberately hurts a swallow and his gourds release only harmful things and ruin him. Endings differ between versions: in the basic plot of the novel Heungbu-jeon (Encyclopedia of Korean Culture) and in well-known sung versions of Heungboga (the Park Bong-sul and Jeong Gwang-su texts described by the National Folk Museum's folk-literature dictionary), Nolbu repents and the brothers are reconciled.",
+      "claimKo": "이야기에서 놀부는 일부러 제비 다리를 부러뜨리고, 그 박에서 몹쓸 것들이 나와 망한다. 결말은 이본마다 다르며, 소설 「흥부전」의 기본 줄거리(한국민족문화대백과사전)와 박봉술·정광수 창본 등 널리 알려진 흥보가 창본(국립민속박물관 한국민속문학사전)에서는 놀부가 잘못을 뉘우치고 형제가 화해한다.",
+      "sources": [
+        {
+          "title": "흥부전",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0066012",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘놀부가 이 소식을 듣고 제비 새끼의 다리를 일부러 부러뜨려 날려 보냈다.’ / ‘그 속에서 온갖 몹쓸 것이 나와 놀부의 집안이 망하게 되었다. 흥부는 이 소식을 듣고 놀부에게 재물을 주어 살게 하고, 그 뒤 놀부도 잘못을 뉘우치고 착한 사람이 되었으며 형제가 화목하게 살게 되었다.’ (basic plot of the novel; about 120 variant texts exist)"
+        },
+        {
+          "title": "흥보가",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0066005",
+          "accessed": "2026-10-10",
+          "quoteOrLocator": "‘형 놀보는 제비다리를 부러뜨리고 그 제비가 물어다 준 박씨를 심어 박을 타서 괴물들이 나와 망한다는 이야기를 판소리로 엮은 것이다.’ (this entry does not mention the repentance)"
+        },
+        {
+          "title": "놀보박타령 (한국민속문학사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/1117",
+          "accessed": "2026-10-10",
+          "quoteOrLocator": "정의: ‘<흥보가> 중 … 박 속에서 나온 것들로 인해 놀보가 몰락하거나 마지막 박에서 나온 장비를 매개로 하여 개과천선하여 흥보와 화해하는 데까지의 소리 대목.’ / 내용: 박봉술 창본·정광수 창본의 제5박에서 ‘놀보는 개과천선하고 형제간의 우애도 회복하는 것으로 끝이 난다.’ / ‘이본마다 그 양상은 조금씩 차이를 보인다.’"
+        }
+      ]
+    },
+    {
+      "id": "f8",
+      "rev": 1,
+      "scope": "in-the-tale",
+      "claimEn": "Sugungga is one of the five pansori works; the same story exists as the late-Joseon novel Tokki-jeon (also called Byeoljubu-jeon). In it the Dragon King falls ill, a sage (dosa) says a rabbit's liver will cure him, and the jara (soft-shelled turtle) called Byeoljubu volunteers to go to land. Byeoljubu (鼈主簿) is a title for the turtle (鼈 'soft-shelled turtle' + 主簿, an old official title), not a personal name.",
+      "claimKo": "수궁가는 판소리 다섯 마당의 하나이며, 같은 이야기가 조선 후기 소설 「토끼전」(「별주부전」)으로도 전한다. 용왕이 병들자 도사가 토끼의 간을 먹으면 낫는다고 하고, 별주부(鼈主簿) 자라가 자원하여 육지로 간다. ‘별주부’는 자라에게 붙은 관직 이름(鼈 자라 + 主簿)으로 사람 이름이 아니다.",
+      "sources": [
+        {
+          "title": "수궁가",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0031241",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "정의: ‘판소리 다섯마당 가운데 하나.’ / ‘용왕(龍王)이 병이 들자 약에 쓸 토끼의 간을 구하기 위하여 자라는 세상에 나와 토끼를 꾀어 용궁으로 데리고 간다.’"
+        },
+        {
+          "title": "토끼전",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0059167",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘조선 후기, 작자·연대 미상의 고전 소설.’ / 명칭: ‘‘토끼전’ 외에 별주부전(鼈主簿傳) · 토별가(兎鼈歌) · 수궁가(水宮歌) …’ / ‘용왕이 병이 나자 도사가 나타나 육지에 있는 토끼의 간을 먹으면 낫는다고 한다.’ … ‘이 때 별주부 자라가 나타나 자원하여 허락을 받는다.’"
+        },
+        {
+          "title": "자라",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%9E%90%EB%9D%BC",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘거북과 비슷하나 등딱지의 중앙선 부분만 단단하고, 다른 부분은 부드러운 피부로 덮였으며’"
+        },
+        {
+          "title": "수궁가 (한국민속문학사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/1118",
+          "accessed": "2026-10-10",
+          "quoteOrLocator": "내용: ‘남해 용왕이 갑자기 병이 나 … 도사가 나타나 토끼의 간을 먹으면 낫는다고 일러준다. … 이때 별주부 자라가 나타나 자원하여 별주부는 토끼화상을 가지고 육지에 이르게 된다.’"
+        },
+        {
+          "title": "별주부전 (표제어)",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EB%B3%84%EC%A3%BC%EB%B6%80%EC%A0%84",
+          "accessed": "2026-10-10",
+          "quoteOrLocator": "별주부-전(鼈主簿傳): ‘토끼의 간을 먹어야 병이 낫는 용왕을 위하여 육지로 나간 별주부 곧 자라가 토끼를 용궁에 데려오는 데는 성공하지만 …’ ≒토끼전"
+        },
+        {
+          "title": "주부 (표제어, 主簿)",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%A3%BC%EB%B6%80",
+          "accessed": "2026-10-10",
+          "quoteOrLocator": "‘주부(主簿)’ 「명사」 『역사』 고구려 때의 십사 관등 가운데 셋째 등급 … (shows 主簿 as an old official title)"
+        },
+        {
+          "title": "도사 (표제어, 道士)",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EB%8F%84%EC%82%AC",
+          "accessed": "2026-10-10",
+          "quoteOrLocator": "도사(道士): ‘도를 갈고닦는 사람.’"
+        }
+      ]
+    },
+    {
+      "id": "f9",
+      "rev": 1,
+      "scope": "in-the-tale",
+      "claimEn": "In the story, the turtle lures the rabbit by promising a high official post at the undersea palace; the rabbit is fooled and follows him to the Dragon King's palace, where the king demands his liver.",
+      "claimKo": "자라는 수궁에 가면 높은 벼슬을 준다고 토끼를 꾀고, 속은 토끼는 용궁에 이르러 간을 내놓으라는 용왕 앞에 선다.",
+      "sources": [
+        {
+          "title": "토끼전",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0059167",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘토끼를 만나 수궁에 가면 높은 벼슬을 준다고 유혹하면서 지상의 어려움을 말한다. 이에 속은 토끼는 자라를 따라 용궁에 이른다. 간을 내라는 용왕 앞에서 …’"
+        }
+      ]
+    },
+    {
+      "id": "f10",
+      "rev": 1,
+      "scope": "in-the-tale",
+      "claimEn": "In the story, the rabbit claims he left his liver on land; the king sends him back with the turtle, and on land the rabbit escapes into the forest.",
+      "claimKo": "토끼는 간을 육지에 두고 왔다고 꾀를 내고, 용왕은 그를 자라와 함께 육지로 돌려보내며, 토끼는 숲속으로 도망간다.",
+      "sources": [
+        {
+          "title": "토끼전",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0059167",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘속은 것을 안 토끼는 꾀를 내어 간을 육지에 두고 왔다고 한다. 이에 용왕은 크게 토끼를 환대하면서 다시 육지에 가서 간을 가져오라고 한다. 자라와 함께 육지에 이른 토끼는 … 숲 속으로 도망가 버린다.’"
+        },
+        {
+          "title": "수궁가",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0031241",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘그러나 토끼는 꾀를 내어 용왕을 속이고 살아 돌아온다는 이야기를 판소리로 짠 것이다.’"
+        }
+      ]
+    },
+    {
+      "id": "f11",
+      "rev": 1,
+      "scope": "in-the-tale",
+      "claimEn": "Korea's rabbit-and-turtle tale (Sugungga / Tokki-jeon) is a different story from Aesop's fable of the hare and the tortoise (titled 'The Hare and the Tortoise' in the Townsend translation cited here, and also known as 'The Tortoise and the Hare'): in Aesop's fable a hare and a tortoise run a race, while in the Korean tale a turtle is sent to bring a rabbit's liver to the sick Dragon King.",
+      "claimKo": "한국의 토끼와 자라 이야기(수궁가·토끼전)는 토끼와 거북이 달리기를 하는 이솝 우화 「토끼와 거북이」와 다른 이야기이다. 한국 이야기에서는 병든 용왕을 위해 자라가 토끼의 간을 구하러 육지로 간다.",
+      "sources": [
+        {
+          "title": "토끼전",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0059167",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "내용: ‘용왕이 병이 나자 도사가 나타나 육지에 있는 토끼의 간을 먹으면 낫는다고 한다. … 별주부 자라가 나타나 자원하여 허락을 받는다.’ (no race in the plot)"
+        },
+        {
+          "title": "수궁가 (한국민속문학사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/1118",
+          "accessed": "2026-10-10",
+          "quoteOrLocator": "내용: ‘남해 용왕이 갑자기 병이 나 백약이 무효하여 … 도사가 나타나 토끼의 간을 먹으면 낫는다고 일러준다.’"
+        },
+        {
+          "title": "Aesop's Fables (trans. G. F. Townsend), 'The Hare and the Tortoise'",
+          "publisher": "Project Gutenberg",
+          "url": "https://www.gutenberg.org/ebooks/21",
+          "accessed": "2026-10-10",
+          "quoteOrLocator": "‘“Though you be swift as the wind, I will beat you in a race.” … On the day appointed for the race the two started together.’"
+        }
+      ]
+    },
+    {
+      "id": "f12",
+      "rev": 1,
+      "scope": "in-the-tale",
+      "claimEn": "An early short form of the rabbit-and-turtle tale, called Gutojiseol (龜兎之說), is recorded in the Samguk sagi, in the biographies (yeoljeon); the pansori Sugungga is built on it as its basic frame.",
+      "claimKo": "토끼와 자라 이야기의 이른 형태인 「구토지설(龜兎之說)」이 『삼국사기』 열전에 기록되어 있으며, 판소리 수궁가는 이를 기본 골격으로 삼았다.",
+      "sources": [
+        {
+          "title": "수궁가 (한국민속문학사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/1118",
+          "accessed": "2026-10-10",
+          "quoteOrLocator": "개관: ‘<수궁가>는 <구토지설(龜兎之說)>을 기본 골격으로 하고 있다. 『삼국사기(三國史記)』 「열전(列傳)」 기록에 의하면 … 선도해가 김춘추에게 해준 이야기가 바로 <구토지설>이다.’"
+        },
+        {
+          "title": "토끼전",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0059167",
+          "accessed": "2026-10-10",
+          "quoteOrLocator": "‘『삼국사기』 김유신 열전에 나타나는 구토 설화(龜兎說話)가 문헌 설화의 예’ (the entry traces the tale from Indian Buddhist tales via the Samguk sagi to the Joseon pansori and novel)"
+        },
+        {
+          "title": "선도해(先道解)",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0028663",
+          "accessed": "2026-10-10",
+          "quoteOrLocator": "정의: ‘삼국시대 고구려에 투옥된 김춘추의 탈옥을 도와준 관리.’ / ‘선도해는 주안상을 차려 옥중으로 김춘추를 찾아가 함께 술을 마시면서 다음과 같은 이야기를 들려주었다. “그대도 일찍이 거북과 토끼의 이야기를 들었는가. … 토끼의 간으로 약을 지으면 치료할 수 있다고 …”’ (the early form has a turtle (거북) and the sea king's daughter; the narration says only ‘an early form’)"
+        }
+      ]
+    }
+  ],
+  "referenceDisplay": "Traditional tales (retold gently). Korea's rabbit-and-turtle tale (Sugungga / Tokki-jeon) is a different story from Aesop's 'The Tortoise and the Hare'. Sources: 국가유산청 국가유산포털(판소리·인류무형유산 목록); UNESCO Intangible Cultural Heritage; 한국민족문화대백과사전; 한국민속대백과사전(국립민속박물관); 국립국어원 표준국어대사전",
+  "verification": {
+    "passes": 3,
+    "checkedAt": "2026-10-10",
+    "scope": "cluster",
+    "notes": "Third independent pass over 6 episodes / 61 facts / 161 source entries (70 unique URLs). Every URL was re-fetched with my own scripts (UNESCO pages via Wayback copies; heritage.go.kr descriptions via the portal ajax html and khs.go.kr open API; folkency via its JSON API) and each quote or locator was machine-matched to the page text; the few non-matching strings were checked by hand (portal metadata fields, hanja or footnote punctuation, label text). Corrections: (1) pansori scene 2 now gives both UNESCO steps (2003 masterpiece proclamation, 2008 Representative List); (2) pansori f11 states the Aesop title as in the cited Townsend text and the common alternate title; (3) added sources: NFM 놀보박타령 for 'greedy' (f5), 표준국어대사전 타다 for 'sawed' (f6), 한국민족문화대백과사전 선도해 for the Samguk sagi tale (f12); (4) Seollal f9/f10 designation-date locators now cite the KHS open API field. No other change. See seasons-tales.signoff.md."
+  },
+  "authorNotes": "REVISED 2026-10-10. Traditional stories: narration describes the tales' content (basic plot per the Encyclopedia of Korean Culture and the National Folk Museum's folk-literature dictionary), not history. Names: the pansori work is 흥보가 (Heungbo/Nolbo) and the novel is 흥부전 (Heungbu/Nolbu); narration uses Heungbu/Nolbu. Ending: the repentance/reconciliation is in the basic plot of the novel Heungbu-jeon (E0066012) AND in the Park Bong-sul and Jeong Gwang-su sung texts (한국민속문학사전 '놀보박타령'); the Encyclopedia's Heungboga entry itself says only that Nolbo is ruined; endings differ (e.g. the 경판본 version ends differently; 신재효's text is described as similar to Jeong Gwang-su's), so narration says 'In well-known versions'. Softened on purpose: Heungbu being beaten and his paid stand-in beatings (매품팔이); Nolbu breaking the swallow's leg is shown only as 'hurt a swallow on purpose'; harmful things from Nolbu's gourds not detailed. Rabbit tale: 'liver' kept because the plot needs it, with a reassurance line right after; the turtle's fate (dies on land or returns empty-handed; in some versions the rabbit's droppings cure the king) is left out. 별주부 (鼈主簿) is the turtle's title, not a name; the 도사 is a sage (道士: one who cultivates the Way). The Korean tale is explicitly distinguished from Aesop's race (summary, scene 6, reference_display, f11). 구토지설: 한국민속문학사전 '수궁가' says Sugungga's frame is the 구토지설 told by Seon Do-hae to Kim Chun-chu and recorded in the Samguk sagi's biographies; the Encyclopedia ('토끼전') names the 구토 tale in the Kim Yu-sin biography as a documented example - narration says only 'an early form is recorded in the Samguk sagi'. Both sources note the older Indian Buddhist (Jataka) roots; not used. 추임새 is now taught in scene 2 and added to vocab (형제 dropped from vocab; it remains the scene 5 Korean word). Combined in one episode to keep the cluster at 6; each could become its own episode. Theme 'crafts' because the app files performing arts under Play & Crafts. FINAL PASS (3rd check, 2026-10-10): scene 2 now says UNESCO named pansori a masterpiece in 2003 and added it to the Representative List in 2008 (UNESCO page: inscribed 2008, originally proclaimed 2003). f11 now gives the Aesop title as in the cited Townsend text ('The Hare and the Tortoise', also known as 'The Tortoise and the Hare'). 'Greedy' for Nolbu rests on the NFM 놀보박타령 entry, which was added to f5.",
+  "errata": []
+}
