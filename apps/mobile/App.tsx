@@ -10,9 +10,11 @@ import { useDocumentLang } from './src/i18n/use-messages';
 import { RootNavigator } from './src/navigation/root';
 import { PwaBanners } from './src/components/PwaBanners';
 import { OopsScreen } from './src/screens/system/OopsScreen';
+import { installGestureUnlock } from './src/platform/audio';
 import { subscribePwa } from './src/platform/pwa';
 import { flushQueue } from './src/platform/telemetry';
 import { useAccountStore } from './src/store/account-store';
+import { bindAudioLevelToProfiles } from './src/store/audio-store';
 import { hydrateLearnerData } from './src/store/bootstrap';
 import { usePwaStore } from './src/store/pwa-store';
 import { registerInboxRefresh } from './src/store/membership-store';
@@ -38,6 +40,11 @@ export default function App(): React.ReactElement {
 
   useEffect(() => {
     let live = true;
+    // The first gesture anywhere unlocks speech for the page lifetime (F-AUDIO-004 AD8);
+    // installed before the navigator renders. A no-op on native.
+    const uninstallUnlock = installGestureUnlock();
+    // Speech speed follows the active profile's level; game code never passes one.
+    const unbindLevel = bindAudioLevelToProfiles();
     void hydrateAccount();
     void countVisit();
     // Offline telemetry (F-PWA-001 §3.2): drain on start and when back online.
@@ -62,6 +69,8 @@ export default function App(): React.ReactElement {
     });
     return () => {
       live = false;
+      uninstallUnlock();
+      unbindLevel();
       off();
       offInbox();
       setProgressPersistListener(null);

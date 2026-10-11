@@ -22,8 +22,8 @@ import { effectiveTier } from '../../store/tier-store';
 import { isParentSessionValid } from '../../logic/profiles/session';
 import type { RootStackParamList } from '../../navigation/types';
 import { installGuideVariant } from '../../logic/pwa/install-guide';
-import { setMuted } from '../../platform/audio';
 import { installEnv } from '../../platform/pwa';
+import { useAudioStore } from '../../store/audio-store';
 import { useTierStore } from '../../store/tier-store';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
@@ -42,8 +42,9 @@ export function ProfileScreen(): React.ReactElement {
   const entitled = effectiveTier(active?.id ?? '', new Date());
   const tier = entitled.tier;
   void cachedTier; // subscribe so the card re-renders when the inbox updates the tier
-  const soundOn = useUiStore((s) => s.soundOn);
-  const toggleSound = useUiStore((s) => s.toggleSound);
+  // Mute is a persisted device preference (F-AUDIO-004 AD7); the switch shows its inverse.
+  const soundOn = useAudioStore((s) => !s.muted);
+  const setMuted = useAudioStore((s) => s.setMuted);
   const parentGateOpenedAt = useUiStore((s) => s.parentGateOpenedAt);
   const forceInstallGuide = usePwaStore((s) => s.force);
   const installed = usePwaStore((s) => s.installed);
@@ -152,8 +153,7 @@ export function ProfileScreen(): React.ReactElement {
       <Spacer size="lg" />
       <Pressable
         onPress={() => {
-          setMuted(soundOn);
-          toggleSound();
+          setMuted(soundOn, 'profile');
         }}
         accessibilityRole="switch"
         accessibilityState={{ checked: soundOn }}
