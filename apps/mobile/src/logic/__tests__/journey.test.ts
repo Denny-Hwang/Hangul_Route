@@ -70,7 +70,7 @@ describe('stageAvailability', () => {
   it('labels are short and come from the message subtree it is given (F-I18N-001 PR 6b)', () => {
     const m = getMessages('en').learner.journey.availability;
     expect(stagePillLabel('open', m)).toBe('Open');
-    expect(stagePillLabel('taste', m)).toBe('Taste');
+    expect(stagePillLabel('taste', m)).toBe('A taste');
     expect(stagePillLabel('soon', m)).toBe('Coming later');
     expect(stagePillLabel('soon', { ...m, soon: { pill: 'Pronto' } })).toBe('Pronto');
   });

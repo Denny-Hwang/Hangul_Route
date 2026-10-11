@@ -143,9 +143,9 @@ export const learner = {
     intro: '7 stages × 5 themes. Draw your own route.',
     /**
      * Keyed by `StageAvailability`. Every stage row shows its availability word,
-     * never a commerce word; "Coming later" is the My route word (F-ROUTE-001 R-J, OD-8).
+     * never a commerce word; "A taste" and "Coming later" are the My route words (F-ROUTE-001 R-J, OD-8).
      */
-    availability: { open: { pill: 'Open' }, taste: { pill: 'Taste' }, soon: { pill: 'Coming later' } },
+    availability: { open: { pill: 'Open' }, taste: { pill: 'A taste' }, soon: { pill: 'Coming later' } },
     tasteNote: 'A taste of this stage is open now. More episodes are coming.',
     /** Landmark names of the two panes on a wide window (F-LAYOUT-001 §3.13). */
     panes: { master: 'Journey map', detail: 'Episode details' },

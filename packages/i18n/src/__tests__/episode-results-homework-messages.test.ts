@@ -120,7 +120,7 @@ describe('learner.home.mission and learner.journey.availability (left by PR 6a)'
   it('keeps the stage availability pills', () => {
     const a = m.learner.journey.availability;
     // F-ROUTE-001 R-J (OD-8): "Soon" reads "Coming later", the My route word.
-    expect([a.open.pill, a.taste.pill, a.soon.pill]).toEqual(['Open', 'Taste', 'Coming later']);
+    expect([a.open.pill, a.taste.pill, a.soon.pill]).toEqual(['Open', 'A taste', 'Coming later']);
   });
 });
 
