@@ -9,6 +9,7 @@ export const common = {
     close: 'Close',
     save: 'Save',
     tryAgain: 'Try again',
+    continue: 'Continue',
   },
   /** Words for `describeRelativeDay`. */
   time: {

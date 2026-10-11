@@ -43,4 +43,12 @@ export const a11y = {
     item.gloss === undefined
       ? `Korean: ${item.ko}, ${item.romanization}`
       : `Korean: ${item.ko}, ${item.romanization}, ${item.gloss}`,
+  /** The grown-up PIN pad; "Digit n" and "Delete last digit" are part of the e2e contract. */
+  pinDigit: (digit: number) => `Digit ${digit}`,
+  pinDelete: 'Delete last digit',
+  pinDots: (entered: number, total: number) => `${entered} of ${total} digits entered`,
+  rescueCode: 'Rescue code',
+  leaveSpace: (name: string) => `Leave ${name}`,
+  /** The paywall offer card: its name, then the already-formatted price. */
+  lifetimeOffer: (name: string, price: string) => `${name}, ${price}`,
 } as const;
