@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { storiesAll } from '../../../content/stories';
 import { readGameHandlers, readGameTarget } from '../read-game';
 import { readyStory } from './story-fixture';
 
@@ -29,6 +30,11 @@ describe('readGameTarget (F-STORY-002 §3.1, PR 2.6b)', () => {
   });
 
   it('reads the content bundle by default', () => {
+    const bundled = storiesAll[0];
+    expect(bundled).toBeDefined();
+    if (!bundled) return;
+    const level = bundled.tiers[0]!.level;
+    expect(readGameTarget({ story: { storyId: bundled.id, level } })).toEqual({ story: bundled, level });
     expect(readGameTarget({ story: { storyId: 'story:not-in-the-bundle', level: 'listen' } }).story).toBeUndefined();
   });
 });

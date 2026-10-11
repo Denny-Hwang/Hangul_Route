@@ -28,17 +28,17 @@ export function StoryReadGame({ scope, onFinish, onBack }: Props): React.ReactEl
   const profileId = useProfileStore((s) => activeProfileSelector(s)?.id ?? null);
   const bookmark = useReaderBookmark(profileId, story?.id ?? scope.story?.storyId ?? '', level);
 
-  const handlers = useMemo(
-    () =>
-      readGameHandlers({
-        saveBookmark: bookmark.save,
-        answerRound: (roundKey, correct) => useQuestRunStore.getState().answerRound(roundKey, correct),
-        markStepComplete: () => useQuestRunStore.getState().markStepComplete(),
-        finish: onFinish,
-        back: onBack,
-      }),
-    [bookmark.save, onFinish, onBack],
-  );
+  // Rebuilt on every render on purpose: the shell's `onFinish` / `onBack` are new each render, and
+  // the reader reads its callbacks through a live ref, so no effect re-runs on a new identity.
+  // TODO(F-STORY-002 PR 2.8/2.9): localized story overlay (`localizeStory` with the UI locale) and
+  // `narrationLang`, here and in StoryReaderScreen, once locale overlays for stories exist (§9).
+  const handlers = readGameHandlers({
+    saveBookmark: bookmark.save,
+    answerRound: (roundKey, correct) => useQuestRunStore.getState().answerRound(roundKey, correct),
+    markStepComplete: () => useQuestRunStore.getState().markStepComplete(),
+    finish: onFinish,
+    back: onBack,
+  });
 
   return (
     <StoryReaderView
