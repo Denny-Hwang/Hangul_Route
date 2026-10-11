@@ -44,6 +44,7 @@ export function MatchSoundGame({ scope, onFinish }: Props): React.ReactElement {
       buildMatchSoundRounds({
         scopeJamoIds: scope.jamoIds ?? [],
         rounds: scope.rounds ?? 4,
+        ...(scope.focusJamoIds ? { focusJamoIds: scope.focusJamoIds } : {}),
       }),
     [scope],
   );
