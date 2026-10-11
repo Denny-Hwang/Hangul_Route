@@ -124,8 +124,8 @@
         },
         {
           "id": "s3",
-          "narrationEn": "A pointed needle inside the bowl casts a shadow. Some lines show the time of day, and other lines show the time of year. Where the shadow falls tells you both!",
-          "captionEn": "A needle's shadow shows the time",
+          "narrationEn": "A pointer inside the bowl casts a shadow. Some lines show the time of day, and other lines show the time of year. Where the shadow falls tells you both!",
+          "captionEn": "A pointer's shadow shows the time",
           "keyword": {
             "id": "geurimja",
             "ko": "그림자",
@@ -163,7 +163,7 @@
         },
         {
           "id": "s5",
-          "narrationEn": "On King Sejong's sundials, the hours were shown with pictures of the zodiac animal spirits instead of letters, so people who could not read could tell the time. Hoya cheers, because the tiger, {kw:horangi}, is one of the twelve!",
+          "narrationEn": "On King Sejong's sundials, the hours were shown with pictures of the twelve zodiac animal spirits instead of written characters, so people who could not read could tell the time. Hoya cheers, because the tiger, {kw:horangi}, is one of the twelve!",
           "captionEn": "Animal pictures showed the hours",
           "keyword": {
             "id": "horangi",
@@ -267,7 +267,7 @@
               "isCorrect": false
             }
           ],
-          "explainEn": "The hours were shown with pictures of the twelve zodiac animal spirits, so people who could not read could tell the time.",
+          "explainEn": "On King Sejong's sundials, the hours were shown with zodiac animal pictures, so people who could not read could tell the time.",
           "factIds": [
             "f5"
           ]
@@ -531,6 +531,6 @@
     "scope": "cluster",
     "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted."
   },
-  "authorNotes": "Makers deliberately not named: KHS entries list different makers (1985 Treasure: 장영실·이천·김조; 2022-1 Treasure: 장영실·이천·이순지) and encykorea says the maker is unclear (citing the Sejo Sillok, 이순지 led instrument-making). The Sillok inscription says '神의 몸을 그렸으니 어리석은 백성을 위한 것' (drew the bodies of spirits, for ordinary people); KHS and encykorea interpret these as the twelve zodiac animal spirits; narration follows them. Omitted: KHS's description of it as Korea's first public clock ('first' claim); line counts (KHS 1985: 7 vertical/13 horizontal; KHS 2022-1: 15-minute hour lines), because they vary by instrument; the sundial returned from the United States in 2020 (KHS 2022-1). Surviving Treasures date from the 17th–18th centuries (KHS). Theme set to 'nature' (sun, sky, seasons, zodiac animals); BP04 places Sejong science under Pillar E, so 'crafts' is an alternative. REVISION: 'seasons' replaced by 'time of year' (KHS: 계절선; encykorea: 13 절기선). Scene 5 now says explicitly that the animal-picture dials are those of Sejong's time (encykorea notes later versions used written characters). The reading of 'drew the bodies of spirits (신의 몸)' as the twelve zodiac animals is the interpretation of KHS and encykorea, not stated in the Sillok inscription itself.",
+  "authorNotes": "Makers deliberately not named: KHS entries list different makers (1985 Treasure: 장영실·이천·김조; 2022-1 Treasure: 장영실·이천·이순지) and encykorea says the maker is unclear (citing the Sejo Sillok, 이순지 led instrument-making). The Sillok inscription says '神의 몸을 그렸으니 어리석은 백성을 위한 것' (drew the bodies of spirits, for ordinary people); KHS and encykorea interpret these as the twelve zodiac animal spirits; narration follows them. Omitted: KHS's description of it as Korea's first public clock ('first' claim); line counts (KHS 1985: 7 vertical/13 horizontal; KHS 2022-1: 15-minute hour lines), because they vary by instrument; the sundial returned from the United States in 2020 (KHS 2022-1). Surviving Treasures date from the 17th–18th centuries (KHS). Theme set to 'nature' (sun, sky, seasons, zodiac animals); BP04 places Sejong science under Pillar E, so 'crafts' is an alternative. REVISION: 'seasons' replaced by 'time of year' (KHS: 계절선; encykorea: 13 절기선). Scene 5 now says explicitly that the animal-picture dials are those of Sejong's time (encykorea notes later versions used written characters). The reading of 'drew the bodies of spirits (신의 몸)' as the twelve zodiac animals is the interpretation of KHS and encykorea, not stated in the Sillok inscription itself. PR 1.8c: keyword gloss 'bowl-shaped sundial' replaces the research vocab 'hemispherical sundial' as plainer English consistent with f2 (cauldron-like bowl). s3 says 'pointer' (f3: pointer, yeongchim) to match check c1. s5 and c2 say 'twelve zodiac animal spirits' and keep the Sejong-era qualifier (f5).",
   "errata": []
 }
