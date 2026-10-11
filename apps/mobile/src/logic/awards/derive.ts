@@ -2,7 +2,7 @@ import type { Episode, ProgressSnapshot, StageKey } from '@hangul-route/content-
 import { isEpisodeComplete, stageAvailability } from '../journey';
 import { shouldUnlockCard } from '../reward';
 import { parseUnlockedBy } from './rules';
-import type { AwardSource, AwardWorld, DerivedAward } from './types';
+import type { AwardWorld, DerivedAward } from './types';
 
 /**
  * The award engine (F-STORY-006 §3.1-§3.2): a pure function from the bundle
@@ -10,9 +10,6 @@ import type { AwardSource, AwardWorld, DerivedAward } from './types';
  * never stored as events, so the same function runs live, at launch, after
  * a sync and after a restore without ever awarding a card twice.
  */
-
-/** Ties on time go to the earlier source in this list, so the result never depends on input order. */
-const SOURCE_ORDER: readonly AwardSource[] = ['quest', 'episode', 'stage', 'welcome', 'set'];
 
 const isPlayable = (e: Pick<Episode, 'status'>): boolean => e.status === 'shipped' || e.status === 'ready';
 const isGrid = (e: Pick<Episode, 'placement'>): boolean => (e.placement ?? 'grid') === 'grid';
@@ -59,9 +56,13 @@ export function isStageComplete(
   return { complete: true, at: latest(times as string[]) };
 }
 
-function better(a: DerivedAward, b: DerivedAward): DerivedAward {
-  if (a.unlockedAt !== b.unlockedAt) return a.unlockedAt < b.unlockedAt ? a : b;
-  return SOURCE_ORDER.indexOf(a.source) <= SOURCE_ORDER.indexOf(b.source) ? a : b;
+/**
+ * One card named by two rules (a quest card is also its episode's card):
+ * keep the earlier time. Quest awards are collected first, so on a tie the
+ * quest source stays and the result never depends on content order.
+ */
+function better(first: DerivedAward, next: DerivedAward): DerivedAward {
+  return next.unlockedAt < first.unlockedAt ? next : first;
 }
 
 /**

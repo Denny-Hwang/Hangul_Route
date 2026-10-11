@@ -16,6 +16,11 @@ describe('completedEpisodes', () => {
     ]);
   });
 
+  it('an extra unfinished record of a finished quest does not change the completion time', () => {
+    const s = snapshot({ quests: [done('quest:f1', 3, T2), done('quest:f1', 1, null)] });
+    expect([...completedEpisodes(WORLD, s).entries()]).toEqual([['episode:stage1-life', T2]]);
+  });
+
   it('a partly finished episode is not complete; a started but unfinished quest does not count', () => {
     const s = snapshot({ quests: [done('quest:l1', 3, T1), done('quest:l2', 3, null)] });
     expect(completedEpisodes(WORLD, s).size).toBe(0);
@@ -87,6 +92,13 @@ describe('derivedAwards (F-STORY-006 §3.1)', () => {
   it('on equal times the quest source wins, so the result never depends on order', () => {
     const s = snapshot({ quests: [done('quest:f1', 3, T2)] });
     expect(find(derivedAwards(WORLD, s, PROFILE), 'card:rice')).toEqual({ cardId: 'card:rice', source: 'quest', via: 'quest:f1', unlockedAt: T2 });
+  });
+
+  it('an episode that completed before the quest run keeps the episode time', () => {
+    // Content where a quest rewards a card of another episode (T-AWARD-2 forbids it in shipped content).
+    const world: AwardWorld = { ...WORLD, quests: WORLD.quests.map((q) => (q.id === 'quest:w1' ? { ...q, rewardCardId: 'card:book' } : q)) };
+    const s = snapshot({ quests: [done('quest:l1', 1, T1), done('quest:l2', 1, T2), done('quest:w1', 3, T4)] });
+    expect(find(derivedAwards(world, s, PROFILE), 'card:book')).toEqual({ cardId: 'card:book', source: 'episode', via: 'episode:stage1-letters', unlockedAt: T2 });
   });
 
   it('a partial episode gives no episode card', () => {
