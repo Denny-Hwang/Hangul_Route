@@ -16,6 +16,15 @@ export interface D1PreparedLike {
 }
 export interface D1Like {
   prepare(sql: string): D1PreparedLike;
+  /**
+   * Runs the statements as one transaction (D1's native `batch`): one result
+   * per statement, in order, each with its own `meta.changes`. A statement
+   * that changes 0 rows does not stop the batch, so every statement that must
+   * depend on an earlier one carries its own guard (F-SPACE-002 section 4.6).
+   * If any statement throws, the whole batch is rolled back and the promise
+   * rejects.
+   */
+  batch(statements: D1PreparedLike[]): Promise<D1RunResultLike[]>;
 }
 
 type Row = Record<string, unknown>;

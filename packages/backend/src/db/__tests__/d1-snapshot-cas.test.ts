@@ -22,6 +22,7 @@ function d1Answering(answer: unknown): { d1: D1Like; sql: string[]; bound: unkno
       };
       return prepared;
     },
+    batch: async (statements) => Promise.all(statements.map((statement) => statement.run())),
   };
   return { d1, sql, bound };
 }
