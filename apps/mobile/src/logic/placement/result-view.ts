@@ -39,9 +39,19 @@ export function shortHintFires(result: StoredResult): boolean {
   return result.gates.some((g) => g.gate === 'syl-cv' && g.form === 'decode' && g.correct >= 2);
 }
 
-/** Reading was not measured (sound guide shown, or the run stopped before a decoding rung). */
+/**
+ * Reading was not measured because the sound guide was shown (section 3.1
+ * step 7, OD-1 (c)): the decoding strands are not tested and the run used
+ * `revealMode: 'always'`. A run that only stopped early keeps the normal
+ * headline (the report lists "ended early"), because "try the check with the
+ * sound guide hidden" would be false for it.
+ */
 export function decodingNotTested(result: StoredResult): boolean {
-  return result.strands['sound-letter'] === 'not-tested' && result.strands['syllable-reading'] === 'not-tested';
+  return (
+    result.revealMode === 'always' &&
+    result.strands['sound-letter'] === 'not-tested' &&
+    result.strands['syllable-reading'] === 'not-tested'
+  );
 }
 
 export interface ResultViewInput {
@@ -98,12 +108,11 @@ export interface ResultView {
   grownUpsNeedsPin: boolean;
 }
 
+/** The route is the start quest and the placed-out set; a level that rises alone does not move it. */
 const sameRoute = (a: RouteSeed, b: RouteSeed): boolean => {
   const set = new Set(a.placedOutQuestIds);
   return (
     a.startQuestId === b.startQuestId &&
-    a.level.stage === b.level.stage &&
-    a.level.band === b.level.band &&
     a.placedOutQuestIds.length === b.placedOutQuestIds.length &&
     b.placedOutQuestIds.every((id) => set.has(id))
   );
@@ -133,7 +142,9 @@ export function resultView(input: ResultViewInput): ResultView {
   const unchanged = input.before !== null && sameRoute(input.before, input.after);
   const noStart = input.after.startQuestId === null;
   const notTested = decodingNotTested(input.result);
-  const planUpdate = retake && !unchanged && self && input.hasActivePlan;
+  // "Hoya found a later place to start": only when the start itself moved to a quest.
+  const startMoved = input.before !== null && !noStart && input.after.startQuestId !== input.before.startQuestId;
+  const planUpdate = retake && startMoved && self && input.hasActivePlan;
   const strip =
     input.routeEnabled &&
     self &&
@@ -183,16 +194,20 @@ export function resultView(input: ResultViewInput): ResultView {
 // ---------------------------------------------------------------------------
 
 export type ReportStrandStatus = StrandStatus | 'not-tested-short';
-export type NotTestedReason = 'noSound' | 'soundGuide' | 'screenReader' | 'endedEarly';
+export type NotTestedReason = 'noSound' | 'soundGuide' | 'screenReader' | 'screenReaderPictures' | 'endedEarly';
 export type AssessmentFormat = (typeof ASSESSMENT_FORMATS)[number];
 
 export interface ReportRung {
   gate: PlacementGate;
   form: PlacementForm;
   status: StrandStatus;
-  /** Correct answers per row ("3 of 3"), Short and Standard only; null for Deep and untested rungs. */
-  counts: number[] | null;
-  /** Deep only: both draws ran, or the confirming draw was stopped. */
+  /**
+   * Per row that was asked: correct out of asked ("3 of 3", "1 of 1"), Short
+   * and Standard only; a row never asked (a draw that was unavailable) is left
+   * out. Null for Deep and untested rungs.
+   */
+  counts: { correct: number; asked: number }[] | null;
+  /** Deep: both draws ran ("checked twice"), or the confirming draw was stopped. Any mode: a row stopped before it was decided. */
   note: 'checkedTwice' | 'notFinished' | null;
 }
 
@@ -221,6 +236,9 @@ function deepNote(rows: readonly GateResult[]): ReportRung['note'] {
   return rows.length === 2 && rows.every((r) => r.asked > 0) ? 'checkedTwice' : null;
 }
 
+const stoppedNote = (rows: readonly GateResult[]): ReportRung['note'] =>
+  rows.some((r) => r.reason === 'stopped') ? 'notFinished' : null;
+
 /** Rows grouped by gate/form in rung order; a Deep result without `mode` renders like Standard. */
 function reportRungs(result: StoredResult): ReportRung[] {
   const deep = modeOf(result) === 'deep';
@@ -234,20 +252,41 @@ function reportRungs(result: StoredResult): ReportRung[] {
           gate: spec.gate,
           form,
           status,
-          counts: deep || status === 'not-tested' ? null : rows.map((r) => r.correct),
-          note: deep ? deepNote(rows) : null,
+          counts:
+            deep || status === 'not-tested'
+              ? null
+              : rows.filter((r) => r.asked > 0).map((r) => ({ correct: r.correct, asked: r.asked })),
+          note: deep ? deepNote(rows) : stoppedNote(rows),
         },
       ];
     }),
   );
 }
 
+/**
+ * Why parts were not tested. "A screen reader was on" is read from the
+ * recognition rung recorded as unavailable: its templates need no sound and no
+ * picture and never leak (pinned by `content/__tests__/placement-bank.test.ts`),
+ * so `visual: false` is the only way it is unavailable. A run that stopped
+ * before that rung has no recognition row and says nothing about it.
+ */
 function notTestedReasons(result: StoredResult): NotTestedReason[] {
-  const out: NotTestedReason[] = [];
-  if (result.gates.some((g) => g.form === 'oral' && g.reason === 'unavailable')) out.push('noSound');
-  if (result.revealMode === 'always') out.push('soundGuide');
   const recog = result.gates.filter((g) => g.gate === 'recog');
-  if (modeOf(result) !== 'short' && recog.every((g) => g.reason === 'unavailable')) out.push('screenReader');
+  const screenReader = modeOf(result) !== 'short' && recog.length > 0 && recog.every((g) => g.reason === 'unavailable');
+  // Section 3.2: Korean picture options carry no text label, so the vocabulary
+  // and sentence rungs (read and oral alike) were left out; their oral rows
+  // then say nothing about sound.
+  const pictureRows = result.gates.filter((g) => g.gate === 'vocab' || g.gate === 'sentence');
+  const pictures =
+    screenReader &&
+    result.testLocale === 'ko' &&
+    pictureRows.length > 0 &&
+    pictureRows.every((g) => g.reason === 'unavailable');
+  const out: NotTestedReason[] = [];
+  if (!pictures && result.gates.some((g) => g.form === 'oral' && g.reason === 'unavailable')) out.push('noSound');
+  if (result.revealMode === 'always') out.push('soundGuide');
+  if (screenReader) out.push('screenReader');
+  if (pictures) out.push('screenReaderPictures');
   if (result.stopReason !== 'complete' && result.stopReason !== 'cap') out.push('endedEarly');
   return out;
 }

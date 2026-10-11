@@ -411,12 +411,13 @@ export const caregiver = {
       sentence: 'Sentences',
     },
     form: { decode: 'reading', read: 'reading', oral: 'listening' },
-    /** One rung of three questions, framed as growth (Short and Standard only). */
-    count: (correct: number) => `${correct} of 3`,
+    /** One row of a rung, correct out of what was asked, framed as growth (Short and Standard only). */
+    count: (correct: number, asked: number) => `${correct} of ${asked}`,
     notTestedReason: {
       noSound: 'Listening was not checked: no sound on this device.',
       soundGuide: 'Reading was not checked: the sound guide was set to always show.',
       screenReader: 'Letter shapes were not checked: a screen reader was on.',
+      screenReaderPictures: 'Words and sentences were not checked: their Korean picture choices cannot be read aloud by a screen reader.',
       endedEarly: 'The check ended early, so some parts were not reached.',
     },
     shortNotTested: 'Shapes of letters and sentences are not part of the short check.',

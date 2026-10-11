@@ -167,6 +167,44 @@ describe('resultView: headline, cards and route lines (section 3.1 step 7)', () 
     expect(decodingNotTested(placementResult())).toBe(false);
   });
 
+  it('a tap run that stopped before reading keeps the normal headline: no sound-guide line or retake', () => {
+    const quitEarly = placementResult({
+      revealMode: 'tap',
+      stopReason: 'quit',
+      strands: { 'hangul-recognition': 'secure', 'sound-letter': 'not-tested', 'syllable-reading': 'not-tested', vocabulary: 'not-tested', sentences: 'not-tested' },
+    });
+    expect(decodingNotTested(quitEarly)).toBe(false);
+    const view = resultView(input({ result: quitEarly }));
+    expect(view.headline).toBe('found');
+    expect(view.notTestedLine).toBe(false);
+    expect(view.retryHidden).toBe(false);
+  });
+
+  it('a retake that only raises the level keeps the route: it stays where it is, no Update my plan', () => {
+    const levelOnly = seed({ level: { stage: 'stage1', band: 2 } });
+    const view = resultView(input({ before: seed(), after: levelOnly, hasActivePlan: true }));
+    expect(view.planUpdate).toBe(false);
+    expect(view.routeLine).toBe('planStays');
+    expect(view.primary).toBe('start');
+    expect(resultView(input({ before: seed(), after: levelOnly })).routeLine).toBe('routeStays');
+  });
+
+  it('a retake that places out more but keeps the start: no "stays" line and no Update my plan', () => {
+    const more = seed({ placedOutQuestIds: ['quest:q3'] });
+    const view = resultView(input({ before: seed(), after: more, hasActivePlan: true }));
+    expect(view.planUpdate).toBe(false);
+    expect(view.routeLine).toBeNull();
+  });
+
+  it('a retake that reaches You know a lot! with an active plan offers stories or the map, not Update my plan', () => {
+    const none = seed({ startQuestId: null, startEpisodeId: null, level: { stage: 'stage2', band: 0 }, placedOutQuestIds: ['quest:q1'] });
+    const view = resultView(input({ before: seed(), after: none, hasActivePlan: true }));
+    expect(view.headline).toBe('knowALot');
+    expect(view.planUpdate).toBe(false);
+    expect(view.primary).toBe('openStories');
+    expect(view.secondary).toBeNull();
+  });
+
   it('after a Short whose hint fired, a self profile gets Try the standard check; a child nothing extra', () => {
     const short = placementResult({
       mode: 'short',
@@ -248,10 +286,10 @@ describe('reportView (section 3.9: rows grouped by gate/form)', () => {
     });
     const view = reportView(result, formatOf);
     expect(view.rungs).toEqual([
-      { gate: 'recog', form: 'decode', status: 'secure', counts: [3], note: null },
-      { gate: 'sound-basic', form: 'decode', status: 'secure', counts: [2], note: null },
-      { gate: 'syl-cv', form: 'decode', status: 'getting-there', counts: [1], note: null },
-      { gate: 'vocab', form: 'oral', status: 'not-yet', counts: [0], note: null },
+      { gate: 'recog', form: 'decode', status: 'secure', counts: [{ correct: 3, asked: 3 }], note: null },
+      { gate: 'sound-basic', form: 'decode', status: 'secure', counts: [{ correct: 2, asked: 3 }], note: null },
+      { gate: 'syl-cv', form: 'decode', status: 'getting-there', counts: [{ correct: 1, asked: 3 }], note: null },
+      { gate: 'vocab', form: 'oral', status: 'not-yet', counts: [{ correct: 0, asked: 3 }], note: null },
       { gate: 'sentence', form: 'oral', status: 'not-tested', counts: null, note: null },
     ]);
     expect(view.notTested).toEqual(['noSound']);
@@ -277,7 +315,8 @@ describe('reportView (section 3.9: rows grouped by gate/form)', () => {
       { gate: 'sound-basic', form: 'decode', status: 'secure', counts: null, note: 'checkedTwice' },
       { gate: 'syl-cv', form: 'decode', status: 'secure', counts: null, note: 'notFinished' },
     ]);
-    expect(view.notTested).toEqual(['screenReader', 'endedEarly']);
+    // No recognition row at all (the run never reached it): nothing is said about a screen reader.
+    expect(view.notTested).toEqual(['endedEarly']);
   });
 
   it('a Deep result stripped of mode renders like Standard with two-row rungs', () => {
@@ -286,8 +325,49 @@ describe('reportView (section 3.9: rows grouped by gate/form)', () => {
       gates: [gate('vocab', 'read', 'pass', 2), gate('vocab', 'read', 'fail', 1)],
     });
     expect(reportView(legacy, formatOf).rungs).toEqual([
-      { gate: 'vocab', form: 'read', status: 'getting-there', counts: [2, 1], note: null },
+      { gate: 'vocab', form: 'read', status: 'getting-there', counts: [{ correct: 2, asked: 3 }, { correct: 1, asked: 3 }], note: null },
     ]);
+  });
+
+  it('counts only rows that were asked, out of what was asked; a stopped row is "not finished" in any mode', () => {
+    const unavailableSecond = placementResult({
+      gates: [gate('vocab', 'read', 'pass', 3), gate('vocab', 'read', 'not-run', 0, { asked: 0, reason: 'unavailable' })],
+    });
+    expect(reportView(unavailableSecond, formatOf).rungs).toEqual([
+      { gate: 'vocab', form: 'read', status: 'secure', counts: [{ correct: 3, asked: 3 }], note: null },
+    ]);
+    const stopped = placementResult({
+      gates: [gate('sound-basic', 'decode', 'not-run', 1, { asked: 1, reason: 'stopped' })],
+      stopReason: 'quit',
+    });
+    expect(reportView(stopped, formatOf).rungs).toEqual([
+      { gate: 'sound-basic', form: 'decode', status: 'getting-there', counts: [{ correct: 1, asked: 1 }], note: 'notFinished' },
+    ]);
+  });
+
+  it('a screen reader is named only from a recognition row recorded unavailable', () => {
+    const unavailable = gate('recog', 'decode', 'not-run', 0, { asked: 0, reason: 'unavailable' });
+    expect(reportView(placementResult({ gates: [unavailable, gate('sound-basic', 'decode', 'pass', 3)] }), formatOf).notTested).toEqual([
+      'screenReader',
+    ]);
+    expect(reportView(placementResult({ gates: [gate('sound-basic', 'decode', 'pass', 3)] }), formatOf).notTested).toEqual([]);
+  });
+
+  it('a Korean test language with a screen reader names the picture rungs it left out (section 3.2)', () => {
+    const off = (g: 'vocab' | 'sentence', form: 'read' | 'oral') => gate(g, form, 'not-run', 0, { asked: 0, reason: 'unavailable' });
+    const gates = [
+      gate('recog', 'decode', 'not-run', 0, { asked: 0, reason: 'unavailable' }),
+      gate('sound-basic', 'decode', 'pass', 3),
+      off('vocab', 'read'),
+      off('sentence', 'read'),
+      off('vocab', 'oral'),
+      off('sentence', 'oral'),
+    ];
+    expect(reportView(placementResult({ testLocale: 'ko', gates }), formatOf).notTested).toEqual(['screenReader', 'screenReaderPictures']);
+    // In English the same rows can only mean no sound for the oral rungs.
+    expect(reportView(placementResult({ testLocale: 'en', gates }), formatOf).notTested).toEqual(['noSound', 'screenReader']);
+    const asked = [...gates.slice(0, 2), gate('vocab', 'read', 'pass', 3)];
+    expect(reportView(placementResult({ testLocale: 'ko', gates: asked }), formatOf).notTested).toEqual(['screenReader']);
   });
 
   it('a Short result: recognition and sentences are not tested (short check); the hint when it fires', () => {
