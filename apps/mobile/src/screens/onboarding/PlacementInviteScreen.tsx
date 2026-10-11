@@ -74,7 +74,7 @@ export function PlacementInviteScreen({ navigation, route }: Props): React.React
       navigation.replace('FirstQuestPreview', { profileId });
       return;
     }
-    // The fork stays underneath, so leaving the check before it starts comes back here.
+    // The fork stays underneath: a system back before the check starts returns here.
     busy.current = false;
     root.navigate('Placement', outcome.params);
   };

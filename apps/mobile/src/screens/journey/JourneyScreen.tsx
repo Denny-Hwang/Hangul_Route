@@ -278,7 +278,8 @@ function GridCell({ stage, theme, paneMode, selectedId, onOpen, progressSnapshot
   // outline and a small check, never the completed tint; the cell stays tappable and awards as any.
   const placedOut =
     !!episode && !isPreview && !completed && marks !== null && cellLook(episode.id, ROUTE_CATALOG, marks.placedOut, completedIds) === 'placed-out';
-  const isStart = marks?.start != null && marks.start.stage === stage && marks.start.theme === theme.key;
+  const start = marks === null ? null : marks.start;
+  const isStart = start !== null && start.stage === stage && start.theme === theme.key;
   const tone = colors.stage[stage];
   const isSelected = paneMode && !!episode && episode.id === selectedId;
   // One pane: a preview cell does nothing, as today. Two panes: it is selectable (its page says "coming soon").
