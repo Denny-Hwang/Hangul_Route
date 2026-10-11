@@ -2,6 +2,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Icon, colors, tabBarMetrics, typography } from '@hangul-route/design-system';
 import React from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useMessages } from '../i18n/use-messages';
 import { HomeScreen } from '../screens/home/HomeScreen';
 import { JourneyScreen } from '../screens/journey/JourneyScreen';
 import { LibraryScreen } from '../screens/library/LibraryScreen';
@@ -10,6 +11,7 @@ import type { MainTabParamList } from './types';
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
 export function MainTabs(): React.ReactElement {
+  const tabs = useMessages().a11y.tabs;
   // The tab row sits above the home indicator instead of a fixed 24px pad
   // that overlapped it (audit p2-L2).
   const { height, paddingTop, paddingBottom } = tabBarMetrics(useSafeAreaInsets().bottom);
@@ -37,9 +39,9 @@ export function MainTabs(): React.ReactElement {
         },
       })}
     >
-      <Tab.Screen name="Home" component={HomeScreen} options={{ tabBarLabel: 'Today' }} />
-      <Tab.Screen name="Journey" component={JourneyScreen} options={{ tabBarLabel: 'Journey' }} />
-      <Tab.Screen name="Library" component={LibraryScreen} options={{ tabBarLabel: 'Library' }} />
+      <Tab.Screen name="Home" component={HomeScreen} options={{ tabBarLabel: tabs.home }} />
+      <Tab.Screen name="Journey" component={JourneyScreen} options={{ tabBarLabel: tabs.journey }} />
+      <Tab.Screen name="Library" component={LibraryScreen} options={{ tabBarLabel: tabs.library }} />
     </Tab.Navigator>
   );
 }

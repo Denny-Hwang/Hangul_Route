@@ -1,3 +1,4 @@
+import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import {
   MISSING_STEP_CAPTION,
@@ -129,13 +130,21 @@ describe('missingStep: what the disabled Continue names (UX-27)', () => {
 });
 
 describe('nameHint: calm, never on an unfinished field', () => {
+  const words = getMessages('en').learner.createProfile.nameHint;
+
   it('is silent for an empty or valid name', () => {
-    expect(nameHint('')).toBeNull();
-    expect(nameHint('Mina')).toBeNull();
+    expect(nameHint('', words)).toBeNull();
+    expect(nameHint('Mina', words)).toBeNull();
   });
 
   it('explains a long name and an unsupported character', () => {
-    expect(nameHint('Abcdefghijklmn')).toBe('Names can be up to 12 letters.');
-    expect(nameHint('Mina :)')).toBe("Please use letters, numbers, spaces, ' or -.");
+    expect(nameHint('Abcdefghijklmn', words)).toBe('Names can be up to 12 letters.');
+    expect(nameHint('Mina :)', words)).toBe("Please use letters, numbers, spaces, ' or -.");
+  });
+
+  it('writes the hint in the words it is given (the sentence is not in the logic)', () => {
+    const other = { tooLong: (max: number) => `max ${max}`, unsupportedCharacter: 'chars' };
+    expect(nameHint('Abcdefghijklmn', other)).toBe('max 12');
+    expect(nameHint('Mina :)', other)).toBe('chars');
   });
 });

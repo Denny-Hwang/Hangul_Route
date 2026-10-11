@@ -4,7 +4,6 @@ import {
   AVATAR_PRESETS,
   DEFAULT_AVATAR,
   avatarAccessibilityLabel,
-  avatarLabel,
   findAvatar,
   isAvatarKind,
 } from '../avatar-catalog';
@@ -26,11 +25,10 @@ describe('avatar catalog', () => {
     expect(new Set(AVATAR_PRESETS.map((a) => a.theme)).size).toBe(AVATAR_PRESETS.length);
   });
 
-  it('pairs every Korean Pillar name with a romanization and an English label', () => {
+  it('pairs every Korean Pillar name with a romanization', () => {
     for (const preset of AVATAR_PRESETS) {
       expect(preset.pillarName).toMatch(/[가-힣]/);
       expect(preset.romanization).toMatch(/^[A-Za-z]+$/);
-      expect(preset.label).toMatch(/^[A-Za-z ]+$/);
     }
   });
 
@@ -53,27 +51,6 @@ describe('avatar catalog', () => {
 describe('avatarAccessibilityLabel', () => {
   it('reads a tile as "<name>\'s tiger, stage N. Tap to enter." (§3.6)', () => {
     expect(avatarAccessibilityLabel('Suni', 1)).toBe("Suni's tiger, stage 1. Tap to enter.");
-  });
-});
-
-describe('avatar labels (the source the picker and chips read)', () => {
-  it('labels every cub in English, in catalogue order', () => {
-    expect(AVATAR_PRESETS.map((a) => avatarLabel(a.kind))).toEqual([
-      'Book Tiger',
-      'Home Tiger',
-      'Feast Tiger',
-      'Mountain Tiger',
-      'Craft Tiger',
-    ]);
-  });
-
-  it('has unique labels (colour is never the only cue)', () => {
-    expect(new Set(AVATAR_PRESETS.map((a) => a.label)).size).toBe(AVATAR_PRESETS.length);
-  });
-
-  it('returns null for persisted junk instead of throwing', () => {
-    // @ts-expect-error — guarding the runtime path for persisted junk data
-    expect(avatarLabel('hoya-teal')).toBeNull();
   });
 });
 
