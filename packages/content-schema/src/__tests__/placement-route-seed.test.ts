@@ -231,9 +231,17 @@ describe('effectiveRoute', () => {
     expect(effectiveRoute([heard, makeResult({ id: 'placement:later', completedAt: at(4), oralStage: 'stage1' })], STAGE1_15, paid)!.oralStage).toBe('stage3');
   });
 
-  it('a Short taken when the route is already at band 1 or higher does not replace the priority tokens', () => {
+  it('a Short taken when the route is already at band 1 or higher does not replace the priority tokens or lower the listening level', () => {
     const short = makeResult({ id: 'placement:short', completedAt: at(3), length: 'quick', mode: 'short', priorityTokens: ['skill:blending'] });
     expect(effectiveRoute([high, short], STAGE1_15, paid)!.priorityTokens).toEqual(['sym:ㅓ']);
+    // listening level: the highest any result measured (3.7, P20), so a later Short never lowers it...
+    const shortHeardLess = { ...short, oralStage: 'stage1' as const };
+    expect(effectiveRoute([high, shortHeardLess], STAGE1_15, paid)!.oralStage).toBe('stage2');
+    const shortHeardNothing = { ...short, oralStage: null };
+    expect(effectiveRoute([high, shortHeardNothing], STAGE1_15, paid)!.oralStage).toBe('stage2');
+    // ...and one that measured more raises it
+    const highHeardLess = { ...high, oralStage: 'stage1' as const };
+    expect(effectiveRoute([highHeardLess, { ...short, oralStage: 'stage2' as const }], STAGE1_15, paid)!.oralStage).toBe('stage2');
     // a legacy quick result without `mode` reads as Short
     const { mode: _m, ...legacyQuick } = short;
     expect(effectiveRoute([high, legacyQuick], STAGE1_15, paid)!.priorityTokens).toEqual(['sym:ㅓ']);
