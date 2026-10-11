@@ -15,6 +15,7 @@ vi.mock('../../platform/telemetry', () => ({
 
 import { setProgressPersistListener } from '../../logic/sync/persist-hook';
 import { readJson, writeJson } from '../../platform/storage';
+import { placementResult } from '../../logic/placement/__tests__/fixtures';
 import { nextStreak, useProgressStore } from '../progress-store';
 
 function resetStore(): void {
@@ -365,3 +366,58 @@ describe('stars never go down (F-STORY-003 PR 3.6, D3)', () => {
     expect(stored()?.quests[0]?.stars).toBe(3);
   });
 });
+
+describe('recordPlacement (F-PLC-001 section 3.8)', () => {
+  const notified: string[] = [];
+
+  beforeEach(() => {
+    resetStore();
+    notified.length = 0;
+    setProgressPersistListener((id) => notified.push(id));
+  });
+
+  afterEach(() => {
+    setProgressPersistListener(null);
+  });
+
+  it('appends to placements only: no quests, cards, homework, sessions, streak or episodes', async () => {
+    mem.set('progress:p1', savedSnapshot());
+    await useProgressStore.getState().hydrate('p1');
+    const before = useProgressStore.getState().byProfile['p1'] as ProgressSnapshot;
+    const result = placementResult({ placedOutQuestIds: ['quest:a', 'quest:b'] });
+    expect(useProgressStore.getState().recordPlacement('p1', result)).toBe(true);
+    const after = useProgressStore.getState().byProfile['p1'] as ProgressSnapshot;
+    expect(after.placements).toEqual([result]);
+    const { placements: _p, updatedAt: _u, ...restAfter } = after;
+    const { placements: _q, updatedAt: _v, ...restBefore } = before;
+    expect(restAfter).toEqual(restBefore);
+    expect(stored()?.placements).toEqual([result]);
+    expect(notified).toEqual(['p1']);
+  });
+
+  it('works on a legacy snapshot without the key and keeps earlier results', async () => {
+    mem.set('progress:p1', savedSnapshot());
+    await useProgressStore.getState().hydrate('p1');
+    const first = placementResult({ id: 'placement:one', completedAt: '2026-10-01T00:00:00Z' });
+    const second = placementResult({ id: 'placement:two', completedAt: '2026-10-02T00:00:00Z' });
+    useProgressStore.getState().recordPlacement('p1', second);
+    useProgressStore.getState().recordPlacement('p1', first);
+    expect(stored()?.placements?.map((r) => r.id)).toEqual(['placement:one', 'placement:two']);
+  });
+
+  it('never stores a result with zero responses', () => {
+    const empty = placementResult({ responses: [] });
+    expect(useProgressStore.getState().recordPlacement('p1', empty)).toBe(false);
+    expect(useProgressStore.getState().byProfile['p1']).toBeUndefined();
+    expect(notified).toEqual([]);
+  });
+
+  it('recording the same result twice keeps one copy', async () => {
+    await useProgressStore.getState().hydrate('p1');
+    const result = placementResult();
+    useProgressStore.getState().recordPlacement('p1', result);
+    useProgressStore.getState().recordPlacement('p1', result);
+    expect(useProgressStore.getState().byProfile['p1']?.placements).toHaveLength(1);
+  });
+});
+
