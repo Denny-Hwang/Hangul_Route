@@ -1,4 +1,5 @@
 import type { SpaceKind } from '@hangul-route/content-schema';
+import type { ApiError } from './api';
 
 /** Re-link approval helpers — F-TCH-001 §10.1 (wireframe console/relink-approval). */
 const MIN_MS = 60_000;
@@ -34,6 +35,16 @@ export function canDeleteLearnerData(kind: SpaceKind, consentMode: 'parent' | 's
  */
 export function canReissueRescueCode(kind: SpaceKind): boolean {
   return kind === 'family';
+}
+
+/**
+ * The note after a failed approve / deny. A 409 usually means the request
+ * closed meanwhile; a learner who left the class (409 `not_a_member`,
+ * F-SPACE-002 T-1b) is not a closed request, so it gets the generic error.
+ */
+export function decideFailureNote(result: { error: ApiError; code?: string }): string {
+  if (result.error === 'unknown' && result.code !== 'not_a_member') return 'This request already closed — the learner can ask again.';
+  return "Didn't go through. Try again.";
 }
 
 export const RELINK_REFRESH_MS = 10_000;

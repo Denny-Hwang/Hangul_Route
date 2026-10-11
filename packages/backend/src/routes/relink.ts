@@ -111,6 +111,8 @@ async function decide(c: Context, approve: boolean): Promise<Response> {
   const now = new Date();
   if (expireIfDue(req, now)) await db.putRelink(req);
   if (req.status !== 'pending') return fail(c, req.status === 'expired' ? 'expired' : 'not_pending', `Request is ${req.status}`, 409);
+  // F-SPACE-002 T16(b): the learner may have left (or been removed) since asking; never bind a device to someone off the roster.
+  if (approve && !(await db.membership(gated.space.id, 'learner', req.learnerId))) return fail(c, 'not_a_member', 'This learner is no longer in this class', 409);
   req.status = approve ? 'approved' : 'denied';
   req.decidedAt = now.toISOString();
   if (approve) {
