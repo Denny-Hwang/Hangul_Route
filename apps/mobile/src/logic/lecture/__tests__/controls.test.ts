@@ -24,7 +24,7 @@ const at = (slideIdx: number, reveal = 0, extra: Partial<PresenterState> = {}): 
 });
 
 const run = (state: PresenterState, ...events: PresenterEvent[]): PresenterState =>
-  events.reduce((s, e) => reduce(s, e, DECK).state, state);
+  events.reduce<PresenterState>((s, e) => reduce(s, e, DECK).state, state);
 
 describe('initialPresenterState', () => {
   it('starts on the first slide, build 0, nothing open, timer in the corner', () => {
