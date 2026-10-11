@@ -4,7 +4,8 @@ import { plural } from '../../plural';
  * Learner-facing screens, one sub-object per screen (F-I18N-001 §3.4 rule 2).
  * PR 5 moves the first-run and settings surfaces in, PR 6a Home, Journey, Library and
  * CardDetail, PR 6b Episode, Results and Homework, PR 7a the Quest player, PR 7b the minigames,
- * the audio prompt panel and the story copy; the wording is unchanged. Strings that end up in a pill or a button are
+ * the audio prompt panel and the story copy, PR 8b the PWA banners and the crash screen; the
+ * wording is unchanged. Strings that end up in a pill or a button are
  * keyed `pill` / `cta` so the length budgets (§3.11) cover them.
  * Content-derived text (stage, theme and card titles, blurbs) is not here: it comes from
  * content and is localised by the overlay mechanism (PR 12).
@@ -545,5 +546,26 @@ export const learner = {
       cultureNote: (title: string) => `Learn about ${title}`,
       encourage: 'Every read helps. Want to read it again?',
     },
+  },
+
+  /**
+   * The non-modal PWA banners (wireframe pwa/system-banners, PR 8b): the offline chip, the
+   * offline-ready toast and the update bar. Hoya-toned; the update only applies when tapped.
+   */
+  pwa: {
+    offline: 'Offline — everything still works',
+    offlineReady: 'All set! You can play without Wi-Fi now.',
+    update: {
+      title: 'New lessons are ready.',
+      hint: 'Tap when you finish what you are doing.',
+      refresh: { cta: 'Refresh' },
+    },
+  },
+
+  /** The top-level crash screen (PR 8b): warm and blame-free; its button is `common.buttons.tryAgain`. */
+  oops: {
+    title: 'Hoya tripped over a rock.',
+    body: "Your cards and stars are safe. Let's hop back in.",
+    bubble: 'Oops! That was not your fault. Tap the button and we go again.',
   },
 } as const;

@@ -4,8 +4,8 @@ import { plural } from '../../plural';
  * Grown-up surfaces (F-I18N-001 §3.4 rule 2): the PIN screens, the Family Dashboard, the paywall,
  * the Classes & family and Progress backup cards, and the audience copy that used to live in
  * `logic/audience-copy.ts` (family and self-only variants, PIN titles, paywall and restore lines).
- * PR 8a moves them in with the wording unchanged; Restore, Save progress, Join a class and the
- * install sheet follow in PR 8b. PR 7a added the Quest-assignment gating reasons.
+ * PR 8a moved them in with the wording unchanged; PR 8b adds Restore, Save my progress, Join a
+ * class, the cloud status line and the install sheet. PR 7a added the Quest-assignment gating reasons.
  *
  * No price is written here: the paywall builds its amount from `PLAN_PRICING` and `formatUsd`
  * and passes it in. Buttons and pills are keyed `cta` / `pill` so the length budgets (§3.11)
@@ -107,7 +107,7 @@ export const caregiver = {
       failure: {
         wrongCode: "That isn't the code saved on this device. Check it and try again.",
         noCode: 'No rescue code is saved on this device. Use the 24-hour wait instead.',
-        /** Same wording as the Restore screen's invalid-code line (PR 8b makes them one message). */
+        /** Also the Restore screen's invalid-code line (`claimErrorMessage('invalid')`): one message for both. */
         badFormat:
           'Type every word and the number, like TIGER-MOON-RIVER-APPLE-482139 (older codes: TIGER-MOON-4821).',
       },
@@ -177,7 +177,7 @@ export const caregiver = {
     join: { cta: 'Join a class' },
   },
 
-  /** Settings card: backup. The cloud status line is PR 8b (`status-line`). */
+  /** Settings card: backup. Its cloud status line is `sync.status`. */
   backup: {
     title: 'Progress backup',
     /** `detail` is the part the accessible label adds to the button name. */
@@ -189,5 +189,199 @@ export const caregiver = {
       unavailable: 'Saving files is not available here.',
       failed: "Couldn't make the file. Try again?",
     },
+  },
+
+  /**
+   * Calm lines Restore and Join a class share when the server asks to slow down, the device is
+   * offline, or anything else goes wrong (`claimErrorMessage`, `joinErrorMessage`). Never blames.
+   */
+  retry: {
+    tooManyAttempts: "Let's wait a few minutes before trying again.",
+    offline: 'This needs internet. Try again when you are online.',
+    unknown: 'Something went wrong. Try again in a moment.',
+  },
+
+  /**
+   * The one-line cloud status (Progress backup card, Save my progress) and the line after
+   * "Save now" — `logic/sync/status-line`. Calm: an old timestamp or an error never reads as alarm.
+   */
+  sync: {
+    status: {
+      deviceOnly: 'Saved on this device only.',
+      /** 403: a class linked this device (SEC-4); a rescue code entered here turns cloud saving on. */
+      needsRescueCode: 'Saved on this device. A rescue code turns on cloud saving here.',
+      retrying: "Couldn't reach the cloud — will retry.",
+      saving: 'Saving to the cloud…',
+      waiting: 'Waiting for the first cloud save.',
+      justNow: 'Saved to the cloud · just now',
+      /** English "min" does not inflect; the plural() call is the slot other locales fill. */
+      minutesAgo: (minutes: number) =>
+        plural('en', minutes, {
+          one: `Saved to the cloud · ${minutes} min ago`,
+          other: `Saved to the cloud · ${minutes} min ago`,
+        }),
+    },
+    saveNow: {
+      saved: 'Saved to the cloud.',
+      off: 'Cloud saving is not set up on this build.',
+      /** Same 403 as `status.needsRescueCode`: the device needs a rescue code, the cloud is not down. */
+      needsRescueCode: "This device can't save to the cloud yet. A rescue code turns it on.",
+      unreachable: "Couldn't reach the cloud — try again later.",
+    },
+  },
+
+  /**
+   * sync/restore: a Rescue Code, a grown-up sign-in (not yet) or a saved file; never overwrites.
+   * The Hoya prompt, the sign-in label and "cards come back" line are `audience.shared`; the
+   * invalid-code line is `pin.reset.failure.badFormat`, the one wording both screens use.
+   */
+  restore: {
+    title: 'Bring back progress',
+    code: {
+      cta: 'I have a rescue code',
+      /** Greyed in the empty field. */
+      placeholder: 'Words, then the number',
+      example: 'Like TIGER-MOON-RIVER-APPLE-482139. Older codes look like TIGER-MOON-4821.',
+      find: { cta: 'Find my cards' },
+      /** The find button while the claim is in flight. */
+      looking: { cta: 'Looking…' },
+      notFound: 'Check the code and try again.',
+    },
+    cloudOff: 'Cloud restore is not set up on this build.',
+    cloudOffUseFile: 'Cloud restore is not set up on this build. Use a saved file instead.',
+    signIn: { comingSoon: 'Coming soon' },
+    file: {
+      cta: 'Open a saved file',
+      openFailed: "Couldn't open that file.",
+      newerVersion: 'This backup comes from a newer version. Update the app first.',
+      unreadable: "This file can't be read. Choose a .hangulroute.json backup.",
+    },
+    startFresh: { cta: 'Start fresh instead' },
+    great: { cta: 'Great' },
+    /** The merge notice: warm, never "overwritten". `name` is the learner's display name. */
+    notice: {
+      created: (name: string) => `Welcome back, ${name}! Your journey is here.`,
+      nothingNew: (name: string) => `${name} already has everything from this file.`,
+      /** At least one count is above zero (`nothingNew` covers the rest). */
+      added: (name: string, cards: number, quests: number) => {
+        const parts = [
+          cards > 0 ? plural('en', cards, { one: `${cards} card`, other: `${cards} cards` }) : null,
+          quests > 0 ? plural('en', quests, { one: `${quests} quest`, other: `${quests} quests` }) : null,
+        ].filter((p): p is string => p !== null);
+        return `We found ${name}'s progress! Added ${parts.join(' and ')}.`;
+      },
+      /** A teacher approved a class re-link (F-TCH-001 §10.1). */
+      relinked: (name: string) => `Welcome back, ${name}! You're in the class again.`,
+    },
+  },
+
+  /** sync/save-progress (PIN-gated): the rescue code shown as a block a parent writes down. */
+  saveProgress: {
+    title: 'Save my progress',
+    bubble: {
+      /** `name` is the active learner; null only when no profile is active. */
+      code: (name: string | null) =>
+        name === null
+          ? 'Write this down. It brings your cards back on any device.'
+          : `Write this down. It brings ${name}'s cards back on any device.`,
+      noCode: 'Once progress is saved to the cloud, a rescue code appears here.',
+    },
+    /** The caption under the code: four words + six digits (SEC-5), or two + four for an older code. */
+    codeShape: (words: number, digits: number) => `${words === 4 ? 'four' : 'two'} words + ${digits} digits`,
+    copy: { cta: 'Copy', done: 'Copied.', unavailable: 'Copy is not available here — write it down.' },
+    share: {
+      cta: 'Share',
+      /** The share sheet's title. */
+      title: 'Rescue code',
+      /** The shared message; `name` is null only when no profile is active. */
+      text: (name: string | null, code: string) => `Hangul Route rescue code for ${name ?? 'my learner'}: ${code}`,
+      unavailable: 'Sharing is not available here — copy it instead.',
+    },
+    saveNow: { cta: 'Save now', saving: { cta: 'Saving…' } },
+    /** Getting a new code is last and small on purpose: the old one stops working. */
+    rotate: {
+      cta: 'Get a new code',
+      caption: 'The old code stops working.',
+      confirmTitle: 'Get a new code?',
+      confirmMessage: 'The old code will stop working. Write the new one down.',
+      keep: { cta: 'Keep my code' },
+      ready: 'New code ready. The old one no longer works.',
+      unavailable: "Couldn't get a new code right now.",
+    },
+  },
+
+  /**
+   * sync/join-space (not PIN-gated: the teacher is in the room). The learner-facing lines name the
+   * fix, never a person (F-LEARN-001 §3.9). `cap_learner` and `not_joinable` read
+   * `audience.shared.joinCodeFull` / `joinCodeNotForLearners`; busy, offline and unknown read `retry`.
+   */
+  join: {
+    title: 'Join a class',
+    bubble: {
+      idle: 'Type the code your teacher gave you.',
+      /** `space` is the class or family name the server returned. */
+      found: (space: string) => `${space} found!`,
+      done: (space: string) => `You're in ${space}!`,
+    },
+    code: {
+      /** A sample code, greyed in the empty field. */
+      placeholder: 'ABC123',
+      rules: '6 letters or numbers — no O, I, 0 or 1',
+      join: { cta: 'Join' },
+      looking: { cta: 'Looking…' },
+    },
+    confirm: {
+      /** Who sees the roster name: a family space, or a teacher's class or school. */
+      seeYouAs: { family: 'Your family will see you as:', teacher: 'Your teacher will see you as:' },
+      me: { cta: "That's me" },
+      joining: { cta: 'Joining…' },
+      alreadyIn: { cta: 'I was already in this class' },
+      notThis: { cta: 'Not this one' },
+    },
+    /** A learner who was in the class before picks their roster name; the teacher approves. */
+    pick: {
+      prompt: 'Which one is you? Your teacher will check.',
+      newHere: { cta: "I'm new here" },
+    },
+    waiting: {
+      line: (name: string) => `Waiting for your teacher to say yes for ${name}.`,
+      caption: 'Ask them to open the class on their screen. This request lasts about 10 minutes.',
+      neverMind: { cta: 'Never mind' },
+    },
+    relink: {
+      denied: 'Your teacher said not now. Ask them in class.',
+      expired: 'That took too long. Ask your teacher and try again.',
+    },
+    done: {
+      joined: (space: string) => `You're in ${space}. New missions may show up on Today.`,
+      already: (space: string) => `You're already in ${space}.`,
+      backToToday: { cta: 'Back to today' },
+    },
+    errors: {
+      codeNotFound: "That code didn't work. Check it with your teacher.",
+      codeExpired: 'That code is too old. Ask for a new one.',
+      classFull: 'This class is full. Ask your teacher.',
+      learnerGone: 'That name is not in this class anymore. Ask your teacher.',
+      alreadyOnDevice: 'This device already has that learner — switch profiles instead.',
+      badFormat: 'A code has 6 letters or numbers.',
+      off: 'Joining a class is not set up on this build.',
+    },
+  },
+
+  /** The install bottom sheet (web); its heading and help line are `audience.installGuideLine` / `installGuideHelp`. */
+  install: {
+    offline: 'Then Hangul Route opens like an app and your cards stay safe, even without Wi-Fi.',
+    /** The step chips: iOS Safari (Share, then Add to Home Screen) and the desktop/Android hint. */
+    steps: {
+      share: 'Tap Share',
+      addToHome: 'Add to Home Screen',
+      browserMenu: 'Browser menu',
+      installApp: 'Install app / Add to Home screen',
+    },
+    install: { cta: 'Install' },
+    inAppBrowser: 'Open this page in Safari or Chrome first.',
+    copyLink: { cta: 'Copy link' },
+    linkCopied: { cta: 'Link copied' },
+    notNow: { cta: 'Not now' },
   },
 } as const;
