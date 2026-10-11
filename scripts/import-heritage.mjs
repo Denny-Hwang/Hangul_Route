@@ -15,7 +15,9 @@
 //   - the one http:// source becomes the same page over https (§3.3 C4);
 //   - a scene gloss that holds Hangul takes the vocab gloss of the word, else the
 //     parenthetical that holds the Hangul is dropped (§3.10 to-do);
-//   - the one hyphenated romanization loses its hyphen (F-CNT-002 R2).
+//   - the one hyphenated romanization loses its hyphen (F-CNT-002 R2);
+//   - Hangul jamo in an illustration brief are written as letter names (artBrief is outside the
+//     validate-content reference zone, so a draft would fail the language policy otherwise).
 //
 // Usage:
 //   node scripts/import-heritage.mjs --src <dir> [--dry-run] [--write]
@@ -389,7 +391,17 @@ export function mapEpisode(raw, cluster, jamo, options = {}) {
     scene.factIds = factIds;
     scene.framing = factIds.length === 0;
     scene.approximations = [];
-    const brief = text(s.illustration);
+    let brief = text(s.illustration);
+    if (resolveKnown && hasHangul(brief)) {
+      // artBrief is not in the validate-content reference zone (§3.8), so Hangul in it is a language-policy
+      // error. Isolated jamo are written as their letter names; anything else is left and flagged.
+      const named = brief.replace(/[\u3131-\u318F]/g, (c) => jamoMap.get(c)?.name ?? c);
+      if (hasHangul(named)) flag("art-brief-hangul", `${where}.artBrief`, "holds Hangul the importer cannot name; rewrite it");
+      else {
+        note("art-brief-hangul", `${where}.artBrief`, `"${brief}" -> "${named}"`);
+        brief = named;
+      }
+    }
     if (brief) scene.artBrief = brief;
 
     const derived = resolveKnown && DERIVED_NUMBERS.find((d) => d.episode === raw.id && d.scene === s.n);

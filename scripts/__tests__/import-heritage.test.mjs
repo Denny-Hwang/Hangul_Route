@@ -561,6 +561,29 @@ describe("mapEpisode: the known lint classes of section 3.14 are resolved as the
     assert.deepEqual(report.flags.filter((f) => f.rule === "gloss-contains-hangul").length, 1);
   });
 
+  test("jamo in an illustration brief are written as letter names; the raw mapping keeps the brief verbatim", () => {
+    const raw = episodeOf();
+    raw.scenes[0].illustration = "Ribbons grow one bend at a time (the app overlays ㄴ ㄷ ㅌ).";
+    const { story, report } = map(raw);
+    assert.equal(
+      tierOf(story).scenes[0].artBrief,
+      "Ribbons grow one bend at a time (the app overlays nieun digeut tieut)."
+    );
+    assert.deepEqual(report.resolved.filter((r) => r.kind === "art-brief-hangul").map((r) => r.where), [
+      "tiers[0].scenes[0].artBrief",
+    ]);
+    const kept = map(raw, CLUSTER, { resolve: false }).story;
+    assert.match(tierOf(kept).scenes[0].artBrief, /ㄴ ㄷ ㅌ/);
+  });
+
+  test("a brief with Hangul that is not a jamo is flagged, not guessed", () => {
+    const raw = episodeOf();
+    raw.scenes[0].illustration = "A sign that reads 사과.";
+    const { story, report } = map(raw);
+    assert.match(tierOf(story).scenes[0].artBrief, /사과/);
+    assert.deepEqual(report.flags.filter((f) => f.rule === "art-brief-hangul").length, 1);
+  });
+
   // The four derived-number sentences of the research set (F-STORY-001 section 1).
   const numbers = [
     {

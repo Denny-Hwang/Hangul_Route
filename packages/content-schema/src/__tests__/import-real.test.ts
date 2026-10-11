@@ -198,6 +198,14 @@ describe.skipIf(!existsSync(RESEARCH_DIR))('import-real: the 24 research episode
     }
   });
 
+  it('writes the isolated jamo of the one illustration brief that holds Hangul as letter names', () => {
+    const shapes = stories.find((s) => s.id === 'story:shapes-of-hangeul')!;
+    expect(shapes.tiers[0]!.scenes[4]!.artBrief).toContain('the app overlays nieun digeut tieut');
+    for (const story of stories) {
+      for (const scene of story.tiers[0]!.scenes) expect(HANGUL.test(scene.artBrief ?? ''), story.id).toBe(false);
+    }
+  });
+
   it('keeps the Jang Yeong-sil narration name and the Hangul in reference text untouched', () => {
     const clock = stories.find((s) => s.id === 'story:jagyeongnu-water-clock')!;
     expect(clock.tiers[0]!.scenes[1]!.narrationEn).toContain('Jang Yeong-sil');
