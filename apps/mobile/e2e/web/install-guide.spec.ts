@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { completeChildForm } from './helpers';
 
 /**
  * F-PWA-001 §3.1 — the install guide appears on the third open of a browser
@@ -8,10 +9,7 @@ test('install guide shows on the third cached open and snoozes on dismiss', asyn
   await page.goto('/');
   await expect(page.getByText("Hi! I'm Hoya.")).toBeVisible();
   await page.getByRole('button', { name: "Let's start" }).click();
-  await page.getByPlaceholder('Type your name').fill('Mina');
-  await page.getByRole('checkbox').click();
-  await page.getByRole('button', { name: 'Continue' }).click();
-  await page.getByRole('button', { name: 'Start my journey' }).click();
+  await completeChildForm(page, { name: 'Mina' });
   await page.waitForFunction(() => !!navigator.serviceWorker.controller);
 
   // Opens 2 and 3 → the guide may show on Home from the third open.

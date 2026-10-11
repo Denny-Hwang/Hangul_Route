@@ -45,12 +45,6 @@ interface Actions {
   setParentEmail: (email: string) => void;
   acceptGuardianConsent: () => void;
   acceptSelfConsent: () => void;
-  /**
-   * @deprecated The pre-F-LEARN-001 checkbox was a parent/guardian attestation,
-   * so this is `acceptGuardianConsent`. Kept only so the current
-   * CreateProfileScreen compiles; F-LEARN-001 PR 4b removes it.
-   */
-  acceptConsent: () => void;
   /** Starts the Forgot PIN wait; a pending request keeps its original time. */
   requestPinReset: () => void;
   clearPinResetRequest: () => void;
@@ -120,8 +114,6 @@ export const useAccountStore = create<State & Actions>((set, get) => ({
     void writeJson(SELF_CONSENT_KEY, now);
     if (first) void writeJson(CONSENT_KEY, now);
   },
-
-  acceptConsent: () => get().acceptGuardianConsent(),
 
   requestPinReset: () => {
     const stamp = startResetWait(get().pinResetRequestedAt, Date.now());

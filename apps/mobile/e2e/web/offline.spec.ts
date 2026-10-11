@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { completeChildForm } from './helpers';
 
 /**
  * PWA acceptance (roadmap web-pwa-offline P2): after one online visit the
@@ -11,13 +12,9 @@ test('onboards, enters the first quest, and keeps working offline', async ({ pag
   await page.goto('/');
   await expect(page.getByText("Hi! I'm Hoya.")).toBeVisible();
 
-  // Onboarding: name + consent → first-quest preview → quest player.
+  // Onboarding: who, name, PIN + consent → first-quest preview → quest player.
   await page.getByRole('button', { name: "Let's start" }).click();
-  await page.getByPlaceholder('Type your name').fill('Suni');
-  await page.getByRole('checkbox').click();
-  await page.getByRole('button', { name: 'Continue' }).click();
-  await expect(page.getByText('Your first card is waiting.')).toBeVisible();
-  await page.getByRole('button', { name: 'Start my journey' }).click();
+  await completeChildForm(page, { name: 'Suni' });
   await expect(page.getByRole('button', { name: 'Continue' })).toBeVisible();
 
   // Wait until the service worker has finished precaching AND controls this

@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { onboardChild, unlockWithPin } from './helpers';
 
 /**
  * F-SYNC-002 §3.3 — the server-less path: export a backup file, then
@@ -7,12 +8,7 @@ import { expect, test } from '@playwright/test';
 test('backup file round-trips a learner between two devices', async ({ browser }) => {
   const deviceA = await browser.newContext();
   const a = await deviceA.newPage();
-  await a.goto('/');
-  await a.getByRole('button', { name: "Let's start" }).click();
-  await a.getByPlaceholder('Type your name').fill('Yuna');
-  await a.getByRole('checkbox').click();
-  await a.getByRole('button', { name: 'Continue' }).click();
-  await a.getByRole('button', { name: 'Start my journey' }).click();
+  await onboardChild(a, { name: 'Yuna' });
   await expect(a.getByRole('button', { name: 'Continue' })).toBeVisible();
   await a.goto('/');
   await expect(a.getByText('Hi, Yuna!')).toBeVisible();
@@ -31,21 +27,12 @@ test('backup file round-trips a learner between two devices', async ({ browser }
   // Device B: onboard a different learner, then restore Yuna from the file.
   const deviceB = await browser.newContext();
   const b = await deviceB.newPage();
-  await b.goto('/');
-  await b.getByRole('button', { name: "Let's start" }).click();
-  await b.getByPlaceholder('Type your name').fill('Bo');
-  await b.getByRole('checkbox').click();
-  await b.getByRole('button', { name: 'Continue' }).click();
-  await b.getByRole('button', { name: 'Start my journey' }).click();
+  await onboardChild(b, { name: 'Bo' });
   await b.goto('/');
   await b.getByRole('button', { name: 'Profile and settings' }).click();
   await b.getByRole('button', { name: 'Restore from a file (grown-ups only)' }).click();
-  // First grown-up entry creates the PIN (F-PROF-001 §10): 1234, twice.
-  for (const round of [0, 1]) {
-    for (const d of ['1', '2', '3', '4']) await b.getByRole('button', { name: `Digit ${d}` }).click();
-    await b.getByRole('button', { name: 'Next' }).click();
-    if (round === 0) await expect(b.getByText('Enter it once more')).toBeVisible();
-  }
+  // The grown-up PIN was created in the onboarding form (F-LEARN-001 §3.3): the gate asks for it.
+  await unlockWithPin(b);
   await expect(b.getByRole('heading', { name: 'Bring back progress' })).toBeVisible();
   const chooser = b.waitForEvent('filechooser');
   await b.getByRole('button', { name: 'Open a saved file' }).click();

@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { completeChildForm } from './helpers';
 
 /**
  * Audit UX-01 / L16 (roadmap PR-01): progress earned in one visit is still
@@ -90,10 +91,7 @@ test('progress earned before a reload survives it and the next write', async ({ 
 
   await page.goto('/');
   await page.getByRole('button', { name: "Let's start" }).click();
-  await page.getByPlaceholder('Type your name').fill('Dami');
-  await page.getByRole('checkbox').click();
-  await page.getByRole('button', { name: 'Continue' }).click();
-  await page.getByRole('button', { name: 'Start my journey' }).click();
+  await completeChildForm(page, { name: 'Dami' });
 
   // Quest 1: intro, one game played perfectly, the rest skipped → 3 stars and the Book card.
   await page.getByRole('button', { name: 'Continue' }).click();
