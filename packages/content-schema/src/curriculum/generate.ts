@@ -91,11 +91,11 @@ interface BuildOptions extends GenerateOptions {
 
 const stageIndex = (stage: StageKey): number => StageKeySchema.options.indexOf(stage);
 const CANONICAL_THEMES = ThemeKeySchema.options as readonly ThemeKey[];
-const byDate = (a: Pick<PlanItem, 'targetDate'>, b: Pick<PlanItem, 'targetDate'>): number => {
-  const x = a.targetDate ?? '';
-  const y = b.targetDate ?? '';
-  return x < y ? -1 : x > y ? 1 : 0;
-};
+/** Plain code-unit order of date keys (never a locale comparison). */
+const compareKeys = (x: string, y: string): number => (x < y ? -1 : x > y ? 1 : 0);
+/** Undated items sort first, as "today". */
+const byDate = (a: Pick<PlanItem, 'targetDate'>, b: Pick<PlanItem, 'targetDate'>): number =>
+  compareKeys(a.targetDate ?? '', b.targetDate ?? '');
 const asQueueItem = (item: PlanItem): QueueItem =>
   item.note === undefined ? { kind: item.kind, id: item.id } : { kind: item.kind, id: item.id, note: item.note };
 
@@ -126,8 +126,8 @@ class Lookup {
   }
 
   minutes(item: QueueItem): number {
-    if (item.kind === 'episode') return this.cells.get(item.id)?.minutes ?? 0;
-    return this.quests.get(item.id)?.minutes ?? 0;
+    const source = item.kind === 'episode' ? this.cells.get(item.id) : this.quests.get(item.id);
+    return source?.minutes ?? 0;
   }
 
   teachesSymbols(item: QueueItem): boolean {
@@ -273,7 +273,7 @@ const reserveAnchors = (
     if (index < 1) continue;
     const list = reserved.get(index) ?? [];
     list.push({ entry, festival: anchor, date });
-    list.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+    list.sort((a, b) => compareKeys(a.date, b.date));
     reserved.set(index, list);
     pool.splice(pool.indexOf(entry), 1);
   }
@@ -328,6 +328,8 @@ const build = (input: CurriculumParamsInput, catalog: Catalog, opts: BuildOption
     return index < 0 ? undefined : stories.splice(index, 1)[0];
   };
   const vocabAllowed = (): boolean => !lessons.some((item) => lookup.teachesSymbols(item));
+  /** Replay: a frozen learn week allowed topics when no symbol lesson was scheduled after it. */
+  const lastSymbolWeek = history.reduce((top, item) => (lookup.teachesSymbols(item) ? Math.max(top, item.week) : top), 0);
   const giveTopic = (extras: WeekExtra[]): void => {
     const topic = topics.shift();
     if (topic === undefined) return;
@@ -359,7 +361,7 @@ const build = (input: CurriculumParamsInput, catalog: Catalog, opts: BuildOption
       if (meta.kind === 'culture') sinceCulture = 0;
       if (meta.kind === 'learn') {
         sinceCulture += 1;
-        if (vocabAllowed()) sinceVocab += 1;
+        if (vocabAllowed() && week.index >= lastSymbolWeek) sinceVocab += 1;
       }
       for (const extra of meta.extras) {
         if (extra.kind === 'hangul-check') hangulCheckGiven = true;
@@ -374,12 +376,15 @@ const build = (input: CurriculumParamsInput, catalog: Catalog, opts: BuildOption
       continue;
     }
 
-    // Step 6: the week kind.
+    // Step 6: the week kind. A week already under way keeps the kind it was started with.
     const pastDates = new Set(past.map((item) => item.targetDate));
     const fillable = week.sessions.filter((date) => date >= from && !pastDates.has(date));
     const reservations = reserved.get(week.index) ?? [];
+    const started = past.length > 0 ? opts.historyWeeks?.find((meta) => meta.index === week.index) : undefined;
+    const keep = started !== undefined && (started.kind === 'learn' || started.kind === 'culture') ? started : undefined;
     let kind: WeekKind;
     if (week.sessions.length === 0) kind = 'break';
+    else if (keep !== undefined && reservations.length === 0) kind = keep.kind;
     else if (reservations.length > 0) kind = 'culture';
     else if (
       cadence.reviewEvery > 0 &&
@@ -395,8 +400,11 @@ const build = (input: CurriculumParamsInput, catalog: Catalog, opts: BuildOption
     past.forEach(count);
     const placed: CurriculumItem[] = [];
     if (kind === 'learn' || kind === 'culture') {
+      const pastStories = past.filter((item) => lookup.category(item) === 'story').length;
       const storySlots =
-        kind === 'culture' ? Math.min(fillable.length, Math.max(cadence.storiesPerCultureWeek, reservations.length)) : 0;
+        kind === 'culture'
+          ? Math.min(fillable.length, Math.max(cadence.storiesPerCultureWeek - pastStories, reservations.length))
+          : 0;
       const pending = reservations.map((reservation) => reservation.entry);
       fillable.forEach((date, slot) => {
         let next: QueueItem | undefined;
@@ -427,7 +435,7 @@ const build = (input: CurriculumParamsInput, catalog: Catalog, opts: BuildOption
       index: week.index,
       startDate: week.startDate,
       kind,
-      focus: focusOf(weekItems, reservations[0]?.festival ?? null),
+      focus: focusOf(weekItems, reservations[0]?.festival ?? keep?.focus.festival ?? null),
       extras,
     });
   }
