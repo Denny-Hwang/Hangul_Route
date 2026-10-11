@@ -122,16 +122,17 @@ describe('restore never reduces cards (F-STORY-006 §3.6 M6)', () => {
   const cards = (rand: () => number) =>
     IDS.filter(() => rand() < 0.5).map((cardId) => ({ cardId, unlockedAt: T[Math.floor(rand() * T.length)] as string, newSinceLastView: rand() < 0.5 }));
 
-  it('an older backup merged into the device keeps every card the device holds, at the same or an earlier time', () => {
+  it('any backup merged into the device keeps every card it holds, never makes an unlock later and never makes a seen card new again', () => {
     for (let seed = 1; seed <= 200; seed += 1) {
       const rand = seededRandom(seed);
       const existing = { ...snap([], []), cards: cards(rand) };
-      const backup: BackupFile = { ...file, exportedAt: '2026-09-01T00:00:00.000Z', snapshot: { ...snap([], []), cards: cards(rand) } };
+      const backup: BackupFile = { ...file, snapshot: { ...snap([], []), cards: cards(rand) } };
       const plan = planRestore(backup, { profile, snapshot: existing }, NOW);
       const after = new Map(plan.snapshot.cards.map((c) => [c.cardId, c]));
       for (const c of existing.cards) {
         expect(after.has(c.cardId), `seed ${seed}`).toBe(true);
         expect((after.get(c.cardId)?.unlockedAt ?? '') <= c.unlockedAt, `seed ${seed}`).toBe(true);
+        if (!c.newSinceLastView) expect(after.get(c.cardId)?.newSinceLastView, `seed ${seed}`).toBe(false);
       }
       expect(plan.snapshot.cards.length, `seed ${seed}`).toBeGreaterThanOrEqual(existing.cards.length);
     }
