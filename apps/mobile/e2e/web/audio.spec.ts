@@ -484,14 +484,15 @@ test('Culture Quiz: Hear it says the prompt word, and nothing plays before the t
 /**
  * F-AUDIO-004 A-6: bundled clips on the web (§3.10). Letter clips are precached; vocabulary,
  * story, card and dialogue clips are runtime-cached. Real letter clips arrive with A-9 (T-017);
- * until then the offline clip test runs only on the e2e fixture build, which maps fixture tones
- * for g, n, d, l from e2e/fixtures/audio:
+ * until then these tests run on the e2e fixture build, which maps fixture tones for g, n, d, l
+ * and one vocabulary tone from e2e/fixtures/audio (CI: the "Story reader e2e (fixture bundle)" step):
  *   pnpm --filter @hangul-route/mobile build:web:fixtures
- *   STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile test:e2e:web audio -g "offline after one visit"
- * (Only that test: in the fixture build those four letters play a tone, not the voice, so the
+ *   STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test audio -g "bundled clips"
+ * (Only this group: in the fixture build those four letters play a tone, not the voice, so the
  * voice tests above expect the regular build.)
  */
-const DIST = join(__dirname, '..', '..', process.env.STORY_FIXTURES === '1' ? 'dist-e2e' : 'dist');
+const FIXTURE_BUILD = process.env.STORY_FIXTURES === '1';
+const DIST = join(__dirname, '..', '..', FIXTURE_BUILD ? 'dist-e2e' : 'dist');
 
 /** Built .mp3 files, relative to dist (dot folders included). */
 function builtClips(): string[] {
@@ -510,17 +511,9 @@ function builtClips(): string[] {
 
 const RUNTIME_CLIP = /(^|\/)audio\/(vocab|story|card|dialogue)\//;
 const letterClips = builtClips().filter((p) => /\/audio\/jamo\//.test(p));
-
-test('the service worker precaches every letter clip and runtime-caches the other clip groups', async ({ page }) => {
-  const res = await page.request.get('/sw.js');
-  expect(res.ok()).toBe(true);
-  const sw = await res.text();
-  for (const clip of letterClips) expect(sw, clip).toContain(clip);
-  for (const clip of builtClips().filter((p) => RUNTIME_CLIP.test(p))) expect(sw, clip).not.toContain(clip);
-  // The cache-first rule for vocabulary / story / card / dialogue clips.
-  expect(sw).toContain('hr-audio-v1');
-  expect(sw).toContain('CacheFirst');
-});
+const runtimeClips = builtClips().filter((p) => RUNTIME_CLIP.test(p));
+// The fixture build must hold its clips: a silent skip there would leave the clip path unchecked in CI.
+const NO_CLIPS = 'No letter clips in this build: real ones arrive with A-9 (T-017); the fixture build (see above) has four.';
 
 type ClipWindow = Window & { __clipStarts?: number[] };
 
@@ -539,29 +532,91 @@ async function recordClipStarts(page: Page): Promise<void> {
   });
 }
 
-test('offline after one visit, Match Sound plays the letter clip and the device voice stays silent', async ({ page, context }) => {
-  test.skip(letterClips.length === 0, 'No letter clips in this build: real ones arrive with A-9 (T-017); the fixture build (see above) has four.');
-  await fakeSpeech(page, 'none');
-  await recordClipStarts(page);
-  await onboardChild(page, { name: 'Dami', startJourney: false });
-  await page.goto('/');
+/** Clips (not the one-sample unlock buffer) that have started. */
+const clipStarts = async (page: Page): Promise<number> =>
+  (await page.evaluate(() => (window as ClipWindow).__clipStarts ?? [])).filter((d) => d > 0.1).length;
+
+/** One online visit until the service worker controls the page. */
+async function controlledBySw(page: Page): Promise<void> {
   await page.waitForFunction(async () => {
     const reg = await navigator.serviceWorker.getRegistration();
     return !!reg?.active && !!navigator.serviceWorker.controller;
   });
-  await page.reload();
-  await page.waitForFunction(() => !!navigator.serviceWorker.controller);
-  await context.setOffline(true);
-  await page.reload();
-  await expect(page.getByText('Hi, Dami!')).toBeVisible();
+}
 
-  await page.getByRole('button', { name: /^Meet g, n, d, l/ }).click();
-  await openMatchSound(page);
+test.describe('bundled clips (A-6)', () => {
+  test('the service worker precaches every letter clip and runtime-caches the other clip groups', async ({ page }) => {
+    if (FIXTURE_BUILD) {
+      expect(letterClips.length, 'fixture letter clips').toBeGreaterThan(0);
+      expect(runtimeClips.length, 'fixture vocabulary clip').toBeGreaterThan(0);
+    }
+    const res = await page.request.get('/sw.js');
+    expect(res.ok()).toBe(true);
+    const sw = await res.text();
+    for (const clip of letterClips) expect(sw, clip).toContain(clip);
+    for (const clip of runtimeClips) expect(sw, clip).not.toContain(clip);
+    // The cache-first rule for vocabulary / story / card / dialogue clips.
+    expect(sw).toContain('hr-audio-v1');
+    expect(sw).toContain('CacheFirst');
+  });
 
-  // A clip (not the one-sample unlock buffer) started, served by the service worker.
-  await expect.poll(async () => (await page.evaluate(() => (window as ClipWindow).__clipStarts ?? [])).filter((d) => d > 0.1).length).toBeGreaterThan(0);
-  expect(await utterances(page)).toEqual([]);
-  // A recording plays, so the round is not switched to the "no Korean voice" text prompt.
-  await expect(page.getByText('No Korean voice on this device.')).toHaveCount(0);
-  await expect(page.getByText('Tap the letter you hear')).toBeVisible();
+  test('a vocabulary clip is cached on its first online fetch and then served offline', async ({ page, context }) => {
+    test.skip(runtimeClips.length === 0 && !FIXTURE_BUILD, 'No runtime-cached clips in this build; the fixture build has one.');
+    const url = `/${runtimeClips[0]}`;
+    await fakeSpeech(page, 'none');
+    await onboardChild(page, { name: 'Dami', startJourney: false });
+    await page.goto('/');
+    await controlledBySw(page);
+    const online = await page.evaluate(async (u) => {
+      const res = await fetch(u);
+      return { ok: res.ok, type: res.headers.get('content-type') };
+    }, url);
+    expect(online).toEqual({ ok: true, type: 'audio/mpeg' });
+    await expect
+      .poll(() => page.evaluate(async (u) => !!(await (await caches.open('hr-audio-v1')).match(u)), url))
+      .toBe(true);
+    await context.setOffline(true);
+    const offline = await page.evaluate(async (u) => {
+      const res = await fetch(u);
+      return { ok: res.ok, bytes: (await res.arrayBuffer()).byteLength };
+    }, url);
+    expect(offline.ok).toBe(true);
+    expect(offline.bytes).toBeGreaterThan(0);
+  });
+
+  test('offline after one visit, Match Sound plays the letter clip and the "no voice" text stays away', async ({ page, context }) => {
+    test.skip(letterClips.length === 0 && !FIXTURE_BUILD, NO_CLIPS);
+    await fakeSpeech(page, 'none');
+    await recordClipStarts(page);
+    await onboardChild(page, { name: 'Dami', startJourney: false });
+    await page.goto('/');
+    await controlledBySw(page);
+    await page.reload();
+    await page.waitForFunction(() => !!navigator.serviceWorker.controller);
+    await context.setOffline(true);
+    await page.reload();
+    await expect(page.getByText('Hi, Dami!')).toBeVisible();
+
+    await page.getByRole('button', { name: /^Meet g, n, d, l/ }).click();
+    await openMatchSound(page);
+
+    // A clip started, served by the service worker.
+    await expect.poll(() => clipStarts(page)).toBeGreaterThan(0);
+    // A recording plays, so the round is not switched to the "no Korean voice" text prompt.
+    await expect(page.getByText('No Korean voice on this device.')).toHaveCount(0);
+    await expect(page.getByText('Tap the letter you hear')).toBeVisible();
+  });
+
+  test('with a Korean voice on the device the recording still wins (clip > voice, AD4)', async ({ page }) => {
+    test.skip(letterClips.length === 0 && !FIXTURE_BUILD, NO_CLIPS);
+    await fakeSpeech(page, 'korean');
+    await recordClipStarts(page);
+    await onboardChild(page, { name: 'Dami' });
+    await openMatchSound(page);
+
+    await expect.poll(() => clipStarts(page)).toBeGreaterThan(0);
+    // The clip played to its end: the Korean voice never spoke the letter.
+    await page.waitForTimeout(1500);
+    expect((await utterances(page)).filter((u) => u.lang === 'ko-KR')).toEqual([]);
+  });
 });
