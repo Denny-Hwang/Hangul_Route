@@ -1,6 +1,7 @@
 import { colors, radii, spacing, typography } from '@hangul-route/design-system/tokens';
 import Link from 'next/link';
 import { mockFamily } from '@/data/mock-family';
+import { levelPillLabel } from '@/lib/console/level-label';
 
 export default function ParentPage(): JSX.Element {
   const family = mockFamily();
@@ -74,17 +75,19 @@ export default function ParentPage(): JSX.Element {
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 style={{ margin: 0 }}>{p.displayName}</h3>
-              <span
-                style={{
-                  fontSize: typography.size.caption,
-                  padding: `${spacing.xxs}px ${spacing.sm}px`,
-                  backgroundColor: colors.surface.sunken,
-                  color: colors.text.secondary,
-                  borderRadius: radii.pill,
-                }}
-              >
-                Age {p.ageGroup}
-              </span>
+              {levelPillLabel(p.ageGroup) ? (
+                <span
+                  style={{
+                    fontSize: typography.size.caption,
+                    padding: `${spacing.xxs}px ${spacing.sm}px`,
+                    backgroundColor: colors.surface.sunken,
+                    color: colors.text.secondary,
+                    borderRadius: radii.pill,
+                  }}
+                >
+                  {levelPillLabel(p.ageGroup)}
+                </span>
+              ) : null}
             </div>
             <p style={{ color: colors.text.secondary, margin: `${spacing.xs}px 0` }}>
               {p.questsCompleted} quests · {p.cards} cards · {p.streak}-day streak

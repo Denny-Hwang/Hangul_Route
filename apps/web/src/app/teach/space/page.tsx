@@ -5,10 +5,12 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useState } from 'react';
 import { Button, ConsoleShell, Muted, Notice, panelStyle } from '@/components/console/ui';
+import { AvatarChip } from '@/components/AvatarChip';
 import { SchoolAdmin } from '@/components/console/SchoolAdmin';
 import { useConsole } from '@/components/console/use-console';
 import type { PlanView, Roster } from '@/lib/console/api';
 import { COPY } from '@/lib/console/copy';
+import { levelPillLabel } from '@/lib/console/level-label';
 import { capState, classRollup, codeExpiry, percent, relativeDay } from '@/lib/console/rollup';
 import { latestPublished, planReadout, readoutLine } from '@/lib/console/plans';
 import { KIND_LABEL, ROUTES, memberNoun, spaceIdFrom } from '@/lib/console/routing';
@@ -145,11 +147,16 @@ function SpaceInner(): JSX.Element {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: spacing.md }}>
                 {roster.learners.map((l) => (
                   <article key={l.id} style={panelStyle} data-testid="student-card">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: spacing.sm }}>
-                      <strong>{l.displayName}</strong>
-                      <span style={{ fontSize: typography.size.caption, color: colors.text.muted, padding: `${spacing.xxs}px ${spacing.sm}px`, backgroundColor: colors.surface.sunken, borderRadius: radii.pill }}>
-                        Age {l.ageGroup}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: spacing.sm }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: spacing.sm, minWidth: 0 }}>
+                        <AvatarChip avatar={l.avatar} />
+                        <strong>{l.displayName}</strong>
                       </span>
+                      {levelPillLabel(l.ageGroup) ? (
+                        <span style={{ fontSize: typography.size.caption, color: colors.text.muted, padding: `${spacing.xxs}px ${spacing.sm}px`, backgroundColor: colors.surface.sunken, borderRadius: radii.pill }}>
+                          {levelPillLabel(l.ageGroup)}
+                        </span>
+                      ) : null}
                     </div>
                     {l.summary ? (
                       <div style={{ color: colors.text.secondary, fontSize: typography.size.bodySm, marginTop: spacing.xs, lineHeight: typography.leading.relaxed }}>
