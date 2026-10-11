@@ -42,7 +42,7 @@ Titles and covers come from the story data (mock: `seollal-new-year`, `sun-and-m
 
 ## 5. Reference
 
-Text references only: a children's-library picture-book shelf seen face-on; a streaming app's "continue watching" hero without autoplay; `library/gallery` for the grid rhythm.
+Text references only: a public-library picture-book shelf seen face-on; a streaming app's "continue watching" hero without autoplay; `library/gallery` for the grid rhythm.
 
 ## 6. Claude Design prompt
 
