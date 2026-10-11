@@ -1,5 +1,6 @@
 import type { TelemetryEventName } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
+import type { RootStackParamList } from '../../../navigation/types';
 import { defaultOpenMode, planOpenStory, type OpenStorySource } from '../open-story';
 import type { StoryStatus } from '../story-status';
 import { shelfIndex, story } from './shelf-fixture';
@@ -70,6 +71,13 @@ describe('planOpenStory', () => {
       clearBookmark: false,
       event: { name: 'story.opened', payload: { storyId: 'story:sun-and-moon', source: 'results', mode: 'read-again' } },
     });
+  });
+
+  it('StoryReader params fit the StoryReader route (F-STORY-002 PR 2.6a)', () => {
+    const plan = planOpenStory({ entry, status: FINISHED, source: 'home', mode: 'read-again' });
+    if (plan.route !== 'StoryReader') throw new Error('expected StoryReader');
+    const params: RootStackParamList['StoryReader'] = plan.params;
+    expect(params.mode).toBe('replay');
   });
 
   it('without a mode, follows the status', () => {
