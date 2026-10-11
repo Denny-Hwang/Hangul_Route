@@ -13,6 +13,20 @@ import { InboxTransferSchema, lenientArray } from './transfer';
  * apps (typing), so the wire format has exactly one definition.
  */
 
+/**
+ * Counts of the learner's self-route (F-PLAN-002 section 3.6 / 3.10): `total`
+ * means "scheduled so far" (the device's one-week horizon), `weeks` and
+ * `endsOn` give the full length. Read by the family space only.
+ */
+export const SelfRouteSummarySchema = z.object({
+  done: z.number().int().nonnegative(),
+  total: z.number().int().nonnegative(),
+  notReady: z.number().int().nonnegative(),
+  weeks: z.number().int().min(1).max(52),
+  endsOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+});
+export type SelfRouteSummary = z.infer<typeof SelfRouteSummarySchema>;
+
 /** Client-computed aggregate; the only column caregivers/teachers read (roadmap §3.3). */
 export const ProgressSummarySchema = z.object({
   schemaVersion: z.literal(1),
@@ -46,6 +60,8 @@ export const ProgressSummarySchema = z.object({
       notReady: z.number().int().nonnegative().default(0),
     }),
   ),
+  /** Self-route counts (F-PLAN-002 section 3.5); removed from every roster but a family's. */
+  selfRoute: SelfRouteSummarySchema.optional(),
 });
 export type ProgressSummary = z.infer<typeof ProgressSummarySchema>;
 

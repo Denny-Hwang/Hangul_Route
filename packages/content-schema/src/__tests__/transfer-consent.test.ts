@@ -202,7 +202,7 @@ describe('consent text per locale', () => {
 describe('what the new teacher sees is generated from data (TEACHER_VISIBLE_SUMMARY_KEYS)', () => {
   const summaryKeys = Object.keys(ProgressSummarySchema.shape).sort();
 
-  it('allow-lists exactly the spec keys and hides schemaVersion and stage1Anchor', () => {
+  it('allow-lists exactly the spec keys and hides schemaVersion, stage1Anchor and selfRoute', () => {
     expect([...TEACHER_VISIBLE_SUMMARY_KEYS]).toEqual([
       'lastActiveAt',
       'streakDays',
@@ -214,7 +214,8 @@ describe('what the new teacher sees is generated from data (TEACHER_VISIBLE_SUMM
       'placement',
       'planProgress',
     ]);
-    expect([...TEACHER_HIDDEN_SUMMARY_KEYS]).toEqual(['schemaVersion', 'stage1Anchor']);
+    // selfRoute: the family space reads it, a class or school never does (F-PLAN-002 section 3.10).
+    expect([...TEACHER_HIDDEN_SUMMARY_KEYS]).toEqual(['schemaVersion', 'stage1Anchor', 'selfRoute']);
   });
 
   it('classifies every ProgressSummarySchema key exactly once (a new key fails here until classified)', () => {

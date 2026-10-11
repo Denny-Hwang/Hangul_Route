@@ -1,5 +1,8 @@
 import { z } from 'zod';
+import { CurriculumMetaSchema } from '../curriculum/draft';
+import { CURRICULUM_MAX_ITEMS } from '../curriculum/presets';
 import { PlacementResultSchema } from './placement';
+import { PlanItemSchema } from './plan-item';
 
 /**
  * Progress — per-profile snapshot of learning state.
@@ -75,6 +78,23 @@ export const ReviewEntrySchema = z.object({
 });
 export type ReviewEntry = z.infer<typeof ReviewEntrySchema>;
 
+/**
+ * A self-route (F-PLAN-002 section 3.5 / 3.9): a curriculum kept on the
+ * learner's device, inside the progress snapshot, so it rides sync, the backup
+ * file and Rescue Code restore. A stopped route is archived (`archivedAt`),
+ * never set to null, so the Worker's preserve rule can tell a stop from an old
+ * client that does not know the field.
+ */
+export const SelfRouteSchema = z.object({
+  id: z.string().regex(/^route:[a-z0-9-]+$/),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  archivedAt: z.string().nullable(),
+  meta: CurriculumMetaSchema,
+  items: z.array(PlanItemSchema).max(CURRICULUM_MAX_ITEMS),
+});
+export type SelfRoute = z.infer<typeof SelfRouteSchema>;
+
 export const ProgressSnapshotSchema = z.object({
   profileId: z.string(),
   updatedAt: z.string(),
@@ -95,6 +115,8 @@ export const ProgressSnapshotSchema = z.object({
    * Writers store `new Date().toISOString()`; mergers compare instants, not strings.
    */
   stageDoneAt: z.record(z.string(), z.string()).optional(),
+  /** The learner's own weekly plan (F-PLAN-002 section 3.5); null when there is none. */
+  selfRoute: SelfRouteSchema.nullable().default(null),
 });
 /**
  * `placements` is optional in the *type* although the schema defaults it to
@@ -102,6 +124,8 @@ export const ProgressSnapshotSchema = z.object({
  * section 3.8), so every snapshot stored before the key existed lacks it at
  * runtime and every reader must treat a missing list as `[]`.
  */
-export type ProgressSnapshot = Omit<z.infer<typeof ProgressSnapshotSchema>, 'placements'> & {
+export type ProgressSnapshot = Omit<z.infer<typeof ProgressSnapshotSchema>, 'placements' | 'selfRoute'> & {
   placements?: z.infer<typeof ProgressSnapshotSchema>['placements'];
+  /** Optional for the same reason as `placements`: readers treat a missing value as null. */
+  selfRoute?: SelfRoute | null;
 };
