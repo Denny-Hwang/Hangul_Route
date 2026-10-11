@@ -15,10 +15,10 @@
   "minutes": 5,
   "learningGoalsEn": [
     "Understand that each king's Annals were compiled after his death by a temporary office, the 실록청 (Sillokcheong).",
-    "Know that used drafts were destroyed (in early Joseon, washed in a stream: 세초) to keep secrets and reuse paper.",
-    "Know that copies were kept in several archives (사고), many deep in the mountains, and that two scholars saved the Jeonju copy during a war.",
-    "Know that historians aired the books in the sun every few years (포쇄) and packed them with herbs.",
-    "Learn the words 사고, 산, 책, 햇볕 and 약초."
+    "Know that used drafts were destroyed to keep secrets and reuse paper; in early Joseon they were washed in a stream, 세초 (secho).",
+    "Know that copies were kept in several archives, 사고 (sago), many deep in the mountains, and that two scholars saved the Jeonju copy during a war.",
+    "Know that historians aired the books in the sun every few years, 포쇄 (poswae), and packed them with herbs.",
+    "Read and recognize the words 사고 (sago), 산 (san), 책 (chaek), 햇볕 (haetbyeot) and 약초 (yakcho)."
   ],
   "origin": {
     "type": "documented",
@@ -108,7 +108,7 @@
       "id": "chaegeul-haetbyeote-mallyeoyo",
       "ko": "책을 햇볕에 말려요.",
       "romanization": "Chaegeul haetbyeote mallyeoyo.",
-      "en": "We dry the books in the sunshine.",
+      "en": "They dry the books in the sunshine.",
       "kind": "phrase"
     },
     {
@@ -126,7 +126,7 @@
       "scenes": [
         {
           "id": "s1",
-          "narrationEn": "When a king died, the next king's court set up a temporary office called the {kw:sillokcheong}. Its officials collected the historians' {kw:sacho} and other court records to write the late king's Annals.",
+          "narrationEn": "When a king died, the next king's court set up a temporary office called the {kw:sillokcheong}. Its officials collected the historians' {kw:sacho} and other court records to write that king's Annals.",
           "captionEn": "An office gathers the historians' notes",
           "keyword": {
             "id": "sillokcheong",
@@ -166,7 +166,7 @@
         {
           "id": "s3",
           "narrationEn": "And the used drafts? In early Joseon, they were soaked and washed in a stream near the government paper office. Secrets stayed safe, and the paper could be reused. This was called {kw:secho}.",
-          "captionEn": "Used drafts washed in a stream",
+          "captionEn": "In early Joseon, drafts were washed in a stream",
           "keyword": {
             "id": "secho",
             "ko": "세초",
@@ -212,7 +212,7 @@
         },
         {
           "id": "s5",
-          "narrationEn": "Two local scholars, An Ui and Son Hong-rok, used their own money to carry the Jeonju copy and other books to Naejangsan Mountain. They took turns guarding them until the books were handed to the government the next year.",
+          "narrationEn": "Two local scholars, An Ui and Son Hongrok, used their own money to carry the Jeonju copy and other books to Naejangsan Mountain. They took turns guarding them until the books were handed to the government the next year.",
           "captionEn": "Scholars carry the books to a mountain",
           "keyword": {
             "id": "naejangsan",
@@ -231,7 +231,7 @@
               "factIds": [
                 "f6"
               ],
-              "rationaleEn": "f6 names the two scholars, An Ui and Son Hong-rok.",
+              "rationaleEn": "f6 names the two scholars, An Ui and Son Hongrok.",
               "timeRelative": false
             }
           ],
@@ -284,7 +284,7 @@
           "line": {
             "ko": "책을 햇볕에 말려요.",
             "romanization": "Chaegeul haetbyeote mallyeoyo.",
-            "en": "We dry the books in the sunshine.",
+            "en": "They dry the books in the sunshine.",
             "speaker": "narrator"
           },
           "factIds": [
@@ -330,7 +330,7 @@
           "options": [
             {
               "id": "a",
-              "en": "An Ui and Son Hong-rok",
+              "en": "An Ui and Son Hongrok",
               "isCorrect": true
             },
             {
@@ -344,7 +344,7 @@
               "isCorrect": false
             }
           ],
-          "explainEn": "Local scholars An Ui and Son Hong-rok used their own money to move the Jeonju copy to Naejangsan Mountain and guard it.",
+          "explainEn": "Local scholars An Ui and Son Hongrok used their own money to move the Jeonju copy to Naejangsan Mountain and guard it.",
           "factIds": [
             "f6"
           ]
