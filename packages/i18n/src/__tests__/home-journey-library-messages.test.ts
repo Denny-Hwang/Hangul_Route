@@ -77,12 +77,11 @@ describe('learner.library', () => {
 
   it('keeps the heading, counts, filter, locked and how-to lines', () => {
     expect(l.title).toBe('Heritage Library');
-    expect(l.collected.line(1, 24)).toBe('1 of 24 collected');
-    expect(l.collected.pill(1, 24)).toBe('1/24');
+    // F-STORY-006 PR 6.5b: a plain count (no N/M pill), and the explainer is one line per rule.
+    expect(l.collected.line(1)).toBe('1 card collected');
     expect(l.filterAll).toBe('All');
-    expect(l.locked).toBe('Locked');
     expect(l.how.title).toBe('How to collect more');
-    expect(l.how.body).toBe('Finish quests to unlock cards.');
+    expect(l.how.quest).toBe('Finish a quest to earn its card.');
   });
 
   it('says how to earn a locked card, one sentence per award rule, never how far along (F-STORY-006 §3.7)', () => {

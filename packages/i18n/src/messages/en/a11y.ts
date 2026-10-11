@@ -37,6 +37,8 @@ export const a11y = {
     soundHint === undefined ? `Korean letter ${romanization}` : `Korean letter ${romanization}. ${soundHint}`,
   discoverFinal: (romanization: string) => `Korean final consonant ${romanization}`,
   lockedCard: 'Locked card',
+  /** A locked Library tile or card page, with how it is earned (an earn hint, F-STORY-006 §3.7). */
+  lockedCardHint: (hint: string) => `Locked card. ${hint}`,
   flipToBack: 'Tap to flip card to back',
   flipToFront: 'Tap to flip card to front',
   shareCard: 'Share this card',
