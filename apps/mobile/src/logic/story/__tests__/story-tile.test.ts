@@ -3,7 +3,15 @@ import { describe, expect, it } from 'vitest';
 import { scanLearnerCopy } from '../../homework/banned-text';
 import { shelfCopy } from '../shelf-copy';
 import type { StoryStatus } from '../story-status';
-import { heroAction, shelfViewedPayload, storyTileColumns, storyTileView } from '../story-tile';
+import {
+  heroAction,
+  lockedStoryGate,
+  shelfViewedPayload,
+  storyCoverVariant,
+  storyTileColumns,
+  storyTileCoverWidth,
+  storyTileView,
+} from '../story-tile';
 import { bookmarks, shelfIndex, story } from './shelf-fixture';
 
 const COPY = shelfCopy(getMessages('en'));
@@ -170,5 +178,38 @@ describe('shelfViewedPayload (story.shelf.viewed, §3.11)', () => {
     const p = shelfViewedPayload('culture', []);
     expect(p).toEqual({ section: 'culture', stories: 0, started: 0, finished: 0 });
     expect(Object.keys(p).sort()).toEqual(['finished', 'section', 'started', 'stories']);
+  });
+});
+
+describe('storyTileCoverWidth (the cover fills the tile less its padding and border)', () => {
+  it('takes the chrome off and floors', () => {
+    expect(storyTileCoverWidth(320, 20)).toBe(300);
+    expect(storyTileCoverWidth(160.7, 20)).toBe(140);
+  });
+
+  it('is never negative, and 0 for an unknown width', () => {
+    expect(storyTileCoverWidth(0, 20)).toBe(0);
+    expect(storyTileCoverWidth(12, 20)).toBe(0);
+    expect(storyTileCoverWidth(-50, 20)).toBe(0);
+    expect(storyTileCoverWidth(Number.NaN, 20)).toBe(0);
+  });
+});
+
+describe('storyCoverVariant (thumbnail below a 240 dp cover)', () => {
+  it('thumb below 240, full from 240', () => {
+    expect(storyCoverVariant(140)).toBe('thumb');
+    expect(storyCoverVariant(239)).toBe('thumb');
+    expect(storyCoverVariant(240)).toBe('full');
+    expect(storyCoverVariant(360)).toBe('full');
+  });
+});
+
+describe('lockedStoryGate (§3.4: a locked tile opens the grown-up gate Journey uses)', () => {
+  it('a self-only device with no PIN opens the paywall directly, attributed to the Library', () => {
+    expect(lockedStoryGate(true)).toEqual({ route: 'Paywall', params: { from: 'library' } });
+  });
+
+  it('otherwise the PIN entry, which then opens the paywall attributed to the Library', () => {
+    expect(lockedStoryGate(false)).toEqual({ route: 'PinEntry', params: { next: 'Paywall', from: 'library' } });
   });
 });

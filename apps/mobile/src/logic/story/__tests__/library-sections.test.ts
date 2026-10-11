@@ -1,6 +1,6 @@
 import type { CultureNote } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
-import { LIBRARY_SECTIONS, selectedSection, visibleSections } from '../library-sections';
+import { DRAWN_LIBRARY_SECTIONS, LIBRARY_SECTIONS, librarySectionTabs, selectedSection, visibleSections } from '../library-sections';
 import { shelfIndex, story } from './shelf-fixture';
 
 const note: CultureNote = {
@@ -66,5 +66,32 @@ describe('selectedSection (§3.3: route.params.section ?? cards)', () => {
   it('a requested section that is not offered falls back to Cards (no reviewed story, theme packs reserved)', () => {
     expect(selectedSection('story-time', ['cards'])).toBe('cards');
     expect(selectedSection('theme-packs', all)).toBe('cards');
+  });
+});
+
+describe('librarySectionTabs (the tab row the Library draws)', () => {
+  it('no tab row when only Cards is offered (behaviour 5: exactly today’s gallery)', () => {
+    expect(librarySectionTabs({ entries: [] })).toEqual([]);
+  });
+
+  it('Cards and Story Time once a Story Time shelf story is indexed', () => {
+    expect(librarySectionTabs({ entries: shelfIndex([tale('tiger')]) })).toEqual(['cards', 'story-time']);
+  });
+
+  it('a culture note alone draws no Culture tab until its section ships (PR 4.7), so no tab row', () => {
+    expect(librarySectionTabs({ entries: shelfIndex([culture('seollal', [note])]) })).toEqual([]);
+  });
+
+  it('a Story Time story with a culture note still draws Cards and Story Time only', () => {
+    expect(librarySectionTabs({ entries: shelfIndex([tale('tiger', [note])]) })).toEqual(['cards', 'story-time']);
+  });
+
+  it('keeps the registry order whatever the drawn set lists', () => {
+    const all = new Set(['culture', 'story-time', 'cards'] as const);
+    expect(librarySectionTabs({ entries: shelfIndex([tale('tiger', [note])]) }, all)).toEqual(['cards', 'story-time', 'culture']);
+  });
+
+  it('draws Cards and Story Time in this build', () => {
+    expect([...DRAWN_LIBRARY_SECTIONS]).toEqual(['cards', 'story-time']);
   });
 });

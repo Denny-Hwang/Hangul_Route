@@ -120,3 +120,30 @@ export function shelfViewedPayload(section: ShelfCategory, statuses: readonly Pi
     finished: statuses.filter((s) => s.state === 'finished').length,
   };
 }
+
+/** Below this cover width the scene is drawn as a thumbnail (detail shapes and hairlines dropped). */
+export const STORY_COVER_THUMB_BELOW = 240;
+
+/** The cover width for a tile `width` wide less its `chrome` (padding and border, both sides); never negative. */
+export function storyTileCoverWidth(width: number, chrome: number): number {
+  return Number.isFinite(width) ? Math.max(0, Math.floor(width - chrome)) : 0;
+}
+
+export function storyCoverVariant(coverWidth: number): 'thumb' | 'full' {
+  return coverWidth < STORY_COVER_THUMB_BELOW ? 'thumb' : 'full';
+}
+
+/**
+ * Where a locked tile goes (§3.4, gating on only): the grown-up gate Journey
+ * uses for a locked stage, or the paywall directly on a self-only device with
+ * no PIN (`opensDirectly`). Either way the paywall is attributed to the Library.
+ */
+export type LockedStoryGate =
+  | { route: 'Paywall'; params: { from: 'library' } }
+  | { route: 'PinEntry'; params: { next: 'Paywall'; from: 'library' } };
+
+export function lockedStoryGate(opensDirectly: boolean): LockedStoryGate {
+  return opensDirectly
+    ? { route: 'Paywall', params: { from: 'library' } }
+    : { route: 'PinEntry', params: { next: 'Paywall', from: 'library' } };
+}

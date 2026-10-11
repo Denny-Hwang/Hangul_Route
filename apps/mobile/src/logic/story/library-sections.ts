@@ -49,3 +49,19 @@ export function selectedSection(
 ): LibrarySectionId {
   return requested !== undefined && visible.includes(requested) ? requested : 'cards';
 }
+
+/** The sections this build can draw; Culture joins with its section (F-STORY-004 PR 4.7). */
+export const DRAWN_LIBRARY_SECTIONS: ReadonlySet<LibrarySectionId> = new Set<LibrarySectionId>(['cards', 'story-time']);
+
+/**
+ * The Library's tab row (§3.3): the offered sections this build draws, in
+ * registry order, or none at all when fewer than two remain (Cards alone is
+ * exactly today's gallery, with no tab row).
+ */
+export function librarySectionTabs(
+  ctx: LibrarySectionContext,
+  drawn: ReadonlySet<LibrarySectionId> = DRAWN_LIBRARY_SECTIONS,
+): LibrarySectionId[] {
+  const tabs = visibleSections(ctx).filter((id) => drawn.has(id));
+  return tabs.length >= 2 ? tabs : [];
+}
