@@ -659,3 +659,82 @@ describe('selfRoute and summary.selfRoute (F-PLAN-002 section 3.5, the additive 
     expect(got.data.summary.selfRoute).toEqual(counts);
   });
 });
+
+describe('summary.journey (F-ROUTE-001 section 3.12, R-8: tolerant, no preserve entry)', () => {
+  beforeEach(() => db.reset());
+  const base = { schemaVer: 1, contentVer: '2026.10' };
+  const journey = {
+    v: 1,
+    here: 'stage1',
+    stages: [
+      { stage: 'stage1', state: 'open', done: 4, known: 0, total: 8 },
+      { stage: 'stage2', state: 'open', done: 0, known: 0, total: 2 },
+    ],
+  };
+
+  type Stored = { data: { rev: number; snapshot: { quests: unknown[] }; summary: Record<string, unknown> } };
+  async function getStored(learnerId: string, auth: Record<string, string>) {
+    const res = await app.request(`/api/sync/learners/${learnerId}/snapshot`, { headers: auth });
+    return (await res.json()) as Stored;
+  }
+
+  it('round-trips the journey with schemaVersion 1', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    expect((await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: snapshotFor(r.learnerId), summary: { ...summary, journey } })).status).toBe(200);
+    const got = await getStored(r.learnerId, auth);
+    expect(got.data.summary.journey).toEqual(journey);
+    expect(got.data.summary.schemaVersion).toBe(1);
+  });
+
+  it('an old client (no journey) is accepted exactly as today and reads back without the key', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    expect((await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: snapshotFor(r.learnerId), summary })).status).toBe(200);
+    expect((await getStored(r.learnerId, auth)).data.summary).not.toHaveProperty('journey');
+  });
+
+  it('malformed journey: PUT still 200, journey dropped, the rest of the upload stored', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    const malformed = [{ ...journey, v: 2 }, { ...journey, stages: [{ stage: 'stage1', state: 'open', done: -1, known: 0, total: 8 }] }, 'journey'];
+    let rev = 0;
+    for (const bad of malformed) {
+      const res = await put(r.learnerId, auth, {
+        ...base,
+        baseRev: rev,
+        snapshot: snapshotFor(r.learnerId, [{ questId: 'quest:a', stars: 3 }]),
+        summary: { ...summary, streakDays: 3, journey: bad },
+      });
+      expect(res.status).toBe(200);
+      rev += 1;
+      const got = await getStored(r.learnerId, auth);
+      expect(got.data.rev).toBe(rev);
+      expect(got.data.summary).not.toHaveProperty('journey');
+      expect(got.data.summary.streakDays).toBe(3);
+      expect(got.data.snapshot.quests).toHaveLength(1);
+    }
+  });
+
+  it('strips per-quest detail smuggled into the journey', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    const smuggled = { ...journey, learnerType: 'self', stages: [{ ...journey.stages[0], questIds: ['quest:secret'] }] };
+    expect((await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: snapshotFor(r.learnerId), summary: { ...summary, journey: smuggled } })).status).toBe(200);
+    const got = await getStored(r.learnerId, auth);
+    expect(got.data.summary.journey).toEqual({ ...journey, stages: [journey.stages[0]] });
+    expect(JSON.stringify(got.data.summary)).not.toContain('secret');
+    expect(JSON.stringify(got.data.summary)).not.toContain('learnerType');
+  });
+
+  it('has no preserve entry: every upload carries its own journey, so an upload without one replaces it', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: snapshotFor(r.learnerId), summary: { ...summary, journey } });
+    const next = { ...journey, stages: [{ ...journey.stages[0], done: 5 }] };
+    await put(r.learnerId, auth, { ...base, baseRev: 1, snapshot: snapshotFor(r.learnerId), summary: { ...summary, journey: next } });
+    expect((await getStored(r.learnerId, auth)).data.summary.journey).toEqual(next);
+    await put(r.learnerId, auth, { ...base, baseRev: 2, snapshot: snapshotFor(r.learnerId), summary });
+    expect((await getStored(r.learnerId, auth)).data.summary).not.toHaveProperty('journey');
+  });
+});
