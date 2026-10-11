@@ -66,6 +66,7 @@ Hangul Route
 │   ├─ A5. Quest player (intro→present→practice→apply→reward) [S] content-skill
 │   │    └─ Minigame shell + 13 kinds (9 구현: 8 active + voice-echo beta)  06
 │   ├─ A6. Results & celebration (stars · card unlock)   [S] F-MOTION-003/004/005
+│   │    └─ Card award model: episode · stage · welcome · set · story 카드, Results extra cards, Today 의 1회 catch-up 카드, Library earn hints, story 카드 뒷면 출처 [S 엔진 / R 화면] F-STORY-006
 │   ├─ A7. Library (Heritage cards 42 = 30 Stage 1 + 12 taste · detail · share) [S] F-CARD-001/002/003
 │   ├─ A8. Reviews (Daily test · Feedback · Stage review · Certificate) [D] F-RVW-001
 │   ├─ A9. Hoya companion (5 poses · bubble · lines)     [S] F-HOYA-001, F-002
@@ -143,12 +144,16 @@ Hangul Route
 | `profiles/switch-button` | (component) | 세션 중 전환 | S | F-PROF-001 | ✓ |
 | `home/todays-mission` (alias `home/home`) | Main/Home | 오늘 할 3가지 | S | F-HW-001 | ✓ |
 | `homework/list` | Homework | 배정된 숙제 큐 | S | F-HW-001 | NEW |
+| `home/cards-catch-up` | Main/Home (인사말 아래 1회) | "Hoya found N cards you already earned!" — 세션당 1회, 타이머·남은 개수 없음 | R | F-STORY-006 §3.5 | ✓ |
 | `journey/grid` | Main/Journey | 격자에서 에피소드 고르기 | S | 02 §1, 04 | NEW |
 | `episode/detail` | EpisodeDetail | 퀘스트 목록 + 보상 카드 미리보기 | S | 05 | NEW |
 | `quest/player` | QuestPlayer | 5-step 진행 셸 | S | content-skill | NEW |
 | `minigame/shell` | Minigame | 라운드 진행·피드백 공통 프레임 | S | 06, minigame-skill | NEW |
 | `minigame/families` | (appendix) | 4 family 별 박스 다이어그램 | S | 06 | NEW |
 | `results/celebrate` | Results | 별 + 카드 언락 + 다음 행동 1개 | S | F-MOTION-003 | NEW |
+| `results/extra-cards` | (Results 의 배너) | 에피소드·스테이지·세트를 끝낸 그 런에서만 "N more cards joined your Library!" + 썸네일 | R | F-STORY-006 §3.3, §3.7 | ✓ |
+| `library/earn-hints` | Main/Library (Cards) · CardDetail | 잠긴 카드마다 얻는 방법 1-2줄 · New pill · 정직한 explainer · N/M pill 없음 | R | F-STORY-006 §3.7 | ✓ |
+| `library/card-back-citation` | CardDetail (뒷면) | 이야기 카드 뒷면: 검증된 사실 원문 + 출처 한 줄 (링크 없음) | R | F-STORY-006 §3.8 | ✓ |
 | `library/gallery` | Main/Library | 모은 카드 보기 | S | F-CARD-001 | NEW |
 | `library/card-detail` | CardDetail (modal) | 카드 앞/뒤 + 공유 | S | F-CARD-002/003 | NEW |
 | `profile/settings` | Profile | 플랜 상태 · 소리 · 전환 · Grown-ups | S | F-SUB-001 | NEW |
@@ -240,6 +245,8 @@ profile/settings ─┬─▶ sync/save-progress (Rescue Code)
                   └─▶ console/account  (parent-gated)
 onboarding/welcome ─▶ sync/restore ("I already have progress") ─┬─▶ profiles/picker
                                                                 └─▶ sync/merge-notice (로컬 진도 있을 때)
+(앱 업데이트 후 첫 세션, reconcile 이 카드를 더했을 때) home/todays-mission ─▶ home/cards-catch-up ─▶ library/earn-hints (New pill)
+results/celebrate (에피소드·스테이지·세트 완료 런) ─▶ results/extra-cards ─▶ library/card-detail (뒷면: library/card-back-citation)
 journey/grid (잠긴 Stage 셀) ─▶ paywall/upgrade (parent-gated)
 
 [web only] 첫 방문 ─▶ pwa/system-banners (offline-ready) ; 설치 안 됨 + 3회 방문 ─▶ pwa/install-guide
