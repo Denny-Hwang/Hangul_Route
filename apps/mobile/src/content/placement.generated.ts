@@ -14,7 +14,7 @@ export const PLACEMENT_BANK: PlacementBank = {
         "options": [
           {"id":"t1","ko":"ㄴ","romanization":"n","en":"letter nieun","isCorrect":false},
           {"id":"t2","ko":"ㄴ","romanization":"n","en":"letter nieun","isCorrect":false},
-          {"id":"t3","ko":"ㄱ","romanization":"g","en":"letter giyeok","isCorrect":true},
+          {"id":"t3","ko":"ㄱ","romanization":"g/k","en":"letter giyeok","isCorrect":true},
           {"id":"t4","ko":"ㄴ","romanization":"n","en":"letter nieun","isCorrect":false}
         ],
         "tags": ["sym:ㄱ","sym:ㄴ","look-alike"],
@@ -32,10 +32,10 @@ export const PLACEMENT_BANK: PlacementBank = {
       "question": {
         "format": "shape-odd-one-out",
         "options": [
-          {"id":"t1","ko":"ㄱ","romanization":"g","en":"letter giyeok","isCorrect":false},
-          {"id":"t2","ko":"ㄱ","romanization":"g","en":"letter giyeok","isCorrect":false},
+          {"id":"t1","ko":"ㄱ","romanization":"g/k","en":"letter giyeok","isCorrect":false},
+          {"id":"t2","ko":"ㄱ","romanization":"g/k","en":"letter giyeok","isCorrect":false},
           {"id":"t3","ko":"ㄴ","romanization":"n","en":"letter nieun","isCorrect":true},
-          {"id":"t4","ko":"ㄱ","romanization":"g","en":"letter giyeok","isCorrect":false}
+          {"id":"t4","ko":"ㄱ","romanization":"g/k","en":"letter giyeok","isCorrect":false}
         ],
         "tags": ["sym:ㄴ","sym:ㄱ","look-alike"],
         "requires": {"audio":false,"picture":null},
@@ -52,10 +52,10 @@ export const PLACEMENT_BANK: PlacementBank = {
       "question": {
         "format": "shape-odd-one-out",
         "options": [
-          {"id":"t1","ko":"ㅂ","romanization":"b","en":"letter bieup","isCorrect":false},
-          {"id":"t2","ko":"ㅂ","romanization":"b","en":"letter bieup","isCorrect":false},
+          {"id":"t1","ko":"ㅂ","romanization":"b/p","en":"letter bieup","isCorrect":false},
+          {"id":"t2","ko":"ㅂ","romanization":"b/p","en":"letter bieup","isCorrect":false},
           {"id":"t3","ko":"ㅁ","romanization":"m","en":"letter mieum","isCorrect":true},
-          {"id":"t4","ko":"ㅂ","romanization":"b","en":"letter bieup","isCorrect":false}
+          {"id":"t4","ko":"ㅂ","romanization":"b/p","en":"letter bieup","isCorrect":false}
         ],
         "tags": ["sym:ㅁ","sym:ㅂ","look-alike"],
         "requires": {"audio":false,"picture":null},
@@ -74,7 +74,7 @@ export const PLACEMENT_BANK: PlacementBank = {
         "options": [
           {"id":"t1","ko":"ㅁ","romanization":"m","en":"letter mieum","isCorrect":false},
           {"id":"t2","ko":"ㅁ","romanization":"m","en":"letter mieum","isCorrect":false},
-          {"id":"t3","ko":"ㅂ","romanization":"b","en":"letter bieup","isCorrect":true},
+          {"id":"t3","ko":"ㅂ","romanization":"b/p","en":"letter bieup","isCorrect":true},
           {"id":"t4","ko":"ㅁ","romanization":"m","en":"letter mieum","isCorrect":false}
         ],
         "tags": ["sym:ㅂ","sym:ㅁ","look-alike"],
@@ -174,7 +174,7 @@ export const PLACEMENT_BANK: PlacementBank = {
         "options": [
           {"id":"t1","ko":"ㅎ","romanization":"h","en":"letter hieut","isCorrect":false},
           {"id":"t2","ko":"ㅎ","romanization":"h","en":"letter hieut","isCorrect":false},
-          {"id":"t3","ko":"ㅇ","romanization":"ng","en":"letter ieung","isCorrect":true},
+          {"id":"t3","ko":"ㅇ","romanization":"silent/ng","en":"letter ieung","isCorrect":true},
           {"id":"t4","ko":"ㅎ","romanization":"h","en":"letter hieut","isCorrect":false}
         ],
         "tags": ["sym:ㅇ","sym:ㅎ","look-alike"],
@@ -192,10 +192,10 @@ export const PLACEMENT_BANK: PlacementBank = {
       "question": {
         "format": "shape-odd-one-out",
         "options": [
-          {"id":"t1","ko":"ㅇ","romanization":"ng","en":"letter ieung","isCorrect":false},
-          {"id":"t2","ko":"ㅇ","romanization":"ng","en":"letter ieung","isCorrect":false},
+          {"id":"t1","ko":"ㅇ","romanization":"silent/ng","en":"letter ieung","isCorrect":false},
+          {"id":"t2","ko":"ㅇ","romanization":"silent/ng","en":"letter ieung","isCorrect":false},
           {"id":"t3","ko":"ㅎ","romanization":"h","en":"letter hieut","isCorrect":true},
-          {"id":"t4","ko":"ㅇ","romanization":"ng","en":"letter ieung","isCorrect":false}
+          {"id":"t4","ko":"ㅇ","romanization":"silent/ng","en":"letter ieung","isCorrect":false}
         ],
         "tags": ["sym:ㅎ","sym:ㅇ","look-alike"],
         "requires": {"audio":false,"picture":null},
@@ -252,10 +252,10 @@ export const PLACEMENT_BANK: PlacementBank = {
       "question": {
         "format": "shape-odd-one-out",
         "options": [
-          {"id":"t1","ko":"ㄹ","romanization":"r","en":"letter rieul","isCorrect":false},
-          {"id":"t2","ko":"ㄹ","romanization":"r","en":"letter rieul","isCorrect":false},
-          {"id":"t3","ko":"ㄷ","romanization":"d","en":"letter digeut","isCorrect":true},
-          {"id":"t4","ko":"ㄹ","romanization":"r","en":"letter rieul","isCorrect":false}
+          {"id":"t1","ko":"ㄹ","romanization":"r/l","en":"letter rieul","isCorrect":false},
+          {"id":"t2","ko":"ㄹ","romanization":"r/l","en":"letter rieul","isCorrect":false},
+          {"id":"t3","ko":"ㄷ","romanization":"d/t","en":"letter digeut","isCorrect":true},
+          {"id":"t4","ko":"ㄹ","romanization":"r/l","en":"letter rieul","isCorrect":false}
         ],
         "tags": ["sym:ㄷ","sym:ㄹ","look-alike"],
         "requires": {"audio":false,"picture":null},
@@ -272,10 +272,10 @@ export const PLACEMENT_BANK: PlacementBank = {
       "question": {
         "format": "shape-odd-one-out",
         "options": [
-          {"id":"t1","ko":"ㄷ","romanization":"d","en":"letter digeut","isCorrect":false},
-          {"id":"t2","ko":"ㄷ","romanization":"d","en":"letter digeut","isCorrect":false},
-          {"id":"t3","ko":"ㄹ","romanization":"r","en":"letter rieul","isCorrect":true},
-          {"id":"t4","ko":"ㄷ","romanization":"d","en":"letter digeut","isCorrect":false}
+          {"id":"t1","ko":"ㄷ","romanization":"d/t","en":"letter digeut","isCorrect":false},
+          {"id":"t2","ko":"ㄷ","romanization":"d/t","en":"letter digeut","isCorrect":false},
+          {"id":"t3","ko":"ㄹ","romanization":"r/l","en":"letter rieul","isCorrect":true},
+          {"id":"t4","ko":"ㄷ","romanization":"d/t","en":"letter digeut","isCorrect":false}
         ],
         "tags": ["sym:ㄹ","sym:ㄷ","look-alike"],
         "requires": {"audio":false,"picture":null},
@@ -332,10 +332,10 @@ export const PLACEMENT_BANK: PlacementBank = {
       "question": {
         "format": "shape-odd-one-out",
         "options": [
-          {"id":"t1","ko":"ㄱ","romanization":"g","en":"letter giyeok","isCorrect":false},
-          {"id":"t2","ko":"ㄱ","romanization":"g","en":"letter giyeok","isCorrect":false},
+          {"id":"t1","ko":"ㄱ","romanization":"g/k","en":"letter giyeok","isCorrect":false},
+          {"id":"t2","ko":"ㄱ","romanization":"g/k","en":"letter giyeok","isCorrect":false},
           {"id":"t3","ko":"ㅋ","romanization":"k","en":"letter kieuk","isCorrect":true},
-          {"id":"t4","ko":"ㄱ","romanization":"g","en":"letter giyeok","isCorrect":false}
+          {"id":"t4","ko":"ㄱ","romanization":"g/k","en":"letter giyeok","isCorrect":false}
         ],
         "tags": ["sym:ㅋ","sym:ㄱ","look-alike"],
         "requires": {"audio":false,"picture":null},
@@ -354,7 +354,7 @@ export const PLACEMENT_BANK: PlacementBank = {
         "options": [
           {"id":"t1","ko":"ㅋ","romanization":"k","en":"letter kieuk","isCorrect":false},
           {"id":"t2","ko":"ㅋ","romanization":"k","en":"letter kieuk","isCorrect":false},
-          {"id":"t3","ko":"ㄱ","romanization":"g","en":"letter giyeok","isCorrect":true},
+          {"id":"t3","ko":"ㄱ","romanization":"g/k","en":"letter giyeok","isCorrect":true},
           {"id":"t4","ko":"ㅋ","romanization":"k","en":"letter kieuk","isCorrect":false}
         ],
         "tags": ["sym:ㄱ","sym:ㅋ","look-alike"],
@@ -572,10 +572,10 @@ export const PLACEMENT_BANK: PlacementBank = {
       "question": {
         "format": "shape-odd-one-out",
         "options": [
-          {"id":"t1","ko":"ㄷ","romanization":"d","en":"letter digeut","isCorrect":false},
-          {"id":"t2","ko":"ㄷ","romanization":"d","en":"letter digeut","isCorrect":false},
+          {"id":"t1","ko":"ㄷ","romanization":"d/t","en":"letter digeut","isCorrect":false},
+          {"id":"t2","ko":"ㄷ","romanization":"d/t","en":"letter digeut","isCorrect":false},
           {"id":"t3","ko":"ㅌ","romanization":"t","en":"letter tieut","isCorrect":true},
-          {"id":"t4","ko":"ㄷ","romanization":"d","en":"letter digeut","isCorrect":false}
+          {"id":"t4","ko":"ㄷ","romanization":"d/t","en":"letter digeut","isCorrect":false}
         ],
         "tags": ["sym:ㅌ","sym:ㄷ","look-alike"],
         "requires": {"audio":false,"picture":null},
@@ -594,7 +594,7 @@ export const PLACEMENT_BANK: PlacementBank = {
         "options": [
           {"id":"t1","ko":"ㅌ","romanization":"t","en":"letter tieut","isCorrect":false},
           {"id":"t2","ko":"ㅌ","romanization":"t","en":"letter tieut","isCorrect":false},
-          {"id":"t3","ko":"ㄷ","romanization":"d","en":"letter digeut","isCorrect":true},
+          {"id":"t3","ko":"ㄷ","romanization":"d/t","en":"letter digeut","isCorrect":true},
           {"id":"t4","ko":"ㅌ","romanization":"t","en":"letter tieut","isCorrect":false}
         ],
         "tags": ["sym:ㄷ","sym:ㅌ","look-alike"],
@@ -612,10 +612,10 @@ export const PLACEMENT_BANK: PlacementBank = {
       "question": {
         "format": "shape-odd-one-out",
         "options": [
-          {"id":"t1","ko":"ㅇ","romanization":"ng","en":"letter ieung","isCorrect":false},
-          {"id":"t2","ko":"ㅇ","romanization":"ng","en":"letter ieung","isCorrect":false},
+          {"id":"t1","ko":"ㅇ","romanization":"silent/ng","en":"letter ieung","isCorrect":false},
+          {"id":"t2","ko":"ㅇ","romanization":"silent/ng","en":"letter ieung","isCorrect":false},
           {"id":"t3","ko":"ㅁ","romanization":"m","en":"letter mieum","isCorrect":true},
-          {"id":"t4","ko":"ㅇ","romanization":"ng","en":"letter ieung","isCorrect":false}
+          {"id":"t4","ko":"ㅇ","romanization":"silent/ng","en":"letter ieung","isCorrect":false}
         ],
         "tags": ["sym:ㅁ","sym:ㅇ","look-alike"],
         "requires": {"audio":false,"picture":null},
@@ -634,7 +634,7 @@ export const PLACEMENT_BANK: PlacementBank = {
         "options": [
           {"id":"t1","ko":"ㅁ","romanization":"m","en":"letter mieum","isCorrect":false},
           {"id":"t2","ko":"ㅁ","romanization":"m","en":"letter mieum","isCorrect":false},
-          {"id":"t3","ko":"ㅇ","romanization":"ng","en":"letter ieung","isCorrect":true},
+          {"id":"t3","ko":"ㅇ","romanization":"silent/ng","en":"letter ieung","isCorrect":true},
           {"id":"t4","ko":"ㅁ","romanization":"m","en":"letter mieum","isCorrect":false}
         ],
         "tags": ["sym:ㅇ","sym:ㅁ","look-alike"],
@@ -652,10 +652,10 @@ export const PLACEMENT_BANK: PlacementBank = {
       "question": {
         "format": "shape-odd-one-out",
         "options": [
-          {"id":"t1","ko":"ㄷ","romanization":"d","en":"letter digeut","isCorrect":false},
-          {"id":"t2","ko":"ㄷ","romanization":"d","en":"letter digeut","isCorrect":false},
+          {"id":"t1","ko":"ㄷ","romanization":"d/t","en":"letter digeut","isCorrect":false},
+          {"id":"t2","ko":"ㄷ","romanization":"d/t","en":"letter digeut","isCorrect":false},
           {"id":"t3","ko":"ㄴ","romanization":"n","en":"letter nieun","isCorrect":true},
-          {"id":"t4","ko":"ㄷ","romanization":"d","en":"letter digeut","isCorrect":false}
+          {"id":"t4","ko":"ㄷ","romanization":"d/t","en":"letter digeut","isCorrect":false}
         ],
         "tags": ["sym:ㄴ","sym:ㄷ","look-alike"],
         "requires": {"audio":false,"picture":null},
@@ -674,7 +674,7 @@ export const PLACEMENT_BANK: PlacementBank = {
         "options": [
           {"id":"t1","ko":"ㄴ","romanization":"n","en":"letter nieun","isCorrect":false},
           {"id":"t2","ko":"ㄴ","romanization":"n","en":"letter nieun","isCorrect":false},
-          {"id":"t3","ko":"ㄷ","romanization":"d","en":"letter digeut","isCorrect":true},
+          {"id":"t3","ko":"ㄷ","romanization":"d/t","en":"letter digeut","isCorrect":true},
           {"id":"t4","ko":"ㄴ","romanization":"n","en":"letter nieun","isCorrect":false}
         ],
         "tags": ["sym:ㄷ","sym:ㄴ","look-alike"],
@@ -692,10 +692,10 @@ export const PLACEMENT_BANK: PlacementBank = {
       "question": {
         "format": "shape-odd-one-out",
         "options": [
-          {"id":"t1","ko":"ㅇ","romanization":"ng","en":"letter ieung","isCorrect":false},
-          {"id":"t2","ko":"ㅇ","romanization":"ng","en":"letter ieung","isCorrect":false},
+          {"id":"t1","ko":"ㅇ","romanization":"silent/ng","en":"letter ieung","isCorrect":false},
+          {"id":"t2","ko":"ㅇ","romanization":"silent/ng","en":"letter ieung","isCorrect":false},
           {"id":"t3","ko":"ㅅ","romanization":"s","en":"letter siot","isCorrect":true},
-          {"id":"t4","ko":"ㅇ","romanization":"ng","en":"letter ieung","isCorrect":false}
+          {"id":"t4","ko":"ㅇ","romanization":"silent/ng","en":"letter ieung","isCorrect":false}
         ],
         "tags": ["sym:ㅅ","sym:ㅇ","look-alike"],
         "requires": {"audio":false,"picture":null},
@@ -714,7 +714,7 @@ export const PLACEMENT_BANK: PlacementBank = {
         "options": [
           {"id":"t1","ko":"ㅅ","romanization":"s","en":"letter siot","isCorrect":false},
           {"id":"t2","ko":"ㅅ","romanization":"s","en":"letter siot","isCorrect":false},
-          {"id":"t3","ko":"ㅇ","romanization":"ng","en":"letter ieung","isCorrect":true},
+          {"id":"t3","ko":"ㅇ","romanization":"silent/ng","en":"letter ieung","isCorrect":true},
           {"id":"t4","ko":"ㅅ","romanization":"s","en":"letter siot","isCorrect":false}
         ],
         "tags": ["sym:ㅇ","sym:ㅅ","look-alike"],
@@ -902,10 +902,10 @@ export const PLACEMENT_BANK: PlacementBank = {
         "promptRomanization": "ga",
         "spokenKo": "가",
         "options": [
-          {"id":"giyeok","ko":"ㄱ","romanization":"g","en":"letter giyeok","isCorrect":true},
+          {"id":"giyeok","ko":"ㄱ","romanization":"g/k","en":"letter giyeok","isCorrect":true},
           {"id":"kieuk","ko":"ㅋ","romanization":"k","en":"letter kieuk","isCorrect":false},
           {"id":"nieun","ko":"ㄴ","romanization":"n","en":"letter nieun","isCorrect":false},
-          {"id":"digeut","ko":"ㄷ","romanization":"d","en":"letter digeut","isCorrect":false}
+          {"id":"digeut","ko":"ㄷ","romanization":"d/t","en":"letter digeut","isCorrect":false}
         ],
         "tags": ["sym:ㄱ","group:basic"],
         "requires": {"audio":true,"picture":null},
@@ -922,7 +922,7 @@ export const PLACEMENT_BANK: PlacementBank = {
       "question": {
         "format": "see-pick-sound",
         "promptKo": "ㄱ",
-        "promptRomanization": "ga",
+        "promptRomanization": "g/k",
         "options": [
           {"id":"ga","sound":"ga","isCorrect":true},
           {"id":"ka","sound":"ka","isCorrect":false},
@@ -947,9 +947,9 @@ export const PLACEMENT_BANK: PlacementBank = {
         "spokenKo": "나",
         "options": [
           {"id":"nieun","ko":"ㄴ","romanization":"n","en":"letter nieun","isCorrect":true},
-          {"id":"giyeok","ko":"ㄱ","romanization":"g","en":"letter giyeok","isCorrect":false},
-          {"id":"digeut","ko":"ㄷ","romanization":"d","en":"letter digeut","isCorrect":false},
-          {"id":"rieul","ko":"ㄹ","romanization":"r","en":"letter rieul","isCorrect":false}
+          {"id":"giyeok","ko":"ㄱ","romanization":"g/k","en":"letter giyeok","isCorrect":false},
+          {"id":"digeut","ko":"ㄷ","romanization":"d/t","en":"letter digeut","isCorrect":false},
+          {"id":"rieul","ko":"ㄹ","romanization":"r/l","en":"letter rieul","isCorrect":false}
         ],
         "tags": ["sym:ㄴ","group:basic"],
         "requires": {"audio":true,"picture":null},
@@ -966,7 +966,7 @@ export const PLACEMENT_BANK: PlacementBank = {
       "question": {
         "format": "see-pick-sound",
         "promptKo": "ㄴ",
-        "promptRomanization": "na",
+        "promptRomanization": "n",
         "options": [
           {"id":"na","sound":"na","isCorrect":true},
           {"id":"ga","sound":"ga","isCorrect":false},
@@ -1079,8 +1079,8 @@ export const PLACEMENT_BANK: PlacementBank = {
         "spokenKo": "마",
         "options": [
           {"id":"mieum","ko":"ㅁ","romanization":"m","en":"letter mieum","isCorrect":true},
-          {"id":"bieup","ko":"ㅂ","romanization":"b","en":"letter bieup","isCorrect":false},
-          {"id":"ieung","ko":"ㅇ","romanization":"ng","en":"letter ieung","isCorrect":false},
+          {"id":"bieup","ko":"ㅂ","romanization":"b/p","en":"letter bieup","isCorrect":false},
+          {"id":"ieung","ko":"ㅇ","romanization":"silent/ng","en":"letter ieung","isCorrect":false},
           {"id":"nieun","ko":"ㄴ","romanization":"n","en":"letter nieun","isCorrect":false}
         ],
         "tags": ["sym:ㅁ","group:basic"],
@@ -1098,7 +1098,7 @@ export const PLACEMENT_BANK: PlacementBank = {
       "question": {
         "format": "see-pick-sound",
         "promptKo": "ㅁ",
-        "promptRomanization": "ma",
+        "promptRomanization": "m",
         "options": [
           {"id":"ma","sound":"ma","isCorrect":true},
           {"id":"ba","sound":"ba","isCorrect":false},
@@ -1210,9 +1210,9 @@ export const PLACEMENT_BANK: PlacementBank = {
         "promptRomanization": "da",
         "spokenKo": "다",
         "options": [
-          {"id":"digeut","ko":"ㄷ","romanization":"d","en":"letter digeut","isCorrect":true},
+          {"id":"digeut","ko":"ㄷ","romanization":"d/t","en":"letter digeut","isCorrect":true},
           {"id":"tieut","ko":"ㅌ","romanization":"t","en":"letter tieut","isCorrect":false},
-          {"id":"rieul","ko":"ㄹ","romanization":"r","en":"letter rieul","isCorrect":false},
+          {"id":"rieul","ko":"ㄹ","romanization":"r/l","en":"letter rieul","isCorrect":false},
           {"id":"nieun","ko":"ㄴ","romanization":"n","en":"letter nieun","isCorrect":false}
         ],
         "tags": ["sym:ㄷ","group:basic"],
@@ -1230,7 +1230,7 @@ export const PLACEMENT_BANK: PlacementBank = {
       "question": {
         "format": "see-pick-sound",
         "promptKo": "ㄷ",
-        "promptRomanization": "da",
+        "promptRomanization": "d/t",
         "options": [
           {"id":"da","sound":"da","isCorrect":true},
           {"id":"ta","sound":"ta","isCorrect":false},
@@ -1254,8 +1254,8 @@ export const PLACEMENT_BANK: PlacementBank = {
         "promptRomanization": "ra",
         "spokenKo": "라",
         "options": [
-          {"id":"rieul","ko":"ㄹ","romanization":"r","en":"letter rieul","isCorrect":true},
-          {"id":"digeut","ko":"ㄷ","romanization":"d","en":"letter digeut","isCorrect":false},
+          {"id":"rieul","ko":"ㄹ","romanization":"r/l","en":"letter rieul","isCorrect":true},
+          {"id":"digeut","ko":"ㄷ","romanization":"d/t","en":"letter digeut","isCorrect":false},
           {"id":"nieun","ko":"ㄴ","romanization":"n","en":"letter nieun","isCorrect":false},
           {"id":"mieum","ko":"ㅁ","romanization":"m","en":"letter mieum","isCorrect":false}
         ],
@@ -1274,7 +1274,7 @@ export const PLACEMENT_BANK: PlacementBank = {
       "question": {
         "format": "see-pick-sound",
         "promptKo": "ㄹ",
-        "promptRomanization": "ra",
+        "promptRomanization": "r/l",
         "options": [
           {"id":"ra","sound":"ra","isCorrect":true},
           {"id":"da","sound":"da","isCorrect":false},
@@ -1301,7 +1301,7 @@ export const PLACEMENT_BANK: PlacementBank = {
           {"id":"jieut","ko":"ㅈ","romanization":"j","en":"letter jieut","isCorrect":true},
           {"id":"chieut","ko":"ㅊ","romanization":"ch","en":"letter chieut","isCorrect":false},
           {"id":"siot","ko":"ㅅ","romanization":"s","en":"letter siot","isCorrect":false},
-          {"id":"giyeok","ko":"ㄱ","romanization":"g","en":"letter giyeok","isCorrect":false}
+          {"id":"giyeok","ko":"ㄱ","romanization":"g/k","en":"letter giyeok","isCorrect":false}
         ],
         "tags": ["sym:ㅈ","group:rest"],
         "requires": {"audio":true,"picture":null},
@@ -1318,7 +1318,7 @@ export const PLACEMENT_BANK: PlacementBank = {
       "question": {
         "format": "see-pick-sound",
         "promptKo": "ㅈ",
-        "promptRomanization": "ja",
+        "promptRomanization": "j",
         "options": [
           {"id":"ja","sound":"ja","isCorrect":true},
           {"id":"cha","sound":"cha","isCorrect":false},
@@ -1362,7 +1362,7 @@ export const PLACEMENT_BANK: PlacementBank = {
       "question": {
         "format": "see-pick-sound",
         "promptKo": "ㅊ",
-        "promptRomanization": "cha",
+        "promptRomanization": "ch",
         "options": [
           {"id":"cha","sound":"cha","isCorrect":true},
           {"id":"ja","sound":"ja","isCorrect":false},
@@ -1386,7 +1386,7 @@ export const PLACEMENT_BANK: PlacementBank = {
         "promptRomanization": "ba",
         "spokenKo": "바",
         "options": [
-          {"id":"bieup","ko":"ㅂ","romanization":"b","en":"letter bieup","isCorrect":true},
+          {"id":"bieup","ko":"ㅂ","romanization":"b/p","en":"letter bieup","isCorrect":true},
           {"id":"pieup","ko":"ㅍ","romanization":"p","en":"letter pieup","isCorrect":false},
           {"id":"mieum","ko":"ㅁ","romanization":"m","en":"letter mieum","isCorrect":false},
           {"id":"siot","ko":"ㅅ","romanization":"s","en":"letter siot","isCorrect":false}
@@ -1406,7 +1406,7 @@ export const PLACEMENT_BANK: PlacementBank = {
       "question": {
         "format": "see-pick-sound",
         "promptKo": "ㅂ",
-        "promptRomanization": "ba",
+        "promptRomanization": "b/p",
         "options": [
           {"id":"ba","sound":"ba","isCorrect":true},
           {"id":"pa","sound":"pa","isCorrect":false},
@@ -1433,7 +1433,7 @@ export const PLACEMENT_BANK: PlacementBank = {
           {"id":"siot","ko":"ㅅ","romanization":"s","en":"letter siot","isCorrect":true},
           {"id":"jieut","ko":"ㅈ","romanization":"j","en":"letter jieut","isCorrect":false},
           {"id":"chieut","ko":"ㅊ","romanization":"ch","en":"letter chieut","isCorrect":false},
-          {"id":"ieung","ko":"ㅇ","romanization":"ng","en":"letter ieung","isCorrect":false}
+          {"id":"ieung","ko":"ㅇ","romanization":"silent/ng","en":"letter ieung","isCorrect":false}
         ],
         "tags": ["sym:ㅅ","group:rest"],
         "requires": {"audio":true,"picture":null},
@@ -1450,7 +1450,7 @@ export const PLACEMENT_BANK: PlacementBank = {
       "question": {
         "format": "see-pick-sound",
         "promptKo": "ㅅ",
-        "promptRomanization": "sa",
+        "promptRomanization": "s",
         "options": [
           {"id":"sa","sound":"sa","isCorrect":true},
           {"id":"ja","sound":"ja","isCorrect":false},
@@ -1475,7 +1475,7 @@ export const PLACEMENT_BANK: PlacementBank = {
         "spokenKo": "카",
         "options": [
           {"id":"kieuk","ko":"ㅋ","romanization":"k","en":"letter kieuk","isCorrect":true},
-          {"id":"giyeok","ko":"ㄱ","romanization":"g","en":"letter giyeok","isCorrect":false},
+          {"id":"giyeok","ko":"ㄱ","romanization":"g/k","en":"letter giyeok","isCorrect":false},
           {"id":"tieut","ko":"ㅌ","romanization":"t","en":"letter tieut","isCorrect":false},
           {"id":"pieup","ko":"ㅍ","romanization":"p","en":"letter pieup","isCorrect":false}
         ],
@@ -1494,7 +1494,7 @@ export const PLACEMENT_BANK: PlacementBank = {
       "question": {
         "format": "see-pick-sound",
         "promptKo": "ㅋ",
-        "promptRomanization": "ka",
+        "promptRomanization": "k",
         "options": [
           {"id":"ka","sound":"ka","isCorrect":true},
           {"id":"ga","sound":"ga","isCorrect":false},
@@ -1519,7 +1519,7 @@ export const PLACEMENT_BANK: PlacementBank = {
         "spokenKo": "타",
         "options": [
           {"id":"tieut","ko":"ㅌ","romanization":"t","en":"letter tieut","isCorrect":true},
-          {"id":"digeut","ko":"ㄷ","romanization":"d","en":"letter digeut","isCorrect":false},
+          {"id":"digeut","ko":"ㄷ","romanization":"d/t","en":"letter digeut","isCorrect":false},
           {"id":"kieuk","ko":"ㅋ","romanization":"k","en":"letter kieuk","isCorrect":false},
           {"id":"pieup","ko":"ㅍ","romanization":"p","en":"letter pieup","isCorrect":false}
         ],
@@ -1538,7 +1538,7 @@ export const PLACEMENT_BANK: PlacementBank = {
       "question": {
         "format": "see-pick-sound",
         "promptKo": "ㅌ",
-        "promptRomanization": "ta",
+        "promptRomanization": "t",
         "options": [
           {"id":"ta","sound":"ta","isCorrect":true},
           {"id":"da","sound":"da","isCorrect":false},
@@ -1563,7 +1563,7 @@ export const PLACEMENT_BANK: PlacementBank = {
         "spokenKo": "파",
         "options": [
           {"id":"pieup","ko":"ㅍ","romanization":"p","en":"letter pieup","isCorrect":true},
-          {"id":"bieup","ko":"ㅂ","romanization":"b","en":"letter bieup","isCorrect":false},
+          {"id":"bieup","ko":"ㅂ","romanization":"b/p","en":"letter bieup","isCorrect":false},
           {"id":"kieuk","ko":"ㅋ","romanization":"k","en":"letter kieuk","isCorrect":false},
           {"id":"tieut","ko":"ㅌ","romanization":"t","en":"letter tieut","isCorrect":false}
         ],
@@ -1582,7 +1582,7 @@ export const PLACEMENT_BANK: PlacementBank = {
       "question": {
         "format": "see-pick-sound",
         "promptKo": "ㅍ",
-        "promptRomanization": "pa",
+        "promptRomanization": "p",
         "options": [
           {"id":"pa","sound":"pa","isCorrect":true},
           {"id":"ba","sound":"ba","isCorrect":false},
@@ -1607,7 +1607,7 @@ export const PLACEMENT_BANK: PlacementBank = {
         "spokenKo": "하",
         "options": [
           {"id":"hieut","ko":"ㅎ","romanization":"h","en":"letter hieut","isCorrect":true},
-          {"id":"ieung","ko":"ㅇ","romanization":"ng","en":"letter ieung","isCorrect":false},
+          {"id":"ieung","ko":"ㅇ","romanization":"silent/ng","en":"letter ieung","isCorrect":false},
           {"id":"chieut","ko":"ㅊ","romanization":"ch","en":"letter chieut","isCorrect":false},
           {"id":"siot","ko":"ㅅ","romanization":"s","en":"letter siot","isCorrect":false}
         ],
@@ -1626,7 +1626,7 @@ export const PLACEMENT_BANK: PlacementBank = {
       "question": {
         "format": "see-pick-sound",
         "promptKo": "ㅎ",
-        "promptRomanization": "ha",
+        "promptRomanization": "h",
         "options": [
           {"id":"ha","sound":"ha","isCorrect":true},
           {"id":"a","sound":"a","isCorrect":false},
@@ -3543,7 +3543,7 @@ export const PLACEMENT_BANK: PlacementBank = {
         "promptRomanization": "songpyeon",
         "options": [
           {"id":"songpyeon","en":"Songpyeon","pictureRef":"card:songpyeon","isCorrect":true},
-          {"id":"lantern","en":"Paper lantern","pictureRef":"card:lantern","isCorrect":false},
+          {"id":"sebae","en":"New Year bow","pictureRef":"card:sebae","isCorrect":false},
           {"id":"hanji","en":"Hanji paper","pictureRef":"card:hanji","isCorrect":false},
           {"id":"mountain","en":"Mountain","pictureRef":"card:mountain","isCorrect":false}
         ],
@@ -3587,7 +3587,7 @@ export const PLACEMENT_BANK: PlacementBank = {
         "promptRomanization": "kkachi",
         "options": [
           {"id":"magpie","en":"Magpie","pictureRef":"card:magpie","isCorrect":true},
-          {"id":"yutnori","en":"Yut game","pictureRef":"card:yutnori","isCorrect":false},
+          {"id":"top","en":"Spinning top","pictureRef":"card:top","isCorrect":false},
           {"id":"sea","en":"Sea","pictureRef":"card:sea","isCorrect":false},
           {"id":"chopsticks","en":"Chopsticks","pictureRef":"card:chopsticks","isCorrect":false}
         ],
@@ -3873,7 +3873,7 @@ export const PLACEMENT_BANK: PlacementBank = {
         "promptRomanization": "but",
         "options": [
           {"id":"brush","en":"Calligraphy brush","pictureRef":"card:brush","isCorrect":true},
-          {"id":"magpie","en":"Magpie","pictureRef":"card:magpie","isCorrect":false},
+          {"id":"tiger","en":"Tiger","pictureRef":"card:tiger","isCorrect":false},
           {"id":"pottery","en":"Celadon pottery","pictureRef":"card:pottery","isCorrect":false},
           {"id":"seollal","en":"Lunar New Year","pictureRef":"card:seollal","isCorrect":false}
         ],
@@ -3885,180 +3885,158 @@ export const PLACEMENT_BANK: PlacementBank = {
       "status": "ready"
     },
     {
-      "id": "pitem:vocab-hear-sagwa",
+      "id": "pitem:vocab-hear-meok",
       "strand": "vocabulary",
       "gate": "vocab",
       "form": "oral",
       "question": {
         "format": "hear-pick-picture",
-        "promptKo": "사과",
-        "promptRomanization": "sagwa",
+        "promptKo": "먹",
+        "promptRomanization": "meok",
         "options": [
-          {"id":"sagwa","en":"Apple","pictureRef":"card:sagwa","isCorrect":true},
-          {"id":"moon","en":"Moon","pictureRef":"card:moon","isCorrect":false},
-          {"id":"sebae","en":"New Year bow","pictureRef":"card:sebae","isCorrect":false},
-          {"id":"brush","en":"Calligraphy brush","pictureRef":"card:brush","isCorrect":false}
+          {"id":"ink","en":"Ink stick","pictureRef":"card:ink","isCorrect":true},
+          {"id":"sea","en":"Sea","pictureRef":"card:sea","isCorrect":false},
+          {"id":"kimchi","en":"Kimchi","pictureRef":"card:kimchi","isCorrect":false},
+          {"id":"top","en":"Spinning top","pictureRef":"card:top","isCorrect":false}
         ],
-        "tags": ["word:sagwa","topic:life"],
+        "tags": ["word:meok","topic:letters"],
         "requires": {"audio":true,"picture":"card"},
         "leaks": false
       },
-      "glossEn": "apple (hear)",
-      "status": "draft"
+      "glossEn": "ink stick (hear)",
+      "status": "ready"
     },
     {
-      "id": "pitem:vocab-hear-uyu",
+      "id": "pitem:vocab-hear-jongijeopgi",
       "strand": "vocabulary",
       "gate": "vocab",
       "form": "oral",
       "question": {
         "format": "hear-pick-picture",
-        "promptKo": "우유",
-        "promptRomanization": "uyu",
+        "promptKo": "종이접기",
+        "promptRomanization": "jongijeopgi",
         "options": [
-          {"id":"uyu","en":"Milk","pictureRef":"card:uyu","isCorrect":true},
-          {"id":"gayageum","en":"Gayageum zither","pictureRef":"card:gayageum","isCorrect":false},
-          {"id":"kite","en":"Kite","pictureRef":"card:kite","isCorrect":false},
-          {"id":"magpie","en":"Magpie","pictureRef":"card:magpie","isCorrect":false}
+          {"id":"origami","en":"Paper folding","pictureRef":"card:origami","isCorrect":true},
+          {"id":"rice","en":"Rice","pictureRef":"card:rice","isCorrect":false},
+          {"id":"mountain","en":"Mountain","pictureRef":"card:mountain","isCorrect":false},
+          {"id":"jegi","en":"Foot shuttlecock","pictureRef":"card:jegi","isCorrect":false}
         ],
-        "tags": ["word:uyu","topic:life"],
+        "tags": ["word:jongijeopgi","topic:letters"],
         "requires": {"audio":true,"picture":"card"},
         "leaks": false
       },
-      "glossEn": "milk (hear)",
-      "status": "draft"
+      "glossEn": "paper folding (hear)",
+      "status": "ready"
     },
     {
-      "id": "pitem:vocab-hear-ppang",
+      "id": "pitem:vocab-hear-bapsang",
       "strand": "vocabulary",
       "gate": "vocab",
       "form": "oral",
       "question": {
         "format": "hear-pick-picture",
-        "promptKo": "빵",
-        "promptRomanization": "ppang",
+        "promptKo": "밥상",
+        "promptRomanization": "bapsang",
         "options": [
-          {"id":"ppang","en":"Bread","pictureRef":"card:ppang","isCorrect":true},
-          {"id":"sebae","en":"New Year bow","pictureRef":"card:sebae","isCorrect":false},
-          {"id":"hanji","en":"Hanji paper","pictureRef":"card:hanji","isCorrect":false},
-          {"id":"moon","en":"Moon","pictureRef":"card:moon","isCorrect":false}
-        ],
-        "tags": ["word:ppang","topic:life"],
-        "requires": {"audio":true,"picture":"card"},
-        "leaks": false
-      },
-      "glossEn": "bread (hear)",
-      "status": "draft"
-    },
-    {
-      "id": "pitem:vocab-hear-dosirak",
-      "strand": "vocabulary",
-      "gate": "vocab",
-      "form": "oral",
-      "question": {
-        "format": "hear-pick-picture",
-        "promptKo": "도시락",
-        "promptRomanization": "dosirak",
-        "options": [
-          {"id":"dosirak","en":"Lunch box","pictureRef":"card:dosirak","isCorrect":true},
-          {"id":"top","en":"Spinning top","pictureRef":"card:top","isCorrect":false},
+          {"id":"family-table","en":"Family table","pictureRef":"card:family-table","isCorrect":true},
           {"id":"tiger","en":"Tiger","pictureRef":"card:tiger","isCorrect":false},
+          {"id":"book","en":"Book","pictureRef":"card:book","isCorrect":false},
+          {"id":"top","en":"Spinning top","pictureRef":"card:top","isCorrect":false}
+        ],
+        "tags": ["word:bapsang","topic:life"],
+        "requires": {"audio":true,"picture":"card"},
+        "leaks": false
+      },
+      "glossEn": "meal table (hear)",
+      "status": "ready"
+    },
+    {
+      "id": "pitem:vocab-hear-seollal",
+      "strand": "vocabulary",
+      "gate": "vocab",
+      "form": "oral",
+      "question": {
+        "format": "hear-pick-picture",
+        "promptKo": "설날",
+        "promptRomanization": "seollal",
+        "options": [
+          {"id":"seollal","en":"Lunar New Year","pictureRef":"card:seollal","isCorrect":true},
+          {"id":"sea","en":"Sea","pictureRef":"card:sea","isCorrect":false},
+          {"id":"ink","en":"Ink stick","pictureRef":"card:ink","isCorrect":false},
+          {"id":"pottery","en":"Celadon pottery","pictureRef":"card:pottery","isCorrect":false}
+        ],
+        "tags": ["word:seollal","topic:rites"],
+        "requires": {"audio":true,"picture":"card"},
+        "leaks": false
+      },
+      "glossEn": "Lunar New Year (hear)",
+      "status": "ready"
+    },
+    {
+      "id": "pitem:vocab-hear-chuseok",
+      "strand": "vocabulary",
+      "gate": "vocab",
+      "form": "oral",
+      "question": {
+        "format": "hear-pick-picture",
+        "promptKo": "추석",
+        "promptRomanization": "chuseok",
+        "options": [
+          {"id":"chuseok","en":"Harvest festival","pictureRef":"card:chuseok","isCorrect":true},
+          {"id":"kimbap","en":"Kimbap","pictureRef":"card:kimbap","isCorrect":false},
+          {"id":"book","en":"Book","pictureRef":"card:book","isCorrect":false},
+          {"id":"top","en":"Spinning top","pictureRef":"card:top","isCorrect":false}
+        ],
+        "tags": ["word:chuseok","topic:rites"],
+        "requires": {"audio":true,"picture":"card"},
+        "leaks": false
+      },
+      "glossEn": "Chuseok (harvest festival) (hear)",
+      "status": "ready"
+    },
+    {
+      "id": "pitem:vocab-hear-sebae",
+      "strand": "vocabulary",
+      "gate": "vocab",
+      "form": "oral",
+      "question": {
+        "format": "hear-pick-picture",
+        "promptKo": "세배",
+        "promptRomanization": "sebae",
+        "options": [
+          {"id":"sebae","en":"New Year bow","pictureRef":"card:sebae","isCorrect":true},
+          {"id":"mountain","en":"Mountain","pictureRef":"card:mountain","isCorrect":false},
+          {"id":"chopsticks","en":"Chopsticks","pictureRef":"card:chopsticks","isCorrect":false},
           {"id":"gayageum","en":"Gayageum zither","pictureRef":"card:gayageum","isCorrect":false}
         ],
-        "tags": ["word:dosirak","topic:life"],
+        "tags": ["word:sebae","topic:rites"],
         "requires": {"audio":true,"picture":"card"},
         "leaks": false
       },
-      "glossEn": "lunch box (hear)",
-      "status": "draft"
+      "glossEn": "New Year bow (hear)",
+      "status": "ready"
     },
     {
-      "id": "pitem:vocab-hear-haneul",
+      "id": "pitem:vocab-hear-yeondeung",
       "strand": "vocabulary",
       "gate": "vocab",
       "form": "oral",
       "question": {
         "format": "hear-pick-picture",
-        "promptKo": "하늘",
-        "promptRomanization": "haneul",
+        "promptKo": "연등",
+        "promptRomanization": "yeondeung",
         "options": [
-          {"id":"haneul","en":"Sky","pictureRef":"card:haneul","isCorrect":true},
-          {"id":"kite","en":"Kite","pictureRef":"card:kite","isCorrect":false},
-          {"id":"magpie","en":"Magpie","pictureRef":"card:magpie","isCorrect":false},
-          {"id":"tteokguk","en":"Rice cake soup","pictureRef":"card:tteokguk","isCorrect":false}
-        ],
-        "tags": ["word:haneul","topic:nature"],
-        "requires": {"audio":true,"picture":"card"},
-        "leaks": false
-      },
-      "glossEn": "sky (hear)",
-      "status": "draft"
-    },
-    {
-      "id": "pitem:vocab-hear-kkot",
-      "strand": "vocabulary",
-      "gate": "vocab",
-      "form": "oral",
-      "question": {
-        "format": "hear-pick-picture",
-        "promptKo": "꽃",
-        "promptRomanization": "kkot",
-        "options": [
-          {"id":"kkot","en":"Flower","pictureRef":"card:kkot","isCorrect":true},
-          {"id":"ink","en":"Ink stick","pictureRef":"card:ink","isCorrect":false},
-          {"id":"pottery","en":"Celadon pottery","pictureRef":"card:pottery","isCorrect":false},
-          {"id":"lantern","en":"Paper lantern","pictureRef":"card:lantern","isCorrect":false}
-        ],
-        "tags": ["word:kkot","topic:nature"],
-        "requires": {"audio":true,"picture":"card"},
-        "leaks": false
-      },
-      "glossEn": "flower (hear)",
-      "status": "draft"
-    },
-    {
-      "id": "pitem:vocab-hear-namu",
-      "strand": "vocabulary",
-      "gate": "vocab",
-      "form": "oral",
-      "question": {
-        "format": "hear-pick-picture",
-        "promptKo": "나무",
-        "promptRomanization": "namu",
-        "options": [
-          {"id":"namu","en":"Tree","pictureRef":"card:namu","isCorrect":true},
+          {"id":"lantern","en":"Paper lantern","pictureRef":"card:lantern","isCorrect":true},
+          {"id":"kimchi","en":"Kimchi","pictureRef":"card:kimchi","isCorrect":false},
           {"id":"tiger","en":"Tiger","pictureRef":"card:tiger","isCorrect":false},
-          {"id":"kimbap","en":"Kimbap","pictureRef":"card:kimbap","isCorrect":false},
-          {"id":"kite","en":"Kite","pictureRef":"card:kite","isCorrect":false}
+          {"id":"brush","en":"Calligraphy brush","pictureRef":"card:brush","isCorrect":false}
         ],
-        "tags": ["word:namu","topic:nature"],
+        "tags": ["word:yeondeung","topic:rites"],
         "requires": {"audio":true,"picture":"card"},
         "leaks": false
       },
-      "glossEn": "tree (hear)",
-      "status": "draft"
-    },
-    {
-      "id": "pitem:vocab-hear-byeol",
-      "strand": "vocabulary",
-      "gate": "vocab",
-      "form": "oral",
-      "question": {
-        "format": "hear-pick-picture",
-        "promptKo": "별",
-        "promptRomanization": "byeol",
-        "options": [
-          {"id":"byeol","en":"Star","pictureRef":"card:byeol","isCorrect":true},
-          {"id":"gayageum","en":"Gayageum zither","pictureRef":"card:gayageum","isCorrect":false},
-          {"id":"lantern","en":"Paper lantern","pictureRef":"card:lantern","isCorrect":false},
-          {"id":"hangul-day","en":"Hangul Day","pictureRef":"card:hangul-day","isCorrect":false}
-        ],
-        "tags": ["word:byeol","topic:nature"],
-        "requires": {"audio":true,"picture":"card"},
-        "leaks": false
-      },
-      "glossEn": "star (hear)",
-      "status": "draft"
+      "glossEn": "paper lantern (hear)",
+      "status": "ready"
     },
     {
       "id": "pitem:vocab-read-gimchi",
@@ -4095,7 +4073,7 @@ export const PLACEMENT_BANK: PlacementBank = {
           {"id":"rice","en":"Rice","pictureRef":"card:rice","isCorrect":true},
           {"id":"book","en":"Book","pictureRef":"card:book","isCorrect":false},
           {"id":"sea","en":"Sea","pictureRef":"card:sea","isCorrect":false},
-          {"id":"chuseok","en":"Harvest festival","pictureRef":"card:chuseok","isCorrect":false}
+          {"id":"sebae","en":"New Year bow","pictureRef":"card:sebae","isCorrect":false}
         ],
         "tags": ["word:bap","topic:life"],
         "requires": {"audio":false,"picture":"card"},
@@ -4138,7 +4116,7 @@ export const PLACEMENT_BANK: PlacementBank = {
         "options": [
           {"id":"kimbap","en":"Kimbap","pictureRef":"card:kimbap","isCorrect":true},
           {"id":"moon","en":"Moon","pictureRef":"card:moon","isCorrect":false},
-          {"id":"chuseok","en":"Harvest festival","pictureRef":"card:chuseok","isCorrect":false},
+          {"id":"hanbok","en":"Hanbok","pictureRef":"card:hanbok","isCorrect":false},
           {"id":"brush","en":"Calligraphy brush","pictureRef":"card:brush","isCorrect":false}
         ],
         "tags": ["word:gimbap","topic:life"],
@@ -4325,92 +4303,48 @@ export const PLACEMENT_BANK: PlacementBank = {
       "status": "ready"
     },
     {
-      "id": "pitem:vocab-read-haneul",
+      "id": "pitem:vocab-read-jongijeopgi",
       "strand": "vocabulary",
       "gate": "vocab",
       "form": "read",
       "question": {
         "format": "read-pick-picture",
-        "promptKo": "하늘",
-        "promptRomanization": "haneul",
+        "promptKo": "종이접기",
+        "promptRomanization": "jongijeopgi",
         "options": [
-          {"id":"haneul","en":"Sky","pictureRef":"card:haneul","isCorrect":true},
-          {"id":"sebae","en":"New Year bow","pictureRef":"card:sebae","isCorrect":false},
-          {"id":"origami","en":"Paper folding","pictureRef":"card:origami","isCorrect":false},
-          {"id":"gayageum","en":"Gayageum zither","pictureRef":"card:gayageum","isCorrect":false}
+          {"id":"origami","en":"Paper folding","pictureRef":"card:origami","isCorrect":true},
+          {"id":"rice","en":"Rice","pictureRef":"card:rice","isCorrect":false},
+          {"id":"sea","en":"Sea","pictureRef":"card:sea","isCorrect":false},
+          {"id":"top","en":"Spinning top","pictureRef":"card:top","isCorrect":false}
         ],
-        "tags": ["word:haneul","topic:nature"],
+        "tags": ["word:jongijeopgi","topic:letters"],
         "requires": {"audio":false,"picture":"card"},
         "leaks": true
       },
-      "glossEn": "sky (read)",
-      "status": "draft"
+      "glossEn": "paper folding (read)",
+      "status": "ready"
     },
     {
-      "id": "pitem:vocab-read-byeol",
+      "id": "pitem:vocab-read-bapsang",
       "strand": "vocabulary",
       "gate": "vocab",
       "form": "read",
       "question": {
         "format": "read-pick-picture",
-        "promptKo": "별",
-        "promptRomanization": "byeol",
+        "promptKo": "밥상",
+        "promptRomanization": "bapsang",
         "options": [
-          {"id":"byeol","en":"Star","pictureRef":"card:byeol","isCorrect":true},
-          {"id":"yutnori","en":"Yut game","pictureRef":"card:yutnori","isCorrect":false},
-          {"id":"magpie","en":"Magpie","pictureRef":"card:magpie","isCorrect":false},
-          {"id":"family-table","en":"Family table","pictureRef":"card:family-table","isCorrect":false}
+          {"id":"family-table","en":"Family table","pictureRef":"card:family-table","isCorrect":true},
+          {"id":"mountain","en":"Mountain","pictureRef":"card:mountain","isCorrect":false},
+          {"id":"hanji","en":"Hanji paper","pictureRef":"card:hanji","isCorrect":false},
+          {"id":"kite","en":"Kite","pictureRef":"card:kite","isCorrect":false}
         ],
-        "tags": ["word:byeol","topic:nature"],
+        "tags": ["word:bapsang","topic:life"],
         "requires": {"audio":false,"picture":"card"},
         "leaks": true
       },
-      "glossEn": "star (read)",
-      "status": "draft"
-    },
-    {
-      "id": "pitem:vocab-read-namu",
-      "strand": "vocabulary",
-      "gate": "vocab",
-      "form": "read",
-      "question": {
-        "format": "read-pick-picture",
-        "promptKo": "나무",
-        "promptRomanization": "namu",
-        "options": [
-          {"id":"namu","en":"Tree","pictureRef":"card:namu","isCorrect":true},
-          {"id":"ink","en":"Ink stick","pictureRef":"card:ink","isCorrect":false},
-          {"id":"pottery","en":"Celadon pottery","pictureRef":"card:pottery","isCorrect":false},
-          {"id":"seollal","en":"Lunar New Year","pictureRef":"card:seollal","isCorrect":false}
-        ],
-        "tags": ["word:namu","topic:nature"],
-        "requires": {"audio":false,"picture":"card"},
-        "leaks": true
-      },
-      "glossEn": "tree (read)",
-      "status": "draft"
-    },
-    {
-      "id": "pitem:vocab-read-uyu",
-      "strand": "vocabulary",
-      "gate": "vocab",
-      "form": "read",
-      "question": {
-        "format": "read-pick-picture",
-        "promptKo": "우유",
-        "promptRomanization": "uyu",
-        "options": [
-          {"id":"uyu","en":"Milk","pictureRef":"card:uyu","isCorrect":true},
-          {"id":"moon","en":"Moon","pictureRef":"card:moon","isCorrect":false},
-          {"id":"sebae","en":"New Year bow","pictureRef":"card:sebae","isCorrect":false},
-          {"id":"brush","en":"Calligraphy brush","pictureRef":"card:brush","isCorrect":false}
-        ],
-        "tags": ["word:uyu","topic:life"],
-        "requires": {"audio":false,"picture":"card"},
-        "leaks": true
-      },
-      "glossEn": "milk (read)",
-      "status": "draft"
+      "glossEn": "meal table (read)",
+      "status": "ready"
     },
     {
       "id": "pitem:vocab-read-gayageum",
@@ -4425,7 +4359,7 @@ export const PLACEMENT_BANK: PlacementBank = {
           {"id":"gayageum","en":"Gayageum zither","pictureRef":"card:gayageum","isCorrect":true},
           {"id":"sea","en":"Sea","pictureRef":"card:sea","isCorrect":false},
           {"id":"seollal","en":"Lunar New Year","pictureRef":"card:seollal","isCorrect":false},
-          {"id":"hangul-day","en":"Hangul Day","pictureRef":"card:hangul-day","isCorrect":false}
+          {"id":"book","en":"Book","pictureRef":"card:book","isCorrect":false}
         ],
         "tags": ["word:gayageum","topic:crafts"],
         "requires": {"audio":false,"picture":"card"},
@@ -4446,8 +4380,8 @@ export const PLACEMENT_BANK: PlacementBank = {
         "options": [
           {"id":"lantern","en":"Paper lantern","pictureRef":"card:lantern","isCorrect":true},
           {"id":"rice","en":"Rice","pictureRef":"card:rice","isCorrect":false},
-          {"id":"hanji","en":"Hanji paper","pictureRef":"card:hanji","isCorrect":false},
-          {"id":"moon","en":"Moon","pictureRef":"card:moon","isCorrect":false}
+          {"id":"brush","en":"Calligraphy brush","pictureRef":"card:brush","isCorrect":false},
+          {"id":"mountain","en":"Mountain","pictureRef":"card:mountain","isCorrect":false}
         ],
         "tags": ["word:yeondeung","topic:rites"],
         "requires": {"audio":false,"picture":"card"},
@@ -4455,28 +4389,6 @@ export const PLACEMENT_BANK: PlacementBank = {
       },
       "glossEn": "paper lantern (read)",
       "status": "ready"
-    },
-    {
-      "id": "pitem:vocab-read-dosirak",
-      "strand": "vocabulary",
-      "gate": "vocab",
-      "form": "read",
-      "question": {
-        "format": "read-pick-picture",
-        "promptKo": "도시락",
-        "promptRomanization": "dosirak",
-        "options": [
-          {"id":"dosirak","en":"Lunch box","pictureRef":"card:dosirak","isCorrect":true},
-          {"id":"top","en":"Spinning top","pictureRef":"card:top","isCorrect":false},
-          {"id":"tiger","en":"Tiger","pictureRef":"card:tiger","isCorrect":false},
-          {"id":"gayageum","en":"Gayageum zither","pictureRef":"card:gayageum","isCorrect":false}
-        ],
-        "tags": ["word:dosirak","topic:life"],
-        "requires": {"audio":false,"picture":"card"},
-        "leaks": true
-      },
-      "glossEn": "lunch box (read)",
-      "status": "draft"
     },
     {
       "id": "pitem:vocab-read-seollal",
@@ -4491,7 +4403,7 @@ export const PLACEMENT_BANK: PlacementBank = {
           {"id":"seollal","en":"Lunar New Year","pictureRef":"card:seollal","isCorrect":true},
           {"id":"book","en":"Book","pictureRef":"card:book","isCorrect":false},
           {"id":"mugunghwa","en":"Rose of Sharon","pictureRef":"card:mugunghwa","isCorrect":false},
-          {"id":"tteokguk","en":"Rice cake soup","pictureRef":"card:tteokguk","isCorrect":false}
+          {"id":"kimbap","en":"Kimbap","pictureRef":"card:kimbap","isCorrect":false}
         ],
         "tags": ["word:seollal","topic:rites"],
         "requires": {"audio":false,"picture":"card"},
@@ -4545,28 +4457,6 @@ export const PLACEMENT_BANK: PlacementBank = {
       "status": "ready"
     },
     {
-      "id": "pitem:vocab-read-hangeullal",
-      "strand": "vocabulary",
-      "gate": "vocab",
-      "form": "read",
-      "question": {
-        "format": "read-pick-picture",
-        "promptKo": "한글날",
-        "promptRomanization": "hangeullal",
-        "options": [
-          {"id":"hangul-day","en":"Hangul Day","pictureRef":"card:hangul-day","isCorrect":true},
-          {"id":"gayageum","en":"Gayageum zither","pictureRef":"card:gayageum","isCorrect":false},
-          {"id":"lantern","en":"Paper lantern","pictureRef":"card:lantern","isCorrect":false},
-          {"id":"magpie","en":"Magpie","pictureRef":"card:magpie","isCorrect":false}
-        ],
-        "tags": ["word:hangeullal","topic:letters"],
-        "requires": {"audio":false,"picture":"card"},
-        "leaks": true
-      },
-      "glossEn": "Hangul Day (read)",
-      "status": "ready"
-    },
-    {
       "id": "pitem:sent-n-hear-horangiyeyo",
       "strand": "sentences",
       "gate": "sentence",
@@ -4586,7 +4476,9 @@ export const PLACEMENT_BANK: PlacementBank = {
         "leaks": false
       },
       "glossEn": "It is a tiger. (hear)",
-      "status": "draft"
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11"
     },
     {
       "id": "pitem:sent-n-read-horangiyeyo",
@@ -4608,7 +4500,9 @@ export const PLACEMENT_BANK: PlacementBank = {
         "leaks": true
       },
       "glossEn": "It is a tiger. (read)",
-      "status": "draft"
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11"
     },
     {
       "id": "pitem:sent-n-hear-darieyo",
@@ -4630,7 +4524,9 @@ export const PLACEMENT_BANK: PlacementBank = {
         "leaks": false
       },
       "glossEn": "It is the moon. (hear)",
-      "status": "draft"
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11"
     },
     {
       "id": "pitem:sent-n-read-darieyo",
@@ -4643,7 +4539,7 @@ export const PLACEMENT_BANK: PlacementBank = {
         "promptRomanization": "darieyo",
         "options": [
           {"id":"moon","en":"Moon","pictureRef":"card:moon","isCorrect":true},
-          {"id":"chuseok","en":"Harvest festival","pictureRef":"card:chuseok","isCorrect":false},
+          {"id":"chopsticks","en":"Chopsticks","pictureRef":"card:chopsticks","isCorrect":false},
           {"id":"origami","en":"Paper folding","pictureRef":"card:origami","isCorrect":false},
           {"id":"gayageum","en":"Gayageum zither","pictureRef":"card:gayageum","isCorrect":false}
         ],
@@ -4652,7 +4548,9 @@ export const PLACEMENT_BANK: PlacementBank = {
         "leaks": true
       },
       "glossEn": "It is the moon. (read)",
-      "status": "draft"
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11"
     },
     {
       "id": "pitem:sent-n-hear-sanieyo",
@@ -4674,7 +4572,9 @@ export const PLACEMENT_BANK: PlacementBank = {
         "leaks": false
       },
       "glossEn": "It is a mountain. (hear)",
-      "status": "draft"
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11"
     },
     {
       "id": "pitem:sent-n-read-sanieyo",
@@ -4689,14 +4589,16 @@ export const PLACEMENT_BANK: PlacementBank = {
           {"id":"mountain","en":"Mountain","pictureRef":"card:mountain","isCorrect":true},
           {"id":"yutnori","en":"Yut game","pictureRef":"card:yutnori","isCorrect":false},
           {"id":"magpie","en":"Magpie","pictureRef":"card:magpie","isCorrect":false},
-          {"id":"chopsticks","en":"Chopsticks","pictureRef":"card:chopsticks","isCorrect":false}
+          {"id":"kimchi","en":"Kimchi","pictureRef":"card:kimchi","isCorrect":false}
         ],
         "tags": ["pattern:n-ieyo","word:san"],
         "requires": {"audio":false,"picture":"card"},
         "leaks": true
       },
       "glossEn": "It is a mountain. (read)",
-      "status": "draft"
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11"
     },
     {
       "id": "pitem:sent-n-hear-badayeyo",
@@ -4711,14 +4613,16 @@ export const PLACEMENT_BANK: PlacementBank = {
           {"id":"sea","en":"Sea","pictureRef":"card:sea","isCorrect":true},
           {"id":"tiger","en":"Tiger","pictureRef":"card:tiger","isCorrect":false},
           {"id":"family-table","en":"Family table","pictureRef":"card:family-table","isCorrect":false},
-          {"id":"kite","en":"Kite","pictureRef":"card:kite","isCorrect":false}
+          {"id":"top","en":"Spinning top","pictureRef":"card:top","isCorrect":false}
         ],
         "tags": ["pattern:n-ieyo","word:bada"],
         "requires": {"audio":true,"picture":"card"},
         "leaks": false
       },
       "glossEn": "It is the sea. (hear)",
-      "status": "draft"
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11"
     },
     {
       "id": "pitem:sent-n-read-badayeyo",
@@ -4740,7 +4644,9 @@ export const PLACEMENT_BANK: PlacementBank = {
         "leaks": true
       },
       "glossEn": "It is the sea. (read)",
-      "status": "draft"
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11"
     },
     {
       "id": "pitem:sent-n-hear-yeonieyo",
@@ -4762,7 +4668,9 @@ export const PLACEMENT_BANK: PlacementBank = {
         "leaks": false
       },
       "glossEn": "It is a kite. (hear)",
-      "status": "draft"
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11"
     },
     {
       "id": "pitem:sent-n-read-yeonieyo",
@@ -4784,7 +4692,9 @@ export const PLACEMENT_BANK: PlacementBank = {
         "leaks": true
       },
       "glossEn": "It is a kite. (read)",
-      "status": "draft"
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11"
     },
     {
       "id": "pitem:sent-n-hear-paengiyeyo",
@@ -4806,7 +4716,9 @@ export const PLACEMENT_BANK: PlacementBank = {
         "leaks": false
       },
       "glossEn": "It is a spinning top. (hear)",
-      "status": "draft"
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11"
     },
     {
       "id": "pitem:sent-n-read-paengiyeyo",
@@ -4828,7 +4740,9 @@ export const PLACEMENT_BANK: PlacementBank = {
         "leaks": true
       },
       "glossEn": "It is a spinning top. (read)",
-      "status": "draft"
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11"
     },
     {
       "id": "pitem:sent-n-hear-kkachiyeyo",
@@ -4842,7 +4756,7 @@ export const PLACEMENT_BANK: PlacementBank = {
         "options": [
           {"id":"magpie","en":"Magpie","pictureRef":"card:magpie","isCorrect":true},
           {"id":"chuseok","en":"Harvest festival","pictureRef":"card:chuseok","isCorrect":false},
-          {"id":"origami","en":"Paper folding","pictureRef":"card:origami","isCorrect":false},
+          {"id":"book","en":"Book","pictureRef":"card:book","isCorrect":false},
           {"id":"gayageum","en":"Gayageum zither","pictureRef":"card:gayageum","isCorrect":false}
         ],
         "tags": ["pattern:n-ieyo","word:kkachi"],
@@ -4850,7 +4764,9 @@ export const PLACEMENT_BANK: PlacementBank = {
         "leaks": false
       },
       "glossEn": "It is a magpie. (hear)",
-      "status": "draft"
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11"
     },
     {
       "id": "pitem:sent-n-read-kkachiyeyo",
@@ -4872,7 +4788,9 @@ export const PLACEMENT_BANK: PlacementBank = {
         "leaks": true
       },
       "glossEn": "It is a magpie. (read)",
-      "status": "draft"
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11"
     },
     {
       "id": "pitem:sent-n-hear-hanbogieyo",
@@ -4894,7 +4812,9 @@ export const PLACEMENT_BANK: PlacementBank = {
         "leaks": false
       },
       "glossEn": "It is a hanbok. (hear)",
-      "status": "draft"
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11"
     },
     {
       "id": "pitem:sent-n-read-hanbogieyo",
@@ -4916,7 +4836,9 @@ export const PLACEMENT_BANK: PlacementBank = {
         "leaks": true
       },
       "glossEn": "It is a hanbok. (read)",
-      "status": "draft"
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11"
     },
     {
       "id": "pitem:sent-n-hear-gimchiyeyo",
@@ -4938,7 +4860,9 @@ export const PLACEMENT_BANK: PlacementBank = {
         "leaks": false
       },
       "glossEn": "It is kimchi. (hear)",
-      "status": "draft"
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11"
     },
     {
       "id": "pitem:sent-n-read-gimchiyeyo",
@@ -4960,7 +4884,9 @@ export const PLACEMENT_BANK: PlacementBank = {
         "leaks": true
       },
       "glossEn": "It is kimchi. (read)",
-      "status": "draft"
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11"
     },
     {
       "id": "pitem:sent-n-hear-chaegieyo",
@@ -4982,7 +4908,9 @@ export const PLACEMENT_BANK: PlacementBank = {
         "leaks": false
       },
       "glossEn": "It is a book. (hear)",
-      "status": "draft"
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11"
     },
     {
       "id": "pitem:sent-n-read-chaegieyo",
@@ -5004,7 +4932,9 @@ export const PLACEMENT_BANK: PlacementBank = {
         "leaks": true
       },
       "glossEn": "It is a book. (read)",
-      "status": "draft"
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11"
     },
     {
       "id": "pitem:sent-n-hear-busieyo",
@@ -5026,7 +4956,9 @@ export const PLACEMENT_BANK: PlacementBank = {
         "leaks": false
       },
       "glossEn": "It is a brush. (hear)",
-      "status": "draft"
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11"
     },
     {
       "id": "pitem:sent-n-read-busieyo",
@@ -5048,7 +4980,9 @@ export const PLACEMENT_BANK: PlacementBank = {
         "leaks": true
       },
       "glossEn": "It is a brush. (read)",
-      "status": "draft"
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11"
     },
     {
       "id": "pitem:sent-n-hear-jegiyeyo",
@@ -5070,7 +5004,9 @@ export const PLACEMENT_BANK: PlacementBank = {
         "leaks": false
       },
       "glossEn": "It is a jegi. (hear)",
-      "status": "draft"
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11"
     },
     {
       "id": "pitem:sent-n-read-jegiyeyo",
@@ -5092,7 +5028,9 @@ export const PLACEMENT_BANK: PlacementBank = {
         "leaks": true
       },
       "glossEn": "It is a jegi. (read)",
-      "status": "draft"
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11"
     },
     {
       "id": "pitem:sent-n-hear-yuchieyo",
@@ -5109,12 +5047,14 @@ export const PLACEMENT_BANK: PlacementBank = {
           {"id":"tiger","en":"Tiger","pictureRef":"card:tiger","isCorrect":false},
           {"id":"gayageum","en":"Gayageum zither","pictureRef":"card:gayageum","isCorrect":false}
         ],
-        "tags": ["pattern:n-ieyo","word:yunnori"],
+        "tags": ["pattern:n-ieyo","word:yut"],
         "requires": {"audio":true,"picture":"card"},
         "leaks": false
       },
-      "glossEn": "It is a yut stick. (hear)",
-      "status": "draft"
+      "glossEn": "These are yut sticks. (hear)",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11"
     },
     {
       "id": "pitem:sent-n-read-yuchieyo",
@@ -5127,16 +5067,18 @@ export const PLACEMENT_BANK: PlacementBank = {
         "promptRomanization": "yuchieyo",
         "options": [
           {"id":"yutnori","en":"Yut game","pictureRef":"card:yutnori","isCorrect":true},
-          {"id":"chopsticks","en":"Chopsticks","pictureRef":"card:chopsticks","isCorrect":false},
+          {"id":"pottery","en":"Celadon pottery","pictureRef":"card:pottery","isCorrect":false},
           {"id":"hanji","en":"Hanji paper","pictureRef":"card:hanji","isCorrect":false},
           {"id":"mountain","en":"Mountain","pictureRef":"card:mountain","isCorrect":false}
         ],
-        "tags": ["pattern:n-ieyo","word:yunnori"],
+        "tags": ["pattern:n-ieyo","word:yut"],
         "requires": {"audio":false,"picture":"card"},
         "leaks": true
       },
-      "glossEn": "It is a yut stick. (read)",
-      "status": "draft"
+      "glossEn": "These are yut sticks. (read)",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11"
     },
     {
       "id": "pitem:sent-n-hear-hanjiyeyo",
@@ -5158,7 +5100,9 @@ export const PLACEMENT_BANK: PlacementBank = {
         "leaks": false
       },
       "glossEn": "It is hanji paper. (hear)",
-      "status": "draft"
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11"
     },
     {
       "id": "pitem:sent-n-read-hanjiyeyo",
@@ -5180,7 +5124,9 @@ export const PLACEMENT_BANK: PlacementBank = {
         "leaks": true
       },
       "glossEn": "It is hanji paper. (read)",
-      "status": "draft"
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11"
     },
     {
       "id": "pitem:sent-v-hear-babeulmeogeoyo",
@@ -5202,7 +5148,9 @@ export const PLACEMENT_BANK: PlacementBank = {
         "leaks": false
       },
       "glossEn": "I eat rice. (hear)",
-      "status": "draft"
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11"
     },
     {
       "id": "pitem:sent-v-read-babeulmeogeoyo",
@@ -5224,7 +5172,9 @@ export const PLACEMENT_BANK: PlacementBank = {
         "leaks": true
       },
       "glossEn": "I eat rice. (read)",
-      "status": "draft"
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11"
     },
     {
       "id": "pitem:sent-v-hear-gimchireulmeogeoyo",
@@ -5246,7 +5196,9 @@ export const PLACEMENT_BANK: PlacementBank = {
         "leaks": false
       },
       "glossEn": "I eat kimchi. (hear)",
-      "status": "draft"
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11"
     },
     {
       "id": "pitem:sent-v-read-gimchireulmeogeoyo",
@@ -5268,7 +5220,9 @@ export const PLACEMENT_BANK: PlacementBank = {
         "leaks": true
       },
       "glossEn": "I eat kimchi. (read)",
-      "status": "draft"
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11"
     },
     {
       "id": "pitem:sent-v-hear-gimbabeulmeogeoyo",
@@ -5290,7 +5244,9 @@ export const PLACEMENT_BANK: PlacementBank = {
         "leaks": false
       },
       "glossEn": "I eat kimbap. (hear)",
-      "status": "draft"
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11"
     },
     {
       "id": "pitem:sent-v-read-gimbabeulmeogeoyo",
@@ -5312,7 +5268,9 @@ export const PLACEMENT_BANK: PlacementBank = {
         "leaks": true
       },
       "glossEn": "I eat kimbap. (read)",
-      "status": "draft"
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11"
     },
     {
       "id": "pitem:sent-v-hear-tteokgugeulmeogeoyo",
@@ -5334,7 +5292,9 @@ export const PLACEMENT_BANK: PlacementBank = {
         "leaks": false
       },
       "glossEn": "I eat rice cake soup. (hear)",
-      "status": "draft"
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11"
     },
     {
       "id": "pitem:sent-v-read-tteokgugeulmeogeoyo",
@@ -5356,7 +5316,9 @@ export const PLACEMENT_BANK: PlacementBank = {
         "leaks": true
       },
       "glossEn": "I eat rice cake soup. (read)",
-      "status": "draft"
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11"
     },
     {
       "id": "pitem:sent-v-hear-songpyeoneulmeogeoyo",
@@ -5378,7 +5340,9 @@ export const PLACEMENT_BANK: PlacementBank = {
         "leaks": false
       },
       "glossEn": "I eat songpyeon. (hear)",
-      "status": "draft"
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11"
     },
     {
       "id": "pitem:sent-v-read-songpyeoneulmeogeoyo",
@@ -5400,51 +5364,57 @@ export const PLACEMENT_BANK: PlacementBank = {
         "leaks": true
       },
       "glossEn": "I eat songpyeon. (read)",
-      "status": "draft"
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11"
     },
     {
-      "id": "pitem:sent-v-hear-uyureulmasyeoyo",
+      "id": "pitem:sent-v-hear-hanbogeulibeoyo",
       "strand": "sentences",
       "gate": "sentence",
       "form": "oral",
       "question": {
         "format": "hear-pick-picture",
-        "promptKo": "우유를 마셔요",
-        "promptRomanization": "uyureul masyeoyo",
+        "promptKo": "한복을 입어요",
+        "promptRomanization": "hanbogeul ibeoyo",
         "options": [
-          {"id":"uyu","en":"Milk","pictureRef":"card:uyu","isCorrect":true},
+          {"id":"hanbok","en":"Hanbok","pictureRef":"card:hanbok","isCorrect":true},
           {"id":"book","en":"Book","pictureRef":"card:book","isCorrect":false},
           {"id":"sea","en":"Sea","pictureRef":"card:sea","isCorrect":false},
-          {"id":"sebae","en":"New Year bow","pictureRef":"card:sebae","isCorrect":false}
+          {"id":"top","en":"Spinning top","pictureRef":"card:top","isCorrect":false}
         ],
-        "tags": ["pattern:n-eul-v","word:uyu"],
+        "tags": ["pattern:n-eul-v","word:hanbok"],
         "requires": {"audio":true,"picture":"card"},
         "leaks": false
       },
-      "glossEn": "I drink milk. (hear)",
-      "status": "draft"
+      "glossEn": "I wear a hanbok. (hear)",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11"
     },
     {
-      "id": "pitem:sent-v-read-uyureulmasyeoyo",
+      "id": "pitem:sent-v-read-hanbogeulibeoyo",
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
       "question": {
         "format": "read-pick-picture",
-        "promptKo": "우유를 마셔요",
-        "promptRomanization": "uyureul masyeoyo",
+        "promptKo": "한복을 입어요",
+        "promptRomanization": "hanbogeul ibeoyo",
         "options": [
-          {"id":"uyu","en":"Milk","pictureRef":"card:uyu","isCorrect":true},
-          {"id":"top","en":"Spinning top","pictureRef":"card:top","isCorrect":false},
+          {"id":"hanbok","en":"Hanbok","pictureRef":"card:hanbok","isCorrect":true},
           {"id":"tiger","en":"Tiger","pictureRef":"card:tiger","isCorrect":false},
+          {"id":"kimchi","en":"Kimchi","pictureRef":"card:kimchi","isCorrect":false},
           {"id":"gayageum","en":"Gayageum zither","pictureRef":"card:gayageum","isCorrect":false}
         ],
-        "tags": ["pattern:n-eul-v","word:uyu"],
+        "tags": ["pattern:n-eul-v","word:hanbok"],
         "requires": {"audio":false,"picture":"card"},
         "leaks": true
       },
-      "glossEn": "I drink milk. (read)",
-      "status": "draft"
+      "glossEn": "I wear a hanbok. (read)",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11"
     },
     {
       "id": "pitem:sent-v-hear-chaegeulilgeoyo",
@@ -5457,7 +5427,7 @@ export const PLACEMENT_BANK: PlacementBank = {
         "promptRomanization": "chaegeul ilgeoyo",
         "options": [
           {"id":"book","en":"Book","pictureRef":"card:book","isCorrect":true},
-          {"id":"magpie","en":"Magpie","pictureRef":"card:magpie","isCorrect":false},
+          {"id":"tiger","en":"Tiger","pictureRef":"card:tiger","isCorrect":false},
           {"id":"pottery","en":"Celadon pottery","pictureRef":"card:pottery","isCorrect":false},
           {"id":"seollal","en":"Lunar New Year","pictureRef":"card:seollal","isCorrect":false}
         ],
@@ -5466,7 +5436,9 @@ export const PLACEMENT_BANK: PlacementBank = {
         "leaks": false
       },
       "glossEn": "I read a book. (hear)",
-      "status": "draft"
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11"
     },
     {
       "id": "pitem:sent-v-read-chaegeulilgeoyo",
@@ -5488,51 +5460,57 @@ export const PLACEMENT_BANK: PlacementBank = {
         "leaks": true
       },
       "glossEn": "I read a book. (read)",
-      "status": "draft"
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11"
     },
     {
-      "id": "pitem:sent-v-hear-sagwareulmeogeoyo",
+      "id": "pitem:sent-v-hear-yeoneulnallyeoyo",
       "strand": "sentences",
       "gate": "sentence",
       "form": "oral",
       "question": {
         "format": "hear-pick-picture",
-        "promptKo": "사과를 먹어요",
-        "promptRomanization": "sagwareul meogeoyo",
+        "promptKo": "연을 날려요",
+        "promptRomanization": "yeoneul nallyeoyo",
         "options": [
-          {"id":"sagwa","en":"Apple","pictureRef":"card:sagwa","isCorrect":true},
-          {"id":"moon","en":"Moon","pictureRef":"card:moon","isCorrect":false},
-          {"id":"sebae","en":"New Year bow","pictureRef":"card:sebae","isCorrect":false},
-          {"id":"brush","en":"Calligraphy brush","pictureRef":"card:brush","isCorrect":false}
+          {"id":"kite","en":"Kite","pictureRef":"card:kite","isCorrect":true},
+          {"id":"rice","en":"Rice","pictureRef":"card:rice","isCorrect":false},
+          {"id":"ink","en":"Ink stick","pictureRef":"card:ink","isCorrect":false},
+          {"id":"pottery","en":"Celadon pottery","pictureRef":"card:pottery","isCorrect":false}
         ],
-        "tags": ["pattern:n-eul-v","word:sagwa"],
+        "tags": ["pattern:n-eul-v","word:yeon"],
         "requires": {"audio":true,"picture":"card"},
         "leaks": false
       },
-      "glossEn": "I eat an apple. (hear)",
-      "status": "draft"
+      "glossEn": "I fly a kite. (hear)",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11"
     },
     {
-      "id": "pitem:sent-v-read-sagwareulmeogeoyo",
+      "id": "pitem:sent-v-read-yeoneulnallyeoyo",
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
       "question": {
         "format": "read-pick-picture",
-        "promptKo": "사과를 먹어요",
-        "promptRomanization": "sagwareul meogeoyo",
+        "promptKo": "연을 날려요",
+        "promptRomanization": "yeoneul nallyeoyo",
         "options": [
-          {"id":"sagwa","en":"Apple","pictureRef":"card:sagwa","isCorrect":true},
-          {"id":"magpie","en":"Magpie","pictureRef":"card:magpie","isCorrect":false},
-          {"id":"pottery","en":"Celadon pottery","pictureRef":"card:pottery","isCorrect":false},
-          {"id":"top","en":"Spinning top","pictureRef":"card:top","isCorrect":false}
+          {"id":"kite","en":"Kite","pictureRef":"card:kite","isCorrect":true},
+          {"id":"songpyeon","en":"Songpyeon","pictureRef":"card:songpyeon","isCorrect":false},
+          {"id":"book","en":"Book","pictureRef":"card:book","isCorrect":false},
+          {"id":"sea","en":"Sea","pictureRef":"card:sea","isCorrect":false}
         ],
-        "tags": ["pattern:n-eul-v","word:sagwa"],
+        "tags": ["pattern:n-eul-v","word:yeon"],
         "requires": {"audio":false,"picture":"card"},
         "leaks": true
       },
-      "glossEn": "I eat an apple. (read)",
-      "status": "draft"
+      "glossEn": "I fly a kite. (read)",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11"
     },
     {
       "id": "pitem:sent-reply-1",
@@ -5544,16 +5522,18 @@ export const PLACEMENT_BANK: PlacementBank = {
         "promptKo": "안녕하세요!",
         "promptRomanization": "annyeonghaseyo",
         "options": [
-          {"id":"reply-1","ko":"안녕하세요","romanization":"annyeonghaseyo","en":"Hello.","isCorrect":true},
-          {"id":"reply-2","ko":"저는 호야예요","romanization":"jeoneun hoyayeyo","en":"I am Hoya.","isCorrect":false},
-          {"id":"reply-6","ko":"네, 잘 지냈어요","romanization":"ne jal jinaesseoyo","en":"Yes, I have been well.","isCorrect":false}
+          {"id":"reply-1","ko":"안녕하세요.","romanization":"annyeonghaseyo","en":"Hello.","isCorrect":true},
+          {"id":"reply-8","ko":"네, 먹었어요.","romanization":"ne meogeosseoyo","en":"Yes, I ate.","isCorrect":false},
+          {"id":"reply-5","ko":"안녕히 계세요.","romanization":"annyeonghi gyeseyo","en":"Goodbye (to the one staying).","isCorrect":false}
         ],
         "tags": ["pattern:reply"],
         "requires": {"audio":true,"picture":null},
         "leaks": true
       },
       "glossEn": "Reply to: Hello!",
-      "status": "draft",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
       "incompatibleWith": ["pitem:sent-reply-3"]
     },
     {
@@ -5566,16 +5546,18 @@ export const PLACEMENT_BANK: PlacementBank = {
         "promptKo": "이름이 뭐예요?",
         "promptRomanization": "ireumi mwoyeyo",
         "options": [
-          {"id":"reply-2","ko":"저는 호야예요","romanization":"jeoneun hoyayeyo","en":"I am Hoya.","isCorrect":true},
-          {"id":"reply-3","ko":"저도 반가워요","romanization":"jeodo bangawoyo","en":"Nice to meet you too.","isCorrect":false},
-          {"id":"reply-6","ko":"네, 잘 지냈어요","romanization":"ne jal jinaesseoyo","en":"Yes, I have been well.","isCorrect":false}
+          {"id":"reply-2","ko":"저는 호야예요.","romanization":"jeoneun hoyayeyo","en":"I am Hoya.","isCorrect":true},
+          {"id":"reply-3","ko":"저도 반가워요.","romanization":"jeodo bangawoyo","en":"Nice to meet you too.","isCorrect":false},
+          {"id":"reply-6","ko":"네, 잘 지냈어요.","romanization":"ne jal jinaesseoyo","en":"Yes, I have been well.","isCorrect":false}
         ],
         "tags": ["pattern:reply"],
         "requires": {"audio":true,"picture":null},
         "leaks": true
       },
       "glossEn": "Reply to: What is your name?",
-      "status": "draft",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
       "incompatibleWith": []
     },
     {
@@ -5588,16 +5570,18 @@ export const PLACEMENT_BANK: PlacementBank = {
         "promptKo": "만나서 반가워요!",
         "promptRomanization": "mannaseo bangawoyo",
         "options": [
-          {"id":"reply-3","ko":"저도 반가워요","romanization":"jeodo bangawoyo","en":"Nice to meet you too.","isCorrect":true},
-          {"id":"reply-5","ko":"안녕히 계세요","romanization":"annyeonghi gyeseyo","en":"Goodbye (to the one staying).","isCorrect":false},
-          {"id":"reply-8","ko":"네, 먹었어요","romanization":"ne meogeosseoyo","en":"Yes, I ate.","isCorrect":false}
+          {"id":"reply-3","ko":"저도 반가워요.","romanization":"jeodo bangawoyo","en":"Nice to meet you too.","isCorrect":true},
+          {"id":"reply-5","ko":"안녕히 계세요.","romanization":"annyeonghi gyeseyo","en":"Goodbye (to the one staying).","isCorrect":false},
+          {"id":"reply-8","ko":"네, 먹었어요.","romanization":"ne meogeosseoyo","en":"Yes, I ate.","isCorrect":false}
         ],
         "tags": ["pattern:reply"],
         "requires": {"audio":true,"picture":null},
         "leaks": true
       },
       "glossEn": "Reply to: Nice to meet you!",
-      "status": "draft",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
       "incompatibleWith": ["pitem:sent-reply-1"]
     },
     {
@@ -5610,16 +5594,18 @@ export const PLACEMENT_BANK: PlacementBank = {
         "promptKo": "감사합니다.",
         "promptRomanization": "gamsahamnida",
         "options": [
-          {"id":"reply-4","ko":"아니에요","romanization":"anieyo","en":"You are welcome.","isCorrect":true},
-          {"id":"reply-5","ko":"안녕히 계세요","romanization":"annyeonghi gyeseyo","en":"Goodbye (to the one staying).","isCorrect":false},
-          {"id":"reply-8","ko":"네, 먹었어요","romanization":"ne meogeosseoyo","en":"Yes, I ate.","isCorrect":false}
+          {"id":"reply-4","ko":"천만에요.","romanization":"cheonmaneyo","en":"You are welcome.","isCorrect":true},
+          {"id":"reply-2","ko":"저는 호야예요.","romanization":"jeoneun hoyayeyo","en":"I am Hoya.","isCorrect":false},
+          {"id":"reply-8","ko":"네, 먹었어요.","romanization":"ne meogeosseoyo","en":"Yes, I ate.","isCorrect":false}
         ],
         "tags": ["pattern:reply"],
         "requires": {"audio":true,"picture":null},
         "leaks": true
       },
       "glossEn": "Reply to: Thank you.",
-      "status": "draft",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
       "incompatibleWith": ["pitem:sent-reply-9","pitem:sent-reply-10"]
     },
     {
@@ -5632,16 +5618,18 @@ export const PLACEMENT_BANK: PlacementBank = {
         "promptKo": "안녕히 가세요.",
         "promptRomanization": "annyeonghi gaseyo",
         "options": [
-          {"id":"reply-5","ko":"안녕히 계세요","romanization":"annyeonghi gyeseyo","en":"Goodbye (to the one staying).","isCorrect":true},
-          {"id":"reply-6","ko":"네, 잘 지냈어요","romanization":"ne jal jinaesseoyo","en":"Yes, I have been well.","isCorrect":false},
-          {"id":"reply-9","ko":"천만에요","romanization":"cheonmaneyo","en":"You are welcome.","isCorrect":false}
+          {"id":"reply-5","ko":"안녕히 계세요.","romanization":"annyeonghi gyeseyo","en":"Goodbye (to the one staying).","isCorrect":true},
+          {"id":"reply-6","ko":"네, 잘 지냈어요.","romanization":"ne jal jinaesseoyo","en":"Yes, I have been well.","isCorrect":false},
+          {"id":"reply-4","ko":"천만에요.","romanization":"cheonmaneyo","en":"You are welcome.","isCorrect":false}
         ],
         "tags": ["pattern:reply"],
         "requires": {"audio":true,"picture":null},
         "leaks": true
       },
       "glossEn": "Reply to: Goodbye (to the one leaving).",
-      "status": "draft",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
       "incompatibleWith": []
     },
     {
@@ -5654,16 +5642,18 @@ export const PLACEMENT_BANK: PlacementBank = {
         "promptKo": "잘 지냈어요?",
         "promptRomanization": "jal jinaesseoyo",
         "options": [
-          {"id":"reply-6","ko":"네, 잘 지냈어요","romanization":"ne jal jinaesseoyo","en":"Yes, I have been well.","isCorrect":true},
-          {"id":"reply-7","ko":"김치예요","romanization":"gimchiyeyo","en":"It is kimchi.","isCorrect":false},
-          {"id":"reply-1","ko":"안녕하세요","romanization":"annyeonghaseyo","en":"Hello.","isCorrect":false}
+          {"id":"reply-6","ko":"네, 잘 지냈어요.","romanization":"ne jal jinaesseoyo","en":"Yes, I have been well.","isCorrect":true},
+          {"id":"reply-7","ko":"네, 김치예요.","romanization":"ne gimchiyeyo","en":"Yes, it is kimchi.","isCorrect":false},
+          {"id":"reply-5","ko":"안녕히 계세요.","romanization":"annyeonghi gyeseyo","en":"Goodbye (to the one staying).","isCorrect":false}
         ],
         "tags": ["pattern:reply"],
         "requires": {"audio":true,"picture":null},
         "leaks": true
       },
-      "glossEn": "Reply to: How have you been?",
-      "status": "draft",
+      "glossEn": "Reply to: Have you been well?",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
       "incompatibleWith": ["pitem:sent-reply-8"]
     },
     {
@@ -5673,19 +5663,21 @@ export const PLACEMENT_BANK: PlacementBank = {
       "form": "read",
       "question": {
         "format": "reply-pick",
-        "promptKo": "이거 뭐예요?",
-        "promptRomanization": "igeo mwoyeyo",
+        "promptKo": "이거 김치예요?",
+        "promptRomanization": "igeo gimchiyeyo",
         "options": [
-          {"id":"reply-7","ko":"김치예요","romanization":"gimchiyeyo","en":"It is kimchi.","isCorrect":true},
-          {"id":"reply-8","ko":"네, 먹었어요","romanization":"ne meogeosseoyo","en":"Yes, I ate.","isCorrect":false},
-          {"id":"reply-1","ko":"안녕하세요","romanization":"annyeonghaseyo","en":"Hello.","isCorrect":false}
+          {"id":"reply-7","ko":"네, 김치예요.","romanization":"ne gimchiyeyo","en":"Yes, it is kimchi.","isCorrect":true},
+          {"id":"reply-8","ko":"네, 먹었어요.","romanization":"ne meogeosseoyo","en":"Yes, I ate.","isCorrect":false},
+          {"id":"reply-1","ko":"안녕하세요.","romanization":"annyeonghaseyo","en":"Hello.","isCorrect":false}
         ],
         "tags": ["pattern:reply"],
         "requires": {"audio":true,"picture":null},
         "leaks": true
       },
-      "glossEn": "Reply to: What is this?",
-      "status": "draft",
+      "glossEn": "Reply to: Is this kimchi?",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
       "incompatibleWith": []
     },
     {
@@ -5698,16 +5690,18 @@ export const PLACEMENT_BANK: PlacementBank = {
         "promptKo": "밥 먹었어요?",
         "promptRomanization": "bap meogeosseoyo",
         "options": [
-          {"id":"reply-8","ko":"네, 먹었어요","romanization":"ne meogeosseoyo","en":"Yes, I ate.","isCorrect":true},
-          {"id":"reply-10","ko":"괜찮아요","romanization":"gwaenchanayo","en":"It is okay.","isCorrect":false},
-          {"id":"reply-3","ko":"저도 반가워요","romanization":"jeodo bangawoyo","en":"Nice to meet you too.","isCorrect":false}
+          {"id":"reply-8","ko":"네, 먹었어요.","romanization":"ne meogeosseoyo","en":"Yes, I ate.","isCorrect":true},
+          {"id":"reply-2","ko":"저는 호야예요.","romanization":"jeoneun hoyayeyo","en":"I am Hoya.","isCorrect":false},
+          {"id":"reply-3","ko":"저도 반가워요.","romanization":"jeodo bangawoyo","en":"Nice to meet you too.","isCorrect":false}
         ],
         "tags": ["pattern:reply"],
         "requires": {"audio":true,"picture":null},
         "leaks": true
       },
       "glossEn": "Reply to: Have you eaten?",
-      "status": "draft",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
       "incompatibleWith": ["pitem:sent-reply-6"]
     },
     {
@@ -5720,16 +5714,18 @@ export const PLACEMENT_BANK: PlacementBank = {
         "promptKo": "고마워요.",
         "promptRomanization": "gomawoyo",
         "options": [
-          {"id":"reply-9","ko":"천만에요","romanization":"cheonmaneyo","en":"You are welcome.","isCorrect":true},
-          {"id":"reply-2","ko":"저는 호야예요","romanization":"jeoneun hoyayeyo","en":"I am Hoya.","isCorrect":false},
-          {"id":"reply-6","ko":"네, 잘 지냈어요","romanization":"ne jal jinaesseoyo","en":"Yes, I have been well.","isCorrect":false}
+          {"id":"reply-9","ko":"아니에요.","romanization":"anieyo","en":"Not at all.","isCorrect":true},
+          {"id":"reply-2","ko":"저는 호야예요.","romanization":"jeoneun hoyayeyo","en":"I am Hoya.","isCorrect":false},
+          {"id":"reply-6","ko":"네, 잘 지냈어요.","romanization":"ne jal jinaesseoyo","en":"Yes, I have been well.","isCorrect":false}
         ],
         "tags": ["pattern:reply"],
         "requires": {"audio":true,"picture":null},
         "leaks": true
       },
       "glossEn": "Reply to: Thanks.",
-      "status": "draft",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
       "incompatibleWith": ["pitem:sent-reply-4","pitem:sent-reply-10"]
     },
     {
@@ -5742,16 +5738,18 @@ export const PLACEMENT_BANK: PlacementBank = {
         "promptKo": "미안해요.",
         "promptRomanization": "mianhaeyo",
         "options": [
-          {"id":"reply-10","ko":"괜찮아요","romanization":"gwaenchanayo","en":"It is okay.","isCorrect":true},
-          {"id":"reply-3","ko":"저도 반가워요","romanization":"jeodo bangawoyo","en":"Nice to meet you too.","isCorrect":false},
-          {"id":"reply-7","ko":"김치예요","romanization":"gimchiyeyo","en":"It is kimchi.","isCorrect":false}
+          {"id":"reply-10","ko":"괜찮아요.","romanization":"gwaenchanayo","en":"It is okay.","isCorrect":true},
+          {"id":"reply-3","ko":"저도 반가워요.","romanization":"jeodo bangawoyo","en":"Nice to meet you too.","isCorrect":false},
+          {"id":"reply-7","ko":"네, 김치예요.","romanization":"ne gimchiyeyo","en":"Yes, it is kimchi.","isCorrect":false}
         ],
         "tags": ["pattern:reply"],
         "requires": {"audio":true,"picture":null},
         "leaks": true
       },
       "glossEn": "Reply to: Sorry.",
-      "status": "draft",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
       "incompatibleWith": ["pitem:sent-reply-4","pitem:sent-reply-9"]
     }
   ]
@@ -5770,7 +5768,7 @@ export const PLACEMENT_WARMUP: PlacementTemplate = {
       {"id":"rice","en":"Rice","pictureRef":"card:rice","isCorrect":true},
       {"id":"tiger","en":"Tiger","pictureRef":"card:tiger","isCorrect":false},
       {"id":"moon","en":"Moon","pictureRef":"card:moon","isCorrect":false},
-      {"id":"kite","en":"Kite","pictureRef":"card:kite","isCorrect":false}
+      {"id":"jegi","en":"Foot shuttlecock","pictureRef":"card:jegi","isCorrect":false}
     ],
     "tags": ["word:bap","topic:life"],
     "requires": {"audio":true,"picture":"card"},

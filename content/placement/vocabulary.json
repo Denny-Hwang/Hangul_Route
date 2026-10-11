@@ -139,7 +139,7 @@
         "prompt": {"ko":"송편","romanization":"songpyeon","en":"songpyeon (rice cake)"},
         "options": [
           {"id":"songpyeon","pictureRef":"card:songpyeon","en":"Songpyeon","isCorrect":true},
-          {"id":"lantern","pictureRef":"card:lantern","en":"Paper lantern","isCorrect":false},
+          {"id":"sebae","pictureRef":"card:sebae","en":"New Year bow","isCorrect":false},
           {"id":"hanji","pictureRef":"card:hanji","en":"Hanji paper","isCorrect":false},
           {"id":"mountain","pictureRef":"card:mountain","en":"Mountain","isCorrect":false}
         ],
@@ -181,7 +181,7 @@
         "prompt": {"ko":"까치","romanization":"kkachi","en":"magpie"},
         "options": [
           {"id":"magpie","pictureRef":"card:magpie","en":"Magpie","isCorrect":true},
-          {"id":"yutnori","pictureRef":"card:yutnori","en":"Yut game","isCorrect":false},
+          {"id":"top","pictureRef":"card:top","en":"Spinning top","isCorrect":false},
           {"id":"sea","pictureRef":"card:sea","en":"Sea","isCorrect":false},
           {"id":"chopsticks","pictureRef":"card:chopsticks","en":"Chopsticks","isCorrect":false}
         ],
@@ -454,7 +454,7 @@
         "prompt": {"ko":"붓","romanization":"but","en":"brush"},
         "options": [
           {"id":"brush","pictureRef":"card:brush","en":"Calligraphy brush","isCorrect":true},
-          {"id":"magpie","pictureRef":"card:magpie","en":"Magpie","isCorrect":false},
+          {"id":"tiger","pictureRef":"card:tiger","en":"Tiger","isCorrect":false},
           {"id":"pottery","pictureRef":"card:pottery","en":"Celadon pottery","isCorrect":false},
           {"id":"seollal","pictureRef":"card:seollal","en":"Lunar New Year","isCorrect":false}
         ],
@@ -464,169 +464,148 @@
       }
     },
     {
-      "id": "pitem:vocab-hear-sagwa",
+      "id": "pitem:vocab-hear-meok",
       "strand": "vocabulary",
       "gate": "vocab",
       "form": "oral",
-      "status": "draft",
-      "glossEn": "apple (hear)",
+      "status": "ready",
+      "glossEn": "ink stick (hear)",
       "question": {
         "format": "hear-pick-picture",
-        "prompt": {"ko":"사과","romanization":"sagwa","en":"apple"},
+        "prompt": {"ko":"먹","romanization":"meok","en":"ink stick"},
         "options": [
-          {"id":"sagwa","pictureRef":"card:sagwa","en":"Apple","isCorrect":true},
-          {"id":"moon","pictureRef":"card:moon","en":"Moon","isCorrect":false},
-          {"id":"sebae","pictureRef":"card:sebae","en":"New Year bow","isCorrect":false},
-          {"id":"brush","pictureRef":"card:brush","en":"Calligraphy brush","isCorrect":false}
+          {"id":"ink","pictureRef":"card:ink","en":"Ink stick","isCorrect":true},
+          {"id":"sea","pictureRef":"card:sea","en":"Sea","isCorrect":false},
+          {"id":"kimchi","pictureRef":"card:kimchi","en":"Kimchi","isCorrect":false},
+          {"id":"top","pictureRef":"card:top","en":"Spinning top","isCorrect":false}
         ],
-        "tags": ["word:sagwa","topic:life"],
+        "tags": ["word:meok","topic:letters"],
         "requires": {"audio":true,"picture":"card"},
         "leaks": false
       }
     },
     {
-      "id": "pitem:vocab-hear-uyu",
+      "id": "pitem:vocab-hear-jongijeopgi",
       "strand": "vocabulary",
       "gate": "vocab",
       "form": "oral",
-      "status": "draft",
-      "glossEn": "milk (hear)",
+      "status": "ready",
+      "glossEn": "paper folding (hear)",
       "question": {
         "format": "hear-pick-picture",
-        "prompt": {"ko":"우유","romanization":"uyu","en":"milk"},
+        "prompt": {"ko":"종이접기","romanization":"jongijeopgi","en":"paper folding"},
         "options": [
-          {"id":"uyu","pictureRef":"card:uyu","en":"Milk","isCorrect":true},
-          {"id":"gayageum","pictureRef":"card:gayageum","en":"Gayageum zither","isCorrect":false},
-          {"id":"kite","pictureRef":"card:kite","en":"Kite","isCorrect":false},
-          {"id":"magpie","pictureRef":"card:magpie","en":"Magpie","isCorrect":false}
+          {"id":"origami","pictureRef":"card:origami","en":"Paper folding","isCorrect":true},
+          {"id":"rice","pictureRef":"card:rice","en":"Rice","isCorrect":false},
+          {"id":"mountain","pictureRef":"card:mountain","en":"Mountain","isCorrect":false},
+          {"id":"jegi","pictureRef":"card:jegi","en":"Foot shuttlecock","isCorrect":false}
         ],
-        "tags": ["word:uyu","topic:life"],
+        "tags": ["word:jongijeopgi","topic:letters"],
         "requires": {"audio":true,"picture":"card"},
         "leaks": false
       }
     },
     {
-      "id": "pitem:vocab-hear-ppang",
+      "id": "pitem:vocab-hear-bapsang",
       "strand": "vocabulary",
       "gate": "vocab",
       "form": "oral",
-      "status": "draft",
-      "glossEn": "bread (hear)",
+      "status": "ready",
+      "glossEn": "meal table (hear)",
       "question": {
         "format": "hear-pick-picture",
-        "prompt": {"ko":"빵","romanization":"ppang","en":"bread"},
+        "prompt": {"ko":"밥상","romanization":"bapsang","en":"meal table"},
         "options": [
-          {"id":"ppang","pictureRef":"card:ppang","en":"Bread","isCorrect":true},
-          {"id":"sebae","pictureRef":"card:sebae","en":"New Year bow","isCorrect":false},
-          {"id":"hanji","pictureRef":"card:hanji","en":"Hanji paper","isCorrect":false},
-          {"id":"moon","pictureRef":"card:moon","en":"Moon","isCorrect":false}
-        ],
-        "tags": ["word:ppang","topic:life"],
-        "requires": {"audio":true,"picture":"card"},
-        "leaks": false
-      }
-    },
-    {
-      "id": "pitem:vocab-hear-dosirak",
-      "strand": "vocabulary",
-      "gate": "vocab",
-      "form": "oral",
-      "status": "draft",
-      "glossEn": "lunch box (hear)",
-      "question": {
-        "format": "hear-pick-picture",
-        "prompt": {"ko":"도시락","romanization":"dosirak","en":"lunch box"},
-        "options": [
-          {"id":"dosirak","pictureRef":"card:dosirak","en":"Lunch box","isCorrect":true},
-          {"id":"top","pictureRef":"card:top","en":"Spinning top","isCorrect":false},
+          {"id":"family-table","pictureRef":"card:family-table","en":"Family table","isCorrect":true},
           {"id":"tiger","pictureRef":"card:tiger","en":"Tiger","isCorrect":false},
+          {"id":"book","pictureRef":"card:book","en":"Book","isCorrect":false},
+          {"id":"top","pictureRef":"card:top","en":"Spinning top","isCorrect":false}
+        ],
+        "tags": ["word:bapsang","topic:life"],
+        "requires": {"audio":true,"picture":"card"},
+        "leaks": false
+      }
+    },
+    {
+      "id": "pitem:vocab-hear-seollal",
+      "strand": "vocabulary",
+      "gate": "vocab",
+      "form": "oral",
+      "status": "ready",
+      "glossEn": "Lunar New Year (hear)",
+      "question": {
+        "format": "hear-pick-picture",
+        "prompt": {"ko":"설날","romanization":"seollal","en":"Lunar New Year"},
+        "options": [
+          {"id":"seollal","pictureRef":"card:seollal","en":"Lunar New Year","isCorrect":true},
+          {"id":"sea","pictureRef":"card:sea","en":"Sea","isCorrect":false},
+          {"id":"ink","pictureRef":"card:ink","en":"Ink stick","isCorrect":false},
+          {"id":"pottery","pictureRef":"card:pottery","en":"Celadon pottery","isCorrect":false}
+        ],
+        "tags": ["word:seollal","topic:rites"],
+        "requires": {"audio":true,"picture":"card"},
+        "leaks": false
+      }
+    },
+    {
+      "id": "pitem:vocab-hear-chuseok",
+      "strand": "vocabulary",
+      "gate": "vocab",
+      "form": "oral",
+      "status": "ready",
+      "glossEn": "Chuseok (harvest festival) (hear)",
+      "question": {
+        "format": "hear-pick-picture",
+        "prompt": {"ko":"추석","romanization":"chuseok","en":"Chuseok (harvest festival)"},
+        "options": [
+          {"id":"chuseok","pictureRef":"card:chuseok","en":"Harvest festival","isCorrect":true},
+          {"id":"kimbap","pictureRef":"card:kimbap","en":"Kimbap","isCorrect":false},
+          {"id":"book","pictureRef":"card:book","en":"Book","isCorrect":false},
+          {"id":"top","pictureRef":"card:top","en":"Spinning top","isCorrect":false}
+        ],
+        "tags": ["word:chuseok","topic:rites"],
+        "requires": {"audio":true,"picture":"card"},
+        "leaks": false
+      }
+    },
+    {
+      "id": "pitem:vocab-hear-sebae",
+      "strand": "vocabulary",
+      "gate": "vocab",
+      "form": "oral",
+      "status": "ready",
+      "glossEn": "New Year bow (hear)",
+      "question": {
+        "format": "hear-pick-picture",
+        "prompt": {"ko":"세배","romanization":"sebae","en":"New Year bow"},
+        "options": [
+          {"id":"sebae","pictureRef":"card:sebae","en":"New Year bow","isCorrect":true},
+          {"id":"mountain","pictureRef":"card:mountain","en":"Mountain","isCorrect":false},
+          {"id":"chopsticks","pictureRef":"card:chopsticks","en":"Chopsticks","isCorrect":false},
           {"id":"gayageum","pictureRef":"card:gayageum","en":"Gayageum zither","isCorrect":false}
         ],
-        "tags": ["word:dosirak","topic:life"],
+        "tags": ["word:sebae","topic:rites"],
         "requires": {"audio":true,"picture":"card"},
         "leaks": false
       }
     },
     {
-      "id": "pitem:vocab-hear-haneul",
+      "id": "pitem:vocab-hear-yeondeung",
       "strand": "vocabulary",
       "gate": "vocab",
       "form": "oral",
-      "status": "draft",
-      "glossEn": "sky (hear)",
+      "status": "ready",
+      "glossEn": "paper lantern (hear)",
       "question": {
         "format": "hear-pick-picture",
-        "prompt": {"ko":"하늘","romanization":"haneul","en":"sky"},
+        "prompt": {"ko":"연등","romanization":"yeondeung","en":"paper lantern"},
         "options": [
-          {"id":"haneul","pictureRef":"card:haneul","en":"Sky","isCorrect":true},
-          {"id":"kite","pictureRef":"card:kite","en":"Kite","isCorrect":false},
-          {"id":"magpie","pictureRef":"card:magpie","en":"Magpie","isCorrect":false},
-          {"id":"tteokguk","pictureRef":"card:tteokguk","en":"Rice cake soup","isCorrect":false}
-        ],
-        "tags": ["word:haneul","topic:nature"],
-        "requires": {"audio":true,"picture":"card"},
-        "leaks": false
-      }
-    },
-    {
-      "id": "pitem:vocab-hear-kkot",
-      "strand": "vocabulary",
-      "gate": "vocab",
-      "form": "oral",
-      "status": "draft",
-      "glossEn": "flower (hear)",
-      "question": {
-        "format": "hear-pick-picture",
-        "prompt": {"ko":"꽃","romanization":"kkot","en":"flower"},
-        "options": [
-          {"id":"kkot","pictureRef":"card:kkot","en":"Flower","isCorrect":true},
-          {"id":"ink","pictureRef":"card:ink","en":"Ink stick","isCorrect":false},
-          {"id":"pottery","pictureRef":"card:pottery","en":"Celadon pottery","isCorrect":false},
-          {"id":"lantern","pictureRef":"card:lantern","en":"Paper lantern","isCorrect":false}
-        ],
-        "tags": ["word:kkot","topic:nature"],
-        "requires": {"audio":true,"picture":"card"},
-        "leaks": false
-      }
-    },
-    {
-      "id": "pitem:vocab-hear-namu",
-      "strand": "vocabulary",
-      "gate": "vocab",
-      "form": "oral",
-      "status": "draft",
-      "glossEn": "tree (hear)",
-      "question": {
-        "format": "hear-pick-picture",
-        "prompt": {"ko":"나무","romanization":"namu","en":"tree"},
-        "options": [
-          {"id":"namu","pictureRef":"card:namu","en":"Tree","isCorrect":true},
+          {"id":"lantern","pictureRef":"card:lantern","en":"Paper lantern","isCorrect":true},
+          {"id":"kimchi","pictureRef":"card:kimchi","en":"Kimchi","isCorrect":false},
           {"id":"tiger","pictureRef":"card:tiger","en":"Tiger","isCorrect":false},
-          {"id":"kimbap","pictureRef":"card:kimbap","en":"Kimbap","isCorrect":false},
-          {"id":"kite","pictureRef":"card:kite","en":"Kite","isCorrect":false}
+          {"id":"brush","pictureRef":"card:brush","en":"Calligraphy brush","isCorrect":false}
         ],
-        "tags": ["word:namu","topic:nature"],
-        "requires": {"audio":true,"picture":"card"},
-        "leaks": false
-      }
-    },
-    {
-      "id": "pitem:vocab-hear-byeol",
-      "strand": "vocabulary",
-      "gate": "vocab",
-      "form": "oral",
-      "status": "draft",
-      "glossEn": "star (hear)",
-      "question": {
-        "format": "hear-pick-picture",
-        "prompt": {"ko":"별","romanization":"byeol","en":"star"},
-        "options": [
-          {"id":"byeol","pictureRef":"card:byeol","en":"Star","isCorrect":true},
-          {"id":"gayageum","pictureRef":"card:gayageum","en":"Gayageum zither","isCorrect":false},
-          {"id":"lantern","pictureRef":"card:lantern","en":"Paper lantern","isCorrect":false},
-          {"id":"hangul-day","pictureRef":"card:hangul-day","en":"Hangul Day","isCorrect":false}
-        ],
-        "tags": ["word:byeol","topic:nature"],
+        "tags": ["word:yeondeung","topic:rites"],
         "requires": {"audio":true,"picture":"card"},
         "leaks": false
       }
@@ -666,7 +645,7 @@
           {"id":"rice","pictureRef":"card:rice","en":"Rice","isCorrect":true},
           {"id":"book","pictureRef":"card:book","en":"Book","isCorrect":false},
           {"id":"sea","pictureRef":"card:sea","en":"Sea","isCorrect":false},
-          {"id":"chuseok","pictureRef":"card:chuseok","en":"Harvest festival","isCorrect":false}
+          {"id":"sebae","pictureRef":"card:sebae","en":"New Year bow","isCorrect":false}
         ],
         "tags": ["word:bap","topic:life"],
         "requires": {"audio":false,"picture":"card"},
@@ -707,7 +686,7 @@
         "options": [
           {"id":"kimbap","pictureRef":"card:kimbap","en":"Kimbap","isCorrect":true},
           {"id":"moon","pictureRef":"card:moon","en":"Moon","isCorrect":false},
-          {"id":"chuseok","pictureRef":"card:chuseok","en":"Harvest festival","isCorrect":false},
+          {"id":"hanbok","pictureRef":"card:hanbok","en":"Hanbok","isCorrect":false},
           {"id":"brush","pictureRef":"card:brush","en":"Calligraphy brush","isCorrect":false}
         ],
         "tags": ["word:gimbap","topic:life"],
@@ -884,85 +863,43 @@
       }
     },
     {
-      "id": "pitem:vocab-read-haneul",
+      "id": "pitem:vocab-read-jongijeopgi",
       "strand": "vocabulary",
       "gate": "vocab",
       "form": "read",
-      "status": "draft",
-      "glossEn": "sky (read)",
+      "status": "ready",
+      "glossEn": "paper folding (read)",
       "question": {
         "format": "read-pick-picture",
-        "prompt": {"ko":"하늘","romanization":"haneul","en":"sky"},
+        "prompt": {"ko":"종이접기","romanization":"jongijeopgi","en":"paper folding"},
         "options": [
-          {"id":"haneul","pictureRef":"card:haneul","en":"Sky","isCorrect":true},
-          {"id":"sebae","pictureRef":"card:sebae","en":"New Year bow","isCorrect":false},
-          {"id":"origami","pictureRef":"card:origami","en":"Paper folding","isCorrect":false},
-          {"id":"gayageum","pictureRef":"card:gayageum","en":"Gayageum zither","isCorrect":false}
+          {"id":"origami","pictureRef":"card:origami","en":"Paper folding","isCorrect":true},
+          {"id":"rice","pictureRef":"card:rice","en":"Rice","isCorrect":false},
+          {"id":"sea","pictureRef":"card:sea","en":"Sea","isCorrect":false},
+          {"id":"top","pictureRef":"card:top","en":"Spinning top","isCorrect":false}
         ],
-        "tags": ["word:haneul","topic:nature"],
+        "tags": ["word:jongijeopgi","topic:letters"],
         "requires": {"audio":false,"picture":"card"},
         "leaks": true
       }
     },
     {
-      "id": "pitem:vocab-read-byeol",
+      "id": "pitem:vocab-read-bapsang",
       "strand": "vocabulary",
       "gate": "vocab",
       "form": "read",
-      "status": "draft",
-      "glossEn": "star (read)",
+      "status": "ready",
+      "glossEn": "meal table (read)",
       "question": {
         "format": "read-pick-picture",
-        "prompt": {"ko":"별","romanization":"byeol","en":"star"},
+        "prompt": {"ko":"밥상","romanization":"bapsang","en":"meal table"},
         "options": [
-          {"id":"byeol","pictureRef":"card:byeol","en":"Star","isCorrect":true},
-          {"id":"yutnori","pictureRef":"card:yutnori","en":"Yut game","isCorrect":false},
-          {"id":"magpie","pictureRef":"card:magpie","en":"Magpie","isCorrect":false},
-          {"id":"family-table","pictureRef":"card:family-table","en":"Family table","isCorrect":false}
+          {"id":"family-table","pictureRef":"card:family-table","en":"Family table","isCorrect":true},
+          {"id":"mountain","pictureRef":"card:mountain","en":"Mountain","isCorrect":false},
+          {"id":"hanji","pictureRef":"card:hanji","en":"Hanji paper","isCorrect":false},
+          {"id":"kite","pictureRef":"card:kite","en":"Kite","isCorrect":false}
         ],
-        "tags": ["word:byeol","topic:nature"],
-        "requires": {"audio":false,"picture":"card"},
-        "leaks": true
-      }
-    },
-    {
-      "id": "pitem:vocab-read-namu",
-      "strand": "vocabulary",
-      "gate": "vocab",
-      "form": "read",
-      "status": "draft",
-      "glossEn": "tree (read)",
-      "question": {
-        "format": "read-pick-picture",
-        "prompt": {"ko":"나무","romanization":"namu","en":"tree"},
-        "options": [
-          {"id":"namu","pictureRef":"card:namu","en":"Tree","isCorrect":true},
-          {"id":"ink","pictureRef":"card:ink","en":"Ink stick","isCorrect":false},
-          {"id":"pottery","pictureRef":"card:pottery","en":"Celadon pottery","isCorrect":false},
-          {"id":"seollal","pictureRef":"card:seollal","en":"Lunar New Year","isCorrect":false}
-        ],
-        "tags": ["word:namu","topic:nature"],
-        "requires": {"audio":false,"picture":"card"},
-        "leaks": true
-      }
-    },
-    {
-      "id": "pitem:vocab-read-uyu",
-      "strand": "vocabulary",
-      "gate": "vocab",
-      "form": "read",
-      "status": "draft",
-      "glossEn": "milk (read)",
-      "question": {
-        "format": "read-pick-picture",
-        "prompt": {"ko":"우유","romanization":"uyu","en":"milk"},
-        "options": [
-          {"id":"uyu","pictureRef":"card:uyu","en":"Milk","isCorrect":true},
-          {"id":"moon","pictureRef":"card:moon","en":"Moon","isCorrect":false},
-          {"id":"sebae","pictureRef":"card:sebae","en":"New Year bow","isCorrect":false},
-          {"id":"brush","pictureRef":"card:brush","en":"Calligraphy brush","isCorrect":false}
-        ],
-        "tags": ["word:uyu","topic:life"],
+        "tags": ["word:bapsang","topic:life"],
         "requires": {"audio":false,"picture":"card"},
         "leaks": true
       }
@@ -981,7 +918,7 @@
           {"id":"gayageum","pictureRef":"card:gayageum","en":"Gayageum zither","isCorrect":true},
           {"id":"sea","pictureRef":"card:sea","en":"Sea","isCorrect":false},
           {"id":"seollal","pictureRef":"card:seollal","en":"Lunar New Year","isCorrect":false},
-          {"id":"hangul-day","pictureRef":"card:hangul-day","en":"Hangul Day","isCorrect":false}
+          {"id":"book","pictureRef":"card:book","en":"Book","isCorrect":false}
         ],
         "tags": ["word:gayageum","topic:crafts"],
         "requires": {"audio":false,"picture":"card"},
@@ -1001,31 +938,10 @@
         "options": [
           {"id":"lantern","pictureRef":"card:lantern","en":"Paper lantern","isCorrect":true},
           {"id":"rice","pictureRef":"card:rice","en":"Rice","isCorrect":false},
-          {"id":"hanji","pictureRef":"card:hanji","en":"Hanji paper","isCorrect":false},
-          {"id":"moon","pictureRef":"card:moon","en":"Moon","isCorrect":false}
+          {"id":"brush","pictureRef":"card:brush","en":"Calligraphy brush","isCorrect":false},
+          {"id":"mountain","pictureRef":"card:mountain","en":"Mountain","isCorrect":false}
         ],
         "tags": ["word:yeondeung","topic:rites"],
-        "requires": {"audio":false,"picture":"card"},
-        "leaks": true
-      }
-    },
-    {
-      "id": "pitem:vocab-read-dosirak",
-      "strand": "vocabulary",
-      "gate": "vocab",
-      "form": "read",
-      "status": "draft",
-      "glossEn": "lunch box (read)",
-      "question": {
-        "format": "read-pick-picture",
-        "prompt": {"ko":"도시락","romanization":"dosirak","en":"lunch box"},
-        "options": [
-          {"id":"dosirak","pictureRef":"card:dosirak","en":"Lunch box","isCorrect":true},
-          {"id":"top","pictureRef":"card:top","en":"Spinning top","isCorrect":false},
-          {"id":"tiger","pictureRef":"card:tiger","en":"Tiger","isCorrect":false},
-          {"id":"gayageum","pictureRef":"card:gayageum","en":"Gayageum zither","isCorrect":false}
-        ],
-        "tags": ["word:dosirak","topic:life"],
         "requires": {"audio":false,"picture":"card"},
         "leaks": true
       }
@@ -1044,7 +960,7 @@
           {"id":"seollal","pictureRef":"card:seollal","en":"Lunar New Year","isCorrect":true},
           {"id":"book","pictureRef":"card:book","en":"Book","isCorrect":false},
           {"id":"mugunghwa","pictureRef":"card:mugunghwa","en":"Rose of Sharon","isCorrect":false},
-          {"id":"tteokguk","pictureRef":"card:tteokguk","en":"Rice cake soup","isCorrect":false}
+          {"id":"kimbap","pictureRef":"card:kimbap","en":"Kimbap","isCorrect":false}
         ],
         "tags": ["word:seollal","topic:rites"],
         "requires": {"audio":false,"picture":"card"},
@@ -1094,27 +1010,6 @@
       }
     },
     {
-      "id": "pitem:vocab-read-hangeullal",
-      "strand": "vocabulary",
-      "gate": "vocab",
-      "form": "read",
-      "status": "ready",
-      "glossEn": "Hangul Day (read)",
-      "question": {
-        "format": "read-pick-picture",
-        "prompt": {"ko":"한글날","romanization":"hangeullal","en":"Hangul Day"},
-        "options": [
-          {"id":"hangul-day","pictureRef":"card:hangul-day","en":"Hangul Day","isCorrect":true},
-          {"id":"gayageum","pictureRef":"card:gayageum","en":"Gayageum zither","isCorrect":false},
-          {"id":"lantern","pictureRef":"card:lantern","en":"Paper lantern","isCorrect":false},
-          {"id":"magpie","pictureRef":"card:magpie","en":"Magpie","isCorrect":false}
-        ],
-        "tags": ["word:hangeullal","topic:letters"],
-        "requires": {"audio":false,"picture":"card"},
-        "leaks": true
-      }
-    },
-    {
       "id": "pitem:warmup-rice",
       "strand": "vocabulary",
       "gate": "vocab",
@@ -1128,7 +1023,7 @@
           {"id":"rice","pictureRef":"card:rice","en":"Rice","isCorrect":true},
           {"id":"tiger","pictureRef":"card:tiger","en":"Tiger","isCorrect":false},
           {"id":"moon","pictureRef":"card:moon","en":"Moon","isCorrect":false},
-          {"id":"kite","pictureRef":"card:kite","en":"Kite","isCorrect":false}
+          {"id":"jegi","pictureRef":"card:jegi","en":"Foot shuttlecock","isCorrect":false}
         ],
         "tags": ["word:bap","topic:life"],
         "requires": {"audio":true,"picture":"card"},

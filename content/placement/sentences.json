@@ -6,7 +6,9 @@
       "strand": "sentences",
       "gate": "sentence",
       "form": "oral",
-      "status": "draft",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
       "glossEn": "It is a tiger. (hear)",
       "question": {
         "format": "hear-pick-picture",
@@ -27,7 +29,9 @@
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
-      "status": "draft",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
       "glossEn": "It is a tiger. (read)",
       "question": {
         "format": "read-pick-picture",
@@ -48,7 +52,9 @@
       "strand": "sentences",
       "gate": "sentence",
       "form": "oral",
-      "status": "draft",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
       "glossEn": "It is the moon. (hear)",
       "question": {
         "format": "hear-pick-picture",
@@ -69,14 +75,16 @@
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
-      "status": "draft",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
       "glossEn": "It is the moon. (read)",
       "question": {
         "format": "read-pick-picture",
         "prompt": {"ko":"달이에요","romanization":"darieyo","en":"It is the moon."},
         "options": [
           {"id":"moon","pictureRef":"card:moon","en":"Moon","isCorrect":true},
-          {"id":"chuseok","pictureRef":"card:chuseok","en":"Harvest festival","isCorrect":false},
+          {"id":"chopsticks","pictureRef":"card:chopsticks","en":"Chopsticks","isCorrect":false},
           {"id":"origami","pictureRef":"card:origami","en":"Paper folding","isCorrect":false},
           {"id":"gayageum","pictureRef":"card:gayageum","en":"Gayageum zither","isCorrect":false}
         ],
@@ -90,7 +98,9 @@
       "strand": "sentences",
       "gate": "sentence",
       "form": "oral",
-      "status": "draft",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
       "glossEn": "It is a mountain. (hear)",
       "question": {
         "format": "hear-pick-picture",
@@ -111,7 +121,9 @@
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
-      "status": "draft",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
       "glossEn": "It is a mountain. (read)",
       "question": {
         "format": "read-pick-picture",
@@ -120,7 +132,7 @@
           {"id":"mountain","pictureRef":"card:mountain","en":"Mountain","isCorrect":true},
           {"id":"yutnori","pictureRef":"card:yutnori","en":"Yut game","isCorrect":false},
           {"id":"magpie","pictureRef":"card:magpie","en":"Magpie","isCorrect":false},
-          {"id":"chopsticks","pictureRef":"card:chopsticks","en":"Chopsticks","isCorrect":false}
+          {"id":"kimchi","pictureRef":"card:kimchi","en":"Kimchi","isCorrect":false}
         ],
         "tags": ["pattern:n-ieyo","word:san"],
         "requires": {"audio":false,"picture":"card"},
@@ -132,7 +144,9 @@
       "strand": "sentences",
       "gate": "sentence",
       "form": "oral",
-      "status": "draft",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
       "glossEn": "It is the sea. (hear)",
       "question": {
         "format": "hear-pick-picture",
@@ -141,7 +155,7 @@
           {"id":"sea","pictureRef":"card:sea","en":"Sea","isCorrect":true},
           {"id":"tiger","pictureRef":"card:tiger","en":"Tiger","isCorrect":false},
           {"id":"family-table","pictureRef":"card:family-table","en":"Family table","isCorrect":false},
-          {"id":"kite","pictureRef":"card:kite","en":"Kite","isCorrect":false}
+          {"id":"top","pictureRef":"card:top","en":"Spinning top","isCorrect":false}
         ],
         "tags": ["pattern:n-ieyo","word:bada"],
         "requires": {"audio":true,"picture":"card"},
@@ -153,7 +167,9 @@
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
-      "status": "draft",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
       "glossEn": "It is the sea. (read)",
       "question": {
         "format": "read-pick-picture",
@@ -174,7 +190,9 @@
       "strand": "sentences",
       "gate": "sentence",
       "form": "oral",
-      "status": "draft",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
       "glossEn": "It is a kite. (hear)",
       "question": {
         "format": "hear-pick-picture",
@@ -195,7 +213,9 @@
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
-      "status": "draft",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
       "glossEn": "It is a kite. (read)",
       "question": {
         "format": "read-pick-picture",
@@ -216,7 +236,9 @@
       "strand": "sentences",
       "gate": "sentence",
       "form": "oral",
-      "status": "draft",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
       "glossEn": "It is a spinning top. (hear)",
       "question": {
         "format": "hear-pick-picture",
@@ -237,7 +259,9 @@
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
-      "status": "draft",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
       "glossEn": "It is a spinning top. (read)",
       "question": {
         "format": "read-pick-picture",
@@ -258,7 +282,9 @@
       "strand": "sentences",
       "gate": "sentence",
       "form": "oral",
-      "status": "draft",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
       "glossEn": "It is a magpie. (hear)",
       "question": {
         "format": "hear-pick-picture",
@@ -266,7 +292,7 @@
         "options": [
           {"id":"magpie","pictureRef":"card:magpie","en":"Magpie","isCorrect":true},
           {"id":"chuseok","pictureRef":"card:chuseok","en":"Harvest festival","isCorrect":false},
-          {"id":"origami","pictureRef":"card:origami","en":"Paper folding","isCorrect":false},
+          {"id":"book","pictureRef":"card:book","en":"Book","isCorrect":false},
           {"id":"gayageum","pictureRef":"card:gayageum","en":"Gayageum zither","isCorrect":false}
         ],
         "tags": ["pattern:n-ieyo","word:kkachi"],
@@ -279,7 +305,9 @@
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
-      "status": "draft",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
       "glossEn": "It is a magpie. (read)",
       "question": {
         "format": "read-pick-picture",
@@ -300,7 +328,9 @@
       "strand": "sentences",
       "gate": "sentence",
       "form": "oral",
-      "status": "draft",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
       "glossEn": "It is a hanbok. (hear)",
       "question": {
         "format": "hear-pick-picture",
@@ -321,7 +351,9 @@
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
-      "status": "draft",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
       "glossEn": "It is a hanbok. (read)",
       "question": {
         "format": "read-pick-picture",
@@ -342,7 +374,9 @@
       "strand": "sentences",
       "gate": "sentence",
       "form": "oral",
-      "status": "draft",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
       "glossEn": "It is kimchi. (hear)",
       "question": {
         "format": "hear-pick-picture",
@@ -363,7 +397,9 @@
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
-      "status": "draft",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
       "glossEn": "It is kimchi. (read)",
       "question": {
         "format": "read-pick-picture",
@@ -384,7 +420,9 @@
       "strand": "sentences",
       "gate": "sentence",
       "form": "oral",
-      "status": "draft",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
       "glossEn": "It is a book. (hear)",
       "question": {
         "format": "hear-pick-picture",
@@ -405,7 +443,9 @@
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
-      "status": "draft",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
       "glossEn": "It is a book. (read)",
       "question": {
         "format": "read-pick-picture",
@@ -426,7 +466,9 @@
       "strand": "sentences",
       "gate": "sentence",
       "form": "oral",
-      "status": "draft",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
       "glossEn": "It is a brush. (hear)",
       "question": {
         "format": "hear-pick-picture",
@@ -447,7 +489,9 @@
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
-      "status": "draft",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
       "glossEn": "It is a brush. (read)",
       "question": {
         "format": "read-pick-picture",
@@ -468,7 +512,9 @@
       "strand": "sentences",
       "gate": "sentence",
       "form": "oral",
-      "status": "draft",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
       "glossEn": "It is a jegi. (hear)",
       "question": {
         "format": "hear-pick-picture",
@@ -489,7 +535,9 @@
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
-      "status": "draft",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
       "glossEn": "It is a jegi. (read)",
       "question": {
         "format": "read-pick-picture",
@@ -510,18 +558,20 @@
       "strand": "sentences",
       "gate": "sentence",
       "form": "oral",
-      "status": "draft",
-      "glossEn": "It is a yut stick. (hear)",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
+      "glossEn": "These are yut sticks. (hear)",
       "question": {
         "format": "hear-pick-picture",
-        "prompt": {"ko":"윷이에요","romanization":"yuchieyo","en":"It is a yut stick."},
+        "prompt": {"ko":"윷이에요","romanization":"yuchieyo","en":"These are yut sticks."},
         "options": [
           {"id":"yutnori","pictureRef":"card:yutnori","en":"Yut game","isCorrect":true},
           {"id":"hanbok","pictureRef":"card:hanbok","en":"Hanbok","isCorrect":false},
           {"id":"tiger","pictureRef":"card:tiger","en":"Tiger","isCorrect":false},
           {"id":"gayageum","pictureRef":"card:gayageum","en":"Gayageum zither","isCorrect":false}
         ],
-        "tags": ["pattern:n-ieyo","word:yunnori"],
+        "tags": ["pattern:n-ieyo","word:yut"],
         "requires": {"audio":true,"picture":"card"},
         "leaks": false
       }
@@ -531,18 +581,20 @@
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
-      "status": "draft",
-      "glossEn": "It is a yut stick. (read)",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
+      "glossEn": "These are yut sticks. (read)",
       "question": {
         "format": "read-pick-picture",
-        "prompt": {"ko":"윷이에요","romanization":"yuchieyo","en":"It is a yut stick."},
+        "prompt": {"ko":"윷이에요","romanization":"yuchieyo","en":"These are yut sticks."},
         "options": [
           {"id":"yutnori","pictureRef":"card:yutnori","en":"Yut game","isCorrect":true},
-          {"id":"chopsticks","pictureRef":"card:chopsticks","en":"Chopsticks","isCorrect":false},
+          {"id":"pottery","pictureRef":"card:pottery","en":"Celadon pottery","isCorrect":false},
           {"id":"hanji","pictureRef":"card:hanji","en":"Hanji paper","isCorrect":false},
           {"id":"mountain","pictureRef":"card:mountain","en":"Mountain","isCorrect":false}
         ],
-        "tags": ["pattern:n-ieyo","word:yunnori"],
+        "tags": ["pattern:n-ieyo","word:yut"],
         "requires": {"audio":false,"picture":"card"},
         "leaks": true
       }
@@ -552,7 +604,9 @@
       "strand": "sentences",
       "gate": "sentence",
       "form": "oral",
-      "status": "draft",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
       "glossEn": "It is hanji paper. (hear)",
       "question": {
         "format": "hear-pick-picture",
@@ -573,7 +627,9 @@
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
-      "status": "draft",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
       "glossEn": "It is hanji paper. (read)",
       "question": {
         "format": "read-pick-picture",
@@ -594,7 +650,9 @@
       "strand": "sentences",
       "gate": "sentence",
       "form": "oral",
-      "status": "draft",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
       "glossEn": "I eat rice. (hear)",
       "question": {
         "format": "hear-pick-picture",
@@ -615,7 +673,9 @@
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
-      "status": "draft",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
       "glossEn": "I eat rice. (read)",
       "question": {
         "format": "read-pick-picture",
@@ -636,7 +696,9 @@
       "strand": "sentences",
       "gate": "sentence",
       "form": "oral",
-      "status": "draft",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
       "glossEn": "I eat kimchi. (hear)",
       "question": {
         "format": "hear-pick-picture",
@@ -657,7 +719,9 @@
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
-      "status": "draft",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
       "glossEn": "I eat kimchi. (read)",
       "question": {
         "format": "read-pick-picture",
@@ -678,7 +742,9 @@
       "strand": "sentences",
       "gate": "sentence",
       "form": "oral",
-      "status": "draft",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
       "glossEn": "I eat kimbap. (hear)",
       "question": {
         "format": "hear-pick-picture",
@@ -699,7 +765,9 @@
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
-      "status": "draft",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
       "glossEn": "I eat kimbap. (read)",
       "question": {
         "format": "read-pick-picture",
@@ -720,7 +788,9 @@
       "strand": "sentences",
       "gate": "sentence",
       "form": "oral",
-      "status": "draft",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
       "glossEn": "I eat rice cake soup. (hear)",
       "question": {
         "format": "hear-pick-picture",
@@ -741,7 +811,9 @@
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
-      "status": "draft",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
       "glossEn": "I eat rice cake soup. (read)",
       "question": {
         "format": "read-pick-picture",
@@ -762,7 +834,9 @@
       "strand": "sentences",
       "gate": "sentence",
       "form": "oral",
-      "status": "draft",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
       "glossEn": "I eat songpyeon. (hear)",
       "question": {
         "format": "hear-pick-picture",
@@ -783,7 +857,9 @@
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
-      "status": "draft",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
       "glossEn": "I eat songpyeon. (read)",
       "question": {
         "format": "read-pick-picture",
@@ -800,43 +876,47 @@
       }
     },
     {
-      "id": "pitem:sent-v-hear-uyureulmasyeoyo",
+      "id": "pitem:sent-v-hear-hanbogeulibeoyo",
       "strand": "sentences",
       "gate": "sentence",
       "form": "oral",
-      "status": "draft",
-      "glossEn": "I drink milk. (hear)",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
+      "glossEn": "I wear a hanbok. (hear)",
       "question": {
         "format": "hear-pick-picture",
-        "prompt": {"ko":"우유를 마셔요","romanization":"uyureul masyeoyo","en":"I drink milk."},
+        "prompt": {"ko":"한복을 입어요","romanization":"hanbogeul ibeoyo","en":"I wear a hanbok."},
         "options": [
-          {"id":"uyu","pictureRef":"card:uyu","en":"Milk","isCorrect":true},
+          {"id":"hanbok","pictureRef":"card:hanbok","en":"Hanbok","isCorrect":true},
           {"id":"book","pictureRef":"card:book","en":"Book","isCorrect":false},
           {"id":"sea","pictureRef":"card:sea","en":"Sea","isCorrect":false},
-          {"id":"sebae","pictureRef":"card:sebae","en":"New Year bow","isCorrect":false}
+          {"id":"top","pictureRef":"card:top","en":"Spinning top","isCorrect":false}
         ],
-        "tags": ["pattern:n-eul-v","word:uyu"],
+        "tags": ["pattern:n-eul-v","word:hanbok"],
         "requires": {"audio":true,"picture":"card"},
         "leaks": false
       }
     },
     {
-      "id": "pitem:sent-v-read-uyureulmasyeoyo",
+      "id": "pitem:sent-v-read-hanbogeulibeoyo",
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
-      "status": "draft",
-      "glossEn": "I drink milk. (read)",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
+      "glossEn": "I wear a hanbok. (read)",
       "question": {
         "format": "read-pick-picture",
-        "prompt": {"ko":"우유를 마셔요","romanization":"uyureul masyeoyo","en":"I drink milk."},
+        "prompt": {"ko":"한복을 입어요","romanization":"hanbogeul ibeoyo","en":"I wear a hanbok."},
         "options": [
-          {"id":"uyu","pictureRef":"card:uyu","en":"Milk","isCorrect":true},
-          {"id":"top","pictureRef":"card:top","en":"Spinning top","isCorrect":false},
+          {"id":"hanbok","pictureRef":"card:hanbok","en":"Hanbok","isCorrect":true},
           {"id":"tiger","pictureRef":"card:tiger","en":"Tiger","isCorrect":false},
+          {"id":"kimchi","pictureRef":"card:kimchi","en":"Kimchi","isCorrect":false},
           {"id":"gayageum","pictureRef":"card:gayageum","en":"Gayageum zither","isCorrect":false}
         ],
-        "tags": ["pattern:n-eul-v","word:uyu"],
+        "tags": ["pattern:n-eul-v","word:hanbok"],
         "requires": {"audio":false,"picture":"card"},
         "leaks": true
       }
@@ -846,14 +926,16 @@
       "strand": "sentences",
       "gate": "sentence",
       "form": "oral",
-      "status": "draft",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
       "glossEn": "I read a book. (hear)",
       "question": {
         "format": "hear-pick-picture",
         "prompt": {"ko":"책을 읽어요","romanization":"chaegeul ilgeoyo","en":"I read a book."},
         "options": [
           {"id":"book","pictureRef":"card:book","en":"Book","isCorrect":true},
-          {"id":"magpie","pictureRef":"card:magpie","en":"Magpie","isCorrect":false},
+          {"id":"tiger","pictureRef":"card:tiger","en":"Tiger","isCorrect":false},
           {"id":"pottery","pictureRef":"card:pottery","en":"Celadon pottery","isCorrect":false},
           {"id":"seollal","pictureRef":"card:seollal","en":"Lunar New Year","isCorrect":false}
         ],
@@ -867,7 +949,9 @@
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
-      "status": "draft",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
       "glossEn": "I read a book. (read)",
       "question": {
         "format": "read-pick-picture",
@@ -884,43 +968,47 @@
       }
     },
     {
-      "id": "pitem:sent-v-hear-sagwareulmeogeoyo",
+      "id": "pitem:sent-v-hear-yeoneulnallyeoyo",
       "strand": "sentences",
       "gate": "sentence",
       "form": "oral",
-      "status": "draft",
-      "glossEn": "I eat an apple. (hear)",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
+      "glossEn": "I fly a kite. (hear)",
       "question": {
         "format": "hear-pick-picture",
-        "prompt": {"ko":"사과를 먹어요","romanization":"sagwareul meogeoyo","en":"I eat an apple."},
+        "prompt": {"ko":"연을 날려요","romanization":"yeoneul nallyeoyo","en":"I fly a kite."},
         "options": [
-          {"id":"sagwa","pictureRef":"card:sagwa","en":"Apple","isCorrect":true},
-          {"id":"moon","pictureRef":"card:moon","en":"Moon","isCorrect":false},
-          {"id":"sebae","pictureRef":"card:sebae","en":"New Year bow","isCorrect":false},
-          {"id":"brush","pictureRef":"card:brush","en":"Calligraphy brush","isCorrect":false}
+          {"id":"kite","pictureRef":"card:kite","en":"Kite","isCorrect":true},
+          {"id":"rice","pictureRef":"card:rice","en":"Rice","isCorrect":false},
+          {"id":"ink","pictureRef":"card:ink","en":"Ink stick","isCorrect":false},
+          {"id":"pottery","pictureRef":"card:pottery","en":"Celadon pottery","isCorrect":false}
         ],
-        "tags": ["pattern:n-eul-v","word:sagwa"],
+        "tags": ["pattern:n-eul-v","word:yeon"],
         "requires": {"audio":true,"picture":"card"},
         "leaks": false
       }
     },
     {
-      "id": "pitem:sent-v-read-sagwareulmeogeoyo",
+      "id": "pitem:sent-v-read-yeoneulnallyeoyo",
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
-      "status": "draft",
-      "glossEn": "I eat an apple. (read)",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
+      "glossEn": "I fly a kite. (read)",
       "question": {
         "format": "read-pick-picture",
-        "prompt": {"ko":"사과를 먹어요","romanization":"sagwareul meogeoyo","en":"I eat an apple."},
+        "prompt": {"ko":"연을 날려요","romanization":"yeoneul nallyeoyo","en":"I fly a kite."},
         "options": [
-          {"id":"sagwa","pictureRef":"card:sagwa","en":"Apple","isCorrect":true},
-          {"id":"magpie","pictureRef":"card:magpie","en":"Magpie","isCorrect":false},
-          {"id":"pottery","pictureRef":"card:pottery","en":"Celadon pottery","isCorrect":false},
-          {"id":"top","pictureRef":"card:top","en":"Spinning top","isCorrect":false}
+          {"id":"kite","pictureRef":"card:kite","en":"Kite","isCorrect":true},
+          {"id":"songpyeon","pictureRef":"card:songpyeon","en":"Songpyeon","isCorrect":false},
+          {"id":"book","pictureRef":"card:book","en":"Book","isCorrect":false},
+          {"id":"sea","pictureRef":"card:sea","en":"Sea","isCorrect":false}
         ],
-        "tags": ["pattern:n-eul-v","word:sagwa"],
+        "tags": ["pattern:n-eul-v","word:yeon"],
         "requires": {"audio":false,"picture":"card"},
         "leaks": true
       }
@@ -930,15 +1018,17 @@
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
-      "status": "draft",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
       "glossEn": "Reply to: Hello!",
       "question": {
         "format": "reply-pick",
         "prompt": {"ko":"안녕하세요!","romanization":"annyeonghaseyo","en":"Hello!"},
         "options": [
-          {"id":"reply-1","ko":"안녕하세요","romanization":"annyeonghaseyo","en":"Hello.","isCorrect":true},
-          {"id":"reply-2","ko":"저는 호야예요","romanization":"jeoneun hoyayeyo","en":"I am Hoya.","isCorrect":false},
-          {"id":"reply-6","ko":"네, 잘 지냈어요","romanization":"ne jal jinaesseoyo","en":"Yes, I have been well.","isCorrect":false}
+          {"id":"reply-1","ko":"안녕하세요.","romanization":"annyeonghaseyo","en":"Hello.","isCorrect":true},
+          {"id":"reply-8","ko":"네, 먹었어요.","romanization":"ne meogeosseoyo","en":"Yes, I ate.","isCorrect":false},
+          {"id":"reply-5","ko":"안녕히 계세요.","romanization":"annyeonghi gyeseyo","en":"Goodbye (to the one staying).","isCorrect":false}
         ],
         "tags": ["pattern:reply"],
         "requires": {"audio":true,"picture":null},
@@ -951,15 +1041,17 @@
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
-      "status": "draft",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
       "glossEn": "Reply to: What is your name?",
       "question": {
         "format": "reply-pick",
         "prompt": {"ko":"이름이 뭐예요?","romanization":"ireumi mwoyeyo","en":"What is your name?"},
         "options": [
-          {"id":"reply-2","ko":"저는 호야예요","romanization":"jeoneun hoyayeyo","en":"I am Hoya.","isCorrect":true},
-          {"id":"reply-3","ko":"저도 반가워요","romanization":"jeodo bangawoyo","en":"Nice to meet you too.","isCorrect":false},
-          {"id":"reply-6","ko":"네, 잘 지냈어요","romanization":"ne jal jinaesseoyo","en":"Yes, I have been well.","isCorrect":false}
+          {"id":"reply-2","ko":"저는 호야예요.","romanization":"jeoneun hoyayeyo","en":"I am Hoya.","isCorrect":true},
+          {"id":"reply-3","ko":"저도 반가워요.","romanization":"jeodo bangawoyo","en":"Nice to meet you too.","isCorrect":false},
+          {"id":"reply-6","ko":"네, 잘 지냈어요.","romanization":"ne jal jinaesseoyo","en":"Yes, I have been well.","isCorrect":false}
         ],
         "tags": ["pattern:reply"],
         "requires": {"audio":true,"picture":null},
@@ -972,15 +1064,17 @@
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
-      "status": "draft",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
       "glossEn": "Reply to: Nice to meet you!",
       "question": {
         "format": "reply-pick",
         "prompt": {"ko":"만나서 반가워요!","romanization":"mannaseo bangawoyo","en":"Nice to meet you!"},
         "options": [
-          {"id":"reply-3","ko":"저도 반가워요","romanization":"jeodo bangawoyo","en":"Nice to meet you too.","isCorrect":true},
-          {"id":"reply-5","ko":"안녕히 계세요","romanization":"annyeonghi gyeseyo","en":"Goodbye (to the one staying).","isCorrect":false},
-          {"id":"reply-8","ko":"네, 먹었어요","romanization":"ne meogeosseoyo","en":"Yes, I ate.","isCorrect":false}
+          {"id":"reply-3","ko":"저도 반가워요.","romanization":"jeodo bangawoyo","en":"Nice to meet you too.","isCorrect":true},
+          {"id":"reply-5","ko":"안녕히 계세요.","romanization":"annyeonghi gyeseyo","en":"Goodbye (to the one staying).","isCorrect":false},
+          {"id":"reply-8","ko":"네, 먹었어요.","romanization":"ne meogeosseoyo","en":"Yes, I ate.","isCorrect":false}
         ],
         "tags": ["pattern:reply"],
         "requires": {"audio":true,"picture":null},
@@ -993,15 +1087,17 @@
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
-      "status": "draft",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
       "glossEn": "Reply to: Thank you.",
       "question": {
         "format": "reply-pick",
         "prompt": {"ko":"감사합니다.","romanization":"gamsahamnida","en":"Thank you."},
         "options": [
-          {"id":"reply-4","ko":"아니에요","romanization":"anieyo","en":"You are welcome.","isCorrect":true},
-          {"id":"reply-5","ko":"안녕히 계세요","romanization":"annyeonghi gyeseyo","en":"Goodbye (to the one staying).","isCorrect":false},
-          {"id":"reply-8","ko":"네, 먹었어요","romanization":"ne meogeosseoyo","en":"Yes, I ate.","isCorrect":false}
+          {"id":"reply-4","ko":"천만에요.","romanization":"cheonmaneyo","en":"You are welcome.","isCorrect":true},
+          {"id":"reply-2","ko":"저는 호야예요.","romanization":"jeoneun hoyayeyo","en":"I am Hoya.","isCorrect":false},
+          {"id":"reply-8","ko":"네, 먹었어요.","romanization":"ne meogeosseoyo","en":"Yes, I ate.","isCorrect":false}
         ],
         "tags": ["pattern:reply"],
         "requires": {"audio":true,"picture":null},
@@ -1014,15 +1110,17 @@
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
-      "status": "draft",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
       "glossEn": "Reply to: Goodbye (to the one leaving).",
       "question": {
         "format": "reply-pick",
         "prompt": {"ko":"안녕히 가세요.","romanization":"annyeonghi gaseyo","en":"Goodbye (to the one leaving)."},
         "options": [
-          {"id":"reply-5","ko":"안녕히 계세요","romanization":"annyeonghi gyeseyo","en":"Goodbye (to the one staying).","isCorrect":true},
-          {"id":"reply-6","ko":"네, 잘 지냈어요","romanization":"ne jal jinaesseoyo","en":"Yes, I have been well.","isCorrect":false},
-          {"id":"reply-9","ko":"천만에요","romanization":"cheonmaneyo","en":"You are welcome.","isCorrect":false}
+          {"id":"reply-5","ko":"안녕히 계세요.","romanization":"annyeonghi gyeseyo","en":"Goodbye (to the one staying).","isCorrect":true},
+          {"id":"reply-6","ko":"네, 잘 지냈어요.","romanization":"ne jal jinaesseoyo","en":"Yes, I have been well.","isCorrect":false},
+          {"id":"reply-4","ko":"천만에요.","romanization":"cheonmaneyo","en":"You are welcome.","isCorrect":false}
         ],
         "tags": ["pattern:reply"],
         "requires": {"audio":true,"picture":null},
@@ -1035,15 +1133,17 @@
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
-      "status": "draft",
-      "glossEn": "Reply to: How have you been?",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
+      "glossEn": "Reply to: Have you been well?",
       "question": {
         "format": "reply-pick",
-        "prompt": {"ko":"잘 지냈어요?","romanization":"jal jinaesseoyo","en":"How have you been?"},
+        "prompt": {"ko":"잘 지냈어요?","romanization":"jal jinaesseoyo","en":"Have you been well?"},
         "options": [
-          {"id":"reply-6","ko":"네, 잘 지냈어요","romanization":"ne jal jinaesseoyo","en":"Yes, I have been well.","isCorrect":true},
-          {"id":"reply-7","ko":"김치예요","romanization":"gimchiyeyo","en":"It is kimchi.","isCorrect":false},
-          {"id":"reply-1","ko":"안녕하세요","romanization":"annyeonghaseyo","en":"Hello.","isCorrect":false}
+          {"id":"reply-6","ko":"네, 잘 지냈어요.","romanization":"ne jal jinaesseoyo","en":"Yes, I have been well.","isCorrect":true},
+          {"id":"reply-7","ko":"네, 김치예요.","romanization":"ne gimchiyeyo","en":"Yes, it is kimchi.","isCorrect":false},
+          {"id":"reply-5","ko":"안녕히 계세요.","romanization":"annyeonghi gyeseyo","en":"Goodbye (to the one staying).","isCorrect":false}
         ],
         "tags": ["pattern:reply"],
         "requires": {"audio":true,"picture":null},
@@ -1056,15 +1156,17 @@
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
-      "status": "draft",
-      "glossEn": "Reply to: What is this?",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
+      "glossEn": "Reply to: Is this kimchi?",
       "question": {
         "format": "reply-pick",
-        "prompt": {"ko":"이거 뭐예요?","romanization":"igeo mwoyeyo","en":"What is this?"},
+        "prompt": {"ko":"이거 김치예요?","romanization":"igeo gimchiyeyo","en":"Is this kimchi?"},
         "options": [
-          {"id":"reply-7","ko":"김치예요","romanization":"gimchiyeyo","en":"It is kimchi.","isCorrect":true},
-          {"id":"reply-8","ko":"네, 먹었어요","romanization":"ne meogeosseoyo","en":"Yes, I ate.","isCorrect":false},
-          {"id":"reply-1","ko":"안녕하세요","romanization":"annyeonghaseyo","en":"Hello.","isCorrect":false}
+          {"id":"reply-7","ko":"네, 김치예요.","romanization":"ne gimchiyeyo","en":"Yes, it is kimchi.","isCorrect":true},
+          {"id":"reply-8","ko":"네, 먹었어요.","romanization":"ne meogeosseoyo","en":"Yes, I ate.","isCorrect":false},
+          {"id":"reply-1","ko":"안녕하세요.","romanization":"annyeonghaseyo","en":"Hello.","isCorrect":false}
         ],
         "tags": ["pattern:reply"],
         "requires": {"audio":true,"picture":null},
@@ -1077,15 +1179,17 @@
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
-      "status": "draft",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
       "glossEn": "Reply to: Have you eaten?",
       "question": {
         "format": "reply-pick",
         "prompt": {"ko":"밥 먹었어요?","romanization":"bap meogeosseoyo","en":"Have you eaten?"},
         "options": [
-          {"id":"reply-8","ko":"네, 먹었어요","romanization":"ne meogeosseoyo","en":"Yes, I ate.","isCorrect":true},
-          {"id":"reply-10","ko":"괜찮아요","romanization":"gwaenchanayo","en":"It is okay.","isCorrect":false},
-          {"id":"reply-3","ko":"저도 반가워요","romanization":"jeodo bangawoyo","en":"Nice to meet you too.","isCorrect":false}
+          {"id":"reply-8","ko":"네, 먹었어요.","romanization":"ne meogeosseoyo","en":"Yes, I ate.","isCorrect":true},
+          {"id":"reply-2","ko":"저는 호야예요.","romanization":"jeoneun hoyayeyo","en":"I am Hoya.","isCorrect":false},
+          {"id":"reply-3","ko":"저도 반가워요.","romanization":"jeodo bangawoyo","en":"Nice to meet you too.","isCorrect":false}
         ],
         "tags": ["pattern:reply"],
         "requires": {"audio":true,"picture":null},
@@ -1098,15 +1202,17 @@
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
-      "status": "draft",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
       "glossEn": "Reply to: Thanks.",
       "question": {
         "format": "reply-pick",
         "prompt": {"ko":"고마워요.","romanization":"gomawoyo","en":"Thanks."},
         "options": [
-          {"id":"reply-9","ko":"천만에요","romanization":"cheonmaneyo","en":"You are welcome.","isCorrect":true},
-          {"id":"reply-2","ko":"저는 호야예요","romanization":"jeoneun hoyayeyo","en":"I am Hoya.","isCorrect":false},
-          {"id":"reply-6","ko":"네, 잘 지냈어요","romanization":"ne jal jinaesseoyo","en":"Yes, I have been well.","isCorrect":false}
+          {"id":"reply-9","ko":"아니에요.","romanization":"anieyo","en":"Not at all.","isCorrect":true},
+          {"id":"reply-2","ko":"저는 호야예요.","romanization":"jeoneun hoyayeyo","en":"I am Hoya.","isCorrect":false},
+          {"id":"reply-6","ko":"네, 잘 지냈어요.","romanization":"ne jal jinaesseoyo","en":"Yes, I have been well.","isCorrect":false}
         ],
         "tags": ["pattern:reply"],
         "requires": {"audio":true,"picture":null},
@@ -1119,15 +1225,17 @@
       "strand": "sentences",
       "gate": "sentence",
       "form": "read",
-      "status": "draft",
+      "status": "ready",
+      "reviewedBy": "ai-3-lens",
+      "reviewedAt": "2026-10-11",
       "glossEn": "Reply to: Sorry.",
       "question": {
         "format": "reply-pick",
         "prompt": {"ko":"미안해요.","romanization":"mianhaeyo","en":"Sorry."},
         "options": [
-          {"id":"reply-10","ko":"괜찮아요","romanization":"gwaenchanayo","en":"It is okay.","isCorrect":true},
-          {"id":"reply-3","ko":"저도 반가워요","romanization":"jeodo bangawoyo","en":"Nice to meet you too.","isCorrect":false},
-          {"id":"reply-7","ko":"김치예요","romanization":"gimchiyeyo","en":"It is kimchi.","isCorrect":false}
+          {"id":"reply-10","ko":"괜찮아요.","romanization":"gwaenchanayo","en":"It is okay.","isCorrect":true},
+          {"id":"reply-3","ko":"저도 반가워요.","romanization":"jeodo bangawoyo","en":"Nice to meet you too.","isCorrect":false},
+          {"id":"reply-7","ko":"네, 김치예요.","romanization":"ne gimchiyeyo","en":"Yes, it is kimchi.","isCorrect":false}
         ],
         "tags": ["pattern:reply"],
         "requires": {"audio":true,"picture":null},

@@ -13,7 +13,7 @@
         "options": [
           {"id":"t1","ko":"ㄴ","romanization":"n","en":"letter nieun","isCorrect":false},
           {"id":"t2","ko":"ㄴ","romanization":"n","en":"letter nieun","isCorrect":false},
-          {"id":"t3","ko":"ㄱ","romanization":"g","en":"letter giyeok","isCorrect":true},
+          {"id":"t3","ko":"ㄱ","romanization":"g/k","en":"letter giyeok","isCorrect":true},
           {"id":"t4","ko":"ㄴ","romanization":"n","en":"letter nieun","isCorrect":false}
         ],
         "tags": ["sym:ㄱ","sym:ㄴ","look-alike"],
@@ -31,10 +31,10 @@
       "question": {
         "format": "shape-odd-one-out",
         "options": [
-          {"id":"t1","ko":"ㄱ","romanization":"g","en":"letter giyeok","isCorrect":false},
-          {"id":"t2","ko":"ㄱ","romanization":"g","en":"letter giyeok","isCorrect":false},
+          {"id":"t1","ko":"ㄱ","romanization":"g/k","en":"letter giyeok","isCorrect":false},
+          {"id":"t2","ko":"ㄱ","romanization":"g/k","en":"letter giyeok","isCorrect":false},
           {"id":"t3","ko":"ㄴ","romanization":"n","en":"letter nieun","isCorrect":true},
-          {"id":"t4","ko":"ㄱ","romanization":"g","en":"letter giyeok","isCorrect":false}
+          {"id":"t4","ko":"ㄱ","romanization":"g/k","en":"letter giyeok","isCorrect":false}
         ],
         "tags": ["sym:ㄴ","sym:ㄱ","look-alike"],
         "requires": {"audio":false,"picture":null},
@@ -51,10 +51,10 @@
       "question": {
         "format": "shape-odd-one-out",
         "options": [
-          {"id":"t1","ko":"ㅂ","romanization":"b","en":"letter bieup","isCorrect":false},
-          {"id":"t2","ko":"ㅂ","romanization":"b","en":"letter bieup","isCorrect":false},
+          {"id":"t1","ko":"ㅂ","romanization":"b/p","en":"letter bieup","isCorrect":false},
+          {"id":"t2","ko":"ㅂ","romanization":"b/p","en":"letter bieup","isCorrect":false},
           {"id":"t3","ko":"ㅁ","romanization":"m","en":"letter mieum","isCorrect":true},
-          {"id":"t4","ko":"ㅂ","romanization":"b","en":"letter bieup","isCorrect":false}
+          {"id":"t4","ko":"ㅂ","romanization":"b/p","en":"letter bieup","isCorrect":false}
         ],
         "tags": ["sym:ㅁ","sym:ㅂ","look-alike"],
         "requires": {"audio":false,"picture":null},
@@ -73,7 +73,7 @@
         "options": [
           {"id":"t1","ko":"ㅁ","romanization":"m","en":"letter mieum","isCorrect":false},
           {"id":"t2","ko":"ㅁ","romanization":"m","en":"letter mieum","isCorrect":false},
-          {"id":"t3","ko":"ㅂ","romanization":"b","en":"letter bieup","isCorrect":true},
+          {"id":"t3","ko":"ㅂ","romanization":"b/p","en":"letter bieup","isCorrect":true},
           {"id":"t4","ko":"ㅁ","romanization":"m","en":"letter mieum","isCorrect":false}
         ],
         "tags": ["sym:ㅂ","sym:ㅁ","look-alike"],
@@ -173,7 +173,7 @@
         "options": [
           {"id":"t1","ko":"ㅎ","romanization":"h","en":"letter hieut","isCorrect":false},
           {"id":"t2","ko":"ㅎ","romanization":"h","en":"letter hieut","isCorrect":false},
-          {"id":"t3","ko":"ㅇ","romanization":"ng","en":"letter ieung","isCorrect":true},
+          {"id":"t3","ko":"ㅇ","romanization":"silent/ng","en":"letter ieung","isCorrect":true},
           {"id":"t4","ko":"ㅎ","romanization":"h","en":"letter hieut","isCorrect":false}
         ],
         "tags": ["sym:ㅇ","sym:ㅎ","look-alike"],
@@ -191,10 +191,10 @@
       "question": {
         "format": "shape-odd-one-out",
         "options": [
-          {"id":"t1","ko":"ㅇ","romanization":"ng","en":"letter ieung","isCorrect":false},
-          {"id":"t2","ko":"ㅇ","romanization":"ng","en":"letter ieung","isCorrect":false},
+          {"id":"t1","ko":"ㅇ","romanization":"silent/ng","en":"letter ieung","isCorrect":false},
+          {"id":"t2","ko":"ㅇ","romanization":"silent/ng","en":"letter ieung","isCorrect":false},
           {"id":"t3","ko":"ㅎ","romanization":"h","en":"letter hieut","isCorrect":true},
-          {"id":"t4","ko":"ㅇ","romanization":"ng","en":"letter ieung","isCorrect":false}
+          {"id":"t4","ko":"ㅇ","romanization":"silent/ng","en":"letter ieung","isCorrect":false}
         ],
         "tags": ["sym:ㅎ","sym:ㅇ","look-alike"],
         "requires": {"audio":false,"picture":null},
@@ -251,10 +251,10 @@
       "question": {
         "format": "shape-odd-one-out",
         "options": [
-          {"id":"t1","ko":"ㄹ","romanization":"r","en":"letter rieul","isCorrect":false},
-          {"id":"t2","ko":"ㄹ","romanization":"r","en":"letter rieul","isCorrect":false},
-          {"id":"t3","ko":"ㄷ","romanization":"d","en":"letter digeut","isCorrect":true},
-          {"id":"t4","ko":"ㄹ","romanization":"r","en":"letter rieul","isCorrect":false}
+          {"id":"t1","ko":"ㄹ","romanization":"r/l","en":"letter rieul","isCorrect":false},
+          {"id":"t2","ko":"ㄹ","romanization":"r/l","en":"letter rieul","isCorrect":false},
+          {"id":"t3","ko":"ㄷ","romanization":"d/t","en":"letter digeut","isCorrect":true},
+          {"id":"t4","ko":"ㄹ","romanization":"r/l","en":"letter rieul","isCorrect":false}
         ],
         "tags": ["sym:ㄷ","sym:ㄹ","look-alike"],
         "requires": {"audio":false,"picture":null},
@@ -271,10 +271,10 @@
       "question": {
         "format": "shape-odd-one-out",
         "options": [
-          {"id":"t1","ko":"ㄷ","romanization":"d","en":"letter digeut","isCorrect":false},
-          {"id":"t2","ko":"ㄷ","romanization":"d","en":"letter digeut","isCorrect":false},
-          {"id":"t3","ko":"ㄹ","romanization":"r","en":"letter rieul","isCorrect":true},
-          {"id":"t4","ko":"ㄷ","romanization":"d","en":"letter digeut","isCorrect":false}
+          {"id":"t1","ko":"ㄷ","romanization":"d/t","en":"letter digeut","isCorrect":false},
+          {"id":"t2","ko":"ㄷ","romanization":"d/t","en":"letter digeut","isCorrect":false},
+          {"id":"t3","ko":"ㄹ","romanization":"r/l","en":"letter rieul","isCorrect":true},
+          {"id":"t4","ko":"ㄷ","romanization":"d/t","en":"letter digeut","isCorrect":false}
         ],
         "tags": ["sym:ㄹ","sym:ㄷ","look-alike"],
         "requires": {"audio":false,"picture":null},
@@ -331,10 +331,10 @@
       "question": {
         "format": "shape-odd-one-out",
         "options": [
-          {"id":"t1","ko":"ㄱ","romanization":"g","en":"letter giyeok","isCorrect":false},
-          {"id":"t2","ko":"ㄱ","romanization":"g","en":"letter giyeok","isCorrect":false},
+          {"id":"t1","ko":"ㄱ","romanization":"g/k","en":"letter giyeok","isCorrect":false},
+          {"id":"t2","ko":"ㄱ","romanization":"g/k","en":"letter giyeok","isCorrect":false},
           {"id":"t3","ko":"ㅋ","romanization":"k","en":"letter kieuk","isCorrect":true},
-          {"id":"t4","ko":"ㄱ","romanization":"g","en":"letter giyeok","isCorrect":false}
+          {"id":"t4","ko":"ㄱ","romanization":"g/k","en":"letter giyeok","isCorrect":false}
         ],
         "tags": ["sym:ㅋ","sym:ㄱ","look-alike"],
         "requires": {"audio":false,"picture":null},
@@ -353,7 +353,7 @@
         "options": [
           {"id":"t1","ko":"ㅋ","romanization":"k","en":"letter kieuk","isCorrect":false},
           {"id":"t2","ko":"ㅋ","romanization":"k","en":"letter kieuk","isCorrect":false},
-          {"id":"t3","ko":"ㄱ","romanization":"g","en":"letter giyeok","isCorrect":true},
+          {"id":"t3","ko":"ㄱ","romanization":"g/k","en":"letter giyeok","isCorrect":true},
           {"id":"t4","ko":"ㅋ","romanization":"k","en":"letter kieuk","isCorrect":false}
         ],
         "tags": ["sym:ㄱ","sym:ㅋ","look-alike"],
@@ -571,10 +571,10 @@
       "question": {
         "format": "shape-odd-one-out",
         "options": [
-          {"id":"t1","ko":"ㄷ","romanization":"d","en":"letter digeut","isCorrect":false},
-          {"id":"t2","ko":"ㄷ","romanization":"d","en":"letter digeut","isCorrect":false},
+          {"id":"t1","ko":"ㄷ","romanization":"d/t","en":"letter digeut","isCorrect":false},
+          {"id":"t2","ko":"ㄷ","romanization":"d/t","en":"letter digeut","isCorrect":false},
           {"id":"t3","ko":"ㅌ","romanization":"t","en":"letter tieut","isCorrect":true},
-          {"id":"t4","ko":"ㄷ","romanization":"d","en":"letter digeut","isCorrect":false}
+          {"id":"t4","ko":"ㄷ","romanization":"d/t","en":"letter digeut","isCorrect":false}
         ],
         "tags": ["sym:ㅌ","sym:ㄷ","look-alike"],
         "requires": {"audio":false,"picture":null},
@@ -593,7 +593,7 @@
         "options": [
           {"id":"t1","ko":"ㅌ","romanization":"t","en":"letter tieut","isCorrect":false},
           {"id":"t2","ko":"ㅌ","romanization":"t","en":"letter tieut","isCorrect":false},
-          {"id":"t3","ko":"ㄷ","romanization":"d","en":"letter digeut","isCorrect":true},
+          {"id":"t3","ko":"ㄷ","romanization":"d/t","en":"letter digeut","isCorrect":true},
           {"id":"t4","ko":"ㅌ","romanization":"t","en":"letter tieut","isCorrect":false}
         ],
         "tags": ["sym:ㄷ","sym:ㅌ","look-alike"],
@@ -611,10 +611,10 @@
       "question": {
         "format": "shape-odd-one-out",
         "options": [
-          {"id":"t1","ko":"ㅇ","romanization":"ng","en":"letter ieung","isCorrect":false},
-          {"id":"t2","ko":"ㅇ","romanization":"ng","en":"letter ieung","isCorrect":false},
+          {"id":"t1","ko":"ㅇ","romanization":"silent/ng","en":"letter ieung","isCorrect":false},
+          {"id":"t2","ko":"ㅇ","romanization":"silent/ng","en":"letter ieung","isCorrect":false},
           {"id":"t3","ko":"ㅁ","romanization":"m","en":"letter mieum","isCorrect":true},
-          {"id":"t4","ko":"ㅇ","romanization":"ng","en":"letter ieung","isCorrect":false}
+          {"id":"t4","ko":"ㅇ","romanization":"silent/ng","en":"letter ieung","isCorrect":false}
         ],
         "tags": ["sym:ㅁ","sym:ㅇ","look-alike"],
         "requires": {"audio":false,"picture":null},
@@ -633,7 +633,7 @@
         "options": [
           {"id":"t1","ko":"ㅁ","romanization":"m","en":"letter mieum","isCorrect":false},
           {"id":"t2","ko":"ㅁ","romanization":"m","en":"letter mieum","isCorrect":false},
-          {"id":"t3","ko":"ㅇ","romanization":"ng","en":"letter ieung","isCorrect":true},
+          {"id":"t3","ko":"ㅇ","romanization":"silent/ng","en":"letter ieung","isCorrect":true},
           {"id":"t4","ko":"ㅁ","romanization":"m","en":"letter mieum","isCorrect":false}
         ],
         "tags": ["sym:ㅇ","sym:ㅁ","look-alike"],
@@ -651,10 +651,10 @@
       "question": {
         "format": "shape-odd-one-out",
         "options": [
-          {"id":"t1","ko":"ㄷ","romanization":"d","en":"letter digeut","isCorrect":false},
-          {"id":"t2","ko":"ㄷ","romanization":"d","en":"letter digeut","isCorrect":false},
+          {"id":"t1","ko":"ㄷ","romanization":"d/t","en":"letter digeut","isCorrect":false},
+          {"id":"t2","ko":"ㄷ","romanization":"d/t","en":"letter digeut","isCorrect":false},
           {"id":"t3","ko":"ㄴ","romanization":"n","en":"letter nieun","isCorrect":true},
-          {"id":"t4","ko":"ㄷ","romanization":"d","en":"letter digeut","isCorrect":false}
+          {"id":"t4","ko":"ㄷ","romanization":"d/t","en":"letter digeut","isCorrect":false}
         ],
         "tags": ["sym:ㄴ","sym:ㄷ","look-alike"],
         "requires": {"audio":false,"picture":null},
@@ -673,7 +673,7 @@
         "options": [
           {"id":"t1","ko":"ㄴ","romanization":"n","en":"letter nieun","isCorrect":false},
           {"id":"t2","ko":"ㄴ","romanization":"n","en":"letter nieun","isCorrect":false},
-          {"id":"t3","ko":"ㄷ","romanization":"d","en":"letter digeut","isCorrect":true},
+          {"id":"t3","ko":"ㄷ","romanization":"d/t","en":"letter digeut","isCorrect":true},
           {"id":"t4","ko":"ㄴ","romanization":"n","en":"letter nieun","isCorrect":false}
         ],
         "tags": ["sym:ㄷ","sym:ㄴ","look-alike"],
@@ -691,10 +691,10 @@
       "question": {
         "format": "shape-odd-one-out",
         "options": [
-          {"id":"t1","ko":"ㅇ","romanization":"ng","en":"letter ieung","isCorrect":false},
-          {"id":"t2","ko":"ㅇ","romanization":"ng","en":"letter ieung","isCorrect":false},
+          {"id":"t1","ko":"ㅇ","romanization":"silent/ng","en":"letter ieung","isCorrect":false},
+          {"id":"t2","ko":"ㅇ","romanization":"silent/ng","en":"letter ieung","isCorrect":false},
           {"id":"t3","ko":"ㅅ","romanization":"s","en":"letter siot","isCorrect":true},
-          {"id":"t4","ko":"ㅇ","romanization":"ng","en":"letter ieung","isCorrect":false}
+          {"id":"t4","ko":"ㅇ","romanization":"silent/ng","en":"letter ieung","isCorrect":false}
         ],
         "tags": ["sym:ㅅ","sym:ㅇ","look-alike"],
         "requires": {"audio":false,"picture":null},
@@ -713,7 +713,7 @@
         "options": [
           {"id":"t1","ko":"ㅅ","romanization":"s","en":"letter siot","isCorrect":false},
           {"id":"t2","ko":"ㅅ","romanization":"s","en":"letter siot","isCorrect":false},
-          {"id":"t3","ko":"ㅇ","romanization":"ng","en":"letter ieung","isCorrect":true},
+          {"id":"t3","ko":"ㅇ","romanization":"silent/ng","en":"letter ieung","isCorrect":true},
           {"id":"t4","ko":"ㅅ","romanization":"s","en":"letter siot","isCorrect":false}
         ],
         "tags": ["sym:ㅇ","sym:ㅅ","look-alike"],
