@@ -135,6 +135,10 @@ content/cards/letters/hunminjeongeum.png,국립한글박물관,KOGL Type 1,"국�
 - KOGL Type 4 (상업 이용·변경 금지) 는 **MVP 사용 금지**
 - 2차 저작 시 attribution_text 에 "2차 저작" 명시
 
+### 3.8 Story (`content/stories/`)
+
+이야기(story mode) JSON 은 위 Episode/Quest 규약이 아니라 **`content/stories/README.md`** 를 따른다 (F-STORY-001): 한 파일 = 한 이야기, `draft` → `ready` 상태, 모든 사실 문장은 출처가 있는 `facts[]` 를 인용, 내레이션 속 한국어는 `{kw:<id>}` 토큰, 전래 이야기 표기, `contentVer` / `fact.rev` 버전 규칙, 그리고 **사실 정정 절차** (errata — 날짜가 보이는 정정 목록, 조용한 수정 금지). `narrationEn` 또는 `facts` 를 바꾸는 PR 은 PR 템플릿의 claims-audit 체크박스를 채운다.
+
 ---
 
 ## 4. Rules (강제)
