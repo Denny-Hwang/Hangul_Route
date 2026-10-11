@@ -308,4 +308,8 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.parent.child.quests': [[1], [9]],
   'console.parent.child.cards': [[1], [14]],
   'console.parent.child.stars': [[3]],
+  'console.journey.onStage': [[1], [7]],
+  'console.journey.stageLine': [[0, 0], [0, 1], [0, 4], [8, 0], [4, 2]],
+  'console.journey.stage': [[1, '4 quests done'], [3, 'Coming later']],
+  'console.journey.stages': [[5, 7, 'Coming later']],
 };
