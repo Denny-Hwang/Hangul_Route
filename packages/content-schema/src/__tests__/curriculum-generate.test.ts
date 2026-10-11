@@ -415,6 +415,21 @@ describe('toPlanItems and toMeta', () => {
     expect(undated[0]?.id).toBe('quest:x');
   });
 
+  it('sorts undated items first and keeps the order of items on one date', () => {
+    const draft = gen({ weeks: 1 });
+    const mixed = {
+      ...draft,
+      items: [
+        { kind: 'quest' as const, id: 'quest:b', targetDate: '2026-10-14', week: 1 },
+        { kind: 'quest' as const, id: 'quest:c', targetDate: '2026-10-14', week: 1 },
+        { kind: 'quest' as const, id: 'quest:u1', week: 1 },
+        { kind: 'quest' as const, id: 'quest:a', targetDate: '2026-10-12', week: 1 },
+        { kind: 'quest' as const, id: 'quest:u2', week: 1 },
+      ],
+    };
+    expect(toPlanItems(mixed).map((item) => item.id)).toEqual(['quest:u1', 'quest:u2', 'quest:a', 'quest:b', 'quest:c']);
+  });
+
   it('keeps a note an item already has', () => {
     const draft = gen({ weeks: 1 });
     const noted = { ...draft, items: [{ kind: 'episode' as const, id: 'episode:stage2-letters', targetDate: '2026-10-12', week: 1, note: 'Soon' }] };
