@@ -2,7 +2,9 @@
 
 import { colors, radii, spacing, typography } from '@hangul-route/design-system/tokens';
 import Link from 'next/link';
-import { DEFAULT_LOCALE, getMessages, type Messages, type UiLocale } from '@hangul-route/i18n';
+// Types only: this is the landing's one client component, and a value import from the package would ship
+// the whole dictionary (every locale, the legal text) to the browser. The words come in as a prop.
+import type { Messages, UiLocale } from '@hangul-route/i18n';
 import { useState, type CSSProperties, type FormEvent } from 'react';
 import { CONTACT_EMAIL } from '../../data/contact';
 import { apiBaseUrl } from '../../lib/console/config';
@@ -12,7 +14,8 @@ import { submitSignup, type WaitlistState } from '../../lib/waitlist';
  * Launch-invite signup on the landing page (#get). First-party: posts JSON to
  * the API Worker, no third-party form and no page navigation. Design reference:
  * the existing "Email signup / get" block of design/screens landing (same
- * fields and tokens; states added). Only the view is exported for tests.
+ * fields and tokens; states added). The server page passes the words (`landing.waitlist` in the
+ * page's locale), so the client bundle never loads the dictionary.
  */
 const MESSAGE_ID = 'waitlist-message';
 const CONSENT_ID = 'waitlist-consent';
@@ -22,7 +25,7 @@ const onPrimary: CSSProperties = { color: colors.text.onPrimary };
 const visuallyHidden: CSSProperties = { position: 'absolute', left: -9999, width: 1, height: 1, overflow: 'hidden' };
 const mailto = `mailto:${CONTACT_EMAIL}`;
 
-type WaitlistWords = Messages['landing']['waitlist'];
+export type WaitlistWords = Messages['landing']['waitlist'];
 
 const messageFor = (state: WaitlistState, words: WaitlistWords): string | null => {
   switch (state.kind) {
@@ -46,12 +49,11 @@ export interface WaitlistFormViewProps {
   onEmailChange: (value: string) => void;
   onWebsiteChange: (value: string) => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
-  /** UI locale of the words (`landing.waitlist`); English by default. */
-  locale?: UiLocale;
+  /** The form's words: `landing.waitlist` in the page's locale, passed from the server page. */
+  words: WaitlistWords;
 }
 
-export function WaitlistFormView({ state, email, website, onEmailChange, onWebsiteChange, onSubmit, locale = DEFAULT_LOCALE }: WaitlistFormViewProps): JSX.Element {
-  const words = getMessages(locale).landing.waitlist;
+export function WaitlistFormView({ state, email, website, onEmailChange, onWebsiteChange, onSubmit, words }: WaitlistFormViewProps): JSX.Element {
   const sending = state.kind === 'sending';
   const message = messageFor(state, words);
   const done = state.kind === 'success';
@@ -166,7 +168,14 @@ export function WaitlistFormView({ state, email, website, onEmailChange, onWebsi
   );
 }
 
-export function WaitlistForm(): JSX.Element {
+export interface WaitlistFormProps {
+  /** `landing.waitlist` in the page's locale. */
+  words: WaitlistWords;
+  /** The page's UI locale, recorded with the signup (the API keeps en / es / ko); English by default. */
+  locale?: UiLocale;
+}
+
+export function WaitlistForm({ words, locale = 'en' }: WaitlistFormProps): JSX.Element {
   const [state, setState] = useState<WaitlistState>({ kind: 'idle' });
   const [email, setEmail] = useState('');
   const [website, setWebsite] = useState('');
@@ -175,8 +184,8 @@ export function WaitlistForm(): JSX.Element {
     event.preventDefault();
     if (state.kind === 'sending') return;
     setState({ kind: 'sending' });
-    void submitSignup({ email, website, endpoint: apiBaseUrl(), source: 'landing', locale: 'en' }).then(setState);
+    void submitSignup({ email, website, endpoint: apiBaseUrl(), source: 'landing', locale }).then(setState);
   };
 
-  return <WaitlistFormView state={state} email={email} website={website} onEmailChange={setEmail} onWebsiteChange={setWebsite} onSubmit={onSubmit} />;
+  return <WaitlistFormView state={state} email={email} website={website} onEmailChange={setEmail} onWebsiteChange={setWebsite} onSubmit={onSubmit} words={words} />;
 }

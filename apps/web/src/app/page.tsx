@@ -6,16 +6,7 @@ import { MeetHoya } from '../components/landing/MeetHoya';
 import { MiniGamesGallery } from '../components/landing/MiniGamesGallery';
 import { WaitlistForm } from '../components/landing/WaitlistForm';
 import { CONTACT_EMAIL } from '../data/contact';
-import {
-  SITE_TAGLINE,
-  audienceBadges,
-  howItWorks,
-  landingFaqs,
-  pricingFootnote,
-  pricingLines,
-  sharedDeviceBullet,
-  trustItems,
-} from '../data/landing-copy';
+import { landingCopy } from '../data/landing-copy';
 
 /** The learner web app (PWA). Overridable per deployment. */
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://app.hangulroute.com';
@@ -25,6 +16,8 @@ const FIRST_LETTER = 'ㄱ';
 
 export default function HomePage(): JSX.Element {
   const t = getMessages(DEFAULT_LOCALE).landing;
+  // One landing subtree for one locale: the words and the ordered lists (11b passes its locale here).
+  const { tagline, audienceBadges, trustItems, howItWorks, faqs, pricingLines, sharedDeviceBullet, pricingFootnote } = landingCopy(DEFAULT_LOCALE);
   return (
     <main
       style={{
@@ -465,7 +458,7 @@ export default function HomePage(): JSX.Element {
           {t.faq.title}
         </h2>
         <div style={{ display: 'grid', gap: spacing.md }}>
-          {landingFaqs.map((faq) => (
+          {faqs.map((faq) => (
             <details
               key={faq.q}
               style={{
@@ -553,7 +546,7 @@ export default function HomePage(): JSX.Element {
         >
           {t.get.play.cta}
         </a>
-        <WaitlistForm />
+        <WaitlistForm words={t.waitlist} locale={DEFAULT_LOCALE} />
         <p
           style={{
             marginTop: spacing.lg,
@@ -589,7 +582,7 @@ export default function HomePage(): JSX.Element {
           >
             {t.brand.name}
           </div>
-          <div>{SITE_TAGLINE}</div>
+          <div>{tagline}</div>
         </div>
         <div>
           <div

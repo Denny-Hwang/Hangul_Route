@@ -196,7 +196,7 @@ export const landing = {
     copyright: (year: number) => `© ${year} Hangul Route`,
   },
   /**
-   * The launch-news form (`WaitlistForm`, docs/launch/waitlist.md; `WAITLIST_COPY` in apps/web/src/lib/waitlist.ts).
+   * The launch-news form (`WaitlistForm`, docs/launch/waitlist.md; `WAITLIST_COPY` in apps/web/src/data/landing-copy.ts).
    * A repeat signup shows the same success text as a first one. The consent line is `consentLead` + a mailto
    * link reading `contactLink` + '. ' + a /privacy link reading `privacyLink`.
    */

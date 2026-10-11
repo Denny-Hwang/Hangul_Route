@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { WAITLIST_COPY, looksLikeEmail, submitSignup, type SignupInput } from '../waitlist';
+import { WAITLIST_COPY } from '../../data/landing-copy';
+import { looksLikeEmail, submitSignup, type SignupInput } from '../waitlist';
 
 /**
  * Landing signup transport — launch-invite waitlist (docs/launch/waitlist.md).

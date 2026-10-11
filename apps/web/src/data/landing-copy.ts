@@ -1,4 +1,4 @@
-import { DEFAULT_LOCALE, getMessages, type UiLocale } from '@hangul-route/i18n';
+import { DEFAULT_LOCALE, LOCALE_META, getMessages, type Messages, type UiLocale } from '@hangul-route/i18n';
 import type { Metadata } from 'next';
 import { stage1Cards } from './stage1-cards';
 
@@ -68,7 +68,7 @@ export function landingCopy(locale: UiLocale = DEFAULT_LOCALE): LandingCopy {
         description: meta.ogDescription,
         siteName: t.brand.name,
         type: 'website',
-        locale: 'en_US',
+        locale: LOCALE_META[locale].ogLocale,
       },
       twitter: {
         card: 'summary_large_image',
@@ -113,3 +113,11 @@ export const pricingLines: readonly PricingLine[] = english.pricingLines;
 export const sharedDeviceBullet: TitledCopy = english.sharedDeviceBullet;
 
 export const pricingFootnote = english.pricingFootnote;
+
+/**
+ * The launch-news form's English words (`landing.waitlist`, F-I18N-001 PR 11a). A repeat signup shows the same
+ * success text as a first one. The consent line is `consentLead` + a mailto link reading `contactLink` + '. ' + a
+ * /privacy link reading `privacyLink`; keep it in step with CONSENT_TEXT_VERSION on the API. Server-side only:
+ * the page passes these words to the client form, which never imports the dictionary.
+ */
+export const WAITLIST_COPY: Messages['landing']['waitlist'] = getMessages(DEFAULT_LOCALE).landing.waitlist;

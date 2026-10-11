@@ -1,7 +1,7 @@
-import { en } from '@hangul-route/i18n';
-
 /**
- * Landing launch-invite signup — transport and copy (docs/launch/waitlist.md).
+ * Landing launch-invite signup — transport (docs/launch/waitlist.md). The words are `landing.waitlist` in
+ * @hangul-route/i18n (`WAITLIST_COPY` in data/landing-copy.ts); this module imports nothing from the
+ * dictionary, because the client form imports it.
  * Talks to POST /api/waitlist on the API Worker (packages/backend/src/routes/waitlist.ts).
  * Never throws: every outcome maps to one state the form renders.
  */
@@ -13,13 +13,6 @@ export type WaitlistState =
   | { kind: 'rate_limited' }
   | { kind: 'error' }
   | { kind: 'unavailable' };
-
-/**
- * The form's English words (`messages/en/landing.ts` → `landing.waitlist`, F-I18N-001 PR 11a). A repeat signup
- * shows the same success text as a first one. The consent line is `consentLead` + a mailto link reading
- * `contactLink` + '. ' + a /privacy link reading `privacyLink`; keep it in step with CONSENT_TEXT_VERSION on the API.
- */
-export const WAITLIST_COPY = en.landing.waitlist;
 
 const MAX_EMAIL_LENGTH = 254;
 const REQUEST_TIMEOUT_MS = 15_000;
