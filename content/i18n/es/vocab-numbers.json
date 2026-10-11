@@ -1,0 +1,53 @@
+{
+  "locale": "es",
+  "domain": "vocab-numbers",
+  "entries": {
+    "vocab-topic:numbers": {
+      "title": "Números",
+      "blurb": "Palabras para contar del uno al diez, luego veinte y cero.",
+      "hoyaIntro": "Contemos juntos, uno por uno."
+    },
+    "vocab:hana": {
+      "gloss": "uno",
+      "senseNote": "Antes de una palabra de conteo se convierte en han."
+    },
+    "vocab:dul": {
+      "gloss": "dos",
+      "senseNote": "Antes de una palabra de conteo se convierte en du."
+    },
+    "vocab:set": {
+      "gloss": "tres",
+      "senseNote": "Antes de una palabra de conteo se convierte en se."
+    },
+    "vocab:net": {
+      "gloss": "cuatro",
+      "senseNote": "Antes de una palabra de conteo se convierte en ne."
+    },
+    "vocab:daseot": {
+      "gloss": "cinco"
+    },
+    "vocab:yeoseot": {
+      "gloss": "seis"
+    },
+    "vocab:ilgop": {
+      "gloss": "siete"
+    },
+    "vocab:yeodeol": {
+      "gloss": "ocho"
+    },
+    "vocab:ahop": {
+      "gloss": "nueve"
+    },
+    "vocab:yeol": {
+      "gloss": "diez"
+    },
+    "vocab:seumul": {
+      "gloss": "veinte",
+      "senseNote": "Antes de una palabra de conteo se convierte en seumu."
+    },
+    "vocab:yeong-zero": {
+      "gloss": "cero",
+      "senseNote": "Cero sinocoreano. En los números de teléfono se dice gong."
+    }
+  }
+}

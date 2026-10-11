@@ -1,0 +1,47 @@
+{
+  "locale": "es",
+  "domain": "vocab-animals",
+  "entries": {
+    "vocab-topic:animals": {
+      "title": "Animales",
+      "blurb": "Palabras para animales, de las mascotas al zoológico.",
+      "hoyaIntro": "¡Soy un tigre! Ven a conocer a algunos amigos animales."
+    },
+    "vocab:horangi": {
+      "gloss": "tigre"
+    },
+    "vocab:goyangi": {
+      "gloss": "gato"
+    },
+    "vocab:gangaji": {
+      "gloss": "cachorro"
+    },
+    "vocab:tokki": {
+      "gloss": "conejo"
+    },
+    "vocab:gom": {
+      "gloss": "oso"
+    },
+    "vocab:sae": {
+      "gloss": "pájaro"
+    },
+    "vocab:mulgogi": {
+      "gloss": "pez"
+    },
+    "vocab:ori": {
+      "gloss": "pato"
+    },
+    "vocab:yeou": {
+      "gloss": "zorro"
+    },
+    "vocab:wonsungi": {
+      "gloss": "mono"
+    },
+    "vocab:kokkiri": {
+      "gloss": "elefante"
+    },
+    "vocab:nabi": {
+      "gloss": "mariposa"
+    }
+  }
+}

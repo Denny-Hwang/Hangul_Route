@@ -1,0 +1,47 @@
+{
+  "locale": "es",
+  "domain": "vocab-colors",
+  "entries": {
+    "vocab-topic:colors": {
+      "title": "Colores",
+      "blurb": "Palabras para los colores que nos rodean.",
+      "hoyaIntro": "¡Mira a tu alrededor! ¿Cuántos colores puedes encontrar?"
+    },
+    "vocab:ppalgansaek": {
+      "gloss": "rojo"
+    },
+    "vocab:juhwangsaek": {
+      "gloss": "naranja"
+    },
+    "vocab:noransaek": {
+      "gloss": "amarillo"
+    },
+    "vocab:choroksaek": {
+      "gloss": "verde"
+    },
+    "vocab:paransaek": {
+      "gloss": "azul"
+    },
+    "vocab:borasaek": {
+      "gloss": "morado"
+    },
+    "vocab:bunhongsaek": {
+      "gloss": "rosa"
+    },
+    "vocab:haneulsaek": {
+      "gloss": "celeste"
+    },
+    "vocab:galsaek": {
+      "gloss": "café"
+    },
+    "vocab:hoesaek": {
+      "gloss": "gris"
+    },
+    "vocab:hayansaek": {
+      "gloss": "blanco"
+    },
+    "vocab:geomeunsaek": {
+      "gloss": "negro"
+    }
+  }
+}
