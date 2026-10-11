@@ -51,7 +51,8 @@ Companion stories:
 - **Given** a parent profile exists,
   **when** parent goes to "Add another child",
   **then** they can create additional learner profiles without re-entering PIN within the same session (15-min session window).
-- Avatars: **5** preset Hoya variants (tiger cub), one per culture-theme Pillar — 글이 (Letters) · 살이 (Life) · 예리 (Rites; respelled from 례이 on 2026-10-10, F-CNT-002 C9) · 솔이 (Nature) · 솜이 (Crafts). These are illustrations, not learner names. Names: free text, 1–12 chars, no emojis, no Korean/Chinese (UI is English).
+- **Amended by F-LEARN-001 (2026-10-10)**: the create form first asks **Who is learning?** ("Me" / "My child or a student"), stored locally as `learnerType` (`child` | `self`; a profile without it counts as `child`). `ageGroup` stays the stored field but is an **opaque level id** (`5-7` / `8-9` / `10-11`), not an age: the app shows `levelLabel()` ("Pictures first", "Some reading", "Reads easily") and never prints an age or an age range. The level is chosen in the form (default "Some reading"). A parent PIN is created in the form for a child profile and is optional for a self profile.
+- Avatars: **5** preset Hoya variants (tiger cub), one per culture-theme Pillar — 글이 (Letters) · 살이 (Life) · 예리 (Rites; respelled from 례이 on 2026-10-10, F-CNT-002 C9) · 솔이 (Nature) · 솜이 (Crafts). These are illustrations, not learner names. Each cub has its own fur colour decided by the avatar name (`hoya-blue` is blue; `hoya.fur*` tokens, `hoyaVariantColors`), with the English label under it in pickers ("Book Tiger", "Home Tiger", "Feast Tiger", "Mountain Tiger", "Craft Tiger"); see `design/components/ProfileAvatar/spec.md`. Names: free text, 1–12 chars, no emojis, no Korean/Chinese (UI is English).
 
 ### 3.3 Data isolation
 
@@ -73,7 +74,7 @@ Companion stories:
 ### 3.5 PIN management
 
 - PIN is 4 digits. Stored as `<salt>:<digest>` — a per-PIN 16-byte salt from a native CSPRNG plus SHA-256 — in AsyncStorage under `parent.<profileId>.pin_hash`. The hash primitive is injected (`PinHasher`), so the choice is swappable without touching PIN logic. Rationale and the rejected bcrypt-cost-10 option are recorded in §9.2.
-- PIN reset in MVP requires reinstalling the app (data wipe). Phase 2: Clerk email recovery.
+- PIN reset (F-LEARN-001 §3.5) no longer needs a reinstall and never wipes data. "Forgot PIN?" on the verify screen offers two paths: **Rescue Code** (typed in any case; matched on the device against a stored code, throttled by the normal PIN attempt counter) and a **24-hour wait** (the old PIN keeps working meanwhile). Both end in setting a new PIN; learners, cards and progress are kept. Phase 2: Clerk email recovery removes the wait.
 - The PIN entry UI **never** echoes digits as text — shows ● dots only.
 
 ### 3.6 Accessibility / safety
@@ -229,6 +230,8 @@ mocks here, not by a device run — T-026's Detox pass is the checkpoint.
 Rites · Nature · Crafts). This keeps the avatar set aligned with the
 Heritage-Journey grid's culture axis instead of inventing three unanchored
 variants. §3.2 updated.
+
+**Update (F-LEARN-001, 2026-10-10)**: the five avatars are also five colours, chosen by the avatar name; the Pillar theme no longer colours anything.
 
 **Residual risk**: on a shared weekend-school device more than five learners
 must reuse avatars. Duplicates are explicitly allowed (see

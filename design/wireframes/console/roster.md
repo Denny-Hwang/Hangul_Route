@@ -48,6 +48,7 @@ Then: they see the join code, one class roll-up, and one summary card per studen
 +------------------------------------------------------------+
 ```
 
+- Each card shows the learner's cub as a 28 px colour chip (`AvatarChip`: the avatar's shade, English cub name as its accessible name, no name or initial on it) and a level pill from `levelLabel(ageGroup)` ("Some reading"); the pill is hidden for a level this build does not know. Never an age (F-LEARN-001 §3.6, §3.7).
 - Card tap → `parent/learner-detail` in read-only mode (same component, summary fields only, no recent-quest list).
 - Anonymize mode (space setting) swaps names for nicknames / initials on every card and in the roll-up.
 - Banned on this tree: sort by accuracy, per-student percentile, schedule-pressure wording from the F-PAR-001 §3.6 banned list (F-TCH-001 §3.2).

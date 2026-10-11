@@ -133,8 +133,8 @@ Hangul Route
 | ID | 코드 라우트 | 목표 (한 줄) | 상태 | 스펙 | WF |
 |---|---|---|---|---|---|
 | `onboarding/welcome` | Onboarding/Welcome | 계정 없이 프로필 → 첫 퀘스트 (PIN 설정은 첫 grown-up zone 진입 시로 미룸, F-PROF-001 §10) | S | F-PROF-001 | NEW |
-| `profiles/create-parent` | Onboarding/CreateProfile(firstRun) | 부모 PIN 1회 설정 | S | F-PROF-001 | ✓ |
-| `profiles/create-learner` | Onboarding/CreateProfile | 이름·연령대·아바타 | S | F-PROF-001 | ✓ |
+| `profiles/create-parent` | Onboarding/CreateProfile(firstRun) | 부모 PIN 1회 설정 (자녀 프로필은 폼 안에서 생성, 본인 프로필은 선택) | S | F-PROF-001 | ✓ |
+| `profiles/create-learner` | Onboarding/CreateProfile | 누가 배우나·이름·레벨·아바타 (F-LEARN-001) | S | F-PROF-001 | ✓ |
 | `onboarding/first-quest-preview` | Onboarding/FirstQuestPreview | Hoya 소개 + 첫 퀘스트 진입 | S | – | NEW |
 | `profiles/picker` | (root, cold launch) | 학습자 선택 (PIN 없음) | S | F-PROF-001 | ✓ |
 | `profiles/pin-entry` | (modal) | 부모 확인 | S | F-PROF-001 | ✓ |

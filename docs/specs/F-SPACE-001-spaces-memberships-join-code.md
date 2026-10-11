@@ -44,7 +44,7 @@ One learner, one snapshot — but the adults around that learner differ: a paren
 | `POST /:id/join` `{ code, learnerId?, displayName? }` | learner device (sends `learnerId` — siblings share a device) **or** account | learner → `student` in a `family` or `class` (409 `cap_learner` above **3 classes**, 409 `cap_class` at **20 students** on a class, 422 `not_joinable` for `school`, idempotent 200 `{ alreadyMember: true }`); account → `caregiver` (family) or `teacher` (school); `class` → 403 `co_teacher_unsupported`. Code must match and be unexpired. `displayName` (≤ 20) updates the learner's roster name |
 | `POST /:id/leave` | learner device | removes that learner's membership (idempotent) |
 | `DELETE /:id/members/:kind/:memberId` | account with `roster.manage` | removes a member; the owner cannot be removed (409 `owner`) |
-| `GET /:id/roster` | account with `summary.read` | `{ space, learners: [{ id, displayName, ageGroup, avatar, joinedAt, summary, lastSyncedAt }] }` — **never `payload_json`**; sorted by last activity, newest first (F-TCH-001 §3.2: no ranking) |
+| `GET /:id/roster` | account with `summary.read` | `{ space, learners: [{ id, displayName, ageGroup, avatar, joinedAt, summary, lastSyncedAt }] }` — **never `payload_json`**; sorted by last activity, newest first (F-TCH-001 §3.2: no ranking). `ageGroup` is an opaque level id: clients show `levelLabel(ageGroup)` ("Some reading") and hide the pill for an id they do not know; `avatar` is a free string the console draws as an `AvatarChip` (F-LEARN-001 §3.6, §3.7) |
 | `GET /api/sync/learners/:id/inbox` | learner device | `memberships` now filled: `[{ spaceId, kind, name, role, joinedAt }]` |
 
 Errors use the standard envelope. Every space route resolves the actor once and asks `can()`.

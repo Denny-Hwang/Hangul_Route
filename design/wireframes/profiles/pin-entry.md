@@ -69,5 +69,5 @@ Exit to:    `parent/dashboard` · `profiles/create-learner` · back to invoking 
 
 ## Open questions
 
-- Forgot PIN: MVP = reinstall (spec §3.5). Does the modal say so, or stay silent to avoid teaching kids the wipe trick? (default: tiny "Forgot?" → parent-tone info sheet; verify in beta)
+- ~~Forgot PIN: MVP = reinstall (spec §3.5).~~ Resolved by F-LEARN-001 §3.5: no reinstall and no wipe. A quiet "Forgot PIN?" text button (verify mode only) opens `PinReset`: Rescue Code first when one is stored, otherwise a 24-hour wait; learners and progress are kept. Boxes: G in `design/wireframes/onboarding/all-ages-onboarding.md`.
 - Cooldown persists across app restarts? (default yes — otherwise a child force-quits to bypass; confirm at F-PROF-001 implementation)
