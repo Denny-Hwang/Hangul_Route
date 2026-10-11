@@ -60,6 +60,11 @@ describe('telemetry event names (one list for the client type and the API whitel
         'story.sequence.finished',
         'story.sources.link_opened',
         'story.sources.opened',
+        'space.transfer.requested',
+        'space.transfer.consented',
+        'space.transfer.declined',
+        'space.transfer.cancelled',
+        'space.transfer.completed',
       ].sort(),
     );
     expect(new Set(TELEMETRY_EVENT_NAMES).size).toBe(TELEMETRY_EVENT_NAMES.length);
