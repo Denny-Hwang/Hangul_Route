@@ -17,6 +17,7 @@ describe('layout tokens', () => {
     expect(layout).toEqual({
       breakpoint: { regular: 600, wide: 900 },
       shortHeight: 480,
+      compactHeight: 640,
       phoneShortSide: 600,
       phoneMaxLongSide: 1000,
       sideBySideMin: 700,

@@ -20,6 +20,7 @@ The class follows the **window** width, never the device: a resized desktop wind
 | `layout.breakpoint.regular` | 600 | window width at or above this is `regular` (below is `compact`) |
 | `layout.breakpoint.wide` | 900 | window width at or above this is `wide` |
 | `layout.shortHeight` | 480 | window height below this is `short` (any width) |
+| `layout.compactHeight` | 640 | window height below this: a screen whose CTA is pinned under scrolling text (the F-STORY-002 reader) draws its `hero` button at `lg` (80, still above the 64 floor) so the text keeps room (320x568, landscape phones) |
 
 ## Phone or tablet
 

@@ -174,6 +174,7 @@ export const spacing = {
 export const layout = {
   breakpoint: { regular: 600, wide: 900 }, // window width
   shortHeight: 480, // window height below this = 'short'
+  compactHeight: 640, // window height below this: a pinned hero CTA steps down to lg (F-STORY-002 reader, 320x568 and landscape phones)
   phoneShortSide: 600, // min(width, height) below this = a phone ...
   phoneMaxLongSide: 1000, // ... if the long side is also at most this (a 1100x500 desktop window is not a phone)
   sideBySideMin: 700, // F-STORY-002 reader: two columns when landscape and width >= this
