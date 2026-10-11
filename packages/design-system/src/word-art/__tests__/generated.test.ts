@@ -2,13 +2,14 @@ import { describe, expect, it } from 'vitest';
 import { BODY_ANCHORS, BODY_PARTS, bodyGlyphs, bodyPart, ring } from '../generated/body';
 import { COLOR_SWATCHES, STICKER_SCALE, SWATCH_RECT, colorGlyphs, swatch } from '../generated/color';
 import { COUNT_VALUES, count, countGlyphs } from '../generated/count';
-import { figure, figureTop, marker, siblings } from '../generated/figure';
+import { FIGURE_HAND, figure, figureTop, marker, siblings } from '../generated/figure';
 import type { FigureOptions } from '../generated/figure';
-import { HALO_TONE, HALO_WIDTH, haloOf } from '../generated/halo';
+import { HALO_TONE, HALO_WIDTH, haloOf, haloPath, outlineD } from '../generated/halo';
+import { parsePath } from '../path';
 import { getWordArt } from '../registry';
 import { isWordArtTone } from '../tones';
 import type { WordArtGlyph, WordArtShape } from '../types';
-import { fillTones, glyphViolations, shapeBox, subjectBox } from './glyph-checks';
+import { fillTones, glyphViolations, pathPoints, shapeBox, subjectBox } from './glyph-checks';
 
 /**
  * F-VOC-002 §3.6 (generated families) and §5 `generated.test.ts`. The
@@ -22,8 +23,29 @@ const GENERATED = { generated: true, haloWidth: HALO_WIDTH } as const;
 const isDot = (s: WordArtShape): boolean => s.t === 'circle' && (s.f === 'brand.primary' || s.f === 'brand.secondary');
 const isHalo = (s: WordArtShape): boolean => s.s === HALO_TONE && s.sw === HALO_WIDTH && s.f === undefined;
 
-/** A smile from `face()`: an ink arc of width 2 whose sweep runs right to left through the bottom. */
-const isSmile = (s: WordArtShape): boolean => s.t === 'path' && s.s === 'text.primary' && s.sw === 2 && / A [\d.]+ [\d.]+ 0 0 1 /.test(s.d);
+/**
+ * A smile: an ink path of width 2 that starts with one small arc drawn from
+ * right to left with sweep 1 (clockwise on screen), so it bends through the
+ * bottom. A frown is the same arc drawn left to right, or with sweep 0.
+ */
+function isSmile(s: WordArtShape): boolean {
+  if (s.t !== 'path' || s.s !== 'text.primary' || s.sw !== 2) return false;
+  const cmds = parsePath(s.d);
+  const [move, arc] = cmds ?? [];
+  if (move?.c !== 'M' || arc?.c !== 'A') return false;
+  const [, , , large, sweep, endX] = arc.a;
+  return large === 0 && sweep === 1 && move.a[0]! > endX!;
+}
+
+describe('the smile check of these tests', () => {
+  const ink = { s: 'text.primary', sw: 2 } as const;
+  it('takes a right-to-left clockwise arc (through the bottom) and refuses a frown', () => {
+    expect(isSmile({ t: 'path', d: 'M 60 50 A 10 10 0 0 1 40 50', ...ink })).toBe(true);
+    expect(isSmile({ t: 'path', d: 'M 40 50 A 10 10 0 0 1 60 50', ...ink })).toBe(false);
+    expect(isSmile({ t: 'path', d: 'M 60 50 A 10 10 0 0 0 40 50', ...ink })).toBe(false);
+    expect(isSmile({ t: 'path', d: 'M 60 50 A 10 10 0 0 1 40 50', s: 'text.primary', sw: 3 })).toBe(false);
+  });
+});
 
 describe('haloOf', () => {
   it('copies the geometry with a wide paper stroke and no fill or opacity', () => {
@@ -35,6 +57,38 @@ describe('haloOf', () => {
   it('is paper, wider than any outline', () => {
     expect(HALO_TONE).toBe('surface.paper');
     expect(HALO_WIDTH).toBeGreaterThan(3);
+  });
+});
+
+describe('outlineD and haloPath', () => {
+  const shapes: WordArtShape[] = [
+    { t: 'circle', x: 30, y: 40, r: 6, f: 'vocab.red' },
+    { t: 'ellipse', x: 60, y: 30, rx: 8, ry: 4, f: 'vocab.green' },
+    { t: 'rect', x: 10, y: 60, w: 20, h: 12, r: 3, f: 'vocab.blue' },
+    { t: 'rect', x: 50, y: 60, w: 10, h: 10, f: 'vocab.blue' },
+    { t: 'path', d: 'M 70 70 L 80 85', s: 'text.primary', sw: 2 },
+  ];
+
+  it.each(shapes.map((s) => [s.t, s] as const))('outlines a %s in the path grammar, over the same extent', (_t, shape) => {
+    const d = outlineD(shape);
+    expect(parsePath(d)).not.toBeNull();
+    const box = shapeBox({ t: 'path', d });
+    const want = shapeBox(shape);
+    for (const k of ['minX', 'minY', 'maxX', 'maxY'] as const) expect(box[k], k).toBeCloseTo(want[k], 5);
+  });
+
+  it('keeps a corner radius within half the side', () => {
+    expect(parsePath(outlineD({ t: 'rect', x: 0, y: 0, w: 10, h: 4, r: 9, f: 'vocab.blue' }))).not.toBeNull();
+    expect(outlineD({ t: 'rect', x: 0, y: 0, w: 10, h: 4, r: 9, f: 'vocab.blue' })).toContain('A 2 2 ');
+  });
+
+  it('halos many shapes as one paper path with one sub-path per shape', () => {
+    const halo = haloPath(shapes)!;
+    expect(halo).toMatchObject({ t: 'path', s: HALO_TONE, sw: HALO_WIDTH });
+    expect(halo.f).toBeUndefined();
+    const d = (halo as Extract<WordArtShape, { t: 'path' }>).d;
+    expect(parsePath(d)!.filter((c) => c.c === 'M')).toHaveLength(shapes.length);
+    expect(haloPath([])).toBeUndefined();
   });
 });
 
@@ -79,13 +133,35 @@ describe('colour swatches (§3.6.1)', () => {
     expect(glyph.slice(firstShape).some(isHalo)).toBe(false);
   });
 
-  it('keeps the object in its own colours, drops its ground shadow, and haloes only opaque shapes', () => {
+  it('keeps the object in its own colours, drops its ground shadow, and haloes only opaque shapes, in one path', () => {
     const glyph = swatch('vocab.purple', apple);
     expect(glyph.some((s) => s.f === 'vocab.red')).toBe(true);
     expect(glyph.some((s) => s.f === 'hoya.furDark')).toBe(false);
     const opaque = apple.filter((s) => (s.o ?? 1) >= 1);
-    expect(glyph.filter(isHalo)).toHaveLength(opaque.length);
-    expect(glyph.length).toBe(1 + opaque.length + apple.filter((s) => s.f !== 'hoya.furDark').length);
+    const haloes = glyph.filter(isHalo) as Extract<WordArtShape, { t: 'path' }>[];
+    expect(haloes).toHaveLength(1);
+    const subPaths = parsePath(haloes[0]!.d)!.filter((c) => c.c === 'M').length;
+    const ownSubPaths = opaque.reduce((n, s) => n + (s.t === 'path' ? parsePath(s.d)!.filter((c) => c.c === 'M').length : 1), 0);
+    expect(subPaths).toBe(ownSubPaths);
+    expect(glyph.length).toBe(2 + apple.filter((s) => s.f !== 'hoya.furDark').length);
+  });
+
+  it('the halo covers the sticker: it reaches past every opaque shape of the object', () => {
+    const glyph = swatch('vocab.red', getWordArt('animal-cat')!);
+    const halo = glyph.find(isHalo) as Extract<WordArtShape, { t: 'path' }>;
+    const sticker = glyph.slice(2).filter((s) => (s.o ?? 1) >= 1);
+    const haloBox = shapeBox(halo);
+    const stickerBox = subjectBox(sticker);
+    for (const k of ['minX', 'minY'] as const) expect(haloBox[k]).toBeLessThanOrEqual(stickerBox[k] + 1e-6);
+    for (const k of ['maxX', 'maxY'] as const) expect(haloBox[k]).toBeGreaterThanOrEqual(stickerBox[k] - 1e-6);
+    expect(pathPoints(halo.d).length).toBeGreaterThan(0);
+  });
+
+  it('fits the 48-shape limit for any object a hand glyph may be (32 shapes, C7)', () => {
+    const big: WordArtGlyph = Array.from({ length: 32 }, (_, i) => ({ t: 'circle' as const, x: 20 + (i % 8) * 8, y: 20 + Math.floor(i / 8) * 12, r: 3, f: 'vocab.red' as const, s: 'text.primary' as const, sw: 2 }));
+    const glyph = swatch('vocab.purple', big);
+    expect(glyph).toHaveLength(34);
+    expect(glyphViolations(glyph, { ...GENERATED, bboxWaived: true, maxTones: 5 }, isWordArtTone)).toEqual([]);
   });
 
   it('keeps the outline and detail widths of the object (they do not shrink with it)', () => {
@@ -103,12 +179,20 @@ describe('colour swatches (§3.6.1)', () => {
   });
 
   it('every swatch the drawn objects allow today passes the glyph rules (C2 waived: the swatch fills the frame)', () => {
+    const waiting: string[] = [];
     for (const [key, { tone, object }] of Object.entries(COLOR_SWATCHES)) {
       const glyph = getWordArt(object);
-      if (!glyph) continue;
+      if (!glyph) {
+        waiting.push(object);
+        continue;
+      }
       expect(glyphViolations(swatch(tone, glyph), { ...GENERATED, bboxWaived: true, maxTones: 5 }, isWordArtTone), key).toEqual([]);
       expect(fillTones(swatch(tone, glyph)).length, key).toBeLessThanOrEqual(5);
     }
+    // the objects W-3 draws (§3.12); this list shrinks as they land, and the loop above can never check nothing
+    const W3_OBJECTS = ['food-banana', 'food-water', 'animal-bear', 'animal-elephant', 'food-milk', 'nature-flower'];
+    expect(waiting.every((key) => W3_OBJECTS.includes(key)), waiting.join(', ')).toBe(true);
+    expect(Object.keys(COLOR_SWATCHES).length - waiting.length).toBeGreaterThanOrEqual(6);
   });
 
   it('the swatch square is the reason for the C2 waiver: 88 of 100 units', () => {
@@ -196,6 +280,28 @@ describe('body parts (§3.6.3)', () => {
     expect(y - outer).toBeGreaterThanOrEqual(0);
     expect(x + outer).toBeLessThanOrEqual(100);
     expect(y + outer).toBeLessThanOrEqual(100);
+  });
+
+  it('the anchors are taken from the drawing: the eye, the ear and the hand rings sit on those parts', () => {
+    type Circle = Extract<WordArtShape, { t: 'circle' }>;
+    const circles = (g: WordArtGlyph): Circle[] => g.filter((s): s is Circle => s.t === 'circle');
+    const eye = BODY_ANCHORS.eye;
+    const eyes = circles(bodyPart('eye')).filter((s) => s.f === 'text.primary');
+    expect(eyes).toHaveLength(2);
+    const left = eyes.reduce((a, b) => (b.x < a.x ? b : a));
+    expect([eye.x, eye.y]).toEqual([left.x, left.y]);
+    expect(eye.r).toBeGreaterThan(left.r);
+    const ear = BODY_ANCHORS.ear;
+    const ears = circles(bodyPart('ear')).filter((s) => s.f === 'surface.paper' && s.x < 50 && s.r < 10);
+    expect(ears).toHaveLength(1);
+    expect(Math.hypot(ears[0]!.x - ear.x, ears[0]!.y - ear.y)).toBeLessThanOrEqual(1);
+    const hand = BODY_ANCHORS.hand;
+    const hands = bodyPart('hand').filter((s) => s.t === 'path' && s.f === 'surface.paper' && parsePath(s.d)!.filter((c) => c.c === 'M').length === 2 && shapeBox(s).maxY - shapeBox(s).minY < 10);
+    expect(hands).toHaveLength(1);
+    const box = shapeBox({ t: 'path', d: (hands[0] as Extract<WordArtShape, { t: 'path' }>).d.split(' M ')[0]! });
+    expect((box.minX + box.maxX) / 2).toBeCloseTo(hand.x, 0);
+    expect((box.minY + box.maxY) / 2).toBeCloseTo(hand.y, 0);
+    expect(FIGURE_HAND.dx).toBeGreaterThan(0);
   });
 
   it('ring() is a brand.secondary circle on a paper halo that only shows outside it', () => {

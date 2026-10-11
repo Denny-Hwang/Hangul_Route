@@ -169,6 +169,9 @@ export const GENERATED_WIDTHS: readonly number[] = [1.5, 2, 3];
 
 /** C2: the subject covers 60-70 % of the width or height, with a 10 % tolerance, centred within 8 units. */
 export const BBOX_MIN = 60 * 0.9;
+/** C7: shape limits. */
+export const MAX_HAND_SHAPES = 32;
+export const MAX_GENERATED_SHAPES = 48;
 export const BBOX_MAX = 70 * 1.1;
 export const CENTRE_TOLERANCE = 8;
 
@@ -185,14 +188,15 @@ export interface GlyphCheckOptions {
 
 /**
  * Every §3.5 rule a glyph's data can be tested for, as readable messages
- * (empty when the glyph passes). `glyphs.test.ts` runs the same rules one
- * `it` per rule on the registry; this runs them on generator output that is
- * not registered yet (the colour, count and body batches, W-3 and W-4).
+ * (empty when the glyph passes). `glyphs.test.ts` runs the rules one `it` per
+ * rule on the registry, with the constants above, and this function on every
+ * registered glyph too, so the two cannot drift; the generator tests run it
+ * on output that is not registered yet (colours, counts, body: W-3 and W-4).
  */
 export function glyphViolations(glyph: WordArtGlyph, options: GlyphCheckOptions, isTone: (s: string) => boolean): string[] {
   const out: string[] = [];
   const widths = options.generated ? GENERATED_WIDTHS : HAND_WIDTHS;
-  const maxShapes = options.generated ? 48 : 32;
+  const maxShapes = options.generated ? MAX_GENERATED_SHAPES : MAX_HAND_SHAPES;
   if (glyph.length === 0 || glyph.length > maxShapes) out.push(`C7: ${glyph.length} shapes (1..${maxShapes})`);
   for (const [i, s] of glyph.entries()) {
     if (s.f === undefined && s.s === undefined) out.push(`shape ${i} is not painted`);
