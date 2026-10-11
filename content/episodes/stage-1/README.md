@@ -13,7 +13,10 @@ and 24 matching Heritage Cards earned through play.
 ## Language policy
 
 Every Korean string lives in a `ko` field and is paired with `romanization`
-and an English gloss (`en`). UI strings stay English (CEFR Pre-A1).
+and an English gloss (`en`). UI strings come from the learner's selected
+locale (en, es or ko): English is the source, written at CEFR Pre-A1, in
+`packages/i18n/src/messages/`, and the es and ko text is an overlay on it
+(F-I18N-001). Translations of content text live in `content/i18n/`.
 The structure is enforced by `scripts/validate-content.mjs` (F-CNT-001).
 
 `romanization` follows F-CNT-002 (`docs/specs/F-CNT-002-romanization-policy.md`):
@@ -26,9 +29,10 @@ The structure is enforced by `scripts/validate-content.mjs` (F-CNT-001).
 - One romanized word per Korean word, with standard Korean spacing.
 - Titles and `en` keep the usual English name (`K-pop`); `romanization`
   is the RR of the Hangul (`keipap`).
-- In `jamo.json` a letter's `romanization` is its sound value and letter
-  name from a fixed table, `"g/k (giyeok)"`, `"silent/ng (ieung)"`; the
-  example word is an ordinary RR word.
+- In `jamo.json` a consonant's `romanization` is its sound value plus its
+  letter name from a fixed table, `"g/k (giyeok)"`, `"silent/ng (ieung)"`;
+  a vowel's is its sound value alone, `"a"`, `"eo"`. The example word is
+  an ordinary RR word.
 
 The romanization suites check every value against the converter:
 `corepack pnpm --filter @hangul-route/content-schema test romanization`.
