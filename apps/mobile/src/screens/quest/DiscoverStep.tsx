@@ -5,7 +5,7 @@ import {
   Caption,
   Card,
   Heading,
-  HoyaBubble,
+  Hoya,
   Icon,
   KoreanText,
   Pill,
@@ -129,7 +129,12 @@ export function DiscoverStep({ pages, hoyaLine, onDone }: Props): React.ReactEle
       >
         {hoyaLine ? (
           <>
-            <HoyaBubble tone="idle" message={hoyaLine} />
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+              <Hoya pose="waving" size={touchTarget.min} />
+              <View style={{ flex: 1 }}>
+                <Body weight="semibold">{hoyaLine}</Body>
+              </View>
+            </View>
             <Spacer size="md" />
           </>
         ) : null}
@@ -163,7 +168,7 @@ export function DiscoverStep({ pages, hoyaLine, onDone }: Props): React.ReactEle
         <Button
           label={DISCOVER_COPY.continue}
           tone="primary"
-          size="hero"
+          size="lg"
           fullWidth
           disabled={!render.continueEnabled}
           onPress={() => dispatch({ type: 'next' })}
