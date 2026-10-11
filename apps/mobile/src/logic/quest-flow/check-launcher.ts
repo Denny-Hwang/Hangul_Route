@@ -13,8 +13,8 @@ export interface LauncherView {
   /** The Check has no Skip: it is the only evidence the learner can decode what was just taught. */
   showSkip: boolean;
   skipLabel: string;
-  /** A small Hoya beside the heading (the Check card); absent on the generic card. */
-  hoyaPose?: 'waving';
+  /** The heading is said by a small Hoya (the Check card); the generic card is plain text. */
+  hoya: boolean;
 }
 
 export function launcherView(kind: QuestStepKind): LauncherView {
@@ -24,7 +24,7 @@ export function launcherView(kind: QuestStepKind): LauncherView {
       primaryLabel: QUEST_FLOW_COPY.check.go,
       showSkip: false,
       skipLabel: QUEST_FLOW_COPY.game.skip,
-      hoyaPose: 'waving',
+      hoya: true,
     };
   }
   return {
@@ -33,6 +33,7 @@ export function launcherView(kind: QuestStepKind): LauncherView {
     primaryLabel: QUEST_FLOW_COPY.game.play,
     showSkip: true,
     skipLabel: QUEST_FLOW_COPY.game.skip,
+    hoya: false,
   };
 }
 
@@ -51,13 +52,12 @@ export interface RunCounts {
   retries: number;
 }
 
-/** `quest.check_completed`: the Check's own first-try count and retries (run totals before and after it). */
+/** `quest.check_completed`: the Check's own first-try count and retries (what `watchCheck` measured). */
 export function checkCompletedPayload(
   questId: string,
-  before: RunCounts,
-  after: RunCounts,
+  completed: { firstTryCorrect: number; retries: number },
 ): { questId: string; firstTryCorrect: number; retries: number } {
-  return { questId, firstTryCorrect: after.correct - before.correct, retries: after.retries - before.retries };
+  return { questId, firstTryCorrect: completed.firstTryCorrect, retries: completed.retries };
 }
 
 /** Run totals at the moment the Check step opened. */

@@ -13,18 +13,28 @@ import {
   spacing,
 } from '@hangul-route/design-system';
 import { CommonActions, useFocusEffect } from '@react-navigation/native';
+import type { QuestStepKind } from '@hangul-route/content-schema';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { Pressable, View } from 'react-native';
 import { questById } from '../../content';
 import { narrativeLine, type NarrativeLine } from '../../logic/korean-labels';
 import { questOutcome } from '../../logic/quest-outcome';
+import {
+  checkCompletedPayload,
+  discoverCompletedPayload,
+  launcherView,
+  watchCheck,
+  type CheckWatch,
+} from '../../logic/quest-flow/check-launcher';
 import { questStepLabel } from '../../logic/quest-steps';
 import { confirm } from '../../platform/dialog';
+import { track } from '../../platform/telemetry';
 import type { RootStackParamList } from '../../navigation/types';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { useQuestRunStore } from '../../store/quest-run-store';
+import { DiscoverStep } from './DiscoverStep';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'QuestPlayer'>;
 
@@ -55,6 +65,29 @@ export function QuestPlayerScreen({ route, navigation }: Props): React.ReactElem
   );
 
   const step = quest?.steps[stepIndex];
+
+  // `quest.check_completed` rides the step change: the Check ends when the player moves past it
+  // (F-QUEST-002 §3.3), so leaving the game and coming back to the launcher never fires it twice.
+  const checkWatch = useRef<CheckWatch | null>(null);
+  const stepKind = step?.kind;
+  const profileId = profile?.id;
+  useEffect(() => {
+    const run = useQuestRunStore.getState();
+    const out = watchCheck(checkWatch.current, {
+      stepIndex,
+      kind: stepKind,
+      correct: run.correctCount,
+      retries: run.retryCount,
+    });
+    checkWatch.current = out.watch;
+    if (out.completed) {
+      void track({
+        name: 'quest.check_completed',
+        profileId,
+        payload: checkCompletedPayload(questId, out.completed),
+      });
+    }
+  }, [stepIndex, stepKind, questId, profileId]);
 
   const finishQuest = (): void => {
     // Honest outcome: a quest with every game skipped is 0 / 0, not 5 / 5.
@@ -110,8 +143,18 @@ export function QuestPlayerScreen({ route, navigation }: Props): React.ReactElem
     );
   }
 
+  const discoverDone = (result: { pages: number; heard: number }): void => {
+    void track({
+      name: 'quest.discover_completed',
+      profileId,
+      payload: discoverCompletedPayload(questId, result),
+    });
+    advance();
+  };
+
+  // A Discover step keeps its header and Continue in view and scrolls only its pages.
   return (
-    <Screen tone="canvas">
+    <Screen tone="canvas" scrollable={step.kind !== 'discover'}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
         <Pressable
           onPress={confirmQuit}
@@ -134,13 +177,16 @@ export function QuestPlayerScreen({ route, navigation }: Props): React.ReactElem
       <Pill tone="primary" label={questStepLabel(step.kind)} size="sm" />
 
       <Spacer size="lg" />
-      {step.minigameKind && step.minigameRef ? (
+      {step.kind === 'discover' && step.discover ? (
+        <DiscoverStep
+          key={step.id}
+          pages={step.discover.pages}
+          hoyaLine={step.hoyaLineEn}
+          onDone={discoverDone}
+        />
+      ) : step.minigameKind && step.minigameRef ? (
         <MinigameLauncher
-          questId={questId}
-          episodeId={episodeId}
-          stepIndex={stepIndex}
-          minigameKind={step.minigameKind}
-          minigameRef={step.minigameRef}
+          kind={step.kind}
           onLaunch={() => navigation.navigate('Minigame', { questId, episodeId, stepIndex })}
           onSkip={advance}
         />
@@ -192,28 +238,38 @@ function NarrativeStepBody({
 }
 
 function MinigameLauncher({
+  kind,
   onLaunch,
   onSkip,
 }: {
-  questId: string;
-  episodeId: string;
-  stepIndex: number;
-  minigameKind: string;
-  minigameRef: string;
+  kind: QuestStepKind;
   onLaunch: () => void;
   onSkip: () => void;
 }): React.ReactElement {
+  const view = launcherView(kind);
   return (
     <View style={{ flex: 1 }}>
-      <Body weight="semibold" size="lg">
-        Ready for a quick game?
-      </Body>
-      <Spacer size="sm" />
-      <Body tone="secondary">Tap to play. When the game is done you&apos;ll come right back.</Body>
+      {view.hoya ? (
+        <HoyaBubble tone="idle" message={view.heading} />
+      ) : (
+        <Body weight="semibold" size="lg">
+          {view.heading}
+        </Body>
+      )}
+      {view.body ? (
+        <>
+          <Spacer size="sm" />
+          <Body tone="secondary">{view.body}</Body>
+        </>
+      ) : null}
       <View style={{ flex: 1 }} />
-      <Button label="Play minigame" tone="primary" size="hero" fullWidth onPress={onLaunch} />
-      <Spacer size="md" />
-      <Button label="Skip for now" tone="ghost" size="md" onPress={onSkip} />
+      <Button label={view.primaryLabel} tone="primary" size="hero" fullWidth onPress={onLaunch} />
+      {view.showSkip ? (
+        <>
+          <Spacer size="md" />
+          <Button label={view.skipLabel} tone="ghost" size="md" onPress={onSkip} />
+        </>
+      ) : null}
       <Spacer size="lg" />
     </View>
   );

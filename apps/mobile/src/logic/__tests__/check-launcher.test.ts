@@ -16,7 +16,7 @@ describe('launcherView (F-QUEST-002 §3.3: the Check launcher variant)', () => {
     expect(view.primaryLabel).toBe('Go');
     expect(view.showSkip).toBe(false);
     expect(view.body).toBeUndefined();
-    expect(view.hoyaPose).toBe('waving');
+    expect(view.hoya).toBe(true);
   });
 
   it('the other game steps keep the generic card and their Skip for now', () => {
@@ -28,7 +28,7 @@ describe('launcherView (F-QUEST-002 §3.3: the Check launcher variant)', () => {
       expect(view.primaryLabel).toBe('Play minigame');
       expect(view.showSkip).toBe(true);
       expect(view.skipLabel).toBe('Skip for now');
-      expect(view.hoyaPose).toBeUndefined();
+      expect(view.hoya).toBe(false);
     }
   });
 
@@ -58,7 +58,7 @@ describe('telemetry payloads', () => {
   });
 
   it('quest.check_completed carries the first-try count and retries of the Check alone', () => {
-    expect(checkCompletedPayload('quest:q', { correct: 4, retries: 1 }, { correct: 5, retries: 2 })).toEqual({
+    expect(checkCompletedPayload('quest:q', { firstTryCorrect: 1, retries: 1 })).toEqual({
       questId: 'quest:q',
       firstTryCorrect: 1,
       retries: 1,
