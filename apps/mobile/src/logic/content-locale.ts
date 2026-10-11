@@ -6,6 +6,7 @@ import {
   type Overlays,
   type Quest,
   type StageDef,
+  type Story,
   type ThemeDef,
   type UiLocale,
 } from '@hangul-route/content-schema';
@@ -36,6 +37,10 @@ export const localizeTheme = (theme: ThemeDef, locale: UiLocale, overlays?: Over
 
 export const localizeJamo = (jamo: Jamo, locale: UiLocale, overlays?: Overlays): Jamo =>
   localize(jamo, jamo.id, locale, overlays);
+
+/** A story's title, narration, captions and checks by its `story:<slug>` id (the story-sequence cards read it). */
+export const localizeStory = (story: Story, locale: UiLocale, overlays?: Overlays): Story =>
+  localize(story, story.id, locale, overlays);
 
 /** A minigame's pairs, step labels, dialogue lines and prompts, by its minigame ref. */
 export const localizeScope = (scope: MinigameScope, ref: string, locale: UiLocale, overlays?: Overlays): MinigameScope =>

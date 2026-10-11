@@ -9,11 +9,14 @@ import {
   localizeQuest,
   localizeScope,
   localizeStage,
+  localizeStory,
   localizeTheme,
   localizeTitle,
 } from '../content-locale';
 import type { MissionCard } from '../homework/mission-builder';
 import { scopeFor } from '../minigame-config';
+import { storiesAll } from '../../content/stories';
+import { buildSequenceCards } from '../story/sequence-cards';
 
 /**
  * F-I18N-001 §3.6: the screens show content titles, blurbs and glosses through
@@ -84,6 +87,24 @@ describe('content-locale: one helper per kind of shipped content', () => {
     expect(es.cardPairs?.find((p) => p.romanization === 'gimchi')?.en).toBe('Kimchi (es)');
     expect(es.cardPairs?.find((p) => p.romanization === 'bap')?.en).toBe('Rice');
     expect(localizeScope(scope, 'minigame:s1-life-card-1', 'en', overlays)).toBe(scope);
+  });
+
+  it('localizes a story by its id: the story-sequence cards show the overlay caption (F-STORY-001 §3.12 row)', () => {
+    const story = storiesAll[0]!;
+    const tier = story.tiers[0]!;
+    const sceneId = tier.sequenceSceneIds[0]!;
+    const local: Overlays = {
+      es: { [story.id]: { [`scenes.${sceneId}.caption`]: 'Leyenda', [`scenes.${sceneId}.narration`]: 'Narración' } },
+      ko: {},
+    };
+    const es = localizeStory(story, 'es', local);
+    const scene = es.tiers[0]!.scenes.find((s) => s.id === sceneId)!;
+    const source = tier.scenes.find((s) => s.id === sceneId)!;
+    expect(scene.narrationEn).toBe('Narración');
+    expect(scene.keyword).toBe(source.keyword);
+    expect(localizeStory(story, 'en', local)).toBe(story);
+    const scope = { kind: 'story-sequence', story: { storyId: story.id, level: tier.level } } as const;
+    expect(buildSequenceCards(scope, es)[0]!.caption).toBe(source.captionEn === undefined ? 'Narración' : 'Leyenda');
   });
 
   it('localizes a mission card title from its quest, else its episode; the daily test names itself', () => {
