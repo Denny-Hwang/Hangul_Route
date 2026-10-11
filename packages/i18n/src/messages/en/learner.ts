@@ -3,7 +3,8 @@ import { plural } from '../../plural';
 /**
  * Learner-facing screens, one sub-object per screen (F-I18N-001 §3.4 rule 2).
  * PR 5 moves the first-run and settings surfaces in, PR 6a Home, Journey, Library and
- * CardDetail, PR 6b Episode, Results and Homework, PR 7a the Quest player; the wording is unchanged. Strings that end up in a pill or a button are
+ * CardDetail, PR 6b Episode, Results and Homework, PR 7a the Quest player, PR 7b the minigames,
+ * the audio prompt panel and the story copy; the wording is unchanged. Strings that end up in a pill or a button are
  * keyed `pill` / `cta` so the length budgets (§3.11) cover them.
  * Content-derived text (stage, theme and card titles, blurbs) is not here: it comes from
  * content and is localised by the overlay mechanism (PR 12).
@@ -299,5 +300,20 @@ export const learner = {
       empty: 'Nothing to look at here. Tap Continue.',
       pageLabel: (page: number, count: number) => `Page ${page} of ${count}`,
     },
+  },
+
+  /**
+   * The minigames (MinigameScreen and the games it launches), PR 7b. The pairs, glosses and
+   * step labels a game plays come from content (`minigame-config`), not from here (PR 12).
+   */
+  minigame: {
+    notFound: 'Minigame not found.',
+    comingSoon: 'This minigame is coming soon.',
+    voiceSoon: 'Voice practice is opening in our next beta.',
+    backToQuest: { cta: 'Back to quest' },
+    noRounds: 'No rounds.',
+    /** The round counter pill: `round` of `total`. */
+    progress: { pill: (round: number, total: number) => `${round} / ${total}` },
+    skip: { cta: 'Skip' },
   },
 } as const;

@@ -23,7 +23,8 @@
     "apps/mobile/src/components/PinPad.tsx",
     "apps/mobile/src/components/PinSetupField.tsx",
     "apps/mobile/src/components/SpacesCard.tsx",
-    "apps/mobile/src/components/BackupCard.tsx"
+    "apps/mobile/src/components/BackupCard.tsx",
+    "apps/mobile/src/screens/minigames/MinigameScreen.tsx"
   ],
   "pluralTernaryBaseline": {
     "apps/web/src/app/teach/space/page.tsx": 1,
