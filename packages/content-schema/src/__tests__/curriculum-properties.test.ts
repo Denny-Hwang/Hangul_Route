@@ -1,0 +1,131 @@
+import { describe, expect, it } from 'vitest';
+import {
+  CURRICULUM_MAX_ITEMS,
+  StageKeySchema,
+  addDays,
+  generateCurriculum,
+  regenerateFrom,
+  toMeta,
+  toPlanItems,
+  type CurriculumParamsInput,
+  type PlacementLevel,
+  type StageKey,
+} from '..';
+import { CATALOG_2026_10 } from './fixtures/catalog-2026-10';
+
+/**
+ * F-PLAN-002 section 5: the invariants over weeks {1, 4, 12, 26, 52} x sessions
+ * {1, 2, 3, 5, 7} x four levels x four focuses x {free, all stages}, minus the
+ * combinations above 260 sessions, which the params reject.
+ */
+
+const WEEKS = [1, 4, 12, 26, 52];
+const SESSIONS = [1, 2, 3, 5, 7];
+const LEVELS: PlacementLevel[] = [
+  { stage: 'stage1', band: 0 },
+  { stage: 'stage1', band: 2 },
+  { stage: 'stage2', band: 0 },
+  { stage: 'stage3', band: 0 },
+];
+const FOCUSES = ['reading', 'words', 'culture', 'balanced'] as const;
+const TIERS: StageKey[][] = [['stage1'], [...StageKeySchema.options]];
+
+const STAGE1_ORDER = CATALOG_2026_10.cells
+  .filter((cell) => cell.stage === 'stage1')
+  .flatMap((cell) => cell.questIds);
+const stageOfQuest = new Map(CATALOG_2026_10.quests.map((quest) => [quest.id, quest.stage]));
+
+const combos: CurriculumParamsInput[] = [];
+for (const weeks of WEEKS) {
+  for (const sessionsPerWeek of SESSIONS) {
+    if (weeks * sessionsPerWeek > CURRICULUM_MAX_ITEMS) continue;
+    for (const level of LEVELS) {
+      for (const focus of FOCUSES) {
+        for (const unlockedStages of TIERS) {
+          combos.push({
+            audience: 'family',
+            level,
+            startDate: '2026-10-12',
+            weeks,
+            sessionsPerWeek,
+            minutesPerSession: 15,
+            goals: { focus, motivation: 'heritage' },
+            daysOff: weeks >= 4 ? [{ from: '2026-11-02', to: '2026-11-08' }] : [],
+            unlockedStages,
+          });
+        }
+      }
+    }
+  }
+}
+
+describe('curriculum properties (F-PLAN-002 section 5)', () => {
+  it('covers the grid', () => {
+    // Only 52 weeks x 7 sessions (364) is above the cap: 768 combinations, the "about 770" of the spec.
+    expect(combos.length).toBe(4 * 4 * 2 * (WEEKS.length * SESSIONS.length - 1));
+  });
+
+  it('holds every invariant for every combination', () => {
+    for (const params of combos) {
+      const draft = generateCurriculum(params, CATALOG_2026_10);
+      const label = JSON.stringify({ w: params.weeks, s: params.sessionsPerWeek, l: params.level, f: params.goals?.focus, t: params.unlockedStages.length });
+      const end = addDays(params.startDate, 7 * params.weeks);
+      const dates = draft.items.map((item) => item.targetDate as string);
+      const ids = draft.items.map((item) => item.id);
+
+      expect(new Set(dates).size, `${label}: two items on one date`).toBe(dates.length);
+      expect(dates.every((date) => date >= params.startDate && date < end), `${label}: date outside the plan`).toBe(true);
+      expect(new Set(ids).size, `${label}: repeated id`).toBe(ids.length);
+      expect(draft.items.length, `${label}: over the cap`).toBeLessThanOrEqual(CURRICULUM_MAX_ITEMS);
+      expect(draft.weeks).toHaveLength(params.weeks);
+
+      const stage1 = ids.filter((id) => STAGE1_ORDER.includes(id));
+      expect(stage1, `${label}: Stage 1 out of canonical order`).toEqual(STAGE1_ORDER.filter((id) => stage1.includes(id)));
+
+      const unlocked = new Set(params.unlockedStages);
+      for (const id of ids) {
+        const stage = stageOfQuest.get(id);
+        if (stage !== undefined && !id.startsWith('quest:story-')) {
+          expect(unlocked.has(stage), `${label}: locked lesson ${id} scheduled`).toBe(true);
+        }
+      }
+      for (const id of draft.locked) expect(ids).not.toContain(id);
+
+      for (const week of draft.weeks) {
+        const inWeek = draft.items.filter((item) => item.week === week.index);
+        if (week.kind === 'review' || week.kind === 'break') {
+          expect(inWeek, `${label}: items in ${week.kind} week ${week.index}`).toEqual([]);
+        }
+        if (week.kind === 'break') {
+          const offWeek = week.startDate >= '2026-11-02' && week.startDate <= '2026-11-08';
+          expect(offWeek, `${label}: break week ${week.index} has sessions`).toBe(true);
+        }
+        for (const item of inWeek) {
+          expect((item.targetDate as string) >= week.startDate && (item.targetDate as string) < addDays(week.startDate, 7)).toBe(true);
+        }
+      }
+
+      expect(draft.items.filter((item) => item.kind === 'episode').length).toBeLessThanOrEqual(5);
+      expect(draft.stats.readyItems + draft.stats.comingSoonItems).toBe(draft.items.length);
+    }
+  });
+
+  it('re-paces every unchanged plan to itself: shift, and requeue for a learner who did every past quest', () => {
+    for (const params of combos) {
+      const draft = generateCurriculum(params, CATALOG_2026_10);
+      const plan = { meta: toMeta(draft), items: toPlanItems(draft) };
+      const label = JSON.stringify({ w: params.weeks, s: params.sessionsPerWeek, l: params.level, f: params.goals?.focus, t: params.unlockedStages.length });
+      const days = [...new Set([0, 3, Math.floor((7 * params.weeks) / 2), 7 * params.weeks - 1])];
+      for (const day of days) {
+        const today = addDays(params.startDate, day);
+        const shifted = regenerateFrom(plan, today, CATALOG_2026_10, { mode: 'shift' });
+        expect(toPlanItems(shifted), `${label} shift ${today}`).toEqual(plan.items);
+        expect(shifted.weeks, `${label} shift ${today}`).toEqual(draft.weeks);
+        const done = plan.items.filter((item) => (item.targetDate as string) < today && item.kind === 'quest').map((item) => item.id);
+        const requeued = regenerateFrom(plan, today, CATALOG_2026_10, { mode: 'requeue', completedQuestIds: done });
+        expect(toPlanItems(requeued), `${label} requeue ${today}`).toEqual(plan.items);
+        expect(requeued.weeks, `${label} requeue ${today}`).toEqual(draft.weeks);
+      }
+    }
+  }, 60_000);
+});
