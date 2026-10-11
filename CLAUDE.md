@@ -146,7 +146,7 @@ Hangul_Route/
 
 > 이 구조에서 벗어나는 새 디렉토리/패키지가 필요하면 먼저 제안하고 승인받는다.
 > 2026-10-10 오너 승인: `packages/i18n`, `content/i18n/` (F-I18N-001), `content/stories/` (F-STORY-001), `content/vocab/` (F-VOC-001).
-> 2026-10-11 추가 (오너 확인 대기): `content/placement/` (F-PLC-001 P12) — 오너가 거절하면 이 디렉토리와 생성기를 되돌린다.
+> 2026-10-11 오너 승인: `content/placement/` (F-PLC-001 P12).
 
 ---
 
