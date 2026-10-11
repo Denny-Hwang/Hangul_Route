@@ -17,7 +17,7 @@ export function FamilyDashboard({ family }: { family: MockFamily }): JSX.Element
 
   return (
     <main style={{ maxWidth: 1100, margin: '0 auto', padding: `${spacing.xl}px ${spacing.lg}px` }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.xxl }}>
+      <header style={{ display: 'flex', flexWrap: 'wrap', gap: spacing.md, justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.xxl }}>
         <div>
           <a href="/" style={{ color: colors.text.muted, fontSize: typography.size.caption }}>
             {c.shell.backToSite}
@@ -43,7 +43,7 @@ export function FamilyDashboard({ family }: { family: MockFamily }): JSX.Element
         </span>
       </header>
 
-      <section style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: spacing.md, marginBottom: spacing.xxl }}>
+      <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 140px), 1fr))', gap: spacing.md, marginBottom: spacing.xxl }}>
         {[
           { key: 'profiles', label: p.stats.profiles, value: family.profiles.length },
           { key: 'cards', label: p.stats.cards, value: family.totals.cards },
@@ -70,7 +70,7 @@ export function FamilyDashboard({ family }: { family: MockFamily }): JSX.Element
       </section>
 
       <h2 style={{ marginBottom: spacing.md }}>{p.kidsTitle}</h2>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: spacing.lg }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 280px), 1fr))', gap: spacing.lg }}>
         {family.profiles.map((profile) => (
           <article
             key={profile.id}
@@ -81,7 +81,7 @@ export function FamilyDashboard({ family }: { family: MockFamily }): JSX.Element
               border: `1px solid ${colors.border.subtle}`,
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: spacing.sm, justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 style={{ margin: 0 }}>{profile.displayName}</h3>
               {levelPillLabel(profile.ageGroup) ? (
                 <span

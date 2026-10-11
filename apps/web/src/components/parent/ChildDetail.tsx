@@ -31,8 +31,9 @@ export function ChildDetail({ child }: { child: MockChildProfile }): JSX.Element
         </p>
       </header>
 
-      <section style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: spacing.xl }}>
-        <div>
+      {/* Two columns (about 2 : 1) on a wide screen, stacked on a phone: flex-wrap keeps a 320px screen free of sideways scroll. */}
+      <section style={{ display: 'flex', flexWrap: 'wrap', gap: spacing.xl }}>
+        <div style={{ flex: '2 1 320px', minWidth: 0 }}>
           <h2>{k.recentTitle}</h2>
           <div style={{ backgroundColor: colors.surface.paper, padding: spacing.lg, borderRadius: radii.lg, border: `1px solid ${colors.border.subtle}` }}>
             {child.recentQuests.length === 0 ? (
@@ -79,7 +80,7 @@ export function ChildDetail({ child }: { child: MockChildProfile }): JSX.Element
           </div>
         </div>
 
-        <aside>
+        <aside style={{ flex: '1 1 240px', minWidth: 0 }}>
           <h2>{k.cardsTitle}</h2>
           <div
             style={{
