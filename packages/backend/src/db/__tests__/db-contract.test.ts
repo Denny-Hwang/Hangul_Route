@@ -180,6 +180,23 @@ function contract(name: string, make: () => Db): void {
       expect(cleared.seats).toBeNull();
     });
 
+    it('waitlist: addWaitlist is idempotent per address, keeps the first row and an unsubscribe, and reset wipes it', async () => {
+      expect(await db.waitlistEntries()).toEqual([]);
+      await db.addWaitlist({ email: 'a@example.com', createdAt: T, source: 'landing', locale: 'en', consentTextVersion: 'v1' });
+      await db.addWaitlist({ email: 'a@example.com', createdAt: '2026-10-09T00:00:00.000Z', source: 'other', locale: 'ko', consentTextVersion: 'v2' });
+      await db.addWaitlist({ email: 'b@example.com', createdAt: '2026-10-08T00:00:00.000Z', source: null, locale: null, consentTextVersion: 'v1' });
+      expect(await db.waitlistEntries()).toEqual([
+        { email: 'a@example.com', createdAt: T, source: 'landing', locale: 'en', consentTextVersion: 'v1', unsubscribedAt: null },
+        { email: 'b@example.com', createdAt: '2026-10-08T00:00:00.000Z', source: null, locale: null, consentTextVersion: 'v1', unsubscribedAt: null },
+      ]);
+      expect(await db.unsubscribeWaitlist('a@example.com', new Date('2026-10-10T00:00:00.000Z'))).toBe(true);
+      expect(await db.unsubscribeWaitlist('missing@example.com', new Date(T))).toBe(false);
+      await db.addWaitlist({ email: 'a@example.com', createdAt: T, source: null, locale: null, consentTextVersion: 'v3' });
+      expect((await db.waitlistEntries())[0]).toMatchObject({ email: 'a@example.com', unsubscribedAt: '2026-10-10T00:00:00.000Z', consentTextVersion: 'v1' });
+      await db.reset();
+      expect(await db.waitlistEntries()).toEqual([]);
+    });
+
     it('reset wipes every table', async () => {
       await db.putAccount({ id: 'mom', email: null, displayName: null, consent: null, createdAt: T });
       await db.putSpace(space('space:f', 'family', 'mom'));

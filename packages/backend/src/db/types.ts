@@ -1,6 +1,17 @@
 import type { Entitlement, EntitlementApply, MemberKind, Membership, Plan, RelinkRequest, Space } from '@hangul-route/content-schema';
 import type { Account, Learner, LearnerDevice, SnapshotRecord } from '../store';
 
+/** One launch-invite signup (docs/launch/waitlist.md). `email` is stored trimmed and lower-case. */
+export interface WaitlistEntry {
+  email: string;
+  createdAt: string;
+  source: string | null;
+  locale: string | null;
+  /** Which consent line the visitor saw (routes/waitlist CONSENT_TEXT_VERSION). */
+  consentTextVersion: string;
+  unsubscribedAt: string | null;
+}
+
 /** A re-link request as stored: `secret` is held until the device picks it up once. */
 export type StoredRelink = RelinkRequest & { secret: string | null };
 
@@ -60,6 +71,14 @@ export interface Db {
   entitlementsFor(subjectKind: Entitlement['subjectKind'], subjectId: string): Promise<Entitlement[]>;
   /** Upsert one row per (subject, plan), keeping refs unless replaced. */
   applyEntitlement(input: EntitlementApply, now: Date): Promise<Entitlement>;
+
+  // waitlist (launch invites; no email is sent from here)
+  /** Insert-if-absent by address: an existing row (and any unsubscribe on it) is left untouched. Says nothing about whether it existed. */
+  addWaitlist(entry: Omit<WaitlistEntry, 'unsubscribedAt'>): Promise<void>;
+  /** Oldest first. Tests and tooling only — no route reads the list. */
+  waitlistEntries(): Promise<WaitlistEntry[]>;
+  /** Marks an address as removed; true when it was on the list. */
+  unsubscribeWaitlist(email: string, now: Date): Promise<boolean>;
 
   /** Tests only: wipe everything. */
   reset(): Promise<void>;

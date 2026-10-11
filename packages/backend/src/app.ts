@@ -12,6 +12,7 @@ import { plansRoutes } from './routes/plans';
 import { spacesRoutes } from './routes/spaces';
 import { syncRoutes } from './routes/sync';
 import { telemetryRoutes } from './routes/telemetry';
+import { waitlistRoutes } from './routes/waitlist';
 
 const app = new Hono<{ Bindings: RuntimeEnv & { ALLOWED_ORIGINS?: string } }>();
 
@@ -60,6 +61,8 @@ app.route('/api/spaces', relinkRoutes);
 app.route('/api/entitlements', entitlementRoutes);
 // School admin (F-SCHOOL-001): class tree, teacher invites, seats — aggregates only.
 app.route('/api/spaces', schoolRoutes);
+// Launch-invite waitlist: public, first-party, no auth. POST only (no read route).
+app.route('/api/waitlist', waitlistRoutes);
 
 app.notFound((c) =>
   c.json({ ok: false, error: { code: 'not_found', message: 'Route not found' } }, 404),

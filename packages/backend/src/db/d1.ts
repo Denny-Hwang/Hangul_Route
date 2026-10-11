@@ -1,6 +1,6 @@
 import type { Entitlement, EntitlementApply, MemberKind, Membership, Plan, Space } from '@hangul-route/content-schema';
 import { id, type Account, type Learner, type LearnerDevice, type SnapshotRecord } from '../store';
-import { mergeEntitlement, type Db, type StoredRelink } from './types';
+import { mergeEntitlement, type Db, type StoredRelink, type WaitlistEntry } from './types';
 
 /** What `run()` resolves to on D1 (`D1Result`): `meta.changes` is the row count the statement wrote. */
 export interface D1RunResultLike {
@@ -66,6 +66,7 @@ const toRelink = (r: Row): StoredRelink => ({
   decidedAt: nstr(r.decided_at),
   secret: nstr(r.secret),
 });
+const toWaitlist = (r: Row): WaitlistEntry => ({ email: str(r.email), createdAt: str(r.created_at), source: nstr(r.source), locale: nstr(r.locale), consentTextVersion: str(r.consent_text_version), unsubscribedAt: nstr(r.unsubscribed_at) });
 const toEntitlement = (r: Row): Entitlement => ({
   id: str(r.id),
   subjectKind: str(r.subject_kind) as Entitlement['subjectKind'],
@@ -251,8 +252,18 @@ export class D1Db implements Db {
     return e;
   }
 
+  addWaitlist(e: Omit<WaitlistEntry, 'unsubscribedAt'>): Promise<void> {
+    return this.run('INSERT INTO waitlist (email, created_at, source, locale, consent_text_version) VALUES (?, ?, ?, ?, ?) ON CONFLICT(email) DO NOTHING', [e.email, e.createdAt, e.source, e.locale, e.consentTextVersion]);
+  }
+  waitlistEntries(): Promise<WaitlistEntry[]> {
+    return this.many('SELECT * FROM waitlist ORDER BY created_at, id', [], toWaitlist);
+  }
+  async unsubscribeWaitlist(email: string, now: Date): Promise<boolean> {
+    return (await this.changes('UPDATE waitlist SET unsubscribed_at = ? WHERE email = ?', [now.toISOString(), email])) > 0;
+  }
+
   async reset(): Promise<void> {
-    for (const table of ['entitlements', 'relink_requests', 'plans', 'memberships', 'spaces', 'snapshots', 'learner_devices', 'learners', 'accounts']) {
+    for (const table of ['waitlist', 'entitlements', 'relink_requests', 'plans', 'memberships', 'spaces', 'snapshots', 'learner_devices', 'learners', 'accounts']) {
       await this.run(`DELETE FROM ${table}`, []);
     }
   }

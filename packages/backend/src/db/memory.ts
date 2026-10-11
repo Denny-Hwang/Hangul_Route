@@ -1,6 +1,6 @@
 import type { Entitlement, EntitlementApply, MemberKind, Membership, Plan, Space } from '@hangul-route/content-schema';
 import { id, type Account, type Learner, type LearnerDevice, type SnapshotRecord } from '../store';
-import { mergeEntitlement, type Db, type StoredRelink } from './types';
+import { mergeEntitlement, type Db, type StoredRelink, type WaitlistEntry } from './types';
 
 const deviceKey = (learnerId: string, deviceId: string): string => `${learnerId}|${deviceId}`;
 const membershipKey = (spaceId: string, kind: MemberKind, memberId: string): string => `${spaceId}|${kind}|${memberId}`;
@@ -24,6 +24,7 @@ export class MemoryDb implements Db {
   private plans = new Map<string, Plan>();
   private relinks = new Map<string, StoredRelink>();
   private entitlements = new Map<string, Entitlement>();
+  private waitlist = new Map<string, WaitlistEntry>();
 
   async getAccount(accountId: string): Promise<Account | null> {
     return clone(this.accounts.get(accountId) ?? null);
@@ -133,7 +134,20 @@ export class MemoryDb implements Db {
     return clone(next);
   }
 
+  async addWaitlist(entry: Omit<WaitlistEntry, 'unsubscribedAt'>): Promise<void> {
+    if (!this.waitlist.has(entry.email)) this.waitlist.set(entry.email, clone({ ...entry, unsubscribedAt: null }));
+  }
+  async waitlistEntries(): Promise<WaitlistEntry[]> {
+    return clone([...this.waitlist.values()].sort((a, b) => a.createdAt.localeCompare(b.createdAt)));
+  }
+  async unsubscribeWaitlist(email: string, now: Date): Promise<boolean> {
+    const row = this.waitlist.get(email);
+    if (!row) return false;
+    this.waitlist.set(email, { ...row, unsubscribedAt: now.toISOString() });
+    return true;
+  }
+
   async reset(): Promise<void> {
-    for (const m of [this.accounts, this.learners, this.devices, this.snapshots, this.spaces, this.memberships, this.plans, this.relinks, this.entitlements]) m.clear();
+    for (const m of [this.accounts, this.learners, this.devices, this.snapshots, this.spaces, this.memberships, this.plans, this.relinks, this.entitlements, this.waitlist]) m.clear();
   }
 }
