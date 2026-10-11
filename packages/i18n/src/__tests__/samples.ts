@@ -28,6 +28,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.cardDetail.earn.quest': [['Meet g, n, d, l', 1], ['Meet g, n, d, l', 2]],
   'a11y.missionCard': [['Meet Hoya', 'Say hello', false], ['Meet Hoya', 'Say hello', true]],
   'a11y.gridCell': [['Letters', 'hangul', false], ['Letters', 'hangul', true]],
+  'a11y.gridCellMarked': [['Letters', 'hangul', true, false], ['Letters', 'hangul', false, true], ['Letters', 'hangul', true, true]],
   'learner.episode.buildsOn': [['Meet g, n, d']],
   'learner.episode.prereq.message': [['Meet g, n, d']],
   'learner.results.newCard.announce': [['Hanbok']],

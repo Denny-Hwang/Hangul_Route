@@ -200,6 +200,8 @@ export const learner = {
     how: {
       title: 'How the journey works',
       body: 'Each cell is one episode. Finish every quest in a cell to complete it and earn its Heritage cards. More stages open as the journey grows.',
+      /** Shown under `body` once the learner has a level-check result (F-PLC-001 section 3.7, wireframe placement I). */
+      placement: 'The pin shows where you started. A cell with a light outline and a check is one you can skip ahead of. You can still play it any time.',
     },
   },
 
