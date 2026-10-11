@@ -1,0 +1,55 @@
+{
+  "locale": "es",
+  "domain": "vocab-family",
+  "entries": {
+    "vocab-topic:family": {
+      "title": "Familia",
+      "blurb": "Palabras para las personas de una familia.",
+      "hoyaIntro": "¿Quién hay en tu familia? Aprendamos una palabra para cada persona."
+    },
+    "vocab:eomma": {
+      "gloss": "mamá",
+      "senseNote": "La palabra de todos los días. La palabra formal para madre es eomeoni."
+    },
+    "vocab:appa": {
+      "gloss": "papá",
+      "senseNote": "La palabra de todos los días. La palabra formal para padre es abeoji."
+    },
+    "vocab:halmeoni": {
+      "gloss": "abuela"
+    },
+    "vocab:harabeoji": {
+      "gloss": "abuelo"
+    },
+    "vocab:eonni": {
+      "gloss": "hermana mayor (lo dice una mujer o niña)",
+      "senseNote": "Así llama una mujer o niña a su hermana mayor. Un hombre o niño dice nuna."
+    },
+    "vocab:nuna": {
+      "gloss": "hermana mayor (lo dice un hombre o niño)",
+      "senseNote": "Así llama un hombre o niño a su hermana mayor. Una mujer o niña dice eonni."
+    },
+    "vocab:oppa": {
+      "gloss": "hermano mayor (lo dice una mujer o niña)",
+      "senseNote": "Así llama una mujer o niña a su hermano mayor. Un hombre o niño dice hyeong."
+    },
+    "vocab:hyeong": {
+      "gloss": "hermano mayor (lo dice un hombre o niño)",
+      "senseNote": "Así llama un hombre o niño a su hermano mayor. Una mujer o niña dice oppa."
+    },
+    "vocab:dongsaeng": {
+      "gloss": "hermano o hermana menor",
+      "senseNote": "Lo dice cualquiera, para un hermano menor o una hermana menor."
+    },
+    "vocab:agi": {
+      "gloss": "bebé"
+    },
+    "vocab:gajok": {
+      "gloss": "familia"
+    },
+    "vocab:na": {
+      "gloss": "yo",
+      "senseNote": "La palabra informal. Para hablar con cortesía, se dice jeo."
+    }
+  }
+}

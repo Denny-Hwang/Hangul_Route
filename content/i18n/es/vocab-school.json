@@ -1,0 +1,48 @@
+{
+  "locale": "es",
+  "domain": "vocab-school",
+  "entries": {
+    "vocab-topic:school": {
+      "title": "Escuela",
+      "blurb": "Cosas del salón de clases y de la mochila.",
+      "hoyaIntro": "¡Prepara tu mochila! Busquemos las cosas del salón de clases."
+    },
+    "vocab:hakgyo": {
+      "gloss": "escuela"
+    },
+    "vocab:seonsaengnim": {
+      "gloss": "maestro o maestra",
+      "senseNote": "También se usa para dirigirse a un maestro; la terminación nim muestra respeto."
+    },
+    "vocab:chingu": {
+      "gloss": "amigo o amiga"
+    },
+    "vocab:chaek": {
+      "gloss": "libro"
+    },
+    "vocab:yeonpil": {
+      "gloss": "lápiz"
+    },
+    "vocab:gabang": {
+      "gloss": "mochila"
+    },
+    "vocab:gongchaek": {
+      "gloss": "cuaderno"
+    },
+    "vocab:jiugae": {
+      "gloss": "goma de borrar"
+    },
+    "vocab:chaeksang": {
+      "gloss": "escritorio"
+    },
+    "vocab:uija": {
+      "gloss": "silla"
+    },
+    "vocab:gawi": {
+      "gloss": "tijeras"
+    },
+    "vocab:chilpan": {
+      "gloss": "pizarrón"
+    }
+  }
+}

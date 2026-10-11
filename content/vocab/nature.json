@@ -1,0 +1,170 @@
+{
+  "schemaVersion": 1,
+  "topic": {
+    "id": "vocab-topic:nature",
+    "key": "nature",
+    "order": 8,
+    "titleEn": "Nature",
+    "titleKo": {
+      "ko": "자연",
+      "romanization": "jayeon",
+      "en": "nature"
+    },
+    "blurbEn": "Things you see outdoors, from the sky to the sea.",
+    "hoyaIntroEn": "Let's step outside and look at the world around us.",
+    "tint": "theme.nature",
+    "coverItemId": "vocab:san",
+    "status": "draft",
+    "fixedOrder": false
+  },
+  "items": [
+    {
+      "id": "vocab:san",
+      "ko": "산",
+      "romanization": "san",
+      "en": "mountain",
+      "pos": "noun",
+      "topics": [
+        "nature"
+      ],
+      "level": 1,
+      "visual": "card:mountain"
+    },
+    {
+      "id": "vocab:bada",
+      "ko": "바다",
+      "romanization": "bada",
+      "en": "sea",
+      "pos": "noun",
+      "topics": [
+        "nature"
+      ],
+      "level": 1,
+      "visual": "card:sea"
+    },
+    {
+      "id": "vocab:haneul",
+      "ko": "하늘",
+      "romanization": "haneul",
+      "en": "sky",
+      "pos": "noun",
+      "topics": [
+        "nature"
+      ],
+      "level": 1,
+      "visual": "word:nature-sky"
+    },
+    {
+      "id": "vocab:hae-sun",
+      "ko": "해",
+      "romanization": "hae",
+      "en": "sun",
+      "pos": "noun",
+      "topics": [
+        "nature"
+      ],
+      "level": 1,
+      "visual": "word:nature-sun",
+      "senseGroup": "hae"
+    },
+    {
+      "id": "vocab:dal-moon",
+      "ko": "달",
+      "romanization": "dal",
+      "en": "moon",
+      "pos": "noun",
+      "topics": [
+        "nature"
+      ],
+      "level": 1,
+      "visual": "card:moon",
+      "senseGroup": "dal"
+    },
+    {
+      "id": "vocab:byeol",
+      "ko": "별",
+      "romanization": "byeol",
+      "en": "star",
+      "pos": "noun",
+      "topics": [
+        "nature"
+      ],
+      "level": 1,
+      "visual": "word:nature-star"
+    },
+    {
+      "id": "vocab:namu",
+      "ko": "나무",
+      "romanization": "namu",
+      "en": "tree",
+      "pos": "noun",
+      "topics": [
+        "nature"
+      ],
+      "level": 1,
+      "visual": "word:nature-tree"
+    },
+    {
+      "id": "vocab:kkot",
+      "ko": "꽃",
+      "romanization": "kkot",
+      "en": "flower",
+      "pos": "noun",
+      "topics": [
+        "nature"
+      ],
+      "level": 1,
+      "visual": "word:nature-flower"
+    },
+    {
+      "id": "vocab:bi-rain",
+      "ko": "비",
+      "romanization": "bi",
+      "en": "rain",
+      "pos": "noun",
+      "topics": [
+        "nature"
+      ],
+      "level": 1,
+      "visual": "word:nature-rain",
+      "senseGroup": "bi"
+    },
+    {
+      "id": "vocab:nun-snow",
+      "ko": "눈",
+      "romanization": "nun",
+      "en": "snow",
+      "pos": "noun",
+      "topics": [
+        "nature"
+      ],
+      "level": 1,
+      "visual": "word:nature-snow",
+      "senseGroup": "nun"
+    },
+    {
+      "id": "vocab:gang",
+      "ko": "강",
+      "romanization": "gang",
+      "en": "river",
+      "pos": "noun",
+      "topics": [
+        "nature"
+      ],
+      "level": 1,
+      "visual": "word:nature-river"
+    },
+    {
+      "id": "vocab:gureum",
+      "ko": "구름",
+      "romanization": "gureum",
+      "en": "cloud",
+      "pos": "noun",
+      "topics": [
+        "nature"
+      ],
+      "level": 1,
+      "visual": "word:nature-cloud"
+    }
+  ]
+}
