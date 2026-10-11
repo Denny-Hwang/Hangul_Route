@@ -1,7 +1,9 @@
 import React, { useMemo } from 'react';
 import { View } from 'react-native';
 import Svg, { Circle, Ellipse, Path, Rect } from 'react-native-svg';
+import { borderWidth, colors } from '../../tokens';
 import { wordArtModel } from '../../word-art/model';
+import type { WordArtModel } from '../../word-art/model';
 import type { RenderShape } from '../../word-art/render';
 import type { WordArtProps } from './types';
 
@@ -30,18 +32,30 @@ function Shape({ shape }: { shape: RenderShape }): React.ReactElement {
   );
 }
 
-function WordArtBase({ artKey, size, mono, decorative, accessibilityLabel, testID }: WordArtProps): React.ReactElement | null {
-  const model = useMemo(() => wordArtModel({ artKey, size, mono, decorative, accessibilityLabel }), [artKey, size, mono, decorative, accessibilityLabel]);
-  if (model === null) return null;
+/**
+ * The painted picture of a model, without hooks (tests call it directly). A
+ * named picture is one `image` element with its label; a decorative one is
+ * hidden on every platform: `aria-hidden` is the attribute react-native-web
+ * writes to the DOM, the other two are the native iOS and Android props.
+ * `flagged` (development builds only, like StoryScene) draws a dashed frame
+ * round a picture that carries the meaning but was given a blank label.
+ */
+export function WordArtView({ model, testID, flagged = false }: { model: WordArtModel; testID?: string; flagged?: boolean }): React.ReactElement {
+  const named = model.label !== undefined;
   return (
     <View
       testID={testID}
-      accessible={model.label !== undefined}
-      accessibilityRole={model.label !== undefined ? 'image' : undefined}
+      accessible={named}
+      accessibilityRole={named ? 'image' : undefined}
       accessibilityLabel={model.label}
+      aria-hidden={model.decorative ? true : undefined}
       accessibilityElementsHidden={model.decorative}
       importantForAccessibility={model.decorative ? 'no-hide-descendants' : undefined}
-      style={{ width: model.size, height: model.size }}
+      style={{
+        width: model.size,
+        height: model.size,
+        ...(flagged ? { borderWidth: borderWidth.base, borderStyle: 'dashed', borderColor: colors.border.strong } : {}),
+      }}
     >
       <Svg width={model.size} height={model.size} viewBox={model.viewBox}>
         {model.shapes.map((shape, index) => (
@@ -50,6 +64,12 @@ function WordArtBase({ artKey, size, mono, decorative, accessibilityLabel, testI
       </Svg>
     </View>
   );
+}
+
+function WordArtBase({ artKey, size, mono, decorative, accessibilityLabel, testID }: WordArtProps): React.ReactElement | null {
+  const model = useMemo(() => wordArtModel({ artKey, size, mono, decorative, accessibilityLabel }), [artKey, size, mono, decorative, accessibilityLabel]);
+  if (model === null) return null;
+  return <WordArtView model={model} testID={testID} flagged={__DEV__ && model.unlabelled} />;
 }
 
 /** Memoised: a glyph is data and never changes while it is shown. */

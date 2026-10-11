@@ -47,15 +47,17 @@ describe('wordArtModel', () => {
   });
 
   it('names the picture with its label when it carries the meaning', () => {
-    expect(wordArtModel({ artKey: 'food-apple', size: 48, accessibilityLabel: 'apple' })).toMatchObject({ label: 'apple', decorative: false });
+    expect(wordArtModel({ artKey: 'food-apple', size: 48, accessibilityLabel: 'apple' })).toMatchObject({ label: 'apple', decorative: false, unlabelled: false });
   });
 
   it('hides a decorative picture from assistive technology', () => {
-    expect(wordArtModel({ artKey: 'food-apple', size: 48, decorative: true })).toMatchObject({ label: undefined, decorative: true });
+    expect(wordArtModel({ artKey: 'food-apple', size: 48, decorative: true })).toMatchObject({ label: undefined, decorative: true, unlabelled: false });
   });
 
-  it('treats a blank label as no label (never an empty announcement)', () => {
-    expect(wordArtModel({ artKey: 'food-apple', size: 48, accessibilityLabel: '  ' })).toMatchObject({ label: undefined, decorative: false });
+  it('treats a blank label as no label (never an empty announcement), and flags the picture as unlabelled', () => {
+    for (const accessibilityLabel of ['', '  ']) {
+      expect(wordArtModel({ artKey: 'food-apple', size: 48, accessibilityLabel })).toMatchObject({ label: undefined, decorative: false, unlabelled: true });
+    }
   });
 
   it.each([0, -1, Number.NaN, Number.POSITIVE_INFINITY])('falls back to the default size for %s', (size) => {

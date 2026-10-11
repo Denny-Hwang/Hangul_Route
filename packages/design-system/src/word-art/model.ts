@@ -32,6 +32,12 @@ export interface WordArtModel {
   label: string | undefined;
   /** Hidden from assistive technology. */
   decorative: boolean;
+  /**
+   * Neither named nor hidden: a picture that carries the meaning was given a
+   * blank label (an empty gloss). The component warns in development, and a
+   * caller (W-7 `PictureArt`) can fall back to the text tile.
+   */
+  unlabelled: boolean;
 }
 
 const cache = new WeakMap<WordArtGlyph, { color?: readonly RenderShape[]; mono?: readonly RenderShape[] }>();
@@ -51,5 +57,5 @@ export function wordArtModel(input: WordArtModelInput, lookup: (key: string) => 
   const decorative = input.decorative === true;
   const label = decorative ? undefined : input.accessibilityLabel?.trim() || undefined;
   const size = Number.isFinite(input.size) && input.size > 0 ? input.size : WORD_ART_DEFAULT_SIZE;
-  return { size, viewBox: '0 0 100 100', shapes: renderListOf(glyph, input.mono === true), label, decorative };
+  return { size, viewBox: '0 0 100 100', shapes: renderListOf(glyph, input.mono === true), label, decorative, unlabelled: !decorative && label === undefined };
 }
