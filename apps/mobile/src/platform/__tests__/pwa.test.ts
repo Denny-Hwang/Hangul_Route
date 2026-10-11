@@ -2,6 +2,17 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { applyUpdate, isStandalone, subscribePwa } from '../pwa';
 import * as web from '../pwa.web';
 
+// Native clipboard (expo-clipboard): a plain function, so a rejected promise is not reported as unhandled.
+let clipboard: 'ok' | 'refused' | 'throws' = 'ok';
+const clipped: string[] = [];
+vi.mock('expo-clipboard', () => ({
+  setStringAsync: (text: string): Promise<boolean> => {
+    clipped.push(text);
+    if (clipboard === 'throws') return Promise.reject(new Error('no clipboard'));
+    return Promise.resolve(clipboard === 'ok');
+  },
+}));
+
 describe('platform/pwa (native no-op)', () => {
   it('never fires and reports standalone', () => {
     const l = vi.fn();
@@ -57,13 +68,24 @@ describe('platform/pwa.web', () => {
 describe('platform/pwa install API', () => {
   afterEach(() => vi.unstubAllGlobals());
 
-  it('native: no env, no prompt, always offline-ready, no clipboard', async () => {
-    const { appUrl, copyText, installEnv, isOfflineReady, promptInstall } = await import('../pwa');
+  it('native: no env, no prompt, always offline-ready', async () => {
+    const { appUrl, installEnv, isOfflineReady, promptInstall } = await import('../pwa');
     expect(installEnv()).toEqual({ userAgent: '', standalone: true, hasPromptEvent: false, isWeb: false });
     expect(await promptInstall()).toBe(false);
     expect(isOfflineReady()).toBe(true);
     expect(appUrl()).toBe('');
+  });
+
+  it('native: copies through the system clipboard; a refusal or an error is false, never a throw', async () => {
+    const { copyText } = await import('../pwa');
+    clipped.length = 0;
+    clipboard = 'ok';
+    expect(await copyText('https://example.org/a')).toBe(true);
+    clipboard = 'refused';
     expect(await copyText('x')).toBe(false);
+    clipboard = 'throws';
+    expect(await copyText('y')).toBe(false);
+    expect(clipped).toEqual(['https://example.org/a', 'x', 'y']);
   });
 
   it('web: reads the shell prompt, service-worker controller, origin and clipboard', async () => {

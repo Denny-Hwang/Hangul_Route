@@ -1,3 +1,5 @@
+import { setStringAsync } from 'expo-clipboard';
+
 /**
  * PWA lifecycle wrapper — native no-op. The web variant (`pwa.web.ts`)
  * listens to the service worker registered by the exported shell and
@@ -38,7 +40,14 @@ export function appUrl(): string {
   return '';
 }
 
-/** Copy text for the in-app-browser fallback; false when unsupported. */
-export function copyText(_text: string): Promise<boolean> {
-  return Promise.resolve(false);
+/**
+ * Copy text (Copy link, the Rescue Code): the system clipboard through
+ * expo-clipboard; false when it refuses or fails, never a throw.
+ */
+export async function copyText(text: string): Promise<boolean> {
+  try {
+    return await setStringAsync(text);
+  } catch {
+    return false;
+  }
 }
