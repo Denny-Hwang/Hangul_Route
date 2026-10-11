@@ -5,7 +5,7 @@ Extends: `design/wireframes/minigame/shell.md` (round shell), `quest/discover.md
 Audience: **any learner, any age** (CLAUDE.md §1); the same screens for everyone. Wireframe level: structure, flow, interaction points. No colours, fonts, art or final copy; text in (parentheses) is a placeholder.
 Notation: `[[ X ]]` the one primary action, `[ X ]` secondary, `( x )` text placeholder, `~~ x ~~` taught Korean shown with romanization + gloss (`KoreanText`), `{ x }` content-driven, `(*)` fill-only marker, `<state>` a runtime state.
 
-Screens in this file: W1 Match Sound with sound · W2 Match Sound, sound off · W3 Match Sound, no Korean voice · W4 Match Sound, play failed / blocked · W5 Discover letter: sound first, name second · W6 Discover: silent letter (ㅇ) and a final consonant · W7 Profile Sound card + voice help sheet · W8 Audio state machine
+Screens in this file: W1 Match Sound with sound · W2 Match Sound, sound off · W3 Match Sound, no Korean voice · W4 Match Sound, play failed / blocked · W5 Discover letter: sound first, name second · W6 Discover: silent letter (ㅇ) and a final consonant · W7 Profile Sound card + voice help sheet · W8 Audio state machine · W9 Screens that already print the Korean (A-5b)
 
 ---
 
@@ -223,6 +223,37 @@ Supersede: a newer prompt stops the older one; the older one counts as played.
 
 ---
 
+## W9 — Screens that already print the Korean: status panel only (PR A-5b)
+
+Build Letter, Card Match, Tap & Respond, Culture Quiz, Voice Echo, card detail. The Korean and its romanization are already next to the speaker, so that line is the text; the panel only says why it is silent.
+
+```
+Tap & Respond (a turn opens: the NPC line is said once)   Culture Quiz (a new Hear it button)
++----------------------------------+                      +----------------------------------+
+|  (Someone says)                  |                      |  (What does this mean?)          |
+|  ~~ 안녕하세요! ~~               |                      |        ~~ 김치 ~~                |
+|  (annyeonghaseyo)                |                      |         (gimchi)                 |
+|  (Hello!)                        |                      |   [ (speaker) Hear it ]          |
+|  [ (speaker) Hear it ]           |  <- replays the line  |  +----------------------------+  |
+|  +----------------------------+  |                      |  | (Sound is off.)            |  |  <- only after a tap on
+|  | (The sound did not play.)  |  |  <- only after a      |  | [ Turn sound on ]          |  |     Hear it
+|  | [ Try again ]              |  |     play that failed  |  +----------------------------+  |
+|  +----------------------------+  |                      |  [ Kimchi ] [ Rice ] ...         |
+|  [ 안녕하세요 annyeonghaseyo ]   |  <- a right reply is  +----------------------------------+
+|  [ 잘 가요 jal gayo ]            |     said in full, then
++----------------------------------+     the next turn opens
+
+Build Letter / Voice Echo / card detail: the panel sits right under the syllable box, the speaker word
+or the Hear it button. Card Match: under the two columns, for the last word tapped (a different word
+starts a new slot).
+```
+
+- Nothing new autoplays except the Tap & Respond NPC line (audit F06 / AUD-13); Culture Quiz, Build Letter, Card Match, Voice Echo and the card detail play on tap only.
+- No panel while the sound works or before any tap; a muted device sees "Sound is off" only after asking for a sound.
+- The round still scores normally in every state; the panel is never red.
+
+---
+
 ## Interaction points
 
 | Where | Gesture | Result |
@@ -237,7 +268,7 @@ Supersede: a newer prompt stops the older one; the older one counts as played.
 
 ## Navigation graph
 
-Entry: Quest player (Match Sound, Listen & Pick, Discover steps), Trace Stroke, Card detail, Profile.
+Entry: Quest player (Match Sound, Listen & Pick, Discover steps, Build Letter, Card Match, Tap & Respond, Culture Quiz, Voice Echo), Trace Stroke, Card detail, Profile.
 Exit: none of these screens navigates because of audio state; the help sheet returns to its caller.
 
 ## Data needs

@@ -325,6 +325,8 @@ export function showText(s: PromptState, cap: AudioCapability, muted: boolean, h
 
 A grep test (§5) asserts that no file under `src/screens` imports `speak` from `platform/audio`, or the removed `playJamoSound`.
 
+> **Revised 2026-10-11 (PR A-5b)**: the A-5b screens (Build Letter, Card Match, Tap & Respond, Culture Quiz, Voice Echo, card detail) already print the Korean and its romanization next to the speaker, so that line is their text fallback (as the Tap & Respond row says). They use the same prompt slot with `PromptPanel variant="status"`: the panel only says why there is no sound and offers the action, and appears once the slot has tried to play (`promptPanelView(...).statusShown`), so a muted device is not told "Sound is off" on screens it never asked to hear. `audio.fallback_shown` fires when that panel appears. Source ids: `build-letter`, `card-match`, `tap-respond`, `culture-quiz`, `voice-echo`, `card-detail`. Card and card-pair `audioRef` stay absent until F-CNT-002 / F-VOC add them. The grep test also asserts each of these screens plays through `usePromptSlot` and renders the status panel. Wireframe: `design/wireframes/minigame/audio-fallback.md` W9.
+
 ### 3.10 The MP3 path
 
 **Layout and file names**
