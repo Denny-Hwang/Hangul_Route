@@ -186,8 +186,15 @@ describe('locale pages are the English pages with locale links', () => {
       const loc = (await import(locPath)) as { default: (p: PageProps) => JSX.Element };
       const enHtml = renderToStaticMarkup(en.default());
       const locHtml = renderToStaticMarkup(loc.default({ params: { locale } }));
+      // "Play now" carries the locale to the learner app (`?lang=`, PR 11c).
       const toLocale = (href: string): string =>
-        href === '/' ? `/${locale}` : ['/about', '/privacy', '/terms'].includes(href) ? `/${locale}${href}` : href;
+        href === '/'
+          ? `/${locale}`
+          : ['/about', '/privacy', '/terms'].includes(href)
+            ? `/${locale}${href}`
+            : href === 'https://app.hangulroute.com'
+              ? `${href}?lang=${locale}`
+              : href;
       expect(hrefs(locHtml)).toEqual(hrefs(enHtml).map(toLocale));
       const strip = (html: string): string => html.replace(/href="[^"]*"/g, '');
       expect(strip(locHtml)).toBe(strip(enHtml));

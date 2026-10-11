@@ -59,6 +59,7 @@ describe('landing: sentences that take a value render the former text', () => {
     expect(l.localeBanner.label).toBe('Language suggestion');
     expect(l.localeBanner.viewIn('Español')).toBe('View in Español');
     expect(l.localeBanner.dismiss).toBe('Close');
+    expect(l.localeBanner.close.cta).toBe('×');
   });
 
   it('about: the contact address is passed in; the "no red" promise says it in words', () => {

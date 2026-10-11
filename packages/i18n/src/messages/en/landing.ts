@@ -441,6 +441,8 @@ export const landing = {
   localeBanner: {
     label: 'Language suggestion',
     viewIn: (endonym: string) => `View in ${endonym}`,
+    /** The close button's accessible name; the button shows `close.cta` (a glyph a locale may swap). */
     dismiss: 'Close',
+    close: { cta: '×' },
   },
 } as const;
