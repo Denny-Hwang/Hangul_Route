@@ -1,7 +1,7 @@
 import { colors, radii, spacing, typography } from '@hangul-route/design-system/tokens';
+import { IconSvg } from '@hangul-route/design-system/icon-glyphs/dom';
 import { DEFAULT_LOCALE, getMessages, type UiLocale } from '@hangul-route/i18n';
 import { minigameCatalog, type MinigameFamily } from '../../data/minigame-catalog';
-import { GlyphIcon } from './GlyphIcon';
 
 const familyTint: Record<MinigameFamily, string> = {
   recognition: colors.theme.letters,
@@ -89,7 +89,7 @@ export function MiniGamesGallery({ locale = DEFAULT_LOCALE }: { locale?: UiLocal
                 alignItems: 'flex-start',
               }}
             >
-              <GlyphIcon name={game.icon} size={36} color={colors.brand.primary} />
+              <IconSvg name={game.icon} size={36} color={colors.brand.primary} />
               {/* Family tint is a dot, not the text colour: theme tints are under 3:1 on white. */}
               <span
                 style={{
