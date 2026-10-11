@@ -73,6 +73,11 @@ export function CardDetailView({ cardId, onClose, showHowToEarn = false }: CardD
 
   // F-MOTION-002 flip (components/FlipCard.tsx); Share is gated mid-flip (F-CARD-003 §8).
   const [isFlipping, setIsFlipping] = useState(false);
+  const canFlip = unlocked;
+  // A card that stops being flippable (the active profile changed while it showed its back) returns to its front.
+  useEffect(() => {
+    if (!canFlip) setFace('front');
+  }, [canFlip]);
 
   if (!card) {
     return (
@@ -82,7 +87,6 @@ export function CardDetailView({ cardId, onClose, showHowToEarn = false }: CardD
     );
   }
 
-  const canFlip = unlocked;
   const flip = (): void => setFace((current) => nextFace(current));
 
   // `audioRef` joins the card schema with F-CNT-002 / F-VOC (spec §3.9); until then the device voice says the name.
@@ -113,14 +117,14 @@ export function CardDetailView({ cardId, onClose, showHowToEarn = false }: CardD
           disabled={!canFlip}
           onFlippingChange={setIsFlipping}
           accessibilityLabelFront={canFlip ? messages.a11y.flipToBack : messages.a11y.lockedCard}
-          accessibilityLabelBack={messages.a11y.flipToFront}
+          accessibilityLabelBack={canFlip ? messages.a11y.flipToFront : messages.a11y.lockedCard}
           front={
             <CardShell card={card} rarityLabel={messages.learner.library.rarity[card.rarity]} flipHint={canFlip ? m.flip.front : null}>
               <FrontFaceBody card={card} unlocked={unlocked} />
             </CardShell>
           }
           back={
-            <CardShell card={card} rarityLabel={messages.learner.library.rarity[card.rarity]} flipHint={m.flip.back}>
+            <CardShell card={card} rarityLabel={messages.learner.library.rarity[card.rarity]} flipHint={canFlip ? m.flip.back : null}>
               <BackFaceBody card={card} />
             </CardShell>
           }

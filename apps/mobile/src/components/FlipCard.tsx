@@ -2,7 +2,7 @@ import { motion } from '@hangul-route/design-system';
 import React, { useRef } from 'react';
 import { Pressable } from 'react-native';
 import Animated, { Easing, interpolate, runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
-import { mayFlip, type FlipFace } from '../logic/flip';
+import { cubicBezierPoints, flipAction, swapAtEdge, type FlipFace } from '../logic/flip';
 import { useReducedMotion } from '../platform/motion';
 
 /**
@@ -30,7 +30,9 @@ export interface FlipCardProps {
   testID?: string;
 }
 
-const EASE = Easing.bezier(0.2, 0, 0, 1);
+// The motion.easing.standard token; `Easing.ease` only if the token ever stops being a cubic-bezier.
+const STANDARD = cubicBezierPoints(motion.easing.standard);
+const EASE = STANDARD ? Easing.bezier(...STANDARD) : Easing.ease;
 
 export function FlipCard({
   face,
@@ -47,6 +49,10 @@ export function FlipCard({
   // 0 = flat on the current face, 1 = edge-on at 90 degrees (the face swaps here).
   const progress = useSharedValue(0);
   const flippingRef = useRef(false);
+  // The face showing now, and the face a running turn started on (the midpoint guard).
+  const faceRef = useRef(face);
+  faceRef.current = face;
+  const startFaceRef = useRef<FlipFace>(face);
 
   const animatedStyle = useAnimatedStyle(() => {
     const deg = interpolate(progress.value, [0, 1], [0, 90]);
@@ -58,19 +64,29 @@ export function FlipCard({
     onFlippingChange?.(value);
   }
 
+  const turnBack = (): void => {
+    progress.value = withTiming(0, { duration: motion.duration.base, easing: EASE }, () => {
+      // Runs on finish and on cancel alike, so a cancelled turn never leaves taps locked.
+      runOnJS(setFlipping)(false);
+    });
+  };
+
+  const atEdge = (finished: boolean): void => {
+    if (swapAtEdge({ finished, startFace: startFaceRef.current, currentFace: faceRef.current })) onFlip();
+    turnBack();
+  };
+
   const handlePress = (): void => {
-    if (!mayFlip({ disabled, flipping: flippingRef.current })) return;
-    if (reducedMotion) {
+    const action = flipAction({ disabled, flipping: flippingRef.current, reducedMotion });
+    if (action === 'ignore') return;
+    if (action === 'instant') {
       onFlip();
       return;
     }
     setFlipping(true);
-    const legMs = motion.duration.base;
-    progress.value = withTiming(1, { duration: legMs, easing: EASE }, () => {
-      runOnJS(onFlip)();
-      progress.value = withTiming(0, { duration: legMs, easing: EASE }, () => {
-        runOnJS(setFlipping)(false);
-      });
+    startFaceRef.current = face;
+    progress.value = withTiming(1, { duration: motion.duration.base, easing: EASE }, (finished) => {
+      runOnJS(atEdge)(finished === true);
     });
   };
 

@@ -1,7 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { mayFlip, nextFace, type FlipFace } from '../flip';
+import { motion } from '@hangul-route/design-system/tokens';
+import { cubicBezierPoints, flipAction, mayFlip, nextFace, swapAtEdge, type FlipFace } from '../flip';
 
 /**
  * F-VOC-003 PR C-2 (section 3.5): the flip of CardDetailView is extracted into
@@ -33,36 +34,79 @@ describe('mayFlip (taps are ignored while disabled or mid-flip, F-MOTION-002 sec
   });
 });
 
+describe('flipAction (what a press does, F-MOTION-002 section 3.3)', () => {
+  it('ignores a press while disabled or already turning, whatever the motion setting', () => {
+    for (const reducedMotion of [false, true]) {
+      expect(flipAction({ disabled: true, flipping: false, reducedMotion })).toBe('ignore');
+      expect(flipAction({ disabled: false, flipping: true, reducedMotion })).toBe('ignore');
+      expect(flipAction({ disabled: true, flipping: true, reducedMotion })).toBe('ignore');
+    }
+  });
+
+  it('swaps at once under reduced motion (no turn, so onFlippingChange is never called)', () => {
+    expect(flipAction({ disabled: false, flipping: false, reducedMotion: true })).toBe('instant');
+  });
+
+  it('otherwise animates the turn (bracketed by onFlippingChange true then false)', () => {
+    expect(flipAction({ disabled: false, flipping: false, reducedMotion: false })).toBe('animate');
+    expect(flipAction({ flipping: false, reducedMotion: false })).toBe('animate');
+  });
+});
+
+describe('swapAtEdge (the midpoint swap only flips the card the learner tapped)', () => {
+  it('swaps when the first leg finished on the face it started from', () => {
+    expect(swapAtEdge({ finished: true, startFace: 'front', currentFace: 'front' })).toBe(true);
+    expect(swapAtEdge({ finished: true, startFace: 'back', currentFace: 'back' })).toBe(true);
+  });
+
+  it('does not swap when the caller changed the face mid-turn (e.g. moved on to the next card)', () => {
+    expect(swapAtEdge({ finished: true, startFace: 'back', currentFace: 'front' })).toBe(false);
+    expect(swapAtEdge({ finished: true, startFace: 'front', currentFace: 'back' })).toBe(false);
+  });
+
+  it('does not swap when the first leg was cancelled', () => {
+    expect(swapAtEdge({ finished: false, startFace: 'front', currentFace: 'front' })).toBe(false);
+  });
+});
+
+describe('cubicBezierPoints (the flip eases on the motion.easing.standard token)', () => {
+  it('reads a CSS cubic-bezier string', () => {
+    expect(cubicBezierPoints('cubic-bezier(0.2, 0, 0, 1)')).toEqual([0.2, 0, 0, 1]);
+    expect(cubicBezierPoints('cubic-bezier(0.34,1.56,0.64,1)')).toEqual([0.34, 1.56, 0.64, 1]);
+    expect(cubicBezierPoints('cubic-bezier(-0.1, -2, .5, 1e0)')).toEqual([-0.1, -2, 0.5, 1]);
+  });
+
+  it('parses every easing token', () => {
+    for (const value of Object.values(motion.easing)) {
+      expect(cubicBezierPoints(value)).toHaveLength(4);
+    }
+    expect(cubicBezierPoints(motion.easing.standard)).toEqual([0.2, 0, 0, 1]);
+  });
+
+  it('returns null for anything else', () => {
+    for (const value of ['ease-in', 'cubic-bezier(0.2, 0, 0)', 'cubic-bezier(a, b, c, d)', 'cubic-bezier(0.2, 0, 0, 1, 2)', '']) {
+      expect(cubicBezierPoints(value)).toBeNull();
+    }
+  });
+});
+
 const SRC = resolve(__dirname, '../..');
 const read = (file: string): string => readFileSync(resolve(SRC, file), 'utf8');
 
-describe('components/FlipCard.tsx (the extracted flip)', () => {
+describe('components/FlipCard.tsx wires the tested decisions', () => {
   const flip = read('components/FlipCard.tsx');
 
-  it('exports the component with the spec props', () => {
-    expect(flip).toContain('export function FlipCard(');
-    expect(flip).toMatch(/face: FlipFace/);
-    expect(flip).toMatch(/onFlip: \(\) => void/);
-    expect(flip).toMatch(/front: React\.ReactNode/);
-    expect(flip).toMatch(/back: React\.ReactNode/);
-    expect(flip).toMatch(/disabled\?: boolean/);
-    expect(flip).toMatch(/onFlippingChange\?: \(flipping: boolean\) => void/);
-    expect(flip).toMatch(/accessibilityLabelFront: string/);
-    expect(flip).toMatch(/accessibilityLabelBack: string/);
-  });
-
-  it('keeps the two base-duration legs, the edge-on swap and the reduced-motion instant swap', () => {
-    expect(flip).toContain('useSharedValue');
+  it('switches on flipAction and guards the midpoint with swapAtEdge', () => {
+    expect(flip).toContain('flipAction(');
+    expect(flip).toContain('swapAtEdge(');
     expect(flip).toContain('motion.duration.base');
-    expect(flip).toContain('useReducedMotion');
-    expect(flip).toContain('mayFlip(');
-    // the face changes once, at the midpoint, through the caller's onFlip
-    expect(flip).toContain('runOnJS(onFlip)');
+    expect(flip).toContain('motion.easing.standard');
   });
 
-  it('uses tokens only: no colour literals', () => {
+  it('uses tokens only: no colour literals and no inline easing curve', () => {
     expect(flip).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
     expect(flip).not.toMatch(/rgba?\(/);
+    expect(flip).not.toMatch(/Easing\.bezier\(\s*\d/);
   });
 });
 
@@ -80,10 +124,11 @@ describe('CardDetailView uses FlipCard (behaviour unchanged)', () => {
     expect(view).toContain('disabled={isFlipping}');
   });
 
-  it('keeps the flip labels and the locked label, and only an unlocked card flips', () => {
-    expect(view).toContain('messages.a11y.flipToBack');
-    expect(view).toContain('messages.a11y.flipToFront');
-    expect(view).toContain('messages.a11y.lockedCard');
+  it('a card that cannot flip says it is locked on either face, shows no flip hint and returns to the front', () => {
     expect(view).toContain('disabled={!canFlip}');
+    expect(view).toContain('accessibilityLabelFront={canFlip ? messages.a11y.flipToBack : messages.a11y.lockedCard}');
+    expect(view).toContain('accessibilityLabelBack={canFlip ? messages.a11y.flipToFront : messages.a11y.lockedCard}');
+    expect(view).toContain('flipHint={canFlip ? m.flip.back : null}');
+    expect(view).toMatch(/if \(!canFlip\) setFace\('front'\)/);
   });
 });
