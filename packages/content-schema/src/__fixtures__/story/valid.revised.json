@@ -1,0 +1,716 @@
+{
+  "v": 1,
+  "id": "story:hangul-day-revised",
+  "state": "ready",
+  "contentVer": 2,
+  "title": {
+    "ko": "한글날",
+    "romanization": "hangeullal",
+    "en": "Hangul Day (revised)"
+  },
+  "summaryEn": "A king gives everyone a new alphabet, and Korea celebrates it every year.",
+  "hoyaIntroEn": "Want to hear how the Korean alphabet began?",
+  "hoyaOutroEn": "Now you know why Hangul Day is special!",
+  "theme": "letters",
+  "kind": "documentary",
+  "recommendedStage": 1,
+  "minutes": 4,
+  "learningGoalsEn": [
+    "Meet the word 한글 (hangeul), the Korean alphabet.",
+    "Hear why the alphabet was made."
+  ],
+  "origin": {
+    "type": "documented",
+    "noteEn": "Follows the Cultural Heritage Administration pages cited in the facts.",
+    "retellingNoteEn": "Shortened for young readers; dates are rounded in the narration."
+  },
+  "review": {
+    "language": "native-reviewed",
+    "culture": "culture-reviewed",
+    "advisory": [
+      "historical-hardship"
+    ],
+    "advisoryNoteEn": "Mentions that most people could not read long ago.",
+    "reviewedBy": "SH",
+    "reviewedAt": "2026-10-10"
+  },
+  "keywords": [
+    {
+      "id": "sejong",
+      "ko": "세종",
+      "romanization": "sejong",
+      "en": "King Sejong",
+      "kind": "term"
+    },
+    {
+      "id": "hangeul",
+      "ko": "한글",
+      "romanization": "hangeul",
+      "en": "the Korean alphabet",
+      "kind": "word",
+      "art": "card:book"
+    },
+    {
+      "id": "hangeullal",
+      "ko": "한글날",
+      "romanization": "hangeullal",
+      "en": "Hangul Day",
+      "kind": "word"
+    },
+    {
+      "id": "jamo-g",
+      "ko": "ㄱ",
+      "romanization": "g",
+      "en": "the consonant letter giyeok",
+      "kind": "jamo"
+    },
+    {
+      "id": "hangeullal-chukahaeyo",
+      "ko": "한글날 축하해요",
+      "romanization": "hangeullal chukahaeyo",
+      "en": "Happy Hangul Day",
+      "kind": "phrase"
+    }
+  ],
+  "cultureNotes": [
+    {
+      "id": "cn-hangul-day",
+      "titleEn": "Hangul Day",
+      "bodyEn": "Korea celebrates its alphabet every year in October.",
+      "term": {
+        "ko": "한글날",
+        "romanization": "hangeullal",
+        "en": "Hangul Day"
+      },
+      "cardId": "card:hanji",
+      "factIds": [
+        "f3",
+        "f4"
+      ]
+    }
+  ],
+  "tiers": [
+    {
+      "level": "listen",
+      "scenes": [
+        {
+          "id": "s1",
+          "narrationEn": "Long ago, King {kw:sejong} wanted everyone to learn to read.",
+          "captionEn": "A king's wish",
+          "keyword": {
+            "id": "sejong",
+            "ko": "세종",
+            "romanization": "Sejong",
+            "en": "King Sejong the Great",
+            "kind": "term"
+          },
+          "factIds": [
+            "f1"
+          ],
+          "framing": false,
+          "approximations": [],
+          "art": {
+            "setting": "scene:palace-hall",
+            "layers": [
+              {
+                "ref": "hoya:wave",
+                "x": 200,
+                "y": 280
+              }
+            ],
+            "altEn": "King Sejong sits in a palace hall while Hoya waves."
+          },
+          "artBrief": "A Joseon palace hall with the king on a raised seat.",
+          "cultureNoteId": "cn-hangul-day",
+          "narrationAudioRef": "audio/stories/hangul-day/s1.mp3"
+        },
+        {
+          "id": "s2",
+          "narrationEn": "About 600 years ago, he and his helpers shared a new alphabet, {kw:hangeul}.",
+          "captionEn": "A new alphabet",
+          "keyword": {
+            "id": "hangeul",
+            "ko": "한글",
+            "romanization": "hangeul",
+            "en": "Hangul",
+            "kind": "word",
+            "art": "card:book"
+          },
+          "factIds": [
+            "f1",
+            "f2"
+          ],
+          "framing": false,
+          "approximations": [
+            {
+              "text": "About 600 years ago",
+              "factIds": [
+                "f2"
+              ],
+              "rationaleEn": "1446 to 2026 is 580 years; the narration rounds it.",
+              "timeRelative": true
+            }
+          ],
+          "art": {
+            "setting": "scene:palace-hall",
+            "layers": [
+              {
+                "ref": "prop:scroll",
+                "x": 120,
+                "y": 260,
+                "s": 1.5,
+                "flip": true,
+                "z": "back",
+                "tint": "theme.letters"
+              },
+              {
+                "ref": "card:book",
+                "x": 280,
+                "y": 250
+              }
+            ],
+            "altEn": "Scholars hold a book of the new alphabet."
+          }
+        },
+        {
+          "id": "s3",
+          "narrationEn": "Look at the first consonant, {kw:jamo-g}.",
+          "captionEn": "The first consonant",
+          "keyword": {
+            "id": "jamo-g",
+            "ko": "ㄱ",
+            "romanization": "g",
+            "en": "giyeok",
+            "kind": "jamo"
+          },
+          "factIds": [
+            "f1"
+          ],
+          "framing": false,
+          "artPending": true,
+          "checkpointId": "cp1"
+        },
+        {
+          "id": "s4",
+          "narrationEn": "Every year on October 9, people in Korea celebrate {kw:hangeullal}.",
+          "captionEn": "Hangul Day",
+          "keyword": {
+            "id": "hangeullal",
+            "ko": "한글날",
+            "romanization": "hangeullal",
+            "en": "Hangul Day",
+            "kind": "word"
+          },
+          "factIds": [
+            "f3"
+          ],
+          "framing": false,
+          "art": {
+            "setting": "scene:palace-hall",
+            "layers": [
+              {
+                "ref": "hoya:cheer",
+                "x": 200,
+                "y": 270
+              }
+            ],
+            "altEn": "Families fly flags on Hangul Day."
+          }
+        },
+        {
+          "id": "s5",
+          "narrationEn": "Hoya cheers: {kw:hangeullal-chukahaeyo}!",
+          "captionEn": "A cheer",
+          "line": {
+            "ko": "한글날 축하해요",
+            "romanization": "hangeullal chukahaeyo",
+            "en": "Happy Hangul Day",
+            "speaker": "hoya",
+            "words": [
+              {
+                "ko": "한글날",
+                "romanization": "hangeullal",
+                "en": "Hangul Day"
+              },
+              {
+                "ko": "축하해요",
+                "romanization": "chukahaeyo",
+                "en": "congratulations"
+              }
+            ]
+          },
+          "factIds": [],
+          "framing": true,
+          "art": {
+            "setting": "scene:palace-hall",
+            "layers": [
+              {
+                "ref": "hoya:cheer",
+                "x": 200,
+                "y": 270
+              }
+            ],
+            "altEn": "Hoya cheers with both paws up."
+          }
+        }
+      ],
+      "checks": [
+        {
+          "id": "c1",
+          "kind": "who",
+          "promptEn": "Who led the making of the Korean alphabet?",
+          "options": [
+            {
+              "id": "a",
+              "en": "King Sejong and his helpers",
+              "isCorrect": true
+            },
+            {
+              "id": "b",
+              "en": "A traveling merchant",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "A famous painter",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "King Sejong led the work so that ordinary people could read.",
+          "hintEn": "Think of the king in the first scene.",
+          "factIds": [
+            "f1"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "pick-meaning",
+          "promptEn": "What does {target} mean?",
+          "target": {
+            "ko": "한글날",
+            "romanization": "hangeullal",
+            "en": "Hangul Day"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Hangul Day",
+              "isCorrect": true
+            },
+            {
+              "id": "b",
+              "en": "New Year",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Harvest Day",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "Hangul Day is the day Korea celebrates its alphabet.",
+          "factIds": [
+            "f3"
+          ]
+        },
+        {
+          "id": "c3",
+          "kind": "true-false",
+          "promptEn": "Hangul Day is on October 9.",
+          "options": [
+            {
+              "id": "t",
+              "en": "True",
+              "isCorrect": true
+            },
+            {
+              "id": "f",
+              "en": "False",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "Hangul Day is celebrated on October 9.",
+          "shuffle": false,
+          "factIds": [
+            "f3"
+          ]
+        }
+      ],
+      "checkpoints": [
+        {
+          "id": "cp1",
+          "kind": "true-false",
+          "promptEn": "Was the alphabet made to be easy to learn?",
+          "options": [
+            {
+              "id": "t",
+              "en": "True",
+              "isCorrect": true
+            },
+            {
+              "id": "f",
+              "en": "False",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "Yes. It was made so ordinary people could learn it.",
+          "factIds": [
+            "f1"
+          ]
+        }
+      ],
+      "sequenceSceneIds": [
+        "s1",
+        "s2",
+        "s4",
+        "s5"
+      ],
+      "newKeywordIds": [
+        "sejong",
+        "hangeul",
+        "hangeullal",
+        "jamo-g"
+      ],
+      "grammarFocusEn": "Short words name things.",
+      "connective": {
+        "ko": "그리고",
+        "romanization": "geurigo",
+        "en": "and"
+      }
+    },
+    {
+      "level": "read-along",
+      "scenes": [
+        {
+          "id": "s1",
+          "narrationEn": "{kw:sejong} made {kw:hangeul} for everyone.",
+          "captionEn": "Sejong's alphabet",
+          "line": {
+            "ko": "세종은 한글을 만들었어요",
+            "romanization": "sejongeun hangeureul mandeureosseoyo",
+            "en": "Sejong made the Korean alphabet.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f1"
+          ],
+          "art": {
+            "setting": "scene:palace-hall",
+            "layers": [
+              {
+                "ref": "hoya:wave",
+                "x": 200,
+                "y": 280
+              }
+            ],
+            "altEn": "King Sejong holds a brush."
+          }
+        },
+        {
+          "id": "s2",
+          "narrationEn": "{kw:hangeul} was made to be easy to learn.",
+          "captionEn": "Easy to learn",
+          "line": {
+            "ko": "한글은 쉬워요",
+            "romanization": "hangeureun swiwoyo",
+            "en": "Hangul is easy.",
+            "speaker": "hoya"
+          },
+          "keyword": {
+            "id": "hangeul",
+            "ko": "한글",
+            "romanization": "hangeul",
+            "en": "Hangul",
+            "kind": "word"
+          },
+          "factIds": [
+            "f1"
+          ],
+          "art": {
+            "setting": "scene:palace-hall",
+            "layers": [
+              {
+                "ref": "hoya:read",
+                "x": 200,
+                "y": 280
+              }
+            ],
+            "altEn": "Hoya reads a page with a smile."
+          }
+        },
+        {
+          "id": "s3",
+          "narrationEn": "Today is {kw:hangeullal}.",
+          "captionEn": "A special day",
+          "line": {
+            "ko": "한글날이에요",
+            "romanization": "hangeullarieyo",
+            "en": "It is Hangul Day.",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f3"
+          ],
+          "artPending": true
+        },
+        {
+          "id": "s4",
+          "narrationEn": "Everyone cheers: {kw:hangeullal-chukahaeyo}!",
+          "captionEn": "A big cheer",
+          "line": {
+            "ko": "한글날 축하해요",
+            "romanization": "Hangeullal chukahaeyo",
+            "en": "Happy Hangul Day",
+            "speaker": "character"
+          },
+          "factIds": [],
+          "framing": true,
+          "art": {
+            "setting": "scene:palace-hall",
+            "layers": [
+              {
+                "ref": "hoya:cheer",
+                "x": 200,
+                "y": 270
+              }
+            ],
+            "altEn": "A crowd cheers together."
+          }
+        }
+      ],
+      "checks": [
+        {
+          "id": "c1",
+          "kind": "detail",
+          "promptEn": "Why was the alphabet made?",
+          "options": [
+            {
+              "id": "a",
+              "en": "So ordinary people could read",
+              "isCorrect": true
+            },
+            {
+              "id": "b",
+              "en": "So kings could hide letters",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "It was made so ordinary people could learn to read and write.",
+          "factIds": [
+            "f1"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "fill-word",
+          "promptEn": "Today is {target}.",
+          "target": {
+            "ko": "한글날",
+            "romanization": "hangeullal",
+            "en": "Hangul Day"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Hangul Day",
+              "isCorrect": true
+            },
+            {
+              "id": "b",
+              "en": "Bedtime",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Moon Day",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Rainy Day",
+              "isCorrect": false
+            }
+          ],
+          "explainEn": "October 9 is Hangul Day.",
+          "factIds": [
+            "f3"
+          ]
+        },
+        {
+          "id": "c3",
+          "kind": "pick-picture",
+          "promptEn": "Which one is the book of the alphabet?",
+          "options": [
+            {
+              "id": "a",
+              "en": "A book",
+              "isCorrect": true,
+              "art": "card:book"
+            },
+            {
+              "id": "b",
+              "en": "A brush",
+              "isCorrect": false,
+              "art": "card:brush"
+            }
+          ],
+          "explainEn": "The book shows the new alphabet.",
+          "factIds": [
+            "f2"
+          ]
+        }
+      ],
+      "checkpoints": [],
+      "sequenceSceneIds": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "newKeywordIds": [
+        "hangeul",
+        "hangeullal"
+      ]
+    }
+  ],
+  "coverSceneId": "s1",
+  "rewardCardIds": {
+    "listen": "card:hanji",
+    "read": "card:book"
+  },
+  "pillarTags": [
+    "A1"
+  ],
+  "companionId": "hoya",
+  "card": {
+    "titleEn": "Hangul Day",
+    "keywordId": "hangeullal",
+    "factId": "f3"
+  },
+  "facts": [
+    {
+      "id": "f1",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "King Sejong led the creation of the Korean alphabet so that ordinary people could learn to read and write it easily.",
+      "claimKo": "세종대왕은 백성이 쉽게 배우고 쓸 수 있도록 한글을 만들었다.",
+      "sources": [
+        {
+          "title": "Hangul, the Korean alphabet",
+          "publisher": "Cultural Heritage Administration",
+          "url": "https://www.heritage.go.kr/fixture/hangul",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "Section: Creation of Hangul"
+        }
+      ]
+    },
+    {
+      "id": "f2",
+      "rev": 2,
+      "scope": "documented",
+      "claimEn": "The Hunminjeongeum, the guide to the new alphabet, was published in 1446.",
+      "claimKo": "훈민정음은 1446년에 반포되었다.",
+      "sources": [
+        {
+          "title": "Hunminjeongeum Manuscript",
+          "publisher": "Cultural Heritage Administration",
+          "url": "https://www.heritage.go.kr/fixture/hunminjeongeum",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "Overview"
+        },
+        {
+          "title": "Hunminjeongeum Manuscript",
+          "publisher": "UNESCO",
+          "url": "https://www.heritage.go.kr/fixture/unesco-hunminjeongeum",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "Inscription note"
+        }
+      ]
+    },
+    {
+      "id": "f3",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Hangul Day is celebrated in South Korea on October 9.",
+      "claimKo": "한글날은 10월 9일이다.",
+      "sources": [
+        {
+          "title": "Hangul Day",
+          "publisher": "Cultural Heritage Administration",
+          "url": "https://www.heritage.go.kr/fixture/hangul-day",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "Overview"
+        },
+        {
+          "title": "Hangul Day",
+          "publisher": "National Institute of Korean Language",
+          "url": "https://www.heritage.go.kr/fixture/hangul-day-nikl",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "Commemoration"
+        }
+      ]
+    },
+    {
+      "id": "f4",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Korea celebrates its alphabet with a holiday every autumn.",
+      "claimKo": "한국은 해마다 가을에 한글을 기념하는 날을 지킨다.",
+      "sources": [
+        {
+          "title": "Hangul Day",
+          "publisher": "Cultural Heritage Administration",
+          "url": "https://www.heritage.go.kr/fixture/hangul-day-autumn",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "Overview"
+        }
+      ]
+    }
+  ],
+  "referenceDisplay": "Sources: Cultural Heritage Administration, UNESCO, National Institute of Korean Language (test fixture)",
+  "verification": {
+    "passes": 3,
+    "checkedAt": "2026-10-10",
+    "scope": "cluster",
+    "notes": "Test fixture: sources are placeholders and were not re-fetched."
+  },
+  "authorNotes": "Test fixture only. Not shipped. A revised copy of story:hangul-day for the Sources e2e (no shelf, so no episode): two visible corrections, a revised fact and a fact only a culture note cites.",
+  "errata": [
+    {
+      "id": "e1",
+      "date": "2026-10-10",
+      "kind": "clarification",
+      "factIds": [
+        "f2"
+      ],
+      "summaryEn": "We made the year of the book easier to find.",
+      "detailEn": "Fixture erratum.",
+      "fixedInVer": 1,
+      "show": false
+    },
+    {
+      "id": "e2",
+      "date": "2026-10-11",
+      "kind": "correction",
+      "factIds": [
+        "f2"
+      ],
+      "summaryEn": "We corrected the year the guide to the alphabet was published.",
+      "detailEn": "Fixture erratum.",
+      "fixedInVer": 2,
+      "show": true
+    },
+    {
+      "id": "e3",
+      "date": "2026-10-09",
+      "kind": "clarification",
+      "factIds": [
+        "f1"
+      ],
+      "summaryEn": "We named the king who made the alphabet.",
+      "detailEn": "Fixture erratum.",
+      "fixedInVer": 2,
+      "show": true
+    }
+  ]
+}
