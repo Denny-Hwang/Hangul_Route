@@ -271,8 +271,12 @@ export const learner = {
       tomorrow: 'Tomorrow',
       inDays: (n: number) => plural('en', n, { one: 'In 1 day', other: `In ${n} days` }),
     },
-    /** Who set it, keyed by the schema's `assignedBy`: no role jargon. */
-    from: { parent: 'From home', teacher: 'From class', system: 'From Hoya' },
+    /** Who set it, keyed by the schema's `assignedBy`: no role jargon. `route` is the learner's own weekly plan (F-PLAN-002). */
+    from: { parent: 'From home', teacher: 'From class', system: 'From Hoya', route: 'Your plan' },
+    /** Under the first three Today rows when more are due (F-PLAN-002 section 3.6): never a number. */
+    moreToday: 'More are waiting. They come one at a time.',
+    /** The one collapsed row after the next seven days of Coming up. */
+    later: 'Later in your plan',
   },
 
   /** The Quest player (QuestPlayerScreen, its game launcher cards and the Discover step), F-QUEST-002. */

@@ -1,7 +1,7 @@
 import type { HomeworkAssignment } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
-import { assignedByLabel, dueLabel, dueTodayCount, groupAssignments } from '../assignment-groups';
+import { assignedByLabel, dueLabel, dueTodayCount, groupAssignments, homeworkWindow, TODAY_LIST_MAX, UPCOMING_WINDOW_DAYS } from '../assignment-groups';
 
 const hw = (id: string, targetDate: string, extra: Partial<HomeworkAssignment> = {}): HomeworkAssignment => ({
   id,
@@ -49,6 +49,42 @@ describe('groupAssignments', () => {
   it('handles an empty list', () => {
     expect(groupAssignments([], today)).toEqual({ today: [], upcoming: [], done: [] });
   });
+  it('orders today by precedence: class, family, own plan, then the earlier date (F-PLAN-002 section 3.10)', () => {
+    const g = groupAssignments(
+      [
+        hw('route:mine#quest:x', '2026-09-18', { assignedBy: 'system' }),
+        hw('home', '2026-09-19', { assignedBy: 'parent' }),
+        hw('home-older', '2026-09-17', { assignedBy: 'parent' }),
+        hw('class', '2026-09-19', { assignedBy: 'teacher' }),
+      ],
+      today,
+    );
+    expect(g.today.map((a) => a.id)).toEqual(['class', 'home-older', 'home', 'route:mine#quest:x']);
+  });
+});
+
+describe('homeworkWindow: the week window of the list (F-PLAN-002 section 3.6)', () => {
+  const today = '2026-09-19';
+  it('shows at most three Today rows and flags that more are waiting', () => {
+    expect(TODAY_LIST_MAX).toBe(3);
+    const many = groupAssignments(['a', 'b', 'c', 'd', 'e'].map((id, i) => hw(id, '2026-09-19', { assignedAt: `2026-09-19T0${i}:00:00.000Z` })), today);
+    const w = homeworkWindow(many, today);
+    expect(w.today.map((a) => a.id)).toEqual(['a', 'b', 'c']);
+    expect(w.moreToday).toBe(true);
+    const three = homeworkWindow(groupAssignments(['a', 'b', 'c'].map((id) => hw(id, today)), today), today);
+    expect(three.today).toHaveLength(3);
+    expect(three.moreToday).toBe(false);
+  });
+  it('keeps the next seven days under Coming up and the rest for the one collapsed row', () => {
+    expect(UPCOMING_WINDOW_DAYS).toBe(7);
+    const g = groupAssignments([hw('tomorrow', '2026-09-20'), hw('day7', '2026-09-26'), hw('day8', '2026-09-27'), hw('far', '2026-11-01')], today);
+    const w = homeworkWindow(g, today);
+    expect(w.comingUp.map((a) => a.id)).toEqual(['tomorrow', 'day7']);
+    expect(w.later.map((a) => a.id)).toEqual(['day8', 'far']);
+  });
+  it('is empty for an empty list', () => {
+    expect(homeworkWindow(groupAssignments([], today), today)).toEqual({ today: [], moreToday: false, comingUp: [], later: [] });
+  });
 });
 
 describe('dueTodayCount (the Home homework line, F-PLAN-002 section 3.6)', () => {
@@ -84,8 +120,11 @@ describe('dueLabel', () => {
 
 describe('assignedByLabel', () => {
   it('maps every source to child-readable English', () => {
-    expect(assignedByLabel('parent', homeworkMessages.from)).toBe('From home');
-    expect(assignedByLabel('teacher', homeworkMessages.from)).toBe('From class');
-    expect(assignedByLabel('system', homeworkMessages.from)).toBe('From Hoya');
+    expect(assignedByLabel({ id: 'hw:1', assignedBy: 'parent' }, homeworkMessages.from)).toBe('From home');
+    expect(assignedByLabel({ id: 'plan:c#quest:a', assignedBy: 'teacher' }, homeworkMessages.from)).toBe('From class');
+    expect(assignedByLabel({ id: 'hw:2', assignedBy: 'system' }, homeworkMessages.from)).toBe('From Hoya');
+  });
+  it('labels the learner own weekly plan by its route: id (F-PLAN-002 section 3.6)', () => {
+    expect(assignedByLabel({ id: 'route:mine#quest:a', assignedBy: 'system' }, homeworkMessages.from)).toBe('Your plan');
   });
 });
