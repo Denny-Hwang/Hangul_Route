@@ -50,3 +50,5 @@ The render list is memoised per glyph and mode in `word-art/model.ts`, and the c
 ## Checklist for this PR (W-1c)
 
 Nothing is learner-visible: no screen renders `WordArt` until F-VOC-003 flips `flags.vocabTopicsEnabled` and W-7 binds `PictureArt`. The registry holds the six W-1b samples and the four props (`status: 'review'`); the generated families (colours, counts, body) are registered by batches W-3 and W-4.
+
+Review sheet (rendered from the data with `glyphToSvgString`, checked by eye at 96 and 48 px and in silhouette): `w1c-review.png` in this folder. It shows the four props, the swatches whose objects are drawn so far, every count, every body part, and figure and sibling compositions.
