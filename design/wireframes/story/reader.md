@@ -2,7 +2,7 @@
 
 Spec: `docs/specs/F-STORY-002-story-reader.md` (§3.3 reader, §3.4 audio, §3.5 Korean on screen, §3.6 progress, §3.7 checkpoints, culture notes, advisory and end page, §3.10 accessibility, §3.11 states), data in `F-STORY-001-story-schema-pipeline.md`
 Audience: anyone learning Hangul, any age (CLAUDE.md §1). A learner who reads little can use every screen: the picture, a speaker button and big targets carry the meaning. No kids-only or adults-only framing. Grown-ups use the same screen; their one control (Sources) sits in the top bar, away from the reading controls.
-Code (built): `apps/mobile/src/screens/story/StoryReaderView.tsx` (state, effects), `ReaderParts.tsx` (paint), `use-reader-audio.ts`, `use-reader-bookmark.ts`, `StoryReaderScreen.tsx` (replay route `StoryReader`), `screens/minigames/StoryReadGame.tsx` (quest host, `story-read` step); pure rules in `apps/mobile/src/logic/story/` (`reader-state`, `scene-view`, `scene-audio`, `audio-runner`, `reader-settings`, `reader-effects`); picture `packages/design-system` `StoryScene`. Component spec: `design/components/StoryReaderView/spec.md`. Brief: `design/brief/screens/21-story-reader.md`.
+Code: built (PRs 2.5-2.8): A, B, E, F1-F6, G1 and H in `apps/mobile/src/screens/story/StoryReaderView.tsx` (state, effects), `ReaderParts.tsx` (paint), `use-reader-audio.ts`, `use-reader-bookmark.ts`, `StoryReaderScreen.tsx` (replay route `StoryReader`), `screens/minigames/StoryReadGame.tsx` (quest host, `story-read` step); pure rules in `apps/mobile/src/logic/story/` (`reader-state`, `scene-view`, `scene-audio`, `audio-runner`, `reader-settings`, `reader-effects`, and from 2.8 `reader-extras` for the note card, the grown-up note and the end-page pictures, `reader-locale` for the story in the UI locale); picture `packages/design-system` `StoryScene`. Planned: G2 checkpoints in PR 2.9 (none of the 24 launch stories has one); the G1 "More in Culture notes" button appears once F-STORY-004 PR 4.7 passes `onOpenCultureNote`. Component spec: `design/components/StoryReaderView/spec.md`. Brief: `design/brief/screens/21-story-reader.md`.
 Notation: `[[ X ]]` the one primary action, `[ X ]` secondary or ghost, `~~ ko / rom / gloss ~~` taught Korean drawn with `KoreanText` (Korean + romanization + gloss), `( )` switch, `o o .` fill-only dots (filled = reached), `<art>` a `StoryScene` picture (4:3), `{chip}` an inline Korean term chip.
 
 Promoted by F-STORY-002 PR 2.0 from the one-file draft. The panel letters are kept so references in code and specs still resolve:
@@ -11,9 +11,9 @@ Promoted by F-STORY-002 PR 2.0 from the one-file draft. The panel letters are ke
 - B. Reader, Read-along / Read level (order changes)
 - C, D. Term gloss card and Korean line with word glosses: **moved to `story/term-gloss.md`** (same letters)
 - E. Reader, landscape / wide
-- F. Reader states: grown-up note, hide-romanization, muted, no Korean voice, art missing, story not found
-- G. Culture note card and checkpoint (inline)
-- H. End page
+- F. Reader states: grown-up note (built in 2.8), hide-romanization, muted, no Korean voice, art missing, story not found
+- G. Culture note card (G1, built in 2.8) and checkpoint (G2, **planned**, PR 2.9)
+- H. End page (the recap pictures built in 2.8)
 - I, J. Sources screen and the open-link gate: **moved to `story/sources.md`** (same letters)
 
 All copy in boxes is placeholder or an English suggestion; final strings live in `packages/i18n` (`learner.story.reader`, read with `useMessages`).
@@ -36,7 +36,7 @@ One primary action per scene: **Next** (on the last scene **Finish**, on the end
 
 ```
 ┌──────────────────────────────────┐
-│ [x]  o o o . . . . .   3 / 8  [Sources] │  <- Close | fill-only dots | page number | Sources
+│ [x]  o o . . . . .   2 / 7  [Sources] │  <- Close | fill-only dots | page number | Sources
 │                                  │
 │ ┌──────────────────────────────┐ │
 │ │                              │ │
@@ -63,11 +63,11 @@ One primary action per scene: **Next** (on the last scene **Finish**, on the end
 └──────────────────────────────────┘
 ```
 
-- Dots only fill (furthest scene reached). "3 / 8" is a page number and may go down on Back.
+- Dots only fill (furthest scene reached). "2 / 7" is a page number and may go down on Back.
 - No timer, no score, no auto-advance. Read to me plays the scene once when it opens; it never turns the page.
 - One Hoya on screen: in the picture. No speech bubble on top of it.
 - Last scene: **Next** reads "Finish". Below a compact window height Next is one size smaller (still above the 64 floor) so the text keeps room.
-- The scene art has alt text (a one-sentence description); a screen reader hears "Scene 3 of 8", the description, then the narration.
+- The scene art has alt text (a one-sentence description); a screen reader hears "Scene 2 of 7", the description, then the narration.
 - **Close** goes back to the quest step (nothing is lost; the place is remembered). No confirmation dialog.
 - The text area scrolls; the art, the top bar and the bottom bar do not.
 
@@ -95,7 +95,7 @@ One primary action per scene: **Next** (on the last scene **Finish**, on the end
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│ [x]  o o o . . . . .   3 / 8                        [Sources]│
+│ [x]  o o . . . . .   2 / 7                          [Sources]│
 │ ┌──────────────────────────┐ ┌─────────────────────────────┐ │
 │ │                          │ │ narration card              │ │
 │ │          <art>           │ │ Korean block                │ │
@@ -140,11 +140,11 @@ F6  Story, level or tier not found, or fewer than 4 scenes
 │  [ Back ]
 ```
 
-- F1 shows only on a fresh (not resumed) quest-mode open of scene 1, once per visit. It is always repeated on the Sources screen. No age wording.
+- F1 shows only on a fresh (not resumed) quest-mode open of scene 1, once per visit; it goes on Dismiss or the first page turn (a checkpoint opening counts). Below a compact window height it is clamped to two lines (a screen reader still reads it all). It is always repeated on the Sources screen. No age wording.
 - F3 and F4 come from the one shared sound state (F-AUDIO-004 `PromptPanel`); the reader adds no error of its own.
 - A browser that blocks sound before the first tap shows "Tap to hear" in the same panel; the first tap anywhere unlocks it.
 
-## G. Culture note card and checkpoint (inline)
+## G. Culture note card (built) and checkpoint (planned, PR 2.9)
 
 ```
 G1  Did you know?  (tapped)
@@ -154,11 +154,11 @@ G1  Did you know?  (tapped)
 │ │ Short body, 1-2 sentences.   │
 │ │ ~~ term / rom / gloss ~~ [spk] │
 │ │ [card art, when it has one]  │
-│ │ [ More in Culture notes ]    │  <- only once that screen exists (F-STORY-004 PR 4.7)
+│ │ [ More in Culture notes ]    │  <- only when the host passes onOpenCultureNote (F-STORY-004 PR 4.7)
 │ │              [ Close ]       │
 │ └──────────────────────────────┘
 
-G2  Checkpoint question (0-2 per story; none in the launch stories)
+G2  Checkpoint question (planned, PR 2.9; 0-2 per story; none in the launch stories)
 │ Quick question
 │ "What did the historians write down?"
 │  ┌─────────────────────────┐
@@ -167,8 +167,8 @@ G2  Checkpoint question (0-2 per story; none in the launch stories)
 │  [ Skip ]                       <- always there; records nothing
 ```
 
-- G1 opens under the narration (pushes content down), like the gloss card. One card at a time: opening G1 closes a gloss card.
-- G2: a wrong tap gets the amber "Try another", never red. A checkpoint scores only on the first try, in a quest, never in a replay (a replay shows "Try it" with feedback, unscored).
+- G1 opens under the chips row (pushes content down) and scrolls into view. It shares the one inline-card slot with the gloss card: opening G1 closes a gloss card, and Close, a second chip tap, Escape, a term chip or a page turn closes G1. The open chip shows an underline and reports expanded.
+- G2 (planned, PR 2.9; until then a tier with checkpoints skips them): a wrong tap gets the amber "Try another", never red. A checkpoint scores only on the first try, in a quest, never in a replay (a replay shows "Try it" with feedback, unscored).
 
 ## H. End page
 
@@ -189,6 +189,7 @@ G2  Checkpoint question (0-2 per story; none in the launch stories)
 ```
 
 - One Hoya (cheering), the art is not shown here. At most one primary and two ghosts.
+- The pictures are at most `useMediaSize(120)` wide (64 below a compact window height); on a short landscape window they sit beside Hoya in one row so Continue stays on screen.
 - Back from the end page returns to the last scene.
 
 ---
@@ -236,5 +237,5 @@ Exit to: `quest/player` next step (Continue) · the previous screen (Done, Close
 ## Open questions
 
 1. Should a long-press on the Korean block offer "slower speech"? Not in v1; the level already slows word and sentence speech.
-2. Recap pictures on the end page: decided, the four Story Order scenes (`sequenceSceneIds`).
+2. Recap pictures on the end page: decided and built in 2.8, up to four Story Order scenes (`sequenceSceneIds`; a scene with pending art is left out, and the row hides when a picture would be under half a touch target).
 3. Should the explanation of a checkpoint be read aloud after an answer? Default: only on the speaker tap (same as F-STORY-003).

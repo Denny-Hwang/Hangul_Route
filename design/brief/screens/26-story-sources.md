@@ -8,7 +8,7 @@ Spec: `docs/specs/F-STORY-002-story-reader.md` §3.8, §3.11, §3.12 · wirefram
 
 - **Who**: grown-ups (parents, teachers, culture reviewers) and curious learners of any age.
 - **Where**: from the reader's top bar and end page, the story's episode page, Culture notes, and links from a scene.
-- **Why**: Hangul Route promises that its stories' facts are sourced exactly. This screen makes that visible: each claim, the scene that uses it, every source with its quote and link, how the story was checked, and corrections. It is a reference page, not a learner screen: counts are fine, nothing is scored, and leaving the app needs the grown-up gate.
+- **Why**: Hangul Route promises that its stories' facts are sourced exactly. This screen makes that visible: each claim, the scene that uses it, every source with its quote and link, how the story was checked, and corrections. It is a reference page, not a learner screen: counts are fine, nothing is scored, and Open link goes through the grown-up gate on a shared or PIN-protected device (on a self-only device without a PIN it opens the browser directly, F-LEARN-001 `gateRequired`).
 
 ## 2. Layout
 
@@ -16,7 +16,7 @@ Top to bottom, one scrolling column (`layout.maxWidth.reading` on wide windows):
 
 1. **Header**: Back (top-left), "Sources" heading; the story title (`KoreanText`: Korean, romanization, English); the "Traditional tale" pill and the retelling note for tales.
 2. **Reference line**: the one-line source headline (in the source language).
-3. **Checked line**: "Checked in N independent passes · last checked <date> · story version <n>", with a "How it was checked" disclosure.
+3. **Checked line**: "Checked in N independent passes · last checked <date> · story version <n>"; when the check covered a group of stories (`verification.scope: 'cluster'`, true of the sample story) a muted line under it, "These checks covered a group of related stories, not this story alone."; then a "How it was checked" disclosure.
 4. **Grown-up note** (only when the story has one).
 5. **Counts**: "10 facts · 27 sources" (the sample story).
 6. **Corrections** (only when any): date, summary, the fact concerned.
@@ -45,6 +45,7 @@ UI strings come from `packages/i18n` (`learner.story.sources`); English shown:
 - **"Open this link in a browser: <url>"**, **"Opening a link needs a connection."**
 - **"Grown-up check done. Tap Open link to open it."**
 - **"10 facts · 27 sources"**, **"Used in questions and notes"**
+- **"These checks covered a group of related stories, not this story alone."**
 - **"One version of a story told in many versions"**
 - Empty: **"No sources are listed for this story."**
 
@@ -70,8 +71,9 @@ tall. No primary button on this page: Copy link and Open link are ghost buttons.
 Frame 1 (top of the page): back arrow, heading "Sources", story title in three lines
 (호야, 사관을 만나다 / Hoya, sagwaneul mannada / Hoya Meets the Royal Historians), a one-line
 source headline in Korean, "Checked in 3 independent passes · last checked 2026-10-10 ·
-story version 1", a collapsed row "How it was checked", the line "10 facts · 27 sources",
-then section "Scene 2 · A palace hall" with one fact card: pill "What we know", the claim
+story version 2", under it in muted text "These checks covered a group of related stories,
+not this story alone.", a collapsed row "How it was checked", the line "10 facts · 27 sources",
+then section "Scene 2 · A historian writes beside the king" with one fact card: pill "What we know", the claim
 "Historians attended wherever the king met his officials and recorded what they saw and
 heard.", a collapsed row "Korean",
 "Sources (2)" and the first source block (title 실록은 누가 기록했을까, publisher

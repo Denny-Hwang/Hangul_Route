@@ -31,6 +31,7 @@ Run these once at the start. Everything else inherits.
 | P2-2 | [`illustrations/heritage-card-art.md`](./illustrations/heritage-card-art.md#7-claude-design-prompt--individual-card-template) | Single Heritage card (template — run 30×) | `design/illustrations/heritage-cards/{theme}/{card-id}__YYYY-MM-DD.png` |
 | P2-3 | [`illustrations/scene-backgrounds.md`](./illustrations/scene-backgrounds.md#6-claude-design-prompt--hanji-texture-pack) | Hanji texture pack (6 backgrounds) | `design/illustrations/backgrounds/_texture-pack__v1__YYYY-MM-DD.png` |
 | P2-4 | [`illustrations/scene-backgrounds.md`](./illustrations/scene-backgrounds.md#7-claude-design-prompt--stage-entry-tint-parameterized) | Tinted stage background (parameterized — run 7×) | `design/illustrations/backgrounds/bg-stage-{N}__v1__YYYY-MM-DD.png` |
+| P2-5 | [`illustrations/scene-art-style.md`](./illustrations/scene-art-style.md#6-prompt-compose-one-scene-with-claude-code) | Story scene art: compose one scene from the kit (F-STORY-002 §3.9; run per scene, Claude Code) | scene `art` layers in `content/stories/<id>.json`, reviewed on `/design-preview/scenes` |
 
 ## Phase 3 — Design system components
 
@@ -46,6 +47,7 @@ Run these once at the start. Everything else inherits.
 | P3-8 | [`components/heading.md`](./components/heading.md#6-claude-design-prompt) | Typography sheet (Heading / Body / Caption) | `design/components/Heading/type-sheet__v1__YYYY-MM-DD.png` |
 | P3-9 | [`components/screen.md`](./components/screen.md#5-claude-design-prompt) | Screen container 3-tone demo | `design/components/Screen/variants__v1__YYYY-MM-DD.png` |
 | P3-10 | [`components/icon-set.md`](./components/icon-set.md#5-claude-design-prompt) | Icon set 19 glyphs | `design/components/Icon/set__v1__YYYY-MM-DD.png` |
+| P3-11 | [`components/story-scene.md`](./components/story-scene.md#5-claude-design-prompt) | StoryScene reference sheet (full + thumb, fallback panel) (F-STORY-002) | `design/components/StoryScene/reference__v1__YYYY-MM-DD.png` |
 | — | [`components/spacer.md`](./components/spacer.md) | (invisible — no prompt) | — |
 
 ## Phase 4 — Screens
@@ -75,6 +77,8 @@ Run these once at the start. Everything else inherits.
 | P4-06 | [`screens/06-episode-detail.md`](./screens/06-episode-detail.md#5-claude-design-prompt) | Episode detail | `design/screens/episode/detail__v1__YYYY-MM-DD.png` |
 | P4-07 | [`screens/07-quest-player.md`](./screens/07-quest-player.md#5-claude-design-prompt) | Quest player narrative + reward variants | `design/screens/quest/player-narrative__v1__YYYY-MM-DD.png` + `player-reward` |
 | P4-14 | [`screens/14-results.md`](./screens/14-results.md#5-claude-design-prompt) | Results (3-star + 1-star) | `design/screens/results/3-stars__v1__YYYY-MM-DD.png` + `1-star` |
+| P4-21 | [`screens/21-story-reader.md`](./screens/21-story-reader.md#6-claude-design-prompt) | Story reader (Listen, gloss card, Read-along, end page, landscape) (F-STORY-002) | `design/screens/story/reader__v1__YYYY-MM-DD.png` |
+| P4-26 | [`screens/26-story-sources.md`](./screens/26-story-sources.md#6-claude-design-prompt) | Story Sources (top, highlighted fact + link failure, wide) (F-STORY-002) | `design/screens/story/sources__v1__YYYY-MM-DD.png` |
 
 ### Minigames (6)
 

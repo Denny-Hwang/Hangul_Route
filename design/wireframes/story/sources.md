@@ -1,7 +1,7 @@
 # Story / Sources: every claim with its citations (wireframe v2)
 
 Spec: `docs/specs/F-STORY-002-story-reader.md` §3.1 (route `StorySources`, `PinEntry` `'ExternalLink'`), §3.8 (Sources screen), §3.11 (offline, empty), §3.12 (telemetry), §3.14 rows 1-4; data (`facts[]`, `sources[]`, `verification`, `errata`, `origin`) in `F-STORY-001-story-schema-pipeline.md`
-Audience: grown-ups, reviewers and curious learners of any age (CLAUDE.md §1). Nothing on the screen is a learner result; leaving the app needs the grown-up gate.
+Audience: grown-ups, reviewers and curious learners of any age (CLAUDE.md §1). Nothing on the screen is a learner result; leaving the app needs the grown-up gate whenever F-LEARN-001 `gateRequired` asks for one (J1).
 Code (built): `apps/mobile/src/screens/story/StorySourcesScreen.tsx` (state, gate, telemetry, scrolling), `SourcesParts.tsx` (paint); pure rules `apps/mobile/src/logic/story/sources-view.ts`, `source-link.ts`, `safe-url.ts`; browser hand-off `apps/mobile/src/platform/external-link(.web).ts`. Screen spec: `design/components/StorySourcesScreen/spec.md`. Brief: `design/brief/screens/26-story-sources.md`.
 Notation: `[[ X ]]` the one primary action, `[ X ]` secondary or ghost, `~~ ko / rom / en ~~` a title drawn with `KoreanText`, `[v]` a disclosure (collapsed).
 
@@ -34,15 +34,16 @@ There is no primary button: the screen is read and scrolled. Secondary actions p
 │  One version of a story told in many versions.
 │                                  │
 │  Sources: 국사편찬위원회 ...; 국가유산청 ...   <- the one-line headline (never the only proof)
-│  Checked in 3 independent passes · last checked 2026-10-10 · story version 1
+│  Checked in 3 independent passes · last checked 2026-10-10 · story version 2
+│  These checks covered a group of related stories, not this story alone.   <- only when the check's scope is a cluster
 │  [v] How it was checked          <- expands the reviewers' notes
 │  A note for grown-ups: ...       <- only when the story has one
-│  12 facts · 31 sources           <- counts are fine here (not a learner result)
+│  10 facts · 27 sources           <- counts are fine here (not a learner result)
 │                                  │
 │  Corrections                     <- only when there are any
 │   2026-11-02  We corrected ...  (fact f4)
 │  ───────────────────────────     │
-│  Scene 2 · A palace hall         │
+│  Scene 2 · A historian writes beside the king   <- the scene's caption
 │  ┌──────────────────────────────┐│
 │  │ What we know                 ││  <- or "What the tale says"
 │  │ Historians attended wherever ││  <- the claim, in plain words
@@ -86,7 +87,7 @@ J2  Could not open (offline, blocked pop-up, or refused)
 │  [ Copy link ]
 ```
 
-- A learner cannot reach the open web from a story. **Copy link** needs no gate (it is a string).
+- On a shared or PIN-protected device a learner cannot reach the open web from a story: Open link goes through the grown-up gate. On a self-only device without a PIN, Open link goes straight to the browser (F-LEARN-001 `gateRequired`, `openLinkStep` in `logic/story/source-link.ts`). **Copy link** never needs a gate (it is a string).
 - Only `https:` links from the story's own source list are ever opened; anything else is refused and shows J2.
 - Native checks the connection first and opens the waiting link by itself on return from the gate.
 

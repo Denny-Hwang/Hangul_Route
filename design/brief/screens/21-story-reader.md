@@ -14,7 +14,7 @@ Spec: `docs/specs/F-STORY-002-story-reader.md` §3.3-3.7, §3.10 · wireframes: 
 
 Portrait (top to bottom), the art and both bars fixed, the text area scrolling:
 
-1. **Top bar** (one row, every control at least `touchTarget.min`): Close (`Icon close`) · fill-only dots (`Progress variant="dots"`) · position pill "3 / 8" · Sources (ghost button with `Icon library`).
+1. **Top bar** (one row, every control at least `touchTarget.min`): Close (`Icon close`) · fill-only dots (`Progress variant="dots"`) · position pill "2 / 7" · Sources (ghost button with `Icon library`).
 2. **Scene art**: `StoryScene`, 4:3, full width of the reading column. Under it, for traditional tales only, the "Traditional tale" `Pill`.
 3. **Narration card** (`Card`, `typography.size.bodyLg`): English narration with inline Korean term chips; a speaker in the top-right corner.
 4. **Korean block** (`KoreanText`): Korean at `title` size (a word) or `bodyLg` (a line), romanization upright, gloss line, a speaker.
@@ -37,7 +37,7 @@ Variants to draw: Listen level (A), Read-along level (B, the Korean line first),
 
 UI strings come from `packages/i18n` (`learner.story.reader`); English shown:
 
-- Top bar: **"Sources"**, position **"3 / 8"**
+- Top bar: **"Sources"**, position **"2 / 7"**
 - Bottom bar: **"Read to me"**, **"Back"**, **"Next"**, **"Finish"**
 - Pills and chips: **"Traditional tale"**, **"Did you know?"**, **"Say it yourself"**
 - Gloss card: **"Close"**; hide-romanization mode: **"Show how to say it"**
@@ -64,8 +64,8 @@ text.secondary, primary button brand.primary with text.onPrimary label, focus ri
 border.focus, subtle lines border.subtle. Body text 18 minimum; narration 20; Korean word 28.
 Every tappable control at least 64 tall; the primary button is the largest element.
 
-Frame 1 (Listen level, scene 3 of 8):
-- Top bar: close icon left, a row of 8 dots with 3 filled, a small pill "3 / 8", a ghost
+Frame 1 (Listen level, scene 2 of 7, the sample story has 7 scenes):
+- Top bar: close icon left, a row of 7 dots with 2 filled, a small pill "2 / 7", a ghost
   button "Sources" with a book icon on the right.
 - A 4:3 picture card: a flat vector palace hall with a faceless historian writing at the side,
   tokens-only colours, no text in the picture.
