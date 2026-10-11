@@ -1,6 +1,6 @@
-import type { ProgressSnapshot, Quest, StoryLevel } from '@hangul-route/content-schema';
+import { StoryLevelSchema, type ProgressSnapshot, type Quest, type StoryLevel } from '@hangul-route/content-schema';
 import { z } from 'zod';
-import { parseStoryMinigameRef } from './story-ref';
+import { storyReadStep } from './story-ref';
 
 /**
  * Story bookmarks (F-STORY-004 §3.1, §3.8): the scene a learner reached in an
@@ -10,7 +10,7 @@ import { parseStoryMinigameRef } from './story-ref';
  */
 
 export const BookmarkSchema = z.object({
-  level: z.enum(['listen', 'read-along', 'read']),
+  level: StoryLevelSchema,
   sceneIndex: z.number().int().min(0).max(40),
   updatedAt: z.string(), // ISO
 });
@@ -25,9 +25,12 @@ export type BookmarkFile = z.infer<typeof BookmarkFileSchema>;
 /** At most this many bookmarks are kept; the oldest `updatedAt` goes first. */
 export const BOOKMARK_LIMIT = 20;
 
-/** Storage key under `platform/storage` (which adds the `hr:` prefix). */
+/** The one prefix of the bookmark keys, under `platform/storage` (which adds the `hr:` prefix). */
+export const BOOKMARKS_KEY_PREFIX = 'story:bookmarks:';
+
+/** Storage key of one profile's bookmark file. */
 export function bookmarksKey(profileId: string): string {
-  return `story:bookmarks:${profileId}`;
+  return `${BOOKMARKS_KEY_PREFIX}${profileId}`;
 }
 
 export function emptyBookmarks(): BookmarkFile {
@@ -125,14 +128,6 @@ export function mergeBookmarks(
   return pruneBookmarks({ v: 1, byStory });
 }
 
-/** The story and level of a quest's `story-read` step, or null for any other quest. */
-function storyReadStep(quest: Pick<Quest, 'steps'>): { index: number; storyId: string; level: StoryLevel } | null {
-  const index = quest.steps.findIndex((s) => s.minigameKind === 'story-read');
-  const ref = index === -1 ? undefined : quest.steps[index]?.minigameRef;
-  const parsed = ref ? parseStoryMinigameRef(ref) : null;
-  return parsed ? { index, storyId: parsed.storyId, level: parsed.level } : null;
-}
-
 /**
  * Which (story, level) pairs the learner has finished: a story quest with a
  * `completedAt`. A bookmark of a finished pair is ignored and pruned (§3.8),
@@ -147,7 +142,7 @@ export function finishedStoryLevels(
   for (const quest of quests) {
     if (!done.has(quest.id)) continue;
     const read = storyReadStep(quest);
-    if (read) finished.add(`${read.storyId}|${read.level}`);
+    if (read) finished.add(`${read.ref.storyId}|${read.ref.level}`);
   }
   return (storyId, level) => finished.has(`${storyId}|${level}`);
 }
@@ -159,7 +154,7 @@ export function finishedStoryLevels(
 export function resumeStepIndex(quest: Pick<Quest, 'steps'>, bookmark: Bookmark | undefined): number {
   if (!bookmark) return 0;
   const read = storyReadStep(quest);
-  return read && read.level === bookmark.level ? read.index : 0;
+  return read && read.ref.level === bookmark.level ? read.index : 0;
 }
 
 /** The scene the reader opens on: the bookmark's, kept inside a story that may have got shorter. */

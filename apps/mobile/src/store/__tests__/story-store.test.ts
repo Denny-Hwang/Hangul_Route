@@ -29,10 +29,11 @@ const SUN_LISTEN: Quest = vi.hoisted(() => ({
 }));
 vi.mock('../../content/quests', () => ({ questsAll: [SUN_LISTEN] }));
 
+import { BOOKMARKS_KEY_PREFIX } from '../../logic/story/bookmarks';
 import { readJson, writeJson } from '../../platform/storage';
 import { useProfileStore } from '../profile-store';
 import { useProgressStore } from '../progress-store';
-import { STORY_BOOKMARKS_KEY_PREFIX, useStoryStore } from '../story-store';
+import { useStoryStore } from '../story-store';
 
 const A = 'profile:a';
 const B = 'profile:b';
@@ -51,17 +52,21 @@ beforeEach(() => {
   vi.mocked(readJson).mockClear();
   useStoryStore.setState({ byProfile: {}, hydratedFor: new Set(), pendingFor: new Set(), clearedFor: {} });
   useProgressStore.setState({ byProfile: {}, hydratedFor: new Set(), pendingFor: new Set() });
+  // Profile list not loaded yet: every profile id may be written (cold start).
+  useProfileStore.setState({ profiles: [], activeId: null, hydrated: false });
   vi.useFakeTimers({ toFake: ['Date'] });
   vi.setSystemTime(new Date('2026-10-11T10:00:00.000Z'));
 });
 
 afterEach(() => {
   vi.useRealTimers();
+  // Clears the module-level read slots too, so no test inherits another's in-flight read.
+  for (const id of [A, B, 'profile:new']) useStoryStore.getState().forgetProfile(id);
 });
 
 describe('story-store: storage key', () => {
   it('saves under story:bookmarks:<profileId> (the hr: prefix is added by platform/storage)', () => {
-    expect(STORY_BOOKMARKS_KEY_PREFIX).toBe('story:bookmarks:');
+    expect(BOOKMARKS_KEY_PREFIX).toBe('story:bookmarks:');
   });
 });
 
@@ -79,7 +84,8 @@ describe('story-store: hydrate', () => {
     expect(s.getBookmark(B, 'story:b')?.sceneIndex).toBe(2);
   });
 
-  it('treats corrupt JSON, another version or nothing saved as empty, without throwing or writing', async () => {
+  // Unparsable JSON never reaches the store: platform/storage's readJson returns null for it (nothing saved).
+  it('treats a value that is not a v1 file, another version or nothing saved as empty, without throwing or writing', async () => {
     mem.set(keyOf(A), 'not json at all');
     mem.set(keyOf(B), saved({ 'story:a': { level: 'listen', sceneIndex: 3, updatedAt: T_OLD } }, 2));
 
@@ -162,6 +168,34 @@ describe('story-store: setBookmark / getBookmark / clearBookmark', () => {
     expect(Object.keys((mem.get(keyOf(A)) as { byStory: object }).byStory)).toEqual(['story:other']);
   });
 
+  it('replaying a story already finished at that level writes nothing (the bookmark would be pruned at once)', async () => {
+    const done: ProgressSnapshot = {
+      profileId: A,
+      updatedAt: T_OLD,
+      episodes: [],
+      quests: [{ questId: SUN_LISTEN.id, episodeId: 'episode:shelf-sun-and-moon', startedAt: T_OLD, completedAt: T_OLD, stars: 3, attempts: 1, accuracy: 1 }],
+      cards: [],
+      sessions: [],
+      homework: [],
+      reviews: [],
+      streakDays: 1,
+    };
+    useProgressStore.setState({ byProfile: { [A]: done }, hydratedFor: new Set([A]) });
+    await useStoryStore.getState().hydrate(A);
+    const before = useStoryStore.getState().byProfile[A];
+
+    useStoryStore.getState().setBookmark(A, 'story:sun-and-moon', { level: 'listen', sceneIndex: 2 });
+    useStoryStore.getState().setBookmark(A, 'story:sun-and-moon', { level: 'listen', sceneIndex: 3 });
+    await flush();
+
+    expect(writeJson).not.toHaveBeenCalled();
+    expect(useStoryStore.getState().byProfile[A]).toBe(before);
+    // Another level of the same story is not finished, so it is still bookmarked.
+    useStoryStore.getState().setBookmark(A, 'story:sun-and-moon', { level: 'read', sceneIndex: 2 });
+    await flush();
+    expect(useStoryStore.getState().getBookmark(A, 'story:sun-and-moon')?.level).toBe('read');
+  });
+
   it('a failed save keeps the bookmark in memory for the session', async () => {
     await useStoryStore.getState().hydrate(A);
     vi.mocked(writeJson).mockRejectedValueOnce(new Error('quota'));
@@ -197,6 +231,33 @@ describe('story-store: writes before hydration merge on load', () => {
     expect(useStoryStore.getState().getBookmark(A, 'story:b')?.sceneIndex).toBe(2);
     expect(Object.keys((mem.get(keyOf(A)) as { byStory: object }).byStory)).toEqual(['story:b']);
     expect(useStoryStore.getState().clearedFor[A]).toBeUndefined();
+  });
+
+  it('a write during the cold-start read joins that read: one read, and the saved file keeps both', async () => {
+    mem.set(keyOf(A), saved({ 'story:saved': { level: 'listen', sceneIndex: 4, updatedAt: T_OLD } }));
+    let release: () => void = () => undefined;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    vi.mocked(readJson).mockImplementationOnce(async (k: string) => {
+      reads.count += 1;
+      await gate;
+      return mem.get(k) ?? null;
+    });
+
+    const booting = useStoryStore.getState().hydrate(A); // bootstrap's read, still in flight
+    useStoryStore.getState().setBookmark(A, 'story:new', { level: 'read-along', sceneIndex: 1 });
+    await flush();
+    expect(writeJson).not.toHaveBeenCalled();
+
+    release();
+    await booting;
+    await flush();
+
+    expect(reads.count).toBe(1);
+    const file = mem.get(keyOf(A)) as { byStory: Record<string, unknown> };
+    expect(Object.keys(file.byStory).sort()).toEqual(['story:new', 'story:saved']);
+    expect(useStoryStore.getState().pendingFor.has(A)).toBe(false);
   });
 
   it('the newer of two bookmarks for one story wins', async () => {
@@ -237,5 +298,56 @@ describe('story-store: profile removal', () => {
     expect(mem.has(keyOf(a.id))).toBe(false);
     expect(useStoryStore.getState().getBookmark(b.id, 'story:b')?.sceneIndex).toBe(3);
     expect(mem.has(keyOf(b.id))).toBe(true);
+  });
+
+  it('a screen that outlives its profile cannot write a new bookmark key for the removed id', async () => {
+    useProfileStore.setState({ profiles: [], activeId: null, hydrated: true });
+    const input = { displayName: 'Mina', ageGroup: '8-9' as const, avatar: 'hoya-blue' as const };
+    const a = useProfileStore.getState().createProfile(input);
+    await useStoryStore.getState().hydrate(a.id);
+    useProfileStore.getState().remove(a.id);
+    await flush();
+    vi.mocked(writeJson).mockClear();
+
+    useStoryStore.getState().setBookmark(a.id, 'story:a', { level: 'listen', sceneIndex: 2 });
+    useStoryStore.getState().clearBookmark(a.id, 'story:a');
+    await flush();
+
+    expect(writeJson).not.toHaveBeenCalled();
+    expect(mem.has(keyOf(a.id))).toBe(false);
+    expect(useStoryStore.getState().byProfile[a.id]).toBeUndefined();
+  });
+
+  it('a read started after a removal keeps its slot when the stale read settles', async () => {
+    let release: () => void = () => undefined;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    vi.mocked(readJson).mockImplementationOnce(async (k: string) => {
+      reads.count += 1;
+      await gate;
+      return mem.get(k) ?? null;
+    });
+    const stale = useStoryStore.getState().hydrate(A);
+    useStoryStore.getState().forgetProfile(A);
+    let releaseFresh: () => void = () => undefined;
+    const freshGate = new Promise<void>((resolve) => {
+      releaseFresh = resolve;
+    });
+    vi.mocked(readJson).mockImplementationOnce(async (k: string) => {
+      reads.count += 1;
+      await freshGate;
+      return mem.get(k) ?? null;
+    });
+    const fresh = useStoryStore.getState().hydrate(A);
+
+    release();
+    await stale;
+    // The fresh read is still running: a third caller shares it instead of reading again.
+    const joined = useStoryStore.getState().hydrate(A);
+    releaseFresh();
+    await Promise.all([fresh, joined]);
+    expect(reads.count).toBe(2);
+    expect(useStoryStore.getState().hydratedFor.has(A)).toBe(true);
   });
 });
