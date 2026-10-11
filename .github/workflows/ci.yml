@@ -50,6 +50,19 @@ jobs:
       - name: Check i18n rules (F-I18N-001)
         run: node scripts/check-i18n.mjs
 
+      - name: UI translation status - fails on missing keys in a shipped locale (F-I18N-001)
+        # On a pull request, --base compares LOCALE_STATUS with the target branch, so the PR
+        # that flips a locale to 'shipped' needs every native review current (F-I18N-001 §3.10).
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          if [ -n "$BASE_REF" ]; then
+            git fetch --no-tags --depth=1 origin "$BASE_REF"
+            node scripts/i18n-status.mjs --base FETCH_HEAD
+          else
+            node scripts/i18n-status.mjs
+          fi
+
       - name: Build
         run: pnpm run build
 

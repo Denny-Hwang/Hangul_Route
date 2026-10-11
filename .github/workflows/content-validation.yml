@@ -32,6 +32,13 @@ on:
       - "scripts/overlay-rules.mjs"
       - "scripts/validate-content.mjs"
       - "packages/i18n/src/banned-words.json"
+      - ".github/workflows/content-validation.yml"
+
+# F-I18N-001 §3.10: overlay locales whose missing translations are errors (comma list, e.g. "es").
+# Add a locale here in the PR that flips its LOCALE_STATUS to 'shipped'; scripts/i18n-status.mjs
+# (ci.yml) fails a shipped locale that is not listed. Read by validate-content.mjs and the vocab suite.
+env:
+  HANGUL_ROUTE_STRICT_LOCALES: ""
 
 concurrency:
   group: content-validation-${{ github.ref }}

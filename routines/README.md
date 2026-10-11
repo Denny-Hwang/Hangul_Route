@@ -1,6 +1,6 @@
 # routines/
 
-Claude Code 가 자동 실행하는 **루틴(Routine)** 명세. v2.2 기준 5개 유지한다.
+Claude Code 가 자동 실행하는 **루틴(Routine)** 명세. v2.2 기준 5개에 F-I18N-001 이 활성화한 R8 을 더해 6개.
 
 | ID | 이름 | 트리거 | 파일 |
 |---|---|---|---|
@@ -9,6 +9,7 @@ Claude Code 가 자동 실행하는 **루틴(Routine)** 명세. v2.2 기준 5개
 | R3 | PR Reviewer | PR opened — label: `routine-generated` | `R3-pr-reviewer.md` |
 | R4 | Coverage Monitor | push to `main` | `R4-coverage-monitor.md` |
 | R6 | Weekly Report | 매주 금 18:00 KST (cron) | `R6-weekly-report.md` |
+| R8 | Translation Sync | 수동, 또는 `packages/i18n/src/messages/en/**` 변경 PR 머지 시 | `R8-translation-sync.md` |
 
 > R5 (Design Sync) 는 제거되었다. 디자인은 **수동** (`design/playbook/`) 으로 운영하며,
 > `design/tokens/` ↔ `packages/design-system/` 동기화는

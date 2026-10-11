@@ -1,6 +1,6 @@
 # Workflow: Routine Operations
 
-5개 루틴 운영.
+6개 루틴 운영 (R8 은 F-I18N-001 PR 13 에서 활성화).
 
 | ID | 이름 | 빈도 | 생성물 |
 |---|---|---|---|
@@ -9,6 +9,7 @@
 | R3 | PR Reviewer | PR (label routine-generated) | 리뷰 코멘트 |
 | R4 | Coverage Monitor | push to main | 이슈/weekly 로그 |
 | R6 | Weekly Report | 매주 금 18:00 KST | PR (docs/weekly/) |
+| R8 | Translation Sync | 수동 / `messages/en/**` 변경 머지 | 초안 PR (`claude/i18n-<locale>-<namespace>`) |
 
 > R5 (Design Sync) 는 제거. 디자인 수동 + `design-token-sync.yml` 대체.
 
