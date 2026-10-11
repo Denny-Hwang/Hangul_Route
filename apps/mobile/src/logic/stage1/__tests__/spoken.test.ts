@@ -1,4 +1,4 @@
-import { romanizeWord } from '@hangul-route/content-schema';
+import { romanizeWord, type Jamo } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { jamoAll } from '../../../content/jamo';
 import { decompose } from '../hangul';
@@ -52,9 +52,22 @@ describe('interim spoken forms (F-QUEST-002 §3.12, F-AUDIO-004 AD2)', () => {
     expect(interimSpokenFor('jamo:nope')).toBeUndefined();
   });
 
-  it('prefers the jamo data (F-AUDIO-004) and falls back to the interim map when spokenKo is absent', () => {
+  it('agrees with the jamo data for all 30 symbols (the interim map and A-2 data are the same values)', () => {
+    for (const j of jamoAll) {
+      expect(j.spokenKo, j.id).toBeDefined();
+      expect(interimSpokenFor(j.id), j.id).toEqual({
+        ko: j.spokenKo,
+        romanization: j.spokenRomanization,
+        kind: j.spokenKind,
+      });
+    }
+  });
+
+  it('reads the jamo data when it carries a spoken form', () => {
+    for (const j of jamoAll) {
+      expect(spokenFormFor(j), j.id).toEqual({ ko: j.spokenKo, romanization: j.spokenRomanization, kind: j.spokenKind });
+    }
     const g = jamoAll.find((j) => j.id === 'jamo:giyeok')!;
-    expect(spokenFormFor(g)).toEqual(interimSpokenFor('jamo:giyeok'));
     expect(spokenFormFor({ ...g, spokenKo: '그', spokenRomanization: 'geu', spokenKind: 'sound' })).toEqual({
       ko: '그',
       romanization: 'geu',
@@ -63,13 +76,29 @@ describe('interim spoken forms (F-QUEST-002 §3.12, F-AUDIO-004 AD2)', () => {
     expect(spokenFormFor({ ...g, spokenKo: '기역', spokenRomanization: 'giyeok', spokenKind: 'name' })?.kind).toBe('name');
   });
 
-  it('falls back to the interim map when the data has no romanization for its spoken form', () => {
-    const g = jamoAll.find((j) => j.id === 'jamo:giyeok')!;
-    expect(spokenFormFor({ ...g, spokenKo: '그', spokenKind: 'sound' })).toEqual(interimSpokenFor('jamo:giyeok'));
-  });
+  describe('fallback to the interim map (jamo without the spoken fields)', () => {
+    const bare = (id: string): Jamo => ({
+      id,
+      char: 'ㄱ',
+      romanization: 'g/k',
+      kind: 'consonant',
+      nameEn: 'giyeok',
+      spokenKind: 'sound',
+      order: 1,
+    });
 
-  it('has no form for a symbol that is neither in the data nor the map', () => {
-    const g = jamoAll[0]!;
-    expect(spokenFormFor({ ...g, id: 'jamo:nope', spokenKind: 'sound' })).toBeUndefined();
+    it('uses the map when spokenKo and spokenRomanization are both absent', () => {
+      expect(spokenFormFor(bare('jamo:giyeok'))).toEqual(interimSpokenFor('jamo:giyeok'));
+      expect(spokenFormFor(bare('jamo:ieung'))?.kind).toBe('name');
+    });
+
+    it('uses the map when only one of the two fields is present', () => {
+      expect(spokenFormFor({ ...bare('jamo:giyeok'), spokenKo: '그' })).toEqual(interimSpokenFor('jamo:giyeok'));
+      expect(spokenFormFor({ ...bare('jamo:giyeok'), spokenRomanization: 'geu' })).toEqual(interimSpokenFor('jamo:giyeok'));
+    });
+
+    it('has no form for a symbol that is neither in the data nor the map', () => {
+      expect(spokenFormFor(bare('jamo:nope'))).toBeUndefined();
+    });
   });
 });
