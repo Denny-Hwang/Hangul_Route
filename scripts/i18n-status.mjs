@@ -7,19 +7,27 @@
 //     from @hangul-route/i18n; the English-authoritative legal text is never
 //     counted, decision L10);
 //   - review state from packages/i18n/src/messages/review-ledger.json:
-//     current (ledger `enSha` = sha256 of the English file), stale (the English
-//     changed since the native review) or not reviewed;
-//   - the locale's LOCALE_STATUS.
+//     current (ledger `enSha` = sha256 of the English file, LF line endings),
+//     stale (the English changed since the native review) or not reviewed;
+//   - the locale's LOCALE_STATUS;
+//   - the current enSha of every English namespace (reviewers copy it into the
+//     ledger).
 //
 // Fails (exit 1, `::error::`) on:
 //   - missing keys in a 'shipped' locale;
-//   - the rest of the §3.10 step 5 release gate for a 'shipped' locale: a
-//     ledger entry for every namespace, and the locale listed in
+//   - the automatable parts of the §3.10 step 5 release gate for a 'shipped'
+//     locale: a ledger entry for every namespace, and the locale listed in
 //     HANGUL_ROUTE_STRICT_LOCALES of .github/workflows/content-validation.yml
 //     (so the content validator treats its missing overlays as errors);
-//   - a malformed ledger, a strict locale that is the source or unknown, a
-//     namespace with no English file.
-// Stale namespaces only warn (`::warning::`).
+//   - with `--base <ref>` (CI on a pull request): a locale that is 'shipped'
+//     here but not at <ref> (the flip PR) whose ledger entries do not all match
+//     the current English (a stale or made-up enSha cannot pass the flip);
+//   - a malformed ledger, a strict locale that is the source or unknown, more
+//     than one HANGUL_ROUTE_STRICT_LOCALES declaration, a namespace with no
+//     English file.
+// Stale namespaces of an already-shipped locale only warn (`::warning::`).
+// Not checked here: the §3.11 layout matrix (nightly e2e, PR 14) stays a manual
+// gate for the flip PRs (PR 15 / PR 16).
 //
 // `--list` also prints every missing path (the R8 Translation Sync routine
 // uses it to pick what to draft: routines/R8-translation-sync.md).
@@ -29,8 +37,9 @@
 // docs/specs/F-I18N-001-ui-locales.md §3.10.
 
 import { createHash } from "node:crypto";
-import { existsSync, readFileSync } from "node:fs";
-import { register } from "node:module";
+import { spawnSync } from "node:child_process";
+import { existsSync, readFileSync, realpathSync } from "node:fs";
+import * as nodeModule from "node:module";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -38,14 +47,45 @@ const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 
 export const LEDGER_REL = "packages/i18n/src/messages/review-ledger.json";
 export const WORKFLOW_REL = ".github/workflows/content-validation.yml";
+export const LOCALE_STATUS_REL = "packages/i18n/src/locales.ts";
 const EN_DIR_REL = "packages/i18n/src/messages/en";
 const SOURCE_LOCALE = "en";
 const SHA = /^[0-9a-f]{64}$/;
 const DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
+// Initials only: the repo is public, so no reviewer names or emails.
+const INITIALS = /^[A-Z]{2,4}$/;
 const ENTRY_FIELDS = new Set(["enSha", "reviewedBy", "reviewedAt"]);
 const SAMPLE = 3;
 
 const isObject = (value) => typeof value === "object" && value !== null && !Array.isArray(value);
+
+const STRICT_LINE = /^[ \t]*HANGUL_ROUTE_STRICT_LOCALES:/gm;
+
+/** How many uncommented `HANGUL_ROUTE_STRICT_LOCALES:` declarations a workflow has (must be one). */
+export function countStrictDeclarations(workflowText) {
+  return (workflowText.match(STRICT_LINE) ?? []).length;
+}
+
+/** The `LOCALE_STATUS` object literal of locales.ts source text, or null. */
+export function parseLocaleStatusSource(tsText) {
+  const block = /\bLOCALE_STATUS\b[^=]*=\s*\{([^}]*)\}/.exec(tsText);
+  if (!block) return null;
+  const status = {};
+  for (const m of block[1].matchAll(/["']?([A-Za-z][\w-]*)["']?\s*:\s*["'](\w+)["']/g)) status[m[1]] = m[2];
+  return status;
+}
+
+/** sha256 of an English namespace file, with CRLF normalised to LF so a Windows checkout hashes like CI. */
+export function hashEnglishSource(buffer) {
+  return createHash("sha256").update(buffer.toString("utf8").replace(/\r\n/g, "\n")).digest("hex");
+}
+
+/** Escapes workflow-command text (GitHub: % -> %25, CR -> %0D, LF -> %0A). */
+export function escapeAnnotation(text) {
+  return String(text).replace(/%/g, "%25").replace(/\r/g, "%0D").replace(/\n/g, "%0A");
+}
+
+const annotate = (kind, text, props = "") => console.log(`::${kind}${props}::${escapeAnnotation(text)}`);
 
 /** The comma list of the (uncommented) `HANGUL_ROUTE_STRICT_LOCALES:` line of a workflow. */
 export function parseStrictLocales(workflowText) {
@@ -86,7 +126,9 @@ export function validateLedger(ledger, { overlayLocales, namespaces }) {
         continue;
       }
       if (typeof entry.enSha !== "string" || !SHA.test(entry.enSha)) errors.push(`${at}: enSha must be the sha256 (64 hex) of messages/en/${namespace}.ts`);
-      if (typeof entry.reviewedBy !== "string" || entry.reviewedBy.trim() === "") errors.push(`${at}: reviewedBy must be the reviewer's initials`);
+      if (typeof entry.reviewedBy !== "string" || !INITIALS.test(entry.reviewedBy)) {
+        errors.push(`${at}: reviewedBy must be the reviewer's initials, 2-4 capital letters (public repo: no names or emails)`);
+      }
       if (typeof entry.reviewedAt !== "string" || !isRealDate(entry.reviewedAt)) errors.push(`${at}: reviewedAt must be a YYYY-MM-DD date`);
       for (const field of Object.keys(entry)) if (!ENTRY_FIELDS.has(field)) errors.push(`${at}: unexpected field "${field}"`);
     }
@@ -96,9 +138,11 @@ export function validateLedger(ledger, { overlayLocales, namespaces }) {
 
 /**
  * Status of every locale. Pure: the caller loads the dictionary and the files.
- * fallbacks: { <locale>: dotted paths falling back to English }; enShas: { <namespace>: sha256 | undefined }.
+ * fallbacks: { <locale>: dotted paths falling back to English }; enShas: { <namespace>: sha256 | undefined };
+ * strictDeclarations: how many HANGUL_ROUTE_STRICT_LOCALES lines the workflow has;
+ * baseStatus: LOCALE_STATUS at the PR's base ref (undefined outside a pull request).
  */
-export function computeStatus({ locales, status, namespaces, fallbacks, enShas, ledger, strictLocales }) {
+export function computeStatus({ locales, status, namespaces, fallbacks, enShas, ledger, strictLocales, strictDeclarations = 1, baseStatus }) {
   const overlayLocales = locales.filter((l) => l !== SOURCE_LOCALE);
   const errors = validateLedger(ledger, { overlayLocales, namespaces });
   const warnings = [];
@@ -106,6 +150,9 @@ export function computeStatus({ locales, status, namespaces, fallbacks, enShas, 
 
   for (const namespace of namespaces) {
     if (!enShas[namespace]) errors.push(`namespace "${namespace}" has no English file ${EN_DIR_REL}/${namespace}.ts`);
+  }
+  if (strictDeclarations > 1) {
+    errors.push(`${WORKFLOW_REL}: declare HANGUL_ROUTE_STRICT_LOCALES once, at workflow level (found ${strictDeclarations}); a job or step override would make i18n-status read a different list than the validator uses`);
   }
   for (const locale of strictLocales) {
     if (!overlayLocales.includes(locale)) {
@@ -141,12 +188,16 @@ export function computeStatus({ locales, status, namespaces, fallbacks, enShas, 
         errors.push(`${row.locale} is shipped but ${ns.namespace} has ${ns.missing.length} missing key(s): ${sample}${ns.missing.length > SAMPLE ? ", ..." : ""}`);
       }
       if (ns.review === "unreviewed") errors.push(`${row.locale} is shipped but ${ns.namespace} has no native review in ${LEDGER_REL}`);
+      const flipping = baseStatus !== undefined && baseStatus[row.locale] !== "shipped";
+      if (flipping && ns.review === "stale") {
+        errors.push(`${row.locale} flips to shipped but ${ns.namespace}'s ledger enSha does not match the current English; review the current text and record the enSha this report prints`);
+      }
     }
     if (!strictLocales.includes(row.locale)) {
       errors.push(`${row.locale} is shipped but not in HANGUL_ROUTE_STRICT_LOCALES (${WORKFLOW_REL}); missing overlays must be errors for a shipped locale`);
     }
   }
-  return { locales: rows, errors, warnings };
+  return { locales: rows, enShas, errors, warnings };
 }
 
 function reviewText(ns) {
@@ -162,6 +213,9 @@ export function renderReport(result, { list, englishAuthoritative }) {
   for (const row of result.locales) {
     if (row.source) {
       lines.push(`${row.locale}  ${row.status}  source`);
+      for (const [namespace, hash] of Object.entries(result.enShas ?? {})) {
+        if (hash) lines.push(`  ${namespace.padEnd(width)}  enSha ${hash}`);
+      }
       continue;
     }
     const reviewed = row.namespaces.filter((n) => n.review === "current").length;
@@ -177,8 +231,6 @@ export function renderReport(result, { list, englishAuthoritative }) {
   return lines.join("\n");
 }
 
-const sha256 = (buffer) => createHash("sha256").update(buffer).digest("hex");
-
 function readJson(path) {
   try {
     return { value: JSON.parse(readFileSync(path, "utf8")) };
@@ -187,15 +239,44 @@ function readJson(path) {
   }
 }
 
+const USAGE = "usage: node scripts/i18n-status.mjs [--list] [--base <git ref>]";
+
+function parseArgs(argv) {
+  const args = { list: false, base: undefined, unknown: [] };
+  for (let i = 0; i < argv.length; i += 1) {
+    if (argv[i] === "--list") args.list = true;
+    else if (argv[i] === "--base") {
+      const ref = argv[i + 1];
+      if (!ref || ref.startsWith("-")) return { error: `--base needs a git ref (${USAGE})` };
+      args.base = ref;
+      i += 1;
+    } else args.unknown.push(argv[i]);
+  }
+  if (args.unknown.length > 0) return { error: `unknown option(s) ${args.unknown.join(" ")} (${USAGE})` };
+  return args;
+}
+
+/** LOCALE_STATUS at a git ref, read with `git show` (fails closed). */
+function readBaseStatus(root, ref) {
+  const shown = spawnSync("git", ["show", `${ref}:${LOCALE_STATUS_REL}`], { cwd: root, encoding: "utf8" });
+  const parsed = shown.status === 0 ? parseLocaleStatusSource(shown.stdout) : null;
+  if (!parsed) return { error: `cannot read LOCALE_STATUS at ${ref} (${LOCALE_STATUS_REL}): ${(shown.stderr || "no LOCALE_STATUS literal").trim()}` };
+  return { value: parsed };
+}
+
 export async function main(argv, root) {
-  const list = argv.includes("--list");
-  const unknown = argv.filter((a) => a !== "--list");
-  if (unknown.length > 0) {
-    console.log(`::error::i18n-status: unknown option(s) ${unknown.join(" ")} (usage: node scripts/i18n-status.mjs [--list])`);
+  const args = parseArgs(argv);
+  if (args.error) {
+    annotate("error", `i18n-status: ${args.error}`);
     return 1;
   }
+  const { list } = args;
 
-  register(pathToFileURL(join(SCRIPT_DIR, "ts-loader.mjs")));
+  if (typeof nodeModule.register !== "function") {
+    annotate("error", `i18n-status needs Node 20.6+ (module.register); this is ${process.version}`);
+    return 1;
+  }
+  nodeModule.register(pathToFileURL(join(SCRIPT_DIR, "ts-loader.mjs")));
   const i18n = await import(pathToFileURL(join(root, "packages/i18n/src/index.ts")).href);
 
   const locales = Object.keys(i18n.LOCALE_STATUS);
@@ -204,26 +285,50 @@ export async function main(argv, root) {
   const enShas = Object.fromEntries(
     namespaces.map((ns) => {
       const file = join(root, EN_DIR_REL, `${ns}.ts`);
-      return [ns, existsSync(file) ? sha256(readFileSync(file)) : undefined];
+      return [ns, existsSync(file) ? hashEnglishSource(readFileSync(file)) : undefined];
     }),
   );
 
   const ledgerRead = readJson(join(root, LEDGER_REL));
   if (ledgerRead.error) {
-    console.log(`::error file=${LEDGER_REL}::${LEDGER_REL} is not readable JSON: ${ledgerRead.error}`);
+    annotate("error", `${LEDGER_REL} is not readable JSON: ${ledgerRead.error}`, ` file=${LEDGER_REL}`);
     return 1;
   }
   const workflowPath = join(root, WORKFLOW_REL);
-  const strictLocales = existsSync(workflowPath) ? parseStrictLocales(readFileSync(workflowPath, "utf8")) : [];
+  const workflowText = existsSync(workflowPath) ? readFileSync(workflowPath, "utf8") : "";
+  const strictLocales = parseStrictLocales(workflowText);
+  const strictDeclarations = countStrictDeclarations(workflowText);
 
-  const result = computeStatus({ locales, status: i18n.LOCALE_STATUS, namespaces, fallbacks, enShas, ledger: ledgerRead.value, strictLocales });
+  let baseStatus;
+  if (args.base) {
+    const base = readBaseStatus(root, args.base);
+    if (base.error) {
+      annotate("error", base.error);
+      return 1;
+    }
+    baseStatus = base.value;
+  }
+
+  const result = computeStatus({
+    locales,
+    status: i18n.LOCALE_STATUS,
+    namespaces,
+    fallbacks,
+    enShas,
+    ledger: ledgerRead.value,
+    strictLocales,
+    strictDeclarations,
+    baseStatus,
+  });
   console.log(renderReport(result, { list, englishAuthoritative: [...(i18n.ENGLISH_AUTHORITATIVE_PREFIXES ?? [])] }));
-  for (const warning of result.warnings) console.log(`::warning::${warning}`);
-  for (const error of result.errors) console.log(`::error::${error}`);
+  for (const warning of result.warnings) annotate("warning", warning);
+  for (const error of result.errors) annotate("error", error);
   return result.errors.length > 0 ? 1 : 0;
 }
 
-const isMain = process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href;
+// Real paths on both sides: Node resolves symlinks in import.meta.url but not in argv[1]
+// (macOS /tmp -> /private/tmp), and a gate must not exit 0 silently.
+const isMain = Boolean(process.argv[1]) && existsSync(process.argv[1]) && realpathSync(fileURLToPath(import.meta.url)) === realpathSync(process.argv[1]);
 if (isMain) {
   const root = process.env.HANGUL_ROUTE_ROOT ? resolve(process.env.HANGUL_ROUTE_ROOT) : join(SCRIPT_DIR, "..");
   process.exitCode = await main(process.argv.slice(2), root);

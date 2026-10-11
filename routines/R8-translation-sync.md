@@ -6,8 +6,8 @@
 
 ## Trigger
 - Manual: "Run now" / `workflow_dispatch` — 입력 `locale` (`es` | `ko`), `namespace` (선택; 없으면 missing 이 가장 많은 namespace 하나).
-- PR merged to `main` that changes `packages/i18n/src/messages/en/**` — `node scripts/i18n-status.mjs` 가 missing 또는 stale 을 보고한 locale 마다 1회.
-- 동시에 열린 R8 PR 은 locale x namespace 당 하나. 같은 브랜치가 이미 열려 있으면 그 PR 에 커밋을 추가한다.
+- PR merged to `main` that changes `packages/i18n/src/messages/en/**` — `node scripts/i18n-status.mjs` 가 missing 또는 stale 을 보고한 **모든** locale x namespace 쌍마다 PR 하나씩 (한 번의 실행에서 여러 PR).
+- 동시에 열린 R8 PR 은 locale x namespace 당 하나. 브랜치를 만들기 전에 `gh pr list --head claude/i18n-<locale>-<namespace>` 와 `git ls-remote origin claude/i18n-<locale>-<namespace>` 로 기존 PR / 원격 브랜치를 확인한다. 있으면 새로 만들지 않고 그 브랜치를 `origin/main` 위로 rebase 한 뒤 커밋을 추가한다 (머지 두 건이 가까이 붙어도 같은 브랜치를 두 번 만들지 않는다).
 
 ## Input
 - `node scripts/i18n-status.mjs --list` — locale / namespace 별 missing 키 경로, review 상태 (current / stale / not reviewed), `LOCALE_STATUS`.
@@ -18,9 +18,9 @@
 - 콘텐츠 overlay 를 초안할 때: `content/i18n/README.md`, `scripts/overlay-fields.mjs` (허용 필드).
 
 ## Steps
-1. `node scripts/i18n-status.mjs --list` 로 대상 locale / namespace 와 missing 경로를 고른다. stale namespace 는 English 가 바뀐 키만 다시 초안한다 (`git log -p` 로 ledger 의 `reviewedAt` 이후 바뀐 키 확인).
-2. 브랜치 `claude/i18n-<locale>-<namespace>` 를 `origin/main` 에서 만든다.
-3. `packages/i18n/src/messages/<locale>/<namespace>.ts` 에 초안을 쓴다: `export const <namespace> = { ... } satisfies DeepPartial<Messages['<namespace>']>;` 를 `messages/<locale>/index.ts` 에 연결. 영어에 없는 키는 쓰지 않는다 (`satisfies` 가 막는다). 함수 메시지는 영어와 같은 인자, 문장 전체를 그 locale 의 어순으로 (`plural(locale, n, ...)` 은 자기 locale 로).
+1. `node scripts/i18n-status.mjs --list` 로 대상 locale / namespace 와 missing 경로를 고른다. stale namespace 는 English 가 바뀐 키만 다시 초안한다 (`git log -p` 로 ledger 의 `reviewedAt` 이후 바뀐 키 확인). 바뀐 경로가 모두 영어 정본 (`landing.legal.privacy.*` / `landing.legal.terms.*`, 결정 L10) 이면 번역할 것이 없으므로 그 namespace 는 건너뛰고, 실행 요약에 "legal-only change: re-sign the ledger, no draft" 로 남긴다 (검토자가 ledger 의 `enSha` 만 갱신).
+2. 위 Trigger 의 기존 PR / 원격 브랜치 확인 후, 없을 때만 브랜치 `claude/i18n-<locale>-<namespace>` 를 `origin/main` 에서 만든다.
+3. `packages/i18n/src/messages/<locale>/<namespace>.ts` 에 초안을 쓴다: `export const <namespace> = { ... } satisfies DeepPartial<Messages['<namespace>']>;` 를 `messages/<locale>/index.ts` 에 연결. export 이름은 namespace 와 같다. 단 `console` 은 전역 `console` 을 가리지 않도록 `consoleMsgs` 로 쓰고 index 에서 `console: consoleMsgs` 로 연결한다 (`messages/en/index.ts` 와 같다). 영어에 없는 키는 쓰지 않는다 (`satisfies` 가 막는다). 함수 메시지는 영어와 같은 인자, 문장 전체를 그 locale 의 어순으로 (`plural(locale, n, ...)` 은 자기 locale 로).
 4. 아래 **Style guide** 를 그대로 따른다 (이 루틴의 프롬프트).
 5. 건드리지 않는 것: `messages/en/**` (원문), `landing.legal.privacy.*` / `landing.legal.terms.*` (영어가 정본, 결정 L10 — overlay 가 쓰면 테스트가 실패), `LOCALE_STATUS`, `review-ledger.json`, `HANGUL_ROUTE_STRICT_LOCALES`. 가르치는 한국어(자모·단어·문장)는 메시지에 넣지 않는다 — `KoreanText` 가 콘텐츠에서 그린다 (결정 L5).
 6. 로컬 검증: `pnpm --filter @hangul-route/i18n test` (구조, Hangul 규칙, 금지어, 길이 예산), `pnpm --filter @hangul-route/i18n typecheck`, `node scripts/check-i18n.mjs`, `node scripts/i18n-status.mjs` (missing 수가 줄었는지). 콘텐츠 overlay 면 `node scripts/validate-content.mjs` 와 `node scripts/build-overlays.mjs --check`.
@@ -53,7 +53,8 @@ Translate from the English source; never change the English.
 ## Output
 - PR: `claude/i18n-<locale>-<namespace>` -> `main`, 라벨 `routine-generated`.
 - 파일: `packages/i18n/src/messages/<locale>/<namespace>.ts` (+ `index.ts` 연결), 또는 `content/i18n/<locale>/<domain>.json` (+ `node scripts/build-overlays.mjs` 로 재생성한 `i18n-overlays.generated.ts`).
-- 원어민 검토자는 PR 리뷰 후 같은 PR 에 `review-ledger.json` 항목을 추가한다: `{ "<locale>": { "<namespace>": { "enSha": "<sha256 of messages/en/<namespace>.ts>", "reviewedBy": "<initials>", "reviewedAt": "YYYY-MM-DD" } } }` (namespace 파일 단위). 이 루틴은 그 항목을 만들지 않는다.
+- 원어민 검토자는 PR 리뷰 후 같은 PR 에 `review-ledger.json` 항목을 추가한다: `{ "<locale>": { "<namespace>": { "enSha": "<sha256 of messages/en/<namespace>.ts>", "reviewedBy": "<initials>", "reviewedAt": "YYYY-MM-DD" } } }` (namespace 파일 단위). `enSha` 는 직접 계산하지 않고 `node scripts/i18n-status.mjs` 출력의 `en` 아래 `<namespace>  enSha <hex>` 줄에서 복사한다 (CRLF 는 LF 로 해시). `reviewedBy` 는 대문자 이니셜 2-4자만 (공개 저장소: 이름, 이메일 금지; CI 가 검사). 이 루틴은 그 항목을 만들지 않는다.
+- `LOCALE_STATUS` 를 `'shipped'` 로 바꾸는 PR (PR 15 / 16) 은 사람이 연다. CI (`--base`) 가 그 PR 에서 모든 namespace 의 ledger `enSha` 가 현재 영어와 일치하는지 확인한다. §3.11 layout matrix (nightly e2e, PR 14) 는 i18n-status 가 검사하지 않으므로 그 PR 에서 수동으로 확인한다.
 
 ## Failure modes
 - missing 0, stale 0 → PR 없이 종료 ("nothing to sync").

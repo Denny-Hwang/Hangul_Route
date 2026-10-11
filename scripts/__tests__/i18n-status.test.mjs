@@ -3,7 +3,7 @@
 import { strict as assert } from "node:assert";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, unlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { after, describe, test } from "node:test";
@@ -13,7 +13,8 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = resolve(HERE, "..", "..");
 const SCRIPT = join(REPO, "scripts", "i18n-status.mjs");
 
-const { computeStatus, parseStrictLocales, renderReport, validateLedger } = await import(SCRIPT);
+const { computeStatus, countStrictDeclarations, escapeAnnotation, hashEnglishSource, parseLocaleStatusSource, parseStrictLocales, renderReport, validateLedger } =
+  await import(SCRIPT);
 
 const sha = (text) => createHash("sha256").update(text).digest("hex");
 const SHA_A = sha("a");
@@ -24,8 +25,9 @@ after(() => {
   for (const r of roots) rmSync(r, { recursive: true, force: true });
 });
 
-function run(root, args = []) {
-  return spawnSync("node", [SCRIPT, ...args], {
+function run(root, args = [], script = SCRIPT) {
+  return spawnSync("node", [script, ...args], {
+    cwd: root,
     env: { ...process.env, HANGUL_ROUTE_ROOT: root },
     encoding: "utf8",
   });
@@ -63,6 +65,46 @@ describe("parseStrictLocales (content-validation.yml)", () => {
   test("a commented-out line does not count", () => {
     assert.deepEqual(parseStrictLocales('  # HANGUL_ROUTE_STRICT_LOCALES: "es"\n'), []);
   });
+
+  test("countStrictDeclarations counts every uncommented declaration", () => {
+    assert.equal(countStrictDeclarations("name: x\n"), 0);
+    assert.equal(countStrictDeclarations('env:\n  HANGUL_ROUTE_STRICT_LOCALES: "es"\n  # HANGUL_ROUTE_STRICT_LOCALES: ""\n'), 1);
+    const twice = 'env:\n  HANGUL_ROUTE_STRICT_LOCALES: "es"\njobs:\n  v:\n    env:\n      HANGUL_ROUTE_STRICT_LOCALES: ""\n';
+    assert.equal(countStrictDeclarations(twice), 2);
+  });
+
+  test("content-validation.yml declares the list exactly once", () => {
+    const text = readFileSync(join(REPO, ".github/workflows/content-validation.yml"), "utf8");
+    assert.equal(countStrictDeclarations(text), 1);
+  });
+});
+
+describe("parseLocaleStatusSource (LOCALE_STATUS at the base ref)", () => {
+  test("reads the object literal of locales.ts, quoted or bare keys", () => {
+    const ts = "export const LOCALE_STATUS: Record<UiLocale, LocaleStatus> = {\n  en: 'shipped',\n  es: \"hidden\",\n  ko: 'hidden',\n};\n";
+    assert.deepEqual(parseLocaleStatusSource(ts), { en: "shipped", es: "hidden", ko: "hidden" });
+    assert.deepEqual(parseLocaleStatusSource('export const LOCALE_STATUS = {"en":"shipped","es":"shipped"};'), { en: "shipped", es: "shipped" });
+  });
+
+  test("no LOCALE_STATUS literal gives null", () => {
+    assert.equal(parseLocaleStatusSource("export const X = 1;\n"), null);
+  });
+
+  test("the repository's locales.ts parses to the live LOCALE_STATUS keys", () => {
+    const parsed = parseLocaleStatusSource(readFileSync(join(REPO, "packages/i18n/src/locales.ts"), "utf8"));
+    assert.deepEqual(Object.keys(parsed ?? {}), ["en", "es", "ko"]);
+  });
+});
+
+describe("hashEnglishSource and escapeAnnotation", () => {
+  test("the hash ignores CRLF vs LF line endings", () => {
+    assert.equal(hashEnglishSource(Buffer.from("a\r\nb\r\n")), hashEnglishSource(Buffer.from("a\nb\n")));
+    assert.equal(hashEnglishSource(Buffer.from("a\nb\n")), sha("a\nb\n"));
+  });
+
+  test("annotation text escapes %, CR and LF so a value cannot start a new workflow command", () => {
+    assert.equal(escapeAnnotation("50%\r\n::error::x"), "50%25%0D%0A::error::x");
+  });
 });
 
 describe("validateLedger", () => {
@@ -79,8 +121,8 @@ describe("validateLedger", () => {
   });
 
   test("an unknown or source locale is refused", () => {
-    assert.match(validateLedger({ en: {} }, opts)[0], /en/);
-    assert.match(validateLedger({ fr: {} }, opts)[0], /fr/);
+    assert.match(validateLedger({ en: {} }, opts)[0], /"en" is not an overlay locale/);
+    assert.match(validateLedger({ fr: {} }, opts)[0], /"fr" is not an overlay locale/);
   });
 
   test("an unknown namespace is refused (granularity is the namespace file)", () => {
@@ -90,6 +132,10 @@ describe("validateLedger", () => {
   test("each field is checked: sha, initials, date, no extra fields", () => {
     assert.match(validateLedger({ es: { common: entry("abc") } }, opts)[0], /enSha/);
     assert.match(validateLedger({ es: { common: entry(SHA_A, { reviewedBy: " " }) } }, opts)[0], /reviewedBy/);
+    for (const reviewedBy of ["Sam Hill", "sam@example.com", "sh", "S", "ABCDE", "S\nH"]) {
+      assert.match(validateLedger({ es: { common: entry(SHA_A, { reviewedBy }) } }, opts)[0] ?? "", /reviewedBy.*initials.*public/, reviewedBy);
+    }
+    assert.deepEqual(validateLedger({ es: { common: entry(SHA_A, { reviewedBy: "JMR" }) } }, opts), []);
     assert.match(validateLedger({ es: { common: entry(SHA_A, { reviewedAt: "2026-13-40" }) } }, opts)[0], /reviewedAt/);
     assert.match(validateLedger({ es: { common: entry(SHA_A, { reviewedAt: "11/02/2026" }) } }, opts)[0], /reviewedAt/);
     assert.match(validateLedger({ es: { common: entry(SHA_A, { note: "x" }) } }, opts)[0], /note/);
@@ -157,12 +203,30 @@ describe("computeStatus", () => {
   });
 
   test("a strict locale that is the source or unknown is a typo and fails", () => {
-    assert.ok(status({ strictLocales: ["en"] }).errors.some((e) => /en/.test(e)));
-    assert.ok(status({ strictLocales: ["fr"] }).errors.some((e) => /fr/.test(e)));
+    assert.ok(status({ strictLocales: ["en"] }).errors.some((e) => /HANGUL_ROUTE_STRICT_LOCALES lists "en"/.test(e)));
+    assert.ok(status({ strictLocales: ["fr"] }).errors.some((e) => /HANGUL_ROUTE_STRICT_LOCALES lists "fr"/.test(e)));
   });
 
   test("a strict hidden locale is allowed (strict before shipping)", () => {
     assert.deepEqual(status({ strictLocales: ["es"] }).errors, []);
+  });
+
+  test("flipping a locale to shipped needs every review current; a stale (or forged) enSha fails the flip", () => {
+    const flip = {
+      status: { ...BASE.status, ko: "shipped" },
+      ledger: { ko: { common: entry(SHA_A), learner: entry("0".repeat(64)) } },
+      strictLocales: ["ko"],
+    };
+    const r = status({ ...flip, baseStatus: { en: "shipped", es: "hidden", ko: "hidden" } });
+    assert.ok(r.errors.some((e) => /ko flips to shipped but learner.*enSha/.test(e)), r.errors.join("\n"));
+    assert.ok(!r.errors.some((e) => /common/.test(e)), r.errors.join("\n"));
+    assert.deepEqual(status({ ...flip, baseStatus: { en: "shipped", es: "hidden", ko: "shipped" } }).errors, []);
+    assert.deepEqual(status(flip).errors, [], "no base ref (push to main, local run): stale only warns");
+  });
+
+  test("more than one HANGUL_ROUTE_STRICT_LOCALES declaration fails", () => {
+    assert.ok(status({ strictDeclarations: 2 }).errors.some((e) => /declare HANGUL_ROUTE_STRICT_LOCALES once/.test(e)));
+    assert.deepEqual(status({ strictDeclarations: 1 }).errors, []);
   });
 
   test("ledger shape errors are reported", () => {
@@ -188,6 +252,12 @@ describe("renderReport", () => {
     assert.match(renderReport(r, { list: true, englishAuthoritative: [] }), /learner\.home\.title/);
   });
 
+  test("prints the current enSha of every English namespace for the ledger", () => {
+    const text = renderReport(status(), { list: false, englishAuthoritative: [] });
+    assert.match(text, new RegExp(`common\\s+enSha ${SHA_A}`));
+    assert.match(text, new RegExp(`learner\\s+enSha ${SHA_B}`));
+  });
+
   test("a stale namespace says the English changed since review", () => {
     const r = status({ ledger: { es: { learner: entry(SHA_A) } } });
     assert.match(renderReport(r, { list: false, englishAuthoritative: [] }), /learner.*English changed since/);
@@ -206,13 +276,14 @@ function makeRoot({ status: localeStatus = { en: "shipped", es: "hidden", ko: "h
     "packages/i18n/src/index.ts": [
       "import type { Messages } from './types';",
       "export { en } from './messages/en';",
-      "export const LOCALE_STATUS: Record<string, 'shipped' | 'hidden'> = " + JSON.stringify(localeStatus) + ";",
+      "export { LOCALE_STATUS } from './locales';",
       "export const ENGLISH_AUTHORITATIVE_PREFIXES = ['landing.legal.privacy.'] as const;",
       "const FALLBACKS: Record<string, string[]> = " + JSON.stringify({ es: esFallbacks, ko: [] }) + ";",
       "export function fallbackPaths(locale: string): string[] { return FALLBACKS[locale] ?? []; }",
       "export type Unused = Messages;",
       "",
     ].join("\n"),
+    "packages/i18n/src/locales.ts": "export const LOCALE_STATUS: Record<string, 'shipped' | 'hidden'> = " + JSON.stringify(localeStatus) + ";\n",
     "packages/i18n/src/types.ts": "export type Messages = Record<string, unknown>;\n",
     "packages/i18n/src/messages/review-ledger.json": JSON.stringify(ledger),
     ".github/workflows/content-validation.yml": `env:\n  HANGUL_ROUTE_STRICT_LOCALES: "${strict}"\n`,
@@ -226,6 +297,11 @@ function makeRoot({ status: localeStatus = { en: "shipped", es: "hidden", ko: "h
 }
 
 const fileSha = (root, ns) => sha(readFileSync(join(root, "packages/i18n/src/messages/en", `${ns}.ts`)));
+const git = (root, ...args) => {
+  const r = spawnSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.invalid", "-c", "commit.gpgsign=false", ...args], { cwd: root, encoding: "utf8" });
+  assert.equal(r.status, 0, r.stderr);
+  return r.stdout.trim();
+};
 
 describe("main (end to end, TypeScript loaded through ts-loader.mjs)", () => {
   test("hidden locales: exit 0 with the report", () => {
@@ -269,11 +345,91 @@ describe("main (end to end, TypeScript loaded through ts-loader.mjs)", () => {
     assert.match(r.stdout, /::error[^:]*::.*review-ledger\.json is not readable JSON/);
   });
 
-  test("an unknown option fails", () => {
-    const r = run(makeRoot(), ["--nope"]);
+  test("an unknown option fails, and --base needs a ref", () => {
+    assert.equal(run(makeRoot(), ["--nope"]).status, 1);
+    const r = run(makeRoot(), ["--base"]);
     assert.equal(r.status, 1);
+    assert.match(r.stdout, /--base needs a git ref/);
   });
 
+  test("--base: a flip with a stale review fails; the same ledger passes once the locale was already shipped", () => {
+    const root = makeRoot({ esFallbacks: [], strict: "es" });
+    const ledger = { es: { common: entry(fileSha(root, "common")), learner: entry(sha("an older learner.ts")) } };
+    writeFileSync(join(root, "packages/i18n/src/messages/review-ledger.json"), JSON.stringify(ledger));
+    git(root, "init", "-q");
+    git(root, "add", "-A");
+    git(root, "commit", "-qm", "base");
+    const base = git(root, "rev-parse", "HEAD");
+    const locales = join(root, "packages/i18n/src/locales.ts");
+    writeFileSync(locales, readFileSync(locales, "utf8").replace('"es":"hidden"', '"es":"shipped"'));
+
+    const flip = run(root, ["--base", base]);
+    assert.equal(flip.status, 1, flip.stdout + flip.stderr);
+    assert.match(flip.stdout, /::error::es flips to shipped but learner/);
+
+    git(root, "commit", "-qam", "ship es");
+    const later = run(root, ["--base", git(root, "rev-parse", "HEAD")]);
+    assert.equal(later.status, 0, later.stdout + later.stderr);
+    assert.match(later.stdout, /::warning::.*es.*learner/);
+  });
+
+  test("--base with an unreadable ref fails closed", () => {
+    const root = makeRoot();
+    git(root, "init", "-q");
+    const r = run(root, ["--base", "no-such-ref"]);
+    assert.equal(r.status, 1);
+    assert.match(r.stdout, /::error::.*LOCALE_STATUS at no-such-ref/);
+  });
+
+  test("two HANGUL_ROUTE_STRICT_LOCALES declarations fail end to end", () => {
+    const root = makeRoot();
+    writeFileSync(join(root, ".github/workflows/content-validation.yml"), 'env:\n  HANGUL_ROUTE_STRICT_LOCALES: "es"\njobs:\n  v:\n    env:\n      HANGUL_ROUTE_STRICT_LOCALES: ""\n');
+    const r = run(root);
+    assert.equal(r.status, 1);
+    assert.match(r.stdout, /::error::.*declare HANGUL_ROUTE_STRICT_LOCALES once/);
+  });
+
+  test("no content-validation.yml: a shipped locale fails on the strict list", () => {
+    const root = makeRoot({ status: { en: "shipped", es: "shipped", ko: "hidden" }, esFallbacks: [] });
+    unlinkSync(join(root, ".github/workflows/content-validation.yml"));
+    const r = run(root);
+    assert.equal(r.status, 1);
+    assert.match(r.stdout, /::error::es is shipped but not in HANGUL_ROUTE_STRICT_LOCALES/);
+  });
+
+  test("a namespace whose English file is missing on disk fails", () => {
+    const root = makeRoot();
+    const en = join(root, "packages/i18n/src/messages/en");
+    writeFileSync(join(en, "index.ts"), "import { common } from './common';\nexport const en = { common, learner: { title: 'Home' } } as const;\n");
+    unlinkSync(join(en, "learner.ts"));
+    const r = run(root);
+    assert.equal(r.status, 1);
+    assert.match(r.stdout, /::error::namespace "learner" has no English file/);
+  });
+
+  test("ts-loader: a JSON file imported from TypeScript without attributes is the default export", () => {
+    const root = makeRoot({ esFallbacks: [] });
+    writeFileSync(join(root, "packages/i18n/src/data.json"), JSON.stringify({ fallbacks: ["learner.title"] }));
+    const index = join(root, "packages/i18n/src/index.ts");
+    const text = readFileSync(index, "utf8")
+      .replace("import type { Messages } from './types';", "import type { Messages } from './types';\nimport data from './data.json';")
+      .replace('const FALLBACKS: Record<string, string[]> = {"es":[],"ko":[]};', "const FALLBACKS: Record<string, string[]> = { es: data.fallbacks, ko: [] };");
+    writeFileSync(index, text);
+    const r = run(root);
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    assert.match(r.stdout, /es\s+hidden\s+1 missing/);
+  });
+
+  test("run through a symlinked path, the script still runs (it does not exit 0 silently)", () => {
+    const link = join(mkdtempSync(join(tmpdir(), "i18nstatus-link-")), "i18n-status.mjs");
+    roots.push(dirname(link));
+    symlinkSync(SCRIPT, link);
+    const r = run(makeRoot(), ["--bogus"], link);
+    assert.equal(r.status, 1, r.stdout + r.stderr);
+    assert.match(r.stdout, /unknown option/);
+  });
+
+  // PR 15 / PR 16 update this test when they flip es / ko to 'shipped'.
   test("the repository itself: es and ko hidden, exit 0, every namespace listed", () => {
     const r = spawnSync("node", [SCRIPT], { encoding: "utf8", env: { ...process.env, HANGUL_ROUTE_ROOT: "" } });
     assert.equal(r.status, 0, r.stdout + r.stderr);

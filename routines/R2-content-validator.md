@@ -14,7 +14,7 @@
 ## Steps
 1. 모든 변경 파일을 zod 스키마로 검증.
 2. 언어 정책 체크:
-   - UI text = English (CEFR Pre-A1)
+   - UI strings from the selected locale (en/es/ko) via the dictionary; English is the source (CEFR Pre-A1); `es` / `ko` overlays under `content/i18n/` are allowed (F-I18N-001)
    - Korean = only for learning targets
    - Romanization present alongside 한글
    - English meaning/gloss present
