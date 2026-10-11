@@ -13,7 +13,7 @@ import type { PlanView, Roster } from '@/lib/console/api';
 import { levelPillLabel } from '@/lib/console/level-label';
 import { capState, classRollup, codeExpiry, percent, relativeDay } from '@/lib/console/rollup';
 import { ownRouteLine, readoutLine as routeReadoutLine } from '@/lib/console/curriculum';
-import { latestPublished, planReadout, readoutLine } from '@/lib/console/plans';
+import { planReaches, planReadout, readoutLine, rosterPlan } from '@/lib/console/plans';
 import { ROUTES, type SpaceError, spaceErrorText, spaceIdFrom } from '@/lib/console/routing';
 import { aroundSlot } from '@/lib/i18n/slot';
 
@@ -72,7 +72,8 @@ function SpaceInner(): JSX.Element {
   const rollup = roster ? classRollup(roster.learners, now) : null;
   const cap = roster ? capState(roster.space.kind, roster.learners.length) : null;
   const empty = roster !== null && roster.learners.length === 0;
-  const latestPlan = latestPublished(plans);
+  // The newest plan for everyone: a plan for one learner (a suggested start) never takes over the roster.
+  const latestPlan = rosterPlan(plans);
   const readout = latestPlan && roster ? new Map(planReadout(latestPlan.id, roster.learners).map((r) => [r.learnerId, r])) : null;
   // Taught jamo stay outside the message (§3.4 rule 5): the sentence is split around them and the page marks them Korean.
   const weekRevisit = aroundSlot(c.space.week.revisit);
@@ -166,7 +167,7 @@ function SpaceInner(): JSX.Element {
                     {l.summary ? (
                       <div style={{ color: colors.text.secondary, fontSize: typography.size.bodySm, marginTop: spacing.xs, lineHeight: typography.leading.relaxed }}>
                         <div>{c.space.learner.lastActive(relativeDay(l.summary.lastActiveAt, now, locale))}</div>
-                        <StartingSpot summary={l.summary} spaceId={spaceId} learnerId={l.id} />
+                        <StartingSpot summary={l.summary} spaceId={spaceId} learnerId={l.id} learnerName={l.displayName} />
                         <div>{c.space.learner.questsCards(l.summary.stage1.questsDone, l.summary.stage1.questsTotal, l.summary.cardsUnlocked)}</div>
                         <div>{c.space.learner.minutesThisWeek(l.summary.minutesLast7d)}</div>
                         {l.summary.needsPractice.length ? (
@@ -176,7 +177,7 @@ function SpaceInner(): JSX.Element {
                             {learnerRevisit.after}
                           </div>
                         ) : null}
-                        {latestPlan && readout ? (
+                        {latestPlan && readout && planReaches(latestPlan, l.id) ? (
                           <div>
                             {c.space.learner.planReadout(
                               latestPlan.title,

@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { RosterLearner, RosterSummary } from '../api';
 import {
   SUGGEST_PARAM,
+  builderOnLoad,
   placementBandLabel,
   startingSpotChanged,
   startingSpotLine,
@@ -12,6 +13,7 @@ import {
   suggestedStart,
   suggestedStartQuestId,
   suggestionFor,
+  suggestionNoticeShown,
 } from '../placement';
 
 const en = getMessages('en');
@@ -19,7 +21,7 @@ const band = en.learner.placement.band;
 const words = en.console.placement;
 
 const placement = (over: Partial<PlacementSummary> = {}): PlacementSummary => ({
-  takenAt: '2026-10-09T15:00:00.000Z',
+  takenAt: '2026-10-09T12:00:00.000Z',
   level: { stage: 'stage1', band: 1 },
   oralStage: null,
   strands: {
@@ -81,7 +83,7 @@ describe('placementBandLabel (the learner band words, F-PLC-001 section 3.6)', (
 describe('startingSpotLine (roster line, section 3.9)', () => {
   it('words stage, band and the day of the check, as in the spec example', () => {
     expect(startingSpotLine(summary(placement()))).toBe('Starting spot: Stage 1 · Letters and sounds · Oct 9');
-    expect(startingSpotLine(summary(placement({ level: { stage: 'stage2', band: 0 }, takenAt: '2026-10-11T08:00:00.000Z' })))).toBe(
+    expect(startingSpotLine(summary(placement({ level: { stage: 'stage2', band: 0 }, takenAt: '2026-10-11T12:00:00.000Z' })))).toBe(
       'Starting spot: Stage 2 · First words · Oct 11',
     );
     expect(startingSpotLine(summary(placement({ level: { stage: 'stage3', band: 0 } })))).toBe('Starting spot: Stage 3 · First sentences · Oct 9');
@@ -155,8 +157,9 @@ describe('suggestedStartQuestId (the coarse start the builder pre-fills)', () =>
     expect(suggestedStartQuestId(null, storyOnly)).toBeNull();
   });
 
-  it('beyond the content, the last playable grid quest (the builder still opens with one item)', () => {
-    expect(suggestedStartQuestId({ stage: 'stage3', band: 0 }, FIXTURE)).toBe('q:d');
+  it('is null when the level places out every playable quest (never a quest the learner placed out)', () => {
+    expect(suggestedStartQuestId({ stage: 'stage3', band: 0 }, FIXTURE)).toBeNull();
+    expect(suggestedStart(withPlacement(placement({ level: { stage: 'stage3', band: 0 }, beyondContent: true })), 'en', FIXTURE).items).toEqual([]);
   });
 
   it('on the shipped catalogue, agrees with the shared coarse mapping', () => {
@@ -178,9 +181,22 @@ describe('suggestedStartQuestId (the coarse start the builder pre-fills)', () =>
 });
 
 describe('suggestedStart (the advisory plan prefill, decision P6)', () => {
-  it('is one quest item with the note, for this learner only, titled for them', () => {
+  it('is one quest item with the note, for this learner only', () => {
     const draft = suggestedStart(withPlacement(placement({ level: { stage: 'stage2', band: 0 } })), 'en', FIXTURE);
-    expect(draft).toEqual({ title: 'Next step for Sam', items: [{ kind: 'quest', id: 'q:d', note: 'Try this next' }], targets: ['learner:sam'] });
+    expect(draft).toEqual({ title: 'A suggested next step', items: [{ kind: 'quest', id: 'q:d', note: 'Try this next' }], targets: ['learner:sam'] });
+  });
+
+  it('stores no learner name in the plan title (it outlives removal and roster aliases)', () => {
+    const draft = suggestedStart(withPlacement(placement(), { displayName: 'Samantha' }), 'en', FIXTURE);
+    expect(draft.title).toBe(words.suggestTitle);
+    expect(draft.title).not.toContain('Samantha');
+  });
+
+  it('opens with a quest the level does not place out on the shipped catalogue', () => {
+    const route = routeCatalogOf(CATALOG);
+    const draft = suggestedStart(withPlacement(placement({ level: { stage: 'stage1', band: 3 } })));
+    expect(draft.items).toHaveLength(1);
+    expect(questsPlacedOutAtLevel({ stage: 'stage1', band: 3 }, route)).not.toContain(draft.items[0]?.id);
   });
 
   it('works without a check result or a summary (first quest of the route)', () => {
@@ -192,19 +208,8 @@ describe('suggestedStart (the advisory plan prefill, decision P6)', () => {
     expect(suggestedStart(learner(), 'en', catalogOf([], [])).items).toEqual([]);
   });
 
-  it('keeps the title within the plan limit of 60, never splitting a character', () => {
-    const long = suggestedStart(learner({ displayName: `${'A'.repeat(55)}😀😀` }), 'en', FIXTURE).title;
-    expect(long.length).toBeLessThanOrEqual(60);
-    expect(long).toBe(`Next step for ${'A'.repeat(46)}`);
-    const emoji = suggestedStart(learner({ displayName: `${'A'.repeat(44)}😀😀` }), 'en', FIXTURE).title;
-    expect(emoji.length).toBeLessThanOrEqual(60);
-    expect(emoji).toBe(`Next step for ${'A'.repeat(44)}😀`);
-    const split = suggestedStart(learner({ displayName: `${'A'.repeat(45)}😀` }), 'en', FIXTURE).title;
-    expect(split).toBe(`Next step for ${'A'.repeat(45)}`);
-  });
-
-  it('trims the name', () => {
-    expect(suggestedStart(learner({ displayName: '  Sam ' }), 'en', FIXTURE).title).toBe('Next step for Sam');
+  it('keeps the title within the plan limit of 60', () => {
+    expect(suggestedStart(learner(), 'en', FIXTURE).title.length).toBeLessThanOrEqual(60);
   });
 });
 
@@ -215,6 +220,10 @@ describe('suggestionFor (the builder reads ?suggest=)', () => {
     const found = suggestionFor(roster, 'learner:sam', 'en', FIXTURE);
     expect(found?.draft.targets).toEqual(['learner:sam']);
     expect(found?.notice).toBe(words.suggestFor('Sam'));
+  });
+
+  it('trims the name in the notice', () => {
+    expect(suggestionFor([learner({ displayName: '  Sam ' })], 'learner:sam', 'en', FIXTURE)?.notice).toBe(words.suggestFor('Sam'));
   });
 
   it('is null without an id or for a learner not on this roster', () => {
@@ -234,5 +243,36 @@ describe('suggest links', () => {
     expect(suggestFrom(new URLSearchParams('id=x&suggest=%20'))).toBeNull();
     expect(suggestFrom(new URLSearchParams('id=x'))).toBeNull();
     expect(suggestFrom(null)).toBeNull();
+  });
+});
+
+describe('builderOnLoad (what a reload of the builder does with the draft)', () => {
+  it('applies the suggestion once, the first time ?suggest= names a learner on the roster', () => {
+    expect(builderOnLoad({ suggestionApplied: false, suggestionOpen: false, suggestionFound: true })).toBe('suggestion');
+  });
+
+  it('keeps an open, never-saved suggestion on every later load (StrictMode, a new session object, Try again)', () => {
+    expect(builderOnLoad({ suggestionApplied: true, suggestionOpen: true, suggestionFound: true })).toBe('keep');
+    expect(builderOnLoad({ suggestionApplied: true, suggestionOpen: true, suggestionFound: false })).toBe('keep');
+  });
+
+  it('opens the stored plan once the suggestion was saved or set aside, or when the learner is not on the roster', () => {
+    expect(builderOnLoad({ suggestionApplied: true, suggestionOpen: false, suggestionFound: true })).toBe('stored');
+    expect(builderOnLoad({ suggestionApplied: false, suggestionOpen: false, suggestionFound: false })).toBe('stored');
+  });
+});
+
+describe('suggestionNoticeShown (the notice names one learner)', () => {
+  it('shows while the unsaved draft reaches exactly the suggested learner', () => {
+    expect(suggestionNoticeShown({ targets: ['learner:sam'] }, 'learner:sam')).toBe(true);
+  });
+
+  it('hides once the draft reaches more learners or everyone, once saved, or without a suggestion', () => {
+    expect(suggestionNoticeShown({ targets: ['learner:sam', 'learner:a'] }, 'learner:sam')).toBe(false);
+    expect(suggestionNoticeShown({ targets: null }, 'learner:sam')).toBe(false);
+    expect(suggestionNoticeShown({ targets: ['learner:a'] }, 'learner:sam')).toBe(false);
+    expect(suggestionNoticeShown({ targets: [] }, 'learner:sam')).toBe(false);
+    expect(suggestionNoticeShown({ id: 'plan:1', targets: ['learner:sam'] }, 'learner:sam')).toBe(false);
+    expect(suggestionNoticeShown({ targets: ['learner:sam'] }, null)).toBe(false);
   });
 });

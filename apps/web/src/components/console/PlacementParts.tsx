@@ -2,7 +2,7 @@
 
 import { colors, spacing, typography } from '@hangul-route/design-system/tokens';
 import Link from 'next/link';
-import { Button } from '@/components/console/ui';
+import { buttonBase } from '@/components/console/ui';
 import type { RosterSummary } from '@/lib/console/api';
 import { startingSpotChanged, startingSpotLine, suggestStartHref } from '@/lib/console/placement';
 import { useConsoleLocale } from '@/lib/i18n/locale-context';
@@ -12,9 +12,21 @@ import { useConsoleLocale } from '@/lib/i18n/locale-context';
  * `design/wireframes/placement/placement.md` K): "Starting spot: Stage 1 · Letters and sounds ·
  * Oct 9", a quiet "Changed by a grown-up" when the start was changed, and **Suggest a different
  * start**, which opens the existing plan builder with a one-quest plan for this learner only.
+ * The control is one link styled as a button, named with the learner ("Suggest a different
+ * start for Sam") so a list of the roster's links tells the cards apart.
  * Nothing when the summary has no level-check result. Every word comes from the dictionary.
  */
-export function StartingSpot({ summary, spaceId, learnerId }: { summary: Pick<RosterSummary, 'placement'> | null; spaceId: string; learnerId: string }): JSX.Element | null {
+export function StartingSpot({
+  summary,
+  spaceId,
+  learnerId,
+  learnerName,
+}: {
+  summary: Pick<RosterSummary, 'placement'> | null;
+  spaceId: string;
+  learnerId: string;
+  learnerName: string;
+}): JSX.Element | null {
   const { messages, locale } = useConsoleLocale();
   const line = startingSpotLine(summary, locale);
   if (line === null) return null;
@@ -25,8 +37,13 @@ export function StartingSpot({ summary, spaceId, learnerId }: { summary: Pick<Ro
         <span style={{ display: 'block' }}>{line}</span>
         {changed ? <span style={{ display: 'block', color: colors.text.muted, fontSize: typography.size.caption }}>{changed}</span> : null}
       </span>
-      <Link href={suggestStartHref(spaceId, learnerId)}>
-        <Button testId="suggest-start">{messages.console.placement.suggest.cta}</Button>
+      <Link
+        href={suggestStartHref(spaceId, learnerId)}
+        data-testid="suggest-start"
+        aria-label={messages.console.placement.suggest.label(learnerName.trim())}
+        style={{ ...buttonBase, display: 'inline-block', textDecoration: 'none' }}
+      >
+        {messages.console.placement.suggest.cta}
       </Link>
     </div>
   );

@@ -3,7 +3,7 @@
 import { colors, radii, spacing, typography } from '@hangul-route/design-system/tokens';
 import type { CurriculumMeta, PlanItem } from '@hangul-route/content-schema';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { Button, ConsoleShell, Field, Muted, Notice, panelStyle } from '@/components/console/ui';
 import { useConsole } from '@/components/console/use-console';
@@ -12,7 +12,7 @@ import { PlanSwitcher, RouteDraftItems, RouteReadout } from '@/components/consol
 import { builderEpisodes, questsOf } from '@/data/catalog';
 import type { PlanView, Roster } from '@/lib/console/api';
 import { type RepaceResult, repaceSaveBody, reweek, selectedPlan, swapRouteItems, withTargetDate } from '@/lib/console/curriculum';
-import { suggestFrom, suggestionFor } from '@/lib/console/placement';
+import { builderOnLoad, suggestFrom, suggestionFor, suggestionNoticeShown } from '@/lib/console/placement';
 import { type PlanError, dateKey, memberKind, moveItem, oneExplicitPerDay, planErrorText, planEveryone, planReadout, spreadDates } from '@/lib/console/plans';
 import { relativeDay } from '@/lib/console/rollup';
 import { ROUTES, spaceIdFrom } from '@/lib/console/routing';
@@ -33,6 +33,7 @@ const draftOf = (plan: PlanView): Draft => ({ id: plan.id, title: plan.title, it
 /** console/plan-builder — F-PLAN-001 §3.5. Builder for drafts, readout once published. */
 function PlanInner(): JSX.Element {
   const params = useSearchParams();
+  const router = useRouter();
   const spaceId = spaceIdFrom(params);
   const { ready, session, api, signOut, m, locale } = useConsole();
   const c = m.console;
@@ -52,8 +53,11 @@ function PlanInner(): JSX.Element {
   const [start, setStart] = useState(dateKey(new Date()));
   const [perWeek, setPerWeek] = useState(2);
   // `?suggest=<learner>` from the roster (F-PLC-001 section 3.9): a one-quest draft for that learner, applied once.
-  const suggestId = suggestFrom(params);
-  const suggestionUsed = useRef(false);
+  // Read once: the param leaves the address when the draft opens, so a refresh never opens a second one.
+  const [suggestId] = useState(() => suggestFrom(params));
+  const suggestionApplied = useRef(false);
+  // True while the suggestion is open and never saved: a reload of the page data keeps it (`builderOnLoad`).
+  const suggestionOpen = useRef(false);
   // The learner the open draft was suggested for; a key, so the notice follows the header language select.
   const [suggestedFor, setSuggestedFor] = useState<string | null>(null);
   // Read by `load` without making a language switch reload (and replace) the open draft.
@@ -65,6 +69,7 @@ function PlanInner(): JSX.Element {
   const openDraft = (next: Draft): void => {
     setDraftState(next);
     setDirty(false);
+    suggestionOpen.current = false;
     setSuggestedFor(null);
   };
   /** An edit in the builder. */
@@ -83,14 +88,18 @@ function PlanInner(): JSX.Element {
     }
     setRoster(rosterRes.data);
     setPlans(plansRes.data);
-    const suggestion = suggestionUsed.current ? null : suggestionFor(rosterRes.data.learners, suggestId, localeRef.current);
-    if (suggestion) {
+    const suggestion = suggestionFor(rosterRes.data.learners, suggestId, localeRef.current);
+    const step = builderOnLoad({ suggestionApplied: suggestionApplied.current, suggestionOpen: suggestionOpen.current, suggestionFound: suggestion !== null });
+    if (step === 'keep') return;
+    if (step === 'suggestion' && suggestion) {
       // An unsaved new draft: an ordinary plan for this learner only, never a change to their check or progress.
-      suggestionUsed.current = true;
+      suggestionApplied.current = true;
+      suggestionOpen.current = true;
       setDraftState({ title: suggestion.draft.title, items: suggestion.draft.items, targets: suggestion.draft.targets, meta: null });
       setDirty(true);
       setEditing(true);
       setSuggestedFor(suggestId);
+      router.replace(ROUTES.spacePlan(spaceId));
       return;
     }
     const current = selectedPlan(plansRes.data, selectedId);
@@ -100,7 +109,7 @@ function PlanInner(): JSX.Element {
     } else if (!current) {
       setEditing(true);
     }
-  }, [api, spaceId, selectedId, suggestId]);
+  }, [api, spaceId, selectedId, suggestId, router]);
 
   useEffect(() => {
     void load();
@@ -165,8 +174,11 @@ function PlanInner(): JSX.Element {
     return result.ok;
   };
 
+  // While the unsaved suggestion is open the switcher marks no stored plan, so every plan can be opened from it.
+  const openPlanId = suggestedFor ? null : (current?.id ?? null);
+
   const select = (plan: PlanView): void => {
-    if (plan.id === current?.id) return;
+    if (plan.id === openPlanId) return;
     if (editing && dirty && !window.confirm(c.curriculum.builder.discardEdits)) return;
     setSelectedId(plan.id);
     setNote(null);
@@ -200,7 +212,7 @@ function PlanInner(): JSX.Element {
   };
 
   const readout = current?.publishedAt && !editing ? planReadout(current.id, learners) : null;
-  const suggestNotice = suggestedFor ? (suggestionFor(learners, suggestedFor, locale)?.notice ?? null) : null;
+  const suggestNotice = suggestionNoticeShown(draft, suggestedFor) ? (suggestionFor(learners, suggestedFor, locale)?.notice ?? null) : null;
 
   return (
     <ConsoleShell onSignOut={signOut} title={roster ? p.titleFor(roster.space.name) : p.title}>
@@ -214,7 +226,7 @@ function PlanInner(): JSX.Element {
           <Button onClick={() => void load()}>{c.tryAgain}</Button>
         </div>
       ) : null}
-      {plans ? <PlanSwitcher plans={plans} selectedId={current?.id ?? null} onSelect={select} locale={locale} /> : null}
+      {plans ? <PlanSwitcher plans={plans} selectedId={openPlanId} onSelect={select} locale={locale} /> : null}
 
       {readout && current ? (
         <PlanReadout

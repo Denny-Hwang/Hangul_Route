@@ -267,6 +267,6 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.placement.item.questionLabel': [[4], [1]],
   'learner.placement.item.pictureChoice': [[2]],
   'console.placement.startingSpot': [[1, 'Letters and sounds', 'Oct 9'], [3, 'First sentences', 'Oct 11']],
-  'console.placement.suggestTitle': [['Sam']],
+  'console.placement.suggest.label': [['Sam']],
   'console.placement.suggestFor': [['Sam']],
 };

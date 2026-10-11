@@ -34,13 +34,18 @@ describe('console.placement (English)', () => {
 
   it('words the advisory hand-off as an ordinary plan', () => {
     expect(p.suggest.cta).toBe('Suggest a different start');
-    expect(p.suggestTitle('Sam')).toBe('Next step for Sam');
+    expect(p.suggest.label('Sam')).toBe('Suggest a different start for Sam');
+    expect(p.suggest.label('Sam').startsWith(p.suggest.cta)).toBe(true);
+    expect(p.suggestTitle).toBe('A suggested next step');
     expect(p.suggestNote).toBe('Try this next');
     expect(p.suggestFor('Sam')).toBe("A suggestion for Sam. It arrives as a plan and never changes Sam's level check or progress.");
   });
 
-  it('keeps the plan note within the plan item limit', () => {
-    for (const locale of LOCALES) expect(getMessages(locale).console.placement.suggestNote.length).toBeLessThanOrEqual(80);
+  it('keeps the plan note and title within the plan limits', () => {
+    for (const locale of LOCALES) {
+      expect(getMessages(locale).console.placement.suggestNote.length).toBeLessThanOrEqual(80);
+      expect(getMessages(locale).console.placement.suggestTitle.length).toBeLessThanOrEqual(60);
+    }
   });
 });
 

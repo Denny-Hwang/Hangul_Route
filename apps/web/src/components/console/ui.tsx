@@ -14,7 +14,8 @@ export const panelStyle: CSSProperties = {
   border: `1px solid ${colors.border.subtle}`,
 };
 
-const buttonBase: CSSProperties = {
+/** The console button look; also used by a link that navigates (one interactive element, not a button inside a link). */
+export const buttonBase: CSSProperties = {
   padding: `${spacing.sm}px ${spacing.lg}px`,
   borderRadius: radii.pill,
   fontWeight: typography.weight.bold,

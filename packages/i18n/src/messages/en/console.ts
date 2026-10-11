@@ -653,9 +653,16 @@ export const consoleMsgs = {
   placement: {
     startingSpot: (stage: number, band: string, date: string) => `Starting spot: Stage ${stage} · ${band} · ${date}`,
     overridden: 'Changed by a grown-up',
-    suggest: { cta: 'Suggest a different start' },
-    /** The pre-filled plan title; the builder caps it at 60 characters. */
-    suggestTitle: (name: string) => `Next step for ${name}`,
+    suggest: {
+      cta: 'Suggest a different start',
+      /** The control's accessible name on a roster card: starts with the visible words, then the learner. */
+      label: (name: string) => `Suggest a different start for ${name}`,
+    },
+    /**
+     * The pre-filled plan title (at most 60 characters). It names no learner: a plan title is
+     * stored with the plan and outlives learner removal and roster aliases.
+     */
+    suggestTitle: 'A suggested next step',
     /** The pre-filled item note (a plan item note holds at most 80 characters). */
     suggestNote: 'Try this next',
     suggestFor: (name: string) => `A suggestion for ${name}. It arrives as a plan and never changes ${name}'s level check or progress.`,

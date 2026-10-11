@@ -29,7 +29,7 @@ afterEach(() => {
 });
 
 const placement = (over: Partial<PlacementSummary> = {}): PlacementSummary => ({
-  takenAt: '2026-10-09T15:00:00.000Z',
+  takenAt: '2026-10-09T12:00:00.000Z',
   level: { stage: 'stage1', band: 1 },
   oralStage: null,
   strands: { 'hangul-recognition': 'secure', 'sound-letter': 'secure', 'syllable-reading': 'getting-there', vocabulary: 'not-tested', sentences: 'not-tested' },
@@ -39,7 +39,7 @@ const placement = (over: Partial<PlacementSummary> = {}): PlacementSummary => ({
 });
 
 const render = (summary: { placement?: PlacementSummary } | null): string =>
-  renderToStaticMarkup(<StartingSpot summary={summary} spaceId="space:c1" learnerId="learner:sam" />);
+  renderToStaticMarkup(<StartingSpot summary={summary} spaceId="space:c1" learnerId="learner:sam" learnerName=" Sam " />);
 
 describe('StartingSpot (console/roster)', () => {
   it('shows the line and the link to the plan builder for this learner', () => {
@@ -47,8 +47,14 @@ describe('StartingSpot (console/roster)', () => {
     expect(html).toContain('data-testid="starting-spot"');
     expect(html).toContain('Starting spot: Stage 1 · Letters and sounds · Oct 9');
     expect(html).toContain('href="/teach/space/plan?id=space%3Ac1&amp;suggest=learner%3Asam"');
-    expect(html).toContain('Suggest a different start');
+    expect(html).toContain('>Suggest a different start</a>');
     expect(html).not.toContain('Changed by a grown-up');
+  });
+
+  it('is one link named with the learner, not a button inside a link', () => {
+    const html = render({ placement: placement() });
+    expect(html).toContain('aria-label="Suggest a different start for Sam"');
+    expect(html).not.toContain('<button');
   });
 
   it('adds the quiet note when a grown-up changed the start', () => {
@@ -69,6 +75,6 @@ describe('StartingSpot (console/roster)', () => {
     const band = getMessages(PSEUDO).learner.placement.band.lettersAndSounds;
     expect(band).toMatch(/^\[/);
     expect(html).toContain(band);
-    expectAllPseudo(html, [band, 'Óçt 9'], 3);
+    expectAllPseudo(html, [band, 'Óçt 9', 'Sam'], 4);
   });
 });

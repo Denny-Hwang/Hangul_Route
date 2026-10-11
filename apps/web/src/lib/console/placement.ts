@@ -22,9 +22,6 @@ import { ROUTES } from './routing';
 
 type PlacementOf = Pick<RosterSummary, 'placement'> | null | undefined;
 
-/** Plan titles hold at most 60 UTF-16 units (`PlanUpsertSchema`). */
-const PLAN_TITLE_MAX = 60;
-
 /**
  * The band label of a level, from the same words the learner saw (`learner.placement.band`).
  * Null for a level this build does not know: the roster is not validated at runtime, and the
@@ -61,15 +58,15 @@ export function startingSpotChanged(summary: PlacementOf, locale: UiLocale = DEF
 /**
  * The quest the advisory plan opens with: the first playable grid quest the level does not
  * place out (`questsPlacedOutAtLevel`, the coarse mapping when only a level is known, section
- * 3.7 item 6), or the first one of the route without a level. Beyond the content it is the
- * last playable grid quest, so the builder still opens with one item; null only when the
- * catalogue has no playable lesson. The grown-up swaps it for the start they suggest.
+ * 3.7 item 6), or the first one of the route without a level. Null when the catalogue has no
+ * playable lesson or the level places out every one of them: a quest the learner already
+ * placed out would contradict the starting-spot line next to it, so the builder then opens
+ * with no item and the grown-up picks one. The grown-up can always swap the pre-filled quest.
  */
 export function suggestedStartQuestId(level: PlacementLevel | null, source: Catalog = CATALOG): string | null {
   const route = routeCatalogOf(source);
-  const playable = route.quests.filter((quest) => quest.grid && quest.playable);
   const placedOut = new Set(level ? questsPlacedOutAtLevel(level, route) : []);
-  return (playable.find((quest) => !placedOut.has(quest.id)) ?? playable[playable.length - 1])?.id ?? null;
+  return route.quests.find((quest) => quest.grid && quest.playable && !placedOut.has(quest.id))?.id ?? null;
 }
 
 export interface SuggestedStart {
@@ -79,19 +76,13 @@ export interface SuggestedStart {
   targets: string[];
 }
 
-/** Cut to `max` UTF-16 units without splitting a character. */
-function capUnits(text: string, max: number): string {
-  let out = '';
-  for (const char of text) {
-    if (out.length + char.length > max) break;
-    out += char;
-  }
-  return out;
-}
-
-/** The plan builder's prefill: one quest item with the note "Try this next", for this learner only. */
+/**
+ * The plan builder's prefill: one quest item with the note "Try this next", for this learner
+ * only. The title names no learner (it is stored with the plan); the name lives only in the
+ * builder's notice, which is never saved.
+ */
 export function suggestedStart(
-  learner: Pick<RosterLearner, 'id' | 'displayName' | 'summary'>,
+  learner: Pick<RosterLearner, 'id' | 'summary'>,
   locale: UiLocale = DEFAULT_LOCALE,
   source: Catalog = CATALOG,
 ): SuggestedStart {
@@ -99,7 +90,7 @@ export function suggestedStart(
   const level = learner.summary?.placement?.level ?? null;
   const questId = suggestedStartQuestId(level && PlacementLevelSchema.safeParse(level).success ? level : null, source);
   return {
-    title: capUnits(words.suggestTitle(learner.displayName.trim()), PLAN_TITLE_MAX),
+    title: words.suggestTitle,
     items: questId ? [{ kind: 'quest', id: questId, note: words.suggestNote }] : [],
     targets: [learner.id],
   };
@@ -129,4 +120,24 @@ export function suggestStartHref(spaceId: string, learnerId: string): string {
 export function suggestFrom(params: { get(name: string): string | null } | null): string | null {
   const id = params?.get(SUGGEST_PARAM)?.trim();
   return id ? id : null;
+}
+
+/**
+ * What a (re)load of the plan builder does with the draft. `keep` while a never-saved
+ * suggestion is open, so a re-run (a new session object, StrictMode, "Try again") never
+ * replaces it; `suggestion` the first time `?suggest=` names a learner on this roster;
+ * otherwise `stored`, the builder's ordinary opening (the selected plan's draft, or a new one).
+ */
+export function builderOnLoad(state: { suggestionApplied: boolean; suggestionOpen: boolean; suggestionFound: boolean }): 'keep' | 'suggestion' | 'stored' {
+  if (state.suggestionOpen) return 'keep';
+  if (!state.suggestionApplied && state.suggestionFound) return 'suggestion';
+  return 'stored';
+}
+
+/**
+ * The builder's suggestion notice names the learner, so it shows only while the unsaved draft
+ * still reaches exactly that learner; picking more learners or everyone hides it.
+ */
+export function suggestionNoticeShown(draft: { id?: string; targets: readonly string[] | null }, suggestedFor: string | null): boolean {
+  return suggestedFor !== null && draft.id === undefined && draft.targets?.length === 1 && draft.targets[0] === suggestedFor;
 }
