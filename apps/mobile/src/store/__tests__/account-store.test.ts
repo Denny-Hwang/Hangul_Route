@@ -40,14 +40,6 @@ describe('account-store', () => {
     expect(useAccountStore.getState().parentEmail).toBeNull();
   });
 
-  it('acceptConsent (kept until the CreateProfile rewrite) is a guardian attestation, as the old checkbox was', () => {
-    useAccountStore.getState().acceptConsent();
-    const s = useAccountStore.getState();
-    expect(s.consentAcceptedAt).toBeTruthy();
-    expect(s.guardianConsentAcceptedAt).toBe(s.consentAcceptedAt);
-    expect(s.selfConsentAcceptedAt).toBeNull();
-  });
-
   describe('consent keys (F-LEARN-001 §3.3)', () => {
     it('acceptGuardianConsent records the guardian stamp and the first-consent stamp', () => {
       useAccountStore.getState().acceptGuardianConsent();
