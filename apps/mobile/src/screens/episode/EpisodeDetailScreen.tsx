@@ -17,11 +17,14 @@ import {
   touchTarget,
 } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
-import { cardById, episodeById, questsAll, stageByKey, themeByKey } from '../../content';
+import { PrereqSheet } from '../../components/PrereqSheet';
+import { cardById, episodeById, episodesAll, questsAll, stageByKey, themeByKey } from '../../content';
+import { buildsOnLine, prereqSheet, softPrerequisite, type PrereqSheet as PrereqSheetModel } from '../../logic/quest-flow/soft-prereq';
 import type { RootStackParamList } from '../../navigation/types';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
+import { usePrereqSheetStore } from '../../store/prereq-sheet-store';
 import { useProgressStore } from '../../store/progress-store';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'EpisodeDetail'>;
@@ -30,6 +33,11 @@ export function EpisodeDetailScreen({ route, navigation }: Props): React.ReactEl
   const episode = episodeById(route.params.episodeId);
   const profile = useProfileStore(activeProfileSelector);
   const snap = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
+
+  const asked = usePrereqSheetStore((s) => s.asked);
+  const markAsked = usePrereqSheetStore((s) => s.markAsked);
+  // The quest whose "Start there?" sheet is open, if any (F-QUEST-002 §3.5).
+  const [sheet, setSheet] = useState<{ questId: string; model: PrereqSheetModel } | null>(null);
 
   // Reward cards are revealed only once earned (F-CARD-002 §3.6 spirit).
   const unlockedCardIds = useMemo(() => new Set((snap?.cards ?? []).map((c) => c.cardId)), [snap]);
@@ -53,145 +61,178 @@ export function EpisodeDetailScreen({ route, navigation }: Props): React.ReactEl
   const quests = episode.questIds.map((id) => questsAll.find((q) => q.id === id)).filter((q): q is NonNullable<typeof q> => Boolean(q));
   const isPreview = episode.status === 'preview';
 
+  const startQuest = (questId: string, episodeId: string): void => {
+    navigation.navigate('QuestPlayer', { questId, episodeId });
+  };
+
+  // Start on a quest whose predecessor is not done: ask once per session, never block.
+  const onStart = (questId: string): void => {
+    const model = prereqSheet({
+      snapshot: snap,
+      quests: questsAll,
+      episodes: episodesAll,
+      questId,
+      shownQuestIds: new Set(asked),
+    });
+    if (!model) {
+      startQuest(questId, episode.id);
+      return;
+    }
+    markAsked(questId);
+    setSheet({ questId, model });
+  };
+
   return (
-    <Screen tone="canvas" scrollable>
-      <Pressable
-        onPress={() => navigation.goBack()}
-        hitSlop={spacing.md}
-        accessibilityLabel="Go back"
-        style={{ alignSelf: 'flex-start', padding: spacing.xs }}
-      >
-        <Icon name="arrow-left" size={28} />
-      </Pressable>
-      <Spacer size="sm" />
+    <View style={{ flex: 1 }}>
+      <Screen tone="canvas" scrollable>
+        <Pressable
+          onPress={() => navigation.goBack()}
+          hitSlop={spacing.md}
+          accessibilityLabel="Go back"
+          style={{ alignSelf: 'flex-start', padding: spacing.xs }}
+        >
+          <Icon name="arrow-left" size={28} />
+        </Pressable>
+        <Spacer size="sm" />
 
-      <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-        <Pill tone="primary" label={stage?.titleEn ?? ''} size="sm" />
-        <Pill tone="secondary" label={theme?.titleEn ?? ''} size="sm" />
-        {isPreview ? <Pill tone="neutral" label="Coming soon" size="sm" /> : null}
-      </View>
+        <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+          <Pill tone="primary" label={stage?.titleEn ?? ''} size="sm" />
+          <Pill tone="secondary" label={theme?.titleEn ?? ''} size="sm" />
+          {isPreview ? <Pill tone="neutral" label="Coming soon" size="sm" /> : null}
+        </View>
 
-      <Spacer size="md" />
-      {/* The stage colour is an accent bar, not the text colour: stage1-4 are below 3:1 as text. */}
-      <View
-        style={{ width: spacing.xxxl, height: spacing.sm, borderRadius: radii.pill, backgroundColor: stageColor }}
-      />
-      <Spacer size="sm" />
-      <Heading level="display">{episode.titleEn}</Heading>
-      {episode.subtitleEn ? (
-        <>
-          <Spacer size="xs" />
-          <Body tone="secondary">{episode.subtitleEn}</Body>
-        </>
-      ) : null}
+        <Spacer size="md" />
+        {/* The stage colour is an accent bar, not the text colour: stage1-4 are below 3:1 as text. */}
+        <View
+          style={{ width: spacing.xxxl, height: spacing.sm, borderRadius: radii.pill, backgroundColor: stageColor }}
+        />
+        <Spacer size="sm" />
+        <Heading level="display">{episode.titleEn}</Heading>
+        {episode.subtitleEn ? (
+          <>
+            <Spacer size="xs" />
+            <Body tone="secondary">{episode.subtitleEn}</Body>
+          </>
+        ) : null}
 
-      <Spacer size="lg" />
-      <HoyaBubble tone="idle" message={episode.hoyaIntroEn} />
+        <Spacer size="lg" />
+        <HoyaBubble tone="idle" message={episode.hoyaIntroEn} />
 
-      {isPreview ? (
-        <>
-          <Spacer size="xl" />
-          <Card padding="md" tone="sunken">
-            <View style={{ alignItems: 'center' }}>
-              <Hoya pose="reading" size={96} />
-              <Spacer size="md" />
-              <Body weight="semibold">Coming soon</Body>
-              <Caption tone="muted" align="center">
-                Finish Stage 1 to help Hoya unlock this episode.
-              </Caption>
-            </View>
-          </Card>
-        </>
-      ) : (
-        <>
-          <Spacer size="lg" />
-          <Heading level="prompt">Quests</Heading>
-          <Spacer size="sm" />
-          {quests.map((q, i) => {
-            const stars = questProgress.get(q.id) ?? 0;
-            return (
-              <Card key={q.id} padding="md" style={{ marginBottom: spacing.sm }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
-                  <View
-                    style={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: radii.circle,
-                      backgroundColor: stars > 0 ? colors.feedback.successLight : colors.surface.sunken,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <Body weight="bold">{i + 1}</Body>
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Body weight="semibold">{q.titleEn}</Body>
-                    {q.blurbEn ? <Caption tone="muted">{q.blurbEn}</Caption> : null}
-                    <Spacer size="xs" />
-                    <StarRow stars={stars as 0 | 1 | 2 | 3} size={18} />
-                  </View>
-                </View>
+        {isPreview ? (
+          <>
+            <Spacer size="xl" />
+            <Card padding="md" tone="sunken">
+              <View style={{ alignItems: 'center' }}>
+                <Hoya pose="reading" size={96} />
                 <Spacer size="md" />
-                <Button
-                  label={stars > 0 ? 'Play again' : 'Start'}
-                  tone={stars > 0 ? 'secondary' : 'primary'}
-                  size="md"
-                  fullWidth
-                  onPress={() =>
-                    navigation.navigate('QuestPlayer', {
-                      questId: q.id,
-                      episodeId: episode.id,
-                    })
-                  }
-                />
-              </Card>
-            );
-          })}
-
-          <Spacer size="lg" />
-          <Heading level="prompt">Cards in this episode</Heading>
-          <Spacer size="sm" />
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
-            {episode.rewardCardIds.map((cid) => {
-              const c = cardById(cid);
-              if (!c) return null;
-              const earned = unlockedCardIds.has(cid);
+                <Body weight="semibold">Coming soon</Body>
+                <Caption tone="muted" align="center">
+                  Finish Stage 1 to help Hoya unlock this episode.
+                </Caption>
+              </View>
+            </Card>
+          </>
+        ) : (
+          <>
+            <Spacer size="lg" />
+            <Heading level="prompt">Quests</Heading>
+            <Spacer size="sm" />
+            {quests.map((q, i) => {
+              const stars = questProgress.get(q.id) ?? 0;
+              const buildsOn = stars === 0 ? softPrerequisite({ snapshot: snap, quests: questsAll, episodes: episodesAll, questId: q.id }) : undefined;
               return (
-                <Pressable
-                  key={cid}
-                  disabled={!earned}
-                  onPress={() => navigation.navigate('CardDetail', { cardId: cid })}
-                  accessibilityRole="button"
-                  accessibilityLabel={earned ? `${c.titleEn} card` : 'A card still waiting to be earned'}
-                  style={{
-                    flexBasis: '47%',
-                    padding: spacing.md,
-                    backgroundColor: earned ? colors.surface.paper : colors.surface.sunken,
-                    borderRadius: radii.md,
-                    borderWidth: 1,
-                    borderColor: colors.border.subtle,
-                    minHeight: touchTarget.min,
-                  }}
-                >
-                  {earned ? (
-                    <>
-                      <Body weight="semibold">{c.titleEn}</Body>
-                      {c.subtitleKo ? <Caption tone="brand">{c.subtitleKo}</Caption> : null}
-                      <Pill tone="neutral" size="sm" label={c.rarity} />
-                    </>
-                  ) : (
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-                      <Icon name="lock" size={20} color={colors.text.muted} />
-                      <Caption tone="muted">Waiting for you</Caption>
+                <Card key={q.id} padding="md" style={{ marginBottom: spacing.sm }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+                    <View
+                      style={{
+                        width: 44,
+                        height: 44,
+                        borderRadius: radii.circle,
+                        backgroundColor: stars > 0 ? colors.feedback.successLight : colors.surface.sunken,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <Body weight="bold">{i + 1}</Body>
                     </View>
-                  )}
-                </Pressable>
+                    <View style={{ flex: 1 }}>
+                      <Body weight="semibold">{q.titleEn}</Body>
+                      {q.blurbEn ? <Caption tone="muted">{q.blurbEn}</Caption> : null}
+                      {buildsOn ? <Caption tone="muted">{buildsOnLine(buildsOn)}</Caption> : null}
+                      <Spacer size="xs" />
+                      <StarRow stars={stars as 0 | 1 | 2 | 3} size={18} />
+                    </View>
+                  </View>
+                  <Spacer size="md" />
+                  <Button
+                    label={stars > 0 ? 'Play again' : 'Start'}
+                    tone={stars > 0 ? 'secondary' : 'primary'}
+                    size="md"
+                    fullWidth
+                    onPress={() => (stars > 0 ? startQuest(q.id, episode.id) : onStart(q.id))}
+                  />
+                </Card>
               );
             })}
-          </View>
-        </>
-      )}
-      <Spacer size="xxl" />
-    </Screen>
+
+            <Spacer size="lg" />
+            <Heading level="prompt">Cards in this episode</Heading>
+            <Spacer size="sm" />
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
+              {episode.rewardCardIds.map((cid) => {
+                const c = cardById(cid);
+                if (!c) return null;
+                const earned = unlockedCardIds.has(cid);
+                return (
+                  <Pressable
+                    key={cid}
+                    disabled={!earned}
+                    onPress={() => navigation.navigate('CardDetail', { cardId: cid })}
+                    accessibilityRole="button"
+                    accessibilityLabel={earned ? `${c.titleEn} card` : 'A card still waiting to be earned'}
+                    style={{
+                      flexBasis: '47%',
+                      padding: spacing.md,
+                      backgroundColor: earned ? colors.surface.paper : colors.surface.sunken,
+                      borderRadius: radii.md,
+                      borderWidth: 1,
+                      borderColor: colors.border.subtle,
+                      minHeight: touchTarget.min,
+                    }}
+                  >
+                    {earned ? (
+                      <>
+                        <Body weight="semibold">{c.titleEn}</Body>
+                        {c.subtitleKo ? <Caption tone="brand">{c.subtitleKo}</Caption> : null}
+                        <Pill tone="neutral" size="sm" label={c.rarity} />
+                      </>
+                    ) : (
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+                        <Icon name="lock" size={20} color={colors.text.muted} />
+                        <Caption tone="muted">Waiting for you</Caption>
+                      </View>
+                    )}
+                  </Pressable>
+                );
+              })}
+            </View>
+          </>
+        )}
+        <Spacer size="xxl" />
+      </Screen>
+      {sheet ? (
+        <PrereqSheet
+          sheet={sheet.model}
+          onStartThere={() => {
+            setSheet(null);
+            startQuest(sheet.model.previousQuestId, sheet.model.previousEpisodeId);
+          }}
+          onPlayAnyway={() => {
+            setSheet(null);
+            startQuest(sheet.questId, episode.id);
+          }}
+        />
+      ) : null}
+    </View>
   );
 }
