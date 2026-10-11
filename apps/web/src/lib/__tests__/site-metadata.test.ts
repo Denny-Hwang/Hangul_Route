@@ -65,10 +65,11 @@ describe('siteMetadataFor', () => {
     expect(meta.alternates).toBeUndefined();
   });
 
-  it.each(['en', 'es', 'ko'] as const)('%s on a QA build: indexable, with hreflang alternates', (locale) => {
+  it.each(['en', 'es', 'ko'] as const)('%s on a QA build: indexable, with hreflang alternates and itself as canonical', (locale) => {
     const meta = siteMetadataFor(locale, '/terms', true);
     expect(meta.robots).toEqual({ index: true, follow: true });
-    expect(meta.alternates).toEqual(siteAlternates('/terms', true));
+    expect(meta.alternates).toEqual({ canonical: locale === 'en' ? '/terms' : `/${locale}/terms`, ...siteAlternates('/terms', true) });
+    expect(siteMetadataFor(locale, '/', true).alternates?.canonical).toBe(locale === 'en' ? '/' : `/${locale}`);
     expect(meta.openGraph).toMatchObject({ locale: LOCALE_META[locale].ogLocale });
   });
 

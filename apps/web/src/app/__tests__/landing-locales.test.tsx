@@ -1,3 +1,4 @@
+import { touchTarget } from '@hangul-route/design-system/tokens';
 import { LOCALE_META, getMessages } from '@hangul-route/i18n';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -122,8 +123,46 @@ describe('on a QA build every locale is offered', () => {
     expect(html).toContain(`<button type="button" aria-label="${offer.dismiss}"`);
   });
 
+  it('both banner controls are touch-sized: the link as well as the close button', () => {
+    const offer = localeBannerOffers(['en', 'es'])['es']!;
+    const html = renderToStaticMarkup(<LocaleBannerView offer={offer} onDismiss={() => undefined} />);
+    const link = html.match(/<a [^>]*>/)?.[0] ?? '';
+    const button = html.match(/<button [^>]*>/)?.[0] ?? '';
+    expect(link).toContain(`min-height:${touchTarget.min}px`);
+    expect(button).toContain(`min-height:${touchTarget.min}px`);
+  });
+
   it('the banner is client-only: the static HTML of / holds none of it', () => {
     const html = renderToStaticMarkup(<LandingPage locale="en" />);
     expect(html).not.toContain('View in');
   });
 });
+
+describe('the legal pages stay English-authoritative under a localized notice (decision L10)', () => {
+  const LEGAL = [
+    ['privacy', () => import('../(en)/privacy/page'), () => import('../(loc)/[locale]/privacy/page')],
+    ['terms', () => import('../(en)/terms/page'), () => import('../(loc)/[locale]/terms/page')],
+  ] as const;
+  const NOTICE = /<p role="note" data-testid="english-authoritative"[^>]*>([^<]*)<\/p>/;
+
+  it.each(LEGAL)('%s: English has no notice and no lang marks', async (_name, en) => {
+    const html = renderToStaticMarkup((await en()).default());
+    expect(html).not.toMatch(NOTICE);
+    expect(html).not.toContain('lang=');
+  });
+
+  it.each(LEGAL)('%s: /es and /ko show the notice in their words, above the document marked lang="en"', async (_name, _en, loc) => {
+    const mod = (await loc()) as { default: (p: { params: { locale: string } }) => JSX.Element };
+    for (const locale of ['es', 'ko'] as const) {
+      const html = renderToStaticMarkup(mod.default({ params: { locale } }));
+      const notice = html.match(NOTICE);
+      expect(notice?.[1]).toBe(getMessages(locale).landing.legal.englishAuthoritative);
+      // Notice first, then the title, the date, every section and the other document's link, each marked English.
+      expect(html.indexOf(notice?.[0] ?? '')).toBeLessThan(html.indexOf('<h1'));
+      expect(html).toMatch(/<h1 lang="en"/);
+      expect((html.match(/<section lang="en"/g) ?? []).length).toBe((html.match(/<section/g) ?? []).length);
+      expect(html).toMatch(/<a [^>]*lang="en"[^>]*>(Terms of Service|Privacy Policy)<\/a>/);
+    }
+  });
+});
+

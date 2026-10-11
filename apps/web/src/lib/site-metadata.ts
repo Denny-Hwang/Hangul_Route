@@ -33,14 +33,17 @@ export function siteAlternates(page: SitePage, showAll: boolean = siteShowAllLoc
   return { languages };
 }
 
-/** The metadata of `page` in `locale`. A hidden locale is `noindex` and names no alternates. */
+/**
+ * The metadata of `page` in `locale`. A hidden locale is `noindex` and names no alternates. With alternates the page
+ * also names itself as canonical (`alternates.canonical`), as search engines expect beside hreflang.
+ */
 export function siteMetadataFor(locale: UiLocale, page: SitePage, showAll: boolean = siteShowAllLocales()): Metadata {
   const hidden = isSiteLocale(locale) && !isShippedSiteLocale(locale, showAll);
   const alternates = hidden ? undefined : siteAlternates(page, showAll);
   return {
     ...landingCopy(locale).metadata,
     metadataBase: new URL(SITE_URL),
-    ...(alternates ? { alternates } : {}),
+    ...(alternates ? { alternates: { canonical: sitePath(locale, page), ...alternates } } : {}),
     ...(hidden ? { robots: { index: false, follow: false } } : {}),
   };
 }
