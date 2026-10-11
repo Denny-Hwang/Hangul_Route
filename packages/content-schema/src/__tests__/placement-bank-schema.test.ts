@@ -351,6 +351,20 @@ describe('PlacementBankSchema', () => {
     expect(bankMessages({ version: 1, templates: [...many(recog, 9, 'a'), ...draftSound] })).toEqual([]);
   });
 
+  it('needs the per-format pools the three modes rely on: 6 ready hear-pick-written per decoding gate, 2 ready tiles per syllable gate', () => {
+    const fewHear: PlacementBank = { version: 1, templates: [...many(recog, 9, 'a'), ...many(soundHear, 5, 'b'), ...many(soundSee, 4, 'c')] };
+    expect(bankMessages(fewHear)).toEqual(['sound-basic needs at least 6 ready hear-pick-written templates, has 5']);
+    const enoughHear: PlacementBank = { version: 1, templates: [...many(recog, 9, 'a'), ...many(soundHear, 6, 'b'), ...many(soundSee, 3, 'c')] };
+    expect(bankMessages(enoughHear)).toEqual([]);
+    const cvHear = (): PlacementTemplate => change(cvBuild, (t) => (t.question.format = 'hear-pick-written'));
+    const oneTile: PlacementBank = { version: 1, templates: [...many(recog, 9, 'a'), ...many(cvHear, 8, 'd'), ...many(cvBuild, 1, 'e')] };
+    expect(bankMessages(oneTile)).toEqual(['syl-cv needs at least 2 ready build-syllable templates, has 1']);
+    expect(bankMessages({ version: 1, templates: [...many(recog, 9, 'a'), ...many(cvHear, 7, 'd'), ...many(cvBuild, 2, 'e')] })).toEqual([]);
+    // A gate with no ready template is not checked (drafts never count).
+    const draftTiles = many(cvBuild, 9, 'e').map((t) => ({ ...t, status: 'draft' as const }));
+    expect(bankMessages({ version: 1, templates: [...many(recog, 9, 'a'), ...draftTiles] })).toEqual([]);
+  });
+
   it('checks that incompatibleWith ids exist and are never offered as distractors', () => {
     const r1 = change(reply, (t) => (t.id = 'pitem:sent-reply-1'));
     const lonely: PlacementBank = { version: 1, templates: [...many(recog, 9, 'a'), r1] };
