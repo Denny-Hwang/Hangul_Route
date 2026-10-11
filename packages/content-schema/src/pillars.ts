@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { romanize } from './romanization/rr';
 import type { ThemeKey } from './schemas/heritage-card';
 
 /** Shared by lint, mobile and web (F-STORY-005 §3.2). */
@@ -18,10 +19,10 @@ export type Pillar = 'A' | 'B' | 'C' | 'D' | 'E';
 
 /** One blueprint 04 sub-theme. Romanization is generated (F-CNT-002), never typed. */
 export interface PillarTag {
-  id: string;
-  pillar: Pillar;
-  ko: string;
-  en: string;
+  readonly id: string;
+  readonly pillar: Pillar;
+  readonly ko: string;
+  readonly en: string;
 }
 
 /**
@@ -30,7 +31,7 @@ export interface PillarTag {
  * the proposed D5 (owner to confirm). One list for the importer, lint, app and
  * console. Tags are catalogue metadata: never shown to learners, never a grid axis.
  */
-export const PILLAR_TAGS: readonly PillarTag[] = Object.freeze([
+export const PILLAR_TAGS: readonly PillarTag[] = Object.freeze(([
   { id: 'A1', pillar: 'A', ko: '훈민정음', en: 'The creation of Hangul' },
   { id: 'A2', pillar: 'A', ko: '팔만대장경', en: 'The Tripitaka Koreana woodblocks' },
   { id: 'A3', pillar: 'A', ko: '조선왕조실록', en: 'The Annals of the Joseon Dynasty' },
@@ -55,7 +56,10 @@ export const PILLAR_TAGS: readonly PillarTag[] = Object.freeze([
   { id: 'E3', pillar: 'E', ko: '측우기와 자격루', en: 'The rain gauge and the self-striking water clock' },
   { id: 'E4', pillar: 'E', ko: '동의보감', en: 'Donguibogam (Principles and Practice of Eastern Medicine)' },
   { id: 'E5', pillar: 'E', ko: '천문과 우주', en: 'Astronomy and the sky' },
-] satisfies PillarTag[]);
+] satisfies PillarTag[]).map((tag) => Object.freeze(tag)));
+
+/** A tag's romanization, generated from `ko` by the F-CNT-002 converter (D13); never stored. */
+export const pillarTagRomanization = (tag: Pick<PillarTag, 'ko'>): string => romanize(tag.ko).text;
 
 const PILLAR_TAG_IDS: ReadonlySet<string> = new Set(PILLAR_TAGS.map((t) => t.id));
 

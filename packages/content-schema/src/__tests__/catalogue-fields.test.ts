@@ -4,11 +4,14 @@ import {
   EpisodeSchema,
   PILLAR_HOME_THEME,
   PILLAR_TAGS,
+  PillarTagSchema,
   StoryObjectSchema,
   ThemeKeySchema,
   isPillarTag,
   lintStory,
   parseStory,
+  pillarTagRomanization,
+  romanize,
   type Story,
 } from '../index';
 import readyJson from '../__fixtures__/story/valid.ready.json';
@@ -69,6 +72,33 @@ describe('PILLAR_TAGS registry (§3.8)', () => {
       expect(HANGUL.test(tag.en), tag.id).toBe(false);
     }
     expect(new Set(PILLAR_TAGS.map((t) => t.id)).size).toBe(PILLAR_TAGS.length);
+  });
+
+  it('generates every romanization with the F-CNT-002 converter, none typed (§3.8, D13)', () => {
+    for (const tag of PILLAR_TAGS) {
+      const { text, unknown } = romanize(tag.ko);
+      expect(unknown, tag.id).toEqual([]);
+      expect(text.trim().length, tag.id).toBeGreaterThan(0);
+      expect(pillarTagRomanization(tag), tag.id).toBe(text);
+    }
+    expect(Object.keys(PILLAR_TAGS[0] ?? {})).not.toContain('romanization');
+  });
+
+  it('is frozen to the entry, so no consumer can edit the shared list', () => {
+    expect(Object.isFrozen(PILLAR_TAGS)).toBe(true);
+    for (const tag of PILLAR_TAGS) expect(Object.isFrozen(tag), tag.id).toBe(true);
+    const first = PILLAR_TAGS[0] as { ko: string };
+    expect(() => {
+      first.ko = 'x';
+    }).toThrow(TypeError);
+    expect(PILLAR_TAGS[0]?.ko).toBe('훈민정음');
+  });
+
+  it('PillarTagSchema admits one pillar letter A-E and one digit 1-9, nothing else', () => {
+    for (const ok of ['A1', 'E9', 'D5']) expect(PillarTagSchema.safeParse(ok).success, ok).toBe(true);
+    for (const bad of ['A0', 'A10', 'F1', '', ' a1', 'a1', 'A1 ', 'Z1']) {
+      expect(PillarTagSchema.safeParse(bad).success, JSON.stringify(bad)).toBe(false);
+    }
   });
 
   it('isPillarTag answers registry membership, not the regex', () => {
@@ -216,6 +246,19 @@ describe('EpisodeSchema grid rules (§3.2)', () => {
     expect(messages({ ...shelf, id: 'episode:shelf-dano-ssireum-v12', volume: 12 })).toEqual([]);
   });
 
+  it('an id ending -v<n> needs volume n, so the id and the volume never disagree', () => {
+    expect(messages({ ...book, id: 'episode:stage5-rites-v2' })).toEqual([
+      'volume: an episode whose id ends -v2 has volume 2 (got 1)',
+    ]);
+    expect(messages({ ...book, id: 'episode:stage5-rites-v3', volume: 1 })).toEqual([
+      'volume: an episode whose id ends -v3 has volume 3 (got 1)',
+    ]);
+    expect(messages({ ...shelf, id: 'episode:shelf-dano-ssireum-v2' })).toEqual([
+      'volume: an episode whose id ends -v2 has volume 2 (got 1)',
+    ]);
+    expect(messages({ ...book, id: 'episode:stage5-rites-v1', volume: 1 })).toEqual([]);
+  });
+
   it('the questIds rule of F-STORY-001 still runs next to these', () => {
     expect(messages({ ...lesson, questIds: [] })).toEqual([
       'questIds: questIds needs at least one quest unless the episode is a preview',
@@ -231,6 +274,11 @@ describe('Story catalogue fields (§3.2; lint, F-STORY-001 §3.8)', () => {
   it('the strict Story schema still rejects other unknown keys', () => {
     expect(StoryObjectSchema.safeParse({ ...readyJson, pillarTags: ['A1'] }).success).toBe(true);
     expect(StoryObjectSchema.safeParse({ ...readyJson, pillars: ['A1'] }).success).toBe(false);
+  });
+
+  it('rejects a companion other than hoya in the strict schema', () => {
+    expect(StoryObjectSchema.safeParse({ ...readyJson, companionId: 'hoya' }).success).toBe(true);
+    expect(StoryObjectSchema.safeParse({ ...readyJson, companionId: 'huni' }).success).toBe(false);
   });
 
   it('rejects more than three tags in the schema', () => {

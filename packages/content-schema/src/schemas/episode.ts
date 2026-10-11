@@ -31,7 +31,10 @@ export const EpisodeObjectSchema = z.object({
   storyIds: z.array(z.string()).optional(),
 }).merge(CatalogueFieldsSchema); // `pillarTags`, `companionId` (F-STORY-005 §3.2)
 
-/** A grid episode's `order` is its theme's column, 1-based in `ThemeKeySchema` order (= `themes[theme].order`). */
+/**
+ * A grid episode's `order` is its theme's column, 1-based in `ThemeKeySchema` order. The app's
+ * `themes[theme].order` (apps/mobile stages.ts) must equal it; content-integrity.test.ts guards that.
+ */
 export const themeOrder = (theme: ThemeKey): number => ThemeKeySchema.options.indexOf(theme) + 1;
 
 /** At launch a story episode on the grid is a Stage 5 book (F-STORY-005 D9) holding 2-3 quests. */
@@ -87,6 +90,11 @@ export const episodeRules = (episode: EpisodeRuleInput, ctx: z.RefinementCtx): v
   const { volume } = episode;
   if (volume >= 2 && !episode.id.endsWith(`-v${volume}`)) {
     issue(['id'], `an episode of volume ${volume} has an id ending -v${volume} (got ${episode.id})`);
+  } else {
+    const suffix = /-v(\d+)$/.exec(episode.id)?.[1];
+    if (suffix !== undefined && Number(suffix) !== volume) {
+      issue(['volume'], `an episode whose id ends -v${suffix} has volume ${suffix} (got ${volume})`);
+    }
   }
 };
 

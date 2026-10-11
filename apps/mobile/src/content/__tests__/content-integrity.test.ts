@@ -3,6 +3,8 @@ import {
   EpisodeSchema,
   QuestSchema,
   StoryCheckSchema,
+  ThemeKeySchema,
+  themeOrder,
   type Story,
   type StoryCheck,
 } from '@hangul-route/content-schema';
@@ -14,6 +16,7 @@ import { episodesAll } from '../episodes';
 import { jamoAll } from '../jamo';
 import { strokesForJamo, type JamoStrokePoint } from '../jamo-strokes';
 import { questById, questsAll } from '../quests';
+import { themes } from '../stages';
 import { storiesAll, storyById, storyEpisodes, storyQuests } from '../stories';
 
 describe('content integrity', () => {
@@ -220,6 +223,11 @@ describe('story content integrity (F-STORY-003 §3.8)', () => {
         }
       }
     }
+  });
+
+  it('the schema theme order is the grid column order of `themes` (F-STORY-005 §3.2)', () => {
+    expect(themes.map((t) => t.key)).toEqual(ThemeKeySchema.options);
+    for (const t of themes) expect(themeOrder(t.key), t.key).toBe(t.order);
   });
 
   it('EpisodeSchema, with the catalogue rules of F-STORY-005 §3.2, parses every episode in the app', () => {
