@@ -309,4 +309,5 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.parent.child.stars': [[3]],
   'learner.library.how.stage': [[1]],
   'a11y.lockedCardHint': [['Finish the episode: Around the Korean Table']],
+  'a11y.newCard': [['Kimchi']],
 };

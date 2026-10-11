@@ -37,6 +37,10 @@ describe('learner.library (F-STORY-006 §3.7)', () => {
     );
   });
 
+  it('a tile with the New pill says so to assistive tech', () => {
+    expect(m.a11y.newCard('Kimchi')).toBe('Kimchi. New');
+  });
+
   it('never shows a fraction, a percent or a shaming word', () => {
     const lines = [l.collected.line(3), l.new.pill, l.how.quest, l.how.episode, l.how.stage(1), l.how.story, l.how.welcome];
     for (const line of lines) {
@@ -48,7 +52,7 @@ describe('learner.library (F-STORY-006 §3.7)', () => {
 
 describe('en-XA covers the new function messages', () => {
   const pseudo = pseudoLocalize(m);
-  for (const path of ['learner.library.collected.line', 'learner.library.how.stage', 'a11y.lockedCardHint']) {
+  for (const path of ['learner.library.collected.line', 'learner.library.how.stage', 'a11y.lockedCardHint', 'a11y.newCard']) {
     it(`${path} is bracketed and at least 40% longer`, () => {
       const samples = SAMPLES[path];
       expect(samples, `function message ${path} needs a row in SAMPLES`).toBeDefined();
