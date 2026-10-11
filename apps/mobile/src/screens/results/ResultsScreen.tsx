@@ -38,7 +38,7 @@ import Svg, { Path } from 'react-native-svg';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
 import { cardById, episodeById, episodesAll, questById, questsAll } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
-import { localizeCard, localizeTitle } from '../../logic/content-locale';
+import { localizeCard } from '../../logic/content-locale';
 import { isStageEntitled } from '../../logic/entitlement';
 import {
   resultsActions,
@@ -134,17 +134,16 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
   // snapshot the effect above is still writing) keeps it stable across the write.
   const tier = effectiveTier(profile?.id ?? '', new Date()).tier;
   const teaser = useMemo(
-    () => {
-      const next = resultsTeaser({
+    () =>
+      resultsTeaser({
         snapshot,
         quests: questsAll,
         episodes: episodesAll,
         questId,
         total,
         isEntitled: (stageKey) => isStageEntitled(stageKey, tier),
-      });
-      return next && localizeTitle(next, next.questId, locale);
-    },
+        locale,
+      }),
     // `cachedTier` re-renders this screen when the inbox changes the tier.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [snapshot, questId, total, tier, cachedTier, locale],
