@@ -31,7 +31,7 @@ describe('./word-art entry', () => {
     await expect(import('../index')).resolves.toBeDefined();
   });
 
-  it('exports the W-1b data model, builders, tones, render list, registry and colour-confusion pairs', async () => {
+  it('exports the data model, builders, tones, render list, registry, colour-confusion pairs, generators and the component model', async () => {
     const entry = await import('../index');
     for (const name of [
       'WORD_ART',
@@ -61,6 +61,27 @@ describe('./word-art entry', () => {
       'groundShadow',
       'face',
       'isWordArtPath',
+      // W-1c: placement, the generators and the component's pure model
+      'placeGlyph',
+      'placePath',
+      'placeShape',
+      'haloOf',
+      'swatch',
+      'colorGlyphs',
+      'COLOR_SWATCHES',
+      'count',
+      'countGlyphs',
+      'COUNT_VALUES',
+      'bodyPart',
+      'bodyGlyphs',
+      'BODY_PARTS',
+      'BODY_ANCHORS',
+      'ring',
+      'figure',
+      'figureTop',
+      'marker',
+      'siblings',
+      'wordArtModel',
     ]) {
       expect(entry, name).toHaveProperty(name);
     }

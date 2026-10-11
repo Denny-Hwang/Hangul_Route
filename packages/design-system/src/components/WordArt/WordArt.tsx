@@ -1,0 +1,56 @@
+import React, { useMemo } from 'react';
+import { View } from 'react-native';
+import Svg, { Circle, Ellipse, Path, Rect } from 'react-native-svg';
+import { wordArtModel } from '../../word-art/model';
+import type { RenderShape } from '../../word-art/render';
+import type { WordArtProps } from './types';
+
+/**
+ * WordArt: a vocabulary word's picture (F-VOC-002 §3.7), hand-authored data
+ * on a 0 0 100 100 viewBox with design tokens only. What to draw and how to
+ * name it is decided in `word-art/model.ts`; this only paints the render list.
+ * An unknown key renders nothing, so the caller shows its text tile. No
+ * motion inside the art. Design: design/components/WordArt/spec.md.
+ */
+
+const TAGS = { circle: Circle, ellipse: Ellipse, rect: Rect, path: Path } as const;
+
+function Shape({ shape }: { shape: RenderShape }): React.ReactElement {
+  const Tag = TAGS[shape.tag] as React.ComponentType<Record<string, unknown>>;
+  return (
+    <Tag
+      {...shape.geometry}
+      fill={shape.fill}
+      stroke={shape.stroke}
+      strokeWidth={shape.strokeWidth}
+      strokeLinecap={shape.strokeLinecap}
+      strokeLinejoin={shape.strokeLinejoin}
+      opacity={shape.opacity}
+    />
+  );
+}
+
+function WordArtBase({ artKey, size, mono, decorative, accessibilityLabel, testID }: WordArtProps): React.ReactElement | null {
+  const model = useMemo(() => wordArtModel({ artKey, size, mono, decorative, accessibilityLabel }), [artKey, size, mono, decorative, accessibilityLabel]);
+  if (model === null) return null;
+  return (
+    <View
+      testID={testID}
+      accessible={model.label !== undefined}
+      accessibilityRole={model.label !== undefined ? 'image' : undefined}
+      accessibilityLabel={model.label}
+      accessibilityElementsHidden={model.decorative}
+      importantForAccessibility={model.decorative ? 'no-hide-descendants' : undefined}
+      style={{ width: model.size, height: model.size }}
+    >
+      <Svg width={model.size} height={model.size} viewBox={model.viewBox}>
+        {model.shapes.map((shape, index) => (
+          <Shape key={index} shape={shape} />
+        ))}
+      </Svg>
+    </View>
+  );
+}
+
+/** Memoised: a glyph is data and never changes while it is shown. */
+export const WordArt = React.memo(WordArtBase);
