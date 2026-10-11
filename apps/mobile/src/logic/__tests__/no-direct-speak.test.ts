@@ -22,7 +22,7 @@ const PENDING_A5B = [
   'minigames/CardMatchGame.tsx',
   'minigames/TapRespondGame.tsx',
   'minigames/VoiceEchoGame.tsx',
-  'library/CardDetailScreen.tsx',
+  'library/CardDetailView.tsx',
 ];
 
 function sourceFiles(dir: string): string[] {
