@@ -80,6 +80,9 @@ export const a11y = {
       /** The diagram's label: its description, then how to close it. */
       close: (description: string) => `${description} Tap to close.`,
     },
+    /** Card Match: a Korean word (its romanization, else the word) and a meaning (content gloss). */
+    koreanWord: (word: string) => `Korean word ${word}`,
+    meaning: (gloss: string) => `English meaning ${gloss}`,
   },
   /** A taught Korean item: Korean text, its romanization and (optionally) a gloss in the UI language. */
   koreanItem: (item: { ko: string; romanization: string; gloss?: string }) =>

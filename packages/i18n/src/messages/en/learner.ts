@@ -352,6 +352,12 @@ export const learner = {
         start: 'Try again — start at the top!',
       },
     },
+    /** Card Match: Korean words on the left, meanings on the right. */
+    cardMatch: {
+      heading: 'Match the meaning',
+      instruction: 'Tap a Korean word, then its English meaning.',
+      nowMeaning: 'Now tap its meaning on the right.',
+    },
   },
 
   /**

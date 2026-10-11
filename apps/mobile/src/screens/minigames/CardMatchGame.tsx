@@ -15,6 +15,7 @@ import {
 } from '@hangul-route/design-system';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
+import { useMessages } from '../../i18n/use-messages';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { pairRoundKey } from '../../logic/round-keys';
 import { speak } from '../../platform/audio';
@@ -31,6 +32,8 @@ interface Props {
  * Child taps matching pairs. Game completes when all pairs are matched.
  */
 export function CardMatchGame({ scope, onFinish }: Props): React.ReactElement {
+  const m = useMessages();
+  const copy = m.learner.minigame;
   const pairs = useMemo(() => scope.cardPairs ?? [], [scope]);
   const koList = useMemo(() => pairs.map((p, i) => ({ ...p, idx: i })), [pairs]);
   const enList = useMemo(() => {
@@ -86,12 +89,12 @@ export function CardMatchGame({ scope, onFinish }: Props): React.ReactElement {
         <View style={{ flex: 1 }}>
           <Progress value={matched.size} max={pairs.length} tone="primary" />
         </View>
-        <Pill label={`${matched.size} / ${pairs.length}`} size="sm" />
+        <Pill label={copy.progress.pill(matched.size, pairs.length)} size="sm" />
       </View>
 
       <Spacer size="lg" />
-      <Heading level="prompt">Match the meaning</Heading>
-      <Caption tone="muted">Tap a Korean word, then its English meaning.</Caption>
+      <Heading level="prompt">{copy.cardMatch.heading}</Heading>
+      <Caption tone="muted">{copy.cardMatch.instruction}</Caption>
 
       <Spacer size="lg" />
       <View style={{ flexDirection: 'row', gap: spacing.md }}>
@@ -108,7 +111,7 @@ export function CardMatchGame({ scope, onFinish }: Props): React.ReactElement {
                   setSelectedKo(p.idx);
                   speak(p.ko, { language: 'ko-KR' });
                 }}
-                accessibilityLabel={`Korean word ${p.romanization ?? p.ko}`}
+                accessibilityLabel={m.a11y.minigame.koreanWord(p.romanization ?? p.ko)}
                 disabled={isMatched}
                 style={{
                   padding: spacing.md,
@@ -151,7 +154,7 @@ export function CardMatchGame({ scope, onFinish }: Props): React.ReactElement {
               <Pressable
                 key={`en-${p.idx}`}
                 onPress={() => tryMatch(p.idx)}
-                accessibilityLabel={`English meaning ${p.en}`}
+                accessibilityLabel={m.a11y.minigame.meaning(p.en)}
                 disabled={isMatched}
                 style={{
                   padding: spacing.md,
@@ -182,12 +185,12 @@ export function CardMatchGame({ scope, onFinish }: Props): React.ReactElement {
       {selectedKo !== null && !matched.has(selectedKo) ? (
         <>
           <Spacer size="lg" />
-          <HoyaBubble tone="idle" message="Now tap its meaning on the right." />
+          <HoyaBubble tone="idle" message={copy.cardMatch.nowMeaning} />
         </>
       ) : null}
 
       <Spacer size="xl" />
-      <Button label="Skip" tone="ghost" size="md" fullWidth onPress={() => { markStepComplete(); onFinish(); }} />
+      <Button label={copy.skip.cta} tone="ghost" size="md" fullWidth onPress={() => { markStepComplete(); onFinish(); }} />
     </Screen>
   );
 }

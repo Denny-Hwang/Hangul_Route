@@ -74,5 +74,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'a11y.minigame.strokeOrder.curving': [['down and right']],
   'a11y.minigame.strokeOrder.legs': [[['right', 'down']], [['right']]],
   'a11y.minigame.strokeOrder.close': [['Stroke order. One stroke. 1: down.']],
+  'a11y.minigame.koreanWord': [['gimchi']],
+  'a11y.minigame.meaning': [['Kimchi']],
   'a11y.soundSwitch': [[false, 'Korean voice ready'], [true, 'Looking for a Korean voice']],
 };

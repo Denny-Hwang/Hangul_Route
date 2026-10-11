@@ -114,6 +114,18 @@ describe('Trace Stroke (English wording as shipped)', () => {
   });
 });
 
+describe('Card Match (English wording as shipped)', () => {
+  it('keeps the heading, the instruction and the Hoya line', () => {
+    expect(m.learner.minigame.cardMatch).toEqual({
+      heading: 'Match the meaning',
+      instruction: 'Tap a Korean word, then its English meaning.',
+      nowMeaning: 'Now tap its meaning on the right.',
+    });
+    expect(m.a11y.minigame.koreanWord('gimchi')).toBe('Korean word gimchi');
+    expect(m.a11y.minigame.meaning('Kimchi')).toBe('English meaning Kimchi');
+  });
+});
+
 describe('learner.audio (F-AUDIO-004 §3.7-3.8, English wording as shipped)', () => {
   const a = m.learner.audio;
 
