@@ -40,3 +40,35 @@ export function overlayFrame({ insets, tabBarHeight, gap, bottomGap = gap }: Ove
     right: size(insets.right) + gap,
   };
 }
+
+export interface BannerFrame {
+  /** The edge the banner slot hangs from. */
+  edge: 'top' | 'bottom';
+  /** Distance from that edge. */
+  offset: number;
+  left: number;
+  right: number;
+}
+
+export interface BannerFrameInput extends OverlayFrameInput {
+  /**
+   * Height of a screen's header row from the top safe-area edge (its top padding plus one touch
+   * target): the top slot sits below it. 0 when omitted.
+   */
+  headerClearance?: number;
+}
+
+/**
+ * The PWA banner slot (offline-ready toast, update bar, offline chip). On a tab screen it sits
+ * above the tab bar (`overlayFrame`). A screen without a tab bar (onboarding, the quest, a game,
+ * the PIN pad) keeps its primary action at the bottom, often in the sticky footer, and a toast
+ * there covered it for six seconds; there the slot hangs from the top, where wireframe
+ * pwa/system-banners puts the banners ("a single slot at the top"), under the status bar or notch
+ * and below the screen's header row, which holds "Leave quest", the PIN pad's close X or Back.
+ */
+export function bannerFrame(input: BannerFrameInput): BannerFrame {
+  const frame = overlayFrame(input);
+  if (size(input.tabBarHeight) > 0) return { edge: 'bottom', offset: frame.bottom, left: frame.left, right: frame.right };
+  const offset = size(input.insets.top) + size(input.headerClearance ?? 0) + input.gap;
+  return { edge: 'top', offset, left: frame.left, right: frame.right };
+}

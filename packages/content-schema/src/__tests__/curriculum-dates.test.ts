@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { addDays, dateKey, oneExplicitPerDay, spreadDates } from '../curriculum/dates';
+import {
+  WEEKDAYS,
+  addDays,
+  dateKey,
+  daysBetween,
+  isDateKey,
+  oneExplicitPerDay,
+  spreadDates,
+  weekdayOf,
+} from '../curriculum/dates';
 import * as barrel from '../index';
 
 describe('curriculum date helpers (F-PLAN-002 PR P2-1)', () => {
@@ -59,5 +68,32 @@ describe('curriculum date helpers (F-PLAN-002 PR P2-1)', () => {
     expect(items[1]).not.toBe(b);
     expect(b.targetDate).toBe('2026-09-21');
     expect(input).toEqual([a, b]);
+  });
+});
+
+describe('curriculum calendar helpers (F-PLAN-002 PR P2-3a)', () => {
+  it('reads the UTC weekday of a date key', () => {
+    expect(WEEKDAYS).toEqual(['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']);
+    expect(weekdayOf('2026-10-18')).toBe('sun');
+    expect(weekdayOf('2026-10-21')).toBe('wed');
+    expect(weekdayOf('2027-02-07')).toBe('sun');
+    expect(weekdayOf('2028-02-29')).toBe('tue');
+  });
+
+  it('counts whole days between two keys', () => {
+    expect(daysBetween('2026-10-18', '2026-10-18')).toBe(0);
+    expect(daysBetween('2026-10-18', '2026-10-25')).toBe(7);
+    expect(daysBetween('2026-10-25', '2026-10-18')).toBe(-7);
+    expect(daysBetween('2026-12-31', '2027-01-01')).toBe(1);
+    expect(daysBetween('2028-02-28', '2028-03-01')).toBe(2);
+  });
+
+  it('accepts only real calendar days as date keys', () => {
+    expect(isDateKey('2026-10-18')).toBe(true);
+    expect(isDateKey('2028-02-29')).toBe(true);
+    expect(isDateKey('2026-02-29')).toBe(false);
+    expect(isDateKey('2026-02-30')).toBe(false);
+    expect(isDateKey('2026-13-01')).toBe(false);
+    expect(isDateKey('2026-1-01')).toBe(false);
   });
 });

@@ -1,11 +1,11 @@
 {
   "v": 1,
   "id": "story:tripitaka-koreana",
-  "state": "draft",
+  "state": "ready",
   "contentVer": 1,
   "title": {
     "ko": "팔만대장경",
-    "romanization": "",
+    "romanization": "Palmandaejanggyeong",
     "en": "Eighty Thousand Woodblocks"
   },
   "summaryEn": "At Haeinsa Temple, Hoya discovers the Tripitaka Koreana: more than 80,000 woodblocks of Buddhist scriptures carved between 1237 and 1248, still kept safe today.",
@@ -14,10 +14,10 @@
   "recommendedStage": 1,
   "minutes": 5,
   "learningGoalsEn": [
-    "Know that the Tripitaka Koreana (Palman Daejanggyeong) is a set of more than 80,000 woodblocks of Buddhist scriptures carved in Goryeo between 1237 and 1248.",
-    "Explain why the blocks were carved: a wish for the Buddha's protection during the Mongol invasions.",
+    "Know that the Tripitaka Koreana (Palmandaejanggyeong) is a set of more than 80,000 woodblocks of Buddhist scriptures carved in Goryeo between 1237 and 1248.",
+    "Understand why the blocks were carved: a wish for the Buddha's protection during the Mongol invasions.",
     "Know that the woodblocks are kept at Haeinsa Temple and were inscribed on UNESCO's Memory of the World Register in 2007.",
-    "Read and say 해인사, 대장경, 팔만, 나무, 경판 and 글자 with romanization."
+    "Read and recognize 해인사 (Haeinsa), 대장경 (Daejanggyeong), 팔만 (palman), 나무 (namu), 경판 (gyeongpan) and 글자 (geulja)."
   ],
   "origin": {
     "type": "documented",
@@ -29,7 +29,7 @@
     "advisory": [
       "war"
     ],
-    "advisoryNoteEn": "Briefly mentions a war from Korea's history."
+    "advisoryNoteEn": "Mentions that Mongol armies invaded Korea long ago. No fighting is shown."
   },
   "keywords": [
     {
@@ -116,7 +116,9 @@
           ],
           "framing": false,
           "approximations": [],
-          "artBrief": "Hoya on a forest path up a green mountain toward a temple with tiled roofs; inset: a long dim hall with tall wooden shelves packed with dark wooden blocks seen through vertical window slats."
+          "artBrief": "Hoya on a forest path up a green mountain toward a temple with tiled roofs; inset: a long dim hall with tall wooden shelves packed with dark wooden blocks seen through vertical window slats.",
+          "captionEn": "Hoya climbs to Haeinsa Temple",
+          "artPending": true
         },
         {
           "id": "s2",
@@ -133,7 +135,9 @@
           ],
           "framing": false,
           "approximations": [],
-          "artBrief": "Rows of wooden printing blocks on shelves, each with small end pieces; warm light falls across them; Hoya stands small and amazed in the aisle. Block faces shown as texture, no readable characters."
+          "artBrief": "Rows of wooden printing blocks on shelves, each with small end pieces; warm light falls across them; Hoya stands small and amazed in the aisle. Block faces shown as texture, no readable characters.",
+          "captionEn": "The Tripitaka Koreana woodblocks",
+          "artPending": true
         },
         {
           "id": "s3",
@@ -151,7 +155,9 @@
           ],
           "framing": false,
           "approximations": [],
-          "artBrief": "Calm workshop scene: carvers in Goryeo clothing bent over wooden boards with small knives, focused and peaceful; distant mountains outside. No fighting, no soldiers."
+          "artBrief": "Calm workshop scene: carvers in Goryeo clothing bent over wooden boards with small knives, focused and peaceful; distant mountains outside. No fighting, no soldiers.",
+          "captionEn": "Carved in Goryeo, hoping for protection",
+          "artPending": true
         },
         {
           "id": "s4",
@@ -168,11 +174,13 @@
           ],
           "framing": false,
           "approximations": [],
-          "artBrief": "Hoya sitting on the floor counting on his paws, dizzy little stars circling his head, with endless shelves of blocks behind him."
+          "artBrief": "Hoya sitting on the floor counting on his paws, dizzy little stars circling his head, with endless shelves of blocks behind him.",
+          "captionEn": "More than 80,000 blocks!",
+          "artPending": true
         },
         {
           "id": "s5",
-          "narrationEn": "Each block, a gyeongpan, is carved on both sides. Most are made of wild cherry wood, coated with lacquer to protect them, and fitted with metal plates at the corners.",
+          "narrationEn": "Each block, a {kw:gyeongpan}, is carved on both sides. Most are made of wild cherry wood, coated with lacquer to protect them, and fitted with metal plates at the corners.",
           "keyword": {
             "id": "namu",
             "ko": "나무",
@@ -185,7 +193,9 @@
           ],
           "framing": false,
           "approximations": [],
-          "artBrief": "A single woodblock shown large, tilted to reveal both carved faces as abstract texture, dark lacquer sheen, and small metal plates at the four corners; a cherry tree in blossom behind it."
+          "artBrief": "A single woodblock shown large, tilted to reveal both carved faces as abstract texture, dark lacquer sheen, and small metal plates at the four corners; a cherry tree in blossom behind it.",
+          "captionEn": "Each block is carved on both sides",
+          "artPending": true
         },
         {
           "id": "s6",
@@ -202,7 +212,9 @@
           ],
           "framing": false,
           "approximations": [],
-          "artBrief": "Close-up of a carver's steady hands and a small knife over a board covered in tiny, even raised marks (abstract pattern, not real characters); Hoya watches, holding his breath."
+          "artBrief": "Close-up of a carver's steady hands and a small knife over a board covered in tiny, even raised marks (abstract pattern, not real characters); Hoya watches, holding his breath.",
+          "captionEn": "Tens of millions of neat characters",
+          "artPending": true
         },
         {
           "id": "s7",
@@ -219,11 +231,13 @@
           ],
           "framing": false,
           "approximations": [],
-          "artBrief": "Hoya proudly standing beside a single woodblock displayed on a cushion, with a soft starburst behind it suggesting world recognition. No logos or text."
+          "artBrief": "Hoya proudly standing beside a single woodblock displayed on a cushion, with a soft starburst behind it suggesting world recognition. No logos or text.",
+          "captionEn": "A National Treasure, honored by UNESCO",
+          "artPending": true
         },
         {
           "id": "s8",
-          "narrationEn": "Almost 800 years later, the blocks are still kept safe at Haeinsa. Hoya whispers, \"Sojunghaeyo, they're precious.\" Next time, let's find out how the buildings protect them!",
+          "narrationEn": "Almost 800 years later, the blocks are still kept safe at Haeinsa. Hoya whispers, \"Sojunghaeyo, they're precious.\"",
           "keyword": {
             "id": "sojunghaeyo",
             "ko": "소중해요",
@@ -246,23 +260,25 @@
               "timeRelative": true
             }
           ],
-          "artBrief": "Evening at Haeinsa: the long storage halls glowing softly at the top of the temple grounds under a starry sky; Hoya sits quietly on the steps."
+          "artBrief": "Evening at Haeinsa: the long storage halls glowing softly at the top of the temple grounds under a starry sky; Hoya sits quietly on the steps.",
+          "captionEn": "Still kept safe at Haeinsa",
+          "artPending": true
         }
       ],
       "checks": [
         {
           "id": "c1",
           "kind": "detail",
-          "promptEn": "About how many woodblocks are in the Tripitaka Koreana?",
+          "promptEn": "How many woodblocks are in the Tripitaka Koreana?",
           "options": [
             {
               "id": "a",
-              "en": "About 800",
+              "en": "More than 800",
               "isCorrect": false
             },
             {
               "id": "b",
-              "en": "About 8,000",
+              "en": "More than 8,000",
               "isCorrect": false
             },
             {
@@ -272,13 +288,14 @@
             },
             {
               "id": "d",
-              "en": "About 800,000",
+              "en": "More than 800,000",
               "isCorrect": false
             }
           ],
           "factIds": [
             "f5"
-          ]
+          ],
+          "explainEn": "There are more than 80,000 woodblocks. Palman, in their Korean name, means eighty thousand."
         },
         {
           "id": "c2",
@@ -308,7 +325,8 @@
           ],
           "factIds": [
             "f1"
-          ]
+          ],
+          "explainEn": "The woodblocks are kept at Haeinsa Temple on Gayasan Mountain, in the halls Beopbojeon and Sudarajang."
         },
         {
           "id": "c3",
@@ -317,7 +335,7 @@
           "options": [
             {
               "id": "a",
-              "en": "To build a bridge",
+              "en": "To record the king's laws for the future",
               "isCorrect": false
             },
             {
@@ -332,13 +350,14 @@
             },
             {
               "id": "d",
-              "en": "Hoping the Buddha's power would protect the country",
+              "en": "To ask the Buddha to protect the land",
               "isCorrect": true
             }
           ],
           "factIds": [
             "f4"
-          ]
+          ],
+          "explainEn": "People carved the woodblocks hoping the Buddha's power would drive back the Mongol invasions."
         }
       ],
       "checkpoints": [],
@@ -629,6 +648,6 @@
     "scope": "cluster",
     "notes": "Third independent pass. Every cited URL for all 6 episodes (52 facts) was re-opened (UNESCO pages via Wayback copies when the live site resets connections) and quotes/locators were compared; the one exception is unesco.org/en/prizes/literacy (unreachable from here; its claim is now also backed by a Korean MCST press release). Eight minimal corrections were made: (1) Hangeul Day f3 no longer says 'Gregorian' (no cited source says the October 9 conversion was Gregorian; encykorea separates Julian/Gregorian only for 1932-45) and dates the October 29/28 observances; (2) f10 gains a third source (SBS 2018 with 국립한글박물관 curator); (3) Shapes scene 8, learning goal and f7 now say 'South Korea's spelling rules' count 24 (North Korea counts 40, 국립한글박물관 webzine 59); (4) Sejong scene 4/f4: 백성 is 'an old-fashioned word' with 표준국어대사전 added; (5) Jikji f8 quote no longer repeats a prize amount that differs between UNESCO page versions; (6) Tripitaka f6 wood and corner plates now have two further sources (정책브리핑; 박상진 wood-identification study); (8) Hangeul Day f9 gains a second source (문화체육관광부 press release); (7) Panjeon scene 8/f9: 'visitors cannot walk inside' replaced by 'visitor entry is restricted' because Haeinsa has run pre-booked tours inside Beopbojeon since June 2021. See hangul-printing.signoff.md."
   },
-  "authorNotes": "The carving period follows 국가유산포털, 한국민족문화대백과사전 and UNESCO WHC (1237–1248). Some accounts count the whole project, preparation included, as about 16 years ending in 1251, so the narration gives only 1237–1248. The count of 81,258 comes from a survey made under Japanese rule and includes some blocks re-carved in Joseon (국가유산포털), so the narration says 'more than 80,000'. Where the carving took place (Ganghwa versus Namhae) is treated differently across sources and is left out. The 1398 move to Haeinsa appears only on 국가유산포털 pages, so it is left out too. The earlier set of blocks lost to fire in 1232 is left out to keep the war content mild. UNESCO's Memory of the World page places Haeinsa in the 'southwest' of the peninsula, but Haeinsa is in South Gyeongsang Province in the southeast, so that phrase was not used. 'Almost 800 years later' is worked out from 1248. The official heritage name is 합천 해인사 대장경판 (Hapcheon Haeinsa Daejanggyeongpan). REVISED: scene 1 no longer puts Hoya 'inside' the hall (visitor entry is restricted, see story-janggyeong-panjeon). f5 attributes the exact figure 81,258 to UNESCO (verified on the Memory of the World page) and records the Korea Heritage Service caveat; other published counts (about 81,350; 81,352) were reported by one fact-checker but not verified here, so no exact number appears in the narration. Second sources added for lacquer (f6) and the tens of millions of characters (f7: 5,200여 만자, 국가유산포털). The wild-cherry wood and corner metal plates (f6) still rest on one authoritative source (한국민족문화대백과사전; spelled 산벗나무 there). The UNESCO WHC page blocks automated access; its text was re-read on an Internet Archive snapshot. Vocab 새기다 dropped and 경판 added to scene 5 so every vocab word appears in a scene. FINAL PASS (3rd check): wild cherry wood (about 64-70% of blocks) and corner metal plates (copper) now rest on three sources (한국민족문화대백과사전, 정책브리핑, 박상진 study). The purpose of the lacquer is stated by 한국민족문화대백과사전 and the 국가유산포털 MoW page (preserves the carving); 박상진 doubts its protective effect, so treat 'to protect them' as the official wording.",
+  "authorNotes": "The carving period follows 국가유산포털, 한국민족문화대백과사전 and UNESCO WHC (1237–1248). Some accounts count the whole project, preparation included, as about 16 years ending in 1251, so the narration gives only 1237–1248. The count of 81,258 comes from a survey made under Japanese rule and includes some blocks re-carved in Joseon (국가유산포털), so the narration says 'more than 80,000'. Where the carving took place (Ganghwa versus Namhae) is treated differently across sources and is left out. The 1398 move to Haeinsa appears only on 국가유산포털 pages, so it is left out too. The earlier set of blocks lost to fire in 1232 is left out to keep the war content mild. UNESCO's Memory of the World page places Haeinsa in the 'southwest' of the peninsula, but Haeinsa is in South Gyeongsang Province in the southeast, so that phrase was not used. 'Almost 800 years later' is worked out from 1248. The official heritage name is 합천 해인사 대장경판 (Hapcheon Haeinsa Daejanggyeongpan). REVISED: scene 1 no longer puts Hoya 'inside' the hall (visitor entry is restricted, see story-janggyeong-panjeon). f5 attributes the exact figure 81,258 to UNESCO (verified on the Memory of the World page) and records the Korea Heritage Service caveat; other published counts (about 81,350; 81,352) were reported by one fact-checker but not verified here, so no exact number appears in the narration. Second sources added for lacquer (f6) and the tens of millions of characters (f7: 5,200여 만자, 국가유산포털). The wild-cherry wood and corner metal plates (f6) still rest on one authoritative source (한국민족문화대백과사전; spelled 산벗나무 there). The UNESCO WHC page blocks automated access; its text was re-read on an Internet Archive snapshot. Vocab 새기다 dropped and 경판 added to scene 5 so every vocab word appears in a scene. FINAL PASS (3rd check): wild cherry wood (about 64-70% of blocks) and corner metal plates (copper) now rest on three sources (한국민족문화대백과사전, 정책브리핑, 박상진 study). The purpose of the lacquer is stated by 한국민족문화대백과사전 and the 국가유산포털 MoW page (preserves the carving); 박상진 doubts its protective effect, so treat 'to protect them' as the official wording. REVIEW PASS (PR 1.8b): s8 no longer points to a 'next time' story (shelf stories open in any order). REVIEW FIX (PR 1.8b round 2): c1 options are now parallel ('More than ...') so the wording does not give the answer away. Name romanization follows the converter ('Palmandaejanggyeong') in the title and goals; s4 keeps the two-word 'Palman Daejanggyeong' on purpose, because the next sentence explains 'Palman means eighty thousand'.",
   "errata": []
 }

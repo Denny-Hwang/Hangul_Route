@@ -22,7 +22,7 @@ export {
   type ResolvedNode,
   type ResolvedScene,
 } from './resolve';
-export { LIMITS, checkItem, checkScene, serializedBytes, type Finding } from './rules';
+export { LIMITS, cappedPalette, checkItem, checkScene, serializedBytes, type Finding } from './rules';
 export { CARD_SIZE, drawScene, type DrawCard, type DrawItem, type DrawNode, type DrawPaint, type DrawnScene } from './draw';
 export { HOYA_BOX, HOYA_POSES, hoyaItem, hoyaNodes, type HoyaPose } from './hoya';
 export { SCENE_ART_REGISTRY, hasItem } from './registry';

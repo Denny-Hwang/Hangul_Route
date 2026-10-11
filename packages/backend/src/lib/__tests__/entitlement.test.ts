@@ -1,7 +1,7 @@
-import type { Entitlement, Space } from '@hangul-route/content-schema';
+import type { Entitlement, Space, Tier, TierSource } from '@hangul-route/content-schema';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { testDb as db } from '../../__tests__/helpers/db';
-import { classCap, classIsPro, isEntitlementActive, schoolIsFull, schoolLimits, schoolUsage, tierForLearner } from '../entitlement';
+import { classCap, classIsPro, isEntitlementActive, schoolIsFull, schoolLimits, schoolUsage, tierForLearner, tierFromSpaces } from '../entitlement';
 
 const now = new Date('2026-09-21T12:00:00.000Z');
 const ent = (over: Partial<Entitlement>): Entitlement => ({ id: 'ent:x', subjectKind: 'space', subjectId: 'space:fam', planKey: 'family_lifetime', status: 'active', provider: 'stripe', providerRef: null, customerRef: null, seats: null, expiresAt: null, promoCode: null, updatedAt: '2026-09-20T00:00:00.000Z', ...over });
@@ -86,5 +86,81 @@ describe('school limits and usage (F-SCHOOL-001 §3.1)', () => {
     expect(await schoolIsFull(db, a, now)).toBe(true);
     expect(await schoolIsFull(db, a, now, 'profile:x')).toBe(false); // already counted
     expect(await schoolIsFull(db, space('space:solo', 'class', 't'), now)).toBe(false);
+  });
+});
+
+/** The pre-extraction `tierForLearner` loop (F-SPACE-002 T-4a). Do not edit: it is the reference the parity test holds both functions to. */
+async function legacyTierForLearner(learnerId: string): Promise<{ tier: Tier; source: TierSource | null }> {
+  const has = async (spaceId: string, keys: readonly Entitlement['planKey'][]) => (await db.entitlementsFor('space', spaceId)).some((e) => keys.includes(e.planKey) && isEntitlementActive(e, now));
+  for (const m of await db.membershipsOf('learner', learnerId)) {
+    const s = await db.getSpace(m.spaceId);
+    if (!s || s.archivedAt) continue;
+    const covered = (s.kind === 'family' && (await has(s.id, ['family_lifetime']))) || (await classIsPro(db, s, now));
+    if (covered) return { tier: 'premium', source: { kind: s.kind, spaceId: s.id, name: s.name } };
+  }
+  return { tier: 'free', source: null };
+}
+
+describe('tierFromSpaces (F-SPACE-002 §4.3, T7: one tier rule in one place)', () => {
+  const learnerSpaces = async (learnerId: string): Promise<Space[]> => {
+    const out: Space[] = [];
+    for (const m of await db.membershipsOf('learner', learnerId)) {
+      const s = await db.getSpace(m.spaceId);
+      if (s) out.push(s);
+    }
+    return out;
+  };
+  // Distinct, ascending joinedAt so the membership order (memory: insertion; D1: ORDER BY joined_at) is the same on both backends.
+  let joinSeq = 0;
+  const member = (spaceId: string, learnerId: string) => {
+    joinSeq += 1;
+    return db.addMembership({ spaceId, memberKind: 'learner', memberId: learnerId, role: 'student', joinedAt: new Date(Date.UTC(2026, 0, 1, 0, 0, joinSeq)).toISOString() });
+  };
+
+  it('agrees with tierForLearner and the pre-extraction loop over every fixture', async () => {
+    await db.putSpace(space('space:fam-free', 'family', 'mom'));
+    await db.putSpace(space('space:fam-life', 'family', 'mom'));
+    await db.putSpace(space('space:cls-free', 'class', 'teacher'));
+    await db.putSpace(space('space:cls-pro', 'class', 't2'));
+    await db.putSpace(space('space:sch', 'school', 'principal'));
+    await db.putSpace(space('space:cls-sch', 'class', 'ms-park', 'space:sch'));
+    await db.putSpace({ ...space('space:fam-gone', 'family', 'mom'), archivedAt: 't' });
+    await db.putSpace({ ...space('space:cls-gone', 'class', 'mr-lee'), archivedAt: 't' });
+    await db.applyEntitlement({ subjectKind: 'space', subjectId: 'space:fam-life', planKey: 'family_lifetime', status: 'active', provider: 'stripe' }, now);
+    await db.applyEntitlement({ subjectKind: 'space', subjectId: 'space:fam-gone', planKey: 'family_lifetime', status: 'active', provider: 'stripe' }, now);
+    await db.applyEntitlement({ subjectKind: 'space', subjectId: 'space:cls-pro', planKey: 'group_license', status: 'active', provider: 'stripe' }, now);
+    await db.applyEntitlement({ subjectKind: 'space', subjectId: 'space:cls-gone', planKey: 'group_license', status: 'active', provider: 'stripe' }, now);
+    await db.applyEntitlement({ subjectKind: 'space', subjectId: 'space:sch', planKey: 'school_seat', status: 'active', provider: 'manual', seats: 50 }, now);
+
+    const fixtures: Record<string, { spaces: string[]; tier: Tier; sourceId: string | null }> = {
+      'profile:free': { spaces: ['space:fam-free', 'space:cls-free'], tier: 'free', sourceId: null },
+      'profile:lifetime': { spaces: ['space:cls-free', 'space:fam-life'], tier: 'premium', sourceId: 'space:fam-life' },
+      'profile:pro': { spaces: ['space:fam-free', 'space:cls-pro'], tier: 'premium', sourceId: 'space:cls-pro' },
+      'profile:school': { spaces: ['space:cls-sch'], tier: 'premium', sourceId: 'space:cls-sch' },
+      'profile:archived': { spaces: ['space:fam-gone', 'space:cls-gone', 'space:cls-free'], tier: 'free', sourceId: null },
+      'profile:both': { spaces: ['space:cls-pro', 'space:fam-life'], tier: 'premium', sourceId: 'space:cls-pro' },
+      'profile:none': { spaces: [], tier: 'free', sourceId: null },
+    };
+    for (const [learnerId, f] of Object.entries(fixtures)) for (const s of f.spaces) await member(s, learnerId);
+
+    for (const [learnerId, f] of Object.entries(fixtures)) {
+      const fromSpaces = await tierFromSpaces(db, await learnerSpaces(learnerId), now);
+      expect(fromSpaces, learnerId).toEqual(await tierForLearner(db, learnerId, now));
+      expect(fromSpaces, learnerId).toEqual(await legacyTierForLearner(learnerId));
+      expect(fromSpaces.tier, learnerId).toBe(f.tier);
+      expect(fromSpaces.source?.spaceId ?? null, learnerId).toBe(f.sourceId);
+    }
+  });
+
+  it('takes the spaces in the order given and skips archived ones', async () => {
+    const life = space('space:fam-life', 'family', 'mom');
+    const pro = space('space:cls-pro', 'class', 't2');
+    for (const s of [life, pro]) await db.putSpace(s);
+    await db.applyEntitlement({ subjectKind: 'space', subjectId: life.id, planKey: 'family_lifetime', status: 'active', provider: 'stripe' }, now);
+    await db.applyEntitlement({ subjectKind: 'space', subjectId: pro.id, planKey: 'group_license', status: 'active', provider: 'stripe' }, now);
+    expect(await tierFromSpaces(db, [life, pro], now)).toEqual({ tier: 'premium', source: { kind: 'family', spaceId: life.id, name: life.name } });
+    expect(await tierFromSpaces(db, [pro, life], now)).toEqual({ tier: 'premium', source: { kind: 'class', spaceId: pro.id, name: pro.name } });
+    expect(await tierFromSpaces(db, [{ ...life, archivedAt: 't' }, { ...pro, archivedAt: 't' }], now)).toEqual({ tier: 'free', source: null });
+    expect(await tierFromSpaces(db, [], now)).toEqual({ tier: 'free', source: null });
   });
 });

@@ -1,11 +1,11 @@
 {
   "v": 1,
   "id": "story:donguibogam",
-  "state": "draft",
+  "state": "ready",
   "contentVer": 1,
   "title": {
     "ko": "허준의 동의보감",
-    "romanization": "",
+    "romanization": "Heojunui Donguibogam",
     "en": "Heo Jun's Treasured Mirror of Medicine"
   },
   "summaryEn": "Hoya learns how the royal doctor Heo Jun finished Donguibogam in 1610, a medical encyclopedia that valued staying healthy and wrote herb names in Hangul, now on UNESCO's Memory of the World Register.",
@@ -14,10 +14,10 @@
   "recommendedStage": 3,
   "minutes": 5,
   "learningGoalsEn": [
-    "Recognize and say 몸 (mom, body), 건강 (geongang, health), 약초 (yakcho, medicinal herb) and 책 (chaek, book).",
+    "Read and recognize 몸 (mom, body), 건강 (geongang, health), 약초 (yakcho, medicinal herb) and 책 (chaek, book).",
     "Know that Heo Jun, a Joseon royal doctor, completed Donguibogam in 1610 and that it was printed in 1613 in 25 volumes.",
-    "Explain the book's idea that preventing illness and staying healthy matters before curing it.",
-    "Know that Donguibogam wrote herb names in Hangul and is on UNESCO's Memory of the World Register (세계기록유산, 2009)."
+    "Understand the book's idea that preventing illness and staying healthy matters before curing it.",
+    "Know that Donguibogam wrote herb names in Hangul and has been on UNESCO's Memory of the World Register, 세계기록유산 (segyegirogyusan), since 2009."
   ],
   "origin": {
     "type": "documented",
@@ -58,7 +58,7 @@
       "ko": "동의보감",
       "romanization": "Donguibogam",
       "en": "Donguibogam (a Joseon medical encyclopedia)",
-      "kind": "word"
+      "kind": "term"
     },
     {
       "id": "geongang",
@@ -75,9 +75,9 @@
       "kind": "word"
     },
     {
-      "id": "bomul-gateun-chaek",
-      "ko": "보물 같은 책",
-      "romanization": "bomul gateun chaek",
+      "id": "bobae-gateun-chaek",
+      "ko": "보배 같은 책",
+      "romanization": "bobae gateun chaek",
       "en": "a book like a treasure",
       "kind": "phrase"
     },
@@ -91,8 +91,8 @@
     {
       "id": "heo-jun",
       "ko": "허준",
-      "romanization": "",
-      "en": "",
+      "romanization": "Heojun",
+      "en": "Heo Jun, a Joseon court doctor",
       "kind": "term"
     }
   ],
@@ -103,7 +103,8 @@
       "scenes": [
         {
           "id": "s1",
-          "narrationEn": "Hoya stretches his arms and legs in the morning sun. \"In Korean, body is {kw:mom},\" he says. \"Long ago, a royal doctor of Joseon wrote a giant book to help people care for their bodies.\"",
+          "narrationEn": "Hoya stretches his arms and legs in the morning sun. \"In Korean, the body is {kw:mom},\" he says. \"Long ago, a royal doctor of Joseon wrote a giant book to help people care for their bodies.\"",
+          "captionEn": "Hoya stretches in the morning sun",
           "keyword": {
             "id": "mom",
             "ko": "몸",
@@ -117,11 +118,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Hoya doing a morning stretch on the wooden floor (maru) of a hanok house, warm sunrise behind him."
         },
         {
           "id": "s2",
           "narrationEn": "His name was Heo Jun, {kw:heo-jun}, and he served as a doctor at the royal court. King Seonjo asked him and other doctors to write a new medical book. Today we call a doctor {kw:uisa}.",
+          "captionEn": "Heo Jun serves as a royal doctor",
           "keyword": {
             "id": "uisa",
             "ko": "의사",
@@ -134,11 +137,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "A Joseon royal physician in official robes and a black hat bowing before a king seated in a palace hall; rolled papers nearby."
         },
         {
           "id": "s3",
-          "narrationEn": "When war broke out again, the work stopped and the doctors were scattered. Later the king asked Heo Jun to write the book alone, and gave him many medical books from the palace to study.",
+          "narrationEn": "When a war broke out, the work stopped and the doctors were scattered. Later the king asked Heo Jun to write the book alone, and gave him many medical books from the palace to study.",
+          "captionEn": "Heo Jun writes the book alone",
           "keyword": {
             "id": "chaek",
             "ko": "책",
@@ -151,17 +156,19 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Heo Jun at a low desk surrounded by stacks of old thread-bound books, writing with a brush by lamplight."
         },
         {
           "id": "s4",
-          "narrationEn": "In 1610 Heo Jun finished the book: {kw:donguibogam}, Donguibogam. 'Dongui' means the medicine of the East, Korea's own medical tradition, and 'bogam' means a treasured mirror, a model to learn from.",
+          "narrationEn": "In 1610 Heo Jun finished the book {kw:donguibogam}. 'Dongui' means the medicine of the East, Korea's own medical tradition, and 'bogam' means a treasured mirror, a model to learn from.",
+          "captionEn": "Heo Jun finishes Donguibogam",
           "keyword": {
             "id": "donguibogam",
             "ko": "동의보감",
             "romanization": "Donguibogam",
             "en": "Donguibogam ('Treasured Mirror of Eastern Medicine')",
-            "kind": "word"
+            "kind": "term"
           },
           "factIds": [
             "f3",
@@ -169,11 +176,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "A neat stack of finished book volumes tied with cord, beside a round bronze mirror that softly reflects light."
         },
         {
           "id": "s5",
           "narrationEn": "Donguibogam taught that staying healthy and preventing illness come before curing sickness. In Korean, health is {kw:geongang}.",
+          "captionEn": "Staying healthy comes first",
           "keyword": {
             "id": "geongang",
             "ko": "건강",
@@ -186,11 +195,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Hoya and two children walking happily through a pine forest, breathing fresh air, with a picnic mat of simple healthy food."
         },
         {
           "id": "s6",
           "narrationEn": "To help country people use medicines growing nearby, the book wrote the everyday Korean names of herbs in Hangul, the Korean alphabet.",
+          "captionEn": "Herb names are written in Hangul",
           "keyword": {
             "id": "yakcho",
             "ko": "약초",
@@ -203,16 +214,18 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Gentle drawings of wild medicinal plants (bellflower, mugwort, a root plant) on a sunny hillside, with a woven basket of herbs; no writing."
         },
         {
           "id": "s7",
           "narrationEn": "Donguibogam was printed in 1613 in 25 volumes. Later it was printed many times in China, and in Japan too. In 2009, UNESCO added it to the Memory of the World Register, {kw:segyegirogyusan}.",
+          "captionEn": "The book was printed many times",
           "keyword": {
             "id": "segyegirogyusan",
             "ko": "세계기록유산",
             "romanization": "segyegirogyusan",
-            "en": "Memory of the World (UNESCO heritage list)",
+            "en": "Memory of the World (UNESCO documentary heritage)",
             "kind": "word"
           },
           "factIds": [
@@ -221,22 +234,25 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Rows of traditional thread-bound books on wooden shelves, with faint outlines of mountains and seas behind them suggesting the book's travels."
         },
         {
           "id": "s8",
-          "narrationEn": "Copies from that first printing are now National Treasures of Korea. Hoya hugs a book-shaped pillow and smiles: \"{kw:bomul-gateun-chaek}!\" That means, \"A book like a treasure!\"",
+          "narrationEn": "Copies from that first printing are now National Treasures of Korea. Hoya hugs a book-shaped pillow and smiles: \"{kw:bobae-gateun-chaek}!\" That means, \"A book like a treasure!\"",
+          "captionEn": "First-edition copies are National Treasures",
           "line": {
-            "ko": "보물 같은 책",
-            "romanization": "bomul gateun chaek",
+            "ko": "보배 같은 책",
+            "romanization": "bobae gateun chaek",
             "en": "a book like a treasure",
-            "speaker": "narrator"
+            "speaker": "hoya"
           },
           "factIds": [
             "f9"
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Hoya hugging a soft pillow shaped like an old book, sitting beside a museum case that holds a thread-bound book under gentle light."
         }
       ],
@@ -262,6 +278,7 @@
               "isCorrect": true
             }
           ],
+          "explainEn": "Donguibogam put preventing illness and keeping healthy before treating sickness.",
           "factIds": [
             "f5"
           ]
@@ -287,6 +304,7 @@
               "isCorrect": false
             }
           ],
+          "explainEn": "The book wrote herb names in Hangul, as people called them, so local medicines could be used widely and easily.",
           "factIds": [
             "f7"
           ]
@@ -312,6 +330,7 @@
               "isCorrect": false
             }
           ],
+          "explainEn": "Donguibogam was first printed in 1613 with wooden movable type, in 25 volumes.",
           "factIds": [
             "f6"
           ]
@@ -600,6 +619,6 @@
     "scope": "cluster",
     "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted."
   },
-  "authorNotes": "Sources disagree on the start year of compilation (KHS designation text and encykorea: 1596; KHS portal Memory-of-the-World page: 1597) and on its length (14 vs 16 years), so narration omits both. The number of royal books given to Heo Jun ('500여 권') comes from encykorea only, so narration says 'many'. UNESCO's page says 'compiled in 1613' (the printing year); KHS and encykorea give completion in 1610 and printing in 1613. Omitted: Heo Jun's exile to Uiju (1608–1609); the Jeongyu invasion is referred to only as 'war broke out again'. No remedies or medical advice are presented; prevention is described only as the book's stated principle. Herb names in Hangul: encykorea (compiling principles) plus 우리역사넷/신편한국사 ('모든 향약명을 한글로 표시'). Theme set to 'life' (body and health); BP05 lists 동의보감 at Pillar E (6.E4), so 'crafts' is the grid-aligned alternative. Scene 7 keyword changed to 세계기록유산 so 책 is not repeated. REVISION: the folk-tale entry 허준 설화 (E0063156) was replaced by the person entry 허준 (E0063152) as f1's second source. Birth year: DROPPED in pass 3. KHS gives 1539; encykorea E0063152 is internally inconsistent (infobox 1539 labelled 중종 32 which would be 1537, summary 1539/중종 34, photo captions 1546/명종 1), and other references give 1546, so narration and f1 give no birth year. PASS 3: added 우리역사넷 (신편한국사) as a second source for f4 ('Dongui' = Korea's own medicine, 集例) and f5 (prevention over treatment).",
+  "authorNotes": "Sources disagree on the start year of compilation (KHS designation text and encykorea: 1596; KHS portal Memory-of-the-World page: 1597) and on its length (14 vs 16 years), so narration omits both. The number of royal books given to Heo Jun ('500여 권') comes from encykorea only, so narration says 'many'. UNESCO's page says 'compiled in 1613' (the printing year); KHS and encykorea give completion in 1610 and printing in 1613. Omitted: Heo Jun's exile to Uiju (1608–1609); the Jeongyu invasion is referred to only as 'a war broke out'. No remedies or medical advice are presented; prevention is described only as the book's stated principle. Herb names in Hangul: encykorea (compiling principles) plus 우리역사넷/신편한국사 ('모든 향약명을 한글로 표시'). Theme set to 'life' (body and health); BP05 lists 동의보감 at Pillar E (6.E4), so 'crafts' is the grid-aligned alternative. Scene 7 keyword changed to 세계기록유산 so 책 is not repeated. REVISION: the folk-tale entry 허준 설화 (E0063156) was replaced by the person entry 허준 (E0063152) as f1's second source. Birth year: DROPPED in pass 3. KHS gives 1539; encykorea E0063152 is internally inconsistent (infobox 1539 labelled 중종 32 which would be 1537, summary 1539/중종 34, photo captions 1546/명종 1), and other references give 1546, so narration and f1 give no birth year. PASS 3: added 우리역사넷 (신편한국사) as a second source for f4 ('Dongui' = Korea's own medicine, 集例) and f5 (prevention over treatment). PR 1.8c: Hoya's s8 line is 보배 같은 책 rather than the research vocab 보물 같은 책, to avoid the heritage grade 보물 and to echo 보감. s3 keeps 'the doctors were scattered' (f2) and drops 'again' because the story never names an earlier war.",
   "errata": []
 }

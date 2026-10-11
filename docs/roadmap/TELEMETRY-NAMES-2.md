@@ -102,3 +102,13 @@ Three names in the new `route_map.` namespace (the map of progress; F-PLAN-002's
 | 1 | `route_map.viewed` | F-ROUTE-001 §3.16 | `{ source: 'home' \| 'journey' \| 'result' \| 'parent', stage: StageKey, hasStart: boolean, hasPlan: boolean }` (the page opens) | R-W1 | R-3 (sources `home` R-4b, `result` F-PLC-001 P-7b) |
 | 2 | `route_map.stage_opened` | F-ROUTE-001 §3.16 | `{ stage: StageKey }` (a stage row is expanded) | R-W1 | R-3 |
 | 3 | `route_map.continue_tapped` | F-ROUTE-001 §3.16 | `{ stage: StageKey, hero: 'start' \| 'continue' }` (the hero button is pressed) | R-W1 | R-3 |
+
+## I. Layout names (F-LAYOUT-001; added by its PR 3)
+
+Three names in the new `layout.` namespace; none collides with sections A to H. The spec points at `specs-out/TELEMETRY-NAMES.md`, which is not in the repo, so the rows live here. Worker first: PR 3 adds them to `TELEMETRY_EVENT_NAMES` and its exact-list test, and the Worker whitelist deploys on merge, in the same release as the app build that sends them (an event the old Worker rejects is dropped, never retried). Classes and booleans only: no sizes in px, no profile data (sent without `profileId`).
+
+| # | Name | Owning spec | Payload | Added to the list by | Emitted by |
+|---|---|---|---|---|---|
+| 1 | `layout.observed` | F-LAYOUT-001 §3.13 | `{ width: 'compact' \| 'regular' \| 'wide', form: 'phone' \| 'tablet', orientation: 'portrait' \| 'landscape', panes: 1 \| 2, standalone: boolean }` (once per session, when the window size is known) | PR 3 | PR 3 |
+| 2 | `layout.guard_shown` | F-LAYOUT-001 §3.13 | `{ standalone: boolean }` (each time the portrait guard appears) | PR 3 | PR 3 |
+| 3 | `layout.guard_dismissed` | F-LAYOUT-001 §3.13 | `{ via: 'rotated' \| 'keep_sideways' }` | PR 3 | PR 3 |

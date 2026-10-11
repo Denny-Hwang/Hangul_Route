@@ -78,6 +78,10 @@ export const TELEMETRY_EVENT_NAMES = [
   'route_map.viewed',
   'route_map.stage_opened',
   'route_map.continue_tapped',
+  // F-LAYOUT-001 §3.13 (classes only: no sizes in px, no profile data)
+  'layout.observed',
+  'layout.guard_shown',
+  'layout.guard_dismissed',
   // F-TCH-004 §3.14 (no profileId; never a name, picker label or the deck title)
   'lecture.start',
   'lecture.complete',

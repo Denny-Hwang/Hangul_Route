@@ -1,6 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { completeChildForm } from './helpers';
+import { completeChildForm, keepSidewaysIfAsked } from './helpers';
 
 /**
  * F-STORY-003 PR 3.5a: Story Order v2 on the shipped Stage 1 sequences.
@@ -25,6 +25,7 @@ const RED = 'rgb(200, 75, 61)'; // colors.feedback.danger: never on a learner's 
 /** Onboard, open the Seollal quest and play up to its Story Order step (the other games are skipped). */
 async function openSeollalOrder(page: Page): Promise<void> {
   await page.goto('/');
+  await keepSidewaysIfAsked(page);
   await page.getByRole('button', { name: "Let's start" }).click();
   await completeChildForm(page, { name: 'Dami' });
   await page.goto('/');

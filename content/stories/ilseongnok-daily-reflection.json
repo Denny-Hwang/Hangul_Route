@@ -1,11 +1,11 @@
 {
   "v": 1,
   "id": "story:ilseongnok-daily-reflection",
-  "state": "draft",
+  "state": "ready",
   "contentVer": 1,
   "title": {
     "ko": "하루를 돌아본 정조의 일기, 일성록",
-    "romanization": "",
+    "romanization": "Harureul dorabon Jeongjoui ilgi, Ilseongnok",
     "en": "King Jeongjo's Diary of Daily Reflection"
   },
   "summaryEn": "As a young royal heir, Jeongjo kept a diary to look back on each day. It grew into the Ilseongnok, an official record of the court from 1760 to 1910.",
@@ -14,10 +14,10 @@
   "recommendedStage": 4,
   "minutes": 4,
   "learningGoalsEn": [
-    "Know that the 일성록 (Ilseongnok) began from Jeongjo's personal diary, kept when he was the royal grandson and heir (세손).",
+    "Know that the 일성록 (Ilseongnok) began from Jeongjo's personal diary, kept when he was the royal grandson and heir, 세손 (seson).",
     "Know that Jeongjo was moved by Zengzi's words in the Analects about looking back on oneself every day, and kept a diary to reflect.",
     "Know that from 1783 it became an official court record written by Gyujanggak officials, with headlines and details for easy reading.",
-    "Use 오늘, 반성, 일기를 써요 and 오늘을 돌아봐요."
+    "Read and understand 오늘 (oneul), 반성 (banseong), 일기를 써요 (ilgireul sseoyo) and 오늘 하루를 돌아봐요 (oneul harureul dorabwayo)."
   ],
   "origin": {
     "type": "documented",
@@ -40,7 +40,7 @@
       "id": "banseong",
       "ko": "반성",
       "romanization": "banseong",
-      "en": "reflection; looking back on oneself",
+      "en": "looking back on yourself (reflection)",
       "kind": "word"
     },
     {
@@ -82,13 +82,13 @@
       "id": "ilgireul-sseoyo",
       "ko": "일기를 써요.",
       "romanization": "Ilgireul sseoyo.",
-      "en": "I write a diary.",
+      "en": "They write a diary.",
       "kind": "phrase"
     },
     {
-      "id": "oneureul-dorabwayo",
-      "ko": "오늘을 돌아봐요.",
-      "romanization": "Oneureul dorabwayo.",
+      "id": "oneul-harureul-dorabwayo",
+      "ko": "오늘 하루를 돌아봐요.",
+      "romanization": "Oneul harureul dorabwayo.",
       "en": "Let's look back on today.",
       "kind": "phrase"
     }
@@ -100,7 +100,8 @@
       "scenes": [
         {
           "id": "s1",
-          "narrationEn": "Hoya opens an old book about a young royal heir named Jeongjo. As the king's grandson and heir, he was called {kw:seson}. Even then, he kept a diary of what he said, did and studied.",
+          "narrationEn": "Hoya opens an old book about a young royal heir named Jeongjo. As the king's grandson who would one day be king, he was called {kw:seson}. Even then, he kept a diary of what he said, did and studied.",
+          "captionEn": "Young Jeongjo keeps a diary",
           "keyword": {
             "id": "seson",
             "ko": "세손",
@@ -113,16 +114,18 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "A young royal heir in plain traditional clothes writing in a small book at a low desk by lamplight; Hoya reading a book about him in the foreground."
         },
         {
           "id": "s2",
-          "narrationEn": "Why? One reason was the words of Zengzi in the Analects about looking back on yourself every day. Jeongjo was deeply moved by them and wanted to look back on himself, too.",
+          "narrationEn": "Why? One reason was the words of Zengzi in an old book, the Analects, about looking back on yourself every day. Jeongjo was deeply moved by them and wanted to look back on himself, too.",
+          "captionEn": "Words about looking back each day",
           "keyword": {
             "id": "banseong",
             "ko": "반성",
             "romanization": "banseong",
-            "en": "reflection; looking back on oneself",
+            "en": "looking back on yourself (reflection)",
             "kind": "word"
           },
           "factIds": [
@@ -130,27 +133,31 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "The prince pausing with brush raised, looking thoughtfully out of a window at an evening sky."
         },
         {
           "id": "s3",
           "narrationEn": "His diary was called the Jonhyeongak Diary. After Jeongjo became king, he kept writing it himself. Hoya tries it too and asks, 'What did I do today?'",
+          "captionEn": "Hoya asks, 'What did I do today?'",
           "line": {
             "ko": "오늘 나는 무엇을 했지?",
             "romanization": "Oneul naneun mueoseul haetji?",
             "en": "What did I do today?",
-            "speaker": "narrator"
+            "speaker": "hoya"
           },
           "factIds": [
             "f3"
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Split scene: King Jeongjo in royal dress writing at night; Hoya in his den with a tiny notebook, scratching his head."
         },
         {
           "id": "s4",
-          "narrationEn": "As state business grew, Jeongjo had too much to write himself. So in 1783, officials of the royal library, Gyujanggak, began writing the diary about state affairs, and the king approved it. His personal diary became an official record.",
+          "narrationEn": "As state business grew, Jeongjo had too much to write himself. So in 1783, officials of the royal library, Gyujanggak, began writing the diary about state affairs and gave it to the king to approve. His personal diary became an official record.",
+          "captionEn": "Library officials write the diary",
           "keyword": {
             "id": "gyujanggak",
             "ko": "규장각",
@@ -163,11 +170,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Scholars at the Gyujanggak library writing at desks, then presenting a bound book to the king, who reads it carefully."
         },
         {
           "id": "s5",
-          "narrationEn": "Its title, {kw:ilseongnok}, is often translated 'Records of Daily Reflections.' Each entry starts with a short headline, and the details follow, which made it easy to read.",
+          "narrationEn": "UNESCO translates its title, {kw:ilseongnok}, as 'Records of Daily Reflections.' Each entry starts with a short headline, and the details follow, which made it easy to read.",
+          "captionEn": "A headline, then the details",
           "keyword": {
             "id": "ilseongnok",
             "ko": "일성록",
@@ -181,15 +190,17 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "An open book page drawn with one bold line of strokes at top and smaller lines below (no readable text), a finger tracing the bold line."
         },
         {
           "id": "s6",
           "narrationEn": "The {kw:ilseongnok} looks like a diary written from the king's point of view, but it was really an official government record. Today, 2,329 books covering 1760 to 1910 are kept at Seoul National University's Gyujanggak.",
+          "captionEn": "A diary that is an official record",
           "line": {
             "ko": "일기를 써요.",
             "romanization": "Ilgireul sseoyo.",
-            "en": "I write a diary.",
+            "en": "They write a diary.",
             "speaker": "narrator"
           },
           "factIds": [
@@ -198,22 +209,25 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "A modern library stack with rows of old thread-bound books in protective cases, a curator in gloves checking one."
         },
         {
           "id": "s7",
           "narrationEn": "The {kw:ilseongnok} is a National Treasure, and in 2011 UNESCO added it to the Memory of the World. Hoya decides to write one line tonight: what went well today, and what to do better.",
+          "captionEn": "Hoya looks back on the day",
           "line": {
-            "ko": "오늘을 돌아봐요.",
-            "romanization": "Oneureul dorabwayo.",
+            "ko": "오늘 하루를 돌아봐요.",
+            "romanization": "Oneul harureul dorabwayo.",
             "en": "Let's look back on today.",
-            "speaker": "narrator"
+            "speaker": "hoya"
           },
           "factIds": [
             "f9"
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Hoya at night writing in a notebook by a small lamp, a crescent moon in the window, smiling."
         }
       ],
@@ -239,6 +253,7 @@
               "isCorrect": false
             }
           ],
+          "explainEn": "As royal grandson and heir, Jeongjo kept a diary of his words, actions and studies. It grew into the Ilseongnok.",
           "factIds": [
             "f1"
           ]
@@ -264,6 +279,7 @@
               "isCorrect": true
             }
           ],
+          "explainEn": "UNESCO renders the name Ilseongnok as 'Records of Daily Reflections'.",
           "factIds": [
             "f5"
           ]
@@ -289,6 +305,7 @@
               "isCorrect": false
             }
           ],
+          "explainEn": "From 1783, Gyujanggak officials wrote the diary about state affairs and gave it to the king to approve.",
           "factIds": [
             "f4"
           ]

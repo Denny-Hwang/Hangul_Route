@@ -9,6 +9,7 @@ import {
   startRun,
   type AssessmentQuestion,
   type PlacementEvent,
+  type PlacementMode,
   type PlacementResult,
 } from '..';
 import { STAGE1_15 } from './fixtures/stage1-15';
@@ -31,8 +32,11 @@ const rungOf = (id: string): string => {
 
 interface Learner {
   name: string;
-  /** Chance of the right answer per rung; `'guess'` picks any option uniformly; `'unsure'` taps "I am not sure". */
-  accuracy: (rung: string) => number | 'guess' | 'unsure';
+  /**
+   * Chance of the right answer per rung; `'guess'` picks any option uniformly; `'never-first'` picks
+   * any option but the first; `'slot-1'` always taps the second card; `'unsure'` taps "I am not sure".
+   */
+  accuracy: (rung: string) => number | 'guess' | 'never-first' | 'slot-1' | 'unsure';
 }
 
 const DECODING = ['recog', 'sound-basic', 'syl-cv', 'sound-rest', 'syl-cvc'];
@@ -41,6 +45,8 @@ const isOral = (rung: string): boolean => rung.endsWith(':oral');
 const LEARNERS: Record<string, Learner> = {
   zero: { name: 'zero', accuracy: () => 'unsure' },
   guesser: { name: 'guesser', accuracy: () => 'guess' },
+  neverFirst: { name: 'neverFirst', accuracy: () => 'never-first' },
+  slotOne: { name: 'slotOne', accuracy: () => 'slot-1' },
   lettersOnly: {
     name: 'lettersOnly',
     accuracy: (r) => (r === 'recog' || r === 'sound-basic' ? 0.9 : 0.3),
@@ -57,13 +63,13 @@ interface Outcome {
 
 const BANK = makeBank();
 
-const simulate = (learner: Learner, index: number, length: 'quick' | 'full' = 'full'): Outcome => {
-  const seed = hashSeed(['sim', learner.name, length, String(index)]);
+const simulate = (learner: Learner, index: number, mode: PlacementMode = 'standard'): Outcome => {
+  const seed = hashSeed(['sim', learner.name, mode, String(index)]);
   const rng = createRng(hashSeed(['learner', learner.name, String(index)]));
   let now = 1_000;
   let state = startRun(
     BANK,
-    { length, revealMode: 'tap', audio: true, visual: true, takeMyTime: false, seed, exclude: [], resolvesPicture: () => true },
+    { mode, revealMode: 'tap', audio: true, visual: true, takeMyTime: false, seed, exclude: [], resolvesPicture: () => true },
     now,
   );
   for (let guard = 0; guard < 100 && !isFinished(state); guard += 1) {
@@ -81,11 +87,14 @@ const simulate = (learner: Learner, index: number, length: 'quick' | 'full' = 'f
       const others = question.options.filter((o) => !o.isCorrect);
       let pick = right;
       if (behaviour === 'guess') pick = question.options[Math.floor(rng() * question.options.length)] as typeof right;
+      else if (behaviour === 'never-first') pick = question.options[1 + Math.floor(rng() * (question.options.length - 1))] as typeof right;
+      else if (behaviour === 'slot-1') pick = question.options[1] as typeof right;
       else if (rng() >= behaviour) pick = others[Math.floor(rng() * others.length)] as typeof right;
       event = { type: 'answer', optionId: pick.id };
     }
     state = apply(state, event, now);
   }
+  expect(isFinished(state)).toBe(true);
   const result = finishRun(state, {
     catalog: STAGE1_15,
     isEntitled: () => true,
@@ -99,14 +108,23 @@ const simulate = (learner: Learner, index: number, length: 'quick' | 'full' = 'f
 };
 
 const RUNS = 1_000;
-const many = (learner: Learner, length: 'quick' | 'full' = 'full'): Outcome[] =>
-  Array.from({ length: RUNS }, (_, i) => simulate(learner, i, length));
+/** Runs are seeded by index, so the first `n` of a longer list are the same runs: memoized per learner and mode. */
+const simulated = new Map<string, Outcome[]>();
+const many = (learner: Learner, mode: PlacementMode = 'standard', n = RUNS): Outcome[] => {
+  const key = `${learner.name}|${mode}`;
+  const known = simulated.get(key) ?? [];
+  for (let i = known.length; i < n; i += 1) known.push(simulate(learner, i, mode));
+  simulated.set(key, known);
+  return known.slice(0, n);
+};
+const aboveBand = (o: Outcome, band: number): boolean => o.result.level.stage !== 'stage1' || o.result.level.band > band;
 const share = (outcomes: Outcome[], test: (o: Outcome) => boolean): number => outcomes.filter(test).length / outcomes.length;
 const bandOneOrLower = (o: Outcome): boolean => o.result.level.stage === 'stage1' && o.result.level.band <= 1;
 
-describe('simulated learners (1,000 seeded runs each)', () => {
+// Synchronous and CPU-bound: an explicit budget, so a slow runner or a later vitest that times out sync tests does not flake.
+describe('simulated learners, Standard (1,000 seeded runs each)', { timeout: 60_000 }, () => {
   it('a learner with no Korean who taps "I am not sure" is asked exactly 12 questions and starts at the first quest', () => {
-    const runs = many(LEARNERS.zero as Learner).slice(0, 50);
+    const runs = many(LEARNERS.zero as Learner, 'standard', 50);
     for (const { asked, result } of runs) {
       expect(asked).toBe(12);
       expect(result.level).toEqual({ stage: 'stage1', band: 0 });
@@ -124,7 +142,15 @@ describe('simulated learners (1,000 seeded runs each)', () => {
     expect(share(runs, (o) => o.result.level.band === 0 && o.result.level.stage === 'stage1')).toBeGreaterThan(0.9);
     for (const { asked } of runs) {
       expect(asked).toBeGreaterThanOrEqual(12);
-      expect(asked).toBeLessThanOrEqual(21);
+      expect(asked).toBeLessThanOrEqual(24);
+    }
+  });
+
+  it('a tapper who never picks the first card, or always the second, does no better than chance', () => {
+    for (const learner of [LEARNERS.neverFirst, LEARNERS.slotOne] as Learner[]) {
+      const runs = many(learner);
+      expect(share(runs, bandOneOrLower)).toBeGreaterThanOrEqual(0.97);
+      expect(share(runs, (o) => aboveBand(o, 0))).toBeLessThanOrEqual(0.06);
     }
   });
 
@@ -139,7 +165,7 @@ describe('simulated learners (1,000 seeded runs each)', () => {
     const runs = many(LEARNERS.decoder as Learner);
     const high = share(runs, (o) => (o.result.level.stage === 'stage1' && o.result.level.band === 3) || o.result.level.stage !== 'stage1');
     expect(high).toBeGreaterThan(0.85);
-    for (const { asked } of runs) expect(asked).toBeLessThanOrEqual(21);
+    for (const { asked } of runs) expect(asked).toBeLessThanOrEqual(24);
   });
 
   it('a heritage listener who understands but cannot read starts at the beginning, with the listening level reported apart', () => {
@@ -153,19 +179,62 @@ describe('simulated learners (1,000 seeded runs each)', () => {
     const runs = many(LEARNERS.advanced as Learner);
     expect(share(runs, (o) => o.result.level.stage === 'stage3')).toBeGreaterThanOrEqual(0.95);
     for (const { result, asked } of runs.filter((o) => o.result.level.stage === 'stage3')) {
-      expect(asked).toBe(21);
+      expect(asked).toBe(24);
       expect(result.placedOutQuestIds).toHaveLength(15);
       expect(result.startQuestId).toBeNull();
     }
   });
 
-  it('Quick asks at most 15 questions and never places above band 1, whoever takes it', () => {
+});
+
+describe('simulated learners, Short and Deep (1,000 seeded runs each)', { timeout: 60_000 }, () => {
+  it('Short asks 6 to 9 questions and never places above band 1, whoever takes it; at most q1 to q3 are placed out', () => {
     for (const learner of Object.values(LEARNERS)) {
-      const runs = many(learner, 'quick').slice(0, 300);
-      for (const { asked, result } of runs) {
-        expect(asked).toBeGreaterThanOrEqual(12);
-        expect(asked).toBeLessThanOrEqual(15);
+      for (const { asked, result } of many(learner, 'short', 300)) {
+        expect(asked).toBeGreaterThanOrEqual(6);
+        expect(asked).toBeLessThanOrEqual(9);
         expect(bandOneOrLower({ asked, result })).toBe(true);
+        expect(result.placedOutQuestIds.length).toBeLessThanOrEqual(3);
+        expect(result.mode).toBe('short');
+        expect(result.length).toBe('quick');
+      }
+    }
+  });
+
+  it('Short: any guesser lands above band 0 in at most 1 percent of runs (the strict 3-of-3 syllable rung)', () => {
+    for (const learner of [LEARNERS.guesser, LEARNERS.neverFirst, LEARNERS.slotOne] as Learner[]) {
+      expect(share(many(learner, 'short'), (o) => aboveBand(o, 0))).toBeLessThanOrEqual(0.01);
+    }
+  });
+
+  it('Short: "not sure" on every item is 6 questions at band 0 with no pause; an advanced learner is at band 1 in most runs', () => {
+    for (const { asked, result } of many(LEARNERS.zero as Learner, 'short', 50)) {
+      expect(asked).toBe(6);
+      expect(result.level).toEqual({ stage: 'stage1', band: 0 });
+      expect(result.stopReason).toBe('complete');
+    }
+    expect(share(many(LEARNERS.advanced as Learner, 'short'), (o) => o.result.level.band === 1)).toBeGreaterThan(0.85);
+  });
+
+  it('Deep: any guesser lands above band 1 in at most 0.5 percent of runs; at most 42 questions', () => {
+    for (const learner of [LEARNERS.guesser, LEARNERS.neverFirst, LEARNERS.slotOne] as Learner[]) {
+      const runs = many(learner, 'deep');
+      expect(share(runs, (o) => aboveBand(o, 1))).toBeLessThanOrEqual(0.005);
+      for (const { asked } of runs) expect(asked).toBeLessThanOrEqual(42);
+    }
+  });
+
+  it('Deep: an advanced learner reaches stage3 in nearly every run, with listening measured', () => {
+    const runs = many(LEARNERS.advanced as Learner, 'deep');
+    expect(share(runs, (o) => o.result.level.stage === 'stage3')).toBeGreaterThanOrEqual(0.9);
+    expect(share(runs, (o) => o.result.oralStage !== null)).toBe(1);
+    for (const { asked } of runs) expect(asked).toBeLessThanOrEqual(42);
+  });
+
+  it('"not sure" on every item is band 0 in every mode', () => {
+    for (const mode of ['short', 'standard', 'deep'] as const) {
+      for (const { result } of many(LEARNERS.zero as Learner, mode, 50)) {
+        expect(result.level).toEqual({ stage: 'stage1', band: 0 });
       }
     }
   });

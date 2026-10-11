@@ -15,7 +15,7 @@ import { View } from 'react-native';
 import { useMessages } from '../i18n/use-messages';
 import { pinSetupChange, pinSetupRedo, type PinSetupState } from '../logic/onboarding/pin-setup';
 import { PIN_LENGTH } from '../logic/profiles/pin-hash';
-import { pinPadFirstWidth, pinPadLayout } from '../logic/profiles/pin-pad-layout';
+import { pinKeyMax, pinPadFirstWidth, pinPadLayout } from '../logic/profiles/pin-pad-layout';
 import { PIN_PAD_GAP, PinPad } from './PinPad';
 
 const DOT_SIZE = spacing.lg + spacing.xs;
@@ -42,7 +42,7 @@ interface PinSetupFieldProps {
 export function PinSetupField({ heading, state, onChange, error = null, disabled = false }: PinSetupFieldProps): React.ReactElement {
   const messages = useMessages();
   const m = messages.caregiver.pin.setup;
-  const { windowWidth, gutter } = useLayoutClass();
+  const { windowWidth, gutter, mediaScale } = useLayoutClass();
   // The card's padding comes off both sides of the screen gutter until it is measured.
   const [width, setWidth] = useState(() =>
     pinPadFirstWidth({ windowWidth, maxWidth: layoutTokens.maxWidth.reading, sidePadding: 2 * gutter + 2 * spacing.lg }),
@@ -51,7 +51,8 @@ export function PinSetupField({ heading, state, onChange, error = null, disabled
     width,
     height: Number.POSITIVE_INFINITY,
     minKey: touchTarget.min,
-    maxKey: touchTarget.min,
+    // F-LAYOUT-001 §3.6: keys scale with the window up to touchTarget.hero (the 64 floor on a phone, as before).
+    maxKey: pinKeyMax({ base: touchTarget.min, mediaScale, ceiling: touchTarget.hero }),
     gap: PIN_PAD_GAP,
   });
 

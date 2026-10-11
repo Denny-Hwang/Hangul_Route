@@ -458,6 +458,7 @@ Decisions made in this spec:
 | L11 | Style: Spanish neutral "tú"; Korean 해요체, no particle on a variable; `es-US` speech tag with `es-*` fallback |
 | L12 | Landing at `/` English, `/es/` `/ko/` prerendered via route groups; console and app unprefixed; a banner suggests, never redirects |
 | L13 | One banned-word JSON, per locale and surface, shared by TypeScript and the validator |
+| L14 | PR 10a retires four `COPY` fragments the space page glued around numbers or jamo (`practicedThisWeek`, `anchor`, `revisitTogether`, `notSyncedWeek`) in favour of whole sentences under `console.space.week` (§3.1: a sentence is one message); the other `COPY` keys keep their names (§3.4 rule 2) |
 
 ## 9. Charter text to land with PR 0 (for CLAUDE.md §2 and friends)
 
@@ -472,6 +473,7 @@ This spec owns the **one** CLAUDE.md §2 edit for every new package or directory
 
 ## 10. Unverified assumptions and open items
 
+- **Console counts outside `plural()`**: PR 10a keeps the console's former English byte for byte (§3.4 rule 1), including "Kim family · 1 learners", "1 cards" and "1 haven't synced" (`console.space.title.*`, `console.space.learner.questsCards`, `console.space.week.notSynced`, marked `TODO(F-I18N-001 §10, console counts)`). The first PR allowed to change console text routes them through `plural()` (rule 4), before `es` ships.
 - **Hermes `Intl` / `Intl.PluralRules` / regex features**: not testable here; the design avoids relying on them (hand-rolled `plural`, fallback month/weekday tables, explicit character ranges instead of `\p{…}` for names; the Unicode-boundary banned-word regex runs in Node tests and on web — verify on Hermes before the native iOS/Android build).
 - **`expo-localization` version** for SDK 52 (`~16.0.0` per the audit): confirm at install; web uses the `navigator.languages` variant and does not need it.
 - **Next route groups with multiple root layouts under `output: 'export'`** (PR 11b): verified in a throwaway prototype on Next 14.2.35 (`out/es.html` has `lang="es"`, §3.4); re-run the check in the real app after the move, because `generateMetadata` and the existing `siteMetadata` export were not part of the prototype. Fallback in §3.4.

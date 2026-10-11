@@ -1,4 +1,5 @@
 import { colors, radii, shadows, spacing, typography } from '@hangul-route/design-system/tokens';
+import { DEFAULT_LOCALE, getMessages, type Messages, type UiLocale } from '@hangul-route/i18n';
 import { stage1Cards, type CardRarity, type LandingCard } from '../../data/stage1-cards';
 
 const rarityBorder: Record<CardRarity, string> = {
@@ -8,14 +9,9 @@ const rarityBorder: Record<CardRarity, string> = {
   legendary: colors.rarity.legendary,
 };
 
-const rarityLabel: Record<CardRarity, string> = {
-  common: 'Common',
-  uncommon: 'Uncommon',
-  rare: 'Rare',
-  legendary: 'Legendary',
-};
+type CardWords = Messages['landing']['cards'];
 
-function CardTile({ card }: { card: LandingCard }): JSX.Element {
+function CardTile({ card, t }: { card: LandingCard; t: CardWords }): JSX.Element {
   return (
     <article
       style={{
@@ -32,7 +28,7 @@ function CardTile({ card }: { card: LandingCard }): JSX.Element {
     >
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span
-          aria-label={`Korean word ${card.romanization}, meaning ${card.en}`}
+          aria-label={t.cardLabel(card.romanization, card.en)}
           style={{
             fontSize: typography.size.title,
             fontWeight: typography.weight.bold,
@@ -59,7 +55,7 @@ function CardTile({ card }: { card: LandingCard }): JSX.Element {
             aria-hidden="true"
             style={{ width: 10, height: 10, borderRadius: radii.circle, backgroundColor: rarityBorder[card.rarity] }}
           />
-          {rarityLabel[card.rarity]}
+          {t.rarity[card.rarity]}
         </span>
       </header>
       <div
@@ -94,7 +90,8 @@ function CardTile({ card }: { card: LandingCard }): JSX.Element {
   );
 }
 
-export function HeritageCardsPreview(): JSX.Element {
+export function HeritageCardsPreview({ locale = DEFAULT_LOCALE }: { locale?: UiLocale }): JSX.Element {
+  const t = getMessages(locale).landing.cards;
   const rarityCounts = stage1Cards.reduce<Record<CardRarity, number>>(
     (acc, card) => {
       acc[card.rarity] += 1;
@@ -122,7 +119,7 @@ export function HeritageCardsPreview(): JSX.Element {
             letterSpacing: 1,
           }}
         >
-          The reward loop
+          {t.eyebrow}
         </span>
         <h2
           id="cards-heading"
@@ -132,19 +129,16 @@ export function HeritageCardsPreview(): JSX.Element {
             lineHeight: typography.leading.tight,
           }}
         >
-          {stage1Cards.length} Heritage Cards. One Korea, one card at a time.
+          {t.title(stage1Cards.length)}
         </h2>
         <p style={{ color: colors.text.secondary, fontSize: typography.size.bodyLg, maxWidth: 720, margin: 0 }}>
-          Every letter you learn earns a real piece of Korean culture — a
-          ramyeon bowl, a Chuseok moon, a swing from a Dano painting. Stage 1
-          ships {stage1Cards.length} cards: {rarityCounts.common} common, {rarityCounts.uncommon} uncommon,{' '}
-          {rarityCounts.rare} rare, and {rarityCounts.legendary} legendary.
+          {t.body(stage1Cards.length, rarityCounts.common, rarityCounts.uncommon, rarityCounts.rare, rarityCounts.legendary)}
         </p>
       </header>
 
       <div
         role="list"
-        aria-label="Stage 1 Heritage Cards"
+        aria-label={t.listLabel}
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
@@ -153,7 +147,7 @@ export function HeritageCardsPreview(): JSX.Element {
       >
         {stage1Cards.map((card) => (
           <div role="listitem" key={card.id}>
-            <CardTile card={card} />
+            <CardTile card={card} t={t} />
           </div>
         ))}
       </div>
@@ -166,8 +160,7 @@ export function HeritageCardsPreview(): JSX.Element {
           textAlign: 'center',
         }}
       >
-        Stage 2 (Words) adds 30+ cards. Stage 7 (Self-expression) caps the
-        Heritage Library at 175.
+        {t.more}
       </p>
     </section>
   );

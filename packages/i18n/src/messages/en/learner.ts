@@ -583,4 +583,10 @@ export const learner = {
     body: "Your cards and stars are safe. Let's hop back in.",
     bubble: 'Oops! That was not your fault. Tap the button and we go again.',
   },
+
+  /** The soft portrait guard on a phone held sideways (F-LAYOUT-001 §3.4, wireframe layout/wide E). */
+  portraitGuard: {
+    title: 'Turn your phone upright',
+    keepSideways: { cta: 'Keep sideways' },
+  },
 } as const;
