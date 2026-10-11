@@ -25,7 +25,7 @@ async function setup() {
     schemaVer: 1,
     contentVer: '2026.09',
   });
-  return { spaceId: cls.space.id, code: cls.joinCode, learnerId: reg.learner.id };
+  return { spaceId: cls.space.id, code: cls.joinCode, learnerId: reg.learner.id, authA };
 }
 const create = (spaceId: string, body: Record<string, unknown>, headers: Record<string, string> = json) => call('POST', `/api/spaces/${spaceId}/relink-requests`, headers, body);
 const poll = (spaceId: string, rid: string, deviceId: string) => call('GET', `/api/spaces/${spaceId}/relink-requests/${rid}?deviceId=${deviceId}`, json);
@@ -154,6 +154,33 @@ describe('re-link requests (F-TCH-001 §10.1)', () => {
     expect((await poll(s.spaceId, again.id, 'device-cccccccc')).body.data).toMatchObject({ status: 'expired' });
     expect((await call('POST', `/api/spaces/${s.spaceId}/relink-requests/${again.id}/approve`, bearer('teacher'))).body.error?.code).toBe('expired');
     expect((await call('POST', `/api/spaces/${s.spaceId}/relink-requests/relink:nope/deny`, bearer('teacher'))).status).toBe(404);
+  });
+
+  it('F-SPACE-002 T16(b): approving a re-link for a learner who left the class answers 409 not_a_member and binds no device', async () => {
+    const s = await setup();
+    const req = ((await create(s.spaceId, { code: s.code, learnerId: s.learnerId, deviceId: DEVICE_B })).body.data as { request: { id: string } }).request;
+    // the learner leaves from their own device while the request is still pending
+    expect((await call('POST', `/api/spaces/${s.spaceId}/leave`, s.authA, { learnerId: s.learnerId })).status).toBe(200);
+
+    const approved = await call('POST', `/api/spaces/${s.spaceId}/relink-requests/${req.id}/approve`, bearer('teacher'));
+    expect(approved.status).toBe(409);
+    expect(approved.body.error?.code).toBe('not_a_member');
+    expect(await db.getDevice(s.learnerId, DEVICE_B)).toBeNull();
+    expect((await db.getRelink(req.id))?.status).toBe('pending');
+    expect((await db.getRelink(req.id))?.secret).toBeNull();
+    expect((await poll(s.spaceId, req.id, DEVICE_B)).body.data).toMatchObject({ status: 'pending' });
+    // the teacher can still clear it
+    expect((await call('POST', `/api/spaces/${s.spaceId}/relink-requests/${req.id}/deny`, bearer('teacher'))).body.data).toMatchObject({ request: { status: 'denied' } });
+  });
+
+  it('F-SPACE-002 T16(b): approving after the teacher removed the learner is refused the same way', async () => {
+    const s = await setup();
+    const req = ((await create(s.spaceId, { code: s.code, learnerId: s.learnerId, deviceId: DEVICE_B })).body.data as { request: { id: string } }).request;
+    expect((await call('DELETE', `/api/spaces/${s.spaceId}/members/learner/${encodeURIComponent(s.learnerId)}`, bearer('teacher'))).status).toBe(200);
+    const approved = await call('POST', `/api/spaces/${s.spaceId}/relink-requests/${req.id}/approve`, bearer('teacher'));
+    expect(approved.status).toBe(409);
+    expect(approved.body.error?.code).toBe('not_a_member');
+    expect(await db.getDevice(s.learnerId, DEVICE_B)).toBeNull();
   });
 
   it('anonymized rosters show initials to the teacher list and the lookup', async () => {
