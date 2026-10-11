@@ -75,6 +75,7 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
   const profile = useProfileStore(activeProfileSelector);
   const recordQuestComplete = useProgressStore((s) => s.recordQuestComplete);
   const unlockCards = useProgressStore((s) => s.unlockCards);
+  const recordCatchUp = useProgressStore((s) => s.recordCatchUp);
   const snapshot = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
   const cachedTier = useTierStore((s) => (profile ? s.byLearner[profile.id] : undefined));
   const reducedMotion = useReducedMotion();
@@ -106,14 +107,16 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
         retries,
       },
       {
+        isHydrated: (id) => useProgressStore.getState().hydratedFor.has(id),
         snapshot: (id) => useProgressStore.getState().byProfile[id],
         recordQuestComplete,
         unlockCards,
+        recordCatchUp,
         track,
       },
     );
     setOutcome(earned);
-  }, [profile, quest, questId, episodeId, stars, correct, total, retries, recordQuestComplete, unlockCards]);
+  }, [profile, quest, questId, episodeId, stars, correct, total, retries, recordQuestComplete, unlockCards, recordCatchUp]);
 
   // Android/web read the live region above (a second announcement would double-read);
   // iOS VoiceOver ignores live regions, so it gets an explicit announcement.

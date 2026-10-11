@@ -88,6 +88,11 @@ interface Actions {
       attempts: number;
     },
   ) => void;
+  /**
+   * @deprecated No production caller since F-STORY-006 PR 6.4b: use
+   * `unlockCards`, which writes deterministic `unlockedAt` times (§3.1 rule 3)
+   * and adds several cards with one write. This one stamps the current time.
+   */
   unlockCard: (profileId: string, cardId: string) => void;
   /**
    * Add several cards with one storage write (F-STORY-006 §3.3, the live
@@ -108,6 +113,12 @@ interface Actions {
    * Cards a quest just earned belong to the live path (see `unlockCards`).
    */
   reconcileAwards: (profileId: string) => DerivedAward[];
+  /**
+   * Announce cards that were already owed before a Results visit and arrived
+   * with its write (`unlockCards`): the Home catch-up list and one aggregate
+   * `card.catchup_granted`, never a per-card event (§3.5). Writes nothing.
+   */
+  recordCatchUp: (profileId: string, added: readonly DerivedAward[]) => void;
   /**
    * Clear the "New" flag of owned cards (CardDetail, the catch-up card's "See
    * my cards") and take them off the catch-up list. The list is cleared even
@@ -375,6 +386,12 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
     persist(profileId, snap);
     announceCatchUp(profileId, added);
     return added;
+  },
+
+  recordCatchUp: (profileId, added) => {
+    if (added.length === 0) return;
+    set((s) => ({ catchUp: catchUpAfter(s.catchUp, profileId, added) }));
+    announceCatchUp(profileId, added);
   },
 
   markCardsSeen: (profileId, cardIds) => {

@@ -18,6 +18,8 @@ import { decideCardAward, type CardAward } from './reward';
  * - the completion awards the run earned (episode, stage, set and, when it is
  *   missing, welcome cards) arrive with the quest card in one storage write and
  *   are returned as `extras`, with their telemetry
+ * - cards the snapshot was already owed before the run (a missed reconcile)
+ *   ride the same write but are a catch-up: no extra, no per-card event
  */
 export interface QuestResultInput {
   profileId: string;
@@ -39,6 +41,13 @@ export interface ResultCardUnlock {
 }
 
 export interface QuestResultDeps {
+  /**
+   * Whether the profile's saved snapshot has been read. Before that, the
+   * in-memory snapshot holds only this run (the saved copy merges in later),
+   * so only the quest card is decided here and the completion cards arrive
+   * with the hydrate reconcile, as a catch-up.
+   */
+  isHydrated: (profileId: string) => boolean;
   /** The profile's snapshot, read at call time (before and after the score is written). */
   snapshot: (profileId: string) => ProgressSnapshot | undefined;
   recordQuestComplete: (
@@ -47,6 +56,12 @@ export interface QuestResultDeps {
   ) => void;
   /** Adds the cards with one storage write and returns the ids it added. */
   unlockCards: (profileId: string, cards: readonly ResultCardUnlock[]) => readonly string[];
+  /**
+   * Cards the snapshot was already owed before this run (a reconcile that was
+   * missed) and that arrived with this run's write: the Home catch-up list and
+   * one aggregate `card.catchup_granted`, never a per-card event (§3.5).
+   */
+  recordCatchUp: (profileId: string, added: readonly DerivedAward[]) => void;
   track: (event: TelemetryEvent) => unknown;
   /** The content the award rules read; the shipped bundle by default. */
   world?: AwardWorld;
@@ -55,7 +70,8 @@ export interface QuestResultDeps {
 /**
  * A card this run brought besides the quest card. Its source is a completion
  * rule (episode, stage, set) or the welcome card; `quest` appears only for
- * another quest's card that had not reached this snapshot yet.
+ * another quest's card that the same write brought (never one the snapshot
+ * was already owed: that is a catch-up).
  */
 export interface ExtraAward {
   cardId: string;
@@ -67,7 +83,7 @@ export interface QuestResultOutcome {
   award: CardAward | null;
   /** Never contains `award.cardId`. */
   extras: ExtraAward[];
-  /** The episode this run completed, for the Results line. */
+  /** The episode of this run when this run completed it, for the Results line. */
   episodeCompleted: string | null;
   /** The stage this run completed (F-QUEST-002 ceremony trigger). */
   stageCompleted: StageKey | null;
@@ -78,6 +94,45 @@ const NOTHING: QuestResultOutcome = { award: null, extras: [], episodeCompleted:
 const welcomeIdsOf = (world: AwardWorld): string[] => world.cards.filter((c) => parseUnlockedBy(c.unlockedBy).kind === 'welcome').map((c) => c.id);
 
 const stagesOf = (world: AwardWorld): StageKey[] => [...new Set(world.episodes.map((e) => e.stage))];
+
+/** What the score write changed, by the award rules. */
+interface Completion {
+  /** Every card the snapshot lacks after the write. */
+  missing: DerivedAward[];
+  /** Cards it already lacked before the write, other than the welcome card and this quest's card. */
+  owedBefore: Set<string>;
+  episodesJustCompleted: string[];
+  stagesJustCompleted: StageKey[];
+}
+
+/**
+ * Null before the saved snapshot has loaded, and when the rules cannot read
+ * the record or the content (malformed or very old): like the store's
+ * reconcile, such a record gains nothing here, and the Results visit still
+ * records its score and its quest card.
+ */
+function readCompletion(
+  world: AwardWorld,
+  before: ProgressSnapshot | undefined,
+  after: ProgressSnapshot | undefined,
+  profile: { createdAt: string },
+  skip: ReadonlySet<string>,
+): Completion | null {
+  if (!after) return null;
+  try {
+    const missing = missingAwards(world, after, profile);
+    const owedBefore = new Set((before ? missingAwards(world, before, profile) : []).map((a) => a.cardId).filter((id) => !skip.has(id)));
+    const doneBefore = completedEpisodes(world, before ?? { quests: [] });
+    const doneAfter = completedEpisodes(world, after);
+    const episodesJustCompleted = [...doneAfter.keys()].filter((id) => !doneBefore.has(id));
+    const stagesJustCompleted = stagesOf(world).filter(
+      (stage) => !isStageComplete(stage, world, doneBefore).complete && isStageComplete(stage, world, doneAfter).complete,
+    );
+    return { missing, owedBefore, episodesJustCompleted, stagesJustCompleted };
+  } catch {
+    return null;
+  }
+}
 
 export function applyQuestResult(input: QuestResultInput, deps: QuestResultDeps): QuestResultOutcome {
   const { profileId, questId, episodeId, stars, correct, total, retries } = input;
@@ -93,6 +148,8 @@ export function applyQuestResult(input: QuestResultInput, deps: QuestResultDeps)
   }
   const world = deps.world ?? awardWorld;
   const welcomeCardIds = welcomeIdsOf(world);
+  const welcome = new Set(welcomeCardIds);
+  const hydrated = deps.isHydrated(profileId);
   const before = deps.snapshot(profileId);
   const ownedBefore = (before?.cards ?? []).map((c) => c.cardId);
 
@@ -106,11 +163,15 @@ export function applyQuestResult(input: QuestResultInput, deps: QuestResultDeps)
     accuracy: correct / total,
     attempts: 1,
   });
-  const award = decideCardAward({ rewardCardId: input.rewardCardId, stars, ownedCardIds: ownedBefore, welcomeCardIds });
   const after = deps.snapshot(profileId);
-  const missing: DerivedAward[] = after ? missingAwards(world, after, { createdAt: input.profileCreatedAt }) : [];
+  const skip = new Set([...welcomeCardIds, ...(input.rewardCardId ? [input.rewardCardId] : [])]);
+  const completion = hydrated ? readCompletion(world, before, after, { createdAt: input.profileCreatedAt }, skip) : null;
+  const owedBefore = completion?.owedBefore ?? new Set<string>();
+  // Cards the learner was already owed count as earned: this run's card is then not their first.
+  const award = decideCardAward({ rewardCardId: input.rewardCardId, stars, ownedCardIds: [...ownedBefore, ...owedBefore], welcomeCardIds });
+  const missing = completion?.missing ?? [];
   const unlocks: ResultCardUnlock[] = missing.map((a) => ({ cardId: a.cardId, unlockedAt: a.unlockedAt }));
-  // A reward card the rules do not know is still the quest's card (unlocked now, as before).
+  // A reward card the rules do not know (or cannot read) is still the quest's card (unlocked now, as before).
   if (award?.isNew && !missing.some((a) => a.cardId === award.cardId)) unlocks.unshift({ cardId: award.cardId });
   const added = new Set(unlocks.length > 0 ? deps.unlockCards(profileId, unlocks) : []);
 
@@ -125,31 +186,31 @@ export function applyQuestResult(input: QuestResultInput, deps: QuestResultDeps)
     if (award.isFirstCard) void deps.track({ name: 'card.first_earned', profileId, payload: { cardId: award.cardId } });
   }
 
-  const extraAwards = missing.filter((a) => a.cardId !== award?.cardId && added.has(a.cardId));
+  const arrived = missing.filter((a) => a.cardId !== award?.cardId && added.has(a.cardId));
+  const caughtUp = arrived.filter((a) => owedBefore.has(a.cardId));
+  if (caughtUp.length > 0) deps.recordCatchUp(profileId, caughtUp);
+  const extraAwards = arrived.filter((a) => !owedBefore.has(a.cardId));
   for (const extra of extraAwards) {
-    const episode = extra.source === 'episode' ? { episodeId: extra.via } : {};
-    void deps.track({ name: 'card.unlocked', profileId, payload: { cardId: extra.cardId, questId, ...episode, source: extra.source } });
+    // A quest card is credited to the quest that earns it.
+    const via = extra.source === 'quest' ? { questId: extra.via } : { questId, ...(extra.source === 'episode' ? { episodeId: extra.via } : {}) };
+    void deps.track({ name: 'card.unlocked', profileId, payload: { cardId: extra.cardId, ...via, source: extra.source } });
   }
   // The first card a learner earns can be a completion card (a 1-star finish of
   // an episode); the funnel counts it, never the welcome card (§3.4).
-  const welcome = new Set(welcomeCardIds);
-  const earnedBefore = ownedBefore.some((id) => !welcome.has(id));
+  const earnedBefore = owedBefore.size > 0 || ownedBefore.some((id) => !welcome.has(id));
   const firstExtra = extraAwards.find((a) => !welcome.has(a.cardId));
   if (!award?.isNew && !earnedBefore && firstExtra) {
     void deps.track({ name: 'card.first_earned', profileId, payload: { cardId: firstExtra.cardId } });
   }
 
-  // What this write completed: compare the completions before it with after it.
-  const cardsFor = (unlockedBy: string): number => world.cards.filter((c) => added.has(c.id) && c.unlockedBy === unlockedBy).length;
-  const doneBefore = completedEpisodes(world, before ?? { quests: [] });
-  const doneAfter = completedEpisodes(world, after ?? { quests: [] });
-  const episodesJustCompleted = [...doneAfter.keys()].filter((id) => !doneBefore.has(id));
+  // What this write completed: the completions after it that were not there before.
+  const announced = new Set([...(award?.isNew ? [award.cardId] : []), ...extraAwards.map((a) => a.cardId)]);
+  const cardsFor = (unlockedBy: string): number => world.cards.filter((c) => announced.has(c.id) && added.has(c.id) && c.unlockedBy === unlockedBy).length;
+  const episodesJustCompleted = completion?.episodesJustCompleted ?? [];
   for (const id of episodesJustCompleted) {
     void deps.track({ name: 'episode.complete', profileId, payload: { episodeId: id, cardsAwarded: cardsFor(id) } });
   }
-  const stagesJustCompleted = stagesOf(world).filter(
-    (stage) => !isStageComplete(stage, world, doneBefore).complete && isStageComplete(stage, world, doneAfter).complete,
-  );
+  const stagesJustCompleted = completion?.stagesJustCompleted ?? [];
   for (const stage of stagesJustCompleted) {
     void deps.track({ name: 'stage.complete', profileId, payload: { stageKey: stage, cardsAwarded: cardsFor(`${stage}-complete`) } });
   }
@@ -160,7 +221,7 @@ export function applyQuestResult(input: QuestResultInput, deps: QuestResultDeps)
   return {
     award,
     extras: extraAwards.map(({ cardId, source }) => ({ cardId, source })),
-    episodeCompleted: episodesJustCompleted.includes(episodeId) ? episodeId : (episodesJustCompleted[0] ?? null),
+    episodeCompleted: episodesJustCompleted.includes(episodeId) ? episodeId : null,
     stageCompleted: stagesJustCompleted[0] ?? null,
   };
 }

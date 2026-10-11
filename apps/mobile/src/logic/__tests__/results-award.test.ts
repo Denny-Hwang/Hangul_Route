@@ -21,6 +21,7 @@ const base: QuestResultInput = {
 type Deps = QuestResultDeps & {
   recordQuestComplete: ReturnType<typeof vi.fn>;
   unlockCards: ReturnType<typeof vi.fn>;
+  recordCatchUp: ReturnType<typeof vi.fn>;
   track: ReturnType<typeof vi.fn>;
   current: () => ProgressSnapshot | undefined;
 };
@@ -34,6 +35,7 @@ function makeDeps(start: ProgressSnapshot | undefined = snapshot({ cards: [owned
   let snap = start;
   return {
     world: WORLD,
+    isHydrated: () => true,
     snapshot: () => snap,
     current: () => snap,
     recordQuestComplete: vi.fn((_p: string, run: { questId: string; episodeId: string; stars: 0 | 1 | 2 | 3; accuracy: number; attempts: number }) => {
@@ -48,6 +50,7 @@ function makeDeps(start: ProgressSnapshot | undefined = snapshot({ cards: [owned
       snap = { ...s, cards: [...s.cards, ...added.map((c) => ({ cardId: c.cardId, unlockedAt: c.unlockedAt ?? NOW, newSinceLastView: true }))] };
       return added.map((c) => c.cardId);
     }),
+    recordCatchUp: vi.fn(),
     track: vi.fn(),
   };
 }
@@ -266,15 +269,79 @@ describe('applyQuestResult (Results award effect, F-STORY-006 §3.3)', () => {
       expect(ofName(deps, 'card.first_earned')).toEqual([]);
     });
 
-    it("another quest's card the snapshot lacks arrives with its quest source", () => {
+    it("another quest's card the snapshot already lacked before this run is a catch-up, not an extra (§3.5)", () => {
       // quest:l1 was finished at 2 stars, but its card never reached this snapshot.
       deps = makeDeps(snapshot({ quests: [done('quest:l1', 2, T1)], cards: [owned('card:tiger', PROFILE.createdAt), owned('card:apple')] }));
+      const outcome = applyQuestResult({ ...base, questId: 'quest:l2', rewardCardId: undefined, stars: 1 }, deps);
+      expect(outcome.extras).toEqual([{ cardId: 'card:hanji', source: 'episode' }]);
+      expect(deps.unlockCards).toHaveBeenCalledTimes(1);
+      expect(cardIds(deps)).toEqual(['card:apple', 'card:book', 'card:hanji', 'card:tiger']);
+      expect(deps.recordCatchUp).toHaveBeenCalledTimes(1);
+      expect(deps.recordCatchUp).toHaveBeenCalledWith('p1', [{ cardId: 'card:book', source: 'quest', via: 'quest:l1', unlockedAt: T1 }]);
+      expect(ofName(deps, 'card.unlocked').map((e) => e.payload?.cardId)).toEqual(['card:hanji']);
+    });
+
+    it('cards a missed reconcile left out are a catch-up: same write, no per-card event, no first-card event', () => {
+      // Letters was complete before this run, but its episode cards never arrived.
+      deps = makeDeps(snapshot({ quests: [done('quest:l1', 1, T1), done('quest:l2', 1, T2)], cards: [owned('card:tiger', PROFILE.createdAt)] }));
+      const outcome = applyQuestResult({ ...base, questId: 'quest:f1', episodeId: 'episode:stage1-life', rewardCardId: 'card:rice', stars: 2, correct: 4 }, deps);
+      expect(outcome.award).toEqual({ cardId: 'card:rice', isNew: true, isFirstCard: false });
+      expect(outcome.extras).toEqual([{ cardId: 'card:lantern', source: 'stage' }]);
+      expect(deps.unlockCards).toHaveBeenCalledTimes(1);
+      expect(cardIds(deps)).toEqual(['card:book', 'card:hanji', 'card:lantern', 'card:rice', 'card:tiger']);
+      expect(deps.recordCatchUp.mock.calls[0]![1].map((a: { cardId: string }) => a.cardId)).toEqual(['card:book', 'card:hanji']);
+      expect(ofName(deps, 'card.unlocked').map((e) => e.payload?.cardId)).toEqual(['card:rice', 'card:lantern']);
+      expect(ofName(deps, 'card.first_earned')).toEqual([]);
+      expect(ofName(deps, 'episode.complete').map((e) => e.payload)).toEqual([{ episodeId: 'episode:stage1-life', cardsAwarded: 1 }]);
+    });
+
+    it('a quest card that arrives with this write but belongs to another quest is credited to that quest', () => {
+      deps = makeDeps(snapshot({ cards: [owned('card:tiger', PROFILE.createdAt), owned('card:apple')] }));
+      const record = deps.recordQuestComplete.getMockImplementation()!;
+      // The same write also lands quest:l1 at 2 stars (for example a merged pending run).
+      deps.recordQuestComplete.mockImplementation((p: string, run: { questId: string; episodeId: string; stars: 0 | 1 | 2 | 3; accuracy: number; attempts: number }) => {
+        record(p, { ...run, questId: 'quest:l1', stars: 2 });
+        record(p, run);
+      });
       const outcome = applyQuestResult({ ...base, questId: 'quest:l2', rewardCardId: undefined, stars: 1 }, deps);
       expect(outcome.extras).toEqual([
         { cardId: 'card:book', source: 'quest' },
         { cardId: 'card:hanji', source: 'episode' },
       ]);
-      expect(ofName(deps, 'card.unlocked')[0]?.payload).toEqual({ cardId: 'card:book', questId: 'quest:l2', source: 'quest' });
+      expect(ofName(deps, 'card.unlocked')[0]?.payload).toEqual({ cardId: 'card:book', questId: 'quest:l1', source: 'quest' });
+    });
+
+    it('episodeCompleted names only the episode of this run', () => {
+      deps = makeDeps(snapshot({ cards: [owned('card:tiger', PROFILE.createdAt), owned('card:apple')] }));
+      const record = deps.recordQuestComplete.getMockImplementation()!;
+      // The same write also lands the life episode's one quest; this run leaves its own episode unfinished.
+      deps.recordQuestComplete.mockImplementation((p: string, run: { questId: string; episodeId: string; stars: 0 | 1 | 2 | 3; accuracy: number; attempts: number }) => {
+        record(p, { ...run, questId: 'quest:f1', episodeId: 'episode:stage1-life', stars: 1 });
+        record(p, run);
+      });
+      const outcome = applyQuestResult({ ...base, stars: 1, correct: 1 }, deps);
+      expect(ofName(deps, 'episode.complete').map((e) => e.payload?.episodeId)).toEqual(['episode:stage1-life']);
+      expect(outcome.episodeCompleted).toBeNull();
+    });
+
+    it('before the saved snapshot has loaded: only the quest card, as before; no extras, no completion or first-card telemetry', () => {
+      deps = makeDeps(snapshot({ quests: [done('quest:l2', 1, T1)] }));
+      deps.isHydrated = () => false;
+      const outcome = applyQuestResult(base, deps);
+      expect(outcome).toEqual({ award: { cardId: 'card:book', isNew: true, isFirstCard: true }, extras: [], episodeCompleted: null, stageCompleted: null });
+      expect(deps.unlockCards).toHaveBeenCalledWith('p1', [{ cardId: 'card:book' }]);
+      expect(deps.recordCatchUp).not.toHaveBeenCalled();
+      expect(eventNames(deps)).toEqual(['quest.complete', 'card.unlocked', 'card.first_earned']);
+    });
+
+    it('content the rules cannot read: the score and quest.complete still land, with only the quest card', () => {
+      deps = makeDeps(snapshot({ quests: [done('quest:l2', 1, T1)], cards: [owned('card:tiger', PROFILE.createdAt)] }));
+      deps.world = { ...WORLD, sets: WORLD.sets.map((s) => ({ ...s, memberCardIds: null as unknown as string[] })) };
+      const outcome = applyQuestResult(base, deps);
+      expect(outcome).toEqual({ award: { cardId: 'card:book', isNew: true, isFirstCard: true }, extras: [], episodeCompleted: null, stageCompleted: null });
+      expect(deps.recordQuestComplete).toHaveBeenCalledTimes(1);
+      expect(deps.unlockCards).toHaveBeenCalledWith('p1', [{ cardId: 'card:book' }]);
+      expect(eventNames(deps)).toEqual(['quest.complete', 'card.unlocked', 'card.first_earned']);
     });
 
     it('a replay of a finished episode at fewer stars announces nothing and takes nothing away', () => {
@@ -297,6 +364,17 @@ describe('applyQuestResult (Results award effect, F-STORY-006 §3.3)', () => {
       const outcome = applyQuestResult(base, d);
       expect(outcome).toEqual({ award: { cardId: 'card:book', isNew: true, isFirstCard: true }, extras: [], episodeCompleted: null, stageCompleted: null });
       expect(d.unlockCards).toHaveBeenCalledWith('p1', [{ cardId: 'card:book' }]);
+    });
+
+    it('a first write with no snapshot before it: the quest card and the welcome card, nothing counted as owed', () => {
+      const d = makeDeps(snapshot());
+      let reads = 0;
+      // Nothing in memory before the score; the write creates the snapshot.
+      d.snapshot = () => (reads++ === 0 ? undefined : d.current());
+      const outcome = applyQuestResult(base, d);
+      expect(outcome.award).toEqual({ cardId: 'card:book', isNew: true, isFirstCard: true });
+      expect(outcome.extras).toEqual([{ cardId: 'card:tiger', source: 'welcome' }]);
+      expect(d.recordCatchUp).not.toHaveBeenCalled();
     });
 
     it('uses the shipped bundle when no world is passed', () => {
