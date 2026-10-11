@@ -82,6 +82,23 @@ describe('regenerateFrom: idempotence', () => {
     }
   });
 
+  it('shifts a plan cut short to the same plan: Stage 1 lessons it never scheduled still hold the check back', () => {
+    // 4 weeks at 3 sessions hold 12 of the 15 Stage 1 lessons, so the plan has no Hangul Check.
+    const short = generateCurriculum({ ...SELF_B, level: { stage: 'stage1', band: 0 }, weeks: 4, sessionDays: undefined, reviewEvery: undefined, goals: { focus: 'words' } }, CATALOG_2026_10);
+    expect(short.weeks.flatMap((week) => week.extras)).toEqual([]);
+    for (const today of ['2026-10-12', '2026-10-21', '2026-11-02', '2026-11-08']) {
+      const again = regenerateFrom(planOf(short), today, CATALOG_2026_10, { mode: 'shift' });
+      expect(toPlanItems(again)).toEqual(toPlanItems(short));
+      expect(again.weeks).toEqual(short.weeks);
+    }
+  });
+
+  it('checks today and the freeze day are real day keys', () => {
+    expect(() => regenerateFrom(planOf(A), '2026-1-5', CATALOG_2026_10, { mode: 'shift' })).toThrow();
+    expect(() => regenerateFrom(planOf(A), '2026-02-30', CATALOG_2026_10, { mode: 'requeue' })).toThrow();
+    expect(() => generateCurriculum(CLASS_A, CATALOG_2026_10, { freezeBefore: '2026-13-01' })).toThrow();
+  });
+
   it('keeps the end date and params, and leaves the stored plan untouched', () => {
     const plan = planOf(A);
     const before = structuredClone(plan);
@@ -211,12 +228,68 @@ describe('regenerateFrom: requeue (the device re-pace)', () => {
     expect(again.warnings).toContainEqual({ code: 'already-done-skipped', count: 1 });
   });
 
+  it('settles for a caught-up learner: past coming-soon items stay on their dates', () => {
+    for (const today of ['2027-01-09', '2027-01-16', '2027-02-10']) {
+      const done = B.items.filter((item) => (item.targetDate as string) < today && item.kind === 'quest').map((item) => item.id);
+      const again = regenerateFrom(planOf(B), today, CATALOG_2026_10, { mode: 'requeue', completedQuestIds: done });
+      expect(toPlanItems(again)).toEqual(toPlanItems(B));
+      expect(again.weeks).toEqual(B.weeks);
+      // "Content runs out" looks from today on, and the learner's completions are reported as skipped.
+      const steady = (warnings: CurriculumDraft['warnings']) => warnings.filter((w) => w.code !== 'already-done-skipped' && w.code !== 'content-runs-out');
+      expect(steady(again.warnings)).toEqual(steady(B.warnings));
+      expect(new Set(again.items.map((item) => item.id)).size).toBe(again.items.length);
+    }
+  });
+
+  it('never queues a placeholder twice, even when its episode id arrives as done', () => {
+    const done = B.items.filter((item) => (item.targetDate as string) < '2027-01-12').map((item) => item.id);
+    expect(done).toContain('episode:stage2-rites');
+    const again = regenerateFrom(planOf(B), '2027-01-12', CATALOG_2026_10, { mode: 'requeue', completedQuestIds: done });
+    const ids = again.items.map((item) => item.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(ids.filter((id) => id.startsWith('episode:'))).toHaveLength(5);
+  });
+
+  it('moves the Hangul Check with a Stage 1 lesson it returns, so the check never comes first', () => {
+    // B closes Stage 1 in week 2 (crafts-q3 on 21 October); the learner has not done crafts-q3.
+    expect(B.weeks[1]?.extras).toEqual([{ kind: 'hangul-check' }]);
+    const again = regenerateFrom(planOf(B), '2026-10-26', CATALOG_2026_10, {
+      mode: 'requeue',
+      completedQuestIds: [q('nature-q2'), q('nature-q3'), q('crafts-q1'), q('crafts-q2')],
+    });
+    expect(again.items.find((item) => item.id === q('crafts-q3'))).toMatchObject({ targetDate: '2026-10-26', week: 3 });
+    expect(again.weeks[1]?.extras).toEqual([{ kind: 'hangul-check' }]);
+    expect(again.weeks[2]?.extras).toContainEqual({ kind: 'hangul-check' });
+    // Done on time, the check stays where it was and is not given again.
+    const onTime = regenerateFrom(planOf(B), '2026-10-26', CATALOG_2026_10, {
+      mode: 'requeue',
+      completedQuestIds: [q('nature-q2'), q('nature-q3'), q('crafts-q1'), q('crafts-q2'), q('crafts-q3')],
+    });
+    expect(onTime.weeks.filter((week) => week.extras.some((extra) => extra.kind === 'hangul-check')).map((week) => week.index)).toEqual([2]);
+  });
+
+  it('keeps the kind of a week already under way, even when none of its past items was done', () => {
+    const plan = planOf(B);
+    plan.meta = { ...plan.meta, weeks: plan.meta.weeks.map((week) => (week.index === 3 ? { ...week, kind: 'culture' } : week)) };
+    const done = B.items.filter((item) => (item.targetDate as string) < '2026-10-26').map((item) => item.id);
+    const again = regenerateFrom(plan, '2026-10-28', CATALOG_2026_10, { mode: 'requeue', completedQuestIds: done });
+    expect(again.weeks[2]?.kind).toBe('culture');
+  });
+
+  it('changes nothing once no session is left: unfinished past items keep their dates', () => {
+    for (const today of ['2027-04-10', '2027-06-01']) {
+      const again = regenerateFrom(planOf(B), today, CATALOG_2026_10, { mode: 'requeue', completedQuestIds: [] });
+      expect(toPlanItems(again)).toEqual(toPlanItems(B));
+      expect(again.weeks).toEqual(B.weeks);
+    }
+  });
+
   it('keeps weeks before the current week and re-decides the rest', () => {
     const again = regenerateFrom(planOf(B), '2026-11-11', CATALOG_2026_10, {
       mode: 'requeue',
       completedQuestIds: [q('nature-q2'), q('nature-q3'), q('crafts-q1'), q('crafts-q2'), q('crafts-q3')],
     });
-    // Weeks 1-4 are frozen; week 5 lost its only past item, so it is re-decided and refilled.
+    // Weeks 1-4 are frozen; week 5 is under way, so it keeps its kind and its unfinished item is refilled.
     expect(again.weeks.slice(0, 4)).toEqual(B.weeks.slice(0, 4));
     expect(again.weeks[4]?.kind).toBe('culture');
     expect(again.items.filter((item) => (item.targetDate as string) < '2026-11-11').map((item) => item.id)).toEqual([

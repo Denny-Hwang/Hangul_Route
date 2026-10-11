@@ -54,6 +54,10 @@ const paramsShape = {
   culturalAnchors: z.boolean().default(true),
   /** The audience's entitlement; lessons of other stages are listed as locked, never scheduled. */
   unlockedStages: z.array(StageKeySchema).min(1),
+  /**
+   * The last stage the lesson queue visits (default `stage7`). One below the level's stage is
+   * allowed and simply schedules no lesson: the plan holds stories (and free practice) only.
+   */
   endStage: StageKeySchema.optional(),
 };
 
@@ -69,19 +73,29 @@ interface RefinableParams {
   daysOff: readonly DaysOff[];
 }
 
+/**
+ * Stable codes of the cross-field checks, carried as `issue.params.code` next to the field's
+ * `path`. Messages are for developers; a form maps the code to its own localised wording.
+ */
+export const PARAMS_ISSUE_CODES = ['session-day-repeated', 'too-many-sessions', 'days-off-reversed', 'not-a-real-day'] as const;
+export type ParamsIssueCode = (typeof PARAMS_ISSUE_CODES)[number];
+
 const refineParams = (params: RefinableParams, ctx: z.RefinementCtx): void => {
-  const fail = (message: string): void => ctx.addIssue({ code: z.ZodIssueCode.custom, message });
+  const fail = (code: ParamsIssueCode, path: Array<string | number>, message: string): void =>
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path, message, params: { code } });
   const days = params.sessionDays ?? [];
   days.forEach((day, index) => {
-    if (days.indexOf(day) !== index) fail(`Session day ${day} is listed twice`);
+    if (days.indexOf(day) !== index) fail('session-day-repeated', ['sessionDays', index], `sessionDays: ${day} is repeated`);
   });
   if (params.weeks * sessionsPerWeekOf(params) > CURRICULUM_MAX_ITEMS) {
-    fail(`That is more than a plan can hold (${CURRICULUM_MAX_ITEMS} sessions)`);
+    fail('too-many-sessions', ['weeks'], `weeks x sessions a week is above ${CURRICULUM_MAX_ITEMS}`);
   }
-  for (const range of params.daysOff) {
-    if (range.from > range.to) fail(`Days off ${range.from} to ${range.to} end before they start`);
-  }
-  if (!isDateKey(params.startDate)) fail(`Start date ${params.startDate} is not a real day`);
+  params.daysOff.forEach((range, index) => {
+    if (!isDateKey(range.from)) fail('not-a-real-day', ['daysOff', index, 'from'], `daysOff.from: ${range.from} is not a real day`);
+    if (!isDateKey(range.to)) fail('not-a-real-day', ['daysOff', index, 'to'], `daysOff.to: ${range.to} is not a real day`);
+    if (range.from > range.to) fail('days-off-reversed', ['daysOff', index, 'to'], `daysOff: ${range.to} is before ${range.from}`);
+  });
+  if (!isDateKey(params.startDate)) fail('not-a-real-day', ['startDate'], `startDate: ${params.startDate} is not a real day`);
 };
 
 export const CurriculumParamsSchema = z.object(paramsShape).superRefine(refineParams);

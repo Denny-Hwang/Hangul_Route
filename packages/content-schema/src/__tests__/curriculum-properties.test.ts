@@ -4,6 +4,9 @@ import {
   StageKeySchema,
   addDays,
   generateCurriculum,
+  regenerateFrom,
+  toMeta,
+  toPlanItems,
   type CurriculumParamsInput,
   type PlacementLevel,
   type StageKey,
@@ -106,4 +109,23 @@ describe('curriculum properties (F-PLAN-002 section 5)', () => {
       expect(draft.stats.readyItems + draft.stats.comingSoonItems).toBe(draft.items.length);
     }
   });
+
+  it('re-paces every unchanged plan to itself: shift, and requeue for a learner who did every past quest', () => {
+    for (const params of combos) {
+      const draft = generateCurriculum(params, CATALOG_2026_10);
+      const plan = { meta: toMeta(draft), items: toPlanItems(draft) };
+      const label = JSON.stringify({ w: params.weeks, s: params.sessionsPerWeek, l: params.level, f: params.goals?.focus, t: params.unlockedStages.length });
+      const days = [...new Set([0, 3, Math.floor((7 * params.weeks) / 2), 7 * params.weeks - 1])];
+      for (const day of days) {
+        const today = addDays(params.startDate, day);
+        const shifted = regenerateFrom(plan, today, CATALOG_2026_10, { mode: 'shift' });
+        expect(toPlanItems(shifted), `${label} shift ${today}`).toEqual(plan.items);
+        expect(shifted.weeks, `${label} shift ${today}`).toEqual(draft.weeks);
+        const done = plan.items.filter((item) => (item.targetDate as string) < today && item.kind === 'quest').map((item) => item.id);
+        const requeued = regenerateFrom(plan, today, CATALOG_2026_10, { mode: 'requeue', completedQuestIds: done });
+        expect(toPlanItems(requeued), `${label} requeue ${today}`).toEqual(plan.items);
+        expect(requeued.weeks, `${label} requeue ${today}`).toEqual(draft.weeks);
+      }
+    }
+  }, 60_000);
 });

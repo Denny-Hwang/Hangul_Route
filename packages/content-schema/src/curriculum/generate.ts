@@ -13,7 +13,7 @@ import { placementStageNumber, questsPlacedOutAtLevel } from '../placement/level
 import { themeOrderFor } from '../placement/route-seed';
 import { StageKeySchema, ThemeKeySchema, type StageKey, type ThemeKey } from '../schemas/heritage-card';
 import type { PlanItem } from '../schemas/plan';
-import { addDays, daysBetween, spreadDates, weekdayOf } from './dates';
+import { addDays, daysBetween, isDateKey, spreadDates, weekdayOf } from './dates';
 import {
   WARNING_CODES,
   type CurriculumDraft,
@@ -27,6 +27,7 @@ import {
 } from './draft';
 import {
   CurriculumParamsSchema,
+  DateKeySchema,
   sessionsPerWeekOf,
   type CurriculumParams,
   type CurriculumParamsInput,
@@ -185,15 +186,14 @@ const catalogQueuesOf = (
   exclude: ReadonlySet<string>,
 ): CatalogQueues => {
   const completed = new Set(p.completedQuestIds);
-  const done = new Set([
-    ...questsPlacedOutAtLevel(p.level, routeCatalogOf(catalog)),
-    ...(p.placedOutQuestIds ?? []),
-    ...completed,
-    ...exclude,
-  ]);
+  // The exact placed-out set of a placement result wins over the level (section 3.1): after a
+  // grown-up override it may be smaller than the level's, and the put-back quests return (FP-B4).
+  const placed = p.placedOutQuestIds ?? questsPlacedOutAtLevel(p.level, routeCatalogOf(catalog));
+  const done = new Set([...placed, ...completed, ...exclude]);
   const unlocked = new Set(p.unlockedStages);
   const cellAt = new Map(catalog.cells.map((cell) => [`${cell.stage}-${cell.theme}`, cell]));
   const out: CatalogQueues = { lessons: [], stories: [], comingSoon: [], locked: [], alreadyDone: 0 };
+  let soonSeen = 0;
   /** Removed by the done set: only real completions count as "already done" (placement is not a completion). */
   const skip = (questId: string): boolean => {
     if (!done.has(questId)) return false;
@@ -201,14 +201,21 @@ const catalogQueuesOf = (
     return true;
   };
 
-  const stages = StageKeySchema.options.slice(stageIndex(p.level.stage), stageIndex(endStage) + 1);
+  // With an exact set, the visit starts at the lowest stage that still has a ready lesson outside it.
+  const open = p.placedOutQuestIds === undefined
+    ? []
+    : catalog.cells.filter((cell) => cellIsReady(cell) && cell.questIds.some((id) => !done.has(id))).map((cell) => stageIndex(cell.stage));
+  const first = Math.min(stageIndex(p.level.stage), ...open);
+  const stages = StageKeySchema.options.slice(first, stageIndex(endStage) + 1);
   for (const stage of stages) {
     for (const theme of stage === 'stage1' ? CANONICAL_THEMES : themeOrder) {
       const cell = cellAt.get(`${stage}-${theme}`);
       if (cell === undefined) continue;
       if (!cellIsReady(cell)) {
-        if (p.includeComingSoon && out.comingSoon.length < COMING_SOON_MAX) {
-          out.comingSoon.push({ kind: 'episode', id: cell.episodeId });
+        // A placeholder already in the plan's history counts towards the cap but is not queued again.
+        if (p.includeComingSoon && soonSeen < COMING_SOON_MAX) {
+          soonSeen += 1;
+          if (!done.has(cell.episodeId)) out.comingSoon.push({ kind: 'episode', id: cell.episodeId });
         }
         continue;
       }
@@ -288,8 +295,12 @@ const copyWeek = (meta: WeekMeta): WeekMeta => ({
   extras: meta.extras.map((extra) => ({ ...extra })),
 });
 
+/** A real UTC day key; `today` and `freezeBefore` are compared as strings, so a malformed key must throw. */
+const RealDateKeySchema = DateKeySchema.refine(isDateKey, { message: 'Not a real UTC day key (YYYY-MM-DD)' });
+
 const build = (input: CurriculumParamsInput, catalog: Catalog, opts: BuildOptions): CurriculumDraft => {
   const p = CurriculumParamsSchema.parse(input);
+  if (opts.freezeBefore !== undefined) RealDateKeySchema.parse(opts.freezeBefore);
   const cadence = cadenceOf(p);
   const lookup = new Lookup(catalog);
   const calendar = calendarOf(p);
@@ -313,7 +324,6 @@ const build = (input: CurriculumParamsInput, catalog: Catalog, opts: BuildOption
   let sinceVocab = 0;
   let newSinceReview = 0;
   let reached = placementStageNumber(p.level.stage);
-  let hangulCheckGiven = false;
 
   const isReady = (item: QueueItem): boolean => lookup.category(item) !== 'coming-soon';
   const count = (item: QueueItem): void => {
@@ -327,7 +337,15 @@ const build = (input: CurriculumParamsInput, catalog: Catalog, opts: BuildOption
     if (index < 0 && !fittingOnly) index = 0;
     return index < 0 ? undefined : stories.splice(index, 1)[0];
   };
-  const vocabAllowed = (): boolean => !lessons.some((item) => lookup.teachesSymbols(item));
+  /** Every id the walk has put on a session so far (history first, then each placed item). */
+  const scheduled = new Set(history.map((item) => item.id));
+  /**
+   * True while a lesson matching `test` is still unscheduled: in the queue being laid, or (in
+   * `shift`, whose queue is the plan's own items) a catalogue lesson the plan never scheduled.
+   */
+  const unscheduled = (test: (item: QueueItem) => boolean): boolean =>
+    lessons.some(test) || fromCatalog.lessons.some((item) => test(item) && !scheduled.has(item.id));
+  const vocabAllowed = (): boolean => !unscheduled((item) => lookup.teachesSymbols(item));
   /** Replay: a frozen learn week allowed topics when no symbol lesson was scheduled after it. */
   const lastSymbolWeek = history.reduce((top, item) => (lookup.teachesSymbols(item) ? Math.max(top, item.week) : top), 0);
   const giveTopic = (extras: WeekExtra[]): void => {
@@ -364,12 +382,10 @@ const build = (input: CurriculumParamsInput, catalog: Catalog, opts: BuildOption
         if (vocabAllowed() && week.index >= lastSymbolWeek) sinceVocab += 1;
       }
       for (const extra of meta.extras) {
-        if (extra.kind === 'hangul-check') hangulCheckGiven = true;
-        else {
-          sinceVocab = 0;
-          const index = topics.findIndex((topic) => topic.id === extra.topicId);
-          if (index >= 0) topics.splice(index, 1);
-        }
+        if (extra.kind !== 'vocab') continue;
+        sinceVocab = 0;
+        const index = topics.findIndex((topic) => topic.id === extra.topicId);
+        if (index >= 0) topics.splice(index, 1);
       }
       past.forEach(count);
       weeks.push(meta);
@@ -380,7 +396,7 @@ const build = (input: CurriculumParamsInput, catalog: Catalog, opts: BuildOption
     const pastDates = new Set(past.map((item) => item.targetDate));
     const fillable = week.sessions.filter((date) => date >= from && !pastDates.has(date));
     const reservations = reserved.get(week.index) ?? [];
-    const started = past.length > 0 ? opts.historyWeeks?.find((meta) => meta.index === week.index) : undefined;
+    const started = week.startDate < from ? opts.historyWeeks?.find((meta) => meta.index === week.index) : undefined;
     const keep = started !== undefined && (started.kind === 'learn' || started.kind === 'culture') ? started : undefined;
     let kind: WeekKind;
     if (week.sessions.length === 0) kind = 'break';
@@ -412,6 +428,7 @@ const build = (input: CurriculumParamsInput, catalog: Catalog, opts: BuildOption
         next ??= lessons.shift() ?? takeStory(false)?.item ?? comingSoon.shift();
         if (next === undefined) return;
         placed.push({ ...next, targetDate: date, week: week.index });
+        scheduled.add(next.id);
         count(next);
       });
       stories.unshift(...pending);
@@ -440,14 +457,16 @@ const build = (input: CurriculumParamsInput, catalog: Catalog, opts: BuildOption
     });
   }
 
-  // Step 8: the Hangul Check closes Stage 1 in the week of its last lesson, once every Stage 1 lesson is scheduled.
+  // Step 8: the Hangul Check closes Stage 1 in the week of its last lesson, once every Stage 1
+  // lesson of the catalogue is scheduled. A check in a frozen week stands; it is given again only
+  // when a re-pace lays a Stage 1 lesson in a later week (requeue returned an unfinished one), so
+  // the check never sits before the last Stage 1 lesson.
   const isStage1Lesson = (item: QueueItem): boolean => lookup.lessonCell(item)?.stage === 'stage1';
   const lastStage1 = [...items].reverse().find(isStage1Lesson);
   const checkWeek = lastStage1 === undefined ? undefined : weeks[lastStage1.week - 1];
   if (
     p.level.stage === 'stage1' &&
-    !hangulCheckGiven &&
-    !lessons.some(isStage1Lesson) &&
+    !unscheduled(isStage1Lesson) &&
     checkWeek !== undefined &&
     checkWeek.index >= currentWeek
   ) {
@@ -574,6 +593,11 @@ export type RegenerateMode = 'shift' | 'requeue';
  * `requeue` rebuilds the queue from the catalogue minus the done set, so an
  * unfinished past item leaves its old date and returns to the front (the
  * device's mode). `reseed` arrives with `proposeRoute` (PR P2-3b).
+ *
+ * In `requeue`, past coming-soon placeholders stay on their dates (nothing can
+ * complete them, so moving them would never settle), and when no session is
+ * left on or after `today` there is nowhere to move anything: every past item
+ * stays and the plan is unchanged. Offer **Add N weeks** (`weeks + N`) first.
  */
 export function regenerateFrom(
   plan: { meta: CurriculumMeta; items: PlanItem[] },
@@ -581,14 +605,19 @@ export function regenerateFrom(
   catalog: Catalog,
   opts: { mode: RegenerateMode; completedQuestIds?: string[] },
 ): CurriculumDraft {
+  RealDateKeySchema.parse(today);
   const completed = opts.completedQuestIds ?? [];
   const params: CurriculumParamsInput = { ...plan.meta.params, completedQuestIds: completed };
   const isPast = (item: PlanItem): boolean => item.targetDate !== undefined && item.targetDate < today;
   const past = plan.items.filter(isPast);
   const base = { freezeBefore: today, historyWeeks: plan.meta.weeks };
   if (opts.mode === 'requeue') {
+    const lookup = new Lookup(catalog);
     const done = new Set(completed);
-    return build(params, catalog, { ...base, history: past.filter((item) => done.has(item.id)) });
+    const sessionsLeft = calendarOf(CurriculumParamsSchema.parse(params)).some((week) => week.sessions.some((date) => date >= today));
+    const stays = (item: PlanItem): boolean =>
+      !sessionsLeft || done.has(item.id) || lookup.category(asQueueItem(item)) === 'coming-soon';
+    return build(params, catalog, { ...base, history: past.filter(stays) });
   }
   const future = plan.items.filter((item) => !isPast(item));
   return build(params, catalog, { ...base, history: past, queue: planQueuesOf(future, new Lookup(catalog)) });

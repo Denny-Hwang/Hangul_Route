@@ -7,6 +7,8 @@ import {
   GENERATOR_VERSION,
   StageKeySchema,
   generateCurriculum,
+  questsPlacedOutAtLevel,
+  routeCatalogOf,
   toMeta,
   toPlanItems,
   weekdayOf,
@@ -114,6 +116,29 @@ describe('step 3: the done set', () => {
     expect(ids(draft)).not.toContain(story('sejong-new-letters'));
     expect(warning(draft, 'already-done-skipped')).toEqual({ code: 'already-done-skipped', count: 2 });
     expect(codes(gen({ level: { stage: 'stage1', band: 3 } }))).not.toContain('already-done-skipped');
+  });
+
+  it('lets the exact placed-out set win over the level, so quests an override put back return', () => {
+    // Band 3 places out q1 to q10; an override that starts at q8 puts q8 to q10 back (FP-B4).
+    const putBack = gen({ level: { stage: 'stage1', band: 3 }, placedOutQuestIds: STAGE1.slice(0, 7) });
+    expect(ids(putBack).slice(0, 4)).toEqual([q('rites-q2'), q('rites-q3'), q('nature-q1'), q('nature-q2')]);
+    for (const id of STAGE1.slice(0, 7)) expect(ids(putBack)).not.toContain(id);
+    // Without an exact set the level decides.
+    expect(ids(gen({ level: { stage: 'stage1', band: 3 } }))[0]).toBe(q('nature-q2'));
+  });
+
+  it('starts the visit at the lowest stage an override put a quest back in', () => {
+    const level = { stage: 'stage2', band: 0 } as const;
+    const all = questsPlacedOutAtLevel(level, routeCatalogOf(CATALOG_2026_10));
+    expect(all).toEqual(STAGE1);
+    const draft = gen({ level, placedOutQuestIds: STAGE1.slice(0, 12), weeks: 3 }, NO_STORIES);
+    expect(ids(draft).slice(0, 3)).toEqual(STAGE1.slice(12));
+    expect(ids(draft)[3]).toMatch(/^quest:stage2-/);
+    // The exact set equal to the level's changes nothing.
+    expect(gen({ level, placedOutQuestIds: all, weeks: 3 }, NO_STORIES)).toEqual({
+      ...gen({ level, weeks: 3 }, NO_STORIES),
+      params: { ...gen({ level, weeks: 3 }, NO_STORIES).params, placedOutQuestIds: all },
+    });
   });
 });
 
@@ -357,6 +382,67 @@ describe('step 8: extras', () => {
     expect(fromStage2.weeks.flatMap((week) => week.extras).some((extra) => extra.kind === 'hangul-check')).toBe(false);
     const done = gen({ weeks: 2, completedQuestIds: STAGE1 });
     expect(done.weeks.flatMap((week) => week.extras).some((extra) => extra.kind === 'hangul-check')).toBe(false);
+  });
+});
+
+describe('priorities by level (section 3.3 table, one row each)', () => {
+  const route = { weeks: 12, goals: { focus: 'balanced', motivation: 'heritage' } } as const;
+  const free: StageKey[] = ['stage1'];
+  const weekOf = (draft: CurriculumDraft, kind: 'vocab' | 'hangul-check'): number | undefined =>
+    draft.weeks.find((week) => week.extras.some((extra) => extra.kind === kind))?.index;
+  const lessonIds = (draft: CurriculumDraft): string[] => ids(draft).filter((id) => id.startsWith('quest:stage'));
+  const bandOf = (band: 0 | 1 | 2 | 3): CurriculumDraft => gen({ ...route, level: { stage: 'stage1', band }, unlockedStages: free });
+
+  it('stage1 band 0: all 15 Stage 1 lessons in canonical order, culture weeks, no topic before q10, then the check', () => {
+    const draft = bandOf(0);
+    expect(lessonIds(draft)).toEqual(STAGE1);
+    expect(draft.weeks.filter((week) => week.kind === 'culture').map((week) => week.index)).toEqual([5, 10]);
+    const q10Week = draft.items.find((item) => item.id === q('nature-q1'))?.week as number;
+    expect(weekOf(draft, 'vocab')).toBeGreaterThan(q10Week);
+    expect(weekOf(draft, 'hangul-check')).toBe(draft.items.find((item) => item.id === q('crafts-q3'))?.week);
+  });
+
+  it('stage1 band 1 or 2: the lessons that are not placed out, so topics and the check come sooner', () => {
+    const zero = bandOf(0);
+    for (const band of [1, 2] as const) {
+      const draft = bandOf(band);
+      const placedOut = questsPlacedOutAtLevel({ stage: 'stage1', band }, routeCatalogOf(CATALOG_2026_10));
+      expect(placedOut.length).toBeGreaterThan(0);
+      expect(lessonIds(draft)).toEqual(STAGE1.filter((id) => !placedOut.includes(id)));
+      expect(weekOf(draft, 'hangul-check') as number).toBeLessThan(weekOf(zero, 'hangul-check') as number);
+      expect(weekOf(draft, 'vocab') as number).toBeLessThan(weekOf(zero, 'vocab') as number);
+    }
+    expect(lessonIds(bandOf(1))[0]).toBe(q('life-q1'));
+    expect(lessonIds(bandOf(2))[0]).toBe(q('rites-q1'));
+  });
+
+  it('stage1 band 3: q11 to q15, the Hangul Check, then stories; topics on their cadence from the first week', () => {
+    const draft = bandOf(3);
+    expect(ids(draft).slice(0, 5)).toEqual(STAGE1.slice(10));
+    expect(weekOf(draft, 'hangul-check')).toBe(2);
+    expect(ids(draft).slice(5).every((id) => id.startsWith('quest:story-') || id.startsWith('episode:'))).toBe(true);
+    // Balanced counts every 4th learn week from week 1: weeks 1, 2, 3 and 6 are learn weeks.
+    expect(weekOf(draft, 'vocab')).toBe(6);
+  });
+
+  it('stage2 band 0: Stage 2 lessons locked on a free tier, fitting stories lead, word topics from week 1', () => {
+    const draft = gen({ ...route, level: { stage: 'stage2', band: 0 }, unlockedStages: free });
+    expect(draft.locked).toEqual(['quest:stage2-life-q1', 'quest:stage2-nature-q1', 'quest:stage4-rites-q1']);
+    expect(lessonIds(draft)).toEqual([]);
+    for (const id of STAGE1) expect(ids(draft)).not.toContain(id);
+    expect(ids(draft).slice(0, 9).every((id) => id.startsWith('quest:story-'))).toBe(true);
+    expect(weekOf(draft, 'vocab')).toBe(6);
+    expect(draft.weeks.flatMap((week) => week.extras)).not.toContainEqual({ kind: 'hangul-check' });
+  });
+
+  it('stage3 band 0: the Stage 4 taste and stories up to the fit limit, then Stage 3 coming soon', () => {
+    const draft = gen({ ...route, level: { stage: 'stage3', band: 0 }, unlockedStages: ALL_STAGES });
+    expect(ids(draft)[0]).toBe('quest:stage4-rites-q1');
+    expect(lessonIds(draft)).toEqual(['quest:stage4-rites-q1']);
+    const soon = ids(draft).filter((id) => id.startsWith('episode:'));
+    expect(soon.length).toBe(5);
+    expect(soon.every((id) => id.startsWith('episode:stage3-'))).toBe(true);
+    expect(ids(draft).filter((id) => id.startsWith('quest:story-')).length).toBeGreaterThan(draft.items.length / 2);
   });
 });
 

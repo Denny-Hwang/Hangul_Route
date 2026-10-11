@@ -37,6 +37,15 @@ const issues = (patch: Partial<Record<keyof CurriculumParamsInput, unknown>>): s
   const result = CurriculumParamsSchema.safeParse({ ...base, ...patch });
   return result.success ? [] : result.error.issues.map((issue) => issue.message);
 };
+/** The cross-field checks as `path: code`, the way a form maps them to its own wording. */
+const coded = (patch: Partial<Record<keyof CurriculumParamsInput, unknown>>): string[] => {
+  const result = CurriculumParamsSchema.safeParse({ ...base, ...patch });
+  if (result.success) return [];
+  return result.error.issues.map((issue) => {
+    const code = issue.code === 'custom' ? String((issue.params as { code?: string } | undefined)?.code) : issue.code;
+    return `${issue.path.join('.')}: ${code}`;
+  });
+};
 
 describe('CurriculumParamsSchema (F-PLAN-002 section 3.1)', () => {
   it('fills the defaults', () => {
@@ -75,10 +84,11 @@ describe('CurriculumParamsSchema (F-PLAN-002 section 3.1)', () => {
 
   it('caps a plan at 260 sessions, with sessionDays winning over sessionsPerWeek', () => {
     expect(issues({ weeks: 52, sessionsPerWeek: 5 })).toEqual([]);
-    expect(issues({ weeks: 52, sessionsPerWeek: 6 })).toEqual(['That is more than a plan can hold (260 sessions)']);
-    expect(issues({ weeks: 52, sessionsPerWeek: 1, sessionDays: ['mon', 'tue', 'wed', 'thu', 'fri', 'sat'] })).toEqual([
-      'That is more than a plan can hold (260 sessions)',
+    expect(coded({ weeks: 52, sessionsPerWeek: 6 })).toEqual(['weeks: too-many-sessions']);
+    expect(coded({ weeks: 52, sessionsPerWeek: 1, sessionDays: ['mon', 'tue', 'wed', 'thu', 'fri', 'sat'] })).toEqual([
+      'weeks: too-many-sessions',
     ]);
+    expect(issues({ weeks: 52, sessionsPerWeek: 6 })).toEqual(['weeks x sessions a week is above 260']);
     expect(issues({ weeks: 52, sessionsPerWeek: 7, sessionDays: ['mon', 'wed'] })).toEqual([]);
   });
 
@@ -88,18 +98,23 @@ describe('CurriculumParamsSchema (F-PLAN-002 section 3.1)', () => {
   });
 
   it('rejects repeated session days and keeps 1 to 7 of them', () => {
-    expect(issues({ sessionDays: ['mon', 'mon'] })).toEqual(['Session day mon is listed twice']);
+    expect(coded({ sessionDays: ['mon', 'mon'] })).toEqual(['sessionDays.1: session-day-repeated']);
     expect(issues({ sessionDays: [] })).not.toEqual([]);
     expect(issues({ sessionDays: ['mon', 'xyz'] })).not.toEqual([]);
   });
 
   it('validates the start date and the days off', () => {
-    expect(issues({ startDate: '2026-02-30' })).toEqual(['Start date 2026-02-30 is not a real day']);
+    expect(coded({ startDate: '2026-02-30' })).toEqual(['startDate: not-a-real-day']);
     expect(issues({ startDate: '12-10-2026' })).not.toEqual([]);
     expect(issues({ daysOff: [{ from: '2026-11-22', to: '2026-11-28' }] })).toEqual([]);
     expect(issues({ daysOff: [{ from: '2026-11-22', to: '2026-11-22' }] })).toEqual([]);
-    expect(issues({ daysOff: [{ from: '2026-11-28', to: '2026-11-22' }] })).toEqual([
-      'Days off 2026-11-28 to 2026-11-22 end before they start',
+    expect(coded({ daysOff: [{ from: '2026-11-28', to: '2026-11-22' }] })).toEqual(['daysOff.0.to: days-off-reversed']);
+    expect(coded({ daysOff: [{ from: '2026-11-01', to: '2026-11-02' }, { from: '2026-02-27', to: '2026-02-30' }] })).toEqual([
+      'daysOff.1.to: not-a-real-day',
+    ]);
+    expect(coded({ daysOff: [{ from: '2026-13-01', to: '2026-13-02' }] })).toEqual([
+      'daysOff.0.from: not-a-real-day',
+      'daysOff.0.to: not-a-real-day',
     ]);
     const thirteen = Array.from({ length: 13 }, () => ({ from: '2026-11-22', to: '2026-11-22' }));
     expect(issues({ daysOff: thirteen })).not.toEqual([]);
@@ -113,6 +128,8 @@ describe('CurriculumParamsSchema (F-PLAN-002 section 3.1)', () => {
     expect(issues({ completedQuestIds: Array.from({ length: 401 }, (_, i) => `q${i}`) })).not.toEqual([]);
     expect(issues({ unlockedStages: [] })).not.toEqual([]);
     expect(issues({ endStage: 'stage3' })).toEqual([]);
+    // An end stage below the level is allowed: the plan simply schedules no lesson (generate tests).
+    expect(issues({ level: { stage: 'stage3', band: 0 }, endStage: 'stage2' })).toEqual([]);
     expect(issues({ audience: 'school' })).not.toEqual([]);
   });
 
