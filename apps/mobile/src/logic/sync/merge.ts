@@ -72,12 +72,29 @@ export function mergeReview(l: ReviewEntry, s: ReviewEntry): ReviewEntry {
   return ls >= ss ? l : s;
 }
 
+/**
+ * Stage latch (F-ROUTE-001 section 3.15): key union, earliest time wins, so an
+ * earned "Complete" is never removed. `undefined` when neither side holds a
+ * latch, so a snapshot that predates the key keeps its shape.
+ */
+export function mergeStageDoneAt(
+  l: Readonly<Record<string, string>> | undefined,
+  s: Readonly<Record<string, string>> | undefined,
+): Record<string, string> | undefined {
+  const out = new Map<string, string>();
+  for (const side of [l ?? {}, s ?? {}]) {
+    for (const [stage, at] of Object.entries(side)) out.set(stage, earliest(out.get(stage), at) ?? at);
+  }
+  return out.size === 0 ? undefined : Object.fromEntries([...out.entries()].sort(([a], [b]) => a.localeCompare(b)));
+}
+
 export interface MergeOptions {
   /** Clock for the streak recomputation; injected for determinism. */
   now: Date;
 }
 
 export function mergeSnapshots(local: ProgressSnapshot, server: ProgressSnapshot, opts: MergeOptions): ProgressSnapshot {
+  const stageDoneAt = mergeStageDoneAt(local.stageDoneAt, server.stageDoneAt);
   const sessions = unionBy<SessionLog>(local.sessions, server.sessions, (x) => x.id, (l) => l).sort(
     (a, b) => a.startedAt.localeCompare(b.startedAt) || a.id.localeCompare(b.id),
   );
@@ -94,6 +111,7 @@ export function mergeSnapshots(local: ProgressSnapshot, server: ProgressSnapshot
       sessions.map((s) => s.startedAt),
       opts.now,
     ),
+    ...(stageDoneAt ? { stageDoneAt } : {}),
   };
 }
 
@@ -103,9 +121,11 @@ export function isSubsetOf(local: ProgressSnapshot, server: ProgressSnapshot): b
   const q = has(server.quests, (x) => `${x.questId}:${x.stars}`);
   const c = has(server.cards, (x) => x.cardId);
   const s = has(server.sessions, (x) => x.id);
+  const latched = new Set(Object.keys(server.stageDoneAt ?? {}));
   return (
     local.quests.every((x) => q.has(`${x.questId}:${x.stars}`)) &&
     local.cards.every((x) => c.has(x.cardId)) &&
-    local.sessions.every((x) => s.has(x.id))
+    local.sessions.every((x) => s.has(x.id)) &&
+    Object.keys(local.stageDoneAt ?? {}).every((stage) => latched.has(stage))
   );
 }

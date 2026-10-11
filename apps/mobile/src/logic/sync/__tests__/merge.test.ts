@@ -127,3 +127,42 @@ describe('legacy snapshots without placements (F-PLC-001 section 3.8)', () => {
     expect(isSubsetOf(base(), legacy())).toBe(true);
   });
 });
+
+describe('stageDoneAt, the stage latch (F-ROUTE-001 section 3.15)', () => {
+  const legacy = (over: Record<string, unknown> = {}): ProgressSnapshot => {
+    const snapshot: Record<string, unknown> = { ...base(), ...over };
+    delete snapshot['stageDoneAt'];
+    return snapshot as unknown as ProgressSnapshot;
+  };
+
+  it('unions the keys and keeps the earliest time per stage', () => {
+    const local = base({ stageDoneAt: { stage1: '2026-10-11T10:00:00.000Z', stage2: '2026-10-20T10:00:00.000Z' } });
+    const server = base({ stageDoneAt: { stage1: '2026-10-10T10:00:00.000Z', stage4: '2026-10-15T10:00:00.000Z' } });
+    const expected = { stage1: '2026-10-10T10:00:00.000Z', stage2: '2026-10-20T10:00:00.000Z', stage4: '2026-10-15T10:00:00.000Z' };
+    expect(mergeSnapshots(local, server, { now: NOW }).stageDoneAt).toEqual(expected);
+    // order of the arguments never changes the result
+    expect(mergeSnapshots(server, local, { now: NOW }).stageDoneAt).toEqual(expected);
+  });
+
+  it('never drops a latch either side holds (an earned Complete is never removed)', () => {
+    const latch = { stage1: '2026-10-11T10:00:00.000Z' };
+    expect(mergeSnapshots(base({ stageDoneAt: latch }), legacy(), { now: NOW }).stageDoneAt).toEqual(latch);
+    expect(mergeSnapshots(legacy(), base({ stageDoneAt: latch }), { now: NOW }).stageDoneAt).toEqual(latch);
+    expect(mergeSnapshots(base({ stageDoneAt: {} }), base({ stageDoneAt: latch }), { now: NOW }).stageDoneAt).toEqual(latch);
+  });
+
+  it('does not add the key to snapshots that predate it (legacy shape kept)', () => {
+    expect(mergeSnapshots(legacy(), legacy(), { now: NOW })).not.toHaveProperty('stageDoneAt');
+    expect(mergeSnapshots(base({ stageDoneAt: {} }), legacy(), { now: NOW })).not.toHaveProperty('stageDoneAt');
+  });
+
+  it('isSubsetOf asks for an upload when the local copy holds a latch the server lacks', () => {
+    const latch = { stage1: '2026-10-11T10:00:00.000Z' };
+    expect(isSubsetOf(base({ stageDoneAt: latch }), legacy())).toBe(false);
+    expect(isSubsetOf(base({ stageDoneAt: latch }), base({ stageDoneAt: { stage1: '2026-10-12T00:00:00.000Z' } }))).toBe(true);
+    expect(isSubsetOf(legacy(), base({ stageDoneAt: latch }))).toBe(true);
+    expect(isSubsetOf(base({ stageDoneAt: {} }), legacy())).toBe(true);
+    // a key that happens to name an Object.prototype member is still a missing latch
+    expect(isSubsetOf(base({ stageDoneAt: { constructor: '2026-10-11T10:00:00.000Z' } }), legacy())).toBe(false);
+  });
+});
