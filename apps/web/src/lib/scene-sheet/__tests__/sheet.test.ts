@@ -6,6 +6,8 @@ import { readStoryFiles, storiesDir, type StoryFile } from '../read-stories';
 import { buildSceneSheet } from '../sheet';
 
 const TODAY = '2026-10-11';
+/** The historians story is authored to ready on main (#205); the sheet reports whatever state the file has. */
+const STATE = (JSON.parse(readFileSync(join(storiesDir(), 'sillok-royal-historians.json'), 'utf8')) as { state: string }).state;
 const raw = (name: string): Record<string, unknown> => JSON.parse(readFileSync(join(storiesDir(), name), 'utf8')) as Record<string, unknown>;
 
 interface RawScene {
@@ -15,10 +17,17 @@ interface RawScene {
 }
 const scenesOf = (story: Record<string, unknown>): RawScene[] => (story.tiers as Array<{ scenes: RawScene[] }>)[0]!.scenes;
 
-/** sillok-royal-historians with art on s2 (the spec's worked example) and s3 pending. */
+/** sillok-royal-historians with art on s2 (the spec's worked example) and every other scene pending. */
 function historians(): Record<string, unknown> {
   const story = raw('sillok-royal-historians.json');
   const scenes = scenesOf(story);
+  // start from no art at all, whatever the file holds today: every scene
+  // pending (a ready story needs art or artPending on each scene), s2 drawn
+  for (const scene of scenes) {
+    delete scene.art;
+    scene.artPending = true;
+  }
+  delete scenes[1]!.artPending;
   scenes[1]!.art = {
     setting: 'scene:palace-hall',
     layers: [
@@ -44,7 +53,7 @@ describe('buildSceneSheet', () => {
       id: 'story:sillok-royal-historians',
       titleEn: 'Hoya Meets the Royal Historians',
       titleKo: '호야, 사관을 만나다',
-      state: 'draft',
+      state: STATE,
       kind: 'documentary',
       origin: 'documented',
       passes: 3,
@@ -65,7 +74,7 @@ describe('buildSceneSheet', () => {
     ]);
     expect(story.scenes[0]!.layers).toEqual([]);
     expect(story.scenes[2]!.artPending).toBe(true);
-    expect(story.scenes[0]!.artPending).toBe(false);
+    expect(story.scenes[1]!.artPending).toBe(false);
   });
 
   it('splits narration into text and keyword chips with romanization and gloss', () => {
@@ -113,8 +122,8 @@ describe('buildSceneSheet', () => {
       stories: 1,
       scenes: 7,
       withArt: 1,
-      artPending: 1,
-      draft: 1,
+      artPending: 6,
+      draft: STATE === 'draft' ? 1 : 0,
       errors: all.filter((f) => f.severity === 'error').length,
       warnings: all.filter((f) => f.severity === 'warning').length,
     });
