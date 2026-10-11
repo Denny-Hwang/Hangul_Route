@@ -1,0 +1,660 @@
+{
+  "v": 1,
+  "id": "story:gimjang-arirang",
+  "state": "draft",
+  "contentVer": 1,
+  "title": {
+    "ko": "김장하는 날과 아리랑",
+    "romanization": "",
+    "en": "Gimjang Day: Sharing Kimchi, Singing Arirang"
+  },
+  "summaryEn": "As winter comes, Hoya helps relatives and neighbors make and share kimchi for gimjang (UNESCO 2013), then hears Arirang, the folk song shared across Korea (South Korea's UNESCO entry, 2012).",
+  "theme": "life",
+  "kind": "intangible",
+  "recommendedStage": 2,
+  "minutes": 5,
+  "learningGoalsEn": [
+    "Explain why families made gimjang kimchi and that sharing is at its heart.",
+    "Describe the yearly preparation for gimjang and the main ingredients (napa cabbage, chili powder, garlic, ginger, green onions).",
+    "Explain that Arirang is a folk song with many regional versions, and that UNESCO inscribed gimjang (2013) and South Korea's Arirang (2012); North Korea's Arirang has its own separate listing.",
+    "Recognize and say 김장, 김치, 배추, 고춧가루, 나눔 and 아리랑."
+  ],
+  "origin": {
+    "type": "documented",
+    "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
+  },
+  "review": {
+    "language": "draft",
+    "culture": "draft",
+    "advisory": []
+  },
+  "keywords": [
+    {
+      "id": "gimjang",
+      "ko": "김장",
+      "romanization": "gimjang",
+      "en": "making winter kimchi",
+      "kind": "word"
+    },
+    {
+      "id": "gimchi",
+      "ko": "김치",
+      "romanization": "gimchi",
+      "en": "kimchi",
+      "kind": "word"
+    },
+    {
+      "id": "baechu",
+      "ko": "배추",
+      "romanization": "baechu",
+      "en": "napa cabbage",
+      "kind": "word"
+    },
+    {
+      "id": "gochutgaru",
+      "ko": "고춧가루",
+      "romanization": "gochutgaru",
+      "en": "red chili powder",
+      "kind": "word"
+    },
+    {
+      "id": "iut",
+      "ko": "이웃",
+      "romanization": "iut",
+      "en": "neighbor",
+      "kind": "word"
+    },
+    {
+      "id": "nanum",
+      "ko": "나눔",
+      "romanization": "nanum",
+      "en": "sharing",
+      "kind": "word"
+    },
+    {
+      "id": "gyeoul",
+      "ko": "겨울",
+      "romanization": "gyeoul",
+      "en": "winter",
+      "kind": "word"
+    },
+    {
+      "id": "arirang",
+      "ko": "아리랑",
+      "romanization": "arirang",
+      "en": "Arirang (folk song)",
+      "kind": "word"
+    },
+    {
+      "id": "gimchiwa-gimjang-munhwa",
+      "ko": "김치와 김장문화",
+      "romanization": "gimchiwa gimjang munhwa",
+      "en": "Kimchi and Gimjang Culture (the Korean name of the UNESCO listing)",
+      "kind": "word"
+    },
+    {
+      "id": "arirang-arirang-arariyo",
+      "ko": "아리랑 아리랑 아라리요",
+      "romanization": "Arirang arirang arariyo",
+      "en": "the Arirang refrain (sung syllables)",
+      "kind": "phrase"
+    }
+  ],
+  "cultureNotes": [],
+  "tiers": [
+    {
+      "level": "listen",
+      "scenes": [
+        {
+          "id": "s1",
+          "narrationEn": "Brrr! As late autumn turns to winter, Hoya visits a busy yard. Long ago, fresh vegetables were hard to find in winter, so families made lots of kimchi at once. This is gimjang (UNESCO spells it Kimjang).",
+          "keyword": {
+            "id": "gimjang",
+            "ko": "김장",
+            "romanization": "gimjang",
+            "en": "making winter kimchi together",
+            "kind": "word"
+          },
+          "factIds": [
+            "f1"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A hanok courtyard in late autumn with bare trees, stacks of napa cabbages and big clay jars; Hoya in a warm vest arriving with a basket."
+        },
+        {
+          "id": "s2",
+          "narrationEn": "Gimjang takes months of preparation! In spring, families get shrimp and anchovies for salting. In summer, they buy sea salt. In late summer, red chili peppers are dried and ground into chili powder.",
+          "keyword": {
+            "id": "gochutgaru",
+            "ko": "고춧가루",
+            "romanization": "gochutgaru",
+            "en": "red chili powder",
+            "kind": "word"
+          },
+          "factIds": [
+            "f2"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Three small seasonal panels: spring jars of salted tiny shrimp, summer sacks of white sea salt, late-summer red chili peppers drying on mats in the sun."
+        },
+        {
+          "id": "s3",
+          "narrationEn": "On gimjang day, relatives and neighbors come to help. They salt napa cabbages, then rub in a seasoning made with chili powder, garlic, ginger and green onions.",
+          "keyword": {
+            "id": "baechu",
+            "ko": "배추",
+            "romanization": "baechu",
+            "en": "napa cabbage",
+            "kind": "word"
+          },
+          "factIds": [
+            "f3"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Neighbors in aprons and rubber gloves around big basins, rubbing red seasoning between cabbage leaves; garlic, ginger and green onions nearby; Hoya helping."
+        },
+        {
+          "id": "s4",
+          "narrationEn": "Every region makes kimchi its own way. In the cold north it is often milder and less salty; in the south it is saltier, with a redder, richer seasoning. So there are countless kinds of kimchi!",
+          "keyword": {
+            "id": "gimchi",
+            "ko": "김치",
+            "romanization": "gimchi",
+            "en": "kimchi",
+            "kind": "word"
+          },
+          "factIds": [
+            "f4"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A simple map-shaped table runner (no labels) with bowls of pale and deep-red kimchi placed from top to bottom; Hoya comparing two bowls."
+        },
+        {
+          "id": "s5",
+          "narrationEn": "When the work is done, helpers often share boiled pork wrapped in the cabbage's yellow inner leaves. Many families give kimchi to neighbors, too. Working together and sharing are the heart of gimjang.",
+          "keyword": {
+            "id": "nanum",
+            "ko": "나눔",
+            "romanization": "nanum",
+            "en": "sharing",
+            "kind": "word"
+          },
+          "factIds": [
+            "f5"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Helpers seated around a low table with sliced boiled pork and pale yellow cabbage leaves; a child carrying a covered dish of kimchi to the house next door; Hoya waving."
+        },
+        {
+          "id": "s6",
+          "narrationEn": "In 2013, UNESCO inscribed 'Kimjang, making and sharing kimchi in the Republic of Korea' on its list of the Intangible Cultural Heritage of Humanity. In Korean, the Heritage Service calls it Gimchiwa gimjang munhwa.",
+          "keyword": {
+            "id": "gimchiwa-gimjang-munhwa",
+            "ko": "김치와 김장문화",
+            "romanization": "gimchiwa gimjang munhwa",
+            "en": "Kimchi and Gimjang Culture (the Korean name of the UNESCO listing)",
+            "kind": "word"
+          },
+          "factIds": [
+            "f6"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Rows of filled clay kimchi jars glowing in late-afternoon light, with Hoya proudly holding a heritage card showing cabbage and hands."
+        },
+        {
+          "id": "s7",
+          "narrationEn": "As the day ends, Grandma hums a song known all over Korea: 'Arirang, arirang, arariyo…' Arirang is a folk song made and passed down by ordinary people over many generations.",
+          "line": {
+            "ko": "아리랑 아리랑 아라리요",
+            "romanization": "Arirang arirang arariyo",
+            "en": "the Arirang refrain (sung syllables)",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f7"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Grandma resting on the wooden porch at dusk, humming with eyes closed, musical notes drifting toward mountain ridges; Hoya leaning on her shoulder."
+        },
+        {
+          "id": "s8",
+          "narrationEn": "Arirang has many versions. Regions have their own, like Jeongseon, Jindo and Miryang Arirang, and anyone can make up new verses! UNESCO inscribed South Korea's Arirang in 2012. North Korea's Arirang has its own separate listing.",
+          "keyword": {
+            "id": "arirang",
+            "ko": "아리랑",
+            "romanization": "Arirang",
+            "en": "Arirang (Korean folk song)",
+            "kind": "word"
+          },
+          "factIds": [
+            "f8",
+            "f9",
+            "f10"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A winding mountain pass with three small scenes along it (mountain valley, island coast, river town), each with people singing; Hoya walking the path."
+        }
+      ],
+      "checks": [
+        {
+          "id": "c1",
+          "kind": "detail",
+          "promptEn": "Why did families make lots of kimchi at once for gimjang?",
+          "options": [
+            {
+              "id": "a",
+              "en": "Fresh vegetables were hard to find in winter",
+              "isCorrect": true
+            },
+            {
+              "id": "b",
+              "en": "Cabbage only grows in the cold north",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Kimchi had to be ready before the new year",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Kimchi jars were needed for a holiday feast",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f1"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "detail",
+          "promptEn": "What is at the heart of gimjang?",
+          "options": [
+            {
+              "id": "a",
+              "en": "Making kimchi as fast as possible",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Working together and sharing",
+              "isCorrect": true
+            },
+            {
+              "id": "c",
+              "en": "Choosing the best cabbage alone",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Competing for the saltiest kimchi",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f5"
+          ]
+        },
+        {
+          "id": "c3",
+          "kind": "detail",
+          "promptEn": "Which statement about Arirang is true?",
+          "options": [
+            {
+              "id": "a",
+              "en": "It has only one version everywhere",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "It was written by one famous composer",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "It has many regional versions",
+              "isCorrect": true
+            },
+            {
+              "id": "d",
+              "en": "It is sung only in winter",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f8"
+          ]
+        }
+      ],
+      "checkpoints": [],
+      "sequenceSceneIds": [
+        "s1",
+        "s3",
+        "s6",
+        "s8"
+      ],
+      "newKeywordIds": [
+        "gimjang",
+        "gochutgaru",
+        "baechu",
+        "gimchi"
+      ]
+    }
+  ],
+  "coverSceneId": "s1",
+  "pillarTags": [],
+  "companionId": "hoya",
+  "facts": [
+    {
+      "id": "f1",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Because fresh vegetables were hard to get in winter, families made a large amount of kimchi at once in late autumn to early winter to last through the winter; this custom is gimjang (UNESCO: Kimjang).",
+      "claimKo": "겨울철에는 신선한 채소를 구하기 어려워 늦가을·초겨울에 겨우내 먹을 김치를 한꺼번에 많이 담갔으며, 이를 김장이라 한다.",
+      "sources": [
+        {
+          "title": "김장",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0010314",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "정의: ‘겨우내 먹을 김치를 한목에 담가두는 풍습.’ / ‘겨울철에는 신선한 채소를 구하기 어려웠으므로, 초겨울에 김치를 많이 담가서 저장하는 풍습이 발달하게 되었다.’"
+        },
+        {
+          "title": "Kimjang, making and sharing kimchi in the Republic of Korea",
+          "publisher": "UNESCO Intangible Cultural Heritage (ich.unesco.org)",
+          "url": "https://ich.unesco.org/en/RL/00881",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘Late autumn is Kimjang season, when communities collectively make and share large quantities of kimchi’ … ‘to sustain it through the long, harsh winter.’"
+        },
+        {
+          "title": "국가무형유산 김치 담그기 (Kimchi Making)",
+          "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0001330000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01330000",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘Kimchi making takes place on a large scale in early winter. This seasonal kimchi-making practice, or kimjang’"
+        }
+      ]
+    },
+    {
+      "id": "f2",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Gimjang preparation takes months (more than half a year, per the Encyclopedia of Korean Culture) and follows a yearly cycle: in spring households procure shrimp, anchovy and other seafood for salting, in summer they buy sea salt, and in late summer red chili peppers are dried and ground into powder.",
+      "claimKo": "김장 준비에는 반년 이상이 걸리며 1년 주기로 이어진다. 봄에는 새우·멸치 등 해산물을 구해 젓갈을 담그고, 여름에는 소금을 사며, 늦여름에는 고추를 말려 가루를 낸다.",
+      "sources": [
+        {
+          "title": "Kimjang, making and sharing kimchi in the Republic of Korea",
+          "publisher": "UNESCO Intangible Cultural Heritage (ich.unesco.org)",
+          "url": "https://ich.unesco.org/en/RL/00881",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘Preparation follows a yearly cycle.’ / ‘In spring, households procure shrimp, anchovy and other seafood for salting and fermenting.’ / ‘In summer, they buy sea salt for the brine.’ / ‘In late summer, red chilli peppers are dried and ground into powder.’"
+        },
+        {
+          "title": "김장",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0010314",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘김장은 봄철의 젓갈담그기에서 초가을의 고추·마늘의 준비, 김장용 채소의 재배 등 준비하는 데에 반년 이상이 걸리는 한 가정의 큰 행사이었다.’"
+        }
+      ]
+    },
+    {
+      "id": "f3",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Relatives and neighbors help one another with gimjang: vegetables such as napa cabbage are salted, then mixed with a seasoning that includes chili powder, garlic, ginger and green onions.",
+      "claimKo": "김장은 서로 도와가며 했으며, 배추 등 채소를 소금에 절인 뒤 고춧가루·마늘·생강·파 등이 든 양념을 버무린다.",
+      "sources": [
+        {
+          "title": "김장",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0010314",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘서로 도와가며 김장을 하는 풍속이 있었다.’ / ‘미나리·갓·마늘·파·생강·고춧가루와 같은 향미가 있는 채소가 부재료로 이용되고, 소금·젓갈이 간을 맞추기 위하여 사용된다.’"
+        },
+        {
+          "title": "김치 담그기",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0076960",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "정의: ‘무 · 배추 ‧ 오이 등의 채소를 소금에 절이고, 젓갈 ‧ 고추 ‧ 파 ‧ 마늘 ‧ 생강 등의 양념을 넣어 발효시켜 김치를 만드는 일.’"
+        },
+        {
+          "title": "국가무형유산 김치 담그기",
+          "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0001330000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01330000",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘협동과 나눔이라는 공동체 정신이 담겨진 문화로’"
+        }
+      ]
+    },
+    {
+      "id": "f4",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Kimchi differs by region: in the cold north it is typically less salty with milder seasoning, while in the south it is saltier with a redder, stronger seasoning; there are countless local varieties.",
+      "claimKo": "김치는 지역마다 달라, 추운 북쪽은 싱겁고 담백하게, 남쪽은 짜고 빨갛고 진한 양념으로 담그며, 지역별 종류가 매우 많다.",
+      "sources": [
+        {
+          "title": "김장",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0010314",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘추운 북쪽지방은 … 소금간을 싱겁게 하고 양념도 담백하게 하여 … 남쪽지방은 소금간을 세게 하고 빨갛고 진한 맛의 양념을 하며 국물을 적게 만든다.’"
+        },
+        {
+          "title": "국가무형유산 김치 담그기",
+          "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0001330000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01330000",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘the countless local varieties of kimchi are a stellar example of cultural diversity.’"
+        }
+      ]
+    },
+    {
+      "id": "f5",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "On gimjang day the host family traditionally boiled pork and served it with the cabbage's yellow inner leaves and seasoning to the helpers (a custom the Encyclopedia says is still kept as a fond tradition); kimchi is also exchanged among households, and cooperation and sharing are the spirit of gimjang.",
+      "claimKo": "김장하는 날 집주인은 전통적으로 돼지고기를 삶아 배추의 노란 속잎과 양념을 일하는 사람들에게 내었고(속대쌈, 지금도 미풍으로 전해진다), 김치를 서로 나누기도 한다. 협동과 나눔이 김장 문화의 핵심이다.",
+      "sources": [
+        {
+          "title": "김장",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0010314",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘돼지고기를 두어근 사다가 삶아놓고 배추의 노란 속잎과 양념을 준비하여 일하는 사람들이 먹도록 하였다.’ / ‘김장담그기가 끝나면 절인 배추나 남은 소를 나누어주고’"
+        },
+        {
+          "title": "Kimjang, making and sharing kimchi in the Republic of Korea",
+          "publisher": "UNESCO Intangible Cultural Heritage (ich.unesco.org)",
+          "url": "https://ich.unesco.org/en/RL/00881",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘the custom of exchanging kimchi among households.’"
+        },
+        {
+          "title": "국가무형유산 김치 담그기",
+          "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0001330000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01330000",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘협동과 나눔이라는 공동체 정신이 담겨진 문화로’"
+        }
+      ]
+    },
+    {
+      "id": "f6",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "'Kimjang, making and sharing kimchi in the Republic of Korea' (Korean name used by the Korea Heritage Service: 김치와 김장문화) was inscribed on UNESCO's Representative List of the Intangible Cultural Heritage of Humanity in 2013.",
+      "claimKo": "‘김치와 김장문화’(UNESCO 영문명: Kimjang, making and sharing kimchi in the Republic of Korea)는 2013년 유네스코 인류무형문화유산 대표목록에 등재되었다.",
+      "sources": [
+        {
+          "title": "Kimjang, making and sharing kimchi in the Republic of Korea",
+          "publisher": "UNESCO Intangible Cultural Heritage (ich.unesco.org)",
+          "url": "https://ich.unesco.org/en/RL/00881",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘Inscribed in 2013’ on the Representative List of the Intangible Cultural Heritage of Humanity (8.COM)"
+        },
+        {
+          "title": "한국의 인류무형유산 (23건) 목록",
+          "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+          "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FkorInCulHeritage.jsp&pageNo=5_3_2_0",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘김치와 김장문화 (2013)’"
+        },
+        {
+          "title": "국가무형유산 김치 담그기",
+          "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0001330000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01330000",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘* Kimchi making was inscribed on the UNESCO Representative List of the Intangible Cultural Heritage of Humanity in 2013.’"
+        }
+      ]
+    },
+    {
+      "id": "f7",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Arirang is a widely shared Korean folk song, created and passed down orally by ordinary people over generations, built around a sung refrain such as 'Arirang, arirang, arariyo'; scholars offer several theories about where the refrain word comes from, but the refrain itself is treated as sung syllables that lift the mood and fill out the melody.",
+      "claimKo": "아리랑은 구전으로 전승·재창조되어 온 한국의 대표 민요로, ‘아리랑 아리랑 아라리요’ 같은 후렴(여음)을 지닌다. 후렴어의 어원에는 여러 설이 있으나, 후렴은 흥을 돕고 음조를 메워 나가는 사설로 본다.",
+      "sources": [
+        {
+          "title": "Arirang, lyrical folk song in the Republic of Korea",
+          "publisher": "UNESCO Intangible Cultural Heritage (ich.unesco.org)",
+          "url": "https://ich.unesco.org/en/RL/00445",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘a popular form of Korean folk song and the outcome of collective contributions made by ordinary Koreans’ / ‘Essentially a simple song, it consists of the refrain …’ (description, sentences 1–2)"
+        },
+        {
+          "title": "아리랑 (민요)",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0034277",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "정의: ‘구전으로 전승되고 재창조되어 온 한국의 전통 민요.’ / 아리랑의 어원 및 구조: ‘아리랑의 어원에 대해서는 … 설이 있으나 의미 없는 사설(nonsence verse)로 흥을 돕고 음조를 메워 나가는 구실을 할 뿐이다.’ (the entry lists several theories of the word's origin and calls them folk etymology)"
+        },
+        {
+          "title": "아리랑",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0077500",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "대표 사설: ‘“아리랑 아리랑 아라리요 / 아리랑 고개를 넘어간다 …”’"
+        },
+        {
+          "title": "국가무형유산 아리랑",
+          "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0001290000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01290000",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘The well-known and widely shared Korean folk song Arirang, which has been handed down through the generations and exists in many variations’"
+        },
+        {
+          "title": "아리랑 (한국민속문학사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/869",
+          "accessed": "2026-10-10",
+          "quoteOrLocator": "정의: ‘‘아리’, ‘아라리’, ‘아라성’, ‘아리랑’이라는 입타령으로 된 후렴이 딸리는 장절 형식이며 … 우리나라의 민요군.’"
+        }
+      ]
+    },
+    {
+      "id": "f8",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Arirang exists in many regional versions, such as Jeongseon Arirang, Jindo Arirang and Miryang Arirang, and anyone can create new lyrics.",
+      "claimKo": "아리랑은 정선아리랑·진도아리랑·밀양아리랑 등 지역마다 다양하며, 누구나 새 노랫말을 지어 부를 수 있다.",
+      "sources": [
+        {
+          "title": "아리랑 (민요)",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0034277",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘강원도 일대에 널리 분포되어 있는 「정선아리랑」, 호남지역의 「진도아리랑」, 그리고 경상남도 일원의 「밀양아리랑」을 묶어서 삼대아리랑이라고 부르고 있다.’"
+        },
+        {
+          "title": "Arirang, lyrical folk song in the Republic of Korea",
+          "publisher": "UNESCO Intangible Cultural Heritage (ich.unesco.org)",
+          "url": "https://ich.unesco.org/en/RL/00445",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘Everyone can create new lyrics, adding to the song's regional, historical and genre variations, and cultural diversity.’"
+        },
+        {
+          "title": "아리랑",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0077500",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘「경기 아리랑」 「밀양 아리랑」 「진도 아리랑」 「정선 아리랑」 등 전국적으로 다양하며’"
+        }
+      ]
+    },
+    {
+      "id": "f9",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "'Arirang, lyrical folk song in the Republic of Korea' (South Korea's entry) was inscribed on UNESCO's Representative List in 2012.",
+      "claimKo": "‘아리랑’(UNESCO 영문명: Arirang, lyrical folk song in the Republic of Korea, 대한민국의 등재 종목)은 2012년 유네스코 인류무형문화유산 대표목록에 등재되었다.",
+      "sources": [
+        {
+          "title": "Arirang, lyrical folk song in the Republic of Korea",
+          "publisher": "UNESCO Intangible Cultural Heritage (ich.unesco.org)",
+          "url": "https://ich.unesco.org/en/RL/00445",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘Inscribed in 2012 (7.COM) on the Representative List of the Intangible Cultural Heritage of Humanity’"
+        },
+        {
+          "title": "한국의 인류무형유산 (23건) 목록",
+          "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+          "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FkorInCulHeritage.jsp&pageNo=5_3_2_0",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘아리랑 (2012)’"
+        },
+        {
+          "title": "아리랑",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0077500",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘2012년 12월 5일 인류무형문화유산으로 등재되었다.’"
+        }
+      ]
+    },
+    {
+      "id": "f10",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "North Korea's Arirang is a separate UNESCO entry, 'Arirang folk song in the Democratic People's Republic of Korea', inscribed in 2014; it is distinct from South Korea's 2012 entry.",
+      "claimKo": "북한의 ‘아리랑’(Arirang folk song in the Democratic People's Republic of Korea)은 2014년에 별도 종목으로 등재되었으며, 2012년 대한민국의 아리랑 등재와는 별개이다.",
+      "sources": [
+        {
+          "title": "Arirang folk song in the Democratic People's Republic of Korea",
+          "publisher": "UNESCO Intangible Cultural Heritage (ich.unesco.org)",
+          "url": "https://ich.unesco.org/en/RL/arirang-folk-song-in-the-democratic-people-s-republic-of-korea-00914",
+          "accessed": "2026-10-10",
+          "quoteOrLocator": "Inscribed in 2014 (9.COM) on the Representative List of the Intangible Cultural Heritage of Humanity"
+        },
+        {
+          "title": "Decision of the Intergovernmental Committee: 9.COM 10.14",
+          "publisher": "UNESCO Intangible Cultural Heritage (ich.unesco.org)",
+          "url": "https://ich.unesco.org/en/decisions/9.COM/10.14",
+          "accessed": "2026-10-10",
+          "quoteOrLocator": "Decision on the nomination of Arirang folk song in the Democratic People's Republic of Korea (No. 00914) for the Representative List"
+        }
+      ]
+    }
+  ],
+  "referenceDisplay": "Sources: UNESCO Intangible Cultural Heritage (Kimjang, 2013; Arirang in the Republic of Korea, 2012 - North Korea's Arirang is a separate 2014 entry); 국가유산청 국가유산포털(김치 담그기·아리랑·인류무형유산 목록); 한국민족문화대백과사전; 한국민속대백과사전(국립민속박물관)",
+  "verification": {
+    "passes": 3,
+    "checkedAt": "2026-10-10",
+    "scope": "cluster",
+    "notes": "Third independent pass over 6 episodes / 61 facts / 161 source entries (70 unique URLs). Every URL was re-fetched with my own scripts (UNESCO pages via Wayback copies; heritage.go.kr descriptions via the portal ajax html and khs.go.kr open API; folkency via its JSON API) and each quote or locator was machine-matched to the page text; the few non-matching strings were checked by hand (portal metadata fields, hanja or footnote punctuation, label text). Corrections: (1) pansori scene 2 now gives both UNESCO steps (2003 masterpiece proclamation, 2008 Representative List); (2) pansori f11 states the Aesop title as in the cited Townsend text and the common alternate title; (3) added sources: NFM 놀보박타령 for 'greedy' (f5), 표준국어대사전 타다 for 'sawed' (f6), 한국민족문화대백과사전 선도해 for the Samguk sagi tale (f12); (4) Seollal f9/f10 designation-date locators now cite the KHS open API field. No other change. See seasons-tales.signoff.md."
+  },
+  "authorNotes": "Spelling: RR for 김장/김치 is gimjang/gimchi. UNESCO's official title uses 'Kimjang', and 'kimchi' is the usual English word. The narration uses 'gimjang' (with UNESCO's spelling noted once) and 'kimchi'. Grandma humming Arirang at the end of the day is a story moment. The narration does not claim Arirang is a gimjang work song. The sources don't link the two, though some Arirang types are work songs (Encyclopedia of Korean Culture). The refrain quoted is the widely known one. The Encyclopedia notes the best-known 'Arirang' (경기/본조 아리랑) is a new folk-song (신민요) form; traditional regional ones include Jeongseon, Jindo and Miryang. Left out on purpose: UNESCO's estimate of 'some 3,600 variations'. Only one authoritative source for it was found, so it isn't in the narration. Also left out: theories about what 'Arirang' means (folk etymology), the DPRK listings (Arirang 2014; kimchi-making 2015), and the old practice of burying kimchi jars in the ground. National designations: 아리랑 (2015-09-22) and 김치 담그기 (2017-11-15) are National Intangible Heritage per the 국가유산포털. They aren't used in the narration. REVISION 2026-10-10: 'takes all year' -> 'takes months' (Encyclopedia: more than half a year; UNESCO: yearly cycle); 'sweet' and 'everyone' removed from scene 5; UNESCO title 'Kimjang, making and sharing kimchi in the Republic of Korea' (2013) and the Korea Heritage Service's Korean name 김치와 김장문화 now used; Arirang 2012 labelled South Korea's entry and the separate DPRK entry (2014) added as f10 (narration mentions 'separate listing' only; the 2014 year lives in f10); 'no exact translation' replaced by 'sung syllables' (encykorea: meaningless refrain, origin theories = folk etymology; 한국민속문학사전: 입타령 refrain).",
+  "errata": []
+}
