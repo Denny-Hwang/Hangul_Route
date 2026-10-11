@@ -1,4 +1,5 @@
 import { narrationTokenIds, narrationWordCount } from './narration';
+import { pillarTagProblems } from './pillars';
 import {
   MIN_VERIFICATION_PASSES,
   NARRATION_MAX_WORDS,
@@ -617,6 +618,19 @@ function lintGates(story: Story, add: Add): void {
   }
 }
 
+// ---- catalogue fields (F-STORY-005 §3.2) ----------------------------------------------------------
+
+function lintPillarTags(story: Story, add: Add): void {
+  for (const p of pillarTagProblems(story.pillarTags)) {
+    add(
+      p.rule,
+      'error',
+      at('pillarTags', p.index),
+      p.rule === 'pillar-tag-unknown' ? `${p.tag} is not in PILLAR_TAGS (pillars.ts)` : `${p.tag} is listed twice`,
+    );
+  }
+}
+
 // ---- entry points -----------------------------------------------------------------------------------------------
 
 function unusedFacts(story: Story, add: Add): void {
@@ -657,5 +671,6 @@ export function lintStory(story: Story, ctx: LintContext = {}): Finding[] {
   lintTale(story, add);
   lintText(story, add);
   lintGates(story, add);
+  lintPillarTags(story, add);
   return findings;
 }

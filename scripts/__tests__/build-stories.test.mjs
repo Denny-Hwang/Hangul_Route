@@ -180,6 +180,8 @@ describe("build-stories.mjs: shelf episodes and quests", () => {
       status: "ready",
       format: "story",
       placement: "shelf",
+      pillarTags: ["A1"],
+      companionId: "hoya",
     });
 
     assert.equal(quests.length, 1);
@@ -208,6 +210,24 @@ describe("build-stories.mjs: shelf episodes and quests", () => {
         ["Put the story in order", "story-sequence", "minigame:story-seq-listen-hangul-day"],
       ]
     );
+  });
+
+  test("the shelf episode copies pillarTags and companionId from its story (F-STORY-005 3.2)", () => {
+    const tagged = buildBundle([ready({ pillarTags: ["B5", "C1"], companionId: "hoya" })]);
+    assert.deepEqual(tagged.episodes[0].pillarTags, ["B5", "C1"]);
+    assert.equal(tagged.episodes[0].companionId, "hoya");
+    const story = ready({ pillarTags: ["E3"] });
+    buildBundle([story]).episodes[0].pillarTags.push("E4");
+    assert.deepEqual(story.pillarTags, ["E3"], "the episode holds a copy, not the story's array");
+  });
+
+  test("a story file without the catalogue fields gets the schema defaults on its shelf episode", () => {
+    const story = ready();
+    delete story.pillarTags;
+    delete story.companionId;
+    const [episode] = buildBundle([story]).episodes;
+    assert.deepEqual(episode.pillarTags, []);
+    assert.equal(episode.companionId, "hoya");
   });
 
   test("minutes below 3 are raised to 3 for episode and quest", () => {
