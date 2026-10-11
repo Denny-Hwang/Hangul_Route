@@ -19,6 +19,8 @@ export const STORY_FIXTURES_BUILD = storyFixtureIds.length > 0;
 
 export interface StoryE2eHandle {
   openReader(params: { storyId: string; level: StoryLevel; sceneIndex?: number }): void;
+  /** Opens a story's shelf quest (F-STORY-002 PR 2.6b: the reader as a quest step) until the shelf can. */
+  openQuest(params: { questId: string; episodeId: string }): void;
   /** Every bundled story with its tiers, so the e2e can smoke-read the real content too. */
   stories(): Array<{ id: string; levels: StoryLevel[]; fixture: boolean; traditional: boolean }>;
   /** `story.*` telemetry events `track()` accepted since the hook mounted (the e2e build sends none). */
@@ -37,6 +39,7 @@ export function StoryE2eHook(): null {
       events: () => events.map((e) => ({ ...e })),
       openReader: ({ storyId, level, sceneIndex }) =>
         navigation.navigate('StoryReader', { storyId, level, mode: 'replay', ...(sceneIndex === undefined ? {} : { sceneIndex }) }),
+      openQuest: ({ questId, episodeId }) => navigation.navigate('QuestPlayer', { questId, episodeId }),
       stories: () =>
         storiesAll.map((s) => ({
           id: s.id,
