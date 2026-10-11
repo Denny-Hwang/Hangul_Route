@@ -127,10 +127,69 @@ describe('pickStoryForHome', () => {
   });
 
   it('never picks a locked story', () => {
-    const locked = (id: string) => id !== 'story:seollal';
+    const locked = (e: { storyId: string }) => e.storyId !== 'story:seollal';
     expect(pickStoryForHome(input({ isLocked: locked }))?.entry.storyId).toBe('story:seollal');
     const file = bookmarks({ 'story:fox': {} });
-    expect(pickStoryForHome(input({ bookmarks: file, isLocked: (id) => id === 'story:fox' }))?.reason).toBe('next');
+    expect(pickStoryForHome(input({ bookmarks: file, isLocked: (e) => e.storyId === 'story:fox' }))?.reason).toBe('next');
+  });
+
+  it('the lock is per entry: a book quest in a stage the learner may not open is never offered', () => {
+    // The caller's stage gate (isStageEntitled) says no to the Stage 5 book; the shelf stays open.
+    const stageLocked = (e: { placement: string; stage: string }) => e.placement === 'grid' && e.stage === 'stage5';
+    expect(index.filter((e) => e.placement === 'grid').every((e) => e.stage === 'stage5')).toBe(true);
+    // Every shelf story finished: `next` would reach the book, so it falls through to `again` on the shelf.
+    const done = snapshot(finishedShelf());
+    expect(pickStoryForHome(input({ snapshot: done, isLocked: stageLocked }))).toMatchObject({
+      reason: 'again',
+      entry: { placement: 'shelf' },
+    });
+    // A read-along bookmark does not continue into the locked book; the story's shelf entry is still offered.
+    const file = bookmarks({ 'story:sun': { level: 'read-along' } });
+    expect(pickStoryForHome(input({ bookmarks: file, isLocked: stageLocked }))).toMatchObject({
+      reason: 'next',
+      entry: { storyId: 'story:tiger', placement: 'shelf' },
+    });
+    // Everything finished but the book: nothing from the book is replayed or offered.
+    const grid = ['tiger', 'sun', 'fox'].map((s, i) => ({ questId: questId(s, 'read-along'), completedAt: at(i + 1) }));
+    const again = pickStoryForHome(input({ snapshot: snapshot([...finishedShelf(), ...grid]), isLocked: stageLocked }));
+    expect(again?.entry.placement).toBe('shelf');
+    expect(nextStoryAfter(questId('tiger', 'read-along'), input({ isLocked: stageLocked }))).toBeNull();
+    expect(pickedForYou({ ...input({ snapshot: done, isLocked: stageLocked }), category: 'story-time' })?.entry.placement).toBe('shelf');
+  });
+
+  it('reasons limits the chain: slot ③ asks for `next` only, then `again` only', () => {
+    // Two bookmarks and unfinished shelf stories: the full chain says continue.
+    const file = bookmarks({ 'story:fox': { updatedAt: at(2) }, 'story:chuseok': { updatedAt: at(3) } });
+    expect(pickStoryForHome(input({ bookmarks: file }))?.reason).toBe('continue');
+    expect(pickStoryForHome(input({ bookmarks: file, reasons: ['next'] }))).toMatchObject({
+      reason: 'next',
+      entry: { storyId: 'story:tiger' },
+    });
+    // `next` only: null once nothing is unfinished; `again` only: the oldest finish, never a fresh story.
+    const all = index.map((e, i) => ({ questId: e.questId, completedAt: at(i + 1) }));
+    expect(pickStoryForHome(input({ snapshot: snapshot(all), reasons: ['next'] }))).toBeNull();
+    expect(pickStoryForHome(input({ reasons: ['again'] }))).toBeNull();
+    expect(pickStoryForHome(input({ snapshot: snapshot(finishedShelf()), reasons: ['again'] }))).toMatchObject({
+      reason: 'again',
+      entry: { storyId: 'story:chuseok' },
+    });
+    expect(pickStoryForHome(input({ bookmarks: file, reasons: [] }))).toBeNull();
+  });
+
+  it('compares times as instants: an offset time and a Z time order by the moment they name', () => {
+    // 11:00+02:00 is 09:00Z, older than 10:00Z, so it is the newer bookmark that loses.
+    const file = bookmarks({
+      'story:sun': { updatedAt: '2026-10-05T10:00:00Z' },
+      'story:chuseok': { updatedAt: '2026-10-05T11:00:00+02:00' },
+    });
+    expect(pickStoryForHome(input({ bookmarks: file }))?.entry.storyId).toBe('story:sun');
+    const done = snapshot(
+      index.map((e) => ({
+        questId: e.questId,
+        completedAt: e.storyId === 'story:fox' && e.placement === 'shelf' ? '2026-10-01T11:00:00+02:00' : '2026-10-01T10:00:00.000Z',
+      })),
+    );
+    expect(pickStoryForHome(input({ snapshot: done }))).toMatchObject({ reason: 'again', entry: { storyId: 'story:fox' } });
   });
 
   it('returns null when nothing applies', () => {
@@ -181,7 +240,7 @@ describe('nextStoryAfter', () => {
   it('skips finished and locked stories', () => {
     const done = snapshot([{ questId: questId('sun'), completedAt: at(1) }]);
     expect(nextStoryAfter(questId('tiger'), input({ snapshot: done }))?.storyId).toBe('story:fox');
-    expect(nextStoryAfter(questId('tiger'), input({ isLocked: (id) => id === 'story:sun' }))?.storyId).toBe('story:fox');
+    expect(nextStoryAfter(questId('tiger'), input({ isLocked: (e) => e.storyId === 'story:sun' }))?.storyId).toBe('story:fox');
   });
 
   it('within a book: the next story quest of the same episode', () => {

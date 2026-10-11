@@ -1,5 +1,6 @@
 import type { CultureNote, ProgressSnapshot, Story, ThemeKey } from '@hangul-route/content-schema';
 import { themes } from '../../content/stages';
+import { compareInstant } from '../sync/merge';
 import { compareShelfOrder, entryForStory, type StoryIndexEntry } from './story-index';
 
 /**
@@ -24,7 +25,7 @@ export interface FoundNote {
   theme: ThemeKey;
   /** The earliest finish of any of the story's quests. */
   foundAt: string;
-  /** Every source of the note's facts, de-duplicated; shown as plain text under "For grown-ups". */
+  /** Every source of the note's facts, de-duplicated; shown as plain text under "Where this comes from". */
   sources: NoteSource[];
 }
 
@@ -45,7 +46,11 @@ function sourcesOf(note: CultureNote, story: Story): NoteSource[] | null {
   return sources;
 }
 
-/** Found notes in story order (shelf order: Story Time, Culture, then books), each story's notes in file order. */
+/**
+ * Found notes in story order: each story sits where its own entry (`entryForStory`:
+ * its shelf entry when it has one) falls in shelf order (Story Time, Culture,
+ * then books), whichever of its quests was finished; each story's notes in file order.
+ */
 export function foundNotes(
   index: readonly StoryIndexEntry[],
   stories: readonly Story[],
@@ -56,19 +61,21 @@ export function foundNotes(
   const storyById = new Map(stories.map((s) => [s.id, s]));
 
   const foundAt = new Map<string, string>();
-  for (const entry of [...index].sort(compareShelfOrder)) {
+  for (const entry of index) {
     const at = done.get(entry.questId);
     if (at === undefined) continue;
     const earlier = foundAt.get(entry.storyId);
-    if (earlier === undefined || at < earlier) foundAt.set(entry.storyId, at);
+    if (earlier === undefined || compareInstant(at, earlier) < 0) foundAt.set(entry.storyId, at);
   }
 
+  // Defined: `foundAt` only holds stories that have an entry.
+  const found = [...foundAt.keys()].map((storyId) => entryForStory(index, storyId) as StoryIndexEntry);
   const notes: FoundNote[] = [];
-  for (const [storyId, at] of foundAt) {
+  for (const entry of found.sort(compareShelfOrder)) {
+    const { storyId } = entry;
+    const at = foundAt.get(storyId) as string;
     const story = storyById.get(storyId);
     if (!story) continue;
-    // Defined: `foundAt` only holds stories that have an entry.
-    const entry = entryForStory(index, storyId) as StoryIndexEntry;
     for (const note of story.cultureNotes) {
       const sources = sourcesOf(note, story);
       if (!sources) continue;

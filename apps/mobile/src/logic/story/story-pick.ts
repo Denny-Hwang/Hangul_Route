@@ -1,4 +1,5 @@
 import type { ProgressSnapshot } from '@hangul-route/content-schema';
+import { compareInstant } from '../sync/merge';
 import type { Bookmark, BookmarkFile } from './bookmarks';
 import { compareShelfOrder, type ShelfCategory, type StoryIndexEntry } from './story-index';
 
@@ -14,6 +15,8 @@ import { compareShelfOrder, type ShelfCategory, type StoryIndexEntry } from './s
  *
  * Locked and excluded entries are never offered. Nothing here is gated by
  * progress: `fits` (F-STORY-005 StoryFit) only moves fitting stories forward.
+ * `reasons` limits the chain to some of its stages (slot ③ of F-STORY-004
+ * §3.7 asks for `next`, then `again`, never `continue`).
  */
 
 export type StoryReason = 'continue' | 'next' | 'again';
@@ -31,21 +34,34 @@ export interface StoryPickInput {
   entries: readonly StoryIndexEntry[];
   snapshot: Pick<ProgressSnapshot, 'quests'> | undefined;
   bookmarks: BookmarkFile;
-  /** `isContentLocked('story', id)` for the learner; always false while gating is off. */
-  isLocked: (storyId: string) => boolean;
+  /**
+   * True when the learner may not open this entry. Callers combine
+   * `isContentLocked({ kind: 'story', id: entry.storyId, ... })` (always false
+   * while gating is off) with, for a book (grid) entry, the stage gate that
+   * Journey applies today: `!isStageEntitled(entry.stage, tier)` and the
+   * stage's availability. Keyed by entry, so a story's free shelf entry can
+   * stay open while its book entry in a stage the learner has not reached is
+   * locked.
+   */
+  isLocked: (entry: StoryIndexEntry) => boolean;
   /** Stories already on the plan (another card), never picked twice. */
   excludeStoryIds?: readonly string[];
   /** Quests already on the plan (e.g. the Journey card). */
   excludeQuestIds?: readonly string[];
   /** F-STORY-005 §3.4: stories that fit the learner come first among `next`; the order is otherwise kept. */
   fits?: (entry: StoryIndexEntry) => boolean;
+  /** The chain stages to run, in chain order; default all three. */
+  reasons?: readonly StoryReason[];
 }
 
-/** Ascending ISO-time order; equal times keep their place (the sort is stable). */
-function byTime(a: string, b: string): number {
-  if (a === b) return 0;
-  return a < b ? -1 : 1;
-}
+const ALL_REASONS: readonly StoryReason[] = ['continue', 'next', 'again'];
+
+/**
+ * Ascending order of ISO times as instants (`compareInstant`: an offset form and
+ * `Z` compare by the moment they name); identical times keep their place (the
+ * sort is stable).
+ */
+const byTime = compareInstant;
 
 function completedAtOf(input: Pick<StoryPickInput, 'snapshot'>): Map<string, string> {
   const done = new Map<string, string>();
@@ -57,7 +73,7 @@ function offerable(input: StoryPickInput): StoryIndexEntry[] {
   const stories = new Set(input.excludeStoryIds ?? []);
   const quests = new Set(input.excludeQuestIds ?? []);
   return input.entries
-    .filter((e) => !stories.has(e.storyId) && !quests.has(e.questId) && !input.isLocked(e.storyId))
+    .filter((e) => !stories.has(e.storyId) && !quests.has(e.questId) && !input.isLocked(e))
     .sort(compareShelfOrder);
 }
 
@@ -69,29 +85,45 @@ function fitFirst(entries: StoryIndexEntry[], fits: StoryPickInput['fits']): Sto
 
 function pickFrom(candidates: StoryIndexEntry[], input: StoryPickInput): StoryPick | null {
   const done = completedAtOf(input);
+  const reasons = new Set(input.reasons ?? ALL_REASONS);
 
+  if (reasons.has('continue')) {
+    const resume = resumableOf(candidates, input, done)[0];
+    if (resume) return { entry: resume.entry, reason: 'continue', mode: 'play', bookmark: resume.bookmark };
+  }
+
+  if (reasons.has('next')) {
+    const unfinished = candidates.filter((e) => !done.has(e.questId));
+    const next =
+      fitFirst(unfinished.filter((e) => e.placement === 'shelf'), input.fits)[0] ??
+      unfinished.find((e) => e.placement === 'grid');
+    if (next) return { entry: next, reason: 'next', mode: 'play' };
+  }
+
+  if (reasons.has('again')) {
+    const finished = candidates
+      .filter((e) => done.has(e.questId))
+      .sort((a, b) => byTime(done.get(a.questId) as string, done.get(b.questId) as string));
+    const again = finished[0];
+    if (again) return { entry: again, reason: 'again', mode: 'replay' };
+  }
+  return null;
+}
+
+/** Bookmarked entries at the bookmark's level whose quest is not finished; newest first, equal times in shelf order. */
+function resumableOf(
+  candidates: StoryIndexEntry[],
+  input: StoryPickInput,
+  done: Map<string, string>,
+): Array<{ entry: StoryIndexEntry; bookmark: Bookmark }> {
   const resumable = candidates
     .map((entry) => ({ entry, bookmark: input.bookmarks.byStory[entry.storyId] }))
     .filter(
       (c): c is { entry: StoryIndexEntry; bookmark: Bookmark } =>
         c.bookmark !== undefined && c.bookmark.level === c.entry.level && !done.has(c.entry.questId),
     );
-  // Newest first; equal times keep shelf order.
   resumable.sort((a, b) => byTime(b.bookmark.updatedAt, a.bookmark.updatedAt));
-  const resume = resumable[0];
-  if (resume) return { entry: resume.entry, reason: 'continue', mode: 'play', bookmark: resume.bookmark };
-
-  const unfinished = candidates.filter((e) => !done.has(e.questId));
-  const next =
-    fitFirst(unfinished.filter((e) => e.placement === 'shelf'), input.fits)[0] ??
-    unfinished.find((e) => e.placement === 'grid');
-  if (next) return { entry: next, reason: 'next', mode: 'play' };
-
-  const finished = candidates
-    .filter((e) => done.has(e.questId))
-    .sort((a, b) => byTime(done.get(a.questId) as string, done.get(b.questId) as string));
-  const again = finished[0];
-  return again ? { entry: again, reason: 'again', mode: 'replay' } : null;
+  return resumable;
 }
 
 /** The Home "Story time" card (§3.7); null when no story applies. */

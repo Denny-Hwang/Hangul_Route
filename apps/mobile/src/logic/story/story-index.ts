@@ -1,4 +1,4 @@
-import type { Episode, Quest, Story, StoryLevel, ThemeKey } from '@hangul-route/content-schema';
+import type { Episode, Quest, StageKey, Story, StoryLevel, ThemeKey } from '@hangul-route/content-schema';
 import { flags } from '../../config/flags';
 import { episodesAll } from '../../content/episodes';
 import { questsAll } from '../../content/quests';
@@ -24,7 +24,9 @@ export interface StoryIndexEntry {
   /** From the quest's `story-read` ref. */
   level: StoryLevel;
   placement: 'shelf' | 'grid';
-  /** Shelf only; null for a book entry (and for a shelf episode whose story has no `shelf` block). */
+  /** The episode's stage: a book (grid) entry sits in a stage that callers must check entitlement for. */
+  stage: StageKey;
+  /** Shelf only; null for a book (grid) entry. */
   category: ShelfCategory | null;
   /** `shelf.order` for a shelf entry, the episode order for a grid entry. */
   order: number;
@@ -40,16 +42,25 @@ export interface BuildStoryIndexInput {
   showUnreviewed: boolean;
 }
 
-/** D14: only language- and culture-reviewed stories reach a production shelf. */
-function isReviewed(story: Story): boolean {
-  return story.review.language === 'native-reviewed' && story.review.culture === 'culture-reviewed';
+/**
+ * D14: only `ready`, language- and culture-reviewed stories reach a production
+ * shelf (the bundle can carry drafts when built with `--include-drafts`).
+ */
+function isProductionReady(story: Story): boolean {
+  return (
+    story.state === 'ready' &&
+    story.review.language === 'native-reviewed' &&
+    story.review.culture === 'culture-reviewed'
+  );
 }
 
 /**
  * Entries in episode order, then quest order inside each episode. Skipped:
  * quests of `draft` / `preview` episodes, quests that are missing or are not
- * story quests, stories that are not bundled or lack the quest's level, and
- * (unless `showUnreviewed`) unreviewed stories.
+ * story quests, stories that are not bundled or lack the quest's level, shelf
+ * quests of a story with no `shelf` block (no Library section could show them,
+ * so Home must not offer them either), and (unless `showUnreviewed`) draft or
+ * unreviewed stories.
  */
 export function buildStoryIndex(input: BuildStoryIndexInput): StoryIndexEntry[] {
   const storyById = new Map(input.stories.map((s) => [s.id, s]));
@@ -64,8 +75,9 @@ export function buildStoryIndex(input: BuildStoryIndexInput): StoryIndexEntry[] 
       const story = read ? storyById.get(read.ref.storyId) : undefined;
       if (!read || !story) continue;
       if (!story.tiers.some((t) => t.level === read.ref.level)) continue;
-      if (!input.showUnreviewed && !isReviewed(story)) continue;
+      if (!input.showUnreviewed && !isProductionReady(story)) continue;
       const shelf = placement === 'shelf' ? story.shelf : undefined;
+      if (placement === 'shelf' && !shelf) continue;
       entries.push({
         storyId: story.id,
         story,
@@ -73,6 +85,7 @@ export function buildStoryIndex(input: BuildStoryIndexInput): StoryIndexEntry[] 
         episodeId: episode.id,
         level: read.ref.level,
         placement,
+        stage: episode.stage,
         category: shelf?.category ?? null,
         order: shelf?.order ?? episode.order,
         minutes: shelf?.minutes ?? story.minutes,
@@ -86,8 +99,8 @@ export function buildStoryIndex(input: BuildStoryIndexInput): StoryIndexEntry[] 
 const CATEGORY_RANK: Record<ShelfCategory, number> = { 'story-time': 0, culture: 1 };
 
 function rank(entry: Pick<StoryIndexEntry, 'placement' | 'category'>): number {
-  if (entry.placement === 'grid') return 3;
-  return entry.category === null ? 2 : CATEGORY_RANK[entry.category];
+  if (entry.placement === 'grid' || entry.category === null) return 2;
+  return CATEGORY_RANK[entry.category];
 }
 
 /**

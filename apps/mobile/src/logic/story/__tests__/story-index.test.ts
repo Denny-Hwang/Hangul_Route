@@ -1,4 +1,8 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import { flags } from '../../../config/flags';
+import { episodesAll } from '../../../content/episodes';
+import { questsAll } from '../../../content/quests';
+import { storiesAll } from '../../../content/stories';
 import {
   buildStoryIndex,
   compareShelfOrder,
@@ -30,6 +34,7 @@ describe('buildStoryIndex', () => {
         episodeId: 'episode:shelf-sun-and-moon',
         level: 'listen',
         placement: 'shelf',
+        stage: 'stage1',
         category: 'story-time',
         order: 2,
         minutes: 5,
@@ -46,7 +51,7 @@ describe('buildStoryIndex', () => {
       quests: [storyQuest('hangul-day', 'read-along')],
       showUnreviewed: false,
     });
-    expect(entry).toMatchObject({ placement: 'grid', category: null, order: 7, level: 'read-along', episodeId: book.id });
+    expect(entry).toMatchObject({ placement: 'grid', stage: 'stage5', category: null, order: 7, level: 'read-along', episodeId: book.id });
   });
 
   it('treats an episode without `placement` as grid', () => {
@@ -120,15 +125,22 @@ describe('buildStoryIndex', () => {
     }
   });
 
-  it('a shelf entry of a story without a shelf block has no category and falls back to the story minutes', () => {
+  it('hides a draft story even when its review fields say reviewed (a bundle built with drafts)', () => {
+    const draft = { ...sun, state: 'draft' as const };
+    const args = { stories: [draft], episodes: [shelfEpisode(draft)], quests: [storyQuest('sun-and-moon')] };
+    expect(buildStoryIndex({ ...args, showUnreviewed: false })).toEqual([]);
+    expect(buildStoryIndex({ ...args, showUnreviewed: true })).toHaveLength(1);
+  });
+
+  it('skips a shelf quest of a story without a shelf block (no Library section could show it), keeps its book quest', () => {
     const bare = story('sun-and-moon', { minutes: 6, shelf: null });
-    const [entry] = buildStoryIndex({
+    const index = buildStoryIndex({
       stories: [bare],
-      episodes: [shelfEpisode(bare, { order: 140 })],
-      quests: [storyQuest('sun-and-moon')],
+      episodes: [shelfEpisode(bare, { order: 140 }), bookEpisode('episode:stage5-letters', [questId('sun-and-moon', 'read-along')])],
+      quests: [storyQuest('sun-and-moon'), storyQuest('sun-and-moon', 'read-along')],
       showUnreviewed: false,
     });
-    expect(entry).toMatchObject({ placement: 'shelf', category: null, order: 140, minutes: 6 });
+    expect(index.map((e) => [e.placement, e.category, e.minutes])).toEqual([['grid', null, 6]]);
   });
 
   it('follows episode order, then the quest order inside an episode', () => {
@@ -182,25 +194,43 @@ describe('lookups', () => {
     ]);
   });
 
-  it('compareShelfOrder puts an uncategorised shelf entry after the categories', () => {
-    const bare = story('bare', { shelf: null });
-    const odd = buildStoryIndex({
-      stories: [bare, seollal],
-      episodes: [shelfEpisode(bare, { order: 1 }), shelfEpisode(seollal)],
-      quests: [storyQuest('bare'), storyQuest('seollal-new-year')],
-      showUnreviewed: false,
-    });
-    expect([...odd].sort(compareShelfOrder).map((e) => e.storyId)).toEqual(['story:seollal-new-year', 'story:bare']);
+  it('compareShelfOrder puts an uncategorised entry after the categories', () => {
+    const shelf = { placement: 'shelf' as const, order: 9 };
+    expect(compareShelfOrder({ ...shelf, category: null }, { ...shelf, category: 'culture' })).toBeGreaterThan(0);
+    expect(compareShelfOrder({ ...shelf, category: 'culture' }, { placement: 'grid', category: null, order: 1 })).toBeLessThan(0);
   });
 });
 
 describe('defaultStoryIndex', () => {
-  it('is built once from the bundle and memoised', () => {
+  it('is built once from the bundle with the flag, and memoised', () => {
     const first = defaultStoryIndex();
     expect(defaultStoryIndex()).toBe(first);
-    // Tests run with the launch flags: `showUnreviewedStories` is off, so only reviewed stories are indexed.
-    const reviewed = (e: (typeof first)[number]) =>
-      e.story.review.language === 'native-reviewed' && e.story.review.culture === 'culture-reviewed';
-    expect(first.every(reviewed)).toBe(true);
+    expect(first).toEqual(
+      buildStoryIndex({ stories: storiesAll, episodes: episodesAll, quests: questsAll, showUnreviewed: flags.showUnreviewedStories }),
+    );
+  });
+
+  it('reads storiesAll, episodesAll, questsAll and flags.showUnreviewedStories', async () => {
+    const draft = unreviewed(story('sun-and-moon', { shelf: { category: 'story-time', order: 1 } }));
+    vi.resetModules();
+    vi.doMock('../../../config/flags', () => ({ flags: { showUnreviewedStories: true } }));
+    vi.doMock('../../../content/stories', () => ({ storiesAll: [draft] }));
+    vi.doMock('../../../content/episodes', () => ({ episodesAll: [shelfEpisode(draft)] }));
+    vi.doMock('../../../content/quests', () => ({ questsAll: [storyQuest('sun-and-moon')] }));
+    try {
+      const fresh = await import('../story-index');
+      const index = fresh.defaultStoryIndex();
+      // Unreviewed, so only the flag lets it in.
+      expect(index.map((e) => [e.storyId, e.questId, e.episodeId])).toEqual([
+        ['story:sun-and-moon', questId('sun-and-moon'), 'episode:shelf-sun-and-moon'],
+      ]);
+      expect(fresh.defaultStoryIndex()).toBe(index);
+    } finally {
+      vi.doUnmock('../../../config/flags');
+      vi.doUnmock('../../../content/stories');
+      vi.doUnmock('../../../content/episodes');
+      vi.doUnmock('../../../content/quests');
+      vi.resetModules();
+    }
   });
 });

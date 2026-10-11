@@ -12,7 +12,7 @@ function allStrings(copy: StoryShelfCopy): string[] {
   const walk = (node: unknown): void => {
     if (typeof node === 'string') out.push(node);
     else if (typeof node === 'function') {
-      for (const args of [[0, 0, 0], [1, 1, 1], [5, 'New', 5], ['Seollal', 'Finished', 1], ['Seollal', 'Cultural Heritage Administration']]) {
+      for (const args of [[0, 0, 0], [1, 1, 1], [5, 'New', 5], ['Seollal', 'Finished', 1], ['Seollal', 'Finished', 5, 2], ['Seollal', 'Cultural Heritage Administration']]) {
         const text = (node as (...a: unknown[]) => unknown)(...args);
         if (typeof text === 'string') out.push(text);
       }
@@ -37,7 +37,7 @@ describe('learner.storyShelf (shelf copy)', () => {
     for (const s of strings) {
       expect(s, s).not.toMatch(/premium/i);
       expect(s, s).not.toMatch(/\d+\s*(\/|of)\s*\d+|%/);
-      expect(s, s).not.toMatch(/\bages?\b|\bkids?\b|\byears? old\b/i);
+      expect(s, s).not.toMatch(/\bages?\b|\bkids?\b|\byears? old\b|grown-?ups?\b|children/i);
     }
   });
 
@@ -57,7 +57,8 @@ describe('learner.storyShelf (shelf copy)', () => {
     expect([COPY.state.new, COPY.state.inProgress, COPY.state.finished]).toEqual(['New', 'Keep reading', 'Finished']);
     expect(COPY.home.subtitle).toEqual({ continue: 'Keep reading', next: 'A short story', again: 'Read it again' });
     expect(COPY.home.explore).toBe('Take a look');
-    expect(COPY.cultureNotes.grownUps).toBe('For grown-ups: where this comes from');
+    // Audience-neutral (CLAUDE.md §1): the spec's "For grown-ups" prefix is dropped on this learner surface.
+    expect(COPY.cultureNotes.whereFrom).toBe('Where this comes from');
   });
 
   it('counts and durations are whole sentences, with plurals', () => {
@@ -66,6 +67,10 @@ describe('learner.storyShelf (shelf copy)', () => {
     expect(COPY.episode.cultureNotes(1)).toBe('Culture notes: 1 found');
     expect(COPY.tileLabel('The Sun and the Moon', COPY.state.new, 4)).toBe('The Sun and the Moon. New. About 4 minutes.');
     expect(COPY.tileLabel('The Sun and the Moon', COPY.state.finished, 1)).toBe('The Sun and the Moon. Finished. About 1 minute.');
+    // The tile's StarRow is inside the one button, so its stars are in the label; a 0-star finish says nothing.
+    expect(COPY.tileLabel('The Sun and the Moon', COPY.state.finished, 4, 1)).toBe('The Sun and the Moon. Finished. About 4 minutes. 1 star.');
+    expect(COPY.tileLabel('The Sun and the Moon', COPY.state.finished, 4, 3)).toBe('The Sun and the Moon. Finished. About 4 minutes. 3 stars.');
+    expect(COPY.tileLabel('The Sun and the Moon', COPY.state.finished, 4, 0)).toBe('The Sun and the Moon. Finished. About 4 minutes.');
     expect(COPY.cultureNotes.source('Hangul Day', 'UNESCO')).toBe('Hangul Day, UNESCO');
   });
 

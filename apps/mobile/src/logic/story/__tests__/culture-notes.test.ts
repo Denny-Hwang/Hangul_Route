@@ -88,6 +88,36 @@ describe('foundNotes', () => {
     expect(foundNotes(both, STORIES, bookOnly)).toHaveLength(2);
   });
 
+  it('a story found only through its book quest keeps its own shelf place', () => {
+    // tiger is Story Time 1 but finished only in the Stage 5 book; seollal (Culture 1) on the shelf.
+    const withBook = shelfIndex(STORIES, {
+      episodes: [bookEpisode('episode:stage5-letters', [questId('tiger', 'read-along')])],
+      quests: [storyQuest('tiger', 'read-along')],
+    });
+    const done = snapshot([
+      { questId: questId('seollal'), completedAt: at(1) },
+      { questId: questId('tiger', 'read-along'), completedAt: at(2) },
+    ]);
+    const notes = foundNotes(withBook, STORIES, done);
+    expect(notes.map((n) => [n.note.id, n.episodeId])).toEqual([
+      ['cn-tiger', 'episode:shelf-tiger'],
+      ['cn-seollal', 'episode:shelf-seollal'],
+    ]);
+  });
+
+  it('foundAt compares finishes as instants (an offset time and a Z time)', () => {
+    const both = shelfIndex(STORIES, {
+      episodes: [bookEpisode('episode:stage5-letters', [questId('sun', 'read-along')])],
+      quests: [storyQuest('sun', 'read-along')],
+    });
+    // 11:00+02:00 is 09:00Z: earlier than the 10:00Z shelf finish, though later as a string.
+    const done = snapshot([
+      { questId: questId('sun'), completedAt: '2026-10-04T10:00:00.000Z' },
+      { questId: questId('sun', 'read-along'), completedAt: '2026-10-04T11:00:00+02:00' },
+    ]);
+    expect(foundNotes(both, STORIES, done)[0]?.foundAt).toBe('2026-10-04T11:00:00+02:00');
+  });
+
   it('a story outside the index (unreviewed in production) has no found notes (behaviour 8)', () => {
     const draft = unreviewed(seollal);
     const gated = buildStoryIndex({
