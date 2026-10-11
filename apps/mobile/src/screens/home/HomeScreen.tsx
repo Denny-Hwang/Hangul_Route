@@ -37,6 +37,7 @@ import {
 import { mergeAssignments } from '../../logic/homework/assignment-merger';
 import { gridQuestProgress } from '../../logic/journey';
 import { homeColumns } from '../../logic/layout/home-columns';
+import { placedOutSkipSet } from '../../logic/placement/route-skip';
 import { DEFAULT_AVATAR } from '../../logic/profiles/avatar-catalog';
 import { computeStreak } from '../../logic/streak';
 import type { RootStackParamList } from '../../navigation/types';
@@ -140,6 +141,7 @@ export function HomeScreen(): React.ReactElement {
       episodes: episodesAll,
       today,
       pinned: pinnedPlan.current,
+      skipQuestIds: placedOutSkipSet(snap.placements, questsAll, episodesAll),
     });
     // A caregiver or class assignment for today takes card ② (F-HW-001 §3.4, F-PLAN-001 §3.4).
     const merged = mergeAssignments({

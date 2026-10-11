@@ -48,6 +48,7 @@ import {
   type ResultsTeaser,
 } from '../../logic/quest-flow/results-teaser';
 import { episodeReturn } from '../../logic/layout/quest-return';
+import { placedOutSkipSet } from '../../logic/placement/route-skip';
 import { applyQuestResult } from '../../logic/results-award';
 import type { CardAward } from '../../logic/reward';
 import { resultsCheerMessage, resultsHeadline } from '../../logic/results-copy';
@@ -143,6 +144,7 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
         total,
         isEntitled: (stageKey) => isStageEntitled(stageKey, tier),
         locale,
+        skipQuestIds: placedOutSkipSet(snapshot?.placements, questsAll, episodesAll),
       }),
     // `cachedTier` re-renders this screen when the inbox changes the tier.
     // eslint-disable-next-line react-hooks/exhaustive-deps

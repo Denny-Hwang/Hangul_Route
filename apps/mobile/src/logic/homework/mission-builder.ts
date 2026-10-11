@@ -121,7 +121,12 @@ function nextQuest(
   skipQuestIds: ReadonlySet<string> | undefined,
 ): Quest | undefined {
   const offerable = offerableQuests(quests, episodes);
-  return nextQuestAfter({ snapshot, quests, episodes, skipQuestIds }) ?? offerable[offerable.length - 1];
+  // A placed-out quest never played comes before a replay of the last quest.
+  return (
+    nextQuestAfter({ snapshot, quests, episodes, skipQuestIds }) ??
+    (skipQuestIds === undefined ? undefined : nextQuestAfter({ snapshot, quests, episodes })) ??
+    offerable[offerable.length - 1]
+  );
 }
 
 function completedToday(snapshot: ProgressSnapshot, questId: string, today: string): boolean {

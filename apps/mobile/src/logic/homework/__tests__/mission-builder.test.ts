@@ -188,9 +188,17 @@ describe('slot ② — the Journey cursor', () => {
     expect(plan.cards[1]).toMatchObject({ slot: 2, kind: 'new', questId: 'quest:b' });
   });
 
-  it('a placed-out quest stays playable: once every other quest is done it falls back as before', () => {
+  it('a placed-out quest stays playable: once every other quest is done it is offered before any replay', () => {
     const plan = build({
       snapshot: snapshot([done('quest:b', YESTERDAY, 1), done('quest:c', YESTERDAY, 1)]),
+      skipQuestIds: new Set(['quest:a']),
+    });
+    expect(plan.cards[1]?.questId).toBe('quest:a');
+  });
+
+  it('with every quest done, placed out or not, it falls back to the last quest as before', () => {
+    const plan = build({
+      snapshot: snapshot([done('quest:a', YESTERDAY, 1), done('quest:b', YESTERDAY, 1), done('quest:c', YESTERDAY, 1)]),
       skipQuestIds: new Set(['quest:a']),
     });
     expect(plan.cards[1]?.questId).toBe('quest:c');

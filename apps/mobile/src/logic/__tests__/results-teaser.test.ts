@@ -60,6 +60,20 @@ describe('resultsTeaser: which quest is next up', () => {
   });
 });
 
+describe('resultsTeaser: placed-out quests (F-PLC-001 section 3.7, consumer 1)', () => {
+  it('skips quests the level check placed out', () => {
+    const skip = new Set(['quest:q2', 'quest:q3']);
+    expect(resultsTeaser({ ...base, snapshot: done(), questId: 'quest:q1', total: 5, skipQuestIds: skip })?.questId).toBe('quest:q4');
+  });
+
+  it('offers a placed-out quest never played before nothing at all', () => {
+    const skip = new Set(['quest:q2']);
+    const t = resultsTeaser({ ...base, snapshot: done('q1', 'q3', 'q4'), questId: 'quest:q5', total: 5, skipQuestIds: skip });
+    expect(t?.questId).toBe('quest:q2');
+    expect(resultsTeaser({ ...base, snapshot: done('q1', 'q2', 'q3', 'q4'), questId: 'quest:q5', total: 5, skipQuestIds: skip })).toBeUndefined();
+  });
+});
+
 describe('resultsTeaser: every game skipped', () => {
   it('offers the same quest again and says so', () => {
     const t = resultsTeaser({ ...base, snapshot: done(), questId: 'quest:q1', total: 0 });
