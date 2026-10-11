@@ -1,7 +1,7 @@
 import type { HomeworkAssignment } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
-import { assignedByLabel, dueLabel, dueTodayCount, groupAssignments, homeworkWindow, TODAY_LIST_MAX, UPCOMING_WINDOW_DAYS } from '../assignment-groups';
+import { assignedByLabel, dueLabel, dueTodayCount, groupAssignments, homeworkWindow, showsTodayCount, TODAY_LIST_MAX, UPCOMING_WINDOW_DAYS } from '../assignment-groups';
 
 const hw = (id: string, targetDate: string, extra: Partial<HomeworkAssignment> = {}): HomeworkAssignment => ({
   id,
@@ -83,6 +83,20 @@ describe('homeworkWindow: the week window of the list (F-PLAN-002 section 3.6)',
     expect(w.comingUp.map((a) => a.id)).toEqual(['tomorrow', 'day7']);
     expect(w.later.map((a) => a.id)).toEqual(['day8', 'far']);
   });
+  it('keeps one class row and one home row in view when both are due (F-TCH-001 section 3.5 stacking, F-PLAN-002 section 3.10)', () => {
+    const list = [
+      hw('class-1', '2026-09-15', { assignedBy: 'teacher' }),
+      hw('class-2', '2026-09-16', { assignedBy: 'teacher' }),
+      hw('class-3', '2026-09-17', { assignedBy: 'teacher' }),
+      hw('home', today, { assignedBy: 'parent' }),
+      hw('route:mine#quest:x', today, { assignedBy: 'system' }),
+    ];
+    const w = homeworkWindow(groupAssignments(list, today), today);
+    expect(w.today.map((a) => a.id)).toEqual(['class-1', 'class-2', 'home']);
+    expect(w.moreToday).toBe(true);
+    const noHome = homeworkWindow(groupAssignments(list.filter((a) => a.id !== 'home'), today), today);
+    expect(noHome.today.map((a) => a.id)).toEqual(['class-1', 'class-2', 'class-3']);
+  });
   it('is empty for an empty list', () => {
     expect(homeworkWindow(groupAssignments([], today), today)).toEqual({ today: [], moreToday: false, comingUp: [], later: [] });
   });
@@ -99,6 +113,12 @@ describe('dueTodayCount (the Home homework line, F-PLAN-002 section 3.6)', () =>
     ];
     expect(dueTodayCount(list, '2026-09-19')).toBe(2);
     expect(dueTodayCount(undefined, '2026-09-19')).toBe(0);
+  });
+  it('is shown as a number only up to the Today list cap; past it the words carry no number', () => {
+    expect(showsTodayCount(0)).toBe(true);
+    expect(showsTodayCount(TODAY_LIST_MAX)).toBe(true);
+    expect(showsTodayCount(TODAY_LIST_MAX + 1)).toBe(false);
+    expect(showsTodayCount(15)).toBe(false);
   });
 });
 

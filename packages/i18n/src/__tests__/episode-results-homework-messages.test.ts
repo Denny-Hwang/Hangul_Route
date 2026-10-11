@@ -97,8 +97,10 @@ describe('learner.homework (English wording as shipped)', () => {
 
   it('words the week window of a long plan without a number (F-PLAN-002 section 3.6)', () => {
     expect(h.moreToday).toBe('More are waiting. They come one at a time.');
-    expect(h.later).toBe('Later in your plan');
-    for (const line of [h.moreToday, h.later, h.from.route]) expect(line).not.toMatch(/\d/);
+    expect(h.later).toBe('Later');
+    expect(h.bubble.aFew).toBe('You have a few things to do today.');
+    expect(m.learner.home.homework.dueMany).toBe('A few to do today');
+    for (const line of [h.moreToday, h.later, h.from.route, h.bubble.aFew, m.learner.home.homework.dueMany]) expect(line).not.toMatch(/\d/);
   });
 });
 

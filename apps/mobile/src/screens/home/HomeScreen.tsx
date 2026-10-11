@@ -34,7 +34,7 @@ import {
   type MissionCard,
   type MissionPlan,
 } from '../../logic/homework/mission-builder';
-import { dueTodayCount } from '../../logic/homework/assignment-groups';
+import { dueTodayCount, showsTodayCount } from '../../logic/homework/assignment-groups';
 import { mergeAssignments } from '../../logic/homework/assignment-merger';
 import { gridQuestProgress } from '../../logic/journey';
 import { homeColumns } from '../../logic/layout/home-columns';
@@ -198,7 +198,7 @@ export function HomeScreen(): React.ReactElement {
             <View style={{ flex: 1 }}>
               <Body weight="semibold">{m.learner.home.homework.title}</Body>
               <Caption tone="muted">
-                {homeworkDue > 0 ? m.learner.home.homework.due(homeworkDue) : copy.homeReviewsIdle}
+                {homeworkDue === 0 ? copy.homeReviewsIdle : showsTodayCount(homeworkDue) ? m.learner.home.homework.due(homeworkDue) : m.learner.home.homework.dueMany}
               </Caption>
             </View>
             <Icon name="card" size={24} color={colors.text.muted} />

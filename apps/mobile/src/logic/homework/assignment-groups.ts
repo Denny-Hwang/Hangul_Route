@@ -65,11 +65,40 @@ export interface HomeworkWindow {
 /** The week window of the Homework list, so a long plan never shows a list of 70 (F-PLAN-002 section 3.6). */
 export function homeworkWindow(groups: AssignmentGroups, todayKey: string): HomeworkWindow {
   return {
-    today: groups.today.slice(0, TODAY_LIST_MAX),
+    today: visibleToday(groups.today),
     moreToday: groups.today.length > TODAY_LIST_MAX,
     comingUp: groups.upcoming.filter((a) => dayDiff(todayKey, a.targetDate) <= UPCOMING_WINDOW_DAYS),
     later: groups.upcoming.filter((a) => dayDiff(todayKey, a.targetDate) > UPCOMING_WINDOW_DAYS),
   };
+}
+
+/**
+ * The Today rows in view: the first class item and the first home item always
+ * get a row (the F-TCH-001 section 3.5 stacking exception, honoured in this
+ * list per F-PLAN-002 section 3.10), the rest fill up in precedence order;
+ * shown in precedence order.
+ */
+function visibleToday(today: readonly HomeworkAssignment[]): HomeworkAssignment[] {
+  if (today.length <= TODAY_LIST_MAX) return [...today];
+  const keep = new Set<HomeworkAssignment>();
+  const firstTeacher = today.find((a) => a.assignedBy === 'teacher');
+  const firstParent = today.find((a) => a.assignedBy === 'parent');
+  if (firstTeacher) keep.add(firstTeacher);
+  if (firstParent) keep.add(firstParent);
+  for (const a of today) {
+    if (keep.size >= TODAY_LIST_MAX) break;
+    keep.add(a);
+  }
+  return today.filter((a) => keep.has(a));
+}
+
+/**
+ * Whether a Today count is shown as a number. Past the Today list cap the
+ * Home line and the Hoya bubble use words with no number, so a backlog that
+ * carried over never reads as a pile (F-PLAN-002 section 3.6).
+ */
+export function showsTodayCount(count: number): boolean {
+  return count <= TODAY_LIST_MAX;
 }
 
 /**

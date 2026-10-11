@@ -21,7 +21,7 @@ import { Pressable, View } from 'react-native';
 import { questsAll } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeQuest } from '../../logic/content-locale';
-import { assignedByLabel, dueLabel, groupAssignments, homeworkWindow } from '../../logic/homework/assignment-groups';
+import { assignedByLabel, dueLabel, groupAssignments, homeworkWindow, showsTodayCount } from '../../logic/homework/assignment-groups';
 import type { RootStackParamList } from '../../navigation/types';
 import { useAudience } from '../../store/audience';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
@@ -72,7 +72,11 @@ export function HomeworkScreen(): React.ReactElement {
       <HoyaBubble
         tone="idle"
         message={
-          groups.today.length === 0 ? m.bubble.none : m.bubble.some(groups.today.length)
+          groups.today.length === 0
+            ? m.bubble.none
+            : showsTodayCount(groups.today.length)
+              ? m.bubble.some(groups.today.length)
+              : m.bubble.aFew
         }
       />
 
@@ -117,8 +121,11 @@ export function HomeworkScreen(): React.ReactElement {
                 testID="homework-later"
                 style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, minHeight: touchTarget.min }}
               >
-                <Icon name={laterOpen ? 'close' : 'plus'} size={spacing.xl} color={colors.text.secondary} />
-                <Body size="sm" style={{ flex: 1 }}>
+                {/* A disclosure arrow: right when closed, turned down when open. */}
+                <View style={laterOpen ? { transform: [{ rotate: '90deg' }] } : undefined}>
+                  <Icon name="arrow-right" size={24} color={colors.text.secondary} />
+                </View>
+                <Body weight="semibold" style={{ flex: 1 }}>
                   {m.later}
                 </Body>
               </Pressable>
