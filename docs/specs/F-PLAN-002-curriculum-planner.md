@@ -2,14 +2,14 @@ Status: ready
 
 # F-PLAN-002 — Curriculum planner: one deterministic route from level, rhythm and goals, for a class, a family or a self-learner
 
-> Start order: P2-1 (shared date helpers) and P2-2 (catalogue + parity tests) have no external dependency. P2-4 (schemas, migration, Worker) must be **deployed before** any console or app build that sends `meta`, `week` or `selfRoute` (the Worker's zod strips unknown keys). P2-3 (the generator) is pure and can be reviewed alone. The worked examples of section 3.4 are golden tests against a frozen copy of today's catalogue, so they stay true while content grows.
+> Start order: P2-1 (shared date helpers) and P2-2 (catalogue + parity tests) have no external dependency. P2-4 (schemas, migration, Worker) must be **deployed before** any console or app build that sends `meta`, `week` or `selfRoute` (the Worker's zod strips unknown keys). P2-3a (the generator) and P2-3b (`proposeRoute`, FP-B11) are pure and can be reviewed alone. The worked examples of section 3.4 are golden tests against a frozen copy of today's catalogue, so they stay true while content grows.
 
-**Scope**: `packages/content-schema` (new `src/curriculum/` generator, new `src/catalog/` shared catalogue, `schemas/plan.ts` additions, `schemas/progress.ts` / `schemas/sync.ts` additions, telemetry names) · `packages/backend` + `apps/api` (plan `meta`, inbox capability filter, roster redaction, migration `0004`) · `apps/mobile` (derivation, display fixes, self-route store, `screens/route/`) · `apps/web` (`/teach/space/curriculum` wizard, plan-builder grouping, readout, catalogue adapter) · `packages/i18n` (strings)
+**Scope**: `packages/content-schema` (new `src/curriculum/` generator, new `src/curriculum/propose.ts` (`proposeRoute`, FP-B1), new `src/catalog/` shared catalogue, `schemas/plan.ts` additions, `schemas/progress.ts` / `schemas/sync.ts` additions, telemetry names) · `packages/backend` + `apps/api` (plan `meta`, inbox capability filter, roster redaction, migration `0006_plan_meta.sql` (E-1: `0001`-`0004` are on main, `0004_waitlist.sql` included, and F-SPACE-002 T-3b holds `0005_class_transfer.sql`, so `0006` is the next free number; if another migration lands first, P2-4 takes the next free number when it is opened and the order is decided at merge; `scripts/check-migrations.mjs` fails CI on a duplicate prefix)) · `apps/mobile` (derivation, display fixes, self-route store, `screens/route/` incl. `RouteProposalScreen.tsx`) · `apps/web` (`/teach/space/curriculum` wizard, plan-builder grouping, readout, catalogue adapter) · `packages/i18n` (strings)
 **Owner**: solo dev
 **Rollout**: console first (class and family), then the in-app self-route; the self-route screens sit behind `flags.routeEnabled` (default off). PR order in section 6.
-**Wireframes**: `wireframes/curriculum-planner.md` (drafted with this spec) -> promoted to `design/wireframes/console/curriculum-wizard.md`, `console/plan-builder.md` (week grouping and readout), `route/setup.md`, `route/overview.md`, `home/todays-mission.md` (route card), `homework/list.md` (week window)
+**Wireframes**: `wireframes/curriculum-planner.md` (drafted with this spec) -> promoted to `design/wireframes/console/curriculum-wizard.md`, `console/plan-builder.md` (week grouping and readout), `route/setup.md`, `route/overview.md`, `route/proposal.md` (FP-B1; drawn as screen K of `design/wireframes/journey/my-route-overview.md`), `home/todays-mission.md` (route card), `homework/list.md` (week window). `route/overview.md` is the weekly plan; F-ROUTE-001's map of progress is `journey/my-route*.md`, so the files do not collide (E-4)
 
-Parent / siblings: F-PLAN-001 (plans: publish once, derive on the device; **this spec amends its sections 3.1, 3.2, 3.3, 3.5**) · F-HW-001 section 3.3 and 3.4 (anti-shame, one explicit assignment per day, gating) · F-TCH-001 section 3.3, 3.5, 3.6 (class plans, stacking, aggregates only) · F-PLC-001 (the placement level is this spec's `level`; `questsPlacedOutAtLevel`, `RouteCatalog`) · F-QUEST-002 (Stage 1 = 15 quests, `teaches` symbol keys, Hangul Check) · F-STORY-001 / F-STORY-004 / F-STORY-005 (24 heritage stories, shelf, tags) · F-VOC-001..005 (12 vocabulary topics) · F-LEARN-001 (`levelOrder`) · F-I18N-001 (all copy through messages) · F-RVW-001 (review items later) · F-SPACE-001 (spaces) · F-CONSOLE-001 (static export, `?id=` routes) · design inputs `curriculum-planner.md`, `level-test.md` · blueprint 04 section 0.4 (stage order linear, theme order free), section 4.3 (Stage 1 minutes), section 8.1 (motivation) · blueprint 05 section 1.4
+Parent / siblings: F-PLAN-001 (plans: publish once, derive on the device; **this spec amends its sections 3.1, 3.2, 3.3, 3.5**) · F-ROUTE-001 (My route: the map of progress; shows the plan's week on its Home strip and page; owns the Home stack order; `AMENDMENTS-PLC-PLAN-HANDOFF.md` amends this spec, FP-B1 to FP-B15) · F-HW-001 section 3.3 and 3.4 (anti-shame, one explicit assignment per day, gating) · F-TCH-001 section 3.3, 3.5, 3.6 (class plans, stacking, aggregates only) · F-PLC-001 (the placement level is this spec's `level`; `questsPlacedOutAtLevel`, `RouteCatalog`) · F-QUEST-002 (Stage 1 = 15 quests, `teaches` symbol keys, Hangul Check) · F-STORY-001 / F-STORY-004 / F-STORY-005 (24 heritage stories, shelf, tags) · F-VOC-001..005 (12 vocabulary topics) · F-LEARN-001 (`levelOrder`) · F-I18N-001 (all copy through messages) · F-RVW-001 (review items later) · F-SPACE-001 (spaces) · F-CONSOLE-001 (static export, `?id=` routes) · design inputs `curriculum-planner.md`, `level-test.md` · blueprint 04 section 0.4 (stage order linear, theme order free), section 4.3 (Stage 1 minutes), section 8.1 (motivation) · blueprint 05 section 1.4
 
 ---
 
@@ -74,7 +74,7 @@ export const CurriculumParamsSchema = z.object({
 }).superRefine(/* sessionDays unique; weeks * sessions <= 260; each daysOff.from <= to; startDate valid */);
 ```
 
-Presets and defaults (`curriculum/presets.ts`, exported constants, one test each):
+Presets and defaults (`curriculum/presets.ts`, exported constants, one test each). Length presets are **choices**; `generateCurriculum` pre-selects none. The **recommended** length comes from `proposeRoute` (section 3.1a): `DEFAULT_SHORT_MAX = 4`, `DEFAULT_TERM_MAX = 16`. **Pace presets** `PACES = { gentle: 2, steady: 3, brisk: 4 }` sessions a week; the default pace is `gentle` for levelOrder 0 and for classes, `steady` otherwise (OD-13). The audience rhythm row of the defaults table changes accordingly (self 4 -> steady 3). (FP-B2)
 
 | Preset | `weeks` | Meaning |
 |---|---|---|
@@ -87,9 +87,40 @@ Presets and defaults (`curriculum/presets.ts`, exported constants, one test each
 |---|---|---|---|
 | `class` | 2 (a class day and a homework day; the wizard asks for the weekdays) | 15 (10 when most of the roster has `levelOrder` 0) | `unlockedStages` from the class's entitlement (`group_license`, `/teach/billing`) |
 | `family` | 3 | 10 for *Pictures first*, else 15 | per learner; level prefilled from that learner's summary |
-| `self` | 4 | 15 | level prefilled from the newest placement result |
+| `self` | 3 (pace `steady`; was 4, FP-B2) | 15 | level prefilled from the newest placement result |
 
 `minutesPerSession` does not add items (one item per session); it feeds the estimates (section 3.3) and the warning `session-too-short`.
+
+### 3.1a `proposeRoute` (`curriculum/propose.ts`, pure, 100 % covered) (FP-B3)
+
+```ts
+export interface ProposeInput {
+  audience: 'class' | 'family' | 'self';
+  seed: Pick<RouteSeed, 'level' | 'oralStage' | 'placedOutQuestIds' | 'themeOrder' | 'startQuestId'> | null;   // effectiveRoute with real completions; null = no level check (stage1 band 0)
+  motivation?: Motivation;
+  completedQuestIds: readonly string[];          // single learner; empty for a class
+  levelOrder: 0 | 1 | 2 | null;                  // D1: pre-selects the pace and minutes only
+  pace?: 'gentle' | 'steady' | 'brisk';          // the chip the learner picked; absent = the default
+  rosterLevelOrders?: readonly (0 | 1 | 2)[];
+  unlockedStages: readonly StageKey[];
+  catalog: Catalog; today: DateKey;
+  existing?: { meta: CurriculumMeta; items: PlanItem[] } | null;
+}
+export type DurationId = '4-week' | '12-week' | '6-month';
+export interface DurationOption { id: DurationId; weeks: 4 | 12 | 26; stats: Pick<CurriculumDraft['stats'], 'lessons' | 'stories' | 'comingSoonItems' | 'openSessions' | 'endsAtStage'>; lastLessonWeek: number; lastContentWeek: number; preview: 'lessons-and-stories' | 'lessons-cut-short' | 'lessons-then-free-practice' | 'stories-and-words'; warnings: WarningCode[] }
+export interface RouteProposal {
+  kind: 'new' | 'update' | 'unchanged';
+  headline: 'start-stage1' | 'continue-stage1' | 'stories-and-words' | 'beyond-content';
+  pace: 'gentle' | 'steady' | 'brisk';
+  params: CurriculumParams;
+  options: readonly [DurationOption, DurationOption, DurationOption];
+  defaultId: DurationId;
+  diff?: { itemsRemoved: number; itemsAdded: number; newStartQuestId: string | null };   // 'update' only
+}
+export function proposeRoute(input: ProposeInput): RouteProposal | null;   // null = nothing ready to schedule
+```
+
+Rules: (1) `params`: the pace's sessions a week, the minutes of section 3.1, `level`, `placedOutQuestIds`, `goals` from the seed, `startDate = today` (class: next class day), no `sessionDays`. (2) `defaultId` by the rule of `AMENDMENTS-PLC-PLAN-HANDOFF.md` section 1.1 from a 52-week probe. (3) `options` are three real drafts; each `preview` code follows section 1.3 of `AMENDMENTS-PLC-PLAN-HANDOFF.md`. (4) With `existing`: `unchanged` when `regenerateFrom(..., { mode: 'reseed', paramsPatch })` yields the same future items, else `update` with the length and end date of `existing`. **Without an override** the level never decreases and `placedOutQuestIds` is a superset; **with an override** the placed-out set may shrink, the put-back quests go into the future queue, and `diff.itemsAdded` counts them. (5) `null` when the draft schedules no ready item. (6) No clock, no randomness, no locale.
 
 ### 3.2 The shared catalogue (`packages/content-schema/src/catalog/`)
 
@@ -121,7 +152,7 @@ export const CatalogSchema = z.object({ version: z.number().int().positive(), ce
 export function generateCurriculum(params: CurriculumParams, catalog: Catalog, opts?: { freezeBefore?: DateKey; history?: PlanItem[]; historyWeeks?: WeekMeta[] }): CurriculumDraft;
 export function toPlanItems(draft: CurriculumDraft): PlanItem[];          // flattened, ordered by date
 export function toMeta(draft: CurriculumDraft): CurriculumMeta;
-export function regenerateFrom(plan: { meta: CurriculumMeta; items: PlanItem[] }, today: DateKey, catalog: Catalog, opts: { mode: 'shift' | 'requeue'; completedQuestIds?: string[] }): CurriculumDraft;
+export function regenerateFrom(plan: { meta: CurriculumMeta; items: PlanItem[] }, today: DateKey, catalog: Catalog, opts: { mode: 'shift' | 'requeue' | 'reseed'; completedQuestIds?: string[]; paramsPatch?: Partial<Pick<CurriculumParams, 'level' | 'placedOutQuestIds' | 'goals'>> }): CurriculumDraft;
 export const GENERATOR_VERSION = 1;
 ```
 
@@ -167,6 +198,8 @@ export const CurriculumDraftSchema = z.object({ params: CurriculumParamsSchema, 
 10. **`toPlanItems`** orders by date; a coming-soon item gets `note: "Coming soon"` (the UI shows the episode title from the catalogue); other items have no note. At most 260 items (`CURRICULUM_MAX_ITEMS`).
 
 **`regenerateFrom`** (re-pacing, section 3.7) is the same generator with `freezeBefore = today`: sessions dated before `today` keep their items (history, copied from `plan.items`), week kinds before the current week keep their `WeekMeta`, the cadence counters (`sinceCulture`, `sinceVocab`, `newSinceReview`) are rebuilt from those weeks, and the end date is unchanged. `mode: 'shift'`: the unit queue is the plan's own items dated `today` or later, in their existing order (lessons, stories, coming-soon items), laid onto the remaining sessions; anchor stories whose festival is still ahead keep their anchor week. `mode: 'requeue'`: the queue is rebuilt from the catalogue minus the done set (`completedQuestIds` plus history that is done), so unfinished past items return to the front. Items that no longer fit fall off the tail and raise `fewer-sessions-than-units`; the re-pace dialog offers **Add N weeks** (`params.weeks + N`, same call) to keep them.
+
+`mode: 'reseed'` (after a retake or an override): `paramsPatch` replaces the stored `level` (never lower) and `placedOutQuestIds` (a superset, except after an override, which may remove ids); history before `today` is frozen; the future queue is rebuilt from the catalogue minus the done set, minus the patched placed-out set, minus every item dated before today; the end date is unchanged. A `reseed` with an empty patch equals `shift`. (FP-B4)
 
 ### 3.4 Worked examples (golden tests: `__tests__/curriculum-golden.test.ts` with a frozen `fixtures/catalog-2026-10.ts`)
 
@@ -216,14 +249,14 @@ Both examples use the catalogue as specified today: Stage 1 = 15 quests (F-QUEST
 | 20 | 02-22 to 02-28 | review | Review and collect | - | - |
 | 21 to 26 | 03-01 to 04-11 | learn | Free practice | - | words: School; Body; Nature; Travel; Sports; K-culture |
 
-Stats: 29 ready items (5 lessons, 24 stories), 5 coming-soon items, 132 planned minutes of 1,170 available, 5 review weeks, 3 culture weeks, 11 vocabulary weeks, 29 open sessions, ends at Stage 1. `locked`: `quest:stage2-life-q1`, `quest:stage2-nature-q1`, `quest:stage4-rites-q1`. Warnings: `coming-soon-included` {week 13, 5}, `content-runs-out` {week 15}, `premium-needed` {3}. **This is the honest picture of today's content:** about five weeks of lessons and stories at three a week, then free practice with the 12 word topics. The preview says so in plain words (section 3.8); it never pads the plan with placeholders beyond five episodes.
+Stats: 29 ready items (5 lessons, 24 stories), 5 coming-soon items, 132 planned minutes of 1,170 available, 5 review weeks, 3 culture weeks, 11 vocabulary weeks, 29 open sessions, ends at Stage 1. `locked`: `quest:stage2-life-q1`, `quest:stage2-nature-q1`, `quest:stage4-rites-q1`. Warnings: `coming-soon-included` {week 13, 5}, `content-runs-out` {week 15}, `premium-needed` {3}. **This is the honest picture of today's content:** about fourteen weeks hold lessons, stories and the first coming-soon items (plus the Seollal story in week 17); free practice starts in week 15, with the 12 word topics. (E-2; the golden test is authoritative.) The preview says so in plain words (section 3.8); it never pads the plan with placeholders beyond five episodes.
 
 ### 3.5 Mapping onto F-PLAN-001 plans (additive)
 
 - **`PlanItemSchema`** gains `week: z.number().int().min(1).max(52).optional()`. `kind` stays `'quest' | 'episode'` (stories are shelf quests, coming-soon cells are episodes; a `review` kind comes with F-RVW-001, D11).
 - **`CurriculumMetaSchema`** = `{ kind: 'curriculum', generatorVersion, catalogVersion, params, weeks: WeekMeta[], horizonDays: z.number().int().min(1).max(28).default(7), repacedAt: string | null }`. About 10 KB for 52 weeks.
 - **Cap.** `CURRICULUM_MAX_ITEMS = 260`. `PlanSchema` and `PlanUpsertSchema` keep `.min(1)` and replace `.max(PLAN_MAX_ITEMS)` by `.max(CURRICULUM_MAX_ITEMS)` plus a `superRefine`: with `meta === null` more than `PLAN_MAX_ITEMS` (30) items is an issue, exactly as today. `PlanSchema` and `InboxPlanSchema` gain `meta: CurriculumMetaSchema.nullable().default(null)`; `PlanUpsertSchema` gains `meta: CurriculumMetaSchema.nullable().optional()` (absent on an update = keep the stored meta, `null` = turn the plan into a classic one, which the item-cap refinement then checks), so an older console or cached page that omits the field cannot silently strip a route's meta. `toMeta` stores `params` without `completedQuestIds` (a device-side fact: it is passed to `regenerateFrom` when needed, never persisted on the server or in a plan row).
-- **D1.** Migration `apps/api/migrations/0004_plan_meta.sql`: `ALTER TABLE plans ADD COLUMN meta_json TEXT;` (NULL = a classic plan). `d1.ts` `toPlan` parses `meta_json`, `putPlan` writes it and updates it on conflict (`d1.ts:50, 218-222`); the memory adapter needs no change (`clone`); the db contract test (`db/__tests__/db-contract.test.ts:136-147`) gains a meta round trip.
+- **D1.** Migration `apps/api/migrations/0006_plan_meta.sql` (E-1: the next free number; `0004_waitlist.sql` exists and F-SPACE-002 T-3b holds `0005_class_transfer.sql`; if another migration lands first, P2-4 takes the next free number when it is opened, the order is decided at merge, and `scripts/check-migrations.mjs` fails CI on a duplicate prefix): `ALTER TABLE plans ADD COLUMN meta_json TEXT;` (NULL = a classic plan). `d1.ts` `toPlan` parses `meta_json`, `putPlan` writes it and updates it on conflict (`d1.ts:50, 218-222`); the memory adapter needs no change (`clone`); the db contract test (`db/__tests__/db-contract.test.ts:136-147`) gains a meta round trip.
 - **Routes.** `plansRoutes.put('/:id/plans')` copies `meta` through on create and update (the item cap is the schema's); `inboxPlansFor` adds `meta` to the inbox row and passes the `week`-bearing items through (`routes/plans.ts:24-59, 83-95`).
 - **Capability gate (old apps never see a long plan).** An app that does not know the horizon would derive every dated item at once. The inbox route accepts `?cap=curriculum`; plans with a non-null `meta` are returned **only** when it is present (`routes/sync.ts:103-124`; the app adds the parameter in `platform/sync-api.ts:236`, `getInbox`). Without it a curriculum plan is simply absent, so an old app keeps working on classic plans and the roster shows the plan as "waiting for the next sync" for that learner.
 - **Roster redaction.** `routes/spaces.ts:382` returns `summary: redactSummary(snapshot?.summary ?? null, space.kind)`: `selfRoute` is removed unless `space.kind === 'family'` (section 3.10).
@@ -241,7 +274,7 @@ Stats: 29 ready items (5 lessons, 24 stories), 5 coming-soon items, 132 planned 
 Display fixes (three commits inside PR P2-5):
 
 - `assignmentsForToday` (`assignment-merger.ts:35-45`) takes pending assignments with `targetDate <= today` (carry-over, matching `groupAssignments`, `assignment-groups.ts:36`), sorted by the precedence of rule 3. A learner who skips a day sees the unfinished item on Home the next day; nothing is shown as late (`dueLabel` already says "Today" for past dates, `:48-53`).
-- Home counts `groupAssignments(snap.homework, today).today.length` (`HomeScreen.tsx:105`) and the Homework line uses the same number (`:222`).
+- Home counts `groupAssignments(snap.homework, today).today.length` instead of every pending homework item with no date filter (today's count, `HomeScreen.tsx:110`), and the Homework line (`:215`) uses the same number. (E-3)
 - The Homework list shows at most three items under "Today" and, below them, one neutral line "More are waiting. They come one at a time." (no number); "Coming up" shows only the next seven days, followed by one collapsed row "Later on your route" (no list of 70) (`HomeworkScreen.tsx:62-93`). The route label `assignedByLabel` returns "Your route" for ids with the `route:` prefix and keeps "From class", "From home" (`assignment-groups.ts:56-65`).
 
 `summarize` keeps `planProgress` for `plan:` sources; `total` for a curriculum means "scheduled so far". The console knows the full length from the plan (`items.length`) and words the readout "4 / 6 so far - 36 planned" (section 3.8). `selfRoute` summary is computed by `selfRouteProgressOf(snapshot, notReady)`.
@@ -255,14 +288,16 @@ Display fixes (three commits inside PR P2-5):
 - **New content.** A coming-soon episode that ships needs no regeneration: its `episode` item expands to the new quests at derivation (`plan-derivation.ts:72`). The wizard offers **Refresh route** (a normal `regenerateFrom` with `mode: 'shift'` and the current catalogue) when `catalogVersion` is older than the app's.
 - **Per-learner overrides** inside a class plan stay out of scope (F-PLAN-001 section 4).
 
+**Hoya check-in** (P2-7b, OD-13): once, at the start of week 5 of an active self plan, a positive card offers a pace change computed from sessions actually finished in weeks 1-4: fewer than half -> "Want a lighter week?" (Gentle); every session -> "Want to go a bit faster?" (one step up). It never names a missed or late session, can be closed with **Not now**, and applies through `regenerateFrom(..., 'shift')` with the new sessions a week. (FP-B14)
+
 ### 3.8 Console wizard (class and family): `/teach/space/curriculum?id=`
 
 New page `apps/web/src/app/teach/space/curriculum/page.tsx` (a client page like the plan builder, `?id=` routing, `ROUTES.spaceCurriculum(id)` in `lib/console/routing.ts`); logic in `apps/web/src/lib/console/curriculum.ts` (pure, tested): `defaultsFor(audience, learners)`, `toParams(state)`, `levelHint(learners)`, `levelFromSummary(summary)`, `previewRows(draft, catalog)`, `weekLabel(...)`, `readoutLine(row, planned)`. Wireframe `curriculum-planner.md`. `unlockedStages` for the generator comes from the space's entitlement: `unlockedStagesForSpace(entitlements, spaceId, now)` in the same file returns all seven stages when `api.entitlements()` (`lib/console/api.ts:193`) holds an active entitlement (`isActive`, `lib/console/billing.ts:44-50`) for this space or its school, else `['stage1']` (assumption 9a).
 
-1. **Starting point.** Six cards (no jargon): *Brand new* (`stage1`/0), *Knows some letters* (`stage1`/1), *Knows all the letters* (`stage1`/2), *Reads words* (`stage1`/3), *Reads first words* (`stage2`/0), *Reads first sentences* (`stage3`/0). A quiet hint when 3 or more learners have a summary: "Most of your students start here: ..." (`levelHint` = the most frequent `summary.placement.level`, else from `stage1.questsDone / questsTotal`; never a list, never a ranking). For a family space the wizard first picks the learner and prefills from that learner's summary.
-2. **Length and rhythm.** Chips *4 weeks*, *12 weeks*, *6 months*, *Choose weeks*; start date; weekday chips (class: a class day + a homework day); minutes per session (5 to 30); *Days off* (add date ranges; shown as removed sessions).
+1. **Starting point.** Six cards (no jargon): *Brand new* (`stage1`/0), *Knows some letters* (`stage1`/1), *Knows all the letters* (`stage1`/2), *Reads words* (`stage1`/3), *Reads first words* (`stage2`/0), *Reads first sentences* (`stage3`/0). A quiet hint when 3 or more learners have a summary: "Most of your students start here: ..." (`levelHint` = the most frequent `summary.placement.level`, else from `stage1.questsDone / questsTotal`; never a list, never a ranking). For a family space the wizard first picks the learner and prefills from that learner's summary. The wizard prefills start, themes, focus and motivation from `proposeRoute` using `levelFromSummary(summary)` (coarse mapping); for a family space the learner is picked first. (FP-B5)
+2. **Length and rhythm.** Pace chips *Gentle*, *Steady*, *Brisk* and length chips *4 weeks*, *12 weeks*, *6 months*, *Choose weeks*, with the recommended ones pre-selected and tagged *Suggested*, and one honest preview line under each length (FP-B5); start date; weekday chips (class: a class day + a homework day); minutes per session (5 to 30); *Days off* (add date ranges; shown as removed sessions).
 3. **Goals.** Focus chips (*Read Hangul*, *First words*, *Culture and stories*, *A bit of everything*), theme chips (order = priority), *Mark Korean holidays* (culture anchors, default on), and *Include lessons that are not released yet* (default on for every audience, with the line "New episodes appear as they are released.").
-4. **Preview.** The week table of section 3.4 (week, dates, kind badge, lesson / story titles in the UI language, extras), stats ("18 lessons and stories - about 80 minutes - ends in Stage 2"), and the warnings in plain words: *No new episodes yet from week 15 - free practice and word topics fill those weeks*, *5 episodes are not released yet and start on their dates once they are*, *3 lessons need Premium and are not in the plan*, *2 lessons did not fit - add a week or a session*. Premium items link to `/teach/billing` for a class. Buttons: **Use this route** and **Change something** (back). Pressing **Use this route** saves a **draft** (`api.savePlan(spaceId, { title, items, meta, publish: false })`) and opens the plan builder on it (`?id=<space>&plan=<planId>`).
+4. **Preview.** The week table of section 3.4 (week, dates, kind badge, lesson / story titles in the UI language, extras), stats ("18 lessons and stories - about 80 minutes - ends in Stage 2"), and the warnings in plain words: *No new episodes yet from week 15 - free practice and word topics fill those weeks*, *5 episodes are not released yet and start on their dates once they are*, *3 lessons need Premium and are not in the plan*, *2 lessons did not fit - add a week or a session*. Premium items link to `/teach/billing` for a class. Buttons: **Use this route** and **Change something** (back). Pressing **Use this route** saves a **draft** (`api.savePlan(spaceId, { title, items, meta, publish: false })`) and opens the plan builder on it (`?id=<space>&plan=<planId>`). When a family-space learner has a newer `summary.placement` than the plan's level, the learner card shows 'Sam's newest check found a later place to start' with **Update the plan** (`reseed`, console mode). Class plans are not updated per learner. (FP-B5)
 5. **Plan builder** (changes to `plan/page.tsx` and `lib/console/plans.ts`): items of a plan with `meta` are grouped under week headers (label, dates, kind badge, extras); the per-item ↑ ↓ × date and note controls stay; **Spread dates** is hidden for curricula (dates come from the calendar; editing one date is allowed and survives until the next re-pace); a plan switcher lists the active route first, then other live plans, then drafts (replacing "newest only", `plans.ts:60-67`); Publish, Save draft and Archive are unchanged.
 6. **Readout** (published): a **This week** block first (the items whose week contains today, per learner `done / so far`), then a collapsible week list; `readoutLine` becomes "4 / 6 so far - 36 planned" when `meta` exists; **Re-pace from today**; no ranking, no percentage, learners in activity order (`plans.ts:89-109`).
 7. **Entries.** Roster: **Plan this term** next to the weekly plan button (`app/teach/space/page.tsx:132`); plan builder empty state: **Start from a template** (the room left in `design/wireframes/console/plan-builder.md`); family home (`/teach/home`): the same link per learner.
@@ -273,10 +308,11 @@ Console copy is English in `messages/en/console.ts` (`console.curriculum.*`) and
 
 ### 3.9 In-app self-route (`screens/route/`, `flags.routeEnabled`)
 
-- **Entry.** Profile -> **Plan my route** (`ProfileScreen.tsx`, a row near the sound switch; a grown-up gate only when `gateRequired` for a child profile, F-LEARN-001; a self profile opens it directly), and the Home route card's **Set up my route** when no route exists and at least one quest is done. `PinEntry.next` gains `'RouteSetup'` (`navigation/types.ts:20`). New root screens `RouteSetup`, `RoutePreview`, `RouteOverview` (`navigation/root.tsx:47-61`).
-- **Setup** (large-chip steps, the console wizard's four steps with the same defaults for `self`): where to start (prefilled from the newest placement result, else *Brand new*), time (minutes, days of the week), how long (*4 weeks*, *12 weeks*, *6 months*), what you like (focus and themes). **Preview** shows the first four weeks expanded, the stats and the warnings of section 3.8 in the UI language (the `premium-needed` warning is **never** worded or shown on this learner screen: a learner sees only "More lessons are coming" for the locked and coming-soon parts; the Premium wording exists only in the grown-up console wizard), then **Start this route**: `routeStore.create(profileId, draft)` stores the `SelfRoute` in the snapshot (`progress-store.setSelfRoute`), derives the first week, fires `route.created`.
-- **Home.** A route card between the mission cards and the progress bar (at most one quiet card there: F-PLC-001's level-check card shows first while it is eligible, then this one): "This week on your route" with a row of fill-only dots (one per item of the week; no fraction text) and **Open route**. Card (2) follows the route through the normal merge (section 3.6); a learner can always play anything else.
-- **Overview.** Weeks as a vertical path (the current week first, later weeks collapsed): labels, kind badges, items, extras (an optional word topic opens the Library topic when F-VOC ships). Buttons: **Move my plan along** (manual re-pace), **Stop this route** (archives it, pending route assignments are removed, history stays). Never the words behind, late, missed, overdue; the level is never named to a child ("We found a path for you").
+- **Entry.** Profile -> **Make a weekly plan** (`ProfileScreen.tsx`, a row near the sound switch; a grown-up gate only when `gateRequired` for a child profile, F-LEARN-001; a self profile opens it directly), and the Home prompt **Hoya can make a weekly plan for you** (eligibility and dismissal: F-PLC-001 AM-6), Profile's **Make a weekly plan** row (always), the result-screen strip and the gated report card (AM-1, AM-5). `PinEntry.next` gains `'RouteProposal'` and `'RouteSetup'` (`apps/mobile/src/navigation/types.ts:5`). (FP-B6, FP-B15) New root screens `RouteSetup`, `RoutePreview`, `RouteOverview` (`navigation/root.tsx:47-61`).
+- **Proposal.** `RouteProposal { source: 'placement' | 'home' | 'profile' | 'parent', profileId, mode?: 'new' | 'update' }` (`screens/route/RouteProposalScreen.tsx`, wireframe `route/proposal.md`) shows `proposeRoute`: the headline, the pace chips, three length cards (recommended pre-selected, tagged 'Hoya suggests', each with its preview line), the start day, a disclosure **Change days and time**, the first week as a short list, **Start this plan** and **Not now** (dismisses, AM-6). Learner screens never show `premium-needed`, a price or the word Premium. The four setup steps below remain for **Change the plan**, prefilled from the proposal. (FP-B6)
+- **Setup** (large-chip steps, the console wizard's four steps with the same defaults for `self`): where to start (prefilled from `effectiveRoute`, else *Brand new*; themes, focus and motivation prefilled too) (FP-B6), time (minutes, days of the week), how long (*4 weeks*, *12 weeks*, *6 months*), what you like (focus and themes). **Preview** shows the first four weeks expanded, the stats and the warnings of section 3.8 in the UI language (the `premium-needed` warning is **never** worded or shown on this learner screen: a learner sees only "More lessons are coming" for the locked and coming-soon parts; the Premium wording exists only in the grown-up console wizard), then **Start this plan** (FP-B15): `routeStore.create(profileId, draft)` stores the `SelfRoute` in the snapshot (`progress-store.setSelfRoute`), derives the first week, fires `route.created`.
+- **Home.** Before a plan exists the Home card is only the prompt (above). **Once a plan exists there is no separate Home plan card**: its week appears as one line in F-ROUTE-001's My route strip ('Week 3 of your weekly plan'), and the week dots of the former card are dropped (they fill with calendar time and reset weekly). Card (2) follows the plan through the normal merge (section 3.6); a learner can always play anything else. (FP-B6)
+- **Overview.** Weeks as a vertical path (the current week first, later weeks collapsed): labels, kind badges, items, extras (an optional word topic opens the Library topic when F-VOC ships). Buttons: **Move my plan along** (manual re-pace), **Stop this plan** (FP-B15; archives it, pending route assignments are removed, history stays). Never the words behind, late, missed, overdue; the level is never named to a child ("We found a path for you").
 - **Storage.** In the progress snapshot (`selfRoute`), so it rides sync, the backup file and Rescue Code restore (`schemas/sync.ts:88-95`); no extra storage key. Derived assignments live in `snapshot.homework` like any other.
 - **Class devices and free tier.** `unlockedStages` comes from `unlockedStagesFor(now, learnerId)` (`store/plan-store.ts:34-37`).
 
@@ -290,10 +326,10 @@ Console copy is English in `messages/en/console.ts` (`console.curriculum.*`) and
 
 - **Offline.** The generator and the catalogue are bundled and pure; the wizard preview and the self-route setup work with no network; saving a console plan needs the API (existing error path, `COPY.cantReach`); the self-route is saved locally and syncs later.
 - **Empty and error states.** No ready content for the chosen level and stage range -> the preview shows only the warnings and a **Change something** button (never a blank page); `weeks * sessions` above 260 items -> a plain message on step 2 ("That is more than a plan can hold. Choose fewer weeks or sessions."); the wizard does not accept a start date earlier than today (the generator itself accepts any date and treats it as given); an unknown level -> *Brand new*; a stale `catalogVersion` -> **Refresh route**; the catalogue parity test guards drift.
-- **Accessibility.** Chips and cards at least 64 dp / 44 px with visible selected state and `role="radio"` / `radio`; the week table is a real table on the web (header cells, row scope) and a list with grouped headings in the app; badges carry text, never colour only; focus order follows the steps; reduced motion has no animation to remove; target sizes and type follow `touchTarget` tokens and the 18 pt body floor; the Home dots have an accessible label ("2 of 3 done this week" for screen readers, where a spoken count is fine).
+- **Accessibility.** Chips and cards at least 64 dp / 44 px with visible selected state and `role="radio"` / `radio`; the week table is a real table on the web (header cells, row scope) and a list with grouped headings in the app; badges carry text, never colour only; focus order follows the steps; reduced motion has no animation to remove; target sizes and type follow `touchTarget` tokens and the 18 pt body floor; the Home dots are dropped with the Home plan card (FP-B6), so no week count is read out.
 - **Privacy.** The route holds only ids, dates and the params above (no names); it never leaves the device except inside the snapshot, and the summary exposes counts only.
 - **Copy.** All strings through `messages` (F-I18N-001), plain Pre-A1 English; no "kids", no age, no "behind", "late", "overdue", "missed", "failed", "incomplete", "lazy" and none of the F-PAR-001 phrases in any locale; generated titles and warnings are tested against both lists.
-- **Telemetry** (app only; the console has no telemetry client): `route.created` `{ audience: 'self', weeks, sessionsPerWeek, focus, startStage }` and `route.repaced` `{ mode: 'auto' | 'manual', pending }` are added to `TELEMETRY_EVENT_NAMES` (`schemas/telemetry.ts:9-43`) and its exact-list test.
+- **Telemetry** (app only; the console has no telemetry client): `route.created` `{ audience: 'self', weeks, sessionsPerWeek, focus, startStage }` and `route.repaced` `{ mode: 'auto' | 'manual', pending }` are added to `TELEMETRY_EVENT_NAMES` (`schemas/telemetry.ts:9-43`) and its exact-list test. `route.proposed` `{ source, kind: 'new' | 'update', defaultWeeks: 4 | 12 | 26, pace: 'gentle' | 'steady' | 'brisk' }`, `route.proposal_skipped` `{ source }` (Just start / Not now), `route.updated` `{ source: 'retake' | 'override', itemsRemoved, itemsAdded }`. `route.created` gains `from: 'proposal' | 'setup'` and `changed: boolean`. Codes and counts only. Added to `TELEMETRY_EVENT_NAMES` and its exact-list test in P2-4, deployed in the shared Worker deploy D2 (F-ROUTE-001 section 6.0). (FP-B7)
 
 ### 3.12 Behaviours (Given / When / Then)
 
@@ -307,15 +343,21 @@ Console copy is English in `messages/en/console.ts` (`console.curriculum.*`) and
 - **Given** an old app (no `?cap=curriculum`), **then** its inbox contains no curriculum plan and its classic plans are unchanged.
 - **Given** the same learner in a class and a family space with a self-route, **then** the class roster summary has no `selfRoute` and the family roster summary has it.
 - **Given** a self-route with four pending past-dated items, **when** the app opens, **then** it re-paces once that day, quietly, and no screen contains a banned word.
+- **Given** `stage1` band 0 on the frozen fixture at Steady, **then** `12-week` is recommended; **given** band 3, **then** `4-week`; **given** band 0 on today's 8-lesson bundle at Steady, **then** `4-week` with preview `lessons-then-free-practice`. (FP-B8)
+- **Given** a lesson count that makes `lastLessonWeek` 17 or more, **then** `6-month` is recommended without a code change.
+- **Given** a retake whose effective level is lower, **then** `kind: 'unchanged'`.
+- **Given** any sequence of placement results **without** an override, **then** `level` never decreases and `placedOutQuestIds` only grows; **with** an override, put-back quests reappear in the future queue (property test generates overrides).
+- **Given** the console wizard and the app for the same level, pace and tier, **then** `defaultId` and `options` are identical.
+- **Given** a 4-week card whose `lastLessonWeek` is greater than 4, **then** its preview is `lessons-cut-short`, never a finish claim.
 
 ## 4. Out of scope
 
 - A `review` or `replay` plan item kind (a review week holds no items until F-RVW-001 ships; D11 "later"), a `vocab-topic` item kind (topics are extras until F-VOC registers playable quests).
 - Saved or shared templates and a `curriculum_templates` table (a later feature, roadmap section 6 step 5): the three presets and the wizard defaults are the templates for now.
-- Per-learner overrides in a class plan, push notifications, a worksheet PDF (F-TCH-003), the Journey "Your Route" ribbon, holiday tables beyond Hangeul Day, Seollal and Chuseok (Dano and others need a verified lunar table).
+- Per-learner overrides in a class plan, push notifications, a worksheet PDF (F-TCH-003), the Journey 'Your Route' ribbon (owned by F-ROUTE-001: the My route page and its Home strip), holiday tables beyond Hangeul Day, Seollal and Chuseok (Dano and others need a verified lunar table).
 - Making class completion visible to the console beyond `planProgress` counts; mixing a class plan and a self-route into one list.
 - Changing `PLAN_MAX_ITEMS` for classic plans, the builder's weekly flow, or the 3-card Home budget.
-- Fixing the Home "Stage 1 progress" bar label (REVIEW-1 section 9).
+- Fixing the Home 'Stage 1 progress' bar (F-ROUTE-001 R-4b).
 
 ## 5. Tests
 
@@ -331,17 +373,21 @@ Console copy is English in `messages/en/console.ts` (`console.curriculum.*`) and
 | `…/curriculum-copy.test.ts` | unit | every label and warning message for `weekLabel` / `warningText` in en, es, ko passes both banned lists and the F-PAR-001 phrases |
 | `…/plan.test.ts` (extend) | unit | `week`, `meta` nullable default null, 31 to 260 items only with `meta`, inbox plan with `meta`, old payloads parse |
 | `…/sync.test.ts` (extend) | unit | `selfRoute` default null, summary `selfRoute` optional |
-| `…/telemetry.test.ts` (extend) | unit | the two new names |
+| `…/telemetry.test.ts` (extend) | unit | the five new names (`route.created`, `route.repaced`; FP-B7 `route.proposed`, `route.proposal_skipped`, `route.updated`) |
 | `backend/src/__tests__/plans.test.ts` (extend) | integration | meta round trip, 31 to 260 items accepted only with meta, inbox carries meta only with `?cap=curriculum`, classic plans unchanged without it |
 | `backend/src/__tests__/spaces.test.ts` (extend) | integration | roster redaction: family returns `selfRoute`, class and school do not |
 | `backend/src/db/__tests__/db-contract.test.ts` (extend) | contract | plans meta for memory and D1 adapters |
-| `apps/api/src/__tests__` (migration) | integration | `0004_plan_meta.sql` applies on a v3 database; existing rows read with `meta` null |
+| `apps/api/src/__tests__` (migration) | integration | `0006_plan_meta.sql` (or the next free number, E-1) applies on the database at the previous migration; existing rows read with `meta` null |
 | `mobile/src/logic/homework/__tests__/plan-derivation.test.ts` (extend) | unit | horizon window, `total` grows with time, redate pending, drop removed pending, keep completed, self source ids and `system`, class / family mapping |
 | `…/assignment-merger.test.ts`, `assignment-groups.test.ts` (extend) | unit | carry-over `<= today`, precedence order, Today cap of three, upcoming window, route label |
 | `mobile/src/logic/route/__tests__/*.test.ts` | unit, 100 % | `setup-flow` (steps, defaults from placement, validation), `home-card` (dots, visibility), `auto-repace` triggers (3 pending or 7 days, once a day, not during a quest), `summary` (`selfRouteProgressOf`) |
 | `mobile/src/store/__tests__/route-store.test.ts`, `plan-store.test.ts` (extend), `progress-store.test.ts` (extend) | integration | create, archive, derive with a route, merge newest `updatedAt`, `isSubsetOf` |
 | `mobile/src/content/__tests__/catalog-parity.test.ts` | integration | section 3.2 parity with the bundle |
 | `web/src/lib/console/__tests__/curriculum.test.ts` | unit | wizard state to params, `levelHint`, `levelFromSummary`, preview rows, `readoutLine` with planned, plan switcher order |
+| `content-schema/src/__tests__/curriculum-propose.test.ts` | unit, 100 % | `defaultId` at the boundaries (LLW 4, 5, 16, 17); each column of `AMENDMENTS-PLC-PLAN-HANDOFF.md` 1.2 against the frozen fixture and against `routeCatalogOf(CATALOG)`; three real drafts; preview codes incl. `lessons-cut-short`; `existing` -> `update` / `unchanged`; override shrinks and `itemsAdded`; `null` when nothing is ready; determinism; a micro-benchmark gate on `proposeRoute` time (four generator runs) (FP-B10) |
+| `mobile/src/logic/route/__tests__/proposal-flow.test.ts` | unit, 100 % | entry points; visibility by learner type (not device gate); dismissal for 14 days or until the next result; accept-unchanged vs changed telemetry |
+| `web/src/lib/console/__tests__/curriculum.test.ts` (extend) | unit | the wizard preselects `proposeRoute`'s pace and length; same input as the app gives the same `defaultId` |
+| `…/curriculum-copy.test.ts` (extend) | unit | proposal headline and preview strings in en / es / ko pass both banned lists, never Premium on a learner surface, no speaking words |
 | `web/src/data/__tests__/catalog.test.ts` | unit | `catalogLabel`, `questsOf` over the shared catalogue |
 | `mobile/e2e/web/route.spec.ts`, `web/e2e/curriculum.spec.ts` (nightly) | e2e | console: wizard -> preview -> draft -> publish -> a learner device shows this week only; app: setup -> Home card (2) follows the route -> manual re-pace |
 
@@ -354,13 +400,16 @@ Coverage: `packages/content-schema` 100 % (including `curriculum/` and `catalog/
 | PR | Content | Size | Needs |
 |---|---|---|---|
 | P2-1 | `refactor`: move `addDays`, `dateKey`, `spreadDates`, `oneExplicitPerDay` from `apps/web/src/lib/console/plans.ts:5-50` into `packages/content-schema/src/curriculum/dates.ts`; web re-exports (own PR, CLAUDE.md section 10) | S | — |
-| P2-2 | `feat(content-schema)`: `catalog/` (schema, data, `routeCatalogOf`), mobile parity test, frozen fixture | M | F-QUEST-002 Q-6b for the 15 quests (until then data lists 8 and the parity test is the guide) |
-| P2-3 | `feat(content-schema)`: `curriculum/` params, presets, `generateCurriculum`, `regenerateFrom`, `toPlanItems`, golden tests | L | P2-1, P2-2, F-PLC-001 P-3 (`questsPlacedOutAtLevel`; the PR adds the same function if absent) |
-| P2-4 | `feat(content-schema,backend,api)`: `PlanItem.week`, `meta`, cap, snapshot / summary `selfRoute`, the Worker preserve rule for `selfRoute` (shared helper with F-VOC-005 P-1 / F-PLC-001 P-2), telemetry names (+ rows in `TELEMETRY-NAMES-2.md`), migration `0004`, inbox `?cap=`, roster redaction; `docs`: the F-PLAN-001 amendments of this spec's header (sections 3.1, 3.2, 3.3, 3.5). **Deploy (migration, then Worker) before any app or console build** | M | P2-3 |
+| P2-0 | `docs`: `AMENDMENTS-PLC-PLAN-HANDOFF.md` applied (FP-B1 to FP-B15, errata E-1 to E-5); the same PR is F-ROUTE-001 R-0 and F-PLC-001 P-0b | S | — |
+| P2-2 | `feat(content-schema)`: `catalog/` (schema, data, `routeCatalogOf`), mobile parity test, frozen fixture | M | merged (#175) with the 8 shipped quests and a parity test (`catalog/data.ts:9-12`); Q-6a and Q-6b grow `catalog/data.ts` through that test. The F-QUEST-002 dependency for `teaches` is Q-6a (quests 1-3), not Q-6b (E-5) |
+| P2-3a | `feat(content-schema)`: generator, presets incl. `PACES`, `toPlanItems`, the existing goldens (FP-B11) | L | P2-1, P2-2, F-PLC-001 P-3 (`questsPlacedOutAtLevel`; the PR adds the same function if absent) |
+| P2-3b | `feat(content-schema)`: `propose.ts`, `regenerateFrom` `reseed`, the 1.2 goldens, the benchmark gate (FP-B11) | M | P2-3a, OD-12, OD-13 |
+| P2-4 | `feat(content-schema,backend,api)`: `PlanItem.week`, `meta`, cap, snapshot / summary `selfRoute`, the Worker preserve rule for `selfRoute` (shared helper with F-VOC-005 P-1 / F-PLC-001 P-2), telemetry names (+ rows in `docs/roadmap/TELEMETRY-NAMES-2.md`), migration `0006` (E-1: or the next free number when opened), inbox `?cap=`, roster redaction; `docs`: the F-PLAN-001 amendments of this spec's header (sections 3.1, 3.2, 3.3, 3.5). **Deploy (migration, then Worker) before any app or console build** | M | P2-3a |
 | P2-5 | `feat(mobile)`: `withSnapshotDefaults`, derivation (horizon, reconcile, precedence, sources), display fixes (merger, Home count, Homework list), `cap=curriculum` in `getInbox` | M | P2-4 |
-| P2-6 | `feat(web)`: shared catalogue adapter (retires `stage1-catalog.ts`), wizard page, builder week grouping, readout, plan switcher, re-pace, entries | L | P2-4 |
-| P2-7 | `feat(mobile)`: `route-store`, `screens/route/` (setup, preview, overview), Home route card, auto re-pace, summary, flag | L | P2-5 |
-| P2-8 | `test(e2e)` + wireframes promoted + flag flip for beta | S | P2-6, P2-7 |
+| P2-6 | `feat(web)`: shared catalogue adapter (retires `stage1-catalog.ts`), wizard page, builder week grouping, readout, plan switcher, re-pace, entries; wizard pre-selects pace and length with a *Suggested* tag; family learner card 'Update the plan' (FP-B11) | L | P2-4 |
+| P2-7a | `feat(mobile)`: `route-store`, `RouteProposalScreen`, Home prompt with eligibility and dismissal, Profile row, flag (FP-B11). **Lands before F-PLC-001 P-7b**, so the one-tap default plan exists for learners without a level check first | M-L | P2-5, P2-3b |
+| P2-7b | `feat(mobile)`: setup steps, preview, overview, auto re-pace, Hoya check-in (FP-B11) | M | P2-7a |
+| P2-8 | `test(e2e)` + wireframes promoted + flag flip for beta | S | P2-6, P2-7a, P2-7b |
 
 ## 7. Dependencies
 
@@ -401,6 +450,8 @@ Binding owner decisions applied (not re-opened): **D1** audience any age (`level
 8. Home dots for the week assume the existing `Progress`/fill components can render dots without a numeric label; if not, a small design-system addition is needed (flagged for the design step).
 9. The entitlement lookup assumes `EntitlementView` identifies its subject space (the billing page already labels cards per space, `lib/console/billing.ts:11-20`); the exact field names were not read here.
 10. The inbox `?cap=curriculum` approach assumes every shipped app version that can parse `meta` also sends the parameter; an app that parses `meta` without the horizon logic must not ship.
+11. **Default length rule and pace chips** — owner decisions OD-12 and OD-13 (F-ROUTE-001 section 9); the 1.2 table is hand-estimated and pinned by the P2-3b goldens. (FP-B12)
+12. **One-tap plan for a self profile on any device** — OD-14.
 
 ---
 

@@ -204,6 +204,7 @@ Formats (one frame each; romanization and glosses stay hidden unless the learner
 - G2, no quest left for this tier: "You know a lot! More adventures are coming." with `[[ OPEN STORIES ]]` (Library) when a reviewed story exists, else `[[ SEE THE WHOLE MAP ]]`. No purchase button for the learner.
 - G3, retake that does not change the route: "Your route stays right where it is." and the same buttons.
 - A result with parts not tested (no sound, sound guide set to always, ended early) says so in one calm line for grown-ups only (J), never on this screen.
+- **Amended (F-PLC-001 AM-1, AM-2, AM-12, AM-14; F-ROUTE-001 R-0):** the button row above is replaced by `journey/my-route-overview.md` J1 (self profile: weekly plan strip with **Use this plan** as the only primary, **Change**, **Just start**, links **See my route** and **For grown-ups**) and J2 (child profile: **Start**, **See my route**, **For grown-ups: set up a weekly plan**); a not-tested run uses J3's headline. **See the whole map** remains only while `flags.myRouteEnabled` is off. G3's learner line becomes "Your plan stays right where it is." when a plan exists; a retake that raises the start shows K3 there. Promoted later as `placement/result.md`.
 
 ## H. Entry points
 
@@ -262,6 +263,7 @@ Choose a different start (sheet)
 ```
 
 - No comparison with other learners, no "behind" wording (F-PAR-001 section 3.6).
+- **Amended (F-PLC-001 AM-5, AM-12; F-ROUTE-001 R-0):** the report opens with the "Suggested weekly plan" card of `journey/my-route-overview.md` K2 (when `flags.routeEnabled`) and carries the skills note `caregiver.skillsNote` under "What we saw". Promoted later as `placement/report.md`.
 
 ## K. Console roster line (`console/roster`) and the advisory hand-off
 
