@@ -450,7 +450,6 @@ export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce }: P
                     <StoryScene
                       art={art}
                       width={cardArtSize}
-                      variant="thumb"
                       decorative
                       testID={`story-sequence-card-art-${card.id}`}
                     />
