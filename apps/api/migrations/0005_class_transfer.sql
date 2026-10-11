@@ -51,6 +51,7 @@ CREATE TABLE IF NOT EXISTS transfer_requests (
   execute_after        TEXT,                                -- l_at + 48 h
   ended_at             TEXT,                                -- declined | cancelled | expired only
   executed_at          TEXT,
+  CHECK (source_space_id <> dest_space_id),                 -- a move into the class being left would end in no class
   CHECK (status NOT IN ('approved','executed') OR (l_state = 'consented' AND s_state IN ('consented','not_required') AND d_state = 'consented')),
   CHECK (status <> 'executed' OR executed_at IS NOT NULL),
   CHECK (status NOT IN ('declined','cancelled','expired') OR (end_reason IS NOT NULL AND ended_at IS NOT NULL)),

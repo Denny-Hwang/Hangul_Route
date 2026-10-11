@@ -78,9 +78,20 @@ function transferContract(name: string, make: () => Db): void {
       });
 
       it('an illegal row is refused by the CHECKs and leaves neither the row nor the event (one transaction)', async () => {
-        await expect(db.createTransfer(learnerSideRow({ status: 'approved' }), created)).rejects.toThrow(/CHECK/i);
-        await expect(db.createTransfer(learnerSideRow({ status: 'declined' }), created)).rejects.toThrow(/CHECK/i);
-        await expect(db.createTransfer(sourceRow({ status: 'executed', learner: learnerSideRow().learner, destination: { state: 'consented', at: T0, accountId: 'teacher-b', via: 'owner' } }), created)).rejects.toThrow(/CHECK/i);
+        const unrecorded = { ...learnerSideRow().learner, textVersion: null };
+        await expect(db.createTransfer(learnerSideRow({ learner: unrecorded }), created)).rejects.toThrow(/CHECK/i);
+        // a move into the class the learner is leaving would end with the learner in no class
+        await expect(db.createTransfer(learnerSideRow({ destSpaceId: SOURCE }), created)).rejects.toThrow(/CHECK/i);
+        expect(await db.getTransfer(ID)).toBeNull();
+        expect(await db.transferEvents(ID)).toEqual([]);
+        expect(await db.createTransfer(learnerSideRow(), created)).toBe('created');
+      });
+
+      it('inserts only a new requested row: any other status cannot skip the consent and promote steps', async () => {
+        const allIn = { learner: learnerSideRow().learner, destination: { state: 'consented' as const, at: T0, accountId: 'teacher-b', via: 'owner' as const } };
+        await expect(db.createTransfer(sourceRow({ status: 'approved', ...allIn, approvedAt: T0 }), created)).rejects.toThrow(/requested/);
+        await expect(db.createTransfer(learnerSideRow({ status: 'declined', endReason: 'declined_source', endedAt: T0 }), created)).rejects.toThrow(/requested/);
+        await expect(db.createTransfer(sourceRow({ status: 'executed', ...allIn, executedAt: T0 }), created)).rejects.toThrow(/requested/);
         expect(await db.getTransfer(ID)).toBeNull();
         expect(await db.transferEvents(ID)).toEqual([]);
         expect(await db.createTransfer(learnerSideRow(), created)).toBe('created');
@@ -99,6 +110,19 @@ function transferContract(name: string, make: () => Db): void {
         // the second guardian loses the race
         expect(await db.consentSlot(ID, { kind: 'learner', record: consentRecord({ evidence: 'dad' }) }, at(2 * HOUR))).toBe(0);
         expect((await db.getTransfer(ID))?.learner.evidence).toBe('device-a');
+      });
+
+      it('records the introduce option with the learner consent; leaving it out keeps the stored choice', async () => {
+        await db.createTransfer(sourceRow(), created);
+        expect(await db.consentSlot(ID, { kind: 'learner', record: consentRecord(), introduce: true }, at(HOUR))).toBe(1);
+        expect((await db.getTransfer(ID))?.introduce).toBe(true);
+        await db.cancelTransfer(ID, 'withdrawn_learner', 'family', at(HOUR));
+        await db.createTransfer(sourceRow({ id: 'transfer:0002', introduce: true }), created);
+        expect(await db.consentSlot('transfer:0002', { kind: 'learner', record: consentRecord() }, at(HOUR))).toBe(1);
+        expect((await db.getTransfer('transfer:0002'))?.introduce).toBe(true);
+        await db.resetLearnerConsent('transfer:0002', 'terms_changed', at(2 * HOUR));
+        expect(await db.consentSlot('transfer:0002', { kind: 'learner', record: consentRecord(), introduce: false }, at(3 * HOUR))).toBe(1);
+        expect((await db.getTransfer('transfer:0002'))?.introduce).toBe(false);
       });
 
       it('fills a teacher slot once; the second answer is a lost race', async () => {
@@ -164,6 +188,13 @@ function transferContract(name: string, make: () => Db): void {
         await db.promoteTransfer('transfer:0002', at(HOUR));
         expect(await db.declineSlot('transfer:0002', 'destination', 'declined_destination', 'destination', at(2 * HOUR))).toBe(1);
         expect(await db.getTransfer('transfer:0002')).toMatchObject({ status: 'declined', destination: { state: 'declined' }, learner: { state: 'consented' } });
+      });
+
+      it('declineSlot refuses a slot name it does not know, on both backends alike', async () => {
+        await db.createTransfer(learnerSideRow(), created);
+        await expect(db.declineSlot(ID, 'toString' as never, 'declined_source', 'source', at(HOUR))).rejects.toThrow(/slot/);
+        await expect(db.declineSlot(ID, 'teacher' as never, 'declined_source', 'source', at(HOUR))).rejects.toThrow(/slot/);
+        expect((await db.getTransfer(ID))?.status).toBe('requested');
       });
 
       it('cancelTransfer ends a requested or approved request once', async () => {
@@ -293,6 +324,29 @@ function transferContract(name: string, make: () => Db): void {
         await fillClass(db, DEST, 3);
         expect((await db.executeTransfer(executeInput(due, { destCap: Number.POSITIVE_INFINITY }))).executed).toBe(true);
         expect(await db.membership(DEST, 'learner', LEARNER)).not.toBeNull();
+      });
+
+      it('an unlimited learner cap is compared as a finite number on both backends', async () => {
+        await approvedRequest(db);
+        expect((await db.executeTransfer(executeInput(due, { learnerCap: Number.POSITIVE_INFINITY }))).executed).toBe(true);
+        expect(await db.membership(DEST, 'learner', LEARNER)).not.toBeNull();
+      });
+
+      it('moves only from a class into a class: a family destination or a source equal to the destination changes nothing', async () => {
+        // the learner is already in the family, so without the kind check the gate would pass and drop the class
+        await approvedRequest(db, at(HOUR), { destSpaceId: FAMILY });
+        expect((await db.executeTransfer({ ...executeInput(due), destSpaceId: FAMILY })).executed).toBe(false);
+        expect(await db.membership(SOURCE, 'learner', LEARNER)).not.toBeNull();
+        expect((await db.getTransfer(ID))?.status).toBe('approved');
+        await db.cancelTransfer(ID, 'cancelled_initiator', 'family', at(2 * HOUR));
+        await approvedRequest(db, at(2 * HOUR), { id: 'transfer:0002', sourceSpaceId: FAMILY });
+        expect((await db.executeTransfer({ ...executeInput(at(2 * HOUR + TRANSFER_COOLING_OFF_MS)), id: 'transfer:0002', sourceSpaceId: FAMILY })).executed).toBe(false);
+        expect(await db.membership(FAMILY, 'learner', LEARNER)).not.toBeNull();
+        expect(await db.membership(DEST, 'learner', LEARNER)).toBeNull();
+        await db.cancelTransfer('transfer:0002', 'cancelled_initiator', 'family', at(2 * HOUR));
+        await approvedRequest(db, at(3 * HOUR), { id: 'transfer:0003' });
+        expect((await db.executeTransfer({ ...executeInput(at(3 * HOUR + TRANSFER_COOLING_OFF_MS)), id: 'transfer:0003', destSpaceId: SOURCE })).executed).toBe(false);
+        expect(await db.membership(SOURCE, 'learner', LEARNER)).not.toBeNull();
       });
 
       it('counts the learner classes as current minus source; archived classes do not count', async () => {
@@ -428,6 +482,21 @@ function transferContract(name: string, make: () => Db): void {
         expect(await db.lastLearnerRefusal('profile:nobody', at(0))).toBeNull();
       });
 
+      it('lastLearnerRefusal counts only refusals of a source-started request, not the learner side ending its own', async () => {
+        // the learner side withdraws, and a device vetoes, a request the learner side started: no refusal of a teacher
+        await db.createTransfer(learnerSideRow(), created);
+        await db.cancelTransfer(ID, 'withdrawn_learner', 'family', at(DAY));
+        await db.createTransfer(learnerSideRow({ id: 'transfer:0002' }), created);
+        await db.declineSlot('transfer:0002', 'learner', 'declined_learner', 'device', at(2 * DAY));
+        expect(await db.lastLearnerRefusal(LEARNER, at(0))).toBeNull();
+        // a real refusal of a teacher's request stays visible behind a newer self-withdrawal
+        await db.createTransfer(sourceRow({ id: 'transfer:0003' }), created);
+        await db.cancelTransfer('transfer:0003', 'withdrawn_learner', 'family', at(3 * DAY));
+        await db.createTransfer(learnerSideRow({ id: 'transfer:0004' }), created);
+        await db.cancelTransfer('transfer:0004', 'withdrawn_learner', 'family', at(4 * DAY));
+        expect((await db.lastLearnerRefusal(LEARNER, at(0)))?.id).toBe('transfer:0003');
+      });
+
       it('lastEndedForPair finds the latest ended request for the learner and destination', async () => {
         await db.createTransfer(learnerSideRow(), created);
         await db.declineSlot(ID, 'destination', 'declined_destination', 'destination', at(DAY));
@@ -551,6 +620,12 @@ function transferContract(name: string, make: () => Db): void {
         expect(await db.getTransferPrefs(LEARNER)).toEqual({ selfManaged: true, blockTeacherRequests: true, updatedAt: iso(2 * HOUR) });
         await db.setTransferPref(LEARNER, 'selfManaged', false, at(3 * HOUR));
         expect(await db.getTransferPrefs(LEARNER)).toEqual({ selfManaged: false, blockTeacherRequests: true, updatedAt: iso(3 * HOUR) });
+      });
+
+      it('setTransferPref refuses a switch name it does not know, on both backends alike', async () => {
+        await expect(db.setTransferPref(LEARNER, 'toString' as never, true, at(HOUR))).rejects.toThrow(/switch/);
+        await expect(db.setTransferPref(LEARNER, 'learner_id' as never, true, at(HOUR))).rejects.toThrow(/switch/);
+        expect(await db.getTransferPrefs(LEARNER)).toEqual({ selfManaged: false, blockTeacherRequests: false, updatedAt: null });
       });
     });
 

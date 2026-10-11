@@ -17,7 +17,7 @@ import {
   type TransferSlotConsent,
   type WaitlistEntry,
 } from './types';
-import { finiteCap, teacherSlotsOf } from './transfer-rules';
+import { assertNewTransfer, assertTransferPrefKey, assertTransferSlot, finiteCap, teacherSlotsOf } from './transfer-rules';
 import { ENDED_TRANSFER_STATUSES, OPEN_TRANSFER_STATUSES } from './transfer-types';
 
 /** What `run()` resolves to on D1 (`D1Result`): `meta.changes` is the row count the statement wrote. */
@@ -429,6 +429,7 @@ export class D1Db implements Db {
   }
 
   async createTransfer(row: StoredTransfer, event: Omit<NewTransferEvent, 'transferId'>): Promise<'created' | 'already_open'> {
+    assertNewTransfer(row);
     // Insert only while the learner has no open request (the partial unique index is the backstop);
     // the event needs its row and is written once per row; both run in one transaction.
     const [inserted] = await this.batchChanges([
@@ -448,9 +449,10 @@ export class D1Db implements Db {
     const at = now.toISOString();
     if (consent.kind === 'learner') {
       const record = { state: 'consented' as const, at, ...consent.record };
+      const introduce = consent.introduce === undefined ? null : consent.introduce ? 1 : 0;
       return this.changes(
-        `UPDATE transfer_requests SET l_state = 'consented', ${LEARNER_RECORD_COLUMNS.map((c) => `${c} = ?`).join(', ')}, execute_after = ?, updated_at = ?, rev = rev + 1 WHERE id = ? AND ${OPEN} AND l_state = 'pending'`,
-        [...learnerRecordValues(record), new Date(now.getTime() + TRANSFER_COOLING_OFF_MS).toISOString(), at, transferId],
+        `UPDATE transfer_requests SET l_state = 'consented', ${LEARNER_RECORD_COLUMNS.map((c) => `${c} = ?`).join(', ')}, introduce = COALESCE(?, introduce), execute_after = ?, updated_at = ?, rev = rev + 1 WHERE id = ? AND ${OPEN} AND l_state = 'pending'`,
+        [...learnerRecordValues(record), introduce, new Date(now.getTime() + TRANSFER_COOLING_OFF_MS).toISOString(), at, transferId],
       );
     }
     const slots = teacherSlotsOf(consent);
@@ -470,7 +472,8 @@ export class D1Db implements Db {
     return this.changes(`UPDATE transfer_requests SET ${sets.join(', ')}, updated_at = ?, rev = rev + 1 WHERE id = ? AND ${OPEN} AND ${where.join(' AND ')}`, [...params, at, transferId]);
   }
 
-  declineSlot(transferId: string, slot: TransferSlot, endReason: TransferEndReason, endActor: TransferEndActor, now: Date): Promise<number> {
+  async declineSlot(transferId: string, slot: TransferSlot, endReason: TransferEndReason, endActor: TransferEndActor, now: Date): Promise<number> {
+    assertTransferSlot(slot);
     const at = now.toISOString();
     return this.changes(
       `UPDATE transfer_requests SET ${SLOT_STATE_COLUMN[slot]} = 'declined', status = 'declined', end_reason = ?, end_actor = ?, ended_at = ?, updated_at = ?, rev = rev + 1 WHERE id = ? AND ${OPEN}`,
@@ -538,15 +541,17 @@ export class D1Db implements Db {
       [
         `UPDATE transfer_requests SET status = 'executed', executed_at = ?, block_reason = ?, updated_at = ?, rev = rev + 1
          WHERE id = ? AND learner_id = ? AND source_space_id = ? AND dest_space_id = ?
+           AND source_space_id <> dest_space_id
            AND status = 'approved' AND expires_at > ? AND execute_after <= ? AND ${ALL_SLOTS_IN}
            AND EXISTS (SELECT 1 FROM learners WHERE id = ?)
            AND EXISTS (SELECT 1 FROM memberships WHERE space_id = ? AND member_kind = 'learner' AND member_id = ?)
-           AND EXISTS (SELECT 1 FROM spaces WHERE id = ? AND archived_at IS NULL)
+           AND EXISTS (SELECT 1 FROM spaces WHERE id = ? AND kind = 'class')
+           AND EXISTS (SELECT 1 FROM spaces WHERE id = ? AND kind = 'class' AND archived_at IS NULL)
            AND ( EXISTS (SELECT 1 FROM memberships WHERE space_id = ? AND member_kind = 'learner' AND member_id = ?)
                  OR ( (SELECT COUNT(*) FROM memberships WHERE space_id = ? AND member_kind = 'learner') < ?
                       AND (SELECT COUNT(*) FROM memberships m JOIN spaces s ON s.id = m.space_id
                            WHERE m.member_kind = 'learner' AND m.member_id = ? AND s.kind = 'class' AND s.archived_at IS NULL AND m.space_id <> ?) < ? ) )`,
-        [at, token, at, transferId, learnerId, source, dest, at, at, learnerId, source, learnerId, dest, dest, learnerId, dest, finiteCap(input.destCap), learnerId, source, input.learnerCap],
+        [at, token, at, transferId, learnerId, source, dest, at, at, learnerId, source, learnerId, source, dest, dest, learnerId, dest, finiteCap(input.destCap), learnerId, source, finiteCap(input.learnerCap)],
       ],
       [`INSERT INTO memberships (space_id, member_kind, member_id, role, joined_at) SELECT ?, 'learner', ?, 'student', ? WHERE ${guard} ON CONFLICT(space_id, member_kind, member_id) DO NOTHING`, [dest, learnerId, at, ...g]],
       [`DELETE FROM memberships WHERE space_id = ? AND member_kind = 'learner' AND member_id = ? AND ${guard}`, [source, learnerId, ...g]],
@@ -579,7 +584,7 @@ export class D1Db implements Db {
   }
   lastLearnerRefusal(learnerId: string, since: Date): Promise<StoredTransfer | null> {
     return this.one(
-      "SELECT * FROM transfer_requests WHERE learner_id = ? AND end_reason IN ('declined_learner','withdrawn_learner') AND ended_at >= ? ORDER BY ended_at DESC, id DESC LIMIT 1",
+      "SELECT * FROM transfer_requests WHERE learner_id = ? AND initiator = 'source' AND end_reason IN ('declined_learner','withdrawn_learner') AND ended_at >= ? ORDER BY ended_at DESC, id DESC LIMIT 1",
       [learnerId, since.toISOString()],
       toTransfer,
     );
@@ -655,7 +660,8 @@ export class D1Db implements Db {
     const prefs = await this.one('SELECT * FROM learner_transfer_prefs WHERE learner_id = ?', [learnerId], (r): TransferPrefs => ({ selfManaged: bool(r.self_managed), blockTeacherRequests: bool(r.block_teacher_requests), updatedAt: nstr(r.updated_at) }));
     return prefs ?? { selfManaged: false, blockTeacherRequests: false, updatedAt: null };
   }
-  setTransferPref(learnerId: string, which: TransferPrefKey, value: boolean, now: Date): Promise<void> {
+  async setTransferPref(learnerId: string, which: TransferPrefKey, value: boolean, now: Date): Promise<void> {
+    assertTransferPrefKey(which);
     const column = PREF_COLUMN[which];
     return this.run(`INSERT INTO learner_transfer_prefs (learner_id, ${column}, updated_at) VALUES (?, ?, ?) ON CONFLICT(learner_id) DO UPDATE SET ${column} = excluded.${column}, updated_at = excluded.updated_at`, [
       learnerId,

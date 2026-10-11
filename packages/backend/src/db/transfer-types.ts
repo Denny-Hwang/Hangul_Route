@@ -147,7 +147,12 @@ export type NewTransferEvent = Omit<TransferEvent, 'id'>;
  * at the route, section 4.4).
  */
 export type TransferSlotConsent =
-  | { kind: 'learner'; record: LearnerConsentRecord }
+  | {
+      kind: 'learner';
+      record: LearnerConsentRecord;
+      /** The learner side's "Tell {destination} where {learner} is coming from" option (section 4.11); left out keeps the stored value. */
+      introduce?: boolean;
+    }
   | { kind: 'teacher'; slots: ReadonlyArray<'source' | 'destination'>; accountId: string; via: TransferVia };
 
 /** What `executeTransfer` needs besides the row: the caps the SQL cannot compute (section 4.6). */
@@ -159,7 +164,10 @@ export interface ExecuteTransferInput {
   now: Date;
   /** The destination's class cap; `Number.POSITIVE_INFINITY` (unlimited) is compared as 1e9. */
   destCap: number;
-  /** How many other live classes the learner may be in (LEARNER_CLASS_CAP). */
+  /**
+   * LEARNER_CLASS_CAP itself (not CAP - 1): the learner's live classes other
+   * than the source must be below this. `Number.POSITIVE_INFINITY` is compared as 1e9.
+   */
   learnerCap: number;
 }
 

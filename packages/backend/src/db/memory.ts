@@ -1,6 +1,6 @@
 import { TRANSFER_COOLING_OFF_MS, type Entitlement, type EntitlementApply, type MemberKind, type Membership, type Plan, type Space, type TransferBlockReason, type TransferEndReason, type TransferSlot } from '@hangul-route/content-schema';
 import { id, type Account, type Learner, type LearnerDevice, type SnapshotRecord } from '../store';
-import { allSlotsIn, assertTransferChecks, finiteCap, isEndedTransfer, isOpenTransfer, teacherSlotsOf } from './transfer-rules';
+import { allSlotsIn, assertNewTransfer, assertTransferChecks, assertTransferPrefKey, assertTransferSlot, finiteCap, isEndedTransfer, isOpenTransfer, teacherSlotsOf } from './transfer-rules';
 import {
   learnerRateKeys,
   mergeEntitlement,
@@ -205,6 +205,7 @@ export class MemoryDb implements Db {
   }
 
   async createTransfer(row: StoredTransfer, event: Omit<NewTransferEvent, 'transferId'>): Promise<'created' | 'already_open'> {
+    assertNewTransfer(row);
     if ([...this.transfers.values()].some((t) => t.learnerId === row.learnerId && isOpenTransfer(t))) return 'already_open';
     if (this.transfers.has(row.id)) throw new Error('UNIQUE constraint failed: transfer_requests.id');
     if (!this.learners.has(row.learnerId) || !this.spaces.has(row.sourceSpaceId) || !this.spaces.has(row.destSpaceId)) throw new Error('FOREIGN KEY constraint failed: transfer_requests');
@@ -221,7 +222,7 @@ export class MemoryDb implements Db {
       return this.casTransfer(
         transferId,
         (t) => isOpenTransfer(t) && t.learner.state === 'pending',
-        (t) => ({ ...t, learner: { state: 'consented', at, ...clone(consent.record) }, executeAfter, updatedAt: at }),
+        (t) => ({ ...t, learner: { state: 'consented', at, ...clone(consent.record) }, introduce: consent.introduce ?? t.introduce, executeAfter, updatedAt: at }),
       );
     }
     const slots = teacherSlotsOf(consent);
@@ -234,12 +235,13 @@ export class MemoryDb implements Db {
   }
 
   async declineSlot(transferId: string, slot: TransferSlot, endReason: TransferEndReason, endActor: TransferEndActor, now: Date): Promise<number> {
+    assertTransferSlot(slot);
     const at = now.toISOString();
     return this.casTransfer(transferId, isOpenTransfer, (t) => {
       const next: StoredTransfer = { ...t, status: 'declined', endReason, endActor, endedAt: at, updatedAt: at };
       if (slot === 'learner') next.learner = { ...t.learner, state: 'declined' };
       else if (slot === 'source') next.source = { ...t.source, state: 'declined' };
-      else next.destination = { ...t.destination, state: 'declined' };
+      else if (slot === 'destination') next.destination = { ...t.destination, state: 'declined' };
       return next;
     });
   }
@@ -290,6 +292,7 @@ export class MemoryDb implements Db {
     const at = input.now.toISOString();
     const { id: transferId, learnerId, sourceSpaceId: source, destSpaceId: dest } = input;
     const row = this.transfers.get(transferId);
+    const sourceSpace = this.spaces.get(source);
     const destSpace = this.spaces.get(dest);
     const isMember = (spaceId: string): boolean => this.memberships.has(membershipKey(spaceId, 'learner', learnerId));
     const learnersIn = (spaceId: string): number => [...this.memberships.values()].filter((m) => m.spaceId === spaceId && m.memberKind === 'learner').length;
@@ -303,6 +306,7 @@ export class MemoryDb implements Db {
       row.learnerId === learnerId &&
       row.sourceSpaceId === source &&
       row.destSpaceId === dest &&
+      source !== dest &&
       row.status === 'approved' &&
       row.expiresAt > at &&
       row.executeAfter !== null &&
@@ -310,9 +314,10 @@ export class MemoryDb implements Db {
       allSlotsIn(row) &&
       this.learners.has(learnerId) &&
       isMember(source) &&
-      !!destSpace &&
+      sourceSpace?.kind === 'class' &&
+      destSpace?.kind === 'class' &&
       destSpace.archivedAt === null &&
-      (isMember(dest) || (learnersIn(dest) < finiteCap(input.destCap) && otherLiveClasses < input.learnerCap));
+      (isMember(dest) || (learnersIn(dest) < finiteCap(input.destCap) && otherLiveClasses < finiteCap(input.learnerCap)));
     if (!gate || !row) return { executed: false, devicesRevoked: 0, relinksClosed: 0 };
 
     this.transfers.set(transferId, { ...row, status: 'executed', executedAt: at, blockReason: null, updatedAt: at, rev: row.rev + 1 });
@@ -354,7 +359,7 @@ export class MemoryDb implements Db {
   }
   async lastLearnerRefusal(learnerId: string, since: Date): Promise<StoredTransfer | null> {
     const from = since.toISOString();
-    const rows = [...this.transfers.values()].filter((t) => t.learnerId === learnerId && (t.endReason === 'declined_learner' || t.endReason === 'withdrawn_learner') && t.endedAt !== null && t.endedAt >= from);
+    const rows = [...this.transfers.values()].filter((t) => t.learnerId === learnerId && t.initiator === 'source' && (t.endReason === 'declined_learner' || t.endReason === 'withdrawn_learner') && t.endedAt !== null && t.endedAt >= from);
     return clone(rows.sort(latestEnded)[0] ?? null);
   }
   async lastEndedForPair(learnerId: string, destSpaceId: string): Promise<StoredTransfer | null> {
@@ -420,6 +425,7 @@ export class MemoryDb implements Db {
     return clone(this.transferPrefs.get(learnerId) ?? { selfManaged: false, blockTeacherRequests: false, updatedAt: null });
   }
   async setTransferPref(learnerId: string, which: TransferPrefKey, value: boolean, now: Date): Promise<void> {
+    assertTransferPrefKey(which);
     if (!this.learners.has(learnerId)) throw new Error('FOREIGN KEY constraint failed: learner_transfer_prefs.learner_id');
     const current = this.transferPrefs.get(learnerId) ?? { selfManaged: false, blockTeacherRequests: false, updatedAt: null };
     this.transferPrefs.set(learnerId, { ...current, [which]: value, updatedAt: now.toISOString() });

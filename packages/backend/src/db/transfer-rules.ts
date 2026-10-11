@@ -1,4 +1,5 @@
-import { ENDED_TRANSFER_STATUSES, OPEN_TRANSFER_STATUSES, type StoredTransfer, type TransferSlotConsent } from './transfer-types';
+import type { TransferSlot } from '@hangul-route/content-schema';
+import { ENDED_TRANSFER_STATUSES, OPEN_TRANSFER_STATUSES, type StoredTransfer, type TransferPrefKey, type TransferSlotConsent } from './transfer-types';
 
 /*
  * Rules both Db backends share for the class-transfer rows (F-SPACE-002
@@ -25,11 +26,31 @@ export function teacherSlotsOf(consent: Extract<TransferSlotConsent, { kind: 'te
  */
 export function assertTransferChecks(t: StoredTransfer): void {
   const failed =
+    t.sourceSpaceId === t.destSpaceId ||
     ((t.status === 'approved' || t.status === 'executed') && !allSlotsIn(t)) ||
     (t.status === 'executed' && t.executedAt === null) ||
     (isEndedTransfer(t) && (t.endReason === null || t.endedAt === null)) ||
     (t.learner.state === 'consented' && (t.learner.at === null || t.learner.basis === null || t.learner.textVersion === null || t.learner.locale === null || t.learner.evidence === null));
   if (failed) throw new Error(`CHECK constraint failed: transfer_requests (${t.id})`);
+}
+
+/**
+ * A new request is always inserted as `requested`; every later state is
+ * reached through the CAS methods, so a caller cannot skip the consent and
+ * promote steps by inserting an `approved` (or ended) row.
+ */
+export function assertNewTransfer(t: Pick<StoredTransfer, 'id' | 'status'>): void {
+  if (t.status !== 'requested') throw new Error(`createTransfer: a new request must be 'requested' (${t.id} is '${t.status}')`);
+}
+
+/** The slot a decline names, refused when it is not one of the three (the column maps never see caller text). */
+export function assertTransferSlot(slot: string): asserts slot is TransferSlot {
+  if (slot !== 'learner' && slot !== 'source' && slot !== 'destination') throw new Error(`declineSlot: unknown slot '${slot}'`);
+}
+
+/** The switch a prefs write names, refused when it is not one of the two. */
+export function assertTransferPrefKey(which: string): asserts which is TransferPrefKey {
+  if (which !== 'selfManaged' && which !== 'blockTeacherRequests') throw new Error(`setTransferPref: unknown switch '${which}'`);
 }
 
 /** `requested` or `approved`: the request can still change. */

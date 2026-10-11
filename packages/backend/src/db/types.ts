@@ -123,9 +123,18 @@ export interface Db {
   /** Every request of a learner, newest first. */
   transfersOfLearner(learnerId: string): Promise<StoredTransfer[]>;
   openTransferOf(learnerId: string): Promise<StoredTransfer | null>;
-  /** The latest request the learner side refused (declined, or withdrew) that ended at or after `since`. */
+  /**
+   * The latest **source-started** request the learner side refused (declined, or withdrew) that ended at or
+   * after `since` (section 4.9, the 30-day `cannot_send` rule). The learner side ending a request it started
+   * itself is not a refusal and never counts.
+   */
   lastLearnerRefusal(learnerId: string, since: Date): Promise<StoredTransfer | null>;
-  /** The latest ended (declined / cancelled / expired) request for this learner and destination. */
+  /**
+   * The latest ended (declined / cancelled / expired) request for this learner and destination, of any
+   * initiator. For the 7-day cooldown (section 4.9: only after another side declined a learner-side request)
+   * the caller must not stop at this row: a newer source-started request that was cancelled or expired would
+   * hide an earlier decline, so check every ended row since the cooldown start (`transfersOfLearner`).
+   */
   lastEndedForPair(learnerId: string, destSpaceId: string): Promise<StoredTransfer | null>;
   countTransfersCreatedBy(accountId: string, since: Date): Promise<number>;
   countTransfersCreatedForLearner(learnerId: string, since: Date): Promise<number>;

@@ -169,6 +169,7 @@ CREATE TABLE IF NOT EXISTS transfer_requests (
   execute_after        TEXT,                                -- l_at + 48 h
   ended_at             TEXT,                                -- declined | cancelled | expired only
   executed_at          TEXT,
+  CHECK (source_space_id <> dest_space_id),                 -- a move into the class being left would end in no class
   CHECK (status NOT IN ('approved','executed') OR (l_state = 'consented' AND s_state IN ('consented','not_required') AND d_state = 'consented')),
   CHECK (status <> 'executed' OR executed_at IS NOT NULL),
   CHECK (status NOT IN ('declined','cancelled','expired') OR (end_reason IS NOT NULL AND ended_at IS NOT NULL)),
@@ -360,11 +361,12 @@ Never granted: family roles (guardians act through guard 9), school-level teache
 ```sql
 -- 1. THE GATE: all preconditions in one WHERE; changes = 1 means the move happens, 0 means nothing else runs
 UPDATE transfer_requests SET status='executed', executed_at=:now, block_reason=NULL, updated_at=:now, rev=rev+1
-WHERE id=:id AND status='approved' AND expires_at > :now AND execute_after <= :now
+WHERE id=:id AND source_space_id <> dest_space_id AND status='approved' AND expires_at > :now AND execute_after <= :now
   AND l_state='consented' AND s_state IN ('consented','not_required') AND d_state='consented'
   AND EXISTS (SELECT 1 FROM learners WHERE id=:learner)
   AND EXISTS (SELECT 1 FROM memberships WHERE space_id=:source AND member_kind='learner' AND member_id=:learner)
-  AND EXISTS (SELECT 1 FROM spaces WHERE id=:dest AND archived_at IS NULL)
+  AND EXISTS (SELECT 1 FROM spaces WHERE id=:source AND kind='class')
+  AND EXISTS (SELECT 1 FROM spaces WHERE id=:dest AND kind='class' AND archived_at IS NULL)
   AND ( EXISTS (SELECT 1 FROM memberships WHERE space_id=:dest AND member_kind='learner' AND member_id=:learner)
         OR ( (SELECT COUNT(*) FROM memberships WHERE space_id=:dest AND member_kind='learner') < :destCap
              AND (SELECT COUNT(*) FROM memberships m JOIN spaces s ON s.id=m.space_id
@@ -657,4 +659,5 @@ The adversarial review round (privacy, data, ux lenses) is recorded in `reviews/
 
 - **Accepted with a different shape.** (a) *Execution order* — the privacy lens proposed flipping the status first then guarding the rest, the data lens proposed insert-first; the spec uses a single gate `UPDATE` carrying **all** preconditions (including capacity counts) and every later statement guarded by the executed row, which satisfies both (4.6). (b) *Adult learners* — the privacy lens wanted the learner's own consent added to a caregiver's, the UX lens wanted device consent allowed for adults; the server cannot tell an adult, so the spec adds the learner-set `selfManaged` switch plus an always-available device veto and the 48-hour window (T3, 4.2). (c) *Family-level "no teacher requests" setting* — stored per learner (`learner_transfer_prefs`), not on the family space, to avoid touching `SpaceSettingsSchema`. (d) *`terms_changed` block reason* — merged into the single `consent_outdated` reset (4.6), because capacity and consent are different states.
 - **Partly rejected.** (a) *Close the lookup roster / return aliases only* (privacy, major) — the roster-by-code **is** the re-link picker and `RelinkCreateSchema` needs a learner id; closing it is an F-TCH-001 change. Kept as owner decision O-5 and flip gate G4, with a durable limiter, the New-class-code prompt and honest wording. (b) *Remove `not_required` and the archived-source path* (data, minor) vs *archive must not veto* (privacy, minor) — kept `s_state = not_required`, reachable **only** by the archive transition, never at creation; the extra state is one value and one CHECK term. (c) *Code re-issue clause in the guardian rule* (privacy, blocker) — replaced by the aged-membership rule, which is what is actually checkable (`joinCodeExpiresAt` does not record who or when). (d) *Admin one-click setting* (ux, minor) — the neutral line and the one-slot-per-action default are built; the setting is a question (A6). (e) *Use `F-SPACE-003` for this feature* (ux, optional) — not applied (the id is the orchestrator's); the T-0 file list is corrected instead (O-12).
+- **T-3b PR review (two reviewers).** Added while 0005 was still unapplied: `CHECK (source_space_id <> dest_space_id)` (a row with source = destination would pass the gate's "already a member" branch and delete the learner's only class membership), and the gate also requires both spaces to be classes. `lastLearnerRefusal` counts only source-started requests (section 4.9: a learner side ending its own request is not a refusal of a teacher). `consentSlot` for the learner slot takes the optional `introduce` of section 4.4 approve. `createTransfer` inserts `requested` rows only. `lastEndedForPair` stays as specified; the 7-day cooldown check in T-4b must look at every ended row since the cooldown start, because a newer cancelled source-started request would otherwise hide a decline.
 - **Unchanged because already right.** `D1Db.changes` already refuses an unreported `meta.changes` (`d1.ts:100-110`), so the CAS methods inherit that safety.
