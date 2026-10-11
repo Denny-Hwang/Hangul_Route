@@ -40,7 +40,7 @@
       "id": "banseong",
       "ko": "반성",
       "romanization": "banseong",
-      "en": "looking back on yourself (to do better)",
+      "en": "looking back on yourself (reflection)",
       "kind": "word"
     },
     {
@@ -100,7 +100,7 @@
       "scenes": [
         {
           "id": "s1",
-          "narrationEn": "Hoya opens an old book about a young prince named Jeongjo. As the king's grandson who would one day be king, he was called {kw:seson}. Even then, he kept a diary of what he said, did and studied.",
+          "narrationEn": "Hoya opens an old book about a young royal heir named Jeongjo. As the king's grandson who would one day be king, he was called {kw:seson}. Even then, he kept a diary of what he said, did and studied.",
           "captionEn": "Young Jeongjo keeps a diary",
           "keyword": {
             "id": "seson",
@@ -125,7 +125,7 @@
             "id": "banseong",
             "ko": "반성",
             "romanization": "banseong",
-            "en": "looking back on yourself (to do better)",
+            "en": "looking back on yourself (reflection)",
             "kind": "word"
           },
           "factIds": [

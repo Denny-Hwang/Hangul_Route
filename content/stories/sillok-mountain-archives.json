@@ -241,7 +241,7 @@
         {
           "id": "s6",
           "narrationEn": "After the war, new copies were printed from the Jeonju copy, making five sets. Most went to archives deep in the mountains or on an island, such as Odaesan and Taebaeksan, where war was less likely to reach them.",
-          "captionEn": "Copies sent far away, safer from war",
+          "captionEn": "Most copies sent to mountain archives",
           "keyword": {
             "id": "sansogui-sago",
             "ko": "산속의 사고",
@@ -279,7 +279,7 @@
         },
         {
           "id": "s8",
-          "narrationEn": "Every few years, a historian traveled to each mountain archive on a clear day. The books were taken out and aired in the sun and breeze. This was called {kw:poswae}. Hoya loves sunny days, too!",
+          "narrationEn": "Every few years, a historian traveled to each mountain archive. On a clear day, the books were taken out and aired in the sun and breeze. This was called {kw:poswae}. Hoya loves sunny days, too!",
           "captionEn": "Airing the books in the sun",
           "line": {
             "ko": "책을 햇볕에 말려요.",

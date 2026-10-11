@@ -44,7 +44,7 @@ export const storiesAll: Story[] = [
         "id": "banseong",
         "ko": "반성",
         "romanization": "banseong",
-        "en": "looking back on yourself (to do better)",
+        "en": "looking back on yourself (reflection)",
         "kind": "word"
       },
       {
@@ -104,7 +104,7 @@ export const storiesAll: Story[] = [
         "scenes": [
           {
             "id": "s1",
-            "narrationEn": "Hoya opens an old book about a young prince named Jeongjo. As the king's grandson who would one day be king, he was called {kw:seson}. Even then, he kept a diary of what he said, did and studied.",
+            "narrationEn": "Hoya opens an old book about a young royal heir named Jeongjo. As the king's grandson who would one day be king, he was called {kw:seson}. Even then, he kept a diary of what he said, did and studied.",
             "captionEn": "Young Jeongjo keeps a diary",
             "keyword": {
               "id": "seson",
@@ -129,7 +129,7 @@ export const storiesAll: Story[] = [
               "id": "banseong",
               "ko": "반성",
               "romanization": "banseong",
-              "en": "looking back on yourself (to do better)",
+              "en": "looking back on yourself (reflection)",
               "kind": "word"
             },
             "factIds": [
@@ -1212,7 +1212,7 @@ export const storiesAll: Story[] = [
       "advisory": [
         "loss"
       ],
-      "advisoryNoteEn": "Mentions palace fires that destroyed many old diaries, told briefly and calmly."
+      "advisoryNoteEn": "Mentions fires at the Royal Secretariat that destroyed many old diaries, told briefly and calmly."
     },
     "keywords": [
       {
@@ -2065,7 +2065,7 @@ export const storiesAll: Story[] = [
           {
             "id": "s6",
             "narrationEn": "After the war, new copies were printed from the Jeonju copy, making five sets. Most went to archives deep in the mountains or on an island, such as Odaesan and Taebaeksan, where war was less likely to reach them.",
-            "captionEn": "Copies sent far away, safer from war",
+            "captionEn": "Most copies sent to mountain archives",
             "keyword": {
               "id": "sansogui-sago",
               "ko": "산속의 사고",
@@ -2103,7 +2103,7 @@ export const storiesAll: Story[] = [
           },
           {
             "id": "s8",
-            "narrationEn": "Every few years, a historian traveled to each mountain archive on a clear day. The books were taken out and aired in the sun and breeze. This was called {kw:poswae}. Hoya loves sunny days, too!",
+            "narrationEn": "Every few years, a historian traveled to each mountain archive. On a clear day, the books were taken out and aired in the sun and breeze. This was called {kw:poswae}. Hoya loves sunny days, too!",
             "captionEn": "Airing the books in the sun",
             "line": {
               "ko": "책을 햇볕에 말려요.",
@@ -2588,7 +2588,7 @@ export const storiesAll: Story[] = [
         "id": "sachoneun-wangdo-bol-su-eopseosseoyo",
         "ko": "사초는 왕도 볼 수 없었어요.",
         "romanization": "Sachoneun wangdo bol su eopseosseoyo.",
-        "en": "Even the king could not read the sacho.",
+        "en": "Even the king was not allowed to read the sacho.",
         "kind": "phrase"
       },
       {
@@ -2669,7 +2669,7 @@ export const storiesAll: Story[] = [
             "line": {
               "ko": "사초는 왕도 볼 수 없었어요.",
               "romanization": "Sachoneun wangdo bol su eopseosseoyo.",
-              "en": "Even the king could not read the sacho.",
+              "en": "Even the king was not allowed to read the sacho.",
               "speaker": "narrator"
             },
             "factIds": [
@@ -3131,7 +3131,7 @@ export const storiesAll: Story[] = [
       "scope": "cluster",
       "notes": "Third independent pass. All Sillok entries (Taejong 4/2/8 #4; Jeongjo 19/leap2/13 #1 and #3) re-fetched from sillok.history.go.kr and compared to original Chinese/Korean text. Every non-UNESCO URL cited was re-fetched fresh and every quote segment machine-matched, plus heritage.go.kr 국가유산 설명 text loaded from the portal's own ajax file (DATA1/heritage/hub_img/html/cul_*.html). UNESCO register pages for all four items verified via Internet Archive (registration years 1997/2001/2007/2011 with exact wording); Uigwe nomination PDF re-extracted and quotes/section numbers verified; Seungjeongwon nomination PDF could not be re-fetched (captcha) so the author's saved text was used, with other sources backing each fact. Corrections this pass: poswae schedule mistranslation (격 2년 = every third year, not every other year), 'dried herbs' removed, ep5 f4 quote exactified, 3 vocab words not appearing in scenes removed, ep5 f8 second source (정병모 판화사적 연구) and ep6 f3 festival official site added, UNESCO locators replaced by exact page wording, ep3 f7 3,045+198 clarification."
     },
-    "authorNotes": "Taejong's fall is told exactly as the entry states (不傷, not hurt); the deer-shooting detail and season are omitted (lunar-to-solar conversion not verified from two sources). The secrecy rule is narrated as a rule ('supposed to'): the NIKH introduction notes that in practice some historians avoided frank writing out of fear and that leaks led to tragic purges (e.g., 1498), which are omitted as unsuitable for young learners. Revision: the English-language portal description quote ('Nobody was allowed to read the sacho...') was dropped from f4; the portal's Korean description sentence is kept in f5/f8/f9/f10 (re-checked against a saved copy of the portal page, 2026-10-09/10). The NIKH f9 quote was corrected to '일컫는다'. UNESCO Annals page is paraphrased, not quoted (unesco.org was unreachable on 2026-10-10 for re-quoting). Added 'from Taejo to Cheoljong' (the Annals do not include the Gojong/Sunjong reigns' records, so 25 kings, not 27). Alignment flag: BP05 1.A3 describes the Sillok as 'a diary people wrote every day' - inaccurate; the Sillok was compiled after each king's death from daily drafts (see story-sillok-mountain-archives). Designation numbers are deliberately not used. Narration scene 2: 'with brush and paper' removed (not stated in the cited sources).",
+    "authorNotes": "Taejong's fall is told exactly as the entry states (不傷, not hurt); the deer-shooting detail and season are omitted (lunar-to-solar conversion not verified from two sources). The secrecy rule is narrated as a rule ('supposed to'): the NIKH introduction notes that in practice some historians avoided frank writing out of fear and that leaks led to tragic purges (e.g., 1498), which are omitted as out of scope for a gentle all-ages story. Revision: the English-language portal description quote ('Nobody was allowed to read the sacho...') was dropped from f4; the portal's Korean description sentence is kept in f5/f8/f9/f10 (re-checked against a saved copy of the portal page, 2026-10-09/10). The NIKH f9 quote was corrected to '일컫는다'. UNESCO Annals page is paraphrased, not quoted (unesco.org was unreachable on 2026-10-10 for re-quoting). Added 'from Taejo to Cheoljong' (the Annals do not include the Gojong/Sunjong reigns' records, so 25 kings, not 27). Alignment flag: BP05 1.A3 describes the Sillok as 'a diary people wrote every day' - inaccurate; the Sillok was compiled after each king's death from daily drafts (see story-sillok-mountain-archives). Designation numbers are deliberately not used. Narration scene 2: 'with brush and paper' removed (not stated in the cited sources).",
     "errata": []
   },
   {
@@ -3352,8 +3352,8 @@ export const storiesAll: Story[] = [
           },
           {
             "id": "s6",
-            "narrationEn": "The king also gave gifts of silk to the elders who took part in the celebration.",
-            "captionEn": "Gifts of silk for the elders",
+            "narrationEn": "The king also gave gifts of silk to elderly people who took part in the celebration.",
+            "captionEn": "Silk for elderly guests",
             "keyword": {
               "id": "eoreusin",
               "ko": "어르신",
