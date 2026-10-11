@@ -83,14 +83,14 @@ describe('console pages render only dictionary text (en-XA)', () => {
   });
 
   it('plan builder, before the plans load (quest and episode titles are content)', async () => {
-    const html = await render('@/app/teach/space/plan/page');
+    const html = await render('@/app/(console)/teach/space/plan/page');
     expect(html).toContain('href="/teach/space?id=space%3Ac1"');
     expect(html).toContain('type="date"');
     expectAllPseudo(html, [...stage1Episodes.map((e) => e.titleEn), ...stage1Quests.map((q) => q.titleEn)]);
   });
 
   it('billing, before the plans load', async () => {
-    const html = await render('@/app/teach/billing/page');
+    const html = await render('@/app/(console)/teach/billing/page');
     expect(html).toContain('name="promo"');
     expectAllPseudo(html);
   });

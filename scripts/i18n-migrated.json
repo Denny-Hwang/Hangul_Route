@@ -46,8 +46,8 @@
     "apps/web/src/components/console/ui.tsx",
     "apps/web/src/components/console/use-console.ts",
     "apps/mobile/src/screens/story/**",
-    "apps/web/src/app/teach/space/plan/page.tsx",
-    "apps/web/src/app/teach/billing/page.tsx",
+    "apps/web/src/app/(console)/teach/space/plan/page.tsx",
+    "apps/web/src/app/(console)/teach/billing/page.tsx",
     "apps/web/src/components/console/PlanParts.tsx",
     "apps/web/src/components/console/BillingParts.tsx"
   ],
