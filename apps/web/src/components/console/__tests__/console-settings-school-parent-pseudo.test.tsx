@@ -4,9 +4,11 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { SchoolAdminView } from '@/components/console/SchoolAdmin';
 import { SettingsSections, type SettingsSectionsProps } from '@/components/console/SettingsParts';
+import { LoadErrorPanel } from '@/components/console/ui';
 import { mockFamily } from '@/data/mock-family';
+import { LocaleProvider } from '@/lib/i18n/locale-context';
 import type { EntitlementView, MemberView, Roster, SchoolView } from '@/lib/console/api';
-import { expectAllPseudo } from './pseudo-text';
+import { expectAllPseudo, wordsOf } from './pseudo-text';
 
 /**
  * F-I18N-001 PR 10c, §3.11: the space settings page, the school admin view and the /parent demo
@@ -226,6 +228,30 @@ describe('/parent demo renders only dictionary text (en-XA)', () => {
 
   it('the layout wraps the demo in the console locale provider', async () => {
     const mod = (await import('@/app/(console)/parent/layout')) as { default: (p: { children: JSX.Element }) => JSX.Element };
-    expect(renderToStaticMarkup(mod.default({ children: <p>x</p> }))).toBe('<p>x</p>');
+    const child = <p>x</p>;
+    const el = mod.default({ children: child });
+    // The element itself, not its markup: a provider renders nothing of its own, so markup alone would pass without one.
+    expect(el.type).toBe(LocaleProvider);
+    expect((el.props as { children: unknown }).children).toBe(child);
+  });
+});
+
+describe('the load-error panel of settings and school admin (en-XA)', () => {
+  // Read inside each test: the pseudo-locale is switched on in beforeAll.
+  const msgs = () => getMessages(PSEUDO).console;
+  const words = (error: 'forbidden' | 'cantReach', forbidden: string): string[] => {
+    const html = renderToStaticMarkup(<LoadErrorPanel error={error} forbidden={forbidden} onRetry={noop} />);
+    expectAllPseudo(html, [], 2);
+    return wordsOf(html, []);
+  };
+
+  it("a forbidden space shows the page's own words, with Try again", () => {
+    const m = msgs();
+    for (const forbidden of [m.settings.forbidden, m.school.forbidden]) expect(words('forbidden', forbidden)).toEqual([forbidden, m.tryAgain]);
+  });
+
+  it("anything else reads can't reach", () => {
+    const m = msgs();
+    expect(words('cantReach', m.settings.forbidden)).toEqual([m.cantReach, m.tryAgain]);
   });
 });

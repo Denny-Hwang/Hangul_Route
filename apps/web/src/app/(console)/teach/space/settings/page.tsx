@@ -4,11 +4,11 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useState } from 'react';
 import { SettingsSections } from '@/components/console/SettingsParts';
-import { Button, ConsoleShell, Muted, Notice, panelStyle } from '@/components/console/ui';
+import { Button, ConsoleShell, LoadErrorPanel, Muted, Notice } from '@/components/console/ui';
 import { useConsole } from '@/components/console/use-console';
 import type { MemberView, Roster } from '@/lib/console/api';
 import { schoolConsentModeEnabled } from '@/lib/console/config';
-import { ROUTES, spaceIdFrom } from '@/lib/console/routing';
+import { ROUTES, isKnownSpaceKind, loadErrorKey, spaceIdFrom, type LoadError } from '@/lib/console/routing';
 import type { Messages } from '@hangul-route/i18n';
 
 type SettingsNote = keyof Messages['console']['settings']['notes'];
@@ -23,7 +23,7 @@ function SettingsInner(): JSX.Element {
   const [roster, setRoster] = useState<Roster | null>(null);
   const [members, setMembers] = useState<MemberView[]>([]);
   // Keys, not text: the messages are looked up at render time, so they follow the header language select.
-  const [error, setError] = useState<'forbidden' | 'cantReach' | null>(null);
+  const [error, setError] = useState<LoadError | null>(null);
   const [note, setNote] = useState<SettingsNote | null>(null);
   const [busy, setBusy] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string>('');
@@ -34,8 +34,13 @@ function SettingsInner(): JSX.Element {
     if (!api) return;
     setError(null);
     const [r, mem] = await Promise.all([api.roster(spaceId), api.members(spaceId)]);
-    if (!r.ok || !mem.ok) {
-      setError(r.ok ? 'cantReach' : r.error === 'forbidden' ? 'forbidden' : 'cantReach');
+    if (!r.ok) {
+      setError(loadErrorKey(r.error));
+      return;
+    }
+    // A space kind this bundle cannot word (a newer Worker) reads as a failed load, never a blank page.
+    if (!mem.ok || !isKnownSpaceKind(r.data.space.kind)) {
+      setError('cantReach');
       return;
     }
     setRoster(r.data);
@@ -66,12 +71,7 @@ function SettingsInner(): JSX.Element {
       <Muted>
         <Link href={ROUTES.space(spaceId)}>{s.back(space?.name ?? null)}</Link>
       </Muted>
-      {error ? (
-        <div style={panelStyle}>
-          <p style={{ margin: 0 }}>{error === 'forbidden' ? s.forbidden : c.cantReach}</p>
-          <Button onClick={() => void load()}>{c.tryAgain}</Button>
-        </div>
-      ) : null}
+      {error ? <LoadErrorPanel error={error} forbidden={s.forbidden} onRetry={() => void load()} /> : null}
       {note ? <Notice tone="nudge">{s.notes[note]}</Notice> : null}
       {archived && space ? <Notice tone="nudge">{s.archived[space.kind]}</Notice> : null}
 

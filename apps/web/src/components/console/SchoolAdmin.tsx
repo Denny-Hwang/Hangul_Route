@@ -4,11 +4,11 @@ import type { Messages } from '@hangul-route/i18n';
 import { colors, spacing, typography } from '@hangul-route/design-system/tokens';
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
-import { Button, ConsoleShell, Field, Muted, Notice, panelStyle } from '@/components/console/ui';
+import { Button, ConsoleShell, Field, LoadErrorPanel, Muted, Notice, panelStyle } from '@/components/console/ui';
 import type { ConsoleApi, MemberView, SchoolView } from '@/lib/console/api';
 import { planTitle, statusLine as entitlementStatus } from '@/lib/console/billing';
 import { codeExpiry, relativeDay } from '@/lib/console/rollup';
-import { ROUTES } from '@/lib/console/routing';
+import { ROUTES, loadErrorKey, type LoadError } from '@/lib/console/routing';
 import { assignableTeachers, limitNote, limitState, usageLine, weekLine } from '@/lib/console/school';
 import { useConsoleLocale } from '@/lib/i18n/locale-context';
 import { aroundSlot } from '@/lib/i18n/slot';
@@ -20,7 +20,7 @@ export function SchoolAdmin({ api, spaceId, onSignOut }: { api: ConsoleApi; spac
   const [view, setView] = useState<SchoolView | null>(null);
   const [members, setMembers] = useState<MemberView[]>([]);
   // Keys, not text: the messages are looked up at render time, so they follow the header language select.
-  const [error, setError] = useState<'forbidden' | 'cantReach' | null>(null);
+  const [error, setError] = useState<LoadError | null>(null);
   const [note, setNote] = useState<SchoolNote | null>(null);
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -33,7 +33,7 @@ export function SchoolAdmin({ api, spaceId, onSignOut }: { api: ConsoleApi; spac
   const load = useCallback(async (): Promise<void> => {
     const [v, m] = await Promise.all([api.school(spaceId), api.members(spaceId)]);
     if (!v.ok) {
-      setError(v.error === 'forbidden' ? 'forbidden' : 'cantReach');
+      setError(loadErrorKey(v.error));
       return;
     }
     setError(null);
@@ -66,12 +66,7 @@ export function SchoolAdmin({ api, spaceId, onSignOut }: { api: ConsoleApi; spac
 
   return (
     <ConsoleShell onSignOut={onSignOut} title={view ? s.titleFor(view.school.name) : s.title}>
-      {error ? (
-        <div style={panelStyle}>
-          <p style={{ margin: 0 }}>{error === 'forbidden' ? s.forbidden : c.cantReach}</p>
-          <Button onClick={() => void load()}>{c.tryAgain}</Button>
-        </div>
-      ) : null}
+      {error ? <LoadErrorPanel error={error} forbidden={s.forbidden} onRetry={() => void load()} /> : null}
       {note ? <Notice tone="nudge">{s.notes[note]}</Notice> : null}
       {view ? (
         <SchoolAdminView
