@@ -19,4 +19,10 @@ describe('join code helpers (F-SPACE-001 §3.5)', () => {
     expect(isCodeError('code_expired')).toBe(true);
     expect(isCodeError('cap_learner')).toBe(false);
   });
+
+  it('names the fix without a grown-up (F-LEARN-001 §3.9): leave a class in Settings, ask for a class code', () => {
+    expect(joinErrorMessage('cap_learner')).toBe("You're already in three classes. Leave one in Settings first.");
+    expect(joinErrorMessage('not_joinable')).toBe("That code isn't for joining as a learner. Ask for a class code.");
+    for (const c of ['cap_learner', 'not_joinable'] as const) expect(joinErrorMessage(c)).not.toMatch(/grown-?up/i);
+  });
 });

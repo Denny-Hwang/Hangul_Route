@@ -8,9 +8,6 @@ import type { DeviceAudience } from './profiles/learner-type';
  * audience adds "(a grown-up can help)" only where an adult really is needed,
  * and "Grown-up zone" stays a family caregiver surface (CLAUDE.md §1).
  * Nothing here names an age or says "for kids".
- *
- * The screens and logic modules that still hold the old wording switch to this
- * module in F-LEARN-001 PR 5.
  */
 
 export interface AudienceCopy {
@@ -64,6 +61,9 @@ const SHARED = {
     'Buying inside this app arrives with the store update. Until then, you can buy it once on the web console.',
   profileSwitchHint: 'Tap a profile to switch.',
 } as const;
+
+/** The strings that do not depend on the audience, for logic modules that have no device in hand. */
+export const NEUTRAL_COPY = SHARED;
 
 function gated(base: string, detail: string | undefined, pinRequired: boolean): string {
   const parts = [detail, pinRequired ? 'PIN required' : undefined].filter((p): p is string => p !== undefined);

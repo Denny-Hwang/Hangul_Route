@@ -1,5 +1,6 @@
 import type { BackupFile, Profile, ProgressSnapshot } from '@hangul-route/content-schema';
 import { mergeSnapshots } from './merge';
+import { NEUTRAL_COPY } from '../audience-copy';
 
 /**
  * What to do with a decoded backup file (F-SYNC-002 §3.3): merge into the
@@ -47,7 +48,7 @@ export function planRestore(
  */
 export function relinkNotice(plan: RestorePlan): string {
   const back = `Welcome back, ${plan.profile.displayName}! You're in the class again.`;
-  return plan.action === 'create' ? `${back} Your cards come back with your grown-up's rescue code.` : back;
+  return plan.action === 'create' ? `${back} ${NEUTRAL_COPY.restoreCardsBack}` : back;
 }
 
 /** Copy for the merge notice — English, warm, never "overwritten". */

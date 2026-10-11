@@ -45,7 +45,7 @@ describe('planRestore (F-SYNC-002 §3.3)', () => {
 describe('relinkNotice (F-TCH-001 §10.1, SEC-4)', () => {
   it('a class re-link brings the learner back into the class, and says the cards need the rescue code', () => {
     const fresh = { action: 'create' as const, profile, snapshot: snap([], []), added: { cards: 0, quests: 0 } };
-    expect(relinkNotice(fresh)).toBe("Welcome back, Suni! You're in the class again. Your cards come back with your grown-up's rescue code.");
+    expect(relinkNotice(fresh)).toBe("Welcome back, Suni! You're in the class again. Your cards come back with your rescue code.");
     const known = { ...fresh, action: 'merge' as const };
     expect(relinkNotice(known)).toBe("Welcome back, Suni! You're in the class again.");
   });
