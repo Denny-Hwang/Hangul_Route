@@ -18,43 +18,7 @@ import type { HeritageCardArtProps } from './types';
  * in a later sprint.
  */
 
-export const supportedCardIds: readonly string[] = [
-  // Letters & Books
-  'card:book',
-  'card:hanji',
-  'card:brush',
-  'card:ink',
-  'card:origami',
-  'card:hangul-day',
-  // Food & Daily Life
-  'card:kimchi',
-  'card:rice',
-  'card:chopsticks',
-  'card:hanbok',
-  'card:kimbap',
-  'card:family-table',
-  // Holidays & Traditions
-  'card:seollal',
-  'card:chuseok',
-  'card:tteokguk',
-  'card:songpyeon',
-  'card:sebae',
-  'card:lantern',
-  // Nature & Animals
-  'card:tiger',
-  'card:magpie',
-  'card:mugunghwa',
-  'card:mountain',
-  'card:sea',
-  'card:moon',
-  // Play & Crafts
-  'card:yutnori',
-  'card:jegi',
-  'card:kite',
-  'card:top',
-  'card:pottery',
-  'card:gayageum',
-];
+export { supportedCardIds } from './card-ids';
 
 interface ArtProps {
   size: number;
