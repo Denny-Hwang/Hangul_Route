@@ -352,6 +352,17 @@ export const learner = {
         start: 'Try again — start at the top!',
       },
     },
+    /** Pic-Word Match (F-QUEST-002 §3.11): Skip is `skip`, the way out `backToQuest`. */
+    picWord: {
+      heading: 'Match each picture',
+      instruction: 'Tap a picture, then its word.',
+      /** The live line once one side is picked: `gloss` is the picture's meaning (content). */
+      pictureSelected: (gloss: string) => `Picture selected: ${gloss}. Choose a word.`,
+      /** `word` is the taught Korean word, passed in (never typed into the message). */
+      wordSelected: (word: string) => `Word selected: ${word}. Choose a picture.`,
+      missHoya: 'Try another one',
+      empty: 'Nothing to play here',
+    },
     /** Listen & Pick (F-QUEST-002 §3.10): the no-sound line is `audio.readHere`, the way out `backToQuest`. */
     listenPick: {
       heading: 'Listen, then pick',

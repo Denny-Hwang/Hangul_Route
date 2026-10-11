@@ -88,6 +88,9 @@ export const a11y = {
       correct: (label: string) => `Right answer: ${label}`,
       wrong: (label: string) => `Not this one: ${label}`,
       hint: (label: string) => `Look here: ${label}`,
+      /** Pic-Word Match: picked, waiting for its partner; and a matched pair with its match number. */
+      selected: (label: string) => `Selected: ${label}`,
+      matched: (badge: number, label: string) => `Matched, number ${badge}: ${label}`,
     },
     /** Card Match: a Korean word (its romanization, else the word) and a meaning (content gloss). */
     koreanWord: (word: string) => `Korean word ${word}`,

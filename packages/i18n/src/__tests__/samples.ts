@@ -79,5 +79,9 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'a11y.minigame.option.correct': [['ga']],
   'a11y.minigame.option.wrong': [['na']],
   'a11y.minigame.option.hint': [['Moon']],
+  'learner.minigame.picWord.pictureSelected': [['rice']],
+  'learner.minigame.picWord.wordSelected': [['bap']],
+  'a11y.minigame.option.selected': [['rice']],
+  'a11y.minigame.option.matched': [[1, 'rice']],
   'a11y.soundSwitch': [[false, 'Korean voice ready'], [true, 'Looking for a Korean voice']],
 };

@@ -190,6 +190,23 @@ describe('Listen & Pick (English wording as shipped)', () => {
   });
 });
 
+describe('Pic-Word Match (English wording as shipped)', () => {
+  it('keeps the heading, the live line and the Hoya line', () => {
+    const p = m.learner.minigame.picWord;
+    expect(p.heading).toBe('Match each picture');
+    expect(p.instruction).toBe('Tap a picture, then its word.');
+    expect(p.pictureSelected('rice')).toBe('Picture selected: rice. Choose a word.');
+    expect(p.wordSelected('bap')).toBe('Word selected: bap. Choose a picture.');
+    expect(p.missHoya).toBe('Try another one');
+    expect(p.empty).toBe('Nothing to play here');
+  });
+
+  it('keeps the selected and matched tile labels', () => {
+    expect(m.a11y.minigame.option.selected('rice')).toBe('Selected: rice');
+    expect(m.a11y.minigame.option.matched(2, 'rice')).toBe('Matched, number 2: rice');
+  });
+});
+
 describe('learner.audio (F-AUDIO-004 §3.7-3.8, English wording as shipped)', () => {
   const a = m.learner.audio;
 
