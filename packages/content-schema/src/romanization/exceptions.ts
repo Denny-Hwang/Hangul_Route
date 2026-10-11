@@ -14,8 +14,23 @@ export interface RomanizationException {
   reason: string;
 }
 
-/** Ships empty: every current mismatch is a real error (F-CNT-002 §3.3). */
-export const ROMANIZATION_EXCEPTIONS: readonly RomanizationException[] = [];
+/**
+ * Shipped empty by F-CNT-002 PR 1: every mismatch then was a real error. Entries added later
+ * name the converter limit they cover (§3.3); the two below came with the story drafts
+ * imported after PR 2b (content/stories/).
+ */
+export const ROMANIZATION_EXCEPTIONS: readonly RomanizationException[] = [
+  {
+    ko: '솔잎',
+    allowed: ['sollip'],
+    reason: 'ㄴ-insertion: 솔잎 is said [솔립], RR sollip; the converter has no compound rule and gives sorip',
+  },
+  {
+    ko: '왜 기록할까요?',
+    allowed: ['wae girokalkkayo'],
+    reason: 'ㄱ+ㅎ across the noun-verb join of 기록하다: the converter keeps the noun convention (묵호 mukho) and gives girokhalkkayo; the verb ending aspirates',
+  },
+];
 
 /**
  * What `romanization` may hold for an isolated jamo (C6): teaching sound values, not

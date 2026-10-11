@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
 import { CONTENT_SKIPPED_DIRS, REPO_ROOT, contentJsonFiles } from './helpers/romanization-registry';
+import { KNOWN_STORY_FINDINGS } from './helpers/romanization-baseline';
 import { scanContentFiles } from './helpers/romanization-json-scan';
 
 // F-CNT-002 PR 3, source class A: every content/**/*.json (outside the skipped dirs) is
@@ -14,7 +15,7 @@ afterAll(() => {
 });
 
 /** Writes `files` under a fresh temp root and scans them. */
-function scanFixture(files: Record<string, unknown>, exceptions?: Parameters<typeof scanContentFiles>[2]) {
+function scanFixture(files: Record<string, unknown>, exceptions?: Parameters<typeof scanContentFiles>[2], baseline: Parameters<typeof scanContentFiles>[3] = []) {
   const root = mkdtempSync(join(tmpdir(), 'romanization-'));
   tmpRoots.push(root);
   for (const [name, body] of Object.entries(files)) {
@@ -22,7 +23,7 @@ function scanFixture(files: Record<string, unknown>, exceptions?: Parameters<typ
     mkdirSync(dirname(full), { recursive: true });
     writeFileSync(full, typeof body === 'string' ? body : JSON.stringify(body, null, 2));
   }
-  return scanContentFiles(root, Object.keys(files), exceptions);
+  return scanContentFiles(root, Object.keys(files), exceptions, baseline);
 }
 
 describe('romanization of the shipped content JSON (class A)', () => {
@@ -37,6 +38,14 @@ describe('romanization of the shipped content JSON (class A)', () => {
 
   it('every content/**/*.json pair is Revised Romanization, unhyphenated, consistent', () => {
     expect(result.errors).toEqual([]);
+  });
+
+  it('lists the known story findings instead of failing on them, and the list stays honest', () => {
+    expect(result.known.length).toBeGreaterThanOrEqual(KNOWN_STORY_FINDINGS.length);
+    for (const k of KNOWN_STORY_FINDINGS) {
+      expect(k.reason.trim(), k.ko).not.toBe('');
+      expect(result.known.some((line) => line.includes(`file=${k.file},`) && line.includes(`::${k.rule}:`) && line.includes(k.ko)), k.ko).toBe(true);
+    }
   });
 
   it('skips the same directories as scripts/validate-content.mjs', () => {
@@ -132,6 +141,28 @@ describe('romanization content scanner (a bad file would fail)', () => {
     const r = scanFixture({ 'content/a.json': [{ ko: 'K팝', romanization: 'kpap', en: 'K-pop' }] });
     expect(r.errors).toEqual([]);
     expect(r.warnings[0]).toContain('romanization-unchecked');
+  });
+
+  it('a baseline entry hides only its own finding, and fails once the finding is gone', () => {
+    const bad = { 'content/stories/a.json': [{ ko: '장영실', romanization: 'jang yeongsil', en: 'Jang Yeong-sil' }] };
+    const entry = { file: 'content/stories/a.json', rule: 'romanization-spacing' as const, ko: '장영실', reason: 'test' };
+    const covered = scanFixture(bad, [], [entry]);
+    expect(covered.errors).toEqual([]);
+    expect(covered.known).toHaveLength(1);
+    expect(scanFixture(bad, [], [{ ...entry, ko: '세종대왕' }]).errors.length).toBe(2);
+    const fixed = scanFixture({ 'content/stories/a.json': [{ ko: '장영실', romanization: 'jangyeongsil', en: 'x' }] }, [], [entry]);
+    expect(fixed.errors).toHaveLength(1);
+    expect(fixed.errors[0]).toContain('baseline entry for 장영실');
+  });
+
+  it('R6 skips the reference zone of a story and story tokens', () => {
+    const story = {
+      state: 'ready',
+      facts: [{ title: 'Hemispherical Sundial (보물 앙부일구)' }],
+      scenes: [{ ko: '허준', romanization: 'heojun', en: 'Heo Jun', narrationEn: 'His name was Heo Jun, {kw:heo-jun}.' }],
+    };
+    expect(scanFixture({ 'content/stories/a.json': story }).errors).toEqual([]);
+    expect(scanFixture({ 'content/other.json': { ...story, facts: undefined, titleEn: 'Sundial (보물 앙부일구)' } }).errors).toHaveLength(1);
   });
 
   it('an unreadable or invalid JSON file is a failing finding naming the path', () => {

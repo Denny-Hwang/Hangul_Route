@@ -15,6 +15,7 @@
  */
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { KNOWN_STORY_FINDINGS, type KnownFinding } from './romanization-baseline';
 import {
   ROMANIZATION_EXCEPTIONS,
   checkConsistency,
@@ -29,6 +30,13 @@ import {
 
 const HANGUL_SYLLABLE = /[가-힣]/;
 const JAMO_ID = /^jamo:/;
+/**
+ * Top-level keys of a shipped story file that hold grown-up and reviewer text (F-STORY-001 §3.8,
+ * the same set as scripts/validate-content.mjs): source titles read "English title (한글 title)",
+ * which is a translation, not a romanization, so the prose rule (R6) skips them. The Korean target
+ * objects inside still go through R1 to R4.
+ */
+const REFERENCE_ZONE_KEYS = new Set(['facts', 'referenceDisplay', 'authorNotes', 'learningGoalsEn', 'verification', 'errata']);
 const PROSE_KEY = /^(en|blurb|fact|title|[a-z]+En|[a-z_]+_en)$/;
 
 export interface ScanResult {
@@ -36,6 +44,8 @@ export interface ScanResult {
   errors: string[];
   /** `::warning …` lines; reported, never failing. */
   warnings: string[];
+  /** Findings listed in the baseline (KNOWN_STORY_FINDINGS): reported, not failing. */
+  known: string[];
   /** Every Korean string seen with a romanization, for R5 across sources. */
   entries: RomanizationEntry[];
   /** Every Korean string seen (R6 registry and R8). */
@@ -60,6 +70,7 @@ export function scanContentFiles(
   root: string,
   files: readonly string[],
   exceptions: readonly RomanizationException[] = ROMANIZATION_EXCEPTIONS,
+  baseline: readonly KnownFinding[] = KNOWN_STORY_FINDINGS,
 ): ScanResult {
   const found: Located[] = [];
   const entries: RomanizationEntry[] = [];
@@ -80,9 +91,10 @@ export function scanContentFiles(
     const draft = typeof parsed === 'object' && parsed !== null && (parsed as { state?: unknown }).state === 'draft';
     const cursor = { at: 0 };
 
-    const visit = (value: unknown): void => {
+    const isStory = file.startsWith('content/stories/');
+    const visit = (value: unknown, inZone = false): void => {
       if (Array.isArray(value)) {
-        value.forEach(visit);
+        value.forEach((v) => visit(v, inZone));
         return;
       }
       if (typeof value !== 'object' || value === null) return;
@@ -113,10 +125,11 @@ export function scanContentFiles(
         }
       }
       for (const [key, child] of Object.entries(obj)) {
-        if (typeof child === 'string' && PROSE_KEY.test(key)) {
+        const zone = inZone || (isStory && value === parsed && REFERENCE_ZONE_KEYS.has(key));
+        if (!zone && typeof child === 'string' && PROSE_KEY.test(key)) {
           proseFields.push({ file, line: lineAfter(source, `"${key}": ${JSON.stringify(child)}`, { at: 0 }), text: child });
         }
-        visit(child);
+        visit(child, zone);
       }
     };
     visit(parsed);
@@ -125,12 +138,27 @@ export function scanContentFiles(
   for (const issue of checkConsistency(entries)) found.push({ file: 'content', line: undefined, issue });
   const registry = [...new Set(koSeen)];
   for (const p of proseFields) {
-    for (const issue of checkProse(p.text, registry)) found.push({ file: p.file, line: p.line, issue });
+    // {kw:heo-jun} and {target} are story tokens (keyword ids), not romanized prose
+    for (const issue of checkProse(p.text.replace(/\{[a-z]+(?::[^}]*)?\}/g, ' '), registry)) found.push({ file: p.file, line: p.line, issue });
   }
 
   const format = (f: Located): string => formatRomanizationFinding(f.file, f.line, f.issue);
+  const matches = (k: KnownFinding, f: Located): boolean => k.file === f.file && k.rule === f.issue.rule && k.ko === f.issue.ko;
+  const failing = found.filter((f) => f.issue.severity === 'error');
+  const known = failing.filter((f) => baseline.some((k) => matches(k, f)));
+  const stale = baseline.filter((k) => files.includes(k.file) && !known.some((f) => matches(k, f)));
   return {
-    errors: found.filter((f) => f.issue.severity === 'error').map(format),
+    errors: [
+      ...failing.filter((f) => !known.includes(f)).map(format),
+      ...stale.map((k) =>
+        formatRomanizationFinding(k.file, undefined, {
+          rule: 'romanization-exception-stale',
+          severity: 'error',
+          message: `baseline entry for ${k.ko} (${k.rule}) matched no finding; remove it from romanization-baseline.ts`,
+        }),
+      ),
+    ],
+    known: known.map(format),
     warnings: found.filter((f) => f.issue.severity === 'warning').map(format),
     entries,
     koSeen,

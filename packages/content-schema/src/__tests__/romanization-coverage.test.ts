@@ -121,8 +121,7 @@ describe('romanization coverage check catches drift (temp-tree fixtures)', () =>
 });
 
 describe('romanization exceptions are self-cleaning (R8)', () => {
-  it('ships empty, so none is stale', () => {
-    expect(ROMANIZATION_EXCEPTIONS).toEqual([]);
+  it('no shipped exception is stale', () => {
     expect(checkExceptions(ROMANIZATION_EXCEPTIONS, seenExceptionKo(ROMANIZATION_EXCEPTIONS))).toEqual([]);
   });
 
