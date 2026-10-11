@@ -2,7 +2,7 @@
   {
     "id": "jamo:giyeok",
     "ko": "ㄱ",
-    "romanization": "g (giyeok)",
+    "romanization": "g/k (giyeok)",
     "en": "G — sounds like the start of 'go'",
     "kind": "consonant",
     "order": 1,
@@ -28,7 +28,7 @@
   {
     "id": "jamo:digeut",
     "ko": "ㄷ",
-    "romanization": "d (digeut)",
+    "romanization": "d/t (digeut)",
     "en": "D — sounds like the start of 'door'",
     "kind": "consonant",
     "order": 3,
@@ -67,7 +67,7 @@
   {
     "id": "jamo:bieup",
     "ko": "ㅂ",
-    "romanization": "b (bieup)",
+    "romanization": "b/p (bieup)",
     "en": "B — sounds like the start of 'boy'",
     "kind": "consonant",
     "order": 6,
@@ -93,7 +93,7 @@
   {
     "id": "jamo:ieung",
     "ko": "ㅇ",
-    "romanization": "silent / ng (ieung)",
+    "romanization": "silent/ng (ieung)",
     "en": "O-shape — quiet at the start, 'ng' at the end",
     "kind": "consonant",
     "order": 8,

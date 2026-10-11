@@ -150,7 +150,9 @@ function jamoIndex(jamo) {
   for (const j of jamo) {
     if (!isObject(j) || typeof j.ko !== "string" || typeof j.romanization !== "string") continue;
     const m = /^(.*?)\s*\(([^)]*)\)\s*$/.exec(j.romanization);
-    const sound = (m ? m[1] : j.romanization).trim();
+    // jamo.json writes the teaching value (F-CNT-002 JAMO_SOUND_VALUES): `g/k`, `d/t`, `b/p`. A story keyword
+    // names the letter by its initial sound, so the final-sound alternative is dropped (`g/k` gives `g`).
+    const sound = (m ? m[1] : j.romanization).trim().replace(/^([a-z]+)\/[ktp]$/, "$1");
     const name = (m ? m[2] : sound).trim();
     index.set(j.ko, {
       ko: j.ko,
