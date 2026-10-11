@@ -10,11 +10,18 @@ import { gridEpisodes } from '../content/episodes';
  */
 export type StageAvailability = 'open' | 'taste' | 'soon';
 
+const cellKey = (e: Pick<Episode, 'stage' | 'theme'>): string => `${e.stage}:${e.theme}`;
+
+/**
+ * Counts cells, not episodes (F-STORY-005 §3.5): a cell is shipped when any of
+ * its episodes is shipped. Callers pass grid episodes (`gridEpisodes`).
+ */
 export function stageAvailability(stage: StageKey, episodes: readonly Episode[]): StageAvailability {
-  const cells = episodes.filter((e) => e.stage === stage);
-  const shipped = cells.filter((e) => e.status === 'shipped').length;
-  if (cells.length === 0 || shipped === 0) return 'soon';
-  return shipped === cells.length ? 'open' : 'taste';
+  const inStage = episodes.filter((e) => e.stage === stage);
+  const cells = new Set(inStage.map(cellKey));
+  const shipped = new Set(inStage.filter((e) => e.status === 'shipped').map(cellKey));
+  if (shipped.size === 0) return 'soon';
+  return shipped.size === cells.size ? 'open' : 'taste';
 }
 
 /** The pill words come from the dictionary (`learner.journey.availability`), passed in as a message subtree. */
@@ -34,6 +41,18 @@ export function isEpisodeComplete(
     quests.filter((q) => q.episodeId === episode.id && q.completedAt).map((q) => q.questId),
   );
   return episode.questIds.every((id) => done.has(id));
+}
+
+/**
+ * A cell is complete when every one of its episodes is (F-STORY-005 §3.5);
+ * with one episode per cell this equals `isEpisodeComplete`. An empty cell is
+ * never complete.
+ */
+export function isCellComplete(
+  episodes: readonly Pick<Episode, 'id' | 'questIds'>[],
+  quests: readonly Pick<QuestProgress, 'questId' | 'episodeId' | 'completedAt'>[],
+): boolean {
+  return episodes.length > 0 && episodes.every((e) => isEpisodeComplete(e, quests));
 }
 
 /**
