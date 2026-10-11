@@ -49,8 +49,7 @@ import {
 } from '../../logic/quest-flow/results-teaser';
 import { episodeReturn } from '../../logic/layout/quest-return';
 import { placedOutSkipSet } from '../../logic/placement/route-skip';
-import { applyQuestResult } from '../../logic/results-award';
-import type { CardAward } from '../../logic/reward';
+import { applyQuestResult, type QuestResultOutcome } from '../../logic/results-award';
 import { resultsCheerMessage, resultsHeadline } from '../../logic/results-copy';
 import { useReducedMotion } from '../../platform/motion';
 import { track } from '../../platform/telemetry';
@@ -75,13 +74,16 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
   const episode = episodeById(episodeId);
   const profile = useProfileStore(activeProfileSelector);
   const recordQuestComplete = useProgressStore((s) => s.recordQuestComplete);
-  const unlockCard = useProgressStore((s) => s.unlockCard);
+  const unlockCards = useProgressStore((s) => s.unlockCards);
   const snapshot = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
   const cachedTier = useTierStore((s) => (profile ? s.byLearner[profile.id] : undefined));
   const reducedMotion = useReducedMotion();
   const { panes } = useLayoutClass();
-  // What this run earned, decided once when the score is written.
-  const [award, setAward] = useState<CardAward | null>(null);
+  // What this run earned (the quest card and the completion awards), decided
+  // once when the score is written (F-STORY-006 §3.3). The extras get their
+  // own banner with PR 6.5a; until then the quest card banner is unchanged.
+  const [outcome, setOutcome] = useState<QuestResultOutcome | null>(null);
+  const award = outcome?.award ?? null;
   const recordedRef = useRef(false);
 
   useEffect(() => {
@@ -90,10 +92,11 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
     // object changes identity underneath (wireframe results/celebrate).
     if (recordedRef.current) return;
     recordedRef.current = true;
-    // Score, telemetry and the one-time card award live in logic/results-award.
+    // Score, telemetry and the one-time card awards live in logic/results-award.
     const earned = applyQuestResult(
       {
         profileId: profile.id,
+        profileCreatedAt: profile.createdAt,
         questId,
         episodeId,
         rewardCardId: quest.rewardCardId,
@@ -103,15 +106,14 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
         retries,
       },
       {
-        ownedCardIds: () =>
-          (useProgressStore.getState().byProfile[profile.id]?.cards ?? []).map((c) => c.cardId),
+        snapshot: (id) => useProgressStore.getState().byProfile[id],
         recordQuestComplete,
-        unlockCard,
+        unlockCards,
         track,
       },
     );
-    setAward(earned);
-  }, [profile, quest, questId, episodeId, stars, correct, total, retries, recordQuestComplete, unlockCard]);
+    setOutcome(earned);
+  }, [profile, quest, questId, episodeId, stars, correct, total, retries, recordQuestComplete, unlockCards]);
 
   // Android/web read the live region above (a second announcement would double-read);
   // iOS VoiceOver ignores live regions, so it gets an explicit announcement.
