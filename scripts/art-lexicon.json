@@ -118,7 +118,9 @@
     { "match": ["sand ring"], "ids": ["prop:sand-ring"] },
     { "match": ["taffy seller", "taffy"], "ids": ["prop:taffy-tray"] },
     { "match": ["shoes", "pair of shoes"], "ids": ["prop:shoes"] },
-    { "match": ["turned away", "crouched and turned away"], "ids": ["prop:fig-child-back"] }
+    { "match": ["turned away", "crouched and turned away"], "ids": ["prop:fig-child-back"] },
+    { "match": ["shrine", "traditional shrine"], "ids": ["scene:shrine"] },
+    { "match": ["square scholar's cap", "schoolroom teacher"], "ids": ["prop:fig-teacher-seated"] }
   ],
   "clusters": {
     "records-joseon": [

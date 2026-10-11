@@ -2,7 +2,7 @@
   "v": 1,
   "id": "story:sillok-royal-historians",
   "state": "ready",
-  "contentVer": 2,
+  "contentVer": 3,
   "title": {
     "ko": "호야, 사관을 만나다",
     "romanization": "Hoya, sagwaneul mannada",
@@ -378,7 +378,7 @@
                 "s": 0.95
               }
             ],
-            "altEn": "Hoya proudly points at a wooden case full of old books: the Annals, which record 472 years of Joseon kings."
+            "altEn": "Hoya proudly waves beside a wooden case full of old books: the Annals, which record 472 years of Joseon kings."
           }
         }
       ],
