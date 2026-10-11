@@ -47,7 +47,7 @@ import {
 import { episodeReturn } from '../../logic/layout/quest-return';
 import { applyQuestResult, type QuestResultOutcome } from '../../logic/results-award';
 import { resultsCheerMessage, resultsHeadline } from '../../logic/results-copy';
-import { extraCardsAnnouncement, extraCardsView } from '../../logic/results-extras';
+import { extraCardsAnnouncement, extraCardsView } from '../../logic/results-extra-cards';
 import { bookmarkClearedByResults } from '../../logic/story/resume';
 import { useReducedMotion } from '../../platform/motion';
 import { track } from '../../platform/telemetry';

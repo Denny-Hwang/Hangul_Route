@@ -1,7 +1,7 @@
 import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import { cardById } from '../../content';
-import { EXTRA_CARDS_SHOWN, extraCardsAnnouncement, extraCardsView } from '../results-extras';
+import { EXTRA_CARDS_SHOWN, extraCardsAnnouncement, extraCardsView } from '../results-extra-cards';
 import type { QuestResultOutcome } from '../results-award';
 
 const x = getMessages('en').learner.results.extraCards;
