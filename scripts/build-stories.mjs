@@ -20,6 +20,10 @@
 //                                                       fail over budget (CI)
 //   node scripts/build-stories.mjs --include-drafts --out <path>
 //                                                       preview bundle with drafts (never under apps/)
+//   node scripts/build-stories.mjs --include-fixtures   e2e bundle: adds the ready story fixtures of
+//                                                       packages/content-schema/src/__fixtures__/story/
+//                                                       (F-STORY-002 §5). Never committed: --check fails
+//                                                       on it and a plain run restores the real bundle.
 //
 // Dependency-free Node (same family as validate-content.mjs). Exit 0 when the
 // bundle is written / in sync / within budget, 1 on a content or drift error,
@@ -203,6 +207,31 @@ export function artBytes(stories) {
   return { raw, scenes };
 }
 
+/**
+ * The e2e bundle (--include-fixtures). Test fixtures are written in the input
+ * form (schema defaults left out), so unlike content they are not typed
+ * literals: they go through the real schema (`parseStory`, zod defaults) when
+ * the module loads. Content stories keep their typed literals; episodes and
+ * quests are derived from both as usual.
+ */
+export function renderFixtureBundle({ stories, fixtures, episodes, quests }) {
+  const sortedFixtures = [...fixtures].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  return (
+    GENERATED_HEADER +
+    "// E2E FIXTURE BUNDLE (--include-fixtures): never commit; run node scripts/build-stories.mjs to restore.\n" +
+    "import { parseStory, type Episode, type Quest, type Story } from '@hangul-route/content-schema';\n\n" +
+    `const contentStories: Story[] = ${literal(stories)};\n\n` +
+    `const fixtureStories: Story[] = (${literal(sortedFixtures)} as unknown[]).map((raw) => parseStory(raw));\n\n` +
+    "export const storiesAll: Story[] = [...contentStories, ...fixtureStories].sort((a, b) =>\n" +
+    "  a.id < b.id ? -1 : a.id > b.id ? 1 : 0,\n" +
+    ");\n\n" +
+    `export const storyEpisodes: Episode[] = ${literal(episodes)};\n\n` +
+    `export const storyQuests: Quest[] = ${literal(quests)};\n\n` +
+    "/** Only an e2e bundle has this export: it switches on the e2e entry (apps/mobile navigation/story-e2e.tsx). */\n" +
+    `export const storyFixtureIds: string[] = ${literal(sortedFixtures.map((f) => f.id))};\n`
+  );
+}
+
 /** Pure: size problems as human-readable strings (empty = within budget). */
 export function checkBudget({ perStory, total, art }) {
   const problems = [];
@@ -238,6 +267,39 @@ function sizes(stories, source) {
 // ---- file system and CLI ------------------------------------------------------
 
 class ContentError extends Error {}
+
+const FIXTURE_DIR = ["packages", "content-schema", "src", "__fixtures__", "story"];
+
+/**
+ * The ready story fixtures, for an e2e build only. Files that are not a story
+ * (the research numbers) and drafts are skipped; a broken file fails.
+ */
+function readFixtureStories(root) {
+  const dir = join(root, ...FIXTURE_DIR);
+  if (!existsSync(dir)) throw new ContentError(`::error::--include-fixtures: ${FIXTURE_DIR.join("/")} is missing`);
+  const stories = [];
+  for (const name of readdirSync(dir).filter((n) => n.endsWith(".json")).sort()) {
+    const rel = [...FIXTURE_DIR, name].join("/");
+    let story;
+    try {
+      story = JSON.parse(readFileSync(join(dir, name), "utf8"));
+    } catch (error) {
+      throw new ContentError(`::error file=${rel}::not valid JSON: ${error.message}`);
+    }
+    const isStory = story !== null && typeof story === "object" && typeof story.id === "string" && STORY_ID_RE.test(story.id);
+    if (isStory && story.state === "ready") stories.push(story);
+  }
+  return stories;
+}
+
+function checkFixtureIds(stories, fixtures) {
+  const ids = new Set(stories.map((s) => s.id));
+  for (const f of fixtures) {
+    if (ids.has(f.id)) {
+      throw new ContentError(`::error::--include-fixtures: the fixture ${f.id} has the id of a content story; rename the fixture`);
+    }
+  }
+}
 
 function readStories(root, includeDrafts) {
   const dir = join(root, "content", "stories");
@@ -277,15 +339,16 @@ function readStories(root, includeDrafts) {
 }
 
 const USAGE =
-  "Usage: node scripts/build-stories.mjs [--check] [--report] [--include-drafts --out <path>] [--out <path>]";
+  "Usage: node scripts/build-stories.mjs [--check] [--report] [--include-drafts --out <path>] [--include-fixtures] [--out <path>]";
 
 function parseArgs(argv) {
-  const opts = { check: false, report: false, includeDrafts: false, out: undefined };
+  const opts = { check: false, report: false, includeDrafts: false, includeFixtures: false, out: undefined };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
     if (arg === "--check") opts.check = true;
     else if (arg === "--report") opts.report = true;
     else if (arg === "--include-drafts") opts.includeDrafts = true;
+    else if (arg === "--include-fixtures") opts.includeFixtures = true;
     else if (arg === "--out") {
       const value = argv[i + 1];
       if (!value || value.startsWith("--")) return { error: "--out needs a path" };
@@ -305,6 +368,12 @@ export function main(argv, root) {
   const { opts } = parsed;
   const defaultTarget = join(root, "apps", "mobile", "src", "content", "stories.generated.ts");
 
+  if (opts.includeFixtures && (opts.check || opts.report || opts.includeDrafts)) {
+    process.stderr.write(
+      `--include-fixtures builds an e2e bundle only; it does not combine with --check, --report or --include-drafts\n${USAGE}\n`
+    );
+    return 2;
+  }
   if (opts.includeDrafts && !opts.out) {
     process.stderr.write(`--include-drafts needs --out <path>: the app bundle never holds drafts\n${USAGE}\n`);
     return 2;
@@ -319,8 +388,18 @@ export function main(argv, root) {
   }
 
   let bundle;
+  let fixtures = [];
   try {
-    bundle = buildBundle(readStories(root, opts.includeDrafts));
+    const stories = readStories(root, opts.includeDrafts);
+    if (opts.includeFixtures) {
+      fixtures = readFixtureStories(root);
+      checkFixtureIds(stories, fixtures);
+    }
+    bundle = buildBundle(stories);
+    if (opts.includeFixtures) {
+      const all = buildBundle([...stories, ...fixtures]);
+      bundle = { ...bundle, episodes: all.episodes, quests: all.quests };
+    }
   } catch (error) {
     if (error instanceof ContentError) {
       process.stdout.write(`${error.message}\n`);
@@ -329,7 +408,7 @@ export function main(argv, root) {
     }
     return 1;
   }
-  const source = renderBundle(bundle);
+  const source = opts.includeFixtures ? renderFixtureBundle({ ...bundle, fixtures }) : renderBundle(bundle);
   const targetRel = relative(root, target).split(sep).join("/");
 
   if (opts.report) {
@@ -367,8 +446,13 @@ export function main(argv, root) {
   mkdirSync(dirname(target), { recursive: true });
   writeFileSync(target, source);
   process.stdout.write(
-    `wrote ${targetRel}: ${bundle.stories.length} stories, ${bundle.episodes.length} shelf episodes, ${bundle.quests.length} quests\n`
+    `wrote ${targetRel}: ${bundle.stories.length + fixtures.length} stories, ${bundle.episodes.length} shelf episodes, ${bundle.quests.length} quests\n`
   );
+  if (opts.includeFixtures) {
+    process.stdout.write(
+      `::warning file=${targetRel}::test fixture bundle for an e2e build: do not commit it; run node scripts/build-stories.mjs to restore\n`
+    );
+  }
   return 0;
 }
 

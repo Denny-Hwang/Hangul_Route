@@ -41,7 +41,7 @@ const ts = loadTypeScript();
 
 const SCAN_DIRS = ["apps", "packages", "scripts"];
 const SKIPPED_DIRS = new Set([
-  "node_modules", "dist", "build", "out", "coverage", ".next", ".expo", ".turbo",
+  "node_modules", "dist", "dist-e2e", "build", "out", "coverage", ".next", ".expo", ".turbo",
   "__tests__", "__mocks__", "e2e", ".git",
 ]);
 const SOURCE_EXT = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]);

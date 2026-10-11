@@ -135,7 +135,7 @@ Opened by tapping an inline chip in the narration (or a word chip in D).
 └──────────────────────────────────────────────────────────────┘
 ```
 
-- Art left (up to 55 %), text and controls right. The web app keeps the single 480 px column from 600 px up.
+- Art left (up to 55 %), text and controls right, whenever the window is landscape and at least 700 wide (F-LAYOUT-001 `sideBySide`): native tablets, landscape phones and the web PWA alike (the 480 px web column is gone since F-LAYOUT-001 PR 2a). Component spec: `design/components/StoryReaderView/spec.md`.
 
 ## F. Reader states
 

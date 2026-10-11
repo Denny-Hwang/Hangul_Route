@@ -6,7 +6,7 @@ import { buildBundle } from '../../../../../scripts/build-stories.mjs';
 import { episodesAll } from '../episodes';
 import { questsAll } from '../quests';
 import { parseStoryMinigameRef, storyIdOfQuest } from '../../logic/story/story-ref';
-import { storiesAll, storyById, storyEpisodes, storyQuests, storySlug } from '../stories';
+import { storiesAll, storyById, storyEpisodes, storyFixtureIds, storyQuests, storySlug } from '../stories';
 
 const FIXTURE_DIR = join(
   __dirname,
@@ -15,6 +15,12 @@ const FIXTURE_DIR = join(
 const readyFixture: unknown = JSON.parse(readFileSync(join(FIXTURE_DIR, 'valid.ready.json'), 'utf8'));
 
 describe('stories bundle wiring (F-STORY-001 PR 1.4)', () => {
+  it('the committed bundle holds no test fixture (F-STORY-002 §5: --include-fixtures is e2e-only)', () => {
+    expect(storyFixtureIds).toEqual([]);
+    const fixtureIds = new Set(['story:hangul-day', 'story:hangul-day-draft', 'story:sun-and-moon-fixture']);
+    for (const story of storiesAll) expect(fixtureIds.has(story.id) && /test fixture/i.test(story.authorNotes ?? '')).toBe(false);
+  });
+
   it('storySlug strips the story: prefix', () => {
     expect(storySlug('story:seollal-new-year')).toBe('seollal-new-year');
   });

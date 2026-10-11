@@ -13,7 +13,7 @@ vi.mock('../storage', () => ({
 }));
 
 import { flags } from '../../config/flags';
-import { flushQueue, track } from '../telemetry';
+import { addTelemetryListener, flushQueue, track } from '../telemetry';
 
 const ORIGINAL_FETCH = globalThis.fetch;
 
@@ -153,5 +153,41 @@ describe('offline queue (F-PWA-001 §3.2)', () => {
     await track({ name: 'session.start' }, { fetchImpl: failing });
     expect(mem.has('telemetry:queue')).toBe(false);
     expect(failing).not.toHaveBeenCalled();
+  });
+});
+
+describe('addTelemetryListener (fixture e2e builds observe what track() accepts)', () => {
+  beforeEach(() => {
+    flags.telemetryEnabled = true;
+    flags.telemetryNetwork = false;
+  });
+
+  it('hears every event track() accepts, even with the network off, until unsubscribed', async () => {
+    const heard: unknown[] = [];
+    const off = addTelemetryListener((e) => heard.push(e));
+    await track({ name: 'story.read.finished', profileId: 'p1', payload: { scenes: 5 } });
+    expect(heard).toEqual([{ name: 'story.read.finished', profileId: 'p1', payload: { scenes: 5 } }]);
+    off();
+    await track({ name: 'story.read.finished' });
+    expect(heard).toHaveLength(1);
+  });
+
+  it('hears nothing when telemetry is disabled or the name is missing', async () => {
+    const heard: unknown[] = [];
+    const off = addTelemetryListener((e) => heard.push(e));
+    flags.telemetryEnabled = false;
+    await track({ name: 'story.read.finished' });
+    flags.telemetryEnabled = true;
+    await track({ name: '' as never });
+    expect(heard).toEqual([]);
+    off();
+  });
+
+  it('a listener that throws never breaks track()', async () => {
+    const off = addTelemetryListener(() => {
+      throw new Error('boom');
+    });
+    await expect(track({ name: 'story.read.finished' })).resolves.toBe(true);
+    off();
   });
 });

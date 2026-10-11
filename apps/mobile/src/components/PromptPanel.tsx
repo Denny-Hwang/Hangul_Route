@@ -23,9 +23,14 @@ interface CommonProps {
 /** The text fallback: the screen shows only a speaker, so the panel prints what the voice says. */
 interface TextProps extends CommonProps {
   variant?: 'text';
-  /** What the voice says for this prompt (`spokenFor(...)`), shown as taught content. */
-  ko: string;
-  romanization: string;
+  /**
+   * What the voice says for this prompt (`spokenFor(...)`), shown as taught content. Omit both when
+   * the screen already shows that Korean right above the panel (the story reader's Korean block,
+   * F-STORY-002): the panel then carries the read line, why and the action, so the Korean is not drawn
+   * twice, and still shows as soon as the text does (unlike `status`, which waits for a play).
+   */
+  ko?: string;
+  romanization?: string;
 }
 
 /**
@@ -50,7 +55,9 @@ export function PromptPanel(props: Props): React.ReactElement {
           <View style={{ alignItems: 'center', gap: spacing.sm }}>
             {props.variant !== 'status' ? (
               <>
-                <KoreanText ko={props.ko} romanization={props.romanization} size="md" testID={`${testID}-text`} />
+                {props.ko !== undefined ? (
+                  <KoreanText ko={props.ko} romanization={props.romanization ?? ''} size="md" testID={`${testID}-text`} />
+                ) : null}
                 <Body tone="muted" align="center">{view.readLine}</Body>
               </>
             ) : null}

@@ -121,6 +121,31 @@ function endpointFor(opts: TelemetryClientOptions | undefined): string {
   return opts?.endpoint ?? DEFAULT_ENDPOINT;
 }
 
+type TelemetryListener = (event: TelemetryEvent) => void;
+const listeners = new Set<TelemetryListener>();
+
+/**
+ * Observe every event `track` accepts (before the network decision). Used by
+ * the story fixture e2e build (`navigation/story-e2e.tsx`) to check what the
+ * reader emits; nothing registers one in a real build. Returns the unsubscribe.
+ */
+export function addTelemetryListener(listener: TelemetryListener): () => void {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}
+
+function notify(event: TelemetryEvent): void {
+  for (const listener of listeners) {
+    try {
+      listener(event);
+    } catch {
+      // An observer never breaks telemetry.
+    }
+  }
+}
+
 /**
  * Send a telemetry event. Returns a Promise that always resolves —
  * `true` if the event was queued/sent successfully, `false` otherwise.
@@ -134,6 +159,7 @@ export async function track(
 
   // Run validation even when network is off, so dev mode catches typos.
   if (!event.name || typeof event.name !== 'string') return false;
+  notify(event);
 
   if (!flags.telemetryNetwork) return true;
 

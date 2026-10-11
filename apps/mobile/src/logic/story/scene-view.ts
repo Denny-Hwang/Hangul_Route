@@ -12,7 +12,7 @@ import {
   type StoryLevel,
   type StoryScene,
 } from '@hangul-route/content-schema';
-import { STORY_READER_COPY } from './story-reader-copy';
+import { getMessages, type Messages } from '@hangul-route/i18n';
 
 /**
  * The pure view model of one reader scene (F-STORY-002 §3.2). The component
@@ -73,9 +73,14 @@ export interface SceneView {
   labels: SceneLabels;
 }
 
+/** The `learner.story.reader` subtree of the UI dictionary (F-I18N-001). */
+export type StoryReaderCopy = Messages['learner']['story']['reader'];
+
 export interface SceneViewContext {
   /** Language of the narration text as shown. Default `en-US`; see `narrationSpeechLang` (scene-audio.ts). */
   narrationLang?: SpeechLang;
+  /** The words of the labels, for the UI locale (the screen passes `useMessages()`'s subtree). Default English. */
+  copy?: StoryReaderCopy;
 }
 
 const CAPTION_WORDS = 6;
@@ -180,7 +185,7 @@ export function buildSceneView(
   const scene = Number.isInteger(index) && index >= 0 ? tier?.scenes[index] : undefined;
   if (!tier || !scene) return null;
 
-  const copy = STORY_READER_COPY.reader;
+  const copy = ctx.copy ?? getMessages('en').learner.story.reader;
   const total = tier.scenes.length;
   const position = index + 1;
   const art = scene.artPending === true ? null : (scene.art ?? null);
@@ -207,10 +212,10 @@ export function buildSceneView(
     blocks: BLOCKS_BY_LEVEL[level].filter((b) => b !== 'korean' || korean !== null),
     traditional: isTraditionalTale(story),
     labels: {
-      position: copy.position(position, total),
+      position: copy.position.pill(position, total),
       scene: copy.sceneOf(position, total),
       announcement: altEn === '' ? copy.sceneOf(position, total) : copy.announce(position, total, altEn),
-      next: isLast ? copy.finish : copy.next,
+      next: isLast ? copy.finish.cta : copy.next.cta,
     },
   };
 }

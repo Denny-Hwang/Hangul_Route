@@ -46,7 +46,8 @@
     "apps/web/src/app/teach/space/page.tsx",
     "apps/web/src/app/teach/space/relink/page.tsx",
     "apps/web/src/components/console/ui.tsx",
-    "apps/web/src/components/console/use-console.ts"
+    "apps/web/src/components/console/use-console.ts",
+    "apps/mobile/src/screens/story/**"
   ],
   "pluralTernaryBaseline": {
     "apps/web/src/data/stage1-catalog.ts": 1,

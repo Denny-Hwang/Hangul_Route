@@ -1,63 +1,16 @@
 /**
- * Every UI string of the story reader, its end page and the Sources screen
- * (F-STORY-002 §3.3-3.8). Plain strings, never a number-as-score, never
- * red-and-cross wording (D3), never an age (D1). Function messages carry the
- * plurals and the interpolation. English only until `packages/i18n` takes the
- * learner strings; then this object moves to `messages/en/learner.ts`
- * unchanged. Korean taught content never appears here: it is drawn by
- * `KoreanText` from the story data.
+ * The Sources screen strings (F-STORY-002 §3.8). Plain strings, never a
+ * number-as-score, never red-and-cross wording (D3), never an age (D1).
+ * Function messages carry the plurals and the interpolation. The reader and
+ * end-page strings moved to `learner.story.reader` / `learner.story.end` in
+ * `packages/i18n` with PR 2.6a (the first screen that shows them); these move
+ * the same way with the Sources screen (PR 2.7). Korean taught content never
+ * appears here: it is drawn by `KoreanText` from the story data.
  */
 
 const plural = (count: number, one: string, many: string): string => (count === 1 ? one : many);
 
 export const STORY_READER_COPY = {
-  reader: {
-    close: 'Close',
-    back: 'Back',
-    next: 'Next',
-    finish: 'Finish',
-    sources: 'Sources',
-    readToMe: 'Read to me',
-    /** A page number, not a meter: it may go down on Back. */
-    position: (index: number, total: number): string => `${index} / ${total}`,
-    sceneOf: (index: number, total: number): string => `Scene ${index} of ${total}`,
-    /** Announced when a scene opens: position, then the picture. */
-    announce: (index: number, total: number, artDescription: string): string =>
-      `Scene ${index} of ${total}. ${artDescription}`,
-    traditionalTale: 'Traditional tale',
-    inEnglish: 'In English',
-    didYouKnow: 'Did you know?',
-    sayItYourself: 'Say it yourself',
-    tapToHear: 'Tap to hear',
-    hearStory: 'Hear this scene',
-    hearKorean: 'Hear the Korean',
-    hearTerm: (romanization: string): string => `Hear ${romanization}`,
-    /** Screen-reader label of an inline term chip. */
-    termLabel: (romanization: string, gloss: string): string =>
-      `Korean word ${romanization}, ${gloss}. Double tap to hear.`,
-    showRomanization: 'Show how to say it',
-    closeGloss: 'Close',
-    /** One line, then Back and (quest mode) Continue: a content problem never traps a quest. */
-    unavailable: 'This story is not ready to read yet.',
-    continue: 'Continue',
-    advisory: (note: string): string => `A note for grown-ups: ${note}`,
-    dismiss: 'Dismiss',
-    cultureNote: {
-      moreInCultureNotes: 'More in Culture notes',
-      close: 'Close',
-    },
-    checkpoint: {
-      tryIt: 'Try it',
-      skip: 'Skip',
-    },
-  },
-  end: {
-    title: 'The End',
-    continue: 'Continue',
-    done: 'Done',
-    readAgain: 'Read again',
-    sources: 'Sources',
-  },
   sources: {
     title: 'Sources',
     back: 'Back',

@@ -20,6 +20,8 @@ import { HomeworkScreen } from '../screens/homework/HomeworkScreen';
 import { QuestPlayerScreen } from '../screens/quest/QuestPlayerScreen';
 import { ResultsScreen } from '../screens/results/ResultsScreen';
 import { MinigameScreen } from '../screens/minigames/MinigameScreen';
+import { StoryReaderScreen } from '../screens/story/StoryReaderScreen';
+import { STORY_FIXTURES_BUILD, StoryE2eHook } from './story-e2e';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -42,26 +44,30 @@ export function RootNavigator(): React.ReactElement {
   }
 
   return (
-    <Stack.Navigator
-      screenOptions={{ headerShown: false, animation: 'fade_from_bottom' }}
-      initialRouteName={hasProfile ? 'Main' : 'Onboarding'}
-    >
-      <Stack.Screen name="Onboarding" component={OnboardingStack} />
-      <Stack.Screen name="Main" component={MainTabs} />
-      <Stack.Screen name="EpisodeDetail" component={EpisodeDetailScreen} />
-      <Stack.Screen name="QuestPlayer" component={QuestPlayerScreen} />
-      <Stack.Screen name="Minigame" component={MinigameScreen} />
-      <Stack.Screen name="Results" component={ResultsScreen} options={{ animation: 'fade' }} />
-      <Stack.Screen name="CardDetail" component={CardDetailModal} options={{ presentation: 'modal' }} />
-      <Stack.Screen name="PinEntry" component={PinEntryModal} options={{ presentation: 'modal' }} />
-      <Stack.Screen name="PinReset" component={PinResetModal} options={{ presentation: 'modal' }} />
-      <Stack.Screen name="ParentDashboard" component={ParentDashboardScreen} />
-      <Stack.Screen name="Profile" component={ProfileScreen} />
-      <Stack.Screen name="Homework" component={HomeworkScreen} />
-      <Stack.Screen name="Restore" component={RestoreScreen} />
-      <Stack.Screen name="SaveProgress" component={SaveProgressScreen} />
-      <Stack.Screen name="JoinSpace" component={JoinSpaceScreen} />
-      <Stack.Screen name="Paywall" component={PaywallScreen} />
-    </Stack.Navigator>
+    <>
+      {STORY_FIXTURES_BUILD ? <StoryE2eHook /> : null}
+      <Stack.Navigator
+        screenOptions={{ headerShown: false, animation: 'fade_from_bottom' }}
+        initialRouteName={hasProfile ? 'Main' : 'Onboarding'}
+      >
+        <Stack.Screen name="Onboarding" component={OnboardingStack} />
+        <Stack.Screen name="Main" component={MainTabs} />
+        <Stack.Screen name="EpisodeDetail" component={EpisodeDetailScreen} />
+        <Stack.Screen name="QuestPlayer" component={QuestPlayerScreen} />
+        <Stack.Screen name="Minigame" component={MinigameScreen} />
+        <Stack.Screen name="Results" component={ResultsScreen} options={{ animation: 'fade' }} />
+        <Stack.Screen name="CardDetail" component={CardDetailModal} options={{ presentation: 'modal' }} />
+        <Stack.Screen name="PinEntry" component={PinEntryModal} options={{ presentation: 'modal' }} />
+        <Stack.Screen name="PinReset" component={PinResetModal} options={{ presentation: 'modal' }} />
+        <Stack.Screen name="ParentDashboard" component={ParentDashboardScreen} />
+        <Stack.Screen name="Profile" component={ProfileScreen} />
+        <Stack.Screen name="Homework" component={HomeworkScreen} />
+        <Stack.Screen name="Restore" component={RestoreScreen} />
+        <Stack.Screen name="SaveProgress" component={SaveProgressScreen} />
+        <Stack.Screen name="JoinSpace" component={JoinSpaceScreen} />
+        <Stack.Screen name="Paywall" component={PaywallScreen} />
+        <Stack.Screen name="StoryReader" component={StoryReaderScreen} />
+      </Stack.Navigator>
+    </>
   );
 }

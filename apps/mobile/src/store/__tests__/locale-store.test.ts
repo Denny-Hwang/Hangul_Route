@@ -242,6 +242,26 @@ describe('locale-store: setters', () => {
     expect(track).toHaveBeenCalledTimes(1);
   });
 
+  it('setReadToMe (F-STORY-002 §3.4) persists per profile and keeps every other setting', () => {
+    useLocaleStore.getState().setProfileLocale('profile:a', 'es');
+    useLocaleStore.getState().setRomanizationMode('profile:a', 'tap');
+    track.mockClear();
+    useLocaleStore.getState().setReadToMe('profile:a', true);
+    expect(useLocaleStore.getState().byProfile['profile:a']).toEqual({ uiLocale: 'es', romanizationMode: 'tap', readToMe: true });
+    expect(mem.get('settings:profile:a')).toEqual({ uiLocale: 'es', romanizationMode: 'tap', readToMe: true });
+    useLocaleStore.getState().setReadToMe('profile:a', false);
+    expect(mem.get('settings:profile:a')).toEqual({ uiLocale: 'es', romanizationMode: 'tap', readToMe: false });
+    // No telemetry for the switch (§3.12 defines none) and other profiles are untouched.
+    expect(track).not.toHaveBeenCalled();
+    expect(useLocaleStore.getState().byProfile['profile:b']).toBeUndefined();
+  });
+
+  it('setReadToMe on a profile with no stored settings starts from the defaults', () => {
+    useLocaleStore.getState().setReadToMe('profile:new', false);
+    expect(useLocaleStore.getState().byProfile['profile:new']).toEqual({ romanizationMode: 'always', readToMe: false });
+    expect(mem.get('settings:profile:new')).toEqual({ romanizationMode: 'always', readToMe: false });
+  });
+
   it('a failing write never throws or loses the in-memory choice', async () => {
     storage.failWrites = true;
     expect(() => useLocaleStore.getState().setDeviceLocale('es')).not.toThrow();

@@ -42,6 +42,61 @@ describe('createAudioRunner (F-STORY-002 §3.2)', () => {
     expect(runner.isPlaying()).toBe(false);
   });
 
+  it('while the voice check was still unknown at the start, an unavailable Korean step is skipped and the English carries on (§3.4)', async () => {
+    const { calls, playPrompt } = fakePlayer();
+    const onStatus = vi.fn();
+    const runner = createAudioRunner({ playPrompt, onStatus });
+    const done = runner.play(
+      // The fourth step leaves `language` out: the PlaySpec default is Korean.
+      [en('A '), ko('한글'), en(' B'), { text: '한글날', kind: 'word', source: 'story-reader' }, en(' C')],
+      { skipUnavailableKorean: true },
+    );
+    await flush();
+    calls[0]!.settle('played');
+    await flush();
+    // The check settles to "no Korean voice" during the chain.
+    calls[1]!.settle('unavailable');
+    await flush();
+    expect(calls.map((c) => c.spec.text)).toEqual(['A ', '한글', ' B']);
+    calls[2]!.settle('played');
+    await flush();
+    calls[3]!.settle('unavailable');
+    await flush();
+    calls[4]!.settle('played');
+    // The English was heard; the slot still learns that the Korean could not play.
+    await expect(done).resolves.toBe('unavailable');
+    expect(calls).toHaveLength(5);
+    expect(onStatus).toHaveBeenCalledTimes(1);
+    expect(onStatus).toHaveBeenCalledWith({ status: 'unavailable' });
+    expect(runner.isPlaying()).toBe(false);
+  });
+
+  it('skipping an unavailable Korean step never skips muted, nor an unavailable English step', async () => {
+    for (const [failing, result] of [
+      [ko('한글'), 'muted'],
+      [en('A '), 'unavailable'],
+    ] as const) {
+      const { calls, playPrompt } = fakePlayer();
+      const runner = createAudioRunner({ playPrompt });
+      const done = runner.play([failing, en(' B')], { skipUnavailableKorean: true });
+      await flush();
+      calls[0]!.settle(result);
+      await expect(done).resolves.toBe(result);
+      expect(calls).toHaveLength(1);
+    }
+  });
+
+  it('a chain whose Korean all played reports played even with the skip option', async () => {
+    const { calls, playPrompt } = fakePlayer();
+    const runner = createAudioRunner({ playPrompt });
+    const done = runner.play([ko('세종'), en(' B')], { skipUnavailableKorean: true });
+    await flush();
+    calls[0]!.settle('played');
+    await flush();
+    calls[1]!.settle('played');
+    await expect(done).resolves.toBe('played');
+  });
+
   it('muted or unavailable on a Korean step ends the chain; the English that follows is skipped too', async () => {
     for (const result of ['muted', 'unavailable'] as const) {
       const { calls, playPrompt } = fakePlayer();
