@@ -118,7 +118,7 @@ Columns: shelf id = `episode:shelf-<slug>`; **home cell** = `<recommendedStage>-
 | 5 | sillok-royal-historians | Hoya Meets the Royal Historians | stage1-letters | letters | 1 | 4 | L | culture 5 |  | A3 | records-joseon |
 | 6 | kim-hongdo-genre-paintings | Kim Hong-do's Pictures of Everyday Life | stage1-life | life | 1 | 5 | L | culture 7 |  | B1 | science-art-life |
 | 7 | seollal-new-year | Hoya's Seollal Morning | stage1-rites | rites | 1 | 4 | L | story-time 1 | S | B5 | seasons-tales |
-| 8 | chuseok-ganggangsullae | Chuseok: Songpyeon Under the Full Moon | stage1-rites | rites | 1 | 5 | L | story-time 2 | S | B5, C4 | seasons-tales |
+| 8 | chuseok-ganggangsullae | Chuseok: Songpyeon and the Full Moon | stage1-rites | rites | 1 | 5 | L | story-time 2 | S | B5, C4 | seasons-tales |
 | 9 | sun-and-moon | The Sun and the Moon (A Traditional Tale) | stage1-nature | nature | 1 | 5 | L | story-time 3 | S | D5*, D2 | seasons-tales |
 | 10 | cheugugi-rain-gauge | The Bowl That Measured the Rain | stage1-crafts | crafts | 1 | 4 | L | culture 6 | S | E3 | science-art-life |
 | 11 | sillok-mountain-archives | The Annals Hide in the Mountains | stage2-letters | letters | 2 | 5 | – | culture 8 |  | A3 | records-joseon |

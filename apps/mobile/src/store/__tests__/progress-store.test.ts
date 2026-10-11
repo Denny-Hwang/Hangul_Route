@@ -205,6 +205,23 @@ describe('loading saved progress (audit UX-01 / L16)', () => {
     expect(stored()).not.toHaveProperty('placements');
   });
 
+  it('a saved snapshot that predates stageDoneAt hydrates and takes writes without gaining the key (F-ROUTE-001 R-W1)', async () => {
+    mem.set('progress:p1', savedSnapshot());
+    expect(mem.get('progress:p1')).not.toHaveProperty('stageDoneAt');
+    await useProgressStore.getState().hydrate('p1');
+    useProgressStore.getState().recordQuestComplete('p1', { questId: 'quest:b', episodeId: 'episode:e', stars: 2, accuracy: 0.8, attempts: 1 });
+    expect(stored()).not.toHaveProperty('stageDoneAt');
+  });
+
+  it('a saved stage latch survives hydrate and later writes (F-ROUTE-001 R-W1)', async () => {
+    const latch = { stage1: '2026-10-11T09:30:00.000Z' };
+    mem.set('progress:p1', { ...savedSnapshot(), stageDoneAt: latch });
+    await useProgressStore.getState().hydrate('p1');
+    useProgressStore.getState().recordQuestComplete('p1', { questId: 'quest:b', episodeId: 'episode:e', stars: 2, accuracy: 0.8, attempts: 1 });
+    useProgressStore.getState().unlockCard('p1', 'card:new');
+    expect(stored()?.stageDoneAt).toEqual(latch);
+  });
+
   it('a blank record from ensure() does not hide the saved snapshot', async () => {
     mem.set('progress:p1', savedSnapshot());
     expect(useProgressStore.getState().ensure('p1').cards).toEqual([]);

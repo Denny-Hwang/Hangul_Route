@@ -1,7 +1,7 @@
 import type { Episode } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { episodeOf, snapshotWith } from '../../stage1/__tests__/fixtures';
-import { initialCard, initialEpisode, latchedSelection, reconcileSelection } from '../pane-selection';
+import { initialCard, initialEpisode, latchedSelection, reconcileSelection, requestedSelection } from '../pane-selection';
 
 const EPISODES: Episode[] = [
   episodeOf('episode:one', ['quest:a', 'quest:b']),
@@ -105,5 +105,19 @@ describe('latchedSelection', () => {
 
   it('is null when nothing is latched', () => {
     expect(latchedSelection(null, 'p1')).toBeNull();
+  });
+});
+
+describe('requestedSelection', () => {
+  it('is the requested episode when the catalogue has it', () => {
+    expect(requestedSelection('episode:two', EPISODES)).toBe('episode:two');
+  });
+
+  it('is null for an unknown id (a stale homework link), so the latched default applies', () => {
+    expect(requestedSelection('episode:gone', EPISODES)).toBeNull();
+  });
+
+  it('is null when nothing is requested', () => {
+    expect(requestedSelection(undefined, EPISODES)).toBeNull();
   });
 });

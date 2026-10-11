@@ -26,10 +26,6 @@ const spacing = (file: string, ko: string): KnownFinding => ({
 });
 
 export const KNOWN_STORY_FINDINGS: readonly KnownFinding[] = [
-  spacing('dano-ssireum', '강릉단오제'),
-  spacing('dano-ssireum', '인류무형유산'),
-  spacing('gimjang-arirang', '김치와 김장문화'),
   spacing('jagyeongnu-water-clock', '장영실'),
   spacing('nanjung-ilgi', '난중일기'),
-  spacing('seollal-new-year', '국가무형유산'),
 ];

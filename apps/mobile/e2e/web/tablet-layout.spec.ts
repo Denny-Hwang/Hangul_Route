@@ -159,6 +159,19 @@ async function openJourney(page: Page): Promise<void> {
 const cell = (page: Page, theme: RegExp, stage: string) => page.getByRole('button', { name: new RegExp(`${theme.source}.* episode for ${stage}(, coming soon)?$`) });
 const detailPane = (page: Page) => page.getByRole('region', { name: 'Episode details' });
 const mapPane = (page: Page) => page.getByRole('region', { name: 'Journey map' });
+const tab = (page: Page, name: string) => page.getByRole('tablist').getByRole('link', { name, exact: true });
+/** Skips every game of the open quest (however many it has) until "See results" shows. */
+async function skipToResults(page: Page): Promise<void> {
+  const results = page.getByRole('button', { name: 'See results' });
+  for (let i = 0; i < 20 && !(await results.isVisible()); i += 1) {
+    const skip = page.getByRole('button', { name: 'Skip for now' });
+    const cont = page.getByRole('button', { name: 'Continue' });
+    await expect(skip.or(cont).or(results).first()).toBeVisible();
+    if (await skip.isVisible()) await skip.click();
+    else if (await cont.isVisible()) await cont.click();
+  }
+  await results.click();
+}
 const overflowsSideways = (page: Page) => page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
 
 test.describe('Journey at 1180x820: two panes', () => {
@@ -206,7 +219,7 @@ test.describe('Journey at 1180x820: two panes', () => {
     await expect(page.getByLabel('Go back', { exact: true })).toHaveCount(0);
   });
 
-  test('Start opens the quest full screen; leaving returns to the same selection', async ({ page }) => {
+  test('Start opens the quest full screen; leaving returns to the Journey pane with the same selection', async ({ page }) => {
     page.on('dialog', (d) => void d.accept());
     await openJourney(page);
     await cell(page, /^Life|^Food/, 'stage1').click();
@@ -219,13 +232,79 @@ test.describe('Journey at 1180x820: two panes', () => {
     await expect(mapPane(page)).toHaveCount(0);
     await page.getByRole('button', { name: 'Leave quest' }).click();
 
-    // Leaving lands on the quest's episode page (QuestPlayer replaces itself with it, unchanged here);
-    // its back arrow returns to the Journey, which kept its selection.
-    await expect(page.getByRole('heading', { name: 'Around the Korean Table' })).toBeVisible();
-    await page.getByLabel('Go back', { exact: true }).click();
+    // Two panes: straight back to the Journey (no full-screen episode page), the selection kept.
     await expect(mapPane(page)).toBeVisible();
     await expect(cell(page, /^Life|^Food/, 'stage1')).toHaveAttribute('aria-selected', 'true');
     await expect(detailPane(page).getByRole('heading', { name: 'Around the Korean Table' })).toBeVisible();
+    await expect(page.getByLabel('Go back', { exact: true })).toHaveCount(0);
+  });
+
+  test('leaving a quest started from Home selects its episode in the Journey pane', async ({ page }) => {
+    page.on('dialog', (d) => void d.accept());
+    await openJourney(page);
+    await cell(page, /^Life|^Food/, 'stage1').click(); // a different selection first
+    await tab(page, 'Today').click();
+    await page.getByRole('button', { name: /^Meet g, n, d, l\./ }).click();
+    await expect(page.getByRole('button', { name: 'Leave quest' })).toBeVisible();
+    await page.getByRole('button', { name: 'Leave quest' }).click();
+
+    await expect(mapPane(page)).toBeVisible();
+    await expect(cell(page, /^Letters/, 'stage1')).toHaveAttribute('aria-selected', 'true');
+    await expect(cell(page, /^Life|^Food/, 'stage1')).toHaveAttribute('aria-selected', 'false');
+    await expect(detailPane(page).getByRole('heading', { name: 'Meet the Letters' })).toBeVisible();
+  });
+
+  test('the same episode can be asked for again after the learner selected another one', async ({ page }) => {
+    page.on('dialog', (d) => void d.accept());
+    await openJourney(page);
+    const leaveFromHome = async (): Promise<void> => {
+      await tab(page, 'Today').click();
+      await page.getByRole('button', { name: /^Meet g, n, d, l\./ }).click();
+      await page.getByRole('button', { name: 'Leave quest' }).click();
+      await expect(mapPane(page)).toBeVisible();
+    };
+    await leaveFromHome();
+    await expect(cell(page, /^Letters/, 'stage1')).toHaveAttribute('aria-selected', 'true');
+    // Another selection, then the same episode asked for again: the param was cleared, so it applies again.
+    await cell(page, /^Life|^Food/, 'stage1').click();
+    await expect(cell(page, /^Letters/, 'stage1')).toHaveAttribute('aria-selected', 'false');
+    await leaveFromHome();
+    await expect(cell(page, /^Letters/, 'stage1')).toHaveAttribute('aria-selected', 'true');
+    await expect(cell(page, /^Life|^Food/, 'stage1')).toHaveAttribute('aria-selected', 'false');
+    await expect(detailPane(page).getByRole('heading', { name: 'Meet the Letters' })).toBeVisible();
+  });
+
+  test('"Episode page" on Results opens the Journey pane with the quest episode selected', async ({ page }) => {
+    await openJourney(page);
+    await cell(page, /^Life|^Food/, 'stage1').click();
+    await detailPane(page).getByRole('button', { name: 'Start', exact: true }).first().click();
+    await detailPane(page).getByRole('button', { name: 'Play anyway' }).click();
+    await skipToResults(page);
+    await expect(page.getByText('All done!')).toBeVisible();
+
+    await page.getByRole('button', { name: 'Episode page' }).click();
+    // Finishing a quest resets the stack under Results, so this selection comes from the quest, not from memory.
+    await expect(mapPane(page)).toBeVisible();
+    await expect(cell(page, /^Life|^Food/, 'stage1')).toHaveAttribute('aria-selected', 'true');
+    await expect(detailPane(page).getByRole('heading', { name: 'Around the Korean Table' })).toBeVisible();
+    await expect(page.getByLabel('Go back', { exact: true })).toHaveCount(0);
+  });
+});
+
+test.describe('Quest exits at 390x844: one pane, as before', () => {
+  test.use({ viewport: { width: 390, height: 844 } });
+
+  test('leaving a quest opens its full-screen episode page', async ({ page }) => {
+    page.on('dialog', (d) => void d.accept());
+    await openJourney(page);
+    await cell(page, /^Letters/, 'stage1').click();
+    await page.getByRole('button', { name: 'Start', exact: true }).first().click();
+    await page.getByRole('button', { name: 'Leave quest' }).click();
+    // The player replaces itself with the episode page (the one it was started from stays under it).
+    await expect(page.getByRole('heading', { name: 'Meet the Letters' }).last()).toBeVisible();
+    await expect(page.getByLabel('Go back', { exact: true }).last()).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Leave quest' })).toHaveCount(0);
+    await expect(mapPane(page)).toHaveCount(0);
   });
 });
 

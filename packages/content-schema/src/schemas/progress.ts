@@ -87,6 +87,14 @@ export const ProgressSnapshotSchema = z.object({
   streakDays: z.number().int().nonnegative(),
   /** Level checks, newest ten (F-PLC-001 section 3.8); absent in snapshots written before it. */
   placements: z.array(PlacementResultSchema).default([]),
+  /**
+   * Stage latch (F-ROUTE-001 section 3.15): stage key -> ISO time the stage was
+   * first complete. A latched stage stays Complete whatever content ships later.
+   * Absent in snapshots written before it; readers treat a missing value as `{}`.
+   * Keys are not validated on the wire so a newer build's stage never fails a sync.
+   * Writers store `new Date().toISOString()`; mergers compare instants, not strings.
+   */
+  stageDoneAt: z.record(z.string(), z.string()).optional(),
 });
 /**
  * `placements` is optional in the *type* although the schema defaults it to

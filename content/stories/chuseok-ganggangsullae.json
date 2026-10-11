@@ -1,12 +1,12 @@
 {
   "v": 1,
   "id": "story:chuseok-ganggangsullae",
-  "state": "draft",
+  "state": "ready",
   "contentVer": 1,
   "title": {
-    "ko": "한가위 보름달과 강강술래",
-    "romanization": "",
-    "en": "Chuseok: Songpyeon Under the Full Moon"
+    "ko": "추석 송편과 보름달",
+    "romanization": "Chuseok songpyeongwa boreumdal",
+    "en": "Chuseok: Songpyeon and the Full Moon"
   },
   "summaryEn": "At Chuseok (Hangawi), Hoya joins a family going back to their hometown, makes songpyeon steamed on pine needles, and watches women dance Ganggangsullae hand in hand under the full moon.",
   "theme": "rites",
@@ -14,10 +14,10 @@
   "recommendedStage": 1,
   "minutes": 5,
   "learningGoalsEn": [
-    "Say when Chuseok falls (15th day of the 8th lunar month) and that its native name is Hangawi.",
-    "Describe songpyeon and how they are made (fillings; steamed on pine needles).",
-    "Describe Ganggangsullae (women in a circle, call-and-response singing) and that UNESCO inscribed it in 2009.",
-    "Recognize and say 추석, 한가위, 송편, 보름달 and 강강술래."
+    "Know when Chuseok falls (15th day of the 8th lunar month) and that its native name is Hangawi.",
+    "Understand what songpyeon are and how they are made (fillings; steamed on pine needles).",
+    "Understand Ganggangsullae (women in a circle, call-and-response singing) and know that UNESCO inscribed it in 2009.",
+    "Read and recognize 추석 (chuseok), 한가위 (hangawi), 송편 (songpyeon), 보름달 (boreumdal) and 강강술래 (ganggangsullae)."
   ],
   "origin": {
     "type": "documented",
@@ -114,7 +114,8 @@
       "scenes": [
         {
           "id": "s1",
-          "narrationEn": "It's Chuseok, also called Hangawi! It falls on the fifteenth day of the eighth lunar month, just as the harvest begins. Families give thanks for the year's crops.",
+          "narrationEn": "It's {kw:chuseok}, also called Hangawi! It falls on the fifteenth day of the eighth lunar month, just as the harvest begins. Families give thanks for the year's crops.",
+          "captionEn": "Chuseok, the harvest holiday",
           "keyword": {
             "id": "hangawi",
             "ko": "한가위",
@@ -128,11 +129,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Golden rice fields under an autumn sky, persimmon trees heavy with orange fruit; Hoya stretching happily at the edge of the field."
         },
         {
           "id": "s2",
-          "narrationEn": "Many people travel back to their hometowns. In the morning, families honor their ancestors with a table of food, called charye, and then visit their ancestors' graves, called seongmyo.",
+          "narrationEn": "Many people travel back to their hometowns, {kw:gohyang}. In the morning, families honor their ancestors with a table of food, called charye, and then visit their ancestors' graves, called seongmyo.",
+          "captionEn": "Charye and a visit to ancestors' graves",
           "keyword": {
             "id": "charye",
             "ko": "차례",
@@ -145,11 +148,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "A family in hanbok standing respectfully before a low table set with fruit and dishes; later a grassy hillside path; Hoya walking quietly with them."
         },
         {
           "id": "s3",
-          "narrationEn": "The night before, under the bright moon, the family makes songpyeon together. They wrap rice dough around fillings like sesame, beans or chestnuts. Rice from the new harvest makes them extra tasty!",
+          "narrationEn": "On the night before Chuseok, under the bright moon, {kw:dal}, the family makes songpyeon together. They wrap rice dough around fillings like sesame, beans or chestnuts. Rice from the new harvest makes them extra tasty!",
+          "captionEn": "Making songpyeon under the moon",
           "keyword": {
             "id": "songpyeon",
             "ko": "송편",
@@ -162,11 +167,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Family members around a low table shaping small white, green and pink rice cakes; bowls of sesame, beans and chestnuts; Hoya pinching one closed."
         },
         {
           "id": "s4",
-          "narrationEn": "Shaped like little half-moons, the songpyeon are steamed on a bed of pine needles. Mmm, smell the fresh pine! Hoya tries one. Yum!",
+          "narrationEn": "Many songpyeon are shaped like little half-moons. They are steamed on a bed of pine needles. Mmm, smell the fresh pine! Hoya tries one. Yum!",
+          "captionEn": "Songpyeon steamed on pine needles",
           "keyword": {
             "id": "sollip",
             "ko": "솔잎",
@@ -179,11 +186,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "A bamboo steamer opened to reveal glossy rice cakes resting on green pine needles, wisps of steam; Hoya sniffing with closed eyes."
         },
         {
           "id": "s5",
-          "narrationEn": "That night, a big round full moon rises. In old farming villages the full moon meant plenty, and Chuseok was even called 'the holiday of the moon.'",
+          "narrationEn": "On Chuseok night, a big round full moon rises. In old farming villages the full moon meant plenty, and Chuseok was even called 'the holiday of the moon.'",
+          "captionEn": "A big round full moon rises",
           "keyword": {
             "id": "boreumdal",
             "ko": "보름달",
@@ -192,15 +201,18 @@
             "kind": "word"
           },
           "factIds": [
-            "f6"
+            "f6",
+            "f1"
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "A huge glowing full moon rising over a quiet village of thatched and tiled roofs; Hoya sitting on a stone wall gazing up."
         },
         {
           "id": "s6",
           "narrationEn": "Under the moon, women join hands in a circle for Ganggangsullae. A lead singer calls out a line, and everyone answers, 'Ganggangsullae!' The song starts slow, then gets faster and faster until they are almost running.",
+          "captionEn": "Dancing Ganggangsullae hand in hand",
           "keyword": {
             "id": "ganggangsullae",
             "ko": "강강술래",
@@ -213,11 +225,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Women in hanbok holding hands in a wide circle on a moonlit field, skirts swirling, one singer at the front; Hoya clapping along outside the circle."
         },
         {
           "id": "s7",
-          "narrationEn": "Between dances they play games with fun names, like 'bracken picking' and 'herring tying.' The dance has long been done along Korea's southwestern coast. And no one knows exactly what the word 'ganggangsullae' means!",
+          "narrationEn": "Between dances they play games with fun names, like 'fern picking' and 'herring tying.' The dance has long been done along Korea's southwestern coast. And no one knows exactly what the word 'ganggangsullae' means!",
+          "captionEn": "Games between the dances",
           "keyword": {
             "id": "nori",
             "ko": "놀이",
@@ -232,11 +246,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Dancers crouched in a line like ferns while a leader 'picks' them one by one; a coastline with small islands in the moonlight behind; Hoya scratching his head curiously."
         },
         {
           "id": "s8",
-          "narrationEn": "In 2009, UNESCO inscribed Ganggangsullae on its Representative List. The Joseon-era book Yeoryang sesigi records an old saying like this: 'No more, no less, may it always be like Hangawi!'",
+          "narrationEn": "In 2009, UNESCO added Ganggangsullae to its heritage list. The Joseon-era book Yeoryang sesigi records an old saying like this: 'No more, no less, may it always be like Hangawi!'",
+          "captionEn": "UNESCO's list and an old Hangawi saying",
           "line": {
             "ko": "더도 말고 덜도 말고 한가위만 같아라",
             "romanization": "Deodo malgo deoldo malgo hangawiman gatara",
@@ -249,6 +265,7 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Hoya and the family sharing songpyeon and fruit on a wooden porch under the full moon, the dance circle glowing in the distance."
         }
       ],
@@ -270,7 +287,7 @@
             },
             {
               "id": "c",
-              "en": "Bamboo mats",
+              "en": "Paper sheets",
               "isCorrect": false
             },
             {
@@ -279,6 +296,7 @@
               "isCorrect": true
             }
           ],
+          "explainEn": "Songpyeon are steamed on a layer of pine needles. The pine scent is said to make them taste better.",
           "factIds": [
             "f5"
           ]
@@ -286,7 +304,7 @@
         {
           "id": "c2",
           "kind": "detail",
-          "promptEn": "How do the dancers move in Ganggangsullae?",
+          "promptEn": "In the Ganggangsullae dance, how do the women move?",
           "options": [
             {
               "id": "a",
@@ -305,10 +323,11 @@
             },
             {
               "id": "d",
-              "en": "In a long line, following the leader",
+              "en": "Sitting in rows, clapping along",
               "isCorrect": false
             }
           ],
+          "explainEn": "In Ganggangsullae, women join hands and move in a circle while they sing.",
           "factIds": [
             "f7"
           ]
@@ -325,20 +344,21 @@
             },
             {
               "id": "b",
-              "en": "Daeboreum",
+              "en": "Songpyeon",
               "isCorrect": false
             },
             {
               "id": "c",
-              "en": "Hansik",
+              "en": "Boreumdal",
               "isCorrect": false
             },
             {
               "id": "d",
-              "en": "Dongji",
+              "en": "Charye",
               "isCorrect": false
             }
           ],
+          "explainEn": "Hangawi is the native Korean name for Chuseok.",
           "factIds": [
             "f2"
           ]
@@ -682,6 +702,6 @@
     "scope": "cluster",
     "notes": "Third independent pass over 6 episodes / 61 facts / 161 source entries (70 unique URLs). Every URL was re-fetched with my own scripts (UNESCO pages via Wayback copies; heritage.go.kr descriptions via the portal ajax html and khs.go.kr open API; folkency via its JSON API) and each quote or locator was machine-matched to the page text; the few non-matching strings were checked by hand (portal metadata fields, hanja or footnote punctuation, label text). Corrections: (1) pansori scene 2 now gives both UNESCO steps (2003 masterpiece proclamation, 2008 Representative List); (2) pansori f11 states the Aesop title as in the cited Townsend text and the common alternate title; (3) added sources: NFM 놀보박타령 for 'greedy' (f5), 표준국어대사전 타다 for 'sawed' (f6), 한국민족문화대백과사전 선도해 for the Samguk sagi tale (f12); (4) Seollal f9/f10 designation-date locators now cite the KHS open API field. No other change. See seasons-tales.signoff.md."
   },
-  "authorNotes": "Left out on purpose: the popular claim that Ganggangsullae began as Admiral Yi Sun-sin's military trick. The 국가유산포털 mentions it only as one theory and says an origin in ancient moonlit-night festivals is more plausible, so it isn't used. Also left out are folk etymologies of 'ganggangsullae' (UNESCO says the meaning is unknown), songpyeon fortune-telling beliefs (spouse looks, pregnancy divination), and specific 차례 table rules. Songpyeon shape symbolism (half-moon) isn't claimed because the sources don't support it. The 국가유산포털 actually links songpyeon to the full moon in general terms. The existing heritage-cards.ts text 'half-moon rice cakes' and 'steamed on pine needles for fragrance' is only partly supported: pine-needle steaming is supported, but the shape and fragrance claims weren't verified. UNESCO describes the original dancers as young unmarried village women; today mostly middle-aged women in cities keep it alive. The narration says 'women'. 'Tile treading' was skipped because explaining it (walking on bent backs) needs care for young children. REVISION 2026-10-10: \"comes from the southwest coast\" -> \"has long been done along the southwestern coast\" (origin is uncertain per KHS and 한국세시풍속사전). Yeoryang sesigi saying: verified in the text quoted by 한국세시풍속사전 (Gim Mae-sun, 8th month entry; the Hanja there is printed 減夜勿, apparently a typo for 減也勿) - narration says the book \"records an old saying like this\" and gives the modern wording. Songpyeon: half-moon shape and pine scent are supported by the National Folk Museum (어린이민속사전; 한국세시풍속사전); the older note saying shape/fragrance were unverified is superseded. \"warm and chewy\" removed (not sourced).",
+  "authorNotes": "Left out on purpose: the popular claim that Ganggangsullae began as Admiral Yi Sun-sin's military trick. The 국가유산포털 mentions it only as one theory and says an origin in ancient moonlit-night festivals is more plausible, so it isn't used. Also left out are folk etymologies of 'ganggangsullae' (UNESCO says the meaning is unknown), songpyeon fortune-telling beliefs (spouse looks, pregnancy divination), and specific 차례 table rules. Songpyeon shape symbolism (half-moon) isn't claimed because the sources don't support it. The 국가유산포털 actually links songpyeon to the full moon in general terms. The existing heritage-cards.ts text 'half-moon rice cakes' and 'steamed on pine needles for fragrance' is only partly supported: pine-needle steaming is supported, but the shape and fragrance claims weren't verified. UNESCO describes the original dancers as young unmarried village women; today mostly middle-aged women in cities keep it alive. The narration says 'women'. 'Tile treading' was skipped because explaining it (walking on bent backs) needs care for young children. REVISION 2026-10-10: \"comes from the southwest coast\" -> \"has long been done along the southwestern coast\" (origin is uncertain per KHS and 한국세시풍속사전). Yeoryang sesigi saying: verified in the text quoted by 한국세시풍속사전 (Gim Mae-sun, 8th month entry; the Hanja there is printed 減夜勿, apparently a typo for 減也勿) - narration says the book \"records an old saying like this\" and gives the modern wording. Songpyeon: half-moon shape and pine scent are supported by the National Folk Museum (어린이민속사전; 한국세시풍속사전); the older note saying shape/fragrance were unverified is superseded. \"warm and chewy\" removed (not sourced). AUTHORING 2026-10-11 (F-STORY-001 PR 1.8d): title romanization, scene captions and check explanations written from the cited facts; every scene is artPending (text-only tile) until the art PRs; no claim or source changed. REVIEW 2026-10-11 (PR 1.8d review fixes): title is now 'Chuseok: Songpyeon and the Full Moon' (추석 송편과 보름달), because songpyeon are made on the evening before Chuseok under 'the bright moon' (f4) and the full moon belongs to Chuseok night (f1, f6); the catalogue row and F-STORY-005 table follow. s3 and s5 name their nights; s4 says 'many' songpyeon are half-moons (f5 'often'); s7 and s8 use plainer words; checks 2 and 3 have one clearly correct answer and only taught distractors; the gohyang and dal keywords are used as tokens; learning goals use receptive verbs. PR #208 REVIEW FIXES 2026-10-11: s7 names the games 'fern picking' and 'herring tying' (f8: bracken picking, herring tying; bracken is a fern); check 1 distractor 'Bamboo mats' replaced by 'Paper sheets' because songpyeon steam over a bamboo steamer base.",
   "errata": []
 }
