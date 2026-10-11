@@ -175,7 +175,11 @@ export const learner = {
      */
     earn: {
       title: 'How to earn it',
-      quest: (questTitle: string, minStars: number) => `Get ${minStars} or more stars in ${questTitle} to earn this card.`,
+      quest: (questTitle: string, minStars: number) =>
+        plural('en', minStars, {
+          one: `Get 1 star or more in ${questTitle} to earn this card.`,
+          other: `Get ${minStars} or more stars in ${questTitle} to earn this card.`,
+        }),
       later: 'This card comes in a later quest.',
     },
   },

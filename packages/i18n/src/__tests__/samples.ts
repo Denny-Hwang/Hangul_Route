@@ -24,7 +24,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.home.homework.due': [[2]],
   'learner.library.collected.line': [[1, 24]],
   'learner.library.collected.pill': [[1, 24]],
-  'learner.cardDetail.earn.quest': [['Meet g, n, d, l', 2]],
+  'learner.cardDetail.earn.quest': [['Meet g, n, d, l', 1], ['Meet g, n, d, l', 2]],
   'a11y.missionCard': [['Meet Hoya', 'Say hello', false], ['Meet Hoya', 'Say hello', true]],
   'a11y.gridCell': [['Letters', 'hangul', false], ['Letters', 'hangul', true]],
   'learner.episode.buildsOn': [['Meet g, n, d']],
