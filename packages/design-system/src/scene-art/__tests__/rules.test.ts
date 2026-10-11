@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { HOYA_POSES, hoyaItem } from '../hoya';
-import { resolveScene } from '../resolve';
+import { paletteOf, resolveScene } from '../resolve';
 import { LIMITS, cappedPalette, checkItem, checkScene, serializedBytes, type Finding } from '../rules';
 import type { ColorToken, ItemDef, Shape } from '../types';
 import { makeArt, makeHoya, makeProp, makeRegistry, makeSetting } from './fixtures';
@@ -48,6 +48,17 @@ describe('checkItem', () => {
     expect(ids(checkItem(makeProp({ nodes: six })))).toContain('I-palette');
     expect(ids(checkItem(makeSetting({ nodes: six })))).not.toContain('I-palette');
     expect(ids(checkItem(makeSetting({ nodes: seven })))).toContain('I-palette');
+  });
+
+  it("exempts Hoya's fixed character palette from the colour cap, and nothing else", () => {
+    for (const pose of HOYA_POSES) expect(checkItem(hoyaItem(pose)), pose).toEqual([]);
+    // a hoya:* item drawing a token outside his palette is held to the cap
+    const extra = hoyaItem('idle');
+    const recoloured = { ...extra, nodes: [...extra.nodes, { t: 'rect', x: 0, y: 0, w: 1, h: 1, fill: 'theme.life' } as Shape] };
+    expect(ids(checkItem(recoloured))).toContain('I-palette');
+    // so is any other item drawing Hoya's shapes, and an unknown pose
+    expect(ids(checkItem({ ...hoyaItem('idle'), id: 'prop:tiger' }))).toContain('I-palette');
+    expect(ids(checkItem({ ...hoyaItem('idle'), id: 'hoya:dancing' }))).toContain('I-palette');
   });
 
   it('requires every shape inside the box', () => {
@@ -288,9 +299,10 @@ describe('checkScene', () => {
     expect(checkScene(art2, dull).find((x) => x.rule === 'S-palette-ink')).toMatchObject({ severity: 'warning' });
   });
 
-  // Owner decision 2026-10-11 (F-STORY-002 §3.9.5 R-S5): Hoya's fixed
-  // character palette does not count toward the scene cap; the cap applies to
-  // everything else in the scene, as the item cap exempts hoya:* (registry test).
+  // F-STORY-002 decision 15 (main session, under the owner's standing delegation,
+  // 2026-10-11; §3.9.5 R-S5): Hoya's fixed character palette does not count toward
+  // the scene cap; the cap applies to everything else in the scene, as checkItem
+  // exempts his palette from the item cap.
   describe('palette cap leaves out Hoya', () => {
     const seven = (['theme.life', 'theme.rites', 'theme.crafts', 'stage.stage1', 'stage.stage2', 'stage.stage3', 'stage.stage4'] as const).map(
       (fill, i) => ({ t: 'rect', x: i, y: 0, w: 1, h: 1, fill }) as Shape,
@@ -316,7 +328,39 @@ describe('checkScene', () => {
       const prop = makeProp({ id: 'prop:six', nodes: [...seven.slice(0, 6), { t: 'rect', x: 0, y: 2, w: 1, h: 1, fill: 'surface.paper' }] });
       const art = makeArt({ layers: [{ ref: 'prop:six', x: 200, y: 250, s: 3 }, { ref: 'hoya:idle', x: 80, y: 280, s: 0.6 }] });
       expect(cappedPalette(resolveScene(art, reg(prop)))).toContain('surface.paper');
-      expect(checkScene(art, reg(prop)).find((x) => x.rule === 'S-palette-cap')).toMatchObject({ severity: 'error', message: '9 colour tokens besides Hoya, at most 8' });
+      expect(checkScene(art, reg(prop)).find((x) => x.rule === 'S-palette-cap')).toMatchObject({ severity: 'error', message: "9 colour tokens besides Hoya's own palette, at most 8" });
+    });
+
+    it('leaves out exactly the tokens only Hoya draws, in every pose', () => {
+      // the setting draws surface.paper, which every pose but cheering shares with Hoya: it stays counted
+      const paperSetting = makeSetting({ nodes: [{ t: 'rect', x: 0, y: 0, w: 400, h: 180, fill: 'surface.paper' }, { t: 'rect', x: 0, y: 180, w: 400, h: 120, fill: 'surface.sunken' }] });
+      const prop = makeProp({ id: 'prop:five', nodes: seven.slice(0, 5) });
+      const registry = makeRegistry([paperSetting, ...HOYA_POSES.map(hoyaItem), prop]);
+      for (const pose of HOYA_POSES) {
+        const art = makeArt({ layers: [{ ref: 'prop:five', x: 200, y: 250, s: 3 }, { ref: `hoya:${pose}`, x: 80, y: 280, s: 0.6 }] });
+        const scene = resolveScene(art, registry);
+        const capped = cappedPalette(scene);
+        expect(capped, pose).toContain('surface.paper');
+        expect(new Set([...capped, ...paletteOf(hoyaItem(pose))]), pose).toEqual(new Set(scene.stats.colors));
+        expect(capped.filter((c) => !['surface.paper', 'surface.sunken', ...seven.slice(0, 5).map((s) => s.fill)].includes(c)), pose).toEqual([]);
+      }
+    });
+
+    it('counts a colour a tint brings onto Hoya', () => {
+      // setting 2 + prop 6 = 8 tokens; tinting Hoya's fur to a ninth token is not his fixed palette
+      const prop = makeProp({ id: 'prop:six', nodes: seven.slice(0, 6) });
+      const tinted = makeArt({ layers: [{ ref: 'prop:six', x: 200, y: 250, s: 3 }, { ref: 'hoya:idle', x: 80, y: 280, s: 0.6, tint: 'theme.nature' }] });
+      expect(cappedPalette(resolveScene(tinted, reg(prop)))).toContain('theme.nature');
+      expect(checkScene(tinted, reg(prop)).find((x) => x.rule === 'S-palette-cap')).toMatchObject({ severity: 'error', message: "9 colour tokens besides Hoya's own palette, at most 8" });
+      // a tint to another token of his own palette stays outside the cap
+      const own = makeArt({ layers: [{ ref: 'prop:six', x: 200, y: 250, s: 3 }, { ref: 'hoya:idle', x: 80, y: 280, s: 0.6, tint: 'hoya.furDark' }] });
+      expect(ids(checkScene(own, reg(prop)))).not.toContain('S-palette-cap');
+    });
+
+    it('names Hoya in the cap message only when he is in the scene', () => {
+      const prop = makeProp({ id: 'prop:seven', nodes: seven });
+      const art = makeArt({ layers: [{ ref: 'prop:seven', x: 200, y: 250, s: 3 }] });
+      expect(checkScene(art, reg(prop)).find((x) => x.rule === 'S-palette-cap')).toMatchObject({ message: '9 colour tokens, at most 8' });
     });
 
     it('applies the cap to everything else in the scene', () => {
