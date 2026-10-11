@@ -11,6 +11,7 @@ vi.mock('../../platform/storage', () => ({
 vi.mock('../../platform/telemetry', () => ({ track: vi.fn(async () => true) }));
 vi.mock('../../platform/locale', () => ({ deviceLanguages: () => [], takeLangHandoff: () => null, setDocumentLang: () => {} }));
 
+import { useAudioStore } from '../audio-store';
 import { hydrateLearnerData } from '../bootstrap';
 import { useLocaleStore } from '../locale-store';
 import { useProfileStore } from '../profile-store';
@@ -36,6 +37,7 @@ describe('cold start (audit UX-01 / L16)', () => {
     useProfileStore.setState({ profiles: [], activeId: null, hydrated: false });
     useProgressStore.setState({ byProfile: {}, hydratedFor: new Set(), pendingFor: new Set() });
     useLocaleStore.setState({ detected: 'en', device: null, byProfile: {}, hydrated: false });
+    useAudioStore.setState({ muted: false, hydrated: false });
   });
 
   it("loads the profiles, then every profile's saved progress, before resolving", async () => {
@@ -89,5 +91,22 @@ describe('cold start (audit UX-01 / L16)', () => {
   it('a fresh install still marks the locale store hydrated', async () => {
     await hydrateLearnerData();
     expect(useLocaleStore.getState()).toMatchObject({ hydrated: true, device: null });
+  });
+
+  it('reads the saved mute before resolving, so the navigator never plays for a learner who muted yesterday (F-AUDIO-004 §3.7)', async () => {
+    mem.set('device:audio', { muted: true });
+
+    await hydrateLearnerData();
+
+    expect(useAudioStore.getState()).toMatchObject({ muted: true, hydrated: true });
+  });
+
+  it('a device that never saved the mute starts with sound on and writes nothing for it', async () => {
+    mem.set('profiles', [profile('profile:a', 'Suni')]);
+
+    await hydrateLearnerData();
+
+    expect(useAudioStore.getState()).toMatchObject({ muted: false, hydrated: true });
+    expect(mem.has('device:audio')).toBe(false);
   });
 });
