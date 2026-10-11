@@ -5,7 +5,7 @@ import type { SourcesRouteParams } from '../logic/story/source-link';
 
 /**
  * Where a grown-up action continues once the gate (or a new PIN) is through. `ExternalLink`
- * (F-STORY-002 §3.1, §3.8): back to Sources, which then opens the source link it was asked for.
+ * (F-STORY-002 §3.1, §3.8): back to Sources, which opens the waiting source link (native) or asks for one more tap (web).
  */
 export type GrownUpDestination = 'ParentDashboard' | 'AddProfile' | 'Restore' | 'SaveProgress' | 'Paywall' | 'ExternalLink';
 
@@ -32,7 +32,7 @@ export type RootStackParamList = {
     mode?: 'setup';
     /** Which Forgot PIN path led here (telemetry only). */
     via?: PinResetMethod;
-    /** `next: 'ExternalLink'`: the source link waiting on the gate (Sources opens it on return). */
+    /** `next: 'ExternalLink'`: the source link waiting on the gate (Sources holds it until the return). */
     url?: string;
   };
   /** Forgot PIN: Rescue Code or a 24-hour wait, then a new PIN (F-LEARN-001 §3.5). `next` is kept for the PIN screen. */

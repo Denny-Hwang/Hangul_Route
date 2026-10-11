@@ -9,13 +9,13 @@ Where "references are marked exactly" becomes visible: every statement of a stor
 
 ## Route
 
-`StorySources { storyId, factId?, sceneIndex?, from? }`
+`StorySources { storyId, factId?, sceneIndex?, from }`
 
 | Param | Effect |
 |---|---|
 | `factId` | Scrolls to that fact's card and highlights it (outline + "Highlighted" pill, never colour alone) |
 | `sceneIndex` | Scrolls to that scene's section (or the next scene that has facts) |
-| `from` | `story.sources.opened` only: `reader` (top bar), `end` (end page), later `episode` / `notes` / `scene` (F-STORY-004) |
+| `from` | Required. `story.sources.opened` only: `reader` (top bar), `end` (end page), later `episode` / `notes` / `scene` (F-STORY-004) |
 
 From the reader: the top bar passes the scene being read; the end page opens at the top.
 
@@ -58,13 +58,13 @@ From the reader: the top bar passes the scene being read; the end page opens at 
 | Device | Tap Open link |
 |---|---|
 | Grown-up session open, or a self-only device with no PIN (`gateOpensDirectly`) | Opens at once |
-| Anything else | `PinEntry { next: 'ExternalLink', url }`; after the gate the PIN screen goes back and Sources opens the link; Cancel drops it |
+| Anything else | `PinEntry { next: 'ExternalLink', url }`; after the gate (or Forgot PIN and a new PIN) the PIN screen goes back to Sources. Native opens the link then; the web shows "Grown-up check done. Tap Open link to open it." on that source and the next tap opens it directly (a browser may block a tab not opened inside a tap). Cancel drops it |
 
 - Only an `https:` URL that is one of the story's own sources is ever handed over (re-checked, never trusted).
-- Native: `Linking.openURL` in a try/catch. Web: a new tab with `noopener,noreferrer`, so the page cannot reach back to the app.
+- Native: the connection is checked first (`expo-network`; only a definite "offline" counts), then `Linking.openURL` in a try/catch. Web: a new tab opened inside the tap; its `opener` is cleared at once, so the page cannot reach back to the app, and a blocked pop-up (no tab handed back) counts as a failure. `story.sources.link_opened` fires only on success.
 - Failure: "Open this link in a browser: <url>"; offline adds "Opening a link needs a connection." first. The link stays selectable and Copy link stays.
 - `story.sources.link_opened { storyId, factId }` fires only after a successful hand-off.
-- Copy link needs no gate. Without a clipboard: "Copying is not available here. The link is above."
+- Copy link needs no gate. Web: `navigator.clipboard`; native: `expo-clipboard`. Only when that refuses: "Copying is not available here. The link is above."
 
 ## Layout by window (F-LAYOUT-001)
 
@@ -73,10 +73,10 @@ One scrolling column in `reading` (720 cap) at every width; the header (back + h
 ## Accessibility
 
 - Heading levels: screen 1, sections 2, "Sources (n)" 3; lists as lists of groups.
-- Each source block is one group labelled "Source 2 of 3: <title>, <publisher>"; its buttons stay reachable inside it.
+- Each source block is labelled "Source 2 of 3: <title>, <publisher>": on the web one group (`role="group"` + `aria-label`); on iOS and Android, which never read a label on a plain view, the title carries it, so VoiceOver and TalkBack say it on entering the block. Its buttons stay separately reachable.
 - Korean nodes (`claimKo`, Korean quotes, the Korean of the title) are marked `lang="ko"`.
 - The highlight is an outline (`borderWidth.base`, `colors.border.focus`) plus the "Highlighted" pill.
-- Outcome lines are polite live regions.
+- Outcome lines sit in a polite live region that is always mounted (so a new line is announced); native also announces it through `AccessibilityInfo` (iOS has no live regions).
 
 ## Tokens
 
