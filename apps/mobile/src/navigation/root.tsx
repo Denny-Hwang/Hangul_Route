@@ -21,6 +21,7 @@ import { QuestPlayerScreen } from '../screens/quest/QuestPlayerScreen';
 import { ResultsScreen } from '../screens/results/ResultsScreen';
 import { MinigameScreen } from '../screens/minigames/MinigameScreen';
 import { StoryReaderScreen } from '../screens/story/StoryReaderScreen';
+import { StorySourcesScreen } from '../screens/story/StorySourcesScreen';
 import { STORY_FIXTURES_BUILD, StoryE2eHook } from './story-e2e';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -67,6 +68,7 @@ export function RootNavigator(): React.ReactElement {
         <Stack.Screen name="JoinSpace" component={JoinSpaceScreen} />
         <Stack.Screen name="Paywall" component={PaywallScreen} />
         <Stack.Screen name="StoryReader" component={StoryReaderScreen} />
+        <Stack.Screen name="StorySources" component={StorySourcesScreen} />
       </Stack.Navigator>
     </>
   );

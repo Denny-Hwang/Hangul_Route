@@ -114,6 +114,9 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
       navigation.replace('SaveProgress');
     } else if (route.params.next === 'Paywall') {
       navigation.replace('Paywall', { from: 'journey' });
+    } else if (route.params.next === 'ExternalLink') {
+      // Back to Sources with the gate open: native opens the waiting link, the web asks for one more tap (F-STORY-002 §3.8).
+      navigation.goBack();
     } else {
       navigation.replace('ParentDashboard');
     }

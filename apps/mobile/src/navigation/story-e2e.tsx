@@ -2,6 +2,7 @@ import type { StoryLevel } from '@hangul-route/content-schema';
 import { useNavigation } from '@react-navigation/native';
 import { useEffect } from 'react';
 import { storiesAll, storyFixtureIds } from '../content/stories';
+import type { SourcesRouteParams } from '../logic/story/source-link';
 import { addTelemetryListener, type TelemetryEvent } from '../platform/telemetry';
 
 /**
@@ -19,6 +20,8 @@ export const STORY_FIXTURES_BUILD = storyFixtureIds.length > 0;
 
 export interface StoryE2eHandle {
   openReader(params: { storyId: string; level: StoryLevel; sceneIndex?: number }): void;
+  /** Sources with its deep-link params (F-STORY-002 PR 2.7; F-STORY-004 adds the episode and notes links). */
+  openSources(params: SourcesRouteParams): void;
   /** Opens a story's shelf quest (F-STORY-002 PR 2.6b: the reader as a quest step) until the shelf can. */
   openQuest(params: { questId: string; episodeId: string }): void;
   /** Every bundled story with its tiers, so the e2e can smoke-read the real content too. */
@@ -39,6 +42,7 @@ export function StoryE2eHook(): null {
       events: () => events.map((e) => ({ ...e })),
       openReader: ({ storyId, level, sceneIndex }) =>
         navigation.navigate('StoryReader', { storyId, level, mode: 'replay', ...(sceneIndex === undefined ? {} : { sceneIndex }) }),
+      openSources: (params) => navigation.navigate('StorySources', params),
       openQuest: ({ questId, episodeId }) => navigation.navigate('QuestPlayer', { questId, episodeId }),
       stories: () =>
         storiesAll.map((s) => ({

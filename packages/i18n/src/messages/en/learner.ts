@@ -624,6 +624,52 @@ export const learner = {
       readAgain: { cta: 'Read again' },
       sources: { cta: 'Sources' },
     },
+    /**
+     * The Sources screen (F-STORY-002 §3.8), moved unchanged from `logic/story/story-reader-copy.ts`
+     * in PR 2.7. Counts are allowed here (not a learner result); never an age (D1). Titles,
+     * publishers, quotes and the Korean claim are citations from the story data, never here.
+     */
+    sources: {
+      title: 'Sources',
+      back: 'Back',
+      traditionalTale: { pill: 'Traditional tale' },
+      traditionalNote: 'One version of a story told in many versions',
+      checked: (passes: number, date: string, contentVer: number) =>
+        `Checked in ${count(passes, 'independent pass', 'independent passes')} · last checked ${date} · story version ${contentVer}`,
+      /** A `scope: 'cluster'` verification record: say only what the record says. */
+      clusterChecked: 'These checks covered a group of related stories, not this story alone.',
+      howChecked: { cta: 'How it was checked' },
+      advisoryHeading: 'A gentle note for grown-ups',
+      corrections: 'Corrections',
+      sceneHeading: (sceneNumber: number) => `Scene ${sceneNumber}`,
+      seeFact: (factId: string) => `See fact ${factId}`,
+      korean: { cta: 'Korean' },
+      scope: {
+        documented: 'What we know',
+        inTheTale: 'What the tale says',
+      },
+      updated: { pill: 'Updated' },
+      updatedOn: { pill: (date: string) => `Updated ${date}` },
+      sourcesHeading: (n: number) => `Sources (${n})`,
+      accessed: (date: string) => `accessed ${date}`,
+      sourceLabel: (index: number, total: number, title: string, publisher: string) =>
+        `Source ${index} of ${total}: ${title}, ${publisher}`,
+      approximation: (text: string, rationale: string) => `About “${text}”: ${rationale}`,
+      dependsOnToday: 'This depends on today’s date.',
+      usedInQuestions: 'Used in questions and notes',
+      highlighted: { pill: 'Highlighted' },
+      /** A grown-up action: the link is opened only after the gate. */
+      openLink: { cta: 'Open link' },
+      copyLink: { cta: 'Copy link' },
+      linkCopied: 'Link copied',
+      copyUnavailable: 'Copying is not available here. The link is above.',
+      openFailed: (url: string) => `Open this link in a browser: ${url}`,
+      needsConnection: 'Opening a link needs a connection.',
+      /** Web, back from the grown-up gate: the browser needs a tap of its own to open a tab. */
+      gateDone: 'Grown-up check done. Tap Open link to open it.',
+      counts: (facts: number, sources: number) => `${count(facts, 'fact', 'facts')} · ${count(sources, 'source', 'sources')}`,
+      noSources: 'No sources are listed for this story.',
+    },
   },
 
   /**
