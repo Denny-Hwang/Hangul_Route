@@ -492,6 +492,9 @@ describe('create', () => {
     expect([missing.status, missing.body.error?.code]).toEqual([422, 'bad_request']);
     const onClass = await create(A, 'teacher-a', classCreate({ consent }));
     expect([onClass.status, onClass.body.error?.code]).toEqual([422, 'bad_request']);
+    // "introduce" is the learner side's choice alone (T8)
+    const introduce = await create(A, 'teacher-a', classCreate({ introduce: true }));
+    expect([introduce.status, introduce.body.error?.code]).toEqual([422, 'bad_request']);
     const stale = await create(FAMILY, 'mom', familyCreate({ consent: { textVersion: 'transfer-2020-01', locale: 'en' } }));
     expect(stale.status).toBe(422);
     expect(stale.body.error).toMatchObject({ code: 'consent_text_stale', details: { current: TRANSFER_CONSENT_TEXT_VERSION } });

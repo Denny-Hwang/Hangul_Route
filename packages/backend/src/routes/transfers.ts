@@ -59,6 +59,7 @@ import {
   type ViewLookups,
 } from '../lib/transfer-views';
 import type { Account } from '../store';
+import { rosterName } from './spaces';
 
 /**
  * /api/spaces/:id/transfer-requests — F-SPACE-002 section 4.4, PR T-5a: the
@@ -94,7 +95,7 @@ export const transferClientLimiter = createRateLimiter(TRANSFER_CLIENT_LIMIT, HO
 const locked = (c: Ctx): Response => fail(c, 'transfers_locked', 'Class moves are not available yet', 422);
 const notFound = (c: Ctx): Response => fail(c, 'not_found', 'Not found', 404);
 const badRequest = (c: Ctx): Response => fail(c, 'bad_request', 'Invalid move request', 422);
-const tooMany = (c: Ctx, code: string, retryAfterSeconds: number): Response => fail(c, code, 'Too many attempts — try again later', 429, { retryAfterSeconds });
+const tooMany = (c: Ctx, code: string, retryAfterSeconds: number, message = 'Too many attempts — try again later'): Response => fail(c, code, message, 429, { retryAfterSeconds });
 const closed = (c: Ctx, row: StoredTransfer): Response => (row.status === 'expired' ? fail(c, 'expired', 'This request has expired', 409) : fail(c, 'not_open', 'This request is no longer open', 409));
 /** One neutral answer for every reason a teacher may not start a request (section 4.9): no reason, no days, no hint that anyone said no. */
 const cannotSend = (c: Ctx): Response => fail(c, 'cannot_send', 'This request cannot be sent right now', 422);
@@ -189,7 +190,8 @@ async function startMove(c: Ctx, mode: 'preview' | 'create'): Promise<Response> 
   if (acting.kind === 'class') {
     const via = teacherVia(actor, await spaceContext(db, acting));
     if (!via || !(await db.membership(acting.id, 'learner', body.learnerId))) return notFound(c);
-    if (body.fromSpaceId !== undefined || body.consent !== undefined) return badRequest(c);
+    // `fromSpaceId` and `consent` are family fields; `introduce` is the learner side's choice alone (T8).
+    if (body.fromSpaceId !== undefined || body.consent !== undefined || body.introduce !== undefined) return badRequest(c);
     side = { kind: 'class', source: acting, via };
   } else if (acting.kind === 'family') {
     const role = await familyGuardianRole(db, account.id, body.learnerId, acting.id);
@@ -259,7 +261,7 @@ async function startMove(c: Ctx, mode: 'preview' | 'create'): Promise<Response> 
   if (await db.membership(dest.id, 'learner', learnerId)) return fail(c, 'already_member', 'The learner is already in that class', 409);
   if (side.kind === 'family') {
     const wait = await learnerSideCooldown(db, learnerId, dest.id, now);
-    if (wait !== null) return tooMany(c, 'cooldown', wait);
+    if (wait !== null) return tooMany(c, 'cooldown', wait, 'You can ask this class again later');
   }
   const seat = await classSeatCheck(db, dest, learnerId, now, { excludeSpaceId: source.id });
   if (seat) return fail(c, seat, 'That class has no room right now', 409);
@@ -273,8 +275,8 @@ async function startMove(c: Ctx, mode: 'preview' | 'create'): Promise<Response> 
 
   // Create only: the daily limits, the bounded purge, then the insert.
   const dayAgo = new Date(now.getTime() - DAY_MS);
-  if ((await db.countTransfersCreatedBy(account.id, dayAgo)) >= TRANSFER_MAX_CREATED_PER_ACCOUNT_PER_DAY) return tooMany(c, 'too_many_requests', DAY_MS / 1000);
-  if ((await db.countTransfersCreatedForLearner(learnerId, dayAgo)) >= TRANSFER_MAX_CREATED_PER_LEARNER_PER_DAY) return tooMany(c, 'too_many_requests', DAY_MS / 1000);
+  if ((await db.countTransfersCreatedBy(account.id, dayAgo)) >= TRANSFER_MAX_CREATED_PER_ACCOUNT_PER_DAY) return tooMany(c, 'too_many_requests', DAY_MS / 1000, 'Too many requests today — try again tomorrow');
+  if ((await db.countTransfersCreatedForLearner(learnerId, dayAgo)) >= TRANSFER_MAX_CREATED_PER_LEARNER_PER_DAY) return tooMany(c, 'too_many_requests', DAY_MS / 1000, 'Too many requests today — try again tomorrow');
   const purgeBefore = new Date(now.getTime() - TRANSFER_PURGE_AFTER_MS);
   await db.purgeTransfers(purgeBefore, purgeBefore, PURGE_TRANSFERS_LIMIT);
   await db.purgeRateHits(dayAgo, PURGE_RATE_HITS_LIMIT);
@@ -386,15 +388,14 @@ transferSpaceRoutes.get('/:id/transfer-requests', async (c) => {
     for (const learnerId of learnerIds) {
       const learner = learners.get(learnerId);
       if (!learner) continue;
-      const viewCtx = await familyViewContext(db, space, learnerId, c.env, now);
-      contexts.set(learnerId, viewCtx);
+      const prefs = await db.getTransferPrefs(learnerId);
+      contexts.set(learnerId, { family: space, selfManaged: prefs.selfManaged, caregiverRoute: true, deviceConsent: transferDeviceConsentEnabled(c.env), now });
       const classes: Array<{ spaceId: string; name: string }> = [];
       for (const m of await db.membershipsOf('learner', learnerId)) {
         const s = await db.getSpace(m.spaceId);
         if (s && s.kind === 'class' && !s.archivedAt) classes.push({ spaceId: s.id, name: s.name });
       }
-      const prefs = await db.getTransferPrefs(learnerId);
-      options.push({ learnerId, name: learner.displayName, classes, selfManaged: prefs.selfManaged, blockTeacherRequests: prefs.blockTeacherRequests });
+      options.push({ learnerId, name: rosterName(space, learner.displayName), classes, selfManaged: prefs.selfManaged, blockTeacherRequests: prefs.blockTeacherRequests });
     }
     const requests: TransferLearnerSideView[] = [];
     for (const t of rows) requests.push(await learnerSideView(db, t, look, contexts.get(t.learnerId) ?? (await familyViewContext(db, space, t.learnerId, c.env, now))));
