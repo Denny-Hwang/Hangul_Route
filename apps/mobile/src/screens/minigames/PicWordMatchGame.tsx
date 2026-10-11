@@ -1,0 +1,264 @@
+import {
+  Body,
+  Button,
+  Caption,
+  ChoiceCard,
+  Heading,
+  HoyaBubble,
+  Pill,
+  Progress,
+  Screen,
+  Spacer,
+  borderWidth,
+  colors,
+  radii,
+  spacing,
+  touchTarget,
+} from '@hangul-route/design-system';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { View, useWindowDimensions } from 'react-native';
+import {
+  PIC_WORD_COPY,
+  announcement,
+  canSkip,
+  headerView,
+  pictureSide,
+  pictureTileView,
+  shuffleBoard,
+  startFlow,
+  stepFlow,
+  validBoards,
+  wordTileView,
+  type FlowEffect,
+  type FlowEvent,
+  type PicWordFlowState,
+  type Side,
+} from '../../logic/pic-word-flow';
+import type { MinigameScope } from '../../logic/minigame-config';
+import { playPrompt, stop } from '../../platform/audio';
+import { nudge, success, tapLight } from '../../platform/haptics';
+import { useLocaleStore } from '../../store/locale-store';
+import { useProfileStore } from '../../store/profile-store';
+import type { MinigameHost } from './host';
+import { PictureArt } from './PictureArt';
+
+/**
+ * Pic-Word Match (F-QUEST-002 §3.11, catalog 2): pair 3-5 pictures with their
+ * Korean words by tapping a picture then a word (or a word then a picture).
+ * The behaviour lives in `logic/pic-word-flow.ts` (reducer, effects,
+ * view-models); this file only renders it and runs the effects. It takes a
+ * `host`, so one component serves a quest step and, later, vocabulary rounds.
+ * Design: design/wireframes/minigame/pic-word-match.md.
+ */
+
+interface Props {
+  scope: MinigameScope;
+  host: MinigameHost;
+  /** Leave an empty scope (never a dead end). */
+  onBack?: () => void;
+}
+
+interface TileFrameProps {
+  selected: boolean;
+  badge: number | undefined;
+  children: React.ReactNode;
+}
+
+/**
+ * Selection ring and match number around a ChoiceCard. The ring is drawn
+ * around the card (not by it) so the card keeps its own five states; the
+ * number sits on both tiles of a matched pair next to the card's check mark,
+ * so a match never relies on colour alone.
+ */
+function TileFrame({ selected, badge, children }: TileFrameProps): React.ReactElement {
+  return (
+    <View
+      style={{
+        padding: spacing.xs,
+        borderRadius: radii.xl,
+        borderWidth: borderWidth.thick,
+        borderColor: selected ? colors.brand.primary : colors.surface.canvas,
+      }}
+    >
+      {children}
+      {badge !== undefined ? (
+        <View pointerEvents="none" style={{ position: 'absolute', top: spacing.sm, right: spacing.sm }}>
+          <Pill label={String(badge)} tone="primary" size="sm" />
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
+export function PicWordMatchGame({ scope, host, onBack }: Props): React.ReactElement {
+  const [seed] = useState(() => Math.floor(Math.random() * 0x7fffffff));
+  const boards = useMemo(() => validBoards(scope), [scope]);
+  const orders = useMemo(() => boards.map((board, i) => shuffleBoard(board, seed + i)), [boards, seed]);
+
+  const activeProfileId = useProfileStore((s) => s.activeId);
+  const romanizationMode = useLocaleStore((s) =>
+    activeProfileId === null ? 'always' : (s.byProfile[activeProfileId]?.romanizationMode ?? 'always'),
+  );
+  const { width, height } = useWindowDimensions();
+
+  const [state, setState] = useState<PicWordFlowState>(() =>
+    startFlow(boards.map((board) => board.pairs.length)),
+  );
+  const stateRef = useRef(state);
+  const clearTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hostRef = useRef(host);
+  hostRef.current = host;
+  const boardsRef = useRef(boards);
+  boardsRef.current = boards;
+  const dispatchRef = useRef<(event: FlowEvent) => void>(() => undefined);
+
+  const runEffect = useCallback((effect: FlowEffect): void => {
+    switch (effect.type) {
+      case 'answer':
+        hostRef.current.answer(effect.roundKey, effect.correct, { itemId: effect.pairId });
+        return;
+      case 'haptic':
+        if (effect.kind === 'success') {
+          tapLight();
+          success();
+        } else {
+          nudge();
+        }
+        return;
+      case 'play': {
+        const board = boardsRef.current[stateRef.current.boardIdx];
+        const pair = board?.pairs.find((p) => p.id === effect.pairId);
+        if (pair) void playPrompt({ text: pair.word.spokenKo ?? pair.word.ko, audioRef: pair.word.audioRef });
+        return;
+      }
+      case 'cancel-clear':
+        if (clearTimer.current) clearTimeout(clearTimer.current);
+        clearTimer.current = null;
+        return;
+      case 'schedule-clear':
+        clearTimer.current = setTimeout(() => dispatchRef.current({ type: 'clear-flash' }), effect.ms);
+        return;
+      case 'schedule-advance':
+        advanceTimer.current = setTimeout(() => dispatchRef.current({ type: 'advance' }), effect.ms);
+        return;
+      case 'complete':
+        hostRef.current.complete();
+        return;
+    }
+  }, []);
+
+  const dispatch = useCallback(
+    (event: FlowEvent): void => {
+      const out = stepFlow(stateRef.current, event);
+      stateRef.current = out.state;
+      setState(out.state);
+      out.effects.forEach(runEffect);
+    },
+    [runEffect],
+  );
+  dispatchRef.current = dispatch;
+
+  useEffect(
+    () => () => {
+      if (clearTimer.current) clearTimeout(clearTimer.current);
+      if (advanceTimer.current) clearTimeout(advanceTimer.current);
+      stop();
+    },
+    [],
+  );
+
+  const board = boards[state.boardIdx];
+  const order = orders[state.boardIdx];
+  if (state.status === 'empty' || !board || !order) {
+    return (
+      <Screen>
+        <Body>{PIC_WORD_COPY.empty}</Body>
+        {onBack ? (
+          <>
+            <Spacer size="lg" />
+            <Button label={PIC_WORD_COPY.back} tone="secondary" size="md" onPress={onBack} />
+          </>
+        ) : null}
+      </Screen>
+    );
+  }
+
+  const header = headerView(state);
+  const side = touchTarget[pictureSide(width, height)];
+  const pairById = new Map(board.pairs.map((p) => [p.id, p]));
+  const select = (tileSide: Side, pairId: string) => (): void => dispatch({ type: 'select', side: tileSide, pairId });
+  const showMissHoya = state.selected !== null && (state.missCounts[state.selected.pairId] ?? 0) > 0;
+
+  return (
+    <Screen tone="canvas" scrollable>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+        <View style={{ flex: 1 }}>
+          <Progress value={header.value} max={header.max} tone="primary" />
+        </View>
+        <Pill label={header.label} tone="neutral" size="sm" />
+        {canSkip(state) ? (
+          <Button label={PIC_WORD_COPY.skip} tone="ghost" size="sm" onPress={() => dispatch({ type: 'skip' })} testID="pic-word-skip" />
+        ) : null}
+      </View>
+
+      <Spacer size="lg" />
+      <Heading level="prompt">{PIC_WORD_COPY.heading}</Heading>
+      <View accessibilityLiveRegion="polite">
+        <Caption tone="muted">{announcement(state, board)}</Caption>
+      </View>
+
+      <Spacer size="lg" />
+      <View style={{ flexDirection: 'row', gap: spacing.md }}>
+        <View style={{ flex: 1, gap: spacing.sm }}>
+          {order.pictureOrder.map((pairId) => {
+            const pair = pairById.get(pairId);
+            if (!pair) return null;
+            const view = pictureTileView(pair, state);
+            return (
+              <TileFrame key={pairId} selected={view.selected} badge={view.badge}>
+                <ChoiceCard
+                  testID={`pic-word-picture-${pairId}`}
+                  state={view.cardState}
+                  art={<PictureArt pictureRef={view.pictureRef} gloss={view.gloss} size={side} />}
+                  accessibilityLabel={view.accessibilityLabel}
+                  onPress={select('picture', pairId)}
+                />
+              </TileFrame>
+            );
+          })}
+        </View>
+        <View style={{ flex: 1, gap: spacing.sm }}>
+          {order.wordOrder.map((pairId) => {
+            const pair = pairById.get(pairId);
+            if (!pair) return null;
+            const view = wordTileView(pair, state, { romanizationMode });
+            return (
+              <TileFrame key={pairId} selected={view.selected} badge={view.badge}>
+                <ChoiceCard
+                  testID={`pic-word-word-${pairId}`}
+                  state={view.cardState}
+                  ko={view.ko}
+                  romanization={view.romanization}
+                  gloss={view.gloss}
+                  accessibilityLabel={view.accessibilityLabel}
+                  onPress={select('word', pairId)}
+                />
+              </TileFrame>
+            );
+          })}
+        </View>
+      </View>
+
+      <View accessibilityLiveRegion="polite">
+        {showMissHoya ? (
+          <>
+            <Spacer size="lg" />
+            <HoyaBubble tone="thinking" message={PIC_WORD_COPY.missHoya} />
+          </>
+        ) : null}
+      </View>
+      <Spacer size="xl" />
+    </Screen>
+  );
+}

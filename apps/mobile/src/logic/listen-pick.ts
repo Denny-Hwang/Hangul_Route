@@ -9,8 +9,8 @@ import type { MinigameScope } from './minigame-config';
 /** The six taught final consonants, in teaching order (F-QUEST-002 §3.6). */
 const TAUGHT_FINALS: readonly string[] = ['ㄴ', 'ㄹ', 'ㅇ', 'ㄱ', 'ㅁ', 'ㅂ'];
 
-/** mulberry32: a small, well-spread seeded generator. */
-function random(seed: number): () => number {
+/** mulberry32: a small, well-spread seeded generator. Shared with the other games' shuffles. */
+export function seededRandom(seed: number): () => number {
   let a = seed >>> 0;
   return () => {
     a = (a + 0x6d2b79f5) >>> 0;
@@ -27,7 +27,7 @@ function random(seed: number): () => number {
  * changed.
  */
 export function shuffleOptions(round: ListenPickRound, seed: number): ListenPickRound {
-  const next = random(seed);
+  const next = seededRandom(seed);
   const options = [...round.options];
   for (let i = options.length - 1; i > 0; i--) {
     const j = Math.floor(next() * (i + 1));
