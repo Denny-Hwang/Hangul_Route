@@ -139,4 +139,44 @@ describe('length budgets (F-I18N-001 §3.11)', () => {
       expect(paths).toContain(expected);
     }
   });
+
+  it('covers the minigame, audio and story pills and CTAs (PR 7b)', () => {
+    const paths = leafPaths(getMessages('en')).filter((p) => BUDGETS[p.split('.').pop() ?? ''] !== undefined);
+    for (const expected of [
+      'learner.minigame.backToQuest.cta',
+      'learner.minigame.progress.pill',
+      'learner.minigame.skip.cta',
+      'learner.minigame.trace.showMe.cta',
+      'learner.minigame.trace.clear.cta',
+      'learner.minigame.trace.done.cta',
+      'learner.minigame.voiceEcho.continue.cta',
+      'learner.minigame.listenPick.checkTitle.pill',
+      'learner.minigame.listenPick.hearAgain.cta',
+      'learner.audio.hearIt.cta',
+      'learner.audio.action.turn_on.cta',
+      'learner.audio.action.try_again.cta',
+      'learner.audio.action.tap_to_hear.cta',
+      'learner.audio.letterName.cta',
+      'learner.audio.howToAddVoice.cta',
+      'learner.story.check.position.pill',
+      'learner.story.check.next.cta',
+      'learner.story.check.showRomanization.cta',
+      'learner.story.check.continue.cta',
+      'learner.story.recap.done.cta',
+      'learner.story.sequence.skip.cta',
+      'learner.story.sequence.continue.cta',
+      'learner.story.sequence.replay.pause.cta',
+      'learner.story.sequence.replay.play.cta',
+      'learner.story.sequence.replay.back.cta',
+      'learner.story.sequence.replay.next.cta',
+      'learner.story.sequence.replay.skip.cta',
+      'learner.story.sequence.replay.done.cta',
+      'learner.story.results.nextStory.cta',
+      'learner.story.results.backHome.cta',
+      'learner.story.results.readAgain.cta',
+      'learner.story.results.episodePage.cta',
+    ]) {
+      expect(paths).toContain(expected);
+    }
+  });
 });

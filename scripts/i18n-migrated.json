@@ -24,21 +24,9 @@
     "apps/mobile/src/components/PinSetupField.tsx",
     "apps/mobile/src/components/SpacesCard.tsx",
     "apps/mobile/src/components/BackupCard.tsx",
-    "apps/mobile/src/screens/minigames/MinigameScreen.tsx",
-    "apps/mobile/src/screens/minigames/MatchSoundGame.tsx",
+    "apps/mobile/src/screens/minigames/**",
     "apps/mobile/src/components/PromptPanel.tsx",
-    "apps/mobile/src/components/VoiceHelpSheet.tsx",
-    "apps/mobile/src/screens/minigames/BuildLetterGame.tsx",
-    "apps/mobile/src/screens/minigames/TraceStrokeGame.tsx",
-    "apps/mobile/src/screens/minigames/StrokeHint.tsx",
-    "apps/mobile/src/screens/minigames/CardMatchGame.tsx",
-    "apps/mobile/src/screens/minigames/CultureQuizGame.tsx",
-    "apps/mobile/src/screens/minigames/OddOneOutGame.tsx",
-    "apps/mobile/src/screens/minigames/TapRespondGame.tsx",
-    "apps/mobile/src/screens/minigames/VoiceEchoGame.tsx",
-    "apps/mobile/src/screens/minigames/ListenPickGame.tsx",
-    "apps/mobile/src/screens/minigames/PicWordMatchGame.tsx",
-    "apps/mobile/src/screens/minigames/StorySequenceGame.tsx"
+    "apps/mobile/src/components/VoiceHelpSheet.tsx"
   ],
   "pluralTernaryBaseline": {
     "apps/web/src/app/teach/space/page.tsx": 1,
