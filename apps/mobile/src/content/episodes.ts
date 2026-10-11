@@ -1,4 +1,5 @@
 import type { Episode } from '@hangul-route/content-schema';
+import { bookEpisodes } from './books';
 import { stages, themes } from './stages';
 import { storyEpisodes } from './stories';
 
@@ -186,26 +187,35 @@ const upperStageTitles: Record<string, Record<string, string>> = {
   },
 };
 
-const shippedBeyondStage1 = new Set<string>([
-  'episode:stage2-life',
-  'episode:stage2-nature',
-  'episode:stage4-rites',
-]);
-const previewEpisodes: Episode[] = stages
-  .filter((s) => s.key !== 'stage1')
-  .flatMap((s) =>
-    themes
-      .map((t, i) => makePreviewEpisode(s.key, t.key, i + 1, upperStageTitles[s.key]?.[t.key] ?? 'Coming soon'))
-      .filter((e) => !shippedBeyondStage1.has(e.id)),
-  );
+/**
+ * Grid capacity (F-STORY-005 §3.1 rule 1, D9): at launch a cell (stage × theme)
+ * holds at most one grid episode. Shelf episodes never count. Raising this to 2
+ * is the "volumes later" switch (PR 5.8).
+ */
+export const MAX_EPISODES_PER_CELL = 1;
 
-export const episodesAll: Episode[] = [
-  ...stage1Episodes,
-  ...stage2Episodes,
-  ...stage4Episodes,
-  ...previewEpisodes,
-  ...storyEpisodes,
-];
+const cellKey = (e: Pick<Episode, 'stage' | 'theme'>): string => `${e.stage}:${e.theme}`;
+
+/** Hand-written grid episodes: the lessons and the Stage 5 books (`books.ts`). */
+const handWritten: Episode[] = [...stage1Episodes, ...stage2Episodes, ...stage4Episodes, ...bookEpisodes];
+
+/**
+ * "Coming soon" previews for every cell beyond Stage 1 that no grid episode of
+ * `claimers` claims, so a new hand-written episode replaces its preview with no
+ * exclusion list to edit (F-STORY-005 §3.5). Ids stay `episode:<stage>-<theme>`.
+ */
+export function previewEpisodesFor(claimers: readonly Episode[]): Episode[] {
+  const claimed = new Set(gridEpisodes(claimers).map(cellKey));
+  return stages
+    .filter((s) => s.key !== 'stage1')
+    .flatMap((s) =>
+      themes.map((t, i) => makePreviewEpisode(s.key, t.key, i + 1, upperStageTitles[s.key]?.[t.key] ?? 'Coming soon')),
+    )
+    .filter((e) => !claimed.has(cellKey(e)));
+}
+
+/** `storyEpisodes`: the generated shelf episodes (F-STORY-001 §3.9). */
+export const episodesAll: Episode[] = [...handWritten, ...storyEpisodes, ...previewEpisodesFor(handWritten)];
 
 export function episodeById(id: string): Episode | undefined {
   return episodesAll.find((e) => e.id === id);
@@ -230,7 +240,17 @@ export function shelfEpisodes<E extends Pick<Episode, 'placement'>>(list: readon
   return list.filter((e) => !isGridEpisode(e));
 }
 
-/** The grid cell at `stage` × `theme`; a shelf episode is never a cell. */
+/**
+ * The grid episodes of the cell at `stage` × `theme`, sorted by volume, then
+ * order (F-STORY-005 §3.5). A shelf episode is never in a cell.
+ */
+export function episodesFor(stage: string, theme: string, list: readonly Episode[] = episodesAll): Episode[] {
+  return list
+    .filter((e) => isGridEpisode(e) && e.stage === stage && e.theme === theme)
+    .sort((a, b) => (a.volume ?? 1) - (b.volume ?? 1) || a.order - b.order);
+}
+
+/** The cell's first grid episode; unchanged for every cell that holds one. */
 export function episodeFor(stage: string, theme: string, list: readonly Episode[] = episodesAll): Episode | undefined {
-  return list.find((e) => isGridEpisode(e) && e.stage === stage && e.theme === theme);
+  return episodesFor(stage, theme, list)[0];
 }
