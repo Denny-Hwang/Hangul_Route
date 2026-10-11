@@ -25,13 +25,48 @@ function shuffle<T>(arr: readonly T[], seed?: number): T[] {
 }
 
 /**
+ * Prompt order for `rounds` rounds over `pool`. Every symbol is asked once
+ * before any repeats; a longer game cycles through fresh shuffles and never
+ * asks the same prompt twice in a row (F-QUEST-002 §3.4). Every `focusIds`
+ * entry is asked at least once.
+ */
+function pickPrompts(pool: readonly Jamo[], rounds: number, focusIds: readonly string[], seed: number): Jamo[] {
+  if (focusIds.length > rounds) {
+    throw new Error(`Cannot ask ${focusIds.length} focus jamo in ${rounds} rounds`);
+  }
+  for (const id of focusIds) {
+    if (!pool.some((j) => j.id === id)) throw new Error(`Focus jamo ${id} is not in scope`);
+  }
+
+  const prompts: Jamo[] = [];
+  for (let cycle = 0; prompts.length < rounds; cycle++) {
+    const pass = shuffle(pool, seed + cycle * 7919);
+    const last = prompts[prompts.length - 1];
+    if (last && pass[0]!.id === last.id) [pass[0], pass[1]] = [pass[1]!, pass[0]!];
+    prompts.push(...pass);
+  }
+  const picked = prompts.slice(0, rounds);
+
+  // A short game may cut the first pass before some focus symbol: swap those
+  // in for non-focus prompts, keeping every prompt distinct.
+  const missing = focusIds.filter((id) => !picked.some((j) => j.id === id));
+  for (const id of missing) {
+    const at = picked.findIndex((j) => !focusIds.includes(j.id));
+    picked[at] = pool.find((j) => j.id === id)!;
+  }
+  return picked;
+}
+
+/**
  * Build a Match Sound minigame: N rounds, each with `tileCount` distinct jamo.
  * Distractors drawn from the same scope. No duplicates within a round (F-001 §3.5).
+ * `rounds` above the pool size cycle the prompts; `focusJamoIds` are always asked.
  */
 export function buildMatchSoundRounds(opts: {
   scopeJamoIds: string[];
   rounds: number;
   tileCount?: number;
+  focusJamoIds?: string[];
   seed?: number;
 }): MatchSoundRound[] {
   const tileCount = opts.tileCount ?? 4;
@@ -42,7 +77,7 @@ export function buildMatchSoundRounds(opts: {
 
   const out: MatchSoundRound[] = [];
   let seed = opts.seed ?? Date.now();
-  const prompts = shuffle(pool, seed).slice(0, opts.rounds);
+  const prompts = pickPrompts(pool, opts.rounds, opts.focusJamoIds ?? [], seed);
 
   for (const prompt of prompts) {
     seed = seed + 1;

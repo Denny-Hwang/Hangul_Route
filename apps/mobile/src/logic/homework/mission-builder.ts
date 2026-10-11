@@ -1,4 +1,5 @@
 import type { Episode, ProgressSnapshot, Quest } from '@hangul-route/content-schema';
+import { nextQuestAfter, offerableQuests, playableEpisodes } from '../next-quest';
 
 /**
  * Today's mission — F-HW-001 §3.1, §3.2.
@@ -97,25 +98,18 @@ function replayCandidates(snapshot: ProgressSnapshot, today: string): CompletedQ
     });
 }
 
-/** Episodes a learner can actually open, in content order. */
-function playableEpisodes(episodes: readonly Episode[]): Episode[] {
-  return episodes.filter((e) => e.status === 'shipped' || e.status === 'ready');
-}
-
 /**
- * The Journey cursor. Only quests inside a playable episode are offered — a
- * quest whose episode is still a preview placeholder would route the learner
- * into an unshipped screen.
+ * The Journey cursor, shared with the Results teaser (`logic/next-quest.ts`).
+ * Once every offerable quest is done Home keeps offering the last one, as it
+ * always has, rather than an empty "New" slot.
  */
 function nextQuest(
   snapshot: ProgressSnapshot,
   quests: readonly Quest[],
   episodes: readonly Episode[],
 ): Quest | undefined {
-  const openIds = new Set(playableEpisodes(episodes).flatMap((e) => e.questIds));
-  const offerable = quests.filter((q) => openIds.has(q.id));
-  const done = new Set(snapshot.quests.filter((q) => q.completedAt).map((q) => q.questId));
-  return offerable.find((q) => !done.has(q.id)) ?? offerable[offerable.length - 1];
+  const offerable = offerableQuests(quests, episodes);
+  return nextQuestAfter({ snapshot, quests, episodes }) ?? offerable[offerable.length - 1];
 }
 
 function completedToday(snapshot: ProgressSnapshot, questId: string, today: string): boolean {
