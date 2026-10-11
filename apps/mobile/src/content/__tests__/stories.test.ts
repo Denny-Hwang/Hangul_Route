@@ -5,6 +5,7 @@ import { EpisodeSchema, MinigameKindSchema, QuestSchema, parseStory } from '@han
 import { buildBundle } from '../../../../../scripts/build-stories.mjs';
 import { episodesAll } from '../episodes';
 import { questsAll } from '../quests';
+import { parseStoryMinigameRef, storyIdOfQuest } from '../../logic/story/story-ref';
 import { storiesAll, storyById, storyEpisodes, storyQuests, storySlug } from '../stories';
 
 const FIXTURE_DIR = join(
@@ -80,5 +81,41 @@ describe('generator output against the real schemas (fixture story)', () => {
       'story-check',
       'story-sequence',
     ]);
+  });
+});
+
+/**
+ * A story can be `ready` as content before PR 1.9 gives it a `shelf` block (F-PLAN-002
+ * section 3.2). Such a story ships in `storiesAll` but must surface on no learner path:
+ * no shelf episode, no quest and no quest step plays it.
+ */
+describe('a ready story without a shelf block reaches no learner path', () => {
+  it('the generator derives no episode and no quest for it (fixture story)', () => {
+    const story = parseStory(readyFixture);
+    const bundle = buildBundle([{ ...story, shelf: undefined }]);
+    expect(bundle.stories.map((s) => s.id)).toEqual([story.id]);
+    expect(bundle.episodes).toEqual([]);
+    expect(bundle.quests).toEqual([]);
+  });
+
+  it('every generated shelf episode and quest belongs to a bundled story with a shelf block', () => {
+    const shelfSlugs = new Set(storiesAll.filter((s) => s.shelf).map((s) => storySlug(s.id)));
+    for (const e of storyEpisodes) expect(shelfSlugs.has(e.id.replace(/^episode:shelf-/, '')), e.id).toBe(true);
+    for (const q of storyQuests) {
+      const storyId = storyIdOfQuest(q);
+      expect(storyId !== null && shelfSlugs.has(storySlug(storyId)), q.id).toBe(true);
+    }
+  });
+
+  it('no episode lists, and no quest plays, a bundled story that has no shelf block', () => {
+    for (const story of storiesAll.filter((s) => !s.shelf)) {
+      const slug = storySlug(story.id);
+      expect(episodesAll.some((e) => e.id === `episode:shelf-${slug}`), `${story.id} has a shelf episode`).toBe(false);
+      expect(questsAll.some((q) => storyIdOfQuest(q) === story.id), `${story.id} is played by a quest`).toBe(false);
+      const namesIt = questsAll.some((q) =>
+        q.steps.some((step) => step.minigameRef !== undefined && parseStoryMinigameRef(step.minigameRef)?.storyId === story.id),
+      );
+      expect(namesIt, `${story.id} is named by a quest step`).toBe(false);
+    }
   });
 });
