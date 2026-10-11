@@ -14,8 +14,8 @@
   "recommendedStage": 2,
   "minutes": 4,
   "learningGoalsEn": [
-    "Recognize and say 해 (hae, sun), 그림자 (geurimja, shadow) and the question 지금 몇 시예요? (What time is it now?).",
-    "Explain that the angbuilgu shows the time of day and the time of year from the sun's shadow.",
+    "Read and recognize 해 (hae, sun), 그림자 (geurimja, shadow) and the question 지금 몇 시예요? (jigeum myeot siyeyo?, What time is it now?).",
+    "Understand that the angbuilgu shows the time of day and the time of year from the sun's shadow.",
     "Know that in 1434 sundials were placed beside busy roads and used animal pictures for people who could not read.",
     "Know that Sejong-era sundials do not survive; the ones we see today were made later in Joseon."
   ],
@@ -47,7 +47,7 @@
       "id": "angbuilgu",
       "ko": "앙부일구",
       "romanization": "angbuilgu",
-      "en": "hemispherical sundial",
+      "en": "bowl-shaped sundial",
       "kind": "word"
     },
     {
@@ -111,7 +111,7 @@
             "id": "angbuilgu",
             "ko": "앙부일구",
             "romanization": "angbuilgu",
-            "en": "hemispherical sundial ('upward-facing pot sundial')",
+            "en": "bowl-shaped sundial ('upward-facing pot sundial')",
             "kind": "word"
           },
           "factIds": [
@@ -164,7 +164,7 @@
         {
           "id": "s5",
           "narrationEn": "On King Sejong's sundials, the hours were shown with pictures of the zodiac animal spirits instead of letters, so people who could not read could tell the time. Hoya cheers, because the tiger, {kw:horangi}, is one of the twelve!",
-          "captionEn": "Animal pictures show the hours",
+          "captionEn": "Animal pictures showed the hours",
           "keyword": {
             "id": "horangi",
             "ko": "호랑이",
@@ -202,13 +202,13 @@
         },
         {
           "id": "s7",
-          "narrationEn": "Some are kept at the National Palace Museum of Korea in Seoul. Hoya peeks at a sundial in its glass case and asks his friend, \"{kw:jigeum-myeot-siyeyo}\" That means, \"What time is it now?\"",
+          "narrationEn": "Some are kept at the National Palace Museum of Korea in Seoul. Hoya peeks at a sundial in its glass case and asks a museum guide, \"{kw:jigeum-myeot-siyeyo}\" That means, \"What time is it now?\"",
           "captionEn": "Hoya asks what time it is",
           "line": {
             "ko": "지금 몇 시예요?",
             "romanization": "jigeum myeot siyeyo?",
             "en": "What time is it now?",
-            "speaker": "narrator"
+            "speaker": "hoya"
           },
           "factIds": [
             "f8"
