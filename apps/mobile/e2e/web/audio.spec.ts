@@ -489,11 +489,11 @@ test('Culture Quiz: Hear it says the prompt word, and nothing plays before the t
 /**
  * F-AUDIO-004 A-6: bundled clips on the web (§3.10). Letter clips are precached; vocabulary,
  * story, card and dialogue clips are runtime-cached. Real letter clips arrive with A-9 (T-017);
- * until then these tests run on the e2e fixture build, which maps fixture tones for g, n, d, l
- * and one vocabulary tone from e2e/fixtures/audio (CI: the "Story reader e2e (fixture bundle)" step):
+ * until then these tests run on the e2e fixture build, which maps fixture tones for g, n, d, l,
+ * a and eo (every letter of quest 1's Match Sound since F-QUEST-002 Q-6a) and one vocabulary tone from e2e/fixtures/audio (CI: the "Story reader e2e (fixture bundle)" step):
  *   pnpm --filter @hangul-route/mobile build:web:fixtures
  *   STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test audio -g "bundled clips"
- * (Only this group: in the fixture build those four letters play a tone, not the voice, so the
+ * (Only this group: in the fixture build those six letters play a tone, not the voice, so the
  * voice tests above expect the regular build.)
  */
 const FIXTURE_BUILD = process.env.STORY_FIXTURES === '1';
@@ -518,7 +518,7 @@ const RUNTIME_CLIP = /(^|\/)audio\/(vocab|story|card|dialogue)\//;
 const letterClips = builtClips().filter((p) => /\/audio\/jamo\//.test(p));
 const runtimeClips = builtClips().filter((p) => RUNTIME_CLIP.test(p));
 // The fixture build must hold its clips: a silent skip there would leave the clip path unchecked in CI.
-const NO_CLIPS = 'No letter clips in this build: real ones arrive with A-9 (T-017); the fixture build (see above) has four.';
+const NO_CLIPS = 'No letter clips in this build: real ones arrive with A-9 (T-017); the fixture build (see above) has six.';
 
 type ClipWindow = Window & { __clipStarts?: number[] };
 
@@ -602,7 +602,7 @@ test.describe('bundled clips (A-6)', () => {
     await page.reload();
     await expect(page.getByText('Hi, Dami!')).toBeVisible();
 
-    await page.getByRole('button', { name: /^Meet g, n, d, l/ }).click();
+    await page.getByRole('button', { name: /^Meet a, eo, g, n/ }).click();
     await openMatchSound(page);
 
     // A clip started, served by the service worker.
