@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
+import ScenesPreviewPage from '../design-preview/scenes/page';
 
 /**
  * F-STORY-002 §3.9.4: the web renderer can only mark where a `card:` layer
@@ -30,8 +31,8 @@ vi.mock('../../lib/scene-sheet/read-stories', async (importOriginal) => {
 });
 
 describe('/design-preview/scenes: card layers', () => {
-  it('labels a card layer in visible text beside the picture', async () => {
-    const { default: ScenesPreviewPage } = await import('../design-preview/scenes/page');
+  // vi.mock is hoisted above the imports, so the page reads the mocked story
+  it('labels a card layer in visible text beside the picture', () => {
     const html = renderToStaticMarkup(<ScenesPreviewPage />);
     expect(html).toMatch(/data-card-note[^>]*>card:hangul-day — shown in the app</);
     expect(html.match(/data-card-note/g)).toHaveLength(1);
