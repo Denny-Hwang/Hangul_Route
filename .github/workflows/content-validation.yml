@@ -6,6 +6,8 @@ on:
     paths:
       - "content/**"
       - "packages/content-schema/**"
+      - "scripts/build-stories.mjs"
+      - "apps/mobile/src/content/stories.generated.ts"
 
 concurrency:
   group: content-validation-${{ github.ref }}
@@ -38,3 +40,9 @@ jobs:
 
       - name: Validate language policy (F-CNT-001)
         run: node scripts/validate-content.mjs
+
+      - name: Story bundle is up to date (F-STORY-001)
+        run: node scripts/build-stories.mjs --check
+
+      - name: Story bundle budget (F-STORY-001)
+        run: node scripts/build-stories.mjs --report
