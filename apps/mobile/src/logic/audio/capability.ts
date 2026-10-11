@@ -29,6 +29,19 @@ export function canPlayKorean(cap: AudioCapability): boolean {
   return cap.tts.state === 'ready' || cap.clips;
 }
 
+/**
+ * Whether the device has a voice for a language other than the Korean being
+ * taught: the instruction voice of the level check's test language (F-PLC-001
+ * section 3.1 step 2). `ranked` is the tracker's eligible voices for that
+ * language. While the voice list is still unknown it counts as available, so it
+ * never blocks by mistake; with no speech engine at all it is false.
+ */
+export function voiceAvailable(cap: AudioCapability, ranked: readonly VoiceCandidate[]): boolean {
+  if (cap.tts.state === 'unknown') return true;
+  if (cap.tts.state === 'none' && cap.tts.reason === 'no_engine') return false;
+  return ranked.length > 0;
+}
+
 /** For the "Check this device" row. Never sent to telemetry. */
 export function describeKoVoice(status: KoVoiceStatus): { voiceName: string; local: boolean; quality: VoiceQuality } | null {
   if (status.state !== 'ready') return null;
