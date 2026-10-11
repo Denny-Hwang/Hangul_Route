@@ -93,4 +93,31 @@ describe('length budgets (F-I18N-001 §3.11)', () => {
       expect(paths).toContain(expected);
     }
   });
+  it('covers the Quest player pills and CTAs (PR 7a)', () => {
+    const paths = leafPaths(getMessages('en')).filter((p) => BUDGETS[p.split('.').pop() ?? ''] !== undefined);
+    for (const expected of [
+      'learner.quest.step.intro.pill',
+      'learner.quest.step.present.pill',
+      'learner.quest.step.discover.pill',
+      'learner.quest.step.practice.pill',
+      'learner.quest.step.apply.pill',
+      'learner.quest.step.check.pill',
+      'learner.quest.step.reward.pill',
+      'learner.quest.goBack.cta',
+      'learner.quest.leave.confirm.cta',
+      'learner.quest.leave.keep.cta',
+      'learner.quest.continue.cta',
+      'learner.quest.seeResults.cta',
+      'learner.quest.launcher.game.play.cta',
+      'learner.quest.launcher.game.skip.cta',
+      'learner.quest.launcher.check.go.cta',
+      'learner.quest.discover.hearIt.cta',
+      'learner.quest.discover.letterName.cta',
+      'learner.quest.discover.showHowToSay.cta',
+      'learner.quest.discover.continue.cta',
+      'learner.quest.discover.heard.pill',
+    ]) {
+      expect(paths).toContain(expected);
+    }
+  });
 });

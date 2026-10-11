@@ -26,6 +26,14 @@ export const a11y = {
   /** A finished homework row, and an open one with its due word. */
   playAgainQuest: (title: string) => `Play again: ${title}`,
   homeworkRow: (title: string, due: string) => `${title}, ${due}`,
+  /** The close control of the Quest player, and the Discover labels (`label` is already-built screen-reader text). */
+  leaveQuest: 'Leave quest',
+  hearItLabel: (label: string) => `Hear it. ${label}`,
+  hearExample: (spoken: string) => `Hear it: ${spoken}`,
+  /** A Discover symbol: `romanization` is the sound value; `soundHint` is the optional content hint. */
+  discoverLetter: (romanization: string, soundHint?: string) =>
+    soundHint === undefined ? `Korean letter ${romanization}` : `Korean letter ${romanization}. ${soundHint}`,
+  discoverFinal: (romanization: string) => `Korean final consonant ${romanization}`,
   lockedCard: 'Locked card',
   flipToBack: 'Tap to flip card to back',
   flipToFront: 'Tap to flip card to front',
