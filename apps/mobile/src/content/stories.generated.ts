@@ -653,9 +653,9 @@ export const storiesAll: Story[] = [
     "minutes": 5,
     "learningGoalsEn": [
       "Know that Janggyeong Panjeon at Haeinsa Temple was built to store the Tripitaka Koreana woodblocks and dates from the 15th century.",
-      "Explain two design features that protect the woodblocks: windows of different sizes for airflow, and a floor layered with charcoal, lime, salt and sand to control moisture.",
+      "Understand two design features that protect the woodblocks: windows of different sizes for airflow, and a floor layered with charcoal, lime, salt and sand to control moisture.",
       "Know that Janggyeong Panjeon was inscribed on the UNESCO World Heritage List in 1995.",
-      "Read and say 건물, 창문, 숯, 바람 and 지켜요 with romanization."
+      "Read and recognize 건물 (geonmul), 창문 (changmun), 숯 (sut), 바람 (baram) and 지켜요 (jikyeoyo)."
     ],
     "origin": {
       "type": "documented",
@@ -738,7 +738,7 @@ export const storiesAll: Story[] = [
         "scenes": [
           {
             "id": "s1",
-            "narrationEn": "Hoya returns to Haeinsa and climbs to the highest part of the temple grounds. Here stand the Janggyeong Panjeon, the halls made to store the woodblocks. They are the oldest buildings still standing at Haeinsa.",
+            "narrationEn": "Hoya visits Haeinsa Temple and climbs to the highest part of the temple grounds. Here stand the Janggyeong Panjeon, the halls made to store the woodblocks. They are the oldest buildings still standing at Haeinsa.",
             "keyword": {
               "id": "janggyeongpanjeon",
               "ko": "장경판전",
@@ -753,7 +753,7 @@ export const storiesAll: Story[] = [
             "framing": false,
             "approximations": [],
             "artBrief": "Hoya climbing stone stairs to a terrace at the top of a mountain temple; two long, plain wooden halls with tiled roofs stand side by side above the other temple roofs.",
-            "captionEn": "The oldest halls at Haeinsa",
+            "captionEn": "The oldest halls still standing at Haeinsa",
             "artPending": true
           },
           {
@@ -853,7 +853,7 @@ export const storiesAll: Story[] = [
           },
           {
             "id": "s7",
-            "narrationEn": "In 1995, UNESCO added Janggyeong Panjeon to the World Heritage List. UNESCO calls it the oldest depository of the Tripitaka, the Buddhist scriptures.",
+            "narrationEn": "In 1995, UNESCO added Janggyeong Panjeon to the World Heritage List. UNESCO says it is the oldest place built to store the Tripitaka, the Buddhist scriptures.",
             "keyword": {
               "id": "segyeyusan",
               "ko": "세계유산",
@@ -872,7 +872,7 @@ export const storiesAll: Story[] = [
           },
           {
             "id": "s8",
-            "narrationEn": "To help keep the temperature and humidity steady, visitor entry is restricted. Hoya peeks through the window slats and whispers, \"Uriga jikyeoyo, we protect it together!\"",
+            "narrationEn": "To keep the heat and dampness inside steady, only a few visitors may go in. Hoya peeks through the window slats and whispers, \"Uriga jikyeoyo, we protect it together!\"",
             "keyword": {
               "id": "uriga-jikyeoyo",
               "ko": "우리가 지켜요",
@@ -886,7 +886,7 @@ export const storiesAll: Story[] = [
             "framing": false,
             "approximations": [],
             "artBrief": "Hoya and a child quietly peeking through vertical window slats from outside, careful not to touch; inside, shelves of woodblocks rest in calm shadow.",
-            "captionEn": "Entry is limited to keep humidity steady",
+            "captionEn": "Few visitors, to keep heat and damp steady",
             "artPending": true
           }
         ],
@@ -1268,7 +1268,7 @@ export const storiesAll: Story[] = [
       "scope": "cluster",
       "notes": "Third independent pass. Every cited URL for all 6 episodes (52 facts) was re-opened (UNESCO pages via Wayback copies when the live site resets connections) and quotes/locators were compared; the one exception is unesco.org/en/prizes/literacy (unreachable from here; its claim is now also backed by a Korean MCST press release). Eight minimal corrections were made: (1) Hangeul Day f3 no longer says 'Gregorian' (no cited source says the October 9 conversion was Gregorian; encykorea separates Julian/Gregorian only for 1932-45) and dates the October 29/28 observances; (2) f10 gains a third source (SBS 2018 with 국립한글박물관 curator); (3) Shapes scene 8, learning goal and f7 now say 'South Korea's spelling rules' count 24 (North Korea counts 40, 국립한글박물관 webzine 59); (4) Sejong scene 4/f4: 백성 is 'an old-fashioned word' with 표준국어대사전 added; (5) Jikji f8 quote no longer repeats a prize amount that differs between UNESCO page versions; (6) Tripitaka f6 wood and corner plates now have two further sources (정책브리핑; 박상진 wood-identification study); (8) Hangeul Day f9 gains a second source (문화체육관광부 press release); (7) Panjeon scene 8/f9: 'visitors cannot walk inside' replaced by 'visitor entry is restricted' because Haeinsa has run pre-booked tours inside Beopbojeon since June 2021. See hangul-printing.signoff.md."
     },
-    "authorNotes": "Theme is set to 'crafts' because the episode is about building and conservation design; switch it to 'letters' if the cluster should stay in one theme. The original construction date is unknown (국가유산포털), so the narration says '15th century' (UNESCO WHC, 국가유산포털). The sources consulted do not say which wall or row has the larger windows, so the narration only says the sizes differ, and illustrations should not suggest a specific pattern. 국가유산포털 also calls it the 'world's only building for storing Tripitaka woodblocks'; the narration uses UNESCO's more conservative wording, 'oldest depository of the Tripitaka', instead. The building's survival through the 1592 war is left out, because the story avoids war content. The visitor-entry restriction is as stated on the WHC page on the access date; rules may change. The official heritage name is 합천 해인사 장경판전 (National Treasure, designated 1962). REVISED: 'oldest buildings' -> 'oldest buildings still standing at Haeinsa' (국가유산포털: 해인사에 남아있는 건물 중 가장 오래 되었다; verified in the portal's description text and its UNESCO page). Visitor restriction (f9): the UNESCO WHC text, re-read on an Internet Archive snapshot, says restrictions exist 'in order to control the temperature and humidity within the depositories'; the fire-protection measures on the same page (guards, surveillance, lightning rod) are a separate sentence. Narration now says visitors 'cannot walk inside' to match the UNESCO wording, and the old 'to keep the air just right inside' phrase was replaced. Only UNESCO is cited for this restriction; no 국가유산청 page with it was found, and rules may change. Check distractors replaced with plausible wrong answers. Vocab 소금/습기 dropped (not shown in a scene) and 세계유산 added. FINAL PASS (3rd check): scene 8 now says 'visitor entry is restricted' (UNESCO wording) instead of 'visitors cannot walk inside', because Haeinsa runs pre-booked guided tours inside Beopbojeon (since 2021-06, 경향신문). Current rules should be checked on haeinsa.or.kr before any release.",
+    "authorNotes": "Theme is set to 'crafts' because the episode is about building and conservation design; switch it to 'letters' if the cluster should stay in one theme. The original construction date is unknown (국가유산포털), so the narration says '15th century' (UNESCO WHC, 국가유산포털). The sources consulted do not say which wall or row has the larger windows, so the narration only says the sizes differ, and illustrations should not suggest a specific pattern. 국가유산포털 also calls it the 'world's only building for storing Tripitaka woodblocks'; the narration uses UNESCO's more conservative wording, 'oldest depository of the Tripitaka', instead. The building's survival through the 1592 war is left out, because the story avoids war content. The visitor-entry restriction is as stated on the WHC page on the access date; rules may change. The official heritage name is 합천 해인사 장경판전 (National Treasure, designated 1962). REVISED: 'oldest buildings' -> 'oldest buildings still standing at Haeinsa' (국가유산포털: 해인사에 남아있는 건물 중 가장 오래 되었다; verified in the portal's description text and its UNESCO page). Visitor restriction (f9): the UNESCO WHC text, re-read on an Internet Archive snapshot, says restrictions exist 'in order to control the temperature and humidity within the depositories'; the fire-protection measures on the same page (guards, surveillance, lightning rod) are a separate sentence. Narration now says visitors 'cannot walk inside' to match the UNESCO wording, and the old 'to keep the air just right inside' phrase was replaced. Only UNESCO is cited for this restriction; no 국가유산청 page with it was found, and rules may change. Check distractors replaced with plausible wrong answers. Vocab 소금/습기 dropped (not shown in a scene) and 세계유산 added. FINAL PASS (3rd check): scene 8 now says 'visitor entry is restricted' (UNESCO wording) instead of 'visitors cannot walk inside', because Haeinsa runs pre-booked guided tours inside Beopbojeon (since 2021-06, 경향신문). Current rules should be checked on haeinsa.or.kr before any release. REVIEW PASS (PR 1.8b): s1 no longer assumes the learner read story-tripitaka-koreana; s7 narrates UNESCO's 'oldest depository' as 'the oldest place built to store the Tripitaka'; s8 says only a few visitors may go in (f9: entry restricted, small pre-booked tours), to keep heat and dampness steady.",
     "errata": []
   },
   {
