@@ -27,6 +27,7 @@ import { ProfileAvatar } from '../../components/ProfileAvatar';
 import { episodesAll, questsAll } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeMissionCard } from '../../logic/content-locale';
+import { cursorContext } from '../../logic/cursor-context';
 import {
   buildTodaysMission,
   missionCardText,
@@ -38,13 +39,13 @@ import { dueTodayCount, showsTodayCount } from '../../logic/homework/assignment-
 import { mergeAssignments } from '../../logic/homework/assignment-merger';
 import { gridQuestProgress } from '../../logic/journey';
 import { homeColumns } from '../../logic/layout/home-columns';
-import { placedOutSkipSet } from '../../logic/placement/route-skip';
 import { DEFAULT_AVATAR } from '../../logic/profiles/avatar-catalog';
 import { computeStreak } from '../../logic/streak';
 import type { RootStackParamList } from '../../navigation/types';
 import { useAudience } from '../../store/audience';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
+import { effectiveTier } from '../../store/tier-store';
 
 /** Avatar circle in the Profile entry; with its label the button clears the 64pt floor. */
 const AVATAR_SIZE = 52;
@@ -143,7 +144,13 @@ export function HomeScreen(): React.ReactElement {
       episodes: episodesAll,
       today,
       pinned: pinnedPlan.current,
-      skipQuestIds: placedOutSkipSet(snap.placements, questsAll, episodesAll),
+      // The same stages and placed-out quests as Results and My route (F-ROUTE-001 R-4a).
+      ...cursorContext({
+        tier: effectiveTier(profile.id, new Date()).tier,
+        placements: snap.placements,
+        quests: questsAll,
+        episodes: episodesAll,
+      }),
     });
     // A caregiver or class assignment for today takes card ② (F-HW-001 §3.4, F-PLAN-001 §3.4).
     const merged = mergeAssignments({
