@@ -1,0 +1,543 @@
+{
+  "v": 1,
+  "id": "story:jagyeongnu-water-clock",
+  "state": "draft",
+  "contentVer": 1,
+  "title": {
+    "ko": "장영실과 스스로 울리는 물시계, 자격루",
+    "romanization": "",
+    "en": "Jang Yeong-sil and the Clock That Rang by Itself"
+  },
+  "summaryEn": "Hoya meets Jang Yeong-sil, the skilled craftsman King Sejong praised, and watches how flowing water, rolling balls and wooden figures made the Jagyeongnu water clock strike the time.",
+  "theme": "crafts",
+  "kind": "science",
+  "recommendedStage": 2,
+  "minutes": 5,
+  "learningGoalsEn": [
+    "Recognize and say 물 (mul, water), 물시계 (mulsigye, water clock) and the sounds 종, 북, 징 (bell, drum, gong).",
+    "Know that King Sejong credited Jang Yeong-sil with building the self-striking water clock, which began keeping time in 1434.",
+    "Describe in simple steps how rising water moved balls and figures to strike the time.",
+    "Know that Sejong's original clock is lost, and parts of a 1536 water clock survive as a National Treasure."
+  ],
+  "origin": {
+    "type": "documented",
+    "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
+  },
+  "review": {
+    "language": "draft",
+    "culture": "draft",
+    "advisory": []
+  },
+  "keywords": [
+    {
+      "id": "mul",
+      "ko": "물",
+      "romanization": "mul",
+      "en": "water",
+      "kind": "word"
+    },
+    {
+      "id": "mulsigye",
+      "ko": "물시계",
+      "romanization": "mulsigye",
+      "en": "water clock",
+      "kind": "word"
+    },
+    {
+      "id": "jagyeongnu",
+      "ko": "자격루",
+      "romanization": "Jagyeongnu",
+      "en": "self-striking water clock",
+      "kind": "word"
+    },
+    {
+      "id": "jong",
+      "ko": "종",
+      "romanization": "jong",
+      "en": "bell",
+      "kind": "word"
+    },
+    {
+      "id": "buk",
+      "ko": "북",
+      "romanization": "buk",
+      "en": "drum",
+      "kind": "word"
+    },
+    {
+      "id": "jing",
+      "ko": "징",
+      "romanization": "jing",
+      "en": "gong",
+      "kind": "word"
+    },
+    {
+      "id": "sigan",
+      "ko": "시간",
+      "romanization": "sigan",
+      "en": "time",
+      "kind": "word"
+    },
+    {
+      "id": "jang-yeongsil",
+      "ko": "장영실",
+      "romanization": "Jang Yeongsil",
+      "en": "Jang Yeong-sil, a Joseon craftsman and inventor",
+      "kind": "word"
+    },
+    {
+      "id": "jong-buk-jing",
+      "ko": "종, 북, 징",
+      "romanization": "jong, buk, jing",
+      "en": "bell, drum, gong",
+      "kind": "phrase"
+    },
+    {
+      "id": "gyeongbokgung",
+      "ko": "경복궁",
+      "romanization": "Gyeongbokgung",
+      "en": "Gyeongbokgung Palace",
+      "kind": "word"
+    },
+    {
+      "id": "sigani-dwaesseoyo",
+      "ko": "시간이 됐어요!",
+      "romanization": "sigani dwaesseoyo!",
+      "en": "It's time!",
+      "kind": "phrase"
+    }
+  ],
+  "cultureNotes": [],
+  "tiers": [
+    {
+      "level": "listen",
+      "scenes": [
+        {
+          "id": "s1",
+          "narrationEn": "Drip, drip, drip. Hoya watches water fall drop by drop into a jar. \"In Korean, water is {kw:mul},\" he says. \"In Joseon, water helped tell the time, with a clock that rang all by itself!\"",
+          "keyword": {
+            "id": "mul",
+            "ko": "물",
+            "romanization": "mul",
+            "en": "water",
+            "kind": "word"
+          },
+          "factIds": [
+            "f1",
+            "f5"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Hoya kneeling beside a large bronze jar, watching a thin stream of water trickle into a taller vessel below."
+        },
+        {
+          "id": "s2",
+          "narrationEn": "Records say Jang Yeong-sil was first a gwanno, a servant owned by the government in Dongnae. He was so skillful that he took charge of craft work in the palace, and King Sejong valued his talent.",
+          "keyword": {
+            "id": "jang-yeongsil",
+            "ko": "장영실",
+            "romanization": "Jang Yeongsil",
+            "en": "Jang Yeong-sil, a Joseon craftsman and inventor",
+            "kind": "word"
+          },
+          "factIds": [
+            "f2"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A focused Joseon craftsman in plain clothes and a headband fitting bronze parts together at a wooden workbench, tools neatly laid out."
+        },
+        {
+          "id": "s3",
+          "narrationEn": "King Sejong said Jang Yeong-sil had built a self-striking water clock, and that without him it could never have been made. The king decided to give him a higher official rank.",
+          "keyword": {
+            "id": "mulsigye",
+            "ko": "물시계",
+            "romanization": "mulsigye",
+            "en": "water clock",
+            "kind": "word"
+          },
+          "factIds": [
+            "f3"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "King Sejong in a red royal robe smiles and gestures with praise while the craftsman bows respectfully in a palace hall."
+        },
+        {
+          "id": "s4",
+          "narrationEn": "The clock was called {kw:jagyeongnu}, 'the water clock that strikes by itself.' Water flowed from jars above into a tall vessel below, and a floating rod slowly rose as the water filled up.",
+          "keyword": {
+            "id": "jagyeongnu",
+            "ko": "자격루",
+            "romanization": "Jagyeongnu",
+            "en": "self-striking water clock",
+            "kind": "word"
+          },
+          "factIds": [
+            "f4"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Cutaway view: bronze jars set on steps pour water through thin pipes into a tall cylinder, where a rod floats upward."
+        },
+        {
+          "id": "s5",
+          "narrationEn": "When the rod reached a mark, it set metal balls rolling. The balls moved wooden figures that struck a bell, a drum and a gong to tell the time: {kw:jong}, {kw:buk}, {kw:jing}!",
+          "line": {
+            "ko": "종, 북, 징",
+            "romanization": "jong, buk, jing",
+            "en": "bell, drum, gong",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f4",
+            "f5"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Three carved wooden figures in robes on a platform, one striking a bell, one a drum, one a gong; small metal balls roll down a chute behind them."
+        },
+        {
+          "id": "s6",
+          "narrationEn": "From the first day of the seventh lunar month in 1434, the new clock kept time in a pavilion named Borugak at Gyeongbokgung Palace. Palace gates passed its sounds along so the city could hear the time.",
+          "keyword": {
+            "id": "gyeongbokgung",
+            "ko": "경복궁",
+            "romanization": "Gyeongbokgung",
+            "en": "Gyeongbokgung Palace",
+            "kind": "word"
+          },
+          "factIds": [
+            "f6"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A small palace pavilion beside a pond with a large pavilion behind it; a gate tower with a big drum in soft evening light."
+        },
+        {
+          "id": "s7",
+          "narrationEn": "Sejong's original clock does not survive, but water vessels from a water clock made in 1536 remain. They are a National Treasure at the National Palace Museum of Korea. Hoya whispers, \"{kw:sigani-dwaesseoyo}\"",
+          "line": {
+            "ko": "시간이 됐어요!",
+            "romanization": "sigani dwaesseoyo!",
+            "en": "It's time!",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f7"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A huge plain bronze jar and tall bronze cylinders in a museum hall; Hoya stands small beside them, whispering with a grin."
+        }
+      ],
+      "checks": [
+        {
+          "id": "c1",
+          "kind": "detail",
+          "promptEn": "What made the floating rod rise?",
+          "options": [
+            {
+              "id": "a",
+              "en": "Water collecting in the tall vessel",
+              "isCorrect": true
+            },
+            {
+              "id": "b",
+              "en": "A helper lifting it with a long rope",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Wind pushing it upward from below",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f4"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "detail",
+          "promptEn": "Which three sounds told the time?",
+          "options": [
+            {
+              "id": "a",
+              "en": "A flute, a drum and a harp",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "A bell, a horn and a flute",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "A bell, a drum and a gong",
+              "isCorrect": true
+            }
+          ],
+          "factIds": [
+            "f5"
+          ]
+        },
+        {
+          "id": "c3",
+          "kind": "detail",
+          "promptEn": "What did King Sejong say about Jang Yeong-sil?",
+          "options": [
+            {
+              "id": "a",
+              "en": "His clock was too noisy to keep in the palace",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "The clock could not have been made without him",
+              "isCorrect": true
+            },
+            {
+              "id": "c",
+              "en": "His work should be hidden away from the people",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f3"
+          ]
+        }
+      ],
+      "checkpoints": [],
+      "sequenceSceneIds": [
+        "s1",
+        "s3",
+        "s5",
+        "s7"
+      ],
+      "newKeywordIds": [
+        "mul",
+        "mulsigye",
+        "jagyeongnu"
+      ]
+    }
+  ],
+  "coverSceneId": "s1",
+  "pillarTags": [],
+  "companionId": "hoya",
+  "facts": [
+    {
+      "id": "f1",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "A water clock measures time by the increase or decrease of water.",
+      "claimKo": "물시계는 물이 늘어나거나 줄어드는 양으로 시간을 재는 장치이다.",
+      "sources": [
+        {
+          "title": "국보 창경궁 자격루 누기 (Clepsydra of Changgyeonggung Palace)",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1111102290000",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"물시계는 물의 증가량 또는 감소량으로 시간을 측정하는 장치로서 … 조선 세종 16년(1434) 장영실에 의해 정해진 시간에 종과 징·북이 저절로 울리도록 한 물시계가 처음 제작되었으나, 오래 사용되지는 못하였고, 중종 31년(1536)에 다시 제작한 자격루의 일부가 현재 남아 있다.\""
+        },
+        {
+          "title": "물시계(漏刻)",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0019863",
+          "accessed": "2026-10-10",
+          "quoteOrLocator": "정의: \"물의 증가 또는 감소로 시간을 측정하는 장치.\""
+        }
+      ]
+    },
+    {
+      "id": "f2",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "The Sillok records that Jang Yeong-sil was a gwanno (官奴, a government-owned servant) of Dongnae County who, being highly skilled, regularly took charge of craft work in the palace; King Sejong said he valued Jang's skill. Encykorea adds that he was later freed (면천) and appointed to a court post.",
+      "claimKo": "실록에 따르면 장영실은 동래현의 관노(官奴, 관청에 속한 종)였으나 솜씨가 정교하여 늘 궁궐 안의 공장 일을 맡았으며, 세종은 그의 재주를 아낀다고 하였다. 한국민족문화대백과사전은 그가 뒤에 면천되어 궁중 기술자로 일하게 되었다고 설명한다.",
+      "sources": [
+        {
+          "title": "세종실록 65권, 세종 16년(1434) 7월 1일 병자 4번째 기사 「새로 만든 누기의 구조와 원리 및 보관 장소와 누기 명의 내용」",
+          "publisher": "국사편찬위원회 조선왕조실록 (sillok.history.go.kr)",
+          "url": "https://sillok.history.go.kr/id/kda_11607001_004",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "국역: \"영실(英實)은 동래현(東萊縣) 관노(官奴)인데, 성품이 정교(精巧)하여 항상 궐내의 공장(工匠) 일을 맡았었다.\""
+        },
+        {
+          "title": "세종실록 61권, 세종 15년(1433) 9월 16일 을미 3번째 기사 「안숭선에게 명하여 장영실에게 호군의 관직을 더해 줄 것을 의논하게 하다」",
+          "publisher": "국사편찬위원회 조선왕조실록 (sillok.history.go.kr)",
+          "url": "https://sillok.history.go.kr/id/kda_11509016_003",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "국역: \"공교(工巧)한 솜씨가 보통 사람에 뛰어나므로 태종께서 보호하시었고, 나도 역시 이를 아낀다. … 이제 자격궁루(自擊宮漏)를 만들었는데 비록 나의 가르침을 받아서 하였지마는, 만약 이 사람이 아니더라면 암만해도 만들어 내지 못했을 것이다. … 호군(護軍)의 관직을 더해 주고자 한다.\" … 임금이 그대로 따랐다."
+        },
+        {
+          "title": "장영실",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0048697",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"동래현의 관노로 있을 때 그의 재주가 세종에게 인정되어 중국에 파견, 천문기기 연구의 기회를 가지게 되었다.\" / \"귀국하자 면천되고 1423년(세종 5) 상의원별좌(尙衣院別坐)에 임명되어 궁중기술자로서의 활동이 시작되었다.\""
+        }
+      ]
+    },
+    {
+      "id": "f3",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "King Sejong stated that Jang Yeong-sil made the self-striking palace water clock (自擊宮漏) and that, although he followed the king's instructions, it could not have been made without him; the king then decided (his ministers agreeing) to add the rank of hogun for him.",
+      "claimKo": "세종은 장영실이 자격궁루를 만들었으며, 임금의 가르침을 받았더라도 그가 아니었다면 만들지 못했을 것이라고 말하고, 대신들의 동의를 얻어 그에게 호군 벼슬을 더해 주기로 하였다.",
+      "sources": [
+        {
+          "title": "세종실록 61권, 세종 15년(1433) 9월 16일 을미 3번째 기사 「안숭선에게 명하여 장영실에게 호군의 관직을 더해 줄 것을 의논하게 하다」",
+          "publisher": "국사편찬위원회 조선왕조실록 (sillok.history.go.kr)",
+          "url": "https://sillok.history.go.kr/id/kda_11509016_003",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "국역: \"공교(工巧)한 솜씨가 보통 사람에 뛰어나므로 태종께서 보호하시었고, 나도 역시 이를 아낀다. … 이제 자격궁루(自擊宮漏)를 만들었는데 비록 나의 가르침을 받아서 하였지마는, 만약 이 사람이 아니더라면 암만해도 만들어 내지 못했을 것이다. … 호군(護軍)의 관직을 더해 주고자 한다.\" … 임금이 그대로 따랐다."
+        },
+        {
+          "title": "국보 창경궁 자격루 누기 (Clepsydra of Changgyeonggung Palace)",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1111102290000",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"물시계는 물의 증가량 또는 감소량으로 시간을 측정하는 장치로서 … 조선 세종 16년(1434) 장영실에 의해 정해진 시간에 종과 징·북이 저절로 울리도록 한 물시계가 처음 제작되었으나, 오래 사용되지는 못하였고, 중종 31년(1536)에 다시 제작한 자격루의 일부가 현재 남아 있다.\""
+        }
+      ]
+    },
+    {
+      "id": "f4",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "In the Jagyeongnu, water flowed from upper vessels into a tall receiving vessel; a floating rod rose as the water collected, and at set marks it released metal balls that set the striking mechanism in motion.",
+      "claimKo": "자격루에서는 위쪽 물그릇의 물이 아래의 긴 물받이 통으로 흘러들고, 물이 고이면 떠 있는 잣대(살대)가 올라가 정해진 눈금에서 쇠구슬을 굴려 시보 장치를 움직였다.",
+      "sources": [
+        {
+          "title": "국보 창경궁 자격루 누기 (Clepsydra of Changgyeonggung Palace)",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1111102290000",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"맨 위에 있는 큰 물그릇에 넉넉히 물을 부어주면 그 물이 아래의 작은 그릇을 거쳐, 제일 아래쪽 길고 높은 물받이 통에 흘러든다. 물받이 통에 물이 고이면 그 위에 떠 있는 잣대가 점점 올라가 … 쇠 구슬을 구멍 속에 굴려 넣어준다. … 종과 징·북을 울리기도 하고, 또는 나무로 만든 인형이 나타나 시각을 알려주는 팻말을 들어 보이기도 한다.\""
+        },
+        {
+          "title": "세종실록 65권, 세종 16년(1434) 7월 1일 병자 4번째 기사 「새로 만든 누기의 구조와 원리 및 보관 장소와 누기 명의 내용」",
+          "publisher": "국사편찬위원회 조선왕조실록 (sillok.history.go.kr)",
+          "url": "https://sillok.history.go.kr/id/kda_11607001_004",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "국역: \"파수호의 누수가 수수호에 내려서 모이면, 떠 있던 살대[浮箭]가 점점 올라와서 시간에 응하여 … 작은 구리 구슬이 떨어져 내려서 … 큰 구슬이 떨어져 … 시간을 맡은 신의 팔을 치받으면, 곧 종이 울린다.\""
+        },
+        {
+          "title": "자격루",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0047854",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"1434년 7월 1일(양력으로 8월 5일) 경회루의 남쪽에 보루각을 세우고 그 안에 자격루를 설치하여 시각을 알리도록 하였다. … 살대가 떠오름에 따라 이 부력(浮力)이 지렛대와 쇠구슬에 전달되어 … 목인(木人)이 3명 서 있어서 하나는 시를 알리기 위하여 종을 치는 일을 맡고, 다른 하나는 경을 알리기 위하여 북을 치는 일을 맡고, 나머지 하나는 점을 알리기 위하여 징을 치는 일을 맡았다.\""
+        }
+      ]
+    },
+    {
+      "id": "f5",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "The Jagyeongnu announced the time automatically: wooden figures struck a bell (jong), a drum (buk) and a gong (jing).",
+      "claimKo": "자격루는 나무 인형이 종·북·징을 쳐서 스스로 시각을 알렸다.",
+      "sources": [
+        {
+          "title": "세종실록 65권, 세종 16년(1434) 7월 1일 병자 4번째 기사 「새로 만든 누기의 구조와 원리 및 보관 장소와 누기 명의 내용」",
+          "publisher": "국사편찬위원회 조선왕조실록 (sillok.history.go.kr)",
+          "url": "https://sillok.history.go.kr/id/kda_11607001_004",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "국역: \"이날부터 비로소 새 누기(漏器)를 썼다. … 호군(護軍) 장영실(蔣英實)에게 명하여 사신 목인(司辰木人)을 만들어 시간에 따라 스스로 알리게 하고 … 하나는 시를 맡아 종(鐘)을 울리고, 하나는 경(更)을 맡아 북을 울리며, 하나는 점(點)을 맡아 징을 울린다.\""
+        },
+        {
+          "title": "국보 창경궁 자격루 누기 (Clepsydra of Changgyeonggung Palace)",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1111102290000",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"맨 위에 있는 큰 물그릇에 넉넉히 물을 부어주면 그 물이 아래의 작은 그릇을 거쳐, 제일 아래쪽 길고 높은 물받이 통에 흘러든다. 물받이 통에 물이 고이면 그 위에 떠 있는 잣대가 점점 올라가 … 쇠 구슬을 구멍 속에 굴려 넣어준다. … 종과 징·북을 울리기도 하고, 또는 나무로 만든 인형이 나타나 시각을 알려주는 팻말을 들어 보이기도 한다.\""
+        },
+        {
+          "title": "자격루",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0047854",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"1434년 7월 1일(양력으로 8월 5일) 경회루의 남쪽에 보루각을 세우고 그 안에 자격루를 설치하여 시각을 알리도록 하였다. … 살대가 떠오름에 따라 이 부력(浮力)이 지렛대와 쇠구슬에 전달되어 … 목인(木人)이 3명 서 있어서 하나는 시를 알리기 위하여 종을 치는 일을 맡고, 다른 하나는 경을 알리기 위하여 북을 치는 일을 맡고, 나머지 하나는 점을 알리기 위하여 징을 치는 일을 맡았다.\""
+        }
+      ]
+    },
+    {
+      "id": "f6",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "From the 1st day of the 7th lunar month of 1434 (Sejong year 16), the new water clock was put into use in a pavilion named Borugak at Gyeongbokgung Palace; its sounds were relayed by drums and bells at palace gates so the city could know the time.",
+      "claimKo": "1434년(세종 16) 7월 1일부터 경복궁 보루각에 설치한 새 물시계를 쓰기 시작하였고, 그 소리를 궁궐 문의 북과 종이 이어받아 서울에 시각을 알렸다.",
+      "sources": [
+        {
+          "title": "세종실록 65권, 세종 16년(1434) 7월 1일 병자 4번째 기사 「새로 만든 누기의 구조와 원리 및 보관 장소와 누기 명의 내용」",
+          "publisher": "국사편찬위원회 조선왕조실록 (sillok.history.go.kr)",
+          "url": "https://sillok.history.go.kr/id/kda_11607001_004",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "국역: \"이날부터 비로소 새 누기(漏器)를 썼다. … 호군(護軍) 장영실(蔣英實)에게 명하여 사신 목인(司辰木人)을 만들어 시간에 따라 스스로 알리게 하고 … 하나는 시를 맡아 종(鐘)을 울리고, 하나는 경(更)을 맡아 북을 울리며, 하나는 점(點)을 맡아 징을 울린다.\""
+        },
+        {
+          "title": "세종실록 65권, 세종 16년(1434) 7월 1일 병자 4번째 기사 「새로 만든 누기의 구조와 원리 및 보관 장소와 누기 명의 내용」",
+          "publisher": "국사편찬위원회 조선왕조실록 (sillok.history.go.kr)",
+          "url": "https://sillok.history.go.kr/id/kda_11607001_004",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "국역: \"드디어 그 집을 보루각(報漏閣)이라 이름하고 … 경회루의 남문과 월화문(月華門)·근정문(勤政門)에 각각 금고(金鼓)를 설치하고, 광화문에 대종고(大鍾鼓)를 세워서, 당일 밤에 각 문의 쇠북을 맡은 자가 목인(木人)의 금고 소리를 듣고는 차례로 전하여 친다.\""
+        },
+        {
+          "title": "보루각",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0023286",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"1434년(세종 16) 세종에 의해 세워졌다. 그 해 7월 초하루를 기하여 장영실(蔣英實)이 새로 만든 자격루(自擊漏)를 표준시계로 사용하기 시작하였는데, 보루각은 바로 이 자격루를 시설해놓은 경복궁의 전각이다. … 보루각에서 시계가 자동으로 소리를 내면 그에 따라 경복궁의 문루에서 같은 신호를 받아 서울 시내에 시각을 알리게 되어 있었다.\""
+        },
+        {
+          "title": "자격루",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0047854",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"1434년 7월 1일(양력으로 8월 5일) 경회루의 남쪽에 보루각을 세우고 그 안에 자격루를 설치하여 시각을 알리도록 하였다. … 살대가 떠오름에 따라 이 부력(浮力)이 지렛대와 쇠구슬에 전달되어 … 목인(木人)이 3명 서 있어서 하나는 시를 알리기 위하여 종을 치는 일을 맡고, 다른 하나는 경을 알리기 위하여 북을 치는 일을 맡고, 나머지 하나는 점을 알리기 위하여 징을 치는 일을 맡았다.\""
+        }
+      ]
+    },
+    {
+      "id": "f7",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "The Sejong-era Jagyeongnu does not survive; water vessels of a Jagyeongnu remade in 1536 (Jungjong year 31) remain and are designated a National Treasure ('Clepsydra of Changgyeonggung Palace'), kept at the National Palace Museum of Korea.",
+      "claimKo": "세종 때 만든 자격루는 남아 있지 않으며, 1536년(중종 31)에 다시 만든 자격루의 물통 부분이 남아 국보 '창경궁 자격루 누기'로 지정되어 국립고궁박물관에 있다.",
+      "sources": [
+        {
+          "title": "국보 창경궁 자격루 누기 (Clepsydra of Changgyeonggung Palace)",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1111102290000",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"물시계는 물의 증가량 또는 감소량으로 시간을 측정하는 장치로서 … 조선 세종 16년(1434) 장영실에 의해 정해진 시간에 종과 징·북이 저절로 울리도록 한 물시계가 처음 제작되었으나, 오래 사용되지는 못하였고, 중종 31년(1536)에 다시 제작한 자격루의 일부가 현재 남아 있다.\""
+        },
+        {
+          "title": "국보 창경궁 자격루 누기 (Clepsydra of Changgyeonggung Palace)",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1111102290000",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "시대: 조선 중종 31년(1536) / 소재지: 서울특별시 종로구 효자로 12 (세종로, 국립고궁박물관) / \"지금 남아 있는 물시계는 쇠구슬이 굴러 조화를 이루던 부분이 없어진 채, 물통 부분들만 남아 있다.\""
+        },
+        {
+          "title": "자격루",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0047854",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"세종 때 만든 자격루는 모두 소실되고 없다. 현재 남아 있는 것으로는 1536년(중종 31)에 만든 파수호와 수수호가 … 보관되어 있다.\" (현 소장처는 국가유산포털 기준 국립고궁박물관)"
+        }
+      ]
+    }
+  ],
+  "referenceDisplay": "Sources: 국사편찬위원회 조선왕조실록(세종실록); 국가유산청 국가유산포털; 한국민족문화대백과사전",
+  "verification": {
+    "passes": 3,
+    "checkedAt": "2026-10-10",
+    "scope": "cluster",
+    "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted."
+  },
+  "authorNotes": "Dating: the Sillok entry in which Sejong praises Jang and grants the rank 호군 is dated 1433-09-16 (lunar), while KHS and encykorea give 1434 as the year the clock was made/completed; narration avoids a making year and gives only the start of use (1434-07-01 lunar), on which the Sillok and encykorea agree. Other makers: encykorea's 자격루 entry lists 장영실·이천·김조 and its 장영실 entry mentions 김빈; the story names only Jang Yeong-sil, whom the Sillok (1433, 1434) and KHS credit. Location: encykorea says the 1536 vessels are at Deoksugung (outdated); KHS lists the National Palace Museum of Korea. Simplified mechanism: the Sillok distinguishes small copper balls and large iron balls and also describes 12 zodiac figures holding time plaques; narration says 'metal balls'. Jang Yeong-sil's later career and other instruments (e.g., 옥루, 혼천의) omitted.  REVISION: 관노 is described as a government-owned servant (Sillok 1434: 동래현 관노), worded neutrally; encykorea adds he was later freed and given a court post, so narration says 'first a gwanno'. Illustration of the 1536 vessels no longer shows dragons: KHS describes plain bronze vessels, and the only decoration mention found is an encykorea image caption ('수수통의 용문양'), which is not in the KHS text, so decoration is left out entirely. PASS 3: scene 3/f3 now say the king 'decided to give' the rank (Sillok 1433-09-16: 'I wish to add the post of hogun'; Hwang Hui and others agreed and 'the king followed').",
+  "errata": []
+}

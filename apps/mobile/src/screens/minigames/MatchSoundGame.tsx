@@ -14,10 +14,14 @@ import {
 } from '@hangul-route/design-system';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
+import { PromptPanel } from '../../components/PromptPanel';
+import { usePromptSlot } from '../../components/use-prompt-slot';
+import { wrongAnswerBubble, shouldAutoReplay } from '../../logic/audio/prompt-view';
+import { spokenFor } from '../../logic/audio/spoken';
 import { jamoTileA11yLabel } from '../../logic/korean-labels';
 import { buildMatchSoundRounds, type MatchSoundRound } from '../../logic/round-builder';
 import type { MinigameScope } from '../../logic/minigame-config';
-import { playJamoSound, speak } from '../../platform/audio';
+import { playJamo } from '../../platform/audio';
 import { nudge, success, tapLight } from '../../platform/haptics';
 import { useQuestRunStore } from '../../store/quest-run-store';
 
@@ -45,13 +49,21 @@ export function MatchSoundGame({ scope, onFinish }: Props): React.ReactElement {
   const replayTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const round = rounds[roundIdx];
+  // The sound of the letter (ga, never gi-yeok), or the same sound as text (F-AUDIO-004 AD1, §3.8).
+  const slot = usePromptSlot({ source: 'match-sound' });
+  const { view, play, reset } = slot;
+  const viewRef = useRef(view);
+  viewRef.current = view;
+
+  const hear = (): Promise<unknown> | undefined => (round ? play(() => playJamo(round.promptJamo, 'sound')) : undefined);
 
   useEffect(() => {
     if (!round) return;
     setLockedWrongIds([]);
     setFeedback('idle');
-    void playJamoSound(round.promptJamo.char);
-  }, [roundIdx, round]);
+    reset();
+    void play(() => playJamo(round.promptJamo, 'sound'));
+  }, [roundIdx, round, play, reset]);
 
   useEffect(() => {
     return () => {
@@ -89,14 +101,13 @@ export function MatchSoundGame({ scope, onFinish }: Props): React.ReactElement {
       setLockedWrongIds([...lockedWrongIds, jamoId]);
       if (replayTimer.current) clearTimeout(replayTimer.current);
       replayTimer.current = setTimeout(() => {
-        void playJamoSound(round.promptJamo.char);
+        if (shouldAutoReplay(viewRef.current)) void hear();
       }, 800);
     }
   };
 
-  const replay = (): void => {
-    void playJamoSound(round.promptJamo.char);
-  };
+  const spoken = spokenFor(round.promptJamo, 'sound');
+  const bubble = wrongAnswerBubble(spoken);
 
   return (
     <Screen tone="canvas">
@@ -108,21 +119,30 @@ export function MatchSoundGame({ scope, onFinish }: Props): React.ReactElement {
       </View>
 
       <Spacer size="lg" />
-      <Heading level="prompt">Tap the letter you hear</Heading>
+      <Heading level="prompt">{view.heading}</Heading>
       <Spacer size="md" />
 
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, justifyContent: 'center' }}>
         <Pressable
-          onPress={replay}
+          onPress={() => void hear()}
           accessibilityRole="button"
-          accessibilityLabel="Play sound again"
+          accessibilityLabel={view.speakerLabel}
+          testID="match-sound-speaker"
           hitSlop={spacing.md}
           style={{ padding: spacing.md }}
         >
           <Icon name="speaker" size={48} />
         </Pressable>
-        <Caption tone="muted">Tap to replay</Caption>
+        <Caption tone="muted">{view.speakerCaption}</Caption>
       </View>
+
+      <Spacer size="md" />
+      <PromptPanel
+        view={view}
+        ko={spoken.text}
+        romanization={spoken.romanization}
+        onAction={(action) => slot.act(action, () => void hear())}
+      />
 
       <Spacer size="xl" />
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: spacing.md }}>
@@ -149,10 +169,10 @@ export function MatchSoundGame({ scope, onFinish }: Props): React.ReactElement {
           <Spacer size="lg" />
           <HoyaBubble
             tone="thinking"
-            message="Listen again. This one says"
-            korean={round.promptJamo.char}
-            romanization={round.promptJamo.romanization}
-            ctaInline={<Button label="Hear it" tone="secondary" size="md" onPress={() => speak(round.promptJamo.char, { language: 'ko-KR' })} />}
+            message={bubble.message}
+            korean={bubble.korean}
+            romanization={bubble.romanization}
+            ctaInline={<Button label="Hear it" tone="secondary" size="md" onPress={() => void hear()} />}
           />
         </>
       ) : null}

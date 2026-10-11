@@ -1,0 +1,605 @@
+{
+  "v": 1,
+  "id": "story:donguibogam",
+  "state": "draft",
+  "contentVer": 1,
+  "title": {
+    "ko": "허준의 동의보감",
+    "romanization": "",
+    "en": "Heo Jun's Treasured Mirror of Medicine"
+  },
+  "summaryEn": "Hoya learns how the royal doctor Heo Jun finished Donguibogam in 1610, a medical encyclopedia that valued staying healthy and wrote herb names in Hangul, now on UNESCO's Memory of the World Register.",
+  "theme": "life",
+  "kind": "documentary",
+  "recommendedStage": 3,
+  "minutes": 5,
+  "learningGoalsEn": [
+    "Recognize and say 몸 (mom, body), 건강 (geongang, health), 약초 (yakcho, medicinal herb) and 책 (chaek, book).",
+    "Know that Heo Jun, a Joseon royal doctor, completed Donguibogam in 1610 and that it was printed in 1613 in 25 volumes.",
+    "Explain the book's idea that preventing illness and staying healthy matters before curing it.",
+    "Know that Donguibogam wrote herb names in Hangul and is on UNESCO's Memory of the World Register (세계기록유산, 2009)."
+  ],
+  "origin": {
+    "type": "documented",
+    "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
+  },
+  "review": {
+    "language": "draft",
+    "culture": "draft",
+    "advisory": [
+      "war"
+    ],
+    "advisoryNoteEn": "Briefly mentions a war from Korea's history."
+  },
+  "keywords": [
+    {
+      "id": "mom",
+      "ko": "몸",
+      "romanization": "mom",
+      "en": "body",
+      "kind": "word"
+    },
+    {
+      "id": "uisa",
+      "ko": "의사",
+      "romanization": "uisa",
+      "en": "doctor",
+      "kind": "word"
+    },
+    {
+      "id": "chaek",
+      "ko": "책",
+      "romanization": "chaek",
+      "en": "book",
+      "kind": "word"
+    },
+    {
+      "id": "donguibogam",
+      "ko": "동의보감",
+      "romanization": "Donguibogam",
+      "en": "Donguibogam (a Joseon medical encyclopedia)",
+      "kind": "word"
+    },
+    {
+      "id": "geongang",
+      "ko": "건강",
+      "romanization": "geongang",
+      "en": "health",
+      "kind": "word"
+    },
+    {
+      "id": "yakcho",
+      "ko": "약초",
+      "romanization": "yakcho",
+      "en": "medicinal herb",
+      "kind": "word"
+    },
+    {
+      "id": "bomul-gateun-chaek",
+      "ko": "보물 같은 책",
+      "romanization": "bomul gateun chaek",
+      "en": "a book like a treasure",
+      "kind": "phrase"
+    },
+    {
+      "id": "segyegirogyusan",
+      "ko": "세계기록유산",
+      "romanization": "segyegirogyusan",
+      "en": "Memory of the World (UNESCO documentary heritage)",
+      "kind": "word"
+    },
+    {
+      "id": "heo-jun",
+      "ko": "허준",
+      "romanization": "",
+      "en": "",
+      "kind": "term"
+    }
+  ],
+  "cultureNotes": [],
+  "tiers": [
+    {
+      "level": "listen",
+      "scenes": [
+        {
+          "id": "s1",
+          "narrationEn": "Hoya stretches his arms and legs in the morning sun. \"In Korean, body is {kw:mom},\" he says. \"Long ago, a royal doctor of Joseon wrote a giant book to help people care for their bodies.\"",
+          "keyword": {
+            "id": "mom",
+            "ko": "몸",
+            "romanization": "mom",
+            "en": "body",
+            "kind": "word"
+          },
+          "factIds": [
+            "f1",
+            "f6"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Hoya doing a morning stretch on the wooden floor (maru) of a hanok house, warm sunrise behind him."
+        },
+        {
+          "id": "s2",
+          "narrationEn": "His name was Heo Jun, {kw:heo-jun}, and he served as a doctor at the royal court. King Seonjo asked him and other doctors to write a new medical book. Today we call a doctor {kw:uisa}.",
+          "keyword": {
+            "id": "uisa",
+            "ko": "의사",
+            "romanization": "uisa",
+            "en": "doctor (modern word)",
+            "kind": "word"
+          },
+          "factIds": [
+            "f1"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A Joseon royal physician in official robes and a black hat bowing before a king seated in a palace hall; rolled papers nearby."
+        },
+        {
+          "id": "s3",
+          "narrationEn": "When war broke out again, the work stopped and the doctors were scattered. Later the king asked Heo Jun to write the book alone, and gave him many medical books from the palace to study.",
+          "keyword": {
+            "id": "chaek",
+            "ko": "책",
+            "romanization": "chaek",
+            "en": "book",
+            "kind": "word"
+          },
+          "factIds": [
+            "f2"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Heo Jun at a low desk surrounded by stacks of old thread-bound books, writing with a brush by lamplight."
+        },
+        {
+          "id": "s4",
+          "narrationEn": "In 1610 Heo Jun finished the book: {kw:donguibogam}, Donguibogam. 'Dongui' means the medicine of the East, Korea's own medical tradition, and 'bogam' means a treasured mirror, a model to learn from.",
+          "keyword": {
+            "id": "donguibogam",
+            "ko": "동의보감",
+            "romanization": "Donguibogam",
+            "en": "Donguibogam ('Treasured Mirror of Eastern Medicine')",
+            "kind": "word"
+          },
+          "factIds": [
+            "f3",
+            "f4"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A neat stack of finished book volumes tied with cord, beside a round bronze mirror that softly reflects light."
+        },
+        {
+          "id": "s5",
+          "narrationEn": "Donguibogam taught that staying healthy and preventing illness come before curing sickness. In Korean, health is {kw:geongang}.",
+          "keyword": {
+            "id": "geongang",
+            "ko": "건강",
+            "romanization": "geongang",
+            "en": "health",
+            "kind": "word"
+          },
+          "factIds": [
+            "f5"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Hoya and two children walking happily through a pine forest, breathing fresh air, with a picnic mat of simple healthy food."
+        },
+        {
+          "id": "s6",
+          "narrationEn": "To help country people use medicines growing nearby, the book wrote the everyday Korean names of herbs in Hangul, the Korean alphabet.",
+          "keyword": {
+            "id": "yakcho",
+            "ko": "약초",
+            "romanization": "yakcho",
+            "en": "medicinal herb",
+            "kind": "word"
+          },
+          "factIds": [
+            "f7"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Gentle drawings of wild medicinal plants (bellflower, mugwort, a root plant) on a sunny hillside, with a woven basket of herbs; no writing."
+        },
+        {
+          "id": "s7",
+          "narrationEn": "Donguibogam was printed in 1613 in 25 volumes. Later it was printed many times in China, and in Japan too. In 2009, UNESCO added it to the Memory of the World Register, {kw:segyegirogyusan}.",
+          "keyword": {
+            "id": "segyegirogyusan",
+            "ko": "세계기록유산",
+            "romanization": "segyegirogyusan",
+            "en": "Memory of the World (UNESCO heritage list)",
+            "kind": "word"
+          },
+          "factIds": [
+            "f6",
+            "f8"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Rows of traditional thread-bound books on wooden shelves, with faint outlines of mountains and seas behind them suggesting the book's travels."
+        },
+        {
+          "id": "s8",
+          "narrationEn": "Copies from that first printing are now National Treasures of Korea. Hoya hugs a book-shaped pillow and smiles: \"{kw:bomul-gateun-chaek}!\" That means, \"A book like a treasure!\"",
+          "line": {
+            "ko": "보물 같은 책",
+            "romanization": "bomul gateun chaek",
+            "en": "a book like a treasure",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f9"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Hoya hugging a soft pillow shaped like an old book, sitting beside a museum case that holds a thread-bound book under gentle light."
+        }
+      ],
+      "checks": [
+        {
+          "id": "c1",
+          "kind": "detail",
+          "promptEn": "According to Donguibogam, what comes before curing sickness?",
+          "options": [
+            {
+              "id": "a",
+              "en": "Resting in bed for a very long time",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Finding the strongest medicine of all",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Staying healthy and preventing illness",
+              "isCorrect": true
+            }
+          ],
+          "factIds": [
+            "f5"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "detail",
+          "promptEn": "Which alphabet did the book use for the Korean names of herbs?",
+          "options": [
+            {
+              "id": "a",
+              "en": "Hangul",
+              "isCorrect": true
+            },
+            {
+              "id": "b",
+              "en": "The Latin alphabet",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "The Greek alphabet",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f7"
+          ]
+        },
+        {
+          "id": "c3",
+          "kind": "detail",
+          "promptEn": "When was Donguibogam first printed?",
+          "options": [
+            {
+              "id": "a",
+              "en": "1592",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "1613",
+              "isCorrect": true
+            },
+            {
+              "id": "c",
+              "en": "1610",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f6"
+          ]
+        }
+      ],
+      "checkpoints": [],
+      "sequenceSceneIds": [
+        "s1",
+        "s3",
+        "s6",
+        "s8"
+      ],
+      "newKeywordIds": [
+        "mom",
+        "uisa",
+        "chaek",
+        "donguibogam"
+      ]
+    }
+  ],
+  "coverSceneId": "s1",
+  "pillarTags": [],
+  "companionId": "hoya",
+  "facts": [
+    {
+      "id": "f1",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Heo Jun was a Joseon court physician (sources differ on his birth year, so none is given); King Seonjo ordered him, together with other physicians such as Yang Ye-su and Yi Myeong-won, to compile a medical book.",
+      "claimKo": "허준은 조선의 궁중 의관이며(출생 연도는 자료마다 달라 쓰지 않는다), 선조가 그와 양예수·이명원 등 의관들에게 의서를 편찬하도록 명하였다.",
+      "sources": [
+        {
+          "title": "국보 동의보감(2015-1) (Dongui bogam (Principles and Practice of Eastern Medicine))",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1111103190100",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"『동의보감(東醫寶鑑)』은 허준(許浚,1539∼1615)이 1610년(광해군 2)에 … 엮어놓은 우리나라 최고의 한의서이다. 선조는 … 허준과, 양예수(楊禮壽), 이명원(李命源) 등에게 명하여 의서를 편찬토록 하였으나 전쟁으로 중단되었다. … 초간본은 편찬된 지 3년 후인 1613년(광해군 5) 11월에 내의원에서 목활자로 간행하였으며, 모두 25권 25책이다. … 중국에서는 1763년(乾隆 28）이후 수차례 간행되었다. 일본에서도 1724년(享保 9）에 교토서림(京都書林)에서 처음 간행된 이후\" / 지정일 2015.06.22, 소장: 국립중앙도서관"
+        },
+        {
+          "title": "허준",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0063152",
+          "accessed": "2026-10-10",
+          "quoteOrLocator": "정의: \"허준은 조선시대 『동의보감』·『언해태산집요』·『언해구급방』 등을 저술한 의관, 의학자이다.\" / Birth year is internally inconsistent on this page: infobox \"1539년(중종 32)\" (중종 32 would be 1537), summary \"1539년(중종 34)\", photo captions \"1546(명종 1)\"; KHS gives 1539; therefore no birth year is used in narration."
+        },
+        {
+          "title": "동의보감",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0016731",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"25권 25책. 1610년(광해군 2)에 완성하여 1613년 내의원에서 개주갑인자(改鑄甲寅字) 목활자로 첫 간행된\" / \"1596년 선조의 명으로 허준 등 5인이 공동으로 편찬을 진행하다가 병란으로 중단된 것을 허준이 단독으로 추진하여 1610년에 완성하였다.\""
+        }
+      ]
+    },
+    {
+      "id": "f2",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "The joint compilation was interrupted when war broke out again (the Jeongyu invasion) and the participants were scattered; afterwards King Seonjo gave Heo Jun medical books from the royal collection and ordered him to compile Donguibogam alone.",
+      "claimKo": "정유재란이 일어나 참여자들이 흩어지면서 편찬이 중단되었고, 이후 선조는 왕실이 소장한 의서를 허준에게 내주며 『동의보감』을 혼자 편찬하도록 하였다.",
+      "sources": [
+        {
+          "title": "동의보감",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0016731",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "편찬/발간 경위: \"1597년(정유년) 1월 일본군이 다시 쳐들어오는 정유재란이 일어났고, 이로 인해서 참여한 인물들이 뿔뿔이 흩어져버려 『동의보감』을 편찬하는 일이 중단되었다. 전쟁이 완전히 끝난 후 1601년 봄 선조는 허준을 불러 왕실에서 소장하고 있던 고금의 의서 500여 권을 내주면서 의학 책의 편찬을 맡겼다. 이 때 허준에게 『동의보감』을 단독으로 편찬할 것과\""
+        },
+        {
+          "title": "국보 동의보감(2015-1) (Dongui bogam (Principles and Practice of Eastern Medicine))",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1111103190100",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"『동의보감(東醫寶鑑)』은 허준(許浚,1539∼1615)이 1610년(광해군 2)에 … 엮어놓은 우리나라 최고의 한의서이다. 선조는 … 허준과, 양예수(楊禮壽), 이명원(李命源) 등에게 명하여 의서를 편찬토록 하였으나 전쟁으로 중단되었다. … 초간본은 편찬된 지 3년 후인 1613년(광해군 5) 11월에 내의원에서 목활자로 간행하였으며, 모두 25권 25책이다. … 중국에서는 1763년(乾隆 28）이후 수차례 간행되었다. 일본에서도 1724년(享保 9）에 교토서림(京都書林)에서 처음 간행된 이후\" / 지정일 2015.06.22, 소장: 국립중앙도서관"
+        }
+      ]
+    },
+    {
+      "id": "f3",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Heo Jun completed Donguibogam in 1610 (Gwanghaegun year 2).",
+      "claimKo": "허준은 1610년(광해군 2)에 『동의보감』을 완성하였다.",
+      "sources": [
+        {
+          "title": "국보 동의보감(2015-1) (Dongui bogam (Principles and Practice of Eastern Medicine))",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1111103190100",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"『동의보감(東醫寶鑑)』은 허준(許浚,1539∼1615)이 1610년(광해군 2)에 … 엮어놓은 우리나라 최고의 한의서이다. 선조는 … 허준과, 양예수(楊禮壽), 이명원(李命源) 등에게 명하여 의서를 편찬토록 하였으나 전쟁으로 중단되었다. … 초간본은 편찬된 지 3년 후인 1613년(광해군 5) 11월에 내의원에서 목활자로 간행하였으며, 모두 25권 25책이다. … 중국에서는 1763년(乾隆 28）이후 수차례 간행되었다. 일본에서도 1724년(享保 9）에 교토서림(京都書林)에서 처음 간행된 이후\" / 지정일 2015.06.22, 소장: 국립중앙도서관"
+        },
+        {
+          "title": "동의보감",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0016731",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"25권 25책. 1610년(광해군 2)에 완성하여 1613년 내의원에서 개주갑인자(改鑄甲寅字) 목활자로 첫 간행된\" / \"1596년 선조의 명으로 허준 등 5인이 공동으로 편찬을 진행하다가 병란으로 중단된 것을 허준이 단독으로 추진하여 1610년에 완성하였다.\""
+        }
+      ]
+    },
+    {
+      "id": "f4",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "In the title, 'Dongui' (東醫) means the medical tradition of the East, i.e., Joseon's own tradition, and 'bogam' (寶鑑) means 'treasured mirror', a model or exemplar.",
+      "claimKo": "책 제목의 '동의(東醫)'는 동쪽, 곧 조선의 의학 전통을 뜻하고, '보감(寶鑑)'은 '보배로운 거울'로 본보기(귀감)라는 뜻이다.",
+      "sources": [
+        {
+          "title": "동의보감",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0016731",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "개설: \"책 제목의 ‘동의(東醫)’란 중국 남쪽과 북쪽의 의학전통에 비견되는 동쪽의 의학 전통 즉, 조선의 의학 전통을 뜻한다. ‘보감(寶鑑)’이란 “보배스러운 거울”이란 뜻으로 귀감(龜鑑)이란 뜻을 지닌다.\""
+        },
+        {
+          "title": "(3) 특징과 의학사적 의의 (신편 한국사 27권 조선 초기의 문화 Ⅱ > Ⅰ. 과학 > 4. 의약과 약학 > 5)《동의보감》의 편찬과 간행)",
+          "publisher": "국사편찬위원회 우리역사넷 (contents.history.go.kr)",
+          "url": "https://contents.history.go.kr/mobile/nh/view.do?levelId=nh_027_0020_0040_0050_0030",
+          "accessed": "2026-10-10",
+          "quoteOrLocator": "《동의보감》의 集例에서 허준은 중국의 의학을 北醫·南醫라 부르면서 우리의 의학을 東醫라 부를 것을 주장하였다. (Only the 'Dongui' = Joseon's own medicine half; the 'bogam' = treasured mirror half rests on encykorea.)"
+        }
+      ]
+    },
+    {
+      "id": "f5",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Donguibogam emphasized preventing illness and preserving health before treating disease.",
+      "claimKo": "『동의보감』은 병을 치료하는 것보다 병을 예방하고 건강을 지키는 것을 중요하게 여겼다.",
+      "sources": [
+        {
+          "title": "동의보감",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0016731",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "편찬 원칙: \"첫째, “병을 고치기에 앞서 수명을 늘리고 병이 안 걸리도록 하는 방법을 중요하게 여긴다.”\" / 내용 요약: \"병의 치료보다 예방을 강조하고\""
+        },
+        {
+          "title": "Donguibogam: Principles and Practice of Eastern Medicine",
+          "publisher": "UNESCO Memory of the World (unesco.org)",
+          "url": "https://www.unesco.org/en/memory-world/donguibogam-principles-and-practice-eastern-medicine",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"An encyclopaedia of medical knowledge and treatment techniques compiled in Korea in 1613 and edited by Heo Jun … it developed the ideals of preventive medicine and public health care by the state\" / Registration Year: 2009"
+        },
+        {
+          "title": "(3) 특징과 의학사적 의의 (신편 한국사 27권 조선 초기의 문화 Ⅱ > Ⅰ. 과학 > 4. 의약과 약학 > 5)《동의보감》의 편찬과 간행)",
+          "publisher": "국사편찬위원회 우리역사넷 (contents.history.go.kr)",
+          "url": "https://contents.history.go.kr/mobile/nh/view.do?levelId=nh_027_0020_0040_0050_0030",
+          "accessed": "2026-10-10",
+          "quoteOrLocator": "《동의보감》에서 가장 두드러지게 나타나는 특징은 치료보다도 예방, 더 나아가 건강 그 자체를 더욱 중요하게 추구하고 있다는 점이다."
+        }
+      ]
+    },
+    {
+      "id": "f6",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Donguibogam was first printed in 1613 (Gwanghaegun year 5) by the Royal Medical Office (Naeuiwon) with wooden movable type, in 25 volumes.",
+      "claimKo": "『동의보감』은 1613년(광해군 5) 내의원에서 목활자로 처음 간행되었으며 모두 25권 25책이다.",
+      "sources": [
+        {
+          "title": "국보 동의보감(2015-1) (Dongui bogam (Principles and Practice of Eastern Medicine))",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1111103190100",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"『동의보감(東醫寶鑑)』은 허준(許浚,1539∼1615)이 1610년(광해군 2)에 … 엮어놓은 우리나라 최고의 한의서이다. 선조는 … 허준과, 양예수(楊禮壽), 이명원(李命源) 등에게 명하여 의서를 편찬토록 하였으나 전쟁으로 중단되었다. … 초간본은 편찬된 지 3년 후인 1613년(광해군 5) 11월에 내의원에서 목활자로 간행하였으며, 모두 25권 25책이다. … 중국에서는 1763년(乾隆 28）이후 수차례 간행되었다. 일본에서도 1724년(享保 9）에 교토서림(京都書林)에서 처음 간행된 이후\" / 지정일 2015.06.22, 소장: 국립중앙도서관"
+        },
+        {
+          "title": "동의보감",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0016731",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"25권 25책. 1610년(광해군 2)에 완성하여 1613년 내의원에서 개주갑인자(改鑄甲寅字) 목활자로 첫 간행된\" / \"1596년 선조의 명으로 허준 등 5인이 공동으로 편찬을 진행하다가 병란으로 중단된 것을 허준이 단독으로 추진하여 1610년에 완성하였다.\""
+        },
+        {
+          "title": "Donguibogam: Principles and Practice of Eastern Medicine",
+          "publisher": "UNESCO Memory of the World (unesco.org)",
+          "url": "https://www.unesco.org/en/memory-world/donguibogam-principles-and-practice-eastern-medicine",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"An encyclopaedia of medical knowledge and treatment techniques compiled in Korea in 1613 and edited by Heo Jun … it developed the ideals of preventive medicine and public health care by the state\" / Registration Year: 2009"
+        }
+      ]
+    },
+    {
+      "id": "f7",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "One of Donguibogam's compiling principles was to write herb names in Hangul using the names Joseon people called them, so that locally grown medicines could be used widely and easily, including in the countryside.",
+      "claimKo": "『동의보감』의 편찬 원칙 가운데 하나는 국산 약을 널리 쉽게 쓸 수 있도록 약초 이름을 조선 사람들이 부르는 이름 그대로 한글로 적는 것이었다.",
+      "sources": [
+        {
+          "title": "동의보감",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0016731",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "편찬 원칙: \"셋째, “국산 약을 널리, 쉽게 쓸 수 있도록 약초 이름에 조선 사람이 부르는 이름을 한글로 쓴다.” 시골에는 약이 부족하기 때문에 주변에서 나는 약을 써야하는데 … 시골사람이 부르는 약초 이름을 쓴 것이다.\""
+        },
+        {
+          "title": "(3) 특징과 의학사적 의의 (신편 한국사 27권 조선 초기의 문화 Ⅱ > Ⅰ. 과학 > 4. 의약과 약학 > 5)《동의보감》의 편찬과 간행)",
+          "publisher": "국사편찬위원회 우리역사넷 (contents.history.go.kr)",
+          "url": "https://contents.history.go.kr/mobile/nh/view.do?levelId=nh_027_0020_0040_0050_0030",
+          "accessed": "2026-10-10",
+          "quoteOrLocator": "\"당시 사용하고 있던 향약을 특별히 중요하게 여겨 모든 향약명을 한글로 표시하여 놓았다.\""
+        }
+      ]
+    },
+    {
+      "id": "f8",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Donguibogam was printed repeatedly in China and also in Japan, and was inscribed on UNESCO's Memory of the World Register in 2009.",
+      "claimKo": "『동의보감』은 중국에서 여러 차례, 일본에서도 간행되었으며, 2009년 유네스코 세계기록유산에 등재되었다.",
+      "sources": [
+        {
+          "title": "국보 동의보감(2015-1) (Dongui bogam (Principles and Practice of Eastern Medicine))",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1111103190100",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"『동의보감(東醫寶鑑)』은 허준(許浚,1539∼1615)이 1610년(광해군 2)에 … 엮어놓은 우리나라 최고의 한의서이다. 선조는 … 허준과, 양예수(楊禮壽), 이명원(李命源) 등에게 명하여 의서를 편찬토록 하였으나 전쟁으로 중단되었다. … 초간본은 편찬된 지 3년 후인 1613년(광해군 5) 11월에 내의원에서 목활자로 간행하였으며, 모두 25권 25책이다. … 중국에서는 1763년(乾隆 28）이후 수차례 간행되었다. 일본에서도 1724년(享保 9）에 교토서림(京都書林)에서 처음 간행된 이후\" / 지정일 2015.06.22, 소장: 국립중앙도서관"
+        },
+        {
+          "title": "동의보감",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0016731",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"『동의보감』은 출간 이후 현재까지 중국에서 대략 30여 차례 출간되었고, 일본에서도 두 차례 출간되었다. … 2009년 7월 제9차 유네스코 기록유산 국제자문위원회(바베이도스)에서 유네스코 세계기록문화유산으로 등재되었다.\""
+        },
+        {
+          "title": "Donguibogam: Principles and Practice of Eastern Medicine",
+          "publisher": "UNESCO Memory of the World (unesco.org)",
+          "url": "https://www.unesco.org/en/memory-world/donguibogam-principles-and-practice-eastern-medicine",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"An encyclopaedia of medical knowledge and treatment techniques compiled in Korea in 1613 and edited by Heo Jun … it developed the ideals of preventive medicine and public health care by the state\" / Registration Year: 2009"
+        },
+        {
+          "title": "한국의 세계기록유산 (Korea's Memory of the World list)",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FkorWorldMemHeritage.jsp",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "목록: \"동의보감 (2009년)\" … \"난중일기 (2013년)\""
+        }
+      ]
+    },
+    {
+      "id": "f9",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "First-edition (1613) copies of Donguibogam held by the National Library of Korea, the Academy of Korean Studies and Seoul National University Kyujanggak are designated National Treasures (2015).",
+      "claimKo": "국립중앙도서관, 한국학중앙연구원, 서울대학교 규장각이 소장한 『동의보감』 초간본(1613)은 국보로 지정되어 있다(2015년).",
+      "sources": [
+        {
+          "title": "국보 동의보감(2015-1) (Dongui bogam (Principles and Practice of Eastern Medicine))",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1111103190100",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"『동의보감(東醫寶鑑)』은 허준(許浚,1539∼1615)이 1610년(광해군 2)에 … 엮어놓은 우리나라 최고의 한의서이다. 선조는 … 허준과, 양예수(楊禮壽), 이명원(李命源) 등에게 명하여 의서를 편찬토록 하였으나 전쟁으로 중단되었다. … 초간본은 편찬된 지 3년 후인 1613년(광해군 5) 11월에 내의원에서 목활자로 간행하였으며, 모두 25권 25책이다. … 중국에서는 1763년(乾隆 28）이후 수차례 간행되었다. 일본에서도 1724년(享保 9）에 교토서림(京都書林)에서 처음 간행된 이후\" / 지정일 2015.06.22, 소장: 국립중앙도서관"
+        },
+        {
+          "title": "국보 동의보감(2015-2) (Dongui bogam (Principles and Practice of Eastern Medicine))",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1113103190200",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "국보, 지정일 2015.06.22 / 관리자: 한국학중앙연구원 / 25卷25冊(赤裳山史庫本), 1613년"
+        },
+        {
+          "title": "국보 동의보감(2015-3) (Dongui bogam (Principles and Practice of Eastern Medicine))",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1111103190300",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "국보, 지정일 2015.06.22 / 소재지: 서울특별시 관악구 관악로 1 (서울대학교) / 관리자: 서울대학교규장각 / 1613년"
+        },
+        {
+          "title": "동의보감",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0016731",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "서지사항: \"동의보감 초간본 3종의 문헌사적, 서지적 가치를 높게 평가하여 각기 국보로 승격 지정하였다. 국립중앙도서관 소장본은 … 한국학중앙연구원 소장본은 … 서울대학교 규장각본은 2종이 지정되었는데, 모두 1613년에 간행된 초간본이다.\""
+        }
+      ]
+    }
+  ],
+  "referenceDisplay": "Sources: 국가유산청 국가유산포털; 한국민족문화대백과사전; 국사편찬위원회 우리역사넷; UNESCO Memory of the World",
+  "verification": {
+    "passes": 3,
+    "checkedAt": "2026-10-10",
+    "scope": "cluster",
+    "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted."
+  },
+  "authorNotes": "Sources disagree on the start year of compilation (KHS designation text and encykorea: 1596; KHS portal Memory-of-the-World page: 1597) and on its length (14 vs 16 years), so narration omits both. The number of royal books given to Heo Jun ('500여 권') comes from encykorea only, so narration says 'many'. UNESCO's page says 'compiled in 1613' (the printing year); KHS and encykorea give completion in 1610 and printing in 1613. Omitted: Heo Jun's exile to Uiju (1608–1609); the Jeongyu invasion is referred to only as 'war broke out again'. No remedies or medical advice are presented; prevention is described only as the book's stated principle. Herb names in Hangul: encykorea (compiling principles) plus 우리역사넷/신편한국사 ('모든 향약명을 한글로 표시'). Theme set to 'life' (body and health); BP05 lists 동의보감 at Pillar E (6.E4), so 'crafts' is the grid-aligned alternative. Scene 7 keyword changed to 세계기록유산 so 책 is not repeated. REVISION: the folk-tale entry 허준 설화 (E0063156) was replaced by the person entry 허준 (E0063152) as f1's second source. Birth year: DROPPED in pass 3. KHS gives 1539; encykorea E0063152 is internally inconsistent (infobox 1539 labelled 중종 32 which would be 1537, summary 1539/중종 34, photo captions 1546/명종 1), and other references give 1546, so narration and f1 give no birth year. PASS 3: added 우리역사넷 (신편한국사) as a second source for f4 ('Dongui' = Korea's own medicine, 集例) and f5 (prevention over treatment).",
+  "errata": []
+}

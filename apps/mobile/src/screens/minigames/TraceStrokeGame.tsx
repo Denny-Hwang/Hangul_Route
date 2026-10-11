@@ -30,7 +30,7 @@ import { directionNudgeFor, failMessage, passMessage, type DirectionNudge } from
 import { traceCanvasSize, traceLayoutMode, traceSidePanelWidth } from '../../logic/trace-layout';
 import { TRACE_IDLE_MS, createTraceEvaluator, type TraceEvaluator } from '../../logic/trace-evaluator';
 import { StrokeHint } from './StrokeHint';
-import { speak } from '../../platform/audio';
+import { playJamo } from '../../platform/audio';
 import { nudge, success } from '../../platform/haptics';
 import { useQuestRunStore } from '../../store/quest-run-store';
 
@@ -120,7 +120,7 @@ export function TraceStrokeGame({
     setDirectionNudge('none');
     setHintToken(0);
     setHintPlaying(false);
-    if (round) speak(round.jamo.char, { language: 'ko-KR' });
+    if (round) void playJamo(round.jamo, 'sound');
   }, [roundIdx, round]);
 
   if (!round) {
@@ -349,8 +349,8 @@ export function TraceStrokeGame({
         onPress={() => {
           setHintToken((t) => t + 1);
           setHintPlaying(true);
-          // F-009 — narrate the jamo at demo start; muting is enforced inside the audio controller.
-          speak(round.jamo.char, { language: 'ko-KR' });
+          // F-009 §3.1 (revised) — narrate the SOUND of the jamo at demo start; muting is enforced inside the audio controller.
+          void playJamo(round.jamo, 'sound');
         }}
       />
       <Button label="Clear" tone="ghost" size="sm" onPress={handleClear} disabled={strokes.length === 0} />

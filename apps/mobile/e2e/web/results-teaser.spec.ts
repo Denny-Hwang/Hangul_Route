@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { completeChildForm } from './helpers';
+import { completeChildForm, jamoOfSpoken } from './helpers';
 
 /**
  * F-QUEST-002 Q-5b: the Results "Next up" teaser and the soft prerequisite on
@@ -8,7 +8,7 @@ import { completeChildForm } from './helpers';
 
 type SpeechWindow = Window & { __spoken?: string[] };
 
-/** Headless Chromium has no Korean voice: stand in for speechSynthesis and end each utterance at once. */
+/** Headless Chromium has no Korean voice (and the app never speaks Hangul without one): stand in for speechSynthesis with a ko-KR voice and end each utterance at once. */
 async function captureSpeech(page: Page): Promise<void> {
   await page.addInitScript(() => {
     const spoken: string[] = [];
@@ -16,12 +16,19 @@ async function captureSpeech(page: Page): Promise<void> {
     Object.defineProperty(window, 'speechSynthesis', {
       configurable: true,
       value: {
+        speaking: false,
+        pending: false,
         speak: (u: SpeechSynthesisUtterance) => {
-          spoken.push(u.text);
-          setTimeout(() => u.onend?.call(u, new Event('end') as SpeechSynthesisEvent), 0);
+          if (u.volume !== 0) spoken.push(u.text);
+          setTimeout(() => {
+            u.onstart?.call(u, new Event('start') as SpeechSynthesisEvent);
+            u.onend?.call(u, new Event('end') as SpeechSynthesisEvent);
+          }, 0);
         },
         cancel: () => undefined,
-        getVoices: () => [],
+        getVoices: () => [{ name: 'Yuna', lang: 'ko-KR', voiceURI: 'Yuna', localService: true, default: true }],
+        addEventListener: () => undefined,
+        removeEventListener: () => undefined,
       },
     });
   });
@@ -29,14 +36,14 @@ async function captureSpeech(page: Page): Promise<void> {
 
 const spokenCount = (page: Page): Promise<number> => page.evaluate(() => (window as SpeechWindow).__spoken?.length ?? 0);
 
-/** Every round answered right: tap the tile for the letter the app just said. */
+/** Every round answered right: tap the tile for the letter whose sound the app just said. */
 async function playMatchSound(page: Page, rounds: number): Promise<void> {
   let heard = await spokenCount(page);
   await page.getByRole('button', { name: 'Play minigame' }).click();
   for (let round = 1; round <= rounds; round += 1) {
     await expect(page.getByText(`${round} / ${rounds}`)).toBeVisible();
     await page.waitForFunction((n) => ((window as SpeechWindow).__spoken?.length ?? 0) > n, heard);
-    const prompt = await page.evaluate(() => (window as SpeechWindow).__spoken?.at(-1) ?? '');
+    const prompt = jamoOfSpoken(await page.evaluate(() => (window as SpeechWindow).__spoken?.at(-1) ?? ''));
     heard = await spokenCount(page);
     await page.getByRole('button', { name: /^Korean letter / }).filter({ hasText: prompt }).click();
   }

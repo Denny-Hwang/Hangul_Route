@@ -1,0 +1,663 @@
+{
+  "v": 1,
+  "id": "story:dano-ssireum",
+  "state": "draft",
+  "contentVer": 1,
+  "title": {
+    "ko": "단오 축제와 씨름",
+    "romanization": "",
+    "en": "Dano Day: Swings, Masks and Ssireum"
+  },
+  "summaryEn": "Hoya celebrates Dano, Korea's early-summer holiday: hair washed in changpo water, high-flying swings, ssireum wrestling, and the UNESCO-listed Gangneung Danoje with its wordless Gwanno mask drama.",
+  "theme": "rites",
+  "kind": "intangible",
+  "recommendedStage": 2,
+  "minutes": 5,
+  "learningGoalsEn": [
+    "Say when Dano falls (5th day of the 5th lunar month) and name two Dano customs (changpo hair-washing, swinging).",
+    "Describe how ssireum is won and what jangsa means.",
+    "Explain that Gangneung Danoje (proclaimed 2005, inscribed 2008) and ssireum (2018, joint inscription by both Koreas) are on UNESCO's Representative List.",
+    "Recognize and say 단오, 그네, 씨름, 장사 and 탈."
+  ],
+  "origin": {
+    "type": "documented",
+    "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
+  },
+  "review": {
+    "language": "draft",
+    "culture": "draft",
+    "advisory": []
+  },
+  "keywords": [
+    {
+      "id": "dano",
+      "ko": "단오",
+      "romanization": "dano",
+      "en": "Dano holiday",
+      "kind": "word"
+    },
+    {
+      "id": "changpo",
+      "ko": "창포",
+      "romanization": "changpo",
+      "en": "sweet flag (plant)",
+      "kind": "word"
+    },
+    {
+      "id": "geune",
+      "ko": "그네",
+      "romanization": "geune",
+      "en": "swing",
+      "kind": "word"
+    },
+    {
+      "id": "ssireum",
+      "ko": "씨름",
+      "romanization": "ssireum",
+      "en": "Korean wrestling",
+      "kind": "word"
+    },
+    {
+      "id": "satba",
+      "ko": "샅바",
+      "romanization": "satba",
+      "en": "ssireum cloth belt",
+      "kind": "word"
+    },
+    {
+      "id": "jangsa",
+      "ko": "장사",
+      "romanization": "jangsa",
+      "en": "champion; very strong person",
+      "kind": "word"
+    },
+    {
+      "id": "tal",
+      "ko": "탈",
+      "romanization": "tal",
+      "en": "mask",
+      "kind": "word"
+    },
+    {
+      "id": "chukje",
+      "ko": "축제",
+      "romanization": "chukje",
+      "en": "festival",
+      "kind": "word"
+    },
+    {
+      "id": "geunettwigi",
+      "ko": "그네뛰기",
+      "romanization": "geunettwigi",
+      "en": "swinging (on a swing)",
+      "kind": "word"
+    },
+    {
+      "id": "gangneung-danoje",
+      "ko": "강릉단오제",
+      "romanization": "Gangneung Danoje",
+      "en": "Gangneung Dano Festival",
+      "kind": "word"
+    },
+    {
+      "id": "illyu-muhyeong-yusan",
+      "ko": "인류무형유산",
+      "romanization": "illyu muhyeong yusan",
+      "en": "Intangible Cultural Heritage of Humanity",
+      "kind": "word"
+    }
+  ],
+  "cultureNotes": [],
+  "tiers": [
+    {
+      "level": "listen",
+      "scenes": [
+        {
+          "id": "s1",
+          "narrationEn": "Summer is almost here! Today is Dano, the fifth day of the fifth lunar month. A late-Joseon book, Dongguk sesigi, counted it among Korea's four great holidays, with lots of games and fun.",
+          "keyword": {
+            "id": "dano",
+            "ko": "단오",
+            "romanization": "Dano",
+            "en": "Dano (5th day of the 5th lunar month)",
+            "kind": "word"
+          },
+          "factIds": [
+            "f1"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Hoya in a light summer hanbok on a green hillside in early summer, rice paddies freshly planted below."
+        },
+        {
+          "id": "s2",
+          "narrationEn": "Long ago on Dano, people washed their hair in water boiled with changpo, a fragrant plant called sweet flag. They said it made hair thick and shiny.",
+          "keyword": {
+            "id": "changpo",
+            "ko": "창포",
+            "romanization": "changpo",
+            "en": "sweet flag (a fragrant water plant)",
+            "kind": "word"
+          },
+          "factIds": [
+            "f2"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Women by a stream rinsing long hair in a wooden basin; tall sword-shaped sweet-flag leaves at the water's edge; Hoya sniffing a leaf."
+        },
+        {
+          "id": "s3",
+          "narrationEn": "Swings hang from tall trees, and people soar into the sky! Swinging, called geunettwigi, has been a favorite Dano game since long ago.",
+          "keyword": {
+            "id": "geunettwigi",
+            "ko": "그네뛰기",
+            "romanization": "geunettwigi",
+            "en": "swinging (on a swing)",
+            "kind": "word"
+          },
+          "factIds": [
+            "f3"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A person in hanbok standing on a long rope swing hung from a big old tree, flying high; Hoya cheering below."
+        },
+        {
+          "id": "s4",
+          "narrationEn": "Another Dano favorite is ssireum, Korean wrestling. Two wrestlers grip each other's satba, a cloth belt around the waist and thigh. In a modern match, whoever first touches the ground with any part of the body from the knee up loses!",
+          "keyword": {
+            "id": "ssireum",
+            "ko": "씨름",
+            "romanization": "ssireum",
+            "en": "Korean wrestling",
+            "kind": "word"
+          },
+          "factIds": [
+            "f4",
+            "f5"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Two wrestlers crouched shoulder to shoulder in a sand ring, each gripping the other's cloth thigh belt; Hoya as a referee."
+        },
+        {
+          "id": "s5",
+          "narrationEn": "The champion is called jangsa, meaning 'a very strong person.' Traditionally the winner received an ox, a symbol of plenty in a farming village!",
+          "keyword": {
+            "id": "jangsa",
+            "ko": "장사",
+            "romanization": "jangsa",
+            "en": "champion; a very strong person",
+            "kind": "word"
+          },
+          "factIds": [
+            "f6"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A smiling champion riding a calm brown ox around the sand ring while villagers clap; Hoya leading the ox by a rope."
+        },
+        {
+          "id": "s6",
+          "narrationEn": "On Korea's east coast, the city of Gangneung holds a big Dano festival: Gangneung Danoje. It begins with brewing a special drink for the gods, and people hold rites praying for a peaceful village and good harvests.",
+          "keyword": {
+            "id": "gangneung-danoje",
+            "ko": "강릉단오제",
+            "romanization": "Gangneung Danoje",
+            "en": "Gangneung Dano Festival",
+            "kind": "word"
+          },
+          "factIds": [
+            "f7"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A riverside festival ground with colorful paper lanterns and banners, a ritual table with offerings, mountains in the distance; Hoya in the crowd."
+        },
+        {
+          "id": "s7",
+          "narrationEn": "Look, masks! In the Gwanno mask drama, performers make the audience laugh using only gestures. They never say a word! It is known as Korea's only mask drama with no spoken lines.",
+          "keyword": {
+            "id": "tal",
+            "ko": "탈",
+            "romanization": "tal",
+            "en": "mask",
+            "kind": "word"
+          },
+          "factIds": [
+            "f8"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Masked performers in a playful pose on an open-air stage: a long-bearded nobleman (yangban) mask and a white-faced young-lady (somae-gaksi) mask; the audience laughing, Hoya giggling."
+        },
+        {
+          "id": "s8",
+          "narrationEn": "In 2005, UNESCO proclaimed Gangneung Danoje a masterpiece of intangible heritage; in 2008 it joined the Representative List. In 2018, ssireum was inscribed after North and South Korea merged their applications, which UNESCO called unprecedented.",
+          "keyword": {
+            "id": "illyu-muhyeong-yusan",
+            "ko": "인류무형유산",
+            "romanization": "illyu muhyeong yusan",
+            "en": "Intangible Cultural Heritage of Humanity",
+            "kind": "word"
+          },
+          "factIds": [
+            "f9",
+            "f10"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Hoya holding a glowing heritage card with a swing, a mask and two wrestlers on it, standing under festival lanterns."
+        }
+      ],
+      "checks": [
+        {
+          "id": "c1",
+          "kind": "detail",
+          "promptEn": "In ssireum, what do the wrestlers grab hold of?",
+          "options": [
+            {
+              "id": "a",
+              "en": "Each other's sleeves",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "The satba, a cloth belt",
+              "isCorrect": true
+            },
+            {
+              "id": "c",
+              "en": "A wooden pole",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Each other's collars",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f5"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "detail",
+          "promptEn": "What is special about the Gwanno mask drama?",
+          "options": [
+            {
+              "id": "a",
+              "en": "The performers use only gestures, no words",
+              "isCorrect": true
+            },
+            {
+              "id": "b",
+              "en": "The performers sing every line in turn",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "One storyteller speaks all the parts",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "The performers recite poems together",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f8"
+          ]
+        },
+        {
+          "id": "c3",
+          "kind": "detail",
+          "promptEn": "Which Dano festival is on UNESCO's Representative List?",
+          "options": [
+            {
+              "id": "a",
+              "en": "Beopseongpo Danoje",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Gyeongsan Jain Danoje",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Gangneung Danoje",
+              "isCorrect": true
+            }
+          ],
+          "factIds": [
+            "f9"
+          ]
+        }
+      ],
+      "checkpoints": [],
+      "sequenceSceneIds": [
+        "s1",
+        "s3",
+        "s6",
+        "s8"
+      ],
+      "newKeywordIds": [
+        "dano",
+        "changpo",
+        "ssireum",
+        "jangsa"
+      ]
+    }
+  ],
+  "coverSceneId": "s1",
+  "pillarTags": [],
+  "companionId": "hoya",
+  "facts": [
+    {
+      "id": "f1",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Dano falls on the fifth day of the fifth lunar month and is a representative summer holiday rich in games and customs. In 1518 it was counted among three great holidays (with Seollal and Chuseok); in the late Joseon era the book Dongguk sesigi counted it among four (Seol, Hansik, Dano, Chuseok).",
+      "claimKo": "단오는 음력 5월 5일로 여름의 대표 명절이며 다양한 놀이와 풍속이 전승되어 왔다. 1518년(중종 13)에는 설·추석과 함께 3대 명절로 꼽혔고, 조선 후기 『동국세시기』는 설·한식·단오·추석을 4대 명절로 꼽았다.",
+      "sources": [
+        {
+          "title": "국가무형유산 단오 (The Traditional Holiday of Dano)",
+          "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0001520000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01520000",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘단오는 음력 5월 5일로 … 여름의 대표 명절이다.’ / ‘단오는 조선시대 4대 명절이었던 설, 한식, 추석에 비해 향유 집단의 폭이 넓은 명절이었다.’ (this sentence alone names three other holidays, so the four-holiday count is sourced from the two entries below)"
+        },
+        {
+          "title": "국가무형유산 설과 대보름 (The Traditional Holidays of Seol and Daeboreum)",
+          "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0001500000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01500000",
+          "accessed": "2026-10-10",
+          "quoteOrLocator": "‘조선시대 설은 중종 13년(1518년) 단오·추석과 함께 3대 명절로 꼽았고, 조선 후기 간행된 『동국세시기』에 따르면 한식·단오·추석과 더불어 4대 명절로 손꼽았다.’"
+        },
+        {
+          "title": "단오",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0013638",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "정의: ‘1년 중에서 양기가 가장 왕성한 날이라 하여 음력 5월 5일에 지내는 우리나라의 명절.’ / ‘단오는 더운 여름을 맞기 전의 초하(初夏)의 계절이며’ / ‘단오는 1518년(중종 13) 설날·추석과 함께 삼대 …’"
+        },
+        {
+          "title": "설",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0028997",
+          "accessed": "2026-10-10",
+          "quoteOrLocator": "‘조선시대는 원단·한식·단오·추석을 4대 명절이라 했지만’"
+        },
+        {
+          "title": "5개 명절(설과 대보름, 한식, 단오, 추석, 동지) 국가무형유산 신규종목 지정 (2023-12-18)",
+          "publisher": "국가유산청 (당시 문화재청) 보도자료",
+          "url": "https://www.khs.go.kr/newsBbz/selectNewsBbzView.do?newsItemId=155704541&sectionId=b_sec_1&mn=NS_01_02_02",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘음력 5월 5일로 다양한 놀이와 풍속이 전승되어온 ‘단오’’"
+        }
+      ]
+    },
+    {
+      "id": "f2",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "On Dano people washed their hair in water boiled with changpo (sweet flag, a fragrant plant), believing it made hair thick and glossy.",
+      "claimKo": "단오에는 창포를 삶은 물로 머리를 감았으며, 그러면 머리카락이 소담하고 윤기가 난다고 여겼다.",
+      "sources": [
+        {
+          "title": "단오",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0013638",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘창포를 삶아 창포탕(菖蒲湯)을 만들어 그 물로 머리를 감기도 한다. 그러면 머리카락이 소담하고 윤기가 있으며, 빠지지 않는다고 한다.’"
+        },
+        {
+          "title": "창포",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%B0%BD%ED%8F%AC",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘온몸에 향기가 있다.’ … ‘단오에 창포물을 만들어 머리를 감거나 술을 빚는다.’"
+        }
+      ]
+    },
+    {
+      "id": "f3",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Swinging (geunettwigi) is a long-recorded Dano custom and folk game.",
+      "claimKo": "그네뛰기는 고려·조선 기록에서도 확인되는 단오의 대표적인 놀이이다.",
+      "sources": [
+        {
+          "title": "국가무형유산 단오",
+          "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0001520000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01520000",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "English: ‘Records from the Goryeo and Joseon eras offer accounts of Dano customs such as holding community festivals, swinging, and making hand-held fans.’"
+        },
+        {
+          "title": "단오",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0013638",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘민속놀이로는 그네뛰기와 씨름 등이 있다.’ / 『동국세시기』 ‘항간에서는 남녀들이 그네뛰기를 많이 한다.’"
+        }
+      ]
+    },
+    {
+      "id": "f4",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Ssireum (Korean wrestling) has long been a popular Dano game.",
+      "claimKo": "씨름은 예로부터 단오의 대표적인 놀이였다.",
+      "sources": [
+        {
+          "title": "단오",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0013638",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘민속놀이로는 그네뛰기와 씨름 등이 있다.’"
+        },
+        {
+          "title": "씨름",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0034198",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "『동국세시기』 단오 대목 인용: ‘단오날의 행사로서 이 씨름은 매우 성하여 서울을 비롯하여 각 고을마다 크게 벌인다.’"
+        }
+      ]
+    },
+    {
+      "id": "f5",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "In ssireum two wrestlers grip each other's satba (a cloth belt worn around the waist and thigh) and try to bring the other down; under modern competition rules, the wrestler whose body from the knee up touches the ground first loses.",
+      "claimKo": "씨름은 두 사람이 샅바(허리와 허벅지에 매는 천 띠)를 맞잡고 상대를 넘어뜨리는 경기이며, 현대 경기 규칙에서는 무릎 이상의 몸이 먼저 땅에 닿는 쪽이 진다.",
+      "sources": [
+        {
+          "title": "국가무형유산 씨름 (Ssireum)",
+          "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0001310000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01310000",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘「씨름」은 두 사람이 샅바를 맞잡고 힘과 기술을 이용해 상대를 넘어뜨려 승부를 겨루는 경기로서’"
+        },
+        {
+          "title": "Traditional Korean wrestling (Ssirum/Ssireum)",
+          "publisher": "UNESCO Intangible Cultural Heritage (ich.unesco.org)",
+          "url": "https://ich.unesco.org/en/RL/traditional-korean-wrestling-ssirum-ssireum-01533",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "ROK description: two players wearing ‘long fabric belts around their waists’ (and one thigh) grip each other's belt"
+        },
+        {
+          "title": "씨름",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0034198",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "경기 판정: ‘경기진행중 무릎 이상의 어느 부분이든 몸체가 지면에 먼저 닿는 선수가 패자가 되고’ (modern competition rules) / ‘왼손으로는 상대방의 허벅지에 끼운 샅바를 잡고’"
+        }
+      ]
+    },
+    {
+      "id": "f6",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "The ssireum champion is called jangsa (a very strong person); traditionally the winner was awarded an ox, a symbol of agricultural abundance.",
+      "claimKo": "씨름 우승자는 ‘장사’라 불리며, 전통적으로 우승자에게 상으로 황소(UNESCO 영문: ox, 농경의 풍요를 상징)를 주었다.",
+      "sources": [
+        {
+          "title": "Traditional Korean wrestling (Ssirum/Ssireum)",
+          "publisher": "UNESCO Intangible Cultural Heritage (ich.unesco.org)",
+          "url": "https://ich.unesco.org/en/RL/traditional-korean-wrestling-ssirum-ssireum-01533",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘The winner of the final game for adults is awarded an ox, symbolizing agricultural abundance, and the title of ‘Jangsa’.’"
+        },
+        {
+          "title": "씨름",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0034198",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘전통적으로 씨름에서 이긴 장사에게는 황소 한 마리를 주는 것이 상례로 되어 있었다.’"
+        },
+        {
+          "title": "장사(壯士)",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%9E%A5%EC%82%AC",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘몸이 우람하고 힘이 아주 센 사람.’"
+        }
+      ]
+    },
+    {
+      "id": "f7",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Gangneung Danoje, held in Gangneung on Korea's east coast, begins with brewing liquor for the deities; rites are held praying for the village's peace and a good harvest, and it is the largest village festival on the east coast.",
+      "claimKo": "강릉단오제는 신에게 드릴 술을 담그면서 시작되며, 제를 올려 마을의 평안과 풍년을 기원한다. 동해안에서 가장 규모가 큰 마을축제이다.",
+      "sources": [
+        {
+          "title": "국가무형유산 강릉단오제 (Gangneung Danoje)",
+          "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0000130000000&ccbaCtcd=51&ccbaCpno=1273200130000",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘단오제는 신에게 드릴 술을 담그면서 시작된다.’ / ‘농사의 번영과 마을의 평안을 기원하며’ / ‘동해안에서 가장 규모가 큰 마을축제’"
+        },
+        {
+          "title": "Gangneung Danoje festival",
+          "publisher": "UNESCO Intangible Cultural Heritage (ich.unesco.org)",
+          "url": "https://ich.unesco.org/en/RL/00114",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘The annual Gangneung Danoje Festival takes place in the town of Gangneung and its surroundings’ / ‘The four-week long festival begins with the brewing of a sacred liquor’"
+        }
+      ]
+    },
+    {
+      "id": "f8",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "The Gwanno mask drama, performed at Gangneung Danoje, has no spoken lines: masked performers (the yangban, the young lady somae-gaksi, and others) amuse the audience with gestures alone. The Korea Heritage Service calls it Korea's only wordless drama, and the National Folk Museum's dictionary calls it the only silent mask drama in Korea.",
+      "claimKo": "강릉단오제의 관노가면극은 양반광대·소매각시 등이 가면을 쓰고 대사 없이 몸짓으로 관객을 웃기는 놀이로, 국가유산청은 우리나라에서 유일한 무언극이라 설명하고 국립민속박물관 사전은 한국 가면극 중 유일한 무언극이라 설명한다.",
+      "sources": [
+        {
+          "title": "국가무형유산 강릉단오제",
+          "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0000130000000&ccbaCtcd=51&ccbaCpno=1273200130000",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘특히 관노가면극은 우리나라에서 유일한 무언극으로 대사없이 몸짓으로 관객을 웃기고 즐겁게 한다.’"
+        },
+        {
+          "title": "Gangneung Danoje festival",
+          "publisher": "UNESCO Intangible Cultural Heritage (ich.unesco.org)",
+          "url": "https://ich.unesco.org/en/RL/00114",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘It encompasses traditional music and Odokddegi folk songs, the Gwanno mask drama,’"
+        },
+        {
+          "title": "강릉관노가면극 (한국세시풍속사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/3149",
+          "accessed": "2026-10-10",
+          "quoteOrLocator": "‘강릉단오제 때 펼쳐지는 탈놀이로 춤과 동작을 위주로 한 국내 유일의 무언(無言) 가면극.’ / ‘등장인물은 양반광대, 소매각시, 장자마리 2명, 시시딱딱이 2명이다.’ / ‘한국 가면극 중에서는 유일한 무언극으로 춤과 몸짓언어(마임)로 전체를 표현하는 묵극(黙劇)양식이다.’"
+        }
+      ]
+    },
+    {
+      "id": "f9",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Gangneung Danoje was proclaimed a UNESCO Masterpiece of the Oral and Intangible Heritage of Humanity in 2005 and, when that programme was merged into the Representative List, was inscribed on the Representative List in 2008. Of Korea's Dano festivals, only Gangneung Danoje is on UNESCO's list.",
+      "claimKo": "강릉단오제는 2005년 유네스코 ‘인류구전 및 무형유산 걸작’으로 선정되었고, 2008년 인류무형문화유산 대표목록에 통합 등재되었다. 한국의 단오제 가운데 유네스코 목록에 오른 것은 강릉단오제이다.",
+      "sources": [
+        {
+          "title": "Gangneung Danoje festival",
+          "publisher": "UNESCO Intangible Cultural Heritage (ich.unesco.org)",
+          "url": "https://ich.unesco.org/en/RL/00114",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘Inscribed in 2008 (3.COM) on the Representative List of the Intangible Cultural Heritage of Humanity (originally proclaimed in 2005)’"
+        },
+        {
+          "title": "한국의 인류무형유산 (23건) 목록",
+          "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+          "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FkorInCulHeritage.jsp&pageNo=5_3_2_0",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘강릉단오제 (2005/2008)’"
+        },
+        {
+          "title": "국가무형유산 강릉단오제",
+          "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0000130000000&ccbaCtcd=51&ccbaCpno=1273200130000",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘In November 2005, it was designated as UNESCO Masterpieces of the Oral and Intangible Heritage of Humanity’"
+        },
+        {
+          "title": "국가무형유산 단오",
+          "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0001520000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01520000",
+          "accessed": "2026-10-10",
+          "quoteOrLocator": "‘특히 현재 대규모 축제 및 의례·제의의 형태로 단오제의 자생성이 살아있는 강릉단오제·경산자인단오제·법성포단오제가 전승되고 있다.’ (the KHS list of Korea's 23 UNESCO elements, cited above, includes 강릉단오제 only)"
+        }
+      ]
+    },
+    {
+      "id": "f10",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "In 2018 ssireum was inscribed on UNESCO's Representative List as a joint inscription by the Republic of Korea and the DPRK; UNESCO's Director-General called the two Koreas joining their applications unprecedented.",
+      "claimKo": "씨름은 2018년 남북한 공동 등재로 유네스코 인류무형문화유산 대표목록에 올랐으며, 유네스코 사무총장은 남북이 신청서를 합친 것을 전례 없는 일이라고 평가했다.",
+      "sources": [
+        {
+          "title": "Decision of the Intergovernmental Committee: 13.COM 10.B.41",
+          "publisher": "UNESCO Intangible Cultural Heritage (ich.unesco.org)",
+          "url": "https://ich.unesco.org/en/decisions/13.COM/10.B.41",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘Inscribes Traditional Korean wrestling (Ssirum/Ssireum) on the Representative List of the Intangible Cultural Heritage of Humanity as a joint inscription.’"
+        },
+        {
+          "title": "Traditional Korean wrestling listed as Intangible Cultural Heritage following unprecedented merged application from both Koreas (26 Nov 2018)",
+          "publisher": "UNESCO Intangible Cultural Heritage (ich.unesco.org)",
+          "url": "https://ich.unesco.org/en/news/traditional-korean-wrestling-listed-as-intangible-cultural-heritage-following-unprecedented-merged-application-from-both-koreas-00325",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘The fact that both Koreas accepted to join their respective applications is unprecedented,’"
+        },
+        {
+          "title": "한국의 인류무형유산 (23건) 목록",
+          "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+          "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FkorInCulHeritage.jsp&pageNo=5_3_2_0",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘씨름(2018)’"
+        }
+      ]
+    }
+  ],
+  "referenceDisplay": "Sources: 국가유산청 국가유산포털(단오·강릉단오제·씨름·인류무형유산 목록); UNESCO Intangible Cultural Heritage; 한국민족문화대백과사전; 한국민속대백과사전(국립민속박물관); 국립국어원 표준국어대사전",
+  "verification": {
+    "passes": 3,
+    "checkedAt": "2026-10-10",
+    "scope": "cluster",
+    "notes": "Third independent pass over 6 episodes / 61 facts / 161 source entries (70 unique URLs). Every URL was re-fetched with my own scripts (UNESCO pages via Wayback copies; heritage.go.kr descriptions via the portal ajax html and khs.go.kr open API; folkency via its JSON API) and each quote or locator was machine-matched to the page text; the few non-matching strings were checked by hand (portal metadata fields, hanja or footnote punctuation, label text). Corrections: (1) pansori scene 2 now gives both UNESCO steps (2003 masterpiece proclamation, 2008 Representative List); (2) pansori f11 states the Aesop title as in the cited Townsend text and the common alternate title; (3) added sources: NFM 놀보박타령 for 'greedy' (f5), 표준국어대사전 타다 for 'sawed' (f6), 한국민족문화대백과사전 선도해 for the Samguk sagi tale (f12); (4) Seollal f9/f10 designation-date locators now cite the KHS open API field. No other change. See seasons-tales.signoff.md."
+  },
+  "authorNotes": "Left out on purpose: the story that Dano comes from China (Qu Yuan), folk etymology of 수릿날, the 석전 (stone fight) custom, shamanic (굿) details, the festival's deities by name (김유신, 범일국사, 정씨 처녀), and how long the festival lasts. Sources describe its length differently (UNESCO says four weeks; the 국가유산포털 says 5 days of rites at the 단오장). The 'only silent mask drama' claim comes from one official source (국가유산청 국가유산포털), so the narration hedges it as 'known as'. The knee rule describes modern competition ssireum (Encyclopedia of Korean Culture). The narration uses 'east coast' and doesn't name the sea. 단오 was also designated National Intangible Heritage on 2023-12-18. That's covered in the Seollal episode and not repeated here. The 2023 Dano designation (KHS press release) is available if wanted. Standard spelling note: 단옷날 (with 사이시옷) is the dictionary form; the title uses 단오 only. REVISION 2026-10-10: \"four great holidays\" now dated to the late-Joseon Dongguk sesigi (1518 list had three); knee rule labelled modern competition rule and phrased \"from the knee up\"; Gwanno illustration now nobleman (yangban) mask + young-lady (somae-gaksi) mask; \"only silent mask drama\" kept hedged and now has two sources (KHS portal; 국립민속박물관 한국세시풍속사전). UNESCO: Danoje proclaimed 2005, inscribed 2008 (stated both). Ox: UNESCO says ox; encykorea says 황소 (bull) - narration follows UNESCO. Check 3 changed to a question that does not rely on \"from Gangneung\".",
+  "errata": []
+}

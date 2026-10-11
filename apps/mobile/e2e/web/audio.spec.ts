@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { onboardChild } from './helpers';
+import { jamoOfSpoken, onboardChild } from './helpers';
 
 /**
  * F-AUDIO-004 A-4a: one persisted sound switch (AD7) and a ranked Korean voice
@@ -9,17 +9,23 @@ import { onboardChild } from './helpers';
 
 type SpeechWindow = Window & { __utterances?: Array<{ text: string; voice: string | null; lang: string }> };
 
-async function fakeSpeech(page: Page): Promise<void> {
-  await page.addInitScript(() => {
+type VoiceSet = 'korean' | 'none';
+
+/** `none` is a device with only an English voice, like headless Chromium or a Firefox without Korean data. */
+async function fakeSpeech(page: Page, voiceSet: VoiceSet = 'korean'): Promise<void> {
+  await page.addInitScript((set: VoiceSet) => {
     const log: NonNullable<SpeechWindow['__utterances']> = [];
     (window as SpeechWindow).__utterances = log;
     const v = (name: string, lang: string, isDefault = false) => ({ name, lang, voiceURI: name, localService: true, default: isDefault });
     // The eight Apple novelty ko_KR voices come before Yuna (`say -v '?'`).
-    const voices = [
-      ...['Eddy', 'Flo', 'Grandma', 'Grandpa', 'Reed', 'Rocko', 'Sandy', 'Shelley'].map((n) => v(`${n} (한국어(한국))`, 'ko-KR')),
-      v('Yuna', 'ko-KR'),
-      v('Samantha', 'en-US', true),
-    ];
+    const voices =
+      set === 'none'
+        ? [v('Samantha', 'en-US', true)]
+        : [
+            ...['Eddy', 'Flo', 'Grandma', 'Grandpa', 'Reed', 'Rocko', 'Sandy', 'Shelley'].map((n) => v(`${n} (한국어(한국))`, 'ko-KR')),
+            v('Yuna', 'ko-KR'),
+            v('Samantha', 'en-US', true),
+          ];
     class Utterance {
       lang = '';
       rate = 1;
@@ -50,7 +56,7 @@ async function fakeSpeech(page: Page): Promise<void> {
         removeEventListener: () => undefined,
       },
     });
-  });
+  }, voiceSet);
 }
 
 const utterances = (page: Page): Promise<NonNullable<SpeechWindow['__utterances']>> =>
@@ -103,4 +109,89 @@ test('switching the sound off is saved on this device and still off after a relo
   await page.reload();
   await page.getByRole('button', { name: 'Profile and settings' }).click();
   await expect(page.getByRole('switch', { name: 'Sound' })).toContainText('Off');
+});
+
+/** From the first-quest preview to the first Match Sound round. */
+async function openMatchSound(page: Page): Promise<void> {
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await page.getByRole('button', { name: 'Play minigame' }).click();
+  await expect(page.getByText('1 / 4')).toBeVisible();
+}
+
+/** The prompt panel's Hangul syllable (its accessible name is "<ko>, <romanization>"). */
+const panelText = (page: Page) => page.getByTestId('prompt-panel-text');
+
+/** The tile of the letter whose sound the text prompt shows, and its tap. */
+async function tapAnswerFromText(page: Page): Promise<void> {
+  const label = (await panelText(page).getAttribute('aria-label')) ?? '';
+  const letter = jamoOfSpoken(label.split(',')[0]!.trim());
+  await page.getByRole('button', { name: /^Korean letter / }).filter({ hasText: letter }).click();
+}
+
+test('no Korean voice: the sound is shown as text, nothing is spoken, and the round still scores', async ({ page }) => {
+  await fakeSpeech(page, 'none');
+  await onboardChild(page, { name: 'Dami' });
+  await openMatchSound(page);
+
+  // The text prompt: spoken syllable + romanization + the line, with the "this sound" heading.
+  await expect(panelText(page)).toBeVisible();
+  await expect(page.getByText('No sound? Read it here.')).toBeVisible();
+  await expect(page.getByText('No Korean voice on this device.')).toBeVisible();
+  await expect(page.getByText('Tap the letter for this sound')).toBeVisible();
+  // Tiles keep their romanization (D2).
+  await expect(page.getByRole('button', { name: /^Korean letter / }).first()).toBeVisible();
+
+  // Never a read of Hangul by an English voice.
+  expect(await utterances(page)).toEqual([]);
+
+  await tapAnswerFromText(page);
+  await expect(page.getByText('2 / 4')).toBeVisible();
+  await expect(panelText(page)).toBeVisible();
+  expect(await utterances(page)).toEqual([]);
+});
+
+test('sound switched off: the text prompt shows at once, Turn sound on plays it, and the text stays for the round', async ({ page }) => {
+  await fakeSpeech(page);
+  await onboardChild(page, { name: 'Dami', startJourney: false });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Profile and settings' }).click();
+  await page.getByRole('switch', { name: 'Sound' }).click();
+  await expect.poll(() => savedAudioPrefs(page)).toBe(JSON.stringify({ muted: true }));
+  await page.reload();
+
+  await page.getByRole('button', { name: /^Meet g, n, d, l/ }).click();
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await page.getByRole('button', { name: 'Play minigame' }).click();
+  await expect(page.getByText('1 / 4')).toBeVisible();
+
+  await expect(panelText(page)).toBeVisible();
+  await expect(page.getByText('Sound is off.')).toBeVisible();
+  await expect(page.getByText('Tap the letter for this sound')).toBeVisible();
+  expect(await utterances(page)).toEqual([]);
+
+  await page.getByTestId('prompt-panel-action').click();
+  await expect.poll(async () => (await utterances(page)).length).toBeGreaterThan(0);
+  const [first] = await utterances(page);
+  expect(first).toMatchObject({ voice: 'Yuna', lang: 'ko-KR' });
+  await expect(panelText(page)).toBeVisible();
+  await expect.poll(() => savedAudioPrefs(page)).toBe(JSON.stringify({ muted: false }));
+});
+
+test('a wrong tap says the sound, not the letter name', async ({ page }) => {
+  await fakeSpeech(page);
+  await onboardChild(page, { name: 'Dami' });
+  await openMatchSound(page);
+  await expect.poll(async () => (await utterances(page)).length).toBeGreaterThan(0);
+  const [first] = await utterances(page);
+  // 가 not 기역: one syllable, spoken at the sound rate.
+  expect(first!.text).toMatch(/^[가-힣]$|^이응$/);
+  const answer = jamoOfSpoken(first!.text);
+  const wrong = page.getByRole('button', { name: /^Korean letter / }).filter({ hasNotText: answer }).first();
+  await wrong.click();
+  await expect(page.getByText('Listen again. This one says')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Hear it' })).toBeVisible();
+  const before = (await utterances(page)).length;
+  await page.getByRole('button', { name: 'Hear it' }).click();
+  await expect.poll(async () => (await utterances(page)).length).toBeGreaterThan(before);
+  expect((await utterances(page)).at(-1)!.text).toBe(first!.text);
 });

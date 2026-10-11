@@ -1,0 +1,608 @@
+{
+  "v": 1,
+  "id": "story:uigwe-royal-birthday",
+  "state": "draft",
+  "contentVer": 1,
+  "title": {
+    "ko": "왕실 잔치를 그림으로 남긴 의궤",
+    "romanization": "",
+    "en": "A Picture Record of a Royal Birthday"
+  },
+  "summaryEn": "Uigwe were detailed reports, full of pictures, of royal ceremonies and projects. Hoya opens the Wonhaeng Eulmyo Jeongni Uigwe, the record of King Jeongjo's 1795 celebration for his mother's 60th birthday.",
+  "theme": "rites",
+  "kind": "documentary",
+  "recommendedStage": 5,
+  "minutes": 5,
+  "learningGoalsEn": [
+    "Know that an 의궤 (uigwe) recorded a royal ceremony or project in words and pictures so later generations could follow it.",
+    "Know that uigwe list the people who took part, including craftspeople.",
+    "Describe a 반차도 (banchado): a long picture of a procession, usually drawn as if seen from above.",
+    "Know that the 1795 feast for Lady Hyegyeong at Bongsudang is recorded in the Annals and in the Wonhaeng Eulmyo Jeongni Uigwe, which was printed with metal type.",
+    "Learn 잔치, 그림, 어머니, 환갑 and 장인."
+  ],
+  "origin": {
+    "type": "documented",
+    "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
+  },
+  "review": {
+    "language": "draft",
+    "culture": "draft",
+    "advisory": []
+  },
+  "keywords": [
+    {
+      "id": "uigwe",
+      "ko": "의궤",
+      "romanization": "uigwe",
+      "en": "illustrated record of a royal event",
+      "kind": "word"
+    },
+    {
+      "id": "janchi",
+      "ko": "잔치",
+      "romanization": "janchi",
+      "en": "feast, celebration",
+      "kind": "word"
+    },
+    {
+      "id": "geurim",
+      "ko": "그림",
+      "romanization": "geurim",
+      "en": "picture",
+      "kind": "word"
+    },
+    {
+      "id": "eomeoni",
+      "ko": "어머니",
+      "romanization": "eomeoni",
+      "en": "mother",
+      "kind": "word"
+    },
+    {
+      "id": "hwangap",
+      "ko": "환갑",
+      "romanization": "hwangap",
+      "en": "60th birthday",
+      "kind": "word"
+    },
+    {
+      "id": "jangin",
+      "ko": "장인",
+      "romanization": "jangin",
+      "en": "artisan, craftsperson",
+      "kind": "word"
+    },
+    {
+      "id": "banchado",
+      "ko": "반차도",
+      "romanization": "banchado",
+      "en": "procession picture",
+      "kind": "word"
+    },
+    {
+      "id": "geurimi-inneun-bogoseo",
+      "ko": "그림이 있는 보고서",
+      "romanization": "geurimi inneun bogoseo",
+      "en": "a report with pictures",
+      "kind": "phrase"
+    },
+    {
+      "id": "eomeoniui-hwangap",
+      "ko": "어머니의 환갑",
+      "romanization": "eomeoniui hwangap",
+      "en": "mother's 60th birthday",
+      "kind": "word"
+    },
+    {
+      "id": "eoreusin",
+      "ko": "어르신",
+      "romanization": "eoreusin",
+      "en": "elders (respectful word)",
+      "kind": "word"
+    },
+    {
+      "id": "hwalja",
+      "ko": "활자",
+      "romanization": "hwalja",
+      "en": "movable type",
+      "kind": "word"
+    },
+    {
+      "id": "wonhaeng-eulmyo-jeongni-uigwe",
+      "ko": "원행을묘정리의궤",
+      "romanization": "",
+      "en": "",
+      "kind": "term"
+    }
+  ],
+  "cultureNotes": [],
+  "tiers": [
+    {
+      "level": "listen",
+      "scenes": [
+        {
+          "id": "s1",
+          "narrationEn": "When the Joseon court held a big event, such as a royal wedding, a banquet or the rebuilding of a palace, officials made an {kw:uigwe}: a detailed report in words and pictures.",
+          "keyword": {
+            "id": "uigwe",
+            "ko": "의궤",
+            "romanization": "uigwe",
+            "en": "illustrated record of a royal event",
+            "kind": "word"
+          },
+          "factIds": [
+            "f1"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "An open old book with a colorful painted page of a ceremony beside a page of neat brush writing (no readable text); Hoya leaning in to look."
+        },
+        {
+          "id": "s2",
+          "narrationEn": "Why? So that next time, people could hold the same kind of event properly. Each uigwe recorded the steps, the people, the costs and the materials, like a final report.",
+          "line": {
+            "ko": "그림이 있는 보고서",
+            "romanization": "geurimi inneun bogoseo",
+            "en": "a report with pictures",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f2"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Officials checking items off against an open uigwe: bolts of cloth, bowls, flags and lanterns laid out in a courtyard."
+        },
+        {
+          "id": "s3",
+          "narrationEn": "Uigwe even listed the people who took part, from high officials to skilled craftspeople. Their names and roles were written down, too.",
+          "keyword": {
+            "id": "jangin",
+            "ko": "장인",
+            "romanization": "jangin",
+            "en": "artisan, craftsperson",
+            "kind": "word"
+          },
+          "factIds": [
+            "f3"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A carpenter, a painter and an embroiderer at work in a palace workshop, each proud of their craft."
+        },
+        {
+          "id": "s4",
+          "narrationEn": "In 1795, King Jeongjo traveled with his mother, Lady Hyegyeong, to the new city of Hwaseong in Suwon for a grand celebration of her 60th birthday.",
+          "keyword": {
+            "id": "eomeoniui-hwangap",
+            "ko": "어머니의 환갑",
+            "romanization": "eomeoniui hwangap",
+            "en": "mother's 60th birthday",
+            "kind": "word"
+          },
+          "factIds": [
+            "f4"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A long, colorful royal procession winding along a road toward a fortress city; two ornate palanquins at the center."
+        },
+        {
+          "id": "s5",
+          "narrationEn": "By the old lunar calendar, 1795 had an extra 'leap' month after the second month. On its 13th day, the king gave a grand feast for his mother at Bongsudang Hall in the Hwaseong temporary palace. The Annals record that day.",
+          "keyword": {
+            "id": "janchi",
+            "ko": "잔치",
+            "romanization": "janchi",
+            "en": "feast, celebration",
+            "kind": "word"
+          },
+          "factIds": [
+            "f5"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A festive palace hall with tables of food, musicians and dancers in bright costumes, and an honored elderly lady seated under a canopy."
+        },
+        {
+          "id": "s6",
+          "narrationEn": "The king also gave gifts of silk to elderly people who took part in the celebration.",
+          "keyword": {
+            "id": "eoreusin",
+            "ko": "어르신",
+            "romanization": "eoreusin",
+            "en": "elders (respectful word)",
+            "kind": "word"
+          },
+          "factIds": [
+            "f6"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Smiling elderly men in plain traditional clothes receiving folded bolts of silk in a sunny courtyard."
+        },
+        {
+          "id": "s7",
+          "narrationEn": "The record of this trip, the {kw:wonhaeng-eulmyo-jeongni-uigwe} (Wonhaeng Eulmyo Jeongni Uigwe), is full of pictures. Some are {kw:banchado}: long pictures of a royal procession, usually drawn as if seen from high above, showing where everyone walked or stood.",
+          "keyword": {
+            "id": "banchado",
+            "ko": "반차도",
+            "romanization": "banchado",
+            "en": "procession picture",
+            "kind": "word"
+          },
+          "factIds": [
+            "f7"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A bird's-eye view of a long procession: rows of tiny figures, horses, flags and palanquins arranged neatly along a path."
+        },
+        {
+          "id": "s8",
+          "narrationEn": "Unusually, this uigwe was printed with metal movable type, so more copies could be shared. Its pictures are prints, too. In 2007, UNESCO added the Joseon uigwe to the Memory of the World.",
+          "keyword": {
+            "id": "hwalja",
+            "ko": "활자",
+            "romanization": "hwalja",
+            "en": "movable type",
+            "kind": "word"
+          },
+          "factIds": [
+            "f8",
+            "f9"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Small metal type pieces in a tray next to a freshly printed picture page and the printing tools beside it."
+        }
+      ],
+      "checks": [
+        {
+          "id": "c1",
+          "kind": "detail",
+          "promptEn": "What is an uigwe?",
+          "options": [
+            {
+              "id": "a",
+              "en": "A crown worn only at royal weddings",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "A royal event report with words and pictures",
+              "isCorrect": true
+            },
+            {
+              "id": "c",
+              "en": "A cookbook of royal palace snacks",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f1"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "detail",
+          "promptEn": "Why did the Joseon court make uigwe?",
+          "options": [
+            {
+              "id": "a",
+              "en": "To sell copies to merchants at the market",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "To give the palace walls a new decoration",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "So later people could hold the same event properly",
+              "isCorrect": true
+            }
+          ],
+          "factIds": [
+            "f2"
+          ]
+        },
+        {
+          "id": "c3",
+          "kind": "detail",
+          "promptEn": "What does a banchado show?",
+          "options": [
+            {
+              "id": "a",
+              "en": "A procession, usually seen from above",
+              "isCorrect": true
+            },
+            {
+              "id": "b",
+              "en": "A song written for the king",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "A map showing the mountains near Seoul",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f7"
+          ]
+        }
+      ],
+      "checkpoints": [],
+      "sequenceSceneIds": [
+        "s1",
+        "s3",
+        "s6",
+        "s8"
+      ],
+      "newKeywordIds": [
+        "uigwe",
+        "jangin",
+        "janchi",
+        "banchado"
+      ]
+    }
+  ],
+  "coverSceneId": "s1",
+  "pillarTags": [],
+  "companionId": "hoya",
+  "facts": [
+    {
+      "id": "f1",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Uigwe record, in text and illustrations, major royal ceremonies and state projects such as royal weddings, banquets, funerals, receptions of envoys and the rebuilding of palaces.",
+      "claimKo": "의궤는 왕실의 혼인, 잔치, 장례, 사신 접대, 궁궐 중건 같은 국가 의례와 행사를 글과 그림으로 기록한 것이다.",
+      "sources": [
+        {
+          "title": "의궤란 무엇인가 (국가유산이야기 > 의궤정보)",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, National Heritage Portal)",
+          "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=/mem/uigweInfo.jsp&pageNo=3_4_1_0",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "Q1: 대표적으로 국왕 및 왕세자 등의 혼인이나 책봉, 장례, 특별한 경우의 사신 접대, 궁궐의 대대적인 중건 같은 일들이 이에 해당한다."
+        },
+        {
+          "title": "Uigwe: The Royal Protocols of the Joseon Dynasty",
+          "publisher": "UNESCO Memory of the World",
+          "url": "https://www.unesco.org/en/memory-world/uigwe-royal-protocols-joseon-dynasty",
+          "accessed": "2026-10-10",
+          "quoteOrLocator": "Description: \"A unique form of documentary heritage, the Uigwe is a collection of Royal Protocols of the over 500 year-long Joseon Dynasty (1392 - 1910), that both records and prescribes through prose and illustration the major ceremonies and rites of the royal family.\" [verified 2026-10-10 on an Internet Archive snapshot of the unesco.org page]"
+        },
+        {
+          "title": "Memory of the World Register – Uigwe: The Royal Protocols of the Joseon Dynasty, Ref N° 2006-48 (nomination form, PDF)",
+          "publisher": "UNESCO Memory of the World",
+          "url": "https://media.unesco.org/sites/default/files/webform/mow001/republic_of_korea_uigwe.pdf",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "§1 Summary: \"important ceremonies such as weddings, funerals, banquets and receiving foreign missions, it also includes details on the construction of royal buildings and tombs\""
+        }
+      ]
+    },
+    {
+      "id": "f2",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Uigwe were made so later generations could refer to them when holding similar events, and they summarized the participants, materials and costs, serving like a settlement report.",
+      "claimKo": "의궤는 후대에 비슷한 행사를 치를 때 참고하도록 만들었으며, 참여 인원·물품·비용을 정리해 결산 보고서 역할도 하였다.",
+      "sources": [
+        {
+          "title": "의궤란 무엇인가 (국가유산이야기 > 의궤정보)",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, National Heritage Portal)",
+          "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=/mem/uigweInfo.jsp&pageNo=3_4_1_0",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "Q2: 후대에 비슷한 종류의 행사를 치를 때 참고할 수 자료로 삼게 하였다. ... 여기에 참여한 인원들, 사용된 물목들과 비용들을 총 정리함으로써 일종의 결산보고서의 기능까지 수행하였던 것이 의궤이다."
+        },
+        {
+          "title": "Memory of the World Register – Uigwe: The Royal Protocols of the Joseon Dynasty, Ref N° 2006-48 (nomination form, PDF)",
+          "publisher": "UNESCO Memory of the World",
+          "url": "https://media.unesco.org/sites/default/files/webform/mow001/republic_of_korea_uigwe.pdf",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "§3.2: \"Each one provides a detailed description of a particular ceremony, including the expenses and implements needed, so that later generations could refer to it as a guide in performing the ceremony the same way.\""
+        }
+      ]
+    },
+    {
+      "id": "f3",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Uigwe list the participants in detail, including artisans, with the name and role of each person.",
+      "claimKo": "의궤에는 장인까지 포함한 참여 인원의 이름과 역할이 자세히 실려 있다.",
+      "sources": [
+        {
+          "title": "의궤란 무엇인가 (국가유산이야기 > 의궤정보)",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, National Heritage Portal)",
+          "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=/mem/uigweInfo.jsp&pageNo=3_4_1_0",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "의궤에는 화려하고 다양한 도설과 함께 장인층까지도 포괄하는 상세한 참여인원의 명단 ... 이 담겨 있다."
+        },
+        {
+          "title": "Memory of the World Register – Uigwe: The Royal Protocols of the Joseon Dynasty, Ref N° 2006-48 (nomination form, PDF)",
+          "publisher": "UNESCO Memory of the World",
+          "url": "https://media.unesco.org/sites/default/files/webform/mow001/republic_of_korea_uigwe.pdf",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "§4.3(c): \"The Uigwe disclosed the name and role of each person involved from the most powerful to skilled craftsmen of the lowest class.\""
+        }
+      ]
+    },
+    {
+      "id": "f4",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "In 1795, King Jeongjo went to the new city of Hwaseong with his mother, Lady Hyegyeong, for the celebration of her 60th birthday (hoegap).",
+      "claimKo": "1795년 정조는 어머니 혜경궁 홍씨의 회갑을 기념하여 어머니를 모시고 새 도시 화성에 행차하였다.",
+      "sources": [
+        {
+          "title": "원행을묘정리의궤(園幸乙卯整理儀軌)",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0040890",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "『원행을묘정리의궤』는 1797년 정리소에서 혜경궁 홍씨의 회갑연 행사를 날짜별로 정리해 간행한 의궤이다. 1795년 윤2월 9일 정조가 회갑을 맞은 혜경궁 홍씨를 모시고 현륭원과 화성 행궁에 행차하여 올린 진연 및 환궁 후의 행사 등을 정리소에서 날짜별로 기록한 책이다."
+        },
+        {
+          "title": "봉수당진찬도(奉壽堂進饌圖)",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
+          "url": "https://encykorea.aks.ac.kr/Contents/Item/E0075663",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "1795년 윤2월 13일 화성행궁의 봉수당에서 거행된 혜경궁 홍씨의 회갑연을 그린 조선시대 기록화."
+        },
+        {
+          "title": "Hwaseong Fortress (World Heritage)",
+          "publisher": "Korea Heritage Service (국가유산청), English website",
+          "url": "https://english.khs.go.kr/cop/bbs/selectBoardArticle.do?ctgryLrcls=CTGRY209&nttId=57995&bbsId=BBSMSTR_1205&uniq=0&mn=EN_03_01",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"In February 1795, when the construction was in its final phase, the king visited Hwaseong with his mother Lady Hyegyeong to hold a banquet to celebrate her 60th birthday. The new city was selected as the venue for the grand event\""
+        }
+      ]
+    },
+    {
+      "id": "f5",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "The banquet for Lady Hyegyeong was held at Bongsudang in the Hwaseong temporary palace on the 13th day of the leap 2nd lunar month (yun-2-wol, the extra month inserted after the 2nd month) of 1795, as recorded in the Annals of King Jeongjo.",
+      "claimKo": "혜경궁을 위한 진찬은 1795년(정조 19) 윤2월 13일 화성행궁의 봉수당에서 열렸으며, 정조실록에 기록되어 있다.",
+      "sources": [
+        {
+          "title": "정조실록 42권, 정조 19년 윤2월 13일 을미 1번째기사 「봉수당에 나아가 혜경궁을 위해 연회를 베풀다」",
+          "publisher": "국사편찬위원회 조선왕조실록 DB (National Institute of Korean History)",
+          "url": "https://sillok.history.go.kr/id/kva_11902113_001",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "정조실록 42권, 정조 19년 윤2월 13일 을미 1/4 기사 (1795년): \"봉수당(奉壽堂)에 나아가 혜경궁을 위해 연회를 베풀었다.\" 原文: \"御奉壽堂, 進饌于惠慶宮。\""
+        },
+        {
+          "title": "봉수당진찬도(奉壽堂進饌圖)",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
+          "url": "https://encykorea.aks.ac.kr/Contents/Item/E0075663",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "진찬은 정조 일행이 화성에 도착한지 3일째 되는 윤2월 13일에 화성행궁의 내당인 봉수당에서 거행되었다."
+        }
+      ]
+    },
+    {
+      "id": "f6",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "On that day the king ordered gifts of silk for elderly people who had taken part in the banquet.",
+      "claimKo": "같은 날 정조는 연회에 참여한 노인들에게 비단을 내리도록 명하였다.",
+      "sources": [
+        {
+          "title": "정조실록 42권, 정조 19년 윤2월 13일 을미 3번째기사 「연회의 반열에 참여한 노인들에게 비단 등을 주고 수원부 성 내외에 급복을 명하다」",
+          "publisher": "국사편찬위원회 조선왕조실록 DB (National Institute of Korean History)",
+          "url": "https://sillok.history.go.kr/id/kva_11902113_003",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "정조실록 42권, 정조 19년 윤2월 13일 을미 3/4 기사: \"연회를 베풀 때 반열에 참여한 노인으로서 70세 이상이 되는 자 및 61세가 되는 사람들에게 각각 비단 1필(匹)씩을 하사하는 동시에\" 原文: \"命進饌時參班老人, 七十以上及六十一歲人, 各賜帛一匹\""
+        }
+      ]
+    },
+    {
+      "id": "f7",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Banchado are pictures of court ceremonies and processions that show the placement of participants, generally drawn from a high, bird's-eye viewpoint; the Wonhaeng Eulmyo Jeongni Uigwe includes 63 pages of banchado among 112 illustrated pages.",
+      "claimKo": "반차도는 궁중 행사와 행렬에서 참여자의 배치를 보여 주는 그림으로, 대개 높은 곳에서 내려다보는 부감법으로 그렸으며, 『원행을묘정리의궤』에는 반차도 63면을 포함해 도식 112면이 실려 있다.",
+      "sources": [
+        {
+          "title": "반차도 (국가유산이야기 > 의궤정보)",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, National Heritage Portal)",
+          "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=/mem/uigweBanCha.jsp&pageNo=3_4_4_0",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "궁중 행사의 의식과 늘어선 관원들의 배치 상황이 정확히 묘사되어 있어 ... 높은 위치에서 내려다보는 식의 부감법(俯瞰法)을 사용하여 그리는 것이 일반적이다."
+        },
+        {
+          "title": "원행을묘정리의궤(園幸乙卯整理儀軌)",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0040890",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "「화성행행도(華城行幸圖)」를 비롯하여 「봉수당진찬도(奉壽堂進饌圖)」 ... 등 도식 49면, 반차도 63면으로 총 112면이 판화로 제작되어 실려 있다."
+        },
+        {
+          "title": "Memory of the World Register – Uigwe: The Royal Protocols of the Joseon Dynasty, Ref N° 2006-48 (nomination form, PDF)",
+          "publisher": "UNESCO Memory of the World",
+          "url": "https://media.unesco.org/sites/default/files/webform/mow001/republic_of_korea_uigwe.pdf",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "§1 Summary: \"In particular, the pictorial materials, such as “Banchado” and “Doseol” illustrate the rituals and ceremonies of the time with a sophistication and vividness that matches the visual materials of the present day.\""
+        }
+      ]
+    },
+    {
+      "id": "f8",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "The Wonhaeng Eulmyo Jeongni Uigwe was printed with metal movable type (Jeongnija); this was unusual because most uigwe were handwritten, and printed uigwe circulated more widely. Its 112 pages of pictures, including the banchado, were made as prints (panhwa).",
+      "claimKo": "『원행을묘정리의궤』는 금속활자(정리자)로 간행되었는데, 의궤 대부분이 필사본이었던 데 비해 드문 경우이며 활자본은 더 널리 배포되었다. 그림 112면은 판화로 제작되었다.",
+      "sources": [
+        {
+          "title": "원행을묘정리의궤(園幸乙卯整理儀軌)",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (Encyclopedia of Korean Culture)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0040890",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "최초의 활자본 의궤로 금속활자로 간행되었다. ... 총 112면이 판화로 제작되어 실려 있다."
+        },
+        {
+          "title": "의궤란 무엇인가 (국가유산이야기 > 의궤정보)",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, National Heritage Portal)",
+          "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=/mem/uigweInfo.jsp&pageNo=3_4_1_0",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "제작 부수가 많지 않은 의궤는 거의 절대 다수가 필사본이다. 그런데 이 시기에 \"원행을묘정리의궤\"나 \"화성성역의궤\" 등이 정리자라는 금속활자로 특별 제작되었다."
+        },
+        {
+          "title": "Memory of the World Register – Uigwe: The Royal Protocols of the Joseon Dynasty, Ref N° 2006-48 (nomination form, PDF)",
+          "publisher": "UNESCO Memory of the World",
+          "url": "https://media.unesco.org/sites/default/files/webform/mow001/republic_of_korea_uigwe.pdf",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "§4.2: \"Uigwe created during the 18th century related to the royal family and those concerning the construction of Hwaseong (fortress) were published using movable type, and therefore had a circulation larger than the hand-scribed Uigwe.\""
+        },
+        {
+          "title": "「원행을묘정리의궤」의 판화사적 연구 (「園幸乙卯整理儀軌」의 板畫史的 硏究) — 정병모 (Jeong Byeong-mo)",
+          "publisher": "한국정신문화연구원 편찬부 (Academy of Korean Studies), via KoreaScience",
+          "url": "https://www.koreascience.or.kr/article/JAKO198971663777327.pdf",
+          "accessed": "2026-10-10",
+          "quoteOrLocator": "Ⅲ. 서지학적 특징: 「정리의궤」는 판화로 찍었고 활자로 간행하였다. 그림은 목판화로 새겼고, 글씨는 ... 금속활자인 정리자(整理字)를 사용하였다. / Ⅵ. 맺음말: 필사가 아니고 판화로 대량제작하였다."
+        }
+      ]
+    },
+    {
+      "id": "f9",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "The Uigwe were inscribed on UNESCO's Memory of the World Register in 2007.",
+      "claimKo": "조선왕조 의궤는 2007년 유네스코 세계기록유산에 등재되었다.",
+      "sources": [
+        {
+          "title": "Uigwe: The Royal Protocols of the Joseon Dynasty",
+          "publisher": "UNESCO Memory of the World",
+          "url": "https://www.unesco.org/en/memory-world/uigwe-royal-protocols-joseon-dynasty",
+          "accessed": "2026-10-10",
+          "quoteOrLocator": "Registration Year: 2007; Submission Year: 2006; Submitted by: Republic of Korea. [verified 2026-10-10 on an Internet Archive snapshot of the unesco.org page]"
+        },
+        {
+          "title": "의궤란 무엇인가 (국가유산이야기 > 의궤정보)",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, National Heritage Portal)",
+          "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=/mem/uigweInfo.jsp&pageNo=3_4_1_0",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "의궤는 조선 시기의 대표적인 기록 문화유산으로 인정받아 2007년 8월 유네스코 세계기록문화유산으로 등재되었다."
+        },
+        {
+          "title": "승정원일기 소개",
+          "publisher": "국사편찬위원회 승정원일기 DB (National Institute of Korean History)",
+          "url": "https://sjw.history.go.kr/intro/intro.do",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "표 '한국의 세계기록유산 목록': 조선왕조실록 1997 / 승정원일기 2001 / 조선왕조의궤 2007 / 일성록 2011"
+        }
+      ]
+    }
+  ],
+  "referenceDisplay": "Sources: 국사편찬위원회 조선왕조실록 DB (정조실록 42권, 정조 19년 윤2월 13일); 국가유산청 국가유산포털 (의궤정보); 한국민족문화대백과사전; Korea Heritage Service; UNESCO Memory of the World (Uigwe)",
+  "verification": {
+    "passes": 3,
+    "checkedAt": "2026-10-10",
+    "scope": "cluster",
+    "notes": "Third independent pass. All Sillok entries (Taejong 4/2/8 #4; Jeongjo 19/leap2/13 #1 and #3) re-fetched from sillok.history.go.kr and compared to original Chinese/Korean text. Every non-UNESCO URL cited was re-fetched fresh and every quote segment machine-matched, plus heritage.go.kr 국가유산 설명 text loaded from the portal's own ajax file (DATA1/heritage/hub_img/html/cul_*.html). UNESCO register pages for all four items verified via Internet Archive (registration years 1997/2001/2007/2011 with exact wording); Uigwe nomination PDF re-extracted and quotes/section numbers verified; Seungjeongwon nomination PDF could not be re-fetched (captcha) so the author's saved text was used, with other sources backing each fact. Corrections this pass: poswae schedule mistranslation (격 2년 = every third year, not every other year), 'dried herbs' removed, ep5 f4 quote exactified, 3 vocab words not appearing in scenes removed, ep5 f8 second source (정병모 판화사적 연구) and ep6 f3 festival official site added, UNESCO locators replaced by exact page wording, ep3 f7 3,045+198 clarification."
+  },
+  "authorNotes": "Narration omits the ages in the silk-gift entry (70+ and those turning 61) because they come from a single source; the Korean line '어르신' is a vocabulary item. 회갑 (source term) and 환갑 (everyday term) both mean the 60th birthday; 환갑 is taught. The feast date is given on the lunar calendar as recorded; the KHS English page says 'February 1795', which refers to the lunar leap 2nd month. The leap-month wording was rewritten simply ('an extra leap month after the second month'). The Hwaseong feast (13th of the leap 2nd month) took place during the 1795 trip celebrating her 60th year; her actual birthday fell in the 6th lunar month and the Encyclopedia notes a formal feast on 6/18 in Seoul, so narration says 'a celebration of her 60th birthday' and never says the Hwaseong feast was on the birthday itself. Revision: the uigwe is now named (원행을묘정리의궤); banchado described as 'long pictures' not paintings; 'woodblock' was REMOVED - Korean authorities (Encyclopedia of Korean Culture) say only 판화 (prints), and no Korean institutional source found says woodblock specifically (a Cambridge/Amsterdam UP page suggested by a checker did not mention woodcuts when re-fetched). The encyclopedia calls this 'the first uigwe printed with movable type'; narration says 'unusually' to stay conservative. UNESCO page text is paraphrased (unesco.org unreachable for re-quoting); UNESCO nomination-form quotes were re-checked against a saved copy of the PDF; the draft's banchado caption quote ('Banchado in color ... excellent clarity') could not be found in the PDF text and was replaced by the §1 Summary sentence on Banchado and Doseol. Omitted: the length of a painting (15.4 m, single source), page counts beyond f7, the story of Prince Sado (tragic), and the 1866 removal of Oegyujanggak uigwe to France and their 2011 return (war-related). PASS 3: second source for 판화 found (정병모, 판화사적 연구: 'prints' - and specifically 목판화, woodblock prints, with 정리자 metal type); narration stays at the more general 'prints'. Silk gifts (f6) confirmed directly in the original Annals entry text (命進饌時參班老人, 七十以上及六十一歲人, 各賜帛一匹); single primary source kept, no numbers in narration.",
+  "errata": []
+}

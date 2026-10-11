@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { completeChildForm } from './helpers';
+import { completeChildForm, jamoOfSpoken } from './helpers';
 
 /**
  * Audit UX-01 / L16 (roadmap PR-01): progress earned in one visit is still
@@ -48,14 +48,14 @@ async function captureSpeech(page: Page): Promise<void> {
 
 const spokenCount = (page: Page): Promise<number> => page.evaluate(() => (window as SpeechWindow).__spoken?.length ?? 0);
 
-/** Every round answered right: tap the tile for the letter the app just said. */
+/** Every round answered right: tap the tile for the letter whose sound the app just said. */
 async function playMatchSound(page: Page, rounds: number): Promise<void> {
   let heard = await spokenCount(page);
   await page.getByRole('button', { name: 'Play minigame' }).click();
   for (let round = 1; round <= rounds; round += 1) {
     await expect(page.getByText(`${round} / ${rounds}`)).toBeVisible();
     await page.waitForFunction((n) => ((window as SpeechWindow).__spoken?.length ?? 0) > n, heard);
-    const prompt = await page.evaluate(() => (window as SpeechWindow).__spoken?.at(-1) ?? '');
+    const prompt = jamoOfSpoken(await page.evaluate(() => (window as SpeechWindow).__spoken?.at(-1) ?? ''));
     heard = await spokenCount(page);
     await page.getByRole('button', { name: /^Korean letter / }).filter({ hasText: prompt }).click();
   }
