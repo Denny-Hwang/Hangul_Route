@@ -3730,7 +3730,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:hangeul-day",
     "state": "ready",
-    "contentVer": 1,
+    "contentVer": 2,
     "title": {
       "ko": "한글날을 축하해요!",
       "romanization": "Hangeullareul chukhahaeyo!",
@@ -3844,8 +3844,46 @@ export const storiesAll: Story[] = [
             "framing": false,
             "approximations": [],
             "artBrief": "A bright autumn day: families in a park, children holding blank paper fans and colorful streamers; Hoya waves a small flag with only a simple circle pattern. No text or signs.",
-            "captionEn": "South Korea celebrates Hangul Day",
-            "artPending": true
+            "art": {
+              "setting": "scene:countryside",
+              "layers": [
+                {
+                  "ref": "prop:leafy-tree",
+                  "x": 56,
+                  "y": 254,
+                  "s": 1.1,
+                  "tint": "feedback.nudge"
+                },
+                {
+                  "ref": "prop:fig-modern",
+                  "x": 168,
+                  "y": 272,
+                  "s": 1,
+                  "tint": "theme.letters"
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 228,
+                  "y": 276,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 278,
+                  "y": 280,
+                  "s": 0.9,
+                  "tint": "theme.letters"
+                },
+                {
+                  "ref": "hoya:waving",
+                  "x": 350,
+                  "y": 290,
+                  "s": 0.6
+                }
+              ],
+              "altEn": "On a bright autumn day families gather in a park to celebrate Hangul Day on October 9, and Hoya waves hello."
+            },
+            "captionEn": "South Korea celebrates Hangul Day"
           },
           {
             "id": "s2",
@@ -3863,8 +3901,31 @@ export const storiesAll: Story[] = [
             "framing": false,
             "approximations": [],
             "artBrief": "Close-up of Hoya's paw beside the last page of an old string-bound book (lines only, no readable text); a crescent moon glows softly in the window.",
-            "captionEn": "Hoya finds a date in the old book",
-            "artPending": true
+            "art": {
+              "setting": "scene:hanok-room",
+              "layers": [
+                {
+                  "ref": "prop:night-window",
+                  "x": 302,
+                  "y": 196,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:book-open",
+                  "x": 190,
+                  "y": 276,
+                  "s": 1.6
+                },
+                {
+                  "ref": "hoya:idle",
+                  "x": 64,
+                  "y": 290,
+                  "s": 0.6
+                }
+              ],
+              "altEn": "By moonlight Hoya rests a paw beside the last page of the Haerye book, where Jeong Inji wrote down a date."
+            },
+            "captionEn": "Hoya finds a date in the old book"
           },
           {
             "id": "s3",
@@ -3882,8 +3943,37 @@ export const storiesAll: Story[] = [
             "framing": false,
             "approximations": [],
             "artBrief": "A wall calendar page with blank squares; one square gets a big orange paw print from Hoya; a moon on one side and a sun on the other suggest lunar and solar calendars. No numbers or text.",
-            "captionEn": "A lunar date is set as October 9",
-            "artPending": true
+            "art": {
+              "setting": "scene:modern-room",
+              "layers": [
+                {
+                  "ref": "prop:full-moon",
+                  "x": 78,
+                  "y": 118,
+                  "s": 1.2
+                },
+                {
+                  "ref": "prop:glow-burst",
+                  "x": 322,
+                  "y": 150,
+                  "s": 0.45
+                },
+                {
+                  "ref": "prop:calendar-page",
+                  "x": 200,
+                  "y": 206,
+                  "s": 1.25
+                },
+                {
+                  "ref": "hoya:waving",
+                  "x": 330,
+                  "y": 294,
+                  "s": 0.6
+                }
+              ],
+              "altEn": "Hoya stamps a paw print on one square of a blank calendar, with a moon for the lunar calendar and a sun for the solar one."
+            },
+            "captionEn": "A lunar date is set as October 9"
           },
           {
             "id": "s4",
@@ -3903,8 +3993,31 @@ export const storiesAll: Story[] = [
             "framing": false,
             "approximations": [],
             "artBrief": "An old wooden hanok room with a carefully wrapped bundle of silk and paper being opened by gentle hands, revealing an old book; Hoya watches with wide eyes.",
-            "captionEn": "An original copy is found in Andong",
-            "artPending": true
+            "art": {
+              "setting": "scene:hanji-backdrop",
+              "layers": [
+                {
+                  "ref": "prop:book-bundle",
+                  "x": 86,
+                  "y": 280,
+                  "s": 1.2
+                },
+                {
+                  "ref": "prop:book-open",
+                  "x": 222,
+                  "y": 290,
+                  "s": 1.9
+                },
+                {
+                  "ref": "hoya:thinking",
+                  "x": 346,
+                  "y": 292,
+                  "s": 0.55
+                }
+              ],
+              "altEn": "In an old house a wrapped bundle has been opened to show an old book, the copy found around 1940 in Andong; Hoya looks on."
+            },
+            "captionEn": "An original copy is found in Andong"
           },
           {
             "id": "s5",
@@ -3922,8 +4035,32 @@ export const storiesAll: Story[] = [
             "framing": false,
             "approximations": [],
             "artBrief": "The old book resting in a glass museum case under soft light; Hoya and a child look at it respectfully from behind a low rope. No labels or text.",
-            "captionEn": "A National Treasure, honored by UNESCO",
-            "artPending": true
+            "art": {
+              "setting": "scene:modern-room",
+              "layers": [
+                {
+                  "ref": "prop:museum-case",
+                  "x": 200,
+                  "y": 290,
+                  "s": 1.6
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 310,
+                  "y": 288,
+                  "s": 0.9,
+                  "tint": "theme.nature"
+                },
+                {
+                  "ref": "hoya:idle",
+                  "x": 86,
+                  "y": 290,
+                  "s": 0.6
+                }
+              ],
+              "altEn": "The Haerye book, a National Treasure on UNESCO's Memory of the World Register, rests in a glass case as Hoya and a child look."
+            },
+            "captionEn": "A National Treasure, honored by UNESCO"
           },
           {
             "id": "s6",
@@ -3941,8 +4078,39 @@ export const storiesAll: Story[] = [
             "framing": false,
             "approximations": [],
             "artBrief": "A 1920s-style gathering in a simple hall: people in hanbok and early modern clothes clapping; Hoya in the front row, smiling. No banners or text.",
-            "captionEn": "The first celebration: Gagyanal",
-            "artPending": true
+            "art": {
+              "setting": "scene:hanok-room",
+              "layers": [
+                {
+                  "ref": "prop:fig-scholar",
+                  "x": 120,
+                  "y": 272,
+                  "s": 1,
+                  "tint": "surface.paper"
+                },
+                {
+                  "ref": "prop:fig-villager",
+                  "x": 200,
+                  "y": 270,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:fig-modern",
+                  "x": 272,
+                  "y": 272,
+                  "s": 1,
+                  "tint": "text.secondary"
+                },
+                {
+                  "ref": "hoya:cheering",
+                  "x": 344,
+                  "y": 294,
+                  "s": 0.55
+                }
+              ],
+              "altEn": "In 1926 people in hanbok and in early modern clothes gather for the first celebration, Gagyanal, with Hoya smiling at the front."
+            },
+            "captionEn": "The first celebration: Gagyanal"
           },
           {
             "id": "s7",
@@ -3959,8 +4127,46 @@ export const storiesAll: Story[] = [
             "framing": false,
             "approximations": [],
             "artBrief": "Hoya bowing politely toward a warm sunrise, with children from many backgrounds holding open books with blank pages around him.",
-            "captionEn": "Hoya thanks King Sejong",
-            "artPending": true
+            "art": {
+              "setting": "scene:countryside",
+              "layers": [
+                {
+                  "ref": "prop:glow-burst",
+                  "x": 200,
+                  "y": 210,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 86,
+                  "y": 282,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:fig-modern",
+                  "x": 132,
+                  "y": 284,
+                  "s": 0.75,
+                  "tint": "theme.nature"
+                },
+                {
+                  "ref": "hoya:idle",
+                  "x": 210,
+                  "y": 292,
+                  "s": 0.75
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 314,
+                  "y": 282,
+                  "s": 1,
+                  "tint": "theme.nature",
+                  "flip": true
+                }
+              ],
+              "altEn": "Hoya bows toward a warm sunrise with children from many places around him, saying thank you to King Sejong."
+            },
+            "captionEn": "Hoya thanks King Sejong"
           }
         ],
         "checks": [
@@ -5698,7 +5904,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:janggyeong-panjeon",
     "state": "ready",
-    "contentVer": 1,
+    "contentVer": 2,
     "title": {
       "ko": "바람이 지키는 장경판전",
       "romanization": "Barami jikineun Janggyeongpanjeon",
@@ -5811,8 +6017,32 @@ export const storiesAll: Story[] = [
             "framing": false,
             "approximations": [],
             "artBrief": "Hoya climbing stone stairs to a terrace at the top of a mountain temple; two long, plain wooden halls with tiled roofs stand side by side above the other temple roofs.",
-            "captionEn": "The oldest halls still standing at Haeinsa",
-            "artPending": true
+            "art": {
+              "setting": "scene:temple",
+              "layers": [
+                {
+                  "ref": "prop:janggyeong-hall",
+                  "x": 232,
+                  "y": 198,
+                  "s": 0.9,
+                  "z": "back"
+                },
+                {
+                  "ref": "prop:janggyeong-hall",
+                  "x": 184,
+                  "y": 214,
+                  "s": 1
+                },
+                {
+                  "ref": "hoya:waving",
+                  "x": 200,
+                  "y": 294,
+                  "s": 0.6
+                }
+              ],
+              "altEn": "Hoya climbs to the highest part of Haeinsa, where the two long halls of Janggyeong Panjeon, its oldest buildings, stand."
+            },
+            "captionEn": "The oldest halls still standing at Haeinsa"
           },
           {
             "id": "s2",
@@ -5830,8 +6060,26 @@ export const storiesAll: Story[] = [
             "framing": false,
             "approximations": [],
             "artBrief": "Bird's-eye view of four plain wooden buildings forming a rectangle around a sandy courtyard, two long and two short; Hoya waves from the courtyard.",
-            "captionEn": "Four buildings around a courtyard",
-            "artPending": true
+            "art": {
+              "setting": "scene:hanji-backdrop",
+              "layers": [
+                {
+                  "ref": "prop:panjeon-plan",
+                  "x": 200,
+                  "y": 286,
+                  "s": 1.5,
+                  "z": "back"
+                },
+                {
+                  "ref": "hoya:waving",
+                  "x": 200,
+                  "y": 234,
+                  "s": 0.8
+                }
+              ],
+              "altEn": "Seen from above, two long halls and two small ones form a rectangle around a courtyard, where Hoya waves."
+            },
+            "captionEn": "Four buildings around a courtyard"
           },
           {
             "id": "s3",
@@ -5849,8 +6097,25 @@ export const storiesAll: Story[] = [
             "framing": false,
             "approximations": [],
             "artBrief": "Front view of a long, simple wooden hall with unpainted pillars and rows of slatted windows; Hoya points out how plain and tidy it looks.",
-            "captionEn": "Plain halls built for one job",
-            "artPending": true
+            "art": {
+              "setting": "scene:temple",
+              "layers": [
+                {
+                  "ref": "prop:janggyeong-hall",
+                  "x": 200,
+                  "y": 250,
+                  "s": 1.6
+                },
+                {
+                  "ref": "hoya:waving",
+                  "x": 342,
+                  "y": 296,
+                  "s": 0.55
+                }
+              ],
+              "altEn": "A long, plain wooden hall from the 15th century: no fancy decoration, every part made to keep the woodblocks safe."
+            },
+            "captionEn": "Plain halls built for one job"
           },
           {
             "id": "s4",
@@ -5868,8 +6133,32 @@ export const storiesAll: Story[] = [
             "framing": false,
             "approximations": [],
             "artBrief": "Cutaway side view of a hall: slatted windows of different sizes high and low on opposite walls, with gentle curved arrows of breeze flowing through past the shelves; Hoya's fur ruffles in the wind.",
-            "captionEn": "Windows of different sizes",
-            "artPending": true
+            "art": {
+              "setting": "scene:hanji-backdrop",
+              "layers": [
+                {
+                  "ref": "prop:hall-section",
+                  "x": 186,
+                  "y": 284,
+                  "s": 1.4,
+                  "z": "back"
+                },
+                {
+                  "ref": "prop:breeze",
+                  "x": 186,
+                  "y": 200,
+                  "s": 1.6
+                },
+                {
+                  "ref": "hoya:thinking",
+                  "x": 346,
+                  "y": 296,
+                  "s": 0.55
+                }
+              ],
+              "altEn": "A cutaway hall shows windows of different sizes, high and low on its two walls, letting a breeze flow past the shelves."
+            },
+            "captionEn": "Windows of different sizes"
           },
           {
             "id": "s5",
@@ -5887,8 +6176,25 @@ export const storiesAll: Story[] = [
             "framing": false,
             "approximations": [],
             "artBrief": "Cross-section of the ground under a hall showing simple colored layers (black charcoal, white lime, pale salt, tan sand) beneath an earthen floor; Hoya kneels, peering at the layers.",
-            "captionEn": "Charcoal, lime and salt under the floor",
-            "artPending": true
+            "art": {
+              "setting": "scene:hanji-backdrop",
+              "layers": [
+                {
+                  "ref": "prop:hall-section",
+                  "x": 176,
+                  "y": 298,
+                  "s": 1.6
+                },
+                {
+                  "ref": "hoya:thinking",
+                  "x": 364,
+                  "y": 296,
+                  "s": 0.5
+                }
+              ],
+              "altEn": "Under the earthen floor lie layers of charcoal, lime and salt with sand, soaking up damp and giving it back when the air is dry."
+            },
+            "captionEn": "Charcoal, lime and salt under the floor"
           },
           {
             "id": "s6",
@@ -5906,8 +6212,37 @@ export const storiesAll: Story[] = [
             "framing": false,
             "approximations": [],
             "artBrief": "Sunlight streaming through slatted windows onto rows of woodblocks; a small mouse and a beetle turn away outside the wall while a breeze swirls leaves; Hoya smiles.",
-            "captionEn": "Wind, sun and earth keep blocks safe",
-            "artPending": true
+            "art": {
+              "setting": "scene:hanji-backdrop",
+              "layers": [
+                {
+                  "ref": "prop:glow-burst",
+                  "x": 340,
+                  "y": 120,
+                  "s": 0.6
+                },
+                {
+                  "ref": "prop:woodblock-shelves",
+                  "x": 176,
+                  "y": 266,
+                  "s": 1.4
+                },
+                {
+                  "ref": "prop:breeze",
+                  "x": 318,
+                  "y": 156,
+                  "s": 1
+                },
+                {
+                  "ref": "hoya:idle",
+                  "x": 334,
+                  "y": 294,
+                  "s": 0.6
+                }
+              ],
+              "altEn": "Sunlight and a gentle breeze keep the woodblocks dry and safe from damp, mice and insects, and Hoya smiles."
+            },
+            "captionEn": "Wind, sun and earth keep blocks safe"
           },
           {
             "id": "s7",
@@ -5925,8 +6260,46 @@ export const storiesAll: Story[] = [
             "framing": false,
             "approximations": [],
             "artBrief": "The two long halls under a clear autumn sky with colorful maple leaves on the mountain; a soft glowing outline around the buildings suggests special recognition. No logos or text.",
-            "captionEn": "A UNESCO World Heritage site",
-            "artPending": true
+            "art": {
+              "setting": "scene:temple",
+              "layers": [
+                {
+                  "ref": "prop:glow-burst",
+                  "x": 200,
+                  "y": 236,
+                  "s": 1.6
+                },
+                {
+                  "ref": "prop:janggyeong-hall",
+                  "x": 226,
+                  "y": 198,
+                  "s": 0.9,
+                  "z": "back"
+                },
+                {
+                  "ref": "prop:janggyeong-hall",
+                  "x": 180,
+                  "y": 216,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:leafy-tree",
+                  "x": 48,
+                  "y": 272,
+                  "s": 1,
+                  "tint": "feedback.nudge"
+                },
+                {
+                  "ref": "prop:leafy-tree",
+                  "x": 356,
+                  "y": 274,
+                  "s": 0.9,
+                  "tint": "feedback.nudge"
+                }
+              ],
+              "altEn": "The two long halls stand under a clear autumn sky among maple trees: Janggyeong Panjeon is on the World Heritage List."
+            },
+            "captionEn": "A UNESCO World Heritage site"
           },
           {
             "id": "s8",
@@ -5944,8 +6317,32 @@ export const storiesAll: Story[] = [
             "framing": false,
             "approximations": [],
             "artBrief": "Hoya and a child quietly peeking through vertical window slats from outside, careful not to touch; inside, shelves of woodblocks rest in calm shadow.",
-            "captionEn": "Entry is limited to keep the air steady",
-            "artPending": true
+            "art": {
+              "setting": "scene:temple",
+              "layers": [
+                {
+                  "ref": "prop:janggyeong-hall",
+                  "x": 200,
+                  "y": 262,
+                  "s": 1.7
+                },
+                {
+                  "ref": "hoya:idle",
+                  "x": 150,
+                  "y": 296,
+                  "s": 0.6
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 250,
+                  "y": 296,
+                  "s": 0.9,
+                  "tint": "theme.crafts"
+                }
+              ],
+              "altEn": "Hoya and a child peek through the slatted windows from outside without touching, because entry is limited to protect the blocks."
+            },
+            "captionEn": "Entry is limited to keep the air steady"
           }
         ],
         "checks": [
@@ -6333,7 +6730,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:jikji-metal-type",
     "state": "ready",
-    "contentVer": 1,
+    "contentVer": 2,
     "title": {
       "ko": "직지, 금속활자로 찍은 책",
       "romanization": "Jikji, geumsokhwaljaro jjigeun chaek",
@@ -6438,8 +6835,39 @@ export const storiesAll: Story[] = [
             "framing": false,
             "approximations": [],
             "artBrief": "A peaceful Goryeo-era temple courtyard with a wooden hall and a stone pagoda; inside an open door, figures bend over a work table with small shiny pieces. Hoya peeks around a pillar.",
-            "captionEn": "Printing with metal type at a temple",
-            "artPending": true
+            "art": {
+              "setting": "scene:temple",
+              "layers": [
+                {
+                  "ref": "prop:fig-monk",
+                  "x": 150,
+                  "y": 270,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:fig-monk",
+                  "x": 252,
+                  "y": 272,
+                  "s": 1,
+                  "flip": true,
+                  "tint": "text.secondary"
+                },
+                {
+                  "ref": "prop:type-tray",
+                  "x": 202,
+                  "y": 292,
+                  "s": 1.2
+                },
+                {
+                  "ref": "hoya:waving",
+                  "x": 344,
+                  "y": 292,
+                  "s": 0.6
+                }
+              ],
+              "altEn": "At Heungdeoksa Temple in Goryeo, monks are busy with something amazing, printing a book with metal type, and Hoya peeks in."
+            },
+            "captionEn": "Printing with metal type at a temple"
           },
           {
             "id": "s2",
@@ -6457,8 +6885,31 @@ export const storiesAll: Story[] = [
             "framing": false,
             "approximations": [],
             "artBrief": "An elderly monk in gray robes writing calmly with a brush at a low desk by a paper window; mountains outside. No readable text on the paper.",
-            "captionEn": "Monk Baegun gathers the teachings",
-            "artPending": true
+            "art": {
+              "setting": "scene:hanok-room",
+              "layers": [
+                {
+                  "ref": "prop:books-stack",
+                  "x": 76,
+                  "y": 282,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:fig-monk-seated",
+                  "x": 206,
+                  "y": 286,
+                  "s": 1.5
+                },
+                {
+                  "ref": "prop:writing-set",
+                  "x": 330,
+                  "y": 282,
+                  "s": 0.9
+                }
+              ],
+              "altEn": "The wise old monk Baegun sits writing with a brush, gathering important teachings of the Buddha into the book Jikji."
+            },
+            "captionEn": "Monk Baegun gathers the teachings"
           },
           {
             "id": "s3",
@@ -6477,8 +6928,40 @@ export const storiesAll: Story[] = [
             "framing": false,
             "approximations": [],
             "artBrief": "Two younger monks carefully lifting a freshly printed sheet (shown as soft gray lines, no readable text) while a nun in robes watches kindly.",
-            "captionEn": "His students print the book",
-            "artPending": true
+            "art": {
+              "setting": "scene:hanok-room",
+              "layers": [
+                {
+                  "ref": "prop:fig-monk",
+                  "x": 126,
+                  "y": 276,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:writing-lines",
+                  "x": 196,
+                  "y": 232,
+                  "s": 1.1
+                },
+                {
+                  "ref": "prop:fig-monk",
+                  "x": 266,
+                  "y": 276,
+                  "s": 1,
+                  "flip": true
+                },
+                {
+                  "ref": "prop:fig-monk",
+                  "x": 346,
+                  "y": 272,
+                  "s": 0.9,
+                  "tint": "text.secondary",
+                  "flip": true
+                }
+              ],
+              "altEn": "Baegun's students lift a freshly printed page in 1377, while the nun Myodeok, who supported the printing, watches kindly."
+            },
+            "captionEn": "His students print the book"
           },
           {
             "id": "s4",
@@ -6496,8 +6979,25 @@ export const storiesAll: Story[] = [
             "framing": false,
             "approximations": [],
             "artBrief": "Close-up of hands placing tiny metal blocks into a tray frame in neat rows (block faces shown blank or as abstract bumps); Hoya holds one tiny block up to the light.",
-            "captionEn": "One piece of type for each character",
-            "artPending": true
+            "art": {
+              "setting": "scene:hanji-backdrop",
+              "layers": [
+                {
+                  "ref": "prop:type-tray",
+                  "x": 196,
+                  "y": 272,
+                  "s": 2.4
+                },
+                {
+                  "ref": "hoya:waving",
+                  "x": 336,
+                  "y": 292,
+                  "s": 0.6
+                }
+              ],
+              "altEn": "Small pieces of metal type are lined up in rows in a frame to make a page, and Hoya holds one tiny piece up to the light."
+            },
+            "captionEn": "One piece of type for each character"
           },
           {
             "id": "s5",
@@ -6515,8 +7015,31 @@ export const storiesAll: Story[] = [
             "framing": false,
             "approximations": [],
             "artBrief": "Hoya proudly holds up an old bound book like a trophy on a small hill, with a gentle golden glow behind him; the cover is plain.",
-            "captionEn": "The oldest surviving metal-type book",
-            "artPending": true
+            "art": {
+              "setting": "scene:countryside",
+              "layers": [
+                {
+                  "ref": "prop:glow-burst",
+                  "x": 200,
+                  "y": 236,
+                  "s": 1.2
+                },
+                {
+                  "ref": "prop:book-thread-bound",
+                  "x": 200,
+                  "y": 190,
+                  "s": 1.3
+                },
+                {
+                  "ref": "hoya:cheering",
+                  "x": 200,
+                  "y": 292,
+                  "s": 0.8
+                }
+              ],
+              "altEn": "On a small hill Hoya proudly lifts up Jikji, the oldest surviving book printed with movable metal type."
+            },
+            "captionEn": "The oldest surviving metal-type book"
           },
           {
             "id": "s6",
@@ -6534,8 +7057,31 @@ export const storiesAll: Story[] = [
             "framing": false,
             "approximations": [],
             "artBrief": "A quiet, grand library reading room with tall shelves and arched windows; one old book rests safely in a protective case. No signs, no flags, no text.",
-            "captionEn": "One volume survives, in Paris",
-            "artPending": true
+            "art": {
+              "setting": "scene:modern-room",
+              "layers": [
+                {
+                  "ref": "prop:archive-shelf",
+                  "x": 72,
+                  "y": 284,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:archive-shelf",
+                  "x": 328,
+                  "y": 284,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:museum-case",
+                  "x": 200,
+                  "y": 292,
+                  "s": 1.5
+                }
+              ],
+              "altEn": "In a quiet library reading room in Paris, the surviving second volume of Jikji rests safely in a protective case."
+            },
+            "captionEn": "One volume survives, in Paris"
           },
           {
             "id": "s7",
@@ -6554,8 +7100,53 @@ export const storiesAll: Story[] = [
             "framing": false,
             "approximations": [],
             "artBrief": "Hoya and children around the world holding hands in a circle around a glowing old book floating above a globe. No text.",
-            "captionEn": "UNESCO honors Jikji",
-            "artPending": true
+            "art": {
+              "setting": "scene:countryside",
+              "layers": [
+                {
+                  "ref": "prop:glow-burst",
+                  "x": 200,
+                  "y": 214,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:book-open",
+                  "x": 200,
+                  "y": 184,
+                  "s": 1.4
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 70,
+                  "y": 286,
+                  "s": 1,
+                  "tint": "theme.crafts"
+                },
+                {
+                  "ref": "prop:fig-modern",
+                  "x": 118,
+                  "y": 288,
+                  "s": 0.7,
+                  "tint": "feedback.nudge"
+                },
+                {
+                  "ref": "hoya:cheering",
+                  "x": 270,
+                  "y": 292,
+                  "s": 0.6
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 336,
+                  "y": 286,
+                  "s": 1,
+                  "tint": "theme.nature",
+                  "flip": true
+                }
+              ],
+              "altEn": "Hoya and children from around the world gather round a glowing old book: Jikji is on the Memory of the World Register."
+            },
+            "captionEn": "UNESCO honors Jikji"
           },
           {
             "id": "s8",
@@ -6573,8 +7164,44 @@ export const storiesAll: Story[] = [
             "framing": false,
             "approximations": [],
             "artBrief": "Present day: a grassy temple site with stone foundations and a rebuilt hall, and a modern museum building nearby; Hoya waves to visiting families. No signs or text.",
-            "captionEn": "A museum stands by the temple site",
-            "artPending": true
+            "art": {
+              "setting": "scene:countryside",
+              "layers": [
+                {
+                  "ref": "prop:museum-building",
+                  "x": 296,
+                  "y": 228,
+                  "s": 1.2
+                },
+                {
+                  "ref": "prop:temple-site",
+                  "x": 150,
+                  "y": 256,
+                  "s": 1.1
+                },
+                {
+                  "ref": "prop:fig-modern",
+                  "x": 300,
+                  "y": 290,
+                  "s": 0.9
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 344,
+                  "y": 292,
+                  "s": 0.8,
+                  "tint": "brand.secondary"
+                },
+                {
+                  "ref": "hoya:waving",
+                  "x": 40,
+                  "y": 292,
+                  "s": 0.6
+                }
+              ],
+              "altEn": "The site of Heungdeoksa, confirmed in 1985, lies beside the Cheongju Early Printing Museum, and Hoya waves to visitors."
+            },
+            "captionEn": "A museum stands by the temple site"
           }
         ],
         "checks": [
@@ -9643,7 +10270,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:sejong-new-letters",
     "state": "ready",
-    "contentVer": 1,
+    "contentVer": 2,
     "title": {
       "ko": "세종대왕의 새 글자",
       "romanization": "Sejongdaewangui sae geulja",
@@ -9772,8 +10399,37 @@ export const storiesAll: Story[] = [
               }
             ],
             "artBrief": "Hoya, a friendly young tiger, steps out of a glowing open book into a Joseon-era royal courtyard with wooden halls and curved tiled roofs; a kind king in royal robes stands on the stone steps.",
-            "captionEn": "Hoya lands in King Sejong's Joseon",
-            "artPending": true
+            "art": {
+              "setting": "scene:palace-courtyard",
+              "layers": [
+                {
+                  "ref": "prop:glow-burst",
+                  "x": 110,
+                  "y": 290,
+                  "s": 0.8
+                },
+                {
+                  "ref": "prop:book-open",
+                  "x": 110,
+                  "y": 288,
+                  "s": 1.2
+                },
+                {
+                  "ref": "hoya:waving",
+                  "x": 112,
+                  "y": 246,
+                  "s": 0.6
+                },
+                {
+                  "ref": "prop:fig-king",
+                  "x": 272,
+                  "y": 262,
+                  "s": 1.1
+                }
+              ],
+              "altEn": "Hoya steps out of a glowing open book into a Joseon palace courtyard, where King Sejong stands in his red robe."
+            },
+            "captionEn": "Hoya lands in King Sejong's Joseon"
           },
           {
             "id": "s2",
@@ -9791,8 +10447,38 @@ export const storiesAll: Story[] = [
             "framing": false,
             "approximations": [],
             "artBrief": "A village lane: a farmer and a child look puzzled at a sheet covered with dense, abstract brush marks (unreadable squiggles, no real characters); Hoya scratches his head beside them.",
-            "captionEn": "Chinese characters were hard to learn",
-            "artPending": true
+            "art": {
+              "setting": "scene:village-lane",
+              "layers": [
+                {
+                  "ref": "prop:fig-villager",
+                  "x": 116,
+                  "y": 270,
+                  "s": 1,
+                  "tint": "surface.paper"
+                },
+                {
+                  "ref": "prop:sheet-cursive",
+                  "x": 184,
+                  "y": 236,
+                  "s": 0.9
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 244,
+                  "y": 274,
+                  "s": 0.9
+                },
+                {
+                  "ref": "hoya:thinking",
+                  "x": 312,
+                  "y": 286,
+                  "s": 0.65
+                }
+              ],
+              "altEn": "In a village lane a farmer and a child puzzle over a sheet of hard borrowed characters, and Hoya scratches his head."
+            },
+            "captionEn": "Chinese characters were hard to learn"
           },
           {
             "id": "s3",
@@ -9811,8 +10497,37 @@ export const storiesAll: Story[] = [
             "framing": false,
             "approximations": [],
             "artBrief": "King Sejong at a low wooden desk by lamplight, brush in hand; simple abstract strokes, dots and circles float above the paper like sparks (no readable letters); Hoya peeks over the desk edge.",
-            "captionEn": "King Sejong creates new letters",
-            "artPending": true
+            "art": {
+              "setting": "scene:hanok-room",
+              "layers": [
+                {
+                  "ref": "prop:oil-lamp",
+                  "x": 86,
+                  "y": 252,
+                  "s": 1.2
+                },
+                {
+                  "ref": "prop:stroke-sparks",
+                  "x": 205,
+                  "y": 150,
+                  "s": 0.9
+                },
+                {
+                  "ref": "prop:fig-king-seated",
+                  "x": 200,
+                  "y": 282,
+                  "s": 1.4
+                },
+                {
+                  "ref": "hoya:thinking",
+                  "x": 322,
+                  "y": 292,
+                  "s": 0.6
+                }
+              ],
+              "altEn": "By lamplight King Sejong writes as simple dots, strokes and circles float up like sparks, and Hoya peeks in with wide eyes."
+            },
+            "captionEn": "King Sejong creates new letters"
           },
           {
             "id": "s4",
@@ -9831,8 +10546,50 @@ export const storiesAll: Story[] = [
             "framing": false,
             "approximations": [],
             "artBrief": "A sunny market street where a merchant, a grandmother and children each hold a small blank paper and smile; warm light suggests everyone can now write.",
-            "captionEn": "He names them Hunminjeongeum",
-            "artPending": true
+            "art": {
+              "setting": "scene:village-lane",
+              "layers": [
+                {
+                  "ref": "prop:fig-villager",
+                  "x": 100,
+                  "y": 268,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:blank-sheet",
+                  "x": 150,
+                  "y": 214,
+                  "s": 0.7
+                },
+                {
+                  "ref": "prop:fig-grandmother",
+                  "x": 205,
+                  "y": 268,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:blank-sheet",
+                  "x": 252,
+                  "y": 216,
+                  "s": 0.7
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 292,
+                  "y": 274,
+                  "s": 0.9
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 350,
+                  "y": 278,
+                  "s": 0.8,
+                  "tint": "theme.nature"
+                }
+              ],
+              "altEn": "On a sunny village street a merchant, a grandmother and two children smile with small blank sheets they can now write on."
+            },
+            "captionEn": "He names them Hunminjeongeum"
           },
           {
             "id": "s5",
@@ -9850,8 +10607,37 @@ export const storiesAll: Story[] = [
             "framing": false,
             "approximations": [],
             "artBrief": "Morning sun rising over palace roofs; Hoya sits cross-legged with a brush and blank paper, grinning proudly; a scholar in a black gat hat watches kindly.",
-            "captionEn": "The new letters are easy to learn",
-            "artPending": true
+            "art": {
+              "setting": "scene:palace-courtyard",
+              "layers": [
+                {
+                  "ref": "prop:glow-burst",
+                  "x": 64,
+                  "y": 96,
+                  "s": 0.6
+                },
+                {
+                  "ref": "hoya:idle",
+                  "x": 140,
+                  "y": 288,
+                  "s": 0.7
+                },
+                {
+                  "ref": "prop:blank-sheet",
+                  "x": 180,
+                  "y": 290,
+                  "s": 0.8
+                },
+                {
+                  "ref": "prop:fig-scholar",
+                  "x": 310,
+                  "y": 272,
+                  "s": 1
+                }
+              ],
+              "altEn": "As the morning sun rises over the palace, Hoya sits with a blank sheet of paper while a scholar in a black gat watches kindly."
+            },
+            "captionEn": "The new letters are easy to learn"
           },
           {
             "id": "s6",
@@ -9870,8 +10656,44 @@ export const storiesAll: Story[] = [
             "framing": false,
             "approximations": [],
             "artBrief": "Several scholars in Joseon robes working at desks in a quiet wooden hall, stacks of bound books with plain covers; one scholar holds up a finished book (cover blank, no text).",
-            "captionEn": "Scholars explain the letters in a book",
-            "artPending": true
+            "art": {
+              "setting": "scene:hanok-room",
+              "layers": [
+                {
+                  "ref": "prop:books-stack",
+                  "x": 66,
+                  "y": 282,
+                  "s": 1.1
+                },
+                {
+                  "ref": "prop:fig-historian",
+                  "x": 160,
+                  "y": 282,
+                  "s": 1.1
+                },
+                {
+                  "ref": "prop:fig-official",
+                  "x": 250,
+                  "y": 252,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:book-thread-bound",
+                  "x": 290,
+                  "y": 206,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:fig-historian",
+                  "x": 330,
+                  "y": 292,
+                  "s": 1.1,
+                  "flip": true
+                }
+              ],
+              "altEn": "Scholars of the Hall of Worthies write in a quiet wooden hall beside stacks of bound books, and one holds up a finished book."
+            },
+            "captionEn": "Scholars explain the letters in a book"
           },
           {
             "id": "s7",
@@ -9889,8 +10711,38 @@ export const storiesAll: Story[] = [
             "framing": false,
             "approximations": [],
             "artBrief": "Present-day scene: Hoya waves beside a child holding a pencil over a notebook (blank lines), with a modern Korean street softly behind them; no signs or readable text.",
-            "captionEn": "Today we call them Hangul",
-            "artPending": true
+            "art": {
+              "setting": "scene:modern-room",
+              "layers": [
+                {
+                  "ref": "prop:fig-modern",
+                  "x": 176,
+                  "y": 280,
+                  "s": 0.75,
+                  "tint": "theme.letters"
+                },
+                {
+                  "ref": "prop:desk-low",
+                  "x": 256,
+                  "y": 290,
+                  "s": 0.75
+                },
+                {
+                  "ref": "prop:writing-lines",
+                  "x": 256,
+                  "y": 250,
+                  "s": 0.55
+                },
+                {
+                  "ref": "hoya:waving",
+                  "x": 92,
+                  "y": 288,
+                  "s": 0.5
+                }
+              ],
+              "altEn": "Today Hoya waves beside a child at a little desk with a notebook, because people in Korea read and write Hangul every day."
+            },
+            "captionEn": "Today we call them Hangul"
           }
         ],
         "checks": [
@@ -11786,7 +12638,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:shapes-of-hangeul",
     "state": "ready",
-    "contentVer": 1,
+    "contentVer": 2,
     "title": {
       "ko": "한글 모양의 비밀",
       "romanization": "Hangeul moyangui bimil",
@@ -11983,8 +12835,37 @@ export const storiesAll: Story[] = [
             "framing": false,
             "approximations": [],
             "artBrief": "Hoya gently opens an old string-bound book with yellowed pages on a low table; soft light glows from the pages (pages shown as faint lines, no readable text).",
-            "captionEn": "Hoya opens the Haerye book",
-            "artPending": true
+            "art": {
+              "setting": "scene:hanok-room",
+              "layers": [
+                {
+                  "ref": "prop:glow-burst",
+                  "x": 216,
+                  "y": 250,
+                  "s": 0.9
+                },
+                {
+                  "ref": "prop:desk-low",
+                  "x": 216,
+                  "y": 290,
+                  "s": 1.3
+                },
+                {
+                  "ref": "prop:book-open",
+                  "x": 216,
+                  "y": 230,
+                  "s": 1.5
+                },
+                {
+                  "ref": "hoya:idle",
+                  "x": 82,
+                  "y": 290,
+                  "s": 0.7
+                }
+              ],
+              "altEn": "Hoya finds a very special old book, the Hunminjeongeum Haerye of 1446, lying open and glowing on a low table."
+            },
+            "captionEn": "Hoya opens the Haerye book"
           },
           {
             "id": "s2",
@@ -12003,8 +12884,25 @@ export const storiesAll: Story[] = [
             "framing": false,
             "approximations": [],
             "artBrief": "Simple friendly side-view diagram of a head with the root of the tongue closing the throat, drawn in soft colors, as the old book describes; Hoya points at it with his tail. The app overlays the letter; no text in the image.",
-            "captionEn": "Giyeok: tongue root closing the throat",
-            "artPending": true
+            "art": {
+              "setting": "scene:hanji-backdrop",
+              "layers": [
+                {
+                  "ref": "prop:speech-g",
+                  "x": 190,
+                  "y": 262,
+                  "s": 1.5
+                },
+                {
+                  "ref": "hoya:waving",
+                  "x": 326,
+                  "y": 290,
+                  "s": 0.65
+                }
+              ],
+              "altEn": "Hoya points at a side-view picture of the mouth: the root of the tongue rises to close the throat, the shape behind the first letter."
+            },
+            "captionEn": "Giyeok: tongue root closing the throat"
           },
           {
             "id": "s3",
@@ -12022,8 +12920,25 @@ export const storiesAll: Story[] = [
             "framing": false,
             "approximations": [],
             "artBrief": "Two small side-view diagrams: a tongue touching the upper gum, and a square-ish open mouth; Hoya opens his mouth wide in a funny face. No text in the image.",
-            "captionEn": "Nieun and mieum: tongue and mouth",
-            "artPending": true
+            "art": {
+              "setting": "scene:hanji-backdrop",
+              "layers": [
+                {
+                  "ref": "prop:speech-nm",
+                  "x": 180,
+                  "y": 236,
+                  "s": 1.4
+                },
+                {
+                  "ref": "hoya:cheering",
+                  "x": 340,
+                  "y": 294,
+                  "s": 0.55
+                }
+              ],
+              "altEn": "Two pictures: the tongue tip touching the upper gum, and a wide square mouth, while Hoya opens his own mouth wide."
+            },
+            "captionEn": "Nieun and mieum: tongue and mouth"
           },
           {
             "id": "s4",
@@ -12042,8 +12957,25 @@ export const storiesAll: Story[] = [
             "framing": false,
             "approximations": [],
             "artBrief": "A playful row of five simple body-part icons (tongue root, tongue tip, mouth, tooth, round throat) like stepping stones, with Hoya hopping across them. No letters drawn.",
-            "captionEn": "Siot is like a tooth, ieung the throat",
-            "artPending": true
+            "art": {
+              "setting": "scene:countryside",
+              "layers": [
+                {
+                  "ref": "prop:organ-stones",
+                  "x": 200,
+                  "y": 290,
+                  "s": 1.4
+                },
+                {
+                  "ref": "hoya:cheering",
+                  "x": 152,
+                  "y": 204,
+                  "s": 0.6
+                }
+              ],
+              "altEn": "Hoya hops across five stepping stones showing the tongue root, the tongue tip, the mouth, a tooth and the throat."
+            },
+            "captionEn": "Siot is like a tooth, ieung the throat"
           },
           {
             "id": "s5",
@@ -12061,8 +12993,25 @@ export const storiesAll: Story[] = [
             "framing": false,
             "approximations": [],
             "artBrief": "Hoya swishes his tail through the air leaving three glowing ribbon trails that grow from one bend to more lines (abstract ribbons; the app overlays nieun digeut tieut).",
-            "captionEn": "Add a stroke for a stronger sound",
-            "artPending": true
+            "art": {
+              "setting": "scene:hanji-backdrop",
+              "layers": [
+                {
+                  "ref": "prop:ribbon-trails",
+                  "x": 236,
+                  "y": 196,
+                  "s": 2.2
+                },
+                {
+                  "ref": "hoya:cheering",
+                  "x": 80,
+                  "y": 290,
+                  "s": 0.7
+                }
+              ],
+              "altEn": "Hoya swishes his tail and leaves three glowing trails in the air, each with one more line than the last."
+            },
+            "captionEn": "Add a stroke for a stronger sound"
           },
           {
             "id": "s6",
@@ -12079,8 +13028,31 @@ export const storiesAll: Story[] = [
             "framing": false,
             "approximations": [],
             "artBrief": "A landscape split into three: a round sun-like dot in the sky, a flat horizon of earth, and a child standing tall; Hoya stands beside the child. No text.",
-            "captionEn": "Vowels: sky, earth and a person",
-            "artPending": true
+            "art": {
+              "setting": "scene:countryside",
+              "layers": [
+                {
+                  "ref": "prop:glow-burst",
+                  "x": 110,
+                  "y": 128,
+                  "s": 0.5
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 230,
+                  "y": 276,
+                  "s": 1.2
+                },
+                {
+                  "ref": "hoya:idle",
+                  "x": 312,
+                  "y": 286,
+                  "s": 0.6
+                }
+              ],
+              "altEn": "A round sun in the sky, the flat earth and a child standing tall: sky, earth and person, the ideas behind three vowels."
+            },
+            "captionEn": "Vowels: sky, earth and a person"
           },
           {
             "id": "s7",
@@ -12098,8 +13070,25 @@ export const storiesAll: Story[] = [
             "framing": false,
             "approximations": [],
             "artBrief": "A tall standing stick and a small round pebble slide together like puzzle pieces while Hoya claps; sparkles show they fit. The app overlays the vowel; no text in the image.",
-            "captionEn": "Shapes join to make new vowels",
-            "artPending": true
+            "art": {
+              "setting": "scene:hanji-backdrop",
+              "layers": [
+                {
+                  "ref": "prop:stick-dot",
+                  "x": 196,
+                  "y": 256,
+                  "s": 1.5
+                },
+                {
+                  "ref": "hoya:cheering",
+                  "x": 324,
+                  "y": 290,
+                  "s": 0.6
+                }
+              ],
+              "altEn": "A tall standing stick and a round pebble slide together and fit like puzzle pieces, and Hoya claps."
+            },
+            "captionEn": "Shapes join to make new vowels"
           },
           {
             "id": "s8",
@@ -12117,8 +13106,25 @@ export const storiesAll: Story[] = [
             "framing": false,
             "approximations": [],
             "artBrief": "Hoya juggling colorful blank tiles (14 of one color, 10 of another) in a sunny classroom; tiles are plain, with no letters printed on them.",
-            "captionEn": "South Korea's rules: 14 consonants, 10 vowels",
-            "artPending": true
+            "art": {
+              "setting": "scene:modern-room",
+              "layers": [
+                {
+                  "ref": "prop:blank-tiles",
+                  "x": 200,
+                  "y": 192,
+                  "s": 1.6
+                },
+                {
+                  "ref": "hoya:cheering",
+                  "x": 200,
+                  "y": 292,
+                  "s": 0.8
+                }
+              ],
+              "altEn": "Hoya juggles 24 blank tiles in a sunny classroom, 14 in one colour and 10 in another, like consonants and vowels."
+            },
+            "captionEn": "South Korea's rules: 14 consonants, 10 vowels"
           }
         ],
         "checks": [
@@ -14722,7 +15728,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:tripitaka-koreana",
     "state": "ready",
-    "contentVer": 1,
+    "contentVer": 2,
     "title": {
       "ko": "팔만대장경",
       "romanization": "Palmandaejanggyeong",
@@ -14837,8 +15843,31 @@ export const storiesAll: Story[] = [
             "framing": false,
             "approximations": [],
             "artBrief": "Hoya on a forest path up a green mountain toward a temple with tiled roofs; inset: a long dim hall with tall wooden shelves packed with dark wooden blocks seen through vertical window slats.",
-            "captionEn": "Hoya climbs to Haeinsa Temple",
-            "artPending": true
+            "art": {
+              "setting": "scene:temple",
+              "layers": [
+                {
+                  "ref": "prop:pine-tree",
+                  "x": 40,
+                  "y": 262,
+                  "s": 0.9
+                },
+                {
+                  "ref": "prop:janggyeong-hall",
+                  "x": 200,
+                  "y": 206,
+                  "s": 1.2
+                },
+                {
+                  "ref": "hoya:waving",
+                  "x": 330,
+                  "y": 292,
+                  "s": 0.6
+                }
+              ],
+              "altEn": "Hoya climbs to Haeinsa Temple on Gayasan Mountain and peeks at a long wooden hall full of carved woodblocks."
+            },
+            "captionEn": "Hoya climbs to Haeinsa Temple"
           },
           {
             "id": "s2",
@@ -14856,8 +15885,31 @@ export const storiesAll: Story[] = [
             "framing": false,
             "approximations": [],
             "artBrief": "Rows of wooden printing blocks on shelves, each with small end pieces; warm light falls across them; Hoya stands small and amazed in the aisle. Block faces shown as texture, no readable characters.",
-            "captionEn": "The Tripitaka Koreana woodblocks",
-            "artPending": true
+            "art": {
+              "setting": "scene:hanji-backdrop",
+              "layers": [
+                {
+                  "ref": "prop:woodblock-shelves",
+                  "x": 96,
+                  "y": 266,
+                  "s": 1.2
+                },
+                {
+                  "ref": "prop:woodblock-shelves",
+                  "x": 304,
+                  "y": 266,
+                  "s": 1.2
+                },
+                {
+                  "ref": "hoya:waving",
+                  "x": 200,
+                  "y": 294,
+                  "s": 0.55
+                }
+              ],
+              "altEn": "Hoya stands amazed between shelves packed with the Tripitaka Koreana woodblocks, a complete collection of Buddhist scriptures."
+            },
+            "captionEn": "The Tripitaka Koreana woodblocks"
           },
           {
             "id": "s3",
@@ -14876,8 +15928,27 @@ export const storiesAll: Story[] = [
             "framing": false,
             "approximations": [],
             "artBrief": "Calm workshop scene: carvers in Goryeo clothing bent over wooden boards with small knives, focused and peaceful; distant mountains outside. No fighting, no soldiers.",
-            "captionEn": "Carved in Goryeo, hoping for protection",
-            "artPending": true
+            "art": {
+              "setting": "scene:hanok-room",
+              "layers": [
+                {
+                  "ref": "prop:fig-carver",
+                  "x": 140,
+                  "y": 288,
+                  "s": 1.15,
+                  "tint": "surface.paper"
+                },
+                {
+                  "ref": "prop:fig-carver",
+                  "x": 288,
+                  "y": 288,
+                  "s": 1.15,
+                  "flip": true
+                }
+              ],
+              "altEn": "In Goryeo, from 1237 to 1248, carvers kneel calmly over wooden boards, cutting the scriptures with small knives."
+            },
+            "captionEn": "Carved in Goryeo, hoping for protection"
           },
           {
             "id": "s4",
@@ -14895,8 +15966,33 @@ export const storiesAll: Story[] = [
             "framing": false,
             "approximations": [],
             "artBrief": "Hoya sitting on the floor counting on his paws, dizzy little stars circling his head, with endless shelves of blocks behind him.",
-            "captionEn": "More than 80,000 blocks!",
-            "artPending": true
+            "art": {
+              "setting": "scene:hanji-backdrop",
+              "layers": [
+                {
+                  "ref": "prop:woodblock-shelves",
+                  "x": 96,
+                  "y": 250,
+                  "s": 1.2,
+                  "z": "back"
+                },
+                {
+                  "ref": "prop:woodblock-shelves",
+                  "x": 304,
+                  "y": 250,
+                  "s": 1.2,
+                  "z": "back"
+                },
+                {
+                  "ref": "hoya:thinking",
+                  "x": 200,
+                  "y": 294,
+                  "s": 0.9
+                }
+              ],
+              "altEn": "Hoya tries to count the more than 80,000 woodblocks on the shelves behind him, then laughs."
+            },
+            "captionEn": "More than 80,000 blocks!"
           },
           {
             "id": "s5",
@@ -14914,8 +16010,26 @@ export const storiesAll: Story[] = [
             "framing": false,
             "approximations": [],
             "artBrief": "A single woodblock shown large, tilted to reveal both carved faces as abstract texture, dark lacquer sheen, and small metal plates at the four corners; a cherry tree in blossom behind it.",
-            "captionEn": "Each block is carved on both sides",
-            "artPending": true
+            "art": {
+              "setting": "scene:countryside",
+              "layers": [
+                {
+                  "ref": "prop:leafy-tree",
+                  "x": 322,
+                  "y": 232,
+                  "s": 1.3,
+                  "tint": "brand.primaryLight"
+                },
+                {
+                  "ref": "prop:woodblock",
+                  "x": 180,
+                  "y": 276,
+                  "s": 2.4
+                }
+              ],
+              "altEn": "One woodblock, carved on both sides, lacquered and fitted with metal corner plates, with a wild cherry tree in blossom behind it."
+            },
+            "captionEn": "Each block is carved on both sides"
           },
           {
             "id": "s6",
@@ -14933,8 +16047,26 @@ export const storiesAll: Story[] = [
             "framing": false,
             "approximations": [],
             "artBrief": "Close-up of a carver's steady hands and a small knife over a board covered in tiny, even raised marks (abstract pattern, not real characters); Hoya watches, holding his breath.",
-            "captionEn": "Tens of millions of neat characters",
-            "artPending": true
+            "art": {
+              "setting": "scene:hanji-backdrop",
+              "layers": [
+                {
+                  "ref": "prop:fig-carver",
+                  "x": 196,
+                  "y": 284,
+                  "s": 2,
+                  "tint": "surface.paper"
+                },
+                {
+                  "ref": "hoya:thinking",
+                  "x": 342,
+                  "y": 294,
+                  "s": 0.6
+                }
+              ],
+              "altEn": "A carver cuts tiny, even characters into a board with a small knife, and Hoya watches, holding his breath."
+            },
+            "captionEn": "Tens of millions of neat characters"
           },
           {
             "id": "s7",
@@ -14952,8 +16084,31 @@ export const storiesAll: Story[] = [
             "framing": false,
             "approximations": [],
             "artBrief": "Hoya proudly standing beside a single woodblock displayed on a cushion, with a soft starburst behind it suggesting world recognition. No logos or text.",
-            "captionEn": "A National Treasure, honored by UNESCO",
-            "artPending": true
+            "art": {
+              "setting": "scene:hanji-backdrop",
+              "layers": [
+                {
+                  "ref": "prop:glow-burst",
+                  "x": 196,
+                  "y": 270,
+                  "s": 1.2
+                },
+                {
+                  "ref": "prop:woodblock",
+                  "x": 196,
+                  "y": 250,
+                  "s": 1.6
+                },
+                {
+                  "ref": "hoya:cheering",
+                  "x": 334,
+                  "y": 294,
+                  "s": 0.6
+                }
+              ],
+              "altEn": "Hoya stands proudly beside a glowing woodblock: the blocks are a National Treasure and on the Memory of the World Register."
+            },
+            "captionEn": "A National Treasure, honored by UNESCO"
           },
           {
             "id": "s8",
@@ -14981,8 +16136,31 @@ export const storiesAll: Story[] = [
               }
             ],
             "artBrief": "Evening at Haeinsa: the long storage halls glowing softly at the top of the temple grounds under a starry sky; Hoya sits quietly on the steps.",
-            "captionEn": "Still kept safe at Haeinsa",
-            "artPending": true
+            "art": {
+              "setting": "scene:temple",
+              "layers": [
+                {
+                  "ref": "prop:night-sky",
+                  "x": 200,
+                  "y": 196,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:janggyeong-hall",
+                  "x": 200,
+                  "y": 206,
+                  "s": 1.2
+                },
+                {
+                  "ref": "hoya:idle",
+                  "x": 200,
+                  "y": 294,
+                  "s": 0.6
+                }
+              ],
+              "altEn": "In the evening the long storage halls of Haeinsa rest under the stars, and Hoya sits quietly on the steps."
+            },
+            "captionEn": "Still kept safe at Haeinsa"
           }
         ],
         "checks": [

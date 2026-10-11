@@ -2,7 +2,7 @@
   "v": 1,
   "id": "story:janggyeong-panjeon",
   "state": "ready",
-  "contentVer": 1,
+  "contentVer": 2,
   "title": {
     "ko": "바람이 지키는 장경판전",
     "romanization": "Barami jikineun Janggyeongpanjeon",
@@ -115,8 +115,32 @@
           "framing": false,
           "approximations": [],
           "artBrief": "Hoya climbing stone stairs to a terrace at the top of a mountain temple; two long, plain wooden halls with tiled roofs stand side by side above the other temple roofs.",
-          "captionEn": "The oldest halls still standing at Haeinsa",
-          "artPending": true
+          "art": {
+            "setting": "scene:temple",
+            "layers": [
+              {
+                "ref": "prop:janggyeong-hall",
+                "x": 232,
+                "y": 198,
+                "s": 0.9,
+                "z": "back"
+              },
+              {
+                "ref": "prop:janggyeong-hall",
+                "x": 184,
+                "y": 214,
+                "s": 1
+              },
+              {
+                "ref": "hoya:waving",
+                "x": 200,
+                "y": 294,
+                "s": 0.6
+              }
+            ],
+            "altEn": "Hoya climbs to the highest part of Haeinsa, where the two long halls of Janggyeong Panjeon, its oldest buildings, stand."
+          },
+          "captionEn": "The oldest halls still standing at Haeinsa"
         },
         {
           "id": "s2",
@@ -134,8 +158,26 @@
           "framing": false,
           "approximations": [],
           "artBrief": "Bird's-eye view of four plain wooden buildings forming a rectangle around a sandy courtyard, two long and two short; Hoya waves from the courtyard.",
-          "captionEn": "Four buildings around a courtyard",
-          "artPending": true
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:panjeon-plan",
+                "x": 200,
+                "y": 286,
+                "s": 1.5,
+                "z": "back"
+              },
+              {
+                "ref": "hoya:waving",
+                "x": 200,
+                "y": 234,
+                "s": 0.8
+              }
+            ],
+            "altEn": "Seen from above, two long halls and two small ones form a rectangle around a courtyard, where Hoya waves."
+          },
+          "captionEn": "Four buildings around a courtyard"
         },
         {
           "id": "s3",
@@ -153,8 +195,25 @@
           "framing": false,
           "approximations": [],
           "artBrief": "Front view of a long, simple wooden hall with unpainted pillars and rows of slatted windows; Hoya points out how plain and tidy it looks.",
-          "captionEn": "Plain halls built for one job",
-          "artPending": true
+          "art": {
+            "setting": "scene:temple",
+            "layers": [
+              {
+                "ref": "prop:janggyeong-hall",
+                "x": 200,
+                "y": 250,
+                "s": 1.6
+              },
+              {
+                "ref": "hoya:waving",
+                "x": 342,
+                "y": 296,
+                "s": 0.55
+              }
+            ],
+            "altEn": "A long, plain wooden hall from the 15th century: no fancy decoration, every part made to keep the woodblocks safe."
+          },
+          "captionEn": "Plain halls built for one job"
         },
         {
           "id": "s4",
@@ -172,8 +231,32 @@
           "framing": false,
           "approximations": [],
           "artBrief": "Cutaway side view of a hall: slatted windows of different sizes high and low on opposite walls, with gentle curved arrows of breeze flowing through past the shelves; Hoya's fur ruffles in the wind.",
-          "captionEn": "Windows of different sizes",
-          "artPending": true
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:hall-section",
+                "x": 186,
+                "y": 284,
+                "s": 1.4,
+                "z": "back"
+              },
+              {
+                "ref": "prop:breeze",
+                "x": 186,
+                "y": 200,
+                "s": 1.6
+              },
+              {
+                "ref": "hoya:thinking",
+                "x": 346,
+                "y": 296,
+                "s": 0.55
+              }
+            ],
+            "altEn": "A cutaway hall shows windows of different sizes, high and low on its two walls, letting a breeze flow past the shelves."
+          },
+          "captionEn": "Windows of different sizes"
         },
         {
           "id": "s5",
@@ -191,8 +274,25 @@
           "framing": false,
           "approximations": [],
           "artBrief": "Cross-section of the ground under a hall showing simple colored layers (black charcoal, white lime, pale salt, tan sand) beneath an earthen floor; Hoya kneels, peering at the layers.",
-          "captionEn": "Charcoal, lime and salt under the floor",
-          "artPending": true
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:hall-section",
+                "x": 176,
+                "y": 298,
+                "s": 1.6
+              },
+              {
+                "ref": "hoya:thinking",
+                "x": 364,
+                "y": 296,
+                "s": 0.5
+              }
+            ],
+            "altEn": "Under the earthen floor lie layers of charcoal, lime and salt with sand, soaking up damp and giving it back when the air is dry."
+          },
+          "captionEn": "Charcoal, lime and salt under the floor"
         },
         {
           "id": "s6",
@@ -210,8 +310,37 @@
           "framing": false,
           "approximations": [],
           "artBrief": "Sunlight streaming through slatted windows onto rows of woodblocks; a small mouse and a beetle turn away outside the wall while a breeze swirls leaves; Hoya smiles.",
-          "captionEn": "Wind, sun and earth keep blocks safe",
-          "artPending": true
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:glow-burst",
+                "x": 340,
+                "y": 120,
+                "s": 0.6
+              },
+              {
+                "ref": "prop:woodblock-shelves",
+                "x": 176,
+                "y": 266,
+                "s": 1.4
+              },
+              {
+                "ref": "prop:breeze",
+                "x": 318,
+                "y": 156,
+                "s": 1
+              },
+              {
+                "ref": "hoya:idle",
+                "x": 334,
+                "y": 294,
+                "s": 0.6
+              }
+            ],
+            "altEn": "Sunlight and a gentle breeze keep the woodblocks dry and safe from damp, mice and insects, and Hoya smiles."
+          },
+          "captionEn": "Wind, sun and earth keep blocks safe"
         },
         {
           "id": "s7",
@@ -229,8 +358,46 @@
           "framing": false,
           "approximations": [],
           "artBrief": "The two long halls under a clear autumn sky with colorful maple leaves on the mountain; a soft glowing outline around the buildings suggests special recognition. No logos or text.",
-          "captionEn": "A UNESCO World Heritage site",
-          "artPending": true
+          "art": {
+            "setting": "scene:temple",
+            "layers": [
+              {
+                "ref": "prop:glow-burst",
+                "x": 200,
+                "y": 236,
+                "s": 1.6
+              },
+              {
+                "ref": "prop:janggyeong-hall",
+                "x": 226,
+                "y": 198,
+                "s": 0.9,
+                "z": "back"
+              },
+              {
+                "ref": "prop:janggyeong-hall",
+                "x": 180,
+                "y": 216,
+                "s": 1
+              },
+              {
+                "ref": "prop:leafy-tree",
+                "x": 48,
+                "y": 272,
+                "s": 1,
+                "tint": "feedback.nudge"
+              },
+              {
+                "ref": "prop:leafy-tree",
+                "x": 356,
+                "y": 274,
+                "s": 0.9,
+                "tint": "feedback.nudge"
+              }
+            ],
+            "altEn": "The two long halls stand under a clear autumn sky among maple trees: Janggyeong Panjeon is on the World Heritage List."
+          },
+          "captionEn": "A UNESCO World Heritage site"
         },
         {
           "id": "s8",
@@ -248,8 +415,32 @@
           "framing": false,
           "approximations": [],
           "artBrief": "Hoya and a child quietly peeking through vertical window slats from outside, careful not to touch; inside, shelves of woodblocks rest in calm shadow.",
-          "captionEn": "Entry is limited to keep the air steady",
-          "artPending": true
+          "art": {
+            "setting": "scene:temple",
+            "layers": [
+              {
+                "ref": "prop:janggyeong-hall",
+                "x": 200,
+                "y": 262,
+                "s": 1.7
+              },
+              {
+                "ref": "hoya:idle",
+                "x": 150,
+                "y": 296,
+                "s": 0.6
+              },
+              {
+                "ref": "prop:fig-child",
+                "x": 250,
+                "y": 296,
+                "s": 0.9,
+                "tint": "theme.crafts"
+              }
+            ],
+            "altEn": "Hoya and a child peek through the slatted windows from outside without touching, because entry is limited to protect the blocks."
+          },
+          "captionEn": "Entry is limited to keep the air steady"
         }
       ],
       "checks": [

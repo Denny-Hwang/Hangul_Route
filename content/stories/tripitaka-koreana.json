@@ -2,7 +2,7 @@
   "v": 1,
   "id": "story:tripitaka-koreana",
   "state": "ready",
-  "contentVer": 1,
+  "contentVer": 2,
   "title": {
     "ko": "팔만대장경",
     "romanization": "Palmandaejanggyeong",
@@ -117,8 +117,31 @@
           "framing": false,
           "approximations": [],
           "artBrief": "Hoya on a forest path up a green mountain toward a temple with tiled roofs; inset: a long dim hall with tall wooden shelves packed with dark wooden blocks seen through vertical window slats.",
-          "captionEn": "Hoya climbs to Haeinsa Temple",
-          "artPending": true
+          "art": {
+            "setting": "scene:temple",
+            "layers": [
+              {
+                "ref": "prop:pine-tree",
+                "x": 40,
+                "y": 262,
+                "s": 0.9
+              },
+              {
+                "ref": "prop:janggyeong-hall",
+                "x": 200,
+                "y": 206,
+                "s": 1.2
+              },
+              {
+                "ref": "hoya:waving",
+                "x": 330,
+                "y": 292,
+                "s": 0.6
+              }
+            ],
+            "altEn": "Hoya climbs to Haeinsa Temple on Gayasan Mountain and peeks at a long wooden hall full of carved woodblocks."
+          },
+          "captionEn": "Hoya climbs to Haeinsa Temple"
         },
         {
           "id": "s2",
@@ -136,8 +159,31 @@
           "framing": false,
           "approximations": [],
           "artBrief": "Rows of wooden printing blocks on shelves, each with small end pieces; warm light falls across them; Hoya stands small and amazed in the aisle. Block faces shown as texture, no readable characters.",
-          "captionEn": "The Tripitaka Koreana woodblocks",
-          "artPending": true
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:woodblock-shelves",
+                "x": 96,
+                "y": 266,
+                "s": 1.2
+              },
+              {
+                "ref": "prop:woodblock-shelves",
+                "x": 304,
+                "y": 266,
+                "s": 1.2
+              },
+              {
+                "ref": "hoya:waving",
+                "x": 200,
+                "y": 294,
+                "s": 0.55
+              }
+            ],
+            "altEn": "Hoya stands amazed between shelves packed with the Tripitaka Koreana woodblocks, a complete collection of Buddhist scriptures."
+          },
+          "captionEn": "The Tripitaka Koreana woodblocks"
         },
         {
           "id": "s3",
@@ -156,8 +202,27 @@
           "framing": false,
           "approximations": [],
           "artBrief": "Calm workshop scene: carvers in Goryeo clothing bent over wooden boards with small knives, focused and peaceful; distant mountains outside. No fighting, no soldiers.",
-          "captionEn": "Carved in Goryeo, hoping for protection",
-          "artPending": true
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:fig-carver",
+                "x": 140,
+                "y": 288,
+                "s": 1.15,
+                "tint": "surface.paper"
+              },
+              {
+                "ref": "prop:fig-carver",
+                "x": 288,
+                "y": 288,
+                "s": 1.15,
+                "flip": true
+              }
+            ],
+            "altEn": "In Goryeo, from 1237 to 1248, carvers kneel calmly over wooden boards, cutting the scriptures with small knives."
+          },
+          "captionEn": "Carved in Goryeo, hoping for protection"
         },
         {
           "id": "s4",
@@ -175,8 +240,33 @@
           "framing": false,
           "approximations": [],
           "artBrief": "Hoya sitting on the floor counting on his paws, dizzy little stars circling his head, with endless shelves of blocks behind him.",
-          "captionEn": "More than 80,000 blocks!",
-          "artPending": true
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:woodblock-shelves",
+                "x": 96,
+                "y": 250,
+                "s": 1.2,
+                "z": "back"
+              },
+              {
+                "ref": "prop:woodblock-shelves",
+                "x": 304,
+                "y": 250,
+                "s": 1.2,
+                "z": "back"
+              },
+              {
+                "ref": "hoya:thinking",
+                "x": 200,
+                "y": 294,
+                "s": 0.9
+              }
+            ],
+            "altEn": "Hoya tries to count the more than 80,000 woodblocks on the shelves behind him, then laughs."
+          },
+          "captionEn": "More than 80,000 blocks!"
         },
         {
           "id": "s5",
@@ -194,8 +284,26 @@
           "framing": false,
           "approximations": [],
           "artBrief": "A single woodblock shown large, tilted to reveal both carved faces as abstract texture, dark lacquer sheen, and small metal plates at the four corners; a cherry tree in blossom behind it.",
-          "captionEn": "Each block is carved on both sides",
-          "artPending": true
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:leafy-tree",
+                "x": 322,
+                "y": 232,
+                "s": 1.3,
+                "tint": "brand.primaryLight"
+              },
+              {
+                "ref": "prop:woodblock",
+                "x": 180,
+                "y": 276,
+                "s": 2.4
+              }
+            ],
+            "altEn": "One woodblock, carved on both sides, lacquered and fitted with metal corner plates, with a wild cherry tree in blossom behind it."
+          },
+          "captionEn": "Each block is carved on both sides"
         },
         {
           "id": "s6",
@@ -213,8 +321,26 @@
           "framing": false,
           "approximations": [],
           "artBrief": "Close-up of a carver's steady hands and a small knife over a board covered in tiny, even raised marks (abstract pattern, not real characters); Hoya watches, holding his breath.",
-          "captionEn": "Tens of millions of neat characters",
-          "artPending": true
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:fig-carver",
+                "x": 196,
+                "y": 284,
+                "s": 2,
+                "tint": "surface.paper"
+              },
+              {
+                "ref": "hoya:thinking",
+                "x": 342,
+                "y": 294,
+                "s": 0.6
+              }
+            ],
+            "altEn": "A carver cuts tiny, even characters into a board with a small knife, and Hoya watches, holding his breath."
+          },
+          "captionEn": "Tens of millions of neat characters"
         },
         {
           "id": "s7",
@@ -232,8 +358,31 @@
           "framing": false,
           "approximations": [],
           "artBrief": "Hoya proudly standing beside a single woodblock displayed on a cushion, with a soft starburst behind it suggesting world recognition. No logos or text.",
-          "captionEn": "A National Treasure, honored by UNESCO",
-          "artPending": true
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:glow-burst",
+                "x": 196,
+                "y": 270,
+                "s": 1.2
+              },
+              {
+                "ref": "prop:woodblock",
+                "x": 196,
+                "y": 250,
+                "s": 1.6
+              },
+              {
+                "ref": "hoya:cheering",
+                "x": 334,
+                "y": 294,
+                "s": 0.6
+              }
+            ],
+            "altEn": "Hoya stands proudly beside a glowing woodblock: the blocks are a National Treasure and on the Memory of the World Register."
+          },
+          "captionEn": "A National Treasure, honored by UNESCO"
         },
         {
           "id": "s8",
@@ -261,8 +410,31 @@
             }
           ],
           "artBrief": "Evening at Haeinsa: the long storage halls glowing softly at the top of the temple grounds under a starry sky; Hoya sits quietly on the steps.",
-          "captionEn": "Still kept safe at Haeinsa",
-          "artPending": true
+          "art": {
+            "setting": "scene:temple",
+            "layers": [
+              {
+                "ref": "prop:night-sky",
+                "x": 200,
+                "y": 196,
+                "s": 1
+              },
+              {
+                "ref": "prop:janggyeong-hall",
+                "x": 200,
+                "y": 206,
+                "s": 1.2
+              },
+              {
+                "ref": "hoya:idle",
+                "x": 200,
+                "y": 294,
+                "s": 0.6
+              }
+            ],
+            "altEn": "In the evening the long storage halls of Haeinsa rest under the stars, and Hoya sits quietly on the steps."
+          },
+          "captionEn": "Still kept safe at Haeinsa"
         }
       ],
       "checks": [
