@@ -114,4 +114,25 @@ describe('flags', () => {
     const src = readFileSync(join(__dirname, '../flags.ts'), 'utf8');
     expect(src).toContain('process.env.EXPO_PUBLIC_AUDIO_CLIPS');
   });
+
+  it('myRouteEnabled (F-ROUTE-001 rollout) is OFF by default and flips on with "true" or "1"', async () => {
+    delete process.env.EXPO_PUBLIC_MY_ROUTE_ENABLED;
+    let mod = await reload();
+    expect(mod.flags.myRouteEnabled).toBe(false);
+    expect(mod.launchDefaultFlags.myRouteEnabled).toBe(false);
+    process.env.EXPO_PUBLIC_MY_ROUTE_ENABLED = 'true';
+    mod = await reload();
+    expect(mod.flags.myRouteEnabled).toBe(true);
+    process.env.EXPO_PUBLIC_MY_ROUTE_ENABLED = '1';
+    mod = await reload();
+    expect(mod.flags.myRouteEnabled).toBe(true);
+    process.env.EXPO_PUBLIC_MY_ROUTE_ENABLED = 'maybe';
+    mod = await reload();
+    expect(mod.flags.myRouteEnabled).toBe(false);
+  });
+
+  it('myRouteEnabled is read by its literal name, so a web build can carry the override', () => {
+    const src = readFileSync(join(__dirname, '../flags.ts'), 'utf8');
+    expect(src).toContain('process.env.EXPO_PUBLIC_MY_ROUTE_ENABLED');
+  });
 });

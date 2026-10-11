@@ -112,4 +112,34 @@ export const a11y = {
   leaveSpace: (name: string) => `Leave ${name}`,
   /** The paywall offer card: its name, then the already-formatted price. */
   lifetimeOffer: (name: string, price: string) => `${name}, ${price}`,
+
+  /** My route (F-ROUTE-001 section 3.14): each row label reads the row; the pips are hidden. */
+  myRoute: {
+    stage: (order: number, title: string, stateWord: string, here: boolean, start: boolean, played: number) =>
+      [
+        `Stage ${order}, ${title}.`,
+        `${stateWord}.`,
+        here ? 'You are here.' : '',
+        start ? 'You started here.' : '',
+        played > 0 ? `${plural('en', played, { one: '1 quest', other: `${played} quests` })} played.` : '',
+      ]
+        .filter((part) => part !== '')
+        .join(' '),
+    stageGrownup: (name: string, order: number, title: string, stateWord: string, here: boolean, start: boolean, played: number) =>
+      [
+        `Stage ${order}, ${title}.`,
+        `${stateWord}.`,
+        here ? `${name} is here.` : '',
+        start ? `${name} started here.` : '',
+        played > 0 ? `${plural('en', played, { one: '1 quest', other: `${played} quests` })} played.` : '',
+      ]
+        .filter((part) => part !== '')
+        .join(' '),
+    /** The merged coming-later row ("Stages 5 to 7") and a single one. */
+    later: (label: string, stateWord: string) => `${label}. ${stateWord}.`,
+    trail: 'Stage list',
+    cell: (theme: string, title: string, word: string) => `${theme}: ${title}. ${word}.`,
+    skill: (label: string, detail: string) => `${label}. ${detail}.`,
+    gain: (word: string, n: number) => `${word}: ${n}`,
+  },
 } as const;

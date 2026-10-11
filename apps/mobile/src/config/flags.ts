@@ -81,6 +81,13 @@ export interface Flags {
    * batch of clips off without a code change (prompts then use the voice).
    */
   audioClips: boolean;
+
+  /**
+   * My route (F-ROUTE-001): the "where am I in the whole journey" page and its
+   * entries (the Journey header button in R-3). OFF until R-10 flips it for
+   * the beta. The stage latch writer (R-1b) runs with it off.
+   */
+  myRouteEnabled: boolean;
 }
 
 const launchDefaults: Flags = {
@@ -92,6 +99,7 @@ const launchDefaults: Flags = {
   showUnreviewedStories: false,
   placementEnabled: false,
   audioClips: true,
+  myRouteEnabled: false,
 };
 
 export const flags: Flags = {
@@ -109,6 +117,7 @@ export const flags: Flags = {
   ),
   placementEnabled: readBool('EXPO_PUBLIC_PLACEMENT_ENABLED', launchDefaults.placementEnabled),
   audioClips: parseBool(process.env.EXPO_PUBLIC_AUDIO_CLIPS, launchDefaults.audioClips),
+  myRouteEnabled: parseBool(process.env.EXPO_PUBLIC_MY_ROUTE_ENABLED, launchDefaults.myRouteEnabled),
 };
 
 export const launchDefaultFlags: Readonly<Flags> = launchDefaults;

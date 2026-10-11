@@ -115,6 +115,13 @@ export interface MyRouteInput {
   isEntitled: (stage: StageKey) => boolean;
   /** `effectiveRoute(placements, catalog, { isEntitled, completedQuestIds: new Set() })`; null until R-7a. */
   route: RouteSeed | null;
+  /**
+   * The placed-out quests the one cursor skips: `cursorContext(...).skipQuestIds`,
+   * the same set Home and Results pass (R-4a, section 3.5). Joined with
+   * `route.placedOutQuestIds`; it moves only the cursor (known pips need the
+   * route, R-7a).
+   */
+  skipQuestIds?: ReadonlySet<string>;
   seen?: SeenRecord;
   now: Date;
 }
