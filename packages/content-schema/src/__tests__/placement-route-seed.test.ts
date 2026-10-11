@@ -66,6 +66,18 @@ describe('priorityTokensOf', () => {
     expect(priorityTokensOf([gate('sound-basic', 'fail'), gate('syl-cv', 'fail')], [], tagsOf)).toEqual([]);
   });
 
+  it('a strict-rule fail with two correct (Short syl-cv 2 of 3) adds no blending token', () => {
+    const nearly: GateResult = { ...gate('syl-cv', 'fail'), correct: 2 };
+    expect(priorityTokensOf([gate('sound-basic', 'pass'), nearly], [], tagsOf)).toEqual([]);
+  });
+
+  it('Deep rows: a syl-cv pass followed by a failed confirming draw adds blending; a failed sound confirmation does not count as a sound pass', () => {
+    expect(priorityTokensOf([gate('sound-basic', 'pass'), gate('syl-cv', 'pass'), gate('syl-cv', 'fail')], [], tagsOf)).toEqual([
+      'skill:blending',
+    ]);
+    expect(priorityTokensOf([gate('sound-basic', 'pass'), gate('sound-basic', 'fail'), gate('syl-cv', 'fail')], [], tagsOf)).toEqual([]);
+  });
+
   it('adds skill:finals whenever syl-cvc failed, and symbols come before skills within the cap of three', () => {
     expect(priorityTokensOf([gate('syl-cvc', 'fail')], [], tagsOf)).toEqual(['skill:finals']);
     const rs = [resp('a', 'wrong'), resp('b', 'wrong'), resp('c', 'wrong')];
@@ -208,7 +220,37 @@ describe('effectiveRoute', () => {
     expect(route.placedOutQuestIds).toEqual(qs(1, 2, 3, 4, 5, 6, 7, 8, 9, 10));
     expect(route.level).toEqual({ stage: 'stage1', band: 3 });
     expect(route.priorityTokens).toEqual(['sym:ㅡ']);
-    expect(route.oralStage).toBeNull();
+    // listening is the highest any result measured; a run that did not ask it does not lower it
+    expect(route.oralStage).toBe('stage2');
+  });
+
+  it('takes the highest listening level, null only when no result measured listening', () => {
+    expect(effectiveRoute([low], STAGE1_15, paid)!.oralStage).toBeNull();
+    const heard = makeResult({ id: 'placement:heard', completedAt: at(3), oralStage: 'stage3' });
+    expect(effectiveRoute([high, low, heard], STAGE1_15, paid)!.oralStage).toBe('stage3');
+    expect(effectiveRoute([heard, makeResult({ id: 'placement:later', completedAt: at(4), oralStage: 'stage1' })], STAGE1_15, paid)!.oralStage).toBe('stage3');
+  });
+
+  it('a Short taken when the route is already at band 1 or higher does not replace the priority tokens or lower the listening level', () => {
+    const short = makeResult({ id: 'placement:short', completedAt: at(3), length: 'quick', mode: 'short', priorityTokens: ['skill:blending'] });
+    expect(effectiveRoute([high, short], STAGE1_15, paid)!.priorityTokens).toEqual(['sym:ㅓ']);
+    // listening level: the highest any result measured (3.7, P20), so a later Short never lowers it...
+    const shortHeardLess = { ...short, oralStage: 'stage1' as const };
+    expect(effectiveRoute([high, shortHeardLess], STAGE1_15, paid)!.oralStage).toBe('stage2');
+    const shortHeardNothing = { ...short, oralStage: null };
+    expect(effectiveRoute([high, shortHeardNothing], STAGE1_15, paid)!.oralStage).toBe('stage2');
+    // ...and one that measured more raises it
+    const highHeardLess = { ...high, oralStage: 'stage1' as const };
+    expect(effectiveRoute([highHeardLess, { ...short, oralStage: 'stage2' as const }], STAGE1_15, paid)!.oralStage).toBe('stage2');
+    // a legacy quick result without `mode` reads as Short
+    const { mode: _m, ...legacyQuick } = short;
+    expect(effectiveRoute([high, legacyQuick], STAGE1_15, paid)!.priorityTokens).toEqual(['sym:ㅓ']);
+    // while the route is still at band 0, a Short can supply tokens
+    const start = makeResult({ id: 'placement:start', completedAt: at(1), priorityTokens: ['sym:ㄱ'] });
+    expect(effectiveRoute([start, short], STAGE1_15, paid)!.priorityTokens).toEqual(['skill:blending']);
+    // a Standard or Deep retake can still move the route, so its tokens replace older ones
+    const deep = makeResult({ id: 'placement:deep', completedAt: at(3), mode: 'deep', priorityTokens: ['sym:ㅠ'] });
+    expect(effectiveRoute([high, deep], STAGE1_15, paid)!.priorityTokens).toEqual(['sym:ㅠ']);
   });
 
   it('does not depend on the array order, only on completedAt', () => {

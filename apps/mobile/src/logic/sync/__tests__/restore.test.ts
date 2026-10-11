@@ -36,6 +36,12 @@ describe('planRestore (F-SYNC-002 §3.3)', () => {
     expect(plan.added).toEqual({ cards: 1, quests: 0 });
     expect(restoreNotice(plan, m)).toBe("We found Suni's progress! Added 1 card.");
   });
+  it('keeps the stage latch a backup file carries when merging into a copy without it (F-ROUTE-001 section 3.15)', () => {
+    const latch = { stage1: '2026-09-20T10:00:00.000Z' };
+    const plan = planRestore({ ...file, snapshot: { ...file.snapshot, stageDoneAt: latch } }, { profile, snapshot: snap(['c1'], ['q1']) }, NOW);
+    expect(plan.action).toBe('merge');
+    expect(plan.snapshot.stageDoneAt).toEqual(latch);
+  });
   it('says so when the file adds nothing, and pluralizes', () => {
     const same = planRestore(file, { profile, snapshot: file.snapshot }, NOW);
     expect(restoreNotice(same, m)).toBe('Suni already has everything from this file.');

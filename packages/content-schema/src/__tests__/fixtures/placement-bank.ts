@@ -47,7 +47,8 @@ export interface TemplateSpec {
   audio?: boolean;
 }
 
-const AUDIO_FORMATS: Format[] = ['hear-pick-written', 'hear-pick-picture', 'reply-pick'];
+// The same list as PLACEMENT_AUDIO_FORMATS (build-syllable's prompt is the speaker).
+const AUDIO_FORMATS: Format[] = ['hear-pick-written', 'build-syllable', 'hear-pick-picture', 'reply-pick'];
 
 export const template = (spec: TemplateSpec): PlacementTemplateInput => ({
   id: `pitem:${spec.id}`,

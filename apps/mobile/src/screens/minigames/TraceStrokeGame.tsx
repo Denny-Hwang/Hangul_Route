@@ -12,6 +12,7 @@ import {
   radii,
   spacing,
   typography,
+  useLayoutClass,
 } from '@hangul-route/design-system';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { View } from 'react-native';
@@ -28,7 +29,13 @@ import { buildTraceStrokeRounds, type TraceStrokeRound } from '../../logic/round
 import { pointsToPathD } from '../../logic/stroke-diagram';
 import { DEFAULT_PASS_THRESHOLD, scoreTrace } from '../../logic/stroke-scoring';
 import { directionNudgeFor, failMessage, passMessage, type DirectionNudge } from '../../logic/trace-copy';
-import { traceCanvasSize, traceLayoutMode, traceSidePanelWidth } from '../../logic/trace-layout';
+import {
+  traceCanvasMax,
+  traceCanvasSize,
+  traceLayoutMode,
+  traceScreenWidth,
+  traceSidePanelWidth,
+} from '../../logic/trace-layout';
 import { TRACE_IDLE_MS, createTraceEvaluator, type TraceEvaluator } from '../../logic/trace-evaluator';
 import { StrokeHint } from './StrokeHint';
 import { playJamo } from '../../platform/audio';
@@ -94,7 +101,10 @@ export function TraceStrokeGame({
   // Measured: the screen's content box (picks the layout) and the canvas slot (sizes the canvas).
   const [box, setBox] = useState<Size | null>(null);
   const [slot, setSlot] = useState<Size | null>(null);
-  const canvasSize = slot ? traceCanvasSize(slot.width, slot.height) : 0;
+  // F-LAYOUT-001 §3.6: the canvas grows with the window class (320 x mediaScale, at most 448), and a
+  // wide landscape window takes the full width so the controls go beside the canvas.
+  const layoutClass = useLayoutClass();
+  const canvasSize = slot ? traceCanvasSize(slot.width, slot.height, traceCanvasMax(layoutClass)) : 0;
 
   const round = rounds[roundIdx];
   const target = useMemo(
@@ -405,7 +415,7 @@ export function TraceStrokeGame({
   return (
     // The canvas owns vertical drags, so this screen opts out of scrolling and instead
     // sizes the canvas from the height the controls leave (UX-09: Done and Skip stay on screen).
-    <Screen tone="canvas" scrollable={false}>
+    <Screen tone="canvas" scrollable={false} width={traceScreenWidth(layoutClass)}>
       <View
         onLayout={(e: LayoutChangeEvent) => {
           const { width, height } = e.nativeEvent.layout;

@@ -65,6 +65,12 @@ describe('telemetry event names (one list for the client type and the API whitel
         'space.transfer.declined',
         'space.transfer.cancelled',
         'space.transfer.completed',
+        'route_map.viewed',
+        'route_map.stage_opened',
+        'route_map.continue_tapped',
+        'layout.observed',
+        'layout.guard_shown',
+        'layout.guard_dismissed',
       ].sort(),
     );
     expect(new Set(TELEMETRY_EVENT_NAMES).size).toBe(TELEMETRY_EVENT_NAMES.length);
@@ -75,6 +81,13 @@ describe('telemetry event names (one list for the client type and the API whitel
     expect(TelemetryEventNameSchema.safeParse('parent.notify.queued').success).toBe(false);
     expect(TelemetryEventNameSchema.safeParse('').success).toBe(false);
     expect(TelemetryEventNameSchema.safeParse(42).success).toBe(false);
+  });
+
+  it('lists the three route_map names of F-ROUTE-001 section 3.16 (Worker first, R-W1)', () => {
+    for (const name of ['route_map.viewed', 'route_map.stage_opened', 'route_map.continue_tapped']) {
+      expect(isTelemetryEventName(name)).toBe(true);
+    }
+    expect(isTelemetryEventName('route_map.opened')).toBe(false);
   });
 
   it('narrows unknown input with isTelemetryEventName', () => {

@@ -337,6 +337,44 @@ describe('placements and summary.placement (F-PLC-001 section 3.8, the additive 
     expect(got.data.summary.placement).toEqual(placementSummary);
   });
 
+  it('round-trips a long Deep result with its mode (42 responses, 14 rows; F-PLC-001 P17), next to a legacy result without one', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    const row = (gate: string, form: string) => ({ gate, form, asked: 3, correct: 3, assisted: 0, result: 'pass' });
+    const deepRows = [
+      row('recog', 'decode'),
+      ...['sound-basic', 'syl-cv', 'sound-rest', 'syl-cvc'].flatMap((g) => [row(g, 'decode'), row(g, 'decode')]),
+      row('vocab', 'read'),
+      row('vocab', 'read'),
+      row('sentence', 'read'),
+      row('sentence', 'read'),
+      row('sentence', 'oral'),
+    ];
+    const deep = {
+      ...placementResult,
+      id: 'placement:2026-10-11-deep',
+      completedAt: '2026-10-11T10:20:00.000Z',
+      length: 'full',
+      mode: 'deep',
+      responses: Array.from({ length: 42 }, (_, i) => ({ ...placementResult.responses[0], questionId: `pitem:deep-${i}` })),
+      gates: deepRows,
+      level: { stage: 'stage3', band: 0 },
+      oralStage: 'stage3',
+    };
+    const short = { ...placementResult, id: 'placement:2026-10-11-short', length: 'quick', mode: 'short' };
+    const res = await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withPlacements(r.learnerId, [placementResult, short, deep]), summary: { ...summary, placement: placementSummary } });
+    expect(res.status).toBe(200);
+    const got = await getStored(r.learnerId, auth);
+    expect(got.data.snapshot.placements).toEqual([placementResult, short, deep]);
+    const stored = got.data.snapshot.placements as Array<{ mode?: string; responses: unknown[]; gates: unknown[] }>;
+    expect(stored[0]).not.toHaveProperty('mode');
+    expect(stored[2]?.mode).toBe('deep');
+    expect(stored[2]?.responses).toHaveLength(42);
+    expect(stored[2]?.gates).toHaveLength(14);
+    // The summary carries no mode (statuses and the level only).
+    expect(got.data.summary.placement).toEqual(placementSummary);
+  });
+
   it('an old client (neither field) is accepted exactly as today and reads back with an empty list', async () => {
     const r = await register(DEVICE_A);
     const auth = deviceAuth(DEVICE_A, r.secret);
@@ -397,8 +435,14 @@ describe('placements and summary.placement (F-PLC-001 section 3.8, the additive 
     const auth = deviceAuth(DEVICE_A, r.secret);
     const badResult = await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withPlacements(r.learnerId, [{ ...placementResult, id: 'review:x' }]), summary });
     expect(badResult.status).toBe(422);
-    const tooMany = await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withPlacements(r.learnerId, [{ ...placementResult, responses: Array(25).fill(placementResult.responses[0]) }]), summary });
+    const tooMany = await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withPlacements(r.learnerId, [{ ...placementResult, responses: Array(49).fill(placementResult.responses[0]) }]), summary });
     expect(tooMany.status).toBe(422);
+    const tooManyRows = await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withPlacements(r.learnerId, [{ ...placementResult, gates: Array(17).fill(placementResult.gates[0]) }]), summary });
+    expect(tooManyRows.status).toBe(422);
+    const badMode = await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withPlacements(r.learnerId, [{ ...placementResult, mode: 'quick' }]), summary });
+    expect(badMode.status).toBe(422);
+    const badLength = await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withPlacements(r.learnerId, [{ ...placementResult, length: 'deep' }]), summary });
+    expect(badLength.status).toBe(422);
     const badSummary = await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: snapshotFor(r.learnerId), summary: { ...summary, placement: { ...placementSummary, level: { stage: 'stage1', band: 9 } } } });
     expect(badSummary.status).toBe(422);
     expect(await db.getSnapshot(r.learnerId)).toBeNull();
@@ -417,5 +461,109 @@ describe('placements and summary.placement (F-PLC-001 section 3.8, the additive 
     expect(got.data.snapshot).not.toHaveProperty('extra');
     expect(got.data.summary).not.toHaveProperty('extra');
     expect(got.data.summary.placement).toEqual(placementSummary);
+  });
+});
+
+describe('stageDoneAt (F-ROUTE-001 section 3.15, the stage latch and the additive preserve rule)', () => {
+  beforeEach(() => db.reset());
+  const base = { schemaVer: 1, contentVer: '2026.10' };
+  const latch = { stage1: '2026-10-11T09:30:00.000Z' };
+  const withLatch = (profileId: string, stageDoneAt: unknown, quests: Array<{ questId: string; stars: 0 | 1 | 2 | 3 }> = []) => ({ ...snapshotFor(profileId, quests), stageDoneAt });
+
+  type Stored = { data: { rev: number; snapshot: { stageDoneAt?: Record<string, string>; quests: unknown[] }; summary: Record<string, unknown> } };
+  async function getStored(learnerId: string, auth: Record<string, string>) {
+    const res = await app.request(`/api/sync/learners/${learnerId}/snapshot`, { headers: auth });
+    return (await res.json()) as Stored;
+  }
+
+  it('round-trips the latch', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    expect((await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withLatch(r.learnerId, latch), summary })).status).toBe(200);
+    expect((await getStored(r.learnerId, auth)).data.snapshot.stageDoneAt).toEqual(latch);
+  });
+
+  it('an old client (no field) is accepted exactly as today and reads back without the key', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    expect((await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: snapshotFor(r.learnerId), summary })).status).toBe(200);
+    expect((await getStored(r.learnerId, auth)).data.snapshot).not.toHaveProperty('stageDoneAt');
+  });
+
+  it('preserve rule: an old client re-uploading without the field cannot erase an earned latch', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withLatch(r.learnerId, latch), summary });
+
+    const old = await put(r.learnerId, auth, { ...base, baseRev: 1, snapshot: snapshotFor(r.learnerId, [{ questId: 'quest:a', stars: 3 }]), summary: { ...summary, streakDays: 4 } });
+    expect(old.status).toBe(200);
+    expect(old.json.data?.rev).toBe(2);
+
+    const got = await getStored(r.learnerId, auth);
+    expect(got.data.snapshot.stageDoneAt).toEqual(latch);
+    // everything the old client did send is taken as sent
+    expect(got.data.snapshot.quests).toHaveLength(1);
+    expect(got.data.summary.streakDays).toBe(4);
+  });
+
+  it('an empty record counts as unset and keeps the stored latch', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withLatch(r.learnerId, latch), summary });
+    expect((await put(r.learnerId, auth, { ...base, baseRev: 1, snapshot: withLatch(r.learnerId, {}), summary })).status).toBe(200);
+    expect((await getStored(r.learnerId, auth)).data.snapshot.stageDoneAt).toEqual(latch);
+  });
+
+  it('a client that sends a latch record is unioned with the stored one (earliest time wins)', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withLatch(r.learnerId, latch), summary });
+    const next = { stage1: '2026-10-12T00:00:00.000Z', stage2: '2026-11-01T08:00:00.000Z' };
+    expect((await put(r.learnerId, auth, { ...base, baseRev: 1, snapshot: withLatch(r.learnerId, next), summary })).status).toBe(200);
+    expect((await getStored(r.learnerId, auth)).data.snapshot.stageDoneAt).toEqual({ ...latch, stage2: next.stage2 });
+  });
+
+  it('an old build that synced without the latch and then upgraded cannot erase a latch another device earned', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    // device A (new build) latches stage2: rev 1
+    const stage2 = { stage2: '2026-10-11T09:30:00.000Z' };
+    await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withLatch(r.learnerId, stage2), summary });
+    // device B (old build) uploads without the field: the preserve rule keeps stage2, rev 2
+    expect((await put(r.learnerId, auth, { ...base, baseRev: 1, snapshot: snapshotFor(r.learnerId), summary })).status).toBe(200);
+    // device B upgrades, latches stage1 locally and uploads at its in-sync rev without ever having seen stage2
+    const stage1 = { stage1: '2026-10-12T10:00:00.000Z' };
+    expect((await put(r.learnerId, auth, { ...base, baseRev: 2, snapshot: withLatch(r.learnerId, stage1), summary })).status).toBe(200);
+    expect((await getStored(r.learnerId, auth)).data.snapshot.stageDoneAt).toEqual({ ...stage2, ...stage1 });
+  });
+
+  it('a 409 hands the stored latch back for the client merge', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withLatch(r.learnerId, latch), summary });
+    const stale = await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: snapshotFor(r.learnerId), summary });
+    expect(stale.status).toBe(409);
+    const body = stale.json as unknown as { data: { snapshot: { stageDoneAt: Record<string, string> } } };
+    expect(body.data.snapshot.stageDoneAt).toEqual(latch);
+  });
+
+  it('rejects a malformed latch with 422 and stores nothing', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    for (const bad of [null, ['stage1'], { stage1: 1 }]) {
+      expect((await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withLatch(r.learnerId, bad), summary })).status).toBe(422);
+    }
+    expect(await db.getSnapshot(r.learnerId)).toBeNull();
+  });
+
+  it('keeps the placements preserve rule working next to the latch', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    const stored = { ...withLatch(r.learnerId, latch), placements: [] };
+    await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: stored, summary });
+    expect((await put(r.learnerId, auth, { ...base, baseRev: 1, snapshot: snapshotFor(r.learnerId), summary })).status).toBe(200);
+    const got = await getStored(r.learnerId, auth);
+    expect(got.data.snapshot.stageDoneAt).toEqual(latch);
+    expect((got.data.snapshot as { placements?: unknown[] }).placements).toEqual([]);
   });
 });

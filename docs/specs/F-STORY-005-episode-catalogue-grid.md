@@ -113,21 +113,21 @@ Columns: shelf id = `episode:shelf-<slug>`; **home cell** = `<recommendedStage>-
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | 1 | sejong-new-letters | King Sejong's New Letters | stage1-letters | letters | 1 | 4 | L | culture 1 | S | A1 | hangul-printing |
 | 2 | shapes-of-hangeul | The Secret in the Shapes | stage1-letters | letters | 1 | 5 | L | culture 2 |  | A1 | hangul-printing |
-| 3 | hangeul-day | Happy Hangeul Day! | stage1-letters | letters | 1 | 4 | L | culture 3 | S | A1 | hangul-printing |
+| 3 | hangeul-day | Happy Hangul Day! | stage1-letters | letters | 1 | 4 | L | culture 3 | S | A1 | hangul-printing |
 | 4 | tripitaka-koreana | Eighty Thousand Woodblocks | stage1-letters | letters | 1 | 5 | L | culture 4 |  | A2 | hangul-printing |
 | 5 | sillok-royal-historians | Hoya Meets the Royal Historians | stage1-letters | letters | 1 | 4 | L | culture 5 |  | A3 | records-joseon |
-| 6 | kim-hongdo-genre-paintings | Kim Hong-do's Pictures of Everyday Life | stage1-life | life | 1 | 5 | L | culture 7 |  | B1 | science-art-life |
+| 6 | kim-hongdo-genre-paintings | Kim Hongdo's Pictures of Everyday Life | stage1-life | life | 1 | 5 | L | culture 7 |  | B1 | science-art-life |
 | 7 | seollal-new-year | Hoya's Seollal Morning | stage1-rites | rites | 1 | 4 | L | story-time 1 | S | B5 | seasons-tales |
-| 8 | chuseok-ganggangsullae | Chuseok: Songpyeon Under the Full Moon | stage1-rites | rites | 1 | 5 | L | story-time 2 | S | B5, C4 | seasons-tales |
+| 8 | chuseok-ganggangsullae | Chuseok: Songpyeon and the Full Moon | stage1-rites | rites | 1 | 5 | L | story-time 2 | S | B5, C4 | seasons-tales |
 | 9 | sun-and-moon | The Sun and the Moon (A Traditional Tale) | stage1-nature | nature | 1 | 5 | L | story-time 3 | S | D5*, D2 | seasons-tales |
 | 10 | cheugugi-rain-gauge | The Bowl That Measured the Rain | stage1-crafts | crafts | 1 | 4 | L | culture 6 | S | E3 | science-art-life |
 | 11 | sillok-mountain-archives | The Annals Hide in the Mountains | stage2-letters | letters | 2 | 5 | – | culture 8 |  | A3 | records-joseon |
-| 12 | jikji-metal-type | Jikji: Letters Made of Metal | stage2-letters | letters | 2 | 5 | – | culture 9 |  | A5 | hangul-printing |
+| 12 | jikji-metal-type | Jikji: Printed with Metal Type | stage2-letters | letters | 2 | 5 | – | culture 9 |  | A5 | hangul-printing |
 | 13 | gimjang-arirang | Gimjang Day: Sharing Kimchi, Singing Arirang | stage2-life | life | 2 | 5 | L | story-time 5 |  | B5, C4 | seasons-tales |
 | 14 | dano-ssireum | Dano Day: Swings, Masks and Ssireum | stage2-rites | rites | 2 | 5 | – | story-time 4 |  | B5, C4 | seasons-tales |
 | 15 | angbuilgu-sundial | The Sky-Facing Pot That Told the Time | stage2-nature | nature | 2 | 4 | L | culture 11 |  | E3, E5 | science-art-life |
 | 16 | janggyeong-panjeon | Guarded by the Wind | stage2-crafts | crafts | 2 | 5 | – | culture 10 |  | A2, D3 | hangul-printing |
-| 17 | jagyeongnu-water-clock | Jang Yeong-sil and the Clock That Rang by Itself | stage2-crafts | crafts | 2 | 5 | – | culture 12 |  | E3 | science-art-life |
+| 17 | jagyeongnu-water-clock | Jang Yeongsil and the Clock That Rang by Itself | stage2-crafts | crafts | 2 | 5 | – | culture 12 |  | E3 | science-art-life |
 | 18 | pansori-tales | Pansori Tales: Heungbu's Swallow and the Clever Rabbit (Traditional Tales) | stage2-crafts | crafts | 2 | 6 | – | story-time 6 |  | C3, D5* | seasons-tales |
 | 19 | seungjeongwon-ilgi-every-day | The Royal Secretariat's Everyday Diary | stage3-letters | letters | 3 | 5 | – | culture 13 |  | A4 | records-joseon |
 | 20 | nanjung-ilgi | Admiral Yi's Diary | stage3-letters | letters | 3 | 4 | – | culture 14 |  | A4 | science-art-life |

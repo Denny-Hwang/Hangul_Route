@@ -19,6 +19,7 @@ import {
   type ResolvedLayer,
   type ResolvedScene,
 } from './resolve';
+import { HOYA_POSES, hoyaItem } from './hoya';
 import { isColorToken } from './tokens-map';
 import { OPACITY_STEPS, SCENE_CANVAS, type ColorToken, type ItemDef, type SceneArtLike, type Shape } from './types';
 
@@ -47,6 +48,7 @@ export const LIMITS = {
   sceneLayers: 8,
   sceneShapes: 160,
   sceneShapesThumb: 80,
+  /** Distinct colour tokens per scene, Hoya's own palette not counted (R-S5). */
   sceneColors: 8,
   altChars: 140,
   /** A layer's bounds may overhang the canvas by this many units. */
@@ -111,6 +113,16 @@ interface Leaf {
   detail: boolean;
 }
 
+/**
+ * Hoya's fixed character palette, per `hoya:<pose>` ref: the tokens the shipped
+ * Hoya.tsx draws in that pose (7-9, accents included). R-I and R-S5 leave these
+ * out of their colour caps; anything else on a hoya:* item or layer, such as
+ * a colour a layer `tint` brings onto him, still counts.
+ */
+const HOYA_PALETTE: ReadonlyMap<string, ReadonlySet<ColorToken>> = new Map(
+  HOYA_POSES.map((pose) => [`hoya:${pose}`, new Set(paletteOf(hoyaItem(pose)))]),
+);
+
 function walk(shapes: readonly Shape[], depth: number, detail: boolean, visit: (s: Shape, depth: number) => void, leaves: Leaf[]): void {
   for (const shape of shapes) {
     visit(shape, depth);
@@ -150,8 +162,10 @@ export function checkItem(item: ItemDef): Finding[] {
   if (total > maxShapes) err('I-shapes', `${total} shapes, at most ${maxShapes}`);
 
   const maxColors = setting ? LIMITS.settingColors : LIMITS.propColors;
-  const colorCount = paletteOf(item).length;
-  if (colorCount > maxColors) err('I-palette', `${colorCount} colour tokens, at most ${maxColors}`);
+  const palette = paletteOf(item);
+  const hoyaOwn = HOYA_PALETTE.get(item.id);
+  const characterPalette = hoyaOwn !== undefined && palette.every((t) => hoyaOwn.has(t));
+  if (palette.length > maxColors && !characterPalette) err('I-palette', `${palette.length} colour tokens, at most ${maxColors}`);
 
   item.nodes.forEach((shape, i) => {
     const b = boundsOf([shape]);
@@ -215,6 +229,25 @@ function groundFill(scene: ResolvedScene, horizonY: number): ColorToken | undefi
     if (!best || area(b) > best.size) best = { fill: n.shape.fill, size: area(b) };
   }
   return best?.fill;
+}
+
+/**
+ * The colour tokens R-S5's cap counts: every token in the scene except those
+ * only Hoya draws from his fixed character palette (7-9 tokens per pose, the
+ * shipped Hoya.tsx palette), as it sits outside the item cap. Decided by the
+ * main session under the owner's standing delegation, 2026-10-11 (F-STORY-002
+ * decision 15). A token he shares with another item still counts through that
+ * item, and a colour a tint brings onto him counts. Sorted.
+ */
+export function cappedPalette(scene: ResolvedScene): ColorToken[] {
+  const set = new Set<ColorToken>();
+  for (const n of scene.nodes) {
+    const own = HOYA_PALETTE.get(n.ref);
+    for (const token of [n.shape.fill === 'none' ? undefined : n.shape.fill, n.shape.stroke]) {
+      if (token !== undefined && !own?.has(token)) set.add(token);
+    }
+  }
+  return [...set].sort();
 }
 
 export function checkScene(art: SceneArtLike, registry: Registry): Finding[] {
@@ -288,8 +321,10 @@ export function checkScene(art: SceneArtLike, registry: Registry): Finding[] {
   }
 
   // R-S5 palette
+  const capped = cappedPalette(scene);
+  const besides = hoyas.length > 0 ? " besides Hoya's own palette" : '';
+  if (capped.length > LIMITS.sceneColors) add('error', 'S-palette-cap', `${capped.length} colour tokens${besides}, at most ${LIMITS.sceneColors}`);
   const colors = scene.stats.colors;
-  if (colors.length > LIMITS.sceneColors) add('error', 'S-palette-cap', `${colors.length} colour tokens, at most ${LIMITS.sceneColors}`);
   if (colors.filter((c) => c.startsWith('surface.') || c.startsWith('text.')).length < 2) add('warning', 'S-palette-ink', 'use at least two surface or text tokens so the picture reads on the canvas');
   if (focus && setting?.horizonY !== undefined) {
     const ground = groundFill(scene, setting.horizonY);

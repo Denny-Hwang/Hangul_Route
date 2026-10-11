@@ -1,7 +1,7 @@
 import type { EdgeInsets } from '@hangul-route/design-system';
 import { spacing, touchTarget } from '@hangul-route/design-system/tokens';
 import { describe, expect, it } from 'vitest';
-import { overlayFrame } from '../overlay-frame';
+import { bannerFrame, overlayFrame } from '../overlay-frame';
 
 const NO_INSETS: EdgeInsets = { top: 0, right: 0, bottom: 0, left: 0 };
 /** `tabBarMetrics(34).height` (design-system layout.ts): the tab row over a 34 pt home indicator. */
@@ -60,3 +60,57 @@ describe('overlayFrame', () => {
   });
 });
 
+
+/**
+ * Where the PWA banner slot sits (wireframes pwa/system-banners "banners share a single slot at the
+ * top" and layout/wide H "above the tab bar, never over a CTA"): above the tab bar on a tab screen;
+ * on a screen with no tab bar (onboarding, quest, PIN) the bottom belongs to the screen's CTA, so the
+ * slot moves to the top, under the status bar / notch and below the screen's header row (the quest's
+ * "Leave quest" X, the PIN pad's close X, the form's Back), so it never sits on those either.
+ */
+describe('bannerFrame', () => {
+  const insets = { top: 47, right: 0, bottom: 34, left: 0 };
+
+  it('sits above the tab bar when it shows, as before', () => {
+    expect(bannerFrame({ insets, tabBarHeight: TAB_BAR_OVER_INDICATOR, gap: spacing.md, bottomGap: spacing.xl })).toEqual({
+      edge: 'bottom',
+      offset: TAB_BAR_OVER_INDICATOR + spacing.xl,
+      left: spacing.md,
+      right: spacing.md,
+    });
+  });
+
+  it('moves to the top under the notch when there is no tab bar, so it never covers a bottom CTA', () => {
+    expect(bannerFrame({ insets, tabBarHeight: 0, gap: spacing.md, bottomGap: spacing.xl })).toEqual({
+      edge: 'top',
+      offset: 47 + spacing.md,
+      left: spacing.md,
+      right: spacing.md,
+    });
+  });
+
+  it('keeps the side gap clear of a landscape notch at the top too', () => {
+    const f = bannerFrame({ insets: { top: 0, right: 0, bottom: 21, left: 47 }, tabBarHeight: 0, gap: spacing.md });
+    expect(f).toEqual({ edge: 'top', offset: spacing.md, left: 47 + spacing.md, right: spacing.md });
+  });
+
+  it("drops below the screen's header row (gutter + one touch target) when given, so it never covers a top control", () => {
+    const headerClearance = spacing.lg + touchTarget.min;
+    expect(bannerFrame({ insets, tabBarHeight: 0, gap: spacing.md, headerClearance })).toEqual({
+      edge: 'top',
+      offset: 47 + headerClearance + spacing.md,
+      left: spacing.md,
+      right: spacing.md,
+    });
+    // A tab screen keeps its bottom slot; the clearance is for the top only.
+    expect(bannerFrame({ insets, tabBarHeight: TAB_BAR_OVER_INDICATOR, gap: spacing.md, headerClearance }).edge).toBe('bottom');
+    // A bad clearance counts as 0.
+    expect(bannerFrame({ insets, tabBarHeight: 0, gap: spacing.md, headerClearance: Number.NaN }).offset).toBe(47 + spacing.md);
+  });
+
+  it('treats a bad tab-bar height as no tab bar, and bad insets as 0', () => {
+    expect(
+      bannerFrame({ insets: { top: Number.NaN, right: -1, bottom: 0, left: 0 }, tabBarHeight: Number.NaN, gap: spacing.sm }),
+    ).toEqual({ edge: 'top', offset: spacing.sm, left: spacing.sm, right: spacing.sm });
+  });
+});

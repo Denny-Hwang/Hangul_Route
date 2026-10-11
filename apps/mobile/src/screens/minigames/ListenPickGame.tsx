@@ -16,9 +16,11 @@ import {
   radii,
   spacing,
   touchTarget,
+  useLayoutClass,
+  useMediaSize,
 } from '@hangul-route/design-system';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, View, useWindowDimensions } from 'react-native';
+import { Pressable, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
 import { useMessages } from '../../i18n/use-messages';
 import {
@@ -32,6 +34,7 @@ import {
   type FlowEvent,
   type ListenPickFlowState,
 } from '../../logic/listen-pick-flow';
+import { answersColumnWidth, pictureTextArrangement, twoUpFits } from '../../logic/layout/game-layout';
 import { shuffleOptions, validRounds } from '../../logic/listen-pick';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { playPrompt, stop } from '../../platform/audio';
@@ -39,6 +42,7 @@ import { nudge, success, tapLight } from '../../platform/haptics';
 import { useReducedMotion } from '../../platform/motion';
 import { useLocaleStore } from '../../store/locale-store';
 import { useProfileStore } from '../../store/profile-store';
+import { GameColumns } from './GameColumns';
 import type { MinigameHost } from './host';
 import { PictureArt } from './PictureArt';
 
@@ -58,6 +62,12 @@ interface Props {
   onBack?: () => void;
 }
 
+/**
+ * What a `ChoiceCard` adds around its art: horizontal padding, the thickest state border, and the
+ * status mark with its gap (ChoiceCard.tsx).
+ */
+const CARD_CHROME = 2 * spacing.lg + 2 * borderWidth.thick + spacing.xl + spacing.md;
+
 /** Focus target for assistive tech when a round advances (web; a no-op where the node has no `focus`). */
 interface Focusable {
   focus?: () => void;
@@ -74,7 +84,13 @@ export function ListenPickGame({ scope, host, onBack }: Props): React.ReactEleme
     activeProfileId === null ? 'always' : (s.byProfile[activeProfileId]?.romanizationMode ?? 'always'),
   );
   const reducedMotion = useReducedMotion();
-  const { width } = useWindowDimensions();
+  // F-LAYOUT-001 §3.6, §3.12: the sound and the answers side by side on a landscape window; the speaker
+  // and the pictures grow with the window.
+  const layoutClass = useLayoutClass();
+  const width = layoutClass.windowWidth;
+  const speakerSize = useMediaSize(touchTarget.hero);
+  const speakerIcon = useMediaSize(spacing.xxxl);
+  const pictureSize = useMediaSize(touchTarget.hero);
 
   const [state, setState] = useState<ListenPickFlowState>(() => startFlow(rounds.length));
   const stateRef = useRef(state);
@@ -182,7 +198,16 @@ export function ListenPickGame({ scope, host, onBack }: Props): React.ReactEleme
 
   const header = headerView(host.mode, state, copy);
   const prompt = promptView(round, state, host.mode);
-  const columns = optionColumns(round, width);
+  const arrangement = pictureTextArrangement(layoutClass);
+  // Beside the sound the answers get half the reading column (348 at 1180 x 820 and 844 x 390), so two cards
+  // sit side by side only while each still holds its art (or a phone-size text card) next to the status mark;
+  // stacked, the phone rule on the window width is unchanged.
+  const art = round.options.some((o) => o.pictureRef !== undefined) ? pictureSize : touchTarget.hero;
+  const columns =
+    arrangement === 'side' &&
+    !twoUpFits(answersColumnWidth(layoutClass, arrangement, spacing.xl), spacing.md, art + CARD_CHROME)
+      ? 1
+      : optionColumns(round, width);
   const showMissHoya = host.mode !== 'review' && state.status === 'asking' && state.wrongIds.length > 0;
 
   return (
@@ -200,96 +225,104 @@ export function ListenPickGame({ scope, host, onBack }: Props): React.ReactEleme
       </View>
 
       <Spacer size="lg" />
-      <Heading level="prompt">{copy.listenPick.heading}</Heading>
-      <Spacer size="md" />
-
-      <View style={{ alignItems: 'center', gap: spacing.md }}>
-        <Animated.View style={roundIdx === 0 && !reducedMotion ? pulseStyle : undefined}>
-          <Pressable
-            ref={(node) => {
-              speakerRef.current = node as unknown as Focusable | null;
-            }}
-            testID="listen-pick-speaker"
-            onPress={() => dispatch({ type: 'hear' })}
-            accessibilityRole="button"
-            accessibilityLabel={m.a11y.minigame.hearAgain}
-            hitSlop={spacing.md}
-            style={{
-              width: touchTarget.hero,
-              height: touchTarget.hero,
-              borderRadius: radii.pill,
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: colors.brand.secondaryLight,
-              borderColor: colors.brand.secondary,
-              borderWidth: borderWidth.base,
-            }}
-          >
-            <Icon name="speaker" size={spacing.xxxl} color={colors.brand.secondaryDark} />
-          </Pressable>
-        </Animated.View>
-        <View style={{ alignSelf: 'center' }}>
-          <Button
-            label={copy.listenPick.hearAgain.cta}
-            tone="secondary"
-            size="md"
-            onPress={() => dispatch({ type: 'hear' })}
-            testID="listen-pick-hear-again"
-          />
-        </View>
-
-        <View accessibilityLiveRegion="polite" style={{ alignItems: 'center', gap: spacing.sm }}>
-          {prompt.content ? (
-            <>
-              {prompt.showText ? <Body tone="muted">{m.learner.audio.readHere}</Body> : null}
-              <KoreanText
-                ko={prompt.content.ko}
-                romanization={prompt.content.romanization}
-                gloss={prompt.content.gloss}
-                size="md"
-                testID="listen-pick-prompt-text"
-              />
-            </>
-          ) : null}
-        </View>
-      </View>
-
-      <Spacer size="xl" />
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md }}>
-        {round.options.map((option) => {
-          const view = optionView(round, option, state, { mode: host.mode, romanizationMode }, m.a11y.minigame);
-          return (
-            <View
-              key={option.id}
-              style={{ flexGrow: 1, flexBasis: columns === 2 ? '45%' : '100%', minWidth: touchTarget.hero }}
-            >
-              <ChoiceCard
-                testID={`listen-pick-option-${option.id}`}
-                state={view.cardState}
-                ko={view.ko}
-                romanization={view.romanization}
-                label={view.label}
-                art={
-                  view.pictureRef !== undefined ? (
-                    <PictureArt pictureRef={view.pictureRef} gloss={view.gloss ?? ''} size={touchTarget.hero} />
-                  ) : undefined
-                }
-                accessibilityLabel={view.accessibilityLabel}
-                onPress={() => dispatch({ type: 'tap', optionId: option.id, answerId: round.answerId, at: Date.now() })}
-              />
-            </View>
-          );
-        })}
-      </View>
-
-      <View accessibilityLiveRegion="polite">
-        {showMissHoya ? (
+      <GameColumns
+        arrangement={arrangement}
+        prompt={
           <>
-            <Spacer size="lg" />
-            <HoyaBubble tone="thinking" message={copy.listenPick.missHoya} />
+            <Heading level="prompt">{copy.listenPick.heading}</Heading>
+            <Spacer size="md" />
+
+            <View style={{ alignItems: 'center', gap: spacing.md }}>
+              <Animated.View style={roundIdx === 0 && !reducedMotion ? pulseStyle : undefined}>
+                <Pressable
+                  ref={(node) => {
+                    speakerRef.current = node as unknown as Focusable | null;
+                  }}
+                  testID="listen-pick-speaker"
+                  onPress={() => dispatch({ type: 'hear' })}
+                  accessibilityRole="button"
+                  accessibilityLabel={m.a11y.minigame.hearAgain}
+                  hitSlop={spacing.md}
+                  style={{
+                    width: speakerSize,
+                    height: speakerSize,
+                    borderRadius: radii.pill,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: colors.brand.secondaryLight,
+                    borderColor: colors.brand.secondary,
+                    borderWidth: borderWidth.base,
+                  }}
+                >
+                  <Icon name="speaker" size={speakerIcon} color={colors.brand.secondaryDark} />
+                </Pressable>
+              </Animated.View>
+              <View style={{ alignSelf: 'center' }}>
+                <Button
+                  label={copy.listenPick.hearAgain.cta}
+                  tone="secondary"
+                  size="md"
+                  onPress={() => dispatch({ type: 'hear' })}
+                  testID="listen-pick-hear-again"
+                />
+              </View>
+
+              <View accessibilityLiveRegion="polite" style={{ alignItems: 'center', gap: spacing.sm }}>
+                {prompt.content ? (
+                  <>
+                    {prompt.showText ? <Body tone="muted">{m.learner.audio.readHere}</Body> : null}
+                    <KoreanText
+                      ko={prompt.content.ko}
+                      romanization={prompt.content.romanization}
+                      gloss={prompt.content.gloss}
+                      size="md"
+                      testID="listen-pick-prompt-text"
+                    />
+                  </>
+                ) : null}
+              </View>
+            </View>
           </>
-        ) : null}
-      </View>
+        }
+        answers={
+          <View testID="listen-pick-options" style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md }}>
+            {round.options.map((option) => {
+              const view = optionView(round, option, state, { mode: host.mode, romanizationMode }, m.a11y.minigame);
+              return (
+                <View
+                  key={option.id}
+                  style={{ flexGrow: 1, flexBasis: columns === 2 ? '45%' : '100%', minWidth: touchTarget.hero }}
+                >
+                  <ChoiceCard
+                    testID={`listen-pick-option-${option.id}`}
+                    state={view.cardState}
+                    ko={view.ko}
+                    romanization={view.romanization}
+                    label={view.label}
+                    art={
+                      view.pictureRef !== undefined ? (
+                        <PictureArt pictureRef={view.pictureRef} gloss={view.gloss ?? ''} size={pictureSize} />
+                      ) : undefined
+                    }
+                    accessibilityLabel={view.accessibilityLabel}
+                    onPress={() => dispatch({ type: 'tap', optionId: option.id, answerId: round.answerId, at: Date.now() })}
+                  />
+                </View>
+              );
+            })}
+          </View>
+        }
+        feedback={
+          <View accessibilityLiveRegion="polite">
+            {showMissHoya ? (
+              <>
+                <Spacer size="lg" />
+                <HoyaBubble tone="thinking" message={copy.listenPick.missHoya} />
+              </>
+            ) : null}
+          </View>
+        }
+      />
       <Spacer size="xl" />
     </Screen>
   );

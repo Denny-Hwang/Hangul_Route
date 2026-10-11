@@ -19,7 +19,8 @@ import {
   typography,
   useLayoutClass,
 } from '@hangul-route/design-system';
-import { useNavigation } from '@react-navigation/native';
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
@@ -33,9 +34,9 @@ import {
   themeCellInitial,
   themeColumnLabel,
 } from '../../logic/journey';
-import { initialEpisode, reconcileSelection } from '../../logic/layout/pane-selection';
+import { initialEpisode, latchedSelection, reconcileSelection, requestedSelection, type PaneLatch } from '../../logic/layout/pane-selection';
 import { journeyGridMaxWidth } from '../../logic/layout/pane-sizes';
-import type { RootStackParamList } from '../../navigation/types';
+import type { MainTabParamList, RootStackParamList } from '../../navigation/types';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { useAudience } from '../../store/audience';
@@ -55,13 +56,31 @@ export function JourneyScreen(): React.ReactElement {
   // Two panes (wide window, F-LAYOUT-001 §3.7): a tap selects, the right pane shows it. One pane: a tap navigates as always.
   const { panes } = useLayoutClass();
   const paneMode = panes === 2;
-  const [selected, setSelected] = useState<string | null>(null);
+  const ownerId = profile?.id ?? null;
+  // Back from a quest or from Results on two panes, the episode arrives as a route param: select it
+  // (only when the catalogue has it), then clear the param so the same episode can be asked for
+  // again later (F-LAYOUT-001 §3.7).
+  const requested = useRoute<RouteProp<MainTabParamList, 'Journey'>>().params?.episodeId;
+  const tabNavigation = useNavigation<BottomTabNavigationProp<MainTabParamList, 'Journey'>>();
+  const [latch, setLatch] = useState<PaneLatch | null>(() => {
+    const known = requestedSelection(requested, episodesAll);
+    return known === null ? null : { ownerId, id: known };
+  });
+  const selected = latchedSelection(latch, ownerId);
+  const setSelected = (id: string): void => setLatch({ ownerId, id });
+  useEffect(() => {
+    if (requested === undefined) return;
+    const known = requestedSelection(requested, episodesAll);
+    if (known !== null) setLatch({ ownerId, id: known });
+    tabNavigation.setParams({ episodeId: undefined });
+  }, [requested, tabNavigation, ownerId]);
   const selectedId = reconcileSelection(selected, episodesAll, initialEpisode(episodesAll, snap));
   // Latch the first selection (the episode of the next quest) so finishing a quest does not move it:
   // back from the quest player returns to the same selection. It survives rotation as screen state.
+  // The latch belongs to the profile: switching learner starts from that learner's next quest.
   useEffect(() => {
-    if (paneMode && selected === null && selectedId !== null) setSelected(selectedId);
-  }, [paneMode, selected, selectedId]);
+    if (paneMode && selected === null && selectedId !== null) setLatch({ ownerId, id: selectedId });
+  }, [paneMode, selected, selectedId, ownerId]);
 
   const gridMax = journeyGridMaxWidth(spacing.xs, layout.columns.journeyCellMax);
 

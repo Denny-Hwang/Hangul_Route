@@ -1,11 +1,11 @@
 {
   "v": 1,
   "id": "story:sejong-new-letters",
-  "state": "draft",
+  "state": "ready",
   "contentVer": 1,
   "title": {
     "ko": "세종대왕의 새 글자",
-    "romanization": "",
+    "romanization": "Sejongdaewangui sae geulja",
     "en": "King Sejong's New Letters"
   },
   "summaryEn": "Hoya travels back to Joseon to learn why King Sejong created 28 new letters in 1443, and how the book Hunminjeongeum explained them in 1446.",
@@ -14,10 +14,10 @@
   "recommendedStage": 1,
   "minutes": 4,
   "learningGoalsEn": [
-    "Say who created Hangeul (King Sejong, the fourth king of Joseon) and when (1443).",
-    "Explain in one sentence why King Sejong made new letters: so ordinary people could learn them easily and write what they wanted to say.",
+    "Know who created Hangul (King Sejong, the fourth king of Joseon) and when (1443).",
+    "Understand why King Sejong made new letters: so ordinary people could learn them easily and write what they wanted to say.",
     "Know that the book Hunminjeongeum (1446) explained the new letters, with explanations written by Jiphyeonjeon scholars.",
-    "Read and say 세종대왕, 한자, 훈민정음, 백성, 집현전 and 한글 with romanization."
+    "Read and recognize 세종대왕 (Sejongdaewang), 한자 (hanja), 훈민정음 (Hunminjeongeum), 백성 (baekseong), 집현전 (Jiphyeonjeon) and 한글 (Hangeul)."
   ],
   "origin": {
     "type": "documented",
@@ -32,7 +32,7 @@
     {
       "id": "sejong-daewang",
       "ko": "세종대왕",
-      "romanization": "Sejong Daewang",
+      "romanization": "Sejongdaewang",
       "en": "King Sejong the Great",
       "kind": "word"
     },
@@ -111,7 +111,7 @@
           "keyword": {
             "id": "sejong-daewang",
             "ko": "세종대왕",
-            "romanization": "Sejong Daewang",
+            "romanization": "Sejongdaewang",
             "en": "King Sejong the Great",
             "kind": "word"
           },
@@ -130,7 +130,9 @@
               "timeRelative": true
             }
           ],
-          "artBrief": "Hoya, a friendly young tiger, steps out of a glowing open book into a Joseon-era royal courtyard with wooden halls and curved tiled roofs; a kind king in royal robes stands on the stone steps."
+          "artBrief": "Hoya, a friendly young tiger, steps out of a glowing open book into a Joseon-era royal courtyard with wooden halls and curved tiled roofs; a kind king in royal robes stands on the stone steps.",
+          "captionEn": "Hoya lands in King Sejong's Joseon",
+          "artPending": true
         },
         {
           "id": "s2",
@@ -147,7 +149,9 @@
           ],
           "framing": false,
           "approximations": [],
-          "artBrief": "A village lane: a farmer and a child look puzzled at a sheet covered with dense, abstract brush marks (unreadable squiggles, no real characters); Hoya scratches his head beside them."
+          "artBrief": "A village lane: a farmer and a child look puzzled at a sheet covered with dense, abstract brush marks (unreadable squiggles, no real characters); Hoya scratches his head beside them.",
+          "captionEn": "Chinese characters were hard to learn",
+          "artPending": true
         },
         {
           "id": "s3",
@@ -165,11 +169,13 @@
           ],
           "framing": false,
           "approximations": [],
-          "artBrief": "King Sejong at a low wooden desk by lamplight, brush in hand; simple abstract strokes, dots and circles float above the paper like sparks (no readable letters); Hoya peeks over the desk edge."
+          "artBrief": "King Sejong at a low wooden desk by lamplight, brush in hand; simple abstract strokes, dots and circles float above the paper like sparks (no readable letters); Hoya peeks over the desk edge.",
+          "captionEn": "King Sejong creates new letters",
+          "artPending": true
         },
         {
           "id": "s4",
-          "narrationEn": "He named them Hunminjeongeum, \"the proper sounds for teaching the people.\" An old-fashioned word for the people is baekseong. In his own words, he made the letters so people could learn them easily and use them every day.",
+          "narrationEn": "He named them Hunminjeongeum, \"the proper sounds for teaching the people.\" An old-fashioned word for the people is {kw:baekseong}. In his own words, he made the letters so people could learn them easily and use them every day.",
           "keyword": {
             "id": "hunminjeongeum",
             "ko": "훈민정음",
@@ -183,11 +189,13 @@
           ],
           "framing": false,
           "approximations": [],
-          "artBrief": "A sunny market street where a merchant, a grandmother and children each hold a small blank paper and smile; warm light suggests everyone can now write."
+          "artBrief": "A sunny market street where a merchant, a grandmother and children each hold a small blank paper and smile; warm light suggests everyone can now write.",
+          "captionEn": "He names them Hunminjeongeum",
+          "artPending": true
         },
         {
           "id": "s5",
-          "narrationEn": "Hoya practices a new phrase: \"Baeugi swiwoyo, it's easy to learn!\" Later, the scholar Jeong In-ji wrote that a wise person could understand the letters before a single morning was over.",
+          "narrationEn": "Hoya practices a new phrase: \"Baeugi swiwoyo, it's easy to learn!\" Later, the scholar Jeong Inji wrote that a wise person could understand the letters before a single morning was over.",
           "keyword": {
             "id": "baeugi-swiwoyo",
             "ko": "배우기 쉬워요",
@@ -200,7 +208,9 @@
           ],
           "framing": false,
           "approximations": [],
-          "artBrief": "Morning sun rising over palace roofs; Hoya sits cross-legged with a brush and blank paper, grinning proudly; a scholar in a black gat hat watches kindly."
+          "artBrief": "Morning sun rising over palace roofs; Hoya sits cross-legged with a brush and blank paper, grinning proudly; a scholar in a black gat hat watches kindly.",
+          "captionEn": "The new letters are easy to learn",
+          "artPending": true
         },
         {
           "id": "s6",
@@ -218,11 +228,13 @@
           ],
           "framing": false,
           "approximations": [],
-          "artBrief": "Several scholars in Joseon robes working at desks in a quiet wooden hall, stacks of bound books with plain covers; one scholar holds up a finished book (cover blank, no text)."
+          "artBrief": "Several scholars in Joseon robes working at desks in a quiet wooden hall, stacks of bound books with plain covers; one scholar holds up a finished book (cover blank, no text).",
+          "captionEn": "Scholars explain the letters in a book",
+          "artPending": true
         },
         {
           "id": "s7",
-          "narrationEn": "Today we call these letters Hangeul. People in Korea read and write with them every day, and now you are learning them too!",
+          "narrationEn": "Today we call these letters Hangul. People in Korea read and write with them every day, and now you are learning them too!",
           "keyword": {
             "id": "hangeul",
             "ko": "한글",
@@ -235,14 +247,16 @@
           ],
           "framing": false,
           "approximations": [],
-          "artBrief": "Present-day scene: Hoya waves beside a child holding a pencil over a notebook (blank lines), with a modern Korean street softly behind them; no signs or readable text."
+          "artBrief": "Present-day scene: Hoya waves beside a child holding a pencil over a notebook (blank lines), with a modern Korean street softly behind them; no signs or readable text.",
+          "captionEn": "Today we call them Hangul",
+          "artPending": true
         }
       ],
       "checks": [
         {
           "id": "c1",
           "kind": "detail",
-          "promptEn": "Who created Hangeul?",
+          "promptEn": "Who created Hangul?",
           "options": [
             {
               "id": "a",
@@ -256,7 +270,7 @@
             },
             {
               "id": "c",
-              "en": "Jeong In-ji",
+              "en": "Jeong Inji",
               "isCorrect": false
             },
             {
@@ -267,7 +281,8 @@
           ],
           "factIds": [
             "f3"
-          ]
+          ],
+          "explainEn": "King Sejong himself created the new letters. He called them Hunminjeongeum."
         },
         {
           "id": "c2",
@@ -297,7 +312,8 @@
           ],
           "factIds": [
             "f3"
-          ]
+          ],
+          "explainEn": "King Sejong created the 28 new letters in 1443."
         },
         {
           "id": "c3",
@@ -311,7 +327,7 @@
             },
             {
               "id": "b",
-              "en": "To decorate the palace walls",
+              "en": "So only scholars could read the king's orders",
               "isCorrect": false
             },
             {
@@ -321,13 +337,14 @@
             },
             {
               "id": "d",
-              "en": "So people could learn easily and write what they wanted to say",
+              "en": "So people could learn letters easily",
               "isCorrect": true
             }
           ],
           "factIds": [
             "f5"
-          ]
+          ],
+          "explainEn": "King Sejong felt sorry for people who could not express themselves, so he made letters that are easy to learn and use every day."
         }
       ],
       "checkpoints": [],
@@ -613,6 +630,6 @@
     "scope": "cluster",
     "notes": "Third independent pass. Every cited URL for all 6 episodes (52 facts) was re-opened (UNESCO pages via Wayback copies when the live site resets connections) and quotes/locators were compared; the one exception is unesco.org/en/prizes/literacy (unreachable from here; its claim is now also backed by a Korean MCST press release). Eight minimal corrections were made: (1) Hangeul Day f3 no longer says 'Gregorian' (no cited source says the October 9 conversion was Gregorian; encykorea separates Julian/Gregorian only for 1932-45) and dates the October 29/28 observances; (2) f10 gains a third source (SBS 2018 with 국립한글박물관 curator); (3) Shapes scene 8, learning goal and f7 now say 'South Korea's spelling rules' count 24 (North Korea counts 40, 국립한글박물관 webzine 59); (4) Sejong scene 4/f4: 백성 is 'an old-fashioned word' with 표준국어대사전 added; (5) Jikji f8 quote no longer repeats a prize amount that differs between UNESCO page versions; (6) Tripitaka f6 wood and corner plates now have two further sources (정책브리핑; 박상진 wood-identification study); (8) Hangeul Day f9 gains a second source (문화체육관광부 press release); (7) Panjeon scene 8/f9: 'visitors cannot walk inside' replaced by 'visitor entry is restricted' because Haeinsa has run pre-booked tours inside Beopbojeon since June 2021. See hangul-printing.signoff.md."
   },
-  "authorNotes": "Revised after two independent checks. 'Promulgation' wording removed from the narration and summary: the Sillok 1446/9 entry only records that Hunminjeongeum was completed ('是月, 訓民正音成'), and 국립국어원 says no official promulgation ceremony is recorded and that a September 1446 promulgation is unsupported; UNESCO, 국가유산포털 and 국립한글박물관 do use 'published/promulgated 1446', so f7 states both. Scene 2 now gives both reasons from Sejong's preface (Korean differs from Chinese; the characters were hard to learn). Scene 5 phrase fixed to 배우기 쉬워요 (baeugi swiwoyo, 'it's easy to learn'). The word 백성 now appears in scene 4 narration; scene 6 key word is 집현전. The 1443 and 1446 Sillok entries are month-end entries in the lunar calendar with no specific day (the 12th lunar month of Sejong 25 falls in early 1444 in the Gregorian calendar, but UNESCO, 국가유산포털 and encykorea all say 1443, so the story follows that convention). Scene 5 quotes only the first half of Jeong In-ji's line. The 'almost 600 years ago' wording is worked out from 1443. The companion 훈이 ('Sejong's cat' in BP04) was deliberately not used. Illustrations must not show a proclamation ceremony. Do not name a specific palace or a royal robe colour. f9: the 표준국어대사전 quotation could not be read (dynamic page) and was replaced by the UNESCO wording ('now called han-gul'); the 한국민족문화대백과사전 한글 entry also states the point. The 국가유산포털 description text quoted in f1, f7, f8 was re-read from the portal's description fragment (hub_img/html/cul_1111100700000) in the research folder. FINAL PASS (3rd check): scene 4 now says 'An old-fashioned word for the people is baekseong' and f4 cites 표준국어대사전 for 백성. All other facts re-verified unchanged.",
+  "authorNotes": "Revised after two independent checks. 'Promulgation' wording removed from the narration and summary: the Sillok 1446/9 entry only records that Hunminjeongeum was completed ('是月, 訓民正音成'), and 국립국어원 says no official promulgation ceremony is recorded and that a September 1446 promulgation is unsupported; UNESCO, 국가유산포털 and 국립한글박물관 do use 'published/promulgated 1446', so f7 states both. Scene 2 now gives both reasons from Sejong's preface (Korean differs from Chinese; the characters were hard to learn). Scene 5 phrase fixed to 배우기 쉬워요 (baeugi swiwoyo, 'it's easy to learn'). The word 백성 now appears in scene 4 narration; scene 6 key word is 집현전. The 1443 and 1446 Sillok entries are month-end entries in the lunar calendar with no specific day (the 12th lunar month of Sejong 25 falls in early 1444 in the Gregorian calendar, but UNESCO, 국가유산포털 and encykorea all say 1443, so the story follows that convention). Scene 5 quotes only the first half of Jeong In-ji's line. The 'almost 600 years ago' wording is worked out from 1443. The companion 훈이 ('Sejong's cat' in BP04) was deliberately not used. Illustrations must not show a proclamation ceremony. Do not name a specific palace or a royal robe colour. f9: the 표준국어대사전 quotation could not be read (dynamic page) and was replaced by the UNESCO wording ('now called han-gul'); the 한국민족문화대백과사전 한글 entry also states the point. The 국가유산포털 description text quoted in f1, f7, f8 was re-read from the portal's description fragment (hub_img/html/cul_1111100700000) in the research folder. FINAL PASS (3rd check): scene 4 now says 'An old-fashioned word for the people is baekseong' and f4 cites 표준국어대사전 for 백성. All other facts re-verified unchanged. REVIEW PASS (PR 1.8b): learner prose writes the scholar's name Jeong Inji (F-CNT-002 rule 8); f6 and f8 keep the researched spelling Jeong In-ji. Check c3 options rebalanced so the answer is not the longest.",
   "errata": []
 }

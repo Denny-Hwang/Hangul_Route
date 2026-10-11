@@ -98,6 +98,34 @@ export const iconGlyphs: Record<IconName, readonly IconGlyphPart[]> = {
   profile: [fill('M12 12 A4 4 0 1 1 12 4 A4 4 0 0 1 12 12 Z'), fill('M4 21 A8 8 0 0 1 20 21 Z')],
   plus: [stroke('M12 5 V19', 2.6), stroke('M5 12 H19', 2.6)],
   sparkle: [fill('M12 2 L13 9 L20 10 L13 11 L12 18 L11 11 L4 10 L11 9 Z')],
+  // F-ROUTE-001 R-2a (design/components/Icon/spec.md). Map pin: an outlined
+  // drop with a solid centre dot ("You started here").
+  pin: [
+    stroke('M12 21.5 C9.5 18.5 5 14 5 9.5 A7 7 0 0 1 19 9.5 C19 14 14.5 18.5 12 21.5 Z', 2.2),
+    fill(circle(12, 9.5, 2.6)),
+  ],
+  // The Complete badge: the check inside a closed ring (never the bare check).
+  'check-circle': [stroke(circle(12, 12, 9), 2.2), stroke('M7.5 12.5 L10.5 15.5 L16.5 8.5', 2.4)],
+  // Read: an open book with its spine.
+  book: [
+    stroke('M12 6.5 C10 5 7 4.5 3.5 5 V18.5 C7 18 10 18.5 12 20 C14 18.5 17 18 20.5 18.5 V5 C17 4.5 14 5 12 6.5 Z', 2.2),
+    stroke('M12 6.5 V20', 2),
+  ],
+  // Listen: an ear seen from the side, a rim and an inner curl that closes on
+  // itself (no free hook, so it never reads as a question mark), with two
+  // sound waves beside it.
+  ear: [
+    stroke('M9 10 A5.5 5.5 0 0 1 20 10 C20 13.5 17 14.5 17 17.5 A3 3 0 0 1 11.5 19', 2.2),
+    stroke('M12.5 13 V10.5 A2.5 2.5 0 0 1 17.5 10.5 C17.5 12 15.5 12.5 14 13.5'),
+    stroke('M6.5 8.5 Q4.5 12 6.5 15.5'),
+    stroke('M3.5 6.5 Q1 12 3.5 17.5'),
+  ],
+  // Write: a pencil on the diagonal with its tip and ferrule marked.
+  pencil: [
+    stroke('M4 20 L5 15 L15 5 L19 9 L9 19 Z', 2.2),
+    stroke('M5 15 L9 19', 2),
+    stroke('M13 7 L17 11', 2),
+  ],
 };
 
 export const iconNames = Object.keys(iconGlyphs) as readonly IconName[];

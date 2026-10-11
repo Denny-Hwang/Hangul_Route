@@ -159,6 +159,8 @@ export const learner = {
     /** Keyed by the schema's `Rarity`, so `es` and `ko` can translate each. */
     rarity: { common: 'common', uncommon: 'uncommon', rare: 'rare', legendary: 'legendary' },
     how: { title: 'How to collect more', body: 'Finish quests to unlock cards.' },
+    /** Landmark names of the two panes on a wide window (F-LAYOUT-001 §3.13). */
+    panes: { master: 'Card gallery', detail: 'Card details' },
   },
 
   cardDetail: {
@@ -167,6 +169,19 @@ export const learner = {
     flip: { front: 'tap to flip', back: 'tap to flip back' },
     hear: { cta: 'Hear it' },
     share: { cta: 'Share', error: "Couldn't make the picture this time. Try again?" },
+    /**
+     * A locked card in the Library pane says where it is earned (F-LAYOUT-001 §3.6). `quest` gets the
+     * quest title (content) and the stars it takes; `later` when no quest awards the card yet.
+     */
+    earn: {
+      title: 'How to earn it',
+      quest: (questTitle: string, minStars: number) =>
+        plural('en', minStars, {
+          one: `Get 1 star or more in ${questTitle} to earn this card.`,
+          other: `Get ${minStars} or more stars in ${questTitle} to earn this card.`,
+        }),
+      later: 'This card comes in a later quest.',
+    },
   },
 
   episode: {
@@ -567,5 +582,11 @@ export const learner = {
     title: 'Hoya tripped over a rock.',
     body: "Your cards and stars are safe. Let's hop back in.",
     bubble: 'Oops! That was not your fault. Tap the button and we go again.',
+  },
+
+  /** The soft portrait guard on a phone held sideways (F-LAYOUT-001 §3.4, wireframe layout/wide E). */
+  portraitGuard: {
+    title: 'Turn your phone upright',
+    keepSideways: { cta: 'Keep sideways' },
   },
 } as const;

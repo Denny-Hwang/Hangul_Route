@@ -50,3 +50,26 @@ export function reconcileSelection(
   if (has(fallback)) return fallback;
   return items[0]?.id ?? null;
 }
+
+/** A split-pane selection the learner made, latched with the profile it belongs to. */
+export interface PaneLatch {
+  ownerId: string | null;
+  id: string;
+}
+
+/**
+ * The latched selection while its profile is active; `null` for another profile, so switching
+ * learner (which does not remount the tabs) starts from that learner's own first selection.
+ */
+export function latchedSelection(latch: PaneLatch | null, ownerId: string | null): string | null {
+  return latch !== null && latch.ownerId === ownerId ? latch.id : null;
+}
+
+/**
+ * The episode asked for by the Journey's `episodeId` route param (back from a quest or from
+ * Results, §3.7) when the catalogue has it; `null` otherwise, so an unknown id (a stale homework
+ * link to a removed episode) never sits in screen state and the latched default still applies.
+ */
+export function requestedSelection(requested: string | undefined, items: readonly { id: string }[]): string | null {
+  return requested !== undefined && items.some((i) => i.id === requested) ? requested : null;
+}

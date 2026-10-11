@@ -52,6 +52,15 @@ describe('syncLearner (F-SYNC-001 §3.5)', () => {
     expect(put.mock.calls[1]?.[1]).toMatchObject({ baseRev: 7 });
   });
 
+  it('keeps a stage latch the 409 server copy holds in the retried upload (F-ROUTE-001 section 3.15)', async () => {
+    const latch = { stage1: '2026-09-20T10:00:00.000Z' };
+    const { api, put } = apiWith([{ status: 'conflict', rev: 7, snapshot: { ...snap(['q2']), stageDoneAt: latch } }, { status: 'ok', rev: 8 }]);
+    const out = await syncLearner({ learnerId: 'profile:a', local: snap(['q1']), localRev: 3, api, now: NOW, summarize });
+    expect(out.status).toBe('synced');
+    if (out.status === 'synced') expect(out.snapshot.stageDoneAt).toEqual(latch);
+    expect(put.mock.calls[1]?.[1]).toMatchObject({ baseRev: 7, snapshot: { stageDoneAt: latch } });
+  });
+
   it('gives up after a second conflict, handing back the merged snapshot and server rev', async () => {
     const { api } = apiWith([
       { status: 'conflict', rev: 7, snapshot: snap(['q2']) },
