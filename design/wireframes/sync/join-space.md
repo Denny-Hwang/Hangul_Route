@@ -82,7 +82,7 @@ Exit to:    `home/todays-mission` · `profile/settings` · (teacher side, not le
 
 ## Open questions
 
-- ~~**Deferred decision — school consent mode**~~ → decided (c) per space; **S3 collects nothing at step 2** (`consentMode` stored only; email capture is F-SPACE-002, app map §7 #22).
+- ~~**Deferred decision — school consent mode**~~ → decided (c) per space; **S3 collects nothing at step 2** (`consentMode` stored only; email capture is F-SPACE-003, app map §7 #22).
 - ~~**Deferred decision — teacher free cap**~~ → 20 (owner, 2026-09-20); shipped as `cap_class` → "This class is full. Ask your teacher."
 - ~~Entry-point conflict~~ → resolved: `profile/settings` "Classes & family" card → **Join a class**, no PIN (app map §7 #21). `profiles/picker` link not added.
 - Family join (co-parent invite via a family `join_code`): the same screen with "family" copy, or an adult-only flow inside `console/account`? A child should probably never type a family code.

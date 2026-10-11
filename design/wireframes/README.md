@@ -35,6 +35,7 @@
 | `console/curriculum-planner.md` | D | F-PLAN-002 |
 | `classroom/lecture-presenter.md` | D | F-TCH-004 |
 | `layout/wide.md` | D | F-LAYOUT-001 |
+| `console/class-transfer.md` | D | F-SPACE-002 |
 
 ### B/C. Caregiver · Teacher · School console (web, 일부 mobile) — 어른
 | 파일 | 상태 | 스펙 |

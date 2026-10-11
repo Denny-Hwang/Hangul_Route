@@ -82,6 +82,7 @@ F-XXX-<slug>.md
 - `F-PLAN-002-curriculum-planner.md` — curriculum generator by level and duration, console wizard, self-route · **ready**
 - `F-TCH-004-lecture-mode.md` — teacher lecture mode for tablets and projectors · **ready**
 - `F-LAYOUT-001-responsive-tablet-landscape.md` — tablet, landscape and split-pane layout · **ready**
+- `F-SPACE-002-class-transfer.md` — move a learner between classes with learner-side, releasing and receiving consent (flag-locked) · **ready**
 - `F-QUEST-002` amended: initial ㅇ is spoken by its name (see F-AUDIO-004)
 
 ### Phase 2 / planned

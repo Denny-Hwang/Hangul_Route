@@ -317,7 +317,7 @@ console/home ─┬─ [family] ─▶ parent/dashboard ─▶ parent/learner-de
 | 19 | 미니게임 enum 이름 ↔ 카탈로그 06 번호 이름 | 이름 대응표만 `minigame/families.md` 에 기록, 코드 변경 없음 | — |
 | 20 | 홈 화면 Streak 노출 | **유지** — PH 런치 결정(#51). 학습자 프로필 통계 카드에서는 제거 (F-RVW-001 §4 anti-pattern 최소화) | 코드 `ProfileScreen` |
 | 21 | 학급 코드 입력의 부모 PIN 게이트 (#10 의 parent-gated) | **게이트 없음** — 교실에서 교사가 도와 입력하며 교사는 부모 PIN 을 모른다. 진도는 이동·초기화되지 않으므로 위험이 낮음. F-TCH-001 §3.1 문구는 F-SPACE-001 §3.5 로 대체 (2026-09-21) | F-SPACE-001 §3.5 · 코드 `JoinSpaceScreen` |
-| 22 | join 시 부모 이메일(동의) 수집 | **S3 에서는 수집 안 함** — `spaces.settings_json.consentMode` 만 저장. 수집 UI 는 F-SPACE-002 (F-AUTH-002 이후) | F-SPACE-001 §4 |
+| 22 | join 시 부모 이메일(동의) 수집 | **S3 에서는 수집 안 함** — `spaces.settings_json.consentMode` 만 저장. 수집 UI 는 F-SPACE-003 (F-AUTH-002 이후) | F-SPACE-001 §4 |
 | 23 | 콘솔 홈의 family/school 행 목적지 (`parent/dashboard` 웹판 · `console/school-admin` 부재) | 셋 다 `/teach/space/:id` 로; **school 은 같은 경로에서 admin 뷰를 렌더** (F-SCHOOL-001, 2026-09-21). 웹 부모 대시보드는 F-PAR-001 웹판 | F-CONSOLE-001 §3.4 · F-SCHOOL-001 §3.3 |
 | 24 | roster 의 "Show rescue code" (roadmap §5.1) vs 해시만 저장 | 평문을 서버가 모르므로 **"Issue a new code" (재발급)** 로 대체 — caregiver/teacher 경로의 `/recovery/issue` (구현됨 2026-09-21) | F-CONSOLE-001 §4 · F-TCH-001 §10.2 |
 | 26 | `onboarding/welcome` 의 "Made for kids 5–11" 한 줄 | **"Start Korean from zero."** 로 교체 (오너 결정 2026-10-06). 랜딩 OG/Twitter description 도 동일 | 코드 `WelcomeScreen` · `apps/web layout.tsx` |
