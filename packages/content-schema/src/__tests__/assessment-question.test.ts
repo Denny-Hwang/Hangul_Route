@@ -3,6 +3,7 @@ import {
   ASSESSMENT_FORMATS,
   AssessmentOptionSchema,
   AssessmentQuestionSchema,
+  AssessmentQuestionShape,
   AssessmentResponseSchema,
   OutcomeSchema,
 } from '../assessment/question';
@@ -82,6 +83,26 @@ describe('AssessmentQuestionSchema', () => {
     const [first, second, third] = q.options;
     q.options = [first!, { ...second!, ko: first!.ko }, third!];
     expect(AssessmentQuestionSchema.safeParse(q).success).toBe(false);
+  });
+
+  it('lets the tiles of a shape-odd-one-out question repeat one letter (three show it, one differs)', () => {
+    const tile = (id: string, ko: string, isCorrect: boolean) => ({ id, ko, isCorrect });
+    const odd = {
+      ...makeQuestion('q1'),
+      format: 'shape-odd-one-out' as const,
+      options: [tile('t1', 'ㅂ', false), tile('t2', 'ㅂ', false), tile('t3', 'ㅁ', true), tile('t4', 'ㅂ', false)],
+    };
+    expect(AssessmentQuestionSchema.safeParse(odd).success).toBe(true);
+    // ids stay unique and exactly one tile is correct
+    const sameId = { ...odd, options: odd.options.map((o) => ({ ...o, id: 't1' })) };
+    expect(AssessmentQuestionSchema.safeParse(sameId).success).toBe(false);
+    // every other format still rejects a repeated letter
+    expect(AssessmentQuestionSchema.safeParse({ ...odd, format: 'hear-pick-written' }).success).toBe(false);
+  });
+
+  it('exposes the unrefined shape so a template can omit the id and re-apply the rules', () => {
+    const { id: _id, ...rest } = makeQuestion('q1');
+    expect(AssessmentQuestionShape.omit({ id: true }).safeParse(rest).success).toBe(true);
   });
 
   it('rejects two options with the same picture', () => {
