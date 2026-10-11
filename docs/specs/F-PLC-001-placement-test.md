@@ -766,6 +766,8 @@ Ids: `pitem:sent-n-hear-<rr>`, `pitem:sent-n-read-<rr>`, `pitem:sent-v-hear-<rr>
 
 ## Appendix B — amendments to F-RVW-001 (applied by PR P-0; F-RVW-001 is `draft` and no review code is in the tree, so nothing shipped changes; it stays `draft` until its own PR 1)
 
+> **Applied 2026-10-11 in PR P-0.** B1 to B7 and B9 are in the text of `F-RVW-001-review-tests.md`; B8 is a no-change note recorded there as well. The `pitem:` row of F-I18N-001 section 3.6 `OVERLAY_FIELDS` was already in that spec and in `scripts/overlay-fields.mjs` (P-4), and the CLAUDE.md section 2 line landed with the owner's P12 approval (#194).
+
 | # | Where in F-RVW-001 | Change |
 |---|---|---|
 | B1 | Header `Scope` | add `packages/content-schema/src/assessment/` (shared question engine, owner F-PLC-001) |
