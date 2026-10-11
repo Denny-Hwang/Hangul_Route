@@ -1,11 +1,11 @@
 {
   "v": 1,
   "id": "story:jagyeongnu-water-clock",
-  "state": "draft",
+  "state": "ready",
   "contentVer": 1,
   "title": {
     "ko": "장영실과 스스로 울리는 물시계, 자격루",
-    "romanization": "",
+    "romanization": "Jangyeongsilgwa seuseuro ullineun mulsigye, Jagyeongnu",
     "en": "Jang Yeong-sil and the Clock That Rang by Itself"
   },
   "summaryEn": "Hoya meets Jang Yeong-sil, the skilled craftsman King Sejong praised, and watches how flowing water, rolling balls and wooden figures made the Jagyeongnu water clock strike the time.",
@@ -26,7 +26,10 @@
   "review": {
     "language": "draft",
     "culture": "draft",
-    "advisory": []
+    "advisory": [
+      "historical-hardship"
+    ],
+    "advisoryNoteEn": "Mentions that Jang Yeong-sil was first a servant owned by the government."
   },
   "keywords": [
     {
@@ -81,7 +84,7 @@
     {
       "id": "jang-yeongsil",
       "ko": "장영실",
-      "romanization": "Jang Yeongsil",
+      "romanization": "Jangyeongsil",
       "en": "Jang Yeong-sil, a Joseon craftsman and inventor",
       "kind": "word"
     },
@@ -115,6 +118,7 @@
         {
           "id": "s1",
           "narrationEn": "Drip, drip, drip. Hoya watches water fall drop by drop into a jar. \"In Korean, water is {kw:mul},\" he says. \"In Joseon, water helped tell the time, with a clock that rang all by itself!\"",
+          "captionEn": "Water drips into a jar",
           "keyword": {
             "id": "mul",
             "ko": "물",
@@ -128,15 +132,17 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Hoya kneeling beside a large bronze jar, watching a thin stream of water trickle into a taller vessel below."
         },
         {
           "id": "s2",
           "narrationEn": "Records say Jang Yeong-sil was first a gwanno, a servant owned by the government in Dongnae. He was so skillful that he took charge of craft work in the palace, and King Sejong valued his talent.",
+          "captionEn": "Jang Yeong-sil works on palace crafts",
           "keyword": {
             "id": "jang-yeongsil",
             "ko": "장영실",
-            "romanization": "Jang Yeongsil",
+            "romanization": "Jangyeongsil",
             "en": "Jang Yeong-sil, a Joseon craftsman and inventor",
             "kind": "word"
           },
@@ -145,11 +151,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "A focused Joseon craftsman in plain clothes and a headband fitting bronze parts together at a wooden workbench, tools neatly laid out."
         },
         {
           "id": "s3",
           "narrationEn": "King Sejong said Jang Yeong-sil had built a self-striking water clock, and that without him it could never have been made. The king decided to give him a higher official rank.",
+          "captionEn": "King Sejong praises Jang Yeong-sil",
           "keyword": {
             "id": "mulsigye",
             "ko": "물시계",
@@ -162,11 +170,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "King Sejong in a red royal robe smiles and gestures with praise while the craftsman bows respectfully in a palace hall."
         },
         {
           "id": "s4",
           "narrationEn": "The clock was called {kw:jagyeongnu}, 'the water clock that strikes by itself.' Water flowed from jars above into a tall vessel below, and a floating rod slowly rose as the water filled up.",
+          "captionEn": "Rising water lifts a floating rod",
           "keyword": {
             "id": "jagyeongnu",
             "ko": "자격루",
@@ -179,11 +189,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Cutaway view: bronze jars set on steps pour water through thin pipes into a tall cylinder, where a rod floats upward."
         },
         {
           "id": "s5",
           "narrationEn": "When the rod reached a mark, it set metal balls rolling. The balls moved wooden figures that struck a bell, a drum and a gong to tell the time: {kw:jong}, {kw:buk}, {kw:jing}!",
+          "captionEn": "Figures strike a bell, drum and gong",
           "line": {
             "ko": "종, 북, 징",
             "romanization": "jong, buk, jing",
@@ -196,11 +208,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Three carved wooden figures in robes on a platform, one striking a bell, one a drum, one a gong; small metal balls roll down a chute behind them."
         },
         {
           "id": "s6",
           "narrationEn": "From the first day of the seventh lunar month in 1434, the new clock kept time in a pavilion named Borugak at Gyeongbokgung Palace. Palace gates passed its sounds along so the city could hear the time.",
+          "captionEn": "The clock keeps time at the palace",
           "keyword": {
             "id": "gyeongbokgung",
             "ko": "경복궁",
@@ -213,11 +227,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "A small palace pavilion beside a pond with a large pavilion behind it; a gate tower with a big drum in soft evening light."
         },
         {
           "id": "s7",
           "narrationEn": "Sejong's original clock does not survive, but water vessels from a water clock made in 1536 remain. They are a National Treasure at the National Palace Museum of Korea. Hoya whispers, \"{kw:sigani-dwaesseoyo}\"",
+          "captionEn": "Old water vessels rest in a museum",
           "line": {
             "ko": "시간이 됐어요!",
             "romanization": "sigani dwaesseoyo!",
@@ -229,6 +245,7 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "A huge plain bronze jar and tall bronze cylinders in a museum hall; Hoya stands small beside them, whispering with a grin."
         }
       ],
@@ -254,6 +271,7 @@
               "isCorrect": false
             }
           ],
+          "explainEn": "Water flowed into the tall vessel, and as it collected, the floating rod rose.",
           "factIds": [
             "f4"
           ]
@@ -279,6 +297,7 @@
               "isCorrect": true
             }
           ],
+          "explainEn": "Wooden figures struck a bell, a drum and a gong to tell the time automatically.",
           "factIds": [
             "f5"
           ]
@@ -304,6 +323,7 @@
               "isCorrect": false
             }
           ],
+          "explainEn": "King Sejong said Jang Yeong-sil made the clock, and that it could not have been made without him.",
           "factIds": [
             "f3"
           ]

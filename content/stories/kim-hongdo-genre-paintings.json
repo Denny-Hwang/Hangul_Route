@@ -1,11 +1,11 @@
 {
   "v": 1,
   "id": "story:kim-hongdo-genre-paintings",
-  "state": "draft",
+  "state": "ready",
   "contentVer": 1,
   "title": {
     "ko": "김홍도의 풍속화: 씨름과 서당",
-    "romanization": "",
+    "romanization": "Gimhongdoui pungsokhwa: ssireumgwa seodang",
     "en": "Kim Hong-do's Pictures of Everyday Life"
   },
   "summaryEn": "Hoya looks closely at Ssireum and Seodang from Danwon's genre painting album at the National Museum of Korea, spotting a taffy seller, shoes that someone has taken off, and a sniffling schoolboy.",
@@ -81,8 +81,8 @@
     {
       "id": "kim-hong-do",
       "ko": "김홍도",
-      "romanization": "",
-      "en": "",
+      "romanization": "Gimhongdo",
+      "en": "Kim Hong-do, a Joseon court painter",
       "kind": "term"
     }
   ],
@@ -94,6 +94,7 @@
         {
           "id": "s1",
           "narrationEn": "Hoya dips a brush into ink. \"In Korean, a picture is {kw:geurim},\" he says. \"Let's look at pictures that show how ordinary people lived in Joseon!\"",
+          "captionEn": "Hoya dips a brush into ink",
           "keyword": {
             "id": "geurim",
             "ko": "그림",
@@ -106,11 +107,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Hoya holding a brush over a sheet of plain hanji paper, an ink stone and water dropper beside him."
         },
         {
           "id": "s2",
           "narrationEn": "Kim Hong-do, {kw:kim-hong-do}, whose pen name was Danwon, was born in 1745. He was a court painter who painted many kinds of subjects, and he is especially famous for genre paintings, pictures of everyday life.",
+          "captionEn": "Kim Hong-do paints everyday life",
           "keyword": {
             "id": "hwaga",
             "ko": "화가",
@@ -123,11 +126,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "A Joseon painter in a light robe sitting on the floor painting on paper, brushes standing in a holder beside him."
         },
         {
           "id": "s3",
           "narrationEn": "An album of 25 genre paintings, known as Danwon's genre painting album, is kept at the National Museum of Korea. It is designated a Treasure. In Korean, a genre painting is {kw:pungsokhwa}.",
+          "captionEn": "An album of genre paintings in a museum",
           "keyword": {
             "id": "pungsokhwa",
             "ko": "풍속화",
@@ -140,11 +145,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "An open folding album showing small paintings of people working and playing, displayed in a museum case."
         },
         {
           "id": "s4",
           "narrationEn": "Look at the painting {kw:ssireum}, Ssireum! In the middle, two wrestlers grab hold of each other and test their strength. Around them, spectators sit in two curved groups, watching closely.",
+          "captionEn": "Two wrestlers test their strength",
           "keyword": {
             "id": "ssireum",
             "ko": "씨름",
@@ -157,11 +164,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Two wrestlers gripping each other in the center, with two curved groups of seated spectators in white clothes and hats, one above and one below them, with round, cheerful faces."
         },
         {
           "id": "s5",
           "narrationEn": "Can you spot more? A taffy seller, {kw:yeotjangsu}, stands at the left, away from the crowd's attention. Over on the right, some shoes have been taken off and left.",
+          "captionEn": "A taffy seller stands at the left",
           "keyword": {
             "id": "yeotjangsu",
             "ko": "엿장수",
@@ -174,11 +183,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Detail of the painting's edges: a smiling taffy seller with a wooden tray stands at the left edge, apart from the crowd; at the right edge, a pair of shoes that someone has taken off rests on the ground."
         },
         {
           "id": "s6",
           "narrationEn": "Now look at {kw:seodang}, Seodang, a village school. The teacher and students are gathered around one boy, who has turned away, sniffling, while the other students grin and the teacher looks troubled.",
+          "captionEn": "A class gathers around one boy",
           "keyword": {
             "id": "seodang",
             "ko": "서당",
@@ -191,11 +202,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "A small schoolroom: a teacher in a square scholar's cap and several students gather around one boy who is crouched and turned away, wiping his eyes; some students grin, and the teacher looks puzzled."
         },
         {
           "id": "s7",
           "narrationEn": "Ssireum is still loved today. It is a National Intangible Heritage of Korea, and in 2018 UNESCO inscribed traditional Korean wrestling as Intangible Cultural Heritage. Hoya rolls up his sleeves: \"{kw:ssireum-han-pan-haeyo}\"",
+          "captionEn": "Ssireum is still loved today",
           "line": {
             "ko": "씨름 한 판 해요!",
             "romanization": "ssireum han pan haeyo!",
@@ -207,6 +220,7 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Hoya and a child friend in a sand ring, playfully gripping cloth belts and smiling, with friends cheering around them."
         }
       ],
@@ -237,6 +251,7 @@
               "isCorrect": false
             }
           ],
+          "explainEn": "The spectators sit in two rounded groups around the wrestlers, one above and one below.",
           "factIds": [
             "f4"
           ]
@@ -267,6 +282,7 @@
               "isCorrect": false
             }
           ],
+          "explainEn": "A seodang was a village school. In the painting, the teacher and students are gathered around one boy.",
           "factIds": [
             "f6"
           ]
@@ -292,6 +308,7 @@
               "isCorrect": true
             }
           ],
+          "explainEn": "The album known as Danwon's genre painting album is a Treasure kept at the National Museum of Korea.",
           "factIds": [
             "f3"
           ]

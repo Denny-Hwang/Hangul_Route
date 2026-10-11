@@ -1,11 +1,11 @@
 {
   "v": 1,
   "id": "story:cheugugi-rain-gauge",
-  "state": "draft",
+  "state": "ready",
   "contentVer": 1,
   "title": {
     "ko": "비를 재는 그릇, 측우기",
-    "romanization": "",
+    "romanization": "Bireul jaeneun geureut, cheugugi",
     "en": "The Bowl That Measured the Rain"
   },
   "summaryEn": "Hoya follows the Joseon crown prince's rain experiments to the 1442 rain gauge, the cheugugi, and meets the only Joseon rain-gauge vessel known to survive.",
@@ -76,7 +76,7 @@
       "ko": "비가 와요",
       "romanization": "biga wayo",
       "en": "It's raining.",
-      "kind": "word"
+      "kind": "phrase"
     }
   ],
   "cultureNotes": [],
@@ -87,6 +87,7 @@
         {
           "id": "s1",
           "narrationEn": "Pitter-patter! Hoya the tiger holds out a paw to catch the raindrops. \"In Korean, rain is {kw:bi},\" he says. \"Long ago, the Joseon kingdom found a clever way to measure rain. Let's go and see!\"",
+          "captionEn": "Hoya catches the falling rain",
           "keyword": {
             "id": "bi",
             "ko": "비",
@@ -99,11 +100,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "A small, friendly tiger cub in a light vest stands in gentle rain holding out one paw; soft gray clouds and a tiled-roof Korean house behind him."
         },
         {
           "id": "s2",
           "narrationEn": "A royal record from 1441 says the crown prince, the king's son who later became King Munjong, worried about drought. After each rain, he dug into the ground to see how deep the water had soaked in.",
+          "captionEn": "The crown prince digs to check the rain",
           "keyword": {
             "id": "seja",
             "ko": "세자",
@@ -116,11 +119,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "A young Joseon crown prince in a red robe kneels in a palace garden beside a small hole, looking at damp soil; a dry field in the distance."
         },
         {
           "id": "s3",
           "narrationEn": "But soil can be dry or damp, so digging could not show exactly how much rain had fallen. So he had a vessel cast from copper and placed in the palace to collect the rainwater.",
+          "captionEn": "A copper vessel collects the rain",
           "keyword": {
             "id": "geureut",
             "ko": "그릇",
@@ -134,11 +139,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "A plain metal cylinder standing in a palace courtyard catching rain, while the prince watches from under the wooden eaves."
         },
         {
           "id": "s4",
           "narrationEn": "In 1442, in King Sejong's reign, a standard rain gauge was named {kw:cheugugi}, 'rain-measuring device.' It stood on a stand at the royal observatory office. After each rain, an official measured the water with a standard ruler and wrote it down.",
+          "captionEn": "An official measures rain with a ruler",
           "keyword": {
             "id": "cheugugi",
             "ko": "측우기",
@@ -151,11 +158,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "A Joseon official in a black hat dips a slim wooden ruler into a metal rain gauge on a square stone stand; a brush and a record book lie beside him."
         },
         {
           "id": "s5",
           "narrationEn": "Rain gauges and rulers were sent to every province. Local towns could make their gauges from pottery, set them on a stand in a courtyard, measure each rain, and report it to the king.",
+          "captionEn": "Rain gauges are sent to every province",
           "keyword": {
             "id": "ja",
             "ko": "자",
@@ -168,11 +177,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "A pottery rain gauge on a stone stand in a country government courtyard; a local magistrate measures with a bamboo ruler; green hills behind."
         },
         {
           "id": "s6",
           "narrationEn": "Joseon sent rain gauges across the land, but only one gauge itself is known to survive today: the rain gauge of the Chungcheong provincial office in Gongju. It was made of bronze in 1837 and is a National Treasure.",
+          "captionEn": "Only one Joseon gauge is known to survive",
           "keyword": {
             "id": "gukbo",
             "ko": "국보",
@@ -186,11 +197,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "A bronze cylindrical rain gauge made of three stacked sections, displayed on a museum pedestal under a soft spotlight; Hoya gazes up in wonder."
         },
         {
           "id": "s7",
           "narrationEn": "Today it is kept at the National Meteorological Museum of Korea in Seoul. Hoya grins and points at the sky. \"Next time it rains, you can say it in Korean: {kw:biga-wayo}!\"",
+          "captionEn": "The gauge rests in a museum in Seoul",
           "keyword": {
             "id": "biga-wayo",
             "ko": "비가 와요",
@@ -203,6 +216,7 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Hoya under a small paper umbrella, pointing happily at the rainy sky in front of a modest museum building."
         }
       ],
@@ -228,6 +242,7 @@
               "isCorrect": false
             }
           ],
+          "explainEn": "Soil can be dry or damp, so digging could not show exactly how much rain had fallen.",
           "factIds": [
             "f2"
           ]
@@ -258,6 +273,7 @@
               "isCorrect": true
             }
           ],
+          "explainEn": "A cheugugi collected rainwater, and an official measured how deep the water was with a standard ruler.",
           "factIds": [
             "f3"
           ]
@@ -283,6 +299,7 @@
               "isCorrect": false
             }
           ],
+          "explainEn": "The Gongju rain gauge was made of bronze in 1837. It is the only Joseon gauge vessel known to survive.",
           "factIds": [
             "f5"
           ]

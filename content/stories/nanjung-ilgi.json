@@ -1,11 +1,11 @@
 {
   "v": 1,
   "id": "story:nanjung-ilgi",
-  "state": "draft",
+  "state": "ready",
   "contentVer": 1,
   "title": {
     "ko": "이순신 장군의 난중일기",
-    "romanization": "",
+    "romanization": "Isunsin janggunui Nanjungilgi",
     "en": "Admiral Yi's Diary"
   },
   "summaryEn": "Hoya opens the diary that Admiral Yi Sun-sin kept almost every day from 1592 to 1598, full of weather, feelings and everyday life, now a National Treasure and UNESCO Memory of the World.",
@@ -70,7 +70,7 @@
     {
       "id": "nanjung-ilgi",
       "ko": "난중일기",
-      "romanization": "Nanjung ilgi",
+      "romanization": "Nanjungilgi",
       "en": "War Diary (of Yi Sun-sin)",
       "kind": "word"
     },
@@ -84,8 +84,8 @@
     {
       "id": "yi-sun-sin",
       "ko": "이순신",
-      "romanization": "",
-      "en": "",
+      "romanization": "Isunsin",
+      "en": "Yi Sun-sin, a Joseon naval commander",
       "kind": "term"
     }
   ],
@@ -97,6 +97,7 @@
         {
           "id": "s1",
           "narrationEn": "Hoya opens a little notebook. \"Do you keep a diary? In Korean, a diary is {kw:ilgi},\" he says. \"Today let's meet a famous diary that a commander wrote long ago in Joseon.\"",
+          "captionEn": "Hoya opens his little notebook",
           "keyword": {
             "id": "ilgi",
             "ko": "일기",
@@ -109,11 +110,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Hoya sitting cross-legged on a floor cushion, holding a small notebook and a brush, smiling."
         },
         {
           "id": "s2",
           "narrationEn": "Yi Sun-sin, {kw:yi-sun-sin}, lived from 1545 to 1598 and was a commander of Joseon's navy. Before war came, he built ships and prepared defenses around Yeosu.",
+          "captionEn": "Yi Sun-sin builds ships near Yeosu",
           "keyword": {
             "id": "janggun",
             "ko": "장군",
@@ -126,11 +129,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "A calm Joseon naval commander in a robe and helmet standing on a wooden dock at sunrise, wooden ships moored in a quiet harbor."
         },
         {
           "id": "s3",
           "narrationEn": "During the Imjin War, from 1592 to 1598, Admiral Yi kept a diary, writing in it almost every day.",
+          "captionEn": "Admiral Yi writes almost every day",
           "keyword": {
             "id": "maeil",
             "ko": "매일",
@@ -143,11 +148,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Inside a simple wooden room at night, the commander writes with a brush by candlelight, a folded map beside him."
         },
         {
           "id": "s4",
           "narrationEn": "He wrote about the weather, about army life, about his own thoughts and feelings, and about the lives of ordinary people around him.",
+          "captionEn": "He writes about weather and feelings",
           "keyword": {
             "id": "nalssi",
             "ko": "날씨",
@@ -160,11 +167,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Soft brush strokes on paper (no readable text) surrounded by little pictures of the sun, rain clouds, a fisherman and a farmer."
         },
         {
           "id": "s5",
           "narrationEn": "He also wrote about his family and relatives, and about the people who served with him.",
+          "captionEn": "He writes about his family",
           "keyword": {
             "id": "gajok",
             "ko": "가족",
@@ -177,15 +186,17 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "A warm scene at a coastal camp gate: a young family member arrives with a bundle and is greeted by the commander."
         },
         {
           "id": "s6",
           "narrationEn": "Seven handwritten volumes of the diary survive. At first it had no title. Later, editors named it {kw:nanjung-ilgi}, 'the diary written in the midst of war.'",
+          "captionEn": "Editors give the diary its name",
           "keyword": {
             "id": "nanjung-ilgi",
             "ko": "난중일기",
-            "romanization": "Nanjung ilgi",
+            "romanization": "Nanjungilgi",
             "en": "Nanjung Ilgi (War Diary)",
             "kind": "word"
           },
@@ -195,11 +206,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Seven old thread-bound books with worn covers stacked neatly on a low wooden table."
         },
         {
           "id": "s7",
           "narrationEn": "Today the diary is a National Treasure kept at Hyeonchungsa Shrine in Asan, and in 2013 UNESCO added it to the Memory of the World Register. Hoya picks up his brush: \"{kw:oneuldo-ilgireul-sseoyo}\"",
+          "captionEn": "The diary is a National Treasure",
           "line": {
             "ko": "오늘도 일기를 써요!",
             "romanization": "oneuldo ilgireul sseoyo!",
@@ -212,6 +225,7 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Hoya at a low desk writing in his notebook with a brush; through the window, the curved tiled roof of a traditional shrine."
         }
       ],
@@ -237,6 +251,7 @@
               "isCorrect": false
             }
           ],
+          "explainEn": "During the Imjin War, Admiral Yi wrote in his diary almost every day, in his own hand.",
           "factIds": [
             "f2"
           ]
@@ -262,6 +277,7 @@
               "isCorrect": false
             }
           ],
+          "explainEn": "He wrote about the weather, army life, his own feelings and the lives of ordinary people.",
           "factIds": [
             "f3"
           ]
@@ -272,7 +288,7 @@
           "promptEn": "Who gave the diary its name, {target}?",
           "target": {
             "ko": "난중일기",
-            "romanization": "Nanjung ilgi",
+            "romanization": "Nanjungilgi",
             "en": "War Diary (of Yi Sun-sin)"
           },
           "options": [
@@ -292,6 +308,7 @@
               "isCorrect": true
             }
           ],
+          "explainEn": "The diary had no title at first. Editors of his collected works later named it Nanjung Ilgi.",
           "factIds": [
             "f6"
           ]

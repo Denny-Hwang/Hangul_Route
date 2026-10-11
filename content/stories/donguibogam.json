@@ -1,11 +1,11 @@
 {
   "v": 1,
   "id": "story:donguibogam",
-  "state": "draft",
+  "state": "ready",
   "contentVer": 1,
   "title": {
     "ko": "허준의 동의보감",
-    "romanization": "",
+    "romanization": "Heojunui Donguibogam",
     "en": "Heo Jun's Treasured Mirror of Medicine"
   },
   "summaryEn": "Hoya learns how the royal doctor Heo Jun finished Donguibogam in 1610, a medical encyclopedia that valued staying healthy and wrote herb names in Hangul, now on UNESCO's Memory of the World Register.",
@@ -91,8 +91,8 @@
     {
       "id": "heo-jun",
       "ko": "허준",
-      "romanization": "",
-      "en": "",
+      "romanization": "Heojun",
+      "en": "Heo Jun, a Joseon court doctor",
       "kind": "term"
     }
   ],
@@ -104,6 +104,7 @@
         {
           "id": "s1",
           "narrationEn": "Hoya stretches his arms and legs in the morning sun. \"In Korean, body is {kw:mom},\" he says. \"Long ago, a royal doctor of Joseon wrote a giant book to help people care for their bodies.\"",
+          "captionEn": "Hoya stretches in the morning sun",
           "keyword": {
             "id": "mom",
             "ko": "몸",
@@ -117,11 +118,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Hoya doing a morning stretch on the wooden floor (maru) of a hanok house, warm sunrise behind him."
         },
         {
           "id": "s2",
           "narrationEn": "His name was Heo Jun, {kw:heo-jun}, and he served as a doctor at the royal court. King Seonjo asked him and other doctors to write a new medical book. Today we call a doctor {kw:uisa}.",
+          "captionEn": "Heo Jun serves as a royal doctor",
           "keyword": {
             "id": "uisa",
             "ko": "의사",
@@ -134,11 +137,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "A Joseon royal physician in official robes and a black hat bowing before a king seated in a palace hall; rolled papers nearby."
         },
         {
           "id": "s3",
           "narrationEn": "When war broke out again, the work stopped and the doctors were scattered. Later the king asked Heo Jun to write the book alone, and gave him many medical books from the palace to study.",
+          "captionEn": "Heo Jun writes the book alone",
           "keyword": {
             "id": "chaek",
             "ko": "책",
@@ -151,11 +156,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Heo Jun at a low desk surrounded by stacks of old thread-bound books, writing with a brush by lamplight."
         },
         {
           "id": "s4",
           "narrationEn": "In 1610 Heo Jun finished the book: {kw:donguibogam}, Donguibogam. 'Dongui' means the medicine of the East, Korea's own medical tradition, and 'bogam' means a treasured mirror, a model to learn from.",
+          "captionEn": "Heo Jun finishes Donguibogam",
           "keyword": {
             "id": "donguibogam",
             "ko": "동의보감",
@@ -169,11 +176,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "A neat stack of finished book volumes tied with cord, beside a round bronze mirror that softly reflects light."
         },
         {
           "id": "s5",
           "narrationEn": "Donguibogam taught that staying healthy and preventing illness come before curing sickness. In Korean, health is {kw:geongang}.",
+          "captionEn": "Staying healthy comes first",
           "keyword": {
             "id": "geongang",
             "ko": "건강",
@@ -186,11 +195,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Hoya and two children walking happily through a pine forest, breathing fresh air, with a picnic mat of simple healthy food."
         },
         {
           "id": "s6",
           "narrationEn": "To help country people use medicines growing nearby, the book wrote the everyday Korean names of herbs in Hangul, the Korean alphabet.",
+          "captionEn": "Herb names are written in Hangul",
           "keyword": {
             "id": "yakcho",
             "ko": "약초",
@@ -203,11 +214,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Gentle drawings of wild medicinal plants (bellflower, mugwort, a root plant) on a sunny hillside, with a woven basket of herbs; no writing."
         },
         {
           "id": "s7",
           "narrationEn": "Donguibogam was printed in 1613 in 25 volumes. Later it was printed many times in China, and in Japan too. In 2009, UNESCO added it to the Memory of the World Register, {kw:segyegirogyusan}.",
+          "captionEn": "The book is printed many times",
           "keyword": {
             "id": "segyegirogyusan",
             "ko": "세계기록유산",
@@ -221,11 +234,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Rows of traditional thread-bound books on wooden shelves, with faint outlines of mountains and seas behind them suggesting the book's travels."
         },
         {
           "id": "s8",
           "narrationEn": "Copies from that first printing are now National Treasures of Korea. Hoya hugs a book-shaped pillow and smiles: \"{kw:bomul-gateun-chaek}!\" That means, \"A book like a treasure!\"",
+          "captionEn": "First-edition copies are National Treasures",
           "line": {
             "ko": "보물 같은 책",
             "romanization": "bomul gateun chaek",
@@ -237,6 +252,7 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Hoya hugging a soft pillow shaped like an old book, sitting beside a museum case that holds a thread-bound book under gentle light."
         }
       ],
@@ -262,6 +278,7 @@
               "isCorrect": true
             }
           ],
+          "explainEn": "Donguibogam put preventing illness and keeping healthy before treating sickness.",
           "factIds": [
             "f5"
           ]
@@ -287,6 +304,7 @@
               "isCorrect": false
             }
           ],
+          "explainEn": "The book wrote herb names in Hangul, as people called them, so local medicines could be used widely and easily.",
           "factIds": [
             "f7"
           ]
@@ -312,6 +330,7 @@
               "isCorrect": false
             }
           ],
+          "explainEn": "Donguibogam was first printed in 1613 with wooden movable type, in 25 volumes.",
           "factIds": [
             "f6"
           ]

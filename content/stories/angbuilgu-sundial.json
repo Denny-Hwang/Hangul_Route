@@ -1,11 +1,11 @@
 {
   "v": 1,
   "id": "story:angbuilgu-sundial",
-  "state": "draft",
+  "state": "ready",
   "contentVer": 1,
   "title": {
     "ko": "하늘을 바라보는 해시계, 앙부일구",
-    "romanization": "",
+    "romanization": "Haneureul baraboneun haesigye, angbuilgu",
     "en": "The Sky-Facing Pot That Told the Time"
   },
   "summaryEn": "Hoya discovers King Sejong's bowl-shaped sundials, set beside busy streets in 1434 with animal pictures so that people who could not read could still tell the time.",
@@ -87,6 +87,7 @@
         {
           "id": "s1",
           "narrationEn": "Hoya squints up at the bright sky. \"In Korean, the sun is {kw:hae},\" he says. \"When the sun shines, things cast shadows. In Joseon, people used the sun's shadow to tell the time!\"",
+          "captionEn": "Hoya looks up at the bright sun",
           "keyword": {
             "id": "hae",
             "ko": "해",
@@ -99,11 +100,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Hoya shading his eyes under a bright sun, his small shadow stretching across the stone paving of a palace courtyard."
         },
         {
           "id": "s2",
           "narrationEn": "In 1434, in King Sejong's reign, a new sundial was set up. Its bowl was round and hollow, like a cooking pot looking up at the sky, so it was called {kw:angbuilgu}, the 'upward-facing pot sundial.'",
+          "captionEn": "A bowl-shaped sundial faces the sky",
           "keyword": {
             "id": "angbuilgu",
             "ko": "앙부일구",
@@ -116,11 +119,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "A bronze bowl-shaped sundial on four short legs, its open side facing a clear blue sky, a slim pointer inside the bowl."
         },
         {
           "id": "s3",
           "narrationEn": "A pointed needle inside the bowl casts a shadow. Some lines show the time of day, and other lines show the time of year. Where the shadow falls tells you both!",
+          "captionEn": "A needle's shadow shows the time",
           "keyword": {
             "id": "geurimja",
             "ko": "그림자",
@@ -134,11 +139,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Close-up of the inside of the sundial bowl: a thin needle casts a dark shadow across a grid of curved lines; no writing or numbers."
         },
         {
           "id": "s4",
           "narrationEn": "King Sejong's sundials were placed beside busy roads, at Hyejeonggyo Bridge and in front of Jongmyo Shrine, so that people passing by could gather and see the time.",
+          "captionEn": "Sundials stand beside busy roads",
           "keyword": {
             "id": "gil",
             "ko": "길",
@@ -151,11 +158,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "A Joseon street scene: people in white clothes and a child gather around a sundial on a stone base beside a small stone bridge."
         },
         {
           "id": "s5",
           "narrationEn": "On King Sejong's sundials, the hours were shown with pictures of the zodiac animal spirits instead of letters, so people who could not read could tell the time. Hoya cheers, because the tiger, {kw:horangi}, is one of the twelve!",
+          "captionEn": "Animal pictures show the hours",
           "keyword": {
             "id": "horangi",
             "ko": "호랑이",
@@ -169,11 +178,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Twelve small, friendly zodiac animals (rat, ox, tiger, rabbit, dragon, snake, horse, sheep, monkey, rooster, dog, pig) standing together in a circle on a grassy hill; Hoya waves happily at the tiger; no letters or numbers."
         },
         {
           "id": "s6",
           "narrationEn": "The sundials from King Sejong's time no longer survive. The ones we can see today were made later in the Joseon period, and several are designated Treasures, {kw:bomul}.",
+          "captionEn": "Some later sundials are Treasures",
           "keyword": {
             "id": "bomul",
             "ko": "보물",
@@ -186,11 +197,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Two elegant dark bronze sundials with fine silver lines, standing on cross-shaped bases inside a museum display case."
         },
         {
           "id": "s7",
           "narrationEn": "Some are kept at the National Palace Museum of Korea in Seoul. Hoya peeks at a sundial in its glass case and asks his friend, \"{kw:jigeum-myeot-siyeyo}\" That means, \"What time is it now?\"",
+          "captionEn": "Hoya asks what time it is",
           "line": {
             "ko": "지금 몇 시예요?",
             "romanization": "jigeum myeot siyeyo?",
@@ -202,6 +215,7 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Hoya and a child friend in a museum gallery, looking at a sundial in a glass case; Hoya has a curious, questioning face."
         }
       ],
@@ -227,6 +241,7 @@
               "isCorrect": true
             }
           ],
+          "explainEn": "A pointer inside the bowl casts a shadow on hour lines and season lines, so you can read the time.",
           "factIds": [
             "f3"
           ]
@@ -252,6 +267,7 @@
               "isCorrect": false
             }
           ],
+          "explainEn": "The hours were shown with pictures of the twelve zodiac animal spirits, so people who could not read could tell the time.",
           "factIds": [
             "f5"
           ]
@@ -277,6 +293,7 @@
               "isCorrect": false
             }
           ],
+          "explainEn": "In 1434 they were set up at Hyejeonggyo Bridge and in front of Jongmyo Shrine, beside roads where people passed.",
           "factIds": [
             "f4"
           ]
