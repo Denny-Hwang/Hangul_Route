@@ -567,3 +567,75 @@ describe('stageDoneAt (F-ROUTE-001 section 3.15, the stage latch and the additiv
     expect((got.data.snapshot as { placements?: unknown[] }).placements).toEqual([]);
   });
 });
+
+describe('selfRoute and summary.selfRoute (F-PLAN-002 section 3.5, the additive preserve rule)', () => {
+  beforeEach(() => db.reset());
+  const base = { schemaVer: 1, contentVer: '2026.10' };
+  const meta = {
+    kind: 'curriculum',
+    generatorVersion: 1,
+    catalogVersion: 1,
+    params: { audience: 'self', level: { stage: 'stage1', band: 0 }, startDate: '2026-10-12', weeks: 1, sessionsPerWeek: 1, minutesPerSession: 15, unlockedStages: ['stage1'] },
+    weeks: [{ index: 1, startDate: '2026-10-12', kind: 'learn', focus: { episodeId: 'episode:stage1-letters', storyIds: [], festival: null }, extras: [] }],
+    horizonDays: 7,
+    repacedAt: null,
+  };
+  const route = { id: 'route:abc', createdAt: '2026-10-12T08:00:00.000Z', updatedAt: '2026-10-12T08:00:00.000Z', archivedAt: null, meta, items: [{ kind: 'quest', id: 'quest:stage1-letters-q1', targetDate: '2026-10-12', week: 1 }] };
+  const counts = { done: 0, total: 1, notReady: 0, weeks: 1, endsOn: '2026-10-18' };
+  const withRoute = (profileId: string, selfRoute: unknown) => ({ ...snapshotFor(profileId), selfRoute });
+
+  type Stored = { data: { rev: number; snapshot: { selfRoute?: unknown }; summary: Record<string, unknown> } };
+  async function getStored(learnerId: string, auth: Record<string, string>) {
+    const res = await app.request(`/api/sync/learners/${learnerId}/snapshot`, { headers: auth });
+    return (await res.json()) as Stored;
+  }
+
+  it('round-trips a route and its counts', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    expect((await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withRoute(r.learnerId, route), summary: { ...summary, selfRoute: counts } })).status).toBe(200);
+    const got = await getStored(r.learnerId, auth);
+    expect(got.data.snapshot.selfRoute).toEqual({ ...route, meta: { ...meta, params: { ...meta.params, daysOff: [], goals: { focus: 'balanced' }, includeComingSoon: true, culturalAnchors: true } } });
+    expect(got.data.summary.selfRoute).toEqual(counts);
+  });
+
+  it('stores an old client (no field) with selfRoute null and no summary counts', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    expect((await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: snapshotFor(r.learnerId), summary })).status).toBe(200);
+    const got = await getStored(r.learnerId, auth);
+    expect(got.data.snapshot.selfRoute).toBeNull();
+    expect(got.data.summary).not.toHaveProperty('selfRoute');
+  });
+
+  it('preserve rule: an older build re-uploading after a merge cannot erase the route or its counts', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withRoute(r.learnerId, route), summary: { ...summary, selfRoute: counts } });
+    const old = await put(r.learnerId, auth, { ...base, baseRev: 1, snapshot: snapshotFor(r.learnerId, [{ questId: 'quest:a', stars: 3 }]), summary: { ...summary, streakDays: 4 } });
+    expect(old.status).toBe(200);
+    const got = await getStored(r.learnerId, auth);
+    expect((got.data.snapshot.selfRoute as { id: string }).id).toBe('route:abc');
+    expect(got.data.summary.selfRoute).toEqual(counts);
+    expect(got.data.summary.streakDays).toBe(4);
+  });
+
+  it('an explicit null never replaces a stored route; an archived route does', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withRoute(r.learnerId, route), summary: { ...summary, selfRoute: counts } });
+    expect((await put(r.learnerId, auth, { ...base, baseRev: 1, snapshot: withRoute(r.learnerId, null), summary })).status).toBe(200);
+    expect(((await getStored(r.learnerId, auth)).data.snapshot.selfRoute as { id: string }).id).toBe('route:abc');
+    const archived = { ...route, archivedAt: '2026-11-01T00:00:00.000Z', updatedAt: '2026-11-01T00:00:00.000Z' };
+    expect((await put(r.learnerId, auth, { ...base, baseRev: 2, snapshot: withRoute(r.learnerId, archived), summary })).status).toBe(200);
+    expect(((await getStored(r.learnerId, auth)).data.snapshot.selfRoute as { archivedAt: string }).archivedAt).toBe('2026-11-01T00:00:00.000Z');
+  });
+
+  it('rejects a malformed route or malformed counts with 422 and stores nothing', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    expect((await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withRoute(r.learnerId, { ...route, id: 'plan:x' }), summary })).status).toBe(422);
+    expect((await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: snapshotFor(r.learnerId), summary: { ...summary, selfRoute: { ...counts, weeks: 0 } } })).status).toBe(422);
+    expect(await db.getSnapshot(r.learnerId)).toBeNull();
+  });
+});

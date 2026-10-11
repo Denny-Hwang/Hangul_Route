@@ -1,6 +1,6 @@
 import { TEACHER_VISIBLE_SUMMARY_KEYS, type ProgressSummary } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
-import { teacherVisibleSummary } from '../roster-summary';
+import { rosterSummary, teacherVisibleSummary } from '../roster-summary';
 
 const placement = {
   takenAt: '2026-10-10T10:05:00.000Z',
@@ -74,5 +74,28 @@ describe('teacherVisibleSummary (F-SPACE-002 T-1a, section 4.11)', () => {
     expect(teacherVisibleSummary(undefined, own)).toBeNull();
     expect(teacherVisibleSummary('summary', own)).toBeNull();
     expect(teacherVisibleSummary([full], own)).toBeNull();
+  });
+});
+
+describe('rosterSummary (F-PLAN-002 section 3.10: the self-route reaches the family space only)', () => {
+  const selfRoute = { done: 7, total: 9, notReady: 0, weeks: 12, endsOn: '2027-01-09' };
+  const withRoute = { ...full, selfRoute };
+
+  it('adds selfRoute to the projection for a family space', () => {
+    expect(rosterSummary(withRoute, own, 'family')).toEqual({ ...teacherVisibleSummary(withRoute, own), selfRoute });
+  });
+
+  it('removes it for a class and a school, which see exactly the teacher projection', () => {
+    for (const kind of ['class', 'school'] as const) {
+      const out = rosterSummary(withRoute, own, kind);
+      expect(out).toEqual(teacherVisibleSummary(withRoute, own));
+      expect(out && 'selfRoute' in out).toBe(false);
+    }
+  });
+
+  it('adds nothing when the summary has no route or a malformed one, and answers null without a summary', () => {
+    expect(rosterSummary(full, own, 'family')).toEqual(teacherVisibleSummary(full, own));
+    expect(rosterSummary({ ...full, selfRoute: 'oops' }, own, 'family')).toEqual(teacherVisibleSummary(full, own));
+    expect(rosterSummary(null, own, 'family')).toBeNull();
   });
 });

@@ -1,4 +1,4 @@
-import { PlanUpsertSchema, type Plan } from '@hangul-route/content-schema';
+import { PLAN_ITEMS_ISSUE_CODE, PLAN_MAX_ITEMS, PlanUpsertSchema, classicPlanCapIssue, type Plan } from '@hangul-route/content-schema';
 import { Hono, type Context } from 'hono';
 import { dbFor, type Db } from '../db';
 import { fail, ok } from '../envelope';
@@ -40,8 +40,15 @@ plansRoutes.put('/:id/plans', async (c) => {
   const existing = input.id ? await db.getPlan(input.id) : null;
   if (input.id && (!existing || existing.spaceId !== gated.spaceId)) return fail(c, 'not_found', 'Plan not found', 404);
 
+  // F-PLAN-002 section 3.5: an absent meta keeps the stored one (null on a create); null makes a classic plan.
+  const meta = input.meta === undefined ? (existing?.meta ?? null) : input.meta;
+  if (classicPlanCapIssue(input.items, meta)) {
+    const issue = { code: 'custom', path: ['items'], message: `A plan without a curriculum holds at most ${PLAN_MAX_ITEMS} items`, params: { code: PLAN_ITEMS_ISSUE_CODE } };
+    return fail(c, 'bad_request', 'Invalid plan body', 422, { issues: [issue] });
+  }
+
   const plan: Plan = existing
-    ? { ...existing, title: input.title, items: input.items, targetLearnerIds: targets, publishedAt: existing.publishedAt ?? (input.publish ? now : null), updatedAt: now }
+    ? { ...existing, title: input.title, items: input.items, targetLearnerIds: targets, publishedAt: existing.publishedAt ?? (input.publish ? now : null), updatedAt: now, meta }
     : {
         id: id('plan'),
         spaceId: gated.spaceId,
@@ -53,6 +60,7 @@ plansRoutes.put('/:id/plans', async (c) => {
         archivedAt: null,
         createdAt: now,
         updatedAt: now,
+        meta,
       };
   await db.putPlan(plan);
   return ok(c, { plan }, existing ? 200 : 201);
@@ -87,7 +95,7 @@ export async function inboxPlansFor(db: Db, learnerId: string) {
     if (!space || space.archivedAt) continue;
     for (const p of await db.plansOf(space.id)) {
       if (!p.publishedAt || p.archivedAt || (p.targetLearnerIds !== null && !p.targetLearnerIds.includes(learnerId))) continue;
-      rows.push({ id: p.id, spaceId: space.id, spaceKind: space.kind, spaceName: space.name, title: p.title, items: p.items, publishedAt: p.publishedAt, updatedAt: p.updatedAt });
+      rows.push({ id: p.id, spaceId: space.id, spaceKind: space.kind, spaceName: space.name, title: p.title, items: p.items, publishedAt: p.publishedAt, updatedAt: p.updatedAt, meta: p.meta ?? null });
     }
   }
   // Stable sort: plans published in the same millisecond keep creation order.

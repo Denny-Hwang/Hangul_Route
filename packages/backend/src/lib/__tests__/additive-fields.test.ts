@@ -167,3 +167,43 @@ describe('the stage latch merge (server-side key union, F-ROUTE-001 section 3.15
     expect(merge?.({ stage1: '2026-10-11T00:00:00.000Z' }, ['stage2'])).toEqual({ stage1: '2026-10-11T00:00:00.000Z' });
   });
 });
+
+describe('preserveAdditiveFields (self-route entry, F-PLAN-002 section 3.5)', () => {
+  const route = { id: 'route:a', updatedAt: '2026-10-12T08:00:00.000Z', archivedAt: null };
+  const counts = { done: 1, total: 3, notReady: 0, weeks: 12, endsOn: '2027-01-09' };
+  const field = ADDITIVE_FIELDS.find((f) => f.payloadKey === 'selfRoute');
+
+  it('lists selfRoute with its summary counterpart, appended after the earlier fields, and with no merge', () => {
+    expect(field).toBeDefined();
+    expect(field?.summaryKey).toBe('selfRoute');
+    expect(field?.merge).toBeUndefined();
+    expect(ADDITIVE_FIELDS.map((f) => f.payloadKey).slice(0, 3)).toEqual(['placements', 'stageDoneAt', 'selfRoute']);
+  });
+
+  it('treats a missing key and null (the schema default) as unset, a route as a value', () => {
+    expect(field?.isUnset(undefined)).toBe(true);
+    expect(field?.isUnset(null)).toBe(true);
+    expect(field?.isUnset(route)).toBe(false);
+    expect(field?.isUnset({ ...route, archivedAt: '2026-11-01T00:00:00.000Z' })).toBe(false);
+  });
+
+  it('never lets an incoming null replace a stored route, and keeps summary.selfRoute with it', () => {
+    const out = preserveAdditiveFields(incoming({ quests: ['new'], selfRoute: null }, { streakDays: 3 }), stored({ quests: ['old'], selfRoute: route }, { selfRoute: counts }));
+    expect(out.payload).toEqual({ quests: ['new'], selfRoute: route });
+    expect(out.summary).toEqual({ streakDays: 3, selfRoute: counts });
+  });
+
+  it('lets a sent route (an archived one included) replace the stored one', () => {
+    const archived = { ...route, archivedAt: '2026-11-01T00:00:00.000Z', updatedAt: '2026-11-01T00:00:00.000Z' };
+    const out = preserveAdditiveFields(incoming({ selfRoute: archived }, { selfRoute: { ...counts, done: 2 } }), stored({ selfRoute: route }, { selfRoute: counts }));
+    expect(out.payload).toEqual({ selfRoute: archived });
+    expect(out.summary).toEqual({ selfRoute: { ...counts, done: 2 } });
+  });
+
+  it('invents nothing when no route is stored', () => {
+    const inc = incoming({ selfRoute: null }, {});
+    const out = preserveAdditiveFields(inc, stored({ selfRoute: null }, {}));
+    expect(out.payload).toBe(inc.payload);
+    expect(out.summary).toBe(inc.summary);
+  });
+});

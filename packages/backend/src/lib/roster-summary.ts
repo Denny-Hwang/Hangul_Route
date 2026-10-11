@@ -1,4 +1,4 @@
-import { TEACHER_VISIBLE_SUMMARY_KEYS, type ProgressSummary, type TeacherVisibleSummaryKey } from '@hangul-route/content-schema';
+import { TEACHER_VISIBLE_SUMMARY_KEYS, type ProgressSummary, type SpaceKind, type TeacherVisibleSummaryKey } from '@hangul-route/content-schema';
 
 /**
  * What a roster reader receives of a learner's summary — F-SPACE-002 T-1a
@@ -40,4 +40,19 @@ export function teacherVisibleSummary(summary: unknown, planIds: ReadonlySet<str
   }
   // Stored summaries were validated by ProgressSummarySchema on write (routes/sync.ts); this only removes keys.
   return out as TeacherVisibleSummary;
+}
+
+/** What a family space additionally reads of its learner's summary. */
+export type FamilyVisibleSummary = TeacherVisibleSummary & Pick<ProgressSummary, 'selfRoute'>;
+
+/**
+ * The roster's summary for a space of `kind` (F-PLAN-002 section 3.10): the
+ * teacher projection above, plus the self-route counts for a family space
+ * only. A class or school never receives `selfRoute`; one summary is shared by
+ * every space the learner is in, so the field is removed at read time.
+ */
+export function rosterSummary(summary: unknown, planIds: ReadonlySet<string>, kind: SpaceKind): FamilyVisibleSummary | null {
+  const out = teacherVisibleSummary(summary, planIds);
+  if (!out || kind !== 'family' || !isPlain(summary) || !isPlain(summary.selfRoute)) return out;
+  return { ...out, selfRoute: summary.selfRoute as ProgressSummary['selfRoute'] };
 }

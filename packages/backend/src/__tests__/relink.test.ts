@@ -81,7 +81,7 @@ describe('re-link requests (F-TCH-001 §10.1)', () => {
     await db.putSpace({ id: 'space:fam', kind: 'family', name: 'Kim family', parentSpaceId: null, ownerAccountId: 'mom', joinCode: null, joinCodeExpiresAt: null, settings: { consentMode: 'parent', anonymizeRoster: false }, archivedAt: null, createdAt: T });
     await db.addMembership({ spaceId: 'space:fam', memberKind: 'account', memberId: 'mom', role: 'owner', joinedAt: T });
     await db.addMembership({ spaceId: 'space:fam', memberKind: 'learner', memberId: s.learnerId, role: 'student', joinedAt: T });
-    await db.putPlan({ id: 'plan:home', spaceId: 'space:fam', authorAccountId: 'mom', title: 'Home', items: [{ kind: 'quest', id: 'quest:a' }], targetLearnerIds: null, publishedAt: T, archivedAt: null, createdAt: T, updatedAt: T });
+    await db.putPlan({ id: 'plan:home', spaceId: 'space:fam', authorAccountId: 'mom', title: 'Home', items: [{ kind: 'quest', id: 'quest:a' }], targetLearnerIds: null, publishedAt: T, archivedAt: null, createdAt: T, updatedAt: T, meta: null });
 
     // The teacher knows the join code and the roster id, so they can ask for their own device and approve it.
     const TEACHER_DEVICE = 'device-teacher1';
