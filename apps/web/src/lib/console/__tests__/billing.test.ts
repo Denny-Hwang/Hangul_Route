@@ -1,8 +1,8 @@
 import { PLAN_PRICING } from '@hangul-route/content-schema';
-import { formatDate, formatUsd, getMessages } from '@hangul-route/i18n';
-import { describe, expect, it } from 'vitest';
+import { formatDate, formatUsd, getMessages, type UiLocale } from '@hangul-route/i18n';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { EntitlementView, SpaceListItem } from '../api';
-import { PLAN_PRICE, checkoutReturnNotice, currentPlanCards, isActive, planPrice, planRowsFor, promoPriceLine, sourceLine, statusLine } from '../billing';
+import { PLAN_TITLES, billingNoteText, checkoutReturnNote, currentPlanCards, isActive, planIncludes, planPrice, planRowsFor, planTitle, promoNoteText, promoPriceLine, rowPrice, sourceLine, statusLine } from '../billing';
 
 const now = new Date('2026-09-21T12:00:00.000Z');
 const ent = (over: Partial<EntitlementView>): EntitlementView => ({ id: 'ent:1', subjectKind: 'space', subjectId: 'space:fam', planKey: 'group_license', status: 'active', provider: 'stripe', providerRef: 'sub', customerRef: 'cus', seats: null, expiresAt: '2026-10-21T00:00:00.000Z', promoCode: null, updatedAt: '2026-09-20T00:00:00.000Z', subjectName: 'Kim family', ...over });
@@ -69,11 +69,24 @@ describe('billing view models (F-ENT-001 §3.6)', () => {
     expect(promoPriceLine('family_lifetime', null)).toBeNull();
   });
 
-  it('maps the checkout return parameter', () => {
-    expect(checkoutReturnNotice('success')).toContain('active');
-    expect(checkoutReturnNotice('cancel')).toContain('Nothing was charged');
-    expect(checkoutReturnNotice(null)).toBeNull();
-    expect(checkoutReturnNotice('weird')).toBeNull();
+  it('maps the checkout return parameter to a note key, worded at render time', () => {
+    expect(checkoutReturnNote('success')).toBe('success');
+    expect(checkoutReturnNote('cancel')).toBe('cancelled');
+    expect(checkoutReturnNote(null)).toBeNull();
+    expect(checkoutReturnNote('weird')).toBeNull();
+    expect(billingNoteText('success')).toBe('Thank you — the plan is active. Learners see it on their next sync.');
+    expect(billingNoteText('cancelled')).toBe('Nothing was charged.');
+    expect(billingNoteText('notConfigured')).toBe('Checkout is not set up on this deployment yet. Nothing was charged.');
+    expect(billingNoteText('checkoutFailed')).toBe("Couldn't start checkout. Try again.");
+    expect(billingNoteText('portalFailed')).toBe("Couldn't open the billing portal.");
+  });
+
+  it('words the promo note from data', () => {
+    expect(promoNoteText({ kind: 'applied', code: 'HOYA20', name: null })).toBe('HOYA20 applied.');
+    expect(promoNoteText({ kind: 'applied', code: 'HOYA20', name: 'Launch' })).toBe('HOYA20 applied · Launch.');
+    expect(promoNoteText({ kind: 'tooMany' })).toBe('Too many tries — wait a minute and try again.');
+    expect(promoNoteText({ kind: 'notConfigured' })).toBe('Codes are not set up on this deployment yet.');
+    expect(promoNoteText({ kind: 'invalid' })).toBe("That code can't be used right now — check the spelling or the date.");
   });
 });
 
@@ -89,7 +102,7 @@ describe('billing words and prices per locale (F-I18N-001 PR 9)', () => {
   it('prices plans from PLAN_PRICING amounts through formatUsd, never the English label (F-I18N-001 §3.1)', () => {
     expect(planPrice('family_lifetime')).toBe('$15.30 once');
     expect(planPrice('group_license')).toBe('$153 / year');
-    expect(PLAN_PRICE).toEqual({ free: '$0', family_lifetime: '$15.30 once', group_license: '$153 / year', school_seat: 'Contact us' });
+    expect((['free', 'family_lifetime', 'group_license', 'school_seat'] as const).map((k) => rowPrice(k))).toEqual(['$0', '$15.30 once', '$153 / year', 'Contact us']);
     for (const locale of ['en', 'es', 'ko'] as const) {
       const price = getMessages(locale).console.price;
       expect(planPrice('family_lifetime', locale)).toBe(price.once(formatUsd(locale, PLAN_PRICING.family_lifetime.amountUsd)));
@@ -116,5 +129,56 @@ describe('billing words and prices per locale (F-I18N-001 PR 9)', () => {
   it('reads the billing date in UTC whatever the device time zone', () => {
     expect(statusLine(ent({ expiresAt: '2026-10-21T00:30:00.000Z' }), now)).toBe('active · renews Oct 21, 2026');
     expect(statusLine(ent({ expiresAt: '2026-10-21T23:30:00.000Z' }), now)).toBe('active · renews Oct 21, 2026');
+  });
+});
+
+describe('billing page words per locale (F-I18N-001 PR 10b)', () => {
+  const PSEUDO = 'en-XA' as UiLocale;
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('keeps the English plan names, includes lines and the SchoolAdmin alias', () => {
+    expect(PLAN_TITLES).toEqual({ free: 'Free', family_lifetime: 'Family Lifetime', group_license: 'Group License', school_seat: 'School Contract' });
+    expect(planTitle('group_license')).toBe('Group License');
+    expect(planIncludes('free')).toBe('Stage 1, local progress, Rescue Code, file backup; classes up to 20 students');
+    expect(planIncludes('family_lifetime')).toBe('Every Stage, now and later, for one family: up to 5 learners, cloud sync, grown-up dashboard and plans');
+    expect(planIncludes('group_license')).toBe('A class or school: every student premium while enrolled, no 20-student cap; a school holds up to 10 teachers / 300 students');
+    expect(planIncludes('school_seat')).toBe('Beyond 300 students or 10 teachers — seats by contract');
+    expect(currentPlanCards([ent({ subjectKind: 'account', subjectId: 'me' })], now)[0]?.subject).toBe('your account');
+  });
+
+  it('words cards, rows, sources and notes from the dictionary in every locale', () => {
+    for (const locale of ['en', 'es', 'ko'] as const) {
+      const b = getMessages(locale).console.billing;
+      const [card] = currentPlanCards([ent({ subjectKind: 'account', subjectId: 'me' })], now, locale);
+      expect(card).toMatchObject({ title: b.planTitle.group_license, subject: b.yourAccount, status: statusLine(ent({}), now, locale) });
+      const rows = planRowsFor('me', [space('space:sch', 'school')], [], now, locale);
+      expect(rows.map((r) => [r.title, r.includes, r.price])).toEqual([
+        [b.planTitle.free, b.includes.free, formatUsd(locale, 0)],
+        [b.planTitle.group_license, b.includes.group_license(10, 300), planPrice('group_license', locale)],
+        [b.planTitle.school_seat, b.includes.school_seat(300, 10), b.contactPrice],
+      ]);
+      expect(sourceLine({ provider: 'apple', promoCode: 'X1' }, locale)).toBe(b.source(b.provider.apple, 'X1'));
+      expect(billingNoteText('portalFailed', locale)).toBe(b.portalFailed);
+    }
+  });
+
+  it('leaves no English in the pseudo-locale', () => {
+    vi.stubEnv('NEXT_PUBLIC_PSEUDO_LOCALE', '1');
+    const bracketed = /^\[.*\]$/;
+    // No expiry date: the formatters take UI locales only, and en-XA is a dictionary test locale.
+    const [card] = currentPlanCards([ent({ subjectKind: 'account', subjectId: 'me', expiresAt: null })], now, PSEUDO);
+    expect(card?.title).toMatch(bracketed);
+    expect(card?.subject).toMatch(bracketed);
+    for (const row of planRowsFor('me', [space('space:fam', 'family'), space('space:sch', 'school')], [], now, PSEUDO)) {
+      expect(row.title).toMatch(bracketed);
+      expect(row.includes).toMatch(bracketed);
+    }
+    expect(rowPrice('school_seat', PSEUDO)).toMatch(bracketed);
+    expect(sourceLine({ provider: 'manual', promoCode: null }, PSEUDO)).toMatch(bracketed);
+    for (const note of ['success', 'cancelled', 'notConfigured', 'checkoutFailed', 'portalFailed'] as const) expect(billingNoteText(note, PSEUDO)).toMatch(bracketed);
+    for (const kind of ['tooMany', 'notConfigured', 'invalid'] as const) expect(promoNoteText({ kind }, PSEUDO)).toMatch(bracketed);
+    expect(promoNoteText({ kind: 'applied', code: 'HOYA20', name: null }, PSEUDO)).toMatch(bracketed);
   });
 });

@@ -340,6 +340,10 @@ export const consoleMsgs = {
       label: 'Your plan',
       title: (items: number) => `Your plan (${items})`,
       empty: 'Add quests or whole episodes from the catalog.',
+      /** The reorder and remove buttons on each item (glyphs; a locale may swap them). */
+      moveUp: { cta: '↑' },
+      moveDown: { cta: '↓' },
+      remove: { cta: '×' },
       dateFor: (item: number) => `Target date for item ${item}`,
       noteFor: (item: number) => `Note for item ${item}`,
       notePlaceholder: 'note (optional)',

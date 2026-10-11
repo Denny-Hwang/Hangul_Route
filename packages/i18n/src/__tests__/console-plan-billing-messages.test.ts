@@ -58,6 +58,7 @@ describe('plan page (teach/space/plan/page.tsx)', () => {
     expect(p.yours.label).toBe('Your plan');
     expect(p.yours.title(0)).toBe('Your plan (0)');
     expect(p.yours.empty).toBe('Add quests or whole episodes from the catalog.');
+    expect([p.yours.moveUp.cta, p.yours.moveDown.cta, p.yours.remove.cta]).toEqual(['↑', '↓', '×']);
     expect(p.yours.dateFor(2)).toBe('Target date for item 2');
     expect(p.yours.noteFor(2)).toBe('Note for item 2');
     expect(p.yours.notePlaceholder).toBe('note (optional)');

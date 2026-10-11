@@ -1,4 +1,4 @@
-import type { PlanItem } from '@hangul-route/content-schema';
+import type { PlanItem, SpaceKind } from '@hangul-route/content-schema';
 import { DEFAULT_LOCALE, formatDate, getMessages, type UiLocale } from '@hangul-route/i18n';
 import type { RosterLearner } from './api';
 
@@ -60,10 +60,29 @@ export function planReadout(planId: string, learners: readonly RosterLearner[]):
   });
 }
 
-export function readoutLine(row: ReadoutRow): string {
-  if (!row.synced) return 'waiting for the next sync';
-  const base = `${row.done} / ${row.total}`;
-  return row.notReady > 0 ? `${base} · ${row.notReady} not ready yet` : base;
+/** "2 / 3" · "0 / 2 · 1 not ready yet" · "waiting for the next sync", in `locale`. */
+export function readoutLine(row: ReadoutRow, locale: UiLocale = DEFAULT_LOCALE): string {
+  const words = getMessages(locale).console.plan.readout;
+  if (!row.synced) return words.waiting;
+  return row.notReady > 0 ? words.withNotReady(row.done, row.total, row.notReady) : words.progress(row.done, row.total);
+}
+
+/**
+ * Who a plan is for, in `locale`: everyone in the space, or a count of its members.
+ * `kind` is null until the roster loads; the page then said "space" and "learners", and still does.
+ */
+export function planAudience(targets: number | null, kind: SpaceKind | null, locale: UiLocale = DEFAULT_LOCALE): string {
+  const audience = getMessages(locale).console.plan.audience;
+  return targets === null ? audience.everyone[kind ?? 'space'] : audience.some[kind ?? 'family'](targets);
+}
+
+/** Why the plan page could not load or save; a key, worded at render time so it follows the header language select. */
+export type PlanError = 'cantReach' | 'saveInvalid' | 'saveFailed' | 'archiveFailed';
+
+/** The words for a `PlanError`, in `locale`. */
+export function planErrorText(error: PlanError, locale: UiLocale = DEFAULT_LOCALE): string {
+  const c = getMessages(locale).console;
+  return error === 'cantReach' ? c.cantReach : c.plan[error];
 }
 
 export function moveItem(items: readonly PlanItem[], from: number, to: number): PlanItem[] {

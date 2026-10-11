@@ -1,7 +1,7 @@
-import { formatDate, getMessages } from '@hangul-route/i18n';
-import { describe, expect, it } from 'vitest';
+import { formatDate, getMessages, type UiLocale } from '@hangul-route/i18n';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { RosterLearner } from '../api';
-import { addDays, currentPlan, latestPublished, moveItem, oneExplicitPerDay, planReadout, planStatusLabel, readoutLine, spreadDates } from '../plans';
+import { addDays, currentPlan, latestPublished, moveItem, oneExplicitPerDay, planAudience, planErrorText, planReadout, planStatusLabel, readoutLine, spreadDates } from '../plans';
 
 describe('plan helpers (F-PLAN-001 §3.5)', () => {
   it('spreads dates evenly and never twice on one day', () => {
@@ -67,6 +67,12 @@ describe('plan helpers (F-PLAN-001 §3.5)', () => {
     expect(readoutLine(rows[0] as ReadoutRowT)).toBe('2 / 3');
     expect(readoutLine(rows[1] as ReadoutRowT)).toBe('0 / 2 · 1 not ready yet');
     expect(readoutLine(rows[2] as ReadoutRowT)).toBe('waiting for the next sync');
+    for (const locale of ['en', 'es', 'ko'] as const) {
+      const words = getMessages(locale).console.plan.readout;
+      expect(readoutLine(rows[0] as ReadoutRowT, locale)).toBe(words.progress(2, 3));
+      expect(readoutLine(rows[1] as ReadoutRowT, locale)).toBe(words.withNotReady(0, 2, 1));
+      expect(readoutLine(rows[2] as ReadoutRowT, locale)).toBe(words.waiting);
+    }
   });
 
   it('moves items within bounds only', () => {
@@ -80,3 +86,42 @@ describe('plan helpers (F-PLAN-001 §3.5)', () => {
 });
 
 type ReadoutRowT = ReturnType<typeof planReadout>[number];
+
+describe('plan page words (F-I18N-001 PR 10b)', () => {
+  const PSEUDO = 'en-XA' as UiLocale;
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('words the errors from a key', () => {
+    expect(planErrorText('cantReach')).toBe("Can't reach the console right now.");
+    expect(planErrorText('saveInvalid')).toBe("Some learners are no longer in this space — check who it's for.");
+    expect(planErrorText('saveFailed')).toBe("Didn't save. Try again.");
+    expect(planErrorText('archiveFailed')).toBe("Couldn't archive it right now.");
+  });
+
+  it('names who the plan is for, as the page did', () => {
+    expect(planAudience(null, 'class')).toBe('everyone in this class');
+    expect(planAudience(null, null)).toBe('everyone in this space');
+    expect(planAudience(3, 'class')).toBe('3 students');
+    expect(planAudience(2, 'family')).toBe('2 learners');
+    expect(planAudience(1, 'school')).toBe('1 members');
+    expect(planAudience(2, null)).toBe('2 learners'); // before the roster loads, as before
+    for (const locale of ['en', 'es', 'ko'] as const) {
+      const a = getMessages(locale).console.plan.audience;
+      expect(planAudience(null, 'family', locale)).toBe(a.everyone.family);
+      expect(planAudience(4, 'class', locale)).toBe(a.some.class(4));
+    }
+  });
+
+  it('leaves no English in the pseudo-locale', () => {
+    vi.stubEnv('NEXT_PUBLIC_PSEUDO_LOCALE', '1');
+    const bracketed = /^\[.*\]$/;
+    for (const error of ['cantReach', 'saveInvalid', 'saveFailed', 'archiveFailed'] as const) expect(planErrorText(error, PSEUDO)).toMatch(bracketed);
+    expect(planAudience(null, 'class', PSEUDO)).toMatch(bracketed);
+    expect(planAudience(3, 'class', PSEUDO)).toMatch(bracketed);
+    const row = { learnerId: 'a', name: 'a', done: 0, total: 2, notReady: 1, synced: true, lastActiveAt: 't' };
+    expect(readoutLine(row, PSEUDO)).toMatch(bracketed);
+    expect(readoutLine({ ...row, synced: false }, PSEUDO)).toMatch(bracketed);
+  });
+});
