@@ -146,6 +146,25 @@ export const spacing = {
   jumbo: 64,
 } as const;
 
+/**
+ * Responsive layout scale (F-LAYOUT-001 §3.1; design/tokens/layout.v1.md).
+ * Units are CSS px / dp. The class (compact / regular / wide) follows the
+ * window, not the device; `layoutClassFor` in `layout.ts` turns a window size
+ * into these numbers. Type sizes and the 64 touch-target floor never change.
+ */
+export const layout = {
+  breakpoint: { regular: 600, wide: 900 }, // window width
+  shortHeight: 480, // window height below this = 'short'
+  phoneShortSide: 600, // min(width, height) below this = a phone ...
+  phoneMaxLongSide: 1000, // ... if the long side is also at most this (a 1100x500 desktop window is not a phone)
+  sideBySideMin: 700, // F-STORY-002 reader: two columns when landscape and width >= this
+  maxWidth: { reading: 720, full: 1120 },
+  gutter: { compact: spacing.lg, regular: spacing.xl, wide: spacing.xxl },
+  pane: { master: 400, gap: spacing.xl }, // master pane width on wide; detail takes the rest
+  mediaScale: { compact: 1, regular: 1.2, wide: 1.4 },
+  columns: { cards: { compact: 2, regular: 3, wide: 3 }, journeyCellMax: 112 },
+} as const;
+
 export const radii = {
   none: 0,
   xs: 4,
@@ -272,6 +291,7 @@ export const z = {
 export const tokens = {
   colors,
   spacing,
+  layout,
   radii,
   typography,
   shadows,
@@ -284,6 +304,7 @@ export const tokens = {
 export type Tokens = typeof tokens;
 export type ColorTokens = typeof colors;
 export type SpacingTokens = typeof spacing;
+export type LayoutTokens = typeof layout;
 export type RadiiTokens = typeof radii;
 export type TypographyTokens = typeof typography;
 export type StageKey = keyof typeof colors.stage;
