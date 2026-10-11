@@ -264,6 +264,7 @@ Entry keys are entity ids (any `^[a-z0-9-]+:[a-z0-9-:.]+$`); field keys are **tr
 | `quest:` | `title`, `blurb`, and `steps.<stepId>.title|body|hoyaLine` | `titleEn`/`blurbEn`; `QuestStep.titleEn`/`bodyEn`/`hoyaLineEn` (`quest.ts:14-16,26-27`) |
 | `minigame:` and inline pairs | `label`, `gloss`, `npc`, `prompt` | `labelEn`, `en`, `npcEn` (`minigame-config.ts:12-18`, `minigame.ts:71`) |
 | `stage:` / `theme:` | `title`, `oneLiner`, `anchorSkill` | `grid.ts:10-12,20-21` |
+| `story:` (F-STORY-001 PR 1.3) | `title`, `summary`, `hoyaIntro`, `hoyaOutro`, `scenes.<sceneId>.narration` / `.caption` / `.alt`, `keywords.<id>.gloss`, `checks.<checkId>.prompt` / `.explain` / `.hint` / `.options.<optionId>`, `cultureNotes.<id>.title` / `.body`, `facts.<id>.claim`, `errata.<id>.summary` | `titleEn`/`summaryEn`/`hoyaIntroEn`/`hoyaOutroEn` and the nested `narrationEn`/`captionEn`/`altEn`, keyword `en`, check `promptEn`/`explainEn`/`hintEn`/option `en`, `CultureNote.titleEn`/`bodyEn`, `claimEn`, `summaryEn` (`schemas/story.ts`, `story-check.ts`). `claimKo`, source titles, publishers and quotes are citations and stay in their source language |
 
 **Never overridable** (error): `ko`, `char`, `romanization`, `target`, `answer_ko`, `lang_ko`, `audioRef`, ids, `order`, anything not in the allow-list. Taught Korean and its romanization come only from the base.
 
@@ -289,6 +290,7 @@ New handling for files under `content/i18n/<locale>/` (plain Node, rule-based, n
 | `overlay-forbidden-field` | error | a field outside `OVERLAY_FIELDS` for the id prefix, or one of `ko`, `romanization`, `target`, `char`, `audioRef` |
 | `korean-in-ui-field` | error | **`es` overlays**: any Hangul in any value (Spanish text has no business with Hangul; taught Korean comes from the base). **`ko` overlays**: Hangul is allowed in translatable fields only |
 | `overlay-circular-gloss` | error | a `ko` overlay `gloss` equal to the base entity's `ko` string |
+| `overlay-token-mismatch` | error | a `story:` overlay of `scenes.<sceneId>.narration` whose `{kw:<id>}` tokens are not **exactly the same multiset** as the base narration's (F-STORY-001 §3.4: a token renders as `KoreanText`, so a translation may reorder the words around it but may not add, drop or rename one) |
 | `banned-on-learner-surface` | error | a word from `banned-words.json[locale].learner` in any overlay value (Unicode boundaries for `es`, substring for `ko`); the base rule now reads the `en` list from the same JSON |
 | `overlay-missing` | warning (`::warning`) | the base entity has a translatable English field the overlay lacks |
 | `overlay-missing` | **error** for locales listed in `HANGUL_ROUTE_STRICT_LOCALES` | set in `content-validation.yml` per locale once `LOCALE_STATUS` is `shipped` |
