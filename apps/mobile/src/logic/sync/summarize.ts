@@ -36,7 +36,8 @@ export function planProgressOf(snapshot: ProgressSnapshot, planNotReady: Readonl
     out[planId] = row;
   }
   for (const [planId, n] of Object.entries(planNotReady)) {
-    if (n <= 0) continue;
+    // Only space plans: a self-route's count stays off the summary class rosters read (F-PLAN-002 section 3.10).
+    if (n <= 0 || !planId.startsWith('plan:')) continue;
     const row = out[planId] ?? { done: 0, total: 0, notReady: 0 };
     row.notReady = n;
     out[planId] = row;

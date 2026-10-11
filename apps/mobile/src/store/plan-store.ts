@@ -3,7 +3,7 @@ import { create } from 'zustand';
 import { episodesAll, questsAll, stages } from '../content';
 import { isStageEntitled } from '../logic/entitlement';
 import { dayKey } from '../logic/homework/mission-builder';
-import { deriveAssignments } from '../logic/homework/plan-derivation';
+import { deriveAssignments, sourcesOf } from '../logic/homework/plan-derivation';
 import { readJson, writeJson } from '../platform/storage';
 import { effectiveTier } from './tier-store';
 import { useProfileStore } from './profile-store';
@@ -11,7 +11,8 @@ import { useProgressStore } from './progress-store';
 
 /**
  * Plans received for each learner — F-PLAN-001 §3.3. Applying the inbox
- * derives homework into the progress snapshot; `notReady` feeds the summary.
+ * derives homework into the progress snapshot (with the active self-route,
+ * F-PLAN-002 section 3.6); `notReady` feeds the summary.
  */
 interface State {
   byLearner: Record<string, InboxPlan[]>;
@@ -56,8 +57,9 @@ export const usePlanStore = create<State & Actions>((set, get) => ({
     const snapshot = progress.ensure(learnerId);
     const now = new Date();
     const profile = useProfileStore.getState().profiles.find((p) => p.id === learnerId);
+    // The learner's own weekly plan rides along as a source of kind `self` (F-PLAN-002 section 3.6).
     const result = deriveAssignments({
-      plans,
+      sources: sourcesOf(plans, snapshot.selfRoute),
       snapshot,
       profileId: learnerId,
       quests: questsAll,

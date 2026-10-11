@@ -9,6 +9,7 @@ vi.mock('../../platform/storage', () => ({
   }),
 }));
 
+import { selfRoute } from '../../logic/homework/__tests__/curriculum-fixture';
 import { useAccountStore } from '../account-store';
 import { usePlanStore, unlockedStagesFor } from '../plan-store';
 import { useProfileStore } from '../profile-store';
@@ -60,5 +61,20 @@ describe('plan-store (F-PLAN-001 §3.3)', () => {
     mem.set('plans:profile:a', [plan]);
     expect(await usePlanStore.getState().hydrate('profile:a')).toEqual([plan]);
     expect(await usePlanStore.getState().hydrate('profile:a')).toEqual([plan]);
+  });
+
+  it('derives the active self-route beside the inbox plans (F-PLAN-002 section 3.6)', async () => {
+    const route = selfRoute({ items: [{ kind: 'quest', id: 'quest:stage1-letters-q2' }] });
+    useProgressStore.getState().ensure('profile:a');
+    const snapshot = useProgressStore.getState().byProfile['profile:a']!;
+    useProgressStore.getState().replaceSnapshot('profile:a', { ...snapshot, selfRoute: route });
+    const outcome = await usePlanStore.getState().applyPlans('profile:a', [plan]);
+    expect(outcome.added).toBe(2);
+    const homework = useProgressStore.getState().byProfile['profile:a']?.homework ?? [];
+    expect(homework.map((h) => [h.id, h.assignedBy])).toEqual([
+      ['plan:w3#quest:stage1-letters-q1', 'teacher'],
+      ['route:mine#quest:stage1-letters-q2', 'system'],
+    ]);
+    expect(useProgressStore.getState().byProfile['profile:a']?.selfRoute).toEqual(route);
   });
 });
