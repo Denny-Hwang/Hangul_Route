@@ -8,7 +8,7 @@ import { Button, ConsoleShell, Muted, Notice, panelStyle } from '@/components/co
 import { useConsole } from '@/components/console/use-console';
 import type { RelinkView, Roster } from '@/lib/console/api';
 import { COPY } from '@/lib/console/copy';
-import { RELINK_REFRESH_MS, canReissueRescueCode, expiresLabel, requestedLabel } from '@/lib/console/relink';
+import { RELINK_REFRESH_MS, canReissueRescueCode, decideFailureNote, expiresLabel, requestedLabel } from '@/lib/console/relink';
 import { ROUTES, spaceIdFrom } from '@/lib/console/routing';
 
 /** console/relink-approval — F-TCH-001 §10.1. Identity and timing only; no progress numbers. */
@@ -52,7 +52,7 @@ function RelinkInner(): JSX.Element {
     const result = await api.decideRelink(spaceId, req.id, approve);
     setBusy(false);
     if (!result.ok) {
-      setNote(result.error === 'unknown' ? 'This request already closed — the learner can ask again.' : "Didn't go through. Try again.");
+      setNote(decideFailureNote(result));
     } else {
       setNote(approve ? `${req.learnerName} can open their new device now.` : `Closed. ${req.learnerName}'s device will say "ask your teacher".`);
     }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { canDeleteLearnerData, canReissueRescueCode, expiresLabel, minutesLeft, requestedLabel } from '../relink';
+import { canDeleteLearnerData, canReissueRescueCode, decideFailureNote, expiresLabel, minutesLeft, requestedLabel } from '../relink';
 
 const now = new Date('2026-09-21T12:00:00.000Z');
 
@@ -26,5 +26,14 @@ describe('relink helpers (F-TCH-001 §10)', () => {
     expect(canReissueRescueCode('family')).toBe(true);
     expect(canReissueRescueCode('class')).toBe(false);
     expect(canReissueRescueCode('school')).toBe(false);
+  });
+
+  it('decide failures: a closed request says so; a learner who left the class (409 not_a_member, F-SPACE-002 T-1b) gets the generic error', () => {
+    expect(decideFailureNote({ error: 'unknown', code: 'not_pending' })).toBe('This request already closed — the learner can ask again.');
+    expect(decideFailureNote({ error: 'unknown', code: 'expired' })).toBe('This request already closed — the learner can ask again.');
+    expect(decideFailureNote({ error: 'unknown' })).toBe('This request already closed — the learner can ask again.');
+    expect(decideFailureNote({ error: 'unknown', code: 'not_a_member' })).toBe("Didn't go through. Try again.");
+    expect(decideFailureNote({ error: 'network' })).toBe("Didn't go through. Try again.");
+    expect(decideFailureNote({ error: 'forbidden', code: 'forbidden' })).toBe("Didn't go through. Try again.");
   });
 });
