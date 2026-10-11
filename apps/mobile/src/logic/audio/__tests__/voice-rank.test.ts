@@ -138,6 +138,21 @@ describe('rankVoices: score', () => {
     expect(rankVoices([b, a], 'ko-KR', { online: true }).map((x) => x.id)).toEqual(['a-id', 'b-id']);
   });
 
+  it('keeps the input order for voices with the same score and the same id (stable)', () => {
+    const first = v({ id: 'dup', name: 'First' });
+    const second = v({ id: 'dup', name: 'Second' });
+    expect(rankVoices([first, second], 'ko-KR', { online: true }).map((x) => x.name)).toEqual(['First', 'Second']);
+  });
+
+  it('a bare "ko" tag ranks 5 points below an exact ko-KR tag, not just below', () => {
+    // exact ko-KR (+5) vs prefix ko (0) with a 3-point deficit elsewhere: exact still wins; with a 6-point one it loses.
+    const exact = v({ id: 'a', name: 'A', lang: 'ko-KR', local: null });
+    const prefixLocal = v({ id: 'b', name: 'B', lang: 'ko', local: true }); // +15
+    expect(rankVoices([exact, prefixLocal], 'ko-KR', { online: true }).map((x) => x.id)).toEqual(['b', 'a']);
+    const prefixDefault = v({ id: 'c', name: 'C', lang: 'ko', local: null, isDefault: true }); // +20
+    expect(rankVoices([exact, prefixDefault], 'ko-KR', { online: true }).map((x) => x.id)).toEqual(['c', 'a']);
+  });
+
   it('does not mutate its input', () => {
     const input = [...MAC_KO];
     rankVoices(input, 'ko-KR', { online: true });

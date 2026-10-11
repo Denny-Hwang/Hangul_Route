@@ -257,6 +257,18 @@ describe('createCapabilityTracker', () => {
       expect(early).toHaveBeenCalledTimes(1);
 
       await expect(tracker.whenReady(1500)).resolves.toBeUndefined();
+
+      // A change that leaves the Korean status unknown (clips, unlock) does not end the wait.
+      const fresh = createCapabilityTracker({ online: true, clips: false });
+      const waiting = vi.fn();
+      void fresh.whenReady(1500).then(waiting);
+      fresh.setClips(true);
+      fresh.setUnlocked(true);
+      await vi.advanceTimersByTimeAsync(0);
+      expect(waiting).not.toHaveBeenCalled();
+      fresh.setVoices([]);
+      await vi.advanceTimersByTimeAsync(0);
+      expect(waiting).toHaveBeenCalledTimes(1);
     } finally {
       vi.useRealTimers();
     }
@@ -309,8 +321,9 @@ describe('attachWebVoices', () => {
 
   it('a missing engine is none/no_engine', () => {
     const tracker = createCapabilityTracker({ online: true, clips: false });
-    attachWebVoices(tracker, null, fakeNetwork(true), { timeoutMs: 1500 });
+    const detach = attachWebVoices(tracker, null, fakeNetwork(true), { timeoutMs: 1500 });
     expect(tracker.get().tts).toEqual({ state: 'none', reason: 'no_engine' });
+    expect(() => detach()).not.toThrow();
   });
 
   it('offline + only the network voice is offline_network_only; going online makes it ready', async () => {

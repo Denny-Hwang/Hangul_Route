@@ -44,37 +44,45 @@ export function normLang(raw: string): string {
   return raw.trim().toLowerCase().replace(/_/g, '-');
 }
 
-/**
- * Preference chain per wanted language, normalised, best first. An entry
- * ending in "-" means "the bare language, or any tag starting with it".
- */
-const CHAINS: Readonly<Record<SpeechLang, readonly string[]>> = {
-  'ko-KR': ['ko-kr', 'ko-'],
-  'en-US': ['en-us', 'en-'],
-  'es-US': ['es-us', 'es-mx', 'es-419', 'es-'],
-};
-
-/** Score bonus by position in the chain: the exact tag gets the spec's +5, later tags a little less. */
-const CHAIN_BONUS: readonly number[] = [5, 4, 3, 0];
-
-/** Index into the chain this tag matches, or -1 when the language is not eligible. */
-function chainIndex(lang: string, want: SpeechLang): number {
-  const norm = normLang(lang);
-  const chain = CHAINS[want];
-  for (let i = 0; i < chain.length; i++) {
-    const entry = chain[i] as string;
-    if (entry.endsWith('-')) {
-      if (norm === entry.slice(0, -1) || norm.startsWith(entry)) return i;
-    } else if (norm === entry) {
-      return i;
-    }
-  }
-  return -1;
+interface ChainEntry {
+  /** Normalised tag. */
+  tag: string;
+  /** true = the bare language or any tag starting with `tag` + "-". */
+  prefix: boolean;
+  /** Score bonus: the exact tag gets the spec's +5, later tags a little less. */
+  bonus: number;
 }
 
+/** Preference chain per wanted language, best first (§3.4 eligibility 1). */
+const CHAINS: Readonly<Record<SpeechLang, readonly ChainEntry[]>> = {
+  'ko-KR': [
+    { tag: 'ko-kr', prefix: false, bonus: 5 },
+    { tag: 'ko', prefix: true, bonus: 0 },
+  ],
+  'en-US': [
+    { tag: 'en-us', prefix: false, bonus: 5 },
+    { tag: 'en', prefix: true, bonus: 0 },
+  ],
+  'es-US': [
+    { tag: 'es-us', prefix: false, bonus: 5 },
+    { tag: 'es-mx', prefix: false, bonus: 4 },
+    { tag: 'es-419', prefix: false, bonus: 3 },
+    { tag: 'es', prefix: true, bonus: 0 },
+  ],
+};
+
+/** The first chain entry this tag matches, or null when the language is not eligible. */
+function matchChain(lang: string, want: SpeechLang): ChainEntry | null {
+  const norm = normLang(lang);
+  for (const entry of CHAINS[want]) {
+    if (entry.prefix ? norm === entry.tag || norm.startsWith(`${entry.tag}-`) : norm === entry.tag) return entry;
+  }
+  return null;
+}
+
+/** The first ASCII word of a voice name, lower-cased ("Eddy (한국어(한국))" gives "eddy"). */
 function leadingWord(name: string): string {
-  const first = name.trim().split(/[^A-Za-z0-9_]/)[0];
-  return (first ?? '').toLowerCase();
+  return name.trim().replace(/[^A-Za-z0-9_][\s\S]*$/, '').toLowerCase();
 }
 
 const YUNA_EN = /(^|[^A-Za-z0-9_])yuna($|[^A-Za-z0-9_])/i;
@@ -99,22 +107,21 @@ export function effectiveQuality(voice: VoiceCandidate): VoiceQuality {
   return QUALITY_RANK[fromName] > QUALITY_RANK[voice.quality] ? fromName : voice.quality;
 }
 
-function eligible(voice: VoiceCandidate, want: SpeechLang, ctx: { online: boolean }): boolean {
-  if (chainIndex(voice.lang, want) < 0) return false;
+/** The non-language eligibility rules (§3.4 rules 2 and 3). */
+function allowed(voice: VoiceCandidate, want: SpeechLang, ctx: { online: boolean }): boolean {
   if (want === 'ko-KR' && EXCLUDED_LOWER.has(leadingWord(voice.name))) return false;
   if (!ctx.online && voice.local === false) return false;
   return true;
 }
 
-function score(voice: VoiceCandidate, want: SpeechLang): number {
-  let s = 0;
+function score(voice: VoiceCandidate, want: SpeechLang, languageBonus: number): number {
+  let s = languageBonus;
   if (want === 'ko-KR' && isKnownGoodKorean(voice.name)) s += 100;
   const quality = effectiveQuality(voice);
   if (quality === 'premium') s += 40;
   else if (quality === 'enhanced') s += 30;
   if (voice.isDefault) s += 20;
   if (voice.local === true) s += 15;
-  s += CHAIN_BONUS[chainIndex(voice.lang, want)] ?? 0;
   return s;
 }
 
@@ -124,11 +131,14 @@ export function rankVoices(
   want: SpeechLang,
   ctx: { online: boolean },
 ): VoiceCandidate[] {
-  return all
-    .filter((voice) => eligible(voice, want, ctx))
-    .map((voice) => ({ voice, s: score(voice, want) }))
-    .sort((a, b) => b.s - a.s || (a.voice.id < b.voice.id ? -1 : a.voice.id > b.voice.id ? 1 : 0))
-    .map((entry) => entry.voice);
+  const scored: Array<{ voice: VoiceCandidate; s: number }> = [];
+  for (const voice of all) {
+    const entry = matchChain(voice.lang, want);
+    if (entry === null || !allowed(voice, want, ctx)) continue;
+    scored.push({ voice, s: score(voice, want, entry.bonus) });
+  }
+  scored.sort((a, b) => b.s - a.s || (a.voice.id < b.voice.id ? -1 : a.voice.id > b.voice.id ? 1 : 0));
+  return scored.map((entry) => entry.voice);
 }
 
 export function pickVoice(

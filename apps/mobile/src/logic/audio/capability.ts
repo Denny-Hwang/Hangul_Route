@@ -122,17 +122,13 @@ export function whenVoicesReady(
   const now = engine.getVoices();
   if (now.length > 0) return Promise.resolve(now);
   return new Promise((resolve) => {
-    let done = false;
-    let timer: ReturnType<typeof setTimeout> | undefined;
     const finish = (): void => {
-      if (done) return;
-      done = true;
-      if (timer !== undefined) clearTimeout(timer);
+      clearTimeout(timer);
       engine.removeEventListener('voiceschanged', finish);
       resolve(engine.getVoices());
     };
     engine.addEventListener('voiceschanged', finish);
-    timer = setTimeout(finish, opts.timeoutMs);
+    const timer = setTimeout(finish, opts.timeoutMs);
   });
 }
 
@@ -205,17 +201,16 @@ export function createCapabilityTracker(init: { online: boolean; clips: boolean 
     whenReady: (timeoutMs) => {
       if (current.tts.state !== 'unknown') return Promise.resolve();
       return new Promise<void>((resolve) => {
-        let off: () => void = () => undefined;
-        const timer = setTimeout(() => {
-          off();
-          resolve();
-        }, timeoutMs);
-        off = subscribe((c) => {
+        const off = subscribe((c) => {
           if (c.tts.state === 'unknown') return;
           clearTimeout(timer);
           off();
           resolve();
         });
+        const timer = setTimeout(() => {
+          off();
+          resolve();
+        }, timeoutMs);
       });
     },
     subscribe,
