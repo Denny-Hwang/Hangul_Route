@@ -6,6 +6,7 @@ import {
   aboutMinutes,
   blockMinutes,
   buildDeck,
+  catalogueTitle,
   classCodeBlock,
   firstName,
   lectureSourceFrom,
@@ -18,6 +19,7 @@ import {
   rosterMessage,
   deckPicker,
   titleProblem,
+  updateBlock,
   type PickerChoice,
 } from '../lecture';
 
@@ -107,6 +109,31 @@ describe('deck sources (F-TCH-004 §3.11)', () => {
     expect(moveBlock(blocks, 0, 1).map((b) => (b.kind === 'quest' ? b.id : ''))).toEqual(['quest:b', 'quest:a', 'quest:c']);
     expect(moveBlock(blocks, 0, -1)).toEqual(blocks);
     expect(moveBlock(blocks, 2, 3)).toEqual(blocks);
+  });
+});
+
+describe('outline rows', () => {
+  it('names content blocks from the catalogue mirrors; an unknown id shows itself', () => {
+    expect(catalogueTitle({ kind: 'quest', id: 'quest:stage1-letters-q1' })).toBe('Meet g, n, d, l');
+    expect(catalogueTitle({ kind: 'episode', id: 'episode:stage1-letters' })).toBe('Meet the Letters');
+    expect(catalogueTitle({ kind: 'vocab', topicId: 'vocab-topic:food' })).toBe('Food');
+    expect(catalogueTitle({ kind: 'story', storyId: 'story:x', checks: true }, [{ id: 'story:x', titleEn: 'X story', minutes: 5 }])).toBe('X story');
+    expect(catalogueTitle({ kind: 'quest', id: 'quest:unknown' })).toBe('quest:unknown');
+    expect(catalogueTitle({ kind: 'episode', id: 'episode:unknown' })).toBe('episode:unknown');
+    expect(catalogueTitle({ kind: 'story', storyId: 'story:unknown', checks: true })).toBe('story:unknown');
+    expect(catalogueTitle({ kind: 'vocab', topicId: 'vocab-topic:unknown' })).toBe('vocab-topic:unknown');
+    expect(catalogueTitle({ kind: 'quiz', from: 'all', rounds: 3 })).toBeNull();
+  });
+
+  it('replaces one block', () => {
+    const blocks: LectureBlock[] = [
+      { kind: 'quiz', from: 'previous', rounds: 5 },
+      { kind: 'activity', preset: 'air-write', minutes: 3 },
+    ];
+    expect(updateBlock(blocks, 1, { kind: 'activity', preset: 'stretch-break', minutes: 2 })).toEqual([
+      blocks[0],
+      { kind: 'activity', preset: 'stretch-break', minutes: 2 },
+    ]);
   });
 });
 

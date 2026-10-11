@@ -122,7 +122,10 @@ function SpaceInner(): JSX.Element {
                   <li>
                     {weekRevisit.before}
                     {jamo(rollup.revisit)}
-                    {weekRevisit.after}
+                    {weekRevisit.after}{' '}
+                    <Link href={ROUTES.spaceLecture(spaceId, 'revisit')} data-testid="revisit-together" style={{ fontSize: typography.size.caption, fontWeight: typography.weight.bold, padding: `${spacing.xxs}px ${spacing.sm}px`, borderRadius: radii.pill, border: `1px solid ${colors.border.strong}`, color: colors.text.primary, textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                      {c.lecture.revisitChip.cta}
+                    </Link>
                   </li>
                 ) : null}
                 {rollup.notSynced ? <li>{c.space.week.notSynced(rollup.notSynced)}</li> : null}
@@ -136,6 +139,9 @@ function SpaceInner(): JSX.Element {
             </Link>
             <Link href={ROUTES.spaceCurriculum(spaceId)}>
               <Button testId="plan-term">{c.curriculum.entries.planTerm.cta}</Button>
+            </Link>
+            <Link href={ROUTES.spaceLecture(spaceId)}>
+              <Button testId="open-lecture">{c.lecture.entry.cta}</Button>
             </Link>
             <Link href={ROUTES.spaceRelink(spaceId)}>
               <Button>{pendingRelinks > 0 ? c.space.relinkPending.cta(pendingRelinks) : c.space.relinkRequests.cta}</Button>

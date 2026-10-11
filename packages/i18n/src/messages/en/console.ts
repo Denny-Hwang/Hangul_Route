@@ -645,4 +645,103 @@ export const consoleMsgs = {
       comingSoon: (title: string) => `${title} (coming soon)`,
     },
   },
+
+  /**
+   * Lecture setup (`/teach/space/lecture`, `lecture.ts`, F-TCH-004 §3.11) and its entry points
+   * (`entry` on the roster, `presentPlan` on the plan readout, `revisitChip` beside the roll-up).
+   * Catalogue titles are content and arrive as arguments; taught jamo stay outside the messages
+   * (the page renders them marked `lang="ko"`, §3.4 rule 5). No learner name is ever an argument.
+   */
+  lecture: {
+    title: 'Lecture',
+    titleFor: (space: string) => `${space} · lecture`,
+    back: (space: string | null) => (space ? `← Back to ${space}` : '← Back to the space'),
+    intro: 'Build a slide lesson from your content and show it on a classroom screen.',
+    entry: { cta: 'Lecture' },
+    presentPlan: { cta: 'Present this plan' },
+    revisitChip: { cta: 'Revisit together' },
+    source: {
+      title: 'Source',
+      plan: (plan: string, items: number) => `This week's plan: ${plan} (${planItems(items)})`,
+      noPlan: 'No published plan yet.',
+      catalogue: 'Pick from the catalogue',
+      revisit: 'Revisit together',
+      noRevisit: 'Nothing to revisit yet.',
+    },
+    catalogue: {
+      title: 'Catalogue',
+      stage1: 'Stage 1',
+      stories: 'Stories',
+      vocab: 'Vocabulary',
+      add: { cta: '+ add' },
+      added: { cta: 'Added' },
+      line: (title: string, minutes: number | null) => `${title} · ${minutes === null ? '?' : minutes} min`,
+      topicLine: (title: string, words: number) => plural('en', words, { one: `${title} · ${words} word`, other: `${title} · ${words} words` }),
+    },
+    outline: {
+      title: 'Outline',
+      about: (minutes: number) => `about ${minutes} min`,
+      empty: 'Add something to teach.',
+      minutes: (minutes: number | null) => `${minutes === null ? '?' : minutes} min`,
+      up: 'Move up',
+      down: 'Move down',
+      remove: 'Remove',
+      /** One outline row; content titles come from the catalogue mirrors (an unknown id shows itself). */
+      block: {
+        quiz: (rounds: number) => plural('en', rounds, { one: `Quick quiz: ${rounds} question`, other: `Quick quiz: ${rounds} questions` }),
+        classCode: 'Class code on the last slide',
+        letters: (count: number) => plural('en', count, { one: `${count} letter`, other: `${count} letters` }),
+        cards: (count: number) => plural('en', count, { one: `${count} heritage card`, other: `${count} heritage cards` }),
+      },
+      addQuiz: { cta: '+ Quiz' },
+      addActivity: { cta: '+ Activity' },
+      addClassCode: { cta: '+ Class code' },
+    },
+    /** `ACTIVITY_PRESETS` (content-schema), the same names the presenter shows. */
+    activity: {
+      'air-write': 'Write it in the air',
+      'say-together': 'Say it together',
+      'pair-share': 'Pair and share',
+      'copy-on-paper': 'Copy it on paper',
+      'stretch-break': 'Stretch break',
+    },
+    options: {
+      title: 'Options',
+      romanization: 'Romanization',
+      romanizationAlways: 'always',
+      romanizationTap: 'hide until tapped',
+      strokeGuide: 'Stroke guide',
+      strokeNote: 'Simplified: not a calligraphy reference.',
+      sound: 'Play sounds',
+      language: 'Presenter language',
+    },
+    picker: {
+      title: 'Helper picker',
+      mode: { names: 'names', initials: 'initials', numbers: 'numbers', none: 'none' },
+      hidden: 'This space hides names, so the picker uses initials.',
+      privacy: 'Names are sent straight to the presenter tab and are not in the link. They are not saved on the classroom device. A copied link has no names.',
+    },
+    titleField: { label: 'Lesson title', placeholder: 'Week 3 letters', hint: "Do not put a student's name in the title." },
+    titleProblem: {
+      empty: 'Give the lesson a title.',
+      chars: 'Use letters, numbers, spaces and simple punctuation, 60 at most.',
+      banned: 'Choose kinder words for the title.',
+      name: 'Take the name out of the title: names are never put in the link.',
+    },
+    check: {
+      title: 'Check the classroom device',
+      offline: 'Open the presenter once with Wi-Fi so it works offline.',
+      voice: 'Check there is a Korean voice (the presenter tells you).',
+      screen: 'Check the projector or TV shows the whole slide.',
+      progress: "This changes nobody's progress.",
+      prepare: 'Prepare here online; the presenter works offline.',
+    },
+    open: { cta: 'Open presenter' },
+    copyLink: { cta: 'Copy link' },
+    copied: { cta: 'Link copied' },
+    copyNoNames: 'A copied link has no names: its picker uses numbers.',
+    copyHasCode: 'This link holds your class join code. Anyone with the link can join until you make a new code. Copy it anyway?',
+    popupBlocked: 'Allow pop-ups for this site to open the presenter, or copy the link.',
+    nothing: 'Add at least one item to the outline.',
+  },
 } as const;

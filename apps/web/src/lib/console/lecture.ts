@@ -14,7 +14,7 @@ import {
   type LecturePicker,
   type LectureRosterMessage,
 } from '@hangul-route/content-schema';
-import { LECTURE_STORIES, type LectureCatalogueStory } from '@/data/lecture-catalogue.generated';
+import { LECTURE_STORIES, LECTURE_VOCAB_TOPICS, type LectureCatalogueStory } from '@/data/lecture-catalogue.generated';
 import { questsOf, stage1Episodes, stage1Quests } from '@/data/stage1-catalog';
 import type { PlanView, Roster } from './api';
 import { findBannedWord } from './banned-text';
@@ -78,6 +78,26 @@ export function moveBlock(blocks: readonly LectureBlock[], from: number, to: num
   const [moved] = out.splice(from, 1);
   out.splice(to, 0, moved as LectureBlock);
   return out;
+}
+
+export function updateBlock(blocks: readonly LectureBlock[], index: number, block: LectureBlock): LectureBlock[] {
+  return blocks.map((b, i) => (i === index ? block : b));
+}
+
+/** A content block's title from the catalogue mirrors (titles are content); an unknown id shows itself. Null for other blocks. */
+export function catalogueTitle(block: LectureBlock, stories: readonly LectureCatalogueStory[] = LECTURE_STORIES): string | null {
+  switch (block.kind) {
+    case 'quest':
+      return stage1Quests.find((q) => q.id === block.id)?.titleEn ?? block.id;
+    case 'episode':
+      return stage1Episodes.find((e) => e.id === block.id)?.titleEn ?? block.id;
+    case 'story':
+      return stories.find((s) => s.id === block.storyId)?.titleEn ?? block.storyId;
+    case 'vocab':
+      return LECTURE_VOCAB_TOPICS.find((t) => t.id === block.topicId)?.titleEn ?? block.topicId;
+    default:
+      return null;
+  }
 }
 
 const questMinutes = new Map(stage1Quests.map((q) => [q.id, q.estimatedMinutes]));

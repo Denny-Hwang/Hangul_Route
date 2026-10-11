@@ -222,6 +222,7 @@ function PlanInner(): JSX.Element {
               />
             ) : undefined
           }
+          presentHref={ROUTES.spaceLecture(spaceId, 'plan')}
         />
       ) : (
         <section aria-label={p.builderLabel}>
