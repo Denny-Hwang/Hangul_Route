@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { layoutClassFor, scaleMedia } from '../layout';
+import { detailPaneWidth, layoutClassFor, scaleMedia } from '../layout';
 import { layout, spacing, tokens } from '../tokens';
 
 /** F-LAYOUT-001 §3.1: the six viewports are also the e2e viewports. */
@@ -172,5 +172,27 @@ describe('scaleMedia (the only way a size scales)', () => {
     expect(scaleMedia(80, 1.4)).toBe(112);
     expect(scaleMedia(75, 1.4)).toBe(105);
     expect(scaleMedia(7, 1.2)).toBe(8);
+  });
+});
+
+describe('detailPaneWidth (F-LAYOUT-001 §3.7)', () => {
+  it('is windowWidth - 2 wide gutters - master - gap, so 412 at 900 and 536 at 1024', () => {
+    expect(detailPaneWidth(900)).toBe(412);
+    expect(detailPaneWidth(1024)).toBe(536);
+  });
+
+  it('stops growing where the full-width cap binds (from 1184)', () => {
+    expect(detailPaneWidth(1184)).toBe(layout.maxWidth.full - layout.pane.master - layout.pane.gap);
+    expect(detailPaneWidth(2000)).toBe(detailPaneWidth(1184));
+  });
+
+  it('is 0 for an unknown or too-small window, never negative', () => {
+    expect(detailPaneWidth(0)).toBe(0);
+    expect(detailPaneWidth(Number.NaN)).toBe(0);
+    expect(detailPaneWidth(400)).toBe(0);
+  });
+
+  it('takes the master width as a second argument', () => {
+    expect(detailPaneWidth(1024, 300)).toBe(1024 - 2 * layout.gutter.wide - 300 - layout.pane.gap);
   });
 });

@@ -157,6 +157,18 @@ export function scaleMedia(base: number, mediaScale: number): number {
   return Math.round(base * mediaScale);
 }
 
+/**
+ * Width of the detail pane in a two-pane window (F-LAYOUT-001 §3.7): the page content
+ * (the window less two wide gutters, capped at `maxWidth.full`) less the master pane and the
+ * gap. Insets are not known here, so a notch makes the real pane a little narrower; callers
+ * that can measure should. An unknown width gives 0.
+ */
+export function detailPaneWidth(windowWidth: number, masterWidth: number = layout.pane.master): number {
+  const w = knownSize(windowWidth);
+  const content = Math.min(w - 2 * layout.gutter.wide, layout.maxWidth.full);
+  return Math.max(0, content - masterWidth - layout.pane.gap);
+}
+
 // ---------------------------------------------------------------------------
 // Screen width cap, gutter and sticky footer (F-LAYOUT-001 §3.2)
 // ---------------------------------------------------------------------------
