@@ -1,5 +1,4 @@
 import type { SceneArt } from '@hangul-route/content-schema';
-import { SCENE_ART_REGISTRY, resolveScene } from '@hangul-route/design-system/scene-art';
 import type { SequenceCard } from './sequence-cards';
 
 /**
@@ -11,17 +10,24 @@ import type { SequenceCard } from './sequence-cards';
  * a scene whose art is pending and a scene whose setting is not in the
  * registry all show the words alone (never a broken image, never the reader's
  * tinted placeholder panel).
+ *
+ * The scene-art resolver is passed in (the screen hands over the design
+ * system's `resolveScene` with its registry): Metro cannot resolve the pure
+ * `./scene-art` subpath and the package root pulls react-native into vitest.
  */
+
+/** Resolves a picture against the scene-art registry; only the issue kinds are read. */
+export type SceneResolver = (art: SceneArt) => { issues: ReadonlyArray<{ kind: string }> };
 
 /** The picture may take at most this share of the window height in the replay (the reader's stacked share). */
 export const REPLAY_ART_SHARE = 0.42;
 
 /** The card's art when its setting resolves in the scene-art registry, else null. Never throws. */
-export function sequenceCardArt(card: SequenceCard): SceneArt | null {
+export function sequenceCardArt(card: SequenceCard, resolve: SceneResolver): SceneArt | null {
   const art = card.art;
   if (!art) return null;
   try {
-    const resolved = resolveScene(art, SCENE_ART_REGISTRY);
+    const resolved = resolve(art);
     return resolved.issues.some((i) => i.kind === 'unresolved-setting') ? null : art;
   } catch {
     return null; // malformed data: the words alone
@@ -29,8 +35,8 @@ export function sequenceCardArt(card: SequenceCard): SceneArt | null {
 }
 
 /** True when at least one card of the step draws a picture (the grid then sizes for pictures). */
-export function sequenceHasArt(cards: ReadonlyArray<SequenceCard>): boolean {
-  return cards.some((c) => sequenceCardArt(c) !== null);
+export function sequenceHasArt(cards: ReadonlyArray<SequenceCard>, resolve: SceneResolver): boolean {
+  return cards.some((c) => sequenceCardArt(c, resolve) !== null);
 }
 
 function cellWidth(gridWidth: number, columns: number, gap: number): number {

@@ -1,4 +1,5 @@
 import type { SceneArt } from '@hangul-route/content-schema';
+import { SCENE_ART_REGISTRY, resolveScene } from '@hangul-route/design-system/scene-art';
 import { describe, expect, it } from 'vitest';
 import type { SequenceCard } from '../sequence-cards';
 import {
@@ -8,12 +9,16 @@ import {
   sequenceCardArt,
   sequenceCardArtWidth,
   sequenceHasArt,
+  type SceneResolver,
 } from '../sequence-art';
+
+/** The real registry, as the screen passes it. */
+const resolve: SceneResolver = (art) => resolveScene(art, SCENE_ART_REGISTRY);
 
 /** A picture every registry resolves: the palace hall with Hoya waving (the reader fixture's scene 1). */
 const PALACE: SceneArt = {
   setting: 'scene:palace-hall',
-  layers: [{ ref: 'hoya:wave', x: 200, y: 280 }],
+  layers: [{ ref: 'hoya:wave', x: 200, y: 280, s: 1 }],
   altEn: 'King Sejong sits in a palace hall while Hoya waves.',
 };
 /** No such setting: the reader would show its tinted panel; a sequence card shows its words alone. */
@@ -30,39 +35,39 @@ const legacy: SequenceCard = {
 
 describe('sequenceCardArt', () => {
   it('returns the art of a card whose picture resolves', () => {
-    expect(sequenceCardArt(withArt)).toBe(PALACE);
+    expect(sequenceCardArt(withArt, resolve)).toBe(PALACE);
   });
 
   it('is null for a legacy step and a scene whose art is pending: the words alone', () => {
-    expect(sequenceCardArt(legacy)).toBeNull();
-    expect(sequenceCardArt(pending)).toBeNull();
+    expect(sequenceCardArt(legacy, resolve)).toBeNull();
+    expect(sequenceCardArt(pending, resolve)).toBeNull();
   });
 
   it('is null when the setting does not resolve, never a broken picture or a tinted placeholder', () => {
-    expect(sequenceCardArt(unresolved)).toBeNull();
+    expect(sequenceCardArt(unresolved, resolve)).toBeNull();
   });
 
   it('keeps the picture when only a layer is unknown (the setting still draws, like the reader)', () => {
-    const art: SceneArt = { ...PALACE, layers: [{ ref: 'prop:no-such-thing', x: 10, y: 10 }] };
-    expect(sequenceCardArt({ id: 's2', caption: 'x', art })).toBe(art);
+    const art: SceneArt = { ...PALACE, layers: [{ ref: 'prop:no-such-thing', x: 10, y: 10, s: 1 }] };
+    expect(sequenceCardArt({ id: 's2', caption: 'x', art }, resolve)).toBe(art);
   });
 
   it('is null for malformed art instead of throwing', () => {
     const broken = { id: 'x', caption: 'x', art: { setting: 'scene:palace-hall', layers: 'nope' } } as unknown as SequenceCard;
-    expect(() => sequenceCardArt(broken)).not.toThrow();
-    expect(sequenceCardArt(broken)).toBeNull();
+    expect(() => sequenceCardArt(broken, resolve)).not.toThrow();
+    expect(sequenceCardArt(broken, resolve)).toBeNull();
   });
 });
 
 describe('sequenceHasArt', () => {
   it('is true when at least one card draws a picture', () => {
-    expect(sequenceHasArt([pending, withArt])).toBe(true);
+    expect(sequenceHasArt([pending, withArt], resolve)).toBe(true);
   });
 
   it('is false for the legacy sequences and for cards whose art is pending or unresolved', () => {
-    expect(sequenceHasArt([legacy])).toBe(false);
-    expect(sequenceHasArt([pending, unresolved])).toBe(false);
-    expect(sequenceHasArt([])).toBe(false);
+    expect(sequenceHasArt([legacy], resolve)).toBe(false);
+    expect(sequenceHasArt([pending, unresolved], resolve)).toBe(false);
+    expect(sequenceHasArt([], resolve)).toBe(false);
   });
 });
 
