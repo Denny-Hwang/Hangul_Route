@@ -33,7 +33,6 @@ import { StrokeHint } from './StrokeHint';
 import { speak } from '../../platform/audio';
 import { nudge, success } from '../../platform/haptics';
 import { useQuestRunStore } from '../../store/quest-run-store';
-import { useUiStore } from '../../store/ui-store';
 
 interface Props {
   scope: MinigameScope;
@@ -69,8 +68,6 @@ export function TraceStrokeGame({
       }),
     [scope],
   );
-
-  const soundOn = useUiStore((s) => s.soundOn);
 
   const answerRound = useQuestRunStore((s) => s.answerRound);
   const markStepComplete = useQuestRunStore((s) => s.markStepComplete);
@@ -352,10 +349,8 @@ export function TraceStrokeGame({
         onPress={() => {
           setHintToken((t) => t + 1);
           setHintPlaying(true);
-          // F-009 — narrate the jamo at demo start (skipped if sound is muted).
-          if (soundOn) {
-            speak(round.jamo.char, { language: 'ko-KR' });
-          }
+          // F-009 — narrate the jamo at demo start; muting is enforced inside the audio controller.
+          speak(round.jamo.char, { language: 'ko-KR' });
         }}
       />
       <Button label="Clear" tone="ghost" size="sm" onPress={handleClear} disabled={strokes.length === 0} />

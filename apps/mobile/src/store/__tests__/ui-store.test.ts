@@ -3,14 +3,13 @@ import { useUiStore } from '../ui-store';
 
 describe('ui-store', () => {
   beforeEach(() => {
-    useUiStore.setState({ soundOn: true, hapticsOn: true, parentGateOpenedAt: null });
+    useUiStore.setState({ hapticsOn: true, parentGateOpenedAt: null });
   });
 
-  it('toggleSound flips soundOn back and forth', () => {
-    useUiStore.getState().toggleSound();
-    expect(useUiStore.getState().soundOn).toBe(false);
-    useUiStore.getState().toggleSound();
-    expect(useUiStore.getState().soundOn).toBe(true);
+  it('no longer holds the sound switch: mute lives in audio-store (F-AUDIO-004 AD7)', () => {
+    const state = useUiStore.getState() as unknown as Record<string, unknown>;
+    expect('soundOn' in state).toBe(false);
+    expect('toggleSound' in state).toBe(false);
   });
 
   it('toggleHaptics flips hapticsOn', () => {
