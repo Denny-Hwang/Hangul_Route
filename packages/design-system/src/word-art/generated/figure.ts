@@ -137,8 +137,9 @@ export type SiblingHair = 'long' | 'short';
 
 /**
  * An older sibling and the speaker (smaller, to the right, with the marker),
- * for 언니, 누나, 오빠 and 형: hair length tells the two sides apart (long or
- * short), the convention the card back names (F-VOC-001 §3.6).
+ * for the four sibling words (eonni, nuna, oppa, hyeong): hair length tells
+ * the two sides apart (long or short), the convention the card back names
+ * (F-VOC-001 §3.6).
  */
 export function siblings(older: SiblingHair, speaker: SiblingHair): WordArtShape[] {
   const big: FigureOptions = { height: 66, hair: older, clothes: 'brand.primary', x: 34, ground: 84 };
