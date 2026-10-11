@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { StoryShelf } from '@hangul-route/content-schema';
-import { homeCellOf } from '../home-cell';
+import { StageKeySchema, ThemeKeySchema, type StoryShelf } from '@hangul-route/content-schema';
+import { homeCellOf, isHomeCell } from '../home-cell';
 import { buildStoryIndex, entriesForCell } from '../story-index';
 import { bookEpisode, questId, shelfEpisode, story, storyQuest, unreviewed } from './shelf-fixture';
 
@@ -22,6 +22,20 @@ describe('homeCellOf', () => {
   it('refuses a recommended stage outside the 7 stages (the story schema already forbids it)', () => {
     expect(() => homeCellOf({ recommendedStage: 0, theme: 'letters' })).toThrow();
     expect(() => homeCellOf({ recommendedStage: 8, theme: 'letters' })).toThrow();
+  });
+});
+
+describe('isHomeCell', () => {
+  it('agrees with homeCellOf for every stage and theme', () => {
+    for (const n of [1, 2, 3, 4, 5, 6, 7]) {
+      const s = { recommendedStage: n, theme: 'rites' as const };
+      const home = homeCellOf(s);
+      for (const stage of StageKeySchema.options) {
+        for (const theme of ThemeKeySchema.options) {
+          expect(isHomeCell(s, stage, theme), `${n} ${stage}:${theme}`).toBe(home.stage === stage && home.theme === theme);
+        }
+      }
+    }
   });
 });
 

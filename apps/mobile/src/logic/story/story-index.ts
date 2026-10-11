@@ -3,7 +3,7 @@ import { flags } from '../../config/flags';
 import { episodesAll } from '../../content/episodes';
 import { questsAll } from '../../content/quests';
 import { storiesAll } from '../../content/stories';
-import { homeCellOf } from './home-cell';
+import { isHomeCell } from './home-cell';
 import { storyReadStep } from './story-ref';
 
 /**
@@ -137,13 +137,7 @@ export function entryForStory(index: readonly StoryIndexEntry[], storyId: string
  * calls the cell home, so it is left out. The review gate is the index's own.
  */
 export function entriesForCell(index: readonly StoryIndexEntry[], stage: StageKey, theme: ThemeKey): StoryIndexEntry[] {
-  return index
-    .filter((e) => {
-      if (e.placement !== 'shelf') return false;
-      const home = homeCellOf(e.story);
-      return home.stage === stage && home.theme === theme;
-    })
-    .sort(compareShelfOrder);
+  return index.filter((e) => e.placement === 'shelf' && isHomeCell(e.story, stage, theme)).sort(compareShelfOrder);
 }
 
 let cached: readonly StoryIndexEntry[] | undefined;

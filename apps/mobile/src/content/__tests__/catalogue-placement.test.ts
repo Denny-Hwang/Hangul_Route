@@ -15,6 +15,7 @@ import {
 } from '@hangul-route/content-schema';
 import { homeCellOf } from '../../logic/story/home-cell';
 import { buildStoryIndex, entriesForCell } from '../../logic/story/story-index';
+import { shelfEpisode, storyQuest } from '../../logic/story/__tests__/shelf-fixture';
 import { cellKey, episodesAll, episodesFor, gridEpisodes } from '../episodes';
 import { questsAll } from '../quests';
 import { stages, themes } from '../stages';
@@ -151,12 +152,21 @@ const fileOf = (r: PlacementRow): Story => {
   return story;
 };
 
-/** A cell holds a lesson when a hand-written, non-preview grid episode sits there. */
+/** A cell holds a lesson when a shipped, hand-written grid episode sits there (the shipped rule of logic/journey.ts). */
 const lessonCells = new Set(
   gridEpisodes(episodesAll)
-    .filter((e) => e.status !== 'preview' && e.format !== 'story')
+    .filter((e) => e.status === 'shipped' && e.format !== 'story')
     .map(cellKey),
 );
+/** Points a failing grid assertion at the place to update when a lesson ships into a stories-only cell. */
+const GRID_HINT = 'when a lesson ships, update the F-STORY-005 §3.3 table, PLACEMENT and MATRIX';
+/** Pillar tags a story counts with: the file's own once written (F-STORY-001 PR 1.9), else its plan row. */
+const effectiveTags = (r: PlacementRow): readonly string[] => {
+  const { pillarTags } = fileOf(r);
+  return pillarTags.length > 0 ? pillarTags : r.tags;
+};
+/** Stories in a cell according to the derived matrix: L+n, Sn or -. */
+const matrixCount = (look: string): number => (look === '-' ? 0 : Number(look.replace(/^(L\+|S)/, '')));
 const homeKey = (story: Pick<Story, 'recommendedStage' | 'theme'>): string => cellKey(homeCellOf(story));
 const pillarOf = (tag: string): Pillar => tag.charAt(0) as Pillar;
 
@@ -199,12 +209,12 @@ describe('placement table (F-STORY-005 §3.3) against the story files', () => {
   it('totals 112 minutes, 12 stories in lesson cells and 12 in cells without a lesson', () => {
     expect(storyFiles.reduce((sum, story) => sum + story.minutes, 0)).toBe(112);
     const inLessonCells = storyFiles.filter((story) => lessonCells.has(homeKey(story)));
-    expect(inLessonCells).toHaveLength(12);
-    expect(storyFiles.length - inLessonCells.length).toBe(12);
+    expect(inLessonCells, GRID_HINT).toHaveLength(12);
+    expect(storyFiles.length - inLessonCells.length, GRID_HINT).toBe(12);
   });
 
   it('gives every row the "cell holds" of the shipped grid', () => {
-    for (const r of PLACEMENT) expect(lessonCells.has(homeKey(fileOf(r))), r.slug).toBe(r.cellHoldsLesson);
+    for (const r of PLACEMENT) expect(lessonCells.has(homeKey(fileOf(r))), `${r.slug}: ${GRID_HINT}`).toBe(r.cellHoldsLesson);
   });
 
   it('puts every home cell inside the 7 x 5 grid', () => {
@@ -222,7 +232,7 @@ describe('placement table (F-STORY-005 §3.3) against the story files', () => {
         const key = `${stage}:${theme}`;
         const count = storiesIn.get(key) ?? 0;
         const look = lessonCells.has(key) ? `L+${count}` : count > 0 ? `S${count}` : '-';
-        expect(look, key).toBe(MATRIX[stage][theme]);
+        expect(look, `${key}: ${GRID_HINT}`).toBe(MATRIX[stage][theme]);
       }
     }
   });
@@ -284,6 +294,11 @@ describe('pillar tags (F-STORY-005 §3.8)', () => {
     expect([...pillars].sort()).toEqual(Object.keys(PILLAR_HOME_THEME).sort());
   });
 
+  it('gives every pillar A-E at least one story over the data: file tags where written, plan tags elsewhere', () => {
+    const pillars = new Set(PLACEMENT.flatMap((r) => effectiveTags(r).map(pillarOf)));
+    expect([...pillars].sort()).toEqual(Object.keys(PILLAR_HOME_THEME).sort());
+  });
+
   it('a story file with pillar tags states the tags of its row', () => {
     for (const r of PLACEMENT) {
       const { pillarTags } = fileOf(r);
@@ -299,12 +314,55 @@ describe('pillar tags (F-STORY-005 §3.8)', () => {
 });
 
 describe('home cells over the bundle', () => {
-  it('a bundled story file is the parsed story file', () => {
-    for (const story of storiesAll) expect(fileBySlug.get(slugOf(story))?.id, story.id).toBe(story.id);
+  it('bundles every non-draft story file, each equal to its file on the fields placement reads', () => {
+    const published = storyFiles.filter((story) => story.state !== 'draft');
+    expect(published.length).toBeGreaterThan(0);
+    expect(storiesAll.map((story) => story.id).sort()).toEqual(published.map((story) => story.id).sort());
+    const placementFields = (story: Story) => ({
+      theme: story.theme,
+      recommendedStage: story.recommendedStage,
+      minutes: story.minutes,
+      shelf: story.shelf,
+      pillarTags: story.pillarTags,
+    });
+    for (const story of storiesAll) {
+      const file = fileBySlug.get(slugOf(story));
+      expect(file, story.id).toBeDefined();
+      if (file) expect(placementFields(story), story.id).toEqual(placementFields(file));
+    }
   });
 
+  it('entriesForCell over the plan (every story file with its §3.3 shelf row) reproduces the derived matrix in shelf order', () => {
+    const planStories = PLACEMENT.map((r): Story => {
+      const file = fileOf(r);
+      return { ...file, shelf: file.shelf ?? { category: r.category, order: r.order, sampler: r.sampler, minutes: r.minutes } };
+    });
+    const index = buildStoryIndex({
+      stories: planStories,
+      episodes: planStories.map((story) => shelfEpisode(story)),
+      quests: planStories.map((story) => storyQuest(slugOf(story))),
+      showUnreviewed: true,
+    });
+    expect(index).toHaveLength(24);
+    const rank = (r: PlacementRow): number => (r.category === 'story-time' ? 0 : 1);
+    for (const stage of StageKeySchema.options) {
+      for (const theme of ThemeKeySchema.options) {
+        const key = `${stage}:${theme}`;
+        const ids = entriesForCell(index, stage, theme).map((e) => e.storyId);
+        expect(ids.length, key).toBe(matrixCount(MATRIX[stage][theme]));
+        const expected = PLACEMENT.filter((r) => `stage${r.recommendedStage}:${r.theme}` === key)
+          .sort((a, b) => rank(a) - rank(b) || a.order - b.order)
+          .map((r) => `story:${r.slug}`);
+        expect(ids, key).toEqual(expected);
+      }
+    }
+  });
+
+  // Today no bundled story has a shelf block yet (written at F-STORY-001 PR 1.9), so this index is empty
+  // and the plan case above carries the matrix. Once a story has one, the bundle must list it too.
   it('entriesForCell over the bundle (gate widened) lists exactly the shelf stories of each home cell', () => {
     const index = buildStoryIndex({ stories: storiesAll, episodes: episodesAll, quests: questsAll, showUnreviewed: true });
+    if (storiesAll.some((story) => story.shelf)) expect(index.length).toBeGreaterThan(0);
     for (const stage of StageKeySchema.options) {
       for (const theme of ThemeKeySchema.options) {
         const expected = storiesAll

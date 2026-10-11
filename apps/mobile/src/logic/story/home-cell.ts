@@ -15,3 +15,12 @@ export interface HomeCell {
 export function homeCellOf(story: Pick<Story, 'recommendedStage' | 'theme'>): HomeCell {
   return { stage: StageKeySchema.parse(`stage${story.recommendedStage}`), theme: story.theme };
 }
+
+/**
+ * Whether (stage, theme) is the story's home cell. Same rule as `homeCellOf`
+ * without a schema parse per call: the map filters every story for each of its
+ * 35 cells on every render.
+ */
+export function isHomeCell(story: Pick<Story, 'recommendedStage' | 'theme'>, stage: StageKey, theme: ThemeKey): boolean {
+  return story.theme === theme && `stage${story.recommendedStage}` === stage;
+}
