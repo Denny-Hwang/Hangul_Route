@@ -1,0 +1,504 @@
+{
+  "v": 1,
+  "id": "story:kim-hongdo-genre-paintings",
+  "state": "draft",
+  "contentVer": 1,
+  "title": {
+    "ko": "김홍도의 풍속화: 씨름과 서당",
+    "romanization": "",
+    "en": "Kim Hong-do's Pictures of Everyday Life"
+  },
+  "summaryEn": "Hoya looks closely at Ssireum and Seodang from Danwon's genre painting album at the National Museum of Korea, spotting a taffy seller, shoes that someone has taken off, and a sniffling schoolboy.",
+  "theme": "life",
+  "kind": "art",
+  "recommendedStage": 1,
+  "minutes": 5,
+  "learningGoalsEn": [
+    "Recognize and say 그림 (geurim, picture), 화가 (hwaga, painter), 씨름 (ssireum, Korean wrestling) and 서당 (seodang, village school).",
+    "Know that Kim Hong-do (pen name Danwon, born 1745) was a Joseon court painter famous for genre paintings.",
+    "Describe what can be seen in the paintings Ssireum and Seodang.",
+    "Know that the album of 25 genre paintings is a Treasure kept at the National Museum of Korea, and that ssireum is living heritage today."
+  ],
+  "origin": {
+    "type": "documented",
+    "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
+  },
+  "review": {
+    "language": "draft",
+    "culture": "draft",
+    "advisory": []
+  },
+  "keywords": [
+    {
+      "id": "geurim",
+      "ko": "그림",
+      "romanization": "geurim",
+      "en": "picture; painting",
+      "kind": "word"
+    },
+    {
+      "id": "hwaga",
+      "ko": "화가",
+      "romanization": "hwaga",
+      "en": "painter",
+      "kind": "word"
+    },
+    {
+      "id": "pungsokhwa",
+      "ko": "풍속화",
+      "romanization": "pungsokhwa",
+      "en": "genre painting",
+      "kind": "word"
+    },
+    {
+      "id": "ssireum",
+      "ko": "씨름",
+      "romanization": "ssireum",
+      "en": "Korean wrestling",
+      "kind": "word"
+    },
+    {
+      "id": "yeotjangsu",
+      "ko": "엿장수",
+      "romanization": "yeotjangsu",
+      "en": "taffy seller",
+      "kind": "word"
+    },
+    {
+      "id": "seodang",
+      "ko": "서당",
+      "romanization": "seodang",
+      "en": "village school",
+      "kind": "word"
+    },
+    {
+      "id": "ssireum-han-pan-haeyo",
+      "ko": "씨름 한 판 해요!",
+      "romanization": "ssireum han pan haeyo!",
+      "en": "Let's have a round of ssireum!",
+      "kind": "phrase"
+    },
+    {
+      "id": "kim-hong-do",
+      "ko": "김홍도",
+      "romanization": "",
+      "en": "",
+      "kind": "term"
+    }
+  ],
+  "cultureNotes": [],
+  "tiers": [
+    {
+      "level": "listen",
+      "scenes": [
+        {
+          "id": "s1",
+          "narrationEn": "Hoya dips a brush into ink. \"In Korean, a picture is {kw:geurim},\" he says. \"Let's look at pictures that show how ordinary people lived in Joseon!\"",
+          "keyword": {
+            "id": "geurim",
+            "ko": "그림",
+            "romanization": "geurim",
+            "en": "picture; painting",
+            "kind": "word"
+          },
+          "factIds": [
+            "f1"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Hoya holding a brush over a sheet of plain hanji paper, an ink stone and water dropper beside him."
+        },
+        {
+          "id": "s2",
+          "narrationEn": "Kim Hong-do, {kw:kim-hong-do}, whose pen name was Danwon, was born in 1745. He was a court painter who painted many kinds of subjects, and he is especially famous for genre paintings, pictures of everyday life.",
+          "keyword": {
+            "id": "hwaga",
+            "ko": "화가",
+            "romanization": "hwaga",
+            "en": "painter",
+            "kind": "word"
+          },
+          "factIds": [
+            "f2"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A Joseon painter in a light robe sitting on the floor painting on paper, brushes standing in a holder beside him."
+        },
+        {
+          "id": "s3",
+          "narrationEn": "An album of 25 genre paintings, known as Danwon's genre painting album, is kept at the National Museum of Korea. It is designated a Treasure. In Korean, a genre painting is {kw:pungsokhwa}.",
+          "keyword": {
+            "id": "pungsokhwa",
+            "ko": "풍속화",
+            "romanization": "pungsokhwa",
+            "en": "genre painting (a picture of everyday life)",
+            "kind": "word"
+          },
+          "factIds": [
+            "f3"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "An open folding album showing small paintings of people working and playing, displayed in a museum case."
+        },
+        {
+          "id": "s4",
+          "narrationEn": "Look at the painting {kw:ssireum}, Ssireum! In the middle, two wrestlers grab hold of each other and test their strength. Around them, spectators sit in two curved groups, watching closely.",
+          "keyword": {
+            "id": "ssireum",
+            "ko": "씨름",
+            "romanization": "ssireum",
+            "en": "ssireum, Korean wrestling",
+            "kind": "word"
+          },
+          "factIds": [
+            "f4"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Two wrestlers gripping each other in the center, with two curved groups of seated spectators in white clothes and hats, one above and one below them, with round, cheerful faces."
+        },
+        {
+          "id": "s5",
+          "narrationEn": "Can you spot more? A taffy seller, {kw:yeotjangsu}, stands at the left, away from the crowd's attention. Over on the right, some shoes have been taken off and left.",
+          "keyword": {
+            "id": "yeotjangsu",
+            "ko": "엿장수",
+            "romanization": "yeotjangsu",
+            "en": "taffy seller (yeot is a Korean taffy)",
+            "kind": "word"
+          },
+          "factIds": [
+            "f5"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Detail of the painting's edges: a smiling taffy seller with a wooden tray stands at the left edge, apart from the crowd; at the right edge, a pair of shoes that someone has taken off rests on the ground."
+        },
+        {
+          "id": "s6",
+          "narrationEn": "Now look at {kw:seodang}, Seodang, a village school. The teacher and students are gathered around one boy, who has turned away, sniffling, while the other students grin and the teacher looks troubled.",
+          "keyword": {
+            "id": "seodang",
+            "ko": "서당",
+            "romanization": "seodang",
+            "en": "village school (Joseon era)",
+            "kind": "word"
+          },
+          "factIds": [
+            "f6"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A small schoolroom: a teacher in a square scholar's cap and several students gather around one boy who is crouched and turned away, wiping his eyes; some students grin, and the teacher looks puzzled."
+        },
+        {
+          "id": "s7",
+          "narrationEn": "Ssireum is still loved today. It is a National Intangible Heritage of Korea, and in 2018 UNESCO inscribed traditional Korean wrestling as Intangible Cultural Heritage. Hoya rolls up his sleeves: \"{kw:ssireum-han-pan-haeyo}\"",
+          "line": {
+            "ko": "씨름 한 판 해요!",
+            "romanization": "ssireum han pan haeyo!",
+            "en": "Let's have a round of ssireum!",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f7"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Hoya and a child friend in a sand ring, playfully gripping cloth belts and smiling, with friends cheering around them."
+        }
+      ],
+      "checks": [
+        {
+          "id": "c1",
+          "kind": "detail",
+          "promptEn": "How are the watchers arranged in the painting {target}?",
+          "target": {
+            "ko": "씨름",
+            "romanization": "ssireum",
+            "en": "Korean wrestling"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "In two curved groups around the wrestlers",
+              "isCorrect": true
+            },
+            {
+              "id": "b",
+              "en": "In one long straight row beside the wrestlers",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "In a single line behind the taffy seller",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f4"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "detail",
+          "promptEn": "What is a {target}?",
+          "target": {
+            "ko": "서당",
+            "romanization": "seodang",
+            "en": "village school"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "A busy market in the village",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "A village school for children",
+              "isCorrect": true
+            },
+            {
+              "id": "c",
+              "en": "A royal hall inside the palace",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f6"
+          ]
+        },
+        {
+          "id": "c3",
+          "kind": "detail",
+          "promptEn": "Where is the album of 25 genre paintings kept?",
+          "options": [
+            {
+              "id": "a",
+              "en": "The National Palace Museum of Korea",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "The National Folk Museum of Korea",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "The National Museum of Korea",
+              "isCorrect": true
+            }
+          ],
+          "factIds": [
+            "f3"
+          ]
+        }
+      ],
+      "checkpoints": [],
+      "sequenceSceneIds": [
+        "s1",
+        "s3",
+        "s5",
+        "s7"
+      ],
+      "newKeywordIds": [
+        "geurim",
+        "hwaga",
+        "pungsokhwa",
+        "ssireum"
+      ]
+    }
+  ],
+  "coverSceneId": "s1",
+  "pillarTags": [],
+  "companionId": "hoya",
+  "facts": [
+    {
+      "id": "f1",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Genre painting (풍속화) depicts the everyday life of ordinary people rather than the royal court; Kim Hong-do's album shows the daily life and work of common people.",
+      "claimKo": "풍속화는 궁궐이 아닌 민간의 생활상을 그린 그림이며, 김홍도의 풍속도 화첩은 서민들의 일상생활과 생업을 담고 있다.",
+      "sources": [
+        {
+          "title": "풍속화 (관련 항목 정의, 「김홍도 필 풍속도 화첩」 항목 내)",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0013639",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "Verified on the page: in the 관련 항목 list, 풍속화: \"궁궐이 아닌 민간의 생활상을 그린 그림. 속화.\" (a related-item definition on the album entry, not the album text itself)"
+        },
+        {
+          "title": "보물 김홍도 필 풍속도 화첩 (Album of Genre Paintings by Kim Hong-do)",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1121105270000",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"김홍도필(金弘道筆) <풍속도 화첩(風俗圖 畵帖)>은 조선 후기의 화가인 김홍도가 그린 그림책 형태의 풍속화 25점이다. 단원 김홍도(1745 ∼ ?)는 … 풍속화가로 더 유명하다. … <씨름>, <대장간>, <글방> 등과 같이 서민사회의 일상생활 모습\" / 지정일 1970.12.30 / 소재지: 국립중앙박물관"
+        }
+      ]
+    },
+    {
+      "id": "f2",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Kim Hong-do (pen name Danwon) was born in 1745; he was a court painter (dohwaseo hwawon) who excelled in many genres and is especially famous for genre painting.",
+      "claimKo": "김홍도(호 단원)는 1745년에 태어났으며, 도화서 화원으로서 여러 분야의 그림에 뛰어났고 특히 풍속화가로 유명하다.",
+      "sources": [
+        {
+          "title": "보물 김홍도 필 풍속도 화첩 (Album of Genre Paintings by Kim Hong-do)",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1121105270000",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"김홍도필(金弘道筆) <풍속도 화첩(風俗圖 畵帖)>은 조선 후기의 화가인 김홍도가 그린 그림책 형태의 풍속화 25점이다. 단원 김홍도(1745 ∼ ?)는 … 풍속화가로 더 유명하다. … <씨름>, <대장간>, <글방> 등과 같이 서민사회의 일상생활 모습\" / 지정일 1970.12.30 / 소재지: 국립중앙박물관"
+        },
+        {
+          "title": "김홍도",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0011079",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"호는 단원(檀園) … 1745년(영조 21) 아버지 김석무(金錫武)와 어머니 장담 문씨(長潭文氏) 사이에서 태어났다.\" / \"18~19세 무렵 예조 소속의 도화서 화원이 된 것으로 추정되며\" / \"산수화, 도석인물화, 풍속화, 화조화 등 모든 화목에서 발군의 실력을 보였다.\""
+        }
+      ]
+    },
+    {
+      "id": "f3",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "The album of 25 genre paintings attributed to Kim Hong-do, also called Danwon's genre painting album (단원 풍속도첩), is designated a Treasure (1970) and kept at the National Museum of Korea.",
+      "claimKo": "김홍도의 풍속화 25점으로 이루어진 화첩(단원 풍속도첩)은 보물로 지정되어 있으며(1970년) 국립중앙박물관에 소장되어 있다.",
+      "sources": [
+        {
+          "title": "《단원 풍속도첩》 (소장품번호 본관6504)",
+          "publisher": "국립중앙박물관 (National Museum of Korea, museum.go.kr)",
+          "url": "https://www.museum.go.kr/site/main/relic/treasure/view?relicId=3799",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"이 화첩은 1918년 趙漢俊에게서 구입했고 모두 27점이었으나 1957年 원 화첩의 首尾에 위치한 〈群仙圖〉2점은 별도의 족자로 만들고 풍속도 25점만 새롭게 화첩으로 꾸몄다. … 1970年 … 《檀園風俗圖帖》이란 명칭으로 보물 … 로 지정되었다.\" / 게재순: \"1）서당 … 4) 씨름\""
+        },
+        {
+          "title": "보물 김홍도 필 풍속도 화첩 (Album of Genre Paintings by Kim Hong-do)",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1121105270000",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"김홍도필(金弘道筆) <풍속도 화첩(風俗圖 畵帖)>은 조선 후기의 화가인 김홍도가 그린 그림책 형태의 풍속화 25점이다. 단원 김홍도(1745 ∼ ?)는 … 풍속화가로 더 유명하다. … <씨름>, <대장간>, <글방> 등과 같이 서민사회의 일상생활 모습\" / 지정일 1970.12.30 / 소재지: 국립중앙박물관"
+        },
+        {
+          "title": "김홍도 필 풍속도 화첩",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0013639",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"조선 후기, 화가 김홍도가 그린 풍속화 25점으로 구성된 화첩.\" / 이칭: 단원 풍속도첩 / 소장처: 국립중앙박물관 / 종목: 보물(1970년 12월 30일 지정)"
+        }
+      ]
+    },
+    {
+      "id": "f4",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "In the painting Ssireum, two wrestlers grapple and test their strength at the center, surrounded by spectators arranged in two rounded groups, one above and one below.",
+      "claimKo": "「씨름」에서는 두 씨름꾼이 가운데에서 맞붙어 힘을 겨루고, 구경꾼들이 화면의 위아래에 두 무리로 둥글게 둘러앉아 있다.",
+      "sources": [
+        {
+          "title": "씨름, 《단원 풍속도첩》 (소장품번호 본관6504-22)",
+          "publisher": "국립중앙박물관 (National Museum of Korea, museum.go.kr)",
+          "url": "https://www.museum.go.kr/site/main/relic/treasure/view?relicId=551",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"두 무리의 구경꾼들을 화면의 위아래에 둥글게 배치하여 가운데 공간을 연 다음, 서로 맞붙어 힘을 겨루는 두 사람의 씨름꾼을 그려 넣어 그림의 중심을 잡았다. 왼쪽에 서 있는 엿장수는 구경꾼들의 관심 밖에 있으면서도 이 원형 구도에 도움을 주고 있으며, 벗어 놓은 신발은 오른쪽으로 터진 여백을 좁히는 구실을 하고 있다.\""
+        },
+        {
+          "title": "김홍도 필 풍속도 화첩",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0013639",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "내용: \"「서당」 장면에는 훈장과 학생이 둥글게 원을 그리며 앉아 있다. 화면의 한편에서 눈물을 흘리는 소년, 이를 보고 웃는 학동들, 난처한 표정의 훈장 등 … 「씨름」은 구경꾼들이 원형을 그리며 둘러앉았고, 그 중심에는 두 사람의 씨름꾼이 서로 맞붙어 힘을 겨루고 있다.\""
+        }
+      ]
+    },
+    {
+      "id": "f5",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "In Ssireum, a taffy seller (엿장수) stands at the left, outside the spectators' attention, and shoes that someone has taken off help close the open space at the right.",
+      "claimKo": "「씨름」에서 엿장수는 구경꾼들의 관심 밖에서 왼쪽에 서 있고, 벗어 놓은 신발이 오른쪽으로 터진 여백을 좁히는 구실을 한다.",
+      "sources": [
+        {
+          "title": "씨름, 《단원 풍속도첩》 (소장품번호 본관6504-22)",
+          "publisher": "국립중앙박물관 (National Museum of Korea, museum.go.kr)",
+          "url": "https://www.museum.go.kr/site/main/relic/treasure/view?relicId=551",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"두 무리의 구경꾼들을 화면의 위아래에 둥글게 배치하여 가운데 공간을 연 다음, 서로 맞붙어 힘을 겨루는 두 사람의 씨름꾼을 그려 넣어 그림의 중심을 잡았다. 왼쪽에 서 있는 엿장수는 구경꾼들의 관심 밖에 있으면서도 이 원형 구도에 도움을 주고 있으며, 벗어 놓은 신발은 오른쪽으로 터진 여백을 좁히는 구실을 하고 있다.\""
+        },
+        {
+          "title": "김홍도, 조선 백성을 그림에 담아내다",
+          "publisher": "국사편찬위원회 우리역사넷 (contents.history.go.kr)",
+          "url": "https://contents.history.go.kr/mobile/eh/view.do?levelId=eh_n0590_0010",
+          "accessed": "2026-10-10",
+          "quoteOrLocator": "\"유독 먼 하늘을 바라보며 딴청을 피우고 있는 엿장수도 그렸어요.\" / \"두 선수가 벗어놓은 가죽신과 짚신으로 신분도 알 수 있었어요.\" (this page says the shoes are the two wrestlers'; the museum text says only 벗어 놓은 신발, so narration does not say whose)"
+        }
+      ]
+    },
+    {
+      "id": "f6",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "In Seodang, the teacher and students are arranged around a boy who is crouched, turned away and sniffling, who is the focus of the picture; the other students look amused and the teacher looks troubled.",
+      "claimKo": "「서당」에서는 쪼그리고 돌아앉아 훌쩍이는 학동을 화면의 초점에 두고 그 주위에 훈장과 학동들이 둥글게 배치되어 있으며, 주변 학동들은 웃고 훈장은 난처한 표정이다.",
+      "sources": [
+        {
+          "title": "서당, 《단원 풍속도첩》 (소장품번호 본관6504-23)",
+          "publisher": "국립중앙박물관 (National Museum of Korea, museum.go.kr)",
+          "url": "https://www.museum.go.kr/site/main/relic/treasure/view?relicId=552",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"쪼그리고 돌아앉아 훌쩍이는 학동을 화면의 초점에 두고, 그 주위에 방건(方巾)을 쓰고 유생의 옷차림을 한 훈장을 축으로 학동들을 둥글게 배치하였다. … 주변 인물들의 익살스러운 모습에도 정감이 넘쳐나\""
+        },
+        {
+          "title": "김홍도 필 풍속도 화첩",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0013639",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "내용: \"「서당」 장면에는 훈장과 학생이 둥글게 원을 그리며 앉아 있다. 화면의 한편에서 눈물을 흘리는 소년, 이를 보고 웃는 학동들, 난처한 표정의 훈장 등 … 「씨름」은 구경꾼들이 원형을 그리며 둘러앉았고, 그 중심에는 두 사람의 씨름꾼이 서로 맞붙어 힘을 겨루고 있다.\" (Note: the encykorea text says the teacher and students sit in a circle, while its photo caption describes pupils sitting side by side on both sides of the teacher; sources differ on the exact layout, so narration says only \"gathered around\".)"
+        }
+      ]
+    },
+    {
+      "id": "f7",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Ssireum is designated a National Intangible Heritage of Korea (2017), and traditional Korean wrestling (Ssirum/Ssireum) was inscribed on UNESCO's Representative List of the Intangible Cultural Heritage of Humanity in 2018.",
+      "claimKo": "씨름은 국가무형유산(2017년 지정)이며, 2018년 유네스코 인류무형문화유산 대표목록에 등재되었다.",
+      "sources": [
+        {
+          "title": "국가무형유산 씨름 (Ssireum (Traditional Korean Wrestling))",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=127ZZ01310000",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "지정일 2017.01.04 / \"「씨름」은 두 사람이 샅바를 맞잡고 힘과 기술을 이용해 상대를 넘어뜨려 승부를 겨루는 경기로서 … 현재까지 전승되어 온 민속놀이이다.\""
+        },
+        {
+          "title": "Traditional Korean wrestling (Ssirum/Ssireum)",
+          "publisher": "UNESCO Intangible Cultural Heritage (ich.unesco.org)",
+          "url": "https://ich.unesco.org/en/RL/traditional-korean-wrestling-ssirum-ssireum-01533",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"Inscribed in 2018 (13.COM) on the Representative List of the Intangible Cultural Heritage of Humanity\" (joint inscription by the Republic of Korea and DPR Korea; UNESCO decision 13.COM 10.B.41, 26 Nov 2018). Page body not directly fetchable in this pass; the 2018 inscription was confirmed from search excerpts of ich.unesco.org and the KHS list."
+        },
+        {
+          "title": "한국의 인류무형문화유산 (Korea's Representative List elements)",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=/unesco/korInCulHeritage.jsp",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "목록: \"씨름(2018)\""
+        }
+      ]
+    }
+  ],
+  "referenceDisplay": "Sources: 국립중앙박물관; 국가유산청 국가유산포털; 한국민족문화대백과사전; 국사편찬위원회 우리역사넷; UNESCO Intangible Cultural Heritage",
+  "verification": {
+    "passes": 3,
+    "checkedAt": "2026-10-10",
+    "scope": "cluster",
+    "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted."
+  },
+  "authorNotes": "Attribution caution: NMK and encykorea both report scholarly debate about the album (differences in skill between leaves, retouching, many similar copies); some scholars regard leaves such as Ssireum and Mudong as genuine and weaker leaves as copies, and one view treats the whole album as a later model book. Only 13 of the 25 leaves bear the seal 김홍도인 (encykorea). Narration therefore calls it the album 'known as' Danwon's album and describes what the paintings show; the fact claim says 'attributed to'. The KHS designation text names the school leaf 〈글방〉; NMK and encykorea use 서당. Omitted: the switch (회초리) mentioned in an encykorea media caption for 서당; the album's purchase history (1918) and the 1957 remounting that separated two 군선도 leaves (NMK); Kim Hong-do's death (c.1806 per encykorea; KHS gives '?'). The 2018 UNESCO inscription was a joint inscription by both Koreas; this is not mentioned in narration. Scene 5 claim about shoes follows NMK ('벗어 놓은 신발'), without saying whose shoes they are. REVISION: (a) 'kicked-off shoes' removed; museum text says only 벗어 놓은 신발 (shoes taken off), at the right, narrowing the open space (NMK relicId=551); seller at the left, 'outside the spectators' attention'. 우리역사넷 says the shoes are the two wrestlers' and the seller looks into the distance; NMK's curator page says the seller looks outward, but narration stays with the museum's catalog wording. (b) Seodang layout softened to 'gathered around' because NMK says 둥글게 배치 around the boy while an encykorea caption says pupils sit side by side on both sides of the teacher. (c) Ssireum crowd: NMK says two groups arranged roundly above and below; narration says 'two curved groups'. (d) Quiz distractor for museum changed to other national museums.",
+  "errata": []
+}

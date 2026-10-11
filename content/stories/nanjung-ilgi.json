@@ -1,0 +1,562 @@
+{
+  "v": 1,
+  "id": "story:nanjung-ilgi",
+  "state": "draft",
+  "contentVer": 1,
+  "title": {
+    "ko": "이순신 장군의 난중일기",
+    "romanization": "",
+    "en": "Admiral Yi's Diary"
+  },
+  "summaryEn": "Hoya opens the diary that Admiral Yi Sun-sin kept almost every day from 1592 to 1598, full of weather, feelings and everyday life, now a National Treasure and UNESCO Memory of the World.",
+  "theme": "letters",
+  "kind": "documentary",
+  "recommendedStage": 3,
+  "minutes": 4,
+  "learningGoalsEn": [
+    "Recognize and say 일기 (ilgi, diary), 매일 (maeil, every day), 날씨 (nalssi, weather) and 가족 (gajok, family).",
+    "Know that Yi Sun-sin kept a diary almost every day during the Imjin War (1592–1598).",
+    "Name things he wrote about: weather, his thoughts and feelings, family visits and ordinary people's lives.",
+    "Know that seven handwritten volumes survive, kept at Hyeonchungsa in Asan, and that the diary is a National Treasure and on UNESCO's Memory of the World Register."
+  ],
+  "origin": {
+    "type": "documented",
+    "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
+  },
+  "review": {
+    "language": "draft",
+    "culture": "draft",
+    "advisory": [
+      "war"
+    ],
+    "advisoryNoteEn": "Briefly mentions a war from Korea's history."
+  },
+  "keywords": [
+    {
+      "id": "ilgi",
+      "ko": "일기",
+      "romanization": "ilgi",
+      "en": "diary",
+      "kind": "word"
+    },
+    {
+      "id": "janggun",
+      "ko": "장군",
+      "romanization": "janggun",
+      "en": "general; commander",
+      "kind": "word"
+    },
+    {
+      "id": "maeil",
+      "ko": "매일",
+      "romanization": "maeil",
+      "en": "every day",
+      "kind": "word"
+    },
+    {
+      "id": "nalssi",
+      "ko": "날씨",
+      "romanization": "nalssi",
+      "en": "weather",
+      "kind": "word"
+    },
+    {
+      "id": "gajok",
+      "ko": "가족",
+      "romanization": "gajok",
+      "en": "family",
+      "kind": "word"
+    },
+    {
+      "id": "nanjung-ilgi",
+      "ko": "난중일기",
+      "romanization": "Nanjung ilgi",
+      "en": "War Diary (of Yi Sun-sin)",
+      "kind": "word"
+    },
+    {
+      "id": "oneuldo-ilgireul-sseoyo",
+      "ko": "오늘도 일기를 써요!",
+      "romanization": "oneuldo ilgireul sseoyo!",
+      "en": "I'm writing in my diary today, too!",
+      "kind": "phrase"
+    },
+    {
+      "id": "yi-sun-sin",
+      "ko": "이순신",
+      "romanization": "",
+      "en": "",
+      "kind": "term"
+    }
+  ],
+  "cultureNotes": [],
+  "tiers": [
+    {
+      "level": "listen",
+      "scenes": [
+        {
+          "id": "s1",
+          "narrationEn": "Hoya opens a little notebook. \"Do you keep a diary? In Korean, a diary is {kw:ilgi},\" he says. \"Today let's meet a famous diary that a commander wrote long ago in Joseon.\"",
+          "keyword": {
+            "id": "ilgi",
+            "ko": "일기",
+            "romanization": "ilgi",
+            "en": "diary",
+            "kind": "word"
+          },
+          "factIds": [
+            "f2"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Hoya sitting cross-legged on a floor cushion, holding a small notebook and a brush, smiling."
+        },
+        {
+          "id": "s2",
+          "narrationEn": "Yi Sun-sin, {kw:yi-sun-sin}, lived from 1545 to 1598 and was a commander of Joseon's navy. Before war came, he built ships and prepared defenses around Yeosu.",
+          "keyword": {
+            "id": "janggun",
+            "ko": "장군",
+            "romanization": "janggun",
+            "en": "general; commander",
+            "kind": "word"
+          },
+          "factIds": [
+            "f1"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A calm Joseon naval commander in a robe and helmet standing on a wooden dock at sunrise, wooden ships moored in a quiet harbor."
+        },
+        {
+          "id": "s3",
+          "narrationEn": "During the Imjin War, from 1592 to 1598, Admiral Yi kept a diary, writing in it almost every day.",
+          "keyword": {
+            "id": "maeil",
+            "ko": "매일",
+            "romanization": "maeil",
+            "en": "every day",
+            "kind": "word"
+          },
+          "factIds": [
+            "f2"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Inside a simple wooden room at night, the commander writes with a brush by candlelight, a folded map beside him."
+        },
+        {
+          "id": "s4",
+          "narrationEn": "He wrote about the weather, about army life, about his own thoughts and feelings, and about the lives of ordinary people around him.",
+          "keyword": {
+            "id": "nalssi",
+            "ko": "날씨",
+            "romanization": "nalssi",
+            "en": "weather",
+            "kind": "word"
+          },
+          "factIds": [
+            "f3"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Soft brush strokes on paper (no readable text) surrounded by little pictures of the sun, rain clouds, a fisherman and a farmer."
+        },
+        {
+          "id": "s5",
+          "narrationEn": "He also wrote about his family and relatives, and about the people who served with him.",
+          "keyword": {
+            "id": "gajok",
+            "ko": "가족",
+            "romanization": "gajok",
+            "en": "family",
+            "kind": "word"
+          },
+          "factIds": [
+            "f4"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A warm scene at a coastal camp gate: a young family member arrives with a bundle and is greeted by the commander."
+        },
+        {
+          "id": "s6",
+          "narrationEn": "Seven handwritten volumes of the diary survive. At first it had no title. Later, editors named it {kw:nanjung-ilgi}, 'the diary written in the midst of war.'",
+          "keyword": {
+            "id": "nanjung-ilgi",
+            "ko": "난중일기",
+            "romanization": "Nanjung ilgi",
+            "en": "Nanjung Ilgi (War Diary)",
+            "kind": "word"
+          },
+          "factIds": [
+            "f5",
+            "f6"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Seven old thread-bound books with worn covers stacked neatly on a low wooden table."
+        },
+        {
+          "id": "s7",
+          "narrationEn": "Today the diary is a National Treasure kept at Hyeonchungsa Shrine in Asan, and in 2013 UNESCO added it to the Memory of the World Register. Hoya picks up his brush: \"{kw:oneuldo-ilgireul-sseoyo}\"",
+          "line": {
+            "ko": "오늘도 일기를 써요!",
+            "romanization": "oneuldo ilgireul sseoyo!",
+            "en": "I'm writing in my diary today, too!",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f7",
+            "f8"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Hoya at a low desk writing in his notebook with a brush; through the window, the curved tiled roof of a traditional shrine."
+        }
+      ],
+      "checks": [
+        {
+          "id": "c1",
+          "kind": "detail",
+          "promptEn": "How often did Admiral Yi write in his diary?",
+          "options": [
+            {
+              "id": "a",
+              "en": "Only once a week",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Almost every day",
+              "isCorrect": true
+            },
+            {
+              "id": "c",
+              "en": "Only on special holidays",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f2"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "detail",
+          "promptEn": "Which of these did he write about?",
+          "options": [
+            {
+              "id": "a",
+              "en": "The weather, army life and ordinary people",
+              "isCorrect": true
+            },
+            {
+              "id": "b",
+              "en": "Stories about faraway lands and their kings",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Lists of foods served at royal banquets",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f3"
+          ]
+        },
+        {
+          "id": "c3",
+          "kind": "detail",
+          "promptEn": "Who gave the diary its name, {target}?",
+          "target": {
+            "ko": "난중일기",
+            "romanization": "Nanjung ilgi",
+            "en": "War Diary (of Yi Sun-sin)"
+          },
+          "options": [
+            {
+              "id": "a",
+              "en": "Admiral Yi himself, on its first page",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "King Seonjo, after he read the diary",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Later editors of his collected works",
+              "isCorrect": true
+            }
+          ],
+          "factIds": [
+            "f6"
+          ]
+        }
+      ],
+      "checkpoints": [],
+      "sequenceSceneIds": [
+        "s1",
+        "s3",
+        "s5",
+        "s7"
+      ],
+      "newKeywordIds": [
+        "ilgi",
+        "janggun",
+        "maeil",
+        "nalssi"
+      ]
+    }
+  ],
+  "coverSceneId": "s1",
+  "pillarTags": [],
+  "companionId": "hoya",
+  "facts": [
+    {
+      "id": "f1",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Yi Sun-sin (1545–1598) served as naval commander of Jeolla Left Province (전라좌도 수군절도사) and, anticipating an invasion, built ships and strengthened military preparations centered on Yeosu.",
+      "claimKo": "이순신(1545~1598)은 전라좌도 수군절도사로 있으면서 왜적의 침입에 대비해 여수를 중심으로 배를 만들고 군비를 늘렸다.",
+      "sources": [
+        {
+          "title": "국보 이순신 난중일기 및 서간첩 임진장초 (Nanjung ilgi (War Diary), Imjin jangcho and Letters by Yi Sun-sin)",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1113400760000",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"이 책은 임진왜란(1592∼1598) 때에 이순신(1545∼1598)이 친필로 작성한 일기로 연도별로 7권이다. … 전라좌도 수군절도사를 지내던 때 … 여수를 중심으로 배를 만들고 군비를 늘리는 등\" / 소재지: 충청남도 아산시 현충사길 48 (염치읍, 현충사) / 관리자: 국가유산청 현충사관리소"
+        },
+        {
+          "title": "난중일기 (미디어 설명: 이순신 난중일기 및 서간첩 임진장초)",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0011715",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "미디어 설명: \"이순신(李舜臣, 1545~1598)이 임진왜란 동안 작성한 일기.\""
+        }
+      ]
+    },
+    {
+      "id": "f2",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "During the Imjin War (1592–1598), Yi Sun-sin kept a personal diary, written almost daily, in his own hand.",
+      "claimKo": "이순신은 임진왜란(1592~1598) 동안 거의 매일 친필로 일기를 썼다.",
+      "sources": [
+        {
+          "title": "Nanjung Ilgi: War Diary of Admiral Yi Sun-sin",
+          "publisher": "UNESCO Memory of the World (unesco.org)",
+          "url": "https://www.unesco.org/en/memory-world/nanjung-ilgi-war-diary-admiral-yi-sun-sin",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"It consists of seven volumes of notes written almost daily from January 1592 through November 1598 … it describes in detail the daily combat situations, the admiral's personal views and feelings, observations on the weather, topographical features of battlefields and the lives of common people.\" / Registration Year: 2013"
+        },
+        {
+          "title": "국보 이순신 난중일기 및 서간첩 임진장초 (Nanjung ilgi (War Diary), Imjin jangcho and Letters by Yi Sun-sin)",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1113400760000",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"이 책은 임진왜란(1592∼1598) 때에 이순신(1545∼1598)이 친필로 작성한 일기로 연도별로 7권이다. … 전라좌도 수군절도사를 지내던 때 … 여수를 중심으로 배를 만들고 군비를 늘리는 등\" / 소재지: 충청남도 아산시 현충사길 48 (염치읍, 현충사) / 관리자: 국가유산청 현충사관리소"
+        },
+        {
+          "title": "난중일기",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0011715",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"7책 205장 친필 필사본이 1962년 국보로 지정되었다.\" / \"1592년(선조 25) 임진왜란이 일어난 다음 달인 5월 1일부터 전사하기 전 달인 1598년 10월 7일까지의 기록으로, 친필 초고가 충청남도 아산 현충사에 보관되어 있다.\""
+        }
+      ]
+    },
+    {
+      "id": "f3",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "The diary records, among other things, observations on the weather, army life, the admiral's personal views and feelings, and the lives of common people.",
+      "claimKo": "일기에는 날씨, 진중 생활, 이순신의 개인적인 생각과 감정, 일반 백성들의 삶 등이 기록되어 있다.",
+      "sources": [
+        {
+          "title": "Nanjung Ilgi: War Diary of Admiral Yi Sun-sin",
+          "publisher": "UNESCO Memory of the World (unesco.org)",
+          "url": "https://www.unesco.org/en/memory-world/nanjung-ilgi-war-diary-admiral-yi-sun-sin",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"It consists of seven volumes of notes written almost daily from January 1592 through November 1598 … it describes in detail the daily combat situations, the admiral's personal views and feelings, observations on the weather, topographical features of battlefields and the lives of common people.\" / Registration Year: 2013"
+        },
+        {
+          "title": "세계기록유산 난중일기",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=/unesco/MemHeritage/MemHeritage_10.jsp",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"당시의 기후나 지형, 일반 서민들의 삶에 대한 기록도 전하고 있어 … 2013년 6월 유네스코 세계기록유산 국제자문위원회(6.18-21, 대한민국 광주)에서 세계기록유산으로 등재되었다.\""
+        },
+        {
+          "title": "난중일기",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0011715",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "의의와 평가: \"일기의 주요 내용은 엄격한 진중 생활과 국정에 관한 솔직한 감회 … 이밖에 가족 · 친지 · 부하 · 장졸 · 내외 요인들의 내왕, 부하들에 대한 상벌 … 등이 실려 있어\""
+        },
+        {
+          "title": "난중일기(亂中日記) < 영상 책 이야기",
+          "publisher": "국사편찬위원회 우리역사넷 (contents.history.go.kr)",
+          "url": "https://contents.history.go.kr/mobile/ts/view.do?levelId=ts_b03",
+          "accessed": "2026-10-10",
+          "quoteOrLocator": "\"일기에는 빠짐없이 날씨 상태가 기록되어 있다.\" / \"전쟁으로 고통에 시달리는 백성에 대한 애환과 무능한 조정과 관리에 대한 탄식\" 등이 드러나 있다."
+        }
+      ]
+    },
+    {
+      "id": "f4",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "The diary also records family members, relatives and subordinates, including their comings and goings.",
+      "claimKo": "일기에는 가족·친지·부하 등에 관한 기록과 그들의 왕래도 담겨 있다.",
+      "sources": [
+        {
+          "title": "난중일기",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0011715",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "의의와 평가: \"일기의 주요 내용은 엄격한 진중 생활과 국정에 관한 솔직한 감회 … 이밖에 가족 · 친지 · 부하 · 장졸 · 내외 요인들의 내왕, 부하들에 대한 상벌 … 등이 실려 있어\""
+        },
+        {
+          "title": "난중일기(亂中日記) < 영상 책 이야기",
+          "publisher": "국사편찬위원회 우리역사넷 (contents.history.go.kr)",
+          "url": "https://contents.history.go.kr/mobile/ts/view.do?levelId=ts_b03",
+          "accessed": "2026-10-10",
+          "quoteOrLocator": "\"어머니에 대한 그리움은 『난중일기』에 90여 차례나 등장하고 있다.\" / \"상관과 장수 및 부하들 간의 갈등 문제 등이 주로 기술되어 있고\""
+        }
+      ]
+    },
+    {
+      "id": "f5",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "The surviving handwritten Nanjung Ilgi consists of seven volumes.",
+      "claimKo": "현재 전하는 친필 『난중일기』는 7책이다.",
+      "sources": [
+        {
+          "title": "국보 이순신 난중일기 및 서간첩 임진장초 (Nanjung ilgi (War Diary), Imjin jangcho and Letters by Yi Sun-sin)",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1113400760000",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"이 책은 임진왜란(1592∼1598) 때에 이순신(1545∼1598)이 친필로 작성한 일기로 연도별로 7권이다. … 전라좌도 수군절도사를 지내던 때 … 여수를 중심으로 배를 만들고 군비를 늘리는 등\" / 소재지: 충청남도 아산시 현충사길 48 (염치읍, 현충사) / 관리자: 국가유산청 현충사관리소"
+        },
+        {
+          "title": "Nanjung Ilgi: War Diary of Admiral Yi Sun-sin",
+          "publisher": "UNESCO Memory of the World (unesco.org)",
+          "url": "https://www.unesco.org/en/memory-world/nanjung-ilgi-war-diary-admiral-yi-sun-sin",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"It consists of seven volumes of notes written almost daily from January 1592 through November 1598 … it describes in detail the daily combat situations, the admiral's personal views and feelings, observations on the weather, topographical features of battlefields and the lives of common people.\" / Registration Year: 2013"
+        },
+        {
+          "title": "난중일기",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0011715",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"7책 205장 친필 필사본이 1962년 국보로 지정되었다.\" / \"1592년(선조 25) 임진왜란이 일어난 다음 달인 5월 1일부터 전사하기 전 달인 1598년 10월 7일까지의 기록으로, 친필 초고가 충청남도 아산 현충사에 보관되어 있다.\""
+        },
+        {
+          "title": "난중일기(亂中日記) < 영상 책 이야기",
+          "publisher": "국사편찬위원회 우리역사넷 (contents.history.go.kr)",
+          "url": "https://contents.history.go.kr/mobile/ts/view.do?levelId=ts_b03",
+          "accessed": "2026-10-10",
+          "quoteOrLocator": "\"1592년부터 1598년까지 7책의 친필본.\""
+        },
+        {
+          "title": "세계기록유산 난중일기",
+          "publisher": "국가유산청 국가유산포털 (heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=/unesco/MemHeritage/MemHeritage_10.jsp",
+          "accessed": "2026-10-10",
+          "quoteOrLocator": "\"현재는 1595년의 을미일기를 뺀 총7책이 보존되어 전해오고 있다.\""
+        }
+      ]
+    },
+    {
+      "id": "f6",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "The diary originally had no title; the name 'Nanjung Ilgi' was given later by the editors of the collected works of Yi Sun-sin (이충무공전서).",
+      "claimKo": "이 일기에는 본래 이름이 없었으며, 뒤에 『이충무공전서』를 엮은 편찬자가 '난중일기'라는 이름을 붙였다.",
+      "sources": [
+        {
+          "title": "난중일기",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0011715",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "편찬/발간 경위: \"본래 이 일기에는 어떤 이름이 붙어 있지 않았다. 그러다가 이후 1795년(정조 19) 『이충무공전서(李忠武公全書)』를 편찬하면서 편찬자가 편의상 ‘난중일기’라는 이름을 붙여\""
+        },
+        {
+          "title": "난중일기(亂中日記) < 영상 책 이야기",
+          "publisher": "국사편찬위원회 우리역사넷 (contents.history.go.kr)",
+          "url": "https://contents.history.go.kr/mobile/ts/view.do?levelId=ts_b03",
+          "accessed": "2026-10-10",
+          "quoteOrLocator": "\"『난중일기』라는 이름을 얻게 된 것은 200년이 지난 뒤였다.\" (the page links the naming to the publication of 『이충무공전서』 under King Jeongjo)"
+        }
+      ]
+    },
+    {
+      "id": "f7",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "The handwritten diary is designated a National Treasure (together with Yi Sun-sin's letters and Imjin war report drafts) and is kept at Hyeonchungsa in Asan, South Chungcheong Province.",
+      "claimKo": "친필 『난중일기』는 서간첩·임진장초와 함께 국보로 지정되어 있으며 충청남도 아산 현충사에 보관되어 있다.",
+      "sources": [
+        {
+          "title": "국보 이순신 난중일기 및 서간첩 임진장초 (Nanjung ilgi (War Diary), Imjin jangcho and Letters by Yi Sun-sin)",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1113400760000",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"이 책은 임진왜란(1592∼1598) 때에 이순신(1545∼1598)이 친필로 작성한 일기로 연도별로 7권이다. … 전라좌도 수군절도사를 지내던 때 … 여수를 중심으로 배를 만들고 군비를 늘리는 등\" / 소재지: 충청남도 아산시 현충사길 48 (염치읍, 현충사) / 관리자: 국가유산청 현충사관리소"
+        },
+        {
+          "title": "난중일기",
+          "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+          "url": "https://encykorea.aks.ac.kr/Article/E0011715",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"7책 205장 친필 필사본이 1962년 국보로 지정되었다.\" / \"1592년(선조 25) 임진왜란이 일어난 다음 달인 5월 1일부터 전사하기 전 달인 1598년 10월 7일까지의 기록으로, 친필 초고가 충청남도 아산 현충사에 보관되어 있다.\""
+        }
+      ]
+    },
+    {
+      "id": "f8",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "The Nanjung Ilgi was inscribed on UNESCO's Memory of the World Register in 2013.",
+      "claimKo": "『난중일기』는 2013년 유네스코 세계기록유산에 등재되었다.",
+      "sources": [
+        {
+          "title": "Nanjung Ilgi: War Diary of Admiral Yi Sun-sin",
+          "publisher": "UNESCO Memory of the World (unesco.org)",
+          "url": "https://www.unesco.org/en/memory-world/nanjung-ilgi-war-diary-admiral-yi-sun-sin",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"It consists of seven volumes of notes written almost daily from January 1592 through November 1598 … it describes in detail the daily combat situations, the admiral's personal views and feelings, observations on the weather, topographical features of battlefields and the lives of common people.\" / Registration Year: 2013"
+        },
+        {
+          "title": "한국의 세계기록유산 (Korea's Memory of the World list)",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FkorWorldMemHeritage.jsp",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "목록: \"동의보감 (2009년)\" … \"난중일기 (2013년)\""
+        },
+        {
+          "title": "세계기록유산 난중일기",
+          "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+          "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=/unesco/MemHeritage/MemHeritage_10.jsp",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "\"당시의 기후나 지형, 일반 서민들의 삶에 대한 기록도 전하고 있어 … 2013년 6월 유네스코 세계기록유산 국제자문위원회(6.18-21, 대한민국 광주)에서 세계기록유산으로 등재되었다.\""
+        }
+      ]
+    }
+  ],
+  "referenceDisplay": "Sources: 국가유산청 국가유산포털; UNESCO Memory of the World; 한국민족문화대백과사전; 국사편찬위원회 우리역사넷",
+  "verification": {
+    "passes": 3,
+    "checkedAt": "2026-10-10",
+    "scope": "cluster",
+    "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted."
+  },
+  "authorNotes": "Kept gentle on purpose: battles, the turtle ship (거북선), and Admiral Yi's death in the final battle of 1598 are omitted for young learners; the war is only named. Coverage dates differ by source (handwritten volumes: 1592-05-01 to 1598-10-07 lunar per encykorea; UNESCO and the KHS portal give January 1592 to November 1598, which includes passages known only from the printed 이충무공전서), so narration says only '1592 to 1598'. The KHS portal MoW page notes an eighth volume (1595, 을미일기) is lost; narration says seven volumes survive. The naming year (1795, 이충무공전서) comes from encykorea only, so no year is given. The National Treasure designation covers the diary together with letters (서간첩) and war-report drafts (임진장초). Romanization: surname written 'Yi' as in KHS and UNESCO usage (strict RR would give 'I'). 장군 is glossed as the customary Korean title for him; his posts were naval commands (수군절도사, later 삼도수군통제사). REVISION: removed 'even in very hard times' (not in any source); kept UNESCO's hedge 'almost daily' because the surviving volumes have gaps (the 1595 volume is lost). Scene 5 now says he 'wrote about' family, relatives and subordinates (two sources) instead of 'visits'. Second sources added for f3, f4, f5, f6 from 우리역사넷 (국사편찬위원회) and the KHS MoW page. The identity of the person who chose the title is not stated; only 'editors of 이충무공전서' is claimed.",
+  "errata": []
+}
