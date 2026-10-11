@@ -26,7 +26,7 @@ The speaker button stays on the screen that owns the prompt (Match Sound keeps i
 | Reason | Detail line | Action | Heading above the speaker |
 |---|---|---|---|
 | `muted` | Sound is off. | Turn sound on | Tap the letter for this sound |
-| `no_voice` | No Korean voice on this device. | none | Tap the letter for this sound |
+| `no_voice` | No Korean voice on this device. | none (a ghost link **How to add a voice** opens the help sheet) | Tap the letter for this sound |
 | `error` | The sound did not play. | Try again | Tap the letter you hear |
 | `blocked` | none (the speaker reads "Tap to hear") | Tap to hear | Tap the letter you hear |
 | none (sound turned back on, text kept for the round) | none | none | Tap the letter for this sound |
@@ -56,4 +56,4 @@ English until F-I18N-001's catalog exists (`logic/audio/copy.ts`, then `learner.
 
 ## Not in this component
 
-"How to add a voice" link and sheet (A-4b); the Profile Sound card line (A-4b); Discover's Letter name chip (F-QUEST-002).
+The sheet itself and the Profile Sound card line (`design/components/VoiceHelp/spec.md`, A-4b); Discover's Letter name chip (F-QUEST-002).
