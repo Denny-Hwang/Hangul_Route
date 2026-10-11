@@ -250,6 +250,8 @@ starts a new slot).
 
 - Nothing new autoplays except the Tap & Respond NPC line (audit F06 / AUD-13); Culture Quiz, Build Letter, Card Match, Voice Echo and the card detail play on tap only.
 - No panel while the sound works or before any tap; a muted device sees "Sound is off" only after asking for a sound.
+- Tap & Respond with sound off: the NPC line does not play on turn open (the learner taps Hear it to ask), so "Sound is off" is not announced again on every turn. While a right reply is being said, Hear it is disabled and the panel action does nothing, so the reply is never cut off.
+- Speaker and Hear it labels name the word ("Hear annyeong"); the sound state is announced by the status panel after the first tap (spec §3.9 revision note).
 - The round still scores normally in every state; the panel is never red.
 
 ---
