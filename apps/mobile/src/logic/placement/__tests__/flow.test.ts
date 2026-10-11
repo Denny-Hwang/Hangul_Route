@@ -18,6 +18,8 @@ import {
   promptPlayback,
   resumableRun,
   resumeClocks,
+  resumedFlow,
+  withGuideHidden,
   selectableLocale,
   runConfig,
   shortAvailable,
@@ -616,5 +618,93 @@ describe('resumeClocks (section 3.1 steps 6 and 8)', () => {
     expect(resumeClocks(paused, 7_300_000)).toBe(paused);
     const stopped = { ...base, stop: 'quit' } satisfies PlacementRunState;
     expect(resumeClocks(stopped, 7_300_000)).toBe(stopped);
+  });
+});
+
+describe('back on the options screen (wireframe C)', () => {
+  it('returns to the language screen when it was shown', () => {
+    const options = run(start({ locales: ['en', 'es'] }), { type: 'confirmLanguage', capability: SOUND });
+    expect(options.screen).toBe('options');
+    expect(run(options, { type: 'back' }).screen).toBe('language');
+  });
+
+  it('stays with one locale, and after "Check without sound" (the warm-up ran for this language)', () => {
+    const one = start();
+    expect(run(one, { type: 'back' })).toBe(one);
+    const withoutSound = { ...run(start({ locales: ['en', 'es'] }), { type: 'confirmLanguage', capability: SOUND }), warmupDone: true };
+    expect(run(withoutSound, { type: 'back' })).toBe(withoutSound);
+  });
+});
+
+describe('resumedFlow (section 3.1 step 8)', () => {
+  const config = { mode: 'deep' as const, listenFirst: true, revealMode: 'always' as const, audio: false, visual: true, takeMyTime: true, seed: 7, exclude: [] };
+  const savedRun = (stop: PlacementRunState['stop']): SavedRun => ({
+    version: 1,
+    savedAtMs: 1_000,
+    testLocale: 'es',
+    source: 'profile',
+    motivation: 'kculture',
+    run: {
+      version: 1,
+      bankVersion: 1,
+      config,
+      startedAtMs: 0,
+      deadlineMs: null,
+      lastTouchMs: 0,
+      shownAtMs: 0,
+      pause: null,
+      pausedAtMs: null,
+      timeUp: false,
+      draws: {},
+      done: [],
+      current: null,
+      responses: [],
+      tags: {},
+      notSureStreak: 0,
+      rested: false,
+      stop,
+    },
+  });
+
+  it('Continue opens the question the run stopped at, with the run\'s own settings', () => {
+    const state = resumedFlow(start(), { kind: 'continue', saved: savedRun(null) });
+    expect(state).toMatchObject({
+      screen: 'item',
+      source: 'profile',
+      testLocale: 'es',
+      mode: 'deep',
+      revealMode: 'always',
+      takeMyTime: true,
+      listenFirst: true,
+      motivation: 'kculture',
+      audio: false,
+      warmupDone: true,
+    });
+  });
+
+  it('a stopped run that was never recorded opens on the result', () => {
+    const saved = savedRun('quit');
+    const { motivation: _unused, ...withoutMotivation } = saved;
+    expect(resumedFlow(start(), { kind: 'finish', saved: withoutMotivation }).screen).toBe('result');
+    expect(resumedFlow(start(), { kind: 'finish', saved: withoutMotivation }).motivation).toBeNull();
+  });
+});
+
+describe('withGuideHidden (section 3.1 step 7, the one-tap retake)', () => {
+  it('opens the full screen with the same length and the guide hidden, so NEXT can start', () => {
+    const state = withGuideHidden(start(), 'deep');
+    expect(state).toMatchObject({ screen: 'options', optionsLayout: 'full', mode: 'deep', revealMode: 'tap' });
+    expect(canProceed(state)).toBe(true);
+    // From the Pictures first card too.
+    const card = start({ levelOrder: 0 });
+    expect(card.optionsLayout).toBe('card');
+    expect(withGuideHidden(card, 'standard')).toMatchObject({ optionsLayout: 'full', mode: 'standard', revealMode: 'tap' });
+  });
+
+  it('leaves Short and any other screen as they are', () => {
+    const options = start();
+    expect(withGuideHidden(options, 'short')).toBe(options);
+    const invite = start({ source: 'onboarding' });
+    expect(withGuideHidden(invite, 'standard')).toBe(invite);
   });
 });

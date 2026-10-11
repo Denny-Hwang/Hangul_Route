@@ -106,7 +106,9 @@ export type FlowEvent =
   | { type: 'tryAgain' }
   | { type: 'startLearning' }
   | { type: 'withoutSound' }
-  | { type: 'runFinished' };
+  | { type: 'runFinished' }
+  /** The options screen's back arrow: to the language screen when it was shown (wireframe C, B). */
+  | { type: 'back' };
 
 const STAGE1_BAND0: PlacementLevel = { stage: 'stage1', band: 0 };
 
@@ -264,6 +266,9 @@ export function flowReducer(state: FlowState, event: FlowEvent): FlowState {
           return { ...state, takeMyTime: event.on };
         case 'setMotivation':
           return { ...state, motivation: event.motivation };
+        case 'back':
+          // After "Check without sound" the warm-up has run for this language: no way back to it.
+          return state.locales.length > 1 && !state.warmupDone ? { ...state, screen: 'language' } : state;
         case 'next':
           if (!canProceed(state)) return state;
           if (state.mode === 'short' || state.levelOrder === 0) return { ...state, screen: 'handoff' };
@@ -542,4 +547,42 @@ export function resumeClocks(run: PlacementRunState, nowMs: number): PlacementRu
     lastTouchMs: nowMs,
     shownAtMs: nowMs,
   };
+}
+
+/**
+ * The flow of a saved run that is opened again (section 3.1 step 8):
+ * `continue` goes straight to the question it stopped at, `finish` to the
+ * result (the caller records it first). The run's own settings win over the
+ * fresh flow's, so the screens match what the run was started with.
+ */
+export function resumedFlow(state: FlowState, offer: ResumeOffer): FlowState {
+  const { saved } = offer;
+  const config = saved.run.config;
+  return {
+    ...state,
+    screen: offer.kind === 'continue' ? 'item' : 'result',
+    source: saved.source,
+    testLocale: saved.testLocale,
+    mode: config.mode,
+    revealMode: config.revealMode,
+    takeMyTime: config.takeMyTime,
+    listenFirst: config.listenFirst,
+    motivation: saved.motivation ?? null,
+    audio: config.audio,
+    warmupDone: true,
+  };
+}
+
+/**
+ * "Try it with the sound guide hidden" on the result (section 3.1 step 7):
+ * a new flow on the full options screen with the same length and the guide
+ * hidden, which is the learner's explicit choice for this run; NEXT then
+ * starts it. Short asks no sound-guide question, so a Short is left as it is.
+ */
+export function withGuideHidden(state: FlowState, mode: PlacementMode): FlowState {
+  if (state.screen !== 'options' || mode === 'short') return state;
+  return flowReducer(flowReducer(flowReducer(state, { type: 'change' }), { type: 'selectMode', mode }), {
+    type: 'setRevealMode',
+    revealMode: 'tap',
+  });
 }

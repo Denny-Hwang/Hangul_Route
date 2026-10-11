@@ -264,4 +264,6 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.curriculum.readout.addWeeks.cta': [[1], [12]],
   'console.curriculum.entries.ownRoute': [[7, 9, 1], [7, 9, 12]],
   'console.curriculum.catalog.comingSoon': [['Word Builder']],
+  'learner.placement.item.questionLabel': [[4], [1]],
+  'learner.placement.item.pictureChoice': [[2]],
 };

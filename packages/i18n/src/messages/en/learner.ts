@@ -790,6 +790,27 @@ export const learner = {
       exit: 'Let us start learning',
       gotIt: 'Got it',
       noSoundFallback: 'No sound? Read it here.',
+      /** Screen readers, on each question: "Question, 4 choices". */
+      questionLabel: (choices: number) =>
+        plural('en', choices, { one: 'Question, 1 choice', other: `Question, ${choices} choices` }),
+      /** A picture option's accessible name when its meaning would be the answer (test language Korean). */
+      pictureChoice: (position: number) => `Picture ${position}`,
+      /** The footstep trail: it only fills; screen readers skip it. */
+      trail: 'Footsteps',
+    },
+    /**
+     * One short instruction per question format, written and spoken (section 3.2).
+     * It never names the answer, a letter or a Korean word. With Korean as the test
+     * language the four letter formats are spoken only (the screen hides the line).
+     */
+    instruction: {
+      shapeOddOneOut: 'Which one is different?',
+      hearPickWritten: 'Listen. Tap what you hear.',
+      seePickSound: 'Look. Tap how it sounds.',
+      buildSyllable: 'Listen. Tap the block you hear.',
+      hearPickPicture: 'Listen. Tap the picture.',
+      readPickPicture: 'Read it. Tap the picture.',
+      replyPick: 'Listen. Tap a good answer.',
     },
     /** Every third answer in Standard and Deep, whatever the answers were. */
     cheer: ['You are doing fine. Keep going!', 'Hoya likes how you try.', 'Nice and calm. On we go!'],
@@ -808,7 +829,7 @@ export const learner = {
       startLearning: 'Start learning',
       withoutSound: 'Check without sound',
     },
-    resume: { continue: 'Continue', startAgain: 'Start again' },
+    resume: { title: 'Pick up where you left off?', continue: 'Continue', startAgain: 'Start again' },
     /** Band labels: the only words about level on a learner screen (section 3.6). */
     band: {
       beginning: 'At the beginning',
@@ -840,6 +861,8 @@ export const learner = {
       updatePlan: 'Update my plan',
       keepPlan: 'Keep my plan',
       tryStandard: 'Try the standard check',
+      /** The mini map's accessible name: the start cell has a pin, cells to skip ahead of a light outline. */
+      map: 'Your route on the map. The pin is where you start.',
       strip: {
         title: 'Hoya made a weekly plan for you',
         usePlan: 'Use this plan',
