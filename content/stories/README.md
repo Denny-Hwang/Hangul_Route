@@ -51,6 +51,15 @@ The full list with rule ids is F-STORY-001 §3.8; `lintStory` (`packages/content
 - **Words.** "Hangul", not "Hangeul", in English prose (proper-name romanizations such as `hangeullal` stay). No age words; a content note for grown-ups goes in `review.advisory` with `advisoryNoteEn`, never an age. No banned learner words (`packages/i18n/src/banned-words.json`).
 - **Checks** cite a fact, vary the answer position, and have an `explainEn` written from the cited fact.
 
+## QA process
+
+The full process is `docs/workflows/story-content-qa.md` (F-STORY-005 §3.9 and §3.10). In short:
+
+- **Eight passes, in order, none skipped**: 0 author, 1 two independent checkers, 2 reviser, 3 a third independent verifier (`verification.passes: 3`), 4 import, 5 native language review, 6 culture review, 7 publish.
+- **Three lint rules back it** (errors): `narration-copies-source` (8 or more consecutive words of any learner-facing English field also in a `quoteOrLocator`: restate, never paste), `narration-national-treasure-number` (no designation number such as "National Treasure No. 70" outside claims and source titles), and `story-shelf-needs-reviewers`.
+- **The shelf gate.** A `shelf` block needs `verification.passes` of at least 3, both review sign-offs (`native-reviewed` and `culture-reviewed`) with `reviewedBy` and `reviewedAt`, and `shelf.minutes` equal to `minutes`.
+- **Images.** Art is SVG drawn in-house; every PR answers the template's "Image rights" line.
+
 ## Versions
 
 - `contentVer` (integer, starts at 1): bump it for **any** change to a `ready` story's learner-visible or source content (narration, keywords, checks, facts, sources, art, culture notes, titles). Changes only to `errata`, `verification`, `review` or `shelf` need no bump. Draft edits need no bump; a story keeps its current `contentVer` when it turns `ready` and is bumped from then on.
