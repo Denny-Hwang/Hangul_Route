@@ -224,6 +224,32 @@ describe('rescue code lifecycle (F-RESTORE-001)', () => {
     expect(await useSyncStore.getState().claimRescueCode('X-Y-0000')).toEqual({ ok: false, error: 'off' });
   });
 
+  it('claim stores the merged snapshot, so a server copy with fewer or later cards never reduces the device cards (F-STORY-006 section 3.6 M6)', async () => {
+    const card = (cardId: string, unlockedAt: string, newSinceLastView: boolean) => ({ cardId, unlockedAt, newSinceLastView });
+    const local = [card('card:a', '2026-09-18T00:00:00.000Z', false), card('card:b', '2026-09-19T00:00:00.000Z', true)];
+    useProgressStore.setState({ byProfile: { 'profile:a': { ...snap(['q1']), cards: local } }, hydratedFor: new Set(['profile:a']) });
+    const server = { ...snap([]), cards: [card('card:a', '2026-09-20T00:00:00.000Z', true), card('card:c', '2026-09-17T00:00:00.000Z', true)] };
+    setSyncApiForTests({
+      ...fakeApi(),
+      claimRescueCode: vi.fn(async () => ({
+        status: 'ok',
+        learner: { id: 'profile:a', displayName: 'Suni', ageGroup: '5-7', avatar: 'hoya-orange' },
+        secret: 'as',
+        snapshot: { rev: 3, snapshot: server, summary: null },
+      })),
+    } as never);
+    const result = await useSyncStore.getState().claimRescueCode('TIGER-MOON-4821');
+    expect(result.ok && result.plan.action).toBe('merge');
+    const stored = new Map((useProgressStore.getState().byProfile['profile:a']?.cards ?? []).map((c) => [c.cardId, c]));
+    for (const c of local) {
+      expect(stored.has(c.cardId)).toBe(true);
+      expect((stored.get(c.cardId)?.unlockedAt ?? '') <= c.unlockedAt).toBe(true);
+      if (!c.newSinceLastView) expect(stored.get(c.cardId)?.newSinceLastView).toBe(false);
+    }
+    expect(stored.get('card:a')).toEqual(card('card:a', '2026-09-18T00:00:00.000Z', false));
+    expect(stored.get('card:c')).toEqual(card('card:c', '2026-09-17T00:00:00.000Z', true));
+  });
+
   it('claim with no server snapshot keeps or creates a blank local snapshot', async () => {
     useProfileStore.setState({ profiles: [], activeId: null, hydrated: true });
     useProgressStore.setState({ byProfile: {}, hydratedFor: new Set() });
