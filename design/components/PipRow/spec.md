@@ -1,8 +1,8 @@
 # PipRow: the drawn pips of My route (component spec v1)
 
 Spec: `docs/specs/F-ROUTE-001-my-route-overview.md` §3.4 (pips and cells), §3.5 (cursor), §3.6 (start marker), §3.14 (no colour-only meaning, border token), PR R-2b in §6.1, assumptions (a) and (b) in §9 · wireframe: `design/wireframes/journey/my-route-overview.md` (pip legend; screens A, B, C2, C3, C5, G)
-Code: `packages/design-system/src/components/PipRow/geometry.ts` (pure geometry), `PipRow.tsx`, `Pip.tsx`, `types.ts` · token `colors.border.shape` (`design/tokens/colors.v1.md`) · tests `PipRow/__tests__/geometry.test.ts`, `src/__tests__/contrast.test.ts`
-Preview: `pip-row-v1.png`. It shows the five shapes at 20, 24 and 48 dp and the wireframe rows (A mid-progress, a taste stage, C2 placed learner wrapping at 320, C5 the grown group, a cell row). Each is drawn three times: normal, greyscale, and protanopia (Machado 1.0). The page is generated from `geometry.ts`, so the preview is the shipped geometry.
+Code: `packages/design-system/src/components/PipRow/geometry.ts` (pure geometry), `PipRow.tsx`, `Pip.tsx`, `types.ts` · token `colors.border.shape` (`design/tokens/colors.v1.md`) · tests `PipRow/__tests__/geometry.test.ts`, `PipRow/__tests__/PipRow.test.tsx` (element trees: margins, svg height, marker offsets, inks, hiding), `src/__tests__/contrast.test.ts`
+Preview: `pip-row-v1.png`. It shows the five shapes at 20, 24 and 48 dp, the wireframe rows (A mid-progress, a taste stage, C2 placed learner wrapping at 320, C5 the grown group, C5 wrapping at 320, a cell row), the trail connector, and a row under a 200 % text label. Each is drawn three times: normal, greyscale, and protanopia (Machado 1.0). The page is generated from `geometry.ts`, so the preview is the shipped geometry.
 
 ## What it is
 
@@ -25,18 +25,22 @@ Drawn in a `size x size` box. `size` is 20 dp in a stage row and 24 dp in a cell
 - Start: a solid map-pin drop in `text.primary` with a paper dot, below the start pip. It sits in a band 0.75 size tall, so the pin is at least 0.6 size tall (12 dp at a 20 dp pip). The pin uses the outline of the `pin` icon glyph, which is also the glyph on the "You started here" tag.
 - A row reserves a band only when one of its pips uses that marker.
 
-**Groups.** `groups` are drawn with a wider gap between them: `spacing.md` between groups, `spacing.xs` between pips, and `spacing.xs` between lines. Wireframe C5 uses this: the earned group first, then the new quests after a gap, so the earned group never looks emptier. The caller can also split quest pips from later pips (wireframe A, Stage 2).
+**Groups.** `groups` are drawn with a wider gap between them: `spacing.md` between groups, `spacing.xs` between pips, and `spacing.xs` between lines. The group gap trails the last pip of a group (a right margin), so a group that wraps onto a new line starts flush left with the lines above; at the end of a line the extra margin is invisible.
+
+**Line pitch.** Every pip cell in a row reserves the same marker bands, so all pips on a line sit at the same height. When a row has a cursor or a start pin and wraps, each line therefore also carries the reserved band room: the visible gap between wrapped lines is `spacing.xs` plus 0.45 size (cursor band) and/or 0.75 size (start band), not `spacing.xs` alone. This is deliberate: reserving a band per line would need layout measurement, and a stage row wraps only in the rare long cases (C2 at 320, a grown group), where the extra room reads as separation, not as a gap in the collection. Wireframe C5 uses this: the earned group first, then the new quests after a gap, so the earned group never looks emptier. The caller can also split quest pips from later pips (wireframe A, Stage 2).
 
 ## Design pass (spec §9 assumptions a and b)
 
 - **(a) Distinct without colour.** Every state differs in geometry, not only in ink. A test replaces every ink with one colour and asserts that the five silhouettes stay pairwise different. The preview checks the same thing by eye at 20 dp in greyscale and protanopia: done (solid disc), known (ring, gap, disc), open (empty ring), new (ring with a sparkle) and later (dashes) all stay apart.
+- **(a) 200 % text.** Pip size follows the layout class (`useMediaSize`), not the font scale, on purpose: the pips are decoration, the facts are in the row label (which does scale), and scaling the pips with text would double the row length and make it wrap at every width. The preview checks a 20 dp row under a 36 px label (200 % of the 18 body floor): every shape stays distinct and the strokes stay 2 dp, so the row stays legible beside the larger text.
+- **The trail connector (§3.14).** R-3 draws it; this pass checks the pairing. The preview draws stage badges joined at the badge centre, 4 dp wide: **solid** in the stage colour down to `trailReached`, **dotted** (round dots every 8 dp) in `border.shape` below. In greyscale and protanopia the two runs stay apart by shape (a continuous line versus a row of dots), so the connector never relies on colour; the dotted run carries the 3:1 `border.shape` ink.
 - **(b) The border token.** `border.shape` #857360 measures 4.55:1 on paper, 4.29:1 on canvas, 3.84:1 on sunken and 3.42:1 on `brand.primaryLight`. Every pairing clears the 3:1 non-text minimum (WCAG 1.4.11), and `contrast.test.ts` pins each one. `border.strong` (1.9:1 on paper) stays a quiet divider. The stage colours (stage1-4 at 2.3 to 3.0:1) only fill a done disc, whose edge is always `border.shape`.
 
 ## Rules
 
 - **Drawn, never typed.** Every pip and marker is a `react-native-svg` part. There is no `Text` and no arrow, shape, dingbat or emoji-capable character (such as U+25B6, U+25C0 or U+25BC) in any source file. A test scans the sources.
 - **Tokens only.** The inks are `border.shape`, `text.primary`, `surface.paper` and the caller's accent token. The components contain no colour literal (tested).
-- **Decorative.** `PipRow` is hidden from screen readers (`importantForAccessibility="no-hide-descendants"`, `accessibilityElementsHidden`). The stage row's accessibility label carries the facts (§3.14). `Pip` draws one shape for the "What the shapes mean" legend, and the caller puts the word next to it.
+- **Decorative.** `PipRow` and `Pip` are hidden from screen readers: `importantForAccessibility="no-hide-descendants"` and `accessibilityElementsHidden` on native, and `aria-hidden` for the web PWA (react-native-web maps only `aria-hidden` to the DOM; `Pip` puts it on a wrapping `View` because the svg may not pass it on). The stage row's accessibility label carries the facts (§3.14). `Pip` draws one shape for the "What the shapes mean" legend, and the caller puts the word next to it.
 - **No ratio, no score.** The row never carries a count, a percentage or an `x / y`. Below 360 dp of width, R-3 shows the stage caption and a plain `Progress` bar instead of the row (§3.4).
 - **No motion in v1.** The one-time fill of a newly done pip (§3.14) belongs to R-3, and only when motion is not reduced.
 

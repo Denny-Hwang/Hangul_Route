@@ -218,6 +218,8 @@ describe('cursor and start markers', () => {
 });
 
 describe('pipRowCells: one wrapping row, a wider gap between groups', () => {
+  // The group gap trails the last pip of a group, so a group that starts a
+  // new wrapped line starts flush with the lines above (no indent).
   const gaps = { pip: 4, group: 12 };
 
   it('keeps every pip in order with its state and markers', () => {
@@ -232,17 +234,17 @@ describe('pipRowCells: one wrapping row, a wider gap between groups', () => {
       gaps,
     );
     expect(cells).toEqual([
-      { key: 'a', state: 'done', isCursor: false, isStart: false, leadingGap: 0 },
-      { key: 'b', state: 'open', isCursor: true, isStart: false, leadingGap: 4 },
-      { key: 'c', state: 'later', isCursor: false, isStart: false, leadingGap: 12 },
+      { key: 'a', state: 'done', isCursor: false, isStart: false, trailingGap: 4 },
+      { key: 'b', state: 'open', isCursor: true, isStart: false, trailingGap: 12 },
+      { key: 'c', state: 'later', isCursor: false, isStart: false, trailingGap: 0 },
     ]);
   });
 
-  it('skips empty groups, so no doubled gap and no gap before the first pip', () => {
-    const cells = pipRowCells([[], [{ key: 'a', state: 'new', isStart: true }], [], [{ key: 'b', state: 'new' }]], gaps);
-    expect(cells.map((c) => [c.key, c.leadingGap, c.isStart])).toEqual([
-      ['a', 0, true],
-      ['b', 12, false],
+  it('skips empty groups, so no doubled gap and no gap after the last pip', () => {
+    const cells = pipRowCells([[], [{ key: 'a', state: 'new', isStart: true }], [], [{ key: 'b', state: 'new' }], []], gaps);
+    expect(cells.map((c) => [c.key, c.trailingGap, c.isStart])).toEqual([
+      ['a', 12, true],
+      ['b', 0, false],
     ]);
   });
 
@@ -284,9 +286,13 @@ describe('drawn, never typed (section 3.4)', () => {
     }
   });
 
-  it('the row hides its pips from screen readers (the stage row label carries the facts)', () => {
-    expect(pipRowSource).toMatch(/importantForAccessibility="no-hide-descendants"/);
-    expect(pipRowSource).toMatch(/accessibilityElementsHidden/);
+  it('the row and the single pip hide their shapes from screen readers on native and web (the stage row label carries the facts)', () => {
+    for (const source of [pipRowSource, pipSource]) {
+      expect(source).toMatch(/importantForAccessibility="no-hide-descendants"/);
+      expect(source).toMatch(/accessibilityElementsHidden/);
+      // react-native-web maps only aria-hidden to the DOM, not the two native props.
+      expect(source).toMatch(/aria-hidden/);
+    }
   });
 
   it('uses tokens only: no colour literal in the components', () => {

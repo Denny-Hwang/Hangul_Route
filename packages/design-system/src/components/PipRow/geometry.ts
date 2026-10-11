@@ -18,7 +18,12 @@ export type { PipContext, PipState, PipView } from './types';
 /** Pip side in dp per context (spec section 3.4). */
 export const PIP_SIZE: Readonly<Record<PipContext, number>> = { stage: 20, cell: 24 };
 
-/** In the spec's precedence order. */
+/**
+ * In the order of the spec's state table (section 3.4), which is also the
+ * legend order. This is not the precedence: when one quest qualifies for
+ * several states the app resolves done > known > new > open > later
+ * (`pipStateOf`, apps/mobile logic/my-route) before it reaches this row.
+ */
 export const PIP_STATES: readonly PipState[] = ['done', 'known', 'open', 'new', 'later'];
 
 /** Dashes around a `later` ring (the spec asks for at least 4 visible ones). */
@@ -157,25 +162,26 @@ export interface PipCell {
   state: PipState;
   isCursor: boolean;
   isStart: boolean;
-  /** Space before this pip: 0 for the first, the pip gap inside a group, the group gap before a new group. */
-  leadingGap: number;
+  /**
+   * Space after this pip: the pip gap inside a group, the group gap after the
+   * last pip of a group that another group follows, 0 after the last pip. The
+   * gap trails, so a group that wraps onto a new line starts flush left.
+   */
+  trailingGap: number;
 }
 
 /** The groups flattened into one wrapping row; empty groups are skipped. */
 export function pipRowCells(groups: readonly (readonly PipView[])[], gaps: { pip: number; group: number }): PipCell[] {
-  const cells: PipCell[] = [];
-  for (const group of groups) {
-    group.forEach((pip, index) => {
-      cells.push({
-        key: pip.key,
-        state: pip.state,
-        isCursor: pip.isCursor ?? false,
-        isStart: pip.isStart ?? false,
-        leadingGap: cells.length === 0 ? 0 : index === 0 ? gaps.group : gaps.pip,
-      });
-    });
-  }
-  return cells;
+  const nonEmpty = groups.filter((group) => group.length > 0);
+  return nonEmpty.flatMap((group, groupIndex) =>
+    group.map((pip, index) => ({
+      key: pip.key,
+      state: pip.state,
+      isCursor: pip.isCursor ?? false,
+      isStart: pip.isStart ?? false,
+      trailingGap: index < group.length - 1 ? gaps.pip : groupIndex < nonEmpty.length - 1 ? gaps.group : 0,
+    })),
+  );
 }
 
 /** Which marker bands the row reserves: only the ones a pip uses. */
