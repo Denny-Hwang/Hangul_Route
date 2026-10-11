@@ -1,6 +1,7 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { completeChildForm, keepSidewaysIfAsked, readStored } from './helpers';
+import { back, filledDots, fullyVisible, next, position, primaryButtons } from './story-reader-helpers';
 
 /**
  * F-STORY-002 PR 2.6b: the story reader as a quest step (`StoryReadGame`,
@@ -23,7 +24,6 @@ const FIXTURE_BUILD = process.env.STORY_FIXTURES === '1';
 const QUEST = 'quest:story-hangul-day-listen';
 const EPISODE = 'episode:shelf-hangul-day';
 const EMOJI = /\p{Extended_Pictographic}/u;
-const BRAND = 'rgb(178, 73, 21)'; // colors.brand.primary: a filled dot
 
 type E2eWindow = Window & {
   __hrStoryE2E?: {
@@ -61,26 +61,9 @@ async function startReading(page: Page): Promise<void> {
 }
 
 const stepHeading = (page: Page, name: string): Locator => page.getByRole('heading', { name });
-const position = (page: Page): Locator => page.getByTestId('story-reader-position');
-const next = (page: Page): Locator => page.getByTestId('story-reader-next');
-const back = (page: Page): Locator => page.getByTestId('story-reader-back');
-
-function filledDots(page: Page): Promise<number> {
-  return page
-    .getByTestId('story-reader-dots')
-    .getByRole('progressbar', { includeHidden: true })
-    .evaluate((bar, brand) => Array.from(bar.children).filter((d) => getComputedStyle(d).backgroundColor === brand).length, BRAND);
-}
 
 function storyEvents(page: Page): Promise<Array<{ name: string; payload?: Record<string, unknown> }>> {
   return page.evaluate(() => (window as E2eWindow).__hrStoryE2E?.events() ?? []);
-}
-
-async function fullyVisible(page: Page, target: Locator): Promise<boolean> {
-  const vp = page.viewportSize();
-  const box = await target.boundingBox();
-  if (!vp || !box) return false;
-  return box.y >= 0 && box.x >= 0 && box.y + box.height <= vp.height + 0.5 && box.x + box.width <= vp.width + 0.5;
 }
 
 test.describe('story reader, quest step (fixture bundle)', () => {
@@ -120,6 +103,8 @@ test.describe('story reader, quest step (fixture bundle)', () => {
     await expect(primary).toHaveText('Continue');
     await expect(page.getByTestId('story-reader-read-again')).toBeVisible();
     await expect(page.getByText('Done', { exact: true })).toHaveCount(0);
+    // At most one primary on the end page, and it is Continue (Read again is a ghost).
+    expect(await primaryButtons(page)).toEqual(['story-reader-end-primary']);
     expect(await page.locator('body').innerText()).not.toMatch(EMOJI);
 
     const finished = (await storyEvents(page)).filter((e) => e.name === 'story.read.finished');
@@ -137,6 +122,7 @@ test.describe('story reader, quest step (fixture bundle)', () => {
     await onboard(page);
     const profiles = await readStored<Array<{ id: string }>>(page, 'profiles');
     const id = profiles?.[0]?.id;
+    expect(id).toBeTruthy();
     await startReading(page);
     await next(page).click();
     await next(page).click();
@@ -148,7 +134,8 @@ test.describe('story reader, quest step (fixture bundle)', () => {
     await expect(stepHeading(page, 'Read the story')).toBeVisible();
     await expect(page.getByText('2 / 5', { exact: true })).toBeVisible();
     expect((await storyEvents(page)).filter((e) => e.name === 'story.read.finished')).toHaveLength(0);
-    // The bookmark seam is a stub until F-STORY-004 PR 4.4b: nothing is stored yet.
+    // Stub-era expectation: the bookmark seam writes nothing until F-STORY-004 PR 4.4b, which flips
+    // this to a stored bookmark at scene index 2 and a replay that opens on 3 / 5.
     expect(await readStored(page, `story:bookmarks:${id ?? ''}`)).toBeNull();
 
     // Played again, the step opens the reader on scene 1 (no bookmark yet).
@@ -161,16 +148,28 @@ test.describe('story reader, quest step (fixture bundle)', () => {
     await expect(stepHeading(page, 'A few questions')).toBeVisible();
   });
 
-  test('320x568: Next and the end page Continue stay on screen in quest mode', async ({ page }) => {
-    await page.setViewportSize({ width: 320, height: 568 });
-    await onboard(page);
-    await startReading(page);
-    expect(await fullyVisible(page, next(page))).toBe(true);
-    for (let i = 0; i < 5; i += 1) await next(page).click();
-    const primary = page.getByTestId('story-reader-end-primary');
-    await expect(primary).toHaveText('Continue');
-    await expect.poll(() => fullyVisible(page, primary)).toBe(true);
-    await primary.click();
-    await expect(stepHeading(page, 'A few questions')).toBeVisible();
-  });
+  // Phone portrait, a phone held sideways and a tablet held sideways (side by side, §3.3); the two short
+  // windows (< layout.compactHeight) get the compact end page, whose lg Continue must still fit.
+  for (const vp of [
+    { width: 320, height: 568 },
+    { width: 844, height: 390 },
+    { width: 1180, height: 820 },
+  ]) {
+    test(`${vp.width}x${vp.height}: Next and the end page Continue stay on screen in quest mode`, async ({ page }) => {
+      await page.setViewportSize(vp);
+      await onboard(page);
+      await startReading(page);
+      await expect.poll(() => fullyVisible(page, next(page))).toBe(true);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+      for (let i = 0; i < 5; i += 1) await next(page).click();
+      const primary = page.getByTestId('story-reader-end-primary');
+      await expect(primary).toHaveText('Continue');
+      await expect(page.getByTestId('story-reader-read-again')).toBeVisible();
+      await expect(page.getByText('Done', { exact: true })).toHaveCount(0);
+      await expect.poll(() => fullyVisible(page, primary)).toBe(true);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+      await primary.click();
+      await expect(stepHeading(page, 'A few questions')).toBeVisible();
+    });
+  }
 });
