@@ -123,3 +123,15 @@ Four names in the new `lecture.` namespace (a teacher's presenter, `/present`). 
 | 2 | `lecture.complete` | F-TCH-004 §3.14 | `{ slidesShown, minutes, reveals }` (Exit confirm, or the last slide then exit) | PR 1 | PR 6 |
 | 3 | `lecture.tool_used` | F-TCH-004 §3.14 | `{ tool: 'timer' \| 'picker' \| 'blank' \| 'pause' \| 'grid' \| 'fullscreen' }` (first use of each tool per lecture) | PR 1 | PR 9 |
 | 4 | `lecture.deck_rejected` | F-TCH-004 §3.14 | `{ reason: 'empty' \| 'too_large' \| 'bad_encoding' \| 'bad_json' \| 'unsupported_version' \| 'invalid' }` (the codec reasons, §3.2) | PR 1 | PR 6 |
+
+## K. Weekly plan names (F-PLAN-002; added by its PR P2-4)
+
+Five names in the `route.` namespace (F-PLAN-002's dated weekly plan; F-ROUTE-001's map of progress uses `route_map.`, section H). None collides with sections A to J (the `lecture.` names of F-TCH-004 included). Worker first: P2-4 adds them to `TELEMETRY_EVENT_NAMES` and its exact-list test, and they ride the shared Worker deploy D2 (F-ROUTE-001 section 6.0) before any app build sends them. App only (the console has no telemetry client); codes and counts only, no names, no dates, no item ids.
+
+| # | Name | Owning spec | Payload | Added to the list by | Emitted by |
+|---|---|---|---|---|---|
+| 1 | `route.created` | F-PLAN-002 §3.11 | `{ audience: 'self', weeks, sessionsPerWeek, focus, startStage, from: 'proposal' \| 'setup', changed: boolean }` (a self-route is started) | P2-4 | P2-7a / P2-7b |
+| 2 | `route.repaced` | F-PLAN-002 §3.11 | `{ mode: 'auto' \| 'manual', pending }` (the self-route is re-paced) | P2-4 | P2-7b |
+| 3 | `route.proposed` | F-PLAN-002 §3.11 (FP-B7) | `{ source, kind: 'new' \| 'update', defaultWeeks: 4 \| 12 \| 26, pace: 'gentle' \| 'steady' \| 'brisk' }` (the proposal is shown) | P2-4 | P2-7a |
+| 4 | `route.proposal_skipped` | F-PLAN-002 §3.11 (FP-B7) | `{ source }` (Just start / Not now) | P2-4 | P2-7a |
+| 5 | `route.updated` | F-PLAN-002 §3.11 (FP-B7) | `{ source: 'retake' \| 'override', itemsRemoved, itemsAdded }` (a retake or an override reseeds the route) | P2-4 | P2-7a |
