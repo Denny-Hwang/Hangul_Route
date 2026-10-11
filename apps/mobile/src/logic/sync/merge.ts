@@ -7,6 +7,7 @@ import {
   type ProgressSnapshot,
   type QuestProgress,
   type ReviewEntry,
+  type SelfRoute,
   type SessionLog,
 } from '@hangul-route/content-schema';
 import { computeStreak } from '../streak';
@@ -147,13 +148,30 @@ const codePointCompare = (a: string, b: string): number => (a < b ? -1 : a > b ?
  * additive key existed lacks it at runtime. Only `recordPlacement` applies
  * this: `hydrate` and `replaceSnapshot` keep a stored snapshot's shape (the P-2
  * rule, pinned by a progress-store test), and every reader treats a missing
- * `placements` as `[]`. A server copy always carries the key (the Worker
- * stores the zod-parsed payload), so `mergeSnapshots` writes it on the first
- * sync. F-PLAN-002 P2-4 and F-VOC-005 P-3 add their keys here.
+ * `placements` as `[]` and a missing `selfRoute` (F-PLAN-002 section 3.5) as
+ * null. A server copy always carries both keys (the Worker stores the
+ * zod-parsed payload), so `mergeSnapshots` writes them on the first sync.
+ * F-VOC-005 P-3 adds its key here.
  */
-export function withSnapshotDefaults(snapshot: ProgressSnapshot): ProgressSnapshot & { placements: PlacementResult[] } {
-  if (snapshot.placements !== undefined) return snapshot as ProgressSnapshot & { placements: PlacementResult[] };
-  return { ...snapshot, placements: [] };
+export function withSnapshotDefaults(
+  snapshot: ProgressSnapshot,
+): ProgressSnapshot & { placements: PlacementResult[]; selfRoute: SelfRoute | null } {
+  if (snapshot.placements !== undefined && snapshot.selfRoute !== undefined) {
+    return snapshot as ProgressSnapshot & { placements: PlacementResult[]; selfRoute: SelfRoute | null };
+  }
+  return { ...snapshot, placements: snapshot.placements ?? [], selfRoute: snapshot.selfRoute ?? null };
+}
+
+/**
+ * The learner's weekly plan on both sides (F-PLAN-002 section 3.5): the newest
+ * `updatedAt` as an instant wins, a tie keeps the local copy. A missing or
+ * null side never replaces a held route: a stopped route is archived, never
+ * set to null, so null only means "this copy has none".
+ */
+export function mergeSelfRoute(l: SelfRoute | null | undefined, s: SelfRoute | null | undefined): SelfRoute | null {
+  if (!l) return s ?? null;
+  if (!s) return l;
+  return compareInstant(s.updatedAt, l.updatedAt) > 0 ? s : l;
 }
 
 /**
@@ -204,6 +222,9 @@ export function mergeSnapshots(local: ProgressSnapshot, server: ProgressSnapshot
     ...(local.placements !== undefined || server.placements !== undefined
       ? { placements: mergePlacements(local.placements, server.placements) }
       : {}),
+    ...(local.selfRoute !== undefined || server.selfRoute !== undefined
+      ? { selfRoute: mergeSelfRoute(local.selfRoute, server.selfRoute) }
+      : {}),
   };
 }
 
@@ -232,7 +253,12 @@ export function isSubsetOf(local: ProgressSnapshot, server: ProgressSnapshot): b
     const theirs = latched.get(stage);
     return theirs !== undefined && earlierLatchTime(theirs, at) === theirs;
   };
+  // The weekly plan is held when the server has the same route at the same or a newer edit.
+  const route = local.selfRoute ?? null;
+  const theirRoute = server.selfRoute ?? null;
+  const holdsRoute = route === null || (theirRoute !== null && theirRoute.id === route.id && compareInstant(theirRoute.updatedAt, route.updatedAt) >= 0);
   return (
+    holdsRoute &&
     local.quests.every((x) => q.has(`${x.questId}:${x.stars}`)) &&
     local.cards.every(cardHeld) &&
     local.sessions.every((x) => s.has(x.id)) &&

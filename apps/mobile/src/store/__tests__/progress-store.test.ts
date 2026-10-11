@@ -392,7 +392,9 @@ describe('recordPlacement (F-PLC-001 section 3.8)', () => {
     expect(useProgressStore.getState().recordPlacement('p1', result)).toBe(true);
     const after = useProgressStore.getState().byProfile['p1'] as ProgressSnapshot;
     expect(after.placements).toEqual([result]);
-    const { placements: _p, updatedAt: _u, ...restAfter } = after;
+    // The only other key it may add is the null default of F-PLAN-002's selfRoute (withSnapshotDefaults).
+    expect(after.selfRoute).toBeNull();
+    const { placements: _p, updatedAt: _u, selfRoute: _r, ...restAfter } = after;
     const { placements: _q, updatedAt: _v, ...restBefore } = before;
     expect(restAfter).toEqual(restBefore);
     expect(stored()?.placements).toEqual([result]);
