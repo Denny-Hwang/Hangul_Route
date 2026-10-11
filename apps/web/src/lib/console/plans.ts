@@ -68,12 +68,29 @@ export function readoutLine(row: ReadoutRow, locale: UiLocale = DEFAULT_LOCALE):
 }
 
 /**
- * Who a plan is for, in `locale`: everyone in the space, or a count of its members.
- * `kind` is null until the roster loads; the page then said "space" and "learners", and still does.
+ * A roster's space kind as a key of the member-worded messages (`noMembers`, `noneJoined`,
+ * `summary.some`). Null (the roster has not loaded) reads as a family's "learners", as the page
+ * always said; so does a kind this build does not know, since the roster is not validated at
+ * runtime and a Worker deployed first could send one.
  */
-export function planAudience(targets: number | null, kind: SpaceKind | null, locale: UiLocale = DEFAULT_LOCALE): string {
-  const audience = getMessages(locale).console.plan.audience;
-  return targets === null ? audience.everyone[kind ?? 'space'] : audience.some[kind ?? 'family'](targets);
+export function memberKind(kind: SpaceKind | null): SpaceKind {
+  return kind === 'class' || kind === 'school' ? kind : 'family';
+}
+
+/** A roster's space kind as a key of the space-worded messages (`summary.everyone`, `who.everyone`); null or unknown reads "space". */
+export function spaceKey(kind: SpaceKind | null): SpaceKind | 'space' {
+  return kind === 'family' || kind === 'class' || kind === 'school' ? kind : 'space';
+}
+
+/** The readout's summary, in `locale`: "4 items · for everyone in this class" · "4 items · for 3 students". */
+export function planSummary(items: number, targets: number | null, kind: SpaceKind | null, locale: UiLocale = DEFAULT_LOCALE): string {
+  const summary = getMessages(locale).console.plan.summary;
+  return targets === null ? summary.everyone[spaceKey(kind)](items) : summary.some[memberKind(kind)](items, targets);
+}
+
+/** The "everyone" choice of the audience radio, in `locale`: "everyone in this class". */
+export function planEveryone(kind: SpaceKind | null, locale: UiLocale = DEFAULT_LOCALE): string {
+  return getMessages(locale).console.plan.who.everyone[spaceKey(kind)];
 }
 
 /** Why the plan page could not load or save; a key, worded at render time so it follows the header language select. */

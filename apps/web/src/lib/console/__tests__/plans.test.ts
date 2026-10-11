@@ -1,7 +1,8 @@
 import { formatDate, getMessages, type UiLocale } from '@hangul-route/i18n';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import type { SpaceKind } from '@hangul-route/content-schema';
 import type { RosterLearner } from '../api';
-import { addDays, currentPlan, latestPublished, moveItem, oneExplicitPerDay, planAudience, planErrorText, planReadout, planStatusLabel, readoutLine, spreadDates } from '../plans';
+import { addDays, currentPlan, latestPublished, moveItem, memberKind, oneExplicitPerDay, planErrorText, planEveryone, planSummary, planReadout, planStatusLabel, readoutLine, spaceKey, spreadDates } from '../plans';
 
 describe('plan helpers (F-PLAN-001 §3.5)', () => {
   it('spreads dates evenly and never twice on one day', () => {
@@ -101,25 +102,43 @@ describe('plan page words (F-I18N-001 PR 10b)', () => {
   });
 
   it('names who the plan is for, as the page did', () => {
-    expect(planAudience(null, 'class')).toBe('everyone in this class');
-    expect(planAudience(null, null)).toBe('everyone in this space');
-    expect(planAudience(3, 'class')).toBe('3 students');
-    expect(planAudience(2, 'family')).toBe('2 learners');
-    expect(planAudience(1, 'school')).toBe('1 members');
-    expect(planAudience(2, null)).toBe('2 learners'); // before the roster loads, as before
+    expect(planSummary(1, null, 'class')).toBe('1 item · for everyone in this class');
+    expect(planSummary(4, null, null)).toBe('4 items · for everyone in this space');
+    expect(planSummary(4, 3, 'class')).toBe('4 items · for 3 students');
+    expect(planSummary(2, 2, 'family')).toBe('2 items · for 2 learners');
+    expect(planSummary(2, 1, 'school')).toBe('2 items · for 1 members');
+    expect(planSummary(2, 2, null)).toBe('2 items · for 2 learners'); // before the roster loads, as before
+    expect(planEveryone('class')).toBe('everyone in this class');
+    expect(planEveryone(null)).toBe('everyone in this space');
     for (const locale of ['en', 'es', 'ko'] as const) {
-      const a = getMessages(locale).console.plan.audience;
-      expect(planAudience(null, 'family', locale)).toBe(a.everyone.family);
-      expect(planAudience(4, 'class', locale)).toBe(a.some.class(4));
+      const p = getMessages(locale).console.plan;
+      expect(planSummary(3, null, 'family', locale)).toBe(p.summary.everyone.family(3));
+      expect(planSummary(3, 4, 'class', locale)).toBe(p.summary.some.class(3, 4));
+      expect(planEveryone('school', locale)).toBe(p.who.everyone.school);
     }
+  });
+
+  it('reads a space kind this build does not know as the roster-not-loaded words, never a crash', () => {
+    // The roster is not validated at runtime; a newer Worker could send a kind added later.
+    const unknown = 'district' as unknown as SpaceKind;
+    expect(memberKind(unknown)).toBe('family');
+    expect(memberKind(null)).toBe('family');
+    expect(memberKind('school')).toBe('school');
+    expect(spaceKey(unknown)).toBe('space');
+    expect(spaceKey(null)).toBe('space');
+    expect(spaceKey('class')).toBe('class');
+    expect(planSummary(2, 3, unknown)).toBe('2 items · for 3 learners');
+    expect(planSummary(2, null, unknown)).toBe('2 items · for everyone in this space');
+    expect(planEveryone(unknown)).toBe('everyone in this space');
   });
 
   it('leaves no English in the pseudo-locale', () => {
     vi.stubEnv('NEXT_PUBLIC_PSEUDO_LOCALE', '1');
     const bracketed = /^\[.*\]$/;
     for (const error of ['cantReach', 'saveInvalid', 'saveFailed', 'archiveFailed'] as const) expect(planErrorText(error, PSEUDO)).toMatch(bracketed);
-    expect(planAudience(null, 'class', PSEUDO)).toMatch(bracketed);
-    expect(planAudience(3, 'class', PSEUDO)).toMatch(bracketed);
+    expect(planSummary(1, null, 'class', PSEUDO)).toMatch(bracketed);
+    expect(planSummary(1, 3, 'class', PSEUDO)).toMatch(bracketed);
+    expect(planEveryone('class', PSEUDO)).toMatch(bracketed);
     const row = { learnerId: 'a', name: 'a', done: 0, total: 2, notReady: 1, synced: true, lastActiveAt: 't' };
     expect(readoutLine(row, PSEUDO)).toMatch(bracketed);
     expect(readoutLine({ ...row, synced: false }, PSEUDO)).toMatch(bracketed);

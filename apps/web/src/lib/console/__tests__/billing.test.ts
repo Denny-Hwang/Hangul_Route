@@ -1,8 +1,8 @@
-import { PLAN_PRICING } from '@hangul-route/content-schema';
+import { FREE_CLASS_STUDENT_CAP, PLAN_PRICING } from '@hangul-route/content-schema';
 import { formatDate, formatUsd, getMessages, type UiLocale } from '@hangul-route/i18n';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { EntitlementView, SpaceListItem } from '../api';
-import { PLAN_TITLES, billingNoteText, checkoutReturnNote, currentPlanCards, isActive, planIncludes, planPrice, planRowsFor, planTitle, promoNoteText, promoPriceLine, rowPrice, sourceLine, statusLine } from '../billing';
+import { PLAN_TITLES, billingNoteText, checkoutReturnNote, currentPlanCards, freePlanLine, isActive, planIncludes, planPrice, planRowsFor, planTitle, promoNoteText, promoPriceLine, rowPrice, sourceLine, statusLine } from '../billing';
 
 const now = new Date('2026-09-21T12:00:00.000Z');
 const ent = (over: Partial<EntitlementView>): EntitlementView => ({ id: 'ent:1', subjectKind: 'space', subjectId: 'space:fam', planKey: 'group_license', status: 'active', provider: 'stripe', providerRef: 'sub', customerRef: 'cus', seats: null, expiresAt: '2026-10-21T00:00:00.000Z', promoCode: null, updatedAt: '2026-09-20T00:00:00.000Z', subjectName: 'Kim family', ...over });
@@ -95,6 +95,8 @@ describe('sourceLine', () => {
     expect(sourceLine({ provider: 'stripe', promoCode: null })).toBe('via web (Stripe)');
     expect(sourceLine({ provider: 'stripe', promoCode: 'KPCCW2026' })).toBe('via web (Stripe) · code KPCCW2026');
     expect(sourceLine({ provider: 'manual', promoCode: null })).toBe('via contract');
+    expect(sourceLine({ provider: 'apple', promoCode: null })).toBe('via App Store');
+    expect(sourceLine({ provider: 'google', promoCode: 'X1' })).toBe('via Google Play · code X1');
   });
 });
 
@@ -146,6 +148,16 @@ describe('billing page words per locale (F-I18N-001 PR 10b)', () => {
     expect(planIncludes('group_license')).toBe('A class or school: every student premium while enrolled, no 20-student cap; a school holds up to 10 teachers / 300 students');
     expect(planIncludes('school_seat')).toBe('Beyond 300 students or 10 teachers — seats by contract');
     expect(currentPlanCards([ent({ subjectKind: 'account', subjectId: 'me' })], now)[0]?.subject).toBe('your account');
+    expect(freePlanLine()).toBe('Stage 1, local progress, Rescue Code, file backup. Classes hold up to 20 students.');
+  });
+
+  it('takes the free-class cap from content-schema, never a number typed into the copy', () => {
+    for (const locale of ['en', 'es', 'ko'] as const) {
+      const b = getMessages(locale).console.billing;
+      expect(planIncludes('free', locale)).toBe(b.includes.free(FREE_CLASS_STUDENT_CAP));
+      expect(planIncludes('group_license', locale)).toBe(b.includes.group_license(10, 300, FREE_CLASS_STUDENT_CAP));
+      expect(freePlanLine(locale)).toBe(b.current.freeLine(FREE_CLASS_STUDENT_CAP));
+    }
   });
 
   it('words cards, rows, sources and notes from the dictionary in every locale', () => {
@@ -155,11 +167,11 @@ describe('billing page words per locale (F-I18N-001 PR 10b)', () => {
       expect(card).toMatchObject({ title: b.planTitle.group_license, subject: b.yourAccount, status: statusLine(ent({}), now, locale) });
       const rows = planRowsFor('me', [space('space:sch', 'school')], [], now, locale);
       expect(rows.map((r) => [r.title, r.includes, r.price])).toEqual([
-        [b.planTitle.free, b.includes.free, formatUsd(locale, 0)],
-        [b.planTitle.group_license, b.includes.group_license(10, 300), planPrice('group_license', locale)],
+        [b.planTitle.free, b.includes.free(FREE_CLASS_STUDENT_CAP), formatUsd(locale, 0)],
+        [b.planTitle.group_license, b.includes.group_license(10, 300, FREE_CLASS_STUDENT_CAP), planPrice('group_license', locale)],
         [b.planTitle.school_seat, b.includes.school_seat(300, 10), b.contactPrice],
       ]);
-      expect(sourceLine({ provider: 'apple', promoCode: 'X1' }, locale)).toBe(b.source(b.provider.apple, 'X1'));
+      expect(sourceLine({ provider: 'apple', promoCode: 'X1' }, locale)).toBe(b.source('apple', 'X1'));
       expect(billingNoteText('portalFailed', locale)).toBe(b.portalFailed);
     }
   });
@@ -177,6 +189,7 @@ describe('billing page words per locale (F-I18N-001 PR 10b)', () => {
     }
     expect(rowPrice('school_seat', PSEUDO)).toMatch(bracketed);
     expect(sourceLine({ provider: 'manual', promoCode: null }, PSEUDO)).toMatch(bracketed);
+    expect(freePlanLine(PSEUDO)).toMatch(bracketed);
     for (const note of ['success', 'cancelled', 'notConfigured', 'checkoutFailed', 'portalFailed'] as const) expect(billingNoteText(note, PSEUDO)).toMatch(bracketed);
     for (const kind of ['tooMany', 'notConfigured', 'invalid'] as const) expect(promoNoteText({ kind }, PSEUDO)).toMatch(bracketed);
     expect(promoNoteText({ kind: 'applied', code: 'HOYA20', name: null }, PSEUDO)).toMatch(bracketed);

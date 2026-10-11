@@ -1,4 +1,4 @@
-import { FAMILY_LIFETIME_LEARNERS, PLAN_PRICING, SCHOOL_LICENSE_STUDENTS, SCHOOL_LICENSE_TEACHERS, discountedUsd, promoLabel, type Entitlement, type PlanKey, type PlanPricing, type Promo, type PurchasablePlanKey } from '@hangul-route/content-schema';
+import { FAMILY_LIFETIME_LEARNERS, FREE_CLASS_STUDENT_CAP, PLAN_PRICING, SCHOOL_LICENSE_STUDENTS, SCHOOL_LICENSE_TEACHERS, discountedUsd, promoLabel, type Entitlement, type PlanKey, type PlanPricing, type Promo, type PurchasablePlanKey } from '@hangul-route/content-schema';
 import { DEFAULT_LOCALE, en, formatDate, formatUsd, getMessages, type UiLocale } from '@hangul-route/i18n';
 import type { EntitlementView, SpaceListItem } from './api';
 
@@ -51,10 +51,15 @@ export function rowPrice(planKey: PlanKey | 'free', locale: UiLocale = DEFAULT_L
 /** What a plan includes, in `locale`; the limits come from content-schema. */
 export function planIncludes(planKey: PlanKey | 'free', locale: UiLocale = DEFAULT_LOCALE): string {
   const includes = getMessages(locale).console.billing.includes;
-  if (planKey === 'free') return includes.free;
+  if (planKey === 'free') return includes.free(FREE_CLASS_STUDENT_CAP);
   if (planKey === 'family_lifetime') return includes.family_lifetime(FAMILY_LIFETIME_LEARNERS);
-  if (planKey === 'group_license') return includes.group_license(SCHOOL_LICENSE_TEACHERS, SCHOOL_LICENSE_STUDENTS);
+  if (planKey === 'group_license') return includes.group_license(SCHOOL_LICENSE_TEACHERS, SCHOOL_LICENSE_STUDENTS, FREE_CLASS_STUDENT_CAP);
   return includes.school_seat(SCHOOL_LICENSE_STUDENTS, SCHOOL_LICENSE_TEACHERS);
+}
+
+/** The current-plan card for an adult on the free plan, in `locale`; the class cap comes from content-schema. */
+export function freePlanLine(locale: UiLocale = DEFAULT_LOCALE): string {
+  return getMessages(locale).console.billing.current.freeLine(FREE_CLASS_STUDENT_CAP);
 }
 
 /** Mirror of the server rule so the page can label cards without a round trip. */
@@ -88,8 +93,7 @@ export function statusLine(e: Entitlement, now: Date, locale: UiLocale = DEFAULT
 
 /** How the plan was obtained, in `locale` — never "paid", since a 100%-off code (a sponsored class) costs nothing. */
 export function sourceLine(e: Pick<Entitlement, 'provider' | 'promoCode'>, locale: UiLocale = DEFAULT_LOCALE): string {
-  const words = getMessages(locale).console.billing;
-  return words.source(words.provider[e.provider], e.promoCode);
+  return getMessages(locale).console.billing.source(e.provider, e.promoCode);
 }
 
 export interface CurrentPlanCard {
