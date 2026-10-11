@@ -83,7 +83,10 @@ export function mergeStageDoneAt(
 ): Record<string, string> | undefined {
   const out = new Map<string, string>();
   for (const side of [l ?? {}, s ?? {}]) {
-    for (const [stage, at] of Object.entries(side)) out.set(stage, earliest(out.get(stage), at) ?? at);
+    for (const [stage, at] of Object.entries(side)) {
+      const prev = out.get(stage);
+      out.set(stage, prev !== undefined && prev < at ? prev : at);
+    }
   }
   return out.size === 0 ? undefined : Object.fromEntries([...out.entries()].sort(([a], [b]) => a.localeCompare(b)));
 }
