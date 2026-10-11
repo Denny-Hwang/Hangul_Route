@@ -113,7 +113,7 @@ export function HomeworkScreen(): React.ReactElement {
               <Pressable
                 onPress={() => setLaterOpen((wasOpen) => !wasOpen)}
                 accessibilityRole="button"
-                accessibilityState={{ expanded: laterOpen }}
+                aria-expanded={laterOpen}
                 testID="homework-later"
                 style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, minHeight: touchTarget.min }}
               >
