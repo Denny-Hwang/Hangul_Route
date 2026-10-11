@@ -15,7 +15,7 @@ export const LOCALE_BANNER_KEY = 'hr:site:localeBanner';
  */
 export function bannerLocale(languages: readonly string[], shown: readonly string[]): string | null {
   for (const tag of languages) {
-    const primary = (tag.split(/[-_]/)[0] ?? '').toLowerCase();
+    const primary = tag.toLowerCase().replace(/[-_].*$/, '');
     if (shown.includes(primary)) return primary === 'en' ? null : primary;
   }
   return null;
