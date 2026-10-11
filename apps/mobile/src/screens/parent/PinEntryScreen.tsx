@@ -6,13 +6,15 @@ import {
   Screen,
   Spacer,
   colors,
+  layout,
   radii,
   spacing,
   touchTarget,
+  useLayoutClass,
 } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
-import { Pressable, View, useWindowDimensions } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PIN_PAD_GAP, PinPad } from '../../components/PinPad';
 import { useMessages } from '../../i18n/use-messages';
@@ -25,7 +27,7 @@ import {
   createPinHash,
   verifyPin,
 } from '../../logic/profiles/pin-hash';
-import { pinPadBudget, pinPadLayout } from '../../logic/profiles/pin-pad-layout';
+import { pinPadBudget, pinPadFirstWidth, pinPadLayout } from '../../logic/profiles/pin-pad-layout';
 import type { RootStackParamList } from '../../navigation/types';
 import { pinHasher } from '../../platform/crypto';
 import { track } from '../../platform/telemetry';
@@ -45,8 +47,6 @@ type Props = NativeStackScreenProps<RootStackParamList, 'PinEntry'>;
 const DOT_SIZE = 20;
 /** First-frame guess for the title block until it is measured. */
 const HEADER_ESTIMATE = 120;
-/** The web build centres a 480px column on wide screens (pwa-postbuild). */
-const WEB_COLUMN_MAX = 480;
 /**
  * Everything but the header and the keys that must stay on screen: screen
  * padding (top + bottom), the gaps around the dots and above the CTA, the dots
@@ -73,13 +73,16 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
   const [busy, setBusy] = useState(false);
   const [now, setNow] = useState(() => Date.now());
   const [headerHeight, setHeaderHeight] = useState(HEADER_ESTIMATE);
-  const screenSize = useWindowDimensions();
+  const { windowWidth, windowHeight, gutter } = useLayoutClass();
   const insets = useSafeAreaInsets();
-  const [padWidth, setPadWidth] = useState(() => Math.min(screenSize.width, WEB_COLUMN_MAX) - 2 * spacing.lg);
+  // First-frame guess until the pad's box is measured: the `Screen` reading column less its gutter.
+  const [padWidth, setPadWidth] = useState(() =>
+    pinPadFirstWidth({ windowWidth, maxWidth: layout.maxWidth.reading, sidePadding: 2 * gutter }),
+  );
   const pad = pinPadLayout({
     width: padWidth,
     height: pinPadBudget({
-      windowHeight: screenSize.height,
+      windowHeight,
       insetTop: insets.top,
       insetBottom: insets.bottom,
       header: headerHeight,
