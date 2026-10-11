@@ -188,3 +188,26 @@ export const cellIsReady = (cell: Pick<CatalogCell, 'status'>): boolean =>
 
 /** A story is offered only when a reviewer has signed it (F-STORY-004). */
 export const storyIsReady = (story: Pick<CatalogStory, 'status'>): boolean => story.status === 'ready';
+
+/** The fields of a story file (F-STORY-001 section 3.2) that decide its catalogue status. */
+export interface StoryOfferFields {
+  state: 'draft' | 'ready';
+  shelf?: unknown;
+  review: { language: 'draft' | 'native-reviewed'; culture: 'draft' | 'culture-reviewed' };
+}
+
+/**
+ * The catalogue status a story file implies (F-PLAN-002 section 3.2), the one rule
+ * `catalog-parity.test.ts` holds `data.ts` to. `ready` (offered by plans and placement)
+ * needs all three: the file is `ready` (bundled), it has a `shelf` block (so the bundle
+ * holds its listen quest and shelf episode) and both review sign-offs are recorded (the
+ * F-STORY-004 review gate). A story can be `ready` as content before PR 1.9 adds its
+ * shelf block and sign-offs; until then it stays `draft` here and no learner path offers it.
+ */
+export const catalogStatusOfStory = (story: StoryOfferFields): CatalogStory['status'] =>
+  story.state === 'ready' &&
+  story.shelf !== undefined &&
+  story.review.language === 'native-reviewed' &&
+  story.review.culture === 'culture-reviewed'
+    ? 'ready'
+    : 'draft';

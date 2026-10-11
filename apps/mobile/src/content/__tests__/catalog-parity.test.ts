@@ -5,6 +5,7 @@ import { z } from 'zod';
 import {
   CATALOG,
   VOCAB_TOPIC_KEYS,
+  catalogStatusOfStory,
   cellIsReady,
   type CatalogCell,
   type CatalogQuest,
@@ -156,6 +157,8 @@ const RawStorySchema = z.object({
   theme: z.string(),
   minutes: z.number(),
   title: z.object({ en: z.string() }),
+  shelf: z.object({}).passthrough().optional(),
+  review: z.object({ language: z.enum(['draft', 'native-reviewed']), culture: z.enum(['draft', 'culture-reviewed']) }),
 });
 const STORY_DIR = join(__dirname, '../../../../../content/stories');
 const rawStories = readdirSync(STORY_DIR)
@@ -163,8 +166,15 @@ const rawStories = readdirSync(STORY_DIR)
   .sort()
   .map((name) => RawStorySchema.parse(JSON.parse(readFileSync(join(STORY_DIR, name), 'utf8'))));
 
+/**
+ * Story status follows one rule, `catalogStatusOfStory` (section 3.2): a catalogue story is
+ * `ready` only when its file is `ready`, has a `shelf` block and carries both review
+ * sign-offs. So a story can be `ready` as content (F-STORY-001 PR 1.8) before PR 1.9 adds
+ * its shelf block and sign-offs, and the catalogue flips at that review step, never before
+ * the bundle holds the story's listen quest.
+ */
 describe('stories and content/stories', () => {
-  it('has a story with equal id, title, minutes, recommended stage, theme and review state for every story file', () => {
+  it('has a story with equal id, title, minutes, recommended stage, theme and offer status for every story file', () => {
     expect(rawStories.length).toBeGreaterThan(0);
     for (const raw of rawStories) {
       const expected: Pick<CatalogStory, 'id' | 'title' | 'minutes' | 'recommendedStage' | 'theme' | 'status'> = {
@@ -173,7 +183,7 @@ describe('stories and content/stories', () => {
         minutes: raw.minutes,
         recommendedStage: raw.recommendedStage,
         theme: raw.theme as CatalogStory['theme'],
-        status: raw.state,
+        status: catalogStatusOfStory(raw),
       };
       const found = CATALOG.stories.find((s) => s.id === raw.id);
       expect(found, `no catalogue story for ${raw.id}${row(expected)}`).toBeDefined();
@@ -187,15 +197,23 @@ describe('stories and content/stories', () => {
     for (const story of CATALOG.stories) expect(ids.has(story.id), `story ${story.id} has no file in content/stories`).toBe(true);
   });
 
-  it('lists every bundled (ready) story as ready with the same sampler flag, and every ready story as bundled', () => {
+  it('gives every bundled story the status of the rule, and the same sampler flag once it has a shelf block', () => {
     for (const story of storiesAll) {
       const found = CATALOG.stories.find((s) => s.id === story.id);
-      expect(found?.status, `bundled story ${story.id} must be ready in the catalogue`).toBe('ready');
-      expect(found?.sampler, `story ${story.id} sampler flag`).toBe(story.shelf?.sampler === true);
+      const status = catalogStatusOfStory(story);
+      const why = `shelf block: ${story.shelf ? 'yes' : 'no'}, review: ${story.review.language} / ${story.review.culture}`;
+      expect(found?.status, `bundled story ${story.id} must be ${status} in the catalogue (${why})`).toBe(status);
+      // The catalogue sampler is the intended free set (D5); a story file states it only in its shelf block (PR 1.9).
+      if (story.shelf) expect(found?.sampler, `story ${story.id} sampler flag`).toBe(story.shelf.sampler === true);
     }
-    const bundled = new Set(storiesAll.map((story) => story.id));
+  });
+
+  it('lists a story as ready only when the bundle holds it as a shelf story with its listen quest', () => {
+    const bundledShelf = new Set(storiesAll.filter((story) => story.shelf).map((story) => story.id));
+    const bundledQuests = new Set(storyQuests.map((quest) => quest.id));
     for (const story of CATALOG.stories.filter((s) => s.status === 'ready')) {
-      expect(bundled.has(story.id), `story ${story.id} is ready in the catalogue but not in the bundle`).toBe(true);
+      expect(bundledShelf.has(story.id), `story ${story.id} is ready in the catalogue but not a bundled shelf story`).toBe(true);
+      expect(bundledQuests.has(story.questId), `story ${story.id} is ready in the catalogue but the bundle lacks ${story.questId}`).toBe(true);
     }
   });
 });

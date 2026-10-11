@@ -10,6 +10,7 @@ import {
   FESTIVAL_DATES,
   ThemeKeySchema,
   VOCAB_TOPIC_KEYS,
+  catalogStatusOfStory,
   cellIsReady,
   routeCatalogOf,
   storyIsReady,
@@ -115,7 +116,7 @@ describe('the shipped catalogue data', () => {
     ]);
   });
 
-  it('keeps every story a draft until a reviewer signs it (the bundle has no ready story yet)', () => {
+  it('keeps every story a draft until PR 1.9 adds its shelf block and both sign-offs (no story is offered yet)', () => {
     expect(CATALOG.stories.every((s) => s.status === 'draft')).toBe(true);
   });
 
@@ -342,6 +343,31 @@ describe('availability', () => {
     const base = CATALOG.stories[0] as CatalogStory;
     expect(storyIsReady({ ...base, status: 'ready' })).toBe(true);
     expect(storyIsReady({ ...base, status: 'draft' })).toBe(false);
+  });
+});
+
+describe('catalogStatusOfStory (the one rule that flips a catalogue story, section 3.2)', () => {
+  const signed = { language: 'native-reviewed', culture: 'culture-reviewed' } as const;
+  const shelf = { order: 1 };
+  const offered = { state: 'ready', shelf, review: signed } as const;
+
+  it('is ready only for a ready file with a shelf block and both review sign-offs', () => {
+    expect(catalogStatusOfStory(offered)).toBe('ready');
+  });
+
+  it('keeps a ready file without a shelf block draft (F-STORY-001 PR 1.8: content ready before PR 1.9)', () => {
+    expect(catalogStatusOfStory({ state: 'ready', review: signed })).toBe('draft');
+    expect(catalogStatusOfStory({ state: 'ready', shelf: undefined, review: signed })).toBe('draft');
+  });
+
+  it('keeps a story draft while either review is unsigned (the F-STORY-004 review gate)', () => {
+    expect(catalogStatusOfStory({ ...offered, review: { ...signed, language: 'draft' } })).toBe('draft');
+    expect(catalogStatusOfStory({ ...offered, review: { ...signed, culture: 'draft' } })).toBe('draft');
+    expect(catalogStatusOfStory({ ...offered, review: { language: 'draft', culture: 'draft' } })).toBe('draft');
+  });
+
+  it('keeps a draft file draft whatever else it carries (the generator does not bundle it)', () => {
+    expect(catalogStatusOfStory({ ...offered, state: 'draft' })).toBe('draft');
   });
 });
 
