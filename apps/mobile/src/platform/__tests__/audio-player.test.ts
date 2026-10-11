@@ -139,9 +139,7 @@ function handlers(): Outcome & { h: { onStart(): void; onDone(): void; onError(r
   return out;
 }
 
-const flush = async (): Promise<void> => {
-  for (let i = 0; i < 10; i += 1) await Promise.resolve();
-};
+const flush = (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 0));
 
 afterEach(() => {
   vi.useRealTimers();
