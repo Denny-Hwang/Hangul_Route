@@ -59,6 +59,7 @@ const scopes: Record<string, MinigameScope> = {
   'mg:block': { kind: 'build-letter', syllables: [{ ko: 'ㄱㅏ', romanization: 'ga', jamoChars: ['ㄱ', 'ㅏ'] }] },
   'mg:story-read': { kind: 'story-read', story: { storyId: 'story:sun-moon', level: 'listen' } },
   'mg:story-check': { kind: 'story-check', story: { storyId: 'story:sun-moon', level: 'listen' } },
+  'mg:listen': { kind: 'listen-pick', listenPick: { rounds: [] } },
 };
 
 type StepSpec = [QuestStep['kind'], string?];
@@ -77,6 +78,29 @@ const quest = (slug: string, steps: StepSpec[], extra: Partial<Quest> = {}): Que
   ...extra,
 });
 
+/** A Stage 1 quest (F-QUEST-002): its `discover` step gets two pages (two jamo items, one an unknown id, then a word). */
+const withDiscover = (q: Quest): Quest => ({
+  ...q,
+  steps: q.steps.map((step) =>
+    step.kind === 'discover'
+      ? {
+          ...step,
+          discover: {
+            pages: [
+              {
+                items: [
+                  { type: 'jamo', jamoId: J('a'), example: { ko: '나', romanization: 'na', en: 'I, me' } },
+                  { type: 'jamo', jamoId: J('nope'), example: { ko: '나', romanization: 'na', en: 'I, me' } },
+                ],
+              },
+              { items: [{ type: 'word', word: { ko: '나무', romanization: 'namu', en: 'tree' } }] },
+            ],
+          },
+        }
+      : step,
+  ),
+});
+
 const quests: Quest[] = [
   quest('letters', [['intro'], ['present', 'mg:present'], ['practice', 'mg:match'], ['apply', 'mg:build'], ['reward']]),
   quest('again', [['intro'], ['present', 'mg:present'], ['practice', 'mg:trace'], ['reward']], { rewardCardId: undefined }),
@@ -88,6 +112,7 @@ const quests: Quest[] = [
   quest('norom', [['practice', 'mg:quiz-norom'], ['apply', 'mg:sequence-norom']]),
   quest('bare', [['present', 'mg:bare'], ['apply', 'mg:block'], ['reward']], { rewardCardId: 'card:plain' }),
   quest('story', [['intro'], ['present', 'mg:story-read'], ['practice', 'mg:story-check'], ['reward']]),
+  withDiscover(quest('discover', [['intro'], ['discover'], ['practice', 'mg:match'], ['check', 'mg:listen'], ['reward']])),
 ];
 
 const episode = (slug: string, questIds: string[], extra: Partial<Episode> = {}): Episode => ({
@@ -259,6 +284,23 @@ describe('expandDeck: quests (F-TCH-004 §3.3 rule 2)', () => {
     expect(new Set(keys(slides)).size).toBe(slides.length);
     expect(skipped).toEqual([]);
     expect(minutes).toBe(4 + 3);
+  });
+
+  it('a Discover step gives a letter per jamo item and a vocab slide per word item; the Check is a counted skip', () => {
+    const { slides, skipped, taught } = expand([{ kind: 'quest', id: 'quest:discover' }]);
+    expect(kinds(slides)).toEqual(['title', 'letter', 'vocab', 'quiz', 'quiz', 'quiz', 'card', 'end']);
+    expect(keys(slides).slice(1, 3)).toEqual(['quest:discover/s2/jamo:a', 'quest:discover/s2/나무']);
+    expect(only(slides, 'vocab')[0]!.word).toEqual({ ko: '나무', romanization: 'namu', gloss: 'tree' });
+    expect(skipped).toEqual([
+      { blockIndex: 0, ref: 'jamo:nope', reason: 'unknown-id' },
+      { blockIndex: 0, ref: 'mg:listen', reason: 'unsupported-step' },
+    ]);
+    expect(taught).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ kind: 'letter', jamoId: 'jamo:a' }),
+        { kind: 'word', ko: '나무', romanization: 'namu', gloss: 'tree' },
+      ]),
+    );
   });
 
   it('the title slide carries the quest title and the intro line', () => {

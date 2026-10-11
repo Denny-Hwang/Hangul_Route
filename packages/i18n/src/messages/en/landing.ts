@@ -13,7 +13,7 @@
  *   message: the page passes it in, with its romanization (§3.4 rule 5).
  * - `legal.privacy` and `legal.terms` are English-authoritative until legal review (decision L10,
  *   §4): an `es` / `ko` overlay must not translate them before that review; until then those
- *   locales show this English text under a localized notice (PR 11b/11c). Enforced by
+ *   locales show this English text under a localized notice (`legal.englishAuthoritative`, PR 11c). Enforced by
  *   ENGLISH_AUTHORITATIVE_PREFIXES (resolve.ts): `fallbackPaths` leaves them out and
  *   messages.structure.test.ts fails on an overlay leaf under them.
  * - The launch-news consent line (`waitlist.consentLead` + `contactLink` + `privacyLink`) must stay
@@ -197,6 +197,8 @@ export const landing = {
     terms: 'Terms',
     contact: 'Contact',
     copyright: (year: number) => `© ${year} Hangul Route`,
+    /** The footer's locale switcher (PR 11c): links named by their endonyms, shown once a second locale ships. */
+    language: 'Language',
   },
   /**
    * The launch-news form (`WaitlistForm`, docs/launch/waitlist.md; `WAITLIST_COPY` in apps/web/src/data/landing-copy.ts).
@@ -244,6 +246,11 @@ export const landing = {
   /** Privacy Policy and Terms of Service: English-authoritative until legal review (L10, see the file comment). */
   legal: {
     backHome: '← Back home',
+    /**
+     * Above the Privacy Policy and Terms on `/es` and `/ko` (decision L10, §4; PR 11c): the documents stay in English
+     * until legal review, and this localized line says so. Never shown on the English pages.
+     */
+    englishAuthoritative: 'This document is shown in English. The English version is the one that applies.',
     draft: 'Draft for review. This document is a working draft pending review by qualified legal counsel before public launch.',
     privacy: {
       title: 'Privacy Policy',
@@ -433,5 +440,17 @@ export const landing = {
         },
       },
     },
+  },
+  /**
+   * The "View in <language>" banner on `/` (F-I18N-001 §3.3, PR 11c): shown when the browser prefers a
+   * shipped locale other than English; it suggests, never redirects. The page words it in the suggested
+   * locale (its own dictionary), and `endonym` is that locale's own name ("Español").
+   */
+  localeBanner: {
+    label: 'Language suggestion',
+    viewIn: (endonym: string) => `View in ${endonym}`,
+    /** The close button's accessible name; the button shows `close.cta` (a glyph a locale may swap). */
+    dismiss: 'Close',
+    close: { cta: '×' },
   },
 } as const;

@@ -1,7 +1,8 @@
 import { LOCALES, en, getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import { BANNED_WORDS, findBannedWord, isCaregiverSafe } from '../banned-text';
-import { COPY, allCopyStrings } from '../copy';
+import * as copyModule from '../copy';
+import { allCopyStrings } from '../copy';
 
 describe('console copy stays caregiver-safe (F-CONSOLE-001 §3.5)', () => {
   it('flags banned words on word boundaries only', () => {
@@ -11,11 +12,11 @@ describe('console copy stays caregiver-safe (F-CONSOLE-001 §3.5)', () => {
     expect(BANNED_WORDS.length).toBeGreaterThan(3);
   });
 
-  it('every string in COPY passes', () => {
+  it('every console string passes', () => {
     const strings = allCopyStrings();
     expect(strings.length).toBeGreaterThan(10);
     for (const s of strings) expect(isCaregiverSafe(s)).toBe(true);
-    expect(COPY.capWarning(16, 20)).toBe('Free plan: 16 / 20 students');
+    expect(en.console.capWarning(16, 20)).toBe('Free plan: 16 / 20 students');
   });
 });
 
@@ -39,10 +40,10 @@ describe('the guard is a thin re-export of @hangul-route/i18n (F-I18N-001 §3.1,
   });
 });
 
-describe('COPY is the English console namespace of the dictionary', () => {
-  it('is en.console itself, keys unchanged', () => {
-    expect(COPY).toBe(en.console);
-    expect(COPY.kidsNoAccount).toBe("Kids don't need an account — they join with a code.");
+describe('the console namespace of the dictionary', () => {
+  it('keeps the former COPY keys; the English-only COPY alias is gone now every page reads useMessages() (F-I18N-001 PR 10c)', () => {
+    expect(en.console.kidsNoAccount).toBe("Kids don't need an account — they join with a code.");
+    expect(Object.keys(copyModule)).not.toContain('COPY');
   });
 
   for (const locale of LOCALES) {

@@ -87,6 +87,11 @@ describe('coveredSymbols', () => {
     expect([...covered([...FINALS_LADDER, fail('sound-rest')])].sort()).toEqual([...RUNG_SYMBOLS.basic].sort());
   });
 
+  it('does not cut a symbol back for a prompt that could not play (noSound, section 3.11)', () => {
+    const silent: AssessmentResponse = { ...resp('pitem:a', 'skipped'), noSound: true };
+    expect([...covered(BASIC_LADDER, [silent])].sort()).toEqual([...RUNG_SYMBOLS.basic].sort());
+  });
+
   it('cuts a symbol back after a wrong, skipped or assisted answer on a template tagged with it', () => {
     const wrong = covered(BASIC_LADDER, [resp('pitem:eu', 'wrong')]);
     expect(wrong.has('ㅡ')).toBe(false);

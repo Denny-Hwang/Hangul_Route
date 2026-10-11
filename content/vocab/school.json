@@ -1,0 +1,167 @@
+{
+  "schemaVersion": 1,
+  "topic": {
+    "id": "vocab-topic:school",
+    "key": "school",
+    "order": 6,
+    "titleEn": "School",
+    "titleKo": {
+      "ko": "학교",
+      "romanization": "hakgyo",
+      "en": "school"
+    },
+    "blurbEn": "Things in a classroom and in a school bag.",
+    "hoyaIntroEn": "Pack your bag! Let's find the things in a classroom.",
+    "tint": "theme.letters",
+    "coverItemId": "vocab:yeonpil",
+    "status": "draft",
+    "fixedOrder": false
+  },
+  "items": [
+    {
+      "id": "vocab:hakgyo",
+      "ko": "학교",
+      "romanization": "hakgyo",
+      "en": "school",
+      "pos": "noun",
+      "topics": [
+        "school"
+      ],
+      "level": 1,
+      "visual": "word:school-school"
+    },
+    {
+      "id": "vocab:seonsaengnim",
+      "ko": "선생님",
+      "romanization": "seonsaengnim",
+      "en": "teacher",
+      "pos": "noun",
+      "topics": [
+        "school"
+      ],
+      "level": 2,
+      "visual": "word:school-teacher",
+      "senseNote": "Also how you address a teacher; the ending nim shows respect."
+    },
+    {
+      "id": "vocab:chingu",
+      "ko": "친구",
+      "romanization": "chingu",
+      "en": "friend",
+      "pos": "noun",
+      "topics": [
+        "school"
+      ],
+      "level": 1,
+      "visual": "word:school-friend"
+    },
+    {
+      "id": "vocab:chaek",
+      "ko": "책",
+      "romanization": "chaek",
+      "en": "book",
+      "pos": "noun",
+      "topics": [
+        "school"
+      ],
+      "level": 1,
+      "visual": "card:book"
+    },
+    {
+      "id": "vocab:yeonpil",
+      "ko": "연필",
+      "romanization": "yeonpil",
+      "en": "pencil",
+      "pos": "noun",
+      "topics": [
+        "school"
+      ],
+      "level": 1,
+      "visual": "word:school-pencil"
+    },
+    {
+      "id": "vocab:gabang",
+      "ko": "가방",
+      "romanization": "gabang",
+      "en": "bag",
+      "pos": "noun",
+      "topics": [
+        "school"
+      ],
+      "level": 1,
+      "visual": "word:school-bag"
+    },
+    {
+      "id": "vocab:gongchaek",
+      "ko": "공책",
+      "romanization": "gongchaek",
+      "en": "notebook",
+      "pos": "noun",
+      "topics": [
+        "school"
+      ],
+      "level": 1,
+      "visual": "word:school-notebook"
+    },
+    {
+      "id": "vocab:jiugae",
+      "ko": "지우개",
+      "romanization": "jiugae",
+      "en": "eraser",
+      "pos": "noun",
+      "topics": [
+        "school"
+      ],
+      "level": 2,
+      "visual": "word:school-eraser"
+    },
+    {
+      "id": "vocab:chaeksang",
+      "ko": "책상",
+      "romanization": "chaeksang",
+      "en": "desk",
+      "pos": "noun",
+      "topics": [
+        "school"
+      ],
+      "level": 1,
+      "visual": "word:school-desk"
+    },
+    {
+      "id": "vocab:uija",
+      "ko": "의자",
+      "romanization": "uija",
+      "en": "chair",
+      "pos": "noun",
+      "topics": [
+        "school"
+      ],
+      "level": 1,
+      "visual": "word:school-chair"
+    },
+    {
+      "id": "vocab:gawi",
+      "ko": "가위",
+      "romanization": "gawi",
+      "en": "scissors",
+      "pos": "noun",
+      "topics": [
+        "school"
+      ],
+      "level": 1,
+      "visual": "word:school-scissors"
+    },
+    {
+      "id": "vocab:chilpan",
+      "ko": "칠판",
+      "romanization": "chilpan",
+      "en": "blackboard",
+      "pos": "noun",
+      "topics": [
+        "school"
+      ],
+      "level": 1,
+      "visual": "word:school-board"
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 import { FAMILY_LIFETIME_LEARNERS, FREE_CLASS_STUDENT_CAP, PLAN_PRICING, SCHOOL_LICENSE_STUDENTS, SCHOOL_LICENSE_TEACHERS, discountedUsd, promoLabel, type Entitlement, type PlanKey, type PlanPricing, type Promo, type PurchasablePlanKey } from '@hangul-route/content-schema';
-import { DEFAULT_LOCALE, en, formatDate, formatUsd, getMessages, type UiLocale } from '@hangul-route/i18n';
+import { DEFAULT_LOCALE, formatDate, formatUsd, getMessages, type UiLocale } from '@hangul-route/i18n';
 import type { EntitlementView, SpaceListItem } from './api';
 
 /** Billing view models — F-ENT-001 §3.6 (wireframe console/billing). Two products (decision #30): family once, group yearly, contract beyond the caps. */
@@ -16,9 +16,6 @@ export interface PlanRow {
   action: 'choose' | 'contact' | 'current' | 'none';
   recommended: boolean;
 }
-
-/** English plan names, read by the school admin view until it takes `planTitle` (PR 10c). */
-export const PLAN_TITLES: Readonly<Record<PlanKey | 'free', string>> = en.console.billing.planTitle;
 
 /** A plan's name ("Family Lifetime"), in `locale`. */
 export function planTitle(planKey: PlanKey | 'free', locale: UiLocale = DEFAULT_LOCALE): string {

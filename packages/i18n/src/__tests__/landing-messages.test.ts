@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { LOCALES } from '../locales';
+import { LOCALES, LOCALE_STATUS } from '../locales';
 import { KIDS_ONLY_FRAMING } from '../audience';
 import { pseudoLocalize, pseudoText } from '../pseudo';
-import { getMessages } from '../resolve';
+import { fallbackPaths, getMessages } from '../resolve';
 import { leafPaths, lookup } from '../tree';
 import { landingBannedWord } from './landing-banned';
 import { SAMPLES } from './samples';
@@ -52,6 +52,14 @@ describe('landing: sentences that take a value render the former text', () => {
 
   it('the footer year is a value', () => {
     expect(l.footer.copyright(2026)).toBe('© 2026 Hangul Route');
+  });
+
+  it('the locale switcher and the "View in" banner (PR 11c): the endonym is passed in', () => {
+    expect(l.footer.language).toBe('Language');
+    expect(l.localeBanner.label).toBe('Language suggestion');
+    expect(l.localeBanner.viewIn('Español')).toBe('View in Español');
+    expect(l.localeBanner.dismiss).toBe('Close');
+    expect(l.localeBanner.close.cta).toBe('×');
   });
 
   it('about: the contact address is passed in; the "no red" promise says it in words', () => {
@@ -204,3 +212,25 @@ describe('landing: offline claims stay qualified until the recordings ship (F-AU
     expect(text).not.toMatch(/plays offline|plays without a connection/i);
   });
 });
+
+/**
+ * PR 11c: the words a visitor sees on a locale's own pages before reading anything else are written in that
+ * locale (`lang` is set to it): the banner offering it, the switcher's heading and the legal notice. Shipping a
+ * locale whose overlay leaves them in English would put English under `lang="es"`, read with a Spanish voice.
+ */
+describe('a shipped locale has its own language words, not the English fallback', () => {
+  const REQUIRED = ['landing.localeBanner.', 'landing.footer.language', 'landing.legal.englishAuthoritative'];
+  it.each(LOCALES.filter((locale) => locale !== 'en'))('%s', (locale) => {
+    const missing = fallbackPaths(locale).filter((path) => REQUIRED.some((prefix) => path.startsWith(prefix)));
+    // While hidden the overlay may still be empty; flipping LOCALE_STATUS (PR 15 / 16) without these words fails here.
+    expect(LOCALE_STATUS[locale] === 'hidden' || missing.length === 0, `${locale} is shipped but falls back to English for: ${missing.join(', ')}`).toBe(true);
+  });
+
+  it('the required paths exist in English', () => {
+    const l = getMessages('en').landing;
+    expect(Object.keys(l.localeBanner).length).toBeGreaterThan(0);
+    expect(l.footer.language).toBe('Language');
+    expect(l.legal.englishAuthoritative).toBe('This document is shown in English. The English version is the one that applies.');
+  });
+});
+

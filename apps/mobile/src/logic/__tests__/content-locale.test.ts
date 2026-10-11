@@ -121,6 +121,23 @@ describe('content-locale: one helper per kind of shipped content', () => {
     expect(localizeMissionCard({ ...questCard, questId: 'quest:none' }, 'es', overlays).titleEn).toBe(quest.titleEn);
   });
 
+  it('localizes a story card title from its story, not from its quest (F-STORY-004 §3.7)', () => {
+    const local: Overlays = { es: { 'story:tiger': { title: 'El tigre' }, [quest.id]: { title: 'Primeras letras' } }, ko: {} };
+    const storyCard: MissionCard = {
+      slot: 1,
+      kind: 'story',
+      subtitle: 'story',
+      collected: false,
+      titleEn: 'The Tiger',
+      storyId: 'story:tiger',
+      storyReason: 'next',
+      questId: quest.id,
+      episodeId: episode.id,
+    };
+    expect(localizeMissionCard(storyCard, 'es', local).titleEn).toBe('El tigre');
+    expect(localizeMissionCard({ ...storyCard, storyId: 'story:none' }, 'es', local).titleEn).toBe('The Tiger');
+  });
+
   it('swaps the overlay title into anything that carries an entity title (the Results teaser)', () => {
     const teaser = { questId: quest.id, titleEn: quest.titleEn, line: 'x' };
     expect(localizeTitle(teaser, quest.id, 'es', overlays)).toEqual({ ...teaser, titleEn: 'Primeras letras' });

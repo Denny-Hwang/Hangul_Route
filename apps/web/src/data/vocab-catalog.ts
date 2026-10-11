@@ -392,5 +392,389 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "en": "zero",
     "topic": "numbers",
     "visual": "word:count-0"
+  },
+  {
+    "id": "vocab:eomma",
+    "ko": "엄마",
+    "romanization": "eomma",
+    "en": "mom",
+    "topic": "family",
+    "visual": "word:family-mom"
+  },
+  {
+    "id": "vocab:appa",
+    "ko": "아빠",
+    "romanization": "appa",
+    "en": "dad",
+    "topic": "family",
+    "visual": "word:family-dad"
+  },
+  {
+    "id": "vocab:halmeoni",
+    "ko": "할머니",
+    "romanization": "halmeoni",
+    "en": "grandmother",
+    "topic": "family",
+    "visual": "word:family-grandma"
+  },
+  {
+    "id": "vocab:harabeoji",
+    "ko": "할아버지",
+    "romanization": "harabeoji",
+    "en": "grandfather",
+    "topic": "family",
+    "visual": "word:family-grandpa"
+  },
+  {
+    "id": "vocab:eonni",
+    "ko": "언니",
+    "romanization": "eonni",
+    "en": "older sister (said by a woman or girl)",
+    "topic": "family",
+    "visual": "word:family-eonni"
+  },
+  {
+    "id": "vocab:nuna",
+    "ko": "누나",
+    "romanization": "nuna",
+    "en": "older sister (said by a man or boy)",
+    "topic": "family",
+    "visual": "word:family-nuna"
+  },
+  {
+    "id": "vocab:oppa",
+    "ko": "오빠",
+    "romanization": "oppa",
+    "en": "older brother (said by a woman or girl)",
+    "topic": "family",
+    "visual": "word:family-oppa"
+  },
+  {
+    "id": "vocab:hyeong",
+    "ko": "형",
+    "romanization": "hyeong",
+    "en": "older brother (said by a man or boy)",
+    "topic": "family",
+    "visual": "word:family-hyeong"
+  },
+  {
+    "id": "vocab:dongsaeng",
+    "ko": "동생",
+    "romanization": "dongsaeng",
+    "en": "younger brother or sister",
+    "topic": "family",
+    "visual": "word:family-dongsaeng"
+  },
+  {
+    "id": "vocab:agi",
+    "ko": "아기",
+    "romanization": "agi",
+    "en": "baby",
+    "topic": "family",
+    "visual": "word:family-baby"
+  },
+  {
+    "id": "vocab:gajok",
+    "ko": "가족",
+    "romanization": "gajok",
+    "en": "family",
+    "topic": "family",
+    "visual": "word:family-family"
+  },
+  {
+    "id": "vocab:na",
+    "ko": "나",
+    "romanization": "na",
+    "en": "I, me",
+    "topic": "family",
+    "visual": "word:family-me"
+  },
+  {
+    "id": "vocab:hakgyo",
+    "ko": "학교",
+    "romanization": "hakgyo",
+    "en": "school",
+    "topic": "school",
+    "visual": "word:school-school"
+  },
+  {
+    "id": "vocab:seonsaengnim",
+    "ko": "선생님",
+    "romanization": "seonsaengnim",
+    "en": "teacher",
+    "topic": "school",
+    "visual": "word:school-teacher"
+  },
+  {
+    "id": "vocab:chingu",
+    "ko": "친구",
+    "romanization": "chingu",
+    "en": "friend",
+    "topic": "school",
+    "visual": "word:school-friend"
+  },
+  {
+    "id": "vocab:chaek",
+    "ko": "책",
+    "romanization": "chaek",
+    "en": "book",
+    "topic": "school",
+    "visual": "card:book"
+  },
+  {
+    "id": "vocab:yeonpil",
+    "ko": "연필",
+    "romanization": "yeonpil",
+    "en": "pencil",
+    "topic": "school",
+    "visual": "word:school-pencil"
+  },
+  {
+    "id": "vocab:gabang",
+    "ko": "가방",
+    "romanization": "gabang",
+    "en": "bag",
+    "topic": "school",
+    "visual": "word:school-bag"
+  },
+  {
+    "id": "vocab:gongchaek",
+    "ko": "공책",
+    "romanization": "gongchaek",
+    "en": "notebook",
+    "topic": "school",
+    "visual": "word:school-notebook"
+  },
+  {
+    "id": "vocab:jiugae",
+    "ko": "지우개",
+    "romanization": "jiugae",
+    "en": "eraser",
+    "topic": "school",
+    "visual": "word:school-eraser"
+  },
+  {
+    "id": "vocab:chaeksang",
+    "ko": "책상",
+    "romanization": "chaeksang",
+    "en": "desk",
+    "topic": "school",
+    "visual": "word:school-desk"
+  },
+  {
+    "id": "vocab:uija",
+    "ko": "의자",
+    "romanization": "uija",
+    "en": "chair",
+    "topic": "school",
+    "visual": "word:school-chair"
+  },
+  {
+    "id": "vocab:gawi",
+    "ko": "가위",
+    "romanization": "gawi",
+    "en": "scissors",
+    "topic": "school",
+    "visual": "word:school-scissors"
+  },
+  {
+    "id": "vocab:chilpan",
+    "ko": "칠판",
+    "romanization": "chilpan",
+    "en": "blackboard",
+    "topic": "school",
+    "visual": "word:school-board"
+  },
+  {
+    "id": "vocab:nun-eye",
+    "ko": "눈",
+    "romanization": "nun",
+    "en": "eye",
+    "topic": "body",
+    "visual": "word:body-eye"
+  },
+  {
+    "id": "vocab:ko",
+    "ko": "코",
+    "romanization": "ko",
+    "en": "nose",
+    "topic": "body",
+    "visual": "word:body-nose"
+  },
+  {
+    "id": "vocab:ip",
+    "ko": "입",
+    "romanization": "ip",
+    "en": "mouth",
+    "topic": "body",
+    "visual": "word:body-mouth"
+  },
+  {
+    "id": "vocab:gwi",
+    "ko": "귀",
+    "romanization": "gwi",
+    "en": "ear",
+    "topic": "body",
+    "visual": "word:body-ear"
+  },
+  {
+    "id": "vocab:meori",
+    "ko": "머리",
+    "romanization": "meori",
+    "en": "head",
+    "topic": "body",
+    "visual": "word:body-head"
+  },
+  {
+    "id": "vocab:eolgul",
+    "ko": "얼굴",
+    "romanization": "eolgul",
+    "en": "face",
+    "topic": "body",
+    "visual": "word:body-face"
+  },
+  {
+    "id": "vocab:son",
+    "ko": "손",
+    "romanization": "son",
+    "en": "hand",
+    "topic": "body",
+    "visual": "word:body-hand"
+  },
+  {
+    "id": "vocab:pal-arm",
+    "ko": "팔",
+    "romanization": "pal",
+    "en": "arm",
+    "topic": "body",
+    "visual": "word:body-arm"
+  },
+  {
+    "id": "vocab:dari-leg",
+    "ko": "다리",
+    "romanization": "dari",
+    "en": "leg",
+    "topic": "body",
+    "visual": "word:body-leg"
+  },
+  {
+    "id": "vocab:bal",
+    "ko": "발",
+    "romanization": "bal",
+    "en": "foot",
+    "topic": "body",
+    "visual": "word:body-foot"
+  },
+  {
+    "id": "vocab:bae-belly",
+    "ko": "배",
+    "romanization": "bae",
+    "en": "belly",
+    "topic": "body",
+    "visual": "word:body-belly"
+  },
+  {
+    "id": "vocab:i-tooth",
+    "ko": "이",
+    "romanization": "i",
+    "en": "tooth",
+    "topic": "body",
+    "visual": "word:body-tooth"
+  },
+  {
+    "id": "vocab:san",
+    "ko": "산",
+    "romanization": "san",
+    "en": "mountain",
+    "topic": "nature",
+    "visual": "card:mountain"
+  },
+  {
+    "id": "vocab:bada",
+    "ko": "바다",
+    "romanization": "bada",
+    "en": "sea",
+    "topic": "nature",
+    "visual": "card:sea"
+  },
+  {
+    "id": "vocab:haneul",
+    "ko": "하늘",
+    "romanization": "haneul",
+    "en": "sky",
+    "topic": "nature",
+    "visual": "word:nature-sky"
+  },
+  {
+    "id": "vocab:hae-sun",
+    "ko": "해",
+    "romanization": "hae",
+    "en": "sun",
+    "topic": "nature",
+    "visual": "word:nature-sun"
+  },
+  {
+    "id": "vocab:dal-moon",
+    "ko": "달",
+    "romanization": "dal",
+    "en": "moon",
+    "topic": "nature",
+    "visual": "card:moon"
+  },
+  {
+    "id": "vocab:byeol",
+    "ko": "별",
+    "romanization": "byeol",
+    "en": "star",
+    "topic": "nature",
+    "visual": "word:nature-star"
+  },
+  {
+    "id": "vocab:namu",
+    "ko": "나무",
+    "romanization": "namu",
+    "en": "tree",
+    "topic": "nature",
+    "visual": "word:nature-tree"
+  },
+  {
+    "id": "vocab:kkot",
+    "ko": "꽃",
+    "romanization": "kkot",
+    "en": "flower",
+    "topic": "nature",
+    "visual": "word:nature-flower"
+  },
+  {
+    "id": "vocab:bi-rain",
+    "ko": "비",
+    "romanization": "bi",
+    "en": "rain",
+    "topic": "nature",
+    "visual": "word:nature-rain"
+  },
+  {
+    "id": "vocab:nun-snow",
+    "ko": "눈",
+    "romanization": "nun",
+    "en": "snow",
+    "topic": "nature",
+    "visual": "word:nature-snow"
+  },
+  {
+    "id": "vocab:gang",
+    "ko": "강",
+    "romanization": "gang",
+    "en": "river",
+    "topic": "nature",
+    "visual": "word:nature-river"
+  },
+  {
+    "id": "vocab:gureum",
+    "ko": "구름",
+    "romanization": "gureum",
+    "en": "cloud",
+    "topic": "nature",
+    "visual": "word:nature-cloud"
   }
 ];
