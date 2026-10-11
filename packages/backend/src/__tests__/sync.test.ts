@@ -697,7 +697,13 @@ describe('summary.journey (F-ROUTE-001 section 3.12, R-8: tolerant, no preserve 
   it('malformed journey: PUT still 200, journey dropped, the rest of the upload stored', async () => {
     const r = await register(DEVICE_A);
     const auth = deviceAuth(DEVICE_A, r.secret);
-    const malformed = [{ ...journey, v: 2 }, { ...journey, stages: [{ stage: 'stage1', state: 'open', done: -1, known: 0, total: 8 }] }, 'journey'];
+    const malformed = [
+      { ...journey, v: 2 },
+      { ...journey, stages: [{ stage: 'stage1', state: 'open', done: -1, known: 0, total: 8 }] },
+      'journey',
+      // Oversized: dropped like any malformed journey, so no roster copies it.
+      { ...journey, stages: Array.from({ length: 17 }, () => journey.stages[0]) },
+    ];
     let rev = 0;
     for (const bad of malformed) {
       const res = await put(r.learnerId, auth, {

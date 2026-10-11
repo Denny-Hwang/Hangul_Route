@@ -146,6 +146,12 @@ describe('summary.journey (F-ROUTE-001 section 3.12, R-8)', () => {
       { ...journey, stages: [{ stage: 'stage1', state: 'open', done: -1, known: 0, total: 8 }] },
       { ...journey, stages: [{ stage: 'stage1', state: 'open', done: 1.5, known: 0, total: 8 }] },
       { ...journey, stages: [{ stage: 'stage1', state: 'open', done: 1, total: 8 }] },
+      // Bounded: a tampered client cannot grow every roster (16 stages, 32-character strings, counts up to 10000).
+      { ...journey, stages: Array.from({ length: 17 }, () => journey.stages[0]) },
+      { ...journey, here: 's'.repeat(33) },
+      { ...journey, stages: [{ stage: 's'.repeat(33), state: 'open', done: 1, known: 0, total: 8 }] },
+      { ...journey, stages: [{ stage: 'stage1', state: 'o'.repeat(33), done: 1, known: 0, total: 8 }] },
+      { ...journey, stages: [{ stage: 'stage1', state: 'open', done: 10001, known: 0, total: 8 }] },
     ];
     for (const value of bad) {
       expect(JourneySummarySchema.safeParse(value).success).toBe(false);

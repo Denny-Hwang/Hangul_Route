@@ -33,22 +33,30 @@ export type SelfRouteSummary = z.infer<typeof SelfRouteSummarySchema>;
  * (the web strip validates them and ignores what it does not know); `total`
  * sizes a segment and is never shown as a goal. No per-quest detail.
  */
+/*
+ * Bounded so a tampered client cannot grow every roster that copies it: an
+ * oversized journey fails here and `.catch(undefined)` drops it like any
+ * malformed one (the PUT still answers 200).
+ */
+const JOURNEY_COUNT_MAX = 10_000;
 export const JourneySummarySchema = z.object({
   v: z.literal(1),
-  here: z.string().nullable(),
-  stages: z.array(
-    z.object({
-      stage: z.string(),
-      /** 'complete' | 'known' | 'explored' | 'open' | 'later' */
-      state: z.string(),
-      /** Done grid quests in that stage. */
-      done: z.number().int().nonnegative(),
-      /** Placed out and not done. */
-      known: z.number().int().nonnegative(),
-      /** Grid quests this build offers there. */
-      total: z.number().int().nonnegative(),
-    }),
-  ),
+  here: z.string().max(32).nullable(),
+  stages: z
+    .array(
+      z.object({
+        stage: z.string().max(32),
+        /** 'complete' | 'known' | 'explored' | 'open' | 'later' */
+        state: z.string().max(32),
+        /** Done grid quests in that stage. */
+        done: z.number().int().nonnegative().max(JOURNEY_COUNT_MAX),
+        /** Placed out and not done. */
+        known: z.number().int().nonnegative().max(JOURNEY_COUNT_MAX),
+        /** Grid quests this build offers there. */
+        total: z.number().int().nonnegative().max(JOURNEY_COUNT_MAX),
+      }),
+    )
+    .max(16),
 });
 export type JourneySummary = z.infer<typeof JourneySummarySchema>;
 
