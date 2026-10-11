@@ -17,6 +17,9 @@ import { episodesAll } from '../../content/episodes';
 import { setProgressPersistListener } from '../../logic/sync/persist-hook';
 import { readJson, writeJson } from '../../platform/storage';
 import { placementResult } from '../../logic/placement/__tests__/fixtures';
+import { track } from '../../platform/telemetry';
+import { useProfileStore } from '../profile-store';
+import { notifyProfileRemoved } from '../profile-removal';
 import { nextStreak, useProgressStore } from '../progress-store';
 
 function resetStore(): void {
@@ -530,5 +533,395 @@ describe('stage latch writer (F-ROUTE-001 R-1b, runs with flags.myRouteEnabled o
     await useProgressStore.getState().hydrate('p1');
     finish('p1', taste[0] as (typeof taste)[number]);
     expect(stored()).not.toHaveProperty('stageDoneAt');
+  });
+});
+
+describe('card awards in the store (F-STORY-006 PR 6.4a)', () => {
+  const CREATED = '2026-09-01T08:00:00.000Z';
+  const T = '2026-10-01T09:05:00.000Z';
+  const T2 = '2026-10-02T09:05:00.000Z';
+  const RITES = ['card:chuseok', 'card:sebae', 'card:seollal', 'card:songpyeon', 'card:tteokguk'];
+  const STAGE1_QUESTS: readonly (readonly [string, string])[] = [
+    ['quest:stage1-letters-q1', 'episode:stage1-letters'],
+    ['quest:stage1-letters-q2', 'episode:stage1-letters'],
+    ['quest:stage1-letters-q3', 'episode:stage1-letters'],
+    ['quest:stage1-life-q1', 'episode:stage1-life'],
+    ['quest:stage1-life-q2', 'episode:stage1-life'],
+    ['quest:stage1-rites-q1', 'episode:stage1-rites'],
+    ['quest:stage1-nature-q1', 'episode:stage1-nature'],
+    ['quest:stage1-crafts-q1', 'episode:stage1-crafts'],
+  ];
+  const STAGE1_QUEST_CARDS = ['card:book', 'card:hanji', 'card:brush', 'card:kimchi', 'card:family-table', 'card:seollal', 'card:magpie', 'card:yutnori'];
+  const notified: string[] = [];
+
+  const quest = (questId: string, episodeId: string, stars: 0 | 1 | 2 | 3, completedAt = T): ProgressSnapshot['quests'][number] => ({
+    questId,
+    episodeId,
+    startedAt: completedAt,
+    completedAt,
+    stars,
+    attempts: 1,
+    accuracy: 1,
+  });
+  const snapshotWith = (over: Partial<ProgressSnapshot> = {}, profileId = 'profile:a'): ProgressSnapshot => ({
+    profileId,
+    updatedAt: T,
+    episodes: [],
+    quests: [],
+    cards: [],
+    sessions: [],
+    homework: [],
+    reviews: [],
+    streakDays: 0,
+    ...over,
+  });
+  const ritesDone = (stars: 0 | 1 | 2 | 3 = 1): ProgressSnapshot => snapshotWith({ quests: [quest('quest:stage1-rites-q1', 'episode:stage1-rites', stars)] });
+  const stage1Done = (): ProgressSnapshot =>
+    snapshotWith({
+      quests: STAGE1_QUESTS.map(([q, e]) => quest(q, e, 2)),
+      cards: STAGE1_QUEST_CARDS.map((cardId) => ({ cardId, unlockedAt: T, newSinceLastView: false })),
+    });
+  const cardsOf = (snap: ProgressSnapshot | undefined): string[] => (snap?.cards ?? []).map((c) => c.cardId).sort();
+  const storedA = (): ProgressSnapshot | undefined => mem.get('progress:profile:a') as ProgressSnapshot | undefined;
+  const writesTo = (profileId: string): number => vi.mocked(writeJson).mock.calls.filter(([k]) => k === `progress:${profileId}`).length;
+
+  beforeEach(() => {
+    resetStore();
+    useProgressStore.setState({ catchUp: {} });
+    useProfileStore.setState({
+      profiles: [{ id: 'profile:a', displayName: 'Suni', ageGroup: '5-7', avatar: 'hoya-orange', role: 'learner', createdAt: CREATED }],
+      activeId: 'profile:a',
+      hydrated: true,
+    });
+    notified.length = 0;
+    setProgressPersistListener((id) => notified.push(id));
+    vi.mocked(track).mockClear();
+  });
+
+  afterEach(() => {
+    setProgressPersistListener(null);
+    useProfileStore.setState({ profiles: [], activeId: null, hydrated: false });
+  });
+
+  describe('unlockCards', () => {
+    it('adds several cards with one storage write and returns the ids it added', async () => {
+      useProgressStore.setState({ byProfile: { 'profile:a': snapshotWith() }, hydratedFor: new Set(['profile:a']) });
+      const added = useProgressStore.getState().unlockCards('profile:a', [{ cardId: 'card:rice', unlockedAt: T }, { cardId: 'card:kimbap' }]);
+      expect(added).toEqual(['card:rice', 'card:kimbap']);
+      expect(writesTo('profile:a')).toBe(1);
+      expect(notified).toEqual(['profile:a']);
+      const cards = storedA()?.cards ?? [];
+      expect(cards.find((c) => c.cardId === 'card:rice')).toEqual({ cardId: 'card:rice', unlockedAt: T, newSinceLastView: true });
+      expect(cards.find((c) => c.cardId === 'card:kimbap')?.newSinceLastView).toBe(true);
+      expect(Number.isFinite(Date.parse(cards.find((c) => c.cardId === 'card:kimbap')?.unlockedAt ?? ''))).toBe(true);
+    });
+
+    it('skips owned and repeated ids and never changes an owned card', () => {
+      const ownedCard = { cardId: 'card:rice', unlockedAt: T, newSinceLastView: false };
+      useProgressStore.setState({ byProfile: { 'profile:a': snapshotWith({ cards: [ownedCard] }) }, hydratedFor: new Set(['profile:a']) });
+      const added = useProgressStore.getState().unlockCards('profile:a', [{ cardId: 'card:rice', unlockedAt: T2 }, { cardId: 'card:kimbap' }, { cardId: 'card:kimbap' }]);
+      expect(added).toEqual(['card:kimbap']);
+      const cards = useProgressStore.getState().byProfile['profile:a']?.cards ?? [];
+      expect(cards.filter((c) => c.cardId === 'card:kimbap')).toHaveLength(1);
+      expect(cards.find((c) => c.cardId === 'card:rice')).toEqual(ownedCard);
+    });
+
+    it('writes nothing when every card is already owned', () => {
+      useProgressStore.setState({ byProfile: { 'profile:a': snapshotWith({ cards: [{ cardId: 'card:rice', unlockedAt: T, newSinceLastView: true }] }) }, hydratedFor: new Set(['profile:a']) });
+      expect(useProgressStore.getState().unlockCards('profile:a', [{ cardId: 'card:rice' }])).toEqual([]);
+      expect(useProgressStore.getState().unlockCards('profile:a', [])).toEqual([]);
+      expect(writeJson).not.toHaveBeenCalled();
+    });
+
+    it('cards unlocked before the saved copy loads are merged with it, never written over it', async () => {
+      mem.set('progress:profile:a', snapshotWith({ cards: [{ cardId: 'card:book', unlockedAt: T, newSinceLastView: false }] }));
+      useProgressStore.getState().unlockCards('profile:a', [{ cardId: 'card:rice', unlockedAt: T2 }]);
+      expect(cardsOf(storedA())).toEqual(['card:book']);
+      await settle();
+      expect(cardsOf(storedA())).toEqual(['card:book', 'card:rice', 'card:tiger']);
+    });
+  });
+
+  describe('reconcileAwards', () => {
+    it('adds every derived card the snapshot lacks, with deterministic times, and returns them', () => {
+      useProgressStore.setState({ byProfile: { 'profile:a': ritesDone(1) }, hydratedFor: new Set(['profile:a']) });
+      const added = useProgressStore.getState().reconcileAwards('profile:a');
+      expect(added.map((a) => a.cardId).sort()).toEqual([...RITES, 'card:tiger'].sort());
+      const cards = useProgressStore.getState().byProfile['profile:a']?.cards ?? [];
+      for (const id of RITES) expect(cards.find((c) => c.cardId === id)).toEqual({ cardId: id, unlockedAt: T, newSinceLastView: true });
+      expect(cards.find((c) => c.cardId === 'card:tiger')).toEqual({ cardId: 'card:tiger', unlockedAt: CREATED, newSinceLastView: true });
+      expect(cardsOf(storedA())).toEqual(cardsOf(useProgressStore.getState().byProfile['profile:a']));
+      expect(writesTo('profile:a')).toBe(1);
+      expect(notified).toEqual(['profile:a']);
+    });
+
+    it('is silent: no per-card telemetry for a card that arrives by reconcile', () => {
+      useProgressStore.setState({ byProfile: { 'profile:a': ritesDone(1) }, hydratedFor: new Set(['profile:a']) });
+      useProgressStore.getState().reconcileAwards('profile:a');
+      expect(track).not.toHaveBeenCalled();
+    });
+
+    it('is idempotent: a second run adds nothing and writes nothing', () => {
+      useProgressStore.setState({ byProfile: { 'profile:a': ritesDone(1) }, hydratedFor: new Set(['profile:a']) });
+      useProgressStore.getState().reconcileAwards('profile:a');
+      vi.mocked(writeJson).mockClear();
+      const before = useProgressStore.getState().byProfile['profile:a'];
+      expect(useProgressStore.getState().reconcileAwards('profile:a')).toEqual([]);
+      expect(useProgressStore.getState().byProfile['profile:a']).toBe(before);
+      expect(writeJson).not.toHaveBeenCalled();
+    });
+
+    it('never takes a card away: owned cards, unknown ids and seen flags stay as they are', () => {
+      const keep = [
+        { cardId: 'card:rice', unlockedAt: T2, newSinceLastView: false },
+        { cardId: 'card:retired-in-a-later-build', unlockedAt: T, newSinceLastView: true },
+      ];
+      // The rites quest was later replayed with fewer stars: nothing is removed.
+      useProgressStore.setState({ byProfile: { 'profile:a': snapshotWith({ cards: keep }) }, hydratedFor: new Set(['profile:a']) });
+      useProgressStore.getState().reconcileAwards('profile:a');
+      const cards = useProgressStore.getState().byProfile['profile:a']?.cards ?? [];
+      for (const c of keep) expect(cards).toContainEqual(c);
+    });
+
+    it('leaves a snapshot alone when its profile is unknown (no creation time for the welcome card)', () => {
+      useProgressStore.setState({ byProfile: { 'profile:ghost': ritesDone(1) }, hydratedFor: new Set(['profile:ghost']) });
+      expect(useProgressStore.getState().reconcileAwards('profile:ghost')).toEqual([]);
+      expect(writeJson).not.toHaveBeenCalled();
+    });
+
+    it('does nothing for a profile with no snapshot in memory', () => {
+      expect(useProgressStore.getState().reconcileAwards('profile:a')).toEqual([]);
+      expect(useProgressStore.getState().byProfile['profile:a']).toBeUndefined();
+      expect(writeJson).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('catch-up for existing learners (§3.5)', () => {
+    it('hydrate ends with a reconcile: a learner who finished Stage 1 receives the 22 cards once', async () => {
+      mem.set('progress:profile:a', stage1Done());
+      await useProgressStore.getState().hydrate('profile:a');
+      const snap = useProgressStore.getState().byProfile['profile:a'];
+      expect(snap?.cards).toHaveLength(30);
+      const added = (snap?.cards ?? []).filter((c) => !STAGE1_QUEST_CARDS.includes(c.cardId));
+      expect(added).toHaveLength(22);
+      expect(added.every((c) => c.newSinceLastView)).toBe(true);
+      expect(added.find((c) => c.cardId === 'card:hangul-day')?.unlockedAt).toBe(T);
+      expect(added.find((c) => c.cardId === 'card:tiger')?.unlockedAt).toBe(CREATED);
+      expect(storedA()?.cards).toHaveLength(30);
+      expect([...(useProgressStore.getState().catchUp['profile:a'] ?? [])].sort()).toEqual(added.map((c) => c.cardId).sort());
+      expect(track).not.toHaveBeenCalled();
+    });
+
+    it('the next launch adds nothing and shows no catch-up', async () => {
+      mem.set('progress:profile:a', stage1Done());
+      await useProgressStore.getState().hydrate('profile:a');
+      const first = storedA();
+      // A new app session: memory is empty, storage holds the reconciled copy.
+      useProgressStore.setState({ byProfile: {}, hydratedFor: new Set(), pendingFor: new Set(), catchUp: {} });
+      vi.mocked(writeJson).mockClear();
+      await useProgressStore.getState().hydrate('profile:a');
+      expect(useProgressStore.getState().byProfile['profile:a']).toEqual(first);
+      expect(useProgressStore.getState().catchUp['profile:a']).toBeUndefined();
+      expect(writeJson).not.toHaveBeenCalled();
+    });
+
+    it('a reconcile that adds only the welcome card is not a catch-up', async () => {
+      mem.set('progress:profile:a', snapshotWith());
+      await useProgressStore.getState().hydrate('profile:a');
+      expect(cardsOf(useProgressStore.getState().byProfile['profile:a'])).toEqual(['card:tiger']);
+      expect(useProgressStore.getState().catchUp['profile:a']).toBeUndefined();
+    });
+
+    it('lists the welcome card with the others when it arrives in the same catch-up', async () => {
+      mem.set('progress:profile:a', ritesDone(1));
+      await useProgressStore.getState().hydrate('profile:a');
+      expect([...(useProgressStore.getState().catchUp['profile:a'] ?? [])].sort()).toEqual([...RITES, 'card:tiger'].sort());
+    });
+
+    it('accumulates over the session without repeating a card', () => {
+      useProgressStore.setState({ byProfile: { 'profile:a': ritesDone(1) }, hydratedFor: new Set(['profile:a']) });
+      useProgressStore.getState().reconcileAwards('profile:a');
+      const crafts = quest('quest:stage1-crafts-q1', 'episode:stage1-crafts', 1, T2);
+      const snap = useProgressStore.getState().byProfile['profile:a'] as ProgressSnapshot;
+      useProgressStore.getState().replaceSnapshot('profile:a', { ...snap, quests: [...snap.quests, crafts] });
+      const list = useProgressStore.getState().catchUp['profile:a'] ?? [];
+      expect(new Set(list).size).toBe(list.length);
+      expect(list).toEqual(expect.arrayContaining([...RITES, 'card:tiger', 'card:yutnori', 'card:pottery']));
+    });
+
+    it('a reset clears the catch-up list: it never announces cards the learner no longer holds', async () => {
+      mem.set('progress:profile:a', ritesDone(1));
+      await useProgressStore.getState().hydrate('profile:a');
+      expect(useProgressStore.getState().catchUp['profile:a']).toBeDefined();
+      useProgressStore.getState().reset('profile:a');
+      expect(useProgressStore.getState().catchUp['profile:a']).toBeUndefined();
+    });
+
+    it('removing the profile drops its catch-up list', async () => {
+      mem.set('progress:profile:a', ritesDone(1));
+      await useProgressStore.getState().hydrate('profile:a');
+      notifyProfileRemoved('profile:a');
+      expect(useProgressStore.getState().catchUp['profile:a']).toBeUndefined();
+    });
+
+    it('a malformed saved record is loaded as it is: the rules add nothing and the read still lands', async () => {
+      mem.set('progress:profile:a', { profileId: 'profile:a', updatedAt: T });
+      await expect(useProgressStore.getState().hydrate('profile:a')).resolves.toBeUndefined();
+      expect(useProgressStore.getState().hydratedFor.has('profile:a')).toBe(true);
+      expect(useProgressStore.getState().catchUp['profile:a']).toBeUndefined();
+      expect(writeJson).not.toHaveBeenCalled();
+      expect(() => useProgressStore.getState().replaceSnapshot('profile:a', { profileId: 'profile:a' } as ProgressSnapshot)).not.toThrow();
+    });
+
+    it('cards earned before the saved copy loads are merged with it and saved with one write', async () => {
+      mem.set('progress:profile:a', snapshotWith({ quests: [quest('quest:stage1-life-q1', 'episode:stage1-life', 3)], cards: [{ cardId: 'card:kimchi', unlockedAt: T, newSinceLastView: false }] }));
+      useProgressStore.getState().recordQuestComplete('profile:a', { questId: 'quest:stage1-rites-q1', episodeId: 'episode:stage1-rites', stars: 1, accuracy: 0.5, attempts: 1 });
+      await settle();
+      const stored = storedA();
+      expect(stored?.quests.map((q) => q.questId).sort()).toEqual(['quest:stage1-life-q1', 'quest:stage1-rites-q1']);
+      expect(cardsOf(stored)).toEqual(['card:kimchi', ...RITES, 'card:tiger'].sort());
+      expect(stored?.cards.find((c) => c.cardId === 'card:kimchi')?.newSinceLastView).toBe(false);
+      expect(writesTo('profile:a')).toBe(1);
+      expect(notified).toEqual(['profile:a']);
+    });
+
+    it('cards the live path unlocked in the same tick are not taken over by a later reconcile', () => {
+      useProgressStore.setState({ byProfile: { 'profile:a': snapshotWith({ cards: [{ cardId: 'card:tiger', unlockedAt: CREATED, newSinceLastView: false }] }) }, hydratedFor: new Set(['profile:a']) });
+      const store = useProgressStore.getState();
+      store.recordQuestComplete('profile:a', { questId: 'quest:stage1-rites-q1', episodeId: 'episode:stage1-rites', stars: 2, accuracy: 1, attempts: 1 });
+      store.unlockCards('profile:a', RITES.map((cardId) => ({ cardId })));
+      expect(store.reconcileAwards('profile:a')).toEqual([]);
+      expect(useProgressStore.getState().catchUp['profile:a']).toBeUndefined();
+    });
+
+    it('an old saved snapshot keeps its shape: no new key is added', async () => {
+      const legacy = ritesDone(1);
+      mem.set('progress:profile:a', legacy);
+      await useProgressStore.getState().hydrate('profile:a');
+      expect(Object.keys(storedA() ?? {}).sort()).toEqual(Object.keys(legacy).sort());
+    });
+  });
+
+  describe('replaceSnapshot', () => {
+    it('reconciles the merged snapshot a sync or restore hands back', () => {
+      useProgressStore.getState().replaceSnapshot('profile:a', ritesDone(1));
+      expect(cardsOf(useProgressStore.getState().byProfile['profile:a'])).toEqual([...RITES, 'card:tiger'].sort());
+      expect(cardsOf(storedA())).toEqual([...RITES, 'card:tiger'].sort());
+    });
+
+    it('a replacement that adds cards is saved with one write and asks sync once; the next pass adds nothing', () => {
+      useProgressStore.getState().replaceSnapshot('profile:a', ritesDone(1));
+      expect(writesTo('profile:a')).toBe(1);
+      expect(notified).toEqual(['profile:a']);
+      const merged = useProgressStore.getState().byProfile['profile:a'] as ProgressSnapshot;
+      notified.length = 0;
+      useProgressStore.getState().replaceSnapshot('profile:a', merged);
+      expect(notified).toEqual([]);
+      expect(useProgressStore.getState().byProfile['profile:a']).toBe(merged);
+    });
+
+    it('does not tell sync about a replacement that added nothing', () => {
+      const done = useProgressStore.getState();
+      done.replaceSnapshot('profile:a', ritesDone(1));
+      notified.length = 0;
+      const snap = useProgressStore.getState().byProfile['profile:a'] as ProgressSnapshot;
+      done.replaceSnapshot('profile:a', snap);
+      expect(notified).toEqual([]);
+    });
+  });
+
+  describe('ensure', () => {
+    it('a new blank snapshot receives the welcome card at the profile creation time, in memory only', () => {
+      useProgressStore.setState({ hydratedFor: new Set(['profile:a']) });
+      const snap = useProgressStore.getState().ensure('profile:a');
+      expect(snap.cards).toEqual([{ cardId: 'card:tiger', unlockedAt: CREATED, newSinceLastView: true }]);
+      expect(useProgressStore.getState().byProfile['profile:a']).toBe(snap);
+      // Never written on its own: a read that failed looks like "nothing saved", and a blank record would replace real progress.
+      expect(writeJson).not.toHaveBeenCalled();
+      expect(notified).toEqual([]);
+      expect(useProgressStore.getState().catchUp['profile:a']).toBeUndefined();
+    });
+
+    it('the first real write saves the welcome card with it', () => {
+      useProgressStore.setState({ hydratedFor: new Set(['profile:a']) });
+      useProgressStore.getState().ensure('profile:a');
+      useProgressStore.getState().beginSession('profile:a');
+      expect(storedA()?.cards).toEqual([{ cardId: 'card:tiger', unlockedAt: CREATED, newSinceLastView: true }]);
+      expect(storedA()?.sessions).toHaveLength(1);
+    });
+
+    it('a profile with no record gets a blank snapshot and nothing is written', () => {
+      useProfileStore.setState({ profiles: [] });
+      useProgressStore.setState({ hydratedFor: new Set(['profile:a']) });
+      const snap = useProgressStore.getState().ensure('profile:a');
+      expect(snap.cards).toEqual([]);
+      expect(writeJson).not.toHaveBeenCalled();
+    });
+
+    it('an existing snapshot is returned as it is', () => {
+      const existing = ritesDone(1);
+      useProgressStore.setState({ byProfile: { 'profile:a': existing }, hydratedFor: new Set(['profile:a']) });
+      expect(useProgressStore.getState().ensure('profile:a')).toBe(existing);
+      expect(writeJson).not.toHaveBeenCalled();
+    });
+
+    it('before the saved copy loads, it reads the saved copy and reconciles that instead of writing a blank over it', async () => {
+      mem.set('progress:profile:a', { ...ritesDone(1), placements: [] });
+      expect(useProgressStore.getState().ensure('profile:a').cards).toEqual([]);
+      expect(writeJson).not.toHaveBeenCalled();
+      await settle();
+      const snap = useProgressStore.getState().byProfile['profile:a'];
+      expect(snap?.quests.map((q) => q.questId)).toEqual(['quest:stage1-rites-q1']);
+      expect(snap).toHaveProperty('placements', []);
+      expect(cardsOf(snap)).toEqual([...RITES, 'card:tiger'].sort());
+    });
+
+    it('a profile created this session with nothing saved gets the welcome card once its read lands, without a write', async () => {
+      useProgressStore.getState().ensure('profile:a');
+      await settle();
+      expect(cardsOf(useProgressStore.getState().byProfile['profile:a'])).toEqual(['card:tiger']);
+      expect(storedA()).toBeUndefined();
+      expect(writeJson).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('markCardsSeen', () => {
+    const fresh = (cardId: string, newSinceLastView = true) => ({ cardId, unlockedAt: T, newSinceLastView });
+
+    it('clears the New flag of the listed owned cards with one write', () => {
+      useProgressStore.setState({ byProfile: { 'profile:a': snapshotWith({ cards: [fresh('card:rice'), fresh('card:kimbap'), fresh('card:hanbok')] }) }, hydratedFor: new Set(['profile:a']) });
+      useProgressStore.getState().markCardsSeen('profile:a', ['card:rice', 'card:kimbap', 'card:not-owned']);
+      const cards = useProgressStore.getState().byProfile['profile:a']?.cards ?? [];
+      expect(cards).toEqual([fresh('card:rice', false), fresh('card:kimbap', false), fresh('card:hanbok')]);
+      expect(storedA()?.cards).toEqual(cards);
+      expect(writesTo('profile:a')).toBe(1);
+      expect(notified).toEqual(['profile:a']);
+      expect(useProgressStore.getState().byProfile['profile:a']?.updatedAt).not.toBe(T);
+    });
+
+    it('writes nothing when no listed card is new', () => {
+      useProgressStore.setState({ byProfile: { 'profile:a': snapshotWith({ cards: [fresh('card:rice', false)] }) }, hydratedFor: new Set(['profile:a']) });
+      useProgressStore.getState().markCardsSeen('profile:a', ['card:rice', 'card:other']);
+      useProgressStore.getState().markCardsSeen('profile:ghost', ['card:rice']);
+      expect(writeJson).not.toHaveBeenCalled();
+    });
+
+    it('clears the catch-up list even when a sync merge already cleared the flags, without a write', () => {
+      const seenElsewhere = RITES.map((cardId) => fresh(cardId, false));
+      useProgressStore.setState({ byProfile: { 'profile:a': snapshotWith({ cards: seenElsewhere }) }, hydratedFor: new Set(['profile:a']), catchUp: { 'profile:a': [...RITES] } });
+      useProgressStore.getState().markCardsSeen('profile:a', RITES);
+      expect(useProgressStore.getState().catchUp['profile:a']).toBeUndefined();
+      expect(writeJson).not.toHaveBeenCalled();
+      expect(notified).toEqual([]);
+    });
+
+    it('takes the seen cards off the catch-up list, and drops the list once it is empty', async () => {
+      mem.set('progress:profile:a', ritesDone(1));
+      await useProgressStore.getState().hydrate('profile:a');
+      useProgressStore.getState().markCardsSeen('profile:a', ['card:sebae']);
+      expect(useProgressStore.getState().catchUp['profile:a']).not.toContain('card:sebae');
+      useProgressStore.getState().markCardsSeen('profile:a', [...RITES, 'card:tiger']);
+      expect(useProgressStore.getState().catchUp['profile:a']).toBeUndefined();
+    });
   });
 });

@@ -41,6 +41,20 @@ describe('decideCardAward (F-MOTION-003 §3.5, audit UX-03)', () => {
     });
   });
 
+  it('a welcome card does not count: the first card a learner earns is still the first (F-STORY-006 §3.4)', () => {
+    expect(decideCardAward({ rewardCardId: 'card:book', stars: 2, ownedCardIds: ['card:tiger'], welcomeCardIds: ['card:tiger'] })).toEqual({
+      cardId: 'card:book',
+      isNew: true,
+      isFirstCard: true,
+    });
+    expect(decideCardAward({ rewardCardId: 'card:book', stars: 2, ownedCardIds: ['card:tiger', 'card:kimchi'], welcomeCardIds: ['card:tiger'] })?.isFirstCard).toBe(false);
+  });
+
+  it('a welcome card the learner does not own changes nothing', () => {
+    expect(decideCardAward({ rewardCardId: 'card:book', stars: 3, ownedCardIds: ['card:kimchi'], welcomeCardIds: ['card:tiger'] })?.isFirstCard).toBe(false);
+    expect(decideCardAward({ rewardCardId: 'card:book', stars: 3, ownedCardIds: [], welcomeCardIds: ['card:tiger'] })?.isFirstCard).toBe(true);
+  });
+
   it('replaying a quest whose card is already owned is not a new card', () => {
     expect(decideCardAward({ rewardCardId: 'card:book', stars: 3, ownedCardIds: ['card:book'] })).toEqual({
       cardId: 'card:book',

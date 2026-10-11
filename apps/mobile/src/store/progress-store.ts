@@ -2,11 +2,17 @@ import { PlacementResultSchema, type PlacementResult, type ProgressSnapshot } fr
 import { create } from 'zustand';
 import { episodesAll } from '../content/episodes';
 import { latchSnapshot } from '../logic/my-route/latch';
+import { awardWorld, welcomeCardIds } from '../content/award-world';
+import { applyAwards } from '../logic/awards/apply';
+import { missingAwards } from '../logic/awards/derive';
+import type { DerivedAward } from '../logic/awards/types';
 import { recordBestQuest } from '../logic/quest-progress';
 import { mergePlacements, mergeSnapshots, withSnapshotDefaults } from '../logic/sync/merge';
 import { notifyProgressPersisted } from '../logic/sync/persist-hook';
 import { readJson, writeJson } from '../platform/storage';
 import { track } from '../platform/telemetry';
+import { onProfileRemoved } from './profile-removal';
+import { useProfileStore } from './profile-store';
 
 const key = (profileId: string): string => `progress:${profileId}`;
 
@@ -48,6 +54,18 @@ interface State {
   hydratedFor: Set<string>;
   /** Profiles written to before their saved snapshot was read; merged with it and saved once it loads. */
   pendingFor: Set<string>;
+  /**
+   * Cards a reconcile added this app session, per profile (F-STORY-006 §3.5):
+   * what the Home catch-up card announces. Session-only, never saved; holds
+   * nothing when a reconcile added only the welcome card.
+   */
+  catchUp: Record<string, string[]>;
+}
+
+/** A card to add; without `unlockedAt` it is unlocked now. */
+export interface CardUnlock {
+  cardId: string;
+  unlockedAt?: string;
 }
 
 interface Actions {
@@ -70,6 +88,29 @@ interface Actions {
     },
   ) => void;
   unlockCard: (profileId: string, cardId: string) => void;
+  /**
+   * Add several cards with one storage write (F-STORY-006 §3.3, the live
+   * path). Owned and repeated ids are skipped; returns the ids it added.
+   * The live path (6.4b) calls it in the same synchronous tick as
+   * `recordQuestComplete`: a reconcile that lands in between (a hydrate or a
+   * sync) would add those cards silently, as a catch-up with no Results moment.
+   */
+  unlockCards: (profileId: string, cards: readonly CardUnlock[]) => string[];
+  /**
+   * Add the cards the award rules say this snapshot should hold and does not
+   * (F-STORY-006 §3.3, §3.5). Silent: no per-card telemetry. Only ever adds.
+   * Returns the awards it added; a profile with no snapshot in memory or no
+   * profile record (no creation time for the welcome card) is left alone, and
+   * a record the rules cannot read (malformed or very old) gains nothing.
+   * Cards a quest just earned belong to the live path (see `unlockCards`).
+   */
+  reconcileAwards: (profileId: string) => DerivedAward[];
+  /**
+   * Clear the "New" flag of owned cards (CardDetail, the catch-up card's "See
+   * my cards") and take them off the catch-up list. The list is cleared even
+   * when no flag changes (a sync merge may already have cleared them).
+   */
+  markCardsSeen: (profileId: string, cardIds: readonly string[]) => void;
   beginSession: (profileId: string) => void;
   endSession: (profileId: string) => void;
   reset: (profileId: string) => void;
@@ -81,7 +122,12 @@ interface Actions {
    * it was.
    */
   recordPlacement: (profileId: string, result: PlacementResult) => boolean;
-  /** Sync / restore hand back a merged snapshot; persisted without re-notifying sync, unless the stage latch added a key. */
+  /**
+   * Sync / restore hand back a merged snapshot. It is latched and reconciled
+   * first and saved with one write; that write does not notify sync unless the
+   * stage latch added a key or the reconcile added cards, which sync must then
+   * upload (the next pass adds nothing, so it converges).
+   */
   replaceSnapshot: (profileId: string, snapshot: ProgressSnapshot) => void;
 }
 
@@ -157,6 +203,44 @@ function persist(profileId: string, snap: ProgressSnapshot): void {
   void store.hydrate(profileId);
 }
 
+const WELCOME_CARD_IDS = new Set(welcomeCardIds);
+
+/**
+ * `snap` with the cards the award rules say it should hold (F-STORY-006
+ * §3.3). Unchanged when the profile is unknown (no creation time for the
+ * welcome card) or the rules cannot read the record: a saved snapshot is
+ * read back unvalidated, and a malformed one must never stop a hydrate or a sync.
+ */
+function withAwards(profileId: string, snap: ProgressSnapshot): { snap: ProgressSnapshot; added: DerivedAward[] } {
+  const profile = useProfileStore.getState().profiles.find((p) => p.id === profileId);
+  if (!profile) return { snap, added: [] };
+  try {
+    const added = missingAwards(awardWorld, snap, profile);
+    if (added.length === 0) return { snap, added };
+    return { snap: applyAwards(snap, added, new Date().toISOString()), added };
+  } catch {
+    return { snap, added: [] };
+  }
+}
+
+/** The catch-up list after a reconcile added `added`: only non-welcome cards announce (§3.5). */
+function catchUpAfter(catchUp: Record<string, string[]>, profileId: string, added: readonly DerivedAward[]): Record<string, string[]> {
+  const ids = added.map((a) => a.cardId);
+  if (!ids.some((id) => !WELCOME_CARD_IDS.has(id))) return catchUp;
+  return { ...catchUp, [profileId]: unionIds(catchUp[profileId] ?? [], ids) };
+}
+
+function withoutCatchUp(catchUp: Record<string, string[]>, profileId: string): Record<string, string[]> {
+  if (!(profileId in catchUp)) return catchUp;
+  const { [profileId]: _dropped, ...others } = catchUp;
+  return others;
+}
+
+/** Union in first-seen order, so a card is never listed twice. */
+function unionIds(a: readonly string[], b: readonly string[]): string[] {
+  return [...new Set([...a, ...b])];
+}
+
 /** A wholesale replacement (restore, sync, reset) is final: no read still in flight may bring older data back. */
 function settle(profileId: string, snapshot: ProgressSnapshot): void {
   useProgressStore.setState((s) => ({
@@ -170,6 +254,7 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
   byProfile: {},
   hydratedFor: new Set(),
   pendingFor: new Set(),
+  catchUp: {},
 
   hydrate: (profileId) => {
     if (get().hydratedFor.has(profileId)) return Promise.resolve();
@@ -185,13 +270,20 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
         unsaved && loaded
           ? replayUnsaved(mergeSnapshots(unsaved, loaded, { now: new Date() }), unsaved)
           : (unsaved ?? loaded ?? byProfile[profileId]);
-      const snap = found ? withLatches(found, new Date()) : found;
+      const latched = found ? withLatches(found, new Date()) : found;
+      // Reconcile after the merge with the saved copy, never before (F-STORY-006 §3.5).
+      const { snap, added } = latched ? withAwards(profileId, latched) : { snap: undefined, added: [] };
       set((s) => ({
         byProfile: snap ? { ...s.byProfile, [profileId]: snap } : s.byProfile,
         hydratedFor: new Set([...s.hydratedFor, profileId]),
         pendingFor: without(s.pendingFor, profileId),
+        catchUp: catchUpAfter(s.catchUp, profileId, added),
       }));
-      if (snap && (unsaved || snap !== found)) save(profileId, snap);
+      // One write for the pending writes, an added latch and the cards they
+      // earned. Cards are saved only onto a record that was read or written:
+      // nothing loaded also means "the read failed", and a blank record holding
+      // only the welcome card would replace real progress (it stays in memory).
+      if (snap && (unsaved || latched !== found || (loaded && added.length > 0))) save(profileId, snap);
     })().finally(() => inFlight.delete(profileId));
     inFlight.set(profileId, load);
     return load;
@@ -202,7 +294,18 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
     if (existing) return existing;
     const fresh = blankSnapshot(profileId);
     set((s) => ({ byProfile: { ...s.byProfile, [profileId]: fresh } }));
-    return fresh;
+    // The welcome card arrives with a new snapshot (F-STORY-006 §3.3). Before
+    // the saved copy has been read, read it instead: `hydrate` reconciles
+    // whatever it loads, so a blank record is never written over saved progress.
+    if (!get().hydratedFor.has(profileId)) {
+      void get().hydrate(profileId);
+      return fresh;
+    }
+    // In memory only, never saved on its own (see `hydrate`): the card is
+    // deterministic (`profile.createdAt`), and the next real write saves it.
+    const { snap, added } = withAwards(profileId, fresh);
+    set((s) => ({ byProfile: { ...s.byProfile, [profileId]: snap }, catchUp: catchUpAfter(s.catchUp, profileId, added) }));
+    return snap;
   },
 
   recordQuestComplete: (profileId, input) => {
@@ -231,6 +334,49 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
       cards: [...snap.cards, { cardId, unlockedAt: now, newSinceLastView: true }],
       updatedAt: now,
     };
+    set((s) => ({ byProfile: { ...s.byProfile, [profileId]: updated } }));
+    persist(profileId, updated);
+  },
+
+  unlockCards: (profileId, cards) => {
+    const snap = get().byProfile[profileId] ?? blankSnapshot(profileId);
+    const owned = new Set(snap.cards.map((c) => c.cardId));
+    const now = new Date().toISOString();
+    const added: ProgressSnapshot['cards'] = [];
+    for (const card of cards) {
+      if (owned.has(card.cardId)) continue;
+      owned.add(card.cardId);
+      added.push({ cardId: card.cardId, unlockedAt: card.unlockedAt ?? now, newSinceLastView: true });
+    }
+    if (added.length === 0) return [];
+    const updated: ProgressSnapshot = { ...snap, cards: [...snap.cards, ...added], updatedAt: now };
+    set((s) => ({ byProfile: { ...s.byProfile, [profileId]: updated } }));
+    persist(profileId, updated);
+    return added.map((c) => c.cardId);
+  },
+
+  reconcileAwards: (profileId) => {
+    const current = get().byProfile[profileId];
+    if (!current) return [];
+    const { snap, added } = withAwards(profileId, current);
+    if (added.length === 0) return [];
+    set((s) => ({ byProfile: { ...s.byProfile, [profileId]: snap }, catchUp: catchUpAfter(s.catchUp, profileId, added) }));
+    persist(profileId, snap);
+    return added;
+  },
+
+  markCardsSeen: (profileId, cardIds) => {
+    const seen = new Set(cardIds);
+    const listed = get().catchUp[profileId];
+    if (listed) {
+      const left = listed.filter((id) => !seen.has(id));
+      set((s) => ({ catchUp: left.length > 0 ? { ...s.catchUp, [profileId]: left } : withoutCatchUp(s.catchUp, profileId) }));
+    }
+    const snap = get().byProfile[profileId];
+    if (!snap?.cards.some((c) => c.newSinceLastView && seen.has(c.cardId))) return;
+    const now = new Date().toISOString();
+    const cards = snap.cards.map((c) => (c.newSinceLastView && seen.has(c.cardId) ? { ...c, newSinceLastView: false } : c));
+    const updated: ProgressSnapshot = { ...snap, cards, updatedAt: now };
     set((s) => ({ byProfile: { ...s.byProfile, [profileId]: updated } }));
     persist(profileId, updated);
   },
@@ -303,15 +449,23 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
   reset: (profileId) => {
     const fresh = blankSnapshot(profileId);
     settle(profileId, fresh);
+    set((s) => ({ catchUp: withoutCatchUp(s.catchUp, profileId) }));
     save(profileId, fresh);
   },
 
   replaceSnapshot: (profileId, snapshot) => {
-    // A completion that arrived by sync or restore is latched now, not at the
-    // next cold start; only an added latch is announced, so it uploads.
+    // Every sync, restore and plan derivation lands here. A completion that
+    // arrived by sync or restore is latched now, not at the next cold start,
+    // and the cards it earned are reconciled after the merge (F-STORY-006
+    // §3.5). Only an added latch or card is announced, so it uploads.
     const latched = withLatches(snapshot, new Date());
-    settle(profileId, latched);
-    void writeJson(key(profileId), latched);
-    if (latched !== snapshot) notifyProgressPersisted(profileId);
+    const { snap, added } = withAwards(profileId, latched);
+    settle(profileId, snap);
+    if (added.length > 0) set((s) => ({ catchUp: catchUpAfter(s.catchUp, profileId, added) }));
+    void writeJson(key(profileId), snap);
+    if (snap !== snapshot) notifyProgressPersisted(profileId);
   },
 }));
+
+// A removed profile's catch-up list goes with it (F-STORY-006 §3.5).
+onProfileRemoved((profileId) => useProgressStore.setState((s) => ({ catchUp: withoutCatchUp(s.catchUp, profileId) })));
