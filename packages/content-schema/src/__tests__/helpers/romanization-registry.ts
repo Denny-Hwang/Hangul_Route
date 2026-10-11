@@ -35,6 +35,7 @@ export const REGISTERED_SOURCES: readonly RegisteredSource[] = [
   { path: 'apps/mobile/src/content/quests.ts', cls: 'B1', suite: MOBILE_SUITE, needle: '../quests' },
   { path: 'apps/mobile/src/logic/minigame-config.ts', cls: 'B1', suite: MOBILE_SUITE, needle: 'logic/minigame-config' },
   { path: 'apps/mobile/src/logic/profiles/avatar-catalog.ts', cls: 'B1', suite: MOBILE_SUITE, needle: 'profiles/avatar-catalog' },
+  { path: 'apps/mobile/src/logic/lecture/content.ts', cls: 'B1', suite: MOBILE_SUITE, needle: 'lecture/content' },
   // B2. TS data, web
   { path: 'apps/web/src/data/stage1-cards.ts', cls: 'B2', suite: WEB_DATA_SUITE, needle: '../stage1-cards' },
   { path: 'apps/web/src/data/mock-family.ts', cls: 'B2', suite: WEB_DATA_SUITE, needle: '../mock-family' },

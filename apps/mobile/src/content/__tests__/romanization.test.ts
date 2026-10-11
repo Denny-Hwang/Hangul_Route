@@ -15,6 +15,7 @@ import {
 } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { minigameScopes } from '../../logic/minigame-config';
+import { PAUSE_WORD } from '../../logic/lecture/content';
 import { AVATAR_PRESETS } from '../../logic/profiles/avatar-catalog';
 import { episodesAll } from '../episodes';
 import { heritageCardsAll } from '../heritage-cards';
@@ -34,6 +35,7 @@ const F = {
   episodes: 'apps/mobile/src/content/episodes.ts',
   scopes: 'apps/mobile/src/logic/minigame-config.ts',
   avatars: 'apps/mobile/src/logic/profiles/avatar-catalog.ts',
+  lecture: 'apps/mobile/src/logic/lecture/content.ts',
 } as const;
 const sources = new Map<string, string>(Object.values(F).map((p) => [p, read(p)]));
 const HANGUL = /[가-힣]/;
@@ -217,6 +219,11 @@ describe('quests, episodes and avatars romanization (B1)', () => {
     });
     expect(found).toEqual([]);
     expect(AVATAR_PRESETS.find((a) => a.kind === 'hoya-green')).toMatchObject({ pillarName: '예리', romanization: 'Yeri' });
+  });
+
+  it('the lecture presenter Pause word romanizes correctly (잠깐 is jamkkan, F-TCH-004 §3.13)', () => {
+    note(F.lecture, PAUSE_WORD.ko, PAUSE_WORD.romanization);
+    expect(pair(F.lecture, PAUSE_WORD.ko, PAUSE_WORD.romanization)).toEqual([]);
   });
 
   it('English prose spells registered words without syllable hyphens and in Revised Romanization (R6)', () => {
