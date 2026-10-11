@@ -34,6 +34,7 @@ import {
   type MissionCard,
   type MissionPlan,
 } from '../../logic/homework/mission-builder';
+import { dueTodayCount, showsTodayCount } from '../../logic/homework/assignment-groups';
 import { mergeAssignments } from '../../logic/homework/assignment-merger';
 import { gridQuestProgress } from '../../logic/journey';
 import { homeColumns } from '../../logic/layout/home-columns';
@@ -119,7 +120,8 @@ export function HomeScreen(): React.ReactElement {
   // Both sides count grid quests only: a shelf story is not a Journey quest (F-STORY-004 §3.10).
   const { completed, total: totalStage1Quests } = gridQuestProgress(episodesAll, questsAll, snap?.quests ?? []);
   const cardsUnlocked = snap?.cards.length ?? 0;
-  const homeworkDue = snap?.homework?.filter((h) => !h.completedAt).length ?? 0;
+  // Today's count only, the same number as the Homework list's Today group (F-PLAN-002 section 3.6).
+  const homeworkDue = dueTodayCount(snap?.homework, dayKey(new Date().toISOString()));
 
   const recentStars = (snap?.quests.slice(-1)[0]?.stars ?? 0) as 0 | 1 | 2 | 3;
 
@@ -196,7 +198,7 @@ export function HomeScreen(): React.ReactElement {
             <View style={{ flex: 1 }}>
               <Body weight="semibold">{m.learner.home.homework.title}</Body>
               <Caption tone="muted">
-                {homeworkDue > 0 ? m.learner.home.homework.due(homeworkDue) : copy.homeReviewsIdle}
+                {homeworkDue === 0 ? copy.homeReviewsIdle : showsTodayCount(homeworkDue) ? m.learner.home.homework.due(homeworkDue) : m.learner.home.homework.dueMany}
               </Caption>
             </View>
             <Icon name="card" size={24} color={colors.text.muted} />

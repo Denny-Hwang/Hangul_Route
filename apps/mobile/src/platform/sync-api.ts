@@ -233,7 +233,7 @@ export function createSyncApi(opts: SyncApiOptions) {
     },
 
     async getInbox(learnerId: string, creds: DeviceCredentials): Promise<InboxResult> {
-      const r = await call(fetchImpl, `${base}/learners/${encodeURIComponent(learnerId)}/inbox`, { headers: authHeader(creds) });
+      const r = await call(fetchImpl, `${base}/learners/${encodeURIComponent(learnerId)}/inbox?cap=curriculum`, { headers: authHeader(creds) });
       if (r.status === -1) return { status: 'error', code: 'network' };
       if (r.status !== 200) return { status: 'error', code: `http_${r.status}` };
       const parsed = SyncInboxSchema.safeParse(r.body.data);

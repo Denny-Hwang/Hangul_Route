@@ -224,6 +224,7 @@ Home                                              Homework
 - Card (2) takes the highest-ranked pending item due today or earlier: class, then family, then own route. The others wait and come on the following days.
 - With no route and one or more quests done: the card reads "Set up my route" instead.
 - Between the mission cards and the progress bar only one quiet card shows: the level-check card (`placement.md` H) while it is eligible, then this route card.
+- **Amended (F-PLAN-002 review of PR #254):** the Homework pill reads "Your plan"; the collapsed row reads **"Later"** (it can hold class and home items too) with a right arrow that turns down when open; the three Today rows keep the first class item and the first home item, then fill in precedence order. Past three items due today, the Hoya bubble reads "You have a few things to do today." and the Home homework line "A few to do today" (no number).
 - **Amended (F-PLAN-002 FP-B6, FP-B13; F-ROUTE-001 R-0):** the in-plan Home card with week dots is removed. Before a plan exists the Home card is only the prompt "Hoya can make a weekly plan for you" with **Make my plan** and **Not now**; once a plan exists its week is one line in F-ROUTE-001's My route strip ("Week 3 of your weekly plan", `journey/my-route-overview.md` D). Home order: F-ROUTE-001 section 6.4.
 
 ## I. Empty, error and offline

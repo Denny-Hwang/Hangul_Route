@@ -79,6 +79,19 @@ describe('plan progress (F-PLAN-001 §3.3)', () => {
   });
 });
 
+describe('plan progress never carries the self-route (F-PLAN-002 section 3.10)', () => {
+  it('ignores route: assignments and route: not-ready counts, which class rosters would read', () => {
+    const withRoute: ProgressSnapshot = {
+      ...snap,
+      homework: [
+        { id: 'route:mine#q1', profileId: 'profile:a', questId: 'q1', episodeId: 'e', assignedBy: 'system', assignedAt: 't', targetDate: '2026-09-21', completedAt: 't' },
+        { id: 'plan:w3#q2', profileId: 'profile:a', questId: 'q2', episodeId: 'e', assignedBy: 'teacher', assignedAt: 't', targetDate: '2026-09-21' },
+      ],
+    };
+    expect(planProgressOf(withRoute, { 'route:mine': 3, 'plan:w3': 1 })).toEqual({ 'plan:w3': { done: 0, total: 1, notReady: 1 } });
+  });
+});
+
 describe('summarize: the level check (F-PLC-001 section 3.8, section 3.7 consumer 5)', () => {
   const fresh: ProgressSnapshot = { ...snap, quests: [], sessions: [] };
   const older = placementResult({ id: 'placement:old', completedAt: '2026-09-01T00:00:00Z', priorityTokens: ['sym:ㄱ'] });

@@ -159,7 +159,8 @@ describe('platform/sync-api — spaces (F-SPACE-001)', () => {
     expect(await api.getInbox('profile:a', creds)).toEqual({ status: 'error', code: 'invalid' });
     expect(await api.getInbox('profile:a', creds)).toEqual({ status: 'error', code: 'http_401' });
     expect(await api.getInbox('profile:a', creds)).toEqual({ status: 'error', code: 'network' });
-    expect(fetchImpl.mock.calls[3]?.[0]).toBe('https://api.example.com/api/sync/learners/profile%3Aa/inbox');
+    // F-PLAN-002 section 3.5: this build derives with a horizon, so it asks for curriculum plans.
+    expect(fetchImpl.mock.calls[3]?.[0]).toBe('https://api.example.com/api/sync/learners/profile%3Aa/inbox?cap=curriculum');
   });
 });
 

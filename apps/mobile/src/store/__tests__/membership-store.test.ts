@@ -15,7 +15,7 @@ vi.mock('../../config/flags', () => ({ flags: { syncEnabled: true, telemetryEnab
 
 import { apiBaseUrl } from '../../platform/sync-api';
 import { track } from '../../platform/telemetry';
-import { useMembershipStore } from '../membership-store';
+import { rederiveAllLocal, useMembershipStore } from '../membership-store';
 import { usePlanStore } from '../plan-store';
 import { useTierStore } from '../tier-store';
 import { useProfileStore } from '../profile-store';
@@ -87,6 +87,34 @@ describe('membership-store (F-SPACE-001 §3.5)', () => {
     expect(requestSync).toHaveBeenCalledWith('profile:a');
     requestSync.mockClear();
     await useMembershipStore.getState().refresh('profile:a');
+    expect(requestSync).not.toHaveBeenCalled();
+    requestSync.mockRestore();
+  });
+
+  it('asks for a sync when a refresh only moves a pending item to a new date (F-PLAN-002 section 3.6 rule 2)', async () => {
+    useSyncStore.getState().adoptCredentials('profile:a', 'sec', 1);
+    const plan = (targetDate: string) => ({ id: 'plan:w3', spaceId: 'space:cls', spaceKind: 'class', spaceName: 'Sunday Class A', title: 'Week 3', items: [{ kind: 'quest', id: 'quest:stage1-letters-q1', targetDate }], publishedAt: 't', updatedAt: 't' });
+    const inbox = (targetDate: string) => ({ status: 'ok', inbox: { rev: 1, plans: [plan(targetDate)], memberships: [classRow], tier: 'free', serverTime: 't' } });
+    const getInbox = vi.fn().mockResolvedValueOnce(inbox('2026-09-28')).mockResolvedValueOnce(inbox('2026-09-30'));
+    setSyncApiForTests(fakeApi({ getInbox }) as never);
+    await useMembershipStore.getState().refresh('profile:a');
+    const requestSync = vi.spyOn(useSyncStore.getState(), 'requestSync');
+    await useMembershipStore.getState().refresh('profile:a');
+    expect(useProgressStore.getState().byProfile['profile:a']?.homework.map((h) => h.targetDate)).toEqual(['2026-09-30']);
+    expect(requestSync).toHaveBeenCalledWith('profile:a');
+    requestSync.mockRestore();
+  });
+
+  it('derives from the cached plans when the inbox cannot be read, and for every learner on demand (F-PLAN-002 section 3.6 rule 1)', async () => {
+    useSyncStore.getState().adoptCredentials('profile:a', 'sec', 1);
+    mem.set('plans:profile:a', [{ id: 'plan:w3', spaceId: 'space:cls', spaceKind: 'class', spaceName: 'Sunday Class A', title: 'Week 3', items: [{ kind: 'quest', id: 'quest:stage1-letters-q1', targetDate: '2026-09-28' }], publishedAt: 't', updatedAt: 't' }]);
+    setSyncApiForTests(fakeApi({ getInbox: vi.fn(async () => ({ status: 'error', code: 'network' })) }) as never);
+    const requestSync = vi.spyOn(useSyncStore.getState(), 'requestSync');
+    expect(await useMembershipStore.getState().refresh('profile:a')).toBeNull();
+    expect(useProgressStore.getState().byProfile['profile:a']?.homework.map((h) => h.id)).toEqual(['plan:w3#quest:stage1-letters-q1']);
+    expect(requestSync).toHaveBeenCalledWith('profile:a');
+    requestSync.mockClear();
+    await rederiveAllLocal();
     expect(requestSync).not.toHaveBeenCalled();
     requestSync.mockRestore();
   });

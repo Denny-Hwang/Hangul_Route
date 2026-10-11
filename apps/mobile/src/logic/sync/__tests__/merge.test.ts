@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { PLACEMENT_KEEP } from '@hangul-route/content-schema';
 import { seededRandom } from '../../listen-pick';
 import { placementResult } from '../../placement/__tests__/fixtures';
+import { selfRoute } from '../../homework/__tests__/curriculum-fixture';
 import { compareInstant, isSubsetOf, mergeCard, mergeSnapshots, withSnapshotDefaults } from '../merge';
 
 const NOW = new Date('2026-09-21T12:00:00.000Z');
@@ -339,8 +340,10 @@ describe('placements (F-PLC-001 section 3.8)', () => {
     const legacy = base();
     expect('placements' in legacy).toBe(false);
     expect(withSnapshotDefaults(legacy).placements).toEqual([]);
-    const held = base({ placements: [p('placement:a', '2026-10-01T00:00:00Z')] });
+    const held = base({ placements: [p('placement:a', '2026-10-01T00:00:00Z')], selfRoute: null });
     expect(withSnapshotDefaults(held)).toBe(held);
+    const partial = base({ placements: held.placements });
+    expect(withSnapshotDefaults(partial).placements).toBe(held.placements);
   });
 
   it('keeps the snapshot shape when neither side has placements', () => {
@@ -432,5 +435,61 @@ describe('compareInstant', () => {
     expect(compareInstant('garbage', '2026-10-01T00:00:00Z')).toBe(-1);
     expect(compareInstant('2026-10-01T00:00:00Z', 'garbage')).toBe(1);
     expect(compareInstant('b', 'a')).toBe(1);
+  });
+});
+
+describe('selfRoute, the learner weekly plan (F-PLAN-002 section 3.5)', () => {
+  const legacy = (over: Record<string, unknown> = {}): ProgressSnapshot => {
+    const snapshot: Record<string, unknown> = { ...base(), ...over };
+    delete snapshot['selfRoute'];
+    return snapshot as unknown as ProgressSnapshot;
+  };
+
+  it('withSnapshotDefaults fills a missing selfRoute with null and keeps a held one', () => {
+    const filled = withSnapshotDefaults(legacy());
+    expect(filled.selfRoute).toBeNull();
+    expect(filled.placements).toEqual([]);
+    const route = selfRoute();
+    const held = base({ placements: [], selfRoute: route });
+    expect(withSnapshotDefaults(held)).toBe(held);
+    expect(withSnapshotDefaults(base({ placements: [] })).selfRoute).toBeNull();
+    expect(withSnapshotDefaults(base({ selfRoute: route })).selfRoute).toBe(route);
+  });
+
+  it('keeps the snapshot shape when neither side has the key', () => {
+    expect('selfRoute' in mergeSnapshots(legacy(), legacy(), { now: NOW })).toBe(false);
+  });
+
+  it('a missing or null side never replaces a held route', () => {
+    const route = selfRoute();
+    expect(mergeSnapshots(legacy(), base({ selfRoute: route }), { now: NOW }).selfRoute).toEqual(route);
+    expect(mergeSnapshots(base({ selfRoute: route }), base({ selfRoute: null }), { now: NOW }).selfRoute).toEqual(route);
+    expect(mergeSnapshots(base({ selfRoute: null }), legacy(), { now: NOW }).selfRoute).toBeNull();
+  });
+
+  it('keeps the route with the newest updatedAt as an instant; a tie keeps the local copy', () => {
+    const older = selfRoute({ id: 'route:old', updatedAt: '2026-09-20T00:00:00.000Z' });
+    const newer = selfRoute({ id: 'route:new', updatedAt: '2026-09-21T00:00:00.000Z' });
+    expect(mergeSnapshots(base({ selfRoute: older }), base({ selfRoute: newer }), { now: NOW }).selfRoute?.id).toBe('route:new');
+    expect(mergeSnapshots(base({ selfRoute: newer }), base({ selfRoute: older }), { now: NOW }).selfRoute?.id).toBe('route:new');
+    const tieServer = selfRoute({ id: 'route:server', updatedAt: older.updatedAt });
+    expect(mergeSnapshots(base({ selfRoute: older }), base({ selfRoute: tieServer }), { now: NOW }).selfRoute?.id).toBe('route:old');
+    // 01:00+02:00 is 23:00Z the day before, so the Z form is newer although it sorts first as a string.
+    const offset = selfRoute({ id: 'route:offset', updatedAt: '2026-09-21T01:00:00+02:00' });
+    const zulu = selfRoute({ id: 'route:zulu', updatedAt: '2026-09-21T00:00:00.000Z' });
+    expect(mergeSnapshots(base({ selfRoute: offset }), base({ selfRoute: zulu }), { now: NOW }).selfRoute?.id).toBe('route:zulu');
+  });
+
+  it('isSubsetOf compares id and updatedAt, treating a missing key as null', () => {
+    const route = selfRoute();
+    const edited = selfRoute({ updatedAt: '2026-09-22T00:00:00.000Z' });
+    expect(isSubsetOf(base({ selfRoute: route }), legacy())).toBe(false);
+    expect(isSubsetOf(base({ selfRoute: route }), base({ selfRoute: null }))).toBe(false);
+    expect(isSubsetOf(base({ selfRoute: route }), base({ selfRoute: route }))).toBe(true);
+    expect(isSubsetOf(base({ selfRoute: route }), base({ selfRoute: edited }))).toBe(true);
+    expect(isSubsetOf(base({ selfRoute: edited }), base({ selfRoute: route }))).toBe(false);
+    expect(isSubsetOf(base({ selfRoute: route }), base({ selfRoute: selfRoute({ id: 'route:other', updatedAt: edited.updatedAt }) }))).toBe(false);
+    expect(isSubsetOf(legacy(), base({ selfRoute: route }))).toBe(true);
+    expect(isSubsetOf(base({ selfRoute: null }), legacy())).toBe(true);
   });
 });

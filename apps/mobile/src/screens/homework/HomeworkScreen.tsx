@@ -10,17 +10,18 @@ import {
   Pill,
   Screen,
   Spacer,
+  colors,
   spacing,
   touchTarget,
 } from '@hangul-route/design-system';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { questsAll } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeQuest } from '../../logic/content-locale';
-import { assignedByLabel, dueLabel, groupAssignments } from '../../logic/homework/assignment-groups';
+import { assignedByLabel, dueLabel, groupAssignments, homeworkWindow, showsTodayCount } from '../../logic/homework/assignment-groups';
 import type { RootStackParamList } from '../../navigation/types';
 import { useAudience } from '../../store/audience';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
@@ -29,6 +30,9 @@ import { useProgressStore } from '../../store/progress-store';
 /**
  * Homework list (wireframe homework/list, F-HW-001 §3.4): the assignment
  * queue behind Today's mission. Rows open the quest; nothing here scolds.
+ * The week window (F-PLAN-002 section 3.6, wireframe console/curriculum-planner
+ * H): at most three Today rows and one neutral line when more are due, the
+ * next seven days of Coming up, then one collapsed "later" row.
  */
 export function HomeworkScreen(): React.ReactElement {
   const messages = useMessages();
@@ -41,6 +45,8 @@ export function HomeworkScreen(): React.ReactElement {
 
   const todayKey = new Date().toISOString().slice(0, 10);
   const groups = useMemo(() => groupAssignments(snap?.homework ?? [], todayKey), [snap, todayKey]);
+  const view = useMemo(() => homeworkWindow(groups, todayKey), [groups, todayKey]);
+  const [laterOpen, setLaterOpen] = useState(false);
   const hasPlayed = (snap?.quests.length ?? 0) > 0;
 
   const open = (h: HomeworkAssignment): void =>
@@ -66,7 +72,11 @@ export function HomeworkScreen(): React.ReactElement {
       <HoyaBubble
         tone="idle"
         message={
-          groups.today.length === 0 ? m.bubble.none : m.bubble.some(groups.today.length)
+          groups.today.length === 0
+            ? m.bubble.none
+            : showsTodayCount(groups.today.length)
+              ? m.bubble.some(groups.today.length)
+              : m.bubble.aFew
         }
       />
 
@@ -86,17 +96,44 @@ export function HomeworkScreen(): React.ReactElement {
           </View>
         </Card>
       ) : (
-        groups.today.map((h) => <AssignmentRow key={h.id} assignment={h} todayKey={todayKey} onPress={open} />)
+        view.today.map((h) => <AssignmentRow key={h.id} assignment={h} todayKey={todayKey} onPress={open} />)
       )}
+      {view.moreToday ? (
+        <Caption tone="secondary" testID="homework-more-today">
+          {m.moreToday}
+        </Caption>
+      ) : null}
 
       {groups.upcoming.length > 0 ? (
         <>
           <Spacer size="lg" />
           <Heading level="prompt">{m.section.comingUp}</Heading>
           <Spacer size="sm" />
-          {groups.upcoming.map((h) => (
+          {view.comingUp.map((h) => (
             <AssignmentRow key={h.id} assignment={h} todayKey={todayKey} onPress={open} />
           ))}
+          {view.later.length > 0 ? (
+            <>
+              <Pressable
+                onPress={() => setLaterOpen((wasOpen) => !wasOpen)}
+                accessibilityRole="button"
+                aria-expanded={laterOpen}
+                testID="homework-later"
+                style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, minHeight: touchTarget.min }}
+              >
+                {/* A disclosure arrow: right when closed, turned down when open. */}
+                <View style={laterOpen ? { transform: [{ rotate: '90deg' }] } : undefined}>
+                  <Icon name="arrow-right" size={24} color={colors.text.secondary} />
+                </View>
+                <Body weight="semibold" style={{ flex: 1 }}>
+                  {m.later}
+                </Body>
+              </Pressable>
+              {laterOpen
+                ? view.later.map((h) => <AssignmentRow key={h.id} assignment={h} todayKey={todayKey} onPress={open} />)
+                : null}
+            </>
+          ) : null}
         </>
       ) : null}
 
@@ -156,7 +193,7 @@ function AssignmentRow({
           <Body weight="semibold" style={{ flex: 1 }}>
             {title}
           </Body>
-          <Pill tone="nudge" label={assignedByLabel(assignment.assignedBy, m.from)} size="sm" />
+          <Pill tone="nudge" label={assignedByLabel(assignment, m.from)} size="sm" />
         </View>
         <Spacer size="xs" />
         <Caption tone="muted">{due}</Caption>

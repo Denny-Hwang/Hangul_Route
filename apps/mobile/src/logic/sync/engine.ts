@@ -22,6 +22,12 @@ export interface SyncInput {
   api: SyncApi;
   now: Date;
   summarize: (snapshot: ProgressSnapshot) => ProgressSummary;
+  /**
+   * Run on a merged snapshot before it is uploaded: a union merge can bring
+   * back a pending derived assignment the plans dropped or moved, and this
+   * puts the plans' answer back (F-PLAN-002 section 3.6 rule 2).
+   */
+  reconcile?: (snapshot: ProgressSnapshot) => ProgressSnapshot;
 }
 
 export type SyncOutcome =
@@ -45,7 +51,10 @@ export async function syncLearner(input: SyncInput): Promise<SyncOutcome> {
     if (result.status === 'ok') return { status: 'synced', rev: result.rev, snapshot, merged };
     if (result.status === 'error') return { status: 'error', code: result.code, snapshot };
     // conflict: fold the server copy in and try once more from its rev
-    snapshot = result.snapshot ? mergeSnapshots(snapshot, result.snapshot, { now: input.now }) : snapshot;
+    if (result.snapshot) {
+      const merged = mergeSnapshots(snapshot, result.snapshot, { now: input.now });
+      snapshot = input.reconcile ? input.reconcile(merged) : merged;
+    }
     baseRev = result.rev;
     merged = merged || !!result.snapshot;
   }
