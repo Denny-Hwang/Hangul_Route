@@ -61,6 +61,9 @@ export function mergeAssetMaps(...lists) {
   return [...all].sort((a, b) => (a.ref < b.ref ? -1 : a.ref > b.ref ? 1 : 0));
 }
 
+/** A native registry id, or the URL string Metro's web asset transformer returns (expo-asset takes both). */
+const MAP_TYPE = 'Readonly<Record<string, number | string>>';
+
 /** The source of `src/content/__generated__/audio-assets.ts`. Metro needs literal require paths. */
 export function renderAssetMap(entries) {
   const lines = [
@@ -69,9 +72,9 @@ export function renderAssetMap(entries) {
     '',
   ];
   if (entries.length === 0) {
-    lines.push('export const AUDIO_ASSETS: Readonly<Record<string, number>> = {};');
+    lines.push(`export const AUDIO_ASSETS: ${MAP_TYPE} = {};`);
   } else {
-    lines.push('export const AUDIO_ASSETS: Readonly<Record<string, number>> = {');
+    lines.push(`export const AUDIO_ASSETS: ${MAP_TYPE} = {`);
     for (const e of entries) lines.push(`  '${e.ref}': require('${e.require}'),`);
     lines.push('};');
   }
@@ -103,7 +106,9 @@ export function audioRuntimeCaching() {
     options: {
       cacheName: 'hr-audio-v1',
       expiration: { maxEntries: 400 },
-      cacheableResponse: { statuses: [0, 200] },
+      // Same-origin only (never opaque), and only a real clip: a single-page host answers a
+      // missing file with index.html and status 200, which must never be cached as a clip.
+      cacheableResponse: { statuses: [200], headers: { 'content-type': 'audio/mpeg' } },
     },
   };
 }

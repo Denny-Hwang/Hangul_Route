@@ -85,7 +85,7 @@ describe('scripts/audio/lib: buildAssetMap', () => {
 describe('scripts/audio/lib: renderAssetMap', () => {
   it('renders an empty map with no require at all', () => {
     const src = renderAssetMap([]);
-    expect(src).toContain('export const AUDIO_ASSETS: Readonly<Record<string, number>> = {};');
+    expect(src).toContain('export const AUDIO_ASSETS: Readonly<Record<string, number | string>> = {};');
     expect(src).not.toContain('require(');
     expect(src.endsWith('\n')).toBe(true);
     expect(refsInRenderedMap(src)).toEqual([]);
@@ -122,7 +122,7 @@ describe('scripts/audio/lib: the PWA precache rules (AD10)', () => {
     expect(rule.options).toEqual({
       cacheName: 'hr-audio-v1',
       expiration: { maxEntries: 400 },
-      cacheableResponse: { statuses: [0, 200] },
+      cacheableResponse: { statuses: [200], headers: { 'content-type': 'audio/mpeg' } },
     });
     expect(rule.urlPattern.test('https://app.hangulroute.com/assets/assets/audio/vocab/ice-cream.1a2b.mp3')).toBe(true);
     expect(rule.urlPattern.test('https://app.hangulroute.com/assets/assets/audio/story/heungbu/line-1.mp3')).toBe(true);

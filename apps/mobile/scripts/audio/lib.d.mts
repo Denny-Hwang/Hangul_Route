@@ -13,7 +13,7 @@ export interface AudioRuntimeCachingRule {
   options: {
     cacheName: string;
     expiration: { maxEntries: number };
-    cacheableResponse: { statuses: number[] };
+    cacheableResponse: { statuses: number[]; headers: Record<string, string> };
   };
 }
 

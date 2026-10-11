@@ -84,6 +84,11 @@ describe('__generated__/audio-assets.ts', () => {
     // The T-017 to-do list: a ref may exist before its recording does (AD4: no file means TTS).
     const missing = refs.filter((r) => !withFile.has(r));
     expect(missing.every((r) => !inMap.has(r))).toBe(true);
+    // Listed, not failed (§5): a short summary here; A-8's `audio:status` prints the whole list.
+    if (missing.length > 0) {
+      const head = missing.slice(0, 10).join(', ');
+      console.info(`audio: ${missing.length} content audioRefs have no clip yet (voice plays them): ${head}${missing.length > 10 ? ', ...' : ''}`);
+    }
     // The 30 jamo sound refs are content refs whether or not their clip has arrived.
     for (const j of jamoAll) if (j.audioRef) expect(refs).toContain(j.audioRef);
   });
