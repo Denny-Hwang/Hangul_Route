@@ -50,7 +50,7 @@ A teacher opens `/teach`, signs in with Google or an email code, lands on the ho
 ## 4. Out of scope
 
 - Mobile sign-in (`sync/restore` → "sign in" path, `@clerk/clerk-expo`) → **F-AUTH-004** (the number F-AUTH-002 was reserved for it in F-AUTH-001; this spec took it for the console because the console shipped first).
-- Account page (email change, delete learner data from the account, consent record) → F-AUTH-005 / F-SPACE-002.
+- Account page (email change, delete learner data from the account, consent record) → F-AUTH-005 / F-SPACE-003.
 - Replacing the Account button in the shell with Clerk's `UserButton` → with the account page.
 
 ## 5. Tests

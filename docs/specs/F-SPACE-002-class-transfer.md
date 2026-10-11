@@ -1,0 +1,660 @@
+Status: ready
+
+> **Readiness scope.** Ready for T-0 to T-5 (flag off, no user-visible change except T-1). T-6 and T-7 (console and app UI) are blocked on the owner's design mockups (T-0b, CLAUDE.md section 5). The device consent route (T-5c) is built but stays off behind its own Worker var until counsel signs off (decision A4, flip gate G6). **Blockers: none unresolved** (every blocker of the review round is closed in the text, see section 10); the flip gates of section 7 are owner/counsel gates, not spec gaps.
+
+# F-SPACE-002 — Class transfer: an agreed path to move a learner from one teacher's class to another
+
+> Start order: T-1b (re-link guard), T-2 (schemas), T-3a (batch plumbing) and T-4a (seat extraction) have no dependency on each other; T-1a follows T-2. T-3b (additive migration + `Db` methods) must be **merged and deployed before** T-5 (routes). T-5 ships **locked** (`CLASS_TRANSFER` unset), so every PR is safe to be live on its own. No console or app build may send a transfer call before T-5 is deployed; request bodies are `.strict()` (section 4.4) so an early or late client fails loudly instead of silently losing a consent field. The flag is flipped by the owner, never by a PR, after every gate of section 7 is met.
+>
+> **Spec id note.** The parent-email capture item that four documents earmarked as `F-SPACE-002` was renumbered to `F-SPACE-003` in the PR that landed this spec (the T-0 renumbering is done).
+
+**Scope**: `packages/content-schema` (new `schemas/transfer.ts`, `transfer-consent.ts`, `TEACHER_VISIBLE_SUMMARY_KEYS`, `SyncInboxSchema` additions, telemetry names) · `packages/backend` + `apps/api` (new `routes/transfers.ts`, `lib/transfer.ts`, `lib/seats.ts` extracted from `routes/spaces.ts`, `can.ts` action `learner.transfer`, `lib/entitlement.ts` `tierFromSpaces`, `Db` methods + `D1Like.batch`, roster projection, migration `0005_class_transfer.sql` — number is taken at merge time) · `apps/web` (console: Move action, `/teach/space/transfers` page, roster chip, home badge, family-side approval) · `apps/mobile` (inbox `transfers`, pending row on the Classes card, Home line, PIN-gated `ApproveTransfer` and `MoveClass` screens, `pinCreatedAt`) · `packages/i18n` (app strings) · web legal copy (counsel-gated, PR T-8)
+**Owner**: solo dev
+**Rollout**: server first, locked by Worker var `CLASS_TRANSFER=enabled` (same pattern as `SCHOOL_CONSENT_MODE`, `routes/spaces.ts:30-33`, `apps/api/wrangler.toml:47`); a **second, separate** Worker var `CLASS_TRANSFER_DEVICE_CONSENT=enabled` guards every route that lets a learner's device fill the consent slot; console var `NEXT_PUBLIC_CLASS_TRANSFER`. PR order and flip gates in section 7.
+**Wireframes**: `wireframes/class-transfer.md` (drafted with this spec) -> promoted to `design/wireframes/console/class-transfer.md` (start sheet, requests page, family approval) and `design/wireframes/sync/move-class.md` (app sheets); `console/space-settings.md` (learner row gets a Move action), `console/roster.md` (chip), `console/home.md` (badge)
+
+Parent / siblings: F-SPACE-001 (spaces, memberships, `can()`, join caps; **this spec adds one action to its section 3.4 and reuses its caps**) · F-TCH-001 section 10.1 (re-link, the closest existing request flow; **not** the same thing, see section 2) · F-TCH-001 section 10.3 (deletion rights, consent mode) · F-ENT-001 section 3.2 (tier derives from memberships) · F-SCHOOL-001 (seat usage) · F-SYNC-001 (one snapshot per learner) · F-LEARN-001 (learnerType L3, consent, PIN gate L2/L7) · F-PLAN-001 (plan derivation on the device) · F-I18N-001 (all app copy through messages; Korean 합니다체 on legal text) · CLAUDE.md sections 1 (audience, languages, anti-shame), 4 (tokens only), 5 (spec, mockup before code), 8 (no ad hoc UI strings)
+
+---
+
+## 1. Decisions
+
+Owner request (2026-10-10, Korean, condensed): "Also build moving a student or a child into another person's class, for example from teacher A to teacher B. Get consent from both sides. Only when both are on the same subscription plan — but since paid users get lifelong learning, that probably does not matter."
+
+| # | Decision | Why |
+|---|---|---|
+| T1 | **Scope: class -> class.** A learner's *class* membership moves. The learner's family memberships, other class memberships, devices, snapshot, Rescue Code and name are never touched. Family -> anything, class -> family and school moves are out of scope. | A family is a home, not something a child "moves out of" (it also has a 5-learner cap, `spaces.ts:311-313`); a learner cannot join a school (`spaces.ts:299`). The owner's example is A -> B teacher. |
+| T2 | **Three consent slots, all required: `learner` (the learner side), `source` (releasing class manager), `destination` (receiving class manager).** This is **an agreed path, not the only path**: join-by-code and Leave stay as they are (B1, section 9), so the guarantee "nobody gets a child's data without the family" is true of the transfer path only. Privacy copy must not call the transfer "the consent path" until B1 is decided (flip gate G3). | Owner intent (two-way) kept literally; the learner side is the third because the person whose data moves is often a child (CLAUDE.md section 1: verifiable parental consent before personal data is linked). |
+| T3 | **Learner side = a guardian, or the learner themself. The route depends on who started the request and on two learner-level switches.** (a) `caregiver` route: a signed-in owner/caregiver of a live family space the learner is in, passing the guardian predicate of 4.2 (aged membership, separation of duties). (b) `device_attested` route: the learner's own full-scope device. It is an **attestation, never "verifiable"**, is **off by default** (`CLASS_TRANSFER_DEVICE_CONSENT`), may **create or consent only for a learner-started request**, and is **never** accepted for a request a teacher started. (c) The learner's own full-scope device can **always decline or cancel** any open request (veto) on any route. (d) Two additive per-learner switches: `selfManaged` (set from the learner's device) makes the caregiver route refuse to start or consent; `blockTeacherRequests` (set by a guardian) makes teacher-started requests impossible. | The server knows no other guardian (`accounts` are never children, `0002_schema_v2.sql:44-50`; any account can create a family space, `spaces.ts:106-141`, and a family code is open to any account, `spaces.ts:323-333`). `learnerType` and the PIN never reach the server (F-LEARN-001 L2/L3), so a device consent is only a string; a teacher can hold a learner's device (Rescue Code claim mints a full device, `recovery.ts:80-111`). Adults are an audience (CLAUDE.md section 1): a self-managed adult in a family space must not need a caregiver's yes. |
+| T4 | **Who can start a request:** (a) the learner side (guardian in the console; the learner's device only when the device route is on), or (b) the source class manager. **The destination manager cannot start one.** | A destination teacher has no way to name a learner: rosters are only readable by their own managers (`spaces.ts:365`), and `lookup` is for codes. A "learner directory" will not be built. |
+| T5 | **The source manager's consent is required but is a hand-off, not a lock.** A "not now" from the source ends this request only; archiving the source does **not** end a request the learner side already agreed to (4.13). The learner side can always leave a class itself (`spaces.ts:336-346`, unchanged) and join by code. Owner decision A3 (section 9): turn the hand-off into "notify only". | A veto would be cosmetic (leave + join already exists) and would feel like trapping a child; the legal map (R2) asks for no veto. |
+| T6 | **No same-plan rule.** No check that the two classes, or the two teachers, hold the same subscription. The only commercial check is the destination's own capacity under its own licence or free cap, at the moment of the move. | Owner said plan equality does not matter. Recorded as assumption A1. |
+| T6b | **Premium honesty.** The owner's premise "a learner's entitlement follows the learner and is never lost" is **not** true in the current model. The `entitlements` subjects are `account` or `space` only (`0002_schema_v2.sql:107-121`), and `tierForLearner` derives premium solely from live memberships (`lib/entitlement.ts:91-100`). A learner covered only by the source class's group licence is covered by the destination's plan after the move. The transfer loses no card, star or finished lesson; the tier is recomputed from memberships. The "never lost" guarantee holds for `family_lifetime` (the family membership is untouched). **Owner choice A1 (section 9):** (a) accept, or (b) carry-over (needs a new learner-level entitlement table, a commercial feature; not built). | Verified against the code; the spec must not hide a deviation from the owner's expectation. |
+| T7 | **Tier is one rule in one place.** `tierFromSpaces(db, spaces, now)` is extracted from `tierForLearner` and used by both it and `tierAfterMove`, with a parity test over the same fixtures. The learner side sees a neutral lesson line when (and only when) the computed tier differs. No price, plan name or promise appears anywhere in this feature. | Two implementations of one rule drift. |
+| T8 | **Nothing identifying reaches the destination before the learner side consents, and even then only an alias.** Until the `learner` slot is `consented`, the destination manager cannot list the request. After it (and until the move executes) they see **initials, picture and level label** — always `rosterAlias`, **never** the full name, **never** the learner id (the card is addressed by the transfer id). The full name (per the destination's `anonymizeRoster`) appears only after execution. They do not see the source class or teacher unless the learner side ticked "Tell the new class where I am coming from". | A class defaults to `anonymizeRoster: false` (`spaces.ts:133`), `displayName` is a free 20-character string (`schemas/space.ts:87-91`); a teacher who declines must not keep a child's real name or a stable id. Legal map R9/R16. |
+| T9 | **The move is one atomic, self-guarding step**, taken after every slot is consented **and** a 48-hour cooling-off has passed: the status flip is the gate for every other statement (destination membership added, source membership removed, source-bound class devices revoked, source pending re-links closed, audit rows). If the gate changes no row nothing else happens. Capacity is re-checked inside the gate. | The current code has no transaction (`db/d1.ts:11-19`; `deleteLearner` is five sequential statements, `d1.ts:134-143`). A D1 batch does not stop on a statement that changed 0 rows, so every statement must carry its own guard (4.6). |
+| T10 | **New action `learner.transfer`, not `roster.manage`.** Granted to a class owner/teacher on their own class, and to a school owner/admin on the school's child classes (cascade). It never covers the `learner` slot. | A school admin already holds `roster.manage` on every child class (`lib/can.ts:62-68`); reusing it would let anyone who can remove a learner also consent for a guardian. |
+| T11 | **One account may fill both teacher slots in one click only when it is the owner/teacher of both classes directly** (not through the school cascade). A school admin acting through the cascade fills one slot per action, recorded `via: school_admin`, and both class pages show the neutral line "Agreed by the school admin." The `learner` slot is always separate. | Avoids a second click for a teacher with two classes without letting an admin silently stand in for a teacher (owner decision A6). |
+| T12 | **Request life: 14 days, then `expired`.** One open request per learner (database-enforced). Durable abuse limits (4.9). **Cooling-off: execution is never earlier than 48 hours after the learner-side consent**; any caregiver of the learner's families, and the learner's own device, can cancel during that time. | Teachers act asynchronously and there is no email or push (F-NOTIF-001 does not exist). A move that executes in the same call as the last click gives a second parent or the learner no time to object (custody-dispute and stalking case). |
+| T13 | **Audit is a D1 table, not telemetry; and telemetry is never evidence.** `transfer_events` records who did what and when with opaque ids, no names, no free text, and cascades with the learner. Consent evidence (`executed` rows and their events) is **kept** while the learner and the destination membership exist (4.1 retention). | Server telemetry is an in-memory array capped at 10,000 (`routes/telemetry.ts:55-57`) and unauthenticated (anyone can post an event). Deleting consent evidence while the processing continues defeats the purpose of recording it. |
+| T14 | **No names or learner ids in any console URL, title or share link.** Console routes use the space id (`?id=<space id>`); a request is addressed by an opaque `transfer:<uuid>` id in API paths only. | Owner rule 2026-10-10 (F-TCH-004 D12/TD3), `lib/console/routing.ts:9-12`. |
+| T15 | **Release lock, visible to clients.** Every transfer route answers `422 transfers_locked` until `CLASS_TRANSFER=enabled`; the device consent routes answer `422 device_consent_locked` until `CLASS_TRANSFER_DEVICE_CONSENT=enabled`. The sync inbox carries `transfersEnabled` and `transferDeviceConsent` (both `false` by default) so an app never offers a button that dead-ends. Rollback = unset the Worker var: create, approve, retry and execute stop at once because every route and the lazy settle step check the var first. | A lock the client cannot see produces a dead-end Move button (`transfers: []` looks the same off or idle). |
+| T16 | **Two existing gaps are fixed here because a transfer makes them matter**: (a) the class roster returns the whole `summary` (`spaces.ts:382`), including `planProgress` keys of other spaces' plans and fields no consent text could list; it is projected to an allow-list shared with the consent text (4.11) and `planProgress` is filtered to the requesting space's plans. (b) `relink.ts` `decide()` approves a re-link without re-checking membership (`relink.ts:105-124`); it refuses with 409 `not_a_member` when the learner left. | Legal map R11, R14(i). Both are small, additive, tested, independent of the flag. |
+| T17 | **Preview before create.** The consent sheet shows the destination that the server resolved from the code; the request is created for that exact space (`destinationSpaceId`), and the code must still resolve to it. | The guardian must not consent before seeing the destination, and the code could be re-issued between preview and create (`spaces.ts:271-281`). |
+| T18 | **One canonical consent text**, a keyed list of lines (4.11), rendered by the console sheet and both app sheets (layout may differ, wording may not). | A consent whose recorded version does not match what the person saw is not usable as a record. |
+
+## 2. Context
+
+What exists on `origin/main` `8083d5d` (re-verified; the files cited below are unchanged since `8602061`):
+
+- **There is no move.** A learner can be in several spaces: `memberships` has primary key `(space_id, member_kind, member_id)` and an index on `(member_kind, member_id)` (`apps/api/migrations/0002_schema_v2.sql:66-74`; `member_id` has **no** foreign key to `learners`). Today "moving" is two uncoordinated, ungated steps: tap Leave on the old class (`apps/mobile/src/components/SpacesCard.tsx:28-37`, a plain `confirm()`, the result is ignored at `:36`) and enter the new class's code (`POST /api/spaces/:id/join`, `routes/spaces.ts:283-321`). Joining needs only the live 6-character code (`:291-292`), no teacher approval, and the role is always `student` (`:314`). Neither teacher is asked, no guardian approves, and the join screen is deliberately not PIN-gated (`navigation/types.ts:37`, decision #21 `10-app-map.md:319`).
+- **That bypass stays.** This spec does not remove join-by-code or Leave. It adds an *agreed* path that records consent and fixes the cap problem below. See section 9, B1.
+- **Re-link is not a transfer.** Re-link binds a *new device* to a learner who is already on a roster; it never changes membership (`routes/relink.ts:14-19`, `:75-88`; F-TCH-001 section 10.1). It is the closest pattern (lazy expiry `relink.ts:24-44`, table `0002:92-104`, console list with a pending chip `apps/web/src/app/teach/space/page.tsx:136-138`) and its read-modify-write `putRelink` (`relink.ts:109-122`, `d1.ts:232-237`) is exactly what this feature **must not** copy (4.7).
+- **Caps on a learner join** (`spaces.ts:302-313`): at most `LEARNER_CLASS_CAP = 3` non-archived classes, counted over class memberships only (`activeClassesOf`, `:60-67`; `schemas/space.ts:105`); the class cap, 20 unless the class or its school is licensed (`lib/entitlement.ts:34-36`); the school's student limit (`schoolIsFull`, `lib/entitlement.ts:78-89`, which skips the check when the learner is already counted in that school, `:83-87`); and the family cap of 5. A naive "join the new class, then leave the old one" fails for a learner already in three classes; a transfer must count "current minus source".
+- **Who can do what** (`lib/can.ts:35-68`): class teacher: `summary.read`, `plan.write`, `roster.manage`; family caregiver adds `snapshot.read`; school owner/admin cascade `summary.read` + `roster.manage` onto child classes (`:62-68`). `learner.delete` is a family caregiver always, a class teacher only under consent mode `school` (`:58-60`), locked until `SCHOOL_CONSENT_MODE=enabled` (`spaces.ts:230-232`). Removing a learner needs only `roster.manage` and no consent from anyone (`spaces.ts:348-359`).
+- **Anyone can be a "family".** Any signed-in account can create a family space (`spaces.ts:106-141`, no verification); `POST /:id/code` has no kind check (`spaces.ts:271-281`); a child device joins a family with a code and no PIN (`spaces.ts:294-320`); any account joins a family as `caregiver` with the code (`spaces.ts:323-333`); `caregiver` holds `snapshot.read` (`can.ts:36`). So "has `snapshot.read` over the learner" proves no parenthood. This is why 4.2 adds aged membership and separation of duties, and why B3 is a flip gate.
+- **Device scopes.** A device approved through re-link has scope `class` (`relink.ts:119`), can read only the inbox (`lib/device-auth.ts:49-68`, `routes/sync.ts:108`), and its inbox hides family spaces (`sync.ts:113-120`). A Rescue Code claim is public (5 per hour per isolate) and mints a **full** device (`recovery.ts:27-29`, `:80-111`): whoever holds a learner's Rescue Code, including a teacher with a classroom tablet, holds a full-scope device.
+- **What a teacher reads.** `GET /:id/roster` returns, per member, `displayName` (through `rosterName`, `spaces.ts:101-104`), `ageGroup`, `avatar`, `joinedAt`, `lastActiveAt`, the **whole** `summary` and `lastSyncedAt` (`:361-389`); never `payload_json`. `ProgressSummarySchema` (`schemas/sync.ts:16-48`) also carries `stage1.questsDone/questsTotal/anchorAccuracy`, `stage1Anchor {met, checkedAt, tricky[]}`, `placement` and `planProgress`. The console reads `stage1.*`, `cardsUnlocked` and the rollup (`apps/web/src/app/teach/space/page.tsx:116,165`, `lib/console/rollup.ts:25`); nothing in `apps/web` reads `stage1Anchor`. A teacher never holds `snapshot.read` (`can.ts:37`). After a membership is removed the roster read ends on the next request: it is derived live from `membersOf` (`spaces.ts:369`). There is no export route (searched `apps/web/src/app/teach`, `lib/console`, `packages/backend/src/routes` for csv/export/download; the only CSV mention is the waitlist comment `routes/waitlist.ts:35`).
+- **Lookup leaks names by design.** `POST /api/spaces/lookup` is unauthenticated; with a live code it returns every class member's `learnerId` and `rosterName` (`spaces.ts:174-201`; the picker for re-link, F-TCH-001 section 10.1). Its limiter is in-memory per isolate, 20/hour (`spaces.ts:35-37`, `lib/rate-limit.ts:1-4`). A join code lives 30 days and nothing rotates it (`lib/join-code.ts:3-4`). Section 4.10 and O-5 deal with what this means after a move.
+- **The learner keeps everything that matters.** Progress is one `snapshots` row per learner, independent of spaces (`0002:32-41`); leaving removes only the membership row (`spaces.ts:345`, `d1.ts:204-208`). Plans reach a learner through live memberships only (`routes/plans.ts:83-95`, filter at `:89`), so source plans vanish from the inbox at the move. On the device, plan-derived homework of a plan that left the inbox is dropped if still pending and kept if completed (`apps/mobile/src/logic/homework/plan-derivation.ts:61-68`). Joining with a `displayName` overwrites the learner's single global name (`spaces.ts:316-319`); a transfer must not accept a name from the destination.
+- **Premium.** See T6b. The inbox carries `tier`, `tierSource`, `tierValidUntil` with a 7-day offline grace (`routes/sync.ts:106-125`).
+- **Consent and audit are nearly absent.** `accounts.consent_json` exists (`0002:48`) but `requireAccount` creates accounts with `consent: null` (`lib/access.ts:31-38`) and nothing writes it. `consentMode: 'parent'` is stored and enforced nowhere except by denying teacher deletion (`can.ts:60`). On the device, consent is device-level timestamps (`apps/mobile/src/store/account-store.ts:14-34`) and there is **no PIN-creation timestamp** (keys `:14-26`). Relink is the only durable request-with-decision record and has no `decided_by`.
+- **Atomicity and concurrency.** `Db` and `D1Like` have no transaction or batch (`db/d1.ts:17-19`, `db/types.ts:23-85`). Each Worker request can run in its own isolate, so two handlers interleave at every `await`; the repo's compare-and-set precedent is `putSnapshot` (one statement, `meta.changes` read through `D1Db.changes`, `d1.ts:100-110, 160-175`; `MemoryDb` does check-then-write with no `await`, `memory.ts:69-74`). The SQLite test shim is one shared `DatabaseSync` connection (`__tests__/helpers/sqlite.ts:19-47`) and applies every `*.sql` in `apps/api/migrations` in sorted order with foreign keys on (`:11-22`). Migrations on disk: `0001`-`0004`. Migrations are applied by the Workers Builds deploy command **before** the Worker upload (`apps/api/wrangler.toml:63-67`), `d1_migrations` makes a re-run a no-op, and CI applies them to a local D1 (`.github/workflows/ci.yml:61-62`). So an additive migration always lands before the code that uses it.
+- **Inbox parsing is all-or-nothing.** The app parses the whole inbox with `SyncInboxSchema.safeParse` and treats a failure as `invalid` (`apps/mobile/src/platform/sync-api.ts:235-240`); `membership-store.ts:76-83` then skips memberships, tier and plans. A bad `transfers` element would therefore cost an installed app its plans **and** premium cache; 4.4 makes the new field lenient.
+- **Console shape.** Static export addressed by `?id=` (`lib/console/routing.ts:5-21`); settings page lists learners with "Remove from <kind>" (`apps/web/src/app/teach/space/settings/page.tsx:139-152`); the API client is `createConsoleApi` (`lib/console/api.ts:137-203`); caregiver copy passes the banned-word guard (`lib/console/banned-text.ts:6-17`); teacher nouns come from `memberNoun` (`lib/console/routing.ts:79-81`, test `routing.test.ts:39-41`). The console has no telemetry calls; the app's `track()` is the only client telemetry.
+- **App shape.** Grown-up actions go through the closed union `GrownUpDestination` (`navigation/types.ts:5`) and a hard-coded chain in `PinEntryScreen.proceed()` (`screens/parent/PinEntryScreen.tsx:100-113`); a self-only device with no PIN opens them directly (`logic/profiles/gate-route.ts:11-17`). `learnerType` lives only on the device, absent reads as `child` (`logic/profiles/learner-type.ts:7-10`); `deviceAudience` is `family` or `self` (`:27-31`). The only server-to-device channel is the sync inbox, refreshed after each sync, on app start, when `SpacesCard` mounts and after a relink (`store/membership-store.ts:76-90, 156-161`).
+
+Terms. **Source**: the class the learner is in and leaves. **Destination**: the class the learner joins. **Learner side**: the guardian or the learner's own device. **Manager of a class**: an account for which `can(actor, 'learner.transfer', class)` is true. **Slot**: one required consent (`learner`, `source`, `destination`). **Hand-off**: the source slot. **Cooling-off**: the 48 hours between the learner-side consent and the earliest execution. **Executed**: the membership swap has happened. **Move** is the user-facing word; `transfer` stays the internal name.
+
+## 3. User stories
+
+> As a **parent**, I want to move my child from Mr Han's Sunday class to Ms Park's Saturday class, and I want neither teacher to see my child's information in the new place until I have said yes, and a few days to change my mind.
+
+> As a **teacher**, I want to hand a student over to a colleague's class in a way that the family and the colleague both agree to, and I want to stop seeing the student in my class the moment it happens — not before.
+
+> As a **receiving teacher**, I want to see "one learner wants to join" with initials and a level, accept or say not now, and never receive someone my class has no room for.
+
+> As an **adult learner**, I want to switch classes myself on my own device, and I do not want a parent or a family owner to be able to move me without my say.
+
+Companion stories:
+
+- As a **school admin**, I want to move a student between two classes of my school with the family's agreement, without chasing two teachers.
+- As a **second parent**, I want to see that a move is planned and cancel it before it happens.
+- As a **maintainer**, I want one atomic, self-guarding swap and one audit table, so a half-finished move can never exist and every decision has an owner.
+
+## 4. Acceptance criteria
+
+### 4.1 Data
+
+`packages/content-schema/src/schemas/transfer.ts` (new, exported from `src/index.ts`):
+
+```ts
+export const TRANSFER_WINDOW_MS = 14 * 24 * 60 * 60 * 1000;                 // request life
+export const TRANSFER_COOLING_OFF_MS = 48 * 60 * 60 * 1000;                  // learner consent -> earliest execution
+export const TRANSFER_BLOCKED_VALID_MS = 72 * 60 * 60 * 1000;                // a consent lapses this long after `approved` if still blocked
+export const TRANSFER_GUARDIAN_MIN_AGE_MS = 24 * 60 * 60 * 1000;             // guardian and learner family memberships must be at least this old
+export const TRANSFER_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000;                 // same learner + destination after another side declined a learner-side request
+export const TRANSFER_REFUSAL_COOLDOWN_MS = 30 * 24 * 60 * 60 * 1000;        // no new source-started request after the learner side refused one
+export const TRANSFER_MAX_CREATED_PER_ACCOUNT_PER_DAY = 10;
+export const TRANSFER_MAX_CREATED_PER_LEARNER_PER_DAY = 3;
+export const TRANSFER_MAX_OPEN_PER_DESTINATION = 20;
+export const TRANSFER_CODE_FAILS_PER_HOUR = 10;
+export const TRANSFER_CODE_FAILS_PER_DAY = 30;
+export const TRANSFER_PURGE_AFTER_MS = 90 * 24 * 60 * 60 * 1000;            // declined / cancelled / expired rows only
+export const TRANSFER_LIST_MAX = 50;
+export const TRANSFER_CONSENT_TEXT_VERSION = 'transfer-2026-10';             // bump when any consent line changes (test pins a hash per locale)
+export const ACCEPTED_CONSENT_TEXT_VERSIONS: readonly string[] = ['transfer-2026-10']; // current + any version legal has not retired
+
+export const TransferStatusSchema = z.enum(['requested', 'approved', 'executed', 'declined', 'expired', 'cancelled']);
+export const TransferSlotSchema = z.enum(['learner', 'source', 'destination']);
+export const LearnerSlotStateSchema = z.enum(['pending', 'consented', 'declined']);      // learner and destination slots
+export const SourceSlotStateSchema = z.enum(['pending', 'consented', 'declined', 'not_required']); // not_required only via the archive transition (4.13)
+export const LearnerBasisSchema = z.enum(['caregiver', 'device_attested']);
+export const DeviceAttestKindSchema = z.enum(['grown_up_pin', 'self']);                  // what the client says it checked; never trusted
+export const TransferInitiatorSchema = z.enum(['learner_side', 'source']);
+export const TransferDeclineReasonSchema = z.enum(['not_now', 'no_room']);               // destination slot only; fixed set, no free text
+export const TransferEndReasonSchema = z.enum([                                           // audit + decider's own view only (4.2 views)
+  'declined_learner', 'declined_source', 'declined_destination',
+  'cancelled_initiator', 'withdrawn_learner',
+  'expired', 'destination_archived', 'learner_left_source',
+]);
+export const TransferBlockReasonSchema = z.enum(['cap_class', 'cap_school', 'cap_learner']);
+export const ConsentResetReasonSchema = z.enum(['terms_changed', 'guardian_changed', 'lapsed']);
+export const TransferIdSchema = z.string().regex(/^transfer:[a-z0-9-]+$/);                // transfer:<crypto.randomUUID()>
+```
+
+Table `transfer_requests` (migration `0005_class_transfer.sql`, **additive only**: `CREATE TABLE/INDEX IF NOT EXISTS`, no column or table is altered or dropped, so the deployed Worker keeps working when the migration lands first, `wrangler.toml:63-67`). **The foreign keys to `learners` and `spaces` stay `ON DELETE CASCADE` forever**, because an older Worker's `deleteLearner` (`d1.ts:134-143`) does not know these tables and relies on the cascade.
+
+```sql
+CREATE TABLE IF NOT EXISTS transfer_requests (
+  id                   TEXT PRIMARY KEY,                    -- transfer:<uuid>
+  learner_id           TEXT NOT NULL REFERENCES learners(id) ON DELETE CASCADE,
+  source_space_id      TEXT NOT NULL REFERENCES spaces(id) ON DELETE CASCADE,
+  dest_space_id        TEXT NOT NULL REFERENCES spaces(id) ON DELETE CASCADE,
+  initiator            TEXT NOT NULL CHECK (initiator IN ('learner_side', 'source')),
+  initiator_account_id TEXT,                                -- null when started from a device
+  status               TEXT NOT NULL CHECK (status IN ('requested','approved','executed','declined','expired','cancelled')),
+  end_reason           TEXT,
+  end_actor            TEXT CHECK (end_actor IN ('family','device','source','destination','system')),  -- audit only
+  block_reason         TEXT,                                -- set while `approved` and waiting for room
+  introduce            INTEGER NOT NULL DEFAULT 0,
+  rev                  INTEGER NOT NULL DEFAULT 0,          -- +1 on every write
+  l_state              TEXT NOT NULL DEFAULT 'pending' CHECK (l_state IN ('pending','consented','declined')),
+  l_at                 TEXT,
+  l_basis              TEXT CHECK (l_basis IN ('caregiver','device_attested')),
+  l_attest             TEXT CHECK (l_attest IN ('grown_up_pin','self')),   -- client claim, device basis only
+  l_evidence           TEXT,                                -- account id (caregiver) or device id; never a name
+  l_role               TEXT,                                -- owner | caregiver (caregiver basis)
+  l_text_version       TEXT,
+  l_locale             TEXT,                                -- the language of the consent text that was shown
+  l_shown_json         TEXT,                                -- ids of the consent lines shown + conditional flags
+  l_dest_name_hash     TEXT,                                -- terms the consent covered (sha-256 hex)
+  l_dest_consent_mode  TEXT,
+  l_dest_anonymize     INTEGER,
+  l_dest_owner_id      TEXT,
+  l_source_name_hash   TEXT,
+  l_premium_change     TEXT,
+  s_state              TEXT NOT NULL DEFAULT 'pending' CHECK (s_state IN ('pending','consented','declined','not_required')),
+  s_at                 TEXT,
+  s_account_id         TEXT,
+  s_via                TEXT,                                -- owner | teacher | school_admin
+  d_state              TEXT NOT NULL DEFAULT 'pending' CHECK (d_state IN ('pending','consented','declined')),
+  d_at                 TEXT,
+  d_account_id         TEXT,
+  d_via                TEXT,
+  created_at           TEXT NOT NULL,
+  updated_at           TEXT NOT NULL,
+  expires_at           TEXT NOT NULL,                       -- created_at + 14 days
+  approved_at          TEXT,                                -- all slots in
+  execute_after        TEXT,                                -- l_at + 48 h
+  ended_at             TEXT,                                -- declined | cancelled | expired only
+  executed_at          TEXT,
+  CHECK (status NOT IN ('approved','executed') OR (l_state = 'consented' AND s_state IN ('consented','not_required') AND d_state = 'consented')),
+  CHECK (status <> 'executed' OR executed_at IS NOT NULL),
+  CHECK (status NOT IN ('declined','cancelled','expired') OR (end_reason IS NOT NULL AND ended_at IS NOT NULL)),
+  CHECK (l_state <> 'consented' OR (l_at IS NOT NULL AND l_basis IS NOT NULL AND l_text_version IS NOT NULL AND l_locale IS NOT NULL AND l_evidence IS NOT NULL))
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_transfer_open_learner ON transfer_requests(learner_id) WHERE status IN ('requested','approved');
+CREATE INDEX IF NOT EXISTS idx_transfer_source ON transfer_requests(source_space_id, status);
+CREATE INDEX IF NOT EXISTS idx_transfer_dest ON transfer_requests(dest_space_id, status);
+CREATE INDEX IF NOT EXISTS idx_transfer_learner ON transfer_requests(learner_id, ended_at);
+CREATE INDEX IF NOT EXISTS idx_transfer_creator ON transfer_requests(initiator_account_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_transfer_ended ON transfer_requests(status, ended_at);
+
+CREATE TABLE IF NOT EXISTS transfer_events (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  transfer_id   TEXT NOT NULL REFERENCES transfer_requests(id) ON DELETE CASCADE,
+  at            TEXT NOT NULL,
+  actor_kind    TEXT NOT NULL CHECK (actor_kind IN ('account','device','system')),
+  actor_ref     TEXT,                                       -- account id or device id; null for system
+  event         TEXT NOT NULL,                              -- created | consented | declined | cancelled | expired | blocked | consent_reset | executed | devices_revoked | relinks_closed | old_space_still_has_access
+  slot          TEXT,
+  detail_json   TEXT                                        -- codes and counts only (reason, count, basis, via); never a name or free text
+);
+CREATE INDEX IF NOT EXISTS idx_transfer_events_transfer ON transfer_events(transfer_id, id);
+
+-- Per-learner switches. Each route writes only its own column.
+CREATE TABLE IF NOT EXISTS learner_transfer_prefs (
+  learner_id               TEXT PRIMARY KEY REFERENCES learners(id) ON DELETE CASCADE,
+  self_managed             INTEGER NOT NULL DEFAULT 0,      -- set from the learner's device
+  block_teacher_requests   INTEGER NOT NULL DEFAULT 0,      -- set by a guardian in the console
+  updated_at               TEXT NOT NULL
+);
+
+-- Durable counters for abuse limits (the in-memory limiter is per isolate, lib/rate-limit.ts:1-4).
+CREATE TABLE IF NOT EXISTS rate_hits (
+  id    INTEGER PRIMARY KEY AUTOINCREMENT,
+  key   TEXT NOT NULL,                                      -- tcode:acct:<id> | tcode:learner:<id> | tcreate:learner:<id>
+  at    TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_rate_hits_key ON rate_hits(key, at);
+```
+
+The database enforces "one open request per learner" with the partial unique index, so two simultaneous creates cannot both win. The CHECKs make an illegal state (`approved` with a pending slot, `executed` without a timestamp, a consent without its evidence) impossible to write. A request stores **ids and hashes only**: no nickname, no class name, no teacher name is copied (legal map R9); names are read live from `learners` / `spaces` / `accounts.display_name` when a view is built. `l_*_hash` fields are SHA-256 hex of the name at consent time, so a later rename is detectable without storing the name.
+
+**Retention.** Rows that ended without a move (`declined`, `cancelled`, `expired`) are purged 90 days after `ended_at`. **`executed` rows are kept** (they are the consent evidence for data the destination now holds) until the learner is erased (cascade) or, if the learner is no longer a member of the destination, 90 days after `executed_at`. Counsel is asked to confirm the length (T-8). Purge runs bounded, **on create only** (not on GET): `DELETE FROM transfer_requests WHERE id IN (SELECT id FROM transfer_requests WHERE (status IN ('declined','cancelled','expired') AND ended_at < ?) OR (status = 'executed' AND executed_at < ? AND NOT EXISTS (SELECT 1 FROM memberships m WHERE m.space_id = dest_space_id AND m.member_kind = 'learner' AND m.member_id = learner_id)) LIMIT 50)`, and `DELETE FROM rate_hits WHERE id IN (SELECT id FROM rate_hits WHERE at < ? LIMIT 200)`.
+
+Slot initial values by initiator (set in one place, `lib/transfer.ts: newRequest`):
+
+| Initiator | `l_state` | `s_state` | `d_state` |
+|---|---|---|---|
+| `learner_side` (guardian or, when the device route is on, the device, creates and consents in the same call) | `consented` | `pending` | `pending` |
+| `source` (a class manager creates) | `pending` | `consented` | `pending` |
+
+`d_state` is never pre-filled; under T11 one account may send both teacher approvals in one click (`slots: ['source','destination']`), and the destination slot is still refused until `learner` is consented. `not_required` is set only on `s_state` by the archive transition (4.13), never at creation.
+
+Request status:
+
+```
+requested --(l, s, d consented; s may be not_required)--> approved (execute_after = l_at + 48 h)
+approved --(now >= execute_after, gate statement of 4.6 changes a row)--> executed
+requested | approved --(any slot declines)--> declined
+requested | approved --(initiator's manager, a guardian, or the learner's device cancels)--> cancelled
+requested | approved --(now >= expires_at)--> expired
+requested | approved --(destination archived, or learner no longer in source)--> cancelled   (end_reason says which)
+approved --(gate changes 0 rows because of capacity)--> approved (+ block_reason; retry allowed until expiry)
+approved --(consent outdated: terms changed, guardian changed, or blocked > 72 h)--> requested (l_state back to pending)
+```
+
+`approved` is durable on purpose: "everyone agreed; waiting out the cooling-off or for room". `executed`, `declined`, `expired`, `cancelled` are terminal. The learner leaving or being deleted is handled by the settle step and by cascade (4.10).
+
+### 4.2 Who may start a request, and who must consent (the matrix)
+
+| Initiator | Starts from | Counts as consent at creation | Still needed | Route rules |
+|---|---|---|---|---|
+| **Guardian** (console) | their family space | `learner` (they confirm the consent sheet in the same call; basis `caregiver`) | `source`, `destination` | Refused with `409 learner_manages_own` when the learner's `selfManaged` is set. |
+| **Learner's own device** (only when `CLASS_TRANSFER_DEVICE_CONSENT` is on) | Classes card, "Move to another class" | `learner` (basis `device_attested`) | `source`, `destination` | Allowed when the learner is `selfManaged` **or** has no family space with a caregiver account route. Otherwise `409 caregiver_required`. |
+| **Source class manager** | class settings, learner row | `source` | `learner`, `destination` | `learner` can then be filled **only through the caregiver route**. Refused up front: `422 cannot_send` (neutral, no reason) when the learner has `blockTeacherRequests`, is `selfManaged`, or a cooldown applies; `422 family_needed` when the learner has no family space with a caregiver account at all. |
+
+Guards, all server-side (every `:id`/`:tid` route also applies the ownership rules of 4.4):
+
+1. **Space rules.** The learner is a member of the source class; source and destination are both live (non-archived) classes, different from each other (`422 not_transferable`, `409 same_space`, `404 not_found`). Schools are rejected (`spaces.ts:299`).
+2. **Entitlement to the learner first, the code second.** Order: authorize the actor for the learner and source/family (404 if not), then resolve the code, then everything that reveals facts about the destination. A caller who is not entitled to the learner never learns anything about a destination.
+3. **The destination is named by its join code, proven twice.** `preview` (4.4) resolves the code and returns the destination; `create` carries `destinationSpaceId` **and** `code` and refuses (`409 destination_changed`) unless the space's `joinCode === code` and `isJoinCodeLive`, exactly as `spaces.ts:291-292` does. Wrong or expired codes answer `code_not_found` / `code_expired` like join. The consent is therefore bound to the class that was displayed. This feature does **not** extend the unauthenticated `lookup`.
+4. **Failed-code limiter, durable.** Every failed code (`code_not_found`, `code_expired`, `invalid_code`) on preview or create adds a `rate_hits` row keyed `tcode:acct:<accountId>` (console) or `tcode:learner:<learnerId>` (device). More than `TRANSFER_CODE_FAILS_PER_HOUR` in an hour or `..._PER_DAY` in a day answers `429 too_many_attempts` with `retryAfterSeconds`, whatever the isolate. This is in addition to a per-client in-memory limiter (20/hour, copied from `lookupLimiter`).
+5. **Not already there.** The learner must not already be a member of the destination (`409 already_member`), reported only after guard 2.
+6. **Capacity is advisory at creation** (`409 cap_class` / `cap_school` right away so nobody waits 14 days for a full class) and **authoritative inside the gate** at execution (4.6). The creation answer reveals nothing the unauthenticated `lookup` does not (`full`, `spaces.ts:199`).
+7. **Consent text.** Every call that records the `learner` slot sends `textVersion` and `locale`. A version outside `ACCEPTED_CONSENT_TEXT_VERSIONS` answers `422 consent_text_stale` with `current` in the body (the client says "Please update the app" or reloads the sheet). `locale` must be one of the locales for which a reviewed text exists (`422 consent_locale_unavailable` otherwise; the sheet shows "Not available in your language yet." and offers the language switch).
+8. **Class-scoped devices.** A device with `scope: 'class'` can neither create, consent, decline nor cancel: the device routes call `authorizeDevice` **without** `allowClassScope` (`device-auth.ts:63-65`, `403 scope_limited`). The inbox returns `transfers: []` for class scope.
+9. **Guardian predicate** (`guardianOf(db, account, learnerId, request?, now)`), for the `learner` slot over the caregiver route, checked at consent **and again at execution**:
+   a. the account holds an `owner` or `caregiver` membership in a **live family space the learner is in** (`can(actor, 'snapshot.read', learner target)` over `learnerContexts`, `access.ts:68-75`, the predicate of `recovery.ts:69`); `l_role` records which;
+   b. **aged membership**: both that account's membership and the learner's membership in that family are at least `TRANSFER_GUARDIAN_MIN_AGE_MS` old (`422 family_too_new`); a family created or joined moments before the request, which is the cheapest way to fake a guardian (a family code is open, `spaces.ts:271-281, 323-333`), does not count. This is friction, **not proof of parenthood** (section 9, O-3);
+   c. **separation of duties**: the account holds **no account membership** in the source class, the destination class, or the school above either, is not `owner_account_id` of either class, and is not the initiator, the source consenter or the destination consenter of this request (`409 conflicted_guardian`). A teacher cannot become the learner side by building a "family" around a child.
+   A class teacher or school admin never passes (a) on class roles alone (`can.ts:37`). **Cancel and decline** (the safe direction) need only (a): any family owner/caregiver may veto, even one who fails (b) or (c).
+10. **Device route** (all of it behind `CLASS_TRANSFER_DEVICE_CONSENT`, T3): the learner slot may be created or consented over the device route only for `initiator: 'learner_side'` requests. Trying it on a source-started request answers `409 caregiver_required_for_teacher_request`. The server stores `l_basis = 'device_attested'` and the client's `l_attest`; nothing calls it "guardian". Device create and device approve count against `tcode:learner:<id>` and `tcreate:learner:<id>`.
+11. **Learner veto.** The learner's own full-scope device sees every open request for that learner (inbox) and may decline or cancel it at any time, whatever route filled the slot. A device decline ends the request (`declined_learner`, `end_actor: device`). A caregiver-route consent never removes this veto. (The veto needs `CLASS_TRANSFER`, not the device-consent var: it only reduces what can happen.)
+12. **Who may fill the teacher slots.** A school admin may fill `source` or `destination` for a child class of their school and **never** `learner` (T10, T11). A guardian cannot fill a class slot.
+13. **Learner-level switches.** `blockTeacherRequests` is written by a guardian (`PUT /api/spaces/:id/learners/:learnerId/transfer-prefs`, `:id` a family where the actor passes guard 9a). `selfManaged` is written by the learner's full-scope device (`PUT /api/sync/learners/:id/transfer-prefs`); the app sends it only for a profile whose local `learnerType` is `self` with `selfConsentAcceptedAt` set (F-LEARN-001 L3). Each is a per-learner row in `learner_transfer_prefs`; neither route touches the other's column. A guardian cannot clear `selfManaged`: the learner's device does (assumption A11).
+
+**Views.** Four, each built server-side from ids; **terminal outcomes never reveal who decided to a party that did not decide** (anti-shame; CLAUDE.md section 1):
+
+- `TransferLearnerSideView` (guardian in the console, learner device in the inbox): from/to names, the destination's owner display name, school name if any, class age bucket and learner count, slot states, `introduce`, `premiumChange`, `destinationConsentMode`, `relinkAffected`, `sourcePlansAffected`, `visibleToday` (below), `executeAfter`, `blockReason`, `expiresAt`, `learnerRoute`, `endedFrom: 'family' | 'device' | null` (this side only).
+- `TransferSourceView` (source class): learner `{ displayName: rosterName(source, …), avatar }` while still a member, then `learner: null`; destination name only if the source manager started it or `introduce`; steps shown as `waiting` or `yes` only; `scheduled` with the date once approved; `ended` with a date and **no actor and no reason**. Never the learner id of a request the source did not start; the card is addressed by the transfer id.
+- `TransferDestinationView`: listed **only** when `l_state = consented`; **initials (`rosterAlias`), avatar and level label only**; no learner id, no full name, no summary, no placement, no plan ids, no source name unless `introduce`; `waiting`/`yes`/`scheduled`/`ended`. Before execution no destination view contains `learner.displayName` or the learner id (tested).
+- `TransferSchoolCountView` (`GET …/transfer-requests` on a school id): a count of waiting moves per child class, nothing else.
+
+`visibleToday` (learner-side views only) is computed server-side from `learnerContexts` (`access.ts:68-75`): every live space the learner is in (family, class, school) with its kind, name and owner display name. The sheet shows "Today these people can see {learner}", so a guardian can see any other space, including an unexpected "family", that gives a teacher a view.
+
+### 4.3 Capacity and premium (T6, T6b, T7)
+
+`lib/seats.ts` (new, pure over `Db`) extracts the cap checks currently inline in `/join` so join and transfer share them:
+
+```ts
+export async function classSeatCheck(db: Db, cls: Space, learnerId: string, now: Date, opts?: { excludeSpaceId?: string }): Promise<null | 'cap_learner' | 'cap_class' | 'cap_school'>;
+```
+
+- `cap_learner`: classes the learner is in, **excluding** `excludeSpaceId`, already >= `LEARNER_CLASS_CAP`. For a transfer `excludeSpaceId` is the source, so a learner in three classes can still swap one for another.
+- `cap_class`: `studentsIn(dest) >= classCap(dest)` (`lib/entitlement.ts:34-36`).
+- `cap_school`: `schoolIsFull(db, dest, now, learnerId)` (`:78-89`); same school as the source: no seat change; different school: the destination school's own limit decides.
+- `routes/spaces.ts` `/join` is refactored to call the helper with no `excludeSpaceId` and **no change in behaviour**. This lands in its **own PR (T-4a) before anything else uses it**, with a characterization test that runs the old inline order and the helper over a matrix (three classes, full class, full school, family cap, already a member) and asserts equal status and error code. The family cap (`spaces.ts:311-313`) stays inline.
+- `classSeatCheck` is **skipped** when the learner is already a member of the destination (the swap only removes the source). This mirrors `/join`'s early return (`spaces.ts:300-301`).
+- There is **no check on plan keys, tiers or prices** anywhere in the transfer path.
+
+Premium (read-only, informational): `lib/entitlement.ts` gains `tierFromSpaces(db, spaces, now)`; `tierForLearner` (`:91-100`) calls it over the learner's live memberships, `tierAfterMove(db, learnerId, fromSpaceId, toSpaceId, now)` calls it over the same set with the source replaced by the destination. A parity test runs both over identical fixtures (free; family_lifetime; pro class; school licence; archived space). The guardian-facing view carries `premiumChange: 'none' | 'may_change'`, `'may_change'` only when the computed tier differs. A learner in a `family_lifetime` family keeps premium (the family membership is untouched; asserted in a test).
+
+### 4.4 Routes (additive; envelope `{ ok, data | error }`; `lib/access.ts` actor)
+
+Mounted next to `relinkRoutes` (`packages/backend/src/app.ts:55-59`): `transferSpaceRoutes` under `/api/spaces`, `transferSyncRoutes` under `/api/sync`. Every handler first checks the lock (T15). **Every request-body schema is `.strict()`** (an unknown key is `422`, so version skew fails loudly instead of dropping a consent-relevant field). Transfer ids are `transfer:<crypto.randomUUID()>`, not `id()` (which is `Math.random`, `store.ts:123-125`).
+
+**Ownership rules (every route, 404 `not_found` otherwise, never 403, to avoid an existence oracle).** Every `:tid` route loads the request and requires: for a **class route**, `:id` equals `source_space_id` (slot `source`) or `dest_space_id` (slot `destination`) and the actor passes `learner.transfer` on that class; for the **family route**, `:id` is a live family that contains `request.learner_id` **and** the actor passes guard 9 for that family; for **device routes**, `request.learner_id === :id` and the device is bound to that learner with full scope. IDOR tests: class B's manager cannot act on slot `source`; a guardian of learner X cannot act on learner Y's request in the same family; a foreign `:id` and a foreign `:tid` per route.
+
+**Console (account bearer). `:id` is the acting space: the source class, the destination class, or the family.**
+
+| Method · path | Who | Result |
+|---|---|---|
+| `POST /api/spaces/:id/transfer-requests/preview` | `:id` = source class: `learner.transfer` · `:id` = family: guardian (guard 9) | `{ learnerId, code, fromSpaceId? (family only) }` -> 200. Writes nothing (except failed-code hits). Source-class caller gets `{ destination: { id, kind, name } }` only. Learner-side caller gets `{ destination: { id, kind, name, ownerName, schoolName, ageBucket, learnerCount }, blockReason?, premiumChange, destinationConsentMode, relinkAffected, sourcePlansAffected, visibleToday }`. Same guards and error codes as create. |
+| `POST /api/spaces/:id/transfer-requests` | as above | `{ learnerId, destinationSpaceId, code, fromSpaceId? (family only), introduce?, consent?: { textVersion, locale } (family only, required) }` -> 201 `{ request: <view> }`. **Idempotent:** an open request for the same (learner, source, destination, initiator) by the same caller identity returns 200 with that request, not `already_open`. Class: initiator `source`. Family: initiator `learner_side`, slot `learner` consented (basis `caregiver`, `l_role`, `l_shown_json`, the consent-time terms of 4.11, `execute_after`). Errors: 404 `not_found` / `code_not_found` / `code_expired` · 409 `already_member` / `same_space` / `already_open` (the body tells the learner side whether the open one was started by `class` or `learner_side`) / `destination_busy` / `destination_changed` / `cap_class` / `cap_school` / `conflicted_guardian` / `learner_manages_own` · 422 `not_transferable` / `consent_text_stale` / `consent_locale_unavailable` / `family_too_new` / `family_needed` / `cannot_send` / `transfers_locked` / bad body · 429 `too_many_attempts` / `too_many_requests` / `cooldown` |
+| `GET /api/spaces/:id/transfer-requests` | class: `learner.transfer` · family: guardian of at least one of its learners · school: admin | `{ requests: [<view>], options? }`, at most `TRANSFER_LIST_MAX` (50). Class as source: requests where it is the source (open first, then ended ones from the last 30 days). Class as destination: only requests whose `learner` slot is `consented` (T8). Family: requests for the family's learners; `options` = for each learner **of that family**, `{ learnerId, name, classes: [{ spaceId, name }] }` (their live classes). School: `TransferSchoolCountView`. Settles each non-terminal row first (4.6 `settle`). Views are built with set-based reads (`getLearners(ids)`, `getSpaces(ids)`), not per-row queries. |
+| `POST /api/spaces/:id/transfer-requests/:tid/approve` | per slot | `{ slots: ['learner'\|'source'\|'destination', …], consent?: { textVersion, locale }, introduce? }` as a **discriminated union**: if `slots` includes `learner`, `consent` is required (`.superRefine`). All-or-nothing; each slot is checked per 4.2. `destination` before `learner` is consented: 409 `awaiting_learner`. `learner` on a source-started request is allowed only on the family route. Idempotent: a slot already `consented` returns 200 unchanged. After the CAS the handler runs `settle` (promote, and execute if due, 4.6) and returns the request with its real status |
+| `POST /api/spaces/:id/transfer-requests/:tid/decline` | per slot | `{ slot, reason?: 'not_now' \| 'no_room' }`; `reason` is accepted **only** on `slot: 'destination'`. 200, status `declined`. Allowed in `requested` or `approved` |
+| `POST /api/spaces/:id/transfer-requests/:tid/cancel` | the initiator's manager (class), or any guardian of the learner (family) | 200, status `cancelled` (`cancelled_initiator` / `withdrawn_learner`). A guardian may cancel **any** request on their learner, including one a teacher started and one a second guardian started. Not allowed once `executed` |
+| `POST /api/spaces/:id/transfer-requests/:tid/retry` | `destination` manager (or the source manager who also manages the destination) | Runs `settle` again for an `approved` request: 200 `executed` / 200 `approved` + `blockReason` / 409 `consent_outdated` / 409 `not_approved` |
+| `PUT /api/spaces/:id/learners/:learnerId/transfer-prefs` | `:id` = family, guardian of that learner | `{ blockTeacherRequests: boolean }` -> 200 |
+
+**Learner device (`Authorization: Device <id>:<secret>`, full scope only).** Create and approve are behind `CLASS_TRANSFER_DEVICE_CONSENT` (`422 device_consent_locked`); the rest need only `CLASS_TRANSFER`.
+
+| Method · path | Result |
+|---|---|
+| `POST /api/sync/learners/:id/transfer-requests/preview` `{ fromSpaceId, code }` | as the console preview, learner-side answer |
+| `POST /api/sync/learners/:id/transfer-requests` `{ fromSpaceId, destinationSpaceId, code, introduce?, consent: { textVersion, locale, attest: 'grown_up_pin' \| 'self' } }` | 201 `{ request }`; initiator `learner_side`, `learner` consented with basis `device_attested`. `409 caregiver_required` per 4.2. Per-client in-memory limiter 10/hour plus the durable limits of 4.9 |
+| `POST …/:tid/approve` `{ consent }` | only for a `learner_side` request whose `l_state` was reset to `pending` (4.6); any other request: `409 caregiver_required_for_teacher_request` |
+| `POST …/:tid/decline` `{}` | `learner` slot `declined` -> `declined` (veto, 4.2 guard 11) |
+| `POST …/:tid/cancel` `{}` | `cancelled` (`withdrawn_learner`) |
+| `PUT /api/sync/learners/:id/transfer-prefs` `{ selfManaged: boolean }` | 200 |
+| `GET /api/sync/learners/:id/inbox` | gains `transfersEnabled`, `transferDeviceConsent`, `selfManaged` and `transfers` (below). All four are `false`/`[]` while locked, and **the handler reads the lock before it touches the table**, so the locked state costs nothing; also `[]` for class scope |
+
+`InboxTransferSchema` (content-schema): `{ id, status: string, initiator: string, from: { spaceId, name }, to: { spaceId, name, ownerName, schoolName, ageBucket }, learnerState: string, sourceState: 'waiting' | 'yes', destinationState: 'waiting' | 'yes', introduce, premiumChange, destinationConsentMode, relinkAffected, sourcePlansAffected, visibleToday: [...], blockReason: string | null, executeAfter: string | null, expiresAt, learnerRoute: 'caregiver' | 'device' | 'none', canVeto: true, endedFrom: 'family' | 'device' | null }`. **The client schema is lenient** so that nothing in this field can cost an installed app its plans or premium cache:
+
+- enum-like fields are `z.string()` on the wire (the strict enums above are used by consumers through `safeParse` and fall back to a neutral row);
+- `transfers: lenientArray(InboxTransferSchema).default([])`, where `lenientArray` keeps the elements that parse and drops the rest (a malformed element never fails the inbox);
+- `transfersEnabled`, `transferDeviceConsent`, `selfManaged`: `z.boolean().default(false)`.
+
+`learnerRoute` is computed server-side per request from the matrix of 4.2: `caregiver` when the learner slot can only be filled in the console (every source-started request; a learner-started one when a caregiver route exists and the learner is not `selfManaged`), `device` when the device route is on and allowed for this learner and request, `none` when neither can answer right now. `canVeto` is always true for a full-scope device.
+
+Tests (in the opposite direction from "an inbox without `transfers` parses"): (a) a **frozen copy of the pre-change `SyncInboxSchema`** parses a payload that has the new fields; (b) a payload whose `transfers` holds a malformed element, and one with an unknown status string, still yields memberships, plans and tier; (c) `lenientArray` unit test.
+
+### 4.5 `can()` (pure, `lib/can.ts`)
+
+Add `'learner.transfer'` to `Action`. Granted:
+
+- class `teacher` (and `owner` acting as teacher) on that class: add to the `class.teacher` list at `can.ts:37`;
+- school `owner`/`admin` on each child class: add to the cascade at `can.ts:64-67`.
+
+Never granted: family roles (guardians act through guard 9), school-level teacher (`can.ts:40`), learner actors. `can.test.ts` gets the matrix row plus assertions: **no teacher role ever holds `snapshot.read`**, and **`learner.transfer` is not implied by `roster.manage`**.
+
+### 4.6 Settle and execution (`lib/transfer.ts`: `settle`, `executeTransfer`)
+
+**No handler reads, mutates and writes back a whole row.** The transfer row changes only through single-statement compare-and-set methods (4.7), each returning `meta.changes`; handlers re-read after each CAS. Because a request that reached "all slots consented" in two racing handlers could otherwise sit in `requested` with nobody left to click, **promote and execute are idempotent and run in `settle`**, which every list, get, inbox, approve and retry calls for non-terminal rows (a read can therefore perform the move once it is due; that is deliberate, there is no scheduler. A Cron Trigger is a later option).
+
+`settle(db, request, now)`, in this order, each step a CAS that is a no-op when it no longer applies:
+
+1. **Lock.** If `CLASS_TRANSFER` is off, return the row unchanged (rollback is instant).
+2. **Expire.** `now >= expires_at` -> `expired`.
+3. **Destination archived** -> `cancelled` (`destination_archived`). **Learner has no source membership** -> `cancelled` (`learner_left_source`). **Source archived** while `s_state` is `pending` -> `s_state = 'not_required'` (4.13); the request continues.
+4. **Promote.** If `l_state = 'consented'`, `s_state ∈ {consented, not_required}`, `d_state = 'consented'` and `status = 'requested'` -> `approved`, `approved_at = now`.
+5. **Freshness of the learner consent** (only when about to promote or execute): compare the consent-time terms of 4.11 with live values: destination `consentMode`, `anonymizeRoster`, owner account id, destination name hash, source name hash, `premiumChange`, and re-run guard 9 (caregiver basis; for the device basis check the device binding still exists with full scope). Any difference, or a request that has been `approved` and blocked for longer than `TRANSFER_BLOCKED_VALID_MS`, resets: `l_state = 'pending'`, `status = 'requested'`, `approved_at` and `execute_after` cleared, event `consent_reset {why}` (`terms_changed` / `guardian_changed` / `lapsed`). The guardian is asked again; `retry` answers `409 consent_outdated`.
+6. **Execute** if `status = 'approved'` and `now >= execute_after`: `executeTransfer`.
+
+`executeTransfer` first computes in JS what the SQL cannot: `destCap` (`classCap`, with `Number.POSITIVE_INFINITY` replaced by `1e9`) and the advisory `cap_school` check. Then it runs **one `batch`** in which **every statement is self-guarding and the first one is the gate**:
+
+```sql
+-- 1. THE GATE: all preconditions in one WHERE; changes = 1 means the move happens, 0 means nothing else runs
+UPDATE transfer_requests SET status='executed', executed_at=:now, block_reason=NULL, updated_at=:now, rev=rev+1
+WHERE id=:id AND status='approved' AND expires_at > :now AND execute_after <= :now
+  AND l_state='consented' AND s_state IN ('consented','not_required') AND d_state='consented'
+  AND EXISTS (SELECT 1 FROM learners WHERE id=:learner)
+  AND EXISTS (SELECT 1 FROM memberships WHERE space_id=:source AND member_kind='learner' AND member_id=:learner)
+  AND EXISTS (SELECT 1 FROM spaces WHERE id=:dest AND archived_at IS NULL)
+  AND ( EXISTS (SELECT 1 FROM memberships WHERE space_id=:dest AND member_kind='learner' AND member_id=:learner)
+        OR ( (SELECT COUNT(*) FROM memberships WHERE space_id=:dest AND member_kind='learner') < :destCap
+             AND (SELECT COUNT(*) FROM memberships m JOIN spaces s ON s.id=m.space_id
+                  WHERE m.member_kind='learner' AND m.member_id=:learner AND s.kind='class' AND s.archived_at IS NULL AND m.space_id<>:source) < :learnerCap ) );
+
+-- 2..N. every later statement carries the same guard G = EXISTS (SELECT 1 FROM transfer_requests WHERE id=:id AND status='executed' AND executed_at=:now)
+INSERT INTO memberships (space_id, member_kind, member_id, role, joined_at)
+  SELECT :dest,'learner',:learner,'student',:now WHERE G ON CONFLICT(space_id, member_kind, member_id) DO NOTHING;   -- joined_at = now, never the source date
+DELETE FROM memberships WHERE space_id=:source AND member_kind='learner' AND member_id=:learner AND G;
+UPDATE relink_requests SET status='denied', decided_at=:now WHERE space_id=:source AND learner_id=:learner AND status='pending' AND G;
+DELETE FROM learner_devices WHERE learner_id=:learner AND scope='class' AND G
+  AND device_id IN (SELECT device_id FROM relink_requests WHERE space_id=:source AND learner_id=:learner AND status='approved')
+  AND device_id NOT IN (SELECT r.device_id FROM relink_requests r JOIN memberships m ON m.space_id=r.space_id AND m.member_kind='learner' AND m.member_id=r.learner_id
+                        WHERE r.learner_id=:learner AND r.status='approved' AND r.space_id<>:source);
+INSERT INTO transfer_events (transfer_id, at, actor_kind, actor_ref, event, slot, detail_json) SELECT :id,:now,'system',NULL,'executed',NULL,NULL WHERE G;
+```
+
+The Worker reads `meta.changes` of statement 1: **1 = executed**; **0 = reload the row and report the real state** (cancelled, declined, already executed, or still `approved` — in which case it recomputes the capacity reason with `classSeatCheck`, records `block_reason` with `blockTransfer` and an event `blocked`). A cancel or decline that lands between `settle`'s reads and the batch therefore **wins**: the gate changes no row and no membership moves. Two concurrent executes: one gate wins. A full destination or a learner in three other classes: the gate changes nothing and the source membership is **not** removed (the child is never left in no class). A learner erased at the same moment leaves no orphan destination membership (the gate requires the learner row). If the batch throws, D1 rolls the transaction back. After the batch, best effort and outside the transaction: events `devices_revoked {count}` and `relinks_closed {count}` from the statements' `meta.changes`, and the audit check `old_space_still_has_access`: for every account that held `learner.transfer` on the source, if it still passes `can(actor, 'snapshot.read', learner target)` over the learner's contexts (for example through a family space), write that event (counts only) — the next guardian view shows "Another space can still see {Name}".
+
+**Residual check-then-act** (recorded, same as `/join`, `spaces.ts:308`): the **school student limit** (`cap_school`) is checked in JS before the batch. Everything else about capacity is evaluated inside the gate.
+
+Step notes. (a) If the learner is already in the destination (joined by code meanwhile), the gate's `OR EXISTS` branch skips the capacity counts and the swap only removes the source; `classSeatCheck` is not called. (b) Nothing in the batch reads or writes `learners.display_name`, `snapshots`, `learner_devices` with scope `full`, `recovery_hash`, family memberships, other class memberships or any account-level entitlement. (c) The memberships of other classes stay; the learner-class cap counts "current minus source" in the gate.
+
+Consequences to state in the copy: a tablet that was linked through the *old* class's re-link stops seeing class data and must be linked again through the new class (a one-time approval by the new teacher), or the learner restores with their grown-up's Rescue Code; unfinished homework from the old class's plans goes away at the next sync, finished homework stays. On the client: a **401 on the inbox for a class-scoped device** is shown as "Join your new class again." (not as an error) and the stored memberships of that device are cleared (the app otherwise keeps stale rows, `membership-store.ts:79-83`, `sync-api.ts:235-240`).
+
+### 4.7 Database layer (`packages/backend/src/db`)
+
+- `D1Like` gains `batch(statements: D1PreparedLike[]): Promise<D1RunResultLike[]>` returning one result per statement (`meta.changes` each). D1's native `batch` runs the statements as one transaction. **The SQLite test shim implements it synchronously**: `prepare()` also records its `sql` and bound `params`, and `batch` loops over them inside `BEGIN`/`COMMIT`/`ROLLBACK` with **no `await` between statements** (the shim is one shared `DatabaseSync`, `helpers/sqlite.ts:19-47`; an `await` would let other queries interleave into the transaction). The hand-written fake in `db/__tests__/d1-snapshot-cas.test.ts:12-26` gains `batch`; `D1Db.reset()` (`d1.ts:265-269`) and `MemoryDb.reset()` (`memory.ts:150-152`) list the new tables (`transfer_events`, `transfer_requests`, `learner_transfer_prefs`, `rate_hits`).
+- `Db` gains **no whole-row `putTransfer`**. Instead, single-statement compare-and-set methods, each returning the changed-row count (`D1Db` through `changes`, `d1.ts:105-110`; `MemoryDb` as synchronous check-then-write with no `await` in between, the `putSnapshot` pattern, `memory.ts:69-74`):
+  - `createTransfer(row, event)` — insert + `created` event in one `batch`; the partial unique index violation maps to `already_open`;
+  - `consentSlot(id, slot, evidence, now)` — e.g. `UPDATE transfer_requests SET l_state='consented', l_at=?, l_basis=?, …, execute_after=?, rev=rev+1 WHERE id=? AND status IN ('requested','approved') AND l_state='pending'`; the teacher slots set `s_*`/`d_*`; a multi-slot approve is **one** UPDATE that sets both teacher slots;
+  - `declineSlot(id, slot, reason, endActor, now)` — `SET <slot>_state='declined', status='declined', end_reason=?, end_actor=?, ended_at=? WHERE id=? AND status IN ('requested','approved')`;
+  - `cancelTransfer(id, reason, endActor, now)`, `expireTransfer(id, now)` (`AND expires_at <= ?`), `markSourceNotRequired(id)`, `promoteTransfer(id, now)` (`status='requested'` and the three slot conditions), `blockTransfer(id, reason)`, `resetLearnerConsent(id, why, now)`, `executeTransfer(input)` (4.6);
+  - reads: `getTransfer(id)`, `transfersOfSpace(spaceId, role, limit)`, `transfersOfLearner(learnerId)`, `openTransferOf(learnerId)`, `lastLearnerRefusal(learnerId, since)`, `lastEndedForPair(learnerId, destSpaceId)`, `countTransfersCreatedBy(accountId, since)`, `countTransfersCreatedForLearner(learnerId, since)`, `countOpenTransfersTo(spaceId)`, `transferEvents(transferId)`, set-based `getLearners(ids)` and `getSpaces(ids)`;
+  - writes: `addTransferEvent(event)`, `purgeTransfers(endedBefore, executedBefore, limit)`, `recordRateHit(key, at)`, `countRateHits(key, since)`, `getTransferPrefs(learnerId)`, `setTransferPref(learnerId, which, value, now)` (upsert touching only `which`).
+- `MemoryDb.executeTransfer` evaluates the same gate in JS on the live maps with no `await` between check and write (clone-and-commit), so its observable behaviour equals the SQL.
+- `deleteLearner` (both implementations, `d1.ts:134-143`, `memory.ts:48-55`) also deletes the learner's transfer requests and events, prefs and `rate_hits` rows explicitly, as it does for `relink_requests` today; the foreign keys cascade anyway. A learner erased through `DELETE /api/spaces/:id/learners/:learnerId/data` (`spaces.ts:260-269`) leaves no transfer record behind.
+- Test strategy (the adapters cannot demonstrate everything alike): `db-contract.test.ts` runs every method on `MemoryDb` and `D1Db` over the shim. **Transaction semantics** are proven at the `D1Like.batch` level (a batch whose last statement violates a CHECK leaves the earlier writes rolled back). **Guard semantics** of `executeTransfer` are proven by contract tests on both adapters: cancel-before-batch leaves both memberships untouched; full destination leaves the source membership in place; double execute is a no-op; a learner erased mid-way leaves no destination row. **Races** use a test decorator that wraps a `Db` and runs a competing call after the Nth `await` (decline vs approve, approve vs approve, cancel vs approve, expire vs approve, cancel between `settle`'s read and the batch) and asserts the final state on both adapters. Time rules use `vi.useFakeTimers` / `setSystemTime` (handlers read `new Date()`, `spaces.ts:290`, `relink.ts:66`). `transfers.test.ts` runs in memory and under `HR_TEST_DB=sqlite`, like the other route suites.
+
+### 4.8 Console (`apps/web`, gated by `NEXT_PUBLIC_CLASS_TRANSFER` and by the first `422 transfers_locked`)
+
+Wireframes: `wireframes/class-transfer.md`. All copy in `COPY` (`lib/console/copy.ts`), English in the console (console strings are not yet in `packages/i18n`, F-I18N-001) **except the consent sheet**, which renders from the keyed consent lines in en, ko and es with its own language switch (4.11). Every string passes `isCaregiverSafe` (`banned-text.ts:15`). **Styles use design-system tokens only** (CLAUDE.md section 4): blocked and ended states use `colors.feedback.nudge` and `colors.text.muted`, never `colors.feedback.danger`; no new token is needed (if one is, T-0b adds it under `design/tokens` first); a test asserts the new files contain no colour literals. The settings page already uses `colors.feedback.danger` for its Danger zone only (`settings/page.tsx:154-155`): the Move button stays **outside** it.
+
+**Wording table.** User-facing noun is **move** everywhere: chip "N class moves waiting", page title "Class moves", button "Move to another class"; internal names stay `transfer`. Teacher/class copy uses a singular `memberNounSingular(kind)` (class `student`, family `learner`, school `member`, next to `memberNoun`, `routing.ts:79-81`) so a teacher card reads "A student moved to another class"; family and app copy say "learner"; never "kid". The family page title uses the family space name from the roster, never a literal "Our family".
+
+- **Settings learner row** (`settings/page.tsx:142-151`; today the label is `Remove from {space.kind}`, `:148`): on `class` rows, next to Remove, **Move to another class** opens the start sheet. On `family` rows, the same slot shows **Move to a class** only for a learner who is currently in a live class (opens the family start flow with the learner and class preselected). `school` rows never show it.
+- **Start sheet (class).** Code field (one input with box-like spacing, label "Class code", paste fills, no per-box inputs: reuse the shipped join field) -> **Find class** -> "Move to <class name>?" (name from `preview`, never typed) -> **Send request**. The learner id travels in the body only.
+- **Requests page** `/teach/space/transfers?id=<space id>` (`ROUTES.spaceTransfers(id)` next to `spaceRelink`, `routing.ts:11`): *Leaving this class* (source) and *Joining this class* (destination) as in the wireframe; cards show `waiting`/`yes`/`scheduled`/`ended` only; **Cancel** while open, **Approve** when only this class's slot is pending, **Accept / Not now** on destination cards (initials, picture, level), `approved` + block -> "This class is full right now" with **Try again**, `scheduled` -> "Everyone agreed. The move happens on <date>." Refresh every 30 s; order is stable within a refresh (re-sort only on reload or when focus is outside a card), changes announced through one polite live region, **nothing auto-dismisses** ("Done" stays until the next manual refresh, then moves to history). After a move into this class, the destination page offers **New class code** (4.10).
+- **Family page** (same route, family variant): *Requests about your learners* (review and agree / not now / cancel), a permanent **Class moves** button on the family roster page (next to Settings, as at `apps/web/src/app/teach/space/page.tsx:132-142`) and a permanent link on the class roster page, both reachable with zero requests (empty state "Nothing waiting."), **Start a move** (learner picker from `options`, then class, then code -> **Find class** -> consent sheet), and the switch "Do not accept move requests from teachers" (`blockTeacherRequests`). If the learner is `selfManaged`: "{Name} manages their own classes. Ask them to start a move on their device." The consent sheet is 4.11.
+- **Roster chip** beside "Re-link requests" (`app/teach/space/page.tsx:136-138`): "N class moves waiting". **Home** badge on the class/family row (`app/teach/home/page.tsx`); on a school row, "N class moves waiting" linking to the child class pages (counts only).
+- **Pure helpers** with tests in `lib/console/transfer.ts`: `slotLabel`, `statusLine`, `canCancel`, `pendingCount`, `blockedCopy`, `daysLeft`, `scheduledLine`. The console never persists rosters or transfer data to storage beyond what the console already does (`lib/console/session.ts:2`).
+- **Flag handling.** The entry points render only when `NEXT_PUBLIC_CLASS_TRANSFER` is set; on the first `422 transfers_locked` they hide for the session. Flip order: Worker var first, then the console build var; rollback is unsetting the Worker var.
+- **State coverage** (each is a row in the wireframe): loading (skeleton, no blame text); 401 "Sign in again." returning to the same page; 403 "You can no longer answer this class's moves." (no names); `transfers_locked` or stale link "Class moves aren't available yet." with a link to the roster; success for the guardian "Moved. {Name} is now in {Class}. Cards and stars stayed with {Name}."; approve/decline/cancel on an ended request -> 409 `not_open` / `expired` mapped to the card's ended state.
+- **Accessibility.** Step ticks have text ("said yes", "waiting") and use a check-mark glyph (never an X-like mark for a positive state; `×` stays the close icon); the blocked state is text + icon on `colors.feedback.nudge` with a contrast test; sheets return focus to the opener, `Escape` closes, and the primary button is **not** the first focus target in the consent sheet.
+
+### 4.9 Rate limits, abuse and expiry (durable, from D1; the in-memory limiter is per isolate, `lib/rate-limit.ts:1-4`)
+
+| Rule | Limit | Answer |
+|---|---|---|
+| Open requests per learner | 1 (partial unique index) | 409 `already_open` (idempotent retry by the same caller: 200) |
+| Failed code attempts (preview + create, console and device) | 10 per hour, 30 per day per account (console) or per learner (device), D1-backed | 429 `too_many_attempts` + `retryAfterSeconds` |
+| Creates per account in 24 hours | `TRANSFER_MAX_CREATED_PER_ACCOUNT_PER_DAY` = 10 | 429 `too_many_requests` + `retryAfterSeconds` |
+| Creates per learner in 24 hours (any initiator, device included) | `TRANSFER_MAX_CREATED_PER_LEARNER_PER_DAY` = 3 | 429 `too_many_requests` |
+| Open requests addressed to one destination | 20 | 409 `destination_busy` |
+| Same learner + destination after **another side declined** a learner-side request | 7 days; not after the initiator's own cancel, the learner side's own withdrawal, or `expired` | 429 `cooldown` with `retryAfterSeconds` to the learner side ("You can ask again in about a week.") |
+| New **source-started** request for a learner whose learner side refused one (declined, or withdrew a teacher-started request) | 30 days, **for any destination** (`lastLearnerRefusal(learnerId, since)`) | `422 cannot_send` (neutral; no reason, no days, no hint that anyone said no) |
+| New source-started request when the learner has `blockTeacherRequests` or `selfManaged` | always | `422 cannot_send` (same neutral error) |
+| Device-started create | 10 per client per hour (in memory, like `relinkLimiter`) plus the per-learner durable limit above | 429 `too_many_attempts` |
+
+A teacher who spams requests only fills their own page and the learner side's prompts: the destination sees nothing until a guardian has consented (T8), a family sees at most one open prompt per learner, the 30-day rule is per learner not per destination, and a family can switch teacher requests off. Declined and cancelled rows disappear for the destination at once and are purged for everyone after 90 days (executed rows excepted, 4.1). Requests expire in `settle` (the relink pattern, `relink.ts:24-44`, but by compare-and-set, not read-modify-write).
+
+### 4.10 After the move: who can still see what
+
+- **Previous teacher.** Nothing new: the roster is derived live from membership (`spaces.ts:369`), so the learner disappears from the roster, summary, plan readouts and settings on the very next request. There is no export, no cached copy server-side and none to add. What the teacher saw before, wrote down or printed is outside the system and the consent text says so. Their *own* history keeps one line, "A student moved to another class" with the date, and **no name** (`learner: null` after execution).
+- **Known gaps the consent text must not paper over.** (1) The previous teacher typed or was given the destination's join code, and `POST /api/spaces/lookup` returns that class's member names and learner ids to anyone holding a live code (`spaces.ts:174-201`), 30 days, not rotated by a move (`join-code.ts:3-4`). So the previous teacher, or anyone the code was shared with, **can still read the new class's roster list of names** until the code is replaced. The lookup roster is the re-link picker (F-TCH-001 section 10.1) and cannot simply be closed here (O-5). Mitigations in this spec: a durable limiter for lookup is a flip precondition (G4); after a move into their class, the destination teacher is offered **New class code** (the existing `POST /:id/code`, `spaces.ts:271-281`); the consent text says "stops seeing {Name} **in that class**" and the guardian view shows `visibleToday`. (2) A family space the teacher built around the child (4.2 guard 9) is stopped at consent by aged membership and separation of duties, and shown by `visibleToday`; the `old_space_still_has_access` audit event is the backstop.
+- **Class-scoped devices and re-links** minted by the source are revoked or closed in the swap (4.6), so a source teacher who asked for a device "for themselves" does not keep reading the destination's class name and plan titles through the inbox. The child's tablet shows "Join your new class again."
+- **Plans.** The source's plans may still list the learner in `target_learner_ids_json` (`0002:83`); plans reach a learner only through live memberships (`routes/plans.ts:83-95`, `:89`), so nothing is scrubbed. The destination never receives the learner's `planProgress` for the source's plans: the roster projection filters it to the plan ids of the requesting space (T-1a).
+- **The destination teacher** sees exactly the normal member view from the moment of the swap (`spaces.ts:375-384`) **as projected by the allow-list of 4.11**. The `joinedAt` is the transfer time. Until then only initials, picture and level (T8).
+- **The learner keeps**: progress, cards, stars, the snapshot, the Rescue Code, full-scope devices, display name, family and other class memberships. On the device, pending plan homework from the source is dropped at the next inbox apply and completed items stay (`plan-derivation.ts:61-68`); the new class's plans arrive on the same refresh. The app refreshes the inbox right after it observes `executed`.
+- **Premium** is recomputed from memberships on the next inbox refresh; the cached tier keeps its 7-day offline grace (`sync.ts:123`). Lessons already finished and every earned item stay (T6b).
+- **Deletion**: a family caregiver can still delete the learner everywhere; a class teacher cannot, except under consent mode `school` (`can.ts:58-60`). Moving into a class whose mode is `school` gives its teacher that right, so the consent sheet shows one extra line and the server returns `destinationConsentMode` (the mode is locked today, `spaces.ts:230-232`).
+
+### 4.11 Learner-side consent: one text, one record
+
+**The text is one keyed list**, `TRANSFER_CONSENT_LINES` in `packages/content-schema/src/schemas/transfer-consent.ts`: stable `id`, `when` condition, and a message key per locale (`en`, `ko`, `es`; Korean in 합니다체 per F-I18N-001 style guide, `docs/specs/F-I18N-001-ui-locales.md:324`, no particle attached to a variable). The console sheet and the app sheets render **the same ids in the same order** (layout may differ, wording may not). English (Pre-A1, **at most 16 words per sentence**, placeholders count as one word; the copy test enforces the cap):
+
+| id | when | text (en) |
+|---|---|---|
+| `moving` | always | "{learner} would move from {source} to {destination}." |
+| `new_teacher` | always | "The teacher of {destination} will see {learner}'s progress." |
+| `old_teacher` | always | "The teacher of {source} stops seeing {learner} in that class when the move happens, not before." |
+| `keeps` | always | "Cards, stars and finished lessons stay with {learner}." |
+| `cooling_off` | always | "The move happens after 2 days. Anyone in the family can cancel before then." |
+| `visible_list` | always (disclosure, expanded by default) | "What the new teacher sees:" + one item per allow-listed key (below) |
+| `nothing_else` | always | "Nothing else from the app is shared with the teacher." |
+| `visible_today` | always | "Today these people can see {learner}:" + the server list |
+| `typed_names` | always | "Class and teacher names are typed by the teacher. We do not check them. Only continue if you know this teacher." |
+| `from_teacher` | initiator `source` | "This request came from the teacher of {source}, not from you." |
+| `premium_may_change` | `premiumChange = 'may_change'` | "Lessons that were open through {source}'s plan may close after the move. Lessons already finished stay." |
+| `school_delete` | `destinationConsentMode = 'school'` | "The teacher of {destination} will be able to delete {learner}'s record." |
+| `device_relink` | `relinkAffected` | "A tablet that joined through {source} may need to join {destination} again." |
+| `homework_drops` | `sourcePlansAffected` | "Homework from {source} that is not finished will go away. Finished homework stays." |
+| `cannot_undo` | always | "A move can't be undone. {learner} can still leave a class in Profile at any time." |
+| `introduce` (option) | always, off by default | "Tell {destination} where {learner} is coming from." |
+
+**Layering.** The sheet opens with the first three lines as a short summary (`moving`, `new_teacher`, `old_teacher`), then the disclosure and the conditional lines as separate short sentences. The primary button becomes active only after the sheet has been scrolled to the end or the disclosure has been opened, and it never sits above an unread conditional line. For a family with an old/new class owner the sheet also shows the destination's **owner display name, school name, class age and learner count** from the preview (so a free-text class name alone is not the identity) — these are shown, not hashed; their stable parts (owner id, name hash) are in the consent-time record.
+
+**What the visible list says is generated from data, not typed.** `TEACHER_VISIBLE_SUMMARY_KEYS` (content-schema) is the allow-list the roster route projects to (T-1a): `lastActiveAt`, `streakDays`, `stage1` (`questsDone`, `questsTotal`, `anchorAccuracy`), `cardsUnlocked`, `minutesLast7d`, `jamoRecognized`, `needsPractice`, `placement` (level and strand statuses; F-PLC-001's roster line reads it), `planProgress` (filtered to the viewing space's plans). `stage1Anchor` (Hangul Check verdict and tricky symbols) is **not** on the list: nothing in `apps/web` reads it (verified by search) and it is not needed. Other roster fields (display name per the class setting, avatar, level label, `joinedAt`, `lastSyncedAt`) are listed as non-summary items. Each key maps to a consent item id (`name_picture_level`, `activity`, `quests`, `cards_letters`, `level_check`, `plan_progress`, `sync_time`); the bullet list is built from that map. **A test fails when `ProgressSummarySchema` gains a key that is neither on the allow-list nor on an explicit hidden list, when an allow-listed key has no consent item (the explicit hidden list is `schemaVersion` and `stage1Anchor`), or when the roster route returns a key outside the list.** That test is what makes `nothing_else` true.
+
+**The record** for the `learner` slot: `l_at`, `l_basis`, `l_attest`, `l_evidence`, `l_role`, `l_text_version`, `l_locale`, `l_shown_json` (the ids shown plus the conditional flags), and the consent-time terms `l_dest_name_hash`, `l_dest_consent_mode`, `l_dest_anonymize`, `l_dest_owner_id`, `l_source_name_hash`, `l_premium_change`, plus the audit event. `settle` step 5 compares those terms with live values before execution; any change asks the guardian again. A test pins a hash of the lines **per locale** to `TRANSFER_CONSENT_TEXT_VERSION` (editing any wording forces a version bump) and a **parity test** checks that every locale has the same line ids, the same placeholders and no missing line (`cannot_undo`, `old_teacher`, `school_delete` …). The Worker accepts any version in `ACCEPTED_CONSENT_TEXT_VERSIONS`, so a copy fix does not lock users of the previous app build out.
+
+**Languages.** The consent lines must exist, and be counsel-reviewed, in every UI locale shipped for the surface (en, ko, es) **before the flag is enabled for that surface** (flip gate G2). The sheet carries a visible language switch (en/ko/es); the chosen locale is sent and stored. Until a locale is reviewed, the sheet says "Not available in your language yet." for guardians whose locale has no reviewed text rather than falling back to English silently.
+
+**Device rules** (client, `apps/mobile/src/logic/transfers/consent-gate.ts`, pure, only when `transferDeviceConsent` is true): the device route is offered for a *learner-started* move only. `attest: 'grown_up_pin'` is offered for a managed learner (`learnerType` absent or `child`, `learner-type.ts:7-10`) when a PIN exists, its creation time (new key `account:pinCreatedAt` in `account-store.ts`, written when the PIN is set; **absent on a PIN that predates this feature, which counts as old enough**) is at least 24 hours before the request, and the grown-up gate is open. `attest: 'self'` is offered only for `learnerType: 'self'` with `selfConsentAcceptedAt` set (`account-store.ts:18, 33-34`); such a device also sets `selfManaged` on the server. A relinked or restored device (no consent record, reads as `child`) can use the PIN branch only. The server cannot verify any of this; it records the basis and the claim, and the audit view shows `device_attested`, never "guardian".
+
+### 4.12 App (`apps/mobile`)
+
+- `sync-api.ts`: `getInbox` mapping gains the new fields (lenient, 4.4); new `previewTransfer`, `createTransfer`, `approveTransfer`, `declineTransfer`, `cancelTransfer`, `putTransferPrefs` calls.
+- `store/membership-store.ts`: `byLearner` memberships stay; a parallel `transfersByLearner` is filled by `refresh` (`:76-90`) and **never persisted** (inbox only, so an offline device cannot show a stale answerable prompt); cleared on `executed`; after an `executed` transition it calls `refresh` again and `requestSync` so plans and tier switch at once. A 401 on the inbox from a class-scoped device clears its memberships and shows "Join your new class again." (4.6). The app sends `selfManaged` when the local profile is `learnerType: 'self'` and the inbox says it differs.
+- **Decide the route from the inbox before navigating** (no wasted PIN). Row variants on the Classes card (`SpacesCard.tsx:39-61`): (a) class-scoped device -> **no Move button**, one quiet line "Use your grown-up's rescue code first."; (b) the learner has a caregiver account (route `caregiver`) -> instead of Move/Review, one quiet line "Ask the grown-up with the account to answer this in the console." and no PIN prompt; (c) `learnerRoute = 'device'` (device consent on, no caregiver or `selfManaged`) -> **Move** / **Review**, through the grown-up gate on a managed device (`GrownUpDestination` gains `MoveClass`, `ApproveTransfer`; `PinEntryScreen.proceed()` chain `:100-113`) and directly on a self-only device with no PIN (`gate-route.ts:11-17`); (d) `none` -> "A grown-up needs to set up a PIN first. Open Profile, then Grown-ups." with a link into `PinEntry` in `mode: 'setup'`, and "Waiting for the family." when only the web route could answer. A **Decline** and **Cancel** inside the gated sheet are the only device UI for those actions (no un-gated button): a tap on a tablet is never read as "the family said no".
+- **Classes card**: a class row gets **Move** beside Leave only in variant (c); Leave keeps its confirm dialog; its result is no longer ignored (it shows "This needs internet." on failure; a small fix in the same PR, `SpacesCard.tsx:36`).
+- **Home**: one line under the Hoya tip when the learner side needs to answer: copy by initiator and audience (`deviceAudience`, `learner-type.ts:27-31`): teacher-started "Sunday Class A asked about moving Mina to Saturday Class B."; guardian-started "A move to Saturday Class B is waiting."; self audience "A move is waiting for you." with **Yes, move me**. Not red, no countdown, no ranking, no number. While the cooling-off runs: "A move is planned for <date>." with a quiet **Cancel**.
+- **Screens**: `MoveClass` (enter code -> **Find class** -> consent sheet -> send) and `ApproveTransfer` (the sheet for a reset-consent request the learner started). Offline: "This needs internet." and nothing is queued (consent is never sent later). A source-started request on a device is **read-only plus veto**: the device shows it and may Decline; consent happens in the console (caregiver route).
+- Copy through `useMessages()` / `packages/i18n` (F-I18N-001; this part waits for PR 6b to land). Neutral audience: "learner", "class", "grown-up"; no "kid", no baby tone. Waiting copy never blames: "Waiting for the other class to answer." Ended copy is one neutral line, "This request ended." Blocked/ended states use the amber nudge tone, never `colors.feedback.danger`.
+- Telemetry (names added server-first to `TELEMETRY_EVENT_NAMES`, `schemas/telemetry.ts:9-60`, with the exact-list test): `space.transfer.requested {initiator}`, `.consented {slot, basis}`, `.declined {slot}`, `.cancelled {}`, `.completed {}`. **Sent without `profileId`** (the unauthenticated endpoint stores one with each event, `routes/telemetry.ts:38-59`); the telemetry route restricts payload keys for `space.transfer.*` to `initiator`, `slot`, `basis`, so no class or learner identifier can ride along. **Telemetry is never evidence of consent**; the D1 audit is.
+
+### 4.13 Edge cases
+
+- **Learner in several classes.** Only the named source is released; the others stay. The cap counts "current minus source" inside the gate.
+- **Learner is in the destination already** (joined by code while waiting): the gate's `OR EXISTS` branch applies, no capacity check, no duplicate row (`ON CONFLICT DO NOTHING`); only the source is removed. Test with a **full** destination that already contains the learner.
+- **Learner left the source meanwhile**: `settle` cancels `learner_left_source`.
+- **Destination archived**: cancelled (`destination_archived`). **Source archived**: if the learner side has not yet consented the request cannot be created (guard 1); if it is archived later, `s_state` becomes `not_required` and the request **continues** (only the guardian or the learner's device can then cancel). Archiving cannot be used as a covert veto, and archive-then-unarchive changes nothing. Archived spaces refuse creates and approvals (`spaces.ts:95-99`). A learner in an archived class is already outside the class caps (`activeClassesOf`, `spaces.ts:60-67`).
+- **Teacher unreachable.** There is no automatic "deemed released": the request expires after 14 days and the family can leave and join by code (T5). Owner decision A3 offers an optional silence-means-release timeout for the **source slot only**, off by default; silence never consents the learner or destination slot.
+- **Teacher account removed from the school or reassigned**: the slot is satisfied by whoever currently passes `learner.transfer` at the time of the call. "Change teacher" only *adds* a second teacher row (`routes/school.ts:97-101`, `teacherOf` picks the first, `school.ts:19-25`); either can consent; the audit shows which.
+- **School admin as a third party**: fills `source` or `destination` for classes of their school, one slot per action, `via: school_admin`, never `learner` (T10, T11). Intra-school moves change no school seat count (`lib/entitlement.ts:83-87`); cross-school moves are bound by the destination school's limit.
+- **Capacity full at execution**: the gate changes 0 rows; `approved` + `blockReason`; the destination page shows "This class is full right now" with **Try again**; the family and source see "Waiting for room in the new class". After 72 hours blocked the learner consent lapses (4.6 step 5). Expires normally.
+- **Cooling-off.** Every other caregiver of the learner's families and the learner's device see "A move is planned" and may cancel; one veto wins. The earliest execution is `l_at + 48 h` (T12). There is no exception for an archived source.
+- **Device offline / old app**: consent never queues. A teacher-started request needs the web console (caregiver route). An older app ignores the new inbox fields (additive, lenient).
+- **Class-only learner (no family space).** A teacher-started request cannot be answered by anyone (no caregiver route; the device route never answers a teacher-started request): the source gets `422 family_needed` at creation and the copy tells the teacher to ask the family to start the move from their app (learner-started, device route when enabled) or to create a family space. This is the common school case and a **known limitation** of v1; B2 (guardian email) would close it.
+- **Self-managed learner in a family space** (adult partner, in-law): `selfManaged` makes the caregiver route refuse (`learner_manages_own`) and the guardian sees "{Name} manages their own classes." The adult starts moves from their own device (device route, when enabled); caregivers see an informational line afterwards, "{Name} moved to {Class} on their own.", needing no consent.
+- **Two guardians answering at once**: the first CAS wins; the second sees `consented` and a 200. A decline racing an approve ends `declined`, never `consented` again (4.7 race tests).
+- **Class-scoped device**: sees no transfers and cannot act (guard 8).
+- **Name oracle**: preview/create with a valid code returns the class name (and, to the learner side, owner name, school, age bucket, count); invalid codes return the same errors as join and are counted durably.
+- **Learner deleted** (`learner.delete`): the cascade removes the request, events, prefs and counters (4.7).
+
+### 4.14 Behaviours (Given / When / Then)
+
+1. **Guardian-started move.** Given a family caregiver (membership older than 24 h) whose child is in class A, and class B's live code; when they pick the child, A and the code, see B's name from the preview and confirm the consent sheet; then a request `requested` exists with `learner` consented (basis `caregiver`, `execute_after = l_at + 48 h`), A's manager sees "waiting", B's manager sees an initials card, and nothing has moved.
+2. **Both teachers agree, then the cooling-off.** Given that request; when A's teacher approves and B's teacher accepts; then status is `approved` with a `scheduled` date and **no membership has changed**; when the first read after `execute_after` settles it; then B has the learner as `student` with `joinedAt` = now, A does not, status is `executed`, and cards and stars are unchanged.
+3. **Teacher-started move.** Given A's teacher starts a request with B's code for a learner who has a family caregiver; when nobody has answered; then B's manager sees **nothing**, the family sees a prompt, and the learner's device sees it read-only with a Decline; when a guardian consents; then B's manager sees the initials card.
+4. **Destination full.** Given all three consented and the cooling-off passed, and B at its cap; then the gate changes 0 rows, status stays `approved` with `blockReason: 'cap_class'`, no membership changes (the learner is still in A); when B frees a seat and its teacher taps Try again, the move executes.
+5. **No bypass through teachers.** Given a school admin; when they try to consent as the learner side; then 403/404. Given a teacher who builds a "family" and gets the child to enter its code; then the first-day guard (`family_too_new`) refuses, and after a day `conflicted_guardian` refuses because the account is a manager of the source class (test: "teacher joins as caregiver of a family the child joined").
+6. **Learner at three classes.** Given a learner in A, C, D and a request A -> B; then the gate counts "current minus source" and the move succeeds.
+7. **A decline is quiet.** When B declines `no_room`; then status `declined`; A's manager and the family see "This request ended." with a date and no actor; B's own history keeps the reason; the same learner + B is in cooldown for 7 days for a learner-side request; the learner can still leave A and join B by code.
+8. **Revocation.** Given a class-scoped device approved by A's re-link; when the move executes; then that device's next inbox call answers 401, the app says "Join your new class again.", and its pending re-links are `denied`.
+9. **Device cannot answer for a teacher.** Given a source-started request and a valid full-scope device secret for the learner; when the device calls approve; then `409 caregiver_required_for_teacher_request`; the device can decline or cancel.
+10. **Device consent is locked by default.** Given `CLASS_TRANSFER_DEVICE_CONSENT` unset; then device create and approve answer `422 device_consent_locked`; preview, decline, cancel and the inbox work.
+11. **Caregiver required for a child.** Given a learner (not `selfManaged`) in a family space with a caregiver account; when the learner's device tries to start a move; then `409 caregiver_required`.
+12. **Premium honesty.** Given A is licensed and B is not and the learner has no other cover; then the learner-side view has `premiumChange: 'may_change'` and the sheet shows `premium_may_change`; given the learner is in a `family_lifetime` family, `premiumChange: 'none'` and the learner keeps premium after the move.
+13. **Locked.** Given `CLASS_TRANSFER` unset; then every route answers 422 `transfers_locked`, the inbox says `transfersEnabled: false`, `transfers: []`, and `settle` does nothing. Unsetting the var after creation stops a scheduled execution.
+14. **No names in URLs.** For every console route and every API path a transfer produces, no learner name, nickname, initial, class name or teacher name appears in the path, query, fragment or page title (property test).
+15. **Withdrawal is honoured.** Given an `approved` request; when the guardian cancels between `settle`'s read and the batch; then the gate changes 0 rows and both memberships are untouched.
+16. **Consent applies to what was shown.** Given a consented request; when the destination's teacher flips `consentMode` to `school` (or turns `anonymizeRoster` off, or the class is renamed) before execution; then `settle` resets `l_state` to `pending` (`consent_outdated`, `terms_changed`) and nothing moves until the guardian confirms again.
+17. **Guardian removed.** Given a consent by account G; when G leaves the family or the learner leaves it before execution; then `settle` resets the consent (`guardian_changed`).
+18. **Destination view leaks nothing.** Given a consented request before execution; then no destination view contains `learner.displayName` or the learner id; the card shows initials, picture and level label.
+19. **Failed-code brake.** Given 10 wrong codes in an hour across different isolates (simulated by the D1-backed counter); then the 11th answers 429 for that account.
+20. **Adult in a family space.** Given a learner with `selfManaged` in a family with a caregiver; then the caregiver route answers `learner_manages_own`; when the adult's device (device route on) starts a move; then it is accepted (`device_attested`, `attest: self`), and the caregiver sees the informational line afterwards.
+21. **Learner veto.** Given a caregiver-consented request; when the learner's device declines; then the request ends and nothing moves.
+22. **Teacher requests off.** Given `blockTeacherRequests`; when a teacher tries to start a request; then `422 cannot_send`, identical to the 30-day refusal answer.
+23. **Archive is not a veto.** Given a guardian-started request and all but the source consented; when the source teacher archives the class; then `s_state` becomes `not_required` and the move proceeds after the cooling-off.
+24. **Idempotent create.** Given a created request whose 201 was lost; when the same caller creates it again; then 200 with the same request.
+25. **No-op gaps.** Given a learner who joined the destination meanwhile and a full destination; then the move executes (only the source is removed).
+
+## 5. Tests
+
+| File | Coverage |
+|---|---|
+| `content-schema/__tests__/transfer.test.ts` | every schema, constants, id regex, strict bodies (unknown key 422; learner slot without consent 422), `lenientArray`, frozen pre-change `SyncInboxSchema` parses the new payload, malformed element still yields memberships/plans/tier (100 %) |
+| `content-schema/__tests__/transfer-consent.test.ts` | line ids per locale identical, placeholders identical, per-locale hash pinned to `TRANSFER_CONSENT_TEXT_VERSION`, sentence-length cap, `ProgressSummarySchema` keys all classified, allow-list keys all have consent items |
+| `content-schema/__tests__/telemetry.test.ts` | exact list updated with the five new names |
+| `backend/lib/__tests__/can.test.ts` | `learner.transfer` matrix (class teacher/owner yes; school admin/owner on child class yes; family, school teacher, learner no), no teacher gets `snapshot.read`, not implied by `roster.manage` |
+| `backend/lib/__tests__/seats.test.ts` | `classSeatCheck` with and without `excludeSpaceId`, same-school and cross-school, free cap, licensed class, school limit, skipped when already a member |
+| `backend/__tests__/join-characterization.test.ts` (T-4a) | the old inline `/join` order vs `classSeatCheck` over the full matrix: equal status and error code |
+| `backend/lib/__tests__/entitlement.test.ts` | `tierFromSpaces` parity with `tierForLearner`; `tierAfterMove`; family_lifetime keeps premium |
+| `backend/lib/__tests__/transfer.test.ts` | state machine: every transition and every illegal one; slot initial values per initiator; T11 dedupe and `via`; `settle` order; freshness reset reasons; guardian predicate (aged membership, separation of duties); cooldown rules; (100 % lines of the pure parts) |
+| `backend/__tests__/spaces.test.ts` | `/join` unchanged after the refactor; roster projection equals the allow-list; `planProgress` filtered; no `stage1Anchor` |
+| `backend/__tests__/relink.test.ts` | approve after the learner left answers 409 `not_a_member` (T-1b) |
+| `backend/__tests__/transfers.test.ts` | the behaviours of 4.14; create guards; preview writes nothing; failed-code counter; **IDOR** (foreign `:id` and `:tid` per route, class B on slot source, guardian of X on Y's request); teacher joins as caregiver of a family the child joined (refused on day one and by separation of duties); idempotent create; consent route rules (caregiver vs device, `caregiver_required`, `caregiver_required_for_teacher_request`, `device_consent_locked`, class-scoped 403, stale text 422 with `current`, locale unavailable); views (destination before execution has no name or id; source/destination never see who declined; learner side sees `endedFrom`); capacity block + retry; archive transitions; learner-left; revocation of class devices and re-links; audit events; purge by status; inbox per scope and while locked (flag read before any query); `selfManaged` / `blockTeacherRequests`; list Db-call count for 20 rows; telemetry key restriction |
+| `backend/db/__tests__/db-contract.test.ts` | every new `Db` method on `MemoryDb` and `D1Db`; CAS methods return 0 on a lost race; `executeTransfer` guard cases (cancel-before-batch, full destination, double execute, erased learner, already-a-member); `D1Like.batch` rollback; `deleteLearner` removes requests, events, prefs, counters |
+| `backend/db/__tests__/transfer-races.test.ts` | decorator-driven interleavings on both adapters: decline vs approve, approve vs approve, cancel vs approve, expire vs approve, cancel between `settle` read and batch |
+| `apps/api/src/__tests__/index.test.ts` | the new routes are mounted; migration `0005` applies on a fresh shim |
+| `web/lib/console/__tests__/transfer.test.ts` | helpers, copy passes `isCaregiverSafe`, `memberNounSingular`, URLs from `ROUTES` carry only the space id (property test), no colour literals in new files |
+| `web/src/app/__tests__/*` | settings Move action per kind, requests page states (loading, 401, 403, empty, waiting, scheduled, blocked, ended, locked), family consent sheet renders every applicable line id, button inactive until scrolled/disclosed, language switch |
+| `mobile/logic/transfers/__tests__/consent-gate.test.ts` | route table (class-scope, caregiver, device, none), `pinCreatedAt` rules incl. legacy PIN, `self` needs `selfConsentAcceptedAt`, relinked device (100 %) |
+| `mobile/platform/__tests__/sync-api.test.ts` | inbox mapping incl. lenient array and unknown status, calls, errors |
+| `mobile/store/__tests__/membership-store.test.ts` | `refresh` fills transfers (not persisted), clears on `executed`, refresh + sync after `executed`, 401 class-scope handling |
+| `mobile/components/__tests__/SpacesCard.test.tsx` | the four row variants, Leave failure message |
+| `design-system` / copy | consent screen passes banned-text and no-"kid" lint, each initiator/audience copy variant |
+
+Coverage targets: `content-schema` 100 %, `backend` 90 %, `mobile` logic 90-100 %, `web` verification logic 90-100 % (CLAUDE.md section 6). A test pins that both `MemoryDb` and `D1Db` expose identical behaviour (the existing dual run, app-map decision #32).
+
+## 6. Out of scope
+
+- Family -> anything, class -> family, school moves, moving more than one learner in one request ("move the whole class").
+- A destination-started request, a learner directory, or any public class search.
+- Email or push notification for a pending request (F-NOTIF-001). Until it exists, teachers see requests only on the console and families in the app or console; this is why execution is lazy and the cooling-off is 48 hours.
+- Co-teachers and multi-teacher classes (`co_teacher_unsupported`, `spaces.ts:328`); parent-email capture at join and any server-held guardian email (renumbered F-SPACE-003, section 9 B2).
+- Removing or gating join-by-code and Leave (section 9, B1); carrying premium across classes; any price, plan comparison or "same plan" rule.
+- Changing the learner's display name or level during a move; moving progress between learners.
+- Revoking source re-link devices on a plain Leave or remove-member (same hole, existing behaviour; B3).
+- Changing the unauthenticated `lookup` roster (O-5): only its limiter (G4).
+- Privacy page, terms and App Privacy label updates are PR T-8, gated by counsel; this spec ships the consent text and the product, not the legal documents.
+
+## 7. Rollout and PR breakdown (dependency order; server first; additive-only D1 migrations; each PR safe live on its own)
+
+Merge applies to production, so every migration is `CREATE ... IF NOT EXISTS` only, and every PR before the flag flip changes no behaviour a user can observe except T-1.
+
+| PR | Contents | Depends on | Deploy note |
+|---|---|---|---|
+| **T-0** docs | Promote this spec to `docs/specs/F-SPACE-002-class-transfer.md` and the wireframe to `design/wireframes/console/class-transfer.md` + `sync/move-class.md`; renumber parent-email capture to `F-SPACE-003` in **four** files (`F-SPACE-001:84`, `10-app-map.md:320`, `join-space.md:85`, `F-AUTH-002:53`); new app-map decisions (T1-T18 summarised); amend `space-settings.md` / `roster.md` / `home.md` | - | no code |
+| **T-0b** mockups | Owner makes `design/screens` mockups for the start sheet, requests page, family consent sheet, Classes card row variants, `ApproveTransfer`; links added to this spec. Manual (CLAUDE.md section 5) | T-0 | hard dependency of T-6 and T-7 |
+| **T-1a** roster projection | `GET /:id/roster` projects `summary` to `TEACHER_VISIBLE_SUMMARY_KEYS` and filters `planProgress` to the space's plan ids; the console row type follows; **roster page check** (this changes what current teachers see: `stage1Anchor` is no longer returned) | T-2 (constant) | Worker + web |
+| **T-1b** relink guard | `relink.ts decide()` refuses with 409 `not_a_member` when the learner left | - | Worker only |
+| **T-2** schemas | `schemas/transfer.ts`, `transfer-consent.ts`, `TEACHER_VISIBLE_SUMMARY_KEYS`, `lenientArray`, `SyncInboxSchema` additions (lenient, defaults), five telemetry names + exact-list test, `Action` union gets `learner.transfer` type only | - | Worker deploy (names must be live **before** any app sends them) |
+| **T-3a** batch plumbing | `D1Like.batch`, synchronous shim `batch`, the `d1-snapshot-cas` fake, reset lists | - | no behaviour |
+| **T-3b** database | Migration `0005_class_transfer.sql` (additive), `Db` CAS methods, `D1Db` / `MemoryDb`, `deleteLearner` update, contract + race tests | T-2, T-3a | Migration is applied on merge and is invisible to the old Worker |
+| **T-4a** seats | `lib/seats.ts` + `/join` refactor with the characterization test; `tierFromSpaces` extraction with the parity test | - | Worker; no behaviour change |
+| **T-4b** rules | `can.ts` `learner.transfer`, `lib/transfer.ts` (`newRequest`, guardian predicate, `settle`, `tierAfterMove`, `executeTransfer` over the Db) with unit tests | T-3b, T-4a | Worker only; nothing mounted |
+| **T-5a** routes (no execution) | `routes/transfers.ts` console router: preview, create, list, cancel, decline, prefs; failed-code counter; lock; limits; telemetry key restriction | T-4b | Worker deploy, locked |
+| **T-5b** routes (approve) | approve + `executeTransfer` + retry + revocation + audit + freshness resets | T-5a | Worker deploy, locked |
+| **T-5c** inbox + device | inbox `transfers` fields, device routes, `transfer-prefs`, `CLASS_TRANSFER_DEVICE_CONSENT`; wrangler comments for both vars | T-5b | Worker deploy, locked; device consent routes stay off after the flip until G6 |
+| **T-6a** console client | API client, routing, helpers, `COPY`, `memberNounSingular` | T-5a, T-0b | Static export; nothing visible while unset |
+| **T-6b** console requests page | requests page, roster chip, home badge | T-6a | same |
+| **T-6c** console start | start sheet, settings Move action | T-6a | same |
+| **T-6d** console family | family page, consent sheet (3 locales), prefs switch | T-6a, T-5b | same |
+| **T-7a** app logic | `sync-api`, store, `consent-gate`, `pinCreatedAt`, tests | T-5c | App release after T-5c is live; inert while locked |
+| **T-7b** app card | Classes card variants, Move | T-7a, T-0b | same |
+| **T-7c** app sheets | `ApproveTransfer`, `MoveClass`, Home line, `PinEntry` destinations | T-7a | same |
+| **T-7d** app i18n | strings in `packages/i18n` | F-I18N-001 PR 6b | same |
+| **T-8** legal | Privacy and terms wording for teachers, classes, rosters and transfers; **counsel review of the consent lines in en/ko/es**; retention length; `legal-copy.test.tsx`; App Privacy label note (`docs/launch/app-store-submission.md:76-80`) | counsel | Gates the flip |
+
+**Flip gates** (the owner sets `CLASS_TRANSFER=enabled` and `NEXT_PUBLIC_CLASS_TRANSFER=enabled`, never a PR; Worker first):
+
+- **G1** the owner has confirmed section 9;
+- **G2** T-8 merged: counsel has seen the consent lines, reviewed en/ko/es, and confirmed the retention length;
+- **G3** B1 decided and recorded (a PIN gate for a joining learner who is already in a class or a managed child, or an owner-signed acceptance of the gap); until then privacy copy does not call the transfer "the consent path";
+- **G4** the family-code hole (O-3) and the lookup roster exposure (O-5) are decided and what was decided is shipped, including the durable `lookup` limiter (a small PR using `rate_hits`);
+- **G5** T-0b mockups exist and T-6/T-7 conform to them;
+- **G6** (separate, for `CLASS_TRANSFER_DEVICE_CONSENT`) **written counsel sign-off that a PIN-gated or self attestation is acceptable as learner-side consent in the learner's jurisdictions**. Until then the web caregiver route is the only way to consent, and class-only learners cannot be moved by transfer.
+
+Not blocked on: any unmerged branch. The in-flight agents (F-I18N-001 PR 6b, F-LAYOUT-001, F-PLC-001, F-STORY-003/002) touch other files; the shared lists they append to (`TELEMETRY_EVENT_NAMES`, `SyncInboxSchema`, `ProgressSummarySchema`) conflict only mechanically. F-PLC-001 adds `summary.placement` and a roster line: it is on the allow-list.
+
+## 8. Dependencies
+
+Upstream: F-SPACE-001 (spaces, `can()`), F-TCH-001 (re-link devices, consent mode), F-ENT-001 (tier from memberships), F-SCHOOL-001 (seat usage), F-SYNC-001 (inbox, device scopes), F-LEARN-001 (learnerType, PIN gate), F-I18N-001 (app strings; PR 6b in flight). Downstream: F-NOTIF-001, F-SPACE-003 (parent-email capture), any future export feature (must respect the 4.10 rule that the previous teacher keeps nothing new).
+
+**Constraints on F-NOTIF-001** (so the first notification does not carry PII): any notification for a transfer says only that a request is waiting; it names no learner, class or teacher; it links to the sign-in page with the opaque transfer id; it carries **no token**, and every action requires a signed-in session; no consent is ever possible from the message itself. **No slot is ever consented by silence**: assumption A3(ii) applies to the source slot only and never to the learner or destination slot.
+
+## 9. Owner decisions and assumptions
+
+**Decisions needed (each has a safe default so nothing blocks building):**
+
+- **A1 — Premium and the "same plan" rule.** You first asked for a same-plan rule, then said lifelong access makes it moot. I built **no** plan check (T6). Consequence to decide (T6b): *a learner covered only by a class plan is covered by the new class's plan after the move*; `group_license` is a yearly licence attached to a class, not to a learner (`lib/entitlement.ts:26-31`; `schemas/entitlement.ts:64-67` marks it yearly), so only `family_lifetime` follows the learner. Options: (a) accept (default), or (b) carry premium for a grace period or for good, which needs a learner-level entitlement and is a commercial feature (not built). No price or plan name appears anywhere in this feature.
+- **A3 — Source consent.** Required, but a "not now" cannot trap the learner (T5). Alternatives: (i) make the source slot "notify only", (ii) auto-release the source slot after N days of silence (never the learner or destination slot). Default off.
+- **A4 — Strength of device consent (flip gate G6).** A device consent (PIN or self-attestation) is *not* verifiable parental consent: the server cannot see the PIN or `learnerType`, and the PIN is one per device, not per grown-up (`account-store.ts:22-25`), so it cannot say which adult approved. The device route is therefore built but **off**, learner-started only, and recorded as `device_attested`. The privacy page promises "verifiable parental consent before any personal data is linked" (`apps/web/src/app/privacy/page.tsx:48`); counsel decides whether the device route is acceptable.
+- **A6 — School admins.** One-click for both slots only for an account that is the direct owner/teacher of both classes; a school admin fills one slot per action with a neutral "Agreed by the school admin" line. A school-level setting to turn admin agreement off is not built (question for you).
+- **B1 — The bypass (gate G3).** Join-by-code and Leave stay un-gated (decision #21, `10-app-map.md:319`), so "join B then leave A" remains a consent-free move and the headline guarantee holds for the transfer path only. Options: (a) require the grown-up PIN for any join or leave that changes which teacher sees a learner, (b) gate only a joining learner who is already in a class or whose profile is a managed child, keeping the first-join helper flow for a teacher with an explicit "teacher helping" bypass, (c) accept the gap and sign it. This spec does (c) by default; (a) or (b) is a separate change to F-SPACE-001 and F-LEARN-001.
+- **O-3 — The family-code hole (gate G4).** Any account can build a family, issue its code, and join it as caregiver (`spaces.ts:106-141, 271-281, 323-333`). This spec adds friction (24-hour aged membership, separation of duties, `visibleToday`, the audit backstop) but cannot prove parenthood. Decide: accept with that friction, or restrict account-path joins into a family space (an F-SPACE-001 change), or both. The 24-hour length is yours to tune.
+- **O-5 — Lookup roster exposure (gate G4).** Because the roster-by-code is the re-link picker, a previous teacher who typed the destination's code can keep reading the new class's list of names until the code is replaced. Options: (a) accept, durable limiter, the New-class-code prompt (default); (b) redesign the picker so the roster needs a per-name token or a proven device (an F-TCH-001 change).
+- **B2 — Guardian email.** Parent-email capture (F-SPACE-003) would give a third, server-verifiable route for class-only learners, who have none in v1 (4.13). Not built; a server-held guardian email is a new data flow needing a privacy-label resubmission.
+- **O-8 — Numbers.** 14-day life, 48-hour cooling-off, 72-hour blocked validity, 24-hour guardian age, 7/30-day cooldowns, limits of 10/3/20, 90-day purge. Constants in one file.
+- **B4 — 13-year line.** The single 13+ self threshold (F-LEARN-001 L3) may not match every jurisdiction's digital-consent age; a self-managed 13-15-year-old moving classes inherits that question (it also decides who can set `selfManaged`).
+- **O-12 — Spec id.** Keep `F-SPACE-002` for this feature and renumber parent-email in four files (default), or take `F-SPACE-003` here and leave them.
+
+**Assumptions I applied:**
+
+- **A2 — "two-way"** = source class + destination class, plus the learner side as the third required party (T2).
+- **A5 — Class -> class only** (T1).
+- **A7 — Revoking source-minted class devices at the move** (4.6): protects the destination class from a source teacher's device; a student tablet linked through the old class must be linked again.
+- **A9 — Counsel gate**: the privacy page and terms never mention teachers, classes, rosters or spaces; `consentMode: 'parent'` is stored but captures nothing; I recommend the flag stays off until T-8.
+- **A10 — Who is a guardian.** Role `owner` or `caregiver` (recorded in `l_role`) of a live family space the learner is in, with aged membership and no class-side role. Either guardian of any such family can consent; either can cancel. The orphaned-family case (the only caregiver account is gone, e.g. re-created on a Clerk switch, `access.ts:43-57`) is escaped by the leave-and-join-by-code path.
+- **A11 — `selfManaged` is a switch only the learner's device can set** (and clear); the server does not verify age.
+- **A12 — Schools:** an admin acting through the cascade is a third party; the audit records `via`.
+
+**Verified, not assumed** (these used to be "unverified"): migrations are applied before the Worker upload and re-runs are no-ops (`wrangler.toml:63-67`); CI applies them to a local D1 (`ci.yml:61-62`); an older Worker's `deleteLearner` stays safe because the new tables cascade from `learners` (rule in 4.1); PRAGMA foreign keys are on in the shim (`helpers/sqlite.ts:21`). **Still unverified by me** (read, not run): D1's native `batch` is one transaction on the real service (documented behaviour; T-3a/T-5b first deploy is exercised on the preview Worker before the flip); SQLite partial unique indexes and `INSERT … SELECT … WHERE … ON CONFLICT` behave the same on D1 (plain SQLite); the exact Home insertion point (`HomeScreen.tsx`) and `ProfileScreen.openGrownUps` (`ProfileScreen.tsx:73`): T-7 confirms them; real-world flow time (whether 14 days and a 30-second refresh suit a weekly class: ask a pilot teacher).
+
+## 10. Review log
+
+The adversarial review round (privacy, data, ux lenses) is recorded in `reviews/REVIEW-SPACE-002.md` with one row per finding. Summary of the dispositions that are not plain acceptances:
+
+- **Accepted with a different shape.** (a) *Execution order* — the privacy lens proposed flipping the status first then guarding the rest, the data lens proposed insert-first; the spec uses a single gate `UPDATE` carrying **all** preconditions (including capacity counts) and every later statement guarded by the executed row, which satisfies both (4.6). (b) *Adult learners* — the privacy lens wanted the learner's own consent added to a caregiver's, the UX lens wanted device consent allowed for adults; the server cannot tell an adult, so the spec adds the learner-set `selfManaged` switch plus an always-available device veto and the 48-hour window (T3, 4.2). (c) *Family-level "no teacher requests" setting* — stored per learner (`learner_transfer_prefs`), not on the family space, to avoid touching `SpaceSettingsSchema`. (d) *`terms_changed` block reason* — merged into the single `consent_outdated` reset (4.6), because capacity and consent are different states.
+- **Partly rejected.** (a) *Close the lookup roster / return aliases only* (privacy, major) — the roster-by-code **is** the re-link picker and `RelinkCreateSchema` needs a learner id; closing it is an F-TCH-001 change. Kept as owner decision O-5 and flip gate G4, with a durable limiter, the New-class-code prompt and honest wording. (b) *Remove `not_required` and the archived-source path* (data, minor) vs *archive must not veto* (privacy, minor) — kept `s_state = not_required`, reachable **only** by the archive transition, never at creation; the extra state is one value and one CHECK term. (c) *Code re-issue clause in the guardian rule* (privacy, blocker) — replaced by the aged-membership rule, which is what is actually checkable (`joinCodeExpiresAt` does not record who or when). (d) *Admin one-click setting* (ux, minor) — the neutral line and the one-slot-per-action default are built; the setting is a question (A6). (e) *Use `F-SPACE-003` for this feature* (ux, optional) — not applied (the id is the orchestrator's); the T-0 file list is corrected instead (O-12).
+- **Unchanged because already right.** `D1Db.changes` already refuses an unreported `meta.changes` (`d1.ts:100-110`), so the CAS methods inherit that safety.

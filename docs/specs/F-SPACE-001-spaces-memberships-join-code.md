@@ -81,7 +81,7 @@ can(actor, action, target)
 
 - Web console screens (`console/sign-in`, `onboarding-role`, `home`, `roster`) → **F-CONSOLE-001** (next PR; this spec ships their API).
 - Plans and homework derivation → F-PLAN-001. Re-link approval → F-TCH-001 §3.5 / S5. Paid caps and `tier` from memberships → F-ENT-001.
-- Parent-email capture at join under `consentMode: 'parent'` → F-SPACE-002 once family accounts exist on the mobile side (F-AUTH-002).
+- Parent-email capture at join under `consentMode: 'parent'` → F-SPACE-003 once family accounts exist on the mobile side (F-AUTH-002).
 - Co-teachers, archiving a space (column exists; UI in S5), leaving a space from the child surface other than the settings row above.
 - Real Clerk keys — dev fallback treats the bearer as the account id (F-AUTH-001).
 
