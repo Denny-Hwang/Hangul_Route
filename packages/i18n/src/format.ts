@@ -88,9 +88,17 @@ export function formatNumber(locale: UiLocale, n: number): string {
   }
 }
 
-/** US dollars (payments are not live and the currency does not change, D5): "$153", "$15.30". */
-export function formatUsd(locale: UiLocale, amount: number): string {
-  const digits = Number.isInteger(amount) ? 0 : 2;
+export interface FormatUsdOptions {
+  /** Always show cents ("$150.00"): for a computed amount such as a discounted price. */
+  cents?: boolean;
+}
+
+/**
+ * US dollars (payments are not live and the currency does not change, D5): "$153",
+ * "$15.30"; with `cents`, always two digits ("$150.00").
+ */
+export function formatUsd(locale: UiLocale, amount: number, options: FormatUsdOptions = {}): string {
+  const digits = options.cents === true || !Number.isInteger(amount) ? 2 : 0;
   try {
     return new Intl.NumberFormat(LOCALE_META[locale].speechLang, {
       style: 'currency',
