@@ -1,6 +1,8 @@
 import React, { useMemo } from 'react';
+import { useLocale } from '../../i18n/use-messages';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { readGameHandlers, readGameTarget } from '../../logic/story/read-game';
+import { readerStory } from '../../logic/story/reader-locale';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useQuestRunStore } from '../../store/quest-run-store';
 import { StoryReaderView } from '../story/StoryReaderView';
@@ -24,14 +26,15 @@ interface Props {
  * scores nothing. The rules are in `logic/story/read-game.ts`.
  */
 export function StoryReadGame({ scope, onFinish, onBack }: Props): React.ReactElement {
-  const { story, level } = useMemo(() => readGameTarget(scope), [scope]);
+  const locale = useLocale();
+  const { story: source, level } = useMemo(() => readGameTarget(scope), [scope]);
+  // The story in the UI language, with the voice of the narration shown in each scene (PR 2.8).
+  const { story, narrationLangs } = useMemo(() => readerStory(source, level, locale), [source, level, locale]);
   const profileId = useProfileStore((s) => activeProfileSelector(s)?.id ?? null);
   const bookmark = useReaderBookmark(profileId, story?.id ?? scope.story?.storyId ?? '', level);
 
   // Rebuilt on every render on purpose: the shell's `onFinish` / `onBack` are new each render, and
   // the reader reads its callbacks through a live ref, so no effect re-runs on a new identity.
-  // TODO(F-STORY-002 PR 2.8/2.9): localized story overlay (`localizeStory` with the UI locale) and
-  // `narrationLang`, here and in StoryReaderScreen, once locale overlays for stories exist (§9).
   const handlers = readGameHandlers({
     saveBookmark: bookmark.save,
     answerRound: (roundKey, correct) => useQuestRunStore.getState().answerRound(roundKey, correct),
@@ -50,6 +53,7 @@ export function StoryReadGame({ scope, onFinish, onBack }: Props): React.ReactEl
       onAnswer={handlers.onAnswer}
       onFinish={handlers.onFinish}
       onClose={handlers.onClose}
+      narrationLangs={narrationLangs}
     />
   );
 }
