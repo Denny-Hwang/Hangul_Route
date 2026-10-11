@@ -17,7 +17,8 @@ export type GrownUpDestination =
   | 'SaveProgress'
   | 'Paywall'
   | 'ExternalLink'
-  | 'PlacementFinish';
+  | 'PlacementFinish'
+  | 'EditProfile';
 
 export type RootStackParamList = {
   Onboarding: NavigatorScreenParams<OnboardingStackParamList>;
@@ -50,9 +51,11 @@ export type RootStackParamList = {
     url?: string;
     /** `next: 'Paywall'`: the surface that opened it, passed on to the paywall (default `'journey'`). */
     from?: 'journey' | 'library';
+    /** `next: 'EditProfile'`: the profile to edit (F-LEARN-001 §3.11). */
+    profileId?: string;
   };
   /** Forgot PIN: Rescue Code or a 24-hour wait, then a new PIN (F-LEARN-001 §3.5). `next` is kept for the PIN screen. */
-  PinReset: { next: GrownUpDestination };
+  PinReset: { next: GrownUpDestination; profileId?: string };
   /** sync/restore — rescue code / sign-in / file (F-RESTORE-001, F-SYNC-002). */
   Restore: { from: 'welcome' | 'settings' } | undefined;
   /** sync/save-progress — the Rescue Code, PIN-gated (F-RESTORE-001 §3.3). */
@@ -63,6 +66,8 @@ export type RootStackParamList = {
   Paywall: { from: 'journey' | 'settings' | 'library' } | undefined;
   ParentDashboard: undefined;
   Profile: undefined;
+  /** profile/edit — name, level, cub, who is learning (F-LEARN-001 §3.11). Behind the PIN when the gate is required. */
+  EditProfile: { profileId: string };
   Homework: undefined;
   Minigame: {
     questId: string;

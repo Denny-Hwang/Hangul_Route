@@ -70,9 +70,14 @@ export function ProfileScreen(): React.ReactElement {
     parentGateOpenedAt === null ? null : { openedAt: parentGateOpenedAt, profileId: 'family' },
     Date.now(),
   );
-  const openGrownUps = (next: 'ParentDashboard' | 'AddProfile' | 'Restore' | 'SaveProgress' | 'Paywall'): void => {
+  const openGrownUps = (
+    next: 'ParentDashboard' | 'AddProfile' | 'Restore' | 'SaveProgress' | 'Paywall' | 'EditProfile',
+    profileId?: string,
+  ): void => {
     if (opensDirectly(parentSessionOpen)) {
-      if (next === 'AddProfile') {
+      if (next === 'EditProfile') {
+        if (profileId !== undefined) navigation.navigate('EditProfile', { profileId });
+      } else if (next === 'AddProfile') {
         navigation.navigate('Onboarding', { screen: 'CreateProfile', params: { firstRun: false } });
       } else if (next === 'Restore') {
         navigation.navigate('Restore', { from: 'settings' });
@@ -85,7 +90,7 @@ export function ProfileScreen(): React.ReactElement {
       }
       return;
     }
-    navigation.navigate('PinEntry', { next });
+    navigation.navigate('PinEntry', next === 'EditProfile' ? { next, profileId } : { next });
   };
 
   return (
@@ -110,28 +115,40 @@ export function ProfileScreen(): React.ReactElement {
           const isActive = p.id === active?.id;
           const level = levelLabel(p.ageGroup);
           return (
-            <Pressable
+            <View
               key={p.id}
-              onPress={() => setActive(p.id)}
-              accessibilityRole="button"
-              accessibilityLabel={t.switchTo(p.displayName)}
               style={{
                 flexBasis: '47%',
-                padding: spacing.md,
                 backgroundColor: isActive ? colors.brand.primaryLight : colors.surface.paper,
                 borderColor: isActive ? colors.brand.primary : colors.border.subtle,
                 borderWidth: 2,
                 borderRadius: radii.lg,
-                alignItems: 'center',
-                minHeight: touchTarget.hero,
               }}
             >
-              <ProfileAvatar avatar={p.avatar} size={72} pose={isActive ? 'cheering' : 'idle'} />
-              <Spacer size="xs" />
-              <Body weight="semibold">{p.displayName}</Body>
-              {level ? <Caption tone="muted">{level}</Caption> : null}
-              {isActive ? <Pill label={t.playingNow} tone="primary" size="sm" /> : null}
-            </Pressable>
+              <Pressable
+                onPress={() => setActive(p.id)}
+                accessibilityRole="button"
+                accessibilityLabel={t.switchTo(p.displayName)}
+                style={{ padding: spacing.md, alignItems: 'center', minHeight: touchTarget.hero, borderRadius: radii.lg }}
+              >
+                <ProfileAvatar avatar={p.avatar} size={72} pose={isActive ? 'cheering' : 'idle'} />
+                <Spacer size="xs" />
+                <Body weight="semibold">{p.displayName}</Body>
+                {level ? <Caption tone="muted">{level}</Caption> : null}
+                {isActive ? <Pill label={t.playingNow} tone="primary" size="sm" /> : null}
+              </Pressable>
+              {/* Its own control, not nested in the switch button (F-LEARN-001 §3.11). */}
+              <View style={{ paddingHorizontal: spacing.sm, paddingBottom: spacing.sm }}>
+                <Button
+                  label={m.learner.editProfile.cta}
+                  tone="ghost"
+                  size="sm"
+                  fullWidth
+                  accessibilityLabel={copy.gatedA11y(m.learner.editProfile.a11y(p.displayName), pinSet)}
+                  onPress={() => openGrownUps('EditProfile', p.id)}
+                />
+              </View>
+            </View>
           );
         })}
       </View>
