@@ -26,6 +26,4 @@ const spacing = (file: string, ko: string): KnownFinding => ({
 });
 
 export const KNOWN_STORY_FINDINGS: readonly KnownFinding[] = [
-  spacing('jagyeongnu-water-clock', '장영실'),
-  spacing('nanjung-ilgi', '난중일기'),
 ];

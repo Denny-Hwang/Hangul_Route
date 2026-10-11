@@ -4,6 +4,1038 @@ import type { Episode, Quest, Story } from '@hangul-route/content-schema';
 export const storiesAll: Story[] = [
   {
     "v": 1,
+    "id": "story:angbuilgu-sundial",
+    "state": "ready",
+    "contentVer": 1,
+    "title": {
+      "ko": "하늘을 바라보는 해시계, 앙부일구",
+      "romanization": "Haneureul baraboneun haesigye, angbuilgu",
+      "en": "The Sky-Facing Pot That Told the Time"
+    },
+    "summaryEn": "Hoya discovers King Sejong's bowl-shaped sundials, set beside busy streets in 1434 with animal pictures so that people who could not read could still tell the time.",
+    "theme": "nature",
+    "kind": "science",
+    "recommendedStage": 2,
+    "minutes": 4,
+    "learningGoalsEn": [
+      "Read and recognize 해 (hae, sun), 그림자 (geurimja, shadow) and the question 지금 몇 시예요? (jigeum myeot siyeyo?, What time is it now?).",
+      "Understand that the angbuilgu shows the time of day and the time of year from the sun's shadow.",
+      "Know that in 1434 sundials were placed beside busy roads and used animal pictures for people who could not read.",
+      "Know that Sejong-era sundials do not survive; the ones we see today were made later in Joseon."
+    ],
+    "origin": {
+      "type": "documented",
+      "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
+    },
+    "review": {
+      "language": "draft",
+      "culture": "draft",
+      "advisory": []
+    },
+    "keywords": [
+      {
+        "id": "hae",
+        "ko": "해",
+        "romanization": "hae",
+        "en": "sun",
+        "kind": "word"
+      },
+      {
+        "id": "geurimja",
+        "ko": "그림자",
+        "romanization": "geurimja",
+        "en": "shadow",
+        "kind": "word"
+      },
+      {
+        "id": "angbuilgu",
+        "ko": "앙부일구",
+        "romanization": "angbuilgu",
+        "en": "bowl-shaped sundial",
+        "kind": "word"
+      },
+      {
+        "id": "gil",
+        "ko": "길",
+        "romanization": "gil",
+        "en": "road; street",
+        "kind": "word"
+      },
+      {
+        "id": "horangi",
+        "ko": "호랑이",
+        "romanization": "horangi",
+        "en": "tiger",
+        "kind": "word"
+      },
+      {
+        "id": "bomul",
+        "ko": "보물",
+        "romanization": "bomul",
+        "en": "treasure",
+        "kind": "word"
+      },
+      {
+        "id": "jigeum-myeot-siyeyo",
+        "ko": "지금 몇 시예요?",
+        "romanization": "jigeum myeot siyeyo?",
+        "en": "What time is it now?",
+        "kind": "phrase"
+      }
+    ],
+    "cultureNotes": [],
+    "tiers": [
+      {
+        "level": "listen",
+        "scenes": [
+          {
+            "id": "s1",
+            "narrationEn": "Hoya squints up at the bright sky. \"In Korean, the sun is {kw:hae},\" he says. \"When the sun shines, things cast shadows. In Joseon, people used the sun's shadow to tell the time!\"",
+            "captionEn": "Hoya looks up at the bright sun",
+            "keyword": {
+              "id": "hae",
+              "ko": "해",
+              "romanization": "hae",
+              "en": "sun",
+              "kind": "word"
+            },
+            "factIds": [
+              "f1"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "Hoya shading his eyes under a bright sun, his small shadow stretching across the stone paving of a palace courtyard."
+          },
+          {
+            "id": "s2",
+            "narrationEn": "In 1434, in King Sejong's reign, a new sundial was set up. Its bowl was round and hollow, like a cooking pot looking up at the sky, so it was called {kw:angbuilgu}, the 'upward-facing pot sundial.'",
+            "captionEn": "A bowl-shaped sundial faces the sky",
+            "keyword": {
+              "id": "angbuilgu",
+              "ko": "앙부일구",
+              "romanization": "angbuilgu",
+              "en": "bowl-shaped sundial ('upward-facing pot sundial')",
+              "kind": "word"
+            },
+            "factIds": [
+              "f2"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "A bronze bowl-shaped sundial on four short legs, its open side facing a clear blue sky, a slim pointer inside the bowl."
+          },
+          {
+            "id": "s3",
+            "narrationEn": "A pointer inside the bowl casts a shadow. Some lines show the time of day, and other lines show the time of year. Where the shadow falls tells you both!",
+            "captionEn": "A pointer's shadow shows the time",
+            "keyword": {
+              "id": "geurimja",
+              "ko": "그림자",
+              "romanization": "geurimja",
+              "en": "shadow",
+              "kind": "word"
+            },
+            "factIds": [
+              "f1",
+              "f3"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "Close-up of the inside of the sundial bowl: a thin needle casts a dark shadow across a grid of curved lines; no writing or numbers."
+          },
+          {
+            "id": "s4",
+            "narrationEn": "King Sejong's sundials were placed beside busy roads, at Hyejeonggyo Bridge and in front of Jongmyo Shrine, so that people passing by could gather and see the time.",
+            "captionEn": "Sundials stand beside busy roads",
+            "keyword": {
+              "id": "gil",
+              "ko": "길",
+              "romanization": "gil",
+              "en": "road; street",
+              "kind": "word"
+            },
+            "factIds": [
+              "f4"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "A Joseon street scene: people in white clothes and a child gather around a sundial on a stone base beside a small stone bridge."
+          },
+          {
+            "id": "s5",
+            "narrationEn": "On King Sejong's sundials, the hours were shown with pictures of the twelve zodiac animal spirits instead of written characters, so people who could not read could tell the time. Hoya cheers, because the tiger, {kw:horangi}, is one of the twelve!",
+            "captionEn": "Animal pictures showed the hours",
+            "keyword": {
+              "id": "horangi",
+              "ko": "호랑이",
+              "romanization": "horangi",
+              "en": "tiger",
+              "kind": "word"
+            },
+            "factIds": [
+              "f5",
+              "f6"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "Twelve small, friendly zodiac animals (rat, ox, tiger, rabbit, dragon, snake, horse, sheep, monkey, rooster, dog, pig) standing together in a circle on a grassy hill; Hoya waves happily at the tiger; no letters or numbers."
+          },
+          {
+            "id": "s6",
+            "narrationEn": "The sundials from King Sejong's time no longer survive. The ones we can see today were made later in the Joseon period, and several are designated Treasures, {kw:bomul}.",
+            "captionEn": "Some later sundials are Treasures",
+            "keyword": {
+              "id": "bomul",
+              "ko": "보물",
+              "romanization": "bomul",
+              "en": "treasure; Treasure (heritage designation)",
+              "kind": "word"
+            },
+            "factIds": [
+              "f7"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "Two elegant dark bronze sundials with fine silver lines, standing on cross-shaped bases inside a museum display case."
+          },
+          {
+            "id": "s7",
+            "narrationEn": "Some are kept at the National Palace Museum of Korea in Seoul. Hoya peeks at a sundial in its glass case and asks a museum guide, \"{kw:jigeum-myeot-siyeyo}\" That means, \"What time is it now?\"",
+            "captionEn": "Hoya asks what time it is",
+            "line": {
+              "ko": "지금 몇 시예요?",
+              "romanization": "jigeum myeot siyeyo?",
+              "en": "What time is it now?",
+              "speaker": "hoya"
+            },
+            "factIds": [
+              "f8"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "Hoya and a child friend in a museum gallery, looking at a sundial in a glass case; Hoya has a curious, questioning face."
+          }
+        ],
+        "checks": [
+          {
+            "id": "c1",
+            "kind": "detail",
+            "promptEn": "How did the angbuilgu show the time?",
+            "options": [
+              {
+                "id": "a",
+                "en": "By the water level in a jar",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "By the sound of a bell",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "By the shadow of a pointer",
+                "isCorrect": true
+              }
+            ],
+            "explainEn": "A pointer inside the bowl casts a shadow on hour lines and season lines, so you can read the time.",
+            "factIds": [
+              "f3"
+            ]
+          },
+          {
+            "id": "c2",
+            "kind": "detail",
+            "promptEn": "Why were animal pictures used for the hours?",
+            "options": [
+              {
+                "id": "a",
+                "en": "So guards could find the right gate of the palace",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "So people who could not read could tell the time",
+                "isCorrect": true
+              },
+              {
+                "id": "c",
+                "en": "So the king could choose lucky days for festivals",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "On King Sejong's sundials, the hours were shown with zodiac animal pictures, so people who could not read could tell the time.",
+            "factIds": [
+              "f5"
+            ]
+          },
+          {
+            "id": "c3",
+            "kind": "detail",
+            "promptEn": "Where were King Sejong's sundials placed?",
+            "options": [
+              {
+                "id": "a",
+                "en": "Beside busy roads where people passed by",
+                "isCorrect": true
+              },
+              {
+                "id": "b",
+                "en": "Inside a locked room deep in the palace",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "On a hilltop far outside the city walls",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "In 1434 they were set up at Hyejeonggyo Bridge and in front of Jongmyo Shrine, beside roads where people passed.",
+            "factIds": [
+              "f4"
+            ]
+          }
+        ],
+        "checkpoints": [],
+        "sequenceSceneIds": [
+          "s1",
+          "s3",
+          "s5",
+          "s7"
+        ],
+        "newKeywordIds": [
+          "hae",
+          "angbuilgu",
+          "geurimja",
+          "gil"
+        ]
+      }
+    ],
+    "coverSceneId": "s1",
+    "pillarTags": [],
+    "companionId": "hoya",
+    "facts": [
+      {
+        "id": "f1",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "The angbuilgu tells the time by the shadow the sun casts inside its bowl.",
+        "claimKo": "앙부일구는 해가 만드는 그림자로 시간을 알려 준다.",
+        "sources": [
+          {
+            "title": "보물 앙부일구 (Hemispherical Sundial)",
+            "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1121108450000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"앙부일구(仰釜日晷)는 세종 16년(1434)에 … 만들었던 해시계로 시계판이 가마솥같이 오목하고, 이 솥이 하늘을 우러르고 있다고 해서 이런 이름을 붙였다. … 세로선은 시각선이고 가로선은 계절선이다. 해가 동쪽에서 떠서 서쪽으로 지면서 생기는 그림자가 시각선에 비추어 시간을 알 수 있다. … 24절기를 알 수 있다. 특히 세종실록에 글을 모르는 백성들을 위해 12지신 그림으로 그려서 시간을 알게 했다는 기록이 있어\""
+          },
+          {
+            "title": "세종실록 66권, 세종 16년(1434) 10월 2일 을사 4번째 기사 「처음으로 앙부일구를 혜정교와 종묘 앞에 설치하여 일영을 관측하다」",
+            "publisher": "국사편찬위원회 조선왕조실록 (sillok.history.go.kr)",
+            "url": "https://sillok.history.go.kr/id/kda_11610002_004",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "국역: \"처음으로 앙부일구(仰釜日晷)를 혜정교(惠政橋)와 종묘(宗廟) 앞에 설치하여 일영(日影)을 관측하였다. … 구리로 부어서 그릇을 만들었으니 모양이 가마솥과 같고 … 신(神)의 몸을 그렸으니 어리석은 백성을 위한 것이요 … 길 옆에 설치한 것은 보는 사람이 모이기 때문이다.\""
+          }
+        ]
+      },
+      {
+        "id": "f2",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Angbuilgu sundials were first set up in 1434 (Sejong year 16); the name comes from the bowl's shape, said to look like a cauldron (釜) looking up (仰) at the sky.",
+        "claimKo": "앙부일구는 1434년(세종 16)에 처음 설치되었으며, 오목한 시계판이 하늘을 우러르는 가마솥 같다고 하여 이런 이름이 붙었다.",
+        "sources": [
+          {
+            "title": "세종실록 66권, 세종 16년(1434) 10월 2일 을사 4번째 기사 「처음으로 앙부일구를 혜정교와 종묘 앞에 설치하여 일영을 관측하다」",
+            "publisher": "국사편찬위원회 조선왕조실록 (sillok.history.go.kr)",
+            "url": "https://sillok.history.go.kr/id/kda_11610002_004",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "국역: \"처음으로 앙부일구(仰釜日晷)를 혜정교(惠政橋)와 종묘(宗廟) 앞에 설치하여 일영(日影)을 관측하였다. … 구리로 부어서 그릇을 만들었으니 모양이 가마솥과 같고 … 신(神)의 몸을 그렸으니 어리석은 백성을 위한 것이요 … 길 옆에 설치한 것은 보는 사람이 모이기 때문이다.\""
+          },
+          {
+            "title": "보물 앙부일구 (Hemispherical Sundial)",
+            "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1121108450000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"앙부일구(仰釜日晷)는 세종 16년(1434)에 … 만들었던 해시계로 시계판이 가마솥같이 오목하고, 이 솥이 하늘을 우러르고 있다고 해서 이런 이름을 붙였다. … 세로선은 시각선이고 가로선은 계절선이다. 해가 동쪽에서 떠서 서쪽으로 지면서 생기는 그림자가 시각선에 비추어 시간을 알 수 있다. … 24절기를 알 수 있다. 특히 세종실록에 글을 모르는 백성들을 위해 12지신 그림으로 그려서 시간을 알게 했다는 기록이 있어\""
+          },
+          {
+            "title": "앙부일구",
+            "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+            "url": "https://encykorea.aks.ac.kr/Article/E0035191",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"1434년(세종 16)에 제작되었다.\" / \"그 모양이 ‘하늘을 우러르는[仰] 가마솥[釜] 같다’고 해서 붙여진 것이다.\" / \"해 그림자를 만드는 막대인 영침(影針) … 13개의 절기선(節氣線)과 … 시각선(時刻線)\" / \"해 그림자가 드리워진 절기선과 시각선의 눈금을 읽으면 별도의 계산 없이 그때의 시각과 절기를 곧바로 파악할 수 있는\""
+          }
+        ]
+      },
+      {
+        "id": "f3",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Inside the bowl, a pointer (yeongchim) casts a shadow on two sets of lines: hour lines and season lines (solar-term lines marking the time of year), so the time of day and the time of year can be read directly.",
+        "claimKo": "시계판 안의 영침이 만든 그림자를 시각선과 절기선(계절선)에 비추어 보면 시각과 절기(한 해의 때)를 곧바로 알 수 있다.",
+        "sources": [
+          {
+            "title": "보물 앙부일구 (Hemispherical Sundial)",
+            "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1121108450000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"앙부일구(仰釜日晷)는 세종 16년(1434)에 … 만들었던 해시계로 시계판이 가마솥같이 오목하고, 이 솥이 하늘을 우러르고 있다고 해서 이런 이름을 붙였다. … 세로선은 시각선이고 가로선은 계절선이다. 해가 동쪽에서 떠서 서쪽으로 지면서 생기는 그림자가 시각선에 비추어 시간을 알 수 있다. … 24절기를 알 수 있다. 특히 세종실록에 글을 모르는 백성들을 위해 12지신 그림으로 그려서 시간을 알게 했다는 기록이 있어\""
+          },
+          {
+            "title": "앙부일구",
+            "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+            "url": "https://encykorea.aks.ac.kr/Article/E0035191",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"1434년(세종 16)에 제작되었다.\" / \"그 모양이 ‘하늘을 우러르는[仰] 가마솥[釜] 같다’고 해서 붙여진 것이다.\" / \"해 그림자를 만드는 막대인 영침(影針) … 13개의 절기선(節氣線)과 … 시각선(時刻線)\" / \"해 그림자가 드리워진 절기선과 시각선의 눈금을 읽으면 별도의 계산 없이 그때의 시각과 절기를 곧바로 파악할 수 있는\""
+          }
+        ]
+      },
+      {
+        "id": "f4",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "In 1434 the sundials were set up at Hyejeonggyo Bridge and in front of Jongmyo Shrine, beside roads where people passed, so that onlookers could gather and see them.",
+        "claimKo": "1434년 앙부일구를 혜정교와 종묘 앞, 사람들이 오가는 길가에 설치하여 지나가는 사람들이 모여서 볼 수 있게 하였다.",
+        "sources": [
+          {
+            "title": "세종실록 66권, 세종 16년(1434) 10월 2일 을사 4번째 기사 「처음으로 앙부일구를 혜정교와 종묘 앞에 설치하여 일영을 관측하다」",
+            "publisher": "국사편찬위원회 조선왕조실록 (sillok.history.go.kr)",
+            "url": "https://sillok.history.go.kr/id/kda_11610002_004",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "국역: \"처음으로 앙부일구(仰釜日晷)를 혜정교(惠政橋)와 종묘(宗廟) 앞에 설치하여 일영(日影)을 관측하였다. … 구리로 부어서 그릇을 만들었으니 모양이 가마솥과 같고 … 신(神)의 몸을 그렸으니 어리석은 백성을 위한 것이요 … 길 옆에 설치한 것은 보는 사람이 모이기 때문이다.\""
+          },
+          {
+            "title": "앙부일구",
+            "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+            "url": "https://encykorea.aks.ac.kr/Article/E0035191",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "의의와 평가: \"세종 때 앙부일구를 만들어 혜정교 옆과 종묘 남쪽에 설치하였다는 사실이다. 그곳은 일반인들이 왕래하는 대로변이었다. … 지평환 부분에 시각을 글자로 표시하지 않고 12지신의 동물그림으로 표현했다는 것이다. 이는 글자를 모르는 백성들로 하여금 시간을 읽을 수 있도록 배려한 것이다.\""
+          }
+        ]
+      },
+      {
+        "id": "f5",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "On the Sejong-era sundials, the hours were shown with pictures of the twelve zodiac animal spirits rather than written characters, so that people who could not read could tell the time.",
+        "claimKo": "세종 때의 앙부일구는 글자 대신 12지신 동물 그림으로 시각을 나타내어 글을 모르는 백성도 시간을 알 수 있게 하였다.",
+        "sources": [
+          {
+            "title": "세종실록 66권, 세종 16년(1434) 10월 2일 을사 4번째 기사 「처음으로 앙부일구를 혜정교와 종묘 앞에 설치하여 일영을 관측하다」",
+            "publisher": "국사편찬위원회 조선왕조실록 (sillok.history.go.kr)",
+            "url": "https://sillok.history.go.kr/id/kda_11610002_004",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "국역: \"처음으로 앙부일구(仰釜日晷)를 혜정교(惠政橋)와 종묘(宗廟) 앞에 설치하여 일영(日影)을 관측하였다. … 구리로 부어서 그릇을 만들었으니 모양이 가마솥과 같고 … 신(神)의 몸을 그렸으니 어리석은 백성을 위한 것이요 … 길 옆에 설치한 것은 보는 사람이 모이기 때문이다.\""
+          },
+          {
+            "title": "앙부일구",
+            "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+            "url": "https://encykorea.aks.ac.kr/Article/E0035191",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "의의와 평가: \"세종 때 앙부일구를 만들어 혜정교 옆과 종묘 남쪽에 설치하였다는 사실이다. 그곳은 일반인들이 왕래하는 대로변이었다. … 지평환 부분에 시각을 글자로 표시하지 않고 12지신의 동물그림으로 표현했다는 것이다. 이는 글자를 모르는 백성들로 하여금 시간을 읽을 수 있도록 배려한 것이다.\""
+          },
+          {
+            "title": "보물 앙부일구 (Hemispherical Sundial)",
+            "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1121108450000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"앙부일구(仰釜日晷)는 세종 16년(1434)에 … 만들었던 해시계로 시계판이 가마솥같이 오목하고, 이 솥이 하늘을 우러르고 있다고 해서 이런 이름을 붙였다. … 세로선은 시각선이고 가로선은 계절선이다. 해가 동쪽에서 떠서 서쪽으로 지면서 생기는 그림자가 시각선에 비추어 시간을 알 수 있다. … 24절기를 알 수 있다. 특히 세종실록에 글을 모르는 백성들을 위해 12지신 그림으로 그려서 시간을 알게 했다는 기록이 있어\""
+          }
+        ]
+      },
+      {
+        "id": "f6",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "The twelve zodiac animal spirits (sibiji) include the tiger, along with the rat, ox, rabbit, dragon, snake, horse, sheep, monkey, rooster, dog and pig.",
+        "claimKo": "십이지신의 동물에는 쥐·소·토끼·용·뱀·말·양·원숭이·닭·개·돼지와 함께 호랑이가 있다.",
+        "sources": [
+          {
+            "title": "십이지신",
+            "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+            "url": "https://encykorea.aks.ac.kr/Article/E0034023",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "정의/내용: \"열두 방위(方位)에 맞추어서 호랑이·토끼·용·뱀·말·양·원숭이·닭·개·돼지·쥐·소 등의 얼굴 모습을 가지며 몸은 사람으로 나타난다.\""
+          },
+          {
+            "title": "호랑이 나라 - 임인년 호랑이띠 해 특별전 (전시 안내, 1부 십이지와 호랑이띠)",
+            "publisher": "국립민속박물관 (National Folk Museum of Korea, nfm.go.kr)",
+            "url": "https://www.nfm.go.kr/user/planexhibition/home/20/selectPlanExhibitionLView.do?planExhibitionIdx=851&page=1",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "1부 십이지와 호랑이띠: \"호랑이는 십이지의 세 번째 동물로, 육십갑자(六十甲子)에서 병인(丙寅), 무인(戊寅), 경인(庚寅), 임인(壬寅), 갑인(甲寅)의 순으로 나타난다.\""
+          }
+        ]
+      },
+      {
+        "id": "f7",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "No angbuilgu made in Sejong's time (early Joseon) is known to survive; the existing ones were made in the later Joseon period, and several are designated Treasures.",
+        "claimKo": "세종 때(조선 초기)에 만든 앙부일구는 남아 있지 않으며, 현존하는 앙부일구는 조선 후기에 만든 것으로 그중 여러 점이 보물로 지정되어 있다.",
+        "sources": [
+          {
+            "title": "보물 앙부일구(2022-1) (Hemispherical Sundial (2022-1))",
+            "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1121121590000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"조선 초기에 제작된 앙부일구는 현재까지 알려진 사례가 없으며 … 제작시기 역시 1713년 이후로 추정된다.\" / 관리자: 국립고궁박물관"
+          },
+          {
+            "title": "앙부일구",
+            "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+            "url": "https://encykorea.aks.ac.kr/Article/E0035191",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "연원 및 변천: \"그런데 세종 때 제작된 앙부일구는 현재 남아 있지 않다. 현존하는 앙부일구는 모두 조선 후기에 제작된 것이다.\""
+          },
+          {
+            "title": "보물 앙부일구 (Hemispherical Sundial)",
+            "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1121108450000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "수량: 2기 / 소재지: 서울 종로구 효자로 12, 국립고궁박물관 / 관리자: 국립고궁박물관 / \"큰 것은 … 17세기 후반에 제작된 것이며, 작은 것은 … 18세기 전반에 제작되었다.\""
+          }
+        ]
+      },
+      {
+        "id": "f8",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Angbuilgu sundials designated as Treasures are kept at the National Palace Museum of Korea (국립고궁박물관) in Seoul.",
+        "claimKo": "보물로 지정된 앙부일구가 서울 국립고궁박물관에 있다.",
+        "sources": [
+          {
+            "title": "보물 앙부일구 (Hemispherical Sundial)",
+            "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1121108450000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "수량: 2기 / 소재지: 서울 종로구 효자로 12, 국립고궁박물관 / 관리자: 국립고궁박물관 / \"큰 것은 … 17세기 후반에 제작된 것이며, 작은 것은 … 18세기 전반에 제작되었다.\""
+          },
+          {
+            "title": "보물 앙부일구(2022-1) (Hemispherical Sundial (2022-1))",
+            "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1121121590000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"조선 초기에 제작된 앙부일구는 현재까지 알려진 사례가 없으며 … 제작시기 역시 1713년 이후로 추정된다.\" / 관리자: 국립고궁박물관"
+          }
+        ]
+      }
+    ],
+    "referenceDisplay": "Sources: 국사편찬위원회 조선왕조실록(세종실록); 국가유산청 국가유산포털; 한국민족문화대백과사전",
+    "verification": {
+      "passes": 3,
+      "checkedAt": "2026-10-10",
+      "scope": "cluster",
+      "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted."
+    },
+    "authorNotes": "Makers deliberately not named: KHS entries list different makers (1985 Treasure: 장영실·이천·김조; 2022-1 Treasure: 장영실·이천·이순지) and encykorea says the maker is unclear (citing the Sejo Sillok, 이순지 led instrument-making). The Sillok inscription says '神의 몸을 그렸으니 어리석은 백성을 위한 것' (drew the bodies of spirits, for ordinary people); KHS and encykorea interpret these as the twelve zodiac animal spirits; narration follows them. Omitted: KHS's description of it as Korea's first public clock ('first' claim); line counts (KHS 1985: 7 vertical/13 horizontal; KHS 2022-1: 15-minute hour lines), because they vary by instrument; the sundial returned from the United States in 2020 (KHS 2022-1). Surviving Treasures date from the 17th–18th centuries (KHS). Theme set to 'nature' (sun, sky, seasons, zodiac animals); BP04 places Sejong science under Pillar E, so 'crafts' is an alternative. REVISION: 'seasons' replaced by 'time of year' (KHS: 계절선; encykorea: 13 절기선). Scene 5 now says explicitly that the animal-picture dials are those of Sejong's time (encykorea notes later versions used written characters). The reading of 'drew the bodies of spirits (신의 몸)' as the twelve zodiac animals is the interpretation of KHS and encykorea, not stated in the Sillok inscription itself. PR 1.8c: keyword gloss 'bowl-shaped sundial' replaces the research vocab 'hemispherical sundial' as plainer English consistent with f2 (cauldron-like bowl). s3 says 'pointer' (f3: pointer, yeongchim) to match check c1. s5 and c2 say 'twelve zodiac animal spirits' and keep the Sejong-era qualifier (f5).",
+    "errata": []
+  },
+  {
+    "v": 1,
+    "id": "story:cheugugi-rain-gauge",
+    "state": "ready",
+    "contentVer": 1,
+    "title": {
+      "ko": "비를 재는 그릇, 측우기",
+      "romanization": "Bireul jaeneun geureut, cheugugi",
+      "en": "The Bowl That Measured the Rain"
+    },
+    "summaryEn": "Hoya follows the Joseon crown prince's rain experiments to the 1442 rain gauge, the cheugugi, and meets the only Joseon rain-gauge vessel known to survive.",
+    "theme": "crafts",
+    "kind": "science",
+    "recommendedStage": 1,
+    "minutes": 4,
+    "learningGoalsEn": [
+      "Read and recognize 비 (bi, rain) and the short sentence 비가 와요 (biga wayo, It's raining).",
+      "Know that a 1441 royal record describes the crown prince (later King Munjong) testing rain with a metal vessel, and that the device was named 측우기 (cheugugi, rain gauge) in 1442.",
+      "Understand that officials measured rain with a standard ruler and kept written records across the provinces.",
+      "Know that the only Joseon rain gauge vessel known to survive was made in 1837 and is a National Treasure."
+    ],
+    "origin": {
+      "type": "documented",
+      "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
+    },
+    "review": {
+      "language": "draft",
+      "culture": "draft",
+      "advisory": []
+    },
+    "keywords": [
+      {
+        "id": "bi",
+        "ko": "비",
+        "romanization": "bi",
+        "en": "rain",
+        "kind": "word"
+      },
+      {
+        "id": "seja",
+        "ko": "세자",
+        "romanization": "seja",
+        "en": "crown prince",
+        "kind": "word"
+      },
+      {
+        "id": "geureut",
+        "ko": "그릇",
+        "romanization": "geureut",
+        "en": "bowl; vessel",
+        "kind": "word"
+      },
+      {
+        "id": "cheugugi",
+        "ko": "측우기",
+        "romanization": "cheugugi",
+        "en": "rain gauge",
+        "kind": "word"
+      },
+      {
+        "id": "ja",
+        "ko": "자",
+        "romanization": "ja",
+        "en": "ruler (for measuring)",
+        "kind": "word"
+      },
+      {
+        "id": "gukbo",
+        "ko": "국보",
+        "romanization": "gukbo",
+        "en": "National Treasure",
+        "kind": "word"
+      },
+      {
+        "id": "biga-wayo",
+        "ko": "비가 와요",
+        "romanization": "biga wayo",
+        "en": "It's raining.",
+        "kind": "phrase"
+      }
+    ],
+    "cultureNotes": [],
+    "tiers": [
+      {
+        "level": "listen",
+        "scenes": [
+          {
+            "id": "s1",
+            "narrationEn": "Pitter-patter! Hoya the tiger holds out a paw to catch the raindrops. \"In Korean, rain is {kw:bi},\" he says. \"Long ago, the Joseon kingdom found a clever way to measure rain. Let's go and see!\"",
+            "captionEn": "Hoya catches the falling rain",
+            "keyword": {
+              "id": "bi",
+              "ko": "비",
+              "romanization": "bi",
+              "en": "rain",
+              "kind": "word"
+            },
+            "factIds": [
+              "f3"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "A small, friendly tiger cub in a light vest stands in gentle rain holding out one paw; soft gray clouds and a tiled-roof Korean house behind him."
+          },
+          {
+            "id": "s2",
+            "narrationEn": "A royal record from 1441 says the crown prince, the king's son who later became King Munjong, worried about drought. After each rain, he dug into the ground to see how deep the water had soaked in.",
+            "captionEn": "The crown prince digs to check the rain",
+            "keyword": {
+              "id": "seja",
+              "ko": "세자",
+              "romanization": "seja",
+              "en": "crown prince",
+              "kind": "word"
+            },
+            "factIds": [
+              "f1"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "A young Joseon crown prince in a red robe kneels in a palace garden beside a small hole, looking at damp soil; a dry field in the distance."
+          },
+          {
+            "id": "s3",
+            "narrationEn": "But soil can be dry or damp, so digging could not show exactly how much rain had fallen. Instead, he had a copper vessel made and placed in the palace to collect the rainwater.",
+            "captionEn": "A copper vessel collects the rain",
+            "keyword": {
+              "id": "geureut",
+              "ko": "그릇",
+              "romanization": "geureut",
+              "en": "bowl; vessel",
+              "kind": "word"
+            },
+            "factIds": [
+              "f1",
+              "f2"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "A plain metal cylinder standing in a palace courtyard catching rain, while the prince watches from under the wooden eaves."
+          },
+          {
+            "id": "s4",
+            "narrationEn": "In 1442, in King Sejong's reign, a standard rain gauge was named {kw:cheugugi}, 'rain-measuring device.' It stood on a stand at the royal observatory office. After each rain, an official measured the water with a standard ruler and wrote it down.",
+            "captionEn": "An official measures rain with a ruler",
+            "keyword": {
+              "id": "cheugugi",
+              "ko": "측우기",
+              "romanization": "cheugugi",
+              "en": "rain gauge",
+              "kind": "word"
+            },
+            "factIds": [
+              "f3"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "A Joseon official in a black hat dips a slim wooden ruler into a metal rain gauge on a square stone stand; a brush and a record book lie beside him."
+          },
+          {
+            "id": "s5",
+            "narrationEn": "Rain gauges and rulers were sent to every province. Local towns could make their gauges from pottery, set them on a stand in a courtyard, measure each rain, and report it to the king.",
+            "captionEn": "Rain gauges are sent to every province",
+            "keyword": {
+              "id": "ja",
+              "ko": "자",
+              "romanization": "ja",
+              "en": "ruler (for measuring)",
+              "kind": "word"
+            },
+            "factIds": [
+              "f4"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "A pottery rain gauge on a stone stand in a country government courtyard; a local magistrate measures with a bamboo ruler; green hills behind."
+          },
+          {
+            "id": "s6",
+            "narrationEn": "Joseon sent rain gauges across the land, but only one gauge itself is known to survive today: the rain gauge of the Chungcheong provincial office in Gongju. It was made of bronze in 1837 and is a National Treasure.",
+            "captionEn": "Only one Joseon gauge vessel is known to survive",
+            "keyword": {
+              "id": "gukbo",
+              "ko": "국보",
+              "romanization": "gukbo",
+              "en": "National Treasure",
+              "kind": "word"
+            },
+            "factIds": [
+              "f4",
+              "f5"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "A bronze cylindrical rain gauge made of three stacked sections, displayed on a museum pedestal under a soft spotlight; Hoya gazes up in wonder."
+          },
+          {
+            "id": "s7",
+            "narrationEn": "Today it is kept at the National Meteorological Museum of Korea in Seoul. Hoya grins and points at the sky. \"Next time it rains, you will know the words: {kw:biga-wayo}!\"",
+            "captionEn": "The gauge rests in a museum in Seoul",
+            "keyword": {
+              "id": "biga-wayo",
+              "ko": "비가 와요",
+              "romanization": "biga wayo",
+              "en": "It's raining.",
+              "kind": "phrase"
+            },
+            "factIds": [
+              "f6"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "Hoya under a small paper umbrella, pointing happily at the rainy sky in front of a modest museum building."
+          }
+        ],
+        "checks": [
+          {
+            "id": "c1",
+            "kind": "detail",
+            "promptEn": "Why wasn't digging in the soil good enough to measure rain?",
+            "options": [
+              {
+                "id": "a",
+                "en": "Rain never soaked into the soil at all",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "Soil can be dry or damp, so the exact amount stayed unclear",
+                "isCorrect": true
+              },
+              {
+                "id": "c",
+                "en": "The crown prince was not allowed to dig",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "Soil can be dry or damp, so digging could not show exactly how much rain had fallen.",
+            "factIds": [
+              "f2"
+            ]
+          },
+          {
+            "id": "c2",
+            "kind": "pick-meaning",
+            "promptEn": "What does a {target} measure?",
+            "target": {
+              "ko": "측우기",
+              "romanization": "cheugugi",
+              "en": "rain gauge"
+            },
+            "options": [
+              {
+                "id": "a",
+                "en": "The speed of the wind outside",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "The warmth of the air at noon",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "The amount of rain that falls",
+                "isCorrect": true
+              }
+            ],
+            "explainEn": "A cheugugi collected rainwater, and an official measured how deep the water was with a standard ruler.",
+            "factIds": [
+              "f3"
+            ]
+          },
+          {
+            "id": "c3",
+            "kind": "detail",
+            "promptEn": "When was the surviving Gongju rain gauge made?",
+            "options": [
+              {
+                "id": "a",
+                "en": "1837",
+                "isCorrect": true
+              },
+              {
+                "id": "b",
+                "en": "1441",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "1442",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "The Gongju rain gauge was made of bronze in 1837. It is the only Joseon gauge vessel known to survive.",
+            "factIds": [
+              "f5"
+            ]
+          }
+        ],
+        "checkpoints": [],
+        "sequenceSceneIds": [
+          "s1",
+          "s3",
+          "s5",
+          "s7"
+        ],
+        "newKeywordIds": [
+          "bi",
+          "seja",
+          "geureut",
+          "cheugugi"
+        ]
+      }
+    ],
+    "coverSceneId": "s1",
+    "pillarTags": [],
+    "companionId": "hoya",
+    "facts": [
+      {
+        "id": "f1",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "A Sejong Sillok entry dated 1441 (Sejong year 23, 4th lunar month, 29th day) records that the crown prince, worried about drought, used to dig into the ground after rain to see how far the water had soaked in, and because this did not show the exact amount, had a vessel cast from copper (銅) and placed in the palace to measure the rainwater it collected. The crown prince at that time later became King Munjong.",
+        "claimKo": "『세종실록』 세종 23년(1441) 4월 29일 기사에 따르면, 세자는 가뭄을 걱정하여 비가 온 뒤마다 땅을 파서 빗물이 스며든 정도를 살폈으나 정확히 알 수 없었으므로, 구리를 부어 그릇을 만들어 궁중에 두고 그릇에 고인 빗물의 양을 재어 보았다. 이 세자는 훗날의 문종이다.",
+        "sources": [
+          {
+            "title": "세종실록 92권, 세종 23년(1441) 4월 29일 을미 1번째 기사 「황우의 변에 대해 승정원에 전지하다」",
+            "publisher": "국사편찬위원회 조선왕조실록 (sillok.history.go.kr)",
+            "url": "https://sillok.history.go.kr/id/kda_12304029_001",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "국역: \"근년 이래로 세자가 가뭄을 근심하여, 비가 올 때마다 젖어 들어 간 푼수[分數]를 땅을 파고 보았었다. 그러나 적확하게 비가 온 푼수를 알지 못하였으므로, 구리를 부어 그릇을 만들고는 궁중(宮中)에 두어 빗물이 그릇에 괴인 푼수를 실험하였는데\" / 원문: 世子憂旱, 每當雨後, 入土分數, 掘地見之。然未可的知分數, 故鑄銅爲器, 置於宮中"
+          },
+          {
+            "title": "통영 측우대",
+            "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+            "url": "https://encykorea.aks.ac.kr/Article/E0068941",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "내용: \"측우기의 제도는 1441년(세종 23)에 당시 왕세자였던 문종의 주도하에 만들어졌지만 임진왜란 이후 그 제도가 쇠잔해졌다가\""
+          }
+        ]
+      },
+      {
+        "id": "f2",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "A Sejong Sillok record of a Ministry of Revenue (Hojo) proposal states that soil differs in dryness and dampness, so the depth to which rain soaks into the ground is hard to know.",
+        "claimKo": "『세종실록』에 실린 호조의 건의에 따르면, 흙의 마르고 젖은 정도가 같지 않아 빗물이 흙 속으로 스며든 깊이를 알기 어렵다.",
+        "sources": [
+          {
+            "title": "세종실록 93권, 세종 23년(1441) 8월 18일 임오 4번째 기사 「호조에서 서운관에 측우기를 설치할 것을 건의하다」",
+            "publisher": "국사편찬위원회 조선왕조실록 (sillok.history.go.kr)",
+            "url": "https://sillok.history.go.kr/id/kda_12308018_004",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "국역: \"토성(土性)의 조습(燥濕)이 같지 아니하고, 흙속으로 스며 든 천심(淺深)도 역시 알기 어렵사오니, 청하옵건대, 서운관(書雲觀)에 대(臺)를 짓고 쇠로 그릇을 부어 만들되 … 대(臺) 위에 올려 놓고 비를 받아\""
+          },
+          {
+            "title": "6) 측우기의 발명과 농업기상학의 발달 (신편 한국사 27권 조선 초기의 문화 Ⅱ > Ⅰ. 과학 > 2. 천문 기상학)",
+            "publisher": "국사편찬위원회 우리역사넷 (contents.history.go.kr)",
+            "url": "https://contents.history.go.kr/front/nh/view.do?levelId=nh_027_0020_0020_0060",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "\"빗물이 땅 속에 스며드는 깊이는 땅이 말랐을 때와 젖었을 때에 따라서 차이가 심하게 드러나기 때문이다.\""
+          }
+        ]
+      },
+      {
+        "id": "f3",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "In 1442 (Sejong year 24), a cast-metal instrument was named 측우기 (cheugugi, 'rain-measuring instrument'). In the capital it was placed on a stand at the Seoun-gwan (the royal office for astronomy and weather), and after each rain an official measured the water depth with a standard ruler (jucheok) and recorded it.",
+        "claimKo": "1442년(세종 24) 쇠로 주조한 기구에 측우기라는 이름을 붙였다. 서울에서는 서운관에 대를 만들어 측우기를 그 위에 두고, 비가 온 뒤마다 관원이 주척으로 물의 깊이를 재어 기록하였다.",
+        "sources": [
+          {
+            "title": "세종실록 96권, 세종 24년(1442) 5월 8일 정묘 1번째 기사 「호조에서 우량을 측정하는 일에 관해 아뢰다」",
+            "publisher": "국사편찬위원회 조선왕조실록 (sillok.history.go.kr)",
+            "url": "https://sillok.history.go.kr/id/kda_12405008_001",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "국역: \"서울에서는 쇠를 주조(鑄造)하여 기구(器具)를 만들어 명칭을 측우기(測雨器)라 하니 … 서운관(書雲觀)에 대(臺)를 만들어 측우기를 대(臺) 위에 두고 매양 비가 온 후에는 본관(本觀)의 관원이 친히 비가 내린 상황을 보고는, 주척(周尺)으로써 물의 깊고 얕은 것을 측량하여 … 상세히 써서 … 기록해 둘 것이며\""
+          },
+          {
+            "title": "국보 공주 충청감영 측우기 (Rain Gauge of Chungcheong Provincial Office, Gongju)",
+            "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1111103290000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"1442년(세종 24)에 발명된 측우기는 … 땅에 스며든 물의 깊이를 측정하던 이전의 비합리적인 강우 측정방식에서 벗어나 본격적으로 강수량을 정량적으로 측정 가능케 한 발명품\""
+          }
+        ]
+      },
+      {
+        "id": "f4",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Cast-metal rain gauges and standard rulers were sent from the capital to each province; local offices could make gauges of porcelain or earthenware, place them on a stand in the courtyard of the official guesthouse (gaeksa), and the magistrate measured each rain, reported it to the king and kept a record.",
+        "claimKo": "중앙에서 쇠로 주조한 측우기와 주척을 각 도에 보냈고, 각 고을은 자기나 와기로 측우기를 구워 만들어 객사 뜰의 대 위에 두었으며, 수령이 비가 온 뒤 물의 깊이를 재어 임금에게 보고하고 기록하였다.",
+        "sources": [
+          {
+            "title": "세종실록 96권, 세종 24년(1442) 5월 8일 정묘 1번째 기사 「호조에서 우량을 측정하는 일에 관해 아뢰다」",
+            "publisher": "국사편찬위원회 조선왕조실록 (sillok.history.go.kr)",
+            "url": "https://sillok.history.go.kr/id/kda_12405008_001",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "국역: \"외방(外方)에서는 쇠로써 주조(鑄造)한 측우기(測雨器)와 주척(周尺) 매 1건(件)을 각도(各道)에 보내어, 각 고을로 하여금 … 혹은 자기(磁器)든지 혹은 와기(瓦器)든지 적당한 데에 따라 구워 만들고, 객사(客舍)의 뜰 가운데에 대(臺)를 만들어 측우기를 대(臺) 위에 두도록 하며 … 수령(守令)이 친히 … 계문(啓聞)하고 기록해 두어서\""
+          },
+          {
+            "title": "국보 공주 충청감영 측우기 (Rain Gauge of Chungcheong Provincial Office, Gongju)",
+            "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1111103290000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"조선시대에는 중앙정부에서 측우기를 제작해 전국의 감영에 보냈기 때문에 여러 점이 만들어졌으리라 예상되지만, 지금까지 ‘공주 충청감영 측우기’만 유일하게 알려져 있다.\""
+          },
+          {
+            "title": "공주 충청감영 측우기",
+            "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+            "url": "https://encykorea.aks.ac.kr/Article/E0007902",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"조선 세종 때 반포되고 영조 때 개정된 우량 관측제도에 의하면, 전국 팔도의 감영(監營)에 측우기를 설치하여 강우량을 측정, 보고하도록 했다.\""
+          }
+        ]
+      },
+      {
+        "id": "f5",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "The Rain Gauge of Chungcheong Provincial Office, Gongju (공주 충청감영 측우기), made of bronze in 1837 (Heonjong year 3), is the only Joseon-period rain gauge vessel known to survive, and it is designated a National Treasure. (Several stone bases/stands on which gauges were set also survive, but no other gauge vessel.)",
+        "claimKo": "공주 충청감영 측우기는 1837년(헌종 3)에 청동으로 만든 것으로, 현재까지 알려진 유일한 조선시대 측우기(빗물을 받는 그릇)이며 국보로 지정되어 있다. 측우기를 올려 두던 대석(臺石)은 몇 기가 남아 있다.",
+        "sources": [
+          {
+            "title": "국보 공주 충청감영 측우기 (Rain Gauge of Chungcheong Provincial Office, Gongju)",
+            "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1111103290000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"국보 ‘공주 충청감영 측우기(公州 忠淸監營 測雨器)’는 1837년(헌종 3)에 제작된 것으로, 측우대는 없고 측우기만 전해오고 있다. … 지금까지 ‘공주 충청감영 측우기’만 유일하게 알려져 있다.\" / 지정일 2020.02.27"
+          },
+          {
+            "title": "공주 충청감영 측우기",
+            "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+            "url": "https://encykorea.aks.ac.kr/Article/E0007902",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"청동으로 제작된 이 측우기는 표면에 새겨진 “도광정유제(道光丁酉製)”라는 글귀를 통해 1837년(헌종 3)에 제작되었음을 알 수 있다.\" / \"빗물을 담는 그릇으로 현존하는 것은 금영 측우기가 유일하다.\" / 종목: 국보(2020년 02월 27일 지정) / 현황: \"측우기를 설치했던 대석(臺石)은 몇 기가 남아 있지만\" (the page continues that the vessel survives only as the 금영 측우기)."
+          },
+          {
+            "title": "통영 측우대",
+            "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+            "url": "https://encykorea.aks.ac.kr/Article/E0068941",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "정의: \"19세기 경상도 통영에 위치한 수군통제영에서 설치하였던 측우기 받침대.\" / \"2010년 보물로 지정되었다.\" (a surviving stone stand, showing that stands survive although gauge vessels do not)"
+          }
+        ]
+      },
+      {
+        "id": "f6",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "The Rain Gauge of Chungcheong Provincial Office, Gongju is kept at the National Meteorological Museum of Korea (국립기상박물관) in Jongno-gu, Seoul.",
+        "claimKo": "공주 충청감영 측우기는 서울 종로구의 국립기상박물관에 있다.",
+        "sources": [
+          {
+            "title": "국보 공주 충청감영 측우기 (Rain Gauge of Chungcheong Provincial Office, Gongju)",
+            "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1111103290000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "소재지: 서울특별시 종로구 송월길 52 (송월동, 국립기상박물관) / 관리자: 국립기상박물관"
+          },
+          {
+            "title": "공주 충청감영 측우기",
+            "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+            "url": "https://encykorea.aks.ac.kr/Article/E0007902",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "소장처: 국립기상박물관 / 소재지: 서울특별시 종로구 송월길 52 (송월동, 국립기상박물관)"
+          },
+          {
+            "title": "국립기상박물관 (National Meteorological Museum of Korea) official website",
+            "publisher": "기상청 국립기상박물관 (science.kma.go.kr/museum)",
+            "url": "https://science.kma.go.kr/museum/",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "English name as printed in the page footer: \"Copyright ⓒ National Meteorological Museum of Korea All rights reserved\""
+          }
+        ]
+      }
+    ],
+    "referenceDisplay": "Sources: 국사편찬위원회 조선왕조실록(세종실록)·우리역사넷; 국가유산청 국가유산포털; 한국민족문화대백과사전; 국립기상박물관",
+    "verification": {
+      "passes": 3,
+      "checkedAt": "2026-10-10",
+      "scope": "cluster",
+      "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted."
+    },
+    "authorNotes": "Attribution: popular retellings often say Jang Yeong-sil invented the rain gauge, but the Sejong Sillok (1441-04-29, lunar) credits the crown prince's (later King Munjong's) experiments and encykorea's 통영 측우대 entry says the system was made under the crown prince's lead; Jang Yeong-sil is therefore not mentioned. Deliberately omitted: the KHS description's comparative claim that the cheugugi was the world's first scientific rain gauge, about 200 years before the West (priority claims are contested); the 1441-08-18 proposal's dimensions and the 1442 standard size (1 cheok 5 chon by 7 chon); the Gongju gauge's removal to Japan (KHS: c.1915; encykorea: early 1910s) and return in 1971 (colonial-era history is out of scope); the 1770/1771 revival under King Yeongjo (sources differ on the year). Materials: the Sillok uses 銅 (copper/bronze) for the crown prince's 1441 vessel and 鐵 (cast metal/iron) for the 1442 standard, so narration says 'copper' and 'metal' respectively; the Gongju gauge is bronze (encykorea). All Sillok dates are lunar. Theme set to 'crafts' to match BP04/BP05 Pillar E (E3 측우기). REVISION: (a) Scene 6/summary/learning goal now say only one gauge VESSEL survives; stone stands (대석/측우대) also survive (encykorea E0007902; Tongyeong stand is a Treasure, E0068941). (b) Museum English name 'National Meteorological Museum of Korea' taken from the museum's own website footer (science.kma.go.kr/museum/); the KHS portal lists only the Korean name. (c) Romanization of 서운관 is Seoun-gwan (seo-un-gwan); 'Seounwan' (proposed by one fact-check) would transcribe 서운완, so it was not adopted. (d) Second source added for f2 (신편한국사 via 우리역사넷); new sources accessed 2026-10-10. PR 1.8c: check c1 distractors replaced with options the story contradicts (s2: the water soaked in; the crown prince dug), so the item has one answer from the story text.",
+    "errata": []
+  },
+  {
+    "v": 1,
     "id": "story:chuseok-ganggangsullae",
     "state": "ready",
     "contentVer": 1,
@@ -1393,6 +2425,630 @@ export const storiesAll: Story[] = [
   },
   {
     "v": 1,
+    "id": "story:donguibogam",
+    "state": "ready",
+    "contentVer": 1,
+    "title": {
+      "ko": "허준의 동의보감",
+      "romanization": "Heojunui Donguibogam",
+      "en": "Heo Jun's Treasured Mirror of Medicine"
+    },
+    "summaryEn": "Hoya learns how the royal doctor Heo Jun finished Donguibogam in 1610, a medical encyclopedia that valued staying healthy and wrote herb names in Hangul, now on UNESCO's Memory of the World Register.",
+    "theme": "life",
+    "kind": "documentary",
+    "recommendedStage": 3,
+    "minutes": 5,
+    "learningGoalsEn": [
+      "Read and recognize 몸 (mom, body), 건강 (geongang, health), 약초 (yakcho, medicinal herb) and 책 (chaek, book).",
+      "Know that Heo Jun, a Joseon royal doctor, completed Donguibogam in 1610 and that it was printed in 1613 in 25 volumes.",
+      "Understand the book's idea that preventing illness and staying healthy matters before curing it.",
+      "Know that Donguibogam wrote herb names in Hangul and has been on UNESCO's Memory of the World Register, 세계기록유산 (segyegirogyusan), since 2009."
+    ],
+    "origin": {
+      "type": "documented",
+      "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
+    },
+    "review": {
+      "language": "draft",
+      "culture": "draft",
+      "advisory": [
+        "war"
+      ],
+      "advisoryNoteEn": "Briefly mentions a war from Korea's history."
+    },
+    "keywords": [
+      {
+        "id": "mom",
+        "ko": "몸",
+        "romanization": "mom",
+        "en": "body",
+        "kind": "word"
+      },
+      {
+        "id": "uisa",
+        "ko": "의사",
+        "romanization": "uisa",
+        "en": "doctor",
+        "kind": "word"
+      },
+      {
+        "id": "chaek",
+        "ko": "책",
+        "romanization": "chaek",
+        "en": "book",
+        "kind": "word"
+      },
+      {
+        "id": "donguibogam",
+        "ko": "동의보감",
+        "romanization": "Donguibogam",
+        "en": "Donguibogam (a Joseon medical encyclopedia)",
+        "kind": "term"
+      },
+      {
+        "id": "geongang",
+        "ko": "건강",
+        "romanization": "geongang",
+        "en": "health",
+        "kind": "word"
+      },
+      {
+        "id": "yakcho",
+        "ko": "약초",
+        "romanization": "yakcho",
+        "en": "medicinal herb",
+        "kind": "word"
+      },
+      {
+        "id": "bobae-gateun-chaek",
+        "ko": "보배 같은 책",
+        "romanization": "bobae gateun chaek",
+        "en": "a book like a treasure",
+        "kind": "phrase"
+      },
+      {
+        "id": "segyegirogyusan",
+        "ko": "세계기록유산",
+        "romanization": "segyegirogyusan",
+        "en": "Memory of the World (UNESCO documentary heritage)",
+        "kind": "word"
+      },
+      {
+        "id": "heo-jun",
+        "ko": "허준",
+        "romanization": "Heojun",
+        "en": "Heo Jun, a Joseon court doctor",
+        "kind": "term"
+      }
+    ],
+    "cultureNotes": [],
+    "tiers": [
+      {
+        "level": "listen",
+        "scenes": [
+          {
+            "id": "s1",
+            "narrationEn": "Hoya stretches his arms and legs in the morning sun. \"In Korean, the body is {kw:mom},\" he says. \"Long ago, a royal doctor of Joseon wrote a giant book to help people care for their bodies.\"",
+            "captionEn": "Hoya stretches in the morning sun",
+            "keyword": {
+              "id": "mom",
+              "ko": "몸",
+              "romanization": "mom",
+              "en": "body",
+              "kind": "word"
+            },
+            "factIds": [
+              "f1",
+              "f6"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "Hoya doing a morning stretch on the wooden floor (maru) of a hanok house, warm sunrise behind him."
+          },
+          {
+            "id": "s2",
+            "narrationEn": "His name was Heo Jun, {kw:heo-jun}, and he served as a doctor at the royal court. King Seonjo asked him and other doctors to write a new medical book. Today we call a doctor {kw:uisa}.",
+            "captionEn": "Heo Jun serves as a royal doctor",
+            "keyword": {
+              "id": "uisa",
+              "ko": "의사",
+              "romanization": "uisa",
+              "en": "doctor (modern word)",
+              "kind": "word"
+            },
+            "factIds": [
+              "f1"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "A Joseon royal physician in official robes and a black hat bowing before a king seated in a palace hall; rolled papers nearby."
+          },
+          {
+            "id": "s3",
+            "narrationEn": "When a war broke out, the work stopped and the doctors were scattered. Later the king asked Heo Jun to write the book alone, and gave him many medical books from the palace to study.",
+            "captionEn": "Heo Jun writes the book alone",
+            "keyword": {
+              "id": "chaek",
+              "ko": "책",
+              "romanization": "chaek",
+              "en": "book",
+              "kind": "word"
+            },
+            "factIds": [
+              "f2"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "Heo Jun at a low desk surrounded by stacks of old thread-bound books, writing with a brush by lamplight."
+          },
+          {
+            "id": "s4",
+            "narrationEn": "In 1610 Heo Jun finished the book {kw:donguibogam}. 'Dongui' means the medicine of the East, Korea's own medical tradition, and 'bogam' means a treasured mirror, a model to learn from.",
+            "captionEn": "Heo Jun finishes Donguibogam",
+            "keyword": {
+              "id": "donguibogam",
+              "ko": "동의보감",
+              "romanization": "Donguibogam",
+              "en": "Donguibogam ('Treasured Mirror of Eastern Medicine')",
+              "kind": "term"
+            },
+            "factIds": [
+              "f3",
+              "f4"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "A neat stack of finished book volumes tied with cord, beside a round bronze mirror that softly reflects light."
+          },
+          {
+            "id": "s5",
+            "narrationEn": "Donguibogam taught that staying healthy and preventing illness come before curing sickness. In Korean, health is {kw:geongang}.",
+            "captionEn": "Staying healthy comes first",
+            "keyword": {
+              "id": "geongang",
+              "ko": "건강",
+              "romanization": "geongang",
+              "en": "health",
+              "kind": "word"
+            },
+            "factIds": [
+              "f5"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "Hoya and two children walking happily through a pine forest, breathing fresh air, with a picnic mat of simple healthy food."
+          },
+          {
+            "id": "s6",
+            "narrationEn": "To help country people use medicines growing nearby, the book wrote the everyday Korean names of herbs in Hangul, the Korean alphabet.",
+            "captionEn": "Herb names are written in Hangul",
+            "keyword": {
+              "id": "yakcho",
+              "ko": "약초",
+              "romanization": "yakcho",
+              "en": "medicinal herb",
+              "kind": "word"
+            },
+            "factIds": [
+              "f7"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "Gentle drawings of wild medicinal plants (bellflower, mugwort, a root plant) on a sunny hillside, with a woven basket of herbs; no writing."
+          },
+          {
+            "id": "s7",
+            "narrationEn": "Donguibogam was printed in 1613 in 25 volumes. Later it was printed many times in China, and in Japan too. In 2009, UNESCO added it to the Memory of the World Register, {kw:segyegirogyusan}.",
+            "captionEn": "The book was printed many times",
+            "keyword": {
+              "id": "segyegirogyusan",
+              "ko": "세계기록유산",
+              "romanization": "segyegirogyusan",
+              "en": "Memory of the World (UNESCO documentary heritage)",
+              "kind": "word"
+            },
+            "factIds": [
+              "f6",
+              "f8"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "Rows of traditional thread-bound books on wooden shelves, with faint outlines of mountains and seas behind them suggesting the book's travels."
+          },
+          {
+            "id": "s8",
+            "narrationEn": "Copies from that first printing are now National Treasures of Korea. Hoya hugs a book-shaped pillow and smiles: \"{kw:bobae-gateun-chaek}!\" That means, \"A book like a treasure!\"",
+            "captionEn": "First-edition copies are National Treasures",
+            "line": {
+              "ko": "보배 같은 책",
+              "romanization": "bobae gateun chaek",
+              "en": "a book like a treasure",
+              "speaker": "hoya"
+            },
+            "factIds": [
+              "f9"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "Hoya hugging a soft pillow shaped like an old book, sitting beside a museum case that holds a thread-bound book under gentle light."
+          }
+        ],
+        "checks": [
+          {
+            "id": "c1",
+            "kind": "detail",
+            "promptEn": "According to Donguibogam, what comes before curing sickness?",
+            "options": [
+              {
+                "id": "a",
+                "en": "Resting in bed for a very long time",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "Finding the strongest medicine of all",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "Staying healthy and preventing illness",
+                "isCorrect": true
+              }
+            ],
+            "explainEn": "Donguibogam put preventing illness and keeping healthy before treating sickness.",
+            "factIds": [
+              "f5"
+            ]
+          },
+          {
+            "id": "c2",
+            "kind": "detail",
+            "promptEn": "Which alphabet did the book use for the Korean names of herbs?",
+            "options": [
+              {
+                "id": "a",
+                "en": "Hangul",
+                "isCorrect": true
+              },
+              {
+                "id": "b",
+                "en": "The Latin alphabet",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "The Greek alphabet",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "The book wrote herb names in Hangul, as people called them, so local medicines could be used widely and easily.",
+            "factIds": [
+              "f7"
+            ]
+          },
+          {
+            "id": "c3",
+            "kind": "detail",
+            "promptEn": "When was Donguibogam first printed?",
+            "options": [
+              {
+                "id": "a",
+                "en": "1592",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "1613",
+                "isCorrect": true
+              },
+              {
+                "id": "c",
+                "en": "1610",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "Donguibogam was first printed in 1613 with wooden movable type, in 25 volumes.",
+            "factIds": [
+              "f6"
+            ]
+          }
+        ],
+        "checkpoints": [],
+        "sequenceSceneIds": [
+          "s1",
+          "s3",
+          "s6",
+          "s8"
+        ],
+        "newKeywordIds": [
+          "mom",
+          "uisa",
+          "chaek",
+          "donguibogam"
+        ]
+      }
+    ],
+    "coverSceneId": "s1",
+    "pillarTags": [],
+    "companionId": "hoya",
+    "facts": [
+      {
+        "id": "f1",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Heo Jun was a Joseon court physician (sources differ on his birth year, so none is given); King Seonjo ordered him, together with other physicians such as Yang Ye-su and Yi Myeong-won, to compile a medical book.",
+        "claimKo": "허준은 조선의 궁중 의관이며(출생 연도는 자료마다 달라 쓰지 않는다), 선조가 그와 양예수·이명원 등 의관들에게 의서를 편찬하도록 명하였다.",
+        "sources": [
+          {
+            "title": "국보 동의보감(2015-1) (Dongui bogam (Principles and Practice of Eastern Medicine))",
+            "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1111103190100",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"『동의보감(東醫寶鑑)』은 허준(許浚,1539∼1615)이 1610년(광해군 2)에 … 엮어놓은 우리나라 최고의 한의서이다. 선조는 … 허준과, 양예수(楊禮壽), 이명원(李命源) 등에게 명하여 의서를 편찬토록 하였으나 전쟁으로 중단되었다. … 초간본은 편찬된 지 3년 후인 1613년(광해군 5) 11월에 내의원에서 목활자로 간행하였으며, 모두 25권 25책이다. … 중국에서는 1763년(乾隆 28）이후 수차례 간행되었다. 일본에서도 1724년(享保 9）에 교토서림(京都書林)에서 처음 간행된 이후\" / 지정일 2015.06.22, 소장: 국립중앙도서관"
+          },
+          {
+            "title": "허준",
+            "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+            "url": "https://encykorea.aks.ac.kr/Article/E0063152",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "정의: \"허준은 조선시대 『동의보감』·『언해태산집요』·『언해구급방』 등을 저술한 의관, 의학자이다.\" / Birth year is internally inconsistent on this page: infobox \"1539년(중종 32)\" (중종 32 would be 1537), summary \"1539년(중종 34)\", photo captions \"1546(명종 1)\"; KHS gives 1539; therefore no birth year is used in narration."
+          },
+          {
+            "title": "동의보감",
+            "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+            "url": "https://encykorea.aks.ac.kr/Article/E0016731",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"25권 25책. 1610년(광해군 2)에 완성하여 1613년 내의원에서 개주갑인자(改鑄甲寅字) 목활자로 첫 간행된\" / \"1596년 선조의 명으로 허준 등 5인이 공동으로 편찬을 진행하다가 병란으로 중단된 것을 허준이 단독으로 추진하여 1610년에 완성하였다.\""
+          }
+        ]
+      },
+      {
+        "id": "f2",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "The joint compilation was interrupted when war broke out again (the Jeongyu invasion) and the participants were scattered; afterwards King Seonjo gave Heo Jun medical books from the royal collection and ordered him to compile Donguibogam alone.",
+        "claimKo": "정유재란이 일어나 참여자들이 흩어지면서 편찬이 중단되었고, 이후 선조는 왕실이 소장한 의서를 허준에게 내주며 『동의보감』을 혼자 편찬하도록 하였다.",
+        "sources": [
+          {
+            "title": "동의보감",
+            "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+            "url": "https://encykorea.aks.ac.kr/Article/E0016731",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "편찬/발간 경위: \"1597년(정유년) 1월 일본군이 다시 쳐들어오는 정유재란이 일어났고, 이로 인해서 참여한 인물들이 뿔뿔이 흩어져버려 『동의보감』을 편찬하는 일이 중단되었다. 전쟁이 완전히 끝난 후 1601년 봄 선조는 허준을 불러 왕실에서 소장하고 있던 고금의 의서 500여 권을 내주면서 의학 책의 편찬을 맡겼다. 이 때 허준에게 『동의보감』을 단독으로 편찬할 것과\""
+          },
+          {
+            "title": "국보 동의보감(2015-1) (Dongui bogam (Principles and Practice of Eastern Medicine))",
+            "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1111103190100",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"『동의보감(東醫寶鑑)』은 허준(許浚,1539∼1615)이 1610년(광해군 2)에 … 엮어놓은 우리나라 최고의 한의서이다. 선조는 … 허준과, 양예수(楊禮壽), 이명원(李命源) 등에게 명하여 의서를 편찬토록 하였으나 전쟁으로 중단되었다. … 초간본은 편찬된 지 3년 후인 1613년(광해군 5) 11월에 내의원에서 목활자로 간행하였으며, 모두 25권 25책이다. … 중국에서는 1763년(乾隆 28）이후 수차례 간행되었다. 일본에서도 1724년(享保 9）에 교토서림(京都書林)에서 처음 간행된 이후\" / 지정일 2015.06.22, 소장: 국립중앙도서관"
+          }
+        ]
+      },
+      {
+        "id": "f3",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Heo Jun completed Donguibogam in 1610 (Gwanghaegun year 2).",
+        "claimKo": "허준은 1610년(광해군 2)에 『동의보감』을 완성하였다.",
+        "sources": [
+          {
+            "title": "국보 동의보감(2015-1) (Dongui bogam (Principles and Practice of Eastern Medicine))",
+            "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1111103190100",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"『동의보감(東醫寶鑑)』은 허준(許浚,1539∼1615)이 1610년(광해군 2)에 … 엮어놓은 우리나라 최고의 한의서이다. 선조는 … 허준과, 양예수(楊禮壽), 이명원(李命源) 등에게 명하여 의서를 편찬토록 하였으나 전쟁으로 중단되었다. … 초간본은 편찬된 지 3년 후인 1613년(광해군 5) 11월에 내의원에서 목활자로 간행하였으며, 모두 25권 25책이다. … 중국에서는 1763년(乾隆 28）이후 수차례 간행되었다. 일본에서도 1724년(享保 9）에 교토서림(京都書林)에서 처음 간행된 이후\" / 지정일 2015.06.22, 소장: 국립중앙도서관"
+          },
+          {
+            "title": "동의보감",
+            "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+            "url": "https://encykorea.aks.ac.kr/Article/E0016731",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"25권 25책. 1610년(광해군 2)에 완성하여 1613년 내의원에서 개주갑인자(改鑄甲寅字) 목활자로 첫 간행된\" / \"1596년 선조의 명으로 허준 등 5인이 공동으로 편찬을 진행하다가 병란으로 중단된 것을 허준이 단독으로 추진하여 1610년에 완성하였다.\""
+          }
+        ]
+      },
+      {
+        "id": "f4",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "In the title, 'Dongui' (東醫) means the medical tradition of the East, i.e., Joseon's own tradition, and 'bogam' (寶鑑) means 'treasured mirror', a model or exemplar.",
+        "claimKo": "책 제목의 '동의(東醫)'는 동쪽, 곧 조선의 의학 전통을 뜻하고, '보감(寶鑑)'은 '보배로운 거울'로 본보기(귀감)라는 뜻이다.",
+        "sources": [
+          {
+            "title": "동의보감",
+            "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+            "url": "https://encykorea.aks.ac.kr/Article/E0016731",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "개설: \"책 제목의 ‘동의(東醫)’란 중국 남쪽과 북쪽의 의학전통에 비견되는 동쪽의 의학 전통 즉, 조선의 의학 전통을 뜻한다. ‘보감(寶鑑)’이란 “보배스러운 거울”이란 뜻으로 귀감(龜鑑)이란 뜻을 지닌다.\""
+          },
+          {
+            "title": "(3) 특징과 의학사적 의의 (신편 한국사 27권 조선 초기의 문화 Ⅱ > Ⅰ. 과학 > 4. 의약과 약학 > 5)《동의보감》의 편찬과 간행)",
+            "publisher": "국사편찬위원회 우리역사넷 (contents.history.go.kr)",
+            "url": "https://contents.history.go.kr/mobile/nh/view.do?levelId=nh_027_0020_0040_0050_0030",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "《동의보감》의 集例에서 허준은 중국의 의학을 北醫·南醫라 부르면서 우리의 의학을 東醫라 부를 것을 주장하였다. (Only the 'Dongui' = Joseon's own medicine half; the 'bogam' = treasured mirror half rests on encykorea.)"
+          }
+        ]
+      },
+      {
+        "id": "f5",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Donguibogam emphasized preventing illness and preserving health before treating disease.",
+        "claimKo": "『동의보감』은 병을 치료하는 것보다 병을 예방하고 건강을 지키는 것을 중요하게 여겼다.",
+        "sources": [
+          {
+            "title": "동의보감",
+            "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+            "url": "https://encykorea.aks.ac.kr/Article/E0016731",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "편찬 원칙: \"첫째, “병을 고치기에 앞서 수명을 늘리고 병이 안 걸리도록 하는 방법을 중요하게 여긴다.”\" / 내용 요약: \"병의 치료보다 예방을 강조하고\""
+          },
+          {
+            "title": "Donguibogam: Principles and Practice of Eastern Medicine",
+            "publisher": "UNESCO Memory of the World (unesco.org)",
+            "url": "https://www.unesco.org/en/memory-world/donguibogam-principles-and-practice-eastern-medicine",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"An encyclopaedia of medical knowledge and treatment techniques compiled in Korea in 1613 and edited by Heo Jun … it developed the ideals of preventive medicine and public health care by the state\" / Registration Year: 2009"
+          },
+          {
+            "title": "(3) 특징과 의학사적 의의 (신편 한국사 27권 조선 초기의 문화 Ⅱ > Ⅰ. 과학 > 4. 의약과 약학 > 5)《동의보감》의 편찬과 간행)",
+            "publisher": "국사편찬위원회 우리역사넷 (contents.history.go.kr)",
+            "url": "https://contents.history.go.kr/mobile/nh/view.do?levelId=nh_027_0020_0040_0050_0030",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "《동의보감》에서 가장 두드러지게 나타나는 특징은 치료보다도 예방, 더 나아가 건강 그 자체를 더욱 중요하게 추구하고 있다는 점이다."
+          }
+        ]
+      },
+      {
+        "id": "f6",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Donguibogam was first printed in 1613 (Gwanghaegun year 5) by the Royal Medical Office (Naeuiwon) with wooden movable type, in 25 volumes.",
+        "claimKo": "『동의보감』은 1613년(광해군 5) 내의원에서 목활자로 처음 간행되었으며 모두 25권 25책이다.",
+        "sources": [
+          {
+            "title": "국보 동의보감(2015-1) (Dongui bogam (Principles and Practice of Eastern Medicine))",
+            "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1111103190100",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"『동의보감(東醫寶鑑)』은 허준(許浚,1539∼1615)이 1610년(광해군 2)에 … 엮어놓은 우리나라 최고의 한의서이다. 선조는 … 허준과, 양예수(楊禮壽), 이명원(李命源) 등에게 명하여 의서를 편찬토록 하였으나 전쟁으로 중단되었다. … 초간본은 편찬된 지 3년 후인 1613년(광해군 5) 11월에 내의원에서 목활자로 간행하였으며, 모두 25권 25책이다. … 중국에서는 1763년(乾隆 28）이후 수차례 간행되었다. 일본에서도 1724년(享保 9）에 교토서림(京都書林)에서 처음 간행된 이후\" / 지정일 2015.06.22, 소장: 국립중앙도서관"
+          },
+          {
+            "title": "동의보감",
+            "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+            "url": "https://encykorea.aks.ac.kr/Article/E0016731",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"25권 25책. 1610년(광해군 2)에 완성하여 1613년 내의원에서 개주갑인자(改鑄甲寅字) 목활자로 첫 간행된\" / \"1596년 선조의 명으로 허준 등 5인이 공동으로 편찬을 진행하다가 병란으로 중단된 것을 허준이 단독으로 추진하여 1610년에 완성하였다.\""
+          },
+          {
+            "title": "Donguibogam: Principles and Practice of Eastern Medicine",
+            "publisher": "UNESCO Memory of the World (unesco.org)",
+            "url": "https://www.unesco.org/en/memory-world/donguibogam-principles-and-practice-eastern-medicine",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"An encyclopaedia of medical knowledge and treatment techniques compiled in Korea in 1613 and edited by Heo Jun … it developed the ideals of preventive medicine and public health care by the state\" / Registration Year: 2009"
+          }
+        ]
+      },
+      {
+        "id": "f7",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "One of Donguibogam's compiling principles was to write herb names in Hangul using the names Joseon people called them, so that locally grown medicines could be used widely and easily, including in the countryside.",
+        "claimKo": "『동의보감』의 편찬 원칙 가운데 하나는 국산 약을 널리 쉽게 쓸 수 있도록 약초 이름을 조선 사람들이 부르는 이름 그대로 한글로 적는 것이었다.",
+        "sources": [
+          {
+            "title": "동의보감",
+            "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+            "url": "https://encykorea.aks.ac.kr/Article/E0016731",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "편찬 원칙: \"셋째, “국산 약을 널리, 쉽게 쓸 수 있도록 약초 이름에 조선 사람이 부르는 이름을 한글로 쓴다.” 시골에는 약이 부족하기 때문에 주변에서 나는 약을 써야하는데 … 시골사람이 부르는 약초 이름을 쓴 것이다.\""
+          },
+          {
+            "title": "(3) 특징과 의학사적 의의 (신편 한국사 27권 조선 초기의 문화 Ⅱ > Ⅰ. 과학 > 4. 의약과 약학 > 5)《동의보감》의 편찬과 간행)",
+            "publisher": "국사편찬위원회 우리역사넷 (contents.history.go.kr)",
+            "url": "https://contents.history.go.kr/mobile/nh/view.do?levelId=nh_027_0020_0040_0050_0030",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "\"당시 사용하고 있던 향약을 특별히 중요하게 여겨 모든 향약명을 한글로 표시하여 놓았다.\""
+          }
+        ]
+      },
+      {
+        "id": "f8",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Donguibogam was printed repeatedly in China and also in Japan, and was inscribed on UNESCO's Memory of the World Register in 2009.",
+        "claimKo": "『동의보감』은 중국에서 여러 차례, 일본에서도 간행되었으며, 2009년 유네스코 세계기록유산에 등재되었다.",
+        "sources": [
+          {
+            "title": "국보 동의보감(2015-1) (Dongui bogam (Principles and Practice of Eastern Medicine))",
+            "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1111103190100",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"『동의보감(東醫寶鑑)』은 허준(許浚,1539∼1615)이 1610년(광해군 2)에 … 엮어놓은 우리나라 최고의 한의서이다. 선조는 … 허준과, 양예수(楊禮壽), 이명원(李命源) 등에게 명하여 의서를 편찬토록 하였으나 전쟁으로 중단되었다. … 초간본은 편찬된 지 3년 후인 1613년(광해군 5) 11월에 내의원에서 목활자로 간행하였으며, 모두 25권 25책이다. … 중국에서는 1763년(乾隆 28）이후 수차례 간행되었다. 일본에서도 1724년(享保 9）에 교토서림(京都書林)에서 처음 간행된 이후\" / 지정일 2015.06.22, 소장: 국립중앙도서관"
+          },
+          {
+            "title": "동의보감",
+            "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+            "url": "https://encykorea.aks.ac.kr/Article/E0016731",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"『동의보감』은 출간 이후 현재까지 중국에서 대략 30여 차례 출간되었고, 일본에서도 두 차례 출간되었다. … 2009년 7월 제9차 유네스코 기록유산 국제자문위원회(바베이도스)에서 유네스코 세계기록문화유산으로 등재되었다.\""
+          },
+          {
+            "title": "Donguibogam: Principles and Practice of Eastern Medicine",
+            "publisher": "UNESCO Memory of the World (unesco.org)",
+            "url": "https://www.unesco.org/en/memory-world/donguibogam-principles-and-practice-eastern-medicine",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"An encyclopaedia of medical knowledge and treatment techniques compiled in Korea in 1613 and edited by Heo Jun … it developed the ideals of preventive medicine and public health care by the state\" / Registration Year: 2009"
+          },
+          {
+            "title": "한국의 세계기록유산 (Korea's Memory of the World list)",
+            "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+            "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FkorWorldMemHeritage.jsp",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "목록: \"동의보감 (2009년)\" … \"난중일기 (2013년)\""
+          }
+        ]
+      },
+      {
+        "id": "f9",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "First-edition (1613) copies of Donguibogam held by the National Library of Korea, the Academy of Korean Studies and Seoul National University Kyujanggak are designated National Treasures (2015).",
+        "claimKo": "국립중앙도서관, 한국학중앙연구원, 서울대학교 규장각이 소장한 『동의보감』 초간본(1613)은 국보로 지정되어 있다(2015년).",
+        "sources": [
+          {
+            "title": "국보 동의보감(2015-1) (Dongui bogam (Principles and Practice of Eastern Medicine))",
+            "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1111103190100",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"『동의보감(東醫寶鑑)』은 허준(許浚,1539∼1615)이 1610년(광해군 2)에 … 엮어놓은 우리나라 최고의 한의서이다. 선조는 … 허준과, 양예수(楊禮壽), 이명원(李命源) 등에게 명하여 의서를 편찬토록 하였으나 전쟁으로 중단되었다. … 초간본은 편찬된 지 3년 후인 1613년(광해군 5) 11월에 내의원에서 목활자로 간행하였으며, 모두 25권 25책이다. … 중국에서는 1763년(乾隆 28）이후 수차례 간행되었다. 일본에서도 1724년(享保 9）에 교토서림(京都書林)에서 처음 간행된 이후\" / 지정일 2015.06.22, 소장: 국립중앙도서관"
+          },
+          {
+            "title": "국보 동의보감(2015-2) (Dongui bogam (Principles and Practice of Eastern Medicine))",
+            "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1113103190200",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "국보, 지정일 2015.06.22 / 관리자: 한국학중앙연구원 / 25卷25冊(赤裳山史庫本), 1613년"
+          },
+          {
+            "title": "국보 동의보감(2015-3) (Dongui bogam (Principles and Practice of Eastern Medicine))",
+            "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1111103190300",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "국보, 지정일 2015.06.22 / 소재지: 서울특별시 관악구 관악로 1 (서울대학교) / 관리자: 서울대학교규장각 / 1613년"
+          },
+          {
+            "title": "동의보감",
+            "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+            "url": "https://encykorea.aks.ac.kr/Article/E0016731",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "서지사항: \"동의보감 초간본 3종의 문헌사적, 서지적 가치를 높게 평가하여 각기 국보로 승격 지정하였다. 국립중앙도서관 소장본은 … 한국학중앙연구원 소장본은 … 서울대학교 규장각본은 2종이 지정되었는데, 모두 1613년에 간행된 초간본이다.\""
+          }
+        ]
+      }
+    ],
+    "referenceDisplay": "Sources: 국가유산청 국가유산포털; 한국민족문화대백과사전; 국사편찬위원회 우리역사넷; UNESCO Memory of the World",
+    "verification": {
+      "passes": 3,
+      "checkedAt": "2026-10-10",
+      "scope": "cluster",
+      "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted."
+    },
+    "authorNotes": "Sources disagree on the start year of compilation (KHS designation text and encykorea: 1596; KHS portal Memory-of-the-World page: 1597) and on its length (14 vs 16 years), so narration omits both. The number of royal books given to Heo Jun ('500여 권') comes from encykorea only, so narration says 'many'. UNESCO's page says 'compiled in 1613' (the printing year); KHS and encykorea give completion in 1610 and printing in 1613. Omitted: Heo Jun's exile to Uiju (1608–1609); the Jeongyu invasion is referred to only as 'a war broke out'. No remedies or medical advice are presented; prevention is described only as the book's stated principle. Herb names in Hangul: encykorea (compiling principles) plus 우리역사넷/신편한국사 ('모든 향약명을 한글로 표시'). Theme set to 'life' (body and health); BP05 lists 동의보감 at Pillar E (6.E4), so 'crafts' is the grid-aligned alternative. Scene 7 keyword changed to 세계기록유산 so 책 is not repeated. REVISION: the folk-tale entry 허준 설화 (E0063156) was replaced by the person entry 허준 (E0063152) as f1's second source. Birth year: DROPPED in pass 3. KHS gives 1539; encykorea E0063152 is internally inconsistent (infobox 1539 labelled 중종 32 which would be 1537, summary 1539/중종 34, photo captions 1546/명종 1), and other references give 1546, so narration and f1 give no birth year. PASS 3: added 우리역사넷 (신편한국사) as a second source for f4 ('Dongui' = Korea's own medicine, 集例) and f5 (prevention over treatment). PR 1.8c: Hoya's s8 line is 보배 같은 책 rather than the research vocab 보물 같은 책, to avoid the heritage grade 보물 and to echo 보감. s3 keeps 'the doctors were scattered' (f2) and drops 'again' because the story never names an earlier war.",
+    "errata": []
+  },
+  {
+    "v": 1,
     "id": "story:gimjang-arirang",
     "state": "ready",
     "contentVer": 1,
@@ -2706,6 +4362,569 @@ export const storiesAll: Story[] = [
   },
   {
     "v": 1,
+    "id": "story:jagyeongnu-water-clock",
+    "state": "ready",
+    "contentVer": 1,
+    "title": {
+      "ko": "장영실과 스스로 울리는 물시계, 자격루",
+      "romanization": "Jangyeongsilgwa seuseuro ullineun mulsigye, jagyeongnu",
+      "en": "Jang Yeongsil and the Clock That Rang by Itself"
+    },
+    "summaryEn": "Hoya meets Jang Yeongsil, the skilled craftsman King Sejong praised, and watches how flowing water, rolling balls and wooden figures made the jagyeongnu water clock strike the time.",
+    "theme": "crafts",
+    "kind": "science",
+    "recommendedStage": 2,
+    "minutes": 5,
+    "learningGoalsEn": [
+      "Read and recognize 물 (mul, water), 물시계 (mulsigye, water clock) and the instruments 종 (jong, bell), 북 (buk, drum) and 징 (jing, gong).",
+      "Know that King Sejong credited Jang Yeongsil with building the self-striking water clock, which began keeping time in 1434.",
+      "Understand, step by step, how rising water moved balls and figures to strike the time.",
+      "Know that Sejong's original clock is lost, and parts of a 1536 water clock survive as a National Treasure."
+    ],
+    "origin": {
+      "type": "documented",
+      "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
+    },
+    "review": {
+      "language": "draft",
+      "culture": "draft",
+      "advisory": [
+        "historical-hardship"
+      ],
+      "advisoryNoteEn": "Mentions that Jang Yeongsil was first a servant owned by the government."
+    },
+    "keywords": [
+      {
+        "id": "mul",
+        "ko": "물",
+        "romanization": "mul",
+        "en": "water",
+        "kind": "word"
+      },
+      {
+        "id": "mulsigye",
+        "ko": "물시계",
+        "romanization": "mulsigye",
+        "en": "water clock",
+        "kind": "word"
+      },
+      {
+        "id": "jagyeongnu",
+        "ko": "자격루",
+        "romanization": "jagyeongnu",
+        "en": "self-striking water clock",
+        "kind": "word"
+      },
+      {
+        "id": "jong",
+        "ko": "종",
+        "romanization": "jong",
+        "en": "bell",
+        "kind": "word"
+      },
+      {
+        "id": "buk",
+        "ko": "북",
+        "romanization": "buk",
+        "en": "drum",
+        "kind": "word"
+      },
+      {
+        "id": "jing",
+        "ko": "징",
+        "romanization": "jing",
+        "en": "gong",
+        "kind": "word"
+      },
+      {
+        "id": "sigan",
+        "ko": "시간",
+        "romanization": "sigan",
+        "en": "time",
+        "kind": "word"
+      },
+      {
+        "id": "jang-yeongsil",
+        "ko": "장영실",
+        "romanization": "Jangyeongsil",
+        "en": "Jang Yeongsil, a Joseon craftsman",
+        "kind": "term"
+      },
+      {
+        "id": "jong-buk-jing",
+        "ko": "종, 북, 징",
+        "romanization": "jong, buk, jing",
+        "en": "bell, drum, gong",
+        "kind": "phrase"
+      },
+      {
+        "id": "gyeongbokgung",
+        "ko": "경복궁",
+        "romanization": "Gyeongbokgung",
+        "en": "Gyeongbokgung Palace",
+        "kind": "term"
+      },
+      {
+        "id": "sigani-dwaesseoyo",
+        "ko": "시간이 됐어요!",
+        "romanization": "sigani dwaesseoyo!",
+        "en": "It's time!",
+        "kind": "phrase"
+      }
+    ],
+    "cultureNotes": [],
+    "tiers": [
+      {
+        "level": "listen",
+        "scenes": [
+          {
+            "id": "s1",
+            "narrationEn": "Drip, drip, drip. Hoya watches water fall drop by drop into a jar. \"In Korean, water is {kw:mul},\" he says. \"In Joseon, water helped tell the time, {kw:sigan}, with a clock that rang all by itself!\"",
+            "captionEn": "Water drips into a jar",
+            "keyword": {
+              "id": "mul",
+              "ko": "물",
+              "romanization": "mul",
+              "en": "water",
+              "kind": "word"
+            },
+            "factIds": [
+              "f1",
+              "f5"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "Hoya kneeling beside a large bronze jar, watching a thin stream of water trickle into a taller vessel below."
+          },
+          {
+            "id": "s2",
+            "narrationEn": "Records say Jang Yeongsil was first a servant owned by the government in Dongnae. He was so skillful that he took charge of craft work in the palace, and King Sejong valued his talent. Later he was freed and given a post at court.",
+            "captionEn": "Jang Yeongsil works on palace crafts",
+            "keyword": {
+              "id": "jang-yeongsil",
+              "ko": "장영실",
+              "romanization": "Jangyeongsil",
+              "en": "Jang Yeongsil, a Joseon craftsman",
+              "kind": "term"
+            },
+            "factIds": [
+              "f2"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "A focused Joseon craftsman in plain clothes and a headband fitting bronze parts together at a wooden workbench, tools neatly laid out."
+          },
+          {
+            "id": "s3",
+            "narrationEn": "King Sejong said Jang Yeongsil had built a self-striking water clock, and that without him it could never have been made. The king decided to give him a higher official rank.",
+            "captionEn": "King Sejong praises Jang Yeongsil",
+            "keyword": {
+              "id": "mulsigye",
+              "ko": "물시계",
+              "romanization": "mulsigye",
+              "en": "water clock",
+              "kind": "word"
+            },
+            "factIds": [
+              "f3"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "King Sejong in a red royal robe smiles and gestures with praise while the craftsman bows respectfully in a palace hall."
+          },
+          {
+            "id": "s4",
+            "narrationEn": "The clock was called {kw:jagyeongnu}, 'the water clock that strikes by itself.' Water flowed from jars above into a tall vessel below, and a floating rod slowly rose as the water filled up.",
+            "captionEn": "Rising water lifts a floating rod",
+            "keyword": {
+              "id": "jagyeongnu",
+              "ko": "자격루",
+              "romanization": "jagyeongnu",
+              "en": "self-striking water clock",
+              "kind": "word"
+            },
+            "factIds": [
+              "f4"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "Cutaway view: bronze jars set on steps pour water through thin pipes into a tall cylinder, where a rod floats upward."
+          },
+          {
+            "id": "s5",
+            "narrationEn": "When the rod reached a mark, it set metal balls rolling. The balls moved wooden figures that struck a bell, a drum and a gong to tell the time: {kw:jong}, {kw:buk}, {kw:jing}!",
+            "captionEn": "Figures strike a bell, drum and gong",
+            "line": {
+              "ko": "종, 북, 징",
+              "romanization": "jong, buk, jing",
+              "en": "bell, drum, gong",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f4",
+              "f5"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "Three carved wooden figures in robes on a platform, one striking a bell, one a drum, one a gong; small metal balls roll down a chute behind them."
+          },
+          {
+            "id": "s6",
+            "narrationEn": "In 1434, the new clock began keeping time in a pavilion named Borugak at Gyeongbokgung Palace. Drums and bells at the palace gates repeated the sound, so the city could hear the time.",
+            "captionEn": "The clock keeps time at the palace",
+            "keyword": {
+              "id": "gyeongbokgung",
+              "ko": "경복궁",
+              "romanization": "Gyeongbokgung",
+              "en": "Gyeongbokgung Palace",
+              "kind": "term"
+            },
+            "factIds": [
+              "f6"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "A small palace pavilion beside a pond with a large pavilion behind it; a gate tower with a big drum in soft evening light."
+          },
+          {
+            "id": "s7",
+            "narrationEn": "Sejong's original clock does not survive, but water vessels from a water clock made in 1536 remain. They are a National Treasure at the National Palace Museum of Korea. Hoya whispers, \"{kw:sigani-dwaesseoyo}\" That means, \"It's time!\"",
+            "captionEn": "Old water vessels rest in a museum",
+            "line": {
+              "ko": "시간이 됐어요!",
+              "romanization": "sigani dwaesseoyo!",
+              "en": "It's time!",
+              "speaker": "hoya"
+            },
+            "factIds": [
+              "f7"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "A huge plain bronze jar and tall bronze cylinders in a museum hall; Hoya stands small beside them, whispering with a grin."
+          }
+        ],
+        "checks": [
+          {
+            "id": "c1",
+            "kind": "detail",
+            "promptEn": "What made the floating rod rise?",
+            "options": [
+              {
+                "id": "a",
+                "en": "Water collecting in the tall vessel",
+                "isCorrect": true
+              },
+              {
+                "id": "b",
+                "en": "A helper lifting it with a long rope",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "Wind pushing it upward from below",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "Water flowed into the tall vessel, and as it collected, the floating rod rose.",
+            "factIds": [
+              "f4"
+            ]
+          },
+          {
+            "id": "c2",
+            "kind": "detail",
+            "promptEn": "What did the wooden figures strike to tell the time?",
+            "options": [
+              {
+                "id": "a",
+                "en": "A flute, a drum and a harp",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "A bell, a horn and a flute",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "A bell, a drum and a gong",
+                "isCorrect": true
+              }
+            ],
+            "explainEn": "Wooden figures struck a bell, a drum and a gong to tell the time automatically.",
+            "factIds": [
+              "f5"
+            ]
+          },
+          {
+            "id": "c3",
+            "kind": "detail",
+            "promptEn": "What did King Sejong say about Jang Yeongsil?",
+            "options": [
+              {
+                "id": "a",
+                "en": "His clock was too noisy to keep in the palace",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "The clock could not have been made without him",
+                "isCorrect": true
+              },
+              {
+                "id": "c",
+                "en": "His work should be hidden away from the people",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "King Sejong said Jang Yeongsil made the clock, and that it could not have been made without him.",
+            "factIds": [
+              "f3"
+            ]
+          }
+        ],
+        "checkpoints": [],
+        "sequenceSceneIds": [
+          "s1",
+          "s3",
+          "s5",
+          "s7"
+        ],
+        "newKeywordIds": [
+          "mul",
+          "mulsigye",
+          "jagyeongnu"
+        ]
+      }
+    ],
+    "coverSceneId": "s1",
+    "pillarTags": [],
+    "companionId": "hoya",
+    "facts": [
+      {
+        "id": "f1",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "A water clock measures time by the increase or decrease of water.",
+        "claimKo": "물시계는 물이 늘어나거나 줄어드는 양으로 시간을 재는 장치이다.",
+        "sources": [
+          {
+            "title": "국보 창경궁 자격루 누기 (Clepsydra of Changgyeonggung Palace)",
+            "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1111102290000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"물시계는 물의 증가량 또는 감소량으로 시간을 측정하는 장치로서 … 조선 세종 16년(1434) 장영실에 의해 정해진 시간에 종과 징·북이 저절로 울리도록 한 물시계가 처음 제작되었으나, 오래 사용되지는 못하였고, 중종 31년(1536)에 다시 제작한 자격루의 일부가 현재 남아 있다.\""
+          },
+          {
+            "title": "물시계(漏刻)",
+            "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+            "url": "https://encykorea.aks.ac.kr/Article/E0019863",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "정의: \"물의 증가 또는 감소로 시간을 측정하는 장치.\""
+          }
+        ]
+      },
+      {
+        "id": "f2",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "The Sillok records that Jang Yeong-sil was a gwanno (官奴, a government-owned servant) of Dongnae County who, being highly skilled, regularly took charge of craft work in the palace; King Sejong said he valued Jang's skill. Encykorea adds that he was later freed (면천) and appointed to a court post.",
+        "claimKo": "실록에 따르면 장영실은 동래현의 관노(官奴, 관청에 속한 종)였으나 솜씨가 정교하여 늘 궁궐 안의 공장 일을 맡았으며, 세종은 그의 재주를 아낀다고 하였다. 한국민족문화대백과사전은 그가 뒤에 면천되어 궁중 기술자로 일하게 되었다고 설명한다.",
+        "sources": [
+          {
+            "title": "세종실록 65권, 세종 16년(1434) 7월 1일 병자 4번째 기사 「새로 만든 누기의 구조와 원리 및 보관 장소와 누기 명의 내용」",
+            "publisher": "국사편찬위원회 조선왕조실록 (sillok.history.go.kr)",
+            "url": "https://sillok.history.go.kr/id/kda_11607001_004",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "국역: \"영실(英實)은 동래현(東萊縣) 관노(官奴)인데, 성품이 정교(精巧)하여 항상 궐내의 공장(工匠) 일을 맡았었다.\""
+          },
+          {
+            "title": "세종실록 61권, 세종 15년(1433) 9월 16일 을미 3번째 기사 「안숭선에게 명하여 장영실에게 호군의 관직을 더해 줄 것을 의논하게 하다」",
+            "publisher": "국사편찬위원회 조선왕조실록 (sillok.history.go.kr)",
+            "url": "https://sillok.history.go.kr/id/kda_11509016_003",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "국역: \"공교(工巧)한 솜씨가 보통 사람에 뛰어나므로 태종께서 보호하시었고, 나도 역시 이를 아낀다. … 이제 자격궁루(自擊宮漏)를 만들었는데 비록 나의 가르침을 받아서 하였지마는, 만약 이 사람이 아니더라면 암만해도 만들어 내지 못했을 것이다. … 호군(護軍)의 관직을 더해 주고자 한다.\" … 임금이 그대로 따랐다."
+          },
+          {
+            "title": "장영실",
+            "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+            "url": "https://encykorea.aks.ac.kr/Article/E0048697",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"동래현의 관노로 있을 때 그의 재주가 세종에게 인정되어 중국에 파견, 천문기기 연구의 기회를 가지게 되었다.\" / \"귀국하자 면천되고 1423년(세종 5) 상의원별좌(尙衣院別坐)에 임명되어 궁중기술자로서의 활동이 시작되었다.\""
+          }
+        ]
+      },
+      {
+        "id": "f3",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "King Sejong stated that Jang Yeong-sil made the self-striking palace water clock (自擊宮漏) and that, although he followed the king's instructions, it could not have been made without him; the king then decided (his ministers agreeing) to add the rank of hogun for him.",
+        "claimKo": "세종은 장영실이 자격궁루를 만들었으며, 임금의 가르침을 받았더라도 그가 아니었다면 만들지 못했을 것이라고 말하고, 대신들의 동의를 얻어 그에게 호군 벼슬을 더해 주기로 하였다.",
+        "sources": [
+          {
+            "title": "세종실록 61권, 세종 15년(1433) 9월 16일 을미 3번째 기사 「안숭선에게 명하여 장영실에게 호군의 관직을 더해 줄 것을 의논하게 하다」",
+            "publisher": "국사편찬위원회 조선왕조실록 (sillok.history.go.kr)",
+            "url": "https://sillok.history.go.kr/id/kda_11509016_003",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "국역: \"공교(工巧)한 솜씨가 보통 사람에 뛰어나므로 태종께서 보호하시었고, 나도 역시 이를 아낀다. … 이제 자격궁루(自擊宮漏)를 만들었는데 비록 나의 가르침을 받아서 하였지마는, 만약 이 사람이 아니더라면 암만해도 만들어 내지 못했을 것이다. … 호군(護軍)의 관직을 더해 주고자 한다.\" … 임금이 그대로 따랐다."
+          },
+          {
+            "title": "국보 창경궁 자격루 누기 (Clepsydra of Changgyeonggung Palace)",
+            "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1111102290000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"물시계는 물의 증가량 또는 감소량으로 시간을 측정하는 장치로서 … 조선 세종 16년(1434) 장영실에 의해 정해진 시간에 종과 징·북이 저절로 울리도록 한 물시계가 처음 제작되었으나, 오래 사용되지는 못하였고, 중종 31년(1536)에 다시 제작한 자격루의 일부가 현재 남아 있다.\""
+          }
+        ]
+      },
+      {
+        "id": "f4",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "In the Jagyeongnu, water flowed from upper vessels into a tall receiving vessel; a floating rod rose as the water collected, and at set marks it released metal balls that set the striking mechanism in motion.",
+        "claimKo": "자격루에서는 위쪽 물그릇의 물이 아래의 긴 물받이 통으로 흘러들고, 물이 고이면 떠 있는 잣대(살대)가 올라가 정해진 눈금에서 쇠구슬을 굴려 시보 장치를 움직였다.",
+        "sources": [
+          {
+            "title": "국보 창경궁 자격루 누기 (Clepsydra of Changgyeonggung Palace)",
+            "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1111102290000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"맨 위에 있는 큰 물그릇에 넉넉히 물을 부어주면 그 물이 아래의 작은 그릇을 거쳐, 제일 아래쪽 길고 높은 물받이 통에 흘러든다. 물받이 통에 물이 고이면 그 위에 떠 있는 잣대가 점점 올라가 … 쇠 구슬을 구멍 속에 굴려 넣어준다. … 종과 징·북을 울리기도 하고, 또는 나무로 만든 인형이 나타나 시각을 알려주는 팻말을 들어 보이기도 한다.\""
+          },
+          {
+            "title": "세종실록 65권, 세종 16년(1434) 7월 1일 병자 4번째 기사 「새로 만든 누기의 구조와 원리 및 보관 장소와 누기 명의 내용」",
+            "publisher": "국사편찬위원회 조선왕조실록 (sillok.history.go.kr)",
+            "url": "https://sillok.history.go.kr/id/kda_11607001_004",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "국역: \"파수호의 누수가 수수호에 내려서 모이면, 떠 있던 살대[浮箭]가 점점 올라와서 시간에 응하여 … 작은 구리 구슬이 떨어져 내려서 … 큰 구슬이 떨어져 … 시간을 맡은 신의 팔을 치받으면, 곧 종이 울린다.\""
+          },
+          {
+            "title": "자격루",
+            "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+            "url": "https://encykorea.aks.ac.kr/Article/E0047854",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"1434년 7월 1일(양력으로 8월 5일) 경회루의 남쪽에 보루각을 세우고 그 안에 자격루를 설치하여 시각을 알리도록 하였다. … 살대가 떠오름에 따라 이 부력(浮力)이 지렛대와 쇠구슬에 전달되어 … 목인(木人)이 3명 서 있어서 하나는 시를 알리기 위하여 종을 치는 일을 맡고, 다른 하나는 경을 알리기 위하여 북을 치는 일을 맡고, 나머지 하나는 점을 알리기 위하여 징을 치는 일을 맡았다.\""
+          }
+        ]
+      },
+      {
+        "id": "f5",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "The Jagyeongnu announced the time automatically: wooden figures struck a bell (jong), a drum (buk) and a gong (jing).",
+        "claimKo": "자격루는 나무 인형이 종·북·징을 쳐서 스스로 시각을 알렸다.",
+        "sources": [
+          {
+            "title": "세종실록 65권, 세종 16년(1434) 7월 1일 병자 4번째 기사 「새로 만든 누기의 구조와 원리 및 보관 장소와 누기 명의 내용」",
+            "publisher": "국사편찬위원회 조선왕조실록 (sillok.history.go.kr)",
+            "url": "https://sillok.history.go.kr/id/kda_11607001_004",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "국역: \"이날부터 비로소 새 누기(漏器)를 썼다. … 호군(護軍) 장영실(蔣英實)에게 명하여 사신 목인(司辰木人)을 만들어 시간에 따라 스스로 알리게 하고 … 하나는 시를 맡아 종(鐘)을 울리고, 하나는 경(更)을 맡아 북을 울리며, 하나는 점(點)을 맡아 징을 울린다.\""
+          },
+          {
+            "title": "국보 창경궁 자격루 누기 (Clepsydra of Changgyeonggung Palace)",
+            "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1111102290000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"맨 위에 있는 큰 물그릇에 넉넉히 물을 부어주면 그 물이 아래의 작은 그릇을 거쳐, 제일 아래쪽 길고 높은 물받이 통에 흘러든다. 물받이 통에 물이 고이면 그 위에 떠 있는 잣대가 점점 올라가 … 쇠 구슬을 구멍 속에 굴려 넣어준다. … 종과 징·북을 울리기도 하고, 또는 나무로 만든 인형이 나타나 시각을 알려주는 팻말을 들어 보이기도 한다.\""
+          },
+          {
+            "title": "자격루",
+            "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+            "url": "https://encykorea.aks.ac.kr/Article/E0047854",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"1434년 7월 1일(양력으로 8월 5일) 경회루의 남쪽에 보루각을 세우고 그 안에 자격루를 설치하여 시각을 알리도록 하였다. … 살대가 떠오름에 따라 이 부력(浮力)이 지렛대와 쇠구슬에 전달되어 … 목인(木人)이 3명 서 있어서 하나는 시를 알리기 위하여 종을 치는 일을 맡고, 다른 하나는 경을 알리기 위하여 북을 치는 일을 맡고, 나머지 하나는 점을 알리기 위하여 징을 치는 일을 맡았다.\""
+          }
+        ]
+      },
+      {
+        "id": "f6",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "From the 1st day of the 7th lunar month of 1434 (Sejong year 16), the new water clock was put into use in a pavilion named Borugak at Gyeongbokgung Palace; its sounds were relayed by drums and bells at palace gates so the city could know the time.",
+        "claimKo": "1434년(세종 16) 7월 1일부터 경복궁 보루각에 설치한 새 물시계를 쓰기 시작하였고, 그 소리를 궁궐 문의 북과 종이 이어받아 서울에 시각을 알렸다.",
+        "sources": [
+          {
+            "title": "세종실록 65권, 세종 16년(1434) 7월 1일 병자 4번째 기사 「새로 만든 누기의 구조와 원리 및 보관 장소와 누기 명의 내용」",
+            "publisher": "국사편찬위원회 조선왕조실록 (sillok.history.go.kr)",
+            "url": "https://sillok.history.go.kr/id/kda_11607001_004",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "국역: \"이날부터 비로소 새 누기(漏器)를 썼다. … 호군(護軍) 장영실(蔣英實)에게 명하여 사신 목인(司辰木人)을 만들어 시간에 따라 스스로 알리게 하고 … 하나는 시를 맡아 종(鐘)을 울리고, 하나는 경(更)을 맡아 북을 울리며, 하나는 점(點)을 맡아 징을 울린다.\""
+          },
+          {
+            "title": "세종실록 65권, 세종 16년(1434) 7월 1일 병자 4번째 기사 「새로 만든 누기의 구조와 원리 및 보관 장소와 누기 명의 내용」",
+            "publisher": "국사편찬위원회 조선왕조실록 (sillok.history.go.kr)",
+            "url": "https://sillok.history.go.kr/id/kda_11607001_004",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "국역: \"드디어 그 집을 보루각(報漏閣)이라 이름하고 … 경회루의 남문과 월화문(月華門)·근정문(勤政門)에 각각 금고(金鼓)를 설치하고, 광화문에 대종고(大鍾鼓)를 세워서, 당일 밤에 각 문의 쇠북을 맡은 자가 목인(木人)의 금고 소리를 듣고는 차례로 전하여 친다.\""
+          },
+          {
+            "title": "보루각",
+            "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+            "url": "https://encykorea.aks.ac.kr/Article/E0023286",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"1434년(세종 16) 세종에 의해 세워졌다. 그 해 7월 초하루를 기하여 장영실(蔣英實)이 새로 만든 자격루(自擊漏)를 표준시계로 사용하기 시작하였는데, 보루각은 바로 이 자격루를 시설해놓은 경복궁의 전각이다. … 보루각에서 시계가 자동으로 소리를 내면 그에 따라 경복궁의 문루에서 같은 신호를 받아 서울 시내에 시각을 알리게 되어 있었다.\""
+          },
+          {
+            "title": "자격루",
+            "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+            "url": "https://encykorea.aks.ac.kr/Article/E0047854",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"1434년 7월 1일(양력으로 8월 5일) 경회루의 남쪽에 보루각을 세우고 그 안에 자격루를 설치하여 시각을 알리도록 하였다. … 살대가 떠오름에 따라 이 부력(浮力)이 지렛대와 쇠구슬에 전달되어 … 목인(木人)이 3명 서 있어서 하나는 시를 알리기 위하여 종을 치는 일을 맡고, 다른 하나는 경을 알리기 위하여 북을 치는 일을 맡고, 나머지 하나는 점을 알리기 위하여 징을 치는 일을 맡았다.\""
+          }
+        ]
+      },
+      {
+        "id": "f7",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "The Sejong-era Jagyeongnu does not survive; water vessels of a Jagyeongnu remade in 1536 (Jungjong year 31) remain and are designated a National Treasure ('Clepsydra of Changgyeonggung Palace'), kept at the National Palace Museum of Korea.",
+        "claimKo": "세종 때 만든 자격루는 남아 있지 않으며, 1536년(중종 31)에 다시 만든 자격루의 물통 부분이 남아 국보 '창경궁 자격루 누기'로 지정되어 국립고궁박물관에 있다.",
+        "sources": [
+          {
+            "title": "국보 창경궁 자격루 누기 (Clepsydra of Changgyeonggung Palace)",
+            "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1111102290000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"물시계는 물의 증가량 또는 감소량으로 시간을 측정하는 장치로서 … 조선 세종 16년(1434) 장영실에 의해 정해진 시간에 종과 징·북이 저절로 울리도록 한 물시계가 처음 제작되었으나, 오래 사용되지는 못하였고, 중종 31년(1536)에 다시 제작한 자격루의 일부가 현재 남아 있다.\""
+          },
+          {
+            "title": "국보 창경궁 자격루 누기 (Clepsydra of Changgyeonggung Palace)",
+            "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1111102290000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "시대: 조선 중종 31년(1536) / 소재지: 서울특별시 종로구 효자로 12 (세종로, 국립고궁박물관) / \"지금 남아 있는 물시계는 쇠구슬이 굴러 조화를 이루던 부분이 없어진 채, 물통 부분들만 남아 있다.\""
+          },
+          {
+            "title": "자격루",
+            "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+            "url": "https://encykorea.aks.ac.kr/Article/E0047854",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"세종 때 만든 자격루는 모두 소실되고 없다. 현재 남아 있는 것으로는 1536년(중종 31)에 만든 파수호와 수수호가 … 보관되어 있다.\" (현 소장처는 국가유산포털 기준 국립고궁박물관)"
+          }
+        ]
+      }
+    ],
+    "referenceDisplay": "Sources: 국사편찬위원회 조선왕조실록(세종실록); 국가유산청 국가유산포털; 한국민족문화대백과사전",
+    "verification": {
+      "passes": 3,
+      "checkedAt": "2026-10-10",
+      "scope": "cluster",
+      "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted."
+    },
+    "authorNotes": "Dating: the Sillok entry in which Sejong praises Jang and grants the rank 호군 is dated 1433-09-16 (lunar), while KHS and encykorea give 1434 as the year the clock was made/completed; narration avoids a making year and gives only the start of use (1434-07-01 lunar), on which the Sillok and encykorea agree. Other makers: encykorea's 자격루 entry lists 장영실·이천·김조 and its 장영실 entry mentions 김빈; the story names only Jang Yeong-sil, whom the Sillok (1433, 1434) and KHS credit. Location: encykorea says the 1536 vessels are at Deoksugung (outdated); KHS lists the National Palace Museum of Korea. Simplified mechanism: the Sillok distinguishes small copper balls and large iron balls and also describes 12 zodiac figures holding time plaques; narration says 'metal balls'. Jang Yeong-sil's later career and other instruments (e.g., 옥루, 혼천의) omitted.  REVISION: 관노 is described as a government-owned servant (Sillok 1434: 동래현 관노), worded neutrally; encykorea adds he was later freed and given a court post, so narration says 'first a servant owned by the government'. Illustration of the 1536 vessels no longer shows dragons: KHS describes plain bronze vessels, and the only decoration mention found is an encykorea image caption ('수수통의 용문양'), which is not in the KHS text, so decoration is left out entirely. PASS 3: scene 3/f3 now say the king 'decided to give' the rank (Sillok 1433-09-16: 'I wish to add the post of hogun'; Hwang Hui and others agreed and 'the king followed'). PR 1.8c: s2 now says 'first a servant owned by the government in Dongnae' and adds the encykorea ending from f2 ('Later he was freed and given a post at court'); the bare romanized 'gwanno' was removed; advisory 'historical-hardship' added. s6 says the gate drums and bells 'repeated the sound' (f6: relayed). s1 now tokens 시간 so the s7 line builds on a known word.",
+    "errata": []
+  },
+  {
+    "v": 1,
     "id": "story:janggyeong-panjeon",
     "state": "ready",
     "contentVer": 1,
@@ -3966,6 +6185,1111 @@ export const storiesAll: Story[] = [
       "notes": "Third independent pass. Every cited URL for all 6 episodes (52 facts) was re-opened (UNESCO pages via Wayback copies when the live site resets connections) and quotes/locators were compared; the one exception is unesco.org/en/prizes/literacy (unreachable from here; its claim is now also backed by a Korean MCST press release). Eight minimal corrections were made: (1) Hangeul Day f3 no longer says 'Gregorian' (no cited source says the October 9 conversion was Gregorian; encykorea separates Julian/Gregorian only for 1932-45) and dates the October 29/28 observances; (2) f10 gains a third source (SBS 2018 with 국립한글박물관 curator); (3) Shapes scene 8, learning goal and f7 now say 'South Korea's spelling rules' count 24 (North Korea counts 40, 국립한글박물관 webzine 59); (4) Sejong scene 4/f4: 백성 is 'an old-fashioned word' with 표준국어대사전 added; (5) Jikji f8 quote no longer repeats a prize amount that differs between UNESCO page versions; (6) Tripitaka f6 wood and corner plates now have two further sources (정책브리핑; 박상진 wood-identification study); (8) Hangeul Day f9 gains a second source (문화체육관광부 press release); (7) Panjeon scene 8/f9: 'visitors cannot walk inside' replaced by 'visitor entry is restricted' because Haeinsa has run pre-booked tours inside Beopbojeon since June 2021. See hangul-printing.signoff.md."
     },
     "authorNotes": "There is no comparison with Gutenberg because official Korean sources give different gaps: '70여년' and '80여년' on the 국가유산포털 Jikji page, and '78년' on the Heungdeoksa site signboard text. How the book reached France is left out as a sensitive topic for young learners; per 국가유산포털 it was collected by Collin de Plancy, passed to Henri Vever, and went to the BnF under his will after his death in 1950. It can be added later with that source. The 1972 'International Book Year' exhibition and the old misnomer 'Jikji Simgyeong' are also left out. The surviving volume has lost its first leaf (38 of 39 leaves remain, per 국가유산포털), which is left out too. The casting method (wax versus sand) is not described because it is debated, and earlier metal-type evidence (the 1239 colophon) is mentioned only in general terms. The full title is 백운화상초록불조직지심체요절 (Baegun Hwasang Chorok Buljo Jikji Simche Yojeol). REVISED: the names of Baegun's disciples are no longer given in the narration. 국가유산포털 writes the second disciple 달담 and the Cheongju Early Printing Museum writes 달잠 (達湛); the museum names Seokchan and Daljam as disciples and Myodeok as donor. Scene 8: 'diggers' -> 'archaeologists'; 'The temple itself disappeared long ago' -> 'seems to have been lost in a fire long ago' (encykorea: 폐사된 것으로 보이며); 'bronze piece' -> 'metal piece' because 국가유산포털 describes the 금구 as a 쇠북(금구) fragment. Vocab 종이/인쇄/금속 replaced by 제자/금속활자/직지 so that every vocab word appears in a scene. FINAL PASS (3rd check): f8 quote no longer repeats the prize amount (UNESCO page copies show US$ 30,000 and US$ 40,000 at different times). All other facts re-verified unchanged. REVIEW PASS (PR 1.8b): title.en and s1 say 'metal type', not 'letters made of metal' (Jikji predates Hangul and its type pieces are characters). s8 now says the temple seems to have closed after a fire (f9: abandoned after a fire). Advisory: the fire in s8 (proposed in F-STORY-001 §3.6) was reviewed and cleared; the scene names no person, harm or danger, only that a building closed long ago.",
+    "errata": []
+  },
+  {
+    "v": 1,
+    "id": "story:kim-hongdo-genre-paintings",
+    "state": "ready",
+    "contentVer": 1,
+    "title": {
+      "ko": "김홍도의 풍속화, 씨름과 서당",
+      "romanization": "Gimhongdoui pungsokhwa, ssireumgwa seodang",
+      "en": "Kim Hongdo's Pictures of Everyday Life"
+    },
+    "summaryEn": "Hoya looks closely at Ssireum and Seodang from Danwon's genre painting album at the National Museum of Korea, spotting a taffy seller, shoes that someone has taken off, and a sniffling schoolboy.",
+    "theme": "life",
+    "kind": "art",
+    "recommendedStage": 1,
+    "minutes": 5,
+    "learningGoalsEn": [
+      "Read and recognize 그림 (geurim, picture), 화가 (hwaga, painter), 씨름 (ssireum, Korean wrestling) and 서당 (seodang, village school).",
+      "Know that Kim Hongdo (pen name Danwon, born 1745) was a Joseon court painter famous for genre paintings.",
+      "Know what can be seen in the paintings Ssireum and Seodang.",
+      "Know that the album of 25 genre paintings is a Treasure kept at the National Museum of Korea, and that ssireum is living heritage today."
+    ],
+    "origin": {
+      "type": "documented",
+      "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
+    },
+    "review": {
+      "language": "draft",
+      "culture": "draft",
+      "advisory": []
+    },
+    "keywords": [
+      {
+        "id": "geurim",
+        "ko": "그림",
+        "romanization": "geurim",
+        "en": "picture; painting",
+        "kind": "word"
+      },
+      {
+        "id": "hwaga",
+        "ko": "화가",
+        "romanization": "hwaga",
+        "en": "painter",
+        "kind": "word"
+      },
+      {
+        "id": "pungsokhwa",
+        "ko": "풍속화",
+        "romanization": "pungsokhwa",
+        "en": "genre painting",
+        "kind": "word"
+      },
+      {
+        "id": "ssireum",
+        "ko": "씨름",
+        "romanization": "ssireum",
+        "en": "Korean wrestling",
+        "kind": "word"
+      },
+      {
+        "id": "yeotjangsu",
+        "ko": "엿장수",
+        "romanization": "yeotjangsu",
+        "en": "taffy seller",
+        "kind": "word"
+      },
+      {
+        "id": "seodang",
+        "ko": "서당",
+        "romanization": "seodang",
+        "en": "village school",
+        "kind": "word"
+      },
+      {
+        "id": "ssireum-hanpan-haeyo",
+        "ko": "씨름 한판 해요!",
+        "romanization": "ssireum hanpan haeyo!",
+        "en": "Let's have a round of ssireum!",
+        "kind": "phrase"
+      },
+      {
+        "id": "kim-hong-do",
+        "ko": "김홍도",
+        "romanization": "Gimhongdo",
+        "en": "Kim Hongdo, a Joseon court painter",
+        "kind": "term"
+      }
+    ],
+    "cultureNotes": [],
+    "tiers": [
+      {
+        "level": "listen",
+        "scenes": [
+          {
+            "id": "s1",
+            "narrationEn": "Hoya dips a brush into ink. \"In Korean, a picture is {kw:geurim},\" he says. \"Let's look at pictures that show how ordinary people lived in Joseon!\"",
+            "captionEn": "Hoya dips a brush into ink",
+            "keyword": {
+              "id": "geurim",
+              "ko": "그림",
+              "romanization": "geurim",
+              "en": "picture; painting",
+              "kind": "word"
+            },
+            "factIds": [
+              "f1"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "Hoya holding a brush over a sheet of plain hanji paper, an ink stone and water dropper beside him."
+          },
+          {
+            "id": "s2",
+            "narrationEn": "Kim Hongdo, {kw:kim-hong-do}, whose pen name was Danwon, was born in 1745. He was a court painter who painted many kinds of subjects, and he is especially famous for genre paintings, pictures of everyday life.",
+            "captionEn": "Kim Hongdo paints everyday life",
+            "keyword": {
+              "id": "hwaga",
+              "ko": "화가",
+              "romanization": "hwaga",
+              "en": "painter",
+              "kind": "word"
+            },
+            "factIds": [
+              "f2"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "A Joseon painter in a light robe sitting on the floor painting on paper, brushes standing in a holder beside him."
+          },
+          {
+            "id": "s3",
+            "narrationEn": "An album of 25 genre paintings, known as Danwon's genre painting album, is kept at the National Museum of Korea. It is designated a Treasure. In Korean, a genre painting is {kw:pungsokhwa}.",
+            "captionEn": "An album of genre paintings in a museum",
+            "keyword": {
+              "id": "pungsokhwa",
+              "ko": "풍속화",
+              "romanization": "pungsokhwa",
+              "en": "genre painting (a picture of everyday life)",
+              "kind": "word"
+            },
+            "factIds": [
+              "f3"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "An open folding album showing small paintings of people working and playing, displayed in a museum case."
+          },
+          {
+            "id": "s4",
+            "narrationEn": "Look at the painting {kw:ssireum}! In the middle, two wrestlers grab hold of each other and test their strength. Around them, spectators sit in two curved groups, watching closely.",
+            "captionEn": "Two wrestlers test their strength",
+            "keyword": {
+              "id": "ssireum",
+              "ko": "씨름",
+              "romanization": "ssireum",
+              "en": "ssireum, Korean wrestling",
+              "kind": "word"
+            },
+            "factIds": [
+              "f4"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "Two wrestlers gripping each other in the center, with two curved groups of seated spectators in white clothes and hats, one above and one below them, with round, cheerful faces."
+          },
+          {
+            "id": "s5",
+            "narrationEn": "Can you spot more? A taffy seller, {kw:yeotjangsu}, stands at the left, away from the crowd's attention. Over on the right, some shoes have been taken off and left.",
+            "captionEn": "A taffy seller stands at the left",
+            "keyword": {
+              "id": "yeotjangsu",
+              "ko": "엿장수",
+              "romanization": "yeotjangsu",
+              "en": "taffy seller (yeot is a Korean taffy)",
+              "kind": "word"
+            },
+            "factIds": [
+              "f5"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "Detail of the painting's edges: a smiling taffy seller with a wooden tray stands at the left edge, outside the crowd's attention; at the right edge, a pair of shoes that someone has taken off rests on the ground."
+          },
+          {
+            "id": "s6",
+            "narrationEn": "Now look at {kw:seodang}, a painting of a village school. The teacher and students are gathered around one boy, who has turned away, sniffling. The other students look amused, and the teacher looks troubled. Hoya hopes the boy feels better soon.",
+            "captionEn": "A class gathers around one boy",
+            "keyword": {
+              "id": "seodang",
+              "ko": "서당",
+              "romanization": "seodang",
+              "en": "village school",
+              "kind": "word"
+            },
+            "factIds": [
+              "f6"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "A small schoolroom: a teacher in a square scholar's cap and several students gather around one boy who is crouched and turned away, wiping his eyes; some students grin, and the teacher looks puzzled."
+          },
+          {
+            "id": "s7",
+            "narrationEn": "Ssireum is still loved today. It is a National Intangible Heritage of Korea, and in 2018 UNESCO inscribed traditional Korean wrestling as Intangible Cultural Heritage. Hoya rolls up his sleeves: \"{kw:ssireum-hanpan-haeyo}\"",
+            "captionEn": "Ssireum is still loved today",
+            "line": {
+              "ko": "씨름 한판 해요!",
+              "romanization": "ssireum hanpan haeyo!",
+              "en": "Let's have a round of ssireum!",
+              "speaker": "hoya"
+            },
+            "factIds": [
+              "f7"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "Hoya and a child friend in a sand ring, playfully gripping cloth belts and smiling, with friends cheering around them."
+          }
+        ],
+        "checks": [
+          {
+            "id": "c1",
+            "kind": "detail",
+            "promptEn": "How are the watchers arranged in the painting {target}?",
+            "target": {
+              "ko": "씨름",
+              "romanization": "ssireum",
+              "en": "Korean wrestling"
+            },
+            "options": [
+              {
+                "id": "a",
+                "en": "In two curved groups around the wrestlers",
+                "isCorrect": true
+              },
+              {
+                "id": "b",
+                "en": "In one long straight row beside the wrestlers",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "In a single line behind the taffy seller",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "The spectators sit in two rounded groups around the wrestlers, one above and one below.",
+            "factIds": [
+              "f4"
+            ]
+          },
+          {
+            "id": "c2",
+            "kind": "pick-meaning",
+            "promptEn": "What is a {target}?",
+            "target": {
+              "ko": "서당",
+              "romanization": "seodang",
+              "en": "village school"
+            },
+            "options": [
+              {
+                "id": "a",
+                "en": "A busy village market",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "A village school",
+                "isCorrect": true
+              },
+              {
+                "id": "c",
+                "en": "A royal palace hall",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "A seodang is a village school. In the painting Seodang, the teacher and students are gathered around one boy.",
+            "factIds": [
+              "f6"
+            ]
+          },
+          {
+            "id": "c3",
+            "kind": "detail",
+            "promptEn": "Who stands at the left of the painting {target}, outside the crowd's attention?",
+            "target": {
+              "ko": "씨름",
+              "romanization": "ssireum",
+              "en": "Korean wrestling"
+            },
+            "options": [
+              {
+                "id": "a",
+                "en": "A teacher in a scholar's cap",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "A boy who has turned away",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "A taffy seller",
+                "isCorrect": true
+              }
+            ],
+            "explainEn": "In Ssireum, a taffy seller stands at the left, away from the crowd's attention.",
+            "factIds": [
+              "f5"
+            ]
+          }
+        ],
+        "checkpoints": [],
+        "sequenceSceneIds": [
+          "s1",
+          "s3",
+          "s5",
+          "s7"
+        ],
+        "newKeywordIds": [
+          "geurim",
+          "hwaga",
+          "pungsokhwa",
+          "ssireum"
+        ]
+      }
+    ],
+    "coverSceneId": "s1",
+    "pillarTags": [],
+    "companionId": "hoya",
+    "facts": [
+      {
+        "id": "f1",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Genre painting (풍속화) depicts the everyday life of ordinary people rather than the royal court; Kim Hong-do's album shows the daily life and work of common people.",
+        "claimKo": "풍속화는 궁궐이 아닌 민간의 생활상을 그린 그림이며, 김홍도의 풍속도 화첩은 서민들의 일상생활과 생업을 담고 있다.",
+        "sources": [
+          {
+            "title": "풍속화 (관련 항목 정의, 「김홍도 필 풍속도 화첩」 항목 내)",
+            "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+            "url": "https://encykorea.aks.ac.kr/Article/E0013639",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "Verified on the page: in the 관련 항목 list, 풍속화: \"궁궐이 아닌 민간의 생활상을 그린 그림. 속화.\" (a related-item definition on the album entry, not the album text itself)"
+          },
+          {
+            "title": "보물 김홍도 필 풍속도 화첩 (Album of Genre Paintings by Kim Hong-do)",
+            "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1121105270000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"김홍도필(金弘道筆) <풍속도 화첩(風俗圖 畵帖)>은 조선 후기의 화가인 김홍도가 그린 그림책 형태의 풍속화 25점이다. 단원 김홍도(1745 ∼ ?)는 … 풍속화가로 더 유명하다. … <씨름>, <대장간>, <글방> 등과 같이 서민사회의 일상생활 모습\" / 지정일 1970.12.30 / 소재지: 국립중앙박물관"
+          }
+        ]
+      },
+      {
+        "id": "f2",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Kim Hong-do (pen name Danwon) was born in 1745; he was a court painter (dohwaseo hwawon) who excelled in many genres and is especially famous for genre painting.",
+        "claimKo": "김홍도(호 단원)는 1745년에 태어났으며, 도화서 화원으로서 여러 분야의 그림에 뛰어났고 특히 풍속화가로 유명하다.",
+        "sources": [
+          {
+            "title": "보물 김홍도 필 풍속도 화첩 (Album of Genre Paintings by Kim Hong-do)",
+            "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1121105270000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"김홍도필(金弘道筆) <풍속도 화첩(風俗圖 畵帖)>은 조선 후기의 화가인 김홍도가 그린 그림책 형태의 풍속화 25점이다. 단원 김홍도(1745 ∼ ?)는 … 풍속화가로 더 유명하다. … <씨름>, <대장간>, <글방> 등과 같이 서민사회의 일상생활 모습\" / 지정일 1970.12.30 / 소재지: 국립중앙박물관"
+          },
+          {
+            "title": "김홍도",
+            "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+            "url": "https://encykorea.aks.ac.kr/Article/E0011079",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"호는 단원(檀園) … 1745년(영조 21) 아버지 김석무(金錫武)와 어머니 장담 문씨(長潭文氏) 사이에서 태어났다.\" / \"18~19세 무렵 예조 소속의 도화서 화원이 된 것으로 추정되며\" / \"산수화, 도석인물화, 풍속화, 화조화 등 모든 화목에서 발군의 실력을 보였다.\""
+          }
+        ]
+      },
+      {
+        "id": "f3",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "The album of 25 genre paintings attributed to Kim Hong-do, also called Danwon's genre painting album (단원 풍속도첩), is designated a Treasure (1970) and kept at the National Museum of Korea.",
+        "claimKo": "김홍도의 풍속화 25점으로 이루어진 화첩(단원 풍속도첩)은 보물로 지정되어 있으며(1970년) 국립중앙박물관에 소장되어 있다.",
+        "sources": [
+          {
+            "title": "《단원 풍속도첩》 (소장품번호 본관6504)",
+            "publisher": "국립중앙박물관 (National Museum of Korea, museum.go.kr)",
+            "url": "https://www.museum.go.kr/site/main/relic/treasure/view?relicId=3799",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"이 화첩은 1918년 趙漢俊에게서 구입했고 모두 27점이었으나 1957年 원 화첩의 首尾에 위치한 〈群仙圖〉2점은 별도의 족자로 만들고 풍속도 25점만 새롭게 화첩으로 꾸몄다. … 1970年 … 《檀園風俗圖帖》이란 명칭으로 보물 … 로 지정되었다.\" / 게재순: \"1）서당 … 4) 씨름\""
+          },
+          {
+            "title": "보물 김홍도 필 풍속도 화첩 (Album of Genre Paintings by Kim Hong-do)",
+            "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1121105270000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"김홍도필(金弘道筆) <풍속도 화첩(風俗圖 畵帖)>은 조선 후기의 화가인 김홍도가 그린 그림책 형태의 풍속화 25점이다. 단원 김홍도(1745 ∼ ?)는 … 풍속화가로 더 유명하다. … <씨름>, <대장간>, <글방> 등과 같이 서민사회의 일상생활 모습\" / 지정일 1970.12.30 / 소재지: 국립중앙박물관"
+          },
+          {
+            "title": "김홍도 필 풍속도 화첩",
+            "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+            "url": "https://encykorea.aks.ac.kr/Article/E0013639",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"조선 후기, 화가 김홍도가 그린 풍속화 25점으로 구성된 화첩.\" / 이칭: 단원 풍속도첩 / 소장처: 국립중앙박물관 / 종목: 보물(1970년 12월 30일 지정)"
+          }
+        ]
+      },
+      {
+        "id": "f4",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "In the painting Ssireum, two wrestlers grapple and test their strength at the center, surrounded by spectators arranged in two rounded groups, one above and one below.",
+        "claimKo": "「씨름」에서는 두 씨름꾼이 가운데에서 맞붙어 힘을 겨루고, 구경꾼들이 화면의 위아래에 두 무리로 둥글게 둘러앉아 있다.",
+        "sources": [
+          {
+            "title": "씨름, 《단원 풍속도첩》 (소장품번호 본관6504-22)",
+            "publisher": "국립중앙박물관 (National Museum of Korea, museum.go.kr)",
+            "url": "https://www.museum.go.kr/site/main/relic/treasure/view?relicId=551",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"두 무리의 구경꾼들을 화면의 위아래에 둥글게 배치하여 가운데 공간을 연 다음, 서로 맞붙어 힘을 겨루는 두 사람의 씨름꾼을 그려 넣어 그림의 중심을 잡았다. 왼쪽에 서 있는 엿장수는 구경꾼들의 관심 밖에 있으면서도 이 원형 구도에 도움을 주고 있으며, 벗어 놓은 신발은 오른쪽으로 터진 여백을 좁히는 구실을 하고 있다.\""
+          },
+          {
+            "title": "김홍도 필 풍속도 화첩",
+            "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+            "url": "https://encykorea.aks.ac.kr/Article/E0013639",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "내용: \"「서당」 장면에는 훈장과 학생이 둥글게 원을 그리며 앉아 있다. 화면의 한편에서 눈물을 흘리는 소년, 이를 보고 웃는 학동들, 난처한 표정의 훈장 등 … 「씨름」은 구경꾼들이 원형을 그리며 둘러앉았고, 그 중심에는 두 사람의 씨름꾼이 서로 맞붙어 힘을 겨루고 있다.\""
+          }
+        ]
+      },
+      {
+        "id": "f5",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "In Ssireum, a taffy seller (엿장수) stands at the left, outside the spectators' attention, and shoes that someone has taken off help close the open space at the right.",
+        "claimKo": "「씨름」에서 엿장수는 구경꾼들의 관심 밖에서 왼쪽에 서 있고, 벗어 놓은 신발이 오른쪽으로 터진 여백을 좁히는 구실을 한다.",
+        "sources": [
+          {
+            "title": "씨름, 《단원 풍속도첩》 (소장품번호 본관6504-22)",
+            "publisher": "국립중앙박물관 (National Museum of Korea, museum.go.kr)",
+            "url": "https://www.museum.go.kr/site/main/relic/treasure/view?relicId=551",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"두 무리의 구경꾼들을 화면의 위아래에 둥글게 배치하여 가운데 공간을 연 다음, 서로 맞붙어 힘을 겨루는 두 사람의 씨름꾼을 그려 넣어 그림의 중심을 잡았다. 왼쪽에 서 있는 엿장수는 구경꾼들의 관심 밖에 있으면서도 이 원형 구도에 도움을 주고 있으며, 벗어 놓은 신발은 오른쪽으로 터진 여백을 좁히는 구실을 하고 있다.\""
+          },
+          {
+            "title": "김홍도, 조선 백성을 그림에 담아내다",
+            "publisher": "국사편찬위원회 우리역사넷 (contents.history.go.kr)",
+            "url": "https://contents.history.go.kr/mobile/eh/view.do?levelId=eh_n0590_0010",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "\"유독 먼 하늘을 바라보며 딴청을 피우고 있는 엿장수도 그렸어요.\" / \"두 선수가 벗어놓은 가죽신과 짚신으로 신분도 알 수 있었어요.\" (this page says the shoes are the two wrestlers'; the museum text says only 벗어 놓은 신발, so narration does not say whose)"
+          }
+        ]
+      },
+      {
+        "id": "f6",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "In Seodang, the teacher and students are arranged around a boy who is crouched, turned away and sniffling, who is the focus of the picture; the other students look amused and the teacher looks troubled.",
+        "claimKo": "「서당」에서는 쪼그리고 돌아앉아 훌쩍이는 학동을 화면의 초점에 두고 그 주위에 훈장과 학동들이 둥글게 배치되어 있으며, 주변 학동들은 웃고 훈장은 난처한 표정이다.",
+        "sources": [
+          {
+            "title": "서당, 《단원 풍속도첩》 (소장품번호 본관6504-23)",
+            "publisher": "국립중앙박물관 (National Museum of Korea, museum.go.kr)",
+            "url": "https://www.museum.go.kr/site/main/relic/treasure/view?relicId=552",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"쪼그리고 돌아앉아 훌쩍이는 학동을 화면의 초점에 두고, 그 주위에 방건(方巾)을 쓰고 유생의 옷차림을 한 훈장을 축으로 학동들을 둥글게 배치하였다. … 주변 인물들의 익살스러운 모습에도 정감이 넘쳐나\""
+          },
+          {
+            "title": "김홍도 필 풍속도 화첩",
+            "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+            "url": "https://encykorea.aks.ac.kr/Article/E0013639",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "내용: \"「서당」 장면에는 훈장과 학생이 둥글게 원을 그리며 앉아 있다. 화면의 한편에서 눈물을 흘리는 소년, 이를 보고 웃는 학동들, 난처한 표정의 훈장 등 … 「씨름」은 구경꾼들이 원형을 그리며 둘러앉았고, 그 중심에는 두 사람의 씨름꾼이 서로 맞붙어 힘을 겨루고 있다.\" (Note: the encykorea text says the teacher and students sit in a circle, while its photo caption describes pupils sitting side by side on both sides of the teacher; sources differ on the exact layout, so narration says only \"gathered around\".)"
+          }
+        ]
+      },
+      {
+        "id": "f7",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Ssireum is designated a National Intangible Heritage of Korea (2017), and traditional Korean wrestling (Ssirum/Ssireum) was inscribed on UNESCO's Representative List of the Intangible Cultural Heritage of Humanity in 2018.",
+        "claimKo": "씨름은 국가무형유산(2017년 지정)이며, 2018년 유네스코 인류무형문화유산 대표목록에 등재되었다.",
+        "sources": [
+          {
+            "title": "국가무형유산 씨름 (Ssireum (Traditional Korean Wrestling))",
+            "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=127ZZ01310000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "지정일 2017.01.04 / \"「씨름」은 두 사람이 샅바를 맞잡고 힘과 기술을 이용해 상대를 넘어뜨려 승부를 겨루는 경기로서 … 현재까지 전승되어 온 민속놀이이다.\""
+          },
+          {
+            "title": "Traditional Korean wrestling (Ssirum/Ssireum)",
+            "publisher": "UNESCO Intangible Cultural Heritage (ich.unesco.org)",
+            "url": "https://ich.unesco.org/en/RL/traditional-korean-wrestling-ssirum-ssireum-01533",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"Inscribed in 2018 (13.COM) on the Representative List of the Intangible Cultural Heritage of Humanity\" (joint inscription by the Republic of Korea and DPR Korea; UNESCO decision 13.COM 10.B.41, 26 Nov 2018). Page body not directly fetchable in this pass; the 2018 inscription was confirmed from search excerpts of ich.unesco.org and the KHS list."
+          },
+          {
+            "title": "한국의 인류무형문화유산 (Korea's Representative List elements)",
+            "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+            "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=/unesco/korInCulHeritage.jsp",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "목록: \"씨름(2018)\""
+          }
+        ]
+      }
+    ],
+    "referenceDisplay": "Sources: 국립중앙박물관; 국가유산청 국가유산포털; 한국민족문화대백과사전; 국사편찬위원회 우리역사넷; UNESCO Intangible Cultural Heritage",
+    "verification": {
+      "passes": 3,
+      "checkedAt": "2026-10-10",
+      "scope": "cluster",
+      "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted."
+    },
+    "authorNotes": "Attribution caution: NMK and encykorea both report scholarly debate about the album (differences in skill between leaves, retouching, many similar copies); some scholars regard leaves such as Ssireum and Mudong as genuine and weaker leaves as copies, and one view treats the whole album as a later model book. Only 13 of the 25 leaves bear the seal 김홍도인 (encykorea). Narration therefore calls it the album 'known as' Danwon's album and describes what the paintings show; the fact claim says 'attributed to'. The KHS designation text names the school leaf 〈글방〉; NMK and encykorea use 서당. Omitted: the switch (회초리) mentioned in an encykorea media caption for 서당; the album's purchase history (1918) and the 1957 remounting that separated two 군선도 leaves (NMK); Kim Hong-do's death (c.1806 per encykorea; KHS gives '?'). The 2018 UNESCO inscription was a joint inscription by both Koreas; this is not mentioned in narration. Scene 5 claim about shoes follows NMK ('벗어 놓은 신발'), without saying whose shoes they are. REVISION: (a) 'kicked-off shoes' removed; museum text says only 벗어 놓은 신발 (shoes taken off), at the right, narrowing the open space (NMK relicId=551); seller at the left, 'outside the spectators' attention'. 우리역사넷 says the shoes are the two wrestlers' and the seller looks into the distance; NMK's curator page says the seller looks outward, but narration stays with the museum's catalog wording. (b) Seodang layout softened to 'gathered around' because NMK says 둥글게 배치 around the boy while an encykorea caption says pupils sit side by side on both sides of the teacher. (c) Ssireum crowd: NMK says two groups arranged roundly above and below; narration says 'two curved groups'. (d) Quiz distractor for museum changed to other national museums. PR 1.8c review: check c3 now asks who stands at the left of Ssireum (f5), because three similar museum names tested memory of a name rather than the story. Check c3 says 'outside the crowd's attention', following f5 and the museum text, not 'away from the crowd'.",
+    "errata": []
+  },
+  {
+    "v": 1,
+    "id": "story:nanjung-ilgi",
+    "state": "ready",
+    "contentVer": 1,
+    "title": {
+      "ko": "이순신 장군의 난중일기",
+      "romanization": "Isunsin janggunui Nanjungilgi",
+      "en": "Admiral Yi's Diary"
+    },
+    "summaryEn": "Hoya opens the diary that Admiral Yi Sunsin kept almost every day from 1592 to 1598, full of weather, feelings and everyday life, now a National Treasure and UNESCO Memory of the World.",
+    "theme": "letters",
+    "kind": "documentary",
+    "recommendedStage": 3,
+    "minutes": 4,
+    "learningGoalsEn": [
+      "Read and recognize 일기 (ilgi, diary), 매일 (maeil, every day), 날씨 (nalssi, weather) and 가족 (gajok, family).",
+      "Know that Yi Sunsin kept a diary almost every day during the Imjin War (1592–1598).",
+      "Know what he wrote about: the weather, his thoughts and feelings, his family and the lives of ordinary people.",
+      "Know that seven handwritten volumes survive, kept at Hyeonchungsa in Asan, and that the diary is a National Treasure and on UNESCO's Memory of the World Register."
+    ],
+    "origin": {
+      "type": "documented",
+      "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
+    },
+    "review": {
+      "language": "draft",
+      "culture": "draft",
+      "advisory": [
+        "war"
+      ],
+      "advisoryNoteEn": "Briefly mentions a war from Korea's history."
+    },
+    "keywords": [
+      {
+        "id": "ilgi",
+        "ko": "일기",
+        "romanization": "ilgi",
+        "en": "diary",
+        "kind": "word"
+      },
+      {
+        "id": "janggun",
+        "ko": "장군",
+        "romanization": "janggun",
+        "en": "general; commander (the title Koreans use for Admiral Yi)",
+        "kind": "word"
+      },
+      {
+        "id": "maeil",
+        "ko": "매일",
+        "romanization": "maeil",
+        "en": "every day",
+        "kind": "word"
+      },
+      {
+        "id": "nalssi",
+        "ko": "날씨",
+        "romanization": "nalssi",
+        "en": "weather",
+        "kind": "word"
+      },
+      {
+        "id": "gajok",
+        "ko": "가족",
+        "romanization": "gajok",
+        "en": "family",
+        "kind": "word"
+      },
+      {
+        "id": "nanjung-ilgi",
+        "ko": "난중일기",
+        "romanization": "Nanjungilgi",
+        "en": "War Diary (of Yi Sunsin)",
+        "kind": "term"
+      },
+      {
+        "id": "oneuldo-ilgireul-sseoyo",
+        "ko": "오늘도 일기를 써요!",
+        "romanization": "oneuldo ilgireul sseoyo!",
+        "en": "I'm writing in my diary today, too!",
+        "kind": "phrase"
+      },
+      {
+        "id": "yi-sun-sin",
+        "ko": "이순신",
+        "romanization": "Isunsin",
+        "en": "Yi Sunsin, a Joseon naval commander",
+        "kind": "term"
+      }
+    ],
+    "cultureNotes": [],
+    "tiers": [
+      {
+        "level": "listen",
+        "scenes": [
+          {
+            "id": "s1",
+            "narrationEn": "Hoya opens a little notebook. \"Do you keep a diary? In Korean, a diary is {kw:ilgi},\" he says. \"Today let's meet a famous diary that a commander wrote long ago in Joseon.\"",
+            "captionEn": "Hoya opens his little notebook",
+            "keyword": {
+              "id": "ilgi",
+              "ko": "일기",
+              "romanization": "ilgi",
+              "en": "diary",
+              "kind": "word"
+            },
+            "factIds": [
+              "f2"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "Hoya sitting cross-legged on a floor cushion, holding a small notebook and a brush, smiling."
+          },
+          {
+            "id": "s2",
+            "narrationEn": "Yi Sunsin, {kw:yi-sun-sin}, lived from 1545 to 1598 and was a commander of Joseon's navy. Before war came, he built ships and prepared defenses around Yeosu.",
+            "captionEn": "Yi Sunsin builds ships near Yeosu",
+            "keyword": {
+              "id": "janggun",
+              "ko": "장군",
+              "romanization": "janggun",
+              "en": "general; commander (the title Koreans use for Admiral Yi)",
+              "kind": "word"
+            },
+            "factIds": [
+              "f1"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "A calm Joseon naval commander in a robe and helmet standing on a wooden dock at sunrise, wooden ships moored in a quiet harbor."
+          },
+          {
+            "id": "s3",
+            "narrationEn": "During the Imjin War, from 1592 to 1598, Admiral Yi kept a diary, writing in it almost every day.",
+            "captionEn": "Admiral Yi writes almost every day",
+            "keyword": {
+              "id": "maeil",
+              "ko": "매일",
+              "romanization": "maeil",
+              "en": "every day",
+              "kind": "word"
+            },
+            "factIds": [
+              "f2"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "Inside a simple wooden room at night, the commander writes with a brush by candlelight, a folded map beside him."
+          },
+          {
+            "id": "s4",
+            "narrationEn": "He wrote about the weather, about army life, about his own thoughts and feelings, and about the lives of ordinary people around him.",
+            "captionEn": "He writes about weather and feelings",
+            "keyword": {
+              "id": "nalssi",
+              "ko": "날씨",
+              "romanization": "nalssi",
+              "en": "weather",
+              "kind": "word"
+            },
+            "factIds": [
+              "f3"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "Soft brush strokes on paper (no readable text) surrounded by little pictures of the sun, rain clouds, a fisherman and a farmer."
+          },
+          {
+            "id": "s5",
+            "narrationEn": "He also wrote about his family and relatives, and about the people who served with him.",
+            "captionEn": "He writes about his family",
+            "keyword": {
+              "id": "gajok",
+              "ko": "가족",
+              "romanization": "gajok",
+              "en": "family",
+              "kind": "word"
+            },
+            "factIds": [
+              "f4"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "A warm scene at a coastal camp gate: a young family member arrives with a bundle and is greeted by the commander."
+          },
+          {
+            "id": "s6",
+            "narrationEn": "Seven handwritten volumes of the diary survive. At first it had no title. Later, editors named it {kw:nanjung-ilgi}, 'the diary written in the midst of war.'",
+            "captionEn": "Editors give the diary its name",
+            "keyword": {
+              "id": "nanjung-ilgi",
+              "ko": "난중일기",
+              "romanization": "Nanjungilgi",
+              "en": "War Diary (the diary written in the midst of war)",
+              "kind": "term"
+            },
+            "factIds": [
+              "f5",
+              "f6"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "Seven old thread-bound books with worn covers stacked neatly on a low wooden table."
+          },
+          {
+            "id": "s7",
+            "narrationEn": "Today the diary is a National Treasure kept at Hyeonchungsa Shrine in Asan, and in 2013 UNESCO added it to the Memory of the World Register. Hoya picks up his brush: \"{kw:oneuldo-ilgireul-sseoyo}\"",
+            "captionEn": "The diary is a National Treasure",
+            "line": {
+              "ko": "오늘도 일기를 써요!",
+              "romanization": "oneuldo ilgireul sseoyo!",
+              "en": "I'm writing in my diary today, too!",
+              "speaker": "hoya"
+            },
+            "factIds": [
+              "f7",
+              "f8"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "Hoya at a low desk writing in his notebook with a brush; through the window, the curved tiled roof of a traditional shrine."
+          }
+        ],
+        "checks": [
+          {
+            "id": "c1",
+            "kind": "detail",
+            "promptEn": "How often did Admiral Yi write in his diary?",
+            "options": [
+              {
+                "id": "a",
+                "en": "Only once a week",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "Almost every day",
+                "isCorrect": true
+              },
+              {
+                "id": "c",
+                "en": "Only on special holidays",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "During the Imjin War, Admiral Yi wrote in his diary almost every day, in his own hand.",
+            "factIds": [
+              "f2"
+            ]
+          },
+          {
+            "id": "c2",
+            "kind": "detail",
+            "promptEn": "Which of these did he write about?",
+            "options": [
+              {
+                "id": "a",
+                "en": "The weather, army life and ordinary people",
+                "isCorrect": true
+              },
+              {
+                "id": "b",
+                "en": "Stories about faraway lands and their kings",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "Lists of foods served at royal banquets",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "He wrote about the weather, army life, his own feelings and the lives of ordinary people.",
+            "factIds": [
+              "f3"
+            ]
+          },
+          {
+            "id": "c3",
+            "kind": "detail",
+            "promptEn": "Who gave the diary its name, {target}?",
+            "target": {
+              "ko": "난중일기",
+              "romanization": "Nanjungilgi",
+              "en": "War Diary (of Yi Sunsin)"
+            },
+            "options": [
+              {
+                "id": "a",
+                "en": "Admiral Yi himself, on its first page",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "King Seonjo, after he read the diary",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "Later editors of his collected works",
+                "isCorrect": true
+              }
+            ],
+            "explainEn": "The diary had no title at first. Editors of his collected works later named it Nanjungilgi, the War Diary.",
+            "factIds": [
+              "f6"
+            ]
+          }
+        ],
+        "checkpoints": [],
+        "sequenceSceneIds": [
+          "s1",
+          "s3",
+          "s5",
+          "s7"
+        ],
+        "newKeywordIds": [
+          "ilgi",
+          "janggun",
+          "maeil",
+          "nalssi"
+        ]
+      }
+    ],
+    "coverSceneId": "s1",
+    "pillarTags": [],
+    "companionId": "hoya",
+    "facts": [
+      {
+        "id": "f1",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Yi Sun-sin (1545–1598) served as naval commander of Jeolla Left Province (전라좌도 수군절도사) and, anticipating an invasion, built ships and strengthened military preparations centered on Yeosu.",
+        "claimKo": "이순신(1545~1598)은 전라좌도 수군절도사로 있으면서 왜적의 침입에 대비해 여수를 중심으로 배를 만들고 군비를 늘렸다.",
+        "sources": [
+          {
+            "title": "국보 이순신 난중일기 및 서간첩 임진장초 (Nanjung ilgi (War Diary), Imjin jangcho and Letters by Yi Sun-sin)",
+            "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1113400760000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"이 책은 임진왜란(1592∼1598) 때에 이순신(1545∼1598)이 친필로 작성한 일기로 연도별로 7권이다. … 전라좌도 수군절도사를 지내던 때 … 여수를 중심으로 배를 만들고 군비를 늘리는 등\" / 소재지: 충청남도 아산시 현충사길 48 (염치읍, 현충사) / 관리자: 국가유산청 현충사관리소"
+          },
+          {
+            "title": "난중일기 (미디어 설명: 이순신 난중일기 및 서간첩 임진장초)",
+            "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+            "url": "https://encykorea.aks.ac.kr/Article/E0011715",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "미디어 설명: \"이순신(李舜臣, 1545~1598)이 임진왜란 동안 작성한 일기.\""
+          }
+        ]
+      },
+      {
+        "id": "f2",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "During the Imjin War (1592–1598), Yi Sun-sin kept a personal diary, written almost daily, in his own hand.",
+        "claimKo": "이순신은 임진왜란(1592~1598) 동안 거의 매일 친필로 일기를 썼다.",
+        "sources": [
+          {
+            "title": "Nanjung Ilgi: War Diary of Admiral Yi Sun-sin",
+            "publisher": "UNESCO Memory of the World (unesco.org)",
+            "url": "https://www.unesco.org/en/memory-world/nanjung-ilgi-war-diary-admiral-yi-sun-sin",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"It consists of seven volumes of notes written almost daily from January 1592 through November 1598 … it describes in detail the daily combat situations, the admiral's personal views and feelings, observations on the weather, topographical features of battlefields and the lives of common people.\" / Registration Year: 2013"
+          },
+          {
+            "title": "국보 이순신 난중일기 및 서간첩 임진장초 (Nanjung ilgi (War Diary), Imjin jangcho and Letters by Yi Sun-sin)",
+            "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1113400760000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"이 책은 임진왜란(1592∼1598) 때에 이순신(1545∼1598)이 친필로 작성한 일기로 연도별로 7권이다. … 전라좌도 수군절도사를 지내던 때 … 여수를 중심으로 배를 만들고 군비를 늘리는 등\" / 소재지: 충청남도 아산시 현충사길 48 (염치읍, 현충사) / 관리자: 국가유산청 현충사관리소"
+          },
+          {
+            "title": "난중일기",
+            "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+            "url": "https://encykorea.aks.ac.kr/Article/E0011715",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"7책 205장 친필 필사본이 1962년 국보로 지정되었다.\" / \"1592년(선조 25) 임진왜란이 일어난 다음 달인 5월 1일부터 전사하기 전 달인 1598년 10월 7일까지의 기록으로, 친필 초고가 충청남도 아산 현충사에 보관되어 있다.\""
+          }
+        ]
+      },
+      {
+        "id": "f3",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "The diary records, among other things, observations on the weather, army life, the admiral's personal views and feelings, and the lives of common people.",
+        "claimKo": "일기에는 날씨, 진중 생활, 이순신의 개인적인 생각과 감정, 일반 백성들의 삶 등이 기록되어 있다.",
+        "sources": [
+          {
+            "title": "Nanjung Ilgi: War Diary of Admiral Yi Sun-sin",
+            "publisher": "UNESCO Memory of the World (unesco.org)",
+            "url": "https://www.unesco.org/en/memory-world/nanjung-ilgi-war-diary-admiral-yi-sun-sin",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"It consists of seven volumes of notes written almost daily from January 1592 through November 1598 … it describes in detail the daily combat situations, the admiral's personal views and feelings, observations on the weather, topographical features of battlefields and the lives of common people.\" / Registration Year: 2013"
+          },
+          {
+            "title": "세계기록유산 난중일기",
+            "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+            "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=/unesco/MemHeritage/MemHeritage_10.jsp",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"당시의 기후나 지형, 일반 서민들의 삶에 대한 기록도 전하고 있어 … 2013년 6월 유네스코 세계기록유산 국제자문위원회(6.18-21, 대한민국 광주)에서 세계기록유산으로 등재되었다.\""
+          },
+          {
+            "title": "난중일기",
+            "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+            "url": "https://encykorea.aks.ac.kr/Article/E0011715",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "의의와 평가: \"일기의 주요 내용은 엄격한 진중 생활과 국정에 관한 솔직한 감회 … 이밖에 가족 · 친지 · 부하 · 장졸 · 내외 요인들의 내왕, 부하들에 대한 상벌 … 등이 실려 있어\""
+          },
+          {
+            "title": "난중일기(亂中日記) < 영상 책 이야기",
+            "publisher": "국사편찬위원회 우리역사넷 (contents.history.go.kr)",
+            "url": "https://contents.history.go.kr/mobile/ts/view.do?levelId=ts_b03",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "\"일기에는 빠짐없이 날씨 상태가 기록되어 있다.\" / \"전쟁으로 고통에 시달리는 백성에 대한 애환과 무능한 조정과 관리에 대한 탄식\" 등이 드러나 있다."
+          }
+        ]
+      },
+      {
+        "id": "f4",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "The diary also records family members, relatives and subordinates, including their comings and goings.",
+        "claimKo": "일기에는 가족·친지·부하 등에 관한 기록과 그들의 왕래도 담겨 있다.",
+        "sources": [
+          {
+            "title": "난중일기",
+            "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+            "url": "https://encykorea.aks.ac.kr/Article/E0011715",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "의의와 평가: \"일기의 주요 내용은 엄격한 진중 생활과 국정에 관한 솔직한 감회 … 이밖에 가족 · 친지 · 부하 · 장졸 · 내외 요인들의 내왕, 부하들에 대한 상벌 … 등이 실려 있어\""
+          },
+          {
+            "title": "난중일기(亂中日記) < 영상 책 이야기",
+            "publisher": "국사편찬위원회 우리역사넷 (contents.history.go.kr)",
+            "url": "https://contents.history.go.kr/mobile/ts/view.do?levelId=ts_b03",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "\"어머니에 대한 그리움은 『난중일기』에 90여 차례나 등장하고 있다.\" / \"상관과 장수 및 부하들 간의 갈등 문제 등이 주로 기술되어 있고\""
+          }
+        ]
+      },
+      {
+        "id": "f5",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "The surviving handwritten Nanjung Ilgi consists of seven volumes.",
+        "claimKo": "현재 전하는 친필 『난중일기』는 7책이다.",
+        "sources": [
+          {
+            "title": "국보 이순신 난중일기 및 서간첩 임진장초 (Nanjung ilgi (War Diary), Imjin jangcho and Letters by Yi Sun-sin)",
+            "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1113400760000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"이 책은 임진왜란(1592∼1598) 때에 이순신(1545∼1598)이 친필로 작성한 일기로 연도별로 7권이다. … 전라좌도 수군절도사를 지내던 때 … 여수를 중심으로 배를 만들고 군비를 늘리는 등\" / 소재지: 충청남도 아산시 현충사길 48 (염치읍, 현충사) / 관리자: 국가유산청 현충사관리소"
+          },
+          {
+            "title": "Nanjung Ilgi: War Diary of Admiral Yi Sun-sin",
+            "publisher": "UNESCO Memory of the World (unesco.org)",
+            "url": "https://www.unesco.org/en/memory-world/nanjung-ilgi-war-diary-admiral-yi-sun-sin",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"It consists of seven volumes of notes written almost daily from January 1592 through November 1598 … it describes in detail the daily combat situations, the admiral's personal views and feelings, observations on the weather, topographical features of battlefields and the lives of common people.\" / Registration Year: 2013"
+          },
+          {
+            "title": "난중일기",
+            "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+            "url": "https://encykorea.aks.ac.kr/Article/E0011715",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"7책 205장 친필 필사본이 1962년 국보로 지정되었다.\" / \"1592년(선조 25) 임진왜란이 일어난 다음 달인 5월 1일부터 전사하기 전 달인 1598년 10월 7일까지의 기록으로, 친필 초고가 충청남도 아산 현충사에 보관되어 있다.\""
+          },
+          {
+            "title": "난중일기(亂中日記) < 영상 책 이야기",
+            "publisher": "국사편찬위원회 우리역사넷 (contents.history.go.kr)",
+            "url": "https://contents.history.go.kr/mobile/ts/view.do?levelId=ts_b03",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "\"1592년부터 1598년까지 7책의 친필본.\""
+          },
+          {
+            "title": "세계기록유산 난중일기",
+            "publisher": "국가유산청 국가유산포털 (heritage.go.kr)",
+            "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=/unesco/MemHeritage/MemHeritage_10.jsp",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "\"현재는 1595년의 을미일기를 뺀 총7책이 보존되어 전해오고 있다.\""
+          }
+        ]
+      },
+      {
+        "id": "f6",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "The diary originally had no title; the name 'Nanjung Ilgi' was given later by the editors of the collected works of Yi Sun-sin (이충무공전서).",
+        "claimKo": "이 일기에는 본래 이름이 없었으며, 뒤에 『이충무공전서』를 엮은 편찬자가 '난중일기'라는 이름을 붙였다.",
+        "sources": [
+          {
+            "title": "난중일기",
+            "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+            "url": "https://encykorea.aks.ac.kr/Article/E0011715",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "편찬/발간 경위: \"본래 이 일기에는 어떤 이름이 붙어 있지 않았다. 그러다가 이후 1795년(정조 19) 『이충무공전서(李忠武公全書)』를 편찬하면서 편찬자가 편의상 ‘난중일기’라는 이름을 붙여\""
+          },
+          {
+            "title": "난중일기(亂中日記) < 영상 책 이야기",
+            "publisher": "국사편찬위원회 우리역사넷 (contents.history.go.kr)",
+            "url": "https://contents.history.go.kr/mobile/ts/view.do?levelId=ts_b03",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "\"『난중일기』라는 이름을 얻게 된 것은 200년이 지난 뒤였다.\" (the page links the naming to the publication of 『이충무공전서』 under King Jeongjo)"
+          }
+        ]
+      },
+      {
+        "id": "f7",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "The handwritten diary is designated a National Treasure (together with Yi Sun-sin's letters and Imjin war report drafts) and is kept at Hyeonchungsa in Asan, South Chungcheong Province.",
+        "claimKo": "친필 『난중일기』는 서간첩·임진장초와 함께 국보로 지정되어 있으며 충청남도 아산 현충사에 보관되어 있다.",
+        "sources": [
+          {
+            "title": "국보 이순신 난중일기 및 서간첩 임진장초 (Nanjung ilgi (War Diary), Imjin jangcho and Letters by Yi Sun-sin)",
+            "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1113400760000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"이 책은 임진왜란(1592∼1598) 때에 이순신(1545∼1598)이 친필로 작성한 일기로 연도별로 7권이다. … 전라좌도 수군절도사를 지내던 때 … 여수를 중심으로 배를 만들고 군비를 늘리는 등\" / 소재지: 충청남도 아산시 현충사길 48 (염치읍, 현충사) / 관리자: 국가유산청 현충사관리소"
+          },
+          {
+            "title": "난중일기",
+            "publisher": "한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)",
+            "url": "https://encykorea.aks.ac.kr/Article/E0011715",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"7책 205장 친필 필사본이 1962년 국보로 지정되었다.\" / \"1592년(선조 25) 임진왜란이 일어난 다음 달인 5월 1일부터 전사하기 전 달인 1598년 10월 7일까지의 기록으로, 친필 초고가 충청남도 아산 현충사에 보관되어 있다.\""
+          }
+        ]
+      },
+      {
+        "id": "f8",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "The Nanjung Ilgi was inscribed on UNESCO's Memory of the World Register in 2013.",
+        "claimKo": "『난중일기』는 2013년 유네스코 세계기록유산에 등재되었다.",
+        "sources": [
+          {
+            "title": "Nanjung Ilgi: War Diary of Admiral Yi Sun-sin",
+            "publisher": "UNESCO Memory of the World (unesco.org)",
+            "url": "https://www.unesco.org/en/memory-world/nanjung-ilgi-war-diary-admiral-yi-sun-sin",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"It consists of seven volumes of notes written almost daily from January 1592 through November 1598 … it describes in detail the daily combat situations, the admiral's personal views and feelings, observations on the weather, topographical features of battlefields and the lives of common people.\" / Registration Year: 2013"
+          },
+          {
+            "title": "한국의 세계기록유산 (Korea's Memory of the World list)",
+            "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+            "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FkorWorldMemHeritage.jsp",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "목록: \"동의보감 (2009년)\" … \"난중일기 (2013년)\""
+          },
+          {
+            "title": "세계기록유산 난중일기",
+            "publisher": "국가유산청 국가유산포털 (Korea Heritage Service, heritage.go.kr)",
+            "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=/unesco/MemHeritage/MemHeritage_10.jsp",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"당시의 기후나 지형, 일반 서민들의 삶에 대한 기록도 전하고 있어 … 2013년 6월 유네스코 세계기록유산 국제자문위원회(6.18-21, 대한민국 광주)에서 세계기록유산으로 등재되었다.\""
+          }
+        ]
+      }
+    ],
+    "referenceDisplay": "Sources: 국가유산청 국가유산포털; UNESCO Memory of the World; 한국민족문화대백과사전; 국사편찬위원회 우리역사넷",
+    "verification": {
+      "passes": 3,
+      "checkedAt": "2026-10-10",
+      "scope": "cluster",
+      "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted."
+    },
+    "authorNotes": "Kept gentle on purpose: battles, the turtle ship (거북선), and Admiral Yi's death in the final battle of 1598 are omitted to keep the story gentle; the war is only named. Coverage dates differ by source (handwritten volumes: 1592-05-01 to 1598-10-07 lunar per encykorea; UNESCO and the KHS portal give January 1592 to November 1598, which includes passages known only from the printed 이충무공전서), so narration says only '1592 to 1598'. The KHS portal MoW page notes an eighth volume (1595, 을미일기) is lost; narration says seven volumes survive. The naming year (1795, 이충무공전서) comes from encykorea only, so no year is given. The National Treasure designation covers the diary together with letters (서간첩) and war-report drafts (임진장초). Romanization: surname written 'Yi' as in KHS and UNESCO usage (strict RR would give 'I'). 장군 is glossed as the customary Korean title for him; his posts were naval commands (수군절도사, later 삼도수군통제사). REVISION: removed 'even in very hard times' (not in any source); kept UNESCO's hedge 'almost daily' because the surviving volumes have gaps (the 1595 volume is lost). Scene 5 now says he 'wrote about' family, relatives and subordinates (two sources) instead of 'visits'. Second sources added for f3, f4, f5, f6 from 우리역사넷 (국사편찬위원회) and the KHS MoW page. The identity of the person who chose the title is not stated; only 'editors of 이충무공전서' is claimed. PR 1.8c: keyword 난중일기 is kind 'term', matching the book title 동의보감.",
     "errata": []
   },
   {
