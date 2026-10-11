@@ -1,4 +1,12 @@
-import type { AvatarKind, Profile, ProfileRole } from '@hangul-route/content-schema';
+import {
+  AvatarKindSchema,
+  LearnerTypeSchema,
+  isLearnerLevelId,
+  type AvatarKind,
+  type LearnerType,
+  type Profile,
+  type ProfileRole,
+} from '@hangul-route/content-schema';
 
 /**
  * Pure profile CRUD + storage-key namespacing — F-PROF-001 §3.2, §3.3.
@@ -21,6 +29,8 @@ export interface CreateProfileInput {
   ageGroup: Profile['ageGroup'];
   avatar: AvatarKind;
   role?: ProfileRole;
+  /** Local only (F-LEARN-001 L2). Left off the profile when not given: absent reads as 'child'. */
+  learnerType?: LearnerType;
 }
 
 export interface Clock {
@@ -70,6 +80,7 @@ export function createProfile(
     role: input.role ?? 'learner',
     createdAt: iso,
     lastActiveAt: iso,
+    ...(input.learnerType !== undefined ? { learnerType: input.learnerType } : {}),
   };
   return {
     set: { profiles: [...set.profiles, created], activeId: created.id },
@@ -103,6 +114,46 @@ export function renameProfile(set: ProfileSet, id: string, displayName: string):
       p.id === id ? { ...p, displayName: displayName.trim() } : p,
     ),
   };
+}
+
+/** Fields a profile owner can change after creation (F-LEARN-001 §3.11). */
+export interface ProfilePatch {
+  displayName?: string;
+  ageGroup?: Profile['ageGroup'];
+  avatar?: AvatarKind;
+  learnerType?: LearnerType;
+}
+
+/**
+ * Applies a patch to one profile. Only the fields present change; each is
+ * validated first (the name by `validateDisplayName`, the others against their
+ * schema), and any invalid field throws before anything is applied. An unknown
+ * id returns the same set. The id, role, timestamps and PIN hash are not
+ * patchable.
+ */
+export function updateProfile(set: ProfileSet, id: string, patch: ProfilePatch): ProfileSet {
+  const changes: Partial<Pick<Profile, 'displayName' | 'ageGroup' | 'avatar' | 'learnerType'>> = {};
+  if (patch.displayName !== undefined) {
+    const nameError = validateDisplayName(patch.displayName);
+    if (nameError !== null) throw new Error(`Invalid display name: ${nameError}`);
+    changes.displayName = patch.displayName.trim();
+  }
+  if (patch.ageGroup !== undefined) {
+    if (!isLearnerLevelId(patch.ageGroup)) throw new Error(`Invalid level: ${String(patch.ageGroup)}`);
+    changes.ageGroup = patch.ageGroup;
+  }
+  if (patch.avatar !== undefined) {
+    if (!AvatarKindSchema.safeParse(patch.avatar).success) throw new Error(`Invalid avatar: ${String(patch.avatar)}`);
+    changes.avatar = patch.avatar;
+  }
+  if (patch.learnerType !== undefined) {
+    if (!LearnerTypeSchema.safeParse(patch.learnerType).success) {
+      throw new Error(`Invalid learner type: ${String(patch.learnerType)}`);
+    }
+    changes.learnerType = patch.learnerType;
+  }
+  if (!set.profiles.some((p) => p.id === id)) return set;
+  return { ...set, profiles: set.profiles.map((p) => (p.id === id ? { ...p, ...changes } : p)) };
 }
 
 export function learners(set: ProfileSet): Profile[] {

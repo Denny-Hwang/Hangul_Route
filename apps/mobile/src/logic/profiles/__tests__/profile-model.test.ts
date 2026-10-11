@@ -13,6 +13,7 @@ import {
   renameProfile,
   scopedKey,
   setActiveProfile,
+  updateProfile,
   validateDisplayName,
   type Clock,
   type ProfileSet,
@@ -120,6 +121,11 @@ describe('profile set operations', () => {
     expect(after.activeId).toBe('profile:parent1');
   });
 
+  it('removeProfile of the last profile leaves no active id', () => {
+    const only = createProfile(EMPTY, learnerInput, clockFrom(['solo'])).set;
+    expect(removeProfile(only, 'profile:solo')).toEqual({ profiles: [], activeId: null });
+  });
+
   it('removeProfile leaves an untouched active id alone', () => {
     const before = setActiveProfile(seeded(), 'profile:kid1', T0);
     expect(removeProfile(before, 'profile:kid2').activeId).toBe('profile:kid1');
@@ -196,5 +202,130 @@ describe('storage-key namespacing (§3.3)', () => {
       'p/profile:kid1/progress',
       'p/profile:kid1/cards',
     ]);
+  });
+});
+
+describe('createProfile and learnerType (F-LEARN-001 §3.3)', () => {
+  it('stores the learnerType it is given', () => {
+    expect(createProfile(EMPTY, { ...learnerInput, learnerType: 'self' }, clockFrom(['a'])).created.learnerType).toBe('self');
+    expect(createProfile(EMPTY, { ...learnerInput, learnerType: 'child' }, clockFrom(['a'])).created.learnerType).toBe('child');
+  });
+
+  it('leaves the key out entirely when none is given (legacy shape; absent reads as child)', () => {
+    const { created } = createProfile(EMPTY, learnerInput, clockFrom(['a']));
+    expect('learnerType' in created).toBe(false);
+  });
+
+  it('still rejects every name validateDisplayName rejects, for both types', () => {
+    for (const learnerType of ['child', 'self'] as const) {
+      for (const displayName of ['', '   ', 'a'.repeat(NAME_MAX + 1), 'Suni 🐯', '日本']) {
+        expect(() => createProfile(EMPTY, { ...learnerInput, displayName, learnerType }, clockFrom(['x']))).toThrow(
+          /Invalid display name/,
+        );
+      }
+    }
+  });
+
+  it('accepts accented and Hangul names with a learnerType', () => {
+    for (const displayName of ['Andrés', '수니']) {
+      expect(() =>
+        createProfile(EMPTY, { ...learnerInput, displayName, learnerType: 'self' }, clockFrom(['x'])),
+      ).not.toThrow();
+    }
+  });
+});
+
+describe('updateProfile (F-LEARN-001 §3.11)', () => {
+  it('changes only the fields in the patch', () => {
+    const before = seeded();
+    const after = updateProfile(before, 'profile:kid1', { ageGroup: '10-11' });
+    const kid = after.profiles[1];
+    expect(kid?.ageGroup).toBe('10-11');
+    expect(kid?.displayName).toBe('Suni');
+    expect(kid?.avatar).toBe('hoya-orange');
+    expect(after.activeId).toBe(before.activeId);
+  });
+
+  it('leaves every other profile untouched (same objects)', () => {
+    const before = seeded();
+    const after = updateProfile(before, 'profile:kid1', { avatar: 'hoya-blue' });
+    expect(after.profiles[0]).toBe(before.profiles[0]);
+    expect(after.profiles[2]).toBe(before.profiles[2]);
+  });
+
+  it('does not mutate its input', () => {
+    const before = seeded();
+    const snapshot = JSON.parse(JSON.stringify(before));
+    updateProfile(before, 'profile:kid1', { displayName: 'Sun', ageGroup: '5-7', avatar: 'hoya-pink', learnerType: 'self' });
+    expect(before).toEqual(snapshot);
+  });
+
+  it('applies several fields at once', () => {
+    const after = updateProfile(seeded(), 'profile:kid2', {
+      displayName: 'Jinny',
+      ageGroup: '10-11',
+      avatar: 'hoya-green',
+      learnerType: 'self',
+    });
+    expect(after.profiles[2]).toMatchObject({
+      id: 'profile:kid2',
+      displayName: 'Jinny',
+      ageGroup: '10-11',
+      avatar: 'hoya-green',
+      learnerType: 'self',
+      role: 'learner',
+    });
+  });
+
+  it('trims the name and applies the same rule as createProfile', () => {
+    expect(updateProfile(seeded(), 'profile:kid1', { displayName: '  Sun  ' }).profiles[1]?.displayName).toBe('Sun');
+    expect(updateProfile(seeded(), 'profile:kid1', { displayName: '수니' }).profiles[1]?.displayName).toBe('수니');
+    for (const displayName of ['', '   ', 'a'.repeat(NAME_MAX + 1), 'Sun 🐯']) {
+      expect(() => updateProfile(seeded(), 'profile:kid1', { displayName })).toThrow(/Invalid display name/);
+    }
+  });
+
+  it('rejects a level, an avatar or a learnerType this build does not know', () => {
+    const bad = (patch: object) => () => updateProfile(seeded(), 'profile:kid1', patch as never);
+    expect(bad({ ageGroup: '12-14' })).toThrow(/Invalid level/);
+    expect(bad({ avatar: 'hoya-red' })).toThrow(/Invalid avatar/);
+    expect(bad({ learnerType: 'teacher' })).toThrow(/Invalid learner type/);
+  });
+
+  it('a failed patch changes nothing, even for fields that were valid', () => {
+    const before = seeded();
+    expect(() => updateProfile(before, 'profile:kid1', { avatar: 'hoya-pink', displayName: '' })).toThrow();
+    expect(before.profiles[1]?.avatar).toBe('hoya-orange');
+  });
+
+  it('returns the same set for an unknown id', () => {
+    const before = seeded();
+    expect(updateProfile(before, 'profile:ghost', { displayName: 'Nobody' })).toBe(before);
+  });
+
+  it('an empty patch changes no field', () => {
+    const before = seeded();
+    expect(updateProfile(before, 'profile:kid1', {}).profiles).toEqual(before.profiles);
+  });
+
+  it('can set learnerType on a legacy profile that has none, and back to child', () => {
+    const before = seeded();
+    const toSelf = updateProfile(before, 'profile:kid1', { learnerType: 'self' });
+    expect(toSelf.profiles[1]?.learnerType).toBe('self');
+    expect(updateProfile(toSelf, 'profile:kid1', { learnerType: 'child' }).profiles[1]?.learnerType).toBe('child');
+  });
+
+  it('does not touch lastActiveAt, createdAt or the PIN hash', () => {
+    const before = setActiveProfile(seeded(), 'profile:kid1', T0 + 9_000);
+    const withPin: ProfileSet = {
+      ...before,
+      profiles: before.profiles.map((p) => ({ ...p, parentPinHash: 'h' })),
+    };
+    const after = updateProfile(withPin, 'profile:kid1', { displayName: 'Sun', learnerType: 'self' });
+    expect(after.profiles[1]).toMatchObject({
+      createdAt: new Date(T0).toISOString(),
+      lastActiveAt: new Date(T0 + 9_000).toISOString(),
+      parentPinHash: 'h',
+    });
   });
 });
