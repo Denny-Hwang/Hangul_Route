@@ -4,6 +4,7 @@ import {
   editMissing,
   editPlan,
   initialEditDraft,
+  levelEditable,
   submitEdit,
   type EditDeps,
   type EditState,
@@ -108,6 +109,14 @@ describe('editPlan: what a change to "Who is learning?" needs (§3.11)', () => {
     expect(editPlan(withDraft(state(), { name: '  Mina ' })).changed).toEqual([]);
   });
 
+  it('a profile that is not a learner has no reading level to change', () => {
+    const parent = state({ original: profile({ role: 'parent' }) });
+    expect(levelEditable(parent.original)).toBe(false);
+    expect(levelEditable(profile())).toBe(true);
+    expect(editPlan(withDraft(parent, { level: '5-7' })).changed).toEqual([]);
+    expect(editPlan(withDraft(parent, { level: '5-7', avatar: 'hoya-blue' })).changed).toEqual(['avatar']);
+  });
+
   it('an unknown stored level left untouched is not a change; picking one is', () => {
     const future = state({ original: { ...profile(), ageGroup: '12-14' } as unknown as Profile });
     expect(editPlan(future).changed).toEqual([]);
@@ -116,9 +125,19 @@ describe('editPlan: what a change to "Who is learning?" needs (§3.11)', () => {
 });
 
 describe('editMissing: the calm line under a disabled Save, in order', () => {
-  it('a name the create form would refuse comes first', () => {
+  it('a name the create form would refuse comes first: empty asks for a name, anything else points at the hint', () => {
     expect(editMissing(withDraft(state(), { name: '' }))).toBe('name');
-    expect(editMissing(withDraft(state(), { name: 'Mina<3', learnerType: 'self' }))).toBe('name');
+    expect(editMissing(withDraft(state(), { name: '   ' }))).toBe('name');
+    expect(editMissing(withDraft(state(), { name: 'Mina<3', learnerType: 'self' }))).toBe('nameCheck');
+    expect(editMissing(withDraft(state(), { name: 'Abcdefghijklm' }))).toBe('nameCheck');
+  });
+
+  it('a stored name that predates the current rule is kept as it is: other rows still save', () => {
+    const restored = state({ original: profile({ displayName: 'Alexandria Mae' }) });
+    expect(editMissing(withDraft(restored, { avatar: 'hoya-green' }))).toBeNull();
+    const odd = state({ original: profile({ displayName: 'Mina_K' }) });
+    expect(editMissing(withDraft(odd, { level: '10-11' }))).toBeNull();
+    expect(editMissing(withDraft(odd, { name: 'Mina_Ki' }))).toBe('nameCheck');
   });
 
   it('then the consent box', () => {
@@ -206,6 +225,21 @@ describe('submitEdit: Save', () => {
       ok: false,
       reason: 'pin-failed',
     });
+    expect(d.calls).toEqual([]);
+  });
+
+  it('a stored name that predates the rule is not sent back when only another row changed', async () => {
+    const d = deps();
+    const s = withDraft(state({ original: profile({ displayName: 'Alexandria Mae' }) }), { avatar: 'hoya-blue' });
+    expect(await submitEdit(s, d)).toEqual({ ok: true });
+    expect(d.updateProfile).toHaveBeenCalledWith('profile:p-1', { avatar: 'hoya-blue' });
+  });
+
+  it('a patch the profile rules would refuse stores nothing: no consent, no PIN, no profile', async () => {
+    const self = state({ original: profile({ learnerType: 'self' }), parentPinHash: null, guardianAcceptedAt: null });
+    const d = deps();
+    const bad = withDraft(self, { learnerType: 'child', avatar: 'not-a-cub' as unknown as EditState['draft']['avatar'] });
+    expect(await submitEdit({ ...bad, agreed: true, pin: '1234' }, d)).toEqual({ ok: false, reason: 'incomplete' });
     expect(d.calls).toEqual([]);
   });
 

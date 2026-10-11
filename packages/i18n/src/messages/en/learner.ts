@@ -123,7 +123,7 @@ export const learner = {
     self: { agree: "I'm 13 or older and I agree to the Privacy Policy." },
     guardian: {
       heading: 'For a grown-up',
-      body: 'A parent, guardian or teacher looks after this profile. We collect as little as possible and never show ads.',
+      body: 'A parent, guardian or teacher sets up the account. We collect as little as possible and never show ads.',
       pinHeading: 'Create a grown-up PIN',
       agree: "I'm a parent or guardian of this learner (or I set it up for them) and I agree to the Privacy Policy.",
     },
@@ -132,9 +132,13 @@ export const learner = {
     /** A learner in a class: the roster keeps the registered values until a server route exists. */
     classNote: "Changes show on your teacher's list after you join again",
     pinFailed: "Couldn't set the PIN. Try again.",
+    /** Save did not go through for another reason; nothing was changed. */
+    saveFailed: "Couldn't save. Try again.",
     /** The calm line under a disabled Save, one per missing step. */
     missing: {
       name: 'Type a name',
+      /** A typed name the rule refuses; the hint under the field says why. */
+      nameCheck: 'Check the name',
       agree: 'Tick the box to agree',
       pin: 'Create the PIN',
       unchanged: 'Change something to save',
