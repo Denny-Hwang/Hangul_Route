@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { SPARK_DEFAULT_MAX_ROWS, SPARK_DEFAULT_SLOTS, SPARK_FILL_MS, sparkLayout } from '../spark';
+import { SPARK_DEFAULT_MAX_ROWS, SPARK_DEFAULT_SLOTS, SPARK_FILL_MS, isNewlyLit, sparkCount, sparkEntrance, sparkLayout } from '../spark';
 import { impureImports } from './impure-imports';
 
 describe('sparkLayout (F-VOC-004 §3.9: a meter that only fills)', () => {
@@ -74,8 +74,47 @@ describe('sparkLayout (F-VOC-004 §3.9: a meter that only fills)', () => {
     }
   });
 
+  it('sparkCount reads slots and rows as a whole number of at least 1', () => {
+    expect(sparkCount(10)).toBe(10);
+    expect(sparkCount(3.9)).toBe(3);
+    for (const bad of [0, -2, Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY]) expect(sparkCount(bad)).toBe(1);
+  });
+
   it('is pure: loads without React or react-native', () => {
     const source = readFileSync(new URL('../spark.ts', import.meta.url), 'utf8');
     expect(impureImports(source)).toEqual([]);
+  });
+});
+
+describe('isNewlyLit: which slots play the fill on a change of value', () => {
+  it('marks only the slots between the previous and the new count', () => {
+    expect([0, 1, 2, 3, 4].map((i) => isNewlyLit(i, 2, 4))).toEqual([false, false, true, true, false]);
+  });
+
+  it('marks the first spark of a new row (index 10 going from 10 to 11)', () => {
+    expect(isNewlyLit(10, 10, 11)).toBe(true);
+    expect(isNewlyLit(9, 10, 11)).toBe(false);
+  });
+
+  it('marks nothing when the value is unchanged or lower (the meter never animates downward)', () => {
+    for (let i = 0; i < 12; i += 1) {
+      expect(isNewlyLit(i, 5, 5)).toBe(false);
+      expect(isNewlyLit(i, 7, 3)).toBe(false);
+    }
+  });
+});
+
+describe('sparkEntrance: decided before the first frame, so nothing blinks', () => {
+  it('a newly lit spark starts hidden and plays one fill', () => {
+    expect(sparkEntrance(true, false)).toEqual({ from: 0, play: true });
+  });
+
+  it('under reduced motion a newly lit spark is shown at once and is never hidden', () => {
+    expect(sparkEntrance(true, true)).toEqual({ from: 1, play: false });
+  });
+
+  it('a spark already lit when the meter appears is drawn as it is, with or without reduced motion', () => {
+    expect(sparkEntrance(false, false)).toEqual({ from: 1, play: false });
+    expect(sparkEntrance(false, true)).toEqual({ from: 1, play: false });
   });
 });

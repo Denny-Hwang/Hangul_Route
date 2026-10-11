@@ -32,17 +32,50 @@ function wholeAtLeast(value: number, min: number): number {
   return Math.max(min, Math.floor(value));
 }
 
+/** Slots per row or rows before full, as used: a whole number of at least 1 (not finite reads as 1). */
+export function sparkCount(input: number): number {
+  return Number.isFinite(input) ? wholeAtLeast(input, 1) : 1;
+}
+
 export function sparkLayout(
   value: number,
   slots: number = SPARK_DEFAULT_SLOTS,
   maxRows: number = SPARK_DEFAULT_MAX_ROWS,
 ): SparkLayout {
-  const perRow = Number.isFinite(slots) ? wholeAtLeast(slots, 1) : 1;
-  const rowCap = Number.isFinite(maxRows) ? wholeAtLeast(maxRows, 1) : 1;
+  const perRow = sparkCount(slots);
+  const rowCap = sparkCount(maxRows);
   const capacity = perRow * rowCap;
   const sparks = wholeAtLeast(value, 0);
   const filled = Math.min(sparks, capacity);
   const shown = Math.max(1, Math.ceil(filled / perRow));
   const rows = Array.from({ length: shown }, (_, row) => Math.min(perRow, filled - row * perRow));
   return { filled, rows, slots: perRow, full: sparks >= capacity };
+}
+
+/**
+ * Whether the slot at `index` (counted across rows) lit up in this change of
+ * value: it was empty at `previousFilled` and is lit at `filled`. Only these
+ * slots play the fill; the first spark of a new row counts like any other.
+ */
+export function isNewlyLit(index: number, previousFilled: number, filled: number): boolean {
+  return index >= previousFilled && index < filled;
+}
+
+export interface SparkEntrance {
+  /** The progress (0 hidden, 1 shown) the spark is first drawn with, before any frame is painted. */
+  from: 0 | 1;
+  /** Whether to run the one 300 ms scale-and-fade from `from` to 1. */
+  play: boolean;
+}
+
+/**
+ * How a lit spark first appears. Decided synchronously before the first
+ * frame, so a spark is never drawn full and then hidden: a newly lit spark
+ * starts hidden and fades in, unless motion is reduced, when it is simply
+ * there (no blink, WCAG 2.3.1 and F-VOC-004 §3.8). A spark already lit when
+ * the meter appears is drawn as it is.
+ */
+export function sparkEntrance(newlyLit: boolean, reducedMotion: boolean): SparkEntrance {
+  const play = newlyLit && !reducedMotion;
+  return { from: play ? 0 : 1, play };
 }
