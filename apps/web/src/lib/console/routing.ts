@@ -13,6 +13,9 @@ export const ROUTES = {
   spaceCurriculum: (id: string) => `/teach/space/curriculum?id=${encodeURIComponent(id)}`,
   spaceRelink: (id: string) => `/teach/space/relink?id=${encodeURIComponent(id)}`,
   spaceSettings: (id: string) => `/teach/space/settings?id=${encodeURIComponent(id)}`,
+  /** Lecture setup (F-TCH-004 §3.11); `from` preselects the deck source. Never a name in the URL. */
+  spaceLecture: (id: string, from?: 'plan' | 'revisit') =>
+    `/teach/space/lecture?id=${encodeURIComponent(id)}${from ? `&from=${from}` : ''}`,
 } as const;
 
 /**

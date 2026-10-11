@@ -4,6 +4,8 @@ export interface ConsoleEnv {
   NEXT_PUBLIC_CONSOLE_DEV_AUTH?: string;
   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?: string;
   NEXT_PUBLIC_SCHOOL_CONSENT_MODE?: string;
+  /** The learner web app (the lecture presenter lives at `${APP_URL}/present`, F-TCH-004 §3.2). */
+  NEXT_PUBLIC_APP_URL?: string;
   NODE_ENV?: string;
 }
 
@@ -20,6 +22,7 @@ export function buildEnv(): ConsoleEnv {
     NEXT_PUBLIC_CONSOLE_DEV_AUTH: process.env.NEXT_PUBLIC_CONSOLE_DEV_AUTH,
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
     NEXT_PUBLIC_SCHOOL_CONSENT_MODE: process.env.NEXT_PUBLIC_SCHOOL_CONSENT_MODE,
+    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
     NODE_ENV: process.env.NODE_ENV,
   };
 }
@@ -49,4 +52,22 @@ export function devAuthEnabled(env: ConsoleEnv = buildEnv()): boolean {
 /** School consent mode (F-TCH-001 §10.3) stays locked until the owner's legal review — mirrors the Worker's SCHOOL_CONSENT_MODE. */
 export function schoolConsentModeEnabled(env: ConsoleEnv = buildEnv()): boolean {
   return env.NEXT_PUBLIC_SCHOOL_CONSENT_MODE === 'enabled';
+}
+
+export const DEFAULT_APP_URL = 'https://app.hangulroute.com';
+
+/**
+ * The learner web app's origin (no path, no trailing slash): the presenter URL is
+ * `${appUrl()}/present#d=…` and the roster hand-off only answers this origin (F-TCH-004 §3.2).
+ * Anything that is not an http(s) URL falls back to production.
+ */
+export function appUrl(env: ConsoleEnv = buildEnv()): string {
+  const raw = env.NEXT_PUBLIC_APP_URL?.trim();
+  if (!raw) return DEFAULT_APP_URL;
+  try {
+    const url = new URL(raw);
+    return url.protocol === 'https:' || url.protocol === 'http:' ? url.origin : DEFAULT_APP_URL;
+  } catch {
+    return DEFAULT_APP_URL;
+  }
 }

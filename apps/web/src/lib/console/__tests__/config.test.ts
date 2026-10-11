@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { apiBaseUrl, buildEnv, clerkPublishableKey, devAuthEnabled, schoolConsentModeEnabled } from '../config';
+import { DEFAULT_APP_URL, apiBaseUrl, appUrl, buildEnv, clerkPublishableKey, devAuthEnabled, schoolConsentModeEnabled } from '../config';
 
 describe('console config (F-CONSOLE-001 §3.2)', () => {
   it('apiBaseUrl trims and rejects the placeholder', () => {
@@ -29,6 +29,17 @@ describe('console config (F-CONSOLE-001 §3.2)', () => {
     expect(clerkPublishableKey() === null || typeof clerkPublishableKey() === 'string').toBe(true);
   });
 
+  it('appUrl is the learner app origin for the presenter link, defaulting to production (F-TCH-004 §3.2)', () => {
+    expect(DEFAULT_APP_URL).toBe('https://app.hangulroute.com');
+    expect(appUrl({})).toBe('https://app.hangulroute.com');
+    expect(appUrl({ NEXT_PUBLIC_APP_URL: ' https://preview.app.example.com/ ' })).toBe('https://preview.app.example.com');
+    expect(appUrl({ NEXT_PUBLIC_APP_URL: 'http://localhost:4173' })).toBe('http://localhost:4173');
+    expect(appUrl({ NEXT_PUBLIC_APP_URL: 'javascript:alert(1)' })).toBe('https://app.hangulroute.com');
+    expect(appUrl({ NEXT_PUBLIC_APP_URL: 'not a url' })).toBe('https://app.hangulroute.com');
+    expect(appUrl({ NEXT_PUBLIC_APP_URL: 'https://app.example.com/some/path' })).toBe('https://app.example.com');
+    expect(typeof appUrl()).toBe('string');
+  });
+
   it('school consent mode is locked until explicitly enabled (legal review)', () => {
     expect(schoolConsentModeEnabled({})).toBe(false);
     expect(schoolConsentModeEnabled({ NEXT_PUBLIC_SCHOOL_CONSENT_MODE: 'true' })).toBe(false);
@@ -45,6 +56,8 @@ describe('console config (F-CONSOLE-001 §3.2)', () => {
       expect(apiBaseUrl()).toBe('https://hangul-route-api.example.workers.dev');
       expect(clerkPublishableKey()).toBe('pk_test_abc');
       expect(buildEnv().NEXT_PUBLIC_API_BASE_URL).toBe('https://hangul-route-api.example.workers.dev/');
+      vi.stubEnv('NEXT_PUBLIC_APP_URL', 'https://app.preview.example.com');
+      expect(appUrl()).toBe('https://app.preview.example.com');
     });
 
     it('never hands process.env around as an object (the browser bundle would see {})', () => {

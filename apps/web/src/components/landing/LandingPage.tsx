@@ -4,14 +4,15 @@ import { HoyaSvg } from '@hangul-route/design-system/scene-art/dom';
 import Link from 'next/link';
 import { CONTACT_EMAIL } from '../../data/contact';
 import { landingCopy } from '../../data/landing-copy';
+import { appUrl } from '../../lib/console/config';
 import { sitePath } from '../../lib/site-path';
 import { HeritageCardsPreview } from './HeritageCardsPreview';
 import { MeetHoya } from './MeetHoya';
 import { MiniGamesGallery } from './MiniGamesGallery';
 import { WaitlistForm } from './WaitlistForm';
 
-/** The learner web app (PWA). Overridable per deployment. */
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://app.hangulroute.com';
+/** The learner web app (PWA). Overridable per deployment (`NEXT_PUBLIC_APP_URL`, read in one place: console config). */
+const APP_URL = appUrl();
 
 /** The first letter Hoya introduces: taught Korean, passed into the hero sentences (never written into a message). */
 const FIRST_LETTER = 'ㄱ';
