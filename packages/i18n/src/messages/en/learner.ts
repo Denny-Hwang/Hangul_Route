@@ -184,6 +184,15 @@ export const learner = {
     },
     tip: "Tip — finish today's quest to keep your streak alive!",
     recentStars: 'Recent stars',
+    /**
+     * The one-time catch-up card (F-STORY-006 §3.5, PR 6.5c): cards the learner had already earned,
+     * found once per app session. A count of cards found, never a fraction or what is left (D3).
+     */
+    catchUp: {
+      line: (count: number) =>
+        plural('en', count, { one: 'Hoya found 1 card you already earned!', other: `Hoya found ${count} cards you already earned!` }),
+      cta: 'See my cards',
+    },
   },
 
   journey: {

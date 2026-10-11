@@ -23,6 +23,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.home.stars.pill': [[0], [3]],
   'learner.home.progress.label': [[1, 24]],
   'learner.home.homework.due': [[2]],
+  'learner.home.catchUp.line': [[1], [22]],
   'learner.library.collected.line': [[1, 24]],
   'learner.library.collected.pill': [[1, 24]],
   'learner.cardDetail.earn.quest': [['Meet g, n, d, l', 1], ['Meet g, n, d, l', 2]],
