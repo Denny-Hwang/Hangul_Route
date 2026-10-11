@@ -4,6 +4,7 @@ import { isStagePlayable } from '../../logic/entitlement';
 import { scopeFor } from '../../logic/minigame-config';
 import { journeySummaryOf } from '../../logic/my-route/summary';
 import { STAGE1_QUESTS, questTeaches } from '../../logic/stage1/curriculum';
+import { episodesAll } from '../episodes';
 import { jamoAll } from '../jamo';
 import { questsAll } from '../quests';
 import { journeyContent, questJamo, stage1QuestIds } from '../sync-context';
@@ -51,7 +52,7 @@ describe('journeyContent: summary.journey over the live bundle', () => {
     episodes: [],
     quests: questIds.map((questId) => ({
       questId,
-      episodeId: questsAll.find((q) => q.id === questId)?.episodeId ?? 'episode:unknown',
+      episodeId: episodesAll.find((e) => e.questIds.includes(questId))?.id ?? 'episode:unknown',
       startedAt: now.toISOString(),
       completedAt: now.toISOString(),
       stars: 1,
