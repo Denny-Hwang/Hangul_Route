@@ -31,6 +31,47 @@ describe('./word-art entry', () => {
     await expect(import('../index')).resolves.toBeDefined();
   });
 
+  it('exports the W-1b data model, builders, tones, render list, registry and colour-confusion pairs', async () => {
+    const entry = await import('../index');
+    for (const name of [
+      'WORD_ART',
+      'WORD_ART_KEYS',
+      'WORD_ART_FAMILIES',
+      'WORD_ART_PLAN',
+      'getWordArt',
+      'wordArtKeyOf',
+      'WORD_ART_TONES',
+      'isWordArtTone',
+      'resolveTone',
+      'toRenderList',
+      'glyphToSvgString',
+      'COLOR_CONFUSION_PAIRS',
+      'circle',
+      'ellipse',
+      'rect',
+      'path',
+      'poly',
+      'blob',
+      'curve',
+      'leaf',
+      'arc',
+      'line',
+      'drop',
+      'star',
+      'groundShadow',
+      'face',
+      'isWordArtPath',
+    ]) {
+      expect(entry, name).toHaveProperty(name);
+    }
+  });
+
+  it('keeps the test-only colour science out of the entry', async () => {
+    const entry = await import('../index');
+    expect(entry).not.toHaveProperty('ciede2000');
+    expect(entry).not.toHaveProperty('confusionPairs');
+  });
+
   it('no file under src/word-art imports React, react-native(-svg/-web), the package barrel or a component', () => {
     const offenders = sourceFiles(WORD_ART_DIR)
       .map((file) => ({ file: relative(WORD_ART_DIR, file), imports: impureImports(readFileSync(file, 'utf8')) }))
