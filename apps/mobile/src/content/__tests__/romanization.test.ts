@@ -37,6 +37,7 @@ const F = {
 } as const;
 const sources = new Map<string, string>(Object.values(F).map((p) => [p, read(p)]));
 const HANGUL = /[가-힣]/;
+const isLoneJamo = (ko: string): boolean => jamoAll.some((j) => j.char === ko);
 const ctx = { exceptions: ROMANIZATION_EXCEPTIONS };
 
 const out = (file: string, ko: string, issues: RomanizationIssue[]): string[] =>
@@ -133,8 +134,30 @@ describe('minigame scopes romanization (B1)', () => {
         check(ref, d.npcKo, d.npcRomanization);
         for (const o of d.options) check(ref, o.ko, o.romanization);
       }
+      for (const r of s.listenPick?.rounds ?? []) {
+        check(ref, r.prompt.ko, r.prompt.romanization);
+        for (const o of r.options) {
+          if (o.text === undefined) continue;
+          // A written-symbol option (ㅓ) carries the symbol's sound value, the jamo rule (R7).
+          if (isLoneJamo(o.text.ko)) found.push(...out(F.scopes, `'${o.text.ko}'`, checkJamoRomanization(o.text.ko, o.text.romanization)).map((m) => `${ref}: ${m}`));
+          else check(ref, o.text.ko, o.text.romanization);
+        }
+      }
+      for (const b of s.picWord?.boards ?? []) for (const p of b.pairs) check(ref, p.word.ko, p.word.romanization);
     }
     expect(found).toEqual([]);
+  });
+
+  it('names Listen & Pick rounds and options only by ASCII ids or by the Korean they show', () => {
+    const stray: string[] = [];
+    for (const [ref, s] of Object.entries(minigameScopes)) {
+      for (const r of s.listenPick?.rounds ?? []) {
+        const shown = new Set([r.prompt.ko, ...r.options.flatMap((o) => (o.text ? [o.text.ko] : []))]);
+        const named = (id: string): boolean => !HANGUL.test(id) || shown.has(id) || shown.has(id.split(':').at(-1) ?? '');
+        for (const id of [r.id, r.answerId, ...r.options.map((o) => o.id)]) if (!named(id)) stray.push(`${ref}: ${id}`);
+      }
+    }
+    expect(stray).toEqual([]);
   });
 
   it('every storySteps label has a romanization that passes R1 (a rule, not a table of values)', () => {
@@ -147,7 +170,8 @@ describe('minigame scopes romanization (B1)', () => {
   });
 
   it('declares no Hangul outside the checked fields', () => {
-    const checked = new Set(['ko', 'labelKo', 'npcKo', 'jamoChars']);
+    // Listen & Pick rounds and Pic-Word boards are checked field by field above.
+    const checked = new Set(['ko', 'labelKo', 'npcKo', 'jamoChars', 'listenPick', 'picWord']);
     const stray: string[] = [];
     const walk = (value: unknown, path: string): void => {
       if (typeof value === 'string') {
@@ -165,9 +189,7 @@ describe('minigame scopes romanization (B1)', () => {
 
 describe('quests, episodes and avatars romanization (B1)', () => {
   /** Hangul allowed in an English field: an isolated syllable in a title (F-CNT-002 §3.4 ignore table). */
-  const ENGLISH_HANGUL_ALLOWED: ReadonlyArray<{ questId: string; stepId: string; field: 'titleEn'; text: string }> = [
-    { questId: 'quest:stage1-letters-q3', stepId: 's4', field: 'titleEn', text: 'Build "가"' },
-  ];
+  const ENGLISH_HANGUL_ALLOWED: ReadonlyArray<{ questId: string; stepId: string; field: 'titleEn'; text: string }> = [];
 
   it('Korean Hoya lines live in hoyaLineKo with romanization and gloss, never in an English field', () => {
     const found: string[] = [];
@@ -187,6 +209,14 @@ describe('quests, episodes and avatars romanization (B1)', () => {
         if (s.hoyaLineKo !== undefined) {
           note(F.quests, s.hoyaLineKo.ko, s.hoyaLineKo.romanization);
           found.push(...pair(F.quests, s.hoyaLineKo.ko, s.hoyaLineKo.romanization));
+        }
+        // Discover examples and words (F-QUEST-002 §3.2): taught Korean with romanization and gloss.
+        for (const page of s.discover?.pages ?? []) {
+          for (const item of page.items) {
+            const text = item.type === 'jamo' ? item.example : item.word;
+            note(F.quests, text.ko, text.romanization);
+            found.push(...pair(F.quests, text.ko, text.romanization).map((m) => `${q.id}/${s.id}: ${m}`));
+          }
         }
       }
     }

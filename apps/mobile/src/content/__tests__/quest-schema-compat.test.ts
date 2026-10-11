@@ -21,11 +21,22 @@ describe('shipped content still parses after the F-QUEST-002 schema changes', ()
     expect(result.success, result.success ? '' : JSON.stringify(result.error.issues)).toBe(true);
   });
 
-  it('adds no discover or check step to a shipped quest (content lands in later PRs)', () => {
+  it('adds discover and check steps only to Stage 1 quests; Stage 2 and Stage 4 keep their five steps and present', () => {
+    const stage1 = new Set(stage1Quests.map((q) => q.id));
     for (const quest of questsAll) {
-      for (const step of quest.steps) {
-        expect(['discover', 'check']).not.toContain(step.kind);
-      }
+      if (stage1.has(quest.id)) continue;
+      for (const step of quest.steps) expect(['discover', 'check'], `${quest.id}/${step.id}`).not.toContain(step.kind);
+    }
+    for (const quest of [...stage2Quests, ...stage4Quests]) {
+      expect(quest.steps.map((s) => s.kind), quest.id).toEqual(['intro', 'present', 'practice', 'apply', 'reward']);
+    }
+  });
+
+  it('rebuilds letters q1-q3 with a Discover and a Check step (F-QUEST-002 Q-6a)', () => {
+    for (const id of ['quest:stage1-letters-q1', 'quest:stage1-letters-q2', 'quest:stage1-letters-q3']) {
+      const kinds = stage1Quests.find((q) => q.id === id)?.steps.map((s) => s.kind);
+      expect(kinds, id).toContain('discover');
+      expect(kinds, id).toContain('check');
     }
   });
 

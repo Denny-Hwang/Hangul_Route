@@ -2,53 +2,126 @@ import type { Quest } from '@hangul-route/content-schema';
 import { storyQuests } from './stories';
 
 /**
- * 5-step quest pattern: intro → present → practice → apply → reward.
+ * Stage 1 quests are being rebuilt to the six-step pattern of F-QUEST-002 §3.6:
+ * intro → discover → practice → apply → check → reward (letters q1-q3 so far,
+ * Q-6a; the others follow in Q-6b, Q-7b and Q-8). The quests not yet rebuilt,
+ * and the Stage 2 / Stage 4 taste quests, keep the five-step pattern
+ * intro → present → practice → apply → reward.
  * Each Stage 1 episode owns 1–3 quests.
  */
 
 export const stage1Quests: Quest[] = [
-  // Letters & Books — Q1: Meet ㄱ ㄴ ㄷ ㄹ
+  // Letters & Books — Q1: ㅏ ㅓ ㄱ ㄴ (F-QUEST-002 §3.6, quest 1)
   {
     id: 'quest:stage1-letters-q1',
-    titleEn: 'Meet g, n, d, l',
-    blurbEn: 'Your first four Korean consonants.',
-    estimatedMinutes: 4,
+    titleEn: 'Meet a, eo, g, n',
+    blurbEn: 'Two vowels, two consonants, and your first syllables.',
+    estimatedMinutes: 5,
     steps: [
-      { id: 's1', kind: 'intro', titleEn: 'Hi from Hoya', hoyaLineEn: 'These four letters say a lot!', durationSeconds: 8 },
-      { id: 's2', kind: 'present', titleEn: 'Listen and Watch', hoyaLineEn: 'Tap each one to hear it.', minigameKind: 'match-sound', minigameRef: 'minigame:s1-letters-recognize-1', durationSeconds: 60 },
-      { id: 's3', kind: 'practice', titleEn: 'Match the Sound', minigameKind: 'match-sound', minigameRef: 'minigame:s1-letters-match-1', durationSeconds: 90 },
-      { id: 's4', kind: 'apply', titleEn: 'Build a Letter', minigameKind: 'build-letter', minigameRef: 'minigame:s1-letters-build-1', durationSeconds: 90 },
-      { id: 's5', kind: 'reward', titleEn: 'Card Earned!', hoyaLineEn: 'You earned a Heritage card!', durationSeconds: 8 },
+      { id: 's1', kind: 'intro', titleEn: 'Hi from Hoya', hoyaLineEn: 'Korean letters join into blocks. Let us meet four!', durationSeconds: 8 },
+      {
+        id: 's2',
+        kind: 'discover',
+        titleEn: 'Four New Letters',
+        hoyaLineEn: 'Tap Hear it to listen to each one.',
+        discover: {
+          pages: [
+            {
+              items: [
+                { type: 'jamo', jamoId: 'jamo:a', example: { ko: '나', romanization: 'na', en: 'I, me' } },
+                { type: 'jamo', jamoId: 'jamo:eo', example: { ko: '너', romanization: 'neo', en: 'you' } },
+              ],
+            },
+            {
+              items: [
+                { type: 'jamo', jamoId: 'jamo:giyeok', example: { ko: '가', romanization: 'ga', en: 'the sound ga' } },
+                { type: 'jamo', jamoId: 'jamo:nieun', example: { ko: '나', romanization: 'na', en: 'I, me' } },
+              ],
+            },
+          ],
+        },
+        durationSeconds: 40,
+      },
+      { id: 's3', kind: 'practice', titleEn: 'Match the Sound', minigameKind: 'match-sound', minigameRef: 'minigame:s1-letters-q1-play', durationSeconds: 90 },
+      { id: 's4', kind: 'apply', titleEn: 'Build a Block', minigameKind: 'build-letter', minigameRef: 'minigame:s1-letters-q1-apply', durationSeconds: 75 },
+      { id: 's5', kind: 'check', titleEn: 'Listen and Read', minigameKind: 'listen-pick', minigameRef: 'minigame:s1-letters-q1-check', durationSeconds: 35 },
+      { id: 's6', kind: 'reward', titleEn: 'Card Earned!', hoyaLineEn: 'You earned a Heritage card!', durationSeconds: 8 },
     ],
     rewardCardId: 'card:book',
   },
-  // Letters & Books — Q2
+  // Letters & Books — Q2: ㅗ ㅜ ㅁ ㅇ (quest 2)
   {
     id: 'quest:stage1-letters-q2',
-    titleEn: 'Meet m, b, s, ng',
-    blurbEn: 'Four more consonants, four more sounds.',
-    estimatedMinutes: 4,
+    titleEn: 'Meet o, u, m and the circle',
+    blurbEn: 'Two round vowels, m, and the circle letter.',
+    estimatedMinutes: 5,
     steps: [
-      { id: 's1', kind: 'intro', titleEn: 'Round Two', hoyaLineEn: 'You did great. Want more letters?', durationSeconds: 6 },
-      { id: 's2', kind: 'present', titleEn: 'Hear & See', minigameKind: 'match-sound', minigameRef: 'minigame:s1-letters-recognize-2', durationSeconds: 60 },
-      { id: 's3', kind: 'practice', titleEn: 'Trace Each Letter', minigameKind: 'trace-stroke', minigameRef: 'minigame:s1-letters-trace-1', durationSeconds: 90 },
-      { id: 's4', kind: 'apply', titleEn: 'Match the Sound', minigameKind: 'match-sound', minigameRef: 'minigame:s1-letters-match-2', durationSeconds: 90 },
-      { id: 's5', kind: 'reward', titleEn: 'Nice!', hoyaLineEn: 'One more card for your library!', durationSeconds: 8 },
+      { id: 's1', kind: 'intro', titleEn: 'Round Two', hoyaLineEn: 'Welcome back! Four more letters today.', durationSeconds: 6 },
+      {
+        id: 's2',
+        kind: 'discover',
+        titleEn: 'Four New Letters',
+        hoyaLineEn: 'Tap Hear it to listen to each one.',
+        discover: {
+          pages: [
+            {
+              items: [
+                { type: 'jamo', jamoId: 'jamo:o', example: { ko: '오', romanization: 'o', en: 'five' } },
+                { type: 'jamo', jamoId: 'jamo:u', example: { ko: '나무', romanization: 'namu', en: 'tree', syllables: ['na', 'mu'] } },
+              ],
+            },
+            {
+              items: [
+                { type: 'jamo', jamoId: 'jamo:mieum', example: { ko: '나무', romanization: 'namu', en: 'tree', syllables: ['na', 'mu'] } },
+                { type: 'jamo', jamoId: 'jamo:ieung', example: { ko: '오', romanization: 'o', en: 'five' } },
+              ],
+            },
+          ],
+        },
+        durationSeconds: 40,
+      },
+      { id: 's3', kind: 'practice', titleEn: 'Match the Sound', minigameKind: 'match-sound', minigameRef: 'minigame:s1-letters-q2-play', durationSeconds: 90 },
+      { id: 's4', kind: 'apply', titleEn: 'Trace Each Letter', minigameKind: 'trace-stroke', minigameRef: 'minigame:s1-letters-q2-apply', durationSeconds: 75 },
+      { id: 's5', kind: 'check', titleEn: 'Listen and Read', minigameKind: 'listen-pick', minigameRef: 'minigame:s1-letters-q2-check', durationSeconds: 35 },
+      { id: 's6', kind: 'reward', titleEn: 'Nice!', hoyaLineEn: 'One more card for your library!', durationSeconds: 8 },
     ],
     rewardCardId: 'card:hanji',
   },
-  // Letters & Books — Q3: vowels
+  // Letters & Books — Q3: ㅡ ㅣ ㄷ ㄹ (quest 3)
   {
     id: 'quest:stage1-letters-q3',
-    titleEn: 'Meet the Vowels',
-    blurbEn: 'ㅏ ㅓ ㅗ ㅜ ㅡ ㅣ — open your mouth and sing.',
+    titleEn: 'Meet eu, i, d, r',
+    blurbEn: 'Four more letters, and real words to read.',
     estimatedMinutes: 5,
     steps: [
-      { id: 's1', kind: 'intro', titleEn: 'Vowels are music', hoyaLineEn: 'Vowels are sounds you can sing!', durationSeconds: 8 },
-      { id: 's2', kind: 'present', titleEn: 'Hear Six Vowels', minigameKind: 'match-sound', minigameRef: 'minigame:s1-letters-recognize-3', durationSeconds: 75 },
-      { id: 's3', kind: 'practice', titleEn: 'Find What\'s Different', minigameKind: 'odd-one-out', minigameRef: 'minigame:s1-letters-odd-1', durationSeconds: 75 },
-      { id: 's4', kind: 'apply', titleEn: 'Build "가"', minigameKind: 'build-letter', minigameRef: 'minigame:s1-letters-build-2', durationSeconds: 90 },
-      { id: 's5', kind: 'reward', titleEn: 'Brush Earned', hoyaLineEn: 'Your library is growing!', durationSeconds: 8 },
+      { id: 's1', kind: 'intro', titleEn: 'Real Words Next', hoyaLineEn: 'Four more letters, and you can read real words!', durationSeconds: 8 },
+      {
+        id: 's2',
+        kind: 'discover',
+        titleEn: 'Four New Letters',
+        hoyaLineEn: 'Tap Hear it to listen to each one.',
+        discover: {
+          pages: [
+            {
+              items: [
+                { type: 'jamo', jamoId: 'jamo:eu', example: { ko: '드라마', romanization: 'deurama', en: 'drama', syllables: ['deu', 'ra', 'ma'] } },
+                { type: 'jamo', jamoId: 'jamo:i', example: { ko: '아이', romanization: 'ai', en: 'child', syllables: ['a', 'i'] } },
+              ],
+            },
+            {
+              items: [
+                { type: 'jamo', jamoId: 'jamo:digeut', example: { ko: '다리', romanization: 'dari', en: 'leg, bridge', syllables: ['da', 'ri'] } },
+                { type: 'jamo', jamoId: 'jamo:rieul', example: { ko: '드라마', romanization: 'deurama', en: 'drama', syllables: ['deu', 'ra', 'ma'] } },
+              ],
+            },
+          ],
+        },
+        durationSeconds: 40,
+      },
+      { id: 's3', kind: 'practice', titleEn: 'Match the Sound', minigameKind: 'match-sound', minigameRef: 'minigame:s1-letters-q3-play', durationSeconds: 90 },
+      { id: 's4', kind: 'apply', titleEn: 'Find the Odd One', minigameKind: 'odd-one-out', minigameRef: 'minigame:s1-letters-q3-apply', durationSeconds: 75 },
+      { id: 's5', kind: 'check', titleEn: 'Listen and Read', minigameKind: 'listen-pick', minigameRef: 'minigame:s1-letters-q3-check', durationSeconds: 35 },
+      { id: 's6', kind: 'reward', titleEn: 'Brush Earned', hoyaLineEn: 'Your library is growing!', durationSeconds: 8 },
     ],
     rewardCardId: 'card:brush',
   },
