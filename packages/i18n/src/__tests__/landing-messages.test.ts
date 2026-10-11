@@ -54,6 +54,13 @@ describe('landing: sentences that take a value render the former text', () => {
     expect(l.footer.copyright(2026)).toBe('© 2026 Hangul Route');
   });
 
+  it('the locale switcher and the "View in" banner (PR 11c): the endonym is passed in', () => {
+    expect(l.footer.language).toBe('Language');
+    expect(l.localeBanner.label).toBe('Language suggestion');
+    expect(l.localeBanner.viewIn('Español')).toBe('View in Español');
+    expect(l.localeBanner.dismiss).toBe('Close');
+  });
+
   it('about: the contact address is passed in; the "no red" promise says it in words', () => {
     expect(l.about.feedback.body('hello@example.com')).toBe('Email hello@example.com — we read everything.');
     expect(l.about.promises.noRed).toBe('No red X marks for wrong answers — Hoya nudges with amber.');

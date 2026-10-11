@@ -194,6 +194,8 @@ export const landing = {
     terms: 'Terms',
     contact: 'Contact',
     copyright: (year: number) => `© ${year} Hangul Route`,
+    /** The footer's locale switcher (PR 11c): links named by their endonyms, shown once a second locale ships. */
+    language: 'Language',
   },
   /**
    * The launch-news form (`WaitlistForm`, docs/launch/waitlist.md; `WAITLIST_COPY` in apps/web/src/data/landing-copy.ts).
@@ -430,5 +432,15 @@ export const landing = {
         },
       },
     },
+  },
+  /**
+   * The "View in <language>" banner on `/` (F-I18N-001 §3.3, PR 11c): shown when the browser prefers a
+   * shipped locale other than English; it suggests, never redirects. The page words it in the suggested
+   * locale (its own dictionary), and `endonym` is that locale's own name ("Español").
+   */
+  localeBanner: {
+    label: 'Language suggestion',
+    viewIn: (endonym: string) => `View in ${endonym}`,
+    dismiss: 'Close',
   },
 } as const;
