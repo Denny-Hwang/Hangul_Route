@@ -8,6 +8,7 @@ import {
   Icon,
   Pill,
   Screen,
+  SectionTabs,
   Spacer,
   SplitPane,
   TAB_SCREEN_EDGES,
@@ -21,7 +22,8 @@ import {
   useLayoutClass,
   useMediaSize,
 } from '@hangul-route/design-system';
-import { useNavigation } from '@react-navigation/native';
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, Text, View, type LayoutChangeEvent, type ViewStyle } from 'react-native';
@@ -38,10 +40,14 @@ import {
   type GalleryMode,
   gridRows,
 } from '../../logic/layout/pane-sizes';
-import type { RootStackParamList } from '../../navigation/types';
+import { selectedSection, visibleSections, type LibrarySectionId } from '../../logic/story/library-sections';
+import { sectionTitle, shelfCopy } from '../../logic/story/shelf-copy';
+import { defaultStoryIndex } from '../../logic/story/story-index';
+import type { MainTabParamList, RootStackParamList } from '../../navigation/types';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { CardDetailView } from './CardDetailView';
+import { StoryShelf } from './StoryShelf';
 
 /** Card art in a gallery thumb at scale 1 (phones), and the thumb's padding plus its thickest border on both sides. */
 const THUMB_ART = 96;
@@ -51,14 +57,50 @@ const GALLERY_GAP = spacing.sm;
 /** The phone gallery: two cards a row at 47 %, exactly as before F-LAYOUT-001. */
 const PHONE_CELL: ViewStyle = { flexBasis: '47%' };
 const ROW_CELL: ViewStyle = { flex: 1 };
+/** The sections this build can draw; Culture joins with its section (F-STORY-004 PR 4.7). */
+const DRAWN_SECTIONS: ReadonlySet<LibrarySectionId> = new Set(['cards', 'story-time']);
 
 export function LibraryScreen(): React.ReactElement {
-  const m = useMessages().learner.library;
+  const messages = useMessages();
+  const m = messages.learner.library;
   const locale = useLocale();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const profile = useProfileStore(activeProfileSelector);
   const snap = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
   const [filter, setFilter] = useState<ThemeKey | 'all'>('all');
+
+  // Library sections (F-STORY-004 §3.3): reviewed stories only (D14), so a production build with no
+  // reviewed story offers Cards alone and the screen is exactly today's gallery, with no tab row.
+  const copy = shelfCopy(messages);
+  const storyIndex = defaultStoryIndex();
+  const sections = useMemo(
+    () => visibleSections({ entries: storyIndex }).filter((id) => DRAWN_SECTIONS.has(id)),
+    [storyIndex],
+  );
+  const requested = useRoute<RouteProp<MainTabParamList, 'Library'>>().params?.section;
+  const tabNavigation = useNavigation<BottomTabNavigationProp<MainTabParamList, 'Library'>>();
+  const [section, setSection] = useState<LibrarySectionId>(() => selectedSection(requested, sections));
+  // A deep link (`params.section`) selects its section, then is cleared so the same link works again.
+  // Switching tabs is local state only: not persisted, no navigation.
+  useEffect(() => {
+    if (requested === undefined) return;
+    setSection(selectedSection(requested, sections));
+    tabNavigation.setParams({ section: undefined });
+  }, [requested, sections, tabNavigation]);
+  const tabsShown = sections.length >= 2;
+  const active: LibrarySectionId = tabsShown ? section : 'cards';
+  const tabs = tabsShown ? (
+    <>
+      <Spacer size="md" />
+      <SectionTabs
+        items={sections.map((id) => ({ id, label: sectionTitle(id, copy) }))}
+        value={active}
+        onChange={setSection}
+        accessibilityLabel={copy.sectionsLabel}
+        testID="library-sections"
+      />
+    </>
+  ) : null;
 
   const unlockedIds = useMemo(() => new Set((snap?.cards ?? []).map((c) => c.cardId)), [snap]);
 
@@ -119,6 +161,7 @@ export function LibraryScreen(): React.ReactElement {
         </View>
         <Pill label={m.collected.pill(unlockedIds.size, heritageCardsAll.length)} tone="primary" />
       </View>
+      {tabs}
 
       <Spacer size="md" />
       <View style={{ flexDirection: 'row', gap: spacing.xs, flexWrap: 'wrap' }}>
@@ -163,6 +206,19 @@ export function LibraryScreen(): React.ReactElement {
 
   // The card page as the stack screen shows it, without its close button; a locked card also says how it is earned.
   const detail = selectedId ? <CardDetailView key={selectedId} cardId={selectedId} showHowToEarn /> : null;
+
+  if (active === 'story-time') {
+    // Story sections use the full width with no detail pane on every window (F-LAYOUT-001 §3.6).
+    return (
+      <Screen tone="canvas" edges={TAB_SCREEN_EDGES} width="full" scrollable>
+        <Heading level="title">{m.title}</Heading>
+        {tabs}
+        <Spacer size="lg" />
+        <StoryShelf category="story-time" index={storyIndex} />
+        <Spacer size="xl" />
+      </Screen>
+    );
+  }
 
   return (
     <Screen tone="canvas" edges={TAB_SCREEN_EDGES} width={screenWidth} scrollable={!paneMode}>

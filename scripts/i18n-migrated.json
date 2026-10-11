@@ -55,7 +55,9 @@
     "apps/web/src/components/console/RoutePlanParts.tsx",
     "apps/mobile/src/screens/placement/**",
     "apps/web/src/app/(console)/teach/space/lecture/page.tsx",
-    "apps/web/src/components/console/LectureParts.tsx"
+    "apps/web/src/components/console/LectureParts.tsx",
+    "apps/mobile/src/screens/library/StoryTile.tsx",
+    "apps/mobile/src/screens/library/StoryShelf.tsx"
   ],
   "pluralTernaryBaseline": {
     "packages/content-schema/src/romanization/compare.ts": 1
