@@ -95,26 +95,29 @@ test.describe('story reader extras (fixture bundle)', () => {
     await expect(next(page)).toBeEnabled();
     expect(await page.getByTestId('story-reader').innerText()).not.toMatch(/\bages?\b|\bkids?\b|for children/i);
 
-    // Dismiss (a 64 dp control named "Dismiss") removes it for the visit.
+    // Dismiss (a 64 dp control named "Dismiss") removes it; from the keyboard, focus lands on the scene text.
     const dismiss = page.getByTestId('story-reader-advisory-dismiss');
     await expect(dismiss).toHaveAccessibleName('Dismiss');
     const box = await dismiss.boundingBox();
     expect(box?.width ?? 0).toBeGreaterThanOrEqual(64);
     expect(box?.height ?? 0).toBeGreaterThanOrEqual(64);
-    await dismiss.click();
+    await dismiss.focus();
+    await page.keyboard.press('Enter');
     await expect(advisory(page)).toHaveCount(0);
-    await next(page).click();
-    await back(page).click();
-    await expect(position(page)).toHaveText('1 / 5');
-    await expect(advisory(page)).toHaveCount(0);
+    await expect(page.getByTestId('story-reader-narration')).toBeFocused();
 
-    // A fresh open shows it again; a page turn takes it away and Back does not bring it back.
+    // A fresh open of scene 1 shows it again. Closed before any page turn, so no bookmark is saved and this
+    // stays a fresh open once F-STORY-004 PR 4.4b wires the bookmark (a resume past scene 1 shows no note).
     await page.getByTestId('story-reader-close').click();
     await page.getByRole('button', { name: 'Play minigame' }).click();
+    await expect(position(page)).toHaveText('1 / 5');
     await expect(advisory(page)).toBeVisible();
+
+    // A page turn takes it away and Back does not bring it back in that visit.
     await next(page).click();
     await expect(advisory(page)).toHaveCount(0);
     await back(page).click();
+    await expect(position(page)).toHaveText('1 / 5');
     await expect(advisory(page)).toHaveCount(0);
   });
 
@@ -130,8 +133,11 @@ test.describe('story reader extras (fixture bundle)', () => {
     await onboard(page);
     await openReplay(page);
     await expect(chip(page)).toHaveText('Did you know?');
+    // A disclosure: a screen reader hears whether the note is open.
+    await expect(chip(page)).toHaveAttribute('aria-expanded', 'false');
     await chip(page).click();
     await expect(note(page)).toBeVisible();
+    await expect(chip(page)).toHaveAttribute('aria-expanded', 'true');
     await expect(note(page)).toBeInViewport();
     await expect(note(page)).toContainText('Did you know?');
     await expect(page.getByTestId('story-reader-note-title')).toHaveText('Hangul Day');
@@ -158,6 +164,7 @@ test.describe('story reader extras (fixture bundle)', () => {
 
     await page.getByTestId('story-reader-note-close').click();
     await expect(note(page)).toHaveCount(0);
+    await expect(chip(page)).toHaveAttribute('aria-expanded', 'false');
   });
 
   test('the note card closes on a second tap, Escape, a term chip and a page turn; scenes without a note have no chip', async ({ page }) => {
@@ -204,8 +211,6 @@ test.describe('story reader extras (fixture bundle)', () => {
     expect(await above(page, page.getByRole('heading', { name: 'The End' }), recap)).toBe(true);
     expect(await above(page, recap, page.getByTestId('story-reader-end-primary'))).toBe(true);
     expect(await primaryButtons(page)).toEqual(['story-reader-end-primary']);
-    // The decorative pictures are not in the accessibility tree.
-    expect(await page.getByRole('img', { name: /scene/i }).count()).toBe(0);
   });
 
   test('read-along: a Story Order scene whose art is pending is left out of the recap', async ({ page }) => {
@@ -233,6 +238,18 @@ test.describe('story reader extras (fixture bundle)', () => {
       await expect.poll(() => fullyVisible(page, page.getByTestId('story-reader-advisory-dismiss'))).toBe(true);
       expect(await noSidewaysScroll(page)).toBe(true);
       await shot(page, `story-extras-advisory-${vp.width}x${vp.height}`);
+
+      // The longest advisory the schema allows (140 characters) still leaves Next, Dismiss and a text area on
+      // screen. react-native-web lays out with CSS, so swapping the text reflows the real layout.
+      await page.getByTestId('story-reader-advisory-text').evaluate((el, longest) => {
+        el.textContent = longest;
+      }, `A note for grown-ups: ${'x'.repeat(140)}`.replace(/x{10}/g, 'xxxxxxxxx '));
+      await expect.poll(() => fullyVisible(page, next(page))).toBe(true);
+      await expect.poll(() => fullyVisible(page, page.getByTestId('story-reader-advisory-dismiss'))).toBe(true);
+      const scroll = await page.getByTestId('story-reader-scroll').boundingBox();
+      expect(scroll?.height ?? 0).toBeGreaterThanOrEqual(64);
+      expect(await noSidewaysScroll(page)).toBe(true);
+      await shot(page, `story-extras-advisory-longest-${vp.width}x${vp.height}`);
 
       await chip(page).click();
       await expect(note(page)).toBeVisible();

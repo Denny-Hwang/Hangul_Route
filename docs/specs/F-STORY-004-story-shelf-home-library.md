@@ -320,7 +320,7 @@ Ships dark: with no reviewed story in the bundle, `visibleSections` returns `['c
 | 4.4b | `feat(mobile)`: resume — `QuestPlayer` `resume` param + `beginQuest(…, startStepIndex)`, reader bookmark wiring (`useReaderBookmark` from F-STORY-002 PR 2.6a), Results clears the bookmark, `story.bookmark.resumed` | 4.3a, 4.3b, F-STORY-002 PR 2.6a/2.6b |
 | 4.5 | `feat(design-system)`: `SectionTabs`; `feat(mobile)`: Library sections shell + Story Time section + `StoryTile` | 4.3b, F-STORY-002 PR 2.3a (`StoryScene`), F-I18N-001 PR 4 (`KoreanText`) |
 | 4.6 | `feat(mobile)`: `StoryEpisodeDetail` and the `EpisodeDetailScreen` branch | 4.3b, 4.5 |
-| 4.7 | `feat(mobile)`: `CultureNotesScreen`, route, Culture section | 4.5 |
+| 4.7 | `feat(mobile)`: `CultureNotesScreen`, route, Culture section; pass `onOpenCultureNote={(noteId) => navigation.navigate('CultureNotes', { noteId })}` to `StoryReaderView` from `StoryReadGame` and `StoryReaderScreen` so the reader's note card draws "More in Culture notes" (F-STORY-002 2.8) | 4.5 |
 | 4.8 | `test(e2e)`: `story-shelf.spec.ts`, `library-cards-only.spec.ts` | 4.4a-4.7 |
 
 F-STORY-003's Results "Next story" needs `nextStoryAfter` from PR 4.3b. PR 4.2 (`content-access.ts`) is the single place the free set is defined: F-QUEST-002 and F-VOC call it and define nothing of their own. The locked-tile path needs F-LEARN-001's `gateRequired` helper (its PR 2); until it exists the tile uses the current `PinEntry` route unconditionally.
