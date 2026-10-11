@@ -1,5 +1,7 @@
 import { PlacementResultSchema, type PlacementResult, type ProgressSnapshot } from '@hangul-route/content-schema';
 import { create } from 'zustand';
+import { episodesAll } from '../content/episodes';
+import { stagesToLatch, withStageLatches } from '../logic/my-route/latch';
 import { recordBestQuest } from '../logic/quest-progress';
 import { mergePlacements, mergeSnapshots, withSnapshotDefaults } from '../logic/sync/merge';
 import { notifyProgressPersisted } from '../logic/sync/persist-hook';
@@ -102,6 +104,17 @@ function save(profileId: string, snap: ProgressSnapshot): void {
   notifyProgressPersisted(profileId);
 }
 
+/**
+ * The stage latch writer (F-ROUTE-001 R-1b): adds `stageDoneAt` keys for
+ * stages that are complete now, on the hydrated snapshot only, never on a
+ * blank one. Runs after each quest result and on hydrate (app start), with
+ * `flags.myRouteEnabled` off too, so a learner who finishes Stage 1 is latched
+ * before any build adds Stage 1 quests.
+ */
+function withLatches(snap: ProgressSnapshot, now: Date): ProgressSnapshot {
+  return withStageLatches(snap, stagesToLatch(snap, episodesAll), now);
+}
+
 /** Any open assignment for the quest is done (F-HW-001 §3.4, F-PLAN-001 §3.3). */
 function completeAssignments(homework: ProgressSnapshot['homework'], questId: string, at: string): ProgressSnapshot['homework'] {
   return homework.map((h) => (h.questId === questId && !h.completedAt ? { ...h, completedAt: at } : h));
@@ -167,16 +180,17 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
       if (get().hydratedFor.has(profileId)) return;
       const { byProfile, pendingFor } = get();
       const unsaved = pendingFor.has(profileId) ? byProfile[profileId] : undefined;
-      const snap =
+      const found =
         unsaved && loaded
           ? replayUnsaved(mergeSnapshots(unsaved, loaded, { now: new Date() }), unsaved)
           : (unsaved ?? loaded ?? byProfile[profileId]);
+      const snap = found ? withLatches(found, new Date()) : found;
       set((s) => ({
         byProfile: snap ? { ...s.byProfile, [profileId]: snap } : s.byProfile,
         hydratedFor: new Set([...s.hydratedFor, profileId]),
         pendingFor: without(s.pendingFor, profileId),
       }));
-      if (unsaved && snap) save(profileId, snap);
+      if (snap && (unsaved || snap !== found)) save(profileId, snap);
     })().finally(() => inFlight.delete(profileId));
     inFlight.set(profileId, load);
     return load;
@@ -200,7 +214,9 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
     );
     const quests = [...snap.quests.filter((q) => q.questId !== input.questId), updatedQuest];
     const homework = completeAssignments(snap.homework, input.questId, now);
-    const updated: ProgressSnapshot = { ...snap, quests, homework, updatedAt: now };
+    const result: ProgressSnapshot = { ...snap, quests, homework, updatedAt: now };
+    // Before the saved copy loads, `hydrate` latches the merged snapshot instead.
+    const updated = get().hydratedFor.has(profileId) ? withLatches(result, new Date(now)) : result;
     set((s) => ({ byProfile: { ...s.byProfile, [profileId]: updated } }));
     persist(profileId, updated);
   },

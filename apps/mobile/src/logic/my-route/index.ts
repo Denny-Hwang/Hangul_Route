@@ -11,3 +11,5 @@ export { STAGE_BUILDS, hereStageOf, isDerivedComplete, stageStateOf, type StageF
 export { SKILLS, SKILL_OF_KIND, SKILL_THRESHOLDS, TILE_KINDS, marksFor, questSkills, skillRows, tilesCount } from './skills';
 export { gainsOf } from './gains';
 export { summarizeJourney, type JourneyStageSummary, type JourneySummary } from './summary';
+export { stagesToLatch, withStageLatches } from './latch';
+export { hoyaPoseFor, newQuestsLine, newlyDoneKeys, parseSeen, readSeen, seenFrom, seenKey, writeSeen, type JsonStorage } from './seen';

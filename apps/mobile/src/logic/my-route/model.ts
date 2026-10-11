@@ -4,7 +4,8 @@ import { routeCursor } from './cursor';
 import { gainsOf } from './gains';
 import { gridEpisodesOf, routeOrder, type RouteEntry } from './order';
 import { skillRows, tilesCount } from './skills';
-import { buildStageRows, isDerivedComplete } from './stage-rows';
+import { stagesToLatch } from './latch';
+import { buildStageRows } from './stage-rows';
 import type { Hero, MyRouteInput, MyRouteModel, StageRow } from './types';
 
 /**
@@ -80,6 +81,6 @@ export function buildMyRoute(input: MyRouteInput): MyRouteModel {
     tiles: tilesCount(done, input.quests),
     gains: gainsOf({ snapshot, episodes: input.episodes }),
     start: null,
-    latchesToWrite: StageKeySchema.options.filter((s) => !latched.has(s) && isDerivedComplete(s, gridEpisodes, snapshot)),
+    latchesToWrite: stagesToLatch(snapshot, input.episodes),
   };
 }
