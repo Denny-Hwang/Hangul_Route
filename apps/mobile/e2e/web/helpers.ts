@@ -283,22 +283,38 @@ export async function passDiscover(page: Page): Promise<void> {
   await expect(pill).toHaveCount(0);
 }
 
+/** The Listen & Pick option cards; a tapped card says so in its label ("Right answer: ..." / "Not this one: ..."). */
+const LISTEN_PICK_OPTIONS = '[data-testid^="listen-pick-option-"]';
+
+/**
+ * Wait for the Listen & Pick round after a right tap: the card marked right leaves when
+ * the next round opens (state, not the game's 700 ms timer).
+ */
+export async function waitForNextListenPickRound(page: Page): Promise<void> {
+  await expect(page.locator(`${LISTEN_PICK_OPTIONS}[aria-label^="Right answer"]`)).toHaveCount(0);
+}
+
 /**
  * Play a quest's two-question Check (F-QUEST-002 §3.3) from its launcher without
- * knowing the content: Go, then tap the options in order each round. A wrong tap only
- * locks that card (amber nudge); the right one ends the round. The Check has no Skip.
+ * knowing the content: Go, then tap the options in order each round until one is marked
+ * right. A wrong tap only locks that card (amber nudge); the right one ends the round.
+ * The Check has no Skip.
  */
 export async function playCheck(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Go', exact: true }).click();
   for (let round = 1; round <= 2; round += 1) {
-    const options = page.locator('[data-testid^="listen-pick-option-"]');
+    const options = page.locator(LISTEN_PICK_OPTIONS);
     await expect(options.first()).toBeVisible();
     const count = await options.count();
     for (let i = 0; i < count; i += 1) {
-      if (!(await options.nth(i).isVisible())) break;
-      await options.nth(i).click();
-      await page.waitForTimeout(60); // outside the game's double-touch window
+      const option = options.nth(i);
+      // A tap inside the game's double-touch window is dropped: tap again until the card answers.
+      await expect(async () => {
+        await option.click();
+        await expect(option).toHaveAttribute('aria-label', /^(Right answer|Not this one)/, { timeout: 250 });
+      }).toPass();
+      if ((await option.getAttribute('aria-label'))?.startsWith('Right answer')) break;
     }
-    if (round === 1) await page.waitForTimeout(900); // the next round opens 700 ms after the right tap
+    if (round === 1) await waitForNextListenPickRound(page);
   }
 }

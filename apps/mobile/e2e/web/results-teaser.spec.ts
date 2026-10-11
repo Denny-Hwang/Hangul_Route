@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { completeChildForm, jamoOfSpoken, passDiscover } from './helpers';
+import { completeChildForm, jamoOfSpoken, passDiscover, waitForNextListenPickRound } from './helpers';
 
 /**
  * F-QUEST-002 Q-5b: the Results "Next up" teaser and the soft prerequisite on
@@ -73,7 +73,7 @@ async function answerCheck(page: Page): Promise<void> {
     const options = page.locator('[data-testid^="listen-pick-option-"]');
     const word = options.filter({ hasText: said });
     await ((await word.count()) === 1 ? word : options.filter({ hasText: jamoOfSpoken(said) })).click();
-    if (round === 1) await page.waitForTimeout(900); // the next round opens 700 ms after the right tap
+    if (round === 1) await waitForNextListenPickRound(page);
   }
 }
 
@@ -82,7 +82,7 @@ async function home(page: Page): Promise<void> {
   await page.goto('/');
   await expect(page.getByText('Hi, Dami!')).toBeVisible();
   const guide = page.getByTestId('install-guide');
-  await page.waitForTimeout(800);
+  await guide.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
   if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
 }
 
