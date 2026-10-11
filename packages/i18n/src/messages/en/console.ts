@@ -15,7 +15,8 @@ import { plural } from '../../plural';
  * the pages' former text, byte for byte, except that counts now go through `plural()`
  * (F-I18N-001 §10, closed): "1 learner", "1 card", "1 hasn't synced".
  * Four former COPY fragments the space page glued around numbers (practicedThisWeek, anchor,
- * revisitTogether, notSyncedWeek) became whole sentences under `space.week`.
+ * revisitTogether, notSyncedWeek) became whole sentences under `space.week`. PR 10b added
+ * `plan` and `billing` (at the end of this object) the same way.
  *
  * Every string here is caregiver surface (no "behind", "lazy" or a learner-banned word),
  * checked per locale by console-messages.test.ts.
@@ -186,8 +187,8 @@ export const consoleMsgs = {
     recentFirst: 'Most recent activity first',
     /**
      * One student card; the day words come from `relativeDay`, the readout from `readoutLine`
-     * (still English until plans.ts moves in PR 10b). `revisit` takes taught Korean, rendered
-     * by the page through `aroundSlot` like `week.revisit`.
+     * (`plan.readout`). `revisit` takes taught Korean, rendered by the page through `aroundSlot`
+     * like `week.revisit`.
      */
     learner: {
       lastActive: (when: string) => `Last active ${when}`,
