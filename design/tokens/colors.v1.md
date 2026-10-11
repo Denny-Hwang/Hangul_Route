@@ -148,7 +148,7 @@ Rules for the vocab tones:
   for the main silhouette); a fill is never relied on for a shape's boundary.
 - **Colour is never the only cue** (WCAG 1.4.1). Measured on these values (CIE Lab, CIEDE2000; Machado
   colour-vision simulation at severity 1.0 in linear RGB): the closest pair under normal vision is
-  skyBlue/gray at 21.2 (distinct). Under protanopia red/brown (2.4) and orange/green (5.8) collapse;
+  skyBlue/gray at 21.1 (distinct). Under protanopia red/brown (2.4) and orange/green (5.8) collapse;
   under deuteranopia blue/purple (5.0), red/green (6.3) and pink/gray (6.8); under tritanopia orange/pink
   (7.6). So every colour swatch carries an object (apple, tangerine, crow, ...), and a quiz never offers
   two of these pairs as the only difference (`COLOR_CONFUSION_PAIRS`, F-VOC-002 §3.4, recomputed by a test).
