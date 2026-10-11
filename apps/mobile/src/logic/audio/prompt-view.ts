@@ -26,6 +26,8 @@ export interface PromptPanelView {
   detail: string | null;
   action: FallbackAction;
   actionLabel: string | null;
+  /** "How to add a voice" link: only when there is no Korean voice (W3), else `null`. */
+  helpLabel: string | null;
   heading: string;
   /** Accessibility label of the speaker button; it states the state. */
   speakerLabel: string;
@@ -54,6 +56,7 @@ export function promptPanelView(s: PromptState, cap: AudioCapability, muted: boo
     detail: panelDetail(reason),
     action,
     actionLabel: action === 'turn_on' ? AUDIO_COPY.turnSoundOn : action === 'try_again' ? AUDIO_COPY.tryAgain : action === 'tap_to_hear' ? AUDIO_COPY.tapToHear : null,
+    helpLabel: reason === 'no_voice' ? AUDIO_COPY.howToAddVoice : null,
     heading: matchSoundHeading(textShown && soundOffOrAbsent),
     speakerLabel: reason === 'blocked' ? AUDIO_COPY.tapToHear : speakerLabel(muted),
     speakerCaption: reason === 'blocked' ? AUDIO_COPY.tapToHear : AUDIO_COPY.tapToReplay,

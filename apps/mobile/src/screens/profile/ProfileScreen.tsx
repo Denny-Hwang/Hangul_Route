@@ -16,7 +16,7 @@ import {
 import { levelLabel } from '@hangul-route/content-schema';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React from 'react';
+import React, { useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
 import { effectiveTier } from '../../store/tier-store';
@@ -31,6 +31,8 @@ import { useProgressStore } from '../../store/progress-store';
 import { usePwaStore } from '../../store/pwa-store';
 import { useAudience } from '../../store/audience';
 import { useUiStore } from '../../store/ui-store';
+import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
+import { soundCardView, soundSwitchLabel } from '../../logic/audio/voice-help';
 import { BackupCard } from '../../components/BackupCard';
 import { SpacesCard } from '../../components/SpacesCard';
 
@@ -47,6 +49,9 @@ export function ProfileScreen(): React.ReactElement {
   // Mute is a persisted device preference (F-AUDIO-004 AD7); the switch shows its inverse.
   const soundOn = useAudioStore((s) => !s.muted);
   const setMuted = useAudioStore((s) => s.setMuted);
+  const voice = useAudioStore((s) => s.tts);
+  const soundCard = soundCardView(voice, !soundOn);
+  const [voiceHelpOpen, setVoiceHelpOpen] = useState(false);
   const parentGateOpenedAt = useUiStore((s) => s.parentGateOpenedAt);
   const forceInstallGuide = usePwaStore((s) => s.force);
   const installed = usePwaStore((s) => s.installed);
@@ -157,25 +162,35 @@ export function ProfileScreen(): React.ReactElement {
       </Card>
 
       <Spacer size="lg" />
-      <Pressable
-        onPress={() => {
-          setMuted(soundOn, 'profile');
-        }}
-        accessibilityRole="switch"
-        accessibilityState={{ checked: soundOn }}
-        accessibilityLabel="Sound"
-        style={{ minHeight: touchTarget.min }}
-      >
-        <Card padding="md">
+      <Card padding="md">
+        <Pressable
+          onPress={() => {
+            setMuted(soundOn, 'profile');
+          }}
+          accessibilityRole="switch"
+          accessibilityState={{ checked: soundOn }}
+          accessibilityLabel={soundSwitchLabel(voice, !soundOn)}
+          style={{ minHeight: touchTarget.min, justifyContent: 'center' }}
+        >
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1 }}>
-              <Icon name="speaker" size={24} color={soundOn ? colors.brand.primary : colors.text.muted} />
-              <Body weight="semibold">Sound</Body>
+              <Icon name={soundCard.glyph} size={24} color={soundOn ? colors.brand.primary : colors.text.muted} />
+              <View style={{ flex: 1 }}>
+                <Body weight="semibold">Sound</Body>
+                <Caption tone="muted" testID="sound-voice-status">{soundCard.statusLine}</Caption>
+              </View>
             </View>
             <Pill tone={soundOn ? 'success' : 'neutral'} label={soundOn ? 'On' : 'Off'} size="sm" />
           </View>
-        </Card>
-      </Pressable>
+        </Pressable>
+        {soundCard.showHowTo ? (
+          <>
+            <Spacer size="sm" />
+            <Button label={soundCard.howToLabel} tone="ghost" size="md" onPress={() => setVoiceHelpOpen(true)} testID="sound-how-to-add" />
+          </>
+        ) : null}
+      </Card>
+      <VoiceHelpSheet visible={voiceHelpOpen} onClose={() => setVoiceHelpOpen(false)} />
 
       <Spacer size="lg" />
       <Card padding="md" tone={tier === 'premium' ? 'success' : 'sunken'}>

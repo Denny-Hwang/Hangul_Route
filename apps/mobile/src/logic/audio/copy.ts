@@ -27,6 +27,7 @@ export const AUDIO_COPY = {
   voiceReady: 'Korean voice: ready',
   voiceNeedsInternet: 'Korean voice needs the internet',
   voiceLooking: 'Looking for a Korean voice',
+  howToAddVoice: 'How to add a voice',
 } as const;
 
 export function matchSoundHeading(textShown: boolean): string {

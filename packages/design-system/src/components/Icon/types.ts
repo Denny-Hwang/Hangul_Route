@@ -2,6 +2,7 @@ export type IconName =
   | 'play'
   | 'pause'
   | 'speaker'
+  | 'speaker-off'
   | 'replay'
   | 'check'
   | 'close'

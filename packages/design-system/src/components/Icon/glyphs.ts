@@ -38,6 +38,13 @@ export const iconGlyphs: Record<IconName, readonly IconGlyphPart[]> = {
     stroke('M16.5 9 Q18.5 12 16.5 15'),
     stroke('M19 7 Q22 12 19 17'),
   ],
+  // Mute sign: the speaker cone with a small cross where the waves were.
+  // Drawn in the muted text colour by its callers, never red (F-AUDIO-004 §3.13).
+  'speaker-off': [
+    fill('M4 9 H8 L13 5 V19 L8 15 H4 Z'),
+    stroke('M16 9.5 L21 14.5', 2.6),
+    stroke('M21 9.5 L16 14.5', 2.6),
+  ],
   replay: [
     // Clockwise three-quarter arc ending at 12 o'clock, arrowhead pointing
     // along the direction of travel.
