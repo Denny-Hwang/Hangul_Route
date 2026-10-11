@@ -1,4 +1,17 @@
-import { Body, Button, Caption, Card, Heading, Hoya, Icon, colors, radii, spacing, touchTarget } from '@hangul-route/design-system';
+import {
+  Body,
+  Button,
+  Caption,
+  Card,
+  Heading,
+  Hoya,
+  Icon,
+  colors,
+  layout,
+  radii,
+  spacing,
+  touchTarget,
+} from '@hangul-route/design-system';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -86,7 +99,11 @@ export function InstallGuideSheet({ shareUrl }: InstallGuideSheetProps): React.R
       }}
       testID="install-guide"
     >
-      <View pointerEvents="box-none" testID="install-guide-column" style={{ width: '100%', maxWidth: frame.maxWidth }}>
+      <View
+        pointerEvents="box-none"
+        testID="install-guide-column"
+        style={{ width: '100%', maxWidth: layout.maxWidth.reading }}
+      >
         <Card padding="md" tone="paper" style={{ borderWidth: 1, borderColor: colors.border.subtle, borderRadius: radii.xl }}>
           <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md }}>
             <Hoya pose="waving" size={56} />

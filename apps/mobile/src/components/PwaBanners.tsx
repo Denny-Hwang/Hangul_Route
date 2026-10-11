@@ -1,4 +1,4 @@
-import { Body, Button, Caption, Card, colors, spacing } from '@hangul-route/design-system';
+import { Body, Button, Caption, Card, colors, layout, spacing } from '@hangul-route/design-system';
 import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -22,7 +22,7 @@ export function PwaBanners(): React.ReactElement | null {
   const [offline, setOffline] = useState(false);
   const insets = useSafeAreaInsets();
   const tabBarHeight = useUiStore((s) => s.tabBarHeight);
-  const frame = overlayFrame({ insets, tabBarHeight, gap: spacing.md });
+  const frame = overlayFrame({ insets, tabBarHeight, gap: spacing.md, bottomGap: spacing.xl });
 
   useEffect(() => {
     const off = subscribePwa((event: PwaEvent) => {
@@ -47,7 +47,11 @@ export function PwaBanners(): React.ReactElement | null {
       pointerEvents="box-none"
       style={{ position: 'absolute', left: frame.left, right: frame.right, bottom: frame.bottom, alignItems: 'center' }}
     >
-      <View pointerEvents="box-none" testID="pwa-banners" style={{ width: '100%', maxWidth: frame.maxWidth, gap: spacing.sm }}>
+      <View
+        pointerEvents="box-none"
+        testID="pwa-banners"
+        style={{ width: '100%', maxWidth: layout.maxWidth.reading, gap: spacing.sm }}
+      >
         {offline ? (
           <View style={{ alignSelf: 'center' }}>
             <Card padding="sm" tone="sunken">
