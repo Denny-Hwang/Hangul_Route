@@ -65,6 +65,8 @@ export const STORY_READER_COPY = {
     traditionalNote: 'One version of a story told in many versions',
     checked: (passes: number, date: string, contentVer: number): string =>
       `Checked in ${passes} independent ${plural(passes, 'pass', 'passes')} · last checked ${date} · story version ${contentVer}`,
+    /** A `scope: 'cluster'` verification record: say only what the record says. */
+    clusterChecked: 'These checks covered a group of related stories, not this story alone.',
     howChecked: 'How it was checked',
     advisoryHeading: 'A gentle note for grown-ups',
     corrections: 'Corrections',
