@@ -331,6 +331,11 @@ test.describe('Library at 1180x820: two panes', () => {
       const b = (await t.boundingBox())!;
       expect(Math.min(b.width, b.height)).toBeGreaterThanOrEqual(64);
     }
+    // The card art stays inside its thumb (sized from the measured grid, not an assumed 400).
+    const bookThumb = (await galleryPane(page).getByRole('button', { name: 'Book', exact: true }).boundingBox())!;
+    const bookArt = (await galleryPane(page).getByLabel('Card art for Book').boundingBox())!;
+    expect(bookArt.x).toBeGreaterThanOrEqual(bookThumb.x);
+    expect(bookArt.x + bookArt.width).toBeLessThanOrEqual(bookThumb.x + bookThumb.width);
 
     // First selection = the most recently earned card, with its page (no close button) on the right.
     await expect(galleryPane(page).getByRole('button', { name: 'Kimchi', exact: true })).toHaveAttribute('aria-selected', 'true');
@@ -394,6 +399,14 @@ test.describe('Library at 768x1024: 3 columns, one pane, a tap navigates', () =>
     await page.getByRole('button', { name: 'Book', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Book', exact: true })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Heritage Library' })).toBeHidden();
+  });
+
+  test('the card screen of a locked card leaves out "How to earn it" (pane only)', async ({ page }) => {
+    await openLibrary(page);
+    await thumbs(page).nth(1).click(); // Hanji Paper, locked
+    await expect(page.getByRole('heading', { name: 'Hanji Paper' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Heritage Library' })).toBeHidden();
+    await expect(page.getByText('How to earn it')).toHaveCount(0);
   });
 
   test('rotating between 768x1024 and 1024x768 keeps the selected card and never navigates', async ({ page }) => {
