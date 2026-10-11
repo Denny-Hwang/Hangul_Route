@@ -655,12 +655,13 @@ test.describe('Library at 768x1024: 3 columns, one pane, a tap navigates', () =>
     await expect(page.getByRole('heading', { name: 'Heritage Library' })).toBeHidden();
   });
 
-  test('the card screen of a locked card leaves out "How to earn it" (pane only)', async ({ page }) => {
+  test('the card screen of a locked card says how to earn it too (F-STORY-006 §3.7, wireframe library/earn-hints F2)', async ({ page }) => {
     await openLibrary(page);
     await thumbs(page).nth(1).click(); // Hanji Paper, locked
     await expect(page.getByRole('heading', { name: 'Hanji Paper' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Heritage Library' })).toBeHidden();
-    await expect(page.getByText('How to earn it')).toHaveCount(0);
+    await expect(page.getByText('How to earn it')).toBeVisible();
+    await expect(page.getByText('Premium')).toHaveCount(0);
   });
 
   test('rotating between 768x1024 and 1024x768 keeps the selected card and never navigates', async ({ page }) => {

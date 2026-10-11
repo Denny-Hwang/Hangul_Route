@@ -24,6 +24,34 @@ async function newLearnerLibrary(page: Page): Promise<void> {
   await expect(page.getByRole('heading', { name: 'Heritage Library' })).toBeVisible();
 }
 
+/** The saved progress record's "New" flag of the welcome card, read straight from IndexedDB (idb-keyval). */
+function savedTigerIsNew(page: Page): Promise<boolean | null> {
+  return page.evaluate(
+    () =>
+      new Promise<boolean | null>((resolve) => {
+        const open = indexedDB.open('keyval-store');
+        open.onerror = () => resolve(null);
+        open.onsuccess = () => {
+          const db = open.result;
+          if (!db.objectStoreNames.contains('keyval')) {
+            db.close();
+            resolve(null);
+            return;
+          }
+          const all = db.transaction('keyval').objectStore('keyval').getAll();
+          all.onerror = () => resolve(null);
+          all.onsuccess = () => {
+            db.close();
+            const record = (all.result as unknown[]).map(String).find((v) => v.includes('"card:tiger"'));
+            if (!record) return resolve(null);
+            const snap = JSON.parse(record) as { cards: { cardId: string; newSinceLastView: boolean }[] };
+            resolve(snap.cards.find((c) => c.cardId === 'card:tiger')?.newSinceLastView ?? null);
+          };
+        };
+      }),
+  );
+}
+
 test('a plain count, earn hints on locked tiles, an honest explainer, and New until opened', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(String(e)));
@@ -56,14 +84,22 @@ test('a plain count, earn hints on locked tiles, an honest explainer, and New un
   await expect(tigerNew).toBeVisible();
   await expect(tigerNew.getByText('New', { exact: true })).toBeVisible();
   await shot(page, 'library-earn-hints');
+  await tigerNew.scrollIntoViewIfNeeded();
+  await shot(page, 'library-new-pill');
+  await page.getByText('How to collect more').scrollIntoViewIfNeeded();
+  await shot(page, 'library-explainer');
   await tigerNew.click();
   await expect(page.getByRole('button', { name: 'Tap to flip card to back' })).toBeVisible();
-  await page.goBack();
+  // Seen is saved (wait for the write to land), so after a fresh open the pill is gone.
+  await expect.poll(() => savedTigerIsNew(page)).toBe(false);
+  await page.goto('/');
+  await expect(page.getByText('Hi, Dami!')).toBeVisible();
+  await page.getByText('Library', { exact: true }).last().click();
   await expect(page.getByRole('button', { name: 'Tiger', exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Tiger. New', exact: true })).toHaveCount(0);
 
   // A locked card page names its hint and says how to earn it.
-  await hanji.click();
+  await page.getByRole('button', { name: 'Locked card. Finish the episode: Meet the Letters' }).first().click();
   await expect(page.getByText('How to earn it')).toBeVisible();
   // The Library stays mounted under the card page: look at what is on screen.
   await expect(page.getByText('Finish the episode: Meet the Letters', { exact: true }).filter({ visible: true }).last()).toBeVisible();
