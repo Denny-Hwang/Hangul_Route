@@ -12,6 +12,8 @@ on:
       - "apps/web/**"
       - "packages/design-system/**"
       - "packages/content-schema/**"
+      # the scene contact sheet (/design-preview/scenes) is built from these files
+      - "content/stories/**"
       - ".github/workflows/preview-deploy.yml"
 
 concurrency:
