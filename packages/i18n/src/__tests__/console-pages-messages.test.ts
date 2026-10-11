@@ -211,6 +211,7 @@ const SLOTTED: readonly [string, (m: Messages) => (value: string) => string][] =
   ['console.space.week.revisit', (m) => m.console.space.week.revisit],
   ['console.space.learner.revisit', (m) => m.console.space.learner.revisit],
   ['console.lecture.source.revisitWith', (m) => m.console.lecture.source.revisitWith],
+  ['console.school.footer', (m) => m.console.school.footer],
 ];
 
 describe('messages split around their argument (aroundSlot)', () => {
@@ -252,6 +253,9 @@ const COUNTED: readonly [string, (m: Messages, n: number) => string][] = [
   ['console.plan.summary.some.class', (m, n) => m.console.plan.summary.some.class(7, n)],
   ['console.plan.summary.some.school', (m, n) => m.console.plan.summary.some.school(7, n)],
   ['console.billing.seats', (m, n) => m.console.billing.seats(n)],
+  ['console.school.classes.line', (m, n) => m.console.school.classes.line('Ms Park', n, 'today', true)],
+  ['console.parent.child.quests', (m, n) => m.console.parent.child.quests(n)],
+  ['console.parent.child.cards', (m, n) => m.console.parent.child.cards(n)],
 ];
 
 describe('console counts use plural() in every locale (en, es, ko, en-XA)', () => {

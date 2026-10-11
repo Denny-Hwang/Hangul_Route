@@ -16,7 +16,8 @@ import { plural } from '../../plural';
  * (F-I18N-001 §10, closed): "1 learner", "1 card", "1 hasn't synced".
  * Four former COPY fragments the space page glued around numbers (practicedThisWeek, anchor,
  * revisitTogether, notSyncedWeek) became whole sentences under `space.week`. PR 10b added
- * `plan` and `billing` (at the end of this object) the same way.
+ * `plan` and `billing` (at the end of this object) the same way, and PR 10c `settings`, `school`
+ * and `parent` after `curriculum`.
  *
  * Every string here is caregiver surface (no "behind", "lazy" or a learner-banned word),
  * checked per locale by console-messages.test.ts.
@@ -767,5 +768,198 @@ export const consoleMsgs = {
     copyHasCode: 'This link holds your class join code. Anyone with the link can join until you make a new code. Copy it anyway?',
     popupBlocked: 'Allow pop-ups for this site to open the presenter, or copy the link.',
     nothing: 'Add at least one item to the outline.',
+  },
+
+  /**
+   * Space settings (`/teach/space/settings`, F-TCH-001 §10.3, F-I18N-001 PR 10c): housekeeping
+   * only, never progress data. Space, member and learner names arrive as arguments; the page keeps
+   * a note key (`notes.*`) and words it at render time. Kind-keyed groups are one whole sentence
+   * or label per kind (§3.1), so no locale glues a kind into a phrase.
+   */
+  settings: {
+    title: 'Settings',
+    titleFor: (space: string) => `${space} · settings`,
+    back: (space: string | null) => `← Back to ${space ?? 'the space'}`,
+    forbidden: "This space isn't yours to manage.",
+    archived: {
+      family: 'This family is archived — read-only until you unarchive it.',
+      class: 'This class is archived — read-only until you unarchive it.',
+      school: 'This school is archived — read-only until you unarchive it.',
+    },
+    notes: {
+      codeReady: 'New code ready.',
+      codeFailed: "Couldn't make a new code right now.",
+      saved: 'Saved.',
+      saveFailed: "Didn't save.",
+      removed: 'Removed.',
+      removeFailed: "Didn't remove.",
+      archived: 'Archived.',
+      unarchived: 'Unarchived.',
+      deleted: 'Deleted everywhere.',
+      deleteFailed: "Couldn't delete.",
+    },
+    joinCode: {
+      title: 'Join code',
+      /** Followed by `oldCodeStops` in the confirm dialog. */
+      regenerateAsk: 'Make a new code?',
+      regenerate: { cta: 'Regenerate' },
+      create: { cta: 'Create a code' },
+    },
+    consent: {
+      title: 'Consent mode',
+      parent: 'A parent consents (email at join — coming later)',
+      school: 'The school attests for its students',
+      notYet: 'not yet',
+    },
+    privacy: {
+      title: 'Privacy',
+      anonymize: 'Anonymize roster',
+    },
+    grownUps: {
+      label: 'Members',
+      title: 'Grown-ups',
+      /** A member's role: a server code (content-schema `SpaceRole`) worded here. */
+      role: { owner: 'owner', caregiver: 'caregiver', teacher: 'teacher', admin: 'admin', student: 'student' },
+      /** `role` arrives worded (`role.*`); `you` marks the signed-in grown-up. */
+      roleLine: (role: string, you: boolean) => (you ? `${role} (you)` : role),
+      removeAsk: (name: string, space: string) => `Remove ${name} from ${space}?`,
+      remove: { cta: 'Remove' },
+      invite: {
+        family: 'Invite a co-parent: they sign in and enter the code above.',
+        class: 'Co-teachers arrive later.',
+        school: 'Invite a teacher: they sign in and enter the code above.',
+      },
+    },
+    learners: {
+      label: 'Learners',
+      title: { family: 'Family learners', class: 'Class students', school: 'School members' },
+      none: 'No one has joined yet — share the code.',
+      removeAsk: (name: string, space: string) => `Remove ${name} from ${space}? Their progress stays with them.`,
+      remove: {
+        family: { cta: 'Remove from family' },
+        class: { cta: 'Remove from class' },
+        school: { cta: 'Remove from school' },
+      },
+    },
+    danger: {
+      title: 'Danger zone',
+      /** Followed by `archiveKeeps` in the confirm dialog. */
+      archiveAsk: (space: string) => `Archive ${space}?`,
+      archive: {
+        family: { cta: 'Archive this family' },
+        class: { cta: 'Archive this class' },
+        school: { cta: 'Archive this school' },
+      },
+      unarchive: { cta: 'Unarchive' },
+      deleteTitle: "Delete a learner's data",
+      deleteLabel: 'Learner to delete',
+      chooseLearner: 'Choose a learner…',
+      typeToConfirm: (name: string) => `Type "${name}" to confirm`,
+      /** Holds the learner's name, so it is not a budgeted `cta`; the button wraps. */
+      deleteData: (name: string) => `Delete ${name}'s data`,
+    },
+    backToConsole: { cta: 'Back to console' },
+  },
+  /**
+   * The school admin view (`SchoolAdmin`, `school.ts`, F-SCHOOL-001 §3.3, F-I18N-001 PR 10c),
+   * rendered by `/teach/space` for a school: aggregates only. Plan names come from
+   * `billing.planTitle`, the licence status from `entitlementStatus`, the code expiry from
+   * `codeExpiry`; class, teacher and school names arrive as arguments.
+   */
+  school: {
+    title: 'School',
+    titleFor: (school: string) => `${school} · school`,
+    forbidden: "This school isn't yours to manage.",
+    /** The link after `schoolLicenceLapsed`. */
+    billingLink: 'Billing',
+    notes: {
+      codeReady: 'New invite code ready.',
+      codeFailed: "Couldn't make a new code.",
+      assigned: 'Teacher assigned.',
+      assignFailed: "Couldn't assign — have they joined the school?",
+      classCreated: 'Class created — assign a teacher when they have joined.',
+      createFailed: "Couldn't create the class.",
+    },
+    licence: {
+      label: 'Licence and seats',
+      title: 'Licence',
+      line: (plan: string, status: string) => `${plan} · ${status}`,
+      none: 'none',
+      seats: 'Seats',
+      /** Seats used against the licence (`usageLine`); a `null` limit has no cap. */
+      usage: (students: number, studentLimit: number | null, teachers: number, teacherLimit: number | null) =>
+        `${studentLimit === null ? `students ${students}` : `students ${students} / ${studentLimit}`} · ${teacherLimit === null ? `teachers ${teachers}` : `teachers ${teachers} / ${teacherLimit}`}`,
+      manage: { cta: 'Manage billing' },
+    },
+    invite: {
+      title: 'Invite a teacher',
+      /** `expiry` comes from `codeExpiry`. */
+      role: (expiry: string) => `role: teacher · ${expiry}`,
+      /** Followed by `oldCodeStops` in the confirm dialog. */
+      regenerateAsk: 'Make a new invite code?',
+      regenerate: { cta: 'Regenerate' },
+      create: { cta: 'Create a code' },
+    },
+    week: {
+      label: 'This week',
+      title: 'This week (whole school)',
+      line: (practiced: number, students: number, classesWithPlan: number, classes: number) =>
+        `${practiced} of ${students} students practiced · ${classesWithPlan} of ${classes} classes have a published plan`,
+    },
+    classes: {
+      title: 'Classes',
+      /** One class row; `active` comes from `relativeDay`, the student count goes through plural(). */
+      line: (teacher: string | null, students: number, active: string, planPublished: boolean) =>
+        `${teacher ?? 'no teacher yet'} · ${plural('en', students, { one: `${students} student`, other: `${students} students` })} · active ${active}${planPublished ? ' · plan published' : ''}`,
+      teacherFor: (className: string) => `Teacher for ${className}`,
+      chooseTeacher: 'Choose a teacher…',
+      cancel: { cta: 'Cancel' },
+      change: { cta: 'Change teacher' },
+      assign: { cta: 'Assign teacher' },
+      open: { cta: 'Open roster →' },
+      newField: { label: 'New class', placeholder: 'Sunday Class C' },
+      add: { cta: '+ New class' },
+    },
+    settingsLink: 'School settings',
+    /** The page renders `link` as a link (`aroundSlot`), so a translation may put it anywhere, exactly once. */
+    footer: (link: string) => `${link} · rosters opened from here show initials by default.`,
+  },
+  /**
+   * The `/parent` demo (F-CONSOLE-001 §3.7, F-I18N-001 PR 10c): a preview on sample data. The
+   * demo family's names, quest titles, times, day letters and card glosses are sample data in
+   * `data/mock-family.ts`, not UI; level labels come from content-schema `levelLabel`.
+   */
+  parent: {
+    title: 'Family Dashboard',
+    demoNote: "Demo preview — the stats below are sample data. The live dashboard reads your kids' progress from this device.",
+    sample: { pill: 'Sample data' },
+    stats: { profiles: 'Profiles', cards: 'Total cards', weekMinutes: 'This week (min)', streak: 'Longest streak' },
+    kidsTitle: 'Kids',
+    kidLine: (quests: number, cards: number, streak: number) =>
+      `${plural('en', quests, { one: `${quests} quest`, other: `${quests} quests` })} · ${plural('en', cards, { one: `${cards} card`, other: `${cards} cards` })} · ${streak}-day streak`,
+    viewProgress: { cta: 'View progress →' },
+    privacy: {
+      title: 'Privacy',
+      points: [
+        'By default, all learning data stays on your device.',
+        'If you opt in to cloud sync, data is stored encrypted in our backend.',
+        "We never sell or share children's data with third parties.",
+        'You can export or delete all data with one tap.',
+      ],
+    },
+    child: {
+      back: '← Family Dashboard',
+      quests: (n: number) => plural('en', n, { one: `${n} quest`, other: `${n} quests` }),
+      cards: (n: number) => plural('en', n, { one: `${n} card`, other: `${n} cards` }),
+      demoNote: 'Demo preview — sample data.',
+      recentTitle: 'Recent activity',
+      noRecent: 'No recent quests.',
+      stars: (n: number) => `${n}★`,
+      weeklyTitle: 'Weekly time',
+      cardsTitle: 'Cards collected',
+      homeworkTitle: 'Send homework',
+      assign: { cta: '+ Assign a quest' },
+      comingSoon: 'Coming soon — for now, Hoya picks the next quest.',
+    },
   },
 } as const;
