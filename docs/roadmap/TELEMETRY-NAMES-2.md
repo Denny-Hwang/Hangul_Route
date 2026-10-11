@@ -102,3 +102,14 @@ Three names in the new `route_map.` namespace (the map of progress; F-PLAN-002's
 | 1 | `route_map.viewed` | F-ROUTE-001 §3.16 | `{ source: 'home' \| 'journey' \| 'result' \| 'parent', stage: StageKey, hasStart: boolean, hasPlan: boolean }` (the page opens) | R-W1 | R-3 (sources `home` R-4b, `result` F-PLC-001 P-7b) |
 | 2 | `route_map.stage_opened` | F-ROUTE-001 §3.16 | `{ stage: StageKey }` (a stage row is expanded) | R-W1 | R-3 |
 | 3 | `route_map.continue_tapped` | F-ROUTE-001 §3.16 | `{ stage: StageKey, hero: 'start' \| 'continue' }` (the hero button is pressed) | R-W1 | R-3 |
+
+## I. Lecture mode names (F-TCH-004; added by its PR 0 docs PR)
+
+Four names in the new `lecture.` namespace (a teacher's presenter, `/present`). None collides with sections A to H or with the 60 names in `TELEMETRY_EVENT_NAMES` on `main` at `9f5e55e` (no existing name starts with `lecture.`). F-TCH-004 cites this list as `specs-out/TELEMETRY-NAMES.md`; this file is that list. Worker first: PR 1 adds all four to `TELEMETRY_EVENT_NAMES` and its exact-list test and is deployed before the presenter build that sends them (PR 6, PR 9). The presenter has no profile, so events carry **no `profileId`**; payloads never carry a name, a picker label, an id of a person or the deck title (F-TCH-004 §3.14, §3.10). Events use the existing offline queue (`platform/telemetry.ts`); the presenter calls `flushQueue` itself because `App` does not run there.
+
+| # | Name | Owning spec | Payload | Added to the list by | Emitted by |
+|---|---|---|---|---|---|
+| 1 | `lecture.start` | F-TCH-004 §3.14 | `{ source: 'console' \| 'quick' \| 'recent', blocks, slides, skipped, picker: 'none' \| 'names' \| 'initials' \| 'numbers', romanization: 'always' \| 'tap', voice: 'ready' \| 'none' \| 'unknown', offlineReady: boolean }` (the Start tap) | PR 1 | PR 6 |
+| 2 | `lecture.complete` | F-TCH-004 §3.14 | `{ slidesShown, minutes, reveals }` (Exit confirm, or the last slide then exit) | PR 1 | PR 6 |
+| 3 | `lecture.tool_used` | F-TCH-004 §3.14 | `{ tool: 'timer' \| 'picker' \| 'blank' \| 'pause' \| 'grid' \| 'fullscreen' }` (first use of each tool per lecture) | PR 1 | PR 9 |
+| 4 | `lecture.deck_rejected` | F-TCH-004 §3.14 | `{ reason: 'empty' \| 'too_large' \| 'bad_encoding' \| 'bad_json' \| 'unsupported_version' \| 'invalid' }` (the codec reasons, §3.2) | PR 1 | PR 6 |

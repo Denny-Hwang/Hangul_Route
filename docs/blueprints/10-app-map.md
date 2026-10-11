@@ -74,7 +74,8 @@ Hangul Route
 │   ├─ A12. Join a space (class / family code)          [S] F-SPACE-001 §3.5 (PIN 없음, §7 #21) · "I was already in this class" 재연결 요청 [S] F-TCH-001 §10.1
 │   ├─ A13. Paywall / Upgrade (parent-gated)            [S] F-ENT-001 §3.5 (covered / premium / free 상태; 구매는 웹 콘솔로 — 스토어 IAP 는 F-IAP-002)
 │   ├─ A14. PWA shell (offline-ready · update banners · offline chip · install guide) [S] roadmap P2 · F-PWA-001
-│   └─ A15. Projection mode (교사용 교실 표시)            [D] F-TCH-001 §3.4
+│   └─ A15. Lecture presenter (`/present`, 교사·어른이 TV·프로젝터로 하는 수업 · 로그인·프로필 없음 · 진도 기록 없음) [R] F-TCH-004
+│        └─ Projection mode (자원봉사 학생이 학습자 화면을 그대로 띄우는 옵션 · 교사 역할 불필요) [D] 연기 F-TCH-001 §3.4
 │
 ├─ B. Caregiver Console ─────────────────────────────────────────── 부모
 │   ├─ B1. Parent gate (PIN)                             [S] F-PROF-001
@@ -95,7 +96,8 @@ Hangul Route
 │   ├─ C6. Re-link approval (기기 이전 승인)               [S] F-TCH-001 §10.1 (`/teach/space/:id/relink` — 승인·거절·10분 창·rescue 재발급)
 │   ├─ C7. School admin (교사 초대 · 학급 트리 · seats)     [S] F-SCHOOL-001 (`/teach/space/:id` school 변형 — 초대 코드 · 라이선스/seats · 이번 주 집계 · 학급 표 · 교사 배정 · 새 학급)
 │   ├─ C8. Billing (group_license $153/yr, Stripe)        [S] F-ENT-001 §3.6 (`/teach/billing`; 상한 초과 school_seat 은 Contact us)
-│   └─ C9. Worksheets PDF · Templates                     [–] F-TCH-002/003
+│   ├─ C9. Worksheets PDF · Templates                     [–] F-TCH-002/003
+│   └─ C10. Lecture setup (`/teach/space/lecture?id=` — 덱 구성 · 옵션 · 헬퍼 피커 · 발표 탭 열기; 이름은 postMessage, URL 에 없음) [R] F-TCH-004 §3.11
 │
 └─ D. Platform ──────────────────────────────────────────────────── 시스템
     ├─ D1. Content bundle (jamo · episodes · quests · cards, CONTENT_VERSION) [S]
@@ -117,7 +119,7 @@ Hangul Route
 | P-A 개인 학습 (어른 없음) | ✓ 전부 (Stage 1) + Rescue Code | – | – | Free |
 | P-B 가정 | ✓ | ✓ 앱+웹 | – | family_lifetime ($15.30 once) |
 | P-C 학급 학생 | ✓ + Join code | (부모가 있으면 ✓) | – | 교사가 지불 |
-| P-C 교사 | Projection mode 만 | – | ✓ C1–C6, C8 | 학생 ≤ 20 무료 → group_license ($153/yr) |
+| P-C 교사 | Lecture presenter 만 (A15, `/present`, 프로필 없음) | – | ✓ C1–C6, C8, C10 | 학생 ≤ 20 무료 → group_license ($153/yr) |
 | P-D 학교 관리자 | – | – | ✓ C7, C8 | group_license ($153/yr) / 상한 초과 seat 계약 |
 | P-6 성인 초보 학습자 (외국인, 2026-09-20 추가) | ✓ 아이와 동일 화면 (Stage 1 은 성인에게도 유효) · Rescue Code | – | – | Free → family_lifetime 과 동일 플랜 (개인 결제) |
 
@@ -161,7 +163,8 @@ Hangul Route
 | `paywall/upgrade` | Paywall (PIN 뒤) | Stage 2+ 잠금 해제 · "covered by <class>" 상태 · 웹 콘솔로 안내 (가격은 placeholder) | S | F-ENT-001 §3.5 | ✓ |
 | `pwa/install-guide` | InstallGuide sheet (web only) | 홈 화면 추가 안내 (iOS/Android/PC), 3회째 열 때 · 5회 스누즈 | S | F-PWA-001 | ✓ |
 | `pwa/system-banners` | (신규, web only) | 오프라인 준비됨 · 업데이트 · 오프라인 상태 | P | roadmap P2 | NEW |
-| `classroom/projection-mode` | (신규, teacher role) | 교실 TV 표시 토글 | D | F-TCH-001 §3.4 | NEW |
+| `classroom/lecture-presenter` | PresenterApp (`/present`, 별도 root, 웹 전용) | 교사가 TV·프로젝터로 하는 슬라이드 수업 — 점수·순위 없음, 이름은 피커에만 (URL 에 없음), 학습자 진도 기록 없음 | R | F-TCH-004 | ✓ |
+| `classroom/projection-mode` | (연기, 자원봉사 학생용 — 교사 수업은 `classroom/lecture-presenter`) | 학습자 화면을 교실 TV 에 그대로 표시 | D | F-TCH-001 §3.4 | NEW |
 
 ※ `parent/gate` (수학 문제) 는 2026-09-19 에 PIN 으로 통합됨 (§7). 파일은 결정 기록용으로 남긴다.
 
@@ -189,6 +192,7 @@ Hangul Route
 | `console/school-admin` | web `/teach/space/:id` (kind = school) | 학급 트리 · 교사 초대 · seat 사용량 · 교사 배정 (집계만, 학생 이름 없음) | S | F-SCHOOL-001 §3.3 | ✓ |
 | `console/plan-builder` | (B 와 공용) | S | F-PLAN-001 §3.5 | ✓ |
 | `console/billing` | (B 와 공용, group_license / school) | S | F-ENT-001 §3.6 | ✓ |
+| `console/lecture-setup` | web `/teach/space/lecture?id=` (C10) | 이번 주 계획 · 카탈로그 · 다시 보기로 덱 구성 · 옵션 · 헬퍼 피커 · [[ Open presenter ]] / [ Copy link ] | R | F-TCH-004 §3.11 | ✓ (`classroom/lecture-presenter.md` K) |
 
 ### 3.4 웹 마케팅 (`apps/web`) — 와이어프레임 대상 아님
 
@@ -239,7 +243,8 @@ onboarding/welcome ─▶ sync/restore ("I already have progress") ─┬─▶ 
 journey/grid (잠긴 Stage 셀) ─▶ paywall/upgrade (parent-gated)
 
 [web only] 첫 방문 ─▶ pwa/system-banners (offline-ready) ; 설치 안 됨 + 3회 방문 ─▶ pwa/install-guide
-[teacher role] profile/settings ─▶ classroom/projection-mode
+[web, 로그인 없음] /present ─▶ classroom/lecture-presenter (A home: Recent · Quick lesson ─▶ B start ─▶ C stage) — 프로필·진도를 읽거나 쓰지 않음 (F-TCH-004 §3.9)
+[연기] 자원봉사 학생 ─▶ classroom/projection-mode (F-TCH-001 §3.4)
 ```
 
 ### 4.3 Caregiver / Teacher Console (web)
@@ -250,7 +255,8 @@ journey/grid (잠긴 Stage 셀) ─▶ paywall/upgrade (parent-gated)
 console/home ─┬─ [family] ─▶ parent/dashboard ─▶ parent/learner-detail ─▶ parent/voice-recorder
               │                              └─▶ console/plan-builder (family)
               ├─ [class]  ─▶ console/roster ─┬─▶ parent/learner-detail (읽기 전용, summary 만)
-              │                              ├─▶ console/plan-builder (class)
+              │                              ├─▶ console/plan-builder (class) ─▶ console/lecture-setup ("Present this plan")
+              │                              ├─▶ console/lecture-setup ("Lecture") ─▶ (새 탭) classroom/lecture-presenter
               │                              ├─▶ console/relink-approval
               │                              └─▶ console/space-settings (join code)
               ├─ [school] ─▶ console/school-admin ─▶ console/roster (학급별)

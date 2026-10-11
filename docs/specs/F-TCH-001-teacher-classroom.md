@@ -78,6 +78,8 @@ Companion stories:
 
 ### 3.4 Projection Mode (mobile)
 
+> **Note (2026-10-11, F-TCH-004)**: Teacher-led classroom presentation is F-TCH-004 (`docs/specs/F-TCH-004-lecture-mode.md`, wireframe `design/wireframes/classroom/lecture-presenter.md`). Projection Mode below remains a deferred option for a volunteer student playing the ordinary learner flow on the projected device; it needs no teacher role and is not built by F-TCH-004.
+
 - **Given** a teacher profile is active on a mobile device,
   **when** the teacher toggles "Projection Mode" in settings,
   **then** all subsequent screens render with: font scale 200 %, tap targets ≥ 128 dp, and an audio boost **where the platform allows it** (Android media gain; iOS cannot exceed the system media volume, so Projection Mode instead shows a "turn up the volume" hint and a larger replay control).
@@ -196,6 +198,8 @@ What is already shipped: class create + join code (F-SPACE-001), roster summary 
 - Console page `/teach/space/:id/settings`: code block, anonymize toggle, consent mode radio (class/school only), members and learners with remove, archive / unarchive, delete a learner's data behind a typed-name confirm.
 
 ### 10.4 Deferred
+
+> **Note (2026-10-11, F-TCH-004)**: Teacher-led classroom presentation is F-TCH-004 (`docs/specs/F-TCH-004-lecture-mode.md`, wireframe `design/wireframes/classroom/lecture-presenter.md`). Projection Mode below remains a deferred option for a volunteer student playing the ordinary learner flow on the projected device; it needs no teacher role and is not built by F-TCH-004.
 
 - §3.4 Projection Mode needs a teacher-role profile on the device (F-PROF-001 role UI) → own spec later. Learner detail page on the console, notifications for pending requests (F-NOTIF-001), co-teachers.
 
