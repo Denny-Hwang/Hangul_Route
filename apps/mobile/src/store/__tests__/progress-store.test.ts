@@ -1,4 +1,4 @@
-import type { ProgressSnapshot } from '@hangul-route/content-schema';
+import { VocabProgressSchema, type ProgressSnapshot, type VocabItemState } from '@hangul-route/content-schema';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mem = vi.hoisted(() => new Map<string, unknown>());
@@ -26,7 +26,7 @@ function resetStore(): void {
   mem.clear();
   vi.mocked(readJson).mockClear();
   vi.mocked(writeJson).mockClear();
-  useProgressStore.setState({ byProfile: {}, hydratedFor: new Set(), pendingFor: new Set() });
+  useProgressStore.setState({ byProfile: {}, hydratedFor: new Set(), pendingFor: new Set(), pendingVocabEvents: {} });
 }
 
 /** Let fire-and-forget hydrations and storage writes settle. */
@@ -432,6 +432,139 @@ describe('recordPlacement (F-PLC-001 section 3.8)', () => {
     useProgressStore.getState().recordPlacement('p1', result);
     useProgressStore.getState().recordPlacement('p1', result);
     expect(useProgressStore.getState().byProfile['p1']?.placements).toHaveLength(1);
+  });
+});
+
+describe('recordVocab (F-VOC-005 section 3.2)', () => {
+  const notified: string[] = [];
+  const APPLE = 'vocab:sagwa-apple';
+  const EYE = 'vocab:nun-eye';
+  const T1 = new Date('2026-10-11T15:00:00.000Z');
+  const word = (over: Partial<VocabItemState> = {}): VocabItemState => ({
+    id: APPLE,
+    first: '2026-10-01',
+    seen: 4,
+    right: 3,
+    bestBox: 3,
+    last: '2026-10-08',
+    box: 3,
+    due: '2026-10-15',
+    at: '2026-10-08T10:00:00.000Z',
+    ...over,
+  });
+  const withVocab = (items: VocabItemState[]): ProgressSnapshot => ({ ...savedSnapshot(), vocab: { v: 1, items, topics: [] } });
+  const vocabIn = (snap: ProgressSnapshot | undefined, id = APPLE) => snap?.vocab?.items.find((w) => w.id === id);
+
+  beforeEach(() => {
+    resetStore();
+    notified.length = 0;
+    setProgressPersistListener((id) => notified.push(id));
+  });
+
+  afterEach(() => {
+    setProgressPersistListener(null);
+  });
+
+  it('applies the events, saves once hydrated and tells sync; nothing else changes', async () => {
+    mem.set('progress:p1', savedSnapshot());
+    await useProgressStore.getState().hydrate('p1');
+    const before = useProgressStore.getState().byProfile['p1'] as ProgressSnapshot;
+    useProgressStore.getState().recordVocab('p1', [{ type: 'introduced', id: APPLE }, { type: 'session', topicKey: 'food', kind: 'cards' }], T1);
+    const after = useProgressStore.getState().byProfile['p1'] as ProgressSnapshot;
+    expect(vocabIn(after)).toMatchObject({ box: 1, due: '2026-10-12', first: '2026-10-11' });
+    expect(after.vocab?.topics.map((t) => t.topic)).toEqual(['food']);
+    expect(after.updatedAt).toBe(T1.toISOString());
+    const { vocab: _v, updatedAt: _u, ...restAfter } = after;
+    const { updatedAt: _w, ...restBefore } = before;
+    expect(restAfter).toEqual(restBefore);
+    expect(stored()).toEqual(after);
+    expect(notified).toEqual(['p1']);
+  });
+
+  it('writes nothing when every event is ignored', async () => {
+    mem.set('progress:p1', savedSnapshot());
+    await useProgressStore.getState().hydrate('p1');
+    vi.mocked(writeJson).mockClear();
+    const before = useProgressStore.getState().byProfile['p1'];
+    useProgressStore.getState().recordVocab('p1', [{ type: 'introduced', id: 'not-an-id' }], T1);
+    useProgressStore.getState().recordVocab('p1', [], T1);
+    expect(useProgressStore.getState().byProfile['p1']).toBe(before);
+    expect(writeJson).not.toHaveBeenCalled();
+    expect(notified).toEqual([]);
+  });
+
+  it('defaults the clock to now', async () => {
+    await useProgressStore.getState().hydrate('p1');
+    useProgressStore.getState().recordVocab('p1', [{ type: 'introduced', id: APPLE }]);
+    expect(vocabIn(useProgressStore.getState().byProfile['p1'])?.box).toBe(1);
+  });
+
+  it('before hydration it queues the events and replays them onto the saved slice, never over it', async () => {
+    mem.set('progress:p1', withVocab([word()]));
+    // A fresh `introduced` stamp would win a last-writer-wins merge over the saved box 3.
+    useProgressStore.getState().recordVocab('p1', [{ type: 'introduced', id: APPLE }, { type: 'answer', id: EYE, correct: true, source: 'speed' }], T1);
+    expect(useProgressStore.getState().pendingVocabEvents['p1']).toHaveLength(1);
+    expect(stored()?.vocab?.items).toHaveLength(1);
+    expect(notified).toEqual([]);
+
+    await settle();
+
+    const snap = useProgressStore.getState().byProfile['p1'];
+    expect(vocabIn(snap)).toEqual(word());
+    expect(vocabIn(snap, EYE)).toMatchObject({ box: 2, seen: 1, right: 1 });
+    expect(snap?.quests.map((q) => q.questId)).toEqual(['quest:a']);
+    expect(stored()).toEqual(snap);
+    expect(useProgressStore.getState().pendingVocabEvents['p1']).toBeUndefined();
+    expect(notified).toEqual(['p1']);
+  });
+
+  it('an answer queued before hydration moves the saved box, in order with later batches', async () => {
+    mem.set('progress:p1', withVocab([word()]));
+    useProgressStore.getState().recordVocab('p1', [{ type: 'answer', id: APPLE, correct: true, source: 'speed' }], T1);
+    useProgressStore.getState().recordVocab('p1', [{ type: 'answer', id: APPLE, correct: false, source: 'speed' }], new Date('2026-10-11T15:01:00.000Z'));
+    await settle();
+    expect(vocabIn(useProgressStore.getState().byProfile['p1'])).toMatchObject({ box: 3, bestBox: 4, seen: 6, right: 4, due: '2026-10-12' });
+  });
+
+  it('with nothing saved, the queued events count once', async () => {
+    useProgressStore.getState().recordVocab('p-new', [{ type: 'answer', id: APPLE, correct: true, source: 'speed' }], T1);
+    await settle();
+    expect(vocabIn(stored('p-new'))).toMatchObject({ seen: 1, right: 1, box: 2 });
+    expect(useProgressStore.getState().pendingVocabEvents['p-new']).toBeUndefined();
+  });
+
+  it('a saved slice that fails the schema is rebuilt from the events (section 3.10)', async () => {
+    mem.set('progress:p1', withVocab([word({ box: 9 })]));
+    await useProgressStore.getState().hydrate('p1');
+    useProgressStore.getState().recordVocab('p1', [{ type: 'introduced', id: EYE }], T1);
+    const snap = useProgressStore.getState().byProfile['p1'];
+    expect(snap?.vocab?.items.map((w) => w.id)).toEqual([EYE]);
+    expect(VocabProgressSchema.safeParse(snap?.vocab).success).toBe(true);
+  });
+
+  it('a restore that lands before the saved copy loads drops the queue with the rest', async () => {
+    mem.set('progress:p1', withVocab([word()]));
+    useProgressStore.getState().recordVocab('p1', [{ type: 'introduced', id: EYE }], T1);
+    useProgressStore.getState().replaceSnapshot('p1', savedSnapshot());
+    await settle();
+    expect(useProgressStore.getState().pendingVocabEvents['p1']).toBeUndefined();
+    expect(useProgressStore.getState().byProfile['p1']?.vocab).toBeUndefined();
+  });
+
+  it('reset writes the empty slice for a profile that held one, so the server copy is replaced (behaviour 15)', async () => {
+    mem.set('progress:p1', withVocab([word()]));
+    await useProgressStore.getState().hydrate('p1');
+    useProgressStore.getState().reset('p1');
+    expect(useProgressStore.getState().byProfile['p1']?.vocab).toEqual({ v: 1, items: [], topics: [] });
+    expect(stored()?.vocab).toEqual({ v: 1, items: [], topics: [] });
+    expect(stored()?.quests).toEqual([]);
+  });
+
+  it('reset keeps a profile that never held a slice free of the key', async () => {
+    mem.set('progress:p1', savedSnapshot());
+    await useProgressStore.getState().hydrate('p1');
+    useProgressStore.getState().reset('p1');
+    expect(stored() && 'vocab' in stored()!).toBe(false);
   });
 });
 
