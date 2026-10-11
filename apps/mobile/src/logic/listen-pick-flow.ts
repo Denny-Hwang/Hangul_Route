@@ -1,4 +1,5 @@
 import type { ListenPickRound, RomanizationMode } from '@hangul-route/content-schema';
+import type { Messages } from '@hangul-route/i18n';
 import type { PlayResult } from '../platform/audio';
 import type { HostMode } from '../screens/minigames/host';
 
@@ -6,6 +7,8 @@ import type { HostMode } from '../screens/minigames/host';
  * Listen & Pick flow (F-QUEST-002 §3.10): the reducer and view-models behind
  * `ListenPickGame`. Pure, so the screen only renders what this returns and
  * runs the effects it asks for (the test lanes cannot render components, §5).
+ * The words are `learner.minigame` and `a11y.minigame` (F-I18N-001 PR 7b),
+ * passed in by the screen.
  *
  * Rules in one place: round 1 never autoplays (first audio needs a gesture),
  * round 2 on does; replay is unlimited; a wrong tap locks that option, ends
@@ -25,26 +28,8 @@ export const LISTEN_PICK_TIMING = {
   touchWindowMs: 50,
 } as const;
 
-/**
- * English copy until the quest-flow messages move into the F-I18N-001 catalog
- * (spec §3.1: one module, no strings inline in the screen).
- */
-export const LISTEN_PICK_COPY = {
-  heading: 'Listen, then pick',
-  checkTitle: 'Quick check',
-  hearAgain: 'Hear it again',
-  hearAgainA11y: 'Play the sound again',
-  missHoya: 'Listen again',
-  noSound: 'No sound? Read it here.',
-  empty: 'Nothing to play here',
-  back: 'Back to quest',
-  a11y: {
-    correct: 'Right answer',
-    wrong: 'Not this one',
-    hint: 'Look here',
-    picture: 'Picture',
-  },
-} as const;
+export type MinigameCopy = Messages['learner']['minigame'];
+export type MinigameA11y = Messages['a11y']['minigame'];
 
 export interface ListenPickFlowState {
   /** `empty`: no playable round. `resolved`: right answer tapped, waiting to advance. `done`: after the last round. */
@@ -180,19 +165,19 @@ export interface HeaderView {
 }
 
 /** Check: two fill-only dots and "Quick check"; every other mode: a bar and "n / N". */
-export function headerView(mode: HostMode, state: ListenPickFlowState): HeaderView {
+export function headerView(mode: HostMode, state: ListenPickFlowState, copy: MinigameCopy): HeaderView {
   if (mode === 'check') {
     const finished = state.status === 'resolved' || state.status === 'done' ? 1 : 0;
     return {
       kind: 'dots',
-      title: LISTEN_PICK_COPY.checkTitle,
+      title: copy.listenPick.checkTitle.pill,
       value: Math.min(state.total, state.roundIdx + finished),
       max: state.total,
       label: undefined,
     };
   }
   const shown = Math.min(state.total, state.roundIdx + 1);
-  return { kind: 'bar', title: undefined, value: shown, max: state.total, label: `${shown} / ${state.total}` };
+  return { kind: 'bar', title: undefined, value: shown, max: state.total, label: copy.progress.pill(shown, state.total) };
 }
 
 export interface PromptContent {
@@ -267,6 +252,7 @@ export function optionView(
   option: ListenPickOption,
   state: ListenPickFlowState,
   context: OptionViewContext,
+  a11y: MinigameA11y,
 ): OptionView {
   const cardState = cardStateOf(round, option, state, context.mode);
   const touched = cardState === 'wrong' || cardState === 'correct';
@@ -276,7 +262,7 @@ export function optionView(
   let base: string;
   if (isPicture) {
     const label = option.labelEn ?? option.text?.en;
-    const gloss = label ?? LISTEN_PICK_COPY.a11y.picture;
+    const gloss = label ?? a11y.picture;
     view = { id: option.id, cardState, ko: undefined, romanization: '', label, pictureRef: option.pictureRef, gloss };
     base = gloss;
   } else {
@@ -294,15 +280,8 @@ export function optionView(
     base = romanization === '' ? text.ko : `${text.ko}, ${romanization}`;
   }
 
-  const prefix =
-    cardState === 'correct'
-      ? LISTEN_PICK_COPY.a11y.correct
-      : cardState === 'wrong'
-        ? LISTEN_PICK_COPY.a11y.wrong
-        : cardState === 'hint'
-          ? LISTEN_PICK_COPY.a11y.hint
-          : undefined;
-  return { ...view, accessibilityLabel: prefix === undefined ? base : `${prefix}: ${base}` };
+  const announced = cardState === 'correct' || cardState === 'wrong' || cardState === 'hint' ? a11y.option[cardState](base) : base;
+  return { ...view, accessibilityLabel: announced };
 }
 
 /** Narrow phones (below this width, dp) get one column. */

@@ -352,6 +352,15 @@ export const learner = {
         start: 'Try again — start at the top!',
       },
     },
+    /** Listen & Pick (F-QUEST-002 §3.10): the no-sound line is `audio.readHere`, the way out `backToQuest`. */
+    listenPick: {
+      heading: 'Listen, then pick',
+      /** The header of the two-question Check. */
+      checkTitle: { pill: 'Quick check' },
+      hearAgain: { cta: 'Hear it again' },
+      missHoya: 'Listen again',
+      empty: 'Nothing to play here',
+    },
     /**
      * Voice Echo (behind `flags.voiceEchoEnabled`, off at launch): listen, say it back, confirm.
      * The shipped caption ended in a tiger emoji; the dictionary carries no emoji (CLAUDE.md), so it is dropped.

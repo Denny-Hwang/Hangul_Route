@@ -80,6 +80,15 @@ export const a11y = {
       /** The diagram's label: its description, then how to close it. */
       close: (description: string) => `${description} Tap to close.`,
     },
+    /** Listen & Pick: the speaker button, and a picture option with no label. */
+    hearAgain: 'Play the sound again',
+    picture: 'Picture',
+    /** An answer card in its state (Listen & Pick, Pic-Word Match); `label` is what the card says. */
+    option: {
+      correct: (label: string) => `Right answer: ${label}`,
+      wrong: (label: string) => `Not this one: ${label}`,
+      hint: (label: string) => `Look here: ${label}`,
+    },
     /** Card Match: a Korean word (its romanization, else the word) and a meaning (content gloss). */
     koreanWord: (word: string) => `Korean word ${word}`,
     meaning: (gloss: string) => `English meaning ${gloss}`,

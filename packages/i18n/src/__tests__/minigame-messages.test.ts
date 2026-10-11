@@ -168,6 +168,28 @@ describe('Voice Echo (English wording as shipped, emoji dropped)', () => {
   });
 });
 
+describe('Listen & Pick (English wording as shipped)', () => {
+  it('keeps the heading, the Check title, the replay button and the lines', () => {
+    expect(m.learner.minigame.listenPick).toEqual({
+      heading: 'Listen, then pick',
+      checkTitle: { pill: 'Quick check' },
+      hearAgain: { cta: 'Hear it again' },
+      missHoya: 'Listen again',
+      empty: 'Nothing to play here',
+    });
+    expect(m.learner.audio.readHere).toBe('No sound? Read it here.');
+  });
+
+  it('keeps the speaker, picture and answer-card labels', () => {
+    const a = m.a11y.minigame;
+    expect(a.hearAgain).toBe('Play the sound again');
+    expect(a.picture).toBe('Picture');
+    expect(a.option.correct('ga')).toBe('Right answer: ga');
+    expect(a.option.wrong('na')).toBe('Not this one: na');
+    expect(a.option.hint('Moon')).toBe('Look here: Moon');
+  });
+});
+
 describe('learner.audio (F-AUDIO-004 §3.7-3.8, English wording as shipped)', () => {
   const a = m.learner.audio;
 

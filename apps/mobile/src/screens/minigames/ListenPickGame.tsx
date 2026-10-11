@@ -20,8 +20,8 @@ import {
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, View, useWindowDimensions } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
+import { useMessages } from '../../i18n/use-messages';
 import {
-  LISTEN_PICK_COPY,
   headerView,
   optionColumns,
   optionView,
@@ -67,6 +67,8 @@ export function ListenPickGame({ scope, host, onBack }: Props): React.ReactEleme
   const [seed] = useState(() => Math.floor(Math.random() * 0x7fffffff));
   const rounds = useMemo(() => validRounds(scope).map((r, i) => shuffleOptions(r, seed + i)), [scope, seed]);
 
+  const m = useMessages();
+  const copy = m.learner.minigame;
   const activeProfileId = useProfileStore((s) => s.activeId);
   const romanizationMode = useLocaleStore((s) =>
     activeProfileId === null ? 'always' : (s.byProfile[activeProfileId]?.romanizationMode ?? 'always'),
@@ -167,18 +169,18 @@ export function ListenPickGame({ scope, host, onBack }: Props): React.ReactEleme
   if (state.status === 'empty' || !round) {
     return (
       <Screen>
-        <Body>{LISTEN_PICK_COPY.empty}</Body>
+        <Body>{copy.listenPick.empty}</Body>
         {onBack ? (
           <>
             <Spacer size="lg" />
-            <Button label={LISTEN_PICK_COPY.back} tone="secondary" size="md" onPress={onBack} />
+            <Button label={copy.backToQuest.cta} tone="secondary" size="md" onPress={onBack} />
           </>
         ) : null}
       </Screen>
     );
   }
 
-  const header = headerView(host.mode, state);
+  const header = headerView(host.mode, state, copy);
   const prompt = promptView(round, state, host.mode);
   const columns = optionColumns(round, width);
   const showMissHoya = host.mode !== 'review' && state.status === 'asking' && state.wrongIds.length > 0;
@@ -198,7 +200,7 @@ export function ListenPickGame({ scope, host, onBack }: Props): React.ReactEleme
       </View>
 
       <Spacer size="lg" />
-      <Heading level="prompt">{LISTEN_PICK_COPY.heading}</Heading>
+      <Heading level="prompt">{copy.listenPick.heading}</Heading>
       <Spacer size="md" />
 
       <View style={{ alignItems: 'center', gap: spacing.md }}>
@@ -210,7 +212,7 @@ export function ListenPickGame({ scope, host, onBack }: Props): React.ReactEleme
             testID="listen-pick-speaker"
             onPress={() => dispatch({ type: 'hear' })}
             accessibilityRole="button"
-            accessibilityLabel={LISTEN_PICK_COPY.hearAgainA11y}
+            accessibilityLabel={m.a11y.minigame.hearAgain}
             hitSlop={spacing.md}
             style={{
               width: touchTarget.hero,
@@ -228,7 +230,7 @@ export function ListenPickGame({ scope, host, onBack }: Props): React.ReactEleme
         </Animated.View>
         <View style={{ alignSelf: 'center' }}>
           <Button
-            label={LISTEN_PICK_COPY.hearAgain}
+            label={copy.listenPick.hearAgain.cta}
             tone="secondary"
             size="md"
             onPress={() => dispatch({ type: 'hear' })}
@@ -239,7 +241,7 @@ export function ListenPickGame({ scope, host, onBack }: Props): React.ReactEleme
         <View accessibilityLiveRegion="polite" style={{ alignItems: 'center', gap: spacing.sm }}>
           {prompt.content ? (
             <>
-              {prompt.showText ? <Body tone="muted">{LISTEN_PICK_COPY.noSound}</Body> : null}
+              {prompt.showText ? <Body tone="muted">{m.learner.audio.readHere}</Body> : null}
               <KoreanText
                 ko={prompt.content.ko}
                 romanization={prompt.content.romanization}
@@ -255,7 +257,7 @@ export function ListenPickGame({ scope, host, onBack }: Props): React.ReactEleme
       <Spacer size="xl" />
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md }}>
         {round.options.map((option) => {
-          const view = optionView(round, option, state, { mode: host.mode, romanizationMode });
+          const view = optionView(round, option, state, { mode: host.mode, romanizationMode }, m.a11y.minigame);
           return (
             <View
               key={option.id}
@@ -284,7 +286,7 @@ export function ListenPickGame({ scope, host, onBack }: Props): React.ReactEleme
         {showMissHoya ? (
           <>
             <Spacer size="lg" />
-            <HoyaBubble tone="thinking" message={LISTEN_PICK_COPY.missHoya} />
+            <HoyaBubble tone="thinking" message={copy.listenPick.missHoya} />
           </>
         ) : null}
       </View>
