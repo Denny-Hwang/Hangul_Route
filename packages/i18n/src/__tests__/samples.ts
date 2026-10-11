@@ -308,4 +308,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.parent.child.quests': [[1], [9]],
   'console.parent.child.cards': [[1], [14]],
   'console.parent.child.stars': [[3]],
+  'learner.vocab.speed.nudge.right.named': [['apple']],
+  'learner.vocab.speed.nudge.miss.first': [['apple']],
+  'learner.vocab.speed.nudge.miss.second': [['apple']],
 };
