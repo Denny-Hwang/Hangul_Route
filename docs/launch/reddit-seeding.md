@@ -47,7 +47,7 @@ Same post, but flip the lede:
 > **Title**: Free Korean app I built for my friend's heritage kid — would love your eyes on it
 >
 > Body: shorter, parent-focused. Emphasize: 5 minutes a day, free for
-> the first 12 cards, no ads, plays offline.
+> the first 12 cards, no ads, works offline after the first visit.
 
 ### r/SideProject
 

@@ -60,3 +60,6 @@ apps/mobile/google-play-service-account.json
 test-results/
 playwright-report/
 apps/mobile/e2e/web/__shots__/
+
+# Raw voice recordings stay local (public repo; F-AUDIO-004 §3.11)
+apps/mobile/recordings/

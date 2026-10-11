@@ -130,15 +130,16 @@ Card    = { pillar, title, image_url, source { institution, license, attribution
 
 ### 3.7 Heritage Card 자산 (공공누리 등)
 
-`content/assets-license.csv` 에 다음 행을 추가:
+`content/assets-license.csv` 에 다음 행을 추가 (헤더는 음성·효과음과 같은 하나, `docs/design/audio-plan.md` §8):
 
 ```csv
-asset_path,source_institution,kogl_type,attribution_text,url
-content/cards/letters/hunminjeongeum.png,국립한글박물관,KOGL Type 1,"국립한글박물관",https://...
+asset_path,category,source,license,attribution,url
+content/cards/letters/hunminjeongeum.png,image,국립한글박물관,KOGL Type 1,"국립한글박물관",https://...
 ```
 
+- `category` = `image`, `source` = 제공 기관, `license` = 공공누리 유형 (`KOGL Type 1` 등), `attribution` = 표기 문구
 - KOGL Type 4 (상업 이용·변경 금지) 는 **MVP 사용 금지**
-- 2차 저작 시 attribution_text 에 "2차 저작" 명시
+- 2차 저작 시 attribution 에 "2차 저작" 명시
 
 ### 3.8 Story (`content/stories/`)
 
@@ -317,10 +318,10 @@ content/cards/letters/hunminjeongeum.png,국립한글박물관,KOGL Type 1,"국�
 }
 ```
 
-`content/assets-license.csv` 에 동일 PR 에서:
+`content/assets-license.csv` 에 동일 PR 에서 (§3.7 헤더):
 
 ```csv
-content/cards/letters/hunminjeongeum.png,국립한글박물관,KOGL Type 1,"국립한글박물관",https://...
+content/cards/letters/hunminjeongeum.png,image,국립한글박물관,KOGL Type 1,"국립한글박물관",https://...
 ```
 
 ### 8.3 나쁜 예 — 회피해야 할 패턴
