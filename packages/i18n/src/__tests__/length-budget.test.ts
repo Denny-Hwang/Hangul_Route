@@ -285,4 +285,34 @@ describe('length budgets (F-I18N-001 §3.11)', () => {
       expect(paths).toContain(expected);
     }
   });
+
+  it('covers the settings, school and /parent buttons (PR 10c)', () => {
+    const paths = leafPaths(getMessages('en')).filter((p) => BUDGETS[p.split('.').pop() ?? ''] !== undefined);
+    for (const expected of [
+      'console.settings.backToConsole.cta',
+      'console.settings.joinCode.regenerate.cta',
+      'console.settings.joinCode.create.cta',
+      'console.settings.grownUps.remove.cta',
+      'console.settings.learners.remove.family.cta',
+      'console.settings.learners.remove.class.cta',
+      'console.settings.learners.remove.school.cta',
+      'console.settings.danger.archive.family.cta',
+      'console.settings.danger.archive.class.cta',
+      'console.settings.danger.archive.school.cta',
+      'console.settings.danger.unarchive.cta',
+      'console.school.licence.manage.cta',
+      'console.school.invite.regenerate.cta',
+      'console.school.invite.create.cta',
+      'console.school.classes.cancel.cta',
+      'console.school.classes.change.cta',
+      'console.school.classes.assign.cta',
+      'console.school.classes.open.cta',
+      'console.school.classes.add.cta',
+      'console.parent.sample.pill',
+      'console.parent.viewProgress.cta',
+      'console.parent.child.assign.cta',
+    ]) {
+      expect(paths).toContain(expected);
+    }
+  });
 });

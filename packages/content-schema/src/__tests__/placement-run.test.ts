@@ -837,19 +837,97 @@ describe('pauses', () => {
     expect(s.pause).toBeNull();
   });
 
-  it('a prompt that cannot play is recorded skipped but is not a "not sure" of the learner (section 3.11)', () => {
+  it('a prompt that cannot play is recorded skipped with noSound, and is not a "not sure" of the learner (section 3.11)', () => {
     let s = run();
-    for (let i = 0; i < 3; i += 1) s = apply(s, { type: 'notSure', cause: 'no-sound' }, 2_000 + i * 1_000);
-    expect(s.responses.map((r) => r.outcome)).toEqual(['skipped', 'skipped', 'skipped']);
-    expect(s.pause).toBeNull();
+    s = apply(s, { type: 'notSure', cause: 'no-sound' }, 2_000);
+    expect(s.responses).toHaveLength(1);
+    expect(s.responses[0]).toMatchObject({ outcome: 'skipped', chosenOptionId: null, noSound: true });
     expect(s.notSureStreak).toBe(0);
+    expect(s.pause).toBeNull(); // one silent prompt in Standard: the run carries on
+    // A learner's own "not sure" carries no noSound flag.
+    s = apply(s, { type: 'notSure' }, 3_000);
+    expect(s.responses[1]).not.toHaveProperty('noSound');
     // It neither adds to nor breaks a streak the learner is on.
-    s = apply(s, { type: 'notSure' }, 6_000);
-    s = apply(s, { type: 'notSure' }, 7_000);
-    s = apply(s, { type: 'notSure', cause: 'no-sound' }, 8_000);
+    s = apply(s, { type: 'notSure' }, 4_000);
+    s = apply(s, { type: 'notSure', cause: 'no-sound' }, 5_000);
     expect(s.notSureStreak).toBe(2);
-    s = apply(s, { type: 'notSure' }, 9_000);
+    expect(s.pause).toBeNull();
+    s = apply(s, { type: 'notSure' }, 6_000);
     expect(s.pause).toBe('not-sure');
+  });
+
+  it('Standard and Deep: two silent prompts in a row open the sound pause; it opens again while sound stays off', () => {
+    for (const mode of ['standard', 'deep'] as const) {
+      let s = run({ mode });
+      s = apply(s, { type: 'notSure', cause: 'no-sound' }, 2_000);
+      expect(s.pause).toBeNull();
+      s = apply(s, { type: 'notSure', cause: 'no-sound' }, 3_000);
+      expect(s.pause).toBe('no-sound');
+      // Nothing more is recorded while the sheet is up: the run cannot skip itself to the end.
+      const held = apply(s, { type: 'notSure', cause: 'no-sound' }, 4_000);
+      expect(held.responses).toHaveLength(2);
+      s = apply(s, { type: 'keepGoing' }, 5_000);
+      expect(s.pause).toBeNull();
+      s = apply(s, { type: 'notSure', cause: 'no-sound' }, 6_000);
+      expect(s.pause).toBe('no-sound');
+    }
+  });
+
+  it('a heard prompt or an answer between two silent prompts breaks the run of silent ones', () => {
+    let s = run();
+    s = apply(s, { type: 'notSure', cause: 'no-sound' }, 2_000);
+    s = apply(s, eventFor(currentQuestion(s)!, 'correct'), 3_000);
+    s = apply(s, { type: 'notSure', cause: 'no-sound' }, 4_000);
+    expect(s.pause).toBeNull();
+  });
+
+  it('Short and any listen-first run: the first silent prompt opens the sound pause (section 3.11)', () => {
+    for (const over of [{ mode: 'short' as const }, { mode: 'standard' as const, listenFirst: true }, { mode: 'deep' as const, listenFirst: true }]) {
+      let s = run(over);
+      s = apply(s, { type: 'notSure', cause: 'no-sound' }, 2_000);
+      expect(s.pause).toBe('no-sound');
+    }
+  });
+
+  it('sound that never plays never completes a run on its own: every silent prompt waits on the sound pause', () => {
+    for (const over of [{ mode: 'short' as const }, { mode: 'standard' as const, listenFirst: true }, { mode: 'standard' as const }]) {
+      let s = run(over);
+      // The item screen sends a no-sound skip for every prompt; nobody answers the sheet.
+      for (let i = 0; i < 60; i += 1) s = apply(s, { type: 'notSure', cause: 'no-sound' }, 2_000 + i * 1_000);
+      expect(isFinished(s)).toBe(false);
+      expect(s.pause).toBe('no-sound');
+      expect(s.responses.length).toBeLessThanOrEqual(2);
+    }
+  });
+
+  it('"That is enough" on the sound pause ends the run with quit; the persisted state accepts the pause', () => {
+    let s = run({ mode: 'short' });
+    s = apply(s, { type: 'notSure', cause: 'no-sound' }, 2_000);
+    expect(PlacementRunStateSchema.parse(JSON.parse(JSON.stringify(s)))).toEqual(s);
+    s = apply(s, { type: 'quit', by: 'learner' }, 3_000);
+    expect(s.stop).toBe('quit');
+  });
+
+  it('a silent prompt is scored as not asked: the heard two of a rung decide it, and old readers parse the result', () => {
+    let s = run();
+    s = apply(s, { type: 'notSure', cause: 'no-sound' }, 2_000);
+    s = apply(s, eventFor(currentQuestion(s)!, 'correct'), 3_000);
+    s = apply(s, eventFor(currentQuestion(s)!, 'correct'), 4_000);
+    expect(s.done[0]).toEqual({ gate: 'recog', form: 'decode', asked: 2, correct: 2, assisted: 0, result: 'pass' });
+    const undecided = (() => {
+      let u = run();
+      u = apply(u, { type: 'notSure', cause: 'no-sound' }, 2_000);
+      u = apply(u, eventFor(currentQuestion(u)!, 'correct'), 3_000);
+      return apply(u, eventFor(currentQuestion(u)!, 'wrong'), 4_000);
+    })();
+    // Undecided because a prompt could not play: not-run (unavailable), never a fail.
+    expect(undecided.done[0]).toEqual({ gate: 'recog', form: 'decode', asked: 2, correct: 1, assisted: 0, result: 'not-run', reason: 'unavailable' });
+    const result = finishRun(play(s).state, context({ catalog: FULL_ROUTE }));
+    expect(result.responses[0]).toMatchObject({ noSound: true });
+    expect(PlacementResultSchema.parse(result).responses[0]).toMatchObject({ noSound: true });
+    const old = PlacementResultSchemaV1.safeParse(result);
+    expect(old.success).toBe(true);
+    expect(old.data!.responses[0]).not.toHaveProperty('noSound');
   });
 
   it('no pause opens when the third "not sure" ends the run', () => {

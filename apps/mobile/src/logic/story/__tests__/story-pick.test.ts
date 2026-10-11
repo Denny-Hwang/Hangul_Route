@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { emptyBookmarks } from '../bookmarks';
-import { nextStoryAfter, pickedForYou, pickStoryForHome, type StoryPickInput } from '../story-pick';
+import { nextStoryAfter, pickedForYou, pickStoryForHome, storyLockFor, type StoryPickInput } from '../story-pick';
 import { bookEpisode, bookmarks, questId, shelfIndex, snapshot, story, storyQuest } from './shelf-fixture';
 
 // Story Time: tiger (1), sun (2), fox (3). Culture: seollal (1), chuseok (2).
@@ -253,5 +253,46 @@ describe('nextStoryAfter', () => {
     expect(nextStoryAfter(questId('chuseok'), input({ snapshot: done }))).toBeNull();
     expect(nextStoryAfter(questId('seollal'), input({ entries: index.filter((e) => e.storyId === 'story:seollal') }))).toBeNull();
     expect(nextStoryAfter('quest:nope', input())).toBeNull();
+  });
+});
+
+describe('storyLockFor (the Home and shelf `isLocked`, F-STORY-004 §3.9)', () => {
+  const registry = { stages: new Set(['stage1']), vocabTopics: new Set<string>(), samplerStories: new Set(['story:tiger']) };
+  const shelf = (slug: string) => index.find((e) => e.placement === 'shelf' && e.storyId === `story:${slug}`)!;
+  const book = (slug: string) => index.find((e) => e.placement === 'grid' && e.storyId === `story:${slug}`)!;
+  const stage5 = bookEpisode('episode:stage5-letters', [], { status: 'shipped' });
+
+  it('gating off: no shelf story is locked, whatever the tier', () => {
+    for (const tier of ['free', 'premium'] as const) {
+      const locked = storyLockFor({ tier, gatingEnabled: false, episodes: [stage5], registry });
+      expect(index.filter((e) => e.placement === 'shelf').some(locked)).toBe(false);
+    }
+  });
+
+  it('gating on: a free learner keeps the sampler and is locked out of the rest; premium opens all', () => {
+    const free = storyLockFor({ tier: 'free', gatingEnabled: true, episodes: [stage5], registry });
+    expect(free(shelf('tiger'))).toBe(false);
+    expect(free(shelf('sun'))).toBe(true);
+    const premium = storyLockFor({ tier: 'premium', gatingEnabled: true, episodes: [stage5], registry });
+    expect(premium(shelf('sun'))).toBe(false);
+  });
+
+  it('a book (grid) story follows the Journey stage gate, which is not behind the flag', () => {
+    expect(storyLockFor({ tier: 'free', gatingEnabled: false, episodes: [stage5], registry })(book('tiger'))).toBe(true);
+    expect(storyLockFor({ tier: 'premium', gatingEnabled: false, episodes: [stage5], registry })(book('tiger'))).toBe(false);
+  });
+
+  it('a book story in a stage that is still "soon" (no shipped cell) is locked even for premium', () => {
+    const readyOnly = bookEpisode('episode:stage5-letters', [], { status: 'ready' });
+    expect(storyLockFor({ tier: 'premium', gatingEnabled: false, episodes: [readyOnly], registry })(book('tiger'))).toBe(true);
+  });
+
+  it('shelf episodes never count toward a stage\'s availability', () => {
+    const shelfOnly = { ...stage5, placement: 'shelf' as const };
+    expect(storyLockFor({ tier: 'premium', gatingEnabled: false, episodes: [shelfOnly], registry })(book('tiger'))).toBe(true);
+  });
+
+  it('defaults to the bundle registry', () => {
+    expect(storyLockFor({ tier: 'free', gatingEnabled: false, episodes: [stage5] })(shelf('sun'))).toBe(false);
   });
 });

@@ -11,6 +11,7 @@ import {
   Screen,
   Spacer,
   StarRow,
+  StoryScene,
   TAB_SCREEN_EDGES,
   colors,
   spacing,
@@ -24,6 +25,8 @@ import React, { useEffect, useMemo, useRef } from 'react';
 import { Pressable, View } from 'react-native';
 import { InstallGuideSheet } from '../../components/InstallGuideSheet';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
+import type { SceneArt } from '@hangul-route/content-schema';
+import { flags } from '../../config/flags';
 import { episodesAll, questsAll } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeMissionCard } from '../../logic/content-locale';
@@ -32,6 +35,8 @@ import {
   buildTodaysMission,
   missionCardText,
   dayKey,
+  planHomeStoryOpen,
+  storyCardShownEvent,
   type MissionCard,
   type MissionPlan,
 } from '../../logic/homework/mission-builder';
@@ -41,10 +46,16 @@ import { gridQuestProgress } from '../../logic/journey';
 import { homeColumns } from '../../logic/layout/home-columns';
 import { DEFAULT_AVATAR } from '../../logic/profiles/avatar-catalog';
 import { computeStreak } from '../../logic/streak';
+import { emptyBookmarks } from '../../logic/story/bookmarks';
+import { storyCoverArt } from '../../logic/story/scene-view';
+import { defaultStoryIndex, entryForQuest } from '../../logic/story/story-index';
+import { storyLockFor } from '../../logic/story/story-pick';
 import type { RootStackParamList } from '../../navigation/types';
+import { track } from '../../platform/telemetry';
 import { useAudience } from '../../store/audience';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
+import { useStoryStore } from '../../store/story-store';
 import { effectiveTier, useTierStore } from '../../store/tier-store';
 
 /** Avatar circle in the Profile entry; with its label the button clears the 64pt floor. */
@@ -55,12 +66,21 @@ const HOYA_SIZE = 72;
 const MISSIONS_FLEX = 3;
 const SIDE_FLEX = 2;
 
-const ICON_FOR: Record<MissionCard['kind'], 'replay' | 'play' | 'library' | 'star'> = {
+const ICON_FOR: Record<MissionCard['kind'], 'replay' | 'play' | 'library' | 'star' | 'journey'> = {
   replay: 'replay',
   new: 'play',
   story: 'library',
   'daily-test': 'star',
+  explore: 'journey',
 };
+/** The story card's cover thumbnail (F-STORY-004 §3.7), drawn where the icon sits. */
+const COVER_THUMB = 48;
+const NO_BOOKMARKS = emptyBookmarks();
+/**
+ * `home.story_card.shown` goes once per profile, day and app session (`<profileId>|<date>`), when the plan is
+ * first pinned — the plan itself is pinned per session too (F-STORY-004 §3.7, §3.11).
+ */
+const storyCardShownSent = new Set<string>();
 
 /**
  * One of the three Today's mission cards (F-HW-001 §3.1).
@@ -69,14 +89,17 @@ const ICON_FOR: Record<MissionCard['kind'], 'replay' | 'play' | 'library' | 'sta
  */
 function MissionTile({
   card,
+  cover,
   onPress,
 }: {
   card: MissionCard;
+  /** A story card's cover art; null or absent keeps the icon. */
+  cover?: SceneArt | null;
   onPress: () => void;
 }): React.ReactElement {
   const m = useMessages();
   const locale = useLocale();
-  const { title, subtitle } = missionCardText(localizeMissionCard(card, locale), m.learner.home.mission);
+  const { title, subtitle } = missionCardText(localizeMissionCard(card, locale), m.learner);
   return (
     <Card
       padding="md"
@@ -92,7 +115,14 @@ function MissionTile({
           minHeight: touchTarget.hero,
         }}
       >
-        <Icon name={ICON_FOR[card.kind]} size={32} color={colors.text.secondary} />
+        {/* One leading slot for the icon or the cover, so every card's title starts at the same x. */}
+        <View style={{ width: COVER_THUMB, alignItems: 'center' }}>
+          {cover ? (
+            <StoryScene art={cover} variant="thumb" width={COVER_THUMB} decorative testID={`home-mission-cover-${card.slot}`} />
+          ) : (
+            <Icon name={ICON_FOR[card.kind]} size={32} color={colors.text.secondary} />
+          )}
+        </View>
         <View style={{ flex: 1 }}>
           <Body weight="semibold" size="lg">
             {title}
@@ -115,6 +145,9 @@ export function HomeScreen(): React.ReactElement {
   // Re-renders Home when the inbox changes the tier, as Results does, so the
   // cursor follows OD-4 on both (F-ROUTE-001 R-4a).
   const cachedTier = useTierStore((s) => (profile ? s.byLearner[profile.id] : undefined));
+  const bookmarks = useStoryStore((s) => (profile ? s.byProfile[profile.id] : undefined)) ?? NO_BOOKMARKS;
+  // Reviewed stories only (D14): empty in production while every bundled story is still a draft.
+  const storyIndex = defaultStoryIndex();
 
   useEffect(() => {
     if (profile) ensure(profile.id);
@@ -155,6 +188,16 @@ export function HomeScreen(): React.ReactElement {
         quests: questsAll,
         episodes: episodesAll,
       }),
+      // The story card (F-STORY-004 §3.7): never a locked story; nothing is locked while gating is off.
+      stories: {
+        entries: storyIndex,
+        bookmarks,
+        isLocked: storyLockFor({
+          tier,
+          gatingEnabled: flags.contentGatingEnabled,
+          episodes: episodesAll,
+        }),
+      },
     });
     // A caregiver or class assignment for today takes card ② (F-HW-001 §3.4, F-PLAN-001 §3.4).
     const merged = mergeAssignments({
@@ -168,9 +211,30 @@ export function HomeScreen(): React.ReactElement {
     return merged;
     // `cachedTier` re-renders this screen when the inbox changes the tier.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile, snap, tier, cachedTier]);
+  }, [profile, snap, tier, cachedTier, bookmarks, storyIndex]);
+
+  useEffect(() => {
+    if (!mission) return;
+    const event = storyCardShownEvent(mission);
+    const key = `${mission.profileId}|${mission.date}`;
+    if (!event || storyCardShownSent.has(key)) return;
+    storyCardShownSent.add(key);
+    void track({ name: event.name, profileId: mission.profileId, payload: event.payload });
+  }, [mission]);
+
+  // A story card opens through the one story-open plan (F-STORY-004 §3.2): the quest player, or the
+  // unscored reader for "Read it again"; "Keep reading" resumes at the bookmark (PR 4.4b).
+  const openStory = (card: MissionCard): boolean => {
+    const plan = planHomeStoryOpen({ card, entries: storyIndex, snapshot: snap, bookmarks });
+    if (!plan) return false;
+    void track({ name: plan.event.name, profileId: profile?.id, payload: plan.event.payload });
+    if (plan.route === 'StoryReader') navigation.navigate('StoryReader', plan.params);
+    else navigation.navigate('QuestPlayer', plan.params);
+    return true;
+  };
 
   const openCard = (card: MissionCard): void => {
+    if (card.kind === 'story' && openStory(card)) return;
     if (card.questId && card.episodeId) {
       navigation.navigate('QuestPlayer', { questId: card.questId, episodeId: card.episodeId });
     } else if (card.episodeId) {
@@ -187,9 +251,17 @@ export function HomeScreen(): React.ReactElement {
         <Heading level="prompt">{m.learner.home.mission.heading}</Heading>
         <Spacer size="sm" />
         <View testID="home-missions" style={{ gap: spacing.sm }}>
-          {mission.cards.map((card) => (
-            <MissionTile key={card.slot} card={card} onPress={() => openCard(card)} />
-          ))}
+          {mission.cards.map((card) => {
+            const entry = card.kind === 'story' && card.questId ? entryForQuest(storyIndex, card.questId) : undefined;
+            return (
+              <MissionTile
+                key={card.slot}
+                card={card}
+                cover={entry ? storyCoverArt(entry.story) : null}
+                onPress={() => openCard(card)}
+              />
+            );
+          })}
         </View>
       </>
     ) : null;

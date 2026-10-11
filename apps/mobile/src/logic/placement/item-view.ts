@@ -88,23 +88,49 @@ export function audioFallback(format: AssessmentFormat): 'text' | 'skip' {
 /**
  * What the item does once its heard prompt reports (section 3.11). `muted`
  * (sound switched off) and `unavailable` are handled alike mid-run: the words
- * or the reply are shown as text, and a heard letter or syllable, which would
- * be the answer, is skipped.
+ * or the reply are shown as text at once. A heard letter or syllable, which
+ * would be the answer, is never skipped on a first failure (a slow voice start
+ * reports `unavailable` too): the speaker asks for a tap (`retry`), and only a
+ * second failure (`priorFailures` >= 1) skips the question.
  */
-export function promptOutcome(result: 'played' | 'muted' | 'unavailable', format: AssessmentFormat): 'played' | 'text' | 'skip' {
-  return result === 'played' ? 'played' : audioFallback(format);
+export function promptOutcome(
+  result: 'played' | 'muted' | 'unavailable',
+  format: AssessmentFormat,
+  priorFailures: number,
+): 'played' | 'text' | 'retry' | 'skip' {
+  if (result === 'played') return 'played';
+  if (audioFallback(format) === 'text') return 'text';
+  return priorFailures >= 1 ? 'skip' : 'retry';
 }
 
-/** A prompt that cannot play: recorded skipped (not wrong), never a "not sure" of the learner. */
+/** A prompt that cannot play: recorded skipped with `noSound` (kept out of scoring), never a "not sure" of the learner. */
 export const NO_SOUND_SKIP: PlacementEvent = { type: 'notSure', cause: 'no-sound' };
 
 /**
- * With a screen reader on nothing auto-plays, so an instruction that is spoken
- * only (Korean as the test language, letter formats) is heard on the speaker
- * tap, before the Korean prompt.
+ * What is said before the Korean prompt when the speaker is tapped. With a
+ * screen reader on nothing auto-plays, so an instruction that is spoken only
+ * (Korean as the test language, letter formats) is heard on the tap; a written
+ * one the screen reader reads itself. The first tap after a resume replaces
+ * playing on open, so it says the instruction that playing on open would have
+ * said (Short shows none written).
  */
-export function instructionOnTap(instruction: Instruction, screenReader: boolean): string | null {
-  return screenReader && instruction.visible === null ? instruction.spoken : null;
+export function instructionOnTap(instruction: Instruction, input: { screenReader: boolean; needsGesture: boolean }): string | null {
+  if (input.screenReader) return instruction.visible === null ? instruction.spoken : null;
+  return input.needsGesture ? instruction.spoken : null;
+}
+
+/**
+ * The romanization under the text fallback ("No sound? Read it here."): taught
+ * Korean shows it (CLAUDE.md section 1), except on a prompt whose romanization
+ * would give the answer away (`leaks`), which keeps it until "Show how it
+ * sounds" unless the run always shows the guide (section 3.2).
+ */
+export function fallbackRomanization(
+  question: Pick<AssessmentQuestion, 'leaks' | 'promptRomanization'>,
+  input: { revealMode: 'tap' | 'always'; revealed: boolean },
+): string {
+  const shown = !question.leaks || input.revealMode === 'always' || input.revealed;
+  return shown ? (question.promptRomanization ?? '') : '';
 }
 
 export interface OptionView {

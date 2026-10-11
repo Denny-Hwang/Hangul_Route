@@ -69,3 +69,23 @@ test('clicking each child link on /parent reaches that child, not the 404 page',
     expect(response.status(), href).toBe(200);
   }
 });
+
+/**
+ * F-I18N-001 PR 10c: the /parent demo now reads the dictionary, so longer locales will stretch its
+ * labels. At 320px neither the dashboard nor a child page scrolls sideways (the stats grid and the
+ * child page's two columns stack, the header rows wrap).
+ */
+test.describe('320px wide', () => {
+  test.use({ viewport: { width: 320, height: 800 } });
+
+  test('/parent and every child page do not scroll sideways', async ({ page }) => {
+    await page.goto('/parent');
+    const hrefs = await page.getByRole('link', { name: /View progress/ }).evaluateAll((links) => links.map((a) => a.getAttribute('href') ?? ''));
+    expect(hrefs.length).toBeGreaterThan(0);
+    for (const route of ['/parent', ...hrefs]) {
+      await page.goto(route);
+      const width = await page.evaluate(() => Math.max(document.documentElement.scrollWidth, document.body.scrollWidth));
+      expect(width, `${route} scrollWidth`).toBeLessThanOrEqual(320);
+    }
+  });
+});

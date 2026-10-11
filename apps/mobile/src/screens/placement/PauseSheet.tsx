@@ -13,8 +13,10 @@ import { LinkButton } from './parts';
  * opens after three "not sure" (not in Short), after 45 seconds untouched,
  * from the exit and when the app leaves the foreground; Deep's rest card
  * ("Hoya is stretching. Keep going?") is the same sheet without the grown-up
- * link. The backstop clock does not run while it is open. "That is enough"
- * ends the run with the answers so far. On a short window (a phone in
+ * link. When prompts stop playing mid-run (section 3.11) the same sheet says
+ * "Turn on sound to play" with **Try again** in place of **Keep going**. The
+ * backstop clock does not run while it is open. "That is enough" ends the run
+ * with the answers so far. On a short window (a phone in
  * landscape, large text) the sheet scrolls inside the window and Hoya steps
  * aside; on a wide one it stays at reading width.
  */
@@ -24,7 +26,8 @@ const HOYA_MIN_WINDOW_HEIGHT = 400;
 export function PauseSheet({ sheet }: { sheet: PauseSheetModel }): React.ReactElement {
   const { m, applyRun, say, screenReader, finishForGrownUp } = usePlacement();
   const copy = m.learner.placement;
-  const title = sheet.kind === 'rest' ? copy.rest.line : copy.pause.title;
+  const title = sheet.kind === 'rest' ? copy.rest.line : sheet.kind === 'sound' ? copy.soundNeeded.title : copy.pause.title;
+  const sound = sheet.kind === 'sound';
   // Hidden while the PIN gate is on top ("For grown-ups: finish now"), shown again on return.
   const focused = useIsFocused();
   const window = useWindowDimensions();
@@ -39,7 +42,7 @@ export function PauseSheet({ sheet }: { sheet: PauseSheetModel }): React.ReactEl
     <Modal transparent animationType="fade" visible={focused} onRequestClose={() => applyRun({ type: 'keepGoing' })}>
       <View style={{ flex: 1, justifyContent: 'flex-end', alignItems: 'center', backgroundColor: colors.surface.overlay }}>
         <View
-          testID={sheet.kind === 'rest' ? 'placement-rest' : 'placement-pause'}
+          testID={sheet.kind === 'rest' ? 'placement-rest' : sound ? 'placement-sound-pause' : 'placement-pause'}
           accessibilityViewIsModal
           style={{
             width: '100%',
@@ -55,17 +58,21 @@ export function PauseSheet({ sheet }: { sheet: PauseSheetModel }): React.ReactEl
             contentContainerStyle={{ padding: spacing.xl, paddingBottom: spacing.xl + insets.bottom, gap: spacing.md }}
           >
           <View style={{ alignItems: 'center', gap: spacing.sm }}>
-            {window.height >= HOYA_MIN_WINDOW_HEIGHT ? <Hoya pose={sheet.kind === 'rest' ? 'cheering' : 'idle'} size={touchTarget.hero} /> : null}
+            {sound ? (
+              <Icon name="speaker-off" size={touchTarget.min} color={colors.text.secondary} />
+            ) : window.height >= HOYA_MIN_WINDOW_HEIGHT ? (
+              <Hoya pose={sheet.kind === 'rest' ? 'cheering' : 'idle'} size={touchTarget.hero} />
+            ) : null}
             <Heading level="title" align="center">
               {title}
             </Heading>
           </View>
           <Button
-            label={copy.pause.keepGoing}
+            label={sound ? copy.soundNeeded.tryAgain : copy.pause.keepGoing}
             tone="primary"
             size="hero"
             fullWidth
-            leading={<Icon name="play" size={spacing.xl} color={colors.text.inverse} />}
+            leading={<Icon name={sound ? 'replay' : 'play'} size={spacing.xl} color={colors.text.inverse} />}
             onPress={() => applyRun({ type: 'keepGoing' })}
             testID="placement-keep-going"
           />
@@ -74,7 +81,7 @@ export function PauseSheet({ sheet }: { sheet: PauseSheetModel }): React.ReactEl
             tone="secondary"
             size="lg"
             fullWidth
-            leading={<Icon name="home" size={spacing.xl} color={colors.text.inverse} />}
+            leading={<Icon name="home" size={spacing.xl} color={colors.text.onSecondary} />}
             onPress={() => applyRun(sheet.enough)}
             testID="placement-enough"
           />

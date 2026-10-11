@@ -102,7 +102,7 @@ type Note = 'hint' | 'wrong' | 'look';
  * Serves the three legacy `storySteps` scopes and story scopes alike. A story
  * card shows its scene art (PR 3.5b) when the picture resolves, the replay
  * shows it full width; a card without art shows its words alone on the paper
- * surface (F-STORY-003 §3.5 amendment). Design: design/wireframes/story/check.md (F, G).
+ * surface (F-STORY-003 §3.5 amendment). Design: design/wireframes/story/sequence.md (F, G).
  */
 export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce }: Props): React.ReactElement {
   const locale = useLocale();

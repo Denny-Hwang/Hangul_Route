@@ -22,12 +22,23 @@ export function wordsOf(html: string, data: readonly string[]): string[] {
 
 /**
  * One bracketed message, or several joined by punctuation only (a part may render two messages
- * in one text node, "[2 / 3] · [today]"); a letter outside the brackets fails.
+ * in one text node, "[2 / 3] · [today]"); a message whose argument is itself a message nests
+ * ("[[owner] (you)]", PR 10c). Removing bracket groups from the inside out must leave no letter
+ * and no stray bracket.
  */
-const PSEUDO_TEXT = /^\[[^\]]*\](?:[^[\]A-Za-z]+\[[^\]]*\])*$/;
+const INNERMOST = /\[[^[\]]*\]/g;
+
+function outsideBrackets(text: string): string {
+  let rest = text;
+  for (let prev = ''; prev !== rest; ) {
+    prev = rest;
+    rest = rest.replace(INNERMOST, '');
+  }
+  return rest;
+}
 
 export function expectAllPseudo(html: string, data: readonly string[] = [], minWords = 4): void {
   const words = wordsOf(html, data);
   expect(words.length).toBeGreaterThanOrEqual(minWords);
-  for (const w of words) expect(w, `"${w}" is not from the dictionary`).toMatch(PSEUDO_TEXT);
+  for (const w of words) expect(outsideBrackets(w), `"${w}" is not from the dictionary`).not.toMatch(/[[\]A-Za-z]/);
 }

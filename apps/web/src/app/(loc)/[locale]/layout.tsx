@@ -10,7 +10,8 @@ import { HIDDEN_LOCALE_ATTR, isShippedSiteLocale, isSiteLocale, siteLocaleParams
  * (F-I18N-001 §3.4, PR 11b). It lives inside `[locale]`, so the static HTML carries `<html lang>`.
  * Every site locale is rendered; one that has not shipped (all are shown on a QA build) is marked
  * `noindex` and with `HIDDEN_LOCALE_ATTR`, and `scripts/prune-hidden-locales.mjs` removes it from `out/`
- * after `next build`. Any other path is a 404. Per-locale metadata and hreflang come with PR 11c.
+ * after `next build`. Any other path is a 404. Each page exports its own metadata in its locale, with hreflang
+ * alternates once a second locale ships (`lib/site-metadata.ts`, PR 11c).
  */
 export const dynamicParams = false;
 

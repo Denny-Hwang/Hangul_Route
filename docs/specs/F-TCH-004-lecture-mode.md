@@ -168,7 +168,8 @@ Every slide has a stable `key` (`<blockKey>/<path>`, e.g. `quest:stage1-letters-
    - `card-match` -> **vocab** slides from `scope.cardPairs`;
    - `story-sequence` -> one **sequence** slide from `scope.storySteps`;
    - `culture-quiz` -> quiz slides from `buildCultureQuizRounds`; `odd-one-out` -> quiz slides from `buildOddOneOutRounds`;
-   - any other kind (`tap-respond`, `voice-echo`, F-QUEST-002 kinds) -> skipped `unsupported-step` (counted on the start screen);
+   - a `discover` step (F-QUEST-002 §3.1; it has no `minigameRef`) -> one **letter** slide per `jamo` item (the same `seen` set) and one **vocab** slide per `word` item, in page order (added after F-QUEST-002 Q-6a replaced the letters quests' `present` steps with Discover; follow-up to #259);
+   - any other kind (`tap-respond`, `voice-echo`, F-QUEST-002 minigame kinds such as the Check's `listen-pick`) -> skipped `unsupported-step` (counted on the start screen);
    - `reward` step -> **card** slide (`cardById(quest.rewardCardId)`: art, title, `factEn`).
    Builders that throw on a small scope (`round-builder.ts:39-41,145-147,183-185`) are wrapped: the failure becomes `scope-too-small` and the slide is omitted.
 3. **jamo-set** -> letter slides. **revisit** -> letter slides for the characters (`jamoAll.find(j => j.char === c && j.kind !== 'batchim')`; unknown -> skipped) then one quiz block of up to 4 rounds over those jamo (needs >= 4 distinct options; the pool is topped up with other jamo of the same kind in `jamoAll` order, otherwise the quiz is skipped).

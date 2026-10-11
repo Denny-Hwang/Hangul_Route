@@ -371,6 +371,26 @@ describe('leave, remove, roster (§3.3, §3.4)', () => {
     expect(await summaryOf(cls.space.id, 'principal')).not.toHaveProperty('selfRoute');
   });
 
+  it('returns summary.journey to the class and the family roster alike (F-ROUTE-001 R-8, OD-11)', async () => {
+    const cls = await createSpace('teacher', 'class', 'A');
+    const fam = await createSpace('mom', 'family', 'Kim family');
+    const famCode = await issueCode('mom', fam.space.id);
+    const suni = await registerLearner('device-suni0001', 'Suni');
+    expect((await joinAs(cls.space.id, suni.auth, { code: cls.joinCode, learnerId: suni.learnerId })).status).toBe(201);
+    expect((await joinAs(fam.space.id, suni.auth, { code: famCode, learnerId: suni.learnerId })).status).toBe(201);
+    const journey = { v: 1, here: 'stage1', stages: [{ stage: 'stage1', state: 'open', done: 4, known: 2, total: 8 }] };
+    const upload = await call('PUT', `/api/sync/learners/${suni.learnerId}/snapshot`, suni.auth, { baseRev: 0, snapshot: snapshotFor(suni.learnerId), summary: { ...summary, journey }, schemaVer: 1, contentVer: '2026.10' });
+    expect(upload.status).toBe(200);
+
+    const summaryOf = async (spaceId: string, user: string): Promise<Record<string, unknown>> => {
+      const r = await get(`/api/spaces/${spaceId}/roster`, bearer(user));
+      expect(r.status).toBe(200);
+      return ((r.body.data as { learners: Array<{ summary: Record<string, unknown> }> }).learners[0] as { summary: Record<string, unknown> }).summary;
+    };
+    expect((await summaryOf(cls.space.id, 'teacher')).journey).toEqual(journey);
+    expect((await summaryOf(fam.space.id, 'mom')).journey).toEqual(journey);
+  });
+
   it('a school admin reads a child class roster without its code; archived spaces disappear', async () => {
     const sch = await createSpace('principal', 'school', 'School');
     const schCode = await issueCode('principal', sch.space.id);
