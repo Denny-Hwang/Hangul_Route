@@ -139,7 +139,7 @@ function PlanInner(): JSX.Element {
             <span style={{ color: colors.text.muted }}>{planStatusLabel(current)}</span>
           </div>
           <Muted>
-            {m.console.planCounts.items(current.items.length)} · for {current.targetLearnerIds ? `${current.targetLearnerIds.length} ${noun}` : `everyone in this ${roster?.space.kind ?? 'space'}`}
+            {m.console.planCounts.items(current.items.length)} · for {current.targetLearnerIds ? m.console.planCounts.targets(roster?.space.kind ?? 'family', current.targetLearnerIds.length) : `everyone in this ${roster?.space.kind ?? 'space'}`}
           </Muted>
           <div style={{ display: 'flex', gap: spacing.sm, margin: `${spacing.md}px 0` }}>
             <Button onClick={() => { setDraft({ id: current.id, title: current.title, items: current.items, targets: current.targetLearnerIds }); setEditing(true); }}>Edit</Button>

@@ -72,6 +72,16 @@ describe('console: formatter words', () => {
     expect(c.planCounts.items(0)).toBe('0 items');
   });
 
+  it('counts a plan\'s targets with plural, worded per space kind', () => {
+    expect(c.planCounts.targets('family', 1)).toBe('1 learner');
+    expect(c.planCounts.targets('family', 2)).toBe('2 learners');
+    expect(c.planCounts.targets('class', 1)).toBe('1 student');
+    expect(c.planCounts.targets('class', 2)).toBe('2 students');
+    expect(c.planCounts.targets('school', 1)).toBe('1 member');
+    expect(c.planCounts.targets('school', 2)).toBe('2 members');
+    expect(c.planCounts.targets('class', 0)).toBe('0 students');
+  });
+
   it('labels a plan; the date arrives formatted', () => {
     expect(c.planStatus.archived).toBe('Archived');
     expect(c.planStatus.draft).toBe('Draft');

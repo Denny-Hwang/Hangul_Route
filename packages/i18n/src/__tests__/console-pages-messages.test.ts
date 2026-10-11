@@ -7,7 +7,9 @@ import type { Messages } from '../types';
 
 // F-I18N-001 PR 10a: the console pages (sign-in, start, home, space, relink) and the shell read
 // the dictionary. English is the source and must render exactly what the pages hard-coded
-// before (§3.4 rule 1), so every value below is the former literal, byte for byte.
+// before (§3.4 rule 1), so every value below is the former literal, byte for byte, except the
+// counts F-I18N-001 §10 moved to plural() ("1 learner", "1 card", "1 hasn't synced"; see the
+// block at the end).
 const c = getMessages('en').console;
 
 describe('console shell (ui.tsx)', () => {
@@ -241,6 +243,9 @@ const COUNTED: readonly [string, (m: Messages, n: number) => string][] = [
   ['console.space.week.notSynced', (m, n) => m.console.space.week.notSynced(n)],
   ['console.space.learner.questsCards', (m, n) => m.console.space.learner.questsCards(7, 24, n)],
   ['console.planCounts.items', (m, n) => m.console.planCounts.items(n)],
+  ['console.planCounts.targets (family)', (m, n) => m.console.planCounts.targets('family', n)],
+  ['console.planCounts.targets (class)', (m, n) => m.console.planCounts.targets('class', n)],
+  ['console.planCounts.targets (school)', (m, n) => m.console.planCounts.targets('school', n)],
   ['console.spaceCounts.students', (m, n) => m.console.spaceCounts.students(n)],
 ];
 

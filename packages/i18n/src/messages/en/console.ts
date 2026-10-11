@@ -12,7 +12,8 @@ import { plural } from '../../plural';
  * Below those, one group per console page (F-I18N-001 PR 10a): `shell` (the header of every
  * page), `signIn`, `start`, `home`, `space` and `relink`, plus `kind` (space kinds) and `joinCode`.
  * A sentence with a number or a name in it is one function message; the English wording is
- * the pages' former text, byte for byte, including the old "1 cards" / "1 learners" forms.
+ * the pages' former text, byte for byte, except that counts now go through `plural()`
+ * (F-I18N-001 §10, closed): "1 learner", "1 card", "1 hasn't synced".
  * Four former COPY fragments the space page glued around numbers (practicedThisWeek, anchor,
  * revisitTogether, notSyncedWeek) became whole sentences under `space.week`.
  *
@@ -245,9 +246,15 @@ export const consoleMsgs = {
     students: (n: number) => plural('en', n, { one: `${n} student`, other: `${n} students` }),
     classes: (n: number) => plural('en', n, { one: `${n} class`, other: `${n} classes` }),
   },
-  /** Plan builder counts (`teach/space/plan`): the number of items in a plan. */
+  /** Plan builder counts (`teach/space/plan`): the items in a plan, and the members it targets (worded per space kind, as `kind.members`). */
   planCounts: {
     items: (n: number) => plural('en', n, { one: `${n} item`, other: `${n} items` }),
+    targets: (kind: 'family' | 'class' | 'school', n: number) =>
+      kind === 'family'
+        ? plural('en', n, { one: `${n} learner`, other: `${n} learners` })
+        : kind === 'class'
+          ? plural('en', n, { one: `${n} student`, other: `${n} students` })
+          : plural('en', n, { one: `${n} member`, other: `${n} members` }),
   },
   /** Plan builder status (`planStatusLabel`); the date arrives formatted. */
   planStatus: {

@@ -100,6 +100,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.spaceCounts.classes': [[1], [4]],
   'console.planStatus.published': [['Sep 20']],
   'console.planCounts.items': [[1], [2]],
+  'console.planCounts.targets': [['family', 1], ['class', 2], ['school', 1]],
   'console.entitlementStatus.trialEnds': [['Oct 21, 2026']],
   'console.entitlementStatus.activeRenews': [['Oct 21, 2026']],
   'console.entitlementStatus.cancelledEnds': [['Oct 21, 2026']],
