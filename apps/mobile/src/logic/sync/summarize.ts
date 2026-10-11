@@ -22,6 +22,8 @@ export interface SummarizeInput {
   questJamo: Readonly<Record<string, readonly string[]>>;
   /** Items per plan the device could not assign yet (F-PLAN-001 §3.3). */
   planNotReady?: Readonly<Record<string, number>>;
+  /** My route stage counts, computed by sync-store (F-ROUTE-001 R-8); left out when absent. */
+  journey?: ProgressSummary['journey'];
 }
 
 /** done / total per plan from the plan-derived assignments, plus what was skipped. */
@@ -81,7 +83,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 export const RECOGNIZED_ACCURACY = 0.8;
 export const PRACTICE_ACCURACY = 0.6;
 
-export function summarize({ snapshot, now, stage1QuestIds, questJamo, planNotReady }: SummarizeInput): ProgressSummary {
+export function summarize({ snapshot, now, stage1QuestIds, questJamo, planNotReady, journey }: SummarizeInput): ProgressSummary {
   const completed = snapshot.quests.filter((q) => q.completedAt);
   const stage1Set = new Set(stage1QuestIds);
   const stage1Done = completed.filter((q) => stage1Set.has(q.questId));
@@ -128,5 +130,6 @@ export function summarize({ snapshot, now, stage1QuestIds, questJamo, planNotRea
     needsPractice,
     planProgress: planProgressOf(snapshot, planNotReady),
     ...(placement ? { placement } : {}),
+    ...(journey ? { journey } : {}),
   };
 }

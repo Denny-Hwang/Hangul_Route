@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { DEFAULT_LOCALE, LOCALES } from '@hangul-route/i18n';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { HIDDEN_LOCALE_ATTR, isShippedSiteLocale, isSiteLocale, siteLocaleParams } from '../site-locales';
-import { SITE_DEFAULT_LOCALE, sitePath } from '../site-path';
+import { SITE_DEFAULT_LOCALE, appEntryUrl, sitePath } from '../site-path';
 
 /**
  * The site's locale routes — F-I18N-001 §3.4, PR 11b. English stays at `/`; `/es` and `/ko`
@@ -88,5 +88,20 @@ describe('sitePath', () => {
 
   it('leaves in-page anchors alone', () => {
     expect(sitePath('es', '#cards')).toBe('#cards');
+  });
+});
+
+describe('appEntryUrl (the "Play now" hand-off, F-I18N-001 §3.3, PR 11c)', () => {
+  it('leaves the app URL alone in English', () => {
+    expect(appEntryUrl('https://app.hangulroute.com', 'en')).toBe('https://app.hangulroute.com');
+  });
+
+  it('adds ?lang=<locale> from /es and /ko, so the app starts in that locale when nothing is stored', () => {
+    expect(appEntryUrl('https://app.hangulroute.com', 'es')).toBe('https://app.hangulroute.com?lang=es');
+    expect(appEntryUrl('https://app.hangulroute.com/', 'ko')).toBe('https://app.hangulroute.com/?lang=ko');
+  });
+
+  it('keeps a query the deployment already has', () => {
+    expect(appEntryUrl('https://preview.example.com/?ref=site', 'es')).toBe('https://preview.example.com/?ref=site&lang=es');
   });
 });

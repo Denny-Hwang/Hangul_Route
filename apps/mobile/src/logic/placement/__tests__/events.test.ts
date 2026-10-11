@@ -21,8 +21,13 @@ describe('placement telemetry payloads (F-PLC-001 section 3.13, AM-34)', () => {
     expect(event).toEqual({
       name: 'placement.item_answered',
       profileId: 'p1',
-      payload: { itemId: 'pitem:a', gate: 'vocab', outcome: 'skipped', assisted: false, ms: 900 },
+      payload: { itemId: 'pitem:a', gate: 'vocab', outcome: 'skipped', assisted: false, ms: 900, noSound: false },
     });
+  });
+
+  it('placement.item_answered tells a prompt that could not play from the learner\'s "not sure"', () => {
+    const silent = itemAnsweredEvent('p1', { questionId: 'pitem:b', outcome: 'skipped', chosenOptionId: null, assisted: false, ms: 300, noSound: true }, 'sound-basic');
+    expect(silent.payload).toEqual({ itemId: 'pitem:b', gate: 'sound-basic', outcome: 'skipped', assisted: false, ms: 300, noSound: true });
   });
 
   it('placement.complete carries the stop reason, level, secure count and the mode (modeOf for old results)', () => {

@@ -100,6 +100,54 @@ export const learner = {
     },
   },
 
+  /**
+   * Edit profile (F-LEARN-001 §3.11): name, reading level, cub and who is learning. Level labels
+   * come from `LEARNER_LEVELS`, cub labels from `avatars`. The consent lines repeat the create
+   * form's wording on purpose: a change of who is learning asks the same question.
+   */
+  editProfile: {
+    /** The button on each card of the profile switcher. */
+    cta: 'Edit',
+    /** Its accessible name (the gate adds "PIN required" when the device is gated). */
+    a11y: (name: string) => `Edit ${name}`,
+    title: 'Edit profile',
+    nameLabel: 'Name',
+    namePlaceholder: 'Type a name',
+    levelHeading: 'Reading level',
+    avatarHeading: 'Pick a Hoya',
+    who: {
+      heading: 'Who is learning?',
+      self: { label: 'Me', sub: "I'm 13 or older" },
+      child: { label: 'My child or a student', sub: 'A grown-up sets it up' },
+    },
+    self: { agree: "I'm 13 or older and I agree to the Privacy Policy." },
+    guardian: {
+      heading: 'For a grown-up',
+      body: 'A parent, guardian or teacher sets up the account. We collect as little as possible and never show ads.',
+      pinHeading: 'Create a grown-up PIN',
+      agree: "I'm a parent or guardian of this learner (or I set it up for them) and I agree to the Privacy Policy.",
+    },
+    privacyLink: 'Read the Privacy Policy',
+    privacyFallback: 'Open hangulroute.com/privacy in a browser.',
+    /** A learner in a class: the roster keeps the registered values until a server route exists. */
+    classNote: "Changes show on your teacher's list after you join again",
+    pinFailed: "Couldn't set the PIN. Try again.",
+    /** Save did not go through for another reason; nothing was changed. */
+    saveFailed: "Couldn't save. Try again.",
+    /** The calm line under a disabled Save, one per missing step. */
+    missing: {
+      name: 'Type a name',
+      /** A typed name the rule refuses; the hint under the field says why. */
+      nameCheck: 'Check the name',
+      agree: 'Tick the box to agree',
+      pin: 'Create the PIN',
+      unchanged: 'Change something to save',
+    },
+    /** The profile was removed while the screen was open. */
+    notFound: 'This profile is no longer on this device.',
+    save: { cta: 'Save' },
+  },
+
   home: {
     /** `null` while there is no active profile. */
     greeting: (name: string | null) => `Hi, ${name ?? 'friend'}!`,
@@ -764,6 +812,8 @@ export const learner = {
           'With the guide shown, the check looks at shapes and listening. With it hidden until you tap, it can also look at reading. Your own setting is not changed.',
       },
       takeMyTime: { label: 'Take my time', help: 'No time limits.' },
+      /** Section 3.12: the web cannot tell whether a screen reader is on (spec assumption 5), so the grown-up says so here. */
+      screenReader: { label: 'I use a screen reader', help: 'Questions play when you tap them, with no time limits.' },
       why: {
         title: 'Why Korean?',
         heritage: 'My family',

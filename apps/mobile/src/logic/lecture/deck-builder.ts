@@ -357,7 +357,7 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
     if (ko !== undefined && romanization !== undefined) teachWord({ ko, romanization, gloss: found.titleEn });
   };
 
-  /** A Discover step (F-QUEST-002): a letter slide per jamo item, a vocab slide per word item. */
+  /** A Discover step (F-QUEST-002 §3.1): a letter slide per jamo item, a vocab slide per word item. */
   const discoverStep = (path: string, discover: Discover): void => {
     for (const item of discover.pages.flatMap((page) => page.items)) {
       if (item.type === 'jamo') {

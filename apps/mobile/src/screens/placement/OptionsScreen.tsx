@@ -28,8 +28,9 @@ import { BackArrow, LinkButton, Note, RadioTile } from './parts';
  * learner with **Change** and **Start**; C2 has the three equal mode tiles
  * (radios, no badge, Short disabled without sound), the sound-guide question
  * for Standard and Deep with nothing pre-selected (NEXT waits for it), *Take
- * my time* and the optional *Why Korean?*. The profile's own sound-guide
- * setting is never written.
+ * my time*, *I use a screen reader* (the only way to say so on the web, spec
+ * assumption 5; turning it on pre-sets *Take my time*) and the optional *Why
+ * Korean?*. The profile's own sound-guide setting is never written.
  */
 export function OptionsScreen(): React.ReactElement {
   const { m, flow, dispatch, say, leave, screenReader } = usePlacement();
@@ -185,6 +186,23 @@ export function OptionsScreen(): React.ReactElement {
           value={flow.takeMyTime}
           onValueChange={(on) => dispatch({ type: 'setTakeMyTime', on })}
           accessibilityLabel={copy.takeMyTime.label}
+          trackColor={{ true: colors.brand.primary, false: colors.border.strong }}
+          thumbColor={colors.surface.paper}
+        />
+      </View>
+
+      <Spacer size="md" />
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: touchTarget.min }}>
+        <Pressable style={{ flex: 1 }} onPress={() => void say(`${copy.screenReader.label}. ${copy.screenReader.help}`)} accessibilityRole="text">
+          <Body weight="semibold">{copy.screenReader.label}</Body>
+          <Caption tone="secondary">{copy.screenReader.help}</Caption>
+        </Pressable>
+        <Switch
+          testID="placement-screen-reader"
+          value={flow.screenReader}
+          onValueChange={(on) => dispatch({ type: 'setScreenReader', on })}
+          accessibilityLabel={copy.screenReader.label}
+          accessibilityHint={copy.screenReader.help}
           trackColor={{ true: colors.brand.primary, false: colors.border.strong }}
           thumbColor={colors.surface.paper}
         />

@@ -3,6 +3,7 @@
 import { colors, radii, spacing, typography } from '@hangul-route/design-system/tokens';
 import type { PlanItem, SpaceKind } from '@hangul-route/content-schema';
 import type { ReactNode } from 'react';
+import Link from 'next/link';
 import { Button, Muted, panelStyle } from '@/components/console/ui';
 import { catalogLabel } from '@/data/catalog';
 import type { PlanView } from '@/lib/console/api';
@@ -25,6 +26,7 @@ export function PlanReadout({
   onArchive,
   onNew,
   route,
+  presentHref,
 }: {
   plan: PlanView;
   rows: readonly ReadoutRow[];
@@ -36,6 +38,8 @@ export function PlanReadout({
   onNew: () => void;
   /** A route plan's readout (F-PLAN-002 section 3.8 step 6), shown in place of the item list and progress. */
   route?: ReactNode;
+  /** "Present this plan": the lecture setup with this plan preselected (F-TCH-004 §3.11). */
+  presentHref?: string;
 }): JSX.Element {
   const { messages, locale } = useConsoleLocale();
   const c = messages.console;
@@ -51,6 +55,11 @@ export function PlanReadout({
         <Button onClick={onEdit}>{p.edit.cta}</Button>
         <Button onClick={onArchive} disabled={busy}>{p.archive.cta}</Button>
         <Button onClick={onNew}>{p.newPlan.cta}</Button>
+        {presentHref ? (
+          <Link href={presentHref}>
+            <Button testId="present-plan">{c.lecture.presentPlan.cta}</Button>
+          </Link>
+        ) : null}
       </div>
       {route ?? (
         <>
