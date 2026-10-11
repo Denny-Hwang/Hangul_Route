@@ -31,7 +31,7 @@ describe('learner.results.extraCards (F-STORY-006 §3.7)', () => {
   });
 
   it('labels each thumbnail with the card it opens', () => {
-    expect(x.seeA11y('Hanbok')).toBe('See my card: Hanbok');
+    expect(x.seeA11y('Hanbok')).toBe('Open card: Hanbok');
   });
 
   it('never shows a fraction, a percent or a shaming word', () => {

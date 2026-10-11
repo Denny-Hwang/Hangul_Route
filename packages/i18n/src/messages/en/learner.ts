@@ -318,7 +318,8 @@ export const learner = {
       /** One sentence for assistive tech: the count, then every card title. */
       announce: (n: number, titles: readonly string[]) =>
         `${plural('en', n, { one: '1 more card joined your Library', other: `${n} more cards joined your Library` })}: ${titles.join(', ')}`,
-      seeA11y: (title: string) => `See my card: ${title}`,
+      /** A thumbnail's label: distinct from the quest card's "See my card" button above it. */
+      seeA11y: (title: string) => `Open card: ${title}`,
     },
   },
 

@@ -93,10 +93,10 @@ test('finishing an episode shows its extra cards once, each opening its card', a
   await expect(banner.getByText('You finished New Year & Festivals!')).toBeVisible();
   await expect(banner.getByText('4 more cards joined your Library!')).toBeVisible();
   for (const title of EXTRA_TITLES) {
-    await expect(banner.getByRole('button', { name: `See my card: ${title}` })).toBeVisible();
+    await expect(banner.getByRole('button', { name: `Open card: ${title}` })).toBeVisible();
   }
   // The quest card is never repeated as an extra, and nothing counts what is left.
-  await expect(banner.getByRole('button', { name: 'See my card: Lunar New Year' })).toHaveCount(0);
+  await expect(banner.getByRole('button', { name: 'Open card: Lunar New Year' })).toHaveCount(0);
   await expect(banner).not.toContainText(/\d+\s*\/\s*\d+|%/);
   // Every thumbnail is a comfortable target (touchTarget.min = 64).
   for (const box of await Promise.all((await banner.getByRole('button').all()).map((b) => b.boundingBox()))) {
@@ -106,7 +106,7 @@ test('finishing an episode shows its extra cards once, each opening its card', a
   await banner.scrollIntoViewIfNeeded();
   await shot(page, 'results-extra-cards');
 
-  await banner.getByRole('button', { name: 'See my card: Songpyeon' }).click();
+  await banner.getByRole('button', { name: 'Open card: Songpyeon' }).click();
   await expect(page.getByText('Songpyeon').first()).toBeVisible();
   await expect(page.getByText('송편').first()).toBeVisible();
 
