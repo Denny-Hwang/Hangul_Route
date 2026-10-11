@@ -12,7 +12,8 @@ import type { PlanView, Roster } from '@/lib/console/api';
 import { levelPillLabel } from '@/lib/console/level-label';
 import { capState, classRollup, codeExpiry, percent, relativeDay } from '@/lib/console/rollup';
 import { latestPublished, planReadout, readoutLine } from '@/lib/console/plans';
-import { ROUTES, spaceIdFrom } from '@/lib/console/routing';
+import { ROUTES, type SpaceError, spaceErrorText, spaceIdFrom } from '@/lib/console/routing';
+import { aroundSlot } from '@/lib/i18n/slot';
 
 /** console/roster — F-CONSOLE-001 §3.5. Summaries only; the API never sends payloads here. */
 function SpaceInner(): JSX.Element {
@@ -23,7 +24,7 @@ function SpaceInner(): JSX.Element {
   const [plans, setPlans] = useState<PlanView[]>([]);
   const [pendingRelinks, setPendingRelinks] = useState(0);
   // A key, not text: the message is looked up at render time, so it follows the header language select.
-  const [error, setError] = useState<'forbidden' | 'gone' | 'cantReach' | 'regenerateFailed' | null>(null);
+  const [error, setError] = useState<SpaceError | null>(null);
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
   const now = new Date();
@@ -71,12 +72,16 @@ function SpaceInner(): JSX.Element {
   const empty = roster !== null && roster.learners.length === 0;
   const latestPlan = latestPublished(plans);
   const readout = latestPlan && roster ? new Map(planReadout(latestPlan.id, roster.learners).map((r) => [r.learnerId, r])) : null;
+  // Taught jamo stay outside the message (§3.4 rule 5): the sentence is split around them and the page marks them Korean.
+  const weekRevisit = aroundSlot(c.space.week.revisit);
+  const learnerRevisit = aroundSlot(c.space.learner.revisit);
+  const jamo = (items: readonly string[]): JSX.Element => <span lang="ko">{items.join(' · ')}</span>;
 
   return (
     <ConsoleShell onSignOut={signOut} title={roster ? c.space.title[roster.space.kind](roster.space.name, roster.learners.length) : c.space.loading}>
       {error ? (
         <div style={panelStyle}>
-          <p style={{ margin: 0 }}>{error === 'cantReach' ? c.cantReach : c.space[error]}</p>
+          <p style={{ margin: 0 }}>{spaceErrorText(error, locale)}</p>
           <Button onClick={() => void load()}>{c.tryAgain}</Button>
         </div>
       ) : null}
@@ -112,7 +117,13 @@ function SpaceInner(): JSX.Element {
               <ul style={{ margin: 0, paddingLeft: spacing.lg, color: colors.text.secondary, lineHeight: typography.leading.relaxed }}>
                 <li>{c.space.week.practiced(rollup.practicedThisWeek, rollup.students)}</li>
                 <li>{c.space.week.anchor(percent(rollup.anchorAccuracy))}</li>
-                {rollup.revisit.length ? <li>{c.space.week.revisit(rollup.revisit.join(' · '))}</li> : null}
+                {rollup.revisit.length ? (
+                  <li>
+                    {weekRevisit.before}
+                    {jamo(rollup.revisit)}
+                    {weekRevisit.after}
+                  </li>
+                ) : null}
                 {rollup.notSynced ? <li>{c.space.week.notSynced(rollup.notSynced)}</li> : null}
               </ul>
             </section>
@@ -120,7 +131,7 @@ function SpaceInner(): JSX.Element {
 
           <div style={{ display: 'flex', gap: spacing.sm, marginBottom: spacing.lg, flexWrap: 'wrap', alignItems: 'center' }}>
             <Link href={ROUTES.spacePlan(spaceId)}>
-              <Button tone="primary">{latestPlan ? c.space.openPlan.cta(latestPlan.title) : c.planThisWeek}</Button>
+              <Button tone="primary">{latestPlan ? c.space.openPlan.label(latestPlan.title) : c.planThisWeek}</Button>
             </Link>
             <Link href={ROUTES.spaceRelink(spaceId)}>
               <Button>{pendingRelinks > 0 ? c.space.relinkPending.cta(pendingRelinks) : c.space.relinkRequests.cta}</Button>
@@ -152,7 +163,13 @@ function SpaceInner(): JSX.Element {
                         <div>{c.space.learner.lastActive(relativeDay(l.summary.lastActiveAt, now, locale))}</div>
                         <div>{c.space.learner.questsCards(l.summary.stage1.questsDone, l.summary.stage1.questsTotal, l.summary.cardsUnlocked)}</div>
                         <div>{c.space.learner.minutesThisWeek(l.summary.minutesLast7d)}</div>
-                        {l.summary.needsPractice.length ? <div>{c.space.learner.revisit(l.summary.needsPractice.join(' · '))}</div> : null}
+                        {l.summary.needsPractice.length ? (
+                          <div>
+                            {learnerRevisit.before}
+                            {jamo(l.summary.needsPractice)}
+                            {learnerRevisit.after}
+                          </div>
+                        ) : null}
                         {latestPlan && readout ? <div>{c.space.learner.planReadout(latestPlan.title, readoutLine(readout.get(l.id) as NonNullable<ReturnType<typeof readout.get>>))}</div> : null}
                       </div>
                     ) : (

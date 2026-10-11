@@ -51,4 +51,19 @@ export function decideFailureNote(result: { error: ApiError; code?: string }, lo
   return words.failed;
 }
 
+/** What the re-link page last did; kept as data and worded at render time, so it follows the header language select. */
+export type RelinkNote =
+  | { kind: 'approved' | 'denied'; name: string }
+  | { kind: 'decideFailed'; result: { error: ApiError; code?: string } }
+  | { kind: 'issueFailed' };
+
+/** The words for a `RelinkNote`, in `locale`. */
+export function relinkNoteText(note: RelinkNote, locale: UiLocale = DEFAULT_LOCALE): string {
+  const words = getMessages(locale).console.relink;
+  if (note.kind === 'approved') return words.approved(note.name);
+  if (note.kind === 'denied') return words.denied(note.name);
+  if (note.kind === 'decideFailed') return decideFailureNote(note.result, locale);
+  return words.issueFailed;
+}
+
 export const RELINK_REFRESH_MS = 10_000;

@@ -214,6 +214,15 @@ describe('length budgets (F-I18N-001 §3.11)', () => {
     }
   });
 
+  it('budgets the fixed words of the plan button, which also holds a user-entered title', () => {
+    // `console.space.openPlan.label` is not a `cta` leaf because the plan title is user data;
+    // its own words leave room for a short title inside the cta budget, and the button wraps.
+    for (const locale of LOCALES) {
+      const fixed = getMessages(locale).console.space.openPlan.label('');
+      expect(fixed.length, `${locale}: ${fixed}`).toBeLessThanOrEqual((BUDGETS.cta ?? 28) - 10);
+    }
+  });
+
   it('covers the console page buttons (PR 10a)', () => {
     const paths = leafPaths(getMessages('en')).filter((p) => BUDGETS[p.split('.').pop() ?? ''] !== undefined);
     for (const expected of [
@@ -233,7 +242,6 @@ describe('length budgets (F-I18N-001 §3.11)', () => {
       'console.home.newSpace.cta',
       'console.space.regenerate.cta',
       'console.space.createCode.cta',
-      'console.space.openPlan.cta',
       'console.space.relinkRequests.cta',
       'console.space.relinkPending.cta',
       'console.space.settings.cta',

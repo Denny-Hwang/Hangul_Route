@@ -131,9 +131,11 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.space.regenerateAsk': [['Class A']],
   'console.space.week.practiced': [[1, 3]],
   'console.space.week.anchor': [['82%']],
+  // The two `revisit` arguments are taught jamo the page renders outside the message (lang="ko");
+  // Latin stand-ins keep the en/es no-Hangul check about the message text itself.
   'console.space.week.revisit': [['a · b']],
   'console.space.week.notSynced': [[2]],
-  'console.space.openPlan.cta': [['Week 1']],
+  'console.space.openPlan.label': [['Week 1']],
   'console.space.relinkPending.cta': [[1], [2]],
   'console.space.learner.lastActive': [['yesterday']],
   'console.space.learner.questsCards': [[3, 24, 1]],

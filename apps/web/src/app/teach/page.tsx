@@ -25,7 +25,8 @@ export default function SignInPage(): JSX.Element {
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  // A key, not text: worded at render time, so it follows the header language select.
+  const [message, setMessage] = useState<'cantReach' | null>(null);
   const devAuth = devAuthEnabled();
   const endpoint = apiBaseUrl();
 
@@ -43,7 +44,7 @@ export default function SignInPage(): JSX.Element {
     const spaces = await api.listSpaces();
     setBusy(false);
     if (!spaces.ok) {
-      setMessage(c.cantReach);
+      setMessage('cantReach');
       return;
     }
     auth.devSignIn({ token: id, accountId: id, displayName: name, email: email.trim() || undefined });
@@ -81,7 +82,7 @@ export default function SignInPage(): JSX.Element {
               <Button type="submit" tone="primary" disabled={busy || !accountId.trim() || !displayName.trim()} testId="sign-in">
                 {busy ? c.signIn.submitting.cta : c.signIn.submit.cta}
               </Button>
-              {message ? <Muted>{message}</Muted> : null}
+              {message ? <Muted>{c[message]}</Muted> : null}
             </form>
           ) : (
             <>

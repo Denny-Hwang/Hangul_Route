@@ -147,6 +147,7 @@ export const consoleMsgs = {
   /** A class or family roster (`/teach/space`). */
   space: {
     loading: 'Loading…',
+    // TODO(F-I18N-001 §10, console counts): route these counts through `plural()` once console text may change (§3.4 rule 1 keeps "1 learners" for now).
     title: {
       family: (space: string, count: number) => `${space} · ${count} learners`,
       class: (space: string, count: number) => `${space} · ${count} students`,
@@ -162,15 +163,21 @@ export const consoleMsgs = {
     regenerate: { cta: 'Regenerate' },
     createCode: { cta: 'Create a code' },
     upgrade: 'Upgrade',
-    /** The class roll-up (`classRollup`); the accuracy arrives formatted, the jamo joined. */
+    /**
+     * The class roll-up (`classRollup`); the accuracy arrives formatted, the jamo joined.
+     * `revisit` takes taught Korean: the page splits it with `aroundSlot` and renders the jamo
+     * itself, marked `lang="ko"`, so the message never holds the Korean (§3.4 rule 5, §3.5).
+     */
     week: {
       title: 'This week',
       practiced: (practiced: number, students: number) => `${practiced} of ${students} practiced this week`,
       anchor: (accuracy: string) => `Stage 1 anchor: ${accuracy}`,
       revisit: (jamo: string) => `Jamo to revisit together: ${jamo}`,
+      // TODO(F-I18N-001 §10, console counts): `plural()` once console text may change ("1 haven't synced").
       notSynced: (count: number) => `${count} haven't synced in a week`,
     },
-    openPlan: { cta: (plan: string) => `Plan: ${plan}` },
+    /** The latest plan's button. Holds a user-entered plan title, so it is not a budgeted `cta`; its fixed words are budgeted in length-budget.test.ts and the button wraps. */
+    openPlan: { label: (plan: string) => `Plan: ${plan}` },
     relinkRequests: { cta: 'Re-link requests' },
     relinkPending: {
       cta: (count: number) => plural('en', count, { one: `${count} re-link request`, other: `${count} re-link requests` }),
@@ -178,9 +185,14 @@ export const consoleMsgs = {
     settings: { cta: 'Settings' },
     studentsLabel: 'Students',
     recentFirst: 'Most recent activity first',
-    /** One student card; the day words come from `relativeDay`, the readout from `readoutLine`. */
+    /**
+     * One student card; the day words come from `relativeDay`, the readout from `readoutLine`
+     * (still English until plans.ts moves in PR 10b). `revisit` takes taught Korean, rendered
+     * by the page through `aroundSlot` like `week.revisit`.
+     */
     learner: {
       lastActive: (when: string) => `Last active ${when}`,
+      // TODO(F-I18N-001 §10, console counts): `plural()` once console text may change ("1 cards").
       questsCards: (done: number, total: number, cards: number) => `Quests ${done} / ${total} · ${cards} cards`,
       minutesThisWeek: (minutes: number) => `${minutes} min this week`,
       revisit: (jamo: string) => `Revisit: ${jamo}`,
@@ -198,7 +210,7 @@ export const consoleMsgs = {
     /** Followed by `oldCodeStops` in the confirm dialog. */
     issueAsk: (name: string) => `Issue a new rescue code for ${name}?`,
     issueFailed: "Couldn't issue a code right now.",
-    /** The page shows the name in bold (`aroundSlot`), so a translation may put it anywhere. */
+    /** The page shows the name in bold (`aroundSlot`), so a translation may put it anywhere, exactly once. */
     askingToBe: (name: string) => `Someone is asking to be ${name}`,
     /** When the request names no platform. */
     device: 'device',

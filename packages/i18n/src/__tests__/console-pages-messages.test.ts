@@ -1,6 +1,9 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { LOCALES } from '../locales';
 import { en } from '../messages/en';
-import { getMessages } from '../resolve';
+import { PSEUDO_LOCALE } from '../pseudo';
+import { getMessages, type MessageLocale } from '../resolve';
+import type { Messages } from '../types';
 
 // F-I18N-001 PR 10a: the console pages (sign-in, start, home, space, relink) and the shell read
 // the dictionary. English is the source and must render exactly what the pages hard-coded
@@ -123,7 +126,7 @@ describe('space page (teach/space/page.tsx)', () => {
   });
 
   it('keeps the action row, with a plural for pending re-link requests', () => {
-    expect(s.openPlan.cta('Week 1')).toBe('Plan: Week 1');
+    expect(s.openPlan.label('Week 1')).toBe('Plan: Week 1');
     expect(s.relinkRequests.cta).toBe('Re-link requests');
     expect(s.relinkPending.cta(1)).toBe('1 re-link request');
     expect(s.relinkPending.cta(2)).toBe('2 re-link requests');
@@ -186,6 +189,35 @@ describe('fragments retired by whole-sentence messages', () => {
   it('drops the COPY fragments the space page used to glue around a number', () => {
     for (const key of ['practicedThisWeek', 'anchor', 'revisitTogether', 'notSyncedWeek']) {
       expect(Object.keys(en.console)).not.toContain(key);
+    }
+  });
+});
+
+// The pages split these messages around their argument (`aroundSlot`, apps/web/src/lib/i18n/slot.ts)
+// to style it: a bold name, or taught jamo marked lang="ko". The split needs the argument exactly
+// once, unchanged, in every locale, including the pseudo-locale wrapper.
+const SLOTTED: readonly [string, (m: Messages) => (value: string) => string][] = [
+  ['console.relink.askingToBe', (m) => m.console.relink.askingToBe],
+  ['console.space.week.revisit', (m) => m.console.space.week.revisit],
+  ['console.space.learner.revisit', (m) => m.console.space.learner.revisit],
+];
+
+describe('messages split around their argument (aroundSlot)', () => {
+  const SENTINEL = '\u0000';
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('use the argument exactly once in every locale and in en-XA', () => {
+    vi.stubEnv('NEXT_PUBLIC_PSEUDO_LOCALE', '1');
+    const locales: readonly MessageLocale[] = [...LOCALES, PSEUDO_LOCALE];
+    for (const locale of locales) {
+      const messages = getMessages(locale);
+      if (locale === PSEUDO_LOCALE) expect(messages.console.shell.home).toMatch(/^\[/);
+      for (const [path, pick] of SLOTTED) {
+        const out = pick(messages)(SENTINEL);
+        expect(out.split(SENTINEL).length - 1, `${locale}:${path}`).toBe(1);
+      }
     }
   });
 });

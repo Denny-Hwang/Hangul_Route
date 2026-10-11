@@ -78,6 +78,15 @@ export function statusLine(item: SpaceListItem, locale: UiLocale = DEFAULT_LOCAL
   return counts.classes(item.counts.classes);
 }
 
+/** Why the roster page could not show a space; a key, worded at render time so it follows the header language select. */
+export type SpaceError = 'forbidden' | 'gone' | 'cantReach' | 'regenerateFailed';
+
+/** The words for a `SpaceError`, in `locale`. */
+export function spaceErrorText(error: SpaceError, locale: UiLocale = DEFAULT_LOCALE): string {
+  const c = getMessages(locale).console;
+  return error === 'cantReach' ? c.cantReach : c.space[error];
+}
+
 /** What a space's members are called ("students", "learners", "members"), in `locale`. */
 export function memberNoun(kind: SpaceKind, locale: UiLocale = DEFAULT_LOCALE): string {
   return getMessages(locale).console.kind.members[kind];

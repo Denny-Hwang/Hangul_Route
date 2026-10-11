@@ -22,7 +22,8 @@ function StartInner(): JSX.Element {
   const [name, setName] = useState('');
   const [step, setStep] = useState<Step>({ at: 'role' });
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  // A key, not text: worded at render time, so it follows the header language select.
+  const [message, setMessage] = useState<'signInAgain' | 'createFailed' | null>(null);
   const [copied, setCopied] = useState(false);
 
   if (!ready || !session) return <ConsoleShell>{null}</ConsoleShell>;
@@ -34,7 +35,7 @@ function StartInner(): JSX.Element {
     const result = await api.createSpace({ kind: step.kind, name: name.trim(), email: session.email, displayName: session.displayName });
     setBusy(false);
     if (!result.ok) {
-      setMessage(result.error === 'unauthorized' ? c.start.signInAgain : c.start.createFailed);
+      setMessage(result.error === 'unauthorized' ? 'signInAgain' : 'createFailed');
       return;
     }
     if (step.kind === 'class' && result.data.joinCode) {
@@ -115,7 +116,7 @@ function StartInner(): JSX.Element {
               </Button>
               <Button onClick={() => setStep({ at: 'role' })}>{c.start.back.cta}</Button>
             </div>
-            {message ? <Muted>{message}</Muted> : null}
+            {message ? <Muted>{c.start[message]}</Muted> : null}
           </form>
         ) : (
           <>

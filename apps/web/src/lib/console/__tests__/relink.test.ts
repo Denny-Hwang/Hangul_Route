@@ -1,6 +1,6 @@
-import { getMessages } from '@hangul-route/i18n';
-import { describe, expect, it } from 'vitest';
-import { canDeleteLearnerData, canReissueRescueCode, decideFailureNote, expiresLabel, minutesLeft, requestedLabel } from '../relink';
+import { getMessages, type UiLocale } from '@hangul-route/i18n';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { canDeleteLearnerData, canReissueRescueCode, decideFailureNote, expiresLabel, minutesLeft, relinkNoteText, requestedLabel } from '../relink';
 
 const now = new Date('2026-09-21T12:00:00.000Z');
 
@@ -48,5 +48,36 @@ describe('relink helpers (F-TCH-001 §10)', () => {
       expect(decideFailureNote({ error: 'unknown', code: 'expired' }, locale)).toBe(r.closed);
       expect(decideFailureNote({ error: 'network' }, locale)).toBe(r.failed);
     }
+  });
+});
+
+describe('relink notes and labels follow the locale they are given (F-I18N-001 PR 10a)', () => {
+  // es and ko have no console keys yet; the pseudo-locale is the one whose words differ.
+  const PSEUDO = 'en-XA' as UiLocale;
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('words each note kind', () => {
+    expect(relinkNoteText({ kind: 'approved', name: 'Mina' })).toBe('Mina can open their new device now.');
+    expect(relinkNoteText({ kind: 'denied', name: 'Mina' })).toBe('Closed. Mina\'s device will say "ask your teacher".');
+    expect(relinkNoteText({ kind: 'decideFailed', result: { error: 'unknown', code: 'expired' } })).toBe('This request already closed — the learner can ask again.');
+    expect(relinkNoteText({ kind: 'decideFailed', result: { error: 'unknown', code: 'not_a_member' } })).toBe("Didn't go through. Try again.");
+    expect(relinkNoteText({ kind: 'issueFailed' })).toBe("Couldn't issue a code right now.");
+  });
+
+  it('reads the pseudo-locale when given it', () => {
+    vi.stubEnv('NEXT_PUBLIC_PSEUDO_LOCALE', '1');
+    const bracketed = /^\[.*\]$/;
+    expect(relinkNoteText({ kind: 'approved', name: 'Mina' }, PSEUDO)).toMatch(bracketed);
+    expect(relinkNoteText({ kind: 'approved', name: 'Mina' }, PSEUDO)).toContain('Míñá');
+    expect(relinkNoteText({ kind: 'denied', name: 'Mina' }, PSEUDO)).toMatch(bracketed);
+    expect(relinkNoteText({ kind: 'decideFailed', result: { error: 'unknown', code: 'expired' } }, PSEUDO)).toMatch(bracketed);
+    expect(relinkNoteText({ kind: 'decideFailed', result: { error: 'network' } }, PSEUDO)).toMatch(bracketed);
+    expect(relinkNoteText({ kind: 'issueFailed' }, PSEUDO)).toMatch(bracketed);
+    expect(expiresLabel('2026-09-21T12:08:30.000Z', now, PSEUDO)).toMatch(bracketed);
+    expect(expiresLabel('garbage', now, PSEUDO)).toMatch(bracketed);
+    expect(requestedLabel('2026-09-21T11:59:40.000Z', now, PSEUDO)).toMatch(bracketed);
+    expect(requestedLabel('2026-09-21T11:57:10.000Z', now, PSEUDO)).toMatch(bracketed);
   });
 });

@@ -6,13 +6,10 @@ import { useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useState } from 'react';
 import { Button, ConsoleShell, Muted, Notice, panelStyle } from '@/components/console/ui';
 import { useConsole } from '@/components/console/use-console';
-import type { ApiError, RelinkView, Roster } from '@/lib/console/api';
-import { RELINK_REFRESH_MS, canReissueRescueCode, decideFailureNote, expiresLabel, requestedLabel } from '@/lib/console/relink';
+import type { RelinkView, Roster } from '@/lib/console/api';
+import { RELINK_REFRESH_MS, type RelinkNote, canReissueRescueCode, expiresLabel, relinkNoteText, requestedLabel } from '@/lib/console/relink';
 import { ROUTES, spaceIdFrom } from '@/lib/console/routing';
 import { aroundSlot } from '@/lib/i18n/slot';
-
-/** What the page last did; worded at render time, so it follows the header language select. */
-type Note = { kind: 'approved' | 'denied'; name: string } | { kind: 'decideFailed'; result: { error: ApiError; code?: string } } | { kind: 'issueFailed' };
 
 /** console/relink-approval — F-TCH-001 §10.1. Identity and timing only; no progress numbers. */
 function RelinkInner(): JSX.Element {
@@ -22,7 +19,8 @@ function RelinkInner(): JSX.Element {
   const [roster, setRoster] = useState<Roster | null>(null);
   const [requests, setRequests] = useState<RelinkView[] | null>(null);
   const [failed, setFailed] = useState(false);
-  const [note, setNote] = useState<Note | null>(null);
+  // Data, not text: worded at render time (`relinkNoteText`), so it follows the header language select.
+  const [note, setNote] = useState<RelinkNote | null>(null);
   const [busy, setBusy] = useState(false);
   const [pick, setPick] = useState('');
   const [issued, setIssued] = useState<{ name: string; code: string } | null>(null);
@@ -76,14 +74,6 @@ function RelinkInner(): JSX.Element {
     setIssued({ name: learner.displayName, code: result.data.code });
   };
 
-  const noteText = (n: Note): string =>
-    n.kind === 'approved'
-      ? c.relink.approved(n.name)
-      : n.kind === 'denied'
-        ? c.relink.denied(n.name)
-        : n.kind === 'decideFailed'
-          ? decideFailureNote(n.result, locale)
-          : c.relink.issueFailed;
   const asking = aroundSlot(c.relink.askingToBe);
 
   return (
@@ -97,7 +87,7 @@ function RelinkInner(): JSX.Element {
           <Button onClick={() => void load()}>{c.tryAgain}</Button>
         </div>
       ) : null}
-      {note ? <Notice tone="success">{noteText(note)}</Notice> : null}
+      {note ? <Notice tone="success">{relinkNoteText(note, locale)}</Notice> : null}
 
       {requests && requests.length === 0 ? (
         <div style={{ ...panelStyle, marginBottom: spacing.lg }}>
