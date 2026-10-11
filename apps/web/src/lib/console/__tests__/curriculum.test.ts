@@ -513,11 +513,19 @@ describe('re-pace from today (console mode shift, section 3.7)', () => {
     return { id: 'plan:route', meta: toMeta(draft), items: toPlanItems(draft) };
   }
 
-  it('offers Refresh route on every route saved from catalogue version 1 (F-QUEST-002 Q-6a bumps it to 2)', () => {
-    expect(CATALOG.version).toBe(2);
+  it('offers Refresh route on every route saved from catalogue version 1 or 2 (F-QUEST-002 Q-6a bumps it to 2, Q-6b to 3)', () => {
+    expect(CATALOG.version).toBe(3);
     expect(v1Plan('brand-new').meta.catalogVersion).toBe(1);
     expect(isStaleCatalog(v1Plan('brand-new').meta)).toBe(true);
     expect(isStaleCatalog(v1Plan('some-letters').meta)).toBe(true);
+    // A route saved between Q-6a and Q-6b (version 2, before life q3 joined) asks once too.
+    expect(isStaleCatalog({ ...v1Plan('brand-new').meta, catalogVersion: 2 })).toBe(true);
+  });
+
+  it('a new route on the shipped catalogue can schedule the new Picnic Snacks quest after life q1-q2', () => {
+    const ids = classPlan({ start: 'brand-new' }).items.map((item) => item.id);
+    const life = ids.filter((id) => id.startsWith('quest:stage1-life-'));
+    expect(life).toEqual(['quest:stage1-life-q1', 'quest:stage1-life-q2', 'quest:stage1-life-q3']);
   });
 
   it('a refresh of a version-1 route keeps its past items and every letters quest it assigned, even where the level now places them out', () => {
