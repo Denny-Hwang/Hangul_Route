@@ -9,7 +9,7 @@ import { onboardChild, readStored, seedStored } from './helpers';
  * Part 2 (PR 5a, §3.7): the split-pane Journey. A wide, not-short window
  * (>= 900 wide, >= 480 high) shows the grid left and the selected cell's page
  * right; every narrower window navigates on a tap, as before. The portrait
- * guard and the Library pane are later PRs of the spec.
+ * guard is a later PR of the spec.
  * PR 2b: the tab row is centred inside `maxWidth.full` and the PWA banners
  * and install guide sit in a centred `maxWidth.reading` column above the tab
  * bar.
@@ -267,7 +267,9 @@ test('install guide sheet is a centred reading column above the tab bar at 1180x
   expect(sheet.y + sheet.height).toBeLessThanOrEqual(tabBar!.y);
 });
 
-// --- Part 3: the Library pane and card columns (PR 5b) ---
+// --- Part 3: the Library pane and card columns (PR 5b, §3.6) ---
+// Regular windows and the 400 master pane: a 3-column gallery; a wide window shows the selected card's
+// page right. Phones and short windows: the 2-column gallery as before.
 
 /** Cold start of a learner who has earned Book, then Paper Folding, then Kimchi (the latest), on the Library tab. */
 async function openLibrary(page: Page): Promise<void> {
