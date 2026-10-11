@@ -1,0 +1,17 @@
+{
+  "description": "A topic file that is not JSON fails.",
+  "ops": [
+    {
+      "op": "put",
+      "file": "vocab/animals.json",
+      "value": "{ nope"
+    }
+  ],
+  "expect": [
+    {
+      "rule": "vocab-schema",
+      "file": "vocab/animals.json",
+      "includes": "JSON"
+    }
+  ]
+}

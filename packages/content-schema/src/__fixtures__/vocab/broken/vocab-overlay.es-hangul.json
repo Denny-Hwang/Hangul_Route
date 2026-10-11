@@ -1,0 +1,19 @@
+{
+  "description": "Hangul in a Spanish overlay value fails.",
+  "ops": [
+    {
+      "op": "set",
+      "file": "i18n/es/vocab-food.json",
+      "path": "entries.vocab:sagwa.gloss",
+      "value": "manzana 사과"
+    }
+  ],
+  "expect": [
+    {
+      "rule": "vocab-overlay",
+      "file": "i18n/es/vocab-food.json",
+      "id": "vocab:sagwa",
+      "includes": "korean-in-ui-field"
+    }
+  ]
+}

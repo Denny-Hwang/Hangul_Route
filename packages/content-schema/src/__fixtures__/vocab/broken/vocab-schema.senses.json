@@ -1,0 +1,17 @@
+{
+  "description": "A sense member with an unknown state fails the registry schema.",
+  "ops": [
+    {
+      "op": "set",
+      "file": "vocab/_senses.json",
+      "path": "groups.0.members.0.state",
+      "value": "maybe"
+    }
+  ],
+  "expect": [
+    {
+      "rule": "vocab-schema",
+      "file": "vocab/_senses.json"
+    }
+  ]
+}

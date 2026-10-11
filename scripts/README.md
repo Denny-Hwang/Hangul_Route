@@ -13,6 +13,7 @@
 | `check-token-drift.mjs` | F-DES-001 | `.github/workflows/design-token-sync.yml` | `design/tokens/*.v*.md` ↔ `packages/design-system/src/tokens.ts` |
 | `check-i18n.mjs` | F-I18N-001 | `.github/workflows/ci.yml` | `docs/specs/F-I18N-001-ui-locales.md` §3.11; ratchet lists in `scripts/i18n-migrated.json` (`globs`: migrated surfaces; `pluralTernaryBaseline`: legacy plural ternaries per file, only ever lowered) |
 | `check-coverage-targets-drift.mjs` | F-COV-002 | `.github/workflows/coverage-gate.yml` | `docs/tests/coverage-targets.md` "Enforced W4 gate" 표 ↔ `docs/tests/coverage-targets.json` |
+| `build-vocab.mjs` | F-VOC-001 | `.github/workflows/content-validation.yml` | `content/vocab/<topic>.json` + `content/i18n/{es,ko}/vocab-*.json` glosses → `apps/mobile/src/content/__generated__/vocab.ts` and `apps/web/src/data/vocab-catalog.ts`; `--check` fails on drift (`pnpm run vocab:check`) |
 | `build-stories.mjs` | F-STORY-001 | `.github/workflows/content-validation.yml` | `content/stories/*.json` (ready stories) → `apps/mobile/src/content/stories.generated.ts`; `--check` fails on drift, `--report` fails over the bundle budget |
 
 Run locally:
@@ -26,6 +27,8 @@ node scripts/check-i18n.mjs
 node scripts/build-stories.mjs            # regenerate the story bundle
 node scripts/build-stories.mjs --check    # drift detector (CI)
 node scripts/build-stories.mjs --report   # sizes and budget (CI)
+node scripts/build-vocab.mjs              # regenerate the vocabulary modules
+node scripts/build-vocab.mjs --check      # drift detector (CI)
 ```
 
 각 스크립트는 (a) gate 충족, 또는 (b) 검사할 데이터가 아직 없을 때 (커버리지 리포트 부재 / `content/*.json` 부재 / 토큰 MD 부재) **exit 0** 으로 통과하고, 그 외에는 `::error::` annotation 과 함께 **exit 1** 로 실패한다.

@@ -1,0 +1,20 @@
+{
+  "description": "An item whose topics[0] is another topic fails.",
+  "ops": [
+    {
+      "op": "set",
+      "file": "vocab/food.json",
+      "path": "items.2.topics",
+      "value": [
+        "animals"
+      ]
+    }
+  ],
+  "expect": [
+    {
+      "rule": "vocab-file-topic",
+      "file": "vocab/food.json",
+      "id": "vocab:ppang"
+    }
+  ]
+}

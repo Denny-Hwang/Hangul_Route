@@ -1,0 +1,18 @@
+{
+  "description": "A visual that is not card:/word: fails.",
+  "ops": [
+    {
+      "op": "set",
+      "file": "vocab/food.json",
+      "path": "items.0.visual",
+      "value": "emoji:apple"
+    }
+  ],
+  "expect": [
+    {
+      "rule": "vocab-visual-grammar",
+      "file": "vocab/food.json",
+      "id": "vocab:sagwa"
+    }
+  ]
+}

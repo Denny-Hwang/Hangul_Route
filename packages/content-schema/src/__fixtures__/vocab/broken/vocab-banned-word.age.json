@@ -1,0 +1,18 @@
+{
+  "description": "An age word in topic copy fails.",
+  "ops": [
+    {
+      "op": "set",
+      "file": "vocab/food.json",
+      "path": "topic.blurbEn",
+      "value": "Words for kids."
+    }
+  ],
+  "expect": [
+    {
+      "rule": "vocab-banned-word",
+      "file": "vocab/food.json",
+      "includes": "kids"
+    }
+  ]
+}

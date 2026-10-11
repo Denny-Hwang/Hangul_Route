@@ -1,0 +1,31 @@
+{
+  "description": "Two items with the same ko and no shared sense group fail, naming both ids.",
+  "ops": [
+    {
+      "op": "set",
+      "file": "vocab/food.json",
+      "path": "items.1.id",
+      "value": "vocab:sagwa-fruit"
+    },
+    {
+      "op": "set",
+      "file": "vocab/food.json",
+      "path": "items.1.ko",
+      "value": "사과"
+    },
+    {
+      "op": "set",
+      "file": "vocab/food.json",
+      "path": "items.1.romanization",
+      "value": "sagwa"
+    }
+  ],
+  "expect": [
+    {
+      "rule": "vocab-duplicate-ko",
+      "file": "vocab/food.json",
+      "id": "vocab:sagwa-fruit",
+      "includes": "vocab:sagwa"
+    }
+  ]
+}

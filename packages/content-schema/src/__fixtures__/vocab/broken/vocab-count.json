@@ -1,0 +1,17 @@
+{
+  "description": "A launch topic with 11 items fails.",
+  "ops": [
+    {
+      "op": "delete",
+      "file": "vocab/food.json",
+      "path": "items.11"
+    }
+  ],
+  "expect": [
+    {
+      "rule": "vocab-count",
+      "file": "vocab/food.json",
+      "includes": "11"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "description": "The file name must be <topic.key>.json.",
+  "ops": [
+    {
+      "op": "rename",
+      "file": "vocab/food.json",
+      "to": "vocab/animals.json"
+    }
+  ],
+  "expect": [
+    {
+      "rule": "vocab-file-topic",
+      "file": "vocab/animals.json",
+      "includes": "food.json"
+    }
+  ]
+}

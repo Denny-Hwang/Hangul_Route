@@ -1,0 +1,16 @@
+{
+  "locale": "es",
+  "domain": "vocab-food",
+  "entries": {
+    "vocab-topic:food": {
+      "title": "Comida",
+      "blurb": "Palabras para lo que comemos."
+    },
+    "vocab:sagwa": {
+      "gloss": "manzana"
+    },
+    "vocab:uyu": {
+      "gloss": "leche"
+    }
+  }
+}

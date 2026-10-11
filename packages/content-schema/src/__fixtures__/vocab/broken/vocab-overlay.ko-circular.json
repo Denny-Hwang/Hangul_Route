@@ -1,0 +1,19 @@
+{
+  "description": "A Korean gloss equal to the taught word fails.",
+  "ops": [
+    {
+      "op": "set",
+      "file": "i18n/ko/vocab-food.json",
+      "path": "entries.vocab:sagwa.gloss",
+      "value": "사과"
+    }
+  ],
+  "expect": [
+    {
+      "rule": "vocab-overlay",
+      "file": "i18n/ko/vocab-food.json",
+      "id": "vocab:sagwa",
+      "includes": "overlay-circular-gloss"
+    }
+  ]
+}

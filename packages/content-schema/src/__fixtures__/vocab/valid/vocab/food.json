@@ -1,0 +1,156 @@
+{
+  "schemaVersion": 1,
+  "topic": {
+    "id": "vocab-topic:food",
+    "key": "food",
+    "order": 1,
+    "titleEn": "Food",
+    "titleKo": {
+      "ko": "음식",
+      "romanization": "eumsik",
+      "en": "food"
+    },
+    "blurbEn": "Words for what we eat.",
+    "hoyaIntroEn": "Hungry? Let us name some tasty things.",
+    "tint": "theme.life",
+    "coverItemId": "vocab:sagwa",
+    "status": "draft",
+    "fixedOrder": false
+  },
+  "items": [
+    {
+      "id": "vocab:sagwa",
+      "ko": "사과",
+      "romanization": "sagwa",
+      "en": "apple",
+      "topics": [
+        "food"
+      ],
+      "level": 1,
+      "visual": "card:sagwa"
+    },
+    {
+      "id": "vocab:uyu",
+      "ko": "우유",
+      "romanization": "uyu",
+      "en": "milk",
+      "topics": [
+        "food"
+      ],
+      "level": 1,
+      "visual": "card:uyu"
+    },
+    {
+      "id": "vocab:ppang",
+      "ko": "빵",
+      "romanization": "ppang",
+      "en": "bread",
+      "topics": [
+        "food"
+      ],
+      "level": 1,
+      "visual": "card:ppang"
+    },
+    {
+      "id": "vocab:bap",
+      "ko": "밥",
+      "romanization": "bap",
+      "en": "rice",
+      "topics": [
+        "food"
+      ],
+      "level": 1,
+      "visual": "card:bap"
+    },
+    {
+      "id": "vocab:mul",
+      "ko": "물",
+      "romanization": "mul",
+      "en": "water",
+      "topics": [
+        "food"
+      ],
+      "level": 1,
+      "visual": "word:water"
+    },
+    {
+      "id": "vocab:gimchi",
+      "ko": "김치",
+      "romanization": "gimchi",
+      "en": "kimchi",
+      "topics": [
+        "food"
+      ],
+      "level": 1,
+      "visual": "card:gimchi"
+    },
+    {
+      "id": "vocab:tteok",
+      "ko": "떡",
+      "romanization": "tteok",
+      "en": "rice cake",
+      "topics": [
+        "food"
+      ],
+      "level": 1,
+      "visual": "word:rice-cake"
+    },
+    {
+      "id": "vocab:gogi",
+      "ko": "고기",
+      "romanization": "gogi",
+      "en": "meat",
+      "topics": [
+        "food"
+      ],
+      "level": 1,
+      "visual": "word:meat"
+    },
+    {
+      "id": "vocab:guk",
+      "ko": "국",
+      "romanization": "guk",
+      "en": "soup",
+      "topics": [
+        "food"
+      ],
+      "level": 1,
+      "visual": "word:soup"
+    },
+    {
+      "id": "vocab:cha",
+      "ko": "차",
+      "romanization": "cha",
+      "en": "tea",
+      "topics": [
+        "food"
+      ],
+      "level": 1,
+      "visual": "word:tea"
+    },
+    {
+      "id": "vocab:bae-pear",
+      "ko": "배",
+      "romanization": "bae",
+      "en": "pear",
+      "topics": [
+        "food"
+      ],
+      "level": 1,
+      "visual": "word:pear",
+      "senseNote": "Also the word for a boat.",
+      "senseGroup": "bae"
+    },
+    {
+      "id": "vocab:dalgyal",
+      "ko": "달걀",
+      "romanization": "dalgyal",
+      "en": "egg",
+      "topics": [
+        "food"
+      ],
+      "level": 1,
+      "visual": "word:egg"
+    }
+  ]
+}

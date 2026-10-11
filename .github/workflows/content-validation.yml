@@ -8,6 +8,9 @@ on:
       - "packages/content-schema/**"
       - "scripts/build-stories.mjs"
       - "apps/mobile/src/content/stories.generated.ts"
+      - "scripts/build-vocab.mjs"
+      - "apps/mobile/src/content/__generated__/vocab.ts"
+      - "apps/web/src/data/vocab-catalog.ts"
 
 concurrency:
   group: content-validation-${{ github.ref }}
@@ -40,6 +43,9 @@ jobs:
 
       - name: Validate language policy (F-CNT-001)
         run: node scripts/validate-content.mjs
+
+      - name: Vocabulary modules are up to date (F-VOC-001)
+        run: pnpm run vocab:check
 
       - name: Story bundle is up to date (F-STORY-001)
         run: node scripts/build-stories.mjs --check

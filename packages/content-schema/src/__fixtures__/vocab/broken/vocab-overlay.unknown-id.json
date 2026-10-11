@@ -1,0 +1,21 @@
+{
+  "description": "An overlay entry for an id that is in no vocabulary file fails.",
+  "ops": [
+    {
+      "op": "set",
+      "file": "i18n/es/vocab-food.json",
+      "path": "entries.vocab:nope",
+      "value": {
+        "gloss": "nada"
+      }
+    }
+  ],
+  "expect": [
+    {
+      "rule": "vocab-overlay",
+      "file": "i18n/es/vocab-food.json",
+      "id": "vocab:nope",
+      "includes": "overlay-unknown-id"
+    }
+  ]
+}

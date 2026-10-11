@@ -1,0 +1,18 @@
+{
+  "description": "A cover item that is not in the file fails the file schema.",
+  "ops": [
+    {
+      "op": "set",
+      "file": "vocab/food.json",
+      "path": "topic.coverItemId",
+      "value": "vocab:nope"
+    }
+  ],
+  "expect": [
+    {
+      "rule": "vocab-schema",
+      "file": "vocab/food.json",
+      "includes": "coverItemId"
+    }
+  ]
+}

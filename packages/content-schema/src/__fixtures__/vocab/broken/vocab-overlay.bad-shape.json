@@ -1,0 +1,18 @@
+{
+  "description": "An overlay whose locale differs from its directory fails.",
+  "ops": [
+    {
+      "op": "set",
+      "file": "i18n/es/vocab-food.json",
+      "path": "locale",
+      "value": "ko"
+    }
+  ],
+  "expect": [
+    {
+      "rule": "vocab-overlay",
+      "file": "i18n/es/vocab-food.json",
+      "includes": "overlay-bad-shape"
+    }
+  ]
+}

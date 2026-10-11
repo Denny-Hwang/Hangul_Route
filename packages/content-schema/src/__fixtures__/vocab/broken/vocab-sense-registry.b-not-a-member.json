@@ -1,0 +1,19 @@
+{
+  "description": "A senseGroup that does not list the item as launch fails (b).",
+  "ops": [
+    {
+      "op": "set",
+      "file": "vocab/food.json",
+      "path": "items.0.senseGroup",
+      "value": "bae"
+    }
+  ],
+  "expect": [
+    {
+      "rule": "vocab-sense-registry",
+      "file": "vocab/food.json",
+      "id": "vocab:sagwa",
+      "includes": "(b)"
+    }
+  ]
+}
