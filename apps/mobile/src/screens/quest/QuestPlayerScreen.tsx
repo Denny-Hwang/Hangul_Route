@@ -33,12 +33,14 @@ import {
   type CheckWatch,
 } from '../../logic/quest-flow/check-launcher';
 import { questStepLabel } from '../../logic/quest-steps';
+import { questStartStep } from '../../logic/story/resume';
 import { confirm } from '../../platform/dialog';
 import { track } from '../../platform/telemetry';
 import type { RootStackParamList } from '../../navigation/types';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { useQuestRunStore } from '../../store/quest-run-store';
+import { useStoryStore } from '../../store/story-store';
 import { DiscoverStep } from './DiscoverStep';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'QuestPlayer'>;
@@ -48,7 +50,7 @@ type QuestMessages = Messages['learner']['quest'];
 export function QuestPlayerScreen({ route, navigation }: Props): React.ReactElement {
   const m = useMessages();
   const q = m.learner.quest;
-  const { questId, episodeId } = route.params;
+  const { questId, episodeId, resume } = route.params;
   const locale = useLocale();
   const quest = useMemo(() => {
     const source = questById(questId);
@@ -62,13 +64,17 @@ export function QuestPlayerScreen({ route, navigation }: Props): React.ReactElem
   const consumePending = useQuestRunStore((s) => s.consumePendingAdvance);
   const stepIndex = useQuestRunStore((s) => s.stepIndex);
 
-  // Initialize quest run state once per mount
+  // Initialize quest run state once per mount. A resumed story quest opens on its story-read step
+  // (F-STORY-004 §3.8); without a usable bookmark it starts at step 0 like any other.
   useEffect(() => {
     if (!profile) return;
-    begin(questId, episodeId);
+    const startStep = questStartStep(questById(questId), resume, (storyId) =>
+      useStoryStore.getState().getBookmark(profile.id, storyId),
+    );
+    begin(questId, episodeId, startStep);
     beginSession(profile.id);
     return () => endSession(profile.id);
-  }, [questId, episodeId, profile, begin, beginSession, endSession]);
+  }, [questId, episodeId, resume, profile, begin, beginSession, endSession]);
 
   // When we re-focus (e.g., returning from a minigame), apply pending advance
   useFocusEffect(
