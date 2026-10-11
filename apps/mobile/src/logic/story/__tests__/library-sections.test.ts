@@ -1,6 +1,6 @@
 import type { CultureNote } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
-import { LIBRARY_SECTIONS, visibleSections } from '../library-sections';
+import { LIBRARY_SECTIONS, selectedSection, visibleSections } from '../library-sections';
 import { shelfIndex, story } from './shelf-fixture';
 
 const note: CultureNote = {
@@ -48,5 +48,23 @@ describe('visibleSections', () => {
     expect(visibleSections({ entries: grid })).toEqual(['cards']);
     const withNote = grid.map((e) => ({ ...e, story: { ...e.story, cultureNotes: [note] } }));
     expect(visibleSections({ entries: withNote })).toEqual(['cards', 'culture']);
+  });
+});
+
+describe('selectedSection (§3.3: route.params.section ?? cards)', () => {
+  const all = ['cards', 'story-time', 'culture'] as const;
+
+  it('no requested section opens Cards', () => {
+    expect(selectedSection(undefined, all)).toBe('cards');
+  });
+
+  it('a requested section that is offered opens it (deep link)', () => {
+    expect(selectedSection('story-time', all)).toBe('story-time');
+    expect(selectedSection('culture', all)).toBe('culture');
+  });
+
+  it('a requested section that is not offered falls back to Cards (no reviewed story, theme packs reserved)', () => {
+    expect(selectedSection('story-time', ['cards'])).toBe('cards');
+    expect(selectedSection('theme-packs', all)).toBe('cards');
   });
 });

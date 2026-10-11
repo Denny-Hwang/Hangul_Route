@@ -931,5 +931,10 @@ export const learner = {
         toStoryTime: { cta: 'Go to Story Time' },
       },
     },
+    /**
+     * The "Picked for you" button read out with the story it opens: `cta` is a `start` /
+     * `keepReading` / `readAgain` label, `title` the story's title (content).
+     */
+    heroLabel: (cta: string, title: string) => `${cta}: ${title}`,
   },
 } as const;

@@ -38,3 +38,14 @@ export const LIBRARY_SECTIONS: readonly LibrarySection[] = [
 export function visibleSections(ctx: LibrarySectionContext): LibrarySectionId[] {
   return LIBRARY_SECTIONS.filter((s) => s.isAvailable(ctx)).map((s) => s.id);
 }
+
+/**
+ * The section the Library opens on (§3.3): the requested one
+ * (`route.params.section`, a deep link) when it is offered, else Cards.
+ */
+export function selectedSection(
+  requested: LibrarySectionId | undefined,
+  visible: readonly LibrarySectionId[],
+): LibrarySectionId {
+  return requested !== undefined && visible.includes(requested) ? requested : 'cards';
+}
