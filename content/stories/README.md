@@ -104,8 +104,8 @@ Source pages move. A scheduled link check (`scripts/check-source-links.mjs`, F-S
 ## Checks to run before a PR
 
 ```bash
-corepack pnpm --filter @hangul-route/content-schema test -t story-content   # schema + lint over every story
-corepack pnpm --filter @hangul-route/content-schema test -t romanization    # romanization suites
+corepack pnpm --filter @hangul-route/content-schema test story-content      # schema + lint over every story
+corepack pnpm --filter @hangul-route/content-schema test romanization       # romanization suites
 node scripts/validate-content.mjs                                           # language policy (F-CNT-001)
 node scripts/build-stories.mjs                                              # regenerate the bundle
 node scripts/build-stories.mjs --check                                      # bundle matches the JSON (CI)
