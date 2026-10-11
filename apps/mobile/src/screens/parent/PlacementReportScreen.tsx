@@ -326,7 +326,7 @@ function ReportBody({ page, m, messages, locale, name, saved, questTitle, stageT
         {page.choices.length > 0 ? (
           <>
             <Spacer size="sm" />
-            <Button label={m.chooseStart} tone="secondary" size="md" onPress={onChooseStart} testID="placement-report-choose" />
+            <Button label={m.chooseStart} tone="ghost" size="md" onPress={onChooseStart} testID="placement-report-choose" />
           </>
         ) : null}
       </Card>

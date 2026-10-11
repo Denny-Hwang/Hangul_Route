@@ -205,6 +205,17 @@ export interface ReportPageView {
 
 export type ReportPage = { kind: 'empty' } | ReportPageView;
 
+/** An example only under a strand the check measured: a "not tested" row shows no letters. */
+function testedExamples(examples: StrandExamples, view: ReportView): StrandExamples {
+  const out: StrandExamples = {};
+  for (const strand of ['sound-letter', 'syllable-reading'] as const) {
+    const example = examples[strand];
+    const status = view.strands.find((s) => s.strand === strand)?.status;
+    if (example !== undefined && status !== 'not-tested' && status !== 'not-tested-short') out[strand] = example;
+  }
+  return out;
+}
+
 export function reportPage(input: ReportPageInput): ReportPage {
   if (input.placements.length === 0) return { kind: 'empty' };
   const sorted = [...input.placements].sort(byCompletedAt);
@@ -220,7 +231,7 @@ export function reportPage(input: ReportPageInput): ReportPage {
     testLocale: newest.testLocale,
     level: seed.level,
     view,
-    examples: strandExamples(newest, input.lookup),
+    examples: testedExamples(strandExamples(newest, input.lookup), view),
     startQuestId: seed.startQuestId,
     needsStage: seed.needsStage,
     beyondContent: seed.beyondContent,

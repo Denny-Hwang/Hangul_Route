@@ -156,6 +156,7 @@ test.describe('placement report (fixture bundle)', () => {
     await shot(page, 'placement-report-standard');
 
     // Choose a different start: the current start is selected, Save waits for another pick.
+    const before = await readStored<{ quests: unknown[]; cards: unknown[] }>(page, `progress:${id}`);
     const startTitle = (await page.getByTestId('placement-report-start-quest').innerText()).trim();
     await page.getByTestId('placement-report-choose').click();
     await expect(page.getByTestId('placement-report-sheet')).toBeVisible();
@@ -174,8 +175,9 @@ test.describe('placement report (fixture bundle)', () => {
       .poll(async () => (await readStored<{ placements?: Array<{ override?: { startQuestId: string } }> }>(page, `progress:${id}`))?.placements?.[0]?.override?.startQuestId)
       .toBe(chosenId);
     const progress = await readStored<{ quests: unknown[]; cards: unknown[] }>(page, `progress:${id}`);
-    expect(progress?.quests ?? []).toEqual([]);
-    expect(progress?.cards ?? []).toEqual([]);
+    // Only the placement record changed: no quest, no card.
+    expect(progress?.quests ?? []).toEqual(before?.quests ?? []);
+    expect(progress?.cards ?? []).toEqual(before?.cards ?? []);
     expect((await events(page)).filter((e) => e.name === 'placement.override_applied')).toEqual([
       expect.objectContaining({ profileId: id, payload: { by: 'parent' } }),
     ]);
@@ -234,7 +236,7 @@ test.describe('placement report (fixture bundle)', () => {
     await expect(page.getByRole('radio', { name: 'Standard' })).toHaveAttribute('aria-checked', 'true');
   });
 
-  test('a Deep result on a child profile: status words, checked twice, tiles, the hidden-guide retake', async ({ page }) => {
+  test('a Deep result on a child profile: status words, checked twice, tiles; the hidden-guide retake', async ({ page }) => {
     await onboardChild(page, { name: 'Dami', startJourney: false });
     await page.goto('/');
     const id = (await readStored<Array<{ id: string }>>(page, 'profiles'))?.[0]?.id ?? '';
@@ -243,40 +245,71 @@ test.describe('placement report (fixture bundle)', () => {
       id,
       storedResult({
         mode: 'deep',
-        revealMode: 'always',
         responses: [
           response('pitem:recog-odd-giyeok-nieun', 'correct'),
+          response('pitem:sound-basic-hear-a', 'correct'),
+          response('pitem:sound-basic-hear-giyeok', 'correct'),
+          response('pitem:syl-cv-hear-ga', 'correct'),
           response('pitem:syl-cv-build-ga', 'correct'),
           response('pitem:syl-cv-build-na', 'wrong'),
-          response('pitem:vocab-hear-bap', 'correct'),
         ],
         gates: [
           row('recog', 'decode', 'pass', 3),
+          row('sound-basic', 'decode', 'pass', 3),
+          row('syl-cv', 'decode', 'pass', 2),
+          row('sound-basic', 'decode', 'pass', 2),
+          row('syl-cv', 'decode', 'not-run', 0, { asked: 1, reason: 'stopped' }),
           row('vocab', 'oral', 'pass', 3),
-          row('vocab', 'oral', 'pass', 2),
-          row('sentence', 'oral', 'not-run', 0, { asked: 1, reason: 'stopped' }),
         ],
+        strands: {
+          'hangul-recognition': 'secure',
+          'sound-letter': 'getting-there',
+          'syllable-reading': 'getting-there',
+          vocabulary: 'secure',
+          sentences: 'not-tested',
+        },
+        level: { stage: 'stage1', band: 1 },
+        stopReason: 'quit',
+      }),
+    );
+    await openReport(page, id);
+    await expect(page.getByTestId('placement-report-level')).toHaveText('Hangul · Letters and sounds');
+    await expect(page.getByText('First letter sounds, reading: secure, checked twice')).toBeVisible();
+    await expect(page.getByText('Simple syllables, reading: secure, not finished')).toBeVisible();
+    await expect(page.getByTestId('placement-report-tiles')).toContainText('Spelling with tiles');
+    await expect(page.getByTestId('placement-report-tiles')).toContainText('getting there');
+    await expect(page.getByTestId('placement-report-retry-hidden')).toHaveCount(0);
+    await expect(page.getByTestId('placement-report-short-hint')).toHaveCount(0);
+    let text = await screenText(page);
+    expect(text).not.toMatch(FORBIDDEN);
+    expect(text).not.toMatch(EMOJI);
+    await shot(page, 'placement-report-deep-child');
+
+    // Reading not tested (the sound guide was always shown): on a child profile the retake offer is here.
+    await seedResult(
+      page,
+      id,
+      storedResult({
+        mode: 'deep',
+        revealMode: 'always',
+        responses: [response('pitem:recog-odd-giyeok-nieun', 'correct'), response('pitem:vocab-hear-bap', 'correct')],
+        gates: [row('recog', 'decode', 'pass', 3), row('vocab', 'oral', 'pass', 3), row('sentence', 'oral', 'pass', 2)],
         strands: {
           'hangul-recognition': 'secure',
           'sound-letter': 'not-tested',
           'syllable-reading': 'not-tested',
           vocabulary: 'secure',
-          sentences: 'not-yet',
+          sentences: 'secure',
         },
-        stopReason: 'quit',
       }),
     );
     await openReport(page, id);
-    await expect(page.getByText('Words, listening: secure, checked twice')).toBeVisible();
-    await expect(page.getByText('Spelling with tiles')).toBeVisible();
-    await expect(page.getByTestId('placement-report-tiles')).toContainText('getting there');
     await expect(page.getByText('Reading was not checked: the sound guide was set to always show.')).toBeVisible();
     await expect(page.getByTestId('placement-report-retry-hidden')).toHaveText('Try it with the sound guide hidden');
-    await expect(page.getByTestId('placement-report-short-hint')).toHaveCount(0);
-    const text = await screenText(page);
+    await expect(page.getByTestId('placement-report-known')).toHaveCount(0);
+    text = await screenText(page);
     expect(text).not.toMatch(FORBIDDEN);
-    expect(text).not.toMatch(EMOJI);
-    await shot(page, 'placement-report-deep-child');
+    await shot(page, 'placement-report-not-tested-child');
   });
 
   test('no check yet: the empty state and the take-it button', async ({ page }) => {

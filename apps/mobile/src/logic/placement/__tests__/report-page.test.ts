@@ -251,6 +251,22 @@ describe('reportPage (section 3.9)', () => {
     }
   });
 
+  it('shows letter examples only under a strand the check measured', () => {
+    const result = placementResult({
+      strands: {
+        'hangul-recognition': 'secure',
+        'sound-letter': 'getting-there',
+        'syllable-reading': 'not-tested',
+        vocabulary: 'not-tested',
+        sentences: 'not-tested',
+      },
+      responses: [response('pitem:sb-a', 'correct'), response('pitem:cv-a', 'correct')],
+    });
+    const page = reportPage(input({ placements: [result] }));
+    if (page.kind !== 'report') throw new Error('expected a report');
+    expect(page.examples).toEqual({ 'sound-letter': { known: ['ㄱ'], fresh: [] } });
+  });
+
   it('finds Spelling with tiles by looking the response up in the bank', () => {
     const deep = placementResult({ mode: 'deep', responses: [response('pitem:cv-a', 'correct'), response('pitem:gone', 'wrong')] });
     const page = reportPage(input({ placements: [deep] }));
