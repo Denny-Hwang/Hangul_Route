@@ -56,7 +56,11 @@ export type OnboardingStackParamList = {
 
 export type MainTabParamList = {
   Home: undefined;
-  Journey: undefined;
+  /**
+   * `episodeId`: select this episode in the two-pane Journey (back from a quest or from Results,
+   * F-LAYOUT-001 §3.7). Read once, then cleared; one pane ignores it.
+   */
+  Journey: { episodeId?: string } | undefined;
   Library: undefined;
 };
 

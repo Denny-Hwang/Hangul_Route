@@ -11,6 +11,7 @@ import {
   Screen,
   Spacer,
   spacing,
+  useLayoutClass,
 } from '@hangul-route/design-system';
 import { CommonActions, useFocusEffect } from '@react-navigation/native';
 import type { QuestStepKind } from '@hangul-route/content-schema';
@@ -21,6 +22,7 @@ import { Pressable, View } from 'react-native';
 import { questById } from '../../content';
 import { useMessages } from '../../i18n/use-messages';
 import { narrativeLine, type NarrativeLine } from '../../logic/korean-labels';
+import { episodeReturn } from '../../logic/layout/quest-return';
 import { questOutcome } from '../../logic/quest-outcome';
 import {
   checkCompletedPayload,
@@ -114,9 +116,13 @@ export function QuestPlayerScreen({ route, navigation }: Props): React.ReactElem
 
   // Quit control (wireframe quest/player): one-line confirm, then back to the
   // episode page with the run discarded. Progress already saved is untouched.
+  // Two panes: back to the Journey with this episode selected in its pane (F-LAYOUT-001 §3.7).
+  const { panes } = useLayoutClass();
   const leaveQuest = (): void => {
     useQuestRunStore.getState().reset();
-    navigation.replace('EpisodeDetail', { episodeId });
+    const back = episodeReturn(panes, episodeId);
+    if (back.to === 'journeyPane') navigation.navigate('Main', { screen: 'Journey', params: { episodeId: back.episodeId } });
+    else navigation.replace('EpisodeDetail', { episodeId: back.episodeId });
   };
   const confirmQuit = (): void => {
     void confirm({
