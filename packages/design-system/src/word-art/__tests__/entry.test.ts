@@ -2,6 +2,7 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import pkgJson from '../../../package.json?raw';
+import { SCANNED_SOURCE, impureImports } from '../../__tests__/impure-imports';
 
 /**
  * `@hangul-route/design-system/word-art` is the pure WordArt entry (F-VOC-002
@@ -15,7 +16,7 @@ function sourceFiles(dir: string): string[] {
   return readdirSync(dir).flatMap((name) => {
     const path = join(dir, name);
     if (statSync(path).isDirectory()) return name === '__tests__' ? [] : sourceFiles(path);
-    return /\.tsx?$/.test(name) ? [path] : [];
+    return SCANNED_SOURCE.test(name) ? [path] : [];
   });
 }
 
@@ -30,14 +31,14 @@ describe('./word-art entry', () => {
     await expect(import('../index')).resolves.toBeDefined();
   });
 
-  it('no file under src/word-art imports React, react-native, react-native-svg or a component', () => {
-    const offenders = sourceFiles(WORD_ART_DIR).filter((file) =>
-      /from\s+['"](react|react-native|react-native-svg|[./]+components\/[^'"]*)['"]/.test(readFileSync(file, 'utf8')),
-    );
-    expect(offenders.map((f) => relative(WORD_ART_DIR, f))).toEqual([]);
+  it('no file under src/word-art imports React, react-native(-svg/-web), the package barrel or a component', () => {
+    const offenders = sourceFiles(WORD_ART_DIR)
+      .map((file) => ({ file: relative(WORD_ART_DIR, file), imports: impureImports(readFileSync(file, 'utf8')) }))
+      .filter(({ imports }) => imports.length > 0);
+    expect(offenders).toEqual([]);
   });
 
-  it('holds no .tsx file: the entry is data and logic, never a view', () => {
-    expect(sourceFiles(WORD_ART_DIR).filter((f) => f.endsWith('.tsx'))).toEqual([]);
+  it('holds no .tsx or .jsx file: the entry is data and logic, never a view', () => {
+    expect(sourceFiles(WORD_ART_DIR).filter((f) => /\.[jt]sx$/.test(f))).toEqual([]);
   });
 });

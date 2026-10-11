@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { impureImports } from '../../../__tests__/impure-imports';
 import { supportedCardIds } from '../card-ids';
 
 /**
@@ -37,9 +38,8 @@ describe('supportedCardIds (card-ids.ts)', () => {
     for (const id of reused) expect(supportedCardIds).toContain(id);
   });
 
-  it('is a pure module: no React, react-native or react-native-svg import', () => {
-    const source = readFileSync(join(HERE, 'card-ids.ts'), 'utf8');
-    expect(source).not.toMatch(/from\s+['"](react|react-native|react-native-svg)['"]/);
+  it('is a pure module: no React, react-native(-svg/-web), package barrel or component import', () => {
+    expect(impureImports(readFileSync(join(HERE, 'card-ids.ts'), 'utf8'))).toEqual([]);
   });
 
   it('has one source: HeritageCardArt.tsx re-exports it and keeps no list of its own', () => {
