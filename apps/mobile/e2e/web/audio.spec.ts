@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { jamoOfSpoken, onboardChild } from './helpers';
+import { jamoOfSpoken, keepSidewaysIfAsked, onboardChild } from './helpers';
 
 /**
  * F-AUDIO-004 A-4a: one persisted sound switch (AD7) and a ranked Korean voice
@@ -285,4 +285,196 @@ test('a ready voice never shows the how-to link in Match Sound', async ({ page }
   await onboardChild(page, { name: 'Dami' });
   await openMatchSound(page);
   await expect(page.getByTestId('prompt-panel-help')).toHaveCount(0);
+});
+
+/** F-AUDIO-004 A-5b: from the first-quest preview, past the two listening games, to Build a Letter. */
+async function openBuildLetter(page: Page): Promise<void> {
+  await page.getByRole('button', { name: 'Continue' }).click();
+  for (let i = 0; i < 2; i++) await page.getByRole('button', { name: 'Skip for now' }).click();
+  await page.getByRole('button', { name: 'Play minigame' }).click();
+  await expect(page.getByText('Build this letter')).toBeVisible();
+}
+
+const buildSpeaker = (page: Page) => page.getByTestId('build-letter-speaker');
+
+test('Build a Letter says the syllable with Yuna when it is tapped, and shows no panel while sound works', async ({ page }) => {
+  await fakeSpeech(page, 'korean');
+  await onboardChild(page, { name: 'Dami' });
+  await openBuildLetter(page);
+  // Nothing autoplays here, not even after the controller's capability wait (up to 1.5 s).
+  await page.waitForTimeout(1600);
+  expect(await utterances(page)).toEqual([]);
+
+  await buildSpeaker(page).click();
+  await expect.poll(async () => (await utterances(page)).length).toBe(1);
+  const [said] = await utterances(page);
+  expect(said).toMatchObject({ voice: 'Yuna', lang: 'ko-KR' });
+  expect(said!.text).toMatch(/^[가-힣]$/);
+  await expect(buildSpeaker(page)).toContainText(said!.text);
+  await expect(page.getByTestId('prompt-panel-detail')).toHaveCount(0);
+});
+
+test('Build a Letter with no Korean voice: the syllable stays on screen and a tap says why it is silent', async ({ page }) => {
+  await fakeSpeech(page, 'none');
+  await onboardChild(page, { name: 'Dami' });
+  await openBuildLetter(page);
+  // The syllable and its romanization are the text; no panel before the learner asks for the sound.
+  await expect(page.getByTestId('prompt-panel-detail')).toHaveCount(0);
+
+  await buildSpeaker(page).click();
+  await expect(page.getByTestId('prompt-panel-detail')).toHaveText('No Korean voice on this device.');
+  // The syllable is not printed a second time.
+  await expect(page.getByTestId('prompt-panel-text')).toHaveCount(0);
+  expect(await utterances(page)).toEqual([]);
+
+  await page.getByTestId('prompt-panel-help').click();
+  await expect(page.getByTestId('voice-help-sheet').getByText('Add a Korean voice')).toBeVisible();
+  await page.getByTestId('voice-help-sheet-ok').click();
+  await expect(page.getByRole('button', { name: /^Korean letter / }).first()).toBeVisible();
+});
+
+test('Build a Letter with sound off: a tap says sound is off, and Turn sound on says the syllable', async ({ page }) => {
+  await fakeSpeech(page, 'korean');
+  await onboardChild(page, { name: 'Dami', startJourney: false });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Profile and settings' }).click();
+  await page.getByRole('switch', { name: /^Sound/ }).click();
+  await expect.poll(() => savedAudioPrefs(page)).toBe(JSON.stringify({ muted: true }));
+  await page.reload();
+  await page.getByRole('button', { name: /^Meet g, n, d, l/ }).click();
+  await openBuildLetter(page);
+  await expect(page.getByTestId('prompt-panel-detail')).toHaveCount(0);
+
+  await buildSpeaker(page).click();
+  await expect(page.getByTestId('prompt-panel-detail')).toHaveText('Sound is off.');
+  expect(await utterances(page)).toEqual([]);
+
+  await page.getByTestId('prompt-panel-action').click();
+  await expect.poll(async () => (await utterances(page)).length).toBe(1);
+  expect((await utterances(page))[0]).toMatchObject({ voice: 'Yuna', lang: 'ko-KR' });
+  await expect.poll(() => savedAudioPrefs(page)).toBe(JSON.stringify({ muted: false }));
+});
+
+/**
+ * F-AUDIO-004 A-5b: the Stage 4 "Greeting Dialogues" quest (Journey, Holidays & Traditions, stage 4):
+ * step 3 is Tap & Respond, step 4 Culture Quiz. `skips` is how many minigame steps to skip first.
+ */
+async function openGreetingQuest(page: Page, name: string, skips: number): Promise<void> {
+  await page.goto('/');
+  await keepSidewaysIfAsked(page);
+  await expect(page.getByText(`Hi, ${name}!`)).toBeVisible();
+  const guide = page.getByTestId('install-guide');
+  await page.waitForTimeout(800);
+  if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
+  await page.getByText('Journey', { exact: true }).last().click();
+  await page.getByRole('button', { name: 'Holidays & Traditions episode for stage4' }).click();
+  await page.getByRole('button', { name: 'Start', exact: true }).click();
+  const anyway = page.getByRole('button', { name: 'Play anyway' });
+  if (await anyway.isVisible()) await anyway.click();
+  await page.getByRole('button', { name: 'Continue' }).click();
+  for (let i = 0; i < skips; i++) await page.getByRole('button', { name: 'Skip for now' }).click();
+  await page.getByRole('button', { name: 'Play minigame' }).click();
+}
+
+async function openTapRespond(page: Page, name = 'Dami'): Promise<void> {
+  await openGreetingQuest(page, name, 1);
+  await expect(page.getByText('Choose your reply', { exact: true })).toBeVisible();
+  await expect(page.getByText('1 / 3')).toBeVisible();
+}
+
+const tapRespondHear = (page: Page) => page.getByTestId('tap-respond-hear');
+const reply = (page: Page, english: string) => page.getByRole('button', { name: new RegExp(`·\\s+${english}$`) });
+
+async function muteOnThisDevice(page: Page): Promise<void> {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Profile and settings' }).click();
+  await page.getByRole('switch', { name: /^Sound/ }).click();
+  await expect.poll(() => savedAudioPrefs(page)).toBe(JSON.stringify({ muted: true }));
+  await page.reload();
+}
+
+test('Tap & Respond with a Korean voice: the line is said when the turn opens and again on Hear it', async ({ page }) => {
+  await fakeSpeech(page, 'korean');
+  await onboardChild(page, { name: 'Dami', startJourney: false });
+  await openTapRespond(page);
+
+  await expect.poll(async () => (await utterances(page)).map((u) => u.text)).toEqual(['안녕하세요!']);
+  expect((await utterances(page))[0]).toMatchObject({ voice: 'Yuna', lang: 'ko-KR' });
+  await expect(tapRespondHear(page)).toHaveAccessibleName('Hear annyeonghaseyo');
+  // The line and its romanization are on screen; no panel while the sound works.
+  await expect(page.getByTestId('prompt-panel-detail')).toHaveCount(0);
+
+  await tapRespondHear(page).click();
+  await expect.poll(async () => (await utterances(page)).map((u) => u.text)).toEqual(['안녕하세요!', '안녕하세요!']);
+});
+
+test('Tap & Respond: a right reply is said in full before the next line, and Hear it cannot cut it off', async ({ page }) => {
+  await fakeSpeech(page, 'korean');
+  await onboardChild(page, { name: 'Dami', startJourney: false });
+  await openTapRespond(page);
+  await expect.poll(async () => (await utterances(page)).length).toBe(1);
+
+  await reply(page, 'Hello').click();
+  // While the reply is said (and for at least 900 ms), Hear it is off.
+  await expect(tapRespondHear(page)).toBeDisabled();
+  await expect(page.getByText('2 / 3')).toBeVisible();
+  const texts = (await utterances(page)).map((u) => u.text);
+  // NPC line, the reply, then the next turn's line: never the next line before the reply.
+  expect(texts.slice(0, 2)).toEqual(['안녕하세요!', '안녕하세요']);
+  await expect.poll(async () => (await utterances(page)).length).toBe(3);
+  const next = (await utterances(page))[2]!;
+  expect(next.text).not.toBe('안녕하세요');
+  await expect(page.getByText(next.text, { exact: true })).toBeVisible();
+  await expect(tapRespondHear(page)).toBeEnabled();
+});
+
+test('Tap & Respond with no Korean voice: nothing is said and the panel says why', async ({ page }) => {
+  await fakeSpeech(page, 'none');
+  await onboardChild(page, { name: 'Dami', startJourney: false });
+  await openTapRespond(page);
+
+  // The turn-open play counts as asking, so the reason shows at once.
+  await expect(page.getByTestId('prompt-panel-detail')).toHaveText('No Korean voice on this device.');
+  await expect(page.getByTestId('prompt-panel-help')).toBeVisible();
+  // The Korean is not printed a second time.
+  await expect(page.getByTestId('prompt-panel-text')).toHaveCount(0);
+  await reply(page, 'Hello').click();
+  await expect(page.getByText('2 / 3')).toBeVisible();
+  expect(await utterances(page)).toEqual([]);
+});
+
+test('Tap & Respond with sound off: the turn opens quietly, and Hear it says sound is off', async ({ page }) => {
+  await fakeSpeech(page, 'korean');
+  await onboardChild(page, { name: 'Dami', startJourney: false });
+  await muteOnThisDevice(page);
+  await openTapRespond(page);
+
+  await page.waitForTimeout(1600);
+  await expect(page.getByTestId('prompt-panel-detail')).toHaveCount(0);
+  expect(await utterances(page)).toEqual([]);
+
+  await tapRespondHear(page).click();
+  await expect(page.getByTestId('prompt-panel-detail')).toHaveText('Sound is off.');
+  expect(await utterances(page)).toEqual([]);
+  await page.getByTestId('prompt-panel-action').click();
+  await expect.poll(async () => (await utterances(page)).map((u) => u.text)).toEqual(['안녕하세요!']);
+});
+
+test('Culture Quiz: Hear it says the prompt word, and nothing plays before the tap', async ({ page }) => {
+  await fakeSpeech(page, 'korean');
+  await onboardChild(page, { name: 'Dami', startJourney: false });
+  await openGreetingQuest(page, 'Dami', 2);
+  const hear = page.getByTestId('culture-quiz-hear');
+  await expect(hear).toBeVisible();
+  await page.waitForTimeout(1600);
+  expect(await utterances(page)).toEqual([]);
+  await expect(hear).toHaveAccessibleName(/^Hear /);
+
+  await hear.click();
+  await expect.poll(async () => (await utterances(page)).length).toBe(1);
+  const [said] = await utterances(page);
+  expect(said).toMatchObject({ voice: 'Yuna', lang: 'ko-KR' });
+  // The word that was said is the one printed above the button.
+  await expect(page.getByRole('heading', { name: said!.text, exact: true })).toBeVisible();
+  await expect(page.getByTestId('prompt-panel-detail')).toHaveCount(0);
 });

@@ -33,6 +33,22 @@ The speaker button stays on the screen that owns the prompt (Match Sound keeps i
 
 Not shown while the voice check is still running (no flash). Once shown it stays for the round and resets with the next round.
 
+## Status variant (`variant="status"`, PR A-5b)
+
+For a screen that already prints the Korean and its romanization next to its speaker: Build Letter (the syllable box), Card Match (each word card), Tap & Respond (the NPC line and the reply buttons), Culture Quiz (the prompt word), Voice Echo (the word under the speaker) and the card detail (the card's Korean name). That printed line is the text fallback, so the panel does not repeat it.
+
+```
+ +------------------------------------+
+ |     Sound is off.                  |   body, muted: why (not for "blocked")
+ |        [ Turn sound on ]           |   secondary button, only when there is an action
+ +------------------------------------+
+```
+
+- Shown only after the slot has tried to play (the learner tapped the speaker, or the screen said its prompt on open, as Tap & Respond does), and only when it has something to say (`promptPanelView(...).statusShown`). A muted device does not get a "Sound is off" line on every screen it never asked to hear.
+- Same reasons and actions as the table above; the "No Korean voice" reason shows the **How to add a voice** link.
+- `audio.fallback_shown` fires when this panel appears (`usePromptSlot({ textOnScreen: true })`), not when the slot first learns sound is off.
+- The detail line is `Body` (not `Caption`), since it is the panel's only line.
+
 ## Tokens (no literals)
 
 | Part | Token |
