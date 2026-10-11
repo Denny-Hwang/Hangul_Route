@@ -117,6 +117,10 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
       navigation.replace('SaveProgress');
     } else if (route.params.next === 'Paywall') {
       navigation.replace('Paywall', { from: 'journey' });
+    } else if (route.params.next === 'EditProfile') {
+      const { profileId } = route.params;
+      if (profileId === undefined) navigation.goBack();
+      else navigation.replace('EditProfile', { profileId });
     } else if (route.params.next === 'ExternalLink') {
       // Back to Sources with the gate open: native opens the waiting link, the web asks for one more tap (F-STORY-002 §3.8).
       navigation.goBack();
@@ -282,7 +286,7 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
           tone="ghost"
           size="md"
           fullWidth
-          onPress={() => navigation.replace('PinReset', { next: route.params.next })}
+          onPress={() => navigation.replace('PinReset', { next: route.params.next, profileId: route.params.profileId })}
         />
       ) : null}
     </Screen>
