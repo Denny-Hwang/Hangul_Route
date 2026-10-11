@@ -2,6 +2,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { supportedCardIds } from '../../components/HeritageCardArt/card-ids';
+import { COLOR_SWATCHES } from '../generated/color';
 import { WORD_ART, WORD_ART_KEYS, wordArtKeyOf } from '../registry';
 import type { WordArtFamily } from '../types';
 
@@ -113,13 +114,19 @@ describe('content/vocab against the registry', () => {
     for (const key of unserved) expect(WORD_ART[key]!.glyph.length).toBeGreaterThan(0);
   });
 
-  it('every prop is drawn inside a colour swatch', () => {
+  it('every prop is drawn inside a colour swatch (the colour generator names it as an object)', () => {
     const props = WORD_ART_KEYS.filter((k) => WORD_ART[k]!.meta.family === 'prop');
-    const colorSwatches = WORD_ART_KEYS.filter((k) => WORD_ART[k]!.meta.family === 'color');
-    // W-1c adds the colour generator and the props together; until then neither exists.
-    expect(props).toEqual([]);
-    // A tripwire: when the swatches land this fails, and W-1c replaces the test with the real §3.9 check
-    // (every prop key is referenced by the colour generator's object table).
-    expect(colorSwatches, 'W-1c: replace this with the colour-generator reference check').toHaveLength(0);
+    const objects = Object.values(COLOR_SWATCHES).map((s) => s.object);
+    expect(props.length).toBeGreaterThan(0);
+    for (const key of props) expect(objects, `${key} is not used by any colour swatch`).toContain(key);
+  });
+
+  it('every colour swatch names an object key in the grammar, and a colour word of the topic file', () => {
+    for (const [key, { object }] of Object.entries(COLOR_SWATCHES)) {
+      expect(wordArtKeyOf(`word:${object}`), key).toBe(object);
+      expect(wordArtKeyOf(`word:${key}`), key).toBe(key);
+    }
+    const colorVisuals = wordRefs.filter((i) => familyOf(wordArtKeyOf(i.visual)!) === 'color').map((i) => wordArtKeyOf(i.visual));
+    expect([...colorVisuals].sort()).toEqual(Object.keys(COLOR_SWATCHES).sort());
   });
 });

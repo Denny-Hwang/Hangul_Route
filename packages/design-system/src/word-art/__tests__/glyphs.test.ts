@@ -3,7 +3,21 @@ import { isWordArtPath } from '../path';
 import { WORD_ART, WORD_ART_KEYS } from '../registry';
 import { isWordArtTone } from '../tones';
 import type { WordArtGlyph, WordArtShape } from '../types';
-import { fillTones, glyphExtent, shapeBox, subjectBox } from './glyph-checks';
+import { HALO_TONE, HALO_WIDTH } from '../generated/halo';
+import {
+  BBOX_MAX,
+  BBOX_MIN,
+  CENTRE_TOLERANCE,
+  GENERATED_WIDTHS,
+  HAND_WIDTHS,
+  MAX_GENERATED_SHAPES,
+  MAX_HAND_SHAPES,
+  fillTones,
+  glyphExtent,
+  glyphViolations,
+  shapeBox,
+  subjectBox,
+} from './glyph-checks';
 
 /**
  * F-VOC-002 §3.5, run on every registry glyph: tones (C4, §3.3), path grammar
@@ -20,14 +34,8 @@ const GEOMETRY: Record<string, readonly string[]> = {
   path: ['t', 'd'],
 };
 
-/** Generated families may use 1.5 for dots (C3); hand glyphs use 2 and 3 only. */
+/** Generated families may use 1.5 for dots and the paper halo (C3), and 48 shapes (C7); the limits live in glyph-checks.ts. */
 const GENERATED = new Set(['color', 'count', 'body']);
-
-/** C2: the subject covers 60-70 % of the width or height, with a 10 % tolerance. */
-const BBOX_MIN = 60 * 0.9;
-const BBOX_MAX = 70 * 1.1;
-/** C2 centring: the subject's centre within this many units of 50 on each axis. */
-const CENTRE_TOLERANCE = 8;
 
 function numbersOf(shape: WordArtShape): number[] {
   return Object.entries(shape)
@@ -83,9 +91,11 @@ describe.each(entries)('%s', (key, glyph, meta) => {
   });
 
   it('strokes at 3 (outline) or 2 (detail), never thinner (C3)', () => {
-    const allowed = GENERATED.has(meta.family) ? [1.5, 2, 3] : [2, 3];
+    const allowed = GENERATED.has(meta.family) ? GENERATED_WIDTHS : HAND_WIDTHS;
+    // a generated sticker or ring stands on a wide paper halo with no fill (§3.6.1, §3.6.3)
+    const isHalo = (shape: WordArtShape): boolean => GENERATED.has(meta.family) && shape.s === HALO_TONE && shape.sw === HALO_WIDTH && shape.f === undefined;
     for (const shape of glyph) {
-      if (shape.sw !== undefined) expect(allowed).toContain(shape.sw);
+      if (shape.sw !== undefined && !isHalo(shape)) expect(allowed).toContain(shape.sw);
       if (shape.sw !== undefined) expect(shape.s, `${key}: sw without a stroke`).toBeDefined();
     }
   });
@@ -94,9 +104,15 @@ describe.each(entries)('%s', (key, glyph, meta) => {
     for (const shape of glyph) if (shape.o !== undefined) expect(shape.o >= 0.1 && shape.o <= 1).toBe(true);
   });
 
-  it(`has at most ${GENERATED.has(meta.family) ? 48 : 32} shapes (C7)`, () => {
+  it(`has at most ${GENERATED.has(meta.family) ? MAX_GENERATED_SHAPES : MAX_HAND_SHAPES} shapes (C7)`, () => {
     expect(glyph.length).toBeGreaterThan(0);
-    expect(glyph.length).toBeLessThanOrEqual(GENERATED.has(meta.family) ? 48 : 32);
+    expect(glyph.length).toBeLessThanOrEqual(GENERATED.has(meta.family) ? MAX_GENERATED_SHAPES : MAX_HAND_SHAPES);
+  });
+
+  it('passes glyphViolations, the same rules the unregistered generator output is held to', () => {
+    const generated = GENERATED.has(meta.family);
+    const options = { generated, haloWidth: HALO_WIDTH, maxTones: meta.maxTones, bboxWaived: meta.bboxWaived === true };
+    expect(glyphViolations(glyph, options, isWordArtTone)).toEqual([]);
   });
 
   it('has a non-empty extent for every shape', () => {
