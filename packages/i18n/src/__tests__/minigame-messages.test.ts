@@ -135,6 +135,16 @@ describe('Culture Quiz (English wording as shipped)', () => {
   });
 });
 
+describe('Odd One Out (English wording as shipped)', () => {
+  it('keeps the heading, the instruction and the miss line', () => {
+    expect(m.learner.minigame.oddOneOut).toEqual({
+      heading: "Tap the one that doesn't belong",
+      instruction: 'Three are the same kind. One is different.',
+      lookAgain: 'Look again — which kind is different?',
+    });
+  });
+});
+
 describe('learner.audio (F-AUDIO-004 §3.7-3.8, English wording as shipped)', () => {
   const a = m.learner.audio;
 

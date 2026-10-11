@@ -352,6 +352,12 @@ export const learner = {
         start: 'Try again — start at the top!',
       },
     },
+    /** Odd One Out: three of a kind and one that is not. */
+    oddOneOut: {
+      heading: "Tap the one that doesn't belong",
+      instruction: 'Three are the same kind. One is different.',
+      lookAgain: 'Look again — which kind is different?',
+    },
     /** Culture Quiz: a Korean word, pick its meaning. */
     cultureQuiz: {
       heading: 'What does this mean?',

@@ -20,6 +20,7 @@ export function OddOneOutGame({ scope, onFinish }: Props): React.ReactElement {
   );
 
   const m = useMessages();
+  const copy = m.learner.minigame;
   const answerRound = useQuestRunStore((s) => s.answerRound);
   const markStepComplete = useQuestRunStore((s) => s.markStepComplete);
 
@@ -31,7 +32,7 @@ export function OddOneOutGame({ scope, onFinish }: Props): React.ReactElement {
   if (!round) {
     return (
       <Screen>
-        <Body>No rounds.</Body>
+        <Body>{copy.noRounds}</Body>
       </Screen>
     );
   }
@@ -67,13 +68,13 @@ export function OddOneOutGame({ scope, onFinish }: Props): React.ReactElement {
         <View style={{ flex: 1 }}>
           <Progress value={roundIdx + 1} max={rounds.length} tone="primary" />
         </View>
-        <Pill label={`${roundIdx + 1} / ${rounds.length}`} tone="neutral" size="sm" />
+        <Pill label={copy.progress.pill(roundIdx + 1, rounds.length)} tone="neutral" size="sm" />
       </View>
 
       <Spacer size="lg" />
-      <Heading level="prompt">Tap the one that doesn&apos;t belong</Heading>
+      <Heading level="prompt">{copy.oddOneOut.heading}</Heading>
       <Spacer size="xs" />
-      <Body tone="secondary">Three are the same kind. One is different.</Body>
+      <Body tone="secondary">{copy.oddOneOut.instruction}</Body>
 
       <Spacer size="xl" />
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: spacing.md }}>
@@ -98,7 +99,7 @@ export function OddOneOutGame({ scope, onFinish }: Props): React.ReactElement {
       {feedback === 'wrong' ? (
         <>
           <Spacer size="lg" />
-          <HoyaBubble tone="thinking" message="Look again — which kind is different?" />
+          <HoyaBubble tone="thinking" message={copy.oddOneOut.lookAgain} />
         </>
       ) : null}
       <Spacer size="xl" />
