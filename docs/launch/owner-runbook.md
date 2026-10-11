@@ -145,3 +145,4 @@ Rescue Code 는 서버에 해시로만 저장된다. 이 키를 넣으면 **새�
 - Node 버전이 22 가 아니라고 로그에 나오면: Build variables 에 `NODE_VERSION=22` 가 있는지 확인.
 - "Ignored build scripts" 경고: 정상이다 (`pnpm-workspace.yaml` 의 `neverBuiltDependencies` 가 의도한 정책). 빌드·배포에 필요한 스크립트는 없다.
 - wrangler "outdated" 경고 (API Worker 는 wrangler 3.114): 배포에 영향 없는 안내 문구다. 업그레이드는 별도 PR 로 한다.
+- API Worker 를 이전 버전으로 되돌릴 때 (롤백): 커리큘럼 플랜(주차가 있는 긴 플랜, F-PLAN-002)이 하나라도 게시된 뒤에는 F-PLAN-002 P2-4 (PR #232) 이전 버전으로 되돌리지 않는다. 이전 Worker 는 `plans.meta_json` 을 모르고 `?cap=curriculum` 확인도 없어서, 31–260개짜리 플랜을 모든 앱에 그대로 보낸다. 꼭 되돌려야 하면 콘솔에서 커리큘럼 플랜을 먼저 보관(Archive)하거나, 되돌리는 대신 수정 PR 을 새로 배포(roll forward)한다. D1 열(`meta_json`)은 그대로 둬도 된다.

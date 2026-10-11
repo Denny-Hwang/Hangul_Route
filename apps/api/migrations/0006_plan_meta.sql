@@ -6,4 +6,8 @@
 -- writes meta_json (server first).
 -- Number: erratum E-1 of docs/specs/AMENDMENTS-PLC-PLAN-HANDOFF.md (0005 is
 -- held by F-SPACE-002 T-3b; scripts/check-migrations.mjs rejects duplicates).
+-- Rollback: once a curriculum plan is published, do not roll the API Worker
+-- back below F-PLAN-002 P2-4. An older Worker ignores meta_json and has no
+-- ?cap=curriculum gate, so it would send 31 to 260 item routes to every app.
+-- Archive or unpublish curriculum plans first, or roll forward instead.
 ALTER TABLE plans ADD COLUMN meta_json TEXT;
