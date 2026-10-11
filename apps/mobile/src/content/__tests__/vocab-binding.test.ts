@@ -4,7 +4,7 @@ import { topicItems, vocabItem, vocabTopic, vocabTopics } from '../vocab';
 
 describe('content/vocab.ts binding', () => {
   it('resolves generated items by id', () => {
-    expect(vocabItem('vocab:sagwa')?.ko).toBe('사과');
+    expect(vocabItem('vocab:sagwa-apple')?.ko).toBe('사과');
   });
 
   it('serves every generated Food item through topicItems', () => {
@@ -19,7 +19,11 @@ describe('content/vocab.ts binding', () => {
     }
   });
 
-  it('still looks a draft topic up by key', () => {
+  it('lists the four reviewed free topics (status ready) in order', () => {
+    expect(vocabTopics.map((t) => t.key)).toEqual(['food', 'animals', 'colors', 'numbers']);
+  });
+
+  it('still looks a topic up by key', () => {
     expect(vocabTopic('food')?.id).toBe('vocab-topic:food');
   });
 });

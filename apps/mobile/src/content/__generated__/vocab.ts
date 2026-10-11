@@ -13,10 +13,10 @@ export const VOCAB_TOPICS: readonly VocabTopic[] = [
       "en": "food"
     },
     "blurbEn": "Words for what we eat and drink.",
-    "hoyaIntroEn": "Hungry? Let us name some tasty things together.",
+    "hoyaIntroEn": "Hungry? Let's name some tasty things together.",
     "tint": "theme.life",
-    "coverItemId": "vocab:sagwa",
-    "status": "draft",
+    "coverItemId": "vocab:sagwa-apple",
+    "status": "ready",
     "fixedOrder": false
   },
   {
@@ -33,7 +33,7 @@ export const VOCAB_TOPICS: readonly VocabTopic[] = [
     "hoyaIntroEn": "I am a tiger! Come and meet some animal friends.",
     "tint": "theme.nature",
     "coverItemId": "vocab:horangi",
-    "status": "draft",
+    "status": "ready",
     "fixedOrder": false
   },
   {
@@ -44,13 +44,13 @@ export const VOCAB_TOPICS: readonly VocabTopic[] = [
     "titleKo": {
       "ko": "색",
       "romanization": "saek",
-      "en": "color"
+      "en": "colors"
     },
     "blurbEn": "Words for the colors all around us.",
     "hoyaIntroEn": "Look around! How many colors can you spot?",
     "tint": "stage.stage2",
     "coverItemId": "vocab:ppalgansaek",
-    "status": "draft",
+    "status": "ready",
     "fixedOrder": true
   },
   {
@@ -61,20 +61,20 @@ export const VOCAB_TOPICS: readonly VocabTopic[] = [
     "titleKo": {
       "ko": "숫자",
       "romanization": "sutja",
-      "en": "number"
+      "en": "numbers"
     },
-    "blurbEn": "Counting words from one to ten, then twenty and zero.",
-    "hoyaIntroEn": "Let us count together, one by one.",
+    "blurbEn": "Numbers to count from one to ten, plus twenty and zero.",
+    "hoyaIntroEn": "Let's count together, one by one.",
     "tint": "stage.stage2",
     "coverItemId": "vocab:daseot",
-    "status": "draft",
+    "status": "ready",
     "fixedOrder": true
   }
 ];
 
 export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
   {
-    "id": "vocab:sagwa",
+    "id": "vocab:sagwa-apple",
     "ko": "사과",
     "romanization": "sagwa",
     "en": "apple",
@@ -84,6 +84,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:food-apple",
+    "senseGroup": "sagwa",
     "glosses": {
       "en": "apple",
       "es": "manzana"
@@ -141,16 +142,17 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "id": "vocab:bap",
     "ko": "밥",
     "romanization": "bap",
-    "en": "rice",
+    "en": "cooked rice",
     "pos": "noun",
     "topics": [
       "food"
     ],
     "level": 1,
     "visual": "card:rice",
+    "senseNote": "It also means a meal. Uncooked rice is ssal.",
     "glosses": {
-      "en": "rice",
-      "es": "arroz"
+      "en": "cooked rice",
+      "es": "arroz cocido"
     }
   },
   {
@@ -164,6 +166,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "card:kimchi",
+    "senseNote": "A Korean side dish of fermented vegetables, often spicy.",
     "glosses": {
       "en": "kimchi",
       "es": "kimchi"
@@ -173,7 +176,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "id": "vocab:gimbap",
     "ko": "김밥",
     "romanization": "gimbap",
-    "en": "gimbap",
+    "en": "gimbap (seaweed rice roll)",
     "pos": "noun",
     "topics": [
       "food"
@@ -181,8 +184,8 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "level": 2,
     "visual": "card:kimbap",
     "glosses": {
-      "en": "gimbap",
-      "es": "gimbap"
+      "en": "gimbap (seaweed rice roll)",
+      "es": "gimbap (rollo de arroz con alga)"
     }
   },
   {
@@ -228,6 +231,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 2,
     "visual": "word:food-egg",
+    "senseNote": "Also called gyeran, which is just as common.",
     "glosses": {
       "en": "egg",
       "es": "huevo"
@@ -260,6 +264,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:food-tteok",
+    "senseNote": "A soft, chewy Korean food made from rice.",
     "glosses": {
       "en": "rice cake",
       "es": "pastel de arroz"
@@ -308,9 +313,10 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 2,
     "visual": "word:animal-puppy",
+    "senseNote": "Also the everyday word for a pet dog. The plain word for dog is gae.",
     "glosses": {
       "en": "puppy",
-      "es": "cachorro"
+      "es": "perrito"
     }
   },
   {
@@ -346,7 +352,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     }
   },
   {
-    "id": "vocab:sae",
+    "id": "vocab:sae-bird",
     "ko": "새",
     "romanization": "sae",
     "en": "bird",
@@ -356,6 +362,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:animal-bird",
+    "senseGroup": "sae",
     "glosses": {
       "en": "bird",
       "es": "pájaro"
@@ -598,7 +605,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "visual": "word:color-brown",
     "glosses": {
       "en": "brown",
-      "es": "café"
+      "es": "marrón"
     }
   },
   {
@@ -660,7 +667,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:count-1",
-    "senseNote": "Before a counting word it becomes han.",
+    "senseNote": "Before a counter word, as in han gae (one thing), it becomes han.",
     "glosses": {
       "en": "one",
       "es": "uno"
@@ -677,7 +684,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:count-2",
-    "senseNote": "Before a counting word it becomes du.",
+    "senseNote": "Before a counter word, as in du gae (two things), it becomes du.",
     "glosses": {
       "en": "two",
       "es": "dos"
@@ -694,7 +701,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:count-3",
-    "senseNote": "Before a counting word it becomes se.",
+    "senseNote": "Before a counter word, as in se gae (three things), it becomes se.",
     "glosses": {
       "en": "three",
       "es": "tres"
@@ -711,7 +718,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:count-4",
-    "senseNote": "Before a counting word it becomes ne.",
+    "senseNote": "Before a counter word, as in ne gae (four things), it becomes ne.",
     "glosses": {
       "en": "four",
       "es": "cuatro"
@@ -798,7 +805,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     }
   },
   {
-    "id": "vocab:yeol",
+    "id": "vocab:yeol-ten",
     "ko": "열",
     "romanization": "yeol",
     "en": "ten",
@@ -808,6 +815,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:count-10",
+    "senseGroup": "yeol",
     "glosses": {
       "en": "ten",
       "es": "diez"
@@ -824,7 +832,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 2,
     "visual": "word:count-20",
-    "senseNote": "Before a counting word it becomes seumu.",
+    "senseNote": "Before a counter word, as in seumu gae (twenty things), it becomes seumu.",
     "glosses": {
       "en": "twenty",
       "es": "veinte"
@@ -841,7 +849,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:count-0",
-    "senseNote": "Sino-Korean zero. In phone numbers people say gong.",
+    "senseNote": "Native Korean has no zero; this word comes from Chinese. In phone numbers people say gong.",
     "senseGroup": "yeong",
     "glosses": {
       "en": "zero",
@@ -1008,6 +1016,51 @@ export const VOCAB_SENSES: VocabSensesFile['groups'] = [
         "id": "vocab:yeong-zero",
         "en": "zero",
         "state": "launch"
+      }
+    ]
+  },
+  {
+    "group": "sagwa",
+    "members": [
+      {
+        "id": "vocab:sagwa-apple",
+        "en": "apple",
+        "state": "launch"
+      },
+      {
+        "id": "vocab:sagwa-apology",
+        "en": "apology",
+        "state": "reserved"
+      }
+    ]
+  },
+  {
+    "group": "sae",
+    "members": [
+      {
+        "id": "vocab:sae-bird",
+        "en": "bird",
+        "state": "launch"
+      },
+      {
+        "id": "vocab:sae-new",
+        "en": "new",
+        "state": "reserved"
+      }
+    ]
+  },
+  {
+    "group": "yeol",
+    "members": [
+      {
+        "id": "vocab:yeol-ten",
+        "en": "ten",
+        "state": "launch"
+      },
+      {
+        "id": "vocab:yeol-fever",
+        "en": "fever, heat",
+        "state": "reserved"
       }
     ]
   },

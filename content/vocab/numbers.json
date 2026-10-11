@@ -8,13 +8,13 @@
     "titleKo": {
       "ko": "숫자",
       "romanization": "sutja",
-      "en": "number"
+      "en": "numbers"
     },
-    "blurbEn": "Counting words from one to ten, then twenty and zero.",
-    "hoyaIntroEn": "Let us count together, one by one.",
+    "blurbEn": "Numbers to count from one to ten, plus twenty and zero.",
+    "hoyaIntroEn": "Let's count together, one by one.",
     "tint": "stage.stage2",
     "coverItemId": "vocab:daseot",
-    "status": "draft",
+    "status": "ready",
     "fixedOrder": true
   },
   "items": [
@@ -29,7 +29,7 @@
       ],
       "level": 1,
       "visual": "word:count-1",
-      "senseNote": "Before a counting word it becomes han."
+      "senseNote": "Before a counter word, as in han gae (one thing), it becomes han."
     },
     {
       "id": "vocab:dul",
@@ -42,7 +42,7 @@
       ],
       "level": 1,
       "visual": "word:count-2",
-      "senseNote": "Before a counting word it becomes du."
+      "senseNote": "Before a counter word, as in du gae (two things), it becomes du."
     },
     {
       "id": "vocab:set",
@@ -55,7 +55,7 @@
       ],
       "level": 1,
       "visual": "word:count-3",
-      "senseNote": "Before a counting word it becomes se."
+      "senseNote": "Before a counter word, as in se gae (three things), it becomes se."
     },
     {
       "id": "vocab:net",
@@ -68,7 +68,7 @@
       ],
       "level": 1,
       "visual": "word:count-4",
-      "senseNote": "Before a counting word it becomes ne."
+      "senseNote": "Before a counter word, as in ne gae (four things), it becomes ne."
     },
     {
       "id": "vocab:daseot",
@@ -131,7 +131,7 @@
       "visual": "word:count-9"
     },
     {
-      "id": "vocab:yeol",
+      "id": "vocab:yeol-ten",
       "ko": "열",
       "romanization": "yeol",
       "en": "ten",
@@ -140,7 +140,8 @@
         "numbers"
       ],
       "level": 1,
-      "visual": "word:count-10"
+      "visual": "word:count-10",
+      "senseGroup": "yeol"
     },
     {
       "id": "vocab:seumul",
@@ -153,7 +154,7 @@
       ],
       "level": 2,
       "visual": "word:count-20",
-      "senseNote": "Before a counting word it becomes seumu."
+      "senseNote": "Before a counter word, as in seumu gae (twenty things), it becomes seumu."
     },
     {
       "id": "vocab:yeong-zero",
@@ -166,7 +167,7 @@
       ],
       "level": 1,
       "visual": "word:count-0",
-      "senseNote": "Sino-Korean zero. In phone numbers people say gong.",
+      "senseNote": "Native Korean has no zero; this word comes from Chinese. In phone numbers people say gong.",
       "senseGroup": "yeong"
     }
   ]

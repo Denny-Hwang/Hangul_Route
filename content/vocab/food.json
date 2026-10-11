@@ -11,15 +11,15 @@
       "en": "food"
     },
     "blurbEn": "Words for what we eat and drink.",
-    "hoyaIntroEn": "Hungry? Let us name some tasty things together.",
+    "hoyaIntroEn": "Hungry? Let's name some tasty things together.",
     "tint": "theme.life",
-    "coverItemId": "vocab:sagwa",
-    "status": "draft",
+    "coverItemId": "vocab:sagwa-apple",
+    "status": "ready",
     "fixedOrder": false
   },
   "items": [
     {
-      "id": "vocab:sagwa",
+      "id": "vocab:sagwa-apple",
       "ko": "사과",
       "romanization": "sagwa",
       "en": "apple",
@@ -28,7 +28,8 @@
         "food"
       ],
       "level": 1,
-      "visual": "word:food-apple"
+      "visual": "word:food-apple",
+      "senseGroup": "sagwa"
     },
     {
       "id": "vocab:banana",
@@ -70,13 +71,14 @@
       "id": "vocab:bap",
       "ko": "밥",
       "romanization": "bap",
-      "en": "rice",
+      "en": "cooked rice",
       "pos": "noun",
       "topics": [
         "food"
       ],
       "level": 1,
-      "visual": "card:rice"
+      "visual": "card:rice",
+      "senseNote": "It also means a meal. Uncooked rice is ssal."
     },
     {
       "id": "vocab:gimchi",
@@ -88,13 +90,14 @@
         "food"
       ],
       "level": 1,
-      "visual": "card:kimchi"
+      "visual": "card:kimchi",
+      "senseNote": "A Korean side dish of fermented vegetables, often spicy."
     },
     {
       "id": "vocab:gimbap",
       "ko": "김밥",
       "romanization": "gimbap",
-      "en": "gimbap",
+      "en": "gimbap (seaweed rice roll)",
       "pos": "noun",
       "topics": [
         "food"
@@ -136,7 +139,8 @@
         "food"
       ],
       "level": 2,
-      "visual": "word:food-egg"
+      "visual": "word:food-egg",
+      "senseNote": "Also called gyeran, which is just as common."
     },
     {
       "id": "vocab:ttalgi",
@@ -160,7 +164,8 @@
         "food"
       ],
       "level": 1,
-      "visual": "word:food-tteok"
+      "visual": "word:food-tteok",
+      "senseNote": "A soft, chewy Korean food made from rice."
     }
   ]
 }

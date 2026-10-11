@@ -18,7 +18,7 @@ The file name is `<topic.key>.json`. A topic file is `{ schemaVersion: 1, topic,
 
 ## Authoring rules
 
-- **One id per sense**: `vocab:<romanization without spaces>[-<sense>]` (`vocab:sagwa`, `vocab:nun-eye`). Ids are permanent: they are audio file names (`audio/vocab/<slug>.mp3`), progress keys and overlay keys.
+- **One id per sense**: `vocab:<romanization without spaces>[-<sense>]` (`vocab:sagwa-apple`, `vocab:nun-eye`). Ids are permanent: they are audio file names (`audio/vocab/<slug>.mp3`), progress keys and overlay keys.
 - **Romanization** is Revised Romanization of the pronunciation, unhyphenated (`yunnori`, not `yutnori` or `yun-no-ri`). `checkRomanization` fails the suite on a mismatch; an exception needs a documented converter limit as its reason.
 - **Homonyms** (same `ko`, different meaning) share a `senseGroup`, carry a sense suffix in the id, and are listed as `launch` members of that group in `_senses.json`. A sense that is not shipped yet is listed as `reserved`: its id is taken and no item may use it. `_senses.json` stores no Korean (the validator would demand a romanization and gloss next to it).
 - **English only in the item** (`en`, `senseNote`, `titleEn`, `blurbEn`, `hoyaIntroEn`): no Hangul (`korean-in-ui-field` in `scripts/validate-content.mjs`), no banned learner word (`missed`, `incomplete`, `failed`, `overdue`), no age words (`kids`, `children`, `ages`, `baby talk`). Spanish glosses and the Korean description live in the overlay files, never in the topic file.

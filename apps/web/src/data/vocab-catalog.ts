@@ -10,7 +10,7 @@ export interface VocabCatalogEntry {
 
 export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
   {
-    "id": "vocab:sagwa",
+    "id": "vocab:sagwa-apple",
     "ko": "사과",
     "romanization": "sagwa",
     "en": "apple",
@@ -45,7 +45,7 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "id": "vocab:bap",
     "ko": "밥",
     "romanization": "bap",
-    "en": "rice",
+    "en": "cooked rice",
     "topic": "food",
     "visual": "card:rice"
   },
@@ -61,7 +61,7 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "id": "vocab:gimbap",
     "ko": "김밥",
     "romanization": "gimbap",
-    "en": "gimbap",
+    "en": "gimbap (seaweed rice roll)",
     "topic": "food",
     "visual": "card:kimbap"
   },
@@ -146,7 +146,7 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:animal-bear"
   },
   {
-    "id": "vocab:sae",
+    "id": "vocab:sae-bird",
     "ko": "새",
     "romanization": "sae",
     "en": "bird",
@@ -370,7 +370,7 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:count-9"
   },
   {
-    "id": "vocab:yeol",
+    "id": "vocab:yeol-ten",
     "ko": "열",
     "romanization": "yeol",
     "en": "ten",

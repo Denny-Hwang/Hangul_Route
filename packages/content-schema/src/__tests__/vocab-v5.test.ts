@@ -25,6 +25,8 @@ interface Row {
   level: 1 | 2 | 3;
   /** Spanish senseNote draft, only for rows that carry a senseNote. */
   note?: { en: string; es: string };
+  /** Sense group registered in _senses.json, only on homonyms. */
+  senseGroup?: string;
 }
 
 interface TopicSpec {
@@ -43,10 +45,10 @@ interface TopicSpec {
 const ANIMALS: Row[] = [
   { id: 'vocab:horangi', ko: '호랑이', romanization: 'horangi', en: 'tiger', es: 'tigre', visual: 'card:tiger', level: 2 },
   { id: 'vocab:goyangi', ko: '고양이', romanization: 'goyangi', en: 'cat', es: 'gato', visual: 'word:animal-cat', level: 2 },
-  { id: 'vocab:gangaji', ko: '강아지', romanization: 'gangaji', en: 'puppy', es: 'cachorro', visual: 'word:animal-puppy', level: 2 },
+  { id: 'vocab:gangaji', ko: '강아지', romanization: 'gangaji', en: 'puppy', es: 'perrito', visual: 'word:animal-puppy', level: 2, note: { en: 'Also the everyday word for a pet dog. The plain word for dog is gae.', es: 'También se usa para cualquier perro de casa. La palabra general para perro es gae.' } },
   { id: 'vocab:tokki', ko: '토끼', romanization: 'tokki', en: 'rabbit', es: 'conejo', visual: 'word:animal-rabbit', level: 1 },
   { id: 'vocab:gom', ko: '곰', romanization: 'gom', en: 'bear', es: 'oso', visual: 'word:animal-bear', level: 1 },
-  { id: 'vocab:sae', ko: '새', romanization: 'sae', en: 'bird', es: 'pájaro', visual: 'word:animal-bird', level: 1 },
+  { id: 'vocab:sae-bird', ko: '새', romanization: 'sae', en: 'bird', es: 'pájaro', visual: 'word:animal-bird', level: 1, senseGroup: 'sae' },
   { id: 'vocab:mulgogi', ko: '물고기', romanization: 'mulgogi', en: 'fish', es: 'pez', visual: 'word:animal-fish', level: 2 },
   { id: 'vocab:ori', ko: '오리', romanization: 'ori', en: 'duck', es: 'pato', visual: 'word:animal-duck', level: 1 },
   { id: 'vocab:yeou', ko: '여우', romanization: 'yeou', en: 'fox', es: 'zorro', visual: 'word:animal-fox', level: 1 },
@@ -64,25 +66,25 @@ const COLORS: Row[] = [
   { id: 'vocab:borasaek', ko: '보라색', romanization: 'borasaek', en: 'purple', es: 'morado', visual: 'word:color-purple', level: 2 },
   { id: 'vocab:bunhongsaek', ko: '분홍색', romanization: 'bunhongsaek', en: 'pink', es: 'rosa', visual: 'word:color-pink', level: 2 },
   { id: 'vocab:haneulsaek', ko: '하늘색', romanization: 'haneulsaek', en: 'sky blue', es: 'celeste', visual: 'word:color-skyblue', level: 2 },
-  { id: 'vocab:galsaek', ko: '갈색', romanization: 'galsaek', en: 'brown', es: 'café', visual: 'word:color-brown', level: 1 },
+  { id: 'vocab:galsaek', ko: '갈색', romanization: 'galsaek', en: 'brown', es: 'marrón', visual: 'word:color-brown', level: 1 },
   { id: 'vocab:hoesaek', ko: '회색', romanization: 'hoesaek', en: 'gray', es: 'gris', visual: 'word:color-gray', level: 1 },
   { id: 'vocab:hayansaek', ko: '하얀색', romanization: 'hayansaek', en: 'white', es: 'blanco', visual: 'word:color-white', level: 2 },
   { id: 'vocab:geomeunsaek', ko: '검은색', romanization: 'geomeunsaek', en: 'black', es: 'negro', visual: 'word:color-black', level: 2 },
 ];
 
 const NUMBERS: Row[] = [
-  { id: 'vocab:hana', ko: '하나', romanization: 'hana', en: 'one', es: 'uno', visual: 'word:count-1', level: 1, note: { en: 'Before a counting word it becomes han.', es: 'Antes de una palabra de conteo se convierte en han.' } },
-  { id: 'vocab:dul', ko: '둘', romanization: 'dul', en: 'two', es: 'dos', visual: 'word:count-2', level: 1, note: { en: 'Before a counting word it becomes du.', es: 'Antes de una palabra de conteo se convierte en du.' } },
-  { id: 'vocab:set', ko: '셋', romanization: 'set', en: 'three', es: 'tres', visual: 'word:count-3', level: 1, note: { en: 'Before a counting word it becomes se.', es: 'Antes de una palabra de conteo se convierte en se.' } },
-  { id: 'vocab:net', ko: '넷', romanization: 'net', en: 'four', es: 'cuatro', visual: 'word:count-4', level: 1, note: { en: 'Before a counting word it becomes ne.', es: 'Antes de una palabra de conteo se convierte en ne.' } },
+  { id: 'vocab:hana', ko: '하나', romanization: 'hana', en: 'one', es: 'uno', visual: 'word:count-1', level: 1, note: { en: 'Before a counter word, as in han gae (one thing), it becomes han.', es: 'Delante de un contador, como en han gae (una cosa), se dice han.' } },
+  { id: 'vocab:dul', ko: '둘', romanization: 'dul', en: 'two', es: 'dos', visual: 'word:count-2', level: 1, note: { en: 'Before a counter word, as in du gae (two things), it becomes du.', es: 'Delante de un contador, como en du gae (dos cosas), se dice du.' } },
+  { id: 'vocab:set', ko: '셋', romanization: 'set', en: 'three', es: 'tres', visual: 'word:count-3', level: 1, note: { en: 'Before a counter word, as in se gae (three things), it becomes se.', es: 'Delante de un contador, como en se gae (tres cosas), se dice se.' } },
+  { id: 'vocab:net', ko: '넷', romanization: 'net', en: 'four', es: 'cuatro', visual: 'word:count-4', level: 1, note: { en: 'Before a counter word, as in ne gae (four things), it becomes ne.', es: 'Delante de un contador, como en ne gae (cuatro cosas), se dice ne.' } },
   { id: 'vocab:daseot', ko: '다섯', romanization: 'daseot', en: 'five', es: 'cinco', visual: 'word:count-5', level: 1 },
   { id: 'vocab:yeoseot', ko: '여섯', romanization: 'yeoseot', en: 'six', es: 'seis', visual: 'word:count-6', level: 1 },
   { id: 'vocab:ilgop', ko: '일곱', romanization: 'ilgop', en: 'seven', es: 'siete', visual: 'word:count-7', level: 1 },
   { id: 'vocab:yeodeol', ko: '여덟', romanization: 'yeodeol', en: 'eight', es: 'ocho', visual: 'word:count-8', level: 1 },
   { id: 'vocab:ahop', ko: '아홉', romanization: 'ahop', en: 'nine', es: 'nueve', visual: 'word:count-9', level: 1 },
-  { id: 'vocab:yeol', ko: '열', romanization: 'yeol', en: 'ten', es: 'diez', visual: 'word:count-10', level: 1 },
-  { id: 'vocab:seumul', ko: '스물', romanization: 'seumul', en: 'twenty', es: 'veinte', visual: 'word:count-20', level: 2, note: { en: 'Before a counting word it becomes seumu.', es: 'Antes de una palabra de conteo se convierte en seumu.' } },
-  { id: 'vocab:yeong-zero', ko: '영', romanization: 'yeong', en: 'zero', es: 'cero', visual: 'word:count-0', level: 1, note: { en: 'Sino-Korean zero. In phone numbers people say gong.', es: 'Cero sinocoreano. En los números de teléfono se dice gong.' } },
+  { id: 'vocab:yeol-ten', ko: '열', romanization: 'yeol', en: 'ten', es: 'diez', visual: 'word:count-10', level: 1, senseGroup: 'yeol' },
+  { id: 'vocab:seumul', ko: '스물', romanization: 'seumul', en: 'twenty', es: 'veinte', visual: 'word:count-20', level: 2, note: { en: 'Before a counter word, as in seumu gae (twenty things), it becomes seumu.', es: 'Delante de un contador, como en seumu gae (veinte cosas), se dice seumu.' } },
+  { id: 'vocab:yeong-zero', ko: '영', romanization: 'yeong', en: 'zero', es: 'cero', visual: 'word:count-0', level: 1, note: { en: 'Native Korean has no zero; this word comes from Chinese. In phone numbers people say gong.', es: 'El coreano nativo no tiene cero; viene del chino. En los números de teléfono se dice gong.' }, senseGroup: 'yeong' },
 ];
 
 const TOPICS: TopicSpec[] = [
@@ -91,11 +93,11 @@ const TOPICS: TopicSpec[] = [
     tint: 'theme.nature', coverItemId: 'vocab:horangi', fixedOrder: false, pos: 'noun', rows: ANIMALS,
   },
   {
-    key: 'colors', order: 3, titleEn: 'Colors', titleEs: 'Colores', titleKo: { ko: '색', romanization: 'saek', en: 'color' },
+    key: 'colors', order: 3, titleEn: 'Colors', titleEs: 'Colores', titleKo: { ko: '색', romanization: 'saek', en: 'colors' },
     tint: 'stage.stage2', coverItemId: 'vocab:ppalgansaek', fixedOrder: true, pos: 'noun', rows: COLORS,
   },
   {
-    key: 'numbers', order: 4, titleEn: 'Numbers', titleEs: 'Números', titleKo: { ko: '숫자', romanization: 'sutja', en: 'number' },
+    key: 'numbers', order: 4, titleEn: 'Numbers', titleEs: 'Números', titleKo: { ko: '숫자', romanization: 'sutja', en: 'numbers' },
     tint: 'stage.stage2', coverItemId: 'vocab:daseot', fixedOrder: true, pos: 'number', rows: NUMBERS,
   },
 ];
@@ -125,6 +127,7 @@ describe.each(TOPICS)('content/vocab/$key.json (F-VOC-001 V-5)', (spec) => {
     expect(item.topics).toEqual([spec.key]);
     expect(item.pos).toBe(spec.pos);
     expect(item.senseNote).toBe(row.note?.en);
+    expect(item.senseGroup).toBe(row.senseGroup);
   });
 
   it.each(spec.rows)('$id romanization equals the converter output (unhyphenated RR)', (row) => {
@@ -132,7 +135,7 @@ describe.each(TOPICS)('content/vocab/$key.json (F-VOC-001 V-5)', (spec) => {
     expect(row.romanization).not.toContain('-');
   });
 
-  it('declares the topic as a draft that no learner can reach yet', () => {
+  it('declares the topic ready after the production review (V12)', () => {
     expect(file.topic).toMatchObject({
       id: `vocab-topic:${spec.key}`,
       key: spec.key,
@@ -140,7 +143,7 @@ describe.each(TOPICS)('content/vocab/$key.json (F-VOC-001 V-5)', (spec) => {
       titleEn: spec.titleEn,
       tint: spec.tint,
       coverItemId: spec.coverItemId,
-      status: 'draft',
+      status: 'ready',
       fixedOrder: spec.fixedOrder,
     });
     expect(file.topic.titleKo).toMatchObject(spec.titleKo);
@@ -155,7 +158,7 @@ describe.each(TOPICS)('content/vocab/$key.json (F-VOC-001 V-5)', (spec) => {
     }
   });
 
-  it('is a Spanish overlay of the vocab domain with the draft glosses from the spec table', () => {
+  it('is a Spanish overlay of the vocab domain with the glosses from the spec table', () => {
     expect(es.locale).toBe('es');
     expect(es.domain).toBe(`vocab-${spec.key}`);
     for (const row of spec.rows) {
@@ -187,17 +190,33 @@ describe('topic-specific rules', () => {
     expect(file.items.every((i) => i.visual.startsWith('word:color-'))).toBe(true);
   });
 
-  it('Numbers: only the zero joins a sense group, and the group is registered as launch', () => {
+  const senses = readJson('vocab/_senses.json') as { groups: { group: string; members: { id: string; state: string }[] }[] };
+  const membersOf = (group: string) => senses.groups.find((g) => g.group === group)?.members;
+
+  it('Numbers: zero and ten are homonyms with their own sense groups, registered as launch', () => {
     const file = VocabTopicFileSchema.parse(readJson('vocab/numbers.json'));
-    expect(file.items.filter((i) => i.senseGroup !== undefined).map((i) => [i.id, i.senseGroup])).toEqual([['vocab:yeong-zero', 'yeong']]);
-    const senses = readJson('vocab/_senses.json') as { groups: { group: string; members: { id: string; state: string }[] }[] };
-    expect(senses.groups.find((g) => g.group === 'yeong')?.members).toEqual([expect.objectContaining({ id: 'vocab:yeong-zero', state: 'launch' })]);
+    expect(file.items.filter((i) => i.senseGroup !== undefined).map((i) => [i.id, i.senseGroup])).toEqual([
+      ['vocab:yeol-ten', 'yeol'],
+      ['vocab:yeong-zero', 'yeong'],
+    ]);
+    expect(membersOf('yeong')).toEqual([expect.objectContaining({ id: 'vocab:yeong-zero', state: 'launch' })]);
+    expect(membersOf('yeol')).toEqual([
+      expect.objectContaining({ id: 'vocab:yeol-ten', state: 'launch' }),
+      expect.objectContaining({ id: 'vocab:yeol-fever', state: 'reserved' }),
+    ]);
   });
 
-  it('Animals and Colors use no sense group', () => {
-    for (const key of ['animals', 'colors']) {
-      const file = VocabTopicFileSchema.parse(readJson(`vocab/${key}.json`));
-      expect(file.items.every((i) => i.senseGroup === undefined && i.senseNote === undefined), key).toBe(true);
-    }
+  it('Animals: only the bird is a homonym (sae, "new", is reserved)', () => {
+    const file = VocabTopicFileSchema.parse(readJson('vocab/animals.json'));
+    expect(file.items.filter((i) => i.senseGroup !== undefined).map((i) => [i.id, i.senseGroup])).toEqual([['vocab:sae-bird', 'sae']]);
+    expect(membersOf('sae')).toEqual([
+      expect.objectContaining({ id: 'vocab:sae-bird', state: 'launch' }),
+      expect.objectContaining({ id: 'vocab:sae-new', state: 'reserved' }),
+    ]);
+  });
+
+  it('Colors uses no sense group and no sense note', () => {
+    const file = VocabTopicFileSchema.parse(readJson('vocab/colors.json'));
+    expect(file.items.every((i) => i.senseGroup === undefined && i.senseNote === undefined)).toBe(true);
   });
 });
