@@ -1,0 +1,458 @@
+import {
+  IDLE_PAUSE_MS,
+  MotivationSchema,
+  PlacementRunStateSchema,
+  PlacementSourceSchema,
+  UiLocaleSchema,
+  effectiveRoute,
+  hashSeed,
+  placementStageNumber,
+  type Motivation,
+  type PlacementConfig,
+  type PlacementEvent,
+  type PlacementLevel,
+  type PlacementMode,
+  type PlacementResult,
+  type PlacementRunState,
+  type PlacementSource,
+  type UiLocale,
+} from '@hangul-route/content-schema';
+import { z } from 'zod';
+import { shortHintFires } from './result-view';
+
+/**
+ * The level check's screen flow (F-PLC-001 section 3.1, wireframe placement
+ * A to L2) as a pure state machine. The screens render a `FlowState` and send
+ * `FlowEvent`s; the adaptive run itself is the engine's
+ * (`@hangul-route/content-schema` `startRun` / `apply`). Nothing here reads a
+ * clock, the device or storage: capabilities arrive inside events, read by the
+ * caller at the moment the options screen opens.
+ */
+
+export type FlowScreen =
+  | 'invite'
+  | 'language'
+  | 'options'
+  | 'handoff'
+  | 'warmup'
+  | 'sound-needed'
+  | 'item'
+  | 'result'
+  /** "I am new to Korean": no run; the caller opens FirstQuestPreview and records the decline. */
+  | 'declined'
+  /** "Start learning" on the sound-needed screen: nothing recorded. */
+  | 'left';
+
+/** What the device can play, read when the options screen opens. */
+export interface FlowCapability {
+  /** `canPlayKorean(getCapability())`. */
+  koreanAudio: boolean;
+  /** `hasVoiceFor(LOCALE_META[testLocale].speechLang)` ("unknown" counts as available). */
+  instructionVoice: boolean;
+}
+
+export interface FlowState {
+  screen: FlowScreen;
+  source: PlacementSource;
+  /** `levelOrder(profile.ageGroup)`: a reading level (0 = Pictures first), never an age. */
+  levelOrder: 0 | 1 | 2 | null;
+  locales: readonly UiLocale[];
+  /** The language of this run only; never the UI locale or a profile setting. */
+  testLocale: UiLocale;
+  koreanAudio: boolean;
+  effectiveLevel: PlacementLevel;
+  lastResult: PlacementResult | null;
+  shortAvailable: boolean;
+  mode: PlacementMode;
+  /** C1 (one pre-filled Short card) or C2 (the full screen). */
+  optionsLayout: 'card' | 'full';
+  /** The run's sound guide; null until chosen (Standard and Deep never start without it). */
+  revealMode: 'tap' | 'always' | null;
+  takeMyTime: boolean;
+  motivation: Motivation | null;
+  /** Pictures first: listen-first formats in every mode, off after "Check without sound". */
+  listenFirst: boolean;
+  /** From the warm-up; null until it reports. */
+  audio: boolean | null;
+  warmupDone: boolean;
+  /** Standard / Deep, not listen-first: "No sound here, so we will use pictures and reading". */
+  noSoundNote: boolean;
+}
+
+export type FlowEvent =
+  | { type: 'declineFork' }
+  | { type: 'acceptFork'; capability: FlowCapability }
+  | { type: 'pickLocale'; locale: UiLocale }
+  | { type: 'confirmLanguage'; capability: FlowCapability }
+  | { type: 'change' }
+  | { type: 'selectMode'; mode: PlacementMode }
+  | { type: 'setRevealMode'; revealMode: 'tap' | 'always' }
+  | { type: 'setTakeMyTime'; on: boolean }
+  | { type: 'setMotivation'; motivation: Motivation | null }
+  | { type: 'next' }
+  | { type: 'tapHoya' }
+  | { type: 'warmupAudio'; result: 'played' | 'muted' | 'unavailable' }
+  | { type: 'warmupAnswer' }
+  | { type: 'tryAgain' }
+  | { type: 'startLearning' }
+  | { type: 'withoutSound' }
+  | { type: 'runFinished' };
+
+const STAGE1_BAND0: PlacementLevel = { stage: 'stage1', band: 0 };
+
+const rank = (level: PlacementLevel): number => placementStageNumber(level.stage) * 10 + level.band;
+
+/** Short needs a Korean voice for the prompts and a voice for the instructions (section 3.1 step 3). */
+export function shortAvailable(koreanAudio: boolean, instructionVoice: boolean): boolean {
+  return koreanAudio && instructionVoice;
+}
+
+/**
+ * The pre-selected mode: the first rule that matches (section 3.1 step 3).
+ * Deep is never pre-selected; Short never once the route is above stage1 band 0.
+ */
+export function defaultMode(
+  levelOrder: 0 | 1 | 2 | null,
+  effectiveLevel: PlacementLevel,
+  lastResult: PlacementResult | null,
+  isShortAvailable: boolean,
+): PlacementMode {
+  if (lastResult !== null && shortHintFires(lastResult)) return 'standard';
+  if (rank(effectiveLevel) > rank(STAGE1_BAND0)) return 'standard';
+  if (levelOrder === 0 && isShortAvailable) return 'short';
+  return 'standard';
+}
+
+export interface StartFlowInput {
+  source: PlacementSource;
+  levelOrder: 0 | 1 | 2 | null;
+  /** `availableLocales()`. */
+  locales: readonly UiLocale[];
+  /** The effective UI locale (profile override, else device, else detected). */
+  uiLocale: UiLocale;
+  /** The snapshot's stored results (a missing list is `[]`). */
+  placements: readonly PlacementResult[];
+  /** `AccessibilityInfo.isScreenReaderEnabled()`: pre-sets Take my time, never the mode. */
+  screenReader: boolean;
+  /** Read now: used when the flow opens straight on the options screen. */
+  capability: FlowCapability;
+}
+
+function newestOf(placements: readonly PlacementResult[]): PlacementResult | null {
+  return [...placements].sort((a, b) => b.completedAt.localeCompare(a.completedAt))[0] ?? null;
+}
+
+function openOptions(state: FlowState, capability: FlowCapability): FlowState {
+  const available = shortAvailable(capability.koreanAudio, capability.instructionVoice);
+  const mode = defaultMode(state.levelOrder, state.effectiveLevel, state.lastResult, available);
+  return {
+    ...state,
+    screen: 'options',
+    koreanAudio: capability.koreanAudio,
+    shortAvailable: available,
+    mode,
+    optionsLayout: mode === 'short' ? 'card' : 'full',
+    revealMode: null,
+  };
+}
+
+function afterFork(state: FlowState, capability: FlowCapability): FlowState {
+  if (state.locales.length > 1) return { ...state, screen: 'language', koreanAudio: capability.koreanAudio };
+  return openOptions({ ...state, testLocale: 'en' }, capability);
+}
+
+export function startFlow(input: StartFlowInput): FlowState {
+  // The route seed's level does not depend on the catalogue or the tier.
+  const seed = effectiveRoute(input.placements, { quests: [] }, { isEntitled: () => true, completedQuestIds: new Set() });
+  const testLocale = input.locales.includes(input.uiLocale) ? input.uiLocale : (input.locales[0] ?? 'en');
+  const base: FlowState = {
+    screen: 'invite',
+    source: input.source,
+    levelOrder: input.levelOrder,
+    locales: input.locales,
+    testLocale,
+    koreanAudio: input.capability.koreanAudio,
+    effectiveLevel: seed?.level ?? STAGE1_BAND0,
+    lastResult: newestOf(input.placements),
+    shortAvailable: false,
+    mode: 'standard',
+    optionsLayout: 'full',
+    revealMode: null,
+    takeMyTime: input.screenReader,
+    motivation: null,
+    listenFirst: input.levelOrder === 0,
+    audio: null,
+    warmupDone: false,
+    noSoundNote: false,
+  };
+  return input.source === 'onboarding' ? base : afterFork(base, input.capability);
+}
+
+/** Whether NEXT / Start is enabled on the options screen. */
+export function canProceed(state: FlowState): boolean {
+  if (state.screen !== 'options') return false;
+  return state.mode === 'short' ? state.shortAvailable : state.revealMode !== null;
+}
+
+/** The sound-guide question shows on the full screen for Standard and Deep only (Short asks none, P19). */
+export function showSoundGuideQuestion(state: FlowState): boolean {
+  return state.screen === 'options' && state.optionsLayout === 'full' && state.mode !== 'short';
+}
+
+/** Whether a run in this mode needs sound to start at all (Short, or any listen-first run). */
+const needsSound = (state: FlowState): boolean => state.mode === 'short' || state.listenFirst;
+
+const toQuestions = (state: FlowState): FlowState => ({ ...state, screen: state.warmupDone ? 'item' : 'warmup' });
+
+export function flowReducer(state: FlowState, event: FlowEvent): FlowState {
+  switch (state.screen) {
+    case 'invite':
+      if (event.type === 'declineFork') return { ...state, screen: 'declined' };
+      if (event.type === 'acceptFork') return afterFork(state, event.capability);
+      return state;
+    case 'language':
+      if (event.type === 'pickLocale') {
+        if (event.locale === 'ko' && !state.koreanAudio) return state;
+        return { ...state, testLocale: event.locale };
+      }
+      if (event.type === 'confirmLanguage') return openOptions(state, event.capability);
+      return state;
+    case 'options':
+      switch (event.type) {
+        case 'change':
+          return { ...state, optionsLayout: 'full' };
+        case 'selectMode':
+          if (event.mode === 'short' && !state.shortAvailable) return state;
+          return { ...state, mode: event.mode };
+        case 'setRevealMode':
+          return { ...state, revealMode: event.revealMode };
+        case 'setTakeMyTime':
+          return { ...state, takeMyTime: event.on };
+        case 'setMotivation':
+          return { ...state, motivation: event.motivation };
+        case 'next':
+          if (!canProceed(state)) return state;
+          if (state.mode === 'short' || state.levelOrder === 0) return { ...state, screen: 'handoff' };
+          return toQuestions(state);
+        default:
+          return state;
+      }
+    case 'handoff':
+      return event.type === 'tapHoya' ? toQuestions(state) : state;
+    case 'warmup':
+      if (event.type === 'warmupAudio') {
+        if (event.result !== 'unavailable') return { ...state, audio: true };
+        if (needsSound(state)) return { ...state, audio: false, screen: 'sound-needed' };
+        return { ...state, audio: false, noSoundNote: true };
+      }
+      if (event.type === 'warmupAnswer') return { ...state, audio: state.audio ?? true, warmupDone: true, screen: 'item' };
+      return state;
+    case 'sound-needed':
+      if (event.type === 'tryAgain') return { ...state, screen: 'warmup', audio: null, noSoundNote: false };
+      if (event.type === 'startLearning') return { ...state, screen: 'left' };
+      if (event.type === 'withoutSound') {
+        // The grown-up's explicit choice of a Standard run with listen-first off;
+        // the sound guide is asked again and the warm-up is not repeated.
+        return {
+          ...state,
+          screen: 'options',
+          optionsLayout: 'full',
+          mode: 'standard',
+          shortAvailable: false,
+          revealMode: null,
+          listenFirst: false,
+          audio: false,
+          warmupDone: true,
+        };
+      }
+      return state;
+    case 'item':
+      return event.type === 'runFinished' ? { ...state, screen: 'result' } : state;
+    default:
+      return state;
+  }
+}
+
+/** One tile of the language screen (section 3.1 step 2). */
+export interface LanguageTile {
+  locale: UiLocale;
+  selected: boolean;
+  /** `ko` without a Korean voice: its reading instructions are audio-only. */
+  disabled: boolean;
+  /** `learner.placement.language.<line>`. */
+  line: 'noKoreanVoice' | 'noVoice' | null;
+}
+
+export function languageTiles(
+  locales: readonly UiLocale[],
+  selected: UiLocale,
+  koreanAudio: boolean,
+  hasInstructionVoice: (locale: UiLocale) => boolean,
+): LanguageTile[] {
+  return locales.map((locale) => {
+    const disabled = locale === 'ko' && !koreanAudio;
+    const line = disabled ? 'noKoreanVoice' : hasInstructionVoice(locale) ? null : 'noVoice';
+    return { locale, selected: locale === selected, disabled, line };
+  });
+}
+
+/**
+ * The controls a Pictures first learner meets from the options card to the
+ * warm-up: each has a spoken label and an icon, so nothing has to be read
+ * (section 3.1 step 3a; the screens render exactly these).
+ */
+export function handoffControls(): readonly { id: string; spoken: true; icon: string }[] {
+  return [
+    { id: 'options.start', spoken: true, icon: 'play' },
+    { id: 'handoff.hoya', spoken: true, icon: 'hoya' },
+  ];
+}
+
+export interface RunConfigContext {
+  profileId: string;
+  startedAtMs: number;
+  screenReader: boolean;
+  /** `canPlayKorean(getCapability())` when the run starts. */
+  koreanAudio: boolean;
+  /** `previousExclude(placements)`. */
+  exclude: string[];
+  resolvesPicture: (ref: string) => boolean;
+  /** The bank's warm-up template (`PLACEMENT_WARMUP`). */
+  warmup: { question: { tags: readonly string[] } };
+}
+
+/** The warm-up's word, never drawn as a scored question (section 3.1 step 4). */
+export function warmupAvoidTags(warmup: { question: { tags: readonly string[] } }): string[] {
+  return warmup.question.tags.filter((tag) => tag.startsWith('word:'));
+}
+
+/** The template ids of the newest stored result: excluded while each rung keeps three questions. */
+export function previousExclude(placements: readonly PlacementResult[]): string[] {
+  return newestOf(placements)?.responses.map((r) => r.questionId) ?? [];
+}
+
+/** The engine configuration of the flow's choices. Short runs `tap` without a reveal button (P19). */
+export function runConfig(state: FlowState, ctx: RunConfigContext): PlacementConfig {
+  const revealMode = state.mode === 'short' ? 'tap' : state.revealMode;
+  if (revealMode === null) throw new Error('a Standard or Deep run needs an explicit sound guide choice');
+  return {
+    mode: state.mode,
+    listenFirst: state.listenFirst,
+    avoidTags: warmupAvoidTags(ctx.warmup),
+    revealMode,
+    audio: state.audio === true && ctx.koreanAudio,
+    visual: !ctx.screenReader,
+    takeMyTime: state.takeMyTime,
+    seed: hashSeed([ctx.profileId, String(ctx.startedAtMs)]),
+    exclude: [...ctx.exclude],
+    resolvesPicture: ctx.resolvesPicture,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// The item screen (section 3.1 step 5)
+// ---------------------------------------------------------------------------
+
+export const FALLBACK_EXTRA_MS = 3_000;
+export const FALLBACK_MAX_MS = 8_000;
+
+/** When a Short item's choices enable if the prompt never reports its end. */
+export function choicesFallbackMs(estimatedPromptMs: number): number {
+  return Math.min(estimatedPromptMs + FALLBACK_EXTRA_MS, FALLBACK_MAX_MS);
+}
+
+/**
+ * Short enables the choices when the prompt's playback ends or after the
+ * fallback delay, whichever comes first; Standard and Deep at once. "I am
+ * not sure" and the exit are always enabled.
+ */
+export function choicesEnabled(input: {
+  mode: PlacementMode;
+  playbackEnded: boolean;
+  shownAtMs: number;
+  nowMs: number;
+  estimatedPromptMs: number;
+}): boolean {
+  if (input.mode !== 'short' || input.playbackEnded) return true;
+  return input.nowMs - input.shownAtMs >= choicesFallbackMs(input.estimatedPromptMs);
+}
+
+/**
+ * Prompts play on open (the warm-up's tap unlocked audio); the first item
+ * after a resume or a cold start, and every item with a screen reader on,
+ * plays on a tap of the speaker instead.
+ */
+export function promptPlayback(input: { screenReader: boolean; needsGesture: boolean }): 'auto' | 'tap' {
+  return input.screenReader || input.needsGesture ? 'tap' : 'auto';
+}
+
+/** Short speaks the instruction on the first item of each rung only. */
+export function speaksInstruction(mode: PlacementMode, indexInRung: number): boolean {
+  return mode !== 'short' || indexInRung === 0;
+}
+
+/** A neutral "Got it", or in Short only the footstep trail filling. */
+export function acknowledgement(mode: PlacementMode): 'got-it' | 'trail' {
+  return mode === 'short' ? 'trail' : 'got-it';
+}
+
+// ---------------------------------------------------------------------------
+// Pause (section 3.1 step 6)
+// ---------------------------------------------------------------------------
+
+/** `AppState` leaving the foreground opens the exit pause, so the backstop stops. */
+export function appStateEvent(appState: string): PlacementEvent | null {
+  return appState === 'background' || appState === 'inactive' ? { type: 'exit' } : null;
+}
+
+/** The caller's inactivity timer: 45 seconds, none with Take my time. */
+export function idleTimeoutMs(takeMyTime: boolean): number | null {
+  return takeMyTime ? null : IDLE_PAUSE_MS;
+}
+
+export interface PauseSheet {
+  /** `pause`: "Need a break?"; `rest`: Deep's number-free rest card. */
+  kind: 'pause' | 'rest';
+  /** The grown-up PIN link (stop reason `grown-up`). */
+  grownUpLink: boolean;
+  /** "That is enough, start learning": the engine ends with `not-sure` after three "not sure", else `quit`. */
+  enough: PlacementEvent;
+}
+
+export function pauseSheet(state: Pick<PlacementRunState, 'pause'>): PauseSheet | null {
+  if (state.pause === null) return null;
+  const enough: PlacementEvent = { type: 'quit', by: 'learner' };
+  return state.pause === 'rest' ? { kind: 'rest', grownUpLink: false, enough } : { kind: 'pause', grownUpLink: true, enough };
+}
+
+// ---------------------------------------------------------------------------
+// Resume (section 3.1 step 8)
+// ---------------------------------------------------------------------------
+
+export const RESUME_WINDOW_MS = 24 * 60 * 60 * 1000;
+
+/** What `placement-run:<profileId>` holds: the engine state plus what `finishRun` needs. */
+export const SavedRunSchema = z.object({
+  version: z.literal(1),
+  savedAtMs: z.number(),
+  testLocale: UiLocaleSchema,
+  source: PlacementSourceSchema,
+  motivation: MotivationSchema.optional(),
+  run: PlacementRunStateSchema,
+});
+export type SavedRun = z.infer<typeof SavedRunSchema>;
+
+/**
+ * A saved run that may be offered as **Continue**: saved within 24 hours,
+ * from the same bank version and not finished. Anything else is discarded
+ * silently.
+ */
+export function resumableRun(saved: unknown, nowMs: number, bankVersion: number): SavedRun | null {
+  const parsed = SavedRunSchema.safeParse(saved);
+  if (!parsed.success) return null;
+  const run = parsed.data;
+  const age = nowMs - run.savedAtMs;
+  if (age < 0 || age > RESUME_WINDOW_MS) return null;
+  if (run.run.bankVersion !== bankVersion || run.run.stop !== null) return null;
+  return run;
+}
