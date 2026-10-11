@@ -1,6 +1,7 @@
 import type { BackupFile, Profile, ProgressSnapshot } from '@hangul-route/content-schema';
 import { LOCALES, findBannedWord, getMessages, type Messages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
+import { seededRandom } from '../../listen-pick';
 import { planRestore, relinkNotice, restoreNotice } from '../restore';
 import { notifyProgressPersisted, setProgressPersistListener } from '../persist-hook';
 import { vi } from 'vitest';
@@ -112,5 +113,34 @@ describe('persist hook', () => {
     expect(l).toHaveBeenCalledWith('profile:a');
     setProgressPersistListener(null);
     expect(() => notifyProgressPersisted('profile:a')).not.toThrow();
+  });
+});
+
+describe('restore never reduces cards (F-STORY-006 §3.6 M6)', () => {
+  const T = ['2026-09-18T00:00:00.000Z', '2026-09-19T00:00:00.000Z', '2026-09-20T00:00:00.000Z'];
+  const IDS = ['card:a', 'card:b', 'card:c', 'card:d'];
+  const cards = (rand: () => number) =>
+    IDS.filter(() => rand() < 0.5).map((cardId) => ({ cardId, unlockedAt: T[Math.floor(rand() * T.length)] as string, newSinceLastView: rand() < 0.5 }));
+
+  it('an older backup merged into the device keeps every card the device holds, at the same or an earlier time', () => {
+    for (let seed = 1; seed <= 200; seed += 1) {
+      const rand = seededRandom(seed);
+      const existing = { ...snap([], []), cards: cards(rand) };
+      const backup: BackupFile = { ...file, exportedAt: '2026-09-01T00:00:00.000Z', snapshot: { ...snap([], []), cards: cards(rand) } };
+      const plan = planRestore(backup, { profile, snapshot: existing }, NOW);
+      const after = new Map(plan.snapshot.cards.map((c) => [c.cardId, c]));
+      for (const c of existing.cards) {
+        expect(after.has(c.cardId), `seed ${seed}`).toBe(true);
+        expect((after.get(c.cardId)?.unlockedAt ?? '') <= c.unlockedAt, `seed ${seed}`).toBe(true);
+      }
+      expect(plan.snapshot.cards.length, `seed ${seed}`).toBeGreaterThanOrEqual(existing.cards.length);
+    }
+  });
+
+  it('an empty backup changes no card', () => {
+    const existing = snap(['c1', 'c2'], ['q1']);
+    const plan = planRestore({ ...file, snapshot: snap([], []) }, { profile, snapshot: existing }, NOW);
+    expect(plan.snapshot.cards).toEqual(existing.cards);
+    expect(plan.added.cards).toBe(0);
   });
 });

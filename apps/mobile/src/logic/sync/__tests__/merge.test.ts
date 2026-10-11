@@ -1,6 +1,7 @@
 import type { ProgressSnapshot } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
-import { isSubsetOf, mergeSnapshots } from '../merge';
+import { seededRandom } from '../../listen-pick';
+import { isSubsetOf, mergeCard, mergeSnapshots } from '../merge';
 
 const NOW = new Date('2026-09-21T12:00:00.000Z');
 const base = (over: Partial<ProgressSnapshot> = {}): ProgressSnapshot => ({
@@ -38,7 +39,7 @@ describe('mergeSnapshots (F-SYNC-001 §3.3)', () => {
     expect(m.quests.map((q) => q.questId).sort()).toEqual(['q1', 'q2', 'q3']);
   });
 
-  it('same stars → higher accuracy wins; cards keep earliest unlock and local newSinceLastView', () => {
+  it('same stars → higher accuracy wins; cards keep earliest unlock and seen-anywhere newSinceLastView', () => {
     const local = base({
       quests: [quest('q1', 2, 0.6)],
       cards: [{ cardId: 'card:a', unlockedAt: '2026-09-20T00:00:00Z', newSinceLastView: false }],
@@ -180,5 +181,142 @@ describe('stageDoneAt, the stage latch (F-ROUTE-001 section 3.15)', () => {
     expect(isSubsetOf(base({ stageDoneAt: {} }), legacy())).toBe(true);
     // a key that happens to name an Object.prototype member is still a missing latch
     expect(isSubsetOf(base({ stageDoneAt: { constructor: '2026-10-11T10:00:00.000Z' } }), legacy())).toBe(false);
+  });
+});
+
+/**
+ * Card collection contract of mergeSnapshots (F-STORY-006 §3.6, M1-M5).
+ * Property tests over seeded random card sets: the same seeds run on every
+ * machine, so a failure is reproducible from the printed seed.
+ */
+type Card = ProgressSnapshot['cards'][number];
+
+const CARD_IDS = ['card:a', 'card:b', 'card:c', 'card:d', 'card:e', 'card:f'];
+const TIMES = ['2026-09-18T00:00:00.000Z', '2026-09-19T00:00:00.000Z', '2026-09-20T00:00:00.000Z', '2026-09-21T00:00:00.000Z'];
+const RUNS = 300;
+
+function pick<T>(rand: () => number, from: readonly T[]): T {
+  return from[Math.floor(rand() * from.length)] as T;
+}
+
+/** A random snapshot: each card present with probability 1/2, random time and seen flag. */
+function randomCards(rand: () => number): Card[] {
+  return CARD_IDS.filter(() => rand() < 0.5).map((cardId) => ({ cardId, unlockedAt: pick(rand, TIMES), newSinceLastView: rand() < 0.5 }));
+}
+
+function randomSnapshot(rand: () => number): ProgressSnapshot {
+  const quests = CARD_IDS.filter(() => rand() < 0.4).map((id) =>
+    quest(`q${id.slice(-1)}`, pick(rand, [0, 1, 2, 3] as const), rand(), 1, rand() < 0.7 ? pick(rand, TIMES) : undefined),
+  );
+  return base({ cards: randomCards(rand), quests: quests.map((q, i) => ({ ...q, attempts: i + 1 })) });
+}
+
+const cardsOf = (a: ProgressSnapshot, b: ProgressSnapshot): Card[] => mergeSnapshots(a, b, { now: NOW }).cards;
+const byId = (cards: readonly Card[]): Map<string, Card> => new Map(cards.map((c) => [c.cardId, c]));
+
+function forAll(property: (rand: () => number, seed: number) => void): void {
+  for (let seed = 1; seed <= RUNS; seed += 1) property(seededRandom(seed), seed);
+}
+
+describe('mergeCard: seen anywhere = seen (M3)', () => {
+  const at = '2026-09-20T00:00:00.000Z';
+  it('a card seen on either device stays seen, whichever side is local', () => {
+    const seen: Card = { cardId: 'card:a', unlockedAt: at, newSinceLastView: false };
+    const fresh: Card = { cardId: 'card:a', unlockedAt: at, newSinceLastView: true };
+    expect(mergeCard(seen, fresh).newSinceLastView).toBe(false);
+    expect(mergeCard(fresh, seen).newSinceLastView).toBe(false);
+    expect(mergeCard(fresh, fresh).newSinceLastView).toBe(true);
+    expect(mergeCard(seen, seen).newSinceLastView).toBe(false);
+  });
+
+  it('a seen local copy merged with an unseen server copy is not new again (and the reverse)', () => {
+    const local = base({ cards: [{ cardId: 'card:a', unlockedAt: at, newSinceLastView: true }] });
+    const server = base({ cards: [{ cardId: 'card:a', unlockedAt: at, newSinceLastView: false }] });
+    expect(cardsOf(local, server)).toEqual([{ cardId: 'card:a', unlockedAt: at, newSinceLastView: false }]);
+    expect(cardsOf(server, local)).toEqual([{ cardId: 'card:a', unlockedAt: at, newSinceLastView: false }]);
+  });
+});
+
+describe('mergeSnapshots card properties (F-STORY-006 §3.6)', () => {
+  it('M1 superset: every card of either side survives, one entry per cardId', () => {
+    forAll((rand, seed) => {
+      const a = randomSnapshot(rand);
+      const b = randomSnapshot(rand);
+      const merged = cardsOf(a, b);
+      const ids = merged.map((c) => c.cardId);
+      expect(new Set(ids).size, `seed ${seed}`).toBe(ids.length);
+      for (const c of [...a.cards, ...b.cards]) expect(ids, `seed ${seed}`).toContain(c.cardId);
+      expect(ids.every((id) => a.cards.some((c) => c.cardId === id) || b.cards.some((c) => c.cardId === id)), `seed ${seed}`).toBe(true);
+    });
+  });
+
+  it('M2 earliest time: unlockedAt is the minimum of both sides', () => {
+    forAll((rand, seed) => {
+      const a = randomSnapshot(rand);
+      const b = randomSnapshot(rand);
+      const ma = byId(a.cards);
+      const mb = byId(b.cards);
+      for (const c of cardsOf(a, b)) {
+        const times = [ma.get(c.cardId)?.unlockedAt, mb.get(c.cardId)?.unlockedAt].filter((t): t is string => t !== undefined);
+        expect(c.unlockedAt, `seed ${seed}`).toBe([...times].sort()[0]);
+      }
+    });
+  });
+
+  it('M3 seen anywhere: newSinceLastView is true only when every side holding the card still has it new', () => {
+    forAll((rand, seed) => {
+      const a = randomSnapshot(rand);
+      const b = randomSnapshot(rand);
+      const ma = byId(a.cards);
+      const mb = byId(b.cards);
+      for (const c of cardsOf(a, b)) {
+        const expected = (ma.get(c.cardId)?.newSinceLastView ?? true) && (mb.get(c.cardId)?.newSinceLastView ?? true);
+        expect(c.newSinceLastView, `seed ${seed}`).toBe(expected);
+      }
+    });
+  });
+
+  it('M4 commutative: merge(a, b) and merge(b, a) hold the same cards', () => {
+    forAll((rand, seed) => {
+      const a = randomSnapshot(rand);
+      const b = randomSnapshot(rand);
+      expect(cardsOf(a, b), `seed ${seed}`).toEqual(cardsOf(b, a));
+    });
+  });
+
+  it('M4 associative: merge(a, merge(b, c)) and merge(merge(a, b), c) hold the same cards', () => {
+    forAll((rand, seed) => {
+      const a = randomSnapshot(rand);
+      const b = randomSnapshot(rand);
+      const c = randomSnapshot(rand);
+      const left = cardsOf(a, mergeSnapshots(b, c, { now: NOW }));
+      const right = cardsOf(mergeSnapshots(a, b, { now: NOW }), c);
+      expect(left, `seed ${seed}`).toEqual(right);
+    });
+  });
+
+  it('M4 idempotent: merge(a, a) holds exactly the cards of a, sorted by cardId', () => {
+    forAll((rand, seed) => {
+      const a = randomSnapshot(rand);
+      const sorted = [...a.cards].sort((x, y) => x.cardId.localeCompare(y.cardId));
+      expect(cardsOf(a, a), `seed ${seed}`).toEqual(sorted);
+    });
+  });
+
+  it('M5 (merge side): a quest completed on either side is completed in the merge, at the earliest time', () => {
+    // Reconcile is a monotone function of the completed quests (F-STORY-006 §3.6 M5); the
+    // merge keeps that input monotone, so reconcile(merge(a, b)) can only add cards.
+    forAll((rand, seed) => {
+      const a = randomSnapshot(rand);
+      const b = randomSnapshot(rand);
+      const merged = mergeSnapshots(a, b, { now: NOW });
+      const done = new Map(merged.quests.filter((q) => q.completedAt).map((q) => [q.questId, q.completedAt]));
+      for (const q of [...a.quests, ...b.quests]) {
+        if (!q.completedAt) continue;
+        const at = done.get(q.questId);
+        expect(at, `seed ${seed}`).toBeDefined();
+        expect((at ?? '') <= q.completedAt, `seed ${seed}`).toBe(true);
+      }
+    });
   });
 });

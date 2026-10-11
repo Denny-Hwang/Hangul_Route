@@ -57,8 +57,18 @@ export function mergeEpisode(l: EpisodeProgress, s: EpisodeProgress): EpisodePro
   };
 }
 
+/**
+ * One card held on both sides (F-STORY-006 §3.6): the earliest unlock time
+ * (M2), and "seen anywhere = seen" (M3) — the card is new only while neither
+ * device has shown it. Both rules are symmetric, so merge order never changes
+ * the result (M4).
+ */
 export function mergeCard(l: CardCollectionEntry, s: CardCollectionEntry): CardCollectionEntry {
-  return { cardId: l.cardId, unlockedAt: earliest(l.unlockedAt, s.unlockedAt) ?? l.unlockedAt, newSinceLastView: l.newSinceLastView };
+  return {
+    cardId: l.cardId,
+    unlockedAt: earliest(l.unlockedAt, s.unlockedAt) ?? l.unlockedAt,
+    newSinceLastView: l.newSinceLastView && s.newSinceLastView,
+  };
 }
 
 export function mergeHomework(l: HomeworkAssignment, s: HomeworkAssignment): HomeworkAssignment {
