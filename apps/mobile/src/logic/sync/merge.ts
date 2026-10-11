@@ -9,8 +9,12 @@ import {
   type ReviewEntry,
   type SelfRoute,
   type SessionLog,
+  type VocabItemState,
+  type VocabProgress,
+  type VocabTopicProgress,
 } from '@hangul-route/content-schema';
 import { computeStreak } from '../streak';
+import { codePoint, validVocab } from '../vocab/progress';
 
 /**
  * Deterministic snapshot merge — F-SYNC-001 §3.3. Every collection in a
@@ -194,6 +198,108 @@ export function mergePlacements(
     .slice(-PLACEMENT_KEEP);
 }
 
+/** Order of two due days for the schedule tie-break: `null` (not scheduled) is earliest. */
+function compareDue(a: string | null, b: string | null): number {
+  if (a === b) return 0;
+  if (a === null) return -1;
+  if (b === null) return 1;
+  return codePoint(a, b);
+}
+
+/**
+ * The side whose schedule (`box`, `due`, `at`) wins (F-VOC-005 section 3.3):
+ * the later `at` as an instant, then the higher box, then the later due. A full
+ * tie means the two triples are equal, and `a` is returned.
+ */
+function scheduleWinner(a: VocabItemState, b: VocabItemState): VocabItemState {
+  const byAt = compareInstant(a.at, b.at);
+  if (byAt !== 0) return byAt > 0 ? a : b;
+  if (a.box !== b.box) return a.box > b.box ? a : b;
+  return compareDue(a.due, b.due) >= 0 ? a : b;
+}
+
+/**
+ * One word held on both sides: every learner-visible field at its best (`first`
+ * the earliest, the rest the largest) and the schedule from `scheduleWinner`,
+ * so a box that fell on one device never shows as a loss (P2).
+ */
+export function mergeVocabItem(l: VocabItemState, s: VocabItemState): VocabItemState {
+  const w = scheduleWinner(l, s);
+  const seen = Math.max(l.seen, s.seen);
+  return {
+    id: l.id,
+    first: l.first < s.first ? l.first : s.first,
+    seen,
+    right: Math.min(Math.max(l.right, s.right), seen),
+    bestBox: Math.max(l.bestBox, s.bestBox, w.box),
+    last: l.last > s.last ? l.last : s.last,
+    box: w.box,
+    due: w.due,
+    at: w.at,
+  };
+}
+
+export function mergeVocabTopic(l: VocabTopicProgress, s: VocabTopicProgress): VocabTopicProgress {
+  return {
+    topic: l.topic,
+    bestStars: Math.max(l.bestStars, s.bestStars),
+    sessions: Math.max(l.sessions, s.sessions),
+    last: l.last > s.last ? l.last : s.last,
+    bestCaught: Math.max(l.bestCaught, s.bestCaught),
+  };
+}
+
+/**
+ * The word progress slice on both sides (F-VOC-005 section 3.3): union by word
+ * and by topic, sorted in code-point order like the reducer's output.
+ * Commutative, associative and idempotent. A side that is absent, or fails the
+ * schema (section 3.10), counts as none; `undefined` when neither has one, so
+ * `mergeSnapshots` omits the key.
+ */
+export function mergeVocab(local: VocabProgress | undefined, server: VocabProgress | undefined): VocabProgress | undefined {
+  const l = validVocab(local);
+  const s = validVocab(server);
+  if (!l) return s;
+  if (!s) return l;
+  return {
+    v: 1,
+    items: unionBy(l.items, s.items, (x) => x.id, mergeVocabItem).sort((a, b) => codePoint(a.id, b.id)),
+    topics: unionBy(l.topics, s.topics, (x) => x.topic, mergeVocabTopic).sort((a, b) => codePoint(a.topic, b.topic)),
+  };
+}
+
+/**
+ * True when the server slice already holds everything in the local one: each
+ * word with a schedule that wins or ties and every other field at least as
+ * good, and each topic likewise. No local slice is always held.
+ */
+function vocabCovered(local: VocabProgress | undefined, server: VocabProgress | undefined): boolean {
+  const l = validVocab(local);
+  if (!l) return true;
+  const s = validVocab(server);
+  if (!s) return false;
+  const words = new Map(s.items.map((x) => [x.id, x]));
+  const topics = new Map(s.topics.map((x) => [x.topic, x]));
+  return (
+    l.items.every((x) => {
+      const t = words.get(x.id);
+      return (
+        t !== undefined &&
+        scheduleWinner(t, x) === t &&
+        t.bestBox >= x.bestBox &&
+        t.seen >= x.seen &&
+        t.right >= x.right &&
+        t.first <= x.first &&
+        t.last >= x.last
+      );
+    }) &&
+    l.topics.every((x) => {
+      const t = topics.get(x.topic);
+      return t !== undefined && t.bestStars >= x.bestStars && t.sessions >= x.sessions && t.last >= x.last && t.bestCaught >= x.bestCaught;
+    })
+  );
+}
+
 export interface MergeOptions {
   /** Clock for the streak recomputation; injected for determinism. */
   now: Date;
@@ -201,6 +307,7 @@ export interface MergeOptions {
 
 export function mergeSnapshots(local: ProgressSnapshot, server: ProgressSnapshot, opts: MergeOptions): ProgressSnapshot {
   const stageDoneAt = mergeStageDoneAt(local.stageDoneAt, server.stageDoneAt);
+  const vocab = mergeVocab(local.vocab, server.vocab);
   const sessions = unionBy<SessionLog>(local.sessions, server.sessions, (x) => x.id, (l) => l).sort(
     (a, b) => a.startedAt.localeCompare(b.startedAt) || a.id.localeCompare(b.id),
   );
@@ -225,6 +332,8 @@ export function mergeSnapshots(local: ProgressSnapshot, server: ProgressSnapshot
     ...(local.selfRoute !== undefined || server.selfRoute !== undefined
       ? { selfRoute: mergeSelfRoute(local.selfRoute, server.selfRoute) }
       : {}),
+    // Word progress (F-VOC-005): omitted when neither side has a slice.
+    ...(vocab !== undefined ? { vocab } : {}),
   };
 }
 
@@ -232,6 +341,8 @@ export function mergeSnapshots(local: ProgressSnapshot, server: ProgressSnapshot
  * True when nothing in `local` is missing from `server` (upload not needed).
  * A card this device has seen counts as held only when the server copy is
  * seen too (F-STORY-006 section 3.6 M3), so a cleared "New" flag still uploads.
+ * Word progress counts as held when the server would gain nothing by merging
+ * it (F-VOC-005 section 3.3, `vocabCovered`).
  */
 export function isSubsetOf(local: ProgressSnapshot, server: ProgressSnapshot): boolean {
   const has = <T>(arr: readonly T[], key: (t: T) => string) => new Set(arr.map(key));
@@ -259,6 +370,7 @@ export function isSubsetOf(local: ProgressSnapshot, server: ProgressSnapshot): b
   const holdsRoute = route === null || (theirRoute !== null && theirRoute.id === route.id && compareInstant(theirRoute.updatedAt, route.updatedAt) >= 0);
   return (
     holdsRoute &&
+    vocabCovered(local.vocab, server.vocab) &&
     local.quests.every((x) => q.has(`${x.questId}:${x.stars}`)) &&
     local.cards.every(cardHeld) &&
     local.sessions.every((x) => s.has(x.id)) &&

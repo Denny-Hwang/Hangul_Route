@@ -1,10 +1,10 @@
-import type { ProgressSnapshot } from '@hangul-route/content-schema';
+import { VocabProgressSchema, type ProgressSnapshot, type VocabItemState, type VocabProgress, type VocabTopicProgress } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { PLACEMENT_KEEP } from '@hangul-route/content-schema';
 import { seededRandom } from '../../listen-pick';
 import { placementResult } from '../../placement/__tests__/fixtures';
 import { selfRoute } from '../../homework/__tests__/curriculum-fixture';
-import { compareInstant, isSubsetOf, mergeCard, mergeSnapshots, withSnapshotDefaults } from '../merge';
+import { compareInstant, isSubsetOf, mergeCard, mergeSnapshots, mergeVocab, withSnapshotDefaults } from '../merge';
 
 const NOW = new Date('2026-09-21T12:00:00.000Z');
 const base = (over: Partial<ProgressSnapshot> = {}): ProgressSnapshot => ({
@@ -491,5 +491,214 @@ describe('selfRoute, the learner weekly plan (F-PLAN-002 section 3.5)', () => {
     expect(isSubsetOf(base({ selfRoute: route }), base({ selfRoute: selfRoute({ id: 'route:other', updatedAt: edited.updatedAt }) }))).toBe(false);
     expect(isSubsetOf(legacy(), base({ selfRoute: route }))).toBe(true);
     expect(isSubsetOf(base({ selfRoute: null }), legacy())).toBe(true);
+  });
+});
+
+describe('mergeVocab, the word progress slice (F-VOC-005 section 3.3)', () => {
+  const ws = (over: Partial<VocabItemState> = {}): VocabItemState => ({
+    id: 'vocab:sagwa-apple',
+    first: '2026-10-01',
+    seen: 3,
+    right: 2,
+    bestBox: 2,
+    last: '2026-10-05',
+    box: 2,
+    due: '2026-10-08',
+    at: '2026-10-05T10:00:00.000Z',
+    ...over,
+  });
+  const vs = (items: VocabItemState[] = [], topics: VocabProgress['topics'] = []): VocabProgress => ({ v: 1, items, topics });
+  const tp = (over: Partial<VocabTopicProgress> = {}): VocabTopicProgress => ({ topic: 'food', bestStars: 1, sessions: 2, last: '2026-10-05', bestCaught: 0, ...over });
+
+  it('undefined on both sides stays undefined; one side undefined gives the other', () => {
+    const a = vs([ws()]);
+    expect(mergeVocab(undefined, undefined)).toBeUndefined();
+    expect(mergeVocab(a, undefined)).toBe(a);
+    expect(mergeVocab(undefined, a)).toBe(a);
+  });
+
+  it('a corrupt side counts as none (section 3.10)', () => {
+    const a = vs([ws()]);
+    const bad = vs([ws({ box: 9 })]);
+    expect(mergeVocab(bad, a)).toBe(a);
+    expect(mergeVocab(a, bad)).toBe(a);
+    expect(mergeVocab(bad, bad)).toBeUndefined();
+  });
+
+  it('unions words and keeps every learner-visible field at its best (behaviour 6)', () => {
+    const phone = vs([ws({ seen: 5, right: 2, bestBox: 3, box: 3, first: '2026-10-02', last: '2026-10-09' }), ws({ id: 'vocab:nun-eye' })]);
+    const tablet = vs([ws({ seen: 4, right: 4, bestBox: 4, box: 4, first: '2026-10-01', last: '2026-10-07' }), ws({ id: 'vocab:mul-water' })]);
+    const m = mergeVocab(phone, tablet);
+    expect(m?.items.map((s) => s.id)).toEqual(['vocab:mul-water', 'vocab:nun-eye', 'vocab:sagwa-apple']);
+    expect(m?.items[2]).toMatchObject({ seen: 5, right: 4, bestBox: 4, first: '2026-10-01', last: '2026-10-09' });
+    expect(mergeVocab(tablet, phone)).toEqual(m);
+  });
+
+  it('the schedule comes from the later stamp, and a drop is never a loss (behaviour 7)', () => {
+    const a = vs([ws({ box: 4, bestBox: 4, due: '2026-10-19', at: '2026-10-05T10:00:00.000Z' })]);
+    const b = vs([ws({ box: 1, bestBox: 1, due: '2026-10-06', at: '2026-10-05T11:00:00.000Z' })]);
+    const m = mergeVocab(a, b);
+    expect(m?.items[0]).toMatchObject({ box: 1, due: '2026-10-06', at: '2026-10-05T11:00:00.000Z', bestBox: 4 });
+    expect(mergeVocab(b, a)).toEqual(m);
+  });
+
+  it('stamps compare as instants, not as strings', () => {
+    // 19:00+09:00 is 10:00Z: it sorts after 10:30Z as a string but is earlier.
+    const a = vs([ws({ box: 2, at: '2026-10-05T19:00:00+09:00' })]);
+    const b = vs([ws({ box: 3, bestBox: 3, at: '2026-10-05T10:30:00.000Z' })]);
+    expect(mergeVocab(a, b)?.items[0]?.box).toBe(3);
+    expect(mergeVocab(b, a)?.items[0]?.box).toBe(3);
+  });
+
+  it('on an equal stamp the higher box wins; on an equal box the later due (null earliest)', () => {
+    const at = '2026-10-05T10:00:00.000Z';
+    const hi = vs([ws({ box: 3, bestBox: 3, at })]);
+    const lo = vs([ws({ box: 2, bestBox: 3, at })]);
+    expect(mergeVocab(lo, hi)?.items[0]?.box).toBe(3);
+    expect(mergeVocab(hi, lo)?.items[0]?.box).toBe(3);
+    const later = vs([ws({ due: '2026-10-09', at })]);
+    const earlier = vs([ws({ due: '2026-10-08', at })]);
+    const none = vs([ws({ due: null, at })]);
+    expect(mergeVocab(earlier, later)?.items[0]?.due).toBe('2026-10-09');
+    expect(mergeVocab(later, earlier)?.items[0]?.due).toBe('2026-10-09');
+    expect(mergeVocab(none, earlier)?.items[0]?.due).toBe('2026-10-08');
+    expect(mergeVocab(earlier, none)?.items[0]?.due).toBe('2026-10-08');
+    expect(mergeVocab(none, none)?.items[0]?.due).toBeNull();
+  });
+
+  it('topics union and every field is a max', () => {
+    const a = vs([], [tp({ bestStars: 3, sessions: 2, last: '2026-10-09', bestCaught: 4 }), tp({ topic: 'animals' })]);
+    const b = vs([], [tp({ bestStars: 1, sessions: 5, last: '2026-10-07', bestCaught: 9 })]);
+    const m = mergeVocab(a, b);
+    expect(m?.topics).toEqual([tp({ topic: 'animals' }), tp({ bestStars: 3, sessions: 5, last: '2026-10-09', bestCaught: 9 })]);
+    expect(mergeVocab(b, a)).toEqual(m);
+  });
+
+  describe('properties over 500 seeded random triples', () => {
+    const IDS = ['vocab:sagwa-apple', 'vocab:nun-eye', 'vocab:nun-snow', 'vocab:nuna-sister', 'vocab:mul-water', 'vocab:bae-pear'];
+    const TOPICS = ['food', 'body', 'animals', 'school'];
+    const STAMPS = ['2026-10-05T10:00:00.000Z', '2026-10-05T10:00:00Z', '2026-10-05T19:00:00+09:00', '2026-10-05T11:00:00.000Z', '2026-10-06T08:30:00.000Z'];
+    const day = (rand: () => number): string => `2026-10-${String(1 + Math.floor(rand() * 20)).padStart(2, '0')}`;
+    const pick = <T,>(rand: () => number, xs: readonly T[]): T => xs[Math.floor(rand() * xs.length)] as T;
+    const randomSlice = (rand: () => number): VocabProgress => {
+      const items = IDS.filter(() => rand() < 0.6).map((id): VocabItemState => {
+        const box = 1 + Math.floor(rand() * 5);
+        const seen = Math.floor(rand() * 8);
+        const first = day(rand);
+        const other = day(rand);
+        return {
+          id,
+          first,
+          last: other > first ? other : first,
+          seen,
+          right: Math.floor(rand() * (seen + 1)),
+          box,
+          bestBox: box + Math.floor(rand() * (6 - box)),
+          due: rand() < 0.15 ? null : day(rand),
+          at: pick(rand, STAMPS),
+        };
+      });
+      const topics = TOPICS.filter(() => rand() < 0.5).map((topic) => ({
+        topic,
+        bestStars: Math.floor(rand() * 4),
+        sessions: Math.floor(rand() * 6),
+        last: day(rand),
+        bestCaught: Math.floor(rand() * 12),
+      }));
+      return vs(items, topics);
+    };
+    const rand = seededRandom(5005);
+    const triples = Array.from({ length: 500 }, () => [randomSlice(rand), randomSlice(rand), randomSlice(rand)] as const);
+
+    it('commutative, associative and idempotent', () => {
+      for (const [a, b, c] of triples) {
+        expect(mergeVocab(a, b)).toEqual(mergeVocab(b, a));
+        expect(mergeVocab(mergeVocab(a, b), c)).toEqual(mergeVocab(a, mergeVocab(b, c)));
+        const aa = mergeVocab(a, a);
+        expect(mergeVocab(aa, a)).toEqual(aa);
+        expect(aa?.items).toEqual([...a.items].sort((x, y) => (x.id < y.id ? -1 : 1)));
+      }
+    });
+
+    it('every monotonic field is at least as good as on either side, and the result passes the schema', () => {
+      for (const [a, b] of triples) {
+        const m = mergeVocab(a, b) as VocabProgress;
+        expect(VocabProgressSchema.safeParse(m).success).toBe(true);
+        for (const side of [a, b]) {
+          for (const s of side.items) {
+            const got = m.items.find((x) => x.id === s.id);
+            expect(got).toBeDefined();
+            expect(got!.bestBox).toBeGreaterThanOrEqual(s.bestBox);
+            expect(got!.seen).toBeGreaterThanOrEqual(s.seen);
+            expect(got!.right).toBeGreaterThanOrEqual(s.right);
+            expect(got!.first <= s.first).toBe(true);
+            expect(got!.last >= s.last).toBe(true);
+          }
+          for (const t of side.topics) {
+            const got = m.topics.find((x) => x.topic === t.topic);
+            expect(got).toBeDefined();
+            expect(got!.bestStars).toBeGreaterThanOrEqual(t.bestStars);
+            expect(got!.sessions).toBeGreaterThanOrEqual(t.sessions);
+            expect(got!.bestCaught).toBeGreaterThanOrEqual(t.bestCaught);
+            expect(got!.last >= t.last).toBe(true);
+          }
+        }
+      }
+    });
+
+    it('a server copy that merged the local one always covers it', () => {
+      for (const [a, b] of triples) {
+        const server = base({ vocab: mergeVocab(a, b) });
+        expect(isSubsetOf(base({ vocab: a }), server)).toBe(true);
+        expect(isSubsetOf(base({ vocab: b }), server)).toBe(true);
+      }
+    });
+  });
+
+  describe('mergeSnapshots and isSubsetOf', () => {
+    it('omits vocab when neither side has it, so an old snapshot keeps its shape', () => {
+      const m = mergeSnapshots(base(), base(), { now: NOW });
+      expect('vocab' in m).toBe(false);
+    });
+
+    it('merges vocab when either side has it', () => {
+      const a = vs([ws()]);
+      expect(mergeSnapshots(base(), base({ vocab: a }), { now: NOW }).vocab).toEqual(a);
+      expect(mergeSnapshots(base({ vocab: a }), base(), { now: NOW }).vocab).toEqual(a);
+      const b = vs([ws({ id: 'vocab:nun-eye' })]);
+      expect(mergeSnapshots(base({ vocab: a }), base({ vocab: b }), { now: NOW }).vocab?.items).toHaveLength(2);
+    });
+
+    it('no local vocab is always covered; a local slice the server lacks is not', () => {
+      expect(isSubsetOf(base(), base({ vocab: vs([ws()]) }))).toBe(true);
+      expect(isSubsetOf(base({ vocab: vs() }), base())).toBe(false);
+      expect(isSubsetOf(base({ vocab: vs([ws()]) }), base({ vocab: vs() }))).toBe(false);
+    });
+
+    it('needs an upload when the server is behind on any word field or the schedule', () => {
+      const local = base({ vocab: vs([ws()]) });
+      const server = (over: Partial<VocabItemState>) => base({ vocab: vs([ws(over)]) });
+      expect(isSubsetOf(local, server({}))).toBe(true);
+      expect(isSubsetOf(local, server({ seen: 4, right: 3, bestBox: 3, box: 3, at: '2026-10-06T10:00:00.000Z', first: '2026-09-30', last: '2026-10-06' }))).toBe(true);
+      expect(isSubsetOf(local, server({ at: '2026-10-05T09:00:00.000Z' }))).toBe(false);
+      expect(isSubsetOf(local, server({ box: 1, bestBox: 2 }))).toBe(false);
+      expect(isSubsetOf(local, server({ due: '2026-10-07' }))).toBe(false);
+      expect(isSubsetOf(local, server({ seen: 2 }))).toBe(false);
+      expect(isSubsetOf(local, server({ right: 1 }))).toBe(false);
+      expect(isSubsetOf(base({ vocab: vs([ws({ bestBox: 3 })]) }), server({}))).toBe(false);
+      expect(isSubsetOf(local, server({ first: '2026-10-02' }))).toBe(false);
+      expect(isSubsetOf(local, server({ last: '2026-10-04' }))).toBe(false);
+    });
+
+    it('needs an upload when the server lacks a topic or is behind on one', () => {
+      const local = base({ vocab: vs([], [tp()]) });
+      const server = (topics: VocabTopicProgress[]) => base({ vocab: vs([], topics) });
+      expect(isSubsetOf(local, server([tp({ sessions: 3, last: '2026-10-06' })]))).toBe(true);
+      expect(isSubsetOf(local, server([]))).toBe(false);
+      expect(isSubsetOf(local, server([tp({ bestStars: 0 })]))).toBe(false);
+      expect(isSubsetOf(local, server([tp({ sessions: 1 })]))).toBe(false);
+      expect(isSubsetOf(local, server([tp({ last: '2026-10-04' })]))).toBe(false);
+      expect(isSubsetOf(base({ vocab: vs([], [tp({ bestCaught: 2 })]) }), server([tp()]))).toBe(false);
+    });
   });
 });

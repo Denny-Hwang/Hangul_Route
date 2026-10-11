@@ -72,6 +72,18 @@ describe('syncLearner (F-SYNC-001 §3.5)', () => {
     if (out.status === 'synced') expect(out.snapshot.homework).toEqual([]);
   });
 
+  it('a 409 with word progress on both sides uploads the union of the two slices (F-VOC-005 section 3.3)', async () => {
+    const word = (id: string, box: number, at: string) => ({ id, first: '2026-09-18', seen: 2, right: 1, bestBox: box, last: '2026-09-20', box, due: '2026-09-22', at });
+    const local = { ...snap([]), vocab: { v: 1 as const, items: [word('vocab:sagwa-apple', 3, '2026-09-20T10:00:00.000Z')], topics: [] } };
+    const server = { ...snap([]), vocab: { v: 1 as const, items: [word('vocab:sagwa-apple', 1, '2026-09-20T11:00:00.000Z'), word('vocab:nun-eye', 2, '2026-09-19T10:00:00.000Z')], topics: [] } };
+    const { api, put } = apiWith([{ status: 'conflict', rev: 7, snapshot: server }, { status: 'ok', rev: 8 }]);
+    const out = await syncLearner({ learnerId: 'profile:a', local, localRev: 3, api, now: NOW, summarize });
+    expect(out).toMatchObject({ status: 'synced', merged: true });
+    const sent = put.mock.calls[1]?.[1].snapshot.vocab;
+    expect(sent?.items.map((s) => s.id)).toEqual(['vocab:nun-eye', 'vocab:sagwa-apple']);
+    expect(sent?.items[1]).toMatchObject({ box: 1, bestBox: 3 });
+  });
+
   it('gives up after a second conflict, handing back the merged snapshot and server rev', async () => {
     const { api } = apiWith([
       { status: 'conflict', rev: 7, snapshot: snap(['q2']) },
