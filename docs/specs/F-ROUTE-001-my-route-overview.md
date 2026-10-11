@@ -159,12 +159,13 @@ For each stage, from `stageAvailability` (`logic/journey.ts:12-17`), `isEntitled
 | `state` | Rule | Learner word | Non-colour cue |
 |---|---|---|---|
 | `complete` | the stage is **latched** (`stageDoneAt[stage]` exists), **or** availability `open` and every grid episode complete, **or** the learner owns a card whose `unlockedBy` is `stage<N>-complete` | **Complete** | check-in-circle badge |
-| `known` | every pip of the stage is `known` or `done`, at least one is `known`, and the stage is not complete | **You knew this** | ring-with-disc badge (never the check-in-circle) |
-| `explored` | availability `taste` and every **shipped** grid episode complete | **Explored** | check mark on the badge |
-| `later` | availability `soon`, or not entitled and no done quest in it | **Coming later** | dotted-ring badge |
+| `known` | every **quest** pip of the stage is `known` or `done`, at least one is `known`, and the stage is not complete (the `later` pips of cells that are not playable are not counted) | **You knew this** | ring-with-disc badge (never the check-in-circle) |
+| `explored` | availability `taste` and every **playable** (shipped or ready) grid episode complete, at least one | **Explored** | check mark on the badge |
+| `later` | availability `soon` and no playable cell (no quest pip), or not entitled and no done quest in it | **Coming later** | dotted-ring badge |
 | `open` | everything else | **Open** (availability `open`) or **A taste** (availability `taste`) | numbered badge |
 
 - **`known` never awards anything.** It never writes `stageDoneAt`, never triggers a card, is never called Complete, and none of its known pips count in "N quests played". `here` and the hero move past it.
+- **"Has content" means playable** (amended in R-1a review). Pips, the cursor and `explored` all count playable episodes (`status` `shipped` or `ready`, `playableEpisodes`), so a stage whose only playable cell is `ready` has quest pips, can hold the cursor and reads `open`, not `later`. `stageAvailability` (shipped only) still decides `open` / `taste` / `soon` for the pill and the derived complete rule. `explored` is computed in `stage-rows.ts` (`allPlayableDone`), not from `completionState(...).stageComplete`, which the award engine answers only for a fully shipped stage (#220).
 - **A `taste` stage is never `complete`** (F-STORY-006 line 51: the stage must be fully shipped; `completionState` counts only playable episodes, `completion.ts:27-31`). Test.
 - `here`: exactly one stage. The stage of the cursor; with no cursor (rest), the highest-order stage with a done pip; with nothing done, the stage of `route.startQuestId`, else Stage 1. A stage can be `complete` and `here`. Tag: **You are here**.
 - **Entitlement never shows commerce.** With the default predicate no shipped stage is `later` for entitlement reasons. If the owner chooses the other branch of OD-4, an unentitled stage reads `later` with the neutral caption **"Not open yet"** (never "coming", which would be false for shipped content), and never "Premium", a price, a lock-for-payment or a purchase button.
@@ -190,9 +191,9 @@ Precedence: `done` > `known` > `new` > `open` > `later`. The cursor pip carries 
 
 1. A `done` pip never becomes anything else, moves or disappears. New content adds pips at the end of their cell; in a latched stage they go to `newPips`, drawn after a gap, so the earned group never looks emptier.
 2. No percentage and no `x / y` is rendered on the learner page (F-STORY-006, F-STORY-005 map rules).
-3. A render-model test: across "ship content" steps, no row exists whose filled share goes down (a latched row's earned group stays fully filled; new pips are their own group).
+3. A render-model test: across "ship content" steps, no **latched** row's earned group loses filled share (it stays fully filled; new pips are their own group). An unlatched row that gains a cell gains open pips, so its share can go down; that is "the row shows what exists", not a loss: its done pips never change (guarantee 1). Amended in R-1a review; the property test checks done pips and latched rows, not the share of unlatched rows.
 4. `known` -> `open` happens only through the grown-up override (`route-seed.ts:169-178`). `known` is not an earned item.
-5. The trail connector fills down to `trailReached` = the highest-order stage with a `done` or `known` pip, and never retracts.
+5. The trail connector fills down to `trailReached` = the highest-order stage with a `done` or `known` pip, plus every quest any stored placement ever placed out (so an override that puts quests back does not retract it). Accepted limit (R-1a review): `placements` keeps the last 10 entries (`PLACEMENT_KEEP`); after more than 10 level checks, a prefix that only a trimmed placement placed out (and that is neither done nor placed out now) no longer counts, so the trail can draw shorter. Done pips are never affected.
 
 A **cell row** (expanded stage) shows the theme label, the episode title, its pips and a word: **Complete** / **Playing** / **You knew this** / **Open** / **Coming later**. A playable cell row opens `EpisodeDetail { episodeId }`; a `later` cell is not a button. Pip ids absent from the bundle (an old placement naming a removed quest) are ignored (test).
 
@@ -420,7 +421,7 @@ Coverage: `apps/mobile/src/logic` >= 90 % with `logic/my-route/` at 100 %; `pack
 | R-W1 | `feat(content-schema,backend)`: `ProgressSnapshot.stageDoneAt` + merge + `ADDITIVE_FIELDS` entry; `route_map.*` telemetry names. **Deploy the Worker before R-1b ships in an app build** | S | R-0 |
 | R-2a | `feat(design-system)`: icons `pin`, `check-circle`, `book`, `ear`, `pencil` (one PR; lands before F-PLC-001 P-6) | S | R-0 |
 | R-2b | `feat(design-system)`: `PipRow` (five drawn shapes, cursor and start markers), border token via `design/tokens/` + `design-token-sync` | M | design mock |
-| R-3 | `feat(mobile)`: `MyRoute` screen (phone / regular / wide single column), navigation + gate check, `learner.myRoute` / `a11y.myRoute` en strings, Journey header button, flag | L | R-1a, R-1b, R-2b, R-W1 deployed |
+| R-3 | `feat(mobile)`: `MyRoute` screen (phone / regular / wide single column), navigation + gate check, `learner.myRoute` / `a11y.myRoute` en strings, Journey header button, flag | L | R-1a, R-1b, R-2b, R-W1 deployed, R-4a (so Home and My route share one cursor for a placed-out learner) |
 | R-4a | `feat(mobile)`: `NextQuestInput.skipQuestIds`; Home and Results pass the same `isEntitled` / `skipQuestIds`; Home keeps its replay fallback | S | OD-4 |
 | R-4b | `feat(mobile)`: Home route strip replaces the bar (`HomeScreen.tsx:199-202`) | M | R-3, OD-3, F-STORY-004 4.4a, F-LAYOUT-001 5c |
 | R-7a | `feat(mobile)`: start marker and known pips | S | F-PLC-001 P-5, F-QUEST-002 Q-6a |
