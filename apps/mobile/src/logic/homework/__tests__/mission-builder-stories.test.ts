@@ -20,6 +20,7 @@ import {
   buildTodaysMission,
   missionCardText,
   missionCopy,
+  storyCardOpenMode,
   storyCardShownEvent,
   type BuildMissionInput,
   type MissionCard,
@@ -426,5 +427,33 @@ describe('production gate: the shipped bundle (D14, F-STORY-004 §6 "ships dark"
       expect(defaultStoryIndex()).toEqual([]);
       expect(plan.cards[0]?.kind).toBe('explore');
     }
+  });
+});
+
+describe('storyCardOpenMode (how a tapped story card opens, §3.7)', () => {
+  const card = (patch: Partial<MissionCard>): MissionCard => ({
+    slot: 1,
+    kind: 'story',
+    titleEn: 'The Tiger',
+    subtitle: 'story',
+    collected: false,
+    storyId: 'story:tiger',
+    storyReason: 'next',
+    storyMode: 'play',
+    ...patch,
+  });
+
+  it('`again` opens the unscored reader, whatever the status', () => {
+    expect(storyCardOpenMode(card({ storyReason: 'again', storyMode: 'replay' }), { state: 'finished' })).toBe('read-again');
+    expect(storyCardOpenMode(card({ storyReason: 'again', storyMode: 'replay' }), { state: 'new' })).toBe('read-again');
+  });
+
+  it('a collected `next` card plays again (scored), like any collected quest card', () => {
+    expect(storyCardOpenMode(card({ collected: true }), { state: 'finished' })).toBe('play-again');
+  });
+
+  it('a story with a bookmark at its level continues; otherwise it starts', () => {
+    expect(storyCardOpenMode(card({ storyReason: 'continue' }), { state: 'in-progress' })).toBe('continue');
+    expect(storyCardOpenMode(card({}), { state: 'new' })).toBe('start');
   });
 });

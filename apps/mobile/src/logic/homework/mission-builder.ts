@@ -3,8 +3,9 @@ import type { Messages } from '@hangul-route/i18n';
 import { nextQuestAfter, offerableQuests, playableEpisodes } from '../next-quest';
 import type { BookmarkFile } from '../story/bookmarks';
 import type { StoryIndexEntry } from '../story/story-index';
+import type { OpenStoryMode } from '../story/open-story';
 import { pickStoryForHome, type StoryPick, type StoryReason } from '../story/story-pick';
-import { storyStatus } from '../story/story-status';
+import { storyStatus, type StoryStatus } from '../story/story-status';
 
 /**
  * Today's mission — F-HW-001 §3.1, §3.2, with the story card of F-STORY-004 §3.7.
@@ -419,4 +420,16 @@ export function storyCardShownEvent(plan: MissionPlan): StoryCardShownEvent | nu
     }
   }
   return null;
+}
+
+/**
+ * How a tapped story card opens (`planOpenStory` mode): an `again` card reads
+ * the story again unscored; otherwise the story's current status decides —
+ * finished plays again (scored, as any collected card), a bookmark at its
+ * level continues, else it starts.
+ */
+export function storyCardOpenMode(card: Pick<MissionCard, 'storyMode'>, status: Pick<StoryStatus, 'state'>): OpenStoryMode {
+  if (card.storyMode === 'replay') return 'read-again';
+  if (status.state === 'finished') return 'play-again';
+  return status.state === 'in-progress' ? 'continue' : 'start';
 }
