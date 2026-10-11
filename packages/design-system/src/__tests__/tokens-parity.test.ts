@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import colorsDoc from '../../../../design/tokens/colors.v1.md?raw';
 import layoutDoc from '../../../../design/tokens/layout.v1.md?raw';
+import presenterDoc from '../../../../design/tokens/presenter.v1.md?raw';
 import appJson from '../../../../apps/mobile/app.json?raw';
 import manifest from '../../../../apps/mobile/public/manifest.webmanifest?raw';
-import { colors, layout } from '../tokens';
+import { colors, layout, presenter } from '../tokens';
 
 /**
  * design/tokens/colors.v1.md is the design source of truth (CLAUDE.md §5).
@@ -113,6 +114,60 @@ describe('design/tokens/layout.v1.md ↔ tokens.ts', () => {
   });
 
   it('exports every layout token the design doc defines', () => {
+    expect([...doc.keys()].filter((k) => !code.has(k))).toEqual([]);
+  });
+
+  it('agrees on every value', () => {
+    const drift = [...code.entries()]
+      .filter(([k, v]) => doc.has(k) && doc.get(k) !== v)
+      .map(([k, v]) => `${k}: tokens.ts ${v} ≠ design ${doc.get(k)}`);
+    expect(drift).toEqual([]);
+  });
+});
+
+/**
+ * design/tokens/presenter.v1.md (F-TCH-004 §3.6) lists every `presenter.<path>`
+ * as a `| key | value |` row. Values are numbers, the font family name, or the
+ * marker shape list written comma-separated, so both sides are compared as text.
+ */
+const presenterDuplicates: string[] = [];
+function documentedPresenter(): Map<string, string> {
+  const rows = new Map<string, string>();
+  for (const m of presenterDoc.matchAll(/^\|\s*`(presenter(?:\.[a-zA-Z0-9]+)+)`\s*\|\s*([^|]+?)\s*\|/gm)) {
+    if (rows.has(m[1]!)) presenterDuplicates.push(m[1]!);
+    rows.set(m[1]!, m[2]!.replace(/`/g, '').trim());
+  }
+  return rows;
+}
+
+function flattenText(prefix: string, value: unknown, out: Map<string, string>): Map<string, string> {
+  if (typeof value === 'number' || typeof value === 'string') {
+    out.set(prefix, String(value));
+  } else if (Array.isArray(value)) {
+    out.set(prefix, value.join(', '));
+  } else {
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) flattenText(`${prefix}.${k}`, v, out);
+  }
+  return out;
+}
+
+describe('design/tokens/presenter.v1.md ↔ tokens.ts', () => {
+  const doc = documentedPresenter();
+  const code = flattenText('presenter', presenter, new Map());
+
+  it('parses exactly one row per presenter value (guards the parser itself)', () => {
+    expect(doc.size).toBe(code.size);
+  });
+
+  it('documents each presenter token once (a second row cannot silently override the first)', () => {
+    expect(presenterDuplicates).toEqual([]);
+  });
+
+  it('documents every presenter token the package exports', () => {
+    expect([...code.keys()].filter((k) => !doc.has(k))).toEqual([]);
+  });
+
+  it('exports every presenter token the design doc defines', () => {
     expect([...doc.keys()].filter((k) => !code.has(k))).toEqual([]);
   });
 

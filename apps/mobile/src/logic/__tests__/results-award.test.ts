@@ -57,6 +57,14 @@ describe('applyQuestResult (Results award effect)', () => {
     expect(eventNames(deps)).toEqual(['quest.complete', 'card.unlocked']);
   });
 
+  it("a learner who holds only Hoya's welcome card still fires card.first_earned for the first card they earn (F-STORY-006 §3.4)", () => {
+    deps = makeDeps(['card:tiger']);
+    const award = applyQuestResult({ ...base, rewardCardId: 'card:book', stars: 2, correct: 3 }, deps);
+    expect(award).toEqual({ cardId: 'card:book', isNew: true, isFirstCard: true });
+    expect(eventNames(deps)).toEqual(['quest.complete', 'card.unlocked', 'card.first_earned']);
+    expect(deps.track.mock.calls.filter((c) => (c[0] as { name: string }).name === 'card.first_earned')).toHaveLength(1);
+  });
+
   it('already-owned card (replay): score is written, nothing is unlocked or announced', () => {
     deps = makeDeps(['card:hanbok']);
     const award = applyQuestResult(base, deps);

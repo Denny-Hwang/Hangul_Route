@@ -350,6 +350,8 @@ describe('platform/audio (native): capability, unlock, telemetry', () => {
     audio.unlockAudio();
     audio.installGestureUnlock()();
     await expect(audio.warmClips(['audio/jamo/giyeok.mp3'])).resolves.toBeUndefined();
+    // The native clip path lands in A-7: no ref has a clip yet, so the voice is always used.
+    expect(audio.hasClip('audio/jamo/giyeok.mp3')).toBe(false);
     audio.dispose();
   });
 
@@ -404,6 +406,7 @@ describe('platform/audio (native): the module-level API', () => {
     mod.installGestureUnlock()();
     await mod.warmClips([]);
     mod.noteFallbackShown('x', 'muted');
+    expect(mod.hasClip('audio/jamo/giyeok.mp3')).toBe(false);
     await expect(mod.playJamo({ char: 'ㅏ', romanization: 'a', nameEn: 'a', spokenKo: '아', spokenKind: 'sound' })).resolves.toBe('played');
   });
 });

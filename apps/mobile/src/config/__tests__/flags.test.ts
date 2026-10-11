@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const ORIGINAL_ENV = { ...process.env };
@@ -90,5 +92,26 @@ describe('flags', () => {
     process.env.EXPO_PUBLIC_PLACEMENT_ENABLED = 'true';
     const mod = await reload();
     expect(mod.flags.placementEnabled).toBe(true);
+  });
+
+  it('audioClips (F-AUDIO-004 A-6) is ON by default and switches off with "false" or "0"', async () => {
+    delete process.env.EXPO_PUBLIC_AUDIO_CLIPS;
+    let mod = await reload();
+    expect(mod.flags.audioClips).toBe(true);
+    expect(mod.launchDefaultFlags.audioClips).toBe(true);
+    process.env.EXPO_PUBLIC_AUDIO_CLIPS = 'false';
+    mod = await reload();
+    expect(mod.flags.audioClips).toBe(false);
+    process.env.EXPO_PUBLIC_AUDIO_CLIPS = '0';
+    mod = await reload();
+    expect(mod.flags.audioClips).toBe(false);
+    process.env.EXPO_PUBLIC_AUDIO_CLIPS = 'nope';
+    mod = await reload();
+    expect(mod.flags.audioClips).toBe(true);
+  });
+
+  it('audioClips is read by its literal name, so the Expo bundler inlines the override', () => {
+    const src = readFileSync(join(__dirname, '../flags.ts'), 'utf8');
+    expect(src).toContain('process.env.EXPO_PUBLIC_AUDIO_CLIPS');
   });
 });

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { WCAG_AA_LARGE, WCAG_AA_NORMAL, contrastRatio, relativeLuminance } from '../contrast';
-import { HOYA_VARIANTS, colors, hoyaVariantColors } from '../tokens';
+import { WCAG_AAA_NORMAL, WCAG_AA_LARGE, WCAG_AA_NORMAL, compositeOver, contrastRatio, relativeLuminance } from '../contrast';
+import presenterDoc from '../../../../design/tokens/presenter.v1.md?raw';
+import { HOYA_VARIANTS, colors, hoyaVariantColors, presenter } from '../tokens';
 
 describe('contrastRatio (WCAG 2.x)', () => {
   it('spans 1:1 to 21:1', () => {
@@ -23,6 +24,24 @@ describe('contrastRatio (WCAG 2.x)', () => {
     expect(contrastRatio('#ffffff', '#000000')).toBeCloseTo(21, 5);
     expect(() => relativeLuminance('#FFF')).toThrow(/#RRGGBB/);
     expect(() => relativeLuminance('rgba(0,0,0,0.4)')).toThrow(/#RRGGBB/);
+  });
+});
+
+describe('compositeOver (an opacity-dimmed colour as it lands on its background)', () => {
+  it('returns the foreground at full opacity and the background at zero', () => {
+    expect(compositeOver('#2A1F14', '#FFFFFF', 1)).toBe('#2A1F14');
+    expect(compositeOver('#2A1F14', '#FFFFFF', 0)).toBe('#FFFFFF');
+  });
+
+  it('blends each channel in sRGB the way a browser draws `opacity`', () => {
+    expect(compositeOver('#000000', '#FFFFFF', 0.5)).toBe('#808080');
+    expect(compositeOver('#2a1f14', '#ffffff', 0.8)).toBe('#554C43');
+  });
+
+  it('rejects an alpha outside 0..1 and a colour that is not #RRGGBB', () => {
+    expect(() => compositeOver('#000000', '#FFFFFF', 1.2)).toThrow(/alpha/);
+    expect(() => compositeOver('#000000', '#FFFFFF', Number.NaN)).toThrow(/alpha/);
+    expect(() => compositeOver('#000', '#FFFFFF', 0.5)).toThrow(/#RRGGBB/);
   });
 });
 
@@ -184,5 +203,82 @@ describe('Hoya fur variant contrast (non-text, WCAG 1.4.11)', () => {
     for (const variant of HOYA_VARIANTS.filter((v) => v !== 'orange')) {
       expect(contrastRatio(hoyaVariantColors(variant).furDark, colors.surface.sunken)).toBeGreaterThanOrEqual(WCAG_AA_LARGE);
     }
+  });
+});
+
+/**
+ * F-TCH-004 §3.6 — the lecture presenter projects existing colour tokens, so
+ * it adds no colours; design/tokens/presenter.v1.md lists every colour pair the
+ * presenter may draw. Projected text is read from the back of a classroom
+ * through a washed-out projector, so the bar is 7:1 (WCAG AAA) for text, and
+ * 3:1 for non-text cues (quiz shape markers, the correct-option border and
+ * check, the timer ring, the focus ring). The pairs are read from the doc so a
+ * new pair cannot ship without passing here.
+ */
+describe('presenter projected colour pairs (F-TCH-004 §3.6)', () => {
+  type Kind = 'text' | 'text-dimmed' | 'non-text';
+  const resolve = (path: string): string => {
+    const [group, key] = path.split('.') as [string, string];
+    const value = (colors as unknown as Record<string, Record<string, string> | undefined>)[group]?.[key];
+    if (value === undefined) throw new Error(`presenter.v1.md names an unknown colour token: ${path}`);
+    return value;
+  };
+  // A `text-dimmed` row is drawn at presenter.dimOpacity, so it is checked as it lands on its background.
+  const pairs: Array<[string, Kind, string, string]> = [];
+  for (const m of presenterDoc.matchAll(/^\|\s*(text|text-dimmed|non-text)\s*\|\s*`([a-zA-Z]+\.[a-zA-Z0-9]+)`\s*\|\s*`([a-zA-Z]+\.[a-zA-Z0-9]+)`\s*\|\s*([^|]+?)\s*\|/gm)) {
+    const kind = m[1] as Kind;
+    const bg = resolve(m[3]!);
+    const fg = kind === 'text-dimmed' ? compositeOver(resolve(m[2]!), bg, presenter.dimOpacity) : resolve(m[2]!);
+    pairs.push([`${m[2]} on ${m[3]} (${m[4]})`, kind, fg, bg]);
+  }
+  // Every data row of the pair table, whatever its format, so a row the pattern above cannot read fails here.
+  const tableRows = (() => {
+    const section = presenterDoc.split(/^## Projected colour pairs$/m)[1]?.split(/^## /m)[0] ?? '';
+    return section
+      .split('\n')
+      .filter((line) => line.startsWith('|'))
+      .filter((line) => !/^\|\s*Kind\s*\|/.test(line) && !/^\|[-|\s]+\|$/.test(line));
+  })();
+  const isText = (kind: Kind): boolean => kind !== 'non-text';
+
+  it('reads every row of the pair table (guards the parser itself)', () => {
+    expect(tableRows.length).toBeGreaterThan(0);
+    expect(pairs.length).toBe(tableRows.length);
+    expect(pairs.some(([, kind]) => kind === 'text-dimmed')).toBe(true);
+  });
+
+  it('projects on white paper with warm dark text (no cream canvas on a projector)', () => {
+    expect(pairs.some(([name]) => name.startsWith('text.primary on surface.paper'))).toBe(true);
+    expect(pairs.some(([, , , bg]) => bg === colors.surface.canvas)).toBe(false);
+  });
+
+  it.each(pairs.filter(([, kind]) => isText(kind)))('%s ≥ 7:1 (text)', (_name, _kind, fg, bg) => {
+    expect(contrastRatio(fg, bg)).toBeGreaterThanOrEqual(WCAG_AAA_NORMAL);
+  });
+
+  it.each(pairs.filter(([, kind]) => kind === 'non-text'))('%s ≥ 3:1 (non-text)', (_name, _kind, fg, bg) => {
+    expect(contrastRatio(fg, bg)).toBeGreaterThanOrEqual(WCAG_AA_LARGE);
+  });
+
+  it('never projects the reserved danger colour (anti-shame quiz reveal)', () => {
+    expect(pairs.some(([, , fg, bg]) => fg === colors.feedback.danger || bg === colors.feedback.danger)).toBe(false);
+  });
+
+  // Why some tempting pairs are not in the table: they miss the projected 7:1 bar.
+  it('keeps text.muted, brand-fill labels and gloss-on-success off the projected stage (< 7:1)', () => {
+    expect(contrastRatio(colors.text.muted, colors.surface.paper)).toBeLessThan(WCAG_AAA_NORMAL);
+    expect(contrastRatio(colors.text.onPrimary, colors.brand.primary)).toBeLessThan(WCAG_AAA_NORMAL);
+    expect(contrastRatio(colors.text.secondary, colors.feedback.successLight)).toBeLessThan(WCAG_AAA_NORMAL);
+  });
+
+  // The dim level is the one number PR 9 needs for the quiz reveal: text.primary stays ≥ 7:1 at it,
+  // text.secondary would not (so a dimmed option sets every line in text.primary), and it still visibly dims.
+  it('dims the non-correct quiz options enough to read as de-emphasised and no further than 7:1 allows', () => {
+    const dimmedPrimary = compositeOver(colors.text.primary, colors.surface.paper, presenter.dimOpacity);
+    const dimmedSecondary = compositeOver(colors.text.secondary, colors.surface.paper, presenter.dimOpacity);
+    expect(contrastRatio(dimmedPrimary, colors.surface.paper)).toBeGreaterThanOrEqual(WCAG_AAA_NORMAL);
+    expect(contrastRatio(dimmedSecondary, colors.surface.paper)).toBeLessThan(WCAG_AAA_NORMAL);
+    expect(presenter.dimOpacity).toBeLessThan(1);
+    expect(contrastRatio(dimmedPrimary, colors.surface.paper)).toBeLessThan(contrastRatio(colors.text.primary, colors.surface.paper) * 0.75);
   });
 });

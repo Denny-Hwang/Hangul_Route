@@ -2,11 +2,15 @@
 // --platform web`. 1) injects manifest / meta / shell CSS / service-worker
 // registration into dist/index.html, 2) generates dist/sw.js with Workbox
 // precaching every exported file so the app plays offline after one visit.
+// Letter clips are precached; vocabulary / story / card / dialogue clips are
+// runtime-cached instead (F-AUDIO-004 AD10), and the build fails if a clip
+// that should be precached is missing from the manifest (§3.10).
 // app.json (adaptive icon) and public/manifest.webmanifest keep a copy of brand.primary: keep them equal to the token.
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
-import { join, dirname } from 'node:path';
+import { readFileSync, readdirSync, writeFileSync, existsSync } from 'node:fs';
+import { join, dirname, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { generateSW } from 'workbox-build';
+import { generateSW, getManifest } from 'workbox-build';
+import { AUDIO_PRECACHE_IGNORES, audioRuntimeCaching, precacheGaps, precacheLeaks } from './audio/lib.mjs';
 
 const dist = process.argv[2] ?? 'dist';
 
@@ -86,15 +90,45 @@ html = html.replace(/<meta name="viewport"[^>]*>/, '<meta name="viewport" conten
 html = html.replace('</head>', `${head}\n${sw}\n</head>`);
 writeFileSync(indexPath, html);
 
-const { count, size, warnings } = await generateSW({
+const precache = {
   globDirectory: dist,
   globPatterns: ['**/*.{js,html,ico,png,json,webmanifest,svg,mp3,woff2}'],
+  // Workbox's default ignore, plus the clip groups served by the runtime rule below.
+  globIgnores: ['**/node_modules/**/*', ...AUDIO_PRECACHE_IGNORES],
+  maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
+};
+
+const { count, size, warnings } = await generateSW({
+  ...precache,
   swDest: join(dist, 'sw.js'),
   navigateFallback: '/index.html',
   clientsClaim: true,
   skipWaiting: false, // the app decides when to apply an update (never mid-quest)
   cleanupOutdatedCaches: true,
-  maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
+  runtimeCaching: [audioRuntimeCaching()],
 });
 for (const w of warnings) process.stdout.write(`workbox: ${w}\n`);
-process.stdout.write(`pwa-postbuild: precached ${count} files (${(size / 1024 / 1024).toFixed(2)} MB)\n`);
+
+// Every built clip outside the runtime groups must be in the precache, or it
+// would not play offline. Workbox's glob skips dot folders, so list dist ourselves.
+function builtMp3s(dir) {
+  const out = [];
+  const walk = (current) => {
+    for (const entry of readdirSync(current, { withFileTypes: true })) {
+      const full = join(current, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (entry.name.toLowerCase().endsWith('.mp3')) out.push(relative(dir, full).split('\\').join('/'));
+    }
+  };
+  walk(dir);
+  return out;
+}
+const { manifestEntries } = await getManifest(precache);
+const manifestUrls = manifestEntries.map((e) => e.url);
+const clips = builtMp3s(dist);
+const gaps = precacheGaps(clips, manifestUrls);
+const leaks = precacheLeaks(manifestUrls);
+if (gaps.length > 0) throw new Error(`pwa-postbuild: clips missing from the precache: ${gaps.join(', ')}`);
+if (leaks.length > 0) throw new Error(`pwa-postbuild: runtime-cached clips found in the precache: ${leaks.join(', ')}`);
+
+process.stdout.write(`pwa-postbuild: precached ${count} files (${(size / 1024 / 1024).toFixed(2)} MB), ${clips.length} audio clips built\n`);

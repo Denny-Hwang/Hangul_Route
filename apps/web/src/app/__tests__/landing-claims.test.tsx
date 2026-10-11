@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { siteMetadata } from '../../data/landing-copy';
-import HomePage from '../page';
+import HomePage from '../(en)/page';
 
 /**
  * The landing promises only what the product does today (owner decisions

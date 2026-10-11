@@ -83,4 +83,25 @@ describe('no direct speak from screens', () => {
       expect(file!.source).toMatch(/\bstop\(\)/);
     },
   );
+
+  /**
+   * A-6 (§3.10): Match Sound and Discover warm their clips on mount, and Match
+   * Sound tells its prompt slot when the round's sound has a bundled recording,
+   * so a device with no Korean voice is not told "no sound" while a clip plays.
+   */
+  it.each(['minigames/MatchSoundGame.tsx', 'quest/DiscoverStep.tsx'])(
+    '%s warms its clips on mount',
+    (rel) => {
+      const file = files.find((f) => f.rel === rel);
+      expect(file, rel).toBeDefined();
+      expect(audioImports(file!.source)).toContain('warmClips');
+      expect(file!.source).toMatch(/warmClips\(clipRefsOf\(/);
+    },
+  );
+
+  it('Match Sound passes hasClip to its prompt slot', () => {
+    const file = files.find((f) => f.rel === 'minigames/MatchSoundGame.tsx');
+    expect(audioImports(file!.source)).toContain('hasClip');
+    expect(file!.source).toMatch(/usePromptSlot\(\{\s*source: 'match-sound',\s*hasClip: hasClip\(/);
+  });
 });

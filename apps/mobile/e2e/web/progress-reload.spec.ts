@@ -111,14 +111,15 @@ test('progress earned before a reload survives it and the next write', async ({ 
   await page.getByRole('button', { name: 'See results' }).click();
   await expect(page.getByText('Wonderful!')).toBeVisible();
   await page.getByRole('button', { name: 'Back home' }).click();
-  await expect(page.getByText(/^1 cards?$/)).toBeVisible();
-  await expect.poll(() => savedProgress(page)).toMatchObject({ cards: ['card:book'] });
+  // The Book card, plus Hoya's welcome card every new profile holds (F-STORY-006 §3.3).
+  await expect(page.getByText(/^2 cards$/)).toBeVisible();
+  await expect.poll(async () => (await savedProgress(page))?.cards.sort()).toEqual(['card:book', 'card:tiger']);
   const earned = await savedProgress(page);
 
   // Reload: the app opens on what was earned, not on an empty record.
   await page.reload();
   await expect(page.getByText('Hi, Dami!')).toBeVisible();
-  await expect(page.getByText(/^1 cards?$/)).toBeVisible();
+  await expect(page.getByText(/^2 cards$/)).toBeVisible();
 
   // First write of the new visit: replaying the quest starts a session.
   await page.getByText('Journey', { exact: true }).last().click();
@@ -126,14 +127,14 @@ test('progress earned before a reload survives it and the next write', async ({ 
   await page.getByRole('button', { name: 'Play again' }).click();
   await expect(page.getByRole('button', { name: 'Leave quest' })).toBeVisible();
   await expect.poll(async () => (await savedProgress(page))?.sessions ?? 0).toBeGreaterThan(earned?.sessions ?? 0);
-  expect((await savedProgress(page))?.cards).toEqual(['card:book']);
+  expect((await savedProgress(page))?.cards.sort()).toEqual(['card:book', 'card:tiger']);
 
   // And it is all still there after another reload.
   await page.reload();
   await expect(page.getByText('Hi, Dami!')).toBeVisible();
-  await expect(page.getByText(/^1 cards?$/)).toBeVisible();
+  await expect(page.getByText(/^2 cards$/)).toBeVisible();
   await page.getByText('Library', { exact: true }).last().click();
-  await expect(page.getByText(/^1 of \d+ collected$/)).toBeVisible();
+  await expect(page.getByText(/^2 of \d+ collected$/)).toBeVisible();
 
   expect(errors).toEqual([]);
 });

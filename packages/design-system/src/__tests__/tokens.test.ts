@@ -5,6 +5,7 @@ import {
   colors,
   hoyaVariantColors,
   motion,
+  presenter,
   radii,
   shadows,
   spacing,
@@ -164,5 +165,38 @@ describe('WordArt content colours, colors.vocab (F-VOC-002 §3.4, W3)', () => {
 
   it('the content black is warm, never pure black (colors.v1.md rule 3)', () => {
     expect(colors.vocab.black).not.toBe('#000000');
+  });
+});
+
+describe('presenter tokens (F-TCH-004 §3.6)', () => {
+  it('is a 1280-unit logical stage whose height clamps between 4:3 and 2:1', () => {
+    expect(presenter.stage).toEqual({ width: 1280, minHeight: 600, maxHeight: 960 });
+    expect(presenter.stage.width / presenter.stage.maxHeight).toBeCloseTo(4 / 3, 5);
+    expect(presenter.stage.width / presenter.stage.minHeight).toBeLessThanOrEqual(2.15);
+  });
+
+  it('steps type down from the glyph to the caption, and caption is the smallest projected size', () => {
+    const { glyph, display, title, prompt, body, caption } = presenter.size;
+    expect([glyph, display, title, prompt, body, caption]).toEqual([380, 140, 80, 56, 40, 28]);
+    const steps = [glyph, display, title, prompt, body, caption];
+    for (let i = 1; i < steps.length; i++) expect(steps[i]).toBeLessThan(steps[i - 1]!);
+    expect(Math.min(...Object.values(presenter.size))).toBe(caption);
+  });
+
+  it('names the bundled Hangul subset family and the four quiz marker shapes in number order', () => {
+    expect(presenter.font).toBe('HR Presenter KR');
+    expect(presenter.marker.shapes).toEqual(['circle', 'triangle', 'square', 'star']);
+  });
+
+  it('auto-hides the control bar after 3 s', () => {
+    expect(presenter.autoHideMs).toBe(3000);
+  });
+
+  it('dims the non-correct quiz options to 0.8 opacity after the reveal (no failure colour)', () => {
+    expect(presenter.dimOpacity).toBe(0.8);
+  });
+
+  it('is part of the tokens aggregate', () => {
+    expect(tokens.presenter).toBe(presenter);
   });
 });

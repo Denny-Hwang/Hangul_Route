@@ -63,3 +63,52 @@ export const FLAT_ROCK: ItemDef = {
     { t: 'path', d: 'M14 12 Q34 6 54 10', stroke: 'surface.paper', sw: 'base', o: 0.6, det: true },
   ],
 };
+
+// --- PR 2.10b: hangul-printing cluster --------------------------------------
+
+export const FULL_MOON: ItemDef = {
+  id: 'prop:full-moon',
+  kind: 'nature',
+  box: { w: 50, h: 50 },
+  z: 'back',
+  tags: { sky: true },
+  alt: 'A round full moon with a soft glow',
+  accuracyNote: 'A plain full moon with a pale halo; it marks the night or the lunar calendar and copies no real view.',
+  nodes: [
+    { t: 'circle', cx: 25, cy: 25, r: 24, fill: 'feedback.nudgeLight', o: 0.35 },
+    { t: 'circle', cx: 25, cy: 25, r: 16, fill: 'feedback.nudgeLight', stroke: 'border.strong', sw: 'thin' },
+    { t: 'path', d: 'M18 20 Q21 18 24 21 M27 30 Q31 28 33 31', stroke: 'border.strong', sw: 'thin', det: true },
+  ],
+};
+
+export const NIGHT_SKY: ItemDef = {
+  id: 'prop:night-sky',
+  kind: 'nature',
+  box: { w: 400, h: 196 },
+  z: 'back',
+  tags: { sky: true },
+  alt: 'A deep blue evening sky with small stars, laid over the background',
+  accuracyNote: 'A translucent dark blue wash and a few stars that turn a day setting into evening; no constellation is copied.',
+  nodes: [
+    { t: 'rect', x: 0, y: 0, w: 400, h: 196, fill: 'brand.secondaryDark', o: 0.6 },
+    { t: 'path', d: 'M40 30 L42 34 L46 36 L42 38 L40 42 L38 38 L34 36 L38 34 Z M300 24 L302 28 L306 30 L302 32 L300 36 L298 32 L294 30 L298 28 Z M170 56 L171.5 59 L174.5 60.5 L171.5 62 L170 65 L168.5 62 L165.5 60.5 L168.5 59 Z', fill: 'surface.paper' },
+    { t: 'path', d: 'M96 18 V19 M130 40 V41 M220 22 V23 M250 60 V61 M350 46 V47 M370 16 V17 M20 76 V77 M80 64 V65', stroke: 'surface.paper', sw: 'thick', det: true },
+  ],
+};
+
+export const LEAFY_TREE: ItemDef = {
+  id: 'prop:leafy-tree',
+  kind: 'nature',
+  box: { w: 90, h: 130 },
+  z: 'mid',
+  tintable: 'theme.nature',
+  alt: 'A broad-leaved tree with a full round crown; its colour shows the season (green leaves, pale blossom or autumn red)',
+  accuracyNote: 'A generic broad-leaved tree; the crown colour is tintable for wild cherry blossom, summer leaves or an autumn maple. No species detail is drawn.',
+  nodes: [
+    { t: 'path', d: 'M40 130 L42 92 L30 74 L34 72 L44 86 L50 66 L54 68 L48 94 L50 130 Z', fill: 'text.secondary' },
+    { t: 'circle', cx: 28, cy: 56, r: 24, fill: 'theme.nature' },
+    { t: 'circle', cx: 62, cy: 52, r: 26, fill: 'theme.nature' },
+    { t: 'circle', cx: 45, cy: 30, r: 28, fill: 'theme.nature' },
+    { t: 'path', d: 'M30 30 V31 M50 18 V19 M62 40 V41 M20 54 V55 M40 52 V53 M70 62 V63 M56 26 V27 M36 66 V67', stroke: 'surface.paper', sw: 'thick', o: 0.6, det: true },
+  ],
+};

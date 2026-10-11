@@ -406,3 +406,78 @@ export const FIG_RESEARCHER: ItemDef = {
     { t: 'path', d: 'M6 70 H12 V98 H6 Z M118 70 H124 V98 H118 Z', fill: 'text.secondary' },
   ],
 };
+
+// --- PR 2.10b: hangul-printing cluster --------------------------------------
+
+const MONK_REF = { title: '승복 (僧服)', publisher: PUBLISHER, url: 'https://encykorea.aks.ac.kr/Article/E0032200', accessed: ACCESSED } as const;
+const MONK_NOTE =
+  'Goryeo monks wore mainly the gasa and pyeonsam, taking up the black jangsam and red gasa from China; grey robes came later (encykorea). So the robe is dark (tintable) with a deep red gasa. The shaved head is general knowledge, not the entry. Nuns dressed alike. The face is blank on purpose.';
+
+export const FIG_MONK: ItemDef = {
+  id: 'prop:fig-monk',
+  kind: 'figure',
+  box: { w: 70, h: 124 },
+  z: 'mid',
+  tintable: 'text.primary',
+  alt: 'A Goryeo Buddhist monk or nun with a shaved head, in a long dark robe with a deep red gasa over one shoulder',
+  sourceRef: MONK_REF,
+  accuracyNote: MONK_NOTE,
+  nodes: [
+    { t: 'rect', x: 31, y: 34, w: 8, h: 8, fill: 'surface.paper', stroke: 'border.strong', sw: 'thin' },
+    { t: 'path', d: 'M24 40 L46 40 L54 50 L64 96 L54 100 L52 76 L58 118 L12 118 L18 76 L16 100 L6 96 L16 50 Z', fill: 'text.primary', stroke: 'border.strong', sw: 'thin' },
+    { t: 'poly', pts: [[17, 47], [27, 41], [57, 104], [49, 112], [42, 100]], fill: 'brand.primaryDark' },
+    { t: 'path', d: 'M27 42 Q35 50 43 42', stroke: 'border.strong', sw: 'thin', det: true },
+    { t: 'circle', cx: 35, cy: 64, r: 4.5, fill: 'surface.paper', stroke: 'border.strong', sw: 'thin' },
+    face(35, 22, 12, 14),
+    { t: 'path', d: 'M18 118 H32 V124 H18 Z M38 118 H52 V124 H38 Z', fill: 'text.primary' },
+  ],
+};
+
+export const FIG_MONK_SEATED: ItemDef = {
+  id: 'prop:fig-monk-seated',
+  kind: 'figure',
+  box: { w: 100, h: 90 },
+  z: 'mid',
+  tintable: 'text.primary',
+  alt: 'An elderly Goryeo Buddhist monk with a shaved head, seated in a dark robe and red gasa, writing with a brush on a sheet of paper',
+  sourceRef: MONK_REF,
+  accuracyNote: `${MONK_NOTE} Seated with the sheet on the lap; the writing is plain strokes, never letters.`,
+  nodes: [
+    { t: 'rect', x: 46, y: 28, w: 8, h: 9, fill: 'surface.paper', stroke: 'border.strong', sw: 'thin' },
+    { t: 'path', d: 'M8 88 Q8 64 30 58 L70 58 Q92 64 92 88 Z', fill: 'text.primary', stroke: 'border.strong', sw: 'thin' },
+    { t: 'path', d: 'M34 60 L28 36 Q50 30 72 36 L66 60 Z', fill: 'text.primary', stroke: 'border.strong', sw: 'thin' },
+    { t: 'poly', pts: [[30, 38], [40, 33], [70, 60], [58, 62]], fill: 'brand.primaryDark' },
+    face(50, 20, 11, 13),
+    { t: 'poly', pts: [[28, 80], [72, 80], [67, 66], [33, 66]], fill: 'surface.paper', stroke: 'border.strong', sw: 'base' },
+    { t: 'path', d: 'M40 69 V76 M46 69 V74 M52 69 V77', stroke: 'text.primary', sw: 'thin', det: true },
+    { t: 'path', d: 'M32 38 Q18 52 26 66 L40 66 Q36 52 38 44 Z', fill: 'text.primary', stroke: 'border.strong', sw: 'thin' },
+    { t: 'path', d: 'M68 38 Q82 52 74 64 L60 64 Q64 52 62 44 Z', fill: 'text.primary', stroke: 'border.strong', sw: 'thin' },
+    { t: 'line', x1: 62, y1: 50, x2: 62, y2: 70, stroke: 'border.strong', sw: 'base' },
+    { t: 'circle', cx: 62, cy: 62, r: 3.5, fill: 'surface.paper', stroke: 'border.strong', sw: 'thin' },
+  ],
+};
+
+export const FIG_CARVER: ItemDef = {
+  id: 'prop:fig-carver',
+  kind: 'figure',
+  box: { w: 110, h: 86 },
+  z: 'mid',
+  tintable: 'surface.sunken',
+  alt: 'A Goryeo woodblock carver in a white ramie robe and black head cloth, an early form of hanbok, kneeling over a board with a small knife',
+  sourceRef: { title: '포 (袍)', publisher: PUBLISHER, url: 'https://encykorea.aks.ac.kr/Article/E0060121', accessed: ACCESSED },
+  accuracyNote: 'In Goryeo even the king at leisure wore a black head cloth and a white ramie robe like commoners (encykorea, from the Goryeo dogyeong). Who the carvers were is not described, so no monk dress is given. Robe tintable; the face is blank on purpose.',
+  nodes: [
+    { t: 'path', d: 'M14 82 Q14 58 34 52 L76 52 Q96 58 96 82 Z', fill: 'surface.sunken', stroke: 'border.strong', sw: 'thin' },
+    { t: 'path', d: 'M38 54 L34 30 Q55 24 76 30 L72 54 Z', fill: 'surface.sunken', stroke: 'border.strong', sw: 'thin' },
+    face(55, 18, 10, 12),
+    { t: 'path', d: 'M44 15 Q44 2 55 2 Q66 2 66 15 Q55 10 44 15 Z', fill: 'text.primary' },
+    { t: 'path', d: 'M64 12 Q70 18 72 26 M66 10 Q74 14 78 20', stroke: 'text.primary', sw: 'thin', det: true },
+    { t: 'poly', pts: [[22, 86], [88, 86], [82, 68], [28, 68]], fill: 'border.strong', stroke: 'text.primary', sw: 'thin' },
+    { t: 'path', d: 'M36 74 H40 M44 74 H48 M52 74 H56 M60 74 H64 M68 74 H72 M34 80 H38 M42 80 H46 M50 80 H54 M58 80 H62 M66 80 H70 M74 80 H78', stroke: 'text.primary', sw: 'thin', det: true },
+    { t: 'path', d: 'M36 32 Q24 48 40 66 L50 64 Q42 50 44 40 Z', fill: 'surface.sunken', stroke: 'border.strong', sw: 'thin' },
+    { t: 'path', d: 'M74 32 Q86 48 70 66 L60 64 Q68 50 66 40 Z', fill: 'surface.sunken', stroke: 'border.strong', sw: 'thin' },
+    { t: 'circle', cx: 46, cy: 66, r: 4, fill: 'surface.paper', stroke: 'border.strong', sw: 'thin' },
+    { t: 'circle', cx: 64, cy: 66, r: 4, fill: 'surface.paper', stroke: 'border.strong', sw: 'thin' },
+    { t: 'line', x1: 64, y1: 66, x2: 70, y2: 74, stroke: 'text.primary', sw: 'base' },
+  ],
+};

@@ -1,3 +1,4 @@
+import { welcomeCardIds } from '../content/award-world';
 import type { TelemetryEvent } from '../platform/telemetry';
 import { decideCardAward, type CardAward } from './reward';
 
@@ -62,6 +63,7 @@ export function applyQuestResult(input: QuestResultInput, deps: QuestResultDeps)
     rewardCardId: input.rewardCardId,
     stars,
     ownedCardIds: deps.ownedCardIds(),
+    welcomeCardIds,
   });
   if (award?.isNew) {
     deps.unlockCard(profileId, award.cardId);

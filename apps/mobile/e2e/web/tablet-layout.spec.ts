@@ -472,6 +472,8 @@ async function openLibrary(page: Page): Promise<void> {
       card('card:book', '2026-10-08T09:00:00.000Z'),
       card('card:kimchi', '2026-10-10T09:00:00.000Z'),
       card('card:origami', '2026-10-09T09:00:00.000Z'),
+      // Hoya's welcome card, held by every profile (F-STORY-006 §3.3); earlier, so Kimchi stays the latest.
+      card('card:tiger', '2026-10-07T09:00:00.000Z'),
     ],
     sessions: [],
     homework: [],
@@ -481,7 +483,7 @@ async function openLibrary(page: Page): Promise<void> {
   await expect(page.getByText('Hi, Dani!')).toBeVisible();
   await page.getByText('Library', { exact: true }).last().click();
   await expect(page.getByRole('heading', { name: 'Heritage Library' })).toBeVisible();
-  await expect(page.getByText('3 of 42 collected')).toBeVisible();
+  await expect(page.getByText('4 of 42 collected')).toBeVisible();
 }
 
 const galleryPane = (page: Page) => page.getByRole('region', { name: 'Card gallery' });

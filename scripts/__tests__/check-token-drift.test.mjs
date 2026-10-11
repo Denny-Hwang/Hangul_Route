@@ -202,4 +202,42 @@ describe("check-token-drift.mjs", () => {
       rmSync(root, { recursive: true, force: true });
     }
   });
+
+  test("presenter kind: a design file + nested non-empty export passes: exit 0", () => {
+    const root = makeRoot();
+    try {
+      writeTokenSourceMd(root, "presenter", 1);
+      writeTokensTs(
+        root,
+        [
+          "export const presenter = {",
+          "  stage: { width: 1280, minHeight: 600, maxHeight: 960 },",
+          "  font: 'HR Presenter KR',",
+          "  marker: { shapes: ['circle', 'triangle', 'square', 'star'] },",
+          "  autoHideMs: 3000,",
+          "} as const;",
+        ].join("\n") + "\n"
+      );
+      const r = run(root);
+      assert.equal(r.status, 0);
+      assert.match(r.stdout, /1 kind\(s\) declared/);
+      assert.match(r.stdout, /0 drift violation/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("presenter kind: design file but tokens.ts has no presenter export: exit 1", () => {
+    const root = makeRoot();
+    try {
+      writeTokenSourceMd(root, "presenter", 1);
+      writeTokensTs(root, "export const layout = { shortHeight: 480 } as const;\n");
+      const r = run(root);
+      assert.equal(r.status, 1);
+      assert.match(r.stdout, /token drift — presenter/);
+      assert.match(r.stdout, /no `export const presenter/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
 });

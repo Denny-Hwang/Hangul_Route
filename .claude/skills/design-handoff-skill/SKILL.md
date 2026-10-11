@@ -58,7 +58,7 @@ description: 디자인 시안을 코드(토큰·컴포넌트·아이콘)로 승�
 | `design/icons/<name>.svg` | `packages/design-system/src/icons/<IconName>.tsx` (generated) |
 | `design/characters/hoya/v<n>/` | `packages/design-system/src/characters/Hoya/` |
 | `design/components/<Name>/v<n>/` | `packages/design-system/src/components/<Name>/` |
-| `design/screens/<flow>/<screen>/v<n>/` | `apps/mobile/src/screens/<Screen>/` 또는 `apps/web/src/app/<route>/` |
+| `design/screens/<flow>/<screen>/v<n>/` | `apps/mobile/src/screens/<Screen>/`, 웹 콘솔은 `apps/web/src/app/(console)/<route>/`, 웹 사이트 페이지는 `apps/web/src/components/landing/<Page>.tsx` + `app/(en)/<route>/page.tsx` 와 `app/(loc)/[locale]/<route>/page.tsx` (F-I18N-001 §3.4; 그룹 밖의 page 는 `route-groups.test.tsx` 가 막음) |
 
 ### 3.2 승격 순서 (아래로 갈수록 상위 의존)
 
