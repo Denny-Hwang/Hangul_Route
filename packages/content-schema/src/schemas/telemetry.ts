@@ -68,6 +68,12 @@ export const TELEMETRY_EVENT_NAMES = [
   'placement.complete',
   'placement.skipped',
   'placement.override_applied',
+  // F-SPACE-002 §4.12 (payload keys initiator, slot, basis only; sent without profileId; never evidence of consent)
+  'space.transfer.requested',
+  'space.transfer.consented',
+  'space.transfer.declined',
+  'space.transfer.cancelled',
+  'space.transfer.completed',
 ] as const;
 
 export const TelemetryEventNameSchema = z.enum(TELEMETRY_EVENT_NAMES);
