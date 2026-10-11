@@ -51,7 +51,9 @@ const overlays: Overlays = {
       'storySteps.b.label': 'Poner la mesa',
       'dialogue.0.npc': '¡Hola!',
       'dialogue.0.options.jal-gayo.gloss': 'Adiós',
-      'rounds.r1.prompt': 'la letra g',
+      'listenPick.rounds.r1.prompt': 'la letra g',
+      'listenPick.rounds.lp-sym-jamo-giyeok.prompt': 'la letra giyeok',
+      'listenPick.rounds.2.prompt': 'la sílaba ga',
     },
     'pitem:vocab-hear-gimchi': { gloss: 'kimchi (oír)', 'options.moon.gloss': 'Luna' },
   },
@@ -89,6 +91,20 @@ describe('overlay vocabulary (F-I18N-001 §3.6)', () => {
     expect(OVERLAY_FIELDS.pitem).toEqual(['gloss', 'options.<optionId>.gloss']);
   });
 
+  it('addresses Listen & Pick rounds where the scope keeps them, and Discover content and the teaser of a quest', () => {
+    expect(OVERLAY_FIELDS.minigame).toContain('listenPick.rounds.<roundId>.prompt');
+    expect(OVERLAY_FIELDS.minigame).not.toContain('rounds.<roundId>.prompt');
+    expect(OVERLAY_FIELDS.quest).toEqual(
+      expect.arrayContaining([
+        'teaser',
+        'steps.<stepId>.discover.pages.<page>.caption',
+        'steps.<stepId>.discover.pages.<page>.items.<item>.example.gloss',
+        'steps.<stepId>.discover.pages.<page>.items.<item>.word.gloss',
+        'steps.<stepId>.discover.pages.<page>.items.<item>.note',
+      ]),
+    );
+  });
+
   it('allows listed fields and dotted paths with ids', () => {
     const allowed: Array<[string, string]> = [
       ['jamo:giyeok', 'gloss'],
@@ -99,6 +115,13 @@ describe('overlay vocabulary (F-I18N-001 §3.6)', () => {
       ['episode:s1-letters', 'hoyaIntro'],
       ['quest:s1-letters-1', 'steps.intro.hoyaLine'],
       ['minigame:s1-life-card-1', 'dialogue.0.options.jal-gayo.gloss'],
+      ['minigame:s1-letters-recognize-1', 'listenPick.rounds.lp-sym-jamo-eo.prompt'],
+      ['minigame:s1-letters-recognize-1', 'listenPick.rounds.3.prompt'],
+      ['quest:s1-letters-1', 'teaser'],
+      ['quest:s1-letters-1', 'steps.discover.discover.pages.0.items.1.example.gloss'],
+      ['quest:s1-letters-1', 'steps.discover.discover.pages.1.items.0.word.gloss'],
+      ['quest:s1-letters-1', 'steps.discover.discover.pages.1.items.0.note'],
+      ['quest:s1-letters-1', 'steps.discover.discover.pages.0.caption'],
       ['stage:stage1', 'anchorSkill'],
       ['theme:letters', 'oneLiner'],
       ['story:sun-and-moon', 'scenes.s1.narration'],
@@ -128,6 +151,10 @@ describe('overlay vocabulary (F-I18N-001 §3.6)', () => {
       ['vocab-topic:food', 'gloss'],
       ['vocab:sagwa', 'title'],
       ['pitem:x', 'options.a.ko'],
+      ['minigame:s1-letters-recognize-1', 'rounds.r1.prompt'],
+      ['minigame:s1-letters-recognize-1', 'listenPick.rounds.lp:sym:jamo:eo.prompt'],
+      ['quest:q', 'steps.discover.discover.pages.0.items.0.example.ko'],
+      ['quest:q', 'steps.discover.discover.pages.0.items.0.word.romanization'],
       ['planet:mars', 'title'],
       ['nocolon', 'title'],
     ];
@@ -213,6 +240,15 @@ describe('localize (F-I18N-001 §3.6 runtime)', () => {
     expect(localize(tsJamo, tsJamo.id, 'es', overlays)).toEqual({ ...tsJamo, exampleWordEn: 'cachorro', soundHint: 'como la g de gato' });
   });
 
+  it('never takes a gloss from the romanized letter name of a TypeScript jamo (nameEn is romanization, not a gloss)', () => {
+    const tsJamo = { id: 'jamo:giyeok', char: 'ㄱ', romanization: 'g/k', nameEn: 'giyeok', exampleWordEn: 'family' };
+    expect(overlayTargets(tsJamo, 'gloss')).toEqual([]);
+    const es = localize(tsJamo, tsJamo.id, 'es', overlays);
+    expect(es.nameEn).toBe('giyeok');
+    expect(Object.keys(es)).not.toContain('gloss');
+    expect(translatableFields('jamo:giyeok', tsJamo).map((f) => f.field)).toEqual(['exampleWord.gloss']);
+  });
+
   it('adds a jamo sound hint the English base does not have yet (hints are authored per language), nothing else', () => {
     const bare = { id: 'jamo:giyeok', char: 'ㄱ', romanization: 'g/k', nameEn: 'giyeok' };
     const es = localize(bare, bare.id, 'es', overlays);
@@ -269,7 +305,7 @@ describe('localize (F-I18N-001 §3.6 runtime)', () => {
     expect(story.tiers[0]?.scenes[1]?.narrationEn).toBe('Hoya sees the {kw:dal}.');
   });
 
-  it('localizes a minigame scope: pairs by romanization slug, steps by id, turns by index, prompts by round id', () => {
+  it('localizes a minigame scope: pairs by romanization slug, steps by id, turns by index, prompts by round key', () => {
     const scope = {
       kind: 'card-match',
       cardPairs: [
@@ -290,14 +326,79 @@ describe('localize (F-I18N-001 §3.6 runtime)', () => {
           ],
         },
       ],
-      listenPick: { rounds: [{ id: 'r1', prompt: { ko: '가', romanization: 'ga', en: 'the letter g' } }] },
+      rounds: 3,
+      listenPick: {
+        rounds: [
+          { id: 'r1', prompt: { ko: '가', romanization: 'ga', en: 'the letter g' } },
+          { id: 'lp:sym:jamo:giyeok', prompt: { ko: '가', romanization: 'ga', en: 'the letter giyeok' } },
+          { id: 'lp:syl:가', prompt: { ko: '가', romanization: 'ga', en: 'the syllable ga' } },
+        ],
+      },
     };
     const es = localize(scope, 'minigame:s1-life-card-1', 'es', overlays);
     expect(es.cardPairs.map((p) => p.en)).toEqual(['Kimchi (es)', 'Rice']);
     expect(es.storySteps.map((s) => s.labelEn)).toEqual(['Wash hands', 'Poner la mesa']);
     expect(es.dialogue[0]?.npcEn).toBe('¡Hola!');
     expect(es.dialogue[0]?.options.map((o) => o.en)).toEqual(['Hello', 'Adiós']);
-    expect(es.listenPick.rounds[0]?.prompt).toEqual({ ko: '가', romanization: 'ga', en: 'la letra g' });
+    expect(es.listenPick.rounds.map((r) => r.prompt)).toEqual([
+      { ko: '가', romanization: 'ga', en: 'la letra g' },
+      { ko: '가', romanization: 'ga', en: 'la letra giyeok' },
+      { ko: '가', romanization: 'ga', en: 'la sílaba ga' },
+    ]);
+    expect(es.rounds).toBe(3);
+  });
+
+  it('localizes the Discover pages and the teaser of a quest; the taught Korean and its romanization stay', () => {
+    const quest = {
+      id: 'quest:discover-demo',
+      titleEn: 'Demo',
+      teaserEn: 'Meet two new letters.',
+      steps: [
+        {
+          id: 'discover',
+          titleEn: 'Discover',
+          discover: {
+            pages: [
+              {
+                captionEn: 'Two letters',
+                items: [
+                  { type: 'jamo', jamoId: 'jamo:giyeok', example: { ko: '가방', romanization: 'gabang', en: 'bag' } },
+                  { type: 'word', word: { ko: '나비', romanization: 'nabi', en: 'butterfly' }, noteEn: 'It flies.' },
+                ],
+              },
+            ],
+          },
+        },
+      ],
+    };
+    const local: Overlays = {
+      es: {
+        [quest.id]: {
+          teaser: 'Conoce dos letras nuevas.',
+          'steps.discover.discover.pages.0.caption': 'Dos letras',
+          'steps.discover.discover.pages.0.items.0.example.gloss': 'bolso',
+          'steps.discover.discover.pages.0.items.1.word.gloss': 'mariposa',
+          'steps.discover.discover.pages.0.items.1.note': 'Vuela.',
+        },
+      },
+      ko: {},
+    };
+    const es = localize(quest, quest.id, 'es', local);
+    const page = es.steps[0]!.discover.pages[0]!;
+    expect(es.teaserEn).toBe('Conoce dos letras nuevas.');
+    expect(page.captionEn).toBe('Dos letras');
+    expect(page.items[0]).toEqual({ type: 'jamo', jamoId: 'jamo:giyeok', example: { ko: '가방', romanization: 'gabang', en: 'bolso' } });
+    expect(page.items[1]).toEqual({ type: 'word', word: { ko: '나비', romanization: 'nabi', en: 'mariposa' }, noteEn: 'Vuela.' });
+    expect(quest.steps[0]!.discover.pages[0]!.items[1]!.noteEn).toBe('It flies.');
+    expect(translatableFields(quest.id, quest).map((f) => f.field)).toEqual([
+      'title',
+      'teaser',
+      'steps.discover.title',
+      'steps.discover.discover.pages.0.caption',
+      'steps.discover.discover.pages.0.items.0.example.gloss',
+      'steps.discover.discover.pages.0.items.1.word.gloss',
+      'steps.discover.discover.pages.0.items.1.note',
+    ]);
   });
 
   it('serves placement templates: gloss on glossEn, option glosses inside the question', () => {
@@ -356,6 +457,15 @@ describe('overlay targets and translatable fields (shared by the validator mirro
 
   it('keys array elements by id, key, romanization slug, then index', () => {
     expect(overlayElementKey({ id: 'a', key: 'k' }, 3)).toBe('a');
+    // An id that is not a path segment is slugged when it is plain ASCII (Listen & Pick round ids)...
+    expect(overlayElementKey({ id: 'lp:sym:jamo:eo' }, 3)).toBe('lp-sym-jamo-eo');
+    expect(overlayElementKey({ id: 'Intro' }, 3)).toBe('intro');
+    expect(overlayElementKey({ key: 'Odd Key' }, 3)).toBe('odd-key');
+    // ...and skipped when it carries Korean (`lp:syl:가`): the next rule names the element.
+    expect(overlayElementKey({ id: 'lp:syl:가' }, 3)).toBe('3');
+    expect(overlayElementKey({ id: 'lp:syl:가', key: 'k' }, 3)).toBe('k');
+    expect(overlayElementKey({ id: '::' }, 4)).toBe('4');
+    expect(overlayElementKey({ id: 'a--b' }, 4)).toBe('a--b');
     expect(overlayElementKey({ key: 'k' }, 3)).toBe('k');
     expect(overlayElementKey({ romanization: 'ne, joayo' }, 3)).toBe('ne-joayo');
     expect(overlayElementKey({ romanization: '!!' }, 3)).toBe('3');

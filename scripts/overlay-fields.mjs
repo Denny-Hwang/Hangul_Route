@@ -22,13 +22,24 @@ export const OVERLAY_FIELDS = Object.freeze({
   jamo: ["gloss", "soundHint", "exampleWord.gloss", "nameHint"],
   card: ["title", "blurb", "fact"],
   episode: ["title", "subtitle", "hoyaIntro"],
-  quest: ["title", "blurb", "steps.<stepId>.title", "steps.<stepId>.body", "steps.<stepId>.hoyaLine"],
+  quest: [
+    "title",
+    "blurb",
+    "teaser",
+    "steps.<stepId>.title",
+    "steps.<stepId>.body",
+    "steps.<stepId>.hoyaLine",
+    "steps.<stepId>.discover.pages.<page>.caption",
+    "steps.<stepId>.discover.pages.<page>.items.<item>.example.gloss",
+    "steps.<stepId>.discover.pages.<page>.items.<item>.word.gloss",
+    "steps.<stepId>.discover.pages.<page>.items.<item>.note",
+  ],
   minigame: [
     "cardPairs.<pair>.gloss",
     "storySteps.<stepId>.label",
     "dialogue.<turn>.npc",
     "dialogue.<turn>.options.<option>.gloss",
-    "rounds.<roundId>.prompt",
+    "listenPick.rounds.<roundId>.prompt",
   ],
   stage: ["title", "oneLiner", "anchorSkill"],
   theme: ["title", "oneLiner", "anchorSkill"],
@@ -107,16 +118,27 @@ const COLLECTION_ALIASES = { checks: ["checks", "checkpoints"] };
 /** Top-level hints an overlay may add although the English base has none (§3.5.6). */
 const ADDITIVE_FIELDS = ["soundHint", "nameHint"];
 
+const slug = (text) =>
+  text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+/** An id / key as a path segment: slugged when plain ASCII, none when it carries Korean. */
+function segmentOf(value) {
+  if (typeof value !== "string" || !/^[\x20-\x7e]+$/.test(value)) return undefined;
+  if (/^[a-z0-9-]+$/.test(value)) return value;
+  const key = slug(value);
+  return key === "" ? undefined : key;
+}
+
 export function overlayElementKey(element, index) {
   if (isRec(element)) {
-    if (typeof element.id === "string" && element.id !== "") return element.id;
-    if (typeof element.key === "string" && element.key !== "") return element.key;
+    const key = segmentOf(element.id) ?? segmentOf(element.key);
+    if (key !== undefined) return key;
     if (typeof element.romanization === "string") {
-      const slug = element.romanization
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-+|-+$/g, "");
-      if (slug !== "") return slug;
+      const romanized = slug(element.romanization);
+      if (romanized !== "") return romanized;
     }
   }
   return String(index);

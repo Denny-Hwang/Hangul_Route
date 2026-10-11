@@ -63,6 +63,11 @@ describe('scripts/overlay-fields.mjs mirrors the TypeScript allow-list', () => {
       ['quest:q', 'steps..title'],
       ['story:s', 'checks.c1.options.a'],
       ['story:s', 'scenes.s1.narration.x'],
+      ['minigame:m', 'listenPick.rounds.lp-sym-jamo-eo.prompt'],
+      ['minigame:m', 'rounds.r1.prompt'],
+      ['quest:q', 'teaser'],
+      ['quest:q', 'steps.d.discover.pages.0.items.1.example.gloss'],
+      ['quest:q', 'steps.d.discover.pages.0.items.1.word.ko'],
       ['nocolon', 'title'],
       ['planet:x', 'title'],
     ];
@@ -99,7 +104,20 @@ describe('scripts/overlay-fields.mjs mirrors the TypeScript allow-list', () => {
   });
 
   it('keys elements the same way', () => {
-    const samples: unknown[] = [{ id: 'a' }, { key: 'k' }, { romanization: 'Ne, joayo!' }, { romanization: '' }, 'x', null, { id: '' }];
+    const samples: unknown[] = [
+      { id: 'a' },
+      { key: 'k' },
+      { romanization: 'Ne, joayo!' },
+      { romanization: '' },
+      'x',
+      null,
+      { id: '' },
+      { id: 'lp:sym:jamo:eo' },
+      { id: 'lp:syl:가' },
+      { id: 'lp:word:강아지', key: 'Odd Key' },
+      { id: '::' },
+      { id: 'a--b' },
+    ];
     samples.forEach((s, i) => expect(mirror.overlayElementKey(s, i)).toBe(overlayElementKey(s, i)));
   });
 

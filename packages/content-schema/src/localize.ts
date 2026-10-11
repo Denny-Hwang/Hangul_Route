@@ -38,17 +38,35 @@ const ADDITIVE_FIELDS: readonly string[] = ['soundHint', 'nameHint'];
 /** Collections reached by another name too. */
 const COLLECTION_ALIASES: Readonly<Record<string, readonly string[]>> = { checks: ['checks', 'checkpoints'] };
 
-/** The key an array element is addressed by in an overlay path: `id`, `key`, romanization slug, else its index. */
+const slug = (text: string): string =>
+  text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+/**
+ * An `id` / `key` as a path segment: as is when it already is one, slugged when it is
+ * plain ASCII (`lp:sym:jamo:eo` -> `lp-sym-jamo-eo`), else none: an id that carries
+ * Korean (a `lp:syl:<syllable>` round) cannot be spelled in a path, so the next rule names the element.
+ */
+function segmentOf(value: unknown): string | undefined {
+  if (typeof value !== 'string' || !/^[\x20-\x7e]+$/.test(value)) return undefined;
+  if (/^[a-z0-9-]+$/.test(value)) return value;
+  const key = slug(value);
+  return key === '' ? undefined : key;
+}
+
+/**
+ * The key an array element is addressed by in an overlay path: its `id`, else `key`
+ * (each as a path segment, see `segmentOf`), else its romanization as a slug, else its index.
+ */
 export function overlayElementKey(element: unknown, index: number): string {
   if (isRec(element)) {
-    if (typeof element.id === 'string' && element.id !== '') return element.id;
-    if (typeof element.key === 'string' && element.key !== '') return element.key;
+    const key = segmentOf(element.id) ?? segmentOf(element.key);
+    if (key !== undefined) return key;
     if (typeof element.romanization === 'string') {
-      const slug = element.romanization
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '');
-      if (slug !== '') return slug;
+      const romanized = slug(element.romanization);
+      if (romanized !== '') return romanized;
     }
   }
   return String(index);
