@@ -1,6 +1,6 @@
 Status: ready (applied by F-PLC-001 P-0c)
 
-> **Applied 2026-10-11 in the P-0c docs PR.** Every AM-n item below is now in the text of `F-PLC-001-placement-test.md` (each marked with its id) and every W-n item in `design/wireframes/placement/placement.md`. The line numbers below refer to `origin/main` `8232a00`, before this PR. This file stays as the record of the design, the measurements and the review response.
+> **Applied 2026-10-11 in the P-0c docs PR.** Every AM-n item below is now in the text of `F-PLC-001-placement-test.md` (each marked with its id) and every W-n item in `design/wireframes/placement/placement.md`. The line numbers below refer to `origin/main` `8232a00`, before this PR. This file stays as the record of the design, the measurements and the review response. The second review round on PR #199 (two independent reviews, section "Review response, round 2" at the end) changed AM-18, AM-20, AM-21, AM-22, AM-27, AM-28, AM-29, AM-30, AM-33, AM-37, AM-38, AM-39, AM-40 and AM-41 in both places; where this record and the spec ever differ, the spec text wins.
 
 # Amendments to F-PLC-001: three check lengths — Short, Standard (default), Deep
 
@@ -69,18 +69,11 @@ Step 2, append:
 > 3. **Options (`placement/options`)** is a **grown-up screen**: whoever sets the check up uses it, and the learner then only listens, looks and taps. Every label on it is also spoken when tapped.
 >    - **Mode** (P14): three equal radio tiles, **Short**, **Standard**, **Deep**. Each has a label, a one-line help (`options.mode.<m>.help`) and a duration line (`options.mode.<m>.duration`, hidden while *Take my time* is on). There is no "recommended" badge, and the tiles never say "easy", "hard", "test" or an age. The pre-selection (`flow.ts defaultMode(levelOrder, effectiveLevel, lastResult, shortAvailable)`) is:
 >
->      | Situation | Pre-selected |
->      |---|---|
->      | `levelOrder(profile.ageGroup)` is 0, the effective level is `stage1` band 0 (or there is no result), and Short is available | Short |
->      | `levelOrder` 0 and Short not available | Standard; the Short tile is disabled with "The short check needs sound." |
->      | the effective level is band 1 or higher (whatever `levelOrder`) | Standard: a mode whose ceiling is at or below the effective level is never pre-selected |
->      | the newest result is a Short whose report hint fired (section 3.9) | Standard |
->      | `levelOrder` 1 or 2, or unknown | Standard |
->      | a screen reader is on | no change of mode (*Take my time* is pre-set on) |
->      | Deep | never pre-selected |
+>      The pre-selection is the **first rule that matches** (round 2): (1) the newest result is a Short whose report hint fired -> Standard; (2) the effective level is above `stage1` band 0 -> Standard (Short is never pre-selected at or above its ceiling; at `stage3` Standard is still pre-selected); (3) `levelOrder` 0 and Short available -> Short; (4) `levelOrder` 0 and Short not available -> Standard; (5) otherwise -> Standard. Deep is never pre-selected. Whenever Short is not available its tile is disabled with "The short check needs sound." A screen reader changes no mode (it only pre-sets *Take my time*).
 >
->      Short is available when the device can play sound (`config.audio` from the capability check) and the test language has an instruction voice (step 2). `levelOrder` is a reading-level id (F-LEARN-001), not an age.
->    - **Layout for `levelOrder` 0.** One pre-filled card shows the mode with a **Change** link, and one primary **Start** button with an icon. Nothing has to be read or chosen first. **Change** opens the full screen below (*Take my time* and *Why Korean?* live there). With Short there is no sound-guide question (section 3.2, P19).
+>      Short is available when `shortAvailable(canPlayKorean(getCapability()), hasVoiceFor(LOCALE_META[testLocale].speechLang))` is true, read when the options screen opens (before the warm-up). `levelOrder` is a reading-level id (F-LEARN-001), not an age.
+>    - **Layout for `levelOrder` 0.** Used only when Short is pre-selected: one pre-filled card shows it with a **Change** link, and one primary **Start** button with an icon. Nothing has to be read or chosen first. **Change** opens the full screen below (*Take my time* and *Why Korean?* live there). With Short there is no sound-guide question (section 3.2, P19). When Standard is pre-selected, a `levelOrder` 0 learner gets the full screen with the sound-guide question (round 2).
+>    - **Tiles on small and wide screens** (round 2): side by side only at 480 pt or wider and a font scale of 1.3 or less, otherwise stacked; centred in `Screen width="reading"` on wide windows; radios with `selected` / `disabled` state, a disabled Short tile hints `options.mode.short.needsSound`.
 >    - **Sound guide** (D2, OD-1 (c), AM-14), for Standard and Deep: asked first, with nothing pre-selected. NEXT stays disabled until one of *Always show it* or *Show it only when I tap* is chosen. Neither choice is recommended, highlighted or described as better. One neutral sentence states the consequence: "With the guide shown, the check looks at shapes and listening. With it hidden until you tap, it can also look at reading. Your own setting is not changed." The profile setting is never written.
 >    - **Take my time** (switch, off): removes the inactivity pause and the backstop clock. Pre-set to on when a screen reader is on (`AccessibilityInfo.isScreenReaderEnabled()`, read in `platform/`).
 >    - Optional **Why Korean?** four icon choices (my family, K-culture, just curious, a Korean friend; blueprint 02 section 2.2 step 2) + "Skip". It only sets the theme order of the route (blueprint 04 section 8.1).
@@ -96,7 +89,7 @@ Replace "It checks audio: ... shows a one-line "No sound here, so we will use pi
 > It checks audio. A `playPrompt` result of `unavailable` sets `config.audio = false` for the whole run (audio-required templates leave the draw; section 3.5).
 >
 > - In **Standard and Deep** for a learner who is not listen-first, a one-line note says "No sound here, so we will use pictures and reading".
-> - In **Short**, and for a **listen-first** learner (`levelOrder` 0) in any mode, the run does not start. A grown-up screen (`placement/sound-needed`) shows an icon, "Turn on sound to play", **Try again**, **Start learning** (to `FirstQuestPreview` or Home, nothing recorded), and a link **Check without sound**. That link runs Standard with listen-first off, as the grown-up's explicit choice.
+> - In **Short**, and for a **listen-first** learner (`levelOrder` 0) in any mode, the run does not start. A grown-up screen (`placement/sound-needed`) shows an icon, "Turn on sound to play", **Try again**, **Start learning** (to `FirstQuestPreview` or Home, nothing recorded), and a link **Check without sound**. That link is the grown-up's explicit choice of Standard with listen-first off: it returns to the full options screen with Standard selected, Short disabled and the sound-guide question unanswered; the warm-up is not repeated (round 2).
 >
 > The warm-up's tap also unlocks audio for the run. Its word is passed to the engine as `avoidTags` (its `word:` tag), so no scored question repeats it. It is not recorded in the result.
 
@@ -104,15 +97,15 @@ Replace "It checks audio: ... shows a one-line "No sound here, so we will use pi
 
 > **Short layout** (wireframe `item-short`; the engine is the same):
 >
-> - Nothing scrolls at 320 x 568, in landscape or at 200 % text.
+> - Portrait: nothing scrolls at 320 x 568 up to 200 % text. Landscape: two columns, fitting 568 x 320 at the default text size; where it cannot fit, the grid scrolls while the prompt and **I am not sure** stay pinned (round 2).
 > - Four cards in 2 x 2 at `touchTarget.child` or larger. **I am not sure** has its own full-width row with a Hoya shrug icon and a spoken label.
 > - The exit is an icon with a spoken label.
-> - The prompt plays on open from the first item (the warm-up tap unlocked audio), and the choices are enabled after its first full play (if the prompt cannot play, section 3.11 applies).
+> - The prompt plays on open (the warm-up tap unlocked audio); the first item after a resume or a cold start plays on a tap of a large speaker. The choices are enabled on the playback end **or** after a fallback delay (estimated prompt length plus 3 s, at most 8 s); **I am not sure** and the exit are always enabled (if the prompt cannot play, section 3.11 applies; round 2).
 > - The instruction is spoken only on the first item of each rung; later items play only the Korean prompt.
 > - An answer is acknowledged by the footstep trail filling, with no "Got it" word.
 > - Hoya cheers every 2 answers with effort-only lines (`learner.placement.cheerShort`, for example "Thanks for listening!"). That list may not contain "right", "correct", "got it", "perfect" or "great job" (copy test).
 >
-> **Listen-first** (`levelOrder` 0, every mode, and every Short run): only one-tap formats that start from a sound or a picture are drawn (`LISTEN_FIRST_FORMATS`). No Latin sound chips (`see-pick-sound`) and no tile building (`build-syllable`).
+> **Listen-first** (`levelOrder` 0, every mode, and every Short run): only `LISTEN_FIRST_FORMATS = ['shape-odd-one-out', 'hear-pick-written', 'hear-pick-picture', 'read-pick-picture', 'reply-pick']` are drawn: every format except Latin sound chips (`see-pick-sound`) and tile building (`build-syllable`). The reading formats stay in, so a listen-first reader can reach `stage3` in Standard and Deep (round 2).
 
 ## AM-22 — Section 3.1 step 6, Pause (line 62): replace the step
 
@@ -272,10 +265,11 @@ After the "No migration, no new route" bullet (line 357), add:
 
 > - **Modes and old readers.**
 >   - Every Short and Standard result also parses with the pre-change schema (test against a frozen copy, `fixtures/placement-result-schema-v1.ts`, on the engine's real output). An old reader drops `mode`, and `modeOf` recovers it.
->   - A Deep result with more than 24 responses or 9 rows is rejected by an older Worker: a 422 for the whole snapshot PUT. Measured: 16 % of intermediate and 99 % of strong-reader Deep results.
+>   - A Deep result with more than 24 responses or 9 rows is rejected by an older Worker: a 422 for the whole snapshot PUT. Measured: 84 % of intermediate and 99 % of strong-reader Deep results (16 % and 1 % parse; corrected in round 2).
+>   - No Worker rollback past P-3b once a build that sets `mode` has shipped. Older app builds reject a whole backup file holding a long Deep result, so the flag flip (P-10) waits for a store build with P-3b's schema one release earlier (round 2).
 >   - So the Worker carrying `mode` and the 48 / 16 bounds is deployed **before any app build that sets `mode`** (P-3b, a gate for P-5). No `PlacementResult` is stored anywhere yet (`flags.placementEnabled` is off), so relaxing the bounds breaks no stored data.
 >   - A copy stripped of `mode` by an older Worker stays readable: the report groups rows by gate/form through `rowsPassed`, so a Deep result without `mode` renders like a Standard one with two-row rungs.
->   - Test in `backend/src/__tests__/sync.test.ts`: PUT a 42-response Deep result with `mode` next to a legacy result, GET them, and check that every response and `mode` survive.
+>   - Test in `packages/backend/src/__tests__/sync.test.ts`: PUT a 42-response Deep result with `mode` next to a legacy result, GET them, and check that every response and `mode` survive.
 
 Line 360 (Size), replace with:
 
@@ -317,14 +311,14 @@ Replace "and no digit except in the allow-listed duration strings `invite.durati
 
 > and no digit except in the allow-listed duration strings `options.mode.standard.duration` and `options.mode.deep.duration`; `invite.duration` has no digit). The mode labels and help lines never name an age, a school year or "kids". `learner.placement.cheerShort` contains no success words ("right", "correct", "got it", "perfect", "great job"). `learner.placement.handoff.helper` is covered by the same scan.
 
-Copy (English; Korean and Spanish follow F-I18N-001's review ledger):
+Copy (English; Korean and Spanish follow F-I18N-001's review ledger). Round 2 writes every key as a full path under `learner.placement` (the grown-up options and sound-needed screens included) or `caregiver.placementReport`, and adds `learner.placement.options.cardTitle` / `.title` / `.howLong` / `.change`, `learner.placement.item.tapToHear`, `learner.placement.result.tryStandard`, `caregiver.placementReport.tryStandard` and `caregiver.placementReport.notTestedShort`; the spec's section 3.12 table is the full list.
 
 | Key | English |
 |---|---|
 | `invite.duration` | It takes a few minutes. You can stop at any time. |
 | `options.mode.short.label` / `.help` / `.duration` / `.needsSound` | Short / A few picture and sound questions. / Just a few minutes. / The short check needs sound. |
-| `options.mode.standard.label` / `.help` / `.duration` | Standard / Letters, sounds and words. / Usually under 10 minutes. |
-| `options.mode.deep.label` / `.help` / `.duration` | Deep / More questions, to be extra sure. Hoya takes a break halfway. / Can take up to 20 minutes. |
+| `options.mode.standard.label` / `.help` / `.duration` | Standard / Letters, sounds, words and sentences. / Usually under 10 minutes. |
+| `options.mode.deep.label` / `.help` / `.duration` | Deep / More questions, to be extra sure. Hoya takes a break halfway. / Usually under 20 minutes. |
 | `handoff.ready` / `handoff.helper` | Ready? Tap Hoya to start. / Helping? Let them choose. "Not sure" is a fine answer. |
 | `rest.line` | Hoya is stretching. Keep going? |
 | `soundNeeded.title` / `.tryAgain` / `.startLearning` / `.withoutSound` | Turn on sound to play / Try again / Start learning / Check without sound |
@@ -377,7 +371,7 @@ No new names; `schemas/telemetry.ts` and its exact-list test are unchanged. The 
 | `…/placement-simulated.test.ts` | integration | fixture bank, per mode, 1,000 seeded runs: Standard as before plus never-first and fixed-slot tappers at band 1 or lower in at least 97 %; Short 6-9, never above band 1, at most 3 placed out, any guesser above band 0 in at most 1 %; Deep any guesser above band 1 in at most 0.5 %, at most 42, advanced `stage3` at least 90 % with listening measured; "not sure" at band 0 in every mode |
 | `…/placement-bank-modes.test.ts` (new) | content | the shipped bank through `scripts/build-placement-bank.mjs`, at most 200 runs per case: per-format minimums; Short with sound and a hidden guide always asks `sound-basic` and never the warm-up word; listen-first never meets chips or tiles; Standard's floor is 12, a perfect reader reaches `stage3` in Standard (24) and Deep (42); Deep's confirming syllable draw holds a tile item |
 | `…/placement-modes-simulation.test.ts` (new) | integration | the mode table on the shipped bank with the time model of appendix D: seeded learners (five guessing patterns, not sure, intermediate, advanced) drive `startRun` / `apply` / `finishRun`, 300 runs per cell; per mode: question range, p90 minutes (Short at most 5, Standard at most 10, Deep at most 20), guesser false-high bounds, Short's ceiling and placed-out bound, Standard's intermediate `stage2` bound, Deep's higher bar than Standard, old-schema parsing |
-| `backend/src/__tests__/sync.test.ts` (extend) | integration | a 42-response Deep result with `mode` round-trips through `PUT` / `GET .../snapshot` next to a legacy result; 49 responses, 17 rows, an unknown `mode` or `length` are a 422 |
+| `packages/backend/src/__tests__/sync.test.ts` (extend) | integration | a 42-response Deep result with `mode` round-trips through `PUT` / `GET .../snapshot` next to a legacy result; 49 responses, 17 rows, an unknown `mode` or `length` are a 422 |
 | `mobile/src/logic/placement/__tests__/*.test.ts` | unit, 100 % | `flow.ts`: `defaultMode` table, `shortAvailable(audio, voice)`, the `levelOrder` 0 card and hand-off (every control on the path to the warm-up has a spoken label and an icon), the sound-needed state, the sound-guide question asked only for Standard and Deep with NEXT disabled until answered. `copy.ts`: the new keys, the digit allow-list, no age words, the effort-only `cheerShort`. `result-view.ts`: hint rows (band 1; **`sound-basic` pass and `syl-cv` 2 of 3 → hint**; `sound-basic` fail → no hint); `modeOf` fallback; Deep rows grouped by gate/form; status words, no counts out of 6 for Deep; tiles line by bank lookup; AM-14 headline without a text button on a child profile |
 | `mobile/src/store/__tests__/progress-store.test.ts` (extend) | integration | a result with zero responses is not stored |
 | `apps/mobile/e2e/web/placement.spec.ts` (nightly) | e2e | as before, plus: a *Pictures first* Short run to the result without reading any text; a Deep run that shows the rest card |
@@ -395,10 +389,10 @@ PR table (lines 488 to 498): add two rows and replace five.
 | P-0c | `docs`: three check lengths, `AMENDMENTS-PLC-THREE-MODES.md` applied (AM-15 to AM-42; P14 to P20), wireframe edits W-1 to W-8 (`options` rewritten, `handoff`, `item-short`, `sound-needed`, `pause` rest card, `result`, `report`) | S | — |
 | **P-3b** | **`feat(content-schema)`: engine modes** — `rungs.ts`, `plan.ts`, `run.ts`, `run-state.ts`, `scoring.ts`, `route-seed.ts`, `schemas/placement.ts` (`mode`, 48 / 16, `PLACEMENT_MIN_FORMAT_READY`), their tests, `placement-bank-modes.test.ts`, `placement-modes-simulation.test.ts`, and the backend round-trip test. **Deploy the Worker before P-5 ships** | M | P-3 (#168), P-4 (#177), P-0c |
 | P-5 | `feat(mobile)`: `logic/placement/` (flow with `defaultMode`, `shortAvailable`, hand-off and sound-needed states; copy; result view with `modeOf`, the Short hint and rows grouped by gate/form; cell look; home card), `placement-run-store`, `recordPlacement` (no zero-response result), `avoidTags` from the warm-up, merge / summarize / mission-builder changes, flag | M | P-3b **and the Worker deploy**, P-4 |
-| P-6 | `feat(mobile)`: screens (language with the instruction-voice line; options as a grown-up screen with the `levelOrder` 0 card and the three mode tiles; hand-off; warm-up; item with the Short layout; pause with exit and rest; sound-needed; result), navigation, audio capability hooks and `platform/audio` `hasVoiceFor` | L | P-5, F-I18N-001 PR 4, F-AUDIO-004 A-4, OD-1 (AM-10, AM-14), wireframes W-1 to W-6 |
+| P-6 | `feat(mobile)`: screens (language with the instruction-voice line; options as a grown-up screen with the `levelOrder` 0 card and the three mode tiles; hand-off; warm-up; item with the Short layout; pause with exit and rest; sound-needed; result), navigation, audio capability hooks and `platform/audio` `hasVoiceFor` | L | P-5, F-I18N-001 PR 4, F-AUDIO-004 A-4, OD-1 (AM-10, AM-14), wireframes W-1 to W-7 |
 | P-7 | `feat(mobile)`: entry points (onboarding fork, Home card, Profile row; "Take the check again" pre-selects with `defaultMode`), Journey placed-out look and start pin | M | P-6, F-ROUTE-001 R-2a (`pin`, `check-circle` glyphs; AM-10) |
-| P-8 | `feat(mobile)`: parent report (Short not-tested line and hint, Deep status words and "checked twice", Spelling with tiles by bank lookup, retake offer location by profile type), override, dashboard row | M | P-6 |
-| P-10 | `test(e2e)` + flag flip for beta | S | P-7, P-7b, P-8, **the P-3b Worker deploy** |
+| P-8 | `feat(mobile)`: parent report (Short not-tested line and hint, Deep status words and "checked twice", Spelling with tiles by bank lookup, retake offer location by profile type), override, dashboard row | M | P-6, wireframe W-8 |
+| P-10 | `test(e2e)` + flag flip for beta | S | P-7, P-7b, P-8, **the P-3b Worker deploy**, a store build with P-3b's schema shipped one release earlier (round 2) |
 
 ## AM-39 — Section 8, decisions
 
@@ -417,7 +411,7 @@ Append to the table:
 
 | # | Decision | Why |
 |---|---|---|
-| P14 | **Three modes: Short, Standard (default), Deep.** Defaults by `levelOrder` and the effective level; Deep is opt-in; a mode whose ceiling is at or below the effective level is never pre-selected. Stored as `length` (legacy `quick` / `full`) plus an optional `mode`. | Owner request 2026-10-11; old readers keep parsing Short and Standard results |
+| P14 | **Three modes: Short, Standard (default), Deep.** Defaults by `levelOrder` and the effective level, as an ordered first-match list; Deep is opt-in; Short is never pre-selected once the effective level is above `stage1` band 0. Stored as `length` (legacy `quick` / `full`) plus an optional `mode`. | Owner request 2026-10-11; old readers keep parsing Short and Standard results |
 | P15 | **Short:** `sound-basic` → `vocab` oral → `syl-cv`; listen-first formats only; `syl-cv` needs 3 of 3; no "three not sure" sheet; no backstop; ceiling `stage1` band 1; does not start without sound. Below D10's floor at the owner's request: the band-1 evidence is the same `sound-basic` and `syl-cv` items as Standard's, and what it drops (recognition, sentence listening) the report names as not part of the short check. | A short, one-tap, spoken check for learners who do not read yet; it errs low because a false high is permanent (any guessing pattern above band 0 in at most 0.2 %, against about 2.5 % with 2 of 3) |
 | P16 | **Standard:** the merged Full path; a `vocab` read pass is confirmed by a second draw (ceiling 24); 10-minute backstop. | The `vocab` read pass places out all of Stage 1; the second draw cuts the intermediate learner's `stage2`-or-higher false high from about 21 % to 9 %. A 12-minute backstop was considered: it would cut 2.1 % instead of 7.0 % of a rare learner (a *Pictures first* profile who reads sentences), and the label "Usually under 10 minutes" holds either way |
 | P17 | **Deep:** every route-moving pass is confirmed by a second, different draw, asked after the next rung; listening for everyone (sentences only for a reader); a rest card after 18; up to 42 questions; 20-minute backstop; `responses` 48 and `gates` 16 before the first app write. | Thorough without six-in-a-row blocks or an easy tail; the Worker is deployed first |
@@ -445,7 +439,7 @@ Append:
 
 > 18. **A helping grown-up** is the most realistic source of false-high results for young learners. The hand-off line asks them to let the learner choose; nothing can enforce it. Beta: compare quest-1 accuracy of placed-out Short learners with others.
 > 19. **Listen-first for `testLocale: 'ko'`** is not assumed. Revisit when beta shows `see-pick-sound` accuracy by test language.
-> 20. **The 4-card Short layout fits 320 x 568 without scrolling.** The `item-short` wireframe must show it before P-6.
+> 20. **The 4-card Short layout fits 320 x 568 without scrolling** in portrait up to 200 % text, and in landscape at the default text size with two columns; the `item-short` wireframe shows both, and P-6 verifies them in Playwright (round 2).
 > 21. **Retakes may repeat items.** The previous result's ids are excluded only while each rung still has three questions; a repeated item is a small practice effect, and under the union rule it pushes upward.
 
 ## AM-41 — Appendix C, rung and path summary: replace
@@ -467,7 +461,9 @@ STANDARD (default)
 
 DEEP (opt-in; rest card after 18)
   recog 3; then sound-basic, syl-cv, sound-rest, syl-cvc, vocab read, sentence read: 3+3 each,
-  the second draw after the next step's first draw (sound-basic not confirmed when syl-cv did not pass)
+  the second draw after the next step's first draw (sound-basic not confirmed when syl-cv did not pass);
+  sentence read's second draw right after vocab read's second draw; a step asked before an earlier
+  confirmation failed is stored but not passed (stepPassed)
   listening: oral pair if vocab read not passed; else sentence oral only (vocab oral while no sentence draw)
   paths: 12 to 42
 ```
@@ -683,3 +679,31 @@ C = child lens, M = measurement lens, K = code lens. Every blocker and major is 
 | K15 | minor | Deep interrupted second draw | **Fixed:** rule documented, tested for 1 and 2 wrong, report "not finished" (AM-27, AM-31, AM-35). |
 | K16 | minor | Sound-guide premise wrong | **Fixed:** restated against AM-14 (P19). |
 | K17 | minor | Counts, `cap` skew, PR order | **Fixed:** Short ends `complete` (no cap label); PR order in AM-38. |
+
+## Review response, round 2 (two independent reviews of PR #199, 23 findings)
+
+A = first review, B = second review. No blockers. Every major is fixed. Minors are fixed unless a reason is given. The spec text is changed in the places named; the AM blocks above were updated to match.
+
+| # | Sev. | Finding | Response |
+|---|---|---|---|
+| A1 | major | The `defaultMode` table overlapped, and its ceiling sentence excluded every mode at `stage3` | **Fixed:** an ordered first-match list (hint fired, above `stage1` band 0, `levelOrder` 0 with and without Short, otherwise); "Short is never pre-selected at or above its ceiling"; Standard stays pre-selected at `stage3`; flow test cases for the hint at band 0 and for `stage3` (section 3.1 step 3, section 5, P14). |
+| A2 / B4 | major | Two paths reached Standard without the sound-guide choice | **Fixed:** C1 is used only when Short is pre-selected; otherwise a `levelOrder` 0 learner gets C2 with the question. **Check without sound** returns to C2 with Standard selected and the question unanswered, with no second warm-up. Flow tests assert that `revealMode` is never set without an explicit choice (section 3.1 steps 3 and 4, section 3.2, wireframes C, C3, L2). |
+| A3 / B3 | major | `LISTEN_FIRST_FORMATS` was never listed, and its prose contradicted the measurements | **Fixed:** the exact tuple is in section 3.5 and pinned in the rungs test: every format except `see-pick-sound` and `build-syllable` (the same tuple as P-3b, #200). The prose is reworded. The plan test checks that a listen-first perfect reader reaches `stage3` in Standard and Deep. |
+| A4 | major | Deep's delayed confirmation left an already-asked next step undefined after a failed confirmation | **Fixed:** that step is stored but counts as not passed everywhere, through one predicate, `stepPassed` (`scoring.ts`). The planner gives the oral pair, the strand is never *secure* from it, and the read pass never stands in for `vocab` oral. `sentence` read's second draw comes right after `vocab` read's. The full Deep order is written out. Plan and scoring test rows added (section 3.5 items 3 and 4, section 3.6, appendix C). P-3b (#200) implements `stepPassed`. |
+| A5 / B2 (figure) | minor | Old-reader share was inverted (16 % rejected vs 16 % parse) | **Fixed:** 84 % of intermediate and 99 % of strong-reader Deep results are rejected by an older Worker (section 3.8, AM-30). |
+| A6 | minor | Copy keys missing and namespaces mixed | **Fixed:** every key is a full path. The grown-up options and sound-needed screens live under `learner.placement`, so the copy scan covers them. Added `options.cardTitle` / `.title` / `.howLong` / `.change`, `item.tapToHear`, `result.tryStandard`, `caregiver.placementReport.tryStandard` and `.notTestedShort` (section 3.12). |
+| A7 | minor | `shortAvailable` read `config.audio`, which is set only after the warm-up | **Fixed:** `shortAvailable(canPlayKorean(getCapability()), hasVoiceFor(...))`, read at options time. A later warm-up failure goes to `placement/sound-needed` (section 3.1 step 3). |
+| A8 | minor | `complete` vs `cap` precedence unstated; the rest card's stop reason missing | **Fixed:** `cap` is stored when no rung is left and the longest path was asked; it never cuts a run short. This matches P-3b. **That is enough** on the idle pause, after the background or on the rest card stores `quit` (section 3.5, section 3.1 step 6, run test). |
+| A9 | minor | "Can take up to 20 minutes" read as a hard bound; the Standard help line left out sentences | **Fixed:** "Usually under 20 minutes." and "Letters, sounds, words and sentences." (section 3.12, AM-33). |
+| A10 | minor | The general rule still said the first prompt of a rung plays on tap | **Fixed:** prompts play on open in every mode; the first item after a resume or a cold start plays on tap (section 3.1 step 5). |
+| A11 | minor | The wireframe's "Got it" line covered Short; P-6 depended on W-1 to W-6 only | **Fixed:** "(Short: the footstep trail only)". P-6 now depends on W-1 to W-7 and P-8 on W-8 (section 6, AM-38). |
+| A12 | minor | A screen-reader row in the `defaultMode` table had no matching input | **Fixed:** the row is removed. A screen reader only pre-sets *Take my time* (section 3.1 step 3). |
+| B1 | major | Builds released before P-3b reject a whole backup file that holds a long Deep result | **Fixed:** new bullet in section 3.8. P-10 now also needs a store build carrying P-3b's schema shipped one release earlier on iOS and Android. P-3b's schema test records that a 42-response Deep result fails the frozen pre-change schema. A v1-compatible export form was **not chosen**: it would make the stored record lossy for a short-lived compatibility window, and gating the flag costs nothing while no result is stored. |
+| B2 | major | A Worker rollback past P-3b would stop all progress sync for affected learners | **Fixed:** "never roll the Worker back past P-3b once a build that sets `mode` has shipped" is in section 3.8 and on P-3b's row. The repository has no deploy runbook, so the rule lives in the spec, P-3b's PR body and the Worker deploy note. The row count "up to 15" is **kept**: when the `sentence` oral draw is unavailable (a not-run row), a Deep reader is asked `vocab` oral, which adds a 15th row. |
+| B5 | major | The Short item screen could not fit 320 x 568 in landscape | **Fixed:** no scrolling in portrait up to 200 % text, and a two-column landscape layout that fits at the default text size; above that, the grid scrolls while the prompt and **I am not sure** stay pinned. Wireframe E2 adds the landscape variant, the States bullet exempts E2, and assumption 20 is widened (section 3.1 step 5, W-4). |
+| B6 | major | Short choices could stay disabled after a resume or a missing playback-end event | **Fixed:** the first item after a resume or a cold start plays on tap. Choices are enabled on the playback end or after a fallback delay (estimated length plus 3 s, at most 8 s). **I am not sure** and the exit are always enabled. Flow test row added. |
+| B7 | minor | Three side-by-side tiles at 320 pt; no wide-window rule | **Fixed:** the tiles stack below 480 pt or above font scale 1.3. Content stays centred in `Screen width="reading"` (F-LAYOUT-001) instead of a new 560 pt constant (section 3.1 step 3, wireframe C). |
+| B8 | minor | Accessibility of the new controls | **Fixed:** radio role and state, the disabled-tile hint, no auto-play with a screen reader (play on activation), and links at least `touchTarget.min` (section 3.12). |
+| B9 | minor | Backgrounding was not covered by the backstop rule | **Fixed:** `AppState` `background` / `inactive` sends `exit`, and the pause sheet is shown on return. Run test added (section 3.1 step 6, section 3.5 Clock). |
+| B10 | minor | The strict "above" token rule contradicted the test row "a Standard or Deep retake does" | **Fixed by narrowing the test row** to retakes below `stage3`. The "could still move the route" rule (P20) stays as implemented in P-3b. |
+| B11 | minor | A brittle spread-key assertion; wrong backend test path | **Fixed:** "no shared spread key whenever at least three eligible fresh-key templates exist, and never a shared template id". The path is now `packages/backend/src/__tests__/sync.test.ts` (sections 3.8 and 5, AM-30). |

@@ -88,7 +88,7 @@ Then: Hoya shows where their route starts, the Journey cursor skips what they kn
 ## C. Options (`placement/options`) — a grown-up screen; every label is spoken when tapped (W-3)
 
 ```
-C1. Pictures first (levelOrder 0) — one pre-filled card
+C1. Pictures first (levelOrder 0) with Short pre-selected — one pre-filled card
 ┌──────────────────────────────────┐
 │ [<]  "Set up the check" (hear)    │
 │ ┌───────────────────────────────┐ │
@@ -99,7 +99,7 @@ C1. Pictures first (levelOrder 0) — one pre-filled card
 │ [[ (icon) START ]]                │  <- nothing else to read or choose -> C3 hand-off
 └──────────────────────────────────┘
 
-C2. Everyone else, or after Change
+C2. Everyone else: Standard pre-selected (any levelOrder), after Change, or after "Check without sound" (L2)
 ┌──────────────────────────────────┐
 │ [<]  "A few choices" (hear)       │
 │ How long?                         │
@@ -117,7 +117,9 @@ C2. Everyone else, or after Change
 └──────────────────────────────────┘
 ```
 
-- Pre-selection (`defaultMode`): Short for a *Pictures first* learner whose route is still at band 0 and whose device has sound and a voice for the test language; Standard otherwise; Deep never.
+- Pre-selection (`defaultMode`, the first rule that matches, spec section 3.1 step 3): a newest Short whose hint fired -> Standard; a route above `stage1` band 0 -> Standard; *Pictures first* with sound and a voice for the test language -> Short; *Pictures first* without -> Standard; everyone else -> Standard. Deep never. The Short tile is disabled with the "needs sound" line whenever Short is unavailable.
+- C1 is shown only when Short is pre-selected. A *Pictures first* learner with Standard pre-selected gets C2, so the sound-guide question is always answered before a Standard or Deep run.
+- The three tiles sit side by side only at a content width of 480 pt or more and a font scale of 1.3 or less; otherwise they stack in one full-width column. On wide windows C1 and C2 stay centred in the reading width (F-LAYOUT-001). The tiles are radios with selected and disabled state; a disabled Short tile announces the "needs sound" line.
 - Every label is spoken when tapped. No age, no "kids", no "easy" or "hard", no "test". Each choice has a one-sentence helper; none uses words like "test score", "pass" or "fail". The profile's sound-guide setting is never written.
 - "Why Korean?" only changes the order of themes on the route.
 - NEXT -> C3 when Short is chosen or `levelOrder` is 0, else -> D.
@@ -136,7 +138,8 @@ C2. Everyone else, or after Change
 └──────────────────────────────────┘
 ```
 
-- Tapping Hoya -> D. No age words and no shame words.
+- Tapping Hoya -> D (after "Check without sound": straight to E, the warm-up is not repeated). No age words and no shame words.
+- With a screen reader on, the line is not auto-played; it plays when the focused Hoya button is activated.
 
 ## D. Warm-up (`placement/warmup`)
 
@@ -192,22 +195,24 @@ Formats (one frame each; romanization and glosses stay hidden unless the learner
    (no labels on pictures)
 ```
 
-- A choice is final on tap: a neutral "Got it", then the next question. No colour change, no sound for right or wrong, no retry, no hint.
+- A choice is final on tap: a neutral "Got it" (not in Short, E2), then the next question. No colour change, no sound for right or wrong, no retry, no hint.
 - "Show how it sounds" reveals the romanization for this question only; the answer then counts like "not sure".
 - "I am not sure" moves on. Three in a row opens F.
 - No per-question timer. 45 seconds without any touch opens the pause sheet (F), records nothing and keeps the question (not with "Take my time"). No timer is shown anywhere.
 - Every third question Hoya says one encouraging line, whatever the answers were.
+- Prompts play on open (the warm-up tap unlocked audio). The first question after Continue or a cold start plays on a tap of a large speaker. With a screen reader on, nothing auto-plays.
 - Screen readers: "Question, four choices"; picture choices read their meaning in the test language; the footsteps are skipped.
 
 ## E2. Short items (`placement/item`, Short layout; promoted as `item-short`) (W-4)
 
 ```
+E2. Short items, portrait (fits 320 x 568 up to 200 % text without scrolling)
 ┌──────────────────────────────────┐
 │ [(icon) exit] (spoken label)      │  <- opens F as an exit pause
 │ [Hoya]  (speaker, plays on open)  │  <- instruction spoken on the first item of a rung only
 │ ┌────────────┐ ┌────────────┐     │
 │ │   card     │ │   card     │     │  <- 2 x 2, >= touchTarget.child;
-│ └────────────┘ └────────────┘     │     enabled after the prompt's first full play
+│ └────────────┘ └────────────┘     │     enabled when the prompt ends or after the fallback delay
 │ ┌────────────┐ ┌────────────┐     │
 │ │   card     │ │   card     │     │
 │ └────────────┘ └────────────┘     │
@@ -216,8 +221,23 @@ Formats (one frame each; romanization and glosses stay hidden unless the learner
 └──────────────────────────────────┘
 ```
 
-- Fits 320 x 568, landscape and 200 % text without scrolling.
-- The prompt plays on open from the first item (the warm-up tap unlocked audio).
+```
+E2. Short items, landscape (two columns; fits 568 x 320 at the default text size)
+┌───────────────────────────────────────────────────────────┐
+│ [(icon) exit] (spoken)        ┌────────────┐ ┌────────────┐ │
+│                               │   card     │ │   card     │ │
+│ [Hoya]                        └────────────┘ └────────────┘ │
+│ (speaker, plays on open)      ┌────────────┐ ┌────────────┐ │
+│                               │   card     │ │   card     │ │
+│  footsteps: · · ·             └────────────┘ └────────────┘ │
+│                               [ (shrug) I am not sure ]     │
+└───────────────────────────────────────────────────────────┘
+```
+
+- Portrait: no scrolling at 320 x 568 up to 200 % text. Landscape: the two-column layout above. Where landscape cannot fit (large text), the grid scrolls while the prompt and "I am not sure" stay pinned.
+- The prompt plays on open (the warm-up tap unlocked audio); the first item after Continue or a cold start plays on a tap of a large speaker.
+- The cards are enabled when the prompt reports its end or after a fallback delay (the prompt's estimated length plus 3 s, at most 8 s), whichever comes first. "I am not sure" and the exit are always enabled.
+- With a screen reader on, the prompt does not auto-play; it plays when the focused speaker is activated.
 - Hoya cheers every 2 answers with an effort-only line ("Thanks for listening!").
 - No Latin sound chips and no tile building in Short, or for any *Pictures first* learner in any mode.
 - No "three not sure" sheet in Short.
@@ -234,7 +254,8 @@ Formats (one frame each; romanization and glosses stay hidden unless the learner
 └──────────────────────────────────┘
 ```
 
-- Nothing is lost: ending early still produces a result from the answers so far.
+- Also opens when the app goes to the background or the screen locks; it is shown on return, and the hidden clock did not run meanwhile.
+- Nothing is lost: ending early still produces a result from the answers so far. "That is enough" (here or on F2) ends the run with the answers so far.
 - Closing the app mid-run keeps the run for 24 hours (see L).
 - The hidden backstop clock does not run while F or F2 is open (W-6).
 
@@ -363,9 +384,10 @@ L2. Sound needed (a grown-up screen; W-5)
 │ "Turn on sound to play"           │
 │ [[ TRY AGAIN ]]                   │
 │ [ Start learning ]                │  <- nothing is stored
-│  Check without sound   (link)     │  <- Standard, listen-first off
-└──────────────────────────────────┘
+│  Check without sound   (link)     │  <- back to C2: Standard selected, Short disabled,
+└──────────────────────────────────┘     sound guide unanswered, listen-first off; no second warm-up
 ```
+- Links ("Check without sound", "Change", "For grown-ups") have a hit area of at least `touchTarget.min`.
 - A rung with fewer than three questions available: it is skipped and reported as not tested.
 - Offline: identical; the result syncs later.
 - A saved run older than a day: dropped silently; a newer one: B shows "Continue" / "Start again".
@@ -375,7 +397,7 @@ L2. Sound needed (a grown-up screen; W-5)
 
 ## Interaction points
 
-- Tap a choice: records the answer, shows "Got it", moves on after a short beat; double taps within 50 ms count once.
+- Tap a choice: records the answer, shows "Got it" (Short: the footstep trail only, no "Got it"), moves on after a short beat; double taps within 50 ms count once.
 - "Show how it sounds": reveals romanization for this question; the answer is then assisted (only when the run hides the guide until tap).
 - "I am not sure": records it, moves on; three in a row open the pause sheet (not in Short).
 - Exit: opens the pause sheet; "start learning" ends the run with the answers so far.
@@ -391,7 +413,7 @@ Exit to: `onboarding/first-quest-preview` (new learner, or Start learning on L2)
 - **success**: as drawn.
 - **empty**: nothing to place (beyond content) -> G2; no result yet -> report shows "No check taken yet" with the take-it button.
 - **error / offline / no sound**: L.
-- **small phone / landscape / 200 % text**: choices stack in one column, the exit and "not sure" stay reachable (Screen scrolls).
+- **small phone / landscape / 200 % text**: choices stack in one column, the exit and "not sure" stay reachable (Screen scrolls). Exception: the Short item screen (E2) keeps its 2 x 2 grid and does not scroll in portrait; in landscape it uses its two-column layout (see E2).
 - **reduced motion**: Hoya and footsteps change state without animation.
 
 ## Data needs
