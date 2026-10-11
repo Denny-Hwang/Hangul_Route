@@ -210,6 +210,7 @@ const SLOTTED: readonly [string, (m: Messages) => (value: string) => string][] =
   ['console.relink.askingToBe', (m) => m.console.relink.askingToBe],
   ['console.space.week.revisit', (m) => m.console.space.week.revisit],
   ['console.space.learner.revisit', (m) => m.console.space.learner.revisit],
+  ['console.lecture.source.revisitWith', (m) => m.console.lecture.source.revisitWith],
 ];
 
 describe('messages split around their argument (aroundSlot)', () => {
