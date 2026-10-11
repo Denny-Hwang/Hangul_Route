@@ -132,7 +132,7 @@ comment thread. People will quote-tweet this image.
   - "0:00 — Tap to start"
   - "2:30 — Mini-game"
   - "5:00 — Card earned"
-- Small text bottom-right: "No ads. No data sold. Plays offline."
+- Small text bottom-right: "No ads. No data sold. Works offline."
 
 **Why**: PH's voters skew adult. Adults *buy* kids' apps. This frame is
 for them.

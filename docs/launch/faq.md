@@ -93,7 +93,7 @@ purchases only.
 A. Never. No ads, ever.
 
 **Q. Offline play?**
-A. Yes. After first sync, the whole Stage 1 plays offline.
+A. Yes. After your first visit the app works offline. Letter sounds need a Korean voice on your device until our own recordings arrive.
 
 ---
 
