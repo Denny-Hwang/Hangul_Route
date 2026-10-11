@@ -230,7 +230,12 @@ test.describe('Journey at 1180x820: two panes', () => {
     await expect(cell(page, /^Letters/, 'stage2')).toHaveAttribute('aria-selected', 'true');
     await expect(detailPane(page).getByText('Coming soon', { exact: true }).first()).toBeVisible();
     await expect(detailPane(page).getByRole('button', { name: 'Start', exact: true })).toHaveCount(0);
-    await expect(page.getByText('Premium', { exact: false }).first()).toBeVisible(); // the stage pill is untouched
+    // The stage pill shows the availability word, never a commerce word (F-ROUTE-001 R-J, OD-8).
+    await expect(page.getByText('Coming later', { exact: true }).first()).toBeVisible();
+    await expect(page.getByText('Premium', { exact: false })).toHaveCount(0);
+    // A stage header is never a lock or a door to the unlock page, for sighted and screen-reader users alike.
+    await expect(mapPane(page).getByRole('button', { name: /locked|unlock/i })).toHaveCount(0);
+    await expect(page.getByText('A taste', { exact: true }).first()).toBeVisible();
     await expect(page.getByLabel('Go back', { exact: true })).toHaveCount(0);
   });
 

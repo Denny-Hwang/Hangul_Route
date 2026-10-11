@@ -42,20 +42,20 @@ The map keeps its single job (pick a cell); a cell with stories adds a count mar
 │ (1) Hangul                [Open] │   <- stage row: badge, title, 1-liner, pill
 │     [L #5] [F #1] [H #2] [N #1] [P #1]
 │                                  │      lesson cells with a count mark (#n = stories)
-│ (2) Words               [Taste]  │
+│ (2) Words             [A taste]  │
 │     [lib #2] [F #1] [lib #1] [N #1] [lib #3]
 │                                  │      lib = stories-only cell (library icon, no lesson there)
 │     "Heritage stories are open   │
 │      in the cells with books."   │   <- one muted caption, shown when the row has a stories-only cell
-│ (3) Sentences            [Soon]  │
+│ (3) Sentences    [Coming later]  │
 │     [lib #2] [lib #1] [lock] [lock] [lock]
-│ (4) Dialogue            [Taste]  │
+│ (4) Dialogue          [A taste]  │
 │     [lib #1] [lock] [H ] [lock] [lock]
-│ (5) Stories              [Soon]  │
+│ (5) Stories      [Coming later]  │
 │     [lock] [lock] [lib #1] [lock] [lock]
-│ (6) Real-use             [Soon]  │
+│ (6) Real-use     [Coming later]  │
 │     [lib #1] [lock] [lock] [lock] [lock]
-│ (7) Self-expression      [Soon]  │
+│ (7) Self-expression [Coming later]  │
 │     [lock] [lock] [lock] [lock] [lock]
 │                                  │
 │ ┌──────────────────────────────┐ │
@@ -68,7 +68,9 @@ The map keeps its single job (pick a cell); a cell with stories adds a count mar
 Cell looks (5): **lesson** (theme initial, stage-tinted border; success tint when complete; `#n` mark when stories exist) · **lesson, complete** · **stories-only** (`library` icon + `#n`, subtle border, paper fill, tappable) · **book** (Stage 5, future: a grid episode of `format: story`; drawn like a lesson cell) · **placeholder** (lock, disabled, "coming soon").
 
 - `#n` is a 20 dp mark in the cell's top-right corner, not a separate target (cells are ~54 dp wide at 320 dp). It reads "5+" from 6 stories. It is inside the cell's accessibility label, not a second element.
-- The stage pill (Open / Taste / Soon) still reflects **lesson/book cells only**; stories-only cells do not change it. No cell is ever routed through the grown-up PIN for being a story cell.
+- The stage pill (Open / A taste / Coming later) still reflects **lesson/book cells only**; stories-only cells do not change it. No cell is ever routed through the grown-up PIN for being a story cell.
+- The stage pill always shows the availability word, never a commerce word: no "Premium" pill on a stage outside the learner's plan (F-ROUTE-001 R-J, OD-8). "Taste" became "A taste" and "Soon" became "Coming later", the My route words.
+- The stage header is a plain row, never a button: it does not open the grown-up PIN or the unlock page, and a screen reader hears the title, the one-liner and the same availability word (no "locked" / "unlock"). Plans are reached from the grown-up area only.
 - 15 of 35 cells carry stories in the launch data (7 lesson cells + 8 stories-only cells); the other 20 stay locked placeholders.
 
 ## Interaction points (A)
@@ -140,4 +142,4 @@ Exit to: `episode/detail` (lesson cell) · `story/cell-stories` (stories-only ce
 ## Open questions
 
 1. **Count mark size**: 20 dp inside a cell of about 54 dp at 320 wide; confirm it is legible at 200 % text, or move it into the cell label only on narrow widths.
-2. **Stage header pill** on a stage whose only open cells are stories-only still reads "Soon"; follow audit UX-12 / F-STORY-004 §3.9 for the pill rule.
+2. **Stage header pill** on a stage whose only open cells are stories-only still reads "Coming later"; follow audit UX-12 / F-STORY-004 §3.9 for the pill rule.

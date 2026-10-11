@@ -64,7 +64,6 @@ describe('length budgets (F-I18N-001 §3.11)', () => {
       'learner.home.streak.pill',
       'learner.home.cards.pill',
       'learner.home.stars.pill',
-      'learner.journey.premium.pill',
       'learner.library.collected.pill',
       'learner.cardDetail.hear.cta',
       'learner.cardDetail.share.cta',

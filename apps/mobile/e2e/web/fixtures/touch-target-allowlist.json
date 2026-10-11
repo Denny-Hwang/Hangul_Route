@@ -2,12 +2,6 @@
   "note": "F-LAYOUT-001 §3.8 touch-target ratchet (target-size.spec.ts). Controls measured under touchTarget.min (64) today, per window. Never add a line: a new small control fails the audit until it is at least 64 x 64. When a listed control is fixed, the audit fails until its line is removed, so this list only shrinks.",
   "offenders": {
     "1180x820": [
-      "Journey | button | Dialogue: locked. Opens the unlock page.",
-      "Journey | button | Real-use: locked. Opens the unlock page.",
-      "Journey | button | Self-expression: locked. Opens the unlock page.",
-      "Journey | button | Sentences: locked. Opens the unlock page.",
-      "Journey | button | Stories: locked. Opens the unlock page.",
-      "Journey | button | Words: locked. Opens the unlock page.",
       "Library | button | All",
       "Library | button | Food",
       "Library | button | Holidays",
@@ -17,12 +11,6 @@
       "Profile | button | Go back"
     ],
     "375x667": [
-      "Journey | button | Dialogue: locked. Opens the unlock page.",
-      "Journey | button | Real-use: locked. Opens the unlock page.",
-      "Journey | button | Self-expression: locked. Opens the unlock page.",
-      "Journey | button | Sentences: locked. Opens the unlock page.",
-      "Journey | button | Stories: locked. Opens the unlock page.",
-      "Journey | button | Words: locked. Opens the unlock page.",
       "Library | button | All",
       "Library | button | Food",
       "Library | button | Holidays",
@@ -32,12 +20,6 @@
       "Profile | button | Go back"
     ],
     "768x1024": [
-      "Journey | button | Dialogue: locked. Opens the unlock page.",
-      "Journey | button | Real-use: locked. Opens the unlock page.",
-      "Journey | button | Self-expression: locked. Opens the unlock page.",
-      "Journey | button | Sentences: locked. Opens the unlock page.",
-      "Journey | button | Stories: locked. Opens the unlock page.",
-      "Journey | button | Words: locked. Opens the unlock page.",
       "Library | button | All",
       "Library | button | Food",
       "Library | button | Holidays",
