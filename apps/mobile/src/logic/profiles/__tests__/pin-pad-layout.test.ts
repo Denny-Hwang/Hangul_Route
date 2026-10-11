@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { PIN_PAD_KEY_COUNT, pinPadBudget, pinPadLayout } from '../pin-pad-layout';
+import { PIN_PAD_KEY_COUNT, pinPadBudget, pinPadFirstWidth, pinPadLayout } from '../pin-pad-layout';
 
 const KEYS = { minKey: 64, maxKey: 80, gap: 8 };
 
@@ -76,6 +76,21 @@ describe('pinPadLayout — PIN keypad sized from the space it has (audit p1-L1)'
         expect(l.columns * l.rows).toBeGreaterThanOrEqual(PIN_PAD_KEY_COUNT);
       }
     }
+  });
+});
+
+describe('pinPadFirstWidth — the width guess before the pad is measured (F-LAYOUT-001 §3.6)', () => {
+  it('is the window width less the side padding on a phone', () => {
+    expect(pinPadFirstWidth({ windowWidth: 375, maxWidth: 720, sidePadding: 32 })).toBe(343);
+  });
+
+  it('stops at the content cap on a tablet or desktop (no 480 px web column any more)', () => {
+    expect(pinPadFirstWidth({ windowWidth: 1180, maxWidth: 720, sidePadding: 64 })).toBe(656);
+    expect(pinPadFirstWidth({ windowWidth: 768, maxWidth: 720, sidePadding: 48 })).toBe(672);
+  });
+
+  it('never goes negative (the first web frame can report 0)', () => {
+    expect(pinPadFirstWidth({ windowWidth: 0, maxWidth: 720, sidePadding: 32 })).toBe(0);
   });
 });
 
