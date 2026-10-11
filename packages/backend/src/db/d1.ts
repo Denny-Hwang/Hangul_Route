@@ -91,6 +91,28 @@ const toEntitlement = (r: Row): Entitlement => ({
   updatedAt: str(r.updated_at),
 });
 
+/**
+ * Every table `reset()` empties, children before parents. The class-transfer
+ * tables (F-SPACE-002, migration of PR T-3b) are listed ahead of the migration
+ * that creates them.
+ */
+const RESET_TABLES = [
+  'transfer_events',
+  'transfer_requests',
+  'learner_transfer_prefs',
+  'rate_hits',
+  'waitlist',
+  'entitlements',
+  'relink_requests',
+  'plans',
+  'memberships',
+  'spaces',
+  'snapshots',
+  'learner_devices',
+  'learners',
+  'accounts',
+] as const;
+
 /** `Db` over a D1 binding — F-INFRA-003. Schema: apps/api/migrations. */
 export class D1Db implements Db {
   constructor(private readonly d1: D1Like) {}
@@ -271,9 +293,11 @@ export class D1Db implements Db {
     return (await this.changes('UPDATE waitlist SET unsubscribed_at = ? WHERE email = ?', [now.toISOString(), email])) > 0;
   }
 
+  /** Tests only. Child tables first; a table whose migration has not landed yet is skipped. */
   async reset(): Promise<void> {
-    for (const table of ['waitlist', 'entitlements', 'relink_requests', 'plans', 'memberships', 'spaces', 'snapshots', 'learner_devices', 'learners', 'accounts']) {
-      await this.run(`DELETE FROM ${table}`, []);
+    const present = new Set(await this.many("SELECT name FROM sqlite_master WHERE type = 'table'", [], (r) => str(r.name)));
+    for (const table of RESET_TABLES) {
+      if (present.has(table)) await this.run(`DELETE FROM ${table}`, []);
     }
   }
 }
