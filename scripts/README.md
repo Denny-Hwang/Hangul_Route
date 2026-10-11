@@ -18,6 +18,7 @@
 | `check-migrations.mjs` | F-ROUTE-001 R-0 (E-1) | `.github/workflows/ci.yml` (through `pnpm run test:scripts`, whose self-test runs it on the repository) | `apps/api/migrations/*.sql`: every file is `NNNN_snake_case.sql` and no two share a prefix (wrangler and the SQLite shim apply them in sorted order) |
 | `build-placement-bank.mjs` | F-PLC-001 | `.github/workflows/content-validation.yml` | `content/placement/*.json` (index + one file per strand, drafts included with their `status`) → `apps/mobile/src/content/placement.generated.ts`; `--check` fails on drift. Structure rules for `content/placement/**` live in `placement-rules.mjs` (called by `validate-content.mjs`); the `pitem:` overlay fields are checked by the shared overlay rules |
 | `build-overlays.mjs` | F-I18N-001 §3.6 | `.github/workflows/content-validation.yml` (and `pnpm run test:scripts`, whose self-test runs `--check` on the repository) | `content/i18n/{es,ko}/*.json` → `packages/content-schema/src/i18n-overlays.generated.ts` (`OVERLAYS`, only allowed fields); `--check` fails on drift. Authoring rules: `content/i18n/README.md` |
+| `i18n-status.mjs` | F-I18N-001 §3.10 | `.github/workflows/ci.yml` (and `pnpm run test:scripts`, whose self-test runs it on the repository) | per locale and namespace of `packages/i18n/src/messages/en/`: missing keys (`fallbackPaths`; the English-authoritative legal text is not counted), native review from `packages/i18n/src/messages/review-ledger.json` (current / stale when the English file's sha256 changed / not reviewed), `LOCALE_STATUS`. Fails on missing keys in a `'shipped'` locale and on the rest of the release gate (a ledger entry per namespace, the locale in `HANGUL_ROUTE_STRICT_LOCALES` of `content-validation.yml`); stale namespaces warn. `--list` prints the missing paths (R8 input). Loads the TypeScript dictionary through `ts-loader.mjs` |
 | `import-heritage.mjs` | F-STORY-001 | (none: one-time, run by hand) | `content/stories/research/<cluster>.final.json` → `content/stories/<slug>.json` drafts (`--dry-run` is the default, `--write` writes, never overwrites an authored story) |
 
 Run locally:
@@ -28,6 +29,8 @@ node scripts/validate-content.mjs
 node scripts/check-token-drift.mjs
 node scripts/check-coverage-targets-drift.mjs
 node scripts/check-i18n.mjs
+node scripts/i18n-status.mjs             # translation status per locale and namespace
+node scripts/i18n-status.mjs --list      # ... with every missing key path
 node scripts/check-migrations.mjs
 node scripts/build-stories.mjs            # regenerate the story bundle
 node scripts/build-stories.mjs --check    # drift detector (CI)
