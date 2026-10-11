@@ -69,12 +69,19 @@ export type WordArtShape =
 
 export type WordArtGlyph = readonly WordArtShape[];                 // painted in order, viewBox 0 0 100 100
 
-export interface WordArtMeta { maxTones?: number; family: WordArtFamily; reserved?: boolean }  // reserved: key exists for v1.1, unused at launch
+export type WordArtStatus = 'draft' | 'review' | 'approved';     // §3.10 contact-sheet state; the owner marks 'approved'
+export interface WordArtMeta {
+  family: WordArtFamily; status: WordArtStatus;
+  maxTones?: number;      // allowlist above 4 fill tones (§3.3); needs `reason`
+  bboxWaived?: boolean;   // C2 waiver; needs `reason`
+  reason?: string;        // why a waiver is granted (a test requires it with either waiver)
+  reserved?: boolean;     // key exists for v1.1, unused at launch
+}
 export type WordArtFamily = 'food'|'animal'|'family'|'school'|'nature'|'travel'|'sport'|'culture'|'science'|'color'|'count'|'body'|'prop';
 ```
 
 - Short field names (`f`, `s`, `sw`, `o`) are deliberate (W2): the data is expanded in memory, never shipped as JSON, so size is the builders' source size.
-- **Path grammar**: absolute commands `M L H V C Q A Z` only, numbers with at most one decimal, no relative commands, no `S`/`T`. (A pure `placePath` can then translate and scale any glyph, which composed glyphs use, §3.6; a test parses every path against this grammar.)
+- **Path grammar** (`word-art/path.ts`: `parsePath`, `isWordArtPath`, `formatNumber`, shared by the `path()` builder, the renderer and the tests): absolute commands `M L H V C Q A Z` only, numbers with at most one decimal, no relative commands, no `S`/`T`. (A pure `placePath` can then translate and scale any glyph, which composed glyphs use, §3.6; a test parses every path against this grammar.)
 - **Stroke and corners**: strokes use round caps and joins (the renderer sets them; the data cannot override); the data carries `sw` only.
 - **Opacity** `o` is 0.1-1; opacity is for shadows and highlights only (a 0.18 ground shadow, a 0.55 highlight), never to build a colour (no mixing by overlay).
 - **No gradients, no filters, no clip paths, no masks, no text, no images, no `<use>`**: the shape union cannot express them (compile-time) and the test suite re-checks the data.
@@ -102,7 +109,7 @@ Every builder returns a `WordArtShape` (or a list) and rounds coordinates to one
 
 ### 3.3 Tones and colours
 
-**Tone vocabulary.** `WordArtTone` is the union of `'<group>.<key>'` for every key of `colors` (`tokens.ts:21-103`) in the groups **brand, surface (canvas, paper, sunken), text, feedback (success, nudge, info and their Light variants), theme, stage, hoya, border, vocab** — and **not** `feedback.danger`, `feedback.dangerLight`, `surface.overlay`, `surface.inkScrim`, or any `rarity.*` (rarity colours carry card-rarity meaning). `word-art/tones.ts` exports:
+**Tone vocabulary.** `WordArtTone` is the union of `'<group>.<key>'` for every key of `colors` (`tokens.ts:21-103`) in the groups **brand, surface (canvas, paper, sunken), text, feedback (success, `successDark`, nudge, info and their Light variants), theme, stage, hoya, border, vocab** (the list is generated from `colors` minus the exclusions, so a token added later joins it) — and **not** `feedback.danger`, `feedback.dangerLight`, `surface.overlay`, `surface.inkScrim`, or any `rarity.*` (rarity colours carry card-rarity meaning). `word-art/tones.ts` exports:
 
 ```ts
 export const WORD_ART_TONES: readonly WordArtTone[]            // generated from `colors` at module load, minus the exclusions
@@ -112,9 +119,9 @@ export function isWordArtTone(s: string): s is WordArtTone
 
 A glyph fails the tone test when any `f` or `s` is not in `WORD_ART_TONES`.
 
-**Outline rule.** The default outline is `text.primary` at `sw` 3 (main outline) or 2 (detail). It is *not* counted as a tone.
+**Outline rule.** The default outline is `text.primary` at `sw` 3 (main outline) or 2 (detail). It is *not* counted as a tone. A small detail **filled** with `text.primary` (the eyes `face()` draws, pupils, wheels, a nose) is part of the same ink and is not counted either; otherwise every face would cost a tone.
 
-**Tone budget.** At most **4 fill tones** per glyph (plus the outline and the optional ground shadow), per heritage-card-art.md §3 ("3-5 colours"). The registry may allowlist a higher number per key with `maxTones` and a reason (the rainbow needs 6; a swatch with a sticker needs 5).
+**Tone budget.** At most **4 fill tones** per glyph (plus the outline ink and the optional ground shadow; only the shadow tone `hoya.furDark` below opacity 0.5 is exempt as the shadow, and a faint fill in any other tone still counts), per heritage-card-art.md §3 ("3-5 colours"). The registry may allowlist a higher number per key with `maxTones` and a reason (the rainbow needs 6; a swatch with a sticker needs 5).
 
 ### 3.4 The twelve `colors.vocab.*` tokens (`tokens.ts`, `design/tokens/colors.v1.md`)
 
@@ -229,7 +236,7 @@ export function wordArtKeyOf(ref: string): string | null        // 'word:food-ap
 
 Key grammar: `^(food|animal|family|school|nature|travel|sport|culture|science|color|count|body|prop)-[a-z0-9-]+$`.
 
-Files: `glyphs/{food,animal,family,school,nature,travel,sport,culture,science,prop}.ts` (hand glyphs, `Record<string, WordArtGlyph>` each), `generated/{color,count,body,figure}.ts`, `registry.ts` (merges them, builds the meta, throws at import on a duplicate key — a unit test imports it).
+Files: `glyphs/{food,animal,family,school,nature,travel,sport,culture,science,prop}.ts` (hand glyphs, `Record<string, WordArtGlyph>` each), `generated/{color,count,body,figure}.ts`, `color-confusion.ts` (`COLOR_CONFUSION_PAIRS`, exported for F-VOC-004), `registry.ts` (merges them, builds the meta, throws at import on a duplicate or malformed key, on a key filed under another family's source — `buildRegistry` takes `[family, glyphs]` pairs — and on meta for a key with no glyph — a unit test imports it). The registry is deeply frozen, every shape included, so no caller can repaint the shared data. `color-science.ts` is test-only and is not exported from the entry.
 
 `packages/design-system/package.json` `exports` gains `"./word-art": "./src/word-art/index.ts"` (a pure entry with **no** React or react-native import) so logic and tests in other packages can use the data without pulling `react-native-svg`.
 
@@ -241,6 +248,7 @@ Files: `glyphs/{food,animal,family,school,nature,travel,sport,culture,science,pr
 - every item `visual` of the form `card:<id>` is in `supportedCardIds`;
 - every `WORD_ART_KEYS` entry of family other than `prop` is used by exactly one item, or is flagged `meta.reserved` — **checked per topic file that exists**: while a topic's JSON has not been merged (F-VOC-001 V-2b..V-6b), the glyphs of its families are checked for validity only (tones, grammar, bbox), so the system PRs W-1b/W-1c and the art batches may land before the data they will serve;
 - every `prop` key is referenced by a colour generator;
+- **while the art lags the data** (amended at W-1b: F-VOC-001 merged `food`, `animals`, `colors` and `numbers` before any batch, leaving 42 `word:` visuals without a glyph): the test keeps an `AWAITING_ART` map from each family to the PR that draws it (W-3 food, color, count; W-4 animal, body; W-5 family, school, nature; W-6 travel, sport, culture, science). For a served family it pins how many visuals are still missing, so a misspelled key in a topic file raises the count and fails at once; a family whose count reaches 0 must leave the map. A batch PR deletes its families from the map, which turns on the full first rule for them; a topic PR that serves a family in the map pins its count. Until the last batch, behaviour 1 holds for every family outside the map;
 - the `COLOR_CONFUSION_PAIRS` constant matches the recomputed list (§3.4).
 
 ### 3.10 The contact-sheet review surface (`/design-preview/word-art`)
@@ -302,7 +310,7 @@ New server-rendered page `apps/web/src/app/design-preview/word-art/page.tsx` (F-
 
 ### 3.13 Behaviours (Given / When / Then)
 
-1. **Given** the registry, **when** `vocab-keys.test.ts` runs, **then** every `word:*` visual in `content/vocab/*.json` resolves and every non-prop, non-reserved glyph is used once.
+1. **Given** the registry, **when** `vocab-keys.test.ts` runs, **then** every `word:*` visual in `content/vocab/*.json` resolves and every non-prop, non-reserved glyph is used once (for a family still in `AWAITING_ART`, §3.9: exactly its pinned number of visuals is missing).
 2. **Given** a glyph with a hex colour `'#ff0000'` as a fill, **when** the tone test runs, **then** it fails (`isWordArtTone` is false); **given** `'feedback.danger'`, it fails.
 3. **Given** `toRenderList(glyph, { mono: 'border.strong' })`, **then** every fill and stroke resolves to the `border.strong` value and shapes with opacity below 0.5 get 0.5.
 4. **Given** the key `food-apple` at 48 px, **when** rendered, **then** the outline is 3 units of 100 (1.4 px) and the SVG has viewBox `0 0 100 100` (a golden `glyphToSvgString` test).
@@ -331,7 +339,7 @@ New server-rendered page `apps/web/src/app/design-preview/word-art/page.tsx` (F-
 | `.../glyphs.test.ts` | unit | for **every registry glyph**: tones valid, at most `maxTones` fill tones, path grammar, coordinates in range, shape count limits, `sw` in {2,3} (generated 1.5 allowed), bbox 60-70 % (waivers listed), distinct data, no `text`/`image` kinds |
 | `.../render.test.ts` | unit, 100 % | `toRenderList` defaults, `mono`, opacity floor; `glyphToSvgString` golden strings for 3 glyphs |
 | `.../generated.test.ts` | unit, 100 % | `swatch` places the sticker in the lower right and keeps 9+ shapes; `count(n)` has n dots for 0..10 and 20, left-to-right; `bodyPart` anchors inside the viewBox; `figure` variants differ; the four sibling glyphs differ |
-| `.../registry.test.ts` | unit | no duplicate keys; key grammar; every family has the planned count (food 9, animal 11, family 12, school 11, nature 9, travel 12, sport 12, culture 7, science 12, color 12, count 12, body 12, prop 4); `getWordArt`, `wordArtKeyOf` |
+| `.../registry.test.ts` | unit | no duplicate keys; key grammar; family matches its source; deep freeze; every family has the planned count (food 9, animal 11, family 12, school 11, nature 9, travel 12, sport 12, culture 7, science 12, color 12, count 12, body 12, prop 4) — at most the plan until its batch lists it in `COMPLETE_FAMILIES`, exactly the plan after, and a family that reaches the plan must be listed; `getWordArt`, `wordArtKeyOf` |
 | `.../color-science.test.ts` | unit | the Lab / Machado helpers on known reference colours; `COLOR_CONFUSION_PAIRS` matches the recomputed list; non-text contrast of the outline on canvas is at least 3:1 |
 | `.../import-guard.test.ts` | integration (source scan) | `colors.vocab` / `'vocab.'` tones appear only under `src/word-art/` and `components/WordArt/` |
 | `.../budget.test.ts` | integration | raw and gzip size limits (W7) |
