@@ -76,7 +76,7 @@ export function MinigameScreen({ route, navigation }: Props): React.ReactElement
     case 'card-match':
       return <CardMatchGame scope={scope} onFinish={close} />;
     case 'story-sequence':
-      return <StorySequenceGame scope={scope} onFinish={close} />;
+      return <StorySequenceGame scope={scope} onFinish={close} sequenceId={ref} />;
     case 'voice-echo':
       if (!flags.voiceEchoEnabled) {
         return fallback('Voice practice is opening in our next beta.');
