@@ -179,4 +179,13 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.library.earnHint.stage': [[1]],
   'learner.library.earnHint.set': [['Seasons and Tales']],
   'caregiver.placementReport.count': [[0, 3], [1, 1]],
+  'learner.storyShelf.minutes.pill': [[2], [10]],
+  'learner.storyShelf.tileLabel': [['The Sun and the Moon', 'New', 1], ['The Sun and the Moon', 'Keep reading', 5]],
+  'learner.storyShelf.episode.minutes.pill': [[2], [10]],
+  'learner.storyShelf.episode.hearWord': [['hae']],
+  'learner.storyShelf.episode.cultureNotes': [[1], [3]],
+  'learner.storyShelf.cultureNotes.found.pill': [[1], [24]],
+  'learner.storyShelf.cultureNotes.fromStory': [['The Sun and the Moon']],
+  'learner.storyShelf.cultureNotes.source': [['Hangul Day', 'National Institute of Korean Language']],
+  'learner.storyShelf.cultureNotes.hearTerm': [['hangeullal']],
 };
