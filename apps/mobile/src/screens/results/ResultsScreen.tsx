@@ -8,6 +8,7 @@ import {
   HeritageCardArt,
   Hoya,
   HoyaBubble,
+  KoreanText,
   Screen,
   Spacer,
   StarRow,
@@ -20,7 +21,7 @@ import {
 } from '@hangul-route/design-system';
 import { CommonActions } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AccessibilityInfo, Platform, View } from 'react-native';
 import Animated, {
   Easing,
@@ -33,7 +34,14 @@ import Animated, {
 } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
-import { cardById, episodeById, questById } from '../../content';
+import { cardById, episodeById, episodesAll, questById, questsAll } from '../../content';
+import { isStageEntitled } from '../../logic/entitlement';
+import {
+  resultsActions,
+  resultsTeaser,
+  teaserTappedEvent,
+  type ResultsTeaser,
+} from '../../logic/quest-flow/results-teaser';
 import { applyQuestResult } from '../../logic/results-award';
 import type { CardAward } from '../../logic/reward';
 import { resultsCheerMessage, resultsHeadline } from '../../logic/results-copy';
@@ -42,6 +50,7 @@ import { track } from '../../platform/telemetry';
 import type { RootStackParamList } from '../../navigation/types';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
+import { effectiveTier, useTierStore } from '../../store/tier-store';
 
 /** Learner's cub in the name chip above the guide Hoya. */
 const AVATAR_SIZE = 40;
@@ -55,6 +64,8 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
   const profile = useProfileStore(activeProfileSelector);
   const recordQuestComplete = useProgressStore((s) => s.recordQuestComplete);
   const unlockCard = useProgressStore((s) => s.unlockCard);
+  const snapshot = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
+  const cachedTier = useTierStore((s) => (profile ? s.byLearner[profile.id] : undefined));
   const reducedMotion = useReducedMotion();
   // What this run earned, decided once when the score is written.
   const [award, setAward] = useState<CardAward | null>(null);
@@ -103,6 +114,27 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
   const cheerMessage = resultsCheerMessage(stars, played);
   const newCard = award?.isNew ? cardById(award.cardId) : undefined;
   const showSparkles = !!newCard && stars >= 3;
+
+  // "Next up" (F-QUEST-002 §3.5): the Journey cursor with this quest counted as
+  // done, limited to stages this learner can open, so a free learner is never
+  // pointed at a Premium stage. Deciding it from route params (not from the
+  // snapshot the effect above is still writing) keeps it stable across the write.
+  const tier = effectiveTier(profile?.id ?? '', new Date()).tier;
+  const teaser = useMemo(
+    () =>
+      resultsTeaser({
+        snapshot,
+        quests: questsAll,
+        episodes: episodesAll,
+        questId,
+        total,
+        isEntitled: (stageKey) => isStageEntitled(stageKey, tier),
+      }),
+    // `cachedTier` re-renders this screen when the inbox changes the tier.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [snapshot, questId, total, tier, cachedTier],
+  );
+  const actions = resultsActions(teaser);
 
   return (
     <Screen tone="canvas" scrollable>
@@ -153,11 +185,33 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
         ) : null}
       </View>
 
+      {teaser ? (
+        <>
+          <Spacer size="lg" />
+          <NextUpCard teaser={teaser} />
+        </>
+      ) : null}
+
       <Spacer size="xl" />
+      {teaser ? (
+        <>
+          <Button
+            label={teaser.ctaLabel}
+            tone="primary"
+            size="hero"
+            fullWidth
+            onPress={() => {
+              if (profile) void track(teaserTappedEvent(profile.id, questId, teaser));
+              navigation.navigate('QuestPlayer', { questId: teaser.questId, episodeId: teaser.episodeId });
+            }}
+          />
+          <Spacer size="sm" />
+        </>
+      ) : null}
       <Button
         label="Back home"
-        tone="primary"
-        size="hero"
+        tone={actions.backHome.tone}
+        size={actions.backHome.size}
         fullWidth
         onPress={() => {
           navigation.dispatch(
@@ -172,14 +226,48 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
       {episode ? (
         <Button
           label="Episode page"
-          tone="ghost"
-          size="md"
+          tone={actions.episodePage.tone}
+          size={actions.episodePage.size}
           fullWidth
           onPress={() => navigation.navigate('EpisodeDetail', { episodeId: episode.id })}
         />
       ) : null}
       <Spacer size="lg" />
     </Screen>
+  );
+}
+
+/**
+ * F-QUEST-002 §3.5 — the "Next up" card (wireframe results/next-quest-teaser).
+ * The quest title and one line; letters in the line are taught content, so
+ * they go through `KoreanText` with their romanization, never a plain string.
+ */
+function NextUpCard({ teaser }: { teaser: ResultsTeaser }): React.ReactElement {
+  const { line } = teaser;
+  return (
+    <Card padding="md" tone="paper" testID="next-up-card">
+      <Caption tone="muted">Next up</Caption>
+      <Spacer size="xs" />
+      <Heading level="prompt">{teaser.titleEn}</Heading>
+      {line?.kind === 'text' ? (
+        <>
+          <Spacer size="xs" />
+          <Body tone="secondary">{line.text}</Body>
+        </>
+      ) : null}
+      {line?.kind === 'letters' ? (
+        <>
+          <Spacer size="xs" />
+          <Body tone="secondary">{line.lead}</Body>
+          <Spacer size="sm" />
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
+            {line.letters.map((letter) => (
+              <KoreanText key={letter.ko} ko={letter.ko} romanization={letter.romanization} size="sm" />
+            ))}
+          </View>
+        </>
+      ) : null}
+    </Card>
   );
 }
 

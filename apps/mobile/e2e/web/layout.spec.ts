@@ -137,6 +137,8 @@ for (const vp of VIEWPORTS) {
       // Home → Meet the Letters → quest 2 → skip to its Trace game.
       await page.getByRole('button', { name: /Meet the Letters/ }).click();
       await page.getByRole('button', { name: 'Start' }).nth(1).click();
+      // Quest 2 builds on quest 1, which is not done yet: the soft-prerequisite sheet asks once (F-QUEST-002 §3.5).
+      await page.getByRole('button', { name: 'Play anyway' }).click();
       await page.getByRole('button', { name: 'Continue' }).click();
       await page.getByRole('button', { name: 'Skip for now' }).click();
       await expect(page.getByText('Trace Each Letter')).toBeVisible();
