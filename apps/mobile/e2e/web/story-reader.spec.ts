@@ -1,6 +1,7 @@
-import type { Locator, Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { completeChildForm, keepSidewaysIfAsked, readStored, seedStored, waitForSaved } from './helpers';
+import { back, filledDots, fullyVisible, next, position } from './story-reader-helpers';
 
 /**
  * F-STORY-002 PR 2.6a: the story reader on its replay route (`StoryReader`,
@@ -94,32 +95,11 @@ async function lowestOpacityAfter(page: Page, testId: string, action: 'next', ms
   );
 }
 
-const position = (page: Page): Locator => page.getByTestId('story-reader-position');
-const BRAND = 'rgb(178, 73, 21)'; // colors.brand.primary: a filled dot
-
-/** Filled dots of the fill-only meter (Progress dots carry no aria-valuenow on react-native-web). */
-function filledDots(page: Page): Promise<number> {
-  return page
-    .getByTestId('story-reader-dots')
-    // The dots are hidden from screen readers (the labelled page number speaks instead).
-    .getByRole('progressbar', { includeHidden: true })
-    .evaluate((bar, brand) => Array.from(bar.children).filter((d) => getComputedStyle(d).backgroundColor === brand).length, BRAND);
-}
-const next = (page: Page): Locator => page.getByTestId('story-reader-next');
-const back = (page: Page): Locator => page.getByTestId('story-reader-back');
-
 async function profileId(page: Page): Promise<string> {
   const profiles = await readStored<Array<{ id: string }>>(page, 'profiles');
   const id = profiles?.[0]?.id;
   if (!id) throw new Error('no profile stored');
   return id;
-}
-
-async function fullyVisible(page: Page, target: Locator): Promise<boolean> {
-  const vp = page.viewportSize();
-  const box = await target.boundingBox();
-  if (!vp || !box) return false;
-  return box.y >= 0 && box.x >= 0 && box.y + box.height <= vp.height + 0.5 && box.x + box.width <= vp.width + 0.5;
 }
 
 test.describe('story reader, replay route (fixture bundle)', () => {
