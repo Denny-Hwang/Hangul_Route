@@ -78,7 +78,7 @@ F-XXX-<slug>.md
 - `F-VOC-003-topic-picker-flashcards.md` — Words entry, topic picker, flashcards · **ready**
 - `F-VOC-004-speed-round.md` — speed round, spark meter, opt-in Challenge mode · **ready**
 - `F-VOC-005-word-progress-srs-sync.md` — per-word progress, Leitner boxes, sync merge, caregiver summary · **ready**
-- `F-PLC-001-placement-test.md` — level check with selectable test language, adaptive ladder, route seed · **ready**
+- `F-PLC-001-placement-test.md` — level check with selectable test language, three check lengths (Short, Standard, Deep; companion `AMENDMENTS-PLC-THREE-MODES.md`, applied), adaptive ladder, route seed · **ready**
 - `F-PLAN-002-curriculum-planner.md` — curriculum generator by level and duration, console wizard, self-route · **ready**
 - `F-TCH-004-lecture-mode.md` — teacher lecture mode for tablets and projectors · **ready**
 - `F-LAYOUT-001-responsive-tablet-landscape.md` — tablet, landscape and split-pane layout · **ready**

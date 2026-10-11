@@ -163,12 +163,20 @@ describe('PlacementResultSchema', () => {
     expect(PlacementResultSchema.safeParse({ ...result, id: 'placement:Bad' }).success).toBe(false);
   });
 
-  it('bounds the arrays (24 responses, 9 gates, 40 placed-out quests, 3 priority tokens)', () => {
-    expect(PlacementResultSchema.safeParse({ ...result, responses: Array(24).fill(response) }).success).toBe(true);
-    expect(PlacementResultSchema.safeParse({ ...result, responses: Array(25).fill(response) }).success).toBe(false);
-    expect(PlacementResultSchema.safeParse({ ...result, gates: Array(10).fill(gate) }).success).toBe(false);
+  it('bounds the arrays (48 responses, 16 gate rows for Deep, 40 placed-out quests, 3 priority tokens)', () => {
+    expect(PlacementResultSchema.safeParse({ ...result, responses: Array(48).fill(response) }).success).toBe(true);
+    expect(PlacementResultSchema.safeParse({ ...result, responses: Array(49).fill(response) }).success).toBe(false);
+    expect(PlacementResultSchema.safeParse({ ...result, gates: Array(16).fill(gate) }).success).toBe(true);
+    expect(PlacementResultSchema.safeParse({ ...result, gates: Array(17).fill(gate) }).success).toBe(false);
     expect(PlacementResultSchema.safeParse({ ...result, placedOutQuestIds: Array(41).fill('q') }).success).toBe(false);
     expect(PlacementResultSchema.safeParse({ ...result, priorityTokens: ['a', 'b', 'c', 'd'] }).success).toBe(false);
+  });
+
+  it('keeps length quick | full and takes an optional mode', () => {
+    expect(PlacementResultSchema.safeParse({ ...result, length: 'standard' }).success).toBe(false);
+    expect(PlacementResultSchema.parse({ ...result, mode: 'deep' }).mode).toBe('deep');
+    expect(PlacementResultSchema.parse(result)).not.toHaveProperty('mode');
+    expect(PlacementResultSchema.safeParse({ ...result, mode: 'quick' }).success).toBe(false);
   });
 
   it('rejects an unknown source, a bad bank version and an override by anyone but a parent', () => {

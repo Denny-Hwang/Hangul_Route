@@ -17,7 +17,19 @@ import type { UiLocale } from '../schemas/locale';
 import { coveredSymbols, placedOutQuestIds, placementStageNumber } from './level-map';
 import { nextRung } from './plan';
 import { priorityTokensOf, seedRoute, type RouteCatalog } from './route-seed';
-import { IDLE_PAUSE_MS, QUESTIONS_PER_RUNG, RUNG_TABLE, backstopMs, questionCap } from './rungs';
+import {
+  DEEP_REST_AT,
+  IDLE_PAUSE_MS,
+  LISTEN_FIRST_FORMATS,
+  QUESTIONS_PER_RUNG,
+  RUNG_TABLE,
+  backstopMs,
+  drawsFor,
+  legacyLengthOf,
+  passAtFor,
+  questionCap,
+  type PlacementMode,
+} from './rungs';
 import type { PlacementRunState } from './run-state';
 import { gateResult, levelOf, oralStageOf, strandStatuses } from './scoring';
 
@@ -46,8 +58,15 @@ export interface PlacementBankInput {
 }
 
 export interface PlacementConfig {
-  /** quick: at most 15 questions, 4 minutes; full: at most 21, 6 minutes. */
-  length: 'quick' | 'full';
+  /** short: 6 to 9 questions, no clock; standard: 9 to 24, 10 minutes; deep: 9 to 42, 20 minutes. */
+  mode: PlacementMode;
+  /**
+   * A *Pictures first* learner (`levelOrder` 0): decoding items start from sound
+   * and take one tap (`LISTEN_FIRST_FORMATS`) in every mode. Short always runs so.
+   */
+  listenFirst?: boolean;
+  /** Templates carrying any of these tags are not drawn (the warm-up's `word:` tag). */
+  avoidTags?: readonly string[];
   revealMode: 'tap' | 'always';
   /** From the warm-up (`playPrompt` result) and `canPlayKorean(getCapability())`. */
   audio: boolean;
@@ -71,6 +90,8 @@ export type PlacementEvent =
   | { type: 'tick' }
   /** Any touch that is not an answer (hear it again, ...): resets the inactivity clock. */
   | { type: 'touch' }
+  /** The learner opened the exit sheet: a pause, so the backstop does not run while it is open. */
+  | { type: 'exit' }
   | { type: 'quit'; by: 'learner' | 'grown-up' }
   | { type: 'keepGoing' };
 
@@ -78,7 +99,8 @@ const MAX_MS = 600_000;
 const NOT_SURE_LIMIT = 3;
 const clampMs = (ms: number): number => Math.min(MAX_MS, Math.max(0, Math.round(ms)));
 
-const drawKey = (gate: PlacementGate, form: PlacementForm): string => `${gate}:${form}`;
+const drawKey = (gate: PlacementGate, form: PlacementForm, draw?: 2): string =>
+  `${gate}:${form}${draw === 2 ? ':2' : ''}`;
 
 /** One key per look-alike pair, symbol, syllable or word, so a draw spreads before it repeats. */
 const spreadKey = (template: PlacementTemplateInput): string => {
@@ -89,48 +111,82 @@ const spreadKey = (template: PlacementTemplateInput): string => {
   return symbols.length > 0 ? symbols.join('|') : template.id;
 };
 
+const listenFirst = (config: Pick<PlacementConfig, 'mode' | 'listenFirst'>): boolean =>
+  config.mode === 'short' || config.listenFirst === true;
+
 const usable = (template: PlacementTemplateInput, config: PlacementConfig): boolean => {
-  const { requires, leaks, options } = template.question;
+  const { requires, leaks, options, format, tags } = template.question;
   if (requires.audio && !config.audio) return false;
   if (leaks && config.revealMode === 'always') return false;
+  if (listenFirst(config) && !LISTEN_FIRST_FORMATS.includes(format)) return false;
+  if (config.avoidTags !== undefined && tags.some((tag) => config.avoidTags?.includes(tag))) return false;
   if (requires.picture === null) return true;
   return options.every((o) => o.pictureRef === undefined || config.resolvesPicture(o.pictureRef));
 };
 
+/** The first draw of a rung, which a confirming second draw avoids. */
+interface FirstDraw {
+  ids: readonly string[];
+  keys: ReadonlySet<string>;
+}
+
 /**
  * Three questions for a rung, or null when fewer than three are eligible. The
- * rung has its own generator, so a draw does not depend on the path taken.
+ * rung has its own generator, so a draw does not depend on the path taken. A
+ * confirming second draw (`first` given) has its own seed, never repeats a
+ * template of the first draw, and prefers symbols, syllables and words the
+ * first draw did not touch; a second `syl-*` draw holds one tile item when one
+ * is eligible.
  */
 const drawRung = (
   bank: PlacementBankInput,
   config: PlacementConfig,
   gate: PlacementGate,
   form: PlacementForm,
+  first?: FirstDraw,
 ): AssessmentQuestion[] | null => {
   if (form === 'oral' && !config.audio) return null;
   if (gate === 'recog' && !config.visual) return null;
   const eligible = bank.templates.filter(
     (t) => t.status === 'ready' && t.gate === gate && t.form === form && usable(t, config),
   );
-  const rng = createRng(hashSeed([String(config.seed), gate, form]));
+  const rng = createRng(hashSeed(first === undefined ? [String(config.seed), gate, form] : [String(config.seed), gate, form, '2']));
   const pick = (count: number, exclude: readonly string[], filter?: (t: PlacementTemplateInput) => boolean) =>
     selectSpread({ candidates: eligible, count, rng, exclude, spreadBy: spreadKey, ...(filter ? { filter } : {}) });
   const isReply = (t: PlacementTemplateInput): boolean => t.question.format === 'reply-pick';
 
-  const choose = (exclude: readonly string[]): PlacementTemplateInput[] => {
-    if (gate !== 'sentence' || form !== 'read') return pick(QUESTIONS_PER_RUNG, exclude);
+  const isBuild = (t: PlacementTemplateInput): boolean => t.question.format === 'build-syllable';
+  const fresh = (t: PlacementTemplateInput): boolean => first === undefined || !first.keys.has(spreadKey(t));
+
+  const chooseOnce = (exclude: readonly string[]): PlacementTemplateInput[] => {
+    if (first !== undefined && (gate === 'syl-cv' || gate === 'syl-cvc')) {
+      const tile = pick(1, exclude, (t) => isBuild(t) && fresh(t));
+      const taken = [...exclude, ...tile.map((t) => t.id)];
+      const rest = pick(QUESTIONS_PER_RUNG - tile.length, taken, (t) => !isBuild(t) && fresh(t));
+      return [...tile, ...rest];
+    }
+    if (gate !== 'sentence' || form !== 'read') return pick(QUESTIONS_PER_RUNG, exclude, fresh);
     // Two read-pick-picture and one reply-pick; a short side is topped up from what is left.
-    const chosen = [...pick(2, exclude, (t) => !isReply(t)), ...pick(1, exclude, isReply)];
+    const chosen = [...pick(2, exclude, (t) => !isReply(t) && fresh(t)), ...pick(1, exclude, (t) => isReply(t) && fresh(t))];
     const taken = [...exclude, ...chosen.map((t) => t.id)];
-    return [...chosen, ...pick(QUESTIONS_PER_RUNG - chosen.length, taken)];
+    return [...chosen, ...pick(QUESTIONS_PER_RUNG - chosen.length, taken, fresh)];
+  };
+  // Fresh symbols first; then any template not in the first draw (a soft preference, never a reason to skip).
+  const choose = (exclude: readonly string[]): PlacementTemplateInput[] => {
+    const own = [...exclude, ...(first?.ids ?? [])];
+    const preferred = chooseOnce(own);
+    if (preferred.length >= QUESTIONS_PER_RUNG || first === undefined) return preferred;
+    const taken = [...own, ...preferred.map((t) => t.id)];
+    return [...preferred, ...pick(QUESTIONS_PER_RUNG - preferred.length, taken)];
   };
   let chosen = choose(config.exclude);
+  // The previous result's ids are relaxed when the rung would otherwise be short (a retake may repeat items).
   if (chosen.length < QUESTIONS_PER_RUNG && config.exclude.length > 0) chosen = choose([]);
   if (chosen.length < QUESTIONS_PER_RUNG) return null;
 
   const recent: number[] = [];
   return chosen.map((t) => {
-    const options = placeCorrect(t.question.options, rng, true, recent);
+    const options = placeCorrect(t.question.options, rng, false, recent);
     recent.push(options.findIndex((o) => o.isCorrect));
     return { ...t.question, id: t.id, options };
   });
@@ -148,15 +204,24 @@ const finish = (state: PlacementRunState, reason: NonNullable<PlacementRunState[
 const advance = (from: PlacementRunState): PlacementRunState => {
   let state = from;
   for (;;) {
-    const step = nextRung({ length: state.config.length, done: state.done });
+    const step = nextRung({ mode: state.config.mode, done: state.done });
     if (step === null) {
-      const full = state.responses.length >= questionCap(state.config.length);
+      const cap = questionCap(state.config.mode);
+      const full = cap !== null && state.responses.length >= cap;
       return { ...finish(state, full ? 'cap' : 'complete'), current: null };
     }
-    const key = drawKey(step.gate, step.form);
+    const key = drawKey(step.gate, step.form, step.draw);
     const questions = state.draws[key];
     if (questions === undefined) {
-      const skipped: GateResult = { ...step, asked: 0, correct: 0, assisted: 0, result: 'not-run', reason: 'unavailable' };
+      const skipped: GateResult = {
+        gate: step.gate,
+        form: step.form,
+        asked: 0,
+        correct: 0,
+        assisted: 0,
+        result: 'not-run',
+        reason: 'unavailable',
+      };
       state = { ...state, done: [...state.done, skipped] };
       continue;
     }
@@ -171,14 +236,23 @@ export const startRun = (bank: PlacementBankInput, config: PlacementConfig, nowM
   for (const spec of RUNG_TABLE) {
     for (const form of spec.forms) {
       const questions = drawRung(bank, config, spec.gate, form);
-      if (questions !== null) draws[drawKey(spec.gate, form)] = questions;
+      if (questions === null) continue;
+      draws[drawKey(spec.gate, form)] = questions;
+      if (drawsFor(config.mode, spec.gate, form) === 2) {
+        const keys = new Set(
+          questions.map((q) => spreadKey(bank.templates.find((t) => t.id === q.id) as PlacementTemplateInput)),
+        );
+        const second = drawRung(bank, config, spec.gate, form, { ids: questions.map((q) => q.id), keys });
+        if (second !== null) draws[drawKey(spec.gate, form, 2)] = second;
+      }
     }
   }
   return advance({
     version: 1,
     bankVersion: bank.version,
     config: {
-      length: config.length,
+      mode: config.mode,
+      listenFirst: listenFirst(config),
       revealMode: config.revealMode,
       audio: config.audio,
       visual: config.visual,
@@ -187,7 +261,7 @@ export const startRun = (bank: PlacementBankInput, config: PlacementConfig, nowM
       exclude: [...config.exclude],
     },
     startedAtMs: nowMs,
-    deadlineMs: deadlineAt(nowMs, backstopMs(config.length, config.takeMyTime)),
+    deadlineMs: deadlineAt(nowMs, backstopMs(config.mode, config.takeMyTime)),
     lastTouchMs: nowMs,
     shownAtMs: nowMs,
     pause: null,
@@ -199,6 +273,7 @@ export const startRun = (bank: PlacementBankInput, config: PlacementConfig, nowM
     responses: [],
     tags: {},
     notSureStreak: 0,
+    rested: false,
     stop: null,
   });
 };
@@ -237,13 +312,28 @@ const record = (
   };
   const inRung = next.responses.slice(rung.start);
   if (inRung.length === QUESTIONS_PER_RUNG) {
-    const finished: GateResult = { gate: rung.gate, form: rung.form, ...gateResult(inRung) };
+    const finished: GateResult = {
+      gate: rung.gate,
+      form: rung.form,
+      ...gateResult(inRung, inRung.length, passAtFor(state.config.mode, rung.gate)),
+    };
     next = advance({ ...next, current: null, done: [...next.done, finished] });
   }
   if (next.stop !== null) return next;
   // Time never marks anything wrong: the answer just given stands, then the run ends.
   if (next.timeUp || isExpired(nowMs, next.deadlineMs)) return finish(next, 'time');
-  if (next.notSureStreak >= NOT_SURE_LIMIT) return { ...next, pause: 'not-sure', pausedAtMs: nowMs };
+  // Short has no "three not sure" sheet: it is at most nine questions and the exit stays visible.
+  if (state.config.mode !== 'short' && next.notSureStreak >= NOT_SURE_LIMIT) return { ...next, pause: 'not-sure', pausedAtMs: nowMs };
+  // Deep: one spoken, number-free rest card after 18 answers, between two rungs, when more remain.
+  // When the "not sure" sheet took that moment, the card waits for the next rung.
+  if (
+    state.config.mode === 'deep' &&
+    !next.rested &&
+    next.responses.length >= DEEP_REST_AT &&
+    next.current?.start === next.responses.length
+  ) {
+    return { ...next, pause: 'rest', pausedAtMs: nowMs, rested: true };
+  }
   return next;
 };
 
@@ -255,6 +345,7 @@ export const apply = (state: PlacementRunState, event: PlacementEvent, nowMs: nu
     return finish(state, state.pause === 'not-sure' ? 'not-sure' : 'quit');
   }
   if (event.type === 'touch') return { ...state, lastTouchMs: nowMs };
+  if (event.type === 'exit') return state.pause === null ? { ...state, pause: 'exit', pausedAtMs: nowMs } : state;
   if (event.type === 'keepGoing') {
     if (state.pause === null) return state;
     const waited = Math.max(0, nowMs - (state.pausedAtMs as number));
@@ -314,7 +405,8 @@ export const finishRun = (state: PlacementRunState, ctx: FinishContext): Placeme
   const gates: GateResult[] = [...state.done];
   const open = state.current;
   if (open !== null && state.responses.length > open.start) {
-    const partial = gateResult(state.responses.slice(open.start));
+    const asked = state.responses.slice(open.start);
+    const partial = gateResult(asked, asked.length, passAtFor(state.config.mode, open.gate));
     gates.push({
       gate: open.gate,
       form: open.form,
@@ -332,7 +424,8 @@ export const finishRun = (state: PlacementRunState, ctx: FinishContext): Placeme
     completedAt: ctx.completedAt,
     source: ctx.source,
     testLocale: ctx.testLocale,
-    length: state.config.length,
+    length: legacyLengthOf(state.config.mode),
+    mode: state.config.mode,
     revealMode: state.config.revealMode,
     bankVersion: state.bankVersion,
     contentVer: ctx.contentVer,

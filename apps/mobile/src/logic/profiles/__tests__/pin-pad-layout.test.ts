@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { PIN_PAD_KEY_COUNT, pinPadBudget, pinPadFirstWidth, pinPadLayout } from '../pin-pad-layout';
+import { PIN_PAD_KEY_COUNT, pinKeyMax, pinPadBudget, pinPadFirstWidth, pinPadLayout } from '../pin-pad-layout';
 
 const KEYS = { minKey: 64, maxKey: 80, gap: 8 };
 
@@ -102,5 +102,32 @@ describe('pinPadBudget — height left for the keys once the screen chrome is pl
 
   it('never goes negative', () => {
     expect(pinPadBudget({ windowHeight: 200, insetTop: 0, insetBottom: 0, header: 300, chrome: 168 })).toBe(0);
+  });
+});
+
+describe('pinKeyMax — keys scale by mediaScale up to touchTarget.hero (F-LAYOUT-001 §3.6 PIN row)', () => {
+  const HERO = 96;
+
+  it('keeps the base size on a phone (scale 1)', () => {
+    expect(pinKeyMax({ base: 80, mediaScale: 1, ceiling: HERO })).toBe(80);
+    expect(pinKeyMax({ base: 64, mediaScale: 1, ceiling: HERO })).toBe(64);
+  });
+
+  it('scales on a tablet and stops at the ceiling', () => {
+    expect(pinKeyMax({ base: 80, mediaScale: 1.2, ceiling: HERO })).toBe(96);
+    expect(pinKeyMax({ base: 80, mediaScale: 1.4, ceiling: HERO })).toBe(96);
+    expect(pinKeyMax({ base: 64, mediaScale: 1.2, ceiling: HERO })).toBe(77);
+    expect(pinKeyMax({ base: 64, mediaScale: 1.4, ceiling: HERO })).toBe(90);
+  });
+
+  it('never goes below the base, even for a bad scale', () => {
+    expect(pinKeyMax({ base: 64, mediaScale: 0.5, ceiling: HERO })).toBe(64);
+    expect(pinKeyMax({ base: 64, mediaScale: Number.NaN, ceiling: HERO })).toBe(64);
+  });
+
+  it('still lets the 6 x 2 landscape pad pick its own key at scale 1', () => {
+    const pad = pinPadLayout({ width: 780, height: 170, minKey: 64, maxKey: pinKeyMax({ base: 80, mediaScale: 1, ceiling: HERO }), gap: 8 });
+    expect(pad.columns).toBe(6);
+    expect(pad.keySize).toBeGreaterThanOrEqual(64);
   });
 });

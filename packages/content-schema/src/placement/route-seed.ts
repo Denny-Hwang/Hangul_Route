@@ -3,6 +3,8 @@ import type { StageKey, ThemeKey } from '../schemas/heritage-card';
 import { ThemeKeySchema } from '../schemas/heritage-card';
 import type { GateResult, Motivation, PlacementLevel, PlacementResult } from '../schemas/placement';
 import { inRouteOrder, placementStageNumber, type TagLookup } from './level-map';
+import { modeCeiling, modeOf } from './rungs';
+import { rowsPassed } from './scoring';
 
 /**
  * The route seed (F-PLC-001 section 3.7): where this learner starts, derived
@@ -66,6 +68,9 @@ export const themeOrderFor = (motivation: Motivation | undefined): ThemeKey[] =>
  * Up to three tokens: symbols answered wrong, then skipped, then assisted
  * (each symbol once, first seen first), then `skill:blending` when a syllable
  * rung failed after a pass of its sound rung, then `skill:finals` when `syl-cvc` failed.
+ * "Failed" means a stored `fail` row with fewer than two correct: Short's strict
+ * 3-of-3 `syl-cv` bar turns a 2-of-3 into a fail, but that near-knower does not
+ * need blending practice. A Deep rung has two rows; any such row counts.
  */
 export const priorityTokensOf = (
   gates: readonly GateResult[],
@@ -82,15 +87,11 @@ export const priorityTokensOf = (
   symbolsOf((r) => r.outcome === 'skipped').forEach(add);
   symbolsOf((r) => r.assisted).forEach(add);
 
-  const result = (gate: GateResult['gate']): GateResult['result'] | undefined =>
-    gates.find((g) => g.gate === gate && g.form === 'decode')?.result;
-  if (
-    (result('syl-cv') === 'fail' && result('sound-basic') === 'pass') ||
-    (result('syl-cvc') === 'fail' && result('sound-rest') === 'pass')
-  ) {
-    add('skill:blending');
-  }
-  if (result('syl-cvc') === 'fail') add('skill:finals');
+  const rows = (gate: GateResult['gate']): GateResult[] => gates.filter((g) => g.gate === gate && g.form === 'decode');
+  const failed = (gate: GateResult['gate']): boolean => rows(gate).some((g) => g.result === 'fail' && g.correct < 2);
+  const passed = (gate: GateResult['gate']): boolean => rowsPassed(rows(gate));
+  if ((failed('syl-cv') && passed('sound-basic')) || (failed('syl-cvc') && passed('sound-rest'))) add('skill:blending');
+  if (failed('syl-cvc')) add('skill:finals');
   return tokens.slice(0, MAX_PRIORITY_TOKENS);
 };
 
@@ -142,13 +143,20 @@ export const seedRoute = (result: PlacementResult, catalog: RouteCatalog, opts: 
     opts,
   );
 
-const higher = (a: PlacementLevel, b: PlacementLevel): PlacementLevel =>
-  placementStageNumber(b.stage) * 10 + b.band > placementStageNumber(a.stage) * 10 + a.band ? b : a;
+const rank = (level: PlacementLevel): number => placementStageNumber(level.stage) * 10 + level.band;
+const higher = (a: PlacementLevel, b: PlacementLevel): PlacementLevel => (rank(b) > rank(a) ? b : a);
 
 /**
  * The route in force, folded from every stored result in `completedAt` order.
- * The placed-out set is the union of all results (results never remove an id),
- * so a lower retake changes nothing but the priority tokens. A parent override
+ * The placed-out set is the union of all results (results never remove an id)
+ * and the level is the highest reached, so a lower retake changes nothing but
+ * the priority tokens. Results combine by the maximum, never by the "more
+ * careful" mode. Priority tokens come from the newest result that could still
+ * move the route when it was taken (its mode's ceiling was above the level
+ * already reached): a Short taken at band 1 or higher does not replace tokens
+ * from rungs it never asks. The listening level is the highest any result
+ * measured (listening is reported, never lowered by a run that did not ask it).
+ * A parent override
  * on the newest result that carries one places out every grid quest before the
  * chosen one and puts back the chosen one and all after it; later retakes cannot
  * re-place them. Returns null when there is no result.
@@ -160,7 +168,6 @@ export const effectiveRoute = (
 ): RouteSeed | null => {
   if (placements.length === 0) return null;
   const sorted = [...placements].sort((a, b) => (a.completedAt < b.completedAt ? -1 : a.completedAt > b.completedAt ? 1 : 0));
-  const newest = sorted[sorted.length - 1] as PlacementResult;
   const newestFirst = [...sorted].reverse();
 
   const placedOut = new Set<string>();
@@ -178,12 +185,21 @@ export const effectiveRoute = (
     }
   }
 
+  let reached: PlacementLevel | null = null;
+  let priorityTokens: readonly string[] = [];
+  for (const result of sorted) {
+    if (reached === null || rank(modeCeiling(modeOf(result))) > rank(reached)) priorityTokens = result.priorityTokens;
+    reached = reached === null ? result.level : higher(reached, result.level);
+  }
+  const heard = sorted.map((r) => r.oralStage).filter((s): s is StageKey => s !== null);
+  const oralStage = heard.length === 0 ? null : heard.reduce((a, b) => (placementStageNumber(b) > placementStageNumber(a) ? b : a));
+
   return buildSeed(
     {
-      level: sorted.map((r) => r.level).reduce(higher),
-      oralStage: newest.oralStage,
+      level: reached as PlacementLevel,
+      oralStage,
       placedOut: [...placedOut],
-      priorityTokens: newest.priorityTokens,
+      priorityTokens,
       motivation: newestFirst.find((r) => r.motivation !== undefined)?.motivation,
     },
     catalog,

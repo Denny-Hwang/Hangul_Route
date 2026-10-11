@@ -122,6 +122,13 @@ describe('learner.profile (English wording as shipped)', () => {
   });
 });
 
+describe('learner.portraitGuard (F-LAYOUT-001 §3.4)', () => {
+  it('asks in one short line and offers a way out', () => {
+    expect(en.learner.portraitGuard.title).toBe('Turn your phone upright');
+    expect(en.learner.portraitGuard.keepSideways.cta).toBe('Keep sideways');
+  });
+});
+
 describe('the dictionary is wired', () => {
   it('exposes learner and caregiver next to common and a11y', () => {
     expect(Object.keys(en).sort()).toEqual(['a11y', 'caregiver', 'common', 'console', 'landing', 'learner']);

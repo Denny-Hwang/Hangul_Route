@@ -3,6 +3,8 @@ import {
   gateResult,
   levelOf,
   oralStageOf,
+  rowsPassed,
+  gatePassed,
   strandStatuses,
   type AssessmentResponse,
   type GateResult,
@@ -62,6 +64,35 @@ describe('gateResult', () => {
   it('takes an explicit asked count', () => {
     expect(gateResult([C], 3).result).toBe('fail');
     expect(gateResult([C, C], 2).asked).toBe(2);
+  });
+});
+
+describe('gateResult with passAt 3 (Short syl-cv)', () => {
+  it('passes only on three correct, fails as soon as three cannot be reached, else undecided', () => {
+    expect(gateResult([C, C, C], 3, 3).result).toBe('pass');
+    expect(gateResult([C, C, W], 3, 3)).toEqual({ asked: 3, correct: 2, assisted: 0, result: 'fail' });
+    expect(gateResult([S], 1, 3).result).toBe('fail');
+    expect(gateResult([C, C], 2, 3).result).toBe('not-run');
+  });
+});
+
+describe('rowsPassed (one row per draw)', () => {
+  it('passes when a row passed and none failed; a not-run row never turns a pass into a fail', () => {
+    expect(rowsPassed([])).toBe(false);
+    expect(rowsPassed([{ result: 'pass' }])).toBe(true);
+    expect(rowsPassed([{ result: 'pass' }, { result: 'pass' }])).toBe(true);
+    expect(rowsPassed([{ result: 'pass' }, { result: 'not-run' }])).toBe(true);
+    expect(rowsPassed([{ result: 'pass' }, { result: 'fail' }])).toBe(false);
+    expect(rowsPassed([{ result: 'not-run' }])).toBe(false);
+    expect(rowsPassed([{ result: 'fail' }])).toBe(false);
+  });
+
+  it('drives gatePassed, the level and the strand status for two-row rungs', () => {
+    const confirmed = [gate('sound-basic', 'decode', 'pass'), gate('sound-basic', 'decode', 'pass'), gate('syl-cv', 'decode', 'pass'), gate('syl-cv', 'decode', 'fail', 1)];
+    expect(gatePassed(confirmed, 'sound-basic', 'decode')).toBe(true);
+    expect(gatePassed(confirmed, 'syl-cv', 'decode')).toBe(false);
+    expect(levelOf(confirmed)).toEqual({ stage: 'stage1', band: 0 });
+    expect(strandStatuses(confirmed)['syllable-reading']).toBe('getting-there');
   });
 });
 
@@ -150,6 +181,16 @@ describe('levelOf (spec 3.6 table)', () => {
   it('never lets an oral pass raise the level', () => {
     const ladder = [P('sound-basic'), P('syl-cv'), P('sound-rest'), P('syl-cvc')];
     expect(levelOf([...ladder, P('vocab', 'oral'), P('sentence', 'oral')])).toEqual({ stage: 'stage1', band: 3 });
+  });
+});
+
+describe('oralStageOf: a Deep reader who passed vocab read hears sentences only', () => {
+  it('lets the vocab read pass stand in for the missing vocab oral row', () => {
+    const reader = [gate('vocab', 'read', 'pass'), gate('vocab', 'read', 'pass')];
+    expect(oralStageOf([...reader, gate('sentence', 'oral', 'pass')])).toBe('stage3');
+    expect(oralStageOf([...reader, gate('sentence', 'oral', 'fail')])).toBe('stage2');
+    expect(oralStageOf([gate('vocab', 'read', 'fail'), gate('sentence', 'oral', 'pass')])).toBe('stage1');
+    expect(oralStageOf([...reader, gate('vocab', 'oral', 'fail'), gate('sentence', 'oral', 'pass')])).toBe('stage1');
   });
 });
 

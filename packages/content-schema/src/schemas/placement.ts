@@ -5,7 +5,7 @@ import {
   refineAssessmentQuestion,
   type ASSESSMENT_FORMATS,
 } from '../assessment/question';
-import { RUNG_SYMBOLS, strandOfGate } from '../placement/rungs';
+import { PLACEMENT_MODES, RUNG_SYMBOLS, strandOfGate } from '../placement/rungs';
 import { StageKeySchema } from './heritage-card';
 import { UiLocaleSchema } from './locale';
 
@@ -49,6 +49,9 @@ export type StopReason = z.infer<typeof StopReasonSchema>;
 export const PlacementSourceSchema = z.enum(['onboarding', 'home', 'profile', 'parent']);
 export type PlacementSource = z.infer<typeof PlacementSourceSchema>;
 
+/** The check length the learner chose (F-PLC-001 P14). The tuple lives in `placement/rungs.ts`. */
+export const PlacementModeSchema = z.enum(PLACEMENT_MODES);
+
 export const MotivationSchema = z.enum(['heritage', 'kculture', 'curious', 'friends']);
 export type Motivation = z.infer<typeof MotivationSchema>;
 
@@ -66,13 +69,18 @@ export const PlacementResultSchema = z.object({
   completedAt: z.string(),
   source: PlacementSourceSchema,
   testLocale: UiLocaleSchema,
+  /** Legacy, unchanged: `legacyLengthOf(mode)` (short -> quick, standard and deep -> full). */
   length: z.enum(['quick', 'full']),
+  /** Optional: absent on results written before the three modes; read it with `modeOf`. */
+  mode: PlacementModeSchema.optional(),
   revealMode: z.enum(['tap', 'always']),
   bankVersion: z.number().int().positive(),
   contentVer: z.string(),
   motivation: MotivationSchema.optional(),
-  responses: z.array(AssessmentResponseSchema).max(24),
-  gates: z.array(GateResultSchema).max(9),
+  /** Deep asks up to 42 (two draws per route-moving rung); Short and Standard stay within 24. */
+  responses: z.array(AssessmentResponseSchema).max(48),
+  /** Deep stores one row per draw (up to 15); Short and Standard stay within 9. */
+  gates: z.array(GateResultSchema).max(16),
   strands: StrandsSchema,
   level: PlacementLevelSchema,
   oralStage: StageKeySchema.nullable(),
@@ -262,6 +270,21 @@ export type PlacementTemplate = z.infer<typeof PlacementTemplateSchema>;
 /** A gate and form needs this many ready templates for three full draws. */
 export const PLACEMENT_MIN_READY = 9;
 
+/**
+ * Per-format pools the three modes rely on (F-PLC-001 section 3.4): two
+ * listen-first draws of `hear-pick-written` per decoding gate (Short, and any
+ * mode for a *Pictures first* learner), and a tile item for each of Deep's
+ * confirming syllable draws. Checked only for a gate that has ready templates.
+ */
+export const PLACEMENT_MIN_FORMAT_READY: readonly { gate: PlacementGate; format: Format; min: number }[] = [
+  { gate: 'sound-basic', format: 'hear-pick-written', min: 6 },
+  { gate: 'syl-cv', format: 'hear-pick-written', min: 6 },
+  { gate: 'sound-rest', format: 'hear-pick-written', min: 6 },
+  { gate: 'syl-cvc', format: 'hear-pick-written', min: 6 },
+  { gate: 'syl-cv', format: 'build-syllable', min: 2 },
+  { gate: 'syl-cvc', format: 'build-syllable', min: 2 },
+];
+
 export const PlacementBankSchema = z
   .object({
     version: z.number().int().positive(),
@@ -278,6 +301,12 @@ export const PlacementBankSchema = z
     });
     for (const [key, n] of ready) {
       if (n < PLACEMENT_MIN_READY) fail(['templates'], `${key} needs at least ${PLACEMENT_MIN_READY} ready templates, has ${n}`);
+    }
+    const readyOf = (gate: PlacementGate): PlacementTemplate[] => bank.templates.filter((t) => t.status === 'ready' && t.gate === gate);
+    for (const { gate, format, min } of PLACEMENT_MIN_FORMAT_READY) {
+      const pool = readyOf(gate);
+      const n = pool.filter((t) => t.question.format === format).length;
+      if (pool.length > 0 && n < min) fail(['templates'], `${gate} needs at least ${min} ready ${format} templates, has ${n}`);
     }
     bank.templates.forEach((t, i) => {
       for (const id of t.incompatibleWith ?? []) {

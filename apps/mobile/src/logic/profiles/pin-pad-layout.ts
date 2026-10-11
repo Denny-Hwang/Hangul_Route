@@ -57,6 +57,25 @@ export function pinPadLayout({ width, height, minKey, maxKey, gap }: PinPadLayou
   return { columns: widest.columns, rows: widest.rows, keySize: minKey, fits: false };
 }
 
+export interface PinKeyMaxInput {
+  /** The phone key size (`touchTarget.child` on the PIN screen, `touchTarget.min` in the onboarding card). */
+  base: number;
+  /** From `useLayoutClass()`: 1 on a phone and on any short window. */
+  mediaScale: number;
+  /** Largest key on any window (`touchTarget.hero`). */
+  ceiling: number;
+}
+
+/**
+ * Largest key the pad may use (`maxKey` of `pinPadLayout`): the base size times
+ * the media scale, capped at the ceiling and never below the base
+ * (F-LAYOUT-001 §3.6 PIN row: keys scale by `mediaScale` up to `touchTarget.hero`).
+ */
+export function pinKeyMax({ base, mediaScale, ceiling }: PinKeyMaxInput): number {
+  const scaled = Math.round(base * (Number.isFinite(mediaScale) ? mediaScale : 1));
+  return Math.max(base, Math.min(ceiling, scaled));
+}
+
 export interface PinPadFirstWidthInput {
   windowWidth: number;
   /** The `Screen` content cap (`layout.maxWidth.reading`, F-LAYOUT-001 §3.6). */

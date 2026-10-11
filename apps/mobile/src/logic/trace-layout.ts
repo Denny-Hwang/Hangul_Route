@@ -13,15 +13,21 @@
  * Pure so the thresholds are tested without a renderer.
  */
 
+import type { LayoutClass, ScreenWidth } from '@hangul-route/design-system';
+import { gameArrangement } from './layout/game-layout';
+
 export type TraceLayoutMode = 'roomy' | 'compact' | 'side';
 
 export const TRACE_CANVAS_MIN = 160;
+/** The phone ceiling; a tablet multiplies it by its media scale (`traceCanvasMax`). */
 export const TRACE_CANVAS_MAX = 320;
+/** No window makes the canvas bigger than this (320 x the wide media scale 1.4). */
+export const TRACE_CANVAS_CEILING = 448;
 
 /**
  * Thresholds are on the Screen's content box (measured with onLayout, so the
- * web build's 480px column on wide windows and the safe-area insets are
- * already accounted for), not on the window.
+ * Screen's width cap and the safe-area insets are already accounted for), not
+ * on the window.
  */
 
 /** Content height the stacked layout needs for a canvas of at least 240. */
@@ -40,10 +46,30 @@ export function traceLayoutMode({ width, height }: TraceLayoutInput): TraceLayou
   return height >= TRACE_ROOMY_MIN_HEIGHT ? 'roomy' : 'compact';
 }
 
-/** Largest square that fits the canvas slot, kept inside [MIN, MAX]. */
-export function traceCanvasSize(slotWidth: number, slotHeight: number): number {
+/**
+ * Largest canvas the window class allows (F-LAYOUT-001 §3.6): 320 x `mediaScale`
+ * (320 on a phone and on any short window, 384 regular, 448 wide), never past 448.
+ */
+export function traceCanvasMax(l: Pick<LayoutClass, 'mediaScale'>): number {
+  const scaled = Math.round(TRACE_CANVAS_MAX * (Number.isFinite(l.mediaScale) ? l.mediaScale : 1));
+  return Math.max(TRACE_CANVAS_MAX, Math.min(TRACE_CANVAS_CEILING, scaled));
+}
+
+/**
+ * The `Screen` width Trace asks for. On a wide landscape window the reading
+ * column (720) would be taller than wide and stack the controls under the
+ * canvas, so the game takes the full width there and gets the `side` mode with
+ * a 448 canvas. Everywhere else, the reading column as before (a landscape
+ * phone reaches `side` inside it, as today).
+ */
+export function traceScreenWidth(l: Pick<LayoutClass, 'sideBySide' | 'short'>): Extract<ScreenWidth, 'reading' | 'full'> {
+  return gameArrangement(l) === 'side' ? 'full' : 'reading';
+}
+
+/** Largest square that fits the canvas slot, kept inside [MIN, max] (`max` from `traceCanvasMax`). */
+export function traceCanvasSize(slotWidth: number, slotHeight: number, max: number = TRACE_CANVAS_MAX): number {
   const fit = Math.floor(Math.min(slotWidth, slotHeight));
-  return Math.max(TRACE_CANVAS_MIN, Math.min(TRACE_CANVAS_MAX, fit));
+  return Math.max(TRACE_CANVAS_MIN, Math.min(max, fit));
 }
 
 /**
