@@ -129,6 +129,7 @@ phone in landscape, browser tab or installed app (844 x 390)
 ```
 
 - Shown only when: phone-sized (short side under 600, long side at most 1000) AND landscape AND touch input AND not already allowed. (The lecture presenter is a separate root that never mounts the guard.)
+- "Phone-sized" and "landscape" are the device's (its physical screen and `screen.orientation`), not the window's: a soft keyboard that makes an upright phone's window wider than tall, or an iPad at 200 % zoom / in a Stage Manager window, never shows the guard. It also never shows while a text field has focus.
 - Rotating back upright removes it. [ Keep sideways ] removes it and remembers the choice on this device; every screen then works at this size (one pane, scrolls).
 - Never shown on tablets, on a mouse-driven desktop window, or on `/present`.
 - On installed Android phones the app tries to stay upright by itself, so this rarely appears there; on iPhone it is the only mechanism.
