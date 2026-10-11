@@ -20,6 +20,7 @@ import { classCap, schoolIsFull } from '../lib/entitlement';
 import { generateJoinCode, isJoinCodeLive, joinCodeExpiry } from '../lib/join-code';
 import { clientKey, createRateLimiter } from '../lib/rate-limit';
 import { teacherVisibleSummary } from '../lib/roster-summary';
+import { classSeatCheck, studentsIn, type SeatBlock } from '../lib/seats';
 import { id, type Account } from '../store';
 
 /**
@@ -52,19 +53,6 @@ function publicSpace(space: Space) {
 
 function liveCode(space: Space, now: Date): { joinCode: string | null; joinCodeExpiresAt: string | null } {
   return isJoinCodeLive(space, now) ? { joinCode: space.joinCode, joinCodeExpiresAt: space.joinCodeExpiresAt } : { joinCode: null, joinCodeExpiresAt: null };
-}
-
-async function studentsIn(db: Db, spaceId: string): Promise<number> {
-  return (await db.membersOf(spaceId)).filter((m) => m.memberKind === 'learner').length;
-}
-
-async function activeClassesOf(db: Db, learnerId: string): Promise<number> {
-  let n = 0;
-  for (const m of await db.membershipsOf('learner', learnerId)) {
-    const s = await db.getSpace(m.spaceId);
-    if (s && s.kind === 'class' && !s.archivedAt) n += 1;
-  }
-  return n;
 }
 
 /** A fresh code no other space holds (the column is unique, live or not). */
@@ -281,6 +269,13 @@ spacesRoutes.post('/:id/code', async (c) => {
   return ok(c, { joinCode: space.joinCode, expiresAt: space.joinCodeExpiresAt });
 });
 
+/** Messages for the seat checks of `/join` (unchanged wording; the client keys off the code). */
+const SEAT_MESSAGES: Record<SeatBlock, string> = {
+  cap_learner: `A learner can be in at most ${LEARNER_CLASS_CAP} classes`,
+  cap_class: 'This class is full',
+  cap_school: 'This school has used all its seats',
+};
+
 spacesRoutes.post('/:id/join', async (c) => {
   const db = dbFor(c);
   const space = await findSpace(c, db, c.req.param('id'));
@@ -300,15 +295,8 @@ spacesRoutes.post('/:id/join', async (c) => {
     if (space.kind === 'school') return fail(c, 'not_joinable', 'Learners join a class or a family, not a school', 422);
     const existing = await db.membership(space.id, 'learner', learnerId);
     if (existing) return ok(c, { alreadyMember: true, membership: existing, space: { id: space.id, kind: space.kind, name: space.name } });
-    if (space.kind === 'class' && (await activeClassesOf(db, learnerId)) >= LEARNER_CLASS_CAP) {
-      return fail(c, 'cap_learner', `A learner can be in at most ${LEARNER_CLASS_CAP} classes`, 409);
-    }
-    if (space.kind === 'class' && (await studentsIn(db, space.id)) >= (await classCap(db, space, now))) {
-      return fail(c, 'cap_class', 'This class is full', 409);
-    }
-    if (space.kind === 'class' && (await schoolIsFull(db, space, now, learnerId))) {
-      return fail(c, 'cap_school', 'This school has used all its seats', 409);
-    }
+    const seat = await classSeatCheck(db, space, learnerId, now);
+    if (seat) return fail(c, seat, SEAT_MESSAGES[seat], 409);
     if (space.kind === 'family' && (await studentsIn(db, space.id)) >= FAMILY_LIFETIME_LEARNERS) {
       return fail(c, 'cap_family', `A family holds up to ${FAMILY_LIFETIME_LEARNERS} learners`, 409);
     }
