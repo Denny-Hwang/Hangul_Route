@@ -210,6 +210,38 @@ describe('slot ② — the Journey cursor', () => {
   });
 });
 
+describe('slot ② — the same stages as Results and My route (F-ROUTE-001 R-4a)', () => {
+  const S2_QUESTS = [...QUESTS, quest('quest:s2', 'Words at home')];
+  const S2_EPISODES: Episode[] = [...EPISODES, { ...episode('episode:s2', ['quest:s2']), stage: 'stage2', theme: 'life' }];
+  const stage1Only = (stageKey: string): boolean => stageKey === 'stage1';
+  const allStage1 = (): ProgressSnapshot => snapshot(QUESTS.map((q) => done(q.id, YESTERDAY, 1)));
+
+  it('offers a later stage when the predicate opens it', () => {
+    const plan = build({ snapshot: allStage1(), quests: S2_QUESTS, episodes: S2_EPISODES, isEntitled: () => true });
+    expect(plan.cards[1]?.questId).toBe('quest:s2');
+  });
+
+  it('never offers a stage the predicate leaves out, even as the replay fallback', () => {
+    const plan = build({ snapshot: allStage1(), quests: S2_QUESTS, episodes: S2_EPISODES, isEntitled: stage1Only });
+    expect(plan.cards[1]?.questId).toBe('quest:c');
+  });
+
+  it('applies the predicate and the placed-out set together', () => {
+    const plan = build({
+      snapshot: snapshot([done('quest:b', YESTERDAY, 1), done('quest:c', YESTERDAY, 1)]),
+      quests: S2_QUESTS,
+      episodes: S2_EPISODES,
+      isEntitled: stage1Only,
+      skipQuestIds: new Set(['quest:a']),
+    });
+    expect(plan.cards[1]?.questId).toBe('quest:a');
+  });
+
+  it('without a predicate every playable stage is open, as before', () => {
+    expect(build({ snapshot: allStage1(), quests: S2_QUESTS, episodes: S2_EPISODES }).cards[1]?.questId).toBe('quest:s2');
+  });
+});
+
 describe('slot ③ — daily test capability gate (§9.2)', () => {
   it('renders the daily test when the review engine is available', () => {
     const plan = build({ capabilities: { dailyTestAvailable: true } });

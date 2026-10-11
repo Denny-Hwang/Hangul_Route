@@ -69,6 +69,11 @@ export interface BuildMissionInput {
   pinned?: MissionPlan | null;
   /** Placed-out quests of the learner's route seed (F-PLC-001 section 3.7); omitted without a level check. */
   skipQuestIds?: ReadonlySet<string>;
+  /**
+   * The stages the cursor may offer (`cursorContext`, F-ROUTE-001 R-4a): the
+   * same predicate Results and My route use. Omitted means every playable stage.
+   */
+  isEntitled?: (stageKey: string) => boolean;
 }
 
 /** How far back a Quest counts as replayable (§3.1 — days N−1, N−2). */
@@ -110,21 +115,19 @@ function replayCandidates(snapshot: ProgressSnapshot, today: string): CompletedQ
 }
 
 /**
- * The Journey cursor, shared with the Results teaser (`logic/next-quest.ts`).
- * Once every offerable quest is done Home keeps offering the last one, as it
- * always has, rather than an empty "New" slot.
+ * The Journey cursor, shared with the Results teaser and My route
+ * (`logic/next-quest.ts`, told the same `isEntitled` and `skipQuestIds` by
+ * `cursorContext`). Home keeps its own replay fallback around it: once every
+ * offerable quest is done Home keeps offering the last one, as it always has,
+ * rather than an empty "New" slot.
  */
-function nextQuest(
-  snapshot: ProgressSnapshot,
-  quests: readonly Quest[],
-  episodes: readonly Episode[],
-  skipQuestIds: ReadonlySet<string> | undefined,
-): Quest | undefined {
-  const offerable = offerableQuests(quests, episodes);
+function nextQuest(input: BuildMissionInput): Quest | undefined {
+  const { snapshot, quests, episodes, skipQuestIds, isEntitled } = input;
+  const offerable = offerableQuests(quests, episodes, isEntitled);
   // A placed-out quest never played comes before a replay of the last quest.
   return (
-    nextQuestAfter({ snapshot, quests, episodes, skipQuestIds }) ??
-    (skipQuestIds === undefined ? undefined : nextQuestAfter({ snapshot, quests, episodes })) ??
+    nextQuestAfter({ snapshot, quests, episodes, isEntitled, skipQuestIds }) ??
+    (skipQuestIds === undefined ? undefined : nextQuestAfter({ snapshot, quests, episodes, isEntitled })) ??
     offerable[offerable.length - 1]
   );
 }
@@ -213,7 +216,7 @@ export function buildTodaysMission(input: BuildMissionInput): MissionPlan {
   }
 
   // ② New — the Journey cursor.
-  const upcoming = nextQuest(snapshot, quests, episodes, input.skipQuestIds);
+  const upcoming = nextQuest(input);
   if (upcoming) {
     usedQuestIds.add(upcoming.id);
     cards.push({
