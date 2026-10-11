@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { DEFAULT_APP_URL, apiBaseUrl, appUrl, buildEnv, clerkPublishableKey, devAuthEnabled, schoolConsentModeEnabled } from '../config';
+import { DEFAULT_APP_URL, apiBaseUrl, appUrl, buildEnv, clerkPublishableKey, devAuthEnabled, lectureModeEnabled, schoolConsentModeEnabled } from '../config';
 
 describe('console config (F-CONSOLE-001 §3.2)', () => {
   it('apiBaseUrl trims and rejects the placeholder', () => {
@@ -45,6 +45,13 @@ describe('console config (F-CONSOLE-001 §3.2)', () => {
     expect(schoolConsentModeEnabled({ NEXT_PUBLIC_SCHOOL_CONSENT_MODE: 'true' })).toBe(false);
     expect(schoolConsentModeEnabled({ NEXT_PUBLIC_SCHOOL_CONSENT_MODE: 'enabled' })).toBe(true);
     expect(typeof schoolConsentModeEnabled()).toBe('boolean');
+  });
+
+  it('lecture mode stays hidden until the presenter ships (F-TCH-004 PR 6), then is switched on', () => {
+    expect(lectureModeEnabled({})).toBe(false);
+    expect(lectureModeEnabled({ NEXT_PUBLIC_LECTURE_MODE: 'true' })).toBe(false);
+    expect(lectureModeEnabled({ NEXT_PUBLIC_LECTURE_MODE: 'enabled' })).toBe(true);
+    expect(typeof lectureModeEnabled()).toBe('boolean');
   });
 
   describe('build env', () => {

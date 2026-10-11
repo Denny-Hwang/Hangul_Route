@@ -25,6 +25,8 @@ describe('console routing (F-CONSOLE-001)', () => {
     expect(ROUTES.spaceLecture('space:c')).toBe('/teach/space/lecture?id=space%3Ac');
     expect(ROUTES.spaceLecture('space:c', 'revisit')).toBe('/teach/space/lecture?id=space%3Ac&from=revisit');
     expect(ROUTES.spaceLecture('space:c', 'plan')).toBe('/teach/space/lecture?id=space%3Ac&from=plan');
+    // The plan on screen travels by id (an id is not a name, so it may sit in the URL).
+    expect(ROUTES.spaceLecture('space:c', 'plan', 'plan:7 a')).toBe('/teach/space/lecture?id=space%3Ac&from=plan&plan=plan%3A7%20a');
     expect(spaceIdFrom(new URLSearchParams('id=space%3Ac'))).toBe('space:c');
     expect(spaceIdFrom(new URLSearchParams('id=+'))).toBe('');
     expect(spaceIdFrom(new URLSearchParams(''))).toBe('');
