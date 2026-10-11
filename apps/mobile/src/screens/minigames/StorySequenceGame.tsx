@@ -9,22 +9,35 @@ import {
   KoreanText,
   Pill,
   Progress,
+  SCENE_ART_REGISTRY,
   Screen,
   Spacer,
+  StoryScene,
   borderWidth,
   colors,
+  layout,
   radii,
   spacing,
   touchTarget,
   typography,
   useLayoutClass,
+  resolveScene,
+  useMediaSize,
 } from '@hangul-route/design-system';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Text, View } from 'react-native';
+import { Text, View, type LayoutChangeEvent } from 'react-native';
 import { storyById } from '../../content/stories';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeStory } from '../../logic/content-locale';
 import type { MinigameScope } from '../../logic/minigame-config';
+import {
+  replayArtWidth,
+  sequenceArtColumns,
+  sequenceCardArt,
+  sequenceCardArtWidth,
+  sequenceHasArt,
+  type SceneResolver,
+} from '../../logic/story/sequence-art';
 import { buildSequenceCards, type SequenceCard } from '../../logic/story/sequence-cards';
 import {
   HIGHLIGHT_SLOT_AFTER_WRONG,
@@ -68,6 +81,21 @@ interface Props {
 /** Column share of one card cell, by column count. */
 const CELL_BASIS = { 1: '100%', 2: '45%', 3: '30%', 4: '22%' } as const;
 
+/** Story pictures resolve against the bundled scene-art registry. */
+const resolveArt: SceneResolver = (art) => resolveScene(art, SCENE_ART_REGISTRY);
+
+/** Gap between card cells. */
+const CARD_GAP = spacing.md;
+/**
+ * Width a `ChoiceCard` takes around its picture: padding and border on both
+ * sides, plus the outcome mark and its gap (kept free so a ring or a nudge
+ * never squeezes the picture).
+ */
+const CARD_CHROME = 2 * spacing.lg + 2 * borderWidth.base + spacing.xl + spacing.md;
+/** A card picture is at least a picture-option's size (F-STORY-003 §3.4) and at most twice that. */
+const CARD_ART_MIN = touchTarget.hero;
+const CARD_ART_MAX = 2 * touchTarget.hero;
+
 type Note = 'hint' | 'wrong' | 'look';
 
 /**
@@ -76,8 +104,10 @@ type Note = 'hint' | 'wrong' | 'look';
  * the next slot. A wrong card flashes amber and nothing moves (the slot is
  * scored once, first try); after two misses the right card gets a ring. When
  * every slot is filled the story replays in order (no scoring), then Done.
- * Serves the three legacy `storySteps` scopes and story scopes alike; scene art
- * arrives with PR 3.5b. Design: design/wireframes/story/check.md (F, G).
+ * Serves the three legacy `storySteps` scopes and story scopes alike. A story
+ * card shows its scene art (PR 3.5b) when the picture resolves, the replay
+ * shows it full width; a card without art shows its words alone (the replay
+ * card on the sunken surface). Design: design/wireframes/story/check.md (F, G).
  */
 export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce }: Props): React.ReactElement {
   const locale = useLocale();
@@ -105,7 +135,17 @@ export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce }: P
   );
   const reducedMotion = useReducedMotion();
   // F-LAYOUT-001 §3.12: the window from the layout class (3-4 card columns at tablet width, F-STORY-003 §3.5).
-  const width = useLayoutClass().windowWidth;
+  const lc = useLayoutClass();
+  const width = lc.windowWidth;
+  // Scene art (PR 3.5b): pictures only where the setting resolves; the grid and the replay card are measured.
+  const artById = useMemo(() => new Map(cards.map((c) => [c.id, sequenceCardArt(c, resolveArt)])), [cards]);
+  const hasArt = useMemo(() => sequenceHasArt(cards, resolveArt), [cards]);
+  const [gridWidth, setGridWidth] = useState(0);
+  const [replayWidth, setReplayWidth] = useState(0);
+  const cardArtMax = useMediaSize(CARD_ART_MAX);
+  const replayArtMax = useMediaSize(layout.maxWidth.reading * (2 / 3));
+  const onGridLayout = (e: LayoutChangeEvent): void => setGridWidth(Math.round(e.nativeEvent.layout.width));
+  const onReplayLayout = (e: LayoutChangeEvent): void => setReplayWidth(Math.round(e.nativeEvent.layout.width));
   const story = useMessages().learner.story;
   const copy = story.sequence;
 
@@ -212,15 +252,38 @@ export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce }: P
   );
 
   if (state.phase !== 'ordering') {
+    const replayArt = replayCard ? (artById.get(replayCard.id) ?? null) : null;
+    // The measured View is inside the card padding, so its width is already the inner width.
+    const replayArtSize = replayArtWidth({
+      width: replayWidth,
+      windowHeight: lc.windowHeight,
+      chrome: 0,
+      maxArt: replayArtMax,
+    });
     return (
       <Screen tone="canvas" scrollable>
         {header}
         <Spacer size="lg" />
         <Heading level="prompt">{copy.replay.title}</Heading>
         <Spacer size="md" />
-        <Card elevation="card" padding="lg" tone="paper" testID="story-sequence-replay-card">
-          <View style={{ gap: spacing.md }}>
+        <Card
+          elevation="card"
+          padding="lg"
+          tone={replayArt ? 'paper' : 'sunken'}
+          testID="story-sequence-replay-card"
+        >
+          <View style={{ gap: spacing.md }} onLayout={onReplayLayout}>
             <Pill label={story.check.position.pill(state.replayIndex + 1, total)} size="sm" tone="neutral" />
+            {replayArt && replayArtSize > 0 ? (
+              <View style={{ alignSelf: 'center' }}>
+                <StoryScene
+                  art={replayArt}
+                  width={replayArtSize}
+                  accessibilityLabel={replayArt.altEn === '' ? undefined : replayArt.altEn}
+                  testID="story-sequence-replay-art"
+                />
+              </View>
+            ) : null}
             {replayCard?.ko ? (
               <KoreanText
                 ko={replayCard.ko.ko}
@@ -303,7 +366,11 @@ export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce }: P
   const slot = placedCount;
   const hintId =
     (state.wrongBySlot[slot] ?? 0) >= HIGHLIGHT_SLOT_AFTER_WRONG ? (state.solution[slot] ?? null) : null;
-  const columns = sequenceColumns(width, longestKoreanGlyphs(cards));
+  const textColumns = sequenceColumns(width, longestKoreanGlyphs(cards));
+  const columns = (
+    hasArt ? sequenceArtColumns(textColumns, gridWidth, CARD_GAP, CARD_CHROME, CARD_ART_MIN) : textColumns
+  ) as 1 | 2 | 3 | 4;
+  const cardArtSize = hasArt ? sequenceCardArtWidth(gridWidth, columns, CARD_GAP, CARD_CHROME, cardArtMax) : 0;
   const remaining = remainingCards(state)
     .map((id) => cardById.get(id))
     .filter((c): c is SequenceCard => c !== undefined);
@@ -362,8 +429,13 @@ export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce }: P
       </View>
 
       <Spacer size="lg" />
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md }}>
+      <View
+        style={{ flexDirection: 'row', flexWrap: 'wrap', gap: CARD_GAP }}
+        onLayout={onGridLayout}
+        testID="story-sequence-cards"
+      >
         {remaining.map((card) => {
+          const art = artById.get(card.id) ?? null;
           const outcome = wrongFlash === card.id ? 'wrong' : hintId === card.id ? 'hint' : null;
           const romanization = sequenceCardRomanization(card, romanizationMode, revealed.has(card.id));
           return (
@@ -373,6 +445,17 @@ export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce }: P
             >
               <ChoiceCard
                 testID={`story-sequence-card-${card.id}`}
+                art={
+                  art && cardArtSize > 0 ? (
+                    <StoryScene
+                      art={art}
+                      width={cardArtSize}
+                      variant="thumb"
+                      decorative
+                      testID={`story-sequence-card-art-${card.id}`}
+                    />
+                  ) : null
+                }
                 state={outcome ?? 'idle'}
                 ko={card.ko?.ko}
                 romanization={romanization}
