@@ -21,6 +21,36 @@ export function bannerLocale(languages: readonly string[], shown: readonly strin
   return null;
 }
 
+/** The browser's preferred languages: `navigator.languages`, else `navigator.language`, else none. */
+export function browserLanguages(nav: { languages?: readonly string[]; language?: string } | undefined): readonly string[] {
+  if (!nav) return [];
+  if (nav.languages && nav.languages.length > 0) return nav.languages;
+  return nav.language ? [nav.language] : [];
+}
+
+/**
+ * True when the visitor arrived from one of the site's own locale pages (`/es`, `/ko/about`): following the footer
+ * switcher's English link is an explicit choice of English, so the banner does not offer back the locale they left.
+ * `referrer` is `document.referrer` (the full URL for a same-origin link); anything unparsable or cross-origin is `false`.
+ */
+export function cameFromLocalePage(referrer: string, origin: string, locales: readonly string[]): boolean {
+  if (!referrer) return false;
+  try {
+    const url = new URL(referrer);
+    if (url.origin !== origin) return false;
+    const first = (url.pathname.split('/')[1] ?? '').toLowerCase().replace(/\.html$/, '');
+    return first !== 'en' && locales.includes(first);
+  } catch {
+    return false;
+  }
+}
+
+/** The locale the banner offers on `/`: none once dismissed, else `bannerLocale` among English and the offered locales. */
+export function localeBannerTarget(languages: readonly string[], offered: readonly string[], dismissed: boolean): string | null {
+  if (dismissed) return null;
+  return bannerLocale(languages, ['en', ...offered]);
+}
+
 export function localeBannerDismissed(storage: KeyValueStorage | null = browserStorage('session')): boolean {
   return readItem(storage, LOCALE_BANNER_KEY) === 'dismissed';
 }

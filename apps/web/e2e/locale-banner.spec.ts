@@ -54,6 +54,26 @@ test.describe('on a QA build', () => {
       await expect(page.locator(banner)).toBeVisible();
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
       expect(overflow).toBeLessThanOrEqual(0);
+      // Both controls are touch-sized (touchTarget.min, 64): the link as well as the close button.
+      for (const control of [`${banner} a`, `${banner} button`]) {
+        const box = await page.locator(control).boundingBox();
+        expect(box?.height ?? 0, control).toBeGreaterThanOrEqual(64);
+      }
+    });
+
+    test('choosing English in the footer switcher on /es is not undone by the banner', async ({ page }) => {
+      await page.goto('/es');
+      await page.locator('nav[aria-label="Language"] a[href="/"]').click();
+      await page.waitForURL((url) => url.pathname === '/');
+      await expect(page.locator('footer')).toBeVisible();
+      await page.waitForTimeout(300);
+      await expect(page.locator(banner)).toHaveCount(0);
+      // Remembered for the visit, not only for this one arrival.
+      await page.goto('/about');
+      await page.goto('/');
+      await expect(page.locator('footer')).toBeVisible();
+      await page.waitForTimeout(300);
+      await expect(page.locator(banner)).toHaveCount(0);
     });
   });
 

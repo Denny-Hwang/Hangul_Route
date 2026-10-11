@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { KeyValueStorage } from '../i18n/safe-storage';
-import { LOCALE_BANNER_KEY, bannerLocale, dismissLocaleBanner, localeBannerDismissed } from '../locale-banner';
+import { LOCALE_BANNER_KEY, bannerLocale, browserLanguages, cameFromLocalePage, dismissLocaleBanner, localeBannerDismissed, localeBannerTarget } from '../locale-banner';
 
 /**
  * The "View in <language>" banner on `/` (F-I18N-001 §3.3, PR 11c): it suggests a shipped locale the
@@ -73,3 +73,52 @@ describe('dismissal lasts for the session (guarded storage)', () => {
     expect(LOCALE_BANNER_KEY).toBe('hr:site:localeBanner');
   });
 });
+
+describe('browserLanguages', () => {
+  it('prefers navigator.languages, then navigator.language, then none', () => {
+    expect(browserLanguages({ languages: ['es-MX', 'en'], language: 'ko' })).toEqual(['es-MX', 'en']);
+    expect(browserLanguages({ languages: [], language: 'ko-KR' })).toEqual(['ko-KR']);
+    expect(browserLanguages({ language: 'es' })).toEqual(['es']);
+    expect(browserLanguages({ languages: [], language: '' })).toEqual([]);
+    expect(browserLanguages({})).toEqual([]);
+    expect(browserLanguages(undefined)).toEqual([]);
+  });
+});
+
+describe('localeBannerTarget: the banner decision on /', () => {
+  it('offers the preferred locale until dismissed', () => {
+    expect(localeBannerTarget(['es-MX', 'en'], ['es', 'ko'], false)).toBe('es');
+    expect(localeBannerTarget(['es-MX', 'en'], ['es', 'ko'], true)).toBeNull();
+  });
+
+  it('offers nothing to an English-first browser, or a locale that is not offered', () => {
+    expect(localeBannerTarget(['en-US', 'es'], ['es', 'ko'], false)).toBeNull();
+    expect(localeBannerTarget(['ko'], ['es'], false)).toBeNull();
+    expect(localeBannerTarget(['es'], [], false)).toBeNull();
+  });
+});
+
+describe('cameFromLocalePage: a switch to English is not undone', () => {
+  const origin = 'https://hangulroute.com';
+  const locales = ['es', 'ko'];
+
+  it('is true for a same-origin locale page, home or deeper', () => {
+    expect(cameFromLocalePage('https://hangulroute.com/es', origin, locales)).toBe(true);
+    expect(cameFromLocalePage('https://hangulroute.com/ko/about', origin, locales)).toBe(true);
+    expect(cameFromLocalePage('https://hangulroute.com/es/', origin, locales)).toBe(true);
+    expect(cameFromLocalePage('https://hangulroute.com/es.html', origin, locales)).toBe(true);
+    expect(cameFromLocalePage('https://hangulroute.com/ES?x=1', origin, locales)).toBe(true);
+  });
+
+  it('is false for English pages, other origins, a locale not offered, and no or bad referrer', () => {
+    expect(cameFromLocalePage('https://hangulroute.com/', origin, locales)).toBe(false);
+    expect(cameFromLocalePage('https://hangulroute.com/about', origin, locales)).toBe(false);
+    expect(cameFromLocalePage('https://hangulroute.com/en', origin, [...locales, 'en'])).toBe(false);
+    expect(cameFromLocalePage('https://hangulroute.com/essay', origin, locales)).toBe(false);
+    expect(cameFromLocalePage('https://example.com/es', origin, locales)).toBe(false);
+    expect(cameFromLocalePage('https://hangulroute.com/ko', origin, ['es'])).toBe(false);
+    expect(cameFromLocalePage('', origin, locales)).toBe(false);
+    expect(cameFromLocalePage('not a url', origin, locales)).toBe(false);
+  });
+});
+

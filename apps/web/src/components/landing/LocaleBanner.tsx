@@ -3,7 +3,7 @@
 import { colors, radii, spacing, touchTarget, typography } from '@hangul-route/design-system/tokens';
 import type { UiLocale } from '@hangul-route/i18n';
 import { useEffect, useState } from 'react';
-import { bannerLocale, dismissLocaleBanner, localeBannerDismissed, type LocaleBannerOffer } from '../../lib/locale-banner';
+import { browserLanguages, cameFromLocalePage, dismissLocaleBanner, localeBannerDismissed, localeBannerTarget, type LocaleBannerOffer } from '../../lib/locale-banner';
 
 /**
  * "View in <language>" on `/` (F-I18N-001 §3.3, PR 11c; wireframe profile/language-picker C). After mount, when
@@ -15,9 +15,13 @@ export function LocaleBanner({ offers }: { offers: Partial<Record<UiLocale, Loca
   const [offer, setOffer] = useState<LocaleBannerOffer | null>(null);
 
   useEffect(() => {
-    if (localeBannerDismissed()) return;
-    const languages = typeof navigator === 'undefined' ? [] : navigator.languages?.length ? navigator.languages : [navigator.language];
-    const target = bannerLocale(languages, ['en', ...Object.keys(offers)]) as UiLocale | null;
+    const offered = Object.keys(offers);
+    // Arriving from /es or /ko (the footer switcher's English link) is a choice of English: remember it as a dismissal.
+    if (cameFromLocalePage(document.referrer, window.location.origin, offered)) {
+      dismissLocaleBanner();
+      return;
+    }
+    const target = localeBannerTarget(browserLanguages(navigator), offered, localeBannerDismissed()) as UiLocale | null;
     setOffer(target ? (offers[target] ?? null) : null);
   }, [offers]);
 
@@ -51,7 +55,11 @@ export function LocaleBannerView({ offer, onDismiss }: { offer: LocaleBannerOffe
         color: colors.text.primary,
       }}
     >
-      <a href={offer.href} hrefLang={offer.lang} style={{ color: colors.text.primary, fontWeight: typography.weight.bold, padding: `${spacing.sm}px 0` }}>
+      <a
+        href={offer.href}
+        hrefLang={offer.lang}
+        style={{ display: 'inline-flex', alignItems: 'center', minHeight: touchTarget.min, color: colors.text.primary, fontWeight: typography.weight.bold, padding: `${spacing.sm}px 0` }}
+      >
         {offer.text}
       </a>
       <button
