@@ -11,6 +11,9 @@ import {
   Spacer,
   Tile,
   spacing,
+  touchTarget,
+  useLayoutClass,
+  useMediaSize,
 } from '@hangul-route/design-system';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
@@ -21,11 +24,13 @@ import { useMessages } from '../../i18n/use-messages';
 import { wrongAnswerBubble, shouldAutoReplay } from '../../logic/audio/prompt-view';
 import { spokenFor } from '../../logic/audio/spoken';
 import { jamoTileA11yLabel } from '../../logic/korean-labels';
+import { gameArrangement, tileGridWidth } from '../../logic/layout/game-layout';
 import { buildMatchSoundRounds, type MatchSoundRound } from '../../logic/round-builder';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { playJamo } from '../../platform/audio';
 import { nudge, success, tapLight } from '../../platform/haptics';
 import { useQuestRunStore } from '../../store/quest-run-store';
+import { GameColumns } from './GameColumns';
 
 interface Props {
   scope: MinigameScope;
@@ -51,6 +56,10 @@ export function MatchSoundGame({ scope, onFinish }: Props): React.ReactElement {
   const [feedback, setFeedback] = useState<'idle' | 'correct' | 'wrong'>('idle');
   const [lockedWrongIds, setLockedWrongIds] = useState<string[]>([]);
   const replayTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // F-LAYOUT-001 §3.6: tiles scale with the window; prompt left, tiles right on a wide landscape window.
+  const layoutClass = useLayoutClass();
+  const tile = useMediaSize(touchTarget.hero);
+  const gridWidth = tileGridWidth(layoutClass.width, tile, spacing.md);
 
   const round = rounds[roundIdx];
   // The sound of the letter (ga, never gi-yeok), or the same sound as text (F-AUDIO-004 AD1, §3.8).
@@ -123,65 +132,83 @@ export function MatchSoundGame({ scope, onFinish }: Props): React.ReactElement {
       </View>
 
       <Spacer size="lg" />
-      <Heading level="prompt">{view.heading}</Heading>
-      <Spacer size="md" />
+      <GameColumns
+        arrangement={gameArrangement(layoutClass)}
+        prompt={
+          <>
+            <Heading level="prompt">{view.heading}</Heading>
+            <Spacer size="md" />
 
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, justifyContent: 'center' }}>
-        <Pressable
-          onPress={() => void hear()}
-          accessibilityRole="button"
-          accessibilityLabel={view.speakerLabel}
-          testID="match-sound-speaker"
-          hitSlop={spacing.md}
-          style={{ padding: spacing.md }}
-        >
-          <Icon name="speaker" size={48} />
-        </Pressable>
-        <Caption tone="muted">{view.speakerCaption}</Caption>
-      </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, justifyContent: 'center' }}>
+              <Pressable
+                onPress={() => void hear()}
+                accessibilityRole="button"
+                accessibilityLabel={view.speakerLabel}
+                testID="match-sound-speaker"
+                hitSlop={spacing.md}
+                style={{ padding: spacing.md }}
+              >
+                <Icon name="speaker" size={48} />
+              </Pressable>
+              <Caption tone="muted">{view.speakerCaption}</Caption>
+            </View>
 
-      <Spacer size="md" />
-      <PromptPanel
-        view={view}
-        ko={spoken.text}
-        romanization={spoken.romanization}
-        onAction={(action) => slot.act(action, () => void hear())}
-        onHelp={() => setHelpOpen(true)}
-      />
-      <VoiceHelpSheet visible={helpOpen} onClose={() => setHelpOpen(false)} />
-
-      <Spacer size="xl" />
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: spacing.md }}>
-        {round.tiles.map((j) => {
-          let state: 'idle' | 'correct' | 'wrong' | 'disabled' = 'idle';
-          if (lockedWrongIds.includes(j.id)) state = 'wrong';
-          if (feedback === 'correct' && j.id === round.promptJamo.id) state = 'correct';
-          return (
-            <Tile
-              key={j.id}
-              label={j.char}
-              romanization={j.romanization}
-              state={state}
-              size="lg"
-              accessibilityLabel={jamoTileA11yLabel(j.romanization, m.a11y.tile)}
-              onPress={() => handleTap(j.id)}
+            <Spacer size="md" />
+            <PromptPanel
+              view={view}
+              ko={spoken.text}
+              romanization={spoken.romanization}
+              onAction={(action) => slot.act(action, () => void hear())}
+              onHelp={() => setHelpOpen(true)}
             />
-          );
-        })}
-      </View>
-
-      {feedback === 'wrong' ? (
-        <>
-          <Spacer size="lg" />
-          <HoyaBubble
-            tone="thinking"
-            message={bubble.message}
-            korean={bubble.korean}
-            romanization={bubble.romanization}
-            ctaInline={<Button label={m.learner.audio.hearIt.cta} tone="secondary" size="md" onPress={() => void hear()} />}
-          />
-        </>
-      ) : null}
+            <VoiceHelpSheet visible={helpOpen} onClose={() => setHelpOpen(false)} />
+          </>
+        }
+        answers={
+          <View
+            testID="match-sound-tiles"
+            style={{
+              flexDirection: 'row',
+              flexWrap: 'wrap',
+              justifyContent: 'center',
+              gap: spacing.md,
+              ...(gridWidth !== undefined ? { width: gridWidth, alignSelf: 'center' } : null),
+            }}
+          >
+            {round.tiles.map((j) => {
+              let state: 'idle' | 'correct' | 'wrong' | 'disabled' = 'idle';
+              if (lockedWrongIds.includes(j.id)) state = 'wrong';
+              if (feedback === 'correct' && j.id === round.promptJamo.id) state = 'correct';
+              return (
+                <Tile
+                  key={j.id}
+                  label={j.char}
+                  romanization={j.romanization}
+                  state={state}
+                  size="lg"
+                  dimension={tile}
+                  accessibilityLabel={jamoTileA11yLabel(j.romanization, m.a11y.tile)}
+                  onPress={() => handleTap(j.id)}
+                />
+              );
+            })}
+          </View>
+        }
+        feedback={
+          feedback === 'wrong' ? (
+            <>
+              <Spacer size="lg" />
+              <HoyaBubble
+                tone="thinking"
+                message={bubble.message}
+                korean={bubble.korean}
+                romanization={bubble.romanization}
+                ctaInline={<Button label={m.learner.audio.hearIt.cta} tone="secondary" size="md" onPress={() => void hear()} />}
+              />
+            </>
+          ) : null
+        }
+      />
       <Spacer size="xl" />
     </Screen>
   );

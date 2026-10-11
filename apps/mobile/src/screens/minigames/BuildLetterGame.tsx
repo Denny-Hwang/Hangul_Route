@@ -13,7 +13,9 @@ import {
   colors,
   radii,
   spacing,
+  touchTarget,
   typography,
+  useMediaSize,
 } from '@hangul-route/design-system';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
@@ -26,6 +28,9 @@ import { speak } from '../../platform/audio';
 import { nudge, success, tapLight } from '../../platform/haptics';
 import { useQuestRunStore } from '../../store/quest-run-store';
 
+// Phone sizes; a tablet multiplies them by its media scale (F-LAYOUT-001 §3.6).
+const TARGET = 160;
+const TARGET_GLYPH = 80;
 const SLOT = 72;
 const HINT_CELL = 40;
 
@@ -48,6 +53,13 @@ export function BuildLetterGame({ scope, onFinish }: Props): React.ReactElement 
   const markStepComplete = useQuestRunStore((s) => s.markStepComplete);
   const round = rounds[roundIdx];
   const shape = useMemo(() => blockShape(round?.componentJamoIds ?? []), [round]);
+  // F-LAYOUT-001 §3.6: the target, the slots and the tiles (and the letters drawn in them) grow with the window; captions keep their type size.
+  const target = useMediaSize(TARGET);
+  const targetGlyph = useMediaSize(TARGET_GLYPH);
+  const slotSize = useMediaSize(SLOT);
+  const slotGlyph = useMediaSize(typography.size.display);
+  const hintCell = useMediaSize(HINT_CELL);
+  const tile = useMediaSize(touchTarget.child);
 
   useEffect(() => {
     setSelected([]);
@@ -121,8 +133,8 @@ export function BuildLetterGame({ scope, onFinish }: Props): React.ReactElement 
           onPress={() => speak(round.targetSyllable, { language: 'ko-KR' })}
           accessibilityLabel={m.a11y.minigame.hear(round.romanization)}
           style={{
-            width: 160,
-            height: 160,
+            width: target,
+            height: target,
             borderRadius: radii.xl,
             backgroundColor: feedback === 'correct' ? colors.feedback.successLight : colors.surface.paper,
             borderWidth: 3,
@@ -131,7 +143,7 @@ export function BuildLetterGame({ scope, onFinish }: Props): React.ReactElement 
             justifyContent: 'center',
           }}
         >
-          <Text style={{ fontSize: 80, fontWeight: '800', color: colors.text.primary }}>{round.targetSyllable}</Text>
+          <Text style={{ fontSize: targetGlyph, fontWeight: '800', color: colors.text.primary }}>{round.targetSyllable}</Text>
           <Caption tone="secondary">{round.romanization}</Caption>
         </Pressable>
       </View>
@@ -151,8 +163,8 @@ export function BuildLetterGame({ scope, onFinish }: Props): React.ReactElement 
             <View
               key={i}
               style={{
-                width: SLOT,
-                height: SLOT,
+                width: slotSize,
+                height: slotSize,
                 borderRadius: radii.lg,
                 borderWidth: 2,
                 borderColor: filled ? colors.brand.primary : colors.border.subtle,
@@ -162,7 +174,7 @@ export function BuildLetterGame({ scope, onFinish }: Props): React.ReactElement 
                 justifyContent: 'center',
               }}
             >
-              <Text style={{ fontSize: typography.size.display, fontWeight: '700' }}>{jamoChar}</Text>
+              <Text style={{ fontSize: slotGlyph, fontWeight: '700' }}>{jamoChar}</Text>
             </View>
           );
         }}
@@ -185,6 +197,7 @@ export function BuildLetterGame({ scope, onFinish }: Props): React.ReactElement 
               romanization={j.romanization}
               accessibilityLabel={tileAccessibilityLabel(j, m.a11y.minigame.finalTile)}
               size="md"
+              dimension={tile}
               state={used ? 'disabled' : 'idle'}
               onPress={() => handleTile(id)}
             />
@@ -209,8 +222,8 @@ export function BuildLetterGame({ scope, onFinish }: Props): React.ReactElement 
                 <View
                   key={i}
                   style={{
-                    width: HINT_CELL,
-                    height: HINT_CELL,
+                    width: hintCell,
+                    height: hintCell,
                     borderRadius: radii.md,
                     borderWidth: 2,
                     borderColor: colors.brand.primary,

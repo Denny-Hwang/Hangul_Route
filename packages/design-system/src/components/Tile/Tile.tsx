@@ -42,10 +42,14 @@ export function Tile({
   onPress,
   state = 'idle',
   size = 'md',
+  dimension,
   accessibilityLabel,
   testID,
 }: TileProps): React.ReactElement {
-  const dim = sizeMap[size];
+  const step = sizeMap[size];
+  const dim = dimension !== undefined && Number.isFinite(dimension) ? Math.max(step, dimension) : step;
+  // The glyph is part of the tile's picture, so it grows with the tile (type tokens themselves are unchanged).
+  const glyph = Math.round((fontMap[size] * dim) / step);
 
   const inner = (
     <View
@@ -57,10 +61,10 @@ export function Tile({
     >
       <Text
         style={{
-          fontSize: fontMap[size],
+          fontSize: glyph,
           fontWeight: typography.weight.bold,
           color: stateLabel[state],
-          lineHeight: fontMap[size] * 1.05,
+          lineHeight: glyph * 1.05,
         }}
       >
         {label}
