@@ -7,22 +7,43 @@ and 24 matching Heritage Cards earned through play.
 
 | File | What's inside |
 |---|---|
-| `jamo.json` | 24 jamo with romanization + a kid-friendly Korean example word |
+| `jamo.json` | 24 jamo with romanization + an everyday Korean example word |
 | `cards.json` | 24 Heritage Cards, one per jamo, mapped across 5 culture themes |
 
 ## Language policy
 
 Every Korean string lives in a `ko` field and is paired with `romanization`
-(Revised Romanization) and an English gloss (`en`). UI strings stay English
-(CEFR Pre-A1). Enforced by `scripts/validate-content.mjs` (F-CNT-001).
+and an English gloss (`en`). UI strings come from the learner's selected
+locale (en, es or ko): English is the source, written at CEFR Pre-A1, in
+`packages/i18n/src/messages/`, and the es and ko text is an overlay on it
+(F-I18N-001). Translations of content text live in `content/i18n/`.
+The structure is enforced by `scripts/validate-content.mjs` (F-CNT-001).
+
+`romanization` follows F-CNT-002 (`docs/specs/F-CNT-002-romanization-policy.md`):
+
+- Revised Romanization of the **pronunciation**, not the spelling:
+  `윷놀이` is `yunnori`, `한글날` is `hangeullal`, `같이` is `gachi`.
+- **No hyphens**, no apostrophes, lower case except for names:
+  `gangaji`, never `gang-a-ji`. A screen that shows syllable splits computes
+  them with `syllableSplit()`; they are never stored.
+- One romanized word per Korean word, with standard Korean spacing.
+- Titles and `en` keep the usual English name (`K-pop`); `romanization`
+  is the RR of the Hangul (`keipap`).
+- In `jamo.json` a consonant's `romanization` is its sound value plus its
+  letter name from a fixed table, `"g/k (giyeok)"`, `"silent/ng (ieung)"`;
+  a vowel's is its sound value alone, `"a"`, `"eo"`. The example word is
+  an ordinary RR word.
+
+The romanization suites check every value against the converter:
+`corepack pnpm --filter @hangul-route/content-schema test romanization`.
 
 ## Theme distribution (cards)
 
-- **Letters** (4): 호랑이 ⋅ K-pop ⋅ 책 ⋅ 한글
-- **Life** (7): 강아지 ⋅ 사과 ⋅ 우유 ⋅ 라면 ⋅ 어묵 ⋅ 우산 ⋅ 한복
+- **Letters** (3): 책 ⋅ 케이팝 ⋅ 호랑이
+- **Life** (6): 강아지 ⋅ 라면 ⋅ 밥 ⋅ 사과 ⋅ 어묵 ⋅ 우산
 - **Rites** (4): 보름달 ⋅ 태극기 ⋅ 아리랑 ⋅ 이불
-- **Nature** (5): 나비 ⋅ 무궁화 ⋅ 여우 ⋅ 오리 ⋅ 잠자리
-- **Crafts** (4): 팽이 ⋅ 인형 ⋅ 그네 ⋅ 윷놀이 ⋅ 야구
+- **Nature** (6): 나비 ⋅ 무궁화 ⋅ 잠자리 ⋅ 여우 ⋅ 오리 ⋅ 용
+- **Crafts** (5): 인형 ⋅ 팽이 ⋅ 야구 ⋅ 윷놀이 ⋅ 그네
 
-> Note: counts add to 24. The earliest letters lean Life/Nature (closer
-> to a 5-year-old's world) and later letters introduce Rites/Crafts.
+> Note: counts add to 24. The earliest letters lean Life/Nature (everyday
+> words) and later letters introduce Rites/Crafts.
