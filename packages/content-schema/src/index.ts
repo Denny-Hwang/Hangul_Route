@@ -39,3 +39,5 @@ export * from './placement';
 export * from './catalog';
 export * from './schemas/transfer';
 export * from './schemas/transfer-consent';
+export * from './schemas/lecture';
+export * from './schemas/lecture-codec';

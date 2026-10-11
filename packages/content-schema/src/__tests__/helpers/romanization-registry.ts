@@ -68,6 +68,7 @@ export const ROMANIZATION_SCAN_IGNORE: readonly ScanIgnore[] = [
   { path: 'packages/content-schema/src/romanization/', reason: 'the converter: golden-vector comments and doc examples, no shipped content' },
   { path: 'packages/content-schema/src/schemas/jamo.ts', reason: 'Hangul character-class regexes and comments' },
   { path: 'packages/content-schema/src/schemas/story-check.ts', reason: 'the Hangul detection regex' },
+  { path: 'packages/content-schema/src/schemas/lecture.ts', reason: 'Hangul character-class regexes for the deck title and picker labels (user data, not taught Korean)' },
   { path: 'packages/content-schema/src/schemas/vocab.ts', reason: 'Hangul character-class regex and comments' },
   { path: 'packages/content-schema/src/__fixtures__/', reason: 'zod and lint fixtures for schema tests, several deliberately broken' },
   { path: 'packages/i18n/src/banned-words.json', reason: 'Korean banned-word list for the UI-copy lint (F-I18N-001), not taught content' },
