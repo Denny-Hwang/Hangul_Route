@@ -31,6 +31,7 @@ export const MinigameKindSchema = z.enum([
   'listen-pick', // Recognition · ③ (F-QUEST-002)
   'pic-word-match', // Recognition · ② (F-QUEST-002)
   'story-read', // Discovery · story reader (F-STORY-002); a read, records no round
+  'story-check', // Discovery · story comprehension check (F-STORY-003); data is StoryCheckSchema, not a Round
 ]);
 export type MinigameKind = z.infer<typeof MinigameKindSchema>;
 

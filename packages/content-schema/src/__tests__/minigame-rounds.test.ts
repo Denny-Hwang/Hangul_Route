@@ -25,7 +25,7 @@ describe('minigame kinds', () => {
     expect(MinigameKindSchema.options).toEqual(
       expect.arrayContaining(['match-sound', 'card-match', 'culture-quiz', 'listen-pick', 'pic-word-match']),
     );
-    expect(MinigameKindSchema.options).toHaveLength(16);
+    expect(MinigameKindSchema.options).toHaveLength(17);
   });
 
   it('adds story-read additively (F-STORY-002 PR 2.1) and parses it as a quest step kind', () => {
@@ -45,8 +45,22 @@ describe('minigame kinds', () => {
     expect(QuestStepSchema.safeParse(step).success).toBe(true);
   });
 
-  it('does not add story-check here (F-STORY-003 PR 3.1 owns it)', () => {
-    expect(MinigameKindSchema.safeParse('story-check').success).toBe(false);
+  it('adds story-check additively (F-STORY-003 PR 3.1) and parses it as a quest step kind', () => {
+    expect(MinigameKindSchema.safeParse('story-check').success).toBe(true);
+    // the kinds that existed before keep parsing
+    for (const kind of ['match-sound', 'story-sequence', 'story-read', 'listen-pick', 'pic-word-match', 'tap-respond']) {
+      expect(MinigameKindSchema.safeParse(kind).success).toBe(true);
+    }
+    expect(MinigameKindSchema.safeParse('story-checks').success).toBe(false);
+    const step = {
+      id: 's3',
+      kind: 'practice',
+      titleEn: 'A few questions',
+      minigameKind: 'story-check',
+      minigameRef: 'minigame:story-check-listen-seollal-new-year',
+      durationSeconds: 60,
+    };
+    expect(QuestStepSchema.safeParse(step).success).toBe(true);
   });
 });
 

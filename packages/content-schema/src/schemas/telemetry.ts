@@ -56,6 +56,12 @@ export const TELEMETRY_EVENT_NAMES = [
   'story.read.finished',
   'story.sources.opened',
   'story.sources.link_opened',
+  // F-STORY-003 §3.9 (payloads carry ids and counts only)
+  'story.check.answered',
+  'story.check.finished',
+  'story.sequence.finished',
+  'story.recap.word_played',
+  'story.results.action',
 ] as const;
 
 export const TelemetryEventNameSchema = z.enum(TELEMETRY_EVENT_NAMES);
