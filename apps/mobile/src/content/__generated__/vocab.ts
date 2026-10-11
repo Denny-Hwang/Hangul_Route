@@ -1125,7 +1125,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "senseNote": "The casual word. To be polite, say jeo.",
     "glosses": {
       "en": "I, me",
-      "es": "yo"
+      "es": "yo, mí"
     }
   },
   {
@@ -1222,7 +1222,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "visual": "word:school-bag",
     "glosses": {
       "en": "bag",
-      "es": "mochila"
+      "es": "bolsa o mochila"
     }
   },
   {

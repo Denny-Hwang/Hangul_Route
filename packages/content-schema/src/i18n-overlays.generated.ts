@@ -1314,7 +1314,7 @@ export const OVERLAYS: Overlays = {
       "senseNote": "Así llama una mujer o niña a su hermana mayor. Un hombre o niño dice nuna."
     },
     "vocab:gabang": {
-      "gloss": "mochila"
+      "gloss": "bolsa o mochila"
     },
     "vocab:gajok": {
       "gloss": "familia"
@@ -1428,7 +1428,7 @@ export const OVERLAYS: Overlays = {
       "gloss": "pez"
     },
     "vocab:na": {
-      "gloss": "yo",
+      "gloss": "yo, mí",
       "senseNote": "La palabra informal. Para hablar con cortesía, se dice jeo."
     },
     "vocab:nabi": {
@@ -1487,7 +1487,7 @@ export const OVERLAYS: Overlays = {
     },
     "vocab:seonsaengnim": {
       "gloss": "maestro o maestra",
-      "senseNote": "También se usa para dirigirse a un maestro; la terminación nim muestra respeto."
+      "senseNote": "También se usa para dirigirse a un maestro o una maestra; el sufijo nim muestra respeto."
     },
     "vocab:set": {
       "gloss": "tres",
