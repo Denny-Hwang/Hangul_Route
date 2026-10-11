@@ -31,7 +31,20 @@ const PLACEMENTS: AdditiveField = {
   isUnset: (value) => value === undefined || (Array.isArray(value) && value.length === 0),
 };
 
-export const ADDITIVE_FIELDS: readonly AdditiveField[] = [PLACEMENTS];
+/**
+ * `stageDoneAt` (F-ROUTE-001 section 3.15) is the stage latch: a record that
+ * only gains keys on the client (union merge, earliest time wins). A missing
+ * key or an empty record next to a stored non-empty one can only come from a
+ * client that predates it, so an earned "Complete" is never erased. It has no
+ * summary counterpart.
+ */
+const STAGE_DONE_AT: AdditiveField = {
+  payloadKey: 'stageDoneAt',
+  isUnset: (value) =>
+    value === undefined || (typeof value === 'object' && value !== null && !Array.isArray(value) && Object.keys(value).length === 0),
+};
+
+export const ADDITIVE_FIELDS: readonly AdditiveField[] = [PLACEMENTS, STAGE_DONE_AT];
 
 type Plain = Record<string, unknown>;
 

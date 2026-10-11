@@ -419,3 +419,93 @@ describe('placements and summary.placement (F-PLC-001 section 3.8, the additive 
     expect(got.data.summary.placement).toEqual(placementSummary);
   });
 });
+
+describe('stageDoneAt (F-ROUTE-001 section 3.15, the stage latch and the additive preserve rule)', () => {
+  beforeEach(() => db.reset());
+  const base = { schemaVer: 1, contentVer: '2026.10' };
+  const latch = { stage1: '2026-10-11T09:30:00.000Z' };
+  const withLatch = (profileId: string, stageDoneAt: unknown, quests: Array<{ questId: string; stars: 0 | 1 | 2 | 3 }> = []) => ({ ...snapshotFor(profileId, quests), stageDoneAt });
+
+  type Stored = { data: { rev: number; snapshot: { stageDoneAt?: Record<string, string>; quests: unknown[] }; summary: Record<string, unknown> } };
+  async function getStored(learnerId: string, auth: Record<string, string>) {
+    const res = await app.request(`/api/sync/learners/${learnerId}/snapshot`, { headers: auth });
+    return (await res.json()) as Stored;
+  }
+
+  it('round-trips the latch', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    expect((await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withLatch(r.learnerId, latch), summary })).status).toBe(200);
+    expect((await getStored(r.learnerId, auth)).data.snapshot.stageDoneAt).toEqual(latch);
+  });
+
+  it('an old client (no field) is accepted exactly as today and reads back without the key', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    expect((await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: snapshotFor(r.learnerId), summary })).status).toBe(200);
+    expect((await getStored(r.learnerId, auth)).data.snapshot).not.toHaveProperty('stageDoneAt');
+  });
+
+  it('preserve rule: an old client re-uploading without the field cannot erase an earned latch', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withLatch(r.learnerId, latch), summary });
+
+    const old = await put(r.learnerId, auth, { ...base, baseRev: 1, snapshot: snapshotFor(r.learnerId, [{ questId: 'quest:a', stars: 3 }]), summary: { ...summary, streakDays: 4 } });
+    expect(old.status).toBe(200);
+    expect(old.json.data?.rev).toBe(2);
+
+    const got = await getStored(r.learnerId, auth);
+    expect(got.data.snapshot.stageDoneAt).toEqual(latch);
+    // everything the old client did send is taken as sent
+    expect(got.data.snapshot.quests).toHaveLength(1);
+    expect(got.data.summary.streakDays).toBe(4);
+  });
+
+  it('an empty record counts as unset and keeps the stored latch', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withLatch(r.learnerId, latch), summary });
+    expect((await put(r.learnerId, auth, { ...base, baseRev: 1, snapshot: withLatch(r.learnerId, {}), summary })).status).toBe(200);
+    expect((await getStored(r.learnerId, auth)).data.snapshot.stageDoneAt).toEqual(latch);
+  });
+
+  it('a client that sends a latch record replaces the stored one; the server never merges records', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withLatch(r.learnerId, latch), summary });
+    const next = { ...latch, stage2: '2026-11-01T08:00:00.000Z' };
+    expect((await put(r.learnerId, auth, { ...base, baseRev: 1, snapshot: withLatch(r.learnerId, next), summary })).status).toBe(200);
+    expect((await getStored(r.learnerId, auth)).data.snapshot.stageDoneAt).toEqual(next);
+  });
+
+  it('a 409 hands the stored latch back for the client merge', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withLatch(r.learnerId, latch), summary });
+    const stale = await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: snapshotFor(r.learnerId), summary });
+    expect(stale.status).toBe(409);
+    const body = stale.json as unknown as { data: { snapshot: { stageDoneAt: Record<string, string> } } };
+    expect(body.data.snapshot.stageDoneAt).toEqual(latch);
+  });
+
+  it('rejects a malformed latch with 422 and stores nothing', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    for (const bad of [null, ['stage1'], { stage1: 1 }]) {
+      expect((await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withLatch(r.learnerId, bad), summary })).status).toBe(422);
+    }
+    expect(await db.getSnapshot(r.learnerId)).toBeNull();
+  });
+
+  it('keeps the placements preserve rule working next to the latch', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    const stored = { ...withLatch(r.learnerId, latch), placements: [] };
+    await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: stored, summary });
+    expect((await put(r.learnerId, auth, { ...base, baseRev: 1, snapshot: snapshotFor(r.learnerId), summary })).status).toBe(200);
+    const got = await getStored(r.learnerId, auth);
+    expect(got.data.snapshot.stageDoneAt).toEqual(latch);
+    expect((got.data.snapshot as { placements?: unknown[] }).placements).toEqual([]);
+  });
+});
