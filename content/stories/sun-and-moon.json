@@ -1,11 +1,11 @@
 {
   "v": 1,
   "id": "story:sun-and-moon",
-  "state": "draft",
+  "state": "ready",
   "contentVer": 1,
   "title": {
-    "ko": "해님 달님 (옛이야기)",
-    "romanization": "Haenim Dallim (yenniyagi)",
+    "ko": "해님 달님",
+    "romanization": "Haenim Dallim",
     "en": "The Sun and the Moon (A Traditional Tale)"
   },
   "summaryEn": "A gentle, simplified retelling of the traditional Korean folk tale Haenim Dallim: a brother and sister outwit a tricky tiger, climb a rope into the sky, and become the sun and the moon.",
@@ -14,10 +14,10 @@
   "recommendedStage": 1,
   "minutes": 5,
   "learningGoalsEn": [
-    "Recognize Haenim Dallim as a traditional Korean folk tale told in many versions, and this retelling as a simplified one.",
-    "Retell the main events: the tricky tiger, the tree, the rope from the sky, the sun and the moon.",
+    "Know that Haenim Dallim is a traditional Korean folk tale told in many versions, and that this retelling is a simplified one.",
+    "Put the main events in order: the tricky tiger, the tree, the rope from the sky, the sun and the moon.",
     "Read and recognize 해 (hae), 달 (dal), 호랑이 (horangi), 떡 (tteok) and 동아줄 (dongajul).",
-    "Notice that folk tales sometimes 'explain' nature (why sorghum stalks are red) as part of the story, not as science."
+    "Understand that folk tales sometimes 'explain' nature (why sorghum stalks are red) as part of the story, not as science."
   ],
   "origin": {
     "type": "traditional",
@@ -29,9 +29,10 @@
     "culture": "draft",
     "advisory": [
       "mild-peril",
+      "loss",
       "trickery"
     ],
-    "advisoryNoteEn": "A trickster and a moment of danger, told gently; the scariest parts are left out."
+    "advisoryNoteEn": "A tricky tiger and a moment of danger, told gently. In older versions the mother does not come home; this one leaves that out."
   },
   "keywords": [
     {
@@ -94,7 +95,7 @@
       "id": "haenim-dallim",
       "ko": "해님 달님",
       "romanization": "Haenim Dallim",
-      "en": "the Sun and the Moon (with the respectful ending -nim; the tale's title)",
+      "en": "the Sun and the Moon (with the honorific suffix -nim; the tale's title)",
       "kind": "word"
     },
     {
@@ -139,7 +140,7 @@
             "id": "haenim-dallim",
             "ko": "해님 달님",
             "romanization": "Haenim Dallim",
-            "en": "the Sun and the Moon (with the respectful ending -nim; the tale's title)",
+            "en": "the Sun and the Moon (with the honorific suffix -nim; the tale's title)",
             "kind": "word"
           },
           "factIds": [
@@ -152,7 +153,7 @@
         },
         {
           "id": "s2",
-          "narrationEn": "Long ago, a mother went out to work. Heading home with rice cakes, she met a tiger at a hill pass. 'Give me your rice cakes!' it said. The old tale has it ask for more at each hill. We keep it short.",
+          "narrationEn": "Long ago, a mother went out to work. On her way home with rice cakes, she met a tiger at a hill pass. 'Give me your rice cakes!' it said. In the old tale it asks again at every hill. We keep it short.",
           "captionEn": "A tiger asks the mother for rice cakes",
           "keyword": {
             "id": "tteok",
@@ -171,7 +172,7 @@
         },
         {
           "id": "s3",
-          "narrationEn": "The tiger went to the children's house, pretending to be Mother. 'Open the door!' The children said, 'Your voice and hand are not Mother's!' But when the tiger said it must feed the crying baby, they opened the door.",
+          "narrationEn": "The tiger went to the house of a brother and sister, {kw:onui}, pretending to be their mother. 'Open the door!' The children said, 'Your voice and hand are not Mother's!' But the tiger kept asking, and at last they opened the door.",
           "captionEn": "The tiger pretends to be Mother",
           "keyword": {
             "id": "mun",
@@ -190,7 +191,7 @@
         },
         {
           "id": "s4",
-          "narrationEn": "Then the children realized it was the tiger, and they climbed a tall tree beside the well. Hoya whispers: 'Don't worry, it's only a story, and these two are clever!'",
+          "narrationEn": "Then the children realized it was the tiger, and they climbed a tall tree, {kw:namu}, beside the well. Hoya whispers: 'Don't worry, it's only a story, and these two are clever!'",
           "captionEn": "The children climb a tall tree",
           "keyword": {
             "id": "horangi",
@@ -237,7 +238,7 @@
         },
         {
           "id": "s6",
-          "narrationEn": "The children prayed to the sky: 'Please send down a new rope!' A strong new rope came down, and up they climbed. The tiger tried a rope too, but it was old and rotten. Snap!",
+          "narrationEn": "The children prayed to the sky: 'Please send down a new rope!' A strong new rope, {kw:dongajul}, came down, and up they climbed. The tiger tried a rope too, but it was old and rotten. Snap!",
           "captionEn": "A strong new rope comes down",
           "line": {
             "ko": "새 동아줄을 내려 주세요",
@@ -274,7 +275,7 @@
         },
         {
           "id": "s8",
-          "narrationEn": "In the sky, the brother became the sun and the sister the moon. But she was scared of the dark night, so they swapped. Shy of people staring, the sister-sun shines so brightly that no one can look at her. They are safe and sound!",
+          "narrationEn": "In the sky, the brother became the sun, {kw:hae}, and the sister the moon, {kw:dal}. She was scared of the night, so they swapped. She is shy, so she shines so brightly that no one can look straight at her. They are safe and sound!",
           "captionEn": "The children become the sun and the moon",
           "keyword": {
             "id": "haewa-dal",
@@ -574,6 +575,6 @@
     "scope": "cluster",
     "notes": "Third independent pass over 6 episodes / 61 facts / 161 source entries (70 unique URLs). Every URL was re-fetched with my own scripts (UNESCO pages via Wayback copies; heritage.go.kr descriptions via the portal ajax html and khs.go.kr open API; folkency via its JSON API) and each quote or locator was machine-matched to the page text; the few non-matching strings were checked by hand (portal metadata fields, hanja or footnote punctuation, label text). Corrections: (1) pansori scene 2 now gives both UNESCO steps (2003 masterpiece proclamation, 2008 Representative List); (2) pansori f11 states the Aesop title as in the cited Townsend text and the common alternate title; (3) added sources: NFM 놀보박타령 for 'greedy' (f5), 표준국어대사전 타다 for 'sawed' (f6), 한국민족문화대백과사전 선도해 for the Samguk sagi tale (f12); (4) Seollal f9/f10 designation-date locators now cite the KHS open API field. No other change. See seasons-tales.signoff.md."
   },
-  "authorNotes": "REVISED 2026-10-10. Traditional tale: narration describes what happens in the tale, not history. Two authoritative sources now: the Encyclopedia of Korean Culture (E0062663; basic version with three siblings) and the National Folk Museum's 한국민속문학사전 entry by 조현설 (topic 6006; summary with two children, whose folk-literature dictionary cites 한국구비문학대계 1-4, 811; 1-5, 308; 2-6, 473; 2-7, 513 as its sources - the 구비문학대계 recordings themselves could not be opened with the tools used, gubi.aks.ac.kr returned nothing). The sesame-oil episode (f4) rests on the Encyclopedia only (the NFM summary does not mention it); claims kept minimal. Differences between sources, stated openly in the facts: Encyclopedia - mother met at successive hill passes with demands rice cake, clothes, arms, legs, torso; children open the door when the tiger says it must nurse the baby; the sun-sister pricks people's eyes with needles. NFM - children see the tiger through a hole in the door and flee by the back door; the sun-sister gives off a strong light. This retelling follows the gentler options where they exist. Softened on purpose: the tiger eating the mother and the baby; the demands for clothes, arms, legs and torso; the axe; the tiger's death on the sorghum stalks (told as 'the end of its tricks'); the needles. Three siblings (삼 남매) in the Encyclopedia vs. two (오누이) in the NFM summary: narration says 'the children' and mentions the crying baby only because the tiger uses it as an excuse. 님 is a gender-neutral respectful suffix; in this retelling the sun is the sister and the moon the brother, so the 'Mr. Sun, Ms. Moon' gloss was removed. Reassurance beats added in scenes 4, 7 and 8. The line '떡 하나 주면 안 잡아먹지' is not used (not in the sources; too scary for young children). Hoya's 'not like me!' is character banter. Stage 5 'Tiger Folktales' is a natural placement, but the language is at Listen level, hence recommended_stage 1. AUTHORING 2026-10-11 (F-STORY-001 PR 1.8d): title romanization, scene captions and check explanations written from the cited facts; every scene is artPending (text-only tile) until the art PRs; no claim or source changed. Fact scope: f1 (the tale exists and is told widely) is documented; f3 and f7 (what happens in the tale) are in-the-tale. Title: 옛이야기 is said [옌니야기] (ㄴ-insertion), hence yenniyagi. 'these two' (s4) carries an approximation entry.",
+  "authorNotes": "REVISED 2026-10-10. Traditional tale: narration describes what happens in the tale, not history. Two authoritative sources now: the Encyclopedia of Korean Culture (E0062663; basic version with three siblings) and the National Folk Museum's 한국민속문학사전 entry by 조현설 (topic 6006; summary with two children, whose folk-literature dictionary cites 한국구비문학대계 1-4, 811; 1-5, 308; 2-6, 473; 2-7, 513 as its sources - the 구비문학대계 recordings themselves could not be opened with the tools used, gubi.aks.ac.kr returned nothing). The sesame-oil episode (f4) rests on the Encyclopedia only (the NFM summary does not mention it); claims kept minimal. Differences between sources, stated openly in the facts: Encyclopedia - mother met at successive hill passes with demands rice cake, clothes, arms, legs, torso; children open the door when the tiger says it must nurse the baby; the sun-sister pricks people's eyes with needles. NFM - children see the tiger through a hole in the door and flee by the back door; the sun-sister gives off a strong light. This retelling follows the gentler options where they exist. Softened on purpose: the tiger eating the mother and the baby; the demands for clothes, arms, legs and torso; the axe; the tiger's death on the sorghum stalks (told as 'the end of its tricks'); the needles. Three siblings (삼 남매) in the Encyclopedia vs. two (오누이) in the NFM summary: narration says 'the children' (s3: 'a brother and sister') and does not mention the baby (review 2026-10-11: naming the baby made listeners ask what happened to it). 님 is a gender-neutral respectful suffix; in this retelling the sun is the sister and the moon the brother, so the 'Mr. Sun, Ms. Moon' gloss was removed. Reassurance beats added in scenes 4, 7 and 8. The line '떡 하나 주면 안 잡아먹지' is not used (not in the sources; too scary for young children). Hoya's 'not like me!' is character banter. Stage 5 'Tiger Folktales' is a natural placement, but the language is at Listen level, hence recommended_stage 1. AUTHORING 2026-10-11 (F-STORY-001 PR 1.8d): title romanization, scene captions and check explanations written from the cited facts; every scene is artPending (text-only tile) until the art PRs; no claim or source changed. Fact scope: f1 (the tale exists and is told widely) is documented; f3 and f7 (what happens in the tale) are in-the-tale. Title: 해님 달님 (Haenim Dallim); the 'traditional tale' label lives in title.en and origin, not in brackets in the Korean title. 'these two' (s4) carries an approximation entry. REVIEW 2026-10-11 (PR 1.8d review fixes): advisory adds 'loss' and the note names the mother's fate as left out; s2 and s8 in plainer sentences; the hae, dal, onui, namu and dongajul keywords appear as tokens; -nim glossed as an honorific suffix; learning goals use receptive verbs.",
   "errata": []
 }
