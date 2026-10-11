@@ -501,7 +501,7 @@ function SectionSpacing(): JSX.Element {
 function SectionTouchTargets(): JSX.Element {
   const rows: Array<[string, number]> = [
     ['min (CLAUDE.md floor)', touchTarget.min],
-    ['child (ages 5–7 primary)', touchTarget.child],
+    ['primary action', touchTarget.child],
     ['hero (jamo tiles, big CTAs)', touchTarget.hero],
   ];
   return (
@@ -897,7 +897,7 @@ function SectionCards(): JSX.Element {
 
 function SectionPills(): JSX.Element {
   const pills: Array<{ tone: string; bg: string; fg: string; label: string }> = [
-    { tone: 'neutral', bg: colors.surface.sunken, fg: colors.text.secondary, label: 'Age 5-7' },
+    { tone: 'neutral', bg: colors.surface.sunken, fg: colors.text.secondary, label: 'Pictures first' },
     { tone: 'primary', bg: colors.brand.primaryLight, fg: colors.brand.primaryDark, label: 'Hangul' },
     { tone: 'secondary', bg: colors.brand.secondaryLight, fg: colors.brand.secondaryDark, label: 'Letters' },
     { tone: 'success', bg: colors.feedback.successLight, fg: '#2F6A47', label: 'Open' },

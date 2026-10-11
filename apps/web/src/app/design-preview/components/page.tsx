@@ -478,7 +478,7 @@ function ChoiceCardVariant({
 
 function PillSection(): JSX.Element {
   const tones: Array<{ key: string; bg: string; fg: string; label: string }> = [
-    { key: 'neutral', bg: colors.surface.sunken, fg: colors.text.secondary, label: 'Age 5-7' },
+    { key: 'neutral', bg: colors.surface.sunken, fg: colors.text.secondary, label: 'Pictures first' },
     { key: 'primary', bg: colors.brand.primaryLight, fg: colors.brand.primaryDark, label: 'Hangul' },
     { key: 'secondary', bg: colors.brand.secondaryLight, fg: colors.brand.secondaryDark, label: 'Letters' },
     { key: 'success', bg: colors.feedback.successLight, fg: '#2F6A47', label: 'Open' },
