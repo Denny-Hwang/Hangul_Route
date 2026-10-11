@@ -56,6 +56,13 @@ describe('learner.journey', () => {
   });
 });
 
+describe('learner.journey.panes (F-LAYOUT-001 §3.13)', () => {
+  it('names the two panes as landmarks', () => {
+    expect(m.learner.journey.panes.master).toBe('Journey map');
+    expect(m.learner.journey.panes.detail).toBe('Episode details');
+  });
+});
+
 describe('learner.library', () => {
   const l = m.learner.library;
 

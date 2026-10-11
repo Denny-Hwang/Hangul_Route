@@ -138,6 +138,8 @@ export const learner = {
     /** Keyed by `StageAvailability`. */
     availability: { open: { pill: 'Open' }, taste: { pill: 'Taste' }, soon: { pill: 'Soon' } },
     tasteNote: 'A taste of this stage is open now. More episodes are coming.',
+    /** Landmark names of the two panes on a wide window (F-LAYOUT-001 §3.13). */
+    panes: { master: 'Journey map', detail: 'Episode details' },
     how: {
       title: 'How the journey works',
       body: 'Each cell is one episode. Finish every quest in a cell to complete it and earn its Heritage cards. More stages open as the journey grows.',
