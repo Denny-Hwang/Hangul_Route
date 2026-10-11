@@ -17,11 +17,16 @@ import {
 import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { jamoAll } from '../../content/jamo';
+import { blockShape, shapeHint, tileAccessibilityLabel } from '../../logic/build-letter-view';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { buildBuildLetterRounds, type BuildLetterRound } from '../../logic/round-builder';
 import { speak } from '../../platform/audio';
 import { nudge, success, tapLight } from '../../platform/haptics';
 import { useQuestRunStore } from '../../store/quest-run-store';
+import { BlockLayout } from './BlockLayout';
+
+const SLOT = 72;
+const HINT_CELL = 40;
 
 interface Props {
   scope: MinigameScope;
@@ -39,6 +44,7 @@ export function BuildLetterGame({ scope, onFinish }: Props): React.ReactElement 
   const answerRound = useQuestRunStore((s) => s.answerRound);
   const markStepComplete = useQuestRunStore((s) => s.markStepComplete);
   const round = rounds[roundIdx];
+  const shape = useMemo(() => blockShape(round?.componentJamoIds ?? []), [round]);
 
   useEffect(() => {
     setSelected([]);
@@ -132,16 +138,17 @@ export function BuildLetterGame({ scope, onFinish }: Props): React.ReactElement 
         Slots:
       </Caption>
       <Spacer size="xs" />
-      <View style={{ flexDirection: 'row', justifyContent: 'center', gap: spacing.sm }}>
-        {round.componentJamoIds.map((_, i) => {
+      <BlockLayout
+        shape={shape}
+        renderCell={(i) => {
           const filled = selected[i];
           const jamoChar = filled ? jamoAll.find((j) => j.id === filled)?.char ?? '' : '';
           return (
             <View
               key={i}
               style={{
-                width: 72,
-                height: 72,
+                width: SLOT,
+                height: SLOT,
                 borderRadius: radii.lg,
                 borderWidth: 2,
                 borderColor: filled ? colors.brand.primary : colors.border.subtle,
@@ -154,8 +161,8 @@ export function BuildLetterGame({ scope, onFinish }: Props): React.ReactElement 
               <Text style={{ fontSize: typography.size.display, fontWeight: '700' }}>{jamoChar}</Text>
             </View>
           );
-        })}
-      </View>
+        }}
+      />
 
       <Spacer size="lg" />
       <Caption tone="muted" align="center">
@@ -172,6 +179,7 @@ export function BuildLetterGame({ scope, onFinish }: Props): React.ReactElement 
               key={id}
               label={j.char}
               romanization={j.romanization}
+              accessibilityLabel={tileAccessibilityLabel(j)}
               size="md"
               state={used ? 'disabled' : 'idle'}
               onPress={() => handleTile(id)}
@@ -183,7 +191,34 @@ export function BuildLetterGame({ scope, onFinish }: Props): React.ReactElement 
       {feedback === 'wrong' ? (
         <>
           <Spacer size="lg" />
-          <HoyaBubble tone="thinking" message="Not quite. Try again — letters go left to right." />
+          <HoyaBubble tone="thinking" message={`Not quite. Try again. ${shapeHint(shape)}`} />
+          <Spacer size="md" />
+          <View
+            style={{ alignItems: 'center' }}
+            accessible
+            accessibilityLabel={`Block shape. ${shapeHint(shape)}`}
+          >
+            <BlockLayout
+              shape={shape}
+              renderCell={(i) => (
+                <View
+                  key={i}
+                  style={{
+                    width: HINT_CELL,
+                    height: HINT_CELL,
+                    borderRadius: radii.md,
+                    borderWidth: 2,
+                    borderColor: colors.brand.primary,
+                    backgroundColor: colors.brand.primaryLight,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Caption tone="secondary">{String(i + 1)}</Caption>
+                </View>
+              )}
+            />
+          </View>
         </>
       ) : null}
       <Spacer size="xl" />

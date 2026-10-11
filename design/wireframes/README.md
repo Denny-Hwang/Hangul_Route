@@ -19,6 +19,7 @@
 | `home/todays-mission.md` · `homework/list.md` | S | F-HW-001 |
 | `journey/grid.md` · `episode/detail.md` | S | 02 §1 · 04 · 05 |
 | `quest/player.md` · `minigame/shell.md` · `minigame/families.md` | S | content-skill · 06 |
+| `minigame/build-letter.md` | R | F-QUEST-002 §3.7 (Q-7a) |
 | `results/celebrate.md` | S | F-MOTION-003 |
 | `library/gallery.md` · `library/card-detail.md` | S | F-CARD-001/002/003 |
 | `profile/settings.md` · `parent/gate.md` | S | F-SUB-001 · (gate 통합 대상) |

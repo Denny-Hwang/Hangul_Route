@@ -8,7 +8,7 @@ import type { MinigameKind } from '@hangul-route/content-schema';
 export interface MinigameScope {
   kind: MinigameKind;
   jamoIds?: string[];
-  syllables?: Array<{ ko: string; romanization: string; jamoChars: string[] }>;
+  syllables?: Array<{ ko: string; romanization: string; jamoChars: string[]; jamoIds?: string[] }>;
   cardPairs?: Array<{ ko: string; en: string; romanization?: string }>;
   storySteps?: Array<{ id: string; labelEn: string; labelKo?: string; romanization?: string }>;
   dialogue?: Array<{
