@@ -26,4 +26,20 @@ describe('episodeReturn', () => {
   it('is the episode screen on one pane, as before', () => {
     expect(episodeReturn(1, 'episode:stage1-life', 'Main')).toEqual({ to: 'episodeScreen', episodeId: 'episode:stage1-life' });
   });
+
+  it('is the episode screen for a shelf episode on two panes: the Journey grid cannot select it (F-STORY-004 §3.10)', () => {
+    const episodes = [
+      { id: 'episode:stage1-life', placement: 'grid' as const },
+      { id: 'episode:story-hunminjeongeum', placement: 'shelf' as const },
+    ];
+    expect(episodeReturn(2, 'episode:story-hunminjeongeum', 'Main', episodes)).toEqual({
+      to: 'episodeScreen',
+      episodeId: 'episode:story-hunminjeongeum',
+    });
+    expect(episodeReturn(2, 'episode:story-hunminjeongeum', 'Results', episodes)).toEqual({
+      to: 'episodeScreen',
+      episodeId: 'episode:story-hunminjeongeum',
+    });
+    expect(episodeReturn(2, 'episode:stage1-life', 'Main', episodes)).toEqual({ to: 'journeyPane', episodeId: 'episode:stage1-life' });
+  });
 });

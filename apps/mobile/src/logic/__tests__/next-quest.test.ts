@@ -20,15 +20,27 @@ const done = (...keys: string[]) =>
   );
 const base = { quests: QUESTS, episodes: EPISODES };
 
+const SHELF: Episode = episodeOf('episode:shelf-tale', ['quest:shelf'], { placement: 'shelf', format: 'story', order: 0 });
+const WITH_SHELF: Episode[] = [SHELF, ...EPISODES];
+const QUESTS_WITH_SHELF: Quest[] = [plainQuest('quest:shelf'), ...QUESTS];
+
 describe('playableEpisodes', () => {
   it('keeps shipped and ready episodes, in content order', () => {
     expect(playableEpisodes(EPISODES).map((e) => e.id)).toEqual(['episode:one', 'episode:two', 'episode:s2']);
+  });
+
+  it('keeps grid episodes only: a shipped shelf episode is never playable on the grid (F-STORY-004 §3.10)', () => {
+    expect(playableEpisodes(WITH_SHELF).map((e) => e.id)).toEqual(['episode:one', 'episode:two', 'episode:s2']);
   });
 });
 
 describe('offerableQuests', () => {
   it('is the quests of playable episodes in quest order', () => {
     expect(offerableQuests(QUESTS, EPISODES).map((q) => q.id)).toEqual(['quest:a', 'quest:b', 'quest:c', 'quest:e']);
+  });
+
+  it('leaves out the quest of a shelf episode', () => {
+    expect(offerableQuests(QUESTS_WITH_SHELF, WITH_SHELF).map((q) => q.id)).toEqual(['quest:a', 'quest:b', 'quest:c', 'quest:e']);
   });
 
   it('drops quests of stages the learner is not entitled to', () => {
@@ -40,6 +52,10 @@ describe('offerableQuests', () => {
 describe('nextQuestAfter (the Journey cursor)', () => {
   it('is the first quest for a fresh learner', () => {
     expect(nextQuestAfter({ ...base, snapshot: done() })?.id).toBe('quest:a');
+  });
+
+  it('never becomes a shelf quest, even one ordered before every cell', () => {
+    expect(nextQuestAfter({ quests: QUESTS_WITH_SHELF, episodes: WITH_SHELF, snapshot: done() })?.id).toBe('quest:a');
   });
 
   it('is the first incomplete quest in content order', () => {

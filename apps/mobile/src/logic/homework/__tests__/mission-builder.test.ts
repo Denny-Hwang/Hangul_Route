@@ -244,6 +244,19 @@ describe('story fallback', () => {
       expect(card.episodeId).not.toBe('episode:preview');
     }
   });
+
+  it('never offers a shelf episode as the Journey cursor or the fallback (F-STORY-004 §3.10)', () => {
+    const shelf: Episode = { ...episode('episode:shelf-tale', ['quest:shelf']), placement: 'shelf', format: 'story', order: 0 };
+    const plan = build({
+      episodes: [shelf, ...EPISODES],
+      quests: [quest('quest:shelf', 'A tale'), ...QUESTS],
+    });
+    expect(plan.cards[1]).toMatchObject({ kind: 'new', questId: 'quest:a' });
+    for (const card of plan.cards) {
+      expect(card.episodeId).not.toBe('episode:shelf-tale');
+      expect(card.questId).not.toBe('quest:shelf');
+    }
+  });
 });
 
 describe('completion state (§3.2)', () => {

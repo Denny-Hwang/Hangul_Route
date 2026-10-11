@@ -46,6 +46,17 @@ describe('firstQuestFor', () => {
     ];
     expect(firstQuestFor(eps, [quest('quest:p1'), quest('quest:ok1')])?.quest.id).toBe('quest:ok1');
   });
+  it('never picks a shelf quest, even one ordered first (F-STORY-004 §3.10)', () => {
+    const eps = [
+      { ...episode('episode:shelf-tale', 0, 'shipped', ['quest:s1']), placement: 'shelf' as const, format: 'story' as const },
+      episode('episode:a', 1, 'shipped', ['quest:a1']),
+    ];
+    expect(firstQuestFor(eps, [quest('quest:s1'), quest('quest:a1')])?.quest.id).toBe('quest:a1');
+  });
+  it('returns null when the only shipped episode is a shelf episode', () => {
+    const eps = [{ ...episode('episode:shelf-tale', 0, 'shipped', ['quest:s1']), placement: 'shelf' as const }];
+    expect(firstQuestFor(eps, [quest('quest:s1')])).toBeNull();
+  });
   it('returns null with no shipped content', () => {
     expect(firstQuestFor([episode('episode:p', 0, 'preview', ['quest:p1'])], [quest('quest:p1')])).toBeNull();
   });
