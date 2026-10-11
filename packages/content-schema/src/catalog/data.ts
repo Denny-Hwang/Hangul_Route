@@ -37,7 +37,7 @@ const lesson = (
 const soon = (stage: StageKey, theme: ThemeKey, title: string): CatalogCell => cell(stage, theme, title, 'preview', 10);
 
 const cells: CatalogCell[] = [
-  cell('stage1', 'letters', 'Meet the Letters', 'shipped', 12, ['quest:stage1-letters-q1', 'quest:stage1-letters-q2', 'quest:stage1-letters-q3']),
+  cell('stage1', 'letters', 'Meet the Letters', 'shipped', 15, ['quest:stage1-letters-q1', 'quest:stage1-letters-q2', 'quest:stage1-letters-q3']),
   cell('stage1', 'life', 'Around the Korean Table', 'shipped', 10, ['quest:stage1-life-q1', 'quest:stage1-life-q2']),
   cell('stage1', 'rites', 'New Year & Festivals', 'shipped', 8, ['quest:stage1-rites-q1']),
   cell('stage1', 'nature', 'Tigers, Mountains, Moon', 'shipped', 9, ['quest:stage1-nature-q1']),

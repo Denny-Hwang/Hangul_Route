@@ -177,6 +177,19 @@ describe('the rebuilt Stage 1 quests', () => {
     expect(chars(REBUILT[1]!)).toEqual(['ㅗ', 'ㅜ', 'ㅁ', 'ㅇ']);
     expect(chars(REBUILT[2]!)).toEqual(['ㅡ', 'ㅣ', 'ㄷ', 'ㄹ']);
   });
+
+  it('gives an episode whose quests are all rebuilt the sum of their minutes (section 3.6: letters 15)', () => {
+    const rebuilt = new Set(REBUILT.map((q) => q.id));
+    const done = episodesAll.filter((e) => e.stage === 'stage1' && e.questIds.length > 0 && e.questIds.every((id) => rebuilt.has(id)));
+    expect(done.map((e) => e.id)).toContain('episode:stage1-letters');
+    for (const episode of done) {
+      const sum = episode.questIds.reduce((n, id) => n + (questsAll.find((q) => q.id === id)?.estimatedMinutes ?? 0), 0);
+      expect(episode.estimatedMinutes, episode.id).toBe(sum);
+    }
+    const letters = episodesAll.find((e) => e.id === 'episode:stage1-letters');
+    expect(letters?.estimatedMinutes).toBe(15);
+    expect(letters?.subtitleEn).toBe('Twelve letters, and your first real words.');
+  });
 });
 
 describe('T1 teach once', () => {

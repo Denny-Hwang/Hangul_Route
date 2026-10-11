@@ -25,7 +25,7 @@ const stage1Episodes: Episode[] = [
     theme: 'letters',
     order: 1,
     titleEn: 'Meet the Letters',
-    subtitleEn: 'The first 14 consonants come alive.',
+    subtitleEn: 'Twelve letters, and your first real words.',
     hoyaIntroEn: 'Hi! I am Hoya. Want to meet my favorite Korean letters?',
     questIds: [
       'quest:stage1-letters-q1',
@@ -33,7 +33,7 @@ const stage1Episodes: Episode[] = [
       'quest:stage1-letters-q3',
     ],
     rewardCardIds: ['card:book', 'card:hanji', 'card:brush', 'card:ink', 'card:origami'],
-    estimatedMinutes: 12,
+    estimatedMinutes: 15,
     pillarTags: ['A1'],
     status: 'shipped',
   },
