@@ -15,6 +15,7 @@ export * from './components/Spacer';
 export * from './components/Icon';
 export * from './components/KoreanText';
 export * from './components/ChoiceCard';
+export * from './components/SyllableBlock';
 export { KOREAN_LANGUAGE, KOREAN_TEXT_SIZES, koreanTextLabel, koreanTextView } from './korean-text';
 export type { KoreanTextSize, KoreanTextView, KoreanTextViewInput } from './korean-text';
 export * from './labels';
