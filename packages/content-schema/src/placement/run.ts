@@ -89,7 +89,12 @@ export interface PlacementConfig {
 
 export type PlacementEvent =
   | { type: 'answer'; optionId: string; assisted?: boolean }
-  | { type: 'notSure' }
+  /**
+   * "I am not sure". With `cause: 'no-sound'` the caller records a prompt that
+   * could not play (section 3.11): skipped, not wrong, and not a "not sure" of
+   * the learner, so it neither adds to nor breaks the three-in-a-row streak.
+   */
+  | { type: 'notSure'; cause?: 'no-sound' }
   /** The caller's own 45-second inactivity timer fired. */
   | { type: 'idle' }
   /** The caller's periodic check of both clocks. */
@@ -299,6 +304,7 @@ const record = (
   chosenOptionId: string | null,
   assisted: boolean,
   nowMs: number,
+  noSound = false,
 ): PlacementRunState => {
   const rung = state.current as NonNullable<PlacementRunState['current']>;
   const question = currentQuestion(state) as AssessmentQuestion;
@@ -313,7 +319,7 @@ const record = (
     ...state,
     responses: [...state.responses, response],
     tags: { ...state.tags, [question.id]: question.tags },
-    notSureStreak: outcome === 'skipped' ? state.notSureStreak + 1 : 0,
+    notSureStreak: noSound ? state.notSureStreak : outcome === 'skipped' ? state.notSureStreak + 1 : 0,
     lastTouchMs: nowMs,
     shownAtMs: nowMs,
   };
@@ -383,7 +389,7 @@ export const apply = (state: PlacementRunState, event: PlacementEvent, nowMs: nu
 
   // answer | notSure
   if (state.pause !== null) return state;
-  if (event.type === 'notSure') return record(state, 'skipped', null, false, nowMs);
+  if (event.type === 'notSure') return record(state, 'skipped', null, false, nowMs, event.cause === 'no-sound');
   const question = currentQuestion(state) as AssessmentQuestion;
   const chosen = question.options.find((o) => o.id === event.optionId);
   if (chosen === undefined) throw new Error(`option ${event.optionId} is not an option of question ${question.id}`);
