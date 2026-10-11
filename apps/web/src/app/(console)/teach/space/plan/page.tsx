@@ -4,7 +4,7 @@ import { colors, radii, spacing, typography } from '@hangul-route/design-system/
 import type { CurriculumMeta, PlanItem } from '@hangul-route/content-schema';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Suspense, useCallback, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { Button, ConsoleShell, Field, Muted, Notice, panelStyle } from '@/components/console/ui';
 import { useConsole } from '@/components/console/use-console';
 import { PlanDraftItems, PlanReadout } from '@/components/console/PlanParts';
@@ -12,6 +12,7 @@ import { PlanSwitcher, RouteDraftItems, RouteReadout } from '@/components/consol
 import { builderEpisodes, questsOf } from '@/data/catalog';
 import type { PlanView, Roster } from '@/lib/console/api';
 import { type RepaceResult, repaceSaveBody, reweek, selectedPlan, swapRouteItems, withTargetDate } from '@/lib/console/curriculum';
+import { suggestFrom, suggestionFor } from '@/lib/console/placement';
 import { type PlanError, dateKey, memberKind, moveItem, oneExplicitPerDay, planErrorText, planEveryone, planReadout, spreadDates } from '@/lib/console/plans';
 import { relativeDay } from '@/lib/console/rollup';
 import { ROUTES, spaceIdFrom } from '@/lib/console/routing';
@@ -50,12 +51,21 @@ function PlanInner(): JSX.Element {
   const [busy, setBusy] = useState(false);
   const [start, setStart] = useState(dateKey(new Date()));
   const [perWeek, setPerWeek] = useState(2);
+  // `?suggest=<learner>` from the roster (F-PLC-001 section 3.9): a one-quest draft for that learner, applied once.
+  const suggestId = suggestFrom(params);
+  const suggestionUsed = useRef(false);
+  // The learner the open draft was suggested for; a key, so the notice follows the header language select.
+  const [suggestedFor, setSuggestedFor] = useState<string | null>(null);
+  // Read by `load` without making a language switch reload (and replace) the open draft.
+  const localeRef = useRef(locale);
+  localeRef.current = locale;
   const now = new Date();
 
   /** Replace the draft with a stored plan (not an edit). */
   const openDraft = (next: Draft): void => {
     setDraftState(next);
     setDirty(false);
+    setSuggestedFor(null);
   };
   /** An edit in the builder. */
   const setDraft = (update: (d: Draft) => Draft): void => {
@@ -73,6 +83,16 @@ function PlanInner(): JSX.Element {
     }
     setRoster(rosterRes.data);
     setPlans(plansRes.data);
+    const suggestion = suggestionUsed.current ? null : suggestionFor(rosterRes.data.learners, suggestId, localeRef.current);
+    if (suggestion) {
+      // An unsaved new draft: an ordinary plan for this learner only, never a change to their check or progress.
+      suggestionUsed.current = true;
+      setDraftState({ title: suggestion.draft.title, items: suggestion.draft.items, targets: suggestion.draft.targets, meta: null });
+      setDirty(true);
+      setEditing(true);
+      setSuggestedFor(suggestId);
+      return;
+    }
     const current = selectedPlan(plansRes.data, selectedId);
     if (current && !current.publishedAt) {
       openDraft(draftOf(current));
@@ -80,7 +100,7 @@ function PlanInner(): JSX.Element {
     } else if (!current) {
       setEditing(true);
     }
-  }, [api, spaceId, selectedId]);
+  }, [api, spaceId, selectedId, suggestId]);
 
   useEffect(() => {
     void load();
@@ -180,6 +200,7 @@ function PlanInner(): JSX.Element {
   };
 
   const readout = current?.publishedAt && !editing ? planReadout(current.id, learners) : null;
+  const suggestNotice = suggestedFor ? (suggestionFor(learners, suggestedFor, locale)?.notice ?? null) : null;
 
   return (
     <ConsoleShell onSignOut={signOut} title={roster ? p.titleFor(roster.space.name) : p.title}>
@@ -226,6 +247,7 @@ function PlanInner(): JSX.Element {
       ) : (
         <section aria-label={p.builderLabel}>
           <h1 style={{ fontSize: typography.size.title, margin: `0 0 ${spacing.sm}px` }}>{draft.id ? p.editTitle : p.newTitle}</h1>
+          {suggestNotice ? <Notice>{suggestNotice}</Notice> : null}
           {plans && plans.length === 0 ? (
             <Notice>
               {c.noPlanYet}{' '}

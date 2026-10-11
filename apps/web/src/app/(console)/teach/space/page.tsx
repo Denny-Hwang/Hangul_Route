@@ -7,6 +7,7 @@ import { Suspense, useCallback, useEffect, useState } from 'react';
 import { Button, ConsoleShell, Muted, Notice, panelStyle } from '@/components/console/ui';
 import { AvatarChip } from '@/components/AvatarChip';
 import { SchoolAdmin } from '@/components/console/SchoolAdmin';
+import { StartingSpot } from '@/components/console/PlacementParts';
 import { useConsole } from '@/components/console/use-console';
 import type { PlanView, Roster } from '@/lib/console/api';
 import { levelPillLabel } from '@/lib/console/level-label';
@@ -165,6 +166,7 @@ function SpaceInner(): JSX.Element {
                     {l.summary ? (
                       <div style={{ color: colors.text.secondary, fontSize: typography.size.bodySm, marginTop: spacing.xs, lineHeight: typography.leading.relaxed }}>
                         <div>{c.space.learner.lastActive(relativeDay(l.summary.lastActiveAt, now, locale))}</div>
+                        <StartingSpot summary={l.summary} spaceId={spaceId} learnerId={l.id} />
                         <div>{c.space.learner.questsCards(l.summary.stage1.questsDone, l.summary.stage1.questsTotal, l.summary.cardsUnlocked)}</div>
                         <div>{c.space.learner.minutesThisWeek(l.summary.minutesLast7d)}</div>
                         {l.summary.needsPractice.length ? (
