@@ -5,6 +5,7 @@ import { episodesAll, gridEpisodes, questsAll, themes } from '../../content';
 import { storyQuests } from '../../content/stories';
 import {
   gridQuestProgress,
+  isCellComplete,
   isEpisodeComplete,
   stageAvailability,
   stagePillLabel,
@@ -12,10 +13,16 @@ import {
   themeColumnLabel,
 } from '../journey';
 
-const ep = (id: string, stage: Episode['stage'], status: Episode['status'], questIds = ['q1']): Episode => ({
+const ep = (
+  id: string,
+  stage: Episode['stage'],
+  status: Episode['status'],
+  questIds = ['q1'],
+  theme: Episode['theme'] = 'letters',
+): Episode => ({
   id,
   stage,
-  theme: 'letters',
+  theme,
   order: 1,
   titleEn: id,
   hoyaIntroEn: 'hi',
@@ -29,9 +36,9 @@ describe('stageAvailability', () => {
   it('open when every cell is shipped, taste when some, soon when none', () => {
     const eps = [
       ep('a', 'stage1', 'shipped'),
-      ep('b', 'stage1', 'shipped'),
+      ep('b', 'stage1', 'shipped', ['q1'], 'life'),
       ep('c', 'stage2', 'shipped'),
-      ep('d', 'stage2', 'preview'),
+      ep('d', 'stage2', 'preview', ['q1'], 'life'),
       ep('e', 'stage3', 'preview'),
     ];
     expect(stageAvailability('stage1', eps)).toBe('open');
@@ -40,11 +47,19 @@ describe('stageAvailability', () => {
     expect(stageAvailability('stage7', eps)).toBe('soon');
   });
   it('is unchanged by shelf episodes once the grid selector runs (F-STORY-004 §3.10)', () => {
-    const cells = [ep('a', 'stage1', 'shipped'), ep('b', 'stage1', 'shipped')];
-    const shelf: Episode = { ...ep('shelf-tale', 'stage1', 'ready'), placement: 'shelf', format: 'story' };
+    const cells = [ep('a', 'stage1', 'shipped'), ep('b', 'stage1', 'shipped', ['q1'], 'life')];
+    const shelf: Episode = { ...ep('shelf-tale', 'stage1', 'ready', ['q1'], 'crafts'), placement: 'shelf', format: 'story' };
     expect(stageAvailability('stage1', [...cells, shelf])).toBe('taste');
     expect(stageAvailability('stage1', gridEpisodes([...cells, shelf]))).toBe('open');
     expect(stageAvailability('stage3', gridEpisodes([{ ...ep('shelf-x', 'stage3', 'shipped'), placement: 'shelf' }]))).toBe('soon');
+  });
+  it('counts cells, not episodes: two episodes in one cell are one cell (F-STORY-005 §3.5)', () => {
+    const lesson = ep('lesson', 'stage5', 'shipped');
+    const volume2 = { ...ep('volume-2', 'stage5', 'preview'), volume: 2 };
+    expect(stageAvailability('stage5', [lesson, volume2])).toBe('open');
+    expect(stageAvailability('stage5', [volume2, lesson])).toBe('open');
+    expect(stageAvailability('stage5', [lesson, volume2, ep('other', 'stage5', 'preview', ['q1'], 'life')])).toBe('taste');
+    expect(stageAvailability('stage5', [volume2, { ...volume2, id: 'volume-3', volume: 3 }])).toBe('soon');
   });
   it('matches the real bundle: stage1 open, stage2/4 taste, others soon', () => {
     expect(stageAvailability('stage1', episodesAll)).toBe('open');
@@ -141,4 +156,33 @@ describe('gridQuestProgress (F-STORY-004 §3.10, behaviour #9: the Home quest to
       gridQuestProgress([listsMissing], [{ id: 'q1' }], [done('q1'), done('q-missing')]),
     ).toEqual({ completed: 1, total: 1 });
   });
+});
+
+describe('isCellComplete (F-STORY-005 §3.5)', () => {
+  const done = (episodeId: string, questId: string) => ({ questId, episodeId, completedAt: '2026-10-01T00:00:00Z' });
+  const one = ep('one', 'stage5', 'shipped', ['q1', 'q2']);
+  const two = { ...ep('two', 'stage5', 'shipped', ['q3']), volume: 2 };
+
+  it('equals isEpisodeComplete while a cell holds one episode', () => {
+    const partial = [done('one', 'q1')];
+    const full = [done('one', 'q1'), done('one', 'q2')];
+    expect(isCellComplete([one], partial)).toBe(isEpisodeComplete(one, partial));
+    expect(isCellComplete([one], full)).toBe(isEpisodeComplete(one, full));
+    expect(isCellComplete([one], full)).toBe(true);
+  });
+
+  it('needs every episode of the cell complete', () => {
+    expect(isCellComplete([one, two], [done('one', 'q1'), done('one', 'q2')])).toBe(false);
+    expect(isCellComplete([one, two], [done('one', 'q1'), done('one', 'q2'), done('two', 'q3')])).toBe(true);
+  });
+
+  it('is false for an empty cell and for a preview cell', () => {
+    expect(isCellComplete([], [])).toBe(false);
+    expect(isCellComplete([ep('soon', 'stage6', 'preview', [])], [])).toBe(false);
+  });
+
+  // Before MAX_EPISODES_PER_CELL becomes 2 (PR 5.8): stage completion still counts
+  // grid episodes in awards/derive.ts `isStageComplete` and my-route/stage-rows.ts
+  // `isDerivedComplete`/`completionState`, while stageAvailability counts cells.
+  it.todo('a cell with a shipped volume 1 and a preview volume 2 still lets its stage complete (PR 5.8)');
 });
