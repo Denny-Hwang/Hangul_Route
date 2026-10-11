@@ -16,7 +16,8 @@ export const PLACEMENT_DIGIT_ALLOW_LIST = [
   'learner.placement.options.mode.deep.duration',
 ] as const;
 
-const HANGUL = /[ᄀ-ᇿ㄰-㆏가-힯]/;
+/** Hangul jamo, compatibility jamo and syllables (escaped, so this file holds no Hangul). */
+const HANGUL = /[\u1100-\u11FF\u3130-\u318F\uAC00-\uD7AF]/;
 const RATIO = /\d\s*\/\s*\d|\b\w+\s+\/\s+\w+\b/;
 /** No age, school year or "kids" in the mode labels and help lines. */
 export const AGE_WORDS = /\b(kids?|child(ren)?|young(er)?|ages?|years?|grade|school|toddlers?|teens?|adults?)\b/i;

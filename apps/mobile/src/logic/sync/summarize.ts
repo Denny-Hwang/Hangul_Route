@@ -62,7 +62,7 @@ export function placementSummaryOf(placements: readonly PlacementResult[] | unde
 }
 
 /**
- * The route's priority symbols as jamo (`sym:ㄹ/final` -> `ㄹ`), at most three.
+ * The route's priority symbols as jamo (a final key such as `sym:<jamo>/final` gives the jamo), at most three.
  * Priority tokens do not depend on the catalogue, so an empty one is enough.
  */
 function prioritySymbols(placements: readonly PlacementResult[] | undefined): string[] {
