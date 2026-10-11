@@ -645,6 +645,28 @@ export const consoleMsgs = {
       comingSoon: (title: string) => `${title} (coming soon)`,
     },
   },
+  /**
+   * The roster's level-check line and the advisory hand-off (F-PLC-001 section 3.9, wireframe
+   * placement K). Summary only: no class average, no distribution, no ranking. The band label
+   * comes from `learner.placement.band`, the same words the learner saw.
+   */
+  placement: {
+    startingSpot: (stage: number, band: string, date: string) => `Starting spot: Stage ${stage} · ${band} · ${date}`,
+    overridden: 'Changed by a grown-up',
+    suggest: {
+      cta: 'Suggest a different start',
+      /** The control's accessible name on a roster card: starts with the visible words, then the learner. */
+      label: (name: string) => `Suggest a different start for ${name}`,
+    },
+    /**
+     * The pre-filled plan title (at most 60 characters). It names no learner: a plan title is
+     * stored with the plan and outlives learner removal and roster aliases.
+     */
+    suggestTitle: 'A suggested next step',
+    /** The pre-filled item note (a plan item note holds at most 80 characters). */
+    suggestNote: 'Try this next',
+    suggestFor: (name: string) => `A suggestion for ${name}. It arrives as a plan and never changes ${name}'s level check or progress.`,
+  },
 
   /**
    * Lecture setup (`/teach/space/lecture`, `lecture.ts`, F-TCH-004 §3.11) and its entry points
