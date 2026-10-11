@@ -29,6 +29,7 @@
 | `story/check.md` · `story/word-recap.md` · `results/celebrate-story.md` | R | F-STORY-003 §3.4 · §3.6 · §3.7 (PR 3.0; brief `screens/22-story-check`, `components/choice-card`) |
 | `story/sequence.md` | S | F-STORY-003 §3.5 (Story Order v2 built in PR 3.5a; art in 3.5b; brief `screens/12-minigame-story-sequence` revised) |
 | `results/celebrate.md` | S | F-MOTION-003 |
+| `results/extra-cards.md` · `home/cards-catch-up.md` · `library/earn-hints.md` · `library/card-back-citation.md` | R | F-STORY-006 §3.3-3.8 (PR 6.0; engine and live path shipped in 6.2-6.4b, surfaces in 6.5a-6.7) |
 | `library/gallery.md` · `library/card-detail.md` | S | F-CARD-001/002/003 |
 | `library/stories.md` · `library/culture.md` · `story/culture-notes.md` | R | F-STORY-004 §3.3-3.5 (PR 4.0; briefs `screens/23-library-stories`, `screens/24-culture-notes`) |
 | `profile/settings.md` · `parent/gate.md` | S | F-SUB-001 · (gate 통합 대상) |

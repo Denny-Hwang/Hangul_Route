@@ -69,6 +69,7 @@ Hangul Route
 │   │    ├─ Story quest steps: story check (`story-check`) · word recap · Story Order v2 (`story-sequence`) → Results story extras [S/R] F-STORY-003
 │   │    └─ Minigame shell + 13 kinds (9 구현: 8 active + voice-echo beta)  06
 │   ├─ A6. Results & celebration (stars · card unlock)   [S] F-MOTION-003/004/005
+│   │    └─ Card award model: episode · stage · welcome · set · story 카드, Results extra cards, Today 의 1회 catch-up 카드, Library earn hints, story 카드 뒷면 출처 [S 엔진 / R 화면] F-STORY-006
 │   ├─ A7. Library (Heritage cards 42 = 30 Stage 1 + 12 taste · detail · share) [S] F-CARD-001/002/003
 │   │    ├─ Sections: Cards · Story Time · Culture (`SectionTabs`, 이야기가 있을 때만) · Picked for you · 고정 순서 선반 [R] F-STORY-004 §3.3-3.4
 │   │    └─ Culture notes (찾은 노트만, 테마별) · story episode page (Start · Keep reading · Read it again) [R] F-STORY-004 §3.5-3.6
@@ -150,6 +151,7 @@ Hangul Route
 | `home/todays-mission` (alias `home/home`) | Main/Home | 오늘 할 3가지 | S | F-HW-001 | ✓ |
 | `home/story-time-card` | Main/Home (mission card ①/③) | 읽던 이야기 이어 읽기 · 다음 이야기 · 다시 읽기 — 하루 고정, 이야기 없으면 explore 카드 | S | F-STORY-004 §3.7 | ✓ |
 | `homework/list` | Homework | 배정된 숙제 큐 | S | F-HW-001 | NEW |
+| `home/cards-catch-up` | Main/Home (인사말 아래 1회) | "Hoya found N cards you already earned!" — 세션당 1회, 타이머·남은 개수 없음 | R | F-STORY-006 §3.5 | ✓ |
 | `journey/grid` | Main/Journey | 격자에서 에피소드 고르기 | S | 02 §1, 04 | NEW |
 | `journey/grid-with-stories` | Main/Journey | 이야기가 있는 셀 표시 (count mark · stories-only 셀) — PIN 없음, 스테이지 pill 불변 | R | F-STORY-005 §3.6 | ✓ |
 | `story/cell-stories` | CellStories | 한 셀의 이야기 선반 (그 셀의 lesson 이 먼저) — 남은 개수·순위·타이머 없음 | R | F-STORY-005 §3.6 | ✓ |
@@ -167,6 +169,9 @@ Hangul Route
 | `story/sequence` | Minigame (`story-sequence`) | 그림 카드를 순서대로 슬롯에 — 시작 순서는 절대 정답 아님, 다 채우면 다시 보기 | S | F-STORY-003 §3.5 | ✓ |
 | `results/celebrate-story` | (Results 의 story 변형) | 이야기 제목 · 문화 노트 링크 · Next story / Read it again — 숫자·비율 없음 | R | F-STORY-003 §3.7 | ✓ |
 | `results/celebrate` | Results | 별 + 카드 언락 + 다음 행동 1개 | S | F-MOTION-003 | NEW |
+| `results/extra-cards` | (Results 의 배너) | 에피소드·스테이지·세트를 끝낸 그 런에서만 "N more cards joined your Library!" + 썸네일 | R | F-STORY-006 §3.3, §3.7 | ✓ |
+| `library/earn-hints` | Main/Library (Cards) · CardDetail | 잠긴 카드마다 얻는 방법 1-2줄 · New pill · 정직한 explainer · N/M pill 없음 | R | F-STORY-006 §3.7 | ✓ |
+| `library/card-back-citation` | CardDetail (뒷면) | 이야기 카드 뒷면: 검증된 사실 원문 + 출처 한 줄 (링크 없음) | R | F-STORY-006 §3.8 | ✓ |
 | `library/gallery` | Main/Library | 모은 카드 보기 | S | F-CARD-001 | NEW |
 | `library/card-detail` | CardDetail (modal) | 카드 앞/뒤 + 공유 | S | F-CARD-002/003 | NEW |
 | `library/stories` | Main/Library `{ section: 'story-time' }` | Picked for you + 고정 순서 이야기 선반 (진도로 재정렬 안 함) | R | F-STORY-004 §3.3-3.4 | ✓ |
@@ -268,6 +273,8 @@ profile/settings ─┬─▶ sync/save-progress (Rescue Code)
                   └─▶ console/account  (parent-gated)
 onboarding/welcome ─▶ sync/restore ("I already have progress") ─┬─▶ profiles/picker
                                                                 └─▶ sync/merge-notice (로컬 진도 있을 때)
+(앱 업데이트 후 첫 세션, reconcile 이 카드를 더했을 때) home/todays-mission ─▶ home/cards-catch-up ─▶ library/earn-hints (New pill)
+results/celebrate (에피소드·스테이지·세트 완료 런) ─▶ results/extra-cards ─▶ library/card-detail (뒷면: library/card-back-citation)
 journey/grid (잠긴 Stage 셀) ─▶ paywall/upgrade (parent-gated)
 journey/grid-with-stories ─┬─ (lesson 셀) ─▶ episode/detail ─▶ episode/detail-cell-stories-row ─▶ story/cell-stories
                            └─ (stories-only 셀) ─▶ story/cell-stories ─▶ episode/detail-story ─▶ quest/player
