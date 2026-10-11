@@ -1,6 +1,7 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { keepSidewaysIfAsked, onboardChild, openGrownUpZone, readStored, seedStored, waitForSaved } from './helpers';
+import { shot, shotsEnabled } from './shots';
 
 /**
  * Tablet / desktop web shell (F-LAYOUT-001 §3.3, PR 2a): the window is the
@@ -804,3 +805,32 @@ test('the queued update bar shows once a tab screen is open at 390x844', async (
   await expect(page.getByRole('button', { name: 'Refresh' })).toBeVisible();
 });
 
+
+// --- Screenshots for the pull request (§5; not a test gate) ---
+// Home, Journey and Library of a learner with three cards, at a phone, an upright tablet and a wide window.
+// Skipped unless HR_SHOTS=1; the PNGs land in e2e/web/__shots__/ (git-ignored).
+
+const SHOT_VIEWPORTS = [
+  { width: 375, height: 667 },
+  { width: 768, height: 1024 },
+  { width: 1180, height: 820 },
+] as const;
+
+for (const vp of SHOT_VIEWPORTS) {
+  test.describe(`screenshots at ${vp.width}x${vp.height}`, () => {
+    test.use({ viewport: { width: vp.width, height: vp.height } });
+    test.skip(!shotsEnabled(), 'screenshots only with HR_SHOTS=1');
+
+    test('Home, Journey and Library', async ({ page }) => {
+      const size = `${vp.width}x${vp.height}`;
+      await openLibrary(page);
+      await shot(page, `library-${size}`);
+      await tab(page, 'Today').click();
+      await expect(page.getByText('Today with Hoya')).toBeVisible();
+      await shot(page, `home-${size}`);
+      await tab(page, 'Journey').click();
+      await expect(page.getByRole('heading', { name: 'Heritage Journey' })).toBeVisible();
+      await shot(page, `journey-${size}`);
+    });
+  });
+}

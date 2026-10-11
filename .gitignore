@@ -58,3 +58,4 @@ apps/mobile/google-play-service-account.json
 # Playwright
 test-results/
 playwright-report/
+apps/mobile/e2e/web/__shots__/
