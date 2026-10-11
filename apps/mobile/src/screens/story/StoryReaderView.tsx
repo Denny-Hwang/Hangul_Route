@@ -16,7 +16,8 @@ import type { KoText, SpeechLang, Story, StoryLevel, StoryTier } from '@hangul-r
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AccessibilityInfo, Animated, Platform, ScrollView, View, type LayoutChangeEvent } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
-import { useMessages } from '../../i18n/use-messages';
+import { useLocale, useMessages } from '../../i18n/use-messages';
+import { checkHasKorean, checkOutcomeLine, uiSpeechLang } from '../../logic/story/check-game';
 import { romanizationShown } from '../../logic/story/romanization';
 import {
   KOREAN_BLOCK_ID,
@@ -31,6 +32,21 @@ import {
   wordId,
   type ReaderMode,
 } from '../../logic/story/reader-effects';
+import {
+  NO_CHECKPOINT_CARDS,
+  cardsAfterReader,
+  checkpointAnnouncement,
+  checkpointAnswered,
+  checkpointCard,
+  checkpointHeading,
+  checkpointItem,
+  checkpointNext,
+  checkpointRevealId,
+  checkpointSkip,
+  checkpointSpeech,
+  tapCheckpoint,
+  type CheckpointCards,
+} from '../../logic/story/reader-checkpoint';
 import { advisoryAfter, advisoryInPhase, advisoryNote, cultureNoteView, noteOpen, recapScenes } from '../../logic/story/reader-extras';
 import { effectiveReadToMe } from '../../logic/story/reader-settings';
 import { initReader, openEffects, reduceReader, type ReaderAction, type ReaderEffect, type ReaderState } from '../../logic/story/reader-state';
@@ -39,8 +55,10 @@ import type { PlaySpec } from '../../logic/audio/controller';
 import { buildSceneView, type SceneBlock } from '../../logic/story/scene-view';
 // Art may take at most this share of the body height when stacked, so the text always has room (shared with Story Order's replay).
 import { STACKED_ART_SHARE } from '../../logic/story/sequence-art';
+import { nudge, success, tapLight } from '../../platform/haptics';
 import { subscribeReaderKeys } from '../../platform/keys';
 import { useReducedMotion } from '../../platform/motion';
+import { focusForScreenReader } from '../../platform/screen-reader';
 import { track } from '../../platform/telemetry';
 import { useLocaleStore } from '../../store/locale-store';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
@@ -59,6 +77,7 @@ import {
   SpeakerButton,
   type TermChipState,
 } from './ReaderParts';
+import { CheckpointCard, type CheckpointFocusable } from './CheckpointCard';
 import { useReaderAudio } from './use-reader-audio';
 
 /**
@@ -78,7 +97,7 @@ export interface StoryReaderViewProps {
   initialIndex: number;
   /** Bookmark seam: called from the scene-changed effect in quest mode for scene 2 on. */
   onSceneChange: (index: number) => void;
-  /** Checkpoint rounds (`cp:<id>`), quest mode only (PR 2.9 draws the card). */
+  /** Checkpoint rounds (`cp:<id>`), quest mode only (the inline card, PR 2.9). */
   onAnswer: (roundKey: string, correct: boolean) => void;
   /** End page primary (Continue / Done) and the fallback's Continue (quest mode). */
   onFinish: () => void;
@@ -93,6 +112,11 @@ export interface StoryReaderViewProps {
   narrationLangs?: readonly SpeechLang[];
   /** "More in Culture notes" (F-STORY-004 PR 4.7, `CultureNotes { noteId }`); without it the button is not drawn. */
   onOpenCultureNote?: (noteId: string) => void;
+  /**
+   * The story before the locale overlay (PR 2.9): a checkpoint read aloud uses the UI voice only for text an
+   * overlay translated. Without it every checkpoint line is read as English.
+   */
+  sourceStory?: Story;
 }
 
 export function StoryReaderView(props: StoryReaderViewProps): React.ReactElement {
@@ -137,8 +161,10 @@ function ReaderBody({
   onOpenSources,
   narrationLangs,
   onOpenCultureNote,
+  sourceStory,
 }: StoryReaderViewProps & { story: Story; tier: StoryTier }): React.ReactElement {
   const m = useMessages();
+  const locale = useLocale();
   const copy = m.learner.story.reader;
   const lc = useLayoutClass();
   const reducedMotion = useReducedMotion();
@@ -162,9 +188,14 @@ function ReaderBody({
   const [helpOpen, setHelpOpen] = useState(false);
 
   const [state, setState] = useState<ReaderState>(() =>
-    initReader(tier.scenes.length, initialIndex, readerCheckpoints(tier, false)),
+    initReader(tier.scenes.length, initialIndex, readerCheckpoints(tier)),
   );
   const stateRef = useRef(state);
+  // One check state per checkpoint card for this visit: Back and Next reopen a card as it was left (§3.7).
+  const [cards, setCards] = useState<CheckpointCards>(NO_CHECKPOINT_CARDS);
+  const cardsRef = useRef(cards);
+  const checkpointRef = useRef<CheckpointFocusable | null>(null);
+  const nextRef = useRef<View | null>(null);
   // The voice of the narration shown in a scene (an overlay's, else English; §3.2).
   const sceneCtx = useCallback(
     (index: number) => ({ copy, narrationLang: narrationLangs?.[index] ?? ('en-US' as const) }),
@@ -175,6 +206,21 @@ function ReaderBody({
   const [advisory, setAdvisory] = useState<string | null>(() => advisoryNote(story, { mode, startIndex: state.index }));
   const note = useMemo(() => cultureNoteView(view?.cultureNote ?? null, supportedCardIds), [view]);
   const recap = useMemo(() => recapScenes(story, level), [story, level]);
+  // The open checkpoint card (§3.7, PR 2.9) and what its speakers say.
+  const checkCopy = m.learner.story.check;
+  const cpHeading = checkpointHeading(mode, copy);
+  const cpItem = useMemo(
+    () => (state.phase === 'checkpoint' ? checkpointItem(story, tier, state.checkpointId) : null),
+    [story, tier, state.phase, state.checkpointId],
+  );
+  const cpSpeech = useMemo(() => {
+    if (!cpItem) return null;
+    const source = sourceStory ?? story;
+    const sourceTier = source.tiers.find((t) => t.level === level);
+    const sourceItem = sourceTier ? checkpointItem(source, sourceTier, cpItem.checkId) ?? undefined : undefined;
+    return checkpointSpeech(cpItem, sourceItem, uiSpeechLang(locale));
+  }, [cpItem, sourceStory, story, level, locale]);
+  const justAnswered = useRef(false);
 
   // Mutable inputs the effect runner reads at call time.
   const live = useRef({ readToMe: readToMeOn, unlocked: audio.unlocked, mode, onSceneChange, onAnswer });
@@ -250,7 +296,14 @@ function ReaderBody({
 
   const dispatch = useCallback(
     (action: ReaderAction): ReaderState => {
+      const kept = cardsAfterReader(cardsRef.current, action);
+      if (kept !== cardsRef.current) {
+        cardsRef.current = kept;
+        setCards(kept);
+      }
       const step = reduceReader(stateRef.current, action);
+      // Leaving a checkpoint card (Back, Skip, Next): its question stops; a new scene may start its own sound.
+      if (stateRef.current.phase === 'checkpoint' && step.state.phase !== 'checkpoint') audioRef.current.stop();
       stateRef.current = step.state;
       setState(step.state);
       runEffects(step.effects);
@@ -316,6 +369,37 @@ function ReaderBody({
     setAdvisory((row) => advisoryInPhase(row, state.phase));
   }, [state.phase]);
 
+  // A checkpoint card opens: the scene's sound stops, the text starts at the top, the card is announced and
+  // takes focus (web), and Read to me reads the question once (§3.4, §3.7, §3.10).
+  const openedCheckpoint = state.phase === 'checkpoint' ? state.checkpointId : null;
+  const cpLive = useRef({ item: cpItem, speech: cpSpeech, heading: cpHeading });
+  cpLive.current = { item: cpItem, speech: cpSpeech, heading: cpHeading };
+  useEffect(() => {
+    if (openedCheckpoint === null) return;
+    const { item, speech, heading } = cpLive.current;
+    const a = audioRef.current;
+    a.resetForScene();
+    pendingAutoplay.current = null;
+    textScrollRef.current?.scrollTo({ y: 0, animated: false });
+    if (item) AccessibilityInfo.announceForAccessibility(checkpointAnnouncement(heading, item));
+    setTimeout(() => checkpointRef.current?.focus?.({ preventScroll: true }), 0);
+    if (speech && live.current.readToMe && a.unlocked) a.play(speech.question);
+  }, [openedCheckpoint]);
+
+  // The right card was tapped: focus moves to Next (its explanation is above), and native hears the outcome.
+  const cpAnsweredId = cpItem && checkpointAnswered(cards, cpItem) ? cpItem.checkId : null;
+  useEffect(() => {
+    if (cpAnsweredId === null || !justAnswered.current) return;
+    justAnswered.current = false;
+    focusForScreenReader(nextRef.current);
+    const item = cpLive.current.item;
+    if (Platform.OS !== 'web' && item) {
+      const line = checkOutcomeLine(item, checkpointCard(cardsRef.current, item), true, checkCopy);
+      if (Platform.OS === 'ios') AccessibilityInfo.announceForAccessibilityWithOptions(line, { queue: true });
+      else AccessibilityInfo.announceForAccessibility(line);
+    }
+  }, [cpAnsweredId, checkCopy]);
+
   // --- interactions ---------------------------------------------------------
 
   const shown = (id: string): boolean => romanizationShown(romanizationMode, state.revealed.includes(id));
@@ -363,6 +447,40 @@ function ReaderBody({
 
   const chip = (id: string): TermChipState => ({ romanizationShown: shown(id), open: state.openTerm === id });
 
+  // Checkpoint card: a miss is reported at once and the card stays; the right card waits for Next (§3.7).
+  const chooseOption = (optionId: string): void => {
+    if (!cpItem) return;
+    const tap = tapCheckpoint(cardsRef.current, cpItem, optionId);
+    if (tap.outcome === null) return;
+    cardsRef.current = tap.cards;
+    setCards(tap.cards);
+    if (tap.outcome === 'correct') {
+      tapLight();
+      success();
+      justAnswered.current = true;
+    } else {
+      nudge();
+      // The Hoya bubble is a polite live region on the web; native hears the outcome and the hint at once.
+      if (Platform.OS !== 'web') {
+        AccessibilityInfo.announceForAccessibility(checkOutcomeLine(cpItem, checkpointCard(tap.cards, cpItem), false, checkCopy));
+      }
+    }
+    if (tap.reader) dispatch(tap.reader);
+  };
+
+  const nextPage = (): void => {
+    if (state.phase !== 'checkpoint') {
+      dispatch({ type: 'next' });
+      return;
+    }
+    const action = cpItem ? checkpointNext(cardsRef.current, cpItem) : { type: 'skipCheckpoint' as const };
+    if (action) dispatch(action);
+  };
+
+  const skipCheckpointCard = (): void => {
+    dispatch(cpItem ? checkpointSkip(cardsRef.current, cpItem) : { type: 'skipCheckpoint' });
+  };
+
   // --- layout ----------------------------------------------------------------
 
   const [body, setBody] = useState({ width: 0, height: 0 });
@@ -380,6 +498,9 @@ function ReaderBody({
   if (!view) return <Screen tone="canvas">{null}</Screen>;
 
   const end = state.phase === 'end';
+  const atCheckpoint = state.phase === 'checkpoint';
+  // Side by side is for scenes: a checkpoint card and the end page use the one reading column.
+  const columns = side && state.phase === 'scene';
   // The grown-up note is drawn on the scene page only (never over a checkpoint or the end page).
   const advisoryRow = advisoryInPhase(advisory, state.phase);
   const sources = onOpenSources ? () => onOpenSources(end ? 'end' : 'reader', state.index) : undefined;
@@ -542,12 +663,63 @@ function ReaderBody({
       copy={copy}
       readToMe={readToMeOn}
       onReadToMe={changeReadToMe}
-      isFirst={view.isFirst}
+      // Back from a checkpoint card returns to its scene, even on scene 1.
+      isFirst={view.isFirst && !atCheckpoint}
       nextLabel={view.labels.next}
       nextSize={compactHeight ? 'lg' : 'hero'}
+      nextDisabled={atCheckpoint && cpItem !== null && !checkpointAnswered(cards, cpItem)}
+      nextRef={nextRef}
       onBack={() => dispatch({ type: 'back' })}
-      onNext={() => dispatch({ type: 'next' })}
+      onNext={nextPage}
     />
+  );
+
+  const hearQuestion = (): void => {
+    if (cpSpeech) audio.play([...cpSpeech.question, ...cpSpeech.options]);
+  };
+
+  const checkpointBody = (
+    <ScrollView
+      ref={textScrollRef}
+      style={{ flex: 1 }}
+      contentContainerStyle={{ paddingTop: spacing.xs, paddingBottom: spacing.md }}
+      keyboardShouldPersistTaps="handled"
+      testID="story-reader-scroll"
+    >
+      {cpItem ? (
+        <CheckpointCard
+          key={cpItem.checkId}
+          item={cpItem}
+          check={checkpointCard(cards, cpItem)}
+          heading={cpHeading}
+          checkCopy={checkCopy}
+          readerCopy={copy}
+          romanizationMode={romanizationMode}
+          revealed={state.revealed.includes(checkpointRevealId(cpItem.checkId))}
+          sayIt={sayItYourselfShown({ canPlayKorean: audio.canPlayKorean, reason, hasKorean: checkHasKorean(cpItem) })}
+          onHearQuestion={hearQuestion}
+          onHearTarget={() => {
+            if (cpSpeech?.target) audio.play([cpSpeech.target]);
+          }}
+          onReveal={() => dispatch({ type: 'reveal', id: checkpointRevealId(cpItem.checkId) })}
+          onChoose={chooseOption}
+          onSkip={skipCheckpointCard}
+          promptPanel={
+            audio.slot.view.textShown ? (
+              <PromptPanel
+                view={audio.slot.view}
+                onAction={(action) => audio.slot.act(action, hearQuestion)}
+                onHelp={() => setHelpOpen(true)}
+                testID="story-reader-checkpoint-prompt-panel"
+              />
+            ) : undefined
+          }
+          regionRef={(node) => {
+            checkpointRef.current = node;
+          }}
+        />
+      ) : null}
+    </ScrollView>
   );
 
   const endPage = (
@@ -572,8 +744,8 @@ function ReaderBody({
     <Screen
       tone="canvas"
       scrollable={false}
-      width={side ? 'full' : 'reading'}
-      footer={!end && !side ? bottomBar : undefined}
+      width={side && !atCheckpoint ? 'full' : 'reading'}
+      footer={!end && !columns ? bottomBar : undefined}
       testID="story-reader"
     >
       <ReaderTopBar
@@ -593,7 +765,7 @@ function ReaderBody({
           compact={compactHeight}
         />
       ) : null}
-      {side && !end ? (
+      {columns ? (
         // Side by side: the art and the text fade on a page turn; the controls under the text stay put (§3.10).
         <View testID="story-reader-body" style={{ flex: 1, marginTop: spacing.sm }} onLayout={onBodyLayout}>
           <View style={{ flex: 1, flexDirection: 'row', gap: spacing.xl }} testID="story-reader-columns">
@@ -618,6 +790,8 @@ function ReaderBody({
         <Animated.View testID="story-reader-body" style={{ flex: 1, opacity: fade, marginTop: spacing.sm }} onLayout={onBodyLayout}>
           {end ? (
             endPage
+          ) : atCheckpoint ? (
+            checkpointBody
           ) : (
             <View style={{ flex: 1, gap: spacing.md }}>
               {art}

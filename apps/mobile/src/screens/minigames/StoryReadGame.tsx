@@ -22,7 +22,7 @@ interface Props {
  * design/wireframes/story/reader.md; component spec
  * design/components/StoryReaderView/spec.md). The same reader as the replay
  * route, in quest mode: it opens on the learner's bookmark, saves one on each
- * scene change from scene 2 on, reports checkpoint rounds (PR 2.9) to the
+ * scene change from scene 2 on, reports checkpoint rounds (the inline card, PR 2.9) to the
  * quest run, and its end-page Continue completes the step. Reading itself
  * scores nothing. The rules are in `logic/story/read-game.ts`.
  */
@@ -55,6 +55,7 @@ export function StoryReadGame({ scope, onFinish, onBack }: Props): React.ReactEl
       onFinish={handlers.onFinish}
       onClose={handlers.onClose}
       narrationLangs={narrationLangs}
+      sourceStory={source}
     />
   );
 }
