@@ -219,3 +219,16 @@ export function buildSceneView(
     },
   };
 }
+
+/**
+ * The art of a story's cover scene (`coverSceneId`, in whichever tier holds it),
+ * drawn as the 48 dp thumbnail of the Home story card (F-STORY-004 §3.7). Null
+ * when that scene has no art yet: the card then keeps its icon.
+ */
+export function storyCoverArt(story: Pick<Story, 'coverSceneId' | 'tiers'>): SceneArt | null {
+  for (const tier of story.tiers) {
+    const scene = tier.scenes.find((s) => s.id === story.coverSceneId);
+    if (scene) return scene.art ?? null;
+  }
+  return null;
+}

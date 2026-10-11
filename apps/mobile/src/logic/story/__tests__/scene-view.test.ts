@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { parseStory, type Story } from '@hangul-route/content-schema';
 import { getMessages, pseudoLocalize } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
-import { buildSceneView, isTraditionalTale, sceneCaption } from '../scene-view';
+import { buildSceneView, isTraditionalTale, sceneCaption, storyCoverArt } from '../scene-view';
 import { readyStory } from './story-fixture';
 
 const HANGUL = /[ㄱ-㆏가-힣]/;
@@ -313,5 +313,27 @@ describe('every story in the repo: no Hangul outside a keyword token (§3.5)', (
       }
     }
     expect(scenes).toBeGreaterThanOrEqual(182);
+  });
+});
+
+describe('storyCoverArt (the Home card thumbnail, F-STORY-004 §3.7)', () => {
+  it('is the art of the cover scene', () => {
+    const story = readyStory();
+    const cover = story.tiers.flatMap((t) => t.scenes).find((s) => s.id === story.coverSceneId)!;
+    expect(cover.art).toBeDefined();
+    expect(storyCoverArt(story)).toEqual(cover.art);
+  });
+
+  it('is null when the cover scene has no art yet (the card keeps its icon)', () => {
+    const story = readyStory();
+    const tiers = story.tiers.map((t) => ({
+      ...t,
+      scenes: t.scenes.map((s) => (s.id === story.coverSceneId ? { ...s, art: undefined, artPending: true } : s)),
+    }));
+    expect(storyCoverArt({ ...story, tiers })).toBeNull();
+  });
+
+  it('is null when no tier holds the cover scene', () => {
+    expect(storyCoverArt({ ...readyStory(), coverSceneId: 's99' })).toBeNull();
   });
 });

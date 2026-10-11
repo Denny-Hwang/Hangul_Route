@@ -56,9 +56,12 @@ export function localizeTitle<T extends { titleEn: string }>(item: T, entityId: 
   return titleEn === item.titleEn ? item : { ...item, titleEn };
 }
 
-/** A mission card's title from its quest (replay, new, assigned), else its episode (story); the daily test names itself. */
+/**
+ * A mission card's title from its story (a story card, F-STORY-004 §3.7), else its quest
+ * (replay, new, assigned), else its episode (explore); the daily test names itself.
+ */
 export function localizeMissionCard(card: MissionCard, locale: UiLocale, overlays?: Overlays): MissionCard {
-  const entityId = card.questId ?? card.episodeId;
+  const entityId = card.storyId ?? card.questId ?? card.episodeId;
   const { titleEn } = card;
   if (titleEn === null || entityId === undefined) return card;
   const localized = localizeTitle({ titleEn }, entityId, locale, overlays).titleEn;
