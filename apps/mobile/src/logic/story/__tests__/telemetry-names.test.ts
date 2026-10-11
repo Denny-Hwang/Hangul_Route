@@ -9,3 +9,12 @@ describe('story reader telemetry names', () => {
     expect(isTelemetryEventName(name)).toBe(true);
   });
 });
+
+// F-STORY-003 §3.9 / PR 3.4a: the check step's two names shipped with PR 3.1, so the Worker that
+// is live already accepts them (Worker first; an unknown name would answer 422 and be dropped).
+describe('story check telemetry names', () => {
+  it.each(['story.check.answered', 'story.check.finished'])('%s is whitelisted', (name) => {
+    expect(TELEMETRY_EVENT_NAMES).toContain(name);
+    expect(isTelemetryEventName(name)).toBe(true);
+  });
+});

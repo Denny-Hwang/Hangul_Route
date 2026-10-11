@@ -31,6 +31,7 @@ Run these once at the start. Everything else inherits.
 | P2-2 | [`illustrations/heritage-card-art.md`](./illustrations/heritage-card-art.md#7-claude-design-prompt--individual-card-template) | Single Heritage card (template — run 30×) | `design/illustrations/heritage-cards/{theme}/{card-id}__YYYY-MM-DD.png` |
 | P2-3 | [`illustrations/scene-backgrounds.md`](./illustrations/scene-backgrounds.md#6-claude-design-prompt--hanji-texture-pack) | Hanji texture pack (6 backgrounds) | `design/illustrations/backgrounds/_texture-pack__v1__YYYY-MM-DD.png` |
 | P2-4 | [`illustrations/scene-backgrounds.md`](./illustrations/scene-backgrounds.md#7-claude-design-prompt--stage-entry-tint-parameterized) | Tinted stage background (parameterized — run 7×) | `design/illustrations/backgrounds/bg-stage-{N}__v1__YYYY-MM-DD.png` |
+| P2-5 | [`illustrations/scene-art-style.md`](./illustrations/scene-art-style.md#6-prompt-compose-one-scene-with-claude-code) | Story scene art: compose one scene from the kit (F-STORY-002 §3.9; run per scene, Claude Code) | scene `art` layers in `content/stories/<id>.json`, reviewed on `/design-preview/scenes` |
 
 ## Phase 3 — Design system components
 
@@ -45,7 +46,9 @@ Run these once at the start. Everything else inherits.
 | P3-7 | [`components/pill.md`](./components/pill.md#5-claude-design-prompt) | Pill 6 tones × 2 sizes | `design/components/Pill/variants__v1__YYYY-MM-DD.png` |
 | P3-8 | [`components/heading.md`](./components/heading.md#6-claude-design-prompt) | Typography sheet (Heading / Body / Caption) | `design/components/Heading/type-sheet__v1__YYYY-MM-DD.png` |
 | P3-9 | [`components/screen.md`](./components/screen.md#5-claude-design-prompt) | Screen container 3-tone demo | `design/components/Screen/variants__v1__YYYY-MM-DD.png` |
+| P3-12 | [`components/choice-card.md`](./components/choice-card.md#4-claude-design-prompt) | ChoiceCard 5 states × 3 contents matrix (F-STORY-003) | `design/components/ChoiceCard/matrix__v1__YYYY-MM-DD.png` |
 | P3-10 | [`components/icon-set.md`](./components/icon-set.md#5-claude-design-prompt) | Icon set 19 glyphs | `design/components/Icon/set__v1__YYYY-MM-DD.png` |
+| P3-11 | [`components/story-scene.md`](./components/story-scene.md#5-claude-design-prompt) | StoryScene reference sheet (full + thumb, fallback panel) (F-STORY-002) | `design/components/StoryScene/reference__v1__YYYY-MM-DD.png` |
 | — | [`components/spacer.md`](./components/spacer.md) | (invisible — no prompt) | — |
 
 ## Phase 4 — Screens
@@ -64,6 +67,7 @@ Run these once at the start. Everything else inherits.
 |---|---|---|---|
 | P4-04 | [`screens/04-home-today.md`](./screens/04-home-today.md#5-claude-design-prompt) | Home / Today | `design/screens/home/today__v1__YYYY-MM-DD.png` |
 | P4-05 | [`screens/05-journey-grid.md`](./screens/05-journey-grid.md#5-claude-design-prompt) | Journey grid (7×5) | `design/screens/journey/grid__v1__YYYY-MM-DD.png` |
+| P4-27 | [`screens/27-cell-stories.md`](./screens/27-cell-stories.md#6-claude-design-prompt) | Cell page: stories-only cell, lesson cell, tablet (F-STORY-005; story cells on the grid in §8 of 05 and 06) | `design/screens/story/cell-stories__v1__YYYY-MM-DD.png` |
 | P4-15 | [`screens/15-library-overview.md`](./screens/15-library-overview.md#5-claude-design-prompt) | Heritage Library overview | `design/screens/library/overview__v1__YYYY-MM-DD.png` |
 | P4-17 | [`screens/17-homework.md`](./screens/17-homework.md#5-claude-design-prompt) | Homework (due + empty) | `design/screens/homework/due__v1__YYYY-MM-DD.png` + `empty` |
 | P4-18 | [`screens/18-profile-switcher.md`](./screens/18-profile-switcher.md#5-claude-design-prompt) | Profile switcher (Me tab) | `design/screens/profile/switcher__v1__YYYY-MM-DD.png` |
@@ -75,6 +79,8 @@ Run these once at the start. Everything else inherits.
 | P4-06 | [`screens/06-episode-detail.md`](./screens/06-episode-detail.md#5-claude-design-prompt) | Episode detail | `design/screens/episode/detail__v1__YYYY-MM-DD.png` |
 | P4-07 | [`screens/07-quest-player.md`](./screens/07-quest-player.md#5-claude-design-prompt) | Quest player narrative + reward variants | `design/screens/quest/player-narrative__v1__YYYY-MM-DD.png` + `player-reward` |
 | P4-14 | [`screens/14-results.md`](./screens/14-results.md#5-claude-design-prompt) | Results (3-star + 1-star) | `design/screens/results/3-stars__v1__YYYY-MM-DD.png` + `1-star` |
+| P4-21 | [`screens/21-story-reader.md`](./screens/21-story-reader.md#6-claude-design-prompt) | Story reader (Listen, gloss card, Read-along, end page, landscape) (F-STORY-002) | `design/screens/story/reader__v1__YYYY-MM-DD.png` |
+| P4-26 | [`screens/26-story-sources.md`](./screens/26-story-sources.md#6-claude-design-prompt) | Story Sources (top, highlighted fact + link failure, wide) (F-STORY-002) | `design/screens/story/sources__v1__YYYY-MM-DD.png` |
 
 ### Minigames (6)
 
@@ -84,16 +90,20 @@ Run these once at the start. Everything else inherits.
 | P4-09 | [`screens/09-minigame-build-letter.md`](./screens/09-minigame-build-letter.md#5-claude-design-prompt) | Build a Letter | `design/screens/minigames/build-letter__v1__YYYY-MM-DD.png` |
 | P4-10 | [`screens/10-minigame-trace-stroke.md`](./screens/10-minigame-trace-stroke.md#5-claude-design-prompt) | Trace Stroke | `design/screens/minigames/trace-stroke__v1__YYYY-MM-DD.png` |
 | P4-11 | [`screens/11-minigame-card-match.md`](./screens/11-minigame-card-match.md#5-claude-design-prompt) | Card Match | `design/screens/minigames/card-match__v1__YYYY-MM-DD.png` |
-| P4-12 | [`screens/12-minigame-story-sequence.md`](./screens/12-minigame-story-sequence.md#5-claude-design-prompt) | Story Sequence | `design/screens/minigames/story-sequence__v1__YYYY-MM-DD.png` |
+| P4-12 | [`screens/12-minigame-story-sequence.md`](./screens/12-minigame-story-sequence.md#5-claude-design-prompt) | Story Order v2 (ordering, wrong, hint, replay) (F-STORY-003) | `design/screens/minigames/story-sequence__v2__YYYY-MM-DD.png` |
 | P4-13 | [`screens/13-minigame-voice-echo.md`](./screens/13-minigame-voice-echo.md#5-claude-design-prompt) | Voice Echo (TTS honor system) | `design/screens/minigames/voice-echo__v1__YYYY-MM-DD.png` |
+| P4-22 | [`screens/22-story-check.md`](./screens/22-story-check.md#6-claude-design-prompt) | Story check, word recap and Results story extras (F-STORY-003) | `design/screens/story/check__v1__YYYY-MM-DD.png` + `design/screens/results/celebrate-story__v1__YYYY-MM-DD.png` |
 
 ### Library / Card detail / Parent (4)
 
 | # | Brief | Artifact | Output path |
 |---|---|---|---|
 | P4-16 | [`screens/16-card-detail.md`](./screens/16-card-detail.md#5-claude-design-prompt) | Card detail (unlocked + locked) | `design/screens/library/card-detail-unlocked__v1__YYYY-MM-DD.png` + `locked` |
+| P4-25 | [`screens/25-story-episode-detail.md`](./screens/25-story-episode-detail.md#6-claude-design-prompt) | Story episode page (new, in progress, finished) (F-STORY-004) | `design/screens/episode/detail-story__v1__YYYY-MM-DD.png` |
 | P4-19 | [`screens/19-parent-gate.md`](./screens/19-parent-gate.md#5-claude-design-prompt) | Parent gate (math) | `design/screens/parent/gate__v1__YYYY-MM-DD.png` |
 | P4-20 | [`screens/20-parent-dashboard.md`](./screens/20-parent-dashboard.md#5-claude-design-prompt) | Parent dashboard (mobile) | `design/screens/parent/dashboard-mobile__v1__YYYY-MM-DD.png` |
+| P4-23 | [`screens/23-library-stories.md`](./screens/23-library-stories.md#6-claude-design-prompt) | Library Story Time section (F-STORY-004) | `design/screens/library/stories__v1__YYYY-MM-DD.png` |
+| P4-24 | [`screens/24-culture-notes.md`](./screens/24-culture-notes.md#6-claude-design-prompt) | Culture notes (list, sources open, empty) (F-STORY-004) | `design/screens/story/culture-notes__v1__YYYY-MM-DD.png` |
 
 ## Phase 5 — Launch & store assets
 

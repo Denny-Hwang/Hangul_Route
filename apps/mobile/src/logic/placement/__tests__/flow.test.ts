@@ -11,6 +11,7 @@ import {
   defaultMode,
   flowReducer,
   controlsFor,
+  hasScoredAnswer,
   idleTimeoutMs,
   languageTiles,
   pauseSheet,
@@ -428,7 +429,6 @@ describe('runConfig', () => {
   const ctx = {
     profileId: 'p1',
     startedAtMs: 1_000,
-    screenReader: false,
     koreanAudio: true,
     exclude: ['pitem:old'],
     resolvesPicture: () => true,
@@ -456,8 +456,9 @@ describe('runConfig', () => {
     const s = run(ready({}, { type: 'setRevealMode', revealMode: 'always' }), { type: 'warmupAudio', result: 'played' });
     expect(runConfig(s, ctx).revealMode).toBe('always');
     expect(runConfig(s, { ...ctx, koreanAudio: false }).audio).toBe(false);
-    expect(runConfig(s, { ...ctx, screenReader: true }).visual).toBe(false);
-    expect(runConfig(s, { ...ctx, screenReader: true }).skipGates).toBeUndefined();
+    const reading = run(s, { type: 'setScreenReader', on: true });
+    expect(runConfig(reading, ctx).visual).toBe(false);
+    expect(runConfig(reading, ctx).skipGates).toBeUndefined();
     expect(runConfig(ready({}, { type: 'setRevealMode', revealMode: 'tap' }), ctx).audio).toBe(false);
   });
 
@@ -469,7 +470,7 @@ describe('runConfig', () => {
       { type: 'next' },
     );
     expect(ko.testLocale).toBe('ko');
-    expect(runConfig(ko, { ...ctx, screenReader: true }).skipGates).toEqual(['vocab', 'sentence']);
+    expect(runConfig(run(ko, { type: 'setScreenReader', on: true }), ctx).skipGates).toEqual(['vocab', 'sentence']);
     expect(runConfig(ko, ctx).skipGates).toBeUndefined();
   });
 
@@ -506,6 +507,19 @@ describe('the item gate (section 3.1 step 5, Short layout)', () => {
     expect(choicesEnabled({ ...at, playbackEnded: true, nowMs: 100 })).toBe(true);
     expect(choicesEnabled({ ...at, playbackEnded: false, nowMs: 4_000 })).toBe(true);
     expect(choicesEnabled({ ...at, estimatedPromptMs: 60_000, playbackEnded: false, nowMs: 8_000 })).toBe(true);
+  });
+
+  it('Short times the fallback from when the Korean prompt starts, not from when the item opened', () => {
+    // The cheer and the instruction took 3 s before the prompt started at 3_000.
+    const at = { mode: 'short', shownAtMs: 0, estimatedPromptMs: 950, playbackEnded: false } as const;
+    expect(choicesEnabled({ ...at, promptStartedAtMs: 3_000, nowMs: 3_950 + 2_999 })).toBe(false);
+    expect(choicesEnabled({ ...at, promptStartedAtMs: 3_000, nowMs: 3_950 + 3_000 })).toBe(true);
+    // No prompt started yet: the cards stay disabled until the 8 s cap from opening.
+    expect(choicesEnabled({ ...at, promptStartedAtMs: null, nowMs: 7_999 })).toBe(false);
+    expect(choicesEnabled({ ...at, promptStartedAtMs: null, nowMs: FALLBACK_MAX_MS })).toBe(true);
+    // The cap from opening holds even when the prompt started late.
+    expect(choicesEnabled({ ...at, promptStartedAtMs: 7_000, nowMs: FALLBACK_MAX_MS })).toBe(true);
+    expect(choicesEnabled({ ...at, promptStartedAtMs: null, playbackEnded: true, nowMs: 1 })).toBe(true);
   });
 
   it('Standard and Deep choices are enabled at once', () => {
@@ -547,6 +561,10 @@ describe('pause rules (section 3.1 step 6)', () => {
       expect(pauseSheet(state(p))).toEqual({ kind: 'pause', grownUpLink: true, enough: { type: 'quit', by: 'learner' } });
     }
     expect(pauseSheet(state('rest'))).toEqual({ kind: 'rest', grownUpLink: false, enough: { type: 'quit', by: 'learner' } });
+  });
+
+  it('sound that stopped mid-run: the sound sheet (Try again, That is enough, the grown-up link)', () => {
+    expect(pauseSheet(state('no-sound'))).toEqual({ kind: 'sound', grownUpLink: true, enough: { type: 'quit', by: 'learner' } });
   });
 });
 
@@ -598,6 +616,55 @@ describe('resumableRun (section 3.1 step 8)', () => {
     expect(resumableRun(answered, 2_000, 1)).toEqual({ kind: 'finish', saved: answered });
     expect(resumableRun(answered, 10 * RESUME_WINDOW_MS, 2)?.kind).toBe('finish');
     expect(resumableRun({ ...saved, run: { ...runState, stop: 'quit' } }, 2_000, 1)).toBeNull();
+  });
+
+  it('a stopped run whose only responses are prompts that could not play has nothing to record', () => {
+    const silent = {
+      ...saved,
+      run: {
+        ...runState,
+        stop: 'quit',
+        responses: [{ questionId: 'pitem:a', outcome: 'skipped', chosenOptionId: null, assisted: false, ms: 1, noSound: true }],
+      },
+    } satisfies SavedRun;
+    expect(resumableRun(silent, 2_000, 1)).toBeNull();
+  });
+});
+
+describe('hasScoredAnswer (section 3.11, AM-32)', () => {
+  const response = (noSound: boolean) => ({
+    questionId: 'pitem:a',
+    outcome: 'skipped' as const,
+    chosenOptionId: null,
+    assisted: false,
+    ms: 1,
+    ...(noSound ? { noSound: true as const } : {}),
+  });
+  it('a run is recorded only when at least one response was heard', () => {
+    expect(hasScoredAnswer({ responses: [] })).toBe(false);
+    expect(hasScoredAnswer({ responses: [response(true), response(true)] })).toBe(false);
+    expect(hasScoredAnswer({ responses: [response(true), response(false)] })).toBe(true);
+  });
+});
+
+describe('the screen reader (section 3.12, spec assumption 5)', () => {
+  it('the device reading pre-sets it and Take my time', () => {
+    expect(start({ screenReader: true })).toMatchObject({ screenReader: true, takeMyTime: true });
+    expect(start()).toMatchObject({ screenReader: false, takeMyTime: false });
+  });
+
+  it('"I use a screen reader" on the options screen turns it on and pre-sets Take my time; off leaves Take my time', () => {
+    const on = run(start(), { type: 'setScreenReader', on: true });
+    expect(on).toMatchObject({ screenReader: true, takeMyTime: true });
+    const off = run(on, { type: 'setScreenReader', on: false });
+    expect(off).toMatchObject({ screenReader: false, takeMyTime: true });
+  });
+
+  it('turned on or off during the check (the device reports it): only the screen reader changes', () => {
+    const item = run(start(), { type: 'setRevealMode', revealMode: 'tap' }, { type: 'next' }, { type: 'warmupAudio', result: 'played' }, { type: 'warmupAnswer' });
+    expect(item.screen).toBe('item');
+    const changed = run(item, { type: 'setScreenReader', on: true });
+    expect(changed).toEqual({ ...item, screenReader: true });
   });
 });
 
@@ -696,6 +763,14 @@ describe('resumedFlow (section 3.1 step 8)', () => {
       audio: false,
       warmupDone: true,
     });
+  });
+
+  it('a run started with a screen reader (visual off) resumes with it on', () => {
+    const saved = savedRun(null);
+    const reading = { ...saved, run: { ...saved.run, config: { ...saved.run.config, visual: false } } };
+    expect(resumedFlow(start(), { kind: 'continue', saved: reading }).screenReader).toBe(true);
+    expect(resumedFlow(start(), { kind: 'continue', saved }).screenReader).toBe(false);
+    expect(resumedFlow(start({ screenReader: true }), { kind: 'continue', saved }).screenReader).toBe(true);
   });
 
   it('a stopped run that was never recorded opens on the result', () => {

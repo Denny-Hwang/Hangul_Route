@@ -16,3 +16,13 @@ export function sitePath(locale: UiLocale, path: string): string {
   if (locale === SITE_DEFAULT_LOCALE || !path.startsWith('/')) return path;
   return path === '/' ? `/${locale}` : `/${locale}${path}`;
 }
+
+/**
+ * The learner app's address from a site page in `locale` (F-I18N-001 §3.3, PR 11c): from `/es` or `/ko` the
+ * "Play now" links add `?lang=<locale>`, which the app takes as the device language only when none was chosen
+ * yet, then removes from the URL. English links stay as they are.
+ */
+export function appEntryUrl(appUrl: string, locale: UiLocale): string {
+  if (locale === SITE_DEFAULT_LOCALE) return appUrl;
+  return `${appUrl}${appUrl.includes('?') ? '&' : '?'}lang=${locale}`;
+}

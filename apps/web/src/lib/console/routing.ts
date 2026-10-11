@@ -1,5 +1,5 @@
-import type { SpaceKind } from '@hangul-route/content-schema';
-import { DEFAULT_LOCALE, en, getMessages, type UiLocale } from '@hangul-route/i18n';
+import { SpaceKindSchema, type SpaceKind } from '@hangul-route/content-schema';
+import { DEFAULT_LOCALE, getMessages, type UiLocale } from '@hangul-route/i18n';
 import type { SpaceListItem } from './api';
 
 /** Where the console sends an adult — F-CONSOLE-001 §3.2–3.4. */
@@ -34,9 +34,6 @@ export function landingAfterCreate(kind: SpaceKind, spaceId: string, fromHome: b
   if (kind === 'class') return ROUTES.space(spaceId);
   return fromHome ? ROUTES.home : ROUTES.home;
 }
-
-/** English kind labels ("Class"), read by the settings page until it takes `m.console.kind.label` (PR 10c). */
-export const KIND_LABEL: Readonly<Record<SpaceKind, string>> = en.console.kind.label;
 
 export interface RoleCard {
   kind: SpaceKind;
@@ -92,7 +89,19 @@ export function spaceErrorText(error: SpaceError, locale: UiLocale = DEFAULT_LOC
   return error === 'cantReach' ? c.cantReach : c.space[error];
 }
 
-/** What a space's members are called ("students", "learners", "members"), in `locale`. */
-export function memberNoun(kind: SpaceKind, locale: UiLocale = DEFAULT_LOCALE): string {
-  return getMessages(locale).console.kind.members[kind];
+/** Why a console page's data did not load: `forbidden` has the page's own words, anything else reads "can't reach". */
+export type LoadError = 'forbidden' | 'cantReach';
+
+/** The `LoadError` for a failed API call's error code. */
+export function loadErrorKey(error: string): LoadError {
+  return error === 'forbidden' ? 'forbidden' : 'cantReach';
+}
+
+/**
+ * A space kind this console bundle can word. API responses are cast, not parsed, so a kind added by
+ * a newer Worker (deployed first, an old console bundle cached) is treated as a failed load instead
+ * of reaching the kind-keyed messages.
+ */
+export function isKnownSpaceKind(kind: unknown): kind is SpaceKind {
+  return SpaceKindSchema.safeParse(kind).success;
 }
