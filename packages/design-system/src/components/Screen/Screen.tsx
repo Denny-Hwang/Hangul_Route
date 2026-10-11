@@ -35,7 +35,10 @@ export function Screen({
   // The cap sits INSIDE the padded container so insets and gutter stay outside it
   // and the background stays full-bleed.
   const capped = { width: '100%', maxWidth: frame.maxWidth, alignSelf: 'center' } as const;
-  const content = <View style={{ ...capped, flexGrow: 1 }}>{children}</View>;
+  // Scrolling content grows to at least the screen height (a bottom-pinned CTA stays put).
+  // Fixed content must also SHRINK to the space it is given (`flex: 1`), as its children
+  // did when they sat directly in the padded container: a measuring child (Trace) sizes itself from it.
+  const content = <View style={{ ...capped, ...(scrollable ? { flexGrow: 1 } : { flex: 1 }) }}>{children}</View>;
 
   const body = scrollable ? (
     <ScrollView
