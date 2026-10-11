@@ -63,7 +63,7 @@ export function MeetHoya(): JSX.Element {
               border: `1px solid ${colors.border.subtle}`,
             }}
           >
-            거의! · geo-eui · almost!
+            거의 다 했어! · geoui da haesseo · almost there!
           </span>
         </div>
       </div>
@@ -119,7 +119,7 @@ export function MeetHoya(): JSX.Element {
         >
           <li>
             <strong style={{ color: colors.text.primary }}>Wrong answer?</strong>{' '}
-            Hoya says &ldquo;거의!&rdquo; (almost) on amber — never red.
+            Hoya says &ldquo;거의 다 했어!&rdquo; (almost there) on amber — never red.
           </li>
           <li>
             <strong style={{ color: colors.text.primary }}>Right answer?</strong>{' '}

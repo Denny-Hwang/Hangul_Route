@@ -8,7 +8,7 @@
     "order": 1,
     "exampleWord": {
       "ko": "강아지",
-      "romanization": "gang-a-ji",
+      "romanization": "gangaji",
       "en": "puppy"
     }
   },
@@ -21,7 +21,7 @@
     "order": 2,
     "exampleWord": {
       "ko": "나비",
-      "romanization": "na-bi",
+      "romanization": "nabi",
       "en": "butterfly"
     }
   },
@@ -47,7 +47,7 @@
     "order": 4,
     "exampleWord": {
       "ko": "라면",
-      "romanization": "ra-myeon",
+      "romanization": "ramyeon",
       "en": "ramen noodles"
     }
   },
@@ -60,7 +60,7 @@
     "order": 5,
     "exampleWord": {
       "ko": "무궁화",
-      "romanization": "mu-gung-hwa",
+      "romanization": "mugunghwa",
       "en": "rose of Sharon — Korea's flower"
     }
   },
@@ -86,7 +86,7 @@
     "order": 7,
     "exampleWord": {
       "ko": "사과",
-      "romanization": "sa-gwa",
+      "romanization": "sagwa",
       "en": "apple"
     }
   },
@@ -99,7 +99,7 @@
     "order": 8,
     "exampleWord": {
       "ko": "인형",
-      "romanization": "in-hyeong",
+      "romanization": "inhyeong",
       "en": "doll"
     }
   },
@@ -112,7 +112,7 @@
     "order": 9,
     "exampleWord": {
       "ko": "잠자리",
-      "romanization": "jam-ja-ri",
+      "romanization": "jamjari",
       "en": "dragonfly"
     }
   },
@@ -138,7 +138,7 @@
     "order": 11,
     "exampleWord": {
       "ko": "케이팝",
-      "romanization": "K-pop",
+      "romanization": "keipap",
       "en": "K-pop music"
     }
   },
@@ -151,7 +151,7 @@
     "order": 12,
     "exampleWord": {
       "ko": "토끼",
-      "romanization": "to-kki",
+      "romanization": "tokki",
       "en": "rabbit"
     }
   },
@@ -164,7 +164,7 @@
     "order": 13,
     "exampleWord": {
       "ko": "팽이",
-      "romanization": "paeng-i",
+      "romanization": "paengi",
       "en": "spinning top"
     }
   },
@@ -177,7 +177,7 @@
     "order": 14,
     "exampleWord": {
       "ko": "호랑이",
-      "romanization": "ho-rang-i",
+      "romanization": "horangi",
       "en": "tiger — that's Hoya!"
     }
   },
@@ -190,7 +190,7 @@
     "order": 15,
     "exampleWord": {
       "ko": "아빠",
-      "romanization": "a-ppa",
+      "romanization": "appa",
       "en": "dad"
     }
   },
@@ -203,7 +203,7 @@
     "order": 16,
     "exampleWord": {
       "ko": "야구",
-      "romanization": "ya-gu",
+      "romanization": "yagu",
       "en": "baseball"
     }
   },
@@ -216,7 +216,7 @@
     "order": 17,
     "exampleWord": {
       "ko": "어묵",
-      "romanization": "eo-muk",
+      "romanization": "eomuk",
       "en": "fish cake"
     }
   },
@@ -229,7 +229,7 @@
     "order": 18,
     "exampleWord": {
       "ko": "여우",
-      "romanization": "yeo-u",
+      "romanization": "yeou",
       "en": "fox"
     }
   },
@@ -242,7 +242,7 @@
     "order": 19,
     "exampleWord": {
       "ko": "오리",
-      "romanization": "o-ri",
+      "romanization": "ori",
       "en": "duck"
     }
   },
@@ -268,7 +268,7 @@
     "order": 21,
     "exampleWord": {
       "ko": "우유",
-      "romanization": "u-yu",
+      "romanization": "uyu",
       "en": "milk"
     }
   },
@@ -280,9 +280,9 @@
     "kind": "vowel",
     "order": 22,
     "exampleWord": {
-      "ko": "윷놀이",
-      "romanization": "yut-no-ri",
-      "en": "yut — a traditional Korean board game"
+      "ko": "유리",
+      "romanization": "yuri",
+      "en": "glass"
     }
   },
   {
@@ -294,7 +294,7 @@
     "order": 23,
     "exampleWord": {
       "ko": "그네",
-      "romanization": "geu-ne",
+      "romanization": "geune",
       "en": "swing — like on a playground"
     }
   },
@@ -307,7 +307,7 @@
     "order": 24,
     "exampleWord": {
       "ko": "이불",
-      "romanization": "i-bul",
+      "romanization": "ibul",
       "en": "blanket — a warm sleeping cover"
     }
   }

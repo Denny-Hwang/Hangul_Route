@@ -17,7 +17,7 @@ export const JamoSchema = z.object({
   kind: JamoKindSchema,
   nameEn: z.string(),
   exampleWordKo: z.string().optional(),
-  /** Revised Romanization, unhyphenated (D13). Required with exampleWordKo from F-CNT-002 PR 2b. */
+  /** Revised Romanization, unhyphenated (D13). Required with exampleWordKo (F-CNT-002 §3.5). */
   exampleWordRomanization: z.string().min(1).optional(),
   exampleWordEn: z.string().optional(),
   /** Sound clip (F-AUDIO-004); every value written today already matches the grammar. */
@@ -36,6 +36,13 @@ export const JamoSchema = z.object({
 }).superRefine((jamo, ctx) => {
   if (jamo.spokenRomanization !== undefined && jamo.spokenKo === undefined) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['spokenRomanization'], message: 'spokenRomanization requires spokenKo' });
+  }
+  if (jamo.exampleWordKo !== undefined && jamo.exampleWordRomanization === undefined) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['exampleWordRomanization'],
+      message: 'exampleWordKo requires exampleWordRomanization',
+    });
   }
   if (jamo.nameAudioRef !== undefined && jamo.nameKo === undefined) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['nameAudioRef'], message: 'nameAudioRef requires nameKo' });

@@ -21,21 +21,26 @@ export type StageKey = z.infer<typeof StageKeySchema>;
  * Heritage Card — a collectible piece of Korean culture earned by completing
  * an episode or milestone. The primary reward of Hangul Route.
  */
-export const HeritageCardSchema = z.object({
-  id: z.string().regex(/^card:[a-z0-9-]+$/),
-  titleEn: z.string(),
-  subtitleKo: z.string().optional(),
-  romanization: z.string().optional(),
-  blurbEn: z.string(),
-  factEn: z.string().optional(),
-  theme: ThemeKeySchema,
-  stage: StageKeySchema,
-  rarity: RaritySchema,
-  illustrationRef: z.string().optional(),
-  unlockedBy: z.string(),
-  era: z.string().optional(),
-  region: z.string().optional(),
-});
+export const HeritageCardSchema = z
+  .object({
+    id: z.string().regex(/^card:[a-z0-9-]+$/),
+    titleEn: z.string(),
+    subtitleKo: z.string().optional(),
+    romanization: z.string().optional(),
+    blurbEn: z.string(),
+    factEn: z.string().optional(),
+    theme: ThemeKeySchema,
+    stage: StageKeySchema,
+    rarity: RaritySchema,
+    illustrationRef: z.string().optional(),
+    unlockedBy: z.string(),
+    era: z.string().optional(),
+    region: z.string().optional(),
+  })
+  .refine(
+    (card) => card.subtitleKo === undefined || (card.romanization !== undefined && card.romanization.length > 0),
+    { path: ['romanization'], message: 'subtitleKo requires romanization (F-CNT-002 §3.5)' },
+  );
 
 export type HeritageCard = z.infer<typeof HeritageCardSchema>;
 export const HeritageCardListSchema = z.array(HeritageCardSchema);

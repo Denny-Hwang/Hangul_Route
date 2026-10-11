@@ -56,7 +56,59 @@ describe('JamoSchema', () => {
   });
 });
 
+describe('JamoSchema example word romanization (F-CNT-002)', () => {
+  const base = {
+    id: 'jamo:giyeok',
+    char: 'ㄱ',
+    romanization: 'g/k',
+    nameEn: 'giyeok',
+    kind: 'consonant',
+    order: 1,
+  };
+
+  it('requires exampleWordRomanization when exampleWordKo is present', () => {
+    const result = JamoSchema.safeParse({ ...base, exampleWordKo: '가족' });
+    expect(result.success).toBe(false);
+    expect(result.success ? [] : result.error.issues.map((i) => i.path.join('.'))).toContain(
+      'exampleWordRomanization',
+    );
+  });
+
+  it('accepts an example word with its romanization', () => {
+    expect(() =>
+      JamoSchema.parse({ ...base, exampleWordKo: '가족', exampleWordRomanization: 'gajok' }),
+    ).not.toThrow();
+  });
+
+  it('accepts a jamo with no example word at all', () => {
+    expect(() => JamoSchema.parse(base)).not.toThrow();
+  });
+
+  it('accepts the silent/ng sound value (up to 12 characters)', () => {
+    expect(() => JamoSchema.parse({ ...base, char: 'ㅇ', romanization: 'silent/ng' })).not.toThrow();
+    expect(() => JamoSchema.parse({ ...base, romanization: 'x'.repeat(13) })).toThrow();
+  });
+});
+
 describe('HeritageCardSchema', () => {
+  it('requires romanization when subtitleKo is present (F-CNT-002)', () => {
+    const card = {
+      id: 'card:gangaji',
+      titleEn: 'Puppy',
+      blurbEn: 'A puppy.',
+      theme: 'life',
+      stage: 'stage1',
+      rarity: 'common',
+      unlockedBy: 'jamo:giyeok',
+    };
+    const missing = HeritageCardSchema.safeParse({ ...card, subtitleKo: '강아지' });
+    expect(missing.success).toBe(false);
+    expect(missing.success ? [] : missing.error.issues.map((i) => i.path.join('.'))).toContain('romanization');
+    expect(HeritageCardSchema.safeParse({ ...card, subtitleKo: '강아지', romanization: '' }).success).toBe(false);
+    expect(HeritageCardSchema.safeParse({ ...card, subtitleKo: '강아지', romanization: 'gangaji' }).success).toBe(true);
+    expect(HeritageCardSchema.safeParse(card).success).toBe(true);
+  });
+
   it('requires theme, stage, rarity', () => {
     expect(() =>
       HeritageCardSchema.parse({

@@ -23,8 +23,8 @@ const ALL_CARDS: Record<string, CardDef[]> = {
     { cardId: 'card:hanji', ko: '한지', romanization: 'hanji', titleEn: 'Hanji Paper', rarity: 'uncommon' },
     { cardId: 'card:brush', ko: '붓', romanization: 'but', titleEn: 'Calligraphy Brush', rarity: 'uncommon' },
     { cardId: 'card:ink', ko: '먹', romanization: 'meok', titleEn: 'Ink Stick', rarity: 'common' },
-    { cardId: 'card:origami', ko: '종이접기', romanization: 'jong-i-jeop-gi', titleEn: 'Paper Folding', rarity: 'rare' },
-    { cardId: 'card:hangul-day', ko: '한글날', romanization: 'hangeul-nal', titleEn: 'Hangul Day', rarity: 'legendary' },
+    { cardId: 'card:origami', ko: '종이접기', romanization: 'jongijeopgi', titleEn: 'Paper Folding', rarity: 'rare' },
+    { cardId: 'card:hangul-day', ko: '한글날', romanization: 'hangeullal', titleEn: 'Hangul Day', rarity: 'legendary' },
   ],
   'Food & Daily Life': [
     { cardId: 'card:kimchi', ko: '김치', romanization: 'gimchi', titleEn: 'Kimchi', rarity: 'common' },
@@ -32,7 +32,7 @@ const ALL_CARDS: Record<string, CardDef[]> = {
     { cardId: 'card:chopsticks', ko: '젓가락', romanization: 'jeotgarak', titleEn: 'Chopsticks', rarity: 'common' },
     { cardId: 'card:hanbok', ko: '한복', romanization: 'hanbok', titleEn: 'Hanbok', rarity: 'rare' },
     { cardId: 'card:kimbap', ko: '김밥', romanization: 'gimbap', titleEn: 'Kimbap', rarity: 'uncommon' },
-    { cardId: 'card:family-table', ko: '가족식탁', romanization: 'gajok-siktak', titleEn: 'Family Table', rarity: 'uncommon' },
+    { cardId: 'card:family-table', ko: '가족 식탁', romanization: 'gajok siktak', titleEn: 'Family Table', rarity: 'uncommon' },
   ],
   'Holidays & Traditions': [
     { cardId: 'card:seollal', ko: '설날', romanization: 'seollal', titleEn: 'Lunar New Year', rarity: 'rare' },
@@ -51,7 +51,7 @@ const ALL_CARDS: Record<string, CardDef[]> = {
     { cardId: 'card:moon', ko: '달', romanization: 'dal', titleEn: 'Moon', rarity: 'uncommon' },
   ],
   'Play & Crafts': [
-    { cardId: 'card:yutnori', ko: '윷놀이', romanization: 'yutnori', titleEn: 'Yut Game', rarity: 'rare' },
+    { cardId: 'card:yutnori', ko: '윷놀이', romanization: 'yunnori', titleEn: 'Yut Game', rarity: 'rare' },
     { cardId: 'card:jegi', ko: '제기', romanization: 'jegi', titleEn: 'Foot Shuttlecock', rarity: 'uncommon' },
     { cardId: 'card:kite', ko: '연', romanization: 'yeon', titleEn: 'Kite', rarity: 'uncommon' },
     { cardId: 'card:top', ko: '팽이', romanization: 'paengi', titleEn: 'Spinning Top', rarity: 'common' },
