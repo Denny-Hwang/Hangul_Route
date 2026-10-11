@@ -227,4 +227,33 @@ describe('placement-run-store (F-PLC-001 section 3.1 step 8, section 3.8)', () =
     await settle();
     expect(usePlacementRunStore.getState().ui['p2']).toEqual({ declinedAt: '2026-10-03T00:00:00Z', dismissedAt: '2026-10-04T00:00:00Z' });
   });
+
+  it('peekResumable tells Home whether a run waits, without restoring or removing anything', async () => {
+    const store = usePlacementRunStore.getState();
+    expect(await store.peekResumable('p1', T0, PLACEMENT_BANK.version)).toBeNull();
+    store.begin('p1', CTX, startRun(PLACEMENT_BANK, config, T0), T0);
+    answerFirst('p1', T0 + 1_000);
+    await settle();
+    // In memory first.
+    expect(await usePlacementRunStore.getState().peekResumable('p1', T0 + 2_000, PLACEMENT_BANK.version)).toBe('continue');
+    usePlacementRunStore.setState({ active: {}, ui: {} });
+    // From storage: offered, but nothing is put back in memory.
+    expect(await usePlacementRunStore.getState().peekResumable('p1', T0 + 2_000, PLACEMENT_BANK.version)).toBe('continue');
+    expect(usePlacementRunStore.getState().active['p1']).toBeUndefined();
+    // A stale or other-bank run is not offered, and is left for `resume` to remove.
+    expect(await usePlacementRunStore.getState().peekResumable('p1', T0 + RESUME_WINDOW_MS + 2_000, PLACEMENT_BANK.version)).toBeNull();
+    expect(await usePlacementRunStore.getState().peekResumable('p1', T0 + 2_000, PLACEMENT_BANK.version + 1)).toBeNull();
+    await settle();
+    expect(mem.has('placement-run:p1')).toBe(true);
+  });
+
+  it('peekResumable offers a stopped run that was never recorded as finish', async () => {
+    usePlacementRunStore.getState().begin('p1', CTX, startRun(PLACEMENT_BANK, config, T0), T0);
+    answerFirst('p1', T0 + 1_000);
+    usePlacementRunStore.getState().apply('p1', { type: 'quit', by: 'learner' }, T0 + 2_000);
+    await settle();
+    usePlacementRunStore.setState({ active: {}, ui: {} });
+    expect(await usePlacementRunStore.getState().peekResumable('p1', T0 + 3_000, PLACEMENT_BANK.version)).toBe('finish');
+  });
 });
+
