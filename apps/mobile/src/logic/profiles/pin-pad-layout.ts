@@ -57,6 +57,19 @@ export function pinPadLayout({ width, height, minKey, maxKey, gap }: PinPadLayou
   return { columns: widest.columns, rows: widest.rows, keySize: minKey, fits: false };
 }
 
+export interface PinPadFirstWidthInput {
+  windowWidth: number;
+  /** The `Screen` content cap (`layout.maxWidth.reading`, F-LAYOUT-001 §3.6). */
+  maxWidth: number;
+  /** Padding between the window edge and the pad, both sides together. */
+  sidePadding: number;
+}
+
+/** First-frame width for the pad until its box is measured: the capped column less its padding. */
+export function pinPadFirstWidth({ windowWidth, maxWidth, sidePadding }: PinPadFirstWidthInput): number {
+  return Math.max(0, Math.min(windowWidth, maxWidth) - sidePadding);
+}
+
 export interface PinPadBudgetInput {
   windowHeight: number;
   insetTop: number;

@@ -1,15 +1,24 @@
-import { Body, Button, Caption, borderWidth, colors, radii, spacing, touchTarget } from '@hangul-route/design-system';
+import {
+  Body,
+  Button,
+  Caption,
+  borderWidth,
+  colors,
+  layout as layoutTokens,
+  radii,
+  spacing,
+  touchTarget,
+  useLayoutClass,
+} from '@hangul-route/design-system';
 import React, { useState } from 'react';
-import { View, useWindowDimensions } from 'react-native';
+import { View } from 'react-native';
 import { useMessages } from '../i18n/use-messages';
 import { pinSetupChange, pinSetupRedo, type PinSetupState } from '../logic/onboarding/pin-setup';
 import { PIN_LENGTH } from '../logic/profiles/pin-hash';
-import { pinPadLayout } from '../logic/profiles/pin-pad-layout';
+import { pinPadFirstWidth, pinPadLayout } from '../logic/profiles/pin-pad-layout';
 import { PIN_PAD_GAP, PinPad } from './PinPad';
 
 const DOT_SIZE = spacing.lg + spacing.xs;
-/** The web build centres a 480 dp column on wide screens (pwa-postbuild). */
-const WEB_COLUMN_MAX = 480;
 
 interface PinSetupFieldProps {
   /** "Create a grown-up PIN" (family) or "Create a PIN" (self). */
@@ -33,9 +42,11 @@ interface PinSetupFieldProps {
 export function PinSetupField({ heading, state, onChange, error = null, disabled = false }: PinSetupFieldProps): React.ReactElement {
   const messages = useMessages();
   const m = messages.caregiver.pin.setup;
-  const screen = useWindowDimensions();
-  // The card's padding comes off both sides of the screen padding until it is measured.
-  const [width, setWidth] = useState(() => Math.min(screen.width, WEB_COLUMN_MAX) - 4 * spacing.lg);
+  const { windowWidth, gutter } = useLayoutClass();
+  // The card's padding comes off both sides of the screen gutter until it is measured.
+  const [width, setWidth] = useState(() =>
+    pinPadFirstWidth({ windowWidth, maxWidth: layoutTokens.maxWidth.reading, sidePadding: 2 * gutter + 2 * spacing.lg }),
+  );
   const layout = pinPadLayout({
     width,
     height: Number.POSITIVE_INFINITY,
