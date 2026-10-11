@@ -29,7 +29,7 @@ A card that turns over to show its other side. It draws nothing of its own: the 
 | `front`, `back` | `ReactNode` | the two faces |
 | `disabled` | `boolean?` | default `false` |
 | `onFlippingChange` | `(flipping: boolean) => void?` | |
-| `accessibilityLabelFront`, `accessibilityLabelBack` | `string` | the button's name on each face (from the dictionary, e.g. "Flip to the back" / "Flip to the front"; a locked card passes its locked label) |
+| `accessibilityLabelFront`, `accessibilityLabelBack` | `string` | the button's name on each face (from the dictionary: `a11y.flipToBack` / `a11y.flipToFront`; a locked card passes `a11y.lockedCard`) |
 
 ## Accessibility
 
