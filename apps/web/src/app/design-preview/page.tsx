@@ -118,6 +118,7 @@ function Header(): JSX.Element {
         </Link>
         <Link
           href="/design-preview/scenes"
+          prefetch={false}
           style={{
             padding: `${spacing.sm}px ${spacing.md}px`,
             backgroundColor: colors.brand.secondary,

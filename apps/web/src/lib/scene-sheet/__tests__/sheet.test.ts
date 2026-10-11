@@ -163,6 +163,15 @@ describe('buildSceneSheet', () => {
     ]);
   });
 
+  it('lists the card layers the web renderer can only mark, so the sheet can say so in words (§3.9.4)', () => {
+    const carded = historians();
+    const art = scenesOf(carded)[1]!.art as { layers: Array<Record<string, unknown>> };
+    art.layers.push({ ref: 'card:hangul-day', x: 60, y: 200 });
+    const s = buildSceneSheet([{ file: 'x.json', json: carded }], SCENE_ART_REGISTRY, { today: TODAY });
+    expect(s.stories[0]!.scenes[1]!.cards).toEqual(['card:hangul-day']);
+    expect(s.stories[0]!.scenes[0]!.cards).toEqual([]);
+  });
+
   it('puts every lint finding of one scene on that scene', () => {
     const twice = historians();
     (scenesOf(twice)[0] as unknown as { narrationEn: string }).narrationEn = 'Hangeul was written by ninety officials.';

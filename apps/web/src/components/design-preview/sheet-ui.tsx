@@ -21,7 +21,8 @@ export function PreviewShell({ title, intro, links, children }: { title: string;
       <header style={{ marginBottom: spacing.xl }}>
         <nav style={{ display: 'flex', gap: spacing.lg, flexWrap: 'wrap' }}>
           {links.map((l) => (
-            <Link key={l.href} href={l.href} style={{ color: colors.brand.primary, fontWeight: 600 }}>
+            // no prefetch: the contact sheet's RSC payload is large (it grows with the art)
+            <Link key={l.href} href={l.href} prefetch={false} style={{ color: colors.brand.primary, fontWeight: 600 }}>
               {l.label}
             </Link>
           ))}

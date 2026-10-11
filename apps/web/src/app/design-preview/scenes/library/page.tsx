@@ -1,4 +1,4 @@
-import { HOYA_POSES, SCENE_ART_REGISTRY, type ItemDef } from '@hangul-route/design-system/scene-art';
+import { HOYA_POSES, SCENE_ART_REGISTRY, type HoyaPose, type ItemDef } from '@hangul-route/design-system/scene-art';
 import { SceneSvg } from '@hangul-route/design-system/scene-art/dom';
 import { borderWidth, colors, spacing, typography } from '@hangul-route/design-system/tokens';
 import type { Metadata } from 'next';
@@ -20,6 +20,11 @@ export const metadata: Metadata = {
 
 const FULL = 320;
 const SMALL = 96;
+
+function poseOf(id: string): HoyaPose | undefined {
+  const pose = id.slice('hoya:'.length);
+  return (HOYA_POSES as readonly string[]).includes(pose) ? (pose as HoyaPose) : undefined;
+}
 
 function Render({ item, width, variant = 'full', label }: { item: ItemDef; width: number; variant?: 'full' | 'thumb'; label: string }): JSX.Element {
   const { art, registry } = previewScene(item, SCENE_ART_REGISTRY);
@@ -69,7 +74,7 @@ function ItemCard({ entry }: { entry: LibraryEntry }): JSX.Element {
   return (
     <article data-testid="library-item" data-item={entry.id} style={{ ...frame, padding: spacing.md, display: 'grid', gap: spacing.md }}>
       <h3 style={{ margin: 0, ...mono, fontSize: typography.size.bodySm, color: colors.text.primary }}>{entry.id}</h3>
-      <div style={{ display: 'flex', gap: spacing.md, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+      <div style={{ display: 'flex', gap: spacing.md, flexWrap: 'wrap', alignItems: 'flex-end', minWidth: 0, overflowX: 'auto' }}>
         <Render item={item} width={FULL} label="full" />
         <Render item={item} width={SMALL} label="96 px" />
         <Render item={item} width={SMALL} variant="thumb" label="thumb" />
@@ -128,14 +133,16 @@ export default function SceneLibraryPage(): JSX.Element {
           <code style={mono}>/design-preview</code>. They should match. Hoya&apos;s own palette is outside the prop and scene colour caps.
         </p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 340px), 1fr))', gap: spacing.lg }}>
-          {lib.hoya.map((entry, i) => {
-            const pose = HOYA_POSES[i]!;
+          {lib.hoya.map((entry) => {
+            // the pose comes from the entry's own id, so a reordered registry cannot pair a drawing with the wrong shipped pose
+            const pose = poseOf(entry.id);
+            if (!pose) return null;
             return (
-              <article key={entry.id} data-testid="hoya-pose" data-pose={pose} style={{ ...frame, padding: spacing.md, display: 'grid', gap: spacing.sm }}>
+              <article key={entry.id} data-testid="hoya-pose" data-item={entry.id} data-pose={pose} style={{ ...frame, padding: spacing.md, display: 'grid', gap: spacing.sm }}>
                 <h3 style={{ margin: 0, ...mono, fontSize: typography.size.bodySm }}>
                   {entry.id} <Tag>palette exempt</Tag>
                 </h3>
-                <div style={{ display: 'flex', gap: spacing.md, alignItems: 'flex-end' }}>
+                <div style={{ display: 'flex', gap: spacing.md, alignItems: 'flex-end', minWidth: 0, overflowX: 'auto' }}>
                   <Render item={SCENE_ART_REGISTRY[entry.id]!} width={160} label="data port" />
                   <figure style={{ margin: 0 }}>
                     <div style={{ ...artFrame, width: 120, justifyContent: 'center' }}>

@@ -1,4 +1,4 @@
-import { mkdtempSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -22,15 +22,19 @@ describe('readStoryFiles', () => {
 
   it('skips sub-folders and other files, and reports a file that is not JSON', () => {
     const dir = mkdtempSync(join(tmpdir(), 'scene-sheet-'));
-    mkdirSync(join(dir, 'research'));
-    writeFileSync(join(dir, 'research', 'x.json'), '{}');
-    writeFileSync(join(dir, 'README.md'), '# notes');
-    writeFileSync(join(dir, 'b.json'), '{"id":"story:b"}');
-    writeFileSync(join(dir, 'a.json'), '{ not json');
-    const files = readStoryFiles(dir);
-    expect(files.map((f) => f.file)).toEqual(['a.json', 'b.json']);
-    expect(files[0]!.error).toMatch(/JSON/);
-    expect(files[0]!.json).toBeUndefined();
-    expect(files[1]).toEqual({ file: 'b.json', json: { id: 'story:b' } });
+    try {
+      mkdirSync(join(dir, 'research'));
+      writeFileSync(join(dir, 'research', 'x.json'), '{}');
+      writeFileSync(join(dir, 'README.md'), '# notes');
+      writeFileSync(join(dir, 'b.json'), '{"id":"story:b"}');
+      writeFileSync(join(dir, 'a.json'), '{ not json');
+      const files = readStoryFiles(dir);
+      expect(files.map((f) => f.file)).toEqual(['a.json', 'b.json']);
+      expect(files[0]!.error).toMatch(/JSON/);
+      expect(files[0]!.json).toBeUndefined();
+      expect(files[1]).toEqual({ file: 'b.json', json: { id: 'story:b' } });
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });

@@ -28,7 +28,7 @@ export interface LibraryEntry {
   tintable?: ColorToken;
   sourceRef?: ItemDef['sourceRef'];
   accuracyNote?: string;
-  /** checkItem findings; Hoya's character palette cap is left out (he is a character, not a prop). */
+  /** checkItem findings (checkItem itself leaves Hoya's character palette out of the I-palette cap). */
   findings: Finding[];
   /** True for `hoya:*`: exempt from the item and scene palette caps (F-STORY-002 R-I, R-S5). */
   paletteExempt: boolean;
@@ -55,7 +55,7 @@ function entryOf(item: ItemDef): LibraryEntry {
     ...(item.tintable ? { tintable: item.tintable } : {}),
     ...(item.sourceRef ? { sourceRef: item.sourceRef } : {}),
     ...(item.accuracyNote ? { accuracyNote: item.accuracyNote } : {}),
-    findings: checkItem(item).filter((f) => !(hoya && f.rule === 'I-palette')),
+    findings: checkItem(item),
     paletteExempt: hoya,
   };
 }

@@ -40,6 +40,11 @@ describe('/design-preview/scenes', () => {
     expect(html).not.toMatch(/\p{Extended_Pictographic}/u);
     expect(scenesMeta.robots).toEqual({ index: false, follow: false });
   });
+
+  it('keeps the heading order: story h2, then the cell labels as h3', () => {
+    expect(html).not.toContain('<h4');
+    expect(count(html, '<h3')).toBe(scenes * 4);
+  });
 });
 
 describe('/design-preview/scenes/library', () => {
@@ -55,6 +60,10 @@ describe('/design-preview/scenes/library', () => {
 
   it('shows the five Hoya poses beside the shipped Hoya', () => {
     expect(count(html, 'data-testid="hoya-pose"')).toBe(5);
+    // each data-port drawing sits beside the shipped pose of the same id
+    const pairs = [...html.matchAll(/data-testid="hoya-pose" data-item="hoya:([a-z]+)" data-pose="([a-z]+)"/g)];
+    expect(pairs).toHaveLength(5);
+    for (const [, id, pose] of pairs) expect(pose).toBe(id);
     for (const pose of HOYA_POSES) {
       expect(html).toContain(`data-pose="${pose}"`);
       expect(html).toContain(`aria-label="Hoya ${pose}"`);

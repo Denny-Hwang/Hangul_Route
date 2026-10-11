@@ -48,6 +48,8 @@ export interface SheetScene {
   narration: NarrationChip[];
   facts: SheetFact[];
   layers: SheetLayer[];
+  /** `card:` layer refs: the web renderer only marks where they sit, so the sheet names them (§3.9.4). */
+  cards: string[];
   findings: SheetFinding[];
 }
 
@@ -139,6 +141,7 @@ function buildStory(file: string, story: Story, registry: Registry, today: strin
           .filter((fact): fact is StoryFact => fact !== undefined)
           .map((fact) => ({ id: fact.id, claimEn: fact.claimEn, sources: fact.sources.map((s) => s.title) })),
         layers: layersOf(scene.art, registry),
+        cards: (scene.art?.layers ?? []).filter((l) => l.ref.startsWith('card:')).map((l) => l.ref),
         findings: [...art, ...(sceneFindings.get(`${ti}/${si}`) ?? [])],
       };
     }),

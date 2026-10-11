@@ -67,3 +67,46 @@ test('the library page lists the five Hoya poses beside the shipped Hoya', async
   await expect(page.getByTestId('count-errors')).toHaveText('0');
   expect(errors).toEqual([]);
 });
+
+test.describe('at phone width (320 px)', () => {
+  test.use({ viewport: { width: 320, height: 640 } });
+  const noSidewaysScroll = async (page: Page): Promise<void> => {
+    const { scroll, client } = await page.evaluate(() => ({ scroll: document.documentElement.scrollWidth, client: document.documentElement.clientWidth }));
+    expect(scroll).toBeLessThanOrEqual(client);
+  };
+
+  test('no sideways page scroll in any contact-sheet mode', async ({ page }) => {
+    await page.goto('/design-preview/scenes');
+    await noSidewaysScroll(page);
+    for (const mode of ['Thumbnails 160', 'Sequence cards 96']) {
+      await page.getByRole('button', { name: mode }).click();
+      await expect(page.getByTestId('scene-thumb')).toHaveCount(scenes);
+      await noSidewaysScroll(page);
+    }
+  });
+
+  test('no sideways page scroll on the library page', async ({ page }) => {
+    await page.goto('/design-preview/scenes/library');
+    await expect(page.getByTestId('hoya-pose')).toHaveCount(5);
+    await noSidewaysScroll(page);
+  });
+});
+
+test('wide screens keep the 4-up thumbnail grid and 8-up sequence cards', async ({ page }) => {
+  await page.setViewportSize({ width: 1500, height: 900 });
+  await page.goto('/design-preview/scenes');
+  // the biggest story grid: how many cells its first row holds, and how many cells it has
+  const firstRow = async (): Promise<{ row: number; size: number }> =>
+    page.locator('[data-testid="thumb-grid"]').evaluateAll((grids) => {
+      const grid = grids.reduce((a, b) => (b.children.length > a.children.length ? b : a));
+      const tops = [...grid.children].map((c) => (c as HTMLElement).offsetTop);
+      return { row: tops.filter((t) => t === tops[0]).length, size: tops.length };
+    });
+  await page.getByRole('button', { name: 'Thumbnails 160' }).click();
+  const thumbs = await firstRow();
+  expect(thumbs.row).toBe(Math.min(4, thumbs.size));
+  await page.getByRole('button', { name: 'Sequence cards 96' }).click();
+  const cards = await firstRow();
+  expect(cards.size).toBeGreaterThanOrEqual(8);
+  expect(cards.row).toBe(8);
+});

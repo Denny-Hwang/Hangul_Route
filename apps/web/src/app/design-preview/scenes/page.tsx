@@ -60,13 +60,16 @@ function SceneRow({ story, scene }: { story: SheetStory; scene: SheetScene }): J
           <ArtStatus scene={scene} />
         </div>
         {scene.art ? <p style={{ ...muted, margin: `${spacing.xs}px 0 0` }}>alt: {scene.art.altEn}</p> : null}
+        {scene.cards.map((ref, i) => (
+          <p key={`${ref}-${i}`} data-card-note style={{ ...muted, margin: `${spacing.xs}px 0 0` }}>{`${ref} — shown in the app`}</p>
+        ))}
       </div>
       <div style={cell}>
-        <h4 style={{ ...muted, margin: `0 0 ${spacing.xs}px` }}>Brief</h4>
+        <h3 style={{ ...muted, margin: `0 0 ${spacing.xs}px` }}>Brief</h3>
         <p style={{ margin: 0 }}>{scene.brief ?? '(no brief)'}</p>
       </div>
       <div style={cell}>
-        <h4 style={{ ...muted, margin: `0 0 ${spacing.xs}px` }}>Narration and evidence</h4>
+        <h3 style={{ ...muted, margin: `0 0 ${spacing.xs}px` }}>Narration and evidence</h3>
         <Narration scene={scene} />
         <ul style={{ margin: `${spacing.sm}px 0 0`, paddingLeft: spacing.lg, display: 'grid', gap: spacing.xs }}>
           {scene.facts.map((f) => (
@@ -77,7 +80,7 @@ function SceneRow({ story, scene }: { story: SheetStory; scene: SheetScene }): J
         </ul>
       </div>
       <div style={cell}>
-        <h4 style={{ ...muted, margin: `0 0 ${spacing.xs}px` }}>Layers</h4>
+        <h3 style={{ ...muted, margin: `0 0 ${spacing.xs}px` }}>Layers</h3>
         {scene.layers.length === 0 ? (
           <p style={{ ...muted, margin: 0 }}>None</p>
         ) : (
@@ -106,7 +109,7 @@ function SceneRow({ story, scene }: { story: SheetStory; scene: SheetScene }): J
         )}
       </div>
       <div style={cell}>
-        <h4 style={{ ...muted, margin: `0 0 ${spacing.xs}px` }}>Findings</h4>
+        <h3 style={{ ...muted, margin: `0 0 ${spacing.xs}px` }}>Findings</h3>
         <FindingList findings={scene.findings} />
       </div>
     </article>

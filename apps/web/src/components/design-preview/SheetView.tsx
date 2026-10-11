@@ -9,8 +9,13 @@ import { useState, type ReactNode } from 'react';
  * The contact sheet's size toggle (F-STORY-002 §3.9.6): review rows (the
  * default, rendered on the server), a 4-up thumbnail grid at 160 x 120, or the
  * 96-wide size a scene has on a Story Order card. The two grids draw the thumb
- * variant here in the browser from the scene data, only when asked for, so the
- * static page carries each picture once.
+ * variant here in the browser from the scene data, only when asked for, so
+ * they add no markup to the static page. (The rows still reach the page twice,
+ * as HTML and in the App Router's inline RSC payload, and `thumbs` carries each
+ * scene's art data once more: about three times the art size in all.)
+ *
+ * On a narrow screen the grids wrap instead of widening the page; from 4 (or
+ * 8) cells' width up they keep the 4-up (or 8-up) layout.
  */
 export type SheetMode = 'rows' | 'thumbs' | 'sequence';
 
@@ -32,12 +37,16 @@ export const CELL_WIDTH: Record<Exclude<SheetMode, 'rows'>, number> = { thumbs: 
 const COLUMNS: Record<Exclude<SheetMode, 'rows'>, number> = { thumbs: 4, sequence: 8 };
 
 function Grid({ stories, width, columns }: { stories: readonly ThumbStory[]; width: number; columns: number }): JSX.Element {
+  const cell = width + 2 * borderWidth.thin; // the picture and its frame
   return (
     <>
       {stories.map((story) => (
         <section key={story.id} style={{ margin: `${spacing.xl}px 0` }}>
           <h2 style={{ fontSize: typography.size.bodyLg, color: colors.text.primary, margin: `0 0 ${spacing.sm}px` }}>{story.titleEn}</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: `repeat(${columns}, max-content)`, gap: spacing.md }}>
+          <div
+            data-testid="thumb-grid"
+            style={{ display: 'grid', gridTemplateColumns: `repeat(auto-fill, ${cell}px)`, maxWidth: columns * cell + (columns - 1) * spacing.md, gap: spacing.md }}
+          >
             {story.scenes.map((scene) => (
               <figure key={scene.key} data-testid="scene-thumb" style={{ margin: 0 }}>
                 <div style={{ display: 'flex', backgroundColor: colors.surface.paper, border: `${borderWidth.thin}px solid ${colors.border.subtle}`, borderRadius: radii.md, overflow: 'hidden' }}>
