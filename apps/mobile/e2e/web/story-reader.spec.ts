@@ -144,8 +144,8 @@ test.describe('story reader, replay route (fixture bundle)', () => {
     await expect(page.getByRole('button', { name: 'Korean: 세종, Sejong, King Sejong the Great' })).toBeAttached();
     // The Korean block has its own 64 dp speaker (§3.3 item 4).
     await expect(page.getByTestId('story-reader-hear-korean')).toHaveAccessibleName('Hear the Korean');
-    // Sources arrives with PR 2.7: no button yet.
-    await expect(page.getByTestId('story-reader-sources')).toHaveCount(0);
+    // Sources (PR 2.7) sits at the end of the top bar; story-reader-sources.spec.ts covers the screen.
+    await expect(page.getByTestId('story-reader-sources')).toBeVisible();
 
     // Next and Back: the page number goes down, the dots never do (D3).
     await next(page).click();
@@ -180,7 +180,7 @@ test.describe('story reader, replay route (fixture bundle)', () => {
     await expect(page.getByRole('heading', { name: 'The End' })).toBeVisible();
     await expect(page.getByTestId('story-reader-end-primary')).toHaveText('Done');
     await expect(page.getByTestId('story-reader-read-again')).toBeVisible();
-    await expect(page.getByTestId('story-reader-end-sources')).toHaveCount(0);
+    await expect(page.getByTestId('story-reader-end-sources')).toBeVisible();
     await expect(page.getByTestId('story-reader-bottom-bar')).toHaveCount(0);
 
     // Read again starts over; the meter stays full.

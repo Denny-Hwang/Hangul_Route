@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { buildSourcesView } from '../sources-view';
 import {
   findSourceLink,
+  hasHangul,
   isSafeHttpsUrl,
   linkOpenedPayload,
   openLinkNote,
@@ -145,4 +146,14 @@ describe('sourcesTarget: deep links (§3.8)', () => {
     expect(sourcesTarget(v, {})).toBeNull();
     expect(sourcesTarget(v, { sceneIndex: 99 })).toBeNull();
   });
+});
+
+describe('hasHangul: which citation nodes are marked lang="ko"', () => {
+  it.each([
+    ['사관은 경연에 참석하여', true],
+    ['Section: ㄱ and ㄴ', true],
+    ['Sejong (세종)', true],
+    ['Section: Creation of Hangul', false],
+    ['', false],
+  ])('%j -> %s', (text, expected) => expect(hasHangul(text)).toBe(expected));
 });

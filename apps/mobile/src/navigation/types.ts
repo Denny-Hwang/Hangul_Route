@@ -1,9 +1,13 @@
 import type { StoryLevel } from '@hangul-route/content-schema';
 import type { NavigatorScreenParams } from '@react-navigation/native';
 import type { PinResetMethod } from '../logic/profiles/pin-flow';
+import type { SourcesRouteParams } from '../logic/story/source-link';
 
-/** Where a grown-up action continues once the gate (or a new PIN) is through. */
-export type GrownUpDestination = 'ParentDashboard' | 'AddProfile' | 'Restore' | 'SaveProgress' | 'Paywall';
+/**
+ * Where a grown-up action continues once the gate (or a new PIN) is through. `ExternalLink`
+ * (F-STORY-002 §3.1, §3.8): back to Sources, which then opens the source link it was asked for.
+ */
+export type GrownUpDestination = 'ParentDashboard' | 'AddProfile' | 'Restore' | 'SaveProgress' | 'Paywall' | 'ExternalLink';
 
 export type RootStackParamList = {
   Onboarding: NavigatorScreenParams<OnboardingStackParamList>;
@@ -28,6 +32,8 @@ export type RootStackParamList = {
     mode?: 'setup';
     /** Which Forgot PIN path led here (telemetry only). */
     via?: PinResetMethod;
+    /** `next: 'ExternalLink'`: the source link waiting on the gate (Sources opens it on return). */
+    url?: string;
   };
   /** Forgot PIN: Rescue Code or a 24-hour wait, then a new PIN (F-LEARN-001 §3.5). `next` is kept for the PIN screen. */
   PinReset: { next: GrownUpDestination };
@@ -52,6 +58,11 @@ export type RootStackParamList = {
    * from Results (F-STORY-003) and the shelf / episode page (F-STORY-004) open it.
    */
   StoryReader: { storyId: string; level: StoryLevel; mode: 'replay'; sceneIndex?: number };
+  /**
+   * Sources (F-STORY-002 §3.8): every fact of a story with its citations. `factId` scrolls to and
+   * highlights that card, `sceneIndex` scrolls to that scene; `from` is for telemetry only.
+   */
+  StorySources: SourcesRouteParams;
 };
 
 export type OnboardingStackParamList = {

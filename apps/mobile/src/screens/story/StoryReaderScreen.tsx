@@ -1,6 +1,7 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useCallback, useMemo } from 'react';
 import { storyById } from '../../content/stories';
+import { sourcesRouteParams } from '../../logic/story/source-link';
 import type { RootStackParamList } from '../../navigation/types';
 import { StoryReaderView } from './StoryReaderView';
 
@@ -14,6 +15,7 @@ const NOTHING = (): void => undefined;
  * writing nothing — no rounds, no step completion, no bookmark, no progress.
  * Entered from "Read it again" (F-STORY-003 Results, F-STORY-004 shelf and
  * episode page). Done, Close and the back gesture return to where it came from.
+ * Sources (top bar and end page, PR 2.7) opens `StorySources` on top of it.
  */
 export function StoryReaderScreen({ route, navigation }: Props): React.ReactElement {
   const { storyId, level, sceneIndex } = route.params;
@@ -23,6 +25,11 @@ export function StoryReaderScreen({ route, navigation }: Props): React.ReactElem
     if (navigation.canGoBack()) navigation.goBack();
     else navigation.navigate('Main', { screen: 'Home' });
   }, [navigation]);
+
+  const openSources = useCallback(
+    (from: 'reader' | 'end', index: number): void => navigation.navigate('StorySources', sourcesRouteParams(storyId, from, index)),
+    [navigation, storyId],
+  );
 
   return (
     <StoryReaderView
@@ -34,6 +41,7 @@ export function StoryReaderScreen({ route, navigation }: Props): React.ReactElem
       onAnswer={NOTHING}
       onFinish={leave}
       onClose={leave}
+      onOpenSources={openSources}
     />
   );
 }
