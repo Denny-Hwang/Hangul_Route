@@ -3,8 +3,18 @@ import { HOYA_POSES } from '../hoya';
 import { SCENE_ART_REGISTRY, hasItem } from '../registry';
 import { checkItem, checkScene } from '../rules';
 
-/** PR 2.3a seeded the Hoya poses; PR 2.3b adds the first library batch. */
-const SETTINGS = ['scene:palace-courtyard', 'scene:palace-hall', 'scene:village-lane'];
+/** PR 2.3a seeded the Hoya poses; PR 2.3b adds the first library batch; PR 2.10a the records-joseon batch. */
+const SETTINGS = [
+  'scene:palace-courtyard',
+  'scene:palace-hall',
+  'scene:village-lane',
+  'scene:hanji-backdrop',
+  'scene:hanok-room',
+  'scene:countryside',
+  'scene:mountains',
+  'scene:mountain-stream',
+  'scene:modern-room',
+];
 const PROPS = [
   'prop:fig-king',
   'prop:fig-official',
@@ -19,13 +29,56 @@ const PROPS = [
   'prop:book-thread-bound',
   'prop:books-case',
   'prop:document-box',
+  // PR 2.10a: records-joseon cluster
+  'prop:fig-officials-kneeling',
+  'prop:fig-king-seated',
+  'prop:fig-writer-seated',
+  'prop:fig-artisan',
+  'prop:fig-dancer',
+  'prop:fig-modern',
+  'prop:fig-worker',
+  'prop:fig-researcher',
+  'prop:books-stack',
+  'prop:book-bundle',
+  'prop:book-chest-open',
+  'prop:books-airing',
+  'prop:book-open-entry',
+  'prop:uigwe-open',
+  'prop:book-geojunggi',
+  'prop:banchado-strip',
+  'prop:paper-stack',
+  'prop:papers-loose',
+  'prop:sheet-cursive',
+  'prop:print-sheet',
+  'prop:type-tray',
+  'prop:horse',
+  'prop:pine-tree',
+  'prop:flat-rock',
+  'prop:sago-archive',
+  'prop:fortress-gate',
+  'prop:fortress-wall',
+  'prop:night-window',
+  'prop:oil-lamp',
+  'prop:tablet',
+  'prop:weather-signs',
+  'prop:signpost',
+  'prop:archive-shelf',
+  'prop:craft-wood',
+  'prop:craft-embroidery',
+  'prop:craft-painting',
+  'prop:palanquin',
+  'prop:procession-row',
+  'prop:feast-table',
+  'prop:bead-curtain',
+  'prop:silk-bolts',
+  'prop:ceremony-goods',
 ];
 
 const entries = Object.entries(SCENE_ART_REGISTRY);
 const library = entries.filter(([id]) => !id.startsWith('hoya:'));
 
 describe('SCENE_ART_REGISTRY', () => {
-  it('holds the five Hoya poses and the first library batch, keyed by their layer ref', () => {
+  it('holds the five Hoya poses and the library batches, keyed by their layer ref', () => {
     const expected = [...HOYA_POSES.map((p) => `hoya:${p}`), ...SETTINGS, ...PROPS].sort();
     expect(Object.keys(SCENE_ART_REGISTRY).sort()).toEqual(expected);
     for (const [key, item] of entries) expect(item.id).toBe(key);
@@ -40,7 +93,7 @@ describe('SCENE_ART_REGISTRY', () => {
       expect(id).toMatch(/^(scene|prop):[a-z]+(-[a-z]+)*$/);
       expect(id.startsWith('scene:')).toBe(item.kind === 'setting');
     }
-    expect(library.filter(([id]) => id.startsWith('scene:'))).toHaveLength(3);
+    expect(library.filter(([id]) => id.startsWith('scene:'))).toHaveLength(SETTINGS.length);
   });
 
   it('every library entry passes every item rule', () => {
@@ -69,11 +122,12 @@ describe('SCENE_ART_REGISTRY', () => {
     }
   });
 
-  it('every heritage artefact is an object with a sourceRef and an accuracyNote', () => {
+  // F-STORY-002 §3.9.10: heritage artefacts are objects or buildings.
+  it('every heritage artefact is an object or a building with a sourceRef and an accuracyNote', () => {
     const heritage = library.filter(([, item]) => item.tags?.heritage);
     expect(heritage.length).toBeGreaterThanOrEqual(3);
     for (const [id, item] of heritage) {
-      expect(item.kind, id).toBe('object');
+      expect(['object', 'architecture'], id).toContain(item.kind);
       expect(item.sourceRef, id).toBeDefined();
       expect(item.accuracyNote, id).toBeDefined();
     }
@@ -95,7 +149,18 @@ describe('SCENE_ART_REGISTRY', () => {
   });
 
   it('tintable figures name a tintable token that their nodes use', () => {
-    for (const id of ['prop:fig-official', 'prop:fig-scholar', 'prop:fig-historian', 'prop:fig-villager', 'prop:fig-grandmother', 'prop:fig-child']) {
+    for (const id of [
+      'prop:fig-official',
+      'prop:fig-scholar',
+      'prop:fig-historian',
+      'prop:fig-villager',
+      'prop:fig-grandmother',
+      'prop:fig-child',
+      'prop:fig-officials-kneeling',
+      'prop:fig-writer-seated',
+      'prop:fig-artisan',
+      'prop:fig-modern',
+    ]) {
       const item = SCENE_ART_REGISTRY[id]!;
       expect(item.tintable, id).toBeDefined();
       expect(JSON.stringify(item.nodes), id).toContain(item.tintable!);
@@ -144,6 +209,16 @@ describe('SCENE_ART_REGISTRY', () => {
       };
       expect(checkScene(art, SCENE_ART_REGISTRY).filter((f) => f.severity === 'error'), pose).toEqual([]);
     }
+  });
+
+  it('every tintable item uses its tintable token, so a tint has something to recolour', () => {
+    for (const [id, item] of library.filter(([, i]) => i.tintable)) expect(JSON.stringify(item.nodes), id).toContain(`"${item.tintable}"`);
+  });
+
+  it('the archive door tint recolours only the doors', () => {
+    const sago = SCENE_ART_REGISTRY['prop:sago-archive']!;
+    const doors = JSON.stringify(sago.nodes).split(`"${sago.tintable}"`).length - 1;
+    expect(doors).toBe(2);
   });
 
   it('answers hasItem for registered refs only', () => {

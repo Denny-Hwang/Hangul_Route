@@ -206,3 +206,203 @@ export const FIG_CHILD: ItemDef = {
     { t: 'path', d: 'M28 34 L24 42 M28 34 L33 42', stroke: 'text.secondary', sw: 'base' },
   ],
 };
+
+// --- PR 2.10a: records-joseon cluster -------------------------------------
+
+export const FIG_OFFICIALS_KNEELING: ItemDef = {
+  id: 'prop:fig-officials-kneeling',
+  kind: 'figure',
+  box: { w: 150, h: 70 },
+  z: 'mid',
+  tintable: 'text.primary',
+  alt: 'A row of three Joseon officials kneeling, seen from behind, in dark robes and winged gauze caps',
+  sourceRef: { title: '흑단령 (黑團領)', publisher: PUBLISHER, url: 'https://encykorea.aks.ac.kr/Article/E0079876', accessed: ACCESSED },
+  accuracyNote:
+    "Three officials kneeling in a row, seen from behind, in the dark round-collared court robe (heukdallyeong) and the samo cap with its two side wings, as in the standing official figure. Only the white inner collar shows at the neck; seen from behind there is no face to draw. Rank badges and belts are out of view, so no rank is claimed. The robe colour is tintable for the later green robes the source mentions.",
+  nodes: [0, 52, 104].map(
+    (tx): Shape => ({
+      t: 'group',
+      tx,
+      kids: [
+        { t: 'path', d: 'M2 68 Q2 40 22 33 Q42 40 42 68 Z', fill: 'text.primary', stroke: 'border.strong', sw: 'thin' },
+        { t: 'rect', x: 17, y: 27, w: 10, h: 6, fill: 'surface.paper', stroke: 'border.strong', sw: 'thin' },
+        { t: 'path', d: 'M14 29 Q14 9 22 9 Q30 9 30 29 Z', fill: 'text.primary' },
+        { t: 'ellipse', cx: 9, cy: 15, rx: 6, ry: 2, fill: 'text.primary' },
+        { t: 'ellipse', cx: 35, cy: 15, rx: 6, ry: 2, fill: 'text.primary' },
+      ],
+    }),
+  ),
+};
+
+/** The seated pose shared by the king, the young writer and the historian: legs folded, paper on the lap. */
+const seatedBase = (robe: 'brand.primary' | 'brand.secondaryLight', ink: 'text.primary' | 'text.secondary'): Shape[] => [
+  { t: 'rect', x: 46, y: 28, w: 8, h: 9, fill: 'surface.paper', stroke: 'border.strong', sw: 'thin' },
+  // folded legs, body and both sleeves as one robe shape
+  { t: 'path', d: 'M8 88 Q8 64 30 58 L34 58 L28 36 Q50 30 72 36 L66 58 L70 58 Q92 64 92 88 Z M32 38 Q18 52 26 66 L40 66 Q36 52 38 44 Z M68 38 Q82 52 74 64 L60 64 Q64 52 62 44 Z', fill: robe, stroke: 'text.primary', sw: 'thin' },
+  face(50, 20, 10, 12),
+  { t: 'poly', pts: [[28, 80], [72, 80], [67, 66], [33, 66]], fill: 'surface.paper', stroke: 'border.strong', sw: 'base' },
+  { t: 'path', d: 'M40 69 V76 M46 69 V74 M52 69 V77', stroke: ink, sw: 'thin', det: true },
+  { t: 'line', x1: 62, y1: 50, x2: 62, y2: 70, stroke: ink, sw: 'base' },
+  { t: 'circle', cx: 62, cy: 62, r: 3.5, fill: 'surface.paper', stroke: 'border.strong', sw: 'thin' },
+];
+
+export const FIG_KING_SEATED: ItemDef = {
+  id: 'prop:fig-king-seated',
+  kind: 'figure',
+  box: { w: 100, h: 90 },
+  z: 'mid',
+  alt: "Joseon king seated on the floor in a crimson robe with dragon patches and the king's winged cap, writing on a sheet of paper",
+  sourceRef: { title: '곤룡포 부 용문보 (袞龍袍 付 龍紋補)', publisher: PUBLISHER, url: 'https://encykorea.aks.ac.kr/Article/E0004151', accessed: ACCESSED },
+  accuracyNote:
+    "The king of the standing figure, seated: the crimson everyday robe (gonryongpo) with round dragon patches on chest and shoulders, and the ikseongwan cap with its two upright wings behind. He writes or reads on a sheet held on his lap, a storytelling pose for King Jeongjo's diary; the source describes the robe, not a posture. Dragon detail and the belt are reduced to plain shapes. The face is blank on purpose: no likeness of any king is invented.",
+  nodes: [
+    ...seatedBase('brand.primary', 'text.primary'),
+    { t: 'ellipse', cx: 45, cy: 3.5, rx: 2.5, ry: 3.5, fill: 'text.primary' },
+    { t: 'ellipse', cx: 55, cy: 3.5, rx: 2.5, ry: 3.5, fill: 'text.primary' },
+    { t: 'path', d: 'M40 17 Q40 3 50 3 Q60 3 60 17 Q50 12 40 17 Z', fill: 'text.primary' },
+    { t: 'circle', cx: 50, cy: 46, r: 6, fill: 'feedback.nudge', stroke: 'text.primary', sw: 'thin' },
+    { t: 'circle', cx: 34, cy: 40, r: 3.5, fill: 'feedback.nudge', stroke: 'text.primary', sw: 'thin' },
+    { t: 'circle', cx: 66, cy: 40, r: 3.5, fill: 'feedback.nudge', stroke: 'text.primary', sw: 'thin' },
+    { t: 'rect', x: 35, y: 56, w: 30, h: 3, fill: 'text.primary' },
+  ],
+};
+
+export const FIG_WRITER_SEATED: ItemDef = {
+  id: 'prop:fig-writer-seated',
+  kind: 'figure',
+  box: { w: 100, h: 90 },
+  z: 'mid',
+  tintable: 'brand.secondaryLight',
+  alt: 'A young man in a plain pale coat, hair in a topknot, seated on the floor writing on a sheet of paper',
+  sourceRef: CLOTHING_REF,
+  accuracyNote:
+    "A seated writer in plain everyday clothes: a pale long coat over the basic jacket and trousers the source names, hair gathered in a topknot with no hat. It stands for young Jeongjo writing his diary as the royal grandson, as the brief asks for plain clothes; what he actually wore at his studies is not shown by the sources, so no royal sign is drawn. Coat colour is tintable. The face is blank on purpose.",
+  nodes: [
+    ...seatedBase('brand.secondaryLight', 'text.secondary'),
+    { t: 'path', d: 'M40 18 Q40 6 50 6 Q60 6 60 18 Q50 12 40 18 Z', fill: 'text.primary' },
+    { t: 'circle', cx: 50, cy: 4, r: 4, fill: 'text.primary' },
+    { t: 'path', d: 'M44 38 L50 46 L56 38', stroke: 'border.strong', sw: 'base', det: true },
+    { t: 'rect', x: 35, y: 56, w: 30, h: 3, fill: 'text.secondary' },
+  ],
+};
+
+export const FIG_ARTISAN: ItemDef = {
+  id: 'prop:fig-artisan',
+  kind: 'figure',
+  box: { w: 80, h: 84 },
+  z: 'mid',
+  tintable: 'surface.sunken',
+  alt: 'A Joseon craftsperson kneeling at work in a plain jacket and trousers, a cloth tied round the head',
+  sourceRef: CLOTHING_REF,
+  accuracyNote:
+    "A kneeling craftsperson in the basic jacket (jeogori) and trousers (baji) the source names, sleeves pushed forward to work, with a plain cloth band tied round the head over a topknot (drawn from general knowledge, not the source). Garment colour is tintable so carpenter, painter and embroiderer can differ. Tools are separate props. No rank, guild sign or name is drawn. The face is blank on purpose.",
+  nodes: [
+    { t: 'ellipse', cx: 40, cy: 82, rx: 34, ry: 2, fill: 'text.primary', o: 0.08, det: true },
+    { t: 'rect', x: 36, y: 30, w: 8, h: 8, fill: 'surface.paper', stroke: 'border.strong', sw: 'thin' },
+    // kneeling legs, body and the arms reaching forward as one garment shape
+    { t: 'path', d: 'M10 82 Q8 62 24 58 L26 38 Q40 32 54 38 L56 50 L74 60 L70 68 L54 62 L56 58 Q72 62 70 82 Z', fill: 'surface.sunken', stroke: 'border.strong', sw: 'base' },
+    face(40, 21, 10, 12),
+    { t: 'path', d: 'M30 18 Q30 6 40 6 Q50 6 50 18 Q40 13 30 18 Z', fill: 'text.primary' },
+    { t: 'circle', cx: 40, cy: 5, r: 4, fill: 'text.primary' },
+    { t: 'rect', x: 30, y: 13, w: 20, h: 3, r: 1, fill: 'text.secondary' },
+    { t: 'path', d: 'M33 40 L40 50 L47 40', stroke: 'border.strong', sw: 'base', det: true },
+    { t: 'rect', x: 26, y: 56, w: 30, h: 3, fill: 'text.secondary' },
+  ],
+};
+
+export const FIG_DANCER: ItemDef = {
+  id: 'prop:fig-dancer',
+  kind: 'figure',
+  box: { w: 80, h: 124 },
+  z: 'mid',
+  alt: 'A Joseon court dancer with a flower crown, a yellow jacket, a dark blue skirt and long striped sleeves raised',
+  sourceRef: { title: '무복(舞服)', publisher: PUBLISHER, url: 'https://encykorea.aks.ac.kr/Article/E0019054', accessed: ACCESSED },
+  accuracyNote:
+    "Simplified from the court dance (jeongjae) costume of female performers the source lists for King Sunjo's feast record: a flower crown, a yellow silk jacket over a green one, an indigo skirt and five-coloured sleeve extensions (hansam). Here the jacket is one yellow, the skirt one dark blue and the long white sleeves carry yellow and blue bands; shoes, sash and crown detail are reduced. The 1795 dancers' exact costume is not given by the source, so this is the general type. The face is blank on purpose.",
+  nodes: [
+    { t: 'rect', x: 36, y: 34, w: 8, h: 8, fill: 'surface.paper', stroke: 'border.strong', sw: 'thin' },
+    { t: 'path', d: 'M26 64 L54 64 L72 120 L8 120 Z', fill: 'brand.secondary', stroke: 'border.strong', sw: 'thin' },
+    { t: 'path', d: 'M28 40 L52 40 L58 48 L58 66 L22 66 L22 48 Z', fill: 'feedback.nudge', stroke: 'border.strong', sw: 'thin' },
+    // one arm raised high, one held out low; the long hansam sleeves hang from them
+    { t: 'path', d: 'M54 44 L70 22 L78 26 L60 52 Z', fill: 'feedback.nudge', stroke: 'border.strong', sw: 'thin' },
+    { t: 'path', d: 'M26 46 L10 66 L16 72 L28 56 Z', fill: 'feedback.nudge', stroke: 'border.strong', sw: 'thin' },
+    { t: 'path', d: 'M70 22 Q78 6 76 2 L80 4 Q80 14 78 26 Z', fill: 'surface.paper', stroke: 'border.strong', sw: 'thin' },
+    { t: 'path', d: 'M10 66 Q2 84 4 100 L10 100 Q10 84 16 72 Z', fill: 'surface.paper', stroke: 'border.strong', sw: 'thin' },
+    { t: 'path', d: 'M5 80 H12.5 M4 90 H11', stroke: 'feedback.nudge', sw: 'base' },
+    { t: 'path', d: 'M5 85 H12 M74 10 L79 11', stroke: 'brand.secondary', sw: 'base', det: true },
+    face(40, 24, 10, 12),
+    { t: 'path', d: 'M28 18 Q30 6 40 6 Q50 6 52 18 Q40 12 28 18 Z', fill: 'text.secondary' },
+    // flower crown
+    { t: 'path', d: 'M30 10 L32 2 L36 7 L40 1 L44 7 L48 2 L50 10 Z', fill: 'feedback.nudge', stroke: 'border.strong', sw: 'thin' },
+  ],
+};
+
+export const FIG_MODERN: ItemDef = {
+  id: 'prop:fig-modern',
+  kind: 'figure',
+  box: { w: 60, h: 124 },
+  z: 'mid',
+  tintable: 'brand.secondary',
+  alt: 'A person of today in a shirt and trousers',
+  accuracyNote:
+    "A present-day adult in a plain shirt and trousers with short hair, for researchers, visitors and families. Shirt colour is tintable; scaled down it stands for a child. Not a portrait of anyone. The face is blank on purpose.",
+  nodes: [
+    { t: 'ellipse', cx: 30, cy: 122, rx: 22, ry: 2, fill: 'text.primary', o: 0.08, det: true },
+    { t: 'rect', x: 26, y: 30, w: 8, h: 8, fill: 'surface.paper', stroke: 'border.strong', sw: 'thin' },
+    { t: 'path', d: 'M17 74 L43 74 L45 120 L33 120 L30 88 L27 120 L15 120 Z', fill: 'text.secondary', stroke: 'border.strong', sw: 'thin' },
+    { t: 'path', d: 'M18 36 L42 36 L50 44 L54 76 L46 78 L43 56 L43 78 L17 78 L17 56 L14 78 L6 76 L10 44 Z', fill: 'brand.secondary', stroke: 'border.strong', sw: 'thin' },
+    { t: 'path', d: 'M25 37 L30 44 L35 37', stroke: 'border.strong', sw: 'base', det: true },
+    face(30, 20, 10, 12),
+    { t: 'path', d: 'M20 18 Q20 6 30 6 Q40 6 40 18 Q36 12 30 12 Q24 12 20 18 Z', fill: 'text.primary' },
+    { t: 'path', d: 'M14 120 H28 V124 H14 Z M32 120 H46 V124 H32 Z', fill: 'text.primary' },
+  ],
+};
+
+export const FIG_WORKER: ItemDef = {
+  id: 'prop:fig-worker',
+  kind: 'figure',
+  box: { w: 64, h: 124 },
+  z: 'mid',
+  alt: 'A restoration worker of today in a yellow hard hat and a work vest',
+  accuracyNote:
+    "A present-day stone mason or restoration worker: a yellow safety helmet, a high-visibility work vest over a long-sleeved shirt, work trousers and boots. Generic safety wear, not any company's uniform. The face is blank on purpose.",
+  nodes: [
+    { t: 'ellipse', cx: 32, cy: 122, rx: 24, ry: 2, fill: 'text.primary', o: 0.08, det: true },
+    { t: 'rect', x: 28, y: 32, w: 8, h: 8, fill: 'surface.paper', stroke: 'border.strong', sw: 'thin' },
+    { t: 'path', d: 'M18 76 L46 76 L48 118 L35 118 L32 90 L29 118 L16 118 Z', fill: 'text.secondary', stroke: 'border.strong', sw: 'thin' },
+    { t: 'path', d: 'M20 38 L44 38 L52 46 L58 74 L50 78 L46 58 L46 80 L18 80 L18 58 L14 78 L6 74 L12 46 Z', fill: 'border.strong', stroke: 'text.secondary', sw: 'thin' },
+    { t: 'path', d: 'M22 40 L28 40 L32 50 L36 40 L42 40 L44 80 L20 80 Z', fill: 'feedback.nudge', stroke: 'text.secondary', sw: 'thin' },
+    { t: 'path', d: 'M20 64 H44', stroke: 'surface.paper', sw: 'thick', det: true },
+    face(32, 22, 10, 12),
+    { t: 'path', d: 'M19 17 Q19 3 32 3 Q45 3 45 17 Z', fill: 'feedback.nudge', stroke: 'text.secondary', sw: 'thin' },
+    { t: 'rect', x: 16, y: 15, w: 32, h: 4, r: 2, fill: 'feedback.nudge', stroke: 'text.secondary', sw: 'thin' },
+    { t: 'path', d: 'M14 118 H30 V124 H14 Z M34 118 H50 V124 H34 Z', fill: 'text.primary' },
+  ],
+};
+
+export const FIG_RESEARCHER: ItemDef = {
+  id: 'prop:fig-researcher',
+  kind: 'figure',
+  box: { w: 130, h: 100 },
+  z: 'mid',
+  alt: 'A researcher of today seated at a desk beside a computer screen showing a simple line chart',
+  accuracyNote:
+    "A present-day researcher at a desk with a monitor that shows a plain rising-and-falling line, standing for weather data read from old diaries. The chart has no axes, labels or numbers, so it claims no particular result. Not a portrait of anyone. The face is blank on purpose.",
+  nodes: [
+    { t: 'ellipse', cx: 65, cy: 98, rx: 60, ry: 2, fill: 'text.primary', o: 0.08, det: true },
+    // the researcher behind the desk
+    { t: 'rect', x: 89, y: 28, w: 8, h: 8, fill: 'surface.paper', stroke: 'border.strong', sw: 'thin' },
+    { t: 'path', d: 'M78 64 L80 40 Q93 34 106 40 L108 64 Z', fill: 'brand.secondary', stroke: 'border.strong', sw: 'thin' },
+    face(93, 19, 9, 11),
+    { t: 'path', d: 'M84 17 Q84 6 93 6 Q102 6 102 17 Q98 11 93 11 Q88 11 84 17 Z', fill: 'text.primary' },
+    // monitor on the desk, facing the viewer
+    { t: 'rect', x: 6, y: 12, w: 64, h: 44, r: 3, fill: 'text.primary' },
+    { t: 'rect', x: 10, y: 16, w: 56, h: 36, fill: 'surface.paper' },
+    { t: 'path', d: 'M14 44 L24 36 L32 40 L42 26 L50 32 L62 22', stroke: 'brand.secondary', sw: 'base' },
+    { t: 'path', d: 'M14 48 H62', stroke: 'border.strong', sw: 'thin', det: true },
+    { t: 'path', d: 'M34 56 H42 L44 64 H32 Z', fill: 'text.primary' },
+    // desk
+    { t: 'rect', x: 0, y: 64, w: 130, h: 6, r: 1, fill: 'text.secondary' },
+    { t: 'path', d: 'M6 70 H12 V98 H6 Z M118 70 H124 V98 H118 Z', fill: 'text.secondary' },
+  ],
+};
