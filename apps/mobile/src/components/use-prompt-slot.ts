@@ -33,9 +33,14 @@ export interface PromptSlotOptions {
   source: string;
   /** The item has a bundled recording (so a missing voice is not a missing sound). */
   hasClip?: boolean;
+  /**
+   * The screen already prints the Korean next to its speaker and renders `<PromptPanel variant="status">`
+   * (A-5b), so the fallback counts as shown when that status panel appears, not before.
+   */
+  textOnScreen?: boolean;
 }
 
-export function usePromptSlot({ source, hasClip = false }: PromptSlotOptions): PromptSlot {
+export function usePromptSlot({ source, hasClip = false, textOnScreen = false }: PromptSlotOptions): PromptSlot {
   const [state, dispatch] = useReducer(promptReducer, INITIAL_PROMPT_STATE);
   const muted = useAudioStore((s) => s.muted);
   const tts = useAudioStore((s) => s.tts);
@@ -56,9 +61,10 @@ export function usePromptSlot({ source, hasClip = false }: PromptSlotOptions): P
     if (!clip) dispatch({ capability: { tts, clips, unlocked } });
   }, [tts, clips, unlocked, clip]);
 
+  const fallbackVisible = textOnScreen ? view.statusShown : view.textShown;
   useEffect(() => {
-    if (view.textShown && view.reason !== null) noteFallbackShown(source, view.reason);
-  }, [view.textShown, view.reason, source]);
+    if (fallbackVisible && view.reason !== null) noteFallbackShown(source, view.reason);
+  }, [fallbackVisible, view.reason, source]);
 
   const play = useCallback((run: () => Promise<PlayResult>): Promise<PlayResult> => {
     const mine = epoch.current;

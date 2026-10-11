@@ -3,19 +3,25 @@ import {
   Button,
   Heading,
   HoyaBubble,
+  Icon,
   Pill,
   Progress,
   Screen,
   Spacer,
+  colors,
   spacing,
   useLayoutClass,
 } from '@hangul-route/design-system';
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View } from 'react-native';
+import { PromptPanel } from '../../components/PromptPanel';
+import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
+import { usePromptSlot } from '../../components/use-prompt-slot';
 import { useMessages } from '../../i18n/use-messages';
 import { gameArrangement } from '../../logic/layout/game-layout';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { buildCultureQuizRounds, type CultureQuizRound } from '../../logic/round-builder';
+import { playPrompt } from '../../platform/audio';
 import { nudge, success, tapLight } from '../../platform/haptics';
 import { useQuestRunStore } from '../../store/quest-run-store';
 import { GameColumns } from './GameColumns';
@@ -26,7 +32,8 @@ interface Props {
 }
 
 export function CultureQuizGame({ scope, onFinish }: Props): React.ReactElement {
-  const copy = useMessages().learner.minigame;
+  const m = useMessages();
+  const copy = m.learner.minigame;
   const rounds = useMemo<CultureQuizRound[]>(
     () => buildCultureQuizRounds({ cardPairs: scope.cardPairs ?? [], rounds: scope.rounds ?? 4 }),
     [scope],
@@ -42,6 +49,14 @@ export function CultureQuizGame({ scope, onFinish }: Props): React.ReactElement 
   const arrangement = gameArrangement(useLayoutClass());
 
   const round = rounds[roundIdx];
+  // The word is printed above its Hear-it button (audit AUD-13 / F16); the panel only says why it is silent (F-AUDIO-004 A-5b).
+  const slot = usePromptSlot({ source: 'culture-quiz', textOnScreen: true });
+  const { reset } = slot;
+  const [helpOpen, setHelpOpen] = useState(false);
+  useEffect(() => {
+    reset();
+  }, [roundIdx, reset]);
+
   if (!round) {
     return (
       <Screen>
@@ -49,6 +64,10 @@ export function CultureQuizGame({ scope, onFinish }: Props): React.ReactElement 
       </Screen>
     );
   }
+
+  const hear = (): void => {
+    void slot.play(() => playPrompt({ text: round.promptKo, kind: 'word', source: 'culture-quiz' }));
+  };
 
   const handleTap = (en: string, isAnswer: boolean): void => {
     if (feedback === 'correct') return;
@@ -94,7 +113,24 @@ export function CultureQuizGame({ scope, onFinish }: Props): React.ReactElement 
             <View style={{ alignItems: 'center' }}>
               <Heading level="title">{round.promptKo}</Heading>
               {round.promptRomanization ? <Body tone="muted">{round.promptRomanization}</Body> : null}
+              <Spacer size="sm" />
+              <Button
+                label={m.learner.audio.hearIt.cta}
+                tone="secondary"
+                size="md"
+                leading={<Icon name="speaker" size={20} color={colors.brand.primary} />}
+                onPress={hear}
+                testID="culture-quiz-hear"
+              />
             </View>
+            <Spacer size="sm" />
+            <PromptPanel
+              variant="status"
+              view={slot.view}
+              onAction={(action) => slot.act(action, hear)}
+              onHelp={() => setHelpOpen(true)}
+            />
+            <VoiceHelpSheet visible={helpOpen} onClose={() => setHelpOpen(false)} />
           </>
         }
         answers={

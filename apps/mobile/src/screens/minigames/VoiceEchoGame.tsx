@@ -16,9 +16,12 @@ import {
 } from '@hangul-route/design-system';
 import React, { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
+import { PromptPanel } from '../../components/PromptPanel';
+import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
+import { usePromptSlot } from '../../components/use-prompt-slot';
 import { useMessages } from '../../i18n/use-messages';
 import type { MinigameScope } from '../../logic/minigame-config';
-import { speak } from '../../platform/audio';
+import { playPrompt } from '../../platform/audio';
 import { useQuestRunStore } from '../../store/quest-run-store';
 
 /** Phone sizes of the speaker button and its icon; a tablet multiplies them by its media scale. */
@@ -36,7 +39,8 @@ interface Props {
  * to listen, repeat aloud, and tap "I said it" — honor system.
  */
 export function VoiceEchoGame({ scope: _scope, onFinish }: Props): React.ReactElement {
-  const copy = useMessages().learner.minigame.voiceEcho;
+  const m = useMessages();
+  const copy = m.learner.minigame.voiceEcho;
   const answerRound = useQuestRunStore((s) => s.answerRound);
   const markStepComplete = useQuestRunStore((s) => s.markStepComplete);
   const [acknowledged, setAcknowledged] = useState(false);
@@ -44,7 +48,15 @@ export function VoiceEchoGame({ scope: _scope, onFinish }: Props): React.ReactEl
   const speaker = useMediaSize(SPEAKER);
   const speakerIcon = useMediaSize(SPEAKER_ICON);
 
-  const target = _scope.cardPairs?.[0]?.ko ?? '안녕';
+  const pair = _scope.cardPairs?.[0];
+  const target = pair?.ko ?? '안녕';
+  const targetRomanization = pair ? pair.romanization : 'annyeong';
+  // The word is printed under the speaker; the panel only says why it is silent (F-AUDIO-004 A-5b).
+  const slot = usePromptSlot({ source: 'voice-echo', textOnScreen: true });
+  const [helpOpen, setHelpOpen] = useState(false);
+  const hear = (): void => {
+    void slot.play(() => playPrompt({ text: target, kind: 'word', source: 'voice-echo' }));
+  };
 
   const onDone = (): void => {
     answerRound(0, true);
@@ -62,7 +74,10 @@ export function VoiceEchoGame({ scope: _scope, onFinish }: Props): React.ReactEl
 
       <View style={{ alignItems: 'center' }}>
         <Pressable
-          onPress={() => speak(target, { language: 'ko-KR' })}
+          onPress={hear}
+          accessibilityRole="button"
+          accessibilityLabel={m.a11y.minigame.hear(targetRomanization ?? target)}
+          testID="voice-echo-speaker"
           style={{
             width: speaker,
             height: speaker,
@@ -76,8 +91,17 @@ export function VoiceEchoGame({ scope: _scope, onFinish }: Props): React.ReactEl
         >
           <Icon name="speaker" size={speakerIcon} />
           <Text style={{ fontSize: typography.size.title, fontWeight: '700', marginTop: spacing.sm }}>{target}</Text>
+          {targetRomanization ? <Caption tone="secondary">{targetRomanization}</Caption> : null}
         </Pressable>
       </View>
+      <Spacer size="sm" />
+      <PromptPanel
+        variant="status"
+        view={slot.view}
+        onAction={(action) => slot.act(action, hear)}
+        onHelp={() => setHelpOpen(true)}
+      />
+      <VoiceHelpSheet visible={helpOpen} onClose={() => setHelpOpen(false)} />
 
       <Spacer size="lg" />
       <HoyaBubble tone="idle" message={copy.bubble} />

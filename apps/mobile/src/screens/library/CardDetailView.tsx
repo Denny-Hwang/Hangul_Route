@@ -27,11 +27,14 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
+import { PromptPanel } from '../../components/PromptPanel';
+import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
+import { usePromptSlot } from '../../components/use-prompt-slot';
 import { cardById, episodesAll, questsAll } from '../../content';
 import { useMessages } from '../../i18n/use-messages';
 import { cardEarnHint } from '../../logic/card-earn';
 import { isStageEntitled } from '../../logic/entitlement';
-import { speak } from '../../platform/audio';
+import { playPrompt } from '../../platform/audio';
 import { useReducedMotion } from '../../platform/motion';
 import { isShareAvailable, shareSnapshot } from '../../platform/sharing';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
@@ -60,6 +63,14 @@ export function CardDetailView({ cardId, onClose, showHowToEarn = false }: CardD
   const [shareAvailable, setShareAvailable] = useState(false);
   const [shareError, setShareError] = useState<string | null>(null);
   const captureRef = useRef<View>(null);
+  // The Korean name is printed on the card; the panel only says why it is silent (F-AUDIO-004 A-5b).
+  const slot = usePromptSlot({ source: 'card-detail', textOnScreen: true });
+  const [helpOpen, setHelpOpen] = useState(false);
+  const resetSlot = slot.reset;
+  // A split pane swaps cards in place: a new card is a new prompt.
+  useEffect(() => {
+    resetSlot();
+  }, [cardId, resetSlot]);
 
   useEffect(() => {
     let cancelled = false;
@@ -134,6 +145,12 @@ export function CardDetailView({ cardId, onClose, showHowToEarn = false }: CardD
         );
       },
     );
+  };
+
+  // `audioRef` joins the card schema with F-CNT-002 / F-VOC (spec §3.9); until then the device voice says the name.
+  const hear = (): void => {
+    const ko = card.subtitleKo;
+    if (ko) void slot.play(() => playPrompt({ text: ko, kind: 'word', source: 'card-detail' }));
   };
 
   function setFlipping(value: boolean): void {
@@ -240,8 +257,17 @@ export function CardDetailView({ cardId, onClose, showHowToEarn = false }: CardD
             label={m.hear.cta}
             tone="secondary"
             size="lg"
-            onPress={() => speak(card.subtitleKo ?? '', { language: 'ko-KR' })}
+            onPress={hear}
+            testID="card-detail-hear"
           />
+          <Spacer size="sm" />
+          <PromptPanel
+            variant="status"
+            view={slot.view}
+            onAction={(action) => slot.act(action, hear)}
+            onHelp={() => setHelpOpen(true)}
+          />
+          <VoiceHelpSheet visible={helpOpen} onClose={() => setHelpOpen(false)} />
         </>
       ) : null}
 

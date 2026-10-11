@@ -33,6 +33,12 @@ export interface PromptPanelView {
   speakerLabel: string;
   /** Visible caption next to the speaker button. */
   speakerCaption: string;
+  /**
+   * The status-only panel (A-5b): on a screen that already prints the Korean next to its speaker,
+   * the panel says why there is no sound and offers the action, once this slot has tried to play
+   * and only when there is something to say.
+   */
+  statusShown: boolean;
 }
 
 /** The reason behind the text prompt right now (muted wins, then what the slot learned, then the proactive no-voice case). */
@@ -53,19 +59,23 @@ export function promptPanelView(
   const textShown = showText(s, cap, muted, hasClip);
   const reason = textShown ? reasonOf(s, cap, muted, hasClip) : null;
   const action = fallbackAction(reason);
+  const detail = panelDetail(reason, copy);
+  const actionLabel = fallbackActionLabel(action, copy);
+  const helpLabel = reason === 'no_voice' ? copy.howToAddVoice.cta : null;
   // Wireframe W4: when the sound may still work (error / blocked) the learner is still asked to listen.
   const soundOffOrAbsent = reason === null || reason === 'muted' || reason === 'no_voice';
   return {
     textShown,
     reason,
     readLine: copy.readHere,
-    detail: panelDetail(reason, copy),
+    detail,
     action,
-    actionLabel: fallbackActionLabel(action, copy),
-    helpLabel: reason === 'no_voice' ? copy.howToAddVoice.cta : null,
+    actionLabel,
+    helpLabel,
     heading: matchSoundHeading(textShown && soundOffOrAbsent, copy),
     speakerLabel: reason === 'blocked' ? copy.tapToHear : speakerLabel(muted, copy),
     speakerCaption: reason === 'blocked' ? copy.tapToHear : copy.tapToReplay,
+    statusShown: textShown && s.attempts > 0 && (detail !== null || actionLabel !== null || helpLabel !== null),
   };
 }
 

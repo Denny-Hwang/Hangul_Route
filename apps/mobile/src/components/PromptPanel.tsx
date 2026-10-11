@@ -12,29 +12,58 @@ import type { PromptPanelView } from '../logic/audio/prompt-view';
  * card tone, never red; a polite live region that does not take focus.
  * The wrapper stays mounted so the arrival of the text is announced.
  */
-interface Props {
+interface CommonProps {
   view: PromptPanelView;
-  /** What the voice says for this prompt (`spokenFor(...)`), shown as taught content. */
-  ko: string;
-  romanization: string;
   onAction: (action: FallbackAction) => void;
   /** Opens the "Add a Korean voice" sheet; shown as a link only when there is no Korean voice (W3). */
   onHelp?: () => void;
   testID?: string;
 }
 
-export function PromptPanel({ view, ko, romanization, onAction, onHelp, testID = 'prompt-panel' }: Props): React.ReactElement {
+/** The text fallback: the screen shows only a speaker, so the panel prints what the voice says. */
+interface TextProps extends CommonProps {
+  variant?: 'text';
+  /** What the voice says for this prompt (`spokenFor(...)`), shown as taught content. */
+  ko: string;
+  romanization: string;
+}
+
+/**
+ * Status only (F-AUDIO-004 A-5b): the screen already prints the Korean and its romanization next to
+ * the speaker (Build Letter, Card Match, Tap & Respond, Culture Quiz, Voice Echo, card detail), so
+ * that line is the text fallback and the panel only says why there is no sound, with the one action.
+ */
+interface StatusProps extends CommonProps {
+  variant: 'status';
+}
+
+type Props = TextProps | StatusProps;
+
+export function PromptPanel(props: Props): React.ReactElement {
+  const { view, onAction, onHelp, testID = 'prompt-panel' } = props;
+  const status = props.variant === 'status';
+  const shown = status ? view.statusShown : view.textShown;
   return (
     <View accessibilityLiveRegion="polite" testID={testID}>
-      {view.textShown ? (
+      {shown ? (
         <Card tone="paper" padding="lg" elevation="flat">
           <View style={{ alignItems: 'center', gap: spacing.sm }}>
-            <KoreanText ko={ko} romanization={romanization} size="md" testID={`${testID}-text`} />
-            <Body tone="muted" align="center">{view.readLine}</Body>
-            {view.detail !== null ? <Caption tone="muted">{view.detail}</Caption> : null}
+            {props.variant !== 'status' ? (
+              <>
+                <KoreanText ko={props.ko} romanization={props.romanization} size="md" testID={`${testID}-text`} />
+                <Body tone="muted" align="center">{view.readLine}</Body>
+              </>
+            ) : null}
+            {view.detail !== null ? (
+              status ? (
+                <Body tone="muted" align="center" testID={`${testID}-detail`}>{view.detail}</Body>
+              ) : (
+                <Caption tone="muted">{view.detail}</Caption>
+              )
+            ) : null}
             {view.actionLabel !== null ? (
               <>
-                <Spacer size="sm" />
+                {status ? null : <Spacer size="sm" />}
                 <Button
                   label={view.actionLabel}
                   tone="secondary"
