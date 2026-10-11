@@ -1,7 +1,7 @@
 import React from 'react';
 import { describe, expect, it } from 'vitest';
-import { SceneSvg } from '../dom';
-import { hoyaItem } from '../hoya';
+import { HoyaSvg, SceneSvg } from '../dom';
+import { HOYA_BOX, HOYA_POSES, hoyaItem } from '../hoya';
 import { resolveColor } from '../tokens-map';
 import { makeArt, makeRegistry } from './fixtures';
 
@@ -56,5 +56,33 @@ describe('SceneSvg', () => {
     expect(card.type).toBe('rect');
     expect(card.props).toMatchObject({ width: 80, height: 80, fill: 'none' });
     expect(JSON.stringify(children(card))).toContain('card:book - shown in the app');
+  });
+});
+
+describe('HoyaSvg', () => {
+  it('draws Hoya alone in his own 128 x 128 box, at the size asked', () => {
+    const svg = HoyaSvg({ pose: 'waving', size: 96 });
+    expect(svg.type).toBe('svg');
+    expect(svg.props).toMatchObject({ width: 96, height: 96, viewBox: `0 0 ${HOYA_BOX.w} ${HOYA_BOX.h}`, 'data-pose': 'waving' });
+    const kids = children(el(svg)).map(flat);
+    expect(kids.length).toBeGreaterThan(10);
+    // Placed at his anchor (box centre, bottom edge), so his own coordinates are the canvas coordinates.
+    for (const k of kids) expect(k.props.transform).toBe('matrix(1 0 0 1 0 0)');
+    expect(kids.some((k) => k.props.fill === resolveColor('hoya.fur'))).toBe(true);
+  });
+
+  it('scales with its parent when the size is a percentage', () => {
+    expect(HoyaSvg({ pose: 'idle', size: '60%' }).props).toMatchObject({ width: '60%', height: '60%' });
+  });
+
+  it('is decorative by default and an image when labelled', () => {
+    expect(HoyaSvg({ pose: 'idle' }).props).toMatchObject({ 'aria-hidden': true, role: undefined, 'aria-label': undefined, width: HOYA_BOX.w });
+    expect(HoyaSvg({ pose: 'cheering', label: 'Hoya cheers' }).props).toMatchObject({ 'aria-hidden': undefined, role: 'img', 'aria-label': 'Hoya cheers' });
+  });
+
+  it('draws each pose differently, and an unknown pose as idle', () => {
+    const shapes = (pose: Parameters<typeof HoyaSvg>[0]['pose']): string => JSON.stringify(children(el(HoyaSvg({ pose }))).map((k) => flat(k).props));
+    expect(new Set(HOYA_POSES.map(shapes)).size).toBe(HOYA_POSES.length);
+    expect(shapes('dancing' as never)).toBe(shapes('idle'));
   });
 });

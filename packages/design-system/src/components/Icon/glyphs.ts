@@ -129,3 +129,27 @@ export const iconGlyphs: Record<IconName, readonly IconGlyphPart[]> = {
 };
 
 export const iconNames = Object.keys(iconGlyphs) as readonly IconName[];
+
+/** The path attributes for one glyph part: a solid fill, or an outline at width 2 (unless set) with round caps and joins. */
+export type IconPartProps =
+  | { readonly d: string; readonly fill: string }
+  | {
+      readonly d: string;
+      readonly fill: 'none';
+      readonly stroke: string;
+      readonly strokeWidth: number;
+      readonly strokeLinecap: 'round';
+      readonly strokeLinejoin: 'round';
+    };
+
+/**
+ * The stroke rules (design/components/Icon/spec.md) in one place, shared by the
+ * react-native-svg `Icon.tsx` and the plain-DOM `dom.tsx`, so the two cannot drift.
+ * Filled and stroked parts are tinted independently so filled silhouettes are not
+ * thickened by an extra stroke outline.
+ */
+export function iconPartProps(part: IconGlyphPart, tint: string): IconPartProps {
+  return part.kind === 'fill'
+    ? { d: part.d, fill: tint }
+    : { d: part.d, fill: 'none', stroke: tint, strokeWidth: part.width ?? 2, strokeLinecap: 'round', strokeLinejoin: 'round' };
+}

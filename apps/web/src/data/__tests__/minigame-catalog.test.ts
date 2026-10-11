@@ -1,3 +1,4 @@
+import { iconNames } from '@hangul-route/design-system/icon-glyphs';
 import { describe, expect, it } from 'vitest';
 import { minigameCatalog, type MinigameFamily } from '../minigame-catalog';
 
@@ -19,6 +20,14 @@ describe('minigameCatalog', () => {
       expect(game.title.length).toBeGreaterThan(0);
       expect(game.blurb.length).toBeGreaterThan(0);
     }
+  });
+
+  it('every minigame draws a distinct design-system icon, never an emoji', () => {
+    for (const game of minigameCatalog) {
+      expect(iconNames, game.kind).toContain(game.icon);
+      expect(game).not.toHaveProperty('emoji');
+    }
+    expect(new Set(minigameCatalog.map((m) => m.icon)).size).toBe(minigameCatalog.length);
   });
 
   it('voice-echo ships as beta (STT accuracy in 5–11 yo is unverified)', () => {

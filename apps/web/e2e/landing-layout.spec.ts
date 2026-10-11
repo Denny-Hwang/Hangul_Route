@@ -204,3 +204,40 @@ test.describe('hero and Meet Hoya: stacked and capped below 720px, two columns f
     }
   });
 });
+
+test.describe('Hoya art is drawn square inside its box, and the hero bubble stays readable', () => {
+  for (const width of [320, 375, 768, 1280]) {
+    test(`${width}px: hero and Meet Hoya svgs are square, sized and inside their art box`, async ({ page }) => {
+      await page.setViewportSize({ width, height: HEIGHT });
+      await page.goto('/');
+
+      for (const selector of ['.hr-landing-hero-art', '.hr-landing-split-art']) {
+        const art = await box(page, selector);
+        const svg = await box(page, `${selector} svg[data-pose]`);
+        const w = svg.right - svg.left;
+        const h = svg.bottom - svg.top;
+        expect(w, `${selector} Hoya width`).toBeGreaterThan(100);
+        expect(Math.abs(w - h), `${selector} Hoya is square (${w}x${h})`).toBeLessThanOrEqual(1);
+        expect(svg.left, `${selector} Hoya inside left`).toBeGreaterThanOrEqual(art.left - 0.5);
+        expect(svg.right, `${selector} Hoya inside right`).toBeLessThanOrEqual(art.right + 0.5);
+        expect(svg.top, `${selector} Hoya inside top`).toBeGreaterThanOrEqual(art.top - 0.5);
+        expect(svg.bottom, `${selector} Hoya inside bottom`).toBeLessThanOrEqual(art.bottom + 0.5);
+      }
+
+      // The speech bubble paints above Hoya, so copy that wraps (en-XA, longer es/ko) is never
+      // covered by him: stretch it to several lines so it grows up over Hoya, then hit-test it.
+      const bubble = page.locator('.hr-landing-hero-art > div').last();
+      const onTop = await bubble.evaluate((el) => {
+        el.textContent = Array.from({ length: 6 }, () => 'Hoya says a longer hello that wraps').join(' ');
+        el.scrollIntoView({ block: 'center' });
+        const r = el.getBoundingClientRect();
+        const hoya = el.parentElement?.querySelector('svg[data-pose]')?.getBoundingClientRect();
+        const overlaps = !!hoya && r.top < hoya.bottom && hoya.top < r.bottom;
+        const hit = document.elementFromPoint(r.left + r.width / 2, r.top + 4);
+        return { overlaps, onTop: hit !== null && el.contains(hit) };
+      });
+      expect(onTop.overlaps, 'the stretched bubble reaches up over Hoya (guards the probe itself)').toBe(true);
+      expect(onTop.onTop, 'hero bubble paints above Hoya').toBe(true);
+    });
+  }
+});

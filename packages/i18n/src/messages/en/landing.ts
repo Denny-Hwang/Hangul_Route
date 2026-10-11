@@ -225,8 +225,8 @@ export const landing = {
       title: 'Our promises',
       plainEnglish: 'Menus and instructions use plain, simple English (CEFR Pre-A1).',
       koreanTaught: 'Korean is only used for the content being taught.',
-      /** `mark` is the page's cross mark, passed in. */
-      noRed: (mark: string) => `No red ${mark} for wrong answers — Hoya nudges with amber.`,
+      /** Said in words: the page shows no cross-mark glyph (no emoji, CLAUDE.md). */
+      noRed: 'No red X marks for wrong answers — Hoya nudges with amber.',
       noAds: 'No ads, ever. No ads designed at children. Period.',
       localFirst: 'Local-first: data stays on the device until you sign in.',
       gate: 'Parent-gate behind multiplication for any commerce or destructive action.',

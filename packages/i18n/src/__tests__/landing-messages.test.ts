@@ -54,9 +54,9 @@ describe('landing: sentences that take a value render the former text', () => {
     expect(l.footer.copyright(2026)).toBe('© 2026 Hangul Route');
   });
 
-  it('about: the contact address and the mark are passed in', () => {
+  it('about: the contact address is passed in; the "no red" promise says it in words', () => {
     expect(l.about.feedback.body('hello@example.com')).toBe('Email hello@example.com — we read everything.');
-    expect(l.about.promises.noRed('X')).toBe('No red X for wrong answers — Hoya nudges with amber.');
+    expect(l.about.promises.noRed).toBe('No red X marks for wrong answers — Hoya nudges with amber.');
   });
 
   it('privacy and terms: the address and the level labels are passed in', () => {
@@ -156,6 +156,34 @@ describe('en-XA covers the landing keys', () => {
       for (const [out, src] of pairs) {
         expect(out).toBe(pseudoText(src));
         expect(out.length - 2).toBeGreaterThanOrEqual(Math.ceil(src.length * 1.4));
+      }
+    });
+  }
+});
+
+/**
+ * No emoji in rendered output (CLAUDE.md). Any Extended_Pictographic code point or the emoji
+ * variation selector U+FE0F fails; the plain text symbols the site uses on purpose (©, ®, ™ in the
+ * footer and legal text) are allowed, and arrows, the middle dot and dashes are not pictographic.
+ */
+const EMOJI = /(?![\u00A9\u00AE\u2122])\p{Extended_Pictographic}|\uFE0F/u;
+
+describe('landing: no emoji in any locale (en, es, ko, en-XA)', () => {
+  it('the check catches emoji and lets the text symbols through (self-check)', () => {
+    for (const bad of ['\u{1F42F}', '\u274C', '\u270D\uFE0F', '\u2714', '\u{1F3AF}']) expect(EMOJI.test(bad), bad).toBe(true);
+    for (const ok of ['© 2026', '™', '←', '→', '·', '—', '★', 'ㄱ']) expect(EMOJI.test(ok), ok).toBe(false);
+  });
+
+  const trees: Array<[string, object]> = [
+    ...LOCALES.map((locale): [string, object] => [locale, getMessages(locale).landing]),
+    ['en-XA', pseudoLocalize(getMessages('en')).landing],
+  ];
+  for (const [name, tree] of trees) {
+    it(name, () => {
+      const paths = leafPaths(tree);
+      expect(paths.length).toBeGreaterThan(150);
+      for (const path of paths) {
+        for (const out of outputs(tree, path)) expect(EMOJI.test(out), `landing.${path}: ${out}`).toBe(false);
       }
     });
   }

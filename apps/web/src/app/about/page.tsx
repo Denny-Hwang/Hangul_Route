@@ -3,9 +3,6 @@ import { DEFAULT_LOCALE, getMessages } from '@hangul-route/i18n';
 import Link from 'next/link';
 import { CONTACT_EMAIL } from '../../data/contact';
 
-/** The cross mark the page has always shown in the "no red" promise; passed in, never written into a message. */
-const CROSS_MARK = '❌';
-
 export default function AboutPage(): JSX.Element {
   const t = getMessages(DEFAULT_LOCALE).landing.about;
   return (
@@ -23,7 +20,7 @@ export default function AboutPage(): JSX.Element {
         <ul style={{ lineHeight: 1.8 }}>
           <li>{t.promises.plainEnglish}</li>
           <li>{t.promises.koreanTaught}</li>
-          <li>{t.promises.noRed(CROSS_MARK)}</li>
+          <li>{t.promises.noRed}</li>
           <li>{t.promises.noAds}</li>
           <li>{t.promises.localFirst}</li>
           <li>{t.promises.gate}</li>
