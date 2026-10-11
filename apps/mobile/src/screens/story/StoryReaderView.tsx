@@ -104,7 +104,7 @@ export function StoryReaderView(props: StoryReaderViewProps): React.ReactElement
 
 /** Focus target on the web (react-native-web forwards `focus`); a no-op where the node has none. */
 interface Focusable {
-  focus?: () => void;
+  focus?: (options?: { preventScroll?: boolean }) => void;
 }
 
 /** Art may take at most this share of the body height when stacked, so the text always has room. */
@@ -193,7 +193,9 @@ function ReaderBody({
           if (plan.autoplay === 'on-unlock') pendingAutoplay.current = effect.index;
           const v = buildSceneView(story, level, effect.index, { copy });
           if (v) AccessibilityInfo.announceForAccessibility(v.labels.announcement);
-          if (plan.moveFocus) setTimeout(() => narrationRef.current?.focus?.(), 0);
+          // No focus scroll: the text is already at its top, and scrolling to the narration would hide a
+          // read-along Korean line above it.
+          if (plan.moveFocus) setTimeout(() => narrationRef.current?.focus?.({ preventScroll: true }), 0);
         } else if (effect.type === 'answer') {
           if (live.current.mode === 'quest') live.current.onAnswer(effect.roundKey, effect.correct);
         } else {

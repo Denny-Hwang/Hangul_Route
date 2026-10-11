@@ -478,6 +478,25 @@ test.describe('story reader, replay route (fixture bundle)', () => {
     const top = await scroll.boundingBox();
     const narration = await page.getByTestId('story-reader-narration').boundingBox();
     expect(top && narration && narration.y >= top.y - 0.5).toBe(true);
+    // Focus moved to the narration without scrolling the text.
+    await expect(page.getByTestId('story-reader-narration')).toBeFocused();
+    expect(await scroll.evaluate((el) => el.scrollTop)).toBe(0);
+  });
+
+  test('320x568 read-along: after a page turn the Korean line above the narration is in view', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 568 });
+    await onboard(page);
+    await openReader(page, 'read-along');
+    const scroll = page.getByTestId('story-reader-scroll');
+    await scroll.evaluate((el) => {
+      el.scrollTop = el.scrollHeight;
+    });
+    await next(page).click();
+    await expect(position(page)).toHaveText('2 / 4');
+    await expect(page.getByTestId('story-reader-narration')).toBeFocused();
+    const box = await scroll.boundingBox();
+    const korean = await page.getByTestId('story-reader-korean').boundingBox();
+    expect(box && korean && korean.y >= box.y - 0.5 && korean.y < box.y + box.height).toBe(true);
   });
 
   test('every bundled story reads through to its end page on every tier, with no raw token or emoji', async ({ page }) => {
