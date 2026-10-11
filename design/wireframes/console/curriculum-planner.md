@@ -68,6 +68,7 @@ Then: they see a week-by-week route that is honest about what exists today, can 
 
 - The note under the form updates live (sessions = days x weeks minus days off). More than 260 items shows one plain sentence and keeps NEXT disabled with the reason beside it.
 - Weekday chips show a selected state with text, not colour alone.
+- **Amended (F-PLAN-002 FP-B5, FP-B13; F-ROUTE-001 R-0):** step 2 gains pace chips *Gentle* / *Steady* / *Brisk* above the length chips; the recommended pace and length come from `proposeRoute`, are pre-selected and tagged *Suggested*, and each length shows one honest preview line (as in `journey/my-route-overview.md` K2).
 
 ## C. Wizard step 3: goals
 
@@ -205,6 +206,7 @@ G3. Overview
 
 - A child profile on a family device reaches G1 through the grown-up gate; a self profile goes straight in.
 - Copy never says behind, late, overdue or missed; "Hoya moved your plan along" appears once after an automatic re-pace.
+- **Amended (F-PLAN-002 FP-B6, FP-B13, FP-B15; F-ROUTE-001 R-0):** learner strings say "weekly plan" / "plan", not "route": the Profile row is "Make a weekly plan", G2's button is **Start this plan**, G3's title is "Your weekly plan" and its stop button **Stop this plan**. The one-tap proposal (`route/proposal`, `journey/my-route-overview.md` K1) comes first; G1 to G3 remain for **Change the plan**. G1 gains the pace chips with the suggested one pre-selected.
 
 ## H. Home route card and the Homework week window
 
@@ -222,6 +224,7 @@ Home                                              Homework
 - Card (2) takes the highest-ranked pending item due today or earlier: class, then family, then own route. The others wait and come on the following days.
 - With no route and one or more quests done: the card reads "Set up my route" instead.
 - Between the mission cards and the progress bar only one quiet card shows: the level-check card (`placement.md` H) while it is eligible, then this route card.
+- **Amended (F-PLAN-002 FP-B6, FP-B13; F-ROUTE-001 R-0):** the in-plan Home card with week dots is removed. Before a plan exists the Home card is only the prompt "Hoya can make a weekly plan for you" with **Make my plan** and **Not now**; once a plan exists its week is one line in F-ROUTE-001's My route strip ("Week 3 of your weekly plan", `journey/my-route-overview.md` D). Home order: F-ROUTE-001 section 6.4.
 
 ## I. Empty, error and offline
 

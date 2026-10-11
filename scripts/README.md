@@ -15,6 +15,7 @@
 | `check-coverage-targets-drift.mjs` | F-COV-002 | `.github/workflows/coverage-gate.yml` | `docs/tests/coverage-targets.md` "Enforced W4 gate" 표 ↔ `docs/tests/coverage-targets.json` |
 | `build-vocab.mjs` | F-VOC-001 | `.github/workflows/content-validation.yml` | `content/vocab/<topic>.json` + `content/i18n/{es,ko}/vocab-*.json` glosses → `apps/mobile/src/content/__generated__/vocab.ts` and `apps/web/src/data/vocab-catalog.ts`; `--check` fails on drift (`pnpm run vocab:check`) |
 | `build-stories.mjs` | F-STORY-001 | `.github/workflows/content-validation.yml` | `content/stories/*.json` (ready stories) → `apps/mobile/src/content/stories.generated.ts`; `--check` fails on drift, `--report` fails over the bundle budget |
+| `check-migrations.mjs` | F-ROUTE-001 R-0 (E-1) | `.github/workflows/ci.yml` (through `pnpm run test:scripts`, whose self-test runs it on the repository) | `apps/api/migrations/*.sql`: every file is `NNNN_snake_case.sql` and no two share a prefix (wrangler and the SQLite shim apply them in sorted order) |
 | `import-heritage.mjs` | F-STORY-001 | (none: one-time, run by hand) | `content/stories/research/<cluster>.final.json` → `content/stories/<slug>.json` drafts (`--dry-run` is the default, `--write` writes, never overwrites an authored story) |
 
 Run locally:
@@ -25,6 +26,7 @@ node scripts/validate-content.mjs
 node scripts/check-token-drift.mjs
 node scripts/check-coverage-targets-drift.mjs
 node scripts/check-i18n.mjs
+node scripts/check-migrations.mjs
 node scripts/build-stories.mjs            # regenerate the story bundle
 node scripts/build-stories.mjs --check    # drift detector (CI)
 node scripts/build-stories.mjs --report   # sizes and budget (CI)

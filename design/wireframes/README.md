@@ -36,6 +36,7 @@
 | `classroom/lecture-presenter.md` | D | F-TCH-004 |
 | `layout/wide.md` | D | F-LAYOUT-001 |
 | `console/class-transfer.md` | D | F-SPACE-002 |
+| `journey/my-route-overview.md` | R | F-ROUTE-001 (screens A to I; J amends `placement/placement.md` G for F-PLC-001 AM-1 / AM-14, K is F-PLAN-002's weekly plan proposal, FP-B6) |
 
 ### B/C. Caregiver · Teacher · School console (web, 일부 mobile) — 어른
 | 파일 | 상태 | 스펙 |

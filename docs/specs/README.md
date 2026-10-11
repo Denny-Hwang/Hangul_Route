@@ -83,6 +83,7 @@ F-XXX-<slug>.md
 - `F-TCH-004-lecture-mode.md` — teacher lecture mode for tablets and projectors · **ready**
 - `F-LAYOUT-001-responsive-tablet-landscape.md` — tablet, landscape and split-pane layout · **ready**
 - `F-SPACE-002-class-transfer.md` — move a learner between classes with learner-side, releasing and receiving consent (flag-locked) · **ready**
+- `F-ROUTE-001-my-route-overview.md` — My route: the whole journey at a glance (stage trail, pips that only fill, read / listen / write inventory, grown-up and console views) and the weekly plan proposed after the level check (companion `AMENDMENTS-PLC-PLAN-HANDOFF.md`, applied to F-PLC-001 and F-PLAN-002) · **ready**
 - `F-QUEST-002` amended: initial ㅇ is spoken by its name (see F-AUDIO-004)
 
 ### Phase 2 / planned
