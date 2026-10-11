@@ -119,7 +119,12 @@ export function vocabRecordingRows(topicFiles: ReadonlyArray<{ items?: readonly 
 export function renderRecordingScript(rows: readonly RecordingRow[], names: readonly NameRow[], vocab: readonly VocabRecordingRow[]): string;
 export function parseJamoSource(source: string): ParsedJamo[];
 export function evaluateReport(kind: ClipKind, report: ClipReport): string[];
-export function evaluateSet(kind: ClipKind, sizes: readonly number[]): string[];
+export function evaluateSet(kind: ClipKind, sizes: readonly number[], label?: string): string[];
+export function clipSets(
+  kind: ClipKind,
+  fileIds: readonly string[],
+  context?: { jamoIds?: readonly string[]; topicByFileId?: ReadonlyMap<string, string> },
+): Array<{ label: string; fileIds: string[] }>;
 export function parseTakeFile(name: string): { fileId: string; take: number } | null;
 export function parseSilences(log: string, durationS: number): TimeSpan[];
 export function takeSegments(silences: readonly TimeSpan[], durationS: number, minGapS?: number): TimeSpan[];
@@ -128,3 +133,14 @@ export function parseEbur128(log: string): { integratedLufs: number; truePeakDb:
 export function clipStatus(refs: readonly string[], files: readonly string[]): { total: number; present: number; missing: string[] };
 export const LOUDNESS_SETTLE_DB: number;
 export function correctionGain(measuredLufs: number, target?: number): number;
+export const MAX_TOP_UP_PASSES: number;
+export const MAX_TOP_UP_DB: number;
+export const LIMITING_WARN_DB: number;
+export function nextTopUp(measuredLufs: number, state: { passes: number; appliedDb: number }): number;
+export function topUpOutcome(measuredLufs: number): 'settled' | 'accepted' | 'rejected';
+export function planRecording(
+  fileId: string,
+  sets: { expected: ReadonlySet<string>; names: ReadonlySet<string> },
+  opts: { names?: boolean; allowExtra?: boolean },
+): { action: 'process' } | { action: 'skip'; reason: string };
+export function isInsideDir(dir: string, root: string): boolean;

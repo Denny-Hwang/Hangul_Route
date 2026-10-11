@@ -9,18 +9,25 @@ import {
   RUNTIME_AUDIO_GROUPS,
   audioRuntimeCaching,
   buildAssetMap,
+  clipSets,
   clipStatus,
   correctionGain,
   evaluateReport,
   evaluateSet,
+  isInsideDir,
   isRuntimeAudio,
+  LIMITING_WARN_DB,
+  MAX_TOP_UP_DB,
+  MAX_TOP_UP_PASSES,
   mergeAssetMaps,
   nameRows,
+  nextTopUp,
   parseEbur128,
   parseJamoSource,
   parseProbe,
   parseSilences,
   parseTakeFile,
+  planRecording,
   precacheGaps,
   precacheLeaks,
   recordingRows,
@@ -29,6 +36,7 @@ import {
   renderAssetMap,
   renderRecordingScript,
   takeSegments,
+  topUpOutcome,
   vocabRecordingRows,
 } from '../../../../scripts/audio/lib.mjs';
 
@@ -294,6 +302,26 @@ describe('scripts/audio/lib: vocabulary rows', () => {
     expect(row?.spokenKo).toBe('씹');
   });
 
+  it('orders two words of one topic by id, whatever the file order', () => {
+    const rows = vocabRecordingRows([
+      topic('food', [
+        { id: 'vocab:sagwa', ko: '사과', romanization: 'sagwa', en: 'apple', topics: ['food'], audioRef: 'audio/vocab/sagwa.mp3' },
+        { id: 'vocab:bap', ko: '밥', romanization: 'bap', en: 'rice', topics: ['food'], audioRef: 'audio/vocab/bap.mp3' },
+      ]),
+    ]);
+    expect(rows.map((r) => r.fileId)).toEqual(['bap', 'sagwa']);
+  });
+
+  it('refuses a nested ref, which could never be a recording file name', () => {
+    expect(() =>
+      vocabRecordingRows([
+        topic('food', [
+          { id: 'vocab:sagwa', ko: '사과', romanization: 'sagwa', en: 'apple', topics: ['food'], audioRef: 'audio/vocab/food/sagwa.mp3' },
+        ]),
+      ]),
+    ).toThrow(/flat/);
+  });
+
   it('is empty when no word has a clip planned', () => {
     expect(vocabRecordingRows([topic('food', [{ id: 'vocab:bap', ko: '밥', romanization: 'bap', en: 'rice', topics: ['food'] }])])).toEqual([]);
   });
@@ -395,6 +423,38 @@ describe('scripts/audio/lib: evaluateReport', () => {
     expect(evaluateSet('jamo', [400_000])).toEqual([]);
     expect(evaluateSet('jamo', [200_000, 200_001])[0]).toMatch(/400000/);
     expect(evaluateSet('word', [1_500_001])[0]).toMatch(/1500000/);
+    expect(evaluateSet('word', [1_500_001], 'topic food')[0]).toMatch(/^topic food: /);
+  });
+
+  it('a silent-peak clip (-inf dBTP) passes the peak limit', () => {
+    expect(evaluateReport('jamo', { ...good, truePeakDb: Number.NEGATIVE_INFINITY })).toEqual([]);
+  });
+
+  it.each([
+    ['NaN', Number.NaN],
+    ['-inf', Number.NEGATIVE_INFINITY],
+  ])('fails a clip whose loudness is %s', (_name, integratedLufs) => {
+    expect(evaluateReport('jamo', { ...good, integratedLufs })[0]).toMatch(/loudness/);
+  });
+});
+
+describe('scripts/audio/lib: clipSets (what the set-total limit adds up)', () => {
+  it('jamo: only the 30 script clips; Batch 2 names and stray files are not in the total', () => {
+    const sets = clipSets('jamo', ['a', 'giyeok', 'giyeok-name', 'stray'], { jamoIds: ['a', 'giyeok', 'nieun'] });
+    expect(sets).toEqual([{ label: 'the jamo clips of the recording script', fileIds: ['a', 'giyeok'] }]);
+  });
+
+  it('word: one set per vocabulary topic, sorted, with unknown files on their own', () => {
+    const topicByFileId = new Map([
+      ['sagwa', 'food'],
+      ['bap', 'food'],
+      ['gae', 'animals'],
+    ]);
+    expect(clipSets('word', ['sagwa', 'gae', 'bap', 'extra'], { topicByFileId })).toEqual([
+      { label: 'topic (not in any topic)', fileIds: ['extra'] },
+      { label: 'topic animals', fileIds: ['gae'] },
+      { label: 'topic food', fileIds: ['bap', 'sagwa'] },
+    ]);
   });
 });
 
@@ -480,6 +540,11 @@ describe('scripts/audio/lib: ffprobe and ebur128 reports', () => {
     expect(parseEbur128(summary)).toEqual({ integratedLufs: -17, truePeakDb: -1.5 });
     expect(() => parseEbur128('nothing')).toThrow(/loudness/);
   });
+
+  it('parseEbur128 reads -inf (a silent clip) as negative infinity', () => {
+    const silent = ['  Integrated loudness:', '    I:         -inf LUFS', '  True peak:', '    Peak:       -inf dBFS'].join('\n');
+    expect(parseEbur128(silent)).toEqual({ integratedLufs: Number.NEGATIVE_INFINITY, truePeakDb: Number.NEGATIVE_INFINITY });
+  });
 });
 
 describe('scripts/audio/lib: clipStatus (audio:status, the T-017 to-do list)', () => {
@@ -512,5 +577,69 @@ describe('scripts/audio/lib: correctionGain (the loudness top-up after the singl
   it('never boosts silence', () => {
     expect(correctionGain(-70)).toBe(0);
     expect(correctionGain(Number.NEGATIVE_INFINITY)).toBe(0);
+  });
+});
+
+describe('scripts/audio/lib: the bounded top-up (nextTopUp, topUpOutcome)', () => {
+  it('applies the correction while passes and the gain budget remain', () => {
+    expect(nextTopUp(-19.4, { passes: 0, appliedDb: 0 })).toBe(3.4);
+    expect(nextTopUp(-14.2, { passes: 1, appliedDb: 0 })).toBe(-1.8);
+  });
+
+  it('stops when settled, after the last pass, or at the total gain cap', () => {
+    expect(nextTopUp(-16.2, { passes: 0, appliedDb: 0 })).toBe(0);
+    expect(nextTopUp(-19.4, { passes: MAX_TOP_UP_PASSES, appliedDb: 0 })).toBe(0);
+    expect(nextTopUp(-19.4, { passes: 1, appliedDb: MAX_TOP_UP_DB })).toBe(0);
+    expect(nextTopUp(-19.4, { passes: 1, appliedDb: MAX_TOP_UP_DB - 1 })).toBe(1);
+  });
+
+  it('bounds the loop and the gain, and warns well before the budget is spent', () => {
+    expect(MAX_TOP_UP_PASSES).toBeLessThanOrEqual(10);
+    expect(MAX_TOP_UP_DB).toBeLessThanOrEqual(18);
+    expect(LIMITING_WARN_DB).toBeLessThan(MAX_TOP_UP_DB);
+    let state = { passes: 0, appliedDb: 0 };
+    for (;;) {
+      const gain = nextTopUp(-40, state);
+      if (gain === 0) break;
+      state = { passes: state.passes + 1, appliedDb: state.appliedDb + gain };
+    }
+    expect(state.appliedDb).toBe(MAX_TOP_UP_DB);
+  });
+
+  it('outcome: settled near the target, accepted inside the tolerance, rejected outside it', () => {
+    expect(topUpOutcome(-16.3)).toBe('settled');
+    expect(topUpOutcome(-17.2)).toBe('accepted');
+    expect(topUpOutcome(-17.6)).toBe('rejected');
+    expect(topUpOutcome(Number.NaN)).toBe('rejected');
+  });
+});
+
+describe('scripts/audio/lib: planRecording (which delivered files become clips)', () => {
+  const sets = { expected: new Set(['giyeok', 'a']), names: new Set(['giyeok-name']) };
+
+  it('processes a file named in the script', () => {
+    expect(planRecording('giyeok', sets, {})).toEqual({ action: 'process' });
+  });
+
+  it('holds back a Batch 2 name clip until --names (it needs nameAudioRef in jamo.ts first, A-10)', () => {
+    expect(planRecording('giyeok-name', sets, {})).toMatchObject({ action: 'skip', reason: expect.stringMatching(/--names/) });
+    expect(planRecording('giyeok-name', sets, { names: true })).toEqual({ action: 'process' });
+  });
+
+  it('skips a file the script does not name (a typo) unless --allow-extra', () => {
+    expect(planRecording('giyok', sets, {})).toMatchObject({ action: 'skip', reason: expect.stringMatching(/not in the recording script/) });
+    expect(planRecording('giyok', sets, { allowExtra: true })).toEqual({ action: 'process' });
+  });
+});
+
+describe('scripts/audio/lib: isInsideDir (raw recordings never sit in the tracked tree)', () => {
+  it('is true for the folder itself and anything below it', () => {
+    expect(isInsideDir('/repo', '/repo')).toBe(true);
+    expect(isInsideDir('/repo/apps/mobile/recordings', '/repo')).toBe(true);
+  });
+
+  it('is false outside it, including a sibling with the same prefix', () => {
+    expect(isInsideDir('/Users/me/Recordings', '/repo')).toBe(false);
+    expect(isInsideDir('/repo-other/x', '/repo')).toBe(false);
   });
 });

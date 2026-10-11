@@ -159,9 +159,11 @@ const NOTES = {
   held: 'end on the final sound; do not add a vowel after it',
 };
 
-/** `audio/jamo/giyeok-batchim.mp3` => `giyeok-batchim`. */
+/** `audio/jamo/giyeok-batchim.mp3` => `giyeok-batchim`. A recorded clip is flat in its group folder (F-VOC-001: `audio/vocab/<slug>.mp3`). */
 function fileIdOf(audioRef) {
-  return audioRef.replace(/^audio\/[a-z]+\//, '').replace(/\.mp3$/, '');
+  const id = audioRef.replace(/^audio\/[a-z]+\//, '').replace(/\.mp3$/, '');
+  if (id.includes('/')) throw new Error(`${audioRef}: a recorded clip must be flat in its group folder (audio/<group>/<id>.mp3)`);
+  return id;
 }
 
 function byOrder(records) {
@@ -348,7 +350,7 @@ export function evaluateReport(kind, r) {
   if (r.sampleRate !== 44100) failures.push(`sample rate ${r.sampleRate}: must be 44100 Hz`);
   if (r.codec !== 'mp3') failures.push(`codec ${r.codec}: must be mp3`);
   if (r.durationS < lim.minS || r.durationS > lim.maxS) failures.push(`duration ${r.durationS} s: must be ${lim.minS}-${lim.maxS} s`);
-  if (Math.abs(r.integratedLufs - TARGET_LUFS) > LUFS_TOLERANCE + 1e-9) {
+  if (!Number.isFinite(r.integratedLufs) || Math.abs(r.integratedLufs - TARGET_LUFS) > LUFS_TOLERANCE + 1e-9) {
     failures.push(`loudness ${r.integratedLufs} LUFS: must be ${TARGET_LUFS} +/- ${LUFS_TOLERANCE}`);
   }
   if (r.truePeakDb > MAX_TRUE_PEAK_DB) failures.push(`true peak ${r.truePeakDb} dBTP: must be <= ${MAX_TRUE_PEAK_DB}`);
@@ -356,11 +358,37 @@ export function evaluateReport(kind, r) {
   return failures;
 }
 
-/** The set-total limit (30 jamo clips <= 400 KB; one vocabulary topic <= 1.5 MB). */
-export function evaluateSet(kind, sizes) {
+/** The set-total limit (30 jamo clips <= 400 KB; one vocabulary topic <= 1.5 MB). `label` names the set in the message. */
+export function evaluateSet(kind, sizes, label) {
   const total = sizes.reduce((sum, b) => sum + b, 0);
   const max = CLIP_LIMITS[kind].setMaxBytes;
-  return total > max ? [`set total ${total} bytes: must be <= ${max}`] : [];
+  if (total <= max) return [];
+  return [`${label ? `${label}: ` : ''}set total ${total} bytes: must be <= ${max}`];
+}
+
+const NO_TOPIC = '(not in any topic)';
+
+/**
+ * The sets the set-total limit applies to. Jamo: the clips of the recording
+ * script only (the optional Batch 2 `-name` clips and stray files are not part
+ * of "30 jamo clips"). Words: one set per vocabulary topic.
+ *
+ * @param {'jamo' | 'word'} kind
+ * @param {readonly string[]} fileIds the clips in the folder, as file ids
+ * @param {{ jamoIds?: readonly string[], topicByFileId?: ReadonlyMap<string, string> }} context
+ */
+export function clipSets(kind, fileIds, { jamoIds = [], topicByFileId = new Map() } = {}) {
+  if (kind === 'jamo') {
+    const script = new Set(jamoIds);
+    return [{ label: 'the jamo clips of the recording script', fileIds: fileIds.filter((id) => script.has(id)).sort() }];
+  }
+  const byTopic = new Map();
+  for (const id of fileIds) {
+    const topic = topicByFileId.get(id) ?? NO_TOPIC;
+    if (!byTopic.has(topic)) byTopic.set(topic, []);
+    byTopic.get(topic).push(id);
+  }
+  return [...byTopic.keys()].sort().map((topic) => ({ label: `topic ${topic}`, fileIds: byTopic.get(topic).sort() }));
 }
 
 // --- Processing helpers (process-recordings.mjs) ---------------------------------
@@ -443,10 +471,11 @@ export function parseProbe(json) {
 
 /** The summary of `ffmpeg -af ebur128=peak=true` => integrated loudness and true peak. */
 export function parseEbur128(log) {
-  const i = [...log.matchAll(/^\s*I:\s*(-?[\d.]+) LUFS/gm)].pop();
+  const i = [...log.matchAll(/^\s*I:\s*(-?[\d.]+|-inf) LUFS/gm)].pop();
   const p = [...log.matchAll(/^\s*Peak:\s*(-?[\d.]+|-inf) dBFS/gm)].pop();
   if (!i || !p) throw new Error('no loudness summary in the ffmpeg output');
-  return { integratedLufs: Number(i[1]), truePeakDb: p[1] === '-inf' ? Number.NEGATIVE_INFINITY : Number(p[1]) };
+  const num = (v) => (v === '-inf' ? Number.NEGATIVE_INFINITY : Number(v));
+  return { integratedLufs: num(i[1]), truePeakDb: num(p[1]) };
 }
 
 /** Which content refs have a file (paths relative to assets/audio). */
@@ -472,4 +501,71 @@ export function correctionGain(measuredLufs, target = TARGET_LUFS) {
   if (!Number.isFinite(measuredLufs) || measuredLufs < SILENCE_LUFS) return 0;
   const gain = target - measuredLufs;
   return Math.abs(gain) <= LOUDNESS_SETTLE_DB ? 0 : Math.round(gain * 100) / 100;
+}
+
+/** At most this many top-up passes ... */
+export const MAX_TOP_UP_PASSES = 10;
+/**
+ * ... and at most this much gain into the limiter in all. Measured on
+ * synthesized syllables: a short plosive final (악, 압) needs about 15 dB to
+ * reach -16 LUFS under the -2 dBFS limit, an open syllable 2-9 dB. A take that
+ * needs more than this budget is not written.
+ */
+export const MAX_TOP_UP_DB = 18;
+/** Above this much top-up gain the clip is heavily limited: process-recordings asks for a listen before it is committed. */
+export const LIMITING_WARN_DB = 8;
+
+/**
+ * The gain of the next top-up pass, or 0 to stop (settled, silent, out of
+ * passes, or the gain budget spent). The budget keeps the limiter from
+ * squashing a quiet take, which would smear the unreleased finals (악 / 압).
+ *
+ * @param {number} measuredLufs
+ * @param {{ passes: number, appliedDb: number }} state passes done and positive gain added so far
+ */
+export function nextTopUp(measuredLufs, { passes, appliedDb }) {
+  if (passes >= MAX_TOP_UP_PASSES) return 0;
+  const gain = correctionGain(measuredLufs);
+  if (gain <= 0) return gain;
+  const room = MAX_TOP_UP_DB - appliedDb;
+  return room <= 0 ? 0 : Math.round(Math.min(gain, room) * 100) / 100;
+}
+
+/** After the top-up: `settled` (within LOUDNESS_SETTLE_DB), `accepted` (within the acceptance tolerance), or `rejected` (not written). */
+export function topUpOutcome(measuredLufs) {
+  if (!Number.isFinite(measuredLufs)) return 'rejected';
+  const off = Math.abs(measuredLufs - TARGET_LUFS);
+  if (off <= LOUDNESS_SETTLE_DB) return 'settled';
+  return off <= LUFS_TOLERANCE + 1e-9 ? 'accepted' : 'rejected';
+}
+
+/**
+ * What process-recordings does with one delivered file. A file the script does
+ * not name (a typo) never reaches assets/: it would become an AUDIO_ASSETS key
+ * no content refers to. A Batch 2 name clip waits for `--names`, which is run
+ * once jamo.ts carries `nameAudioRef` (F-AUDIO-004 A-10).
+ *
+ * @param {string} fileId
+ * @param {{ expected: ReadonlySet<string>, names: ReadonlySet<string> }} sets
+ * @param {{ names?: boolean, allowExtra?: boolean }} opts
+ * @returns {{ action: 'process' } | { action: 'skip', reason: string }}
+ */
+export function planRecording(fileId, { expected, names }, opts) {
+  if (expected.has(fileId)) return { action: 'process' };
+  if (names.has(fileId)) {
+    return opts.names
+      ? { action: 'process' }
+      : { action: 'skip', reason: `${fileId} is a Batch 2 name clip; pass --names once jamo.ts has its nameAudioRef (A-10)` };
+  }
+  return opts.allowExtra
+    ? { action: 'process' }
+    : { action: 'skip', reason: `${fileId} is not in the recording script (check the name, or pass --allow-extra)` };
+}
+
+/** Whether `dir` is `root` or below it (absolute, resolved paths; either separator). */
+export function isInsideDir(dir, root) {
+  const norm = (p) => p.replace(/\\/g, '/').replace(/\/+$/, '');
+  const d = norm(dir);
+  const r = norm(root);
+  return d === r || d.startsWith(`${r}/`);
 }
