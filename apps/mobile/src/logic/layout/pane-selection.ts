@@ -64,3 +64,12 @@ export interface PaneLatch {
 export function latchedSelection(latch: PaneLatch | null, ownerId: string | null): string | null {
   return latch !== null && latch.ownerId === ownerId ? latch.id : null;
 }
+
+/**
+ * The episode asked for by the Journey's `episodeId` route param (back from a quest or from
+ * Results, §3.7) when the catalogue has it; `null` otherwise, so an unknown id (a stale homework
+ * link to a removed episode) never sits in screen state and the latched default still applies.
+ */
+export function requestedSelection(requested: string | undefined, items: readonly { id: string }[]): string | null {
+  return requested !== undefined && items.some((i) => i.id === requested) ? requested : null;
+}
