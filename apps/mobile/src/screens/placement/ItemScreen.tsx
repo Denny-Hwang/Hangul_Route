@@ -101,8 +101,10 @@ function ItemView({ question, ack, onAck }: { question: AssessmentQuestion; ack:
     alive.current = true;
     return () => {
       alive.current = false;
+      stop();
     };
   }, []);
+  const autoStarted = useRef(false);
   const promptRef = useRef<object | null>(null);
 
   const instruction = instructionFor(m, question.format, flow.testLocale);
@@ -146,23 +148,24 @@ function ItemView({ question, ack, onAck }: { question: AssessmentQuestion; ack:
     });
   };
 
-  // On open: a cheer every few answers, the instruction (Short: first item of a rung only), then the prompt.
   useEffect(() => {
     focusForScreenReader(promptRef.current);
-    if (promptPlayback({ screenReader, needsGesture }) !== 'auto') return;
-    let alive = true;
+  }, []);
+
+  // On open: a cheer every few answers, the instruction (Short: first item of a rung only), then the prompt.
+  // Never under a pause sheet (a question can open under the sound sheet): it starts once the sheet closes.
+  const paused = sheet !== null;
+  useEffect(() => {
+    if (autoStarted.current || paused || promptPlayback({ screenReader, needsGesture }) !== 'auto') return;
+    autoStarted.current = true;
     void (async () => {
       if (cheer !== null) await say(cheer);
-      if (alive && speaksInstruction(mode, position?.indexInRung ?? 0)) await say(instruction.spoken);
-      if (alive) playKorean();
+      if (alive.current && speaksInstruction(mode, position?.indexInRung ?? 0)) await say(instruction.spoken);
+      if (alive.current) playKorean();
     })();
-    return () => {
-      alive = false;
-      stop();
-    };
-    // Once per question (this view is keyed by it).
+    // Once per question (this view is keyed by it), when no sheet is open.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [paused]);
 
   // Short: the cards enable after the fallback delay even if the prompt never reports its end.
   const enableAt = choicesEnableAtMs(gate);

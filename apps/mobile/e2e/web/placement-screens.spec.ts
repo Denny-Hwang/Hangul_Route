@@ -425,6 +425,8 @@ test.describe('level check screens (fixture bundle)', () => {
     await page.getByTestId('placement-speaker').click();
     await expect(page.getByTestId('placement-sound-pause')).toBeVisible();
     await expect(page.getByText('Turn on sound to play')).toBeVisible();
+    // The next question waits under the sheet: nothing plays (or fails) until Try again.
+    await expect(page.getByTestId('placement-tap-to-hear')).toHaveCount(0);
     await shot(page, 'placement-sound-pause');
     const profileId = (await readStored<Array<{ id: string }>>(page, 'profiles'))?.[0]?.id ?? '';
     await expect
