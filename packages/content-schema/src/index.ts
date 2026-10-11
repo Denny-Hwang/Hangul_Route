@@ -43,3 +43,5 @@ export * from './curriculum/presets';
 export * from './curriculum/params';
 export * from './curriculum/draft';
 export * from './curriculum/generate';
+export * from './schemas/lecture';
+export * from './schemas/lecture-codec';
