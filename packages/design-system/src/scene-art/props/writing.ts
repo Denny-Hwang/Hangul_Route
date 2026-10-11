@@ -310,8 +310,8 @@ export const STROKE_SPARKS: ItemDef = {
   kind: 'symbol',
   box: { w: 150, h: 80 },
   z: 'mid',
-  alt: 'Simple shapes floating up like sparks: dots, short straight strokes and small circles, with tiny sparkles (no letters)',
-  accuracyNote: 'Abstract dots, strokes and circles rising like sparks; they suggest new letters being made without drawing any real letter.',
+  alt: 'Simple letter pieces floating up like sparks: dots, short straight strokes, a hook and small circles, with tiny sparkles',
+  accuracyNote: 'Jamo-like pieces (dots, strokes, a hook, circles) rising like sparks, drawn as shapes, never as text (rule 7); they suggest new letters being made and spell nothing.',
   nodes: [
     { t: 'circle', cx: 20, cy: 50, r: 5, fill: 'feedback.nudge' },
     { t: 'path', d: 'M40 24 H62 M84 12 V34 M110 40 H132 M60 60 V72', stroke: 'text.primary', sw: 'thick' },

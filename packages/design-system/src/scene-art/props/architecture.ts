@@ -109,6 +109,7 @@ export const NIGHT_WINDOW: ItemDef = {
 // --- PR 2.10b: hangul-printing cluster --------------------------------------
 
 const PANJEON_REF = { title: '유네스코 등재유산 소개 — 세계유산 「해인사 장경판전」', publisher: '국가유산청 국가유산포털 (Korea Heritage Service, National Heritage Portal)', url: 'https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FHeritage%2FHeritage_02.jsp&pageNo=5_1_1_0', accessed: ACCESSED } as const;
+const PANJEON_RECORD_REF = { title: '국보 합천 해인사 장경판전 (陜川 海印寺 藏經板殿)', publisher: '국가유산청 국가유산포털 (Korea Heritage Service, National Heritage Portal)', url: 'https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1113800520000', accessed: ACCESSED } as const;
 const HEUNGDEOKSA_REF = { title: '청주 흥덕사지 (淸州 興德寺址)', publisher: ENCYKOREA, url: 'https://encykorea.aks.ac.kr/Article/E0056767', accessed: ACCESSED } as const;
 
 export const JANGGYEONG_HALL: ItemDef = {
@@ -119,7 +120,7 @@ export const JANGGYEONG_HALL: ItemDef = {
   alt: 'A long, plain Joseon wooden hall of Janggyeong Panjeon at Haeinsa: fifteen bays of unpainted posts, rows of slatted windows high and low, a hipped tiled roof',
   tags: { heritage: true },
   sourceRef: { title: '합천 해인사 장경판전 (陜川 海印寺 藏經板殿)', publisher: ENCYKOREA, url: 'https://encykorea.aks.ac.kr/Article/E0062725', accessed: ACCESSED },
-  accuracyNote: 'One of the two long halls: 15 bays under a hipped roof, no decoration (encykorea); upper and lower windows differ in size (Heritage Portal). Which row is larger on which wall is not given, so here the lower row is taller. One slat per bay.',
+  accuracyNote: 'One of the two long halls: 15 bays under a hipped roof, no decoration (encykorea). The national heritage record (Heritage Portal) says the windows differ in size between the south and north walls; other accounts disagree on which row is larger where, so this single face draws the lower row taller and names no wall. One slat per bay.',
   nodes: [
     { t: 'rect', x: 0, y: 88, w: 220, h: 12, fill: 'border.strong', stroke: 'text.secondary', sw: 'thin' },
     { t: 'rect', x: 5, y: 40, w: 210, h: 48, fill: 'surface.paper' },
@@ -163,8 +164,8 @@ export const HALL_SECTION: ItemDef = {
   z: 'mid',
   alt: 'A cutaway of a Janggyeong Panjeon hall: windows of different sizes high and low in the two walls, shelves of woodblocks inside, and layers of charcoal, lime, salt and sand under the earth floor',
   tags: { heritage: true },
-  sourceRef: PANJEON_REF,
-  accuracyNote: 'A diagram, not a measured section: windows of different sizes high and low, front and back, and a foundation packed with charcoal, salt and lime (Heritage Portal; the story adds sand). Layer order and depth are not given; one rack stands for the shelves.',
+  sourceRef: PANJEON_RECORD_REF,
+  accuracyNote: 'A diagram, not a measured section. The national heritage record says window sizes differ between the south and north walls and that charcoal, lime and salt were laid with sand in the earth floor. The left wall draws the lower opening larger and the right wall the upper, the layout often described for south and north; the record does not say which, so no wall is named. Layer depth is not given; one rack stands for the shelves.',
   nodes: [
     { t: 'rect', x: 0, y: 128, w: 220, h: 42, fill: 'feedback.nudgeLight' },
     { t: 'rect', x: 0, y: 130, w: 220, h: 9, fill: 'text.primary' },

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { HOYA_POSES } from '../hoya';
-import { SCENE_ART_REGISTRY, hasItem } from '../registry';
+import { LIBRARY, SCENE_ART_REGISTRY, hasItem } from '../registry';
 import { checkItem, checkScene } from '../rules';
 
 /** PR 2.3a seeded the Hoya poses; PR 2.3b adds the first library batch; PR 2.10a the records-joseon batch; PR 2.10b the hangul-printing batch. */
@@ -111,6 +111,12 @@ describe('SCENE_ART_REGISTRY', () => {
     const expected = [...HOYA_POSES.map((p) => `hoya:${p}`), ...SETTINGS, ...PROPS].sort();
     expect(Object.keys(SCENE_ART_REGISTRY).sort()).toEqual(expected);
     for (const [key, item] of entries) expect(item.id).toBe(key);
+  });
+
+  it('lists each library item once, so a reused id cannot silently replace an earlier item', () => {
+    const ids = LIBRARY.map((item) => item.id);
+    expect(ids.filter((id, i) => ids.indexOf(id) !== i)).toEqual([]);
+    expect(LIBRARY.length).toBe(SETTINGS.length + PROPS.length);
   });
 
   it('is frozen', () => {

@@ -268,10 +268,10 @@ export const BOOK_OPEN: ItemDef = {
   kind: 'object',
   box: { w: 96, h: 60 },
   z: 'mid',
-  alt: 'An old Joseon thread-bound book lying open, its pages ruled in a frame with columns of marks (no readable text)',
+  alt: 'An old thread-bound book lying open, its pages ruled in a frame with columns of marks (no readable text)',
   tags: { heritage: true },
   sourceRef: { title: '국보 훈민정음 (訓民正音)', publisher: '국가유산청 국가유산포털 (Korea Heritage Service, National Heritage Portal)', url: 'https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1111100700000', accessed: '2026-10-11' },
-  accuracyNote: 'Stands for the Hunminjeongeum Haerye, one woodblock-printed volume of 1446 (Heritage Portal). A generic open book with ruled frames and columns of marks; no character, page count or seal.',
+  accuracyNote: 'A generic old Korean thread-bound book, not one particular volume: ruled frames and columns of marks, no character, page count or seal. Scenes use it for the Hunminjeongeum Haerye (woodblock printed, 1446; Heritage Portal) and for other old books such as Jikji; the scene alt names the book.',
   nodes: [
     ...openBook(96, 60),
     { t: 'path', d: 'M8 10 H44 V48 H8 Z M52 10 H88 V48 H52 Z', stroke: 'text.secondary', sw: 'thin' },

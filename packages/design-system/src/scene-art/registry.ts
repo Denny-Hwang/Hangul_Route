@@ -100,7 +100,8 @@ import { TEMPLE } from './settings/temple';
 import { VILLAGE_LANE } from './settings/village-lane';
 import type { ItemDef } from './types';
 
-const LIBRARY: readonly ItemDef[] = [
+/** Every library item, in batch order. Exported so a test can catch a reused id (a later item would silently replace an earlier one in the registry). */
+export const LIBRARY: readonly ItemDef[] = [
   PALACE_COURTYARD,
   PALACE_HALL,
   VILLAGE_LANE,
@@ -139,7 +140,6 @@ const LIBRARY: readonly ItemDef[] = [
   BOOK_OPEN_ENTRY,
   UIGWE_OPEN,
   BOOK_GEOJUNGGI,
-  BOOK_OPEN,
   BANCHADO_STRIP,
   PAPER_STACK,
   PAPERS_LOOSE,
