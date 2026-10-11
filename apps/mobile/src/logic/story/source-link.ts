@@ -111,7 +111,8 @@ export function sourcesTarget(
   return null;
 }
 
-const HANGUL = /[ᄀ-ᇿ㄰-㆏가-힣]/;
+// Jamo, compatibility jamo and syllables, written as escapes so this file holds no Hangul.
+const HANGUL = new RegExp('[\\u1100-\\u11ff\\u3130-\\u318f\\uac00-\\ud7a3]');
 
 /** Whether a citation (quote, title, notes) has Korean in it, so its node is marked `lang="ko"`. */
 export function hasHangul(text: string): boolean {
