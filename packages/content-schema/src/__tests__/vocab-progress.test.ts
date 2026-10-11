@@ -95,6 +95,24 @@ describe('VocabItemStateSchema (F-VOC-005 section 3.1)', () => {
     expect(VocabItemStateSchema.safeParse({ ...item, id: 'vocab:Sagwa' }).success).toBe(false);
     expect(VocabItemStateSchema.safeParse({ ...item, at: 7 }).success).toBe(false);
   });
+
+  it('rejects calendar days that do not exist, so a due day can always come due', () => {
+    for (const day of ['2026-13-45', '2026-02-30', '2027-02-29', '9999-99-99', '2026-00-10', '2026-10-00']) {
+      expect(VocabItemStateSchema.safeParse({ ...item, first: day }).success).toBe(false);
+      expect(VocabItemStateSchema.safeParse({ ...item, last: day }).success).toBe(false);
+      expect(VocabItemStateSchema.safeParse({ ...item, due: day }).success).toBe(false);
+    }
+    expect(VocabItemStateSchema.safeParse({ ...item, first: '2028-02-29', last: '2028-02-29' }).success).toBe(true);
+  });
+
+  it('takes `at` only as an ISO date-time (UTC or offset) of at most 40 characters', () => {
+    for (const at of ['2026-10-12T09:00:00.000Z', '2026-10-12T09:00:00+09:00', '2026-10-12T09:00Z']) {
+      expect(VocabItemStateSchema.safeParse({ ...item, at }).success).toBe(true);
+    }
+    for (const at of ['zzz', '', '2026-10-12', '2026-10-12 09:00:00', '9999-99-99T99:99:99Z', `2026-10-12T09:00:00.${'1'.repeat(40)}Z`]) {
+      expect(VocabItemStateSchema.safeParse({ ...item, at }).success).toBe(false);
+    }
+  });
 });
 
 describe('VocabTopicProgressSchema', () => {
@@ -131,6 +149,12 @@ describe('VocabProgressSchema', () => {
     const topics = (n: number) => Array.from({ length: n }, (_, i) => ({ ...topic, topic: `t${i}` }));
     expect(VocabProgressSchema.safeParse({ v: 1, items: [], topics: topics(100) }).success).toBe(true);
     expect(VocabProgressSchema.safeParse({ v: 1, items: [], topics: topics(101) }).success).toBe(false);
+  });
+
+  it('rejects a duplicate word id or a duplicate topic key', () => {
+    expect(VocabProgressSchema.safeParse({ ...slice, items: [item, { ...item, seen: 4 }] }).success).toBe(false);
+    expect(VocabProgressSchema.safeParse({ ...slice, topics: [topic, { ...topic, sessions: 1 }] }).success).toBe(false);
+    expect(VocabProgressSchema.safeParse({ ...slice, items: [item, { ...item, id: 'vocab:nun-eye' }] }).success).toBe(true);
   });
 
   it('fails when one item breaks the refinement', () => {
@@ -189,6 +213,35 @@ describe('the slice on the snapshot, the summary and the backup file', () => {
   it('a malformed slice fails the snapshot (the Worker answers 422, never stores it)', () => {
     expect(ProgressSnapshotSchema.safeParse({ ...snapshot, vocab: { ...slice, items: [{ ...item, box: 9 }] } }).success).toBe(false);
     expect(ProgressSnapshotSchema.safeParse({ ...snapshot, vocab: { ...slice, items: [{ ...item, first: 'yesterday' }] } }).success).toBe(false);
-    expect(ProgressSummarySchema.safeParse({ ...summary, vocab: { ...vocabSummary, firstTryRate: 2 } }).success).toBe(false);
+  });
+
+  it('a malformed summary.vocab is dropped, never fatal: the rest of the summary still parses', () => {
+    for (const bad of [{ ...vocabSummary, firstTryRate: 1.0000001 }, { ...vocabSummary, needsPractice: ['vocab:a', 'vocab:b', 'vocab:c', 'vocab:d'] }, 'x']) {
+      const parsed = ProgressSummarySchema.safeParse({ ...summary, vocab: bad });
+      expect(parsed.success).toBe(true);
+      expect(parsed.success && parsed.data.vocab).toBeUndefined();
+      expect(parsed.success && parsed.data.streakDays).toBe(0);
+    }
+  });
+
+  it('a backup file with a malformed slice still restores everything else, without the slice', () => {
+    const quest = { questId: 'quest:s1-q1', episodeId: 'episode:s1', startedAt: 't', stars: 3, attempts: 1, accuracy: 1 };
+    const card = { cardId: 'card:sejong', unlockedAt: 't', newSinceLastView: false };
+    const file = {
+      format: BACKUP_FORMAT,
+      version: BACKUP_VERSION,
+      exportedAt: 't',
+      profile: { id: 'profile:abc', displayName: 'Suni', ageGroup: '5-7', avatar: 'hoya-orange', createdAt: 't' },
+      snapshot: { ...snapshot, quests: [quest], cards: [card] },
+    };
+    for (const vocab of [{ ...slice, items: [{ ...item, box: 9 }] }, { ...slice, v: 2 }, { ...slice, items: [item, item] }]) {
+      const parsed = BackupFileSchema.safeParse({ ...file, snapshot: { ...file.snapshot, vocab } });
+      expect(parsed.success).toBe(true);
+      expect(parsed.success && parsed.data.snapshot.vocab).toBeUndefined();
+      expect(parsed.success && parsed.data.snapshot.quests).toHaveLength(1);
+      expect(parsed.success && parsed.data.snapshot.cards).toEqual([card]);
+    }
+    // The sync contract stays strict: the Worker still answers 422 for the same slice.
+    expect(ProgressSnapshotSchema.safeParse({ ...snapshot, vocab: { ...slice, v: 2 } }).success).toBe(false);
   });
 });

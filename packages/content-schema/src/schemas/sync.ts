@@ -8,6 +8,7 @@ import { LearnerLevelIdSchema } from './learner-level';
 import { PlacementSummarySchema } from './placement';
 import { InboxTransferSchema, lenientArray } from './transfer';
 import { VocabIdSchema } from './vocab';
+import { VocabProgressSchema } from './vocab-progress';
 
 /**
  * Sync contracts — F-SYNC-001. Shared by the Worker (validation) and the
@@ -82,8 +83,13 @@ export const ProgressSummarySchema = z.object({
   ),
   /** Self-route counts (F-PLAN-002 section 3.5); removed from every roster but a family's. Malformed counts are dropped, never fatal. */
   selfRoute: SelfRouteSummarySchema.optional().catch(undefined),
-  /** Word counts (F-VOC-005 section 3.8); omitted when the learner has no collected words. */
-  vocab: VocabSummarySchema.optional(),
+  /**
+   * Word counts (F-VOC-005 section 3.8); omitted when the learner has no
+   * collected words. A derived display figure, so malformed counts are dropped,
+   * never fatal (as `selfRoute`): a bad summary must not stop the slice and
+   * everything else from syncing.
+   */
+  vocab: VocabSummarySchema.optional().catch(undefined),
 });
 export type ProgressSummary = z.infer<typeof ProgressSummarySchema>;
 
@@ -146,7 +152,12 @@ export const BackupFileSchema = z.object({
   version: z.literal(BACKUP_VERSION),
   exportedAt: z.string(),
   profile: ProfileSchema,
-  snapshot: ProgressSnapshotSchema,
+  /**
+   * The word slice is lenient here only (F-VOC-005 section 3.10): a malformed
+   * or newer-version slice is dropped so the file still restores quests, cards
+   * and episodes. The sync contract stays strict (a 422 on the Worker).
+   */
+  snapshot: ProgressSnapshotSchema.extend({ vocab: VocabProgressSchema.optional().catch(undefined) }),
 });
 export type BackupFile = Omit<z.infer<typeof BackupFileSchema>, 'snapshot'> & { snapshot: ProgressSnapshot };
 

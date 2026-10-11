@@ -724,6 +724,30 @@ describe('vocab and summary.vocab (F-VOC-005 section 3.3, server first and the a
     expect(await db.getSnapshot(r.learnerId)).toBeNull();
   });
 
+  it('a malformed summary.vocab is dropped, not a 422: the slice and the rest of the PUT still sync', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    const bad = { ...counts, firstTryRate: 1.0000001 };
+    expect((await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withVocab(r.learnerId, vocab), summary: { ...summary, vocab: bad } })).status).toBe(200);
+    const got = await getStored(r.learnerId, auth);
+    expect(got.data.snapshot.vocab).toEqual(vocab);
+    expect(got.data.summary.vocab).toBeUndefined();
+  });
+
+  it('rejects a duplicate word id, a non-ISO `at` or a day that does not exist with 422', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    for (const slice of [
+      { ...vocab, items: [item, { ...item, seen: 5 }] },
+      { ...vocab, items: [{ ...item, at: 'zzz' }] },
+      { ...vocab, items: [{ ...item, due: '2026-13-45' }] },
+    ]) {
+      const res = await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withVocab(r.learnerId, slice), summary });
+      expect(res.status).toBe(422);
+    }
+    expect(await db.getSnapshot(r.learnerId)).toBeNull();
+  });
+
   it('accepts an old-shaped snapshot (no vocab) exactly as before, with no vocab key stored', async () => {
     const r = await register(DEVICE_A);
     const auth = deviceAuth(DEVICE_A, r.secret);
