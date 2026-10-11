@@ -2,7 +2,7 @@
 
 Spec: `docs/specs/F-CARD-002-heritage-card-back-face.md` §3.1–3.6 · `docs/specs/F-CARD-003-card-share-export.md` §3.1–3.7 · F-MOTION-002 (flip animation, supersedes CARD-002 §3.1 "instant swap")
 Audience: **learner (P4/P5 child, 5–11)** front face · **parent / older child** back face + share
-Code (back-filled): `apps/mobile/src/screens/library/CardDetailScreen.tsx` — route `CardDetail { cardId }`, `presentation: 'modal'`
+Code (back-filled): `apps/mobile/src/screens/library/CardDetailView.tsx` (body; `CardDetailScreen.tsx` is the stack wrapper) — route `CardDetail { cardId }`, `presentation: 'modal'`
 
 ## Scenario (Given-When-Then)
 
