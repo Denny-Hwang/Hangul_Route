@@ -1,14 +1,24 @@
 import type { DiscoverPage } from '@hangul-route/content-schema';
+import { getMessages, pseudoLocalize, pseudoText } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import {
-  DISCOVER_COPY,
-  buildDiscover,
-  pageRender,
+  buildDiscover as buildDiscoverWith,
+  pageRender as pageRenderWith,
   startDiscover,
   stepDiscover,
   type DiscoverEvent,
   type DiscoverState,
 } from '../discover-flow';
+
+const messages = getMessages('en');
+const COPY = messages.learner.quest.discover;
+const buildDiscover = (pages: DiscoverPage[]): ReturnType<typeof buildDiscoverWith> =>
+  buildDiscoverWith(pages, COPY, messages.a11y);
+const pageRender = (
+  model: Parameters<typeof pageRenderWith>[0],
+  state: Parameters<typeof pageRenderWith>[1],
+  mode: Parameters<typeof pageRenderWith>[2],
+): ReturnType<typeof pageRenderWith> => pageRenderWith(model, state, mode, COPY);
 
 const ko = (text: string, romanization: string, en: string, extra: Record<string, unknown> = {}) => ({
   ko: text,
@@ -94,7 +104,7 @@ describe('buildDiscover: the view model of the pages', () => {
     expect(item.hear.spec.text).toBe('안');
     expect(item.letterName).toBeUndefined();
     expect(item.block).toEqual({ vowel: 'under', hasFinal: true, highlight: 'final', parts: ['ㅁ', 'ㅜ', 'ㄴ'] });
-    expect(item.batchimLine).toBe(DISCOVER_COPY.batchimLine);
+    expect(item.batchimLine).toBe(COPY.batchimLine);
     expect(item.accessibilityLabel).toBe('Korean final consonant n');
     const beside = buildDiscover([batchimPage]).pages[0]!.items[1]!;
     expect(beside.block).toEqual({ vowel: 'beside', hasFinal: true, highlight: 'final', parts: ['ㄷ', 'ㅏ', 'ㄹ'] });
@@ -155,7 +165,7 @@ describe('buildDiscover: the view model of the pages', () => {
 
   it('titles a page: its caption, else "words you can read now" for an all-word page', () => {
     const model = buildDiscover([pageTwo, wordsPage, pageOne]);
-    expect(model.pages.map((p) => p.title)).toEqual(['The sound ga', DISCOVER_COPY.wordsTitle, undefined]);
+    expect(model.pages.map((p) => p.title)).toEqual(['The sound ga', COPY.wordsTitle, undefined]);
   });
 
   it('keeps the same word twice apart with distinct keys', () => {
@@ -218,7 +228,7 @@ describe('stepDiscover: pages, hearing, reveal', () => {
       expect(out.state.played).toEqual([]);
       expect(out.state.page).toBe(0);
       const render = pageRender(model, out.state, 'always');
-      expect(render.items[0]!.sayLines).toEqual([`${DISCOVER_COPY.sayItOutLoud} a`]);
+      expect(render.items[0]!.sayLines).toEqual([COPY.sayLine('a')]);
       expect(render.items[0]!.heard).toBe(false);
       expect(render.items[1]!.sayLines).toEqual([]);
     }
@@ -235,24 +245,24 @@ describe('stepDiscover: pages, hearing, reveal', () => {
     const pageG = buildDiscover([pageTwo]);
     const g = pageG.pages[0]!.items[0]!;
     const out = run(startDiscover(pageG), { type: 'audio', id: g.hear.id, result: 'unavailable' });
-    expect(pageRender(pageG, out.state, 'always').items[0]!.sayLines).toEqual([`${DISCOVER_COPY.sayItOutLoud} ga`]);
+    expect(pageRender(pageG, out.state, 'always').items[0]!.sayLines).toEqual([COPY.sayLine('ga')]);
     const batchim = buildDiscover([batchimPage]);
     const k = batchim.pages[0]!.items[0]!;
     const out2 = run(startDiscover(batchim), { type: 'audio', id: k.hear.id, result: 'muted' });
-    expect(pageRender(batchim, out2.state, 'always').items[0]!.sayLines).toEqual([`${DISCOVER_COPY.sayItOutLoud} an`]);
+    expect(pageRender(batchim, out2.state, 'always').items[0]!.sayLines).toEqual([COPY.sayLine('an')]);
   });
 
   it('the example word gets its own say-it line from its romanization', () => {
     const g = model.pages[1]!.items[0]!;
     const out = run(startDiscover(model), { type: 'next' }, { type: 'audio', id: g.example!.hear.id, result: 'unavailable' });
-    expect(pageRender(model, out.state, 'always').items[0]!.sayLines).toEqual([`${DISCOVER_COPY.sayItOutLoud} gagu`]);
+    expect(pageRender(model, out.state, 'always').items[0]!.sayLines).toEqual([COPY.sayLine('gagu')]);
   });
 
   it('a word item says its romanization', () => {
     const words = buildDiscover([wordsPage]);
     const a = words.pages[0]!.items[0]!;
     const out = run(startDiscover(words), { type: 'audio', id: a.hear.id, result: 'unavailable' });
-    expect(pageRender(words, out.state, 'always').items[0]!.sayLines).toEqual([`${DISCOVER_COPY.sayItOutLoud} abeoji`]);
+    expect(pageRender(words, out.state, 'always').items[0]!.sayLines).toEqual([COPY.sayLine('abeoji')]);
   });
 
   it('shows the letter name after its button was tapped', () => {
@@ -339,12 +349,31 @@ describe('an empty Discover step', () => {
     expect(state.pageCount).toBe(0);
     const render = pageRender(model, state, 'always');
     expect(render).toMatchObject({ empty: true, continueEnabled: true, isLast: true, items: [] });
-    expect(render.emptyLine).toBe(DISCOVER_COPY.empty);
+    expect(render.emptyLine).toBe(COPY.empty);
     expect(stepDiscover(state, { type: 'next' }).effects).toEqual([{ type: 'done', pages: 0, heard: 0 }]);
   });
 
   it('a step whose items are all unresolvable behaves the same', () => {
     const model = buildDiscover([{ items: [{ type: 'jamo', jamoId: 'jamo:nope', example: ko('가', 'ga', 'x') }] }]);
     expect(pageRender(model, startDiscover(model), 'always').empty).toBe(true);
+  });
+});
+
+describe('copy comes from the message subtree it is given (F-I18N-001 §3.4 rule 3)', () => {
+  const pseudo = pseudoLocalize(messages);
+
+  it('buildDiscover words the titles and labels from the subtree and a11y messages', () => {
+    const model = buildDiscoverWith([wordsPage, batchimPage], pseudo.learner.quest.discover, pseudo.a11y);
+    expect(model.pages[0]!.title).toBe(pseudoText(COPY.wordsTitle));
+    const item = model.pages[1]!.items[0]!;
+    expect(item.batchimLine).toBe(pseudoText(COPY.batchimLine));
+    expect(item.accessibilityLabel).toBe(pseudoText('Korean final consonant n'));
+  });
+
+  it('pageRender words the empty line and the say-it-out-loud line from the subtree', () => {
+    const empty = buildDiscoverWith([], pseudo.learner.quest.discover, pseudo.a11y);
+    expect(pageRenderWith(empty, startDiscover(empty), 'always', pseudo.learner.quest.discover).emptyLine).toBe(
+      pseudoText(COPY.empty),
+    );
   });
 });

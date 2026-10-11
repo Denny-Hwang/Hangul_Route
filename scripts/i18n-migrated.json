@@ -13,7 +13,9 @@
     "apps/mobile/src/screens/episode/EpisodeDetailScreen.tsx",
     "apps/mobile/src/screens/results/ResultsScreen.tsx",
     "apps/mobile/src/screens/homework/HomeworkScreen.tsx",
-    "apps/mobile/src/components/PrereqSheet.tsx"
+    "apps/mobile/src/components/PrereqSheet.tsx",
+    "apps/mobile/src/screens/quest/QuestPlayerScreen.tsx",
+    "apps/mobile/src/screens/quest/DiscoverStep.tsx"
   ],
   "pluralTernaryBaseline": {
     "apps/web/src/app/teach/space/page.tsx": 1,

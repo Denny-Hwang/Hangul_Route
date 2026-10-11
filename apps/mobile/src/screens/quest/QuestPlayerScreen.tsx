@@ -14,10 +14,12 @@ import {
 } from '@hangul-route/design-system';
 import { CommonActions, useFocusEffect } from '@react-navigation/native';
 import type { QuestStepKind } from '@hangul-route/content-schema';
+import type { Messages } from '@hangul-route/i18n';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useRef } from 'react';
 import { Pressable, View } from 'react-native';
 import { questById } from '../../content';
+import { useMessages } from '../../i18n/use-messages';
 import { narrativeLine, type NarrativeLine } from '../../logic/korean-labels';
 import { questOutcome } from '../../logic/quest-outcome';
 import {
@@ -38,7 +40,11 @@ import { DiscoverStep } from './DiscoverStep';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'QuestPlayer'>;
 
+type QuestMessages = Messages['learner']['quest'];
+
 export function QuestPlayerScreen({ route, navigation }: Props): React.ReactElement {
+  const m = useMessages();
+  const q = m.learner.quest;
   const { questId, episodeId } = route.params;
   const quest = questById(questId);
   const profile = useProfileStore(activeProfileSelector);
@@ -114,10 +120,10 @@ export function QuestPlayerScreen({ route, navigation }: Props): React.ReactElem
   };
   const confirmQuit = (): void => {
     void confirm({
-      title: 'Leave this quest?',
-      message: 'Stars from this try will not be saved.',
-      confirmLabel: 'Leave',
-      cancelLabel: 'Keep playing',
+      title: q.leave.title,
+      message: q.leave.message,
+      confirmLabel: q.leave.confirm.cta,
+      cancelLabel: q.leave.keep.cta,
       destructive: true,
     }).then((yes) => {
       if (yes) leaveQuest();
@@ -136,9 +142,9 @@ export function QuestPlayerScreen({ route, navigation }: Props): React.ReactElem
   if (!quest || !step) {
     return (
       <Screen>
-        <Body>Quest not found.</Body>
+        <Body>{q.notFound}</Body>
         <Spacer size="lg" />
-        <Button label="Go back" tone="secondary" size="md" onPress={() => navigation.goBack()} />
+        <Button label={q.goBack.cta} tone="secondary" size="md" onPress={() => navigation.goBack()} />
       </Screen>
     );
   }
@@ -160,7 +166,7 @@ export function QuestPlayerScreen({ route, navigation }: Props): React.ReactElem
           onPress={confirmQuit}
           hitSlop={spacing.md}
           accessibilityRole="button"
-          accessibilityLabel="Leave quest"
+          accessibilityLabel={m.a11y.leaveQuest}
           style={{ padding: spacing.xs }}
         >
           <Icon name="close" size={24} />
@@ -168,13 +174,13 @@ export function QuestPlayerScreen({ route, navigation }: Props): React.ReactElem
         <View style={{ flex: 1 }}>
           <Progress value={stepIndex + 1} max={quest.steps.length} tone="primary" variant="dots" />
         </View>
-        <Pill tone="neutral" label={`${stepIndex + 1} / ${quest.steps.length}`} size="sm" />
+        <Pill tone="neutral" label={q.progress(stepIndex + 1, quest.steps.length)} size="sm" />
       </View>
 
       <Spacer size="lg" />
       <Heading level="title">{step.titleEn}</Heading>
       <Spacer size="xs" />
-      <Pill tone="primary" label={questStepLabel(step.kind)} size="sm" />
+      <Pill tone="primary" label={questStepLabel(step.kind, q.step)} size="sm" />
 
       <Spacer size="lg" />
       {step.kind === 'discover' && step.discover ? (
@@ -186,13 +192,15 @@ export function QuestPlayerScreen({ route, navigation }: Props): React.ReactElem
         />
       ) : step.minigameKind && step.minigameRef ? (
         <MinigameLauncher
+          copy={q}
           kind={step.kind}
           onLaunch={() => navigation.navigate('Minigame', { questId, episodeId, stepIndex })}
           onSkip={advance}
         />
       ) : (
         <NarrativeStepBody
-          line={narrativeLine(step)}
+          copy={q}
+          line={narrativeLine(step, q.keepGoing)}
           onContinue={advance}
           isReward={step.kind === 'reward'}
         />
@@ -202,10 +210,12 @@ export function QuestPlayerScreen({ route, navigation }: Props): React.ReactElem
 }
 
 function NarrativeStepBody({
+  copy,
   line,
   onContinue,
   isReward,
 }: {
+  copy: QuestMessages;
   line: NarrativeLine;
   onContinue: () => void;
   isReward: boolean;
@@ -231,22 +241,24 @@ function NarrativeStepBody({
         ) : null}
       </Card>
       <View style={{ flex: 1 }} />
-      <Button label={isReward ? 'See results' : 'Continue'} tone="primary" size="hero" fullWidth onPress={onContinue} />
+      <Button label={isReward ? copy.seeResults.cta : copy.continue.cta} tone="primary" size="hero" fullWidth onPress={onContinue} />
       <Spacer size="lg" />
     </View>
   );
 }
 
 function MinigameLauncher({
+  copy,
   kind,
   onLaunch,
   onSkip,
 }: {
+  copy: QuestMessages;
   kind: QuestStepKind;
   onLaunch: () => void;
   onSkip: () => void;
 }): React.ReactElement {
-  const view = launcherView(kind);
+  const view = launcherView(kind, copy.launcher);
   return (
     <View style={{ flex: 1 }}>
       {view.hoya ? (

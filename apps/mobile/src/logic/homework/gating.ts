@@ -12,8 +12,11 @@ export type GateRejection = 'unknown-quest' | 'episode-not-shipped' | 'stage-loc
 export interface GateResult {
   allowed: boolean;
   reason?: GateRejection;
-  /** English caregiver-facing message (CLAUDE.md §8 — UI is English). */
-  message?: string;
+  /**
+   * Who the caregiver is blocked for, on a rejection. The screen words the reason in the
+   * UI locale: `m.caregiver.gating[reason](learnerName)` (F-I18N-001 §3.4 rule 3).
+   */
+  learnerName?: string;
 }
 
 export interface GateInput {
@@ -22,7 +25,7 @@ export interface GateInput {
   episodes: readonly Episode[];
   /** Stage keys the learner has unlocked, e.g. ['stage1']. */
   unlockedStages: readonly string[];
-  /** Learner's display name, for the caregiver message. */
+  /** Learner's display name, returned with a rejection for the caregiver message. */
   learnerName: string;
 }
 
@@ -34,25 +37,13 @@ export function canAssignQuest({
 }: GateInput): GateResult {
   const episode = episodes.find((e) => e.questIds.includes(questId));
   if (!episode) {
-    return {
-      allowed: false,
-      reason: 'unknown-quest',
-      message: 'That quest is not available yet.',
-    };
+    return { allowed: false, reason: 'unknown-quest', learnerName };
   }
   if (episode.status === 'preview' || episode.status === 'draft') {
-    return {
-      allowed: false,
-      reason: 'episode-not-shipped',
-      message: 'That episode is still being built.',
-    };
+    return { allowed: false, reason: 'episode-not-shipped', learnerName };
   }
   if (!unlockedStages.includes(episode.stage)) {
-    return {
-      allowed: false,
-      reason: 'stage-locked',
-      message: `${learnerName} hasn't reached this quest yet.`,
-    };
+    return { allowed: false, reason: 'stage-locked', learnerName };
   }
   return { allowed: true };
 }

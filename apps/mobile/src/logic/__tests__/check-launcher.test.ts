@@ -1,4 +1,5 @@
 import type { QuestStepKind } from '@hangul-route/content-schema';
+import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import {
   checkCompletedPayload,
@@ -6,12 +7,13 @@ import {
   launcherView,
   watchCheck,
 } from '../quest-flow/check-launcher';
-import { QUEST_FLOW_COPY } from '../quest-flow/copy';
 import { questStepLabel } from '../quest-steps';
+
+const { launcher, step } = getMessages('en').learner.quest;
 
 describe('launcherView (F-QUEST-002 §3.3: the Check launcher variant)', () => {
   it('the Check says "Two quick ones", has a single Go and no Skip', () => {
-    const view = launcherView('check');
+    const view = launcherView('check', launcher);
     expect(view.heading).toBe('Two quick ones');
     expect(view.primaryLabel).toBe('Go');
     expect(view.showSkip).toBe(false);
@@ -22,7 +24,7 @@ describe('launcherView (F-QUEST-002 §3.3: the Check launcher variant)', () => {
   it('the other game steps keep the generic card and their Skip for now', () => {
     const kinds: QuestStepKind[] = ['present', 'practice', 'apply'];
     for (const kind of kinds) {
-      const view = launcherView(kind);
+      const view = launcherView(kind, launcher);
       expect(view.heading).toBe('Ready for a quick game?');
       expect(view.body).toBe("Tap to play. When the game is done you'll come right back.");
       expect(view.primaryLabel).toBe('Play minigame');
@@ -34,16 +36,16 @@ describe('launcherView (F-QUEST-002 §3.3: the Check launcher variant)', () => {
 
   it('only the Check drops the Skip, across every step kind', () => {
     const kinds: QuestStepKind[] = ['intro', 'present', 'discover', 'practice', 'apply', 'check', 'reward'];
-    expect(kinds.filter((k) => !launcherView(k).showSkip)).toEqual(['check']);
+    expect(kinds.filter((k) => !launcherView(k, launcher).showSkip)).toEqual(['check']);
   });
 
   it('the learner-facing step labels are plain English', () => {
-    expect(questStepLabel('discover')).toBe('Look and learn');
-    expect(questStepLabel('check')).toBe('Quick check');
+    expect(questStepLabel('discover', step)).toBe('Look and learn');
+    expect(questStepLabel('check', step)).toBe('Quick check');
   });
 
-  it('keeps no age words, emoji or red-X language in the copy module', () => {
-    const text = JSON.stringify(QUEST_FLOW_COPY);
+  it('keeps no age words, emoji or red-X language in the launcher copy', () => {
+    const text = JSON.stringify(launcher);
     expect(text).not.toMatch(/\b(kids?|child(ren)?|ages?|fail\w*|wrong)\b|\p{Extended_Pictographic}/iu);
   });
 });

@@ -1,3 +1,4 @@
+import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import {
   jamoTileA11yLabel,
@@ -40,10 +41,11 @@ describe('jamo screen-reader labels (F-CNT-002 §3.3: a11yRomanization)', () => 
 });
 
 describe('narrativeLine (hoyaLineKo on the quest player)', () => {
+  const KEEP_GOING = getMessages('en').learner.quest.keepGoing;
   const ko = { ko: '새해 복 많이 받으세요.', romanization: 'saehae bok mani badeuseyo', en: 'Happy New Year!' };
 
   it('shows the Korean line with romanization and gloss under the English message', () => {
-    expect(narrativeLine({ hoyaLineEn: "Happy New Year! Let's learn the greeting.", hoyaLineKo: ko })).toEqual({
+    expect(narrativeLine({ hoyaLineEn: "Happy New Year! Let's learn the greeting.", hoyaLineKo: ko }, KEEP_GOING)).toEqual({
       message: "Happy New Year! Let's learn the greeting.",
       korean: ko.ko,
       romanization: ko.romanization,
@@ -52,7 +54,7 @@ describe('narrativeLine (hoyaLineKo on the quest player)', () => {
   });
 
   it('uses the gloss as the message, once, when there is no English line', () => {
-    expect(narrativeLine({ hoyaLineKo: ko })).toEqual({
+    expect(narrativeLine({ hoyaLineKo: ko }, KEEP_GOING)).toEqual({
       message: 'Happy New Year!',
       korean: ko.ko,
       romanization: ko.romanization,
@@ -60,9 +62,9 @@ describe('narrativeLine (hoyaLineKo on the quest player)', () => {
   });
 
   it('keeps today behaviour when there is no Korean line: hoyaLineEn, then bodyEn, then a default', () => {
-    expect(narrativeLine({ hoyaLineEn: 'Hi', bodyEn: 'Body' })).toEqual({ message: 'Hi' });
-    expect(narrativeLine({ bodyEn: 'Body' })).toEqual({ message: 'Body' });
-    expect(narrativeLine({})).toEqual({ message: "Let's keep going!" });
+    expect(narrativeLine({ hoyaLineEn: 'Hi', bodyEn: 'Body' }, KEEP_GOING)).toEqual({ message: 'Hi' });
+    expect(narrativeLine({ bodyEn: 'Body' }, KEEP_GOING)).toEqual({ message: 'Body' });
+    expect(narrativeLine({}, KEEP_GOING)).toEqual({ message: "Let's keep going!" });
   });
 });
 
