@@ -1,6 +1,6 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useIsFocused } from '@react-navigation/native';
-import { Icon, colors, tabBarMetrics, typography, useLayoutClass } from '@hangul-route/design-system';
+import { Icon, borderWidth, colors, tabBarMetrics, typography, useLayoutClass } from '@hangul-route/design-system';
 import React, { useEffect } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useMessages } from '../i18n/use-messages';
@@ -19,11 +19,11 @@ export function MainTabs(): React.ReactElement {
   // inside `layout.maxWidth.full` on a wide window (F-LAYOUT-001 §3.2, LD6).
   const insets = useSafeAreaInsets();
   const { windowWidth } = useLayoutClass();
-  const { height, paddingTop, paddingBottom, paddingLeft, paddingRight } = tabBarMetrics(
-    insets.bottom,
-    { left: insets.left, right: insets.right },
-    windowWidth,
-  );
+  const metrics = tabBarMetrics(insets.bottom, { left: insets.left, right: insets.right }, windowWidth);
+  const { paddingTop, paddingBottom, paddingLeft, paddingRight } = metrics;
+  // The top border is inside the bar's height (border-box), so it is added on
+  // top: otherwise the items come out 1 px under the 64 pt floor.
+  const height = metrics.height + borderWidth.thin;
   // PwaBanners (mounted beside the navigator) sit above the tab bar while it shows.
   const focused = useIsFocused();
   const setTabBarHeight = useUiStore((s) => s.setTabBarHeight);
@@ -41,6 +41,7 @@ export function MainTabs(): React.ReactElement {
         tabBarStyle: {
           backgroundColor: colors.surface.paper,
           borderTopColor: colors.border.subtle,
+          borderTopWidth: borderWidth.thin,
           height,
           paddingTop,
           paddingBottom,
