@@ -125,3 +125,29 @@ export async function onboardSelf(page: Page, o: OnboardOptions): Promise<void> 
   await page.getByRole('button', { name: "Let's start" }).click();
   await completeSelfForm(page, o);
 }
+
+/**
+ * Turn the device into one that was set up before the form made the PIN
+ * (F-LEARN-001 L8): a family device with no PIN yet, so the first grown-up
+ * action still shows the PIN setup screen. Deletes the stored hash, reloads.
+ */
+export async function forgetPin(page: Page): Promise<void> {
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve, reject) => {
+        const open = indexedDB.open('keyval-store');
+        open.onerror = () => reject(open.error);
+        open.onsuccess = () => {
+          const db = open.result;
+          const tx = db.transaction('keyval', 'readwrite');
+          tx.objectStore('keyval').delete('hr:account:parentPinHash');
+          tx.oncomplete = () => {
+            db.close();
+            resolve();
+          };
+          tx.onerror = () => reject(tx.error);
+        };
+      }),
+  );
+  await page.goto('/');
+}

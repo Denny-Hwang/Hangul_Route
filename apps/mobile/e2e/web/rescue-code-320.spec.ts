@@ -47,7 +47,7 @@ function seedRescueCode(page: Page, code: string): Promise<void> {
 test('sync/restore: the whole longest code is visible in the field, wrapped, with no sideways scroll', async ({ page }) => {
   await onboard(page, 'Dami');
   await page.getByRole('button', { name: 'Profile and settings' }).click();
-  await page.getByRole('button', { name: 'Restore from a file (grown-ups only)' }).click();
+  await page.getByRole('button', { name: 'Restore from a file (PIN required)' }).click();
   await unlockWithPin(page);
   await page.getByRole('button', { name: 'I have a rescue code' }).click();
 
