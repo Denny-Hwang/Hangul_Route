@@ -213,4 +213,11 @@ describe('length budgets (F-I18N-001 §3.11)', () => {
       expect(paths).toContain(expected);
     }
   });
+
+  it('covers the landing buttons (PR 11a)', () => {
+    const paths = leafPaths(getMessages('en')).filter((p) => BUDGETS[p.split('.').pop() ?? ''] !== undefined);
+    for (const expected of ['landing.nav.playNow.cta', 'landing.hero.play.cta', 'landing.hero.seeCards.cta', 'landing.get.play.cta']) {
+      expect(paths).toContain(expected);
+    }
+  });
 });

@@ -12,9 +12,10 @@ import { SAMPLES } from './samples';
 
 const HANGUL = /[ᄀ-ᇿ㄰-㆏가-힯]/;
 
-function stringsOf(messages: Messages): string[] {
+function stringsOf(messages: Messages, keep: (path: string) => boolean = () => true): string[] {
   const out: string[] = [];
   for (const path of leafPaths(messages)) {
+    if (!keep(path)) continue;
     const value = lookup(messages, path);
     if (typeof value === 'string') out.push(value);
     else if (Array.isArray(value)) out.push(...value.map(String));
@@ -26,6 +27,13 @@ function stringsOf(messages: Messages): string[] {
   }
   return out;
 }
+
+/**
+ * The public site (`landing`) is checked against the learner list: it is what a learner reads, and it
+ * uses "behind" only for the parent-gate ("behind a simple multiplication question"), never for progress.
+ * Every other namespace keeps the stricter caregiver list (learner words plus "behind", "lazy").
+ */
+const isLanding = (path: string): boolean => path.startsWith('landing.');
 
 describe('overlay structure', () => {
   it('every es/ko path exists in en, with the same kind of value', () => {
@@ -82,9 +90,15 @@ describe('content rules for every locale', () => {
     }
 
     it(`${locale}: no banned word on the learner or caregiver surface`, () => {
-      for (const s of strings) {
+      for (const s of stringsOf(getMessages(locale), (path) => !isLanding(path))) {
         expect(findBannedWord(s, locale, 'caregiver'), s).toBeNull();
       }
+    });
+
+    it(`${locale}: no learner-banned word on the public site (landing)`, () => {
+      const site = stringsOf(getMessages(locale), isLanding);
+      expect(site.length).toBeGreaterThan(0);
+      for (const s of site) expect(findBannedWord(s, locale, 'learner'), s).toBeNull();
     });
 
     // U+2605 (the black star in the Home "stars" pill) is a plain text symbol, not an emoji.

@@ -5,6 +5,7 @@
  */
 export type { DeepPartial, MessageFn, Messages, Widen } from './types';
 export { en } from './messages/en';
+export type { LegalValues } from './messages/en/landing';
 export {
   availableLocales,
   DEFAULT_LOCALE,
