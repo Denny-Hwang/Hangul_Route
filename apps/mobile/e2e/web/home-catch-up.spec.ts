@@ -1,0 +1,149 @@
+import type { Page } from '@playwright/test';
+import type { ProgressSnapshot } from '@hangul-route/content-schema';
+import { expect, test } from './fixtures';
+import { onboardChild, readStored, seedStored } from './helpers';
+import { shot } from './shots';
+
+/**
+ * F-STORY-006 §3.5, PR 6.5c: the Home catch-up card. A learner who earned cards before the award
+ * model existed is told once per app session, under the greeting, that Hoya found the cards; one
+ * button opens the Library and marks those cards seen. No timer, no counter of what is left, and
+ * a new learner (the welcome card alone) never sees it.
+ */
+
+const T = '2026-10-01T09:05:00.000Z';
+const STAGE1_QUESTS: readonly (readonly [string, string])[] = [
+  ['quest:stage1-letters-q1', 'episode:stage1-letters'],
+  ['quest:stage1-letters-q2', 'episode:stage1-letters'],
+  ['quest:stage1-letters-q3', 'episode:stage1-letters'],
+  ['quest:stage1-life-q1', 'episode:stage1-life'],
+  ['quest:stage1-life-q2', 'episode:stage1-life'],
+  ['quest:stage1-rites-q1', 'episode:stage1-rites'],
+  ['quest:stage1-nature-q1', 'episode:stage1-nature'],
+  ['quest:stage1-crafts-q1', 'episode:stage1-crafts'],
+];
+const STAGE1_QUEST_CARDS = ['card:book', 'card:hanji', 'card:brush', 'card:kimchi', 'card:family-table', 'card:seollal', 'card:magpie', 'card:yutnori'];
+const LINE = 'Hoya found 22 cards you already earned!';
+
+/** All eight shipped Stage 1 quests at two stars with their quest cards: the reconcile owes 22 more (§3.11 row 1). */
+const stage1Done = (profileId: string): ProgressSnapshot => ({
+  profileId,
+  updatedAt: T,
+  episodes: [],
+  quests: STAGE1_QUESTS.map(([questId, episodeId]) => ({ questId, episodeId, startedAt: T, completedAt: T, stars: 2, attempts: 1, accuracy: 1 })),
+  cards: STAGE1_QUEST_CARDS.map((cardId) => ({ cardId, unlockedAt: T, newSinceLastView: false })),
+  sessions: [],
+  homework: [],
+  reviews: [],
+  streakDays: 0,
+});
+
+const tab = (page: Page, name: string) => page.getByRole('tablist').getByRole('link', { name, exact: true });
+const catchUp = (page: Page) => page.getByTestId('home-catch-up');
+
+/** The install guide shows from the third cached open and covers Home. */
+async function closeInstallGuide(page: Page): Promise<void> {
+  const guide = page.getByTestId('install-guide');
+  await guide.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
+  if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
+}
+
+/** A learner Dani, then the Stage 1 record saved under their id and the app opened again (a new session). */
+async function seedStage1Learner(page: Page): Promise<string> {
+  await onboardChild(page, { name: 'Dani', startJourney: false });
+  await page.goto('/');
+  await expect(page.getByText('Hi, Dani!')).toBeVisible();
+  const profileId = (await readStored<string>(page, 'profiles:active')) as string;
+  expect(profileId).toBeTruthy();
+  await seedStored(page, `progress:${profileId}`, stage1Done(profileId));
+  await expect(page.getByText('Hi, Dani!')).toBeVisible();
+  return profileId;
+}
+
+const newCards = async (page: Page, profileId: string): Promise<string[]> =>
+  ((await readStored<ProgressSnapshot>(page, `progress:${profileId}`))?.cards ?? []).filter((c) => c.newSinceLastView).map((c) => c.cardId);
+
+test('a learner who earned cards before sees one catch-up card under the greeting, once', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(String(e)));
+  const profileId = await seedStage1Learner(page);
+  await closeInstallGuide(page);
+
+  const card = catchUp(page);
+  await expect(card).toBeVisible();
+  await expect(card.getByText(LINE)).toBeVisible();
+  // One Hoya on the screen: the card's cheering Hoya stands in for the greeting's.
+  await expect(card.getByLabel('Hoya the tiger, cheering', { exact: true })).toBeVisible();
+  await expect(page.getByLabel('Hoya the tiger, waving', { exact: true })).toHaveCount(0);
+  // Under the greeting, above the mission cards, never between them.
+  const cardBox = await card.boundingBox();
+  const greetingBox = await page.getByText('Hi, Dani!').boundingBox();
+  const missionsBox = await page.getByTestId('home-missions').boundingBox();
+  expect(cardBox && greetingBox && missionsBox).toBeTruthy();
+  if (cardBox && greetingBox && missionsBox) {
+    expect(cardBox.y).toBeGreaterThan(greetingBox.y);
+    expect(cardBox.y + cardBox.height).toBeLessThanOrEqual(missionsBox.y);
+  }
+  const button = card.getByRole('button', { name: 'See my cards' });
+  const buttonBox = await button.boundingBox();
+  expect(buttonBox?.height ?? 0).toBeGreaterThanOrEqual(64);
+  // A count of cards found, never a fraction or what is left (D3).
+  const text = await card.innerText();
+  expect(text).not.toMatch(/\d+\s*(\/|of)\s*\d+/);
+  expect(text.toLowerCase()).not.toMatch(/\b(left|remaining|missing|missed)\b/);
+  expect((await newCards(page, profileId)).length).toBe(22);
+  await shot(page, 'home-catch-up');
+
+  // See my cards: the Library, the caught-up cards marked seen, and the card goes for good.
+  await button.click();
+  await expect(page.getByRole('heading', { name: 'Heritage Library' })).toBeVisible();
+  await expect.poll(() => newCards(page, profileId)).toEqual([]);
+  await tab(page, 'Today').click();
+  await expect(page.getByText('Today with Hoya')).toBeVisible();
+  await expect(catchUp(page)).toHaveCount(0);
+  await expect(page.getByLabel('Hoya the tiger, waving', { exact: true }).first()).toBeVisible();
+
+  // The next session: nothing added, no card, no duplicates.
+  await page.goto('/');
+  await expect(page.getByText('Today with Hoya')).toBeVisible();
+  await expect(catchUp(page)).toHaveCount(0);
+  const cards = (await readStored<ProgressSnapshot>(page, `progress:${profileId}`))?.cards ?? [];
+  expect(cards).toHaveLength(30);
+  expect(new Set(cards.map((c) => c.cardId)).size).toBe(30);
+  expect(errors).toEqual([]);
+});
+
+test('closing the app before See my cards: the card does not come back and the cards stay new', async ({ page }) => {
+  const profileId = await seedStage1Learner(page);
+  await closeInstallGuide(page);
+  await expect(catchUp(page).getByText(LINE)).toBeVisible();
+
+  await page.goto('/');
+  await expect(page.getByText('Today with Hoya')).toBeVisible();
+  await expect(catchUp(page)).toHaveCount(0);
+  expect((await newCards(page, profileId)).length).toBe(22);
+});
+
+test('a new learner (the welcome card alone) sees no catch-up card', async ({ page }) => {
+  await onboardChild(page, { name: 'Mina', startJourney: false });
+  await page.goto('/');
+  await expect(page.getByText('Today with Hoya')).toBeVisible();
+  await expect(catchUp(page)).toHaveCount(0);
+  await expect(page.getByLabel('Hoya the tiger, waving', { exact: true }).first()).toBeVisible();
+});
+
+test.describe('at 320 wide', () => {
+  test.use({ viewport: { width: 320, height: 640 } });
+
+  test('the catch-up card fits with no sideways scroll', async ({ page }) => {
+    await seedStage1Learner(page);
+    await closeInstallGuide(page);
+    const card = catchUp(page);
+    await expect(card.getByText(LINE)).toBeVisible();
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    expect(overflow).toBeLessThanOrEqual(0);
+    const box = await card.boundingBox();
+    expect((box?.x ?? -1) >= 0 && (box?.x ?? 0) + (box?.width ?? 0) <= 320).toBe(true);
+    await shot(page, 'home-catch-up-320');
+  });
+});
