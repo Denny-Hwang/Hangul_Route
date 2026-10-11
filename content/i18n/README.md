@@ -36,17 +36,20 @@ entries by area (`stage1-cards`, `vocab-food`, `placement`, `stories`, ...).
 - A field key is the translatable field **without `En`** (`title` for `titleEn`), or a dotted
   path inside the entity. In a path, a list element is named by its `id`, else its `key`, else
   its romanization as a slug (`ne, joayo` becomes `ne-joayo`), else its position (`0`, `1`, ...).
+  An `id` / `key` that is not already lower-case letters, digits and hyphens is slugged when it is
+  plain ASCII (the Listen & Pick round `lp:sym:jamo:eo` is `lp-sym-jamo-eo`) and skipped when it
+  carries Korean (a `lp:syl:` / `lp:word:` / `lp:pic:` round is named by its position).
 - Values are non-blank strings.
 
 ## What may be translated (`OVERLAY_FIELDS`)
 
 | id prefix | fields |
 |---|---|
-| `jamo:` | `gloss`, `soundHint`, `exampleWord.gloss`, `nameHint` |
+| `jamo:` | `gloss` (JSON jamo only, see below), `soundHint`, `exampleWord.gloss`, `nameHint` |
 | `card:` | `title`, `blurb`, `fact` |
 | `episode:` | `title`, `subtitle`, `hoyaIntro` |
-| `quest:` | `title`, `blurb`, `steps.<stepId>.title` / `.body` / `.hoyaLine` |
-| `minigame:` | `cardPairs.<pair>.gloss`, `storySteps.<stepId>.label`, `dialogue.<turn>.npc`, `dialogue.<turn>.options.<option>.gloss`, `rounds.<roundId>.prompt` |
+| `quest:` | `title`, `blurb`, `teaser`, `steps.<stepId>.title` / `.body` / `.hoyaLine`, and Discover: `steps.<stepId>.discover.pages.<page>.caption`, `steps.<stepId>.discover.pages.<page>.items.<item>.example.gloss` / `.word.gloss` / `.note` |
+| `minigame:` | `cardPairs.<pair>.gloss`, `storySteps.<stepId>.label`, `dialogue.<turn>.npc`, `dialogue.<turn>.options.<option>.gloss`, `listenPick.rounds.<roundId>.prompt` |
 | `stage:` / `theme:` | `title`, `oneLiner`, `anchorSkill` |
 | `story:` | `title`, `summary`, `hoyaIntro`, `hoyaOutro`, `scenes.<sceneId>.narration` / `.caption` / `.alt`, `keywords.<id>.gloss`, `checks.<checkId>.prompt` / `.explain` / `.hint` / `.options.<optionId>`, `cultureNotes.<id>.title` / `.body`, `facts.<id>.claim`, `errata.<id>.summary` |
 | `vocab:` | `gloss`, `senseNote` |
@@ -59,6 +62,18 @@ scripts, in `scripts/overlay-fields.mjs` (a test keeps them equal). **Never** tr
 `sound`, `pictureRef`, `visual`. Taught Korean and its romanization come only from the base
 content, in every locale. A jamo `soundHint` / `nameHint` may exist in an overlay even when the
 English base has none yet (a Spanish sound-alike is written fresh for Spanish readers).
+
+**Jamo glosses.** `jamo:*.gloss` translates the JSON jamo's `en` (`content/episodes/stage-1/jamo.json`).
+The TypeScript jamo the app ships (`apps/mobile/src/content/jamo.ts`) has no English gloss: its
+`nameEn` is the romanized letter name (`giyeok`) and is **never** a gloss source, so a `gloss` on a
+TypeScript-only jamo lands nowhere and fails the mobile overlay test. Describe a letter's sound in
+`soundHint` (and its name in `nameHint`); translate its example word with `exampleWord.gloss`, which
+Discover uses when the page shows that jamo's own example word. A Discover page's other example
+and word glosses are translated on the quest (`steps.<stepId>.discover.pages...`).
+
+**Not yet translatable.** The Journey and Library theme labels shorten the theme title to its first
+word (an English-only rule); a theme overlay must not ship before a short-label field replaces
+that rule (open item for F-I18N-001 PR 15/16).
 
 ## Writing rules
 
@@ -98,8 +113,9 @@ Vocabulary overlays also feed `scripts/build-vocab.mjs` (run it too, `content/vo
 
 Ids of content that is still TypeScript in `apps/mobile/src/content` (`jamo:`, `card:`,
 `episode:`, `quest:`, `minigame:`, `stage:`, `theme:` that are not in the JSON) are checked by
-`apps/mobile/src/content/__tests__/overlays.test.ts` instead: the entity must ship and each field
-must land on an English source the screens read. Test fixtures (`content/fixtures/`), research
+`apps/mobile/src/content/__tests__/overlays.test.ts` instead: the entity must ship, each field
+must land on an English source the screens read, a Korean value must not echo the Korean it
+explains, and the glosses of one minigame must stay distinct in each locale. Test fixtures (`content/fixtures/`), research
 data and `_*.json` registries are not translatable entities.
 
 Spanish and Korean stay hidden in the app (`LOCALE_STATUS` in `packages/i18n`) until their native
