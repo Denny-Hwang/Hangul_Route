@@ -35,6 +35,10 @@ export interface AudienceCopy {
   profileSwitchHint: string;
   /** Label of the account and backup section. */
   zoneLabel: string;
+  /** PIN screen titles and the create-step line (F-LEARN-001 §3.4). */
+  pinVerifyTitle: string;
+  pinCreateTitle: string;
+  pinCreateSubtitle: string;
   /**
    * Accessible label of a gated control: `base`, an optional `detail`, and
    * "PIN required" when the device is gated (always on a family device; on a
@@ -74,6 +78,9 @@ const FAMILY: AudienceCopy = {
   ...SHARED,
   installGuideHelp: 'A grown-up can help.',
   zoneLabel: 'Grown-up zone',
+  pinVerifyTitle: 'Grown-up zone',
+  pinCreateTitle: 'Create a grown-up PIN',
+  pinCreateSubtitle: 'Pick 4 digits only grown-ups will know. It protects settings and grown-up pages.',
   gatedA11y: (base, _pinSet, detail) => gated(base, detail, true),
 };
 
@@ -81,6 +88,9 @@ const SELF: AudienceCopy = {
   ...SHARED,
   installGuideHelp: null,
   zoneLabel: 'Account & backup',
+  pinVerifyTitle: 'Settings PIN',
+  pinCreateTitle: 'Create a PIN',
+  pinCreateSubtitle: 'Pick 4 digits to protect settings.',
   gatedA11y: (base, pinSet, detail) => gated(base, detail, pinSet),
 };
 

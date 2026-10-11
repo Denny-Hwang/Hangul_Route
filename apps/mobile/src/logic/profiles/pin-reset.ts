@@ -1,4 +1,5 @@
 import { normalizeRescueCode } from '@hangul-route/content-schema';
+import { claimErrorMessage } from '../sync/rescue-code';
 import {
   cooldownRemainingMs,
   isLocked,
@@ -87,4 +88,47 @@ export function resetWaitState(requestedAt: string | null, now: number): ResetWa
  */
 export function startResetWait(existing: string | null, now: number): string {
   return existing !== null && resetWaitState(existing, now).status !== 'idle' ? existing : new Date(now).toISOString();
+}
+
+/** Calm, adult-facing line for a Rescue Code entry that did not open the reset. Never shames. */
+export function rescueFailureMessage(result: Extract<RescueCodeResult, { ok: false }>): string {
+  switch (result.reason) {
+    case 'cooldown':
+      return `Let's take a short break. Try again in ${Math.ceil((result.cooldownRemainingMs ?? 0) / 1000)}s.`;
+    case 'bad-format':
+      return claimErrorMessage('invalid');
+    case 'no-code':
+      return 'No rescue code is saved on this device. Use the 24-hour wait instead.';
+    case 'wrong-code':
+      return "That isn't the code saved on this device. Check it and try again.";
+  }
+}
+
+export interface WaitCardView {
+  caption: string;
+  buttonLabel: string;
+  buttonDisabled: boolean;
+}
+
+/**
+ * What the "Wait 24 hours" card shows. `formatReadyAt` turns the epoch ms of
+ * the end of the wait into local text (the screen owns the locale).
+ */
+export function waitCardView(wait: ResetWaitState, formatReadyAt: (readyAt: number) => string): WaitCardView {
+  switch (wait.status) {
+    case 'idle':
+      return {
+        caption: 'Your PIN keeps working meanwhile. After 24 hours you can set a new one.',
+        buttonLabel: 'Start the wait',
+        buttonDisabled: false,
+      };
+    case 'waiting':
+      return {
+        caption: `You can set a new PIN after ${formatReadyAt(wait.readyAt)}.`,
+        buttonLabel: 'Wait started',
+        buttonDisabled: true,
+      };
+    case 'ready':
+      return { caption: 'The 24 hours are up.', buttonLabel: 'Set a new PIN', buttonDisabled: false };
+  }
 }

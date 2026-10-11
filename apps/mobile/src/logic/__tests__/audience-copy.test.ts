@@ -90,6 +90,22 @@ describe('audienceCopy: the two audiences differ only where the spec says', () =
   });
 });
 
+describe('audienceCopy: PIN screen titles by audience (F-LEARN-001 §3.4)', () => {
+  it('family keeps the grown-up wording', () => {
+    const c = audienceCopy('family');
+    expect(c.pinVerifyTitle).toBe('Grown-up zone');
+    expect(c.pinCreateTitle).toBe('Create a grown-up PIN');
+    expect(c.pinCreateSubtitle).toBe('Pick 4 digits only grown-ups will know. It protects settings and grown-up pages.');
+  });
+
+  it('a self-only device says "Settings PIN" and never "grown-up"', () => {
+    const c = audienceCopy('self');
+    expect(c.pinVerifyTitle).toBe('Settings PIN');
+    expect(c.pinCreateTitle).toBe('Create a PIN');
+    expect(c.pinCreateSubtitle).toBe('Pick 4 digits to protect settings.');
+  });
+});
+
 describe('audienceCopy: tone rules', () => {
   it('no string in the self audience says "grown-up"', () => {
     for (const [key, text] of allStrings('self')) {
@@ -98,7 +114,7 @@ describe('audienceCopy: tone rules', () => {
   });
 
   it('in the family audience "grown-up" appears only on the caregiver surfaces and the install second line', () => {
-    const allowed = new Set(['installGuideHelp', 'zoneLabel']);
+    const allowed = new Set(['installGuideHelp', 'zoneLabel', 'pinVerifyTitle', 'pinCreateTitle', 'pinCreateSubtitle']);
     for (const [key, text] of allStrings('family')) {
       if (allowed.has(key)) continue;
       expect(text, key).not.toMatch(/grown-?ups?/i);

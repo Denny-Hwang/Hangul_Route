@@ -37,3 +37,13 @@ export const pinCreated = (where: 'first_run' | 'gate' | 'reset' | 'optional'): 
   name: 'pin.created',
   payload: { where },
 });
+
+export const pinResetRequested = (method: 'rescue_code' | 'wait'): OnboardingEvent => ({
+  name: 'pin.reset_requested',
+  payload: { method },
+});
+
+export const pinResetCompleted = (method: 'rescue_code' | 'wait'): OnboardingEvent => ({
+  name: 'pin.reset_completed',
+  payload: { method },
+});

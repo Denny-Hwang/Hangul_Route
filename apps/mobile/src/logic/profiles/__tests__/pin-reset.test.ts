@@ -12,7 +12,9 @@ import {
   attemptRescueCode,
   collectRescueCodes,
   resetWaitState,
+  rescueFailureMessage,
   startResetWait,
+  waitCardView,
 } from '../pin-reset';
 
 const NOW = 1_800_000_000_000;
@@ -188,5 +190,57 @@ describe('startResetWait', () => {
 
   it('replaces an unreadable stamp', () => {
     expect(startResetWait('garbage', NOW)).toBe(new Date(NOW).toISOString());
+  });
+});
+
+describe('rescueFailureMessage: calm lines for the Forgot PIN code field', () => {
+  const fail = (reason: 'cooldown' | 'bad-format' | 'no-code' | 'wrong-code', cooldownRemainingMs?: number) =>
+    ({ ok: false as const, state: INITIAL_ATTEMPT_STATE, reason, cooldownRemainingMs });
+
+  it('names the next step for each failure', () => {
+    expect(rescueFailureMessage(fail('wrong-code'))).toBe("That isn't the code saved on this device. Check it and try again.");
+    expect(rescueFailureMessage(fail('bad-format'))).toContain('TIGER-MOON-RIVER-APPLE-482139');
+    expect(rescueFailureMessage(fail('no-code'))).toBe('No rescue code is saved on this device. Use the 24-hour wait instead.');
+  });
+
+  it('counts the cooldown down in whole seconds, rounding up', () => {
+    expect(rescueFailureMessage(fail('cooldown', 12_000))).toBe("Let's take a short break. Try again in 12s.");
+    expect(rescueFailureMessage(fail('cooldown', 11_001))).toBe("Let's take a short break. Try again in 12s.");
+    expect(rescueFailureMessage(fail('cooldown'))).toBe("Let's take a short break. Try again in 0s.");
+  });
+
+  it('never uses shaming or banned words', () => {
+    for (const r of ['wrong-code', 'bad-format', 'no-code', 'cooldown'] as const) {
+      expect(rescueFailureMessage(fail(r, 5000))).not.toMatch(/\b(wrong|failed|missed|overdue|incomplete|error)\b/i);
+    }
+  });
+});
+
+describe('waitCardView: the 24-hour wait card', () => {
+  const format = (ms: number): string => `T${ms - NOW}`;
+  const READY_AT = NOW + PIN_RESET_WAIT_MS;
+
+  it('idle: offers to start, explains the old PIN keeps working', () => {
+    expect(waitCardView({ status: 'idle' }, format)).toEqual({
+      caption: 'Your PIN keeps working meanwhile. After 24 hours you can set a new one.',
+      buttonLabel: 'Start the wait',
+      buttonDisabled: false,
+    });
+  });
+
+  it('waiting: shows when the new PIN can be set, button disabled', () => {
+    expect(waitCardView({ status: 'waiting', readyAt: READY_AT, remainingMs: 5 }, format)).toEqual({
+      caption: `You can set a new PIN after T${PIN_RESET_WAIT_MS}.`,
+      buttonLabel: 'Wait started',
+      buttonDisabled: true,
+    });
+  });
+
+  it('ready: the same button reads "Set a new PIN" and is live', () => {
+    expect(waitCardView({ status: 'ready', readyAt: READY_AT }, format)).toEqual({
+      caption: 'The 24 hours are up.',
+      buttonLabel: 'Set a new PIN',
+      buttonDisabled: false,
+    });
   });
 });
