@@ -122,6 +122,9 @@ describe('the whole registry', () => {
   });
 
   it('glyphs are frozen data', () => {
-    for (const [, glyph] of entries) expect(Object.isFrozen(glyph as WordArtGlyph)).toBe(true);
+    for (const [, glyph] of entries) {
+      expect(Object.isFrozen(glyph as WordArtGlyph)).toBe(true);
+      expect((glyph as WordArtGlyph).every((shape) => Object.isFrozen(shape))).toBe(true);
+    }
   });
 });

@@ -72,15 +72,25 @@ const META: WordArtMetaOverrides = {
   'sport-soccer': { status: 'review' },
 };
 
-/** Merge glyph sources into a frozen registry; throws on a duplicate or malformed key, or meta without a glyph. */
-export function buildRegistry(sources: readonly Readonly<Record<string, WordArtGlyph>>[], meta: WordArtMetaOverrides): Readonly<Record<string, WordArtEntry>> {
+/** One glyph file: the family it holds, and its glyphs by key. */
+export type WordArtSource = readonly [WordArtFamily, Readonly<Record<string, WordArtGlyph>>];
+
+/**
+ * Merge glyph sources into a deeply frozen registry (shapes included, so no
+ * caller can repaint the shared data). Throws on a malformed or duplicate key,
+ * a key filed under another family's source (§3.9 one file per family), or
+ * meta without a glyph.
+ */
+export function buildRegistry(sources: readonly WordArtSource[], meta: WordArtMetaOverrides): Readonly<Record<string, WordArtEntry>> {
   const out: Record<string, WordArtEntry> = {};
-  for (const source of sources) {
-    for (const [key, glyph] of Object.entries(source)) {
+  for (const [sourceFamily, glyphs] of sources) {
+    for (const [key, glyph] of Object.entries(glyphs)) {
       const family = WORD_ART_KEY_RE.exec(key)?.[1] as WordArtFamily | undefined;
       if (family === undefined) throw new Error(`WordArt key outside the grammar: ${key}`);
+      if (family !== sourceFamily) throw new Error(`WordArt key ${key} is filed under the ${sourceFamily} glyphs`);
       if (Object.hasOwn(out, key)) throw new Error(`Duplicate WordArt key: ${key}`);
-      out[key] = Object.freeze({ glyph: Object.freeze(glyph), meta: Object.freeze({ family, status: 'draft', ...meta[key] }) });
+      const frozen: WordArtGlyph = Object.freeze(glyph.map((shape) => Object.freeze({ ...shape })));
+      out[key] = Object.freeze({ glyph: frozen, meta: Object.freeze({ family, status: 'draft', ...meta[key] }) });
     }
   }
   for (const key of Object.keys(meta)) if (!Object.hasOwn(out, key)) throw new Error(`WordArt meta for a key with no glyph: ${key}`);
@@ -88,7 +98,18 @@ export function buildRegistry(sources: readonly Readonly<Record<string, WordArtG
 }
 
 export const WORD_ART: Readonly<Record<string, WordArtEntry>> = buildRegistry(
-  [FOOD_GLYPHS, ANIMAL_GLYPHS, FAMILY_GLYPHS, SCHOOL_GLYPHS, NATURE_GLYPHS, TRAVEL_GLYPHS, SPORT_GLYPHS, CULTURE_GLYPHS, SCIENCE_GLYPHS, PROP_GLYPHS],
+  [
+    ['food', FOOD_GLYPHS],
+    ['animal', ANIMAL_GLYPHS],
+    ['family', FAMILY_GLYPHS],
+    ['school', SCHOOL_GLYPHS],
+    ['nature', NATURE_GLYPHS],
+    ['travel', TRAVEL_GLYPHS],
+    ['sport', SPORT_GLYPHS],
+    ['culture', CULTURE_GLYPHS],
+    ['science', SCIENCE_GLYPHS],
+    ['prop', PROP_GLYPHS],
+  ],
   META,
 );
 

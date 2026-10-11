@@ -67,35 +67,57 @@ describe('planned counts (§3.8, §5)', () => {
     if (COMPLETE_FAMILIES.includes(family)) expect(count).toBe(WORD_ART_PLAN[family]);
     else expect(count).toBeLessThanOrEqual(WORD_ART_PLAN[family]);
   });
+
+  it.each(WORD_ART_FAMILIES)('%s is listed in COMPLETE_FAMILIES as soon as it reaches its plan', (family) => {
+    const count = WORD_ART_KEYS.filter((k) => WORD_ART[k]!.meta.family === family).length;
+    if (count === WORD_ART_PLAN[family]) expect(COMPLETE_FAMILIES, `${family} is complete: add it to COMPLETE_FAMILIES`).toContain(family);
+  });
 });
 
 describe('buildRegistry', () => {
   const dot = [circle(50, 50, 20, { f: 'vocab.red' })];
 
   it('merges sources and fills the meta', () => {
-    const reg = buildRegistry([{ 'food-a': dot }, { 'animal-b': dot }], { 'animal-b': { status: 'approved' } });
+    const reg = buildRegistry([['food', { 'food-a': dot }], ['animal', { 'animal-b': dot }]], { 'animal-b': { status: 'approved' } });
     expect(Object.keys(reg)).toEqual(['food-a', 'animal-b']);
     expect(reg['food-a']!.meta).toEqual({ family: 'food', status: 'draft' });
     expect(reg['animal-b']!.meta).toEqual({ family: 'animal', status: 'approved' });
   });
 
   it('throws on a duplicate key across sources', () => {
-    expect(() => buildRegistry([{ 'food-a': dot }, { 'food-a': dot }], {})).toThrow(/duplicate.*food-a/i);
+    expect(() => buildRegistry([['food', { 'food-a': dot }], ['food', { 'food-a': dot }]], {})).toThrow(/duplicate.*food-a/i);
   });
 
   it('throws on a key outside the grammar', () => {
-    expect(() => buildRegistry([{ 'Food-A': dot }], {})).toThrow(/key/);
-    expect(() => buildRegistry([{ 'pet-dog': dot }], {})).toThrow(/key/);
+    expect(() => buildRegistry([['food', { 'Food-A': dot }]], {})).toThrow(/key/);
+    expect(() => buildRegistry([['animal', { 'pet-dog': dot }]], {})).toThrow(/key/);
   });
 
   it('throws on meta for a key that has no glyph', () => {
-    expect(() => buildRegistry([{ 'food-a': dot }], { 'food-b': { status: 'review' } })).toThrow(/food-b/);
+    expect(() => buildRegistry([['food', { 'food-a': dot }]], { 'food-b': { status: 'review' } })).toThrow(/food-b/);
   });
 
-  it('freezes what it returns', () => {
-    const reg = buildRegistry([{ 'food-a': dot }], {});
+  it('throws on a key filed under another family', () => {
+    expect(() => buildRegistry([['food', { 'animal-bear': dot }]], {})).toThrow(/animal-bear.*food/);
+  });
+
+  it('freezes what it returns, down to every shape, without freezing the source', () => {
+    const source = { 'food-a': [circle(50, 50, 20, { f: 'vocab.red' })] };
+    const reg = buildRegistry([['food', source]], {});
     expect(Object.isFrozen(reg)).toBe(true);
     expect(Object.isFrozen(reg['food-a'])).toBe(true);
+    expect(Object.isFrozen(reg['food-a']!.glyph)).toBe(true);
+    expect(Object.isFrozen(reg['food-a']!.meta)).toBe(true);
+    expect(reg['food-a']!.glyph.every((shape) => Object.isFrozen(shape))).toBe(true);
+    expect(Object.isFrozen(source['food-a'][0])).toBe(false);
+  });
+
+  it('the shared registry cannot be repainted by a caller', () => {
+    const shape = getWordArt('food-apple')![0]!;
+    expect(() => {
+      (shape as { f?: string }).f = 'feedback.success';
+    }).toThrow(TypeError);
+    expect(WORD_ART['food-apple']!.glyph.every((s) => Object.isFrozen(s))).toBe(true);
   });
 });
 
