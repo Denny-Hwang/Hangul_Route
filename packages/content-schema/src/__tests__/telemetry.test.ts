@@ -47,6 +47,9 @@ describe('telemetry event names (one list for the client type and the API whitel
         'locale.changed',
         'romanization.mode_changed',
         'stage.complete',
+        'story.read.finished',
+        'story.sources.link_opened',
+        'story.sources.opened',
       ].sort(),
     );
     expect(new Set(TELEMETRY_EVENT_NAMES).size).toBe(TELEMETRY_EVENT_NAMES.length);

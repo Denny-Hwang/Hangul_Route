@@ -9,6 +9,7 @@ import {
   MinigameSchema,
   PicWordPairSchema,
   PicWordRoundSchema,
+  QuestStepSchema,
   RoundSchema,
 } from '../index';
 
@@ -24,7 +25,28 @@ describe('minigame kinds', () => {
     expect(MinigameKindSchema.options).toEqual(
       expect.arrayContaining(['match-sound', 'card-match', 'culture-quiz', 'listen-pick', 'pic-word-match']),
     );
-    expect(MinigameKindSchema.options).toHaveLength(15);
+    expect(MinigameKindSchema.options).toHaveLength(16);
+  });
+
+  it('adds story-read additively (F-STORY-002 PR 2.1) and parses it as a quest step kind', () => {
+    expect(MinigameKindSchema.safeParse('story-read').success).toBe(true);
+    // the kinds that existed before keep parsing
+    for (const kind of ['match-sound', 'story-sequence', 'listen-pick', 'pic-word-match', 'tap-respond']) {
+      expect(MinigameKindSchema.safeParse(kind).success).toBe(true);
+    }
+    expect(MinigameKindSchema.safeParse('story-reads').success).toBe(false);
+    const step = {
+      id: 's2',
+      kind: 'present',
+      titleEn: 'Read the story',
+      minigameKind: 'story-read',
+      minigameRef: 'minigame:story-read-listen-seollal-new-year',
+    };
+    expect(QuestStepSchema.safeParse(step).success).toBe(true);
+  });
+
+  it('does not add story-check here (F-STORY-003 PR 3.1 owns it)', () => {
+    expect(MinigameKindSchema.safeParse('story-check').success).toBe(false);
   });
 });
 

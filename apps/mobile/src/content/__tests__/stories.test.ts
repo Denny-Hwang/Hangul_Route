@@ -60,8 +60,8 @@ describe('generator output against the real schemas (fixture story)', () => {
   });
 
   it('the derived quest passes QuestSchema and keeps the story-ref grammar', () => {
-    // `story-read` / `story-check` join MinigameKindSchema in F-STORY-002 PR 2.1 / F-STORY-003 PR 3.1;
-    // until then only the kind enum may differ, so the kind is dropped from steps whose kind is unknown.
+    // `story-read` joined MinigameKindSchema in F-STORY-002 PR 2.1; `story-check` joins in F-STORY-003 PR 3.1.
+    // Until then only the kind enum may differ, so the kind is dropped from steps whose kind is unknown.
     const known = new Set<string>(MinigameKindSchema.options);
     const quest = {
       ...questDraft,

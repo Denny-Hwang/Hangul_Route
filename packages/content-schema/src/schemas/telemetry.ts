@@ -52,6 +52,10 @@ export const TELEMETRY_EVENT_NAMES = [
   'audio.fallback_shown',
   'audio.mute_changed',
   'audio.playback_failed',
+  // F-STORY-002 §3.12 (payloads carry ids and counts only)
+  'story.read.finished',
+  'story.sources.opened',
+  'story.sources.link_opened',
 ] as const;
 
 export const TelemetryEventNameSchema = z.enum(TELEMETRY_EVENT_NAMES);
