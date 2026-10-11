@@ -80,10 +80,10 @@ export function buildStageRows(input: MyRouteInput, ctx: StageRowsContext): Stag
   const rows = StageKeySchema.options.map((stage, index): StageRow => {
     const availability = stageAvailability(stage, ctx.gridEpisodes);
     const cells = cellRowsOf(stage, ctx.gridEpisodes, input.themes, ctx.pips);
-    const { pips, newPips } = splitStagePips(cells);
+    const latched = ctx.pips.latched.has(stage);
+    const { pips, newPips } = splitStagePips(cells, latched);
     const questPips = cells.flatMap((c) => c.pips).filter((p) => p.kind === 'quest');
     const seenTotal = input.seen?.totals[stage];
-    const latched = ctx.pips.latched.has(stage);
     return {
       stage,
       order: ORDERS[index] as StageRow['order'],

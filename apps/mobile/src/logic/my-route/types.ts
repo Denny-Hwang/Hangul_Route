@@ -55,7 +55,11 @@ export interface StageRow {
   isStart: boolean;
   /** Earned and open pips, in route order. */
   pips: Pip[];
-  /** State 'new', drawn as their own group after a gap; empty unless latched. */
+  /**
+   * Quests that joined after the stage was latched (state 'new', or 'known' when
+   * a later level check placed one out), drawn as their own group after a gap;
+   * empty unless latched.
+   */
   newPips: Pip[];
   cells: CellRow[];
   done: number;

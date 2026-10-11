@@ -107,14 +107,17 @@ export function cellRowsOf(
 }
 
 /**
- * The stage row's two groups: earned and open quest pips in route order, then
- * the `later` cell pips; and the `new` pips, drawn after a gap so the earned
- * group never looks emptier.
+ * The stage row's two groups: the earned and open quest pips in route order,
+ * then the `later` cell pips; and, after a gap, the pips that joined the stage
+ * later. In a latched stage every quest that is not done joined after the
+ * stage was completed, so it goes to the second group (state `new`, or `known`
+ * when a later level check placed it out): the earned group stays full.
  */
-export function splitStagePips(cells: readonly CellRow[]): { pips: Pip[]; newPips: Pip[] } {
-  const all = cells.flatMap((c) => c.pips);
+export function splitStagePips(cells: readonly CellRow[], latched: boolean): { pips: Pip[]; newPips: Pip[] } {
+  const quests = cells.flatMap((c) => c.pips).filter((p) => p.kind === 'quest');
+  const joined = (p: Pip): boolean => p.state === 'new' || (latched && p.state !== 'done');
   return {
-    pips: [...all.filter((p) => p.kind === 'quest' && p.state !== 'new'), ...all.filter((p) => p.kind === 'cell')],
-    newPips: all.filter((p) => p.state === 'new'),
+    pips: [...quests.filter((p) => !joined(p)), ...cells.flatMap((c) => c.pips).filter((p) => p.kind === 'cell')],
+    newPips: quests.filter(joined),
   };
 }

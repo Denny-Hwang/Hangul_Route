@@ -64,6 +64,16 @@ describe('routeOrder (F-ROUTE-001 section 3.2)', () => {
     expect(order.indexOf('quest:stage1-crafts-q9')).toBe(order.indexOf('quest:stage1-crafts-q1') + 1);
   });
 
+  it('keeps the episode order between two quests the catalogue does not list', () => {
+    const extra = ['quest:stage1-crafts-q8', 'quest:stage1-crafts-q7'];
+    const b: Bundle = {
+      episodes: BUNDLE_8.episodes.map((e) => (e.id === 'episode:stage1-crafts' ? { ...e, questIds: [...e.questIds, ...extra] } : e)),
+      quests: [...BUNDLE_8.quests, ...extra.map((id) => quest(id, id, ['match-sound']))],
+    };
+    const order = routeOrder({ catalog: catalogOf(BUNDLE_8), episodes: b.episodes, quests: b.quests }).map((e) => e.questId);
+    expect(order.slice(7, 10)).toEqual(['quest:stage1-crafts-q1', ...extra]);
+  });
+
   it('treats a missing placement as grid (the bundle is not parsed)', () => {
     expect(isGridEpisode({})).toBe(true);
     expect(isGridEpisode({ placement: 'grid' })).toBe(true);

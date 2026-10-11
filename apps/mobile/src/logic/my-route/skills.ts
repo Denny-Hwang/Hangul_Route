@@ -37,7 +37,7 @@ export const SKILL_OF_KIND: Readonly<Record<MinigameKind, readonly Skill[]>> = {
 
 export const TILE_KINDS: ReadonlySet<MinigameKind> = new Set<MinigameKind>(['build-letter', 'syllable-build']);
 
-export const SKILL_THRESHOLDS = [1, 2, 4, 6, 8] as const;
+export const SKILL_THRESHOLDS: readonly number[] = [1, 2, 4, 6, 8];
 
 type QuestSteps = Pick<Quest, 'steps'>;
 

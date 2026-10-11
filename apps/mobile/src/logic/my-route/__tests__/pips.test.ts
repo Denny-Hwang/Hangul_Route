@@ -113,18 +113,32 @@ describe('cellRowsOf', () => {
     const done = new Set(BUNDLE_8.quests.filter((q) => q.id.startsWith('quest:stage1')).map((q) => q.id));
     const latched = cellRowsOf('stage1', gridEpisodesOf(grown.episodes), THEME_DEFS, ctxOf({ done, latched: new Set(['stage1']) }, grown));
     expect(latched[1]?.state).toBe('partial');
-    const split = splitStagePips(latched);
+    const split = splitStagePips(latched, true);
     expect(split.pips).toHaveLength(8);
     expect(split.pips.every((p) => p.state === 'done')).toBe(true);
     expect(split.newPips.map((p) => p.questId)).toEqual(['quest:stage1-life-q3']);
 
     const unlatched = cellRowsOf('stage1', gridEpisodesOf(grown.episodes), THEME_DEFS, ctxOf({ done }, grown));
-    expect(splitStagePips(unlatched).newPips).toEqual([]);
-    expect(splitStagePips(unlatched).pips.filter((p) => p.state === 'open')).toHaveLength(1);
+    expect(splitStagePips(unlatched, false).newPips).toEqual([]);
+    expect(splitStagePips(unlatched, false).pips.filter((p) => p.state === 'open')).toHaveLength(1);
+  });
+
+  it('in a latched stage, a joined quest placed out later still goes to the second group', () => {
+    const grown = {
+      episodes: BUNDLE_8.episodes.map((e) =>
+        e.id === 'episode:stage1-life' ? episode('stage1', 'life', e.titleEn, [...e.questIds, 'quest:stage1-life-q3', 'quest:stage1-life-q4']) : e,
+      ),
+      quests: [...BUNDLE_8.quests, quest('quest:stage1-life-q3', 'Picnic', ['match-sound']), quest('quest:stage1-life-q4', 'More', ['match-sound'])],
+    };
+    const done = new Set(BUNDLE_8.quests.filter((q) => q.id.startsWith('quest:stage1')).map((q) => q.id));
+    const ctx = ctxOf({ done, latched: new Set(['stage1']), placedOut: new Set(['quest:stage1-life-q3']) }, grown);
+    const split = splitStagePips(cellRowsOf('stage1', gridEpisodesOf(grown.episodes), THEME_DEFS, ctx), true);
+    expect(split.pips.every((p) => p.state === 'done')).toBe(true);
+    expect(split.newPips.map((p) => p.state)).toEqual(['known', 'new']);
   });
 
   it('puts later cell pips after the quest pips of the stage row', () => {
-    const split = splitStagePips(cells('stage2', ctxOf()));
+    const split = splitStagePips(cells('stage2', ctxOf()), false);
     expect(split.pips.map((p) => p.state)).toEqual(['open', 'open', 'later', 'later', 'later']);
   });
 });
