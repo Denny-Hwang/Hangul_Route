@@ -14,7 +14,7 @@ import {
   typography,
 } from '@hangul-route/design-system';
 import React from 'react';
-import { Pressable, Text, View, type LayoutChangeEvent } from 'react-native';
+import { Platform, Pressable, Text, View, type LayoutChangeEvent } from 'react-native';
 import { hasHangul } from '../../logic/story/source-link';
 import type { ApproximationView, CorrectionView, FactCardView, SourceView, SourcesCopy } from '../../logic/story/sources-view';
 
@@ -186,7 +186,14 @@ export function CorrectionsList({ copy, corrections }: { copy: SourcesCopy; corr
   );
 }
 
-/** One citation: one focusable group labelled "Source 2 of 3: title, publisher". */
+/**
+ * One citation, labelled "Source 2 of 3: title, publisher". On the web the
+ * block is one group with that name (`role="group"` + `aria-label`). iOS and
+ * Android never read a label on a plain View, so there the title, the first
+ * thing a screen reader reaches in the block, carries it; the buttons stay
+ * separately focusable. The outcome line sits in a live region that is always
+ * mounted, so a new line is announced when it appears.
+ */
 export function SourceBlock({
   copy,
   source,
@@ -216,7 +223,11 @@ export function SourceBlock({
         borderTopColor: colors.border.subtle,
       }}
     >
-      <Text {...korean(source.title)} style={{ fontSize: typography.size.body, fontWeight: typography.weight.semibold, color: colors.text.primary }}>
+      <Text
+        {...korean(source.title)}
+        {...(Platform.OS === 'web' ? {} : { accessibilityLabel: source.label })}
+        style={{ fontSize: typography.size.body, fontWeight: typography.weight.semibold, color: colors.text.primary }}
+      >
         {source.title}
       </Text>
       <Text style={{ fontSize: typography.size.bodySm, color: colors.text.secondary }}>
@@ -225,15 +236,19 @@ export function SourceBlock({
       </Text>
       <CitationText text={source.quoteOrLocator} size="sm" />
       <CitationText text={source.url} size="sm" tone="secondary" selectable testID={`${testID}-url`} />
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
-        <Button label={copy.copyLink.cta} tone="ghost" size="md" onPress={onCopy} testID={`${testID}-copy`} />
-        {onOpen ? <Button label={copy.openLink.cta} tone="secondary" size="md" onPress={onOpen} testID={`${testID}-open`} /> : null}
-      </View>
-      {note !== null ? (
-        <View accessibilityLiveRegion="polite" aria-live="polite">
-          <CitationText text={note} size="sm" selectable testID={`${testID}-note`} />
+      <View>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
+          <Button label={copy.copyLink.cta} tone="ghost" size="md" onPress={onCopy} testID={`${testID}-copy`} />
+          {onOpen ? <Button label={copy.openLink.cta} tone="secondary" size="md" onPress={onOpen} testID={`${testID}-open`} /> : null}
         </View>
-      ) : null}
+        <View accessibilityLiveRegion="polite" aria-live="polite">
+          {note !== null ? (
+            <View style={{ paddingTop: spacing.xs }}>
+              <CitationText text={note} size="sm" selectable testID={`${testID}-note`} />
+            </View>
+          ) : null}
+        </View>
+      </View>
     </View>
   );
 }

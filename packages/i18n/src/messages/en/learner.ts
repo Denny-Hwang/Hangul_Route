@@ -665,6 +665,8 @@ export const learner = {
       copyUnavailable: 'Copying is not available here. The link is above.',
       openFailed: (url: string) => `Open this link in a browser: ${url}`,
       needsConnection: 'Opening a link needs a connection.',
+      /** Web, back from the grown-up gate: the browser needs a tap of its own to open a tab. */
+      gateDone: 'Grown-up check done. Tap Open link to open it.',
       counts: (facts: number, sources: number) => `${count(facts, 'fact', 'facts')} · ${count(sources, 'source', 'sources')}`,
       noSources: 'No sources are listed for this story.',
     },

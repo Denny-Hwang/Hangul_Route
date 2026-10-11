@@ -2,7 +2,7 @@ import { Body, Caption, KoreanText, Pill, Screen, spacing } from '@hangul-route/
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ScrollView, View, type LayoutChangeEvent } from 'react-native';
+import { AccessibilityInfo, Platform, ScrollView, View, type LayoutChangeEvent } from 'react-native';
 import { storyById } from '../../content/stories';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeStory } from '../../logic/content-locale';
@@ -20,7 +20,7 @@ import {
 } from '../../logic/story/source-link';
 import { buildSourcesView, type SourceView } from '../../logic/story/sources-view';
 import type { RootStackParamList } from '../../navigation/types';
-import { openExternalUrl } from '../../platform/external-link';
+import { HAND_OFF_NEEDS_TAP, openExternalUrl } from '../../platform/external-link';
 import { copyText } from '../../platform/pwa';
 import { track } from '../../platform/telemetry';
 import { useAccountStore } from '../../store/account-store';
@@ -41,7 +41,7 @@ function gateOpenNow(): boolean {
 }
 
 /**
- * Sources — `StorySources { storyId, factId?, sceneIndex?, from? }`
+ * Sources — `StorySources { storyId, factId?, sceneIndex?, from }`
  * (F-STORY-002 §3.8, screen spec design/components/StorySourcesScreen/spec.md):
  * every fact of a story with the citations behind it, the corrections, how it
  * was checked and the note for grown-ups, all built by `buildSourcesView` from
@@ -77,7 +77,7 @@ export function StorySourcesScreen({ route, navigation }: Props): React.ReactEle
     void track({
       name: 'story.sources.opened',
       ...(profileId === null ? {} : { profileId }),
-      payload: { ...sourcesOpenedPayload(story.id, from ?? 'reader', factId) },
+      payload: { ...sourcesOpenedPayload(story.id, from, factId) },
     });
   }, [story, profileId, from, factId]);
 
@@ -116,14 +116,17 @@ export function StorySourcesScreen({ route, navigation }: Props): React.ReactEle
     tryInitialScroll();
   };
 
-  // Links: one outcome line per source block.
-  const setNote = (key: string, note: string | null): void =>
+  // Links: one outcome line per source block. The web reads it from the block's live region;
+  // iOS has no live regions, so native screen readers are told directly.
+  const setNote = useCallback((key: string, note: string | null): void => {
     setNotes((prev) => {
       const next = { ...prev };
       if (note === null) delete next[key];
       else next[key] = note;
       return next;
     });
+    if (note !== null && Platform.OS !== 'web') AccessibilityInfo.announceForAccessibility(note);
+  }, []);
 
   const handOff = useCallback(
     async (link: SourceLink, key: string): Promise<void> => {
@@ -137,18 +140,22 @@ export function StorySourcesScreen({ route, navigation }: Props): React.ReactEle
         });
       }
     },
-    [copy, story, profileId],
+    [copy, story, profileId, setNote],
   );
 
-  // A link waiting on the grown-up gate opens on return once the gate is through.
+  // A link waiting on the grown-up gate, back on Sources: native opens it once the gate is
+  // through; the web asks for one more tap (a tab opened outside a tap may be blocked), and with
+  // the grown-up session now open that tap opens it directly. A cancelled gate drops it.
   const pending = useRef<{ link: SourceLink; key: string } | null>(null);
   useFocusEffect(
     useCallback(() => {
       const waiting = pending.current;
-      const step = pendingLinkStep(waiting?.link ?? null, gateOpenNow());
+      const step = pendingLinkStep(waiting?.link ?? null, gateOpenNow(), HAND_OFF_NEEDS_TAP);
       pending.current = null;
-      if (step === 'open' && waiting) void handOff(waiting.link, waiting.key);
-    }, [handOff]),
+      if (!waiting) return;
+      if (step === 'open') void handOff(waiting.link, waiting.key);
+      else if (step === 'tap-again') setNote(waiting.key, copy.gateDone);
+    }, [handOff, setNote, copy]),
   );
 
   const onOpen = (source: SourceView, key: string): void => {

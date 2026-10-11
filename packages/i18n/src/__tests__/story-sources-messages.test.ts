@@ -38,6 +38,7 @@ describe('learner.story.sources (English wording as shipped in PR 2.5)', () => {
     expect(s.copyUnavailable).toBe('Copying is not available here. The link is above.');
     expect(s.openFailed('https://example.org/a')).toBe('Open this link in a browser: https://example.org/a');
     expect(s.needsConnection).toBe('Opening a link needs a connection.');
+    expect(s.gateDone).toBe('Grown-up check done. Tap Open link to open it.');
   });
 
   it('pluralises the checked line and the counts', () => {
