@@ -1,5 +1,5 @@
 import { Asset } from 'expo-asset';
-import { Audio } from 'expo-av';
+import { Audio, InterruptionModeAndroid, InterruptionModeIOS } from 'expo-av';
 import { PLAY_IN_SILENT_MODE } from '../config/audio';
 import type { ClipFailure, ClipPlayer } from '../logic/audio/controller';
 
@@ -10,14 +10,20 @@ import type { ClipFailure, ClipPlayer } from '../logic/audio/controller';
  * `expo-audio` at an SDK upgrade touches this one file. Metro picks
  * `audio-player.web.ts` (Web Audio) for the web build.
  *
- * The audio session is set once, at first use: the device's silent switch is
- * respected (`PLAY_IN_SILENT_MODE`, owner decision 2026-10-10) and nothing
- * plays in the background. A sound object is created per play and unloaded
- * when it ends or stops, so no native player is left holding memory.
+ * The audio session is set once, when the player is created (§3.6: "once at
+ * start"), so the device voice and the clips share one session from the very
+ * first prompt (`expo-speech` follows the app session on iOS). The device's
+ * silent switch is respected (`PLAY_IN_SILENT_MODE`, owner decision
+ * 2026-10-10), prompts mix with other apps' audio, and nothing plays in the
+ * background. A sound object is created per play and unloaded when it ends or
+ * stops, so no native player is left holding memory.
  *
  * Settles each play through exactly one of `onDone` / `onError`, unless the
- * play is stopped first (then it reports nothing). Every failure is a reason,
- * never a thrown exception, so the controller can fall through to the voice.
+ * play is stopped first (then it reports nothing). Every native step is
+ * bounded by a timeout, and every failure is a reason, never a thrown
+ * exception, so the controller can always fall through to the voice. A clip
+ * that fails after it was heard (`onStart`) settles as done: the prompt was
+ * played, and the voice does not say it a second time.
  */
 
 /** The slice of an expo-av playback status the player reads. */
@@ -26,6 +32,7 @@ export interface NativePlaybackStatus {
   isPlaying?: boolean;
   didJustFinish?: boolean;
   durationMillis?: number;
+  positionMillis?: number;
   /** Set on an unloaded status when the player hit a fatal error. */
   error?: string;
 }
@@ -57,14 +64,18 @@ export interface NativeClipEnv {
   audio: NativeAudioApi;
   /** `PLAY_IN_SILENT_MODE`: false respects the silent switch. */
   playInSilentMode: boolean;
-  /** How long each load step (local file, then sound) may take before the voice takes over. Default 3 s. */
+  /** How long each load step (session, local file, then sound) may take before the voice takes over. Default 3 s. */
   loadTimeoutMs?: number;
+  /** How long the native play call may take before the play is `blocked`. Default 1.5 s. */
+  startTimeoutMs?: number;
 }
 
 const DEFAULT_LOAD_TIMEOUT_MS = 3000;
+/** The same bound the controller gives a voice that never starts (§3.5 item 4). */
+const DEFAULT_START_TIMEOUT_MS = 1500;
 /** A started clip that never reports its end (an interrupted session) still settles this long after its end. */
 const END_SAFETY_MS = 1500;
-/** Until the clip reports its length, a play settles at the latest after this. */
+/** Until the clip reports its length, a play settles at the latest this long after it starts. */
 const MAX_CLIP_MS = 15_000;
 
 class ClipLoadError extends Error {
@@ -82,32 +93,55 @@ function within<T>(work: Promise<T>, ms: number, reason: ClipFailure): Promise<T
   return Promise.race([work.catch(() => Promise.reject(new ClipLoadError(reason))), late]).finally(() => clearTimeout(timer));
 }
 
-/** Release a native sound; it may already be gone. */
+/** A native call as a promise: a synchronous throw becomes a rejection. */
+function attempt<T>(call: () => Promise<T>): Promise<T> {
+  try {
+    return call();
+  } catch (err) {
+    return Promise.reject(err);
+  }
+}
+
+/** Release a native sound; it may already be gone, so nothing here throws. */
 function release(sound: NativeSoundLike, stop: boolean): void {
-  sound.setOnPlaybackStatusUpdate(null);
+  try {
+    sound.setOnPlaybackStatusUpdate(null);
+  } catch {
+    // Already released.
+  }
   const unload = (): void => {
-    sound.unloadAsync().catch(() => undefined);
+    attempt(() => sound.unloadAsync()).catch(() => undefined);
   };
-  if (stop) sound.stopAsync().then(unload, unload);
+  if (stop) attempt(() => sound.stopAsync()).then(unload, unload);
   else unload();
 }
 
 export function createNativeClipPlayer(env: NativeClipEnv): ClipPlayer {
   const loadTimeoutMs = env.loadTimeoutMs ?? DEFAULT_LOAD_TIMEOUT_MS;
+  const startTimeoutMs = env.startTimeoutMs ?? DEFAULT_START_TIMEOUT_MS;
   const uris = new Map<string, string>();
   const loading = new Map<string, Promise<string>>();
   const active = new Set<{ stop(): void }>();
   let mode: Promise<void> | null = null;
 
-  /** The session is set once; a refusal is asked again at the next play (playback goes on with the default session). */
+  /**
+   * The session is set once. A refusal, or a call that does not answer within
+   * the load timeout, is asked again at the next play; playback goes on with
+   * the default session meanwhile, so a stuck session never silences prompts.
+   */
   const ensureMode = (): Promise<void> => {
-    mode ??= env.audio
-      .setAudioModeAsync({ playsInSilentModeIOS: env.playInSilentMode, staysActiveInBackground: false })
-      .catch(() => {
-        mode = null;
-      });
-    return mode;
+    if (mode !== null) return mode;
+    const asked: Promise<void> = within(
+      attempt(() => env.audio.setAudioModeAsync({ playsInSilentModeIOS: env.playInSilentMode, staysActiveInBackground: false })),
+      loadTimeoutMs,
+      'blocked',
+    ).catch(() => {
+      if (mode === asked) mode = null;
+    });
+    mode = asked;
+    return asked;
   };
+  void ensureMode();
 
   /** One local-file job per ref at a time; a failure is not kept, so the next play tries again. */
   const local = (ref: string, source: number | string): Promise<string> => {
@@ -115,7 +149,7 @@ export function createNativeClipPlayer(env: NativeClipEnv): ClipPlayer {
     if (hit !== undefined) return Promise.resolve(hit);
     const inFlight = loading.get(ref);
     if (inFlight !== undefined) return inFlight;
-    const job = env.localUri(source).then((uri) => {
+    const job = attempt(() => env.localUri(source)).then((uri) => {
       uris.set(ref, uri);
       return uri;
     });
@@ -132,6 +166,14 @@ export function createNativeClipPlayer(env: NativeClipEnv): ClipPlayer {
     let settled = false;
     let sound: NativeSoundLike | null = null;
     let safety: ReturnType<typeof setTimeout> | undefined;
+    /** The play call was made: the safety timer runs from here. */
+    let begun = false;
+    /** `onStart` was reported: the learner has heard the clip. */
+    let started = false;
+    /** The first length the sound reported. */
+    let duration: number | null = null;
+    /** The safety timer is the clip's own length (armed once, never pushed back). */
+    let lengthArmed = false;
 
     const handle = {
       stop: (): void => {
@@ -154,6 +196,12 @@ export function createNativeClipPlayer(env: NativeClipEnv): ClipPlayer {
       clearTimeout(safety);
       safety = setTimeout(() => settle(() => h.onDone()), ms + END_SAFETY_MS);
     };
+    /** Once playing, the play settles at the clip's end plus a margin, measured once from its first report. */
+    const armLength = (position: number): void => {
+      if (lengthArmed || duration === null) return;
+      lengthArmed = true;
+      armSafety(Math.max(0, duration - position));
+    };
 
     const source = env.source(ref);
     if (source === null) {
@@ -164,13 +212,15 @@ export function createNativeClipPlayer(env: NativeClipEnv): ClipPlayer {
 
     const onStatus = (status: NativePlaybackStatus): void => {
       if (!status.isLoaded) {
-        if (status.error !== undefined) settle(() => h.onError('decode'));
+        // After the clip was heard, a fatal error ends the prompt rather than repeating it in the voice.
+        if (status.error !== undefined) settle(() => (started ? h.onDone() : h.onError('decode')));
         return;
       }
       if (status.didJustFinish === true) return settle(() => h.onDone());
-      if (typeof status.durationMillis === 'number' && Number.isFinite(status.durationMillis) && status.durationMillis > 0) {
-        armSafety(status.durationMillis);
+      if (duration === null && typeof status.durationMillis === 'number' && Number.isFinite(status.durationMillis) && status.durationMillis > 0) {
+        duration = status.durationMillis;
       }
+      if (begun) armLength(typeof status.positionMillis === 'number' && Number.isFinite(status.positionMillis) ? status.positionMillis : 0);
     };
 
     void (async (): Promise<void> => {
@@ -181,7 +231,7 @@ export function createNativeClipPlayer(env: NativeClipEnv): ClipPlayer {
       try {
         const uri = await within(local(ref, source), loadTimeoutMs, 'fetch');
         if (stopped) return;
-        pending = env.audio.createSound(uri, (status) => onStatus(status));
+        pending = attempt(() => env.audio.createSound(uri, (status) => onStatus(status)));
         created = await within(pending, loadTimeoutMs, 'decode');
       } catch (err) {
         // A sound that arrives after its load timed out is released at once.
@@ -197,15 +247,19 @@ export function createNativeClipPlayer(env: NativeClipEnv): ClipPlayer {
         return;
       }
       sound = created;
-      armSafety(MAX_CLIP_MS);
+      begun = true;
+      if (duration === null) armSafety(MAX_CLIP_MS);
+      else armLength(0);
       try {
-        await created.playAsync();
+        // A play call the session never answers is `blocked`, like a voice that never starts.
+        await within(created.playAsync(), startTimeoutMs, 'blocked');
       } catch {
         return settle(() => h.onError('blocked'));
       }
       if (stopped || settled) return;
+      started = true;
       h.onStart();
-    })();
+    })().catch(() => settle(() => h.onError('blocked')));
 
     return handle;
   };
@@ -243,7 +297,16 @@ export function expoAvClipEnv(assets: Readonly<Record<string, number | string>>)
       return asset.localUri ?? asset.uri;
     },
     audio: {
-      setAudioModeAsync: (mode) => Audio.setAudioModeAsync(mode),
+      // The mix policy is stated, not left to expo-av's defaults: prompts mix with other apps' audio (iOS) and duck it (Android).
+      setAudioModeAsync: (mode) =>
+        Audio.setAudioModeAsync({
+          ...mode,
+          interruptionModeIOS: InterruptionModeIOS.MixWithOthers,
+          interruptionModeAndroid: InterruptionModeAndroid.DuckOthers,
+          shouldDuckAndroid: true,
+          playThroughEarpieceAndroid: false,
+          allowsRecordingIOS: false,
+        }),
       createSound: async (uri, onStatus) => {
         // The file is already local: no second download.
         const { sound } = await Audio.Sound.createAsync({ uri }, { shouldPlay: false }, onStatus, false);

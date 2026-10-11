@@ -40,9 +40,10 @@ import { track } from './telemetry';
  * Metro picks `audio.web.ts` for the web build; the surface is identical.
  * Bundled recordings (`__generated__/audio-assets.ts`) play first through the
  * expo-av clip player (`audio-player.ts`, A-7), which sets the audio session
- * from `PLAY_IN_SILENT_MODE` (`config/audio.ts`); a clip that fails falls
- * through to the voice. Speech itself follows the system audio session
- * (expo-speech has no option for it).
+ * from `PLAY_IN_SILENT_MODE` (`config/audio.ts`) once, when it is created
+ * with the adapter (before the first prompt); a clip that fails falls through
+ * to the voice. Speech has no session option of its own and follows that app
+ * session, so the voice and the clips behave the same from the first prompt.
  */
 
 export type { PlayResult, PlaySpec, SpeakOptions };
