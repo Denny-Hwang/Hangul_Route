@@ -1,7 +1,7 @@
 import { layoutClassFor } from '@hangul-route/design-system/layout';
 import { spacing, touchTarget } from '@hangul-route/design-system/tokens';
 import { describe, expect, it } from 'vitest';
-import { gameArrangement, pictureTextArrangement, tileGridWidth } from '../game-layout';
+import { answersColumnWidth, gameArrangement, pictureTextArrangement, tileGridWidth, twoUpFits } from '../game-layout';
 
 const at = (width: number, height: number) => layoutClassFor({ width, height });
 
@@ -54,16 +54,64 @@ describe('tileGridWidth', () => {
   const gap = spacing.md;
 
   it('leaves the phone grid alone: tiles wrap as they always did', () => {
-    expect(tileGridWidth('compact', tile, gap)).toBeUndefined();
+    expect(tileGridWidth(at(390, 844), tile, gap)).toBeUndefined();
+    expect(tileGridWidth(at(320, 568), tile, gap)).toBeUndefined();
   });
 
   it('holds two tiles and one gap from regular up, so four tiles sit 2 x 2', () => {
-    expect(tileGridWidth('regular', 115, gap)).toBe(2 * 115 + gap);
-    expect(tileGridWidth('wide', 134, gap)).toBe(2 * 134 + gap);
+    expect(tileGridWidth(at(768, 1024), 115, gap)).toBe(2 * 115 + gap);
+    expect(tileGridWidth(at(1180, 820), 134, gap)).toBe(2 * 134 + gap);
   });
 
-  it('never makes a tile narrower than the touch-target floor', () => {
-    const width = tileGridWidth('regular', touchTarget.min, gap) ?? 0;
-    expect((width - gap) / 2).toBeGreaterThanOrEqual(touchTarget.min);
+  it('leaves a short window alone too: a landscape phone keeps its single row of four, as today', () => {
+    expect(at(844, 390).width).toBe('regular');
+    expect(tileGridWidth(at(844, 390), tile, gap)).toBeUndefined();
+    expect(at(932, 430).width).toBe('wide');
+    expect(tileGridWidth(at(932, 430), tile, gap)).toBeUndefined();
+  });
+
+  it('fits a 2 x 2 grid of scaled tiles inside the answers column wherever the prompt sits beside it', () => {
+    for (const [w, h] of [
+      [1180, 820],
+      [1024, 768],
+      [960, 600],
+      [700, 480],
+    ] as const) {
+      const l = at(w, h);
+      const grid = tileGridWidth(l, Math.round(touchTarget.hero * l.mediaScale), gap) ?? 0;
+      expect(grid).toBeLessThanOrEqual(answersColumnWidth(l, gameArrangement(l), spacing.xl));
+    }
+  });
+});
+
+describe('answersColumnWidth', () => {
+  const gap = spacing.xl;
+
+  it('is the whole reading column when stacked', () => {
+    expect(answersColumnWidth(at(390, 844), 'stacked', gap)).toBe(390 - 2 * spacing.lg);
+    expect(answersColumnWidth(at(768, 1024), 'stacked', gap)).toBe(720);
+  });
+
+  it('is half the reading column, less the gap, beside the prompt', () => {
+    expect(answersColumnWidth(at(1180, 820), 'side', gap)).toBe((720 - gap) / 2);
+    expect(answersColumnWidth(at(844, 390), 'side', gap)).toBe((720 - gap) / 2);
+    expect(answersColumnWidth(at(700, 480), 'side', gap)).toBe((700 - 2 * spacing.xl - gap) / 2);
+  });
+
+  it('is 0 while the window size is unknown', () => {
+    expect(answersColumnWidth(at(0, 0), 'side', gap)).toBe(0);
+    expect(answersColumnWidth(at(0, 0), 'stacked', gap)).toBe(0);
+  });
+});
+
+describe('twoUpFits', () => {
+  it('is true when each of two cards gets at least the minimum width', () => {
+    expect(twoUpFits(348, 12, 168)).toBe(true);
+    expect(twoUpFits(348, 12, 169)).toBe(false);
+  });
+
+  it('is false for an unknown column', () => {
+    expect(twoUpFits(0, 12, 100)).toBe(false);
+    expect(twoUpFits(Number.NaN, 12, 100)).toBe(false);
   });
 });

@@ -1,5 +1,5 @@
 import { layoutClassFor } from '@hangul-route/design-system/layout';
-import { layout } from '@hangul-route/design-system/tokens';
+import { layout, spacing } from '@hangul-route/design-system/tokens';
 import { describe, expect, it } from 'vitest';
 import {
   TRACE_CANVAS_CEILING,
@@ -108,7 +108,7 @@ describe('traceScreenWidth and the side mode on a wide window', () => {
 
   it('gives the canvas its 448 ceiling beside the controls at 1180 x 820', () => {
     const content = box(1180, 820, layout.maxWidth.full);
-    const slotWidth = content.width - traceSidePanelWidth(content.width) - 24;
+    const slotWidth = content.width - traceSidePanelWidth(content.width) - spacing.lg; // TraceStrokeGame's side row gap
     expect(traceCanvasSize(slotWidth, content.height, traceCanvasMax(at(1180, 820)))).toBe(448);
   });
 

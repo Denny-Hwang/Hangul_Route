@@ -59,7 +59,7 @@ export function MatchSoundGame({ scope, onFinish }: Props): React.ReactElement {
   // F-LAYOUT-001 §3.6: tiles scale with the window; prompt left, tiles right on a wide landscape window.
   const layoutClass = useLayoutClass();
   const tile = useMediaSize(touchTarget.hero);
-  const gridWidth = tileGridWidth(layoutClass.width, tile, spacing.md);
+  const gridWidth = tileGridWidth(layoutClass, tile, spacing.md);
 
   const round = rounds[roundIdx];
   // The sound of the letter (ga, never gi-yeok), or the same sound as text (F-AUDIO-004 AD1, §3.8).
