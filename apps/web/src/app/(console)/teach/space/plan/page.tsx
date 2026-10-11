@@ -10,7 +10,9 @@ import { useConsole } from '@/components/console/use-console';
 import { PlanDraftItems, PlanReadout } from '@/components/console/PlanParts';
 import { PlanSwitcher, RouteDraftItems, RouteReadout } from '@/components/console/RoutePlanParts';
 import { builderEpisodes, questsOf } from '@/data/catalog';
-import type { PlanView, Roster } from '@/lib/console/api';
+import type { PlanView, Roster, SpaceListItem } from '@/lib/console/api';
+import { lectureModeEnabled } from '@/lib/console/config';
+import { canComposeIn } from '@/lib/console/lecture';
 import { type RepaceResult, repaceSaveBody, reweek, selectedPlan, swapRouteItems, withTargetDate } from '@/lib/console/curriculum';
 import { type PlanError, dateKey, memberKind, moveItem, oneExplicitPerDay, planErrorText, planEveryone, planReadout, spreadDates } from '@/lib/console/plans';
 import { relativeDay } from '@/lib/console/rollup';
@@ -38,6 +40,8 @@ function PlanInner(): JSX.Element {
   const p = c.plan;
   const [roster, setRoster] = useState<Roster | null>(null);
   const [plans, setPlans] = useState<PlanView[] | null>(null);
+  // Lecture mode's "Present this plan" shows for the roles that compose plans (F-TCH-004 §3.11).
+  const [spaces, setSpaces] = useState<SpaceListItem[] | null>(null);
   const [draft, setDraftState] = useState<Draft>(EMPTY);
   // Unsaved edits in the builder: switching plans asks first (F-PLAN-002 section 3.8 step 5).
   const [dirty, setDirty] = useState(false);
@@ -66,7 +70,8 @@ function PlanInner(): JSX.Element {
   const load = useCallback(async (): Promise<void> => {
     if (!api) return;
     setError(null);
-    const [rosterRes, plansRes] = await Promise.all([api.roster(spaceId), api.listPlans(spaceId)]);
+    const [rosterRes, plansRes, spacesRes] = await Promise.all([api.roster(spaceId), api.listPlans(spaceId), lectureModeEnabled() ? api.listSpaces() : null]);
+    if (spacesRes?.ok) setSpaces(spacesRes.data);
     if (!rosterRes.ok || !plansRes.ok) {
       setError('cantReach');
       return;
@@ -89,6 +94,7 @@ function PlanInner(): JSX.Element {
   if (!ready || !session) return <ConsoleShell>{null}</ConsoleShell>;
 
   const current = plans ? selectedPlan(plans, selectedId) : null;
+  const presentable = lectureModeEnabled() && canComposeIn(spaces, spaceId);
   const learners = roster?.learners ?? [];
   // Before the roster loads the page says "learners" and "this space", as it always has.
   const kind = roster?.space.kind ?? null;
@@ -222,7 +228,7 @@ function PlanInner(): JSX.Element {
               />
             ) : undefined
           }
-          presentHref={ROUTES.spaceLecture(spaceId, 'plan')}
+          presentHref={presentable ? ROUTES.spaceLecture(spaceId, 'plan', current.id) : undefined}
         />
       ) : (
         <section aria-label={p.builderLabel}>

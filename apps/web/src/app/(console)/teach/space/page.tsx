@@ -8,7 +8,9 @@ import { Button, ConsoleShell, Muted, Notice, panelStyle } from '@/components/co
 import { AvatarChip } from '@/components/AvatarChip';
 import { SchoolAdmin } from '@/components/console/SchoolAdmin';
 import { useConsole } from '@/components/console/use-console';
-import type { PlanView, Roster } from '@/lib/console/api';
+import type { PlanView, Roster, SpaceListItem } from '@/lib/console/api';
+import { lectureModeEnabled } from '@/lib/console/config';
+import { canComposeIn } from '@/lib/console/lecture';
 import { levelPillLabel } from '@/lib/console/level-label';
 import { capState, classRollup, codeExpiry, percent, relativeDay } from '@/lib/console/rollup';
 import { ownRouteLine, readoutLine as routeReadoutLine } from '@/lib/console/curriculum';
@@ -24,6 +26,8 @@ function SpaceInner(): JSX.Element {
   const [roster, setRoster] = useState<Roster | null>(null);
   const [plans, setPlans] = useState<PlanView[]>([]);
   const [pendingRelinks, setPendingRelinks] = useState(0);
+  // Lecture mode's entry points show for the roles that compose plans (F-TCH-004 §3.11).
+  const [spaces, setSpaces] = useState<SpaceListItem[] | null>(null);
   // A key, not text: the message is looked up at render time, so it follows the header language select.
   const [error, setError] = useState<SpaceError | null>(null);
   const [busy, setBusy] = useState(false);
@@ -33,7 +37,13 @@ function SpaceInner(): JSX.Element {
   const load = useCallback(async (): Promise<void> => {
     if (!api) return;
     setError(null);
-    const [result, planList, relinks] = await Promise.all([api.roster(spaceId), api.listPlans(spaceId), api.relinkRequests(spaceId)]);
+    const [result, planList, relinks, spaceList] = await Promise.all([
+      api.roster(spaceId),
+      api.listPlans(spaceId),
+      api.relinkRequests(spaceId),
+      lectureModeEnabled() ? api.listSpaces() : null,
+    ]);
+    if (spaceList?.ok) setSpaces(spaceList.data);
     if (planList.ok) setPlans(planList.data);
     if (relinks.ok) setPendingRelinks(relinks.data.length);
     if (result.ok) setRoster(result.data);
@@ -72,6 +82,7 @@ function SpaceInner(): JSX.Element {
   const cap = roster ? capState(roster.space.kind, roster.learners.length) : null;
   const empty = roster !== null && roster.learners.length === 0;
   const latestPlan = latestPublished(plans);
+  const lecture = lectureModeEnabled() && canComposeIn(spaces, spaceId);
   const readout = latestPlan && roster ? new Map(planReadout(latestPlan.id, roster.learners).map((r) => [r.learnerId, r])) : null;
   // Taught jamo stay outside the message (§3.4 rule 5): the sentence is split around them and the page marks them Korean.
   const weekRevisit = aroundSlot(c.space.week.revisit);
@@ -123,9 +134,15 @@ function SpaceInner(): JSX.Element {
                     {weekRevisit.before}
                     {jamo(rollup.revisit)}
                     {weekRevisit.after}{' '}
-                    <Link href={ROUTES.spaceLecture(spaceId, 'revisit')} data-testid="revisit-together" style={{ fontSize: typography.size.caption, fontWeight: typography.weight.bold, padding: `${spacing.xxs}px ${spacing.sm}px`, borderRadius: radii.pill, border: `1px solid ${colors.border.strong}`, color: colors.text.primary, textDecoration: 'none', whiteSpace: 'nowrap' }}>
-                      {c.lecture.revisitChip.cta}
-                    </Link>
+                    {lecture ? (
+                      <Link
+                        href={ROUTES.spaceLecture(spaceId, 'revisit')}
+                        data-testid="revisit-together"
+                        style={{ display: 'inline-flex', alignItems: 'center', minHeight: spacing.xxxl, fontSize: typography.size.caption, fontWeight: typography.weight.bold, padding: `0 ${spacing.md}px`, borderRadius: radii.pill, border: `1px solid ${colors.border.strong}`, color: colors.text.primary, textDecoration: 'none', whiteSpace: 'nowrap' }}
+                      >
+                        {c.lecture.revisitChip.cta}
+                      </Link>
+                    ) : null}
                   </li>
                 ) : null}
                 {rollup.notSynced ? <li>{c.space.week.notSynced(rollup.notSynced)}</li> : null}
@@ -140,9 +157,11 @@ function SpaceInner(): JSX.Element {
             <Link href={ROUTES.spaceCurriculum(spaceId)}>
               <Button testId="plan-term">{c.curriculum.entries.planTerm.cta}</Button>
             </Link>
-            <Link href={ROUTES.spaceLecture(spaceId)}>
-              <Button testId="open-lecture">{c.lecture.entry.cta}</Button>
-            </Link>
+            {lecture ? (
+              <Link href={ROUTES.spaceLecture(spaceId)}>
+                <Button testId="open-lecture">{c.lecture.entry.cta}</Button>
+              </Link>
+            ) : null}
             <Link href={ROUTES.spaceRelink(spaceId)}>
               <Button>{pendingRelinks > 0 ? c.space.relinkPending.cta(pendingRelinks) : c.space.relinkRequests.cta}</Button>
             </Link>
