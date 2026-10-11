@@ -36,6 +36,10 @@ function rig(
     context?: () => FakeAudioContext;
     noWebAudio?: boolean;
     cacheSize?: number;
+    cacheBytes?: number;
+    loadTimeoutMs?: number;
+    resumeTimeoutMs?: number;
+    fetchFn?: NonNullable<WebClipEnv['fetch']>;
   } = {},
 ): Rig {
   const fetch = makeFakeFetch(opts.files ?? ALL_FILES);
@@ -43,7 +47,7 @@ function rig(
   const make = opts.context ?? (() => new FakeAudioContext());
   const env: WebClipEnv = {
     uri: (ref) => URLS[ref] ?? null,
-    fetch,
+    fetch: opts.fetchFn ?? fetch,
     createContext: opts.noWebAudio
       ? null
       : () => {
@@ -51,8 +55,10 @@ function rig(
           contexts.push(ctx);
           return ctx as unknown as ReturnType<NonNullable<WebClipEnv['createContext']>>;
         },
-    resumeTimeoutMs: 5,
+    resumeTimeoutMs: opts.resumeTimeoutMs ?? 5,
     ...(opts.cacheSize === undefined ? {} : { cacheSize: opts.cacheSize }),
+    ...(opts.cacheBytes === undefined ? {} : { cacheBytes: opts.cacheBytes }),
+    ...(opts.loadTimeoutMs === undefined ? {} : { loadTimeoutMs: opts.loadTimeoutMs }),
   };
   return { player: createWebClipPlayer(env), fetch, contexts };
 }
@@ -86,6 +92,10 @@ const flush = async (): Promise<void> => {
 };
 
 const lastSource = (r: Rig) => r.contexts[0]!.sources.at(-1)!;
+
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 describe('platform/audio-player.web: play', () => {
   it('fetches, decodes and starts a buffer source; done when it ends', async () => {
@@ -272,13 +282,24 @@ describe('platform/audio-player.web: stop', () => {
   });
 
   it('a play stopped while it waits for the context never reports', async () => {
-    const r = rig({ context: () => new StuckContext() });
+    vi.useFakeTimers();
+    /** resume() stays pending: the play sits in the resume wait. */
+    class PendingResume extends FakeAudioContext {
+      override resume(): Promise<void> {
+        this.resumeCalls += 1;
+        return new Promise(() => undefined);
+      }
+    }
+    const r = rig({ context: () => new PendingResume(), resumeTimeoutMs: 300 });
     const p = play(r, 'audio/jamo/giyeok.mp3');
+    // The synchronous resume (in the gesture), then the loaded clip waits on a second one.
+    for (let i = 0; i < 20 && r.contexts[0]!.resumeCalls < 2; i++) await vi.advanceTimersByTimeAsync(0);
+    expect(r.contexts[0]!.resumeCalls).toBe(2);
     p.handle.stop();
     p.handle.stop();
-    await flush();
-    await new Promise((res) => setTimeout(res, 20));
+    await vi.advanceTimersByTimeAsync(400);
     expect(p.outcome).toEqual({ started: false, result: null });
+    expect(r.contexts[0]!.sources).toHaveLength(0);
   });
 
   it('stopping a playing clip stops its source and the late `ended` is ignored', async () => {
@@ -418,5 +439,179 @@ describe('platform/audio-player.web: webAudioGlobals', () => {
     vi.stubGlobal('webkitAudioContext', undefined);
     vi.stubGlobal('fetch', undefined);
     expect(webAudioGlobals()).toEqual({ createContext: null, fetch: null });
+  });
+});
+
+describe('platform/audio-player.web: review fixes (a tap resumes, nothing hangs, memory is bounded)', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('a play asks a suspended context to run synchronously, inside the tap, before any await', () => {
+    const r = rig();
+    r.player.unlock();
+    expect(r.contexts[0]!.resumeCalls).toBe(1);
+    // iOS suspended the context while the page was in the background.
+    r.contexts[0]!.state = 'suspended';
+    play(r, 'audio/jamo/giyeok.mp3');
+    expect(r.contexts[0]!.resumeCalls).toBe(2);
+  });
+
+  it('a play on a running context does not ask again', () => {
+    const r = rig();
+    r.player.unlock();
+    play(r, 'audio/jamo/giyeok.mp3');
+    expect(r.contexts[0]!.resumeCalls).toBe(1);
+  });
+
+  it('unlock leaves a running context alone and starts a suspended one again', () => {
+    const r = rig();
+    r.player.unlock();
+    r.player.unlock();
+    expect(r.contexts[0]!.resumeCalls).toBe(1);
+    expect(r.contexts[0]!.sources).toHaveLength(1);
+    r.contexts[0]!.state = 'suspended';
+    r.player.unlock();
+    expect(r.contexts[0]!.resumeCalls).toBe(2);
+    expect(r.contexts[0]!.sources).toHaveLength(2);
+  });
+
+  it('a clip that does not load in time gives way to the voice (`fetch`), and the late load still fills the cache', async () => {
+    vi.useFakeTimers();
+    let release: () => void = () => undefined;
+    const calls: string[] = [];
+    const fetchFn = (url: string) => {
+      calls.push(url);
+      return new Promise<{ ok: boolean; status: number; arrayBuffer(): Promise<ArrayBuffer> }>((resolve) => {
+        release = () => resolve({ ok: true, status: 200, arrayBuffer: () => Promise.resolve(bytes(10)) });
+      });
+    };
+    const r = rig({ fetchFn, loadTimeoutMs: 3000 });
+    r.player.unlock();
+    const p = play(r, 'audio/jamo/giyeok.mp3');
+    await vi.advanceTimersByTimeAsync(2999);
+    expect(p.outcome.result).toBeNull();
+    await vi.advanceTimersByTimeAsync(1);
+    expect(p.outcome).toEqual({ started: false, result: 'fetch' });
+    release();
+    await vi.advanceTimersByTimeAsync(0);
+    const again = play(r, 'audio/jamo/giyeok.mp3');
+    await vi.advanceTimersByTimeAsync(0);
+    expect(again.outcome.started).toBe(true);
+    expect(calls).toHaveLength(1);
+  });
+
+  it('a started clip whose `ended` never comes still settles after its length plus a margin', async () => {
+    vi.useFakeTimers();
+    const r = rig();
+    r.player.unlock();
+    const p = play(r, 'audio/jamo/giyeok.mp3');
+    await vi.advanceTimersByTimeAsync(0);
+    expect(p.outcome.started).toBe(true);
+    await vi.advanceTimersByTimeAsync(900 + 1499);
+    expect(p.outcome.result).toBeNull();
+    await vi.advanceTimersByTimeAsync(1);
+    expect(p.outcome.result).toBe('done');
+    // A late `ended` after the safety timer reports nothing more.
+    lastSource(r).onended?.();
+    expect(p.outcome.result).toBe('done');
+  });
+
+  it('the safety timer is cleared when the clip ends or is stopped', async () => {
+    vi.useFakeTimers();
+    const r = rig();
+    r.player.unlock();
+    const a = play(r, 'audio/jamo/giyeok.mp3');
+    await vi.advanceTimersByTimeAsync(0);
+    lastSource(r).onended?.();
+    expect(a.outcome.result).toBe('done');
+    const b = play(r, 'audio/jamo/nieun.mp3');
+    await vi.advanceTimersByTimeAsync(0);
+    b.handle.stop();
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(b.outcome).toEqual({ started: true, result: null });
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('caps the decoded cache by bytes, least recently used out first', async () => {
+    /** Buffers that say their size: 1000 frames, mono, float32 = 4000 bytes each. */
+    class SizedContext extends FakeAudioContext {
+      override decodeAudioData(data: ArrayBuffer) {
+        return Promise.resolve({ duration: 0.9, byteLength: data.byteLength, length: 1000, numberOfChannels: 1 });
+      }
+    }
+    const r = rig({ context: () => new SizedContext(), cacheBytes: 9000 });
+    r.player.unlock();
+    await r.player.warm(['audio/jamo/giyeok.mp3', 'audio/jamo/nieun.mp3']);
+    expect(r.fetch.calls).toHaveLength(2);
+    // A third clip pushes past 9000 bytes: giyeok (the oldest) goes.
+    await r.player.warm(['audio/jamo/digeut.mp3']);
+    await r.player.warm(['audio/jamo/nieun.mp3', 'audio/jamo/digeut.mp3']);
+    expect(r.fetch.calls).toHaveLength(3);
+    await r.player.warm(['audio/jamo/giyeok.mp3']);
+    expect(r.fetch.calls).toHaveLength(4);
+  });
+
+  it('a clip larger than the whole cache plays but is not kept', async () => {
+    class HugeContext extends FakeAudioContext {
+      override decodeAudioData(data: ArrayBuffer) {
+        return Promise.resolve({ duration: 0.9, byteLength: data.byteLength, length: 1_000_000, numberOfChannels: 2 });
+      }
+    }
+    const r = rig({ context: () => new HugeContext(), cacheBytes: 1000 });
+    r.player.unlock();
+    const p = play(r, 'audio/jamo/giyeok.mp3');
+    await flush();
+    expect(p.outcome.started).toBe(true);
+    await r.player.warm(['audio/jamo/giyeok.mp3']);
+    expect(r.fetch.calls).toHaveLength(2);
+  });
+
+  it('an HTML page served in place of a clip (a single-page host) is `fetch`, without decoding', async () => {
+    const fetchFn = () =>
+      Promise.resolve({
+        ok: true,
+        status: 200,
+        headers: { get: (name: string) => (name === 'content-type' ? 'text/html; charset=utf-8' : null) },
+        arrayBuffer: () => Promise.resolve(bytes(10)),
+      });
+    const r = rig({ fetchFn });
+    r.player.unlock();
+    await expect(play(r, 'audio/jamo/giyeok.mp3').settled).resolves.toEqual({ started: false, result: 'fetch' });
+  });
+
+  it('an audio content type plays', async () => {
+    const fetchFn = () =>
+      Promise.resolve({
+        ok: true,
+        status: 200,
+        headers: { get: () => 'audio/mpeg' },
+        arrayBuffer: () => Promise.resolve(bytes(10)),
+      });
+    const r = rig({ fetchFn });
+    r.player.unlock();
+    const p = play(r, 'audio/jamo/giyeok.mp3');
+    await flush();
+    expect(p.outcome.started).toBe(true);
+  });
+
+  it('an old engine whose resume() returns nothing, or throws, is `blocked`, never a hang', async () => {
+    class NoPromise extends FakeAudioContext {
+      override resume(): Promise<void> {
+        this.resumeCalls += 1;
+        return undefined as unknown as Promise<void>;
+      }
+    }
+    class Throws extends FakeAudioContext {
+      override resume(): Promise<void> {
+        this.resumeCalls += 1;
+        throw new Error('InvalidStateError');
+      }
+    }
+    for (const Ctor of [NoPromise, Throws]) {
+      const r = rig({ context: () => new Ctor() });
+      expect(() => r.player.unlock()).not.toThrow();
+      await expect(play(r, 'audio/jamo/giyeok.mp3').settled).resolves.toEqual({ started: false, result: 'blocked' });
+    }
   });
 });

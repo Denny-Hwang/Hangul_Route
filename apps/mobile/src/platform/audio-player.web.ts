@@ -13,6 +13,9 @@ import type { ClipFailure, ClipPlayer } from '../logic/audio/controller';
 
 interface AudioBufferLike {
   readonly duration: number;
+  /** Sample frames and channels: the decoded size (float32 PCM) the cache is capped by. */
+  readonly length?: number;
+  readonly numberOfChannels?: number;
 }
 
 interface BufferSourceLike {
@@ -42,6 +45,7 @@ interface FetchResponseLike {
   ok: boolean;
   status: number;
   arrayBuffer(): Promise<ArrayBuffer>;
+  headers?: { get(name: string): string | null };
 }
 
 export interface WebClipEnv {
@@ -54,10 +58,41 @@ export interface WebClipEnv {
   resumeTimeoutMs?: number;
   /** Decoded clips kept in memory (least recently used dropped). Default 64. */
   cacheSize?: number;
+  /** Decoded bytes kept in memory, least recently used dropped first. Default 32 MB. */
+  cacheBytes?: number;
+  /** How long a play waits for its clip to load before it gives way to the voice. Default 3 s. */
+  loadTimeoutMs?: number;
 }
 
 const DEFAULT_RESUME_TIMEOUT_MS = 300;
 const DEFAULT_CACHE_SIZE = 64;
+const DEFAULT_CACHE_BYTES = 32 * 1024 * 1024;
+const DEFAULT_LOAD_TIMEOUT_MS = 3000;
+/** A started clip that never reports `ended` (an interrupted context) still settles this long after its end. */
+const END_SAFETY_MS = 1500;
+
+/** Decoded float32 PCM bytes of a buffer (0 when the browser does not say). */
+function bufferBytes(buffer: AudioBufferLike): number {
+  const frames = buffer.length ?? 0;
+  const channels = buffer.numberOfChannels ?? 1;
+  return Number.isFinite(frames) && Number.isFinite(channels) ? frames * channels * 4 : 0;
+}
+
+/** `resume()` that never throws and always settles, even on an old engine that returns nothing. */
+function safeResume(audio: AudioContextLike): Promise<void> {
+  try {
+    const pending: unknown = audio.resume();
+    if (pending !== null && typeof pending === 'object' && typeof (pending as Promise<void>).then === 'function') {
+      return (pending as Promise<void>).then(
+        () => undefined,
+        () => undefined,
+      );
+    }
+  } catch {
+    // a context that refuses is reported as `blocked` by the play that needed it
+  }
+  return Promise.resolve();
+}
 
 class ClipLoadError extends Error {
   constructor(readonly reason: ClipFailure) {
@@ -92,7 +127,10 @@ const wait = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(
 export function createWebClipPlayer(env: WebClipEnv): ClipPlayer {
   const resumeTimeoutMs = env.resumeTimeoutMs ?? DEFAULT_RESUME_TIMEOUT_MS;
   const cacheSize = env.cacheSize ?? DEFAULT_CACHE_SIZE;
+  const cacheBytes = env.cacheBytes ?? DEFAULT_CACHE_BYTES;
+  const loadTimeoutMs = env.loadTimeoutMs ?? DEFAULT_LOAD_TIMEOUT_MS;
   const cache = new Map<string, AudioBufferLike>();
+  let cachedBytes = 0;
   const loading = new Map<string, Promise<AudioBufferLike>>();
   const active = new Set<{ stop(): void }>();
   let ctx: AudioContextLike | null = null;
@@ -107,13 +145,24 @@ export function createWebClipPlayer(env: WebClipEnv): ClipPlayer {
     return ctx;
   };
 
-  const remember = (ref: string, buffer: AudioBufferLike): void => {
+  const forget = (ref: string): void => {
+    const old = cache.get(ref);
+    if (old === undefined) return;
     cache.delete(ref);
+    cachedBytes -= bufferBytes(old);
+  };
+
+  /** Least recently used out first, by count and by decoded size (a long narration is megabytes). */
+  const remember = (ref: string, buffer: AudioBufferLike): void => {
+    forget(ref);
+    const size = bufferBytes(buffer);
+    if (size > cacheBytes) return; // larger than the whole cache: played, never kept
     cache.set(ref, buffer);
-    while (cache.size > cacheSize) {
+    cachedBytes += size;
+    while (cache.size > cacheSize || cachedBytes > cacheBytes) {
       const oldest = cache.keys().next().value;
       if (oldest === undefined) break;
-      cache.delete(oldest);
+      forget(oldest);
     }
   };
 
@@ -133,6 +182,9 @@ export function createWebClipPlayer(env: WebClipEnv): ClipPlayer {
       try {
         const res = await doFetch(url);
         if (!res.ok) throw new ClipLoadError('fetch');
+        // A missing file on a single-page host comes back as index.html with 200: not a clip.
+        const type = res.headers?.get('content-type') ?? '';
+        if (type.toLowerCase().startsWith('text/')) throw new ClipLoadError('fetch');
         data = await res.arrayBuffer();
       } catch {
         throw new ClipLoadError('fetch');
@@ -152,19 +204,30 @@ export function createWebClipPlayer(env: WebClipEnv): ClipPlayer {
   /** iOS and Chrome keep a context suspended until a gesture; ask once, briefly. */
   const running = async (audio: AudioContextLike): Promise<boolean> => {
     if (audio.state === 'running') return true;
-    await Promise.race([audio.resume().catch(() => undefined), wait(resumeTimeoutMs)]);
+    await Promise.race([safeResume(audio), wait(resumeTimeoutMs)]);
     return audio.state === 'running';
+  };
+
+  /** The clip, or a `fetch` failure once `loadTimeoutMs` passes (the load itself keeps going and fills the cache). */
+  const loadInTime = (audio: AudioContextLike, ref: string, url: string): Promise<AudioBufferLike> => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const late = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => reject(new ClipLoadError('fetch')), loadTimeoutMs);
+    });
+    return Promise.race([load(audio, ref, url), late]).finally(() => clearTimeout(timer));
   };
 
   const play: ClipPlayer['play'] = (ref, h) => {
     let stopped = false;
     let settled = false;
     let source: BufferSourceLike | null = null;
+    let safety: ReturnType<typeof setTimeout> | undefined;
 
     const handle = {
       stop: (): void => {
         if (stopped) return;
         stopped = true;
+        clearTimeout(safety);
         active.delete(handle);
         try {
           source?.stop();
@@ -176,6 +239,7 @@ export function createWebClipPlayer(env: WebClipEnv): ClipPlayer {
     const settle = (report: () => void): void => {
       if (stopped || settled) return;
       settled = true;
+      clearTimeout(safety);
       active.delete(handle);
       report();
     };
@@ -187,12 +251,16 @@ export function createWebClipPlayer(env: WebClipEnv): ClipPlayer {
     }
     active.add(handle);
 
+    // A tap reaches here synchronously, inside the gesture: ask the context to run now,
+    // before any await, or iOS refuses once a backgrounded page has suspended it (§3.6).
+    const audio = context();
+    if (audio !== null && audio.state !== 'running') void safeResume(audio);
+
     void (async (): Promise<void> => {
-      const audio = context();
       if (audio === null) return settle(() => h.onError('blocked'));
       let buffer: AudioBufferLike;
       try {
-        buffer = await load(audio, ref, url);
+        buffer = await loadInTime(audio, ref, url);
       } catch (err) {
         const reason: ClipFailure = err instanceof ClipLoadError ? err.reason : 'decode';
         return settle(() => h.onError(reason));
@@ -210,8 +278,10 @@ export function createWebClipPlayer(env: WebClipEnv): ClipPlayer {
       } catch {
         return settle(() => h.onError('blocked'));
       }
+      const seconds = Number.isFinite(buffer.duration) ? Math.max(0, buffer.duration) : 0;
+      safety = setTimeout(() => settle(() => h.onDone()), seconds * 1000 + END_SAFETY_MS);
       h.onStart();
-    })();
+    })().catch(() => settle(() => h.onError('blocked')));
 
     return handle;
   };
@@ -231,11 +301,12 @@ export function createWebClipPlayer(env: WebClipEnv): ClipPlayer {
         }),
       );
     },
-    // Runs inside the first gesture (§3.6): start the shared context and play one silent sample.
+    // Runs inside a gesture (§3.6): start the shared context and play one silent sample.
+    // Cheap to call on every gesture: a context that is already running is left alone.
     unlock: () => {
       const audio = context();
-      if (audio === null) return;
-      void audio.resume().catch(() => undefined);
+      if (audio === null || audio.state === 'running') return;
+      void safeResume(audio);
       try {
         const silent = audio.createBufferSource();
         silent.buffer = audio.createBuffer(1, 1, 22050);
