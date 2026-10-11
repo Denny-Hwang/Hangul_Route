@@ -42,7 +42,7 @@ describe('platform/keys.web', () => {
   it('passes Right, Left and Escape to the handler and stops listening on unsubscribe', () => {
     const doc = fakeDocument();
     g.document = doc;
-    const handler = vi.fn(() => true);
+    const handler = vi.fn((_key: string) => true);
     const off = subscribeReaderKeys(handler);
     const right = doc.press({ key: 'ArrowRight' });
     doc.press({ key: 'ArrowLeft' });
@@ -65,7 +65,7 @@ describe('platform/keys.web', () => {
   it('ignores repeats, modifiers, other keys, handled events and typing in a field', () => {
     const doc = fakeDocument();
     g.document = doc;
-    const handler = vi.fn(() => true);
+    const handler = vi.fn((_key: string) => true);
     subscribeReaderKeys(handler);
     doc.press({ key: 'ArrowRight', repeat: true });
     doc.press({ key: 'ArrowRight', altKey: true });

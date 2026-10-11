@@ -19,6 +19,16 @@ The one visible text fallback for a sound prompt: when a letter's sound cannot b
  +------------------------------------+
 ```
 
+**Korean already on screen** (the story reader's Korean block, F-STORY-002 §3.4): the screen passes no `ko` / `romanization`, and the panel shows only the read line, the reason and the action, directly under the Korean it refers to, so the Hangul is never drawn twice:
+
+```
+ +------------------------------------+
+ |     No sound? Read it here.        |
+ |     No Korean voice on this device.|
+ |        [ How to add a voice ]      |
+ +------------------------------------+
+```
+
 The speaker button stays on the screen that owns the prompt (Match Sound keeps its own); the panel never replaces it. Its label states the state ("Play sound", "Play sound, sound is off", "Tap to hear").
 
 ## States (from `promptPanelView`)

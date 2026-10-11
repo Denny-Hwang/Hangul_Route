@@ -1,3 +1,4 @@
+import type { StoryLevel } from '@hangul-route/content-schema';
 import type { NavigatorScreenParams } from '@react-navigation/native';
 import type { PinResetMethod } from '../logic/profiles/pin-flow';
 
@@ -46,6 +47,11 @@ export type RootStackParamList = {
     episodeId: string;
     stepIndex: number;
   };
+  /**
+   * The story reader outside a quest (F-STORY-002 §3.1): unscored, writes nothing. "Read it again"
+   * from Results (F-STORY-003) and the shelf / episode page (F-STORY-004) open it.
+   */
+  StoryReader: { storyId: string; level: StoryLevel; mode: 'replay'; sceneIndex?: number };
 };
 
 export type OnboardingStackParamList = {

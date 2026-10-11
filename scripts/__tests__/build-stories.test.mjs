@@ -408,6 +408,82 @@ describe("build-stories.mjs: --include-drafts and --out", () => {
   });
 });
 
+/** Copy the content-schema story fixtures (and the non-story research file) into a temp root. */
+function putFixtures(root, names = ["valid.ready.json", "valid.draft.json", "valid.tale.json", "research-numbers.json"]) {
+  const dir = join(root, "packages", "content-schema", "src", "__fixtures__", "story");
+  mkdirSync(dir, { recursive: true });
+  for (const name of names) writeFileSync(join(dir, name), readFileSync(join(FIXTURES, name), "utf8"));
+  return dir;
+}
+
+describe("build-stories.mjs: --include-fixtures (F-STORY-002 PR 2.6a, e2e builds only)", () => {
+  test("adds the ready fixtures (and their shelf episode) to the app bundle; drafts and non-stories are skipped", () => {
+    const root = makeRoot();
+    putFixtures(root);
+    const content = ready({ id: "story:zz-content", shelf: undefined });
+    putStory(root, content);
+    const r = run(root, ["--include-fixtures"]);
+    assert.equal(r.status, 0, r.stderr + r.stdout);
+    const src = generatedOf(root);
+    assert.ok(src.startsWith(GENERATED_HEADER));
+    assert.match(src, /never commit/);
+    // Content stays a typed literal; fixtures (input form) go through the schema at load time.
+    const contentIds = JSON.parse(src.match(/const contentStories: Story\[\] = ([\s\S]*?);\n\n/)[1]);
+    assert.deepEqual(contentIds.map((s) => s.id), ["story:zz-content"]);
+    const fixtures = JSON.parse(src.match(/const fixtureStories: Story\[\] = \(([\s\S]*?) as unknown\[\]\)\.map\(\(raw\) => parseStory\(raw\)\);/)[1]);
+    assert.deepEqual(fixtures.map((s) => s.id), ["story:hangul-day"]);
+    assert.match(src, /import \{ parseStory, type Episode, type Quest, type Story \} from '@hangul-route\/content-schema';/);
+    assert.match(src, /export const storiesAll: Story\[\] = \[\.\.\.contentStories, \.\.\.fixtureStories\]\.sort/);
+    const episodes = JSON.parse(src.match(/export const storyEpisodes: Episode\[\] = ([\s\S]*?);\n\nexport/)[1]);
+    assert.deepEqual(episodes.map((e) => e.id), ["episode:shelf-hangul-day"]);
+    assert.match(r.stdout, /2 stories/);
+    assert.match(r.stdout, /do not commit/i);
+  });
+
+  test("the bundle without the flag never holds a fixture, so --check fails on a fixture bundle", () => {
+    const root = makeRoot();
+    putFixtures(root);
+    assert.equal(run(root, ["--include-fixtures"]).status, 0);
+    const check = run(root, ["--check"]);
+    assert.equal(check.status, 1);
+    assert.equal(run(root).status, 0);
+    assert.deepEqual(evaluate(generatedOf(root)).storiesAll, []);
+    assert.equal(run(root, ["--check"]).status, 0);
+  });
+
+  test("a fixture whose id is also a content story fails (content and fixtures never mix silently)", () => {
+    const root = makeRoot();
+    putFixtures(root, ["valid.ready.json"]);
+    putStory(root, ready());
+    const r = run(root, ["--include-fixtures"]);
+    assert.equal(r.status, 1);
+    assert.match(r.stdout, /story:hangul-day/);
+    assert.match(r.stdout, /fixture/);
+  });
+
+  test("is refused with --check, --report or --include-drafts, and without a fixture directory", () => {
+    const root = makeRoot();
+    for (const other of ["--check", "--report", "--include-drafts"]) {
+      const r = run(root, ["--include-fixtures", other]);
+      assert.equal(r.status, 2, other);
+      assert.match(r.stderr, /--include-fixtures/);
+    }
+    const missing = run(root, ["--include-fixtures"]);
+    assert.equal(missing.status, 1);
+    assert.match(missing.stdout, /__fixtures__/);
+    assert.equal(existsSync(join(root, GENERATED_REL)), false);
+  });
+
+  test("a fixture file that is not JSON fails with an annotation naming it", () => {
+    const root = makeRoot();
+    const dir = putFixtures(root, ["valid.ready.json"]);
+    writeFileSync(join(dir, "broken.json"), "{ nope");
+    const r = run(root, ["--include-fixtures"]);
+    assert.equal(r.status, 1);
+    assert.match(r.stdout, /broken\.json/);
+  });
+});
+
 describe("build-stories.mjs: --report and the bundle budget", () => {
   test("prints per-story and total bytes raw and gzip, exits 0 under budget, writes nothing", () => {
     const root = makeRoot();
