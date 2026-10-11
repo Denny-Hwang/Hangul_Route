@@ -56,6 +56,19 @@ jobs:
           test -f apps/web/out/teach/space.html
           test -f apps/web/out/teach/space/settings.html
           test -f apps/web/out/404.html
+          test -f apps/web/out/design-preview/scenes.html
+          test -f apps/web/out/design-preview/scenes/library.html
+
+      # There is no per-PR preview URL (Workers Builds deploys main only), so the
+      # built export is attached to the run: art reviewers download it and serve
+      # it with `node apps/web/e2e/serve-out.mjs <dir>` to open /design-preview/scenes.
+      - name: Upload static export (contact sheet review)
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-export
+          path: apps/web/out
+          retention-days: 7
+          if-no-files-found: error
 
       - name: Install Playwright Chromium
         run: pnpm --filter @hangul-route/web exec playwright install --with-deps chromium

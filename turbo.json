@@ -5,11 +5,20 @@
       "dependsOn": ["^build"],
       "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
     },
+    "@hangul-route/web#build": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/content/stories/**"],
+      "outputs": [".next/**", "!.next/cache/**", "out/**"]
+    },
     "lint": {
       "dependsOn": ["^lint"]
     },
     "test": {
       "dependsOn": ["^build"]
+    },
+    "@hangul-route/web#test": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/content/stories/**"]
     },
     "test:coverage": {
       "dependsOn": ["^build"],
