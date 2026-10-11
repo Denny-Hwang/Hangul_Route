@@ -34,10 +34,8 @@ export const CREATE_PROFILE_COPY = {
     placeholder: 'name@email.com',
     invalid: 'That email looks off. Check the spelling.',
   },
+  /** The create-and-confirm field's own lines moved to `caregiver.pin.setup` with `PinSetupField` (PR 8a). */
   pin: {
-    again: 'Type it again',
-    set: 'PIN set',
-    change: 'Change',
     failed: "Couldn't set the PIN. Try again.",
   },
   privacyLink: 'Read the Privacy Policy',

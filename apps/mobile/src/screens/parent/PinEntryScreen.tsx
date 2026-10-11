@@ -15,6 +15,7 @@ import React, { useEffect, useState } from 'react';
 import { Pressable, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PIN_PAD_GAP, PinPad } from '../../components/PinPad';
+import { useMessages } from '../../i18n/use-messages';
 import { pinCreated, pinResetCompleted } from '../../logic/onboarding/onboarding-events';
 import { initialPinMode, pinCreatedWhere, showForgotPin, type PinMode } from '../../logic/profiles/pin-flow';
 import {
@@ -61,6 +62,8 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
   const clearPinResetRequest = useAccountStore((s) => s.clearPinResetRequest);
   const pinResetRequestedAt = useAccountStore((s) => s.pinResetRequestedAt);
   const { copy } = useAudience();
+  const messages = useMessages();
+  const m = messages.caregiver.pin;
   const openParentGate = useUiStore((s) => s.openParentGate);
 
   const [mode, setMode] = useState<PinMode>(() => initialPinMode(route.params, storedHash));
@@ -128,7 +131,7 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
           setEntry('');
           setFirstPin('');
           setMode('setup-1');
-          setHint("Those didn't match. Let's start again.");
+          setHint(m.mismatch);
           return;
         }
         setParentPinHash(await createPinHash(entry, pinHasher));
@@ -157,7 +160,7 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
         setHint(null);
       } else {
         const left = attemptsRemaining(result.state, Date.now());
-        setHint(left > 0 ? `Not quite. ${left} more ${left === 1 ? 'try' : 'tries'}.` : null);
+        setHint(left > 0 ? m.entry.triesLeft(left) : null);
       }
     } finally {
       setBusy(false);
@@ -165,17 +168,15 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
   };
 
   const title =
-    mode === 'verify' ? copy.pinVerifyTitle : mode === 'setup-1' ? copy.pinCreateTitle : 'Enter it once more';
+    mode === 'verify' ? copy.pinVerifyTitle : mode === 'setup-1' ? copy.pinCreateTitle : m.entry.createAgain;
   const subtitle =
     mode === 'verify'
-      ? 'Enter your 4-digit PIN to continue.'
+      ? m.entry.verifySubtitle
       : mode === 'setup-1'
         ? copy.pinCreateSubtitle
-        : 'Type the same 4 digits again.';
+        : m.entry.createAgainSubtitle;
 
-  const hintText = locked
-    ? `Let's take a short break. Try again in ${Math.ceil(cooldownMs / 1000)}s.`
-    : hint;
+  const hintText = locked ? m.cooldown(Math.ceil(cooldownMs / 1000)) : hint;
 
   return (
     <Screen tone="canvas">
@@ -185,7 +186,7 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
           <Pressable
             onPress={() => navigation.goBack()}
             accessibilityRole="button"
-            accessibilityLabel="Close"
+            accessibilityLabel={messages.common.buttons.close}
             hitSlop={spacing.md}
             style={{ paddingTop: spacing.xxs }}
           >
@@ -222,7 +223,7 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
 
       <Spacer size="md" />
       <View
-        accessibilityLabel={`${entry.length} of ${PIN_LENGTH} digits entered`}
+        accessibilityLabel={messages.a11y.pinDots(entry.length, PIN_LENGTH)}
         style={{ flexDirection: 'row', justifyContent: 'center', gap: spacing.md }}
       >
         {Array.from({ length: PIN_LENGTH }, (_, i) => (
@@ -255,7 +256,7 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
 
       <Spacer size="md" />
       <Button
-        label={mode === 'verify' ? 'Unlock' : 'Next'}
+        label={mode === 'verify' ? m.entry.unlock.cta : messages.common.buttons.next}
         tone="primary"
         size="lg"
         fullWidth
@@ -263,11 +264,11 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
         onPress={() => void submit()}
       />
       <Spacer size="sm" />
-      <Button label="Cancel" tone="ghost" size="md" fullWidth onPress={() => navigation.goBack()} />
+      <Button label={messages.common.buttons.cancel} tone="ghost" size="md" fullWidth onPress={() => navigation.goBack()} />
       {/* Quiet on purpose: plain text, no icon, nothing for a child to gain from poking it. */}
       {showForgotPin(mode) ? (
         <Button
-          label="Forgot PIN?"
+          label={m.entry.forgot.cta}
           tone="ghost"
           size="md"
           fullWidth

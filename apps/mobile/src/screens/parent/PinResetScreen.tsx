@@ -16,12 +16,14 @@ import {
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
 import { Pressable, TextInput, View } from 'react-native';
+import { useLocale, useMessages } from '../../i18n/use-messages';
 import { pinResetRequested } from '../../logic/onboarding/onboarding-events';
 import { cooldownRemainingMs } from '../../logic/profiles/pin-hash';
 import type { PinResetMethod } from '../../logic/profiles/pin-flow';
 import {
   attemptRescueCode,
   collectRescueCodes,
+  formatReadyAt,
   rescueFailureMessage,
   resetWaitState,
   waitCardView,
@@ -39,11 +41,6 @@ type Props = NativeStackScreenProps<RootStackParamList, 'PinReset'>;
 const CODE_LINE_HEIGHT = Math.round(typography.size.bodyLg * 1.3);
 const CODE_BORDER = 2;
 
-/** Local date and time, e.g. "Oct 11, 2026, 4:30 PM". */
-function formatReadyAt(readyAt: number): string {
-  return new Date(readyAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
-}
-
 /**
  * Forgot PIN — F-LEARN-001 §3.5, L9. Wireframe: design/wireframes/onboarding/all-ages-onboarding.md
  * boxes F and G (and profiles/pin-entry.md). Two offline ways to a new PIN, both keep
@@ -52,6 +49,9 @@ function formatReadyAt(readyAt: number): string {
  */
 export function PinResetScreen({ route, navigation }: Props): React.ReactElement {
   const { next } = route.params;
+  const locale = useLocale();
+  const messages = useMessages();
+  const m = messages.caregiver.pin;
   const profiles = useProfileStore((s) => s.profiles);
   const hydrateSync = useSyncStore((s) => s.hydrate);
   const byLearner = useSyncStore((s) => s.byLearner);
@@ -105,14 +105,14 @@ export function PinResetScreen({ route, navigation }: Props): React.ReactElement
     const result = attemptRescueCode({ entry: codeInput, storedCodes: codes, state: attempts, now: at });
     if (result.state !== attempts) setPinAttempts(result.state);
     if (!result.ok) {
-      setMessage(rescueFailureMessage(result));
+      setMessage(rescueFailureMessage(result, m));
       return;
     }
     void track(pinResetRequested('rescue_code'));
     goToSetup('rescue_code');
   };
 
-  const view = waitCardView(wait, formatReadyAt);
+  const view = waitCardView(wait, (readyAt) => formatReadyAt(locale, readyAt), m);
   const pressWait = (): void => {
     if (wait.status === 'ready') {
       goToSetup('wait');
@@ -126,7 +126,7 @@ export function PinResetScreen({ route, navigation }: Props): React.ReactElement
   };
 
   const codeRows = rescueInputRows(codeInput);
-  const codeLine = locked ? `Let's take a short break. Try again in ${Math.ceil(cooldownMs / 1000)}s.` : message;
+  const codeLine = locked ? m.cooldown(Math.ceil(cooldownMs / 1000)) : message;
   const showWait = !hasCode || waitOpen || wait.status !== 'idle';
 
   return (
@@ -135,22 +135,22 @@ export function PinResetScreen({ route, navigation }: Props): React.ReactElement
         onPress={() => navigation.replace('PinEntry', { next })}
         hitSlop={spacing.md}
         accessibilityRole="button"
-        accessibilityLabel="Go back"
+        accessibilityLabel={messages.a11y.goBack}
         style={{ alignSelf: 'flex-start', padding: spacing.xs }}
       >
         <Icon name="arrow-left" size={28} />
       </Pressable>
       <Spacer size="sm" />
-      <Heading level="title">Reset the PIN</Heading>
+      <Heading level="title">{m.reset.title}</Heading>
       <Spacer size="xs" />
-      <Body tone="secondary">Your learners, cards and progress are kept.</Body>
+      <Body tone="secondary">{m.reset.subtitle}</Body>
       <Spacer size="lg" />
 
       {loaded ? (
         <>
           {hasCode ? (
             <Card padding="lg" tone="paper">
-              <Heading level="prompt">Use a Rescue Code</Heading>
+              <Heading level="prompt">{m.reset.code.heading}</Heading>
               <Spacer size="sm" />
               <TextInput
                 value={codeInput}
@@ -163,7 +163,7 @@ export function PinResetScreen({ route, navigation }: Props): React.ReactElement
                 multiline
                 numberOfLines={codeRows}
                 blurOnSubmit
-                placeholder="TIGER-MOON-RIVER-APPLE-482139"
+                placeholder={m.reset.code.placeholder}
                 placeholderTextColor={colors.text.muted}
                 autoCapitalize="characters"
                 autoCorrect={false}
@@ -171,7 +171,7 @@ export function PinResetScreen({ route, navigation }: Props): React.ReactElement
                 spellCheck={false}
                 returnKeyType="go"
                 maxLength={RESCUE_INPUT_MAX}
-                accessibilityLabel="Rescue code"
+                accessibilityLabel={messages.a11y.rescueCode}
                 testID="pin-reset-code-input"
                 style={{
                   minHeight: Math.max(
@@ -194,11 +194,11 @@ export function PinResetScreen({ route, navigation }: Props): React.ReactElement
               />
               <Spacer size="xs" />
               <Caption tone="muted" align="center">
-                Four words and six digits. Older codes: two words and four digits.
+                {m.reset.code.formats}
               </Caption>
               <Spacer size="md" />
               <Button
-                label="Continue"
+                label={messages.common.buttons.continue}
                 tone="primary"
                 size="lg"
                 fullWidth
@@ -230,7 +230,7 @@ export function PinResetScreen({ route, navigation }: Props): React.ReactElement
                 }}
               >
                 <Body weight="semibold" tone="brand">
-                  I don't have the code
+                  {m.reset.noCode.cta}
                 </Body>
               </Pressable>
             </>
@@ -240,7 +240,7 @@ export function PinResetScreen({ route, navigation }: Props): React.ReactElement
             <>
               <Spacer size="sm" />
               <Card padding="lg" tone="paper">
-                <Heading level="prompt">Wait 24 hours</Heading>
+                <Heading level="prompt">{m.reset.wait.heading}</Heading>
                 <Spacer size="sm" />
                 <View accessibilityLiveRegion="polite">
                   <Body tone="secondary">{view.caption}</Body>

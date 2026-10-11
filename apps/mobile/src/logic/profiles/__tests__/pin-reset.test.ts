@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest';
+import { getMessages } from '@hangul-route/i18n';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   ATTEMPT_WINDOW_MS,
   COOLDOWN_MS,
@@ -11,12 +12,14 @@ import {
   PIN_RESET_WAIT_MS,
   attemptRescueCode,
   collectRescueCodes,
+  formatReadyAt,
   resetWaitState,
   rescueFailureMessage,
   startResetWait,
   waitCardView,
 } from '../pin-reset';
 
+const m = getMessages('en').caregiver.pin;
 const NOW = 1_800_000_000_000;
 const NEW_CODE = 'TIGER-MOON-RIVER-APPLE-482139';
 const OLD_CODE = 'PANDA-LAKE-4821';
@@ -198,20 +201,20 @@ describe('rescueFailureMessage: calm lines for the Forgot PIN code field', () =>
     ({ ok: false as const, state: INITIAL_ATTEMPT_STATE, reason, cooldownRemainingMs });
 
   it('names the next step for each failure', () => {
-    expect(rescueFailureMessage(fail('wrong-code'))).toBe("That isn't the code saved on this device. Check it and try again.");
-    expect(rescueFailureMessage(fail('bad-format'))).toContain('TIGER-MOON-RIVER-APPLE-482139');
-    expect(rescueFailureMessage(fail('no-code'))).toBe('No rescue code is saved on this device. Use the 24-hour wait instead.');
+    expect(rescueFailureMessage(fail('wrong-code'), m)).toBe("That isn't the code saved on this device. Check it and try again.");
+    expect(rescueFailureMessage(fail('bad-format'), m)).toContain('TIGER-MOON-RIVER-APPLE-482139');
+    expect(rescueFailureMessage(fail('no-code'), m)).toBe('No rescue code is saved on this device. Use the 24-hour wait instead.');
   });
 
   it('counts the cooldown down in whole seconds, rounding up', () => {
-    expect(rescueFailureMessage(fail('cooldown', 12_000))).toBe("Let's take a short break. Try again in 12s.");
-    expect(rescueFailureMessage(fail('cooldown', 11_001))).toBe("Let's take a short break. Try again in 12s.");
-    expect(rescueFailureMessage(fail('cooldown'))).toBe("Let's take a short break. Try again in 0s.");
+    expect(rescueFailureMessage(fail('cooldown', 12_000), m)).toBe("Let's take a short break. Try again in 12s.");
+    expect(rescueFailureMessage(fail('cooldown', 11_001), m)).toBe("Let's take a short break. Try again in 12s.");
+    expect(rescueFailureMessage(fail('cooldown'), m)).toBe("Let's take a short break. Try again in 0s.");
   });
 
   it('never uses shaming or banned words', () => {
     for (const r of ['wrong-code', 'bad-format', 'no-code', 'cooldown'] as const) {
-      expect(rescueFailureMessage(fail(r, 5000))).not.toMatch(/\b(wrong|failed|missed|overdue|incomplete|error)\b/i);
+      expect(rescueFailureMessage(fail(r, 5000), m)).not.toMatch(/\b(wrong|failed|missed|overdue|incomplete|error)\b/i);
     }
   });
 });
@@ -221,7 +224,7 @@ describe('waitCardView: the 24-hour wait card', () => {
   const READY_AT = NOW + PIN_RESET_WAIT_MS;
 
   it('idle: offers to start, explains the old PIN keeps working', () => {
-    expect(waitCardView({ status: 'idle' }, format)).toEqual({
+    expect(waitCardView({ status: 'idle' }, format, m)).toEqual({
       caption: 'Your PIN keeps working meanwhile. After 24 hours you can set a new one.',
       buttonLabel: 'Start the wait',
       buttonDisabled: false,
@@ -229,7 +232,7 @@ describe('waitCardView: the 24-hour wait card', () => {
   });
 
   it('waiting: shows when the new PIN can be set, button disabled', () => {
-    expect(waitCardView({ status: 'waiting', readyAt: READY_AT, remainingMs: 5 }, format)).toEqual({
+    expect(waitCardView({ status: 'waiting', readyAt: READY_AT, remainingMs: 5 }, format, m)).toEqual({
       caption: `You can set a new PIN after T${PIN_RESET_WAIT_MS}.`,
       buttonLabel: 'Wait started',
       buttonDisabled: true,
@@ -237,10 +240,41 @@ describe('waitCardView: the 24-hour wait card', () => {
   });
 
   it('ready: the same button reads "Set a new PIN" and is live', () => {
-    expect(waitCardView({ status: 'ready', readyAt: READY_AT }, format)).toEqual({
+    expect(waitCardView({ status: 'ready', readyAt: READY_AT }, format, m)).toEqual({
       caption: 'The 24 hours are up.',
       buttonLabel: 'Set a new PIN',
       buttonDisabled: false,
     });
+  });
+});
+
+describe('rescueFailureMessage and waitCardView take their words from the message subtree', () => {
+  it('uses the subtree it is given', () => {
+    const other = { ...m, cooldown: (s: number) => `Pausa ${s}`, reset: { ...m.reset, failure: { ...m.reset.failure, noCode: 'Sin codigo.' } } };
+    const fail = (reason: 'cooldown' | 'no-code', cooldownRemainingMs?: number) =>
+      ({ ok: false as const, state: INITIAL_ATTEMPT_STATE, reason, cooldownRemainingMs });
+    expect(rescueFailureMessage(fail('no-code'), other)).toBe('Sin codigo.');
+    expect(rescueFailureMessage(fail('cooldown', 3000), other)).toBe('Pausa 3');
+  });
+});
+
+describe('formatReadyAt: the end of the wait as a local date and time in the UI locale', () => {
+  afterEach(() => vi.restoreAllMocks());
+  const READY = new Date(2026, 9, 11, 16, 30).getTime();
+
+  it('reads like "Oct 11, 2026, 4:30 PM" in English', () => {
+    expect(formatReadyAt('en', READY)).toMatch(/^Oct 11, 2026, 4:30\sPM$/);
+  });
+
+  it('follows the locale', () => {
+    expect(formatReadyAt('ko', READY)).toContain('2026');
+    expect(formatReadyAt('es', READY)).toContain('2026');
+  });
+
+  it('never throws: falls back to the formatter table when toLocaleString does', () => {
+    vi.spyOn(Date.prototype, 'toLocaleString').mockImplementation(() => {
+      throw new RangeError('no locale data');
+    });
+    expect(formatReadyAt('en', READY)).toBe('Oct 11, 2026, 16:30');
   });
 });

@@ -15,6 +15,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React from 'react';
 import { Pressable, View } from 'react-native';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
+import { useMessages } from '../../i18n/use-messages';
 import { questsAll } from '../../content';
 import type { RootStackParamList } from '../../navigation/types';
 import { useProfileStore } from '../../store/profile-store';
@@ -26,6 +27,7 @@ const AVATAR_SIZE = 40;
 type Props = NativeStackScreenProps<RootStackParamList, 'ParentDashboard'>;
 
 export function ParentDashboardScreen({ navigation }: Props): React.ReactElement {
+  const m = useMessages().caregiver.dashboard;
   const profiles = useProfileStore((s) => s.profiles);
   const byProfile = useProgressStore((s) => s.byProfile);
 
@@ -36,14 +38,14 @@ export function ParentDashboardScreen({ navigation }: Props): React.ReactElement
           <Icon name="arrow-left" size={28} />
         </Pressable>
         <View style={{ flex: 1 }}>
-          <Heading level="title">Family Dashboard</Heading>
-          <Caption tone="muted">Read-only — data stays on this device.</Caption>
+          <Heading level="title">{m.title}</Heading>
+          <Caption tone="muted">{m.readOnly}</Caption>
         </View>
       </View>
 
       <Spacer size="lg" />
       {profiles.length === 0 ? (
-        <Body>No profiles yet.</Body>
+        <Body>{m.noProfiles}</Body>
       ) : (
         profiles.map((p) => {
           const snap = byProfile[p.id];
@@ -67,15 +69,15 @@ export function ParentDashboardScreen({ navigation }: Props): React.ReactElement
               </View>
               <Spacer size="sm" />
               <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                <Stat label="Quests" value={String(completed)} />
-                <Stat label="Cards" value={String(cards)} />
-                <Stat label="Sessions" value={String(sessions)} />
-                <Stat label="Minutes" value={String(sessionMinutes)} />
+                <Stat label={m.stats.quests} value={String(completed)} />
+                <Stat label={m.stats.cards} value={String(cards)} />
+                <Stat label={m.stats.sessions} value={String(sessions)} />
+                <Stat label={m.stats.minutes} value={String(sessionMinutes)} />
               </View>
               {snap && snap.quests.length > 0 ? (
                 <>
                   <Spacer size="md" />
-                  <Caption tone="muted">Recent</Caption>
+                  <Caption tone="muted">{m.recent}</Caption>
                   {snap.quests.slice(-3).reverse().map((q) => {
                     const quest = questsAll.find((x) => x.id === q.questId);
                     return (
@@ -104,10 +106,10 @@ export function ParentDashboardScreen({ navigation }: Props): React.ReactElement
 
       <Spacer size="lg" />
       <Card padding="md" tone="sunken">
-        <Heading level="prompt">Privacy</Heading>
+        <Heading level="prompt">{m.privacy.title}</Heading>
         <Spacer size="xs" />
         <Body size="sm" tone="secondary">
-          All learning data stays on this device unless you sign in. We do not share with third parties.
+          {m.privacy.body}
         </Body>
       </Card>
       <Spacer size="xl" />

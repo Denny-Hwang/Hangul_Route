@@ -1,4 +1,5 @@
 import { normalizeRescueCode } from '@hangul-route/content-schema';
+import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import { RESCUE_INPUT_MAX, claimErrorMessage, cleanRescueInput, rescueCodeHint, rescueCodeLines, rescueInputRows } from '../rescue-code';
 
@@ -39,6 +40,10 @@ describe('rescue code helpers (F-RESTORE-001)', () => {
     // the format hint shows the new shape and still names the older one
     expect(claimErrorMessage('invalid')).toContain('TIGER-MOON-RIVER-APPLE-482139');
     expect(claimErrorMessage('invalid')).toContain('TIGER-MOON-4821');
+  });
+
+  it('says the invalid-code line exactly as the Forgot PIN screen does (one wording until PR 8b makes it one message)', () => {
+    expect(claimErrorMessage('invalid')).toBe(getMessages('en').caregiver.pin.reset.failure.badFormat);
   });
 });
 
