@@ -6,6 +6,7 @@ import { SKILL_OF_KIND } from '../skills';
 import type { MyRouteInput, MyRouteModel, SeenRecord } from '../types';
 import {
   GAME_NAME_KEY,
+  emptySnapshot,
   PIP_ROW_MIN_WIDTH,
   gamesFor,
   myRouteMessages,
@@ -40,6 +41,19 @@ const model = (done: string[], over: Partial<MyRouteInput> = {}, bundle: Bundle 
     ...over,
   });
 
+const inputOf = (snapshot: ProgressSnapshot): MyRouteInput => ({
+  snapshot,
+  catalog: catalogOf(BUNDLE_8),
+  episodes: BUNDLE_8.episodes,
+  quests: BUNDLE_8.quests,
+  cards: [],
+  stages: STAGE_DEFS,
+  themes: THEME_DEFS,
+  isEntitled: () => true,
+  route: null,
+  now: new Date('2026-10-11T00:00:00.000Z'),
+});
+
 const view = (m: MyRouteModel, over: Partial<MyRouteViewInput> = {}) =>
   myRouteView({ model: m, messages: EN, viewer: 'self', name: 'Sam', themeTitles: THEME_TITLES, nextTitle: null, hasStories: false, seen: undefined, ...over });
 
@@ -57,6 +71,14 @@ describe('myRouteMessages', () => {
       expect(slices.skillsNote).toBe(m.caregiver.skillsNote);
       expect(slices.a11y).toBe(m.a11y.myRoute);
     }
+  });
+});
+
+describe('emptySnapshot', () => {
+  it('a profile with no progress draws the new-learner page', () => {
+    const snap = emptySnapshot('p1');
+    expect(snap).toMatchObject({ profileId: 'p1', quests: [], cards: [], streakDays: 0 });
+    expect(view(model([]))).toEqual(view(buildMyRoute({ ...inputOf(snap) })));
   });
 });
 

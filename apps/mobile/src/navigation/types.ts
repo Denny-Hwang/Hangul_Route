@@ -1,5 +1,6 @@
 import type { PlacementSource, StoryLevel } from '@hangul-route/content-schema';
 import type { NavigatorScreenParams } from '@react-navigation/native';
+import type { MyRouteSource } from '../logic/my-route/telemetry';
 import type { PinResetMethod } from '../logic/profiles/pin-flow';
 import type { LibrarySectionId } from '../logic/story/library-sections';
 import type { SourcesRouteParams } from '../logic/story/source-link';
@@ -18,12 +19,19 @@ export type GrownUpDestination =
   | 'Paywall'
   | 'ExternalLink'
   | 'PlacementFinish'
-  | 'EditProfile';
+  | 'EditProfile'
+  | 'MyRoute';
 
 export type RootStackParamList = {
   Onboarding: NavigatorScreenParams<OnboardingStackParamList>;
   Main: NavigatorScreenParams<MainTabParamList>;
   EpisodeDetail: { episodeId: string };
+  /**
+   * My route (F-ROUTE-001 section 3.1): the whole journey at a glance. `profileId` absent = the
+   * active profile. Another profile opens read-only only while the grown-up gate is open; otherwise
+   * the screen replaces itself with `PinEntry`. `source` is the entry, for `route_map.viewed`.
+   */
+  MyRoute: { source: MyRouteSource; profileId?: string };
   /**
    * `resume`: open a story quest on its `story-read` step when the learner has a
    * bookmark for it at the quest's level (F-STORY-004 §3.8); otherwise step 0.
@@ -51,7 +59,7 @@ export type RootStackParamList = {
     url?: string;
     /** `next: 'Paywall'`: the surface that opened it, passed on to the paywall (default `'journey'`). */
     from?: 'journey' | 'library';
-    /** `next: 'EditProfile'`: the profile to edit (F-LEARN-001 §3.11). */
+    /** `next: 'EditProfile'`: the profile to edit (F-LEARN-001 §3.11). `next: 'MyRoute'`: the profile whose page opens read-only. */
     profileId?: string;
   };
   /** Forgot PIN: Rescue Code or a 24-hour wait, then a new PIN (F-LEARN-001 §3.5). `next` is kept for the PIN screen. */

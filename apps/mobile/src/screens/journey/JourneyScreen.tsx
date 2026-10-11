@@ -1,6 +1,7 @@
 import type { StageKey, ThemeDef } from '@hangul-route/content-schema';
 import {
   Body,
+  Button,
   Caption,
   Card,
   Heading,
@@ -40,12 +41,14 @@ import type { MainTabParamList, RootStackParamList } from '../../navigation/type
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { EpisodeDetailView } from '../episode/EpisodeDetailView';
+import { flags } from '../../config/flags';
 
 /** The grid's episodes: a shelf episode is never a grid cell or a pane selection (F-STORY-004 §3.10). */
 const GRID_EPISODES = gridEpisodes(episodesAll);
 
 export function JourneyScreen(): React.ReactElement {
-  const m = useMessages().learner.journey;
+  const messages = useMessages();
+  const m = messages.learner.journey;
   const locale = useLocale();
   const localThemes = useMemo(() => themes.map((t) => localizeTheme(t, locale)), [locale]);
   const localStages = useMemo(() => stages.map((s) => localizeStage(s, locale)), [locale]);
@@ -89,6 +92,21 @@ export function JourneyScreen(): React.ReactElement {
       <Heading level="title">{m.title}</Heading>
       <Spacer size="xs" />
       <Body tone="secondary">{m.intro}</Body>
+      {flags.myRouteEnabled ? (
+        // F-ROUTE-001 R-3: the first entry to My route, under the intro line.
+        <>
+          <Spacer size="sm" />
+          <View style={{ alignSelf: 'flex-start' }}>
+            <Button
+              label={messages.learner.myRoute.open.cta}
+              tone="secondary"
+              size="md"
+              onPress={() => navigation.navigate('MyRoute', { source: 'journey' })}
+              testID="journey-my-route"
+            />
+          </View>
+        </>
+      ) : null}
 
       <Spacer size="lg" />
       {/* Same row geometry as the cells below, so each label sits over its column. */}

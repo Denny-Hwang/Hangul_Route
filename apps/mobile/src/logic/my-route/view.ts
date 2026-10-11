@@ -1,4 +1,4 @@
-import type { MinigameKind, StageKey, ThemeKey } from '@hangul-route/content-schema';
+import type { MinigameKind, ProgressSnapshot, StageKey, ThemeKey } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
 import {
   canDoCopy,
@@ -30,6 +30,11 @@ import type { Hero, MyRouteModel, Pip, SeenRecord, Skill, StageRow, StageState }
  * come from the dictionary through the copy selectors, the facts from
  * `buildMyRoute`. Nothing here reads a clock, a store or the window.
  */
+
+/** A profile that has not played yet: the page draws the new-learner state (section 3.17). */
+export function emptySnapshot(profileId: string): ProgressSnapshot {
+  return { profileId, updatedAt: '', episodes: [], quests: [], cards: [], sessions: [], homework: [], reviews: [], streakDays: 0 };
+}
 
 /** The four dictionary slices the copy selectors read, from one locale's dictionary. */
 export function myRouteMessages(m: Messages): MyRouteMessages {
