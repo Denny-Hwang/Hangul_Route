@@ -100,6 +100,14 @@ export function earnHint(card: HeritageCard, world: AwardWorld): EarnHint;      
 
 Details: grid **and** shelf episodes count for `completedEpisodes` (F-STORY-004 shelf episodes have one quest); a `preview`/`draft` episode (`questIds` empty or not shipped) never completes (`journey.ts:33` returns false for no quests). Stage completion generalises F-QUEST-002's `isStageComplete`: for stage 1 it is exactly "all five grid episodes complete". Sets are resolved after the other rules (a set's members may themselves be derived), in one pass: members owned = existing ∪ derived non-set cards.
 
+**As built (PR 6.2, #220).** Differences from the interface block above, for 6.4a-6.7:
+- `CardSet` also carries `titleEn` (the collection name the set earn hint needs); 6.7's `story-sets.ts` supplies it.
+- `earnHint(card, world, m)` takes the `learner.library.earnHint` message subtree as a third argument (no inline UI strings, like `stagePillLabel`) and returns `EarnHint | null` (`null` for a rule it cannot explain). It reads the raw `titleEn` of the episode or set; 6.5b passes localized titles once content overlays exist.
+- `stageCanComplete(stage, world)` is exported: a stage can complete only when every **grid** episode of it is shipped (`stageAvailability` over grid episodes); `isStageComplete` and `gridEpisodes` use the same grid-only list, so a `ready` story shelf episode never counts toward a stage.
+- `logic/awards/transitions.ts` (§3.4) holds `completionState` / `completionTransition` / `stageCompleteFor` on top of the engine; `logic/stage1/completion.ts` is a thin re-export (`stageCompleteFor` as `isStageComplete`). A stage with a preview placeholder therefore never completes for the ceremony either.
+- Times compare as instants (`Date.parse`, the `earlierLatchTime` rule of `logic/sync/merge.ts`), so an offset time next to a UTC time picks the right latest/earliest instant.
+- Set members count owned cards and cards derived in the same pass by a **non-set** rule only, so the result never depends on the order of `world.sets`.
+
 `parseUnlockedBy` and `derivedAwards` are the only places that know the grammar. `decideCardAward` (`logic/reward.ts:26-35`) stays the quest-card decision; it gains one optional input so the welcome card does not break the funnel (§3.4).
 
 **Sets** — `apps/mobile/src/content/story-sets.ts` (hand-written, four entries, one per research cluster): `{ id: 'set:records-joseon', cardId: 'card:set-records-joseon', memberStoryIds: [6 story ids] }`; `CardSet.memberCardIds` is resolved from the members' story cards. A set is registered only when all its member stories are in the bundle with a `card` block; until then it does not exist (so its card is neither listed nor awardable).
