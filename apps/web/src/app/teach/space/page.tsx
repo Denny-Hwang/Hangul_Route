@@ -170,7 +170,7 @@ function SpaceInner(): JSX.Element {
                             {learnerRevisit.after}
                           </div>
                         ) : null}
-                        {latestPlan && readout ? <div>{c.space.learner.planReadout(latestPlan.title, readoutLine(readout.get(l.id) as NonNullable<ReturnType<typeof readout.get>>))}</div> : null}
+                        {latestPlan && readout ? <div>{c.space.learner.planReadout(latestPlan.title, readoutLine(readout.get(l.id) as NonNullable<ReturnType<typeof readout.get>>, locale))}</div> : null}
                       </div>
                     ) : (
                       <Muted>

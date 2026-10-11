@@ -33,10 +33,10 @@ describe('console: the former COPY, keys and wording unchanged', () => {
   });
 
   // PR 10a added one group per console page and retired four fragments (practicedThisWeek, anchor,
-  // revisitTogether, notSyncedWeek) for whole-sentence messages under `space.week`.
+  // revisitTogether, notSyncedWeek) for whole-sentence messages under `space.week`; PR 10b added `plan` and `billing`.
   it('has exactly the 54 remaining COPY keys plus the formatter and page groups', () => {
     const groups = ['language', 'codeExpiry', 'spaceCounts', 'planCounts', 'planStatus', 'entitlementStatus', 'price', 'promoPrice'];
-    const pages = ['shell', 'kind', 'joinCode', 'signIn', 'start', 'home', 'space', 'relink'];
+    const pages = ['shell', 'kind', 'joinCode', 'signIn', 'start', 'home', 'space', 'relink', 'plan', 'billing'];
     const copyKeys = Object.keys(en.console).filter((k) => !groups.includes(k) && !pages.includes(k));
     expect(copyKeys).toHaveLength(54);
     for (const g of pages) expect(Object.keys(en.console)).toContain(g);

@@ -260,4 +260,29 @@ describe('length budgets (F-I18N-001 §3.11)', () => {
       expect(paths).toContain(expected);
     }
   });
+
+  it('covers the plan and billing page buttons (PR 10b)', () => {
+    const paths = leafPaths(getMessages('en')).filter((p) => BUDGETS[p.split('.').pop() ?? ''] !== undefined);
+    for (const expected of [
+      'console.plan.edit.cta',
+      'console.plan.archive.cta',
+      'console.plan.newPlan.cta',
+      'console.plan.catalog.addEpisode.cta',
+      'console.plan.catalog.add.cta',
+      'console.plan.catalog.added.cta',
+      'console.plan.yours.moveUp.cta',
+      'console.plan.yours.moveDown.cta',
+      'console.plan.yours.remove.cta',
+      'console.plan.saving.cta',
+      'console.plan.cancel.cta',
+      'console.billing.manage.cta',
+      'console.billing.promo.apply.cta',
+      'console.billing.promo.change.cta',
+      'console.billing.choose.cta',
+      'console.billing.contact.cta',
+      'console.billing.isCurrent.pill',
+    ]) {
+      expect(paths).toContain(expected);
+    }
+  });
 });

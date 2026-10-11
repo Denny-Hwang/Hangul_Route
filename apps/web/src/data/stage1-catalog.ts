@@ -1,3 +1,5 @@
+import { DEFAULT_LOCALE, getMessages, type UiLocale } from '@hangul-route/i18n';
+
 /**
  * Stage 1 catalog for the plan builder — F-PLAN-001 §3.5.
  * Mirrors `apps/mobile/src/content/{episodes,quests}.ts` (ids and titles
@@ -43,11 +45,11 @@ export const stage1Episodes: CatalogEpisode[] = [
 const questById = new Map(stage1Quests.map((q) => [q.id, q]));
 const episodeById = new Map(stage1Episodes.map((e) => [e.id, e]));
 
-/** A readable label for a plan item; unknown ids fall back to the id itself. */
-export function catalogLabel(kind: 'quest' | 'episode', id: string): string {
+/** A readable label for a plan item, in `locale` (the titles are content); unknown ids fall back to the id itself. */
+export function catalogLabel(kind: 'quest' | 'episode', id: string, locale: UiLocale = DEFAULT_LOCALE): string {
   if (kind === 'quest') return questById.get(id)?.titleEn ?? id;
   const episode = episodeById.get(id);
-  return episode ? `${episode.titleEn} (${episode.questIds.length} quest${episode.questIds.length === 1 ? '' : 's'})` : id;
+  return episode ? getMessages(locale).console.plan.catalog.episodeLabel(episode.titleEn, episode.questIds.length) : id;
 }
 
 export function questsOf(episodeId: string): CatalogQuest[] {

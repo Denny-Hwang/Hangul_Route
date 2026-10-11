@@ -15,11 +15,22 @@ import { plural } from '../../plural';
  * the pages' former text, byte for byte, except that counts now go through `plural()`
  * (F-I18N-001 §10, closed): "1 learner", "1 card", "1 hasn't synced".
  * Four former COPY fragments the space page glued around numbers (practicedThisWeek, anchor,
- * revisitTogether, notSyncedWeek) became whole sentences under `space.week`.
+ * revisitTogether, notSyncedWeek) became whole sentences under `space.week`. PR 10b added
+ * `plan` and `billing` (at the end of this object) the same way.
  *
  * Every string here is caregiver surface (no "behind", "lazy" or a learner-banned word),
  * checked per locale by console-messages.test.ts.
  */
+/** "1 item" / "4 items": `planCounts.items`, also the plan item count inside `plan.summary.*`. */
+const planItems = (items: number): string => plural('en', items, { one: `${items} item`, other: `${items} items` });
+/** "1 learner" / "3 students": `planCounts.targets`, also the target count inside `plan.summary.some.*`. */
+const planTargets = (kind: 'family' | 'class' | 'school', n: number): string =>
+  kind === 'family'
+    ? plural('en', n, { one: `${n} learner`, other: `${n} learners` })
+    : kind === 'class'
+      ? plural('en', n, { one: `${n} student`, other: `${n} students` })
+      : plural('en', n, { one: `${n} member`, other: `${n} members` });
+
 export const consoleMsgs = {
   whySignIn: ['Keep progress safe across devices', 'Bring cards back after a reinstall', 'Manage plans and billing'],
   kidsNoAccount: "Kids don't need an account — they join with a code.",
@@ -186,8 +197,8 @@ export const consoleMsgs = {
     recentFirst: 'Most recent activity first',
     /**
      * One student card; the day words come from `relativeDay`, the readout from `readoutLine`
-     * (still English until plans.ts moves in PR 10b). `revisit` takes taught Korean, rendered
-     * by the page through `aroundSlot` like `week.revisit`.
+     * (`plan.readout`). `revisit` takes taught Korean, rendered by the page through `aroundSlot`
+     * like `week.revisit`.
      */
     learner: {
       lastActive: (when: string) => `Last active ${when}`,
@@ -248,13 +259,8 @@ export const consoleMsgs = {
   },
   /** Plan builder counts (`teach/space/plan`): the items in a plan, and the members it targets (worded per space kind, as `kind.members`). */
   planCounts: {
-    items: (n: number) => plural('en', n, { one: `${n} item`, other: `${n} items` }),
-    targets: (kind: 'family' | 'class' | 'school', n: number) =>
-      kind === 'family'
-        ? plural('en', n, { one: `${n} learner`, other: `${n} learners` })
-        : kind === 'class'
-          ? plural('en', n, { one: `${n} student`, other: `${n} students` })
-          : plural('en', n, { one: `${n} member`, other: `${n} members` }),
+    items: planItems,
+    targets: planTargets,
   },
   /** Plan builder status (`planStatusLabel`); the date arrives formatted. */
   planStatus: {
@@ -284,4 +290,140 @@ export const consoleMsgs = {
   /** Price line once a promo code is applied (F-ENT-002 §3.3); `price` and `was` come from `price.*`. */
   promoPrice: (price: string, code: string, off: string, firstYear: boolean, was: string) =>
     `${price} with ${code} (${off}${firstYear ? ', first year' : ''}), was ${was}`,
+
+  /**
+   * The plan page (`/teach/space/plan`, F-I18N-001 PR 10b): the builder for a draft, the
+   * readout once published (`plans.ts readoutLine`), and the catalog labels (`catalogLabel`).
+   * Quest and episode titles are content and arrive as arguments. Kind-keyed groups take
+   * `space` where the roster has not loaded.
+   */
+  plan: {
+    title: 'Plan',
+    titleFor: (space: string) => `${space} · plan`,
+    back: (space: string | null) => `← Back to ${space ?? 'the space'}`,
+    saveInvalid: "Some learners are no longer in this space — check who it's for.",
+    saveFailed: "Didn't save. Try again.",
+    archiveFailed: "Couldn't archive it right now.",
+    readoutLabel: 'Plan readout',
+    /**
+     * The readout's one-line summary (`plans.ts planSummary`): "4 items · for everyone in this
+     * class" · "4 items · for 3 students". One whole sentence per audience (§3.1), so a locale
+     * words "for" together with its noun instead of gluing a phrase after it.
+     */
+    summary: {
+      everyone: {
+        family: (items: number) => `${planItems(items)} · for everyone in this family`,
+        class: (items: number) => `${planItems(items)} · for everyone in this class`,
+        school: (items: number) => `${planItems(items)} · for everyone in this school`,
+        space: (items: number) => `${planItems(items)} · for everyone in this space`,
+      },
+      /** The target count reads `planCounts.targets` ("for 1 learner", F-I18N-001 §10 console counts, closed). */
+      some: {
+        family: (items: number, count: number) => `${planItems(items)} · for ${planTargets('family', count)}`,
+        class: (items: number, count: number) => `${planItems(items)} · for ${planTargets('class', count)}`,
+        school: (items: number, count: number) => `${planItems(items)} · for ${planTargets('school', count)}`,
+      },
+    },
+    edit: { cta: 'Edit' },
+    archive: { cta: 'Archive' },
+    newPlan: { cta: 'New plan' },
+    progressTitle: 'Progress',
+    noMembers: { family: 'No learners yet.', class: 'No students yet.', school: 'No members yet.' },
+    /** One learner's progress on the plan (`readoutLine`); counts only, never a ranking. */
+    readout: {
+      waiting: 'waiting for the next sync',
+      progress: (done: number, total: number) => `${done} / ${total}`,
+      withNotReady: (done: number, total: number, notReady: number) => `${done} / ${total} · ${notReady} not ready yet`,
+    },
+    builderLabel: 'Plan builder',
+    editTitle: 'Edit plan',
+    newTitle: 'New plan',
+    titleField: { label: 'Plan title', placeholder: 'Week 3' },
+    catalog: {
+      label: 'Catalog',
+      title: 'Catalog (Stage 1)',
+      addEpisode: { cta: '+ episode' },
+      /** A quest row; `minutes` is null for a quest the catalog does not know. */
+      questLine: (title: string, minutes: number | null) => `${title} · ${minutes ?? '?'} min`,
+      add: { cta: '+ add' },
+      added: { cta: 'added' },
+      /** An episode as a plan item (`catalogLabel`). */
+      episodeLabel: (title: string, quests: number) => `${title} (${plural('en', quests, { one: `${quests} quest`, other: `${quests} quests` })})`,
+    },
+    yours: {
+      label: 'Your plan',
+      title: (items: number) => `Your plan (${items})`,
+      empty: 'Add quests or whole episodes from the catalog.',
+      /** The reorder and remove buttons on each item (glyphs; a locale may swap them). */
+      moveUp: { cta: '↑' },
+      moveDown: { cta: '↓' },
+      remove: { cta: '×' },
+      dateFor: (item: number) => `Target date for item ${item}`,
+      noteFor: (item: number) => `Note for item ${item}`,
+      notePlaceholder: 'note (optional)',
+    },
+    pace: {
+      title: 'Pace',
+      start: 'Start date',
+      perWeekLabel: 'Items per week',
+      perWeek: (items: number) => `${items} / week`,
+    },
+    /** The audience choice; `everyone` is a stand-alone radio label (`planEveryone`). */
+    who: {
+      title: 'Who is this for',
+      everyone: { family: 'everyone in this family', class: 'everyone in this class', school: 'everyone in this school', space: 'everyone in this space' },
+      only: 'only:',
+    },
+    noneJoined: { family: 'No learners have joined yet.', class: 'No students have joined yet.', school: 'No members have joined yet.' },
+    saving: { cta: 'Saving…' },
+    cancel: { cta: 'Cancel' },
+  },
+  /**
+   * The billing page (`/teach/billing`, `billing.ts`, F-I18N-001 PR 10b). Prices come from
+   * `price.*` and `formatUsd`; plan limits, the free-class cap among them, arrive as numbers
+   * from content-schema, so no locale types a limit into its copy.
+   */
+  billing: {
+    title: 'Billing',
+    cantCheck: "Can't check your plan right now.",
+    checkoutFailed: "Couldn't start checkout. Try again.",
+    portalFailed: "Couldn't open the billing portal.",
+    current: {
+      title: 'Current plan',
+      /** `cap` is content-schema `FREE_CLASS_STUDENT_CAP` (`billing.ts freePlanLine`). */
+      freeLine: (cap: number) => `Stage 1, local progress, Rescue Code, file backup. Classes hold up to ${cap} students.`,
+    },
+    yourAccount: 'your account',
+    /**
+     * How the plan was obtained (`sourceLine`) — never "paid": a 100%-off code costs nothing.
+     * One whole sentence per provider (§3.1); the provider names live inside it.
+     */
+    source: (provider: 'stripe' | 'apple' | 'google' | 'manual', code: string | null) =>
+      `via ${{ stripe: 'web (Stripe)', apple: 'App Store', google: 'Google Play', manual: 'contract' }[provider]}${code ? ` · code ${code}` : ''}`,
+    seats: (seats: number) => plural('en', seats, { one: `${seats} seat`, other: `${seats} seats` }),
+    manage: { cta: 'Manage subscription' },
+    planTitle: { free: 'Free', family_lifetime: 'Family Lifetime', group_license: 'Group License', school_seat: 'School Contract' },
+    includes: {
+      /** `cap` / `freeCap` are content-schema `FREE_CLASS_STUDENT_CAP`. */
+      free: (cap: number) => `Stage 1, local progress, Rescue Code, file backup; classes up to ${cap} students`,
+      family_lifetime: (learners: number) => `Every Stage, now and later, for one family: up to ${learners} learners, cloud sync, grown-up dashboard and plans`,
+      group_license: (teachers: number, students: number, freeCap: number) =>
+        `A class or school: every student premium while enrolled, no ${freeCap}-student cap; a school holds up to ${teachers} teachers / ${students} students`,
+      school_seat: (students: number, teachers: number) => `Beyond ${students} students or ${teachers} teachers — seats by contract`,
+    },
+    /** The price column of the contract row. */
+    contactPrice: 'Contact us',
+    plans: { title: 'Plans' },
+    promo: {
+      formLabel: 'Promo code',
+      placeholder: 'HOYA20',
+      apply: { cta: 'Apply code' },
+      change: { cta: 'Change code' },
+      /** `name` is the promotion's own name, when it has one. */
+      applied: (code: string, name: string | null) => `${code} applied${name ? ` · ${name}` : ''}.`,
+    },
+    choose: { cta: 'Choose' },
+    contact: { cta: 'Contact us' },
+    isCurrent: { pill: 'current' },
+  },
 } as const;

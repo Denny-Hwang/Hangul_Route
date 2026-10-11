@@ -247,6 +247,10 @@ const COUNTED: readonly [string, (m: Messages, n: number) => string][] = [
   ['console.planCounts.targets (class)', (m, n) => m.console.planCounts.targets('class', n)],
   ['console.planCounts.targets (school)', (m, n) => m.console.planCounts.targets('school', n)],
   ['console.spaceCounts.students', (m, n) => m.console.spaceCounts.students(n)],
+  ['console.plan.summary.some.family', (m, n) => m.console.plan.summary.some.family(7, n)],
+  ['console.plan.summary.some.class', (m, n) => m.console.plan.summary.some.class(7, n)],
+  ['console.plan.summary.some.school', (m, n) => m.console.plan.summary.some.school(7, n)],
+  ['console.billing.seats', (m, n) => m.console.billing.seats(n)],
 ];
 
 describe('console counts use plural() in every locale (en, es, ko, en-XA)', () => {
