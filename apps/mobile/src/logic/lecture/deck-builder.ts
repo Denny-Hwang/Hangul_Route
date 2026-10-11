@@ -177,7 +177,7 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
       taught.push({ kind: 'word', ...word });
       return;
     }
-    // A syllable met without a gloss (나) that is later taught as a word ("I, me") gains the gloss,
+    // A syllable met without a gloss (na) that is later taught as a word ("I, me") gains the gloss,
     // so it reaches a word-to-gloss quiz and End shows its meaning.
     if (met.gloss === undefined && word.gloss !== undefined) met.gloss = word.gloss;
   };
