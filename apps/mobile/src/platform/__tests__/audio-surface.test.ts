@@ -25,7 +25,6 @@ describe('audio.ts and audio.web.ts are one surface (Metro picks one per platfor
         'isMuted',
         'noteFallbackShown',
         'playJamo',
-        'playJamoSound',
         'playPrompt',
         'refreshCapability',
         'setMuted',
