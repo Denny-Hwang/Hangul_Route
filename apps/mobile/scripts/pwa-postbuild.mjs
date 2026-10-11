@@ -17,7 +17,6 @@ const tokensSrc = readFileSync(join(here, '../../../packages/design-system/src/t
 const token = (name, fallback) => tokensSrc.match(new RegExp(`\\b${name}:\\s*'(#[0-9A-Fa-f]{6})'`))?.[1] ?? fallback;
 const canvas = token('canvas', '#FCF8F1');
 const brand = token('primary', '#B24915');
-const border = token('subtle', '#E8DFCD');
 const indexPath = join(dist, 'index.html');
 if (!existsSync(indexPath)) {
   throw new Error(`${indexPath} not found — run \`expo export --platform web\` first`);
@@ -41,11 +40,9 @@ const head = `
     body { -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
     input, textarea { -webkit-user-select: text; user-select: text; }
     #trace-canvas { touch-action: none; }
-    /* Desktop / tablet: keep the phone-width column centered (roadmap §3.4)
-       until a wide layout is designed; phones are unaffected. */
-    @media (min-width: 600px) {
-      #root { max-width: 480px; margin: 0 auto; min-height: 100vh; border-left: 1px solid ${border}; border-right: 1px solid ${border}; }
-    }
+    /* NEVER add a max-width / border rule on #root here (F-LAYOUT-001 LD3): the content width
+       is capped inside Screen (design-system layout.maxWidth) so backgrounds, the tab bar,
+       banners and the lecture presenter use the whole window. */
   </style>`;
 
 const sw = `

@@ -60,11 +60,16 @@ describe('native / PWA config ↔ tokens.ts', () => {
   const app = (JSON.parse(appJson) as {
     expo: { splash: { backgroundColor: string }; android: { adaptiveIcon: { backgroundColor: string } } };
   }).expo;
-  const pwa = JSON.parse(manifest) as { theme_color: string; background_color: string };
+  const pwa = JSON.parse(manifest) as { theme_color: string; background_color: string; orientation: string };
 
   it('manifest theme_color is brand.primary and background_color is surface.canvas', () => {
     expect(norm(pwa.theme_color)).toBe(norm(colors.brand.primary));
     expect(norm(pwa.background_color)).toBe(norm(colors.surface.canvas));
+  });
+
+  it('manifest orientation is any', () => {
+    // A phone-only portrait lock in the manifest would stop tablets and Chromebooks rotating (F-LAYOUT-001 LD5, D12).
+    expect(pwa.orientation).toBe('any');
   });
 
   it('app.json splash is surface.canvas and the adaptive icon background is brand.primary', () => {

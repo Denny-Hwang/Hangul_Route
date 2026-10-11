@@ -16,6 +16,10 @@ const VIEWPORTS = [
   { name: 'iPhone SE in Safari (toolbar shown)', width: 375, height: 553 },
   { name: 'iPhone 8 / SE 2nd gen', width: 375, height: 667 },
   { name: 'iPhone 14 landscape', width: 844, height: 390 },
+  // F-LAYOUT-001 PR 2a: the 480 px `#root` cap is gone, so tablets and desktops run the same flows at full width.
+  { name: 'iPhone 14 portrait', width: 390, height: 844 },
+  { name: 'iPad portrait', width: 768, height: 1024 },
+  { name: 'iPad Air landscape / laptop', width: 1180, height: 820 },
 ] as const;
 
 async function fullyInViewport(page: Page, target: Locator): Promise<boolean> {
@@ -38,6 +42,15 @@ async function expectReachable(page: Page, target: Locator): Promise<void> {
   await expect(target).toBeInViewport({ ratio: 1 });
 }
 
+/** Nothing may force the page wider than the window (a fixed-width child would show as a sideways scrollbar). */
+async function expectNoHorizontalOverflow(page: Page): Promise<void> {
+  const { scrollWidth, innerWidth } = await page.evaluate(() => ({
+    scrollWidth: document.documentElement.scrollWidth,
+    innerWidth: window.innerWidth,
+  }));
+  expect(scrollWidth, 'horizontal overflow').toBeLessThanOrEqual(innerWidth);
+}
+
 /** Onboard through the real form: "My child or a student" creates the grown-up PIN in the form, so the gate later asks for it. */
 async function onboard(page: Page, name: string): Promise<void> {
   await page.goto('/');
@@ -50,6 +63,9 @@ async function onboard(page: Page, name: string): Promise<void> {
 for (const vp of VIEWPORTS) {
   test.describe(`${vp.name} ${vp.width}x${vp.height}`, () => {
     test.use({ viewport: { width: vp.width, height: vp.height } });
+    test.afterEach(async ({ page }) => {
+      await expectNoHorizontalOverflow(page);
+    });
 
     test('quest, Build-a-Letter and Results CTAs are reachable', async ({ page }) => {
       await onboard(page, 'Dani');
