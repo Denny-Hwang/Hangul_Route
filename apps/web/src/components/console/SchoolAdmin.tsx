@@ -9,6 +9,7 @@ import { PLAN_TITLES, statusLine as entitlementStatus } from '@/lib/console/bill
 import { COPY } from '@/lib/console/copy';
 import { codeExpiry, relativeDay } from '@/lib/console/rollup';
 import { ROUTES } from '@/lib/console/routing';
+import { useMessages } from '@/lib/i18n/locale-context';
 import { assignableTeachers, limitNote, limitState, usageLine, weekLine } from '@/lib/console/school';
 
 /** console/school-admin — F-SCHOOL-001 §3.3. Rendered by /teach/space?id= for school spaces. */
@@ -22,6 +23,7 @@ export function SchoolAdmin({ api, spaceId, onSignOut }: { api: ConsoleApi; spac
   const [newClass, setNewClass] = useState('');
   const [assigning, setAssigning] = useState<string | null>(null);
   const now = new Date();
+  const m = useMessages();
 
   const load = useCallback(async (): Promise<void> => {
     const [v, m] = await Promise.all([api.school(spaceId), api.members(spaceId)]);
@@ -127,7 +129,7 @@ export function SchoolAdmin({ api, spaceId, onSignOut }: { api: ConsoleApi; spac
                       {row.space.archivedAt ? <span style={{ color: colors.text.muted }}> (archived)</span> : null}
                     </strong>
                     <Muted>
-                      {row.teacher ? row.teacher.name : 'no teacher yet'} · {row.students} student{row.students === 1 ? '' : 's'} · active {relativeDay(row.lastActiveAt, now)}
+                      {row.teacher ? row.teacher.name : 'no teacher yet'} · {m.console.spaceCounts.students(row.students)} · active {relativeDay(row.lastActiveAt, now)}
                       {row.hasPublishedPlan ? ' · plan published' : ''}
                     </Muted>
                   </div>

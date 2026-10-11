@@ -147,11 +147,10 @@ export const consoleMsgs = {
   /** A class or family roster (`/teach/space`). */
   space: {
     loading: 'Loading…',
-    // TODO(F-I18N-001 §10, console counts): route these counts through `plural()` once console text may change (§3.4 rule 1 keeps "1 learners" for now).
     title: {
-      family: (space: string, count: number) => `${space} · ${count} learners`,
-      class: (space: string, count: number) => `${space} · ${count} students`,
-      school: (space: string, count: number) => `${space} · ${count} members`,
+      family: (space: string, count: number) => plural('en', count, { one: `${space} · ${count} learner`, other: `${space} · ${count} learners` }),
+      class: (space: string, count: number) => plural('en', count, { one: `${space} · ${count} student`, other: `${space} · ${count} students` }),
+      school: (space: string, count: number) => plural('en', count, { one: `${space} · ${count} member`, other: `${space} · ${count} members` }),
     },
     forbidden: "This space isn't yours to view.",
     gone: 'This space is gone.',
@@ -173,8 +172,7 @@ export const consoleMsgs = {
       practiced: (practiced: number, students: number) => `${practiced} of ${students} practiced this week`,
       anchor: (accuracy: string) => `Stage 1 anchor: ${accuracy}`,
       revisit: (jamo: string) => `Jamo to revisit together: ${jamo}`,
-      // TODO(F-I18N-001 §10, console counts): `plural()` once console text may change ("1 haven't synced").
-      notSynced: (count: number) => `${count} haven't synced in a week`,
+      notSynced: (count: number) => plural('en', count, { one: `${count} hasn't synced in a week`, other: `${count} haven't synced in a week` }),
     },
     /** The latest plan's button. Holds a user-entered plan title, so it is not a budgeted `cta`; its fixed words are budgeted in length-budget.test.ts and the button wraps. */
     openPlan: { label: (plan: string) => `Plan: ${plan}` },
@@ -192,8 +190,8 @@ export const consoleMsgs = {
      */
     learner: {
       lastActive: (when: string) => `Last active ${when}`,
-      // TODO(F-I18N-001 §10, console counts): `plural()` once console text may change ("1 cards").
-      questsCards: (done: number, total: number, cards: number) => `Quests ${done} / ${total} · ${cards} cards`,
+      questsCards: (done: number, total: number, cards: number) =>
+        plural('en', cards, { one: `Quests ${done} / ${total} · ${cards} card`, other: `Quests ${done} / ${total} · ${cards} cards` }),
       minutesThisWeek: (minutes: number) => `${minutes} min this week`,
       revisit: (jamo: string) => `Revisit: ${jamo}`,
       planReadout: (plan: string, readout: string) => `${plan}: ${readout}`,
@@ -246,6 +244,10 @@ export const consoleMsgs = {
     learners: (n: number) => plural('en', n, { one: `${n} learner`, other: `${n} learners` }),
     students: (n: number) => plural('en', n, { one: `${n} student`, other: `${n} students` }),
     classes: (n: number) => plural('en', n, { one: `${n} class`, other: `${n} classes` }),
+  },
+  /** Plan builder counts (`teach/space/plan`): the number of items in a plan. */
+  planCounts: {
+    items: (n: number) => plural('en', n, { one: `${n} item`, other: `${n} items` }),
   },
   /** Plan builder status (`planStatusLabel`); the date arrives formatted. */
   planStatus: {
