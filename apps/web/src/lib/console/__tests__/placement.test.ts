@@ -140,6 +140,8 @@ describe('suggestedStartQuestId (the coarse start the builder pre-fills)', () =>
 
   it('with a level, the first playable grid quest the level does not place out', () => {
     expect(suggestedStartQuestId({ stage: 'stage1', band: 0 }, FIXTURE)).toBe('q:a');
+    // Band 1 covers the first letters, so the quests teaching only those are placed out.
+    expect(suggestedStartQuestId({ stage: 'stage1', band: 1 }, FIXTURE)).toBe('q:c');
     expect(suggestedStartQuestId({ stage: 'stage2', band: 0 }, FIXTURE)).toBe('q:d');
   });
 
