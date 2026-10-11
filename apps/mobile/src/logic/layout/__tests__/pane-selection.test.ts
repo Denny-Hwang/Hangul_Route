@@ -1,7 +1,7 @@
 import type { Episode } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { episodeOf, snapshotWith } from '../../stage1/__tests__/fixtures';
-import { initialCard, initialEpisode, reconcileSelection } from '../pane-selection';
+import { initialCard, initialEpisode, latchedSelection, reconcileSelection } from '../pane-selection';
 
 const EPISODES: Episode[] = [
   episodeOf('episode:one', ['quest:a', 'quest:b']),
@@ -89,5 +89,21 @@ describe('reconcileSelection', () => {
     selected = reconcileSelection('episode:two', EPISODES, selected);
     // rotation changes only the layout class; the selection state is untouched
     expect(reconcileSelection(selected, EPISODES, initialEpisode(EPISODES, snapshotWith([])))).toBe('episode:two');
+  });
+});
+
+/** A latched selection belongs to the profile that made it (switching profile starts from the new learner's first selection). */
+describe('latchedSelection', () => {
+  it('is the latched id while the same profile is active', () => {
+    expect(latchedSelection({ ownerId: 'p1', id: 'card:book' }, 'p1')).toBe('card:book');
+  });
+
+  it('is null for another profile, so that learner gets its own first selection', () => {
+    expect(latchedSelection({ ownerId: 'p1', id: 'card:book' }, 'p2')).toBeNull();
+    expect(latchedSelection({ ownerId: 'p1', id: 'card:book' }, null)).toBeNull();
+  });
+
+  it('is null when nothing is latched', () => {
+    expect(latchedSelection(null, 'p1')).toBeNull();
   });
 });

@@ -94,6 +94,21 @@ describe('learner.cardDetail', () => {
   });
 });
 
+describe('learner.library.panes and learner.cardDetail.earn (F-LAYOUT-001 §3.6, §3.13)', () => {
+  it('names the two Library panes as landmarks', () => {
+    expect(m.learner.library.panes.master).toBe('Card gallery');
+    expect(m.learner.library.panes.detail).toBe('Card details');
+  });
+
+  it('says how a locked card is earned: the quest and its stars, or later', () => {
+    const e = m.learner.cardDetail.earn;
+    expect(e.title).toBe('How to earn it');
+    expect(e.quest('Meet g, n, d, l', 2)).toBe('Get 2 or more stars in Meet g, n, d, l to earn this card.');
+    expect(e.quest('Meet g, n, d, l', 1)).toBe('Get 1 star or more in Meet g, n, d, l to earn this card.');
+    expect(e.later).toBe('This card comes in a later quest.');
+  });
+});
+
 describe('accessibility labels of these screens', () => {
   it('are the English labels as shipped', () => {
     expect(m.a11y.profileEntry).toBe('Profile and settings');

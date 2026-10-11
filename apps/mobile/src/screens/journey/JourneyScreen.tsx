@@ -33,7 +33,7 @@ import {
   themeCellInitial,
   themeColumnLabel,
 } from '../../logic/journey';
-import { initialEpisode, reconcileSelection } from '../../logic/layout/pane-selection';
+import { initialEpisode, latchedSelection, reconcileSelection, type PaneLatch } from '../../logic/layout/pane-selection';
 import { journeyGridMaxWidth } from '../../logic/layout/pane-sizes';
 import type { RootStackParamList } from '../../navigation/types';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
@@ -55,13 +55,17 @@ export function JourneyScreen(): React.ReactElement {
   // Two panes (wide window, F-LAYOUT-001 §3.7): a tap selects, the right pane shows it. One pane: a tap navigates as always.
   const { panes } = useLayoutClass();
   const paneMode = panes === 2;
-  const [selected, setSelected] = useState<string | null>(null);
+  const ownerId = profile?.id ?? null;
+  const [latch, setLatch] = useState<PaneLatch | null>(null);
+  const selected = latchedSelection(latch, ownerId);
+  const setSelected = (id: string): void => setLatch({ ownerId, id });
   const selectedId = reconcileSelection(selected, episodesAll, initialEpisode(episodesAll, snap));
   // Latch the first selection (the episode of the next quest) so finishing a quest does not move it:
   // back from the quest player returns to the same selection. It survives rotation as screen state.
+  // The latch belongs to the profile: switching learner starts from that learner's next quest.
   useEffect(() => {
-    if (paneMode && selected === null && selectedId !== null) setSelected(selectedId);
-  }, [paneMode, selected, selectedId]);
+    if (paneMode && selected === null && selectedId !== null) setLatch({ ownerId, id: selectedId });
+  }, [paneMode, selected, selectedId, ownerId]);
 
   const gridMax = journeyGridMaxWidth(spacing.xs, layout.columns.journeyCellMax);
 
