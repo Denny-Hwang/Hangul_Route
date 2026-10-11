@@ -43,7 +43,7 @@ export const stage1Quests: Quest[] = [
         durationSeconds: 40,
       },
       { id: 's3', kind: 'practice', titleEn: 'Match the Sound', minigameKind: 'match-sound', minigameRef: 'minigame:s1-letters-q1-play', durationSeconds: 90 },
-      { id: 's4', kind: 'apply', titleEn: 'Build a Block', minigameKind: 'build-letter', minigameRef: 'minigame:s1-letters-q1-apply', durationSeconds: 75 },
+      { id: 's4', kind: 'apply', titleEn: 'Build a Letter', minigameKind: 'build-letter', minigameRef: 'minigame:s1-letters-q1-apply', durationSeconds: 75 },
       { id: 's5', kind: 'check', titleEn: 'Listen and Read', minigameKind: 'listen-pick', minigameRef: 'minigame:s1-letters-q1-check', durationSeconds: 35 },
       { id: 's6', kind: 'reward', titleEn: 'Card Earned!', hoyaLineEn: 'You earned a Heritage card!', durationSeconds: 8 },
     ],
