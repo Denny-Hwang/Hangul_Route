@@ -1,5 +1,6 @@
-import type { ProgressSnapshot, QuestProgress } from '@hangul-route/content-schema';
+import type { ProgressSnapshot } from '@hangul-route/content-schema';
 import { create } from 'zustand';
+import { recordBestQuest } from '../logic/quest-progress';
 import { mergeSnapshots } from '../logic/sync/merge';
 import { notifyProgressPersisted } from '../logic/sync/persist-hook';
 import { readJson, writeJson } from '../platform/storage';
@@ -184,19 +185,12 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
   recordQuestComplete: (profileId, input) => {
     const snap = get().byProfile[profileId] ?? blankSnapshot(profileId);
     const now = new Date().toISOString();
-    const updatedQuest: QuestProgress = {
-      questId: input.questId,
-      episodeId: input.episodeId,
-      startedAt: now,
-      completedAt: now,
-      stars: input.stars,
-      attempts: input.attempts,
-      accuracy: input.accuracy,
-    };
-    const quests = [
-      ...snap.quests.filter((q) => q.questId !== input.questId),
-      updatedQuest,
-    ];
+    const updatedQuest = recordBestQuest(
+      snap.quests.find((q) => q.questId === input.questId),
+      input,
+      now,
+    );
+    const quests = [...snap.quests.filter((q) => q.questId !== input.questId), updatedQuest];
     const homework = completeAssignments(snap.homework, input.questId, now);
     const updated: ProgressSnapshot = { ...snap, quests, homework, updatedAt: now };
     set((s) => ({ byProfile: { ...s.byProfile, [profileId]: updated } }));
