@@ -282,7 +282,7 @@ export const storiesAll: Story[] = [
                   "s": 0.6
                 }
               ],
-              "altEn": "The twelve zodiac animals stand in a ring on a grassy hill, and Hoya waves happily at the tiger."
+              "altEn": "The heads of the twelve zodiac animals form a ring on a grassy hill, and Hoya waves happily at the tiger."
             }
           },
           {
@@ -810,7 +810,7 @@ export const storiesAll: Story[] = [
                   "s": 0.9
                 }
               ],
-              "altEn": "Hoya holds out a paw to catch the falling rain in front of a palace hall with a curved tiled roof."
+              "altEn": "Hoya waves a paw in the falling rain in front of a palace hall with a curved tiled roof."
             }
           },
           {
@@ -1079,7 +1079,7 @@ export const storiesAll: Story[] = [
                   "s": 0.8
                 }
               ],
-              "altEn": "Hoya grins and points at the rainy sky in front of the museum where the rain gauge is kept today."
+              "altEn": "Hoya waves happily at the rainy sky in front of the museum where the rain gauge is kept today."
             }
           }
         ],
@@ -9381,10 +9381,10 @@ export const storiesAll: Story[] = [
                   "s": 1.6
                 },
                 {
-                  "ref": "prop:fig-scholar",
-                  "x": 304,
-                  "y": 272,
-                  "s": 1,
+                  "ref": "prop:fig-writer-seated",
+                  "x": 308,
+                  "y": 280,
+                  "s": 0.9,
                   "tint": "surface.paper"
                 }
               ],
@@ -9443,7 +9443,7 @@ export const storiesAll: Story[] = [
                   "tint": "brand.secondaryLight"
                 }
               ],
-              "altEn": "Today Hoya and a friend stand ready in a sand ring for a friendly round of ssireum while their friends cheer."
+              "altEn": "Today Hoya cheers in a sand ring beside a friend, set for a friendly round of ssireum, as other friends look on."
             }
           }
         ],

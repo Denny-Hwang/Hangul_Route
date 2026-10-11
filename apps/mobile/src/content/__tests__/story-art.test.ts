@@ -103,6 +103,27 @@ describe('story scene art', () => {
     for (const story of stories.filter((s) => ids.includes(s.id))) expect(story.contentVer, story.id).toBeGreaterThanOrEqual(2);
   });
 
+  // §3.9.5 rule 9: the alt states what is drawn. Hoya has five poses
+  // (idle, cheering, thinking, reading, waving); none points, grips, kneels,
+  // holds a paw out or stands in a ready stance, so the alt may not say so.
+  it('science-art-life alt text names only gestures Hoya is drawn in', () => {
+    const undrawn = /\bHoya\b[^.;:]*?\b(points?|pointing|holds out|stands? ready|grips?|gripping|kneels?)\b/i;
+    for (const { story, scene } of scenes.filter((s) => SCIENCE_ART_LIFE.includes(s.story.id) && s.scene.art)) {
+      if (!scene.art!.layers.some((l) => l.ref.startsWith('hoya:'))) continue;
+      expect(scene.art!.altEn, `${story.id} ${scene.id}`).not.toMatch(undrawn);
+    }
+  });
+
+  // §3.9.10: a detail the sources do not support is left out. The museum's
+  // Seodang shows the teacher in a square indoor cap, never an outdoor gat.
+  it('draws the Seodang teacher without a gat', () => {
+    const seodang = scenes.find((s) => s.story.id === 'story:kim-hongdo-genre-paintings' && s.scene.id === 's6');
+    expect(seodang?.scene.art).toBeDefined();
+    for (const layer of seodang!.scene.art!.layers) {
+      expect(SCENE_ART_REGISTRY[layer.ref]?.alt ?? '', layer.ref).not.toMatch(/\bgat\b/);
+    }
+  });
+
   it.each(CLUSTERS)('illustrates every scene of the $name cluster, with no warnings either', ({ ids, scenes: count }) => {
     const cluster = scenes.filter((s) => ids.includes(s.story.id));
     expect(new Set(cluster.map((s) => s.story.id)).size).toBe(6);

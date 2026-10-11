@@ -349,10 +349,10 @@
                 "s": 1.6
               },
               {
-                "ref": "prop:fig-scholar",
-                "x": 304,
-                "y": 272,
-                "s": 1,
+                "ref": "prop:fig-writer-seated",
+                "x": 308,
+                "y": 280,
+                "s": 0.9,
                 "tint": "surface.paper"
               }
             ],
@@ -411,7 +411,7 @@
                 "tint": "brand.secondaryLight"
               }
             ],
-            "altEn": "Today Hoya and a friend stand ready in a sand ring for a friendly round of ssireum while their friends cheer."
+            "altEn": "Today Hoya cheers in a sand ring beside a friend, set for a friendly round of ssireum, as other friends look on."
           }
         }
       ],
