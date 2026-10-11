@@ -322,7 +322,7 @@ const HANGUL_ONLY = /^\p{Script=Hangul}+$/u;
 
 /**
  * A whole-token match in any case. A needle that ends in Hangul needs no boundary after it,
- * because Korean attaches particles to a name ("민호의 수업", "민호랑").
+ * because Korean attaches particles directly to a name (Minho + ui "of", Minho + rang "with").
  */
 function containsToken(haystack: string, needle: string): boolean {
   const after = HANGUL_END.test(needle) ? '' : '(?=$|[^\\p{L}\\p{N}])';
