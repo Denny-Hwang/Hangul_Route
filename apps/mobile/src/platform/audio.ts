@@ -1,104 +1,241 @@
+import type { SpeechLang } from '@hangul-route/content-schema';
+import { Platform } from 'react-native';
 import * as Speech from 'expo-speech';
+import {
+  attachNativeVoices,
+  createCapabilityTracker,
+  readNativeVoices,
+  type AudioCapability,
+  type NativeVoiceLike,
+  type NetworkLike,
+} from '../logic/audio/capability';
+import {
+  createAudioController,
+  type AudioController,
+  type PlayResult,
+  type PlaySpec,
+  type TtsEngine,
+  type TtsHandlers,
+  type TtsRequest,
+} from '../logic/audio/controller';
+import type { FallbackReason } from '../logic/audio/prompt-state';
+import { speakCompat, type SpeakOptions } from '../logic/audio/speak-compat';
+import type { SpokenJamo } from '../logic/audio/spoken';
+import { useAudioStore } from '../store/audio-store';
+import { track } from './telemetry';
 
 /**
- * Audio wrapper — speaks Korean prompts via TTS when no MP3 asset is bound.
- * Real per-jamo MP3 assets land later under apps/mobile/assets/audio/jamo/.
+ * Native adapter over the audio controller (F-AUDIO-004 §3.5). `expo-speech`
+ * is wrapped as a `TtsEngine`; every decision lives in
+ * `logic/audio/controller`. The voice id passed to the engine is only ever
+ * one read from `getAvailableVoicesAsync()` in this session (an uninstalled
+ * id makes iOS throw), and with no usable Korean voice the engine is not
+ * called at all, so an English voice never reads Hangul (Android would
+ * otherwise fall back to the default locale).
+ *
+ * Metro picks `audio.web.ts` for the web build; the surface is identical.
+ * The clip path (expo-av) lands in A-7; the silent-switch decision it reads is
+ * `PLAY_IN_SILENT_MODE` in `config/audio.ts`. Speech itself follows the
+ * system audio session (expo-speech has no option for it).
  */
 
-let muted = false;
+export type { PlayResult, PlaySpec, SpeakOptions };
+/** The name F-QUEST-002 §3.12 used for the same shape. */
+export type PromptSpec = PlaySpec;
 
-export function setMuted(value: boolean): void {
-  muted = value;
-  if (muted) Speech.stop();
-}
+// --- Environment (injected so the adapter is tested against a fake) ---------
 
-export function isMuted(): boolean {
-  return muted;
-}
-
-export interface SpeakOptions {
-  language?: 'ko-KR' | 'en-US';
+interface SpeechEventOptions {
+  language?: string;
   rate?: number;
   pitch?: number;
+  voice?: string;
+  onStart?: () => void;
   onDone?: () => void;
-  /**
-   * Called instead of `onDone` when the engine reports an error. Without it an
-   * error still ends in `onDone`, so existing callers are unchanged.
-   */
-  onError?: () => void;
+  onStopped?: () => void;
+  onError?: (error: Error) => void;
 }
 
-export function speak(text: string, opts: SpeakOptions = {}): void {
-  if (muted) {
-    opts.onDone?.();
-    return;
-  }
-  Speech.stop();
-  Speech.speak(text, {
-    language: opts.language ?? 'ko-KR',
-    rate: opts.rate ?? 0.78,
-    pitch: opts.pitch ?? 1.05,
-    onDone: opts.onDone,
-    onStopped: opts.onDone,
-    onError: opts.onError ?? opts.onDone,
-  });
+/** The slice of `expo-speech` this adapter uses. */
+export interface NativeSpeechApi {
+  speak(text: string, options?: SpeechEventOptions): void;
+  stop(): void | Promise<void>;
+  getAvailableVoicesAsync(): Promise<readonly NativeVoiceLike[]>;
 }
 
-export function stop(): void {
-  Speech.stop();
+export interface NativeAudioEnv {
+  speech: NativeSpeechApi;
+  platform: 'ios' | 'android';
 }
+
+// --- The adapter -------------------------------------------------------------
 
 /**
- * playJamoSound — preferred entry: uses MP3 ref if bundled, else falls back to TTS.
- * For prototype, all jamo go through TTS.
+ * Network state is not wired on native yet (no NetInfo dependency): voices are
+ * treated as reachable. A network voice that errors is retried once with the
+ * next candidate by the controller.
  */
+const ASSUME_ONLINE: NetworkLike = { isOnline: () => true, subscribe: () => () => undefined };
+
+export function createNativeAudio(env: NativeAudioEnv) {
+  const { speech, platform } = env;
+  const tracker = createCapabilityTracker({ online: true, clips: false });
+
+  // Utterances between `speak` and their first terminal callback.
+  const live = new Set<object>();
+
+  const engine: TtsEngine = {
+    speak: (req: TtsRequest, h: TtsHandlers) => {
+      const token = {};
+      live.add(token);
+      const finish = (cb: () => void): void => {
+        live.delete(token);
+        cb();
+      };
+      try {
+        speech.speak(req.text, {
+          language: req.lang,
+          rate: req.rate,
+          pitch: req.pitch,
+          ...(req.voice === null ? {} : { voice: req.voice.id }),
+          onStart: () => h.onStart(),
+          onDone: () => finish(() => h.onEnd()),
+          // onStopped is a stop() (a newer prompt, or mute): not a failure.
+          onStopped: () => finish(() => h.onError('interrupted')),
+          onError: () => finish(() => h.onError('error')),
+        });
+      } catch {
+        // iOS throws for a voice that is no longer installed.
+        queueMicrotask(() => finish(() => h.onError('error')));
+      }
+      return { cancel: () => void speech.stop() };
+    },
+    cancelAll: () => {
+      live.clear();
+      void speech.stop();
+    },
+    busy: () => live.size > 0,
+  };
+
+  const store = useAudioStore;
+  const controller: AudioController = createAudioController({
+    engine,
+    clips: null,
+    assets: { has: () => false },
+    clipsEnabled: () => false,
+    voices: tracker,
+    isMuted: () => store.getState().muted,
+    levelOrder: () => store.getState().levelOrder,
+    platform,
+    emit: (event) => {
+      void track({ name: event.name, payload: { ...event.payload } });
+    },
+    reportFailure: (reason: FallbackReason) => store.getState().reportFailure(reason),
+  });
+
+  const pushCapability = (c: AudioCapability): void => store.getState().setCapability(c);
+  const offCapability = tracker.subscribe(pushCapability);
+  // Nothing to unlock on native (§3.6).
+  tracker.setUnlocked(true);
+  pushCapability(tracker.get());
+
+  const offMute = store.subscribe((state, prev) => {
+    if (state.muted && !prev.muted) controller.stop();
+  });
+
+  const readVoices = (): Promise<readonly NativeVoiceLike[]> => speech.getAvailableVoicesAsync();
+  const detachVoices = attachNativeVoices(tracker, readVoices, platform, ASSUME_ONLINE);
+
+  const playPrompt = (spec: PlaySpec): Promise<PlayResult> => controller.playPrompt(spec);
+
+  return {
+    playPrompt,
+    playJamo: (jamo: SpokenJamo, mode: 'sound' | 'name' = 'sound'): Promise<PlayResult> => controller.playJamo(jamo, mode),
+    /** Legacy: resolves when the letter has been spoken (or could not be). */
+    playJamoSound: (char: string): Promise<void> =>
+      playPrompt({ text: char, language: 'ko-KR', kind: 'sound' }).then(() => undefined),
+    speak: (text: string, opts: SpeakOptions = {}): void => speakCompat(playPrompt, text, opts),
+    stop: (): void => controller.stop(),
+    setMuted: (muted: boolean): void => store.getState().setMuted(muted, 'profile'),
+    isMuted: (): boolean => store.getState().muted,
+    getCapability: (): AudioCapability => tracker.get(),
+    refreshCapability: async (): Promise<void> => {
+      const result = await readNativeVoices(readVoices, platform);
+      tracker.setVoices(result.kind === 'voices' ? result.voices : 'no_engine');
+    },
+    subscribeCapability: (fn: (c: AudioCapability) => void): (() => void) => tracker.subscribe(fn),
+    /** Nothing to unlock on native. */
+    unlockAudio: (): void => undefined,
+    installGestureUnlock: (): (() => void) => () => undefined,
+    /** Clip pre-decode arrives with the clip player (A-7); nothing to warm yet. */
+    warmClips: (_refs: readonly string[]): Promise<void> => Promise.resolve(),
+    noteFallbackShown: (source: string, reason: FallbackReason): void => controller.noteFallbackShown(source, reason),
+    dispose: (): void => {
+      detachVoices();
+      offCapability();
+      offMute();
+      controller.dispose();
+    },
+  };
+}
+
+export type NativeAudio = ReturnType<typeof createNativeAudio>;
+
+// --- Module-level surface (what screens import) ------------------------------
+
+let instance: NativeAudio | null = null;
+
+function audio(): NativeAudio {
+  instance ??= createNativeAudio({
+    speech: Speech as unknown as NativeSpeechApi,
+    platform: Platform.OS === 'ios' ? 'ios' : 'android',
+  });
+  return instance;
+}
+
+export function playPrompt(spec: PlaySpec): Promise<PlayResult> {
+  return audio().playPrompt(spec);
+}
+export function playJamo(jamo: SpokenJamo, mode: 'sound' | 'name' = 'sound'): Promise<PlayResult> {
+  return audio().playJamo(jamo, mode);
+}
+/** Kept until the Match Sound and Trace call sites move to `playJamo` (PR A-5a). */
 export function playJamoSound(char: string, _audioRef?: string): Promise<void> {
-  return new Promise((resolve) => {
-    speak(char, { language: 'ko-KR', onDone: resolve });
-  });
+  return audio().playJamoSound(char);
+}
+export function speak(text: string, opts: SpeakOptions = {}): void {
+  audio().speak(text, opts);
+}
+export function stop(): void {
+  audio().stop();
+}
+export function setMuted(muted: boolean): void {
+  audio().setMuted(muted);
+}
+export function isMuted(): boolean {
+  return audio().isMuted();
+}
+export function getCapability(): AudioCapability {
+  return audio().getCapability();
+}
+export function refreshCapability(): Promise<void> {
+  return audio().refreshCapability();
+}
+export function subscribeCapability(fn: (c: AudioCapability) => void): () => void {
+  return audio().subscribeCapability(fn);
+}
+export function unlockAudio(): void {
+  audio().unlockAudio();
+}
+/** Web only; a no-op on native. Returns the uninstall function. */
+export function installGestureUnlock(): () => void {
+  return audio().installGestureUnlock();
+}
+export function warmClips(refs: readonly string[]): Promise<void> {
+  return audio().warmClips(refs);
+}
+export function noteFallbackShown(source: string, reason: FallbackReason): void {
+  audio().noteFallbackShown(source, reason);
 }
 
-/** What happened to a prompt (F-QUEST-002 §3.12): heard, switched off, or no way to say it. */
-export type PlayResult = 'played' | 'muted' | 'unavailable';
-
-export interface PromptSpec {
-  /** `item.spokenKo ?? item.ko`; for a symbol its sound, never the letter name. */
-  text: string;
-  /** MP3 path; wins over TTS once recordings are bundled (D6, F-AUDIO-004). Not played yet. */
-  audioRef?: string;
-  language?: 'ko-KR' | 'en-US';
-}
-
-/**
- * False only when the device lists voices and none speaks `language`. An
- * empty or unreadable list proves nothing, so the engine's error decides.
- */
-async function hasVoiceFor(language: string): Promise<boolean> {
-  try {
-    const voices = await Speech.getAvailableVoicesAsync();
-    if (voices.length === 0) return true;
-    const prefix = language.slice(0, 2).toLowerCase();
-    return voices.some((v) => v.language.toLowerCase().replace('_', '-').startsWith(prefix));
-  } catch {
-    return true;
-  }
-}
-
-/**
- * Thin shim over `speak` for the prompt-audio contract; F-AUDIO-004 owns the
- * real implementation and keeps this signature. `unavailable` is the cue to
- * show the prompt as text (F-001 §3.3, D6).
- */
-export async function playPrompt(spec: PromptSpec): Promise<PlayResult> {
-  if (muted) return 'muted';
-  const language = spec.language ?? 'ko-KR';
-  if (!(await hasVoiceFor(language))) return 'unavailable';
-  if (muted) return 'muted';
-  return new Promise<PlayResult>((resolve) => {
-    speak(spec.text, {
-      language,
-      onDone: () => resolve('played'),
-      onError: () => resolve('unavailable'),
-    });
-  });
-}
+export type { SpeechLang };
