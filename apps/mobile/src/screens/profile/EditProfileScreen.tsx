@@ -16,7 +16,7 @@ import {
   typography,
 } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Linking, Pressable, TextInput, View } from 'react-native';
 import { OptionCard } from '../../components/OptionCard';
 import { PinSetupField } from '../../components/PinSetupField';
@@ -26,7 +26,15 @@ import { privacyUrl } from '../../logic/links';
 import { nameHint } from '../../logic/onboarding/create-profile-form';
 import { PIN_SETUP_START, type PinSetupState } from '../../logic/onboarding/pin-setup';
 import { AVATAR_PRESETS } from '../../logic/profiles/avatar-catalog';
-import { editMissing, editPlan, initialEditDraft, submitEdit, type EditDraft, type EditState } from '../../logic/profiles/edit-profile';
+import {
+  editMissing,
+  editPlan,
+  initialEditDraft,
+  levelEditable,
+  submitEdit,
+  type EditDraft,
+  type EditState,
+} from '../../logic/profiles/edit-profile';
 import { createPinHash } from '../../logic/profiles/pin-hash';
 import { NAME_MAX } from '../../logic/profiles/profile-model';
 import type { RootStackParamList } from '../../navigation/types';
@@ -71,6 +79,10 @@ export function EditProfileScreen({ navigation, route }: Props): React.ReactElem
   const [pinError, setPinError] = useState<string | null>(null);
   const [linkNote, setLinkNote] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  // `busy` is React state, so two taps before the re-render would both read `false`;
+  // this ref closes Save on the first tap (one hash, one consent, one goBack).
+  const submitting = useRef(false);
 
   useEffect(() => {
     void hydrateMemberships(profileId);
@@ -113,10 +125,14 @@ export function EditProfileScreen({ navigation, route }: Props): React.ReactElem
   };
   const plan = editPlan(state);
   const missing = editMissing(state);
-  const hint = nameHint(draft.name, m.createProfile.nameHint);
+  // A stored name that predates the rule stays as it is, so only a changed name gets a hint.
+  const hint = plan.changed.includes('name') ? nameHint(draft.name, m.createProfile.nameHint) : null;
   const showCard = plan.consent !== null || plan.pinRequired;
 
-  const change = (patch: Partial<EditDraft>): void => setDraft({ ...draft, ...patch });
+  const change = (patch: Partial<EditDraft>): void => {
+    setDraft({ ...draft, ...patch });
+    setSaveError(null);
+  };
 
   const chooseWho = (next: LearnerType): void => {
     if (next === draft.learnerType) return;
@@ -137,9 +153,12 @@ export function EditProfileScreen({ navigation, route }: Props): React.ReactElem
   };
 
   const onSave = async (): Promise<void> => {
-    if (missing !== null || busy) return;
+    if (missing !== null || submitting.current) return;
+    submitting.current = true;
     setBusy(true);
     setPinError(null);
+    setSaveError(null);
+    let done = false;
     try {
       const result = await submitEdit(state, {
         hashPin: (pin) => createPinHash(pin, pinHasher),
@@ -149,9 +168,16 @@ export function EditProfileScreen({ navigation, route }: Props): React.ReactElem
         updateProfile,
         track: (event) => void track(event),
       });
-      if (result.ok) navigation.goBack();
-      else if (result.reason === 'pin-failed') setPinError(e.pinFailed);
+      if (result.ok) {
+        done = true;
+        navigation.goBack();
+      } else if (result.reason === 'pin-failed') setPinError(e.pinFailed);
+      else setSaveError(e.saveFailed);
+    } catch {
+      setSaveError(e.saveFailed);
     } finally {
+      // After a save the screen is leaving: keep Save closed so a late tap cannot go back twice.
+      if (!done) submitting.current = false;
       setBusy(false);
     }
   };
@@ -171,7 +197,7 @@ export function EditProfileScreen({ navigation, route }: Props): React.ReactElem
         placeholder={e.namePlaceholder}
         placeholderTextColor={colors.text.muted}
         accessibilityLabel={e.nameLabel}
-        maxLength={NAME_MAX}
+        maxLength={Math.max(NAME_MAX, original.displayName.length)}
         autoCapitalize="words"
         style={{
           backgroundColor: colors.surface.paper,
@@ -191,20 +217,24 @@ export function EditProfileScreen({ navigation, route }: Props): React.ReactElem
         </>
       ) : null}
 
-      <Spacer size="xl" />
-      <Body weight="semibold">{e.levelHeading}</Body>
-      <Spacer size="sm" />
-      <View accessibilityRole="radiogroup" accessibilityLabel={e.levelHeading} style={{ gap: spacing.sm }}>
-        {LEARNER_LEVELS.map((l) => (
-          <OptionCard
-            key={l.id}
-            label={l.label}
-            description={l.description}
-            selected={draft.level === l.id}
-            onPress={() => change({ level: l.id })}
-          />
-        ))}
-      </View>
+      {levelEditable(original) ? (
+        <>
+          <Spacer size="xl" />
+          <Body weight="semibold">{e.levelHeading}</Body>
+          <Spacer size="sm" />
+          <View accessibilityRole="radiogroup" accessibilityLabel={e.levelHeading} style={{ gap: spacing.sm }}>
+            {LEARNER_LEVELS.map((l) => (
+              <OptionCard
+                key={l.id}
+                label={l.label}
+                description={l.description}
+                selected={draft.level === l.id}
+                onPress={() => change({ level: l.id })}
+              />
+            ))}
+          </View>
+        </>
+      ) : null}
 
       <Spacer size="xl" />
       <Body weight="semibold">{e.avatarHeading}</Body>
@@ -358,11 +388,11 @@ export function EditProfileScreen({ navigation, route }: Props): React.ReactElem
         disabled={missing !== null || busy}
         onPress={() => void onSave()}
       />
-      {missing !== null ? (
+      {saveError !== null || missing !== null ? (
         <>
           <Spacer size="xs" />
           <Caption tone="secondary" align="center">
-            {e.missing[missing]}
+            {saveError ?? (missing !== null ? e.missing[missing] : null)}
           </Caption>
         </>
       ) : null}

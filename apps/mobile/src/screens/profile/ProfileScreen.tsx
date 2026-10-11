@@ -123,14 +123,13 @@ export function ProfileScreen(): React.ReactElement {
                 borderColor: isActive ? colors.brand.primary : colors.border.subtle,
                 borderWidth: 2,
                 borderRadius: radii.lg,
-                overflow: 'hidden',
               }}
             >
               <Pressable
                 onPress={() => setActive(p.id)}
                 accessibilityRole="button"
                 accessibilityLabel={t.switchTo(p.displayName)}
-                style={{ padding: spacing.md, alignItems: 'center', minHeight: touchTarget.hero }}
+                style={{ padding: spacing.md, alignItems: 'center', minHeight: touchTarget.hero, borderRadius: radii.lg }}
               >
                 <ProfileAvatar avatar={p.avatar} size={72} pose={isActive ? 'cheering' : 'idle'} />
                 <Spacer size="xs" />

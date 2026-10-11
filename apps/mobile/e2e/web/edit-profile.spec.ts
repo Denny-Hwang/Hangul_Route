@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { onboardChild, onboardSelf, readStored, typeDigits, unlockWithPin, waitForSaved } from './helpers';
+import { onboardChild, onboardSelf, readStored, seedStored, typeDigits, unlockWithPin, waitForSaved } from './helpers';
 import { shot } from './shots';
 
 /**
@@ -10,6 +10,8 @@ import { shot } from './shots';
  * consent the create form would (and a PIN for a child on a device with none).
  * No text on the screen names an age, and it never scrolls sideways.
  */
+const DAY_MS = 24 * 60 * 60 * 1000;
+
 const VIEWPORTS = [
   { width: 375, height: 667 },
   { width: 320, height: 568 },
@@ -166,3 +168,110 @@ for (const vp of VIEWPORTS) {
     });
   });
 }
+
+test.describe('edge cases (375x667)', () => {
+  test.use({ viewport: { width: 375, height: 667 } });
+
+  test('a profile stored before "Who is learning?" existed reads as a child and can become "Me" (§3.10)', async ({ page }) => {
+    await onboardChild(page, { name: 'Mina' });
+    // The shape a profile had before learnerType: drop the field and reload.
+    const profiles = (await readStored<StoredProfile[]>(page, 'profiles'))!;
+    await seedStored(
+      page,
+      'profiles',
+      profiles.map(({ learnerType: _drop, ...rest }) => rest),
+    );
+    expect((await storedProfile(page)).learnerType).toBeUndefined();
+
+    await openProfile(page, 'Mina');
+    await page.getByRole('button', { name: 'Edit Mina (PIN required)', exact: true }).click();
+    await unlockWithPin(page);
+    await expect(page.getByRole('heading', { name: 'Edit profile' })).toBeVisible();
+    await expect(page.getByRole('radio', { name: /^My child or a student/ })).toHaveAttribute('aria-checked', 'true');
+
+    await page.getByRole('radio', { name: /^Me\./ }).click();
+    await page.getByRole('checkbox', { name: "I'm 13 or older and I agree to the Privacy Policy." }).click();
+    await page.getByRole('button', { name: 'Save' }).click();
+    await expect(page.getByRole('heading', { name: 'Profiles & settings' })).toBeVisible();
+    await expect.poll(async () => (await storedProfile(page)).learnerType).toBe('self');
+  });
+
+  test('a learner in a class is told the teacher\'s list changes after joining again', async ({ page }) => {
+    await onboardSelf(page, { name: 'Rio' });
+    const { id } = await storedProfile(page);
+    await openProfile(page, 'Rio');
+    await page.getByRole('button', { name: 'Edit Rio', exact: true }).click();
+    await expect(page.getByRole('heading', { name: 'Edit profile' })).toBeVisible();
+    await expect(page.getByText("Changes show on your teacher's list after you join again")).toHaveCount(0);
+
+    await seedStored(page, `memberships:${id}`, [
+      { spaceId: 'space-1', kind: 'class', name: 'Saturday class', role: 'learner', joinedAt: '2026-10-01T00:00:00.000Z' },
+    ]);
+    await openProfile(page, 'Rio');
+    await page.getByRole('button', { name: 'Edit Rio', exact: true }).click();
+    await expect(page.getByText("Changes show on your teacher's list after you join again")).toBeVisible();
+  });
+
+  test('Forgot PIN from Edit comes back to Edit once the new PIN is set', async ({ page }) => {
+    await onboardChild(page, { name: 'Mina' });
+    await seedStored(page, 'account:pinResetRequestedAt', new Date(Date.now() - DAY_MS - 60_000).toISOString());
+    await openProfile(page, 'Mina');
+    await page.getByRole('button', { name: 'Edit Mina (PIN required)', exact: true }).click();
+    await page.getByRole('button', { name: 'Forgot PIN?' }).click();
+    await page.getByRole('button', { name: 'Set a new PIN' }).click();
+    await expect(page.getByText('Create a grown-up PIN')).toBeVisible();
+    for (const round of [0, 1]) {
+      await typeDigits(page, '2468');
+      await page.getByRole('button', { name: 'Next' }).click();
+      if (round === 0) await expect(page.getByText('Enter it once more')).toBeVisible();
+    }
+    await expect(page.getByRole('heading', { name: 'Edit profile' })).toBeVisible();
+    await expect(page.getByRole('textbox', { name: 'Name' })).toHaveValue('Mina');
+  });
+
+  test('a stored name longer than today\'s rule is kept, and another row still saves', async ({ page }) => {
+    await onboardSelf(page, { name: 'Rio' });
+    const profiles = (await readStored<StoredProfile[]>(page, 'profiles'))!;
+    await seedStored(
+      page,
+      'profiles',
+      profiles.map((p) => ({ ...p, displayName: 'Alexandria Mae' })),
+    );
+    await openProfile(page, 'Alexandria Mae');
+    await page.getByRole('button', { name: 'Edit Alexandria Mae', exact: true }).click();
+    await expect(page.getByRole('textbox', { name: 'Name' })).toHaveValue('Alexandria Mae');
+    await expect(page.getByText(/^Names can be up to/)).toHaveCount(0);
+    await page.getByRole('radio', { name: 'Home Tiger' }).click();
+    const save = page.getByRole('button', { name: 'Save' });
+    await expect(save).toBeEnabled();
+    await save.click();
+    await expect(page.getByRole('heading', { name: 'Profiles & settings' })).toBeVisible();
+    await expect
+      .poll(async () => {
+        const p = await storedProfile(page);
+        return [p.displayName, p.avatar];
+      })
+      .toEqual(['Alexandria Mae', 'hoya-blue']);
+  });
+
+  test('a double tap on Save saves once and goes back one screen', async ({ page }) => {
+    await onboardSelf(page, { name: 'Leo' });
+    await openProfile(page, 'Leo');
+    await page.getByRole('button', { name: 'Edit Leo', exact: true }).click();
+    await page.getByRole('radio', { name: /^My child or a student/ }).click();
+    await page.getByRole('checkbox').click();
+    await typeDigits(page, '2468');
+    await typeDigits(page, '2468');
+    await expect(page.getByText('PIN set')).toBeVisible();
+    // Two presses in the same task, before React can re-render the disabled button.
+    const save = page.getByRole('button', { name: 'Save' });
+    await expect(save).toBeEnabled();
+    await save.evaluate((el) => {
+      (el as HTMLElement).click();
+      (el as HTMLElement).click();
+    });
+    await expect(page.getByRole('heading', { name: 'Profiles & settings' })).toBeVisible();
+    await page.waitForTimeout(500);
+    await expect(page.getByRole('heading', { name: 'Profiles & settings' })).toBeVisible();
+  });
+});
