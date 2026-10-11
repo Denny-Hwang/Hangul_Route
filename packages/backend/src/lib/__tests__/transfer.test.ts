@@ -177,6 +177,12 @@ describe('newTransferId / newRequest (§4.1 initiator table)', () => {
     expect(r.learner).toMatchObject({ basis: 'device_attested', attest: 'self', evidence: 'device-1', role: null, locale: 'ko' });
   });
 
+  it('copies only the consent record fields: a wider runtime object cannot override state or at', async () => {
+    const wider = { ...(await momConsent(CREATED)), state: 'pending', at: 'not-a-time', extra: 'dropped' } as unknown as LearnerConsentRecord;
+    const r = newRequest({ id: 'transfer:w', learnerId: LEARNER, sourceSpaceId: SOURCE, destSpaceId: DEST, introduce: false, now: CREATED, initiator: 'learner_side', initiatorAccountId: 'mom', consent: wider });
+    expect(r.learner).toEqual({ state: 'consented', at: CREATED.toISOString(), ...(await momConsent(CREATED)) });
+  });
+
   it('source: source consented by the teacher, learner and destination pending, no execute_after', async () => {
     const r = newRequest({ id: 'transfer:s', learnerId: LEARNER, sourceSpaceId: SOURCE, destSpaceId: DEST, introduce: false, now: CREATED, initiator: 'source', initiatorAccountId: 'teacher-a', via: 'owner' });
     expect(r).toMatchObject({
@@ -280,6 +286,36 @@ describe('teacher slots (T10, T11)', () => {
     const fromTeacher = newRequest({ id: 'transfer:s', learnerId: LEARNER, sourceSpaceId: SOURCE, destSpaceId: DEST, introduce: false, now: CREATED, initiator: 'source', initiatorAccountId: 'teacher-a', via: 'owner' });
     expect(planTeacherConsent(await actor('teacher-b'), fromTeacher, ['destination'], ctxs)).toEqual({ kind: 'refused', error: 'awaiting_learner' });
     expect(planTeacherConsent(await actor('teacher-b'), { ...t, status: 'declined' }, ['destination'], ctxs)).toEqual({ kind: 'refused', error: 'not_open' });
+  });
+
+  it('refuses (not_found) a context that is not this request\'s source or destination (IDOR)', async () => {
+    await join('space:class-c', 'account', 'teacher-a', 'teacher');
+    const t = await learnerSide();
+    expect(planTeacherConsent(await actor('teacher-a'), t, ['source'], { source: await ctx('space:class-c'), destination: await ctx(DEST) })).toEqual({ kind: 'refused', error: 'not_found' });
+    expect(planTeacherConsent(await actor('teacher-b'), t, ['destination'], { source: await ctx(SOURCE), destination: await ctx(SOURCE) })).toEqual({ kind: 'refused', error: 'not_found' });
+  });
+
+  it('via comes from the slots actually written, not every slot named', async () => {
+    await db.putAccount({ id: 'mixed', email: null, displayName: null, consent: null, createdAt: T0 });
+    await join(SOURCE, 'account', 'mixed', 'teacher');
+    await putSpace(DEST, { ownerAccountId: 'mixed' });
+    await join(DEST, 'account', 'mixed', 'owner');
+    const t = await learnerSide();
+    expect(await db.consentSlot(t.id, { kind: 'teacher', slots: ['source'], accountId: 'teacher-a', via: 'owner' }, CREATED)).toBe(1);
+    const ctxs = { source: await ctx(SOURCE), destination: await ctx(DEST) };
+    expect(planTeacherConsent(await actor('mixed'), await row(t.id), ['source', 'destination'], ctxs)).toEqual({
+      kind: 'consent',
+      consent: { kind: 'teacher', slots: ['destination'], accountId: 'mixed', via: 'owner' },
+    });
+  });
+
+  it('a school admin naming both slots when only one is still pending fills that one', async () => {
+    const t = await learnerSide();
+    expect(await db.consentSlot(t.id, { kind: 'teacher', slots: ['source'], accountId: 'teacher-a', via: 'owner' }, CREATED)).toBe(1);
+    expect(planTeacherConsent(await actor('principal'), await row(t.id), ['source', 'destination'], { source: await ctx(SOURCE), destination: await ctx(DEST) })).toEqual({
+      kind: 'consent',
+      consent: { kind: 'teacher', slots: ['destination'], accountId: 'principal', via: 'school_admin' },
+    });
   });
 
   it('a slot already in is left out; nothing left to fill is unchanged (idempotent approve)', async () => {
@@ -496,6 +532,43 @@ describe('settle (§4.6)', () => {
     expect(await learnerSpaces()).toEqual([FAMILY, SOURCE].sort());
   });
 
+  it('a copy taken before the last slot came in still promotes and executes by what is stored', async () => {
+    const copy = await learnerSide();
+    await db.consentSlot(copy.id, { kind: 'teacher', slots: ['source'], accountId: 'teacher-a', via: 'owner' }, CREATED);
+    await db.consentSlot(copy.id, { kind: 'teacher', slots: ['destination'], accountId: 'teacher-b', via: 'owner' }, CREATED);
+    const result = await settle(db, copy, AFTER_DUE, ON);
+    expect(result.execution?.executed).toBe(true);
+    expect(result.request).toEqual(await row(copy.id));
+    expect(await learnerSpaces()).toEqual([DEST, FAMILY].sort());
+  });
+
+  it('a copy that predates a reset and a new consent never resets the new consent', async () => {
+    const copy = await allAgreed();
+    await putSpace(DEST, { name: 'Renamed' });
+    expect(await db.resetLearnerConsent(copy.id, 'terms_changed', CREATED)).toBe(1);
+    const fresh = await momConsent(CREATED);
+    expect(await db.consentSlot(copy.id, { kind: 'learner', record: fresh }, CREATED)).toBe(1);
+    const result = await settle(db, copy, CREATED, ON);
+    expect(result.reset).toBeNull();
+    expect(result.request).toMatchObject({ status: 'approved', learner: { state: 'consented', terms: fresh.terms } });
+    expect((await events(copy.id)).filter((e) => e === 'consent_reset')).toHaveLength(1);
+  });
+
+  it('a self-managed switch set after a caregiver consented does not undo it: the learner device can still decline', async () => {
+    const t = await approved();
+    await db.setTransferPref(LEARNER, 'selfManaged', true, CREATED);
+    expect((await settle(db, t, AFTER_DUE, ON)).execution?.executed).toBe(true);
+  });
+
+  it('the guardian re-check accepts any family that still qualifies (guard 9 is about the account, not one family)', async () => {
+    await db.putSpace({ ...(await space(FAMILY)), id: 'space:family-2' });
+    await join('space:family-2', 'account', 'mom', 'owner');
+    await join('space:family-2', 'learner', LEARNER, 'student');
+    const t = await approved();
+    await db.removeMembership(FAMILY, 'account', 'mom');
+    expect(await settle(db, t, AFTER_DUE, ON)).toMatchObject({ reset: null, execution: { executed: true } });
+  });
+
   it('a request that vanished (learner erased) settles to null', async () => {
     const t = await learnerSide();
     await db.deleteLearner(LEARNER);
@@ -522,6 +595,16 @@ describe('settle (§4.6)', () => {
         expect((await db.transferEvents(t.id))[1]).toMatchObject({ actorKind: 'system', slot: 'learner', detail: { why: 'terms_changed' } });
       });
     }
+
+    it('a premium warning that no longer applies does not reset: joining a pro destination meanwhile (behaviour 25)', async () => {
+      await db.applyEntitlement({ subjectKind: 'space', subjectId: DEST, planKey: 'group_license', status: 'active', provider: 'manual' }, at(0));
+      const t = await approved();
+      expect(t.learner.terms?.premiumChange).toBe('may_change');
+      await join(DEST, 'learner', LEARNER, 'student');
+      const result = await settle(db, t, DUE, ON);
+      expect(result).toMatchObject({ reset: null, execution: { executed: true } });
+      expect(await learnerSpaces()).toEqual([DEST, FAMILY].sort());
+    });
 
     it('terms_changed before execution: nothing moves until the guardian confirms again', async () => {
       const t = await approved();
@@ -568,22 +651,62 @@ describe('settle (§4.6)', () => {
       await db.putDevice(device);
       expect(await consentFreshness(db, await row(request.id), CREATED)).toBeNull();
       await db.putDevice({ ...device, scope: 'class' });
-      expect((await settle(db, await row(request.id), CREATED, ON)).reset).toBe('guardian_changed');
+      expect((await settle(db, await row(request.id), CREATED, { ...ON, CLASS_TRANSFER_DEVICE_CONSENT: 'enabled' })).reset).toBe('guardian_changed');
       expect(await consentFreshness(db, { ...(await row(request.id)), learner: { ...request.learner } }, CREATED)).toBe('guardian_changed');
       const unbound = { ...request, learner: { ...request.learner, evidence: 'phone-unknown' } };
       expect(await consentFreshness(db, unbound, CREATED)).toBe('guardian_changed');
     });
 
-    it('lapsed when approved and blocked for 72 hours after the move fell due', async () => {
+    it('device basis with the device-consent lock off: held, neither promoted nor executed, until the lock opens', async () => {
+      const t = await learnerSide();
+      await db.cancelTransfer(t.id, 'withdrawn_learner', 'device', CREATED);
+      const consent = { ...(await momConsent(CREATED)), basis: 'device_attested' as const, attest: 'self' as const, evidence: 'phone-1', role: null };
+      const request = newRequest({ id: 'transfer:dev', learnerId: LEARNER, sourceSpaceId: SOURCE, destSpaceId: DEST, introduce: false, now: CREATED, initiator: 'learner_side', initiatorAccountId: null, consent });
+      await db.createTransfer(request, { at: CREATED.toISOString(), actorKind: 'device', actorRef: 'phone-1', event: 'created', slot: null, detail: null });
+      await db.consentSlot(request.id, { kind: 'teacher', slots: ['source'], accountId: 'teacher-a', via: 'owner' }, CREATED);
+      await db.consentSlot(request.id, { kind: 'teacher', slots: ['destination'], accountId: 'teacher-b', via: 'owner' }, CREATED);
+      await db.putDevice({ learnerId: LEARNER, deviceId: 'phone-1', secretHash: 'h', scope: 'full', createdAt: T0, lastSeenAt: T0 });
+      const DEVICE_ON = { ...ON, CLASS_TRANSFER_DEVICE_CONSENT: 'enabled' };
+      const held = await settle(db, await row(request.id), CREATED, ON);
+      expect(held).toMatchObject({ reset: null, execution: null, request: { status: 'requested', learner: { state: 'consented' } } });
+      expect((await settle(db, await row(request.id), CREATED, DEVICE_ON)).request?.status).toBe('approved');
+      expect(await settle(db, await row(request.id), AFTER_DUE, ON)).toMatchObject({ execution: null, request: { status: 'approved' } });
+      expect(await learnerSpaces()).toEqual([FAMILY, SOURCE].sort());
+      expect((await settle(db, await row(request.id), AFTER_DUE, DEVICE_ON)).execution?.executed).toBe(true);
+    });
+
+    it('lapsed when the move is still blocked 72 hours after the first recorded block', async () => {
       await fillClass(db, DEST, 20);
       const t = await approved();
-      const blocked = await settle(db, t, DUE, ON);
-      expect(blocked.request).toMatchObject({ status: 'approved', blockReason: 'cap_class' });
-      const stillValid = await settle(db, await row(t.id), new Date(DUE.getTime() + TRANSFER_BLOCKED_VALID_MS - 1), ON);
-      expect(stillValid.reset).toBeNull();
-      const lapsed = await settle(db, await row(t.id), new Date(DUE.getTime() + TRANSFER_BLOCKED_VALID_MS), ON);
-      expect(lapsed).toMatchObject({ reset: 'lapsed', request: { status: 'requested', blockReason: null } });
+      const firstRead = new Date(DUE.getTime() + 10 * HOUR);
+      const blocked = await settle(db, t, firstRead, ON);
+      expect(blocked).toMatchObject({ reset: null, request: { status: 'approved', blockReason: 'cap_class' } });
+      const stillValid = await settle(db, await row(t.id), new Date(firstRead.getTime() + TRANSFER_BLOCKED_VALID_MS - 1), ON);
+      expect(stillValid).toMatchObject({ reset: null, request: { status: 'approved' } });
+      const lapsed = await settle(db, await row(t.id), new Date(firstRead.getTime() + TRANSFER_BLOCKED_VALID_MS), ON);
+      expect(lapsed).toMatchObject({ reset: 'lapsed', request: { status: 'requested', blockReason: null, learner: { state: 'pending' } } });
+      expect((await db.transferEvents(t.id)).find((e) => e.event === 'consent_reset')?.detail).toEqual({ why: 'lapsed' });
       expect(await learnerSpaces()).toEqual([FAMILY, SOURCE].sort());
+    });
+
+    it('a first read long after the move fell due records the block and does not lapse; a seat freed 30 s later moves the learner', async () => {
+      await fillClass(db, DEST, 20);
+      const t = await approved();
+      const lateFirstRead = new Date(DUE.getTime() + TRANSFER_BLOCKED_VALID_MS + HOUR);
+      expect(await settle(db, t, lateFirstRead, ON)).toMatchObject({ reset: null, request: { status: 'approved', blockReason: 'cap_class' } });
+      await db.removeMembership(DEST, 'learner', 'profile:class-b-0');
+      const retry = await settle(db, await row(t.id), new Date(lateFirstRead.getTime() + 30_000), ON);
+      expect(retry).toMatchObject({ reset: null, execution: { executed: true } });
+      expect(await learnerSpaces()).toEqual([DEST, FAMILY].sort());
+    });
+
+    it('a seat that comes free after 72 hours blocked: the gate decides first and the move goes ahead', async () => {
+      await fillClass(db, DEST, 20);
+      const t = await approved();
+      await settle(db, t, DUE, ON);
+      await db.removeMembership(DEST, 'learner', 'profile:class-b-0');
+      const later = await settle(db, await row(t.id), new Date(DUE.getTime() + TRANSFER_BLOCKED_VALID_MS + HOUR), ON);
+      expect(later).toMatchObject({ reset: null, execution: { executed: true } });
     });
 
     it('a consented learner slot whose terms are missing is treated as changed', async () => {
@@ -824,6 +947,31 @@ describe('races through settle (§4.7)', () => {
     const race = before('promoteTransfer', () => db.declineSlot(t.id, 'destination', 'declined_destination', 'destination', CREATED));
     const result = await settle(race.wrapped, t, CREATED, ON);
     expect(result.request).toMatchObject({ status: 'declined', approvedAt: null });
+  });
+
+  it('a re-consent landing just before the reset survives it', async () => {
+    const t = await allAgreed();
+    await putSpace(DEST, { name: 'Renamed' });
+    const fresh = await momConsent(CREATED);
+    const race = before('resetLearnerConsent', async () => {
+      await db.resetLearnerConsent(t.id, 'terms_changed', CREATED);
+      await db.consentSlot(t.id, { kind: 'learner', record: fresh }, CREATED);
+    });
+    const result = await settle(race.wrapped, t, CREATED, ON);
+    expect(race.fired()).toBe(true);
+    expect(result.reset).toBeNull();
+    expect(await row(t.id)).toMatchObject({ learner: { state: 'consented', terms: fresh.terms } });
+    expect((await events(t.id)).filter((e) => e === 'consent_reset')).toHaveLength(1);
+  });
+
+  it('two blocked settles at once write one blocked event', async () => {
+    await fillClass(db, DEST, 20);
+    const t = await approved();
+    const race = before('blockTransfer', () => executeTransfer(db, t, DUE));
+    const result = await executeTransfer(race.wrapped, t, DUE);
+    expect(race.fired()).toBe(true);
+    expect(result).toMatchObject({ executed: false, blockReason: 'cap_class', request: { blockReason: 'cap_class' } });
+    expect((await events(t.id)).filter((e) => e === 'blocked')).toHaveLength(1);
   });
 
   it('a reset that lost its race reports no reset', async () => {

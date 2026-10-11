@@ -21,7 +21,7 @@ import type {
   TransferSlotConsent,
   TransferVia,
 } from '../db';
-import { allSlotsIn, finiteCap, isOpenTransfer } from '../db/transfer-rules';
+import { allSlotsIn, consentedLearnerSlot, finiteCap, isOpenTransfer } from '../db/transfer-rules';
 import { learnerContexts, spaceContext } from './access';
 import { can, type AccountActor, type SpaceContext } from './can';
 import { hashSecret } from './device-auth';
@@ -119,7 +119,7 @@ export function newRequest(input: NewRequestInput): StoredTransfer {
     rev: 0,
     learner:
       input.initiator === 'learner_side'
-        ? { state: 'consented', at, ...input.consent }
+        ? consentedLearnerSlot(input.consent, at)
         : { state: 'pending', at: null, basis: null, attest: null, evidence: null, role: null, textVersion: null, locale: null, shown: null, terms: null },
     source: input.initiator === 'source' ? { state: 'consented', at, accountId: input.initiatorAccountId, via: input.via } : { ...EMPTY_TEACHER_SLOT },
     destination: { ...EMPTY_TEACHER_SLOT },
@@ -160,14 +160,21 @@ export async function consentTermsFor(db: Db, learnerId: string, source: Space, 
   };
 }
 
-function sameTerms(a: TransferConsentTerms, b: TransferConsentTerms): boolean {
+/**
+ * Whether the terms a consent was given on still cover the live ones. Every
+ * term must be equal, except that a premium warning the guardian saw and that
+ * no longer applies (`may_change` then, `none` now: the learner joined a pro
+ * destination meanwhile, behaviour 25) is no reason to ask again. A warning
+ * the guardian never saw (`none` then, `may_change` now) is.
+ */
+function termsStillCovered(consented: TransferConsentTerms, live: TransferConsentTerms): boolean {
   return (
-    a.destNameHash === b.destNameHash &&
-    a.destConsentMode === b.destConsentMode &&
-    a.destAnonymize === b.destAnonymize &&
-    a.destOwnerId === b.destOwnerId &&
-    a.sourceNameHash === b.sourceNameHash &&
-    a.premiumChange === b.premiumChange
+    consented.destNameHash === live.destNameHash &&
+    consented.destConsentMode === live.destConsentMode &&
+    consented.destAnonymize === live.destAnonymize &&
+    consented.destOwnerId === live.destOwnerId &&
+    consented.sourceNameHash === live.sourceNameHash &&
+    (consented.premiumChange === live.premiumChange || (consented.premiumChange === 'may_change' && live.premiumChange === 'none'))
   );
 }
 
@@ -199,13 +206,17 @@ export type TeacherConsentPlan =
 
 /**
  * Turns an approve of teacher slots into the one `consentSlot` call to make.
+ * `ctx` must be this request's own source and destination contexts; any other
+ * context answers `not_found` (the ownership rule of §4.4), so a route that
+ * passes the wrong context never authorizes a manager of an unrelated class.
  * Repeated slot names count once and slots already in are left out (approve
  * is idempotent). Both slots in one call only for an account that is the
  * direct owner/teacher of both classes (T11); a school admin acting through
- * the cascade fills one slot per action. The single UPDATE records one `via`:
- * `owner` when the account owns both classes, `teacher` otherwise (an owner
- * acts as the class teacher, can.ts `OWNER_AS`). The destination slot waits
- * for the learner slot (`awaiting_learner`).
+ * the cascade fills one slot per action (`one_slot_per_action` when two are
+ * still pending). The single UPDATE records one `via`, taken from the slots it
+ * writes: `owner` when the account owns every one of them, `teacher` otherwise
+ * (an owner acts as the class teacher, can.ts `OWNER_AS`). The destination
+ * slot waits for the learner slot (`awaiting_learner`).
  */
 export function planTeacherConsent(
   actor: AccountActor,
@@ -213,16 +224,18 @@ export function planTeacherConsent(
   slots: ReadonlyArray<'source' | 'destination'>,
   ctx: { source: SpaceContext; destination: SpaceContext },
 ): TeacherConsentPlan {
+  if (ctx.source.space.id !== request.sourceSpaceId || ctx.destination.space.id !== request.destSpaceId) return { kind: 'refused', error: 'not_found' };
   const named = (['source', 'destination'] as const).filter((slot) => slots.includes(slot));
   if (named.length === 0) return { kind: 'refused', error: 'not_found' };
-  const vias = named.map((slot) => teacherVia(actor, ctx[slot]));
-  if (vias.some((via) => via === null)) return { kind: 'refused', error: 'not_found' };
+  const vias = new Map(named.map((slot) => [slot, teacherVia(actor, ctx[slot])]));
+  if ([...vias.values()].some((via) => via === null)) return { kind: 'refused', error: 'not_found' };
   if (!isOpenTransfer(request)) return { kind: 'refused', error: 'not_open' };
-  if (named.length === 2 && vias.includes('school_admin')) return { kind: 'refused', error: 'one_slot_per_action' };
   const pending = named.filter((slot) => request[slot].state === 'pending');
   if (pending.length === 0) return { kind: 'unchanged' };
+  const written = pending.map((slot) => vias.get(slot) as TransferVia);
+  if (written.length === 2 && written.includes('school_admin')) return { kind: 'refused', error: 'one_slot_per_action' };
   if (pending.includes('destination') && request.learner.state !== 'consented') return { kind: 'refused', error: 'awaiting_learner' };
-  const via: TransferVia = vias.length === 1 ? (vias[0] as TransferVia) : vias.every((v) => v === 'owner') ? 'owner' : 'teacher';
+  const via: TransferVia = written.length === 1 ? (written[0] as TransferVia) : written.every((v) => v === 'owner') ? 'owner' : 'teacher';
   return { kind: 'consent', consent: { kind: 'teacher', slots: pending, accountId: actor.accountId, via } };
 }
 
@@ -298,6 +311,10 @@ export async function familyGuardianRole(db: Db, accountId: string, learnerId: s
  *    guardian who started a learner-side request is its learner side, not a
  *    second party, so that initiator never conflicts.
  *
+ * Without `familyId` any family that qualifies counts: the re-check before
+ * execution asks whether the consenting account is still a guardian of the
+ * learner, not whether it is one through the family it consented from.
+ *
  * (b) is checked before (c), so a family built around a child on the day of
  * the request answers `family_too_new` (behaviour 5).
  */
@@ -356,14 +373,14 @@ export async function sourceRequestRefused(db: Db, learnerId: string, now: Date)
 
 /**
  * Whether the learner consent still covers what would happen (`settle` step
- * 5): `terms_changed` when a consent-time term differs from its live value
- * (destination consent mode, anonymity, owner, destination or source name,
- * premium outlook); `guardian_changed` when guard 9 no longer holds for the
- * consenting account (caregiver basis) or the consenting device is no longer
- * bound with full scope (device basis); `lapsed` when the request has waited
- * for room longer than 72 hours. A block can only start once the move is due,
- * so the 72 hours count from the later of `approvedAt` and `executeAfter`.
- * Null when the consent is fresh, or there is no consent to check.
+ * 5): `terms_changed` when a consent-time term no longer covers its live value
+ * (destination consent mode, anonymity, owner, destination or source name, a
+ * new premium warning: `termsStillCovered`); `guardian_changed` when guard 9
+ * no longer holds for the consenting account (caregiver basis) or the
+ * consenting device is no longer bound with full scope (device basis). Null
+ * when the consent is fresh, or there is no consent to check. The 72-hour
+ * `lapsed` rule is not decided here but after a fresh attempt still blocks
+ * (`settle` step 6), so a seat that came free always gets its chance first.
  */
 export async function consentFreshness(db: Db, request: StoredTransfer, now: Date): Promise<ConsentResetReason | null> {
   const consent = request.learner;
@@ -371,7 +388,7 @@ export async function consentFreshness(db: Db, request: StoredTransfer, now: Dat
   const spaces = new Map((await db.getSpaces([request.sourceSpaceId, request.destSpaceId])).map((s) => [s.id, s]));
   const source = spaces.get(request.sourceSpaceId);
   const dest = spaces.get(request.destSpaceId);
-  if (!consent.terms || !source || !dest || !sameTerms(consent.terms, await consentTermsFor(db, request.learnerId, source, dest, now))) return 'terms_changed';
+  if (!consent.terms || !source || !dest || !termsStillCovered(consent.terms, await consentTermsFor(db, request.learnerId, source, dest, now))) return 'terms_changed';
 
   if (consent.basis === 'caregiver') {
     const guardian = consent.evidence ? await guardianOf(db, consent.evidence, request.learnerId, partiesOf(request), now) : null;
@@ -380,12 +397,21 @@ export async function consentFreshness(db: Db, request: StoredTransfer, now: Dat
     const device = consent.evidence ? await db.getDevice(request.learnerId, consent.evidence) : null;
     if (device?.scope !== 'full') return 'guardian_changed';
   }
-
-  if (request.status === 'approved' && request.blockReason !== null) {
-    const since = Math.max(Date.parse(request.approvedAt ?? request.updatedAt), Date.parse(request.executeAfter ?? request.updatedAt));
-    if (now.getTime() >= since + TRANSFER_BLOCKED_VALID_MS) return 'lapsed';
-  }
   return null;
+}
+
+/**
+ * When the current block started: the first `blocked` event since this
+ * approval (`approvedAt`; a reset clears it and a new promotion sets it
+ * again, so an earlier cycle never counts). Null when no block is recorded.
+ * Measured from the block, not from when the move fell due: with no scheduler
+ * a block is first seen at the first read, which may come days later.
+ */
+async function blockedSince(db: Db, request: StoredTransfer): Promise<number | null> {
+  const approvedAt = request.approvedAt;
+  if (approvedAt === null) return null;
+  const first = (await db.transferEvents(request.id)).find((e) => e.event === 'blocked' && e.at >= approvedAt);
+  return first ? Date.parse(first.at) : null;
 }
 
 export interface ExecuteOutcome {
@@ -431,7 +457,13 @@ const systemEvent = (transferId: string, now: Date) => ({ transferId, at: now.to
  * transaction. Not executed: the row is re-read and its real state reported;
  * an `approved` request that is due records why it waits for room
  * (`blockTransfer` and a `blocked` event, only when the reason changes, so a
- * read every 30 seconds does not fill the audit).
+ * read every 30 seconds does not fill the audit; the CAS itself refuses a
+ * reason already recorded, so two racing reads write one event).
+ *
+ * Internal to `settle`: it checks neither the `CLASS_TRANSFER` lock nor the
+ * freshness of the learner consent (step 5), which the SQL gate does not
+ * cover either. Every route, retry included, calls `settle`, never this.
+ * Exported for the unit tests.
  */
 export async function executeTransfer(db: Db, request: StoredTransfer, now: Date): Promise<ExecuteOutcome> {
   const { id, learnerId, sourceSpaceId, destSpaceId } = request;
@@ -450,8 +482,8 @@ export async function executeTransfer(db: Db, request: StoredTransfer, now: Date
   const due = row?.status === 'approved' && row.executeAfter !== null && row.executeAfter <= now.toISOString() && row.expiresAt > now.toISOString();
   if (!row || !due || !dest) return { executed: false, request: row, blockReason: null, devicesRevoked: 0, relinksClosed: 0 };
   const reason: TransferBlockReason | null = schoolFull ? 'cap_school' : await classSeatCheck(db, dest, learnerId, now, { excludeSpaceId: sourceSpaceId });
-  if (reason && row.blockReason !== reason && (await db.blockTransfer(id, reason, now)) === 1) {
-    await db.addTransferEvent({ ...systemEvent(id, now), event: 'blocked', detail: { reason } });
+  if (reason && row.blockReason !== reason) {
+    if ((await db.blockTransfer(id, reason, now)) === 1) await db.addTransferEvent({ ...systemEvent(id, now), event: 'blocked', detail: { reason } });
     row = await db.getTransfer(id);
   }
   return { executed: false, request: row, blockReason: reason ?? row?.blockReason ?? null, devicesRevoked: 0, relinksClosed: 0 };
@@ -494,15 +526,24 @@ export interface SettleResult {
  *    an archived source turns a pending source slot into `not_required`;
  * 4. promote to `approved` when every slot is in;
  * 5. before promoting or executing, check the learner consent is still fresh
- *    (`consentFreshness`) and reset it when not;
- * 6. execute when `approved` and the cooling-off has passed.
+ *    (`consentFreshness`) and reset it when not; the reset carries the `rev`
+ *    it was decided on, so it never wipes a consent given since. A
+ *    `device_attested` consent while `CLASS_TRANSFER_DEVICE_CONSENT` is off
+ *    is held here (neither promoted nor executed) until the lock opens again;
+ * 6. execute when `approved` and the cooling-off has passed. When the move is
+ *    still blocked 72 hours after the first recorded block, the learner
+ *    consent lapses (`lapsed`).
+ *
+ * The caller's `request` only names the row (and answers for a closed lock):
+ * every decision is taken on a fresh read, never on the caller's copy.
  */
 export async function settle(db: Db, request: StoredTransfer, now: Date, env: TransferEnv | undefined): Promise<SettleResult> {
   const unchanged = (row: StoredTransfer | null): SettleResult => ({ request: row, reset: null, execution: null });
   if (!classTransferEnabled(env) || !isOpenTransfer(request)) return unchanged(request);
   const at = now.toISOString();
   const { id } = request;
-  let row: StoredTransfer | null = request;
+  let row = await db.getTransfer(id);
+  if (!row || !isOpenTransfer(row)) return unchanged(row);
 
   if (at >= row.expiresAt) {
     await db.expireTransfer(id, now);
@@ -528,10 +569,11 @@ export async function settle(db: Db, request: StoredTransfer, now: Date, env: Tr
   const isDue = (t: StoredTransfer): boolean => t.status === 'approved' && t.executeAfter !== null && at >= t.executeAfter;
   const aboutToPromote = row.status === 'requested' && allSlotsIn(row);
   if (!aboutToPromote && !isDue(row)) return unchanged(row);
+  if (row.learner.basis === 'device_attested' && !transferDeviceConsentEnabled(env)) return unchanged(row);
 
   const why = await consentFreshness(db, row, now);
   if (why) {
-    const changed = await db.resetLearnerConsent(id, why, now);
+    const changed = await db.resetLearnerConsent(id, why, now, row.rev);
     return { request: await db.getTransfer(id), reset: changed === 1 ? why : null, execution: null };
   }
 
@@ -542,5 +584,13 @@ export async function settle(db: Db, request: StoredTransfer, now: Date, env: Tr
   }
 
   const execution = await executeTransfer(db, row, now);
+  const blocked = execution.request;
+  if (!execution.executed && execution.blockReason !== null && blocked?.status === 'approved') {
+    const since = await blockedSince(db, blocked);
+    if (since !== null && now.getTime() >= since + TRANSFER_BLOCKED_VALID_MS) {
+      const changed = await db.resetLearnerConsent(id, 'lapsed', now, blocked.rev);
+      return { request: await db.getTransfer(id), reset: changed === 1 ? 'lapsed' : null, execution };
+    }
+  }
   return { request: execution.request, reset: null, execution };
 }
