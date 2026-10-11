@@ -1,0 +1,354 @@
+import type { AssessmentQuestion, AssessmentResponse, Outcome } from '../assessment/question';
+import { deadline as deadlineAt, isExpired, isIdle } from '../assessment/clock';
+import { placeCorrect } from '../assessment/options';
+import { createRng, hashSeed } from '../assessment/rng';
+import { selectSpread } from '../assessment/select';
+import type { StageKey } from '../schemas/heritage-card';
+import type {
+  GateResult,
+  Motivation,
+  PlacementForm,
+  PlacementGate,
+  PlacementResult,
+  PlacementSource,
+  PlacementStrand,
+} from '../schemas/placement';
+import type { UiLocale } from '../schemas/locale';
+import { coveredSymbols, placedOutQuestIds, placementStageNumber } from './level-map';
+import { nextRung } from './plan';
+import { priorityTokensOf, seedRoute, type RouteCatalog } from './route-seed';
+import { IDLE_PAUSE_MS, QUESTIONS_PER_RUNG, RUNG_TABLE, backstopMs, questionCap } from './rungs';
+import type { PlacementRunState } from './run-state';
+import { gateResult, levelOf, oralStageOf, strandStatuses } from './scoring';
+
+export { PlacementRunConfigSchema, PlacementRunStateSchema, type PlacementRunState } from './run-state';
+
+/**
+ * The pure run engine (F-PLC-001 section 3.5): start, ask, apply events, finish.
+ * Time enters only as `nowMs`; randomness only through `config.seed`. A run
+ * never moves the route backwards, writes no completion and grants nothing.
+ */
+
+/** What the engine needs of a bank template; P-4's `PlacementTemplateSchema` type satisfies it. */
+export interface PlacementTemplateInput {
+  id: string;
+  /** Not used by the engine; present on the bank's own type. */
+  strand?: PlacementStrand;
+  glossEn?: string;
+  gate: PlacementGate;
+  form: PlacementForm;
+  question: Omit<AssessmentQuestion, 'id'>;
+  status: 'draft' | 'ready';
+}
+export interface PlacementBankInput {
+  version: number;
+  templates: readonly PlacementTemplateInput[];
+}
+
+export interface PlacementConfig {
+  /** quick: at most 15 questions, 4 minutes; full: at most 21, 6 minutes. */
+  length: 'quick' | 'full';
+  revealMode: 'tap' | 'always';
+  /** From the warm-up (`playPrompt` result) and `canPlayKorean(getCapability())`. */
+  audio: boolean;
+  /** False with a screen reader: `recog` is not run. */
+  visual: boolean;
+  /** True: no inactivity pause, no backstop clock. */
+  takeMyTime: boolean;
+  /** `hashSeed([profileId, startedAt])`. */
+  seed: number;
+  /** Template ids of the previous result. */
+  exclude: string[];
+  resolvesPicture: (ref: string) => boolean;
+}
+
+export type PlacementEvent =
+  | { type: 'answer'; optionId: string; assisted?: boolean }
+  | { type: 'notSure' }
+  /** The caller's own 45-second inactivity timer fired. */
+  | { type: 'idle' }
+  /** The caller's periodic check of both clocks. */
+  | { type: 'tick' }
+  /** Any touch that is not an answer (hear it again, ...): resets the inactivity clock. */
+  | { type: 'touch' }
+  | { type: 'quit'; by: 'learner' | 'grown-up' }
+  | { type: 'keepGoing' };
+
+const MAX_MS = 600_000;
+const NOT_SURE_LIMIT = 3;
+const clampMs = (ms: number): number => Math.min(MAX_MS, Math.max(0, Math.round(ms)));
+
+const drawKey = (gate: PlacementGate, form: PlacementForm): string => `${gate}:${form}`;
+
+/** One key per look-alike pair, symbol, syllable or word, so a draw spreads before it repeats. */
+const spreadKey = (template: PlacementTemplateInput): string => {
+  const tags = template.question.tags;
+  const named = tags.find((tag) => tag.startsWith('syl:') || tag.startsWith('word:'));
+  if (named !== undefined) return named;
+  const symbols = tags.filter((tag) => tag.startsWith('sym:')).sort();
+  return symbols.length > 0 ? symbols.join('|') : template.id;
+};
+
+const usable = (template: PlacementTemplateInput, config: PlacementConfig): boolean => {
+  const { requires, leaks, options } = template.question;
+  if (requires.audio && !config.audio) return false;
+  if (leaks && config.revealMode === 'always') return false;
+  if (requires.picture === null) return true;
+  return options.every((o) => o.pictureRef === undefined || config.resolvesPicture(o.pictureRef));
+};
+
+/**
+ * Three questions for a rung, or null when fewer than three are eligible. The
+ * rung has its own generator, so a draw does not depend on the path taken.
+ */
+const drawRung = (
+  bank: PlacementBankInput,
+  config: PlacementConfig,
+  gate: PlacementGate,
+  form: PlacementForm,
+): AssessmentQuestion[] | null => {
+  if (form === 'oral' && !config.audio) return null;
+  if (gate === 'recog' && !config.visual) return null;
+  const eligible = bank.templates.filter(
+    (t) => t.status === 'ready' && t.gate === gate && t.form === form && usable(t, config),
+  );
+  const rng = createRng(hashSeed([String(config.seed), gate, form]));
+  const pick = (count: number, exclude: readonly string[], filter?: (t: PlacementTemplateInput) => boolean) =>
+    selectSpread({ candidates: eligible, count, rng, exclude, spreadBy: spreadKey, ...(filter ? { filter } : {}) });
+  const isReply = (t: PlacementTemplateInput): boolean => t.question.format === 'reply-pick';
+
+  const choose = (exclude: readonly string[]): PlacementTemplateInput[] => {
+    if (gate !== 'sentence' || form !== 'read') return pick(QUESTIONS_PER_RUNG, exclude);
+    // Two read-pick-picture and one reply-pick; a short side is topped up from what is left.
+    const chosen = [...pick(2, exclude, (t) => !isReply(t)), ...pick(1, exclude, isReply)];
+    const taken = [...exclude, ...chosen.map((t) => t.id)];
+    return [...chosen, ...pick(QUESTIONS_PER_RUNG - chosen.length, taken)];
+  };
+  let chosen = choose(config.exclude);
+  if (chosen.length < QUESTIONS_PER_RUNG && config.exclude.length > 0) chosen = choose([]);
+  if (chosen.length < QUESTIONS_PER_RUNG) return null;
+
+  const recent: number[] = [];
+  return chosen.map((t) => {
+    const options = placeCorrect(t.question.options, rng, true, recent);
+    recent.push(options.findIndex((o) => o.isCorrect));
+    return { ...t.question, id: t.id, options };
+  });
+};
+
+const finish = (state: PlacementRunState, reason: NonNullable<PlacementRunState['stop']>): PlacementRunState => ({
+  ...state,
+  stop: reason,
+  draws: {},
+  pause: null,
+  pausedAtMs: null,
+});
+
+/** Moves to the next rung that can be asked, recording the ones that cannot as not-run; or ends the run. */
+const advance = (from: PlacementRunState): PlacementRunState => {
+  let state = from;
+  for (;;) {
+    const step = nextRung({ length: state.config.length, done: state.done });
+    if (step === null) {
+      const full = state.responses.length >= questionCap(state.config.length);
+      return { ...finish(state, full ? 'cap' : 'complete'), current: null };
+    }
+    const key = drawKey(step.gate, step.form);
+    const questions = state.draws[key];
+    if (questions === undefined) {
+      const skipped: GateResult = { ...step, asked: 0, correct: 0, assisted: 0, result: 'not-run', reason: 'unavailable' };
+      state = { ...state, done: [...state.done, skipped] };
+      continue;
+    }
+    const draws = { ...state.draws };
+    delete draws[key];
+    return { ...state, draws, current: { gate: step.gate, form: step.form, questions, start: state.responses.length } };
+  }
+};
+
+export const startRun = (bank: PlacementBankInput, config: PlacementConfig, nowMs: number): PlacementRunState => {
+  const draws: PlacementRunState['draws'] = {};
+  for (const spec of RUNG_TABLE) {
+    for (const form of spec.forms) {
+      const questions = drawRung(bank, config, spec.gate, form);
+      if (questions !== null) draws[drawKey(spec.gate, form)] = questions;
+    }
+  }
+  return advance({
+    version: 1,
+    bankVersion: bank.version,
+    config: {
+      length: config.length,
+      revealMode: config.revealMode,
+      audio: config.audio,
+      visual: config.visual,
+      takeMyTime: config.takeMyTime,
+      seed: config.seed,
+      exclude: [...config.exclude],
+    },
+    startedAtMs: nowMs,
+    deadlineMs: deadlineAt(nowMs, backstopMs(config.length, config.takeMyTime)),
+    lastTouchMs: nowMs,
+    shownAtMs: nowMs,
+    pause: null,
+    pausedAtMs: null,
+    timeUp: false,
+    draws,
+    done: [],
+    current: null,
+    responses: [],
+    tags: {},
+    notSureStreak: 0,
+    stop: null,
+  });
+};
+
+export const isFinished = (state: PlacementRunState): boolean => state.stop !== null;
+
+/** The open question (the same one while paused), or null once the run is finished. */
+export const currentQuestion = (state: PlacementRunState): AssessmentQuestion | null => {
+  if (state.current === null) return null;
+  return state.current.questions[state.responses.length - state.current.start] as AssessmentQuestion;
+};
+
+const record = (
+  state: PlacementRunState,
+  outcome: Outcome,
+  chosenOptionId: string | null,
+  assisted: boolean,
+  nowMs: number,
+): PlacementRunState => {
+  const rung = state.current as NonNullable<PlacementRunState['current']>;
+  const question = currentQuestion(state) as AssessmentQuestion;
+  const response: AssessmentResponse = {
+    questionId: question.id,
+    outcome,
+    chosenOptionId,
+    assisted,
+    ms: clampMs(nowMs - state.shownAtMs),
+  };
+  let next: PlacementRunState = {
+    ...state,
+    responses: [...state.responses, response],
+    tags: { ...state.tags, [question.id]: question.tags },
+    notSureStreak: outcome === 'skipped' ? state.notSureStreak + 1 : 0,
+    lastTouchMs: nowMs,
+    shownAtMs: nowMs,
+  };
+  const inRung = next.responses.slice(rung.start);
+  if (inRung.length === QUESTIONS_PER_RUNG) {
+    const finished: GateResult = { gate: rung.gate, form: rung.form, ...gateResult(inRung) };
+    next = advance({ ...next, current: null, done: [...next.done, finished] });
+  }
+  if (next.stop !== null) return next;
+  // Time never marks anything wrong: the answer just given stands, then the run ends.
+  if (next.timeUp || isExpired(nowMs, next.deadlineMs)) return finish(next, 'time');
+  if (next.notSureStreak >= NOT_SURE_LIMIT) return { ...next, pause: 'not-sure', pausedAtMs: nowMs };
+  return next;
+};
+
+export const apply = (state: PlacementRunState, event: PlacementEvent, nowMs: number): PlacementRunState => {
+  if (state.stop !== null) return state;
+
+  if (event.type === 'quit') {
+    if (event.by === 'grown-up') return finish(state, 'grown-up');
+    return finish(state, state.pause === 'not-sure' ? 'not-sure' : 'quit');
+  }
+  if (event.type === 'touch') return { ...state, lastTouchMs: nowMs };
+  if (event.type === 'keepGoing') {
+    if (state.pause === null) return state;
+    const waited = Math.max(0, nowMs - (state.pausedAtMs as number));
+    return {
+      ...state,
+      pause: null,
+      pausedAtMs: null,
+      notSureStreak: state.pause === 'not-sure' ? 0 : state.notSureStreak,
+      // The backstop is for runaway sessions: stepping away does not use it up.
+      deadlineMs: state.deadlineMs === null ? null : state.deadlineMs + waited,
+      lastTouchMs: nowMs,
+      shownAtMs: nowMs,
+    };
+  }
+  if (event.type === 'idle') {
+    if (state.config.takeMyTime || state.pause !== null) return state;
+    return { ...state, pause: 'idle', pausedAtMs: nowMs };
+  }
+  if (event.type === 'tick') {
+    if (state.pause !== null) return state;
+    const idleMs = state.config.takeMyTime ? null : IDLE_PAUSE_MS;
+    if (isIdle(nowMs, state.lastTouchMs, idleMs)) {
+      return { ...state, pause: 'idle', pausedAtMs: state.lastTouchMs + IDLE_PAUSE_MS };
+    }
+    if (!state.timeUp && isExpired(nowMs, state.deadlineMs)) return { ...state, timeUp: true };
+    return state;
+  }
+
+  // answer | notSure
+  if (state.pause !== null) return state;
+  if (event.type === 'notSure') return record(state, 'skipped', null, false, nowMs);
+  const question = currentQuestion(state) as AssessmentQuestion;
+  const chosen = question.options.find((o) => o.id === event.optionId);
+  if (chosen === undefined) throw new Error(`option ${event.optionId} is not an option of question ${question.id}`);
+  return record(state, chosen.isCorrect ? 'correct' : 'wrong', chosen.id, event.assisted === true, nowMs);
+};
+
+export interface FinishContext {
+  catalog: RouteCatalog;
+  isEntitled: (stage: StageKey) => boolean;
+  completedQuestIds: ReadonlySet<string>;
+  /** ISO timestamp; the engine reads no clock. */
+  completedAt: string;
+  motivation?: Motivation;
+  contentVer: string;
+  testLocale: UiLocale;
+  source: PlacementSource;
+}
+
+/**
+ * The stored result of a finished run. A rung cut short keeps what was asked
+ * (`not-run`, reason `stopped`, when still undecided). The start quest and
+ * `needsStage` come from `seedRoute`, so the result and the route always agree.
+ */
+export const finishRun = (state: PlacementRunState, ctx: FinishContext): PlacementResult => {
+  if (state.stop === null) throw new Error('the run has not finished');
+  const gates: GateResult[] = [...state.done];
+  const open = state.current;
+  if (open !== null && state.responses.length > open.start) {
+    const partial = gateResult(state.responses.slice(open.start));
+    gates.push({
+      gate: open.gate,
+      form: open.form,
+      ...partial,
+      ...(partial.result === 'not-run' ? { reason: 'stopped' as const } : {}),
+    });
+  }
+  // Every response was recorded with the tags of its question.
+  const tagsOf = (questionId: string): readonly string[] => state.tags[questionId] as readonly string[];
+  const level = levelOf(gates);
+  const covered = coveredSymbols({ gates, responses: state.responses }, tagsOf);
+  const base: PlacementResult = {
+    id: `placement:${state.config.seed.toString(36)}`,
+    startedAt: new Date(state.startedAtMs).toISOString(),
+    completedAt: ctx.completedAt,
+    source: ctx.source,
+    testLocale: ctx.testLocale,
+    length: state.config.length,
+    revealMode: state.config.revealMode,
+    bankVersion: state.bankVersion,
+    contentVer: ctx.contentVer,
+    ...(ctx.motivation === undefined ? {} : { motivation: ctx.motivation }),
+    responses: state.responses,
+    gates,
+    strands: strandStatuses(gates),
+    level,
+    oralStage: oralStageOf(gates),
+    beyondContent: placementStageNumber(level.stage) >= 3,
+    startQuestId: null,
+    placedOutQuestIds: placedOutQuestIds(level, covered, ctx.catalog),
+    priorityTokens: priorityTokensOf(gates, state.responses, tagsOf),
+    needsStage: null,
+    stopReason: state.stop,
+  };
+  const seed = seedRoute(base, ctx.catalog, { isEntitled: ctx.isEntitled, completedQuestIds: ctx.completedQuestIds });
+  return { ...base, startQuestId: seed.startQuestId, needsStage: seed.needsStage };
+};

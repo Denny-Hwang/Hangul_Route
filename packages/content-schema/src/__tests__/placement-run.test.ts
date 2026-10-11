@@ -1,0 +1,734 @@
+import { describe, expect, it } from 'vitest';
+import {
+  PlacementResultSchema,
+  PlacementRunStateSchema,
+  apply,
+  currentQuestion,
+  finishRun,
+  isFinished,
+  startRun,
+  type AssessmentQuestion,
+  type FinishContext,
+  type PlacementConfig,
+  type PlacementEvent,
+  type PlacementRunState,
+} from '..';
+import { FULL_ROUTE, STAGE1_15, ids, q, qs } from './fixtures/stage1-15';
+import { makeBank, only, template } from './fixtures/placement-bank';
+
+const config = (over: Partial<PlacementConfig> = {}): PlacementConfig => ({
+  length: 'full',
+  revealMode: 'tap',
+  audio: true,
+  visual: true,
+  takeMyTime: false,
+  seed: 7,
+  exclude: [],
+  resolvesPicture: () => true,
+  ...over,
+});
+
+const context = (over: Partial<FinishContext> = {}): FinishContext => ({
+  catalog: STAGE1_15,
+  isEntitled: () => true,
+  completedQuestIds: new Set<string>(),
+  completedAt: '2026-10-10T10:06:00.000Z',
+  contentVer: 'test',
+  testLocale: 'en',
+  source: 'onboarding',
+  ...over,
+});
+
+type Verdict = 'correct' | 'wrong' | 'skip' | 'assisted';
+
+/** The rung a built question belongs to, from the synthetic bank's template ids. */
+const rungOf = (id: string): string => {
+  const m = /^pitem:(recog|sound-basic|sound-rest|syl-cvc|syl-cv)-/.exec(id);
+  if (m !== null) return m[1] as string;
+  if (id.startsWith('pitem:vocab-read')) return 'vocab:read';
+  if (id.startsWith('pitem:vocab-hear')) return 'vocab:oral';
+  if (id.startsWith('pitem:sent-hear')) return 'sentence:oral';
+  return 'sentence:read';
+};
+
+const eventFor = (question: AssessmentQuestion, verdict: Verdict): PlacementEvent => {
+  if (verdict === 'skip') return { type: 'notSure' };
+  const correct = question.options.find((o) => o.isCorrect)!;
+  const wrong = question.options.find((o) => !o.isCorrect)!;
+  return { type: 'answer', optionId: (verdict === 'wrong' ? wrong : correct).id, assisted: verdict === 'assisted' };
+};
+
+/** Plays to the end. `verdicts` maps a rung key to what the learner does there (default: correct). */
+const play = (
+  start: PlacementRunState,
+  verdicts: Record<string, Verdict> = {},
+  fallback: Verdict = 'correct',
+  t0 = 1_000,
+): { state: PlacementRunState; asked: string[] } => {
+  let state = start;
+  let t = t0;
+  const asked: string[] = [];
+  for (let guard = 0; guard < 200 && !isFinished(state); guard += 1) {
+    if (state.pause !== null) {
+      state = apply(state, { type: 'keepGoing' }, t);
+      continue;
+    }
+    const question = currentQuestion(state) as AssessmentQuestion;
+    asked.push(question.id);
+    t += 3_000;
+    state = apply(state, eventFor(question, verdicts[rungOf(question.id)] ?? fallback), t);
+  }
+  return { state, asked };
+};
+
+const run = (over: Partial<PlacementConfig> = {}, bank = makeBank(), now = 1_000) => startRun(bank, config(over), now);
+
+const ALL_PASS: Record<string, Verdict> = {};
+const FAIL_FROM = (...rungs: string[]): Record<string, Verdict> => Object.fromEntries(rungs.map((r) => [r, 'wrong' as const]));
+
+describe('startRun and currentQuestion', () => {
+  it('opens on the first recognition question, unfinished, not paused', () => {
+    const s = run();
+    expect(isFinished(s)).toBe(false);
+    expect(s.pause).toBeNull();
+    expect(s.stop).toBeNull();
+    const first = currentQuestion(s)!;
+    expect(rungOf(first.id)).toBe('recog');
+    expect(first.format).toBe('shape-odd-one-out');
+  });
+
+  it('builds the question from the template: its id, its options (one correct), its tags', () => {
+    const first = currentQuestion(run())!;
+    const bank = makeBank();
+    const t = bank.templates.find((x) => x.id === first.id)!;
+    expect(first.tags).toEqual(t.question.tags);
+    expect(first.options.map((o) => o.id).sort()).toEqual(t.question.options.map((o) => o.id).sort());
+    expect(first.options.filter((o) => o.isCorrect)).toHaveLength(1);
+    expect(first).not.toHaveProperty('status');
+    expect(first).not.toHaveProperty('glossEn');
+  });
+
+  it('is deterministic for a seed and varies with it', () => {
+    const a = JSON.stringify(run({ seed: 11 }));
+    expect(JSON.stringify(run({ seed: 11 }))).toBe(a);
+    expect(JSON.stringify(run({ seed: 12 }))).not.toBe(a);
+  });
+
+  it('is a plain JSON value that its schema accepts', () => {
+    const s = run();
+    const copy = JSON.parse(JSON.stringify(s));
+    expect(copy).toEqual(s);
+    expect(PlacementRunStateSchema.parse(copy)).toEqual(s);
+    expect(PlacementRunStateSchema.safeParse({ ...copy, version: 2 }).success).toBe(false);
+  });
+
+  it('keeps the picture resolver out of the persisted state', () => {
+    expect(JSON.stringify(run())).not.toContain('resolvesPicture');
+  });
+
+  it('does not always put the correct option first', () => {
+    const seeds = 300;
+    let first = 0;
+    for (let seed = 1; seed <= seeds; seed += 1) {
+      if (currentQuestion(run({ seed }))!.options[0]!.isCorrect) first += 1;
+    }
+    expect(first / seeds).toBeLessThanOrEqual(0.35);
+  });
+
+  it('never puts the correct option in the same slot three times running inside a rung', () => {
+    for (let seed = 1; seed <= 200; seed += 1) {
+      const s = run({ seed });
+      const rungs = [s.current!.questions, ...Object.values(s.draws)];
+      for (const questions of rungs) {
+        const slots = questions.map((x) => x.options.findIndex((o) => o.isCorrect));
+        expect(new Set(slots).size).toBeGreaterThan(1);
+      }
+    }
+  });
+});
+
+describe('the draw', () => {
+  const askedIn = (over: Partial<PlacementConfig> = {}, verdicts: Record<string, Verdict> = {}, bank = makeBank()) =>
+    play(run(over, bank), verdicts).asked;
+
+  it('asks three questions per rung from three distinct spread keys', () => {
+    const asked = askedIn({}, ALL_PASS);
+    const bank = makeBank();
+    const tagsOf = (id: string) => bank.templates.find((t) => t.id === id)!.question.tags;
+    const group = (rung: string) => asked.filter((id) => rungOf(id) === rung);
+    expect(asked).toHaveLength(21);
+    for (const rung of ['recog', 'sound-basic', 'syl-cv', 'sound-rest', 'syl-cvc', 'vocab:read']) expect(group(rung)).toHaveLength(3);
+    const pairs = group('recog').map((id) => tagsOf(id).filter((t) => t.startsWith('sym:')).sort().join('|'));
+    expect(new Set(pairs).size).toBe(3);
+    const syms = group('sound-basic').map((id) => tagsOf(id)[0]);
+    expect(new Set(syms).size).toBe(3);
+    const syls = group('syl-cv').map((id) => tagsOf(id).find((t) => t.startsWith('syl:')));
+    expect(new Set(syls).size).toBe(3);
+  });
+
+  it('sentence read is two read-pick-picture then one reply-pick', () => {
+    const asked = askedIn({}, ALL_PASS).filter((id) => rungOf(id) === 'sentence:read');
+    const bank = makeBank();
+    const formats = asked.map((id) => bank.templates.find((t) => t.id === id)!.question.format);
+    expect(formats).toEqual(['read-pick-picture', 'read-pick-picture', 'reply-pick']);
+  });
+
+  it('sentence read tops up from read items when there is no reply item, and is unavailable when still short', () => {
+    const noReplies = only(makeBank(), (t) => t.question.format !== 'reply-pick');
+    const asked = askedIn({}, ALL_PASS, noReplies).filter((id) => rungOf(id) === 'sentence:read');
+    expect(asked).toHaveLength(3);
+    const short = only(makeBank(), (t) => !(t.gate === 'sentence' && t.form === 'read' && t.id !== 'pitem:sent-read-0' && t.id !== 'pitem:sent-read-1'));
+    expect(askedIn({}, ALL_PASS, short).filter((id) => rungOf(id) === 'sentence:read')).toHaveLength(0);
+  });
+
+  it('leaves draft templates out', () => {
+    const bank = makeBank();
+    const drafts = { ...bank, templates: bank.templates.map((t) => (t.id.startsWith('pitem:recog-odd-1') ? { ...t, status: 'draft' as const } : t)) };
+    for (let seed = 1; seed <= 40; seed += 1) {
+      const asked = play(run({ seed }, drafts)).asked;
+      expect(asked.some((id) => id.startsWith('pitem:recog-odd-1') && id !== 'pitem:recog-odd-1' + id.slice(-1))).toBe(false);
+      expect(asked).not.toContain('pitem:recog-odd-1');
+      expect(asked).not.toContain('pitem:recog-odd-10');
+    }
+  });
+
+  it('avoids the ids of the previous result when it can', () => {
+    const bank = makeBank();
+    const recog = bank.templates.filter((t) => t.gate === 'recog').map((t) => t.id);
+    const exclude = recog.slice(0, 17);
+    for (let seed = 1; seed <= 20; seed += 1) {
+      const asked = askedIn({ seed, exclude }, FAIL_FROM('sound-basic')).filter((id) => rungOf(id) === 'recog');
+      expect(asked.every((id) => !exclude.includes(id))).toBe(true);
+    }
+  });
+
+  it('relaxes the exclusion only when a rung would otherwise have fewer than three questions', () => {
+    const bank = makeBank();
+    const recog = bank.templates.filter((t) => t.gate === 'recog').map((t) => t.id);
+    const asked = askedIn({ exclude: recog.slice(0, 19) }, FAIL_FROM('sound-basic'), bank).filter((id) => rungOf(id) === 'recog');
+    expect(asked).toHaveLength(3);
+    expect(asked.filter((id) => recog.slice(0, 19).includes(id)).length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('leaves out audio templates when there is no sound', () => {
+    const asked = askedIn({ audio: false }, ALL_PASS);
+    const bank = makeBank();
+    for (const id of asked) expect(bank.templates.find((t) => t.id === id)!.question.requires.audio).toBe(false);
+  });
+
+  it('leaves out templates whose picture does not resolve (never substituting text)', () => {
+    const bank = makeBank();
+    const asked = askedIn({ resolvesPicture: (ref) => !ref.startsWith('card:vocab-read') }, ALL_PASS, bank);
+    expect(asked.some((id) => rungOf(id) === 'vocab:read')).toBe(false);
+  });
+
+  it('with the sound guide always on, draws no leaking template', () => {
+    const bank = makeBank();
+    const { asked } = play(run({ revealMode: 'always' }, bank));
+    for (const id of asked) expect(bank.templates.find((t) => t.id === id)!.question.leaks).toBe(false);
+  });
+
+  it('does not run a rung whose own draw has fewer than three eligible templates', () => {
+    const thin = only(makeBank(), (t) => t.gate !== 'syl-cv' || t.id === 'pitem:syl-cv-0');
+    const { asked } = play(run({}, thin));
+    expect(asked.some((id) => rungOf(id) === 'syl-cv')).toBe(false);
+  });
+
+  it('treats an oral form as unavailable without audio and recog as unavailable without sight, even if a template says otherwise', () => {
+    const bank = makeBank();
+    const lax = {
+      ...bank,
+      templates: [
+        ...bank.templates.filter((t) => !(t.gate === 'vocab' && t.form === 'oral')),
+        ...[0, 1, 2].map((i) => template({ id: `vocab-hear-quiet-${i}`, gate: 'vocab', form: 'oral', format: 'hear-pick-picture', tags: [`word:q${i}`], kind: 'picture', audio: false })),
+      ],
+    };
+    const muted = play(run({ audio: false }, lax), FAIL_FROM('sound-basic')).asked;
+    expect(muted.some((id) => id.includes('quiet'))).toBe(false);
+    const sighted = play(run({ visual: true }, lax), FAIL_FROM('sound-basic')).asked;
+    expect(sighted.some((id) => id.includes('quiet'))).toBe(true);
+    expect(play(run({ visual: false }, lax)).asked.some((id) => rungOf(id) === 'recog')).toBe(false);
+  });
+});
+
+describe('a run end to end (the section 3.14 behaviours)', () => {
+  it('fails sound-basic: exactly the two oral rungs follow, 12 questions, stage1 band 0, nothing placed out', () => {
+    const { state, asked } = play(run(), FAIL_FROM('sound-basic'));
+    expect(asked).toHaveLength(12);
+    expect(asked.map(rungOf)).toEqual([
+      ...Array(3).fill('recog'),
+      ...Array(3).fill('sound-basic'),
+      ...Array(3).fill('vocab:oral'),
+      ...Array(3).fill('sentence:oral'),
+    ]);
+    const r = finishRun(state, context());
+    expect(PlacementResultSchema.parse(r)).toEqual(r);
+    expect(r.level).toEqual({ stage: 'stage1', band: 0 });
+    expect(r.placedOutQuestIds).toEqual([]);
+    expect(r.startQuestId).toBe(q(1));
+    expect(r.stopReason).toBe('complete');
+    expect(r.oralStage).toBe('stage3');
+    expect(r.strands['sound-letter']).toBe('not-yet');
+    expect(r.strands['hangul-recognition']).toBe('secure');
+    expect(r.gates.map((g) => `${g.gate}:${g.form}:${g.result}`)).toEqual([
+      'recog:decode:pass',
+      'sound-basic:decode:fail',
+      'vocab:oral:pass',
+      'sentence:oral:pass',
+    ]);
+  });
+
+  it('answers every rung through syl-cvc and reads vocabulary: 21 questions at most, stage2 band 0, all 15 placed out, none completed', () => {
+    const { state, asked } = play(run(), { 'sentence:read': 'wrong' });
+    expect(asked.length).toBeLessThanOrEqual(21);
+    const r = finishRun(state, context());
+    expect(r.level).toEqual({ stage: 'stage2', band: 0 });
+    expect(r.placedOutQuestIds).toEqual(ids(STAGE1_15.quests));
+    expect(r.startQuestId).toBeNull();
+    expect(r.oralStage).toBeNull();
+    expect(r.stopReason).toBe('cap');
+    expect(r.beyondContent).toBe(false);
+    expect(Object.keys(r)).not.toEqual(expect.arrayContaining(['quests', 'cards', 'homework', 'stars']));
+  });
+
+  it('on a free tier that learner has no entitled start, needsStage is stage2', () => {
+    const { state } = play(run(), { 'sentence:read': 'wrong' });
+    const r = finishRun(state, context({ isEntitled: (s) => s === 'stage1' }));
+    expect(r.startQuestId).toBeNull();
+    expect(r.needsStage).toBe('stage2');
+    expect(r.placedOutQuestIds).toHaveLength(15);
+  });
+
+  it('a learner who passes everything lands at stage3 (beyond the content), 21 questions, cap', () => {
+    const { state, asked } = play(run());
+    expect(asked).toHaveLength(21);
+    const r = finishRun(state, context({ catalog: FULL_ROUTE }));
+    expect(r.level).toEqual({ stage: 'stage3', band: 0 });
+    expect(r.beyondContent).toBe(true);
+    expect(r.stopReason).toBe('cap');
+    expect(r.strands).toEqual({
+      'hangul-recognition': 'secure',
+      'sound-letter': 'secure',
+      'syllable-reading': 'secure',
+      vocabulary: 'secure',
+      sentences: 'secure',
+    });
+    expect(r.startQuestId).toBe('quest:stage4-life-q1');
+    expect(r.placedOutQuestIds).toContain('quest:stage2-nature-q1');
+  });
+
+  it('quick stops after syl-cv: 15 questions, band 1, oral rungs measured, stop reason cap', () => {
+    const { state, asked } = play(run({ length: 'quick' }));
+    expect(asked).toHaveLength(15);
+    const r = finishRun(state, context());
+    expect(r.level).toEqual({ stage: 'stage1', band: 1 });
+    expect(r.length).toBe('quick');
+    expect(r.stopReason).toBe('cap');
+    expect(r.placedOutQuestIds).toEqual(qs(1, 2, 3));
+    expect(r.startQuestId).toBe(q(4));
+  });
+
+  it('a wrong symbol cuts its quest back: the band is 1 but the start is the quest that teaches it', () => {
+    let state = run({ length: 'quick' });
+    let t = 1_000;
+    let target: AssessmentQuestion | null = null;
+    for (let guard = 0; guard < 40 && !isFinished(state); guard += 1) {
+      if (state.pause !== null) {
+        state = apply(state, { type: 'keepGoing' }, t);
+        continue;
+      }
+      const question = currentQuestion(state)!;
+      if (target === null && rungOf(question.id) === 'sound-basic') target = question;
+      t += 1_000;
+      // one sound-basic question is answered wrong; the rung still passes on the other two
+      state = apply(state, eventFor(question, question === target ? 'wrong' : 'correct'), t);
+    }
+    const r = finishRun(state, context());
+    const symbol = target!.tags.find((tag) => tag.startsWith('sym:'))!.slice(4);
+    const teaching = STAGE1_15.quests.find((x) => x.teaches.includes(symbol))!;
+    expect(r.level).toEqual({ stage: 'stage1', band: 1 });
+    expect(r.gates.find((g) => g.gate === 'sound-basic')).toMatchObject({ correct: 2, result: 'pass' });
+    expect(r.placedOutQuestIds).not.toContain(teaching.id);
+    expect(r.startQuestId).toBe(STAGE1_15.quests.find((x) => !r.placedOutQuestIds.includes(x.id))!.id);
+    expect(r.priorityTokens[0]).toBe(`sym:${symbol}`);
+  });
+
+  it('assisted answers count like "not sure": no pass, no covered symbols', () => {
+    const { state } = play(run({ length: 'quick' }), { 'sound-basic': 'assisted' });
+    const r = finishRun(state, context());
+    const gate = r.gates.find((g) => g.gate === 'sound-basic')!;
+    expect(gate).toMatchObject({ correct: 0, assisted: 3, result: 'fail' });
+    expect(r.responses.filter((x) => x.assisted)).toHaveLength(3);
+    expect(r.level).toEqual({ stage: 'stage1', band: 0 });
+    expect(r.priorityTokens.every((tok) => tok.startsWith('sym:') || tok.startsWith('skill:'))).toBe(true);
+    expect(r.priorityTokens.length).toBeGreaterThan(0);
+  });
+
+  it('the sound guide always on: recognition and listening only, decoding not tested, 9 questions, band 0', () => {
+    const { state, asked } = play(run({ revealMode: 'always' }));
+    expect(asked).toHaveLength(9);
+    const r = finishRun(state, context());
+    expect(r.revealMode).toBe('always');
+    expect(r.level).toEqual({ stage: 'stage1', band: 0 });
+    expect(r.strands['sound-letter']).toBe('not-tested');
+    expect(r.strands['syllable-reading']).toBe('not-tested');
+    expect(r.strands['hangul-recognition']).toBe('secure');
+    expect(r.gates.find((g) => g.gate === 'sound-basic')).toMatchObject({ result: 'not-run', reason: 'unavailable', asked: 0 });
+    expect(r.stopReason).toBe('complete');
+    expect(r.placedOutQuestIds).toEqual([]);
+  });
+
+  it('no sound: audio-required templates are out, the oral rungs are not-run (unavailable), listening is not tested', () => {
+    const { state } = play(run({ audio: false }), FAIL_FROM('sound-basic'));
+    const r = finishRun(state, context());
+    expect(r.oralStage).toBeNull();
+    expect(r.gates.filter((g) => g.form === 'oral').map((g) => [g.result, g.reason])).toEqual([
+      ['not-run', 'unavailable'],
+      ['not-run', 'unavailable'],
+    ]);
+    expect(r.responses).toHaveLength(6);
+  });
+
+  it('a screen reader (no recognition rung): the floor is 9 and recog is reported unavailable', () => {
+    const { state, asked } = play(run({ visual: false }), FAIL_FROM('sound-basic'));
+    expect(asked).toHaveLength(9);
+    const r = finishRun(state, context());
+    expect(r.gates[0]).toMatchObject({ gate: 'recog', result: 'not-run', reason: 'unavailable', asked: 0 });
+    expect(r.strands['hangul-recognition']).toBe('not-tested');
+  });
+
+  it('never exceeds 21 questions over many seeds and verdict mixes', () => {
+    for (let seed = 1; seed <= 60; seed += 1) {
+      const verdicts: Record<string, Verdict> = {};
+      for (const rung of ['recog', 'sound-basic', 'syl-cv', 'sound-rest', 'syl-cvc', 'vocab:read', 'sentence:read', 'vocab:oral', 'sentence:oral']) {
+        verdicts[rung] = (seed >> (rung.length % 5)) % 3 === 0 ? 'wrong' : 'correct';
+      }
+      const { asked } = play(run({ seed }), verdicts);
+      expect(asked.length).toBeLessThanOrEqual(21);
+      expect(asked.length).toBeGreaterThanOrEqual(12);
+    }
+  });
+
+  it('uses today\'s completed quests: the start never lands on a completed quest', () => {
+    const { state } = play(run({ length: 'quick' }));
+    const r = finishRun(state, context({ completedQuestIds: new Set(qs(4, 5)) }));
+    expect(r.startQuestId).toBe(q(6));
+  });
+
+  it('writes the context into the result: id from the seed, ISO start, source, locale, motivation, content version', () => {
+    const started = Date.UTC(2026, 9, 10, 10, 0, 0);
+    const { state } = play(run({ seed: 123456 }, makeBank(), started), FAIL_FROM('sound-basic'), 'correct', started + 1_000);
+    const r = finishRun(
+      state,
+      context({ motivation: 'curious', source: 'parent', testLocale: 'ko', contentVer: 'v9', completedAt: '2026-10-10T10:07:00.000Z' }),
+    );
+    expect(r.id).toBe(`placement:${(123456).toString(36)}`);
+    expect(r.startedAt).toBe('2026-10-10T10:00:00.000Z');
+    expect(r).toMatchObject({ motivation: 'curious', source: 'parent', testLocale: 'ko', contentVer: 'v9', bankVersion: 1, completedAt: '2026-10-10T10:07:00.000Z' });
+    expect(PlacementResultSchema.safeParse(r).success).toBe(true);
+    expect('motivation' in finishRun(state, context())).toBe(false);
+  });
+
+  it('refuses to finish a run that is still going', () => {
+    expect(() => finishRun(run(), context())).toThrow(/not finished/);
+  });
+});
+
+describe('events', () => {
+  it('records "not sure" as skipped and an answer as correct or wrong, with the time taken', () => {
+    let s = run({}, makeBank(), 10_000);
+    const first = currentQuestion(s)!;
+    s = apply(s, { type: 'notSure' }, 14_500);
+    expect(s.responses[0]).toEqual({ questionId: first.id, outcome: 'skipped', chosenOptionId: null, assisted: false, ms: 4_500 });
+    const second = currentQuestion(s)!;
+    const wrong = second.options.find((o) => !o.isCorrect)!;
+    s = apply(s, { type: 'answer', optionId: wrong.id }, 16_000);
+    expect(s.responses[1]).toMatchObject({ questionId: second.id, outcome: 'wrong', chosenOptionId: wrong.id, assisted: false, ms: 1_500 });
+    const third = currentQuestion(s)!;
+    s = apply(s, { type: 'answer', optionId: third.options.find((o) => o.isCorrect)!.id, assisted: true }, 15_000);
+    expect(s.responses[2]).toMatchObject({ outcome: 'correct', assisted: true, ms: 0 });
+  });
+
+  it('caps the time taken at ten minutes', () => {
+    let s = run({ takeMyTime: true });
+    s = apply(s, { type: 'notSure' }, 1_000 + 900_000);
+    expect(s.responses[0]!.ms).toBe(600_000);
+  });
+
+  it('rejects an option that is not on the open question', () => {
+    expect(() => apply(run(), { type: 'answer', optionId: 'nope' }, 2_000)).toThrow(/not an option/);
+  });
+
+  it('does not change the input state', () => {
+    const s = run();
+    const before = JSON.stringify(s);
+    apply(s, { type: 'notSure' }, 5_000);
+    expect(JSON.stringify(s)).toBe(before);
+  });
+
+  it('ignores every event once the run is finished', () => {
+    const { state } = play(run(), FAIL_FROM('sound-basic'));
+    for (const e of [{ type: 'notSure' }, { type: 'tick' }, { type: 'idle' }, { type: 'keepGoing' }, { type: 'touch' }, { type: 'quit', by: 'learner' }] as PlacementEvent[]) {
+      expect(apply(state, e, 999_999)).toBe(state);
+    }
+    expect(currentQuestion(state)).toBeNull();
+  });
+});
+
+describe('stop reasons', () => {
+  it('quit by the learner', () => {
+    const s = apply(run(), { type: 'quit', by: 'learner' }, 5_000);
+    expect(isFinished(s)).toBe(true);
+    expect(finishRun(s, context()).stopReason).toBe('quit');
+  });
+
+  it('quit by a grown-up (behind the PIN gate)', () => {
+    const s = apply(run(), { type: 'quit', by: 'grown-up' }, 5_000);
+    expect(finishRun(s, context()).stopReason).toBe('grown-up');
+  });
+
+  it('"That is enough" after three "not sure" in a row is not-sure', () => {
+    let s = run();
+    for (let i = 0; i < 3; i += 1) s = apply(s, { type: 'notSure' }, 2_000 + i * 1_000);
+    expect(s.pause).toBe('not-sure');
+    const done = apply(s, { type: 'quit', by: 'learner' }, 9_000);
+    const r = finishRun(done, context());
+    expect(r.stopReason).toBe('not-sure');
+    expect(r.responses).toHaveLength(3);
+    expect(r.level).toEqual({ stage: 'stage1', band: 0 });
+  });
+
+  it('a grown-up ending a not-sure pause is still grown-up', () => {
+    let s = run();
+    for (let i = 0; i < 3; i += 1) s = apply(s, { type: 'notSure' }, 2_000 + i * 1_000);
+    expect(finishRun(apply(s, { type: 'quit', by: 'grown-up' }, 9_000), context()).stopReason).toBe('grown-up');
+  });
+
+  it('a partly answered rung is still scored: two correct answers pass it; undecided ones are stopped', () => {
+    let s = run();
+    const one = (state: PlacementRunState, verdict: Verdict, t: number) => apply(state, eventFor(currentQuestion(state)!, verdict), t);
+    s = one(s, 'correct', 2_000);
+    s = one(s, 'correct', 3_000);
+    const passed = finishRun(apply(s, { type: 'quit', by: 'learner' }, 4_000), context());
+    expect(passed.gates).toEqual([{ gate: 'recog', form: 'decode', asked: 2, correct: 2, assisted: 0, result: 'pass' }]);
+    const undecided = finishRun(apply(one(run(), 'correct', 2_000), { type: 'quit', by: 'learner' }, 3_000), context());
+    expect(undecided.gates).toEqual([{ gate: 'recog', form: 'decode', asked: 1, correct: 1, assisted: 0, result: 'not-run', reason: 'stopped' }]);
+    expect(undecided.strands['hangul-recognition']).toBe('not-tested');
+  });
+
+  it('a quit with nothing asked records no gate', () => {
+    const r = finishRun(apply(run(), { type: 'quit', by: 'learner' }, 2_000), context());
+    expect(r.gates).toEqual([]);
+    expect(r.responses).toEqual([]);
+    expect(r.level).toEqual({ stage: 'stage1', band: 0 });
+  });
+});
+
+describe('pauses', () => {
+  it('three "not sure" in a row open the pause; keep going carries on with the next question', () => {
+    let s = run();
+    for (let i = 0; i < 3; i += 1) s = apply(s, { type: 'notSure' }, 2_000 + i * 1_000);
+    expect(s.pause).toBe('not-sure');
+    const open = currentQuestion(s)!;
+    s = apply(s, { type: 'notSure' }, 6_000);
+    expect(s.responses).toHaveLength(3); // answers are ignored while the sheet is up
+    s = apply(s, { type: 'keepGoing' }, 7_000);
+    expect(s.pause).toBeNull();
+    expect(currentQuestion(s)).toEqual(open);
+    expect(s.notSureStreak).toBe(0);
+    s = apply(s, { type: 'notSure' }, 8_000);
+    expect(s.pause).toBeNull(); // the streak starts over
+  });
+
+  it('an answer between two "not sure" breaks the streak', () => {
+    let s = run();
+    s = apply(s, { type: 'notSure' }, 2_000);
+    s = apply(s, { type: 'notSure' }, 3_000);
+    s = apply(s, eventFor(currentQuestion(s)!, 'correct'), 4_000);
+    s = apply(s, { type: 'notSure' }, 5_000);
+    expect(s.pause).toBeNull();
+  });
+
+  it('no pause opens when the third "not sure" ends the run', () => {
+    const { state } = play(run(), {}, 'correct');
+    expect(state.pause).toBeNull();
+  });
+
+  it('45 seconds without a touch opens the inactivity pause and records nothing; keep going asks the same question again', () => {
+    let s = run({}, makeBank(), 1_000);
+    const open = currentQuestion(s)!;
+    s = apply(s, { type: 'tick' }, 1_000 + 44_999);
+    expect(s.pause).toBeNull();
+    s = apply(s, { type: 'tick' }, 1_000 + 45_000);
+    expect(s.pause).toBe('idle');
+    expect(s.responses).toEqual([]);
+    s = apply(s, { type: 'keepGoing' }, 80_000);
+    expect(s.pause).toBeNull();
+    expect(currentQuestion(s)).toEqual(open);
+    expect(s.responses).toEqual([]);
+    const timed = apply(s, { type: 'notSure' }, 83_000);
+    expect(timed.responses[0]!.ms).toBe(3_000);
+  });
+
+  it('a touch resets the inactivity clock', () => {
+    let s = run({}, makeBank(), 0);
+    s = apply(s, { type: 'touch' }, 40_000);
+    s = apply(s, { type: 'tick' }, 80_000);
+    expect(s.pause).toBeNull();
+    s = apply(s, { type: 'tick' }, 85_000);
+    expect(s.pause).toBe('idle');
+  });
+
+  it('the idle event opens the same pause; ticks do nothing while paused', () => {
+    let s = run();
+    s = apply(s, { type: 'idle' }, 5_000);
+    expect(s.pause).toBe('idle');
+    expect(apply(s, { type: 'idle' }, 6_000)).toBe(s);
+    expect(apply(s, { type: 'tick' }, 99_000_000)).toBe(s);
+    expect(apply(s, { type: 'notSure' }, 7_000)).toBe(s);
+    expect(apply(s, { type: 'answer', optionId: 'o1' }, 7_000)).toBe(s);
+  });
+
+  it('keep going when nothing is paused does nothing', () => {
+    const s = run();
+    expect(apply(s, { type: 'keepGoing' }, 3_000)).toBe(s);
+  });
+
+  it('a grown-up or learner can still quit from an inactivity pause', () => {
+    let s = apply(run(), { type: 'idle' }, 5_000);
+    s = apply(s, { type: 'quit', by: 'learner' }, 6_000);
+    expect(finishRun(s, context()).stopReason).toBe('quit');
+  });
+
+  it('three "not sure" still open the pause with Take my time (there is no deadline to shift)', () => {
+    let s = run({ takeMyTime: true });
+    for (let i = 0; i < 3; i += 1) s = apply(s, { type: 'notSure' }, 2_000 + i * 1_000);
+    expect(s.pause).toBe('not-sure');
+    s = apply(s, { type: 'keepGoing' }, 99_000);
+    expect(s.pause).toBeNull();
+    expect(s.deadlineMs).toBeNull();
+  });
+
+  it('Take my time removes the inactivity pause and the backstop clock', () => {
+    let s = run({ takeMyTime: true }, makeBank(), 0);
+    expect(s.deadlineMs).toBeNull();
+    s = apply(s, { type: 'tick' }, 10_000_000);
+    expect(s.pause).toBeNull();
+    expect(s.timeUp).toBe(false);
+    s = apply(s, { type: 'idle' }, 10_000_001);
+    expect(s.pause).toBeNull();
+    s = apply(s, { type: 'notSure' }, 10_000_002);
+    expect(isFinished(s)).toBe(false);
+  });
+});
+
+describe('the backstop clock (D3)', () => {
+  const answerCorrect = (s: PlacementRunState, t: number) => apply(s, eventFor(currentQuestion(s)!, 'correct'), t);
+
+  it('starts when the run starts: 6 minutes full, 4 minutes quick', () => {
+    expect(run({}, makeBank(), 1_000).deadlineMs).toBe(1_000 + 360_000);
+    expect(run({ length: 'quick' }, makeBank(), 1_000).deadlineMs).toBe(1_000 + 240_000);
+  });
+
+  it('when it runs out the open question can still be answered, then the run ends with time', () => {
+    let s = run({}, makeBank(), 0);
+    s = answerCorrect(s, 359_000);
+    s = apply(s, { type: 'tick' }, 360_000);
+    expect(s.timeUp).toBe(true);
+    expect(isFinished(s)).toBe(false);
+    const open = currentQuestion(s);
+    expect(open).not.toBeNull();
+    s = answerCorrect(s, 365_000);
+    expect(isFinished(s)).toBe(true);
+    const r = finishRun(s, context());
+    expect(r.stopReason).toBe('time');
+    expect(r.responses).toHaveLength(2);
+    expect(r.responses.every((x) => x.outcome === 'correct')).toBe(true);
+  });
+
+  it('answering after the deadline without a tick ends the run too, and "not sure" is skipped, never wrong', () => {
+    let s = run({}, makeBank(), 0);
+    s = apply(s, { type: 'notSure' }, 400_000);
+    expect(isFinished(s)).toBe(true);
+    const r = finishRun(s, context());
+    expect(r.stopReason).toBe('time');
+    expect(r.responses.map((x) => x.outcome)).toEqual(['skipped']);
+    expect(r.responses.some((x) => x.outcome === 'wrong')).toBe(false);
+  });
+
+  it('a partly answered rung is scored from what was asked', () => {
+    let s = run({}, makeBank(), 0);
+    s = answerCorrect(s, 1_000);
+    s = answerCorrect(s, 400_000);
+    const r = finishRun(s, context());
+    expect(r.gates).toEqual([{ gate: 'recog', form: 'decode', asked: 2, correct: 2, assisted: 0, result: 'pass' }]);
+    expect(r.stopReason).toBe('time');
+  });
+
+  it('a run that finishes on its own ends complete or cap, even when the clock has run out', () => {
+    let state = run({}, makeBank(), 0);
+    let t = 1_000;
+    for (let guard = 0; guard < 40 && !isFinished(state); guard += 1) {
+      if (state.pause !== null) state = apply(state, { type: 'keepGoing' }, t);
+      else {
+        state = apply(state, eventFor(currentQuestion(state)!, guard < 11 ? 'wrong' : 'correct'), t);
+        t += 1_000;
+      }
+    }
+    expect(['complete', 'cap']).toContain(finishRun(state, context()).stopReason);
+  });
+
+  it('ticks before the deadline change nothing; the pause shifts the deadline by the time paused', () => {
+    let s = run({}, makeBank(), 0);
+    expect(apply(s, { type: 'tick' }, 30_000)).toBe(s);
+    s = apply(s, { type: 'idle' }, 20_000);
+    s = apply(s, { type: 'keepGoing' }, 320_000);
+    expect(s.deadlineMs).toBe(360_000 + 300_000);
+    s = apply(s, { type: 'tick' }, 400_000);
+    expect(s.timeUp).toBe(false);
+  });
+
+  it('the inactivity pause is dated from the last touch, so a late tick does not charge the waiting', () => {
+    let s = run({}, makeBank(), 0);
+    s = apply(s, { type: 'tick' }, 100_000);
+    expect(s.pause).toBe('idle');
+    expect(s.pausedAtMs).toBe(45_000);
+    s = apply(s, { type: 'keepGoing' }, 100_000);
+    expect(s.deadlineMs).toBe(360_000 + 55_000);
+  });
+
+  it('time does not shift when nothing is paused for a quick run with take my time off', () => {
+    const s = run({ length: 'quick' }, makeBank(), 0);
+    expect(apply(s, { type: 'keepGoing' }, 5_000).deadlineMs).toBe(240_000);
+  });
+});
+
+describe('resume', () => {
+  it('a state serialised mid-run, parsed and continued gives the same questions and the same result', () => {
+    const verdicts: Record<string, Verdict> = { 'syl-cv': 'wrong' };
+    const straight = play(run({ seed: 99 }), verdicts).state;
+
+    let s = run({ seed: 99 });
+    let t = 1_000;
+    for (let i = 0; i < 7; i += 1) {
+      if (s.pause !== null) s = apply(s, { type: 'keepGoing' }, t);
+      const question = currentQuestion(s)!;
+      t += 3_000;
+      s = apply(s, eventFor(question, verdicts[rungOf(question.id)] ?? 'correct'), t);
+    }
+    const revived = PlacementRunStateSchema.parse(JSON.parse(JSON.stringify(s)));
+    expect(currentQuestion(revived)).toEqual(currentQuestion(s));
+    expect(revived).toEqual(s);
+    const resumed = play(revived, verdicts, 'correct', t).state;
+    expect(finishRun(resumed, context())).toEqual(finishRun(straight, context()));
+  });
+
+  it('shrinks as rungs are used: a drawn rung is dropped from the persisted draws', () => {
+    const start = run();
+    const keysAtStart = Object.keys(start.draws).length;
+    const { state } = play(start);
+    expect(keysAtStart).toBeGreaterThan(0);
+    expect(Object.keys(state.draws)).toEqual([]);
+    expect(state.current).toBeNull();
+  });
+});

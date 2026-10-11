@@ -159,6 +159,12 @@ describe('placedOutQuestIds on the 15-quest fixture (spec 3.6 table)', () => {
     expect(atStage2).not.toContain('quest:stage2-life-q1');
   });
 
+  it('keeps catalog order between quests with the same order', () => {
+    const [a, b, c] = STAGE1_15.quests as [(typeof STAGE1_15.quests)[number], (typeof STAGE1_15.quests)[number], (typeof STAGE1_15.quests)[number]];
+    const tied = { quests: [{ ...c, order: 1 }, { ...a, order: 1 }, { ...b, order: 1 }] };
+    expect(placedOutQuestIds({ stage: 'stage2', band: 0 }, new Set(), tied)).toEqual([c.id, a.id, b.id]);
+  });
+
   it('returns ids in route order whatever the catalog array order', () => {
     const shuffled = { quests: [...STAGE1_15.quests].reverse() };
     expect(placedOutQuestIds({ stage: 'stage1', band: 1 }, new Set(RUNG_SYMBOLS.basic), shuffled)).toEqual(qs(1, 2, 3));
