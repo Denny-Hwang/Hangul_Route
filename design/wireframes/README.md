@@ -20,6 +20,7 @@
 | `home/story-time-card.md` | S | F-STORY-004 §3.7 (PR 4.0; built in PR 4.4a) |
 | `episode/detail-story.md` | R | F-STORY-004 §3.6 (PR 4.0; brief `screens/25-story-episode-detail`; screen in PR 4.6) |
 | `journey/grid.md` · `episode/detail.md` | S | 02 §1 · 04 · 05 |
+| `journey/grid-with-stories.md` · `story/cell-stories.md` · `episode/detail-cell-stories-row.md` | R | F-STORY-005 §3.6 (PR 5.0; brief `screens/27-cell-stories`, story sections in `05-journey-grid` and `06-episode-detail`) |
 | `quest/player.md` · `minigame/shell.md` · `minigame/families.md` | S | content-skill · 06 |
 | `story/reader.md` · `story/term-gloss.md` · `story/sources.md` | S (reader G2 checkpoint: R, PR 2.9) | F-STORY-002 §3.3-3.8 (PR 2.0; briefs `screens/21-story-reader`, `screens/26-story-sources`, `components/story-scene`, `illustrations/scene-art-style`) |
 | `minigame/build-letter.md` | R | F-QUEST-002 §3.7 (Q-7a) |

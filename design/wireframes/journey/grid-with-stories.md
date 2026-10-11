@@ -1,33 +1,32 @@
-# Story catalogue on the map, and the card award surfaces (wireframe v1)
+# Journey / Grid with stories: where the heritage stories live on the map (wireframe v2)
 
-Specs: `docs/specs/F-STORY-005-episode-catalogue-grid.md` (§3.5 grid, §3.6 map surfaces) · `docs/specs/F-STORY-006-card-award-model.md` (§3.5 catch-up, §3.7 Library and Results copy, §3.8 story cards)
-Audience: anyone learning Hangul, any age (CLAUDE.md §1). Nothing says a learner is behind; every locked thing says how to open it.
-Code (planned): `screens/journey/JourneyScreen.tsx` (`GridCell`, `logic/journey-cells.ts`), `screens/story/CellStoriesScreen.tsx`, `screens/episode/EpisodeDetailScreen.tsx`, `screens/results/ExtraCardsBanner.tsx`, `screens/home/HomeScreen.tsx` (catch-up card), `screens/library/{LibraryScreen,CardDetailScreen}.tsx`
+Specs: `docs/specs/F-STORY-005-episode-catalogue-grid.md` (§3.1 model, §3.4 when a story is offered, §3.5 grid capacity, §3.6 map surfaces, §3.12 accessibility) · the card surfaces D-G belong to `docs/specs/F-STORY-006-card-award-model.md` §3.5, §3.7, §3.8 (their screen files are listed below)
+Audience: anyone learning Hangul, any age (CLAUDE.md §1). Nothing says a learner is behind; every locked thing says how to open it; a story cell is never routed through the grown-up PIN.
+Code: built so far (PRs 5.1-5.2): `apps/mobile/src/content/episodes.ts` (`episodesFor`, `MAX_EPISODES_PER_CELL`, `cellsOverCapacity`), `apps/mobile/src/logic/journey.ts` (cell-based `stageAvailability`, `isCellComplete`), the pillar registry; planned: `apps/mobile/src/logic/journey-cells.ts` (`cellModel`, `cellLabel`) and the `GridCell` looks in `screens/journey/JourneyScreen.tsx` (PR 5.5a), `logic/story/home-cell.ts` (PR 5.3). Base screen: `journey/grid.md`; two panes on wide windows: `layout/wide.md` C. Brief: `design/brief/screens/05-journey-grid.md` (story cells section) and `27-cell-stories.md`.
 Notation: `[[ X ]]` the one primary action, `[ X ]` secondary or ghost, `(tab)` a section tab, `~~ ko ~~` taught Korean drawn with `KoreanText` (Korean + romanization + gloss), `#n` a small count mark.
 
-This file holds nine screens or states in one place (house style is one file per screen; split when promoted):
+Promoted by F-STORY-005 PR 5.0 from the one-file draft (this file, v1). The panel letters are kept so references still resolve:
 
-- A. Journey with stories: the cell looks
-- B. Cell page ("Heritage stories for this cell")
-- C. Lesson page: the stories row
-- D. Results: "more cards joined your Library"
-- E. Home: the one-time catch-up card
-- F. Library: header, New pill, locked tile with an earn hint, honest explainer
-- G. Card back face of a story card (sourced fact and citation)
-- H. Future: Stage 5 book cell and volumes (not shipped; for the layout rule only)
-- I. Empty and error states
+- A. Journey with stories: the cell looks (this file)
+- B. Cell page: **moved to `story/cell-stories.md`**
+- C. Lesson page stories row: **moved to `episode/detail-cell-stories-row.md`**
+- D-G. The card surfaces of F-STORY-006 (Results extra cards, Home catch-up card, Library earn hints, story card back face): their screen files are `results/extra-cards.md`, `home/cards-catch-up.md`, `library/earn-hints.md` and `library/card-back-citation.md`, promoted by F-STORY-006 PR 6.0 (until that PR merges they are still drawn in this file)
+- H. Future: Stage 5 book cell (this file)
+- I. States (this file)
 
-All copy in boxes is placeholder or an English suggestion; final strings sit in `JOURNEY_COPY` / `LIBRARY_COPY` / `results-copy.ts`.
+All copy in boxes is placeholder or an English suggestion; final strings live in `packages/i18n` (`learner.journey`, read with `useMessages`).
 
 ## Scenario (Given-When-Then)
 
 Given: the bundle holds reviewed heritage stories and the learner has played any amount (even nothing)
-When: the learner opens the Journey, the Library, Today, or finishes a quest
-Then: they can see which cells have stories, open any story without finishing a lesson, receive the cards they earned (and the ones they already earned before this version), and read exactly how to get a card they do not have yet
+When: the learner opens the Journey
+Then: they can see which cells have stories, open any story cell without finishing a lesson first, and every lesson cell works exactly as before
 
 ## Screen goal
 
-"See where stories live on the map and open one; get every card you earned, with a clear reason."
+"See where stories live on the map and open one."
+
+The map keeps its single job (pick a cell); a cell with stories adds a count mark, and a stories-only cell becomes tappable. No new primary button.
 
 ---
 
@@ -50,7 +49,7 @@ Then: they can see which cells have stories, open any story without finishing a 
 │      in the cells with books."   │   <- one muted caption, shown when the row has a stories-only cell
 │ (3) Sentences            [Soon]  │
 │     [lib #2] [lib #1] [lock] [lock] [lock]
-│ (4) Dialogue             [Soon]  │
+│ (4) Dialogue            [Taste]  │
 │     [lib #1] [lock] [H ] [lock] [lock]
 │ (5) Stories              [Soon]  │
 │     [lock] [lock] [lib #1] [lock] [lock]
@@ -81,64 +80,10 @@ Cell looks (5): **lesson** (theme initial, stage-tinted border; success tint whe
 
 ---
 
-## B. Cell page — "Heritage stories for this cell"
+## B, C. Moved
 
-```
-┌──────────────────────────────────┐
-│ [<]  Stage 2 · Words             │   <- back; stage title · theme title
-│      "Letters & Books"           │
-│      "Heritage stories for this  │
-│       cell"                      │
-│                                  │
-│ ┌──────────────────────────────┐ │   <- only if the cell has a lesson/book
-│ │ [ Lunch Box Words ]          │ │      secondary row: "the lesson for this cell"
-│ └──────────────────────────────┘ │
-│                                  │
-│ ┌────────────┐  ┌────────────┐   │   <- StoryTile (F-STORY-004): cover 4:3, title, ~~ ko ~~,
-│ │ cover      │  │ cover      │   │      "about 5 min", state line: New / Keep reading / Finished
-│ │ Title      │  │ Title      │   │      (stars when >= 1)
-│ │ ~~ 한글 ~~ │  │ ~~ 한글 ~~ │   │      whole tile = one button >= 64 dp
-│ │ New        │  │ Keep       │   │
-│ └────────────┘  └────────────┘   │      1 column at 320 dp, 2 at 360-767, 3-4 from 768
-│                                  │
-└──────────────────────────────────┘
-```
-
-- Stories in `shelf` order; order never changes with progress.
-- No count of unfinished stories, no "N of M", no recommended-stage label, no timer.
-
-## Interaction points (B)
-
-- Tile tap → `EpisodeDetail { episodeId }` (story variant, F-STORY-004 §3.6)
-- Lesson row tap → `EpisodeDetail { episodeId }` of the lesson
-- Back → Journey
-
-## Navigation graph
-
-Enter from: Journey stories-only cell · lesson page stories row (C) · story page home-cell pill
-Exit to: `EpisodeDetail` (story or lesson) · Journey
-
----
-
-## C. Lesson page: stories row
-
-```
-┌──────────────────────────────────┐
-│ [<]  Meet the Letters            │
-│ ... Hoya intro, quests ...       │
-│                                  │
-│ ┌──────────────────────────────┐ │   <- new row, shown only when the cell has stories
-│ │ Heritage stories for this    │ │
-│ │ cell                     5 > │ │      count is a plain number; row >= 64 dp
-│ └──────────────────────────────┘ │
-│                                  │
-│ "Cards in this episode"          │
-│ [card] [card] [lock: "Finish     │   <- locked card says how to earn it (F)
-│                  every quest…"]  │
-└──────────────────────────────────┘
-```
-
-- Row tap → `CellStories { stage, theme }`. Hidden when the count is 0 (so today's lesson page is unchanged without stories).
+- B. Cell page ("Heritage stories for this cell"): **`story/cell-stories.md`** (same letter).
+- C. Lesson page stories row: **`episode/detail-cell-stories-row.md`** (same letter).
 
 ---
 
@@ -275,21 +220,35 @@ Earn hints by rule: episode → "Finish the episode: …" · story → "Finish t
 
 ## I. States
 
-- **No reviewed story in the bundle**: Journey is exactly today's (no marks, no book cells); `CellStories` is unreachable; Library and Results as today except corrected copy.
-- **Empty cell page** (stale deep link): one card "Nothing here yet" and a Back button.
-- **Error**: a story or cover that fails to load degrades its tile to tint + title; progress unreadable renders cells without the complete look and the usual muted line.
-- **Offline**: all screens work from bundled content and the local snapshot.
+- **No reviewed story in the bundle**: the Journey is exactly today's `journey/grid` (no marks, no stories-only or book cells; the golden test in `episodes.test.ts`).
+- **Error**: a story or cover that fails to load never changes a cell's look beyond its count; progress unreadable renders cells without the complete look and the usual muted line.
+- **Offline**: everything works from bundled content and the local snapshot.
+- **Small phone (320 wide), 200 % text**: five columns leave each cell about 54 x 54 (no hit slop), below the 64 floor: a known exception owned by audit UX-25 and out of scope here (F-STORY-005 §3.12). This spec adds no smaller target: the count mark is not a target and its number stays in the cell label. The column labels wrap. The touch-target audit measures 375 and wider, where the cells are about 65.
+- **Wide window**: grid in the master pane, the selected cell's content in the detail pane (`layout/wide.md` C); a stories-only cell navigates as on one pane until its view is extracted.
+- **Reduced motion**: no cell press animation.
+
+## Interaction points
+
+| Where | Tap / key | Result |
+|---|---|---|
+| Lesson (or book) cell | tap | `EpisodeDetail { episodeId }` (unchanged); the count mark does not intercept the tap |
+| Stories-only cell | tap | `CellStories { stage, theme }` (`story/cell-stories.md`) |
+| Placeholder cell | none | disabled; label "<stage> <theme>, coming soon" |
+| Row header | none | no-op (as today) |
+| Explainer card | none | read only |
+
+## Navigation graph
+
+Enter from: `tabs/journey` · `results/celebrate` (Next up opens the Journey on wide windows) · `home/todays-mission` slot ② (via the episode)
+Exit to: `episode/detail` (lesson cell) · `story/cell-stories` (stories-only cell) · the detail pane on wide windows
 
 ## Data needs
 
-- reads: `stages[]`, `themes[]`, `episodesFor(stage, theme)`, story index entries with `recommendedStage` (home cell), `ProgressSnapshot.quests[]` (cell complete, story state), `ProgressSnapshot.cards[]` (owned, New), award world (episodes, quests, cards, sets)
-- writes: cards through the store actions `unlockCards`, `reconcileAwards`, `markCardsSeen`; nothing else
-- telemetry: `journey.cell_stories_opened`, `card.unlocked` (+ `source`), `episode.complete`, `stage.complete`, `card.catchup_granted`, `card_set.complete`
+- reads: `stages[]`, `themes[]`, `episodesFor(stage, theme)`, story index entries with their home cell (`recommendedStage` + pillar home theme), `ProgressSnapshot.quests[]` (cell complete)
+- writes: nothing
+- telemetry: none on the map itself; `journey.cell_stories_opened` is sent by the cell page (`story/cell-stories.md`)
 
 ## Open questions
 
-- **Tiger rarity**: keep `legendary` as authored (default) or demote the welcome card to `rare` so "legendary" stays a milestone? Wording in F already says it is a gift.
-- **Count mark size**: 20 dp inside a ~54 dp cell at 320 dp; confirm it is legible at 200 % text or move it to the cell label only on narrow widths.
-- **Stage header pill** on a stage whose only open cells are stories-only still reads "Soon"; follow audit UX-12 / F-STORY-004 §3.9 for the pill rule.
-- **Catch-up card placement** under the greeting vs below the three mission cards; default: under the greeting, because it is a one-time good-news message.
-- **`N/M` pill removal** (F-STORY-006 decision 3): restore as a fill-only meter if preferred.
+1. **Count mark size**: 20 dp inside a cell of about 54 dp at 320 wide; confirm it is legible at 200 % text, or move it into the cell label only on narrow widths.
+2. **Stage header pill** on a stage whose only open cells are stories-only still reads "Soon"; follow audit UX-12 / F-STORY-004 §3.9 for the pill rule.

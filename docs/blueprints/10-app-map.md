@@ -63,6 +63,7 @@ Hangul Route
 │   ├─ A4. Journey (격자 7 Stage × 5 Theme)              [S] 02 §1
 │   │    ├─ Stage 1 = 5 episodes / 11 quests (shipped)
 │   │    ├─ Stage 2·4 taste (F-011, F-012)               [S]
+│   │    ├─ Heritage stories on the grid (24편 · 15 셀: count mark · stories-only 셀 · Cell page · lesson page 의 stories row) [R] F-STORY-005
 │   │    └─ Stage 3·5·6·7 preview cells                  [–] blueprint only
 │   ├─ A5. Quest player (intro→present→practice→apply→reward) [S] content-skill
 │   │    ├─ Story quest steps: story check (`story-check`) · word recap · Story Order v2 (`story-sequence`) → Results story extras [S/R] F-STORY-003
@@ -150,6 +151,9 @@ Hangul Route
 | `home/story-time-card` | Main/Home (mission card ①/③) | 읽던 이야기 이어 읽기 · 다음 이야기 · 다시 읽기 — 하루 고정, 이야기 없으면 explore 카드 | S | F-STORY-004 §3.7 | ✓ |
 | `homework/list` | Homework | 배정된 숙제 큐 | S | F-HW-001 | NEW |
 | `journey/grid` | Main/Journey | 격자에서 에피소드 고르기 | S | 02 §1, 04 | NEW |
+| `journey/grid-with-stories` | Main/Journey | 이야기가 있는 셀 표시 (count mark · stories-only 셀) — PIN 없음, 스테이지 pill 불변 | R | F-STORY-005 §3.6 | ✓ |
+| `story/cell-stories` | CellStories | 한 셀의 이야기 선반 (그 셀의 lesson 이 먼저) — 남은 개수·순위·타이머 없음 | R | F-STORY-005 §3.6 | ✓ |
+| `episode/detail-cell-stories-row` | (EpisodeDetail 의 한 줄) | lesson 페이지에 "Heritage stories for this cell" 행 (이야기 0 이면 숨김) | R | F-STORY-005 §3.6 | ✓ |
 | `episode/detail` | EpisodeDetail | 퀘스트 목록 + 보상 카드 미리보기 | S | 05 | NEW |
 | `episode/detail-story` | EpisodeDetail (`format: story`) | 이야기 1편 (또는 책 에피소드) — 큰 버튼 1개, 낱말, 문화 노트, 스포일러 없는 보상 카드, Sources | R | F-STORY-004 §3.6 | ✓ |
 | `quest/player` | QuestPlayer | 5-step 진행 셸 | S | content-skill | NEW |
@@ -265,6 +269,8 @@ profile/settings ─┬─▶ sync/save-progress (Rescue Code)
 onboarding/welcome ─▶ sync/restore ("I already have progress") ─┬─▶ profiles/picker
                                                                 └─▶ sync/merge-notice (로컬 진도 있을 때)
 journey/grid (잠긴 Stage 셀) ─▶ paywall/upgrade (parent-gated)
+journey/grid-with-stories ─┬─ (lesson 셀) ─▶ episode/detail ─▶ episode/detail-cell-stories-row ─▶ story/cell-stories
+                           └─ (stories-only 셀) ─▶ story/cell-stories ─▶ episode/detail-story ─▶ quest/player
 
 [web only] 첫 방문 ─▶ pwa/system-banners (offline-ready) ; 설치 안 됨 + 3회 방문 ─▶ pwa/install-guide
 [web, 로그인 없음] /present ─▶ classroom/lecture-presenter (A home: Recent · Quick lesson ─▶ B start ─▶ C stage) — 프로필·진도를 읽거나 쓰지 않음 (F-TCH-004 §3.9)

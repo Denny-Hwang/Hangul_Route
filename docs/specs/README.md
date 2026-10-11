@@ -74,6 +74,7 @@ F-XXX-<slug>.md
 - `F-STORY-004-story-shelf-home-library.md` — story shelf, Home card, Library categories · **ready**
   - wireframes `design/wireframes/library/{stories,culture}.md`, `story/culture-notes.md`, `home/story-time-card.md`, `episode/detail-story.md` · briefs `design/brief/screens/23-library-stories.md`, `24-culture-notes.md`, `25-story-episode-detail.md` (PR 4.0)
 - `F-STORY-005-episode-catalogue-grid.md` — 24 heritage stories placed on the 7x5 grid · **ready**
+  - wireframes `design/wireframes/journey/grid-with-stories.md`, `story/cell-stories.md`, `episode/detail-cell-stories-row.md` · briefs `design/brief/screens/27-cell-stories.md`, §8 of `05-journey-grid.md` and `06-episode-detail.md` (PR 5.0)
 - `F-STORY-006-card-award-model.md` — card award model (31 unearnable cards), story and set cards · **ready**
 - `F-VOC-001-vocab-schema-pipeline.md` — vocabulary schema, `content/vocab/` pipeline, sense registry · **ready**
 - `F-VOC-002-wordart-svg-system.md` — hand-drawn WordArt SVG glyph system and vocabulary colour tokens · **ready**
