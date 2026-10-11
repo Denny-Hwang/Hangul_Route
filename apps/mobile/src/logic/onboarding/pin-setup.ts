@@ -4,7 +4,7 @@ import { PIN_LENGTH } from '../profiles/pin-hash';
  * Create-and-confirm PIN field inside the onboarding grown-up card —
  * F-LEARN-001 §3.4. Pure state machine; the card only paints it (dots, the
  * `PinPad`, the "PIN set" line). 4 digits entered twice; a mismatch clears both
- * entries and starts over with a calm line, never a red state.
+ * entries and starts over with a calm line (`caregiver.pin.mismatch`, shared with the PIN screen), never a red state.
  */
 export type PinSetupStage = 'create' | 'confirm' | 'set';
 
@@ -21,9 +21,6 @@ export interface PinSetupState {
 }
 
 export const PIN_SETUP_START: PinSetupState = { stage: 'create', entry: '', first: '', pin: null, mismatch: false };
-
-/** Same wording as the PIN screen (`PinEntryScreen`). */
-export const PIN_SETUP_MISMATCH = "Those didn't match. Let's start again.";
 
 /** The pad's `onChange` landed: `next` is the full entry for the current stage. */
 export function pinSetupChange(state: PinSetupState, next: string): PinSetupState {

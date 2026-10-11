@@ -1,5 +1,5 @@
 import { normalizeRescueCode } from '@hangul-route/content-schema';
-import { claimErrorMessage } from '../sync/rescue-code';
+import { LOCALE_META, formatDate, type Messages, type UiLocale } from '@hangul-route/i18n';
 import {
   cooldownRemainingMs,
   isLocked,
@@ -90,17 +90,33 @@ export function startResetWait(existing: string | null, now: number): string {
   return existing !== null && resetWaitState(existing, now).status !== 'idle' ? existing : new Date(now).toISOString();
 }
 
+type PinMessages = Messages['caregiver']['pin'];
+
 /** Calm, adult-facing line for a Rescue Code entry that did not open the reset. Never shames. */
-export function rescueFailureMessage(result: Extract<RescueCodeResult, { ok: false }>): string {
+export function rescueFailureMessage(result: Extract<RescueCodeResult, { ok: false }>, m: PinMessages): string {
   switch (result.reason) {
     case 'cooldown':
-      return `Let's take a short break. Try again in ${Math.ceil((result.cooldownRemainingMs ?? 0) / 1000)}s.`;
+      return m.cooldown(Math.ceil((result.cooldownRemainingMs ?? 0) / 1000));
     case 'bad-format':
-      return claimErrorMessage('invalid');
+      return m.reset.failure.badFormat;
     case 'no-code':
-      return 'No rescue code is saved on this device. Use the 24-hour wait instead.';
+      return m.reset.failure.noCode;
     case 'wrong-code':
-      return "That isn't the code saved on this device. Check it and try again.";
+      return m.reset.failure.wrongCode;
+  }
+}
+
+/**
+ * The end of the wait as a local date and time in the UI locale, e.g. "Oct 11, 2026, 4:30 PM".
+ * Never throws: a runtime without that locale's data falls back to the formatter table.
+ */
+export function formatReadyAt(locale: UiLocale, readyAt: number): string {
+  const date = new Date(readyAt);
+  try {
+    return date.toLocaleString(LOCALE_META[locale].speechLang, { dateStyle: 'medium', timeStyle: 'short' });
+  } catch {
+    const pad = (n: number): string => String(n).padStart(2, '0');
+    return `${formatDate(locale, date, 'monthDayYear')}, ${pad(date.getHours())}:${pad(date.getMinutes())}`;
   }
 }
 
@@ -114,21 +130,21 @@ export interface WaitCardView {
  * What the "Wait 24 hours" card shows. `formatReadyAt` turns the epoch ms of
  * the end of the wait into local text (the screen owns the locale).
  */
-export function waitCardView(wait: ResetWaitState, formatReadyAt: (readyAt: number) => string): WaitCardView {
+export function waitCardView(
+  wait: ResetWaitState,
+  formatReadyAt: (readyAt: number) => string,
+  m: PinMessages,
+): WaitCardView {
   switch (wait.status) {
     case 'idle':
-      return {
-        caption: 'Your PIN keeps working meanwhile. After 24 hours you can set a new one.',
-        buttonLabel: 'Start the wait',
-        buttonDisabled: false,
-      };
+      return { caption: m.reset.wait.idle.caption, buttonLabel: m.reset.wait.idle.button, buttonDisabled: false };
     case 'waiting':
       return {
-        caption: `You can set a new PIN after ${formatReadyAt(wait.readyAt)}.`,
-        buttonLabel: 'Wait started',
+        caption: m.reset.wait.waiting.caption(formatReadyAt(wait.readyAt)),
+        buttonLabel: m.reset.wait.waiting.button,
         buttonDisabled: true,
       };
     case 'ready':
-      return { caption: 'The 24 hours are up.', buttonLabel: 'Set a new PIN', buttonDisabled: false };
+      return { caption: m.reset.wait.ready.caption, buttonLabel: m.reset.wait.ready.button, buttonDisabled: false };
   }
 }

@@ -120,4 +120,23 @@ describe('length budgets (F-I18N-001 §3.11)', () => {
       expect(paths).toContain(expected);
     }
   });
+
+  it('covers the grown-up buttons (PR 8a)', () => {
+    const paths = leafPaths(getMessages('en')).filter((p) => BUDGETS[p.split('.').pop() ?? ''] !== undefined);
+    for (const expected of [
+      'caregiver.pin.entry.unlock.cta',
+      'caregiver.pin.entry.forgot.cta',
+      'caregiver.pin.reset.noCode.cta',
+      'caregiver.paywall.backToJourney.cta',
+      'caregiver.paywall.premium.manage.cta',
+      'caregiver.paywall.free.openConsole.cta',
+      'caregiver.spaces.leave.cta',
+      'caregiver.spaces.join.cta',
+      'caregiver.backup.save.cta',
+      'caregiver.backup.file.cta',
+      'caregiver.backup.restore.cta',
+    ]) {
+      expect(paths).toContain(expected);
+    }
+  });
 });

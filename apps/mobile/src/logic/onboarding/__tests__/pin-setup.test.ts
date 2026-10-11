@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { PIN_SETUP_MISMATCH, PIN_SETUP_START, pinSetupChange, pinSetupRedo } from '../pin-setup';
+import { PIN_SETUP_START, pinSetupChange, pinSetupRedo } from '../pin-setup';
 
 describe('pin setup (create, then type it again) — F-LEARN-001 §3.4', () => {
   it('starts on "create" with nothing entered', () => {
@@ -45,9 +45,5 @@ describe('pin setup (create, then type it again) — F-LEARN-001 §3.4', () => {
     const set = pinSetupChange(pinSetupChange(PIN_SETUP_START, '1234'), '1234');
     expect(pinSetupRedo()).toEqual(PIN_SETUP_START);
     expect(set.pin).toBe('1234');
-  });
-
-  it('uses the calm wording of the PIN screen for a mismatch', () => {
-    expect(PIN_SETUP_MISMATCH).toBe("Those didn't match. Let's start again.");
   });
 });

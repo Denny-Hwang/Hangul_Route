@@ -2,7 +2,8 @@ import { Body, Button, Caption, Card, Heading, Hoya, HoyaBubble, Icon, Screen, S
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
 import { Linking, Platform, Pressable, View } from 'react-native';
-import { LIFETIME_OFFER, PREMIUM_BULLETS, PROMO_HINT, consoleBillingUrl, paywallState } from '../../logic/paywall';
+import { useLocale, useMessages } from '../../i18n/use-messages';
+import { consoleBillingUrl, lifetimeOffer, paywallState, premiumBullets } from '../../logic/paywall';
 import type { RootStackParamList } from '../../navigation/types';
 import { track } from '../../platform/telemetry';
 import { useAudience } from '../../store/audience';
@@ -17,12 +18,16 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Paywall'>;
  */
 export function PaywallScreen({ navigation, route }: Props): React.ReactElement {
   const { copy } = useAudience();
+  const locale = useLocale();
+  const messages = useMessages();
+  const m = messages.caregiver.paywall;
+  const offer = lifetimeOffer(locale, m);
   const profile = useProfileStore(activeProfileSelector);
   const cached = useTierStore((s) => (profile ? s.byLearner[profile.id] : undefined));
   const entitled = effectiveTier(profile?.id ?? '', new Date());
   const state = paywallState(entitled.tier, entitled.source);
   const [note, setNote] = useState<string | null>(null);
-  const name = profile?.displayName ?? 'Your learner';
+  const name = profile?.displayName ?? m.learnerFallback;
   const from = route.params?.from ?? 'settings';
   void cached; // re-render when the inbox updates the tier
 
@@ -32,11 +37,11 @@ export function PaywallScreen({ navigation, route }: Props): React.ReactElement 
 
   const openConsole = async (): Promise<void> => {
     const url = consoleBillingUrl();
-    void track({ name: 'paywall.console_opened', profileId: profile?.id, payload: { plan: LIFETIME_OFFER.key } });
+    void track({ name: 'paywall.console_opened', profileId: profile?.id, payload: { plan: offer.key } });
     try {
       await Linking.openURL(url);
     } catch {
-      setNote(`Open ${url} on a computer or phone browser.`);
+      setNote(m.free.openFailed(url));
     }
   };
 
@@ -48,7 +53,7 @@ export function PaywallScreen({ navigation, route }: Props): React.ReactElement 
   return (
     <Screen tone="canvas" scrollable>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Pressable onPress={back} hitSlop={spacing.md} accessibilityRole="button" accessibilityLabel="Go back" style={{ padding: spacing.xs }}>
+        <Pressable onPress={back} hitSlop={spacing.md} accessibilityRole="button" accessibilityLabel={messages.a11y.goBack} style={{ padding: spacing.xs }}>
           <Icon name="arrow-left" size={28} />
         </Pressable>
       </View>
@@ -61,12 +66,12 @@ export function PaywallScreen({ navigation, route }: Props): React.ReactElement 
           </View>
           <Spacer size="md" />
           <Heading level="title" align="center">
-            {name} is covered by {entitled.source?.name ?? 'the class'}.
+            {m.covered.title(name, entitled.source?.name ?? m.covered.sourceFallback)}
           </Heading>
           <Spacer size="xs" />
-          <Body tone="secondary" align="center">Everything is unlocked while they are in it.</Body>
+          <Body tone="secondary" align="center">{m.covered.note}</Body>
           <Spacer size="xl" />
-          <Button label="Back to journey" tone="primary" size="lg" fullWidth onPress={() => navigation.navigate('Main', { screen: 'Journey' })} />
+          <Button label={m.backToJourney.cta} tone="primary" size="lg" fullWidth onPress={() => navigation.navigate('Main', { screen: 'Journey' })} />
         </>
       ) : state === 'premium' ? (
         <>
@@ -74,28 +79,28 @@ export function PaywallScreen({ navigation, route }: Props): React.ReactElement 
             <Hoya pose="cheering" size={96} />
           </View>
           <Spacer size="md" />
-          <Heading level="title" align="center">You&apos;re on Premium.</Heading>
+          <Heading level="title" align="center">{m.premium.title}</Heading>
           <Spacer size="xs" />
-          <Body tone="secondary" align="center">The full journey is open for {name}. Manage your plan on the web console.</Body>
+          <Body tone="secondary" align="center">{m.premium.note(name)}</Body>
           <Spacer size="xl" />
-          <Button label="Manage plan on the web" tone="secondary" size="lg" fullWidth onPress={() => void openConsole()} />
+          <Button label={m.premium.manage.cta} tone="secondary" size="lg" fullWidth onPress={() => void openConsole()} />
           <Spacer size="sm" />
-          <Button label="Back to journey" tone="primary" size="lg" fullWidth onPress={() => navigation.navigate('Main', { screen: 'Journey' })} />
+          <Button label={m.backToJourney.cta} tone="primary" size="lg" fullWidth onPress={() => navigation.navigate('Main', { screen: 'Journey' })} />
         </>
       ) : (
         <>
-          <HoyaBubble tone="idle" message="Stage 1 is always free." />
+          <HoyaBubble tone="idle" message={m.free.bubble} />
           <Spacer size="lg" />
-          <Heading level="prompt">What {LIFETIME_OFFER.label} unlocks</Heading>
+          <Heading level="prompt">{m.free.unlocks(offer.label)}</Heading>
           <Spacer size="xs" />
-          {PREMIUM_BULLETS.map((line) => (
+          {premiumBullets(m).map((line) => (
             <Body key={line} tone="secondary">
               · {line}
             </Body>
           ))}
           <Spacer size="lg" />
           <View
-            accessibilityLabel={`${LIFETIME_OFFER.label}, ${LIFETIME_OFFER.price}`}
+            accessibilityLabel={messages.a11y.lifetimeOffer(offer.label, offer.price)}
             style={{
               padding: spacing.md,
               borderRadius: radii.lg,
@@ -105,10 +110,10 @@ export function PaywallScreen({ navigation, route }: Props): React.ReactElement 
             }}
           >
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
-              <Body weight="semibold">{LIFETIME_OFFER.label}</Body>
-              <Body weight="semibold">{LIFETIME_OFFER.price}</Body>
+              <Body weight="semibold">{offer.label}</Body>
+              <Body weight="semibold">{offer.price}</Body>
             </View>
-            <Caption tone="muted">{LIFETIME_OFFER.line}</Caption>
+            <Caption tone="muted">{offer.line}</Caption>
           </View>
           <Spacer size="lg" />
           <Card padding="md" tone="sunken">
@@ -117,7 +122,7 @@ export function PaywallScreen({ navigation, route }: Props): React.ReactElement 
             </Caption>
           </Card>
           <Spacer size="md" />
-          <Button label="Open the web console" tone="primary" size="lg" fullWidth onPress={() => void openConsole()} />
+          <Button label={m.free.openConsole.cta} tone="primary" size="lg" fullWidth onPress={() => void openConsole()} />
           {note ? (
             <>
               <Spacer size="xs" />
@@ -125,9 +130,9 @@ export function PaywallScreen({ navigation, route }: Props): React.ReactElement 
             </>
           ) : null}
           <Spacer size="md" />
-          <Caption tone="muted" align="center">{PROMO_HINT}</Caption>
+          <Caption tone="muted" align="center">{copy.promoHint}</Caption>
           <Spacer size="xs" />
-          <Caption tone="muted" align="center">One payment, no renewal. Terms and privacy are on the website.</Caption>
+          <Caption tone="muted" align="center">{m.free.terms}</Caption>
         </>
       )}
       <Spacer size="xl" />

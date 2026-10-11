@@ -2,6 +2,7 @@ import { Body, Button, Caption, Card, Heading, Spacer, spacing } from '@hangul-r
 import type { LearnerMembership, Profile } from '@hangul-route/content-schema';
 import React, { useEffect } from 'react';
 import { View } from 'react-native';
+import { useMessages } from '../i18n/use-messages';
 import { confirm } from '../platform/dialog';
 import { useAudience } from '../store/audience';
 import { useMembershipStore } from '../store/membership-store';
@@ -11,11 +12,11 @@ export interface SpacesCardProps {
   onJoin: () => void;
 }
 
-const KIND_LABEL: Record<LearnerMembership['kind'], string> = { family: 'Family', class: 'Class', school: 'School' };
-
 /** Settings card: the learner's classes and family, with Join / Leave (F-SPACE-001 §3.5). */
 export function SpacesCard({ profile, onJoin }: SpacesCardProps): React.ReactElement {
   const { copy } = useAudience();
+  const messages = useMessages();
+  const m = messages.caregiver.spaces;
   const rows = useMembershipStore((s) => s.byLearner[profile.id]) ?? [];
   const hydrate = useMembershipStore((s) => s.hydrate);
   const refresh = useMembershipStore((s) => s.refresh);
@@ -27,10 +28,10 @@ export function SpacesCard({ profile, onJoin }: SpacesCardProps): React.ReactEle
 
   const leaveSpace = async (row: LearnerMembership): Promise<void> => {
     const yes = await confirm({
-      title: `Leave ${row.name}?`,
-      message: 'Your cards and stars stay with you. You can join again with the code.',
-      confirmLabel: 'Leave',
-      cancelLabel: 'Stay',
+      title: m.leave.confirmTitle(row.name),
+      message: m.leave.confirmMessage,
+      confirmLabel: m.leave.cta,
+      cancelLabel: m.leave.stay,
       destructive: true,
     });
     if (yes) await leave(profile.id, row.spaceId);
@@ -38,7 +39,7 @@ export function SpacesCard({ profile, onJoin }: SpacesCardProps): React.ReactEle
 
   return (
     <Card padding="md" testID="spaces-card">
-      <Heading level="prompt">Classes & family</Heading>
+      <Heading level="prompt">{m.title}</Heading>
       <Spacer size="xs" />
       {rows.length === 0 ? (
         <Caption tone="muted">{copy.spacesNoClass}</Caption>
@@ -48,15 +49,15 @@ export function SpacesCard({ profile, onJoin }: SpacesCardProps): React.ReactEle
             <View key={row.spaceId} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md }}>
               <View style={{ flex: 1 }}>
                 <Body weight="semibold">{row.name}</Body>
-                <Caption tone="muted">{KIND_LABEL[row.kind]}</Caption>
+                <Caption tone="muted">{m.kind[row.kind]}</Caption>
               </View>
-              <Button label="Leave" tone="ghost" size="sm" accessibilityLabel={`Leave ${row.name}`} onPress={() => void leaveSpace(row)} />
+              <Button label={m.leave.cta} tone="ghost" size="sm" accessibilityLabel={messages.a11y.leaveSpace(row.name)} onPress={() => void leaveSpace(row)} />
             </View>
           ))}
         </View>
       )}
       <Spacer size="md" />
-      <Button label="Join a class" tone="secondary" size="md" onPress={onJoin} />
+      <Button label={m.join.cta} tone="secondary" size="md" onPress={onJoin} />
     </Card>
   );
 }

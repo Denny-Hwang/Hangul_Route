@@ -15,7 +15,15 @@
     "apps/mobile/src/screens/homework/HomeworkScreen.tsx",
     "apps/mobile/src/components/PrereqSheet.tsx",
     "apps/mobile/src/screens/quest/QuestPlayerScreen.tsx",
-    "apps/mobile/src/screens/quest/DiscoverStep.tsx"
+    "apps/mobile/src/screens/quest/DiscoverStep.tsx",
+    "apps/mobile/src/screens/parent/PinEntryScreen.tsx",
+    "apps/mobile/src/screens/parent/PinResetScreen.tsx",
+    "apps/mobile/src/screens/parent/ParentDashboardScreen.tsx",
+    "apps/mobile/src/screens/paywall/PaywallScreen.tsx",
+    "apps/mobile/src/components/PinPad.tsx",
+    "apps/mobile/src/components/PinSetupField.tsx",
+    "apps/mobile/src/components/SpacesCard.tsx",
+    "apps/mobile/src/components/BackupCard.tsx"
   ],
   "pluralTernaryBaseline": {
     "apps/web/src/app/teach/space/page.tsx": 1,

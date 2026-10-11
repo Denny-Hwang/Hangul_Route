@@ -1,6 +1,7 @@
 import { Icon, colors, radii, spacing, typography } from '@hangul-route/design-system';
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
+import { useMessages } from '../i18n/use-messages';
 import { PIN_LENGTH } from '../logic/profiles/pin-hash';
 import type { PinPadLayout } from '../logic/profiles/pin-pad-layout';
 
@@ -28,6 +29,7 @@ interface PinPadProps {
  * Design reference: design/wireframes/onboarding/all-ages-onboarding.md, section D.
  */
 export function PinPad({ value, onChange, disabled = false, layout, testID }: PinPadProps): React.ReactElement {
+  const m = useMessages().a11y;
   const gridWidth = layout.columns * layout.keySize + (layout.columns - 1) * PIN_PAD_GAP;
 
   return (
@@ -48,7 +50,7 @@ export function PinPad({ value, onChange, disabled = false, layout, testID }: Pi
             disabled={value.length === 0 || disabled}
             onPress={() => onChange(value.slice(0, -1))}
             accessibilityRole="button"
-            accessibilityLabel="Delete last digit"
+            accessibilityLabel={m.pinDelete}
             style={{
               width: layout.keySize,
               height: layout.keySize,
@@ -65,7 +67,7 @@ export function PinPad({ value, onChange, disabled = false, layout, testID }: Pi
             disabled={disabled}
             onPress={() => onChange((value + String(k)).slice(0, PIN_LENGTH))}
             accessibilityRole="button"
-            accessibilityLabel={`Digit ${k}`}
+            accessibilityLabel={m.pinDigit(k)}
             style={{
               width: layout.keySize,
               height: layout.keySize,

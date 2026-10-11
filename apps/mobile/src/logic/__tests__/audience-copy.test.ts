@@ -1,12 +1,15 @@
+import { LOCALES, findBannedWord, getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
-import { NEUTRAL_COPY, audienceCopy } from '../audience-copy';
+import { NEUTRAL_COPY, audienceCopy as audienceCopyFor } from '../audience-copy';
 import type { DeviceAudience } from '../profiles/learner-type';
 
 const AUDIENCES: DeviceAudience[] = ['family', 'self'];
+const enAudience = getMessages('en').caregiver.audience;
+const audienceCopy = (a: DeviceAudience) => audienceCopyFor(a, enAudience);
 
 /** Every string the module can produce for an audience, functions called with sample arguments. */
-function allStrings(audience: DeviceAudience): Array<[string, string]> {
-  const c = audienceCopy(audience);
+function allStrings(who: DeviceAudience, locale: (typeof LOCALES)[number] = 'en'): Array<[string, string]> {
+  const c = audienceCopyFor(who, getMessages(locale).caregiver.audience);
   const out: Array<[string, string]> = [];
   for (const [key, value] of Object.entries(c)) {
     if (typeof value === 'string') out.push([key, value]);
@@ -136,6 +139,34 @@ describe('audienceCopy: tone rules', () => {
       }
     }
   });
+});
+
+describe('audienceCopy: words come from the message subtree it is given (F-I18N-001 §3.4 rule 3)', () => {
+  it('uses the subtree, not English literals', () => {
+    const other = {
+      ...enAudience,
+      shared: { ...enAudience.shared, homeworkIntro: 'Elegida por Hoya.' },
+      self: { ...enAudience.self, zoneLabel: 'Cuenta y copia' },
+      gated: (base: string, pinRequired: boolean) => (pinRequired ? `${base} [PIN]` : base),
+    };
+    expect(audienceCopyFor('self', other).homeworkIntro).toBe('Elegida por Hoya.');
+    expect(audienceCopyFor('family', other).homeworkIntro).toBe('Elegida por Hoya.');
+    expect(audienceCopyFor('self', other).zoneLabel).toBe('Cuenta y copia');
+    expect(audienceCopyFor('family', other).zoneLabel).toBe('Grown-up zone');
+    expect(audienceCopyFor('family', other).gatedA11y('Add a profile', false)).toBe('Add a profile [PIN]');
+    expect(audienceCopyFor('self', other).gatedA11y('Add a profile', false)).toBe('Add a profile');
+    expect(audienceCopyFor('self', other).gatedA11y('Add a profile', true)).toBe('Add a profile [PIN]');
+  });
+
+  for (const locale of LOCALES) {
+    it(`${locale}: no banned word reaches either audience`, () => {
+      for (const who of AUDIENCES) {
+        for (const [key, text] of allStrings(who, locale)) {
+          expect(findBannedWord(text, locale, 'caregiver'), `${locale}.${who}.${key}`).toBeNull();
+        }
+      }
+    });
+  }
 });
 
 describe('NEUTRAL_COPY: the audience-free strings used by logic modules', () => {

@@ -1,13 +1,8 @@
 import { Body, Button, Caption, borderWidth, colors, radii, spacing, touchTarget } from '@hangul-route/design-system';
 import React, { useState } from 'react';
 import { View, useWindowDimensions } from 'react-native';
-import { CREATE_PROFILE_COPY } from '../logic/onboarding/create-profile-copy';
-import {
-  PIN_SETUP_MISMATCH,
-  pinSetupChange,
-  pinSetupRedo,
-  type PinSetupState,
-} from '../logic/onboarding/pin-setup';
+import { useMessages } from '../i18n/use-messages';
+import { pinSetupChange, pinSetupRedo, type PinSetupState } from '../logic/onboarding/pin-setup';
 import { PIN_LENGTH } from '../logic/profiles/pin-hash';
 import { pinPadLayout } from '../logic/profiles/pin-pad-layout';
 import { PIN_PAD_GAP, PinPad } from './PinPad';
@@ -36,6 +31,8 @@ interface PinSetupFieldProps {
  * design/wireframes/onboarding/all-ages-onboarding.md, section D.
  */
 export function PinSetupField({ heading, state, onChange, error = null, disabled = false }: PinSetupFieldProps): React.ReactElement {
+  const messages = useMessages();
+  const m = messages.caregiver.pin.setup;
   const screen = useWindowDimensions();
   // The card's padding comes off both sides of the screen padding until it is measured.
   const [width, setWidth] = useState(() => Math.min(screen.width, WEB_COLUMN_MAX) - 4 * spacing.lg);
@@ -52,22 +49,22 @@ export function PinSetupField({ heading, state, onChange, error = null, disabled
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: touchTarget.min }}>
         <View style={{ flex: 1 }}>
           <Body weight="semibold" size="sm">
-            {CREATE_PROFILE_COPY.pin.set}
+            {m.set}
           </Body>
         </View>
-        <Button label={CREATE_PROFILE_COPY.pin.change} tone="ghost" size="md" onPress={() => onChange(pinSetupRedo())} />
+        <Button label={m.change} tone="ghost" size="md" onPress={() => onChange(pinSetupRedo())} />
       </View>
     );
   }
 
-  const title = state.stage === 'create' ? heading : CREATE_PROFILE_COPY.pin.again;
+  const title = state.stage === 'create' ? heading : m.again;
   return (
     <View>
       <Body weight="semibold" size="sm">
         {title}
       </Body>
       <View
-        accessibilityLabel={`${state.entry.length} of ${PIN_LENGTH} digits entered`}
+        accessibilityLabel={messages.a11y.pinDots(state.entry.length, PIN_LENGTH)}
         style={{ flexDirection: 'row', justifyContent: 'center', gap: spacing.md, marginVertical: spacing.md }}
       >
         {Array.from({ length: PIN_LENGTH }, (_, i) => (
@@ -105,7 +102,7 @@ export function PinSetupField({ heading, state, onChange, error = null, disabled
             backgroundColor: colors.feedback.nudgeLight,
           }}
         >
-          <Caption>{PIN_SETUP_MISMATCH}</Caption>
+          <Caption>{messages.caregiver.pin.mismatch}</Caption>
         </View>
       ) : null}
       {error ? (

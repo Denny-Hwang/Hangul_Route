@@ -1,5 +1,11 @@
-import { FAMILY_LIFETIME_LEARNERS, PLAN_PRICING, type Tier, type TierSource } from '@hangul-route/content-schema';
-import { NEUTRAL_COPY } from './audience-copy';
+import {
+  FAMILY_LIFETIME_LEARNERS,
+  PLAN_PRICING,
+  type PlanPricing,
+  type Tier,
+  type TierSource,
+} from '@hangul-route/content-schema';
+import { formatUsd, type Messages, type UiLocale } from '@hangul-route/i18n';
 
 /**
  * Paywall state — F-ENT-001 §3.5 (wireframe paywall/upgrade). Stage 1 is
@@ -12,19 +18,32 @@ export function paywallState(tier: Tier, source: TierSource | null): PaywallStat
   return source && source.kind !== 'family' ? 'covered' : 'premium';
 }
 
+type Paywall = Messages['caregiver']['paywall'];
+
 /** What the family plan adds (decision #30: one payment, every Stage, one family). */
-export const PREMIUM_BULLETS: readonly string[] = ['Every Stage, now and later', 'Cloud save on every device', 'Grown-up dashboard and plans', `Up to ${FAMILY_LIFETIME_LEARNERS} learners in your family`];
+export function premiumBullets(m: Paywall, learners: number = FAMILY_LIFETIME_LEARNERS): readonly string[] {
+  return [m.bullets.everyStage, m.bullets.cloudSave, m.bullets.dashboard, m.bullets.learners(learners)];
+}
 
-/** The single offer the child-side paywall shows; checkout itself lives on the web console. */
-export const LIFETIME_OFFER = {
-  key: 'family_lifetime',
-  label: 'Family Lifetime',
-  price: PLAN_PRICING.family_lifetime.label,
-  line: 'One payment. No subscription, nothing to cancel.',
-} as const;
-
-/** Codes are typed on the console, never in the child app (F-ENT-002 §3.4). */
-export const PROMO_HINT = NEUTRAL_COPY.promoHint;
+/**
+ * The single offer the child-side paywall shows; checkout itself lives on the web console.
+ * The amount is `PLAN_PRICING` run through `formatUsd` for the locale: no price is
+ * written into a message (F-I18N-001 §3.1). Codes are typed on the console, never in
+ * the child app (F-ENT-002 §3.4), so the promo hint is `audience.promoHint`.
+ */
+export function lifetimeOffer(
+  locale: UiLocale,
+  m: Paywall,
+  pricing: Pick<PlanPricing, 'amountUsd' | 'per'> = PLAN_PRICING.family_lifetime,
+): { key: 'family_lifetime'; label: string; price: string; line: string } {
+  const amount = formatUsd(locale, pricing.amountUsd);
+  return {
+    key: 'family_lifetime',
+    label: m.offer.name,
+    price: pricing.per === 'once' ? m.offer.price.once(amount) : m.offer.price.year(amount),
+    line: m.offer.line,
+  };
+}
 
 const DEFAULT_CONSOLE = 'https://hangulroute.com';
 

@@ -1,10 +1,13 @@
+import { getMessages, type Messages } from '@hangul-route/i18n';
 import type { DeviceAudience } from './profiles/learner-type';
 
 /**
  * Neutral "ask a grown-up" copy — F-LEARN-001 §3.9, audit UF-08.
  *
- * The single place these strings live, so F-I18N-001 can move them into the
- * catalogs as one block. The default is a neutral sentence; the family
+ * The words live in the dictionary (`caregiver.audience`, F-I18N-001 PR 8a); this
+ * module only picks the family or self-only variant and takes the message subtree
+ * as a parameter, so it stays pure and testable per locale (§3.4 rule 3). The
+ * default is a neutral sentence; the family
  * audience adds "(a grown-up can help)" only where an adult really is needed,
  * and "Grown-up zone" stays a family caregiver surface (CLAUDE.md §1).
  * Nothing here names an age or says "for kids".
@@ -47,53 +50,27 @@ export interface AudienceCopy {
   gatedA11y: (base: string, pinSet: boolean, detail?: string) => string;
 }
 
-const SHARED = {
-  installGuideLine: 'Add me to your home screen.',
-  journeyLockedA11y: (stageTitle: string) => `${stageTitle}: locked. Opens the unlock page.`,
-  homeReviewsIdle: 'Reviews picked for you',
-  homeworkIntro: 'Picked by Hoya, your teacher or your family.',
-  restorePrompt: 'Got a rescue code, an account, or a saved file?',
-  restoreSignInLabel: 'Sign in',
-  restoreCardsBack: 'Your cards come back with your rescue code.',
-  spacesNoClass: 'Not in a class yet. Got a code from a teacher or your family?',
-  joinCodeFull: "You're already in three classes. Leave one in Settings first.",
-  joinCodeNotForLearners: "That code isn't for joining as a learner. Ask for a class code.",
-  promoHint: 'Have a promo or referral code? Enter it on the web console.',
-  paywallBuyOnWeb:
-    'Buy it once on the web console, so no store fees reach your family. Sign in there and come back — this device updates on its next sync.',
-  paywallBuyLater:
-    'Buying inside this app arrives with the store update. Until then, you can buy it once on the web console.',
-  profileSwitchHint: 'Tap a profile to switch.',
-} as const;
+type AudienceMessages = Messages['caregiver']['audience'];
 
-/** The strings that do not depend on the audience, for logic modules that have no device in hand. */
-export const NEUTRAL_COPY = SHARED;
+/**
+ * The audience-free strings for logic modules that have no device in hand yet
+ * (`join-code`, `restore`). English until PR 8b gives those modules a message
+ * subtree, which retires this export.
+ */
+export const NEUTRAL_COPY = getMessages('en').caregiver.audience.shared;
 
-function gated(base: string, detail: string | undefined, pinRequired: boolean): string {
-  const parts = [detail, pinRequired ? 'PIN required' : undefined].filter((p): p is string => p !== undefined);
-  return parts.length === 0 ? base : `${base} (${parts.join(', ')})`;
-}
-
-const FAMILY: AudienceCopy = {
-  ...SHARED,
-  installGuideHelp: 'A grown-up can help.',
-  zoneLabel: 'Grown-up zone',
-  pinVerifyTitle: 'Grown-up zone',
-  pinCreateTitle: 'Create a grown-up PIN',
-  pinCreateSubtitle: 'Pick 4 digits only grown-ups will know. It protects settings and grown-up pages.',
-  gatedA11y: (base, _pinSet, detail) => gated(base, detail, true),
-};
-
-const SELF: AudienceCopy = {
-  ...SHARED,
-  installGuideHelp: null,
-  zoneLabel: 'Account & backup',
-  pinVerifyTitle: 'Settings PIN',
-  pinCreateTitle: 'Create a PIN',
-  pinCreateSubtitle: 'Pick 4 digits to protect settings.',
-  gatedA11y: (base, pinSet, detail) => gated(base, detail, pinSet),
-};
-
-export function audienceCopy(audience: DeviceAudience): AudienceCopy {
-  return audience === 'family' ? FAMILY : SELF;
+export function audienceCopy(audience: DeviceAudience, m: AudienceMessages): AudienceCopy {
+  if (audience === 'family') {
+    return {
+      ...m.shared,
+      ...m.family,
+      gatedA11y: (base, _pinSet, detail) => m.gated(base, true, detail),
+    };
+  }
+  return {
+    ...m.shared,
+    installGuideHelp: null,
+    ...m.self,
+    gatedA11y: (base, pinSet, detail) => m.gated(base, pinSet, detail),
+  };
 }
