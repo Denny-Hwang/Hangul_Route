@@ -108,7 +108,7 @@ export interface VocabQuestion {
   prompt: { kind: 'word' | 'image' | 'audio'; ko?: string; romanization?: string; pictureRef?: string; spokenKo?: string; audioRef?: string };
   options: VocabOption[];                       // shuffled
   answerId: string;                             // equals itemId
-  topicChip?: string;                           // topic title, only when another item in the universe shares `ko` (homonym prompt in a mixed pool)
+  topicChip?: string;                           // the answer's primary topic key (the view shows its localised title), only when another item in the universe shares `ko` (homonym prompt in a mixed pool)
 }
 export interface BuildInput {
   pool: readonly RuntimeVocabItem[];            // the words to ask about, already in selection priority order (F-VOC-005 §3.6)
@@ -133,6 +133,13 @@ export class NotEnoughWords extends Error {}
 6. **Confusables** (level 2 only): prefer candidates whose first syllable's initial consonant or first syllable equals the answer's (`decomposeSyllable`, `packages/content-schema/src/romanization/hangul.ts`, exported by the package index), e.g. 곰 / 공 / 고양이. A preference.
 7. **Same topic**: `universe` is the topic's items; a mixed review (F-VOC-005 §3.6) passes the catalogue and the builder prefers the answer's topic first.
 8. Among the preferred candidates, take `optionCount - 1` with the seeded `shuffle` (`logic/shuffle.ts`); the answer is inserted and the option list shuffled with `seed + 1`.
+
+**Amendments from the S-2 review** (the builder as merged):
+- **Rule 6 reserves one slot** at level 2: one distractor is a confusable whenever one is left (behaviour 14 as a guarantee, not only a preference). The reserved word comes from the answer's picture family first; from another family only when the answer is not a colour, so rule 3 ("colour options are always other colours") holds in a mixed review too.
+- **Format fallback.** When the box format cannot get `optionCount - 1` distractors (for example too few pictures resolve), or would show a card-art answer as the only card-style tile (rule 5, F-VOC-002 §3.11), the builder tries the other allowed formats this word has not had, `image-to-word` first (it needs no option pictures); a word is skipped only when no format can be built. If every format left shows the card alone (Pictures first has no `image-to-word`), the word is still asked (§8 item 11).
+- **Seeds**: the builder reads a negative, fractional or non-finite `seed` as `abs(trunc(seed))` (non-finite as 0) before deriving question seeds; `logic/shuffle.ts` itself is unchanged, so replays stay byte-identical.
+- **`count` below 1** returns `[]`; `NotEnoughWords` is thrown only when a positive `count` yields no question.
+- **`COLOR_CONFUSION_PAIRS`** is read from `logic/vocab/color-confusion.ts`, an app copy that a test pins equal to the design-system list: Metro (Expo SDK 52) does not read package `exports`, so app code never imports a design-system subpath at runtime (a guard test scans `apps/mobile/src`).
 
 **Properties** (each a test): every question has exactly `optionCount` options, unique `id`s, unique pictures (picture formats) and unique `ko` (word options); the answer is always present and `answerId === itemId`; no option shares a `senseGroup` with the answer; the same `seed` gives the same output; across 1,000 seeds the answer's position is uniform within +-5 % per slot; `buildQuestions` throws `NotEnoughWords` only when it can build **zero** questions, otherwise it returns as many as it can (fewer than `count`). With `canPlay` false there is no `audio-to-image` question. A homonym answer in a mixed universe carries `topicChip`.
 
@@ -354,3 +361,4 @@ Estimated effort: about 8-10 working days.
 8. **`logic/reviews/star-calc.ts` does not exist yet** (F-RVW-001 is `draft`); `logic/vocab/stars.ts` duplicates its table and a test pins them together once both exist.
 9. **`HoyaBubble` and Hoya poses** (`idle`, `cheering`, `thinking`) are assumed available as in the existing game (`CultureQuizGame.tsx:101`); no new pose is added.
 10. **Seeding with `Date.now()`** means two rounds started in the same millisecond are identical; irrelevant to learners, and tests pass a seed.
+11. **호랑이 is the only card art in the Animals topic.** At levels 1 and 2 the builder asks it as `image-to-word`, so its card style never gives the answer away; at Pictures first (no `image-to-word`) its picture question still shows it as the one card-style tile. The content fix is a WordArt glyph `word:animal-tiger` (F-VOC-002 §3.11 exit), after which the topic has no lone card.

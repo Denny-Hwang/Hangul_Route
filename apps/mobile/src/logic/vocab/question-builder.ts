@@ -1,8 +1,8 @@
 import { decomposeSyllable, type RuntimeVocabItem } from '@hangul-route/content-schema';
-import { COLOR_CONFUSION_PAIRS } from '@hangul-route/design-system/word-art';
 import { shuffle } from '../shuffle';
 import { sameSense } from './catalog';
-import { formatFor, formatsForLevel, repeatFormat, type VocabFormat, type VocabLevelOrder } from './format-for';
+import { COLOR_CONFUSION_PAIRS } from './color-confusion';
+import { VOCAB_FORMATS, formatFor, formatsForLevel, repeatFormat, type VocabFormat, type VocabLevelOrder } from './format-for';
 
 /**
  * The vocabulary question builder (F-VOC-004 §3.3). Pure, seeded, keyed by
@@ -79,6 +79,16 @@ export class NotEnoughWords extends Error {
 /** Seed spacing between questions, so no two questions share a shuffle. */
 const QUESTION_SEED_STEP = 7919;
 
+/**
+ * A seed the shuffle can use: a whole number of at least 0. The generator
+ * (logic/shuffle.ts, kept byte-identical for replays) only works on such
+ * seeds; a negative or NaN seed from a caller's hash would otherwise fill
+ * the option list with holes.
+ */
+export function normaliseSeed(seed: number): number {
+  return Number.isFinite(seed) ? Math.abs(Math.trunc(seed)) : 0;
+}
+
 /** The picture family: `card` for heritage card art, `word-<family>` for WordArt (F-VOC-002 §3.11). */
 export function pictureFamily(ref: string): string {
   if (ref.startsWith('card:')) return 'card';
@@ -134,7 +144,8 @@ function countAllowed(answer: number, candidate: number | null, levelOrder: Voca
  * either. Returns fewer than `optionCount - 1` only when the universe cannot
  * supply them.
  */
-export function distractorsFor(answer: RuntimeVocabItem, format: VocabFormat, i: BuildInput): RuntimeVocabItem[] {
+export function distractorsFor(answer: RuntimeVocabItem, format: VocabFormat, input: BuildInput): RuntimeVocabItem[] {
+  const i: BuildInput = { ...input, seed: normaliseSeed(input.seed) };
   const need = i.optionCount - 1;
   const pictures = format !== 'image-to-word';
   const base = uniqueById(i.universe).filter(
@@ -186,9 +197,15 @@ function pick(
     );
 
   const chosen: RuntimeVocabItem[] = [];
-  // Behaviour 14: at level 2 one slot goes to a confusable whenever one is left.
-  const firstConfusable = confusables ? ranked.find((c) => confusable(answer, c)) : undefined;
-  if (firstConfusable !== undefined) chosen.push(firstConfusable);
+  // Behaviour 14: at level 2 one slot goes to a confusable whenever one is left. It comes from the
+  // answer's picture family first (rule 5); another family only when the answer is not a colour,
+  // because colour options are always other colours (rule 3), even in a mixed review.
+  const sameFamily = (c: RuntimeVocabItem): boolean => pictureFamily(c.visual) === family;
+  const reserve = confusables
+    ? (ranked.find((c) => confusable(answer, c) && sameFamily(c)) ??
+      (family === 'word-color' ? undefined : ranked.find((c) => confusable(answer, c))))
+    : undefined;
+  if (reserve !== undefined) chosen.push(reserve);
   for (const c of ranked) {
     if (chosen.length >= need) break;
     if (!chosen.includes(c) && !clashes(c, chosen)) chosen.push(c);
@@ -212,13 +229,27 @@ function optionFor(item: RuntimeVocabItem, format: VocabFormat): VocabOption {
 }
 
 /**
+ * A picture question about card art whose options hold no other card art: the
+ * one tinted card-style tile would give the answer away (rule 5, F-VOC-002
+ * §3.11). Image-to-word shows only the prompt picture, so it never does.
+ */
+function styleGivesAway(answer: RuntimeVocabItem, format: VocabFormat, distractors: readonly RuntimeVocabItem[]): boolean {
+  return format !== 'image-to-word' && pictureFamily(answer.visual) === 'card' && !distractors.some((d) => pictureFamily(d.visual) === 'card');
+}
+
+/**
  * Up to `count` questions over `pool` (§3.3 selection). Walks the pool in
  * order and cycles it again when it is shorter than `count`, never asking a
  * word twice in a row nor in the same format twice; a word whose picture does
- * not resolve is dropped, and a word that cannot get `optionCount` options is
- * skipped. Throws `NotEnoughWords` only when no question at all can be built.
+ * not resolve is dropped. When a word's box format cannot get `optionCount`
+ * options, or would let card art give the answer away, the other allowed
+ * formats are tried (image-to-word first: it needs no option pictures); a
+ * word is skipped only when no format works. Returns [] for a `count` below
+ * 1 and throws `NotEnoughWords` only when no question at all can be built.
  */
-export function buildQuestions(i: BuildInput): VocabQuestion[] {
+export function buildQuestions(input: BuildInput): VocabQuestion[] {
+  if (!(input.count >= 1)) return [];
+  const i: BuildInput = { ...input, seed: normaliseSeed(input.seed) };
   const allowed = formatsForLevel(i.levelOrder, i.canPlay);
   const pool = uniqueById(i.pool).filter((item) => i.canRender(item.visual));
   const everyone = uniqueById([...i.universe, ...pool]);
@@ -243,11 +274,27 @@ export function buildQuestions(i: BuildInput): VocabQuestion[] {
 
   function build(item: RuntimeVocabItem, index: number): VocabQuestion | null {
     const used = usedFormats.get(item.id) ?? [];
-    const format = used.length === 0 ? formatFor(i.boxOf(item.id), allowed, i.canPlay) : repeatFormat(used, allowed, i.canPlay);
-    if (format === null) return null;
+    const first = used.length === 0 ? formatFor(i.boxOf(item.id), allowed, i.canPlay) : repeatFormat(used, allowed, i.canPlay);
+    if (first === null) return null;
     const seed = i.seed + index * QUESTION_SEED_STEP;
-    const distractors = distractorsFor(item, format, { ...i, seed });
-    if (distractors.length < i.optionCount - 1) return null;
+    // The box format first, then the other allowed formats this word has not had, image-to-word first.
+    const others = [...VOCAB_FORMATS].reverse().filter((f) => f !== first && !used.includes(f) && allowed.includes(f));
+    let chosen: { format: VocabFormat; distractors: RuntimeVocabItem[] } | null = null;
+    let fallback: typeof chosen = null;
+    for (const format of [first, ...others]) {
+      const distractors = distractorsFor(item, format, { ...i, seed });
+      if (distractors.length < i.optionCount - 1) continue;
+      if (!styleGivesAway(item, format, distractors)) {
+        chosen = { format, distractors };
+        break;
+      }
+      fallback ??= { format, distractors };
+    }
+    // When every format left shows its card art alone (Pictures first has no image-to-word, and a topic
+    // may hold a single card), the word is still asked rather than dropped (F-VOC-004 §8 open item).
+    chosen ??= fallback;
+    if (chosen === null) return null;
+    const { format, distractors } = chosen;
     usedFormats.set(item.id, [...used, format]);
     const question: VocabQuestion = {
       key: `q${index}:${item.id}:${format}`,

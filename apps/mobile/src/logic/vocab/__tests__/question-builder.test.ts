@@ -6,6 +6,7 @@ import {
   NotEnoughWords,
   buildQuestions,
   distractorsFor,
+  normaliseSeed,
   pictureFamily,
   type BuildInput,
   type VocabQuestion,
@@ -562,5 +563,87 @@ describe('topicChip (behaviour 13)', () => {
   it('a word with no homonym in its universe has no chip', () => {
     const questions = buildQuestions(input({ pool: [BODY[0]!, ...BODY.slice(2)], universe: BODY }));
     expect(questions.every((q) => q.topicChip === undefined)).toBe(true);
+  });
+});
+
+describe('review follow-ups (F-VOC-004 S-2)', () => {
+  it('rule 6 never breaks rule 3: at level 2 over the whole catalogue a colour only ever meets colours', () => {
+    for (let seed = 0; seed < 60; seed++) {
+      for (const answer of COLORS) {
+        for (const format of ['word-to-image', 'audio-to-image', 'image-to-word'] as const) {
+          const picked = distractorsFor(answer, format, input({ pool: COLORS, universe: VOCAB_ITEMS, levelOrder: 2, seed }));
+          expect(picked).toHaveLength(3);
+          expect(picked.every((p) => pictureFamily(p.visual) === 'word-color')).toBe(true);
+        }
+      }
+    }
+  });
+
+  it('rule 6 still reserves a confusable from another family for a word that is not a colour', () => {
+    // 호랑이 is the only card art in Animals: its ㅎ partner comes from another family.
+    const picked = distractorsFor(byId('vocab:horangi'), 'image-to-word', input({ pool: ANIMALS, universe: VOCAB_ITEMS, levelOrder: 2, seed: 4 }));
+    const initial = (ko: string): string | undefined => decomposeSyllable(ko[0]!)?.initial;
+    expect(picked.some((p) => initial(p.ko) === 'ㅎ')).toBe(true);
+  });
+
+  it('a lone card art answer is asked as image-to-word when the level allows it, so its style never gives it away', () => {
+    for (const levelOrder of [1, 2] as const) {
+      for (let seed = 0; seed < 40; seed++) {
+        for (const box of [0, 1, 2]) {
+          const questions = buildQuestions(input({ pool: ANIMALS, levelOrder, seed, count: ANIMALS.length, boxOf: () => box }));
+          const tiger = questions.find((q) => q.itemId === 'vocab:horangi')!;
+          expect(tiger.format).toBe('image-to-word');
+        }
+      }
+    }
+  });
+
+  it('a card art answer with other cards in its options keeps its box format (Food has three cards)', () => {
+    const questions = buildQuestions(input({ pool: FOOD, boxOf: () => 0, count: FOOD.length }));
+    const kimchi = questions.find((q) => q.itemId === 'vocab:gimchi')!;
+    expect(kimchi.format).toBe('word-to-image');
+    expect(kimchi.options.filter((o) => o.pictureRef?.startsWith('card:')).length).toBeGreaterThan(1);
+  });
+
+  it('at Pictures first (no image-to-word) the lone card art is still asked rather than dropped', () => {
+    const questions = buildQuestions(input({ pool: ANIMALS, levelOrder: 0, optionCount: 3, count: ANIMALS.length }));
+    const tiger = questions.find((q) => q.itemId === 'vocab:horangi')!;
+    expect(tiger.format).toBe('word-to-image');
+  });
+
+  it('tries another allowed format before skipping a word whose box format cannot get enough options', () => {
+    const apple = byId('vocab:sagwa-apple');
+    const other = FOOD.find((f) => f.id !== apple.id && f.visual.startsWith('word:'))!;
+    // Only two food pictures draw: no picture question can be built, a written one can.
+    const canRender = (ref: string): boolean => ref === apple.visual || ref === other.visual;
+    const [q] = buildQuestions(input({ pool: [apple], universe: FOOD, count: 1, boxOf: () => 0, canRender }));
+    expect(q!.format).toBe('image-to-word');
+    expect(q!.options).toHaveLength(4);
+    // Pictures first has no written format, so the word cannot be asked at all.
+    expect(() => buildQuestions(input({ pool: [apple], universe: FOOD, count: 1, levelOrder: 0, optionCount: 3, canRender }))).toThrow(
+      NotEnoughWords,
+    );
+  });
+
+  it('returns no questions for a count below 1 instead of throwing', () => {
+    for (const count of [0, -3, Number.NaN]) expect(buildQuestions(input({ pool: FOOD, count }))).toEqual([]);
+  });
+
+  it('reads a negative or NaN seed as a whole number of at least 0, so options never have holes', () => {
+    expect(normaliseSeed(-100)).toBe(100);
+    expect(normaliseSeed(-1.7)).toBe(1);
+    expect(normaliseSeed(Number.NaN)).toBe(0);
+    expect(normaliseSeed(Number.POSITIVE_INFINITY)).toBe(0);
+    expect(normaliseSeed(42)).toBe(42);
+    for (const seed of [-1, -100, -2147483648, Number.NaN]) {
+      const i = input({ pool: FOOD, seed, boxOf: (id) => id.length % 6 });
+      const questions = buildQuestions(i);
+      expect(questions).toHaveLength(10);
+      assertProperties(questions, i);
+      expect(questions).toEqual(buildQuestions({ ...i, seed: normaliseSeed(seed) }));
+      const picked = distractorsFor(byId('vocab:gimchi'), 'word-to-image', i);
+      expect(picked).toHaveLength(3);
+      expect(picked.every((p) => p !== undefined)).toBe(true);
+    }
   });
 });
