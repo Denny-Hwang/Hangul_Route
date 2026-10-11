@@ -20,8 +20,17 @@ import type { LectureBundle } from './deck-builder';
  * counted as not ready.
  */
 
-/** The Pause overlay word: 잠깐, "wait a moment" (drawn with `KoreanText`). */
-export const PAUSE_WORD = { ko: '잠깐', romanization: 'jamkkan', en: 'wait a moment' } as const;
+/**
+ * The Pause overlay word: 잠깐, "wait a moment" (drawn with `KoreanText`). The
+ * gloss follows the presenter locale through `glossKey` (§3.13; the message
+ * lands with the overlay strings, PR 9); `en` is the English fallback.
+ */
+export const PAUSE_WORD = {
+  ko: '잠깐',
+  romanization: 'jamkkan',
+  glossKey: 'learner.presenter.pause.gloss',
+  en: 'wait a moment',
+} as const;
 
 export function lectureBundle(locale: UiLocale, overlays?: Overlays): LectureBundle {
   const reviewed = new Set(reviewedStrokeIds);

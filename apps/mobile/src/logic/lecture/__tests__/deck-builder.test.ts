@@ -613,7 +613,8 @@ describe('expandDeck: letters, revisit, cards, vocab, activities (rules 3, 4, 6,
     const some = expand([{ kind: 'vocab', topicId: 'vocab-topic:food', wordIds: ['vocab:bap', 'vocab:gone'] }]);
     expect(only(some.slides, 'vocab').map((v) => v.word.ko)).toEqual(['밥']);
     expect(some.skipped).toEqual([{ blockIndex: 0, ref: 'vocab:gone', reason: 'unknown-id' }]);
-    expect(only(some.slides, 'quiz')).toHaveLength(4);
+    // Fewer than 4 chosen words: no quiz, so no word without a slide is ever asked.
+    expect(only(some.slides, 'quiz')).toEqual([]);
   });
 
   it('vocab: no adapter yet, an unknown topic, or a topic under 4 words (no quiz)', () => {
@@ -760,5 +761,101 @@ describe('expandDeck: the whole deck (rules 10-12)', () => {
     const always = withBuilds(tap, { romanization: 'always', strokeGuide: true });
     expect(always[0]!.builds).toEqual(['ko', 'stroke', 'sound', 'name', 'example']);
     expect(always[0]!.key).toBe(tap[0]!.key);
+  });
+});
+
+describe('expandDeck: review fixes (never a crash, trace-stroke order, chosen words)', () => {
+  const revisitQuiz = (chars: string[]) => {
+    const out = expand([{ kind: 'revisit', chars }]);
+    return { ...out, quiz: only(out.slides, 'quiz') };
+  };
+  const answers = (quiz: ReadonlyArray<Extract<Slide, { kind: 'quiz' }>>): string[] =>
+    quiz.map((q) => q.options.find((o) => o.correct)!.ko!);
+
+  it('revisit with 5 or 6 distinct characters gives at most 4 rounds, all over the revisit letters', () => {
+    const five = ['ㄱ', 'ㄴ', 'ㄷ', 'ㄹ', 'ㅁ'];
+    const a = revisitQuiz(five);
+    expect(only(a.slides, 'letter')).toHaveLength(5);
+    expect(a.quiz).toHaveLength(4);
+    for (const ko of answers(a.quiz)) expect(five).toContain(ko);
+    expect(a.skipped).toEqual([]);
+
+    const six = ['ㅏ', 'ㅓ', 'ㅗ', 'ㅜ', 'ㅡ', 'ㅣ'];
+    const b = revisitQuiz(six);
+    expect(only(b.slides, 'letter')).toHaveLength(6);
+    expect(b.quiz).toHaveLength(4);
+    for (const ko of answers(b.quiz)) expect(six).toContain(ko);
+    expect(b.skipped).toEqual([]);
+  });
+
+  it('revisit with repeated characters counts each letter once', () => {
+    const a = revisitQuiz(['ㄱ', 'ㄱ', 'ㄴ']);
+    expect(only(a.slides, 'letter').map((l) => l.jamoId)).toEqual([J('giyeok'), J('nieun')]);
+    expect(a.quiz).toHaveLength(2);
+    expect(answers(a.quiz).sort()).toEqual(['ㄱ', 'ㄴ']);
+    expect(a.skipped).toEqual([]);
+
+    const b = revisitQuiz(['ㄱ', 'ㄱ', 'ㄱ', 'ㄱ', 'ㄱ']);
+    expect(only(b.slides, 'letter')).toHaveLength(1);
+    expect(answers(b.quiz)).toEqual(['ㄱ']);
+    expect(b.skipped).toEqual([]);
+  });
+
+  it('a round builder that throws in a revisit or quiz block is scope-too-small, never a crash', () => {
+    // Jamo the round builders do not know (they read the bundled jamo list) make them throw.
+    const strange = jamoAll.map((j) => ({ ...j, id: `${j.id}-x` }));
+    const b = bundle({ jamoAll: strange });
+    const revisit = expand([{ kind: 'revisit', chars: ['ㄱ', 'ㄴ', 'ㄷ', 'ㄹ'] }], {}, b);
+    expect(only(revisit.slides, 'letter')).toHaveLength(4);
+    expect(only(revisit.slides, 'quiz')).toEqual([]);
+    expect(revisit.skipped).toEqual([{ blockIndex: 0, ref: 'revisit/quiz', reason: 'scope-too-small' }]);
+
+    const ids = ['giyeok', 'nieun', 'digeut', 'rieul'].map((id) => `${J(id)}-x`);
+    const quiz = expand([{ kind: 'jamo-set', jamoIds: ids }, { kind: 'quiz', from: 'all', rounds: 3 }], {}, b);
+    expect(only(quiz.slides, 'quiz')).toEqual([]);
+    expect(quiz.skipped).toEqual([{ blockIndex: 1, ref: 'quiz', reason: 'scope-too-small' }]);
+  });
+
+  it('trace-stroke letters start with the stroke guide; no guide or no skeleton keeps the usual order', () => {
+    const traced = (over: Partial<LectureDeckInput> = {}, b: LectureBundle = bundle()) =>
+      expand([{ kind: 'quest', id: 'quest:again' }], over, b).slides.find((s) => s.key === 'quest:again/s3/jamo:mieum')!;
+    expect(traced()).toMatchObject({ kind: 'letter', strokeFirst: true, builds: ['stroke', 'ko', 'sound', 'name', 'example'] });
+    expect(traced({ options: { romanization: 'tap' } }).builds).toEqual(['stroke', 'ko', 'rom', 'sound', 'name', 'example']);
+    expect(traced({ options: { strokeGuide: false } }).builds).toEqual(['ko', 'sound', 'name', 'example']);
+    expect(traced({}, bundle({ hasStrokes: () => false })).builds).toEqual(['ko', 'sound', 'name', 'example']);
+    const presented = expand([{ kind: 'quest', id: 'quest:letters' }]).slides.find((s) => s.kind === 'letter')!;
+    expect(presented).not.toHaveProperty('strokeFirst');
+  });
+
+  it('vocab: the quiz asks only the chosen words when 4 or more were chosen', () => {
+    const big: LectureVocabTopic = {
+      ...topic,
+      words: [
+        ...topic.words,
+        { id: 'vocab:dal', ko: '달', romanization: 'dal', gloss: 'moon' },
+        { id: 'vocab:hae', ko: '해', romanization: 'hae', gloss: 'sun' },
+      ],
+    };
+    const chosen = ['vocab:bap', 'vocab:mul', 'vocab:dal', 'vocab:hae'];
+    const { slides } = expand([{ kind: 'vocab', topicId: 'vocab-topic:food', wordIds: chosen }], { options: { quizRounds: 10 } }, bundle({ vocabTopic: () => big }));
+    const quiz = only(slides, 'quiz');
+    expect(quiz).toHaveLength(4);
+    for (const q of quiz) {
+      expect(q.prompt.ask).toBe('meaning');
+      if (q.prompt.ask === 'meaning') expect(['밥', '물', '달', '해']).toContain(q.prompt.ko);
+      for (const o of q.options) expect(['rice', 'water', 'moon', 'sun']).toContain(o.gloss);
+    }
+  });
+
+  it('a story check option with Korean but no romanization leaves that check out, counted', () => {
+    const tier = sunMoon.tiers[1]!;
+    const bad: LectureStory = {
+      ...sunMoon,
+      id: 'story:bad-check',
+      tiers: [{ ...tier, checks: [{ ...tier.checks[0]!, options: [...tier.checks[0]!.options, { id: 'd', ko: '별', en: 'star', isCorrect: false }] }, tier.checks[1]!] }],
+    };
+    const { slides, skipped } = expand([{ kind: 'story', storyId: 'story:bad-check' }], {}, bundle({ story: () => bad }));
+    expect(only(slides, 'quiz')).toHaveLength(1);
+    expect(skipped).toEqual([{ blockIndex: 0, ref: 'story:bad-check/check-c1', reason: 'no-romanization' }]);
   });
 });

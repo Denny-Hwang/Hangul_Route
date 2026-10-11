@@ -9,7 +9,8 @@ import type { SpokenForm } from '../audio/spoken';
  * Builds depend on the deck options, so the presenter recomputes them when
  * the teacher flips romanization live (`Shift+R`, §3.7): `always` merges the
  * romanization into the Korean's first build, `tap` gives it a build of its
- * own right after (D2). Pure.
+ * own right after (D2): on a sequence or story slide, one `rom` build reveals
+ * the romanization of every Korean line on it. Pure.
  */
 
 /** Taught Korean on a slide: always with its romanization (CLAUDE.md §1). */
@@ -74,6 +75,8 @@ export type SlideBody =
       hasStrokes: boolean;
       /** Native-reviewed; otherwise the panel says "Simplified stroke guide" (§3.6). */
       strokeReviewed: boolean;
+      /** From a trace-stroke step: the stroke guide is the first build (§3.3 rule 2). */
+      strokeFirst?: true;
     }
   | { kind: 'syllable'; ko: string; romanization: string; split: string; parts: string[]; spoken: SpokenForm }
   | { kind: 'vocab'; word: KoLine & { gloss: string }; cardId?: string; wordId?: string }
@@ -125,23 +128,31 @@ export function buildsFor(body: SlideBody, opts: BuildOptions): BuildName[] {
   const tap = opts.romanization === 'tap';
   const rom: BuildName[] = tap ? ['rom'] : [];
   switch (body.kind) {
-    case 'letter':
+    case 'letter': {
+      const stroke = opts.strokeGuide && body.hasStrokes;
+      const first = stroke && body.strokeFirst === true;
       return [
+        ...(first ? (['stroke'] as const) : []),
         'ko',
         ...rom,
-        ...(opts.strokeGuide && body.hasStrokes ? (['stroke'] as const) : []),
+        ...(stroke && !first ? (['stroke'] as const) : []),
         'sound',
         'name',
         ...(body.example ? (['example'] as const) : []),
       ];
+    }
     case 'syllable':
       return ['parts', 'join', 'rom', 'sound'];
     case 'vocab':
       return ['ko', ...rom, 'gloss', ...(body.cardId ? (['art'] as const) : [])];
     case 'sequence':
-      return [...body.steps.map((): BuildName => 'step'), 'order'];
-    case 'story':
-      return ['art', 'narration', ...(body.korean ? (['korean', ...rom] as const) : [])];
+      // `tap`: every step's romanization appears together at one build, before the order question.
+      return [...body.steps.map((): BuildName => 'step'), ...(body.steps.some((s) => s.ko !== undefined) ? rom : []), 'order'];
+    case 'story': {
+      // `tap`: the Korean line's and the narration keyword chips' romanization appear at one build, last.
+      const chips = body.narration.some((piece) => 'ko' in piece);
+      return ['art', 'narration', ...(body.korean ? (['korean'] as const) : []), ...(body.korean || chips ? rom : [])];
+    }
     case 'quiz':
       return ['question', 'answer'];
     case 'card':

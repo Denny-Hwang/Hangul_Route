@@ -91,4 +91,37 @@ describe('buildsFor: one teacher click per build (F-TCH-004 §3.4)', () => {
     expect(buildsFor({ kind: 'activity', preset: 'air-write', minutes: 3 }, TAP)).toEqual(['prompt']);
     expect(buildsFor({ kind: 'end', letters: [], words: [] }, TAP)).toEqual(['summary']);
   });
+
+  it('trace-stroke letter (strokeFirst): the stroke guide comes first, unless it is off or missing', () => {
+    expect(buildsFor(letter({ strokeFirst: true }), ALWAYS)).toEqual(['stroke', 'ko', 'sound', 'name', 'example']);
+    expect(buildsFor(letter({ strokeFirst: true }), TAP)).toEqual(['stroke', 'ko', 'rom', 'sound', 'name', 'example']);
+    expect(buildsFor(letter({ strokeFirst: true }), { romanization: 'always', strokeGuide: false })).toEqual(['ko', 'sound', 'name', 'example']);
+    expect(buildsFor(letter({ strokeFirst: true, hasStrokes: false }), ALWAYS)).toEqual(['ko', 'sound', 'name', 'example']);
+  });
+
+  it("sequence with 'tap': the steps' romanization gets one build of its own before the order", () => {
+    const body: SlideBody = {
+      kind: 'sequence',
+      steps: [
+        { id: 'a', gloss: 'Wash hands', ko: '손 씻기', romanization: 'son ssitgi' },
+        { id: 'b', gloss: 'Eat' },
+      ],
+      shuffled: ['b', 'a'],
+    };
+    expect(buildsFor(body, TAP)).toEqual(['step', 'step', 'rom', 'order']);
+    expect(buildsFor(body, ALWAYS)).toEqual(['step', 'step', 'order']);
+    expect(buildsFor({ ...body, steps: [{ id: 'b', gloss: 'Eat' }] }, TAP)).toEqual(['step', 'order']);
+  });
+
+  it("story narration keyword chips with 'tap': their romanization gets a build of its own", () => {
+    const body: SlideBody = {
+      kind: 'story',
+      storyId: 'story:x',
+      sceneId: 's1',
+      narration: [{ text: 'The ' }, { ko: '해', romanization: 'hae', gloss: 'sun' }],
+    };
+    expect(buildsFor(body, TAP)).toEqual(['art', 'narration', 'rom']);
+    expect(buildsFor(body, ALWAYS)).toEqual(['art', 'narration']);
+    expect(buildsFor({ ...body, korean: { ko: '해', romanization: 'hae', gloss: 'sun' } }, TAP)).toEqual(['art', 'narration', 'korean', 'rom']);
+  });
 });

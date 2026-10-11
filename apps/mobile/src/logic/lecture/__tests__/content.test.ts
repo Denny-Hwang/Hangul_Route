@@ -11,7 +11,7 @@ const shippedEpisodes = episodesAll.filter((e) => e.status !== 'preview' && e.qu
 
 describe('the presenter content bundle (F-TCH-004 §3.3, §3.13)', () => {
   it('the Pause word is taught Korean with romanization and a gloss (no Hangul in a UI message)', () => {
-    expect(PAUSE_WORD).toEqual({ ko: '잠깐', romanization: 'jamkkan', en: 'wait a moment' });
+    expect(PAUSE_WORD).toEqual({ ko: '잠깐', romanization: 'jamkkan', glossKey: 'learner.presenter.pause.gloss', en: 'wait a moment' });
   });
 
   it('looks up the bundled content', () => {

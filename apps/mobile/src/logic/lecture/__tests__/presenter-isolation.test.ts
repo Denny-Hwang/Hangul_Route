@@ -25,9 +25,24 @@ const FORBIDDEN_STORES = [
 
 const IMPORT_SPECIFIER = /(?:\bfrom\s*|\bimport\s*\(\s*|\bimport\s+|\brequire\s*\(\s*|vi\.mock\s*\(\s*)['"]([^'"]+)['"]/g;
 
-function forbiddenSpecifier(specifier: string): boolean {
-  if (FORBIDDEN_STORES.some((name) => specifier === `store/${name}` || specifier.endsWith(`/store/${name}`))) return true;
-  return /(^|\/)minigames\/[A-Za-z]+Game(\.tsx)?$/.test(specifier);
+/** `store/bootstrap` runs `hydrateLearnerData`, which the presenter never calls. */
+const FORBIDDEN_STORE_FILES = [...FORBIDDEN_STORES, 'bootstrap'];
+
+/** Drops an extension, a trailing `/index` and a trailing slash, so every spelling of a path compares equal. */
+function normalise(specifier: string): string {
+  return specifier
+    .replace(/\.(tsx?|jsx?)$/, '')
+    .replace(/\/index$/, '')
+    .replace(/\/$/, '');
+}
+
+function forbiddenSpecifier(raw: string): boolean {
+  const specifier = normalise(raw);
+  // The `store` barrel (`store/index.ts`) re-exports the profile, progress and quest-run stores.
+  if (/(^|\/)store$/.test(specifier)) return true;
+  if (FORBIDDEN_STORE_FILES.some((name) => specifier === `store/${name}` || specifier.endsWith(`/store/${name}`))) return true;
+  // Every minigame screen, and the screen and host that mount them.
+  return /(^|\/)minigames\/([A-Za-z]+Game|MinigameScreen|host)$/.test(specifier);
 }
 
 function scanSource(file: string, source: string): string[] {
@@ -77,9 +92,18 @@ describe('presenter isolation (F-TCH-004 §3.9)', () => {
       "import { usePwaStore } from '../../store/pwa-store';",
       "import CultureQuizGame from '../minigames/CultureQuizGame';",
       "import { MatchSoundGame } from '../../screens/minigames/MatchSoundGame.tsx';",
+      "import { useProgressStore } from '../../store';",
+      "import { useUiStore } from '../../store/';",
+      "import { useProfileStore } from '../../store/index';",
+      "import { useQuestRunStore } from '../store/index.ts';",
+      "import { useProgressStore as p2 } from '../store/progress-store.ts';",
+      "import { s } from 'store';",
+      "import { hydrateLearnerData } from '../../store/bootstrap';",
+      "import { MinigameScreen } from '../../screens/minigames/MinigameScreen';",
+      "import { gameHost } from '../minigames/host.ts';",
     ].join('\n');
     const hits = scanSource('logic/lecture/x.ts', source);
-    expect(hits).toHaveLength(11);
+    expect(hits).toHaveLength(20);
     expect(hits[0]).toBe('logic/lecture/x.ts:1 imports ../../store/progress-store');
     expect(hits[10]).toBe('logic/lecture/x.ts:11 imports ../../screens/minigames/MatchSoundGame.tsx');
   });
@@ -91,6 +115,11 @@ describe('presenter isolation (F-TCH-004 §3.9)', () => {
       "import { StrokeHint } from '../minigames/StrokeHint';",
       "import { buildMatchSoundRounds } from '../round-builder';",
       "import { progressStore } from './progress-store-like';",
+      "import { useAudioStore as a2 } from '../store/audio-store.ts';",
+      "import { useLocaleStore } from '../../store/locale-store';",
+      "import { restore } from '../restore';",
+      "import { shelf } from '../storefront/index';",
+      "import { host } from '../audio/host';",
     ].join('\n');
     expect(scanSource('x.ts', allowed)).toEqual([]);
   });

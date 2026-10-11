@@ -15,12 +15,15 @@ import { z } from 'zod';
 export const RECENT_KEY = 'lecture:recent';
 export const RECENT_MAX = 10;
 
+const SavedAtSchema = z.string().max(40).regex(LECTURE_CREATED_AT_RE);
+/** A slide key (`<blockKey>/<path>`): content ids only. */
+const SlideKeySchema = z.string().min(1).max(256);
+
 const RecentItemSchema = z
   .object({
     deck: LectureDeckSchema,
-    savedAt: z.string().max(40).regex(LECTURE_CREATED_AT_RE),
-    /** A slide key (`<blockKey>/<path>`): content ids only. */
-    lastSlideKey: z.string().min(1).max(256).optional(),
+    savedAt: SavedAtSchema,
+    lastSlideKey: SlideKeySchema.optional(),
   })
   .strict();
 
@@ -42,28 +45,44 @@ export function emptyRecent(): RecentList {
   return { v: 1, items: [] };
 }
 
+/** A valid item; one whose only fault is its slide key is kept without it (it reopens at the start). */
+function parseItem(candidate: unknown): RecentItem | undefined {
+  const item = RecentItemSchema.safeParse(candidate);
+  if (item.success) return item.data;
+  if (typeof candidate !== 'object' || candidate === null || !('lastSlideKey' in candidate)) return undefined;
+  const { lastSlideKey: _dropped, ...rest } = candidate as Record<string, unknown>;
+  const retry = RecentItemSchema.safeParse(rest);
+  return retry.success ? retry.data : undefined;
+}
+
 /** Keeps the valid items, the first of each deck id, at most 10. */
 export function parseRecent(raw: unknown): RecentList {
   const list = RecentListShape.safeParse(raw);
   if (!list.success) return emptyRecent();
   const items: RecentItem[] = [];
   for (const candidate of list.data.items) {
-    const item = RecentItemSchema.safeParse(candidate);
-    if (!item.success || items.some((i) => i.deck.id === item.data.deck.id)) continue;
-    items.push(item.data);
+    const item = parseItem(candidate);
+    if (!item || items.some((i) => i.deck.id === item.deck.id)) continue;
+    items.push(item);
     if (items.length === RECENT_MAX) break;
   }
   return { v: 1, items };
 }
 
-/** Saves a deck at the front (Start / Start over), with no open slide yet. */
+/**
+ * Saves a deck at the front (Start / Start over), with no open slide yet.
+ * `savedAt` is `new Date().toISOString()`; any other string would make the
+ * item unreadable on the next load, so the list is returned unchanged.
+ */
 export function rememberDeck(list: RecentList, deck: LectureDeck, savedAt: string): RecentList {
+  if (!SavedAtSchema.safeParse(savedAt).success) return list;
   const rest = list.items.filter((i) => i.deck.id !== deck.id);
   return { v: 1, items: [{ deck, savedAt }, ...rest].slice(0, RECENT_MAX) };
 }
 
+/** Records the open slide; a key outside 1-256 characters is ignored (the item stays readable). */
 export function setLastSlide(list: RecentList, deckId: string, lastSlideKey: string): RecentList {
-  if (!list.items.some((i) => i.deck.id === deckId)) return list;
+  if (!SlideKeySchema.safeParse(lastSlideKey).success || !list.items.some((i) => i.deck.id === deckId)) return list;
   return { v: 1, items: list.items.map((i) => (i.deck.id === deckId ? { ...i, lastSlideKey } : i)) };
 }
 

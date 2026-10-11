@@ -42,6 +42,10 @@ import {
  * An id the bundle does not know, a step the presenter cannot show, a scope
  * too small for its quiz, or Korean without romanization becomes a counted
  * skip, never a crash (the start screen counts them).
+ *
+ * The round builders (`round-builder.ts`) read the bundled jamo list, not
+ * `bundle.jamoAll`; every call to them goes through `attempt`, so a jamo they
+ * do not know is a `scope-too-small` skip too.
  */
 
 type StoryKo = { ko: string; romanization: string; en: string };
@@ -129,6 +133,9 @@ export interface ExpandedDeck {
 
 const listOf = <T>(items: readonly T[] | undefined): readonly T[] => items ?? [];
 
+/** A scene's Korean: its line, else its keyword (the D14 rule of the schema's `sceneKorean`, on the presenter's narrower view). */
+const sceneKo = (scene: LectureStoryScene): StoryKo | undefined => scene.line ?? scene.keyword;
+
 const STORY_LEVEL_ORDER: readonly StoryLevel[] = ['listen', 'read-along', 'read'];
 const QUIZ_MIN_ITEMS = 4;
 const REVISIT_MAX_ROUNDS = 4;
@@ -170,7 +177,7 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
 
   // ---- letters and quizzes ----------------------------------------------------
 
-  const letter = (path: string, jamo: Jamo): void => {
+  const letter = (path: string, jamo: Jamo, strokeFirst = false): void => {
     if (seenJamo.has(jamo.id)) return;
     seenJamo.add(jamo.id);
     let example: KoLine | undefined;
@@ -190,20 +197,31 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
       ...(example ? { example } : {}),
       hasStrokes: bundle.hasStrokes(jamo.id),
       strokeReviewed: bundle.strokeReviewed(jamo.id),
+      ...(strokeFirst ? { strokeFirst: true as const } : {}),
     });
     taught.push({ kind: 'letter', jamoId: jamo.id, ko: jamo.char, romanization: jamo.romanization });
   };
 
-  const letterById = (path: string, id: string): void => {
+  const letterById = (path: string, id: string, strokeFirst = false): void => {
     const jamo = bundle.jamoAll.find((j) => j.id === id);
-    if (jamo) letter(path, jamo);
+    if (jamo) letter(path, jamo, strokeFirst);
     else skip(id, 'unknown-id');
   };
 
   const jamoOption = (jamo: Jamo, correct: boolean): QuizOption => ({ ko: jamo.char, romanization: jamo.romanization, correct });
 
-  const soundQuiz = (path: string, rounds: readonly MatchSoundRound[]): void => {
-    rounds.forEach((round, i) =>
+  /** Runs a round builder; one that throws on a small scope becomes a counted skip. */
+  const attempt = <T>(ref: string, build: () => T): T | null => {
+    try {
+      return build();
+    } catch {
+      skip(ref, 'scope-too-small');
+      return null;
+    }
+  };
+
+  const soundQuiz = (path: string, ref: string, build: () => readonly MatchSoundRound[]): void => {
+    attempt(ref, build)?.forEach((round, i) =>
       push(`${path}/q${i + 1}`, {
         kind: 'quiz',
         prompt: { ask: 'sound', spoken: spokenFor(round.promptJamo, 'sound') },
@@ -214,8 +232,8 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
   };
 
   /** Word-to-gloss rounds; a round whose Korean has no romanization is left out and counted. */
-  const meaningQuiz = (path: string, rounds: readonly CultureQuizRound[], from: number, ref: string): void => {
-    rounds.forEach((round, i) => {
+  const meaningQuiz = (path: string, ref: string, build: () => readonly CultureQuizRound[], from = 0): void => {
+    attempt(ref, build)?.forEach((round, i) => {
       if (round.promptRomanization === undefined) {
         skip(ref, 'no-romanization');
         return;
@@ -229,16 +247,6 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
     });
   };
 
-  /** Runs a round builder; one that throws on a small scope becomes a counted skip. */
-  const attempt = <T>(ref: string, build: () => T): T | null => {
-    try {
-      return build();
-    } catch {
-      skip(ref, 'scope-too-small');
-      return null;
-    }
-  };
-
   // ---- blocks -------------------------------------------------------------------
 
   const scopeStep = (path: string, ref: string, scope: MinigameScope, stepKind: Quest['steps'][number]['kind']): void => {
@@ -250,12 +258,11 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
           for (const id of jamoIds) letterById(path, id);
           return;
         }
-        const built = attempt(ref, () => buildMatchSoundRounds({ scopeJamoIds: [...jamoIds], rounds, tileCount: 4, seed: seed() }));
-        if (built) soundQuiz(path, built);
+        soundQuiz(path, ref, () => buildMatchSoundRounds({ scopeJamoIds: [...jamoIds], rounds, tileCount: 4, seed: seed() }));
         return;
       }
       case 'trace-stroke':
-        for (const id of jamoIds) letterById(path, id);
+        for (const id of jamoIds) letterById(path, id, true);
         return;
       case 'build-letter':
         for (const s of listOf(scope.syllables)) {
@@ -298,8 +305,7 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
         return;
       }
       case 'culture-quiz': {
-        const built = attempt(ref, () => buildCultureQuizRounds({ cardPairs: [...listOf(scope.cardPairs)], rounds, seed: seed() }));
-        if (built) meaningQuiz(path, built, 0, ref);
+        meaningQuiz(path, ref, () => buildCultureQuizRounds({ cardPairs: [...listOf(scope.cardPairs)], rounds, seed: seed() }));
         return;
       }
       case 'odd-one-out': {
@@ -440,7 +446,7 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
       cover: { storyId, sceneId: found.coverSceneId },
     });
     tier.scenes.forEach((scene, i) => {
-      const ko = scene.line ?? scene.keyword;
+      const ko = sceneKo(scene);
       const korean = ko ? { ko: ko.ko, romanization: ko.romanization, gloss: ko.en } : undefined;
       push(`${key}/${scene.id}`, {
         kind: 'story',
@@ -460,12 +466,17 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
         steps.length = 0;
         break;
       }
-      const ko = scene.line ?? scene.keyword;
+      const ko = sceneKo(scene);
       steps.push({ id, gloss: scene.captionEn, ...(ko ? { ko: ko.ko, romanization: ko.romanization } : {}) });
     }
     if (steps.length > 0) sequence(`${key}/sequence`, steps);
     if (!checks) return;
     tier.checks.forEach((check) => {
+      const ref = `${key}/check-${check.id}`;
+      if (check.options.some((o) => o.ko !== undefined && !o.romanization)) {
+        skip(ref, 'no-romanization');
+        return;
+      }
       const options = check.options.map(
         (o): QuizOption => ({
           ...(o.ko !== undefined ? { ko: o.ko, romanization: o.romanization } : {}),
@@ -476,7 +487,7 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
       );
       const keepOrder = check.kind === 'true-false' || check.shuffle === false;
       const target = check.target ? { ko: check.target.ko, romanization: check.target.romanization, gloss: check.target.en } : undefined;
-      push(`${key}/check-${check.id}`, {
+      push(ref, {
         kind: 'quiz',
         prompt: { ask: 'check', text: check.promptEn, ...(target ? { target } : {}) },
         options: keepOrder ? options : shuffleSeeded(options, seed()),
@@ -509,9 +520,10 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
       push(`${path}/${w.id}`, { kind: 'vocab', word, wordId: w.id, ...(w.cardId !== undefined ? { cardId: w.cardId } : {}) });
       teachWord(word);
     }
-    if (topic.words.length < QUIZ_MIN_ITEMS) return;
-    const pairs: CardMatchPair[] = topic.words.map((w) => ({ ko: w.ko, en: w.gloss, romanization: w.romanization }));
-    meaningQuiz(path, buildCultureQuizRounds({ cardPairs: pairs, rounds: deck.options.quizRounds, seed: seed() }), 0, topicId);
+    // The quiz asks only words that had a slide: under 4 shown (all of a small topic, or a short chosen list), no quiz.
+    if (words.length < QUIZ_MIN_ITEMS) return;
+    const pairs: CardMatchPair[] = words.map((w) => ({ ko: w.ko, en: w.gloss, romanization: w.romanization }));
+    meaningQuiz(path, topicId, () => buildCultureQuizRounds({ cardPairs: pairs, rounds: deck.options.quizRounds, seed: seed() }));
   };
 
   const revisitBlock = (path: string, chars: readonly string[]): void => {
@@ -522,6 +534,8 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
         skip(c, 'unknown-id');
         continue;
       }
+      // A repeated character is the same letter: one slide, one place in the quiz.
+      if (focus.some((j) => j.id === jamo.id)) continue;
       focus.push(jamo);
       letter(path, jamo);
     }
@@ -530,20 +544,25 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
     const pool = [...focus];
     for (const j of bundle.jamoAll) {
       if (pool.length >= QUIZ_MIN_ITEMS) break;
-      if (kinds.has(j.kind) && !pool.includes(j)) pool.push(j);
+      if (kinds.has(j.kind) && !pool.some((p) => p.id === j.id)) pool.push(j);
     }
+    const ref = `${path}/quiz`;
     if (pool.length < QUIZ_MIN_ITEMS) {
-      skip(`${path}/quiz`, 'scope-too-small');
+      skip(ref, 'scope-too-small');
       return;
     }
-    const rounds = buildMatchSoundRounds({
-      scopeJamoIds: pool.map((j) => j.id),
-      rounds: Math.min(REVISIT_MAX_ROUNDS, focus.length),
-      focusJamoIds: focus.map((j) => j.id),
-      tileCount: 4,
-      seed: seed(),
-    });
-    soundQuiz(`${path}/quiz`, rounds);
+    // Up to 4 rounds; each must ask a revisit letter. With 4 or more letters the pool is exactly
+    // those letters, so every prompt is one; with fewer, each is asked once (focus = rounds).
+    const rounds = Math.min(REVISIT_MAX_ROUNDS, focus.length);
+    soundQuiz(ref, ref, () =>
+      buildMatchSoundRounds({
+        scopeJamoIds: pool.map((j) => j.id),
+        rounds,
+        focusJamoIds: focus.slice(0, rounds).map((j) => j.id),
+        tileCount: 4,
+        seed: seed(),
+      }),
+    );
   };
 
   const quizBlock = (path: string, from: 'previous' | 'all', rounds: number): void => {
@@ -560,9 +579,9 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
       return;
     }
     const letterRounds = lettersOk ? (pairsOk ? Math.ceil(rounds / 2) : rounds) : 0;
-    if (lettersOk) soundQuiz(path, buildMatchSoundRounds({ scopeJamoIds: letters, rounds: letterRounds, tileCount: 4, seed: seed() }));
+    if (lettersOk) soundQuiz(path, 'quiz', () => buildMatchSoundRounds({ scopeJamoIds: letters, rounds: letterRounds, tileCount: 4, seed: seed() }));
     if (pairsOk) {
-      meaningQuiz(path, buildCultureQuizRounds({ cardPairs: pairs, rounds: rounds - letterRounds, seed: seed() }), letterRounds, 'quiz');
+      meaningQuiz(path, 'quiz', () => buildCultureQuizRounds({ cardPairs: pairs, rounds: rounds - letterRounds, seed: seed() }), letterRounds);
     }
   };
 

@@ -127,4 +127,19 @@ describe('Recent lessons (F-TCH-004 §3.12)', () => {
     await expect(saveRecent(broken, list)).resolves.toBe(false);
     await expect(saveRecent(store, list)).resolves.toBe(true);
   });
+
+  it('never stores a slide key or a save time that would drop the deck on the next load', () => {
+    const list = rememberDeck(emptyRecent(), deck(1), at(1));
+    expect(setLastSlide(list, 'lecture:deck001', '')).toBe(list);
+    expect(setLastSlide(list, 'lecture:deck001', 'k'.repeat(257))).toBe(list);
+    expect(setLastSlide(list, 'lecture:deck001', 'k'.repeat(256)).items[0]!.lastSlideKey).toHaveLength(256);
+    expect(rememberDeck(list, deck(2), 'yesterday')).toBe(list);
+  });
+
+  it('keeps a deck whose only fault is a bad slide key, without the key', () => {
+    const items = [{ deck: deck(1), savedAt: at(1), lastSlideKey: 'k'.repeat(300) }];
+    expect(parseRecent({ v: 1, items })).toEqual({ v: 1, items: [{ deck: deck(1), savedAt: at(1) }] });
+    const labelled = [{ deck: deck(1), savedAt: at(1), lastSlideKey: '', labels: ['Mina'] }];
+    expect(parseRecent({ v: 1, items: labelled })).toEqual(emptyRecent());
+  });
 });
