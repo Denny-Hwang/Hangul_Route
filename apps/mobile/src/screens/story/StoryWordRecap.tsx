@@ -16,6 +16,7 @@ import type { PlaySpec } from '../../logic/audio/controller';
 import type { RecapWord } from '../../logic/story/recap';
 import {
   RECAP_WORD_CELL,
+  longestRecapGlyphs,
   notePlayed,
   recapChipView,
   recapColumns,
@@ -54,7 +55,7 @@ export function StoryWordRecap({ words, storyId, profileId, romanizationMode, sa
   const m = useMessages();
   const copy = m.learner.story.recap;
   const width = useLayoutClass().windowWidth;
-  const columns = recapColumns(width);
+  const columns = recapColumns(width, longestRecapGlyphs(words));
   const [revealed, setRevealed] = useState<ReadonlySet<string>>(() => new Set());
   const played = useRef<ReadonlySet<string>>(new Set());
   const headingRef = useRef<View | null>(null);
@@ -111,35 +112,29 @@ export function StoryWordRecap({ words, storyId, profileId, romanizationMode, sa
           const chip = recapChipView(word, { romanizationMode, revealed }, copy, m.a11y.koreanItem);
           return (
             <View key={chip.id} role="listitem" style={RECAP_WORD_CELL[columns]} testID={`story-recap-word-${chip.id}`}>
+              {/* Stacked and centred: the Korean keeps the chip's full width, so a word never breaks across lines. */}
               <Card tone="paper" padding="md" elevation="card" style={{ flexGrow: 1 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm }}>
-                  <View style={{ flex: 1, minWidth: 0 }}>
-                    <KoreanText
-                      ko={chip.ko}
-                      romanization={chip.romanization}
-                      gloss={chip.gloss}
-                      size="sm"
-                      onPress={() => hear(word)}
-                      accessibilityLabel={chip.accessibilityLabel}
-                      testID={`story-recap-text-${chip.id}`}
+                <View style={{ alignItems: 'center', gap: spacing.sm }}>
+                  <KoreanText
+                    ko={chip.ko}
+                    romanization={chip.romanization}
+                    gloss={chip.gloss}
+                    size="sm"
+                    onPress={() => hear(word)}
+                    accessibilityLabel={chip.accessibilityLabel}
+                    testID={`story-recap-text-${chip.id}`}
+                  />
+                  {chip.revealNeeded ? (
+                    <Button
+                      label={m.learner.story.check.showRomanization.cta}
+                      tone="ghost"
+                      size="md"
+                      onPress={() => setRevealed((r) => new Set([...r, chip.id]))}
+                      testID={`story-recap-reveal-${chip.id}`}
                     />
-                  </View>
+                  ) : null}
                   <SpeakerButton label={chip.hearLabel} onPress={() => hear(word)} testID={`story-recap-hear-${chip.id}`} />
                 </View>
-                {chip.revealNeeded ? (
-                  <>
-                    <Spacer size="xs" />
-                    <View style={{ alignSelf: 'flex-start' }}>
-                      <Button
-                        label={m.learner.story.check.showRomanization.cta}
-                        tone="ghost"
-                        size="md"
-                        onPress={() => setRevealed((r) => new Set([...r, chip.id]))}
-                        testID={`story-recap-reveal-${chip.id}`}
-                      />
-                    </View>
-                  </>
-                ) : null}
               </Card>
             </View>
           );

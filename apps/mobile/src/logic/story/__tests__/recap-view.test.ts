@@ -4,6 +4,7 @@ import { STORY_CHECK_AUDIO_SOURCE } from '../check-game';
 import type { RecapWord } from '../recap';
 import {
   RECAP_WORD_CELL,
+  longestRecapGlyphs,
   notePlayed,
   recapChipView,
   recapColumns,
@@ -75,6 +76,20 @@ describe('recapColumns', () => {
     expect(recapColumns(359)).toBe(1);
     expect(recapColumns(360)).toBe(2);
     expect(recapColumns(1280)).toBe(2);
+  });
+
+  it('a Korean word too long for a half-width chip keeps one column (never broken across lines)', () => {
+    expect(recapColumns(375, 3)).toBe(2);
+    expect(recapColumns(375, 4)).toBe(1);
+    expect(recapColumns(768, 5)).toBe(2);
+    expect(recapColumns(768, 6)).toBe(1);
+  });
+});
+
+describe('longestRecapGlyphs', () => {
+  it('counts the glyphs of the longest Korean word, spaces left out', () => {
+    expect(longestRecapGlyphs([])).toBe(0);
+    expect(longestRecapGlyphs([seollal, { id: 'p', ko: '한글날 축하해요', romanization: 'x', en: 'y' }])).toBe(7);
   });
 
   it('cells: a full row in one column, a half row that never stretches in two', () => {

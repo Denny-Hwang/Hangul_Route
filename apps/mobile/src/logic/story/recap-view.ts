@@ -58,9 +58,24 @@ export function recapSpeech(word: RecapWord): PlaySpec {
   return spec;
 }
 
-/** Chip columns by window width: one at 320 dp, two from 360 dp (the reading column keeps it at two). */
-export function recapColumns(width: number): 1 | 2 {
-  return width >= 360 ? 2 : 1;
+/** Widest Korean word (glyphs without spaces) that a half-width chip holds on one line, below / at tablet width. */
+const FITS_PHONE = 3;
+const FITS_TABLET = 5;
+
+/**
+ * Chip columns by window width: one at 320 dp, two from 360 dp (the reading
+ * column keeps it at two). `longestKorean` (`longestRecapGlyphs`) keeps one
+ * column when a half-width chip would break a Korean word across lines (the
+ * same measure as Story Order's cards).
+ */
+export function recapColumns(width: number, longestKorean = 0): 1 | 2 {
+  if (width < 360) return 1;
+  return longestKorean > (width >= 768 ? FITS_TABLET : FITS_PHONE) ? 1 : 2;
+}
+
+/** Glyphs of the longest Korean word of the recap (spaces do not count). */
+export function longestRecapGlyphs(words: readonly RecapWord[]): number {
+  return Math.max(0, ...words.map((w) => [...w.ko].filter((g) => g.trim() !== '').length));
 }
 
 /** The flex cell of one chip: a full row, or a half row that never stretches (an odd last chip keeps its width). */
