@@ -57,6 +57,7 @@ Hangul Route
 │   │    ├─ Picker · PIN entry · Switch button
 │   │    └─ role: learner | parent  (+ teacher | admin 예약)   [P]
 │   ├─ A3. Today (홈 = 3-card mission)                  [S] F-HW-001
+│   │    ├─ Story time card (① continue · next · again → explore 순서, 하루 고정) [S] F-STORY-004 §3.7 (PR 4.4a)
 │   │    ├─ ① Continue · ② New/Assigned · ③ Story/Review
 │   │    └─ Homework list (배정 큐)                       [S]
 │   ├─ A4. Journey (격자 7 Stage × 5 Theme)              [S] 02 §1
@@ -68,6 +69,8 @@ Hangul Route
 │   │    └─ Minigame shell + 13 kinds (9 구현: 8 active + voice-echo beta)  06
 │   ├─ A6. Results & celebration (stars · card unlock)   [S] F-MOTION-003/004/005
 │   ├─ A7. Library (Heritage cards 42 = 30 Stage 1 + 12 taste · detail · share) [S] F-CARD-001/002/003
+│   │    ├─ Sections: Cards · Story Time · Culture (`SectionTabs`, 이야기가 있을 때만) · Picked for you · 고정 순서 선반 [R] F-STORY-004 §3.3-3.4
+│   │    └─ Culture notes (찾은 노트만, 테마별) · story episode page (Start · Keep reading · Read it again) [R] F-STORY-004 §3.5-3.6
 │   ├─ A8. Reviews (Daily test · Feedback · Stage review · Certificate) [D] F-RVW-001
 │   ├─ A9. Hoya companion (5 poses · bubble · lines)     [S] F-HOYA-001, F-002
 │   ├─ A10. Settings / Profile page (plan status · mute · switch · grown-ups) [S]
@@ -144,9 +147,11 @@ Hangul Route
 | `profiles/pin-entry` | (modal) | 부모 확인 | S | F-PROF-001 | ✓ |
 | `profiles/switch-button` | (component) | 세션 중 전환 | S | F-PROF-001 | ✓ |
 | `home/todays-mission` (alias `home/home`) | Main/Home | 오늘 할 3가지 | S | F-HW-001 | ✓ |
+| `home/story-time-card` | Main/Home (mission card ①/③) | 읽던 이야기 이어 읽기 · 다음 이야기 · 다시 읽기 — 하루 고정, 이야기 없으면 explore 카드 | S | F-STORY-004 §3.7 | ✓ |
 | `homework/list` | Homework | 배정된 숙제 큐 | S | F-HW-001 | NEW |
 | `journey/grid` | Main/Journey | 격자에서 에피소드 고르기 | S | 02 §1, 04 | NEW |
 | `episode/detail` | EpisodeDetail | 퀘스트 목록 + 보상 카드 미리보기 | S | 05 | NEW |
+| `episode/detail-story` | EpisodeDetail (`format: story`) | 이야기 1편 (또는 책 에피소드) — 큰 버튼 1개, 낱말, 문화 노트, 스포일러 없는 보상 카드, Sources | R | F-STORY-004 §3.6 | ✓ |
 | `quest/player` | QuestPlayer | 5-step 진행 셸 | S | content-skill | NEW |
 | `story/reader` | Minigame (`story-read` 단계) · StoryReader (replay) | 장면 하나씩: 그림 · 내레이션 · 한국어 + 로마자 + 뜻 — 점수·타이머·자동 넘김 없음, 읽던 장면 기억 | S | F-STORY-002 §3.3-3.7 | ✓ |
 | `story/term-gloss` | (story/reader 안의 인라인 카드) | 낱말 칩 탭 → 듣기 + 한국어·로마자·뜻 카드 (팝오버 아님) | S | F-STORY-002 §3.5 | ✓ |
@@ -160,6 +165,9 @@ Hangul Route
 | `results/celebrate` | Results | 별 + 카드 언락 + 다음 행동 1개 | S | F-MOTION-003 | NEW |
 | `library/gallery` | Main/Library | 모은 카드 보기 | S | F-CARD-001 | NEW |
 | `library/card-detail` | CardDetail (modal) | 카드 앞/뒤 + 공유 | S | F-CARD-002/003 | NEW |
+| `library/stories` | Main/Library `{ section: 'story-time' }` | Picked for you + 고정 순서 이야기 선반 (진도로 재정렬 안 함) | R | F-STORY-004 §3.3-3.4 | ✓ |
+| `library/culture` | Main/Library `{ section: 'culture' }` | 찾은 문화 노트 카드 (개수만) + culture 이야기 타일 | R | F-STORY-004 §3.5 | ✓ |
+| `story/culture-notes` | CultureNotes | 찾은 노트를 테마별로 — 용어 듣기 · 출처는 링크 없는 텍스트 · 잠긴 자리 없음 | R | F-STORY-004 §3.5 | ✓ |
 | `profile/settings` | Profile | 플랜 상태 · 소리 · 전환 · Grown-ups | S | F-SUB-001 | NEW |
 | `parent/gate` | ~~ParentGate~~ → PinEntry (modal) | **retired** — `profiles/pin-entry` 로 통합 (§7 결정) | S→PIN | F-PROF-001 §10 | ✓ (기록용) |
 | `reviews/daily-test` | (신규) | 하루 1회 간격 반복 테스트 | D | F-RVW-001 §3.2 | NEW |
@@ -246,6 +254,9 @@ home/todays-mission card ③ ─▶ reviews/daily-test ─▶ results/celebrate
 story/reader ─▶ story/check ─▶ story/word-recap ─▶ story/sequence ─▶ results/celebrate-story ─┬─▶ quest/player (Next story) · story/reader (Read it again, replay)
                                                                                             └─▶ episode/detail-story · home/todays-mission
 journey/grid (stage 완료 셀) ─▶ reviews/stage-review ─▶ certificate (results 변형) ─▶ library/gallery
+library/stories · library/culture ─▶ episode/detail-story ─┬─▶ quest/player (Start · Keep reading = resume) · story/reader (Read it again)
+                                                           └─▶ story/culture-notes · story/sources · library/card-detail
+home/story-time-card ─▶ quest/player (continue = resume · next) | story/reader (again) | episode/detail (explore)
 
 profile/settings ─┬─▶ sync/save-progress (Rescue Code)
                   ├─▶ sync/join-space

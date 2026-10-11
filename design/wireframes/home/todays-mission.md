@@ -49,7 +49,7 @@ Then: exactly three cards say what Hoya wants to do today, in a fixed order that
 ## Interaction points
 
 - Card ① / ② tap → `QuestPlayer` (questId, episodeId)
-- Story card tap (F-STORY-004 §3.7, drawn in `library/stories.md` §F) →
+- Story card tap (F-STORY-004 §3.7, drawn in `home/story-time-card.md` F) →
   `QuestPlayer` for "Keep reading" / "A short story"; `StoryReader` (unscored
   replay) for "Read it again". A story card with cover art shows a 48 dp
   cover thumbnail where the icon sits.

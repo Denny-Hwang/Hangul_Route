@@ -91,6 +91,7 @@ design/brief/
 - `components/*` — Button / Card / Tile / HoyaBubble / Progress / StarRow / Pill / Heading / Screen / Icon (10개).
 - 이야기 확인 (F-STORY-003 PR 3.0): [`components/choice-card.md`](./components/choice-card.md) · [`screens/22-story-check.md`](./screens/22-story-check.md) · [`screens/12-minigame-story-sequence.md`](./screens/12-minigame-story-sequence.md) (Story Order v2 로 개정).
 - `screens/*` — onboarding 3 + main 4 + episode/quest/results 3 + minigames 6 + library/card 2 + parent 2 = 20개.
+- 이야기 선반 (F-STORY-004 PR 4.0): [`screens/23-library-stories.md`](./screens/23-library-stories.md) · [`screens/24-culture-notes.md`](./screens/24-culture-notes.md) · [`screens/25-story-episode-detail.md`](./screens/25-story-episode-detail.md).
 
 ## Out of scope (이 PR)
 

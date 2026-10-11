@@ -98,8 +98,11 @@ Run these once at the start. Everything else inherits.
 | # | Brief | Artifact | Output path |
 |---|---|---|---|
 | P4-16 | [`screens/16-card-detail.md`](./screens/16-card-detail.md#5-claude-design-prompt) | Card detail (unlocked + locked) | `design/screens/library/card-detail-unlocked__v1__YYYY-MM-DD.png` + `locked` |
+| P4-25 | [`screens/25-story-episode-detail.md`](./screens/25-story-episode-detail.md#6-claude-design-prompt) | Story episode page (new, in progress, finished) (F-STORY-004) | `design/screens/episode/detail-story__v1__YYYY-MM-DD.png` |
 | P4-19 | [`screens/19-parent-gate.md`](./screens/19-parent-gate.md#5-claude-design-prompt) | Parent gate (math) | `design/screens/parent/gate__v1__YYYY-MM-DD.png` |
 | P4-20 | [`screens/20-parent-dashboard.md`](./screens/20-parent-dashboard.md#5-claude-design-prompt) | Parent dashboard (mobile) | `design/screens/parent/dashboard-mobile__v1__YYYY-MM-DD.png` |
+| P4-23 | [`screens/23-library-stories.md`](./screens/23-library-stories.md#6-claude-design-prompt) | Library Story Time section (F-STORY-004) | `design/screens/library/stories__v1__YYYY-MM-DD.png` |
+| P4-24 | [`screens/24-culture-notes.md`](./screens/24-culture-notes.md#6-claude-design-prompt) | Culture notes (list, sources open, empty) (F-STORY-004) | `design/screens/story/culture-notes__v1__YYYY-MM-DD.png` |
 
 ## Phase 5 — Launch & store assets
 
