@@ -9,7 +9,10 @@ import { onboardChild } from './helpers';
  * Part 2 (PR 5a, §3.7): the split-pane Journey. A wide, not-short window
  * (>= 900 wide, >= 480 high) shows the grid left and the selected cell's page
  * right; every narrower window navigates on a tap, as before. The portrait
- * guard, the Library pane and the tab bar are later PRs of the spec.
+ * guard and the Library pane are later PRs of the spec.
+ * PR 2b: the tab row is centred inside `maxWidth.full` and the PWA banners
+ * and install guide sit in a centred `maxWidth.reading` column above the tab
+ * bar.
  */
 const WIDE_VIEWPORTS = [
   { name: 'iPad portrait', width: 768, height: 1024 },
@@ -184,3 +187,82 @@ for (const vp of [
     });
   });
 }
+
+// --- Part 2b: centred tab bar, banners and install guide (PR 2b) ---
+
+/** `layout.maxWidth` (design-system tokens). */
+const MAX_FULL = 1120;
+const MAX_READING = 720;
+
+/** Onboard, then open Home the way a returning learner does (second open of the app). */
+async function openHome(page: Page): Promise<void> {
+  await onboardChild(page, { name: 'Mina' });
+  await page.waitForFunction(() => !!navigator.serviceWorker.controller);
+  await page.goto('/');
+  await expect(page.getByText('Hi, Mina!')).toBeVisible();
+}
+
+async function box(page: Page, testId: string): Promise<{ x: number; y: number; width: number; height: number }> {
+  const b = await page.getByTestId(testId).boundingBox();
+  if (!b) throw new Error(`${testId} has no box`);
+  return b;
+}
+
+const TAB_BAR_VIEWPORTS = [
+  ...WIDE_VIEWPORTS,
+  { name: 'desktop', width: 1440, height: 900 },
+] as const;
+
+for (const vp of TAB_BAR_VIEWPORTS) {
+  test(`tab bar row is centred inside maxWidth.full and its items are >= 64 at ${vp.width}x${vp.height}`, async ({ page }) => {
+    await page.setViewportSize({ width: vp.width, height: vp.height });
+    await openHome(page);
+    const items = page.getByRole('tablist').getByRole('link');
+    await expect(items).toHaveCount(3);
+    const boxes = await Promise.all((await items.all()).map((i) => i.boundingBox()));
+    const left = Math.min(...boxes.map((b) => b!.x));
+    const right = Math.max(...boxes.map((b) => b!.x + b!.width));
+    const margin = Math.max(0, (vp.width - MAX_FULL) / 2);
+    expect(left).toBeCloseTo(margin, 0);
+    expect(vp.width - right).toBeCloseTo(margin, 0);
+    for (const b of boxes) {
+      expect(b!.width).toBeGreaterThanOrEqual(64);
+      expect(b!.height).toBeGreaterThanOrEqual(64);
+    }
+  });
+}
+
+const BANNER_VIEWPORTS = [
+  { width: 1180, height: 820 },
+  { width: 768, height: 1024 },
+  { width: 844, height: 390 },
+  { width: 390, height: 844 },
+] as const;
+
+for (const vp of BANNER_VIEWPORTS) {
+  test(`offline-ready toast is a centred reading column above the tab bar at ${vp.width}x${vp.height}`, async ({ page }) => {
+    await page.setViewportSize({ width: vp.width, height: vp.height });
+    await openHome(page);
+    await page.evaluate(() => window.dispatchEvent(new Event('hr:offline-ready')));
+    await expect(page.getByText('All set! You can play without Wi-Fi now.')).toBeVisible();
+    const banner = await box(page, 'pwa-banners');
+    const tabBar = await page.getByRole('tablist').boundingBox();
+    expect(banner.width).toBeLessThanOrEqual(MAX_READING);
+    expect(banner.width).toBeLessThan(vp.width);
+    expect(Math.abs(banner.x - (vp.width - banner.x - banner.width))).toBeLessThanOrEqual(1);
+    expect(banner.y + banner.height, 'toast clears the tab bar').toBeLessThanOrEqual(tabBar!.y);
+  });
+}
+
+test('install guide sheet is a centred reading column above the tab bar at 1180x820', async ({ page }) => {
+  await page.setViewportSize({ width: 1180, height: 820 });
+  await openHome(page);
+  await page.reload(); // third cached open
+  await expect(page.getByText('Hi, Mina!')).toBeVisible();
+  await expect(page.getByTestId('install-guide')).toBeVisible();
+  const sheet = await box(page, 'install-guide-column');
+  const tabBar = await page.getByRole('tablist').boundingBox();
+  expect(sheet.width).toBeLessThanOrEqual(MAX_READING);
+  expect(Math.abs(sheet.x - (1180 - sheet.x - sheet.width))).toBeLessThanOrEqual(1);
+  expect(sheet.y + sheet.height).toBeLessThanOrEqual(tabBar!.y);
+});
