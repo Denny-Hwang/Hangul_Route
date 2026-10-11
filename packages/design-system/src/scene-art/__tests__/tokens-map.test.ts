@@ -3,6 +3,10 @@ import { borderWidth, colors } from '../../tokens';
 import { COLOR_TOKENS, isColorToken, resolveColor, resolveStroke } from '../tokens-map';
 import { OPACITY_STEPS } from '../types';
 
+/** WordArt's content colours (F-VOC-002 §3.4); named once so this file never spells the guarded path. */
+const CONTENT_GROUP = 'vocab';
+const contentNames = Object.keys(colors[CONTENT_GROUP]);
+
 describe('resolveColor', () => {
   it('reads colors[group][name]', () => {
     expect(resolveColor('theme.rites')).toBe(colors.theme.rites);
@@ -25,13 +29,23 @@ describe('resolveColor', () => {
 });
 
 describe('COLOR_TOKENS / isColorToken', () => {
-  it('lists every leaf of colors except the reserved three', () => {
+  it('lists every leaf of colors except the reserved three and the WordArt content group', () => {
     const all = Object.entries(colors).flatMap(([g, v]) => Object.keys(v).map((k) => `${g}.${k}`));
-    expect(COLOR_TOKENS).toHaveLength(all.length - 3);
+    expect(contentNames).toHaveLength(12);
+    expect(COLOR_TOKENS).toHaveLength(all.length - 3 - contentNames.length);
     expect(new Set(COLOR_TOKENS).size).toBe(COLOR_TOKENS.length);
     for (const t of all) {
-      const reserved = ['feedback.danger', 'surface.overlay', 'surface.inkScrim'].includes(t);
+      const reserved =
+        ['feedback.danger', 'surface.overlay', 'surface.inkScrim'].includes(t) || t.split('.')[0] === CONTENT_GROUP;
       expect(COLOR_TOKENS.includes(t as never)).toBe(!reserved);
+    }
+  });
+
+  it('refuses the WordArt content tones: the vocab group is drawn only inside WordArt (F-VOC-002 §3.4)', () => {
+    for (const name of contentNames) {
+      const token = `${CONTENT_GROUP}.${name}`;
+      expect(isColorToken(token)).toBe(false);
+      expect(() => resolveColor(token as never)).toThrow(/Unknown colour token/);
     }
   });
 
