@@ -1,5 +1,5 @@
 import type { SpaceKind } from '@hangul-route/content-schema';
-import { DEFAULT_LOCALE, getMessages, type UiLocale } from '@hangul-route/i18n';
+import { DEFAULT_LOCALE, en, getMessages, type UiLocale } from '@hangul-route/i18n';
 import type { SpaceListItem } from './api';
 
 /** Where the console sends an adult — F-CONSOLE-001 §3.2–3.4. */
@@ -30,8 +30,8 @@ export function landingAfterCreate(kind: SpaceKind, spaceId: string, fromHome: b
   return fromHome ? ROUTES.home : ROUTES.home;
 }
 
-export const KIND_LABEL: Record<SpaceKind, string> = { family: 'Family', class: 'Class', school: 'School' };
-export const KIND_GROUP: Record<SpaceKind, string> = { family: 'Family', class: 'Classes', school: 'School' };
+/** English kind labels ("Class"), read by the settings page until it takes `m.console.kind.label` (PR 10c). */
+export const KIND_LABEL: Readonly<Record<SpaceKind, string>> = en.console.kind.label;
 
 export interface RoleCard {
   kind: SpaceKind;
@@ -39,17 +39,21 @@ export interface RoleCard {
   line: string;
 }
 
-export const ROLE_CARDS: readonly RoleCard[] = [
-  { kind: 'family', title: 'Parent / caregiver', line: 'Home — my kids' },
-  { kind: 'class', title: 'Teacher', line: 'My class' },
-  { kind: 'school', title: 'School admin', line: 'Teachers and classes' },
-];
+const ROLE_ORDER: readonly SpaceKind[] = ['family', 'class', 'school'];
 
-export function prefillName(kind: SpaceKind, displayName: string): string {
+/** The role step of console/onboarding-role, in `locale`. */
+export function roleCards(locale: UiLocale = DEFAULT_LOCALE): RoleCard[] {
+  const roles = getMessages(locale).console.start.roles;
+  return ROLE_ORDER.map((kind) => ({ kind, ...roles[kind] }));
+}
+
+/** The suggested name for a new space, in `locale`; the grown-up can edit it before creating. */
+export function prefillName(kind: SpaceKind, displayName: string, locale: UiLocale = DEFAULT_LOCALE): string {
+  const prefill = getMessages(locale).console.start.prefill;
   const who = displayName.trim();
-  if (kind === 'family') return who ? `${who} family` : 'Our family';
-  if (kind === 'class') return 'Class A';
-  return who ? `${who} school` : 'Our school';
+  if (kind === 'family') return who ? prefill.family(who) : prefill.familyDefault;
+  if (kind === 'class') return prefill.class;
+  return who ? prefill.school(who) : prefill.schoolDefault;
 }
 
 /** Group by kind, most recent first inside each group, archived rows last. */
@@ -74,6 +78,7 @@ export function statusLine(item: SpaceListItem, locale: UiLocale = DEFAULT_LOCAL
   return counts.classes(item.counts.classes);
 }
 
-export function memberNoun(kind: SpaceKind): string {
-  return kind === 'class' ? 'students' : kind === 'family' ? 'learners' : 'members';
+/** What a space's members are called ("students", "learners", "members"), in `locale`. */
+export function memberNoun(kind: SpaceKind, locale: UiLocale = DEFAULT_LOCALE): string {
+  return getMessages(locale).console.kind.members[kind];
 }

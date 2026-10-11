@@ -1,3 +1,4 @@
+import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import { canDeleteLearnerData, canReissueRescueCode, decideFailureNote, expiresLabel, minutesLeft, requestedLabel } from '../relink';
 
@@ -35,5 +36,17 @@ describe('relink helpers (F-TCH-001 §10)', () => {
     expect(decideFailureNote({ error: 'unknown', code: 'not_a_member' })).toBe("Didn't go through. Try again.");
     expect(decideFailureNote({ error: 'network' })).toBe("Didn't go through. Try again.");
     expect(decideFailureNote({ error: 'forbidden', code: 'forbidden' })).toBe("Didn't go through. Try again.");
+  });
+
+  it('words every label from the dictionary in each locale (F-I18N-001 PR 10a)', () => {
+    for (const locale of ['en', 'es', 'ko'] as const) {
+      const r = getMessages(locale).console.relink;
+      expect(expiresLabel('2026-09-21T12:08:30.000Z', now, locale)).toBe(r.expiresIn(9));
+      expect(expiresLabel('garbage', now, locale)).toBe(r.expired);
+      expect(requestedLabel('2026-09-21T11:59:40.000Z', now, locale)).toBe(r.askedJustNow);
+      expect(requestedLabel('2026-09-21T11:57:10.000Z', now, locale)).toBe(r.askedAgo(2));
+      expect(decideFailureNote({ error: 'unknown', code: 'expired' }, locale)).toBe(r.closed);
+      expect(decideFailureNote({ error: 'network' }, locale)).toBe(r.failed);
+    }
   });
 });

@@ -1,7 +1,7 @@
 import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import type { SpaceListItem } from '../api';
-import { KIND_GROUP, KIND_LABEL, ROLE_CARDS, ROUTES, groupSpaces, landingAfterCreate, landingAfterSignIn, memberNoun, prefillName, spaceIdFrom, statusLine } from '../routing';
+import { KIND_LABEL, ROUTES, groupSpaces, landingAfterCreate, landingAfterSignIn, memberNoun, prefillName, roleCards, spaceIdFrom, statusLine } from '../routing';
 
 const item = (id: string, kind: SpaceListItem['space']['kind'], createdAt: string, over: Partial<SpaceListItem> = {}, archivedAt: string | null = null): SpaceListItem => ({
   space: { id, kind, name: id, parentSpaceId: null, settings: { consentMode: 'parent', anonymizeRoster: false }, archivedAt, createdAt },
@@ -35,11 +35,29 @@ describe('console routing (F-CONSOLE-001)', () => {
     expect(prefillName('school', 'Seoul Hangul')).toBe('Seoul Hangul school');
     expect(prefillName('school', '')).toBe('Our school');
     expect(KIND_LABEL.class).toBe('Class');
-    expect(KIND_GROUP.class).toBe('Classes');
-    expect(ROLE_CARDS.map((r) => r.kind)).toEqual(['family', 'class', 'school']);
+    expect(roleCards().map((r) => r.kind)).toEqual(['family', 'class', 'school']);
+    expect(roleCards()[0]).toEqual({ kind: 'family', title: 'Parent / caregiver', line: 'Home — my kids' });
     expect(memberNoun('class')).toBe('students');
     expect(memberNoun('family')).toBe('learners');
     expect(memberNoun('school')).toBe('members');
+  });
+
+  it('reads role cards, prefilled names and member nouns from the dictionary in every locale (F-I18N-001 PR 10a)', () => {
+    for (const locale of ['en', 'es', 'ko'] as const) {
+      const c = getMessages(locale).console;
+      expect(roleCards(locale)).toEqual([
+        { kind: 'family', ...c.start.roles.family },
+        { kind: 'class', ...c.start.roles.class },
+        { kind: 'school', ...c.start.roles.school },
+      ]);
+      expect(prefillName('family', ' Kim ', locale)).toBe(c.start.prefill.family('Kim'));
+      expect(prefillName('family', ' ', locale)).toBe(c.start.prefill.familyDefault);
+      expect(prefillName('class', 'Kim', locale)).toBe(c.start.prefill.class);
+      expect(prefillName('school', 'Seoul', locale)).toBe(c.start.prefill.school('Seoul'));
+      expect(prefillName('school', '', locale)).toBe(c.start.prefill.schoolDefault);
+      for (const kind of ['family', 'class', 'school'] as const) expect(memberNoun(kind, locale)).toBe(c.kind.members[kind]);
+    }
+    expect(KIND_LABEL).toEqual(getMessages('en').console.kind.label);
   });
 
   it('groups by kind, newest first, archived last, with count-only status lines', () => {
