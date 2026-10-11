@@ -221,6 +221,8 @@ function ReaderBody({
     return checkpointSpeech(cpItem, sourceItem, uiSpeechLang(locale));
   }, [cpItem, sourceStory, story, level, locale]);
   const justAnswered = useRef(false);
+  // Checkpoints whose question Read to me has already read this visit: reopening a card (Back, then Next) is quiet.
+  const spokenCheckpoints = useRef<Set<string>>(new Set());
 
   // Mutable inputs the effect runner reads at call time.
   const live = useRef({ readToMe: readToMeOn, unlocked: audio.unlocked, mode, onSceneChange, onAnswer });
@@ -301,15 +303,27 @@ function ReaderBody({
         cardsRef.current = kept;
         setCards(kept);
       }
-      const step = reduceReader(stateRef.current, action);
+      if (action.type === 'restart') spokenCheckpoints.current.clear();
+      const prev = stateRef.current;
+      const step = reduceReader(prev, action);
       // Leaving a checkpoint card (Back, Skip, Next): its question stops; a new scene may start its own sound.
-      if (stateRef.current.phase === 'checkpoint' && step.state.phase !== 'checkpoint') audioRef.current.stop();
+      if (prev.phase === 'checkpoint' && step.state.phase !== 'checkpoint') audioRef.current.stop();
       stateRef.current = step.state;
       setState(step.state);
       runEffects(step.effects);
+      // Back from a card returns to the same scene, so no scene-changed runs: say where the learner is and put
+      // focus on the narration (the focused control on the card has just gone; §3.10).
+      if (prev.phase === 'checkpoint' && step.state.phase === 'scene' && !step.effects.some((e) => e.type === 'scene-changed')) {
+        const v = buildSceneView(story, level, step.state.index, sceneCtx(step.state.index));
+        if (v) AccessibilityInfo.announceForAccessibility(v.labels.announcement);
+        setTimeout(() => {
+          if (Platform.OS === 'web') narrationRef.current?.focus?.({ preventScroll: true });
+          else focusForScreenReader(narrationRef.current);
+        }, 0);
+      }
       return step.state;
     },
-    [runEffects],
+    [runEffects, story, level, sceneCtx],
   );
 
   // Opening: announce the scene, save nothing for scene 1, autoplay when allowed (§3.3, §3.4).
@@ -370,7 +384,7 @@ function ReaderBody({
   }, [state.phase]);
 
   // A checkpoint card opens: the scene's sound stops, the text starts at the top, the card is announced and
-  // takes focus (web), and Read to me reads the question once (§3.4, §3.7, §3.10).
+  // takes focus, and Read to me reads the question on its first opening only (§3.4, §3.7, §3.10).
   const openedCheckpoint = state.phase === 'checkpoint' ? state.checkpointId : null;
   const cpLive = useRef({ item: cpItem, speech: cpSpeech, heading: cpHeading });
   cpLive.current = { item: cpItem, speech: cpSpeech, heading: cpHeading };
@@ -382,8 +396,15 @@ function ReaderBody({
     pendingAutoplay.current = null;
     textScrollRef.current?.scrollTo({ y: 0, animated: false });
     if (item) AccessibilityInfo.announceForAccessibility(checkpointAnnouncement(heading, item));
-    setTimeout(() => checkpointRef.current?.focus?.({ preventScroll: true }), 0);
-    if (speech && live.current.readToMe && a.unlocked) a.play(speech.question);
+    // Web: the region takes keyboard focus without a scroll jump; native: VoiceOver / TalkBack move to it.
+    setTimeout(() => {
+      if (Platform.OS === 'web') checkpointRef.current?.focus?.({ preventScroll: true });
+      else focusForScreenReader(checkpointRef.current);
+    }, 0);
+    if (speech && live.current.readToMe && a.unlocked && !spokenCheckpoints.current.has(openedCheckpoint)) {
+      spokenCheckpoints.current.add(openedCheckpoint);
+      a.play(speech.question);
+    }
   }, [openedCheckpoint]);
 
   // The right card was tapped: focus moves to Next (its explanation is above), and native hears the outcome.
@@ -704,6 +725,8 @@ function ReaderBody({
           onReveal={() => dispatch({ type: 'reveal', id: checkpointRevealId(cpItem.checkId) })}
           onChoose={chooseOption}
           onSkip={skipCheckpointCard}
+          // Native has no scrollIntoView: once Hoya's hint or explanation is laid out, the text area scrolls to it.
+          onBubbleShown={() => textScrollRef.current?.scrollToEnd({ animated: !reducedMotion })}
           promptPanel={
             audio.slot.view.textShown ? (
               <PromptPanel

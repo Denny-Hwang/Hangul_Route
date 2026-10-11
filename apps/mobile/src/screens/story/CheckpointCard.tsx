@@ -64,6 +64,11 @@ export interface CheckpointCardProps {
   onReveal: () => void;
   onChoose: (optionId: string) => void;
   onSkip: () => void;
+  /**
+   * Native only: Hoya's hint or explanation has been laid out under the options, so the host can scroll its
+   * text area to it (the web brings it into view with `scrollIntoView`).
+   */
+  onBubbleShown?: () => void;
   /** The reader's shared sound state (`PromptPanel`: muted, no Korean voice, tap to hear). */
   promptPanel?: React.ReactNode;
   /** The card region, for the focus move when it opens (web). */
@@ -93,6 +98,7 @@ export function CheckpointCard({
   onReveal,
   onChoose,
   onSkip,
+  onBubbleShown,
   promptPanel,
   regionRef,
 }: CheckpointCardProps): React.ReactElement {
@@ -103,7 +109,8 @@ export function CheckpointCard({
   const cell = checkOptionCell(checkOptionColumns(item));
   const reveal = revealNeeded(item, check, ctx);
 
-  // Hoya's line (hint or explanation) comes into view inside the text area when it changes.
+  // Hoya's line (hint or explanation) comes into view inside the text area when it changes (web here; native
+  // through `onBubbleShown` once the bubble is laid out, below).
   const bubbleRef = useRef<View | null>(null);
   useEffect(() => {
     if (!bubble) return;
@@ -210,7 +217,11 @@ export function CheckpointCard({
       </Card>
 
       {/* A live region on the web only: native announces the outcome line itself (one announcement, no overlap). */}
-      <View ref={bubbleRef} accessibilityLiveRegion={Platform.OS === 'web' ? 'polite' : 'none'}>
+      <View
+        ref={bubbleRef}
+        accessibilityLiveRegion={Platform.OS === 'web' ? 'polite' : 'none'}
+        onLayout={Platform.OS === 'web' || !bubble ? undefined : () => onBubbleShown?.()}
+      >
         {bubble ? <HoyaBubble tone={bubble.tone} message={bubble.message} testID="story-reader-checkpoint-bubble" /> : null}
       </View>
 

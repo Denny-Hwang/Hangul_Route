@@ -16,7 +16,9 @@ import { back, checkpointCard, checkpointSkip, fullyVisible, next, nextPage, pos
  * In a quest the card is "Quick question" and its first answer is a scored
  * round (`cp:cp1`): the quest suite below proves it on Results, where one
  * checkpoint miss turns 7 of 7 first-try rounds into 7 of 8 (two stars, not
- * three). In a replay the card is the unscored "Try it".
+ * three), and on the run's tally (`__hrStoryE2E.run()`), which tells 8 of 8
+ * from 7 of 7 and shows Skip before an answer adds no round. In a replay the
+ * card is the unscored "Try it".
  */
 
 const FIXTURE_BUILD = process.env.STORY_FIXTURES === '1';
@@ -37,8 +39,18 @@ type E2eWindow = Window & {
     openReader(p: { storyId: string; level: string; sceneIndex?: number }): void;
     openQuest(p: { questId: string; episodeId: string }): void;
     events(): Array<{ name: string; payload?: Record<string, unknown> }>;
+    run(): { stepIndex: number; correctCount: number; totalCount: number; scoredRounds: string[] };
   };
 };
+
+type QuestRun = { correctCount: number; totalCount: number; checkpointRounds: string[] };
+
+/** The quest run's first-try tally, with the checkpoint round keys (`<step>:cp:<id>`) it scored. */
+async function questRun(page: Page): Promise<QuestRun> {
+  const r = await page.evaluate(() => (window as E2eWindow).__hrStoryE2E?.run());
+  if (!r) throw new Error('the e2e hook has no quest run');
+  return { correctCount: r.correctCount, totalCount: r.totalCount, checkpointRounds: r.scoredRounds.filter((k) => k.includes(':cp:')) };
+}
 
 const option = (page: Page, id: 't' | 'f'): Locator => page.getByTestId(`story-reader-checkpoint-option-${id}`);
 const status = (page: Page, id: 't' | 'f'): Locator => page.getByTestId(`story-reader-checkpoint-status-${id}`);
@@ -145,11 +157,12 @@ test.describe('story reader checkpoints, replay (fixture bundle)', () => {
     await option(page, 'f').click();
     await expect(status(page, 'f')).toHaveText('Try another');
 
-    // Back (and the Left key) go to the scene, not past it.
+    // Back (and the Left key) go to the scene, not past it; focus lands on the scene's narration, never on <body>.
     await back(page).click();
     await expect(checkpointCard(page)).toHaveCount(0);
     await expect(position(page)).toHaveText('3 / 5');
     await expect(page.getByTestId('story-reader-narration')).toBeVisible();
+    await expect(page.getByTestId('story-reader-narration')).toBeFocused();
     await next(page).click();
     // The card comes back as it was left: the miss is still locked, the question still open.
     await expect(status(page, 'f')).toHaveText('Try another');
@@ -157,6 +170,7 @@ test.describe('story reader checkpoints, replay (fixture bundle)', () => {
     await page.keyboard.press('ArrowLeft');
     await expect(position(page)).toHaveText('3 / 5');
     await expect(checkpointCard(page)).toHaveCount(0);
+    await expect(page.getByTestId('story-reader-narration')).toBeFocused();
     await next(page).click();
 
     // Skip is always there and moves on without an answer.
@@ -242,7 +256,7 @@ async function readToCheckpoint(page: Page): Promise<void> {
 }
 
 /** Scenes 4-5, the end page's Continue, every check right first time, the sequence in order, then Results. */
-async function finishQuestAllRight(page: Page): Promise<void> {
+async function finishQuestAllRight(page: Page, beforeResults?: () => Promise<void>): Promise<void> {
   await expect(position(page)).toHaveText('4 / 5');
   await next(page).click();
   await next(page).click();
@@ -259,6 +273,8 @@ async function finishQuestAllRight(page: Page): Promise<void> {
     await page.locator('[data-testid^="story-sequence-card-"]').filter({ hasText: caption }).click();
   }
   await page.getByRole('button', { name: 'Skip replay' }).click();
+  await expect(page.getByRole('button', { name: 'See results' })).toBeVisible();
+  if (beforeResults) await beforeResults();
   await page.getByRole('button', { name: 'See results' }).click();
 }
 
@@ -278,8 +294,14 @@ test.describe('story reader checkpoints, quest step (fixture bundle)', () => {
     await back(page).click();
     await next(page).click();
     await expect(status(page, 't')).toHaveText('Correct');
+    // The right answer is scored when the page turns: one round, right, under the checkpoint's key.
+    expect((await questRun(page)).totalCount).toBe(0);
     await next(page).click();
-    await finishQuestAllRight(page);
+    expect(await questRun(page)).toEqual({ correctCount: 1, totalCount: 1, checkpointRounds: [expect.stringMatching(/:cp:cp1$/)] });
+    // 8 of 8, not 7 of 7: both are three stars, so the tally is what proves the checkpoint round counted.
+    await finishQuestAllRight(page, async () => {
+      expect(await questRun(page)).toMatchObject({ correctCount: 8, totalCount: 8 });
+    });
     await expect(page.getByText('Wonderful!')).toBeVisible();
     await expect(page.getByRole('button', { name: /^See my card/ })).toBeVisible();
     expect(await page.locator('body').innerText()).not.toMatch(/\d+\s*(%|\/\s*\d)/);
@@ -295,8 +317,44 @@ test.describe('story reader checkpoints, quest step (fixture bundle)', () => {
     // The right card afterwards is a retry, never a second scored answer.
     await option(page, 't').click();
     await next(page).click();
-    await finishQuestAllRight(page);
+    expect(await questRun(page)).toEqual({ correctCount: 0, totalCount: 1, checkpointRounds: [expect.stringMatching(/:cp:cp1$/)] });
+    await finishQuestAllRight(page, async () => {
+      expect(await questRun(page)).toMatchObject({ correctCount: 7, totalCount: 8 });
+    });
     await expect(page.getByText('Great!')).toBeVisible();
     await expect(page.getByRole('button', { name: /^See my card/ })).toBeVisible();
+  });
+
+  test('Skip before an answer scores nothing, and the skipped card is not asked again', async ({ page }) => {
+    await onboard(page);
+    await startQuestReading(page);
+    await readToCheckpoint(page);
+    // Unanswered: Skip moves on and the run has no checkpoint round (the quest stays 7 of 7).
+    await checkpointSkip(page).click();
+    await expect(position(page)).toHaveText('4 / 5');
+    expect(await questRun(page)).toEqual({ correctCount: 0, totalCount: 0, checkpointRounds: [] });
+    await back(page).click();
+    await expect(position(page)).toHaveText('3 / 5');
+    await next(page).click();
+    await expect(position(page)).toHaveText('4 / 5');
+    await expect(checkpointCard(page)).toHaveCount(0);
+    expect(await questRun(page)).toEqual({ correctCount: 0, totalCount: 0, checkpointRounds: [] });
+  });
+
+  test('Skip after the right card carries that answer on like Next: one right round, once', async ({ page }) => {
+    await onboard(page);
+    await startQuestReading(page);
+    await readToCheckpoint(page);
+    await option(page, 't').click();
+    await expect(bubble(page)).toContainText(EXPLAIN);
+    expect((await questRun(page)).totalCount).toBe(0);
+    await checkpointSkip(page).click();
+    await expect(position(page)).toHaveText('4 / 5');
+    expect(await questRun(page)).toEqual({ correctCount: 1, totalCount: 1, checkpointRounds: [expect.stringMatching(/:cp:cp1$/)] });
+    // Answered once is answered: going round again adds nothing.
+    await back(page).click();
+    await next(page).click();
+    await expect(position(page)).toHaveText('4 / 5');
+    expect((await questRun(page)).totalCount).toBe(1);
   });
 });
