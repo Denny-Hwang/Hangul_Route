@@ -18,6 +18,7 @@
     "@clerk/clerk-react": "^5.61.3",
     "@hangul-route/content-schema": "workspace:*",
     "@hangul-route/design-system": "workspace:*",
+    "@hangul-route/i18n": "workspace:*",
     "@hangul-route/shared-types": "workspace:*",
     "next": "^14.2.18",
     "react": "18.3.1",

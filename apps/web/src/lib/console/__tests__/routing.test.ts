@@ -1,3 +1,4 @@
+import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import type { SpaceListItem } from '../api';
 import { KIND_GROUP, KIND_LABEL, ROLE_CARDS, ROUTES, groupSpaces, landingAfterCreate, landingAfterSignIn, memberNoun, prefillName, spaceIdFrom, statusLine } from '../routing';
@@ -55,5 +56,14 @@ describe('console routing (F-CONSOLE-001)', () => {
     expect(statusLine(groups.class[1] as SpaceListItem)).toBe('1 student');
     expect(statusLine(groups.family[0] as SpaceListItem)).toBe('2 learners');
     expect(statusLine(groups.school[0] as SpaceListItem)).toBe('4 classes');
+    expect(statusLine(item('one-fam', 'family', 't', { counts: { learners: 1, accounts: 1, classes: 0 } }))).toBe('1 learner');
+    expect(statusLine(item('one-sch', 'school', 't', { counts: { learners: 0, accounts: 1, classes: 1 } }))).toBe('1 class');
+    expect(statusLine(item('empty', 'class', 't'))).toBe('0 students');
+    for (const locale of ['en', 'es', 'ko'] as const) {
+      const counts = getMessages(locale).console.spaceCounts;
+      expect(statusLine(groups.class[0] as SpaceListItem, locale)).toBe(counts.students(12));
+      expect(statusLine(groups.family[0] as SpaceListItem, locale)).toBe(counts.learners(2));
+      expect(statusLine(groups.school[0] as SpaceListItem, locale)).toBe(counts.classes(4));
+    }
   });
 });

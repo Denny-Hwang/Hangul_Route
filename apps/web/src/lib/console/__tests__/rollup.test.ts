@@ -1,3 +1,4 @@
+import { formatDate, getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import type { RosterLearner } from '../api';
 import { CAP_WARNING_RATIO, capState, classRollup, codeExpiry, percent, relativeDay } from '../rollup';
@@ -66,5 +67,23 @@ describe('class roll-up (F-CONSOLE-001 §3.5)', () => {
     expect(codeExpiry(null, now)).toBe('no code yet');
     expect(percent(0.714)).toBe('71%');
     expect(percent(null)).toBe('—');
+  });
+
+  it('words relative days and code expiry in every locale (F-I18N-001 PR 9)', () => {
+    for (const locale of ['en', 'es', 'ko'] as const) {
+      const time = getMessages(locale).common.time;
+      const expiry = getMessages(locale).console.codeExpiry;
+      expect(relativeDay('2026-09-21T03:00:00.000Z', now, locale)).toBe(time.today);
+      expect(relativeDay('2026-09-20T23:00:00.000Z', now, locale)).toBe(time.yesterday);
+      expect(relativeDay('2026-09-17T10:00:00.000Z', now, locale)).toBe(formatDate(locale, '2026-09-17T10:00:00.000Z', 'weekday'));
+      expect(relativeDay('2026-09-03T10:00:00.000Z', now, locale)).toBe(formatDate(locale, '2026-09-03T10:00:00.000Z', 'monthDay'));
+      expect(relativeDay(undefined, now, locale)).toBe(time.notYet);
+      expect(codeExpiry('2026-10-09T12:00:00.000Z', now, locale)).toBe(expiry.inDays(18));
+      expect(codeExpiry('2026-09-22T13:00:00.000Z', now, locale)).toBe(expiry.inDays(1));
+      expect(codeExpiry('2026-09-22T11:00:00.000Z', now, locale)).toBe(expiry.today);
+      expect(codeExpiry('2026-09-01T00:00:00.000Z', now, locale)).toBe(expiry.expired);
+      expect(codeExpiry(undefined, now, locale)).toBe(expiry.none);
+    }
+    expect(relativeDay('2026-09-17T10:00:00.000Z', now, 'ko')).not.toBe('Thu');
   });
 });

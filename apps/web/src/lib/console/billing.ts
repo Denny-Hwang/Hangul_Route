@@ -1,4 +1,5 @@
-import { FAMILY_LIFETIME_LEARNERS, PLAN_PRICING, SCHOOL_LICENSE_STUDENTS, SCHOOL_LICENSE_TEACHERS, discountedUsd, promoLabel, type Entitlement, type PlanKey, type Promo } from '@hangul-route/content-schema';
+import { FAMILY_LIFETIME_LEARNERS, PLAN_PRICING, SCHOOL_LICENSE_STUDENTS, SCHOOL_LICENSE_TEACHERS, discountedUsd, promoLabel, type Entitlement, type PlanKey, type PlanPricing, type Promo, type PurchasablePlanKey } from '@hangul-route/content-schema';
+import { DEFAULT_LOCALE, formatDate, formatUsd, getMessages, type UiLocale } from '@hangul-route/i18n';
 import type { EntitlementView, SpaceListItem } from './api';
 import { COPY } from './copy';
 
@@ -24,10 +25,26 @@ export const PLAN_TITLES: Record<PlanKey | 'free', string> = {
   school_seat: 'School Contract',
 };
 
+/** "$15.30 once" · "$153 / year" around a formatted amount; `cents` keeps two digits for a computed (discounted) amount. */
+function priceText(per: PlanPricing['per'], amountUsd: number, locale: UiLocale, cents = false): string {
+  const price = getMessages(locale).console.price;
+  const amount = formatUsd(locale, amountUsd, { cents });
+  return per === 'year' ? price.year(amount) : price.once(amount);
+}
+
+/**
+ * A purchasable plan's price in `locale`, from `PLAN_PRICING[…].amountUsd` and `.per`
+ * through `formatUsd` — never the English `label` (F-I18N-001 §3.1).
+ */
+export function planPrice(planKey: PurchasablePlanKey, locale: UiLocale = DEFAULT_LOCALE): string {
+  const pricing = PLAN_PRICING[planKey];
+  return priceText(pricing.per, pricing.amountUsd, locale);
+}
+
 export const PLAN_PRICE: Record<PlanKey | 'free', string> = {
-  free: '$0',
-  family_lifetime: PLAN_PRICING.family_lifetime.label,
-  group_license: PLAN_PRICING.group_license.label,
+  free: formatUsd(DEFAULT_LOCALE, 0),
+  family_lifetime: planPrice('family_lifetime'),
+  group_license: planPrice('group_license'),
   school_seat: 'Contact us',
 };
 
@@ -48,26 +65,22 @@ export function isActive(e: Entitlement, now: Date): boolean {
   return false;
 }
 
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] as const;
-function day(iso: string): string {
-  const d = new Date(iso);
-  return `${MONTHS[d.getUTCMonth()] ?? ''} ${d.getUTCDate()}, ${d.getUTCFullYear()}`;
-}
-
-export function statusLine(e: Entitlement, now: Date): string {
-  const when = e.expiresAt ? day(e.expiresAt) : null;
+/** Entitlement status line, in `locale`; dates are the UTC calendar day of the stored timestamp. */
+export function statusLine(e: Entitlement, now: Date, locale: UiLocale = DEFAULT_LOCALE): string {
+  const words = getMessages(locale).console.entitlementStatus;
+  const when = e.expiresAt ? formatDate(locale, e.expiresAt, 'monthDayYear', { utc: true }) : null;
   switch (e.status) {
     case 'trial':
-      return when ? `trial · ends ${when}` : 'trial';
+      return when ? words.trialEnds(when) : words.trial;
     case 'active':
-      if (e.planKey === 'family_lifetime') return 'active · yours for good';
-      return when ? `active · renews ${when}` : 'active';
+      if (e.planKey === 'family_lifetime') return words.activeForGood;
+      return when ? words.activeRenews(when) : words.active;
     case 'past_due':
-      return isActive(e, now) ? 'payment needs attention · premium kept for a week' : 'payment needs attention · premium paused';
+      return isActive(e, now) ? words.pastDueKept : words.pastDuePaused;
     case 'cancelled':
-      return when && isActive(e, now) ? `cancelled · ends ${when}` : 'cancelled';
+      return when && isActive(e, now) ? words.cancelledEnds(when) : words.cancelled;
     default:
-      return when ? `ended ${when}` : 'ended';
+      return when ? words.endedOn(when) : words.ended;
   }
 }
 
@@ -135,13 +148,12 @@ export function planRowsFor(_accountId: string, spaces: readonly SpaceListItem[]
  * Price line once a code is applied — "$12.24 with HOYA20 (20% off), was $15.30" (F-ENT-002 §3.3).
  * A yearly licence on a one-charge coupon says so; null when the plan is not purchasable.
  */
-export function promoPriceLine(planKey: PlanKey | 'free', promo: Promo | null): string | null {
+export function promoPriceLine(planKey: PlanKey | 'free', promo: Promo | null, locale: UiLocale = DEFAULT_LOCALE): string | null {
   if (!promo || (planKey !== 'family_lifetime' && planKey !== 'group_license')) return null;
   const pricing = PLAN_PRICING[planKey];
-  const after = discountedUsd(pricing.amountUsd, promo);
-  const unit = pricing.per === 'year' ? ' / year' : ' once';
-  const scope = pricing.per === 'year' && promo.duration === 'once' ? ', first year' : '';
-  return `$${after.toFixed(2)}${unit} with ${promo.code} (${promoLabel(promo)}${scope}), was ${pricing.label}`;
+  const after = priceText(pricing.per, discountedUsd(pricing.amountUsd, promo), locale, true);
+  const firstYear = pricing.per === 'year' && promo.duration === 'once';
+  return getMessages(locale).console.promoPrice(after, promo.code, promoLabel(promo), firstYear, planPrice(planKey, locale));
 }
 
 /** Message for `?checkout=` on return from Stripe. */

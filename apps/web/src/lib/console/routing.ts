@@ -1,4 +1,5 @@
 import type { SpaceKind } from '@hangul-route/content-schema';
+import { DEFAULT_LOCALE, getMessages, type UiLocale } from '@hangul-route/i18n';
 import type { SpaceListItem } from './api';
 
 /** Where the console sends an adult — F-CONSOLE-001 §3.2–3.4. */
@@ -64,16 +65,13 @@ export function groupSpaces(items: readonly SpaceListItem[]): Record<SpaceKind, 
   return groups;
 }
 
-function plural(n: number, one: string, many: string): string {
-  return `${n} ${n === 1 ? one : many}`;
-}
-
-/** One neutral status line per row — counts only, never names or percentages. */
-export function statusLine(item: SpaceListItem): string {
+/** One neutral status line per row — counts only, never names or percentages — in `locale`. */
+export function statusLine(item: SpaceListItem, locale: UiLocale = DEFAULT_LOCALE): string {
+  const counts = getMessages(locale).console.spaceCounts;
   const { kind } = item.space;
-  if (kind === 'family') return plural(item.counts.learners, 'learner', 'learners');
-  if (kind === 'class') return plural(item.counts.learners, 'student', 'students');
-  return plural(item.counts.classes, 'class', 'classes');
+  if (kind === 'family') return counts.learners(item.counts.learners);
+  if (kind === 'class') return counts.students(item.counts.learners);
+  return counts.classes(item.counts.classes);
 }
 
 export function memberNoun(kind: SpaceKind): string {

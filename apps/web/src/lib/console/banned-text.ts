@@ -1,17 +1,20 @@
+import { DEFAULT_LOCALE, bannedWordsFor, findBannedWord as findBannedFor, type UiLocale } from '@hangul-route/i18n';
+
 /**
- * Caregiver-surface copy guard — mirror of
- * `apps/mobile/src/logic/homework/banned-text.ts` (F-HW-001 §3.3, F-PAR-001
- * §3.6). Kept in sync by hand until a shared package exists.
+ * Caregiver-surface copy guard (F-HW-001 §3.3, F-PAR-001 §3.6, F-CONSOLE-001 §3.5).
+ * A thin re-export of `@hangul-route/i18n`, whose `banned-words.json` is the one list
+ * per locale and surface (F-I18N-001 §3.1); the hand-kept mirror is gone. English
+ * stays the default locale, so existing callers do not change.
  */
-export const BANNED_WORDS = ['missed', 'incomplete', 'failed', 'overdue', 'behind', 'lazy'] as const;
 
-const BANNED_RE = new RegExp(`\\b(${BANNED_WORDS.join('|')})\\b`, 'i');
+/** The English caregiver list: the learner words plus "behind" and "lazy". */
+export const BANNED_WORDS: readonly string[] = bannedWordsFor(DEFAULT_LOCALE, 'caregiver');
 
-export function findBannedWord(text: string): string | null {
-  const hit = text.match(BANNED_RE);
-  return hit ? (hit[1] as string).toLowerCase() : null;
+/** The first caregiver-banned word in `text` for `locale` (whole tokens in en/es, substrings in ko), or null. */
+export function findBannedWord(text: string, locale: UiLocale = DEFAULT_LOCALE): string | null {
+  return findBannedFor(text, locale, 'caregiver');
 }
 
-export function isCaregiverSafe(text: string): boolean {
-  return findBannedWord(text) === null;
+export function isCaregiverSafe(text: string, locale: UiLocale = DEFAULT_LOCALE): boolean {
+  return findBannedWord(text, locale) === null;
 }

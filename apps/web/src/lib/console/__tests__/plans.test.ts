@@ -1,3 +1,4 @@
+import { formatDate, getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import type { RosterLearner } from '../api';
 import { addDays, currentPlan, latestPublished, moveItem, oneExplicitPerDay, planReadout, planStatusLabel, readoutLine, spreadDates } from '../plans';
@@ -38,6 +39,14 @@ describe('plan helpers (F-PLAN-001 §3.5)', () => {
     expect(planStatusLabel(plans[1] as (typeof plans)[number])).toBe('Published Sep 20');
     expect(planStatusLabel(plans[2] as (typeof plans)[number])).toBe('Draft');
     expect(planStatusLabel(plans[3] as (typeof plans)[number])).toBe('Archived');
+    for (const locale of ['en', 'es', 'ko'] as const) {
+      const status = getMessages(locale).console.planStatus;
+      expect(planStatusLabel(plans[1] as (typeof plans)[number], locale)).toBe(status.published(formatDate(locale, '2026-09-20T00:00:00.000Z', 'monthDay', { utc: true })));
+      expect(planStatusLabel(plans[2] as (typeof plans)[number], locale)).toBe(status.draft);
+      expect(planStatusLabel(plans[3] as (typeof plans)[number], locale)).toBe(status.archived);
+    }
+    // The published day is the UTC calendar day, whatever the device time zone.
+    expect(planStatusLabel({ ...(plans[1] as (typeof plans)[number]), publishedAt: '2026-09-20T23:30:00.000Z' })).toBe('Published Sep 20');
   });
 
   it('reads out per-learner progress in roster order without ranking', () => {
