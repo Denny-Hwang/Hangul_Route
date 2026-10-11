@@ -49,10 +49,11 @@ describe('SCENE_ART_REGISTRY', () => {
 
   // Documented exemption: Hoya is a character, not a prop. His pose palettes use
   // 7-9 colour tokens (the shipped Hoya.tsx palette), above the 5-colour prop cap
-  // (rule I-palette). Every other rule still applies to him.
-  it('every hoya:* entry passes the item rules except the character palette cap (I-palette)', () => {
+  // (rule I-palette); checkItem exempts that fixed palette, and every other rule
+  // still applies to him.
+  it('every hoya:* entry passes the item rules, his fixed palette exempt from the cap', () => {
     for (const [id, item] of entries.filter(([k]) => k.startsWith('hoya:'))) {
-      expect(checkItem(item).filter((f) => f.rule !== 'I-palette'), id).toEqual([]);
+      expect(checkItem(item), id).toEqual([]);
     }
   });
 
@@ -124,6 +125,25 @@ describe('SCENE_ART_REGISTRY', () => {
       ],
     };
     expect(checkScene(art, SCENE_ART_REGISTRY).filter((f) => f.severity === 'error')).toEqual([]);
+  });
+
+  // F-STORY-002 decision 15 (main session, owner's standing delegation, 2026-10-11;
+  // R-S5): Hoya's own palette is outside the scene cap, so the flagship court scene
+  // still composes with Hoya watching from the side.
+  it('composes the flagship court scene with Hoya beside it, in every pose', () => {
+    for (const pose of HOYA_POSES) {
+      const art = {
+        setting: 'scene:palace-hall',
+        altEn: 'Hoya watches from the side as the king sits on a raised seat and a historian writes down what is said',
+        layers: [
+          { ref: 'prop:fig-king', x: 200, y: 186, s: 0.9 },
+          { ref: 'prop:fig-official', x: 300, y: 256, flip: true, tint: 'text.secondary' },
+          { ref: 'prop:fig-historian', x: 330, y: 292, s: 1.1, flip: true },
+          { ref: `hoya:${pose}`, x: 70, y: 292, s: 0.7 },
+        ],
+      };
+      expect(checkScene(art, SCENE_ART_REGISTRY).filter((f) => f.severity === 'error'), pose).toEqual([]);
+    }
   });
 
   it('answers hasItem for registered refs only', () => {
