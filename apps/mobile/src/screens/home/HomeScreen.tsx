@@ -15,6 +15,8 @@ import {
   colors,
   spacing,
   touchTarget,
+  useLayoutClass,
+  useMediaSize,
 } from '@hangul-route/design-system';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -32,6 +34,7 @@ import {
   type MissionPlan,
 } from '../../logic/homework/mission-builder';
 import { mergeAssignments } from '../../logic/homework/assignment-merger';
+import { homeColumns } from '../../logic/layout/home-columns';
 import { DEFAULT_AVATAR } from '../../logic/profiles/avatar-catalog';
 import { computeStreak } from '../../logic/streak';
 import type { RootStackParamList } from '../../navigation/types';
@@ -41,6 +44,11 @@ import { useProgressStore } from '../../store/progress-store';
 
 /** Avatar circle in the Profile entry; with its label the button clears the 64pt floor. */
 const AVATAR_SIZE = 52;
+/** Hoya beside the greeting at scale 1 (phones); x1.2 on regular, x1.4 on wide (F-LAYOUT-001 §3.6). */
+const HOYA_SIZE = 72;
+/** Two columns: missions left (flex 3), progress / homework / tip right (flex 2), wireframe layout/wide B. */
+const MISSIONS_FLEX = 3;
+const SIDE_FLEX = 2;
 
 const ICON_FOR: Record<MissionCard['kind'], 'replay' | 'play' | 'library' | 'star'> = {
   replay: 'replay',
@@ -150,53 +158,25 @@ export function HomeScreen(): React.ReactElement {
     }
   };
 
-  return (
-    <View style={{ flex: 1 }}>
-    <Screen tone="canvas" edges={TAB_SCREEN_EDGES}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
-        <Hoya pose="waving" size={72} accessibilityLabel={m.a11y.hoya('waving')} />
-        <View style={{ flex: 1 }}>
-          <Heading level="title">{m.learner.home.greeting(profile?.displayName ?? null)}</Heading>
-          <Body tone="secondary">{m.learner.home.subtitle}</Body>
+  // Regular and wide windows: two columns under the greeting; phones and short windows: one column as always.
+  const twoColumns = homeColumns(useLayoutClass()) === 2;
+  const hoyaSize = useMediaSize(HOYA_SIZE);
+
+  const missions =
+    mission && mission.cards.length > 0 ? (
+      <>
+        <Heading level="prompt">{m.learner.home.mission.heading}</Heading>
+        <Spacer size="sm" />
+        <View style={{ gap: spacing.sm }}>
+          {mission.cards.map((card) => (
+            <MissionTile key={card.slot} card={card} onPress={() => openCard(card)} />
+          ))}
         </View>
-        {/* Profile entry (UX-05): the learner's own cub, tinted and ringed in the
-            colour its avatar name says (not the Pillar theme), with a visible
-            label — the only way to profiles, backup, classes and the grown-up zone. */}
-        <Pressable
-          onPress={() => navigation.navigate('Profile')}
-          accessibilityRole="button"
-          accessibilityLabel={m.a11y.profileEntry}
-          hitSlop={spacing.xs}
-          style={{ alignItems: 'center', minWidth: touchTarget.min, gap: spacing.xxs }}
-        >
-          <ProfileAvatar avatar={profile?.avatar ?? DEFAULT_AVATAR} size={AVATAR_SIZE} ring />
-          <Caption tone="secondary" weight="semibold">
-            {m.learner.home.profileLabel}
-          </Caption>
-        </Pressable>
-      </View>
+      </>
+    ) : null;
 
-      <Spacer size="lg" />
-      <View style={{ flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap' }}>
-        <Pill tone="primary" label={m.learner.home.streak.pill(streak)} />
-        <Pill tone="secondary" label={m.learner.home.cards.pill(cardsUnlocked)} />
-        <Pill tone="success" label={m.learner.home.stars.pill(stars3)} />
-      </View>
-
-      {mission && mission.cards.length > 0 ? (
-        <>
-          <Spacer size="lg" />
-          <Heading level="prompt">{m.learner.home.mission.heading}</Heading>
-          <Spacer size="sm" />
-          <View style={{ gap: spacing.sm }}>
-            {mission.cards.map((card) => (
-              <MissionTile key={card.slot} card={card} onPress={() => openCard(card)} />
-            ))}
-          </View>
-        </>
-      ) : null}
-
-      <Spacer size="xl" />
+  const side = (
+    <>
       <Heading level="prompt">{m.learner.home.progress.heading}</Heading>
       <Spacer size="sm" />
       <Progress value={completed} max={totalStage1Quests} tone="primary" label={m.learner.home.progress.label(completed, totalStage1Quests)} />
@@ -232,6 +212,69 @@ export function HomeScreen(): React.ReactElement {
           accessibilityLabel={m.a11y.stars(recentStars)}
         />
       </Card>
+    </>
+  );
+
+  return (
+    <View style={{ flex: 1 }}>
+    <Screen tone="canvas" edges={TAB_SCREEN_EDGES} width={twoColumns ? 'full' : 'reading'}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+        <Hoya pose="waving" size={hoyaSize} accessibilityLabel={m.a11y.hoya('waving')} />
+        <View style={{ flex: 1 }}>
+          <Heading level="title">{m.learner.home.greeting(profile?.displayName ?? null)}</Heading>
+          <Body tone="secondary">{m.learner.home.subtitle}</Body>
+        </View>
+        {/* Profile entry (UX-05): the learner's own cub, tinted and ringed in the
+            colour its avatar name says (not the Pillar theme), with a visible
+            label — the only way to profiles, backup, classes and the grown-up zone. */}
+        <Pressable
+          onPress={() => navigation.navigate('Profile')}
+          accessibilityRole="button"
+          accessibilityLabel={m.a11y.profileEntry}
+          hitSlop={spacing.xs}
+          style={{ alignItems: 'center', minWidth: touchTarget.min, gap: spacing.xxs }}
+        >
+          <ProfileAvatar avatar={profile?.avatar ?? DEFAULT_AVATAR} size={AVATAR_SIZE} ring />
+          <Caption tone="secondary" weight="semibold">
+            {m.learner.home.profileLabel}
+          </Caption>
+        </Pressable>
+      </View>
+
+      <Spacer size="lg" />
+      <View style={{ flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap' }}>
+        <Pill tone="primary" label={m.learner.home.streak.pill(streak)} />
+        <Pill tone="secondary" label={m.learner.home.cards.pill(cardsUnlocked)} />
+        <Pill tone="success" label={m.learner.home.stars.pill(stars3)} />
+      </View>
+
+      {twoColumns ? (
+        <>
+          <Spacer size="lg" />
+          {/* The mission cards keep their slot order in every class (F-HW-001 §3.2). */}
+          <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.xl }}>
+            <View testID="home-missions-column" style={{ flex: MISSIONS_FLEX, minWidth: 0 }}>
+              {missions}
+            </View>
+            <View testID="home-side-column" style={{ flex: SIDE_FLEX, minWidth: 0 }}>
+              {side}
+            </View>
+          </View>
+          <Spacer size="xl" />
+        </>
+      ) : (
+        <>
+          {missions ? (
+            <>
+              <Spacer size="lg" />
+              {missions}
+            </>
+          ) : null}
+
+          <Spacer size="xl" />
+          {side}
+        </>
+      )}
     </Screen>
       {/* Web only (F-PWA-001): asks a grown-up to install once the app is cached. */}
       <InstallGuideSheet />

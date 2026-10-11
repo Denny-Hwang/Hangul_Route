@@ -55,6 +55,72 @@ test('the web manifest does not lock the orientation', async ({ request }) => {
   expect(manifest.orientation).toBe('any');
 });
 
+// --- Part 4: Home in two columns (PR 5c, §3.6) ---
+// Regular and wide windows: missions left (flex 3), progress / homework / tip / recent stars right (flex 2),
+// Hoya x1.2 / x1.4. Phones, short windows and the 200 % zoom proxy: one column, exactly as before.
+
+/** Cold start to Home of a fresh learner. */
+async function openHome(page: Page): Promise<void> {
+  await onboardChild(page, { name: 'Dani', startJourney: false });
+  await page.goto('/');
+  await expect(page.getByText('Hi, Dani!')).toBeVisible();
+  await expect(page.getByText('Today with Hoya')).toBeVisible();
+}
+
+const greetingHoya = (page: Page) => page.getByLabel('Hoya the tiger, waving', { exact: true }).first();
+
+for (const vp of [
+  { name: 'iPad portrait', width: 768, height: 1024, hoya: 86 },
+  { name: 'iPad Air landscape / laptop', width: 1180, height: 820, hoya: 101 },
+] as const) {
+  test.describe(`Home at ${vp.name} ${vp.width}x${vp.height}: two columns`, () => {
+    test.use({ viewport: { width: vp.width, height: vp.height } });
+
+    test('missions left, progress, homework and the tip right; Hoya scaled', async ({ page }) => {
+      await openHome(page);
+      const missions = (await page.getByTestId('home-missions-column').boundingBox())!;
+      const side = (await page.getByTestId('home-side-column').boundingBox())!;
+      expect(side.x).toBeGreaterThanOrEqual(missions.x + missions.width);
+      expect(Math.abs(side.y - missions.y)).toBeLessThan(1);
+      expect(missions.width / side.width).toBeCloseTo(1.5, 1);
+
+      const progress = (await page.getByText('Stage 1 progress').boundingBox())!;
+      const tip = (await page.getByText(/^Tip — finish today/).boundingBox())!;
+      const homework = (await page.getByRole('button', { name: 'Open homework' }).boundingBox())!;
+      for (const box of [progress, tip, homework]) expect(box.x).toBeGreaterThanOrEqual(side.x - 1);
+      // The three mission cards keep their slot order, one under the other, in the left column.
+      const cards = await page.getByTestId('home-missions-column').getByRole('button').all();
+      expect(cards.length).toBe(3);
+      const tops = await Promise.all(cards.map(async (c) => (await c.boundingBox())!.y));
+      expect([...tops].sort((a, b) => a - b)).toEqual(tops);
+
+      const hoya = (await greetingHoya(page).boundingBox())!;
+      expect(Math.round(hoya.width)).toBe(vp.hoya);
+      expect(await overflowsSideways(page)).toBe(false);
+    });
+  });
+}
+
+for (const vp of [
+  { name: 'phone portrait', width: 390, height: 844 },
+  { name: 'phone landscape', width: 844, height: 390 },
+  { name: '200 % zoom proxy of 1180x820', width: 590, height: 410 },
+] as const) {
+  test.describe(`Home at ${vp.name} ${vp.width}x${vp.height}: one column`, () => {
+    test.use({ viewport: { width: vp.width, height: vp.height } });
+
+    test('one column in today\'s order, Hoya at its phone size, no sideways scrolling', async ({ page }) => {
+      await openHome(page);
+      await expect(page.getByTestId('home-side-column')).toHaveCount(0);
+      const lastMission = (await page.getByRole('button', { name: /Around the Korean Table|Story time|Something new/ }).last().boundingBox())!;
+      const progress = (await page.getByText('Stage 1 progress').boundingBox())!;
+      expect(progress.y).toBeGreaterThan(lastMission.y + lastMission.height);
+      expect(Math.round((await greetingHoya(page).boundingBox())!.width)).toBe(72);
+      expect(await overflowsSideways(page)).toBe(false);
+    });
+  });
+}
+
 // --- Part 2: the split-pane Journey (PR 5a) ---
 
 /** Cold start to Home of a fresh learner, then the Journey tab. */
