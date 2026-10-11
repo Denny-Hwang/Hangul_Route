@@ -15,16 +15,18 @@ const LIBRARY_DIR = resolve(__dirname, '../../screens/library');
 const read = (file: string): string => readFileSync(resolve(LIBRARY_DIR, file), 'utf8');
 
 describe('Library screens (F-STORY-006 PR 6.1)', () => {
-  it('CardDetailScreen renders no emoji', () => {
+  it('CardDetailScreen and CardDetailView render no emoji', () => {
     expect(read('CardDetailScreen.tsx')).not.toMatch(/\p{Extended_Pictographic}/u);
+    expect(read('CardDetailView.tsx')).not.toMatch(/\p{Extended_Pictographic}/u);
   });
 
   it('LibraryScreen renders no emoji', () => {
     expect(read('LibraryScreen.tsx')).not.toMatch(/\p{Extended_Pictographic}/u);
   });
 
-  it('CardDetailScreen shows the fact next to a sparkle Icon instead of an emoji', () => {
-    const src = read('CardDetailScreen.tsx');
+  it('CardDetailView shows the fact next to a sparkle Icon instead of an emoji', () => {
+    // The body moved from CardDetailScreen to CardDetailView (F-LAYOUT-001 PR 4).
+    const src = read('CardDetailView.tsx');
     expect(src.match(/<Icon name="sparkle"/g)?.length).toBe(2);
   });
 

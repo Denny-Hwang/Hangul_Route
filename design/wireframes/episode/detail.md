@@ -2,7 +2,7 @@
 
 Spec: `docs/blueprints/05-episode-learning-goals.md` · `docs/specs/F-CARD-002-heritage-card-back-face.md` §3.6 (no spoilers on locked cards) · `docs/blueprints/10-app-map.md` §3.1, §4.1
 Audience: **learner (P4/P5 child, 5–11)**
-Code (back-filled): `apps/mobile/src/screens/episode/EpisodeDetailScreen.tsx` — route `EpisodeDetail { episodeId }`
+Code (back-filled): `apps/mobile/src/screens/episode/EpisodeDetailView.tsx` (body; `EpisodeDetailScreen.tsx` is the stack wrapper) — route `EpisodeDetail { episodeId }`
 
 ## Scenario (Given-When-Then)
 
