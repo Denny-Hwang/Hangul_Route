@@ -1050,10 +1050,10 @@ export const storiesAll: Story[] = [
     "recommendedStage": 3,
     "minutes": 5,
     "learningGoalsEn": [
-      "Recognize and say 몸 (mom, body), 건강 (geongang, health), 약초 (yakcho, medicinal herb) and 책 (chaek, book).",
+      "Read and recognize 몸 (mom, body), 건강 (geongang, health), 약초 (yakcho, medicinal herb) and 책 (chaek, book).",
       "Know that Heo Jun, a Joseon royal doctor, completed Donguibogam in 1610 and that it was printed in 1613 in 25 volumes.",
-      "Explain the book's idea that preventing illness and staying healthy matters before curing it.",
-      "Know that Donguibogam wrote herb names in Hangul and is on UNESCO's Memory of the World Register (세계기록유산, 2009)."
+      "Understand the book's idea that preventing illness and staying healthy matters before curing it.",
+      "Know that Donguibogam wrote herb names in Hangul and has been on UNESCO's Memory of the World Register, 세계기록유산 (segyegirogyusan), since 2009."
     ],
     "origin": {
       "type": "documented",
@@ -1094,7 +1094,7 @@ export const storiesAll: Story[] = [
         "ko": "동의보감",
         "romanization": "Donguibogam",
         "en": "Donguibogam (a Joseon medical encyclopedia)",
-        "kind": "word"
+        "kind": "term"
       },
       {
         "id": "geongang",
@@ -1111,9 +1111,9 @@ export const storiesAll: Story[] = [
         "kind": "word"
       },
       {
-        "id": "bomul-gateun-chaek",
-        "ko": "보물 같은 책",
-        "romanization": "bomul gateun chaek",
+        "id": "bobae-gateun-chaek",
+        "ko": "보배 같은 책",
+        "romanization": "bobae gateun chaek",
         "en": "a book like a treasure",
         "kind": "phrase"
       },
@@ -1178,7 +1178,7 @@ export const storiesAll: Story[] = [
           },
           {
             "id": "s3",
-            "narrationEn": "When war broke out again, the work stopped and the doctors were scattered. Later the king asked Heo Jun to write the book alone, and gave him many medical books from the palace to study.",
+            "narrationEn": "When a war broke out, the work stopped and the doctors had to leave. Later the king asked Heo Jun to write the book alone, and gave him many medical books from the palace to study.",
             "captionEn": "Heo Jun writes the book alone",
             "keyword": {
               "id": "chaek",
@@ -1197,14 +1197,14 @@ export const storiesAll: Story[] = [
           },
           {
             "id": "s4",
-            "narrationEn": "In 1610 Heo Jun finished the book: {kw:donguibogam}, Donguibogam. 'Dongui' means the medicine of the East, Korea's own medical tradition, and 'bogam' means a treasured mirror, a model to learn from.",
+            "narrationEn": "In 1610 Heo Jun finished the book {kw:donguibogam}. 'Dongui' means the medicine of the East, Korea's own medical tradition, and 'bogam' means a treasured mirror, a model to learn from.",
             "captionEn": "Heo Jun finishes Donguibogam",
             "keyword": {
               "id": "donguibogam",
               "ko": "동의보감",
               "romanization": "Donguibogam",
               "en": "Donguibogam ('Treasured Mirror of Eastern Medicine')",
-              "kind": "word"
+              "kind": "term"
             },
             "factIds": [
               "f3",
@@ -1261,7 +1261,7 @@ export const storiesAll: Story[] = [
               "id": "segyegirogyusan",
               "ko": "세계기록유산",
               "romanization": "segyegirogyusan",
-              "en": "Memory of the World (UNESCO heritage list)",
+              "en": "Memory of the World (UNESCO documentary heritage)",
               "kind": "word"
             },
             "factIds": [
@@ -1275,13 +1275,13 @@ export const storiesAll: Story[] = [
           },
           {
             "id": "s8",
-            "narrationEn": "Copies from that first printing are now National Treasures of Korea. Hoya hugs a book-shaped pillow and smiles: \"{kw:bomul-gateun-chaek}!\" That means, \"A book like a treasure!\"",
+            "narrationEn": "Copies from that first printing are now National Treasures of Korea. Hoya hugs a book-shaped pillow and smiles: \"{kw:bobae-gateun-chaek}!\" That means, \"A book like a treasure!\"",
             "captionEn": "First-edition copies are National Treasures",
             "line": {
-              "ko": "보물 같은 책",
-              "romanization": "bomul gateun chaek",
+              "ko": "보배 같은 책",
+              "romanization": "bobae gateun chaek",
               "en": "a book like a treasure",
-              "speaker": "narrator"
+              "speaker": "hoya"
             },
             "factIds": [
               "f9"
