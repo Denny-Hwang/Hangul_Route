@@ -555,8 +555,8 @@ describe('platform/audio.web: the module-level API (browser globals)', () => {
     expect(mod.isMuted()).toBe(true);
     await expect(mod.playPrompt({ text: '가' })).resolves.toBe('muted');
     mod.setMuted(false);
-    await expect(mod.playJamoSound('ㄷ')).resolves.toBeUndefined();
-    expect(synth.spoken.map((u) => u.text)).toContain('ㄷ');
+    await expect(mod.playJamo({ char: 'ㄷ', romanization: 'd/t', nameEn: 'digeut', spokenKo: '다', spokenKind: 'sound' }, 'sound')).resolves.toBe('played');
+    expect(synth.spoken.map((u) => u.text)).toContain('다');
   });
 
   it('without speechSynthesis every call is safe', async () => {

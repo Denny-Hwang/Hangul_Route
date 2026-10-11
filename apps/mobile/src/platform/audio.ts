@@ -151,9 +151,6 @@ export function createNativeAudio(env: NativeAudioEnv) {
   return {
     playPrompt,
     playJamo: (jamo: SpokenJamo, mode: 'sound' | 'name' = 'sound'): Promise<PlayResult> => controller.playJamo(jamo, mode),
-    /** Legacy: resolves when the letter has been spoken (or could not be). */
-    playJamoSound: (char: string): Promise<void> =>
-      playPrompt({ text: char, language: 'ko-KR', kind: 'sound' }).then(() => undefined),
     speak: (text: string, opts: SpeakOptions = {}): void => speakCompat(playPrompt, text, opts),
     stop: (): void => controller.stop(),
     setMuted: (muted: boolean): void => store.getState().setMuted(muted, 'profile'),
@@ -198,10 +195,6 @@ export function playPrompt(spec: PlaySpec): Promise<PlayResult> {
 }
 export function playJamo(jamo: SpokenJamo, mode: 'sound' | 'name' = 'sound'): Promise<PlayResult> {
   return audio().playJamo(jamo, mode);
-}
-/** Kept until the Match Sound and Trace call sites move to `playJamo` (PR A-5a). */
-export function playJamoSound(char: string, _audioRef?: string): Promise<void> {
-  return audio().playJamoSound(char);
 }
 export function speak(text: string, opts: SpeakOptions = {}): void {
   audio().speak(text, opts);

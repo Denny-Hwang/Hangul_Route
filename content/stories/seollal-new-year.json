@@ -1,0 +1,645 @@
+{
+  "v": 1,
+  "id": "story:seollal-new-year",
+  "state": "draft",
+  "contentVer": 1,
+  "title": {
+    "ko": "호야의 설날 아침",
+    "romanization": "",
+    "en": "Hoya's Seollal Morning"
+  },
+  "summaryEn": "Hoya spends Seollal, the Lunar New Year, with a family: new seolbim clothes, a New Year bow (sebae), a warm bowl of tteokguk, and a lively game of yunnori.",
+  "theme": "rites",
+  "kind": "intangible",
+  "recommendedStage": 1,
+  "minutes": 4,
+  "learningGoalsEn": [
+    "Explain that Seollal is the first day of the first lunar month and one of Korea's biggest traditional holidays.",
+    "Recognize and say 설날, 세배, 떡국 and 윷놀이, and the greeting 새해 복 많이 받으세요.",
+    "Describe sebae (the New Year bow) and deokdam (words of blessing from elders).",
+    "Name the five yut throws (do, gae, geol, yut, mo) and how many spaces each one moves."
+  ],
+  "origin": {
+    "type": "documented",
+    "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
+  },
+  "review": {
+    "language": "draft",
+    "culture": "draft",
+    "advisory": []
+  },
+  "keywords": [
+    {
+      "id": "seollal",
+      "ko": "설날",
+      "romanization": "seollal",
+      "en": "Lunar New Year's Day",
+      "kind": "word"
+    },
+    {
+      "id": "seolbim",
+      "ko": "설빔",
+      "romanization": "seolbim",
+      "en": "new clothes for Seollal",
+      "kind": "word"
+    },
+    {
+      "id": "sebae",
+      "ko": "세배",
+      "romanization": "sebae",
+      "en": "New Year bow to elders",
+      "kind": "word"
+    },
+    {
+      "id": "deokdam",
+      "ko": "덕담",
+      "romanization": "deokdam",
+      "en": "words of blessing",
+      "kind": "word"
+    },
+    {
+      "id": "tteokguk",
+      "ko": "떡국",
+      "romanization": "tteokguk",
+      "en": "rice cake soup",
+      "kind": "word"
+    },
+    {
+      "id": "yunnori",
+      "ko": "윷놀이",
+      "romanization": "yunnori",
+      "en": "yut stick game",
+      "kind": "word"
+    },
+    {
+      "id": "yut",
+      "ko": "윷",
+      "romanization": "yut",
+      "en": "yut sticks; the 4-space throw",
+      "kind": "word"
+    },
+    {
+      "id": "halmeoni",
+      "ko": "할머니",
+      "romanization": "halmeoni",
+      "en": "grandmother",
+      "kind": "word"
+    },
+    {
+      "id": "saehae-bok-mani-badeuseyo",
+      "ko": "새해 복 많이 받으세요",
+      "romanization": "Saehae bok mani badeuseyo",
+      "en": "Happy New Year! (literally: Receive many blessings in the new year)",
+      "kind": "phrase"
+    },
+    {
+      "id": "do-gae-geol-yut-mo",
+      "ko": "도, 개, 걸, 윷, 모",
+      "romanization": "do, gae, geol, yut, mo",
+      "en": "the five throws: 1, 2, 3, 4 and 5 spaces",
+      "kind": "phrase"
+    },
+    {
+      "id": "gukga-muhyeong-yusan",
+      "ko": "국가무형유산",
+      "romanization": "gukga muhyeong yusan",
+      "en": "National Intangible Heritage",
+      "kind": "word"
+    }
+  ],
+  "cultureNotes": [],
+  "tiers": [
+    {
+      "level": "listen",
+      "scenes": [
+        {
+          "id": "s1",
+          "narrationEn": "Good morning! I'm Hoya. Today is Seollal, the Lunar New Year. It falls on the first day of the first month of the lunar calendar, and it is one of Korea's biggest traditional holidays.",
+          "keyword": {
+            "id": "seollal",
+            "ko": "설날",
+            "romanization": "Seollal",
+            "en": "Lunar New Year's Day",
+            "kind": "word"
+          },
+          "factIds": [
+            "f1"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Hoya the young tiger waving at the gate of a traditional hanok house on a crisp winter morning, a pale sunrise over snowy roof tiles."
+        },
+        {
+          "id": "s2",
+          "narrationEn": "People dress in new clothes for the new year. New Seollal clothes are called seolbim. Young girls traditionally wear saekdong jeogori, a jacket with rainbow-striped sleeves.",
+          "keyword": {
+            "id": "seolbim",
+            "ko": "설빔",
+            "romanization": "seolbim",
+            "en": "new clothes for Seollal",
+            "kind": "word"
+          },
+          "factIds": [
+            "f2"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "A family in bright hanbok; a girl spreads her arms to show rainbow-striped saekdong sleeves while Hoya admires them."
+        },
+        {
+          "id": "s3",
+          "narrationEn": "After the morning rites for the family's ancestors, the children bow deeply to Grandma and Grandpa. This New Year bow is called sebae, the first greeting of the year.",
+          "keyword": {
+            "id": "sebae",
+            "ko": "세배",
+            "romanization": "sebae",
+            "en": "New Year bow to elders",
+            "kind": "word"
+          },
+          "factIds": [
+            "f3"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Two children bowing deeply on a heated wooden floor before smiling grandparents seated on cushions; Hoya bows beside them."
+        },
+        {
+          "id": "s4",
+          "narrationEn": "After bowing, Hoya says, 'Saehae bok mani badeuseyo!' Grandma answers with kind wishes for the year, called deokdam. Children may get a little money, or rice cakes and fruit.",
+          "line": {
+            "ko": "새해 복 많이 받으세요",
+            "romanization": "Saehae bok mani badeuseyo",
+            "en": "Happy New Year! (literally: Receive many blessings in the new year)",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f4",
+            "f5"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Grandma smiling and handing a small envelope to a child; a plate of rice cakes and tangerines on a low table; Hoya beaming."
+        },
+        {
+          "id": "s5",
+          "narrationEn": "Breakfast is tteokguk: a clear soup with thin slices of white rice cake. People have long said that you grow one year older when you eat your bowl of tteokguk on Seollal!",
+          "keyword": {
+            "id": "tteokguk",
+            "ko": "떡국",
+            "romanization": "tteokguk",
+            "en": "rice cake soup",
+            "kind": "word"
+          },
+          "factIds": [
+            "f6"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Steaming bowls of clear soup with oval white rice-cake slices and egg garnish on a low table; Hoya holding a spoon happily."
+        },
+        {
+          "id": "s6",
+          "narrationEn": "Now for a game of yunnori! Two teams take turns throwing four wooden yut sticks. Depending on how the sticks land, a team moves its pieces around the board.",
+          "keyword": {
+            "id": "yunnori",
+            "ko": "윷놀이",
+            "romanization": "yunnori",
+            "en": "the yut stick game",
+            "kind": "word"
+          },
+          "factIds": [
+            "f7"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Four wooden yut sticks tumbling in mid-air above a cloth game board with a circle-and-cross pattern; two teams cheering, Hoya on one team."
+        },
+        {
+          "id": "s7",
+          "narrationEn": "Do moves one space, gae two, geol three, yut four, and mo five! Throw a yut or a mo and you throw again. The first team to bring all its pieces home wins.",
+          "line": {
+            "ko": "도, 개, 걸, 윷, 모",
+            "romanization": "do, gae, geol, yut, mo",
+            "en": "the five throws: 1, 2, 3, 4 and 5 spaces",
+            "speaker": "narrator"
+          },
+          "factIds": [
+            "f8"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Five small panels in a row showing yut sticks landing in five different patterns, each with a matching number of footprints (1 to 5), no letters."
+        },
+        {
+          "id": "s8",
+          "narrationEn": "In 2023, Korea named five traditional holidays, including Seol and Daeboreum (New Year through the first full moon), as National Intangible Heritage. Yunnori was named in 2022. Hoya bows: 'Saehae bok mani badeuseyo!'",
+          "keyword": {
+            "id": "gukga-muhyeong-yusan",
+            "ko": "국가무형유산",
+            "romanization": "gukga muhyeong yusan",
+            "en": "National Intangible Heritage",
+            "kind": "word"
+          },
+          "factIds": [
+            "f9",
+            "f10"
+          ],
+          "framing": false,
+          "approximations": [],
+          "artBrief": "Night scene of a big round full moon over a village, with Hoya bowing toward the viewer and a yut board resting nearby."
+        }
+      ],
+      "checks": [
+        {
+          "id": "c1",
+          "kind": "detail",
+          "promptEn": "What is the New Year bow to elders called?",
+          "options": [
+            {
+              "id": "a",
+              "en": "Seolbim",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Deokdam",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Sebae",
+              "isCorrect": true
+            },
+            {
+              "id": "d",
+              "en": "Charye",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f3"
+          ]
+        },
+        {
+          "id": "c2",
+          "kind": "detail",
+          "promptEn": "In yunnori, how many spaces does 'mo' move?",
+          "options": [
+            {
+              "id": "a",
+              "en": "Two",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Three",
+              "isCorrect": false
+            },
+            {
+              "id": "c",
+              "en": "Four",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Five",
+              "isCorrect": true
+            }
+          ],
+          "factIds": [
+            "f8"
+          ]
+        },
+        {
+          "id": "c3",
+          "kind": "detail",
+          "promptEn": "In the story, which soup does the family eat for Seollal breakfast?",
+          "options": [
+            {
+              "id": "a",
+              "en": "Miyeokguk (seaweed soup)",
+              "isCorrect": false
+            },
+            {
+              "id": "b",
+              "en": "Tteokguk (rice cake soup)",
+              "isCorrect": true
+            },
+            {
+              "id": "c",
+              "en": "Samgyetang (chicken ginseng soup)",
+              "isCorrect": false
+            },
+            {
+              "id": "d",
+              "en": "Seolleongtang (ox bone soup)",
+              "isCorrect": false
+            }
+          ],
+          "factIds": [
+            "f6"
+          ]
+        }
+      ],
+      "checkpoints": [],
+      "sequenceSceneIds": [
+        "s1",
+        "s3",
+        "s6",
+        "s8"
+      ],
+      "newKeywordIds": [
+        "seollal",
+        "seolbim",
+        "sebae",
+        "tteokguk"
+      ]
+    }
+  ],
+  "coverSceneId": "s1",
+  "pillarTags": [],
+  "companionId": "hoya",
+  "facts": [
+    {
+      "id": "f1",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Seollal (Seol) is the first day of the first month of the lunar calendar and one of Korea's major traditional holidays; in the late Joseon era the book Dongguk sesigi counted Seol, Hansik, Dano and Chuseok as the four great holidays.",
+      "claimKo": "설(설날)은 음력 정월 초하루로 우리나라의 대표 명절이며, 조선 후기 『동국세시기』는 설·한식·단오·추석을 4대 명절로 꼽았다.",
+      "sources": [
+        {
+          "title": "국가무형유산 설과 대보름 (The Traditional Holidays of Seol and Daeboreum)",
+          "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0001500000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01500000",
+          "accessed": "2026-10-10",
+          "quoteOrLocator": "‘설과 대보름은 음력 정월 초하루에서 보름까지 해당하며, 한 해의 시작을 기념하는 인류 보편적 ‘신년맞이 명절’이다.’ / ‘조선시대 설은 중종 13년(1518년) 단오·추석과 함께 3대 명절로 꼽았고, 조선 후기 간행된 『동국세시기』에 따르면 한식·단오·추석과 더불어 4대 명절로 손꼽았다.’"
+        },
+        {
+          "title": "설",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0028997",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "정의: ‘한 해의 시작인 음력 1월 1일을 일컫는 말로 설날이라는 말과 같은 우리나라의 명절.’ / ‘조선시대는 원단·한식·단오·추석을 4대 명절이라 했지만’"
+        }
+      ]
+    },
+    {
+      "id": "f2",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "New clothes for Seollal are called seolbim; young girls in particular traditionally wear saekdong jeogori (a jacket with rainbow-striped sleeves).",
+      "claimKo": "설을 맞아 새로 장만해 입는 옷을 설빔이라 하며, 특히 여자 어린이들은 색동저고리를 입는다.",
+      "sources": [
+        {
+          "title": "설",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0028997",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘설날에 입는 옷을 설빔이라 한다.’ … ‘설날에 색깔이 있는 옷을 입는데 특히 여자 어린이들은 색동저고리를 입는다.’"
+        },
+        {
+          "title": "설빔",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%84%A4%EB%B9%94",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘설을 맞이하여 새로 장만하여 입거나 신는 옷, 신발 따위를 이르는 말.’"
+        }
+      ]
+    },
+    {
+      "id": "f3",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Sebae is the New Year bow to elders, the first greeting of the year; after the ancestral rites (charye), children bow first to grandparents and parents.",
+      "claimKo": "세배는 정월 초하룻날 윗사람에게 절을 하는 새해의 첫인사로, 차례를 지낸 뒤 조부모·부모에게 먼저 절한다.",
+      "sources": [
+        {
+          "title": "세배",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0029802",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "정의: ‘정월 초하룻날 윗사람에게 절을 하는 새해의 첫인사.’ 내용: ‘차례를 지낸 뒤에 자리를 정리하여 앉는다. 그리고는 조부모·부모에게 먼저 절하고’"
+        },
+        {
+          "title": "국가무형유산 설과 대보름",
+          "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0001500000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01500000",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "English description: ‘Seol customs such as observing ancestral rites at home (charye), bowing to elder kin (sebae), and eating a bowl of tteokguk’"
+        }
+      ]
+    },
+    {
+      "id": "f4",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "When bowing, people say New Year wishes such as “Saehae bok mani badeuseyo” (Receive lots of blessings in the new year); this greeting is a modern-era form of New Year wish.",
+      "claimKo": "세배 때 ‘새해 복 많이 받으세요’와 같은 새해 인사말을 하며, 이 인사말은 현대에 널리 쓰이게 된 덕담이다.",
+      "sources": [
+        {
+          "title": "세배",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0029802",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘웃어른에게 세배를 할 때는 절을 하고 나서 “새해에는 더욱 건강하시기를 빕니다.”, “새해에는 복 많이 받으시고 오래오래 사십시오.” 등의 새해 인사말을 한다.’"
+        },
+        {
+          "title": "설",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0028997",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘실상 “새해 복 많이 받으십시오”라는 신년 인사말은 전통적인 덕담이 아니라 새로 생긴 현대판 덕담이다.’"
+        }
+      ]
+    },
+    {
+      "id": "f5",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Elders who receive sebae answer with words of blessing (deokdam); children who come to bow are given a little money, or rice cakes and fruit.",
+      "claimKo": "세배를 받는 어른은 덕담을 하고, 아이들에게는 약간의 돈 또는 떡과 과일을 준다.",
+      "sources": [
+        {
+          "title": "세배",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0029802",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘세배를 받는 이도 … 한마디씩 덕담을 한다.’ / ‘아이들에게는 술은 주지 않고 약간의 돈, 또는 떡과 과일을 준다.’"
+        },
+        {
+          "title": "덕담",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EB%8D%95%EB%8B%B4",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘남이 잘되기를 비는 말. 주로 새해에 많이 나누는 말이다.’"
+        }
+      ]
+    },
+    {
+      "id": "f6",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Tteokguk, a clear broth with thinly sliced white rice cake (garaetteok), is the representative Seollal food, and there is a long-standing saying that you become one year older by eating tteokguk.",
+      "claimKo": "떡국은 맑은 장국에 가래떡을 얇게 썰어 넣고 끓인 설날 음식이며, 떡국을 먹어야 나이 한 살을 먹는다는 말이 전한다.",
+      "sources": [
+        {
+          "title": "떡국",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0017198",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "정의: ‘맑은 장국에 가래떡을 얇게 썰어넣고 끓인 음식.’ 내용: ‘설날에 먹는 절식(節食)의 하나이다.’"
+        },
+        {
+          "title": "설",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0028997",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘세찬의 대표적인 음식인 떡국을 먹어야 나이 한 살을 먹는다고 했다.’"
+        },
+        {
+          "title": "국가무형유산 설과 대보름",
+          "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0001500000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01500000",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘설의 핵심 요소인 설 차례, 새배, 떡국을 먹는 풍속이 확인된다.’ (원문 표기 그대로)"
+        },
+        {
+          "title": "떡국 (한국세시풍속사전)",
+          "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+          "url": "https://folkency.nfm.go.kr/kr/topic/detail/3690",
+          "accessed": "2026-10-10",
+          "quoteOrLocator": "‘멥쌀을 가루내어 떡메로 친 후, 손으로 길게 만든 흰 가래떡을 썰어서 맑은 장국에 넣고 끓인 음식으로 정조차례(正朝茶禮)시에 세찬(歲饌)으로 먹는 시절음식.’"
+        }
+      ]
+    },
+    {
+      "id": "f7",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "In yunnori (yut game) two sides take turns throwing four wooden yut sticks; depending on how the sticks land, they move their pieces on the board, and the side that first brings all its pieces to the goal wins. It is played from New Year's Day to Jeongwol Daeboreum.",
+      "claimKo": "윷놀이는 양편으로 나뉘어 윷가락 4개를 던져, 엎어지고 젖혀진 상태에 따라 윷판의 모든 말을 목적지에 먼저 도달시키는 편이 이기는 놀이로, 정초부터 정월대보름까지 즐긴다.",
+      "sources": [
+        {
+          "title": "국가무형유산 윷놀이 (Yut nori)",
+          "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0001490000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01490000",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘‘윷놀이’는 양편으로 나뉘어 윷가락 4개를 던져, 윷가락이 엎어지고 젖혀진 상태에 따라 윷판의 모든 말을 목적지에 먼저 도달시키는 편이 이기는 놀이로, 정초(正初)부터 정월대보름까지 …’"
+        },
+        {
+          "title": "‘윷놀이’ 무형문화재 됐다…“민족 정체성 담은 전통 놀이” (2022.11.11)",
+          "publisher": "대한민국 정책브리핑 (korea.kr), 문화재청 보도자료 기반",
+          "url": "https://www.korea.kr/news/policyNewsView.do?newsId=148908175",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘윷놀이는 윷가락 4개를 던져 윷판의 모든 말을 목적지에 먼저 도달시키는 편이 이기는 놀이로’"
+        },
+        {
+          "title": "윷놀이",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0042794",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "정의: ‘정월 초하루부터 대보름까지 즐기며, 4개의 윷가락을 던지고 그 결과에 따라 말[馬]을 사용하여 승부를 겨루는 민속놀이.’"
+        }
+      ]
+    },
+    {
+      "id": "f8",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "The five throws move a piece as follows: do 1 space, gae 2, geol 3, yut 4, mo 5; throwing yut or mo earns another throw.",
+      "claimKo": "도는 한 발, 개는 두 발, 걸은 세 발, 윷은 네 발, 모는 다섯 발을 가며, 윷이나 모가 나오면 한 번 더 던진다.",
+      "sources": [
+        {
+          "title": "윷놀이",
+          "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+          "url": "https://encykorea.aks.ac.kr/Article/E0042794",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘도는 한 발, 개는 두 발, 걸은 세 발, 윷은 네 발, 모는 다섯 발을 간다.’ / ‘모나 윷이 나오면 한번 더 할 수가 있으며’"
+        },
+        {
+          "title": "도 / 개 / 걸 / 모 (표제어)",
+          "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+          "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EB%AA%A8",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘모’: ‘윷놀이에서, 윷짝의 네 개가 다 엎어진 경우를 이르는 말. 끗수는 다섯 끗으로 친다.’ (같은 사전 ‘도’ 한 끗, ‘개’ 두 끗, ‘걸’ 세 끗)"
+        }
+      ]
+    },
+    {
+      "id": "f9",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "On 18 December 2023, Korea designated five traditional holidays — Seol and Daeboreum, Hansik, Dano, Chuseok and Dongji — as National Intangible Heritage. Daeboreum (the 15th day of the first lunar month) celebrates the first full moon after the Lunar New Year.",
+      "claimKo": "2023년 12월 18일 ‘설과 대보름’, ‘한식’, ‘단오’, ‘추석’, ‘동지’ 5개 명절이 국가무형유산으로 지정되었다. 정월대보름(음력 1월 15일)은 새해 첫 보름달을 맞는 명절이다.",
+      "sources": [
+        {
+          "title": "5개 명절(설과 대보름, 한식, 단오, 추석, 동지) 국가무형유산 신규종목 지정 (2023-12-18)",
+          "publisher": "국가유산청 (당시 문화재청) 보도자료",
+          "url": "https://www.khs.go.kr/newsBbz/selectNewsBbzView.do?newsItemId=155704541&sectionId=b_sec_1&mn=NS_01_02_02",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘문화재청(청장 최응천)은 우리 민족의 5개 대표 명절 ‘설과 대보름’, ‘한식’, ‘단오’, ‘추석’, ‘동지’를 신규 국가무형유산으로 지정한다.’"
+        },
+        {
+          "title": "설·대보름 등 우리 민족 5대 명절, 국가무형유산으로 지정 (2023.12.18)",
+          "publisher": "대한민국 정책브리핑 (korea.kr), 문화재청 보도자료 기반",
+          "url": "https://www.korea.kr/news/policyNewsView.do?newsId=148923903",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘문화재청은 18일 우리 민족의 5개 대표 명절 설과 대보름, 한식, 단오, 추석, 동지를 신규 국가무형유산으로 지정한다고 밝혔다.’"
+        },
+        {
+          "title": "국가무형유산 설과 대보름",
+          "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0001500000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01500000",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "기본 정보: 지정(등록)일 2023.12.18 (portal field; re-checked 2026-10-10 against the Korea Heritage Service open API field ccbaAsdt=20231218)"
+        },
+        {
+          "title": "국가무형유산 윷놀이",
+          "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0001490000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01490000",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "English description: ‘Jeongwol Daeboreum (a traditional holiday celebrating the first full moon after the Lunar New Year)’"
+        }
+      ]
+    },
+    {
+      "id": "f10",
+      "rev": 1,
+      "scope": "documented",
+      "claimEn": "Yunnori was designated a National Intangible Heritage (community-based item) on 11 November 2022.",
+      "claimKo": "윷놀이는 2022년 11월 11일 국가무형유산(공동체종목)으로 지정되었다.",
+      "sources": [
+        {
+          "title": "국가무형유산 윷놀이",
+          "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+          "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0001490000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01490000",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "기본 정보: 지정(등록)일 2022.11.11 (portal field; re-checked 2026-10-10 against the Korea Heritage Service open API field ccbaAsdt=20221111)"
+        },
+        {
+          "title": "(국영문 동시배포) ‘윷놀이’ 국가무형문화재 신규종목 지정 (2022-11-11)",
+          "publisher": "국가유산청 (당시 문화재청) 보도자료",
+          "url": "https://www.khs.go.kr/newsBbz/selectNewsBbzView.do?newsItemId=155703746&sectionId=b_sec_1&mn=NS_01_02_02",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘문화재청(청장 최응천)은 ‘윷놀이’를 신규 국가무형문화재로 지정하였다.’"
+        },
+        {
+          "title": "‘윷놀이’ 무형문화재 됐다…“민족 정체성 담은 전통 놀이” (2022.11.11)",
+          "publisher": "대한민국 정책브리핑 (korea.kr), 문화재청 보도자료 기반",
+          "url": "https://www.korea.kr/news/policyNewsView.do?newsId=148908175",
+          "accessed": "2026-10-09",
+          "quoteOrLocator": "‘우리 민족 대표 전통 놀이문화 ‘윷놀이’가 신규 국가무형문화재로 지정됐다.’"
+        }
+      ]
+    }
+  ],
+  "referenceDisplay": "Sources: 국가유산청 국가유산포털(설과 대보름·윷놀이); 국가유산청 보도자료; 한국민족문화대백과사전; 한국민속대백과사전(국립민속박물관); 국립국어원 표준국어대사전; 대한민국 정책브리핑",
+  "verification": {
+    "passes": 3,
+    "checkedAt": "2026-10-10",
+    "scope": "cluster",
+    "notes": "Third independent pass over 6 episodes / 61 facts / 161 source entries (70 unique URLs). Every URL was re-fetched with my own scripts (UNESCO pages via Wayback copies; heritage.go.kr descriptions via the portal ajax html and khs.go.kr open API; folkency via its JSON API) and each quote or locator was machine-matched to the page text; the few non-matching strings were checked by hand (portal metadata fields, hanja or footnote punctuation, label text). Corrections: (1) pansori scene 2 now gives both UNESCO steps (2003 masterpiece proclamation, 2008 Representative List); (2) pansori f11 states the Aesop title as in the cited Townsend text and the common alternate title; (3) added sources: NFM 놀보박타령 for 'greedy' (f5), 표준국어대사전 타다 for 'sawed' (f6), 한국민족문화대백과사전 선도해 for the Samguk sagi tale (f12); (4) Seollal f9/f10 designation-date locators now cite the KHS open API field. No other change. See seasons-tales.signoff.md."
+  },
+  "authorNotes": "Romanization: 윷놀이 is pronounced [윤노리], so RR gives 'yunnori'; the Korea Heritage Service's English name is 'Yut nori' and the app's existing card uses 'yutnori'. Pick one spelling app-wide. 'Saehae bok mani badeuseyo' is the greeting most people use today, but the Encyclopedia of Korean Culture calls it a modern greeting (older ones include '과세 안녕히 하셨습니까'). The narration keeps that in facts and doesn't call it ancient. The tteokguk age saying is presented only as a saying. Sebae money (세뱃돈) is described the way the Encyclopedia does: 'a little money, or rice cakes and fruit'. Left out on purpose: the sources don't explain which way up the yut sticks count for each throw (엎어지다/젖혀지다), so the narration doesn't say. Also left out are 차례 table details, 복조리, and 안택 rites. Note for existing content: heritage-cards.ts says tteokguk slices 'look like coins for good luck'. None of the sources checked here supports that, so it's not used here; please review it. REVISION 2026-10-10: \"four great holidays\" now stated as the late-Joseon Dongguk sesigi listing (the 1518 list had three: Seol, Dano, Chuseok, per the KHS portal). Check 3 reworded to an in-story question; \"Everyone\" softened to \"People\".",
+  "errata": []
+}

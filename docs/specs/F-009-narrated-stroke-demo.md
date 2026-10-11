@@ -30,6 +30,8 @@ Why minimal narration (not per-stroke):
 - **and** the OS reports sound is enabled AND the UI sound setting is on (`useUiStore.soundOn`),
 - **then** `speak(jamo.char, { language: 'ko-KR' })` is called once at the start of the demo.
 
+> **Revised 2026-10-10 (F-AUDIO-004 §3.9, AD1; PR A-5a) — the narration is the sound, not the name.** The one utterance at the start of the demo, and the on-mount utterance of the trace round, is `playJamo(jamo, 'sound')`: the carrier syllable (ㄱ is spoken **가**, not 기역), or 이응 for the silent initial ㅇ. The UI sound setting is the persisted device setting in `audio-store` (`useUiStore.soundOn` no longer exists); muting is enforced inside `playPrompt`, so the screen has no guard of its own, and with no usable Korean voice nothing is spoken (the animation still plays and the letter is on screen).
+
 ### 3.2 Mute paths
 
 - **Given** the UI sound is muted (`useUiStore.soundOn === false`),
