@@ -1,7 +1,7 @@
 import type { Entitlement, Space, Tier, TierSource } from '@hangul-route/content-schema';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { testDb as db } from '../../__tests__/helpers/db';
-import { classCap, classIsPro, isEntitlementActive, schoolIsFull, schoolLimits, schoolUsage, tierForLearner, tierFromSpaces } from '../entitlement';
+import { classCap, classIsPro, isEntitlementActive, schoolIsFull, schoolLimits, schoolUsage, tierAfterMove, tierForLearner, tierFromSpaces } from '../entitlement';
 
 const now = new Date('2026-09-21T12:00:00.000Z');
 const ent = (over: Partial<Entitlement>): Entitlement => ({ id: 'ent:x', subjectKind: 'space', subjectId: 'space:fam', planKey: 'family_lifetime', status: 'active', provider: 'stripe', providerRef: null, customerRef: null, seats: null, expiresAt: null, promoCode: null, updatedAt: '2026-09-20T00:00:00.000Z', ...over });
@@ -162,5 +162,66 @@ describe('tierFromSpaces (F-SPACE-002 §4.3, T7: one tier rule in one place)', (
     expect(await tierFromSpaces(db, [pro, life], now)).toEqual({ tier: 'premium', source: { kind: 'class', spaceId: pro.id, name: pro.name } });
     expect(await tierFromSpaces(db, [{ ...life, archivedAt: 't' }, { ...pro, archivedAt: 't' }], now)).toEqual({ tier: 'free', source: null });
     expect(await tierFromSpaces(db, [], now)).toEqual({ tier: 'free', source: null });
+  });
+});
+
+describe('tierAfterMove (F-SPACE-002 §4.3, T6b / T7)', () => {
+  let joinSeq = 0;
+  const member = (spaceId: string, learnerId: string) => {
+    joinSeq += 1;
+    return db.addMembership({ spaceId, memberKind: 'learner', memberId: learnerId, role: 'student', joinedAt: new Date(Date.UTC(2026, 0, 1, 0, 0, joinSeq)).toISOString() });
+  };
+  /** The tier the learner really has once the move is done, by moving and asking tierForLearner. */
+  const tierAfterRealMove = async (learnerId: string, from: string, to: string) => {
+    await db.removeMembership(from, 'learner', learnerId);
+    if (!(await db.membership(to, 'learner', learnerId))) await member(to, learnerId);
+    return tierForLearner(db, learnerId, now);
+  };
+
+  beforeEach(async () => {
+    await db.putSpace(space('space:fam-free', 'family', 'mom'));
+    await db.putSpace(space('space:fam-life', 'family', 'mom'));
+    await db.putSpace(space('space:cls-free', 'class', 'teacher'));
+    await db.putSpace(space('space:cls-free-2', 'class', 'mr-lee'));
+    await db.putSpace(space('space:cls-pro', 'class', 't2'));
+    await db.putSpace(space('space:sch', 'school', 'principal'));
+    await db.putSpace(space('space:cls-sch', 'class', 'ms-park', 'space:sch'));
+    await db.putSpace({ ...space('space:cls-gone', 'class', 't'), archivedAt: 't' });
+    await db.applyEntitlement({ subjectKind: 'space', subjectId: 'space:fam-life', planKey: 'family_lifetime', status: 'active', provider: 'stripe' }, now);
+    await db.applyEntitlement({ subjectKind: 'space', subjectId: 'space:cls-pro', planKey: 'group_license', status: 'active', provider: 'stripe' }, now);
+    await db.applyEntitlement({ subjectKind: 'space', subjectId: 'space:cls-gone', planKey: 'group_license', status: 'active', provider: 'stripe' }, now);
+    await db.applyEntitlement({ subjectKind: 'space', subjectId: 'space:sch', planKey: 'school_seat', status: 'active', provider: 'manual', seats: 50 }, now);
+  });
+
+  const cases: Array<{ name: string; spaces: string[]; from: string; to: string; tier: Tier }> = [
+    { name: 'free class to a pro class: premium after', spaces: ['space:fam-free', 'space:cls-free'], from: 'space:cls-free', to: 'space:cls-pro', tier: 'premium' },
+    { name: 'pro class to a free class with no other cover: free after', spaces: ['space:fam-free', 'space:cls-pro'], from: 'space:cls-pro', to: 'space:cls-free', tier: 'free' },
+    { name: 'school seat to a free class: free after', spaces: ['space:cls-sch'], from: 'space:cls-sch', to: 'space:cls-free', tier: 'free' },
+    { name: 'family_lifetime keeps premium whatever the classes', spaces: ['space:cls-pro', 'space:fam-life'], from: 'space:cls-pro', to: 'space:cls-free', tier: 'premium' },
+    { name: 'free to free stays free', spaces: ['space:cls-free'], from: 'space:cls-free', to: 'space:cls-free-2', tier: 'free' },
+    { name: 'already in the destination: only the source goes', spaces: ['space:cls-pro', 'space:cls-free'], from: 'space:cls-pro', to: 'space:cls-free', tier: 'free' },
+    { name: 'an archived destination grants nothing', spaces: ['space:cls-pro'], from: 'space:cls-pro', to: 'space:cls-gone', tier: 'free' },
+  ];
+
+  for (const c of cases) {
+    it(c.name, async () => {
+      const learnerId = 'profile:mover';
+      for (const s of c.spaces) await member(s, learnerId);
+      const predicted = await tierAfterMove(db, learnerId, c.from, c.to, now);
+      expect(predicted.tier).toBe(c.tier);
+      expect(predicted).toEqual(await tierAfterRealMove(learnerId, c.from, c.to));
+    });
+  }
+
+  it('reads only: nothing about the learner changes', async () => {
+    await member('space:cls-pro', 'profile:mover');
+    await tierAfterMove(db, 'profile:mover', 'space:cls-pro', 'space:cls-free', now);
+    expect((await db.membershipsOf('learner', 'profile:mover')).map((m) => m.spaceId)).toEqual(['space:cls-pro']);
+    expect((await tierForLearner(db, 'profile:mover', now)).tier).toBe('premium');
+  });
+
+  it('an unknown destination id is skipped', async () => {
+    await member('space:cls-pro', 'profile:mover');
+    expect(await tierAfterMove(db, 'profile:mover', 'space:cls-pro', 'space:nowhere', now)).toEqual({ tier: 'free', source: null });
   });
 });

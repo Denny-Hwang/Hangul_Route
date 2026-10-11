@@ -1,5 +1,5 @@
 import { TRANSFER_COOLING_OFF_MS, type TransferSlot } from '@hangul-route/content-schema';
-import { ENDED_TRANSFER_STATUSES, OPEN_TRANSFER_STATUSES, type StoredTransfer, type TransferPrefKey, type TransferSlotConsent } from './transfer-types';
+import { ENDED_TRANSFER_STATUSES, OPEN_TRANSFER_STATUSES, type LearnerConsentRecord, type StoredLearnerSlot, type StoredTransfer, type TransferPrefKey, type TransferSlotConsent } from './transfer-types';
 
 /*
  * Rules both Db backends share for the class-transfer rows (F-SPACE-002
@@ -7,6 +7,26 @@ import { ENDED_TRANSFER_STATUSES, OPEN_TRANSFER_STATUSES, type StoredTransfer, t
  * of migration 0005 and the WHERE clauses of its statements; `MemoryDb` calls
  * these so its observable behaviour is the same.
  */
+
+/**
+ * The stored learner slot for a consent given at `at`. Copies the record's
+ * fields one by one, so a wider runtime object (one built from a parsed body)
+ * can neither override `state` / `at` nor carry extra keys into a backend.
+ */
+export function consentedLearnerSlot(record: LearnerConsentRecord, at: string): StoredLearnerSlot {
+  return {
+    state: 'consented',
+    at,
+    basis: record.basis,
+    attest: record.attest,
+    evidence: record.evidence,
+    role: record.role,
+    textVersion: record.textVersion,
+    locale: record.locale,
+    shown: { lineIds: [...record.shown.lineIds], flags: { ...record.shown.flags } },
+    terms: { ...record.terms },
+  };
+}
 
 /** Which teacher slots a consent names. Refuses an empty, repeated or unknown slot list. */
 export function teacherSlotsOf(consent: Extract<TransferSlotConsent, { kind: 'teacher' }>): { source: boolean; destination: boolean } {
