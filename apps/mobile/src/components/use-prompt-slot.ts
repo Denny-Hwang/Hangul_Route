@@ -38,9 +38,19 @@ export interface PromptSlotOptions {
    * (A-5b), so the fallback counts as shown when that status panel appears, not before.
    */
   textOnScreen?: boolean;
+  /**
+   * `false`: the slot never sends `audio.fallback_shown`, for a screen that draws no `PromptPanel` and
+   * reports the fallback it does draw itself (the story check's "Say it yourself" chip). Default `true`.
+   */
+  reportFallback?: boolean;
 }
 
-export function usePromptSlot({ source, hasClip = false, textOnScreen = false }: PromptSlotOptions): PromptSlot {
+export function usePromptSlot({
+  source,
+  hasClip = false,
+  textOnScreen = false,
+  reportFallback = true,
+}: PromptSlotOptions): PromptSlot {
   const [state, dispatch] = useReducer(promptReducer, INITIAL_PROMPT_STATE);
   const muted = useAudioStore((s) => s.muted);
   const tts = useAudioStore((s) => s.tts);
@@ -61,7 +71,7 @@ export function usePromptSlot({ source, hasClip = false, textOnScreen = false }:
     if (!clip) dispatch({ capability: { tts, clips, unlocked } });
   }, [tts, clips, unlocked, clip]);
 
-  const shown = fallbackVisible(view, textOnScreen);
+  const shown = reportFallback && fallbackVisible(view, textOnScreen);
   useEffect(() => {
     if (shown && view.reason !== null) noteFallbackShown(source, view.reason);
   }, [shown, view.reason, source]);
