@@ -4,6 +4,7 @@ import type { AudioCapability } from '../capability';
 import { INITIAL_PROMPT_STATE, promptReducer, type PromptEvent, type PromptState } from '../prompt-state';
 import {
   failureFromStore,
+  fallbackVisible,
   promptPanelView as promptPanelViewWith,
   shouldAutoReplay,
   wrongAnswerBubble,
@@ -147,6 +148,31 @@ describe('promptPanelView.statusShown (the status-only panel, F-AUDIO-004 A-5b)'
 
   it('a new round (reset) hides it again', () => {
     expect(promptPanelView(run(['play', { result: 'unavailable', failure: 'error' }, 'reset']), readyCap, false, false).statusShown).toBe(false);
+  });
+});
+
+describe('fallbackVisible (when audio.fallback_shown fires)', () => {
+  it('a screen that prints the Korean (textOnScreen) counts the fallback as shown only once its status panel appears', () => {
+    const mutedIdle = promptPanelView(run([{ muted: true }]), readyCap, true, false);
+    expect(mutedIdle.textShown).toBe(true);
+    expect(fallbackVisible(mutedIdle, true)).toBe(false);
+    const mutedAfterPlay = promptPanelView(run([{ muted: true }, 'play', { result: 'muted' }]), readyCap, true, false);
+    expect(fallbackVisible(mutedAfterPlay, true)).toBe(true);
+  });
+
+  it('a screen with the full text panel counts it as shown as soon as the text is up', () => {
+    const mutedIdle = promptPanelView(run([{ muted: true }]), readyCap, true, false);
+    expect(fallbackVisible(mutedIdle, false)).toBe(true);
+    expect(fallbackVisible(promptPanelView(INITIAL_PROMPT_STATE, noneCap, false, false), false)).toBe(true);
+  });
+
+  it('never counts a shown panel that has no reason (text kept after sound came back) or a sound that played', () => {
+    const back = promptPanelView(run([{ muted: true }, { muted: false }]), readyCap, false, false);
+    expect(back.textShown).toBe(true);
+    expect(fallbackVisible(back, false)).toBe(false);
+    const played = promptPanelView(run(['play', { result: 'played' }]), readyCap, false, false);
+    expect(fallbackVisible(played, true)).toBe(false);
+    expect(fallbackVisible(played, false)).toBe(false);
   });
 });
 

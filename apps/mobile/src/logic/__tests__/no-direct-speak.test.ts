@@ -64,6 +64,23 @@ describe('no direct speak from screens', () => {
     const source = file!.source;
     expect(audioImports(source).some((n) => n === 'playPrompt' || n === 'playJamo')).toBe(true);
     expect(source).toMatch(/usePromptSlot\(\{\s*source:/);
-    expect(source).toMatch(/<PromptPanel[^>]*variant="status"/);
+    // Props in any order: an arrow-function prop before `variant` must not end the match at its `>`.
+    expect(source).toMatch(/<PromptPanel\b[\s\S]*?variant="status"[\s\S]*?\/>/);
   });
+
+  /**
+   * Screens that speak without a tap on every open (a Tap & Respond turn) or
+   * that can be closed mid-word (the card detail) stop the speech when they
+   * unmount, as Listen & Pick and Story Order do, so Korean never keeps
+   * playing over the next screen.
+   */
+  it.each(['minigames/TapRespondGame.tsx', 'library/CardDetailView.tsx', 'minigames/ListenPickGame.tsx'])(
+    '%s stops its speech on unmount',
+    (rel) => {
+      const file = files.find((f) => f.rel === rel);
+      expect(file, rel).toBeDefined();
+      expect(audioImports(file!.source)).toContain('stop');
+      expect(file!.source).toMatch(/\bstop\(\)/);
+    },
+  );
 });
