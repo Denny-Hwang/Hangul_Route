@@ -16,6 +16,7 @@ import { SaveProgressScreen } from '../screens/sync/SaveProgressScreen';
 import { JoinSpaceScreen } from '../screens/sync/JoinSpaceScreen';
 import { PaywallScreen } from '../screens/paywall/PaywallScreen';
 import { ProfileScreen } from '../screens/profile/ProfileScreen';
+import { EditProfileScreen } from '../screens/profile/EditProfileScreen';
 import { HomeworkScreen } from '../screens/homework/HomeworkScreen';
 import { QuestPlayerScreen } from '../screens/quest/QuestPlayerScreen';
 import { ResultsScreen } from '../screens/results/ResultsScreen';
@@ -65,6 +66,7 @@ export function RootNavigator(): React.ReactElement {
         <Stack.Screen name="PinReset" component={PinResetModal} options={{ presentation: 'modal' }} />
         <Stack.Screen name="ParentDashboard" component={ParentDashboardScreen} />
         <Stack.Screen name="Profile" component={ProfileScreen} />
+        <Stack.Screen name="EditProfile" component={EditProfileScreen} />
         <Stack.Screen name="Homework" component={HomeworkScreen} />
         <Stack.Screen name="Restore" component={RestoreScreen} />
         <Stack.Screen name="SaveProgress" component={SaveProgressScreen} />

@@ -96,7 +96,19 @@ const SELF_ROUTE: AdditiveField = {
   isUnset: (value) => value === undefined || value === null,
 };
 
-export const ADDITIVE_FIELDS: readonly AdditiveField[] = [PLACEMENTS, STAGE_DONE_AT, SELF_ROUTE];
+/**
+ * `vocab` (F-VOC-005 section 3.3, P6) is optional with no default, so only an
+ * absent key means "an old build sent this". An explicit empty slice
+ * `{ v: 1, items: [], topics: [] }` is a value (a profile reset) and replaces
+ * the stored one. `summary.vocab` is kept only when the slice is.
+ */
+const VOCAB: AdditiveField = {
+  payloadKey: 'vocab',
+  summaryKey: 'vocab',
+  isUnset: (value) => value === undefined,
+};
+
+export const ADDITIVE_FIELDS: readonly AdditiveField[] = [PLACEMENTS, STAGE_DONE_AT, SELF_ROUTE, VOCAB];
 
 export interface SnapshotParts<P, S> {
   payload: P;

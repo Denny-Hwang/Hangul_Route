@@ -27,7 +27,6 @@ import { Pressable, Text, View } from 'react-native';
 import { episodeById, episodeFor, episodesAll, gridEpisodes, stages, themes } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeStage, localizeTheme } from '../../logic/content-locale';
-import { isStageEntitled } from '../../logic/entitlement';
 import {
   isEpisodeComplete,
   stageAvailability,
@@ -40,8 +39,6 @@ import { journeyGridMaxWidth } from '../../logic/layout/pane-sizes';
 import type { MainTabParamList, RootStackParamList } from '../../navigation/types';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
-import { useAudience } from '../../store/audience';
-import { effectiveTier, useTierStore } from '../../store/tier-store';
 import { EpisodeDetailView } from '../episode/EpisodeDetailView';
 
 /** The grid's episodes: a shelf episode is never a grid cell or a pane selection (F-STORY-004 §3.10). */
@@ -53,12 +50,8 @@ export function JourneyScreen(): React.ReactElement {
   const localThemes = useMemo(() => themes.map((t) => localizeTheme(t, locale)), [locale]);
   const localStages = useMemo(() => stages.map((s) => localizeStage(s, locale)), [locale]);
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { copy, opensDirectly } = useAudience();
   const profile = useProfileStore(activeProfileSelector);
   const snap = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
-  const cachedTier = useTierStore((s) => (profile ? s.byLearner[profile.id] : undefined));
-  const tier = effectiveTier(profile?.id ?? '', new Date()).tier;
-  void cachedTier; // re-render when the inbox changes the tier
 
   // Two panes (wide window, F-LAYOUT-001 §3.7): a tap selects, the right pane shows it. One pane: a tap navigates as always.
   const { panes } = useLayoutClass();
@@ -112,16 +105,14 @@ export function JourneyScreen(): React.ReactElement {
       {localStages.map((stage) => {
         const availability = stageAvailability(stage.key, GRID_EPISODES);
         const isLocked = availability === 'soon';
-        const entitledStage = isStageEntitled(stage.key, tier);
         return (
           <View key={stage.key} style={{ marginBottom: spacing.lg }}>
-            <Pressable
-              disabled={entitledStage}
-              onPress={() => (opensDirectly(false) ? navigation.navigate('Paywall', { from: 'journey' }) : navigation.navigate('PinEntry', { next: 'Paywall' }))}
-              accessibilityRole={entitledStage ? undefined : 'button'}
-              accessibilityLabel={entitledStage ? undefined : copy.journeyLockedA11y(stage.titleEn)}
-              style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.sm }}
-            >
+            {/*
+              The stage header is a plain row, never a button: no lock, no door to the unlock page on a
+              learner screen (F-ROUTE-001 R-J, OD-8; section 3.3). A screen reader reads the title, the
+              one-liner and the same availability word the pill shows. Plans live in the grown-up area.
+            */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.sm }}>
               <View
                 style={{
                   width: 32,
@@ -147,10 +138,10 @@ export function JourneyScreen(): React.ReactElement {
               </View>
               <Pill
                 tone={availability === 'open' ? 'success' : availability === 'taste' ? 'primary' : 'neutral'}
-                label={entitledStage ? stagePillLabel(availability, m.availability) : m.premium.pill}
+                label={stagePillLabel(availability, m.availability)}
                 size="sm"
               />
-            </Pressable>
+            </View>
 
             <View style={{ flexDirection: 'row', gap: spacing.xs, width: '100%', maxWidth: gridMax }}>
               {localThemes.map((theme) => (

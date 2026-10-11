@@ -2,7 +2,7 @@
   "v": 1,
   "id": "story:kim-hongdo-genre-paintings",
   "state": "ready",
-  "contentVer": 2,
+  "contentVer": 3,
   "title": {
     "ko": "김홍도의 풍속화, 씨름과 서당",
     "romanization": "Gimhongdoui pungsokhwa, ssireumgwa seodang",
@@ -361,7 +361,7 @@
         },
         {
           "id": "s7",
-          "narrationEn": "Ssireum is still loved today. It is a National Intangible Heritage of Korea, and in 2018 UNESCO inscribed traditional Korean wrestling as Intangible Cultural Heritage. Hoya rolls up his sleeves: \"{kw:ssireum-hanpan-haeyo}\"",
+          "narrationEn": "Ssireum is still loved today. It is a National Intangible Heritage of Korea, and in 2018 UNESCO inscribed traditional Korean wrestling as Intangible Cultural Heritage. Hoya cheers: \"{kw:ssireum-hanpan-haeyo}\"",
           "captionEn": "Ssireum is still loved today",
           "line": {
             "ko": "씨름 한판 해요!",

@@ -38,3 +38,30 @@ export const LIBRARY_SECTIONS: readonly LibrarySection[] = [
 export function visibleSections(ctx: LibrarySectionContext): LibrarySectionId[] {
   return LIBRARY_SECTIONS.filter((s) => s.isAvailable(ctx)).map((s) => s.id);
 }
+
+/**
+ * The section the Library opens on (§3.3): the requested one
+ * (`route.params.section`, a deep link) when it is offered, else Cards.
+ */
+export function selectedSection(
+  requested: LibrarySectionId | undefined,
+  visible: readonly LibrarySectionId[],
+): LibrarySectionId {
+  return requested !== undefined && visible.includes(requested) ? requested : 'cards';
+}
+
+/** The sections this build can draw; Culture joins with its section (F-STORY-004 PR 4.7). */
+export const DRAWN_LIBRARY_SECTIONS: ReadonlySet<LibrarySectionId> = new Set<LibrarySectionId>(['cards', 'story-time']);
+
+/**
+ * The Library's tab row (§3.3): the offered sections this build draws, in
+ * registry order, or none at all when fewer than two remain (Cards alone is
+ * exactly today's gallery, with no tab row).
+ */
+export function librarySectionTabs(
+  ctx: LibrarySectionContext,
+  drawn: ReadonlySet<LibrarySectionId> = DRAWN_LIBRARY_SECTIONS,
+): LibrarySectionId[] {
+  const tabs = visibleSections(ctx).filter((id) => drawn.has(id));
+  return tabs.length >= 2 ? tabs : [];
+}

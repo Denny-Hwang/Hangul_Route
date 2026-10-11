@@ -695,7 +695,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:cheugugi-rain-gauge",
     "state": "ready",
-    "contentVer": 2,
+    "contentVer": 3,
     "title": {
       "ko": "비를 재는 그릇, 측우기",
       "romanization": "Bireul jaeneun geureut, cheugugi",
@@ -779,7 +779,7 @@ export const storiesAll: Story[] = [
         "scenes": [
           {
             "id": "s1",
-            "narrationEn": "Pitter-patter! Hoya the tiger holds out a paw to catch the raindrops. \"In Korean, rain is {kw:bi},\" he says. \"Long ago, the Joseon kingdom found a clever way to measure rain. Let's go and see!\"",
+            "narrationEn": "Pitter-patter! Hoya the tiger waves a paw in the falling raindrops. \"In Korean, rain is {kw:bi},\" he says. \"Long ago, the Joseon kingdom found a clever way to measure rain. Let's go and see!\"",
             "captionEn": "Hoya catches the falling rain",
             "keyword": {
               "id": "bi",
@@ -1042,7 +1042,7 @@ export const storiesAll: Story[] = [
           },
           {
             "id": "s7",
-            "narrationEn": "Today it is kept at the National Meteorological Museum of Korea in Seoul. Hoya grins and points at the sky. \"Next time it rains, you will know the words: {kw:biga-wayo}!\"",
+            "narrationEn": "Today it is kept at the National Meteorological Museum of Korea in Seoul. Hoya waves happily at the rainy sky. \"Next time it rains, you will know the words: {kw:biga-wayo}!\"",
             "captionEn": "The gauge rests in a museum in Seoul",
             "keyword": {
               "id": "biga-wayo",
@@ -2750,7 +2750,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:donguibogam",
     "state": "ready",
-    "contentVer": 2,
+    "contentVer": 3,
     "title": {
       "ko": "허준의 동의보감",
       "romanization": "Heojunui Donguibogam",
@@ -2974,7 +2974,7 @@ export const storiesAll: Story[] = [
                   "flip": true
                 }
               ],
-              "altEn": "At night by lamplight Heo Jun sits writing with a brush, surrounded by stacks of old thread-bound books."
+              "altEn": "By lamplight Heo Jun sits writing with a brush, surrounded by stacks of old thread-bound books."
             }
           },
           {
@@ -3141,7 +3141,7 @@ export const storiesAll: Story[] = [
           },
           {
             "id": "s8",
-            "narrationEn": "Copies from that first printing are now National Treasures of Korea. Hoya hugs a book-shaped pillow and smiles: \"{kw:bobae-gateun-chaek}!\" That means, \"A book like a treasure!\"",
+            "narrationEn": "Copies from that first printing are now National Treasures of Korea. Hoya holds a book close: \"{kw:bobae-gateun-chaek}!\" That means, \"A book like a treasure!\"",
             "captionEn": "First-edition copies are National Treasures",
             "line": {
               "ko": "보배 같은 책",
@@ -9034,7 +9034,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:kim-hongdo-genre-paintings",
     "state": "ready",
-    "contentVer": 2,
+    "contentVer": 3,
     "title": {
       "ko": "김홍도의 풍속화, 씨름과 서당",
       "romanization": "Gimhongdoui pungsokhwa, ssireumgwa seodang",
@@ -9393,7 +9393,7 @@ export const storiesAll: Story[] = [
           },
           {
             "id": "s7",
-            "narrationEn": "Ssireum is still loved today. It is a National Intangible Heritage of Korea, and in 2018 UNESCO inscribed traditional Korean wrestling as Intangible Cultural Heritage. Hoya rolls up his sleeves: \"{kw:ssireum-hanpan-haeyo}\"",
+            "narrationEn": "Ssireum is still loved today. It is a National Intangible Heritage of Korea, and in 2018 UNESCO inscribed traditional Korean wrestling as Intangible Cultural Heritage. Hoya cheers: \"{kw:ssireum-hanpan-haeyo}\"",
             "captionEn": "Ssireum is still loved today",
             "line": {
               "ko": "씨름 한판 해요!",
@@ -9751,7 +9751,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:nanjung-ilgi",
     "state": "ready",
-    "contentVer": 2,
+    "contentVer": 3,
     "title": {
       "ko": "이순신 장군의 난중일기",
       "romanization": "Isunsin janggunui Nanjungilgi",
@@ -9966,7 +9966,7 @@ export const storiesAll: Story[] = [
                   "s": 0.7
                 }
               ],
-              "altEn": "At night in a wooden room the commander stands at his desk by lamplight, with his diary and folded papers."
+              "altEn": "In a wooden room the commander stands at his desk by lamplight, with his diary and folded papers."
             }
           },
           {
@@ -13650,7 +13650,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:shapes-of-hangeul",
     "state": "ready",
-    "contentVer": 2,
+    "contentVer": 3,
     "title": {
       "ko": "한글 모양의 비밀",
       "romanization": "Hangeul moyangui bimil",
@@ -13881,7 +13881,7 @@ export const storiesAll: Story[] = [
           },
           {
             "id": "s2",
-            "narrationEn": "The first secret: the five basic consonants copy the shapes of the parts of the body we speak with. The old book says the letter {kw:jamo-g} copies the root of the tongue closing the throat. Hoya points at the picture.",
+            "narrationEn": "The first secret: the five basic consonants copy the shapes of the parts of the body we speak with. The old book says the letter {kw:jamo-g} copies the root of the tongue closing the throat. Hoya waves you over to look at the picture.",
             "keyword": {
               "id": "jamo-g",
               "ko": "ㄱ",
@@ -13912,7 +13912,7 @@ export const storiesAll: Story[] = [
                   "s": 0.65
                 }
               ],
-              "altEn": "Hoya points at a side-view picture of the mouth: the root of the tongue rises to close the throat, the shape behind the first letter."
+              "altEn": "Hoya waves beside a side-view picture of the mouth: the root of the tongue rises to close the throat, the shape behind the first letter."
             },
             "captionEn": "Giyeok: tongue root closing the throat"
           },
@@ -15382,7 +15382,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:sillok-royal-historians",
     "state": "ready",
-    "contentVer": 2,
+    "contentVer": 3,
     "title": {
       "ko": "호야, 사관을 만나다",
       "romanization": "Hoya, sagwaneul mannada",
@@ -15758,7 +15758,7 @@ export const storiesAll: Story[] = [
                   "s": 0.95
                 }
               ],
-              "altEn": "Hoya proudly points at a wooden case full of old books: the Annals, which record 472 years of Joseon kings."
+              "altEn": "Hoya proudly waves beside a wooden case full of old books: the Annals, which record 472 years of Joseon kings."
             }
           }
         ],

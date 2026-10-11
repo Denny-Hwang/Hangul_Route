@@ -83,13 +83,18 @@ Card    = { pillar, title, image_url, source { institution, license, attribution
 - **UI text**: English 가 원본 로케일이다 (CEFR Pre-A1, 짧고 쉬운 어휘). 번역(es/ko)은 `content/i18n/` 오버레이로 얹는다 — 콘텐츠 JSON 에 다른 언어 UI 문구를 직접 쓰지 않는다 (F-I18N-001)
 - **Character dialogue = English**
 - **Korean = 학습 대상만** (자모·단어·문장)
-- **Romanization** 항상 동반 (McCune-Reischauer 가 아닌 Revised Romanization)
+- **Romanization** 항상 동반 (McCune-Reischauer 가 아닌 Revised Romanization, F-CNT-002 §3.1):
+  - **철자가 아니라 발음**을 옮긴다. RR 이 표기하는 음운 변화를 적용한다: 연음 (`할아버지` `harabeoji`), 비음화 (`윷놀이` `yunnori`, `국립` `gungnip`, `승리` `seungni`), 유음화 (`한글날` `hangeullal`, `신라` `silla`), 구개음화 (`같이` `gachi`), `ㅎ` 축약·탈락 (`좋아요` `joayo`, `놓고` `noko`), 받침 중화 (`젓가락` `jeotgarak`, `꽃` `kkot`). RR 이 표기하지 않는 된소리는 표기하지 않는다 (`학교` `hakgyo`).
+  - **하이픈·아포스트로피·발음 구별 기호 금지.** 저장되는 값은 `sagwa` 이지 `sa-gwa` 가 아니다. 기본은 소문자, 이름만 대문자 허용. 음절 구분 표시(`han-geul-lal`)가 필요한 학습 UI 는 `syllableSplit()` 로 계산해서 보여 주고, 저장하지 않는다.
+  - **띄어쓰기**는 한국어 표준 띄어쓰기를 따르고, 한국어 한 단어에 로마자 한 단어 (`손 씻기` → `son ssitgi`, `가족 식탁` → `gajok siktak`).
+  - **영어 문장 속** 로마자 한국어 단어도 같은 규칙 (`sebaetdon`, `jongihak`, `gangaji`), 하이픈 없이. 제목·영어 gloss 는 굳어진 영어 이름을 쓴다 (`K-pop`, `Hangul Day`); `romanization` 필드는 RR (`keipap`).
+  - 낱자모의 `romanization` 은 단어가 아니라 소리값 표 (`g/k`, `silent/ng` …, `JAMO_SOUND_VALUES`). 변환기가 모르는 단어는 이유를 적어 `ROMANIZATION_EXCEPTIONS` 에 넣는다 (`packages/content-schema/src/romanization/exceptions.ts`). 검사: `corepack pnpm --filter @hangul-route/content-schema test romanization`.
 - **Gloss** (UI 언어; 기본 English) 또는 visual 항상 동반
 
 예:
 ```
 ✅ "Tap the letter that says 'ga' (가)"
-✅ "What does 사과 (sa-gwa) mean? Apple? Banana? Orange?"
+✅ "What does 사과 (sagwa) mean? Apple? Banana? Orange?"
 ✅ hoya: "Let's learn ㄱ! It sounds like /g/."
 ❌ "ㄱ을 터치하세요"           (UI 가 한국어)
 ❌ "사과는 빨간 과일이에요"     (설명 문장이 한국어)
@@ -125,15 +130,20 @@ Card    = { pillar, title, image_url, source { institution, license, attribution
 
 ### 3.7 Heritage Card 자산 (공공누리 등)
 
-`content/assets-license.csv` 에 다음 행을 추가:
+`content/assets-license.csv` 에 다음 행을 추가 (헤더는 음성·효과음과 같은 하나, `docs/design/audio-plan.md` §8):
 
 ```csv
-asset_path,source_institution,kogl_type,attribution_text,url
-content/cards/letters/hunminjeongeum.png,국립한글박물관,KOGL Type 1,"국립한글박물관",https://...
+asset_path,category,source,license,attribution,url
+content/cards/letters/hunminjeongeum.png,image,국립한글박물관,KOGL Type 1,"국립한글박물관",https://...
 ```
 
+- `category` = `image`, `source` = 제공 기관, `license` = 공공누리 유형 (`KOGL Type 1` 등), `attribution` = 표기 문구
 - KOGL Type 4 (상업 이용·변경 금지) 는 **MVP 사용 금지**
-- 2차 저작 시 attribution_text 에 "2차 저작" 명시
+- 2차 저작 시 attribution 에 "2차 저작" 명시
+
+### 3.8 Story (`content/stories/`)
+
+이야기(story mode) JSON 은 위 Episode/Quest 규약이 아니라 **`content/stories/README.md`** 를 따른다 (F-STORY-001): 한 파일 = 한 이야기, `draft` → `ready` 상태, 모든 사실 문장은 출처가 있는 `facts[]` 를 인용, 내레이션 속 한국어는 `{kw:<id>}` 토큰, 전래 이야기 표기, `contentVer` / `fact.rev` 버전 규칙, 그리고 **사실 정정 절차** (errata — 날짜가 보이는 정정 목록, 조용한 수정 금지). `narrationEn` 또는 `facts` 를 바꾸는 PR 은 PR 템플릿의 claims-audit 체크박스를 채운다.
 
 ---
 
@@ -308,10 +318,10 @@ content/cards/letters/hunminjeongeum.png,국립한글박물관,KOGL Type 1,"국�
 }
 ```
 
-`content/assets-license.csv` 에 동일 PR 에서:
+`content/assets-license.csv` 에 동일 PR 에서 (§3.7 헤더):
 
 ```csv
-content/cards/letters/hunminjeongeum.png,국립한글박물관,KOGL Type 1,"국립한글박물관",https://...
+content/cards/letters/hunminjeongeum.png,image,국립한글박물관,KOGL Type 1,"국립한글박물관",https://...
 ```
 
 ### 8.3 나쁜 예 — 회피해야 할 패턴

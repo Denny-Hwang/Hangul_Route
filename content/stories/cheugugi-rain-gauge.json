@@ -2,7 +2,7 @@
   "v": 1,
   "id": "story:cheugugi-rain-gauge",
   "state": "ready",
-  "contentVer": 2,
+  "contentVer": 3,
   "title": {
     "ko": "비를 재는 그릇, 측우기",
     "romanization": "Bireul jaeneun geureut, cheugugi",
@@ -86,7 +86,7 @@
       "scenes": [
         {
           "id": "s1",
-          "narrationEn": "Pitter-patter! Hoya the tiger holds out a paw to catch the raindrops. \"In Korean, rain is {kw:bi},\" he says. \"Long ago, the Joseon kingdom found a clever way to measure rain. Let's go and see!\"",
+          "narrationEn": "Pitter-patter! Hoya the tiger waves a paw in the falling raindrops. \"In Korean, rain is {kw:bi},\" he says. \"Long ago, the Joseon kingdom found a clever way to measure rain. Let's go and see!\"",
           "captionEn": "Hoya catches the falling rain",
           "keyword": {
             "id": "bi",
@@ -349,7 +349,7 @@
         },
         {
           "id": "s7",
-          "narrationEn": "Today it is kept at the National Meteorological Museum of Korea in Seoul. Hoya grins and points at the sky. \"Next time it rains, you will know the words: {kw:biga-wayo}!\"",
+          "narrationEn": "Today it is kept at the National Meteorological Museum of Korea in Seoul. Hoya waves happily at the rainy sky. \"Next time it rains, you will know the words: {kw:biga-wayo}!\"",
           "captionEn": "The gauge rests in a museum in Seoul",
           "keyword": {
             "id": "biga-wayo",

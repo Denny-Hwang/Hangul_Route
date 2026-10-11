@@ -83,7 +83,7 @@
 
 ## 8. 라이선스 (`content/assets-license.csv` 신규)
 
-- 컬럼: `asset_path, category(voice/sfx/bgm), source, license, attribution, url`.
+- 컬럼: `asset_path, category(voice/sfx/bgm/image), source, license, attribution, url`. 헤리티지 카드 이미지도 같은 헤더 하나를 쓴다 (`category=image`, content-skill §3.7).
 - **CC0 우선**. 구매 시 라이선스 증빙 보관. 공공누리 해당 시 KOGL.
 - 향후 `content-validation` CI 가 csv 일치 검증.
 

@@ -35,6 +35,7 @@
 
 ### Follow-ups
 - [ ] T-017 F-001 외부 의존: 30 개 jamo 음성 MP3 녹음 (24 자모 + 6 받침, 단일 native speaker) — 1d **← 웹 오프라인 발음 보장의 전제 (web-app-launch §3), 우선순위 상향**
+  - 2026-10-11 (F-AUDIO-004 A-8): 무엇을 말할지와 파일 이름은 `docs/launch/audio-recording-script.md` (콘텐츠에서 생성, `audio:script`), 녹음 방법은 `docs/launch/owner-runbook.md` Step 12. 파일 이름은 글자가 아니라 file id (`giyeok.m4a`). 처리 `audio:process` → 검사 `audio:check` → `audio:map`; 남은 클립은 `audio:status`. 녹음이 오면 A-9 콘텐츠 PR (코드 변경 없음).
 
 ### Week 5–6 (Homework · Reviews · Profiles — addendum 09)
 

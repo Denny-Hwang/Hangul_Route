@@ -61,7 +61,7 @@ export const landing = {
       `Hoya the tiger guides you from ${letter} to Chuseok — five-minute quests, plain-English instructions, and Korean culture cards to collect along the way. Kids, teens and grown-ups play the same quests. Played, not taught. Never a frown.`,
     play: { cta: 'Play in your browser' },
     seeCards: { cta: 'See the cards' },
-    facts: 'Nothing to download · No ads · Plays offline after your first visit',
+    facts: 'Nothing to download · No ads · Works offline after your first visit',
     /** Hoya's speech bubble on the hero art; `letter` is passed in. */
     bubble: (letter: string) => `Annyeong! Let's meet ${letter}.`,
   },
@@ -70,7 +70,10 @@ export const landing = {
     items: {
       coppa: { title: 'COPPA-compliant', body: 'No third-party tracking. Parent email is the only PII.' },
       ads: { title: 'No ads, ever', body: 'No third-party ads. No data sold. Revenue is in-app only.' },
-      offline: { title: 'Plays offline', body: 'After your first visit, the full Stage 1 plays without a connection.' },
+      offline: {
+        title: 'Works offline',
+        body: 'After your first visit the app opens without a connection. Letter sounds need a Korean voice on your device until our own recordings arrive.',
+      },
       antiShame: { title: 'Anti-shame design', body: 'Wrong answers use amber. No red. No streak guilt.' },
     },
   },
@@ -129,7 +132,7 @@ export const landing = {
   parents: {
     eyebrow: 'For parents',
     title: 'Five minutes a day. Nothing creepy.',
-    body: 'Many of our learners are children, so Hangul Route is built for tired parents too. Hand the phone over for five minutes; come back to one new Korean letter and one heritage card. Learning Korean yourself? Play the same quests. Bring it on a long flight — the whole Stage 1 plays offline.',
+    body: 'Many of our learners are children, so Hangul Route is built for tired parents too. Hand the phone over for five minutes; come back to one new Korean letter and one heritage card. Learning Korean yourself? Play the same quests. Bring it on a long flight — the app works offline after your first visit.',
     points: {
       localFirst: { title: 'Local-first by default.', body: 'All learning data stays on the device until you sign in.' },
       gate: { title: 'Parent-gate.', body: 'Anything that costs money or deletes data is behind a simple multiplication question.' },
@@ -178,7 +181,7 @@ export const landing = {
   /** The #get section around the launch-news form. */
   get: {
     title: 'Try Hangul Route this week.',
-    body: "Hangul Route runs in your browser — open it, add it to your home screen, and Stage 1 plays offline. Leave your email and we'll send you the launch news.",
+    body: "Hangul Route runs in your browser — open it, add it to your home screen, and it works offline. Leave your email and we'll send you the launch news.",
     play: { cta: 'Play now — free' },
     devices: 'Works on iPhone, Android, iPad and Chromebook — any modern browser.',
   },

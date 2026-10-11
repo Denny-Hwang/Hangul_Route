@@ -7,6 +7,8 @@ import { LearnerMembershipSchema } from './space';
 import { LearnerLevelIdSchema } from './learner-level';
 import { PlacementSummarySchema } from './placement';
 import { InboxTransferSchema, lenientArray } from './transfer';
+import { VocabIdSchema } from './vocab';
+import { VocabProgressSchema } from './vocab-progress';
 
 /**
  * Sync contracts — F-SYNC-001. Shared by the Worker (validation) and the
@@ -60,6 +62,25 @@ export const JourneySummarySchema = z.object({
 });
 export type JourneySummary = z.infer<typeof JourneySummarySchema>;
 
+/**
+ * Word counts for caregivers and teachers (F-VOC-005 section 3.8): counts, a
+ * first-try rate and up to three words to look at together. Never shown to the
+ * learner; no response time and no per-question history.
+ */
+export const VocabSummarySchema = z.object({
+  /** Words with a state, all topics. */
+  collected: z.number().int().nonnegative(),
+  /** `bestBox >= 3`. */
+  strong: z.number().int().nonnegative(),
+  topicsStarted: z.number().int().nonnegative(),
+  /** Topics whose `last` is within the last 7 days (topics, not rounds). */
+  topicsPracticed7d: z.number().int().nonnegative(),
+  /** sum(right) / sum(seen), rounded to 2 decimals; null when nothing was answered. */
+  firstTryRate: z.number().min(0).max(1).nullable(),
+  needsPractice: z.array(VocabIdSchema).max(3),
+});
+export type VocabSummary = z.infer<typeof VocabSummarySchema>;
+
 /** Client-computed aggregate; the only column caregivers/teachers read (roadmap §3.3). */
 export const ProgressSummarySchema = z.object({
   schemaVersion: z.literal(1),
@@ -97,6 +118,13 @@ export const ProgressSummarySchema = z.object({
   selfRoute: SelfRouteSummarySchema.optional().catch(undefined),
   /** My route stage counts (F-ROUTE-001 R-8); class and family rosters read it. Malformed is dropped, never fatal. */
   journey: JourneySummarySchema.optional().catch(undefined),
+  /**
+   * Word counts (F-VOC-005 section 3.8); omitted when the learner has no
+   * collected words. A derived display figure, so malformed counts are dropped,
+   * never fatal (as `selfRoute`): a bad summary must not stop the slice and
+   * everything else from syncing.
+   */
+  vocab: VocabSummarySchema.optional().catch(undefined),
 });
 export type ProgressSummary = z.infer<typeof ProgressSummarySchema>;
 
@@ -159,7 +187,12 @@ export const BackupFileSchema = z.object({
   version: z.literal(BACKUP_VERSION),
   exportedAt: z.string(),
   profile: ProfileSchema,
-  snapshot: ProgressSnapshotSchema,
+  /**
+   * The word slice is lenient here only (F-VOC-005 section 3.10): a malformed
+   * or newer-version slice is dropped so the file still restores quests, cards
+   * and episodes. The sync contract stays strict (a 422 on the Worker).
+   */
+  snapshot: ProgressSnapshotSchema.extend({ vocab: VocabProgressSchema.optional().catch(undefined) }),
 });
 export type BackupFile = Omit<z.infer<typeof BackupFileSchema>, 'snapshot'> & { snapshot: ProgressSnapshot };
 

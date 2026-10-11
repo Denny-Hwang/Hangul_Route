@@ -1,6 +1,7 @@
 import type { PlacementSource, StoryLevel } from '@hangul-route/content-schema';
 import type { NavigatorScreenParams } from '@react-navigation/native';
 import type { PinResetMethod } from '../logic/profiles/pin-flow';
+import type { LibrarySectionId } from '../logic/story/library-sections';
 import type { SourcesRouteParams } from '../logic/story/source-link';
 
 /**
@@ -16,7 +17,8 @@ export type GrownUpDestination =
   | 'SaveProgress'
   | 'Paywall'
   | 'ExternalLink'
-  | 'PlacementFinish';
+  | 'PlacementFinish'
+  | 'EditProfile';
 
 export type RootStackParamList = {
   Onboarding: NavigatorScreenParams<OnboardingStackParamList>;
@@ -47,9 +49,13 @@ export type RootStackParamList = {
     via?: PinResetMethod;
     /** `next: 'ExternalLink'`: the source link waiting on the gate (Sources holds it until the return). */
     url?: string;
+    /** `next: 'Paywall'`: the surface that opened it, passed on to the paywall (default `'journey'`). */
+    from?: 'journey' | 'library';
+    /** `next: 'EditProfile'`: the profile to edit (F-LEARN-001 §3.11). */
+    profileId?: string;
   };
   /** Forgot PIN: Rescue Code or a 24-hour wait, then a new PIN (F-LEARN-001 §3.5). `next` is kept for the PIN screen. */
-  PinReset: { next: GrownUpDestination };
+  PinReset: { next: GrownUpDestination; profileId?: string };
   /** sync/restore — rescue code / sign-in / file (F-RESTORE-001, F-SYNC-002). */
   Restore: { from: 'welcome' | 'settings' } | undefined;
   /** sync/save-progress — the Rescue Code, PIN-gated (F-RESTORE-001 §3.3). */
@@ -57,9 +63,11 @@ export type RootStackParamList = {
   /** sync/join-space — enter a class or family code (F-SPACE-001 §3.5). Not PIN-gated. */
   JoinSpace: undefined;
   /** paywall/upgrade — PIN-gated premium explainer (F-ENT-001 §3.5). */
-  Paywall: { from: 'journey' | 'settings' } | undefined;
+  Paywall: { from: 'journey' | 'settings' | 'library' } | undefined;
   ParentDashboard: undefined;
   Profile: undefined;
+  /** profile/edit — name, level, cub, who is learning (F-LEARN-001 §3.11). Behind the PIN when the gate is required. */
+  EditProfile: { profileId: string };
   Homework: undefined;
   Minigame: {
     questId: string;
@@ -111,7 +119,12 @@ export type MainTabParamList = {
    * (shown if the window widens to two panes). An id the catalogue does not have is ignored.
    */
   Journey: { episodeId?: string } | undefined;
-  Library: undefined;
+  /**
+   * `section`: open the Library on this section (F-STORY-004 §3.3), e.g.
+   * `navigate('Main', { screen: 'Library', params: { section: 'story-time' } })`. Read once, then
+   * cleared; a section that is not offered opens Cards.
+   */
+  Library: { section?: LibrarySectionId } | undefined;
 };
 
 declare global {

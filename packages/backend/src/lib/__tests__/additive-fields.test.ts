@@ -207,3 +207,45 @@ describe('preserveAdditiveFields (self-route entry, F-PLAN-002 section 3.5)', ()
     expect(out.summary).toBe(inc.summary);
   });
 });
+
+describe('preserveAdditiveFields (vocab entry, F-VOC-005 section 3.3 P6)', () => {
+  const slice = { v: 1, items: [{ id: 'vocab:sagwa-apple', box: 3 }], topics: [] };
+  const empty = { v: 1, items: [], topics: [] };
+  const counts = { collected: 1, strong: 1, topicsStarted: 1, topicsPracticed7d: 1, firstTryRate: 1, needsPractice: [] };
+  const field = ADDITIVE_FIELDS.find((f) => f.payloadKey === 'vocab');
+
+  it('lists vocab with its summary counterpart, appended after the earlier fields, and with no merge', () => {
+    expect(field).toBeDefined();
+    expect(field?.summaryKey).toBe('vocab');
+    expect(field?.merge).toBeUndefined();
+    expect(ADDITIVE_FIELDS.map((f) => f.payloadKey).slice(0, 4)).toEqual(['placements', 'stageDoneAt', 'selfRoute', 'vocab']);
+  });
+
+  it('treats only an absent key as unset: the empty slice is a value', () => {
+    expect(field?.isUnset(undefined)).toBe(true);
+    expect(field?.isUnset(empty)).toBe(false);
+    expect(field?.isUnset(slice)).toBe(false);
+  });
+
+  it('keeps the stored slice and summary.vocab when an old build re-uploads without the key', () => {
+    const out = preserveAdditiveFields(incoming({ quests: ['new'] }, { streakDays: 3 }), stored({ quests: ['old'], vocab: slice }, { vocab: counts }));
+    expect(out.payload).toEqual({ quests: ['new'], vocab: slice });
+    expect(out.summary).toEqual({ streakDays: 3, vocab: counts });
+  });
+
+  it('lets a sent slice replace the stored one, the empty slice of a reset included, with its own summary', () => {
+    const reset = preserveAdditiveFields(incoming({ vocab: empty }, { streakDays: 0 }), stored({ vocab: slice }, { vocab: counts }));
+    expect(reset.payload).toEqual({ vocab: empty });
+    expect(reset.summary).toEqual({ streakDays: 0 });
+    const next = { ...slice, items: [{ id: 'vocab:sagwa-apple', box: 4 }] };
+    const sent = preserveAdditiveFields(incoming({ vocab: next }, { vocab: { ...counts, strong: 2 } }), stored({ vocab: slice }, { vocab: counts }));
+    expect(sent.payload).toEqual({ vocab: next });
+    expect(sent.summary).toEqual({ vocab: { ...counts, strong: 2 } });
+  });
+
+  it('invents nothing when no slice is stored', () => {
+    const out = preserveAdditiveFields(incoming({ quests: [] }, {}), stored({ quests: [] }, { vocab: counts }));
+    expect(out.payload).toEqual({ quests: [] });
+    expect(out.summary).toEqual({});
+  });
+});

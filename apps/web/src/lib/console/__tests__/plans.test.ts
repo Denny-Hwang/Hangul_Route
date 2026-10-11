@@ -2,7 +2,7 @@ import { formatDate, getMessages, type UiLocale } from '@hangul-route/i18n';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { SpaceKind } from '@hangul-route/content-schema';
 import type { RosterLearner } from '../api';
-import { addDays, currentPlan, latestPublished, moveItem, memberKind, oneExplicitPerDay, planErrorText, planEveryone, planSummary, planReadout, planStatusLabel, readoutLine, spaceKey, spreadDates } from '../plans';
+import { addDays, currentPlan, latestPublished, moveItem, memberKind, oneExplicitPerDay, planErrorText, planEveryone, planReaches, planSummary, planReadout, planStatusLabel, readoutLine, rosterPlan, spaceKey, spreadDates } from '../plans';
 
 describe('plan helpers (F-PLAN-001 §3.5)', () => {
   it('spreads dates evenly and never twice on one day', () => {
@@ -24,6 +24,27 @@ describe('plan helpers (F-PLAN-001 §3.5)', () => {
     expect(items.map((i) => i.targetDate)).toEqual(['2026-09-21', '2026-09-22', undefined, '2026-09-23']);
     expect(moved).toBe(2);
     expect(oneExplicitPerDay([{ kind: 'quest', id: 'a', targetDate: '2026-09-21' }]).moved).toBe(0);
+  });
+
+  it('shows the newest plan for everyone on the roster, so a plan for one learner never buries it (F-PLC-001 section 3.9)', () => {
+    const plan = (id: string, publishedAt: string | null, targetLearnerIds: string[] | null, archivedAt: string | null = null) => ({
+      id,
+      title: id,
+      publishedAt,
+      archivedAt,
+      updatedAt: publishedAt ?? '2026-10-11T00:00:00.000Z',
+      targetLearnerIds,
+    });
+    const classPlan = plan('class', '2026-10-01T00:00:00.000Z', null);
+    const suggestion = plan('suggest', '2026-10-10T00:00:00.000Z', ['learner:sam']);
+    expect(rosterPlan([classPlan, suggestion])?.id).toBe('class');
+    expect(rosterPlan([suggestion, plan('older-class', '2026-09-01T00:00:00.000Z', null), classPlan])?.id).toBe('class');
+    // No published plan for everyone: the newest published plan of any kind.
+    expect(rosterPlan([suggestion, plan('class-draft', null, null), plan('class-gone', '2026-10-11T00:00:00.000Z', null, '2026-10-11T01:00:00.000Z')])?.id).toBe('suggest');
+    expect(rosterPlan([])).toBeNull();
+    expect(planReaches(classPlan, 'learner:ana')).toBe(true);
+    expect(planReaches(suggestion, 'learner:sam')).toBe(true);
+    expect(planReaches(suggestion, 'learner:ana')).toBe(false);
   });
 
   it('picks the latest published and the current plan, and labels status', () => {

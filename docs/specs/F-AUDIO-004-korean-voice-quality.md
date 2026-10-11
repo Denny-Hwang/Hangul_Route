@@ -401,6 +401,7 @@ Rules for the owner (plain language in the runbook; Korean text allowed because 
 - Batch 2 (optional, later): the 14 consonant names as `<id>-name`, e.g. `giyeok-name` = 기역.
 - **Vocabulary word list format** (`audio-recording-script.md` section generated from `content/vocab/**` when F-VOC lands; any `KoText` with an `audioRef` is a row): `file id | ko (what to say) | spokenKo if different | romanization | gloss | topic | note`, ordered by topic then id so a speaker records one topic per sitting. Phrases are spoken at natural speed, not word-by-word.
 - A short signed voice-use release from the speaker is kept with the files; `content/assets-license.csv` (docs/design/audio-plan.md §8) gets one row per clip (`asset_path, category=voice, source, license, attribution`).
+- **Privacy (amended in A-8, 2026-10-11; the repo is public):** the signed release and the raw recordings stay with the owner **outside the repo** (a private drive) and are never committed; only the processed MP3s are. The `attribution` column carries a credit the speaker agreed to (initials, a stage name, or `Hangul Route (voice-use release on file)`), never a legal name without that consent. `process-recordings.mjs` refuses an input folder inside the repo unless it is gitignored (`apps/mobile/recordings/` is).
 
 **Processing** (`apps/mobile/scripts/audio/process-recordings.mjs`, `ffmpeg` required locally, not in CI; command verified on a synthesized sample): per file, trim leading/trailing silence, add 0.3 s of silence each side, loudness-normalise, mono, 44.1 kHz, 64 kbps CBR MP3, strip metadata:
 
@@ -423,6 +424,15 @@ ffmpeg -i in.wav \
 
 Delivery: the owner sends the folder; a PR (`content(audio): jamo clips`) adds the processed files and re-runs `audio:map`. No code change is needed (§6, A-9).
 
+**As built in A-8 (amended 2026-10-11).** Where the code differs from the text above, this list is what ships:
+
+- *Take mark.* The owner marks the better take by renaming the file `<id>.2.m4a`; an unmarked file uses take 1.
+- *Final-consonant notes.* The generated script (its source is `lib.mjs`) splits the batchim note in two: the stop finals ㄱ ㄷ ㅂ get "end on the closed sound without letting it go; do not add a vowel after it", the held finals ㄴ ㄹ ㅁ ㅇ get "end on the final sound; do not add a vowel after it". Row 25 above is illustrative.
+- *Loudness top-up.* loudnorm needs about 3 s of audio, so one pass leaves a short syllable 1-5 dB under the target (the -17.0 LUFS sample above is one case). After that pass the script applies gain behind a -2 dBFS peak limiter at 4x oversampling until the clip is within 0.5 dB of -16 LUFS: at most 10 passes and 18 dB in all (synthesized plosive finals needed about 15 dB, open syllables 2-9 dB). Above 8 dB it asks for a listen; a clip still outside -16 +/- 1.5 LUFS is not written. `audio:check` stays the gate.
+- *Which files become clips.* A file the script does not name is skipped (`--allow-extra` keeps it). Batch 2 `<id>-name` clips are processed only with `--names`, once A-10 adds `nameAudioRef` to `jamo.ts`; until then `audio:map` would list clips no content refers to. One unreadable file is reported and the rest still run.
+- *Set totals.* The 400 KB total counts the 30 clips of the script only; the 1.5 MB total is checked for each vocabulary topic on its own.
+- *Listening after processing.* Besides the ear check on the raw takes, the six processed final-consonant clips are played back to back before the A-9 commit (limiting can smear an unreleased final).
+
 ### 3.12 Copy claims
 
 Until A-9 is merged **and** the offline e2e passes, change (English now, catalog keys when F-I18N-001 ships):
@@ -431,6 +441,7 @@ Until A-9 is merged **and** the offline e2e passes, change (English now, catalog
 - `apps/web/src/app/page.tsx:200` ("Plays offline after your first visit"), `:402` ("the whole Stage 1 plays offline"), `:542` ("Stage 1 plays offline"): keep "works offline" wording for the app, drop "plays" claims about sound.
 - `apps/mobile/public/manifest.webmanifest:4` and `pwa-postbuild.mjs:35` ("Works offline.") stay (the app does).
 - `docs/launch/maker-comment.md:110`: replace with "Pronunciation is your device's Korean voice today; recordings by a native speaker are in progress."
+- Launch-day paste copy (added in A-8): `docs/launch/faq.md` (Offline play answer), `docs/launch/reddit-seeding.md` (r/AsianParenting body) and `docs/launch/gallery-spec.md` (frame small text) say "works offline" for the app and make no "plays" claim about sound.
 - After A-9 + e2e, restore the strong claim and delete this section's qualifier in the same PR.
 
 ### 3.13 Accessibility, errors, offline

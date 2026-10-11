@@ -744,3 +744,113 @@ describe('summary.journey (F-ROUTE-001 section 3.12, R-8: tolerant, no preserve 
     expect((await getStored(r.learnerId, auth)).data.summary).not.toHaveProperty('journey');
   });
 });
+
+describe('vocab and summary.vocab (F-VOC-005 section 3.3, server first and the additive preserve rule)', () => {
+  beforeEach(() => db.reset());
+  const base = { schemaVer: 1, contentVer: '2026.10' };
+  const item = { id: 'vocab:sagwa-apple', first: '2026-10-10', seen: 2, right: 1, bestBox: 3, last: '2026-10-12', box: 2, due: '2026-10-15', at: '2026-10-12T09:00:00.000Z' };
+  const vocab = { v: 1, items: [item], topics: [{ topic: 'food', bestStars: 2, sessions: 3, last: '2026-10-12', bestCaught: 0 }] };
+  const counts = { collected: 1, strong: 1, topicsStarted: 1, topicsPracticed7d: 1, firstTryRate: 0.5, needsPractice: [] };
+  const withVocab = (profileId: string, slice: unknown) => ({ ...snapshotFor(profileId), vocab: slice });
+
+  type Stored = { data: { rev: number; snapshot: Record<string, unknown>; summary: Record<string, unknown> } };
+  async function getStored(learnerId: string, auth: Record<string, string>) {
+    const res = await app.request(`/api/sync/learners/${learnerId}/snapshot`, { headers: auth });
+    return (await res.json()) as Stored;
+  }
+
+  it('a PUT with vocab returns 200 and the GET returns the slice and summary intact', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    expect((await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withVocab(r.learnerId, vocab), summary: { ...summary, vocab: counts } })).status).toBe(200);
+    const got = await getStored(r.learnerId, auth);
+    expect(got.data.snapshot.vocab).toEqual(vocab);
+    expect(got.data.summary.vocab).toEqual(counts);
+  });
+
+  it('preserve rule: a PUT without vocab after one with it keeps the stored slice and summary.vocab', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withVocab(r.learnerId, vocab), summary: { ...summary, vocab: counts } });
+    const old = await put(r.learnerId, auth, { ...base, baseRev: 1, snapshot: snapshotFor(r.learnerId, [{ questId: 'quest:a', stars: 3 }]), summary: { ...summary, streakDays: 4 } });
+    expect(old.status).toBe(200);
+    const got = await getStored(r.learnerId, auth);
+    expect(got.data.rev).toBe(2);
+    expect(got.data.snapshot.vocab).toEqual(vocab);
+    expect((got.data.snapshot.quests as unknown[]).length).toBe(1);
+    expect(got.data.summary.vocab).toEqual(counts);
+    expect(got.data.summary.streakDays).toBe(4);
+  });
+
+  it('an explicit empty slice (a reset) replaces the stored one and the summary drops its block', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withVocab(r.learnerId, vocab), summary: { ...summary, vocab: counts } });
+    const empty = { v: 1, items: [], topics: [] };
+    expect((await put(r.learnerId, auth, { ...base, baseRev: 1, snapshot: withVocab(r.learnerId, empty), summary })).status).toBe(200);
+    const got = await getStored(r.learnerId, auth);
+    expect(got.data.snapshot.vocab).toEqual(empty);
+    expect(got.data.summary).not.toHaveProperty('vocab');
+  });
+
+  it('rejects a box out of range, more than 1,000 items or a bad day with 422 bad_request, storing nothing', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    const many = Array.from({ length: 1001 }, (_, i) => ({ ...item, id: `vocab:w${i}-x` }));
+    for (const slice of [
+      { ...vocab, items: [{ ...item, box: 9, bestBox: 9 }] },
+      { ...vocab, items: many },
+      { ...vocab, items: [{ ...item, first: 'yesterday' }] },
+    ]) {
+      const res = await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withVocab(r.learnerId, slice), summary });
+      expect(res.status).toBe(422);
+      expect((res.json as { error?: { code: string } }).error?.code).toBe('bad_request');
+    }
+    expect(await db.getSnapshot(r.learnerId)).toBeNull();
+  });
+
+  it('a malformed summary.vocab is dropped, not a 422: the slice and the rest of the PUT still sync', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    const bad = { ...counts, firstTryRate: 1.0000001 };
+    expect((await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withVocab(r.learnerId, vocab), summary: { ...summary, vocab: bad } })).status).toBe(200);
+    const got = await getStored(r.learnerId, auth);
+    expect(got.data.snapshot.vocab).toEqual(vocab);
+    expect(got.data.summary.vocab).toBeUndefined();
+  });
+
+  it('rejects a duplicate word id, a non-ISO `at` or a day that does not exist with 422', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    for (const slice of [
+      { ...vocab, items: [item, { ...item, seen: 5 }] },
+      { ...vocab, items: [{ ...item, at: 'zzz' }] },
+      { ...vocab, items: [{ ...item, due: '2026-13-45' }] },
+    ]) {
+      const res = await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withVocab(r.learnerId, slice), summary });
+      expect(res.status).toBe(422);
+    }
+    expect(await db.getSnapshot(r.learnerId)).toBeNull();
+  });
+
+  it('accepts an old-shaped snapshot (no vocab) exactly as before, with no vocab key stored', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    expect((await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: snapshotFor(r.learnerId), summary })).status).toBe(200);
+    const got = await getStored(r.learnerId, auth);
+    expect(got.data.snapshot).not.toHaveProperty('vocab');
+    expect(got.data.summary).not.toHaveProperty('vocab');
+  });
+
+  it('a 409 returns the stored vocab so the client can merge it', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withVocab(r.learnerId, vocab), summary: { ...summary, vocab: counts } });
+    const stale = await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: snapshotFor(r.learnerId), summary });
+    expect(stale.status).toBe(409);
+    const data = stale.json.data as { rev: number; snapshot: { vocab?: unknown }; summary: { vocab?: unknown } };
+    expect(data.rev).toBe(1);
+    expect(data.snapshot.vocab).toEqual(vocab);
+    expect(data.summary.vocab).toEqual(counts);
+  });
+});

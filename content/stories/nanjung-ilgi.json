@@ -2,7 +2,7 @@
   "v": 1,
   "id": "story:nanjung-ilgi",
   "state": "ready",
-  "contentVer": 2,
+  "contentVer": 3,
   "title": {
     "ko": "이순신 장군의 난중일기",
     "romanization": "Isunsin janggunui Nanjungilgi",
@@ -217,7 +217,7 @@
                 "s": 0.7
               }
             ],
-            "altEn": "At night in a wooden room the commander stands at his desk by lamplight, with his diary and folded papers."
+            "altEn": "In a wooden room the commander stands at his desk by lamplight, with his diary and folded papers."
           }
         },
         {
