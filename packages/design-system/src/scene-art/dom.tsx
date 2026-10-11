@@ -7,7 +7,8 @@
  */
 import React from 'react';
 import { borderWidth, colors, radii } from '../tokens';
-import type { DrawItem } from './draw';
+import { drawScene, type DrawItem } from './draw';
+import { HOYA_BOX, HOYA_POSES, type HoyaPose } from './hoya';
 import { SCENE_ART_REGISTRY } from './registry';
 import type { Registry } from './resolve';
 import { FALLBACK_TINT_OPACITY, storySceneModel, type StorySceneModelInput } from './story-scene-model';
@@ -52,6 +53,40 @@ export function SceneSvg({ registry = SCENE_ART_REGISTRY, ...input }: SceneSvgPr
       ) : (
         <rect width={SCENE_CANVAS.width} height={SCENE_CANVAS.height} rx={radii.lg} fill={colors.theme[model.theme]} opacity={FALLBACK_TINT_OPACITY} />
       )}
+    </svg>
+  );
+}
+
+export interface HoyaSvgProps {
+  pose: HoyaPose;
+  /** Side of the square: px, or a percentage of the parent's width so he scales with it. Defaults to Hoya's own 128-unit box. */
+  size?: number | `${number}%`;
+  /** Accessible name. Without one the drawing is decorative (hidden from assistive technology). */
+  label?: string;
+}
+
+/**
+ * Hoya on his own, for web pages that are not story scenes (the public site): the
+ * same `hoya:<pose>` scene-art item, placed at its anchor so his 128-unit box is
+ * the viewBox. Tokens only, through the shared drawing list.
+ */
+export function HoyaSvg({ pose: poseIn, size = HOYA_BOX.w, label }: HoyaSvgProps): React.ReactElement {
+  const pose: HoyaPose = HOYA_POSES.includes(poseIn) ? poseIn : 'idle';
+  const { items } = drawScene({ setting: '', layers: [{ ref: `hoya:${pose}`, x: HOYA_BOX.w / 2, y: HOYA_BOX.h }], altEn: '' }, SCENE_ART_REGISTRY);
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={size}
+      height={size}
+      viewBox={`0 0 ${HOYA_BOX.w} ${HOYA_BOX.h}`}
+      role={label ? 'img' : undefined}
+      aria-label={label}
+      aria-hidden={label ? undefined : true}
+      data-pose={pose}
+    >
+      {items.map((item) => (
+        <Item key={item.key} item={item} />
+      ))}
     </svg>
   );
 }
