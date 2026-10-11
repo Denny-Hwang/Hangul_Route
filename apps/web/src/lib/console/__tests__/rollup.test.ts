@@ -16,7 +16,6 @@ const learner = (id: string, over: Partial<RosterLearner> = {}, summary: Partial
     summary === null
       ? null
       : {
-          schemaVersion: 1,
           lastActiveAt: '2026-09-21T00:00:00.000Z',
           streakDays: 0,
           stage1: { questsDone: 3, questsTotal: 11, anchorAccuracy: null },

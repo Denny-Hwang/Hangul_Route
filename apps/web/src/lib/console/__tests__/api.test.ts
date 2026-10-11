@@ -1,10 +1,17 @@
-import { describe, expect, it, vi } from 'vitest';
-import { createConsoleApi } from '../api';
+import type { TeacherVisibleSummaryKey } from '@hangul-route/content-schema';
+import { describe, expect, expectTypeOf, it, vi } from 'vitest';
+import { createConsoleApi, type RosterLearner } from '../api';
 
 const json = (status: number, body: unknown) => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
 const space = { id: 'space:c', kind: 'class', name: 'A', parentSpaceId: null, settings: { consentMode: 'parent', anonymizeRoster: false }, archivedAt: null, createdAt: 't' };
 
 describe('console api (F-CONSOLE-001)', () => {
+  it('types roster summaries as the teacher allow-list: no stage1Anchor, no schemaVersion (F-SPACE-002 T-1a)', () => {
+    expectTypeOf<keyof NonNullable<RosterLearner['summary']>>().toEqualTypeOf<TeacherVisibleSummaryKey>();
+    expectTypeOf<NonNullable<RosterLearner['summary']>>().not.toHaveProperty('stage1Anchor');
+    expectTypeOf<NonNullable<RosterLearner['summary']>>().not.toHaveProperty('schemaVersion');
+  });
+
   it('sends the bearer and maps each method', async () => {
     const fetchImpl = vi.fn<typeof fetch>()
       .mockResolvedValueOnce(json(200, { data: { spaces: [{ space, role: 'owner', counts: { learners: 1, accounts: 1, classes: 0 }, joinCode: 'K7M2X9', joinCodeExpiresAt: 't' }] } }))

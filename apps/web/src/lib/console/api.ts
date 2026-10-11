@@ -1,4 +1,14 @@
-import type { Entitlement, LearnerLevelId, PlanItem, ProgressSummary, Promo, PurchasablePlanKey, SpaceKind, SpaceRole } from '@hangul-route/content-schema';
+import type {
+  Entitlement,
+  LearnerLevelId,
+  PlanItem,
+  ProgressSummary,
+  Promo,
+  PurchasablePlanKey,
+  SpaceKind,
+  SpaceRole,
+  TeacherVisibleSummaryKey,
+} from '@hangul-route/content-schema';
 
 /**
  * Console transport for /api/spaces — F-CONSOLE-001. Bearer = the console
@@ -22,14 +32,21 @@ export interface SpaceListItem {
   joinCodeExpiresAt: string | null;
 }
 
+/**
+ * A roster summary as the Worker sends it: projected to the teacher allow-list,
+ * `planProgress` holding this space's plans only (F-SPACE-002 T-1a, section 4.11).
+ */
+export type RosterSummary = Pick<ProgressSummary, TeacherVisibleSummaryKey>;
+
 export interface RosterLearner {
+  /** Opaque learner id: keys the row, targets plans, issues Rescue Codes. Never shown. */
   id: string;
   displayName: string;
   ageGroup: LearnerLevelId;
   avatar: string;
   joinedAt: string;
   lastActiveAt: string;
-  summary: ProgressSummary | null;
+  summary: RosterSummary | null;
   lastSyncedAt: string | null;
 }
 

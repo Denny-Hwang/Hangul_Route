@@ -152,6 +152,16 @@ export const TEACHER_VISIBLE_ROSTER_FIELDS: Readonly<Record<string, TeacherVisib
 };
 
 /**
+ * Roster fields that address a row and are never shown (T-1a). `id` is the
+ * opaque learner id the console needs to key the list, target a plan and
+ * issue a Rescue Code; it carries no progress, so it maps to no consent item.
+ * A destination class receives it only after a move executes: until then its
+ * transfer views are addressed by the transfer id (T8).
+ */
+export const TEACHER_ROSTER_ADDRESS_FIELDS = ['id'] as const;
+export type TeacherRosterAddressField = (typeof TEACHER_ROSTER_ADDRESS_FIELDS)[number];
+
+/**
  * Locales that have a consent text. English only for now; Korean (formal polite style, F-I18N-001)
  * and Spanish are added with the i18n layer, and every locale is
  * counsel-reviewed before the flag is enabled (flip gate G2). The Worker
