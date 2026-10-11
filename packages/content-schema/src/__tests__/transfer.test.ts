@@ -44,6 +44,10 @@ import {
   TransferSlotSchema,
   TransferStatusSchema,
   TransferStepStateSchema,
+  InboxPlanSchema,
+  LearnerMembershipSchema,
+  SyncInboxSchema,
+  TierSourceSchema,
   lenientArray,
 } from '../index';
 
@@ -287,5 +291,82 @@ describe('InboxTransferSchema is lenient on the wire', () => {
     expect(InboxTransferSchema.safeParse(noId).success).toBe(false);
     expect(InboxTransferSchema.safeParse({ ...inboxTransfer, id: 'x' }).success).toBe(false);
     expect(InboxTransferSchema.safeParse({ ...inboxTransfer, to: { spaceId: 'space:b', name: 'B' } }).success).toBe(false);
+  });
+});
+
+/** SyncInboxSchema exactly as it was before F-SPACE-002 (what installed apps run today). */
+const PreTransferSyncInboxSchema = z.object({
+  rev: z.number().int().nonnegative(),
+  plans: z.array(InboxPlanSchema),
+  memberships: z.array(LearnerMembershipSchema),
+  tier: z.enum(['free', 'premium']),
+  tierSource: TierSourceSchema.nullable().default(null),
+  tierValidUntil: z.string().nullable().default(null),
+  serverTime: z.string(),
+});
+
+describe('SyncInboxSchema transfer additions (F-SPACE-002 §4.4)', () => {
+  const membership = { spaceId: 'space:a', kind: 'class', name: 'Sunday Class A', role: 'student', joinedAt: 't' };
+  const plan = {
+    id: 'plan:1',
+    spaceId: 'space:a',
+    spaceKind: 'class',
+    spaceName: 'Sunday Class A',
+    title: 'Week 1',
+    items: [{ kind: 'quest', id: 'quest:stage1-letters-q1' }],
+    publishedAt: 't',
+    updatedAt: 't',
+  };
+  const oldWorker = { rev: 2, plans: [plan], memberships: [membership], tier: 'premium', serverTime: 't' };
+  const newWorker = {
+    ...oldWorker,
+    transfersEnabled: true,
+    transferDeviceConsent: false,
+    selfManaged: true,
+    transfers: [inboxTransfer],
+  };
+
+  it('an installed app (pre-change schema) still parses an inbox that has the new fields', () => {
+    const parsed = PreTransferSyncInboxSchema.safeParse(newWorker);
+    expect(parsed.success).toBe(true);
+    expect(parsed.data?.memberships).toEqual([membership]);
+    expect(parsed.data?.plans).toHaveLength(1);
+    expect(parsed.data?.tier).toBe('premium');
+  });
+
+  it('a new app reads an old Worker inbox with everything off and empty', () => {
+    const inbox = SyncInboxSchema.parse(oldWorker);
+    expect(inbox.transfersEnabled).toBe(false);
+    expect(inbox.transferDeviceConsent).toBe(false);
+    expect(inbox.selfManaged).toBe(false);
+    expect(inbox.transfers).toEqual([]);
+  });
+
+  it('parses the new fields', () => {
+    const inbox = SyncInboxSchema.parse(newWorker);
+    expect(inbox.transfersEnabled).toBe(true);
+    expect(inbox.selfManaged).toBe(true);
+    expect(inbox.transfers).toEqual([inboxTransfer]);
+  });
+
+  it('a malformed transfer element never costs memberships, plans or tier', () => {
+    const inbox = SyncInboxSchema.parse({ ...newWorker, transfers: [{ id: 'transfer:x' }, inboxTransfer, 'junk'] });
+    expect(inbox.transfers).toEqual([inboxTransfer]);
+    expect(inbox.memberships).toEqual([membership]);
+    expect(inbox.plans).toHaveLength(1);
+    expect(inbox.tier).toBe('premium');
+  });
+
+  it('an unknown status string still yields memberships, plans and tier', () => {
+    const inbox = SyncInboxSchema.parse({ ...newWorker, transfers: [{ ...inboxTransfer, status: 'on_hold' }] });
+    expect(inbox.transfers[0]?.status).toBe('on_hold');
+    expect(TransferStatusSchema.safeParse(inbox.transfers[0]?.status).success).toBe(false);
+    expect(inbox.memberships).toEqual([membership]);
+    expect(inbox.plans).toHaveLength(1);
+    expect(inbox.tier).toBe('premium');
+  });
+
+  it('a non-array transfers value reads as empty', () => {
+    expect(SyncInboxSchema.parse({ ...newWorker, transfers: null }).transfers).toEqual([]);
   });
 });

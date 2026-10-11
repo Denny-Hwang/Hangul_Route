@@ -151,7 +151,11 @@ describe('platform/sync-api — spaces (F-SPACE-001)', () => {
     expect(await api.leaveSpace('space:c', 'profile:a', creds)).toEqual({ status: 'ok', left: true });
     expect(await api.leaveSpace('space:c', 'profile:a', creds)).toEqual({ status: 'error', code: 'http_404' });
     expect(await api.leaveSpace('space:c', 'profile:a', creds)).toEqual({ status: 'error', code: 'network' });
-    expect(await api.getInbox('profile:a', creds)).toEqual({ status: 'ok', inbox: { ...inbox, tierSource: null, tierValidUntil: null } });
+    // An inbox from a Worker without the F-SPACE-002 fields reads with transfers off and empty.
+    expect(await api.getInbox('profile:a', creds)).toEqual({
+      status: 'ok',
+      inbox: { ...inbox, tierSource: null, tierValidUntil: null, transfersEnabled: false, transferDeviceConsent: false, selfManaged: false, transfers: [] },
+    });
     expect(await api.getInbox('profile:a', creds)).toEqual({ status: 'error', code: 'invalid' });
     expect(await api.getInbox('profile:a', creds)).toEqual({ status: 'error', code: 'http_401' });
     expect(await api.getInbox('profile:a', creds)).toEqual({ status: 'error', code: 'network' });

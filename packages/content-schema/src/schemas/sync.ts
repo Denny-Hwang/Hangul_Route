@@ -6,6 +6,7 @@ import { InboxPlanSchema } from './plan';
 import { LearnerMembershipSchema } from './space';
 import { LearnerLevelIdSchema } from './learner-level';
 import { PlacementSummarySchema } from './placement';
+import { InboxTransferSchema, lenientArray } from './transfer';
 
 /**
  * Sync contracts — F-SYNC-001. Shared by the Worker (validation) and the
@@ -82,6 +83,15 @@ export const SyncInboxSchema = z.object({
   /** Cached premium is honoured until this instant when offline (7-day grace). */
   tierValidUntil: z.string().nullable().default(null),
   serverTime: z.string(),
+  /*
+   * Class transfer (F-SPACE-002 §4.4, T15). Additive and lenient: an old Worker
+   * omits them (defaults: off, empty) and one bad `transfers` element is
+   * dropped instead of failing the whole inbox (plans and tier survive).
+   */
+  transfersEnabled: z.boolean().default(false),
+  transferDeviceConsent: z.boolean().default(false),
+  selfManaged: z.boolean().default(false),
+  transfers: lenientArray(InboxTransferSchema).default([]),
 });
 export type SyncInbox = z.infer<typeof SyncInboxSchema>;
 
