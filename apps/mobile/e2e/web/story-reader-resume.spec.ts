@@ -127,6 +127,8 @@ test.describe('story resume (fixture bundle)', () => {
       byStory: { [STORY]: { level: 'read-along', sceneIndex: 2, updatedAt: '2026-10-11T09:00:00.000Z' } },
     });
     await expect(page.getByText('Hi, Dami!')).toBeVisible();
+    // The seeded read-along bookmark is really there, so ignoring it is a choice, not a missed seed.
+    await expect.poll(async () => (await bookmarksOf(page, id))?.byStory[STORY]).toMatchObject({ level: 'read-along', sceneIndex: 2 });
 
     await openQuest(page, true);
     await expect(page.getByRole('heading', { name: 'Story time' })).toBeVisible();
@@ -161,7 +163,7 @@ test.describe('story resume (fixture bundle)', () => {
     await page.getByRole('button', { name: 'Skip replay' }).click();
 
     // The bookmark is still there until the score is written.
-    expect((await bookmarksOf(page, id))?.byStory[STORY]).toBeDefined();
+    await expect.poll(async () => (await bookmarksOf(page, id))?.byStory[STORY]).toMatchObject({ level: 'listen' });
     await page.getByRole('button', { name: 'See results' }).click();
     await expect.poll(async () => (await bookmarksOf(page, id))?.byStory).toEqual({});
   });
