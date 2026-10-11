@@ -19,7 +19,7 @@ Top to bottom, one scrolling reading column:
 3. Hoya intro bubble (one Hoya on the page).
 4. **Tale rows**: cover thumbnail, English and Korean titles, a state line, actions by state: new **Start** · in progress **Keep reading** plus ghost **Start over** · finished **Play again** (secondary) plus ghost **Read it again**. Only the first new or in-progress row's button is large.
 5. **Words in this story**: keyword chips (Korean, romanization, gloss) with speakers.
-6. **Culture notes: 2 found** row (only when at least one).
+6. **Culture notes: N found** row (only when at least one; no bundled story has culture notes yet, F-STORY-002 §3.7, so the frames below leave it out).
 7. **Cards in this episode**: earned cards (art, title, Korean, romanization); not earned: a silhouette with the rarity border and no title.
 8. Ghost **Sources** row (grown-up).
 
@@ -39,7 +39,7 @@ UI strings come from `packages/i18n` (`learner.storyShelf`, `.episode`); English
 - Pills: **"Story Time"**, **"Culture"**, **"4 min"**
 - Rows: **"New"**, **"Keep reading"**, **"Finished"**; buttons **"Start"**, **"Keep reading"**, **"Start over"**, **"Play again"**, **"Read it again"**
 - **"Words in this story"**, speaker **"Hear <romanization>"**
-- **"Culture notes: 2 found"**
+- **"Culture notes: N found"** (a future story with notes)
 - **"Sources"**
 - Error: **"Episode not found."** and **"Back"**
 
@@ -60,7 +60,7 @@ shadow, primary brand.primary (hero size, the only large button), secondary and 
 buttons per the Button brief, not-earned card silhouette surface.sunken with a rarity.*
 border, text text.primary / text.secondary. Controls at least 64 tall.
 
-Frame 1 (new): back arrow; pills "Story Time", "Rites", "4 min"; title "Hoya's Seollal
+Frame 1 (new): back arrow; pills "Story Time", "Holidays & Traditions", "4 min"; title "Hoya's Seollal
 Morning", Korean 호야의 설날 아침 / Hoyaui Seollal achim; Hoya the tiger in a small intro
 bubble; one tale row (cover thumbnail, titles, "New", a large "Start"); "Words in this
 story" with chips 설날 seollal, 설빔 seolbim, 세배 sebae, 떡국 tteokguk (each with a
@@ -68,7 +68,7 @@ speaker); "Cards in this episode" with one silhouette card (no title); a ghost r
 "Sources".
 Frame 2 (in progress): the row shows "Keep reading" (large) and a ghost "Start over".
 Frame 3 (finished): the row shows three stars, "Finished", a secondary "Play again" and a
-ghost "Read it again"; "Culture notes: 2 found" with a chevron; the earned card with art
+ghost "Read it again"; the earned card with art
 and its title.
 
 Anti-patterns: more than one large button, a stage pill on a shelf story, card titles on

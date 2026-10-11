@@ -17,7 +17,8 @@
 | `onboarding/welcome.md` · `onboarding/first-quest-preview.md` | S | F-PROF-001 |
 | `profiles/picker.md` · `pin-entry.md` · `switch-button.md` · `create-parent.md` · `create-learner.md` | S | F-PROF-001 |
 | `home/todays-mission.md` · `homework/list.md` | S | F-HW-001 |
-| `home/story-time-card.md` · `episode/detail-story.md` | R | F-STORY-004 §3.6 · §3.7 (PR 4.0; brief `screens/25-story-episode-detail`; Home card in PR 4.4a) |
+| `home/story-time-card.md` | S | F-STORY-004 §3.7 (PR 4.0; built in PR 4.4a) |
+| `episode/detail-story.md` | R | F-STORY-004 §3.6 (PR 4.0; brief `screens/25-story-episode-detail`; screen in PR 4.6) |
 | `journey/grid.md` · `episode/detail.md` | S | 02 §1 · 04 · 05 |
 | `quest/player.md` · `minigame/shell.md` · `minigame/families.md` | S | content-skill · 06 |
 | `minigame/build-letter.md` | R | F-QUEST-002 §3.7 (Q-7a) |

@@ -57,7 +57,7 @@ Hangul Route
 │   │    ├─ Picker · PIN entry · Switch button
 │   │    └─ role: learner | parent  (+ teacher | admin 예약)   [P]
 │   ├─ A3. Today (홈 = 3-card mission)                  [S] F-HW-001
-│   │    ├─ Story time card (① continue · next · again → explore 순서, 하루 고정) [R] F-STORY-004 §3.7
+│   │    ├─ Story time card (① continue · next · again → explore 순서, 하루 고정) [S] F-STORY-004 §3.7 (PR 4.4a)
 │   │    ├─ ① Continue · ② New/Assigned · ③ Story/Review
 │   │    └─ Homework list (배정 큐)                       [S]
 │   ├─ A4. Journey (격자 7 Stage × 5 Theme)              [S] 02 §1
@@ -145,7 +145,7 @@ Hangul Route
 | `profiles/pin-entry` | (modal) | 부모 확인 | S | F-PROF-001 | ✓ |
 | `profiles/switch-button` | (component) | 세션 중 전환 | S | F-PROF-001 | ✓ |
 | `home/todays-mission` (alias `home/home`) | Main/Home | 오늘 할 3가지 | S | F-HW-001 | ✓ |
-| `home/story-time-card` | Main/Home (mission card ①/③) | 읽던 이야기 이어 읽기 · 다음 이야기 · 다시 읽기 — 하루 고정, 이야기 없으면 explore 카드 | R | F-STORY-004 §3.7 | ✓ |
+| `home/story-time-card` | Main/Home (mission card ①/③) | 읽던 이야기 이어 읽기 · 다음 이야기 · 다시 읽기 — 하루 고정, 이야기 없으면 explore 카드 | S | F-STORY-004 §3.7 | ✓ |
 | `homework/list` | Homework | 배정된 숙제 큐 | S | F-HW-001 | NEW |
 | `journey/grid` | Main/Journey | 격자에서 에피소드 고르기 | S | 02 §1, 04 | NEW |
 | `episode/detail` | EpisodeDetail | 퀘스트 목록 + 보상 카드 미리보기 | S | 05 | NEW |

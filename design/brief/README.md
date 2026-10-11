@@ -89,6 +89,7 @@ design/brief/
 - [`illustrations/heritage-card-art.md`](./illustrations/heritage-card-art.md) — Stage 1 카드 30장.
 - `components/*` — Button / Card / Tile / HoyaBubble / Progress / StarRow / Pill / Heading / Screen / Icon (10개).
 - `screens/*` — onboarding 3 + main 4 + episode/quest/results 3 + minigames 6 + library/card 2 + parent 2 = 20개.
+- 이야기 선반 (F-STORY-004 PR 4.0): [`screens/23-library-stories.md`](./screens/23-library-stories.md) · [`screens/24-culture-notes.md`](./screens/24-culture-notes.md) · [`screens/25-story-episode-detail.md`](./screens/25-story-episode-detail.md).
 
 ## Out of scope (이 PR)
 

@@ -34,7 +34,7 @@ UI strings come from `packages/i18n` (`learner.storyShelf.cultureNotes`); Englis
 - **"Where this comes from"**; source line **"<title>, <publisher>"**
 - **"Hear <romanization>"** (speaker label)
 - Empty: **"Finish a story to find your first culture note."**, **"Go to Story Time"**
-- Library card: **"Culture notes"**, **"5 found"**; episode line **"Culture notes: 2 found"**
+- Library card: **"Culture notes"**, **"5 found"**; episode line **"Culture notes: N found"**
 
 Note titles, bodies, terms and sources come from the story data.
 
@@ -54,10 +54,10 @@ theme.letters, theme.life, theme.rites, theme.nature, theme.crafts (short bars b
 headings only), primary brand.primary. Buttons at least 64 tall.
 
 Frame 1 (list): back arrow, title "Culture notes", pill "5 found"; heading "Holidays &
-Traditions" with a theme.rites accent bar; a note card: title "The New Year bow", a
-two-sentence body about bowing to elders on Lunar New Year, the term 세배 / sebae / New
-Year bow to elders with a speaker icon, a row "From the story: Hoya's Seollal Morning"
-with a chevron, a collapsed row "Where this comes from". Below, heading "Letters & Books"
+Traditions" with a theme.rites accent bar; a hypothetical note card (no bundled story has
+culture notes yet, so this is placeholder content, not a real note): title "<Note title>",
+a two-line placeholder body, a Korean term with romanization, gloss and a speaker icon, a
+row "From the story: <story title>" with a chevron, a collapsed row "Where this comes from". Below, heading "Letters & Books"
 and the top of another card.
 Frame 2: the same card with "Where this comes from" expanded: two plain-text lines
 ("<title>, <publisher>"), no links.

@@ -28,7 +28,7 @@ One primary action: the button of the first **new** or **in-progress** row. Ever
 ```
 ┌──────────────────────────────────┐
 │ [<]                               │
-│ [Story Time] [Rites] [4 min]      │  <- pills; no stage pill for a shelf story
+│ [Story Time] [Holidays & Traditions] [4 min]  <- pills (theme title); no stage pill for a shelf story
 │ English title (display)           │     (a book episode shows its stage title instead)
 │ ~~ ko / romanization ~~           │
 │ [Hoya bubble: intro]              │  <- one Hoya on the screen
@@ -39,7 +39,7 @@ One primary action: the button of the first **new** or **in-progress** row. Ever
 │                                   │
 │ Words in this story               │  <- keyword chips, each with a speaker
 │ [~~ 설날 ~~ spk] [~~ 세배 ~~ spk]   │     (single-story pages only)
-│ Culture notes: 2 found       [ > ]│  <- only when >= 1
+│ Culture notes: N found       [ > ]│  <- only when >= 1 (no bundled story has notes yet)
 │ Cards in this episode             │
 │ [art + title] [silhouette]        │  <- earned: art, title, Korean; not earned: silhouette,
 │                                   │     rarity border, no title (no spoilers)

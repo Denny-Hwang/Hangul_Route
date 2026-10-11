@@ -1,8 +1,8 @@
-# Home / Story time card: today's story among the three missions (wireframe v2)
+# Home / Story time card: today's story among the three missions (wireframe v2, built in PR 4.4a)
 
 Spec: `docs/specs/F-STORY-004-story-shelf-home-library.md` §3.7 (Home "Story time" card, preference chain, `pickStoryForHome`), §3.8 (continue where you left off); amends `docs/specs/F-HW-001-homework-page.md` §3.1 and §9.2; base screen `home/todays-mission.md`
 Audience: anyone learning Hangul, any age (CLAUDE.md §1). A story card is an invitation, never a chore: no counts of unread stories, no "behind".
-Code: pure `apps/mobile/src/logic/homework/mission-builder.ts` (`explore` kind, story fields) and `apps/mobile/src/logic/story/story-pick.ts` (built in PR 4.3b); card wiring in `screens/home/HomeScreen.tsx` (PR 4.4a, open as #260). Two-column Home on wide windows: `layout/wide.md` B.
+Code (built, PRs 4.3b and 4.4a): pure `apps/mobile/src/logic/homework/mission-builder.ts` (`explore` kind, story fields, the story chain, `planHomeStoryOpen`) and `apps/mobile/src/logic/story/story-pick.ts` (`pickStoryForHome`, `storyLockFor`); card wiring and the 48 dp cover (`StoryScene variant="thumb"`, decorative) in `screens/home/HomeScreen.tsx`. Two-column Home on wide windows: `layout/wide.md` B.
 Notation: `[[ X ]]` the one primary action, `[ X ]` secondary, `(n)` a mission slot number, `[cover 48]` a small `StoryScene` thumbnail.
 
 Promoted by F-STORY-004 PR 4.0 from panel F of the one-file draft (`library/stories.md`).
@@ -41,7 +41,9 @@ F2  No story playable
 
 - Slot ① order: continue story → best replay quest → next story → read-again story → explore. Slot ② unchanged (grid episodes only). Slot ③: the daily test when available, else next story → best remaining replay → read-again story → explore. Day one therefore shows two different stories and the first quest.
 - A card flips to the collected look when its quest completes **today**; a "Read it again" card is never collected or scored.
-- Pinned all day: the target story does not change; only the reason line may refresh (a "A short story" card becomes "Keep reading" after the learner leaves mid-story).
+- Pinned all day: the target story does not change; only the reason line of a next or continue card may refresh ("A short story" becomes "Keep reading" after the learner leaves mid-story, and "Keep reading" reads "A short story" again once that story is finished today or its bookmark is gone). A "Read it again" card keeps its reason.
+- The replay link of slots 1 and 3 reads Journey (grid) quests only: a finished shelf story never comes back as a scored "One more go" card, only as the unscored "Read it again" card (decided in PR 4.4a: a scored redo of a story would read as a correction).
+- Production gate: the card reads only ready, reviewed stories; while every bundled story is still a draft there is no story card and slots 1 and 3 fall back to a replay or the explore card (F2).
 - The cover thumbnail replaces the icon when the story has cover art.
 
 ---
@@ -71,9 +73,9 @@ Exit to: `quest/player` (resumed at the bookmarked scene for continue) · `story
 
 ## Data needs
 
-- reads: story index entries, bookmarks (`story:bookmarks:<profileId>`), completed quests with `completedAt`, replay candidates, the pinned plan of the day (F-HW-001 §3.2), `isLocked(storyId)`
+- reads: story index entries (`defaultStoryIndex()`: ready, reviewed stories only), bookmarks (`story:bookmarks:<profileId>`), completed quests with `completedAt`, replay candidates (grid quests only), the pinned plan of the day (F-HW-001 §3.2), `isLocked(entry)` (`storyLockFor`)
 - writes: the pinned plan (existing); nothing story-specific
-- telemetry: `home.story_card.shown` `{ storyId, reason }` once per profile per day when a plan with a story card is first pinned; `story.opened` `{ storyId, source: 'home', mode }`
+- telemetry: `home.story_card.shown` `{ storyId, reason }` once per profile, day and app session when a plan with a story card is first pinned (a reload on the same day may send it again); `story.opened` `{ storyId, source: 'home', mode }`
 
 ## Open questions
 
