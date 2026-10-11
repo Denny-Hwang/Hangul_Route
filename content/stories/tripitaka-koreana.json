@@ -1,11 +1,11 @@
 {
   "v": 1,
   "id": "story:tripitaka-koreana",
-  "state": "draft",
+  "state": "ready",
   "contentVer": 1,
   "title": {
     "ko": "팔만대장경",
-    "romanization": "",
+    "romanization": "Palmandaejanggyeong",
     "en": "Eighty Thousand Woodblocks"
   },
   "summaryEn": "At Haeinsa Temple, Hoya discovers the Tripitaka Koreana: more than 80,000 woodblocks of Buddhist scriptures carved between 1237 and 1248, still kept safe today.",
@@ -29,7 +29,7 @@
     "advisory": [
       "war"
     ],
-    "advisoryNoteEn": "Briefly mentions a war from Korea's history."
+    "advisoryNoteEn": "Mentions that Mongol armies invaded Korea long ago. No fighting is shown."
   },
   "keywords": [
     {
@@ -116,7 +116,9 @@
           ],
           "framing": false,
           "approximations": [],
-          "artBrief": "Hoya on a forest path up a green mountain toward a temple with tiled roofs; inset: a long dim hall with tall wooden shelves packed with dark wooden blocks seen through vertical window slats."
+          "artBrief": "Hoya on a forest path up a green mountain toward a temple with tiled roofs; inset: a long dim hall with tall wooden shelves packed with dark wooden blocks seen through vertical window slats.",
+          "captionEn": "Hoya climbs to Haeinsa Temple",
+          "artPending": true
         },
         {
           "id": "s2",
@@ -133,7 +135,9 @@
           ],
           "framing": false,
           "approximations": [],
-          "artBrief": "Rows of wooden printing blocks on shelves, each with small end pieces; warm light falls across them; Hoya stands small and amazed in the aisle. Block faces shown as texture, no readable characters."
+          "artBrief": "Rows of wooden printing blocks on shelves, each with small end pieces; warm light falls across them; Hoya stands small and amazed in the aisle. Block faces shown as texture, no readable characters.",
+          "captionEn": "The Tripitaka Koreana woodblocks",
+          "artPending": true
         },
         {
           "id": "s3",
@@ -151,7 +155,9 @@
           ],
           "framing": false,
           "approximations": [],
-          "artBrief": "Calm workshop scene: carvers in Goryeo clothing bent over wooden boards with small knives, focused and peaceful; distant mountains outside. No fighting, no soldiers."
+          "artBrief": "Calm workshop scene: carvers in Goryeo clothing bent over wooden boards with small knives, focused and peaceful; distant mountains outside. No fighting, no soldiers.",
+          "captionEn": "Carved in Goryeo, hoping for protection",
+          "artPending": true
         },
         {
           "id": "s4",
@@ -168,11 +174,13 @@
           ],
           "framing": false,
           "approximations": [],
-          "artBrief": "Hoya sitting on the floor counting on his paws, dizzy little stars circling his head, with endless shelves of blocks behind him."
+          "artBrief": "Hoya sitting on the floor counting on his paws, dizzy little stars circling his head, with endless shelves of blocks behind him.",
+          "captionEn": "More than 80,000 blocks!",
+          "artPending": true
         },
         {
           "id": "s5",
-          "narrationEn": "Each block, a gyeongpan, is carved on both sides. Most are made of wild cherry wood, coated with lacquer to protect them, and fitted with metal plates at the corners.",
+          "narrationEn": "Each block, a {kw:gyeongpan}, is carved on both sides. Most are made of wild cherry wood, coated with lacquer to protect them, and fitted with metal plates at the corners.",
           "keyword": {
             "id": "namu",
             "ko": "나무",
@@ -185,7 +193,9 @@
           ],
           "framing": false,
           "approximations": [],
-          "artBrief": "A single woodblock shown large, tilted to reveal both carved faces as abstract texture, dark lacquer sheen, and small metal plates at the four corners; a cherry tree in blossom behind it."
+          "artBrief": "A single woodblock shown large, tilted to reveal both carved faces as abstract texture, dark lacquer sheen, and small metal plates at the four corners; a cherry tree in blossom behind it.",
+          "captionEn": "Each block is carved on both sides",
+          "artPending": true
         },
         {
           "id": "s6",
@@ -202,7 +212,9 @@
           ],
           "framing": false,
           "approximations": [],
-          "artBrief": "Close-up of a carver's steady hands and a small knife over a board covered in tiny, even raised marks (abstract pattern, not real characters); Hoya watches, holding his breath."
+          "artBrief": "Close-up of a carver's steady hands and a small knife over a board covered in tiny, even raised marks (abstract pattern, not real characters); Hoya watches, holding his breath.",
+          "captionEn": "Tens of millions of neat characters",
+          "artPending": true
         },
         {
           "id": "s7",
@@ -219,7 +231,9 @@
           ],
           "framing": false,
           "approximations": [],
-          "artBrief": "Hoya proudly standing beside a single woodblock displayed on a cushion, with a soft starburst behind it suggesting world recognition. No logos or text."
+          "artBrief": "Hoya proudly standing beside a single woodblock displayed on a cushion, with a soft starburst behind it suggesting world recognition. No logos or text.",
+          "captionEn": "A National Treasure, honored by UNESCO",
+          "artPending": true
         },
         {
           "id": "s8",
@@ -246,7 +260,9 @@
               "timeRelative": true
             }
           ],
-          "artBrief": "Evening at Haeinsa: the long storage halls glowing softly at the top of the temple grounds under a starry sky; Hoya sits quietly on the steps."
+          "artBrief": "Evening at Haeinsa: the long storage halls glowing softly at the top of the temple grounds under a starry sky; Hoya sits quietly on the steps.",
+          "captionEn": "Still kept safe at Haeinsa",
+          "artPending": true
         }
       ],
       "checks": [
@@ -278,7 +294,8 @@
           ],
           "factIds": [
             "f5"
-          ]
+          ],
+          "explainEn": "There are more than 80,000 woodblocks. Palman, in their Korean name, means eighty thousand."
         },
         {
           "id": "c2",
@@ -308,7 +325,8 @@
           ],
           "factIds": [
             "f1"
-          ]
+          ],
+          "explainEn": "The woodblocks are kept at Haeinsa Temple on Gayasan Mountain, in the halls Beopbojeon and Sudarajang."
         },
         {
           "id": "c3",
@@ -338,7 +356,8 @@
           ],
           "factIds": [
             "f4"
-          ]
+          ],
+          "explainEn": "People carved the woodblocks hoping the Buddha's power would drive back the Mongol invasions."
         }
       ],
       "checkpoints": [],
