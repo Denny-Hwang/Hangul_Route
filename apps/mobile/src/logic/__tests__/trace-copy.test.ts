@@ -1,7 +1,20 @@
+import { getMessages, pseudoLocalize, pseudoText } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import { strokesForJamo, type JamoStrokePoint } from '../../content/jamo-strokes';
 import { scoreTrace } from '../stroke-scoring';
-import { directionNudgeFor, failMessage, passMessage } from '../trace-copy';
+import {
+  directionNudgeFor,
+  failMessage as failMessageWith,
+  passMessage as passMessageWith,
+  type DirectionNudge,
+} from '../trace-copy';
+
+// The words are learner.minigame.trace (F-I18N-001 PR 7b).
+const COPY = getMessages('en').learner.minigame.trace;
+const passMessage = (orderCorrect: boolean | null, nudge: DirectionNudge): string =>
+  passMessageWith(orderCorrect, nudge, COPY);
+const failMessage = (strictMode: boolean, orderCorrect: boolean | null): string =>
+  failMessageWith(strictMode, orderCorrect, COPY);
 
 type Pt = JamoStrokePoint;
 
@@ -95,5 +108,17 @@ describe('passMessage / failMessage precedence', () => {
     expect(failMessage(true, false)).toMatch(/right order/);
     expect(failMessage(false, false)).toBe('Try again — start at the top!');
     expect(failMessage(true, true)).toBe('Try again — start at the top!');
+  });
+});
+
+describe('the messages take their words as a parameter (en-XA)', () => {
+  it('render the subtree they are given', () => {
+    const pseudo = pseudoLocalize(getMessages('en')).learner.minigame.trace;
+    expect(passMessageWith(null, 'none', pseudo)).toBe(pseudoText('Beautiful! That looks like the letter.'));
+    expect(passMessageWith(false, 'none', pseudo)).toBe(pseudoText(passMessage(false, 'none')));
+    expect(passMessageWith(true, 'open', pseudo)).toBe(pseudoText(passMessage(true, 'open')));
+    expect(passMessageWith(true, 'loop', pseudo)).toBe(pseudoText(passMessage(true, 'loop')));
+    expect(failMessageWith(true, false, pseudo)).toBe(pseudoText(failMessage(true, false)));
+    expect(failMessageWith(false, null, pseudo)).toBe(pseudoText('Try again — start at the top!'));
   });
 });

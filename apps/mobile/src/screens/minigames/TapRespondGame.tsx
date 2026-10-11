@@ -1,6 +1,7 @@
 import { Body, Button, Caption, Card, Heading, HoyaBubble, Pill, Progress, Screen, Spacer, spacing } from '@hangul-route/design-system';
 import React, { useMemo, useState } from 'react';
 import { View } from 'react-native';
+import { useMessages } from '../../i18n/use-messages';
 import { replyOptionLabel } from '../../logic/korean-labels';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { speak } from '../../platform/audio';
@@ -13,6 +14,7 @@ interface Props {
 }
 
 export function TapRespondGame({ scope, onFinish }: Props): React.ReactElement {
+  const copy = useMessages().learner.minigame;
   const turns = useMemo(() => scope.dialogue ?? [], [scope]);
 
   const answerRound = useQuestRunStore((s) => s.answerRound);
@@ -26,7 +28,7 @@ export function TapRespondGame({ scope, onFinish }: Props): React.ReactElement {
   if (!turn) {
     return (
       <Screen>
-        <Body>No dialogue.</Body>
+        <Body>{copy.tapRespond.noDialogue}</Body>
       </Screen>
     );
   }
@@ -63,15 +65,15 @@ export function TapRespondGame({ scope, onFinish }: Props): React.ReactElement {
         <View style={{ flex: 1 }}>
           <Progress value={turnIdx + 1} max={turns.length} tone="primary" />
         </View>
-        <Pill label={`${turnIdx + 1} / ${turns.length}`} tone="neutral" size="sm" />
+        <Pill label={copy.progress.pill(turnIdx + 1, turns.length)} tone="neutral" size="sm" />
       </View>
 
       <Spacer size="lg" />
-      <Heading level="prompt">Choose your reply</Heading>
+      <Heading level="prompt">{copy.tapRespond.heading}</Heading>
       <Spacer size="md" />
 
       <Card padding="md">
-        <Caption tone="muted">Someone says</Caption>
+        <Caption tone="muted">{copy.tapRespond.someoneSays}</Caption>
         <Spacer size="xs" />
         <Heading level="title">{turn.npcKo}</Heading>
         {turn.npcRomanization ? <Body tone="muted">{turn.npcRomanization}</Body> : null}
@@ -102,7 +104,7 @@ export function TapRespondGame({ scope, onFinish }: Props): React.ReactElement {
       {feedback === 'wrong' ? (
         <>
           <Spacer size="lg" />
-          <HoyaBubble tone="thinking" message="Hmm, that doesn't fit. Try another!" />
+          <HoyaBubble tone="thinking" message={copy.tapRespond.tryAnother} />
         </>
       ) : null}
       <Spacer size="xl" />

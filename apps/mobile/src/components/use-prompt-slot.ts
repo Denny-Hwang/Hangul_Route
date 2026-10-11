@@ -6,6 +6,7 @@ import {
   type PlayResult,
 } from '../logic/audio/prompt-state';
 import { failureFromStore, promptPanelView, type PromptPanelView } from '../logic/audio/prompt-view';
+import { useMessages } from '../i18n/use-messages';
 import { noteFallbackShown } from '../platform/audio';
 import { useAudioStore } from '../store/audio-store';
 
@@ -41,10 +42,11 @@ export function usePromptSlot({ source, hasClip = false }: PromptSlotOptions): P
   const clips = useAudioStore((s) => s.clips);
   const unlocked = useAudioStore((s) => s.unlocked);
   const epoch = useRef(0);
+  const copy = useMessages().learner.audio;
 
   const capability = { tts, clips, unlocked };
   const clip = hasClip && clips;
-  const view = promptPanelView(state, capability, muted, clip);
+  const view = promptPanelView(state, capability, muted, clip, copy);
 
   // Mute and capability changes reach the slot as events, so text shown in a round stays (no flicker).
   useEffect(() => {

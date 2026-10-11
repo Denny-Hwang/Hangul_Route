@@ -3,7 +3,8 @@ import { plural } from '../../plural';
 /**
  * Learner-facing screens, one sub-object per screen (F-I18N-001 §3.4 rule 2).
  * PR 5 moves the first-run and settings surfaces in, PR 6a Home, Journey, Library and
- * CardDetail, PR 6b Episode, Results and Homework, PR 7a the Quest player; the wording is unchanged. Strings that end up in a pill or a button are
+ * CardDetail, PR 6b Episode, Results and Homework, PR 7a the Quest player, PR 7b the minigames,
+ * the audio prompt panel and the story copy; the wording is unchanged. Strings that end up in a pill or a button are
  * keyed `pill` / `cta` so the length budgets (§3.11) cover them.
  * Content-derived text (stage, theme and card titles, blurbs) is not here: it comes from
  * content and is localised by the overlay mechanism (PR 12).
@@ -300,6 +301,249 @@ export const learner = {
       batchimLine: 'Sits at the bottom of the block',
       empty: 'Nothing to look at here. Tap Continue.',
       pageLabel: (page: number, count: number) => `Page ${page} of ${count}`,
+    },
+  },
+
+  /**
+   * The minigames (MinigameScreen and the games it launches), PR 7b. The pairs, glosses and
+   * step labels a game plays come from content (`minigame-config`), not from here (PR 12).
+   */
+  minigame: {
+    notFound: 'Minigame not found.',
+    comingSoon: 'This minigame is coming soon.',
+    voiceSoon: 'Voice practice is opening in our next beta.',
+    backToQuest: { cta: 'Back to quest' },
+    noRounds: 'No rounds.',
+    /** The round counter pill: `round` of `total`. */
+    progress: { pill: (round: number, total: number) => `${round} / ${total}` },
+    skip: { cta: 'Skip' },
+    /** Build a Letter (F-QUEST-002 §3.7). */
+    buildLetter: {
+      heading: 'Build this letter',
+      slots: 'Slots:',
+      tiles: 'Tiles',
+      /** Hoya after a miss; `hint` is one of `shape`. */
+      notQuite: (hint: string) => `Not quite. Try again. ${hint}`,
+      /** Where the letters of the block go, keyed by the block shape: whole sentences, never "left to right". */
+      shape: {
+        beside: 'The vowel goes beside the first letter.',
+        under: 'The vowel goes under the first letter.',
+        besideFinal: 'The vowel goes beside the first letter. The last letter sits at the bottom.',
+        underFinal: 'The vowel goes under the first letter. The last letter sits at the bottom.',
+      },
+    },
+    /** Trace Stroke (F-004 to F-008): coverage passes; order and direction only surface as "next time" nudges. */
+    trace: {
+      /** `romanization` is the letter's sound value. */
+      heading: (romanization: string) => `Trace the letter ${romanization}`,
+      instruction: 'Draw the letter with your finger.',
+      showMe: { cta: 'Show me' },
+      clear: { cta: 'Clear' },
+      done: { cta: 'Done' },
+      idle: 'Slowly draw the letter. Lift your finger to finish.',
+      /** After a pass: the order nudge wins, then an open-stroke direction nudge, then a loop one, else praise. */
+      pass: {
+        order: 'You got it! Next time, try drawing the top line first.',
+        open: 'Nice! Try drawing left-to-right next time.',
+        loop: 'Nice! Next time, try going around the other way.',
+        clean: 'Beautiful! That looks like the letter.',
+      },
+      /** Before a retry: order coaching (strict mode, order the only thing off), else the standard line. */
+      retry: {
+        order: 'Almost! Try drawing the strokes in the right order. Tap Show me to see.',
+        start: 'Try again — start at the top!',
+      },
+    },
+    /** Pic-Word Match (F-QUEST-002 §3.11): Skip is `skip`, the way out `backToQuest`. */
+    picWord: {
+      heading: 'Match each picture',
+      instruction: 'Tap a picture, then its word.',
+      /** The live line once one side is picked: `gloss` is the picture's meaning (content). */
+      pictureSelected: (gloss: string) => `Picture selected: ${gloss}. Choose a word.`,
+      /** `word` is the taught Korean word, passed in (never typed into the message). */
+      wordSelected: (word: string) => `Word selected: ${word}. Choose a picture.`,
+      missHoya: 'Try another one',
+      empty: 'Nothing to play here',
+    },
+    /** Listen & Pick (F-QUEST-002 §3.10): the no-sound line is `audio.readHere`, the way out `backToQuest`. */
+    listenPick: {
+      heading: 'Listen, then pick',
+      /** The header of the two-question Check. */
+      checkTitle: { pill: 'Quick check' },
+      hearAgain: { cta: 'Hear it again' },
+      missHoya: 'Listen again',
+      empty: 'Nothing to play here',
+    },
+    /**
+     * Voice Echo (behind `flags.voiceEchoEnabled`, off at launch): listen, say it back, confirm.
+     * The shipped caption ended in a tiger emoji; the dictionary carries no emoji (CLAUDE.md), so it is dropped.
+     */
+    voiceEcho: {
+      heading: 'Say it out loud',
+      bubble: "Listen to me, then say it back out loud. Tap 'I said it' when done.",
+      saidIt: 'I said it!',
+      note: "Voice grading is coming soon — for now it's honor system",
+      continue: { cta: 'Continue' },
+    },
+    /** Tap & Respond: someone speaks, the learner picks a reply. */
+    tapRespond: {
+      noDialogue: 'No dialogue.',
+      heading: 'Choose your reply',
+      someoneSays: 'Someone says',
+      tryAnother: "Hmm, that doesn't fit. Try another!",
+    },
+    /** Odd One Out: three of a kind and one that is not. */
+    oddOneOut: {
+      heading: "Tap the one that doesn't belong",
+      instruction: 'Three are the same kind. One is different.',
+      lookAgain: 'Look again — which kind is different?',
+    },
+    /** Culture Quiz: a Korean word, pick its meaning. */
+    cultureQuiz: {
+      heading: 'What does this mean?',
+      tryAnother: 'Not quite — try another!',
+    },
+    /** Card Match: Korean words on the left, meanings on the right. */
+    cardMatch: {
+      heading: 'Match the meaning',
+      instruction: 'Tap a Korean word, then its English meaning.',
+      nowMeaning: 'Now tap its meaning on the right.',
+    },
+  },
+
+  /**
+   * The audio prompt panel, its speaker button and the "Add a Korean voice" sheet (F-AUDIO-004
+   * §3.7-3.8), shared by the minigames, Discover and the Profile Sound card. Korean letters are
+   * shown by the screens as taught content, never inside these strings.
+   */
+  audio: {
+    readHere: 'No sound? Read it here.',
+    /** The Match Sound heading: listening, or reading the sound as text. */
+    heading: { listen: 'Tap the letter you hear', text: 'Tap the letter for this sound' },
+    /** Hoya after a miss; the spoken syllable and its romanization follow as taught content. */
+    listenAgain: 'Listen again. This one says',
+    hearIt: { cta: 'Hear it' },
+    tapToHear: 'Tap to hear',
+    tapToReplay: 'Tap to replay',
+    /** The panel's one button, keyed by `FallbackAction` (`none` has no button). */
+    action: {
+      turn_on: { cta: 'Turn sound on' },
+      try_again: { cta: 'Try again' },
+      tap_to_hear: { cta: 'Tap to hear' },
+    },
+    soundIsOff: 'Sound is off.',
+    noKoreanVoice: 'No Korean voice on this device',
+    /** The panel's second line, a sentence. */
+    noKoreanVoiceSentence: 'No Korean voice on this device.',
+    didNotPlay: 'The sound did not play.',
+    letterName: { cta: 'Letter name' },
+    /** Accessibility label of the speaker button; it states the state. */
+    speaker: { on: 'Play sound', off: 'Play sound, sound is off' },
+    /** The Profile Sound card's second line. */
+    voice: {
+      ready: 'Korean voice: ready',
+      needsInternet: 'Korean voice needs the internet',
+      looking: 'Looking for a Korean voice',
+    },
+    howToAddVoice: { cta: 'How to add a voice' },
+    /** Menu names follow Apple, Google and Microsoft help pages and vary by OS version, so the sheet says so. */
+    voiceHelp: {
+      title: 'Add a Korean voice',
+      note: 'Menu names can differ on your device.',
+      sections: {
+        apple: {
+          title: 'iPhone or iPad',
+          steps: [
+            'Open Settings, then Accessibility.',
+            'Tap Spoken Content, then Voices, then Korean.',
+            'Download a voice, such as Yuna. Enhanced or Premium sounds best.',
+            'Come back and reopen Hangul Route.',
+          ],
+        },
+        android: {
+          title: 'Android',
+          steps: [
+            'Open Settings, then search for Text-to-speech output.',
+            'Choose Speech Services by Google and tap the gear.',
+            'Tap Install voice data, then Korean.',
+            'Come back and reopen Hangul Route.',
+          ],
+        },
+        computer: {
+          title: 'Computer',
+          steps: [
+            'Mac: System Settings, Accessibility, Spoken Content, System Voice, Manage Voices, then Korean.',
+            'Windows: Settings, Time & language, Speech, Manage voices, then Add voices and Korean.',
+            'Chrome and Edge: some Korean voices need the internet, so check you are online.',
+            'Reload this page.',
+          ],
+        },
+      },
+      footer: 'You can still play: the sound is written on screen.',
+    },
+  },
+
+  /**
+   * The story check, Story Order, word recap and story Results (F-STORY-003 §3.4-3.7), moved from
+   * `logic/story/copy.ts` in PR 7b. Never a number-as-score, ratio or percent; never red-and-cross
+   * wording (D3). Story text itself (titles, captions, narration) is content.
+   */
+  story: {
+    check: {
+      position: { pill: (index: number, total: number) => `${index} / ${total}` },
+      positionLabel: (index: number, total: number) => `Question ${index} of ${total}`,
+      tryAnother: 'Try another',
+      correct: 'Correct',
+      next: { cta: 'Next' },
+      defaultHint: 'Not quite. Have another look.',
+      lookHere: 'This one is worth a look.',
+      speakerPrompt: 'Hear the question',
+      speakerOptions: 'Hear the answers',
+      speakerTarget: 'Hear the Korean word',
+      showRomanization: { cta: 'Show how to say it' },
+      pictureOptionLabel: (label: string) => `Picture: ${label}`,
+      emptyLine: 'There are no questions for this story yet.',
+      continue: { cta: 'Continue' },
+    },
+    recap: {
+      title: 'Words from this story',
+      done: { cta: 'Done' },
+      wordsLabel: (count: number) =>
+        plural('en', count, { one: '1 word from this story', other: `${count} words from this story` }),
+      hearWord: (romanization: string) => `Hear ${romanization}`,
+    },
+    sequence: {
+      title: 'Put the story in order',
+      hint: 'Tap each picture, starting with what happened first.',
+      /** The hint while the cards are text only (no scene art yet). */
+      stepHint: 'Tap each step, starting with what happened first.',
+      skip: { cta: 'Skip this one' },
+      positionLabel: (index: number, total: number) => `Picture ${index} of ${total}`,
+      /** A slot of the row the learner fills: its place, and the card in it when it has one. */
+      slotLabel: (index: number, total: number, caption?: string) =>
+        caption === undefined ? `Place ${index} of ${total}, empty` : `Place ${index} of ${total}: ${caption}`,
+      tryAnother: 'Try another',
+      lookHere: 'This one comes next.',
+      emptyLine: 'There is nothing to put in order yet.',
+      continue: { cta: 'Continue' },
+      replay: {
+        title: 'The story, in order',
+        pause: { cta: 'Pause' },
+        play: { cta: 'Play' },
+        back: { cta: 'Back' },
+        next: { cta: 'Next' },
+        skip: { cta: 'Skip replay' },
+        done: { cta: 'Done' },
+      },
+    },
+    results: {
+      nextStory: { cta: 'Next story' },
+      backHome: { cta: 'Back home' },
+      readAgain: { cta: 'Read it again' },
+      episodePage: { cta: 'Episode page' },
+      /** `title` is the culture note's title (content). */
+      cultureNote: (title: string) => `Learn about ${title}`,
+      encourage: 'Every read helps. Want to read it again?',
     },
   },
 } as const;

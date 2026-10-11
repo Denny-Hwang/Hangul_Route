@@ -1,14 +1,21 @@
+import { getMessages, pseudoLocalize, pseudoText } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import { jamoStrokes, strokesForJamo } from '../../content/jamo-strokes';
 import {
   BADGE_RADIUS,
   buildStrokeDiagram,
-  describeStroke,
-  describeStrokeOrder,
+  describeStroke as describeStrokeWith,
+  describeStrokeOrder as describeStrokeOrderWith,
   pointAlong,
   pointsToPathD,
   staticHintHoldMs,
 } from '../stroke-diagram';
+
+// The words are a11y.minigame.strokeOrder (F-I18N-001 PR 7b).
+const STROKE_ORDER = getMessages('en').a11y.minigame.strokeOrder;
+const describeStroke = (stroke: Parameters<typeof describeStrokeWith>[0]): string => describeStrokeWith(stroke, STROKE_ORDER);
+const describeStrokeOrder = (target: Parameters<typeof describeStrokeOrderWith>[0]): string =>
+  describeStrokeOrderWith(target, STROKE_ORDER);
 
 const dist = (a: { x: number; y: number }, b: { x: number; y: number }): number =>
   Math.hypot(a.x - b.x, a.y - b.y);
@@ -179,5 +186,23 @@ describe('describeStrokeOrder — text alternative for the still diagram', () =>
 
   it('copes with an empty target', () => {
     expect(describeStrokeOrder([])).toBe('Stroke order guide');
+  });
+
+  it('describes a curve that turns too often by where it ends', () => {
+    const zigzag = [
+      { x: 0, y: 0 }, { x: 40, y: 0 }, { x: 40, y: 40 }, { x: 80, y: 40 }, { x: 80, y: 80 }, { x: 120, y: 80 },
+    ];
+    expect(describeStroke(zigzag)).toBe('curving down and right');
+    expect(describeStroke([{ x: 5, y: 5 }])).toBe('a dot');
+  });
+
+  it('takes its words as a parameter (en-XA)', () => {
+    const pseudo = pseudoLocalize(getMessages('en')).a11y.minigame.strokeOrder;
+    const target = strokesForJamo('jamo:digeut')!;
+    expect(describeStrokeOrderWith([], pseudo)).toBe(pseudoText('Stroke order guide'));
+    // Composed messages nest: the direction word is pseudo text inside the pseudo legs line.
+    expect(describeStrokeWith([{ x: 30, y: 100 }, { x: 170, y: 100 }], pseudo)).toContain(pseudoText('right'));
+    expect(describeStrokeWith([{ x: 5, y: 5 }], pseudo)).toBe(pseudoText('a dot'));
+    expect(describeStrokeOrderWith(target, pseudo).startsWith('[')).toBe(true);
   });
 });

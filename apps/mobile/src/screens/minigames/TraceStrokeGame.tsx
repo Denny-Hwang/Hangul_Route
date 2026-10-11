@@ -20,6 +20,7 @@ import { runOnJS } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
 import type { JamoStrokePoint } from '../../content/jamo-strokes';
 import { strokesForJamo } from '../../content/jamo-strokes';
+import { useMessages } from '../../i18n/use-messages';
 import type { LayoutChangeEvent } from 'react-native';
 import { traceCanvasA11yLabel, traceLetterA11yText } from '../../logic/korean-labels';
 import type { MinigameScope } from '../../logic/minigame-config';
@@ -60,6 +61,8 @@ export function TraceStrokeGame({
   onFinish,
   strictMode = false,
 }: Props): React.ReactElement {
+  const m = useMessages();
+  const copy = m.learner.minigame;
   const rounds = useMemo<TraceStrokeRound[]>(
     () =>
       buildTraceStrokeRounds({
@@ -126,7 +129,7 @@ export function TraceStrokeGame({
   if (!round) {
     return (
       <Screen>
-        <Body>No rounds.</Body>
+        <Body>{copy.noRounds}</Body>
       </Screen>
     );
   }
@@ -259,16 +262,16 @@ export function TraceStrokeGame({
       <View style={{ flex: 1 }}>
         <Progress value={roundIdx + 1} max={rounds.length} tone="primary" />
       </View>
-      <Pill label={`${roundIdx + 1} / ${rounds.length}`} size="sm" />
+      <Pill label={copy.progress.pill(roundIdx + 1, rounds.length)} size="sm" />
     </View>
   );
 
   const prompt = (
     <View style={{ gap: spacing.xs }}>
-      <View accessible accessibilityRole="header" accessibilityLabel={traceLetterA11yText(round.jamo.romanization)}>
-        <Heading level="prompt">Trace the letter {round.jamo.romanization}</Heading>
+      <View accessible accessibilityRole="header" accessibilityLabel={traceLetterA11yText(round.jamo.romanization, m.a11y.minigame.traceLetter)}>
+        <Heading level="prompt">{copy.trace.heading(round.jamo.romanization)}</Heading>
       </View>
-      {stacked ? <Caption tone="muted">Draw the letter with your finger.</Caption> : null}
+      {stacked ? <Caption tone="muted">{copy.trace.instruction}</Caption> : null}
     </View>
   );
 
@@ -277,7 +280,7 @@ export function TraceStrokeGame({
       <GestureDetector gesture={panGesture}>
         <View
           nativeID="trace-canvas"
-          accessibilityLabel={traceCanvasA11yLabel(round.jamo.romanization)}
+          accessibilityLabel={traceCanvasA11yLabel(round.jamo.romanization, m.a11y.minigame.traceCanvas)}
           style={{
             width: canvasSize,
             height: canvasSize,
@@ -342,7 +345,7 @@ export function TraceStrokeGame({
   const helpers = (
     <View style={{ flexDirection: 'row', justifyContent: 'center', gap: spacing.md }}>
       <Button
-        label="Show me"
+        label={copy.trace.showMe.cta}
         tone="secondary"
         size="sm"
         disabled={hintPlaying}
@@ -353,22 +356,22 @@ export function TraceStrokeGame({
           void playJamo(round.jamo, 'sound');
         }}
       />
-      <Button label="Clear" tone="ghost" size="sm" onPress={handleClear} disabled={strokes.length === 0} />
+      <Button label={copy.trace.clear.cta} tone="ghost" size="sm" onPress={handleClear} disabled={strokes.length === 0} />
     </View>
   );
 
   const feedbackMessage =
     feedback === 'fail'
-      ? failMessage(strictMode, orderCorrect)
+      ? failMessage(strictMode, orderCorrect, copy.trace)
       : feedback === 'pass'
-        ? passMessage(orderCorrect, directionNudge)
-        : 'Slowly draw the letter. Lift your finger to finish.';
+        ? passMessage(orderCorrect, directionNudge, copy.trace)
+        : copy.trace.idle;
   const feedbackTone: HoyaTone = feedback === 'fail' ? 'thinking' : feedback === 'pass' ? 'cheering' : 'idle';
   const feedbackLines = mode === 'side' ? 3 : 2;
 
   const doneButton = (
     <Button
-      label="Done"
+      label={copy.trace.done.cta}
       tone="primary"
       size={stacked ? 'lg' : 'md'}
       fullWidth
@@ -378,7 +381,7 @@ export function TraceStrokeGame({
       }}
     />
   );
-  const skipButton = <Button label="Skip" tone="ghost" size="md" fullWidth onPress={finishStep} />;
+  const skipButton = <Button label={copy.skip.cta} tone="ghost" size="md" fullWidth onPress={finishStep} />;
   const actions = stacked ? (
     <View style={{ gap: spacing.sm }}>
       {doneButton}

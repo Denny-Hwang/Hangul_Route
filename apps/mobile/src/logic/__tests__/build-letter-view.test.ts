@@ -1,6 +1,18 @@
+import { getMessages, pseudoLocalize, pseudoText } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import { findJamo } from '../../content/jamo';
-import { blockShape, shapeHint, tileAccessibilityLabel } from '../build-letter-view';
+import {
+  blockShape,
+  shapeHint as shapeHintWith,
+  tileAccessibilityLabel as tileAccessibilityLabelWith,
+  type BlockShape,
+} from '../build-letter-view';
+
+// The words are learner.minigame.buildLetter.shape and a11y.minigame.finalTile (F-I18N-001 PR 7b).
+const messages = getMessages('en');
+const shapeHint = (shape: BlockShape): string => shapeHintWith(shape, messages.learner.minigame.buildLetter.shape);
+const tileAccessibilityLabel = (jamo: Parameters<typeof tileAccessibilityLabelWith>[0]): string | undefined =>
+  tileAccessibilityLabelWith(jamo, messages.a11y.minigame.finalTile);
 
 describe('blockShape', () => {
   it('puts a vertical vowel beside the consonant (가)', () => {
@@ -62,5 +74,17 @@ describe('shapeHint', () => {
         expect(shapeHint({ vowel, hasFinal })).not.toMatch(/left to right/i);
       }
     }
+  });
+});
+
+describe('the hint and the tile label take their words as a parameter (en-XA)', () => {
+  it('render the subtree they are given', () => {
+    const pseudo = pseudoLocalize(messages);
+    expect(shapeHintWith({ vowel: 'under', hasFinal: true }, pseudo.learner.minigame.buildLetter.shape)).toBe(
+      pseudoText('The vowel goes under the first letter. The last letter sits at the bottom.'),
+    );
+    expect(tileAccessibilityLabelWith(findJamo('jamo:nieun-batchim')!, pseudo.a11y.minigame.finalTile)).toBe(
+      pseudoText('final n'),
+    );
   });
 });

@@ -1,5 +1,5 @@
+import { getMessages, pseudoLocalize } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
-import { STORY_CHECK_COPY } from '../copy';
 import type { SequenceCard } from '../sequence-cards';
 import { initSequenceState, reduceSequence, type SequenceAction, type SequenceState } from '../sequence-player';
 import {
@@ -7,7 +7,7 @@ import {
   SEQUENCE_WRONG_FLASH_MS,
   autoAdvanceDue,
   longestKoreanGlyphs,
-  sequenceCardLabel,
+  sequenceCardLabel as sequenceCardLabelWith,
   sequenceCardRomanization,
   sequenceColumns,
   sequenceFinishedPayload,
@@ -15,6 +15,14 @@ import {
   sequenceSummary,
   slotViews,
 } from '../sequence-view';
+
+// The words are learner.story.sequence (F-I18N-001 PR 7b); these tests read the dictionary.
+const COPY = getMessages('en').learner.story.sequence;
+const sequenceCardLabel = (
+  card: Parameters<typeof sequenceCardLabelWith>[0],
+  romanization: string,
+  outcome: Parameters<typeof sequenceCardLabelWith>[2],
+): string => sequenceCardLabelWith(card, romanization, outcome, COPY);
 
 const ids = (n: number): string[] => Array.from({ length: n }, (_, i) => `s${i + 1}`);
 const cards = (xs: readonly string[]): Array<{ id: string }> => xs.map((id) => ({ id }));
@@ -120,8 +128,12 @@ describe('sequenceCardLabel', () => {
     expect(sequenceCardLabel(plainCard, '', null)).toBe('Eat');
   });
   it('names the outcome of a wrong tap and of a highlight, in words', () => {
-    expect(sequenceCardLabel(plainCard, '', 'wrong')).toBe(`Eat. ${STORY_CHECK_COPY.sequence.tryAnother}`);
-    expect(sequenceCardLabel(plainCard, '', 'hint')).toBe(`Eat. ${STORY_CHECK_COPY.sequence.lookHere}`);
+    expect(sequenceCardLabel(plainCard, '', 'wrong')).toBe('Eat. Try another');
+    expect(sequenceCardLabel(plainCard, '', 'hint')).toBe('Eat. This one comes next.');
+    // The outcome words come from the subtree it is given (en-XA).
+    const pseudo = pseudoLocalize(getMessages('en')).learner.story.sequence;
+    expect(sequenceCardLabelWith(plainCard, '', 'wrong', pseudo)).toBe(`Eat. ${pseudo.tryAnother}`);
+    expect(sequenceCardLabelWith(plainCard, '', 'hint', pseudo)).toBe(`Eat. ${pseudo.lookHere}`);
   });
 });
 

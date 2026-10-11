@@ -1,11 +1,11 @@
 import type { ListenPickRound } from '@hangul-route/content-schema';
+import { getMessages, pseudoLocalize, pseudoText } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import {
-  LISTEN_PICK_COPY,
   LISTEN_PICK_TIMING,
-  headerView,
+  headerView as headerViewWith,
   optionColumns,
-  optionView,
+  optionView as optionViewWith,
   promptView,
   startFlow,
   stepFlow,
@@ -13,6 +13,21 @@ import {
   type FlowEvent,
   type ListenPickFlowState,
 } from '../listen-pick-flow';
+
+// The words are learner.minigame and a11y.minigame (F-I18N-001 PR 7b); these tests read the dictionary.
+const messages = getMessages('en');
+const COPY = messages.learner.minigame;
+const A11Y = messages.a11y.minigame;
+type HeaderArgs = Parameters<typeof headerViewWith>;
+type OptionArgs = Parameters<typeof optionViewWith>;
+const headerView = (mode: HeaderArgs[0], state: HeaderArgs[1]): ReturnType<typeof headerViewWith> =>
+  headerViewWith(mode, state, COPY);
+const optionView = (
+  round: OptionArgs[0],
+  option: OptionArgs[1],
+  state: OptionArgs[2],
+  context: OptionArgs[3],
+): ReturnType<typeof optionViewWith> => optionViewWith(round, option, state, context, A11Y);
 
 const text = (ko: string, romanization: string, en = ko) => ({ ko, romanization, en });
 
@@ -351,14 +366,14 @@ describe('optionView', () => {
     const missed = run(asking, [tap('b', 100)]).state;
     const view = optionView(textRound, optionB, missed, { mode: 'quest', romanizationMode: 'always' });
     expect(view.cardState).toBe('wrong');
-    expect(view.accessibilityLabel).toBe(`${LISTEN_PICK_COPY.a11y.wrong}: 나, na`);
+    expect(view.accessibilityLabel).toBe('Not this one: 나, na');
   });
 
   it('rings the right option after two misses, but never in the review', () => {
     const twice = run(asking, [tap('b', 100), tap('c', 900)]).state;
     const quest = optionView(textRound, optionA, twice, { mode: 'quest', romanizationMode: 'always' });
     expect(quest.cardState).toBe('hint');
-    expect(quest.accessibilityLabel).toBe(`${LISTEN_PICK_COPY.a11y.hint}: 가, ga`);
+    expect(quest.accessibilityLabel).toBe('Look here: 가, ga');
     const review = optionView(textRound, optionA, twice, { mode: 'review', romanizationMode: 'always' });
     expect(review.cardState).toBe('idle');
     expect(review.accessibilityLabel).toBe('가, ga');
@@ -368,7 +383,7 @@ describe('optionView', () => {
     const resolved = run(asking, [tap('b', 100), tap('a', 900)]).state;
     const right = optionView(textRound, optionA, resolved, { mode: 'quest', romanizationMode: 'always' });
     expect(right.cardState).toBe('correct');
-    expect(right.accessibilityLabel).toBe(`${LISTEN_PICK_COPY.a11y.correct}: 가, ga`);
+    expect(right.accessibilityLabel).toBe('Right answer: 가, ga');
     expect(optionView(textRound, optionB, resolved, { mode: 'quest', romanizationMode: 'always' }).cardState).toBe('wrong');
     const other = textRound.options[2]!;
     expect(optionView(textRound, other, resolved, { mode: 'quest', romanizationMode: 'always' }).cardState).toBe('disabled');
@@ -393,8 +408,19 @@ describe('optionView', () => {
     expect(withText.label).toBe('red');
     const bare = optionView(odd, odd.options[1]!, startFlow(1), { mode: 'quest', romanizationMode: 'always' });
     expect(bare.label).toBeUndefined();
-    expect(bare.gloss).toBe(LISTEN_PICK_COPY.a11y.picture);
-    expect(bare.accessibilityLabel).toBe(LISTEN_PICK_COPY.a11y.picture);
+    expect(bare.gloss).toBe('Picture');
+    expect(bare.accessibilityLabel).toBe('Picture');
+  });
+});
+
+describe('the view-models take their words as a parameter (F-I18N-001 §3.4 rule 3)', () => {
+  it('render the subtree they are given (en-XA)', () => {
+    const pseudo = pseudoLocalize(messages);
+    expect(headerViewWith('check', startFlow(2), pseudo.learner.minigame).title).toBe(pseudoText('Quick check'));
+    expect(headerViewWith('quest', startFlow(4), pseudo.learner.minigame).label).toBe(pseudoText('1 / 4'));
+    const missed = run(startFlow(1), [tap('b', 100)]).state;
+    const view = optionViewWith(textRound, textRound.options[1]!, missed, { mode: 'quest', romanizationMode: 'always' }, pseudo.a11y.minigame);
+    expect(view.accessibilityLabel).toBe(pseudoText('Not this one: 나, na'));
   });
 });
 

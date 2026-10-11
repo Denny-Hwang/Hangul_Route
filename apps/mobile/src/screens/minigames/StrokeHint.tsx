@@ -13,6 +13,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import Svg, { Circle, Path, Text as SvgText } from 'react-native-svg';
 import type { JamoStrokePoint } from '../../content/jamo-strokes';
+import { useMessages } from '../../i18n/use-messages';
 import {
   BADGE_RADIUS,
   buildStrokeDiagram,
@@ -58,6 +59,7 @@ export function StrokeHint({
   onComplete,
   playToken,
 }: Props): React.ReactElement | null {
+  const strokeOrder = useMessages().a11y.minigame.strokeOrder;
   // One progress shared value per stroke (0 → 1 along the path)
   // For simplicity, we use a single sweep value spanning all strokes.
   const sweep = useSharedValue(0);
@@ -135,7 +137,7 @@ export function StrokeHint({
     return (
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`${describeStrokeOrder(target)} Tap to close.`}
+        accessibilityLabel={strokeOrder.close(describeStrokeOrder(target, strokeOrder))}
         onPress={dismissStill}
         style={{ position: 'absolute', top: 0, left: 0, width: size, height: size }}
       >

@@ -1,5 +1,4 @@
-import type { RomanizationMode } from '@hangul-route/i18n';
-import { STORY_CHECK_COPY } from './copy';
+import type { Messages, RomanizationMode } from '@hangul-route/i18n';
 import type { SequenceCard } from './sequence-cards';
 import { hashSeed } from './seeded-order';
 import { romanizationShown } from './romanization';
@@ -8,8 +7,10 @@ import type { SequenceState } from './sequence-player';
 /**
  * View-models and small rules for the Story Order screen (F-STORY-003 §3.5).
  * `StorySequenceGame` only paints what these return; everything with a branch
- * lives here so it is unit-tested without a renderer.
+ * lives here so it is unit-tested without a renderer. Words come in as the
+ * `learner.story.sequence` subtree (F-I18N-001 PR 7b).
  */
+export type SequenceCopy = Messages['learner']['story']['sequence'];
 
 /** The story replay moves to the next card about this often (ms). */
 export const SEQUENCE_REPLAY_MS = 2500;
@@ -69,8 +70,8 @@ export function sequenceCardLabel(
   card: SequenceCard,
   romanization: string,
   outcome: 'wrong' | 'hint' | null,
+  copy: SequenceCopy,
 ): string {
-  const copy = STORY_CHECK_COPY.sequence;
   let base = card.caption;
   if (card.ko) {
     const korean = romanization === '' ? card.ko.ko : `${card.ko.ko}, ${romanization}`;

@@ -1,6 +1,9 @@
+import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import { scanLearnerCopy } from '../../homework/banned-text';
-import { STORY_CHECK_COPY } from '../copy';
+
+// The story copy moved to the dictionary (`learner.story`, F-I18N-001 PR 7b); this reads it there.
+const STORY_CHECK_COPY = getMessages('en').learner.story;
 
 type Msg = string | ((...args: never[]) => string);
 
@@ -20,7 +23,7 @@ function allStrings(): string[] {
   return out;
 }
 
-describe('STORY_CHECK_COPY', () => {
+describe('learner.story', () => {
   const strings = allStrings();
 
   it('has strings to scan', () => {
@@ -43,14 +46,14 @@ describe('STORY_CHECK_COPY', () => {
 
   it('uses the wireframe wording for the key moments', () => {
     expect(STORY_CHECK_COPY.check.tryAnother).toBe('Try another');
-    expect(STORY_CHECK_COPY.check.next).toBe('Next');
+    expect(STORY_CHECK_COPY.check.next.cta).toBe('Next');
     expect(STORY_CHECK_COPY.sequence.title).toBe('Put the story in order');
-    expect(STORY_CHECK_COPY.sequence.skip).toBe('Skip this one');
+    expect(STORY_CHECK_COPY.sequence.skip.cta).toBe('Skip this one');
     expect(STORY_CHECK_COPY.recap.title).toBe('Words from this story');
-    expect(STORY_CHECK_COPY.results.nextStory).toBe('Next story');
-    expect(STORY_CHECK_COPY.results.readAgain).toBe('Read it again');
-    expect(STORY_CHECK_COPY.results.episodePage).toBe('Episode page');
-    expect(STORY_CHECK_COPY.results.backHome).toBe('Back home');
+    expect(STORY_CHECK_COPY.results.nextStory.cta).toBe('Next story');
+    expect(STORY_CHECK_COPY.results.readAgain.cta).toBe('Read it again');
+    expect(STORY_CHECK_COPY.results.episodePage.cta).toBe('Episode page');
+    expect(STORY_CHECK_COPY.results.backHome.cta).toBe('Back home');
   });
 
   it('never uses red-and-cross wording for a wrong tap (D3)', () => {
@@ -63,7 +66,7 @@ describe('STORY_CHECK_COPY', () => {
   });
 
   it('pluralises function messages', () => {
-    expect(STORY_CHECK_COPY.check.position(2, 3)).toBe('2 / 3');
+    expect(STORY_CHECK_COPY.check.position.pill(2, 3)).toBe('2 / 3');
     expect(STORY_CHECK_COPY.check.positionLabel(2, 3)).toBe('Question 2 of 3');
     expect(STORY_CHECK_COPY.sequence.positionLabel(1, 4)).toBe('Picture 1 of 4');
     expect(STORY_CHECK_COPY.sequence.slotLabel(2, 4)).toBe('Place 2 of 4, empty');
@@ -80,7 +83,7 @@ describe('STORY_CHECK_COPY', () => {
       else expect(['string', 'function']).toContain(typeof node);
     };
     walk(STORY_CHECK_COPY);
-    const sample: Msg = STORY_CHECK_COPY.check.next;
+    const sample: Msg = STORY_CHECK_COPY.check.next.cta;
     expect(sample).toBe('Next');
   });
 });

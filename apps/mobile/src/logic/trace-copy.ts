@@ -1,8 +1,10 @@
+import type { Messages } from '@hangul-route/i18n';
 import type { ScoreTraceResult } from './stroke-scoring';
 
 /**
- * Trace Stroke feedback copy (F-005 / F-006 / F-008). Plain strings, pure
- * functions, so the wording rules are unit-tested.
+ * Trace Stroke feedback rules (F-005 / F-006 / F-008). Pure functions over the
+ * `learner.minigame.trace` messages (F-I18N-001 PR 7b), so the wording rules are
+ * unit-tested per locale.
  *
  * Coverage is the pass criterion; order and direction are auxiliary and only
  * surface as gentle "next time" nudges when the child PASSED.
@@ -33,17 +35,13 @@ export function directionNudgeFor(
   return loopWrong ? 'loop' : 'none';
 }
 
-export function passMessage(orderCorrect: boolean | null, nudge: DirectionNudge): string {
-  if (orderCorrect === false) {
-    return 'You got it! Next time, try drawing the top line first.';
-  }
-  if (nudge === 'open') {
-    return 'Nice! Try drawing left-to-right next time.';
-  }
-  if (nudge === 'loop') {
-    return 'Nice! Next time, try going around the other way.';
-  }
-  return 'Beautiful! That looks like the letter.';
+export type TraceCopy = Messages['learner']['minigame']['trace'];
+
+export function passMessage(orderCorrect: boolean | null, nudge: DirectionNudge, copy: TraceCopy): string {
+  if (orderCorrect === false) return copy.pass.order;
+  if (nudge === 'open') return copy.pass.open;
+  if (nudge === 'loop') return copy.pass.loop;
+  return copy.pass.clean;
 }
 
 /**
@@ -51,9 +49,6 @@ export function passMessage(orderCorrect: boolean | null, nudge: DirectionNudge)
  * only thing wrong (coverage passed), use the order-coaching message.
  * Otherwise use the standard "try again — start at the top!".
  */
-export function failMessage(strictMode: boolean, orderCorrect: boolean | null): string {
-  if (strictMode && orderCorrect === false) {
-    return 'Almost! Try drawing the strokes in the right order. Tap Show me to see.';
-  }
-  return 'Try again — start at the top!';
+export function failMessage(strictMode: boolean, orderCorrect: boolean | null, copy: TraceCopy): string {
+  return strictMode && orderCorrect === false ? copy.retry.order : copy.retry.start;
 }

@@ -1,7 +1,19 @@
+import { getMessages, pseudoLocalize, pseudoText } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import type { KoVoiceStatus } from '../capability';
-import { AUDIO_COPY } from '../copy';
-import { VOICE_HELP, soundCardView, soundSwitchLabel } from '../voice-help';
+import {
+  soundCardView as soundCardViewWith,
+  soundSwitchLabel as soundSwitchLabelWith,
+  voiceHelpContent,
+  type SoundCardView,
+} from '../voice-help';
+
+const messages = getMessages('en');
+const COPY = messages.learner.audio;
+const soundCardView = (status: KoVoiceStatus, muted: boolean): SoundCardView => soundCardViewWith(status, muted, COPY);
+const soundSwitchLabel = (status: KoVoiceStatus, muted: boolean): string =>
+  soundSwitchLabelWith(status, muted, COPY, messages.a11y.soundSwitch);
+const VOICE_HELP = voiceHelpContent(COPY.voiceHelp);
 
 const ready: KoVoiceStatus = { state: 'ready', voiceId: 'v', voiceName: 'Yuna', local: true, quality: 'standard' };
 const unknown: KoVoiceStatus = { state: 'unknown' };
@@ -79,7 +91,7 @@ describe('VOICE_HELP', () => {
 
   it('tells the learner they can still play, and closes with OK', () => {
     expect(VOICE_HELP.footer).toBe('You can still play: the sound is written on screen.');
-    expect(VOICE_HELP.closeLabel).toBe('OK');
+    expect(messages.common.buttons.ok).toBe('OK');
   });
 
   it('is plain: no emoji, no age words, no shaming', () => {
@@ -90,6 +102,13 @@ describe('VOICE_HELP', () => {
   });
 
   it('the link label is the one in the copy table', () => {
-    expect(AUDIO_COPY.howToAddVoice).toBe('How to add a voice');
+    expect(COPY.howToAddVoice.cta).toBe('How to add a voice');
+  });
+
+  it('builds the sheet from the subtree it is given (en-XA)', () => {
+    const pseudo = voiceHelpContent(pseudoLocalize(messages).learner.audio.voiceHelp);
+    expect(pseudo.title).toBe(pseudoText(VOICE_HELP.title));
+    expect(pseudo.sections.map((s) => s.id)).toEqual(['apple', 'android', 'computer']);
+    expect(pseudo.sections[0]!.steps).toEqual(VOICE_HELP.sections[0]!.steps.map(pseudoText));
   });
 });

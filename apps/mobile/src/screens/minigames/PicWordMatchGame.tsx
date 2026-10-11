@@ -17,8 +17,8 @@ import {
 } from '@hangul-route/design-system';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, useWindowDimensions } from 'react-native';
+import { useMessages } from '../../i18n/use-messages';
 import {
-  PIC_WORD_COPY,
   announcement,
   canSkip,
   headerView,
@@ -95,6 +95,8 @@ export function PicWordMatchGame({ scope, host, onBack }: Props): React.ReactEle
   const boards = useMemo(() => validBoards(scope), [scope]);
   const orders = useMemo(() => boards.map((board, i) => shuffleBoard(board, seed + i)), [boards, seed]);
 
+  const m = useMessages();
+  const copy = m.learner.minigame;
   const activeProfileId = useProfileStore((s) => s.activeId);
   const romanizationMode = useLocaleStore((s) =>
     activeProfileId === null ? 'always' : (s.byProfile[activeProfileId]?.romanizationMode ?? 'always'),
@@ -173,18 +175,18 @@ export function PicWordMatchGame({ scope, host, onBack }: Props): React.ReactEle
   if (state.status === 'empty' || !board || !order) {
     return (
       <Screen>
-        <Body>{PIC_WORD_COPY.empty}</Body>
+        <Body>{copy.picWord.empty}</Body>
         {onBack ? (
           <>
             <Spacer size="lg" />
-            <Button label={PIC_WORD_COPY.back} tone="secondary" size="md" onPress={onBack} />
+            <Button label={copy.backToQuest.cta} tone="secondary" size="md" onPress={onBack} />
           </>
         ) : null}
       </Screen>
     );
   }
 
-  const header = headerView(state);
+  const header = headerView(state, copy);
   const side = touchTarget[pictureSide(width, height)];
   const pairById = new Map(board.pairs.map((p) => [p.id, p]));
   const select = (tileSide: Side, pairId: string) => (): void => dispatch({ type: 'select', side: tileSide, pairId });
@@ -198,14 +200,14 @@ export function PicWordMatchGame({ scope, host, onBack }: Props): React.ReactEle
         </View>
         <Pill label={header.label} tone="neutral" size="sm" />
         {canSkip(state) ? (
-          <Button label={PIC_WORD_COPY.skip} tone="ghost" size="sm" onPress={() => dispatch({ type: 'skip' })} testID="pic-word-skip" />
+          <Button label={copy.skip.cta} tone="ghost" size="sm" onPress={() => dispatch({ type: 'skip' })} testID="pic-word-skip" />
         ) : null}
       </View>
 
       <Spacer size="lg" />
-      <Heading level="prompt">{PIC_WORD_COPY.heading}</Heading>
+      <Heading level="prompt">{copy.picWord.heading}</Heading>
       <View accessibilityLiveRegion="polite">
-        <Caption tone="muted">{announcement(state, board)}</Caption>
+        <Caption tone="muted">{announcement(state, board, copy)}</Caption>
       </View>
 
       <Spacer size="lg" />
@@ -214,7 +216,7 @@ export function PicWordMatchGame({ scope, host, onBack }: Props): React.ReactEle
           {order.pictureOrder.map((pairId) => {
             const pair = pairById.get(pairId);
             if (!pair) return null;
-            const view = pictureTileView(pair, state);
+            const view = pictureTileView(pair, state, m.a11y.minigame);
             return (
               <TileFrame key={pairId} selected={view.selected} badge={view.badge}>
                 <ChoiceCard
@@ -232,7 +234,7 @@ export function PicWordMatchGame({ scope, host, onBack }: Props): React.ReactEle
           {order.wordOrder.map((pairId) => {
             const pair = pairById.get(pairId);
             if (!pair) return null;
-            const view = wordTileView(pair, state, { romanizationMode });
+            const view = wordTileView(pair, state, { romanizationMode }, m.a11y.minigame);
             return (
               <TileFrame key={pairId} selected={view.selected} badge={view.badge}>
                 <ChoiceCard
@@ -254,7 +256,7 @@ export function PicWordMatchGame({ scope, host, onBack }: Props): React.ReactEle
         {showMissHoya ? (
           <>
             <Spacer size="lg" />
-            <HoyaBubble tone="thinking" message={PIC_WORD_COPY.missHoya} />
+            <HoyaBubble tone="thinking" message={copy.picWord.missHoya} />
           </>
         ) : null}
       </View>

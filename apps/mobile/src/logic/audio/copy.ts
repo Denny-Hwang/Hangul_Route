@@ -1,92 +1,64 @@
+import type { Messages } from '@hangul-route/i18n';
 import type { KoVoiceStatus } from './capability';
 import type { FallbackAction, FallbackReason } from './prompt-state';
 
 /**
- * Audio UI copy (F-AUDIO-004 §3.8). Pre-A1 English, plain and calm: no emoji,
- * no age words, no failure shaming. Lives here until F-I18N-001's catalog
- * exists, then moves to `learner.audio.*` keys. Korean letters are shown by
- * the screens as taught content (with romanization), never inside these strings.
+ * Audio UI copy rules (F-AUDIO-004 §3.8). The words live in the dictionary
+ * (`learner.audio`, F-I18N-001 PR 7b); these pick which one applies and take
+ * the subtree as a parameter, so they stay pure and testable per locale.
+ * Korean letters are shown by the screens as taught content (with
+ * romanization), never inside these strings.
  */
-export const AUDIO_COPY = {
-  readHere: 'No sound? Read it here.',
-  headingListen: 'Tap the letter you hear',
-  headingText: 'Tap the letter for this sound',
-  listenAgain: 'Listen again. This one says',
-  hearIt: 'Hear it',
-  tapToHear: 'Tap to hear',
-  tapToReplay: 'Tap to replay',
-  turnSoundOn: 'Turn sound on',
-  tryAgain: 'Try again',
-  noKoreanVoice: 'No Korean voice on this device',
-  noKoreanVoiceSentence: 'No Korean voice on this device.',
-  soundIsOff: 'Sound is off.',
-  didNotPlay: 'The sound did not play.',
-  letterName: 'Letter name',
-  playSound: 'Play sound',
-  playSoundOff: 'Play sound, sound is off',
-  voiceReady: 'Korean voice: ready',
-  voiceNeedsInternet: 'Korean voice needs the internet',
-  voiceLooking: 'Looking for a Korean voice',
-  howToAddVoice: 'How to add a voice',
-} as const;
+export type AudioCopy = Messages['learner']['audio'];
 
-export function matchSoundHeading(textShown: boolean): string {
-  return textShown ? AUDIO_COPY.headingText : AUDIO_COPY.headingListen;
+export function matchSoundHeading(textShown: boolean, copy: AudioCopy): string {
+  return textShown ? copy.heading.text : copy.heading.listen;
 }
 
 /** Accessibility label of the speaker button; it states the state. */
-export function speakerLabel(muted: boolean): string {
-  return muted ? AUDIO_COPY.playSoundOff : AUDIO_COPY.playSound;
+export function speakerLabel(muted: boolean, copy: AudioCopy): string {
+  return muted ? copy.speaker.off : copy.speaker.on;
 }
 
-export function fallbackMessage(reason: FallbackReason | null): string | null {
+export function fallbackMessage(reason: FallbackReason | null, copy: AudioCopy): string | null {
   switch (reason) {
     case 'muted':
-      return AUDIO_COPY.soundIsOff;
+      return copy.soundIsOff;
     case 'no_voice':
-      return AUDIO_COPY.noKoreanVoice;
+      return copy.noKoreanVoice;
     case 'error':
-      return AUDIO_COPY.didNotPlay;
+      return copy.didNotPlay;
     case 'blocked':
-      return AUDIO_COPY.tapToHear;
+      return copy.tapToHear;
     case null:
       return null;
   }
 }
 
-export function fallbackActionLabel(action: FallbackAction): string | null {
-  switch (action) {
-    case 'turn_on':
-      return AUDIO_COPY.turnSoundOn;
-    case 'try_again':
-      return AUDIO_COPY.tryAgain;
-    case 'tap_to_hear':
-      return AUDIO_COPY.tapToHear;
-    case 'none':
-      return null;
-  }
+export function fallbackActionLabel(action: FallbackAction, copy: AudioCopy): string | null {
+  return action === 'none' ? null : copy.action[action].cta;
 }
 
 /** The Profile "Sound" card's second line (§3.7). */
-export function voiceStatusLine(status: KoVoiceStatus): string {
-  if (status.state === 'ready') return AUDIO_COPY.voiceReady;
-  if (status.state === 'unknown') return AUDIO_COPY.voiceLooking;
-  if (status.reason === 'offline_network_only') return AUDIO_COPY.voiceNeedsInternet;
-  return AUDIO_COPY.noKoreanVoice;
+export function voiceStatusLine(status: KoVoiceStatus, copy: AudioCopy): string {
+  if (status.state === 'ready') return copy.voice.ready;
+  if (status.state === 'unknown') return copy.voice.looking;
+  if (status.reason === 'offline_network_only') return copy.voice.needsInternet;
+  return copy.noKoreanVoice;
 }
 
 /**
  * The second line of the fallback panel (§3.8): why the text is up. A blocked
  * sound has no line, because the speaker button itself reads "Tap to hear".
  */
-export function panelDetail(reason: FallbackReason | null): string | null {
+export function panelDetail(reason: FallbackReason | null, copy: AudioCopy): string | null {
   switch (reason) {
     case 'muted':
-      return AUDIO_COPY.soundIsOff;
+      return copy.soundIsOff;
     case 'no_voice':
-      return AUDIO_COPY.noKoreanVoiceSentence;
+      return copy.noKoreanVoiceSentence;
     case 'error':
-      return AUDIO_COPY.didNotPlay;
+      return copy.didNotPlay;
     case 'blocked':
     case null:
       return null;

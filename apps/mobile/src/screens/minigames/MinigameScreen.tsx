@@ -3,6 +3,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React from 'react';
 import { flags } from '../../config/flags';
 import { questById } from '../../content';
+import { useMessages } from '../../i18n/use-messages';
 import { scopeFor } from '../../logic/minigame-config';
 import type { RootStackParamList } from '../../navigation/types';
 import { track } from '../../platform/telemetry';
@@ -30,6 +31,7 @@ export function MinigameScreen({ route, navigation }: Props): React.ReactElement
   const ref = step?.minigameRef;
   const scope = ref ? scopeFor(ref) : undefined;
   const activeProfileId = useProfileStore((s) => activeProfileSelector(s)?.id);
+  const copy = useMessages().learner.minigame;
 
   const close = (): void => {
     if (scope) {
@@ -47,12 +49,12 @@ export function MinigameScreen({ route, navigation }: Props): React.ReactElement
     <Screen>
       <Body>{message}</Body>
       <Spacer size="lg" />
-      <Button label="Back to quest" tone="secondary" size="md" onPress={() => navigation.goBack()} />
+      <Button label={copy.backToQuest.cta} tone="secondary" size="md" onPress={() => navigation.goBack()} />
     </Screen>
   );
 
   if (!quest || !step || !scope) {
-    return fallback('Minigame not found.');
+    return fallback(copy.notFound);
   }
 
   // The quest host for the games that take one (F-QUEST-002 §3.12): answers go to the run store
@@ -79,7 +81,7 @@ export function MinigameScreen({ route, navigation }: Props): React.ReactElement
       return <StorySequenceGame scope={scope} onFinish={close} sequenceId={ref} />;
     case 'voice-echo':
       if (!flags.voiceEchoEnabled) {
-        return fallback('Voice practice is opening in our next beta.');
+        return fallback(copy.voiceSoon);
       }
       return <VoiceEchoGame scope={scope} onFinish={close} />;
     case 'odd-one-out':
@@ -93,6 +95,6 @@ export function MinigameScreen({ route, navigation }: Props): React.ReactElement
     case 'tap-respond':
       return <TapRespondGame scope={scope} onFinish={close} />;
     default:
-      return fallback('This minigame is coming soon.');
+      return fallback(copy.comingSoon);
   }
 }

@@ -1,25 +1,38 @@
 import type { PicWordRound } from '@hangul-route/content-schema';
+import { getMessages, pseudoLocalize, pseudoText } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import {
-  PIC_WORD_COPY,
   PIC_WORD_TIMING,
-  announcement,
+  announcement as announcementWith,
   boardCount,
   canSkip,
-  headerView,
+  headerView as headerViewWith,
   hintTarget,
   pairRoundKey,
   pictureSide,
-  pictureTileView,
+  pictureTileView as pictureTileViewWith,
   shuffleBoard,
   startFlow,
   stepFlow,
   validBoards,
-  wordTileView,
+  wordTileView as wordTileViewWith,
   type FlowEffect,
   type FlowEvent,
   type PicWordFlowState,
 } from '../pic-word-flow';
+
+// The words are learner.minigame and a11y.minigame (F-I18N-001 PR 7b); these tests read the dictionary.
+const messages = getMessages('en');
+const COPY = messages.learner.minigame;
+const A11Y = messages.a11y.minigame;
+type PicArgs = Parameters<typeof pictureTileViewWith>;
+type WordArgs = Parameters<typeof wordTileViewWith>;
+const headerView = (state: PicWordFlowState): ReturnType<typeof headerViewWith> => headerViewWith(state, COPY);
+const pictureTileView = (pair: PicArgs[0], state: PicArgs[1]): ReturnType<typeof pictureTileViewWith> =>
+  pictureTileViewWith(pair, state, A11Y);
+const wordTileView = (pair: WordArgs[0], state: WordArgs[1], context: WordArgs[2]): ReturnType<typeof wordTileViewWith> =>
+  wordTileViewWith(pair, state, context, A11Y);
+const announcement = (state: PicWordFlowState, board: PicWordRound): string => announcementWith(state, board, COPY);
 
 const ko = (word: string, romanization: string, en: string) => ({ ko: word, romanization, en });
 
@@ -365,7 +378,7 @@ describe('tile views', () => {
     const state = run(fresh(), [pic('bap'), word('san')]).state;
     const tile = wordTileView(san, state, always);
     expect(tile.cardState).toBe('wrong');
-    expect(tile.accessibilityLabel).toBe(`${PIC_WORD_COPY.a11y.wrong}: 산, san`);
+    expect(tile.accessibilityLabel).toBe('Not this one: 산, san');
     expect(wordTileView(hanbok, state, always).cardState).toBe('idle');
     expect(pictureTileView(bap, state).cardState).toBe('idle');
   });
@@ -379,7 +392,7 @@ describe('tile views', () => {
     const state = run(fresh(), [pic('bap'), word('san'), word('hanbok'), { type: 'clear-flash' }]).state;
     const tile = wordTileView(bap, state, always);
     expect(tile.cardState).toBe('hint');
-    expect(tile.accessibilityLabel).toBe(`${PIC_WORD_COPY.a11y.hint}: 밥, bap`);
+    expect(tile.accessibilityLabel).toBe('Look here: 밥, bap');
     expect(wordTileView(yeon, state, always).cardState).toBe('idle');
   });
 
@@ -420,7 +433,7 @@ describe('tile views', () => {
 
 describe('announcement', () => {
   it('invites the first tap when nothing is selected', () => {
-    expect(announcement(fresh(), board)).toBe(PIC_WORD_COPY.instruction);
+    expect(announcement(fresh(), board)).toBe('Tap a picture, then its word.');
   });
 
   it('announces a selected picture and asks for a word', () => {
@@ -433,7 +446,23 @@ describe('announcement', () => {
 
   it('falls back to the instruction for a selection that is not on the board', () => {
     const state: PicWordFlowState = { ...fresh(), selected: { side: 'word', pairId: 'ghost' } };
-    expect(announcement(state, board)).toBe(PIC_WORD_COPY.instruction);
+    expect(announcement(state, board)).toBe('Tap a picture, then its word.');
+  });
+});
+
+describe('the view-models take their words as a parameter (F-I18N-001 §3.4 rule 3)', () => {
+  it('render the subtree they are given (en-XA)', () => {
+    const pseudo = pseudoLocalize(messages);
+    expect(headerViewWith(fresh(), pseudo.learner.minigame).label).toBe(pseudoText('0 / 8'));
+    expect(announcementWith(fresh(), board, pseudo.learner.minigame)).toBe(pseudoText('Tap a picture, then its word.'));
+    expect(announcementWith(run(fresh(), [pic('bap')]).state, board, pseudo.learner.minigame)).toBe(
+      pseudoText('Picture selected: rice. Choose a word.'),
+    );
+    const bap = board.pairs.find((p) => p.id === 'bap')!;
+    const matched = run(fresh(), [pic('bap'), word('bap')]).state;
+    expect(pictureTileViewWith(bap, matched, pseudo.a11y.minigame).accessibilityLabel).toBe(
+      pseudoText('Matched, number 1: rice'),
+    );
   });
 });
 

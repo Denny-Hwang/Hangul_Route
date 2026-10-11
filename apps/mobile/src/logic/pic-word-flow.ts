@@ -1,4 +1,5 @@
 import type { PicWordRound, RomanizationMode } from '@hangul-route/content-schema';
+import type { Messages } from '@hangul-route/i18n';
 import { seededRandom } from './listen-pick';
 import type { MinigameScope } from './minigame-config';
 
@@ -30,28 +31,9 @@ const MIN_PAIRS = 3;
 /** Misses on one pair before its partner is ringed. */
 const HINT_AFTER_MISSES = 2;
 
-/**
- * English copy until the quest-flow messages move into the F-I18N-001 catalog
- * (spec §3.1: one module, no strings inline in the screen).
- */
-export const PIC_WORD_COPY = {
-  heading: 'Match each picture',
-  instruction: 'Tap a picture, then its word.',
-  pictureSelected: 'Picture selected',
-  wordSelected: 'Word selected',
-  choosePicture: 'Choose a picture.',
-  chooseWord: 'Choose a word.',
-  missHoya: 'Try another one',
-  skip: 'Skip',
-  empty: 'Nothing to play here',
-  back: 'Back to quest',
-  a11y: {
-    selected: 'Selected',
-    matched: 'Matched, number',
-    wrong: 'Not this one',
-    hint: 'Look here',
-  },
-} as const;
+/** The words are `learner.minigame` and `a11y.minigame` (F-I18N-001 PR 7b), passed in by the screen. */
+export type MinigameCopy = Messages['learner']['minigame'];
+export type MinigameA11y = Messages['a11y']['minigame'];
 
 export type Side = 'picture' | 'word';
 
@@ -304,11 +286,11 @@ export interface HeaderView {
   label: string;
 }
 
-export function headerView(state: PicWordFlowState): HeaderView {
+export function headerView(state: PicWordFlowState, copy: MinigameCopy): HeaderView {
   const max = state.pairCounts.reduce((sum, n) => sum + n, 0);
   const before = state.pairCounts.slice(0, state.boardIdx).reduce((sum, n) => sum + n, 0);
   const value = Math.min(max, before + state.matched.length);
-  return { value, max, label: `${value} / ${max}` };
+  return { value, max, label: copy.progress.pill(value, max) };
 }
 
 export type TileCardState = 'idle' | 'correct' | 'wrong' | 'hint';
@@ -337,7 +319,14 @@ export interface WordTileView extends TileBase {
   gloss: string | undefined;
 }
 
-function tileBase(pairId: string, side: Side, state: PicWordFlowState): Omit<TileBase, 'accessibilityLabel'> & { prefix: string | undefined } {
+type Announce = (label: string) => string;
+
+function tileBase(
+  pairId: string,
+  side: Side,
+  state: PicWordFlowState,
+  a11y: MinigameA11y,
+): Omit<TileBase, 'accessibilityLabel'> & { announce: Announce } {
   const matchedAt = state.matched.indexOf(pairId);
   const badge = matchedAt >= 0 ? matchedAt + 1 : undefined;
   const isFlash = state.flash?.side === side && state.flash.pairId === pairId;
@@ -346,32 +335,30 @@ function tileBase(pairId: string, side: Side, state: PicWordFlowState): Omit<Til
   const selected = state.selected?.side === side && state.selected.pairId === pairId;
 
   let cardState: TileCardState = 'idle';
-  let prefix: string | undefined;
+  let announce: Announce = (label) => label;
   if (badge !== undefined) {
     cardState = 'correct';
-    prefix = `${PIC_WORD_COPY.a11y.matched} ${badge}`;
+    announce = (label) => a11y.option.matched(badge, label);
   } else if (isFlash) {
     cardState = 'wrong';
-    prefix = PIC_WORD_COPY.a11y.wrong;
+    announce = a11y.option.wrong;
   } else if (isHint) {
     cardState = 'hint';
-    prefix = PIC_WORD_COPY.a11y.hint;
+    announce = a11y.option.hint;
   } else if (selected) {
-    prefix = PIC_WORD_COPY.a11y.selected;
+    announce = a11y.option.selected;
   }
-  return { pairId, cardState, selected, badge, prefix };
+  return { pairId, cardState, selected, badge, announce };
 }
 
-const named = (prefix: string | undefined, base: string): string => (prefix === undefined ? base : `${prefix}: ${base}`);
-
 /** How one picture tile looks and is announced in the current state. */
-export function pictureTileView(pair: PicWordPair, state: PicWordFlowState): PictureTileView {
-  const { prefix, ...base } = tileBase(pair.id, 'picture', state);
+export function pictureTileView(pair: PicWordPair, state: PicWordFlowState, a11y: MinigameA11y): PictureTileView {
+  const { announce, ...base } = tileBase(pair.id, 'picture', state, a11y);
   return {
     ...base,
     pictureRef: pair.pictureRef,
     gloss: pair.word.en,
-    accessibilityLabel: named(prefix, pair.word.en),
+    accessibilityLabel: announce(pair.word.en),
   };
 }
 
@@ -380,23 +367,22 @@ export function wordTileView(
   pair: PicWordPair,
   state: PicWordFlowState,
   context: { romanizationMode: RomanizationMode },
+  a11y: MinigameA11y,
 ): WordTileView {
-  const { prefix, ...base } = tileBase(pair.id, 'word', state);
+  const { announce, ...base } = tileBase(pair.id, 'word', state, a11y);
   const touched = base.selected || base.cardState === 'correct' || base.cardState === 'wrong';
   const romanization = context.romanizationMode === 'always' || touched ? pair.word.romanization : '';
   const gloss = base.cardState === 'correct' ? pair.word.en : undefined;
   const spoken = [pair.word.ko, romanization, gloss].filter((part) => part !== undefined && part !== '').join(', ');
-  return { ...base, ko: pair.word.ko, romanization, gloss, accessibilityLabel: named(prefix, spoken) };
+  return { ...base, ko: pair.word.ko, romanization, gloss, accessibilityLabel: announce(spoken) };
 }
 
 /** The line under the board (a live region): what is selected and what to do next. */
-export function announcement(state: PicWordFlowState, board: PicWordRound): string {
+export function announcement(state: PicWordFlowState, board: PicWordRound, copy: MinigameCopy): string {
   const first = state.selected;
   const pair = first === null ? undefined : board.pairs.find((p) => p.id === first.pairId);
-  if (first === null || pair === undefined) return PIC_WORD_COPY.instruction;
-  return first.side === 'picture'
-    ? `${PIC_WORD_COPY.pictureSelected}: ${pair.word.en}. ${PIC_WORD_COPY.chooseWord}`
-    : `${PIC_WORD_COPY.wordSelected}: ${pair.word.ko}. ${PIC_WORD_COPY.choosePicture}`;
+  if (first === null || pair === undefined) return copy.picWord.instruction;
+  return first.side === 'picture' ? copy.picWord.pictureSelected(pair.word.en) : copy.picWord.wordSelected(pair.word.ko);
 }
 
 /**

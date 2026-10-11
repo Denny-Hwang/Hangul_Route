@@ -1,3 +1,5 @@
+import { plural } from '../../plural';
+
 /**
  * Accessibility labels (F-I18N-001 §3.4). The design system takes these as props
  * with its own English default, so it needs no i18n dependency.
@@ -38,6 +40,62 @@ export const a11y = {
   flipToBack: 'Tap to flip card to back',
   flipToFront: 'Tap to flip card to front',
   shareCard: 'Share this card',
+  /** The Profile Sound switch, its state and the voice line read as one group (`voice` has no colon). */
+  soundSwitch: (muted: boolean, voice: string) => `Sound, ${muted ? 'off' : 'on'}. ${voice}.`,
+  /** The minigames' screen-reader labels (PR 7b); `romanization` is a sound value, never Hangul. */
+  minigame: {
+    hear: (romanization: string) => `Hear ${romanization}`,
+    /** A batchim tile in Build a Letter. */
+    finalTile: (romanization: string) => `final ${romanization}`,
+    /** The block-shape hint picture; `hint` is one of `learner.minigame.buildLetter.shape`. */
+    blockShape: (hint: string) => `Block shape. ${hint}`,
+    traceLetter: (romanization: string) => `Trace the letter ${romanization}`,
+    traceCanvas: (romanization: string) => `Draw the letter ${romanization} with your finger`,
+    /** The still stroke-order diagram read aloud: "Stroke order. 1: right, then down. 2: a loop." */
+    strokeOrder: {
+      guide: 'Stroke order guide',
+      /** `strokes` are the per-stroke descriptions, in writing order. */
+      summary: (strokes: readonly string[]) =>
+        `${plural('en', strokes.length, {
+          one: 'Stroke order. One stroke',
+          other: `Stroke order. ${strokes.length} strokes`,
+        })}. ${strokes.map((stroke, i) => `${i + 1}: ${stroke}`).join('. ')}.`,
+      dot: 'a dot',
+      loop: 'a loop',
+      /** A stroke that turns too often, described by where it ends. */
+      curving: (direction: string) => `curving ${direction}`,
+      /** The legs of one stroke, in drawing order. */
+      legs: (directions: readonly string[]) => directions.join(', then '),
+      /** By octant, clockwise from right (screen y grows downward). */
+      direction: {
+        right: 'right',
+        downRight: 'down and right',
+        down: 'down',
+        downLeft: 'down and left',
+        left: 'left',
+        upLeft: 'up and left',
+        up: 'up',
+        upRight: 'up and right',
+      },
+      /** The diagram's label: its description, then how to close it. */
+      close: (description: string) => `${description} Tap to close.`,
+    },
+    /** Listen & Pick: the speaker button, and a picture option with no label. */
+    hearAgain: 'Play the sound again',
+    picture: 'Picture',
+    /** An answer card in its state (Listen & Pick, Pic-Word Match); `label` is what the card says. */
+    option: {
+      correct: (label: string) => `Right answer: ${label}`,
+      wrong: (label: string) => `Not this one: ${label}`,
+      hint: (label: string) => `Look here: ${label}`,
+      /** Pic-Word Match: picked, waiting for its partner; and a matched pair with its match number. */
+      selected: (label: string) => `Selected: ${label}`,
+      matched: (badge: number, label: string) => `Matched, number ${badge}: ${label}`,
+    },
+    /** Card Match: a Korean word (its romanization, else the word) and a meaning (content gloss). */
+    koreanWord: (word: string) => `Korean word ${word}`,
+    meaning: (gloss: string) => `English meaning ${gloss}`,
+  },
   /** A taught Korean item: Korean text, its romanization and (optionally) a gloss in the UI language. */
   koreanItem: (item: { ko: string; romanization: string; gloss?: string }) =>
     item.gloss === undefined
