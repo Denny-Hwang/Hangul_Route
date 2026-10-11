@@ -8,7 +8,16 @@
  */
 import type { iconGlyphs } from '@hangul-route/design-system/icon-glyphs';
 
-/** A design-system icon (design/components/Icon/spec.md); the landing draws no emoji (CLAUDE.md). */
+/**
+ * A design-system icon (design/components/Icon/spec.md); the landing draws no emoji (CLAUDE.md).
+ *
+ * The marks are decorative (aria-hidden, always beside the game title) and reuse the shipped
+ * glyph set; there is no glyph per game. Picks, closest shape first:
+ * speaker = hear a sound · pencil = trace · plus = put two strokes together · sparkle = the one
+ * that stands out · journey (the route map) = the world behind the letter · ear = listen and tap ·
+ * card = card match · book = story · replay = hear it, then say it back (no mic glyph yet).
+ * A dedicated glyph goes through the design-mock path first (design/components/Icon).
+ */
 export type LandingIconName = keyof typeof iconGlyphs;
 
 export type MinigameFamily = 'recognition' | 'production' | 'application' | 'review';
