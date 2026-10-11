@@ -400,7 +400,8 @@ describe('routeCatalogOf', () => {
     const route = routeCatalogOf(CATALOG);
     const letters = route.quests.find((q) => q.id === 'quest:stage1-letters-q1');
     expect(letters).toMatchObject({ episodeId: 'episode:stage1-letters', stage: 'stage1', theme: 'letters', playable: true, grid: true });
-    expect(letters?.teaches).toEqual([]);
+    expect(letters?.teaches).toEqual(['ㅏ', 'ㅓ', 'ㄱ', 'ㄴ']); // F-QUEST-002 Q-6a
+    expect(route.quests.find((q) => q.id === 'quest:stage1-life-q1')?.teaches).toEqual([]);
   });
 
   it('is playable when the cell is ready and, for a story, when the story is ready', () => {
