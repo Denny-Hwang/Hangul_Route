@@ -43,9 +43,26 @@ export function getMessages(locale: MessageLocale): Messages {
   return merged;
 }
 
-/** Dotted paths that fell back to English for `locale` (tests and `scripts/i18n-status.mjs`). */
+/**
+ * Dictionary subtrees that stay English in every locale on purpose: the Privacy Policy and the Terms of
+ * Service are English-authoritative until legal review (decision L10, F-I18N-001 §4). es / ko show the
+ * English text under a localized notice (`landing.legal.draft` and `backHome` stay translatable), so an
+ * overlay must not set a leaf under these prefixes (messages.structure.test.ts), and they are not
+ * fallbacks: they never count against a locale's key coverage (§3.10 release gate).
+ */
+export const ENGLISH_AUTHORITATIVE_PREFIXES = ['landing.legal.privacy.', 'landing.legal.terms.'] as const;
+
+/** True when `path` is in a subtree that stays English in every locale (ENGLISH_AUTHORITATIVE_PREFIXES). */
+export function isEnglishAuthoritative(path: string): boolean {
+  return ENGLISH_AUTHORITATIVE_PREFIXES.some((prefix) => path.startsWith(prefix));
+}
+
+/**
+ * Dotted paths that fell back to English for `locale` (tests and `scripts/i18n-status.mjs`). The
+ * English-authoritative legal text is intentionally English, so it is never listed.
+ */
 export function fallbackPaths(locale: MessageLocale): string[] {
   if (locale === 'en' || locale === PSEUDO_LOCALE) return [];
   const translated = new Set(leafPaths(OVERLAYS[locale]));
-  return leafPaths(en).filter((path) => !translated.has(path));
+  return leafPaths(en).filter((path) => !translated.has(path) && !isEnglishAuthoritative(path));
 }

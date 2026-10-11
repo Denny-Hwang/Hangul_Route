@@ -4,16 +4,21 @@
  * names.
  */
 import { borderWidth, colors } from '../tokens';
-import type { ColorToken, StrokeToken } from './types';
+import type { ColorToken, ReservedColorGroup, StrokeToken } from './types';
 
 const RESERVED: ReadonlySet<string> = new Set(['surface.overlay', 'surface.inkScrim', 'feedback.danger']);
 
+/** Whole groups a scene may not use: WordArt's content tones are drawn only inside WordArt (F-VOC-002 §3.4). */
+const RESERVED_GROUPS: ReadonlySet<string> = new Set<ReservedColorGroup>(['vocab']);
+
 /** Every leaf of `colors` a picture may use, in table order. */
-export const COLOR_TOKENS: readonly ColorToken[] = Object.entries(colors).flatMap(([group, values]) =>
-  Object.keys(values)
-    .map((name) => `${group}.${name}`)
-    .filter((path) => !RESERVED.has(path)),
-) as ColorToken[];
+export const COLOR_TOKENS: readonly ColorToken[] = Object.entries(colors)
+  .filter(([group]) => !RESERVED_GROUPS.has(group))
+  .flatMap(([group, values]) =>
+    Object.keys(values)
+      .map((name) => `${group}.${name}`)
+      .filter((path) => !RESERVED.has(path)),
+  ) as ColorToken[];
 
 const TOKEN_SET: ReadonlySet<string> = new Set(COLOR_TOKENS);
 

@@ -1,11 +1,11 @@
 {
   "v": 1,
   "id": "story:cheugugi-rain-gauge",
-  "state": "draft",
+  "state": "ready",
   "contentVer": 1,
   "title": {
     "ko": "비를 재는 그릇, 측우기",
-    "romanization": "",
+    "romanization": "Bireul jaeneun geureut, cheugugi",
     "en": "The Bowl That Measured the Rain"
   },
   "summaryEn": "Hoya follows the Joseon crown prince's rain experiments to the 1442 rain gauge, the cheugugi, and meets the only Joseon rain-gauge vessel known to survive.",
@@ -14,8 +14,8 @@
   "recommendedStage": 1,
   "minutes": 4,
   "learningGoalsEn": [
-    "Recognize and say 비 (bi, rain) and the short sentence 비가 와요 (It's raining).",
-    "Know that a 1441 royal record describes the crown prince (later King Munjong) testing rain with a metal vessel, and that the device was named 측우기 in 1442.",
+    "Read and recognize 비 (bi, rain) and the short sentence 비가 와요 (biga wayo, It's raining).",
+    "Know that a 1441 royal record describes the crown prince (later King Munjong) testing rain with a metal vessel, and that the device was named 측우기 (cheugugi, rain gauge) in 1442.",
     "Understand that officials measured rain with a standard ruler and kept written records across the provinces.",
     "Know that the only Joseon rain gauge vessel known to survive was made in 1837 and is a National Treasure."
   ],
@@ -76,7 +76,7 @@
       "ko": "비가 와요",
       "romanization": "biga wayo",
       "en": "It's raining.",
-      "kind": "word"
+      "kind": "phrase"
     }
   ],
   "cultureNotes": [],
@@ -87,6 +87,7 @@
         {
           "id": "s1",
           "narrationEn": "Pitter-patter! Hoya the tiger holds out a paw to catch the raindrops. \"In Korean, rain is {kw:bi},\" he says. \"Long ago, the Joseon kingdom found a clever way to measure rain. Let's go and see!\"",
+          "captionEn": "Hoya catches the falling rain",
           "keyword": {
             "id": "bi",
             "ko": "비",
@@ -99,11 +100,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "A small, friendly tiger cub in a light vest stands in gentle rain holding out one paw; soft gray clouds and a tiled-roof Korean house behind him."
         },
         {
           "id": "s2",
           "narrationEn": "A royal record from 1441 says the crown prince, the king's son who later became King Munjong, worried about drought. After each rain, he dug into the ground to see how deep the water had soaked in.",
+          "captionEn": "The crown prince digs to check the rain",
           "keyword": {
             "id": "seja",
             "ko": "세자",
@@ -116,11 +119,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "A young Joseon crown prince in a red robe kneels in a palace garden beside a small hole, looking at damp soil; a dry field in the distance."
         },
         {
           "id": "s3",
-          "narrationEn": "But soil can be dry or damp, so digging could not show exactly how much rain had fallen. So he had a vessel cast from copper and placed in the palace to collect the rainwater.",
+          "narrationEn": "But soil can be dry or damp, so digging could not show exactly how much rain had fallen. Instead, he had a copper vessel made and placed in the palace to collect the rainwater.",
+          "captionEn": "A copper vessel collects the rain",
           "keyword": {
             "id": "geureut",
             "ko": "그릇",
@@ -134,11 +139,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "A plain metal cylinder standing in a palace courtyard catching rain, while the prince watches from under the wooden eaves."
         },
         {
           "id": "s4",
           "narrationEn": "In 1442, in King Sejong's reign, a standard rain gauge was named {kw:cheugugi}, 'rain-measuring device.' It stood on a stand at the royal observatory office. After each rain, an official measured the water with a standard ruler and wrote it down.",
+          "captionEn": "An official measures rain with a ruler",
           "keyword": {
             "id": "cheugugi",
             "ko": "측우기",
@@ -151,11 +158,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "A Joseon official in a black hat dips a slim wooden ruler into a metal rain gauge on a square stone stand; a brush and a record book lie beside him."
         },
         {
           "id": "s5",
           "narrationEn": "Rain gauges and rulers were sent to every province. Local towns could make their gauges from pottery, set them on a stand in a courtyard, measure each rain, and report it to the king.",
+          "captionEn": "Rain gauges are sent to every province",
           "keyword": {
             "id": "ja",
             "ko": "자",
@@ -168,11 +177,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "A pottery rain gauge on a stone stand in a country government courtyard; a local magistrate measures with a bamboo ruler; green hills behind."
         },
         {
           "id": "s6",
           "narrationEn": "Joseon sent rain gauges across the land, but only one gauge itself is known to survive today: the rain gauge of the Chungcheong provincial office in Gongju. It was made of bronze in 1837 and is a National Treasure.",
+          "captionEn": "Only one Joseon gauge vessel is known to survive",
           "keyword": {
             "id": "gukbo",
             "ko": "국보",
@@ -186,23 +197,26 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "A bronze cylindrical rain gauge made of three stacked sections, displayed on a museum pedestal under a soft spotlight; Hoya gazes up in wonder."
         },
         {
           "id": "s7",
-          "narrationEn": "Today it is kept at the National Meteorological Museum of Korea in Seoul. Hoya grins and points at the sky. \"Next time it rains, you can say it in Korean: {kw:biga-wayo}!\"",
+          "narrationEn": "Today it is kept at the National Meteorological Museum of Korea in Seoul. Hoya grins and points at the sky. \"Next time it rains, you will know the words: {kw:biga-wayo}!\"",
+          "captionEn": "The gauge rests in a museum in Seoul",
           "keyword": {
             "id": "biga-wayo",
             "ko": "비가 와요",
             "romanization": "biga wayo",
             "en": "It's raining.",
-            "kind": "word"
+            "kind": "phrase"
           },
           "factIds": [
             "f6"
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Hoya under a small paper umbrella, pointing happily at the rainy sky in front of a modest museum building."
         }
       ],
@@ -214,7 +228,7 @@
           "options": [
             {
               "id": "a",
-              "en": "Digging was too slow to do after every single shower",
+              "en": "Rain never soaked into the soil at all",
               "isCorrect": false
             },
             {
@@ -224,17 +238,18 @@
             },
             {
               "id": "c",
-              "en": "Digging harmed the palace garden when done each day",
+              "en": "The crown prince was not allowed to dig",
               "isCorrect": false
             }
           ],
+          "explainEn": "Soil can be dry or damp, so digging could not show exactly how much rain had fallen.",
           "factIds": [
             "f2"
           ]
         },
         {
           "id": "c2",
-          "kind": "detail",
+          "kind": "pick-meaning",
           "promptEn": "What does a {target} measure?",
           "target": {
             "ko": "측우기",
@@ -258,6 +273,7 @@
               "isCorrect": true
             }
           ],
+          "explainEn": "A cheugugi collected rainwater, and an official measured how deep the water was with a standard ruler.",
           "factIds": [
             "f3"
           ]
@@ -283,6 +299,7 @@
               "isCorrect": false
             }
           ],
+          "explainEn": "The Gongju rain gauge was made of bronze in 1837. It is the only Joseon gauge vessel known to survive.",
           "factIds": [
             "f5"
           ]
@@ -474,6 +491,6 @@
     "scope": "cluster",
     "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted."
   },
-  "authorNotes": "Attribution: popular retellings often say Jang Yeong-sil invented the rain gauge, but the Sejong Sillok (1441-04-29, lunar) credits the crown prince's (later King Munjong's) experiments and encykorea's 통영 측우대 entry says the system was made under the crown prince's lead; Jang Yeong-sil is therefore not mentioned. Deliberately omitted: the KHS description's comparative claim that the cheugugi was the world's first scientific rain gauge, about 200 years before the West (priority claims are contested); the 1441-08-18 proposal's dimensions and the 1442 standard size (1 cheok 5 chon by 7 chon); the Gongju gauge's removal to Japan (KHS: c.1915; encykorea: early 1910s) and return in 1971 (colonial-era history is out of scope); the 1770/1771 revival under King Yeongjo (sources differ on the year). Materials: the Sillok uses 銅 (copper/bronze) for the crown prince's 1441 vessel and 鐵 (cast metal/iron) for the 1442 standard, so narration says 'copper' and 'metal' respectively; the Gongju gauge is bronze (encykorea). All Sillok dates are lunar. Theme set to 'crafts' to match BP04/BP05 Pillar E (E3 측우기). REVISION: (a) Scene 6/summary/learning goal now say only one gauge VESSEL survives; stone stands (대석/측우대) also survive (encykorea E0007902; Tongyeong stand is a Treasure, E0068941). (b) Museum English name 'National Meteorological Museum of Korea' taken from the museum's own website footer (science.kma.go.kr/museum/); the KHS portal lists only the Korean name. (c) Romanization of 서운관 is Seoun-gwan (seo-un-gwan); 'Seounwan' (proposed by one fact-check) would transcribe 서운완, so it was not adopted. (d) Second source added for f2 (신편한국사 via 우리역사넷); new sources accessed 2026-10-10.",
+  "authorNotes": "Attribution: popular retellings often say Jang Yeong-sil invented the rain gauge, but the Sejong Sillok (1441-04-29, lunar) credits the crown prince's (later King Munjong's) experiments and encykorea's 통영 측우대 entry says the system was made under the crown prince's lead; Jang Yeong-sil is therefore not mentioned. Deliberately omitted: the KHS description's comparative claim that the cheugugi was the world's first scientific rain gauge, about 200 years before the West (priority claims are contested); the 1441-08-18 proposal's dimensions and the 1442 standard size (1 cheok 5 chon by 7 chon); the Gongju gauge's removal to Japan (KHS: c.1915; encykorea: early 1910s) and return in 1971 (colonial-era history is out of scope); the 1770/1771 revival under King Yeongjo (sources differ on the year). Materials: the Sillok uses 銅 (copper/bronze) for the crown prince's 1441 vessel and 鐵 (cast metal/iron) for the 1442 standard, so narration says 'copper' and 'metal' respectively; the Gongju gauge is bronze (encykorea). All Sillok dates are lunar. Theme set to 'crafts' to match BP04/BP05 Pillar E (E3 측우기). REVISION: (a) Scene 6/summary/learning goal now say only one gauge VESSEL survives; stone stands (대석/측우대) also survive (encykorea E0007902; Tongyeong stand is a Treasure, E0068941). (b) Museum English name 'National Meteorological Museum of Korea' taken from the museum's own website footer (science.kma.go.kr/museum/); the KHS portal lists only the Korean name. (c) Romanization of 서운관 is Seoun-gwan (seo-un-gwan); 'Seounwan' (proposed by one fact-check) would transcribe 서운완, so it was not adopted. (d) Second source added for f2 (신편한국사 via 우리역사넷); new sources accessed 2026-10-10. PR 1.8c: check c1 distractors replaced with options the story contradicts (s2: the water soaked in; the crown prince dug), so the item has one answer from the story text.",
   "errata": []
 }

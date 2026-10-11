@@ -14,9 +14,11 @@ import {
   radii,
   spacing,
   touchTarget,
+  useLayoutClass,
+  useMediaSize,
 } from '@hangul-route/design-system';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { View, useWindowDimensions } from 'react-native';
+import { View } from 'react-native';
 import { useMessages } from '../../i18n/use-messages';
 import {
   announcement,
@@ -101,7 +103,9 @@ export function PicWordMatchGame({ scope, host, onBack }: Props): React.ReactEle
   const romanizationMode = useLocaleStore((s) =>
     activeProfileId === null ? 'always' : (s.byProfile[activeProfileId]?.romanizationMode ?? 'always'),
   );
-  const { width, height } = useWindowDimensions();
+  // F-LAYOUT-001 §3.6, §3.12: the window from the layout class; the picture grows with its media scale.
+  const { windowWidth, windowHeight } = useLayoutClass();
+  const side = useMediaSize(touchTarget[pictureSide(windowWidth, windowHeight)]);
 
   const [state, setState] = useState<PicWordFlowState>(() =>
     startFlow(boards.map((board) => board.pairs.length)),
@@ -187,7 +191,6 @@ export function PicWordMatchGame({ scope, host, onBack }: Props): React.ReactEle
   }
 
   const header = headerView(state, copy);
-  const side = touchTarget[pictureSide(width, height)];
   const pairById = new Map(board.pairs.map((p) => [p.id, p]));
   const select = (tileSide: Side, pairId: string) => (): void => dispatch({ type: 'select', side: tileSide, pairId });
   const showMissHoya = state.selected !== null && (state.missCounts[state.selected.pairId] ?? 0) > 0;

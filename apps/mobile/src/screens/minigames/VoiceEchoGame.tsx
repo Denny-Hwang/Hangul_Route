@@ -12,6 +12,7 @@ import {
   radii,
   spacing,
   typography,
+  useMediaSize,
 } from '@hangul-route/design-system';
 import React, { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
@@ -19,6 +20,10 @@ import { useMessages } from '../../i18n/use-messages';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { speak } from '../../platform/audio';
 import { useQuestRunStore } from '../../store/quest-run-store';
+
+/** Phone sizes of the speaker button and its icon; a tablet multiplies them by its media scale. */
+const SPEAKER = 200;
+const SPEAKER_ICON = 64;
 
 interface Props {
   scope: MinigameScope;
@@ -35,6 +40,9 @@ export function VoiceEchoGame({ scope: _scope, onFinish }: Props): React.ReactEl
   const answerRound = useQuestRunStore((s) => s.answerRound);
   const markStepComplete = useQuestRunStore((s) => s.markStepComplete);
   const [acknowledged, setAcknowledged] = useState(false);
+  // F-LAYOUT-001 §3.6: the speaker grows with the window.
+  const speaker = useMediaSize(SPEAKER);
+  const speakerIcon = useMediaSize(SPEAKER_ICON);
 
   const target = _scope.cardPairs?.[0]?.ko ?? '안녕';
 
@@ -56,8 +64,8 @@ export function VoiceEchoGame({ scope: _scope, onFinish }: Props): React.ReactEl
         <Pressable
           onPress={() => speak(target, { language: 'ko-KR' })}
           style={{
-            width: 200,
-            height: 200,
+            width: speaker,
+            height: speaker,
             borderRadius: radii.circle,
             backgroundColor: colors.brand.primaryLight,
             borderWidth: 3,
@@ -66,7 +74,7 @@ export function VoiceEchoGame({ scope: _scope, onFinish }: Props): React.ReactEl
             justifyContent: 'center',
           }}
         >
-          <Icon name="speaker" size={64} />
+          <Icon name="speaker" size={speakerIcon} />
           <Text style={{ fontSize: typography.size.title, fontWeight: '700', marginTop: spacing.sm }}>{target}</Text>
         </Pressable>
       </View>

@@ -9,20 +9,22 @@ import { AvatarChip } from '@/components/AvatarChip';
 import { SchoolAdmin } from '@/components/console/SchoolAdmin';
 import { useConsole } from '@/components/console/use-console';
 import type { PlanView, Roster } from '@/lib/console/api';
-import { COPY } from '@/lib/console/copy';
 import { levelPillLabel } from '@/lib/console/level-label';
 import { capState, classRollup, codeExpiry, percent, relativeDay } from '@/lib/console/rollup';
 import { latestPublished, planReadout, readoutLine } from '@/lib/console/plans';
-import { KIND_LABEL, ROUTES, memberNoun, spaceIdFrom } from '@/lib/console/routing';
+import { ROUTES, type SpaceError, spaceErrorText, spaceIdFrom } from '@/lib/console/routing';
+import { aroundSlot } from '@/lib/i18n/slot';
 
 /** console/roster — F-CONSOLE-001 §3.5. Summaries only; the API never sends payloads here. */
 function SpaceInner(): JSX.Element {
   const spaceId = spaceIdFrom(useSearchParams());
-  const { ready, session, api, signOut } = useConsole();
+  const { ready, session, api, signOut, m, locale } = useConsole();
+  const c = m.console;
   const [roster, setRoster] = useState<Roster | null>(null);
   const [plans, setPlans] = useState<PlanView[]>([]);
   const [pendingRelinks, setPendingRelinks] = useState(0);
-  const [error, setError] = useState<string | null>(null);
+  // A key, not text: the message is looked up at render time, so it follows the header language select.
+  const [error, setError] = useState<SpaceError | null>(null);
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
   const now = new Date();
@@ -34,7 +36,7 @@ function SpaceInner(): JSX.Element {
     if (planList.ok) setPlans(planList.data);
     if (relinks.ok) setPendingRelinks(relinks.data.length);
     if (result.ok) setRoster(result.data);
-    else setError(result.error === 'forbidden' ? "This space isn't yours to view." : result.error === 'not_found' ? 'This space is gone.' : COPY.cantReach);
+    else setError(result.error === 'forbidden' ? 'forbidden' : result.error === 'not_found' ? 'gone' : 'cantReach');
   }, [api, spaceId]);
 
   useEffect(() => {
@@ -47,12 +49,12 @@ function SpaceInner(): JSX.Element {
 
   const regenerate = async (): Promise<void> => {
     if (!api || !roster) return;
-    if (roster.joinCode && !window.confirm(`Make a new code for ${roster.space.name}? ${COPY.oldCodeStops}`)) return;
+    if (roster.joinCode && !window.confirm(`${c.space.regenerateAsk(roster.space.name)} ${c.oldCodeStops}`)) return;
     setBusy(true);
     const result = await api.regenerateCode(spaceId);
     setBusy(false);
     if (result.ok) setRoster({ ...roster, joinCode: result.data.joinCode, joinCodeExpiresAt: result.data.expiresAt });
-    else setError("Couldn't make a new code right now.");
+    else setError('regenerateFailed');
   };
 
   const copy = async (): Promise<void> => {
@@ -70,80 +72,78 @@ function SpaceInner(): JSX.Element {
   const empty = roster !== null && roster.learners.length === 0;
   const latestPlan = latestPublished(plans);
   const readout = latestPlan && roster ? new Map(planReadout(latestPlan.id, roster.learners).map((r) => [r.learnerId, r])) : null;
+  // Taught jamo stay outside the message (§3.4 rule 5): the sentence is split around them and the page marks them Korean.
+  const weekRevisit = aroundSlot(c.space.week.revisit);
+  const learnerRevisit = aroundSlot(c.space.learner.revisit);
+  const jamo = (items: readonly string[]): JSX.Element => <span lang="ko">{items.join(' · ')}</span>;
 
   return (
-    <ConsoleShell onSignOut={signOut} title={roster ? `${roster.space.name} · ${roster.learners.length} ${memberNoun(roster.space.kind)}` : 'Loading…'}>
+    <ConsoleShell onSignOut={signOut} title={roster ? c.space.title[roster.space.kind](roster.space.name, roster.learners.length) : c.space.loading}>
       {error ? (
         <div style={panelStyle}>
-          <p style={{ margin: 0 }}>{error}</p>
-          <Button onClick={() => void load()}>{COPY.tryAgain}</Button>
+          <p style={{ margin: 0 }}>{spaceErrorText(error, locale)}</p>
+          <Button onClick={() => void load()}>{c.tryAgain}</Button>
         </div>
       ) : null}
       {roster ? (
         <>
-          <section style={{ ...panelStyle, marginBottom: spacing.lg, textAlign: empty ? 'center' : 'left' }} aria-label="Join code">
+          <section style={{ ...panelStyle, marginBottom: spacing.lg, textAlign: empty ? 'center' : 'left' }} aria-label={c.space.joinCodeLabel}>
             <div style={{ fontSize: typography.size.caption, color: colors.text.muted, textTransform: 'uppercase' }}>
-              {KIND_LABEL[roster.space.kind]} code
+              {c.space.codeLabel[roster.space.kind]}
             </div>
             <div data-testid="join-code" style={{ fontSize: empty ? typography.size.hero : typography.size.display, fontWeight: typography.weight.bold, letterSpacing: spacing.sm, fontFamily: typography.family.mono, margin: `${spacing.xs}px 0` }}>
               {roster.joinCode ?? '—'}
             </div>
-            <Muted>{codeExpiry(roster.joinCodeExpiresAt, now)}</Muted>
+            <Muted>{codeExpiry(roster.joinCodeExpiresAt, now, locale)}</Muted>
             <div style={{ display: 'flex', gap: spacing.sm, justifyContent: empty ? 'center' : 'flex-start' }}>
-              {roster.joinCode ? <Button onClick={() => void copy()}>{copied ? 'Copied' : 'Copy'}</Button> : null}
+              {roster.joinCode ? <Button onClick={() => void copy()}>{copied ? c.joinCode.copied.cta : c.joinCode.copy.cta}</Button> : null}
               <Button onClick={() => void regenerate()} disabled={busy}>
-                {roster.joinCode ? 'Regenerate' : 'Create a code'}
+                {roster.joinCode ? c.space.regenerate.cta : c.space.createCode.cta}
               </Button>
             </div>
-            {empty ? <Muted>{COPY.writeOnBoard}</Muted> : null}
+            {empty ? <Muted>{c.writeOnBoard}</Muted> : null}
           </section>
 
           {cap?.warning ? (
             <Notice tone="nudge">
-              {cap.reached ? COPY.capReached : COPY.capWarning(cap.used, cap.total)}{' '}
-              <Link href="/teach/billing">Upgrade</Link>
+              {cap.reached ? c.capReached : c.capWarning(cap.used, cap.total)}{' '}
+              <Link href="/teach/billing">{c.space.upgrade}</Link>
             </Notice>
           ) : null}
 
           {rollup && !empty ? (
-            <section style={{ ...panelStyle, marginBottom: spacing.lg }} aria-label="This week">
-              <h2 style={{ fontSize: typography.size.bodyLg, margin: `0 0 ${spacing.sm}px` }}>This week</h2>
+            <section style={{ ...panelStyle, marginBottom: spacing.lg }} aria-label={c.space.week.title}>
+              <h2 style={{ fontSize: typography.size.bodyLg, margin: `0 0 ${spacing.sm}px` }}>{c.space.week.title}</h2>
               <ul style={{ margin: 0, paddingLeft: spacing.lg, color: colors.text.secondary, lineHeight: typography.leading.relaxed }}>
-                <li>
-                  {rollup.practicedThisWeek} of {rollup.students} {COPY.practicedThisWeek}
-                </li>
-                <li>
-                  {COPY.anchor}: {percent(rollup.anchorAccuracy)}
-                </li>
+                <li>{c.space.week.practiced(rollup.practicedThisWeek, rollup.students)}</li>
+                <li>{c.space.week.anchor(percent(rollup.anchorAccuracy))}</li>
                 {rollup.revisit.length ? (
                   <li>
-                    {COPY.revisitTogether}: {rollup.revisit.join(' · ')}
+                    {weekRevisit.before}
+                    {jamo(rollup.revisit)}
+                    {weekRevisit.after}
                   </li>
                 ) : null}
-                {rollup.notSynced ? (
-                  <li>
-                    {rollup.notSynced} {COPY.notSyncedWeek}
-                  </li>
-                ) : null}
+                {rollup.notSynced ? <li>{c.space.week.notSynced(rollup.notSynced)}</li> : null}
               </ul>
             </section>
           ) : null}
 
           <div style={{ display: 'flex', gap: spacing.sm, marginBottom: spacing.lg, flexWrap: 'wrap', alignItems: 'center' }}>
             <Link href={ROUTES.spacePlan(spaceId)}>
-              <Button tone="primary">{latestPlan ? `Plan: ${latestPlan.title}` : COPY.planThisWeek}</Button>
+              <Button tone="primary">{latestPlan ? c.space.openPlan.label(latestPlan.title) : c.planThisWeek}</Button>
             </Link>
             <Link href={ROUTES.spaceRelink(spaceId)}>
-              <Button>{pendingRelinks > 0 ? `${pendingRelinks} re-link request${pendingRelinks === 1 ? '' : 's'}` : 'Re-link requests'}</Button>
+              <Button>{pendingRelinks > 0 ? c.space.relinkPending.cta(pendingRelinks) : c.space.relinkRequests.cta}</Button>
             </Link>
             <Link href={ROUTES.spaceSettings(spaceId)}>
-              <Button>Settings</Button>
+              <Button>{c.space.settings.cta}</Button>
             </Link>
           </div>
 
           {!empty ? (
-            <section aria-label="Students">
-              <h2 style={{ fontSize: typography.size.bodyLg, margin: `0 0 ${spacing.sm}px` }}>Most recent activity first</h2>
+            <section aria-label={c.space.studentsLabel}>
+              <h2 style={{ fontSize: typography.size.bodyLg, margin: `0 0 ${spacing.sm}px` }}>{c.space.recentFirst}</h2>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: spacing.md }}>
                 {roster.learners.map((l) => (
                   <article key={l.id} style={panelStyle} data-testid="student-card">
@@ -160,16 +160,22 @@ function SpaceInner(): JSX.Element {
                     </div>
                     {l.summary ? (
                       <div style={{ color: colors.text.secondary, fontSize: typography.size.bodySm, marginTop: spacing.xs, lineHeight: typography.leading.relaxed }}>
-                        <div>Last active {relativeDay(l.summary.lastActiveAt, now)}</div>
-                        <div>
-                          Quests {l.summary.stage1.questsDone} / {l.summary.stage1.questsTotal} · {l.summary.cardsUnlocked} cards
-                        </div>
-                        <div>{l.summary.minutesLast7d} min this week</div>
-                        {l.summary.needsPractice.length ? <div>Revisit: {l.summary.needsPractice.join(' · ')}</div> : null}
-                        {latestPlan && readout ? <div>{latestPlan.title}: {readoutLine(readout.get(l.id) as NonNullable<ReturnType<typeof readout.get>>)}</div> : null}
+                        <div>{c.space.learner.lastActive(relativeDay(l.summary.lastActiveAt, now, locale))}</div>
+                        <div>{c.space.learner.questsCards(l.summary.stage1.questsDone, l.summary.stage1.questsTotal, l.summary.cardsUnlocked)}</div>
+                        <div>{c.space.learner.minutesThisWeek(l.summary.minutesLast7d)}</div>
+                        {l.summary.needsPractice.length ? (
+                          <div>
+                            {learnerRevisit.before}
+                            {jamo(l.summary.needsPractice)}
+                            {learnerRevisit.after}
+                          </div>
+                        ) : null}
+                        {latestPlan && readout ? <div>{c.space.learner.planReadout(latestPlan.title, readoutLine(readout.get(l.id) as NonNullable<ReturnType<typeof readout.get>>))}</div> : null}
                       </div>
                     ) : (
-                      <Muted>{COPY.notSyncedYet} · joined {relativeDay(l.joinedAt, now)}</Muted>
+                      <Muted>
+                        {c.notSyncedYet} · {c.space.learner.joined(relativeDay(l.joinedAt, now, locale))}
+                      </Muted>
                     )}
                   </article>
                 ))}

@@ -11,6 +11,7 @@
     "./layout": "./src/layout.ts",
     "./scene-art": "./src/scene-art/index.ts",
     "./scene-art/dom": "./src/scene-art/dom.tsx",
+    "./word-art": "./src/word-art/index.ts",
     "./choice-card-style": "./src/components/ChoiceCard/style.ts",
     "./icon-glyphs": "./src/components/Icon/glyphs.ts",
     "./components/*": "./src/components/*/index.ts"

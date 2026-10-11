@@ -8,6 +8,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useDocumentLang } from './src/i18n/use-messages';
 import { RootNavigator } from './src/navigation/root';
+import { PortraitGuard } from './src/components/PortraitGuard';
 import { PwaBanners } from './src/components/PwaBanners';
 import { OopsScreen } from './src/screens/system/OopsScreen';
 import { installGestureUnlock } from './src/platform/audio';
@@ -89,6 +90,8 @@ export default function App(): React.ReactElement {
               <StatusBar style="dark" />
             </NavigationContainer>
             <PwaBanners />
+            {/* F-LAYOUT-001 §3.4: a touch phone held sideways is asked, once, to turn upright. */}
+            <PortraitGuard />
           </ErrorBoundary>
         </SafeAreaProvider>
       </QueryClientProvider>

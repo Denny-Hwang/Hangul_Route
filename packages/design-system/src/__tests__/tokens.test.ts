@@ -123,3 +123,46 @@ describe('Hoya fur variants (F-LEARN-001 §3.6)', () => {
     expect(Object.values(colors.hoya).every((v) => typeof v === 'string')).toBe(true);
   });
 });
+
+describe('WordArt content colours, colors.vocab (F-VOC-002 §3.4, W3)', () => {
+  const VOCAB_KEYS = [
+    'red',
+    'orange',
+    'yellow',
+    'green',
+    'blue',
+    'purple',
+    'skyBlue',
+    'brown',
+    'gray',
+    'white',
+    'black',
+    'pink',
+  ];
+
+  it('declares exactly the twelve colour-word tones, in table order', () => {
+    expect(Object.keys(colors.vocab)).toEqual(VOCAB_KEYS);
+  });
+
+  it('sits between rarity and border, so the palette table order is unchanged around it', () => {
+    const groups = Object.keys(colors);
+    expect(groups.indexOf('vocab')).toBe(groups.indexOf('rarity') + 1);
+    expect(groups.indexOf('border')).toBe(groups.indexOf('vocab') + 1);
+  });
+
+  it('every tone is an opaque #RRGGBB value and no two tones are the same', () => {
+    const values = Object.values(colors.vocab);
+    for (const v of values) expect(v).toMatch(/^#[0-9A-F]{6}$/);
+    expect(new Set(values).size).toBe(values.length);
+  });
+
+  it('the content red is its own value, never the reserved feedback.danger', () => {
+    expect(colors.vocab.red).not.toBe(colors.feedback.danger);
+    expect(Object.values(colors.vocab)).not.toContain(colors.feedback.danger);
+    expect(Object.values(colors.vocab)).not.toContain(colors.feedback.dangerLight);
+  });
+
+  it('the content black is warm, never pure black (colors.v1.md rule 3)', () => {
+    expect(colors.vocab.black).not.toBe('#000000');
+  });
+});

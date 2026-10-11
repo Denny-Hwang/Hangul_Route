@@ -34,10 +34,21 @@
     "apps/mobile/src/screens/sync/JoinSpaceScreen.tsx",
     "apps/mobile/src/components/InstallGuideSheet.tsx",
     "apps/mobile/src/components/PwaBanners.tsx",
-    "apps/mobile/src/screens/system/OopsScreen.tsx"
+    "apps/mobile/src/screens/system/OopsScreen.tsx",
+    "apps/web/src/app/page.tsx",
+    "apps/web/src/app/about/page.tsx",
+    "apps/web/src/app/privacy/page.tsx",
+    "apps/web/src/app/terms/page.tsx",
+    "apps/web/src/components/landing/**",
+    "apps/web/src/app/teach/page.tsx",
+    "apps/web/src/app/teach/start/page.tsx",
+    "apps/web/src/app/teach/home/page.tsx",
+    "apps/web/src/app/teach/space/page.tsx",
+    "apps/web/src/app/teach/space/relink/page.tsx",
+    "apps/web/src/components/console/ui.tsx",
+    "apps/web/src/components/console/use-console.ts"
   ],
   "pluralTernaryBaseline": {
-    "apps/web/src/app/teach/space/page.tsx": 1,
     "apps/web/src/app/teach/space/plan/page.tsx": 1,
     "apps/web/src/components/console/SchoolAdmin.tsx": 1,
     "apps/web/src/data/stage1-catalog.ts": 1,

@@ -71,6 +71,7 @@ export const ROMANIZATION_SCAN_IGNORE: readonly ScanIgnore[] = [
   { path: 'packages/content-schema/src/schemas/vocab.ts', reason: 'Hangul character-class regex and comments' },
   { path: 'packages/content-schema/src/__fixtures__/', reason: 'zod and lint fixtures for schema tests, several deliberately broken' },
   { path: 'packages/i18n/src/banned-words.json', reason: 'Korean banned-word list for the UI-copy lint (F-I18N-001), not taught content' },
+  { path: 'packages/i18n/src/audience.ts', reason: 'Korean kids-only-framing patterns for the audience guard (F-I18N-001 §3.8), not taught content' },
   { path: 'packages/i18n/src/banned.ts', reason: 'comments for the banned-word matcher (F-I18N-001)' },
   { path: 'packages/i18n/src/format.ts', reason: 'Korean UI locale date words (일, 월, 년); the Korean UI locale is F-I18N-001, not taught Korean' },
   { path: 'packages/i18n/src/locales.ts', reason: 'the Korean locale endonym (한국어) in the locale table (F-I18N-001)' },

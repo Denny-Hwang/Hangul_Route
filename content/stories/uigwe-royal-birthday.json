@@ -1,11 +1,11 @@
 {
   "v": 1,
   "id": "story:uigwe-royal-birthday",
-  "state": "draft",
+  "state": "ready",
   "contentVer": 1,
   "title": {
     "ko": "왕실 잔치를 그림으로 남긴 의궤",
-    "romanization": "",
+    "romanization": "Wangsil janchireul geurimeuro namgin uigwe",
     "en": "A Picture Record of a Royal Birthday"
   },
   "summaryEn": "Uigwe were detailed reports, full of pictures, of royal ceremonies and projects. Hoya opens the Wonhaeng Eulmyo Jeongni Uigwe, the record of King Jeongjo's 1795 celebration for his mother's 60th birthday.",
@@ -16,9 +16,9 @@
   "learningGoalsEn": [
     "Know that an 의궤 (uigwe) recorded a royal ceremony or project in words and pictures so later generations could follow it.",
     "Know that uigwe list the people who took part, including craftspeople.",
-    "Describe a 반차도 (banchado): a long picture of a procession, usually drawn as if seen from above.",
+    "Know that a 반차도 (banchado) is a long picture of a procession, usually drawn as if seen from above.",
     "Know that the 1795 feast for Lady Hyegyeong at Bongsudang is recorded in the Annals and in the Wonhaeng Eulmyo Jeongni Uigwe, which was printed with metal type.",
-    "Learn 잔치, 그림, 어머니, 환갑 and 장인."
+    "Read and recognize 잔치 (janchi), 그림 (geurim), 어머니 (eomeoni), 환갑 (hwangap) and 장인 (jangin)."
   ],
   "origin": {
     "type": "documented",
@@ -109,9 +109,9 @@
     },
     {
       "id": "wonhaeng-eulmyo-jeongni-uigwe",
-      "ko": "원행을묘정리의궤",
-      "romanization": "",
-      "en": "",
+      "ko": "원행 을묘 정리 의궤",
+      "romanization": "Wonhaeng Eulmyo Jeongni Uigwe",
+      "en": "the uigwe of King Jeongjo's 1795 royal trip",
       "kind": "term"
     }
   ],
@@ -123,6 +123,7 @@
         {
           "id": "s1",
           "narrationEn": "When the Joseon court held a big event, such as a royal wedding, a banquet or the rebuilding of a palace, officials made an {kw:uigwe}: a detailed report in words and pictures.",
+          "captionEn": "A royal event report in words and pictures",
           "keyword": {
             "id": "uigwe",
             "ko": "의궤",
@@ -135,11 +136,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "An open old book with a colorful painted page of a ceremony beside a page of neat brush writing (no readable text); Hoya leaning in to look."
         },
         {
           "id": "s2",
           "narrationEn": "Why? So that next time, people could hold the same kind of event properly. Each uigwe recorded the steps, the people, the costs and the materials, like a final report.",
+          "captionEn": "A guide for holding similar events",
           "line": {
             "ko": "그림이 있는 보고서",
             "romanization": "geurimi inneun bogoseo",
@@ -151,11 +154,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Officials checking items off against an open uigwe: bolts of cloth, bowls, flags and lanterns laid out in a courtyard."
         },
         {
           "id": "s3",
           "narrationEn": "Uigwe even listed the people who took part, from high officials to skilled craftspeople. Their names and roles were written down, too.",
+          "captionEn": "Even craftspeople are listed",
           "keyword": {
             "id": "jangin",
             "ko": "장인",
@@ -168,11 +173,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "A carpenter, a painter and an embroiderer at work in a palace workshop, each proud of their craft."
         },
         {
           "id": "s4",
           "narrationEn": "In 1795, King Jeongjo traveled with his mother, Lady Hyegyeong, to the new city of Hwaseong in Suwon for a grand celebration of her 60th birthday.",
+          "captionEn": "Jeongjo travels with his mother",
           "keyword": {
             "id": "eomeoniui-hwangap",
             "ko": "어머니의 환갑",
@@ -185,11 +192,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "A long, colorful royal procession winding along a road toward a fortress city; two ornate palanquins at the center."
         },
         {
           "id": "s5",
-          "narrationEn": "By the old lunar calendar, 1795 had an extra 'leap' month after the second month. On its 13th day, the king gave a grand feast for his mother at Bongsudang Hall in the Hwaseong temporary palace. The Annals record that day.",
+          "narrationEn": "In 1795, the old lunar calendar had an extra month after the second month. On day 13 of that month, the king held a grand feast for his mother at Bongsudang Hall in Hwaseong. The Annals record that day.",
+          "captionEn": "A grand feast at Bongsudang Hall",
           "keyword": {
             "id": "janchi",
             "ko": "잔치",
@@ -202,11 +211,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "A festive palace hall with tables of food, musicians and dancers in bright costumes, and an honored elderly lady seated under a canopy."
         },
         {
           "id": "s6",
           "narrationEn": "The king also gave gifts of silk to elderly people who took part in the celebration.",
+          "captionEn": "Silk for elderly guests",
           "keyword": {
             "id": "eoreusin",
             "ko": "어르신",
@@ -219,11 +230,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Smiling elderly men in plain traditional clothes receiving folded bolts of silk in a sunny courtyard."
         },
         {
           "id": "s7",
-          "narrationEn": "The record of this trip, the {kw:wonhaeng-eulmyo-jeongni-uigwe} (Wonhaeng Eulmyo Jeongni Uigwe), is full of pictures. Some are {kw:banchado}: long pictures of a royal procession, usually drawn as if seen from high above, showing where everyone walked or stood.",
+          "narrationEn": "The record of this trip, the {kw:wonhaeng-eulmyo-jeongni-uigwe}, is full of pictures. Some are {kw:banchado}: long pictures of a royal procession, usually drawn as if seen from high above, showing where everyone walked or stood.",
+          "captionEn": "Long pictures of the royal procession",
           "keyword": {
             "id": "banchado",
             "ko": "반차도",
@@ -236,11 +249,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "A bird's-eye view of a long procession: rows of tiny figures, horses, flags and palanquins arranged neatly along a path."
         },
         {
           "id": "s8",
           "narrationEn": "Unusually, this uigwe was printed with metal movable type, so more copies could be shared. Its pictures are prints, too. In 2007, UNESCO added the Joseon uigwe to the Memory of the World.",
+          "captionEn": "Printed with metal movable type",
           "keyword": {
             "id": "hwalja",
             "ko": "활자",
@@ -254,6 +269,7 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Small metal type pieces in a tray next to a freshly printed picture page and the printing tools beside it."
         }
       ],
@@ -279,6 +295,7 @@
               "isCorrect": false
             }
           ],
+          "explainEn": "An uigwe recorded a big royal ceremony or project, such as a wedding or a banquet, in words and pictures.",
           "factIds": [
             "f1"
           ]
@@ -304,6 +321,7 @@
               "isCorrect": true
             }
           ],
+          "explainEn": "Uigwe were made so later people could follow them when holding a similar event. They also listed people, materials and costs.",
           "factIds": [
             "f2"
           ]
@@ -329,6 +347,7 @@
               "isCorrect": false
             }
           ],
+          "explainEn": "A banchado shows where everyone stood or walked in a ceremony or procession, usually drawn as if seen from high above.",
           "factIds": [
             "f7"
           ]

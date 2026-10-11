@@ -12,6 +12,7 @@ vi.mock('../../platform/telemetry', () => ({ track: vi.fn(async () => true) }));
 vi.mock('../../platform/locale', () => ({ deviceLanguages: () => [], takeLangHandoff: () => null, setDocumentLang: () => {} }));
 
 import { useAudioStore } from '../audio-store';
+import { useLayoutStore } from '../layout-store';
 import { hydrateLearnerData } from '../bootstrap';
 import { useLocaleStore } from '../locale-store';
 import { useProfileStore } from '../profile-store';
@@ -38,6 +39,7 @@ describe('cold start (audit UX-01 / L16)', () => {
     useProgressStore.setState({ byProfile: {}, hydratedFor: new Set(), pendingFor: new Set() });
     useLocaleStore.setState({ detected: 'en', device: null, byProfile: {}, hydrated: false });
     useAudioStore.setState({ muted: false, hydrated: false });
+    useLayoutStore.setState({ allowedSideways: false, hydrated: false });
   });
 
   it("loads the profiles, then every profile's saved progress, before resolving", async () => {
@@ -108,5 +110,20 @@ describe('cold start (audit UX-01 / L16)', () => {
 
     expect(useAudioStore.getState()).toMatchObject({ muted: false, hydrated: true });
     expect(mem.has('device:audio')).toBe(false);
+  });
+
+  it('reads "Keep sideways" before resolving, so the portrait guard never flashes for a learner who said no (F-LAYOUT-001 §3.4)', async () => {
+    mem.set('device:layout', { v: 1, allowedSideways: true });
+
+    await hydrateLearnerData();
+
+    expect(useLayoutStore.getState()).toMatchObject({ allowedSideways: true, hydrated: true });
+  });
+
+  it('a fresh install marks the layout store hydrated with the guard allowed to ask, and writes nothing for it', async () => {
+    await hydrateLearnerData();
+
+    expect(useLayoutStore.getState()).toMatchObject({ allowedSideways: false, hydrated: true });
+    expect(mem.has('device:layout')).toBe(false);
   });
 });

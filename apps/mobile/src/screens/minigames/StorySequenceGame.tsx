@@ -17,9 +17,10 @@ import {
   spacing,
   touchTarget,
   typography,
+  useLayoutClass,
 } from '@hangul-route/design-system';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Text, View, useWindowDimensions } from 'react-native';
+import { Text, View } from 'react-native';
 import { storyById } from '../../content/stories';
 import { useMessages } from '../../i18n/use-messages';
 import type { MinigameScope } from '../../logic/minigame-config';
@@ -100,7 +101,8 @@ export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce }: P
     s.byProfile[activeProfileId ?? '']?.romanizationMode ?? 'always',
   );
   const reducedMotion = useReducedMotion();
-  const { width } = useWindowDimensions();
+  // F-LAYOUT-001 §3.12: the window from the layout class (3-4 card columns at tablet width, F-STORY-003 §3.5).
+  const width = useLayoutClass().windowWidth;
   const story = useMessages().learner.story;
   const copy = story.sequence;
 

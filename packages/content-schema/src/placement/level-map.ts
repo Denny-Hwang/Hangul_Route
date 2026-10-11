@@ -18,22 +18,29 @@ export const placementStageNumber = (stage: StageKey): number => StageKeySchema.
 export type TagLookup = (questionId: string) => readonly string[];
 
 /**
- * A symbol key is covered when the rung that owns it passed and no response on a
- * template tagged with it was wrong, skipped or assisted. Symbols no question
- * touched are covered by their rung's pass (the check samples, it does not
- * census: spec 3.6, decision P13). The result carries no tags, so the lookup is
- * an argument.
+ * A symbol key is covered when the rung that owns it and every earlier main rung
+ * passed, and no response on a template tagged with it was wrong, skipped or
+ * assisted. Symbols no question touched are covered by their rung's pass (the
+ * check samples, it does not census: spec 3.6, decision P13). The result
+ * carries no tags, so the lookup is an argument.
  */
 export const coveredSymbols = (
   evidence: { gates: readonly GateResult[]; responses: readonly AssessmentResponse[] },
   tagsOf: TagLookup,
 ): Set<string> => {
+  // A rung's symbols count only when every earlier main rung passed too, as in
+  // `levelOf`. In Deep a confirming draw comes after the next rung's first draw;
+  // when that confirmation fails, the next rung's lone pass row lies beyond the
+  // end of the ladder and covers nothing.
+  const passed = (gate: 'sound-basic' | 'syl-cv' | 'sound-rest' | 'syl-cvc'): boolean =>
+    gatePassed(evidence.gates, gate, 'decode');
   const owned: string[] = [];
-  if (gatePassed(evidence.gates, 'sound-basic', 'decode') && gatePassed(evidence.gates, 'syl-cv', 'decode')) {
-    owned.push(...RUNG_SYMBOLS.basic);
-  }
-  if (gatePassed(evidence.gates, 'sound-rest', 'decode')) owned.push(...RUNG_SYMBOLS.rest);
-  if (gatePassed(evidence.gates, 'syl-cvc', 'decode')) owned.push(...RUNG_SYMBOLS.finals);
+  const basic = passed('sound-basic') && passed('syl-cv');
+  const rest = basic && passed('sound-rest');
+  const finals = rest && passed('syl-cvc');
+  if (basic) owned.push(...RUNG_SYMBOLS.basic);
+  if (rest) owned.push(...RUNG_SYMBOLS.rest);
+  if (finals) owned.push(...RUNG_SYMBOLS.finals);
 
   const doubtful = new Set<string>();
   for (const response of evidence.responses) {

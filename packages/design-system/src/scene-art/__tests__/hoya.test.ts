@@ -147,11 +147,10 @@ describe('hoya data port: as an item', () => {
     expect(item.alt).toMatch(/^Hoya/);
   });
 
-  it.each(HOYA_POSES)('%s: passes every item rule except the five-colour cap', (pose) => {
+  it.each(HOYA_POSES)('%s: passes every item rule, his fixed palette exempt from the five-colour cap', (pose) => {
     // Hoya is a full character, not a prop: the shipped component uses 7 to 9
-    // tokens per pose. Everything else in R-I holds (shapes, box, size, detail).
-    const findings = checkItem(hoyaItem(pose));
-    expect(findings.filter((f) => f.rule !== 'I-palette')).toEqual([]);
+    // tokens per pose, which checkItem exempts. Everything else in R-I holds (shapes, box, size, detail).
+    expect(checkItem(hoyaItem(pose))).toEqual([]);
     expect(paletteOf(hoyaItem(pose)).length).toBeLessThanOrEqual(9);
   });
 

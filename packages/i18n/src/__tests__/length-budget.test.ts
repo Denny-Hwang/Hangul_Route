@@ -213,4 +213,51 @@ describe('length budgets (F-I18N-001 §3.11)', () => {
       expect(paths).toContain(expected);
     }
   });
+
+  it('covers the landing buttons (PR 11a)', () => {
+    const paths = leafPaths(getMessages('en')).filter((p) => BUDGETS[p.split('.').pop() ?? ''] !== undefined);
+    for (const expected of ['landing.nav.playNow.cta', 'landing.hero.play.cta', 'landing.hero.seeCards.cta', 'landing.get.play.cta']) {
+      expect(paths).toContain(expected);
+    }
+  });
+
+  it('budgets the fixed words of the plan button, which also holds a user-entered title', () => {
+    // `console.space.openPlan.label` is not a `cta` leaf because the plan title is user data;
+    // its own words leave room for a short title inside the cta budget, and the button wraps.
+    for (const locale of LOCALES) {
+      const fixed = getMessages(locale).console.space.openPlan.label('');
+      expect(fixed.length, `${locale}: ${fixed}`).toBeLessThanOrEqual((BUDGETS.cta ?? 28) - 10);
+    }
+  });
+
+  it('covers the console page buttons (PR 10a)', () => {
+    const paths = leafPaths(getMessages('en')).filter((p) => BUDGETS[p.split('.').pop() ?? ''] !== undefined);
+    for (const expected of [
+      'console.shell.account.cta',
+      'console.shell.billing.cta',
+      'console.shell.signOut.cta',
+      'console.joinCode.copy.cta',
+      'console.joinCode.copied.cta',
+      'console.signIn.submit.cta',
+      'console.signIn.submitting.cta',
+      'console.start.continue.cta',
+      'console.start.back.cta',
+      'console.start.create.cta',
+      'console.start.creating.cta',
+      'console.start.goToClass.cta',
+      'console.home.open.cta',
+      'console.home.newSpace.cta',
+      'console.space.regenerate.cta',
+      'console.space.createCode.cta',
+      'console.space.relinkRequests.cta',
+      'console.space.relinkPending.cta',
+      'console.space.settings.cta',
+      'console.relink.approve.cta',
+      'console.relink.deny.cta',
+      'console.relink.done.cta',
+      'console.relink.issue.cta',
+    ]) {
+      expect(paths).toContain(expected);
+    }
+  });
 });

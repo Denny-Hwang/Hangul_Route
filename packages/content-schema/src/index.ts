@@ -39,3 +39,7 @@ export * from './placement';
 export * from './catalog';
 export * from './schemas/transfer';
 export * from './schemas/transfer-consent';
+export * from './curriculum/presets';
+export * from './curriculum/params';
+export * from './curriculum/draft';
+export * from './curriculum/generate';

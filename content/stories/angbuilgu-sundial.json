@@ -1,11 +1,11 @@
 {
   "v": 1,
   "id": "story:angbuilgu-sundial",
-  "state": "draft",
+  "state": "ready",
   "contentVer": 1,
   "title": {
     "ko": "하늘을 바라보는 해시계, 앙부일구",
-    "romanization": "",
+    "romanization": "Haneureul baraboneun haesigye, angbuilgu",
     "en": "The Sky-Facing Pot That Told the Time"
   },
   "summaryEn": "Hoya discovers King Sejong's bowl-shaped sundials, set beside busy streets in 1434 with animal pictures so that people who could not read could still tell the time.",
@@ -14,8 +14,8 @@
   "recommendedStage": 2,
   "minutes": 4,
   "learningGoalsEn": [
-    "Recognize and say 해 (hae, sun), 그림자 (geurimja, shadow) and the question 지금 몇 시예요? (What time is it now?).",
-    "Explain that the angbuilgu shows the time of day and the time of year from the sun's shadow.",
+    "Read and recognize 해 (hae, sun), 그림자 (geurimja, shadow) and the question 지금 몇 시예요? (jigeum myeot siyeyo?, What time is it now?).",
+    "Understand that the angbuilgu shows the time of day and the time of year from the sun's shadow.",
     "Know that in 1434 sundials were placed beside busy roads and used animal pictures for people who could not read.",
     "Know that Sejong-era sundials do not survive; the ones we see today were made later in Joseon."
   ],
@@ -47,7 +47,7 @@
       "id": "angbuilgu",
       "ko": "앙부일구",
       "romanization": "angbuilgu",
-      "en": "hemispherical sundial",
+      "en": "bowl-shaped sundial",
       "kind": "word"
     },
     {
@@ -87,6 +87,7 @@
         {
           "id": "s1",
           "narrationEn": "Hoya squints up at the bright sky. \"In Korean, the sun is {kw:hae},\" he says. \"When the sun shines, things cast shadows. In Joseon, people used the sun's shadow to tell the time!\"",
+          "captionEn": "Hoya looks up at the bright sun",
           "keyword": {
             "id": "hae",
             "ko": "해",
@@ -99,16 +100,18 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Hoya shading his eyes under a bright sun, his small shadow stretching across the stone paving of a palace courtyard."
         },
         {
           "id": "s2",
           "narrationEn": "In 1434, in King Sejong's reign, a new sundial was set up. Its bowl was round and hollow, like a cooking pot looking up at the sky, so it was called {kw:angbuilgu}, the 'upward-facing pot sundial.'",
+          "captionEn": "A bowl-shaped sundial faces the sky",
           "keyword": {
             "id": "angbuilgu",
             "ko": "앙부일구",
             "romanization": "angbuilgu",
-            "en": "hemispherical sundial ('upward-facing pot sundial')",
+            "en": "bowl-shaped sundial ('upward-facing pot sundial')",
             "kind": "word"
           },
           "factIds": [
@@ -116,11 +119,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "A bronze bowl-shaped sundial on four short legs, its open side facing a clear blue sky, a slim pointer inside the bowl."
         },
         {
           "id": "s3",
-          "narrationEn": "A pointed needle inside the bowl casts a shadow. Some lines show the time of day, and other lines show the time of year. Where the shadow falls tells you both!",
+          "narrationEn": "A pointer inside the bowl casts a shadow. Some lines show the time of day, and other lines show the time of year. Where the shadow falls tells you both!",
+          "captionEn": "A pointer's shadow shows the time",
           "keyword": {
             "id": "geurimja",
             "ko": "그림자",
@@ -134,11 +139,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Close-up of the inside of the sundial bowl: a thin needle casts a dark shadow across a grid of curved lines; no writing or numbers."
         },
         {
           "id": "s4",
           "narrationEn": "King Sejong's sundials were placed beside busy roads, at Hyejeonggyo Bridge and in front of Jongmyo Shrine, so that people passing by could gather and see the time.",
+          "captionEn": "Sundials stand beside busy roads",
           "keyword": {
             "id": "gil",
             "ko": "길",
@@ -151,11 +158,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "A Joseon street scene: people in white clothes and a child gather around a sundial on a stone base beside a small stone bridge."
         },
         {
           "id": "s5",
-          "narrationEn": "On King Sejong's sundials, the hours were shown with pictures of the zodiac animal spirits instead of letters, so people who could not read could tell the time. Hoya cheers, because the tiger, {kw:horangi}, is one of the twelve!",
+          "narrationEn": "On King Sejong's sundials, the hours were shown with pictures of the twelve zodiac animal spirits instead of written characters, so people who could not read could tell the time. Hoya cheers, because the tiger, {kw:horangi}, is one of the twelve!",
+          "captionEn": "Animal pictures showed the hours",
           "keyword": {
             "id": "horangi",
             "ko": "호랑이",
@@ -169,11 +178,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Twelve small, friendly zodiac animals (rat, ox, tiger, rabbit, dragon, snake, horse, sheep, monkey, rooster, dog, pig) standing together in a circle on a grassy hill; Hoya waves happily at the tiger; no letters or numbers."
         },
         {
           "id": "s6",
           "narrationEn": "The sundials from King Sejong's time no longer survive. The ones we can see today were made later in the Joseon period, and several are designated Treasures, {kw:bomul}.",
+          "captionEn": "Some later sundials are Treasures",
           "keyword": {
             "id": "bomul",
             "ko": "보물",
@@ -186,22 +197,25 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Two elegant dark bronze sundials with fine silver lines, standing on cross-shaped bases inside a museum display case."
         },
         {
           "id": "s7",
-          "narrationEn": "Some are kept at the National Palace Museum of Korea in Seoul. Hoya peeks at a sundial in its glass case and asks his friend, \"{kw:jigeum-myeot-siyeyo}\" That means, \"What time is it now?\"",
+          "narrationEn": "Some are kept at the National Palace Museum of Korea in Seoul. Hoya peeks at a sundial in its glass case and asks a museum guide, \"{kw:jigeum-myeot-siyeyo}\" That means, \"What time is it now?\"",
+          "captionEn": "Hoya asks what time it is",
           "line": {
             "ko": "지금 몇 시예요?",
             "romanization": "jigeum myeot siyeyo?",
             "en": "What time is it now?",
-            "speaker": "narrator"
+            "speaker": "hoya"
           },
           "factIds": [
             "f8"
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Hoya and a child friend in a museum gallery, looking at a sundial in a glass case; Hoya has a curious, questioning face."
         }
       ],
@@ -227,6 +241,7 @@
               "isCorrect": true
             }
           ],
+          "explainEn": "A pointer inside the bowl casts a shadow on hour lines and season lines, so you can read the time.",
           "factIds": [
             "f3"
           ]
@@ -252,6 +267,7 @@
               "isCorrect": false
             }
           ],
+          "explainEn": "On King Sejong's sundials, the hours were shown with zodiac animal pictures, so people who could not read could tell the time.",
           "factIds": [
             "f5"
           ]
@@ -277,6 +293,7 @@
               "isCorrect": false
             }
           ],
+          "explainEn": "In 1434 they were set up at Hyejeonggyo Bridge and in front of Jongmyo Shrine, beside roads where people passed.",
           "factIds": [
             "f4"
           ]
@@ -514,6 +531,6 @@
     "scope": "cluster",
     "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted."
   },
-  "authorNotes": "Makers deliberately not named: KHS entries list different makers (1985 Treasure: 장영실·이천·김조; 2022-1 Treasure: 장영실·이천·이순지) and encykorea says the maker is unclear (citing the Sejo Sillok, 이순지 led instrument-making). The Sillok inscription says '神의 몸을 그렸으니 어리석은 백성을 위한 것' (drew the bodies of spirits, for ordinary people); KHS and encykorea interpret these as the twelve zodiac animal spirits; narration follows them. Omitted: KHS's description of it as Korea's first public clock ('first' claim); line counts (KHS 1985: 7 vertical/13 horizontal; KHS 2022-1: 15-minute hour lines), because they vary by instrument; the sundial returned from the United States in 2020 (KHS 2022-1). Surviving Treasures date from the 17th–18th centuries (KHS). Theme set to 'nature' (sun, sky, seasons, zodiac animals); BP04 places Sejong science under Pillar E, so 'crafts' is an alternative. REVISION: 'seasons' replaced by 'time of year' (KHS: 계절선; encykorea: 13 절기선). Scene 5 now says explicitly that the animal-picture dials are those of Sejong's time (encykorea notes later versions used written characters). The reading of 'drew the bodies of spirits (신의 몸)' as the twelve zodiac animals is the interpretation of KHS and encykorea, not stated in the Sillok inscription itself.",
+  "authorNotes": "Makers deliberately not named: KHS entries list different makers (1985 Treasure: 장영실·이천·김조; 2022-1 Treasure: 장영실·이천·이순지) and encykorea says the maker is unclear (citing the Sejo Sillok, 이순지 led instrument-making). The Sillok inscription says '神의 몸을 그렸으니 어리석은 백성을 위한 것' (drew the bodies of spirits, for ordinary people); KHS and encykorea interpret these as the twelve zodiac animal spirits; narration follows them. Omitted: KHS's description of it as Korea's first public clock ('first' claim); line counts (KHS 1985: 7 vertical/13 horizontal; KHS 2022-1: 15-minute hour lines), because they vary by instrument; the sundial returned from the United States in 2020 (KHS 2022-1). Surviving Treasures date from the 17th–18th centuries (KHS). Theme set to 'nature' (sun, sky, seasons, zodiac animals); BP04 places Sejong science under Pillar E, so 'crafts' is an alternative. REVISION: 'seasons' replaced by 'time of year' (KHS: 계절선; encykorea: 13 절기선). Scene 5 now says explicitly that the animal-picture dials are those of Sejong's time (encykorea notes later versions used written characters). The reading of 'drew the bodies of spirits (신의 몸)' as the twelve zodiac animals is the interpretation of KHS and encykorea, not stated in the Sillok inscription itself. PR 1.8c: keyword gloss 'bowl-shaped sundial' replaces the research vocab 'hemispherical sundial' as plainer English consistent with f2 (cauldron-like bowl). s3 says 'pointer' (f3: pointer, yeongchim) to match check c1. s5 and c2 say 'twelve zodiac animal spirits' and keep the Sejong-era qualifier (f5).",
   "errata": []
 }

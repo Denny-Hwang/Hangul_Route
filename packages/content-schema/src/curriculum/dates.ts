@@ -51,3 +51,27 @@ export function oneExplicitPerDay(items: readonly PlanItem[]): SpacedItems {
   });
   return { items: out, moved };
 }
+
+/** UTC weekdays in `Date.getUTCDay()` order (F-PLAN-002 section 3.1 `WeekdaySchema`). */
+export const WEEKDAYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
+export type Weekday = (typeof WEEKDAYS)[number];
+
+const utcMs = (key: string): number => {
+  const [y, m, d] = key.split('-').map(Number) as [number, number, number];
+  return Date.UTC(y, m - 1, d);
+};
+
+/** The UTC weekday of a date key. */
+export function weekdayOf(key: string): Weekday {
+  return WEEKDAYS[new Date(utcMs(key)).getUTCDay()] as Weekday;
+}
+
+/** Whole days from `from` to `to` (negative when `to` is earlier). */
+export function daysBetween(from: string, to: string): number {
+  return Math.round((utcMs(to) - utcMs(from)) / DAY_MS);
+}
+
+/** A `YYYY-MM-DD` key that names a real calendar day (no 30 February). */
+export function isDateKey(key: string): boolean {
+  return /^\d{4}-\d{2}-\d{2}$/.test(key) && addDays(key, 0) === key;
+}

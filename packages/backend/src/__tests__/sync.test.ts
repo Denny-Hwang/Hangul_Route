@@ -337,6 +337,44 @@ describe('placements and summary.placement (F-PLC-001 section 3.8, the additive 
     expect(got.data.summary.placement).toEqual(placementSummary);
   });
 
+  it('round-trips a long Deep result with its mode (42 responses, 14 rows; F-PLC-001 P17), next to a legacy result without one', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    const row = (gate: string, form: string) => ({ gate, form, asked: 3, correct: 3, assisted: 0, result: 'pass' });
+    const deepRows = [
+      row('recog', 'decode'),
+      ...['sound-basic', 'syl-cv', 'sound-rest', 'syl-cvc'].flatMap((g) => [row(g, 'decode'), row(g, 'decode')]),
+      row('vocab', 'read'),
+      row('vocab', 'read'),
+      row('sentence', 'read'),
+      row('sentence', 'read'),
+      row('sentence', 'oral'),
+    ];
+    const deep = {
+      ...placementResult,
+      id: 'placement:2026-10-11-deep',
+      completedAt: '2026-10-11T10:20:00.000Z',
+      length: 'full',
+      mode: 'deep',
+      responses: Array.from({ length: 42 }, (_, i) => ({ ...placementResult.responses[0], questionId: `pitem:deep-${i}` })),
+      gates: deepRows,
+      level: { stage: 'stage3', band: 0 },
+      oralStage: 'stage3',
+    };
+    const short = { ...placementResult, id: 'placement:2026-10-11-short', length: 'quick', mode: 'short' };
+    const res = await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withPlacements(r.learnerId, [placementResult, short, deep]), summary: { ...summary, placement: placementSummary } });
+    expect(res.status).toBe(200);
+    const got = await getStored(r.learnerId, auth);
+    expect(got.data.snapshot.placements).toEqual([placementResult, short, deep]);
+    const stored = got.data.snapshot.placements as Array<{ mode?: string; responses: unknown[]; gates: unknown[] }>;
+    expect(stored[0]).not.toHaveProperty('mode');
+    expect(stored[2]?.mode).toBe('deep');
+    expect(stored[2]?.responses).toHaveLength(42);
+    expect(stored[2]?.gates).toHaveLength(14);
+    // The summary carries no mode (statuses and the level only).
+    expect(got.data.summary.placement).toEqual(placementSummary);
+  });
+
   it('an old client (neither field) is accepted exactly as today and reads back with an empty list', async () => {
     const r = await register(DEVICE_A);
     const auth = deviceAuth(DEVICE_A, r.secret);
@@ -397,8 +435,14 @@ describe('placements and summary.placement (F-PLC-001 section 3.8, the additive 
     const auth = deviceAuth(DEVICE_A, r.secret);
     const badResult = await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withPlacements(r.learnerId, [{ ...placementResult, id: 'review:x' }]), summary });
     expect(badResult.status).toBe(422);
-    const tooMany = await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withPlacements(r.learnerId, [{ ...placementResult, responses: Array(25).fill(placementResult.responses[0]) }]), summary });
+    const tooMany = await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withPlacements(r.learnerId, [{ ...placementResult, responses: Array(49).fill(placementResult.responses[0]) }]), summary });
     expect(tooMany.status).toBe(422);
+    const tooManyRows = await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withPlacements(r.learnerId, [{ ...placementResult, gates: Array(17).fill(placementResult.gates[0]) }]), summary });
+    expect(tooManyRows.status).toBe(422);
+    const badMode = await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withPlacements(r.learnerId, [{ ...placementResult, mode: 'quick' }]), summary });
+    expect(badMode.status).toBe(422);
+    const badLength = await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withPlacements(r.learnerId, [{ ...placementResult, length: 'deep' }]), summary });
+    expect(badLength.status).toBe(422);
     const badSummary = await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: snapshotFor(r.learnerId), summary: { ...summary, placement: { ...placementSummary, level: { stage: 'stage1', band: 9 } } } });
     expect(badSummary.status).toBe(422);
     expect(await db.getSnapshot(r.learnerId)).toBeNull();
