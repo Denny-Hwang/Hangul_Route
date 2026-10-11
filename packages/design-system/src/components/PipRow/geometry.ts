@@ -9,10 +9,11 @@ export type { PipContext, PipState, PipView } from './types';
  * unit-tested in node. A pip is drawn in a `size x size` box; the cursor and
  * start markers each sit in a band of `markerBand(size)` above or below it.
  *
- * The meaning is in the shape, never only in the colour: a done disc, a ring
- * with an inner disc (known), a plain ring (open), a ring with a sparkle (new),
+ * The meaning is in the shape, never only in the colour: a done disc with a
+ * check inside, a ring with an inner disc (known), a plain ring (open), a ring with a sparkle (new),
  * a dotted ring (later). Every outline is `border.shape` (3:1 on every surface);
- * only a done pip uses the caller's accent (the stage colour, decoration).
+ * only a done pip uses the caller's accent (the stage colour, decoration), and
+ * its check in `text.primary` carries the state whatever that accent is.
  */
 
 /** Pip side in dp per context (spec section 3.4). */
@@ -76,13 +77,31 @@ function sparklePath(size: number): string {
   return `${pts.map(([x, y], i) => `${i === 0 ? 'M' : 'L'}${round(x)} ${round(y)}`).join(' ')} Z`;
 }
 
+/**
+ * The check inside a done disc: an open three-point stroke in `ink`. It, not
+ * the accent fill, tells done from open (spec 3.14: the stage colour only
+ * decorates; stage2 and stage3 are 2.4:1 on paper), and `text.primary` holds
+ * at least 3:1 against every stage colour and the default accent (tested).
+ */
+function checkPath(size: number): string {
+  const pts: Array<[number, number]> = [
+    [size * 0.28, size * 0.52],
+    [size * 0.43, size * 0.67],
+    [size * 0.72, size * 0.36],
+  ];
+  return pts.map(([x, y], i) => `${i === 0 ? 'M' : 'L'}${round(x)} ${round(y)}`).join(' ');
+}
+
 /** The parts of one pip, in a `size x size` box, drawn in order. */
 export function pipParts(state: PipState, size: number): PipPart[] {
   const base = ring(size);
   switch (state) {
     case 'done': {
       const edge = pipStrokeWidth(size) * 0.75;
-      return [{ kind: 'circle', cx: size / 2, cy: size / 2, r: size / 2 - edge / 2, fill: 'accent', stroke: 'mark', strokeWidth: edge }];
+      return [
+        { kind: 'circle', cx: size / 2, cy: size / 2, r: size / 2 - edge / 2, fill: 'accent', stroke: 'mark', strokeWidth: edge },
+        { kind: 'path', d: checkPath(size), fill: 'none', stroke: 'ink', strokeWidth: pipStrokeWidth(size) },
+      ];
     }
     case 'known':
       return [base, { kind: 'circle', cx: size / 2, cy: size / 2, r: size / 4, fill: 'mark' }];

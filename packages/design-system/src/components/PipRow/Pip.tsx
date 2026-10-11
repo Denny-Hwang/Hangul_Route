@@ -24,7 +24,7 @@ export function PipParts({ parts, accent, offsetY = 0 }: { parts: readonly PipPa
             strokeDasharray={part.dash === undefined ? undefined : [...part.dash]}
           />
         ) : (
-          <Path key={index} d={part.d} fill={pipInk(part.fill, accent)} stroke={stroke} strokeWidth={part.strokeWidth} strokeLinejoin="round" />
+          <Path key={index} d={part.d} fill={pipInk(part.fill, accent)} stroke={stroke} strokeWidth={part.strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
         );
       })}
     </G>

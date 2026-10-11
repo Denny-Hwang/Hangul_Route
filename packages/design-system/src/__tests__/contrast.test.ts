@@ -132,9 +132,17 @@ describe('token contrast contract (WCAG AA)', () => {
     },
   );
 
-  // The pip markers are drawn in text.primary; the start pin's dot is paper on it.
-  it('PipRow markers (text.primary) on paper and its paper dot ≥ 3:1 (non-text)', () => {
-    expect(contrastRatio(colors.text.primary, colors.surface.paper)).toBeGreaterThanOrEqual(WCAG_AA_LARGE);
+  // The cursor triangle and the start pin are drawn in text.primary on whatever surface the row
+  // sits on; the start pin's paper dot sits on the text.primary drop.
+  it.each([...Object.entries(surfaces), ['brand.primaryLight', colors.brand.primaryLight] as const])(
+    'PipRow markers (text.primary) on %s ≥ 3:1 (non-text)',
+    (_name, bg) => {
+      expect(contrastRatio(colors.text.primary, bg)).toBeGreaterThanOrEqual(WCAG_AA_LARGE);
+    },
+  );
+
+  it('the start pin dot (surface.paper) on its text.primary drop ≥ 3:1 (non-text)', () => {
+    expect(contrastRatio(colors.surface.paper, colors.text.primary)).toBeGreaterThanOrEqual(WCAG_AA_LARGE);
   });
 
   // border.strong stays a quiet divider: it is NOT a 3:1 graphic, which is why the pips need border.shape.

@@ -2,8 +2,8 @@ import React from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { colors, spacing } from '../../../tokens';
 import { cursorMarkerParts, markerBand, pipInk, pipParts, startBand, startMarkerParts, type PipPart } from '../geometry';
-import { PipParts, PipSvg } from '../Pip';
-import { PipRowBody } from '../PipRow';
+import { Pip, PipParts, PipSvg } from '../Pip';
+import { PipRow, PipRowBody } from '../PipRow';
 
 /**
  * The element trees of PipRow and Pip (component-skill section 3.1), built by
@@ -13,6 +13,8 @@ import { PipRowBody } from '../PipRow';
  */
 vi.mock('react-native', () => ({ View: 'View', useWindowDimensions: () => ({ width: 400, height: 800 }) }));
 vi.mock('react-native-svg', () => ({ default: 'Svg', Svg: 'Svg', Circle: 'Circle', G: 'G', Path: 'Path' }));
+// A regular-class window: every media size is scaled by 1.5 (useMediaSize rounds base x mediaScale).
+vi.mock('../../Layout/LayoutProvider', () => ({ useMediaSize: (base: number) => Math.round(base * 1.5) }));
 
 type Props = Record<string, unknown>;
 type El = React.ReactElement<Props>;
@@ -37,9 +39,11 @@ describe('PipParts: geometry parts as svg', () => {
     });
   });
 
-  it('fills a done disc with the accent and edges it in border.shape', () => {
-    const [disc] = kids(PipParts({ parts: pipParts('done', 20), accent: ACCENT }) as El);
+  it('fills a done disc with the accent, edges it in border.shape and draws the check in text.primary with round ends', () => {
+    const [disc, check] = kids(PipParts({ parts: pipParts('done', 20), accent: ACCENT }) as El);
     expect(disc!.props).toMatchObject({ fill: ACCENT, stroke: colors.border.shape, strokeDasharray: undefined });
+    expect(check!.type).toBe('Path');
+    expect(check!.props).toMatchObject({ fill: 'none', stroke: colors.text.primary, strokeLinecap: 'round', strokeLinejoin: 'round' });
   });
 
   it('draws paths (the sparkle, the markers) with their ink and a round join, offset by offsetY', () => {
@@ -124,5 +128,35 @@ describe('PipRowBody', () => {
   it('reserves only the start band for a start pin without the cursor', () => {
     const [cell] = kids(PipRowBody({ groups: [[{ key: 'a', state: 'open', isStart: true }]], size, accent: ACCENT }) as El);
     expect(kids(cell!)[0]!.props).toMatchObject({ height: size + startBand(size) });
+  });
+});
+
+describe('PipRow and Pip: context to size through useMediaSize, and the default accent', () => {
+  it('a cell row passes the scaled 24 dp size, the scaled gaps and border.shape as the accent to its body', () => {
+    const groups = [[{ key: 'a', state: 'done' as const }]];
+    const el = PipRow({ groups, context: 'cell', testID: 'row' }) as El;
+    expect(el.type).toBe(PipRowBody);
+    expect(el.props).toMatchObject({ groups, size: 36, accent: colors.border.shape, testID: 'row', gaps: { pip: 6, group: 18 } });
+  });
+
+  it('a stage row (the default) passes the scaled 20 dp size and keeps a caller accent', () => {
+    const el = PipRow({ groups: [], accent: colors.stage.stage3 }) as El;
+    expect(el.props).toMatchObject({ size: 30, accent: colors.stage.stage3 });
+  });
+
+  it('the legend pip passes the scaled size per context and border.shape as the default accent', () => {
+    expect((Pip({ state: 'open' }) as El).props).toMatchObject({ state: 'open', size: 30, accent: colors.border.shape });
+    expect((Pip({ state: 'done', context: 'cell', accent: colors.stage.stage2 }) as El).props).toMatchObject({ size: 36, accent: colors.stage.stage2 });
+  });
+
+  it('the body lays the row out with the gaps it is given', () => {
+    const row = PipRowBody({
+      groups: [[{ key: 'a', state: 'done' }], [{ key: 'b', state: 'new' }]],
+      size: 30,
+      accent: ACCENT,
+      gaps: { pip: 6, group: 18 },
+    }) as El;
+    expect(row.props.style).toMatchObject({ columnGap: 6, rowGap: 6 });
+    expect(kids(row).map((c) => (c.props.style as { marginRight: number }).marginRight)).toEqual([12, 0]);
   });
 });

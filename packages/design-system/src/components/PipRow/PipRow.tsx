@@ -7,7 +7,13 @@ import { PIP_SIZE, cursorMarkerParts, markerBand, pipParts, pipRowBands, pipRowC
 import { PipParts } from './Pip';
 import type { PipRowProps } from './types';
 
+/** Unscaled gaps: `spacing.xs` between pips and lines, `spacing.md` between groups. */
 const GAPS = { pip: spacing.xs, group: spacing.md } as const;
+
+export interface PipRowGaps {
+  pip: number;
+  group: number;
+}
 
 /**
  * PipRow (F-ROUTE-001 R-2b; design/components/PipRow/spec.md): one drawn
@@ -25,7 +31,9 @@ const GAPS = { pip: spacing.xs, group: spacing.md } as const;
  */
 export function PipRow({ groups, context = 'stage', accent = colors.border.shape, testID }: PipRowProps): React.ReactElement {
   const size = useMediaSize(PIP_SIZE[context]);
-  return <PipRowBody groups={groups} size={size} accent={accent} testID={testID} />;
+  // The gaps scale with the pips, so the group gap still reads as a gap on wide windows (wireframe C5).
+  const gaps = { pip: useMediaSize(GAPS.pip), group: useMediaSize(GAPS.group) };
+  return <PipRowBody groups={groups} size={size} accent={accent} gaps={gaps} testID={testID} />;
 }
 
 /** The row for a resolved pip size, without hooks (tested by calling it). */
@@ -33,8 +41,9 @@ export function PipRowBody({
   groups,
   size,
   accent,
+  gaps = GAPS,
   testID,
-}: Pick<PipRowProps, 'groups' | 'testID'> & { size: number; accent: string }): React.ReactElement {
+}: Pick<PipRowProps, 'groups' | 'testID'> & { size: number; accent: string; gaps?: PipRowGaps }): React.ReactElement {
   const bands = pipRowBands(groups);
   const top = bands.top ? markerBand(size) : 0;
   const height = top + size + (bands.bottom ? startBand(size) : 0);
@@ -44,10 +53,10 @@ export function PipRowBody({
       importantForAccessibility="no-hide-descendants"
       accessibilityElementsHidden
       aria-hidden
-      style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start', columnGap: GAPS.pip, rowGap: spacing.xs }}
+      style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start', columnGap: gaps.pip, rowGap: gaps.pip }}
     >
-      {pipRowCells(groups, GAPS).map((cell) => (
-        <View key={cell.key} style={{ marginRight: Math.max(0, cell.trailingGap - GAPS.pip) }}>
+      {pipRowCells(groups, gaps).map((cell) => (
+        <View key={cell.key} style={{ marginRight: Math.max(0, cell.trailingGap - gaps.pip) }}>
           <Svg width={size} height={height} viewBox={`0 0 ${size} ${height}`}>
             {cell.isCursor ? <PipParts parts={cursorMarkerParts(size)} accent={accent} /> : null}
             <PipParts parts={pipParts(cell.state, size)} accent={accent} offsetY={top} />

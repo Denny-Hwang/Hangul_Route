@@ -4,6 +4,7 @@ import pipRowSource from '../PipRow.tsx?raw';
 import geometrySource from '../geometry.ts?raw';
 import typesSource from '../types.ts?raw';
 import indexSource from '../index.ts?raw';
+import { WCAG_AA_LARGE, contrastRatio } from '../../../contrast';
 import { colors } from '../../../tokens';
 import {
   LATER_DASHES,
@@ -89,10 +90,25 @@ describe('the five pip shapes', () => {
     }
   });
 
-  it('done: one filled disc in the accent, edged in the mark colour so its edge holds 3:1 whatever the accent', () => {
-    const parts = pipParts('done', 20);
-    expect(parts).toHaveLength(1);
-    expect(parts[0]).toMatchObject({ kind: 'circle', cx: 10, cy: 10, fill: 'accent', stroke: 'mark' });
+  it.each(SIZES)('done: a filled disc in the accent, edged in the mark colour, with a check drawn inside it in ink (%i dp)', (size) => {
+    const [disc, check, ...rest] = pipParts('done', size);
+    expect(rest).toEqual([]);
+    expect(disc).toMatchObject({ kind: 'circle', cx: size / 2, cy: size / 2, fill: 'accent', stroke: 'mark' });
+    expect(check).toMatchObject({ kind: 'path', fill: 'none', stroke: 'ink' });
+    if (disc?.kind !== 'circle' || check?.kind !== 'path') throw new Error('disc and path expected');
+    // An open stroke of three points (no Z): a check, not a closed sparkle or a disc.
+    expect(check.d).not.toMatch(/Z/);
+    const xy = coords(check.d);
+    expect(xy).toHaveLength(6);
+    expect(check.strokeWidth).toBeGreaterThanOrEqual(pipStrokeWidth(size) * 0.9);
+    // Every point plus half the stroke stays inside the disc, clear of its edge.
+    const fillEdge = disc.r - (disc.strokeWidth ?? 0) / 2;
+    for (let i = 0; i < xy.length; i += 2) {
+      expect(Math.hypot(xy[i]! - size / 2, xy[i + 1]! - size / 2) + (check.strokeWidth ?? 0) / 2).toBeLessThan(fillEdge);
+    }
+    // Wide enough to read as a mark at 20 dp, not a speck.
+    const xs = xy.filter((_, i) => i % 2 === 0);
+    expect(Math.max(...xs) - Math.min(...xs)).toBeGreaterThanOrEqual(size * 0.4);
   });
 
   it('open: one ring, 2 dp stroke, no fill', () => {
@@ -141,12 +157,50 @@ describe('the five pip shapes', () => {
     expect(off).toBeGreaterThan(1);
   });
 
-  it('the five shapes are pairwise distinct with colour taken away (greyscale, protanopia)', () => {
-    for (const size of SIZES) {
-      const shapes = PIP_STATES.map((state) => silhouette(pipParts(state, size)));
-      expect(new Set(shapes).size).toBe(PIP_STATES.length);
+  it.each(SIZES)('the five shapes differ in geometry, not in ink: outline and interior mark, accent ignored (%i dp)', (size) => {
+    const signatures = PIP_STATES.map((state) => {
+      const [outer, ...inside] = pipParts(state, size);
+      if (outer?.kind !== 'circle') throw new Error('outer circle expected');
+      // The outline with the fill treated as unknown: a greyscale or colour-blind reader may not see the accent.
+      const outline = outer.dash !== undefined ? 'dashed ring' : 'ring';
+      const interior = inside.map((p) => (p.kind === 'circle' ? 'disc' : p.fill === 'none' ? 'stroke' : 'filled path'));
+      return { state, key: `${outline}|${interior.join('+')}`, inside };
+    });
+    expect(new Set(signatures.map((s) => s.key)).size).toBe(PIP_STATES.length);
+    // Every interior mark is drawn in a non-accent ink, so the mark (not the colour) carries the state.
+    for (const { state, inside } of signatures) {
+      for (const p of inside) {
+        expect(p.fill === 'accent' || p.stroke === 'accent', state).toBe(false);
+        expect(p.fill === 'paper' || p.stroke === 'paper', state).toBe(false);
+      }
+    }
+    // done is told from open by its check, which open does not have, not by the fill alone.
+    expect(signatures.find((s) => s.state === 'done')!.inside.length).toBeGreaterThan(0);
+    expect(signatures.find((s) => s.state === 'open')!.inside).toEqual([]);
+  });
+
+  // Spec 3.14: the stage colour decorates. Whatever accent fills a done disc
+  // (every stage colour, or the default), the check that carries "done" holds
+  // 3:1 against that fill, and the edge holds 3:1 against every surface.
+  const accents = { ...Object.fromEntries(Object.entries(colors.stage).map(([k, v]) => [`stage.${k}`, v])), 'default (border.shape)': colors.border.shape };
+  it.each(Object.entries(accents))('done on a %s fill: the check holds 3:1 against the fill (non-text)', (_name, accent) => {
+    const marks = pipParts('done', 20).slice(1);
+    expect(marks.length).toBeGreaterThan(0);
+    for (const p of marks) {
+      const ink = p.stroke ?? p.fill;
+      if (ink === 'none') throw new Error('a mark needs an ink');
+      expect(contrastRatio(pipInk(ink, accent), accent)).toBeGreaterThanOrEqual(WCAG_AA_LARGE);
     }
   });
+
+  it.each([colors.surface.paper, colors.surface.canvas, colors.surface.sunken, colors.brand.primaryLight])(
+    'done: the disc edge holds 3:1 against the surface %s whatever the fill',
+    (surface) => {
+      const [disc] = pipParts('done', 20);
+      expect(disc).toMatchObject({ stroke: 'mark' });
+      expect(contrastRatio(pipInk('mark', colors.stage.stage2), surface)).toBeGreaterThanOrEqual(WCAG_AA_LARGE);
+    },
+  );
 
   it('only a done pip uses the accent: the stage colour decorates, the shape carries the meaning', () => {
     for (const state of PIP_STATES.filter((s): s is Exclude<PipState, 'done'> => s !== 'done')) {
