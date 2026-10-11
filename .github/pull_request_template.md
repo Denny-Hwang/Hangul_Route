@@ -21,6 +21,7 @@
 - [ ] Design tokens only — no hardcoded colors / spacing / typography
 - [ ] Language policy respected — UI strings from the selected locale (en/es/ko); taught Korean shown with romanization + a gloss in the UI language
 - [ ] Romanization + English gloss present for every Korean learning item
+- [ ] Claims audit: every sentence I changed maps to a fact I re-read <!-- required when the PR changes narrationEn or facts in content/stories/ (F-STORY-001 §3.3 C6; process in content/stories/README.md) -->
 - [ ] Rolling coverage targets met (see `docs/tests/coverage-targets.md`)
 - [ ] Conventional Commit title
 - [ ] `routine-generated` label set if this PR was opened by a routine

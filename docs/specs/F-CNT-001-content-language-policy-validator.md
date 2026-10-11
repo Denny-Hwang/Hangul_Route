@@ -82,7 +82,10 @@ behind the schema's own parsing.
 
 - **Korean string strictness beyond romanization + gloss** — e.g.
   Revised-Romanization-vs-McCune-Reischauer enforcement, romanization
-  spelling accuracy. Tracked as F-CNT-002.
+  spelling accuracy. Specified in
+  [`F-CNT-002-romanization-policy.md`](F-CNT-002-romanization-policy.md)
+  (policy §3.1, checker rules §3.3, scanned sources §3.4) and enforced by
+  the romanization vitest suites, not by this validator.
 - **CEFR Pre-A1 vocabulary cap on English fields.** Today the validator
   flags Korean-in-UI; it does NOT yet flag English vocabulary above CEFR
   Pre-A1 (plain, short words a young reader and an adult beginner both
