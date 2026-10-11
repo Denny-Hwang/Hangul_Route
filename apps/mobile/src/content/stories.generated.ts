@@ -1186,9 +1186,9 @@ export const storiesAll: Story[] = [
     "state": "ready",
     "contentVer": 1,
     "title": {
-      "ko": "날마다 쓴 승정원일기",
-      "romanization": "Nalmada sseun Seungjeongwonilgi",
-      "en": "The Royal Secretaries' Everyday Diary"
+      "ko": "날마다 쓴 승정원 일기",
+      "romanization": "Nalmada sseun Seungjeongwon Ilgi",
+      "en": "The Royal Secretariat's Everyday Diary"
     },
     "summaryEn": "At the Royal Secretariat, scribes wrote down the king's working day, every day, even the weather. Hoya learns why this giant diary is a treasure.",
     "theme": "letters",
@@ -1197,10 +1197,10 @@ export const storiesAll: Story[] = [
     "minutes": 5,
     "learningGoalsEn": [
       "Know that the 승정원 (Seungjeongwon) was the king's secretariat that passed royal orders down and officials' opinions up.",
-      "Know that scribes called 주서 (juseo) wrote the 승정원일기, which survives for 1623-1910 in 3,243 books.",
+      "Know that scribes called 주서 (juseo) wrote the 승정원 일기 (Seungjeongwon Ilgi), which survives for 1623-1910 in 3,243 books.",
       "Know that each day's entry noted the weather, which researchers can use today.",
       "Know that the original is in cursive 초서 (choseo), which was later rewritten in regular script, and that fires destroyed many volumes.",
-      "Use the patterns 날씨가 맑아요 and 일기를 다시 써요."
+      "Read and understand 날씨가 맑아요 (nalssiga malgayo) and 일기를 다시 써요 (ilgireul dasi sseoyo)."
     ],
     "origin": {
       "type": "documented",
@@ -1209,7 +1209,10 @@ export const storiesAll: Story[] = [
     "review": {
       "language": "draft",
       "culture": "draft",
-      "advisory": []
+      "advisory": [
+        "loss"
+      ],
+      "advisoryNoteEn": "Mentions palace fires that destroyed many old diaries, told briefly and calmly."
     },
     "keywords": [
       {
@@ -1284,8 +1287,8 @@ export const storiesAll: Story[] = [
       },
       {
         "id": "seungjeongwon-ilgi",
-        "ko": "승정원일기",
-        "romanization": "Seungjeongwonilgi",
+        "ko": "승정원 일기",
+        "romanization": "Seungjeongwon Ilgi",
         "en": "the Diaries of the Royal Secretariat",
         "kind": "term"
       }
@@ -1297,7 +1300,7 @@ export const storiesAll: Story[] = [
         "scenes": [
           {
             "id": "s1",
-            "narrationEn": "Let's travel back in time with Hoya to the {kw:seungjeongwon}, the Royal Secretariat. This was the king's secretariat. It passed the king's orders down to officials and carried their opinions back up to the king.",
+            "narrationEn": "Let's travel back in time with Hoya to the {kw:seungjeongwon}, the Royal Secretariat. This office passed the king's orders down to officials and carried their opinions back up to the king.",
             "captionEn": "The king's Royal Secretariat",
             "keyword": {
               "id": "seungjeongwon",
@@ -1335,7 +1338,7 @@ export const storiesAll: Story[] = [
           },
           {
             "id": "s3",
-            "narrationEn": "Each day, a scribe worked in front of the king together with a historian, jotting quick notes of the discussions. Later, a neat copy was made, and each month's diary was usually bound into one book.",
+            "narrationEn": "Each day, a scribe worked in front of the king together with a historian, writing quick notes of the talks. Later, a neat copy was made, and each month's diary was usually bound into one book.",
             "captionEn": "Quick notes in front of the king",
             "keyword": {
               "id": "maeil",
@@ -1372,7 +1375,7 @@ export const storiesAll: Story[] = [
           },
           {
             "id": "s5",
-            "narrationEn": "The original diaries are written in a flowing cursive script called {kw:choseo}, which is hard to read. In modern times, Korea's National Institute of Korean History rewrote them in clear, regular characters and published them.",
+            "narrationEn": "The original diaries are written in a flowing cursive script called {kw:choseo}, which is hard to read. In modern times, the National Institute of Korean History rewrote them in clear, regular characters and published them.",
             "captionEn": "Cursive script, rewritten clearly",
             "keyword": {
               "id": "choseo",
@@ -1392,7 +1395,7 @@ export const storiesAll: Story[] = [
           {
             "id": "s6",
             "narrationEn": "Fires at the Royal Secretariat in 1744 and 1888 destroyed many diaries. Officials worked to rebuild them, partly using other records such as the court gazette.",
-            "captionEn": "Fires, then rebuilding the diaries",
+            "captionEn": "Fires, then diaries partly rebuilt",
             "line": {
               "ko": "일기를 다시 써요.",
               "romanization": "Ilgireul dasi sseoyo.",
@@ -1433,7 +1436,12 @@ export const storiesAll: Story[] = [
           {
             "id": "c1",
             "kind": "detail",
-            "promptEn": "Who wrote the Seungjeongwon Ilgi?",
+            "promptEn": "Who wrote the {target}?",
+            "target": {
+              "ko": "승정원 일기",
+              "romanization": "Seungjeongwon Ilgi",
+              "en": "the Diaries of the Royal Secretariat"
+            },
             "options": [
               {
                 "id": "a",
@@ -1451,7 +1459,7 @@ export const storiesAll: Story[] = [
                 "isCorrect": false
               }
             ],
-            "explainEn": "Two scribes called juseo wrote the Seungjeongwon Ilgi, the office diary of the Royal Secretariat.",
+            "explainEn": "Scribes called juseo wrote the Seungjeongwon Ilgi, the office diary of the Royal Secretariat.",
             "factIds": [
               "f2"
             ]
@@ -1485,7 +1493,12 @@ export const storiesAll: Story[] = [
           {
             "id": "c3",
             "kind": "detail",
-            "promptEn": "How many books of the Seungjeongwon Ilgi survive today?",
+            "promptEn": "How many books of the {target} survive today?",
+            "target": {
+              "ko": "승정원 일기",
+              "romanization": "Seungjeongwon Ilgi",
+              "en": "the Diaries of the Royal Secretariat"
+            },
             "options": [
               {
                 "id": "a",

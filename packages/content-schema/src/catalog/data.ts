@@ -113,7 +113,7 @@ const storyRows: StoryRow[] = [
   ['janggyeong-panjeon', 'Guarded by the Wind', 2, 'crafts', 5],
   ['jagyeongnu-water-clock', 'Jang Yeong-sil and the Clock That Rang by Itself', 2, 'crafts', 5],
   ['pansori-tales', "Pansori Tales: Heungbu's Swallow and the Clever Rabbit (Traditional Tales)", 2, 'crafts', 6],
-  ['seungjeongwon-ilgi-every-day', "The Royal Secretaries' Everyday Diary", 3, 'letters', 5],
+  ['seungjeongwon-ilgi-every-day', "The Royal Secretariat's Everyday Diary", 3, 'letters', 5],
   ['nanjung-ilgi', "Admiral Yi's Diary", 3, 'letters', 4],
   ['donguibogam', "Heo Jun's Treasured Mirror of Medicine", 3, 'life', 5],
   ['ilseongnok-daily-reflection', "King Jeongjo's Diary of Daily Reflection", 4, 'letters', 4],
