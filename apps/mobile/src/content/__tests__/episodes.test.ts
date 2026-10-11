@@ -2,6 +2,7 @@ import type { Episode } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { episodeFor, episodesAll, gridEpisodes, isGridEpisode, shelfEpisodes } from '../episodes';
 import { questsAll } from '../quests';
+import { storyEpisodes, storyQuests } from '../stories';
 
 /**
  * F-STORY-004 §3.10: the grid/shelf split. A shelf episode (`placement: 'shelf'`)
@@ -48,14 +49,17 @@ describe('gridEpisodes / shelfEpisodes', () => {
     expect(shelfEpisodes([])).toEqual([]);
   });
 
-  it('leave today\'s bundle unchanged: every shipped episode is a grid episode', () => {
-    expect(gridEpisodes(episodesAll)).toEqual(episodesAll);
-    expect(shelfEpisodes(episodesAll)).toEqual([]);
+  it('keep every hand-written episode on the grid: only the story bundle can add shelf episodes', () => {
+    const handWritten = episodesAll.filter((e) => !storyEpisodes.includes(e));
+    expect(gridEpisodes(handWritten)).toEqual(handWritten);
+    for (const e of shelfEpisodes(episodesAll)) expect(storyEpisodes).toContain(e);
   });
 
-  it('keep Home\'s quest total (quests of grid episodes) equal to today\'s quest count', () => {
+  it('keep Home\'s quest total (quests of grid episodes) counting every hand-written quest', () => {
     const gridQuestIds = new Set(gridEpisodes(episodesAll).flatMap((e) => e.questIds));
-    expect(questsAll.filter((q) => gridQuestIds.has(q.id))).toHaveLength(questsAll.length);
+    const handWritten = questsAll.filter((q) => !storyQuests.includes(q));
+    expect(handWritten.length).toBeGreaterThan(0);
+    for (const q of handWritten) expect(gridQuestIds.has(q.id)).toBe(true);
   });
 });
 
