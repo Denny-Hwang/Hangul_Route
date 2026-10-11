@@ -1,7 +1,7 @@
 {
   "v": 1,
   "id": "story:seollal-new-year",
-  "state": "draft",
+  "state": "ready",
   "contentVer": 1,
   "title": {
     "ko": "호야의 설날 아침",
@@ -14,10 +14,10 @@
   "recommendedStage": 1,
   "minutes": 4,
   "learningGoalsEn": [
-    "Explain that Seollal is the first day of the first lunar month and one of Korea's biggest traditional holidays.",
+    "Know that Seollal is the first day of the first lunar month and one of Korea's biggest traditional holidays.",
     "Read and recognize 설날 (seollal), 세배 (sebae), 떡국 (tteokguk) and 윷놀이 (yunnori), and the greeting 새해 복 많이 받으세요 (saehae bok mani badeuseyo).",
-    "Describe sebae (the New Year bow) and deokdam (words of blessing from elders).",
-    "Name the five yut throws (do, gae, geol, yut, mo) and how many spaces each one moves."
+    "Understand sebae (the New Year bow) and deokdam (words of blessing from elders).",
+    "Know the five yut throws (do, gae, geol, yut, mo) and how many spaces each one moves."
   ],
   "origin": {
     "type": "documented",
@@ -171,7 +171,7 @@
         },
         {
           "id": "s4",
-          "narrationEn": "After bowing, Hoya says, 'Saehae bok mani badeuseyo!' Grandma answers with kind wishes for the year, called {kw:deokdam}. Children may get a little money, or rice cakes and fruit.",
+          "narrationEn": "After bowing, Hoya says, 'Saehae bok mani badeuseyo!' Grandma, {kw:halmeoni}, answers with kind wishes for the year, called {kw:deokdam}. Children may get a little money, or rice cakes and fruit.",
           "captionEn": "New Year wishes and kind blessings",
           "line": {
             "ko": "새해 복 많이 받으세요",
@@ -237,7 +237,8 @@
             "speaker": "narrator"
           },
           "factIds": [
-            "f8"
+            "f8",
+            "f7"
           ],
           "framing": false,
           "approximations": [],
@@ -246,7 +247,7 @@
         },
         {
           "id": "s8",
-          "narrationEn": "In 2023, Korea named five traditional holidays, including Seol and Daeboreum (New Year through the first full moon), as National Intangible Heritage. Yunnori was named in 2022. Hoya bows: 'Saehae bok mani badeuseyo!'",
+          "narrationEn": "In 2023, Korea listed five traditional holidays as National Intangible Heritage. One is Seol and Daeboreum: the New Year and the first full moon. Yunnori was listed in 2022. Hoya bows: 'Saehae bok mani badeuseyo!'",
           "captionEn": "Seol and yunnori: National Intangible Heritage",
           "keyword": {
             "id": "gukga-muhyeong-yusan",
@@ -288,7 +289,7 @@
             },
             {
               "id": "d",
-              "en": "Charye",
+              "en": "Tteokguk",
               "isCorrect": false
             }
           ],
@@ -659,6 +660,6 @@
     "scope": "cluster",
     "notes": "Third independent pass over 6 episodes / 61 facts / 161 source entries (70 unique URLs). Every URL was re-fetched with my own scripts (UNESCO pages via Wayback copies; heritage.go.kr descriptions via the portal ajax html and khs.go.kr open API; folkency via its JSON API) and each quote or locator was machine-matched to the page text; the few non-matching strings were checked by hand (portal metadata fields, hanja or footnote punctuation, label text). Corrections: (1) pansori scene 2 now gives both UNESCO steps (2003 masterpiece proclamation, 2008 Representative List); (2) pansori f11 states the Aesop title as in the cited Townsend text and the common alternate title; (3) added sources: NFM 놀보박타령 for 'greedy' (f5), 표준국어대사전 타다 for 'sawed' (f6), 한국민족문화대백과사전 선도해 for the Samguk sagi tale (f12); (4) Seollal f9/f10 designation-date locators now cite the KHS open API field. No other change. See seasons-tales.signoff.md."
   },
-  "authorNotes": "Romanization: 윷놀이 is pronounced [윤노리], so RR gives 'yunnori'; the Korea Heritage Service's English name is 'Yut nori' and the app's existing card uses 'yutnori'. Pick one spelling app-wide. 'Saehae bok mani badeuseyo' is the greeting most people use today, but the Encyclopedia of Korean Culture calls it a modern greeting (older ones include '과세 안녕히 하셨습니까'). The narration keeps that in facts and doesn't call it ancient. The tteokguk age saying is presented only as a saying. Sebae money (세뱃돈) is described the way the Encyclopedia does: 'a little money, or rice cakes and fruit'. Left out on purpose: the sources don't explain which way up the yut sticks count for each throw (엎어지다/젖혀지다), so the narration doesn't say. Also left out are 차례 table details, 복조리, and 안택 rites. Note for existing content: heritage-cards.ts says tteokguk slices 'look like coins for good luck'. None of the sources checked here supports that, so it's not used here; please review it. REVISION 2026-10-10: \"four great holidays\" now stated as the late-Joseon Dongguk sesigi listing (the 1518 list had three: Seol, Dano, Chuseok, per the KHS portal). Check 3 reworded to an in-story question; \"Everyone\" softened to \"People\". AUTHORING 2026-10-11 (F-STORY-001 PR 1.8d): title romanization, scene captions and check explanations written from the cited facts; every scene is artPending (text-only tile) until the art PRs; no claim or source changed. Korean spacing: the learner term is written 국가 무형 유산 (spaced by word, 한글 맞춤법 제50항) so each word lines up with gukga muhyeong yusan; the facts keep the official 국가무형유산.",
+  "authorNotes": "Romanization: 윷놀이 is pronounced [윤노리], so RR (the repo converter) gives 'yunnori', and yunnori is the app-wide romanization (the yut heritage card also stores yunnori). 'Yut nori' (Korea Heritage Service) and 'yutnori' appear only as alternate English spellings. 'Saehae bok mani badeuseyo' is the greeting most people use today, but the Encyclopedia of Korean Culture calls it a modern greeting (older ones include '과세 안녕히 하셨습니까'). The narration keeps that in facts and doesn't call it ancient. The tteokguk age saying is presented only as a saying. Sebae money (세뱃돈) is described the way the Encyclopedia does: 'a little money, or rice cakes and fruit'. Left out on purpose: the sources don't explain which way up the yut sticks count for each throw (엎어지다/젖혀지다), so the narration doesn't say. Also left out are 차례 table details, 복조리, and 안택 rites. Note for existing content: heritage-cards.ts says tteokguk slices 'look like coins for good luck'. None of the sources checked here supports that, so it's not used here; please review it. REVISION 2026-10-10: \"four great holidays\" now stated as the late-Joseon Dongguk sesigi listing (the 1518 list had three: Seol, Dano, Chuseok, per the KHS portal). Check 3 reworded to an in-story question; \"Everyone\" softened to \"People\". AUTHORING 2026-10-11 (F-STORY-001 PR 1.8d): title romanization, scene captions and check explanations written from the cited facts; every scene is artPending (text-only tile) until the art PRs; no claim or source changed. Korean spacing: the learner term is written 국가 무형 유산 (spaced by word, 한글 맞춤법 제50항) so each word lines up with gukga muhyeong yusan; the facts keep the official 국가무형유산. REVIEW 2026-10-11 (PR 1.8d review fixes): s7 also cites f7 (the winning rule); s8 says 'listed' in short sentences; check 1 uses only words this story teaches; s4 now uses the halmeoni keyword as a token; learning goals use receptive verbs (Know, Understand, Read and recognize).",
   "errata": []
 }
