@@ -638,6 +638,635 @@ export const storiesAll: Story[] = [
   },
   {
     "v": 1,
+    "id": "story:jikji-metal-type",
+    "state": "ready",
+    "contentVer": 1,
+    "title": {
+      "ko": "직지, 금속활자로 찍은 책",
+      "romanization": "Jikji, geumsokhwaljaro jjigeun chaek",
+      "en": "Jikji: Letters Made of Metal"
+    },
+    "summaryEn": "Hoya visits Heungdeoksa Temple in Cheongju, where Jikji was printed with metal movable type in 1377. It is the world's oldest surviving book of its kind, and its one remaining volume is kept in Paris.",
+    "theme": "letters",
+    "kind": "documentary",
+    "recommendedStage": 2,
+    "minutes": 5,
+    "learningGoalsEn": [
+      "Explain in one sentence what movable metal type is.",
+      "Know that Jikji was printed in 1377 at Heungdeoksa Temple in Cheongju and is the world's oldest surviving book printed with movable metal type.",
+      "Know where the surviving volume is kept today (the National Library of France) and that it was inscribed on UNESCO's Memory of the World Register in 2001.",
+      "Read and say 절, 스님, 제자, 활자, 금속활자 and 박물관 with romanization."
+    ],
+    "origin": {
+      "type": "documented",
+      "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
+    },
+    "review": {
+      "language": "draft",
+      "culture": "draft",
+      "advisory": []
+    },
+    "keywords": [
+      {
+        "id": "jeol",
+        "ko": "절",
+        "romanization": "jeol",
+        "en": "Buddhist temple",
+        "kind": "word"
+      },
+      {
+        "id": "seunim",
+        "ko": "스님",
+        "romanization": "seunim",
+        "en": "Buddhist monk (respectful)",
+        "kind": "word"
+      },
+      {
+        "id": "jeja",
+        "ko": "제자",
+        "romanization": "jeja",
+        "en": "student; disciple",
+        "kind": "word"
+      },
+      {
+        "id": "hwalja",
+        "ko": "활자",
+        "romanization": "hwalja",
+        "en": "printing type (one piece for each character)",
+        "kind": "word"
+      },
+      {
+        "id": "geumsokhwalja",
+        "ko": "금속활자",
+        "romanization": "geumsokhwalja",
+        "en": "metal movable type",
+        "kind": "word"
+      },
+      {
+        "id": "jikji",
+        "ko": "직지",
+        "romanization": "Jikji",
+        "en": "Jikji (short name of the book)",
+        "kind": "word"
+      },
+      {
+        "id": "bangmulgwan",
+        "ko": "박물관",
+        "romanization": "bangmulgwan",
+        "en": "museum",
+        "kind": "word"
+      },
+      {
+        "id": "hagwon",
+        "ko": "하권",
+        "romanization": "hagwon",
+        "en": "the second (last) volume of a set",
+        "kind": "word"
+      }
+    ],
+    "cultureNotes": [],
+    "tiers": [
+      {
+        "level": "listen",
+        "scenes": [
+          {
+            "id": "s1",
+            "narrationEn": "Hoya travels to Cheongju in the time of the Goryeo kingdom. At Heungdeoksa Temple, people are busy with something amazing: printing a book with letters made of metal!",
+            "keyword": {
+              "id": "jeol",
+              "ko": "절",
+              "romanization": "jeol",
+              "en": "Buddhist temple",
+              "kind": "word"
+            },
+            "factIds": [
+              "f1"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "A peaceful Goryeo-era temple courtyard with a wooden hall and a stone pagoda; inside an open door, figures bend over a work table with small shiny pieces. Hoya peeks around a pillar.",
+            "captionEn": "Printing with metal at a temple",
+            "artPending": true
+          },
+          {
+            "id": "s2",
+            "narrationEn": "The book is called Jikji. In 1372, a wise old monk named Baegun, then 75 years old, gathered important teachings of the Buddha and great teachers into it.",
+            "keyword": {
+              "id": "seunim",
+              "ko": "스님",
+              "romanization": "seunim",
+              "en": "Buddhist monk (respectful)",
+              "kind": "word"
+            },
+            "factIds": [
+              "f2"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "An elderly monk in gray robes writing calmly with a brush at a low desk by a paper window; mountains outside. No readable text on the paper.",
+            "captionEn": "Monk Baegun gathers the teachings",
+            "artPending": true
+          },
+          {
+            "id": "s3",
+            "narrationEn": "In 1377, Baegun's students printed the book here, with support from a Buddhist nun named Myodeok.",
+            "keyword": {
+              "id": "jeja",
+              "ko": "제자",
+              "romanization": "jeja",
+              "en": "student; disciple",
+              "kind": "word"
+            },
+            "factIds": [
+              "f1",
+              "f3"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "Two younger monks carefully lifting a freshly printed sheet (shown as soft gray lines, no readable text) while a nun in robes watches kindly.",
+            "captionEn": "His students print the book",
+            "artPending": true
+          },
+          {
+            "id": "s4",
+            "narrationEn": "How does it work? Each character is its own little piece of metal type. Printers line the pieces up to make a page, then print it. Metal type made printing handier and mistakes easier to fix.",
+            "keyword": {
+              "id": "hwalja",
+              "ko": "활자",
+              "romanization": "hwalja",
+              "en": "printing type (one piece for each character)",
+              "kind": "word"
+            },
+            "factIds": [
+              "f4"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "Close-up of hands placing tiny metal blocks into a tray frame in neat rows (block faces shown blank or as abstract bumps); Hoya holds one tiny block up to the light.",
+            "captionEn": "One piece of type for each character",
+            "artPending": true
+          },
+          {
+            "id": "s5",
+            "narrationEn": "Jikji is the oldest surviving book in the world printed with movable metal type. Old records show metal type was used in Goryeo even earlier, but Jikji is the oldest such book that still exists.",
+            "keyword": {
+              "id": "geumsokhwalja",
+              "ko": "금속활자",
+              "romanization": "geumsokhwalja",
+              "en": "metal movable type",
+              "kind": "word"
+            },
+            "factIds": [
+              "f5"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "Hoya proudly holds up an old bound book like a trophy on a small hill, with a gentle golden glow behind him; the cover is plain.",
+            "captionEn": "The oldest surviving metal-type book",
+            "artPending": true
+          },
+          {
+            "id": "s6",
+            "narrationEn": "The book had two volumes. Only the second volume survives today, and it is kept at the National Library of France in Paris.",
+            "keyword": {
+              "id": "hagwon",
+              "ko": "하권",
+              "romanization": "hagwon",
+              "en": "the second (last) volume of a set",
+              "kind": "word"
+            },
+            "factIds": [
+              "f6"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "A quiet, grand library reading room with tall shelves and arched windows; one old book rests safely in a protective case. No signs, no flags, no text.",
+            "captionEn": "One volume survives, in Paris",
+            "artPending": true
+          },
+          {
+            "id": "s7",
+            "narrationEn": "In 2001, UNESCO added Jikji to the Memory of the World Register. UNESCO also has a prize carrying its name, for people who help protect old documents and share them.",
+            "keyword": {
+              "id": "jikji",
+              "ko": "직지",
+              "romanization": "Jikji",
+              "en": "Jikji (short name of the book)",
+              "kind": "word"
+            },
+            "factIds": [
+              "f7",
+              "f8"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "Hoya and children around the world holding hands in a circle around a glowing old book floating above a globe. No text.",
+            "captionEn": "UNESCO honors Jikji",
+            "artPending": true
+          },
+          {
+            "id": "s8",
+            "narrationEn": "Heungdeoksa seems to have been lost in a fire long ago. But in 1985, archaeologists digging at the site found a metal piece carved with the name Heungdeoksa, so its site was confirmed. Today the Cheongju Early Printing Museum stands beside it.",
+            "keyword": {
+              "id": "bangmulgwan",
+              "ko": "박물관",
+              "romanization": "bangmulgwan",
+              "en": "museum",
+              "kind": "word"
+            },
+            "factIds": [
+              "f9"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "Present day: a grassy temple site with stone foundations and a rebuilt hall, and a modern museum building nearby; Hoya waves to visiting families. No signs or text.",
+            "captionEn": "A museum stands by the temple site",
+            "artPending": true
+          }
+        ],
+        "checks": [
+          {
+            "id": "c1",
+            "kind": "detail",
+            "promptEn": "In what year was Jikji printed?",
+            "options": [
+              {
+                "id": "a",
+                "en": "1443",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "1995",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "1377",
+                "isCorrect": true
+              },
+              {
+                "id": "d",
+                "en": "2001",
+                "isCorrect": false
+              }
+            ],
+            "factIds": [
+              "f1"
+            ],
+            "explainEn": "Jikji was printed with metal type at Heungdeoksa Temple in 1377."
+          },
+          {
+            "id": "c2",
+            "kind": "detail",
+            "promptEn": "What makes Jikji special?",
+            "options": [
+              {
+                "id": "a",
+                "en": "It was the first book written in Hangul",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "It was the first book ever printed with woodblocks",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "It was written by King Sejong",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "It is the oldest surviving book printed with movable metal type",
+                "isCorrect": true
+              }
+            ],
+            "factIds": [
+              "f5"
+            ],
+            "explainEn": "Jikji is the world's oldest surviving book printed with movable metal type. Old Korean records mention even earlier metal type."
+          },
+          {
+            "id": "c3",
+            "kind": "detail",
+            "promptEn": "Where is the surviving volume of Jikji kept today?",
+            "options": [
+              {
+                "id": "a",
+                "en": "Haeinsa Temple",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "The National Library of France in Paris",
+                "isCorrect": true
+              },
+              {
+                "id": "c",
+                "en": "Kansong Art Museum",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "Cheongju City Hall",
+                "isCorrect": false
+              }
+            ],
+            "factIds": [
+              "f6"
+            ],
+            "explainEn": "Only the second volume survives. It is kept at the National Library of France in Paris."
+          }
+        ],
+        "checkpoints": [],
+        "sequenceSceneIds": [
+          "s1",
+          "s3",
+          "s6",
+          "s8"
+        ],
+        "newKeywordIds": [
+          "jeol",
+          "seunim",
+          "jeja",
+          "hwalja"
+        ]
+      }
+    ],
+    "coverSceneId": "s1",
+    "pillarTags": [],
+    "companionId": "hoya",
+    "facts": [
+      {
+        "id": "f1",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Jikji was printed with metal movable type at Heungdeoksa Temple, outside Cheongju, in the 7th month of 1377 (the 3rd year of King U of Goryeo).",
+        "claimKo": "『직지』는 고려 우왕 3년(1377) 7월 청주목 밖 흥덕사에서 금속활자로 인쇄되었다.",
+        "sources": [
+          {
+            "title": "Baegun hwasang chorok buljo jikji simche yojeol (vol.II), the second volume of \"Anthology of Great Buddhist Priests' Zen Teachings\"",
+            "publisher": "UNESCO — Memory of the World",
+            "url": "https://www.unesco.org/en/memory-world/baegun-hwasang-chorok-buljo-jikji-simche-yojeol-volii-second-volume-anthology-great-buddhist-priests",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"printed the old Heungdeok-sa temple in Cheongju city, using movable metal types in July 1377\""
+          },
+          {
+            "title": "유네스코 등재유산 소개 — 세계기록유산 「직지심체요절」",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FMemHeritage%2FMemHeritage_03.jsp&pageNo=5_4_2_0",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"청주 흥덕사에서 1377년 7월에 금속활자로 인쇄하였다.\"; 하권 간기 \"宣光七年丁巳七月 日 淸州牧外興德寺鑄字印施\""
+          },
+          {
+            "title": "직지란?",
+            "publisher": "청주고인쇄박물관 (Cheongju Early Printing Museum), 청주시",
+            "url": "https://www.cheongju.go.kr/jikjiworld/contents.do?key=17509",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"「직지」를 1377년에 청주목(淸州牧) 밖에 있는 흥덕사에서 금속활자로 인쇄하여 배포하는데\""
+          },
+          {
+            "title": "활자본 — 한국민족문화대백과사전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0065041",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"1377년(우왕 3) 7월에 주자로 찍은 「불조직지심체요절」\""
+          }
+        ]
+      },
+      {
+        "id": "f2",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "The monk Baegun compiled Jikji in 1372, at the age of 75, choosing important passages from the teachings, dialogues and letters of the Buddha and eminent monks.",
+        "claimKo": "백운화상은 75세이던 1372년(공민왕 21)에 부처와 고승들의 법어, 대화, 편지 등에서 중요한 내용을 뽑아 『직지』를 엮었다.",
+        "sources": [
+          {
+            "title": "유네스코 등재유산 소개 — 세계기록유산 「직지심체요절」",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FMemHeritage%2FMemHeritage_03.jsp&pageNo=5_4_2_0",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"백운화상이 75세였던 고려 공민왕 21년(1372)에 … 저술한 것으로서\""
+          },
+          {
+            "title": "직지란?",
+            "publisher": "청주고인쇄박물관 (Cheongju Early Printing Museum), 청주시",
+            "url": "https://www.cheongju.go.kr/jikjiworld/contents.do?key=17509",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"1372년(공민왕 21, 75세)에 성불산 성불사에서 145가(家)의 법어를 가려\""
+          },
+          {
+            "title": "사적 청주 흥덕사지 (淸州 興德寺址) — 안내판 설명 및 국가유산 설명",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1333303150000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "안내판: \"『직지』는 백운화상(白雲和尙)이 고려 공민왕 21년(1372)에 부처와 고승들의 법어, 대화, 편지 등에서 중요한 내용을 뽑아 엮은 책으로\""
+          }
+        ]
+      },
+      {
+        "id": "f3",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Baegun's disciples, including Seokchan, printed it with donations from the Buddhist nun Myodeok. The second disciple's name is written Daldam (달담) on 국가유산포털 and Daljam (달잠) on the Cheongju Early Printing Museum page, so the story does not name him.",
+        "claimKo": "백운화상의 제자 석찬 등이 비구니 묘덕의 시주를 받아 인쇄하였다. 둘째 제자의 이름은 국가유산포털에는 '달담', 청주고인쇄박물관에는 '달잠'으로 적혀 있어 이야기에서는 이름을 밝히지 않는다.",
+        "sources": [
+          {
+            "title": "유네스코 등재유산 소개 — 세계기록유산 「직지심체요절」",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FMemHeritage%2FMemHeritage_03.jsp&pageNo=5_4_2_0",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"그 제자 석찬과 달담이 비구니 묘덕의 시주를 받아 청주 흥덕사에서 1377년 7월에 금속활자로 인쇄하였다.\""
+          },
+          {
+            "title": "직지란? (직지를 간행한 사람)",
+            "publisher": "청주고인쇄박물관 (Cheongju Early Printing Museum)",
+            "url": "https://www.cheongju.go.kr/jikjiworld/contents.do?key=17509",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "\"연화문인(緣化門人) 석찬(釋璨), 달잠(達湛), 시주 비구니 묘덕(妙德)이라는 간행 기록이 있다. … 석찬과 달잠은 모두 백운화상의 제자로서 … 묘덕의 시주를 받아 흥덕사에서 금속활자로 「직지」를 간행하게 되었다.\""
+          }
+        ]
+      },
+      {
+        "id": "f4",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "In movable-type printing, separate pieces of type are arranged (typeset) into a plate to print pages. Metal type made printing more convenient and economical, and it made corrections easier.",
+        "claimKo": "활자 인쇄는 낱낱의 활자를 원고에 따라 배열(조판)해 판을 만들어 찍는 방식이며, 금속활자는 인쇄를 더 편리하고 경제적으로 만들고 교정을 쉽게 해 주었다.",
+        "sources": [
+          {
+            "title": "활자본 — 한국민족문화대백과사전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0065041",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"활자본은 활자를 조판하여 찍어낸 책이다.\""
+          },
+          {
+            "title": "동인찰 — 한국민족문화대백과사전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0080087",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"균자장은 원고에 따라 활자를 배열하여 높이와 간격을 맞추고 활자가 움직이지 않도록 고정시켜 인쇄할 때 쓰는 판을 만드는 장인이다.\""
+          },
+          {
+            "title": "유네스코 등재유산 소개 — 세계기록유산 「직지심체요절」",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FMemHeritage%2FMemHeritage_03.jsp&pageNo=5_4_2_0",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"이 책은 금속활자를 이용하여 인쇄하였는데, 인쇄술을 보다 편리하고 경제적이며 교정을 쉽게 하여 주었고\""
+          }
+        ]
+      },
+      {
+        "id": "f5",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Jikji is the world's oldest surviving book printed with movable metal type, although old Korean records mention earlier metal-type printing.",
+        "claimKo": "『직지』는 현존하는 세계에서 가장 오래된 금속활자본이며, 그보다 앞선 금속활자 인쇄는 옛 기록으로만 전한다.",
+        "sources": [
+          {
+            "title": "Baegun hwasang chorok buljo jikji simche yojeol (vol.II), the second volume of \"Anthology of Great Buddhist Priests' Zen Teachings\"",
+            "publisher": "UNESCO — Memory of the World",
+            "url": "https://www.unesco.org/en/memory-world/baegun-hwasang-chorok-buljo-jikji-simche-yojeol-volii-second-volume-anthology-great-buddhist-priests",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"While some earlier metal type printings were mentioned in the old Korean books, this book is the world's oldest movable metal type printing evidence available\""
+          },
+          {
+            "title": "사적 청주 흥덕사지 (淸州 興德寺址) — 안내판 설명 및 국가유산 설명",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1333303150000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "안내판: \"흥덕사는 현존하는 세계에서 가장 오래된 금속활자본인 『백운화상초록불조직지심체요절』 … 을 간행한 곳이다.\""
+          },
+          {
+            "title": "금속활자 — 한국민족문화대백과사전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0007871",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "1239년 『남명천화상송증도가』 중조본 지(誌): \"주자본(鑄字本)에 의거하여 1239년(고종 26) 다시 새겨\" → \"금속활자가 1232년 강화로 천도하기 이전인 13세기 초기 개경에서 이미 만들어져 사용되었음을 알 수 있다.\""
+          }
+        ]
+      },
+      {
+        "id": "f6",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Jikji was made in two volumes; only the second volume survives, and it is kept at the National Library of France (Bibliothèque nationale de France) in Paris.",
+        "claimKo": "『직지』는 상·하 2권이었으나 하권만 남아 있으며, 프랑스 국립도서관에 소장되어 있다.",
+        "sources": [
+          {
+            "title": "유네스코 등재유산 소개 — 세계기록유산 「직지심체요절」",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FMemHeritage%2FMemHeritage_03.jsp&pageNo=5_4_2_0",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"이 책은 상·하 2권으로 되어 있으나, 현재 하권만이 유일하게 프랑스에 소장되어 있다.\" / \"프랑스국립도서관으로 이관되어 오늘에 이르고 있다.\""
+          },
+          {
+            "title": "직지란?",
+            "publisher": "청주고인쇄박물관 (Cheongju Early Printing Museum), 청주시",
+            "url": "https://www.cheongju.go.kr/jikjiworld/contents.do?key=17509",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"「직지」의 체제는 상·하 2권으로 구성되어 있다.\"; \"하권 1책(총 38장)만이 프랑스 국립도서관 동양문헌실에 전하고 있다.\""
+          },
+          {
+            "title": "UNESCO/Jikji Memory of the World Prize — About the Prize",
+            "publisher": "UNESCO",
+            "url": "https://www.unesco.org/en/prizes/jikji/about",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"The book was printed in two volumes. The first volume is still missing and the second volume is kept in the Bibliothèque nationale of France.\""
+          }
+        ]
+      },
+      {
+        "id": "f7",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Jikji (vol. II) was inscribed on UNESCO's Memory of the World Register in 2001.",
+        "claimKo": "『직지』(하권)는 2001년 유네스코 세계기록유산에 등재되었다.",
+        "sources": [
+          {
+            "title": "Baegun hwasang chorok buljo jikji simche yojeol (vol.II), the second volume of \"Anthology of Great Buddhist Priests' Zen Teachings\"",
+            "publisher": "UNESCO — Memory of the World",
+            "url": "https://www.unesco.org/en/memory-world/baegun-hwasang-chorok-buljo-jikji-simche-yojeol-volii-second-volume-anthology-great-buddhist-priests",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "Registration Year: 2001 (submitted 2000 by the Republic of Korea)"
+          },
+          {
+            "title": "유네스코 등재유산 소개 — 세계기록유산 「직지심체요절」",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FMemHeritage%2FMemHeritage_03.jsp&pageNo=5_4_2_0",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"이 책은 이러한 가치를 인정받아 2001년 9월 유네스코세계기록유산으로 등재되었다.\""
+          },
+          {
+            "title": "직지란?",
+            "publisher": "청주고인쇄박물관 (Cheongju Early Printing Museum), 청주시",
+            "url": "https://www.cheongju.go.kr/jikjiworld/contents.do?key=17509",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"2001년에는 유네스코 세계기록유산에 「직지」를 등재시킴으로써\""
+          }
+        ]
+      },
+      {
+        "id": "f8",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "UNESCO has a prize carrying Jikji's name, the UNESCO/Jikji Memory of the World Prize, awarded to individuals or institutions that have made significant contributions to the preservation and accessibility of documentary heritage.",
+        "claimKo": "유네스코에는 '직지'의 이름을 딴 '유네스코/직지 세계기록유산상(UNESCO/Jikji Memory of the World Prize)'이 있으며, 기록유산의 보존과 접근성 향상에 크게 기여한 개인이나 기관에 수여된다.",
+        "sources": [
+          {
+            "title": "UNESCO/Jikji Memory of the World Prize — About the Prize",
+            "publisher": "UNESCO",
+            "url": "https://www.unesco.org/en/prizes/jikji/about",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"The Prize consists of a biennial award of US$ [amount differs between page versions; not used in the story] to individuals or institutions that have made significant contributions to the preservation and accessibility of documentary heritage.\""
+          }
+        ]
+      },
+      {
+        "id": "f9",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Heungdeoksa appears to have been abandoned after a fire in late Goryeo. Its site was confirmed in 1985, when an archaeological excavation found a metal piece (geumgu) inscribed 'Heungdeoksa'. The Cheongju Early Printing Museum stands beside the site today.",
+        "claimKo": "흥덕사는 고려 말에 화재로 폐사된 것으로 보인다. 1985년 발굴조사에서 '흥덕사'라는 글씨가 새겨진 금구 조각이 출토되어 흥덕사 터임이 확인되었으며, 현재 흥덕사지 옆에는 청주고인쇄박물관이 있다.",
+        "sources": [
+          {
+            "title": "사적 청주 흥덕사지 (淸州 興德寺址) — 안내판 설명 및 국가유산 설명",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1333303150000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "안내판: \"1985년 발굴조사 중 이곳에서 '흥덕사'라는 글씨가 새겨진 금구*가 나와 이곳이 당시의 흥덕사였음을 확인하였다.\"; \"현재 흥덕사지 옆에는 청주고인쇄박물관이 있으며\""
+          },
+          {
+            "title": "청주 흥덕사지 — 한국민족문화대백과사전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0056767",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"청주대학교의 주관하에 1985년 발굴을 할 때 출토된 '興德寺'라는 글씨가 새겨진 금구(禁口)조각과 청동불발(靑銅佛鉢) 뚜껑으로 이 절터가 흥덕사지임을 확인하게 되었다.\"; \"흥덕사는 늦어도 9세기에 창건되고 고려 말에 화재로 폐사된 것으로 보이며\""
+          },
+          {
+            "title": "국가유산 설명 — 사적 청주 흥덕사지 (淸州 興德寺址)",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1333303150000",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "\"1985년 발굴조사 때 … ‘흥덕사’라고 새겨진 쇠북(금구)조각이 나와 절의 이름이 흥덕사였음을 알 수 있었다. … 고려 후기까지 그 명맥을 유지하였던 것으로 보인다.\" (English text: \"burnt down at the end of Goryeo\")"
+          }
+        ]
+      }
+    ],
+    "referenceDisplay": "Sources: 국가유산청 국가유산포털; 청주고인쇄박물관; 한국민족문화대백과사전; UNESCO Memory of the World",
+    "verification": {
+      "passes": 3,
+      "checkedAt": "2026-10-10",
+      "scope": "cluster",
+      "notes": "Third independent pass. Every cited URL for all 6 episodes (52 facts) was re-opened (UNESCO pages via Wayback copies when the live site resets connections) and quotes/locators were compared; the one exception is unesco.org/en/prizes/literacy (unreachable from here; its claim is now also backed by a Korean MCST press release). Eight minimal corrections were made: (1) Hangeul Day f3 no longer says 'Gregorian' (no cited source says the October 9 conversion was Gregorian; encykorea separates Julian/Gregorian only for 1932-45) and dates the October 29/28 observances; (2) f10 gains a third source (SBS 2018 with 국립한글박물관 curator); (3) Shapes scene 8, learning goal and f7 now say 'South Korea's spelling rules' count 24 (North Korea counts 40, 국립한글박물관 webzine 59); (4) Sejong scene 4/f4: 백성 is 'an old-fashioned word' with 표준국어대사전 added; (5) Jikji f8 quote no longer repeats a prize amount that differs between UNESCO page versions; (6) Tripitaka f6 wood and corner plates now have two further sources (정책브리핑; 박상진 wood-identification study); (8) Hangeul Day f9 gains a second source (문화체육관광부 press release); (7) Panjeon scene 8/f9: 'visitors cannot walk inside' replaced by 'visitor entry is restricted' because Haeinsa has run pre-booked tours inside Beopbojeon since June 2021. See hangul-printing.signoff.md."
+    },
+    "authorNotes": "There is no comparison with Gutenberg because official Korean sources give different gaps: '70여년' and '80여년' on the 국가유산포털 Jikji page, and '78년' on the Heungdeoksa site signboard text. How the book reached France is left out as a sensitive topic for young learners; per 국가유산포털 it was collected by Collin de Plancy, passed to Henri Vever, and went to the BnF under his will after his death in 1950. It can be added later with that source. The 1972 'International Book Year' exhibition and the old misnomer 'Jikji Simgyeong' are also left out. The surviving volume has lost its first leaf (38 of 39 leaves remain, per 국가유산포털), which is left out too. The casting method (wax versus sand) is not described because it is debated, and earlier metal-type evidence (the 1239 colophon) is mentioned only in general terms. The full title is 백운화상초록불조직지심체요절 (Baegun Hwasang Chorok Buljo Jikji Simche Yojeol). REVISED: the names of Baegun's disciples are no longer given in the narration. 국가유산포털 writes the second disciple 달담 and the Cheongju Early Printing Museum writes 달잠 (達湛); the museum names Seokchan and Daljam as disciples and Myodeok as donor. Scene 8: 'diggers' -> 'archaeologists'; 'The temple itself disappeared long ago' -> 'seems to have been lost in a fire long ago' (encykorea: 폐사된 것으로 보이며); 'bronze piece' -> 'metal piece' because 국가유산포털 describes the 금구 as a 쇠북(금구) fragment. Vocab 종이/인쇄/금속 replaced by 제자/금속활자/직지 so that every vocab word appears in a scene. FINAL PASS (3rd check): f8 quote no longer repeats the prize amount (UNESCO page copies show US$ 30,000 and US$ 40,000 at different times). All other facts re-verified unchanged.",
+    "errata": []
+  },
+  {
+    "v": 1,
     "id": "story:sejong-new-letters",
     "state": "ready",
     "contentVer": 1,
