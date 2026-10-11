@@ -142,7 +142,7 @@ Opened by tapping an inline chip in the narration (or a word chip in D).
 ```
 F1  First scene of a fresh read, story has a gentle note
 │ ┌──────────────────────────────────┐
-│ │ A note for grown-ups: this story │ [ Dismiss ]   <- one line, never blocks
+│ │ A note for grown-ups: this story │ [ x ]   <- one quiet row (at most two lines on a short window), never blocks; [x] is a 64 dp Dismiss
 │ │ mentions a war long ago.         │
 │ └──────────────────────────────────┘
 │ <art> ...

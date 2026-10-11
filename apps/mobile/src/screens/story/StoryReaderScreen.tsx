@@ -2,6 +2,8 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useCallback, useMemo } from 'react';
 import { storyById } from '../../content/stories';
 import { sourcesRouteParams } from '../../logic/story/source-link';
+import { useLocale } from '../../i18n/use-messages';
+import { readerStory } from '../../logic/story/reader-locale';
 import type { RootStackParamList } from '../../navigation/types';
 import { StoryReaderView } from './StoryReaderView';
 
@@ -19,7 +21,9 @@ const NOTHING = (): void => undefined;
  */
 export function StoryReaderScreen({ route, navigation }: Props): React.ReactElement {
   const { storyId, level, sceneIndex } = route.params;
-  const story = useMemo(() => storyById(storyId), [storyId]);
+  const locale = useLocale();
+  // The story in the UI language, with the voice of the narration shown in each scene (PR 2.8).
+  const { story, narrationLangs } = useMemo(() => readerStory(storyById(storyId), level, locale), [storyId, level, locale]);
 
   const leave = useCallback((): void => {
     if (navigation.canGoBack()) navigation.goBack();
@@ -42,6 +46,7 @@ export function StoryReaderScreen({ route, navigation }: Props): React.ReactElem
       onFinish={leave}
       onClose={leave}
       onOpenSources={openSources}
+      narrationLangs={narrationLangs}
     />
   );
 }

@@ -4,24 +4,28 @@ import {
   Caption,
   Card,
   Heading,
+  HeritageCardArt,
   Hoya,
   Icon,
   KoreanText,
   Pill,
   Progress,
   Spacer,
+  StoryScene,
   borderWidth,
   colors,
   radii,
   spacing,
   touchTarget,
   typography,
+  useLayoutClass,
   useMediaSize,
 } from '@hangul-route/design-system';
-import type { KoText } from '@hangul-route/content-schema';
+import type { KoText, ThemeKey } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
-import React, { useEffect, useRef } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Pressable, Text, View, type LayoutChangeEvent } from 'react-native';
+import { recapLayout, type CultureNoteView, type RecapScene } from '../../logic/story/reader-extras';
 import type { NarrationPartView, SceneKorean } from '../../logic/story/scene-view';
 
 /**
@@ -351,6 +355,186 @@ export function KoreanBlock({
 }
 
 // ---------------------------------------------------------------------------
+// Culture note chip and card, advisory row (§3.7, wireframe G1 and F1)
+// ---------------------------------------------------------------------------
+
+/** "Did you know?": the chip of a scene with a culture note; it opens and closes the note card. */
+export function CultureNoteChip({
+  label,
+  open,
+  onPress,
+}: {
+  label: string;
+  open: boolean;
+  onPress: () => void;
+}): React.ReactElement {
+  return (
+    <View style={{ borderBottomWidth: borderWidth.thick, borderBottomColor: open ? colors.brand.secondaryDark : 'transparent' }}>
+      <Button
+        label={label}
+        tone="secondary"
+        size="md"
+        leading={<Icon name="sparkle" size={spacing.xl} color={colors.text.onSecondary} />}
+        onPress={onPress}
+        expanded={open}
+        testID="story-reader-did-you-know"
+      />
+    </View>
+  );
+}
+
+/**
+ * The inline culture note card (wireframe G1): "Did you know?", the title, a
+ * short body, the term as `KoreanText` with its speaker, the card art when the
+ * card has art, "More in Culture notes" only when that screen exists (F-STORY-004
+ * PR 4.7 passes `onMore`), and Close. Never a floating popover.
+ */
+export function CultureNoteCard({
+  note,
+  copy,
+  koreanItem,
+  cardArtLabel,
+  romanizationShown,
+  onHear,
+  onMore,
+  onClose,
+  compact = false,
+}: {
+  note: CultureNoteView;
+  copy: ReaderCopy;
+  koreanItem: KoreanItemLabel;
+  cardArtLabel: string;
+  romanizationShown: boolean;
+  onHear: () => void;
+  onMore?: () => void;
+  onClose: () => void;
+  /** Window height < `layout.compactHeight`: a smaller card picture leaves the short text area more room. */
+  compact?: boolean;
+}): React.ReactElement {
+  const ref = useRef<View | null>(null);
+  useEffect(() => {
+    const node = ref.current as unknown as { scrollIntoView?: (o: { block: 'nearest' }) => void } | null;
+    node?.scrollIntoView?.({ block: 'nearest' });
+  }, []);
+  const art = useMediaSize(compact ? touchTarget.hero : touchTarget.hero + spacing.xxl);
+  const { term } = note;
+  return (
+    <View ref={ref} accessibilityLiveRegion="polite" role="region" aria-label={note.title} testID="story-reader-note">
+      <Card tone="paper" padding="lg" elevation="flat">
+        <View style={{ gap: spacing.sm }}>
+          <Caption tone="muted">{copy.didYouKnow.cta}</Caption>
+          <Heading level="prompt" weight="bold" testID="story-reader-note-title">
+            {note.title}
+          </Heading>
+          <Body testID="story-reader-note-body">{note.body}</Body>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.md }}>
+            <View style={{ flexShrink: 1, minWidth: 0 }}>
+              <KoreanText
+                ko={term.ko}
+                romanization={term.romanization}
+                gloss={term.en}
+                size="sm"
+                romanizationShown={romanizationShown}
+                onPress={onHear}
+                accessibilityLabel={koreanItem({ ko: term.ko, romanization: term.romanization, gloss: term.en })}
+                testID="story-reader-note-term"
+              />
+            </View>
+            <SpeakerButton label={copy.hearTerm(term.romanization)} onPress={onHear} testID="story-reader-note-hear" />
+          </View>
+          {note.cardId !== null ? (
+            // The title and the term already say what the picture shows: hidden from screen readers.
+            <View
+              style={{ alignSelf: 'center', borderRadius: radii.xl, overflow: 'hidden', backgroundColor: colors.surface.paper }}
+              accessibilityElementsHidden
+              importantForAccessibility="no-hide-descendants"
+              aria-hidden
+              testID="story-reader-note-art"
+            >
+              <HeritageCardArt cardId={note.cardId} size={art} accessibilityLabel={cardArtLabel} />
+            </View>
+          ) : null}
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: spacing.sm }}>
+            {onMore ? (
+              <Button
+                label={copy.cultureNote.moreInCultureNotes.cta}
+                tone="ghost"
+                size="md"
+                onPress={onMore}
+                testID="story-reader-note-more"
+              />
+            ) : null}
+            <Button label={copy.cultureNote.close.cta} tone="ghost" size="md" onPress={onClose} testID="story-reader-note-close" />
+          </View>
+        </View>
+      </Card>
+    </View>
+  );
+}
+
+const ADVISORY_COMPACT_LINES = 2;
+
+/**
+ * "A note for grown-ups: ..." (wireframe F1): one quiet row above the art on a
+ * fresh quest-mode open of scene 1, with Dismiss. It never blocks reading.
+ */
+export function AdvisoryRow({
+  text,
+  dismissLabel,
+  onDismiss,
+  compact = false,
+}: {
+  text: string;
+  dismissLabel: string;
+  onDismiss: () => void;
+  /**
+   * Window height < `layout.compactHeight` (320x568, landscape phones): the row is clamped to two lines so a
+   * long note (up to 140 characters) leaves the art and the text room. The full note stays in the text a
+   * screen reader reads, and Sources always shows it (§3.7).
+   */
+  compact?: boolean;
+}): React.ReactElement {
+  return (
+    <View testID="story-reader-advisory" style={{ marginTop: spacing.xs }}>
+      <Card tone="sunken" padding="sm" elevation="flat">
+        {/* A 64 dp Dismiss (close icon, labelled "Dismiss") beside the text keeps the row short on a narrow phone. */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+          <View style={{ flex: 1, minWidth: 0, paddingLeft: spacing.xs }}>
+            <Text
+              numberOfLines={compact ? ADVISORY_COMPACT_LINES : undefined}
+              style={{
+                fontSize: typography.size.body,
+                lineHeight: typography.size.body * typography.leading.normal,
+                color: colors.text.secondary,
+              }}
+              testID="story-reader-advisory-text"
+            >
+              {text}
+            </Text>
+          </View>
+          <Pressable
+            onPress={onDismiss}
+            accessibilityRole="button"
+            accessibilityLabel={dismissLabel}
+            testID="story-reader-advisory-dismiss"
+            style={({ pressed }) => ({
+              width: touchTarget.min,
+              height: touchTarget.min,
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: radii.pill,
+              backgroundColor: pressed ? colors.surface.paper : 'transparent',
+            })}
+          >
+            <Icon name="close" size={spacing.xl} color={colors.text.secondary} />
+          </Pressable>
+        </View>
+      </Card>
+    </View>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Bottom bar: Read to me · Back · Next (§3.3 item 6)
 // ---------------------------------------------------------------------------
 
@@ -457,33 +641,87 @@ export function ReaderEndPage({
   mode,
   hoyaLabel,
   retellingNote,
+  recap = [],
+  theme,
   onPrimary,
   onReadAgain,
   onSources,
   compact = false,
+  landscape = false,
 }: {
   copy: EndCopy;
   mode: 'quest' | 'replay';
   hoyaLabel: string;
   /** Traditional tales only: "one version of a tale told in many versions". */
   retellingNote: string | null;
+  /** Up to four Story Order scenes with art (`recapScenes`): small decorative pictures. */
+  recap?: readonly RecapScene[];
+  /** Tint of a picture's fallback panel. */
+  theme?: ThemeKey;
   onPrimary: () => void;
   onReadAgain: () => void;
   onSources?: () => void;
   /** Window height < `layout.compactHeight` (landscape phones): a smaller Hoya and an lg primary keep Continue / Done on screen. */
   compact?: boolean;
+  /** Window wider than tall: with `compact`, the recap sits beside Hoya in one row. */
+  landscape?: boolean;
 }): React.ReactElement {
   const hoya = useMediaSize(compact ? touchTarget.min : touchTarget.hero + spacing.xxl);
+  const maxThumb = useMediaSize(compact ? touchTarget.min : touchTarget.hero + spacing.xl);
+  // Start from the window width (the reading column is never wider), so the pictures are drawn on the first
+  // frame and the centred column does not jump once it is measured.
+  const { windowWidth } = useLayoutClass();
+  const [width, setWidth] = useState(windowWidth);
+  const onLayout = (e: LayoutChangeEvent): void => {
+    const next = Math.round(e.nativeEvent.layout.width);
+    setWidth((prev) => (prev === next ? prev : next));
+  };
+  const gap = spacing.sm;
+  // A picture under half a touch target recaps nothing: the row is hidden instead.
+  const minThumb = touchTarget.min / 2;
+  const { inline, thumbWidth } = recapLayout({ width, compact, landscape, count: recap.length, hoya, maxThumb, minThumb, gap });
+  const hoyaNode = <Hoya pose="cheering" size={hoya} accessibilityLabel={hoyaLabel} />;
+  // Decorative: the pictures recap what was read; a screen reader skips them (§3.7).
+  const pictures =
+    thumbWidth > 0 ? (
+      <View
+        style={{ flexDirection: 'row', justifyContent: 'center', gap }}
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+        aria-hidden
+        testID="story-reader-recap"
+      >
+        {recap.map((r) => (
+          <View key={r.sceneId} style={{ borderRadius: radii.md, overflow: 'hidden' }}>
+            <StoryScene art={r.art} theme={theme} variant="thumb" width={thumbWidth} decorative testID={`story-reader-recap-${r.sceneId}`} />
+          </View>
+        ))}
+      </View>
+    ) : null;
   return (
     <View
       testID="story-reader-end"
+      onLayout={onLayout}
       style={{ flexGrow: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: compact ? spacing.md : spacing.xl }}
     >
-      <Hoya pose="cheering" size={hoya} accessibilityLabel={hoyaLabel} />
+      {inline && pictures ? (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap }}>
+          {hoyaNode}
+          {pictures}
+        </View>
+      ) : (
+        hoyaNode
+      )}
       <Spacer size={compact ? 'sm' : 'lg'} />
       <Heading level="display" align="center">
         {copy.title}
       </Heading>
+      {!inline && pictures ? (
+        <>
+          <Spacer size={compact ? 'sm' : 'lg'} />
+          {pictures}
+        </>
+      ) : null}
       {retellingNote !== null ? (
         <>
           <Spacer size="md" />

@@ -6,12 +6,13 @@ import {
   Screen,
   StoryScene,
   layout,
+  supportedCardIds,
   motion,
   spacing,
   useLayoutClass,
   useMediaSize,
 } from '@hangul-route/design-system';
-import type { KoText, Story, StoryLevel, StoryTier } from '@hangul-route/content-schema';
+import type { KoText, SpeechLang, Story, StoryLevel, StoryTier } from '@hangul-route/content-schema';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AccessibilityInfo, Animated, Platform, ScrollView, View, type LayoutChangeEvent } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
@@ -30,6 +31,7 @@ import {
   wordId,
   type ReaderMode,
 } from '../../logic/story/reader-effects';
+import { advisoryAfter, advisoryInPhase, advisoryNote, cultureNoteView, noteOpen, recapScenes } from '../../logic/story/reader-extras';
 import { effectiveReadToMe } from '../../logic/story/reader-settings';
 import { initReader, openEffects, reduceReader, type ReaderAction, type ReaderEffect, type ReaderState } from '../../logic/story/reader-state';
 import { STORY_READER_AUDIO_SOURCE, planSceneAudio, type SceneAudioPart } from '../../logic/story/scene-audio';
@@ -41,6 +43,9 @@ import { track } from '../../platform/telemetry';
 import { useLocaleStore } from '../../store/locale-store';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import {
+  AdvisoryRow,
+  CultureNoteCard,
+  CultureNoteChip,
   GlossCard,
   InEnglishLabel,
   KoreanBlock,
@@ -79,6 +84,13 @@ export interface StoryReaderViewProps {
   onClose: () => void;
   /** Opens Sources (PR 2.7); without it the Sources buttons are not drawn. */
   onOpenSources?: (from: 'reader' | 'end', sceneIndex: number) => void;
+  /**
+   * The narration voice of each scene (`readerStory`, PR 2.8): the UI locale's when its overlay is
+   * shown, else `en-US` (the default for a missing entry).
+   */
+  narrationLangs?: readonly SpeechLang[];
+  /** "More in Culture notes" (F-STORY-004 PR 4.7, `CultureNotes { noteId }`); without it the button is not drawn. */
+  onOpenCultureNote?: (noteId: string) => void;
 }
 
 export function StoryReaderView(props: StoryReaderViewProps): React.ReactElement {
@@ -123,6 +135,8 @@ function ReaderBody({
   onFinish,
   onClose,
   onOpenSources,
+  narrationLangs,
+  onOpenCultureNote,
 }: StoryReaderViewProps & { story: Story; tier: StoryTier }): React.ReactElement {
   const m = useMessages();
   const copy = m.learner.story.reader;
@@ -151,7 +165,16 @@ function ReaderBody({
     initReader(tier.scenes.length, initialIndex, readerCheckpoints(tier, false)),
   );
   const stateRef = useRef(state);
-  const view = useMemo(() => buildSceneView(story, level, state.index, { copy }), [story, level, state.index, copy]);
+  // The voice of the narration shown in a scene (an overlay's, else English; §3.2).
+  const sceneCtx = useCallback(
+    (index: number) => ({ copy, narrationLang: narrationLangs?.[index] ?? ('en-US' as const) }),
+    [copy, narrationLangs],
+  );
+  const view = useMemo(() => buildSceneView(story, level, state.index, sceneCtx(state.index)), [story, level, state.index, sceneCtx]);
+  // The grown-up note: a fresh quest-mode open of scene 1 only; it goes on Dismiss or the first page turn (§3.7).
+  const [advisory, setAdvisory] = useState<string | null>(() => advisoryNote(story, { mode, startIndex: state.index }));
+  const note = useMemo(() => cultureNoteView(view?.cultureNote ?? null, supportedCardIds), [view]);
+  const recap = useMemo(() => recapScenes(story, level), [story, level]);
 
   // Mutable inputs the effect runner reads at call time.
   const live = useRef({ readToMe: readToMeOn, unlocked: audio.unlocked, mode, onSceneChange, onAnswer });
@@ -170,16 +193,17 @@ function ReaderBody({
 
   const sceneSteps = useCallback(
     (index: number, include: readonly SceneAudioPart[]) => {
-      const v = buildSceneView(story, level, index, { copy });
+      const v = buildSceneView(story, level, index, sceneCtx(index));
       return v ? planSceneAudio(v, { include }) : [];
     },
-    [story, level, copy],
+    [story, level, sceneCtx],
   );
 
   const runEffects = useCallback(
     (effects: readonly ReaderEffect[]): void => {
       for (const effect of effects) {
         const audio = audioRef.current;
+        setAdvisory((row) => advisoryAfter(row, effect));
         if (effect.type === 'scene-changed') {
           audio.resetForScene();
           pendingAutoplay.current = null;
@@ -191,7 +215,7 @@ function ReaderBody({
           if (plan.saveBookmark) save(effect.index);
           if (plan.autoplay === 'now') audio.play(sceneSteps(effect.index, ['narration', 'korean']));
           if (plan.autoplay === 'on-unlock') pendingAutoplay.current = effect.index;
-          const v = buildSceneView(story, level, effect.index, { copy });
+          const v = buildSceneView(story, level, effect.index, sceneCtx(effect.index));
           if (v) AccessibilityInfo.announceForAccessibility(v.labels.announcement);
           // No focus scroll: the text is already at its top, and scrolling to the narration would hide a
           // read-along Korean line above it.
@@ -221,7 +245,7 @@ function ReaderBody({
         }
       }
     },
-    [sceneSteps, story, level, copy, profileId],
+    [sceneSteps, story, level, sceneCtx, profileId],
   );
 
   const dispatch = useCallback(
@@ -287,6 +311,11 @@ function ReaderBody({
     return () => anim.stop();
   }, [state.index, state.phase, reducedMotion, fade]);
 
+  // Opening a checkpoint or the end page is a page turn too: the grown-up note goes and does not come back.
+  useEffect(() => {
+    setAdvisory((row) => advisoryInPhase(row, state.phase));
+  }, [state.phase]);
+
   // --- interactions ---------------------------------------------------------
 
   const shown = (id: string): boolean => romanizationShown(romanizationMode, state.revealed.includes(id));
@@ -315,6 +344,17 @@ function ReaderBody({
     if (target) audio.play(termSteps(target.text));
   };
 
+  // Dismiss unmounts the focused control: put a keyboard or screen-reader user back on the scene text (web).
+  const dismissAdvisory = (): void => {
+    setAdvisory(null);
+    if (Platform.OS === 'web') setTimeout(() => narrationRef.current?.focus?.({ preventScroll: true }), 0);
+  };
+
+  // The note card shares the one inline-card slot with the gloss card; a second tap of its chip closes it.
+  const toggleNote = (): void => {
+    if (note) dispatch({ type: 'tapTerm', id: note.itemId });
+  };
+
   const changeReadToMe = (next: boolean): void => {
     setSessionReadToMe(next);
     if (profileId !== null) setReadToMe(profileId, next);
@@ -340,6 +380,8 @@ function ReaderBody({
   if (!view) return <Screen tone="canvas">{null}</Screen>;
 
   const end = state.phase === 'end';
+  // The grown-up note is drawn on the scene page only (never over a checkpoint or the end page).
+  const advisoryRow = advisoryInPhase(advisory, state.phase);
   const sources = onOpenSources ? () => onOpenSources(end ? 'end' : 'reader', state.index) : undefined;
   const gloss = glossTarget(view, state.openTerm);
   const reason = audio.slot.view.reason;
@@ -455,22 +497,46 @@ function ReaderBody({
     return null;
   };
 
+  // Window height < layout.compactHeight (320x568, landscape phones): hero CTAs step down to lg.
+  const compactHeight = lc.windowHeight > 0 && lc.windowHeight < layout.compactHeight;
+  const sayIt = sayItYourselfShown({ canPlayKorean: audio.canPlayKorean, reason, hasKorean: view.korean !== null });
+  const noteIsOpen = noteOpen(note, state.openTerm);
+  // Chips row (§3.3 item 5): "Did you know?" and "Say it yourself", only when present.
   const chips =
-    sayItYourselfShown({ canPlayKorean: audio.canPlayKorean, reason, hasKorean: view.korean !== null }) ? (
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }} testID="story-reader-chips">
-        <Pill label={copy.sayItYourself.pill} tone="info" testID="story-reader-say-it" />
+    note || sayIt ? (
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: spacing.sm }} testID="story-reader-chips">
+        {note ? <CultureNoteChip label={copy.didYouKnow.cta} open={noteIsOpen} onPress={toggleNote} /> : null}
+        {sayIt ? <Pill label={copy.sayItYourself.pill} tone="info" testID="story-reader-say-it" /> : null}
       </View>
+    ) : null;
+
+  const noteCard =
+    note && noteIsOpen ? (
+      <CultureNoteCard
+        key={note.id}
+        note={note}
+        copy={copy}
+        koreanItem={m.a11y.koreanItem}
+        cardArtLabel={m.a11y.cardArt(note.title)}
+        romanizationShown={shown(note.itemId)}
+        onHear={() => {
+          dispatch({ type: 'reveal', id: note.itemId });
+          audio.play(termSteps(note.term));
+        }}
+        onMore={onOpenCultureNote ? () => onOpenCultureNote(note.id) : undefined}
+        onClose={() => dispatch({ type: 'closeTerm' })}
+        compact={compactHeight}
+      />
     ) : null;
 
   const text = (
     <View style={{ gap: spacing.lg, paddingBottom: spacing.md }}>
       {view.blocks.filter((b) => b !== 'art').map(block)}
       {chips}
+      {noteCard}
     </View>
   );
 
-  // Window height < layout.compactHeight (320x568, landscape phones): hero CTAs step down to lg.
-  const compactHeight = lc.windowHeight > 0 && lc.windowHeight < layout.compactHeight;
   const bottomBar = (
     <ReaderBottomBar
       copy={copy}
@@ -491,10 +557,13 @@ function ReaderBody({
         mode={mode}
         hoyaLabel={m.a11y.hoya('cheering')}
         retellingNote={view.traditional ? story.origin.retellingNoteEn ?? null : null}
+        recap={recap}
+        theme={story.theme}
         onPrimary={onFinish}
         onReadAgain={() => dispatch({ type: 'restart' })}
         onSources={sources}
         compact={compactHeight}
+        landscape={lc.windowWidth > lc.windowHeight}
       />
     </ScrollView>
   );
@@ -516,6 +585,14 @@ function ReaderBody({
         onClose={onClose}
         onSources={sources}
       />
+      {advisoryRow !== null ? (
+        <AdvisoryRow
+          text={copy.advisory(advisoryRow)}
+          dismissLabel={copy.dismiss.cta}
+          onDismiss={dismissAdvisory}
+          compact={compactHeight}
+        />
+      ) : null}
       {side && !end ? (
         // Side by side: the art and the text fade on a page turn; the controls under the text stay put (§3.10).
         <View testID="story-reader-body" style={{ flex: 1, marginTop: spacing.sm }} onLayout={onBodyLayout}>

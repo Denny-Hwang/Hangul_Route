@@ -13,5 +13,7 @@ export interface ButtonProps {
   leading?: ReactNode;
   trailing?: ReactNode;
   accessibilityLabel?: string;
+  /** A disclosure button (it opens and closes something inline): announced as expanded or collapsed. */
+  expanded?: boolean;
   testID?: string;
 }
