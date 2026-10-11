@@ -56,7 +56,7 @@ Only the text area scrolls: the picture and the bottom bar never scroll away (sp
 |---|---|
 | Portrait, any width | Stacked in the `reading` column (720 cap). Picture width = min(column, `useMediaSize(480)`, 42 % of the body height x 4/3) |
 | `sideBySide` (landscape and width >= 700; 844x390, 1180x820) | `Screen width="full"`: picture left (at most 55 % of the body and never taller than the body), text and the bottom bar right; the top bar spans both. A page turn fades the picture and the text only; the bottom bar stays put |
-| Window height < `layout.compactHeight` (640; 320x568, landscape phones) | Next is `size="lg"` (80) instead of `hero` (96) so the text keeps room; both are over the 64 floor |
+| Window height < `layout.compactHeight` (640; 320x568, landscape phones) | Next is `size="lg"` (80) instead of `hero` (96) so the text keeps room; both are over the 64 floor. The end page steps down the same way (F-STORY-002 PR 2.6b): its primary (Continue / Done) is `lg`, Hoya is `touchTarget.min` (64) instead of 128 and the spacing is tighter, so the primary stays fully on screen at 844x390 without scrolling |
 
 Every scene opens at the top of its text: the text scroll goes back to the top on each page turn (native and web).
 
