@@ -34,7 +34,7 @@ import { cardById, episodesAll, questsAll } from '../../content';
 import { useMessages } from '../../i18n/use-messages';
 import { cardEarnHint } from '../../logic/card-earn';
 import { isStageEntitled } from '../../logic/entitlement';
-import { playPrompt } from '../../platform/audio';
+import { playPrompt, stop } from '../../platform/audio';
 import { useReducedMotion } from '../../platform/motion';
 import { isShareAvailable, shareSnapshot } from '../../platform/sharing';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
@@ -66,11 +66,8 @@ export function CardDetailView({ cardId, onClose, showHowToEarn = false }: CardD
   // The Korean name is printed on the card; the panel only says why it is silent (F-AUDIO-004 A-5b).
   const slot = usePromptSlot({ source: 'card-detail', textOnScreen: true });
   const [helpOpen, setHelpOpen] = useState(false);
-  const resetSlot = slot.reset;
-  // A split pane swaps cards in place: a new card is a new prompt.
-  useEffect(() => {
-    resetSlot();
-  }, [cardId, resetSlot]);
+  // Closing the card (Back, or another card in the split pane, which remounts it by key) stops a word mid-way.
+  useEffect(() => () => stop(), []);
 
   useEffect(() => {
     let cancelled = false;

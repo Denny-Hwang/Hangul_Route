@@ -79,6 +79,17 @@ export function promptPanelView(
   };
 }
 
+/**
+ * Whether the text fallback counts as shown (it fires `audio.fallback_shown`). A screen that already
+ * prints the Korean next to its speaker (`textOnScreen`, A-5b) shows only the status panel, so it
+ * counts once that panel is up; a screen with the full text panel counts as soon as the text is.
+ * A panel with no reason (text kept after sound came back) is not a fallback.
+ */
+export function fallbackVisible(view: PromptPanelView, textOnScreen: boolean): boolean {
+  if (view.reason === null) return false;
+  return textOnScreen ? view.statusShown : view.textShown;
+}
+
 /** The 800 ms replay after a wrong tap is skipped while the text stands in for a sound that is off or unavailable. */
 export function shouldAutoReplay(view: PromptPanelView): boolean {
   return view.reason === null;

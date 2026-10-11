@@ -20,17 +20,12 @@ import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { usePromptSlot } from '../../components/use-prompt-slot';
 import { useMessages } from '../../i18n/use-messages';
 import { replyOptionLabel } from '../../logic/korean-labels';
+import { afterReply } from '../../logic/audio/reply-advance';
 import type { MinigameScope } from '../../logic/minigame-config';
-import { playPrompt } from '../../platform/audio';
+import { playPrompt, stop } from '../../platform/audio';
 import { nudge, success, tapLight } from '../../platform/haptics';
+import { useAudioStore } from '../../store/audio-store';
 import { useQuestRunStore } from '../../store/quest-run-store';
-
-/** The next turn waits at least this long after a right reply, and for the reply to be said. */
-const ADVANCE_MIN_MS = 900;
-/** Never wait longer than this for the reply to finish (the controller's own safety timeout is the real bound). */
-const ADVANCE_MAX_MS = 6000;
-
-const delay = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
 interface Props {
   scope: MinigameScope;
@@ -55,22 +50,28 @@ export function TapRespondGame({ scope, onFinish }: Props): React.ReactElement {
   const slot = usePromptSlot({ source: 'tap-respond', textOnScreen: true });
   const { play, reset } = slot;
   const [helpOpen, setHelpOpen] = useState(false);
-  const mounted = useRef(true);
-  useEffect(
-    () => () => {
+  const mounted = useRef(false);
+  // While a right reply is being said, nothing may start the NPC line again (it would cut the reply off).
+  const replying = useRef(false);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
       mounted.current = false;
-    },
-    [],
-  );
+      // Leaving mid-line (Back, or the last reply's onFinish) must not leave Korean playing over the next screen.
+      stop();
+    };
+  }, []);
 
   const hearLine = useCallback((): void => {
-    if (turn) void play(() => playPrompt({ text: turn.npcKo, kind: 'sentence', source: 'tap-respond' }));
+    if (!turn || replying.current) return;
+    void play(() => playPrompt({ text: turn.npcKo, kind: 'sentence', source: 'tap-respond' }));
   }, [turn, play]);
 
-  // Each turn opens with the NPC line, said once.
+  // Each turn opens with the NPC line, said once. With sound switched off it waits for a tap, as on the
+  // other A-5b screens, so a muted learner is not told "Sound is off" again on every turn.
   useEffect(() => {
     reset();
-    hearLine();
+    if (!useAudioStore.getState().muted) hearLine();
   }, [hearLine, reset]);
 
   if (!turn) {
@@ -88,9 +89,11 @@ export function TapRespondGame({ scope, onFinish }: Props): React.ReactElement {
       success();
       answerRound(turnIdx, true);
       setFeedback('correct');
+      replying.current = true;
       const reply = play(() => playPrompt({ text: ko, kind: 'sentence', source: 'tap-respond' }));
       // The reply is said in full before the next line starts (a newer prompt would cut it off).
-      void Promise.all([Promise.race([reply, delay(ADVANCE_MAX_MS)]), delay(ADVANCE_MIN_MS)]).then(() => {
+      void afterReply(reply).then(() => {
+        replying.current = false;
         if (!mounted.current) return;
         if (turnIdx >= turns.length - 1) {
           markStepComplete();
@@ -136,6 +139,8 @@ export function TapRespondGame({ scope, onFinish }: Props): React.ReactElement {
             tone="secondary"
             size="md"
             leading={<Icon name="speaker" size={20} color={colors.text.onSecondary} />}
+            accessibilityLabel={m.a11y.minigame.hear(turn.npcRomanization ?? turn.npcKo)}
+            disabled={feedback === 'correct'}
             onPress={hearLine}
             testID="tap-respond-hear"
           />
@@ -145,7 +150,9 @@ export function TapRespondGame({ scope, onFinish }: Props): React.ReactElement {
       <PromptPanel
         variant="status"
         view={slot.view}
-        onAction={(action) => slot.act(action, hearLine)}
+        onAction={(action) => {
+          if (!replying.current) slot.act(action, hearLine);
+        }}
         onHelp={() => setHelpOpen(true)}
       />
       <VoiceHelpSheet visible={helpOpen} onClose={() => setHelpOpen(false)} />

@@ -5,7 +5,7 @@ import {
   type FallbackAction,
   type PlayResult,
 } from '../logic/audio/prompt-state';
-import { failureFromStore, promptPanelView, type PromptPanelView } from '../logic/audio/prompt-view';
+import { failureFromStore, fallbackVisible, promptPanelView, type PromptPanelView } from '../logic/audio/prompt-view';
 import { useMessages } from '../i18n/use-messages';
 import { noteFallbackShown } from '../platform/audio';
 import { useAudioStore } from '../store/audio-store';
@@ -61,10 +61,10 @@ export function usePromptSlot({ source, hasClip = false, textOnScreen = false }:
     if (!clip) dispatch({ capability: { tts, clips, unlocked } });
   }, [tts, clips, unlocked, clip]);
 
-  const fallbackVisible = textOnScreen ? view.statusShown : view.textShown;
+  const shown = fallbackVisible(view, textOnScreen);
   useEffect(() => {
-    if (fallbackVisible && view.reason !== null) noteFallbackShown(source, view.reason);
-  }, [fallbackVisible, view.reason, source]);
+    if (shown && view.reason !== null) noteFallbackShown(source, view.reason);
+  }, [shown, view.reason, source]);
 
   const play = useCallback((run: () => Promise<PlayResult>): Promise<PlayResult> => {
     const mine = epoch.current;
