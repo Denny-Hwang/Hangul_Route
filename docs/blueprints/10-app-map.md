@@ -49,6 +49,7 @@ status: reference (living — 화면·기능이 추가되면 이 문서를 먼�
 Hangul Route
 │
 ├─ A. Learner App ──────────────────────────────────────────────── 아이
+│   ├─ A0. Layout (모든 화면 공통): compact · regular · wide · short 클래스 · regular 는 가운데 읽기 칼럼 · wide 는 Journey/Library 두 pane · 폰 가로는 부드러운 세로 안내 ("Keep sideways") · 터치 64 하한 불변 [S] F-LAYOUT-001
 │   ├─ A1. Onboarding                                   [S] F-PROF-001
 │   │    ├─ Welcome (value-first, 계정 없음)
 │   │    ├─ Create parent (PIN)  →  Create learner (name·age·avatar)
@@ -163,6 +164,7 @@ Hangul Route
 | `paywall/upgrade` | Paywall (PIN 뒤) | Stage 2+ 잠금 해제 · "covered by <class>" 상태 · 웹 콘솔로 안내 (가격은 placeholder) | S | F-ENT-001 §3.5 | ✓ |
 | `pwa/install-guide` | InstallGuide sheet (web only) | 홈 화면 추가 안내 (iOS/Android/PC), 3회째 열 때 · 5회 스누즈 | S | F-PWA-001 | ✓ |
 | `pwa/system-banners` | (신규, web only) | 오프라인 준비됨 · 업데이트 · 오프라인 상태 | P | roadmap P2 | NEW |
+| `layout/wide` | (모든 화면, `useLayoutClass`) | 넓은 창은 그림·두 화면 동시 보기에 쓰고 타깃은 작게 하지 않음: 클래스 4 · Home 2열 · Journey/Library 두 pane · 폰 가로 안내 · pane 상태 | S | F-LAYOUT-001 §3.1-3.8 | ✓ |
 | `classroom/lecture-presenter` | PresenterApp (`/present`, 별도 root, 웹 전용) | 교사가 TV·프로젝터로 하는 슬라이드 수업 — 점수·순위 없음, 이름은 피커에만 (URL 에 없음), 학습자 진도 기록 없음 | R | F-TCH-004 | ✓ |
 | `classroom/projection-mode` | (연기, 자원봉사 학생용 — 교사 수업은 `classroom/lecture-presenter`) | 학습자 화면을 교실 TV 에 그대로 표시 | D | F-TCH-001 §3.4 | NEW |
 
@@ -243,6 +245,7 @@ onboarding/welcome ─▶ sync/restore ("I already have progress") ─┬─▶ 
 journey/grid (잠긴 Stage 셀) ─▶ paywall/upgrade (parent-gated)
 
 [web only] 첫 방문 ─▶ pwa/system-banners (offline-ready) ; 설치 안 됨 + 3회 방문 ─▶ pwa/install-guide
+[모든 채널] 창 크기·회전 ─▶ layout/wide (클래스 재계산) ; wide: journey/grid · library/gallery 의 셀/카드 탭 ─▶ 오른쪽 pane (이동 없음) ; 폰 가로 ─▶ 세로 안내 ─▶ "Keep sideways" 또는 회전
 [web, 로그인 없음] /present ─▶ classroom/lecture-presenter (A home: Recent · Quick lesson ─▶ B start ─▶ C stage) — 프로필·진도를 읽거나 쓰지 않음 (F-TCH-004 §3.9)
 [연기] 자원봉사 학생 ─▶ classroom/projection-mode (F-TCH-001 §3.4)
 ```
