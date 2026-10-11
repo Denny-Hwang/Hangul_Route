@@ -172,3 +172,16 @@ Deliverable: 1170 × 3400 PNG.
 ## 7. Output path
 
 - `design/screens/episode/detail__v1__YYYY-MM-DD.png`
+
+## 8. Stories row (F-STORY-005, added by PR 5.0)
+
+Spec: `docs/specs/F-STORY-005-episode-catalogue-grid.md` §3.6 · wireframe: `design/wireframes/episode/detail-cell-stories-row.md` C.
+
+When the lesson's grid cell also has heritage stories, one row sits after the quest list and before "Cards in this episode": **"Heritage stories for this cell"** with a plain count and a chevron, at least 64 tall, `surface.paper` with the `card` shadow, secondary weight (the next quest's Start stays the only primary). It opens the cell page (`27-cell-stories.md`). Without stories the row is absent and the page is exactly as above.
+
+Prompt addition (append to the §5 prompt): "After the quest list add one full-width secondary row card: 'Heritage stories for this cell' on the left, the number 5 and a chevron on the right."
+
+Acceptance additions:
+
+- [ ] The stories row is secondary and never competes with the next quest's Start
+- [ ] The count is a plain number (no "of", no "unread")
