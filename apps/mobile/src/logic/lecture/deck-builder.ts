@@ -350,6 +350,21 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
     if (ko !== undefined && romanization !== undefined) teachWord({ ko, romanization, gloss: found.titleEn });
   };
 
+  /** A Discover step (F-QUEST-002 §3.1): a letter slide per jamo item, a vocab slide per word item. */
+  const discoverStep = (path: string, discover: Quest['steps'][number]['discover']): void => {
+    for (const page of listOf(discover?.pages)) {
+      for (const item of page.items) {
+        if (item.type === 'jamo') {
+          letterById(path, item.jamoId);
+          continue;
+        }
+        const word = { ko: item.word.ko, romanization: item.word.romanization, gloss: item.word.en };
+        push(`${path}/${word.ko}`, { kind: 'vocab', word });
+        teachWord(word);
+      }
+    }
+  };
+
   const questBlock = (path: string, quest: Quest): void => {
     minutes += quest.estimatedMinutes;
     const intro = quest.steps.find((s) => s.kind === 'intro');
@@ -364,6 +379,10 @@ export function expandDeck(deck: LectureDeck, bundle: LectureBundle, voice: Voic
       const stepPath = `${path}/${step.id}`;
       if (step.kind === 'reward') {
         if (quest.rewardCardId !== undefined) card(stepPath, quest.rewardCardId);
+        continue;
+      }
+      if (step.kind === 'discover') {
+        discoverStep(stepPath, step.discover);
         continue;
       }
       if (step.minigameRef === undefined) continue;

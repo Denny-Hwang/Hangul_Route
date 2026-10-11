@@ -30,8 +30,8 @@ import type { NarrationPartView, SceneKorean } from '../../logic/story/scene-vie
 
 /**
  * The presentational pieces of the story reader (F-STORY-002 §3.3-3.7,
- * wireframe design/wireframes/story/reader.md A-F, H; component spec
- * design/components/StoryReaderView/spec.md). No state and no rules: each
+ * wireframe design/wireframes/story/reader.md A, B, E-H, with C-D in
+ * story/term-gloss.md; component spec design/components/StoryReaderView/spec.md). No state and no rules: each
  * piece draws what `StoryReaderView` passes in. Tokens only.
  */
 

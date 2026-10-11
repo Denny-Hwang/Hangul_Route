@@ -40,8 +40,11 @@ export const PlacementRunStateSchema = z.object({
   lastTouchMs: z.number(),
   /** When the open question appeared (for `ms`). */
   shownAtMs: z.number(),
-  /** not-sure: three in a row (not in Short); idle: 45 s untouched; rest: Deep's halfway card; exit: the exit sheet is open. */
-  pause: z.enum(['not-sure', 'idle', 'rest', 'exit']).nullable(),
+  /**
+   * not-sure: three in a row (not in Short); idle: 45 s untouched; rest: Deep's halfway card; exit: the exit sheet is open;
+   * no-sound: prompts stopped playing mid-run (section 3.11: the first in Short or a listen-first run, two in a row otherwise).
+   */
+  pause: z.enum(['not-sure', 'idle', 'rest', 'exit', 'no-sound']).nullable(),
   pausedAtMs: z.number().nullable(),
   /** The backstop ran out: the open question may still be answered, then the run ends. */
   timeUp: z.boolean(),

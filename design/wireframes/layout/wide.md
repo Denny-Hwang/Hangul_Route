@@ -1,11 +1,11 @@
-# Layout/Wide — tablet, landscape and split panes (wireframe v1)
+# Layout/Wide — tablet, landscape and split panes (wireframe v2)
 
-Spec: `docs/specs/F-LAYOUT-001-responsive-tablet-landscape.md` (§3.1 classes, §3.4 guard, §3.6 per-screen table, §3.7 panes)
+Spec: `docs/specs/F-LAYOUT-001-responsive-tablet-landscape.md` (§3.1 classes, §3.4 guard, §3.6 per-screen table, §3.7 panes, §3.8 targets, §3.12 adoption checklist)
 Audience: anyone learning Hangul, any age (CLAUDE.md §1), on a phone, an iPad, an Android tablet, a Chromebook or a desktop window. Teachers on classroom tablets are a main case. No separate "tablet mode" the learner has to find. UI strings are English by default with Korean and Spanish selectable; Spanish runs about 30 % longer, so no pane label has a fixed width.
-Code (planned): `packages/design-system` `Screen width`, `SplitPane`, `useLayoutClass`; `screens/home/HomeScreen.tsx`, `journey/JourneyScreen.tsx`, `library/LibraryScreen.tsx`, `episode/EpisodeDetailView.tsx`, `library/CardDetailView.tsx`, `components/PortraitGuard.tsx`
-Notation: `[[ X ]]` the one primary action, `[ X ]` secondary, `( )` a tab or toggle, `{ }` content that depends on the class, `<sel>` selected state. No colours, fonts or pixel sizes; relative widths only. All copy is placeholder.
+Code (built, PRs 1-7): tokens `layout.*` in `packages/design-system/src/tokens.ts` (`design/tokens/layout.v1.md`), `layoutClassFor`, `useLayoutClass`, `useMediaSize`, `LayoutProvider`, `SplitPane` (`packages/design-system/src/components/Layout/`), `Screen width` / `footer`; pure rules in `apps/mobile/src/logic/layout/` (`orientation-guard`, `pane-selection`, `pane-sizes`, `home-columns`, `game-layout`, `overlay-frame`, `quest-return`); `apps/mobile/src/components/PortraitGuard.tsx`, `platform/orientation(.web).ts`, `store/layout-store.ts` (`device:layout`); screens `home/HomeScreen.tsx`, `journey/JourneyScreen.tsx`, `library/LibraryScreen.tsx`, `episode/EpisodeDetailView.tsx`, `library/CardDetailView.tsx`; e2e `apps/mobile/e2e/web/layout.spec.ts`, `apps/mobile/e2e/web/tablet-layout.spec.ts`, `apps/mobile/e2e/web/target-size.spec.ts`.
+Notation: `[[ X ]]` the one primary action, `[ X ]` secondary, `( )` a tab or toggle, `{ }` content that depends on the class, `<sel>` selected state. No colours, fonts or pixel sizes; relative widths only. All copy is placeholder; final strings live in `packages/i18n` (`learner.portraitGuard`, the `panes` landmark names of `learner.journey` and `learner.library`).
 
-This file holds eight screens or states in one place (house style is one file per screen; split when promoted to `design/wireframes/layout/` and `home/`, `journey/`, `library/`):
+Promoted by F-LAYOUT-001 PR 0. The spec lets this file stay whole ("split per screen if wanted"), and it does: every panel is the same rule (one layout system) applied to a screen that already has its own wireframe, so splitting it would scatter one decision over many files. The wide variants of `home/todays-mission`, `journey/grid`, `library/gallery`, `episode/detail` and `library/card-detail` are drawn here (B to D), and the guard is also drawn, as a system banner, in `pwa/system-banners.md` panel 4. New screens apply the adoption checklist (§3.12), copied into `.github/pull_request_template.md`.
 
 - A. The four layout classes at a glance (what changes, what never does)
 - B. Home, regular and wide
@@ -43,7 +43,7 @@ short (window height < 480, any width):   one pane, scrolls, controls beside the
                                           picture-beside-text screens (reader, Discover) still go two columns in landscape (width >= 700)
 ```
 
-- Never changes with the class: type sizes, 64-point minimum tap target, copy, order of actions.
+- Never changes with the class: type sizes, 64-point minimum tap target, copy, order of actions. Known older exceptions are measured by the touch-target ratchet (`apps/mobile/e2e/web/fixtures/touch-target-allowlist.json`, at 375 and wider; the list only shrinks) or tracked by audit UX-25, such as the five Journey cells at 320 wide (about 54 each); new screens add none.
 - Changes with the class: how many columns, how many panes, the size of Hoya / tiles / card art / the Trace canvas.
 - The class follows the **window**, so a resized desktop window, iPad Split View and 200 % browser zoom all move between rows live.
 
@@ -219,5 +219,5 @@ Never shown with: `/present` (the lecture presenter owns its own full-bleed layo
 
 - Left navigation rail instead of a centred bottom tab bar on wide windows: needs the react-navigation v7 upgrade; confirm the owner wants it later.
 - Should Home on wide put the next quest as one large hero card instead of three equal cards (UX-19)? This wireframe keeps the three-card structure.
-- Master pane width: 400 is a starting number; try 360 and 440 on a real iPad.
-- Should the guard appear on a phone only when the app is installed, never in a browser tab? The spec shows it in both, with the escape button.
+- Master pane width: shipped as `layout.pane.master` = 400 (five Journey cells of 76 each, above the 64 floor). A real-iPad check of 360 and 440 stays on the manual device list.
+- Guard in a browser tab as well as installed: decided by the spec (both, with [ Keep sideways ]) and shipped in PR 3.

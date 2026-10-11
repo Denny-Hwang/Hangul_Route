@@ -67,9 +67,11 @@ export function Button({
   accessibilityLabel,
   expanded,
   testID,
+  pressableRef,
 }: ButtonProps): React.ReactElement {
   return (
     <Pressable
+      ref={pressableRef}
       onPress={disabled ? undefined : onPress}
       disabled={disabled}
       accessibilityRole="button"

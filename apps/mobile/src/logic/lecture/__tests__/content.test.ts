@@ -17,10 +17,15 @@ describe('the presenter content bundle (F-TCH-004 §3.3, §3.13)', () => {
   it('looks up the bundled content', () => {
     const b = lectureBundle('en');
     expect(b.jamoAll).toBe(jamoAll);
-    expect(b.questById('quest:stage1-letters-q1')?.titleEn).toBe('Meet g, n, d, l');
-    expect(b.episodeById('episode:stage1-letters')?.titleEn).toBe('Meet the Letters');
+    // Read from the bundled content rather than copied, so a content edit to the quest does not break this test.
+    const q1 = questsAll.find((q) => q.id === 'quest:stage1-letters-q1');
+    const letters = episodesAll.find((e) => e.id === 'episode:stage1-letters');
+    expect(q1?.titleEn).toEqual(expect.any(String));
+    expect(letters?.titleEn).toEqual(expect.any(String));
+    expect(b.questById('quest:stage1-letters-q1')?.titleEn).toBe(q1?.titleEn);
+    expect(b.episodeById('episode:stage1-letters')?.titleEn).toBe(letters?.titleEn);
     expect(b.cardById('card:book')?.subtitleKo).toBe('책');
-    expect(b.scopeFor('minigame:s1-letters-recognize-1')?.kind).toBe('match-sound');
+    expect(b.scopeFor('minigame:s1-letters-q1-play')?.kind).toBe('match-sound');
     expect(b.questById('quest:nope')).toBeUndefined();
     expect(b.episodeById('episode:nope')).toBeUndefined();
     expect(b.cardById('card:nope')).toBeUndefined();
@@ -45,6 +50,23 @@ describe('the presenter content bundle (F-TCH-004 §3.3, §3.13)', () => {
       const { slides, skipped } = expandDeck(deck(blocks.slice(i, i + 30)), lectureBundle('en'), { canPlayKorean: true });
       expect(slides.length).toBeGreaterThan(0);
       expect(skipped.filter((s) => s.reason === 'no-romanization' || s.reason === 'unknown-id')).toEqual([]);
+    }
+  });
+
+  it('letters quests 1-3 open on the letters their Discover step teaches, before any quiz (F-QUEST-002 §3.1)', () => {
+    for (const id of ['quest:stage1-letters-q1', 'quest:stage1-letters-q2', 'quest:stage1-letters-q3']) {
+      const quest = questsAll.find((q) => q.id === id)!;
+      const discover = quest.steps.find((s) => s.kind === 'discover')!;
+      const taughtIds = discover.discover!.pages.flatMap((p) => p.items.flatMap((item) => (item.type === 'jamo' ? [item.jamoId] : [])));
+      expect(taughtIds.length).toBeGreaterThan(0);
+      const { slides, skipped } = expandDeck(deck([{ kind: 'quest', id }]), lectureBundle('en'), { canPlayKorean: true });
+      const firstQuiz = slides.findIndex((s) => s.kind === 'quiz');
+      const before = slides.slice(1, firstQuiz);
+      expect(before.map((s) => (s.kind === 'letter' ? s.jamoId : s.kind))).toEqual(taughtIds);
+      expect(before.every((s) => s.key.startsWith(`${id}/${discover.id}/`))).toBe(true);
+      // The Check (Listen & Pick) is not a presenter slide yet (§3.3 rule 2): a counted skip, nothing else.
+      const check = quest.steps.find((s) => s.kind === 'check')!;
+      expect(skipped).toEqual([{ blockIndex: 0, ref: check.minigameRef, reason: 'unsupported-step' }]);
     }
   });
 

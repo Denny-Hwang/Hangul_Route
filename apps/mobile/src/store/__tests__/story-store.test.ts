@@ -196,6 +196,36 @@ describe('story-store: setBookmark / getBookmark / clearBookmark', () => {
     expect(useStoryStore.getState().getBookmark(A, 'story:sun-and-moon')?.level).toBe('read');
   });
 
+  it('getResumableBookmark ignores a bookmark of a story finished at that level; getBookmark still returns it for Results to clear', async () => {
+    mem.set(
+      keyOf(A),
+      saved({
+        'story:sun-and-moon': { level: 'listen', sceneIndex: 3, updatedAt: T_OLD },
+        'story:other': { level: 'listen', sceneIndex: 2, updatedAt: T_OLD },
+      }),
+    );
+    const done: ProgressSnapshot = {
+      profileId: A,
+      updatedAt: T_OLD,
+      episodes: [],
+      quests: [{ questId: SUN_LISTEN.id, episodeId: 'episode:shelf-sun-and-moon', startedAt: T_OLD, completedAt: T_OLD, stars: 3, attempts: 1, accuracy: 1 }],
+      cards: [],
+      sessions: [],
+      homework: [],
+      reviews: [],
+      streakDays: 1,
+    };
+    useProgressStore.setState({ byProfile: { [A]: done }, hydratedFor: new Set([A]) });
+    await useStoryStore.getState().hydrate(A);
+
+    expect(useStoryStore.getState().getResumableBookmark(A, 'story:sun-and-moon')).toBeUndefined();
+    expect(useStoryStore.getState().getBookmark(A, 'story:sun-and-moon')?.sceneIndex).toBe(3);
+    expect(useStoryStore.getState().getResumableBookmark(A, 'story:other')?.sceneIndex).toBe(2);
+    expect(useStoryStore.getState().getResumableBookmark(B, 'story:other')).toBeUndefined();
+    // Reading writes nothing.
+    expect(writeJson).not.toHaveBeenCalled();
+  });
+
   it('a failed save keeps the bookmark in memory for the session', async () => {
     await useStoryStore.getState().hydrate(A);
     vi.mocked(writeJson).mockRejectedValueOnce(new Error('quota'));

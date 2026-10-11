@@ -33,6 +33,9 @@ on:
       - "scripts/validate-content.mjs"
       - "packages/i18n/src/banned-words.json"
       - ".github/workflows/content-validation.yml"
+      # F-TCH-004 PR 10: lecture catalogue mirror (stories and vocabulary topics for the console)
+      - "scripts/build-lecture-catalogue.mjs"
+      - "apps/web/src/data/lecture-catalogue.generated.ts"
 
 # F-I18N-001 §3.10: overlay locales whose missing translations are errors (comma list, e.g. "es").
 # Add a locale here in the PR that flips its LOCALE_STATUS to 'shipped'; scripts/i18n-status.mjs
@@ -95,3 +98,6 @@ jobs:
 
       - name: Story bundle budget (F-STORY-001)
         run: node scripts/build-stories.mjs --report
+
+      - name: Lecture catalogue is up to date (F-TCH-004)
+        run: node scripts/build-lecture-catalogue.mjs --check

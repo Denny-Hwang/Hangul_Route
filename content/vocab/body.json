@@ -1,0 +1,173 @@
+{
+  "schemaVersion": 1,
+  "topic": {
+    "id": "vocab-topic:body",
+    "key": "body",
+    "order": 7,
+    "titleEn": "Body",
+    "titleKo": {
+      "ko": "몸",
+      "romanization": "mom",
+      "en": "body"
+    },
+    "blurbEn": "Parts of the body you can point to.",
+    "hoyaIntroEn": "Point to your nose! Let's learn the words for the body.",
+    "tint": "stage.stage2",
+    "coverItemId": "vocab:meori",
+    "status": "draft",
+    "fixedOrder": false
+  },
+  "items": [
+    {
+      "id": "vocab:nun-eye",
+      "ko": "눈",
+      "romanization": "nun",
+      "en": "eye",
+      "pos": "noun",
+      "topics": [
+        "body"
+      ],
+      "level": 1,
+      "visual": "word:body-eye",
+      "senseGroup": "nun"
+    },
+    {
+      "id": "vocab:ko",
+      "ko": "코",
+      "romanization": "ko",
+      "en": "nose",
+      "pos": "noun",
+      "topics": [
+        "body"
+      ],
+      "level": 1,
+      "visual": "word:body-nose"
+    },
+    {
+      "id": "vocab:ip",
+      "ko": "입",
+      "romanization": "ip",
+      "en": "mouth",
+      "pos": "noun",
+      "topics": [
+        "body"
+      ],
+      "level": 1,
+      "visual": "word:body-mouth"
+    },
+    {
+      "id": "vocab:gwi",
+      "ko": "귀",
+      "romanization": "gwi",
+      "en": "ear",
+      "pos": "noun",
+      "topics": [
+        "body"
+      ],
+      "level": 1,
+      "visual": "word:body-ear"
+    },
+    {
+      "id": "vocab:meori",
+      "ko": "머리",
+      "romanization": "meori",
+      "en": "head",
+      "pos": "noun",
+      "topics": [
+        "body"
+      ],
+      "level": 1,
+      "visual": "word:body-head",
+      "senseNote": "It also means hair."
+    },
+    {
+      "id": "vocab:eolgul",
+      "ko": "얼굴",
+      "romanization": "eolgul",
+      "en": "face",
+      "pos": "noun",
+      "topics": [
+        "body"
+      ],
+      "level": 1,
+      "visual": "word:body-face"
+    },
+    {
+      "id": "vocab:son",
+      "ko": "손",
+      "romanization": "son",
+      "en": "hand",
+      "pos": "noun",
+      "topics": [
+        "body"
+      ],
+      "level": 1,
+      "visual": "word:body-hand"
+    },
+    {
+      "id": "vocab:pal-arm",
+      "ko": "팔",
+      "romanization": "pal",
+      "en": "arm",
+      "pos": "noun",
+      "topics": [
+        "body"
+      ],
+      "level": 1,
+      "visual": "word:body-arm",
+      "senseGroup": "pal"
+    },
+    {
+      "id": "vocab:dari-leg",
+      "ko": "다리",
+      "romanization": "dari",
+      "en": "leg",
+      "pos": "noun",
+      "topics": [
+        "body"
+      ],
+      "level": 1,
+      "visual": "word:body-leg",
+      "senseGroup": "dari"
+    },
+    {
+      "id": "vocab:bal",
+      "ko": "발",
+      "romanization": "bal",
+      "en": "foot",
+      "pos": "noun",
+      "topics": [
+        "body"
+      ],
+      "level": 1,
+      "visual": "word:body-foot"
+    },
+    {
+      "id": "vocab:bae-belly",
+      "ko": "배",
+      "romanization": "bae",
+      "en": "belly",
+      "pos": "noun",
+      "topics": [
+        "body"
+      ],
+      "level": 1,
+      "visual": "word:body-belly",
+      "senseGroup": "bae"
+    },
+    {
+      "id": "vocab:i-tooth",
+      "ko": "이",
+      "romanization": "i",
+      "en": "tooth",
+      "pos": "noun",
+      "topics": [
+        "body"
+      ],
+      "level": 1,
+      "visual": "word:body-tooth",
+      "senseNote": "Also called chia, a more formal word.",
+      "senseGroup": "i"
+    }
+  ]
+}

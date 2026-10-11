@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { completeChildForm, jamoOfSpoken, passDiscover } from './helpers';
+import { completeChildForm, jamoOfSpoken, passDiscover, waitForNextListenPickRound } from './helpers';
 
 /**
  * Audit UX-01 / L16 (roadmap PR-01): progress earned in one visit is still
@@ -77,8 +77,13 @@ async function answerCheck(page: Page): Promise<void> {
     const said = await page.evaluate(() => (window as SpeechWindow).__spoken?.at(-1) ?? '');
     const options = page.locator('[data-testid^="listen-pick-option-"]');
     const word = options.filter({ hasText: said });
-    await ((await word.count()) === 1 ? word : options.filter({ hasText: jamoOfSpoken(said) })).click();
-    if (round === 1) await page.waitForTimeout(900); // the next round opens 700 ms after the right tap
+    const answer = (await word.count()) === 1 ? word : options.filter({ hasText: jamoOfSpoken(said) });
+    // A tap inside the game's double-touch window is dropped: tap again until the card answers.
+    await expect(async () => {
+      await answer.click();
+      await expect(answer).toHaveAttribute('aria-label', /^Right answer/, { timeout: 250 });
+    }).toPass();
+    if (round === 1) await waitForNextListenPickRound(page);
   }
 }
 

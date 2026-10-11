@@ -9,6 +9,7 @@ import {
   clearBookmark,
   emptyBookmarks,
   finishedStoryLevels,
+  unfinishedBookmark,
   mergeBookmarks,
   parseBookmarkFile,
   pruneBookmarks,
@@ -176,6 +177,20 @@ describe('finishedStoryLevels', () => {
   it('is false for everything without a snapshot or with a lesson quest done', () => {
     expect(finishedStoryLevels([LISTEN_SUN], undefined)('story:sun-and-moon', 'listen')).toBe(false);
     expect(finishedStoryLevels([LESSON], snap([{ questId: LESSON.id, completedAt: at(1) }]))('story:sun-and-moon', 'listen')).toBe(false);
+  });
+});
+
+describe('unfinishedBookmark', () => {
+  const finishedListen = (storyId: string, level: Bookmark['level']): boolean => storyId === 'story:sun-and-moon' && level === 'listen';
+
+  it('drops a bookmark of a (story, level) already finished, for example on another device (§3.8)', () => {
+    expect(unfinishedBookmark('story:sun-and-moon', mark(3), finishedListen)).toBeUndefined();
+  });
+
+  it('keeps a bookmark of another level or another story, and passes a missing one through', () => {
+    expect(unfinishedBookmark('story:sun-and-moon', mark(3, 0, 'read'), finishedListen)).toEqual(mark(3, 0, 'read'));
+    expect(unfinishedBookmark('story:other', mark(2), finishedListen)).toEqual(mark(2));
+    expect(unfinishedBookmark('story:sun-and-moon', undefined, finishedListen)).toBeUndefined();
   });
 });
 

@@ -2,11 +2,11 @@ Status: ready
 
 # F-LAYOUT-001 — Responsive layout: tablets, landscape, a wide layout instead of a 480 px column
 
-**Scope**: `packages/design-system` (layout tokens, `layoutClassFor`, `useLayoutClass`, `LayoutProvider`, `Screen` width, `SplitPane`, tab-bar side insets) · `apps/mobile` (web shell `scripts/pwa-postbuild.mjs`, `public/manifest.webmanifest`, orientation platform module + guard, Home / Journey / Library / EpisodeDetail / CardDetail views, game sizing, e2e) · `design/tokens/layout.v1.md` (new) · `scripts/check-token-drift.mjs` · wireframe `design/wireframes/layout/layout-wide.md`
+**Scope**: `packages/design-system` (layout tokens, `layoutClassFor`, `useLayoutClass`, `LayoutProvider`, `Screen` width, `SplitPane`, tab-bar side insets) · `apps/mobile` (web shell `scripts/pwa-postbuild.mjs`, `public/manifest.webmanifest`, orientation platform module + guard, Home / Journey / Library / EpisodeDetail / CardDetail views, game sizing, e2e) · `design/tokens/layout.v1.md` (new) · `scripts/check-token-drift.mjs` · wireframe `design/wireframes/layout/wide.md`
 **Owner**: solo dev
 **Rollout**: PWA first (the primary channel). Native iPad / Android tablets follow the App Store track (10-app-map decision #28). PR order in §6. F-TCH-004 (lecture presenter) needs PR 1 and PR 2a only.
 
-Parent / siblings: PR #95 (Screen scrolls, safe-area aware, labelled Profile entry, `pin-pad-layout.ts`, `tabBarMetrics`) · audit UX-09, UX-23, UX-26, p1-L1..L4, p2-L1..L3 · `design/wireframes/pwa/system-banners.md` panel 4 (portrait guard) · F-STORY-002 §3.3 (reader screen, "Landscape / wide" two-column rule) · F-STORY-003 §3.5 (3-4 columns "at tablet width") · F-LEARN-001 (sticky footer, `PinPad`) · F-I18N-001 (long Spanish strings) · F-TCH-004 (presenter exemptions) · wireframe `wireframes/layout-wide.md`
+Parent / siblings: PR #95 (Screen scrolls, safe-area aware, labelled Profile entry, `pin-pad-layout.ts`, `tabBarMetrics`) · audit UX-09, UX-23, UX-26, p1-L1..L4, p2-L1..L3 · `design/wireframes/pwa/system-banners.md` panel 4 (portrait guard) · F-STORY-002 §3.3 (reader screen, "Landscape / wide" two-column rule) · F-STORY-003 §3.5 (3-4 columns "at tablet width") · F-LEARN-001 (sticky footer, `PinPad`) · F-I18N-001 (long Spanish strings) · F-TCH-004 (presenter exemptions) · wireframe `design/wireframes/layout/wide.md` (promoted from the draft `wireframes/layout-wide.md` by PR 0)
 
 ---
 

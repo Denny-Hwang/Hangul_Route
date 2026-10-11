@@ -41,6 +41,16 @@ Companion stories:
 - **Given** no qualifying *Replay* exists (e.g. day 1 of app use),
   **when** the home renders,
   **then** card ① is replaced by a *Story Time* card from the current Stage's recommended Library pack.
+- **Amended by F-STORY-004 §3.7 (PR 4.4a, 2026-10-11)** — the story card. Each slot shows the first card its chain finds:
+
+  | Slot | Order |
+  |---|---|
+  | ① | `continue` story (a bookmark at the story's level, not finished) → best Replay → `next` story → `again` story → `explore` |
+  | ② | unchanged: the Journey cursor (grid episodes only), or an assigned quest (§3.4) |
+  | ③, no daily test | `next` story → best remaining Replay → `again` story → `explore` |
+  | ③, daily test available | the Daily test (unchanged) |
+
+  A *story* card is a real story from the story index (reviewed stories only, D14), titled with the story's title and subtitled "Keep reading" / "A short story" / "Read it again". `continue` and `next` open the quest player; `again` opens the unscored reader and is never collected. `explore` ("Take a look", a playable grid episode) replaces the old fallback that labelled any episode "Story time" (audit UX-19). A Replay is a grid quest: a shelf story finished below full accuracy comes back only as the unscored `again` card, never as a scored Replay. While no reviewed story is bundled (production today) slots ① and ③ fall back to Replay or `explore`, so the three-card invariant holds.
 
 ### 3.2 Card completion semantics
 
@@ -163,6 +173,14 @@ takes a `capabilities: { dailyTestAvailable: boolean }` input:
 **Residual risk**: until F-RVW-001 ships, a learner's third card is a second
 replay/story rather than a spaced-review test, so the review-interval benefit
 of §3.1 is not yet realised. Tracked by T-030–T-032, not by this feature.
+
+**Amended by F-STORY-004 §3.7 (PR 4.4a, 2026-10-11)**: with
+`dailyTestAvailable: false`, slot ③ no longer repeats slot ①'s chain. It runs
+its own: `next` story → best remaining replay → `again` story → `explore`
+(table in §3.1). A story leads slot ③ because replays exist almost every day
+for an active learner and would otherwise hide stories; a day-one learner
+therefore sees two different stories around the Journey card. With
+`dailyTestAvailable: true` slot ③ is still the Daily Test.
 
 ### 9.3 Design tokens named in §5 do not exist
 

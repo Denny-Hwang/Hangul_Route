@@ -17,13 +17,13 @@ import { AppState } from 'react-native';
 import { episodesAll, questsAll } from '../../content';
 import { PLACEMENT_BANK, PLACEMENT_WARMUP } from '../../content/placement.generated';
 import { useLocale } from '../../i18n/use-messages';
-import { canPlayKorean } from '../../logic/audio/capability';
 import { isStageEntitled } from '../../logic/entitlement';
 import { placementRouteCatalog } from '../../logic/placement/catalog';
 import { completeEvent, itemAnsweredEvent, startEvent } from '../../logic/placement/events';
 import {
   appStateEvent,
   flowReducer,
+  hasScoredAnswer,
   previousExclude,
   resumedFlow,
   retakeFlow,
@@ -34,14 +34,14 @@ import {
   type ResumeOffer,
   type SavedRun,
 } from '../../logic/placement/flow';
-import { flowCapability, speechLangOf } from '../../logic/placement/options-view';
+import { bankHasClips, flowCapability, placementKoreanAudio, speechLangOf } from '../../logic/placement/options-view';
 import { resultView } from '../../logic/placement/result-view';
 import { completedAtOf, newResponse, resultRoutes, rungPosition, startTarget } from '../../logic/placement/session';
 import { resolvePicture, swatchColors } from '../../logic/picture-ref';
 import { effectiveLearnerType, gateRequired } from '../../logic/profiles/learner-type';
 import type { PlacementStackParamList, RootStackParamList } from '../../navigation/types';
 import { getCapability, hasVoiceFor, playPrompt, stop } from '../../platform/audio';
-import { isScreenReaderEnabled } from '../../platform/screen-reader';
+import { isScreenReaderEnabled, subscribeScreenReader } from '../../platform/screen-reader';
 import { CONTENT_VERSION } from '../../platform/sync-api';
 import { track } from '../../platform/telemetry';
 import { useAccountStore } from '../../store/account-store';
@@ -82,6 +82,9 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Placement'>;
 const Stack = createNativeStackNavigator<PlacementStackParamList>();
 const SWATCHES = swatchColors(colors);
 const resolvesPicture = (ref: string): boolean => resolvePicture(ref, { supportedCardIds, swatches: SWATCHES }).kind !== 'text';
+/** The bank's prompts are spoken by the Korean voice until it carries clips (section 3.11). */
+const PLACEMENT_HAS_CLIPS = bankHasClips(PLACEMENT_BANK, PLACEMENT_WARMUP);
+const koreanAudioNow = (): boolean => placementKoreanAudio(getCapability(), PLACEMENT_HAS_CLIPS);
 
 const ROUTES = {
   PlacementBoot: flowRoute('PlacementBoot', () => <Screen tone="canvas" testID="placement-boot">{null}</Screen>),
@@ -133,6 +136,7 @@ export function PlacementScreen({ route, navigation }: Props): React.ReactElemen
   const profiles = useProfileStore((s) => s.profiles);
   const parentPinHash = useAccountStore((s) => s.parentPinHash);
   const parentGateOpenedAt = useUiStore((s) => s.parentGateOpenedAt);
+  const resetParentGate = useUiStore((s) => s.resetParentGate);
   const uiLocale = useLocale();
   const profileId = profile?.id ?? null;
   const saved = usePlacementRunStore((s) => (profileId === null ? undefined : s.active[profileId]));
@@ -144,7 +148,6 @@ export function PlacementScreen({ route, navigation }: Props): React.ReactElemen
   const [flow, setFlow] = useState<FlowState | null>(null);
   const [offer, setOffer] = useState<ResumeOffer | null>(null);
   const [finished, setFinished] = useState<FinishedCheck | null>(null);
-  const [screenReader, setScreenReader] = useState(false);
   const [needsGesture, setNeedsGesture] = useState(false);
   const baseFlow = useRef<FlowState | null>(null);
   const flowRef = useRef<FlowState | null>(null);
@@ -157,7 +160,7 @@ export function PlacementScreen({ route, navigation }: Props): React.ReactElemen
 
   const capability = useCallback(
     (testLocale: FlowState['testLocale']) =>
-      flowCapability({ koreanAudio: canPlayKorean(getCapability()), hasVoiceFor: (lang: SpeechLang) => hasVoiceFor(lang), testLocale }),
+      flowCapability({ koreanAudio: koreanAudioNow(), hasVoiceFor: (lang: SpeechLang) => hasVoiceFor(lang), testLocale }),
     [],
   );
 
@@ -202,7 +205,6 @@ export function PlacementScreen({ route, navigation }: Props): React.ReactElemen
       // "Try it with the sound guide hidden": a one-tap retake that starts at once.
       if (retakeMode !== undefined) base = retakeFlow(base, retakeMode, capability);
       baseFlow.current = base;
-      setScreenReader(reader);
       if (resume?.kind === 'continue') {
         setFlow(base);
         setOffer(resume);
@@ -226,6 +228,10 @@ export function PlacementScreen({ route, navigation }: Props): React.ReactElemen
   const dispatch = useCallback((event: FlowEvent): void => {
     setFlow((current) => (current === null ? current : flowReducer(current, event)));
   }, []);
+
+  // A screen reader turned on or off during the check: auto-play and the speaker labels follow
+  // (a run already started keeps its own settings). The web reports nothing (spec assumption 5).
+  useEffect(() => subscribeScreenReader((on) => dispatch({ type: 'setScreenReader', on })), [dispatch]);
 
   const applyRun = useCallback(
     (event: PlacementEvent): void => {
@@ -253,8 +259,7 @@ export function PlacementScreen({ route, navigation }: Props): React.ReactElemen
     const config = runConfig(flow, {
       profileId: profile.id,
       startedAtMs: now,
-      screenReader,
-      koreanAudio: canPlayKorean(getCapability()),
+      koreanAudio: koreanAudioNow(),
       exclude: previousExclude(placements),
       resolvesPicture,
       warmup: PLACEMENT_WARMUP,
@@ -275,7 +280,7 @@ export function PlacementScreen({ route, navigation }: Props): React.ReactElemen
         level: profile.ageGroup,
       }),
     );
-  }, [profile, flow, run, finished, screenReader]);
+  }, [profile, flow, run, finished]);
 
   // --- Finish: record the result (never a completion), then the result screen -----------
   const finish = useCallback(
@@ -283,8 +288,8 @@ export function PlacementScreen({ route, navigation }: Props): React.ReactElemen
       if (profile === null || finishing.current) return;
       finishing.current = true;
       const store = usePlacementRunStore.getState();
-      if (savedRun.run.responses.length === 0) {
-        // Stopped before any answer: nothing to record (section 3.11).
+      if (!hasScoredAnswer(savedRun.run)) {
+        // Stopped before any answer, or only prompts that could not play: nothing to record (section 3.11).
         store.discard(profile.id);
         leave();
         return;
@@ -367,8 +372,10 @@ export function PlacementScreen({ route, navigation }: Props): React.ReactElemen
     if (askedAt !== null && parentGateOpenedAt !== null && parentGateOpenedAt >= askedAt) {
       grownUpAskedAt.current = null;
       applyRun({ type: 'quit', by: 'grown-up' });
+      // The PIN only ended the check: it does not open the 15-minute grown-up session for the child.
+      resetParentGate();
     }
-  }, [parentGateOpenedAt, applyRun]);
+  }, [parentGateOpenedAt, applyRun, resetParentGate]);
 
   const finishForGrownUp = useCallback((): void => {
     if (gateRequired({ profiles, parentPinHash })) {
@@ -504,7 +511,7 @@ export function PlacementScreen({ route, navigation }: Props): React.ReactElemen
     flow,
     dispatch,
     m,
-    screenReader,
+    screenReader: flow.screenReader,
     capability,
     say,
     run,

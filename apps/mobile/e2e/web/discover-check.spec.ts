@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { completeChildForm } from './helpers';
+import { answerCheckRounds, completeChildForm } from './helpers';
 
 /**
  * F-QUEST-002 Q-5a: a Stage 1 quest teaches before it asks (Discover) and
@@ -88,24 +88,6 @@ async function skipGamesToCheck(page: Page): Promise<void> {
   await expect(page.getByText('Quick check', { exact: true }).first()).toBeVisible();
 }
 
-/**
- * Answer the two Check rounds without knowing the content: tap the options in
- * order. A wrong tap only locks that card (amber nudge); the right one ends the
- * round. The 50 ms pause keeps each tap outside the game's double-touch window.
- */
-async function playCheck(page: Page): Promise<void> {
-  for (let round = 1; round <= 2; round += 1) {
-    const options = page.locator('[data-testid^="listen-pick-option-"]');
-    await expect(options.first()).toBeVisible();
-    const count = await options.count();
-    for (let i = 0; i < count; i += 1) {
-      await options.nth(i).click();
-      await page.waitForTimeout(60);
-    }
-    if (round === 1) await page.waitForTimeout(900); // the next round opens 700 ms after the right tap
-  }
-}
-
 test('Discover teaches before it asks; nothing autoplays and Continue never waits', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(String(e)));
@@ -148,7 +130,7 @@ test('the Check is two questions with no Skip, and leads on to the results', asy
   await page.getByTestId('listen-pick-speaker').click();
   await expect.poll(() => spokenCount(page)).toBeGreaterThan(before);
 
-  await playCheck(page);
+  await answerCheckRounds(page);
 
   // Back on the quest: the Check step is over and the reward step follows.
   await expect(page.getByRole('button', { name: 'See results' })).toBeVisible();
@@ -177,7 +159,7 @@ test('with no speech engine Discover and the Check fall back to text', async ({ 
   await page.getByTestId('listen-pick-speaker').click();
   await expect(page.getByText('No sound? Read it here.')).toBeVisible();
   await expect(page.getByTestId('listen-pick-prompt-text')).toBeVisible();
-  await playCheck(page);
+  await answerCheckRounds(page);
   await expect(page.getByRole('button', { name: 'See results' })).toBeVisible();
   expect(errors).toEqual([]);
 });
