@@ -122,9 +122,9 @@ export const PLACEMENT_FORMATS: Readonly<Record<PlacementGate, Partial<Record<Pl
 };
 
 /** Formats that start from audio (build-syllable too: its prompt is the speaker, wireframe `item`). */
-const AUDIO_FORMATS: readonly Format[] = ['hear-pick-written', 'build-syllable', 'hear-pick-picture', 'reply-pick'];
+export const PLACEMENT_AUDIO_FORMATS: readonly Format[] = ['hear-pick-written', 'build-syllable', 'hear-pick-picture', 'reply-pick'];
 /** Formats whose written options or prompt would not give the answer away. */
-const NO_LEAK_FORMATS: readonly Format[] = ['shape-odd-one-out', 'hear-pick-picture'];
+export const PLACEMENT_NO_LEAK_FORMATS: readonly Format[] = ['shape-odd-one-out', 'hear-pick-picture'];
 const PICTURE_FORMATS: readonly Format[] = ['hear-pick-picture', 'read-pick-picture'];
 /** The written form is the answer, so the prompt is audio only. */
 const SPOKEN_ONLY_FORMATS: readonly Format[] = ['hear-pick-written', 'build-syllable'];
@@ -208,8 +208,8 @@ function templateIssues(t: TemplateShape): Found[] {
   if (formats === undefined) add(['form'], `form ${t.form} is not used by gate ${t.gate}`);
   else if (!formats.includes(q.format)) add(['question', 'format'], `format ${q.format} is not used by gate ${t.gate} (${t.form})`);
 
-  if (q.leaks !== !NO_LEAK_FORMATS.includes(q.format)) add(['question', 'leaks'], `leaks must be ${!NO_LEAK_FORMATS.includes(q.format)} for ${q.format}`);
-  if (q.requires.audio !== AUDIO_FORMATS.includes(q.format)) add(['question', 'requires'], `requires.audio must be ${AUDIO_FORMATS.includes(q.format)} for ${q.format}`);
+  if (q.leaks !== !PLACEMENT_NO_LEAK_FORMATS.includes(q.format)) add(['question', 'leaks'], `leaks must be ${!PLACEMENT_NO_LEAK_FORMATS.includes(q.format)} for ${q.format}`);
+  if (q.requires.audio !== PLACEMENT_AUDIO_FORMATS.includes(q.format)) add(['question', 'requires'], `requires.audio must be ${PLACEMENT_AUDIO_FORMATS.includes(q.format)} for ${q.format}`);
 
   const wanted = q.format === 'reply-pick' ? [3, 4] : [4];
   if (!wanted.includes(q.options.length)) add(['question', 'options'], q.format === 'reply-pick' ? 'a reply-pick question needs 3 or 4 options' : `a ${q.format} question needs 4 options`);

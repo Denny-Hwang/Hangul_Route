@@ -1,0 +1,805 @@
+{
+  "strand": "hangul-recognition",
+  "templates": [
+    {
+      "id": "pitem:recog-odd-giyeok-nieun",
+      "strand": "hangul-recognition",
+      "gate": "recog",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Spot the odd one: giyeok among nieun",
+      "question": {
+        "format": "shape-odd-one-out",
+        "options": [
+          {"id":"t1","ko":"ㄴ","romanization":"n","en":"letter nieun","isCorrect":false},
+          {"id":"t2","ko":"ㄴ","romanization":"n","en":"letter nieun","isCorrect":false},
+          {"id":"t3","ko":"ㄱ","romanization":"g","en":"letter giyeok","isCorrect":true},
+          {"id":"t4","ko":"ㄴ","romanization":"n","en":"letter nieun","isCorrect":false}
+        ],
+        "tags": ["sym:ㄱ","sym:ㄴ","look-alike"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": false
+      }
+    },
+    {
+      "id": "pitem:recog-odd-nieun-giyeok",
+      "strand": "hangul-recognition",
+      "gate": "recog",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Spot the odd one: nieun among giyeok",
+      "question": {
+        "format": "shape-odd-one-out",
+        "options": [
+          {"id":"t1","ko":"ㄱ","romanization":"g","en":"letter giyeok","isCorrect":false},
+          {"id":"t2","ko":"ㄱ","romanization":"g","en":"letter giyeok","isCorrect":false},
+          {"id":"t3","ko":"ㄴ","romanization":"n","en":"letter nieun","isCorrect":true},
+          {"id":"t4","ko":"ㄱ","romanization":"g","en":"letter giyeok","isCorrect":false}
+        ],
+        "tags": ["sym:ㄴ","sym:ㄱ","look-alike"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": false
+      }
+    },
+    {
+      "id": "pitem:recog-odd-mieum-bieup",
+      "strand": "hangul-recognition",
+      "gate": "recog",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Spot the odd one: mieum among bieup",
+      "question": {
+        "format": "shape-odd-one-out",
+        "options": [
+          {"id":"t1","ko":"ㅂ","romanization":"b","en":"letter bieup","isCorrect":false},
+          {"id":"t2","ko":"ㅂ","romanization":"b","en":"letter bieup","isCorrect":false},
+          {"id":"t3","ko":"ㅁ","romanization":"m","en":"letter mieum","isCorrect":true},
+          {"id":"t4","ko":"ㅂ","romanization":"b","en":"letter bieup","isCorrect":false}
+        ],
+        "tags": ["sym:ㅁ","sym:ㅂ","look-alike"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": false
+      }
+    },
+    {
+      "id": "pitem:recog-odd-bieup-mieum",
+      "strand": "hangul-recognition",
+      "gate": "recog",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Spot the odd one: bieup among mieum",
+      "question": {
+        "format": "shape-odd-one-out",
+        "options": [
+          {"id":"t1","ko":"ㅁ","romanization":"m","en":"letter mieum","isCorrect":false},
+          {"id":"t2","ko":"ㅁ","romanization":"m","en":"letter mieum","isCorrect":false},
+          {"id":"t3","ko":"ㅂ","romanization":"b","en":"letter bieup","isCorrect":true},
+          {"id":"t4","ko":"ㅁ","romanization":"m","en":"letter mieum","isCorrect":false}
+        ],
+        "tags": ["sym:ㅂ","sym:ㅁ","look-alike"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": false
+      }
+    },
+    {
+      "id": "pitem:recog-odd-o-u",
+      "strand": "hangul-recognition",
+      "gate": "recog",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Spot the odd one: o among u",
+      "question": {
+        "format": "shape-odd-one-out",
+        "options": [
+          {"id":"t1","ko":"ㅜ","romanization":"u","en":"letter u","isCorrect":false},
+          {"id":"t2","ko":"ㅜ","romanization":"u","en":"letter u","isCorrect":false},
+          {"id":"t3","ko":"ㅗ","romanization":"o","en":"letter o","isCorrect":true},
+          {"id":"t4","ko":"ㅜ","romanization":"u","en":"letter u","isCorrect":false}
+        ],
+        "tags": ["sym:ㅗ","sym:ㅜ","look-alike"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": false
+      }
+    },
+    {
+      "id": "pitem:recog-odd-u-o",
+      "strand": "hangul-recognition",
+      "gate": "recog",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Spot the odd one: u among o",
+      "question": {
+        "format": "shape-odd-one-out",
+        "options": [
+          {"id":"t1","ko":"ㅗ","romanization":"o","en":"letter o","isCorrect":false},
+          {"id":"t2","ko":"ㅗ","romanization":"o","en":"letter o","isCorrect":false},
+          {"id":"t3","ko":"ㅜ","romanization":"u","en":"letter u","isCorrect":true},
+          {"id":"t4","ko":"ㅗ","romanization":"o","en":"letter o","isCorrect":false}
+        ],
+        "tags": ["sym:ㅜ","sym:ㅗ","look-alike"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": false
+      }
+    },
+    {
+      "id": "pitem:recog-odd-a-eo",
+      "strand": "hangul-recognition",
+      "gate": "recog",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Spot the odd one: a among eo",
+      "question": {
+        "format": "shape-odd-one-out",
+        "options": [
+          {"id":"t1","ko":"ㅓ","romanization":"eo","en":"letter eo","isCorrect":false},
+          {"id":"t2","ko":"ㅓ","romanization":"eo","en":"letter eo","isCorrect":false},
+          {"id":"t3","ko":"ㅏ","romanization":"a","en":"letter a","isCorrect":true},
+          {"id":"t4","ko":"ㅓ","romanization":"eo","en":"letter eo","isCorrect":false}
+        ],
+        "tags": ["sym:ㅏ","sym:ㅓ","look-alike"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": false
+      }
+    },
+    {
+      "id": "pitem:recog-odd-eo-a",
+      "strand": "hangul-recognition",
+      "gate": "recog",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Spot the odd one: eo among a",
+      "question": {
+        "format": "shape-odd-one-out",
+        "options": [
+          {"id":"t1","ko":"ㅏ","romanization":"a","en":"letter a","isCorrect":false},
+          {"id":"t2","ko":"ㅏ","romanization":"a","en":"letter a","isCorrect":false},
+          {"id":"t3","ko":"ㅓ","romanization":"eo","en":"letter eo","isCorrect":true},
+          {"id":"t4","ko":"ㅏ","romanization":"a","en":"letter a","isCorrect":false}
+        ],
+        "tags": ["sym:ㅓ","sym:ㅏ","look-alike"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": false
+      }
+    },
+    {
+      "id": "pitem:recog-odd-ieung-hieut",
+      "strand": "hangul-recognition",
+      "gate": "recog",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Spot the odd one: ieung among hieut",
+      "question": {
+        "format": "shape-odd-one-out",
+        "options": [
+          {"id":"t1","ko":"ㅎ","romanization":"h","en":"letter hieut","isCorrect":false},
+          {"id":"t2","ko":"ㅎ","romanization":"h","en":"letter hieut","isCorrect":false},
+          {"id":"t3","ko":"ㅇ","romanization":"ng","en":"letter ieung","isCorrect":true},
+          {"id":"t4","ko":"ㅎ","romanization":"h","en":"letter hieut","isCorrect":false}
+        ],
+        "tags": ["sym:ㅇ","sym:ㅎ","look-alike"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": false
+      }
+    },
+    {
+      "id": "pitem:recog-odd-hieut-ieung",
+      "strand": "hangul-recognition",
+      "gate": "recog",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Spot the odd one: hieut among ieung",
+      "question": {
+        "format": "shape-odd-one-out",
+        "options": [
+          {"id":"t1","ko":"ㅇ","romanization":"ng","en":"letter ieung","isCorrect":false},
+          {"id":"t2","ko":"ㅇ","romanization":"ng","en":"letter ieung","isCorrect":false},
+          {"id":"t3","ko":"ㅎ","romanization":"h","en":"letter hieut","isCorrect":true},
+          {"id":"t4","ko":"ㅇ","romanization":"ng","en":"letter ieung","isCorrect":false}
+        ],
+        "tags": ["sym:ㅎ","sym:ㅇ","look-alike"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": false
+      }
+    },
+    {
+      "id": "pitem:recog-odd-jieut-chieut",
+      "strand": "hangul-recognition",
+      "gate": "recog",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Spot the odd one: jieut among chieut",
+      "question": {
+        "format": "shape-odd-one-out",
+        "options": [
+          {"id":"t1","ko":"ㅊ","romanization":"ch","en":"letter chieut","isCorrect":false},
+          {"id":"t2","ko":"ㅊ","romanization":"ch","en":"letter chieut","isCorrect":false},
+          {"id":"t3","ko":"ㅈ","romanization":"j","en":"letter jieut","isCorrect":true},
+          {"id":"t4","ko":"ㅊ","romanization":"ch","en":"letter chieut","isCorrect":false}
+        ],
+        "tags": ["sym:ㅈ","sym:ㅊ","look-alike"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": false
+      }
+    },
+    {
+      "id": "pitem:recog-odd-chieut-jieut",
+      "strand": "hangul-recognition",
+      "gate": "recog",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Spot the odd one: chieut among jieut",
+      "question": {
+        "format": "shape-odd-one-out",
+        "options": [
+          {"id":"t1","ko":"ㅈ","romanization":"j","en":"letter jieut","isCorrect":false},
+          {"id":"t2","ko":"ㅈ","romanization":"j","en":"letter jieut","isCorrect":false},
+          {"id":"t3","ko":"ㅊ","romanization":"ch","en":"letter chieut","isCorrect":true},
+          {"id":"t4","ko":"ㅈ","romanization":"j","en":"letter jieut","isCorrect":false}
+        ],
+        "tags": ["sym:ㅊ","sym:ㅈ","look-alike"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": false
+      }
+    },
+    {
+      "id": "pitem:recog-odd-digeut-rieul",
+      "strand": "hangul-recognition",
+      "gate": "recog",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Spot the odd one: digeut among rieul",
+      "question": {
+        "format": "shape-odd-one-out",
+        "options": [
+          {"id":"t1","ko":"ㄹ","romanization":"r","en":"letter rieul","isCorrect":false},
+          {"id":"t2","ko":"ㄹ","romanization":"r","en":"letter rieul","isCorrect":false},
+          {"id":"t3","ko":"ㄷ","romanization":"d","en":"letter digeut","isCorrect":true},
+          {"id":"t4","ko":"ㄹ","romanization":"r","en":"letter rieul","isCorrect":false}
+        ],
+        "tags": ["sym:ㄷ","sym:ㄹ","look-alike"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": false
+      }
+    },
+    {
+      "id": "pitem:recog-odd-rieul-digeut",
+      "strand": "hangul-recognition",
+      "gate": "recog",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Spot the odd one: rieul among digeut",
+      "question": {
+        "format": "shape-odd-one-out",
+        "options": [
+          {"id":"t1","ko":"ㄷ","romanization":"d","en":"letter digeut","isCorrect":false},
+          {"id":"t2","ko":"ㄷ","romanization":"d","en":"letter digeut","isCorrect":false},
+          {"id":"t3","ko":"ㄹ","romanization":"r","en":"letter rieul","isCorrect":true},
+          {"id":"t4","ko":"ㄷ","romanization":"d","en":"letter digeut","isCorrect":false}
+        ],
+        "tags": ["sym:ㄹ","sym:ㄷ","look-alike"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": false
+      }
+    },
+    {
+      "id": "pitem:recog-odd-siot-jieut",
+      "strand": "hangul-recognition",
+      "gate": "recog",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Spot the odd one: siot among jieut",
+      "question": {
+        "format": "shape-odd-one-out",
+        "options": [
+          {"id":"t1","ko":"ㅈ","romanization":"j","en":"letter jieut","isCorrect":false},
+          {"id":"t2","ko":"ㅈ","romanization":"j","en":"letter jieut","isCorrect":false},
+          {"id":"t3","ko":"ㅅ","romanization":"s","en":"letter siot","isCorrect":true},
+          {"id":"t4","ko":"ㅈ","romanization":"j","en":"letter jieut","isCorrect":false}
+        ],
+        "tags": ["sym:ㅅ","sym:ㅈ","look-alike"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": false
+      }
+    },
+    {
+      "id": "pitem:recog-odd-jieut-siot",
+      "strand": "hangul-recognition",
+      "gate": "recog",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Spot the odd one: jieut among siot",
+      "question": {
+        "format": "shape-odd-one-out",
+        "options": [
+          {"id":"t1","ko":"ㅅ","romanization":"s","en":"letter siot","isCorrect":false},
+          {"id":"t2","ko":"ㅅ","romanization":"s","en":"letter siot","isCorrect":false},
+          {"id":"t3","ko":"ㅈ","romanization":"j","en":"letter jieut","isCorrect":true},
+          {"id":"t4","ko":"ㅅ","romanization":"s","en":"letter siot","isCorrect":false}
+        ],
+        "tags": ["sym:ㅈ","sym:ㅅ","look-alike"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": false
+      }
+    },
+    {
+      "id": "pitem:recog-odd-kieuk-giyeok",
+      "strand": "hangul-recognition",
+      "gate": "recog",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Spot the odd one: kieuk among giyeok",
+      "question": {
+        "format": "shape-odd-one-out",
+        "options": [
+          {"id":"t1","ko":"ㄱ","romanization":"g","en":"letter giyeok","isCorrect":false},
+          {"id":"t2","ko":"ㄱ","romanization":"g","en":"letter giyeok","isCorrect":false},
+          {"id":"t3","ko":"ㅋ","romanization":"k","en":"letter kieuk","isCorrect":true},
+          {"id":"t4","ko":"ㄱ","romanization":"g","en":"letter giyeok","isCorrect":false}
+        ],
+        "tags": ["sym:ㅋ","sym:ㄱ","look-alike"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": false
+      }
+    },
+    {
+      "id": "pitem:recog-odd-giyeok-kieuk",
+      "strand": "hangul-recognition",
+      "gate": "recog",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Spot the odd one: giyeok among kieuk",
+      "question": {
+        "format": "shape-odd-one-out",
+        "options": [
+          {"id":"t1","ko":"ㅋ","romanization":"k","en":"letter kieuk","isCorrect":false},
+          {"id":"t2","ko":"ㅋ","romanization":"k","en":"letter kieuk","isCorrect":false},
+          {"id":"t3","ko":"ㄱ","romanization":"g","en":"letter giyeok","isCorrect":true},
+          {"id":"t4","ko":"ㅋ","romanization":"k","en":"letter kieuk","isCorrect":false}
+        ],
+        "tags": ["sym:ㄱ","sym:ㅋ","look-alike"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": false
+      }
+    },
+    {
+      "id": "pitem:recog-odd-eu-i",
+      "strand": "hangul-recognition",
+      "gate": "recog",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Spot the odd one: eu among i",
+      "question": {
+        "format": "shape-odd-one-out",
+        "options": [
+          {"id":"t1","ko":"ㅣ","romanization":"i","en":"letter i","isCorrect":false},
+          {"id":"t2","ko":"ㅣ","romanization":"i","en":"letter i","isCorrect":false},
+          {"id":"t3","ko":"ㅡ","romanization":"eu","en":"letter eu","isCorrect":true},
+          {"id":"t4","ko":"ㅣ","romanization":"i","en":"letter i","isCorrect":false}
+        ],
+        "tags": ["sym:ㅡ","sym:ㅣ","look-alike"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": false
+      }
+    },
+    {
+      "id": "pitem:recog-odd-i-eu",
+      "strand": "hangul-recognition",
+      "gate": "recog",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Spot the odd one: i among eu",
+      "question": {
+        "format": "shape-odd-one-out",
+        "options": [
+          {"id":"t1","ko":"ㅡ","romanization":"eu","en":"letter eu","isCorrect":false},
+          {"id":"t2","ko":"ㅡ","romanization":"eu","en":"letter eu","isCorrect":false},
+          {"id":"t3","ko":"ㅣ","romanization":"i","en":"letter i","isCorrect":true},
+          {"id":"t4","ko":"ㅡ","romanization":"eu","en":"letter eu","isCorrect":false}
+        ],
+        "tags": ["sym:ㅣ","sym:ㅡ","look-alike"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": false
+      }
+    },
+    {
+      "id": "pitem:recog-odd-ya-yeo",
+      "strand": "hangul-recognition",
+      "gate": "recog",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Spot the odd one: ya among yeo",
+      "question": {
+        "format": "shape-odd-one-out",
+        "options": [
+          {"id":"t1","ko":"ㅕ","romanization":"yeo","en":"letter yeo","isCorrect":false},
+          {"id":"t2","ko":"ㅕ","romanization":"yeo","en":"letter yeo","isCorrect":false},
+          {"id":"t3","ko":"ㅑ","romanization":"ya","en":"letter ya","isCorrect":true},
+          {"id":"t4","ko":"ㅕ","romanization":"yeo","en":"letter yeo","isCorrect":false}
+        ],
+        "tags": ["sym:ㅑ","sym:ㅕ","look-alike"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": false
+      }
+    },
+    {
+      "id": "pitem:recog-odd-yeo-ya",
+      "strand": "hangul-recognition",
+      "gate": "recog",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Spot the odd one: yeo among ya",
+      "question": {
+        "format": "shape-odd-one-out",
+        "options": [
+          {"id":"t1","ko":"ㅑ","romanization":"ya","en":"letter ya","isCorrect":false},
+          {"id":"t2","ko":"ㅑ","romanization":"ya","en":"letter ya","isCorrect":false},
+          {"id":"t3","ko":"ㅕ","romanization":"yeo","en":"letter yeo","isCorrect":true},
+          {"id":"t4","ko":"ㅑ","romanization":"ya","en":"letter ya","isCorrect":false}
+        ],
+        "tags": ["sym:ㅕ","sym:ㅑ","look-alike"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": false
+      }
+    },
+    {
+      "id": "pitem:recog-odd-yo-yu",
+      "strand": "hangul-recognition",
+      "gate": "recog",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Spot the odd one: yo among yu",
+      "question": {
+        "format": "shape-odd-one-out",
+        "options": [
+          {"id":"t1","ko":"ㅠ","romanization":"yu","en":"letter yu","isCorrect":false},
+          {"id":"t2","ko":"ㅠ","romanization":"yu","en":"letter yu","isCorrect":false},
+          {"id":"t3","ko":"ㅛ","romanization":"yo","en":"letter yo","isCorrect":true},
+          {"id":"t4","ko":"ㅠ","romanization":"yu","en":"letter yu","isCorrect":false}
+        ],
+        "tags": ["sym:ㅛ","sym:ㅠ","look-alike"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": false
+      }
+    },
+    {
+      "id": "pitem:recog-odd-yu-yo",
+      "strand": "hangul-recognition",
+      "gate": "recog",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Spot the odd one: yu among yo",
+      "question": {
+        "format": "shape-odd-one-out",
+        "options": [
+          {"id":"t1","ko":"ㅛ","romanization":"yo","en":"letter yo","isCorrect":false},
+          {"id":"t2","ko":"ㅛ","romanization":"yo","en":"letter yo","isCorrect":false},
+          {"id":"t3","ko":"ㅠ","romanization":"yu","en":"letter yu","isCorrect":true},
+          {"id":"t4","ko":"ㅛ","romanization":"yo","en":"letter yo","isCorrect":false}
+        ],
+        "tags": ["sym:ㅠ","sym:ㅛ","look-alike"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": false
+      }
+    },
+    {
+      "id": "pitem:recog-odd-a-ya",
+      "strand": "hangul-recognition",
+      "gate": "recog",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Spot the odd one: a among ya",
+      "question": {
+        "format": "shape-odd-one-out",
+        "options": [
+          {"id":"t1","ko":"ㅑ","romanization":"ya","en":"letter ya","isCorrect":false},
+          {"id":"t2","ko":"ㅑ","romanization":"ya","en":"letter ya","isCorrect":false},
+          {"id":"t3","ko":"ㅏ","romanization":"a","en":"letter a","isCorrect":true},
+          {"id":"t4","ko":"ㅑ","romanization":"ya","en":"letter ya","isCorrect":false}
+        ],
+        "tags": ["sym:ㅏ","sym:ㅑ","look-alike"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": false
+      }
+    },
+    {
+      "id": "pitem:recog-odd-ya-a",
+      "strand": "hangul-recognition",
+      "gate": "recog",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Spot the odd one: ya among a",
+      "question": {
+        "format": "shape-odd-one-out",
+        "options": [
+          {"id":"t1","ko":"ㅏ","romanization":"a","en":"letter a","isCorrect":false},
+          {"id":"t2","ko":"ㅏ","romanization":"a","en":"letter a","isCorrect":false},
+          {"id":"t3","ko":"ㅑ","romanization":"ya","en":"letter ya","isCorrect":true},
+          {"id":"t4","ko":"ㅏ","romanization":"a","en":"letter a","isCorrect":false}
+        ],
+        "tags": ["sym:ㅑ","sym:ㅏ","look-alike"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": false
+      }
+    },
+    {
+      "id": "pitem:recog-odd-eo-yeo",
+      "strand": "hangul-recognition",
+      "gate": "recog",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Spot the odd one: eo among yeo",
+      "question": {
+        "format": "shape-odd-one-out",
+        "options": [
+          {"id":"t1","ko":"ㅕ","romanization":"yeo","en":"letter yeo","isCorrect":false},
+          {"id":"t2","ko":"ㅕ","romanization":"yeo","en":"letter yeo","isCorrect":false},
+          {"id":"t3","ko":"ㅓ","romanization":"eo","en":"letter eo","isCorrect":true},
+          {"id":"t4","ko":"ㅕ","romanization":"yeo","en":"letter yeo","isCorrect":false}
+        ],
+        "tags": ["sym:ㅓ","sym:ㅕ","look-alike"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": false
+      }
+    },
+    {
+      "id": "pitem:recog-odd-yeo-eo",
+      "strand": "hangul-recognition",
+      "gate": "recog",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Spot the odd one: yeo among eo",
+      "question": {
+        "format": "shape-odd-one-out",
+        "options": [
+          {"id":"t1","ko":"ㅓ","romanization":"eo","en":"letter eo","isCorrect":false},
+          {"id":"t2","ko":"ㅓ","romanization":"eo","en":"letter eo","isCorrect":false},
+          {"id":"t3","ko":"ㅕ","romanization":"yeo","en":"letter yeo","isCorrect":true},
+          {"id":"t4","ko":"ㅓ","romanization":"eo","en":"letter eo","isCorrect":false}
+        ],
+        "tags": ["sym:ㅕ","sym:ㅓ","look-alike"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": false
+      }
+    },
+    {
+      "id": "pitem:recog-odd-tieut-digeut",
+      "strand": "hangul-recognition",
+      "gate": "recog",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Spot the odd one: tieut among digeut",
+      "question": {
+        "format": "shape-odd-one-out",
+        "options": [
+          {"id":"t1","ko":"ㄷ","romanization":"d","en":"letter digeut","isCorrect":false},
+          {"id":"t2","ko":"ㄷ","romanization":"d","en":"letter digeut","isCorrect":false},
+          {"id":"t3","ko":"ㅌ","romanization":"t","en":"letter tieut","isCorrect":true},
+          {"id":"t4","ko":"ㄷ","romanization":"d","en":"letter digeut","isCorrect":false}
+        ],
+        "tags": ["sym:ㅌ","sym:ㄷ","look-alike"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": false
+      }
+    },
+    {
+      "id": "pitem:recog-odd-digeut-tieut",
+      "strand": "hangul-recognition",
+      "gate": "recog",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Spot the odd one: digeut among tieut",
+      "question": {
+        "format": "shape-odd-one-out",
+        "options": [
+          {"id":"t1","ko":"ㅌ","romanization":"t","en":"letter tieut","isCorrect":false},
+          {"id":"t2","ko":"ㅌ","romanization":"t","en":"letter tieut","isCorrect":false},
+          {"id":"t3","ko":"ㄷ","romanization":"d","en":"letter digeut","isCorrect":true},
+          {"id":"t4","ko":"ㅌ","romanization":"t","en":"letter tieut","isCorrect":false}
+        ],
+        "tags": ["sym:ㄷ","sym:ㅌ","look-alike"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": false
+      }
+    },
+    {
+      "id": "pitem:recog-odd-mieum-ieung",
+      "strand": "hangul-recognition",
+      "gate": "recog",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Spot the odd one: mieum among ieung",
+      "question": {
+        "format": "shape-odd-one-out",
+        "options": [
+          {"id":"t1","ko":"ㅇ","romanization":"ng","en":"letter ieung","isCorrect":false},
+          {"id":"t2","ko":"ㅇ","romanization":"ng","en":"letter ieung","isCorrect":false},
+          {"id":"t3","ko":"ㅁ","romanization":"m","en":"letter mieum","isCorrect":true},
+          {"id":"t4","ko":"ㅇ","romanization":"ng","en":"letter ieung","isCorrect":false}
+        ],
+        "tags": ["sym:ㅁ","sym:ㅇ","look-alike"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": false
+      }
+    },
+    {
+      "id": "pitem:recog-odd-ieung-mieum",
+      "strand": "hangul-recognition",
+      "gate": "recog",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Spot the odd one: ieung among mieum",
+      "question": {
+        "format": "shape-odd-one-out",
+        "options": [
+          {"id":"t1","ko":"ㅁ","romanization":"m","en":"letter mieum","isCorrect":false},
+          {"id":"t2","ko":"ㅁ","romanization":"m","en":"letter mieum","isCorrect":false},
+          {"id":"t3","ko":"ㅇ","romanization":"ng","en":"letter ieung","isCorrect":true},
+          {"id":"t4","ko":"ㅁ","romanization":"m","en":"letter mieum","isCorrect":false}
+        ],
+        "tags": ["sym:ㅇ","sym:ㅁ","look-alike"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": false
+      }
+    },
+    {
+      "id": "pitem:recog-odd-nieun-digeut",
+      "strand": "hangul-recognition",
+      "gate": "recog",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Spot the odd one: nieun among digeut",
+      "question": {
+        "format": "shape-odd-one-out",
+        "options": [
+          {"id":"t1","ko":"ㄷ","romanization":"d","en":"letter digeut","isCorrect":false},
+          {"id":"t2","ko":"ㄷ","romanization":"d","en":"letter digeut","isCorrect":false},
+          {"id":"t3","ko":"ㄴ","romanization":"n","en":"letter nieun","isCorrect":true},
+          {"id":"t4","ko":"ㄷ","romanization":"d","en":"letter digeut","isCorrect":false}
+        ],
+        "tags": ["sym:ㄴ","sym:ㄷ","look-alike"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": false
+      }
+    },
+    {
+      "id": "pitem:recog-odd-digeut-nieun",
+      "strand": "hangul-recognition",
+      "gate": "recog",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Spot the odd one: digeut among nieun",
+      "question": {
+        "format": "shape-odd-one-out",
+        "options": [
+          {"id":"t1","ko":"ㄴ","romanization":"n","en":"letter nieun","isCorrect":false},
+          {"id":"t2","ko":"ㄴ","romanization":"n","en":"letter nieun","isCorrect":false},
+          {"id":"t3","ko":"ㄷ","romanization":"d","en":"letter digeut","isCorrect":true},
+          {"id":"t4","ko":"ㄴ","romanization":"n","en":"letter nieun","isCorrect":false}
+        ],
+        "tags": ["sym:ㄷ","sym:ㄴ","look-alike"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": false
+      }
+    },
+    {
+      "id": "pitem:recog-odd-siot-ieung",
+      "strand": "hangul-recognition",
+      "gate": "recog",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Spot the odd one: siot among ieung",
+      "question": {
+        "format": "shape-odd-one-out",
+        "options": [
+          {"id":"t1","ko":"ㅇ","romanization":"ng","en":"letter ieung","isCorrect":false},
+          {"id":"t2","ko":"ㅇ","romanization":"ng","en":"letter ieung","isCorrect":false},
+          {"id":"t3","ko":"ㅅ","romanization":"s","en":"letter siot","isCorrect":true},
+          {"id":"t4","ko":"ㅇ","romanization":"ng","en":"letter ieung","isCorrect":false}
+        ],
+        "tags": ["sym:ㅅ","sym:ㅇ","look-alike"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": false
+      }
+    },
+    {
+      "id": "pitem:recog-odd-ieung-siot",
+      "strand": "hangul-recognition",
+      "gate": "recog",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Spot the odd one: ieung among siot",
+      "question": {
+        "format": "shape-odd-one-out",
+        "options": [
+          {"id":"t1","ko":"ㅅ","romanization":"s","en":"letter siot","isCorrect":false},
+          {"id":"t2","ko":"ㅅ","romanization":"s","en":"letter siot","isCorrect":false},
+          {"id":"t3","ko":"ㅇ","romanization":"ng","en":"letter ieung","isCorrect":true},
+          {"id":"t4","ko":"ㅅ","romanization":"s","en":"letter siot","isCorrect":false}
+        ],
+        "tags": ["sym:ㅇ","sym:ㅅ","look-alike"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": false
+      }
+    },
+    {
+      "id": "pitem:recog-odd-u-yu",
+      "strand": "hangul-recognition",
+      "gate": "recog",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Spot the odd one: u among yu",
+      "question": {
+        "format": "shape-odd-one-out",
+        "options": [
+          {"id":"t1","ko":"ㅠ","romanization":"yu","en":"letter yu","isCorrect":false},
+          {"id":"t2","ko":"ㅠ","romanization":"yu","en":"letter yu","isCorrect":false},
+          {"id":"t3","ko":"ㅜ","romanization":"u","en":"letter u","isCorrect":true},
+          {"id":"t4","ko":"ㅠ","romanization":"yu","en":"letter yu","isCorrect":false}
+        ],
+        "tags": ["sym:ㅜ","sym:ㅠ","look-alike"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": false
+      }
+    },
+    {
+      "id": "pitem:recog-odd-yu-u",
+      "strand": "hangul-recognition",
+      "gate": "recog",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Spot the odd one: yu among u",
+      "question": {
+        "format": "shape-odd-one-out",
+        "options": [
+          {"id":"t1","ko":"ㅜ","romanization":"u","en":"letter u","isCorrect":false},
+          {"id":"t2","ko":"ㅜ","romanization":"u","en":"letter u","isCorrect":false},
+          {"id":"t3","ko":"ㅠ","romanization":"yu","en":"letter yu","isCorrect":true},
+          {"id":"t4","ko":"ㅜ","romanization":"u","en":"letter u","isCorrect":false}
+        ],
+        "tags": ["sym:ㅠ","sym:ㅜ","look-alike"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": false
+      }
+    },
+    {
+      "id": "pitem:recog-odd-o-yo",
+      "strand": "hangul-recognition",
+      "gate": "recog",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Spot the odd one: o among yo",
+      "question": {
+        "format": "shape-odd-one-out",
+        "options": [
+          {"id":"t1","ko":"ㅛ","romanization":"yo","en":"letter yo","isCorrect":false},
+          {"id":"t2","ko":"ㅛ","romanization":"yo","en":"letter yo","isCorrect":false},
+          {"id":"t3","ko":"ㅗ","romanization":"o","en":"letter o","isCorrect":true},
+          {"id":"t4","ko":"ㅛ","romanization":"yo","en":"letter yo","isCorrect":false}
+        ],
+        "tags": ["sym:ㅗ","sym:ㅛ","look-alike"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": false
+      }
+    },
+    {
+      "id": "pitem:recog-odd-yo-o",
+      "strand": "hangul-recognition",
+      "gate": "recog",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Spot the odd one: yo among o",
+      "question": {
+        "format": "shape-odd-one-out",
+        "options": [
+          {"id":"t1","ko":"ㅗ","romanization":"o","en":"letter o","isCorrect":false},
+          {"id":"t2","ko":"ㅗ","romanization":"o","en":"letter o","isCorrect":false},
+          {"id":"t3","ko":"ㅛ","romanization":"yo","en":"letter yo","isCorrect":true},
+          {"id":"t4","ko":"ㅗ","romanization":"o","en":"letter o","isCorrect":false}
+        ],
+        "tags": ["sym:ㅛ","sym:ㅗ","look-alike"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": false
+      }
+    }
+  ]
+}

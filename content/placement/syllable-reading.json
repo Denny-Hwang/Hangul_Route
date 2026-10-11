@@ -1,0 +1,1517 @@
+{
+  "strand": "syllable-reading",
+  "templates": [
+    {
+      "id": "pitem:syl-cv-hear-ga",
+      "strand": "syllable-reading",
+      "gate": "syl-cv",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear the syllable ga",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"가","romanization":"ga","en":"syllable ga"},
+        "options": [
+          {"id":"ga","ko":"가","romanization":"ga","en":"syllable ga","isCorrect":true},
+          {"id":"geo","ko":"거","romanization":"geo","en":"syllable geo","isCorrect":false},
+          {"id":"na","ko":"나","romanization":"na","en":"syllable na","isCorrect":false},
+          {"id":"ra","ko":"라","romanization":"ra","en":"syllable ra","isCorrect":false}
+        ],
+        "tags": ["sym:ㄱ","sym:ㅏ","syl:ga","shape:cv"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cv-hear-geo",
+      "strand": "syllable-reading",
+      "gate": "syl-cv",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear the syllable geo",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"거","romanization":"geo","en":"syllable geo"},
+        "options": [
+          {"id":"geo","ko":"거","romanization":"geo","en":"syllable geo","isCorrect":true},
+          {"id":"go","ko":"고","romanization":"go","en":"syllable go","isCorrect":false},
+          {"id":"geu","ko":"그","romanization":"geu","en":"syllable geu","isCorrect":false},
+          {"id":"deo","ko":"더","romanization":"deo","en":"syllable deo","isCorrect":false}
+        ],
+        "tags": ["sym:ㄱ","sym:ㅓ","syl:geo","shape:cv"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cv-hear-go",
+      "strand": "syllable-reading",
+      "gate": "syl-cv",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear the syllable go",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"고","romanization":"go","en":"syllable go"},
+        "options": [
+          {"id":"go","ko":"고","romanization":"go","en":"syllable go","isCorrect":true},
+          {"id":"gu","ko":"구","romanization":"gu","en":"syllable gu","isCorrect":false},
+          {"id":"ro","ko":"로","romanization":"ro","en":"syllable ro","isCorrect":false},
+          {"id":"o","ko":"오","romanization":"o","en":"syllable o","isCorrect":false}
+        ],
+        "tags": ["sym:ㄱ","sym:ㅗ","syl:go","shape:cv"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cv-hear-gu",
+      "strand": "syllable-reading",
+      "gate": "syl-cv",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear the syllable gu",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"구","romanization":"gu","en":"syllable gu"},
+        "options": [
+          {"id":"gu","ko":"구","romanization":"gu","en":"syllable gu","isCorrect":true},
+          {"id":"geu","ko":"그","romanization":"geu","en":"syllable geu","isCorrect":false},
+          {"id":"ga","ko":"가","romanization":"ga","en":"syllable ga","isCorrect":false},
+          {"id":"mu","ko":"무","romanization":"mu","en":"syllable mu","isCorrect":false}
+        ],
+        "tags": ["sym:ㄱ","sym:ㅜ","syl:gu","shape:cv"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cv-hear-na",
+      "strand": "syllable-reading",
+      "gate": "syl-cv",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear the syllable na",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"나","romanization":"na","en":"syllable na"},
+        "options": [
+          {"id":"na","ko":"나","romanization":"na","en":"syllable na","isCorrect":true},
+          {"id":"ni","ko":"니","romanization":"ni","en":"syllable ni","isCorrect":false},
+          {"id":"a","ko":"아","romanization":"a","en":"syllable a","isCorrect":false},
+          {"id":"da","ko":"다","romanization":"da","en":"syllable da","isCorrect":false}
+        ],
+        "tags": ["sym:ㄴ","sym:ㅏ","syl:na","shape:cv"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cv-hear-neo",
+      "strand": "syllable-reading",
+      "gate": "syl-cv",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear the syllable neo",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"너","romanization":"neo","en":"syllable neo"},
+        "options": [
+          {"id":"neo","ko":"너","romanization":"neo","en":"syllable neo","isCorrect":true},
+          {"id":"na","ko":"나","romanization":"na","en":"syllable na","isCorrect":false},
+          {"id":"nu","ko":"누","romanization":"nu","en":"syllable nu","isCorrect":false},
+          {"id":"geo","ko":"거","romanization":"geo","en":"syllable geo","isCorrect":false}
+        ],
+        "tags": ["sym:ㄴ","sym:ㅓ","syl:neo","shape:cv"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cv-hear-no",
+      "strand": "syllable-reading",
+      "gate": "syl-cv",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear the syllable no",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"노","romanization":"no","en":"syllable no"},
+        "options": [
+          {"id":"no","ko":"노","romanization":"no","en":"syllable no","isCorrect":true},
+          {"id":"neo","ko":"너","romanization":"neo","en":"syllable neo","isCorrect":false},
+          {"id":"do","ko":"도","romanization":"do","en":"syllable do","isCorrect":false},
+          {"id":"mo","ko":"모","romanization":"mo","en":"syllable mo","isCorrect":false}
+        ],
+        "tags": ["sym:ㄴ","sym:ㅗ","syl:no","shape:cv"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cv-hear-nu",
+      "strand": "syllable-reading",
+      "gate": "syl-cv",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear the syllable nu",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"누","romanization":"nu","en":"syllable nu"},
+        "options": [
+          {"id":"nu","ko":"누","romanization":"nu","en":"syllable nu","isCorrect":true},
+          {"id":"no","ko":"노","romanization":"no","en":"syllable no","isCorrect":false},
+          {"id":"ni","ko":"니","romanization":"ni","en":"syllable ni","isCorrect":false},
+          {"id":"ru","ko":"루","romanization":"ru","en":"syllable ru","isCorrect":false}
+        ],
+        "tags": ["sym:ㄴ","sym:ㅜ","syl:nu","shape:cv"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cv-hear-da",
+      "strand": "syllable-reading",
+      "gate": "syl-cv",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear the syllable da",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"다","romanization":"da","en":"syllable da"},
+        "options": [
+          {"id":"da","ko":"다","romanization":"da","en":"syllable da","isCorrect":true},
+          {"id":"deu","ko":"드","romanization":"deu","en":"syllable deu","isCorrect":false},
+          {"id":"ma","ko":"마","romanization":"ma","en":"syllable ma","isCorrect":false},
+          {"id":"ga","ko":"가","romanization":"ga","en":"syllable ga","isCorrect":false}
+        ],
+        "tags": ["sym:ㄷ","sym:ㅏ","syl:da","shape:cv"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cv-hear-deo",
+      "strand": "syllable-reading",
+      "gate": "syl-cv",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear the syllable deo",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"더","romanization":"deo","en":"syllable deo"},
+        "options": [
+          {"id":"deo","ko":"더","romanization":"deo","en":"syllable deo","isCorrect":true},
+          {"id":"di","ko":"디","romanization":"di","en":"syllable di","isCorrect":false},
+          {"id":"do","ko":"도","romanization":"do","en":"syllable do","isCorrect":false},
+          {"id":"eo","ko":"어","romanization":"eo","en":"syllable eo","isCorrect":false}
+        ],
+        "tags": ["sym:ㄷ","sym:ㅓ","syl:deo","shape:cv"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cv-hear-do",
+      "strand": "syllable-reading",
+      "gate": "syl-cv",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear the syllable do",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"도","romanization":"do","en":"syllable do"},
+        "options": [
+          {"id":"do","ko":"도","romanization":"do","en":"syllable do","isCorrect":true},
+          {"id":"da","ko":"다","romanization":"da","en":"syllable da","isCorrect":false},
+          {"id":"go","ko":"고","romanization":"go","en":"syllable go","isCorrect":false},
+          {"id":"ro","ko":"로","romanization":"ro","en":"syllable ro","isCorrect":false}
+        ],
+        "tags": ["sym:ㄷ","sym:ㅗ","syl:do","shape:cv"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cv-hear-du",
+      "strand": "syllable-reading",
+      "gate": "syl-cv",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear the syllable du",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"두","romanization":"du","en":"syllable du"},
+        "options": [
+          {"id":"du","ko":"두","romanization":"du","en":"syllable du","isCorrect":true},
+          {"id":"deo","ko":"더","romanization":"deo","en":"syllable deo","isCorrect":false},
+          {"id":"deu","ko":"드","romanization":"deu","en":"syllable deu","isCorrect":false},
+          {"id":"nu","ko":"누","romanization":"nu","en":"syllable nu","isCorrect":false}
+        ],
+        "tags": ["sym:ㄷ","sym:ㅜ","syl:du","shape:cv"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cv-hear-ma",
+      "strand": "syllable-reading",
+      "gate": "syl-cv",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear the syllable ma",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"마","romanization":"ma","en":"syllable ma"},
+        "options": [
+          {"id":"ma","ko":"마","romanization":"ma","en":"syllable ma","isCorrect":true},
+          {"id":"mu","ko":"무","romanization":"mu","en":"syllable mu","isCorrect":false},
+          {"id":"da","ko":"다","romanization":"da","en":"syllable da","isCorrect":false},
+          {"id":"a","ko":"아","romanization":"a","en":"syllable a","isCorrect":false}
+        ],
+        "tags": ["sym:ㅁ","sym:ㅏ","syl:ma","shape:cv"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cv-hear-meo",
+      "strand": "syllable-reading",
+      "gate": "syl-cv",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear the syllable meo",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"머","romanization":"meo","en":"syllable meo"},
+        "options": [
+          {"id":"meo","ko":"머","romanization":"meo","en":"syllable meo","isCorrect":true},
+          {"id":"meu","ko":"므","romanization":"meu","en":"syllable meu","isCorrect":false},
+          {"id":"ma","ko":"마","romanization":"ma","en":"syllable ma","isCorrect":false},
+          {"id":"reo","ko":"러","romanization":"reo","en":"syllable reo","isCorrect":false}
+        ],
+        "tags": ["sym:ㅁ","sym:ㅓ","syl:meo","shape:cv"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cv-hear-mo",
+      "strand": "syllable-reading",
+      "gate": "syl-cv",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear the syllable mo",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"모","romanization":"mo","en":"syllable mo"},
+        "options": [
+          {"id":"mo","ko":"모","romanization":"mo","en":"syllable mo","isCorrect":true},
+          {"id":"mi","ko":"미","romanization":"mi","en":"syllable mi","isCorrect":false},
+          {"id":"o","ko":"오","romanization":"o","en":"syllable o","isCorrect":false},
+          {"id":"no","ko":"노","romanization":"no","en":"syllable no","isCorrect":false}
+        ],
+        "tags": ["sym:ㅁ","sym:ㅗ","syl:mo","shape:cv"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cv-hear-mu",
+      "strand": "syllable-reading",
+      "gate": "syl-cv",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear the syllable mu",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"무","romanization":"mu","en":"syllable mu"},
+        "options": [
+          {"id":"mu","ko":"무","romanization":"mu","en":"syllable mu","isCorrect":true},
+          {"id":"ma","ko":"마","romanization":"ma","en":"syllable ma","isCorrect":false},
+          {"id":"mo","ko":"모","romanization":"mo","en":"syllable mo","isCorrect":false},
+          {"id":"gu","ko":"구","romanization":"gu","en":"syllable gu","isCorrect":false}
+        ],
+        "tags": ["sym:ㅁ","sym:ㅜ","syl:mu","shape:cv"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cv-hear-ra",
+      "strand": "syllable-reading",
+      "gate": "syl-cv",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear the syllable ra",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"라","romanization":"ra","en":"syllable ra"},
+        "options": [
+          {"id":"ra","ko":"라","romanization":"ra","en":"syllable ra","isCorrect":true},
+          {"id":"ro","ko":"로","romanization":"ro","en":"syllable ro","isCorrect":false},
+          {"id":"na","ko":"나","romanization":"na","en":"syllable na","isCorrect":false},
+          {"id":"ma","ko":"마","romanization":"ma","en":"syllable ma","isCorrect":false}
+        ],
+        "tags": ["sym:ㄹ","sym:ㅏ","syl:ra","shape:cv"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cv-hear-i",
+      "strand": "syllable-reading",
+      "gate": "syl-cv",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear the syllable i",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"이","romanization":"i","en":"syllable i"},
+        "options": [
+          {"id":"i","ko":"이","romanization":"i","en":"syllable i","isCorrect":true},
+          {"id":"o","ko":"오","romanization":"o","en":"syllable o","isCorrect":false},
+          {"id":"eu","ko":"으","romanization":"eu","en":"syllable eu","isCorrect":false},
+          {"id":"di","ko":"디","romanization":"di","en":"syllable di","isCorrect":false}
+        ],
+        "tags": ["sym:ㅇ","sym:ㅣ","syl:i","shape:cv"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cv-see-geu",
+      "strand": "syllable-reading",
+      "gate": "syl-cv",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "See the syllable geu, pick its sound",
+      "question": {
+        "format": "see-pick-sound",
+        "prompt": {"ko":"그","romanization":"geu","en":"syllable geu"},
+        "options": [
+          {"id":"geu","sound":"geu","isCorrect":true},
+          {"id":"ga","sound":"ga","isCorrect":false},
+          {"id":"neu","sound":"neu","isCorrect":false},
+          {"id":"reu","sound":"reu","isCorrect":false}
+        ],
+        "tags": ["sym:ㄱ","sym:ㅡ","syl:geu","shape:cv"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cv-see-gi",
+      "strand": "syllable-reading",
+      "gate": "syl-cv",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "See the syllable gi, pick its sound",
+      "question": {
+        "format": "see-pick-sound",
+        "prompt": {"ko":"기","romanization":"gi","en":"syllable gi"},
+        "options": [
+          {"id":"gi","sound":"gi","isCorrect":true},
+          {"id":"geo","sound":"geo","isCorrect":false},
+          {"id":"gu","sound":"gu","isCorrect":false},
+          {"id":"di","sound":"di","isCorrect":false}
+        ],
+        "tags": ["sym:ㄱ","sym:ㅣ","syl:gi","shape:cv"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cv-see-neu",
+      "strand": "syllable-reading",
+      "gate": "syl-cv",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "See the syllable neu, pick its sound",
+      "question": {
+        "format": "see-pick-sound",
+        "prompt": {"ko":"느","romanization":"neu","en":"syllable neu"},
+        "options": [
+          {"id":"neu","sound":"neu","isCorrect":true},
+          {"id":"no","sound":"no","isCorrect":false},
+          {"id":"reu","sound":"reu","isCorrect":false},
+          {"id":"eu","sound":"eu","isCorrect":false}
+        ],
+        "tags": ["sym:ㄴ","sym:ㅡ","syl:neu","shape:cv"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cv-see-ni",
+      "strand": "syllable-reading",
+      "gate": "syl-cv",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "See the syllable ni, pick its sound",
+      "question": {
+        "format": "see-pick-sound",
+        "prompt": {"ko":"니","romanization":"ni","en":"syllable ni"},
+        "options": [
+          {"id":"ni","sound":"ni","isCorrect":true},
+          {"id":"nu","sound":"nu","isCorrect":false},
+          {"id":"na","sound":"na","isCorrect":false},
+          {"id":"mi","sound":"mi","isCorrect":false}
+        ],
+        "tags": ["sym:ㄴ","sym:ㅣ","syl:ni","shape:cv"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cv-see-deu",
+      "strand": "syllable-reading",
+      "gate": "syl-cv",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "See the syllable deu, pick its sound",
+      "question": {
+        "format": "see-pick-sound",
+        "prompt": {"ko":"드","romanization":"deu","en":"syllable deu"},
+        "options": [
+          {"id":"deu","sound":"deu","isCorrect":true},
+          {"id":"di","sound":"di","isCorrect":false},
+          {"id":"eu","sound":"eu","isCorrect":false},
+          {"id":"neu","sound":"neu","isCorrect":false}
+        ],
+        "tags": ["sym:ㄷ","sym:ㅡ","syl:deu","shape:cv"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cv-see-di",
+      "strand": "syllable-reading",
+      "gate": "syl-cv",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "See the syllable di, pick its sound",
+      "question": {
+        "format": "see-pick-sound",
+        "prompt": {"ko":"디","romanization":"di","en":"syllable di"},
+        "options": [
+          {"id":"di","sound":"di","isCorrect":true},
+          {"id":"da","sound":"da","isCorrect":false},
+          {"id":"do","sound":"do","isCorrect":false},
+          {"id":"gi","sound":"gi","isCorrect":false}
+        ],
+        "tags": ["sym:ㄷ","sym:ㅣ","syl:di","shape:cv"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cv-see-meu",
+      "strand": "syllable-reading",
+      "gate": "syl-cv",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "See the syllable meu, pick its sound",
+      "question": {
+        "format": "see-pick-sound",
+        "prompt": {"ko":"므","romanization":"meu","en":"syllable meu"},
+        "options": [
+          {"id":"meu","sound":"meu","isCorrect":true},
+          {"id":"meo","sound":"meo","isCorrect":false},
+          {"id":"neu","sound":"neu","isCorrect":false},
+          {"id":"reu","sound":"reu","isCorrect":false}
+        ],
+        "tags": ["sym:ㅁ","sym:ㅡ","syl:meu","shape:cv"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cv-see-mi",
+      "strand": "syllable-reading",
+      "gate": "syl-cv",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "See the syllable mi, pick its sound",
+      "question": {
+        "format": "see-pick-sound",
+        "prompt": {"ko":"미","romanization":"mi","en":"syllable mi"},
+        "options": [
+          {"id":"mi","sound":"mi","isCorrect":true},
+          {"id":"mo","sound":"mo","isCorrect":false},
+          {"id":"meu","sound":"meu","isCorrect":false},
+          {"id":"di","sound":"di","isCorrect":false}
+        ],
+        "tags": ["sym:ㅁ","sym:ㅣ","syl:mi","shape:cv"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cv-see-a",
+      "strand": "syllable-reading",
+      "gate": "syl-cv",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "See the syllable a, pick its sound",
+      "question": {
+        "format": "see-pick-sound",
+        "prompt": {"ko":"아","romanization":"a","en":"syllable a"},
+        "options": [
+          {"id":"a","sound":"a","isCorrect":true},
+          {"id":"eu","sound":"eu","isCorrect":false},
+          {"id":"ra","sound":"ra","isCorrect":false},
+          {"id":"ga","sound":"ga","isCorrect":false}
+        ],
+        "tags": ["sym:ㅇ","sym:ㅏ","syl:a","shape:cv"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cv-see-eo",
+      "strand": "syllable-reading",
+      "gate": "syl-cv",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "See the syllable eo, pick its sound",
+      "question": {
+        "format": "see-pick-sound",
+        "prompt": {"ko":"어","romanization":"eo","en":"syllable eo"},
+        "options": [
+          {"id":"eo","sound":"eo","isCorrect":true},
+          {"id":"i","sound":"i","isCorrect":false},
+          {"id":"o","sound":"o","isCorrect":false},
+          {"id":"meo","sound":"meo","isCorrect":false}
+        ],
+        "tags": ["sym:ㅇ","sym:ㅓ","syl:eo","shape:cv"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cv-see-o",
+      "strand": "syllable-reading",
+      "gate": "syl-cv",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "See the syllable o, pick its sound",
+      "question": {
+        "format": "see-pick-sound",
+        "prompt": {"ko":"오","romanization":"o","en":"syllable o"},
+        "options": [
+          {"id":"o","sound":"o","isCorrect":true},
+          {"id":"a","sound":"a","isCorrect":false},
+          {"id":"go","sound":"go","isCorrect":false},
+          {"id":"do","sound":"do","isCorrect":false}
+        ],
+        "tags": ["sym:ㅇ","sym:ㅗ","syl:o","shape:cv"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cv-see-u",
+      "strand": "syllable-reading",
+      "gate": "syl-cv",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "See the syllable u, pick its sound",
+      "question": {
+        "format": "see-pick-sound",
+        "prompt": {"ko":"우","romanization":"u","en":"syllable u"},
+        "options": [
+          {"id":"u","sound":"u","isCorrect":true},
+          {"id":"eo","sound":"eo","isCorrect":false},
+          {"id":"eu","sound":"eu","isCorrect":false},
+          {"id":"nu","sound":"nu","isCorrect":false}
+        ],
+        "tags": ["sym:ㅇ","sym:ㅜ","syl:u","shape:cv"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cv-build-ga",
+      "strand": "syllable-reading",
+      "gate": "syl-cv",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Build the syllable ga",
+      "question": {
+        "format": "build-syllable",
+        "spoken": {"ko":"가","romanization":"ga","en":"syllable ga"},
+        "options": [
+          {"id":"ga","ko":"가","romanization":"ga","en":"syllable ga","isCorrect":true},
+          {"id":"geo","ko":"거","romanization":"geo","en":"syllable geo","isCorrect":false},
+          {"id":"na","ko":"나","romanization":"na","en":"syllable na","isCorrect":false},
+          {"id":"ra","ko":"라","romanization":"ra","en":"syllable ra","isCorrect":false}
+        ],
+        "tags": ["sym:ㄱ","sym:ㅏ","syl:ga","shape:cv"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cv-build-na",
+      "strand": "syllable-reading",
+      "gate": "syl-cv",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Build the syllable na",
+      "question": {
+        "format": "build-syllable",
+        "spoken": {"ko":"나","romanization":"na","en":"syllable na"},
+        "options": [
+          {"id":"na","ko":"나","romanization":"na","en":"syllable na","isCorrect":true},
+          {"id":"no","ko":"노","romanization":"no","en":"syllable no","isCorrect":false},
+          {"id":"neu","ko":"느","romanization":"neu","en":"syllable neu","isCorrect":false},
+          {"id":"da","ko":"다","romanization":"da","en":"syllable da","isCorrect":false}
+        ],
+        "tags": ["sym:ㄴ","sym:ㅏ","syl:na","shape:cv"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cv-build-da",
+      "strand": "syllable-reading",
+      "gate": "syl-cv",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Build the syllable da",
+      "question": {
+        "format": "build-syllable",
+        "spoken": {"ko":"다","romanization":"da","en":"syllable da"},
+        "options": [
+          {"id":"da","ko":"다","romanization":"da","en":"syllable da","isCorrect":true},
+          {"id":"du","ko":"두","romanization":"du","en":"syllable du","isCorrect":false},
+          {"id":"ra","ko":"라","romanization":"ra","en":"syllable ra","isCorrect":false},
+          {"id":"a","ko":"아","romanization":"a","en":"syllable a","isCorrect":false}
+        ],
+        "tags": ["sym:ㄷ","sym:ㅏ","syl:da","shape:cv"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cv-build-ma",
+      "strand": "syllable-reading",
+      "gate": "syl-cv",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Build the syllable ma",
+      "question": {
+        "format": "build-syllable",
+        "spoken": {"ko":"마","romanization":"ma","en":"syllable ma"},
+        "options": [
+          {"id":"ma","ko":"마","romanization":"ma","en":"syllable ma","isCorrect":true},
+          {"id":"meu","ko":"므","romanization":"meu","en":"syllable meu","isCorrect":false},
+          {"id":"meo","ko":"머","romanization":"meo","en":"syllable meo","isCorrect":false},
+          {"id":"ra","ko":"라","romanization":"ra","en":"syllable ra","isCorrect":false}
+        ],
+        "tags": ["sym:ㅁ","sym:ㅏ","syl:ma","shape:cv"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cv-build-mo",
+      "strand": "syllable-reading",
+      "gate": "syl-cv",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Build the syllable mo",
+      "question": {
+        "format": "build-syllable",
+        "spoken": {"ko":"모","romanization":"mo","en":"syllable mo"},
+        "options": [
+          {"id":"mo","ko":"모","romanization":"mo","en":"syllable mo","isCorrect":true},
+          {"id":"mi","ko":"미","romanization":"mi","en":"syllable mi","isCorrect":false},
+          {"id":"o","ko":"오","romanization":"o","en":"syllable o","isCorrect":false},
+          {"id":"no","ko":"노","romanization":"no","en":"syllable no","isCorrect":false}
+        ],
+        "tags": ["sym:ㅁ","sym:ㅗ","syl:mo","shape:cv"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cv-build-gu",
+      "strand": "syllable-reading",
+      "gate": "syl-cv",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Build the syllable gu",
+      "question": {
+        "format": "build-syllable",
+        "spoken": {"ko":"구","romanization":"gu","en":"syllable gu"},
+        "options": [
+          {"id":"gu","ko":"구","romanization":"gu","en":"syllable gu","isCorrect":true},
+          {"id":"ga","ko":"가","romanization":"ga","en":"syllable ga","isCorrect":false},
+          {"id":"go","ko":"고","romanization":"go","en":"syllable go","isCorrect":false},
+          {"id":"nu","ko":"누","romanization":"nu","en":"syllable nu","isCorrect":false}
+        ],
+        "tags": ["sym:ㄱ","sym:ㅜ","syl:gu","shape:cv"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cvc-hear-dal",
+      "strand": "syllable-reading",
+      "gate": "syl-cvc",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear the syllable dal",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"달","romanization":"dal","en":"syllable dal"},
+        "options": [
+          {"id":"dal","ko":"달","romanization":"dal","en":"syllable dal","isCorrect":true},
+          {"id":"dan","ko":"단","romanization":"dan","en":"syllable dan","isCorrect":false},
+          {"id":"dak","ko":"닥","romanization":"dak","en":"syllable dak","isCorrect":false},
+          {"id":"deol","ko":"덜","romanization":"deol","en":"syllable deol","isCorrect":false}
+        ],
+        "tags": ["sym:ㄷ","sym:ㅏ","sym:ㄹ/final","syl:dal","shape:cvc"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cvc-hear-mul",
+      "strand": "syllable-reading",
+      "gate": "syl-cvc",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear the syllable mul",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"물","romanization":"mul","en":"syllable mul"},
+        "options": [
+          {"id":"mul","ko":"물","romanization":"mul","en":"syllable mul","isCorrect":true},
+          {"id":"mung","ko":"뭉","romanization":"mung","en":"syllable mung","isCorrect":false},
+          {"id":"mum","ko":"뭄","romanization":"mum","en":"syllable mum","isCorrect":false},
+          {"id":"meol","ko":"멀","romanization":"meol","en":"syllable meol","isCorrect":false}
+        ],
+        "tags": ["sym:ㅁ","sym:ㅜ","sym:ㄹ/final","syl:mul","shape:cvc"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cvc-hear-mun",
+      "strand": "syllable-reading",
+      "gate": "syl-cvc",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear the syllable mun",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"문","romanization":"mun","en":"syllable mun"},
+        "options": [
+          {"id":"mun","ko":"문","romanization":"mun","en":"syllable mun","isCorrect":true},
+          {"id":"muk","ko":"묵","romanization":"muk","en":"syllable muk","isCorrect":false},
+          {"id":"mup","ko":"뭅","romanization":"mup","en":"syllable mup","isCorrect":false},
+          {"id":"mon","ko":"몬","romanization":"mon","en":"syllable mon","isCorrect":false}
+        ],
+        "tags": ["sym:ㅁ","sym:ㅜ","sym:ㄴ/final","syl:mun","shape:cvc"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cvc-hear-san",
+      "strand": "syllable-reading",
+      "gate": "syl-cvc",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear the syllable san",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"산","romanization":"san","en":"syllable san"},
+        "options": [
+          {"id":"san","ko":"산","romanization":"san","en":"syllable san","isCorrect":true},
+          {"id":"sam","ko":"삼","romanization":"sam","en":"syllable sam","isCorrect":false},
+          {"id":"sal","ko":"살","romanization":"sal","en":"syllable sal","isCorrect":false},
+          {"id":"seun","ko":"슨","romanization":"seun","en":"syllable seun","isCorrect":false}
+        ],
+        "tags": ["sym:ㅅ","sym:ㅏ","sym:ㄴ/final","syl:san","shape:cvc"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cvc-hear-gang",
+      "strand": "syllable-reading",
+      "gate": "syl-cvc",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear the syllable gang",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"강","romanization":"gang","en":"syllable gang"},
+        "options": [
+          {"id":"gang","ko":"강","romanization":"gang","en":"syllable gang","isCorrect":true},
+          {"id":"gap","ko":"갑","romanization":"gap","en":"syllable gap","isCorrect":false},
+          {"id":"gal","ko":"갈","romanization":"gal","en":"syllable gal","isCorrect":false},
+          {"id":"ging","ko":"깅","romanization":"ging","en":"syllable ging","isCorrect":false}
+        ],
+        "tags": ["sym:ㄱ","sym:ㅏ","sym:ㅇ/final","syl:gang","shape:cvc"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cvc-hear-gom",
+      "strand": "syllable-reading",
+      "gate": "syl-cvc",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear the syllable gom",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"곰","romanization":"gom","en":"syllable gom"},
+        "options": [
+          {"id":"gom","ko":"곰","romanization":"gom","en":"syllable gom","isCorrect":true},
+          {"id":"gon","ko":"곤","romanization":"gon","en":"syllable gon","isCorrect":false},
+          {"id":"gong","ko":"공","romanization":"gong","en":"syllable gong","isCorrect":false},
+          {"id":"gam","ko":"감","romanization":"gam","en":"syllable gam","isCorrect":false}
+        ],
+        "tags": ["sym:ㄱ","sym:ㅗ","sym:ㅁ/final","syl:gom","shape:cvc"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cvc-hear-bap",
+      "strand": "syllable-reading",
+      "gate": "syl-cvc",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear the syllable bap",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"밥","romanization":"bap","en":"syllable bap"},
+        "options": [
+          {"id":"bap","ko":"밥","romanization":"bap","en":"syllable bap","isCorrect":true},
+          {"id":"bal","ko":"발","romanization":"bal","en":"syllable bal","isCorrect":false},
+          {"id":"bak","ko":"박","romanization":"bak","en":"syllable bak","isCorrect":false},
+          {"id":"bop","ko":"봅","romanization":"bop","en":"syllable bop","isCorrect":false}
+        ],
+        "tags": ["sym:ㅂ","sym:ㅏ","sym:ㅂ/final","syl:bap","shape:cvc"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cvc-hear-jip",
+      "strand": "syllable-reading",
+      "gate": "syl-cvc",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear the syllable jip",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"집","romanization":"jip","en":"syllable jip"},
+        "options": [
+          {"id":"jip","ko":"집","romanization":"jip","en":"syllable jip","isCorrect":true},
+          {"id":"jing","ko":"징","romanization":"jing","en":"syllable jing","isCorrect":false},
+          {"id":"jim","ko":"짐","romanization":"jim","en":"syllable jim","isCorrect":false},
+          {"id":"jop","ko":"좁","romanization":"jop","en":"syllable jop","isCorrect":false}
+        ],
+        "tags": ["sym:ㅈ","sym:ㅣ","sym:ㅂ/final","syl:jip","shape:cvc"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cvc-hear-bom",
+      "strand": "syllable-reading",
+      "gate": "syl-cvc",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear the syllable bom",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"봄","romanization":"bom","en":"syllable bom"},
+        "options": [
+          {"id":"bom","ko":"봄","romanization":"bom","en":"syllable bom","isCorrect":true},
+          {"id":"bok","ko":"복","romanization":"bok","en":"syllable bok","isCorrect":false},
+          {"id":"bon","ko":"본","romanization":"bon","en":"syllable bon","isCorrect":false},
+          {"id":"beum","ko":"븜","romanization":"beum","en":"syllable beum","isCorrect":false}
+        ],
+        "tags": ["sym:ㅂ","sym:ㅗ","sym:ㅁ/final","syl:bom","shape:cvc"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cvc-hear-byeol",
+      "strand": "syllable-reading",
+      "gate": "syl-cvc",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear the syllable byeol",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"별","romanization":"byeol","en":"syllable byeol"},
+        "options": [
+          {"id":"byeol","ko":"별","romanization":"byeol","en":"syllable byeol","isCorrect":true},
+          {"id":"byeop","ko":"볍","romanization":"byeop","en":"syllable byeop","isCorrect":false},
+          {"id":"byeong","ko":"병","romanization":"byeong","en":"syllable byeong","isCorrect":false},
+          {"id":"bul","ko":"불","romanization":"bul","en":"syllable bul","isCorrect":false}
+        ],
+        "tags": ["sym:ㅂ","sym:ㅕ","sym:ㄹ/final","syl:byeol","shape:cvc"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cvc-hear-gong",
+      "strand": "syllable-reading",
+      "gate": "syl-cvc",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear the syllable gong",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"공","romanization":"gong","en":"syllable gong"},
+        "options": [
+          {"id":"gong","ko":"공","romanization":"gong","en":"syllable gong","isCorrect":true},
+          {"id":"gon","ko":"곤","romanization":"gon","en":"syllable gon","isCorrect":false},
+          {"id":"gok","ko":"곡","romanization":"gok","en":"syllable gok","isCorrect":false},
+          {"id":"gang","ko":"강","romanization":"gang","en":"syllable gang","isCorrect":false}
+        ],
+        "tags": ["sym:ㄱ","sym:ㅗ","sym:ㅇ/final","syl:gong","shape:cvc"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cvc-hear-jul",
+      "strand": "syllable-reading",
+      "gate": "syl-cvc",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear the syllable jul",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"줄","romanization":"jul","en":"syllable jul"},
+        "options": [
+          {"id":"jul","ko":"줄","romanization":"jul","en":"syllable jul","isCorrect":true},
+          {"id":"jung","ko":"중","romanization":"jung","en":"syllable jung","isCorrect":false},
+          {"id":"jum","ko":"줌","romanization":"jum","en":"syllable jum","isCorrect":false},
+          {"id":"jeol","ko":"절","romanization":"jeol","en":"syllable jeol","isCorrect":false}
+        ],
+        "tags": ["sym:ㅈ","sym:ㅜ","sym:ㄹ/final","syl:jul","shape:cvc"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cvc-hear-yeon",
+      "strand": "syllable-reading",
+      "gate": "syl-cvc",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear the syllable yeon",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"연","romanization":"yeon","en":"syllable yeon"},
+        "options": [
+          {"id":"yeon","ko":"연","romanization":"yeon","en":"syllable yeon","isCorrect":true},
+          {"id":"yeok","ko":"역","romanization":"yeok","en":"syllable yeok","isCorrect":false},
+          {"id":"yeop","ko":"엽","romanization":"yeop","en":"syllable yeop","isCorrect":false},
+          {"id":"an","ko":"안","romanization":"an","en":"syllable an","isCorrect":false}
+        ],
+        "tags": ["sym:ㅇ","sym:ㅕ","sym:ㄴ/final","syl:yeon","shape:cvc"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cvc-hear-han",
+      "strand": "syllable-reading",
+      "gate": "syl-cvc",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear the syllable han",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"한","romanization":"han","en":"syllable han"},
+        "options": [
+          {"id":"han","ko":"한","romanization":"han","en":"syllable han","isCorrect":true},
+          {"id":"ham","ko":"함","romanization":"ham","en":"syllable ham","isCorrect":false},
+          {"id":"hal","ko":"할","romanization":"hal","en":"syllable hal","isCorrect":false},
+          {"id":"heun","ko":"흔","romanization":"heun","en":"syllable heun","isCorrect":false}
+        ],
+        "tags": ["sym:ㅎ","sym:ㅏ","sym:ㄴ/final","syl:han","shape:cvc"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cvc-hear-guk",
+      "strand": "syllable-reading",
+      "gate": "syl-cvc",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear the syllable guk",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"국","romanization":"guk","en":"syllable guk"},
+        "options": [
+          {"id":"guk","ko":"국","romanization":"guk","en":"syllable guk","isCorrect":true},
+          {"id":"gup","ko":"굽","romanization":"gup","en":"syllable gup","isCorrect":false},
+          {"id":"gul","ko":"굴","romanization":"gul","en":"syllable gul","isCorrect":false},
+          {"id":"gik","ko":"긱","romanization":"gik","en":"syllable gik","isCorrect":false}
+        ],
+        "tags": ["sym:ㄱ","sym:ㅜ","sym:ㄱ/final","syl:guk","shape:cvc"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cvc-hear-hak",
+      "strand": "syllable-reading",
+      "gate": "syl-cvc",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear the syllable hak",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"학","romanization":"hak","en":"syllable hak"},
+        "options": [
+          {"id":"hak","ko":"학","romanization":"hak","en":"syllable hak","isCorrect":true},
+          {"id":"han","ko":"한","romanization":"han","en":"syllable han","isCorrect":false},
+          {"id":"hang","ko":"항","romanization":"hang","en":"syllable hang","isCorrect":false},
+          {"id":"heok","ko":"헉","romanization":"heok","en":"syllable heok","isCorrect":false}
+        ],
+        "tags": ["sym:ㅎ","sym:ㅏ","sym:ㄱ/final","syl:hak","shape:cvc"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cvc-hear-nun",
+      "strand": "syllable-reading",
+      "gate": "syl-cvc",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear the syllable nun",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"눈","romanization":"nun","en":"syllable nun"},
+        "options": [
+          {"id":"nun","ko":"눈","romanization":"nun","en":"syllable nun","isCorrect":true},
+          {"id":"nung","ko":"눙","romanization":"nung","en":"syllable nung","isCorrect":false},
+          {"id":"num","ko":"눔","romanization":"num","en":"syllable num","isCorrect":false},
+          {"id":"neon","ko":"넌","romanization":"neon","en":"syllable neon","isCorrect":false}
+        ],
+        "tags": ["sym:ㄴ","sym:ㅜ","sym:ㄴ/final","syl:nun","shape:cvc"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cvc-hear-ip",
+      "strand": "syllable-reading",
+      "gate": "syl-cvc",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear the syllable ip",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"입","romanization":"ip","en":"syllable ip"},
+        "options": [
+          {"id":"ip","ko":"입","romanization":"ip","en":"syllable ip","isCorrect":true},
+          {"id":"ing","ko":"잉","romanization":"ing","en":"syllable ing","isCorrect":false},
+          {"id":"im","ko":"임","romanization":"im","en":"syllable im","isCorrect":false},
+          {"id":"op","ko":"옵","romanization":"op","en":"syllable op","isCorrect":false}
+        ],
+        "tags": ["sym:ㅇ","sym:ㅣ","sym:ㅂ/final","syl:ip","shape:cvc"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cvc-see-dal",
+      "strand": "syllable-reading",
+      "gate": "syl-cvc",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "See the syllable dal, pick its sound",
+      "question": {
+        "format": "see-pick-sound",
+        "prompt": {"ko":"달","romanization":"dal","en":"syllable dal"},
+        "options": [
+          {"id":"dal","sound":"dal","isCorrect":true},
+          {"id":"dan","sound":"dan","isCorrect":false},
+          {"id":"dak","sound":"dak","isCorrect":false},
+          {"id":"deol","sound":"deol","isCorrect":false}
+        ],
+        "tags": ["sym:ㄷ","sym:ㅏ","sym:ㄹ/final","syl:dal","shape:cvc"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cvc-see-mul",
+      "strand": "syllable-reading",
+      "gate": "syl-cvc",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "See the syllable mul, pick its sound",
+      "question": {
+        "format": "see-pick-sound",
+        "prompt": {"ko":"물","romanization":"mul","en":"syllable mul"},
+        "options": [
+          {"id":"mul","sound":"mul","isCorrect":true},
+          {"id":"mung","sound":"mung","isCorrect":false},
+          {"id":"mum","sound":"mum","isCorrect":false},
+          {"id":"meol","sound":"meol","isCorrect":false}
+        ],
+        "tags": ["sym:ㅁ","sym:ㅜ","sym:ㄹ/final","syl:mul","shape:cvc"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cvc-see-mun",
+      "strand": "syllable-reading",
+      "gate": "syl-cvc",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "See the syllable mun, pick its sound",
+      "question": {
+        "format": "see-pick-sound",
+        "prompt": {"ko":"문","romanization":"mun","en":"syllable mun"},
+        "options": [
+          {"id":"mun","sound":"mun","isCorrect":true},
+          {"id":"muk","sound":"muk","isCorrect":false},
+          {"id":"mup","sound":"mup","isCorrect":false},
+          {"id":"mon","sound":"mon","isCorrect":false}
+        ],
+        "tags": ["sym:ㅁ","sym:ㅜ","sym:ㄴ/final","syl:mun","shape:cvc"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cvc-see-san",
+      "strand": "syllable-reading",
+      "gate": "syl-cvc",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "See the syllable san, pick its sound",
+      "question": {
+        "format": "see-pick-sound",
+        "prompt": {"ko":"산","romanization":"san","en":"syllable san"},
+        "options": [
+          {"id":"san","sound":"san","isCorrect":true},
+          {"id":"sam","sound":"sam","isCorrect":false},
+          {"id":"sal","sound":"sal","isCorrect":false},
+          {"id":"seun","sound":"seun","isCorrect":false}
+        ],
+        "tags": ["sym:ㅅ","sym:ㅏ","sym:ㄴ/final","syl:san","shape:cvc"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cvc-see-gang",
+      "strand": "syllable-reading",
+      "gate": "syl-cvc",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "See the syllable gang, pick its sound",
+      "question": {
+        "format": "see-pick-sound",
+        "prompt": {"ko":"강","romanization":"gang","en":"syllable gang"},
+        "options": [
+          {"id":"gang","sound":"gang","isCorrect":true},
+          {"id":"gap","sound":"gap","isCorrect":false},
+          {"id":"gal","sound":"gal","isCorrect":false},
+          {"id":"ging","sound":"ging","isCorrect":false}
+        ],
+        "tags": ["sym:ㄱ","sym:ㅏ","sym:ㅇ/final","syl:gang","shape:cvc"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cvc-see-gom",
+      "strand": "syllable-reading",
+      "gate": "syl-cvc",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "See the syllable gom, pick its sound",
+      "question": {
+        "format": "see-pick-sound",
+        "prompt": {"ko":"곰","romanization":"gom","en":"syllable gom"},
+        "options": [
+          {"id":"gom","sound":"gom","isCorrect":true},
+          {"id":"gon","sound":"gon","isCorrect":false},
+          {"id":"gong","sound":"gong","isCorrect":false},
+          {"id":"gam","sound":"gam","isCorrect":false}
+        ],
+        "tags": ["sym:ㄱ","sym:ㅗ","sym:ㅁ/final","syl:gom","shape:cvc"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cvc-see-bap",
+      "strand": "syllable-reading",
+      "gate": "syl-cvc",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "See the syllable bap, pick its sound",
+      "question": {
+        "format": "see-pick-sound",
+        "prompt": {"ko":"밥","romanization":"bap","en":"syllable bap"},
+        "options": [
+          {"id":"bap","sound":"bap","isCorrect":true},
+          {"id":"bal","sound":"bal","isCorrect":false},
+          {"id":"bak","sound":"bak","isCorrect":false},
+          {"id":"bop","sound":"bop","isCorrect":false}
+        ],
+        "tags": ["sym:ㅂ","sym:ㅏ","sym:ㅂ/final","syl:bap","shape:cvc"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cvc-see-jip",
+      "strand": "syllable-reading",
+      "gate": "syl-cvc",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "See the syllable jip, pick its sound",
+      "question": {
+        "format": "see-pick-sound",
+        "prompt": {"ko":"집","romanization":"jip","en":"syllable jip"},
+        "options": [
+          {"id":"jip","sound":"jip","isCorrect":true},
+          {"id":"jing","sound":"jing","isCorrect":false},
+          {"id":"jim","sound":"jim","isCorrect":false},
+          {"id":"jop","sound":"jop","isCorrect":false}
+        ],
+        "tags": ["sym:ㅈ","sym:ㅣ","sym:ㅂ/final","syl:jip","shape:cvc"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cvc-see-bom",
+      "strand": "syllable-reading",
+      "gate": "syl-cvc",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "See the syllable bom, pick its sound",
+      "question": {
+        "format": "see-pick-sound",
+        "prompt": {"ko":"봄","romanization":"bom","en":"syllable bom"},
+        "options": [
+          {"id":"bom","sound":"bom","isCorrect":true},
+          {"id":"bok","sound":"bok","isCorrect":false},
+          {"id":"bon","sound":"bon","isCorrect":false},
+          {"id":"beum","sound":"beum","isCorrect":false}
+        ],
+        "tags": ["sym:ㅂ","sym:ㅗ","sym:ㅁ/final","syl:bom","shape:cvc"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cvc-see-byeol",
+      "strand": "syllable-reading",
+      "gate": "syl-cvc",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "See the syllable byeol, pick its sound",
+      "question": {
+        "format": "see-pick-sound",
+        "prompt": {"ko":"별","romanization":"byeol","en":"syllable byeol"},
+        "options": [
+          {"id":"byeol","sound":"byeol","isCorrect":true},
+          {"id":"byeop","sound":"byeop","isCorrect":false},
+          {"id":"byeong","sound":"byeong","isCorrect":false},
+          {"id":"bul","sound":"bul","isCorrect":false}
+        ],
+        "tags": ["sym:ㅂ","sym:ㅕ","sym:ㄹ/final","syl:byeol","shape:cvc"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cvc-see-gong",
+      "strand": "syllable-reading",
+      "gate": "syl-cvc",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "See the syllable gong, pick its sound",
+      "question": {
+        "format": "see-pick-sound",
+        "prompt": {"ko":"공","romanization":"gong","en":"syllable gong"},
+        "options": [
+          {"id":"gong","sound":"gong","isCorrect":true},
+          {"id":"gon","sound":"gon","isCorrect":false},
+          {"id":"gok","sound":"gok","isCorrect":false},
+          {"id":"gang","sound":"gang","isCorrect":false}
+        ],
+        "tags": ["sym:ㄱ","sym:ㅗ","sym:ㅇ/final","syl:gong","shape:cvc"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cvc-see-han",
+      "strand": "syllable-reading",
+      "gate": "syl-cvc",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "See the syllable han, pick its sound",
+      "question": {
+        "format": "see-pick-sound",
+        "prompt": {"ko":"한","romanization":"han","en":"syllable han"},
+        "options": [
+          {"id":"han","sound":"han","isCorrect":true},
+          {"id":"hang","sound":"hang","isCorrect":false},
+          {"id":"ham","sound":"ham","isCorrect":false},
+          {"id":"hon","sound":"hon","isCorrect":false}
+        ],
+        "tags": ["sym:ㅎ","sym:ㅏ","sym:ㄴ/final","syl:han","shape:cvc"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cvc-build-dal",
+      "strand": "syllable-reading",
+      "gate": "syl-cvc",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Build the syllable dal",
+      "question": {
+        "format": "build-syllable",
+        "spoken": {"ko":"달","romanization":"dal","en":"syllable dal"},
+        "options": [
+          {"id":"dal","ko":"달","romanization":"dal","en":"syllable dal","isCorrect":true},
+          {"id":"dan","ko":"단","romanization":"dan","en":"syllable dan","isCorrect":false},
+          {"id":"dak","ko":"닥","romanization":"dak","en":"syllable dak","isCorrect":false},
+          {"id":"deol","ko":"덜","romanization":"deol","en":"syllable deol","isCorrect":false}
+        ],
+        "tags": ["sym:ㄷ","sym:ㅏ","sym:ㄹ/final","syl:dal","shape:cvc"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cvc-build-mul",
+      "strand": "syllable-reading",
+      "gate": "syl-cvc",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Build the syllable mul",
+      "question": {
+        "format": "build-syllable",
+        "spoken": {"ko":"물","romanization":"mul","en":"syllable mul"},
+        "options": [
+          {"id":"mul","ko":"물","romanization":"mul","en":"syllable mul","isCorrect":true},
+          {"id":"mung","ko":"뭉","romanization":"mung","en":"syllable mung","isCorrect":false},
+          {"id":"mum","ko":"뭄","romanization":"mum","en":"syllable mum","isCorrect":false},
+          {"id":"meol","ko":"멀","romanization":"meol","en":"syllable meol","isCorrect":false}
+        ],
+        "tags": ["sym:ㅁ","sym:ㅜ","sym:ㄹ/final","syl:mul","shape:cvc"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cvc-build-mun",
+      "strand": "syllable-reading",
+      "gate": "syl-cvc",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Build the syllable mun",
+      "question": {
+        "format": "build-syllable",
+        "spoken": {"ko":"문","romanization":"mun","en":"syllable mun"},
+        "options": [
+          {"id":"mun","ko":"문","romanization":"mun","en":"syllable mun","isCorrect":true},
+          {"id":"muk","ko":"묵","romanization":"muk","en":"syllable muk","isCorrect":false},
+          {"id":"mup","ko":"뭅","romanization":"mup","en":"syllable mup","isCorrect":false},
+          {"id":"mon","ko":"몬","romanization":"mon","en":"syllable mon","isCorrect":false}
+        ],
+        "tags": ["sym:ㅁ","sym:ㅜ","sym:ㄴ/final","syl:mun","shape:cvc"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cvc-build-san",
+      "strand": "syllable-reading",
+      "gate": "syl-cvc",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Build the syllable san",
+      "question": {
+        "format": "build-syllable",
+        "spoken": {"ko":"산","romanization":"san","en":"syllable san"},
+        "options": [
+          {"id":"san","ko":"산","romanization":"san","en":"syllable san","isCorrect":true},
+          {"id":"sam","ko":"삼","romanization":"sam","en":"syllable sam","isCorrect":false},
+          {"id":"sal","ko":"살","romanization":"sal","en":"syllable sal","isCorrect":false},
+          {"id":"seun","ko":"슨","romanization":"seun","en":"syllable seun","isCorrect":false}
+        ],
+        "tags": ["sym:ㅅ","sym:ㅏ","sym:ㄴ/final","syl:san","shape:cvc"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cvc-build-gang",
+      "strand": "syllable-reading",
+      "gate": "syl-cvc",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Build the syllable gang",
+      "question": {
+        "format": "build-syllable",
+        "spoken": {"ko":"강","romanization":"gang","en":"syllable gang"},
+        "options": [
+          {"id":"gang","ko":"강","romanization":"gang","en":"syllable gang","isCorrect":true},
+          {"id":"gap","ko":"갑","romanization":"gap","en":"syllable gap","isCorrect":false},
+          {"id":"gal","ko":"갈","romanization":"gal","en":"syllable gal","isCorrect":false},
+          {"id":"ging","ko":"깅","romanization":"ging","en":"syllable ging","isCorrect":false}
+        ],
+        "tags": ["sym:ㄱ","sym:ㅏ","sym:ㅇ/final","syl:gang","shape:cvc"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:syl-cvc-build-gom",
+      "strand": "syllable-reading",
+      "gate": "syl-cvc",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Build the syllable gom",
+      "question": {
+        "format": "build-syllable",
+        "spoken": {"ko":"곰","romanization":"gom","en":"syllable gom"},
+        "options": [
+          {"id":"gom","ko":"곰","romanization":"gom","en":"syllable gom","isCorrect":true},
+          {"id":"gon","ko":"곤","romanization":"gon","en":"syllable gon","isCorrect":false},
+          {"id":"gong","ko":"공","romanization":"gong","en":"syllable gong","isCorrect":false},
+          {"id":"gam","ko":"감","romanization":"gam","en":"syllable gam","isCorrect":false}
+        ],
+        "tags": ["sym:ㄱ","sym:ㅗ","sym:ㅁ/final","syl:gom","shape:cvc"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    }
+  ]
+}
