@@ -1,6 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { completeChildForm, readStored, seedStored, waitForSaved } from './helpers';
+import { completeChildForm, keepSidewaysIfAsked, readStored, seedStored, waitForSaved } from './helpers';
 
 /**
  * F-STORY-002 PR 2.6a: the story reader on its replay route (`StoryReader`,
@@ -32,6 +32,8 @@ type E2eWindow = Window & {
 
 async function onboard(page: Page): Promise<void> {
   await page.goto('/');
+  // A touch phone held sideways (844x390) is asked to turn upright first (F-LAYOUT-001 PR 3).
+  await keepSidewaysIfAsked(page);
   await page.getByRole('button', { name: "Let's start" }).click();
   await completeChildForm(page, { name: 'Dami' });
   await page.goto('/');
