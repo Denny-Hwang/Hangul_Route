@@ -113,35 +113,35 @@ describe('content overlays for TypeScript-resident content (F-I18N-001 §3.6)', 
   });
 
   it('reports a minigame whose translated glosses collide (two foods both "arroz")', () => {
-    const scope = minigameScopes['minigame:s1-life-card-1']!;
+    const scope = minigameScopes['minigame:s2-life-card-1']!;
     const [first, second] = scope.cardPairs!.map(overlayElementKey);
     const bad: Overlays = {
       es: {
-        'minigame:s1-life-card-1': {
+        'minigame:s2-life-card-1': {
           [`cardPairs.${first!}.gloss`]: 'Arroz',
           [`cardPairs.${second!}.gloss`]: 'arroz ',
         },
       },
       ko: {},
     };
-    expect(duplicateGlosses(bad)).toEqual(['es minigame:s1-life-card-1 cardPairs: "arroz " twice']);
+    expect(duplicateGlosses(bad)).toEqual(['es minigame:s2-life-card-1 cardPairs: "arroz " twice']);
   });
 
   it('reports a Korean gloss that echoes the Korean it explains', () => {
     const jamo = jamoAll.find((j) => j.id === 'jamo:giyeok')!;
-    const pair = minigameScopes['minigame:s1-life-card-1']!.cardPairs![0]!;
+    const pair = minigameScopes['minigame:s2-life-card-1']!.cardPairs![0]!;
     const slug = overlayElementKey(pair, 0);
     const bad: Overlays = {
       es: { 'jamo:giyeok': { 'exampleWord.gloss': jamo.exampleWordKo! } },
       ko: {
         'jamo:giyeok': { 'exampleWord.gloss': ` ${jamo.exampleWordKo!}`, soundHint: jamo.char, nameHint: '기역이라는 이름' },
-        'minigame:s1-life-card-1': { [`cardPairs.${slug}.gloss`]: pair.ko },
+        'minigame:s2-life-card-1': { [`cardPairs.${slug}.gloss`]: pair.ko },
       },
     };
     expect(overlayProblems(bad)).toEqual([
       'ko jamo:giyeok.exampleWord.gloss: echoes the Korean it explains (overlay-circular-gloss)',
       'ko jamo:giyeok.soundHint: echoes the Korean it explains (overlay-circular-gloss)',
-      `ko minigame:s1-life-card-1.cardPairs.${slug}.gloss: echoes the Korean it explains (overlay-circular-gloss)`,
+      `ko minigame:s2-life-card-1.cardPairs.${slug}.gloss: echoes the Korean it explains (overlay-circular-gloss)`,
     ]);
   });
 
@@ -175,7 +175,7 @@ describe('content overlays for TypeScript-resident content (F-I18N-001 §3.6)', 
     expect(SHIPPED.card!.has('card:book')).toBe(true);
     expect(SHIPPED.stage!.has('stage:stage1')).toBe(true);
     expect(SHIPPED.theme!.has('theme:letters')).toBe(true);
-    expect(SHIPPED.minigame!.has('minigame:s1-life-card-1')).toBe(true);
+    expect(SHIPPED.minigame!.has('minigame:s2-life-card-1')).toBe(true);
     expect(SHIPPED.episode!.size).toBeGreaterThan(0);
     expect(SHIPPED.quest!.size).toBeGreaterThan(0);
   });
@@ -187,7 +187,7 @@ describe('content overlays for TypeScript-resident content (F-I18N-001 §3.6)', 
         'card:not-shipped': { title: 'x' },
         'card:book': { title: 'Libro', romanization: 'x' },
         [quest.id]: { 'steps.no-such-step.title': 'x', title: 'ok' },
-        'minigame:s1-life-card-1': { 'cardPairs.gimchi.gloss': 'Kimchi', 'cardPairs.nothing.gloss': 'x' },
+        'minigame:s2-life-card-1': { 'cardPairs.gimbap.gloss': 'Kimbap', 'cardPairs.nothing.gloss': 'x' },
         'jamo:giyeok': { soundHint: 'como la g de gato' },
         'vocab:not-checked-here': { gloss: 'x' },
       },
@@ -197,7 +197,7 @@ describe('content overlays for TypeScript-resident content (F-I18N-001 §3.6)', 
       'es card:not-shipped: not in the shipped content modules',
       'es card:book.romanization: not on the allow-list',
       `es ${quest.id}.steps.no-such-step.title: lands on no English source`,
-      'es minigame:s1-life-card-1.cardPairs.nothing.gloss: lands on no English source',
+      'es minigame:s2-life-card-1.cardPairs.nothing.gloss: lands on no English source',
       'ko theme:nope: not in the shipped content modules',
     ]);
   });
