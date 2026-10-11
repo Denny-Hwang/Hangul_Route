@@ -99,7 +99,7 @@ describe('HeritageCardSchema', () => {
       theme: 'life',
       stage: 'stage1',
       rarity: 'common',
-      unlockedBy: 'jamo:giyeok',
+      unlockedBy: 'episode:stage1-life',
     };
     const missing = HeritageCardSchema.safeParse({ ...card, subtitleKo: '강아지' });
     expect(missing.success).toBe(false);

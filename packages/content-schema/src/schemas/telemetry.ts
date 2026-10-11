@@ -94,6 +94,9 @@ export const TELEMETRY_EVENT_NAMES = [
   'story.bookmark.resumed',
   'culture.note.viewed',
   'story.locked.tapped',
+  // F-STORY-006 §3.9 (payloads carry ids and counts only)
+  'card.catchup_granted',
+  'card_set.complete',
 ] as const;
 
 export const TelemetryEventNameSchema = z.enum(TELEMETRY_EVENT_NAMES);

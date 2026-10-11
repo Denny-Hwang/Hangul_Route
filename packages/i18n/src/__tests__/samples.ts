@@ -167,4 +167,8 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.relink.askingToBe': [['Mina']],
   'console.relink.expiresIn': [[9]],
   'console.relink.askedAgo': [[2]],
+  'learner.library.earnHint.episode': [['Meet the Letters']],
+  'learner.library.earnHint.story': [['The Sun and the Moon']],
+  'learner.library.earnHint.stage': [[1]],
+  'learner.library.earnHint.set': [['Seasons and Tales']],
 };
