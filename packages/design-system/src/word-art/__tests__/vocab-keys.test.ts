@@ -21,7 +21,9 @@ import type { WordArtFamily } from '../types';
  * the batch. A batch PR deletes its families from this map, which turns on
  * the full check for them; a topic PR that serves a family here pins its count.
  * At W-1b every served family is waiting (42 visuals: 8 food, 10 animal,
- * 12 color, 12 count), so the full check starts with batch W-3.
+ * 12 color, 12 count), so the full check starts with batch W-3. F-VOC-001 V-6a
+ * serves body (12 generated), family (12), school (11 word: visuals, the chair
+ * drawn) and nature (9 word: visuals, the cloud drawn) and pins their counts.
  */
 interface Awaiting {
   /** The PR that draws the family (F-VOC-002 §6). */
@@ -35,10 +37,10 @@ const AWAITING_ART: Readonly<Partial<Record<WordArtFamily, Awaiting>>> = {
   color: { batch: 'W-3', missing: 12 },
   count: { batch: 'W-3', missing: 12 },
   animal: { batch: 'W-4', missing: 10 },
-  body: { batch: 'W-4' },
-  family: { batch: 'W-5' },
-  school: { batch: 'W-5' },
-  nature: { batch: 'W-5' },
+  body: { batch: 'W-4', missing: 12 },
+  family: { batch: 'W-5', missing: 12 },
+  school: { batch: 'W-5', missing: 10 },
+  nature: { batch: 'W-5', missing: 8 },
   travel: { batch: 'W-6' },
   sport: { batch: 'W-6' },
   culture: { batch: 'W-6' },
