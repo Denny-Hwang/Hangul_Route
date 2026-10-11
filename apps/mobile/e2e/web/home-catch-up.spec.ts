@@ -147,3 +147,25 @@ test.describe('at 320 wide', () => {
     await shot(page, 'home-catch-up-320');
   });
 });
+
+test.describe('on a wide window (1180x820)', () => {
+  test.use({ viewport: { width: 1180, height: 820 } });
+
+  test('the catch-up card spans the mission column, above the mission cards', async ({ page }) => {
+    await seedStage1Learner(page);
+    await closeInstallGuide(page);
+    const column = page.getByTestId('home-missions-column');
+    await expect(page.getByTestId('home-side-column')).toBeVisible();
+    const card = column.getByTestId('home-catch-up');
+    await expect(card.getByText(LINE)).toBeVisible();
+    const cardBox = await card.boundingBox();
+    const columnBox = await column.boundingBox();
+    const missionsBox = await page.getByTestId('home-missions').boundingBox();
+    expect(cardBox && columnBox && missionsBox).toBeTruthy();
+    if (cardBox && columnBox && missionsBox) {
+      expect(Math.round(cardBox.width)).toBe(Math.round(columnBox.width));
+      expect(cardBox.y + cardBox.height).toBeLessThanOrEqual(missionsBox.y);
+    }
+    await shot(page, 'home-catch-up-wide');
+  });
+});
