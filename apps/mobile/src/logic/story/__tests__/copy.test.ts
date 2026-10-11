@@ -66,6 +66,9 @@ describe('STORY_CHECK_COPY', () => {
     expect(STORY_CHECK_COPY.check.position(2, 3)).toBe('2 / 3');
     expect(STORY_CHECK_COPY.check.positionLabel(2, 3)).toBe('Question 2 of 3');
     expect(STORY_CHECK_COPY.sequence.positionLabel(1, 4)).toBe('Picture 1 of 4');
+    expect(STORY_CHECK_COPY.sequence.slotLabel(2, 4)).toBe('Place 2 of 4, empty');
+    expect(STORY_CHECK_COPY.sequence.slotLabel(2, 4, 'Eat')).toBe('Place 2 of 4: Eat');
+    expect(STORY_CHECK_COPY.sequence.stepHint).toMatch(/^Tap each step/);
     expect(STORY_CHECK_COPY.recap.wordsLabel(1)).toBe('1 word from this story');
     expect(STORY_CHECK_COPY.recap.wordsLabel(3)).toBe('3 words from this story');
     expect(STORY_CHECK_COPY.recap.hearWord('seollal')).toBe('Hear seollal');

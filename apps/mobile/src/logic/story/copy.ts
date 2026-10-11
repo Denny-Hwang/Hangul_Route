@@ -32,8 +32,13 @@ export const STORY_CHECK_COPY = {
   sequence: {
     title: 'Put the story in order',
     hint: 'Tap each picture, starting with what happened first.',
+    /** The hint while the cards are text only (no scene art yet). */
+    stepHint: 'Tap each step, starting with what happened first.',
     skip: 'Skip this one',
     positionLabel: (index: number, total: number): string => `Picture ${index} of ${total}`,
+    /** A slot of the row the learner fills: its place, and the card in it when it has one. */
+    slotLabel: (index: number, total: number, caption?: string): string =>
+      caption === undefined ? `Place ${index} of ${total}, empty` : `Place ${index} of ${total}: ${caption}`,
     tryAnother: 'Try another',
     lookHere: 'This one comes next.',
     emptyLine: 'There is nothing to put in order yet.',
