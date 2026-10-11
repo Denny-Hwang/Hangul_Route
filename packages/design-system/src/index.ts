@@ -2,6 +2,7 @@ export * from './tokens';
 export * from './layout';
 export * from './components/Button';
 export * from './components/Card';
+export * from './components/Layout';
 export * from './components/Screen';
 export * from './components/Tile';
 export * from './components/Progress';

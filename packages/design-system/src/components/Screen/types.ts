@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import type { ScreenEdge } from '../../layout';
+import type { ScreenEdge, ScreenWidth } from '../../layout';
 
 export interface ScreenProps {
   children: ReactNode;
@@ -18,5 +18,19 @@ export interface ScreenProps {
    * bar already sits above the home indicator.
    */
   edges?: readonly ScreenEdge[];
+  /**
+   * Content width cap inside the screen (F-LAYOUT-001 LD3): `reading` = 720
+   * (default), `full` = 1120 for pane screens, `bleed` = no cap (presenter
+   * stage, full-screen art). Backgrounds stay full-bleed; insets and gutter
+   * stay outside the cap.
+   */
+  width?: ScreenWidth;
+  /**
+   * Sticky footer slot (a primary CTA that must stay reachable on a short
+   * window). Rendered below the scroll area, outside the ScrollView, inside
+   * the bottom safe-area padding when the screen owns the `bottom` edge, with
+   * the same width cap as the content. Adds no style beyond cap and padding.
+   */
+  footer?: ReactNode;
   testID?: string;
 }
