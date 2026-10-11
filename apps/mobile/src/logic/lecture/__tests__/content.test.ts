@@ -1,6 +1,7 @@
 import { LectureDeckSchema, type LectureBlock, type Overlays } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
-import { episodesAll, jamoAll, questsAll } from '../../../content';
+import { episodeById, episodesAll, jamoAll, questById, questsAll } from '../../../content';
+import { scopeFor } from '../../minigame-config';
 import { expandDeck } from '../deck-builder';
 import { PAUSE_WORD, lectureBundle } from '../content';
 
@@ -22,9 +23,13 @@ describe('the presenter content bundle (F-TCH-004 §3.3, §3.13)', () => {
     const letters = episodesAll.find((e) => e.id === 'episode:stage1-letters');
     expect(q1?.titleEn).toEqual(expect.any(String));
     expect(letters?.titleEn).toEqual(expect.any(String));
+    expect(b.questById('quest:stage1-letters-q1')).toBe(questById('quest:stage1-letters-q1'));
     expect(b.questById('quest:stage1-letters-q1')?.titleEn).toBe(q1?.titleEn);
+    expect(b.episodeById('episode:stage1-letters')).toBe(episodeById('episode:stage1-letters'));
     expect(b.episodeById('episode:stage1-letters')?.titleEn).toBe(letters?.titleEn);
     expect(b.cardById('card:book')?.subtitleKo).toBe('책');
+    const playRef = q1!.steps.find((s) => s.minigameRef !== undefined)!.minigameRef!;
+    expect(b.scopeFor(playRef)).toEqual(scopeFor(playRef));
     expect(b.scopeFor('minigame:s1-letters-q1-play')?.kind).toBe('match-sound');
     expect(b.questById('quest:nope')).toBeUndefined();
     expect(b.episodeById('episode:nope')).toBeUndefined();
@@ -41,15 +46,43 @@ describe('the presenter content bundle (F-TCH-004 §3.3, §3.13)', () => {
     expect(b.vocabTopic).toBeUndefined();
   });
 
-  it('every shipped episode and quest expands with no Korean missing its romanization (rule 11)', () => {
-    const blocks: LectureBlock[] = [
-      ...shippedEpisodes.map((e): LectureBlock => ({ kind: 'episode', id: e.id })),
-      ...questsAll.map((q): LectureBlock => ({ kind: 'quest', id: q.id })),
-    ];
-    for (let i = 0; i < blocks.length; i += 30) {
-      const { slides, skipped } = expandDeck(deck(blocks.slice(i, i + 30)), lectureBundle('en'), { canPlayKorean: true });
-      expect(slides.length).toBeGreaterThan(0);
-      expect(skipped.filter((s) => s.reason === 'no-romanization' || s.reason === 'unknown-id')).toEqual([]);
+  it.each(['en', 'es', 'ko'] as const)(
+    'every shipped episode and quest expands with no Korean missing its romanization (rule 11, %s)',
+    (locale) => {
+      const blocks: LectureBlock[] = [
+        ...shippedEpisodes.map((e): LectureBlock => ({ kind: 'episode', id: e.id })),
+        ...questsAll.map((q): LectureBlock => ({ kind: 'quest', id: q.id })),
+      ];
+      for (let i = 0; i < blocks.length; i += 30) {
+        const { slides, skipped } = expandDeck(deck(blocks.slice(i, i + 30)), lectureBundle(locale), { canPlayKorean: true });
+        expect(slides.length).toBeGreaterThan(0);
+        expect(skipped.filter((s) => s.reason === 'no-romanization' || s.reason === 'unknown-id')).toEqual([]);
+        // A skipped step is always a minigame kind the presenter cannot show, never a step dropped for having no minigame.
+        expect(skipped.filter((s) => s.reason === 'unsupported-step' && !s.ref.startsWith('minigame:'))).toEqual([]);
+      }
+    },
+  );
+
+  it('every quest teaches: at least one slide besides its title and End', () => {
+    for (const q of questsAll) {
+      const { slides } = expandDeck(deck([{ kind: 'quest', id: q.id }]), lectureBundle('en'), { canPlayKorean: true });
+      expect(slides.filter((s) => s.kind !== 'title' && s.kind !== 'end').length, q.id).toBeGreaterThan(0);
+    }
+  });
+
+  it('every quest with a Discover step shows a letter slide for each jamo it discovers, before any quiz', () => {
+    const discovering = questsAll.filter((q) => q.steps.some((s) => s.kind === 'discover'));
+    expect(discovering.length).toBeGreaterThan(0);
+    for (const q of discovering) {
+      const jamoIds = q.steps.flatMap((s) => s.discover?.pages.flatMap((p) => p.items.flatMap((it) => (it.type === 'jamo' ? [it.jamoId] : []))) ?? []);
+      expect(jamoIds.length, q.id).toBeGreaterThan(0);
+      const { slides } = expandDeck(deck([{ kind: 'quest', id: q.id }]), lectureBundle('en'), { canPlayKorean: true });
+      const letterAt = new Map(slides.flatMap((s, i) => (s.kind === 'letter' ? [[s.jamoId, i] as const] : [])));
+      const firstQuiz = slides.findIndex((s) => s.kind === 'quiz');
+      for (const id of jamoIds) {
+        expect(letterAt.has(id), `${q.id} ${id}`).toBe(true);
+        if (firstQuiz >= 0) expect(letterAt.get(id)!, `${q.id} ${id}`).toBeLessThan(firstQuiz);
+      }
     }
   });
 
@@ -84,7 +117,7 @@ describe('the presenter content bundle (F-TCH-004 §3.3, §3.13)', () => {
     expect(b.cardById('card:book')).toMatchObject({ titleEn: 'Libro', subtitleKo: '책', romanization: 'chaek' });
     const { slides } = expandDeck(deck([{ kind: 'quest', id: 'quest:stage1-letters-q1' }]), b, { canPlayKorean: true });
     expect(slides[0]).toMatchObject({ kind: 'title', title: 'Conoce g, n, d, l' });
-    expect(b.episodeById('episode:stage1-letters')?.titleEn).toBe('Meet the Letters');
+    expect(b.episodeById('episode:stage1-letters')?.titleEn).toBe(episodeById('episode:stage1-letters')!.titleEn);
     expect(b.jamoAll).not.toBe(jamoAll);
     const giyeok = b.jamoAll.find((j) => j.id === 'jamo:giyeok')!;
     expect(giyeok).toMatchObject({ char: 'ㄱ', exampleWordKo: '가족', exampleWordRomanization: 'gajok', exampleWordEn: 'familia' });
