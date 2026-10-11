@@ -14,7 +14,7 @@
 // docs/specs/F-HW-001-homework-page.md §3.3 / §9.5.
 
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
-import { dirname, extname, join, relative, resolve } from "node:path";
+import { dirname, extname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = process.env.HANGUL_ROUTE_ROOT
@@ -63,7 +63,38 @@ const LEARNER_TEXT_FIELDS = new Set([
   "labelEn",
   "promptEn",
   "messageEn",
+  // F-STORY-001 §3.8: story copy that a learner (or a caregiver reading over
+  // their shoulder) sees. Applies in every directory; the set is a union.
+  "narrationEn",
+  "summaryEn",
+  "captionEn",
+  "explainEn",
+  "hintEn",
+  "altEn",
+  "claimEn",
+  "advisoryNoteEn",
 ]);
+
+// F-STORY-001 §3.8 reference zone. In shipped story files (content/stories/*.json)
+// the top-level keys below hold grown-up / reviewer text and citations, where
+// Hangul is allowed (claimKo, source titles and publishers, learning goals written
+// as "한글 (romanization)"). Only `korean-in-ui-field` is lifted: the banned-word
+// scan still runs on claimEn and errata[].summaryEn, and Korean target objects still
+// need romanization and a gloss. Fields learners read (narrationEn, captionEn,
+// explainEn, title.en, ...) and every other directory are never in the zone.
+const STORY_DIR_PREFIX = "content/stories/";
+const REFERENCE_ZONE_KEYS = new Set([
+  "facts",
+  "referenceDisplay",
+  "authorNotes",
+  "learningGoalsEn",
+  "verification",
+  "errata",
+]);
+
+function isStoryFile(file) {
+  return file.split(sep).join("/").startsWith(STORY_DIR_PREFIX);
+}
 
 function walk(dir) {
   const out = [];
@@ -80,9 +111,11 @@ function walk(dir) {
   return out;
 }
 
-function visit(value, path, file, violations, parentObj) {
+function visit(value, path, file, violations, parentObj, inReferenceZone = false) {
   if (Array.isArray(value)) {
-    value.forEach((item, i) => visit(item, [...path, String(i)], file, violations, parentObj));
+    value.forEach((item, i) =>
+      visit(item, [...path, String(i)], file, violations, parentObj, inReferenceZone)
+    );
     return;
   }
   if (value && typeof value === "object") {
@@ -107,7 +140,11 @@ function visit(value, path, file, violations, parentObj) {
       }
     }
     for (const [k, v] of Object.entries(obj)) {
+      const zone =
+        inReferenceZone ||
+        (path.length === 0 && REFERENCE_ZONE_KEYS.has(k) && isStoryFile(file));
       if (
+        !zone &&
         typeof v === "string" &&
         KOREAN_RE.test(v) &&
         !KOREAN_TARGET_FIELDS.has(k) &&
@@ -131,7 +168,7 @@ function visit(value, path, file, violations, parentObj) {
           rule: `banned-on-learner-surface: "${hit ? hit[1] : ""}"`,
         });
       }
-      visit(v, [...path, k], file, violations, obj);
+      visit(v, [...path, k], file, violations, obj, zone);
     }
   }
 }
