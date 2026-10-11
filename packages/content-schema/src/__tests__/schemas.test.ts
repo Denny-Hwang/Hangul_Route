@@ -176,10 +176,10 @@ describe('EpisodeSchema', () => {
 
 describe('EpisodeSchema story fields and questIds rule (F-STORY-001 §3.9)', () => {
   const base = {
-    id: 'episode:shelf-x',
+    id: 'episode:stage1-letters',
     stage: 'stage1',
     theme: 'letters',
-    order: 101,
+    order: 1,
     titleEn: 't',
     hoyaIntroEn: 'h',
     questIds: ['quest:story-x-listen'],
@@ -190,13 +190,22 @@ describe('EpisodeSchema story fields and questIds rule (F-STORY-001 §3.9)', () 
 
   it('defaults format, placement and volume so an existing episode parses unchanged', () => {
     const parsed = EpisodeSchema.parse(base);
-    expect(parsed).toEqual({ ...base, format: 'lesson', placement: 'grid', volume: 1 });
+    expect(parsed).toEqual({
+      ...base,
+      format: 'lesson',
+      placement: 'grid',
+      volume: 1,
+      pillarTags: [],
+      companionId: 'hoya',
+    });
     expect(parsed.storyIds).toBeUndefined();
   });
 
   it('accepts a shelf story episode with storyIds', () => {
     const parsed = EpisodeSchema.parse({
       ...base,
+      id: 'episode:shelf-x-v2',
+      order: 101,
       format: 'story',
       placement: 'shelf',
       volume: 2,

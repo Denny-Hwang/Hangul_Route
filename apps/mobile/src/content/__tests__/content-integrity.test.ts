@@ -221,6 +221,10 @@ describe('story content integrity (F-STORY-003 §3.8)', () => {
       }
     }
   });
+
+  it('EpisodeSchema, with the catalogue rules of F-STORY-005 §3.2, parses every episode in the app', () => {
+    for (const e of episodesAll) expect(EpisodeSchema.safeParse(e).error?.issues ?? [], e.id).toEqual([]);
+  });
 });
 
 describe('story content rules, exercised on the ready fixture story', () => {
