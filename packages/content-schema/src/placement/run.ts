@@ -108,6 +108,17 @@ export type PlacementEvent =
 
 const MAX_MS = 600_000;
 const NOT_SURE_LIMIT = 3;
+/**
+ * Silent prompts in a row that open the sound pause (section 3.11): one in
+ * Short or a listen-first run (every question there is heard, so a run without
+ * sound must not go on), two in Standard and Deep.
+ */
+export const NO_SOUND_LIMIT = { listenFirst: 1, other: 2 } as const;
+const trailingNoSound = (responses: readonly AssessmentResponse[]): number => {
+  let count = 0;
+  for (let i = responses.length - 1; i >= 0 && responses[i]?.noSound === true; i -= 1) count += 1;
+  return count;
+};
 const clampMs = (ms: number): number => Math.min(MAX_MS, Math.max(0, Math.round(ms)));
 
 const drawKey = (gate: PlacementGate, form: PlacementForm, draw?: 2): string =>
@@ -314,6 +325,7 @@ const record = (
     chosenOptionId,
     assisted,
     ms: clampMs(nowMs - state.shownAtMs),
+    ...(noSound ? { noSound: true as const } : {}),
   };
   let next: PlacementRunState = {
     ...state,
@@ -325,16 +337,22 @@ const record = (
   };
   const inRung = next.responses.slice(rung.start);
   if (inRung.length === QUESTIONS_PER_RUNG) {
+    const scored = gateResult(inRung, inRung.length, passAtFor(state.config.mode, rung.gate));
     const finished: GateResult = {
       gate: rung.gate,
       form: rung.form,
-      ...gateResult(inRung, inRung.length, passAtFor(state.config.mode, rung.gate)),
+      ...scored,
+      // Only prompts that could not play leave a whole rung undecided.
+      ...(scored.result === 'not-run' ? { reason: 'unavailable' as const } : {}),
     };
     next = advance({ ...next, current: null, done: [...next.done, finished] });
   }
   if (next.stop !== null) return next;
   // Time never marks anything wrong: the answer just given stands, then the run ends.
   if (next.timeUp || isExpired(nowMs, next.deadlineMs)) return finish(next, 'time');
+  // Sound stopped mid-run: pause with "Try again" instead of skipping every heard question to the end.
+  const silentLimit = state.config.listenFirst ? NO_SOUND_LIMIT.listenFirst : NO_SOUND_LIMIT.other;
+  if (noSound && trailingNoSound(next.responses) >= silentLimit) return { ...next, pause: 'no-sound', pausedAtMs: nowMs };
   // Short has no "three not sure" sheet: it is at most nine questions and the exit stays visible.
   if (state.config.mode !== 'short' && next.notSureStreak >= NOT_SURE_LIMIT) return { ...next, pause: 'not-sure', pausedAtMs: nowMs };
   // Deep: one spoken, number-free rest card after 18 answers, between two rungs, when more remain.
