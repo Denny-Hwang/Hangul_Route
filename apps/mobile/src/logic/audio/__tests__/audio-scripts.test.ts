@@ -1,18 +1,35 @@
-import { AUDIO_REF_PATTERN as SCHEMA_PATTERN } from '@hangul-route/content-schema';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { AUDIO_REF_PATTERN as SCHEMA_PATTERN, type Jamo } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
+import { jamoAll } from '../../../content/jamo';
 import {
   AUDIO_PRECACHE_IGNORES,
   AUDIO_REF_PATTERN,
   RUNTIME_AUDIO_GROUPS,
   audioRuntimeCaching,
   buildAssetMap,
+  clipStatus,
+  correctionGain,
+  evaluateReport,
+  evaluateSet,
   isRuntimeAudio,
   mergeAssetMaps,
+  nameRows,
+  parseEbur128,
+  parseJamoSource,
+  parseProbe,
+  parseSilences,
+  parseTakeFile,
   precacheGaps,
   precacheLeaks,
+  recordingRows,
   refFromFile,
   refsInRenderedMap,
   renderAssetMap,
+  renderRecordingScript,
+  takeSegments,
+  vocabRecordingRows,
 } from '../../../../scripts/audio/lib.mjs';
 
 /** The pure cores of apps/mobile/scripts/audio (F-AUDIO-004 §3.10, §5 audio-scripts.test.ts). */
@@ -146,5 +163,354 @@ describe('scripts/audio/lib: the PWA precache rules (AD10)', () => {
     expect(precacheLeaks(['index.html', 'assets/assets/audio/vocab/a.mp3', 'assets/assets/audio/jamo/a.mp3'])).toEqual([
       'assets/assets/audio/vocab/a.mp3',
     ]);
+  });
+});
+
+// --- Recording script (F-AUDIO-004 §3.11) -----------------------------------------
+
+describe('scripts/audio/lib: the recording script rows', () => {
+  const rows = recordingRows(jamoAll);
+
+  it('has the 30 sound clips in the order of §3.2, numbered from 1', () => {
+    expect(rows).toHaveLength(30);
+    expect(rows.map((r) => r.n)).toEqual(Array.from({ length: 30 }, (_, i) => i + 1));
+    expect(rows.map((r) => r.fileId)).toEqual(
+      [...jamoAll].sort((a, b) => a.order - b.order).map((j) => (j.audioRef ?? '').replace(/^audio\/jamo\//, '').replace(/\.mp3$/, '')),
+    );
+  });
+
+  it('names every file by its id, unique, and never by the letter (AUD-08)', () => {
+    const ids = rows.map((r) => r.fileId);
+    expect(new Set(ids).size).toBe(30);
+    for (const id of ids) expect(id).toMatch(/^[a-z][a-z0-9-]*$/);
+    expect(ids).toContain('giyeok');
+    expect(ids).toContain('giyeok-batchim');
+  });
+
+  it('a consonant says its ㅏ syllable, never its name or the ㅡ syllable', () => {
+    expect(rows[0]).toEqual({
+      n: 1,
+      fileId: 'giyeok',
+      say: '가',
+      doNotSay: ['기역', '그'],
+      romanization: 'ga',
+      note: 'consonant sound = syllable with ㅏ',
+    });
+  });
+
+  it('ㅇ says its name, never the ㅏ syllable that sounds like the vowel', () => {
+    expect(rows[7]).toEqual({
+      n: 8,
+      fileId: 'ieung',
+      say: '이응',
+      doNotSay: ['아'],
+      romanization: 'ieung',
+      note: 'ㅇ is silent at the start; say its name',
+    });
+  });
+
+  it('a vowel says itself with nothing to avoid', () => {
+    expect(rows[14]).toEqual({ n: 15, fileId: 'a', say: '아', doNotSay: [], romanization: 'a', note: '' });
+  });
+
+  it('a final consonant says ㅇ + ㅏ + the final, never the doubled syllable or the name', () => {
+    expect(rows[24]).toEqual({
+      n: 25,
+      fileId: 'giyeok-batchim',
+      say: '악',
+      doNotSay: ['각', '기역'],
+      romanization: 'ak',
+      note: 'end on the closed sound without letting it go; do not add a vowel after it',
+    });
+    expect(rows[26]).toMatchObject({ fileId: 'rieul-batchim', say: '알', doNotSay: ['랄', '리을'], note: 'end on the final sound; do not add a vowel after it' });
+    expect(rows[28]).toMatchObject({ fileId: 'bieup-batchim', say: '압', doNotSay: ['밥', '비읍'] });
+  });
+
+  it('the final ㅇ never lists its own syllable as one to avoid', () => {
+    expect(rows[29]).toMatchObject({ fileId: 'ieung-batchim', say: '앙', doNotSay: ['이응'], romanization: 'ang' });
+    for (const r of rows) expect(r.doNotSay).not.toContain(r.say);
+  });
+
+  it('the romanization column is the spoken form\'s romanization', () => {
+    for (const r of rows) {
+      const j = jamoAll.find((x) => (x.audioRef ?? '').endsWith(`/${r.fileId}.mp3`));
+      expect(r.romanization).toBe(j?.spokenRomanization);
+      expect(r.say).toBe(j?.spokenKo);
+    }
+  });
+
+  it('fails loudly on a record without a spoken form or an audioRef', () => {
+    const [first] = jamoAll;
+    expect(() => recordingRows([{ ...first!, spokenKo: undefined }])).toThrow(/spokenKo/);
+    expect(() => recordingRows([{ ...first!, audioRef: undefined }])).toThrow(/audioRef/);
+  });
+});
+
+describe('scripts/audio/lib: batch 2, the consonant names', () => {
+  it('lists the 14 consonant names as <id>-name, in order', () => {
+    const rows = nameRows(jamoAll);
+    expect(rows).toHaveLength(14);
+    expect(rows[0]).toEqual({ n: 1, fileId: 'giyeok-name', say: '기역', romanization: 'giyeok' });
+    expect(rows[13]).toEqual({ n: 14, fileId: 'hieut-name', say: '히읗', romanization: 'hieut' });
+    expect(new Set(rows.map((r) => r.fileId)).size).toBe(14);
+  });
+});
+
+describe('scripts/audio/lib: vocabulary rows', () => {
+  const topic = (key: string, items: object[]) => ({ schemaVersion: 1, topic: { key }, items });
+
+  it('lists only words with an audioRef, ordered by topic then id', () => {
+    const rows = vocabRecordingRows([
+      topic('food', [
+        { id: 'vocab:sagwa', ko: '사과', romanization: 'sagwa', en: 'apple', topics: ['food'], audioRef: 'audio/vocab/sagwa.mp3' },
+        { id: 'vocab:bap', ko: '밥', romanization: 'bap', en: 'rice', topics: ['food'] },
+      ]),
+      topic('animals', [
+        {
+          id: 'vocab:horangi',
+          ko: '호랑이',
+          romanization: 'horangi',
+          en: 'tiger',
+          topics: ['animals'],
+          audioRef: 'audio/vocab/horangi.mp3',
+          senseNote: 'the animal',
+        },
+        { id: 'vocab:gae', ko: '개', romanization: 'gae', en: 'dog', topics: ['animals'], spokenKo: '개', audioRef: 'audio/vocab/gae.mp3' },
+      ]),
+    ]);
+    expect(rows).toEqual([
+      { fileId: 'gae', say: '개', spokenKo: '', romanization: 'gae', gloss: 'dog', topic: 'animals', note: '' },
+      { fileId: 'horangi', say: '호랑이', spokenKo: '', romanization: 'horangi', gloss: 'tiger', topic: 'animals', note: 'the animal' },
+      { fileId: 'sagwa', say: '사과', spokenKo: '', romanization: 'sagwa', gloss: 'apple', topic: 'food', note: '' },
+    ]);
+  });
+
+  it('shows spokenKo only when it differs from the written word', () => {
+    const [row] = vocabRecordingRows([
+      topic('numbers', [
+        { id: 'vocab:sip', ko: '십', romanization: 'sip', en: 'ten', topics: ['numbers'], spokenKo: '씹', audioRef: 'audio/vocab/sip.mp3' },
+      ]),
+    ]);
+    expect(row?.spokenKo).toBe('씹');
+  });
+
+  it('is empty when no word has a clip planned', () => {
+    expect(vocabRecordingRows([topic('food', [{ id: 'vocab:bap', ko: '밥', romanization: 'bap', en: 'rice', topics: ['food'] }])])).toEqual([]);
+  });
+});
+
+describe('scripts/audio/lib: renderRecordingScript', () => {
+  const md = renderRecordingScript(recordingRows(jamoAll), nameRows(jamoAll), []);
+
+  it('is marked generated and points at the runbook for the rules', () => {
+    expect(md.startsWith('# Audio recording script')).toBe(true);
+    expect(md).toContain('GENERATED by apps/mobile/scripts/audio/gen-recording-script.mjs');
+    expect(md).toContain('owner-runbook.md');
+  });
+
+  it('has one table row per clip with the columns of §3.11', () => {
+    expect(md).toContain('| # | file id | Say exactly | Do NOT say | Romanization | Note |');
+    expect(md).toContain('| 1 | giyeok | 가 | 기역, 그 | ga | consonant sound = syllable with ㅏ |');
+    expect(md).toContain('| 15 | a | 아 |  | a |  |');
+    expect(md).toContain('| 1 | giyeok-name | 기역 | giyeok |');
+  });
+
+  it('says so when no vocabulary clip is planned, and lists them when one is', () => {
+    expect(md).toContain('No vocabulary clips are planned yet.');
+    const withVocab = renderRecordingScript([], [], [
+      { fileId: 'sagwa', say: '사과', spokenKo: '', romanization: 'sagwa', gloss: 'apple', topic: 'food', note: '' },
+    ]);
+    expect(withVocab).toContain('| file id | Say (ko) | spokenKo if different | Romanization | Gloss | Topic | Note |');
+    expect(withVocab).toContain('| sagwa | 사과 |  | sagwa | apple | food |  |');
+  });
+
+  it('is deterministic and ends with one newline', () => {
+    expect(renderRecordingScript(recordingRows(jamoAll), nameRows(jamoAll), [])).toBe(md);
+    expect(md.endsWith('\n')).toBe(true);
+    expect(md.endsWith('\n\n')).toBe(false);
+  });
+});
+
+describe('scripts/audio/lib: parseJamoSource (how the plain-node generator reads jamo.ts)', () => {
+  it('reads exactly the records the app ships', () => {
+    const source = readFileSync(join(__dirname, '../../../content/jamo.ts'), 'utf8');
+    const pick = (j: Partial<Jamo>) => ({
+      id: j.id,
+      kind: j.kind,
+      char: j.char,
+      order: j.order,
+      audioRef: j.audioRef,
+      spokenKo: j.spokenKo,
+      spokenRomanization: j.spokenRomanization,
+      spokenKind: j.spokenKind,
+      nameKo: j.nameKo,
+    });
+    expect(parseJamoSource(source).map(pick)).toEqual(jamoAll.map(pick));
+  });
+
+  it('fails loudly when the factories cannot be read', () => {
+    expect(() => parseJamoSource('export const jamoAll = [];')).toThrow(/no jamo records/);
+    expect(() => parseJamoSource("  c('giyeok', 'ㄱ'),\n")).toThrow(/giyeok/);
+  });
+});
+
+// --- Clip acceptance (F-AUDIO-004 §3.11 table) -----------------------------------
+
+describe('scripts/audio/lib: evaluateReport', () => {
+  const good = { channels: 1, sampleRate: 44100, codec: 'mp3', durationS: 0.91, integratedLufs: -16.4, truePeakDb: -1.6, bytes: 7314 };
+
+  it('passes a clip inside every limit', () => {
+    expect(evaluateReport('jamo', good)).toEqual([]);
+    expect(evaluateReport('word', { ...good, durationS: 3.2, bytes: 30_000 })).toEqual([]);
+  });
+
+  it.each([
+    ['channels', { channels: 2 }, /mono/],
+    ['sample rate', { sampleRate: 48000 }, /44100/],
+    ['codec', { codec: 'aac' }, /mp3/],
+    ['too short', { durationS: 0.5 }, /duration/],
+    ['too long for a jamo', { durationS: 1.6 }, /duration/],
+    ['too quiet', { integratedLufs: -17.6 }, /loudness/],
+    ['too loud', { integratedLufs: -14.4 }, /loudness/],
+    ['peak', { truePeakDb: -1.0 }, /true peak/],
+    ['size', { bytes: 12_001 }, /size/],
+  ])('fails a jamo clip on %s', (_name, patch, message) => {
+    const failures = evaluateReport('jamo', { ...good, ...patch });
+    expect(failures).toHaveLength(1);
+    expect(failures[0]).toMatch(message);
+  });
+
+  it('accepts the edges of each range', () => {
+    expect(evaluateReport('jamo', { ...good, durationS: 0.6, integratedLufs: -17.5, truePeakDb: -1.5, bytes: 12_000 })).toEqual([]);
+    expect(evaluateReport('jamo', { ...good, durationS: 1.5, integratedLufs: -14.5 })).toEqual([]);
+    expect(evaluateReport('word', { ...good, durationS: 4.0, bytes: 40_000 })).toEqual([]);
+  });
+
+  it('uses the word limits for a word clip', () => {
+    expect(evaluateReport('word', { ...good, durationS: 4.1 })[0]).toMatch(/duration/);
+    expect(evaluateReport('word', { ...good, bytes: 40_001 })[0]).toMatch(/size/);
+  });
+
+  it('evaluateSet checks the total size of a set', () => {
+    expect(evaluateSet('jamo', [400_000])).toEqual([]);
+    expect(evaluateSet('jamo', [200_000, 200_001])[0]).toMatch(/400000/);
+    expect(evaluateSet('word', [1_500_001])[0]).toMatch(/1500000/);
+  });
+});
+
+// --- Processing and checking helpers (process-recordings.mjs, check-audio.mjs) ---
+
+describe('scripts/audio/lib: parseTakeFile', () => {
+  it('reads the file id and the take (1 by default, or marked as <id>.<n>)', () => {
+    expect(parseTakeFile('giyeok.m4a')).toEqual({ fileId: 'giyeok', take: 1 });
+    expect(parseTakeFile('giyeok-batchim.wav')).toEqual({ fileId: 'giyeok-batchim', take: 1 });
+    expect(parseTakeFile('giyeok.2.m4a')).toEqual({ fileId: 'giyeok', take: 2 });
+    expect(parseTakeFile('GIYEOK.M4A')).toEqual({ fileId: 'giyeok', take: 1 });
+  });
+
+  it('ignores files that are not recordings', () => {
+    expect(parseTakeFile('.DS_Store')).toBeNull();
+    expect(parseTakeFile('release.pdf')).toBeNull();
+    expect(parseTakeFile('notes.txt')).toBeNull();
+  });
+
+  it('refuses a file named by the letter or with spaces (AUD-08)', () => {
+    expect(() => parseTakeFile('ㄱ.m4a')).toThrow(/file id/);
+    expect(() => parseTakeFile('giyeok 2.m4a')).toThrow(/file id/);
+    expect(() => parseTakeFile('giyeok.0.m4a')).toThrow(/take/);
+  });
+});
+
+describe('scripts/audio/lib: takes from silencedetect', () => {
+  const log = [
+    '[Parsed_silencedetect_0 @ 0x1] silence_start: 0',
+    '[Parsed_silencedetect_0 @ 0x1] silence_end: 0.41 | silence_duration: 0.41',
+    '[Parsed_silencedetect_0 @ 0x1] silence_start: 1.02',
+    '[Parsed_silencedetect_0 @ 0x1] silence_end: 3.1 | silence_duration: 2.08',
+    '[Parsed_silencedetect_0 @ 0x1] silence_start: 3.75',
+  ].join('\n');
+
+  it('parseSilences reads the intervals, closing an open one at the end of the file', () => {
+    expect(parseSilences(log, 4.2)).toEqual([
+      { start: 0, end: 0.41 },
+      { start: 1.02, end: 3.1 },
+      { start: 3.75, end: 4.2 },
+    ]);
+    expect(parseSilences('', 1)).toEqual([]);
+  });
+
+  it('takeSegments returns the spoken parts between the silences', () => {
+    expect(takeSegments(parseSilences(log, 4.2), 4.2)).toEqual([
+      { start: 0.41, end: 1.02 },
+      { start: 3.1, end: 3.75 },
+    ]);
+  });
+
+  it('a file with no silence is one take', () => {
+    expect(takeSegments([], 0.9)).toEqual([{ start: 0, end: 0.9 }]);
+  });
+
+  it('a short pause inside a word does not split it', () => {
+    expect(takeSegments([{ start: 0.5, end: 0.7 }], 1.4)).toEqual([{ start: 0, end: 1.4 }]);
+  });
+});
+
+describe('scripts/audio/lib: ffprobe and ebur128 reports', () => {
+  it('parseProbe reads the stream and format', () => {
+    const json = JSON.stringify({
+      streams: [{ codec_name: 'mp3', channels: 1, sample_rate: '44100' }],
+      format: { duration: '0.914286', size: '7314' },
+    });
+    expect(parseProbe(json)).toEqual({ codec: 'mp3', channels: 1, sampleRate: 44100, durationS: 0.914, bytes: 7314 });
+  });
+
+  it('parseProbe fails on a file with no audio stream', () => {
+    expect(() => parseProbe(JSON.stringify({ streams: [], format: {} }))).toThrow(/no audio stream/);
+  });
+
+  it('parseEbur128 reads the summary block', () => {
+    const summary = [
+      '[Parsed_ebur128_0 @ 0x1] Summary:',
+      '  Integrated loudness:',
+      '    I:         -17.0 LUFS',
+      '    Threshold: -27.1 LUFS',
+      '  True peak:',
+      '    Peak:       -1.5 dBFS',
+    ].join('\n');
+    expect(parseEbur128(summary)).toEqual({ integratedLufs: -17, truePeakDb: -1.5 });
+    expect(() => parseEbur128('nothing')).toThrow(/loudness/);
+  });
+});
+
+describe('scripts/audio/lib: clipStatus (audio:status, the T-017 to-do list)', () => {
+  it('lists the refs that have no file yet', () => {
+    expect(clipStatus(['audio/jamo/a.mp3', 'audio/jamo/giyeok.mp3'], ['jamo/a.mp3'])).toEqual({
+      total: 2,
+      present: 1,
+      missing: ['audio/jamo/giyeok.mp3'],
+    });
+  });
+
+  it('counts each ref once', () => {
+    expect(clipStatus(['audio/jamo/a.mp3', 'audio/jamo/a.mp3'], [])).toEqual({ total: 1, present: 0, missing: ['audio/jamo/a.mp3'] });
+  });
+});
+
+describe('scripts/audio/lib: correctionGain (the loudness top-up after the single loudnorm pass)', () => {
+  it('is 0 when the clip is already near the target', () => {
+    expect(correctionGain(-16)).toBe(0);
+    expect(correctionGain(-16.5)).toBe(0);
+    expect(correctionGain(-15.5)).toBe(0);
+  });
+
+  it('is the distance to the target otherwise, rounded to 0.01 dB', () => {
+    expect(correctionGain(-19.4)).toBe(3.4);
+    expect(correctionGain(-14.2)).toBe(-1.8);
+    expect(correctionGain(-20.333)).toBe(4.33);
+  });
+
+  it('never boosts silence', () => {
+    expect(correctionGain(-70)).toBe(0);
+    expect(correctionGain(Number.NEGATIVE_INFINITY)).toBe(0);
   });
 });
