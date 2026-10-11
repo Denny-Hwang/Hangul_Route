@@ -83,7 +83,7 @@ Exit to: `library/card-detail` (thumbnail) · `StageComplete` (F-QUEST-002) · `
 
 ## Data needs
 
-- reads: `QuestResultOutcome` (`cardsAwarded` with each card's source: episode, stage, welcome, set, story, quest), card catalogue (art, title, rarity), the completed episode or stage title
+- reads: `QuestResultOutcome` from `logic/results-award.ts`: `award` (the quest card, as before), `extras[]` (`{ cardId, source }`, `source` one of `'quest' | 'episode' | 'stage' | 'welcome' | 'set'` (`AwardSource`); a story card has no source of its own and arrives through its story episode's rule or as a quest card), `episodeCompleted` and `stageCompleted`; the card catalogue (art, title, rarity); the completed episode or stage title
 - writes: cards through `unlockCards` (already done by the live path before the banner renders)
 - telemetry: `card.unlocked` with `source`, `episode.complete` `{ episodeId, cardsAwarded }`, `stage.complete`, `card_set.complete` (all sent by the live path, PR 6.4b)
 

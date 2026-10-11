@@ -69,7 +69,7 @@ Exit to: `library/gallery` (See my cards) · the existing Today exits
 
 ## Data needs
 
-- reads: the session `catchUp` state (`{ count, cardIds }`) set by `reconcileAwards` at start
+- reads: the session-only `catchUp[profileId]` in the progress store (the card ids a reconcile added this app session; the count is its length; empty when the reconcile added only the welcome card), set by `reconcileAwards` at start
 - writes: `markCardsSeen(cardIds)` on See my cards
 - telemetry: `card.catchup_granted` `{ count, episode, stage, welcome, quest, set }` once per reconcile that adds more than the welcome card (sent by the reconcile, PR 6.4b)
 
