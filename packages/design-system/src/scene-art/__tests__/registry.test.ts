@@ -167,6 +167,16 @@ describe('SCENE_ART_REGISTRY', () => {
     }
   });
 
+  // 2.3b convention and §3.9.10: every figure in historical dress has a sourceRef
+  // and its costume is period-labelled in alt; people of today say so.
+  it('labels every figure by period, and sources every figure in historical dress', () => {
+    for (const [id, item] of library.filter(([, it]) => it.kind === 'figure')) {
+      if (/\bof today\b/.test(item.alt)) continue;
+      expect(item.alt, id).toMatch(/\bJoseon\b|\bhanbok\b/);
+      expect(item.sourceRef, id).toBeDefined();
+    }
+  });
+
   it('draws people faceless: a blank paper oval outlined with border.strong, and no figure uses a skin token', () => {
     for (const [id, item] of library.filter(([, i]) => i.kind === 'figure')) {
       const json = JSON.stringify(item.nodes);

@@ -41,7 +41,8 @@ export const PROCESSION_ROW: ItemDef = {
   kind: 'figure',
   box: { w: 150, h: 42 },
   z: 'mid',
-  alt: 'A line of marchers in yellow robes and black hats carrying tall red flags',
+  alt: 'A line of Joseon marchers in yellow robes and black hats carrying tall red flags',
+  sourceRef: { title: '원행을묘정리의궤(園幸乙卯整理儀軌)', publisher: ENCYKOREA, url: 'https://encykorea.aks.ac.kr/Article/E0040890', accessed: ACCESSED },
   accuracyNote:
     "A short file of marchers in a procession, the way a royal procession appears in the banchado: yellow robes (the colour the gagyo entry gives the palanquin attendants), black hats and tall flags. The real procession had thousands of people in a fixed order with ranks and banners that are not copied here; the flags are plain. Faces are blank on purpose.",
   nodes: (() => {

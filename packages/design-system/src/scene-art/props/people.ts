@@ -273,7 +273,7 @@ export const FIG_WRITER_SEATED: ItemDef = {
   box: { w: 100, h: 90 },
   z: 'mid',
   tintable: 'brand.secondaryLight',
-  alt: 'A young man in a plain pale coat, hair in a topknot, seated on the floor writing on a sheet of paper',
+  alt: 'A young Joseon man in a plain pale coat, hair in a topknot, seated on the floor writing on a sheet of paper',
   sourceRef: CLOTHING_REF,
   accuracyNote:
     "A seated writer in plain everyday clothes: a pale long coat over the basic jacket and trousers the source names, hair gathered in a topknot with no hat. It stands for young Jeongjo writing his diary as the royal grandson, as the brief asks for plain clothes; what he actually wore at his studies is not shown by the sources, so no royal sign is drawn. Coat colour is tintable. The face is blank on purpose.",

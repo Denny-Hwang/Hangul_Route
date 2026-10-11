@@ -137,10 +137,22 @@ describe('checkItem', () => {
       kind: 'object',
       tags: { heritage: true },
       sourceRef: { title: 'Jikji', publisher: 'Cultural Heritage Administration', url: 'https://example.org/jikji', accessed: '2026-10-10' },
+      accuracyNote: 'Cover and stitching simplified.',
     });
     expect(ids(checkItem(sourced))).not.toContain('I-heritage');
     expect(ids(checkItem(makeProp({ kind: 'object' })))).not.toContain('I-heritage');
     expect(ids(checkItem(makeProp({ kind: 'furniture', tags: { heritage: true } })))).not.toContain('I-heritage');
+  });
+
+  it('holds heritage buildings to the same rule, and needs an accuracyNote too (§3.9.10)', () => {
+    const sourceRef = { title: 'Hwaseong', publisher: 'Encyclopedia of Korean Culture', url: 'https://example.org/hwaseong', accessed: '2026-10-10' };
+    const building = makeProp({ kind: 'architecture', tags: { heritage: true } });
+    expect(checkItem(building)).toContainEqual(expect.objectContaining({ rule: 'I-heritage', severity: 'error' }));
+    const noNote = checkItem(makeProp({ kind: 'architecture', tags: { heritage: true }, sourceRef }));
+    expect(noNote).toContainEqual(expect.objectContaining({ rule: 'I-heritage', message: expect.stringContaining('accuracyNote') }));
+    expect(ids(checkItem(makeProp({ kind: 'object', tags: { heritage: true }, sourceRef })))).toContain('I-heritage');
+    expect(ids(checkItem(makeProp({ kind: 'architecture', tags: { heritage: true }, sourceRef, accuracyNote: 'Gate roof simplified.' })))).not.toContain('I-heritage');
+    expect(ids(checkItem(makeProp({ kind: 'architecture' })))).not.toContain('I-heritage');
   });
 
   it('limits serialised size to 3 KB for a prop and 6 KB for a setting', () => {
