@@ -10,11 +10,12 @@ import { storyEpisodes } from './stories';
  *
  * `pillarTags` (F-STORY-005 §3.2, §3.8) are metadata for the catalogue and
  * analytics, never shown to learners. Each tag names the blueprint 04 sub-theme
- * the lesson's content actually belongs to: A1 훈민정음 (the letters), B5 명절과
- * 세시풍속 (the family table and the Seollal/Chuseok lesson), D2 산과 강 (the
- * nature lessons), E1 한지와 붓 (paper, kites and folk play). Two lessons stay
- * `[]` on purpose: `stage2-life` (everyday food words) and `stage4-rites`
- * (greeting dialogues) fit no sub-theme, and a wrong tag is worse than none.
+ * the lesson's content actually belongs to: A1 Hunminjeongeum (the letters), B5
+ * festivals and seasonal customs (the family table and the Seollal/Chuseok
+ * lesson), D2 mountains and rivers (the nature lessons), E1 hanji and brush
+ * (paper, kites and folk play). Two lessons stay `[]` on purpose: `stage2-life`
+ * (everyday food words) and `stage4-rites` (greeting dialogues) fit no
+ * sub-theme, and a wrong tag is worse than none.
  */
 
 const stage1Episodes: Episode[] = [
