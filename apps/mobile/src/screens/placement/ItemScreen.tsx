@@ -61,12 +61,19 @@ interface Focusable {
  */
 export function ItemScreen(): React.ReactElement | null {
   const { run } = usePlacement();
+  // "Got it" outlives the question it acknowledges (the next one is already showing).
+  const [ack, setAck] = useState(false);
+  useEffect(() => {
+    if (!ack) return;
+    const id = setTimeout(() => setAck(false), ACK_MS);
+    return () => clearTimeout(id);
+  }, [ack]);
   const question = run === null ? null : currentQuestion(run);
   if (run === null || question === null || run.stop !== null) return <Screen tone="canvas">{null}</Screen>;
-  return <ItemView key={`${question.id}:${run.responses.length}`} question={question} />;
+  return <ItemView key={`${question.id}:${run.responses.length}`} question={question} ack={ack} onAck={() => setAck(true)} />;
 }
 
-function ItemView({ question }: { question: AssessmentQuestion }): React.ReactElement {
+function ItemView({ question, ack, onAck }: { question: AssessmentQuestion; ack: boolean; onAck: () => void }): React.ReactElement {
   const { m, flow, run, applyRun, say, screenReader, needsGesture, markGesture } = usePlacement();
   const copy = m.learner.placement.item;
   const state = run as NonNullable<typeof run>;
@@ -83,7 +90,6 @@ function ItemView({ question }: { question: AssessmentQuestion }): React.ReactEl
   const [textFallback, setTextFallback] = useState(false);
   const [shownAt] = useState(() => Date.now());
   const [now, setNow] = useState(shownAt);
-  const [ack, setAck] = useState(false);
   const playing = useRef(false);
   const promptRef = useRef<Focusable | null>(null);
 
@@ -142,12 +148,6 @@ function ItemView({ question }: { question: AssessmentQuestion }): React.ReactEl
     return () => clearTimeout(id);
   }, [short, playbackEnded, heard, prompt]);
 
-  useEffect(() => {
-    if (!ack) return;
-    const id = setTimeout(() => setAck(false), ACK_MS);
-    return () => clearTimeout(id);
-  }, [ack]);
-
   const hear = (): void => {
     markGesture();
     applyRun({ type: 'touch' });
@@ -160,7 +160,7 @@ function ItemView({ question }: { question: AssessmentQuestion }): React.ReactEl
   const choose = (option: OptionView): void => {
     if (!enabled || sheet !== null) return;
     stop();
-    if (acknowledgement(mode) === 'got-it') setAck(true);
+    if (acknowledgement(mode) === 'got-it') onAck();
     applyRun({ type: 'answer', optionId: option.id, assisted: revealed });
   };
   const notSure = (): void => {
@@ -177,10 +177,11 @@ function ItemView({ question }: { question: AssessmentQuestion }): React.ReactEl
   const window = useWindowDimensions();
   const contentWidth = Math.min(layout.windowWidth - 2 * layout.gutter, layout.maxWidth.reading);
   const columns = choiceColumns({ mode, contentWidth, fontScale: window.fontScale });
-  const artSize = useMediaSize(short ? touchTarget.child : touchTarget.hero);
+  const arrangement = short ? shortLayout(window, window.fontScale) : 'portrait';
+  // Short in landscape: smaller pictures so two rows and "I am not sure" fit 568 x 320 (cards keep touchTarget.child).
+  const artSize = useMediaSize(short ? (arrangement === 'portrait' ? touchTarget.child : spacing.xxxl) : touchTarget.hero);
   // Standard and Deep: the speaker grows with the window like the games' speakers.
   const speakerSize = useMediaSize(touchTarget.hero);
-  const arrangement = short ? shortLayout(window, window.fontScale) : 'portrait';
 
   const exitControl = short ? (
     <Pressable
@@ -196,15 +197,22 @@ function ItemView({ question }: { question: AssessmentQuestion }): React.ReactEl
     <Button label={copy.exit} tone="ghost" size="md" onPress={exit} testID="placement-exit" />
   );
 
-  const promptBlock = (
+  /** Focus lands here on each question: "Question, 4 choices" and the instruction. */
+  const announced = (children: React.ReactNode): React.ReactElement => (
     <View
       ref={(node) => {
         promptRef.current = node as unknown as Focusable | null;
       }}
       accessible
-      accessibilityLabel={questionLabel(m, question)}
-      style={{ alignItems: 'center', gap: spacing.md }}
+      accessibilityRole="header"
+      accessibilityLabel={instruction.visible === null ? questionLabel(m, question) : `${questionLabel(m, question)}. ${instruction.visible}`}
     >
+      {children}
+    </View>
+  );
+
+  const promptBlock = (
+    <View style={{ alignItems: 'center', gap: spacing.md }}>
       {prompt.kind === 'speaker' ? (
         <SpeakerButton
           onPress={hear}
@@ -264,8 +272,16 @@ function ItemView({ question }: { question: AssessmentQuestion }): React.ReactEl
     </Pressable>
   );
 
+  // Short (wireframe E2): Hoya beside the speaker, nothing to read; the instruction and cheers are spoken.
   const hoyaLine = cheer ?? instruction.visible;
-  const hoya = hoyaLine === null ? <Hoya pose="idle" size={touchTarget.min} /> : <HoyaBubble tone={cheer === null ? 'idle' : 'cheering'} message={hoyaLine} />;
+  const hoya = short ? (
+    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.lg }}>
+      {announced(<Hoya pose={cheer === null ? 'idle' : 'cheering'} size={touchTarget.min} />)}
+      {promptBlock}
+    </View>
+  ) : (
+    announced(hoyaLine === null ? <Hoya pose="idle" size={touchTarget.min} /> : <HoyaBubble tone={cheer === null ? 'idle' : 'cheering'} message={hoyaLine} />)
+  );
   const topBar = (
     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md }}>
       {exitControl}
@@ -290,7 +306,6 @@ function ItemView({ question }: { question: AssessmentQuestion }): React.ReactEl
           <View style={{ flex: 1, gap: spacing.md }}>
             {topBar}
             {hoya}
-            {promptBlock}
           </View>
           <View style={{ flex: 1, gap: spacing.md }}>
             {arrangement === 'landscape-scroll' ? <ScrollView style={{ flex: 1 }}>{grid}</ScrollView> : grid}
@@ -307,8 +322,12 @@ function ItemView({ question }: { question: AssessmentQuestion }): React.ReactEl
       {topBar}
       <Spacer size={short ? 'sm' : 'md'} />
       {hoya}
-      <Spacer size={short ? 'sm' : 'md'} />
-      {promptBlock}
+      {short ? null : (
+        <>
+          <Spacer size="md" />
+          {promptBlock}
+        </>
+      )}
       <Spacer size={short ? 'md' : 'lg'} />
       <ChoiceGrid columns={columns}>{cards}</ChoiceGrid>
       <Spacer size="md" />

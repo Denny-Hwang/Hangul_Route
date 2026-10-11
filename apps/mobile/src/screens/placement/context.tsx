@@ -1,8 +1,8 @@
 import type { PlacementEvent, PlacementResult, PlacementRunState, RouteCatalog } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { createContext, useContext, useEffect } from 'react';
+import React, { createContext, useCallback, useContext } from 'react';
 import type { FlowCapability, FlowEvent, FlowState, ResumeOffer } from '../../logic/placement/flow';
 import type { ResultView } from '../../logic/placement/result-view';
 import type { PlacementStackParamList } from '../../navigation/types';
@@ -75,9 +75,12 @@ export function flowRoute(name: PlacementRoute, Screen: React.ComponentType): Re
   function FlowRoute(): React.ReactElement | null {
     const { target } = usePlacement();
     const navigation = useNavigation<NativeStackNavigationProp<PlacementStackParamList>>();
-    useEffect(() => {
-      if (target !== name) navigation.replace(target);
-    }, [target, navigation]);
+    // On focus, not on mount: an action sent while the nested navigator is still mounting is dropped.
+    useFocusEffect(
+      useCallback(() => {
+        if (target !== name) navigation.replace(target);
+      }, [target, navigation]),
+    );
     return target === name ? <Screen /> : null;
   }
   FlowRoute.displayName = `FlowRoute(${name})`;

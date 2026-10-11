@@ -86,7 +86,21 @@ function ResultView({ check }: { check: FinishedCheck }): React.ReactElement {
   };
 
   return (
-    <Screen tone="canvas" testID="placement-result">
+    <Screen
+      tone="canvas"
+      testID="placement-result"
+      footer={
+        <Button
+          label={primaryLabel}
+          tone="primary"
+          size="hero"
+          fullWidth
+          leading={<Icon name="play" size={spacing.xl} color={colors.text.inverse} />}
+          onPress={() => onResultAction(PRIMARY_ACTION[view.primary])}
+          testID="placement-result-primary"
+        />
+      }
+    >
       <View style={{ alignItems: 'center', gap: spacing.md, paddingTop: spacing.lg }}>
         <Hoya pose="cheering" size={touchTarget.hero + touchTarget.min} />
         <Heading level="title" align="center" testID="placement-headline">
@@ -134,17 +148,7 @@ function ResultView({ check }: { check: FinishedCheck }): React.ReactElement {
         </>
       )}
 
-      <Spacer size="xl" />
-      <Button
-        label={primaryLabel}
-        tone="primary"
-        size="hero"
-        fullWidth
-        leading={<Icon name="play" size={spacing.xl} color={colors.text.inverse} />}
-        onPress={() => onResultAction(PRIMARY_ACTION[view.primary])}
-        testID="placement-result-primary"
-      />
-      <Spacer size="sm" />
+      <Spacer size="md" />
       <View style={{ alignItems: 'center' }}>
         {view.links.map((link) => (
           <LinkButton key={link} label={linkLabel[link]} onPress={() => onResultAction(LINK_ACTION[link])} testID={`placement-link-${link}`} />

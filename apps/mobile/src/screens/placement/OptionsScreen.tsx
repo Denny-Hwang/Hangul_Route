@@ -77,7 +77,7 @@ export function OptionsScreen(): React.ReactElement {
           {flow.takeMyTime ? null : <Caption tone="secondary">{short.duration}</Caption>}
           <View style={{ alignItems: 'flex-end' }}>
             {change ? (
-              <LinkButton label={copy.change} icon={change.icon === 'pencil' ? 'pencil' : undefined} onPress={spoken(copy.change, () => dispatch(change.event))} testID="placement-change" />
+              <LinkButton label={copy.change} icon="pencil" onPress={spoken(copy.change, () => dispatch(change.event))} testID="placement-change" />
             ) : null}
           </View>
         </Card>
@@ -204,6 +204,7 @@ export function OptionsScreen(): React.ReactElement {
               onPress={spoken(label, () => dispatch({ type: 'setMotivation', motivation: selected ? null : motivation }))}
               accessibilityRole="radio"
               accessibilityState={{ selected, checked: selected }}
+              aria-checked={selected}
               accessibilityLabel={label}
               style={{
                 minHeight: touchTarget.min,

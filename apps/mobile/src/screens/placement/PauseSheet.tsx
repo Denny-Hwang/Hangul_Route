@@ -60,7 +60,7 @@ export function PauseSheet({ sheet }: { sheet: PauseSheetModel }): React.ReactEl
             tone="secondary"
             size="lg"
             fullWidth
-            leading={<Icon name="home" size={spacing.xl} color={colors.brand.primary} />}
+            leading={<Icon name="home" size={spacing.xl} color={colors.text.inverse} />}
             onPress={() => applyRun(sheet.enough)}
             testID="placement-enough"
           />

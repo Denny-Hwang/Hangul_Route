@@ -24,6 +24,7 @@ import { StoryReaderScreen } from '../screens/story/StoryReaderScreen';
 import { StorySourcesScreen } from '../screens/story/StorySourcesScreen';
 import { PlacementScreen } from '../screens/placement/PlacementScreen';
 import { STORY_FIXTURES_BUILD, StoryE2eHook } from './story-e2e';
+import { PlacementE2eHook } from './placement-e2e';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -48,6 +49,7 @@ export function RootNavigator(): React.ReactElement {
   return (
     <>
       {STORY_FIXTURES_BUILD ? <StoryE2eHook /> : null}
+      {STORY_FIXTURES_BUILD ? <PlacementE2eHook /> : null}
       <Stack.Navigator
         screenOptions={{ headerShown: false, animation: 'fade_from_bottom' }}
         initialRouteName={hasProfile ? 'Main' : 'Onboarding'}

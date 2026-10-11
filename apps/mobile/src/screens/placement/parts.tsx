@@ -153,8 +153,11 @@ export function RadioTile({
     <Pressable
       testID={testID}
       onPress={disabled ? undefined : onPress}
+      disabled={disabled}
       accessibilityRole="radio"
       accessibilityState={{ selected, checked: selected, disabled }}
+      aria-checked={selected}
+      aria-disabled={disabled}
       accessibilityLabel={accessibilityLabel}
       accessibilityHint={accessibilityHint}
       style={{

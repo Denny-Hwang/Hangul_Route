@@ -84,7 +84,7 @@ const SWATCHES = swatchColors(colors);
 const resolvesPicture = (ref: string): boolean => resolvePicture(ref, { supportedCardIds, swatches: SWATCHES }).kind !== 'text';
 
 const ROUTES = {
-  PlacementBoot: flowRoute('PlacementBoot', () => <Screen tone="canvas">{null}</Screen>),
+  PlacementBoot: flowRoute('PlacementBoot', () => <Screen tone="canvas" testID="placement-boot">{null}</Screen>),
   PlacementResume: flowRoute('PlacementResume', ResumeScreen),
   PlacementLanguage: flowRoute('PlacementLanguage', LanguageScreen),
   PlacementOptions: flowRoute('PlacementOptions', OptionsScreen),
@@ -475,6 +475,9 @@ export function PlacementScreen({ route, navigation }: Props): React.ReactElemen
   }, [phase, flow?.screen, finished, saved, finish]);
 
   const target = routeOf(phase, flow, finished);
+  // The nested stack opens on the screen the flow is on when it first renders.
+  const initialRoute = useRef<PlacementRoute | null>(null);
+  if (initialRoute.current === null && flow !== null) initialRoute.current = target;
 
   if (profileId === null || flow === null) {
     // No active profile (never reached through the app) or still booting.
@@ -509,7 +512,7 @@ export function PlacementScreen({ route, navigation }: Props): React.ReactElemen
 
   return (
     <PlacementProvider value={value}>
-      <Stack.Navigator initialRouteName="PlacementBoot" screenOptions={{ headerShown: false, animation: 'fade', gestureEnabled: false }}>
+      <Stack.Navigator initialRouteName={initialRoute.current ?? 'PlacementBoot'} screenOptions={{ headerShown: false, animation: 'fade', gestureEnabled: false }}>
         {(Object.keys(ROUTES) as PlacementRoute[]).map((name) => (
           <Stack.Screen key={name} name={name} component={ROUTES[name]} />
         ))}
