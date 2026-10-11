@@ -3,6 +3,7 @@ import { flags } from '../../config/flags';
 import { episodesAll } from '../../content/episodes';
 import { questsAll } from '../../content/quests';
 import { storiesAll } from '../../content/stories';
+import { homeCellOf } from './home-cell';
 import { storyReadStep } from './story-ref';
 
 /**
@@ -128,6 +129,21 @@ export function entryForQuest(index: readonly StoryIndexEntry[], questId: string
 export function entryForStory(index: readonly StoryIndexEntry[], storyId: string): StoryIndexEntry | undefined {
   const ofStory = index.filter((e) => e.storyId === storyId);
   return ofStory.find((e) => e.placement === 'shelf') ?? ofStory[0];
+}
+
+/**
+ * The shelf entries whose home cell (F-STORY-005 §3.2) is this grid cell, in
+ * shelf order. A book (grid) entry is the cell's own episode, not a story that
+ * calls the cell home, so it is left out. The review gate is the index's own.
+ */
+export function entriesForCell(index: readonly StoryIndexEntry[], stage: StageKey, theme: ThemeKey): StoryIndexEntry[] {
+  return index
+    .filter((e) => {
+      if (e.placement !== 'shelf') return false;
+      const home = homeCellOf(e.story);
+      return home.stage === stage && home.theme === theme;
+    })
+    .sort(compareShelfOrder);
 }
 
 let cached: readonly StoryIndexEntry[] | undefined;
