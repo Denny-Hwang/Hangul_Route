@@ -260,6 +260,17 @@ describe('story-store: writes before hydration merge on load', () => {
     expect(useStoryStore.getState().pendingFor.has(A)).toBe(false);
   });
 
+  it('a profile marked pending with no file in memory loads the saved file unchanged', async () => {
+    mem.set(keyOf(A), saved({ 'story:saved': { level: 'listen', sceneIndex: 4, updatedAt: T_OLD } }));
+    useStoryStore.setState({ pendingFor: new Set([A]) });
+
+    await useStoryStore.getState().hydrate(A);
+
+    expect(useStoryStore.getState().getBookmark(A, 'story:saved')?.sceneIndex).toBe(4);
+    expect(mem.get(keyOf(A))).toEqual(saved({ 'story:saved': { level: 'listen', sceneIndex: 4, updatedAt: T_OLD } }));
+    expect(useStoryStore.getState().pendingFor.has(A)).toBe(false);
+  });
+
   it('the newer of two bookmarks for one story wins', async () => {
     mem.set(keyOf(A), saved({ 'story:a': { level: 'listen', sceneIndex: 5, updatedAt: T_OLD } }));
     useStoryStore.getState().setBookmark(A, 'story:a', { level: 'listen', sceneIndex: 2 });
