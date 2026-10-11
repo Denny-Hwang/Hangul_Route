@@ -23,6 +23,7 @@
 | `minigame/listen-pick.md` | R | F-QUEST-002 §3.10 (Q-3b) |
 | `minigame/pic-word-match.md` | R | F-QUEST-002 §3.11 (Q-4) |
 | `results/celebrate.md` | S | F-MOTION-003 |
+| `results/extra-cards.md` · `home/cards-catch-up.md` · `library/earn-hints.md` · `library/card-back-citation.md` | R | F-STORY-006 §3.3-3.8 (PR 6.0; engine and live path shipped in 6.2-6.4b, surfaces in 6.5a-6.7) |
 | `library/gallery.md` · `library/card-detail.md` | S | F-CARD-001/002/003 |
 | `profile/settings.md` · `parent/gate.md` | S | F-SUB-001 · (gate 통합 대상) |
 | `reviews/daily-test.md` · `feedback-review.md` · `stage-review.md` | D | F-RVW-001 |
