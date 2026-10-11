@@ -1,6 +1,7 @@
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { colors, radii, shadows, spacing, touchTarget, typography } from '../../tokens';
+import { colors, radii, shadows, spacing, typography } from '../../tokens';
+import { tileMetrics } from './metrics';
 import type { TileProps, TileState } from './types';
 
 const stateBg: Record<TileState, string> = {
@@ -24,18 +25,6 @@ const stateLabel: Record<TileState, string> = {
   disabled: colors.text.muted,
 };
 
-const sizeMap = {
-  sm: touchTarget.min,
-  md: touchTarget.child,
-  lg: touchTarget.hero,
-} as const;
-
-const fontMap = {
-  sm: typography.size.title,
-  md: typography.size.display,
-  lg: typography.size.hero,
-} as const;
-
 export function Tile({
   label,
   romanization,
@@ -46,10 +35,8 @@ export function Tile({
   accessibilityLabel,
   testID,
 }: TileProps): React.ReactElement {
-  const step = sizeMap[size];
-  const dim = dimension !== undefined && Number.isFinite(dimension) ? Math.max(step, dimension) : step;
   // The glyph is part of the tile's picture, so it grows with the tile (type tokens themselves are unchanged).
-  const glyph = Math.round((fontMap[size] * dim) / step);
+  const { dim, glyph } = tileMetrics(size, dimension);
 
   const inner = (
     <View
