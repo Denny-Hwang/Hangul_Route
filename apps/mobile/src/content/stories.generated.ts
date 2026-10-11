@@ -3994,7 +3994,7 @@ export const storiesAll: Story[] = [
             "approximations": [],
             "artBrief": "An old wooden hanok room with a carefully wrapped bundle of silk and paper being opened by gentle hands, revealing an old book; Hoya watches with wide eyes.",
             "art": {
-              "setting": "scene:hanji-backdrop",
+              "setting": "scene:hanok-room",
               "layers": [
                 {
                   "ref": "prop:book-bundle",
@@ -4164,7 +4164,7 @@ export const storiesAll: Story[] = [
                   "flip": true
                 }
               ],
-              "altEn": "Hoya bows toward a warm sunrise with children from many places around him, saying thank you to King Sejong."
+              "altEn": "Hoya stands before a warm sunrise with children from many places around him, saying thank you to King Sejong."
             },
             "captionEn": "Hoya thanks King Sejong"
           }
@@ -6022,20 +6022,20 @@ export const storiesAll: Story[] = [
               "layers": [
                 {
                   "ref": "prop:janggyeong-hall",
-                  "x": 232,
+                  "x": 282,
                   "y": 198,
-                  "s": 0.9,
+                  "s": 0.72,
                   "z": "back"
                 },
                 {
                   "ref": "prop:janggyeong-hall",
-                  "x": 184,
-                  "y": 214,
-                  "s": 1
+                  "x": 128,
+                  "y": 240,
+                  "s": 0.8
                 },
                 {
                   "ref": "hoya:waving",
-                  "x": 200,
+                  "x": 262,
                   "y": 294,
                   "s": 0.6
                 }
@@ -6271,16 +6271,16 @@ export const storiesAll: Story[] = [
                 },
                 {
                   "ref": "prop:janggyeong-hall",
-                  "x": 226,
+                  "x": 258,
                   "y": 198,
-                  "s": 0.9,
+                  "s": 0.72,
                   "z": "back"
                 },
                 {
                   "ref": "prop:janggyeong-hall",
-                  "x": 180,
-                  "y": 216,
-                  "s": 1
+                  "x": 150,
+                  "y": 244,
+                  "s": 0.8
                 },
                 {
                   "ref": "prop:leafy-tree",
@@ -6865,7 +6865,7 @@ export const storiesAll: Story[] = [
                   "s": 0.6
                 }
               ],
-              "altEn": "At Heungdeoksa Temple in Goryeo, monks are busy with something amazing, printing a book with metal type, and Hoya peeks in."
+              "altEn": "At Heungdeoksa Temple in Goryeo, monks are busy with something amazing, printing a book with metal type, and Hoya waves from the side."
             },
             "captionEn": "Printing with metal type at a temple"
           },
@@ -10587,7 +10587,7 @@ export const storiesAll: Story[] = [
                   "tint": "theme.nature"
                 }
               ],
-              "altEn": "On a sunny village street a merchant, a grandmother and two children smile with small blank sheets they can now write on."
+              "altEn": "On a sunny village street a merchant, a grandmother and two children gather by small blank sheets of paper they can now write on."
             },
             "captionEn": "He names them Hunminjeongeum"
           },
@@ -10635,7 +10635,7 @@ export const storiesAll: Story[] = [
                   "s": 1
                 }
               ],
-              "altEn": "As the morning sun rises over the palace, Hoya sits with a blank sheet of paper while a scholar in a black gat watches kindly."
+              "altEn": "As the morning sun rises over the palace, Hoya stands beside a blank sheet of paper while a scholar in a black gat watches kindly."
             },
             "captionEn": "The new letters are easy to learn"
           },
@@ -13050,7 +13050,7 @@ export const storiesAll: Story[] = [
                   "s": 0.6
                 }
               ],
-              "altEn": "A round sun in the sky, the flat earth and a child standing tall: sky, earth and person, the ideas behind three vowels."
+              "altEn": "A round dot shining in the round sky, the flat earth and a child standing tall: sky, earth and person, the ideas behind three vowels."
             },
             "captionEn": "Vowels: sky, earth and a person"
           },
@@ -16158,7 +16158,7 @@ export const storiesAll: Story[] = [
                   "s": 0.6
                 }
               ],
-              "altEn": "In the evening the long storage halls of Haeinsa rest under the stars, and Hoya sits quietly on the steps."
+              "altEn": "In the evening the long storage halls of Haeinsa rest under the stars, and Hoya waits quietly in front of them."
             },
             "captionEn": "Still kept safe at Haeinsa"
           }

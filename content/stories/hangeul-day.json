@@ -266,7 +266,7 @@
           "approximations": [],
           "artBrief": "An old wooden hanok room with a carefully wrapped bundle of silk and paper being opened by gentle hands, revealing an old book; Hoya watches with wide eyes.",
           "art": {
-            "setting": "scene:hanji-backdrop",
+            "setting": "scene:hanok-room",
             "layers": [
               {
                 "ref": "prop:book-bundle",
@@ -436,7 +436,7 @@
                 "flip": true
               }
             ],
-            "altEn": "Hoya bows toward a warm sunrise with children from many places around him, saying thank you to King Sejong."
+            "altEn": "Hoya stands before a warm sunrise with children from many places around him, saying thank you to King Sejong."
           },
           "captionEn": "Hoya thanks King Sejong"
         }
