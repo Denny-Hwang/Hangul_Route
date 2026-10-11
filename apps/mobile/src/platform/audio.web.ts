@@ -51,12 +51,16 @@ interface WebUtterance {
   onerror: ((ev: { error?: string }) => void) | null;
 }
 
-interface WebSynth extends WebSpeechEngineLike {
+interface WebSynth {
   getVoices(): readonly WebVoiceLike[];
   speak(u: WebUtterance): void;
   cancel(): void;
   readonly speaking: boolean;
   readonly pending: boolean;
+  /** Missing on old Safari (before 14.1), where only `onvoiceschanged` exists. */
+  addEventListener?: (type: 'voiceschanged', listener: () => void) => void;
+  removeEventListener?: (type: 'voiceschanged', listener: () => void) => void;
+  onvoiceschanged?: (() => void) | null;
 }
 
 export interface WebAudioEnv {
@@ -116,25 +120,63 @@ export function createWebAudio(env: WebAudioEnv) {
     },
   };
 
+  // Total over old engines: no EventTarget (old Safari) falls back to `onvoiceschanged`,
+  // and a getVoices() that throws reads as an empty list.
+  const legacyListeners = new Set<() => void>();
+  const dispatchLegacy = (): void => {
+    for (const listener of [...legacyListeners]) listener();
+  };
+  const voiceEvents: WebSpeechEngineLike | null =
+    synth === null
+      ? null
+      : {
+          getVoices: () => {
+            try {
+              return synth.getVoices();
+            } catch {
+              return [];
+            }
+          },
+          addEventListener: (type, listener) => {
+            if (typeof synth.addEventListener === 'function') return synth.addEventListener(type, listener);
+            legacyListeners.add(listener);
+            synth.onvoiceschanged = dispatchLegacy;
+          },
+          removeEventListener: (type, listener) => {
+            if (typeof synth.removeEventListener === 'function') return synth.removeEventListener(type, listener);
+            legacyListeners.delete(listener);
+            if (legacyListeners.size === 0 && synth.onvoiceschanged === dispatchLegacy) synth.onvoiceschanged = null;
+          },
+        };
+
   const engine: TtsEngine | null =
     synth === null || Utterance === null
       ? null
       : {
           speak: (req: TtsRequest, h: TtsHandlers) => {
-            const u = new Utterance(req.text);
-            u.lang = req.lang;
-            u.rate = req.rate;
-            u.pitch = req.pitch;
-            if (req.voice !== null) {
-              const wanted = req.voice.id;
-              const match = synth.getVoices().find((v) => voiceKey(v) === wanted);
-              if (match !== undefined) u.voice = match;
+            try {
+              const u = new Utterance(req.text);
+              u.lang = req.lang;
+              u.rate = req.rate;
+              u.pitch = req.pitch;
+              if (req.voice !== null) {
+                const wanted = req.voice.id;
+                const match = (voiceEvents?.getVoices() ?? []).find((v) => voiceKey(v) === wanted);
+                try {
+                  if (match !== undefined) u.voice = match;
+                } catch {
+                  // A voice the engine will not take: speak with the language alone.
+                }
+              }
+              u.onstart = () => h.onStart();
+              u.onend = () => h.onEnd();
+              // cancel() raises onerror in Chromium and WebKit: a normal stop, not a failure.
+              u.onerror = (ev) => h.onError(ev?.error === 'canceled' || ev?.error === 'interrupted' ? 'interrupted' : 'error');
+              synth.speak(u);
+            } catch {
+              // A refused voice or utterance is a failed prompt, never a thrown exception.
+              queueMicrotask(() => h.onError('error'));
             }
-            u.onstart = () => h.onStart();
-            u.onend = () => h.onEnd();
-            // cancel() raises onerror in Chromium and WebKit: a normal stop, not a failure.
-            u.onerror = (ev) => h.onError(ev?.error === 'canceled' || ev?.error === 'interrupted' ? 'interrupted' : 'error');
-            synth.speak(u);
             return { cancel: () => synth.cancel() };
           },
           cancelAll: () => synth.cancel(),
@@ -166,7 +208,7 @@ export function createWebAudio(env: WebAudioEnv) {
     if (state.muted && !prev.muted) controller.stop();
   });
 
-  const detachVoices = attachWebVoices(tracker, synth, network, { timeoutMs: 1500 });
+  const detachVoices = attachWebVoices(tracker, voiceEvents, network, { timeoutMs: 1500 });
 
   const playPrompt = (spec: PlaySpec): Promise<PlayResult> => controller.playPrompt(spec);
 
@@ -223,8 +265,8 @@ export function createWebAudio(env: WebAudioEnv) {
     isMuted: (): boolean => store.getState().muted,
     getCapability: (): AudioCapability => tracker.get(),
     refreshCapability: (): Promise<void> => {
-      if (synth === null) tracker.setVoices('no_engine');
-      else tracker.setVoices(synth.getVoices().map(webVoiceToCandidate));
+      if (voiceEvents === null) tracker.setVoices('no_engine');
+      else tracker.setVoices(voiceEvents.getVoices().map(webVoiceToCandidate));
       return Promise.resolve();
     },
     subscribeCapability: (fn: (c: AudioCapability) => void): (() => void) => tracker.subscribe(fn),

@@ -356,6 +356,119 @@ describe('platform/audio.web: first-gesture unlock (AD8, §3.6)', () => {
   });
 });
 
+describe('platform/audio.web: old and odd engines', () => {
+  const lone = (extra: Record<string, unknown> = {}) => {
+    const spoken: FakeUtterance[] = [];
+    const synth = {
+      speaking: false,
+      pending: false,
+      spoken,
+      getVoices: () => [YUNA],
+      speak: (u: FakeUtterance) => {
+        spoken.push(u);
+        queueMicrotask(() => u.onend?.({}));
+      },
+      cancel: () => undefined,
+      ...extra,
+    };
+    const env: WebAudioEnv = {
+      synth: synth as unknown as WebAudioEnv['synth'],
+      Utterance: FakeUtterance as unknown as NonNullable<WebAudioEnv['Utterance']>,
+      doc: null,
+      win: null,
+      isOnline: () => true,
+    };
+    return { synth, audio: createWebAudio(env) };
+  };
+
+  it('a speechSynthesis without addEventListener (Safari before 14.1) works through onvoiceschanged', async () => {
+    const { synth, audio } = lone();
+    await expect(audio.playPrompt({ text: '가' })).resolves.toBe('played');
+    expect(synth.spoken[0]?.voice?.name).toBe('Yuna');
+    expect(typeof (synth as { onvoiceschanged?: unknown }).onvoiceschanged).toBe('function');
+    audio.dispose();
+    expect((synth as { onvoiceschanged?: unknown }).onvoiceschanged).toBeNull();
+  });
+
+  it('late voices reach every listener through the single onvoiceschanged slot', async () => {
+    let voices: FakeVoice[] = [];
+    const { synth, audio } = lone({ getVoices: () => voices });
+    await flush();
+    expect(audio.getCapability().tts.state).toBe('unknown');
+    voices = [YUNA];
+    (synth as { onvoiceschanged?: () => void }).onvoiceschanged?.();
+    expect(audio.getCapability().tts).toMatchObject({ state: 'ready', voiceName: 'Yuna' });
+    audio.dispose();
+  });
+
+  it('a getVoices() that throws reads as no voices, not a crash', async () => {
+    vi.useFakeTimers();
+    const { audio } = lone({
+      getVoices: () => {
+        throw new Error('not ready');
+      },
+    });
+    const result = audio.playPrompt({ text: '가' });
+    await vi.advanceTimersByTimeAsync(1600);
+    await expect(result).resolves.toBe('unavailable');
+    expect(audio.getCapability().tts).toEqual({ state: 'none', reason: 'no_korean_voice' });
+    audio.dispose();
+  });
+
+  it('a voice the utterance will not take still speaks, with the language alone', async () => {
+    class StrictUtterance extends FakeUtterance {}
+    Object.defineProperty(StrictUtterance.prototype, 'voice', {
+      set() {
+        throw new TypeError('not a SpeechSynthesisVoice');
+      },
+      get: () => null,
+    });
+    const spoken: string[] = [];
+    const env: WebAudioEnv = {
+      synth: {
+        speaking: false,
+        pending: false,
+        getVoices: () => [YUNA],
+        speak: (u: { text?: string; onend: ((e: unknown) => void) | null }) => {
+          spoken.push(String(u.text));
+          queueMicrotask(() => u.onend?.({}));
+        },
+        cancel: () => undefined,
+      } as unknown as WebAudioEnv['synth'],
+      Utterance: StrictUtterance as unknown as NonNullable<WebAudioEnv['Utterance']>,
+      doc: null,
+      win: null,
+      isOnline: () => true,
+    };
+    const audio = createWebAudio(env);
+    await expect(audio.playPrompt({ text: '가' })).resolves.toBe('played');
+    expect(spoken).toEqual(['가']);
+    audio.dispose();
+  });
+
+  it('an utterance the engine refuses to build or speak is a failed prompt, not an exception', async () => {
+    const { audio } = lone({
+      speak: () => {
+        throw new Error('refused');
+      },
+    });
+    await expect(audio.playPrompt({ text: '가' })).resolves.toBe('unavailable');
+    expect(useAudioStore.getState().lastFailure?.reason).toBe('error');
+    audio.dispose();
+  });
+
+  it('an engine that throws on the unlock utterance is ignored', () => {
+    const { audio } = lone({
+      speak: () => {
+        throw new Error('refused');
+      },
+    });
+    expect(() => audio.unlockAudio()).not.toThrow();
+    expect(useAudioStore.getState().unlocked).toBe(true);
+    audio.dispose();
+  });
+});
+
 describe('platform/audio.web: capability', () => {
   it('pushes every change into the store and to subscribers', async () => {
     const { synth, audio } = rig({ voices: [] });
