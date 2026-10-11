@@ -182,7 +182,7 @@ describe("the shipped lexicon", () => {
     }
   });
   // later clusters may name ids before their batch exists; a built cluster's must exist
-  for (const name of ["records-joseon", "hangul-printing"]) {
+  for (const name of ["records-joseon", "hangul-printing", "science-art-life"]) {
     test(`every id the lexicon names for the ${name} cluster is in the registry`, () => {
       const ids = registryIds(REPO);
       const cluster = JSON.parse(readFileSync(LEXICON, "utf8")).clusters[name];

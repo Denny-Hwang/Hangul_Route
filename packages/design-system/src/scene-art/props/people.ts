@@ -481,3 +481,87 @@ export const FIG_CARVER: ItemDef = {
     { t: 'line', x1: 64, y1: 66, x2: 70, y2: 74, stroke: 'text.primary', sw: 'base' },
   ],
 };
+
+// --- PR 2.10c: science-art-life cluster -------------------------------------
+
+const SSIREUM_REF = { title: '씨름, 《단원 풍속도첩》 (본관6504-22)', publisher: '국립중앙박물관 (National Museum of Korea, museum.go.kr)', url: 'https://www.museum.go.kr/site/main/relic/treasure/view?relicId=551', accessed: ACCESSED } as const;
+
+export const FIG_COMMANDER: ItemDef = {
+  id: 'prop:fig-commander',
+  kind: 'figure',
+  box: { w: 80, h: 130 },
+  z: 'mid',
+  tintable: 'text.secondary',
+  alt: 'Joseon military commander in a dark cheollik robe, a red sash belt and a black felt jeollip hat',
+  sourceRef: { title: '융복 (戎服)', publisher: PUBLISHER, url: 'https://encykorea.aks.ac.kr/Article/E0042783', accessed: ACCESSED },
+  accuracyNote:
+    'Military dress per the entry: a pleated cheollik robe (worn for military duty from the Imjin War on), a red silk belt and a jeollip hat. Rank colours came later, so the robe is a plain dark tone, tintable. No sword or armour; faceless.',
+  nodes: [
+    { t: 'rect', x: 36, y: 40, w: 8, h: 10, fill: 'surface.paper', stroke: 'border.strong', sw: 'thin' },
+    { t: 'path', d: 'M30 48 L50 48 L58 56 L68 100 L60 104 L57 82 L68 122 L12 122 L23 82 L20 104 L12 100 L22 56 Z', fill: 'text.secondary', stroke: 'text.primary', sw: 'thin' },
+    face(40, 30, 11, 13),
+    { t: 'path', d: 'M18 18 Q18 14 30 14 Q30 3 40 3 Q50 3 50 14 Q62 14 62 18 Q62 22 40 22 Q18 22 18 18 Z M22 122 H38 V130 H22 Z M42 122 H58 V130 H42 Z', fill: 'text.primary' },
+    { t: 'path', d: 'M32 48 Q40 56 48 48 M30 92 L27 120 M37 92 L36 120 M43 92 L44 120 M50 92 L53 120', stroke: 'text.primary', sw: 'thin', det: true },
+    { t: 'rect', x: 22, y: 84, w: 36, h: 4, fill: 'brand.primary' },
+    { t: 'line', x1: 30, y1: 18, x2: 50, y2: 18, stroke: 'text.secondary', sw: 'thin' },
+  ],
+};
+
+export const FIG_WRESTLERS: ItemDef = {
+  id: 'prop:fig-wrestlers',
+  kind: 'figure',
+  box: { w: 130, h: 90 },
+  z: 'mid',
+  tintable: 'surface.sunken',
+  alt: 'Two Joseon wrestlers in plain cotton hanbok crouched shoulder to shoulder, cloth belts at waist and thigh',
+  sourceRef: SSIREUM_REF,
+  accuracyNote: "After the centre of Kim Hongdo's Ssireum: two men in plain cotton grappling. The waist and thigh belts (satba) follow ssireum today; grips simplified. Clothes tintable, faces blank.",
+  nodes: [
+    { t: 'path', d: 'M10 88 L20 62 L42 56 L50 74 L42 88 L33 88 L37 74 L28 70 L19 88 Z M120 88 L110 62 L88 56 L80 74 L88 88 L97 88 L93 74 L102 70 L111 88 Z', fill: 'surface.sunken', stroke: 'border.strong', sw: 'base' },
+    { t: 'path', d: 'M20 63 L43 57 L67 38 L58 27 L38 33 Z M110 63 L87 57 L63 38 L72 27 L92 33 Z', fill: 'surface.sunken', stroke: 'border.strong', sw: 'base' },
+    { t: 'path', d: 'M21 63 L43 57 M37 74 L46 70 M109 63 L87 57 M93 74 L84 70', stroke: 'feedback.nudge', sw: 'thick' },
+    { t: 'path', d: 'M64 35 Q80 42 88 56 M66 35 Q50 42 42 56', stroke: 'border.strong', sw: 'thick' },
+    face(56, 20, 8, 9),
+    face(74, 20, 8, 9),
+    { t: 'path', d: 'M48 19 Q48 10 56 10 Q64 10 64 19 Q56 15 48 19 Z M82 19 Q82 10 74 10 Q66 10 66 19 Q74 15 82 19 Z M53 8 A3 3 0 1 0 59 8 A3 3 0 1 0 53 8 Z M71 8 A3 3 0 1 0 77 8 A3 3 0 1 0 71 8 Z', fill: 'text.primary' },
+  ],
+};
+
+export const CROWD_SEATED: ItemDef = {
+  id: 'prop:crowd-seated',
+  kind: 'figure',
+  box: { w: 160, h: 66 },
+  z: 'mid',
+  tintable: 'surface.sunken',
+  alt: 'Four Joseon onlookers in plain cotton hanbok seated in a curved row, three in black gat hats',
+  sourceRef: SSIREUM_REF,
+  accuracyNote: "After the curved groups of onlookers in plain cotton in Kim Hongdo's Ssireum. Their hats are not described, so three wear the everyday gat and one a bare topknot. Clothes tintable, faces blank.",
+  nodes: [
+    { t: 'path', d: 'M5 66 Q5 46 22 44 Q39 46 39 66 Z M45 66 Q45 40 62 38 Q79 40 79 66 Z M83 66 Q83 40 100 38 Q117 40 117 66 Z M121 66 Q121 46 138 44 Q155 46 155 66 Z', fill: 'surface.sunken', stroke: 'border.strong', sw: 'base' },
+    face(22, 34, 7, 8),
+    { t: 'path', d: 'M55 28 A7 8 0 1 0 69 28 A7 8 0 1 0 55 28 Z M93 28 A7 8 0 1 0 107 28 A7 8 0 1 0 93 28 Z M131 34 A7 8 0 1 0 145 34 A7 8 0 1 0 131 34 Z', fill: 'surface.paper', stroke: 'border.strong', sw: 'base' },
+    { t: 'path', d: 'M16 27 L28 27 L27 17 L17 17 Z M56 21 L68 21 L67 11 L57 11 Z M132 27 L144 27 L143 17 L133 17 Z M8 28 Q22 23 36 28 Q22 31 8 28 Z M48 22 Q62 17 76 22 Q62 25 48 22 Z M124 28 Q138 23 152 28 Q138 31 124 28 Z', fill: 'text.primary' },
+    { t: 'path', d: 'M93 26 Q93 19 100 19 Q107 19 107 26 Q100 23 93 26 Z M97 17 A3 3 0 1 0 103 17 A3 3 0 1 0 97 17 Z', fill: 'text.primary' },
+    { t: 'path', d: 'M16 50 L22 56 L28 50 M56 44 L62 50 L68 44 M94 44 L100 50 L106 44 M132 50 L138 56 L144 50', stroke: 'border.strong', sw: 'thin', det: true },
+  ],
+};
+
+export const FIG_CHILD_BACK: ItemDef = {
+  id: 'prop:fig-child-back',
+  kind: 'figure',
+  box: { w: 52, h: 60 },
+  z: 'mid',
+  tintable: 'feedback.nudge',
+  alt: 'A Joseon schoolboy in hanbok crouched and turned away, a long braid down his back',
+  sourceRef: { title: '서당, 《단원 풍속도첩》 (본관6504-23)', publisher: '국립중앙박물관 (National Museum of Korea, museum.go.kr)', url: 'https://www.museum.go.kr/site/main/relic/treasure/view?relicId=552', accessed: ACCESSED },
+  accuracyNote: "After the boy at the centre of Kim Hongdo's Seodang, crouched and turned away, so only an edge of his blank face shows. The long braid with a ribbon follows unmarried boys' hair. Jacket tintable.",
+  nodes: [
+    { t: 'path', d: 'M4 60 Q4 50 26 50 Q48 50 48 60 Z', fill: 'surface.paper', stroke: 'border.strong', sw: 'base' },
+    { t: 'path', d: 'M8 56 Q4 32 26 26 Q46 28 46 56 Z M36 32 Q46 30 42 20 L38 22 Q40 28 33 28 Z', fill: 'feedback.nudge', stroke: 'text.primary', sw: 'thin' },
+    face(34, 16, 9, 10),
+    { t: 'path', d: 'M17 17 Q17 4 30 5 Q40 6 41 12 Q34 13 33 25 Q21 28 17 17 Z', fill: 'text.primary' },
+    { t: 'path', d: 'M24 24 Q21 34 25 44', stroke: 'text.primary', sw: 'thick' },
+    { t: 'path', d: 'M22 44 L28 44 L27 49 L23 49 Z', fill: 'brand.primary', det: true },
+    { t: 'line', x1: 8, y1: 56, x2: 46, y2: 56, stroke: 'text.primary', sw: 'thin', o: 0.35 },
+  ],
+};

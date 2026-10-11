@@ -2,7 +2,7 @@
   "v": 1,
   "id": "story:kim-hongdo-genre-paintings",
   "state": "ready",
-  "contentVer": 1,
+  "contentVer": 2,
   "title": {
     "ko": "김홍도의 풍속화, 씨름과 서당",
     "romanization": "Gimhongdoui pungsokhwa, ssireumgwa seodang",
@@ -107,8 +107,31 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "Hoya holding a brush over a sheet of plain hanji paper, an ink stone and water dropper beside him."
+          "artBrief": "Hoya holding a brush over a sheet of plain hanji paper, an ink stone and water dropper beside him.",
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "hoya:idle",
+                "x": 150,
+                "y": 286,
+                "s": 1
+              },
+              {
+                "ref": "prop:blank-sheet",
+                "x": 270,
+                "y": 276,
+                "s": 1.4
+              },
+              {
+                "ref": "prop:writing-set",
+                "x": 300,
+                "y": 294,
+                "s": 1
+              }
+            ],
+            "altEn": "Hoya gets ready to paint, with a brush, an inkstone and a sheet of plain paper beside him."
+          }
         },
         {
           "id": "s2",
@@ -126,8 +149,25 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "A Joseon painter in a light robe sitting on the floor painting on paper, brushes standing in a holder beside him."
+          "artBrief": "A Joseon painter in a light robe sitting on the floor painting on paper, brushes standing in a holder beside him.",
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:fig-writer-seated",
+                "x": 196,
+                "y": 288,
+                "s": 1.5
+              },
+              {
+                "ref": "prop:writing-set",
+                "x": 330,
+                "y": 290,
+                "s": 0.9
+              }
+            ],
+            "altEn": "Kim Hongdo, a court painter in a light robe, sits on the floor painting on a sheet of paper."
+          }
         },
         {
           "id": "s3",
@@ -145,8 +185,25 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "An open folding album showing small paintings of people working and playing, displayed in a museum case."
+          "artBrief": "An open folding album showing small paintings of people working and playing, displayed in a museum case.",
+          "art": {
+            "setting": "scene:modern-room",
+            "layers": [
+              {
+                "ref": "prop:display-case",
+                "x": 200,
+                "y": 300,
+                "s": 1.7
+              },
+              {
+                "ref": "prop:album-open",
+                "x": 200,
+                "y": 215,
+                "s": 1.3
+              }
+            ],
+            "altEn": "Kim Hongdo's album of everyday-life paintings lies open in a case at the National Museum of Korea."
+          }
         },
         {
           "id": "s4",
@@ -164,8 +221,44 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "Two wrestlers gripping each other in the center, with two curved groups of seated spectators in white clothes and hats, one above and one below them, with round, cheerful faces."
+          "artBrief": "Two wrestlers gripping each other in the center, with two curved groups of seated spectators in white clothes and hats, one above and one below them, with round, cheerful faces.",
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:crowd-seated",
+                "x": 104,
+                "y": 160,
+                "s": 0.75,
+                "z": "back",
+                "tint": "surface.paper"
+              },
+              {
+                "ref": "prop:crowd-seated",
+                "x": 296,
+                "y": 160,
+                "s": 0.75,
+                "z": "back",
+                "tint": "surface.paper"
+              },
+              {
+                "ref": "prop:fig-wrestlers",
+                "x": 200,
+                "y": 252,
+                "s": 1.45,
+                "tint": "surface.paper"
+              },
+              {
+                "ref": "prop:crowd-seated",
+                "x": 200,
+                "y": 300,
+                "s": 1.05,
+                "z": "front",
+                "tint": "surface.paper"
+              }
+            ],
+            "altEn": "In Kim Hongdo's Ssireum two wrestlers grapple in the middle while two curved rows of onlookers watch closely."
+          }
         },
         {
           "id": "s5",
@@ -183,8 +276,38 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "Detail of the painting's edges: a smiling taffy seller with a wooden tray stands at the left edge, outside the crowd's attention; at the right edge, a pair of shoes that someone has taken off rests on the ground."
+          "artBrief": "Detail of the painting's edges: a smiling taffy seller with a wooden tray stands at the left edge, outside the crowd's attention; at the right edge, a pair of shoes that someone has taken off rests on the ground.",
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:crowd-seated",
+                "x": 270,
+                "y": 196,
+                "s": 0.9,
+                "z": "back"
+              },
+              {
+                "ref": "prop:fig-child",
+                "x": 144,
+                "y": 276,
+                "s": 1.3
+              },
+              {
+                "ref": "prop:taffy-tray",
+                "x": 70,
+                "y": 286,
+                "s": 1.2
+              },
+              {
+                "ref": "prop:shoes",
+                "x": 330,
+                "y": 282,
+                "s": 1.6
+              }
+            ],
+            "altEn": "At the edges of the painting a young taffy seller stands by his tray on the left, and a pair of shoes rests on the right."
+          }
         },
         {
           "id": "s6",
@@ -202,8 +325,39 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "A small schoolroom: a teacher in a square scholar's cap and several students gather around one boy who is crouched and turned away, wiping his eyes; some students grin, and the teacher looks puzzled."
+          "artBrief": "A small schoolroom: a teacher in a square scholar's cap and several students gather around one boy who is crouched and turned away, wiping his eyes; some students grin, and the teacher looks puzzled.",
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:fig-child",
+                "x": 76,
+                "y": 276,
+                "s": 0.9
+              },
+              {
+                "ref": "prop:fig-child",
+                "x": 126,
+                "y": 286,
+                "s": 0.85,
+                "tint": "surface.sunken"
+              },
+              {
+                "ref": "prop:fig-child-back",
+                "x": 200,
+                "y": 284,
+                "s": 1.6
+              },
+              {
+                "ref": "prop:fig-writer-seated",
+                "x": 308,
+                "y": 280,
+                "s": 0.9,
+                "tint": "surface.paper"
+              }
+            ],
+            "altEn": "In Kim Hongdo's Seodang, a teacher and his students gather around one boy who sits turned away, sniffling."
+          }
         },
         {
           "id": "s7",
@@ -220,8 +374,45 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "Hoya and a child friend in a sand ring, playfully gripping cloth belts and smiling, with friends cheering around them."
+          "artBrief": "Hoya and a child friend in a sand ring, playfully gripping cloth belts and smiling, with friends cheering around them.",
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:sand-ring",
+                "x": 200,
+                "y": 292,
+                "s": 1.4
+              },
+              {
+                "ref": "prop:fig-child",
+                "x": 56,
+                "y": 268,
+                "s": 0.8,
+                "tint": "feedback.nudgeLight"
+              },
+              {
+                "ref": "hoya:cheering",
+                "x": 168,
+                "y": 284,
+                "s": 0.8
+              },
+              {
+                "ref": "prop:fig-child",
+                "x": 248,
+                "y": 280,
+                "s": 1.05
+              },
+              {
+                "ref": "prop:fig-child",
+                "x": 350,
+                "y": 268,
+                "s": 0.8,
+                "tint": "brand.secondaryLight"
+              }
+            ],
+            "altEn": "Today Hoya cheers in a sand ring beside a friend, set for a friendly round of ssireum, as other friends look on."
+          }
         }
       ],
       "checks": [
