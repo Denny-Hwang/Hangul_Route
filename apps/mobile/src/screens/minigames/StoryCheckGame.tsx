@@ -4,11 +4,15 @@ import {
   ChoiceCard,
   Heading,
   HoyaBubble,
+  Icon,
+  KOREAN_LANGUAGE,
   KoreanText,
   Pill,
   Progress,
   Screen,
   Spacer,
+  colors,
+  radii,
   spacing,
   supportedCardIds,
   touchTarget,
@@ -16,7 +20,7 @@ import {
   useMediaSize,
 } from '@hangul-route/design-system';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AccessibilityInfo, Platform, Text, View } from 'react-native';
+import { AccessibilityInfo, Platform, Pressable, Text, View } from 'react-native';
 import { storyById } from '../../content/stories';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeStory } from '../../logic/content-locale';
@@ -26,15 +30,19 @@ import {
   STORY_CHECK_AUDIO_SOURCE,
   checkAnsweredPayload,
   checkBubble,
+  checkFallbackReason,
   checkFinishedPayload,
   checkGameItems,
   checkHasKorean,
+  checkOptionCell,
   checkOptionColumns,
+  checkOutcomeLine,
   checkProgress,
   checkSpeech,
   optionCardView,
   revealNeeded,
   tallyResolved,
+  targetAccessibilityLabel,
   targetView,
   uiSpeechLang,
   type CheckIds,
@@ -49,7 +57,9 @@ import {
 } from '../../logic/story/check-player';
 import { sayItYourselfShown } from '../../logic/story/reader-effects';
 import { effectiveReadToMe } from '../../logic/story/reader-settings';
+import { noteFallbackShown } from '../../platform/audio';
 import { nudge, success, tapLight } from '../../platform/haptics';
+import { focusForScreenReader } from '../../platform/screen-reader';
 import { track } from '../../platform/telemetry';
 import { useLocaleStore } from '../../store/locale-store';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
@@ -62,11 +72,20 @@ interface Props {
   scope: MinigameScope;
   /** The shell's close (`minigame.finished`, then back); called after the step is marked complete. */
   onFinish: () => void;
+  /** Close: back to the quest step without completing it; answers already scored stay scored. */
+  onBack: () => void;
 }
 
-/** A web DOM node (react-native-web forwards the ref); a no-op on native. */
-interface WebNode {
-  querySelector?: (selector: string) => { focus?: () => void } | null;
+/** Taught Korean inside an English line: read in a Korean voice (spec §3.10; web `lang`, iOS `accessibilityLanguage`). */
+const koreanSpeech = { lang: KOREAN_LANGUAGE, accessibilityLanguage: KOREAN_LANGUAGE };
+
+/** Hidden from assistive tech: a visual cue whose words a labelled element already says. */
+const a11yHidden = { accessibilityElementsHidden: true, importantForAccessibility: 'no-hide-descendants', 'aria-hidden': true } as const;
+
+/** Native screen readers hear the outcome line; iOS queues it behind the focus move to Next, Android has no queue option. */
+function announce(line: string, queue: boolean): void {
+  if (queue && Platform.OS === 'ios') AccessibilityInfo.announceForAccessibilityWithOptions(line, { queue: true });
+  else AccessibilityInfo.announceForAccessibility(line);
 }
 
 /**
@@ -81,7 +100,7 @@ interface WebNode {
  * paints them and runs their effects. The word recap after the last item
  * arrives with PR 3.4b.
  */
-export function StoryCheckGame({ scope, onFinish }: Props): React.ReactElement {
+export function StoryCheckGame({ scope, onFinish, onBack }: Props): React.ReactElement {
   const locale = useLocale();
   const m = useMessages();
   const copy = m.learner.story.check;
@@ -114,7 +133,8 @@ export function StoryCheckGame({ scope, onFinish }: Props): React.ReactElement {
   const settings = useLocaleStore((s) => (profileId === null ? undefined : s.byProfile[profileId]));
   const romanizationMode = settings?.romanizationMode ?? 'always';
   const readToMe = effectiveReadToMe(settings?.readToMe, profile?.ageGroup ?? '');
-  const audio = useReaderAudio(STORY_CHECK_AUDIO_SOURCE);
+  // No PromptPanel here: the only fallback this screen draws is the "Say it yourself" chip, reported below.
+  const audio = useReaderAudio(STORY_CHECK_AUDIO_SOURCE, { reportFallback: false });
   // The hook's functions are stable; the object around them is new on every render.
   const { play: playAudio, stop: stopAudio, resetForScene } = audio;
   const pictureSize = useMediaSize(touchTarget.hero);
@@ -147,9 +167,11 @@ export function StoryCheckGame({ scope, onFinish }: Props): React.ReactElement {
             nudge();
           }
           answerRound(effect.roundKey, effect.correct);
-          // The Hoya bubble is a polite live region on the web; native gets the outcome spoken.
-          if (Platform.OS !== 'web') {
-            AccessibilityInfo.announceForAccessibility(effect.correct ? copy.correct : copy.tryAnother);
+          // The Hoya bubble is a polite live region on the web. Native hears the outcome and Hoya's line
+          // in one announcement: a miss at once, a resolve after focus moves to Next (effect below).
+          const answered = playerView.items[previous.index];
+          if (Platform.OS !== 'web' && !effect.correct && answered) {
+            announce(checkOutcomeLine(answered, out.state, false, copy), false);
           }
         } else if (effect.type === 'resolved') {
           tally.current = tallyResolved(tally.current, effect);
@@ -173,12 +195,16 @@ export function StoryCheckGame({ scope, onFinish }: Props): React.ReactElement {
     [playerView, answerRound, copy, profileId, finish, resetForScene],
   );
 
-  // Focus follows the resolved item to Next (web: the button inside the wrapper).
+  // Focus follows the resolved item to Next (web: the DOM focus; native: the screen reader's focus),
+  // then native hears "Correct" with the explanation (iOS has no live regions).
   const resolvedKey = state.phase === 'explained' ? state.index : -1;
+  const resolvedLine = useRef<string | null>(null);
+  const resolvedItem = items[resolvedKey];
+  resolvedLine.current = resolvedItem ? checkOutcomeLine(resolvedItem, state, true, copy) : null;
   useEffect(() => {
-    if (resolvedKey < 0 || Platform.OS !== 'web') return;
-    const node = nextRef.current as unknown as WebNode | null;
-    node?.querySelector?.('[role="button"]')?.focus?.();
+    if (resolvedKey < 0) return;
+    focusForScreenReader(nextRef.current);
+    if (Platform.OS !== 'web' && resolvedLine.current !== null) announce(resolvedLine.current, true);
   }, [resolvedKey]);
 
   // Read to me: the prompt (and its Korean) is read when an item opens; options only on request.
@@ -187,14 +213,28 @@ export function StoryCheckGame({ scope, onFinish }: Props): React.ReactElement {
     () => (item ? checkSpeech(item, sourceItems[state.index], uiSpeechLang(locale)) : null),
     [item, sourceItems, state.index, locale],
   );
-  const autoplay = useRef({ readToMe, unlocked: audio.unlocked, speech, play: playAudio });
-  autoplay.current = { readToMe, unlocked: audio.unlocked, speech, play: playAudio };
+  const autoplay = useRef({ readToMe, speech, play: playAudio });
+  autoplay.current = { readToMe, speech, play: playAudio };
+  // Each item is read once: when it opens, or on the first gesture that unlocks audio (web cold open).
+  const autoplayed = useRef(-1);
   useEffect(() => {
-    const { readToMe: on, unlocked, speech: s, play } = autoplay.current;
-    if (on && unlocked && s && stateRef.current.phase === 'answering') play(s.question);
-  }, [state.index]);
+    const { readToMe: on, speech: s, play } = autoplay.current;
+    if (!on || !audio.unlocked || !s || autoplayed.current === state.index) return;
+    if (stateRef.current.phase !== 'answering') return;
+    autoplayed.current = state.index;
+    play(s.question);
+  }, [state.index, audio.unlocked]);
 
   useEffect(() => () => stopAudio(), [stopAudio]);
+
+  // `audio.fallback_shown` (source 'story-check') only for the fallback drawn here: the chip (spec §3.4).
+  const sayItNow =
+    item !== undefined &&
+    sayItYourselfShown({ canPlayKorean: audio.canPlayKorean, reason: audio.slot.view.reason, hasKorean: checkHasKorean(item) });
+  useEffect(() => {
+    const reason = checkFallbackReason(sayItNow);
+    if (reason !== null) noteFallbackShown(STORY_CHECK_AUDIO_SOURCE, reason);
+  }, [sayItNow]);
 
   const total = items.length;
   if (total === 0 || !item || !speech) {
@@ -213,16 +253,31 @@ export function StoryCheckGame({ scope, onFinish }: Props): React.ReactElement {
   const bubble = checkBubble(item, state, copy);
   const columns = checkOptionColumns(item);
   const resolved = state.phase !== 'answering';
-  const sayIt = sayItYourselfShown({
-    canPlayKorean: audio.canPlayKorean,
-    reason: audio.slot.view.reason,
-    hasKorean: checkHasKorean(item),
-  });
+  const sayIt = sayItNow;
+  const cell = checkOptionCell(columns);
 
   return (
     <Screen tone="canvas" scrollable>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
-        <View style={{ flex: 1 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: touchTarget.min }}>
+        {/* Close (wireframe check.md A): back to the quest step; scored answers stay scored. */}
+        <Pressable
+          onPress={onBack}
+          accessibilityRole="button"
+          accessibilityLabel={m.learner.story.reader.close}
+          testID="story-check-close"
+          style={({ pressed }) => ({
+            width: touchTarget.min,
+            height: touchTarget.min,
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderRadius: radii.pill,
+            backgroundColor: pressed ? colors.surface.sunken : 'transparent',
+          })}
+        >
+          <Icon name="close" size={spacing.xxl} color={colors.text.secondary} />
+        </Pressable>
+        {/* The bar carries no value a screen reader can say; the labelled position does (§3.10). */}
+        <View style={{ flex: 1 }} {...a11yHidden}>
           <Progress
             value={progress.value}
             max={total}
@@ -230,7 +285,17 @@ export function StoryCheckGame({ scope, onFinish }: Props): React.ReactElement {
             testID="story-check-progress"
           />
         </View>
-        <Pill label={copy.position.pill(progress.position, total)} size="sm" testID="story-check-position" />
+        <View
+          accessible
+          accessibilityLabel={copy.positionLabel(progress.position, total)}
+          aria-label={copy.positionLabel(progress.position, total)}
+          role="group"
+          testID="story-check-position-group"
+        >
+          <View {...a11yHidden}>
+            <Pill label={copy.position.pill(progress.position, total)} size="sm" testID="story-check-position" />
+          </View>
+        </View>
       </View>
 
       <Spacer size="lg" />
@@ -239,7 +304,7 @@ export function StoryCheckGame({ scope, onFinish }: Props): React.ReactElement {
           <Heading level="prompt" testID="story-check-prompt">
             {item.promptParts.map((part, i) =>
               'target' in part ? (
-                <Text key={i} style={{ fontWeight: typography.weight.bold }}>
+                <Text key={i} {...koreanSpeech} style={{ fontWeight: typography.weight.bold }}>
                   {part.target.ko}
                 </Text>
               ) : (
@@ -266,6 +331,8 @@ export function StoryCheckGame({ scope, onFinish }: Props): React.ReactElement {
               size="md"
               // Without a Korean voice the speaker gives way to the "Say it yourself" chip (F-AUDIO-004 §3.8).
               onPress={!sayIt && speech.target ? () => playAudio(speech.target ? [speech.target] : []) : undefined}
+              // As the speaker it says that a tap plays the word; as plain text, "ko, romanization" (the default).
+              accessibilityLabel={!sayIt && speech.target ? targetAccessibilityLabel(target, copy) : undefined}
               testID="story-check-target"
             />
           </View>
@@ -301,7 +368,7 @@ export function StoryCheckGame({ scope, onFinish }: Props): React.ReactElement {
           return (
             <View
               key={option.id}
-              style={{ flexGrow: 1, flexBasis: columns === 2 ? '45%' : '100%', minWidth: touchTarget.hero, gap: spacing.xs }}
+              style={{ ...cell, minWidth: touchTarget.hero, gap: spacing.xs }}
             >
               <ChoiceCard
                 testID={`story-check-option-${option.id}`}
@@ -315,16 +382,20 @@ export function StoryCheckGame({ scope, onFinish }: Props): React.ReactElement {
                 onPress={() => dispatch({ type: 'choose', optionId: option.id })}
               />
               {card.status ? (
-                <Body size="sm" weight="semibold" testID={`story-check-status-${option.id}`}>
-                  {card.status === 'correct' ? copy.correct : copy.tryAnother}
-                </Body>
+                // The visible non-colour cue; the card's accessible name already ends with these words.
+                <View {...a11yHidden}>
+                  <Body size="sm" weight="semibold" testID={`story-check-status-${option.id}`}>
+                    {card.status === 'correct' ? copy.correct : copy.tryAnother}
+                  </Body>
+                </View>
               ) : null}
             </View>
           );
         })}
       </View>
 
-      <View accessibilityLiveRegion="polite">
+      {/* A live region on the web only: native announces the outcome line itself (one announcement, no overlap). */}
+      <View accessibilityLiveRegion={Platform.OS === 'web' ? 'polite' : 'none'}>
         {bubble ? (
           <>
             <Spacer size="lg" />
@@ -336,8 +407,9 @@ export function StoryCheckGame({ scope, onFinish }: Props): React.ReactElement {
       {resolved ? (
         <>
           <Spacer size="xl" />
-          <View ref={nextRef}>
+          <View>
             <Button
+              pressableRef={nextRef}
               label={copy.next.cta}
               tone="primary"
               size="hero"

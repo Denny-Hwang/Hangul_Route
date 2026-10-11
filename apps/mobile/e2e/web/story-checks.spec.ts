@@ -1,6 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { completeChildForm, keepSidewaysIfAsked } from './helpers';
+import { completeChildForm, keepSidewaysIfAsked, readStored, seedStored } from './helpers';
 import { fullyVisible } from './story-reader-helpers';
 
 /**
@@ -57,9 +57,21 @@ const option = (page: Page, id: string): Locator => page.getByTestId(`story-chec
 const position = (page: Page): Locator => page.getByTestId('story-check-position');
 const nextButton = (page: Page): Locator => page.getByTestId('story-check-next');
 
+/** Stored learner settings (`settings:<profileId>`), seeded before the quest opens. */
+type LearnerSettings = { romanizationMode?: 'always' | 'tap'; readToMe?: boolean };
+
+async function seedSettings(page: Page, settings: LearnerSettings): Promise<void> {
+  const profiles = await readStored<Array<{ id: string }>>(page, 'profiles');
+  const id = profiles?.[0]?.id;
+  if (!id) throw new Error('no profile stored');
+  await seedStored(page, `settings:${id}`, { romanizationMode: 'always', ...settings });
+  await expect(page.getByText('Hi, Dami!')).toBeVisible();
+}
+
 /** Intro, skip the read step, then open the check step. */
-async function openChecks(page: Page): Promise<void> {
+async function openChecks(page: Page, settings?: LearnerSettings): Promise<void> {
   await onboard(page);
+  if (settings) await seedSettings(page, settings);
   await page.waitForFunction(() => Boolean((window as E2eWindow).__hrStoryE2E), undefined, { timeout: 10_000 });
   await page.evaluate(
     ([questId, episodeId]) => (window as E2eWindow).__hrStoryE2E?.openQuest({ questId, episodeId }),
@@ -233,6 +245,81 @@ test.describe('story check step (fixture bundle)', () => {
     expect(results).not.toMatch(/\d+\s*(%|\/\s*\d)/);
   });
 
+  test('screen reader: the labelled position, Korean in a Korean voice, each outcome said once, Close', async ({ page }) => {
+    await openChecks(page);
+    // The pill says "Question 1 of 3", not "one slash three"; the bar and the bare pill are hidden.
+    await expect(page.getByTestId('story-check-position-group')).toHaveAccessibleName('Question 1 of 3');
+    await expect(page.getByRole('group', { name: 'Question 1 of 3' })).toBeVisible();
+    await option(page, C1.wrong[0]!).click();
+    // The status line is the visible cue; the card's name already ends with it.
+    await expect(page.getByTestId(`story-check-status-${C1.wrong[0]!}`)).toHaveText('Try another');
+    const hidden = await page
+      .getByTestId(`story-check-status-${C1.wrong[0]!}`)
+      .evaluate((el) => Boolean(el.closest('[aria-hidden="true"]')));
+    expect(hidden).toBe(true);
+    await answer(page, C1);
+
+    // The inline target of "What does 한글날 mean?" is marked Korean.
+    await expect(page.getByTestId('story-check-prompt')).toHaveText('What does 한글날 mean?');
+    await expect(page.getByTestId('story-check-prompt').locator('[lang="ko"]')).toHaveText('한글날');
+    await expect(page.getByTestId('story-check-position-group')).toHaveAccessibleName('Question 2 of 3');
+
+    // Close: back to the quest step without finishing it (wireframe check.md A).
+    const close = page.getByTestId('story-check-close');
+    await expect(close).toHaveAccessibleName('Close');
+    await close.click();
+    await expect(stepHeading(page, 'A few questions')).toBeVisible();
+    const events = await storyEvents(page);
+    expect(events.filter((e) => e.name === 'story.check.finished')).toEqual([]);
+    expect(events.filter((e) => e.name === 'story.check.answered').map((e) => e.payload?.checkId)).toEqual(['c1']);
+  });
+
+  test('Read to me: the question is read when each item opens, with no tap', async ({ page }) => {
+    await openChecks(page, { readToMe: true });
+    const asked = (): Promise<string[]> => page.evaluate(() => (window as E2eWindow).__silentSpeech ?? []);
+    await expect.poll(asked).toContain('Who led the making of the Korean alphabet?');
+    await page.evaluate(() => {
+      (window as E2eWindow).__silentSpeech?.splice(0);
+    });
+    await answer(page, C1);
+    await expect.poll(asked).toContain('What does ');
+    // Read once per item: answering and waiting reads nothing more for this item.
+    await option(page, C2.right).click();
+    const count = (await asked()).filter((t) => t === 'What does ').length;
+    await page.waitForTimeout(1000);
+    expect((await asked()).filter((t) => t === 'What does ').length).toBe(count);
+  });
+
+  test('hide until tap: romanization behind "Show how to say it", and always shown once resolved', async ({ page }) => {
+    await openChecks(page, { romanizationMode: 'tap' });
+    // Item 1 has no Korean: nothing to reveal.
+    await expect(page.getByTestId('story-check-reveal')).toHaveCount(0);
+    await answer(page, C1);
+
+    const target = page.getByTestId('story-check-target');
+    await expect(target).toContainText('한글날');
+    await expect(target).not.toContainText('hangeullal');
+    const reveal = page.getByTestId('story-check-reveal');
+    await expect(reveal).toHaveText('Show how to say it');
+    await reveal.click();
+    await expect(target).toContainText('hangeullal');
+    await expect(reveal).toHaveCount(0);
+    await answer(page, C2);
+    // Item 3 has no Korean: the reveal does not carry over.
+    await expect(position(page)).toHaveText('3 / 3');
+    await expect(page.getByTestId('story-check-reveal')).toHaveCount(0);
+  });
+
+  test('hide until tap, never revealed: the romanization shows once the item resolves', async ({ page }) => {
+    await openChecks(page, { romanizationMode: 'tap' });
+    await answer(page, C1);
+    const target = page.getByTestId('story-check-target');
+    await expect(target).not.toContainText('hangeullal');
+    await option(page, C2.right).click();
+    await expect(target).toContainText('hangeullal');
+    await expect(page.getByTestId('story-check-reveal')).toHaveCount(0);
+  });
+
   test('no sound needed: the speaker asks for the question, and the step still plays to the end', async ({ page }) => {
     await openChecks(page);
     await page.getByTestId('story-check-speaker').click();
@@ -262,11 +349,15 @@ test.describe('story check step (fixture bundle)', () => {
   for (const vp of [
     { width: 320, height: 568 },
     { width: 844, height: 390 },
+    { width: 1280, height: 800 },
   ]) {
     test(`${vp.width}x${vp.height}: the options and Next are reachable, no sideways scroll`, async ({ page }) => {
       await page.setViewportSize(vp);
       await openChecks(page);
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+      // A wide window keeps the reading column (tokens layout.maxWidth.reading = 720).
+      const optionsBox = await page.getByTestId('story-check-options').boundingBox();
+      expect(optionsBox?.width ?? 0).toBeLessThanOrEqual(720);
       await option(page, C1.right).scrollIntoViewIfNeeded();
       await option(page, C1.right).click();
       const next = nextButton(page);

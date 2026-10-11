@@ -1,6 +1,7 @@
-import type { KoText, SpeechLang, Story, StoryLevel } from '@hangul-route/content-schema';
-import { romanizationShown, type Messages, type RomanizationMode, type UiLocale } from '@hangul-route/i18n';
+import { SPEECH_LANGS, type KoText, type SpeechLang, type Story, type StoryLevel } from '@hangul-route/content-schema';
+import { LOCALE_META, romanizationShown, type Messages, type RomanizationMode, type UiLocale } from '@hangul-route/i18n';
 import type { PlaySpec, PromptKind } from '../audio/controller';
+import type { FallbackReason } from '../audio/prompt-state';
 import { HIGHLIGHT_AFTER_WRONG, type CheckState } from './check-player';
 import { buildCheckView, type CheckView, type OptionView } from './check-view';
 
@@ -33,11 +34,13 @@ export function checkGameItems(story: Story | undefined, level: StoryLevel, chec
 
 // --- Speech ---------------------------------------------------------------
 
-const SPEECH_LANG: Record<UiLocale, SpeechLang> = { en: 'en-US', es: 'es-US', ko: 'ko-KR' };
-
-/** The voice of the UI locale (F-I18N-001 `LOCALE_META[locale].speechLang`). */
+/**
+ * The voice of the UI locale, read from F-I18N-001 `LOCALE_META[locale].speechLang` (the single source,
+ * spec §3.10); a value the speech layer does not know falls back to English.
+ */
 export function uiSpeechLang(locale: UiLocale): SpeechLang {
-  return SPEECH_LANG[locale];
+  const lang = LOCALE_META[locale].speechLang;
+  return SPEECH_LANGS.find((l) => l === lang) ?? 'en-US';
 }
 
 /**
@@ -49,8 +52,12 @@ export function speechLangOf(shown: string, source: string | undefined, ui: Spee
   return source !== undefined && shown !== source ? ui : 'en-US';
 }
 
-/** A chunk worth speaking has a letter or a digit (not just "?" after a token). */
-const SAYABLE = /[\p{L}\p{N}]/u;
+/**
+ * A chunk worth speaking has a letter or a digit (not just "?" after a token). Explicit ranges for the
+ * UI languages (Latin with its accents, Hangul syllables and jamo): Hermes support for `\p{}` is not
+ * guaranteed, and this module loads with the minigame shell.
+ */
+const SAYABLE = /[0-9A-Za-z\u00C0-\u024F\u1100-\u11FF\u3130-\u318F\uAC00-\uD7A3]/;
 
 function step(text: string, language: SpeechLang, kind: PromptKind, audioRef?: string): PlaySpec {
   const spec: PlaySpec = { text, language, kind, source: STORY_CHECK_AUDIO_SOURCE };
@@ -191,6 +198,20 @@ export function checkOptionColumns(item: CheckView): 1 | 2 {
   return item.options.length > 0 && item.options.every((o) => o.art !== undefined) ? 2 : 1;
 }
 
+export interface CheckOptionCell {
+  flexGrow: number;
+  flexBasis: '45%' | '100%';
+  maxWidth?: '50%';
+}
+
+/**
+ * The flex cell around one option card. Two columns: a half-row cell that never grows past half, so
+ * an odd last picture keeps its column width instead of stretching across the row.
+ */
+export function checkOptionCell(columns: 1 | 2): CheckOptionCell {
+  return columns === 2 ? { flexGrow: 1, flexBasis: '45%', maxWidth: '50%' } : { flexGrow: 1, flexBasis: '100%' };
+}
+
 // --- Target and romanization -----------------------------------------------
 
 export interface TargetView {
@@ -213,6 +234,15 @@ export function targetView(item: CheckView, state: CheckState, ctx: Romanization
   };
   if (!item.hideTargetGloss || done) view.gloss = item.target.en;
   return view;
+}
+
+/**
+ * The accessible name of the target when it is the Korean speaker: the Korean, its romanization when
+ * shown, and that a tap plays it. Never the gloss, which would give a pick-meaning answer away.
+ */
+export function targetAccessibilityLabel(target: TargetView, copy: CheckCopy): string {
+  const korean = target.romanization === '' ? target.ko : `${target.ko}, ${target.romanization}`;
+  return `${korean}. ${copy.speakerTarget}`;
 }
 
 /** Whether the item draws any taught Korean (a target or a Korean option). */
@@ -242,6 +272,24 @@ export function checkBubble(item: CheckView, state: CheckState, copy: CheckCopy)
   if (state.wrong.length === 0) return null;
   if (state.wrong.length >= HIGHLIGHT_AFTER_WRONG) return { tone: 'thinking', message: copy.lookHere };
   return { tone: 'thinking', message: item.hintEn ?? copy.defaultHint };
+}
+
+/**
+ * What a native screen reader hears after a tap (iOS has no live regions): the outcome, then Hoya's line
+ * (the hint, the ring pointer, or the explanation), as one announcement so neither cuts the other off.
+ */
+export function checkOutcomeLine(item: CheckView, state: CheckState, correct: boolean, copy: CheckCopy): string {
+  const outcome = correct ? copy.correct : copy.tryAnother;
+  const bubble = checkBubble(item, state, copy);
+  return bubble ? `${outcome}. ${bubble.message}` : outcome;
+}
+
+/**
+ * The `audio.fallback_shown` reason this screen reports (spec §3.4): only the "Say it yourself" chip is a
+ * fallback it draws (no `PromptPanel`, the Korean text is always on screen), so only `no_voice` counts.
+ */
+export function checkFallbackReason(sayItShown: boolean): FallbackReason | null {
+  return sayItShown ? 'no_voice' : null;
 }
 
 /** Fill-only progress: `value` grows when an item resolves and never drops; `position` is the item shown (1-based). */

@@ -106,7 +106,7 @@ export function MinigameScreen({ route, navigation }: Props): React.ReactElement
     case 'story-read':
       return <StoryReadGame scope={scope} onFinish={close} onBack={() => navigation.goBack()} />;
     case 'story-check':
-      return <StoryCheckGame scope={scope} onFinish={close} />;
+      return <StoryCheckGame scope={scope} onFinish={close} onBack={() => navigation.goBack()} />;
     default:
       return fallback(copy.comingSoon);
   }

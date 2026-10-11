@@ -1,4 +1,4 @@
-import { getMessages } from '@hangul-route/i18n';
+import { LOCALE_META, UI_LOCALES, getMessages } from '@hangul-route/i18n';
 import type { StoryCheck } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { storiesAll } from '../../../content/stories';
@@ -8,10 +8,13 @@ import {
   STORY_CHECK_AUDIO_SOURCE,
   checkAnsweredPayload,
   checkBubble,
+  checkFallbackReason,
   checkFinishedPayload,
   checkGameItems,
   checkHasKorean,
   checkOptionColumns,
+  checkOptionCell,
+  checkOutcomeLine,
   checkProgress,
   checkSpeech,
   optionCardState,
@@ -19,6 +22,7 @@ import {
   revealNeeded,
   speechLangOf,
   tallyResolved,
+  targetAccessibilityLabel,
   targetView,
   uiSpeechLang,
 } from '../check-game';
@@ -120,6 +124,10 @@ describe('speech languages', () => {
     expect(uiSpeechLang('ko')).toBe('ko-KR');
   });
 
+  it('reads the voice from LOCALE_META, the single source (spec §3.10)', () => {
+    for (const locale of UI_LOCALES) expect(uiSpeechLang(locale)).toBe(LOCALE_META[locale].speechLang);
+  });
+
   it('speaks a string in the UI voice only when an overlay replaced the English source', () => {
     expect(speechLangOf('¿Por qué?', 'Why?', 'es-US')).toBe('es-US');
     expect(speechLangOf('Why?', 'Why?', 'es-US')).toBe('en-US');
@@ -167,6 +175,21 @@ describe('checkSpeech', () => {
   it('skips a prompt chunk with nothing to say', () => {
     const item = view({ ...meaningCheck, promptEn: '{target}?' });
     expect(checkSpeech(item, item, 'en-US').question.map((s) => s.text)).toEqual(['한글날']);
+  });
+
+  it('speaks Spanish and Korean prompt chunks, and skips punctuation-only ones (no Unicode property escapes)', () => {
+    const es = view({ ...meaningCheck, promptEn: '¿Qué significa {target}?' });
+    expect(checkSpeech(es, view(meaningCheck), 'es-US').question.map((s) => s.text)).toEqual(['¿Qué significa ', '한글날']);
+    const ko = view({ ...textCheck, promptEn: '왜 만들었을까요?' });
+    expect(checkSpeech(ko, view(textCheck), 'ko-KR').question).toEqual([
+      { text: '왜 만들었을까요?', language: 'ko-KR', kind: 'sentence', source: STORY_CHECK_AUDIO_SOURCE },
+    ]);
+    const digits = view({ ...meaningCheck, promptEn: '{target} 1446?' });
+    expect(checkSpeech(digits, digits, 'en-US').question.map((s) => s.text)).toEqual(['한글날', ' 1446?']);
+    const accented = view({ ...meaningCheck, promptEn: '{target} ¿ñ?' });
+    expect(checkSpeech(accented, accented, 'en-US').question.map((s) => s.text)).toEqual(['한글날', ' ¿ñ?']);
+    const bare = view({ ...meaningCheck, promptEn: '¿{target}? ...' });
+    expect(checkSpeech(bare, bare, 'en-US').question.map((s) => s.text)).toEqual(['한글날']);
   });
 
   it('reads a Korean option in Korean, then its gloss', () => {
@@ -372,6 +395,38 @@ describe('checkBubble', () => {
   });
 });
 
+describe('checkOutcomeLine (native screen readers hear the outcome and Hoya in one line)', () => {
+  const item = view(textCheck);
+
+  it('a wrong tap: Try another, then the hint or the ring pointer', () => {
+    expect(checkOutcomeLine(item, answering({ wrong: ['b'] }), false, copy)).toBe('Try another. Think of the king.');
+    expect(checkOutcomeLine(item, answering({ wrong: ['b', 'c'] }), false, copy)).toBe(`Try another. ${copy.lookHere}`);
+  });
+
+  it('resolved: Correct, then the explanation; Correct alone when the check has none', () => {
+    expect(checkOutcomeLine(item, explained(), true, copy)).toBe('Correct. It was made so people could read.');
+    expect(checkOutcomeLine(view({ ...textCheck, explainEn: undefined }), explained(), true, copy)).toBe('Correct');
+  });
+});
+
+describe('targetAccessibilityLabel', () => {
+  it('names the Korean, its romanization when shown, and that a tap plays it; never the gloss', () => {
+    expect(targetAccessibilityLabel({ ko: '한글날', romanization: 'hangeullal', inline: true }, copy)).toBe(
+      '한글날, hangeullal. Hear the Korean word',
+    );
+    expect(targetAccessibilityLabel({ ko: '한글날', romanization: '', gloss: 'Hangul Day', inline: true }, copy)).toBe(
+      '한글날. Hear the Korean word',
+    );
+  });
+});
+
+describe('checkFallbackReason (audio.fallback_shown only for a fallback on screen)', () => {
+  it('reports no_voice while the Say it yourself chip shows, else nothing', () => {
+    expect(checkFallbackReason(true)).toBe('no_voice');
+    expect(checkFallbackReason(false)).toBeNull();
+  });
+});
+
 describe('checkProgress (fill-only)', () => {
   it('fills when an item resolves and never drops; the pill names the current item', () => {
     expect(checkProgress(answering(), 3)).toEqual({ value: 0, position: 1 });
@@ -391,6 +446,11 @@ describe('checkOptionColumns', () => {
     expect(checkOptionColumns(view(pictureCheck))).toBe(2);
     expect(checkOptionColumns(view(textCheck))).toBe(1);
     expect(checkOptionColumns(view(koreanOptionCheck))).toBe(1);
+  });
+
+  it('a two-column cell never grows past half the row, so an odd last picture keeps its column width', () => {
+    expect(checkOptionCell(2)).toEqual({ flexGrow: 1, flexBasis: '45%', maxWidth: '50%' });
+    expect(checkOptionCell(1)).toEqual({ flexGrow: 1, flexBasis: '100%' });
   });
 });
 

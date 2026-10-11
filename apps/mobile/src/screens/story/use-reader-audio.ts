@@ -38,9 +38,14 @@ export interface ReaderAudio {
 /**
  * @param source surface id of the prompt slot (`audio.fallback_shown`); the story check
  * (F-STORY-003 §3.4) passes `'story-check'`, the reader keeps its default.
+ * @param options.reportFallback `false` for a screen without a `PromptPanel` that reports the
+ * fallback it draws itself (the story check); the reader keeps the default `true`.
  */
-export function useReaderAudio(source: string = STORY_READER_AUDIO_SOURCE): ReaderAudio {
-  const slot = usePromptSlot({ source });
+export function useReaderAudio(
+  source: string = STORY_READER_AUDIO_SOURCE,
+  options: { reportFallback?: boolean } = {},
+): ReaderAudio {
+  const slot = usePromptSlot({ source, reportFallback: options.reportFallback ?? true });
   const koreanOk = useAudioStore(
     (s) => s.tts.state === 'unknown' || canPlayKorean({ tts: s.tts, clips: s.clips, unlocked: s.unlocked }),
   );
