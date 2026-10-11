@@ -2,6 +2,7 @@ import type { Episode } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import { episodesAll, gridEpisodes, questsAll, themes } from '../../content';
+import { storyQuests } from '../../content/stories';
 import {
   gridQuestProgress,
   isEpisodeComplete,
@@ -128,7 +129,16 @@ describe('gridQuestProgress (F-STORY-004 §3.10, behaviour #9: the Home quest to
 
   it('is 0 of the grid total with no progress, and the total stays the grid count for today\'s bundle', () => {
     expect(gridQuestProgress([grid, shelf], quests, [])).toEqual({ completed: 0, total: 2 });
-    const gridIds = new Set(gridEpisodes(episodesAll).flatMap((e) => e.questIds));
-    expect(gridQuestProgress(episodesAll, questsAll, []).total).toBe(questsAll.filter((q) => gridIds.has(q.id)).length);
+    // Every hand-written quest is a grid quest; bundled shelf stories never count.
+    expect(gridQuestProgress(episodesAll, questsAll, []).total).toBe(
+      questsAll.filter((q) => !storyQuests.includes(q)).length,
+    );
+  });
+
+  it('never reads "completed of total" past the total when a grid episode lists a quest that is not bundled', () => {
+    const listsMissing = ep('grid-b', 'stage1', 'shipped', ['q1', 'q-missing']);
+    expect(
+      gridQuestProgress([listsMissing], [{ id: 'q1' }], [done('q1'), done('q-missing')]),
+    ).toEqual({ completed: 1, total: 1 });
   });
 });

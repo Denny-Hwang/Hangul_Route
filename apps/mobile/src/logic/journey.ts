@@ -39,7 +39,8 @@ export function isEpisodeComplete(
 /**
  * The Home progress line, "completed of total" (F-STORY-004 §3.10 and behaviour #9): both sides
  * count the quests of grid episodes only, so a finished shelf story never pushes the count past
- * the total. A quest id that no grid episode lists (a shelf quest, retired content) is left out.
+ * the total. A quest id that no grid episode lists (a shelf quest, retired content), or that a
+ * grid episode lists but the bundle does not ship, is left out of both sides.
  */
 export function gridQuestProgress(
   episodes: readonly Pick<Episode, 'placement' | 'questIds'>[],
@@ -47,9 +48,10 @@ export function gridQuestProgress(
   progress: readonly Pick<QuestProgress, 'questId' | 'completedAt'>[],
 ): { completed: number; total: number } {
   const gridIds = new Set(gridEpisodes(episodes).flatMap((e) => e.questIds));
-  const total = quests.filter((q) => gridIds.has(q.id)).length;
-  const done = new Set(progress.filter((q) => q.completedAt && gridIds.has(q.questId)).map((q) => q.questId));
-  return { completed: done.size, total };
+  // One set feeds both sides: a grid id with no bundled quest counts on neither.
+  const countable = new Set(quests.filter((q) => gridIds.has(q.id)).map((q) => q.id));
+  const done = new Set(progress.filter((q) => q.completedAt && countable.has(q.questId)).map((q) => q.questId));
+  return { completed: done.size, total: countable.size };
 }
 
 /**

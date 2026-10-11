@@ -129,4 +129,3 @@ describe('requestedSelection', () => {
     expect(reconcileSelection('episode:story-a', grid, initialEpisode(grid, undefined))).toBe('episode:one');
   });
 });
-
