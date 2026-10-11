@@ -147,7 +147,7 @@ describe('thumbVariant', () => {
   it('drops detail shapes and thin strokes, keeps fills', () => {
     const shapes: Shape[] = [
       { t: 'rect', x: 0, y: 0, w: 4, h: 4, fill: 'theme.rites', stroke: 'border.strong', sw: 'thin' },
-      { t: 'circle', cx: 1, cy: 1, r: 1, fill: 'hoya.fur', d: true },
+      { t: 'circle', cx: 1, cy: 1, r: 1, fill: 'hoya.fur', det: true },
       { t: 'line', x1: 0, y1: 0, x2: 5, y2: 5, stroke: 'text.primary', sw: 'thin' },
       { t: 'line', x1: 0, y1: 0, x2: 5, y2: 5, stroke: 'text.primary', sw: 'thick' },
       { t: 'ellipse', cx: 1, cy: 1, rx: 1, ry: 1, fill: 'none', stroke: 'text.primary', sw: 'thin' },
@@ -163,8 +163,8 @@ describe('thumbVariant', () => {
 
   it('recurses into groups and drops the ones left empty', () => {
     const shapes: Shape[] = [
-      { t: 'group', tx: 3, kids: [{ t: 'circle', cx: 1, cy: 1, r: 1, fill: 'hoya.fur' }, { t: 'circle', cx: 1, cy: 1, r: 1, d: true, fill: 'hoya.fur' }] },
-      { t: 'group', kids: [{ t: 'circle', cx: 1, cy: 1, r: 1, d: true, fill: 'hoya.fur' }] },
+      { t: 'group', tx: 3, kids: [{ t: 'circle', cx: 1, cy: 1, r: 1, fill: 'hoya.fur' }, { t: 'circle', cx: 1, cy: 1, r: 1, det: true, fill: 'hoya.fur' }] },
+      { t: 'group', kids: [{ t: 'circle', cx: 1, cy: 1, r: 1, det: true, fill: 'hoya.fur' }] },
     ];
     expect(thumbVariant(shapes)).toEqual([{ t: 'group', tx: 3, kids: [{ t: 'circle', cx: 1, cy: 1, r: 1, fill: 'hoya.fur' }] }]);
   });

@@ -330,7 +330,7 @@ export function paletteOf(item: Pick<ItemDef, 'nodes'>): ColorToken[] {
 export function thumbVariant(nodes: readonly Shape[]): Shape[] {
   const out: Shape[] = [];
   for (const shape of nodes) {
-    if (shape.d) continue;
+    if (shape.det) continue;
     if (shape.t === 'group') {
       const kids = thumbVariant(shape.kids);
       if (kids.length > 0) out.push({ ...shape, kids });

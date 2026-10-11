@@ -56,9 +56,9 @@ describe('checkItem', () => {
   });
 
   it('limits detail shapes to half of the item', () => {
-    const half = [...rects(2), ...rects(2, 'surface.paper', { d: true })];
+    const half = [...rects(2), ...rects(2, 'surface.paper', { det: true })];
     expect(ids(checkItem(makeProp({ nodes: half })))).not.toContain('I-detail');
-    const more = [...rects(1), ...rects(2, 'surface.paper', { d: true })];
+    const more = [...rects(1), ...rects(2, 'surface.paper', { det: true })];
     expect(ids(checkItem(makeProp({ nodes: more })))).toContain('I-detail');
   });
 
@@ -318,9 +318,9 @@ describe('checkScene', () => {
         id: 'prop:sparse',
         nodes: [
           { t: 'rect', x: 0, y: 20, w: 100, h: 60, fill: 'text.secondary' },
-          { t: 'circle', cx: 50, cy: 50, r: 5, fill: 'surface.paper', d: true },
-          { t: 'circle', cx: 30, cy: 50, r: 5, fill: 'surface.paper', d: true },
-          { t: 'circle', cx: 70, cy: 50, r: 5, fill: 'surface.paper', stroke: 'border.strong', sw: 'thin', d: true },
+          { t: 'circle', cx: 50, cy: 50, r: 5, fill: 'surface.paper', det: true },
+          { t: 'circle', cx: 30, cy: 50, r: 5, fill: 'surface.paper', det: true },
+          { t: 'circle', cx: 70, cy: 50, r: 5, fill: 'surface.paper', stroke: 'border.strong', sw: 'thin', det: true },
         ],
       }),
     ]);
@@ -335,7 +335,7 @@ describe('checkScene', () => {
     expect(ids(checkScene(eight, reg))).not.toContain('S-layers');
 
     const many = (n: number, extra: Partial<Shape> = {}) => makeProp({ id: `prop:m${n}`, nodes: rects(n, 'surface.paper', extra) });
-    const big = makeRegistry([many(40), makeProp({ id: 'prop:d', nodes: rects(40, 'surface.paper', { d: true }) })]);
+    const big = makeRegistry([many(40), makeProp({ id: 'prop:d', nodes: rects(40, 'surface.paper', { det: true }) })]);
     const full = makeArt({ layers: [0, 1, 2, 3, 4].map((i) => ({ ref: 'prop:m40', x: 50 + i * 75, y: 250 })) });
     expect(checkScene(full, big).find((x) => x.rule === 'S-shapes')).toMatchObject({ severity: 'error' });
     // 5 x 40 detail-free shapes + setting: thumb count is also over 80

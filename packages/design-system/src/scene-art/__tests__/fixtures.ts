@@ -32,7 +32,7 @@ export function makeSetting(overrides: Partial<ItemDef> = {}): ItemDef {
     nodes: [
       { t: 'rect', x: 0, y: 0, w: 400, h: 180, fill: 'surface.canvas' },
       { t: 'rect', x: 0, y: 180, w: 400, h: 120, fill: 'theme.nature' },
-      { t: 'line', x1: 0, y1: 180, x2: 400, y2: 180, stroke: 'border.strong', sw: 'thin', d: true },
+      { t: 'line', x1: 0, y1: 180, x2: 400, y2: 180, stroke: 'border.strong', sw: 'thin', det: true },
     ],
     ...overrides,
   };

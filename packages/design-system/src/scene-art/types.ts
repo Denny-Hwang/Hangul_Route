@@ -26,8 +26,11 @@ export interface Paint {
   stroke?: ColorToken;
   sw?: StrokeToken;
   o?: OpacityStep;
-  /** Detail: skipped in the thumb variant. */
-  d?: true;
+  /**
+   * Detail: skipped in the thumb variant. Named `det`, not the spec's `d`,
+   * because `d` is the path data of a path shape and the two collide.
+   */
+  det?: true;
 }
 
 type Geometry =

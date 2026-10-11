@@ -114,8 +114,8 @@ interface Leaf {
 function walk(shapes: readonly Shape[], depth: number, detail: boolean, visit: (s: Shape, depth: number) => void, leaves: Leaf[]): void {
   for (const shape of shapes) {
     visit(shape, depth);
-    if (shape.t === 'group') walk(shape.kids, depth + 1, detail || shape.d === true, visit, leaves);
-    else leaves.push({ shape, detail: detail || shape.d === true });
+    if (shape.t === 'group') walk(shape.kids, depth + 1, detail || shape.det === true, visit, leaves);
+    else leaves.push({ shape, detail: detail || shape.det === true });
   }
 }
 
