@@ -130,9 +130,11 @@ describe('design/tokens/layout.v1.md ↔ tokens.ts', () => {
  * as a `| key | value |` row. Values are numbers, the font family name, or the
  * marker shape list written comma-separated, so both sides are compared as text.
  */
+const presenterDuplicates: string[] = [];
 function documentedPresenter(): Map<string, string> {
   const rows = new Map<string, string>();
   for (const m of presenterDoc.matchAll(/^\|\s*`(presenter(?:\.[a-zA-Z0-9]+)+)`\s*\|\s*([^|]+?)\s*\|/gm)) {
+    if (rows.has(m[1]!)) presenterDuplicates.push(m[1]!);
     rows.set(m[1]!, m[2]!.replace(/`/g, '').trim());
   }
   return rows;
@@ -155,6 +157,10 @@ describe('design/tokens/presenter.v1.md ↔ tokens.ts', () => {
 
   it('parses exactly one row per presenter value (guards the parser itself)', () => {
     expect(doc.size).toBe(code.size);
+  });
+
+  it('documents each presenter token once (a second row cannot silently override the first)', () => {
+    expect(presenterDuplicates).toEqual([]);
   });
 
   it('documents every presenter token the package exports', () => {

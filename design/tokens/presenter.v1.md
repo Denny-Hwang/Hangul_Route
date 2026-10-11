@@ -41,20 +41,22 @@ Slides size text as `unit * n`, never with a CSS `transform: scale`. Nothing pro
 | `presenter.font` | HR Presenter KR | family name of the bundled Hangul subset (Noto Sans KR Bold, SIL OFL 1.1; F-TCH-004 PR 3). Until it ships, the system Hangul font is used |
 | `presenter.marker.shapes` | circle, triangle, square, star | quiz option markers for options 1, 2, 3, 4: every option has a shape and a number, so colour is never the only cue |
 | `presenter.autoHideMs` | 3000 | the control bar hides after this many ms with no pointer, touch or key activity (a focused button keeps it visible) |
+| `presenter.dimOpacity` | 0.8 | opacity of the non-correct quiz options after the reveal (§3.10). Every line of a dimmed option (Korean, romanization, gloss, shape marker) is `text.primary`, which stays at 8.4:1 on paper; `text.secondary` would fall to 4.9:1, so it is never dimmed |
 
 ## Projected colour pairs
 
-The presenter adds **no colours**: it projects existing `colors.*` tokens on white paper (`surface.paper`, never the cream canvas, which washes out on a projector). Every pair the presenter may draw is listed here. Text pairs must reach **7:1** (WCAG AAA; read from the back of a room through a projector); non-text cues must reach **3:1** (WCAG 1.4.11). A new pair needs a row here first; the contrast test reads this table.
+The presenter adds **no colours**: it projects existing `colors.*` tokens on white paper (`surface.paper`, never the cream canvas, which washes out on a projector). The blank and pause overlays use the same paper ground. Every pair the presenter may draw is listed here. Text pairs must reach **7:1** (WCAG AAA; read from the back of a room through a projector); non-text cues must reach **3:1** (WCAG 1.4.11). A `text-dimmed` pair is drawn at `presenter.dimOpacity` and is checked as it lands (the foreground composited over the background) against the same 7:1. A new pair needs a row here first; the contrast test reads this table and fails if it cannot read a row.
 
 | Kind | Foreground | Background | Where |
 |---|---|---|---|
-| text | `text.primary` | `surface.paper` | slide text, Korean glyphs, titles, quiz options at rest |
+| text | `text.primary` | `surface.paper` | slide text, Korean glyphs, titles, quiz options at rest, the blank overlay's "Eyes on me" line, the pause overlay |
 | text | `text.secondary` | `surface.paper` | romanization, gloss, captions on the stage |
 | text | `text.primary` | `surface.sunken` | control bar labels, grid thumbnails, help overlay |
 | text | `text.secondary` | `surface.sunken` | control bar status line (offline, voice, update) |
 | text | `text.primary` | `feedback.successLight` | the revealed correct quiz option (Korean, romanization and gloss) |
 | text | `text.primary` | `brand.secondaryLight` | `KoreanText` target chip on a slide |
 | text | `text.onPrimary` | `brand.primaryDark` | the big [[ Start ]] button and other primary fills |
+| text-dimmed | `text.primary` | `surface.paper` | the non-correct quiz options after the reveal, at `presenter.dimOpacity` (Korean, romanization, gloss and shape marker) |
 | non-text | `text.primary` | `surface.paper` | quiz shape markers (circle, triangle, square, star) |
 | non-text | `text.primary` | `feedback.successLight` | the shape marker of the revealed correct option |
 | non-text | `feedback.success` | `surface.paper` | the correct option's border at the answer build |
@@ -62,8 +64,11 @@ The presenter adds **no colours**: it projects existing `colors.*` tokens on whi
 | non-text | `brand.primary` | `surface.paper` | the class timer ring as it fills |
 | non-text | `border.focus` | `surface.paper` | keyboard focus ring on the stage |
 | non-text | `border.focus` | `surface.sunken` | keyboard focus ring on the control bar |
+| non-text | `brand.primary` | `surface.sunken` | the timer ring fill against its unfilled track (the track is `surface.sunken`, a decorative ground; the m:ss numbers carry the time) |
+| non-text | `brand.secondary` | `surface.paper` | `KoreanText` target chip border on a slide |
+| non-text | `brand.secondaryDark` | `surface.paper` | `KoreanText` speaker icon on a slide |
 
-Not projected, because they miss 7:1: `text.muted` on paper (6.0:1), a white label on `brand.primary` (5.4:1; use `brand.primaryDark`), and `text.secondary` on `feedback.successLight` (6.9:1; the revealed option uses `text.primary` for every line).
+Not projected, because they miss 7:1: `text.muted` on paper (6.0:1), a white label on `brand.primary` (5.4:1; use `brand.primaryDark`), `text.secondary` on `feedback.successLight` (6.9:1; the revealed option uses `text.primary` for every line), and `text.secondary` at `presenter.dimOpacity` on paper (4.9:1; a dimmed option uses `text.primary` for every line).
 
 ---
 
@@ -71,7 +76,7 @@ Not projected, because they miss 7:1: `text.muted` on paper (6.0:1), a white lab
 
 1. **Stage units only.** Slide components size text and art as `unit * presenter.size.<x>` (or `stageText`), never a raw pixel number and never `* 1.4`-style ratios.
 2. **Nothing projected below `caption`**, and nothing on screen below `typography.size.body`.
-3. **No failure colour.** The quiz reveal gives the correct option the success border and check; the others only lose emphasis (opacity). `feedback.danger` and a red X never appear on a projected slide (CLAUDE.md anti-shame rules; F-TCH-004 §3.10).
+3. **No failure colour.** The quiz reveal gives the correct option the success border and check; the others only lose emphasis, drawn at `presenter.dimOpacity` with every line in `text.primary`. `feedback.danger` and a red X never appear on a projected slide (CLAUDE.md anti-shame rules; F-TCH-004 §3.10).
 4. **Control bar targets** are `touchTarget.hero` (96) in real pixels, not stage units, with a visible text label.
 5. **Only these numbers and pairs.** A new size, shape or colour pair needs a spec change, this table and `tokens.ts` in the same PR.
 

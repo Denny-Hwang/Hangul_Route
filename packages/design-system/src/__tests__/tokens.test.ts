@@ -192,6 +192,10 @@ describe('presenter tokens (F-TCH-004 §3.6)', () => {
     expect(presenter.autoHideMs).toBe(3000);
   });
 
+  it('dims the non-correct quiz options to 0.8 opacity after the reveal (no failure colour)', () => {
+    expect(presenter.dimOpacity).toBe(0.8);
+  });
+
   it('is part of the tokens aggregate', () => {
     expect(tokens.presenter).toBe(presenter);
   });

@@ -321,6 +321,7 @@ export const presenter = {
   font: 'HR Presenter KR', // family name of the bundled Hangul subset (F-TCH-004 PR 3)
   marker: { shapes: ['circle', 'triangle', 'square', 'star'] }, // quiz options 1-4, so colour is never the only cue
   autoHideMs: 3000, // control bar hides after this long with no pointer, touch or key
+  dimOpacity: 0.8, // non-correct quiz options after the reveal; text.primary only (8.4:1 on paper; text.secondary would fall to 4.9:1)
 } as const;
 
 export const tokens = {
