@@ -104,3 +104,15 @@ describe('learner.delete (F-TCH-001 §10.3)', () => {
     expect(can(principal, 'learner.delete', { kind: 'space', ctx: { space: schoolConsent, parent: school } })).toBe(false);
   });
 });
+
+describe('learner.transfer (F-SPACE-002 T-2: type only)', () => {
+  it('is an Action that nothing grants yet; the matrix lands with the rules (T-4b)', () => {
+    const action: Action = 'learner.transfer';
+    const teacher = account('teacher', [member('space:cls', 'teacher', 'owner')]);
+    const principal = account('principal', [member('space:sch', 'principal', 'owner')]);
+    const mom = account('mom', [member('space:fam', 'mom', 'owner')]);
+    expect(can(teacher, action, { kind: 'space', ctx: { space: klass, parent: school } })).toBe(false);
+    expect(can(principal, action, { kind: 'space', ctx: { space: klass, parent: school } })).toBe(false);
+    expect(can(mom, action, { kind: 'space', ctx: { space: family, parent: null } })).toBe(false);
+  });
+});

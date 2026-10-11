@@ -16,7 +16,9 @@ export type Action =
   | 'class.create'
   | 'teacher.invite'
   | 'entitlement.manage'
-  | 'learner.delete';
+  | 'learner.delete'
+  /** Fill a class slot of a class move (F-SPACE-002 T10). Granted with the rules (T-4b); never implied by `roster.manage`. */
+  | 'learner.transfer';
 
 export type Actor =
   | { kind: 'learner'; learnerId: string }
