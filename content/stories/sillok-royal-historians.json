@@ -111,8 +111,24 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "A small friendly tiger cub sitting on a stack of old thread-bound books, head tilted with curiosity; warm hanji-paper background."
+          "artBrief": "A small friendly tiger cub sitting on a stack of old thread-bound books, head tilted with curiosity; warm hanji-paper background.",
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:books-stack",
+                "x": 258,
+                "y": 262,
+                "s": 2.2
+              },
+              {
+                "ref": "hoya:thinking",
+                "x": 105,
+                "y": 282
+              }
+            ],
+            "altEn": "Hoya, a curious young tiger, stands by a stack of old thread-bound books and wonders how we know the past."
+          }
         },
         {
           "id": "s2",
@@ -130,8 +146,37 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "A Joseon palace hall: the king on a raised seat, officials kneeling in rows, and at the side a historian in official dress and a black hat writing with a brush on paper."
+          "artBrief": "A Joseon palace hall: the king on a raised seat, officials kneeling in rows, and at the side a historian in official dress and a black hat writing with a brush on paper.",
+          "art": {
+            "setting": "scene:palace-hall",
+            "layers": [
+              {
+                "ref": "prop:fig-king",
+                "x": 200,
+                "y": 186,
+                "s": 0.9
+              },
+              {
+                "ref": "prop:fig-officials-kneeling",
+                "x": 140,
+                "y": 248
+              },
+              {
+                "ref": "prop:fig-officials-kneeling",
+                "x": 170,
+                "y": 298,
+                "s": 1.35
+              },
+              {
+                "ref": "prop:fig-historian",
+                "x": 335,
+                "y": 292,
+                "s": 1.1,
+                "flip": true
+              }
+            ],
+            "altEn": "In a palace hall the king sits on a raised seat, officials kneel in rows and a historian at the side writes with a brush."
+          }
         },
         {
           "id": "s3",
@@ -150,8 +195,31 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "Close-up of hands holding a calligraphy brush over sheets of handwritten paper, an inkstone and ink stick beside them."
+          "artBrief": "Close-up of hands holding a calligraphy brush over sheets of handwritten paper, an inkstone and ink stick beside them.",
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:desk-low",
+                "x": 200,
+                "y": 296,
+                "s": 1.9
+              },
+              {
+                "ref": "prop:writing-lines",
+                "x": 160,
+                "y": 211,
+                "s": 1.5
+              },
+              {
+                "ref": "prop:writing-set",
+                "x": 272,
+                "y": 211,
+                "s": 1.5
+              }
+            ],
+            "altEn": "A low desk holds a historian's handwritten draft notes beside an inkstone, an ink stick and a brush."
+          }
         },
         {
           "id": "s4",
@@ -168,8 +236,24 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "A closed wooden document box tied with a red cord; the king, seen from behind, walking past it without opening it."
+          "artBrief": "A closed wooden document box tied with a red cord; the king, seen from behind, walking past it without opening it.",
+          "art": {
+            "setting": "scene:palace-hall",
+            "layers": [
+              {
+                "ref": "prop:document-box",
+                "x": 130,
+                "y": 250,
+                "s": 1.5
+              },
+              {
+                "ref": "prop:fig-king",
+                "x": 270,
+                "y": 282
+              }
+            ],
+            "altEn": "The king walks past a closed wooden box of the historians' notes, tied with a red cord, and leaves it shut."
+          }
         },
         {
           "id": "s5",
@@ -187,8 +271,25 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "A gentle countryside scene: a brown horse that has stumbled on grass, and a king in plain riding clothes sitting up on the ground, unhurt, brushing off his sleeve."
+          "artBrief": "A gentle countryside scene: a brown horse that has stumbled on grass, and a king in plain riding clothes sitting up on the ground, unhurt, brushing off his sleeve.",
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:pine-tree",
+                "x": 64,
+                "y": 232,
+                "s": 0.8
+              },
+              {
+                "ref": "prop:horse",
+                "x": 220,
+                "y": 258,
+                "s": 1.7
+              }
+            ],
+            "altEn": "A brown horse grazes calmly in the green countryside where King Taejong went hunting in 1404."
+          }
         },
         {
           "id": "s6",
@@ -206,8 +307,37 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "The king glancing over his shoulder with a finger to his lips, while in the background a historian quietly writes; Hoya peeks from behind a tree, smiling."
+          "artBrief": "The king glancing over his shoulder with a finger to his lips, while in the background a historian quietly writes; Hoya peeks from behind a tree, smiling.",
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:fig-historian",
+                "x": 330,
+                "y": 214,
+                "s": 0.7
+              },
+              {
+                "ref": "prop:fig-king",
+                "x": 210,
+                "y": 272
+              },
+              {
+                "ref": "hoya:idle",
+                "x": 140,
+                "y": 286,
+                "s": 0.6
+              },
+              {
+                "ref": "prop:pine-tree",
+                "x": 80,
+                "y": 284,
+                "s": 1.2,
+                "z": "front"
+              }
+            ],
+            "altEn": "The king looks around while a historian writes quietly in the distance, and Hoya peeks out from behind a pine tree."
+          }
         },
         {
           "id": "s7",
@@ -227,8 +357,25 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "A long row of old thread-bound books standing in a wooden case, with Hoya proudly pointing at them."
+          "artBrief": "A long row of old thread-bound books standing in a wooden case, with Hoya proudly pointing at them.",
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:books-case",
+                "x": 245,
+                "y": 272,
+                "s": 2.2
+              },
+              {
+                "ref": "hoya:waving",
+                "x": 80,
+                "y": 286,
+                "s": 0.95
+              }
+            ],
+            "altEn": "Hoya proudly points at a wooden case full of old books: the Annals, which record 472 years of Joseon kings."
+          }
         }
       ],
       "checks": [
