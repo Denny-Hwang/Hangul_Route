@@ -1,4 +1,4 @@
-import type { TransferSlot } from '@hangul-route/content-schema';
+import { TRANSFER_COOLING_OFF_MS, type TransferSlot } from '@hangul-route/content-schema';
 import { ENDED_TRANSFER_STATUSES, OPEN_TRANSFER_STATUSES, type StoredTransfer, type TransferPrefKey, type TransferSlotConsent } from './transfer-types';
 
 /*
@@ -34,13 +34,50 @@ export function assertTransferChecks(t: StoredTransfer): void {
   if (failed) throw new Error(`CHECK constraint failed: transfer_requests (${t.id})`);
 }
 
+/** True for the one form every Db-side `now` takes (`Date.toISOString()`); the SQL compares these as text. */
+const isCanonicalIso = (value: string): boolean => {
+  const ms = Date.parse(value);
+  return Number.isFinite(ms) && new Date(ms).toISOString() === value;
+};
+
+const teacherSlotIsEmpty = (slot: StoredTransfer['source']): boolean => slot.at === null && slot.accountId === null && slot.via === null;
+const teacherSlotIsFilled = (slot: StoredTransfer['source']): boolean => slot.at !== null && slot.accountId !== null && slot.via !== null;
+const learnerSlotIsEmpty = (slot: StoredTransfer['learner']): boolean =>
+  slot.at === null && slot.basis === null && slot.attest === null && slot.evidence === null && slot.role === null && slot.textVersion === null && slot.locale === null && slot.shown === null && slot.terms === null;
+
 /**
- * A new request is always inserted as `requested`; every later state is
- * reached through the CAS methods, so a caller cannot skip the consent and
- * promote steps by inserting an `approved` (or ended) row.
+ * A new request is always inserted as `requested`, with the starting slots of
+ * the initiator table (section 4.1) and nothing of a later state; every later
+ * state is reached through the CAS methods, so a caller cannot skip a consent
+ * (a pre-filled destination slot) or the promote step by what it inserts.
+ *
+ * | initiator      | learner   | source  | destination |
+ * | `learner_side` | consented | pending | pending     |
+ * | `source`       | pending   | consented | pending   |
+ *
+ * `executeAfter` is the learner consent + 48 h when the learner slot is in,
+ * null otherwise. Every timestamp is canonical ISO (`toISOString()`), because
+ * expiry, cooling-off and retention compare them as text.
  */
-export function assertNewTransfer(t: Pick<StoredTransfer, 'id' | 'status'>): void {
-  if (t.status !== 'requested') throw new Error(`createTransfer: a new request must be 'requested' (${t.id} is '${t.status}')`);
+export function assertNewTransfer(t: StoredTransfer): void {
+  const refuse = (why: string): never => {
+    throw new Error(`createTransfer: ${why} (${t.id})`);
+  };
+  if (t.status !== 'requested') refuse(`a new request must be 'requested', not '${t.status}'`);
+  const stamps = [t.createdAt, t.updatedAt, t.expiresAt, t.learner.at, t.source.at, t.destination.at, t.executeAfter].filter((v): v is string => v !== null);
+  if (!stamps.every(isCanonicalIso)) refuse('every timestamp must be canonical ISO (toISOString)');
+  const learnerSide = t.initiator === 'learner_side';
+  const slotsMatch =
+    t.destination.state === 'pending' &&
+    teacherSlotIsEmpty(t.destination) &&
+    (learnerSide
+      ? t.learner.state === 'consented' && t.source.state === 'pending' && teacherSlotIsEmpty(t.source)
+      : t.learner.state === 'pending' && learnerSlotIsEmpty(t.learner) && t.source.state === 'consented' && teacherSlotIsFilled(t.source));
+  if (!slotsMatch) refuse(`the starting slots do not match the initiator table for '${t.initiator}'`);
+  const executeAfter = t.learner.state === 'consented' && t.learner.at !== null ? new Date(Date.parse(t.learner.at) + TRANSFER_COOLING_OFF_MS).toISOString() : null;
+  if (t.executeAfter !== executeAfter) refuse('execute_after must be the learner consent + 48 h, and null while the learner slot is pending');
+  const fresh = t.rev === 0 && t.approvedAt === null && t.executedAt === null && t.endedAt === null && t.endReason === null && t.endActor === null && t.blockReason === null;
+  if (!fresh) refuse('a new request carries no approval, execution, end or block fields, and rev 0');
 }
 
 /** The slot a decline names, refused when it is not one of the three (the column maps never see caller text). */

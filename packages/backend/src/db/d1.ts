@@ -216,11 +216,10 @@ const IN_CHUNK = 90;
  * Every table `reset()` empties, children before parents. The class-transfer
  * tables come from migration 0005 (F-SPACE-002 PR T-3b).
  */
+/** The tables of migration 0005 (F-SPACE-002 PR T-3b), children first. */
+const TRANSFER_TABLES = ['transfer_events', 'transfer_requests', 'learner_transfer_prefs', 'rate_hits'] as const;
 const RESET_TABLES = [
-  'transfer_events',
-  'transfer_requests',
-  'learner_transfer_prefs',
-  'rate_hits',
+  ...TRANSFER_TABLES,
   'waitlist',
   'entitlements',
   'relink_requests',
@@ -283,13 +282,19 @@ export class D1Db implements Db {
     const existed = !!(await this.getLearner(learnerId));
     // learner_devices, snapshots, relink_requests and the transfer tables cascade from learners; memberships and
     // rate_hits hold a plain id. Each is deleted explicitly anyway, children first, in one transaction
-    // (F-SPACE-002 section 4.7).
+    // (F-SPACE-002 section 4.7). A transfer table is named only once migration 0005 has created it: an erase is
+    // the live caregiver route, and "no such table" would roll the whole batch back if this Worker ever ran
+    // before the migration.
+    const present = await this.presentTables(TRANSFER_TABLES);
     const rateKeys = learnerRateKeys(learnerId);
+    const transferStatements: Array<[(typeof TRANSFER_TABLES)[number], string, unknown[]]> = [
+      ['transfer_events', 'DELETE FROM transfer_events WHERE transfer_id IN (SELECT id FROM transfer_requests WHERE learner_id = ?)', [learnerId]],
+      ['transfer_requests', 'DELETE FROM transfer_requests WHERE learner_id = ?', [learnerId]],
+      ['learner_transfer_prefs', 'DELETE FROM learner_transfer_prefs WHERE learner_id = ?', [learnerId]],
+      ['rate_hits', `DELETE FROM rate_hits WHERE key IN (${rateKeys.map(() => '?').join(', ')})`, rateKeys],
+    ];
     const statements: Array<[string, unknown[]]> = [
-      ['DELETE FROM transfer_events WHERE transfer_id IN (SELECT id FROM transfer_requests WHERE learner_id = ?)', [learnerId]],
-      ['DELETE FROM transfer_requests WHERE learner_id = ?', [learnerId]],
-      ['DELETE FROM learner_transfer_prefs WHERE learner_id = ?', [learnerId]],
-      [`DELETE FROM rate_hits WHERE key IN (${rateKeys.map(() => '?').join(', ')})`, rateKeys],
+      ...transferStatements.filter(([table]) => present.has(table)).map(([, sql, params]): [string, unknown[]] => [sql, params]),
       ["DELETE FROM memberships WHERE member_kind = 'learner' AND member_id = ?", [learnerId]],
       ['DELETE FROM relink_requests WHERE learner_id = ?', [learnerId]],
       ['DELETE FROM learner_devices WHERE learner_id = ?', [learnerId]],
@@ -298,6 +303,11 @@ export class D1Db implements Db {
     ];
     await this.d1.batch(statements.map(([sql, params]) => this.d1.prepare(sql).bind(...params)));
     return existed;
+  }
+  /** Which of `tables` exist (migration order is not guaranteed relative to the Worker upload). */
+  private async presentTables(tables: readonly string[]): Promise<Set<string>> {
+    const names = await this.many(`SELECT name FROM sqlite_master WHERE type = 'table' AND name IN (${tables.map(() => '?').join(', ')})`, [...tables], (r) => str(r.name));
+    return new Set(names);
   }
   getDevice(learnerId: string, deviceId: string): Promise<LearnerDevice | null> {
     return this.one('SELECT * FROM learner_devices WHERE learner_id = ? AND device_id = ?', [learnerId, deviceId], toDevice);
@@ -589,10 +599,10 @@ export class D1Db implements Db {
       toTransfer,
     );
   }
-  lastEndedForPair(learnerId: string, destSpaceId: string): Promise<StoredTransfer | null> {
+  lastCooldownDecline(learnerId: string, destSpaceId: string, since: Date): Promise<StoredTransfer | null> {
     return this.one(
-      `SELECT * FROM transfer_requests WHERE learner_id = ? AND dest_space_id = ? AND ${ENDED} ORDER BY ended_at DESC, id DESC LIMIT 1`,
-      [learnerId, destSpaceId],
+      "SELECT * FROM transfer_requests WHERE learner_id = ? AND dest_space_id = ? AND initiator = 'learner_side' AND end_reason IN ('declined_source','declined_destination') AND ended_at >= ? ORDER BY ended_at DESC, id DESC LIMIT 1",
+      [learnerId, destSpaceId, since.toISOString()],
       toTransfer,
     );
   }

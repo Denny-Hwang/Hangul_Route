@@ -98,7 +98,12 @@ export interface Db {
   // class transfer (F-SPACE-002 section 4.7). No whole-row put: every write is
   // one compare-and-set statement answering the number of rows it changed
   // (0 = the row was not in the state the call expected: a lost race).
-  /** Insert a new `requested` row and its `created` event together; `already_open` when the learner has an open request. */
+  /**
+   * Insert a new `requested` row (starting slots of the initiator table, section 4.1) and its `created` event
+   * together; `already_open` when the learner has an open request, which may be the caller's own earlier
+   * attempt: a route that answers an idempotent retry (section 4.9) compares `openTransferOf(learnerId)` with
+   * its own request before treating the answer as a conflict.
+   */
   createTransfer(row: StoredTransfer, event: Omit<NewTransferEvent, 'transferId'>): Promise<'created' | 'already_open'>;
   /** Fill pending slot(s) of an open request. The destination slot needs the learner slot consented; a learner consent sets `executeAfter` = now + 48 h. */
   consentSlot(id: string, consent: TransferSlotConsent, now: Date): Promise<number>;
@@ -130,12 +135,12 @@ export interface Db {
    */
   lastLearnerRefusal(learnerId: string, since: Date): Promise<StoredTransfer | null>;
   /**
-   * The latest ended (declined / cancelled / expired) request for this learner and destination, of any
-   * initiator. For the 7-day cooldown (section 4.9: only after another side declined a learner-side request)
-   * the caller must not stop at this row: a newer source-started request that was cancelled or expired would
-   * hide an earlier decline, so check every ended row since the cooldown start (`transfersOfLearner`).
+   * The latest **learner-side** request to this destination that another side declined (`declined_source` or
+   * `declined_destination`) and that ended at or after `since` (section 4.9, the 7-day `cooldown` rule). The
+   * initiator's own cancel, the learner side's own withdrawal, an expiry and any source-started request never
+   * count, and a newer row of that kind never hides an earlier decline.
    */
-  lastEndedForPair(learnerId: string, destSpaceId: string): Promise<StoredTransfer | null>;
+  lastCooldownDecline(learnerId: string, destSpaceId: string, since: Date): Promise<StoredTransfer | null>;
   countTransfersCreatedBy(accountId: string, since: Date): Promise<number>;
   countTransfersCreatedForLearner(learnerId: string, since: Date): Promise<number>;
   countOpenTransfersTo(spaceId: string): Promise<number>;

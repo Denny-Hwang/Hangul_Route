@@ -9,7 +9,8 @@ function d1Answering(answer: () => unknown): { d1: D1Like; batches: number[] } {
   const prepared: D1PreparedLike = {
     bind: () => prepared,
     first: async () => null,
-    all: async () => ({ results: [] }),
+    // every read of a list answers the four tables of migration 0005, so deleteLearner names them all
+    all: async <T,>() => ({ results: ['transfer_events', 'transfer_requests', 'learner_transfer_prefs', 'rate_hits'].map((name) => ({ name })) as T[] }),
     run: async () => answer() as D1RunResultLike,
   };
   const d1: D1Like = {

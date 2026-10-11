@@ -5,7 +5,8 @@
 #   Project name  : hangul-route-api        (must equal `name` below)
 #   Root directory: /
 #   Build command : pnpm install --frozen-lockfile
-#   Deploy command: pnpm --filter @hangul-route/api exec wrangler deploy
+#   Deploy command: pnpm --filter @hangul-route/api exec wrangler d1 migrations apply hangul-route --remote && pnpm --filter @hangul-route/api exec wrangler deploy
+#                   (two steps on one line: migrations first, then the upload; see the D1 block below)
 #
 # Variables vs secrets (Workers Builds redeploys on every merge):
 #   - `keep_vars = true` keeps plain-text variables entered in the dashboard

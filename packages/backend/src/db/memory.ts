@@ -362,8 +362,11 @@ export class MemoryDb implements Db {
     const rows = [...this.transfers.values()].filter((t) => t.learnerId === learnerId && t.initiator === 'source' && (t.endReason === 'declined_learner' || t.endReason === 'withdrawn_learner') && t.endedAt !== null && t.endedAt >= from);
     return clone(rows.sort(latestEnded)[0] ?? null);
   }
-  async lastEndedForPair(learnerId: string, destSpaceId: string): Promise<StoredTransfer | null> {
-    const rows = [...this.transfers.values()].filter((t) => t.learnerId === learnerId && t.destSpaceId === destSpaceId && isEndedTransfer(t));
+  async lastCooldownDecline(learnerId: string, destSpaceId: string, since: Date): Promise<StoredTransfer | null> {
+    const from = since.toISOString();
+    const rows = [...this.transfers.values()].filter(
+      (t) => t.learnerId === learnerId && t.destSpaceId === destSpaceId && t.initiator === 'learner_side' && (t.endReason === 'declined_source' || t.endReason === 'declined_destination') && t.endedAt !== null && t.endedAt >= from,
+    );
     return clone(rows.sort(latestEnded)[0] ?? null);
   }
   async countTransfersCreatedBy(accountId: string, since: Date): Promise<number> {

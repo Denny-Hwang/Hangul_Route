@@ -6,9 +6,12 @@ import { openSqliteD1 } from '../../__tests__/helpers/sqlite';
 import type { D1Like } from '../d1';
 
 /**
- * Migration 0005_class_transfer.sql — F-SPACE-002 section 4.1 (PR T-3b). A
- * merge applies it to production before the Worker upload, so it must be
- * additive, re-runnable and invisible to the Worker that is live today.
+ * Migration 0005_class_transfer.sql — F-SPACE-002 section 4.1 (PR T-3b). The
+ * API Workers Builds deploy command applies migrations before the Worker
+ * upload (docs/launch/owner-runbook.md section 0, a dashboard setting the repo
+ * cannot check), so it must be additive, re-runnable and invisible to the
+ * Worker that is live today; and the new Worker must not depend on it for
+ * anything already live (D1Db.deleteLearner skips a missing transfer table).
  */
 const file = join(dirname(fileURLToPath(import.meta.url)), '../../../../../apps/api/migrations/0005_class_transfer.sql');
 const sql = readFileSync(file, 'utf8');
