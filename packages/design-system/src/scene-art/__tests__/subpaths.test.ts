@@ -45,4 +45,13 @@ describe('package subpaths', () => {
       expect(imports.includes('react'), f).toBe(f === 'dom.tsx');
     }
   });
+
+  it('the package root re-exports the pure scene-art API, the path Metro can resolve', () => {
+    // Metro (Expo SDK 52) does not read package `exports`, so apps/mobile imports
+    // from the root; only the Next.js web app uses the subpaths.
+    const index = readFileSync(join(pkgDir, 'src/index.ts'), 'utf8');
+    expect(index).toMatch(/export \* from '\.\/scene-art';/);
+    expect(index).toMatch(/export \* from '\.\/components\/StoryScene';/);
+    expect(index).not.toMatch(/scene-art\/dom/);
+  });
 });
