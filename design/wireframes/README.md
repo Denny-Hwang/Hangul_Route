@@ -21,6 +21,7 @@
 | `quest/player.md` · `minigame/shell.md` · `minigame/families.md` | S | content-skill · 06 |
 | `minigame/build-letter.md` | R | F-QUEST-002 §3.7 (Q-7a) |
 | `minigame/listen-pick.md` | R | F-QUEST-002 §3.10 (Q-3b) |
+| `minigame/pic-word-match.md` | R | F-QUEST-002 §3.11 (Q-4) |
 | `results/celebrate.md` | S | F-MOTION-003 |
 | `library/gallery.md` · `library/card-detail.md` | S | F-CARD-001/002/003 |
 | `profile/settings.md` · `parent/gate.md` | S | F-SUB-001 · (gate 통합 대상) |
