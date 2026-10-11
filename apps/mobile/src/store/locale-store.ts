@@ -4,7 +4,7 @@ import {
   type ProfileSettings,
   type RomanizationMode,
 } from '@hangul-route/content-schema';
-import { detectLocale, resolveLocale, type UiLocale } from '@hangul-route/i18n';
+import { availableLocales, detectLocale, resolveLocale, type UiLocale } from '@hangul-route/i18n';
 import { create } from 'zustand';
 import { deviceLanguages, takeLangHandoff } from '../platform/locale';
 import { readJson, removeKey, writeJson } from '../platform/storage';
@@ -47,9 +47,27 @@ export function detectInitialLocale(): UiLocale {
   return detectLocale(deviceLanguages());
 }
 
+/**
+ * A stored locale counts only while it is available. Flipping `LOCALE_STATUS` back to
+ * `'hidden'` (the rollback in F-I18N-001 §6) therefore ignores stored non-English choices
+ * without a data change: the stored value stays, and un-hiding brings it back.
+ */
+function visible(locale: UiLocale | null | undefined): UiLocale | undefined {
+  return locale != null && availableLocales().includes(locale) ? locale : undefined;
+}
+
+/** `resolveLocale` over the levels that are currently visible; a hidden level falls through to the next one. */
+function effectiveLocale(levels: { profile?: UiLocale | null; device?: UiLocale | null; detected?: UiLocale | null }): UiLocale {
+  return resolveLocale({
+    profile: visible(levels.profile),
+    device: visible(levels.device),
+    detected: visible(levels.detected),
+  });
+}
+
 /** The locale the UI renders in for the active profile (`null` = no profile yet). */
 export function activeLocale(state: Pick<State, 'detected' | 'device' | 'byProfile'>, activeProfileId: string | null): UiLocale {
-  return resolveLocale({
+  return effectiveLocale({
     profile: activeProfileId === null ? undefined : state.byProfile[activeProfileId]?.uiLocale,
     device: state.device,
     detected: state.detected,
@@ -97,25 +115,26 @@ export const useLocaleStore = create<State & Actions>((set, get) => ({
     const handoff = takeLangHandoff();
     const device = (storedDevice.success ? storedDevice.data.uiLocale : undefined) ?? null;
     set({ device, byProfile, hydrated: true });
-    if (device === null && handoff !== null) get().setDeviceLocale(handoff, 'handoff');
+    // A stored choice in a currently hidden locale is ignored, so it does not block the hand-off either.
+    if (visible(device) === undefined && handoff !== null) get().setDeviceLocale(handoff, 'handoff');
   },
 
   setDeviceLocale: (locale, source = 'settings') => {
     const { detected, device } = get();
-    const from = resolveLocale({ device, detected });
+    const from = effectiveLocale({ device, detected });
     set({ device: locale });
     persist(locale === null ? removeKey(DEVICE_KEY) : writeJson(DEVICE_KEY, { uiLocale: locale }));
-    reportLocaleChange(from, resolveLocale({ device: locale, detected }), 'device', source);
+    reportLocaleChange(from, effectiveLocale({ device: locale, detected }), 'device', source);
   },
 
   setProfileLocale: (profileId, locale, source = 'settings') => {
     const { detected, device, byProfile } = get();
     const previous = byProfile[profileId];
-    const from = resolveLocale({ profile: previous?.uiLocale, device, detected });
+    const from = effectiveLocale({ profile: previous?.uiLocale, device, detected });
     const next: ProfileSettings = locale === null ? withoutLocale(previous) : { ...withoutLocale(previous), uiLocale: locale };
     set({ byProfile: { ...byProfile, [profileId]: next } });
     persist(writeJson(profileKey(profileId), next));
-    reportLocaleChange(from, resolveLocale({ profile: locale, device, detected }), 'profile', source, profileId);
+    reportLocaleChange(from, effectiveLocale({ profile: locale, device, detected }), 'profile', source, profileId);
   },
 
   setRomanizationMode: (profileId, mode) => {
