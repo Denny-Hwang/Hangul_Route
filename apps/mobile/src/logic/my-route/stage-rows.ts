@@ -1,5 +1,6 @@
 import { StageKeySchema, type Episode, type ProgressSnapshot, type StageKey } from '@hangul-route/content-schema';
 import { stageAvailability, type StageAvailability } from '../journey';
+import { playableEpisodes } from '../next-quest';
 import { completionState } from '../stage1/completion';
 import { cellRowsOf, splitStagePips, type PipContext } from './pips';
 import type { MyRouteInput, PipState, Skill, StageRow, StageState } from './types';
@@ -43,7 +44,9 @@ export function stageStateOf(f: StageFacts): StageState {
   const done = f.questPips.filter((p) => p === 'done').length;
   if (known > 0 && known + done === f.questPips.length) return 'known';
   if (f.availability === 'taste' && f.allPlayableDone) return 'explored';
-  if (f.availability === 'soon' || (!f.entitled && done === 0)) return 'later';
+  // "Has content" means playable (shipped or ready), as for the pips and the
+  // cursor: a stage with quest pips is never `later` for an entitled learner.
+  if ((f.availability === 'soon' && f.questPips.length === 0) || (!f.entitled && done === 0)) return 'later';
   return 'open';
 }
 
@@ -63,6 +66,19 @@ export function isDerivedComplete(
   snapshot: Pick<ProgressSnapshot, 'quests'>,
 ): boolean {
   return stageAvailability(stage, gridEpisodes) === 'open' && completionState(stage, gridEpisodes, snapshot).stageComplete;
+}
+
+/**
+ * Every playable (shipped or ready) grid episode of the stage is complete, and
+ * at least one exists. Unlike `completionState(...).stageComplete`, which the
+ * award engine answers only for a fully shipped stage, this also holds for a
+ * `taste` stage, so `explored` can be reached.
+ */
+export function allPlayableDone(stage: StageKey, gridEpisodes: readonly Episode[], snapshot: Pick<ProgressSnapshot, 'quests'>): boolean {
+  const playable = playableEpisodes(gridEpisodes.filter((e) => e.stage === stage));
+  if (playable.length === 0) return false;
+  const completed = new Set(completionState(stage, gridEpisodes, snapshot).completedEpisodeIds);
+  return playable.every((e) => completed.has(e.id));
 }
 
 export interface StageRowsContext {
@@ -93,7 +109,7 @@ export function buildStageRows(input: MyRouteInput, ctx: StageRowsContext): Stag
         entitled: input.isEntitled(stage),
         latched,
         cardComplete: completeCards.has(`${stage}-complete`),
-        allPlayableDone: completionState(stage, ctx.gridEpisodes, input.snapshot).stageComplete,
+        allPlayableDone: allPlayableDone(stage, ctx.gridEpisodes, input.snapshot),
         questPips: questPips.map((p) => p.state),
       }),
       availability,

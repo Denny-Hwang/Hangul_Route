@@ -151,6 +151,19 @@ describe('buildMyRoute (F-ROUTE-001 section 3.18 behaviours, frozen fixtures)', 
     expect(m.latchesToWrite).toEqual([]);
   });
 
+  it('a stage whose only playable cell is ready (not shipped) is open with its pips, never coming later', () => {
+    const ready: Bundle = {
+      episodes: BUNDLE_8.episodes.map((e) =>
+        e.id === 'episode:stage3-letters' ? { ...e, questIds: ['quest:stage1-letters-q1'], status: 'ready' as const } : e,
+      ),
+      quests: BUNDLE_8.quests,
+    };
+    const m = build([], {}, ready);
+    expect(row(m, 'stage3')?.availability).toBe('soon');
+    expect(row(m, 'stage3')?.state).toBe('open');
+    expect(row(m, 'stage3')?.cells[0]?.pips.map((p) => p.kind)).toEqual(['quest']);
+  });
+
   it('falls back to the stage key when no stage definition is given', () => {
     expect(build([], { stages: [] }).stages.map((s) => s.title)).toEqual(['stage1', 'stage2', 'stage3', 'stage4', 'stage5', 'stage6', 'stage7']);
   });

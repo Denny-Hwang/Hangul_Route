@@ -35,7 +35,7 @@ describe('stageStateOf (F-ROUTE-001 section 3.3)', () => {
                       ? 'known'
                       : availability === 'taste' && allPlayableDone
                         ? 'explored'
-                        : availability === 'soon' || (!entitled && !anyDone)
+                        : (availability === 'soon' && pips.length === 0) || (!entitled && !anyDone)
                           ? 'later'
                           : 'open';
                   expect(stageStateOf(facts), JSON.stringify(facts)).toBe(expected);
@@ -45,6 +45,13 @@ describe('stageStateOf (F-ROUTE-001 section 3.3)', () => {
   it('never calls a taste stage complete by the derived rule', () => {
     const facts: StageFacts = { availability: 'taste', entitled: true, latched: false, cardComplete: false, allPlayableDone: true, questPips: ['done', 'done'] };
     expect(stageStateOf(facts)).toBe('explored');
+  });
+
+  it('a stage with playable quest pips is never coming later for an entitled learner, even when none is shipped yet', () => {
+    const facts: StageFacts = { availability: 'soon', entitled: true, latched: false, cardComplete: false, allPlayableDone: false, questPips: ['open'] };
+    expect(stageStateOf(facts)).toBe('open');
+    expect(stageStateOf({ ...facts, questPips: [] })).toBe('later');
+    expect(stageStateOf({ ...facts, entitled: false, questPips: ['later'] })).toBe('later');
   });
 
   it('never calls a known stage complete', () => {
