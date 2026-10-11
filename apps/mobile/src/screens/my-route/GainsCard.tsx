@@ -27,7 +27,7 @@ export function GainsCard({ tiles, onOpenLibrary }: { tiles: GainTileView[]; onO
           alignItems: 'center',
           gap: spacing.sm,
           minHeight: touchTarget.min,
-          minWidth: touchTarget.hero + touchTarget.min,
+          minWidth: touchTarget.hero + spacing.xl,
           paddingHorizontal: spacing.md,
           paddingVertical: spacing.sm,
           borderRadius: radii.lg,
