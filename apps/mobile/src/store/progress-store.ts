@@ -1,7 +1,7 @@
 import { PlacementResultSchema, type PlacementResult, type ProgressSnapshot } from '@hangul-route/content-schema';
 import { create } from 'zustand';
 import { episodesAll } from '../content/episodes';
-import { stagesToLatch, withStageLatches } from '../logic/my-route/latch';
+import { latchSnapshot } from '../logic/my-route/latch';
 import { recordBestQuest } from '../logic/quest-progress';
 import { mergePlacements, mergeSnapshots, withSnapshotDefaults } from '../logic/sync/merge';
 import { notifyProgressPersisted } from '../logic/sync/persist-hook';
@@ -81,7 +81,7 @@ interface Actions {
    * it was.
    */
   recordPlacement: (profileId: string, result: PlacementResult) => boolean;
-  /** Sync / restore hand back a merged snapshot; persisted without re-notifying sync. */
+  /** Sync / restore hand back a merged snapshot; persisted without re-notifying sync, unless the stage latch added a key. */
   replaceSnapshot: (profileId: string, snapshot: ProgressSnapshot) => void;
 }
 
@@ -107,12 +107,13 @@ function save(profileId: string, snap: ProgressSnapshot): void {
 /**
  * The stage latch writer (F-ROUTE-001 R-1b): adds `stageDoneAt` keys for
  * stages that are complete now, on the hydrated snapshot only, never on a
- * blank one. Runs after each quest result and on hydrate (app start), with
- * `flags.myRouteEnabled` off too, so a learner who finishes Stage 1 is latched
- * before any build adds Stage 1 quests.
+ * blank one. Runs after each quest result, on hydrate (app start) and when
+ * sync or restore hands back a snapshot, with `flags.myRouteEnabled` off too,
+ * so a learner who finishes Stage 1 is latched before any build adds Stage 1
+ * quests. Best effort: it never throws (`latchSnapshot`).
  */
 function withLatches(snap: ProgressSnapshot, now: Date): ProgressSnapshot {
-  return withStageLatches(snap, stagesToLatch(snap, episodesAll), now);
+  return latchSnapshot(snap, episodesAll, now);
 }
 
 /** Any open assignment for the quest is done (F-HW-001 §3.4, F-PLAN-001 §3.3). */
@@ -306,7 +307,11 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
   },
 
   replaceSnapshot: (profileId, snapshot) => {
-    settle(profileId, snapshot);
-    void writeJson(key(profileId), snapshot);
+    // A completion that arrived by sync or restore is latched now, not at the
+    // next cold start; only an added latch is announced, so it uploads.
+    const latched = withLatches(snapshot, new Date());
+    settle(profileId, latched);
+    void writeJson(key(profileId), latched);
+    if (latched !== snapshot) notifyProgressPersisted(profileId);
   },
 }));

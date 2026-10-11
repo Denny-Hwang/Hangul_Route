@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { buildMyRoute } from '../model';
-import { stagesToLatch, withStageLatches } from '../latch';
+import { latchSnapshot, stagesToLatch, withStageLatches } from '../latch';
 import { BUNDLE_15, BUNDLE_8, STAGE1_8, STAGE_DEFS, THEME_DEFS, catalogOf, snapshotWith } from './fixtures/bundle-2026-10';
 import { seed } from './fixtures/route';
 
@@ -88,5 +88,21 @@ describe('withStageLatches', () => {
     const snapshot = snapshotWith(STAGE1_8, { stageDoneAt: { stage1: '2026-10-01T00:00:00.000Z' } });
     expect(withStageLatches(snapshot, ['stage1'], NOW)).toBe(snapshot);
     expect(withStageLatches(snapshot, [], NOW)).toBe(snapshot);
+  });
+});
+
+describe('latchSnapshot (the store writer: best effort, never throws)', () => {
+  it('adds the latch a completed stage needs', () => {
+    expect(latchSnapshot(snapshotWith(STAGE1_8), BUNDLE_8.episodes, NOW).stageDoneAt).toEqual({ stage1: '2026-10-11T09:30:00.000Z' });
+  });
+
+  it('returns the same snapshot when nothing is newly complete', () => {
+    const snapshot = snapshotWith(STAGE1_8.slice(0, 3));
+    expect(latchSnapshot(snapshot, BUNDLE_8.episodes, NOW)).toBe(snapshot);
+  });
+
+  it('returns the input unchanged for a malformed stored snapshot (no quests array)', () => {
+    const broken = { ...snapshotWith([]), quests: undefined } as unknown as Parameters<typeof latchSnapshot>[0];
+    expect(latchSnapshot(broken, BUNDLE_8.episodes, NOW)).toBe(broken);
   });
 });

@@ -501,6 +501,27 @@ describe('stage latch writer (F-ROUTE-001 R-1b, runs with flags.myRouteEnabled o
     expect(stored()?.stageDoneAt?.stage1).toMatch(ISO);
   });
 
+  it('latches a completed stage that arrives by sync or restore (replaceSnapshot) and announces it so it uploads', () => {
+    useProgressStore.getState().replaceSnapshot('p1', savedWith(stage1));
+    expect(stored()?.stageDoneAt?.stage1).toMatch(ISO);
+    expect(useProgressStore.getState().byProfile['p1']?.stageDoneAt?.stage1).toMatch(ISO);
+    expect(notified).toEqual(['p1']);
+  });
+
+  it('replaceSnapshot keeps an incoming latch and does not announce when nothing is added', () => {
+    const latch = { stage1: '2026-10-01T09:10:00.000Z' };
+    useProgressStore.getState().replaceSnapshot('p1', savedWith(stage1, { stageDoneAt: latch }));
+    expect(stored()?.stageDoneAt).toEqual(latch);
+    expect(notified).toEqual([]);
+  });
+
+  it('a malformed saved snapshot (no quests) still hydrates: the latch never blocks app start', async () => {
+    mem.set('progress:p1', { ...savedSnapshot(), quests: undefined });
+    await expect(useProgressStore.getState().hydrate('p1')).resolves.toBeUndefined();
+    expect(useProgressStore.getState().hydratedFor.has('p1')).toBe(true);
+    expect(writeJson).not.toHaveBeenCalled();
+  });
+
   it('never latches a taste stage', async () => {
     const taste = episodesAll
       .filter((e) => e.stage === 'stage2' && e.status === 'shipped')
