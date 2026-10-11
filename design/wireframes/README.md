@@ -31,12 +31,12 @@
 | `pwa/install-guide.md` · `pwa/system-banners.md` | P | roadmap web-pwa-offline §3 |
 | `classroom/projection-mode.md` | D | F-TCH-001 §3.4 (연기: 자원봉사 학생용 옵션; 교사 수업은 `classroom/lecture-presenter.md`, F-TCH-004) |
 | `vocab/topics.md` · `vocab/flashcards.md` · `vocab/speed-round.md` | D | F-VOC-003 · F-VOC-004 |
-| `placement/placement.md` | D | F-PLC-001 |
+| `placement/placement.md` (flow overview) · `placement/invite.md` · `language.md` · `options.md` · `handoff.md` · `warmup.md` · `item.md` · `item-short.md` · `pause.md` · `sound-needed.md` · `result.md` · `report.md` · `home-entry.md` | R | F-PLC-001 (promoted in P-0) |
 | `console/curriculum-planner.md` | D | F-PLAN-002 |
 | `classroom/lecture-presenter.md` | R | F-TCH-004 |
 | `layout/wide.md` | D | F-LAYOUT-001 |
 | `console/class-transfer.md` | D | F-SPACE-002 |
-| `journey/my-route-overview.md` | R | F-ROUTE-001 (screens A to I; J amends `placement/placement.md` G for F-PLC-001 AM-1 / AM-14, K is F-PLAN-002's weekly plan proposal, FP-B6) |
+| `journey/my-route-overview.md` | R | F-ROUTE-001 (screens A to I; J amends `placement/result.md` (was `placement.md` G) for F-PLC-001 AM-1 / AM-14, K is F-PLAN-002's weekly plan proposal, FP-B6) |
 
 ### B/C. Caregiver · Teacher · School console (web, 일부 mobile) — 어른
 | 파일 | 상태 | 스펙 |
