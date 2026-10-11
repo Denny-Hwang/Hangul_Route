@@ -68,6 +68,10 @@ describe('telemetry event names (one list for the client type and the API whitel
         'route_map.viewed',
         'route_map.stage_opened',
         'route_map.continue_tapped',
+        'lecture.start',
+        'lecture.complete',
+        'lecture.tool_used',
+        'lecture.deck_rejected',
       ].sort(),
     );
     expect(new Set(TELEMETRY_EVENT_NAMES).size).toBe(TELEMETRY_EVENT_NAMES.length);

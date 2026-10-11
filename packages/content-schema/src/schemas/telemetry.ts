@@ -78,6 +78,11 @@ export const TELEMETRY_EVENT_NAMES = [
   'route_map.viewed',
   'route_map.stage_opened',
   'route_map.continue_tapped',
+  // F-TCH-004 §3.14 (no profileId; never a name, picker label or the deck title)
+  'lecture.start',
+  'lecture.complete',
+  'lecture.tool_used',
+  'lecture.deck_rejected',
 ] as const;
 
 export const TelemetryEventNameSchema = z.enum(TELEMETRY_EVENT_NAMES);
