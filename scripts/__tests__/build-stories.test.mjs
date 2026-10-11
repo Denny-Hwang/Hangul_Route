@@ -436,6 +436,7 @@ describe("build-stories.mjs: --include-fixtures (F-STORY-002 PR 2.6a, e2e builds
     assert.match(src, /export const storiesAll: Story\[\] = \[\.\.\.contentStories, \.\.\.fixtureStories\]\.sort/);
     const episodes = JSON.parse(src.match(/export const storyEpisodes: Episode\[\] = ([\s\S]*?);\n\nexport/)[1]);
     assert.deepEqual(episodes.map((e) => e.id), ["episode:shelf-hangul-day"]);
+    assert.match(src, /export const storyFixtureIds: string\[\] = \[\n  "story:hangul-day"\n\];\n$/);
     assert.match(r.stdout, /2 stories/);
     assert.match(r.stdout, /do not commit/i);
   });
@@ -448,6 +449,7 @@ describe("build-stories.mjs: --include-fixtures (F-STORY-002 PR 2.6a, e2e builds
     assert.equal(check.status, 1);
     assert.equal(run(root).status, 0);
     assert.deepEqual(evaluate(generatedOf(root)).storiesAll, []);
+    assert.doesNotMatch(generatedOf(root), /storyFixtureIds/);
     assert.equal(run(root, ["--check"]).status, 0);
   });
 

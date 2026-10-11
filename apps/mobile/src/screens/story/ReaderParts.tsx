@@ -20,7 +20,7 @@ import {
 } from '@hangul-route/design-system';
 import type { KoText } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import type { NarrationPartView, SceneKorean } from '../../logic/story/scene-view';
 
@@ -77,7 +77,11 @@ export function ReaderTopBar({
       <View style={{ flex: 1, alignItems: 'center', minWidth: 0 }} testID="story-reader-dots">
         <Progress variant="dots" value={furthest + 1} max={total} height={spacing.sm} tone="primary" />
       </View>
-      {position !== null ? <Pill label={position} size="md" tone="neutral" testID="story-reader-position" /> : null}
+      {position !== null ? (
+        <View style={{ justifyContent: 'center' }}>
+          <Pill label={position} size="md" tone="neutral" testID="story-reader-position" />
+        </View>
+      ) : null}
       {onSources ? (
         <Button
           label={copy.sources.cta}
@@ -204,8 +208,14 @@ export function GlossCard({
   onHear: () => void;
   onClose: () => void;
 }): React.ReactElement {
+  // Wireframe C: the card pushes the text down and scrolls into view (web: the node is the DOM element).
+  const ref = useRef<View | null>(null);
+  useEffect(() => {
+    const node = ref.current as unknown as { scrollIntoView?: (o: { block: 'nearest' }) => void } | null;
+    node?.scrollIntoView?.({ block: 'nearest' });
+  }, []);
   return (
-    <View accessibilityLiveRegion="polite" testID="story-reader-gloss">
+    <View ref={ref} accessibilityLiveRegion="polite" testID="story-reader-gloss">
       <Card tone="paper" padding="lg" elevation="flat">
         <View style={{ alignItems: 'center', gap: spacing.sm }}>
           <KoreanText
@@ -218,7 +228,9 @@ export function GlossCard({
             accessibilityLabel={koreanItem({ ko: text.ko, romanization: text.romanization, gloss: text.en })}
             testID="story-reader-gloss-text"
           />
-          <Button label={copy.closeGloss.cta} tone="ghost" size="md" onPress={onClose} testID="story-reader-gloss-close" />
+          <View style={{ alignSelf: 'center' }}>
+            <Button label={copy.closeGloss.cta} tone="ghost" size="md" onPress={onClose} testID="story-reader-gloss-close" />
+          </View>
         </View>
       </Card>
     </View>
@@ -294,14 +306,16 @@ export function KoreanBlock({
       <Body align="center" tone="secondary" testID="story-reader-line-gloss">
         {text.en}
       </Body>
-      <Button
-        label={copy.hearKorean}
-        tone="secondary"
-        size="md"
-        leading={<Icon name="speaker" size={spacing.xl} color={colors.text.onSecondary} />}
-        onPress={onHear}
-        testID="story-reader-hear-line"
-      />
+      <View style={{ alignSelf: 'center' }}>
+        <Button
+          label={copy.hearKorean}
+          tone="secondary"
+          size="md"
+          leading={<Icon name="speaker" size={spacing.xl} color={colors.text.onSecondary} />}
+          onPress={onHear}
+          testID="story-reader-hear-line"
+        />
+      </View>
     </View>
   );
 }
@@ -387,7 +401,7 @@ export function ReaderBottomBar({
       style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: spacing.lg, rowGap: spacing.xs, paddingTop: spacing.sm }}
     >
       <ReadToMeSwitch label={copy.readToMe} value={readToMe} onChange={onReadToMe} />
-      <View style={{ flexGrow: 1, flexBasis: touchTarget.hero * 3, flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+      <View style={{ flexGrow: 1, flexBasis: touchTarget.hero * 2 + spacing.sm, flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
         <Button
           label={copy.back.cta}
           tone="secondary"

@@ -5,13 +5,14 @@
 // fixtures. This script:
 //   1. regenerates apps/mobile/src/content/stories.generated.ts with
 //      `build-stories.mjs --include-fixtures`,
-//   2. exports the web app with EXPO_PUBLIC_STORY_FIXTURES=1 (installs the
-//      `window.__hrStoryE2E` entry, navigation/story-e2e.tsx) into dist/ and
-//      runs the PWA post-build,
+//   2. exports the web app into dist/ and runs the PWA post-build (the
+//      fixture ids in that bundle switch on the `window.__hrStoryE2E` entry,
+//      navigation/story-e2e.tsx),
 //   3. ALWAYS restores the real bundle (plain `build-stories.mjs`), even when
 //      the export fails, so the fixture bundle is never left for a commit.
-// The Metro cache is cleared on both sides of the fixture export so no
-// transform carrying the flag survives into a later production build.
+// Nothing is keyed on an environment variable, so the Metro cache cannot
+// carry the e2e entry into a later production build: the restored bundle has
+// no fixture ids and the entry stays off.
 //
 // Usage (from apps/mobile): pnpm build:web:fixtures   then   STORY_FIXTURES=1 pnpm test:e2e:web story-reader
 // Never used by a deploy: Cloudflare builds run `build:web` from a clean checkout.
@@ -24,15 +25,15 @@ const app = join(dirname(fileURLToPath(import.meta.url)), '..');
 const generator = join(app, '..', '..', 'scripts', 'build-stories.mjs');
 const dist = process.argv[2] ?? 'dist';
 
-function run(command, args, env = {}) {
-  const r = spawnSync(command, args, { cwd: app, stdio: 'inherit', env: { ...process.env, ...env } });
+function run(command, args) {
+  const r = spawnSync(command, args, { cwd: app, stdio: 'inherit' });
   return r.status ?? 1;
 }
 
 let status = run(process.execPath, [generator, '--include-fixtures']);
 try {
   if (status === 0) {
-    status = run('expo', ['export', '--platform', 'web', '--output-dir', dist, '--clear'], { EXPO_PUBLIC_STORY_FIXTURES: '1' });
+    status = run('expo', ['export', '--platform', 'web', '--output-dir', dist]);
   }
   if (status === 0) status = run(process.execPath, [join(app, 'scripts', 'pwa-postbuild.mjs'), dist]);
 } finally {

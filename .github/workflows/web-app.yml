@@ -82,3 +82,13 @@ jobs:
       - name: Offline e2e
         if: steps.changes.outputs.run == 'true'
         run: pnpm --filter @hangul-route/mobile test:e2e:web
+
+      # F-STORY-002 PR 2.6a: no story is ready yet, so the reader runs against a
+      # second build that holds the test fixtures (never deployed; the script
+      # restores the real story bundle). Runs after the offline e2e because it
+      # replaces dist/.
+      - name: Story reader e2e (fixture bundle)
+        if: steps.changes.outputs.run == 'true'
+        run: |
+          pnpm --filter @hangul-route/mobile build:web:fixtures
+          STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test story-reader

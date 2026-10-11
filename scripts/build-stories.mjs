@@ -226,7 +226,9 @@ export function renderFixtureBundle({ stories, fixtures, episodes, quests }) {
     "  a.id < b.id ? -1 : a.id > b.id ? 1 : 0,\n" +
     ");\n\n" +
     `export const storyEpisodes: Episode[] = ${literal(episodes)};\n\n` +
-    `export const storyQuests: Quest[] = ${literal(quests)};\n`
+    `export const storyQuests: Quest[] = ${literal(quests)};\n\n` +
+    "/** Only an e2e bundle has this export: it switches on the e2e entry (apps/mobile navigation/story-e2e.tsx). */\n" +
+    `export const storyFixtureIds: string[] = ${literal(sortedFixtures.map((f) => f.id))};\n`
   );
 }
 

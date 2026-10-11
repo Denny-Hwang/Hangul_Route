@@ -109,6 +109,11 @@ interface Focusable {
 const STACKED_ART_SHARE = 0.42;
 /** Art column share in the side-by-side layout (§3.3: art left, at most 55 %). */
 const SIDE_ART_SHARE = 0.55;
+/**
+ * Below this window height (small phones such as 320x568, landscape phones) Next is `lg` (80) instead of
+ * `hero` (96), so the scrolling text keeps room; both are above the 64 floor (§3.10, F-LAYOUT-001 §3.6).
+ */
+const COMPACT_HEIGHT = 640;
 
 function ReaderBody({
   story,
@@ -311,7 +316,7 @@ function ReaderBody({
   const side = lc.sideBySide;
   const artWidth = (() => {
     if (body.width === 0) return 0;
-    if (side) return Math.floor(Math.min(body.width * SIDE_ART_SHARE - spacing.lg, (body.height * 4) / 3, maxArt * 1.5));
+    if (side) return Math.floor(Math.min(body.width * SIDE_ART_SHARE - spacing.xl, ((body.height - spacing.xxxl) * 4) / 3, maxArt * 1.5));
     return Math.floor(Math.min(body.width, maxArt, (body.height * STACKED_ART_SHARE * 4) / 3));
   })();
 
@@ -333,7 +338,11 @@ function ReaderBody({
           testID="story-reader-art"
         />
       ) : null}
-      {view.traditional ? <Pill label={copy.traditionalTale.pill} tone="secondary" testID="story-reader-traditional" /> : null}
+      {view.traditional ? (
+        <View style={{ alignSelf: 'center' }}>
+          <Pill label={copy.traditionalTale.pill} tone="secondary" testID="story-reader-traditional" />
+        </View>
+      ) : null}
     </View>
   );
 
@@ -371,6 +380,7 @@ function ReaderBody({
           </View>
           {gloss !== null && gloss.id.startsWith('kw:') ? (
             <GlossCard
+              key={gloss.id}
               text={gloss.text}
               copy={copy}
               koreanItem={m.a11y.koreanItem}
@@ -397,6 +407,7 @@ function ReaderBody({
           />
           {gloss !== null && gloss.id.startsWith('word:') ? (
             <GlossCard
+              key={gloss.id}
               text={gloss.text}
               copy={copy}
               koreanItem={m.a11y.koreanItem}
@@ -448,7 +459,7 @@ function ReaderBody({
       onReadToMe={changeReadToMe}
       isFirst={view.isFirst}
       nextLabel={view.labels.next}
-      nextSize={lc.short ? 'lg' : 'hero'}
+      nextSize={lc.windowHeight > 0 && lc.windowHeight < COMPACT_HEIGHT ? 'lg' : 'hero'}
       onBack={() => dispatch({ type: 'back' })}
       onNext={() => dispatch({ type: 'next' })}
     />
@@ -484,12 +495,12 @@ function ReaderBody({
         onClose={onClose}
         onSources={sources}
       />
-      <Animated.View style={{ flex: 1, opacity: fade, marginTop: spacing.sm }} onLayout={onBodyLayout}>
+      <Animated.View testID="story-reader-body" style={{ flex: 1, opacity: fade, marginTop: spacing.sm }} onLayout={onBodyLayout}>
         {end ? (
           endPage
         ) : side ? (
           <View style={{ flex: 1, flexDirection: 'row', gap: spacing.xl }} testID="story-reader-columns">
-            <View style={{ width: `${SIDE_ART_SHARE * 100}%`, maxWidth: artWidth + spacing.lg, alignItems: 'center' }}>{art}</View>
+            <View style={{ width: artWidth, alignItems: 'center' }}>{art}</View>
             <View style={{ flex: 1, minWidth: 0 }}>
               <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingTop: spacing.xs }} keyboardShouldPersistTaps="handled">
                 {text}
