@@ -7,17 +7,24 @@ import {
   Pill,
   Screen,
   Spacer,
+  borderWidth,
   colors,
   spacing,
 } from '@hangul-route/design-system';
-import { levelLabel } from '@hangul-route/content-schema';
+import { levelLabel, type StageKey } from '@hangul-route/content-schema';
+import { formatDate, type Messages } from '@hangul-route/i18n';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Pressable, View } from 'react-native';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeQuest } from '../../logic/content-locale';
-import { questsAll } from '../../content';
+import { questsAll, stages } from '../../content';
+import { flags } from '../../config/flags';
+import { localizeStage } from '../../logic/content-locale';
+import { bandLabel } from '../../logic/placement/copy';
+import { startingSpotRow } from '../../logic/placement/report-page';
+import { LinkButton } from '../placement/parts';
 import type { RootStackParamList } from '../../navigation/types';
 import { useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
@@ -28,10 +35,21 @@ const AVATAR_SIZE = 40;
 type Props = NativeStackScreenProps<RootStackParamList, 'ParentDashboard'>;
 
 export function ParentDashboardScreen({ navigation }: Props): React.ReactElement {
-  const m = useMessages().caregiver.dashboard;
+  const messages = useMessages();
+  const m = messages.caregiver.dashboard;
   const locale = useLocale();
   const profiles = useProfileStore((s) => s.profiles);
   const byProfile = useProgressStore((s) => s.byProfile);
+
+  // Every profile's snapshot, not only the active one: the cards and the Starting spot row read them.
+  useEffect(() => {
+    for (const p of profiles) void useProgressStore.getState().hydrate(p.id);
+  }, [profiles]);
+
+  const stageTitle = (key: StageKey): string => {
+    const stage = stages.find((s) => s.key === key);
+    return stage === undefined ? '' : localizeStage(stage, locale).titleEn;
+  };
 
   return (
     <Screen tone="canvas" scrollable>
@@ -76,6 +94,17 @@ export function ParentDashboardScreen({ navigation }: Props): React.ReactElement
                 <Stat label={m.stats.sessions} value={String(sessions)} />
                 <Stat label={m.stats.minutes} value={String(sessionMinutes)} />
               </View>
+              {flags.placementEnabled ? (
+                <StartingSpot
+                  spot={startingSpotRow(snap?.placements)}
+                  m={messages.caregiver.placementReport}
+                  levelLine={(spot) =>
+                    [stageTitle(spot.level.stage), bandLabel(messages, spot.level), formatDate(locale, spot.takenAt, 'monthDay')].join(' · ')
+                  }
+                  onOpen={() => navigation.navigate('PlacementReport', { profileId: p.id })}
+                  testID={`dashboard-starting-spot-${p.id}`}
+                />
+              ) : null}
               {snap && snap.quests.length > 0 ? (
                 <>
                   <Spacer size="md" />
@@ -127,6 +156,41 @@ function Stat({ label, value }: { label: string; value: string }): React.ReactEl
         {value}
       </Body>
       <Caption tone="muted">{label}</Caption>
+    </View>
+  );
+}
+
+type SpotRow = NonNullable<ReturnType<typeof startingSpotRow>>;
+
+/**
+ * The Starting spot row (F-PLC-001 section 3.9, wireframe placement/report):
+ * the stage title, the band label and the date of the newest check, "Changed
+ * by a grown-up" when a parent override is in force, and See the check. With
+ * no check yet it says so and still opens the report (its take-it button).
+ */
+function StartingSpot({
+  spot,
+  m,
+  levelLine,
+  onOpen,
+  testID,
+}: {
+  spot: SpotRow | null;
+  m: Messages['caregiver']['placementReport'];
+  levelLine: (spot: SpotRow) => string;
+  onOpen: () => void;
+  testID: string;
+}): React.ReactElement {
+  return (
+    <View testID={testID} style={{ marginTop: spacing.md, paddingTop: spacing.sm, borderTopWidth: borderWidth.thin, borderTopColor: colors.border.subtle }}>
+      <Caption tone="muted">{m.row.label}</Caption>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: spacing.sm }}>
+        <View style={{ flexShrink: 1 }}>
+          <Body weight="semibold">{spot === null ? m.noCheck : levelLine(spot)}</Body>
+          {spot?.overridden ? <Caption tone="muted">{m.changedByGrownUp}</Caption> : null}
+        </View>
+        <LinkButton label={m.row.seeCheck} onPress={onOpen} testID={`${testID}-open`} />
+      </View>
     </View>
   );
 }

@@ -448,9 +448,10 @@ export function PlacementScreen({ route, navigation }: Props): React.ReactElemen
           resetTo([{ name: 'Main', params: { screen: 'Library' } }]);
           return;
         case 'forGrownUps':
-          // The placement report arrives with P-8; until then the grown-up zone.
-          if (gateRequired({ profiles, parentPinHash })) navigation.navigate('PinEntry', { next: 'ParentDashboard' });
-          else navigation.navigate('ParentDashboard');
+          // The grown-up report of this learner (F-PLC-001 section 3.9), behind the PIN when the gate is required.
+          if (profileId === null) return;
+          if (gateRequired({ profiles, parentPinHash })) navigation.navigate('PinEntry', { next: 'PlacementReport', profileId });
+          else navigation.navigate('PlacementReport', { profileId });
           return;
         case 'tryStandard':
           allowLeave.current = true;
@@ -464,7 +465,7 @@ export function PlacementScreen({ route, navigation }: Props): React.ReactElemen
         }
       }
     },
-    [finished, resetTo, navigation, profiles, parentPinHash, source],
+    [finished, resetTo, navigation, profiles, parentPinHash, source, profileId],
   );
 
   const continueRun = useCallback((): void => {

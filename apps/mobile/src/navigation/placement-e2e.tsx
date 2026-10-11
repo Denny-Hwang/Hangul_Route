@@ -12,6 +12,8 @@ import { addTelemetryListener, type TelemetryEvent } from '../platform/telemetry
  */
 export interface PlacementE2eHandle {
   open(source: PlacementSource): void;
+  /** The grown-up report of a profile (F-PLC-001 P-8); the dashboard row stays hidden while the flag is off. */
+  openReport(profileId: string): void;
   /** `placement.*` telemetry events `track()` accepted since the hook mounted. */
   events(): TelemetryEvent[];
 }
@@ -26,6 +28,7 @@ export function PlacementE2eHook(): null {
     });
     g.__hrPlacementE2E = {
       open: (source) => navigation.navigate('Placement', { source }),
+      openReport: (profileId) => navigation.navigate('PlacementReport', { profileId }),
       events: () => events.map((e) => ({ ...e })),
     };
     return () => {
