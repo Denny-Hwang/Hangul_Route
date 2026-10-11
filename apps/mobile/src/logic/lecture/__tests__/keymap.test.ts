@@ -69,6 +69,63 @@ describe('commandForKey (F-TCH-004 §3.5 keyboard / clicker map)', () => {
     expect(commandForKey({ key: 'Enter', isComposing: true })).toBeNull();
   });
 
+  it('Enter and Space on a focused button, link or toggle activate it instead of advancing the slide (§3.13, WCAG 2.1.1)', () => {
+    for (const k of ['Enter', ' ', 'Spacebar']) {
+      expect(commandForKey({ key: k, onActivatable: true })).toBeNull();
+      expect(commandForKey({ key: k, onActivatable: false })).toBe('next');
+      expect(commandForKey({ key: k })).toBe('next');
+    }
+  });
+
+  it('arrows, clicker keys and letter shortcuts still work while a control-bar button has focus', () => {
+    expect(commandForKey({ key: 'ArrowRight', onActivatable: true })).toBe('next');
+    expect(commandForKey({ key: 'PageUp', onActivatable: true })).toBe('prev');
+    expect(commandForKey({ key: 'b', onActivatable: true })).toEqual({ overlay: 'blank' });
+    expect(commandForKey({ key: 'Escape', onActivatable: true })).toBe('escape');
+  });
+
+  it('ignores auto-repeat, so a held key or clicker button cannot flash the blank, grid or help overlay on a projector', () => {
+    for (const k of ['b', 'B', '.', 'g', 'h', '?', 'f', 't', 'p', 's', 'r', 'ArrowRight', 'PageDown', ' ', 'Backspace', 'Home', 'Escape']) {
+      expect(commandForKey({ key: k, repeat: true })).toBeNull();
+    }
+    expect(commandForKey({ key: 'R', shiftKey: true, repeat: true })).toBeNull();
+    expect(commandForKey({ key: 'b', repeat: false })).toEqual({ overlay: 'blank' });
+  });
+
+  it.each([
+    ['ㅠ', 'KeyB', { overlay: 'blank' }],
+    ['ㄴ', 'KeyS', 'replay-sound'],
+    ['ㄱ', 'KeyR', 'replay-stroke'],
+    ['ㅅ', 'KeyT', { overlay: 'timer' }],
+    ['ㅔ', 'KeyP', { overlay: 'picker' }],
+    ['ㅎ', 'KeyG', { overlay: 'grid' }],
+    ['ㄹ', 'KeyF', 'fullscreen'],
+    ['ㅗ', 'KeyH', { overlay: 'help' }],
+    ['Process', 'KeyT', { overlay: 'timer' }],
+    ['Unidentified', 'KeyB', { overlay: 'blank' }],
+    ['Process', 'Period', { overlay: 'blank' }],
+  ] as Array<[string, string, KeyCommand]>)('Hangul or another non-Latin input source: key %j with code %j -> %j', (k, code, command) => {
+    expect(commandForKey({ key: k, code })).toEqual(command);
+  });
+
+  it('the physical-key fallback keeps Shift+R for romanization and Shift+/ for help', () => {
+    expect(commandForKey({ key: 'ㄲ', code: 'KeyR', shiftKey: true })).toBe('toggle-romanization');
+    expect(commandForKey({ key: 'Process', code: 'Slash', shiftKey: true })).toEqual({ overlay: 'help' });
+    expect(commandForKey({ key: 'Process', code: 'Slash' })).toBeNull();
+  });
+
+  it('a Latin key wins over the physical position (an AZERTY or Dvorak letter keeps its own meaning)', () => {
+    expect(commandForKey({ key: 'b', code: 'KeyN' })).toEqual({ overlay: 'blank' });
+    expect(commandForKey({ key: 'a', code: 'KeyB' })).toBeNull();
+  });
+
+  it('the physical-key fallback still respects modifiers, text inputs and unmapped keys', () => {
+    expect(commandForKey({ key: 'ㅠ', code: 'KeyB', metaKey: true })).toBeNull();
+    expect(commandForKey({ key: 'ㅠ', code: 'KeyB', inTextInput: true })).toBeNull();
+    expect(commandForKey({ key: 'ㅁ', code: 'KeyA' })).toBeNull();
+    expect(commandForKey({ key: 'ㅠ' })).toBeNull();
+  });
+
   it('unmapped keys return null (so the browser keeps them)', () => {
     for (const k of ['a', 'x', 'Tab', 'F5', 'Shift', 'Control', '1', 'Delete', '', 'ArrowRightX']) expect(key(k)).toBeNull();
   });

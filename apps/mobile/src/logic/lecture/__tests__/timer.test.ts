@@ -126,6 +126,24 @@ describe('reduceTimer', () => {
   });
 });
 
+describe('a clock reading that is not a number', () => {
+  it('is ignored by every event, so the ring and m:ss never turn into NaN', () => {
+    const running = play([{ type: 'start', ms: 60_000, now: 0 }, { type: 'tick', now: 10_000 }]);
+    for (const bad of [Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY]) {
+      for (const type of ['tick', 'pause', 'resume', 'add'] as const) {
+        expect(reduceTimer(running, { type, now: bad })).toBe(running);
+      }
+      expect(reduceTimer(initialTimer(), { type: 'start', ms: 60_000, now: bad })).toEqual(initialTimer());
+      const paused = reduceTimer(running, { type: 'pause', now: 20_000 });
+      expect(reduceTimer(paused, { type: 'resume', now: bad })).toBe(paused);
+    }
+    const after = reduceTimer(reduceTimer(running, { type: 'tick', now: Number.NaN }), { type: 'tick', now: 20_000 });
+    expect(after.remainingMs).toBe(40_000);
+    expect(formatRemaining(after.remainingMs)).toBe('0:40');
+    expect(Number.isNaN(ringFraction(after))).toBe(false);
+  });
+});
+
 describe('the ring only fills (meters never drop)', () => {
   it('increases monotonically through ticks, pauses and +30 s, and completes exactly at zero', () => {
     const events: TimerEvent[] = [

@@ -44,7 +44,9 @@ describe('consoleOrigins (F-TCH-004 §3.2 step 2)', () => {
 
   it('drops anything that is not a bare https origin (or http on localhost)', () => {
     expect(
-      consoleOrigins('*,null,http://evil.example,https://ok.example/path,https://ok.example?q=1,ftp://x.example,not a url,https://user:pw@ok.example,https://good.example'),
+      consoleOrigins(
+        '*,null,http://evil.example,https://ok.example/path,https://ok.example?q=1,ftp://x.example,not a url,https://user:pw@ok.example,https://*.pages.dev,https://pr-*.hangul-route-web.pages.dev,https://good.example',
+      ),
     ).toEqual([...LECTURE_CONSOLE_ORIGINS, 'https://good.example']);
     expect(consoleOrigins('http://127.0.0.1:3000')).toContain('http://127.0.0.1:3000');
   });
@@ -71,8 +73,8 @@ describe('ready announcement', () => {
     expect(readyTargets(deck(null), opener, origins)).toEqual([]);
   });
 
-  it('never targets "*"', () => {
-    expect(readyTargets(NAMES_DECK, opener, consoleOrigins('*'))).not.toContain('*');
+  it('never targets "*", even when a caller hands it one directly', () => {
+    expect(readyTargets(NAMES_DECK, opener, ['*', CONSOLE])).toEqual([CONSOLE]);
   });
 });
 

@@ -1,4 +1,4 @@
-import { typography } from '@hangul-route/design-system/tokens';
+import { layout, typography } from '@hangul-route/design-system/tokens';
 import { describe, expect, it } from 'vitest';
 import { stageScale, stageText, type StageBounds } from '../stage-scale';
 
@@ -87,6 +87,7 @@ describe('stageScale (F-TCH-004 §3.6)', () => {
       offsetY: 0,
       letterboxed: false,
       portrait: false,
+      tooSmall: false,
     });
   });
 
@@ -94,6 +95,34 @@ describe('stageScale (F-TCH-004 §3.6)', () => {
     expect(stageScale({ width: -10, height: 500 }, STAGE).unit).toBe(0);
     expect(stageScale({ width: 500, height: Number.NaN }, STAGE).unit).toBe(0);
     expect(stageScale({ width: Number.POSITIVE_INFINITY, height: 500 }, STAGE).unit).toBe(0);
+  });
+});
+
+describe('tooSmall: the stage is narrower than the compact breakpoint (§3.6 "about 640 px")', () => {
+  it('a phone in portrait or landscape is too small: the presenter shows the bigger-window hint', () => {
+    expect(stageScale({ width: 320, height: 568 }, STAGE).tooSmall).toBe(true);
+    expect(stageScale({ width: 568, height: 320 }, STAGE).tooSmall).toBe(true);
+  });
+
+  it('a short wide window is too small when the height clamp shrinks the stage', () => {
+    const s = stageScale({ width: 1280, height: 280 }, STAGE);
+    expect(s.stageWidth).toBeLessThan(layout.breakpoint.regular);
+    expect(s.tooSmall).toBe(true);
+  });
+
+  it('the breakpoint itself, an iPad in portrait and every projector size are not', () => {
+    expect(layout.breakpoint.regular).toBe(600);
+    expect(stageScale({ width: 600, height: 450 }, STAGE).tooSmall).toBe(false);
+    expect(stageScale({ width: 599, height: 450 }, STAGE).tooSmall).toBe(true);
+    for (const [width, height] of [
+      [768, 1024],
+      [1024, 768],
+      [1280, 720],
+      [1920, 1080],
+      [2560, 1080],
+    ] as const) {
+      expect(stageScale({ width, height }, STAGE).tooSmall).toBe(false);
+    }
   });
 });
 

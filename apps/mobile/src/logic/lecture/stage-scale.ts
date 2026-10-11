@@ -1,4 +1,4 @@
-import { typography } from '@hangul-route/design-system/tokens';
+import { layout, typography } from '@hangul-route/design-system/tokens';
 
 /**
  * Presenter stage scale (F-TCH-004 §3.6), pure.
@@ -14,6 +14,12 @@ import { typography } from '@hangul-route/design-system/tokens';
  *
  * The bounds are passed in (the presenter passes `presenter.stage` from the
  * design tokens), so this module holds no layout numbers of its own.
+ *
+ * `tooSmall`: the stage box is narrower than the compact breakpoint
+ * (`layout.breakpoint.regular`, 600 px; §3.6 "about 640 px"). There the 18 px
+ * text floor lifts captions and romanization well above their stage size and
+ * the slide layout can overflow, so the presenter shows the "make the window
+ * bigger or turn the screen" hint instead of a cramped slide.
  */
 
 export interface StageBounds {
@@ -41,6 +47,8 @@ export interface StageScale {
   letterboxed: boolean;
   /** Taller than wide: the presenter shows a "turn the screen" hint. */
   portrait: boolean;
+  /** The stage is narrower than the compact breakpoint: the presenter shows the bigger-window hint. */
+  tooSmall: boolean;
 }
 
 const usable = (n: number): boolean => Number.isFinite(n) && n > 0;
@@ -58,6 +66,7 @@ export function stageScale(size: WindowSize, bounds: StageBounds): StageScale {
       offsetY: 0,
       letterboxed: false,
       portrait: false,
+      tooSmall: false,
     };
   }
   const natural = (bounds.width * h) / w;
@@ -75,6 +84,7 @@ export function stageScale(size: WindowSize, bounds: StageBounds): StageScale {
       offsetY: 0,
       letterboxed: false,
       portrait,
+      tooSmall: w < layout.breakpoint.regular,
     };
   }
   const unit = Math.min(w / bounds.width, h / logicalHeight);
@@ -90,6 +100,7 @@ export function stageScale(size: WindowSize, bounds: StageBounds): StageScale {
     offsetY: (h - stageHeight) / 2,
     letterboxed: true,
     portrait,
+    tooSmall: stageWidth < layout.breakpoint.regular,
   };
 }
 

@@ -32,6 +32,7 @@ describe('initialPresenterState', () => {
       slideIdx: 0,
       reveal: 0,
       overlay: null,
+      timerOpen: false,
       timerMode: 'corner',
       skipped: new Set(),
       ended: false,
@@ -148,13 +149,19 @@ describe('overlays swallow navigation', () => {
   });
 
   it('timer in the corner lets slides advance and stays open', () => {
-    expect(run(at(0, 0, { overlay: 'timer', timerMode: 'corner' }), 'next')).toMatchObject({ slideIdx: 1, overlay: 'timer' });
-    expect(run(at(1, 0, { overlay: 'timer', timerMode: 'corner' }), { goto: 3 })).toMatchObject({ slideIdx: 3, overlay: 'timer' });
+    expect(run(at(0, 0, { timerOpen: true, timerMode: 'corner' }), 'next')).toMatchObject({ slideIdx: 1, timerOpen: true });
+    expect(run(at(1, 0, { timerOpen: true, timerMode: 'corner' }), { goto: 3 })).toMatchObject({ slideIdx: 3, timerOpen: true });
   });
 
   it('timer full screen swallows navigation', () => {
-    const s = at(1, 1, { overlay: 'timer', timerMode: 'full' });
+    const s = at(1, 1, { timerOpen: true, timerMode: 'full' });
     for (const ev of ['next', 'prev', 'first', 'last', { goto: 3 }] as const) expect(run(s, ev)).toEqual(s);
+  });
+
+  it('a covering overlay over the corner timer still swallows navigation; blank over it clears first', () => {
+    const picker = at(1, 1, { overlay: 'picker', timerOpen: true, timerMode: 'corner' });
+    expect(run(picker, 'next')).toEqual(picker);
+    expect(run(at(1, 1, { overlay: 'blank', timerOpen: true }), 'next')).toMatchObject({ slideIdx: 1, reveal: 1, overlay: null, timerOpen: true });
   });
 
   it.each(['grid', 'help', 'exit', 'picker'] as const)('%s swallows next / prev / first / last', (overlay) => {
@@ -181,10 +188,18 @@ describe('opening and closing overlays', () => {
   });
 
   it('close and Esc close the open overlay without touching the slide', () => {
-    for (const overlay of ['timer', 'picker', 'blank', 'pause', 'grid', 'help', 'exit'] as const) {
+    for (const overlay of ['picker', 'blank', 'pause', 'grid', 'help', 'exit'] as const) {
       expect(run(at(1, 2, { overlay }), 'close')).toMatchObject({ slideIdx: 1, reveal: 2, overlay: null });
       expect(run(at(1, 2, { overlay }), 'escape')).toMatchObject({ slideIdx: 1, reveal: 2, overlay: null });
     }
+  });
+
+  it('close and Esc close a full-screen timer; a corner timer closes with close or T, and Esc there asks to exit', () => {
+    expect(run(at(1, 0, { timerOpen: true, timerMode: 'full' }), 'escape')).toMatchObject({ timerOpen: false, overlay: null });
+    expect(run(at(1, 0, { timerOpen: true, timerMode: 'full' }), 'close')).toMatchObject({ timerOpen: false, overlay: null });
+    expect(run(at(1, 0, { timerOpen: true, timerMode: 'corner' }), 'close')).toMatchObject({ timerOpen: false, overlay: null });
+    expect(run(at(1, 0, { timerOpen: true, timerMode: 'corner' }), 'escape')).toMatchObject({ timerOpen: true, overlay: 'exit' });
+    expect(run(at(1, 0, { timerOpen: true, timerMode: 'corner' }), { overlay: 'timer' })).toMatchObject({ timerOpen: false });
   });
 
   it('Esc with nothing open asks to exit; close with nothing open does nothing', () => {
@@ -194,12 +209,41 @@ describe('opening and closing overlays', () => {
 
   it('the timer mode switches between corner and full and opens the timer', () => {
     const full = run(at(1), { timerMode: 'full' });
-    expect(full).toMatchObject({ overlay: 'timer', timerMode: 'full' });
-    expect(run(full, { timerMode: 'corner' })).toMatchObject({ overlay: 'timer', timerMode: 'corner' });
+    expect(full).toMatchObject({ timerOpen: true, timerMode: 'full', overlay: null });
+    expect(run(full, { timerMode: 'corner' })).toMatchObject({ timerOpen: true, timerMode: 'corner' });
   });
 
   it('closing the timer keeps its mode for next time', () => {
-    expect(run(at(1, 0, { overlay: 'timer', timerMode: 'full' }), 'close')).toMatchObject({ overlay: null, timerMode: 'full' });
+    expect(run(at(1, 0, { timerOpen: true, timerMode: 'full' }), 'close')).toMatchObject({ timerOpen: false, timerMode: 'full' });
+  });
+
+  it('T toggles the timer, and with a covering overlay open it brings the timer forward instead of hiding it', () => {
+    const open = run(at(1), { overlay: 'timer' });
+    expect(open).toMatchObject({ timerOpen: true, overlay: null });
+    expect(run(open, { overlay: 'timer' }).timerOpen).toBe(false);
+    expect(run(at(1, 0, { overlay: 'help', timerOpen: true }), { overlay: 'timer' })).toMatchObject({ overlay: null, timerOpen: true });
+    expect(run(at(1, 0, { overlay: 'help' }), { overlay: 'timer' })).toMatchObject({ overlay: null, timerOpen: true });
+  });
+});
+
+describe('a running corner timer survives other overlays (activity slide: Start timer, then P)', () => {
+  it.each(['picker', 'blank', 'pause', 'grid', 'help', 'exit'] as const)('%s opens over the corner timer and closing it shows the timer again', (overlay) => {
+    const timing = run(at(3), { startTimer: 180_000 });
+    expect(timing).toMatchObject({ timerOpen: true, overlay: null });
+    const covered = run(timing, { overlay });
+    expect(covered).toMatchObject({ overlay, timerOpen: true });
+    expect(run(covered, 'close')).toMatchObject({ overlay: null, timerOpen: true, timerMode: 'corner' });
+    expect(run(covered, 'escape')).toMatchObject({ overlay: null, timerOpen: true });
+    expect(run(covered, { overlay })).toMatchObject({ overlay: null, timerOpen: true });
+  });
+
+  it('Esc closes the covering overlay first, then a full-screen timer, then asks to exit', () => {
+    const s = at(1, 0, { overlay: 'picker', timerOpen: true, timerMode: 'full' });
+    const afterOne = run(s, 'escape');
+    expect(afterOne).toMatchObject({ overlay: null, timerOpen: true });
+    const afterTwo = run(afterOne, 'escape');
+    expect(afterTwo).toMatchObject({ overlay: null, timerOpen: false });
+    expect(run(afterTwo, 'escape').overlay).toBe('exit');
   });
 });
 
@@ -211,7 +255,7 @@ describe('effects stay outside the reducer', () => {
   });
 
   it('a replay works with the corner timer open but not under a covering overlay', () => {
-    expect(reduce(at(1, 0, { overlay: 'timer', timerMode: 'corner' }), 'replay-sound', DECK).effect).toEqual({
+    expect(reduce(at(1, 0, { timerOpen: true, timerMode: 'corner' }), 'replay-sound', DECK).effect).toEqual({
       type: 'play-sound',
       slideKey: 'l',
     });
@@ -219,17 +263,41 @@ describe('effects stay outside the reducer', () => {
       expect(reduce(at(1, 0, { overlay }), 'replay-sound', DECK).effect).toBeUndefined();
       expect(reduce(at(1, 0, { overlay }), 'replay-stroke', DECK).effect).toBeUndefined();
     }
-    expect(reduce(at(1, 0, { overlay: 'timer', timerMode: 'full' }), 'replay-stroke', DECK).effect).toBeUndefined();
+    expect(reduce(at(1, 0, { timerOpen: true, timerMode: 'full' }), 'replay-stroke', DECK).effect).toBeUndefined();
+    expect(reduce(at(1, 0, { overlay: 'picker', timerOpen: true, timerMode: 'corner' }), 'replay-sound', DECK).effect).toBeUndefined();
   });
 
   it('start timer opens the timer and returns a start-timer effect with the minutes as ms', () => {
     const r = reduce(at(3), { startTimer: 180_000 }, DECK);
-    expect(r.state).toMatchObject({ slideIdx: 3, overlay: 'timer' });
+    expect(r.state).toMatchObject({ slideIdx: 3, timerOpen: true, overlay: null });
     expect(r.effect).toEqual({ type: 'start-timer', ms: 180_000 });
   });
 
-  it('navigation returns no effect', () => {
-    expect(reduce(at(0), 'next', DECK).effect).toBeUndefined();
+  it('a forward step reports the build it revealed, so the screen can play a newly revealed sound or stroke build', () => {
+    expect(reduce(at(1, 1), 'next', DECK).effect).toEqual({ type: 'revealed', slideKey: 'l', build: 2 });
+    expect(reduce(at(1, 4), 'next', DECK).effect).toEqual({ type: 'revealed', slideKey: 'q', build: 0 });
+    expect(reduce(at(0), 'next', DECK).effect).toEqual({ type: 'revealed', slideKey: 'l', build: 0 });
+    expect(reduce(at(0, 0, { timerOpen: true }), 'next', DECK).effect).toEqual({ type: 'revealed', slideKey: 'l', build: 0 });
+  });
+
+  it('a jump (first, last, goto) reports build 0 of the slide it lands on', () => {
+    expect(reduce(at(3, 1), 'first', DECK).effect).toEqual({ type: 'revealed', slideKey: 't', build: 0 });
+    expect(reduce(at(1), 'last', DECK).effect).toEqual({ type: 'revealed', slideKey: 'e', build: 0 });
+    expect(reduce(at(0, 0, { overlay: 'grid' }), { goto: 2 }, DECK).effect).toEqual({ type: 'revealed', slideKey: 'q', build: 0 });
+  });
+
+  it('prev never replays anything: going back lands on the last reveal silently', () => {
+    expect(reduce(at(2, 1), 'prev', DECK).effect).toBeUndefined();
+    expect(reduce(at(2, 0), 'prev', DECK).effect).toBeUndefined();
+  });
+
+  it('no effect when nothing moved: the end of the deck, a swallowed step, or a blank cleared', () => {
+    expect(reduce(at(4, 0, { ended: true }), 'next', DECK).effect).toBeUndefined();
+    expect(reduce(at(1, 0, { overlay: 'help' }), 'next', DECK).effect).toBeUndefined();
+    expect(reduce(at(1, 0, { overlay: 'blank' }), 'next', DECK).effect).toBeUndefined();
+    expect(reduce(at(1, 0, { timerOpen: true, timerMode: 'full' }), 'next', DECK).effect).toBeUndefined();
+    expect(reduce(at(0), 'first', DECK).effect).toBeUndefined();
+    expect(reduce(at(2), { goto: 2 }, DECK).effect).toBeUndefined();
   });
 });
 

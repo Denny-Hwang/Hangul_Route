@@ -1,9 +1,10 @@
 /**
  * Presenter controls (F-TCH-004 §3.5): a pure reducer over the slide index,
- * the reveal (build) inside a slide and the one open overlay. The screen
- * turns keys, taps and buttons into `PresenterEvent`s and performs the
- * returned `effect` (play a sound, replay the stroke guide, start the class
- * timer), so this module never touches audio, timers or the DOM.
+ * the reveal (build) inside a slide, the one open covering overlay and the
+ * class timer. The screen turns keys, taps and buttons into `PresenterEvent`s
+ * and performs the returned `effect` (play a newly revealed build, replay a
+ * sound or the stroke guide, start the class timer), so this module never
+ * touches audio, timers or the DOM.
  *
  * - `next` reveals the slide's next build before it advances; at the last
  *   slide it does nothing (the End slide says how to exit: no accidental exit).
@@ -11,13 +12,25 @@
  *   last build, so going back shows the complete slide.
  * - Slides skipped in the grid (this session only) are jumped over.
  * - Overlays: `blank` and `pause` swallow the first navigation (it only clears
- *   them); the timer in the corner lets slides move, full screen swallows;
- *   `grid`, `help`, `exit` and the helper `picker` swallow too, except that a
- *   `goto` from the grid jumps and closes it. `escape` / `close` close the
- *   open overlay; `escape` with nothing open asks to exit.
+ *   them); `grid`, `help`, `exit` and the helper `picker` swallow too, except
+ *   that a `goto` from the grid jumps and closes it.
+ * - The class timer is not one of those overlays (`timerOpen`): a running
+ *   corner timer stays on screen while the picker, blank, grid, help or exit
+ *   covers the slide and is still there when that overlay closes. In the
+ *   corner it lets slides move; full screen swallows navigation.
+ * - `escape` / `close` close the covering overlay first, then a full-screen
+ *   timer; `close` also closes a corner timer (its own close button), while
+ *   `escape` with only a corner timer open asks to exit, like with nothing open.
+ * - A forward step (`next`, `first`, `last`, `goto`) that moves returns a
+ *   `revealed` effect naming the build now showing; the screen plays it when
+ *   it is a sound or stroke build. `prev` never returns one, so going back to
+ *   a complete slide is silent.
  */
 
-export type Overlay = null | 'timer' | 'picker' | 'blank' | 'pause' | 'grid' | 'help' | 'exit';
+/** Overlays that cover the slide; at most one is open. */
+export type CoveringOverlay = null | 'picker' | 'blank' | 'pause' | 'grid' | 'help' | 'exit';
+/** What `{ overlay }` can ask for: a covering overlay, or `timer` (T) which toggles the class timer. */
+export type Overlay = CoveringOverlay | 'timer';
 export type TimerMode = 'corner' | 'full';
 
 /** What the reducer needs from a slide; the deck builder's `Slide` (PR 5) is wider. */
@@ -35,7 +48,9 @@ export interface ControlDeck {
 export interface PresenterState {
   slideIdx: number;
   reveal: number;
-  overlay: Overlay;
+  overlay: CoveringOverlay;
+  /** The class timer is on screen (corner or full), independent of the covering overlay. */
+  timerOpen: boolean;
   timerMode: TimerMode;
   /** Slide keys hidden from the run for this session (grid); memory only, never saved in the deck. */
   skipped: ReadonlySet<string>;
@@ -60,6 +75,8 @@ export type PresenterEvent =
   | { startTimer: number };
 
 export type PresenterEffect =
+  /** A forward step now shows `build` of `slideKey`; the screen plays it if it is a sound or stroke build. */
+  | { type: 'revealed'; slideKey: string; build: number }
   | { type: 'play-sound'; slideKey: string }
   | { type: 'play-stroke'; slideKey: string }
   | { type: 'start-timer'; ms: number };
@@ -81,6 +98,7 @@ export function initialPresenterState(deck: ControlDeck, startKey?: string): Pre
     slideIdx,
     reveal: 0,
     overlay: null,
+    timerOpen: false,
     timerMode: 'corner',
     skipped: new Set<string>(),
     ended: deck.slides.length > 0 && slideIdx === deck.slides.length - 1,
@@ -93,9 +111,13 @@ function isNavigation(event: PresenterEvent): event is Navigation {
   return event === 'next' || event === 'prev' || event === 'first' || event === 'last' || (typeof event === 'object' && 'goto' in event);
 }
 
+function fullTimer(state: PresenterState): boolean {
+  return state.timerOpen && state.timerMode === 'full';
+}
+
 /** The slide is on screen (not covered), so a replay makes sense. */
 function slideVisible(state: PresenterState): boolean {
-  return state.overlay === null || (state.overlay === 'timer' && state.timerMode === 'corner');
+  return state.overlay === null && !fullTimer(state);
 }
 
 function land(state: PresenterState, deck: ControlDeck, slideIdx: number, reveal: number): PresenterState {
@@ -140,15 +162,17 @@ export function reduce(state: PresenterState, event: PresenterEvent, deck: Contr
   if (isNavigation(event)) {
     const overlay = state.overlay;
     if (overlay === 'blank' || overlay === 'pause') return { state: { ...state, overlay: null } };
-    const passes =
-      overlay === null ||
-      (overlay === 'timer' && state.timerMode === 'corner') ||
-      (overlay === 'grid' && typeof event === 'object');
-    return { state: passes ? navigate(state, event, deck) : state };
+    const passes = (overlay === null && !fullTimer(state)) || (overlay === 'grid' && typeof event === 'object');
+    if (!passes) return { state };
+    const next = navigate(state, event, deck);
+    const moved = next.slideIdx !== state.slideIdx || next.reveal !== state.reveal;
+    if (!moved || event === 'prev') return { state: next };
+    return { state: next, effect: { type: 'revealed', slideKey: deck.slides[next.slideIdx]!.key, build: next.reveal } };
   }
 
   if (event === 'close' || event === 'escape') {
     if (state.overlay !== null) return { state: { ...state, overlay: null } };
+    if (fullTimer(state) || (state.timerOpen && event === 'close')) return { state: { ...state, timerOpen: false } };
     return { state: event === 'escape' ? { ...state, overlay: 'exit' } : state };
   }
 
@@ -159,16 +183,21 @@ export function reduce(state: PresenterState, event: PresenterEvent, deck: Contr
   }
 
   if ('overlay' in event) {
+    if (event.overlay === 'timer') {
+      // T with a covering overlay open brings the timer forward; otherwise it toggles the timer.
+      if (state.overlay !== null) return { state: { ...state, overlay: null, timerOpen: true } };
+      return { state: { ...state, timerOpen: !state.timerOpen } };
+    }
     const overlay = event.overlay === state.overlay ? null : event.overlay;
     return { state: { ...state, overlay } };
   }
 
   if ('timerMode' in event) {
-    return { state: { ...state, overlay: 'timer', timerMode: event.timerMode } };
+    return { state: { ...state, timerOpen: true, timerMode: event.timerMode } };
   }
 
   if ('startTimer' in event) {
-    return { state: { ...state, overlay: 'timer' }, effect: { type: 'start-timer', ms: event.startTimer } };
+    return { state: { ...state, timerOpen: true }, effect: { type: 'start-timer', ms: event.startTimer } };
   }
 
   // toggleSkip: a known slide other than the last (the End slide always stays).

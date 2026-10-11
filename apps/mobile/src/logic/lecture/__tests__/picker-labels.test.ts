@@ -91,9 +91,11 @@ describe('picker labels live in memory only (F-TCH-004 §3.2 step 4, §3.9)', ()
   it('the two hand-off modules import no storage, store, telemetry or platform code at all', () => {
     for (const file of ['picker-labels.ts', 'roster-message.ts']) {
       const src = readFileSync(join(__dirname, '..', file), 'utf8');
-      const specifiers = [...src.matchAll(/from\s+'([^']+)'/g)].map((m) => m[1]!);
+      // Static `from '…'` / `from "…"`, dynamic `import('…')` and `require('…')`.
+      const specifiers = [...src.matchAll(/(?:\bfrom\s+|\bimport\s*\(\s*|\brequire\s*\(\s*)['"]([^'"]+)['"]/g)].map((m) => m[1]!);
+      expect(specifiers.length).toBeGreaterThan(0);
       expect(specifiers.filter((s) => /platform|store|telemetry|storage|idb-keyval|async-storage/i.test(s))).toEqual([]);
-      expect(src).not.toMatch(/console\.|localStorage|sessionStorage|indexedDB|document\.title|location\./);
+      expect(src).not.toMatch(/console\.|localStorage|sessionStorage|indexedDB|document\.title|location\.|window\.name|history\./);
     }
   });
 });

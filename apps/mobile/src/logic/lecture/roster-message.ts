@@ -42,6 +42,9 @@ export interface AcceptedRoster {
 
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1']);
 
+/** Host names a browser can report as `event.origin`: letters, digits, dots and hyphens (no `*` pattern, which would never match). */
+const HOSTNAME = /^[a-z0-9.-]+$/;
+
 /** A bare origin: https anywhere, http only on this machine; no path, query, credentials or wildcard. */
 function bareOrigin(candidate: string): string | null {
   let url: URL;
@@ -51,7 +54,7 @@ function bareOrigin(candidate: string): string | null {
     return null;
   }
   const secure = url.protocol === 'https:' || (url.protocol === 'http:' && LOCAL_HOSTS.has(url.hostname));
-  if (!secure || url.origin !== candidate) return null;
+  if (!secure || url.origin !== candidate || !HOSTNAME.test(url.hostname)) return null;
   return url.origin;
 }
 

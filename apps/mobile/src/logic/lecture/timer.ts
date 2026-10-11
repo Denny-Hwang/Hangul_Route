@@ -65,6 +65,8 @@ export function ringFraction(state: TimerState): number {
 }
 
 export function reduceTimer(state: TimerState, event: TimerEvent): TimerState {
+  // A clock reading that is not a finite number would turn the time left into NaN for good.
+  if (event.type !== 'reset' && !Number.isFinite(event.now)) return state;
   switch (event.type) {
     case 'start':
       return Number.isFinite(event.ms) && event.ms > 0 ? freshRun(event.ms, event.now) : state;
