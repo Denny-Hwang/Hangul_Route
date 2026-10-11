@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { PlacementResultSchema } from './placement';
 
 /**
  * Progress — per-profile snapshot of learning state.
@@ -84,5 +85,15 @@ export const ProgressSnapshotSchema = z.object({
   homework: z.array(HomeworkAssignmentSchema),
   reviews: z.array(ReviewEntrySchema),
   streakDays: z.number().int().nonnegative(),
+  /** Level checks, newest ten (F-PLC-001 section 3.8); absent in snapshots written before it. */
+  placements: z.array(PlacementResultSchema).default([]),
 });
-export type ProgressSnapshot = z.infer<typeof ProgressSnapshotSchema>;
+/**
+ * `placements` is optional in the *type* although the schema defaults it to
+ * `[]`: the apps read their own local copy without parsing (F-PLC-001
+ * section 3.8), so every snapshot stored before the key existed lacks it at
+ * runtime and every reader must treat a missing list as `[]`.
+ */
+export type ProgressSnapshot = Omit<z.infer<typeof ProgressSnapshotSchema>, 'placements'> & {
+  placements?: z.infer<typeof ProgressSnapshotSchema>['placements'];
+};
