@@ -387,7 +387,7 @@ Console copy is English in `messages/en/console.ts` (`console.curriculum.*`) and
 | `web/src/lib/console/__tests__/curriculum.test.ts` | unit | wizard state to params, `levelHint`, `levelFromSummary`, preview rows, `readoutLine` with planned, plan switcher order |
 | `content-schema/src/__tests__/curriculum-propose.test.ts` | unit, 100 % | `defaultId` at the boundaries (LLW 4, 5, 16, 17); each column of `AMENDMENTS-PLC-PLAN-HANDOFF.md` 1.2 against the frozen fixture and against `routeCatalogOf(CATALOG)`; three real drafts; preview codes incl. `lessons-cut-short`; `existing` -> `update` / `unchanged`; override shrinks and `itemsAdded`; `null` when nothing is ready; determinism; a micro-benchmark gate on `proposeRoute` time (four generator runs) (FP-B10) |
 | `mobile/src/logic/route/__tests__/proposal-flow.test.ts` | unit, 100 % | entry points; visibility by learner type (not device gate); dismissal for 14 days or until the next result; accept-unchanged vs changed telemetry |
-| `web/src/lib/console/__tests__/curriculum.test.ts` (extend) | unit | the wizard preselects `proposeRoute`'s pace and length; same input as the app gives the same `defaultId` |
+| `web/src/lib/console/__tests__/curriculum.test.ts` (extend, PR P2-6b) | unit | the wizard preselects `proposeRoute`'s pace and length; same input as the app gives the same `defaultId` |
 | `…/curriculum-copy.test.ts` (extend) | unit | proposal headline and preview strings in en / es / ko pass both banned lists, never Premium on a learner surface, no speaking words |
 | `web/src/data/__tests__/catalog.test.ts` | unit | `catalogLabel`, `questsOf` over the shared catalogue |
 | `mobile/e2e/web/route.spec.ts`, `web/e2e/curriculum.spec.ts` (nightly) | e2e | console: wizard -> preview -> draft -> publish -> a learner device shows this week only; app: setup -> Home card (2) follows the route -> manual re-pace |
@@ -407,10 +407,11 @@ Coverage: `packages/content-schema` 100 % (including `curriculum/` and `catalog/
 | P2-3b | `feat(content-schema)`: `propose.ts`, `regenerateFrom` `reseed`, the 1.2 goldens, the benchmark gate (FP-B11) | M | P2-3a, OD-12, OD-13 |
 | P2-4 | `feat(content-schema,backend,api)`: `PlanItem.week`, `meta`, cap, snapshot / summary `selfRoute`, the Worker preserve rule for `selfRoute` (shared helper with F-VOC-005 P-1 / F-PLC-001 P-2), telemetry names (+ rows in `docs/roadmap/TELEMETRY-NAMES-2.md`), migration `0006` (E-1: or the next free number when opened), inbox `?cap=`, roster redaction; `docs`: the F-PLAN-001 amendments of this spec's header (sections 3.1, 3.2, 3.3, 3.5). **Deploy (migration, then Worker) before any app or console build** | M | P2-3a |
 | P2-5 | `feat(mobile)`: `withSnapshotDefaults`, derivation (horizon, reconcile, precedence, sources), display fixes (merger, Home count, Homework list), `cap=curriculum` in `getInbox` | M | P2-4 |
-| P2-6 | `feat(web)`: shared catalogue adapter (retires `stage1-catalog.ts`), wizard page, builder week grouping, readout, plan switcher, re-pace, entries; wizard pre-selects pace and length with a *Suggested* tag; family learner card 'Update the plan' (FP-B11) | L | P2-4 |
+| P2-6 | `feat(web)`: shared catalogue adapter (retires `stage1-catalog.ts`), wizard page (no length pre-selected; the rhythm starts from the audience table of section 3.1), builder week grouping, readout, plan switcher, re-pace (`shift`), entries | L | P2-4 |
+| P2-6b | `feat(web)`: the wizard pre-selects pace and length with a *Suggested* tag and a per-length preview line, pace chips, themes / focus / motivation prefilled from `proposeRoute` (section 3.8 steps 1, 2 and 4); family learner card 'Update the plan' (`reseed`); the `curriculum.test.ts (extend)` row of section 5 (FP-B11). Split from P2-6 because it needs `proposeRoute` and the owner decisions | S-M | P2-6, P2-3b, OD-12, OD-13 |
 | P2-7a | `feat(mobile)`: `route-store`, `RouteProposalScreen`, Home prompt with eligibility and dismissal, Profile row, flag (FP-B11). **Lands before F-PLC-001 P-7b**, so the one-tap default plan exists for learners without a level check first | M-L | P2-5, P2-3b |
 | P2-7b | `feat(mobile)`: setup steps, preview, overview, auto re-pace, Hoya check-in (FP-B11) | M | P2-7a |
-| P2-8 | `test(e2e)` + wireframes promoted + flag flip for beta | S | P2-6, P2-7a, P2-7b |
+| P2-8 | `test(e2e)` + wireframes promoted + flag flip for beta | S | P2-6, P2-6b, P2-7a, P2-7b |
 
 ## 7. Dependencies
 
