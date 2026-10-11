@@ -7,6 +7,12 @@ import type { LearnerLevelId } from '@hangul-route/content-schema';
 
 export interface MockChildProfile {
   id: string;
+  /**
+   * The demo child's route segment, `/parent/<slug>` (issue #237). Colon-free and URL-safe,
+   * so the exported file name, the dashboard link and the URL the host serves all agree.
+   * Demo data only: a real learner's name never goes into a URL.
+   */
+  slug: string;
   displayName: string;
   ageGroup: LearnerLevelId;
   questsCompleted: number;
@@ -31,6 +37,7 @@ export function mockFamily(): MockFamily {
   const profiles: MockChildProfile[] = [
     {
       id: 'profile:mina',
+      slug: 'mina',
       displayName: 'Mina',
       ageGroup: '5-7',
       questsCompleted: 9,
@@ -59,6 +66,7 @@ export function mockFamily(): MockFamily {
     },
     {
       id: 'profile:jun',
+      slug: 'jun',
       displayName: 'Jun',
       ageGroup: '8-9',
       questsCompleted: 12,
@@ -95,3 +103,25 @@ export function mockFamily(): MockFamily {
   const streak = Math.max(...profiles.map((p) => p.streak));
   return { profiles, totals: { cards, weekMinutes, streak } };
 }
+
+/** `decodeURIComponent` that answers `undefined` for a malformed escape instead of throwing. */
+function safeDecode(segment: string): string | undefined {
+  try {
+    return decodeURIComponent(segment);
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * The demo child a `/parent/[childId]` segment names (issue #237). The segment is decoded
+ * first, because Next and the host may hand it over percent-encoded. It matches the slug,
+ * or the old profile id so a link shared before the slugs still resolves when it reaches
+ * this lookup.
+ */
+export function findMockChild(segment: string): MockChildProfile | undefined {
+  const decoded = safeDecode(segment);
+  if (!decoded) return undefined;
+  return mockFamily().profiles.find((p) => p.slug === decoded || p.id === decoded);
+}
+
