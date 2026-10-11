@@ -507,6 +507,32 @@ describe('storyCardOpenMode (how a tapped story card opens, §3.7)', () => {
   });
 });
 
+describe('the story card with the shared cursor context (F-ROUTE-001 R-4a)', () => {
+  it('a pinned plan re-pins a placed-out New card and still refreshes the story card\'s reason', () => {
+    const first = build();
+    expect(first.cards[1]).toMatchObject({ kind: 'new', questId: 'quest:a' });
+    expect(first.cards[0]).toMatchObject({ storyId: 'story:tiger', storyReason: 'next' });
+    const after = build(
+      { pinned: first, skipQuestIds: new Set(['quest:a']) },
+      { bookmarks: bookmarks({ 'story:tiger': { sceneIndex: 2 } }) },
+    );
+    expect(after.cards[1]).toMatchObject({ slot: 2, kind: 'new', subtitle: 'new', questId: 'quest:b' });
+    expect(after.cards[0]).toMatchObject({ storyId: 'story:tiger', storyReason: 'continue', collected: false });
+    expect(after.cards[2]).toMatchObject({ storyId: 'story:sun', storyReason: 'next' });
+  });
+
+  it('isEntitled narrows the Journey card while the story cards stay', () => {
+    const stage2 = { ...gridEpisode('episode:s2', ['quest:z']), stage: 'stage2' };
+    const plan = build({
+      quests: [quest('quest:z', 'Stage 2 quest'), ...GRID_QUESTS, ...SHELF_QUESTS],
+      episodes: [stage2, ...GRID_EPISODES, ...SHELF_EPISODES],
+      isEntitled: (stage) => stage === 'stage1',
+    });
+    expect(plan.cards.map((c) => c.kind)).toEqual(['story', 'new', 'story']);
+    expect(plan.cards[1]).toMatchObject({ questId: 'quest:a' });
+  });
+});
+
 describe('planHomeStoryOpen (a tapped Home story card, §3.2, §3.7)', () => {
   const world = { entries: INDEX, snapshot: snapshot(), bookmarks: emptyBookmarks() };
 
