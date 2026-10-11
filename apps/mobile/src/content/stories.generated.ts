@@ -1665,18 +1665,18 @@ export const storiesAll: Story[] = [
     "contentVer": 1,
     "title": {
       "ko": "장영실과 스스로 울리는 물시계, 자격루",
-      "romanization": "Jangyeongsilgwa seuseuro ullineun mulsigye, Jagyeongnu",
-      "en": "Jang Yeong-sil and the Clock That Rang by Itself"
+      "romanization": "Jangyeongsilgwa seuseuro ullineun mulsigye, jagyeongnu",
+      "en": "Jang Yeongsil and the Clock That Rang by Itself"
     },
-    "summaryEn": "Hoya meets Jang Yeong-sil, the skilled craftsman King Sejong praised, and watches how flowing water, rolling balls and wooden figures made the Jagyeongnu water clock strike the time.",
+    "summaryEn": "Hoya meets Jang Yeongsil, the skilled craftsman King Sejong praised, and watches how flowing water, rolling balls and wooden figures made the jagyeongnu water clock strike the time.",
     "theme": "crafts",
     "kind": "science",
     "recommendedStage": 2,
     "minutes": 5,
     "learningGoalsEn": [
-      "Recognize and say 물 (mul, water), 물시계 (mulsigye, water clock) and the sounds 종, 북, 징 (bell, drum, gong).",
-      "Know that King Sejong credited Jang Yeong-sil with building the self-striking water clock, which began keeping time in 1434.",
-      "Describe in simple steps how rising water moved balls and figures to strike the time.",
+      "Read and recognize 물 (mul, water), 물시계 (mulsigye, water clock) and the instruments 종 (jong, bell), 북 (buk, drum) and 징 (jing, gong).",
+      "Know that King Sejong credited Jang Yeongsil with building the self-striking water clock, which began keeping time in 1434.",
+      "Understand, step by step, how rising water moved balls and figures to strike the time.",
       "Know that Sejong's original clock is lost, and parts of a 1536 water clock survive as a National Treasure."
     ],
     "origin": {
@@ -1689,7 +1689,7 @@ export const storiesAll: Story[] = [
       "advisory": [
         "historical-hardship"
       ],
-      "advisoryNoteEn": "Mentions that Jang Yeong-sil was first a servant owned by the government."
+      "advisoryNoteEn": "Mentions that Jang Yeongsil was first a servant owned by the government."
     },
     "keywords": [
       {
@@ -1709,7 +1709,7 @@ export const storiesAll: Story[] = [
       {
         "id": "jagyeongnu",
         "ko": "자격루",
-        "romanization": "Jagyeongnu",
+        "romanization": "jagyeongnu",
         "en": "self-striking water clock",
         "kind": "word"
       },
@@ -1745,8 +1745,8 @@ export const storiesAll: Story[] = [
         "id": "jang-yeongsil",
         "ko": "장영실",
         "romanization": "Jangyeongsil",
-        "en": "Jang Yeong-sil, a Joseon craftsman and inventor",
-        "kind": "word"
+        "en": "Jang Yeongsil, a Joseon craftsman",
+        "kind": "term"
       },
       {
         "id": "jong-buk-jing",
@@ -1760,7 +1760,7 @@ export const storiesAll: Story[] = [
         "ko": "경복궁",
         "romanization": "Gyeongbokgung",
         "en": "Gyeongbokgung Palace",
-        "kind": "word"
+        "kind": "term"
       },
       {
         "id": "sigani-dwaesseoyo",
@@ -1797,14 +1797,14 @@ export const storiesAll: Story[] = [
           },
           {
             "id": "s2",
-            "narrationEn": "Records say Jang Yeong-sil was first a gwanno, a servant owned by the government in Dongnae. He was so skillful that he took charge of craft work in the palace, and King Sejong valued his talent.",
-            "captionEn": "Jang Yeong-sil works on palace crafts",
+            "narrationEn": "Records say Jang Yeongsil was first a servant owned by the government in Dongnae. He was so skillful that he took charge of craft work in the palace, and King Sejong valued his talent. Later he was freed and given a post at court.",
+            "captionEn": "Jang Yeongsil works on palace crafts",
             "keyword": {
               "id": "jang-yeongsil",
               "ko": "장영실",
               "romanization": "Jangyeongsil",
-              "en": "Jang Yeong-sil, a Joseon craftsman and inventor",
-              "kind": "word"
+              "en": "Jang Yeongsil, a Joseon craftsman",
+              "kind": "term"
             },
             "factIds": [
               "f2"
@@ -1816,8 +1816,8 @@ export const storiesAll: Story[] = [
           },
           {
             "id": "s3",
-            "narrationEn": "King Sejong said Jang Yeong-sil had built a self-striking water clock, and that without him it could never have been made. The king decided to give him a higher official rank.",
-            "captionEn": "King Sejong praises Jang Yeong-sil",
+            "narrationEn": "King Sejong said Jang Yeongsil had built a self-striking water clock, and that without him it could never have been made. The king decided to give him a higher official rank.",
+            "captionEn": "King Sejong praises Jang Yeongsil",
             "keyword": {
               "id": "mulsigye",
               "ko": "물시계",
@@ -1840,7 +1840,7 @@ export const storiesAll: Story[] = [
             "keyword": {
               "id": "jagyeongnu",
               "ko": "자격루",
-              "romanization": "Jagyeongnu",
+              "romanization": "jagyeongnu",
               "en": "self-striking water clock",
               "kind": "word"
             },
@@ -1873,14 +1873,14 @@ export const storiesAll: Story[] = [
           },
           {
             "id": "s6",
-            "narrationEn": "From the first day of the seventh lunar month in 1434, the new clock kept time in a pavilion named Borugak at Gyeongbokgung Palace. Palace gates passed its sounds along so the city could hear the time.",
+            "narrationEn": "In 1434, the new clock began keeping time in a pavilion named Borugak at Gyeongbokgung Palace. Drums and bells at the palace gates passed the time on, so the city could hear it.",
             "captionEn": "The clock keeps time at the palace",
             "keyword": {
               "id": "gyeongbokgung",
               "ko": "경복궁",
               "romanization": "Gyeongbokgung",
               "en": "Gyeongbokgung Palace",
-              "kind": "word"
+              "kind": "term"
             },
             "factIds": [
               "f6"
@@ -1892,13 +1892,13 @@ export const storiesAll: Story[] = [
           },
           {
             "id": "s7",
-            "narrationEn": "Sejong's original clock does not survive, but water vessels from a water clock made in 1536 remain. They are a National Treasure at the National Palace Museum of Korea. Hoya whispers, \"{kw:sigani-dwaesseoyo}\"",
+            "narrationEn": "Sejong's original clock does not survive, but water vessels from a water clock made in 1536 remain. They are a National Treasure at the National Palace Museum of Korea. Hoya whispers, \"{kw:sigani-dwaesseoyo}\" That means, \"It's time!\"",
             "captionEn": "Old water vessels rest in a museum",
             "line": {
               "ko": "시간이 됐어요!",
               "romanization": "sigani dwaesseoyo!",
               "en": "It's time!",
-              "speaker": "narrator"
+              "speaker": "hoya"
             },
             "factIds": [
               "f7"
@@ -1939,7 +1939,7 @@ export const storiesAll: Story[] = [
           {
             "id": "c2",
             "kind": "detail",
-            "promptEn": "Which three sounds told the time?",
+            "promptEn": "What did the wooden figures strike to tell the time?",
             "options": [
               {
                 "id": "a",
@@ -1965,7 +1965,7 @@ export const storiesAll: Story[] = [
           {
             "id": "c3",
             "kind": "detail",
-            "promptEn": "What did King Sejong say about Jang Yeong-sil?",
+            "promptEn": "What did King Sejong say about Jang Yeongsil?",
             "options": [
               {
                 "id": "a",
@@ -1983,7 +1983,7 @@ export const storiesAll: Story[] = [
                 "isCorrect": false
               }
             ],
-            "explainEn": "King Sejong said Jang Yeong-sil made the clock, and that it could not have been made without him.",
+            "explainEn": "King Sejong said Jang Yeongsil made the clock, and that it could not have been made without him.",
             "factIds": [
               "f3"
             ]
