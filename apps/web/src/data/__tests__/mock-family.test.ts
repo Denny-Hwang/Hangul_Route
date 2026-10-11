@@ -16,4 +16,11 @@ describe('mockFamily', () => {
     );
     expect(f.totals.weekMinutes).toBe(expected);
   });
+
+  it('labels each demo card with its Korean word, not an emoji (CLAUDE.md: no emoji in rendered output)', () => {
+    for (const card of mockFamily().profiles.flatMap((p) => p.recentCards)) {
+      expect(card.ko, card.title).toMatch(/^[\uAC00-\uD7A3]+$/);
+      expect(card, card.title).not.toHaveProperty('emoji');
+    }
+  });
 });

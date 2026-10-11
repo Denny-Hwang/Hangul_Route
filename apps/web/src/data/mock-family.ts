@@ -14,7 +14,8 @@ export interface MockChildProfile {
   streak: number;
   weekly: Array<{ day: string; minutes: number }>;
   recentQuests: Array<{ id: string; title: string; stars: number; completedAt: string }>;
-  recentCards: Array<{ id: string; title: string; emoji: string }>;
+  /** A collected card: its English title and the Korean word the card teaches (drawn as text, no emoji). */
+  recentCards: Array<{ id: string; title: string; ko: string }>;
 }
 
 export interface MockFamily {
@@ -46,10 +47,10 @@ export function mockFamily(): MockFamily {
         { id: 'q3', title: 'Tiger, Magpie, Moon', stars: 3, completedAt: 'Sun, May 17' },
       ],
       recentCards: [
-        { id: 'c1', title: 'Tiger', emoji: '🐯' },
-        { id: 'c2', title: 'Kimchi', emoji: '🥬' },
-        { id: 'c3', title: 'Moon', emoji: '🌙' },
-        { id: 'c4', title: 'Kite', emoji: '🪁' },
+        { id: 'c1', title: 'Tiger', ko: '호랑이' },
+        { id: 'c2', title: 'Kimchi', ko: '김치' },
+        { id: 'c3', title: 'Moon', ko: '달' },
+        { id: 'c4', title: 'Kite', ko: '연' },
       ],
     },
     {
@@ -74,10 +75,10 @@ export function mockFamily(): MockFamily {
         { id: 'q6', title: 'Hello Kimchi & Rice', stars: 2, completedAt: 'Yesterday' },
       ],
       recentCards: [
-        { id: 'c5', title: 'Yutnori', emoji: '🎲' },
-        { id: 'c6', title: 'Mountain', emoji: '⛰️' },
-        { id: 'c7', title: 'Seollal', emoji: '🎊' },
-        { id: 'c8', title: 'Rice', emoji: '🍚' },
+        { id: 'c5', title: 'Yutnori', ko: '윷놀이' },
+        { id: 'c6', title: 'Mountain', ko: '산' },
+        { id: 'c7', title: 'Seollal', ko: '설날' },
+        { id: 'c8', title: 'Rice', ko: '밥' },
       ],
     },
   ];

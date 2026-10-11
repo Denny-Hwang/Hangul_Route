@@ -102,7 +102,9 @@ export default function ChildDetailPage({ params }: { params: { childId: string 
                   textAlign: 'center',
                 }}
               >
-                <div style={{ fontSize: typography.size.title }}>{c.emoji}</div>
+                <div lang="ko" style={{ fontSize: typography.size.title, fontWeight: typography.weight.bold, color: colors.text.primary }}>
+                  {c.ko}
+                </div>
                 <div style={{ fontSize: typography.size.caption, fontWeight: 600 }}>{c.title}</div>
               </div>
             ))}
