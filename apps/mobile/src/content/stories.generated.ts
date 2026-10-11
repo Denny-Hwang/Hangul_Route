@@ -3152,9 +3152,9 @@ export const storiesAll: Story[] = [
     "learningGoalsEn": [
       "Know that an 의궤 (uigwe) recorded a royal ceremony or project in words and pictures so later generations could follow it.",
       "Know that uigwe list the people who took part, including craftspeople.",
-      "Describe a 반차도 (banchado): a long picture of a procession, usually drawn as if seen from above.",
+      "Know that a 반차도 (banchado) is a long picture of a procession, usually drawn as if seen from above.",
       "Know that the 1795 feast for Lady Hyegyeong at Bongsudang is recorded in the Annals and in the Wonhaeng Eulmyo Jeongni Uigwe, which was printed with metal type.",
-      "Learn 잔치, 그림, 어머니, 환갑 and 장인."
+      "Read and recognize 잔치 (janchi), 그림 (geurim), 어머니 (eomeoni), 환갑 (hwangap) and 장인 (jangin)."
     ],
     "origin": {
       "type": "documented",
@@ -3245,8 +3245,8 @@ export const storiesAll: Story[] = [
       },
       {
         "id": "wonhaeng-eulmyo-jeongni-uigwe",
-        "ko": "원행을묘정리의궤",
-        "romanization": "Wonhaengeulmyojeongniuigwe",
+        "ko": "원행 을묘 정리 의궤",
+        "romanization": "Wonhaeng Eulmyo Jeongni Uigwe",
         "en": "the uigwe of King Jeongjo's 1795 royal trip",
         "kind": "term"
       }
@@ -3333,7 +3333,7 @@ export const storiesAll: Story[] = [
           },
           {
             "id": "s5",
-            "narrationEn": "By the old lunar calendar, 1795 had an extra 'leap' month after the second month. On its 13th day, the king gave a grand feast for his mother at Bongsudang Hall in the Hwaseong temporary palace. The Annals record that day.",
+            "narrationEn": "In 1795, the old lunar calendar had an extra month after the second month. On day 13 of that month, the king held a grand feast for his mother at Bongsudang Hall in Hwaseong. The Annals record that day.",
             "captionEn": "A grand feast at Bongsudang Hall",
             "keyword": {
               "id": "janchi",
@@ -3352,8 +3352,8 @@ export const storiesAll: Story[] = [
           },
           {
             "id": "s6",
-            "narrationEn": "The king also gave gifts of silk to elderly people who took part in the celebration.",
-            "captionEn": "Gifts of silk for elderly people",
+            "narrationEn": "The king also gave gifts of silk to the elders who took part in the celebration.",
+            "captionEn": "Gifts of silk for the elders",
             "keyword": {
               "id": "eoreusin",
               "ko": "어르신",
@@ -3371,7 +3371,7 @@ export const storiesAll: Story[] = [
           },
           {
             "id": "s7",
-            "narrationEn": "The record of this trip, the {kw:wonhaeng-eulmyo-jeongni-uigwe} (Wonhaeng Eulmyo Jeongni Uigwe), is full of pictures. Some are {kw:banchado}: long pictures of a royal procession, usually drawn as if seen from high above, showing where everyone walked or stood.",
+            "narrationEn": "The record of this trip, the {kw:wonhaeng-eulmyo-jeongni-uigwe}, is full of pictures. Some are {kw:banchado}: long pictures of a royal procession, usually drawn as if seen from high above, showing where everyone walked or stood.",
             "captionEn": "Long pictures of the royal procession",
             "keyword": {
               "id": "banchado",
