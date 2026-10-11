@@ -10,6 +10,7 @@ import { OnboardingStack } from './onboarding';
 import { withOwnSafeArea } from './with-own-safe-area';
 import { ParentDashboardScreen } from '../screens/parent/ParentDashboardScreen';
 import { PinEntryScreen } from '../screens/parent/PinEntryScreen';
+import { PinResetScreen } from '../screens/parent/PinResetScreen';
 import { RestoreScreen } from '../screens/sync/RestoreScreen';
 import { SaveProgressScreen } from '../screens/sync/SaveProgressScreen';
 import { JoinSpaceScreen } from '../screens/sync/JoinSpaceScreen';
@@ -25,6 +26,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 // Modal screens (iOS page sheets) measure their own safe area, see with-own-safe-area.
 const CardDetailModal = withOwnSafeArea(CardDetailScreen);
 const PinEntryModal = withOwnSafeArea(PinEntryScreen);
+const PinResetModal = withOwnSafeArea(PinResetScreen);
 
 export function RootNavigator(): React.ReactElement {
   const profiles = useProfileStore((s) => s.profiles);
@@ -52,6 +54,7 @@ export function RootNavigator(): React.ReactElement {
       <Stack.Screen name="Results" component={ResultsScreen} options={{ animation: 'fade' }} />
       <Stack.Screen name="CardDetail" component={CardDetailModal} options={{ presentation: 'modal' }} />
       <Stack.Screen name="PinEntry" component={PinEntryModal} options={{ presentation: 'modal' }} />
+      <Stack.Screen name="PinReset" component={PinResetModal} options={{ presentation: 'modal' }} />
       <Stack.Screen name="ParentDashboard" component={ParentDashboardScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
       <Stack.Screen name="Homework" component={HomeworkScreen} />

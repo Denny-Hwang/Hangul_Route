@@ -15,6 +15,8 @@ import React, { useEffect, useState } from 'react';
 import { Pressable, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PIN_PAD_GAP, PinPad } from '../../components/PinPad';
+import { pinCreated, pinResetCompleted } from '../../logic/onboarding/onboarding-events';
+import { initialPinMode, pinCreatedWhere, showForgotPin, type PinMode } from '../../logic/profiles/pin-flow';
 import {
   PIN_LENGTH,
   attemptsRemaining,
@@ -25,7 +27,9 @@ import {
 import { pinPadBudget, pinPadLayout } from '../../logic/profiles/pin-pad-layout';
 import type { RootStackParamList } from '../../navigation/types';
 import { pinHasher } from '../../platform/crypto';
+import { track } from '../../platform/telemetry';
 import { useAccountStore } from '../../store/account-store';
+import { useAudience } from '../../store/audience';
 import { useUiStore } from '../../store/ui-store';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'PinEntry'>;
@@ -36,7 +40,6 @@ type Props = NativeStackScreenProps<RootStackParamList, 'PinEntry'>;
  * parent-first onboarding has not shipped yet). Replaces the v1.0 math gate
  * (10-app-map §7 #1). Digits are never echoed as text — dots only (§3.5).
  */
-type Mode = 'setup-1' | 'setup-2' | 'verify';
 
 const DOT_SIZE = 20;
 /** First-frame guess for the title block until it is measured. */
@@ -55,9 +58,12 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
   const attempts = useAccountStore((s) => s.pinAttempts);
   const setParentPinHash = useAccountStore((s) => s.setParentPinHash);
   const setPinAttempts = useAccountStore((s) => s.setPinAttempts);
+  const clearPinResetRequest = useAccountStore((s) => s.clearPinResetRequest);
+  const pinResetRequestedAt = useAccountStore((s) => s.pinResetRequestedAt);
+  const { copy } = useAudience();
   const openParentGate = useUiStore((s) => s.openParentGate);
 
-  const [mode, setMode] = useState<Mode>(storedHash ? 'verify' : 'setup-1');
+  const [mode, setMode] = useState<PinMode>(() => initialPinMode(route.params, storedHash));
   const [entry, setEntry] = useState('');
   const [firstPin, setFirstPin] = useState('');
   const [hint, setHint] = useState<string | null>(null);
@@ -126,6 +132,8 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
           return;
         }
         setParentPinHash(await createPinHash(entry, pinHasher));
+        void track(pinCreated(pinCreatedWhere(route.params)));
+        if (route.params.via) void track(pinResetCompleted(route.params.via));
         proceed();
         return;
       }
@@ -139,6 +147,8 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
       setPinAttempts(result.state);
       setEntry('');
       if (result.ok) {
+        // Remembering the PIN settles a pending Forgot PIN wait (F-LEARN-001 §3.5).
+        if (pinResetRequestedAt !== null) clearPinResetRequest();
         proceed();
         return;
       }
@@ -155,12 +165,12 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
   };
 
   const title =
-    mode === 'verify' ? 'Grown-up zone' : mode === 'setup-1' ? 'Create a grown-up PIN' : 'Enter it once more';
+    mode === 'verify' ? copy.pinVerifyTitle : mode === 'setup-1' ? copy.pinCreateTitle : 'Enter it once more';
   const subtitle =
     mode === 'verify'
       ? 'Enter your 4-digit PIN to continue.'
       : mode === 'setup-1'
-        ? 'Pick 4 digits only grown-ups will know. It protects settings and grown-up pages.'
+        ? copy.pinCreateSubtitle
         : 'Type the same 4 digits again.';
 
   const hintText = locked
@@ -254,6 +264,16 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
       />
       <Spacer size="sm" />
       <Button label="Cancel" tone="ghost" size="md" fullWidth onPress={() => navigation.goBack()} />
+      {/* Quiet on purpose: plain text, no icon, nothing for a child to gain from poking it. */}
+      {showForgotPin(mode) ? (
+        <Button
+          label="Forgot PIN?"
+          tone="ghost"
+          size="md"
+          fullWidth
+          onPress={() => navigation.replace('PinReset', { next: route.params.next })}
+        />
+      ) : null}
     </Screen>
   );
 }

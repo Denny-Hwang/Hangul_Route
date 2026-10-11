@@ -1,4 +1,8 @@
 import type { NavigatorScreenParams } from '@react-navigation/native';
+import type { PinResetMethod } from '../logic/profiles/pin-flow';
+
+/** Where a grown-up action continues once the gate (or a new PIN) is through. */
+export type GrownUpDestination = 'ParentDashboard' | 'AddProfile' | 'Restore' | 'SaveProgress' | 'Paywall';
 
 export type RootStackParamList = {
   Onboarding: NavigatorScreenParams<OnboardingStackParamList>;
@@ -17,7 +21,15 @@ export type RootStackParamList = {
   };
   CardDetail: { cardId: string };
   /** Grown-up gate (PIN). `AddProfile` continues into Onboarding/CreateProfile. */
-  PinEntry: { next: 'ParentDashboard' | 'AddProfile' | 'Restore' | 'SaveProgress' | 'Paywall' };
+  PinEntry: {
+    next: GrownUpDestination;
+    /** `'setup'` opens PIN creation even when one is stored (Forgot PIN, F-LEARN-001 §3.5). */
+    mode?: 'setup';
+    /** Which Forgot PIN path led here (telemetry only). */
+    via?: PinResetMethod;
+  };
+  /** Forgot PIN: Rescue Code or a 24-hour wait, then a new PIN (F-LEARN-001 §3.5). `next` is kept for the PIN screen. */
+  PinReset: { next: GrownUpDestination };
   /** sync/restore — rescue code / sign-in / file (F-RESTORE-001, F-SYNC-002). */
   Restore: { from: 'welcome' | 'settings' } | undefined;
   /** sync/save-progress — the Rescue Code, PIN-gated (F-RESTORE-001 §3.3). */

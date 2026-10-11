@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { E2E_PIN, onboardChild, typeDigits, unlockWithPin } from './helpers';
+import { E2E_PIN, onboardChild, openGrownUpZone, readStored, seedRescueCode, typeDigits, unlockWithPin } from './helpers';
 
 /**
  * F-LEARN-001 §3.3, §3.4, §3.14: the "My child or a student" path. The
@@ -102,6 +102,61 @@ for (const vp of VIEWPORTS) {
       await page.getByRole('button', { name: 'Unlock' }).click();
       await expect(page.getByText(/Not quite\./)).toBeVisible();
       await unlockWithPin(page, E2E_PIN);
+      await expect(page.getByText('Enter your 4-digit PIN to continue.')).toHaveCount(0);
+    });
+
+    test('Forgot PIN with a stored Rescue Code sets a new PIN and keeps the learner and progress', async ({ page }) => {
+      await onboardChild(page, { name: 'Mina', avatar: 'Feast Tiger' });
+      await seedRescueCode(page, 'TIGER-MOON-RIVER-APPLE-482139');
+      const profilesBefore = await readStored(page, 'profiles');
+      const oldHash = await readStored<string>(page, 'account:parentPinHash');
+      expect(oldHash).not.toBeNull();
+
+      await openGrownUpZone(page, 'Mina');
+      const forgot = page.getByRole('button', { name: 'Forgot PIN?' });
+      await forgot.scrollIntoViewIfNeeded();
+      const box = await forgot.boundingBox();
+      expect(box!.height).toBeGreaterThanOrEqual(64);
+      await forgot.click();
+
+      await expect(page.getByRole('heading', { name: 'Reset the PIN' })).toBeVisible();
+      await expect(page.getByText('Your learners, cards and progress are kept.')).toBeVisible();
+      await expect(page.getByText('Use a Rescue Code')).toBeVisible();
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+      const code = page.getByTestId('pin-reset-code-input');
+      const field = await code.boundingBox();
+      expect(field!.x).toBeGreaterThanOrEqual(0);
+      expect(field!.x + field!.width).toBeLessThanOrEqual(page.viewportSize()!.width);
+
+      // A well-formed but different code is turned away calmly; nothing changes.
+      await code.fill('tiger moon river apple 000000');
+      await page.getByRole('button', { name: 'Continue' }).click();
+      await expect(page.getByText("That isn't the code saved on this device. Check it and try again.")).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Reset the PIN' })).toBeVisible();
+
+      // The right code in any case, with spaces: the PIN-setup screen opens.
+      await code.fill('tiger moon river apple 482 139');
+      await page.getByRole('button', { name: 'Continue' }).click();
+      await expect(page.getByText('Create a grown-up PIN')).toBeVisible();
+      await expect(page.getByText('Enter your 4-digit PIN to continue.')).toHaveCount(0);
+      await expect(page.getByRole('button', { name: 'Forgot PIN?' })).toHaveCount(0);
+
+      await typeDigits(page, '5678');
+      await page.getByRole('button', { name: 'Next' }).click();
+      await expect(page.getByText('Enter it once more')).toBeVisible();
+      await typeDigits(page, '5678');
+      await page.getByRole('button', { name: 'Next' }).click();
+      // The destination the PIN was asked for opens (the grown-up dashboard).
+      await expect(page.getByText('Enter it once more')).toHaveCount(0);
+      await expect.poll(() => readStored<string>(page, 'account:parentPinHash')).not.toBe(oldHash);
+
+      // The learner is untouched, the old PIN no longer works and the new one does.
+      expect(await readStored(page, 'profiles')).toEqual(profilesBefore);
+      await openGrownUpZone(page, 'Mina');
+      await typeDigits(page, E2E_PIN);
+      await page.getByRole('button', { name: 'Unlock' }).click();
+      await expect(page.getByText(/Not quite\./)).toBeVisible();
+      await unlockWithPin(page, '5678');
       await expect(page.getByText('Enter your 4-digit PIN to continue.')).toHaveCount(0);
     });
   });

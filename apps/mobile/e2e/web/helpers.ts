@@ -126,6 +126,71 @@ export async function onboardSelf(page: Page, o: OnboardOptions): Promise<void> 
   await completeSelfForm(page, o);
 }
 
+/** The JSON value the app stored under `key` (IndexedDB, same prefix as `platform/storage`), or null. */
+export function readStored<T = unknown>(page: Page, key: string): Promise<T | null> {
+  return page.evaluate(
+    (k) =>
+      new Promise<unknown>((resolve, reject) => {
+        const open = indexedDB.open('keyval-store');
+        open.onerror = () => reject(open.error);
+        open.onsuccess = () => {
+          const db = open.result;
+          const get = db.transaction('keyval').objectStore('keyval').get(`hr:${k}`);
+          get.onerror = () => reject(get.error);
+          get.onsuccess = () => {
+            db.close();
+            resolve(typeof get.result === 'string' ? JSON.parse(get.result) : null);
+          };
+        };
+      }),
+    key,
+  ) as Promise<T | null>;
+}
+
+/** Write a JSON value under `key` the way `platform/storage` does, then load the app again so its stores hydrate from it. */
+export async function seedStored(page: Page, key: string, value: unknown): Promise<void> {
+  await page.evaluate(
+    ([k, json]) =>
+      new Promise<void>((resolve, reject) => {
+        const open = indexedDB.open('keyval-store');
+        open.onerror = () => reject(open.error);
+        open.onsuccess = () => {
+          const db = open.result;
+          const tx = db.transaction('keyval', 'readwrite');
+          tx.objectStore('keyval').put(json, `hr:${k}`);
+          tx.oncomplete = () => {
+            db.close();
+            resolve();
+          };
+          tx.onerror = () => reject(tx.error);
+        };
+      }),
+    [key, JSON.stringify(value)] as const,
+  );
+  await page.goto('/');
+}
+
+/** Give the (only) learner on the device a stored Rescue Code, as a synced profile has (`sync:<id>`). */
+export async function seedRescueCode(page: Page, code: string): Promise<void> {
+  const profiles = await readStored<Array<{ id: string }>>(page, 'profiles');
+  const id = profiles?.[0]?.id;
+  if (!id) throw new Error('no profile stored to attach a Rescue Code to');
+  await seedStored(page, `sync:${id}`, { secret: null, rev: 0, lastSyncedAt: null, rescueCode: code });
+}
+
+/** Home to the Grown-up zone PIN screen (verify mode) of a family device. */
+export async function openGrownUpZone(page: Page, name: string): Promise<void> {
+  await page.goto('/');
+  await expect(page.getByText(`Hi, ${name}!`)).toBeVisible();
+  // The install guide shows from the third cached open and covers the Home tabs.
+  const guide = page.getByTestId('install-guide');
+  await page.waitForTimeout(800);
+  if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
+  await page.getByRole('button', { name: 'Profile and settings' }).click();
+  await page.getByRole('button', { name: 'Grown-up zone (PIN required)' }).click();
+  await expect(page.getByText('Enter your 4-digit PIN to continue.')).toBeVisible();
+}
+
 /**
  * Turn the device into one that was set up before the form made the PIN
  * (F-LEARN-001 L8): a family device with no PIN yet, so the first grown-up
