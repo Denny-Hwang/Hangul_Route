@@ -166,6 +166,8 @@ export function createNativeAudio(env: NativeAudioEnv) {
     installGestureUnlock: (): (() => void) => () => undefined,
     /** Clip pre-decode arrives with the clip player (A-7); nothing to warm yet. */
     warmClips: (_refs: readonly string[]): Promise<void> => Promise.resolve(),
+    /** No native clip player before A-7: every prompt uses the voice. */
+    hasClip: (_ref: string | undefined): boolean => false,
     noteFallbackShown: (source: string, reason: FallbackReason): void => controller.noteFallbackShown(source, reason),
     dispose: (): void => {
       detachVoices();
@@ -229,6 +231,9 @@ export function warmClips(refs: readonly string[]): Promise<void> {
 }
 export function noteFallbackShown(source: string, reason: FallbackReason): void {
   audio().noteFallbackShown(source, reason);
+}
+export function hasClip(ref: string | undefined): boolean {
+  return audio().hasClip(ref);
 }
 
 export type { SpeechLang };

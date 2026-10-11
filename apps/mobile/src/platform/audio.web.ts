@@ -1,4 +1,7 @@
 import type { SpeechLang } from '@hangul-route/content-schema';
+import { Asset } from 'expo-asset';
+import { flags } from '../config/flags';
+import { AUDIO_ASSETS } from '../content/__generated__/audio-assets';
 import {
   attachWebVoices,
   createCapabilityTracker,
@@ -11,6 +14,7 @@ import {
 import {
   createAudioController,
   type AudioController,
+  type ClipPlayer,
   type PlayResult,
   type PlaySpec,
   type TtsEngine,
@@ -21,6 +25,7 @@ import type { FallbackReason } from '../logic/audio/prompt-state';
 import { speakCompat, type SpeakOptions } from '../logic/audio/speak-compat';
 import type { SpokenJamo } from '../logic/audio/spoken';
 import { useAudioStore } from '../store/audio-store';
+import { createWebClipPlayer, webAudioGlobals } from './audio-player.web';
 import { track } from './telemetry';
 
 /**
@@ -30,9 +35,10 @@ import { track } from './telemetry';
  * gap) lives in `logic/audio/controller`. Metro picks this file for the web
  * build instead of `audio.ts`; the surface is identical.
  *
- * The first gesture anywhere unlocks speech for the page lifetime
- * (`installGestureUnlock`, AD8). The shared Web Audio context for clips is
- * created with the clip player in A-6, which also hooks into `unlockAudio`.
+ * The first gesture anywhere unlocks speech and the shared Web Audio context
+ * for the page lifetime (`installGestureUnlock`, AD8). Bundled recordings
+ * (`__generated__/audio-assets.ts`) play first through the clip player
+ * (`audio-player.web.ts`, A-6); a clip that fails falls through to the voice.
  */
 export type { PlayResult, PlaySpec, SpeakOptions };
 /** The name F-QUEST-002 §3.12 used for the same shape. */
@@ -71,6 +77,34 @@ export interface WebAudioEnv {
   /** `window`: online / offline events. */
   win: EventTarget | null;
   isOnline(): boolean;
+  /** Bundled recordings (A-6). Absent = a build with no clip path: every prompt uses the voice. */
+  clips?: WebClipSetup;
+}
+
+export interface WebClipSetup {
+  player: ClipPlayer;
+  /** The bundled asset map: `has(ref)` and how many clips it holds. */
+  assets: { has(ref: string): boolean; readonly size: number };
+  /** `flags.audioClips`: off switches every clip off without a code change. */
+  enabled(): boolean;
+}
+
+/** The generated map, resolved to URLs by expo-asset (`/assets/assets/audio/...<hash>.mp3`). */
+function bundledClips(): WebClipSetup {
+  const has = (ref: string): boolean => Object.prototype.hasOwnProperty.call(AUDIO_ASSETS, ref);
+  const uri = (ref: string): string | null => {
+    if (!has(ref)) return null;
+    try {
+      return Asset.fromModule(AUDIO_ASSETS[ref] as number).uri;
+    } catch {
+      return null;
+    }
+  };
+  return {
+    player: createWebClipPlayer({ uri, ...webAudioGlobals() }),
+    assets: { has, size: Object.keys(AUDIO_ASSETS).length },
+    enabled: () => flags.audioClips,
+  };
 }
 
 function defaultEnv(): WebAudioEnv {
@@ -88,6 +122,7 @@ function defaultEnv(): WebAudioEnv {
     doc: g.document ?? null,
     win: typeof g.addEventListener === 'function' ? (globalThis as unknown as EventTarget) : null,
     isOnline: () => g.navigator?.onLine !== false,
+    clips: bundledClips(),
   };
 }
 
@@ -102,7 +137,13 @@ function voiceKey(v: WebVoiceLike): string {
 
 export function createWebAudio(env: WebAudioEnv) {
   const { synth, Utterance } = env;
-  const tracker = createCapabilityTracker({ online: env.isOnline(), clips: false });
+  const clipSetup = env.clips ?? null;
+  const clipsOn = (): boolean => clipSetup !== null && clipSetup.enabled();
+  const hasClip = (ref: string | undefined): boolean => ref !== undefined && clipsOn() && (clipSetup?.assets.has(ref) ?? false);
+  const tracker = createCapabilityTracker({
+    online: env.isOnline(),
+    clips: clipsOn() && (clipSetup?.assets.size ?? 0) > 0,
+  });
 
   const network: NetworkLike = {
     isOnline: env.isOnline,
@@ -186,9 +227,9 @@ export function createWebAudio(env: WebAudioEnv) {
   const store = useAudioStore;
   const controller: AudioController = createAudioController({
     engine,
-    clips: null,
-    assets: { has: () => false },
-    clipsEnabled: () => false,
+    clips: clipSetup?.player ?? null,
+    assets: { has: (ref) => clipSetup?.assets.has(ref) ?? false },
+    clipsEnabled: clipsOn,
     voices: tracker,
     isMuted: () => store.getState().muted,
     levelOrder: () => store.getState().levelOrder,
@@ -213,6 +254,7 @@ export function createWebAudio(env: WebAudioEnv) {
   const playPrompt = (spec: PlaySpec): Promise<PlayResult> => controller.playPrompt(spec);
 
   const unlockAudio = (): void => {
+    clipSetup?.player.unlock();
     if (synth !== null && Utterance !== null) {
       try {
         const u = new Utterance(' ');
@@ -269,8 +311,14 @@ export function createWebAudio(env: WebAudioEnv) {
     subscribeCapability: (fn: (c: AudioCapability) => void): (() => void) => tracker.subscribe(fn),
     unlockAudio,
     installGestureUnlock,
-    /** Clip pre-decode arrives with the clip player (A-6); nothing to warm yet. */
-    warmClips: (_refs: readonly string[]): Promise<void> => Promise.resolve(),
+    /** Fetch and decode a round's clips ahead of time (§3.10); refs with no bundled file are skipped. */
+    warmClips: (refs: readonly string[]): Promise<void> => {
+      const wanted = refs.filter((ref) => hasClip(ref));
+      if (clipSetup === null || wanted.length === 0) return Promise.resolve();
+      return clipSetup.player.warm(wanted);
+    },
+    /** The ref has a bundled recording that will be tried first (the prompt slot's `hasClip`). */
+    hasClip,
     noteFallbackShown: (source: string, reason: FallbackReason): void => controller.noteFallbackShown(source, reason),
     dispose: (): void => {
       uninstallGesture?.();
@@ -332,6 +380,9 @@ export function warmClips(refs: readonly string[]): Promise<void> {
 }
 export function noteFallbackShown(source: string, reason: FallbackReason): void {
   audio().noteFallbackShown(source, reason);
+}
+export function hasClip(ref: string | undefined): boolean {
+  return audio().hasClip(ref);
 }
 
 export type { SpeechLang };
