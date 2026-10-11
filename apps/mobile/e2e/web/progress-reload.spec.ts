@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { completeChildForm, jamoOfSpoken } from './helpers';
+import { completeChildForm, jamoOfSpoken, passDiscover } from './helpers';
 
 /**
  * Audit UX-01 / L16 (roadmap PR-01): progress earned in one visit is still
@@ -54,11 +54,31 @@ async function playMatchSound(page: Page, rounds: number): Promise<void> {
   let heard = await spokenCount(page);
   await page.getByRole('button', { name: 'Play minigame' }).click();
   for (let round = 1; round <= rounds; round += 1) {
-    await expect(page.getByText(`${round} / ${rounds}`)).toBeVisible();
+    // The quest's own step counter ("3 / 6") stays mounted, hidden, under the game: match the visible round counter.
+    await expect(page.getByText(`${round} / ${rounds}`, { exact: true }).filter({ visible: true })).toBeVisible();
     await page.waitForFunction((n) => ((window as SpeechWindow).__spoken?.length ?? 0) > n, heard);
     const prompt = jamoOfSpoken(await page.evaluate(() => (window as SpeechWindow).__spoken?.at(-1) ?? ''));
     heard = await spokenCount(page);
     await page.getByRole('button', { name: /^Korean letter / }).filter({ hasText: prompt }).click();
+  }
+}
+
+/**
+ * The two-question Check answered right first time (F-QUEST-002 §3.3): tap the speaker,
+ * then the option for what was just said (a symbol's sound picks its letter, a word
+ * picks itself).
+ */
+async function answerCheck(page: Page): Promise<void> {
+  await page.getByRole('button', { name: 'Go', exact: true }).click();
+  for (let round = 1; round <= 2; round += 1) {
+    const heard = await spokenCount(page);
+    await page.getByTestId('listen-pick-speaker').click(); // round 2 already spoke as it opened; ask again to read it
+    await page.waitForFunction((n) => ((window as SpeechWindow).__spoken?.length ?? 0) > n, heard);
+    const said = await page.evaluate(() => (window as SpeechWindow).__spoken?.at(-1) ?? '');
+    const options = page.locator('[data-testid^="listen-pick-option-"]');
+    const word = options.filter({ hasText: said });
+    await ((await word.count()) === 1 ? word : options.filter({ hasText: jamoOfSpoken(said) })).click();
+    if (round === 1) await page.waitForTimeout(900); // the next round opens 700 ms after the right tap
   }
 }
 
@@ -103,11 +123,12 @@ test('progress earned before a reload survives it and the next write', async ({ 
   await page.getByRole('button', { name: "Let's start" }).click();
   await completeChildForm(page, { name: 'Dami' });
 
-  // Quest 1: intro, one game played perfectly, the rest skipped → 3 stars and the Book card.
+  // Quest 1: intro, Discover, Match Sound and the Check played perfectly, Build a Letter skipped → 3 stars and the Book card.
   await page.getByRole('button', { name: 'Continue' }).click();
-  await playMatchSound(page, 4);
+  await passDiscover(page);
+  await playMatchSound(page, 6);
   await page.getByRole('button', { name: 'Skip for now' }).click();
-  await page.getByRole('button', { name: 'Skip for now' }).click();
+  await answerCheck(page);
   await page.getByRole('button', { name: 'See results' }).click();
   await expect(page.getByText('Wonderful!')).toBeVisible();
   await page.getByRole('button', { name: 'Back home' }).click();

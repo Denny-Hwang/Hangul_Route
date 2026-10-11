@@ -6,29 +6,39 @@ import { completeChildForm } from './helpers';
  * F-QUEST-002 Q-5a: a Stage 1 quest teaches before it asks (Discover) and
  * checks with two questions (Check, no Skip), on the web PWA.
  *
- * The shipped Stage 1 quests gain their Discover and Check steps in the
- * content PRs (Q-6a onward). Until quest 1 carries them this file skips with
- * that reason instead of failing; from Q-6a it runs unchanged. It does not
- * depend on which games sit between the two steps (they are skipped), so the
- * content PRs need no edits here.
+ * Quest 1 carries its Discover and Check steps since the content PR Q-6a (the
+ * file skipped until then). It does not depend on which games sit between the
+ * two steps (they are skipped), so the later content PRs need no edits here.
  */
 
 type SpeechWindow = Window & { __spoken?: string[] };
 
-/** Headless Chromium has no Korean voice: stand in for speechSynthesis, end each utterance at once and keep what was said. */
+/**
+ * Headless Chromium has no Korean voice: stand in for speechSynthesis with one ko-KR
+ * voice, end each utterance at once and keep what was said. The silent unlock
+ * utterance of the first gesture (volume 0, F-AUDIO-004) is not a prompt and is not kept.
+ */
 async function stubVoice(page: Page): Promise<void> {
   await page.addInitScript(() => {
     const spoken: string[] = [];
     (window as SpeechWindow).__spoken = spoken;
+    const voice = { name: 'Yuna', lang: 'ko-KR', voiceURI: 'Yuna', localService: true, default: false };
     Object.defineProperty(window, 'speechSynthesis', {
       configurable: true,
       value: {
+        speaking: false,
+        pending: false,
         speak: (u: SpeechSynthesisUtterance) => {
-          spoken.push(u.text);
-          setTimeout(() => u.onend?.call(u, new Event('end') as SpeechSynthesisEvent), 0);
+          if (u.volume !== 0) spoken.push(u.text);
+          setTimeout(() => {
+            u.onstart?.call(u, new Event('start') as SpeechSynthesisEvent);
+            u.onend?.call(u, new Event('end') as SpeechSynthesisEvent);
+          }, 0);
         },
         cancel: () => undefined,
-        getVoices: () => [],
+        getVoices: () => [voice],
+        addEventListener: () => undefined,
+        removeEventListener: () => undefined,
       },
     });
   });
@@ -44,20 +54,13 @@ async function noVoice(page: Page): Promise<void> {
 const spokenCount = (page: Page): Promise<number> => page.evaluate(() => (window as SpeechWindow).__spoken?.length ?? 0);
 const lastSpoken = (page: Page): Promise<string> => page.evaluate(() => (window as SpeechWindow).__spoken?.at(-1) ?? '');
 
-/** Onboard, pass the intro, and skip the whole test when quest 1 has no Discover step yet. */
+/** Onboard and pass the intro: quest 1 opens on its Discover step. */
 async function openDiscover(page: Page): Promise<void> {
   await page.goto('/');
   await page.getByRole('button', { name: "Let's start" }).click();
   await completeChildForm(page, { name: 'Dami' });
   await page.getByRole('button', { name: 'Continue' }).click();
-  const hasDiscover = await page
-    .getByText('Look and learn', { exact: true })
-    .waitFor({ state: 'visible', timeout: 3_000 })
-    .then(
-      () => true,
-      () => false,
-    );
-  test.skip(!hasDiscover, 'Stage 1 quest 1 has no Discover step yet: it arrives with the content PR Q-6a.');
+  await expect(page.getByText('Look and learn', { exact: true })).toBeVisible();
 }
 
 /** Read "Page n of m" from the header of a Discover page. */

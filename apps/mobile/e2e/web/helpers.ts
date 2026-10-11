@@ -266,3 +266,39 @@ export function jamoOfSpoken(spoken: string): string {
   if (final > 0) return FINALS[final]!;
   return initial === 11 ? VOWELS[vowel]! : INITIALS[initial]!;
 }
+
+/**
+ * Continue through every page of a quest's Discover step (F-QUEST-002 §3.2) to the
+ * next step. Stage 1 quest 1 opens on it since Q-6a: intro, Discover, then the games.
+ */
+export async function passDiscover(page: Page): Promise<void> {
+  const pill = page.getByText('Look and learn', { exact: true });
+  await expect(pill).toBeVisible();
+  const label = await page.getByText(/^Page \d+ of \d+$/).first().innerText();
+  const pages = Number(/of (\d+)$/.exec(label)?.[1] ?? '1');
+  for (let i = 1; i <= pages; i += 1) {
+    await expect(page.getByText(`Page ${i} of ${pages}`, { exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'Continue' }).click();
+  }
+  await expect(pill).toHaveCount(0);
+}
+
+/**
+ * Play a quest's two-question Check (F-QUEST-002 §3.3) from its launcher without
+ * knowing the content: Go, then tap the options in order each round. A wrong tap only
+ * locks that card (amber nudge); the right one ends the round. The Check has no Skip.
+ */
+export async function playCheck(page: Page): Promise<void> {
+  await page.getByRole('button', { name: 'Go', exact: true }).click();
+  for (let round = 1; round <= 2; round += 1) {
+    const options = page.locator('[data-testid^="listen-pick-option-"]');
+    await expect(options.first()).toBeVisible();
+    const count = await options.count();
+    for (let i = 0; i < count; i += 1) {
+      if (!(await options.nth(i).isVisible())) break;
+      await options.nth(i).click();
+      await page.waitForTimeout(60); // outside the game's double-touch window
+    }
+    if (round === 1) await page.waitForTimeout(900); // the next round opens 700 ms after the right tap
+  }
+}

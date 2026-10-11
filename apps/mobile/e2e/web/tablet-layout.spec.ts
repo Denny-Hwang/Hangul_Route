@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { keepSidewaysIfAsked, onboardChild, openGrownUpZone, readStored, seedStored, waitForSaved } from './helpers';
+import { keepSidewaysIfAsked, onboardChild, openGrownUpZone, playCheck, readStored, seedStored, waitForSaved } from './helpers';
 import { shot, shotsEnabled } from './shots';
 
 /**
@@ -173,15 +173,17 @@ const cell = (page: Page, theme: RegExp, stage: string) => page.getByRole('butto
 const detailPane = (page: Page) => page.getByRole('region', { name: 'Episode details' });
 const mapPane = (page: Page) => page.getByRole('region', { name: 'Journey map' });
 const tab = (page: Page, name: string) => page.getByRole('tablist').getByRole('link', { name, exact: true });
-/** Skips every game of the open quest (however many it has) until "See results" shows. */
+/** Skips every game of the open quest (however many it has) until "See results" shows; a Check has no Skip, so it is played. */
 async function skipToResults(page: Page): Promise<void> {
   const results = page.getByRole('button', { name: 'See results' });
   for (let i = 0; i < 20 && !(await results.isVisible()); i += 1) {
     const skip = page.getByRole('button', { name: 'Skip for now' });
     const cont = page.getByRole('button', { name: 'Continue' });
-    await expect(skip.or(cont).or(results).first()).toBeVisible();
+    const go = page.getByRole('button', { name: 'Go', exact: true });
+    await expect(skip.or(cont).or(go).or(results).first()).toBeVisible();
     if (await skip.isVisible()) await skip.click();
     else if (await cont.isVisible()) await cont.click();
+    else if (await go.isVisible()) await playCheck(page);
   }
   await results.click();
 }
@@ -257,7 +259,7 @@ test.describe('Journey at 1180x820: two panes', () => {
     await openJourney(page);
     await cell(page, /^Life|^Food/, 'stage1').click(); // a different selection first
     await tab(page, 'Today').click();
-    await page.getByRole('button', { name: /^Meet g, n, d, l\./ }).click();
+    await page.getByRole('button', { name: /^Meet a, eo, g, n\./ }).click();
     await expect(page.getByRole('button', { name: 'Leave quest' })).toBeVisible();
     await page.getByRole('button', { name: 'Leave quest' }).click();
 
@@ -272,7 +274,7 @@ test.describe('Journey at 1180x820: two panes', () => {
     await openJourney(page);
     const leaveFromHome = async (): Promise<void> => {
       await tab(page, 'Today').click();
-      await page.getByRole('button', { name: /^Meet g, n, d, l\./ }).click();
+      await page.getByRole('button', { name: /^Meet a, eo, g, n\./ }).click();
       await page.getByRole('button', { name: 'Leave quest' }).click();
       await expect(mapPane(page)).toBeVisible();
     };
@@ -552,7 +554,7 @@ test.describe('Library at 1180x820: two panes', () => {
     await expect(thumbs(galleryPane(page)).nth(1)).toHaveAttribute('aria-selected', 'true');
     await expect(cardPane(page).getByRole('heading', { name: 'Hanji Paper' })).toBeVisible();
     await expect(cardPane(page).getByText('How to earn it')).toBeVisible();
-    await expect(cardPane(page).getByText('Get 2 or more stars in Meet m, b, s, ng to earn this card.')).toBeVisible();
+    await expect(cardPane(page).getByText('Get 2 or more stars in Meet o, u, m and the circle to earn this card.')).toBeVisible();
     await expect(cardPane(page).getByText('Premium')).toHaveCount(0);
     await expect(cardPane(page).getByRole('button', { name: 'Hear it' })).toHaveCount(0);
     // A card no quest awards yet says so instead of promising one.
