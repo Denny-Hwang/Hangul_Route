@@ -26,7 +26,9 @@
     "apps/mobile/src/components/BackupCard.tsx",
     "apps/mobile/src/screens/minigames/**",
     "apps/mobile/src/components/PromptPanel.tsx",
-    "apps/mobile/src/components/VoiceHelpSheet.tsx"
+    "apps/mobile/src/components/VoiceHelpSheet.tsx",
+    "apps/web/src/components/console/LanguageSelect.tsx",
+    "apps/web/src/lib/i18n/**"
   ],
   "pluralTernaryBaseline": {
     "apps/web/src/app/teach/space/page.tsx": 1,
