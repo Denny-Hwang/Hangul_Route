@@ -64,17 +64,21 @@ export function PromptPanel(props: Props): React.ReactElement {
             {view.actionLabel !== null ? (
               <>
                 {status ? null : <Spacer size="sm" />}
-                <Button
-                  label={view.actionLabel}
-                  tone="secondary"
-                  size="md"
-                  onPress={() => onAction(view.action)}
-                  testID={`${testID}-action`}
-                />
+                <View style={{ alignSelf: 'center' }}>
+                  <Button
+                    label={view.actionLabel}
+                    tone="secondary"
+                    size="md"
+                    onPress={() => onAction(view.action)}
+                    testID={`${testID}-action`}
+                  />
+                </View>
               </>
             ) : null}
             {view.helpLabel !== null && onHelp ? (
-              <Button label={view.helpLabel} tone="ghost" size="md" onPress={onHelp} testID={`${testID}-help`} />
+              <View style={{ alignSelf: 'center' }}>
+                <Button label={view.helpLabel} tone="ghost" size="md" onPress={onHelp} testID={`${testID}-help`} />
+              </View>
             ) : null}
           </View>
         </Card>

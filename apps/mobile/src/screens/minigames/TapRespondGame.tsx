@@ -135,7 +135,7 @@ export function TapRespondGame({ scope, onFinish }: Props): React.ReactElement {
             label={m.learner.audio.hearIt.cta}
             tone="secondary"
             size="md"
-            leading={<Icon name="speaker" size={20} color={colors.brand.primary} />}
+            leading={<Icon name="speaker" size={20} color={colors.text.onSecondary} />}
             onPress={hearLine}
             testID="tap-respond-hear"
           />

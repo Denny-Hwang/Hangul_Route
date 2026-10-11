@@ -114,14 +114,16 @@ export function CultureQuizGame({ scope, onFinish }: Props): React.ReactElement 
               <Heading level="title">{round.promptKo}</Heading>
               {round.promptRomanization ? <Body tone="muted">{round.promptRomanization}</Body> : null}
               <Spacer size="sm" />
-              <Button
-                label={m.learner.audio.hearIt.cta}
-                tone="secondary"
-                size="md"
-                leading={<Icon name="speaker" size={20} color={colors.brand.primary} />}
-                onPress={hear}
-                testID="culture-quiz-hear"
-              />
+              <View style={{ alignSelf: 'center' }}>
+                <Button
+                  label={m.learner.audio.hearIt.cta}
+                  tone="secondary"
+                  size="md"
+                  leading={<Icon name="speaker" size={20} color={colors.text.onSecondary} />}
+                  onPress={hear}
+                  testID="culture-quiz-hear"
+                />
+              </View>
             </View>
             <Spacer size="sm" />
             <PromptPanel
