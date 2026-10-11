@@ -3,6 +3,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { normalizeRescueCode } from '@hangul-route/content-schema';
 import React, { useState } from 'react';
 import { Pressable, TextInput, View } from 'react-native';
+import { useMessages } from '../../i18n/use-messages';
 import { decodeBackup } from '../../logic/sync/backup';
 import { RESCUE_INPUT_MAX, claimErrorMessage, cleanRescueInput, rescueInputRows } from '../../logic/sync/rescue-code';
 import { planRestore, restoreNotice, type RestorePlan } from '../../logic/sync/restore';
@@ -27,6 +28,8 @@ const CODE_BORDER = 2;
 
 export function RestoreScreen({ navigation, route }: Props): React.ReactElement {
   const { copy } = useAudience();
+  const messages = useMessages();
+  const m = messages.caregiver.restore;
   const from = route.params?.from ?? 'settings';
   const profiles = useProfileStore((s) => s.profiles);
   const [showCode, setShowCode] = useState(false);
@@ -46,14 +49,14 @@ export function RestoreScreen({ navigation, route }: Props): React.ReactElement 
     if (busy || !cloudAvailable) return;
     const code = normalizeRescueCode(codeInput);
     if (!code) {
-      setMessage(claimErrorMessage('invalid'));
+      setMessage(claimErrorMessage('invalid', messages.caregiver));
       return;
     }
     setBusy(true);
     const result = await useSyncStore.getState().claimRescueCode(code);
     setBusy(false);
     if (!result.ok) {
-      setMessage(result.error === 'off' ? 'Cloud restore is not set up on this build. Use a saved file instead.' : claimErrorMessage(result.error));
+      setMessage(result.error === 'off' ? m.cloudOffUseFile : claimErrorMessage(result.error, messages.caregiver));
       return;
     }
     finish(result.plan);
@@ -62,12 +65,12 @@ export function RestoreScreen({ navigation, route }: Props): React.ReactElement 
   const restoreFile = async (): Promise<void> => {
     const picked = await pickTextFile();
     if (!picked.ok) {
-      if (picked.reason === 'failed') setMessage("Couldn't open that file.");
+      if (picked.reason === 'failed') setMessage(m.file.openFailed);
       return;
     }
     const decoded = decodeBackup(picked.text);
     if (!decoded.ok) {
-      setMessage(decoded.error === 'unsupported-version' ? 'This backup comes from a newer version. Update the app first.' : "This file can't be read. Choose a .hangulroute.json backup.");
+      setMessage(decoded.error === 'unsupported-version' ? m.file.newerVersion : m.file.unreadable);
       return;
     }
     const file = decoded.file;
@@ -91,11 +94,11 @@ export function RestoreScreen({ navigation, route }: Props): React.ReactElement 
 
   return (
     <Screen tone="canvas" scrollable>
-      <Pressable onPress={() => navigation.goBack()} hitSlop={spacing.md} accessibilityRole="button" accessibilityLabel="Go back" style={{ alignSelf: 'flex-start', padding: spacing.xs }}>
+      <Pressable onPress={() => navigation.goBack()} hitSlop={spacing.md} accessibilityRole="button" accessibilityLabel={messages.a11y.goBack} style={{ alignSelf: 'flex-start', padding: spacing.xs }}>
         <Icon name="arrow-left" size={28} />
       </Pressable>
       <Spacer size="sm" />
-      <Heading level="title">Bring back progress</Heading>
+      <Heading level="title">{m.title}</Heading>
       <Spacer size="md" />
       <HoyaBubble tone="thinking" message={copy.restorePrompt} />
       <Spacer size="xl" />
@@ -106,13 +109,13 @@ export function RestoreScreen({ navigation, route }: Props): React.ReactElement 
             <Hoya pose="cheering" size={96} />
           </View>
           <Spacer size="md" />
-          <HoyaBubble tone="cheering" message={restoreNotice(done)} />
+          <HoyaBubble tone="cheering" message={restoreNotice(done, messages.caregiver)} />
           <Spacer size="lg" />
-          <Button label="Great" tone="primary" size="lg" fullWidth onPress={() => navigation.navigate('Main', { screen: 'Home' })} />
+          <Button label={m.great.cta} tone="primary" size="lg" fullWidth onPress={() => navigation.navigate('Main', { screen: 'Home' })} />
         </Card>
       ) : (
         <>
-          <Button label="I have a rescue code" tone="primary" size="hero" fullWidth onPress={() => setShowCode((v) => !v)} />
+          <Button label={m.code.cta} tone="primary" size="hero" fullWidth onPress={() => setShowCode((v) => !v)} />
           {showCode ? (
             <>
               <Spacer size="md" />
@@ -127,7 +130,7 @@ export function RestoreScreen({ navigation, route }: Props): React.ReactElement 
                 multiline
                 numberOfLines={codeRows}
                 blurOnSubmit
-                placeholder="Words, then the number"
+                placeholder={m.code.placeholder}
                 placeholderTextColor={colors.text.muted}
                 autoCapitalize="characters"
                 autoCorrect={false}
@@ -135,7 +138,7 @@ export function RestoreScreen({ navigation, route }: Props): React.ReactElement 
                 spellCheck={false}
                 returnKeyType="go"
                 maxLength={RESCUE_INPUT_MAX}
-                accessibilityLabel="Rescue code"
+                accessibilityLabel={messages.a11y.rescueCode}
                 testID="rescue-code-input"
                 style={{
                   minHeight: Math.max(touchTarget.child, codeRows * CODE_LINE_HEIGHT + 2 * spacing.sm + 2 * CODE_BORDER),
@@ -154,22 +157,22 @@ export function RestoreScreen({ navigation, route }: Props): React.ReactElement 
                 }}
               />
               <Spacer size="xs" />
-              <Caption tone="muted" align="center">Like TIGER-MOON-RIVER-APPLE-482139. Older codes look like TIGER-MOON-4821.</Caption>
+              <Caption tone="muted" align="center">{m.code.example}</Caption>
               <Spacer size="md" />
-              <Button label={busy ? 'Looking…' : 'Find my cards'} tone="primary" size="lg" fullWidth disabled={busy || !cloudAvailable} onPress={() => void claim()} />
+              <Button label={busy ? m.code.looking.cta : m.code.find.cta} tone="primary" size="lg" fullWidth disabled={busy || !cloudAvailable} onPress={() => void claim()} />
               {!cloudAvailable ? (
                 <>
                   <Spacer size="xs" />
-                  <Caption tone="muted" align="center">Cloud restore is not set up on this build.</Caption>
+                  <Caption tone="muted" align="center">{m.cloudOff}</Caption>
                 </>
               ) : null}
             </>
           ) : null}
           <Spacer size="md" />
           <Button label={copy.restoreSignInLabel} tone="secondary" size="lg" fullWidth disabled onPress={() => {}} />
-          <Caption tone="muted" align="center">Coming soon</Caption>
+          <Caption tone="muted" align="center">{m.signIn.comingSoon}</Caption>
           <Spacer size="md" />
-          <Button label="Open a saved file" tone="secondary" size="lg" fullWidth onPress={() => void restoreFile()} />
+          <Button label={m.file.cta} tone="secondary" size="lg" fullWidth onPress={() => void restoreFile()} />
           {message ? (
             <>
               <Spacer size="md" />
@@ -177,7 +180,7 @@ export function RestoreScreen({ navigation, route }: Props): React.ReactElement 
             </>
           ) : null}
           <Spacer size="xl" />
-          <Button label="Start fresh instead" tone="ghost" size="md" fullWidth onPress={leave} />
+          <Button label={m.startFresh.cta} tone="ghost" size="md" fullWidth onPress={leave} />
         </>
       )}
       <Spacer size="xl" />

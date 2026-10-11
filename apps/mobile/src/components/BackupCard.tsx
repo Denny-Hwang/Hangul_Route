@@ -8,7 +8,7 @@ import { cloudStatusLine } from '../logic/sync/status-line';
 import { saveTextFile } from '../platform/file';
 import { useAudience } from '../store/audience';
 import { useProgressStore } from '../store/progress-store';
-import { useSyncStore, type LearnerSyncState } from '../store/sync-store';
+import { useSyncStore } from '../store/sync-store';
 
 /**
  * "Progress backup" card on profile/settings — F-SYNC-002 §3.3.
@@ -19,14 +19,10 @@ export interface BackupCardProps {
   onSaveProgress: () => void;
 }
 
-/** Kept as the card's export for sync/save-progress; the wording lives in logic/sync/status-line (tested). */
-export function statusLine(state: LearnerSyncState | undefined, now: Date): string {
-  return cloudStatusLine(state, now);
-}
-
 export function BackupCard({ profile, onRestore, onSaveProgress }: BackupCardProps): React.ReactElement {
   const { copy, pinSet } = useAudience();
-  const m = useMessages().caregiver.backup;
+  const messages = useMessages();
+  const m = messages.caregiver.backup;
   const snap = useProgressStore((s) => s.byProfile[profile.id]);
   const syncState = useSyncStore((s) => s.byLearner[profile.id]);
   const hydrateSync = useSyncStore((s) => s.hydrate);
@@ -46,7 +42,7 @@ export function BackupCard({ profile, onRestore, onSaveProgress }: BackupCardPro
   return (
     <Card padding="md" testID="backup-card">
       <Body weight="semibold">{m.title}</Body>
-      <Caption tone="muted">{statusLine(syncState, new Date())}</Caption>
+      <Caption tone="muted">{cloudStatusLine(syncState, new Date(), messages.caregiver.sync)}</Caption>
       <Spacer size="md" />
       <View style={{ gap: spacing.sm }}>
         <Button label={m.save.cta} tone="primary" size="md" accessibilityLabel={copy.gatedA11y(m.save.cta, pinSet, m.save.detail)} onPress={onSaveProgress} />

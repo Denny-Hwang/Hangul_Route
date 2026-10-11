@@ -2,6 +2,7 @@ import { Body, Button, Caption, Card, Heading, HoyaBubble, Icon, Screen, Spacer,
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
 import { Pressable, TextInput, View } from 'react-native';
+import { useMessages } from '../../i18n/use-messages';
 import { cleanJoinCode, isCodeError, isCompleteJoinCode, joinErrorMessage } from '../../logic/spaces/join-code';
 import { relinkNotice } from '../../logic/sync/restore';
 import type { RootStackParamList } from '../../navigation/types';
@@ -22,6 +23,8 @@ export const RELINK_POLL_MS = 4000;
  * moves or resets.
  */
 export function JoinSpaceScreen({ navigation }: Props): React.ReactElement {
+  const messages = useMessages();
+  const m = messages.caregiver.join;
   const profile = useProfileStore(activeProfileSelector);
   const lookup = useMembershipStore((s) => s.lookup);
   const join = useMembershipStore((s) => s.join);
@@ -45,11 +48,11 @@ export function JoinSpaceScreen({ navigation }: Props): React.ReactElement {
     const result = await lookup(code);
     setBusy(false);
     if (!result.ok) {
-      setMessage(joinErrorMessage(result.error));
+      setMessage(joinErrorMessage(result.error, messages.caregiver));
       return;
     }
     if (result.full) {
-      setMessage(joinErrorMessage('cap_class'));
+      setMessage(joinErrorMessage('cap_class', messages.caregiver));
       return;
     }
     setFound(result.space);
@@ -63,7 +66,7 @@ export function JoinSpaceScreen({ navigation }: Props): React.ReactElement {
     const result = await requestRelink(found.id, code, pick.learnerId);
     setBusy(false);
     if (!result.ok) {
-      setMessage(joinErrorMessage(result.error));
+      setMessage(joinErrorMessage(result.error, messages.caregiver));
       return;
     }
     setRelink({ requestId: result.requestId, expiresAt: result.expiresAt, name: pick.name });
@@ -79,14 +82,14 @@ export function JoinSpaceScreen({ navigation }: Props): React.ReactElement {
       if (result.state === 'pending') return;
       setRelink(null);
       if (result.state === 'error') {
-        setMessage(joinErrorMessage(result.error === 'off' ? 'off' : result.error === 'network' ? 'network' : 'unknown'));
+        setMessage(joinErrorMessage(result.error === 'off' ? 'off' : result.error === 'network' ? 'network' : 'unknown', messages.caregiver));
       } else if (result.state === 'approved') {
         setActive(result.plan.profile.id);
-        setDone({ name: found.name, alreadyMember: true, notice: relinkNotice(result.plan) });
+        setDone({ name: found.name, alreadyMember: true, notice: relinkNotice(result.plan, messages.caregiver) });
       } else if (result.state === 'denied') {
-        setMessage('Your teacher said not now. Ask them in class.');
+        setMessage(messages.caregiver.join.relink.denied);
       } else {
-        setMessage('That took too long. Ask your teacher and try again.');
+        setMessage(messages.caregiver.join.relink.expired);
       }
     };
     void tick();
@@ -95,7 +98,7 @@ export function JoinSpaceScreen({ navigation }: Props): React.ReactElement {
       stopped = true;
       clearInterval(handle);
     };
-  }, [relink, found, pollRelink, setActive]);
+  }, [relink, found, pollRelink, setActive, messages]);
 
   const confirmName = async (): Promise<void> => {
     if (!profile || !found) return;
@@ -104,43 +107,43 @@ export function JoinSpaceScreen({ navigation }: Props): React.ReactElement {
     const result = await join(profile.id, found.id, code, name.trim() || undefined);
     setBusy(false);
     if (!result.ok) {
-      setMessage(joinErrorMessage(result.error));
+      setMessage(joinErrorMessage(result.error, messages.caregiver));
       if (isCodeError(result.error)) setFound(null);
       return;
     }
     setDone({ name: result.membership.name, alreadyMember: result.alreadyMember });
   };
 
-  const who = found?.kind === 'family' ? 'Your family' : 'Your teacher';
+  const seeYouAs = found?.kind === 'family' ? m.confirm.seeYouAs.family : m.confirm.seeYouAs.teacher;
 
   return (
     <Screen tone="canvas" scrollable>
-      <Pressable onPress={() => navigation.goBack()} hitSlop={spacing.md} accessibilityRole="button" accessibilityLabel="Go back" style={{ alignSelf: 'flex-start', padding: spacing.xs }}>
+      <Pressable onPress={() => navigation.goBack()} hitSlop={spacing.md} accessibilityRole="button" accessibilityLabel={messages.a11y.goBack} style={{ alignSelf: 'flex-start', padding: spacing.xs }}>
         <Icon name="arrow-left" size={28} />
       </Pressable>
       <Spacer size="sm" />
-      <Heading level="title">Join a class</Heading>
+      <Heading level="title">{m.title}</Heading>
       <Spacer size="md" />
-      <HoyaBubble tone={done ? 'cheering' : 'idle'} message={done ? `You're in ${done.name}!` : found ? `${found.name} found!` : 'Type the code your teacher gave you.'} />
+      <HoyaBubble tone={done ? 'cheering' : 'idle'} message={done ? m.bubble.done(done.name) : found ? m.bubble.found(found.name) : m.bubble.idle} />
       <Spacer size="xl" />
 
       {done ? (
         <Card padding="lg" tone="success" testID="join-done">
-          <Body align="center">{done.notice ?? (done.alreadyMember ? `You're already in ${done.name}.` : `You're in ${done.name}. New missions may show up on Today.`)}</Body>
+          <Body align="center">{done.notice ?? (done.alreadyMember ? m.done.already(done.name) : m.done.joined(done.name))}</Body>
           <Spacer size="lg" />
-          <Button label="Back to today" tone="primary" size="lg" fullWidth onPress={() => navigation.navigate('Main', { screen: 'Home' })} />
+          <Button label={m.done.backToToday.cta} tone="primary" size="lg" fullWidth onPress={() => navigation.navigate('Main', { screen: 'Home' })} />
         </Card>
       ) : relink ? (
         <Card padding="lg" tone="brand" testID="join-waiting">
-          <Body align="center">Waiting for your teacher to say yes for {relink.name}.</Body>
+          <Body align="center">{m.waiting.line(relink.name)}</Body>
           <Spacer size="xs" />
-          <Caption tone="muted" align="center">Ask them to open the class on their screen. This request lasts about 10 minutes.</Caption>
+          <Caption tone="muted" align="center">{m.waiting.caption}</Caption>
           <Spacer size="md" />
-          <Button label="Never mind" tone="ghost" size="sm" fullWidth onPress={() => setRelink(null)} />
+          <Button label={m.waiting.neverMind.cta} tone="ghost" size="sm" fullWidth onPress={() => setRelink(null)} />
         </Card>
       ) : picking ? (
         <Card padding="lg" tone="brand" testID="join-pick">
-          <Caption tone="muted">Which one is you? Your teacher will check.</Caption>
+          <Caption tone="muted">{m.pick.prompt}</Caption>
           <Spacer size="sm" />
           <View style={{ gap: spacing.sm }}>
             {roster.map((r) => (
@@ -148,18 +151,18 @@ export function JoinSpaceScreen({ navigation }: Props): React.ReactElement {
             ))}
           </View>
           <Spacer size="sm" />
-          <Button label="I'm new here" tone="ghost" size="sm" fullWidth onPress={() => setPicking(false)} />
+          <Button label={m.pick.newHere.cta} tone="ghost" size="sm" fullWidth onPress={() => setPicking(false)} />
         </Card>
       ) : found ? (
         <Card padding="lg" tone="brand" testID="join-confirm">
-          <Caption tone="muted">{who} will see you as:</Caption>
+          <Caption tone="muted">{seeYouAs}</Caption>
           <Spacer size="xs" />
           <TextInput
             value={name}
             onChangeText={setName}
             maxLength={20}
             autoCorrect={false}
-            accessibilityLabel="Name your teacher will see"
+            accessibilityLabel={messages.a11y.joinName}
             style={{
               minHeight: touchTarget.child,
               paddingHorizontal: spacing.md,
@@ -173,10 +176,10 @@ export function JoinSpaceScreen({ navigation }: Props): React.ReactElement {
             }}
           />
           <Spacer size="md" />
-          <Button label={busy ? 'Joining…' : "That's me"} tone="primary" size="lg" fullWidth disabled={busy || name.trim().length === 0} onPress={() => void confirmName()} />
+          <Button label={busy ? m.confirm.joining.cta : m.confirm.me.cta} tone="primary" size="lg" fullWidth disabled={busy || name.trim().length === 0} onPress={() => void confirmName()} />
           <Spacer size="sm" />
-          {roster.length > 0 ? <Button label="I was already in this class" tone="ghost" size="sm" fullWidth onPress={() => setPicking(true)} /> : null}
-          <Button label="Not this one" tone="ghost" size="sm" fullWidth onPress={() => { setFound(null); setRoster([]); }} />
+          {roster.length > 0 ? <Button label={m.confirm.alreadyIn.cta} tone="ghost" size="sm" fullWidth onPress={() => setPicking(true)} /> : null}
+          <Button label={m.confirm.notThis.cta} tone="ghost" size="sm" fullWidth onPress={() => { setFound(null); setRoster([]); }} />
         </Card>
       ) : (
         <>
@@ -186,12 +189,12 @@ export function JoinSpaceScreen({ navigation }: Props): React.ReactElement {
               setMessage(null);
               setCode(cleanJoinCode(v));
             }}
-            placeholder="ABC123"
+            placeholder={m.code.placeholder}
             placeholderTextColor={colors.text.muted}
             autoCapitalize="characters"
             autoCorrect={false}
             maxLength={6}
-            accessibilityLabel="Class code"
+            accessibilityLabel={messages.a11y.classCode}
             testID="join-code"
             style={{
               minHeight: touchTarget.hero,
@@ -207,13 +210,13 @@ export function JoinSpaceScreen({ navigation }: Props): React.ReactElement {
             }}
           />
           <Spacer size="xs" />
-          <Caption tone="muted" align="center">6 letters or numbers — no O, I, 0 or 1</Caption>
+          <Caption tone="muted" align="center">{m.code.rules}</Caption>
           <Spacer size="md" />
-          <Button label={busy ? 'Looking…' : 'Join'} tone="primary" size="hero" fullWidth disabled={busy || !cloudAvailable || !isCompleteJoinCode(code)} onPress={() => void find()} />
+          <Button label={busy ? m.code.looking.cta : m.code.join.cta} tone="primary" size="hero" fullWidth disabled={busy || !cloudAvailable || !isCompleteJoinCode(code)} onPress={() => void find()} />
           {!cloudAvailable ? (
             <>
               <Spacer size="xs" />
-              <Caption tone="muted" align="center">{joinErrorMessage('off')}</Caption>
+              <Caption tone="muted" align="center">{joinErrorMessage('off', messages.caregiver)}</Caption>
             </>
           ) : null}
         </>

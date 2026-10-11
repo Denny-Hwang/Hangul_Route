@@ -106,6 +106,9 @@ export const a11y = {
   pinDelete: 'Delete last digit',
   pinDots: (entered: number, total: number) => `${entered} of ${total} digits entered`,
   rescueCode: 'Rescue code',
+  /** Join a class: the code field and the roster-name field. */
+  classCode: 'Class code',
+  joinName: 'Name your teacher will see',
   leaveSpace: (name: string) => `Leave ${name}`,
   /** The paywall offer card: its name, then the already-formatted price. */
   lifetimeOffer: (name: string, price: string) => `${name}, ${price}`,

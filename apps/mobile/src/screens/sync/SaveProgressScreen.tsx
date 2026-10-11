@@ -2,9 +2,9 @@ import { Body, Button, Caption, Card, Heading, HoyaBubble, Icon, Screen, Spacer,
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
-import { statusLine } from '../../components/BackupCard';
+import { useMessages } from '../../i18n/use-messages';
 import { rescueCodeHint, rescueCodeLines } from '../../logic/sync/rescue-code';
-import { saveNowNote } from '../../logic/sync/status-line';
+import { cloudStatusLine, saveNowNote } from '../../logic/sync/status-line';
 import type { RootStackParamList } from '../../navigation/types';
 import { confirm } from '../../platform/dialog';
 import { copyText } from '../../platform/pwa';
@@ -19,6 +19,8 @@ type Props = NativeStackScreenProps<RootStackParamList, 'SaveProgress'>;
  * a block a parent writes down. Rotation is last and small on purpose.
  */
 export function SaveProgressScreen({ navigation }: Props): React.ReactElement {
+  const messages = useMessages();
+  const m = messages.caregiver.saveProgress;
   const profile = useProfileStore(activeProfileSelector);
   const learnerId = profile?.id ?? '';
   const state = useSyncStore((s) => s.byLearner[learnerId]);
@@ -39,33 +41,33 @@ export function SaveProgressScreen({ navigation }: Props): React.ReactElement {
     setBusy(true);
     const after = await syncNow(learnerId);
     setBusy(false);
-    setNote(saveNowNote(after));
+    setNote(saveNowNote(after, messages.caregiver.sync));
   };
 
   const rotate = async (): Promise<void> => {
     const yes = await confirm({
-      title: 'Get a new code?',
-      message: 'The old code will stop working. Write the new one down.',
-      confirmLabel: 'Get a new code',
-      cancelLabel: 'Keep my code',
+      title: m.rotate.confirmTitle,
+      message: m.rotate.confirmMessage,
+      confirmLabel: m.rotate.cta,
+      cancelLabel: m.rotate.keep.cta,
       destructive: true,
     });
     if (!yes || !learnerId) return;
     setBusy(true);
     const fresh = await issue(learnerId);
     setBusy(false);
-    setNote(fresh ? 'New code ready. The old one no longer works.' : "Couldn't get a new code right now.");
+    setNote(fresh ? m.rotate.ready : m.rotate.unavailable);
   };
 
   return (
     <Screen tone="canvas" scrollable>
-      <Pressable onPress={() => navigation.goBack()} hitSlop={spacing.md} accessibilityRole="button" accessibilityLabel="Go back" style={{ alignSelf: 'flex-start', padding: spacing.xs }}>
+      <Pressable onPress={() => navigation.goBack()} hitSlop={spacing.md} accessibilityRole="button" accessibilityLabel={messages.a11y.goBack} style={{ alignSelf: 'flex-start', padding: spacing.xs }}>
         <Icon name="arrow-left" size={28} />
       </Pressable>
       <Spacer size="sm" />
-      <Heading level="title">Save my progress</Heading>
+      <Heading level="title">{m.title}</Heading>
       <Spacer size="md" />
-      <HoyaBubble tone="idle" message={code ? `Write this down. It brings ${profile?.displayName ?? 'your'}'s cards back on any device.` : 'Once progress is saved to the cloud, a rescue code appears here.'} />
+      <HoyaBubble tone="idle" message={code ? m.bubble.code(profile?.displayName ?? null) : m.bubble.noCode} />
 
       <Spacer size="xl" />
       {code ? (
@@ -77,16 +79,16 @@ export function SaveProgressScreen({ navigation }: Props): React.ReactElement {
             </Heading>
             <Spacer size="xs" />
             <Caption tone="muted" align="center">
-              {rescueCodeHint(code) ?? ''}
+              {rescueCodeHint(code, m) ?? ''}
             </Caption>
           </Card>
           <Spacer size="md" />
           <View style={{ flexDirection: 'row', gap: spacing.sm }}>
             <View style={{ flex: 1 }}>
-              <Button label="Copy" tone="secondary" size="md" fullWidth onPress={() => void copyText(code).then((ok) => setNote(ok ? 'Copied.' : 'Copy is not available here — write it down.'))} />
+              <Button label={m.copy.cta} tone="secondary" size="md" fullWidth onPress={() => void copyText(code).then((ok) => setNote(ok ? m.copy.done : m.copy.unavailable))} />
             </View>
             <View style={{ flex: 1 }}>
-              <Button label="Share" tone="secondary" size="md" fullWidth onPress={() => void shareText(`Hangul Route rescue code for ${profile?.displayName ?? 'my learner'}: ${code}`, 'Rescue code').then((ok) => { if (!ok) setNote('Sharing is not available here — copy it instead.'); })} />
+              <Button label={m.share.cta} tone="secondary" size="md" fullWidth onPress={() => void shareText(m.share.text(profile?.displayName ?? null, code), m.share.title).then((ok) => { if (!ok) setNote(m.share.unavailable); })} />
             </View>
           </View>
         </>
@@ -94,9 +96,9 @@ export function SaveProgressScreen({ navigation }: Props): React.ReactElement {
 
       <Spacer size="lg" />
       <Card padding="md" tone="sunken">
-        <Caption tone="muted">{statusLine(state, new Date())}</Caption>
+        <Caption tone="muted">{cloudStatusLine(state, new Date(), messages.caregiver.sync)}</Caption>
         <Spacer size="sm" />
-        <Button label={busy ? 'Saving…' : 'Save now'} tone="primary" size="md" disabled={busy} onPress={() => void saveNow()} />
+        <Button label={busy ? m.saveNow.saving.cta : m.saveNow.cta} tone="primary" size="md" disabled={busy} onPress={() => void saveNow()} />
       </Card>
 
       {note ? (
@@ -110,8 +112,8 @@ export function SaveProgressScreen({ navigation }: Props): React.ReactElement {
         <>
           <Spacer size="xxl" />
           <View style={{ alignItems: 'center', borderTopWidth: 1, borderTopColor: colors.border.subtle, borderRadius: radii.sm, paddingTop: spacing.md }}>
-            <Button label="Get a new code" tone="ghost" size="sm" disabled={busy} onPress={() => void rotate()} />
-            <Caption tone="muted">The old code stops working.</Caption>
+            <Button label={m.rotate.cta} tone="ghost" size="sm" disabled={busy} onPress={() => void rotate()} />
+            <Caption tone="muted">{m.rotate.caption}</Caption>
           </View>
         </>
       ) : null}

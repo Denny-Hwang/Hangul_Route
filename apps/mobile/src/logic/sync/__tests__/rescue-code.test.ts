@@ -1,7 +1,9 @@
 import { normalizeRescueCode } from '@hangul-route/content-schema';
-import { getMessages } from '@hangul-route/i18n';
+import { LOCALES, findBannedWord, getMessages, type Messages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import { RESCUE_INPUT_MAX, claimErrorMessage, cleanRescueInput, rescueCodeHint, rescueCodeLines, rescueInputRows } from '../rescue-code';
+
+const m = getMessages('en').caregiver;
 
 describe('rescue code helpers (F-RESTORE-001)', () => {
   it('cleans the one code field while typing: upper case, letters, digits and single separators', () => {
@@ -20,9 +22,9 @@ describe('rescue code helpers (F-RESTORE-001)', () => {
   });
 
   it('describes the shape of the code a parent is looking at', () => {
-    expect(rescueCodeHint('TIGER-MOON-RIVER-APPLE-482139')).toBe('four words + 6 digits');
-    expect(rescueCodeHint('TIGER-MOON-4821')).toBe('two words + 4 digits');
-    expect(rescueCodeHint('not a code')).toBeNull();
+    expect(rescueCodeHint('TIGER-MOON-RIVER-APPLE-482139', m.saveProgress)).toBe('four words + 6 digits');
+    expect(rescueCodeHint('TIGER-MOON-4821', m.saveProgress)).toBe('two words + 4 digits');
+    expect(rescueCodeHint('not a code', m.saveProgress)).toBeNull();
   });
 
   it('lays a code out one word per row, the number last, so no word breaks mid-way on a narrow phone', () => {
@@ -34,17 +36,57 @@ describe('rescue code helpers (F-RESTORE-001)', () => {
 
   it('has calm copy for every error', () => {
     for (const c of ['code_not_found', 'too_many_attempts', 'network', 'invalid', 'unknown'] as const) {
-      expect(claimErrorMessage(c).length).toBeGreaterThan(10);
+      expect(claimErrorMessage(c, m).length).toBeGreaterThan(10);
     }
-    expect(claimErrorMessage('code_not_found')).not.toMatch(/wrong|fail/i);
+    expect(claimErrorMessage('code_not_found', m)).not.toMatch(/wrong|fail/i);
     // the format hint shows the new shape and still names the older one
-    expect(claimErrorMessage('invalid')).toContain('TIGER-MOON-RIVER-APPLE-482139');
-    expect(claimErrorMessage('invalid')).toContain('TIGER-MOON-4821');
+    expect(claimErrorMessage('invalid', m)).toContain('TIGER-MOON-RIVER-APPLE-482139');
+    expect(claimErrorMessage('invalid', m)).toContain('TIGER-MOON-4821');
   });
 
-  it('says the invalid-code line exactly as the Forgot PIN screen does (one wording until PR 8b makes it one message)', () => {
-    expect(claimErrorMessage('invalid')).toBe(getMessages('en').caregiver.pin.reset.failure.badFormat);
+  it('keeps the English wording of every error', () => {
+    expect(claimErrorMessage('code_not_found', m)).toBe('Check the code and try again.');
+    expect(claimErrorMessage('too_many_attempts', m)).toBe("Let's wait a few minutes before trying again.");
+    expect(claimErrorMessage('network', m)).toBe('This needs internet. Try again when you are online.');
+    expect(claimErrorMessage('invalid', m)).toBe(
+      'Type every word and the number, like TIGER-MOON-RIVER-APPLE-482139 (older codes: TIGER-MOON-4821).',
+    );
+    expect(claimErrorMessage('unknown', m)).toBe('Something went wrong. Try again in a moment.');
   });
+
+  it('the invalid-code line is the one message the Forgot PIN screen uses too', () => {
+    const other: Pick<Messages['caregiver'], 'restore' | 'retry' | 'pin'> = {
+      ...m,
+      pin: { ...m.pin, reset: { ...m.pin.reset, failure: { ...m.pin.reset.failure, badFormat: 'Formato.' } } },
+    };
+    expect(claimErrorMessage('invalid', other)).toBe('Formato.');
+  });
+});
+
+describe('the rescue-code lines take their words from the message subtree (F-I18N-001 §3.4 rule 3)', () => {
+  it('renders errors and the code shape from the subtree it is given', () => {
+    const other: Pick<Messages['caregiver'], 'restore' | 'retry' | 'pin'> = {
+      ...m,
+      restore: { ...m.restore, code: { ...m.restore.code, notFound: 'Revisa el codigo.' } },
+      retry: { tooManyAttempts: 'Espera.', offline: 'Sin internet.', unknown: 'Otra vez.' },
+    };
+    expect(claimErrorMessage('code_not_found', other)).toBe('Revisa el codigo.');
+    expect(claimErrorMessage('too_many_attempts', other)).toBe('Espera.');
+    expect(claimErrorMessage('network', other)).toBe('Sin internet.');
+    expect(claimErrorMessage('unknown', other)).toBe('Otra vez.');
+    const shape = { ...m.saveProgress, codeShape: (words: number, digits: number) => `${words} palabras + ${digits}` };
+    expect(rescueCodeHint('TIGER-MOON-RIVER-APPLE-482139', shape)).toBe('4 palabras + 6');
+    expect(rescueCodeHint('TIGER-MOON-4821', shape)).toBe('2 palabras + 4');
+  });
+
+  for (const locale of LOCALES) {
+    it(`${locale}: every claim error is calm (no shaming word)`, () => {
+      const caregiver = getMessages(locale).caregiver;
+      for (const c of ['code_not_found', 'too_many_attempts', 'network', 'invalid', 'unknown'] as const) {
+        expect(findBannedWord(claimErrorMessage(c, caregiver), locale, 'caregiver'), `${locale}.${c}`).toBeNull();
+      }
+    });
+  }
 });
 
 describe('rescueInputRows', () => {

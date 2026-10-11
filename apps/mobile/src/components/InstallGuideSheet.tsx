@@ -15,6 +15,7 @@ import {
 import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useMessages } from '../i18n/use-messages';
 import { overlayFrame } from '../logic/layout/overlay-frame';
 import { installGuideVariant, shouldShowInstallGuide, type InstallGuideVariant } from '../logic/pwa/install-guide';
 import { appUrl, copyText, installEnv, isOfflineReady, promptInstall } from '../platform/pwa';
@@ -37,6 +38,8 @@ export interface InstallGuideSheetProps {
 
 export function InstallGuideSheet({ shareUrl }: InstallGuideSheetProps): React.ReactElement | null {
   const { copy } = useAudience();
+  const messages = useMessages();
+  const m = messages.caregiver.install;
   const visits = usePwaStore((s) => s.visits);
   const snoozedUntilVisit = usePwaStore((s) => s.snoozedUntilVisit);
   const installed = usePwaStore((s) => s.installed);
@@ -110,13 +113,13 @@ export function InstallGuideSheet({ shareUrl }: InstallGuideSheetProps): React.R
             <View style={{ flex: 1 }}>
               <Heading level="prompt">{copy.installGuideLine}</Heading>
               {copy.installGuideHelp ? <Caption tone="secondary">{copy.installGuideHelp}</Caption> : null}
-              <Caption tone="muted">Then Hangul Route opens like an app and your cards stay safe, even without Wi-Fi.</Caption>
+              <Caption tone="muted">{m.offline}</Caption>
             </View>
             <Pressable
               onPress={dismiss}
               hitSlop={spacing.sm}
               accessibilityRole="button"
-              accessibilityLabel="Close"
+              accessibilityLabel={messages.common.buttons.close}
               style={{ minWidth: touchTarget.min, minHeight: touchTarget.min, alignItems: 'center', justifyContent: 'center' }}
             >
               <Icon name="close" size={22} color={colors.text.muted} />
@@ -126,26 +129,26 @@ export function InstallGuideSheet({ shareUrl }: InstallGuideSheetProps): React.R
           <View style={{ marginTop: spacing.md }}>
             {variant === 'ios-safari' ? (
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexWrap: 'wrap' }}>
-                <Step icon="arrow-right" label="Tap Share" />
+                <Step icon="arrow-right" label={m.steps.share} />
                 <Icon name="arrow-right" size={16} color={colors.text.muted} />
-                <Step icon="plus" label="Add to Home Screen" />
+                <Step icon="plus" label={m.steps.addToHome} />
               </View>
             ) : null}
             {variant === 'prompt' ? (
-              <Button label="Install" tone="primary" size="lg" fullWidth onPress={() => void onInstall()} />
+              <Button label={m.install.cta} tone="primary" size="lg" fullWidth onPress={() => void onInstall()} />
             ) : null}
             {variant === 'desktop-hint' ? (
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexWrap: 'wrap' }}>
-                <Step icon="home" label="Browser menu" />
+                <Step icon="home" label={m.steps.browserMenu} />
                 <Icon name="arrow-right" size={16} color={colors.text.muted} />
-                <Step icon="plus" label="Install app / Add to Home screen" />
+                <Step icon="plus" label={m.steps.installApp} />
               </View>
             ) : null}
             {variant === 'in-app-browser' ? (
               <View style={{ gap: spacing.sm }}>
-                <Body size="sm">Open this page in Safari or Chrome first.</Body>
+                <Body size="sm">{m.inAppBrowser}</Body>
                 <Button
-                  label={copied ? 'Link copied' : 'Copy link'}
+                  label={copied ? m.linkCopied.cta : m.copyLink.cta}
                   tone="secondary"
                   size="md"
                   onPress={() => void onCopy()}
@@ -155,7 +158,7 @@ export function InstallGuideSheet({ shareUrl }: InstallGuideSheetProps): React.R
           </View>
 
           <View style={{ marginTop: spacing.sm, alignItems: 'flex-end' }}>
-            <Button label="Not now" tone="ghost" size="sm" onPress={dismiss} />
+            <Button label={m.notNow.cta} tone="ghost" size="sm" onPress={dismiss} />
           </View>
         </Card>
       </View>

@@ -140,6 +140,40 @@ describe('length budgets (F-I18N-001 §3.11)', () => {
     }
   });
 
+  it('covers the Restore, Save my progress, Join a class, install sheet and banner buttons (PR 8b)', () => {
+    const paths = leafPaths(getMessages('en')).filter((p) => BUDGETS[p.split('.').pop() ?? ''] !== undefined);
+    for (const expected of [
+      'caregiver.restore.code.cta',
+      'caregiver.restore.code.find.cta',
+      'caregiver.restore.code.looking.cta',
+      'caregiver.restore.file.cta',
+      'caregiver.restore.startFresh.cta',
+      'caregiver.restore.great.cta',
+      'caregiver.saveProgress.copy.cta',
+      'caregiver.saveProgress.share.cta',
+      'caregiver.saveProgress.saveNow.cta',
+      'caregiver.saveProgress.saveNow.saving.cta',
+      'caregiver.saveProgress.rotate.cta',
+      'caregiver.saveProgress.rotate.keep.cta',
+      'caregiver.join.code.join.cta',
+      'caregiver.join.code.looking.cta',
+      'caregiver.join.confirm.me.cta',
+      'caregiver.join.confirm.joining.cta',
+      'caregiver.join.confirm.alreadyIn.cta',
+      'caregiver.join.confirm.notThis.cta',
+      'caregiver.join.pick.newHere.cta',
+      'caregiver.join.waiting.neverMind.cta',
+      'caregiver.join.done.backToToday.cta',
+      'caregiver.install.install.cta',
+      'caregiver.install.copyLink.cta',
+      'caregiver.install.linkCopied.cta',
+      'caregiver.install.notNow.cta',
+      'learner.pwa.update.refresh.cta',
+    ]) {
+      expect(paths).toContain(expected);
+    }
+  });
+
   it('covers the minigame, audio and story pills and CTAs (PR 7b)', () => {
     const paths = leafPaths(getMessages('en')).filter((p) => BUDGETS[p.split('.').pop() ?? ''] !== undefined);
     for (const expected of [

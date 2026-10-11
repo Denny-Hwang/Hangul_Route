@@ -2,6 +2,7 @@ import { Body, Button, Caption, Card, colors, layout, spacing } from '@hangul-ro
 import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useMessages } from '../i18n/use-messages';
 import { overlayFrame } from '../logic/layout/overlay-frame';
 import { applyUpdate, subscribePwa, type PwaEvent } from '../platform/pwa';
 import { useUiStore } from '../store/ui-store';
@@ -18,6 +19,7 @@ import { useUiStore } from '../store/ui-store';
 type Banner = 'offline-ready' | 'update-ready' | null;
 
 export function PwaBanners(): React.ReactElement | null {
+  const m = useMessages().learner.pwa;
   const [banner, setBanner] = useState<Banner>(null);
   const [offline, setOffline] = useState(false);
   const insets = useSafeAreaInsets();
@@ -55,23 +57,23 @@ export function PwaBanners(): React.ReactElement | null {
         {offline ? (
           <View style={{ alignSelf: 'center' }}>
             <Card padding="sm" tone="sunken">
-              <Caption tone="muted">Offline — everything still works</Caption>
+              <Caption tone="muted">{m.offline}</Caption>
             </Card>
           </View>
         ) : null}
         {banner === 'offline-ready' ? (
           <Card padding="md" tone="success">
-            <Body weight="semibold">All set! You can play without Wi-Fi now.</Body>
+            <Body weight="semibold">{m.offlineReady}</Body>
           </Card>
         ) : null}
         {banner === 'update-ready' ? (
           <Card padding="md" tone="brand" style={{ borderColor: colors.brand.primary, borderWidth: 1 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
               <View style={{ flex: 1 }}>
-                <Body weight="semibold">New lessons are ready.</Body>
-                <Caption tone="muted">Tap when you finish what you are doing.</Caption>
+                <Body weight="semibold">{m.update.title}</Body>
+                <Caption tone="muted">{m.update.hint}</Caption>
               </View>
-              <Button label="Refresh" tone="primary" size="sm" onPress={applyUpdate} />
+              <Button label={m.update.refresh.cta} tone="primary" size="sm" onPress={applyUpdate} />
             </View>
           </Card>
         ) : null}
