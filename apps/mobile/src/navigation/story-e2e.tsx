@@ -1,7 +1,7 @@
 import type { StoryLevel } from '@hangul-route/content-schema';
 import { useNavigation } from '@react-navigation/native';
 import { useEffect } from 'react';
-import { storyFixtureIds } from '../content/stories';
+import { storiesAll, storyFixtureIds } from '../content/stories';
 
 /**
  * End-to-end entry to the replay reader, for fixture builds only
@@ -18,6 +18,8 @@ export const STORY_FIXTURES_BUILD = storyFixtureIds.length > 0;
 
 export interface StoryE2eHandle {
   openReader(params: { storyId: string; level: StoryLevel; sceneIndex?: number }): void;
+  /** Every bundled story with its tiers, so the e2e can smoke-read the real content too. */
+  stories(): Array<{ id: string; levels: StoryLevel[]; fixture: boolean; traditional: boolean }>;
 }
 
 export function StoryE2eHook(): null {
@@ -27,6 +29,13 @@ export function StoryE2eHook(): null {
     g.__hrStoryE2E = {
       openReader: ({ storyId, level, sceneIndex }) =>
         navigation.navigate('StoryReader', { storyId, level, mode: 'replay', ...(sceneIndex === undefined ? {} : { sceneIndex }) }),
+      stories: () =>
+        storiesAll.map((s) => ({
+          id: s.id,
+          levels: s.tiers.map((t) => t.level),
+          fixture: storyFixtureIds.includes(s.id),
+          traditional: s.origin.type === 'traditional' || s.origin.type === 'adapted',
+        })),
     };
     return () => {
       delete g.__hrStoryE2E;

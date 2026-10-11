@@ -23,7 +23,10 @@ const STORY = 'story:hangul-day';
 const EMOJI = /\p{Extended_Pictographic}/u;
 
 type E2eWindow = Window & {
-  __hrStoryE2E?: { openReader(p: { storyId: string; level: string; sceneIndex?: number }): void };
+  __hrStoryE2E?: {
+    openReader(p: { storyId: string; level: string; sceneIndex?: number }): void;
+    stories(): Array<{ id: string; levels: string[]; fixture: boolean; traditional: boolean }>;
+  };
   __silentSpeech?: string[];
 };
 
@@ -35,7 +38,7 @@ async function onboard(page: Page): Promise<void> {
   await expect(page.getByText('Hi, Dami!')).toBeVisible();
 }
 
-async function openReader(page: Page, level = 'listen', sceneIndex?: number): Promise<void> {
+async function openReader(page: Page, level = 'listen', sceneIndex?: number, storyId = STORY): Promise<void> {
   await page.waitForFunction(() => Boolean((window as E2eWindow).__hrStoryE2E), undefined, { timeout: 10_000 });
   await page.evaluate(
     ([storyId, lvl, scene]) =>
@@ -44,7 +47,7 @@ async function openReader(page: Page, level = 'listen', sceneIndex?: number): Pr
         level: lvl as string,
         ...(scene === null ? {} : { sceneIndex: scene as number }),
       }),
-    [STORY, level, sceneIndex ?? null] as const,
+    [storyId, level, sceneIndex ?? null] as const,
   );
   await expect(page.getByTestId('story-reader-next')).toBeVisible();
 }
@@ -274,6 +277,34 @@ test.describe('story reader, replay route (fixture bundle)', () => {
     await expect(position(page)).toHaveText('2 / 5');
     const opacity = await page.getByTestId('story-reader-body').evaluate((el) => getComputedStyle(el).opacity);
     expect(opacity).toBe('1');
+  });
+
+  test('every bundled story reads through to its end page on every tier, with no raw token or emoji', async ({ page }) => {
+    test.setTimeout(240_000);
+    await onboard(page);
+    await page.waitForFunction(() => Boolean((window as E2eWindow).__hrStoryE2E));
+    const stories = await page.evaluate(() => (window as E2eWindow).__hrStoryE2E?.stories() ?? []);
+    expect(stories.some((s) => s.fixture)).toBe(true);
+    for (const story of stories) {
+      for (const level of story.levels) {
+        await openReader(page, level, undefined, story.id);
+        await expect(page.getByTestId('story-reader-unavailable')).toHaveCount(0);
+        // Traditional tales say so under the picture on every scene (F-STORY-001 §3.5 T4).
+        await expect(page.getByTestId('story-reader-traditional')).toHaveCount(story.traditional ? 1 : 0);
+        const total = Number((await position(page).innerText()).split('/')[1]);
+        expect(total, `${story.id} ${level}`).toBeGreaterThanOrEqual(4);
+        for (let n = 1; n <= total; n += 1) {
+          await expect(position(page)).toHaveText(`${n} / ${total}`);
+          const shown = await page.getByTestId('story-reader').innerText();
+          expect(shown, `${story.id} ${level} scene ${n}`).not.toContain('{kw:');
+          expect(shown, `${story.id} ${level} scene ${n}`).not.toMatch(EMOJI);
+          await next(page).click();
+        }
+        await expect(page.getByRole('heading', { name: 'The End' })).toBeVisible();
+        await page.getByTestId('story-reader-end-primary').click();
+        await expect(page.getByText('Hi, Dami!')).toBeVisible();
+      }
+    }
   });
 
   for (const vp of [
