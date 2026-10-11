@@ -1,7 +1,7 @@
 {
   "v": 1,
   "id": "story:gimjang-arirang",
-  "state": "draft",
+  "state": "ready",
   "contentVer": 1,
   "title": {
     "ko": "김장하는 날과 아리랑",
@@ -14,9 +14,9 @@
   "recommendedStage": 2,
   "minutes": 5,
   "learningGoalsEn": [
-    "Explain why families made gimjang kimchi and that sharing is at its heart.",
-    "Describe the yearly preparation for gimjang and the main ingredients (napa cabbage, chili powder, garlic, ginger, green onions).",
-    "Explain that Arirang is a folk song with many regional versions, and that UNESCO inscribed gimjang (2013) and South Korea's Arirang (2012); North Korea's Arirang has its own separate listing.",
+    "Understand why families made gimjang kimchi and that sharing is at its heart.",
+    "Know the yearly preparation for gimjang and the main ingredients (napa cabbage, chili powder, garlic, ginger, green onions).",
+    "Know that Arirang is a folk song with many regional versions, and that UNESCO inscribed gimjang (2013) and South Korea's Arirang (2012); North Korea's Arirang has its own separate listing.",
     "Read and recognize 김장 (gimjang), 김치 (gimchi), 배추 (baechu), 고춧가루 (gochutgaru), 나눔 (nanum) and 아리랑 (arirang)."
   ],
   "origin": {
@@ -86,10 +86,10 @@
       "kind": "word"
     },
     {
-      "id": "gimchiwa-gimjang-munhwa",
-      "ko": "김치와 김장 문화",
-      "romanization": "gimchiwa gimjang munhwa",
-      "en": "Kimchi and Gimjang Culture (the Korean name of the UNESCO listing)",
+      "id": "gimchiwa-gimjangmunhwa",
+      "ko": "김치와 김장문화",
+      "romanization": "gimchiwa gimjangmunhwa",
+      "en": "Kimchi and Gimjang Culture (the Korea Heritage Service's name for the UNESCO listing)",
       "kind": "word"
     },
     {
@@ -107,7 +107,7 @@
       "scenes": [
         {
           "id": "s1",
-          "narrationEn": "Brrr! As late autumn turns to winter, Hoya visits a busy yard. Long ago, fresh vegetables were hard to find in winter, so families made lots of kimchi at once. This is gimjang (UNESCO spells it Kimjang).",
+          "narrationEn": "Brrr! Late autumn is turning to winter, {kw:gyeoul}. Hoya visits a busy yard. Long ago, fresh vegetables were hard to find in winter, so families made lots of kimchi at once. This is called gimjang.",
           "captionEn": "Making lots of kimchi before winter",
           "keyword": {
             "id": "gimjang",
@@ -145,7 +145,7 @@
         },
         {
           "id": "s3",
-          "narrationEn": "On gimjang day, relatives and neighbors come to help. They salt napa cabbages, then rub in a seasoning made with chili powder, garlic, ginger and green onions.",
+          "narrationEn": "On gimjang day, relatives and neighbors, {kw:iut}, come to help. They salt napa cabbages, then rub in a seasoning made with chili powder, garlic, ginger and green onions.",
           "captionEn": "Salting and seasoning napa cabbages",
           "keyword": {
             "id": "baechu",
@@ -183,7 +183,7 @@
         },
         {
           "id": "s5",
-          "narrationEn": "When the work is done, helpers often share boiled pork wrapped in the cabbage's yellow inner leaves. Many families give kimchi to neighbors, too. Working together and sharing are the heart of gimjang.",
+          "narrationEn": "On gimjang day, the host family traditionally serves the helpers boiled pork with the cabbage's yellow inner leaves. Many families give kimchi to neighbors, too. Working together and sharing are the heart of gimjang.",
           "captionEn": "Sharing pork, kimchi and help",
           "keyword": {
             "id": "nanum",
@@ -202,13 +202,13 @@
         },
         {
           "id": "s6",
-          "narrationEn": "In 2013, UNESCO inscribed 'Kimjang, making and sharing kimchi in the Republic of Korea' on its list of the Intangible Cultural Heritage of Humanity. In Korean, the Heritage Service calls it Gimchiwa gimjang munhwa.",
+          "narrationEn": "In 2013, UNESCO added gimjang, making and sharing kimchi, to its heritage list. Its Korean name is {kw:gimchiwa-gimjangmunhwa}.",
           "captionEn": "Gimjang on UNESCO's list",
           "keyword": {
-            "id": "gimchiwa-gimjang-munhwa",
-            "ko": "김치와 김장 문화",
-            "romanization": "gimchiwa gimjang munhwa",
-            "en": "Kimchi and Gimjang Culture (the Korean name of the UNESCO listing)",
+            "id": "gimchiwa-gimjangmunhwa",
+            "ko": "김치와 김장문화",
+            "romanization": "gimchiwa gimjangmunhwa",
+            "en": "Kimchi and Gimjang Culture (the Korea Heritage Service's name for the UNESCO listing)",
             "kind": "word"
           },
           "factIds": [
@@ -239,7 +239,7 @@
         },
         {
           "id": "s8",
-          "narrationEn": "Arirang has many versions. Regions have their own, like Jeongseon, Jindo and Miryang Arirang, and anyone can make up new verses! UNESCO inscribed South Korea's Arirang in 2012. North Korea's Arirang has its own separate listing.",
+          "narrationEn": "Arirang has many versions. Regions have their own, like Jeongseon, Jindo and Miryang Arirang, and anyone can make up new verses! In 2012, UNESCO added South Korea's Arirang to its heritage list. North Korea's Arirang is listed separately.",
           "captionEn": "Arirang's many regional versions",
           "keyword": {
             "id": "arirang",
@@ -674,6 +674,6 @@
     "scope": "cluster",
     "notes": "Third independent pass over 6 episodes / 61 facts / 161 source entries (70 unique URLs). Every URL was re-fetched with my own scripts (UNESCO pages via Wayback copies; heritage.go.kr descriptions via the portal ajax html and khs.go.kr open API; folkency via its JSON API) and each quote or locator was machine-matched to the page text; the few non-matching strings were checked by hand (portal metadata fields, hanja or footnote punctuation, label text). Corrections: (1) pansori scene 2 now gives both UNESCO steps (2003 masterpiece proclamation, 2008 Representative List); (2) pansori f11 states the Aesop title as in the cited Townsend text and the common alternate title; (3) added sources: NFM 놀보박타령 for 'greedy' (f5), 표준국어대사전 타다 for 'sawed' (f6), 한국민족문화대백과사전 선도해 for the Samguk sagi tale (f12); (4) Seollal f9/f10 designation-date locators now cite the KHS open API field. No other change. See seasons-tales.signoff.md."
   },
-  "authorNotes": "Spelling: RR for 김장/김치 is gimjang/gimchi. UNESCO's official title uses 'Kimjang', and 'kimchi' is the usual English word. The narration uses 'gimjang' (with UNESCO's spelling noted once) and 'kimchi'. Grandma humming Arirang at the end of the day is a story moment. The narration does not claim Arirang is a gimjang work song. The sources don't link the two, though some Arirang types are work songs (Encyclopedia of Korean Culture). The refrain quoted is the widely known one. The Encyclopedia notes the best-known 'Arirang' (경기/본조 아리랑) is a new folk-song (신민요) form; traditional regional ones include Jeongseon, Jindo and Miryang. Left out on purpose: UNESCO's estimate of 'some 3,600 variations'. Only one authoritative source for it was found, so it isn't in the narration. Also left out: theories about what 'Arirang' means (folk etymology), the DPRK listings (Arirang 2014; kimchi-making 2015), and the old practice of burying kimchi jars in the ground. National designations: 아리랑 (2015-09-22) and 김치 담그기 (2017-11-15) are National Intangible Heritage per the 국가유산포털. They aren't used in the narration. REVISION 2026-10-10: 'takes all year' -> 'takes months' (Encyclopedia: more than half a year; UNESCO: yearly cycle); 'sweet' and 'everyone' removed from scene 5; UNESCO title 'Kimjang, making and sharing kimchi in the Republic of Korea' (2013) and the Korea Heritage Service's Korean name 김치와 김장문화 now used; Arirang 2012 labelled South Korea's entry and the separate DPRK entry (2014) added as f10 (narration mentions 'separate listing' only; the 2014 year lives in f10); 'no exact translation' replaced by 'sung syllables' (encykorea: meaningless refrain, origin theories = folk etymology; 한국민속문학사전: 입타령 refrain). AUTHORING 2026-10-11 (F-STORY-001 PR 1.8d): title romanization, scene captions and check explanations written from the cited facts; every scene is artPending (text-only tile) until the art PRs; no claim or source changed. Korean spacing: the learner term is written 김치와 김장 문화 (spaced by word, 한글 맞춤법 제49항) so each word lines up with gimchiwa gimjang munhwa; f6 keeps the Korea Heritage Service spelling 김치와 김장문화.",
+  "authorNotes": "Spelling: RR for 김장/김치 is gimjang/gimchi. UNESCO's official title uses 'Kimjang', and 'kimchi' is the usual English word. The narration uses 'gimjang' and 'kimchi'; UNESCO's spelling 'Kimjang' stays in f1, f6 and the Sources screen (review 2026-10-11: the spoken aside was removed). Grandma humming Arirang at the end of the day is a story moment. The narration does not claim Arirang is a gimjang work song. The sources don't link the two, though some Arirang types are work songs (Encyclopedia of Korean Culture). The refrain quoted is the widely known one. The Encyclopedia notes the best-known 'Arirang' (경기/본조 아리랑) is a new folk-song (신민요) form; traditional regional ones include Jeongseon, Jindo and Miryang. Left out on purpose: UNESCO's estimate of 'some 3,600 variations'. Only one authoritative source for it was found, so it isn't in the narration. Also left out: theories about what 'Arirang' means (folk etymology), the DPRK listings (Arirang 2014; kimchi-making 2015), and the old practice of burying kimchi jars in the ground. National designations: 아리랑 (2015-09-22) and 김치 담그기 (2017-11-15) are National Intangible Heritage per the 국가유산포털. They aren't used in the narration. REVISION 2026-10-10: 'takes all year' -> 'takes months' (Encyclopedia: more than half a year; UNESCO: yearly cycle); 'sweet' and 'everyone' removed from scene 5; UNESCO title 'Kimjang, making and sharing kimchi in the Republic of Korea' (2013) and the Korea Heritage Service's Korean name 김치와 김장문화 now used; Arirang 2012 labelled South Korea's entry and the separate DPRK entry (2014) added as f10 (narration mentions 'separate listing' only; the 2014 year lives in f10); 'no exact translation' replaced by 'sung syllables' (encykorea: meaningless refrain, origin theories = folk etymology; 한국민속문학사전: 입타령 refrain). AUTHORING 2026-10-11 (F-STORY-001 PR 1.8d): title romanization, scene captions and check explanations written from the cited facts; every scene is artPending (text-only tile) until the art PRs; no claim or source changed. Korean name (review 2026-10-11): the learner term shows the Korea Heritage Service's official form 김치와 김장문화 (gimchiwa gimjangmunhwa, keyword id gimchiwa-gimjangmunhwa), the same spelling as f6. REVIEW 2026-10-11 (PR 1.8d review fixes): s5 follows f5 (on gimjang day the host family serves the helpers); s6 and s8 say 'added to its heritage list' in plain words, and the exact UNESCO titles stay in f6, f9, f10; the iut and gyeoul keywords are used as tokens; learning goals use receptive verbs.",
   "errata": []
 }
