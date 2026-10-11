@@ -62,6 +62,12 @@ export const TELEMETRY_EVENT_NAMES = [
   'story.sequence.finished',
   'story.recap.word_played',
   'story.results.action',
+  // F-PLC-001 §3.13 (payloads carry ids, codes and counts only; never learnerType)
+  'placement.start',
+  'placement.item_answered',
+  'placement.complete',
+  'placement.skipped',
+  'placement.override_applied',
 ] as const;
 
 export const TelemetryEventNameSchema = z.enum(TELEMETRY_EVENT_NAMES);

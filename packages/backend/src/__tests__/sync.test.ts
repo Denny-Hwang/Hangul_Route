@@ -292,3 +292,130 @@ describe('/api/sync Hangul Check fields (F-QUEST-002 §3.9, Q-10a)', () => {
     expect(await db.getSnapshot(r.learnerId)).toBeNull();
   });
 });
+
+describe('placements and summary.placement (F-PLC-001 section 3.8, the additive preserve rule)', () => {
+  const base = { schemaVer: 1, contentVer: '2026.10' };
+  const strands = { 'hangul-recognition': 'secure', 'sound-letter': 'getting-there', 'syllable-reading': 'not-yet', vocabulary: 'not-tested', sentences: 'not-tested' };
+  const placementResult = {
+    id: 'placement:2026-10-10-a',
+    startedAt: '2026-10-10T10:00:00.000Z',
+    completedAt: '2026-10-10T10:05:00.000Z',
+    source: 'onboarding',
+    testLocale: 'en',
+    length: 'full',
+    revealMode: 'tap',
+    bankVersion: 1,
+    contentVer: '2026.10',
+    responses: [{ questionId: 'pitem:recog-1', outcome: 'correct', chosenOptionId: 'a', assisted: false, ms: 1500 }],
+    gates: [{ gate: 'recog', form: 'decode', asked: 3, correct: 3, assisted: 0, result: 'pass' }],
+    strands,
+    level: { stage: 'stage1', band: 1 },
+    oralStage: null,
+    beyondContent: false,
+    startQuestId: 'quest:stage1-03',
+    placedOutQuestIds: ['quest:stage1-01', 'quest:stage1-02'],
+    priorityTokens: ['sym:ㅓ'],
+    needsStage: null,
+    stopReason: 'complete',
+  };
+  const placementSummary = { takenAt: '2026-10-10T10:05:00.000Z', level: { stage: 'stage1', band: 1 }, oralStage: null, strands, beyondContent: false, overridden: false };
+  const withPlacements = (profileId: string, placements: unknown[], quests: Array<{ questId: string; stars: 0 | 1 | 2 | 3 }> = []) => ({ ...snapshotFor(profileId, quests), placements });
+
+  type Stored = { data: { rev: number; snapshot: { placements?: unknown[]; quests: unknown[] }; summary: Record<string, unknown> } };
+  async function getStored(learnerId: string, auth: Record<string, string>) {
+    const res = await app.request(`/api/sync/learners/${learnerId}/snapshot`, { headers: auth });
+    return (await res.json()) as Stored;
+  }
+
+  it('round-trips placements and summary.placement', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    const res = await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withPlacements(r.learnerId, [placementResult]), summary: { ...summary, placement: placementSummary } });
+    expect(res.status).toBe(200);
+    const got = await getStored(r.learnerId, auth);
+    expect(got.data.snapshot.placements).toEqual([placementResult]);
+    expect(got.data.summary.placement).toEqual(placementSummary);
+  });
+
+  it('an old client (neither field) is accepted exactly as today and reads back with an empty list', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    const res = await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: snapshotFor(r.learnerId), summary });
+    expect(res.status).toBe(200);
+    const got = await getStored(r.learnerId, auth);
+    expect(got.data.snapshot.placements).toEqual([]);
+    expect(got.data.summary).not.toHaveProperty('placement');
+  });
+
+  it('preserve rule: an old client re-uploading without the fields cannot erase them', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withPlacements(r.learnerId, [placementResult]), summary: { ...summary, placement: placementSummary } });
+
+    const old = await put(r.learnerId, auth, {
+      ...base,
+      baseRev: 1,
+      snapshot: snapshotFor(r.learnerId, [{ questId: 'quest:a', stars: 3 }]),
+      summary: { ...summary, streakDays: 4 },
+    });
+    expect(old.status).toBe(200);
+    expect(old.json.data?.rev).toBe(2);
+
+    const got = await getStored(r.learnerId, auth);
+    expect(got.data.snapshot.placements).toEqual([placementResult]);
+    expect(got.data.summary.placement).toEqual(placementSummary);
+    // everything the old client did send is taken as sent
+    expect(got.data.snapshot.quests).toHaveLength(1);
+    expect(got.data.summary.streakDays).toBe(4);
+  });
+
+  it('a client that sends a longer list replaces the stored one; the server never merges lists', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withPlacements(r.learnerId, [placementResult]), summary: { ...summary, placement: placementSummary } });
+    const second = { ...placementResult, id: 'placement:2026-10-11-b', completedAt: '2026-10-11T10:05:00.000Z' };
+    const next = { ...placementSummary, takenAt: second.completedAt, overridden: true };
+    expect((await put(r.learnerId, auth, { ...base, baseRev: 1, snapshot: withPlacements(r.learnerId, [placementResult, second]), summary: { ...summary, placement: next } })).status).toBe(200);
+    const got = await getStored(r.learnerId, auth);
+    expect(got.data.snapshot.placements).toEqual([placementResult, second]);
+    expect(got.data.summary.placement).toEqual(next);
+  });
+
+  it('a 409 hands the stored placements back for the merge', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withPlacements(r.learnerId, [placementResult]), summary: { ...summary, placement: placementSummary } });
+    const stale = await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: snapshotFor(r.learnerId), summary });
+    expect(stale.status).toBe(409);
+    const body = stale.json as unknown as { data: { snapshot: { placements: unknown[] }; summary: Record<string, unknown> } };
+    expect(body.data.snapshot.placements).toEqual([placementResult]);
+    expect(body.data.summary.placement).toEqual(placementSummary);
+  });
+
+  it('rejects malformed placements and a malformed summary.placement with 422 and stores nothing', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    const badResult = await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withPlacements(r.learnerId, [{ ...placementResult, id: 'review:x' }]), summary });
+    expect(badResult.status).toBe(422);
+    const tooMany = await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withPlacements(r.learnerId, [{ ...placementResult, responses: Array(25).fill(placementResult.responses[0]) }]), summary });
+    expect(tooMany.status).toBe(422);
+    const badSummary = await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: snapshotFor(r.learnerId), summary: { ...summary, placement: { ...placementSummary, level: { stage: 'stage1', band: 9 } } } });
+    expect(badSummary.status).toBe(422);
+    expect(await db.getSnapshot(r.learnerId)).toBeNull();
+  });
+
+  it('still strips unknown keys, including per-question data smuggled into summary.placement', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    await put(r.learnerId, auth, {
+      ...base,
+      baseRev: 0,
+      snapshot: { ...withPlacements(r.learnerId, [placementResult]), extra: 1 },
+      summary: { ...summary, extra: 1, placement: { ...placementSummary, responses: [{ questionId: 'pitem:x' }], asked: 12 } },
+    });
+    const got = await getStored(r.learnerId, auth);
+    expect(got.data.snapshot).not.toHaveProperty('extra');
+    expect(got.data.summary).not.toHaveProperty('extra');
+    expect(got.data.summary.placement).toEqual(placementSummary);
+  });
+});

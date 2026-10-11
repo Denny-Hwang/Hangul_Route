@@ -100,3 +100,30 @@ describe('mergeSnapshots (F-SYNC-001 §3.3)', () => {
     expect(isSubsetOf(base({ sessions: [session('s', 't')] }), server)).toBe(false);
   });
 });
+
+describe('legacy snapshots without placements (F-PLC-001 section 3.8)', () => {
+  const legacy = (over: Record<string, unknown> = {}): ProgressSnapshot => {
+    const snapshot: Record<string, unknown> = { ...base(), ...over };
+    delete snapshot['placements'];
+    return snapshot as unknown as ProgressSnapshot;
+  };
+
+  it('merges two snapshots that predate the key without throwing', () => {
+    const merged = mergeSnapshots(legacy({ quests: [quest('q1', 2, 0.7)] }), legacy({ quests: [quest('q2', 1, 0.5)] }), { now: NOW });
+    expect(merged.quests.map((q) => q.questId).sort()).toEqual(['q1', 'q2']);
+  });
+
+  it('merges a legacy local copy with a server copy that carries placements', () => {
+    const server = base({ quests: [quest('q2', 1, 0.5)], placements: [{ id: 'placement:a' } as never] });
+    const merged = mergeSnapshots(legacy({ quests: [quest('q1', 2, 0.7)] }), server, { now: NOW });
+    expect(merged.quests.map((q) => q.questId).sort()).toEqual(['q1', 'q2']);
+    expect(isSubsetOf(legacy({ quests: [quest('q2', 1, 0.5)] }), server)).toBe(true);
+    expect(isSubsetOf(server, legacy())).toBe(false);
+  });
+
+  it('isSubsetOf works when either side lacks the key', () => {
+    expect(isSubsetOf(legacy(), legacy())).toBe(true);
+    expect(isSubsetOf(legacy(), base())).toBe(true);
+    expect(isSubsetOf(base(), legacy())).toBe(true);
+  });
+});

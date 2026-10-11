@@ -34,3 +34,4 @@ export * from './story-sources';
 export * from './story-lint';
 export * from './curriculum/dates';
 export * from './assessment';
+export * from './schemas/placement';

@@ -196,6 +196,15 @@ describe('loading saved progress (audit UX-01 / L16)', () => {
     expect(notified).toEqual(['p1']);
   });
 
+  it('a saved snapshot that predates placements hydrates and takes writes without gaining the key', async () => {
+    mem.set('progress:p1', savedSnapshot());
+    expect(mem.get('progress:p1')).not.toHaveProperty('placements');
+    await useProgressStore.getState().hydrate('p1');
+    useProgressStore.getState().recordQuestComplete('p1', { questId: 'quest:b', episodeId: 'episode:e', stars: 2, accuracy: 0.8, attempts: 1 });
+    expect(stored()?.quests.map((q) => q.questId)).toEqual(['quest:a', 'quest:b']);
+    expect(stored()).not.toHaveProperty('placements');
+  });
+
   it('a blank record from ensure() does not hide the saved snapshot', async () => {
     mem.set('progress:p1', savedSnapshot());
     expect(useProgressStore.getState().ensure('p1').cards).toEqual([]);

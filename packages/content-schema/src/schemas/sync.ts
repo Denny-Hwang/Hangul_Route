@@ -1,10 +1,11 @@
 import { z } from 'zod';
 import { ProfileSchema } from './profile';
-import { ProgressSnapshotSchema } from './progress';
+import { ProgressSnapshotSchema, type ProgressSnapshot } from './progress';
 import { TierSourceSchema } from './entitlement';
 import { InboxPlanSchema } from './plan';
 import { LearnerMembershipSchema } from './space';
 import { LearnerLevelIdSchema } from './learner-level';
+import { PlacementSummarySchema } from './placement';
 
 /**
  * Sync contracts — F-SYNC-001. Shared by the Worker (validation) and the
@@ -33,6 +34,8 @@ export const ProgressSummarySchema = z.object({
       tricky: z.array(z.string()),
     })
     .optional(),
+  /** Level and strand statuses of the newest level check (F-PLC-001 section 3.8); no counts. */
+  placement: PlacementSummarySchema.optional(),
   planProgress: z.record(
     z.string(),
     z.object({
@@ -53,7 +56,8 @@ export const SnapshotPutSchema = z.object({
   schemaVer: z.number().int().positive(),
   contentVer: z.string().min(1),
 });
-export type SnapshotPut = z.infer<typeof SnapshotPutSchema>;
+/** `snapshot` keeps the legacy-tolerant `ProgressSnapshot` type (see progress.ts). */
+export type SnapshotPut = Omit<z.infer<typeof SnapshotPutSchema>, 'snapshot'> & { snapshot: ProgressSnapshot };
 
 /** POST /api/sync/learners body. */
 export const LearnerRegisterSchema = z.object({
@@ -92,7 +96,7 @@ export const BackupFileSchema = z.object({
   profile: ProfileSchema,
   snapshot: ProgressSnapshotSchema,
 });
-export type BackupFile = z.infer<typeof BackupFileSchema>;
+export type BackupFile = Omit<z.infer<typeof BackupFileSchema>, 'snapshot'> & { snapshot: ProgressSnapshot };
 
 /**
  * Rescue Code shapes — F-RESTORE-001 §3.1. New codes are four list words and
