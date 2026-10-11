@@ -87,6 +87,8 @@ export interface WebClipSetup {
   assets: { has(ref: string): boolean; readonly size: number };
   /** `flags.audioClips`: off switches every clip off without a code change. */
   enabled(): boolean;
+  /** The browser has Web Audio and `fetch`; without them no clip can play, so none is tried. */
+  supported: boolean;
 }
 
 /** The generated map, resolved to URLs by expo-asset (`/assets/assets/audio/...<hash>.mp3`). */
@@ -95,15 +97,19 @@ function bundledClips(): WebClipSetup {
   const uri = (ref: string): string | null => {
     if (!has(ref)) return null;
     try {
-      return Asset.fromModule(AUDIO_ASSETS[ref] as number).uri;
+      // On web Metro's asset transformer makes `require('x.mp3')` a URL string, not a registry number.
+      const mod = AUDIO_ASSETS[ref];
+      return mod === undefined ? null : Asset.fromModule(mod).uri;
     } catch {
       return null;
     }
   };
+  const globals = webAudioGlobals();
   return {
-    player: createWebClipPlayer({ uri, ...webAudioGlobals() }),
+    player: createWebClipPlayer({ uri, ...globals }),
     assets: { has, size: Object.keys(AUDIO_ASSETS).length },
     enabled: () => flags.audioClips,
+    supported: globals.createContext !== null && globals.fetch !== null,
   };
 }
 
@@ -129,6 +135,12 @@ function defaultEnv(): WebAudioEnv {
 // --- The adapter -------------------------------------------------------------
 
 const GESTURE_EVENTS = ['pointerdown', 'touchend', 'keydown'] as const;
+/**
+ * Events that carry user activation on touch screens too (`pointerdown` does not there). The clip
+ * context is offered every one of them for the page lifetime, so a context that iOS suspended
+ * (background, a call, Siri) starts again on the next tap; a running context ignores them.
+ */
+const CLIP_GESTURE_EVENTS = ['pointerup', 'touchend', 'click', 'keydown'] as const;
 const CAPTURE = { capture: true } as const;
 
 function voiceKey(v: WebVoiceLike): string {
@@ -138,11 +150,13 @@ function voiceKey(v: WebVoiceLike): string {
 export function createWebAudio(env: WebAudioEnv) {
   const { synth, Utterance } = env;
   const clipSetup = env.clips ?? null;
-  const clipsOn = (): boolean => clipSetup !== null && clipSetup.enabled();
+  const clipsOn = (): boolean => clipSetup !== null && clipSetup.supported && clipSetup.enabled();
+  /** Clips are on and the build holds at least one: only then is Web Audio touched at all. */
+  const clipsLive = (): boolean => clipsOn() && (clipSetup?.assets.size ?? 0) > 0;
   const hasClip = (ref: string | undefined): boolean => ref !== undefined && clipsOn() && (clipSetup?.assets.has(ref) ?? false);
   const tracker = createCapabilityTracker({
     online: env.isOnline(),
-    clips: clipsOn() && (clipSetup?.assets.size ?? 0) > 0,
+    clips: clipsLive(),
   });
 
   const network: NetworkLike = {
@@ -253,8 +267,18 @@ export function createWebAudio(env: WebAudioEnv) {
 
   const playPrompt = (spec: PlaySpec): Promise<PlayResult> => controller.playPrompt(spec);
 
+  /** Starts the clip context inside a gesture; never stops the speech unlock that follows. */
+  const unlockClips = (): void => {
+    if (!clipsLive()) return;
+    try {
+      clipSetup?.player.unlock();
+    } catch {
+      // a player that refuses is reported as `blocked` by the clip that needed it
+    }
+  };
+
   const unlockAudio = (): void => {
-    clipSetup?.player.unlock();
+    unlockClips();
     if (synth !== null && Utterance !== null) {
       try {
         const u = new Utterance(' ');
@@ -285,9 +309,11 @@ export function createWebAudio(env: WebAudioEnv) {
       for (const type of GESTURE_EVENTS) doc.removeEventListener(type, onGesture, CAPTURE);
     };
     for (const type of GESTURE_EVENTS) doc.addEventListener(type, onGesture, CAPTURE);
+    for (const type of CLIP_GESTURE_EVENTS) doc.addEventListener(type, unlockClips, CAPTURE);
     doc.addEventListener('visibilitychange', onVisibility);
     const uninstall = (): void => {
       removeGesture();
+      for (const type of CLIP_GESTURE_EVENTS) doc.removeEventListener(type, unlockClips, CAPTURE);
       doc.removeEventListener('visibilitychange', onVisibility);
       uninstallGesture = null;
     };

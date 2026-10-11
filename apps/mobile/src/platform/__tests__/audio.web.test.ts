@@ -17,7 +17,10 @@ vi.mock('../storage', () => ({
   }),
 }));
 // The module-level instance resolves bundled clips through expo-asset (a native module tree vitest cannot load).
-vi.mock('expo-asset', () => ({ Asset: { fromModule: (id: number) => ({ uri: `/assets/clip-${id}.mp3` }) } }));
+// On web Metro makes `require('x.mp3')` a URL string; natively it is a registry number.
+vi.mock('expo-asset', () => ({
+  Asset: { fromModule: (id: number | string) => ({ uri: typeof id === 'string' ? id : `/assets/clip-${id}.mp3` }) },
+}));
 vi.mock('../telemetry', () => ({
   track: vi.fn(async (e: { name: string; payload?: Record<string, unknown> }) => {
     tracked.push(e);
@@ -93,6 +96,8 @@ interface ClipRigOptions {
   player: FakeClipPlayer;
   refs?: string[];
   enabled?: boolean;
+  /** The browser has Web Audio and fetch (default true). */
+  supported?: boolean;
 }
 
 function rig(
@@ -114,7 +119,12 @@ function rig(
   if (opts.clips) {
     const refs = new Set(opts.clips.refs ?? [GIYEOK_CLIP]);
     const enabled = opts.clips.enabled ?? true;
-    env.clips = { player: opts.clips.player, assets: { has: (ref) => refs.has(ref), size: refs.size }, enabled: () => enabled };
+    env.clips = {
+      player: opts.clips.player,
+      assets: { has: (ref) => refs.has(ref), size: refs.size },
+      enabled: () => enabled,
+      supported: opts.clips.supported ?? true,
+    };
   }
   return { synth, doc, win, online, audio: createWebAudio(env) };
 }
@@ -710,6 +720,74 @@ describe('platform/audio.web: bundled clips (A-6, AD4: clip > voice > text)', ()
   });
 });
 
+describe('platform/audio.web: the clip context is touched only when clips can play (review)', () => {
+  it('flag off: a gesture never unlocks the clip player, and speech still unlocks', () => {
+    const player = new FakeClipPlayer();
+    const { synth, doc, audio } = rig({ clips: { player, enabled: false } });
+    audio.installGestureUnlock();
+    doc.dispatchEvent(new Event('pointerdown'));
+    doc.dispatchEvent(new Event('click'));
+    expect(player.unlocks).toBe(0);
+    expect(synth.spoken[0]).toMatchObject({ text: ' ', volume: 0 });
+    audio.dispose();
+  });
+
+  it('an empty clip map: a gesture never unlocks the clip player', () => {
+    const player = new FakeClipPlayer();
+    const { synth, doc, audio } = rig({ clips: { player, refs: [] } });
+    audio.installGestureUnlock();
+    doc.dispatchEvent(new Event('pointerdown'));
+    doc.dispatchEvent(new Event('touchend'));
+    audio.unlockAudio();
+    expect(player.unlocks).toBe(0);
+    expect(synth.spoken.length).toBeGreaterThan(0);
+    audio.dispose();
+  });
+
+  it('a browser without Web Audio or fetch: no clip is claimed, tried or unlocked', async () => {
+    const player = new FakeClipPlayer();
+    const { synth, audio } = rig({ clips: { player, supported: false } });
+    expect(audio.hasClip(GIYEOK_CLIP)).toBe(false);
+    expect(audio.getCapability().clips).toBe(false);
+    audio.unlockAudio();
+    expect(player.unlocks).toBe(0);
+    await expect(audio.playPrompt({ text: '가', audioRef: GIYEOK_CLIP })).resolves.toBe('played');
+    expect(player.played).toEqual([]);
+    expect(synth.spoken.map((u) => u.text)).toContain('가');
+    audio.dispose();
+  });
+
+  it('a clip player that throws on unlock never stops the speech unlock', () => {
+    const player = new FakeClipPlayer();
+    player.unlock = () => {
+      throw new Error('NotAllowedError');
+    };
+    const { synth, audio } = rig({ clips: { player } });
+    expect(() => audio.unlockAudio()).not.toThrow();
+    expect(synth.spoken[0]).toMatchObject({ text: ' ', volume: 0 });
+    expect(useAudioStore.getState().unlocked).toBe(true);
+  });
+
+  it('every later tap offers the clip context a restart (after the background, a call or a blocked clip)', () => {
+    const player = new FakeClipPlayer();
+    const { doc, audio } = rig({ clips: { player } });
+    const uninstall = audio.installGestureUnlock();
+    doc.dispatchEvent(new Event('pointerdown'));
+    expect(player.unlocks).toBe(1);
+    doc.visibilityState = 'hidden';
+    doc.dispatchEvent(new Event('visibilitychange'));
+    doc.visibilityState = 'visible';
+    doc.dispatchEvent(new Event('visibilitychange'));
+    // Touch screens: pointerup / touchend / click carry the activation pointerdown does not.
+    for (const type of ['pointerup', 'touchend', 'click', 'keydown']) doc.dispatchEvent(new Event(type));
+    expect(player.unlocks).toBe(5);
+    uninstall();
+    doc.dispatchEvent(new Event('click'));
+    expect(player.unlocks).toBe(5);
+    audio.dispose();
+  });
+});
+
 describe('platform/audio.web: the module-level API (browser globals)', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
@@ -786,6 +864,49 @@ describe('platform/audio.web: the module-level API (browser globals)', () => {
     // A ref the map does not hold is spoken by the voice.
     await expect(mod.playPrompt({ text: '나', audioRef: 'audio/jamo/nieun.mp3' })).resolves.toBe('played');
     expect(synth.spoken.map((u) => u.text)).toEqual([' ', '나']);
+    vi.doUnmock('../../content/__generated__/audio-assets');
+  });
+
+  it('with no bundled clips a gesture creates no AudioContext (production before A-9)', async () => {
+    vi.resetModules();
+    vi.doMock('../../content/__generated__/audio-assets', () => ({ AUDIO_ASSETS: {} }));
+    const contexts: FakeAudioContext[] = [];
+    class RecordingContext extends FakeAudioContext {
+      constructor() {
+        super();
+        contexts.push(this);
+      }
+    }
+    vi.stubGlobal('AudioContext', RecordingContext);
+    const { mod, synth } = await load(true);
+    mod.installGestureUnlock();
+    mod.unlockAudio();
+    expect(contexts).toHaveLength(0);
+    expect(synth.spoken.map((u) => u.text)).toEqual([' ']);
+    vi.doUnmock('../../content/__generated__/audio-assets');
+  });
+
+  it('a web asset module that is a URL string (Metro on web) resolves through expo-asset', async () => {
+    vi.resetModules();
+    const url = '/assets/assets/audio/jamo/giyeok.abc.mp3';
+    vi.doMock('../../content/__generated__/audio-assets', () => ({ AUDIO_ASSETS: { 'audio/jamo/giyeok.mp3': url } }));
+    const contexts: FakeAudioContext[] = [];
+    class RecordingContext extends FakeAudioContext {
+      constructor() {
+        super();
+        contexts.push(this);
+      }
+    }
+    vi.stubGlobal('AudioContext', RecordingContext);
+    const fetchFn = makeFakeFetch({ [url]: new ArrayBuffer(64) });
+    vi.stubGlobal('fetch', fetchFn);
+    const { mod } = await load(true);
+    mod.unlockAudio();
+    const result = mod.playPrompt({ text: '가', audioRef: 'audio/jamo/giyeok.mp3' });
+    await vi.waitFor(() => expect(contexts[0]?.sources.length).toBe(2));
+    expect(fetchFn.calls).toEqual([url]);
+    contexts[0]!.sources[1]!.onended?.();
+    await expect(result).resolves.toBe('played');
     vi.doUnmock('../../content/__generated__/audio-assets');
   });
 
