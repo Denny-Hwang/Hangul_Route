@@ -14,7 +14,14 @@ import { touchTarget } from '@hangul-route/design-system/tokens';
 export const TARGET_MIN = touchTarget.min;
 
 export type AuditScreen = 'Home' | 'Journey' | 'Library' | 'Profile';
-export type TargetRole = 'button' | 'link' | 'checkbox';
+/**
+ * §3.8 names `button` / `link` / `checkbox`; ARIA `switch` is a checkbox
+ * subclass, and `radio`, `tab` and `menuitem` are the other tappable roles the
+ * app renders (Profile's option cards and language chips), so they are held to
+ * the same floor.
+ */
+export const TARGET_ROLES = ['button', 'link', 'checkbox', 'switch', 'radio', 'tab', 'menuitem'] as const;
+export type TargetRole = (typeof TARGET_ROLES)[number];
 
 /** §3.8: the windows the audit runs at, in the spec's order. */
 export const AUDIT_VIEWPORTS = [
@@ -54,6 +61,29 @@ export function isOffender(t: { width: number; height: number }, min: number = T
   return Math.round(t.width) < min || Math.round(t.height) < min;
 }
 
+/**
+ * Gives every repeat of a key on the same walk its own key (`... #2`, `... #3`,
+ * in document order), so a second small control with the same screen, role and
+ * name is a new offender instead of hiding behind the first one's line.
+ */
+export function occurrenceKeys(keys: readonly string[]): string[] {
+  const seen = new Map<string, number>();
+  return keys.map((k) => {
+    const n = (seen.get(k) ?? 0) + 1;
+    seen.set(k, n);
+    return n === 1 ? k : `${k} #${n}`;
+  });
+}
+
+/**
+ * What one read of a screen looks like: every measured control's role, name
+ * and rounded size, not only the offenders. Two equal signatures 300 ms apart
+ * mean the layout has settled (a control still growing towards 64 changes it).
+ */
+export function settleSignature(measured: readonly MeasuredTarget[]): string {
+  return JSON.stringify(measured.map((t) => [t.role, t.name, Math.round(t.width), Math.round(t.height)]));
+}
+
 /** What changed against the list: `added` must be fixed (or the control enlarged), `gone` must leave the list. */
 export function ratchet(found: readonly string[], allowed: readonly string[]): { added: string[]; gone: string[] } {
   const f = new Set(found);
@@ -65,23 +95,42 @@ export function ratchet(found: readonly string[], allowed: readonly string[]): {
 }
 
 /**
- * Runs in the page (`page.evaluate(measureTargets)`): every visible button,
- * link and checkbox (native or ARIA role), its accessible name (aria-label,
- * else aria-labelledby, else its text, whitespace collapsed) and its box.
- * Hidden screens kept mounted by the navigator (`display: none`) and
- * `aria-hidden` subtrees are left out, as is the transient PWA overlay layer
- * (`pwa-banners`, `install-guide`, `portrait-guard`), which shows on its own
- * schedule and is audited by its own specs.
+ * Runs in the page (`page.evaluate(measureTargets, null)`), so it must stay
+ * self-contained (no imports, no outer variables): every visible control with
+ * one of `TARGET_ROLES` (native element or ARIA role), its accessible name
+ * (aria-label, else aria-labelledby, else its text, whitespace collapsed) and
+ * its box, in document order. Hidden screens kept mounted by the navigator
+ * (`display: none`) and `aria-hidden` subtrees are left out. So is the PWA
+ * overlay layer (`pwa-banners`, `install-guide`, `portrait-guard`): it appears
+ * on its own schedule (service-worker update, install prompt, phone
+ * landscape), so whether it is on screen would make the walk flaky; `within`
+ * (a `data-testid`) measures only that subtree instead, overlays included,
+ * which is how `target-size.spec.ts` audits each overlay once it has been
+ * opened on purpose.
  */
-export function measureTargets(): MeasuredTarget[] {
+export function measureTargets(within: string | null): MeasuredTarget[] {
   const OVERLAYS = '[data-testid="pwa-banners"], [data-testid="install-guide"], [data-testid="portrait-guard"]';
   const roleOf = (el: Element): TargetRole | null => {
     const explicit = el.getAttribute('role');
-    if (explicit === 'button' || explicit === 'link' || explicit === 'checkbox') return explicit;
+    if (
+      explicit === 'button' ||
+      explicit === 'link' ||
+      explicit === 'checkbox' ||
+      explicit === 'switch' ||
+      explicit === 'radio' ||
+      explicit === 'tab' ||
+      explicit === 'menuitem'
+    ) {
+      return explicit;
+    }
     if (explicit) return null;
     if (el.tagName === 'BUTTON') return 'button';
     if (el.tagName === 'A' && el.hasAttribute('href')) return 'link';
-    if (el.tagName === 'INPUT' && (el as HTMLInputElement).type === 'checkbox') return 'checkbox';
+    if (el.tagName === 'INPUT') {
+      const type = (el as HTMLInputElement).type;
+      if (type === 'checkbox') return 'checkbox';
+      if (type === 'radio') return 'radio';
+    }
     return null;
   };
   const clean = (s: string | null | undefined): string => (s ?? '').replace(/\s+/g, ' ').trim();
@@ -96,11 +145,15 @@ export function measureTargets(): MeasuredTarget[] {
     return clean((el as HTMLElement).innerText ?? el.textContent) || '(no name)';
   };
   const out: MeasuredTarget[] = [];
-  const candidates = document.querySelectorAll('button, a[href], input[type="checkbox"], [role="button"], [role="link"], [role="checkbox"]');
+  const root: ParentNode | null = within ? document.querySelector(`[data-testid="${within}"]`) : document;
+  if (!root) return [];
+  const candidates = root.querySelectorAll(
+    'button, a[href], input[type="checkbox"], input[type="radio"], [role="button"], [role="link"], [role="checkbox"], [role="switch"], [role="radio"], [role="tab"], [role="menuitem"]',
+  );
   for (const el of Array.from(candidates)) {
     const role = roleOf(el);
     if (!role) continue;
-    if (el.closest('[aria-hidden="true"]') || el.closest(OVERLAYS)) continue;
+    if (el.closest('[aria-hidden="true"]') || (!within && el.closest(OVERLAYS))) continue;
     if (typeof el.checkVisibility === 'function' && !el.checkVisibility({ checkOpacity: false, checkVisibilityCSS: true })) continue;
     const r = el.getBoundingClientRect();
     if (r.width === 0 && r.height === 0) continue;

@@ -8,11 +8,14 @@ import {
   AUDIT_VIEWPORTS,
   isOffender,
   measureTargets,
+  occurrenceKeys,
   offenderKey,
   ratchet,
+  settleSignature,
   TARGET_MIN,
   viewportKey,
   type AuditScreen,
+  type MeasuredTarget,
   type TouchTargetAllowlist,
 } from './target-audit';
 
@@ -32,18 +35,30 @@ import {
  */
 const allowlist = JSON.parse(readFileSync(join(__dirname, 'fixtures', 'touch-target-allowlist.json'), 'utf8')) as TouchTargetAllowlist;
 
-/** Measures until two reads 300 ms apart agree, so entrance animations and late layout do not decide the result. */
-async function settledOffenders(page: Page, screen: AuditScreen): Promise<{ keys: string[]; detail: string[] }> {
-  let last = '';
+interface ScreenOffenders {
+  /** One key per small control (repeats get `#2`, `#3`), in document order. */
+  keys: string[];
+  /** Key -> measured size, for the failure message. */
+  sizes: Map<string, string>;
+}
+
+/**
+ * Measures until two reads 300 ms apart agree on every control's role, name and
+ * rounded size (not only the offenders), so entrance animations, late layout
+ * and controls still growing do not decide the result. At least two reads are
+ * always taken, even when the first finds nothing small.
+ */
+async function settledOffenders(page: Page, screen: AuditScreen): Promise<ScreenOffenders> {
+  let last: string | null = null;
   for (let i = 0; i < 10; i += 1) {
-    const measured = (await page.evaluate(measureTargets)).filter((t) => isOffender(t));
-    const keys = [...new Set(measured.map((t) => offenderKey({ screen, ...t })))].sort();
-    const now = keys.join('\n');
-    if (now === last) {
-      return {
-        keys,
-        detail: measured.map((t) => `${offenderKey({ screen, ...t })} (${Math.round(t.width)}x${Math.round(t.height)})`),
-      };
+    const measured: MeasuredTarget[] = await page.evaluate(measureTargets, null);
+    const now = settleSignature(measured);
+    if (last !== null && now === last) {
+      const small = measured.filter((t) => isOffender(t));
+      const keys = occurrenceKeys(small.map((t) => offenderKey({ screen, ...t })));
+      const sizes = new Map<string, string>();
+      small.forEach((t, n) => sizes.set(keys[n] ?? '', `${Math.round(t.width)}x${Math.round(t.height)}`));
+      return { keys, sizes };
     }
     last = now;
     await page.waitForTimeout(300);
@@ -54,7 +69,7 @@ async function settledOffenders(page: Page, screen: AuditScreen): Promise<{ keys
 const tabLink = (page: Page, name: string) => page.getByRole('tablist').getByRole('link', { name, exact: true });
 
 /** Opens each audited screen of a fresh learner in turn and hands back its offenders. */
-async function walk(page: Page): Promise<{ keys: string[]; detail: string[] }> {
+async function walk(page: Page): Promise<ScreenOffenders> {
   await onboardChild(page, { name: 'Dani', startJourney: false });
   await page.goto('/');
   await expect(page.getByText('Hi, Dani!')).toBeVisible();
@@ -79,28 +94,29 @@ async function walk(page: Page): Promise<{ keys: string[]; detail: string[] }> {
   };
 
   const keys: string[] = [];
-  const detail: string[] = [];
+  const sizes = new Map<string, string>();
   for (const screen of AUDIT_SCREENS) {
     await open[screen]();
     const found = await settledOffenders(page, screen);
     keys.push(...found.keys);
-    detail.push(...found.detail);
+    for (const [k, size] of found.sizes) sizes.set(k, size);
   }
-  return { keys: [...new Set(keys)].sort(), detail };
+  return { keys, sizes };
 }
 
 for (const vp of AUDIT_VIEWPORTS) {
   const key = viewportKey(vp);
   test.describe(`touch targets at ${key}`, () => {
-    test.use({ viewport: { width: vp.width, height: vp.height } });
+    // Entrance animations off, so a control is measured at its resting size.
+    test.use({ viewport: { width: vp.width, height: vp.height }, reducedMotion: 'reduce' });
 
     test(`no new control under ${TARGET_MIN} on Home, Journey, Library or Profile, and the allowlist only shrinks`, async ({ page }) => {
-      const { keys, detail } = await walk(page);
+      const { keys, sizes } = await walk(page);
       const { added, gone } = ratchet(keys, allowlist.offenders[key] ?? []);
       expect(
         added,
-        `New controls under ${TARGET_MIN} at ${key}; make them at least ${TARGET_MIN} x ${TARGET_MIN}:\n${detail
-          .filter((d) => added.some((a) => d.startsWith(a)))
+        `New controls under ${TARGET_MIN} at ${key}; make them at least ${TARGET_MIN} x ${TARGET_MIN}:\n${added
+          .map((a) => `${a} (${sizes.get(a) ?? '?'})`)
           .join('\n')}`,
       ).toEqual([]);
       expect(
@@ -110,3 +126,78 @@ for (const vp of AUDIT_VIEWPORTS) {
     });
   });
 }
+
+// The PWA overlays appear on their own schedule, so the walk above leaves them
+// out; here each one is opened on purpose and every control in it must already
+// meet the floor (they have no allowlist).
+async function smallIn(page: Page, testId: string): Promise<string[]> {
+  const all = await page.evaluate(measureTargets, testId);
+  expect(all.length, `${testId} has controls to measure`).toBeGreaterThan(0);
+  return all.filter((t) => isOffender(t)).map((t) => `${t.role} | ${t.name} (${Math.round(t.width)}x${Math.round(t.height)})`);
+}
+
+test.describe('touch targets in the PWA overlays', () => {
+  test.use({ reducedMotion: 'reduce' });
+
+  test(`install guide and update bar controls are at least ${TARGET_MIN} at 1180x820`, async ({ page }) => {
+    await page.setViewportSize({ width: 1180, height: 820 });
+    await onboardChild(page, { name: 'Mina' });
+    await page.waitForFunction(() => !!navigator.serviceWorker.controller);
+    await page.goto('/');
+    await expect(page.getByText('Hi, Mina!')).toBeVisible();
+    await page.reload(); // third cached open: the install guide shows
+    await expect(page.getByText('Hi, Mina!')).toBeVisible();
+    const guide = page.getByTestId('install-guide');
+    await expect(guide).toBeVisible();
+    await expect(guide.getByRole('button').first()).toBeVisible();
+    expect(await smallIn(page, 'install-guide'), 'install guide').toEqual([]);
+
+    // The update bar is the only banner with a control (the toasts only inform).
+    await page.evaluate(() => window.dispatchEvent(new Event('hr:update-ready')));
+    await expect(page.getByRole('button', { name: 'Refresh' })).toBeVisible();
+    expect(await smallIn(page, 'pwa-banners'), 'banners').toEqual([]);
+  });
+
+  test(`portrait guard controls are at least ${TARGET_MIN} on a phone held sideways 844x390`, async ({ page }) => {
+    await page.setViewportSize({ width: 844, height: 390 });
+    await page.goto('/');
+    await expect(page.getByRole('button', { name: 'Keep sideways' })).toBeVisible();
+    expect(await smallIn(page, 'portrait-guard'), 'portrait guard').toEqual([]);
+  });
+});
+
+// measureTargets itself, on a page whose layout is known exactly: which elements
+// count, which are skipped, how each is named and that sizes are the laid-out box.
+test('measureTargets: roles, names, skipped subtrees and boxes on a fixture page', async ({ page }) => {
+  await page.setViewportSize({ width: 800, height: 600 });
+  await page.setContent(`
+    <style>* { margin: 0; padding: 0; border: 0; } .b { display: block; width: 100px; height: 40px; }</style>
+    <button class="b">  Native
+      button </button>
+    <div role="button" aria-label="Labelled div" class="b" style="width: 70px; height: 70px">ignored text</div>
+    <span id="lbl">From labelledby</span>
+    <a href="#x" aria-labelledby="lbl" class="b" style="width: 64px; height: 64px"></a>
+    <a class="b">No href, not a link</a>
+    <div role="switch" aria-label="Sound" class="b" style="width: 120px; height: 30px"></div>
+    <div role="radio" aria-label="Spanish" class="b"></div>
+    <input type="checkbox" aria-label="Agree" style="display: block; width: 20px; height: 20px" />
+    <div role="presentation"><button class="b" role="none">Role none</button></div>
+    <div aria-hidden="true"><button class="b">Hidden from AT</button></div>
+    <div style="display: none"><button class="b">Inactive screen</button></div>
+    <div data-testid="pwa-banners"><button class="b">Refresh</button></div>
+    <button class="b" style="width: 0; height: 0; overflow: hidden"></button>
+    <button class="b"></button>
+  `);
+  const all = await page.evaluate(measureTargets, null);
+  expect(all.map((t) => [t.role, t.name, Math.round(t.width), Math.round(t.height)])).toEqual([
+    ['button', 'Native button', 100, 40],
+    ['button', 'Labelled div', 70, 70],
+    ['link', 'From labelledby', 64, 64],
+    ['switch', 'Sound', 120, 30],
+    ['radio', 'Spanish', 100, 40],
+    ['checkbox', 'Agree', 20, 20],
+    ['button', '(no name)', 100, 40],
+  ]);
+  expect((await page.evaluate(measureTargets, 'pwa-banners')).map((t) => t.name)).toEqual(['Refresh']);
+  expect(await page.evaluate(measureTargets, 'no-such-id')).toEqual([]);
+});

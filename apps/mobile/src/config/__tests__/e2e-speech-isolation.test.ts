@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
@@ -31,5 +31,12 @@ describe('web e2e specs never reach the real speech engine', () => {
     expect(source).toContain('auto: true');
     expect(source).toContain('addInitScript');
     expect(source).toContain('speechSynthesis');
+  });
+
+  // `./fixtures` resolves to fixtures.ts only while the data folder next to it
+  // (fixtures/, e.g. the touch-target allowlist) has no index module; one would
+  // silently take over every spec's `test` import and drop the silent engine.
+  it.each(['index.ts', 'index.tsx', 'index.js', 'index.mjs', 'index.cjs'])('the fixtures/ data folder has no %s', (file) => {
+    expect(existsSync(join(E2E_DIR, 'fixtures', file))).toBe(false);
   });
 });
