@@ -288,9 +288,19 @@ describe('PlacementTemplateSchema', () => {
     expect(messages(sentHear())).toEqual([]);
   });
 
-  it('keeps unreviewed sentences out of ready (the reviewedBy ledger does not exist yet)', () => {
-    rejects(reply, (t) => (t.status = 'ready'), 'a sentence cannot be ready');
-    rejects(sentHear, (t) => (t.status = 'ready'), 'a sentence cannot be ready');
+  it('keeps a sentence out of ready until it carries its language review record', () => {
+    rejects(reply, (t) => (t.status = 'ready'), 'needs its language review record');
+    rejects(sentHear, (t) => (t.status = 'ready'), 'needs its language review record');
+    rejects(sentHear, (t) => Object.assign(t, { status: 'ready', reviewedBy: 'ab' }), 'needs its language review record');
+    rejects(sentHear, (t) => Object.assign(t, { status: 'ready', reviewedAt: '2026-10-11' }), 'needs its language review record');
+    expect(messages({ ...sentHear(), status: 'ready', reviewedBy: 'ab', reviewedAt: '2026-10-11' })).toEqual([]);
+    expect(messages({ ...reply(), status: 'ready', reviewedBy: 'ab', reviewedAt: '2026-10-11' })).toEqual([]);
+  });
+
+  it('checks the shape of the review record', () => {
+    expect(PlacementTemplateSchema.safeParse({ ...sentHear(), reviewedAt: '11/10/2026' }).success).toBe(false);
+    expect(PlacementTemplateSchema.safeParse({ ...sentHear(), reviewedBy: ' ' }).success).toBe(false);
+    expect(PlacementTemplateSchema.safeParse({ ...sentHear(), reviewedBy: 'x'.repeat(17) }).success).toBe(false);
   });
 
   it('still applies the shared question rules', () => {

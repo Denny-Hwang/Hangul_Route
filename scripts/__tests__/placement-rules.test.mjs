@@ -116,8 +116,20 @@ describe("placement-rules: strand files", () => {
     assert.deepEqual(rules(ok), []);
   });
 
-  test("a sentence is never ready until the reviewedBy ledger exists", () => {
-    assert.deepEqual(rules(edit("content/placement/sentences.json", (f) => (f.templates[0].status = "ready"))), ["placement-sentence-ready"]);
+  test("a sentence is ready only with its language review record", () => {
+    const sentence = (fn) => rules(edit("content/placement/sentences.json", (f) => fn(f.templates[0])));
+    assert.deepEqual(sentence((t) => (t.status = "ready")), ["placement-sentence-ready"]);
+    assert.deepEqual(sentence((t) => Object.assign(t, { status: "ready", reviewedBy: "ab" })), ["placement-sentence-ready"]);
+    assert.deepEqual(sentence((t) => Object.assign(t, { status: "ready", reviewedAt: "2026-10-11" })), ["placement-sentence-ready"]);
+    assert.deepEqual(sentence((t) => Object.assign(t, { status: "ready", reviewedBy: "ab", reviewedAt: "2026-10-11" })), []);
+  });
+
+  test("the review record has a short reviewer label and a YYYY-MM-DD date", () => {
+    assert.deepEqual(rules(tpl((t) => (t.reviewedBy = " "))), ["placement-review"]);
+    assert.deepEqual(rules(tpl((t) => (t.reviewedBy = "x".repeat(17)))), ["placement-review"]);
+    assert.deepEqual(rules(tpl((t) => (t.reviewedBy = 3))), ["placement-review"]);
+    assert.deepEqual(rules(tpl((t) => (t.reviewedAt = "11/10/2026"))), ["placement-review"]);
+    assert.deepEqual(rules(tpl((t) => Object.assign(t, { reviewedBy: "ab", reviewedAt: "2026-10-11" }))), []);
   });
 
   test("status must be draft or ready", () => {

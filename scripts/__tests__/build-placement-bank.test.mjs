@@ -163,6 +163,13 @@ describe("build-placement-bank.mjs: shaping", () => {
     assert.deepEqual(Object.keys(shapeTemplate(warmup(), "f").question.options[0]), ["id", "en", "pictureRef", "isCorrect"]);
   });
 
+  test("the language review record of a sentence is carried into the bank", () => {
+    const out = shapeTemplate({ ...reply(), status: "ready", reviewedBy: "ab", reviewedAt: "2026-10-11" }, "f");
+    assert.deepEqual(Object.keys(out), ["id", "strand", "gate", "form", "question", "glossEn", "status", "reviewedBy", "reviewedAt", "incompatibleWith"]);
+    assert.equal(out.reviewedBy, "ab");
+    assert.equal(out.reviewedAt, "2026-10-11");
+  });
+
   test("a picture option and a sound chip option are shaped without Korean", () => {
     const pic = shapeTemplate(warmup(), "f").question.options[0];
     assert.deepEqual(pic, { id: "rice", en: "Rice", pictureRef: "card:rice", isCorrect: true });
@@ -236,6 +243,8 @@ describe("build-placement-bank.mjs: input errors", () => {
     fails(INDEX(), withTemplate((t) => (t.question.requires = null)), /requires must be an object/);
     fails(INDEX(), withTemplate((t) => (t.question.leaks = 1)), /leaks must be a boolean/);
     fails(INDEX(), withTemplate((t) => (t.incompatibleWith = "x")), /incompatibleWith must be an array of strings/);
+    fails(INDEX(), withTemplate((t) => (t.reviewedBy = 1)), /reviewedBy must be a string/);
+    fails(INDEX(), withTemplate((t) => (t.reviewedAt = 1)), /reviewedAt must be a string/);
   });
 
   test("Korean prompt and spoken objects need ko, romanization and a gloss", () => {

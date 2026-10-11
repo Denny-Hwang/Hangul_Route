@@ -96,10 +96,10 @@
         "format": "hear-pick-written",
         "spoken": {"ko":"가","romanization":"ga","en":"the sound ga"},
         "options": [
-          {"id":"giyeok","ko":"ㄱ","romanization":"g","en":"letter giyeok","isCorrect":true},
+          {"id":"giyeok","ko":"ㄱ","romanization":"g/k","en":"letter giyeok","isCorrect":true},
           {"id":"kieuk","ko":"ㅋ","romanization":"k","en":"letter kieuk","isCorrect":false},
           {"id":"nieun","ko":"ㄴ","romanization":"n","en":"letter nieun","isCorrect":false},
-          {"id":"digeut","ko":"ㄷ","romanization":"d","en":"letter digeut","isCorrect":false}
+          {"id":"digeut","ko":"ㄷ","romanization":"d/t","en":"letter digeut","isCorrect":false}
         ],
         "tags": ["sym:ㄱ","group:basic"],
         "requires": {"audio":true,"picture":null},
@@ -115,7 +115,7 @@
       "glossEn": "See the letter giyeok: pick \"ga\"",
       "question": {
         "format": "see-pick-sound",
-        "prompt": {"ko":"ㄱ","romanization":"ga","en":"letter giyeok"},
+        "prompt": {"ko":"ㄱ","romanization":"g/k","en":"letter giyeok"},
         "options": [
           {"id":"ga","sound":"ga","isCorrect":true},
           {"id":"ka","sound":"ka","isCorrect":false},
@@ -139,9 +139,9 @@
         "spoken": {"ko":"나","romanization":"na","en":"the sound na"},
         "options": [
           {"id":"nieun","ko":"ㄴ","romanization":"n","en":"letter nieun","isCorrect":true},
-          {"id":"giyeok","ko":"ㄱ","romanization":"g","en":"letter giyeok","isCorrect":false},
-          {"id":"digeut","ko":"ㄷ","romanization":"d","en":"letter digeut","isCorrect":false},
-          {"id":"rieul","ko":"ㄹ","romanization":"r","en":"letter rieul","isCorrect":false}
+          {"id":"giyeok","ko":"ㄱ","romanization":"g/k","en":"letter giyeok","isCorrect":false},
+          {"id":"digeut","ko":"ㄷ","romanization":"d/t","en":"letter digeut","isCorrect":false},
+          {"id":"rieul","ko":"ㄹ","romanization":"r/l","en":"letter rieul","isCorrect":false}
         ],
         "tags": ["sym:ㄴ","group:basic"],
         "requires": {"audio":true,"picture":null},
@@ -157,7 +157,7 @@
       "glossEn": "See the letter nieun: pick \"na\"",
       "question": {
         "format": "see-pick-sound",
-        "prompt": {"ko":"ㄴ","romanization":"na","en":"letter nieun"},
+        "prompt": {"ko":"ㄴ","romanization":"n","en":"letter nieun"},
         "options": [
           {"id":"na","sound":"na","isCorrect":true},
           {"id":"ga","sound":"ga","isCorrect":false},
@@ -265,8 +265,8 @@
         "spoken": {"ko":"마","romanization":"ma","en":"the sound ma"},
         "options": [
           {"id":"mieum","ko":"ㅁ","romanization":"m","en":"letter mieum","isCorrect":true},
-          {"id":"bieup","ko":"ㅂ","romanization":"b","en":"letter bieup","isCorrect":false},
-          {"id":"ieung","ko":"ㅇ","romanization":"ng","en":"letter ieung","isCorrect":false},
+          {"id":"bieup","ko":"ㅂ","romanization":"b/p","en":"letter bieup","isCorrect":false},
+          {"id":"ieung","ko":"ㅇ","romanization":"silent/ng","en":"letter ieung","isCorrect":false},
           {"id":"nieun","ko":"ㄴ","romanization":"n","en":"letter nieun","isCorrect":false}
         ],
         "tags": ["sym:ㅁ","group:basic"],
@@ -283,7 +283,7 @@
       "glossEn": "See the letter mieum: pick \"ma\"",
       "question": {
         "format": "see-pick-sound",
-        "prompt": {"ko":"ㅁ","romanization":"ma","en":"letter mieum"},
+        "prompt": {"ko":"ㅁ","romanization":"m","en":"letter mieum"},
         "options": [
           {"id":"ma","sound":"ma","isCorrect":true},
           {"id":"ba","sound":"ba","isCorrect":false},
@@ -390,9 +390,9 @@
         "format": "hear-pick-written",
         "spoken": {"ko":"다","romanization":"da","en":"the sound da"},
         "options": [
-          {"id":"digeut","ko":"ㄷ","romanization":"d","en":"letter digeut","isCorrect":true},
+          {"id":"digeut","ko":"ㄷ","romanization":"d/t","en":"letter digeut","isCorrect":true},
           {"id":"tieut","ko":"ㅌ","romanization":"t","en":"letter tieut","isCorrect":false},
-          {"id":"rieul","ko":"ㄹ","romanization":"r","en":"letter rieul","isCorrect":false},
+          {"id":"rieul","ko":"ㄹ","romanization":"r/l","en":"letter rieul","isCorrect":false},
           {"id":"nieun","ko":"ㄴ","romanization":"n","en":"letter nieun","isCorrect":false}
         ],
         "tags": ["sym:ㄷ","group:basic"],
@@ -409,7 +409,7 @@
       "glossEn": "See the letter digeut: pick \"da\"",
       "question": {
         "format": "see-pick-sound",
-        "prompt": {"ko":"ㄷ","romanization":"da","en":"letter digeut"},
+        "prompt": {"ko":"ㄷ","romanization":"d/t","en":"letter digeut"},
         "options": [
           {"id":"da","sound":"da","isCorrect":true},
           {"id":"ta","sound":"ta","isCorrect":false},
@@ -432,8 +432,8 @@
         "format": "hear-pick-written",
         "spoken": {"ko":"라","romanization":"ra","en":"the sound ra"},
         "options": [
-          {"id":"rieul","ko":"ㄹ","romanization":"r","en":"letter rieul","isCorrect":true},
-          {"id":"digeut","ko":"ㄷ","romanization":"d","en":"letter digeut","isCorrect":false},
+          {"id":"rieul","ko":"ㄹ","romanization":"r/l","en":"letter rieul","isCorrect":true},
+          {"id":"digeut","ko":"ㄷ","romanization":"d/t","en":"letter digeut","isCorrect":false},
           {"id":"nieun","ko":"ㄴ","romanization":"n","en":"letter nieun","isCorrect":false},
           {"id":"mieum","ko":"ㅁ","romanization":"m","en":"letter mieum","isCorrect":false}
         ],
@@ -451,7 +451,7 @@
       "glossEn": "See the letter rieul: pick \"ra\"",
       "question": {
         "format": "see-pick-sound",
-        "prompt": {"ko":"ㄹ","romanization":"ra","en":"letter rieul"},
+        "prompt": {"ko":"ㄹ","romanization":"r/l","en":"letter rieul"},
         "options": [
           {"id":"ra","sound":"ra","isCorrect":true},
           {"id":"da","sound":"da","isCorrect":false},
@@ -477,7 +477,7 @@
           {"id":"jieut","ko":"ㅈ","romanization":"j","en":"letter jieut","isCorrect":true},
           {"id":"chieut","ko":"ㅊ","romanization":"ch","en":"letter chieut","isCorrect":false},
           {"id":"siot","ko":"ㅅ","romanization":"s","en":"letter siot","isCorrect":false},
-          {"id":"giyeok","ko":"ㄱ","romanization":"g","en":"letter giyeok","isCorrect":false}
+          {"id":"giyeok","ko":"ㄱ","romanization":"g/k","en":"letter giyeok","isCorrect":false}
         ],
         "tags": ["sym:ㅈ","group:rest"],
         "requires": {"audio":true,"picture":null},
@@ -493,7 +493,7 @@
       "glossEn": "See the letter jieut: pick \"ja\"",
       "question": {
         "format": "see-pick-sound",
-        "prompt": {"ko":"ㅈ","romanization":"ja","en":"letter jieut"},
+        "prompt": {"ko":"ㅈ","romanization":"j","en":"letter jieut"},
         "options": [
           {"id":"ja","sound":"ja","isCorrect":true},
           {"id":"cha","sound":"cha","isCorrect":false},
@@ -535,7 +535,7 @@
       "glossEn": "See the letter chieut: pick \"cha\"",
       "question": {
         "format": "see-pick-sound",
-        "prompt": {"ko":"ㅊ","romanization":"cha","en":"letter chieut"},
+        "prompt": {"ko":"ㅊ","romanization":"ch","en":"letter chieut"},
         "options": [
           {"id":"cha","sound":"cha","isCorrect":true},
           {"id":"ja","sound":"ja","isCorrect":false},
@@ -558,7 +558,7 @@
         "format": "hear-pick-written",
         "spoken": {"ko":"바","romanization":"ba","en":"the sound ba"},
         "options": [
-          {"id":"bieup","ko":"ㅂ","romanization":"b","en":"letter bieup","isCorrect":true},
+          {"id":"bieup","ko":"ㅂ","romanization":"b/p","en":"letter bieup","isCorrect":true},
           {"id":"pieup","ko":"ㅍ","romanization":"p","en":"letter pieup","isCorrect":false},
           {"id":"mieum","ko":"ㅁ","romanization":"m","en":"letter mieum","isCorrect":false},
           {"id":"siot","ko":"ㅅ","romanization":"s","en":"letter siot","isCorrect":false}
@@ -577,7 +577,7 @@
       "glossEn": "See the letter bieup: pick \"ba\"",
       "question": {
         "format": "see-pick-sound",
-        "prompt": {"ko":"ㅂ","romanization":"ba","en":"letter bieup"},
+        "prompt": {"ko":"ㅂ","romanization":"b/p","en":"letter bieup"},
         "options": [
           {"id":"ba","sound":"ba","isCorrect":true},
           {"id":"pa","sound":"pa","isCorrect":false},
@@ -603,7 +603,7 @@
           {"id":"siot","ko":"ㅅ","romanization":"s","en":"letter siot","isCorrect":true},
           {"id":"jieut","ko":"ㅈ","romanization":"j","en":"letter jieut","isCorrect":false},
           {"id":"chieut","ko":"ㅊ","romanization":"ch","en":"letter chieut","isCorrect":false},
-          {"id":"ieung","ko":"ㅇ","romanization":"ng","en":"letter ieung","isCorrect":false}
+          {"id":"ieung","ko":"ㅇ","romanization":"silent/ng","en":"letter ieung","isCorrect":false}
         ],
         "tags": ["sym:ㅅ","group:rest"],
         "requires": {"audio":true,"picture":null},
@@ -619,7 +619,7 @@
       "glossEn": "See the letter siot: pick \"sa\"",
       "question": {
         "format": "see-pick-sound",
-        "prompt": {"ko":"ㅅ","romanization":"sa","en":"letter siot"},
+        "prompt": {"ko":"ㅅ","romanization":"s","en":"letter siot"},
         "options": [
           {"id":"sa","sound":"sa","isCorrect":true},
           {"id":"ja","sound":"ja","isCorrect":false},
@@ -643,7 +643,7 @@
         "spoken": {"ko":"카","romanization":"ka","en":"the sound ka"},
         "options": [
           {"id":"kieuk","ko":"ㅋ","romanization":"k","en":"letter kieuk","isCorrect":true},
-          {"id":"giyeok","ko":"ㄱ","romanization":"g","en":"letter giyeok","isCorrect":false},
+          {"id":"giyeok","ko":"ㄱ","romanization":"g/k","en":"letter giyeok","isCorrect":false},
           {"id":"tieut","ko":"ㅌ","romanization":"t","en":"letter tieut","isCorrect":false},
           {"id":"pieup","ko":"ㅍ","romanization":"p","en":"letter pieup","isCorrect":false}
         ],
@@ -661,7 +661,7 @@
       "glossEn": "See the letter kieuk: pick \"ka\"",
       "question": {
         "format": "see-pick-sound",
-        "prompt": {"ko":"ㅋ","romanization":"ka","en":"letter kieuk"},
+        "prompt": {"ko":"ㅋ","romanization":"k","en":"letter kieuk"},
         "options": [
           {"id":"ka","sound":"ka","isCorrect":true},
           {"id":"ga","sound":"ga","isCorrect":false},
@@ -685,7 +685,7 @@
         "spoken": {"ko":"타","romanization":"ta","en":"the sound ta"},
         "options": [
           {"id":"tieut","ko":"ㅌ","romanization":"t","en":"letter tieut","isCorrect":true},
-          {"id":"digeut","ko":"ㄷ","romanization":"d","en":"letter digeut","isCorrect":false},
+          {"id":"digeut","ko":"ㄷ","romanization":"d/t","en":"letter digeut","isCorrect":false},
           {"id":"kieuk","ko":"ㅋ","romanization":"k","en":"letter kieuk","isCorrect":false},
           {"id":"pieup","ko":"ㅍ","romanization":"p","en":"letter pieup","isCorrect":false}
         ],
@@ -703,7 +703,7 @@
       "glossEn": "See the letter tieut: pick \"ta\"",
       "question": {
         "format": "see-pick-sound",
-        "prompt": {"ko":"ㅌ","romanization":"ta","en":"letter tieut"},
+        "prompt": {"ko":"ㅌ","romanization":"t","en":"letter tieut"},
         "options": [
           {"id":"ta","sound":"ta","isCorrect":true},
           {"id":"da","sound":"da","isCorrect":false},
@@ -727,7 +727,7 @@
         "spoken": {"ko":"파","romanization":"pa","en":"the sound pa"},
         "options": [
           {"id":"pieup","ko":"ㅍ","romanization":"p","en":"letter pieup","isCorrect":true},
-          {"id":"bieup","ko":"ㅂ","romanization":"b","en":"letter bieup","isCorrect":false},
+          {"id":"bieup","ko":"ㅂ","romanization":"b/p","en":"letter bieup","isCorrect":false},
           {"id":"kieuk","ko":"ㅋ","romanization":"k","en":"letter kieuk","isCorrect":false},
           {"id":"tieut","ko":"ㅌ","romanization":"t","en":"letter tieut","isCorrect":false}
         ],
@@ -745,7 +745,7 @@
       "glossEn": "See the letter pieup: pick \"pa\"",
       "question": {
         "format": "see-pick-sound",
-        "prompt": {"ko":"ㅍ","romanization":"pa","en":"letter pieup"},
+        "prompt": {"ko":"ㅍ","romanization":"p","en":"letter pieup"},
         "options": [
           {"id":"pa","sound":"pa","isCorrect":true},
           {"id":"ba","sound":"ba","isCorrect":false},
@@ -769,7 +769,7 @@
         "spoken": {"ko":"하","romanization":"ha","en":"the sound ha"},
         "options": [
           {"id":"hieut","ko":"ㅎ","romanization":"h","en":"letter hieut","isCorrect":true},
-          {"id":"ieung","ko":"ㅇ","romanization":"ng","en":"letter ieung","isCorrect":false},
+          {"id":"ieung","ko":"ㅇ","romanization":"silent/ng","en":"letter ieung","isCorrect":false},
           {"id":"chieut","ko":"ㅊ","romanization":"ch","en":"letter chieut","isCorrect":false},
           {"id":"siot","ko":"ㅅ","romanization":"s","en":"letter siot","isCorrect":false}
         ],
@@ -787,7 +787,7 @@
       "glossEn": "See the letter hieut: pick \"ha\"",
       "question": {
         "format": "see-pick-sound",
-        "prompt": {"ko":"ㅎ","romanization":"ha","en":"letter hieut"},
+        "prompt": {"ko":"ㅎ","romanization":"h","en":"letter hieut"},
         "options": [
           {"id":"ha","sound":"ha","isCorrect":true},
           {"id":"a","sound":"a","isCorrect":false},

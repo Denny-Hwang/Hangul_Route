@@ -12,7 +12,9 @@ import {
   PlacementTemplateSchema,
   RUNG_SYMBOLS,
   RUNG_TABLE,
+  checkJamoRomanization,
   checkRomanization,
+  composeSyllable,
   decomposeSyllable,
   romanize,
   ROMANIZATION_EXCEPTIONS,
@@ -53,9 +55,8 @@ const byGate = (g: PlacementGate): PlacementTemplate[] => all.filter((t) => t.ga
 const tagOf = (t: PlacementTemplate, prefix: string): string => (t.question.tags.find((x) => x.startsWith(prefix)) ?? '').slice(prefix.length);
 const correctOf = (t: PlacementTemplate) => t.question.options.find((o) => o.isCorrect)!;
 
-/** The Stage 2 cards have no art in HeritageCardArt yet (spec 3.4): their templates stay draft. */
+/** The Stage 2 cards have no art in HeritageCardArt (spec 3.4), so no template may show them. */
 const NO_ART = ['sagwa', 'uyu', 'ppang', 'dosirak', 'haneul', 'kkot', 'namu', 'byeol'];
-const noArt = (t: PlacementTemplate): boolean => t.question.options.some((o) => NO_ART.some((s) => o.pictureRef === `card:${s}`));
 
 describe('content/placement: the bank as shipped', () => {
   it('has the five strand files, the index and a warm-up that is not a bank template', () => {
@@ -68,13 +69,13 @@ describe('content/placement: the bank as shipped', () => {
     expect(warmup.question.options.find((o) => o.isCorrect)?.pictureRef).toBe('card:rice');
   });
 
-  it('holds the 265 templates of appendix A, by strand', () => {
+  it('holds the 260 templates of appendix A, by strand', () => {
     expect(byStrand('hangul-recognition')).toHaveLength(40);
     expect(byStrand('sound-letter')).toHaveLength(46);
     expect(byStrand('syllable-reading')).toHaveLength(72);
-    expect(byStrand('vocabulary')).toHaveLength(53);
+    expect(byStrand('vocabulary')).toHaveLength(48);
     expect(byStrand('sentences')).toHaveLength(54);
-    expect(all).toHaveLength(265);
+    expect(all).toHaveLength(260);
   });
 
   it('counts the gates and forms the way appendix A does', () => {
@@ -86,36 +87,39 @@ describe('content/placement: the bank as shipped', () => {
     expect(count('sound-rest', 'see-pick-sound')).toBe(12);
     expect([count('syl-cv', 'hear-pick-written'), count('syl-cv', 'see-pick-sound'), count('syl-cv', 'build-syllable')]).toEqual([18, 12, 6]);
     expect([count('syl-cvc', 'hear-pick-written'), count('syl-cvc', 'see-pick-sound'), count('syl-cvc', 'build-syllable')]).toEqual([18, 12, 6]);
-    expect(byGate('vocab').filter((t) => t.form === 'oral')).toHaveLength(30);
-    expect(byGate('vocab').filter((t) => t.form === 'read')).toHaveLength(23);
+    expect(byGate('vocab').filter((t) => t.form === 'oral')).toHaveLength(29);
+    expect(byGate('vocab').filter((t) => t.form === 'read')).toHaveLength(19);
     expect(count('sentence', 'reply-pick')).toBe(10);
     expect(byGate('sentence').filter((t) => t.question.format !== 'reply-pick' && t.form === 'oral')).toHaveLength(14 + 8);
     expect(byGate('sentence').filter((t) => t.question.format === 'read-pick-picture')).toHaveLength(14 + 8);
   });
 
-  it('is ready where review is not pending: at least 40 ready templates per strand except sentences, which wait for a native reviewer', () => {
-    for (const strand of ['hangul-recognition', 'sound-letter', 'syllable-reading', 'vocabulary'] as const) {
+  it('is production ready: every template is ready, at least 40 per strand', () => {
+    expect(all.filter((t) => t.status !== 'ready').map((t) => t.id)).toEqual([]);
+    for (const strand of ['hangul-recognition', 'sound-letter', 'syllable-reading', 'vocabulary', 'sentences'] as const) {
       expect(byStrand(strand).filter((t) => t.status === 'ready').length, strand).toBeGreaterThanOrEqual(40);
     }
-    expect(byStrand('sentences').filter((t) => t.status === 'ready')).toEqual([]);
-    expect(ready).toHaveLength(198);
+    expect(ready).toHaveLength(260);
   });
 
-  it('keeps the 13 vocabulary templates whose art does not exist as draft, and every other vocabulary template ready', () => {
-    const vocab = byStrand('vocabulary');
-    const art = vocab.filter(noArt);
-    expect(art).toHaveLength(13);
-    expect(art.every((t) => t.status === 'draft')).toBe(true);
-    expect(vocab.filter((t) => !noArt(t)).every((t) => t.status === 'ready')).toBe(true);
-    expect(byStrand('sentences').filter(noArt)).toHaveLength(4);
+  it('every sentence carries the language review record (section 9)', () => {
+    for (const t of byStrand('sentences')) {
+      expect(t.reviewedBy, t.id).toBe('ai-3-lens');
+      expect(t.reviewedAt, t.id).toBe('2026-10-11');
+    }
   });
 
-  it('every ready (gate, form) has three full draws, and every gate that is asked has ready templates', () => {
+  it('shows no Stage 2 card, whose art does not exist', () => {
+    for (const t of all) {
+      for (const o of t.question.options) expect(NO_ART.some((s) => o.pictureRef === `card:${s}`), `${t.id} ${o.pictureRef}`).toBe(false);
+    }
+  });
+
+  it('every (gate, form) has three full draws of ready templates', () => {
     for (const spec of RUNG_TABLE) {
       for (const form of spec.forms) {
         const n = ready.filter((t) => t.gate === spec.gate && t.form === form).length;
-        if (spec.gate === 'sentence') expect(n, `${spec.gate} ${form}`).toBe(0);
-        else expect(n, `${spec.gate} ${form}`).toBeGreaterThanOrEqual(9);
+        expect(n, `${spec.gate} ${form}`).toBeGreaterThanOrEqual(9);
       }
     }
   });
@@ -168,6 +172,30 @@ describe('content/placement: romanization and the language policy', () => {
       }
     }
     expect(checked).toBeGreaterThan(400);
+  });
+
+  it('every single jamo carries a sound value of the jamo table (checkJamoRomanization)', () => {
+    let checked = 0;
+    for (const t of all) {
+      for (const { ko, romanization } of koTexts(t)) {
+        if (!/^[ㄱ-ㅎㅏ-ㅣ]$/.test(ko)) continue;
+        checked += 1;
+        expect(romanization, `${t.id} ${ko}`).toBeDefined();
+        expect(checkJamoRomanization(ko, romanization as string), `${t.id} ${ko}`).toEqual([]);
+      }
+    }
+    expect(checked).toBe(275);
+  });
+
+  it('labels one letter the same way everywhere in the bank', () => {
+    const seen = new Map<string, Set<string>>();
+    for (const t of all) {
+      for (const { ko, romanization } of koTexts(t)) {
+        if (!/^[ㄱ-ㅎㅏ-ㅣ]$/.test(ko)) continue;
+        seen.set(ko, (seen.get(ko) ?? new Set()).add(romanization as string));
+      }
+    }
+    for (const [ko, values] of seen) expect([...values], ko).toHaveLength(1);
   });
 
   it('the spoken form of a template has the converter romanization as its prompt romanization', () => {
@@ -263,10 +291,15 @@ describe('content/placement: sound-letter (A.2)', () => {
     }
   });
 
-  it('see-pick-sound chips are the carrier sounds of the symbol and its confusables', () => {
+  it('see-pick-sound chips are the carrier sounds of the symbol and its confusables; the sound guide is the letter value', () => {
     for (const t of sound.filter((x) => x.question.format === 'see-pick-sound')) {
+      const s = symTags(t)[0] as string;
       expect(t.question.options.every((o) => o.ko === undefined && /^[a-z]{1,8}$/.test(o.sound as string))).toBe(true);
-      expect(correctOf(t).sound).toBe(t.question.promptRomanization);
+      const carrier = VOWELS.includes(s)
+        ? composeSyllable({ initial: 'ㅇ', medial: MEDIALS.indexOf(s), final: '' })
+        : composeSyllable({ initial: s, medial: MEDIALS.indexOf('ㅏ'), final: '' });
+      expect(correctOf(t).sound, t.id).toBe(romanize(carrier as string).text);
+      expect(checkJamoRomanization(s, t.question.promptRomanization as string), t.id).toEqual([]);
     }
   });
 });
@@ -324,13 +357,28 @@ describe('content/placement: syllable-reading (A.3)', () => {
 describe('content/placement: vocabulary and sentences (A.4, A.5)', () => {
   /** Pictures that could be mistaken for each other are never offered together (spec A.4 `avoidWith`). */
   const AVOID_ROWS: string[][] = [
-    ['kimchi', 'kimbap', 'rice', 'tteokguk', 'songpyeon', 'chopsticks', 'family-table', 'sagwa', 'uyu', 'ppang', 'dosirak'],
+    ['kimchi', 'kimbap', 'rice', 'tteokguk', 'songpyeon', 'chopsticks', 'family-table'],
     ['seollal', 'chuseok', 'sebae', 'lantern', 'hanbok'],
     ['yutnori', 'jegi', 'kite', 'top'],
     ['book', 'hanji', 'brush', 'ink', 'origami', 'hangul-day'],
     ['tiger', 'magpie'],
-    ['mountain', 'sea', 'moon', 'mugunghwa', 'haneul', 'kkot', 'namu', 'byeol'],
+    ['mountain', 'sea', 'moon', 'mugunghwa'],
     ['pottery', 'gayageum'],
+  ];
+  /**
+   * Pictures that share what they show, or that belong to each other, are never offered
+   * together, so each item has one clearly correct picture (production review 2026-10-11):
+   * a full moon is on the moon and the Chuseok card; the lantern is a round glowing disc
+   * like the moon; tteokguk, the folk games and the magpie (the Seollal song) belong to
+   * Seollal; songpyeon and rice stalks to Chuseok; the kite carries a tiger face; the paper
+   * crane looks like a bird and like the crane on the celadon vase; the yut sticks look like
+   * chopsticks; the lantern is hanji paper; 연 (kite) is the first syllable of 연등.
+   */
+  const CONFLICTS: Array<[string, string]> = [
+    ['moon', 'chuseok'], ['moon', 'lantern'], ['songpyeon', 'chuseok'], ['rice', 'chuseok'],
+    ['tteokguk', 'seollal'], ['seollal', 'top'], ['seollal', 'yutnori'], ['seollal', 'kite'], ['seollal', 'jegi'],
+    ['seollal', 'magpie'], ['tiger', 'kite'], ['magpie', 'origami'], ['pottery', 'origami'],
+    ['chopsticks', 'yutnori'], ['hanji', 'lantern'], ['kite', 'lantern'],
   ];
   const picture = all.filter((t) => t.question.requires.picture === 'card');
 
@@ -345,11 +393,16 @@ describe('content/placement: vocabulary and sentences (A.4, A.5)', () => {
     }
   });
 
-  it('draws distractor pictures from cards that have art', () => {
-    for (const t of picture) {
-      for (const o of t.question.options.filter((x) => !x.isCorrect)) {
-        expect(NO_ART.some((s) => o.pictureRef === `card:${s}`), `${t.id} ${o.pictureRef}`).toBe(false);
-      }
+  it('never offers two pictures that share what they show or belong to each other', () => {
+    for (const t of [...picture, warmup]) {
+      const slugs = t.question.options.map((o) => (o.pictureRef as string).slice('card:'.length));
+      for (const [a, b] of CONFLICTS) expect(slugs.includes(a) && slugs.includes(b), `${t.id} ${a} + ${b}`).toBe(false);
+    }
+  });
+
+  it('a read item never shows the Hangul Day picture, whose art carries written Hangul', () => {
+    for (const t of picture.filter((x) => x.form === 'read')) {
+      expect(t.question.options.some((o) => o.pictureRef === 'card:hangul-day'), t.id).toBe(false);
     }
   });
 
@@ -372,14 +425,13 @@ describe('content/placement: vocabulary and sentences (A.4, A.5)', () => {
     }
   });
 
-  it('sentences are all draft, use the two patterns and the ten replies, and name the picture noun', () => {
+  it('sentences use the two patterns and the ten replies, and name the picture noun', () => {
     const sentences = byGate('sentence');
-    expect(sentences.every((t) => t.status === 'draft')).toBe(true);
     expect(sentences.filter((t) => tagOf(t, 'pattern:') === 'n-ieyo')).toHaveLength(28);
     expect(sentences.filter((t) => tagOf(t, 'pattern:') === 'n-eul-v')).toHaveLength(16);
     expect(sentences.filter((t) => tagOf(t, 'pattern:') === 'reply')).toHaveLength(10);
     for (const t of sentences.filter((x) => x.question.format !== 'reply-pick')) {
-      expect(t.question.promptKo, t.id).toMatch(/(예요|이에요|먹어요|마셔요|읽어요)$/);
+      expect(t.question.promptKo, t.id).toMatch(/(예요|이에요|먹어요|읽어요|입어요|날려요)$/);
       expect(tagOf(t, 'word:'), t.id).not.toBe('');
     }
   });
@@ -391,6 +443,15 @@ describe('content/placement: vocabulary and sentences (A.4, A.5)', () => {
       expect(t.question.options, t.id).toHaveLength(3);
       expect(t.question.requires, t.id).toEqual({ audio: true, picture: null });
       expect(t.form).toBe('read');
+    }
+    for (const t of replies) {
+      // standard punctuation (표준 문장 부호): every line and every reply ends a sentence
+      expect(t.question.promptKo, t.id).toMatch(/[.?!]$/);
+      for (const o of t.question.options) expect(o.ko, `${t.id} ${o.id}`).toMatch(/[.?!]$/);
+      // a reply of a row is the same text wherever it is offered
+      for (const o of t.question.options) expect(o.ko).toBe(correctOf(replies[Number(o.id.slice('reply-'.length)) - 1] as PlacementTemplate).ko);
+      // a distractor is never the natural answer of an incompatible row
+      for (const o of t.question.options.filter((x) => !x.isCorrect)) expect(t.incompatibleWith ?? [], `${t.id} ${o.id}`).not.toContain(`pitem:sent-${o.id}`);
     }
     const clusters = [[1, 3], [4, 9, 10], [6, 8]];
     for (const cluster of clusters) {

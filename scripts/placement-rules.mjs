@@ -41,6 +41,7 @@ const PLACEMENT_DIR = "content/placement/";
 const OVERLAY_FILE = /^content\/i18n\/([^/]+)\/placement\.json$/;
 const TEMPLATE_ID = /^pitem:[a-z0-9-]+$/;
 const OPTION_GLOSS = /^options\.([a-z0-9-]+)\.gloss$/;
+const REVIEW_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 function isObject(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value);
@@ -82,8 +83,14 @@ function checkTemplate(t, at, file, out, seen) {
   if (!wanted.includes(q.options.length)) add("placement-options", `${q.format} needs ${wanted.join(" or ")} options, has ${q.options.length}`);
   if (q.options.filter((o) => isObject(o) && o.isCorrect === true).length !== 1) add("placement-options", "exactly one option must be correct");
 
-  if (t.status === "ready" && t.strand === "sentences") {
-    add("placement-sentence-ready", "a sentence cannot be ready until the reviewedBy ledger exists (F-CNT-002); keep it draft");
+  if (t.reviewedBy !== undefined && (typeof t.reviewedBy !== "string" || t.reviewedBy.trim() === "" || t.reviewedBy.length > 16)) {
+    add("placement-review", "reviewedBy must be a non-empty string of at most 16 characters");
+  }
+  if (t.reviewedAt !== undefined && (typeof t.reviewedAt !== "string" || !REVIEW_DATE.test(t.reviewedAt))) {
+    add("placement-review", "reviewedAt must be a YYYY-MM-DD date");
+  }
+  if (t.status === "ready" && t.strand === "sentences" && (t.reviewedBy === undefined || t.reviewedAt === undefined)) {
+    add("placement-sentence-ready", "a ready sentence needs its language review record (reviewedBy and reviewedAt); keep it draft until then");
   }
 }
 

@@ -41,21 +41,15 @@ describe('placement.generated.ts (F-PLC-001 P-4)', () => {
   it('parses with PlacementBankSchema, and the warm-up with PlacementTemplateSchema', () => {
     expect(() => PlacementBankSchema.parse(PLACEMENT_BANK)).not.toThrow();
     expect(() => PlacementTemplateSchema.parse(PLACEMENT_WARMUP)).not.toThrow();
-    expect(PLACEMENT_BANK.templates).toHaveLength(265);
+    expect(PLACEMENT_BANK.templates).toHaveLength(260);
   });
 
-  it('every picture of a ready template, and of the warm-up, resolves in supportedCardIds', () => {
+  it('every template is ready, and every picture of a template and of the warm-up resolves in supportedCardIds', () => {
     const art = supportedCardIds();
     expect(art).toHaveLength(30);
-    for (const t of [...PLACEMENT_BANK.templates.filter((x) => x.status === 'ready'), PLACEMENT_WARMUP]) {
+    expect(PLACEMENT_BANK.templates.filter((t) => t.status !== 'ready').map((t) => t.id)).toEqual([]);
+    for (const t of [...PLACEMENT_BANK.templates, PLACEMENT_WARMUP]) {
       for (const ref of pictures(t.question.options)) expect(art, `${t.id} ${ref}`).toContain(ref);
     }
-  });
-
-  it('a template whose picture has no art yet is draft, so it is never drawn', () => {
-    const art = supportedCardIds();
-    const missing = PLACEMENT_BANK.templates.filter((t) => pictures(t.question.options).some((ref) => !art.includes(ref)));
-    expect(missing).toHaveLength(17);
-    expect(missing.every((t) => t.status === 'draft')).toBe(true);
   });
 });
