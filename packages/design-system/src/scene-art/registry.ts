@@ -2,8 +2,8 @@
  * The scene-art registry (F-STORY-002 §3.9.4): every item a scene may name.
  * PR 2.3a seeded it with Hoya's five poses; PR 2.3b adds the first library
  * batch (3 settings, 13 props) for the flagship stories; PR 2.10a adds the
- * records-joseon cluster batch; PR 2.10b the hangul-printing batch. Later
- * batches (PR 2.10c-d) each add entries here.
+ * records-joseon cluster batch; PR 2.10b the hangul-printing batch; PR 2.10c
+ * the science-art-life batch. The last batch (PR 2.10d) adds entries here.
  */
 import { HOYA_POSES, hoyaItem } from './hoya';
 import {
@@ -30,9 +30,10 @@ import {
   BOOKS_STACK,
   DOCUMENT_BOX,
   UIGWE_OPEN,
+  ALBUM_OPEN,
 } from './props/books';
 import { BEAD_CURTAIN, CEREMONY_GOODS, FEAST_TABLE, PALANQUIN, PROCESSION_ROW, SILK_BOLTS } from './props/festival';
-import { FLAT_ROCK, FULL_MOON, HORSE, LEAFY_TREE, NIGHT_SKY, PINE_TREE } from './props/nature';
+import { DUG_SOIL, FLAT_ROCK, FULL_MOON, GROUND_SHADOW, HERBS, HORSE, LEAFY_TREE, NIGHT_SKY, PINE_TREE, RAIN_CLOUD, SAND_RING } from './props/nature';
 import {
   ARCHIVE_SHELF,
   BLANK_SHEET,
@@ -48,6 +49,12 @@ import {
   SIGNPOST,
   TABLET,
   WEATHER_SIGNS,
+  DISPLAY_CASE,
+  DRUM,
+  BASKET,
+  TAFFY_TRAY,
+  SHOES,
+  PANOKSEON,
 } from './props/objects';
 import {
   FIG_ARTISAN,
@@ -68,6 +75,10 @@ import {
   FIG_VILLAGER,
   FIG_WORKER,
   FIG_WRITER_SEATED,
+  FIG_COMMANDER,
+  FIG_WRESTLERS,
+  CROWD_SEATED,
+  FIG_CHILD_BACK,
 } from './props/people';
 import {
   DESK_LOW,
@@ -87,6 +98,7 @@ import {
   WRITING_LINES,
   WRITING_SET,
 } from './props/writing';
+import { BRONZE_JAR, BRONZE_MIRROR, FLOAT_VESSEL, RAIN_GAUGE, RULER, STRIKING_FIGURES, SUNDIAL, WATER_STREAM, ZODIAC_RING } from './props/science';
 import type { Registry } from './resolve';
 import { COUNTRYSIDE } from './settings/countryside';
 import { HANJI_BACKDROP } from './settings/hanji-backdrop';
@@ -96,6 +108,7 @@ import { MOUNTAIN_STREAM } from './settings/mountain-stream';
 import { MOUNTAINS } from './settings/mountains';
 import { PALACE_COURTYARD } from './settings/palace-courtyard';
 import { PALACE_HALL } from './settings/palace-hall';
+import { SEASHORE } from './settings/seashore';
 import { TEMPLE } from './settings/temple';
 import { VILLAGE_LANE } from './settings/village-lane';
 import type { ItemDef } from './types';
@@ -195,6 +208,33 @@ export const LIBRARY: readonly ItemDef[] = [
   CALENDAR_PAGE,
   BLANK_SHEET,
   BLANK_TILES,
+  // PR 2.10c: science-art-life cluster
+  SEASHORE,
+  RAIN_CLOUD,
+  RAIN_GAUGE,
+  RULER,
+  DUG_SOIL,
+  GROUND_SHADOW,
+  SUNDIAL,
+  ZODIAC_RING,
+  DISPLAY_CASE,
+  BRONZE_JAR,
+  FLOAT_VESSEL,
+  WATER_STREAM,
+  STRIKING_FIGURES,
+  DRUM,
+  BRONZE_MIRROR,
+  HERBS,
+  BASKET,
+  PANOKSEON,
+  FIG_COMMANDER,
+  ALBUM_OPEN,
+  FIG_WRESTLERS,
+  CROWD_SEATED,
+  SAND_RING,
+  TAFFY_TRAY,
+  SHOES,
+  FIG_CHILD_BACK,
 ];
 
 export const SCENE_ART_REGISTRY: Registry = Object.freeze({

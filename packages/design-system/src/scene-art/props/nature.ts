@@ -112,3 +112,73 @@ export const LEAFY_TREE: ItemDef = {
     { t: 'path', d: 'M30 30 V31 M50 18 V19 M62 40 V41 M20 54 V55 M40 52 V53 M70 62 V63 M56 26 V27 M36 66 V67', stroke: 'surface.paper', sw: 'thick', o: 0.6, det: true },
   ],
 };
+
+// --- PR 2.10c: science-art-life cluster -------------------------------------
+
+export const RAIN_CLOUD: ItemDef = {
+  id: 'prop:rain-cloud',
+  kind: 'nature',
+  box: { w: 400, h: 200 },
+  z: 'back',
+  tags: { sky: true },
+  alt: 'Soft grey rain clouds with gentle rain falling',
+  accuracyNote: 'A translucent cloud band and slanting rain lines laid over a day setting; no storm.',
+  nodes: [
+    { t: 'path', d: 'M0 0 H400 V40 Q380 26 356 38 Q330 14 298 32 Q268 8 232 30 Q200 10 168 30 Q136 6 104 28 Q76 12 50 34 Q24 22 0 38 Z', fill: 'text.secondary', o: 0.35 },
+    { t: 'path', d: 'M0 30 Q30 44 60 40 Q96 58 136 44 Q176 62 214 46 Q252 62 292 46 Q332 60 368 44 Q386 40 400 46 V30 Z', fill: 'border.strong', o: 0.6 },
+    { t: 'path', d: 'M30 70 L24 86 M90 60 L84 76 M150 74 L144 90 M210 62 L204 78 M270 72 L264 88 M330 60 L324 76 M380 76 L374 92 M60 130 L54 146 M120 114 L114 130 M180 134 L174 150', stroke: 'text.secondary', sw: 'base', o: 0.6 },
+    { t: 'path', d: 'M240 120 L234 136 M300 130 L294 146 M360 116 L354 132 M20 170 L14 186 M100 176 L94 192 M200 178 L194 194 M280 170 L274 186 M350 180 L344 196', stroke: 'text.secondary', sw: 'base', o: 0.6 },
+  ],
+};
+
+export const DUG_SOIL: ItemDef = {
+  id: 'prop:dug-soil',
+  kind: 'nature',
+  box: { w: 80, h: 30 },
+  z: 'mid',
+  alt: 'A small hole dug in damp earth with a heap of soil beside it',
+  accuracyNote: 'A small hole and a heap of turned soil; no tool is recorded, so none is drawn.',
+  nodes: [
+    { t: 'path', d: 'M44 28 Q50 10 62 12 Q74 14 78 28 Z', fill: 'border.strong', stroke: 'text.secondary', sw: 'thin' },
+    { t: 'ellipse', cx: 24, cy: 22, rx: 22, ry: 7, fill: 'text.secondary' },
+    { t: 'ellipse', cx: 24, cy: 23, rx: 15, ry: 4, fill: 'text.primary', o: 0.85 },
+  ],
+};
+
+export const GROUND_SHADOW: ItemDef = {
+  id: 'prop:ground-shadow',
+  kind: 'nature',
+  box: { w: 100, h: 16 },
+  z: 'back',
+  alt: 'A long soft shadow on the ground',
+  accuracyNote: 'A plain sun shadow to place under a figure; length and direction are illustrative.',
+  nodes: [{ t: 'path', d: 'M6 8 Q6 2 30 3 L94 6 Q100 8 94 10 L30 13 Q6 14 6 8 Z', fill: 'text.primary', o: 0.2 }],
+};
+
+export const HERBS: ItemDef = {
+  id: 'prop:herbs',
+  kind: 'nature',
+  box: { w: 110, h: 70 },
+  z: 'mid',
+  alt: 'Wild medicinal plants: bellflowers, mugwort and a plant with its root showing',
+  accuracyNote: 'Simplified wild herbs: purple bellflowers (doraji), jagged mugwort (ssuk) and a leafy plant with a pale root. No species detail or label.',
+  nodes: [
+    { t: 'path', d: 'M14 70 Q12 50 16 28 M24 70 Q26 54 30 40 M50 70 V30 M50 40 L40 34 L44 30 L38 26 M50 48 L60 42 L56 38 L62 34 M50 56 L41 52 L45 48', stroke: 'theme.nature', sw: 'base' },
+    { t: 'path', d: 'M16 16 L19 22 L26 22 L21 27 L23 34 L16 30 L9 34 L11 27 L6 22 L13 22 Z M30 30 L32.5 35 L38 35 L34 39 L35.5 45 L30 42 L24.5 45 L26 39 L22 35 L27.5 35 Z', fill: 'theme.rites', stroke: 'text.secondary', sw: 'thin' },
+    { t: 'path', d: 'M92 52 Q88 40 78 34 Q90 34 94 46 Q96 30 108 24 Q102 40 98 52 Z', fill: 'theme.nature' },
+    { t: 'path', d: 'M88 52 Q96 50 104 52 Q100 62 96 70 Q92 62 88 52 Z', fill: 'feedback.nudgeLight', stroke: 'text.secondary', sw: 'thin' },
+  ],
+};
+
+export const SAND_RING: ItemDef = {
+  id: 'prop:sand-ring',
+  kind: 'nature',
+  box: { w: 240, h: 60 },
+  z: 'back',
+  alt: 'A round ring of sand on the ground for wrestling',
+  accuracyNote: 'A plain sand ring seen at an angle, as used for ssireum today; size illustrative.',
+  nodes: [
+    { t: 'ellipse', cx: 120, cy: 30, rx: 118, ry: 28, fill: 'feedback.nudgeLight', stroke: 'border.strong', sw: 'thick' },
+    { t: 'ellipse', cx: 120, cy: 30, rx: 100, ry: 21, stroke: 'border.strong', sw: 'thin', det: true },
+  ],
+};
