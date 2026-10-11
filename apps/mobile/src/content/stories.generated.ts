@@ -554,8 +554,8 @@ export const storiesAll: Story[] = [
     "recommendedStage": 1,
     "minutes": 4,
     "learningGoalsEn": [
-      "Recognize and say 비 (bi, rain) and the short sentence 비가 와요 (It's raining).",
-      "Know that a 1441 royal record describes the crown prince (later King Munjong) testing rain with a metal vessel, and that the device was named 측우기 in 1442.",
+      "Read and recognize 비 (bi, rain) and the short sentence 비가 와요 (biga wayo, It's raining).",
+      "Know that a 1441 royal record describes the crown prince (later King Munjong) testing rain with a metal vessel, and that the device was named 측우기 (cheugugi, rain gauge) in 1442.",
       "Understand that officials measured rain with a standard ruler and kept written records across the provinces.",
       "Know that the only Joseon rain gauge vessel known to survive was made in 1837 and is a National Treasure."
     ],
@@ -664,7 +664,7 @@ export const storiesAll: Story[] = [
           },
           {
             "id": "s3",
-            "narrationEn": "But soil can be dry or damp, so digging could not show exactly how much rain had fallen. So he had a vessel cast from copper and placed in the palace to collect the rainwater.",
+            "narrationEn": "But soil can be dry or damp, so digging could not show exactly how much rain had fallen. So he had a copper vessel made and placed in the palace to collect the rainwater.",
             "captionEn": "A copper vessel collects the rain",
             "keyword": {
               "id": "geureut",
@@ -742,14 +742,14 @@ export const storiesAll: Story[] = [
           },
           {
             "id": "s7",
-            "narrationEn": "Today it is kept at the National Meteorological Museum of Korea in Seoul. Hoya grins and points at the sky. \"Next time it rains, you can say it in Korean: {kw:biga-wayo}!\"",
+            "narrationEn": "Today it is kept at the National Meteorological Museum of Korea in Seoul. Hoya grins and points at the sky. \"Next time it rains, you will know the words: {kw:biga-wayo}!\"",
             "captionEn": "The gauge rests in a museum in Seoul",
             "keyword": {
               "id": "biga-wayo",
               "ko": "비가 와요",
               "romanization": "biga wayo",
               "en": "It's raining.",
-              "kind": "word"
+              "kind": "phrase"
             },
             "factIds": [
               "f6"
@@ -789,7 +789,7 @@ export const storiesAll: Story[] = [
           },
           {
             "id": "c2",
-            "kind": "detail",
+            "kind": "pick-meaning",
             "promptEn": "What does a {target} measure?",
             "target": {
               "ko": "측우기",
