@@ -412,6 +412,14 @@ describe('recordPlacement (F-PLC-001 section 3.8)', () => {
     expect(notified).toEqual([]);
   });
 
+  it('never stores a result the Worker schema would refuse (it would block every later sync)', () => {
+    const tooMany = placementResult({ placedOutQuestIds: Array.from({ length: 41 }, (_, i) => `quest:q${i}`) });
+    expect(useProgressStore.getState().recordPlacement('p1', tooMany)).toBe(false);
+    expect(useProgressStore.getState().recordPlacement('p1', placementResult({ id: 'not-a-placement-id' }))).toBe(false);
+    expect(useProgressStore.getState().byProfile['p1']).toBeUndefined();
+    expect(notified).toEqual([]);
+  });
+
   it('recording the same result twice keeps one copy', async () => {
     await useProgressStore.getState().hydrate('p1');
     const result = placementResult();

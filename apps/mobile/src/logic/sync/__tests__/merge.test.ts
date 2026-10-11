@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { PLACEMENT_KEEP } from '@hangul-route/content-schema';
 import { seededRandom } from '../../listen-pick';
 import { placementResult } from '../../placement/__tests__/fixtures';
-import { isSubsetOf, mergeCard, mergeSnapshots, withSnapshotDefaults } from '../merge';
+import { compareInstant, isSubsetOf, mergeCard, mergeSnapshots, withSnapshotDefaults } from '../merge';
 
 const NOW = new Date('2026-09-21T12:00:00.000Z');
 const base = (over: Partial<ProgressSnapshot> = {}): ProgressSnapshot => ({
@@ -398,5 +398,39 @@ describe('placements (F-PLC-001 section 3.8)', () => {
     expect(isSubsetOf(overridden, plain)).toBe(false);
     expect(isSubsetOf(plain, overridden)).toBe(true);
     expect(isSubsetOf(overridden, overridden)).toBe(true);
+  });
+
+  it('orders results and overrides as instants, not strings (offset and Z forms, with or without milliseconds)', () => {
+    // 01:30+02:00 is 23:30Z the day before: earlier than 00:00Z, though it sorts later as a string.
+    const offset = p('placement:b', '2026-10-02T01:30:00+02:00');
+    const zulu = p('placement:a', '2026-10-02T00:00:00.000Z');
+    expect(mergeSnapshots(base({ placements: [zulu] }), base({ placements: [offset] }), { now: NOW }).placements?.map((r) => r.id)).toEqual([
+      'placement:b',
+      'placement:a',
+    ]);
+    const at = '2026-10-01T00:00:00Z';
+    const localLater = p('placement:a', at, { contentVer: 'local', override: { by: 'parent', at: '2026-10-05T00:00:00Z', startQuestId: 'quest:q2' } });
+    const serverEarlier = p('placement:a', at, { contentVer: 'server', override: { by: 'parent', at: '2026-10-05T01:00:00+02:00', startQuestId: 'quest:q3' } });
+    expect(mergeSnapshots(base({ placements: [localLater] }), base({ placements: [serverEarlier] }), { now: NOW }).placements?.[0]?.contentVer).toBe('local');
+    expect(isSubsetOf(base({ placements: [localLater] }), base({ placements: [serverEarlier] }))).toBe(false);
+    expect(isSubsetOf(base({ placements: [serverEarlier] }), base({ placements: [localLater] }))).toBe(true);
+  });
+
+  it('breaks a completedAt tie by id in code-point order', () => {
+    const at = '2026-10-01T00:00:00Z';
+    const m = mergeSnapshots(base({ placements: [p('placement:a-b', at)] }), base({ placements: [p('placement:ab', at)] }), { now: NOW });
+    expect(m.placements?.map((r) => r.id)).toEqual(['placement:a-b', 'placement:ab']);
+  });
+});
+
+describe('compareInstant', () => {
+  it('compares instants, then code points; an unparsable side sorts first', () => {
+    expect(compareInstant('2026-10-01T00:00:00Z', '2026-10-01T00:00:01Z')).toBe(-1);
+    expect(compareInstant('2026-10-01T02:00:00+02:00', '2026-10-01T00:00:00.500Z')).toBe(-1);
+    expect(compareInstant('2026-10-01T00:00:00.000Z', '2026-10-01T00:00:00Z')).toBe(-1);
+    expect(compareInstant('2026-10-01T00:00:00Z', '2026-10-01T00:00:00Z')).toBe(0);
+    expect(compareInstant('garbage', '2026-10-01T00:00:00Z')).toBe(-1);
+    expect(compareInstant('2026-10-01T00:00:00Z', 'garbage')).toBe(1);
+    expect(compareInstant('b', 'a')).toBe(1);
   });
 });

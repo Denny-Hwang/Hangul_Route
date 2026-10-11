@@ -114,14 +114,21 @@ describe('summarize: the level check (F-PLC-001 section 3.8, section 3.7 consume
     expect(run({ ...fresh, placements: [overridden, newer] }).placement?.overridden).toBe(true);
   });
 
-  it('seeds needsPractice with the route priority symbols until the learner has quest history', () => {
+  it('seeds needsPractice with the route priority symbols before any quest history', () => {
     expect(run({ ...fresh, placements: [older, newer] }).needsPractice).toEqual(['ㅓ', 'ㄹ']);
   });
 
-  it('keeps real practice data once a quest is complete', () => {
+  it('merges them behind real practice data, never repeating or flagging a recognised symbol', () => {
     const withHistory = { ...snap, placements: [newer] };
-    const summary = summarize({ snapshot: withHistory, now: NOW, stage1QuestIds: ['q1'], questJamo: { q2: ['ㄷ'] } });
-    expect(summary.needsPractice).toEqual(['ㄷ']);
+    const summary = summarize({ snapshot: withHistory, now: NOW, stage1QuestIds: ['q1'], questJamo: { q2: ['ㄷ', 'ㅓ'] } });
+    expect(summary.needsPractice).toEqual(['ㄷ', 'ㅓ', 'ㄹ']);
+  });
+
+  it('a completed quest with nothing shaky keeps the seed, minus what the quests show is recognised', () => {
+    const recognisedOnly = { ...snap, quests: snap.quests.filter((q) => q.questId === 'q1'), placements: [newer] };
+    const summary = summarize({ snapshot: recognisedOnly, now: NOW, stage1QuestIds: ['q1'], questJamo: { q1: ['ㅓ'] } });
+    expect(summary.jamoRecognized).toEqual(['ㅓ']);
+    expect(summary.needsPractice).toEqual(['ㄹ']);
   });
 });
 

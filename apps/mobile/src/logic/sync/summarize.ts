@@ -6,6 +6,7 @@ import {
   type ProgressSummary,
 } from '@hangul-route/content-schema';
 import { planIdOf } from '../homework/plan-derivation';
+import { compareInstant } from './merge';
 
 /**
  * Client-side aggregate uploaded next to the snapshot — F-SYNC-001 §3.4.
@@ -47,10 +48,13 @@ export function planProgressOf(snapshot: ProgressSnapshot, planNotReady: Readonl
  * The grown-up view of the level check (F-PLC-001 section 3.8): the newest
  * result's statuses and level only, no per-question data and no counts.
  * `overridden` is true while a parent override is in force on any result.
+ * The level is the newest result's on purpose ("summarize fills it from the
+ * newest result", section 3.8), not `effectiveRoute`'s highest level: the
+ * summary reports what the latest check saw.
  */
 export function placementSummaryOf(placements: readonly PlacementResult[] | undefined): PlacementSummary | undefined {
   if (placements === undefined || placements.length === 0) return undefined;
-  const newest = [...placements].sort((a, b) => b.completedAt.localeCompare(a.completedAt))[0] as PlacementResult;
+  const newest = [...placements].sort((a, b) => compareInstant(b.completedAt, a.completedAt))[0] as PlacementResult;
   return {
     takenAt: newest.completedAt,
     level: newest.level,
@@ -95,12 +99,12 @@ export function summarize({ snapshot, now, stage1QuestIds, questJamo, planNotRea
     if (q.accuracy >= RECOGNIZED_ACCURACY) jamo.forEach((j) => recognized.add(j));
     else if (q.accuracy < PRACTICE_ACCURACY) jamo.forEach((j) => shaky.add(j));
   }
-  // Until the learner has quest history, the level check's priority symbols
-  // make a new grown-up view meaningful (F-PLC-001 section 3.7, consumer 5).
-  const needsPractice =
-    completed.length === 0
-      ? prioritySymbols(snapshot.placements)
-      : [...shaky].filter((j) => !recognized.has(j)).slice(0, 3);
+  // The level check's priority symbols make a new grown-up view meaningful;
+  // real practice data comes first and they fill what is left (F-PLC-001
+  // section 3.7, consumer 5).
+  const practiced = [...shaky].filter((j) => !recognized.has(j));
+  const seeded = prioritySymbols(snapshot.placements).filter((j) => !recognized.has(j));
+  const needsPractice = [...new Set([...practiced, ...seeded])].slice(0, 3);
 
   const placement = placementSummaryOf(snapshot.placements);
 
