@@ -60,7 +60,7 @@ test('the web manifest does not lock the orientation', async ({ request }) => {
 // Hoya x1.2 / x1.4. Phones, short windows and the 200 % zoom proxy: one column, exactly as before.
 
 /** Cold start to Home of a fresh learner. */
-async function openHome(page: Page): Promise<void> {
+async function openHomeColumns(page: Page): Promise<void> {
   await onboardChild(page, { name: 'Dani', startJourney: false });
   await page.goto('/');
   await expect(page.getByText('Hi, Dani!')).toBeVisible();
@@ -77,7 +77,7 @@ for (const vp of [
     test.use({ viewport: { width: vp.width, height: vp.height } });
 
     test('missions left, progress, homework and the tip right; Hoya scaled', async ({ page }) => {
-      await openHome(page);
+      await openHomeColumns(page);
       const missions = (await page.getByTestId('home-missions-column').boundingBox())!;
       const side = (await page.getByTestId('home-side-column').boundingBox())!;
       expect(side.x).toBeGreaterThanOrEqual(missions.x + missions.width);
@@ -110,7 +110,7 @@ for (const vp of [
     test.use({ viewport: { width: vp.width, height: vp.height } });
 
     test('one column in today\'s order, Hoya at its phone size, no sideways scrolling', async ({ page }) => {
-      await openHome(page);
+      await openHomeColumns(page);
       await expect(page.getByTestId('home-side-column')).toHaveCount(0);
       const lastMission = (await page.getByRole('button', { name: /Around the Korean Table|Story time|Something new/ }).last().boundingBox())!;
       const progress = (await page.getByText('Stage 1 progress').boundingBox())!;
