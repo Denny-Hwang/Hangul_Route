@@ -214,3 +214,37 @@ describe('StoryCheckSchema (F-STORY-003 §3.1)', () => {
     expect(issuePaths({ ...detail, [field]: 'About 설날' })).toContain(field);
   });
 });
+
+describe('StoryCheckSchema edge cases (F-STORY-003 PR 3.1)', () => {
+  it('accepts an option label at 79 and 80 characters and rejects 81', () => {
+    const withLabel = (n: number) => ({
+      ...detail,
+      options: [{ id: 'a', en: 'x'.repeat(n), isCorrect: true }, detail.options[1]],
+    });
+    expect(StoryCheckSchema.safeParse(withLabel(79)).success).toBe(true);
+    expect(StoryCheckSchema.safeParse(withLabel(80)).success).toBe(true);
+    expect(StoryCheckSchema.safeParse(withLabel(81)).success).toBe(false);
+  });
+
+  it('rejects the order kind and any unknown kind (ordering is the sequence game)', () => {
+    expect(StoryCheckSchema.safeParse({ ...detail, kind: 'order' }).success).toBe(false);
+    expect(StoryCheckSchema.safeParse({ ...detail, kind: 'essay' }).success).toBe(false);
+  });
+
+  it('rejects Hangul in the prompt and in an English option label', () => {
+    expect(issuePaths({ ...detail, promptEn: 'What is 설날?' })).toContain('promptEn');
+    expect(
+      issuePaths({ ...detail, options: [{ id: 'a', en: '설날', isCorrect: true }, detail.options[1]] }).length,
+    ).toBeGreaterThan(0);
+  });
+
+  it('accepts a check with explainEn absent and one with the 140 character cap', () => {
+    expect(StoryCheckSchema.safeParse(detail).success).toBe(true);
+    expect(StoryCheckSchema.safeParse({ ...detail, explainEn: 'x'.repeat(140) }).success).toBe(true);
+  });
+
+  it('rejects a Korean option that has no romanization or gloss', () => {
+    const korean = { id: 'a', ko: '떡국', isCorrect: true };
+    expect(StoryCheckSchema.safeParse({ ...detail, options: [korean, detail.options[1]] }).success).toBe(false);
+  });
+});
