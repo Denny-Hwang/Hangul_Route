@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { completeChildForm } from './helpers';
 
 /**
  * F-QUEST-002 Q-5b: the Results "Next up" teaser and the soft prerequisite on
@@ -44,10 +45,7 @@ async function playMatchSound(page: Page, rounds: number): Promise<void> {
 async function startFirstQuest(page: Page): Promise<void> {
   await page.goto('/');
   await page.getByRole('button', { name: "Let's start" }).click();
-  await page.getByPlaceholder('Type your name').fill('Dami');
-  await page.getByRole('checkbox').click();
-  await page.getByRole('button', { name: 'Continue' }).click();
-  await page.getByRole('button', { name: 'Start my journey' }).click();
+  await completeChildForm(page, { name: 'Dami' });
   await page.getByRole('button', { name: 'Continue' }).click();
 }
 
