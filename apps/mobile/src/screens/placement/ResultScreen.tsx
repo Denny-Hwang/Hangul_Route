@@ -166,8 +166,9 @@ function RouteCard({ title, lines, icon }: { title: string; lines: string[]; ico
       </View>
       <View style={{ flex: 1 }}>
         <Caption tone="secondary">{title}</Caption>
-        {lines.map((line) => (
-          <Body key={line} weight="semibold">
+        {/* Two quests may share a title (or have none on this build): keyed by position. */}
+        {lines.map((line, index) => (
+          <Body key={`${index}:${line}`} weight="semibold">
             {line}
           </Body>
         ))}

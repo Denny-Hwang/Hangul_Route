@@ -26,9 +26,9 @@ import {
   flowReducer,
   previousExclude,
   resumedFlow,
+  retakeFlow,
   runConfig,
   startFlow,
-  withGuideHidden,
   type FlowEvent,
   type FlowState,
   type ResumeOffer,
@@ -139,6 +139,8 @@ export function PlacementScreen({ route, navigation }: Props): React.ReactElemen
   const run = saved?.run ?? null;
 
   const [phase, setPhase] = useState<Phase>('boot');
+  const phaseRef = useRef<Phase>('boot');
+  phaseRef.current = phase;
   const [flow, setFlow] = useState<FlowState | null>(null);
   const [offer, setOffer] = useState<ResumeOffer | null>(null);
   const [finished, setFinished] = useState<FinishedCheck | null>(null);
@@ -197,7 +199,8 @@ export function PlacementScreen({ route, navigation }: Props): React.ReactElemen
       });
       // The fork ("I already know some Korean") is answered before this route opens.
       if (base.screen === 'invite') base = flowReducer(base, { type: 'acceptFork', capability: capability(base.testLocale) });
-      if (retakeMode !== undefined) base = withGuideHidden(base, retakeMode);
+      // "Try it with the sound guide hidden": a one-tap retake that starts at once.
+      if (retakeMode !== undefined) base = retakeFlow(base, retakeMode, capability);
       baseFlow.current = base;
       setScreenReader(reader);
       if (resume?.kind === 'continue') {
@@ -302,9 +305,12 @@ export function PlacementScreen({ route, navigation }: Props): React.ReactElemen
       });
       // A result recorded before the app closed is not counted twice.
       const previous = (snapshot?.placements ?? []).filter((p) => p.id !== result.id);
-      useProgressStore.getState().recordPlacement(profile.id, result);
-      void track(completeEvent(profile.id, result));
-      store.discard(profile.id);
+      // A result that could not be stored keeps the saved run, so reopening the check records it
+      // (the `finish` offer); it is not reported as complete until then.
+      if (useProgressStore.getState().recordPlacement(profile.id, result)) {
+        void track(completeEvent(profile.id, result));
+        store.discard(profile.id);
+      }
       const { before, after } = resultRoutes(previous, result, catalog, opts);
       const view = resultView({
         result,
@@ -341,7 +347,8 @@ export function PlacementScreen({ route, navigation }: Props): React.ReactElemen
   }, [flow?.screen, saved, finished, finish]);
 
   // --- Clocks, the app leaving the foreground, the grown-up gate ------------------------
-  const runOpen = run !== null && run.stop === null;
+  // Not while the Resume offer waits: Continue starts the clocks again from that moment.
+  const runOpen = phase === 'flow' && run !== null && run.stop === null;
   useEffect(() => {
     if (!runOpen) return;
     const tick = setInterval(() => applyRun({ type: 'tick' }), 1_000);
@@ -376,7 +383,8 @@ export function PlacementScreen({ route, navigation }: Props): React.ReactElemen
   useEffect(
     () =>
       navigation.addListener('beforeRemove', (e) => {
-        if (allowLeave.current) return;
+        // Back on the Resume offer leaves; the saved run stays as it is for the next visit.
+        if (allowLeave.current || phaseRef.current === 'offer') return;
         const open = runRef.current;
         if (open !== null && open.stop === null) {
           e.preventDefault();
@@ -454,12 +462,14 @@ export function PlacementScreen({ route, navigation }: Props): React.ReactElemen
 
   const continueRun = useCallback((): void => {
     const base = baseFlow.current;
-    if (offer === null || base === null) return;
+    if (offer === null || base === null || profileId === null) return;
+    // Time spent on the offer is time away: the idle clock and the backstop start again now.
+    void usePlacementRunStore.getState().resume(profileId, Date.now(), PLACEMENT_BANK.version);
     setNeedsGesture(true);
     setFlow(resumedFlow(base, offer));
     setOffer(null);
     setPhase('flow');
-  }, [offer]);
+  }, [offer, profileId]);
 
   const startAgain = useCallback((): void => {
     if (profileId !== null) usePlacementRunStore.getState().discard(profileId);

@@ -32,15 +32,15 @@ import { BackArrow, LinkButton, Note, RadioTile } from './parts';
  * setting is never written.
  */
 export function OptionsScreen(): React.ReactElement {
-  const { m, flow, dispatch, say, leave } = usePlacement();
+  const { m, flow, dispatch, say, leave, screenReader } = usePlacement();
   const copy = m.learner.placement.options;
   const layout = useLayoutClass();
   const { fontScale } = useWindowDimensions();
   const contentWidth = Math.min(layout.windowWidth - 2 * layout.gutter, layout.maxWidth.reading);
 
-  /** Taps speak the label first, then act. */
+  /** Taps speak the label first, then act; with a screen reader on, it reads the label instead. */
   const spoken = (label: string, act: () => void) => (): void => {
-    void say(label);
+    if (!screenReader) void say(label);
     act();
   };
   const back = (): void => {
