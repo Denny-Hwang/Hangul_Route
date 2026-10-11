@@ -84,6 +84,15 @@ describe("matchBrief", () => {
   test("an empty brief matches nothing", () => {
     assert.deepEqual(matchBrief("", lex), { settings: [], props: [], hoya: false, matched: [] });
   });
+  test("records every alias of an entry that the brief uses, not only the first", () => {
+    const books = { entries: [{ match: ["thread-bound", "books", "book"], ids: ["prop:book-thread-bound"] }] };
+    const brief = "A row of old thread-bound books in a wooden case, a young tiger watching";
+    const m = matchBrief(brief, books);
+    assert.deepEqual(m.matched, ["thread-bound", "books"]);
+    const words = wordsOf(brief, m.matched);
+    assert.equal(words.includes("books"), false, words.join(","));
+    assert.equal(words.includes("thread-bound"), false, words.join(","));
+  });
 });
 
 describe("wordsOf", () => {
@@ -103,6 +112,15 @@ describe("registryIds", () => {
   test("the real registry has the 2.3b batch", () => {
     const ids = registryIds(REPO);
     for (const id of ["scene:palace-hall", "prop:fig-king", "prop:writing-set", "hoya:reading"]) assert.ok(ids.has(id), id);
+  });
+});
+
+describe("loadLexicon", () => {
+  test("a lexicon without an entries array is rejected", () => {
+    const root = makeRoot();
+    const path = join(root, "bad.json");
+    writeFileSync(path, JSON.stringify({ entries: { match: ["x"] } }));
+    assert.throws(() => loadLexicon(path), /"entries" must be an array/);
   });
 });
 
@@ -141,6 +159,16 @@ describe("demandReport", () => {
     assert.match(text, /Missing items by frequency/);
     assert.match(text, /1 {2}prop:horse/);
   });
+  test("the report says none when the registry has every candidate id", () => {
+    const report = demandReport(
+      [{ file: "a.json", storyId: "story:a", level: "listen", sceneId: "s1", brief: "", status: "none" }],
+      { entries: [] },
+      new Set()
+    );
+    const text = renderReport(report);
+    assert.match(text, /Missing items by frequency[^\n]*:\n {2}none\n/);
+    assert.match(text, /no lexicon entry covers[^\n]*:\n {2}none\n/);
+  });
 });
 
 describe("the shipped lexicon", () => {
@@ -155,12 +183,9 @@ describe("the shipped lexicon", () => {
   });
   test("every id the lexicon names for the records-joseon cluster is in the registry", () => {
     const ids = registryIds(REPO);
-    const named = new Set(lexicon.entries.flatMap((e) => e.ids).filter((id) => id !== "hoya:*"));
-    const missing = [...named].filter((id) => !ids.has(id));
     // later clusters may name ids before their batch exists; this cluster's must exist
     const cluster = JSON.parse(readFileSync(LEXICON, "utf8")).clusters["records-joseon"];
     assert.deepEqual(cluster.filter((id) => !ids.has(id)), []);
-    assert.ok(missing.every((id) => !cluster.includes(id)));
   });
 });
 
@@ -189,5 +214,12 @@ describe("cli", () => {
     const r = spawnSync("node", [SCRIPT], { encoding: "utf8", cwd: REPO });
     assert.equal(r.status, 0, r.stderr);
     assert.match(r.stdout, /Scenes: \d+/);
+  });
+  test("--json on the real repository writes the whole report through a pipe (over 64 KB)", () => {
+    const r = spawnSync("node", [SCRIPT, "--json"], { encoding: "utf8", cwd: REPO, stdio: ["ignore", "pipe", "pipe"], maxBuffer: 64 * 1024 * 1024 });
+    assert.equal(r.status, 0, r.stderr);
+    assert.ok(r.stdout.length > 64 * 1024, `only ${r.stdout.length} bytes`);
+    const report = JSON.parse(r.stdout);
+    assert.equal(report.scenes.length, report.counts.scenes);
   });
 });

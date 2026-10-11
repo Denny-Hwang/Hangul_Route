@@ -47,9 +47,10 @@ export function matchBrief(brief, lexicon) {
   const matched = [];
   let hoya = false;
   for (const entry of lexicon.entries) {
-    const hit = entry.match.find((w) => phrase(w).test(brief));
-    if (!hit) continue;
-    matched.push(hit);
+    // every alias the brief uses, so wordsOf() strips them all
+    const hits = entry.match.filter((w) => phrase(w).test(brief));
+    if (hits.length === 0) continue;
+    matched.push(...hits);
     for (const id of entry.ids) {
       if (id.startsWith("hoya:")) hoya = true;
       else if (id.startsWith("scene:")) settings.add(id);
@@ -185,5 +186,6 @@ export function main(argv, root) {
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
   const root = process.env.HANGUL_ROUTE_ROOT ? resolve(process.env.HANGUL_ROUTE_ROOT) : join(dirname(fileURLToPath(import.meta.url)), "..");
-  process.exit(main(process.argv.slice(2), root));
+  // exitCode, not exit(): stdout to a pipe is asynchronous, and exit() would cut it off at 64 KB
+  process.exitCode = main(process.argv.slice(2), root);
 }
