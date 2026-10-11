@@ -69,6 +69,7 @@ F-XXX-<slug>.md
 - `F-AUDIO-004-korean-voice-quality.md` — sound-first Korean voice, capability check, visible text fallback, MP3 path · **ready**
 - `F-STORY-001-story-schema-pipeline.md` — story schema, `content/stories/` pipeline, sourced facts, verification gate · **ready**
 - `F-STORY-002-story-reader.md` — story reader, Sources screen, SVG scene art · **ready**
+  - wireframes `design/wireframes/story/{reader,term-gloss,sources}.md` · briefs `design/brief/screens/21-story-reader.md`, `26-story-sources.md`, `components/story-scene.md`, `illustrations/scene-art-style.md` (PR 2.0)
 - `F-STORY-003-story-checks-sequence-v2.md` — comprehension checks and sequence v2 · **ready**
 - `F-STORY-004-story-shelf-home-library.md` — story shelf, Home card, Library categories · **ready**
 - `F-STORY-005-episode-catalogue-grid.md` — 24 heritage stories placed on the 7x5 grid · **ready**

@@ -19,6 +19,7 @@
 | `home/todays-mission.md` · `homework/list.md` | S | F-HW-001 |
 | `journey/grid.md` · `episode/detail.md` | S | 02 §1 · 04 · 05 |
 | `quest/player.md` · `minigame/shell.md` · `minigame/families.md` | S | content-skill · 06 |
+| `story/reader.md` · `story/term-gloss.md` · `story/sources.md` | S | F-STORY-002 §3.3-3.8 (PR 2.0; briefs `screens/21-story-reader`, `screens/26-story-sources`, `components/story-scene`, `illustrations/scene-art-style`) |
 | `minigame/build-letter.md` | R | F-QUEST-002 §3.7 (Q-7a) |
 | `minigame/listen-pick.md` | R | F-QUEST-002 §3.10 (Q-3b) |
 | `minigame/pic-word-match.md` | R | F-QUEST-002 §3.11 (Q-4) |

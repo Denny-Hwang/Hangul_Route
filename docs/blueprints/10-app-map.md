@@ -74,8 +74,9 @@ Hangul Route
 │   ├─ A12. Join a space (class / family code)          [S] F-SPACE-001 §3.5 (PIN 없음, §7 #21) · "I was already in this class" 재연결 요청 [S] F-TCH-001 §10.1
 │   ├─ A13. Paywall / Upgrade (parent-gated)            [S] F-ENT-001 §3.5 (covered / premium / free 상태; 구매는 웹 콘솔로 — 스토어 IAP 는 F-IAP-002)
 │   ├─ A14. PWA shell (offline-ready · update banners · offline chip · install guide) [S] roadmap P2 · F-PWA-001
-│   └─ A15. Lecture presenter (`/present`, 교사·어른이 TV·프로젝터로 하는 수업 · 로그인·프로필 없음 · 진도 기록 없음) [R] F-TCH-004
-│        └─ Projection mode (자원봉사 학생이 학습자 화면을 그대로 띄우는 옵션 · 교사 역할 불필요) [D] 연기 F-TCH-001 §3.4
+│   ├─ A15. Lecture presenter (`/present`, 교사·어른이 TV·프로젝터로 하는 수업 · 로그인·프로필 없음 · 진도 기록 없음) [R] F-TCH-004
+│   │    └─ Projection mode (자원봉사 학생이 학습자 화면을 그대로 띄우는 옵션 · 교사 역할 불필요) [D] 연기 F-TCH-001 §3.4
+│   └─ A16. Story reader & Sources (퀘스트의 `story-read` 단계 · "Read it again" replay · 어른용 Sources · SVG 장면 그림) [S] F-STORY-002
 │
 ├─ B. Caregiver Console ─────────────────────────────────────────── 부모
 │   ├─ B1. Parent gate (PIN)                             [S] F-PROF-001
@@ -146,6 +147,9 @@ Hangul Route
 | `journey/grid` | Main/Journey | 격자에서 에피소드 고르기 | S | 02 §1, 04 | NEW |
 | `episode/detail` | EpisodeDetail | 퀘스트 목록 + 보상 카드 미리보기 | S | 05 | NEW |
 | `quest/player` | QuestPlayer | 5-step 진행 셸 | S | content-skill | NEW |
+| `story/reader` | Minigame (`story-read` 단계) · StoryReader (replay) | 장면 하나씩: 그림 · 내레이션 · 한국어 + 로마자 + 뜻 — 점수·타이머·자동 넘김 없음, 읽던 장면 기억 | S | F-STORY-002 §3.3-3.7 | ✓ |
+| `story/term-gloss` | (story/reader 안의 인라인 카드) | 낱말 칩 탭 → 듣기 + 한국어·로마자·뜻 카드 (팝오버 아님) | S | F-STORY-002 §3.5 | ✓ |
+| `story/sources` | StorySources | 주장마다 출처 · 인용 · 링크 · 검증 · 정정 (링크 열기는 어른 게이트) | S | F-STORY-002 §3.8 | ✓ |
 | `minigame/shell` | Minigame | 라운드 진행·피드백 공통 프레임 | S | 06, minigame-skill | NEW |
 | `minigame/families` | (appendix) | 4 family 별 박스 다이어그램 | S | 06 | NEW |
 | `results/celebrate` | Results | 별 + 카드 언락 + 다음 행동 1개 | S | F-MOTION-003 | NEW |
@@ -231,6 +235,8 @@ profile/settings ─┬─▶ profiles/pin-entry (modal; 첫 진입 시 PIN 설�
 
 ```
 quest/player ─▶ ... ─▶ results/celebrate ─(같은 route, 2번째 패널)─▶ reviews/feedback-review (새 요소 ≥1 이면) ─▶ Main tabs
+quest/player (story-read 단계) · "Read it again" (replay) ─▶ story/reader ─┬─▶ story/term-gloss (같은 화면, 인라인 카드)
+                                                                          └─▶ story/sources ─▶ profiles/pin-entry (Open link, 게이트가 필요할 때) ─▶ 기기 브라우저
 home/todays-mission card ③ ─▶ reviews/daily-test ─▶ results/celebrate
 journey/grid (stage 완료 셀) ─▶ reviews/stage-review ─▶ certificate (results 변형) ─▶ library/gallery
 
