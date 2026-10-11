@@ -6,10 +6,13 @@ import { questById } from '../../content';
 import { scopeFor } from '../../logic/minigame-config';
 import type { RootStackParamList } from '../../navigation/types';
 import { track } from '../../platform/telemetry';
+import { useQuestRunStore } from '../../store/quest-run-store';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { BuildLetterGame } from './BuildLetterGame';
 import { CardMatchGame } from './CardMatchGame';
 import { CultureQuizGame } from './CultureQuizGame';
+import type { MinigameHost } from './host';
+import { ListenPickGame } from './ListenPickGame';
 import { MatchSoundGame } from './MatchSoundGame';
 import { OddOneOutGame } from './OddOneOutGame';
 import { StorySequenceGame } from './StorySequenceGame';
@@ -51,6 +54,17 @@ export function MinigameScreen({ route, navigation }: Props): React.ReactElement
     return fallback('Minigame not found.');
   }
 
+  // The quest host for the games that take one (F-QUEST-002 §3.12): answers go to the run store
+  // (first answer per round scores), `complete` ends the step as the older games do.
+  const host: MinigameHost = {
+    mode: step.kind === 'check' ? 'check' : 'quest',
+    answer: (roundKey, correct) => useQuestRunStore.getState().answerRound(roundKey, correct),
+    complete: () => {
+      useQuestRunStore.getState().markStepComplete();
+      close();
+    },
+  };
+
   switch (scope.kind) {
     case 'match-sound':
       return <MatchSoundGame scope={scope} onFinish={close} />;
@@ -71,6 +85,8 @@ export function MinigameScreen({ route, navigation }: Props): React.ReactElement
       return <OddOneOutGame scope={scope} onFinish={close} />;
     case 'culture-quiz':
       return <CultureQuizGame scope={scope} onFinish={close} />;
+    case 'listen-pick':
+      return <ListenPickGame scope={scope} host={host} onBack={() => navigation.goBack()} />;
     case 'tap-respond':
       return <TapRespondGame scope={scope} onFinish={close} />;
     default:
