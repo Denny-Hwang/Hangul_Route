@@ -100,6 +100,7 @@ export interface DeriveResult {
 interface Wanted {
   source: DeriveSource;
   questId: string;
+  episodeId: string;
   targetDate: string | undefined;
 }
 
@@ -128,12 +129,13 @@ export function deriveAssignments(input: DeriveInput): DeriveResult {
         continue;
       }
       for (const questId of targets) {
-        if (!questIds.has(questId) || !canAssignQuest({ questId, episodes, unlockedStages, learnerName }).allowed) {
+        const episode = episodeOfQuest(questId);
+        if (!episode || !questIds.has(questId) || !canAssignQuest({ questId, episodes, unlockedStages, learnerName }).allowed) {
           bump(source.id);
           continue;
         }
         const id = planAssignmentId(source.id, questId);
-        if (!wanted.has(id)) wanted.set(id, { source, questId, targetDate: item.targetDate });
+        if (!wanted.has(id)) wanted.set(id, { source, questId, episodeId: episode.id, targetDate: item.targetDate });
       }
     }
   }
@@ -179,7 +181,7 @@ export function deriveAssignments(input: DeriveInput): DeriveResult {
       id,
       profileId,
       questId: want.questId,
-      episodeId: episodeOfQuest(want.questId)?.id ?? '',
+      episodeId: want.episodeId,
       assignedBy: ASSIGNED_BY[want.source.kind],
       assignedAt: want.source.assignedAt,
       targetDate: want.targetDate ?? today,

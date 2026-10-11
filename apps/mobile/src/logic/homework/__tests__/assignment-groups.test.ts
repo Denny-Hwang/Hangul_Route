@@ -36,6 +36,7 @@ describe('groupAssignments', () => {
         hw('b', '2026-09-19', { assignedAt: '2026-09-19T09:00:00.000Z' }),
         hw('a', '2026-09-19', { assignedAt: '2026-09-19T07:00:00.000Z' }),
         hw('far', '2026-09-25'),
+        hw('near-later', '2026-09-20', { assignedAt: '2026-09-20T09:00:00.000Z' }),
         hw('near', '2026-09-20'),
         hw('old', '2026-09-10', { completedAt: '2026-09-10T10:00:00.000Z' }),
         hw('new', '2026-09-12', { completedAt: '2026-09-12T10:00:00.000Z' }),
@@ -43,7 +44,7 @@ describe('groupAssignments', () => {
       today,
     );
     expect(g.today.map((a) => a.id)).toEqual(['a', 'b']);
-    expect(g.upcoming.map((a) => a.id)).toEqual(['near', 'far']);
+    expect(g.upcoming.map((a) => a.id)).toEqual(['near', 'near-later', 'far']);
     expect(g.done.map((a) => a.id)).toEqual(['new', 'old']);
   });
   it('handles an empty list', () => {
