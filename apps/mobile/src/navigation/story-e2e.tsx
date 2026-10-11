@@ -2,6 +2,7 @@ import type { StoryLevel } from '@hangul-route/content-schema';
 import { useNavigation } from '@react-navigation/native';
 import { useEffect } from 'react';
 import { storiesAll, storyFixtureIds } from '../content/stories';
+import { addTelemetryListener, type TelemetryEvent } from '../platform/telemetry';
 
 /**
  * End-to-end entry to the replay reader, for fixture builds only
@@ -20,13 +21,20 @@ export interface StoryE2eHandle {
   openReader(params: { storyId: string; level: StoryLevel; sceneIndex?: number }): void;
   /** Every bundled story with its tiers, so the e2e can smoke-read the real content too. */
   stories(): Array<{ id: string; levels: StoryLevel[]; fixture: boolean; traditional: boolean }>;
+  /** `story.*` telemetry events `track()` accepted since the hook mounted (the e2e build sends none). */
+  events(): TelemetryEvent[];
 }
 
 export function StoryE2eHook(): null {
   const navigation = useNavigation();
   useEffect(() => {
     const g = globalThis as { __hrStoryE2E?: StoryE2eHandle };
+    const events: TelemetryEvent[] = [];
+    const stopListening = addTelemetryListener((e) => {
+      if (e.name.startsWith('story.')) events.push(e);
+    });
     g.__hrStoryE2E = {
+      events: () => events.map((e) => ({ ...e })),
       openReader: ({ storyId, level, sceneIndex }) =>
         navigation.navigate('StoryReader', { storyId, level, mode: 'replay', ...(sceneIndex === undefined ? {} : { sceneIndex }) }),
       stories: () =>
@@ -38,6 +46,7 @@ export function StoryE2eHook(): null {
         })),
     };
     return () => {
+      stopListening();
       delete g.__hrStoryE2E;
     };
   }, [navigation]);
