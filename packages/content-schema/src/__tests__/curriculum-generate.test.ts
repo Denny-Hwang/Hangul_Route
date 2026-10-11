@@ -547,3 +547,28 @@ describe('toPlanItems and toMeta', () => {
     expect(draft.catalogVersion).toBe(CATALOG.version);
   });
 });
+
+describe('the shipped catalogue once letters q1-q3 teach (F-QUEST-002 Q-6a)', () => {
+  const LETTERS = [q('letters-q1'), q('letters-q2'), q('letters-q3')];
+  const shipped = (band: 0 | 1 | 2 | 3): CurriculumDraft =>
+    generateCurriculum({ ...base, weeks: 12, goals: { focus: 'balanced', motivation: 'heritage' }, level: { stage: 'stage1', band }, unlockedStages: ['stage1'] }, CATALOG);
+  const vocabWeek = (draft: CurriculumDraft): number | undefined =>
+    draft.weeks.find((week) => week.extras.some((extra) => extra.kind === 'vocab'))?.index;
+
+  it('keeps letters q1-q3 first for band 0 and holds word topics back until all three are scheduled', () => {
+    const draft = shipped(0);
+    expect(ids(draft).slice(0, 3)).toEqual(LETTERS);
+    const lastLetters = Math.max(...draft.items.filter((item) => LETTERS.includes(item.id)).map((item) => item.week));
+    const topic = vocabWeek(draft);
+    expect(topic).toBeDefined();
+    expect(topic as number).toBeGreaterThanOrEqual(lastLetters);
+  });
+
+  it('places letters q1-q3 out from band 1 up (the basic rung covers what they teach)', () => {
+    for (const band of [1, 2, 3] as const) {
+      expect(questsPlacedOutAtLevel({ stage: 'stage1', band }, routeCatalogOf(CATALOG))).toEqual(expect.arrayContaining(LETTERS));
+      expect(ids(shipped(band)).filter((id) => LETTERS.includes(id))).toEqual([]);
+    }
+    expect(questsPlacedOutAtLevel({ stage: 'stage1', band: 0 }, routeCatalogOf(CATALOG))).toEqual([]);
+  });
+});

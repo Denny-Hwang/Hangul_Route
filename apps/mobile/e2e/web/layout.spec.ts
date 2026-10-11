@@ -1,6 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { completeChildForm, forgetPin, keepSidewaysIfAsked, typeDigits, unlockWithPin } from './helpers';
+import { completeChildForm, forgetPin, keepSidewaysIfAsked, passDiscover, playCheck, typeDigits, unlockWithPin } from './helpers';
 
 /**
  * Short-phone and phone-landscape layout (audit p1-L1..L4, p2-L1..L3, UX-09):
@@ -74,15 +74,21 @@ for (const vp of VIEWPORTS) {
     test('quest, Build-a-Letter and Results CTAs are reachable', async ({ page }) => {
       await onboard(page, 'Dani');
 
-      // Quest intro → skip the two listening games → Build-a-Letter.
+      // Quest intro → Discover pages → skip the listening game → Build-a-Letter.
       const cont = page.getByRole('button', { name: 'Continue' });
       await expectReachable(page, cont);
       await cont.click();
-      for (let i = 0; i < 2; i++) {
-        const skip = page.getByRole('button', { name: 'Skip for now' });
-        await expectReachable(page, skip);
-        await skip.click();
+      await expect(page.getByText('Look and learn', { exact: true })).toBeVisible();
+      while (await page.getByText(/^Page \d+ of \d+$/).first().isVisible()) {
+        const label = await page.getByText(/^Page \d+ of \d+$/).first().innerText();
+        await expectReachable(page, cont);
+        await cont.click();
+        if (/^Page (\d+) of \1$/.test(label)) break;
+        await expect(page.getByText(label, { exact: true })).toHaveCount(0);
       }
+      const skip = page.getByRole('button', { name: 'Skip for now' });
+      await expectReachable(page, skip);
+      await skip.click();
       await expect(page.getByText('Build a Letter')).toBeVisible();
       const play = page.getByRole('button', { name: 'Play minigame' });
       await expectReachable(page, play);
@@ -96,11 +102,15 @@ for (const vp of VIEWPORTS) {
       await expectReachable(page, skipGame);
       await skipGame.click();
 
+      // The two-question Check has no Skip (F-QUEST-002 §3.3): its Go must be reachable.
+      await expectReachable(page, page.getByRole('button', { name: 'Go', exact: true }));
+      await playCheck(page);
+
       const seeResults = page.getByRole('button', { name: 'See results' });
       await expectReachable(page, seeResults);
       await seeResults.click();
 
-      await expect(page.getByText('All done!')).toBeVisible();
+      // Results (the heading follows the Check's stars, so it is not pinned here).
       await expectReachable(page, page.getByRole('button', { name: 'Episode page' }));
       const home = page.getByRole('button', { name: 'Back home' });
       await expectReachable(page, home);
@@ -161,6 +171,7 @@ for (const vp of VIEWPORTS) {
       // Quest 2 builds on quest 1, which is not done yet: the soft-prerequisite sheet asks once (F-QUEST-002 §3.5).
       await page.getByRole('button', { name: 'Play anyway' }).click();
       await page.getByRole('button', { name: 'Continue' }).click();
+      await passDiscover(page);
       await page.getByRole('button', { name: 'Skip for now' }).click();
       await expect(page.getByText('Trace Each Letter')).toBeVisible();
       await page.getByRole('button', { name: 'Play minigame' }).click();

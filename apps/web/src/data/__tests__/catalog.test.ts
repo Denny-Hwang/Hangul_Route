@@ -6,7 +6,7 @@ import { builderEpisodes, catalogLabel, itemCategory, itemTitle, questsOf } from
 /** F-PLAN-002 section 3.2: the console reads the shared catalogue through this adapter (it retires `stage1-catalog.ts`). */
 describe('console catalogue adapter over the shared catalogue', () => {
   it('labels quests by title and episodes with their quest count', () => {
-    expect(catalogLabel('quest', 'quest:stage1-letters-q1')).toBe('Meet g, n, d, l');
+    expect(catalogLabel('quest', 'quest:stage1-letters-q1')).toBe('Meet a, eo, g, n');
     expect(catalogLabel('episode', 'episode:stage1-letters')).toBe('Meet the Letters (3 quests)');
     expect(catalogLabel('episode', 'episode:stage1-rites')).toBe('New Year & Festivals (1 quest)');
   });
@@ -30,7 +30,7 @@ describe('console catalogue adapter over the shared catalogue', () => {
 
   it('lists the quests of an episode in catalogue order', () => {
     expect(questsOf('episode:stage1-life').map((q) => q.id)).toEqual(['quest:stage1-life-q1', 'quest:stage1-life-q2']);
-    expect(questsOf('episode:stage1-letters').map((q) => q.minutes)).toEqual([4, 4, 5]);
+    expect(questsOf('episode:stage1-letters').map((q) => q.minutes)).toEqual([5, 5, 5]);
     expect(questsOf('episode:stage2-letters')).toEqual([]);
     expect(questsOf('episode:nope')).toEqual([]);
   });

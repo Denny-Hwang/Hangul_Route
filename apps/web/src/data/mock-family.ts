@@ -53,7 +53,7 @@ export function mockFamily(): MockFamily {
         { day: 'S', minutes: 11 },
       ],
       recentQuests: [
-        { id: 'q1', title: 'Meet g, n, d, l', stars: 3, completedAt: 'Today, 8:14am' },
+        { id: 'q1', title: 'Meet a, eo, g, n', stars: 3, completedAt: 'Today, 8:14am' },
         { id: 'q2', title: 'Bow & Eat Tteokguk', stars: 2, completedAt: 'Yesterday' },
         { id: 'q3', title: 'Tiger, Magpie, Moon', stars: 3, completedAt: 'Sun, May 17' },
       ],
@@ -82,7 +82,7 @@ export function mockFamily(): MockFamily {
         { day: 'S', minutes: 17 },
       ],
       recentQuests: [
-        { id: 'q4', title: 'Meet the Vowels', stars: 3, completedAt: 'Today, 4:02pm' },
+        { id: 'q4', title: 'Meet eu, i, d, r', stars: 3, completedAt: 'Today, 4:02pm' },
         { id: 'q5', title: 'Yut, Kite, Top', stars: 3, completedAt: 'Today, 3:50pm' },
         { id: 'q6', title: 'Hello Kimchi & Rice', stars: 2, completedAt: 'Yesterday' },
       ],

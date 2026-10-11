@@ -142,7 +142,7 @@ describe('teaches', () => {
     expect(teachesOf(discoverQuest('quest:t', ['jamo:nope']))).toEqual(['unknown:jamo:nope']);
   });
 
-  it('is empty for every shipped quest until F-QUEST-002 Q-6b adds Discover steps (then data.ts must follow)', () => {
+  it('equals what the Discover steps teach for every shipped quest (letters q1-q3 since Q-6a; empty for a quest without one)', () => {
     for (const quest of lessonQuests) {
       const found = CATALOG.quests.find((q) => q.id === quest.id);
       expect(found?.teaches, `quest ${quest.id} teaches${row(teachesOf(quest))}`).toEqual(teachesOf(quest));

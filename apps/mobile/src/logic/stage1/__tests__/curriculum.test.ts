@@ -91,7 +91,9 @@ describe('teachingQuestFor', () => {
   });
 
   it('reads the shipped Stage 1 list by default', () => {
-    expect(teachingQuestFor('jamo:hieut')).toBeUndefined(); // nothing teaches yet on shipped content
+    expect(teachingQuestFor('jamo:giyeok')?.id).toBe('quest:stage1-letters-q1'); // F-QUEST-002 Q-6a
+    expect(teachingQuestFor('jamo:rieul')?.id).toBe('quest:stage1-letters-q3');
+    expect(teachingQuestFor('jamo:hieut')).toBeUndefined(); // rites q3, not shipped yet
   });
 });
 
@@ -118,7 +120,7 @@ describe('symbolsMetThrough', () => {
   });
 
   it('reads the shipped Stage 1 list by default', () => {
-    expect(symbolsMetThrough(STAGE1_QUESTS[0]!.id)).toEqual([]);
+    expect(symbolsMetThrough(STAGE1_QUESTS[0]!.id)).toEqual(['jamo:a', 'jamo:eo', 'jamo:giyeok', 'jamo:nieun']);
   });
 });
 

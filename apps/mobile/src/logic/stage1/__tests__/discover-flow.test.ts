@@ -69,7 +69,7 @@ describe('buildDiscover: the sound hint in the UI language (F-I18N-001 §3.6)', 
     expect(es.glyph).toBe(en.glyph);
     expect(es.romanization).toBe(en.romanization);
     expect(es.accessibilityLabel).toBe(messages.a11y.discoverLetter(en.romanization, 'como la g de gato'));
-    expect(en.soundHint).toBeUndefined();
+    expect(en.soundHint).toBe('a soft, light g (between g and k)');
   });
 
   it('defaults to English and the generated overlays', () => {
@@ -199,8 +199,8 @@ describe('buildDiscover: the view model of the pages', () => {
 
   it('carries the sound hint and the hint-bearing accessible name', () => {
     const item = buildDiscover([pageOne]).pages[0]!.items[0]!;
-    expect(item.accessibilityLabel).toBe('Korean letter a');
-    expect(item.soundHint).toBeUndefined();
+    expect(item.soundHint).toBe('like the a in "father"');
+    expect(item.accessibilityLabel).toBe(messages.a11y.discoverLetter('a', 'like the a in "father"'));
   });
 
   it('builds a word item: romanization joined with a thin separator in the teaching UI only', () => {

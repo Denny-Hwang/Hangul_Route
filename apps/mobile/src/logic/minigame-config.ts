@@ -1,9 +1,11 @@
 import type {
+  KoText,
   ListenPickRound,
   MinigameKind,
   PicWordRound,
   StoryLevel,
 } from '@hangul-route/content-schema';
+import { lp } from './scope-builders';
 import { storyScopeFor } from './story/story-ref';
 
 /**
@@ -25,6 +27,8 @@ export interface StoryScope {
 export interface MinigameScope {
   kind: MinigameKind;
   jamoIds?: string[];
+  /** Match Sound: symbols asked at least once however the prompts fall (the quest's new symbols, F-QUEST-002 §3.4). */
+  focusJamoIds?: string[];
   syllables?: Array<{ ko: string; romanization: string; jamoChars: string[]; jamoIds?: string[] }>;
   cardPairs?: Array<{ ko: string; en: string; romanization?: string }>;
   storySteps?: Array<{ id: string; labelEn: string; labelKo?: string; romanization?: string }>;
@@ -46,73 +50,94 @@ export interface MinigameScope {
 const J = (id: string): string => `jamo:${id}`;
 const Jb = (id: string): string => `jamo:${id}-batchim`;
 
+/** The symbols the Letters quests teach (F-QUEST-002 §3.6): quest 1, 2 and 3. */
+const L1 = [J('a'), J('eo'), J('giyeok'), J('nieun')];
+const L2 = [J('o'), J('u'), J('mieum'), J('ieung')];
+const L3 = [J('eu'), J('i'), J('digeut'), J('rieul')];
+
+const word = (ko: string, romanization: string, en: string, syllables?: string[]): KoText =>
+  syllables ? { ko, romanization, en, syllables } : { ko, romanization, en };
+
+/** Reading words of the Letters quests: built only from symbols taught so far (R3). */
+const W = {
+  na: word('나', 'na', 'I, me'),
+  neo: word('너', 'neo', 'you'),
+  ga: word('가', 'ga', 'the sound ga'),
+  geo: word('거', 'geo', 'the sound geo'),
+  namu: word('나무', 'namu', 'tree', ['na', 'mu']),
+  neomu: word('너무', 'neomu', 'too much', ['neo', 'mu']),
+  gagu: word('가구', 'gagu', 'furniture', ['ga', 'gu']),
+  o: word('오', 'o', 'five'),
+  dari: word('다리', 'dari', 'leg, bridge', ['da', 'ri']),
+  ai: word('아이', 'ai', 'child', ['a', 'i']),
+  eomeoni: word('어머니', 'eomeoni', 'mother', ['eo', 'meo', 'ni']),
+  deurama: word('드라마', 'deurama', 'drama', ['deu', 'ra', 'ma']),
+} as const;
+
 export const minigameScopes: Record<string, MinigameScope> = {
-  // Stage 1 / Letters / Q1 — g, n, d, l
-  'minigame:s1-letters-recognize-1': {
+  // Stage 1 / Letters / Q1 — ㅏ ㅓ ㄱ ㄴ (F-QUEST-002 §3.6, quest 1)
+  'minigame:s1-letters-q1-play': {
     kind: 'match-sound',
-    jamoIds: [J('giyeok'), J('nieun'), J('digeut'), J('rieul')],
-    rounds: 4,
+    jamoIds: L1,
+    focusJamoIds: L1,
+    rounds: 6,
   },
-  'minigame:s1-letters-match-1': {
-    kind: 'match-sound',
-    jamoIds: [J('giyeok'), J('nieun'), J('digeut'), J('rieul')],
-    rounds: 5,
-  },
-  'minigame:s1-letters-build-1': {
-    kind: 'build-letter',
-    syllables: [
-      { ko: '가', romanization: 'ga', jamoChars: ['ㄱ', 'ㅏ'] },
-      { ko: '나', romanization: 'na', jamoChars: ['ㄴ', 'ㅏ'] },
-      { ko: '다', romanization: 'da', jamoChars: ['ㄷ', 'ㅏ'] },
-      { ko: '라', romanization: 'ra', jamoChars: ['ㄹ', 'ㅏ'] },
-    ],
-  },
-
-  // Stage 1 / Letters / Q2 — m, b, s, ng
-  'minigame:s1-letters-recognize-2': {
-    kind: 'match-sound',
-    jamoIds: [J('mieum'), J('bieup'), J('siot'), J('ieung')],
-    rounds: 4,
-  },
-  'minigame:s1-letters-trace-1': {
-    kind: 'trace-stroke',
-    jamoIds: [J('mieum'), J('bieup'), J('siot'), J('ieung')],
-    rounds: 4,
-  },
-  'minigame:s1-letters-match-2': {
-    kind: 'match-sound',
-    jamoIds: [
-      J('giyeok'),
-      J('nieun'),
-      J('digeut'),
-      J('rieul'),
-      J('mieum'),
-      J('bieup'),
-      J('siot'),
-      J('ieung'),
-    ],
-    rounds: 5,
-  },
-
-  // Stage 1 / Letters / Q3 — vowels
-  'minigame:s1-letters-recognize-3': {
-    kind: 'match-sound',
-    jamoIds: [J('a'), J('eo'), J('o'), J('u'), J('eu'), J('i')],
-    rounds: 5,
-  },
-  'minigame:s1-letters-match-3': {
-    kind: 'match-sound',
-    jamoIds: [J('a'), J('eo'), J('o'), J('u'), J('eu'), J('i')],
-    rounds: 5,
-  },
-  'minigame:s1-letters-build-2': {
+  'minigame:s1-letters-q1-apply': {
     kind: 'build-letter',
     syllables: [
       { ko: '가', romanization: 'ga', jamoChars: ['ㄱ', 'ㅏ'] },
       { ko: '거', romanization: 'geo', jamoChars: ['ㄱ', 'ㅓ'] },
-      { ko: '고', romanization: 'go', jamoChars: ['ㄱ', 'ㅗ'] },
-      { ko: '구', romanization: 'gu', jamoChars: ['ㄱ', 'ㅜ'] },
+      { ko: '나', romanization: 'na', jamoChars: ['ㄴ', 'ㅏ'] },
+      { ko: '너', romanization: 'neo', jamoChars: ['ㄴ', 'ㅓ'] },
     ],
+  },
+  'minigame:s1-letters-q1-check': {
+    kind: 'listen-pick',
+    listenPick: {
+      rounds: [
+        // Fewer than four of a kind are taught yet, so the options are the quest's four new symbols (§3.3).
+        lp.sym(J('eo'), L1, { optionIds: [J('eo'), J('a'), J('giyeok'), J('nieun')] }),
+        lp.word(W.neo, [W.ga, W.geo, W.na]),
+      ],
+    },
+  },
+
+  // Stage 1 / Letters / Q2 — ㅗ ㅜ ㅁ ㅇ, reviewing quest 1 (quest 2)
+  'minigame:s1-letters-q2-play': {
+    kind: 'match-sound',
+    jamoIds: [...L2, ...L1],
+    focusJamoIds: L2,
+    rounds: 6,
+  },
+  'minigame:s1-letters-q2-apply': {
+    kind: 'trace-stroke',
+    jamoIds: [J('mieum'), J('ieung'), J('o'), J('u')],
+    rounds: 4,
+  },
+  'minigame:s1-letters-q2-check': {
+    kind: 'listen-pick',
+    listenPick: {
+      rounds: [lp.sym(J('u'), [...L1, ...L2]), lp.word(W.namu, [W.neomu, W.gagu, W.o])],
+    },
+  },
+
+  // Stage 1 / Letters / Q3 — ㅡ ㅣ ㄷ ㄹ, reviewing quest 2 (quest 3)
+  'minigame:s1-letters-q3-play': {
+    kind: 'match-sound',
+    jamoIds: [...L3, ...L2],
+    focusJamoIds: L3,
+    rounds: 6,
+  },
+  'minigame:s1-letters-q3-apply': {
+    kind: 'odd-one-out',
+    jamoIds: [J('digeut'), J('rieul'), J('giyeok'), J('nieun'), J('mieum'), J('eu'), J('i'), J('a')],
+    rounds: 4,
+  },
+  'minigame:s1-letters-q3-check': {
+    kind: 'listen-pick',
+    listenPick: {
+      rounds: [lp.sym(J('eu'), [...L1, ...L2, ...L3]), lp.word(W.dari, [W.ai, W.eomeoni, W.deurama])],
+    },
   },
 
   // Stage 1 / Food & Life
@@ -213,13 +238,6 @@ export const minigameScopes: Record<string, MinigameScope> = {
       { id: 'c', labelEn: 'Move the piece', labelKo: '말 옮기기', romanization: 'mal omgigi' },
       { id: 'd', labelEn: 'Win!', labelKo: '승리!', romanization: 'seungni' },
     ],
-  },
-
-  // Stage 1 / Letters — Odd One Out (consonants vs vowels)
-  'minigame:s1-letters-odd-1': {
-    kind: 'odd-one-out',
-    jamoIds: [J('giyeok'), J('nieun'), J('digeut'), J('rieul'), J('a'), J('eo')],
-    rounds: 4,
   },
 
   // Stage 1 / Nature — Culture Quiz (Korean word -> English meaning)

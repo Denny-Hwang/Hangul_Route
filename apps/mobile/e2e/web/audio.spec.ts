@@ -2,7 +2,7 @@ import { existsSync, readdirSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { jamoOfSpoken, keepSidewaysIfAsked, onboardChild } from './helpers';
+import { jamoOfSpoken, keepSidewaysIfAsked, onboardChild, passDiscover } from './helpers';
 
 /**
  * F-AUDIO-004 A-4a: one persisted sound switch (AD7) and a ranked Korean voice
@@ -90,8 +90,9 @@ test('the Korean prompt is spoken with Yuna, the sound, never a novelty voice', 
   await fakeSpeech(page);
   await onboardChild(page, { name: 'Dami' });
   await page.getByRole('button', { name: 'Continue' }).click();
+  await passDiscover(page);
   await page.getByRole('button', { name: 'Play minigame' }).click();
-  await expect(page.getByText('1 / 4')).toBeVisible();
+  await expect(page.getByText('1 / 6')).toBeVisible();
   await expect.poll(async () => (await utterances(page)).length).toBeGreaterThan(0);
   const [first] = await utterances(page);
   expect(first).toMatchObject({ voice: 'Yuna', lang: 'ko-KR' });
@@ -101,8 +102,9 @@ test('an idle game speaks once when the round starts, and not again on a timer o
   await fakeSpeech(page);
   await onboardChild(page, { name: 'Dami' });
   await page.getByRole('button', { name: 'Continue' }).click();
+  await passDiscover(page);
   await page.getByRole('button', { name: 'Play minigame' }).click();
-  await expect(page.getByText('1 / 4')).toBeVisible();
+  await expect(page.getByText('1 / 6')).toBeVisible();
   await expect.poll(async () => (await utterances(page)).length).toBe(1);
 
   // No input: nothing more is said while the learner thinks (a Trace/Match idle timer must not speak).
@@ -141,11 +143,12 @@ test('switching the sound off is saved on this device and still off after a relo
   await expect(page.getByRole('switch', { name: 'Sound' })).toContainText('Off');
 });
 
-/** From the first-quest preview to the first Match Sound round. */
+/** From the first-quest preview, past its Discover step, to the first Match Sound round. */
 async function openMatchSound(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Continue' }).click();
+  await passDiscover(page);
   await page.getByRole('button', { name: 'Play minigame' }).click();
-  await expect(page.getByText('1 / 4')).toBeVisible();
+  await expect(page.getByText('1 / 6')).toBeVisible();
 }
 
 /** The prompt panel's Hangul syllable (its accessible name is "<ko>, <romanization>"). */
@@ -175,7 +178,7 @@ test('no Korean voice: the sound is shown as text, nothing is spoken, and the ro
   expect(await utterances(page)).toEqual([]);
 
   await tapAnswerFromText(page);
-  await expect(page.getByText('2 / 4')).toBeVisible();
+  await expect(page.getByText('2 / 6')).toBeVisible();
   await expect(panelText(page)).toBeVisible();
   expect(await utterances(page)).toEqual([]);
 });
@@ -189,10 +192,11 @@ test('sound switched off: the text prompt shows at once, Turn sound on plays it,
   await expect.poll(() => savedAudioPrefs(page)).toBe(JSON.stringify({ muted: true }));
   await page.reload();
 
-  await page.getByRole('button', { name: /^Meet g, n, d, l/ }).click();
+  await page.getByRole('button', { name: /^Meet a, eo, g, n/ }).click();
   await page.getByRole('button', { name: 'Continue' }).click();
+  await passDiscover(page);
   await page.getByRole('button', { name: 'Play minigame' }).click();
-  await expect(page.getByText('1 / 4')).toBeVisible();
+  await expect(page.getByText('1 / 6')).toBeVisible();
 
   await expect(panelText(page)).toBeVisible();
   await expect(page.getByText('Sound is off.')).toBeVisible();
@@ -277,9 +281,9 @@ test('no Korean voice in Match Sound: the panel links to the same sheet and the 
   await page.getByTestId('voice-help-sheet-ok').click();
   await expect(page.getByTestId('voice-help-sheet')).toHaveCount(0);
 
-  await expect(page.getByText('1 / 4')).toBeVisible();
+  await expect(page.getByText('1 / 6')).toBeVisible();
   await tapAnswerFromText(page);
-  await expect(page.getByText('2 / 4')).toBeVisible();
+  await expect(page.getByText('2 / 6')).toBeVisible();
 });
 
 test('a ready voice never shows the how-to link in Match Sound', async ({ page }) => {
@@ -289,10 +293,11 @@ test('a ready voice never shows the how-to link in Match Sound', async ({ page }
   await expect(page.getByTestId('prompt-panel-help')).toHaveCount(0);
 });
 
-/** F-AUDIO-004 A-5b: from the first-quest preview, past the two listening games, to Build a Letter. */
+/** F-AUDIO-004 A-5b: from the first-quest preview, past Discover and the Match Sound game, to Build a Letter. */
 async function openBuildLetter(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Continue' }).click();
-  for (let i = 0; i < 2; i++) await page.getByRole('button', { name: 'Skip for now' }).click();
+  await passDiscover(page);
+  await page.getByRole('button', { name: 'Skip for now' }).click();
   await page.getByRole('button', { name: 'Play minigame' }).click();
   await expect(page.getByText('Build this letter')).toBeVisible();
 }
@@ -343,7 +348,7 @@ test('Build a Letter with sound off: a tap says sound is off, and Turn sound on 
   await page.getByRole('switch', { name: /^Sound/ }).click();
   await expect.poll(() => savedAudioPrefs(page)).toBe(JSON.stringify({ muted: true }));
   await page.reload();
-  await page.getByRole('button', { name: /^Meet g, n, d, l/ }).click();
+  await page.getByRole('button', { name: /^Meet a, eo, g, n/ }).click();
   await openBuildLetter(page);
   await expect(page.getByTestId('prompt-panel-detail')).toHaveCount(0);
 
@@ -484,11 +489,11 @@ test('Culture Quiz: Hear it says the prompt word, and nothing plays before the t
 /**
  * F-AUDIO-004 A-6: bundled clips on the web (§3.10). Letter clips are precached; vocabulary,
  * story, card and dialogue clips are runtime-cached. Real letter clips arrive with A-9 (T-017);
- * until then these tests run on the e2e fixture build, which maps fixture tones for g, n, d, l
- * and one vocabulary tone from e2e/fixtures/audio (CI: the "Story reader e2e (fixture bundle)" step):
+ * until then these tests run on the e2e fixture build, which maps fixture tones for g, n, d, l,
+ * a and eo (every letter of quest 1's Match Sound since F-QUEST-002 Q-6a) and one vocabulary tone from e2e/fixtures/audio (CI: the "Story reader e2e (fixture bundle)" step):
  *   pnpm --filter @hangul-route/mobile build:web:fixtures
  *   STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test audio -g "bundled clips"
- * (Only this group: in the fixture build those four letters play a tone, not the voice, so the
+ * (Only this group: in the fixture build those six letters play a tone, not the voice, so the
  * voice tests above expect the regular build.)
  */
 const FIXTURE_BUILD = process.env.STORY_FIXTURES === '1';
@@ -513,7 +518,7 @@ const RUNTIME_CLIP = /(^|\/)audio\/(vocab|story|card|dialogue)\//;
 const letterClips = builtClips().filter((p) => /\/audio\/jamo\//.test(p));
 const runtimeClips = builtClips().filter((p) => RUNTIME_CLIP.test(p));
 // The fixture build must hold its clips: a silent skip there would leave the clip path unchecked in CI.
-const NO_CLIPS = 'No letter clips in this build: real ones arrive with A-9 (T-017); the fixture build (see above) has four.';
+const NO_CLIPS = 'No letter clips in this build: real ones arrive with A-9 (T-017); the fixture build (see above) has six.';
 
 type ClipWindow = Window & { __clipStarts?: number[] };
 
@@ -597,7 +602,7 @@ test.describe('bundled clips (A-6)', () => {
     await page.reload();
     await expect(page.getByText('Hi, Dami!')).toBeVisible();
 
-    await page.getByRole('button', { name: /^Meet g, n, d, l/ }).click();
+    await page.getByRole('button', { name: /^Meet a, eo, g, n/ }).click();
     await openMatchSound(page);
 
     // A clip started, served by the service worker.

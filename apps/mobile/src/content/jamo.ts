@@ -13,6 +13,55 @@ type SpokenKind = Jamo['spokenKind'];
  * Revised Romanization of spokenKo (D13); nameKo is the Hangul letter name.
  */
 
+/**
+ * English sound hints, one per symbol (F-QUEST-002 Appendix A), shown under the glyph on
+ * a Discover page and read in its screen-reader label. Wording rule (audit F15): the soft
+ * stops ㄱ ㄷ ㅂ ㅈ are "soft and light", the aspirated ㅋ ㅌ ㅍ ㅊ come "with a puff of air";
+ * no "voiced English" claims. Spanish and Korean readers need their own hint, a
+ * F-I18N-001 overlay (`jamo:*.soundHint`, PR 15, not written yet), never a translation of
+ * these English sound-alikes; until then `localize` falls back to English, so es and ko must
+ * stay hidden (the release guard in `__tests__/overlays.test.ts`).
+ */
+const SOUND_HINTS: Readonly<Record<string, string>> = {
+  'jamo:giyeok': 'a soft, light g (between g and k)',
+  'jamo:nieun': 'like n in "nose"',
+  'jamo:digeut': 'a soft, light d (between d and t)',
+  'jamo:rieul': 'a quick tap of the tongue, between r and l',
+  'jamo:mieum': 'like m in "moon"',
+  'jamo:bieup': 'a soft, light b (between b and p)',
+  'jamo:siot': 'like s in "sun"',
+  'jamo:ieung': 'silent at the start of a block; "ng" in "sing" at the end',
+  'jamo:jieut': 'a soft, light j',
+  'jamo:chieut': 'like ch in "chair", with a puff of air',
+  'jamo:kieuk': 'like k in "kite", with a puff of air',
+  'jamo:tieut': 'like t in "top", with a puff of air',
+  'jamo:pieup': 'like p in "pie", with a puff of air',
+  'jamo:hieut': 'like h in "hat"',
+  'jamo:a': 'like the a in "father"',
+  'jamo:ya': 'like "ya" in "yacht"',
+  'jamo:eo': 'like the u in "cup", mouth wide open',
+  'jamo:yeo': 'like "yu" in "young"',
+  'jamo:o': 'like the o in "go", lips round',
+  'jamo:yo': 'like "yo" in "yoga"',
+  'jamo:u': 'like "oo" in "moon"',
+  'jamo:yu': 'like "you"',
+  'jamo:eu': 'say "oo" with flat lips',
+  'jamo:i': 'like "ee" in "see"',
+  'jamo:giyeok-batchim': 'a short, closed k (like "book" cut off)',
+  'jamo:nieun-batchim': 'ends like n in "sun"',
+  'jamo:rieul-batchim': 'ends like l in "ball"',
+  'jamo:mieum-batchim': 'ends like m in "ham"',
+  'jamo:bieup-batchim': 'a short, closed p (like "cup" cut off)',
+  'jamo:ieung-batchim': 'ends like ng in "sing"',
+};
+
+/** The sound hint of a jamo id; every one of the 30 symbols has one. */
+function hint(id: string): string {
+  const found = SOUND_HINTS[id];
+  if (found === undefined) throw new Error(`No sound hint for ${id}`);
+  return found;
+}
+
 const c = (
   id: string,
   char: string,
@@ -34,6 +83,7 @@ const c = (
   nameEn,
   ipa,
   kind: 'consonant',
+  soundHint: hint(`jamo:${id}`),
   exampleWordKo,
   exampleWordRomanization,
   exampleWordEn,
@@ -66,6 +116,7 @@ const v = (
   nameEn,
   ipa,
   kind: 'vowel',
+  soundHint: hint(`jamo:${id}`),
   exampleWordKo,
   exampleWordRomanization,
   exampleWordEn,
@@ -91,6 +142,7 @@ const b = (
   romanization,
   nameEn,
   kind: 'batchim',
+  soundHint: hint(`jamo:${id}-batchim`),
   audioRef: `audio/jamo/${id}-batchim.mp3`,
   spokenKo,
   spokenRomanization,

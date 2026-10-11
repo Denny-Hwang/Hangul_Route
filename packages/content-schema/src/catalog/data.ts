@@ -7,12 +7,13 @@ import type { Catalog, CatalogCell, CatalogQuest, CatalogStory, CatalogTopic } f
  * corrected row when the bundle and this file drift apart. Bump `CATALOG_VERSION`
  * on every content change that alters what a generated route can contain.
  *
- * Until F-QUEST-002 Q-6b lands the 15 Stage 1 quests, this file lists the 8 the
- * bundle ships; Q-6b grows it to 15 (the parity test shows the rows to add).
+ * Until F-QUEST-002 lands the 15 Stage 1 quests, this file lists the 8 the bundle
+ * ships; Q-6a filled `teaches` for letters q1-q3, and Q-6b, Q-7b and Q-8 grow it to
+ * 15 (the parity test shows the rows to add).
  * Every story is a `draft` until a native reviewer signs it and the bundle holds
  * its `shelf` block; flipping a story to `ready` is that reviewer's change.
  */
-export const CATALOG_VERSION = 1;
+export const CATALOG_VERSION = 2;
 
 const cell = (
   stage: StageKey,
@@ -36,7 +37,7 @@ const lesson = (
 const soon = (stage: StageKey, theme: ThemeKey, title: string): CatalogCell => cell(stage, theme, title, 'preview', 10);
 
 const cells: CatalogCell[] = [
-  cell('stage1', 'letters', 'Meet the Letters', 'shipped', 12, ['quest:stage1-letters-q1', 'quest:stage1-letters-q2', 'quest:stage1-letters-q3']),
+  cell('stage1', 'letters', 'Meet the Letters', 'shipped', 15, ['quest:stage1-letters-q1', 'quest:stage1-letters-q2', 'quest:stage1-letters-q3']),
   cell('stage1', 'life', 'Around the Korean Table', 'shipped', 10, ['quest:stage1-life-q1', 'quest:stage1-life-q2']),
   cell('stage1', 'rites', 'New Year & Festivals', 'shipped', 8, ['quest:stage1-rites-q1']),
   cell('stage1', 'nature', 'Tigers, Mountains, Moon', 'shipped', 9, ['quest:stage1-nature-q1']),
@@ -74,13 +75,14 @@ const cells: CatalogCell[] = [
 ];
 
 /**
- * `teaches` is what the bundle's Discover steps teach, which is nothing until
- * F-QUEST-002 Q-6b adds them (`questTeaches`, the parity test compares).
+ * `teaches` is what the bundle's Discover steps teach (`questTeaches`, the parity
+ * test compares): letters q1-q3 since F-QUEST-002 Q-6a; the quests not yet rebuilt
+ * teach nothing until Q-6b, Q-7b and Q-8 add their Discover steps.
  */
 const lessonQuests: CatalogQuest[] = [
-  lesson('stage1-letters-q1', 'stage1', 'letters', 'Meet g, n, d, l', 4),
-  lesson('stage1-letters-q2', 'stage1', 'letters', 'Meet m, b, s, ng', 4),
-  lesson('stage1-letters-q3', 'stage1', 'letters', 'Meet the Vowels', 5),
+  lesson('stage1-letters-q1', 'stage1', 'letters', 'Meet a, eo, g, n', 5, ['ㅏ', 'ㅓ', 'ㄱ', 'ㄴ']),
+  lesson('stage1-letters-q2', 'stage1', 'letters', 'Meet o, u, m and the circle', 5, ['ㅗ', 'ㅜ', 'ㅁ', 'ㅇ']),
+  lesson('stage1-letters-q3', 'stage1', 'letters', 'Meet eu, i, d, r', 5, ['ㅡ', 'ㅣ', 'ㄷ', 'ㄹ']),
   lesson('stage1-life-q1', 'stage1', 'life', 'Hello Kimchi & Rice', 5),
   lesson('stage1-life-q2', 'stage1', 'life', 'Family at the Table', 5),
   lesson('stage1-rites-q1', 'stage1', 'rites', 'Bow & Eat Tteokguk', 5),

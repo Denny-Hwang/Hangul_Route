@@ -52,6 +52,22 @@ describe('lp.sym (sound -> written symbol)', () => {
   it('needs at least two taught symbols of the kind', () => {
     expect(() => lp.sym('jamo:giyeok', ['jamo:giyeok'])).toThrow(/two options/);
   });
+
+  it('takes explicit options when too few of a kind are taught (quest 1: the four new symbols)', () => {
+    const r = lp.sym('jamo:eo', TAUGHT_L1, { optionIds: ['jamo:a', 'jamo:eo', 'jamo:giyeok', 'jamo:nieun'] });
+    expect(r.options.map((o) => o.id)).toEqual(['jamo:eo', 'jamo:a', 'jamo:giyeok', 'jamo:nieun']);
+    expect(r.answerId).toBe('jamo:eo');
+    expect(r.options[2]!.text).toMatchObject({ ko: 'ㄱ', romanization: 'g/k' });
+    expect(ListenPickRoundSchema.safeParse(r).success).toBe(true);
+  });
+
+  it('rejects explicit options that leave out the target, repeat one, or name an untaught or unknown symbol', () => {
+    expect(() => lp.sym('jamo:eo', TAUGHT_L1, { optionIds: ['jamo:a', 'jamo:giyeok'] })).toThrow(/target/);
+    expect(() => lp.sym('jamo:eo', TAUGHT_L1, { optionIds: ['jamo:eo', 'jamo:a', 'jamo:a'] })).toThrow(/twice/);
+    expect(() => lp.sym('jamo:eo', TAUGHT_L1, { optionIds: ['jamo:eo', 'jamo:o'] })).toThrow(/not taught/);
+    expect(() => lp.sym('jamo:eo', [...TAUGHT_L1, 'jamo:nope'], { optionIds: ['jamo:eo', 'jamo:nope'] })).toThrow(/Unknown symbol/);
+    expect(() => lp.sym('jamo:eo', TAUGHT_L1, { optionIds: ['jamo:eo'] })).toThrow(/two options/);
+  });
 });
 
 describe('lp.syl (syllable -> written syllable)', () => {

@@ -1,6 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { completeChildForm, unlockWithPin } from './helpers';
+import { completeChildForm, passDiscover, unlockWithPin } from './helpers';
 
 /**
  * F-LAYOUT-001 PR 6 (§3.6 game rows, PIN row, LD4 "media scales, text does not"):
@@ -67,8 +67,9 @@ for (const c of CASES) {
       await page.getByRole('button', { name: "Let's start" }).click();
       await completeChildForm(page, { name });
 
-      // Quest 1, step 2: Match Sound.
+      // Quest 1, step 3: Match Sound (after the Discover step).
       await page.getByRole('button', { name: 'Continue' }).click();
+      await passDiscover(page);
       await page.getByRole('button', { name: 'Play minigame' }).click();
       const tiles = page.getByTestId('match-sound-tiles').getByRole('button');
       await expect(tiles).toHaveCount(4);
@@ -95,18 +96,20 @@ for (const c of CASES) {
       await page.getByRole('button', { name: /Meet the Letters/ }).click();
       await page.getByRole('button', { name: 'Start' }).first().click();
       await page.getByRole('button', { name: 'Continue' }).click();
-      for (let i = 0; i < 2; i++) await page.getByRole('button', { name: 'Skip for now' }).click();
+      await passDiscover(page);
+      await page.getByRole('button', { name: 'Skip for now' }).click();
       await page.getByRole('button', { name: 'Play minigame' }).click();
       await expect(page.getByText('Build this letter')).toBeVisible();
       const letter = await box(page.getByRole('button', { name: /^Korean letter / }).first());
       expect(letter.width, 'Build a Letter tile').toBeCloseTo(scaled(80, c.scale), 0);
 
-      // Quest 2, step 3: Trace.
+      // Quest 2, step 4: Trace.
       await home(page, name);
       await page.getByRole('button', { name: /Meet the Letters/ }).click();
       await page.getByRole('button', { name: 'Start' }).nth(1).click();
       await page.getByRole('button', { name: 'Play anyway' }).click();
       await page.getByRole('button', { name: 'Continue' }).click();
+      await passDiscover(page);
       await page.getByRole('button', { name: 'Skip for now' }).click();
       await page.getByRole('button', { name: 'Play minigame' }).click();
       await expect(page.getByText(/^Trace the letter /)).toBeVisible();

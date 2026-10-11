@@ -37,13 +37,32 @@ function syllableText(ko: string, gloss?: string): KoText {
 
 const parseRound = (round: ListenPickRound): ListenPickRound => ListenPickRoundSchema.parse(round);
 
+/** Explicit symbol options, target first: each taught, known and listed once. */
+function explicitOptionIds(targetId: string, taughtIds: readonly string[], optionIds: readonly string[]): string[] {
+  if (!optionIds.includes(targetId)) throw new Error(`Options for ${targetId} must include the target`);
+  const taught = new Set(taughtIds);
+  for (const [i, id] of optionIds.entries()) {
+    if (optionIds.indexOf(id) !== i) throw new Error(`Option ${id} is listed twice`);
+    if (!taught.has(id)) throw new Error(`Option ${id} is not taught yet`);
+    if (!findJamo(id)) throw new Error(`Unknown symbol ${id}`);
+  }
+  if (optionIds.length < 2) throw new Error(`Need at least two options for ${targetId}`);
+  return [targetId, ...optionIds.filter((id) => id !== targetId)];
+}
+
 export const lp = {
-  /** Sound -> written symbol (a consonant or vowel). Options: the symbol and its taught confusables. */
-  sym(jamoId: string, taughtIds: readonly string[]): ListenPickRound {
+  /**
+   * Sound -> written symbol (a consonant or vowel). Options: the symbol and its taught
+   * confusables. `optionIds` names the options instead, for a quest that teaches fewer
+   * than four symbols of a kind (quest 1 asks among its four new symbols, F-QUEST-002
+   * section 3.3); they must be taught and include the target, which goes first.
+   */
+  sym(jamoId: string, taughtIds: readonly string[], opts: { optionIds?: readonly string[] } = {}): ListenPickRound {
     const jamo = findJamo(jamoId);
     const spoken = jamo && spokenFormFor(jamo);
     if (!jamo || !spoken) throw new Error(`Unknown symbol ${jamoId}`);
-    const options = checkOptionIds(jamoId, taughtIds).map((id) => {
+    const ids = opts.optionIds ? explicitOptionIds(jamoId, taughtIds, opts.optionIds) : checkOptionIds(jamoId, taughtIds);
+    const options = ids.map((id) => {
       const option = findJamo(id)!;
       return { id, text: { ko: option.char, romanization: option.romanization, en: `the letter ${option.nameEn}` } };
     });

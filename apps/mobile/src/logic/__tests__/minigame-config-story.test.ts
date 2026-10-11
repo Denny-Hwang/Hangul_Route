@@ -8,7 +8,8 @@ vi.mock('../../content/stories', () => ({
 describe('scopeFor story fallback', () => {
   it('hand-written scopes still win', async () => {
     const { scopeFor, minigameScopes } = await import('../minigame-config');
-    const ref = 'minigame:s1-letters-recognize-1';
+    const ref = 'minigame:s1-letters-q1-play';
+    expect(minigameScopes[ref]).toBeDefined();
     expect(scopeFor(ref)).toBe(minigameScopes[ref]);
   });
 
