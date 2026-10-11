@@ -1,5 +1,7 @@
 import { choiceCardStyle, CHOICE_CARD_STATES } from '@hangul-route/design-system/choice-card-style';
 import { iconGlyphs } from '@hangul-route/design-system/icon-glyphs';
+import type { SceneArtLike } from '@hangul-route/design-system/scene-art';
+import { SceneSvg } from '@hangul-route/design-system/scene-art/dom';
 import { borderWidth, colors, radii, spacing, touchTarget, typography } from '@hangul-route/design-system/tokens';
 import Link from 'next/link';
 import React from 'react';
@@ -59,6 +61,7 @@ export default function ComponentsPreviewPage(): JSX.Element {
       <ProgressSection />
       <StarRowSection />
       <TypographySection />
+      <StorySceneSection />
 
       <footer
         style={{
@@ -71,7 +74,8 @@ export default function ComponentsPreviewPage(): JSX.Element {
       >
         <p>
           HoyaBubble + Hoya 5-pose live on the main <Link href="/design-preview" style={{ color: colors.brand.primary }}>/design-preview</Link> page. Heritage Card art has its own
-          page at <Link href="/design-preview/cards" style={{ color: colors.brand.primary }}>/design-preview/cards</Link>.
+          page at <Link href="/design-preview/cards" style={{ color: colors.brand.primary }}>/design-preview/cards</Link>. Every story scene is on the
+          contact sheet at <Link href="/design-preview/scenes" prefetch={false} style={{ color: colors.brand.primary }}>/design-preview/scenes</Link>.
         </p>
       </footer>
     </main>
@@ -677,6 +681,45 @@ function TypographySection(): JSX.Element {
               오늘의 학습
             </div>
           </div>
+        ))}
+      </div>
+    </SectionWrapper>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// StoryScene (F-STORY-002 §3.9.9, §5): three art sizes + the tinted fallback.
+// The web renderer `SceneSvg` draws the same model as the app's StoryScene.
+// ---------------------------------------------------------------------------
+
+/** The spec's worked example (§3.9.4): the palace hall with the king, an official and a historian. */
+const STORY_SCENE_SAMPLE: SceneArtLike = {
+  setting: 'scene:palace-hall',
+  layers: [
+    { ref: 'prop:fig-king', x: 200, y: 186, s: 0.9 },
+    { ref: 'prop:fig-official', x: 90, y: 256 },
+    { ref: 'prop:fig-historian', x: 330, y: 292, s: 1.1, flip: true, z: 'front' },
+  ],
+  altEn: 'The king on a raised seat in a palace hall, an official below and a historian writing at the side',
+};
+
+function StorySceneSection(): JSX.Element {
+  const cells: Array<{ label: string; art?: SceneArtLike; width: number; variant: 'full' | 'thumb' }> = [
+    { label: 'full 320', art: STORY_SCENE_SAMPLE, width: 320, variant: 'full' },
+    { label: 'full 96', art: STORY_SCENE_SAMPLE, width: 96, variant: 'full' },
+    { label: 'thumb 96', art: STORY_SCENE_SAMPLE, width: 96, variant: 'thumb' },
+    { label: 'fallback 320 (no art)', width: 320, variant: 'full' },
+    { label: 'fallback 96 (no art)', width: 96, variant: 'full' },
+  ];
+  return (
+    <SectionWrapper id="story-scene" title="StoryScene — 3 art sizes + fallback (5 cells)">
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: spacing.md, alignItems: 'stretch', overflowX: 'auto' }}>
+        {cells.map((c) => (
+          <Cell key={c.label} label={c.label}>
+            <div style={{ display: 'flex', borderRadius: radii.md, overflow: 'hidden' }}>
+              <SceneSvg art={c.art} theme="letters" width={c.width} variant={c.variant} />
+            </div>
+          </Cell>
         ))}
       </div>
     </SectionWrapper>
