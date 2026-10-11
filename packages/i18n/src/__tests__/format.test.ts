@@ -127,6 +127,22 @@ describe('formatUsd', () => {
     expect(formatUsd('en', 1234.5)).toBe('$1,234.50');
   });
 
+  it('cents: always two digits, for a computed amount such as a discounted price', () => {
+    expect(formatUsd('en', 150, { cents: true })).toBe('$150.00');
+    expect(formatUsd('en', 0, { cents: true })).toBe('$0.00');
+    expect(formatUsd('en', 12.24, { cents: true })).toBe('$12.24');
+    expect(formatUsd('en', 122.4, { cents: true })).toBe('$122.40');
+    expect(formatUsd('en', 1234.5, { cents: false })).toBe('$1,234.50');
+    expect(formatUsd('en', 153, {})).toBe('$153');
+  });
+
+  it('cents survive the fallback too', () => {
+    vi.stubGlobal('Intl', undefined);
+    expect(formatUsd('en', 150, { cents: true })).toBe('$150.00');
+    expect(formatUsd('es', 1234, { cents: true })).toBe('$1,234.00');
+    expect(formatUsd('en', 153)).toBe('$153');
+  });
+
   it('is localised for es and ko and always mentions the amount', () => {
     expect(formatUsd('es', 15.3)).toContain('15');
     expect(formatUsd('ko', 153)).toContain('153');

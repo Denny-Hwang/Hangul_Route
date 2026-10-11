@@ -187,6 +187,9 @@ importers:
       '@hangul-route/design-system':
         specifier: workspace:*
         version: link:../../packages/design-system
+      '@hangul-route/i18n':
+        specifier: workspace:*
+        version: link:../../packages/i18n
       '@hangul-route/shared-types':
         specifier: workspace:*
         version: link:../../packages/shared-types

@@ -1,4 +1,5 @@
 import type { PlanItem } from '@hangul-route/content-schema';
+import { DEFAULT_LOCALE, formatDate, getMessages, type UiLocale } from '@hangul-route/i18n';
 import type { RosterLearner } from './api';
 
 /** Pure plan-builder helpers — F-PLAN-001 §3.5 (wireframe console/plan-builder). */
@@ -24,13 +25,12 @@ export function currentPlan<T extends PlanLike>(plans: readonly T[]): T | null {
   return plans.filter((p) => !p.archivedAt).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))[0] ?? null;
 }
 
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] as const;
-
-export function planStatusLabel(plan: PlanLike): string {
-  if (plan.archivedAt) return 'Archived';
-  if (!plan.publishedAt) return 'Draft';
-  const d = new Date(plan.publishedAt);
-  return `Published ${MONTHS[d.getUTCMonth()] ?? ''} ${d.getUTCDate()}`;
+/** "Archived" · "Draft" · "Published Sep 20" (the UTC calendar day of publishing), in `locale`. */
+export function planStatusLabel(plan: PlanLike, locale: UiLocale = DEFAULT_LOCALE): string {
+  const status = getMessages(locale).console.planStatus;
+  if (plan.archivedAt) return status.archived;
+  if (!plan.publishedAt) return status.draft;
+  return status.published(formatDate(locale, plan.publishedAt, 'monthDay', { utc: true }));
 }
 
 export interface ReadoutRow {

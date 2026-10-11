@@ -3,6 +3,7 @@
 import { colors, radii, spacing, typography } from '@hangul-route/design-system/tokens';
 import Link from 'next/link';
 import type { CSSProperties, ReactNode } from 'react';
+import { LanguageSelect } from './LanguageSelect';
 
 /** Token-only building blocks for the console — F-CONSOLE-001. */
 export const panelStyle: CSSProperties = {
@@ -90,7 +91,8 @@ export function ConsoleShell({ children, onSignOut, title }: { children: ReactNo
           </Link>
           {title ? <span style={{ color: colors.text.secondary }}>· {title}</span> : null}
         </div>
-        <nav style={{ display: 'flex', gap: spacing.sm, alignItems: 'center' }}>
+        <nav style={{ display: 'flex', gap: spacing.sm, alignItems: 'center', flexWrap: 'wrap' }}>
+          <LanguageSelect />
           <Button disabled>Account</Button>
           <Link href="/teach/billing">
             <Button>Billing</Button>

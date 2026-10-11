@@ -1,6 +1,8 @@
+import { PLAN_PRICING } from '@hangul-route/content-schema';
+import { formatDate, formatUsd, getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import type { EntitlementView, SpaceListItem } from '../api';
-import { checkoutReturnNotice, currentPlanCards, isActive, planRowsFor, promoPriceLine, sourceLine, statusLine } from '../billing';
+import { PLAN_PRICE, checkoutReturnNotice, currentPlanCards, isActive, planPrice, planRowsFor, promoPriceLine, sourceLine, statusLine } from '../billing';
 
 const now = new Date('2026-09-21T12:00:00.000Z');
 const ent = (over: Partial<EntitlementView>): EntitlementView => ({ id: 'ent:1', subjectKind: 'space', subjectId: 'space:fam', planKey: 'group_license', status: 'active', provider: 'stripe', providerRef: 'sub', customerRef: 'cus', seats: null, expiresAt: '2026-10-21T00:00:00.000Z', promoCode: null, updatedAt: '2026-09-20T00:00:00.000Z', subjectName: 'Kim family', ...over });
@@ -80,5 +82,39 @@ describe('sourceLine', () => {
     expect(sourceLine({ provider: 'stripe', promoCode: null })).toBe('via web (Stripe)');
     expect(sourceLine({ provider: 'stripe', promoCode: 'KPCCW2026' })).toBe('via web (Stripe) · code KPCCW2026');
     expect(sourceLine({ provider: 'manual', promoCode: null })).toBe('via contract');
+  });
+});
+
+describe('billing words and prices per locale (F-I18N-001 PR 9)', () => {
+  it('prices plans from PLAN_PRICING amounts through formatUsd, never the English label (F-I18N-001 §3.1)', () => {
+    expect(planPrice('family_lifetime')).toBe('$15.30 once');
+    expect(planPrice('group_license')).toBe('$153 / year');
+    expect(PLAN_PRICE).toEqual({ free: '$0', family_lifetime: '$15.30 once', group_license: '$153 / year', school_seat: 'Contact us' });
+    for (const locale of ['en', 'es', 'ko'] as const) {
+      const price = getMessages(locale).console.price;
+      expect(planPrice('family_lifetime', locale)).toBe(price.once(formatUsd(locale, PLAN_PRICING.family_lifetime.amountUsd)));
+      expect(planPrice('group_license', locale)).toBe(price.year(formatUsd(locale, PLAN_PRICING.group_license.amountUsd)));
+    }
+  });
+
+  it('words statuses and promo prices in every locale (F-I18N-001 PR 9)', () => {
+    const pct = { id: 'promo_1', code: 'HOYA20', name: 'Launch', percentOff: 20, amountOffCents: null, duration: 'once' as const };
+    for (const locale of ['en', 'es', 'ko'] as const) {
+      const c = getMessages(locale).console;
+      const day = formatDate(locale, '2026-10-21T00:00:00.000Z', 'monthDayYear', { utc: true });
+      expect(statusLine(ent({ status: 'trial' }), now, locale)).toBe(c.entitlementStatus.trialEnds(day));
+      expect(statusLine(ent({}), now, locale)).toBe(c.entitlementStatus.activeRenews(day));
+      expect(statusLine(ent({ status: 'cancelled' }), now, locale)).toBe(c.entitlementStatus.cancelledEnds(day));
+      expect(statusLine(ent({ status: 'expired' }), now, locale)).toBe(c.entitlementStatus.endedOn(day));
+      expect(statusLine(ent({ status: 'past_due' }), now, locale)).toBe(c.entitlementStatus.pastDueKept);
+      expect(promoPriceLine('group_license', pct, locale)).toBe(
+        c.promoPrice(c.price.year(formatUsd(locale, 122.4, { cents: true })), 'HOYA20', '20% off', true, planPrice('group_license', locale)),
+      );
+    }
+  });
+
+  it('reads the billing date in UTC whatever the device time zone', () => {
+    expect(statusLine(ent({ expiresAt: '2026-10-21T00:30:00.000Z' }), now)).toBe('active · renews Oct 21, 2026');
+    expect(statusLine(ent({ expiresAt: '2026-10-21T23:30:00.000Z' }), now)).toBe('active · renews Oct 21, 2026');
   });
 });

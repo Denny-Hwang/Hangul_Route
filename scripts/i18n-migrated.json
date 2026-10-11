@@ -26,14 +26,15 @@
     "apps/mobile/src/components/BackupCard.tsx",
     "apps/mobile/src/screens/minigames/**",
     "apps/mobile/src/components/PromptPanel.tsx",
-    "apps/mobile/src/components/VoiceHelpSheet.tsx"
+    "apps/mobile/src/components/VoiceHelpSheet.tsx",
+    "apps/web/src/components/console/LanguageSelect.tsx",
+    "apps/web/src/lib/i18n/**"
   ],
   "pluralTernaryBaseline": {
     "apps/web/src/app/teach/space/page.tsx": 1,
     "apps/web/src/app/teach/space/plan/page.tsx": 1,
     "apps/web/src/components/console/SchoolAdmin.tsx": 1,
     "apps/web/src/data/stage1-catalog.ts": 1,
-    "apps/web/src/lib/console/rollup.ts": 1,
     "packages/content-schema/src/romanization/compare.ts": 1
   }
 }

@@ -29,6 +29,7 @@ export {
   type DateInput,
   type DateKind,
   type FormatDateOptions,
+  type FormatUsdOptions,
   type RelativeDayWords,
 } from './format';
 export {
