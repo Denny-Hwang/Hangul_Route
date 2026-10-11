@@ -29,6 +29,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { cardById } from '../../content';
+import { useMessages } from '../../i18n/use-messages';
 import { speak } from '../../platform/audio';
 import { useReducedMotion } from '../../platform/motion';
 import { isShareAvailable, shareSnapshot } from '../../platform/sharing';
@@ -41,6 +42,8 @@ type Props = NativeStackScreenProps<RootStackParamList, 'CardDetail'>;
 type CardFace = 'front' | 'back';
 
 export function CardDetailScreen({ route, navigation }: Props): React.ReactElement {
+  const messages = useMessages();
+  const m = messages.learner.cardDetail;
   const card = cardById(route.params.cardId);
   const profile = useProfileStore(activeProfileSelector);
   const snap = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
@@ -82,7 +85,7 @@ export function CardDetailScreen({ route, navigation }: Props): React.ReactEleme
   if (!card) {
     return (
       <Screen>
-        <Body>Card not found.</Body>
+        <Body>{m.notFound}</Body>
       </Screen>
     );
   }
@@ -147,7 +150,11 @@ export function CardDetailScreen({ route, navigation }: Props): React.ReactEleme
         disabled={!canFlip}
         accessibilityRole="button"
         accessibilityLabel={
-          canFlip ? `Tap to flip card to ${face === 'front' ? 'back' : 'front'}` : 'Locked card'
+          canFlip
+            ? face === 'front'
+              ? messages.a11y.flipToBack
+              : messages.a11y.flipToFront
+            : messages.a11y.lockedCard
         }
       >
         <View ref={captureRef} collapsable={false}>
@@ -158,7 +165,7 @@ export function CardDetailScreen({ route, navigation }: Props): React.ReactEleme
             style={{ borderWidth: 4, borderColor: colors.rarity[card.rarity], borderRadius: radii.xl }}
           >
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <Pill tone={rarityTone} label={card.rarity} />
+              <Pill tone={rarityTone} label={messages.learner.library.rarity[card.rarity]} />
               {canFlip ? (
                 <View
                   style={{
@@ -173,7 +180,7 @@ export function CardDetailScreen({ route, navigation }: Props): React.ReactEleme
                 >
                   <Icon name="replay" size={14} color={colors.text.muted} />
                   <Caption tone="muted">
-                    {face === 'front' ? 'tap to flip' : 'tap to flip back'}
+                    {face === 'front' ? m.flip.front : m.flip.back}
                   </Caption>
                 </View>
               ) : null}
@@ -217,7 +224,7 @@ export function CardDetailScreen({ route, navigation }: Props): React.ReactEleme
         <>
           <Spacer size="lg" />
           <Button
-            label="Hear it"
+            label={m.hear.cta}
             tone="secondary"
             size="lg"
             onPress={() => speak(card.subtitleKo ?? '', { language: 'ko-KR' })}
@@ -231,10 +238,10 @@ export function CardDetailScreen({ route, navigation }: Props): React.ReactEleme
         <>
           <Spacer size="sm" />
           <Button
-            label="Share"
+            label={m.share.cta}
             tone="ghost"
             size="md"
-            accessibilityLabel="Share this card"
+            accessibilityLabel={messages.a11y.shareCard}
             disabled={isFlipping}
             leading={<Icon name="card" size={18} color={colors.brand.primary} />}
             onPress={async () => {
@@ -246,7 +253,7 @@ export function CardDetailScreen({ route, navigation }: Props): React.ReactEleme
                 format: 'png',
               });
               if (!res.ok && res.reason === 'capture-failed') {
-                setShareError("Couldn't make the picture this time. Try again?");
+                setShareError(m.share.error);
               }
             }}
           />
@@ -271,6 +278,7 @@ function FrontFaceBody({
   card: HeritageCard;
   unlocked: boolean;
 }): React.ReactElement {
+  const a11y = useMessages().a11y;
   return (
     <View style={{ alignItems: 'center' }}>
       <View
@@ -291,7 +299,7 @@ function FrontFaceBody({
       >
         {unlocked ? (
           supportedCardIds.includes(card.id) ? (
-            <HeritageCardArt cardId={card.id} size={200} />
+            <HeritageCardArt cardId={card.id} size={200} accessibilityLabel={a11y.cardArt(card.titleEn)} />
           ) : (
             <Text style={{ fontSize: 80, fontWeight: '800', color: colors.text.primary }}>
               {card.subtitleKo ?? card.titleEn.charAt(0)}

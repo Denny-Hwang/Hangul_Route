@@ -23,6 +23,7 @@ import { Pressable, View } from 'react-native';
 import { InstallGuideSheet } from '../../components/InstallGuideSheet';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
 import { episodesAll, questsAll } from '../../content';
+import { useMessages } from '../../i18n/use-messages';
 import {
   buildTodaysMission,
   dayKey,
@@ -59,14 +60,13 @@ function MissionTile({
   card: MissionCard;
   onPress: () => void;
 }): React.ReactElement {
+  const a11y = useMessages().a11y;
   return (
     <Card
       padding="md"
       tone={card.collected ? 'success' : 'paper'}
       onPress={onPress}
-      accessibilityLabel={`${card.titleEn}. ${card.subtitleEn}.${
-        card.collected ? ' Collected.' : ''
-      }`}
+      accessibilityLabel={a11y.missionCard(card.titleEn, card.subtitleEn, card.collected)}
     >
       <View
         style={{
@@ -90,6 +90,7 @@ function MissionTile({
 }
 
 export function HomeScreen(): React.ReactElement {
+  const m = useMessages();
   const { copy } = useAudience();
   const profile = useProfileStore(activeProfileSelector);
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -105,6 +106,8 @@ export function HomeScreen(): React.ReactElement {
   const totalStage1Quests = questsAll.length;
   const cardsUnlocked = snap?.cards.length ?? 0;
   const homeworkDue = snap?.homework?.filter((h) => !h.completedAt).length ?? 0;
+
+  const recentStars = (snap?.quests.slice(-1)[0]?.stars ?? 0) as 0 | 1 | 2 | 3;
 
   const streak = useMemo(() => {
     const dates = snap?.sessions.map((s) => s.startedAt) ?? [];
@@ -149,10 +152,10 @@ export function HomeScreen(): React.ReactElement {
     <View style={{ flex: 1 }}>
     <Screen tone="canvas" edges={TAB_SCREEN_EDGES}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
-        <Hoya pose="waving" size={72} />
+        <Hoya pose="waving" size={72} accessibilityLabel={m.a11y.hoya('waving')} />
         <View style={{ flex: 1 }}>
-          <Heading level="title">Hi, {profile?.displayName ?? 'friend'}!</Heading>
-          <Body tone="secondary">Ready for today&apos;s quest?</Body>
+          <Heading level="title">{m.learner.home.greeting(profile?.displayName ?? null)}</Heading>
+          <Body tone="secondary">{m.learner.home.subtitle}</Body>
         </View>
         {/* Profile entry (UX-05): the learner's own cub, tinted and ringed in the
             colour its avatar name says (not the Pillar theme), with a visible
@@ -160,28 +163,28 @@ export function HomeScreen(): React.ReactElement {
         <Pressable
           onPress={() => navigation.navigate('Profile')}
           accessibilityRole="button"
-          accessibilityLabel="Profile and settings"
+          accessibilityLabel={m.a11y.profileEntry}
           hitSlop={spacing.xs}
           style={{ alignItems: 'center', minWidth: touchTarget.min, gap: spacing.xxs }}
         >
           <ProfileAvatar avatar={profile?.avatar ?? DEFAULT_AVATAR} size={AVATAR_SIZE} ring />
           <Caption tone="secondary" weight="semibold">
-            Profile
+            {m.learner.home.profileLabel}
           </Caption>
         </Pressable>
       </View>
 
       <Spacer size="lg" />
       <View style={{ flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap' }}>
-        <Pill tone="primary" label={`Streak ${streak} day${streak === 1 ? '' : 's'}`} />
-        <Pill tone="secondary" label={`${cardsUnlocked} cards`} />
-        <Pill tone="success" label={`${stars3}★ quests`} />
+        <Pill tone="primary" label={m.learner.home.streak.pill(streak)} />
+        <Pill tone="secondary" label={m.learner.home.cards.pill(cardsUnlocked)} />
+        <Pill tone="success" label={m.learner.home.stars.pill(stars3)} />
       </View>
 
       {mission && mission.cards.length > 0 ? (
         <>
           <Spacer size="lg" />
-          <Heading level="prompt">Today with Hoya</Heading>
+          <Heading level="prompt">{m.learner.home.mission.heading}</Heading>
           <Spacer size="sm" />
           <View style={{ gap: spacing.sm }}>
             {mission.cards.map((card) => (
@@ -192,22 +195,22 @@ export function HomeScreen(): React.ReactElement {
       ) : null}
 
       <Spacer size="xl" />
-      <Heading level="prompt">Stage 1 progress</Heading>
+      <Heading level="prompt">{m.learner.home.progress.heading}</Heading>
       <Spacer size="sm" />
-      <Progress value={completed} max={totalStage1Quests} tone="primary" label={`${completed} of ${totalStage1Quests} quests`} />
+      <Progress value={completed} max={totalStage1Quests} tone="primary" label={m.learner.home.progress.label(completed, totalStage1Quests)} />
 
       <Spacer size="xl" />
       <Pressable
         onPress={() => navigation.navigate('Homework')}
         accessibilityRole="button"
-        accessibilityLabel="Open homework"
+        accessibilityLabel={m.a11y.openHomework}
       >
         <Card padding="md" tone="sunken">
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <View style={{ flex: 1 }}>
-              <Body weight="semibold">Homework</Body>
+              <Body weight="semibold">{m.learner.home.homework.title}</Body>
               <Caption tone="muted">
-                {homeworkDue > 0 ? `${homeworkDue} to do today` : copy.homeReviewsIdle}
+                {homeworkDue > 0 ? m.learner.home.homework.due(homeworkDue) : copy.homeReviewsIdle}
               </Caption>
             </View>
             <Icon name="card" size={24} color={colors.text.muted} />
@@ -216,15 +219,16 @@ export function HomeScreen(): React.ReactElement {
       </Pressable>
 
       <Spacer size="xl" />
-      <HoyaBubble
-        tone="idle"
-        message="Tip — finish today&apos;s quest to keep your streak alive!"
-      />
+      <HoyaBubble tone="idle" message={m.learner.home.tip} />
       <Spacer size="lg" />
       <Card padding="md" tone="sunken">
-        <Heading level="prompt">Recent stars</Heading>
+        <Heading level="prompt">{m.learner.home.recentStars}</Heading>
         <Spacer size="sm" />
-        <StarRow stars={(snap?.quests.slice(-1)[0]?.stars ?? 0) as 0 | 1 | 2 | 3} size={28} />
+        <StarRow
+          stars={recentStars}
+          size={28}
+          accessibilityLabel={m.a11y.stars(recentStars)}
+        />
       </Card>
     </Screen>
       {/* Web only (F-PWA-001): asks a grown-up to install once the app is cached. */}
