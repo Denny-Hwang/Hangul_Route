@@ -10,13 +10,15 @@ import {
   choicesFallbackMs,
   defaultMode,
   flowReducer,
-  handoffControls,
+  controlsFor,
   idleTimeoutMs,
   languageTiles,
   pauseSheet,
   previousExclude,
   promptPlayback,
   resumableRun,
+  resumeClocks,
+  selectableLocale,
   runConfig,
   shortAvailable,
   showSoundGuideQuestion,
@@ -30,9 +32,11 @@ import {
 } from '../flow';
 import { gate, placementResult } from './fixtures';
 
-const SOUND = { koreanAudio: true, instructionVoice: true };
-const NO_KO = { koreanAudio: false, instructionVoice: true };
-const NO_VOICE = { koreanAudio: true, instructionVoice: false };
+const SOUND = { koreanAudio: true, instructionVoice: true, koreanInstructionVoice: true };
+const NO_KO = { koreanAudio: false, instructionVoice: true, koreanInstructionVoice: false };
+const NO_VOICE = { koreanAudio: true, instructionVoice: false, koreanInstructionVoice: true };
+/** Korean clips can play, but no Korean voice speaks the instructions. */
+const CLIPS_ONLY = { koreanAudio: true, instructionVoice: true, koreanInstructionVoice: false };
 
 const start = (over: Partial<StartFlowInput> = {}): FlowState =>
   startFlow({
@@ -113,6 +117,28 @@ describe('startFlow and the fork', () => {
     expect(start({ locales: [] }).testLocale).toBe('en');
   });
 
+  it('a Korean UI on a device without Korean sound starts on English, never on a disabled ko tile', () => {
+    const noKo = start({ source: 'onboarding', locales: ['en', 'ko'], uiLocale: 'ko', capability: NO_KO });
+    expect(noKo.testLocale).toBe('en');
+    expect(run(noKo, { type: 'acceptFork', capability: NO_KO }).testLocale).toBe('en');
+    expect(start({ locales: ['es', 'ko'], uiLocale: 'ko', capability: CLIPS_ONLY }).testLocale).toBe('es');
+    expect(start({ locales: ['en', 'ko'], uiLocale: 'ko', capability: SOUND }).testLocale).toBe('ko');
+  });
+
+  it('with one shipped locale that locale is the test language', () => {
+    expect(start({ locales: ['es'], uiLocale: 'en' }).testLocale).toBe('es');
+    expect(start({ locales: ['es'], uiLocale: 'es' }).screen).toBe('options');
+  });
+
+  it('selectableLocale: ko only when it can be chosen; English first, else the first other locale', () => {
+    expect(selectableLocale(['en', 'ko'], 'ko', true)).toBe('ko');
+    expect(selectableLocale(['en', 'ko'], 'ko', false)).toBe('en');
+    expect(selectableLocale(['es', 'ko', 'en'], 'ko', false)).toBe('en');
+    expect(selectableLocale(['es', 'ko'], 'ko', false)).toBe('es');
+    expect(selectableLocale(['ko'], 'ko', false)).toBe('en');
+    expect(selectableLocale(['en', 'es'], 'es', false)).toBe('es');
+  });
+
   it('a screen reader pre-sets Take my time and never changes the mode', () => {
     const s = start({ screenReader: true, levelOrder: 0 });
     expect(s.takeMyTime).toBe(true);
@@ -139,6 +165,22 @@ describe('the language screen', () => {
       { locale: 'ko', selected: false, disabled: true, line: 'noKoreanVoice' },
     ]);
     expect(languageTiles(['ko'], 'ko', true, () => true)[0]).toEqual({ locale: 'ko', selected: true, disabled: false, line: null });
+  });
+
+  it('ko is disabled when Korean clips play but no Korean voice speaks its audio-only instructions', () => {
+    const noKoVoice = (l: string) => l !== 'ko';
+    expect(languageTiles(['en', 'ko'], 'en', true, noKoVoice)[1]).toEqual({ locale: 'ko', selected: false, disabled: true, line: 'noKoreanVoice' });
+    const clips = start({ locales: ['en', 'ko'], capability: CLIPS_ONLY });
+    expect(run(clips, { type: 'pickLocale', locale: 'ko' }).testLocale).toBe('en');
+  });
+
+  it('confirming never opens options on ko when Korean sound is missing', () => {
+    const picked = run(start({ locales: ['en', 'ko'], uiLocale: 'ko' }), { type: 'pickLocale', locale: 'ko' });
+    expect(picked.testLocale).toBe('ko');
+    const confirmed = run(picked, { type: 'confirmLanguage', capability: NO_KO });
+    expect(confirmed.screen).toBe('options');
+    expect(confirmed.testLocale).toBe('en');
+    expect(run(picked, { type: 'confirmLanguage', capability: SOUND }).testLocale).toBe('ko');
   });
 
   it('picking a tile sets the run locale; a disabled ko tile cannot be picked', () => {
@@ -248,13 +290,33 @@ describe('the hand-off (section 3.1 step 3a)', () => {
     expect(run(s, { type: 'tapHoya' }).screen).toBe('warmup');
   });
 
-  it('every control from options to the warm-up for a Pictures first learner has a spoken label and an icon', () => {
-    const controls = handoffControls();
-    expect(controls.map((c) => c.id)).toEqual(['options.start', 'handoff.hoya']);
-    for (const c of controls) {
-      expect(c.spoken).toBe(true);
-      expect(c.icon.length).toBeGreaterThan(0);
+  it('a Pictures first learner reaches the warm-up from the options card only through spoken controls with an icon', () => {
+    let s = start({ levelOrder: 0 });
+    expect(s).toMatchObject({ screen: 'options', optionsLayout: 'card' });
+    const path: string[] = [];
+    for (const want of ['options.start', 'handoff.hoya']) {
+      const controls = controlsFor(s);
+      expect(controls.length).toBeGreaterThan(0);
+      for (const c of controls) {
+        expect(c.spoken).toBe(true);
+        expect(c.icon.length).toBeGreaterThan(0);
+      }
+      const control = controls.find((c) => c.id === want);
+      expect(control).toBeDefined();
+      path.push(s.screen);
+      s = flowReducer(s, control!.event);
     }
+    expect(path).toEqual(['options', 'handoff']);
+    expect(s.screen).toBe('warmup');
+    expect(controlsFor(s)).toEqual([]);
+  });
+
+  it('Change on the card opens the full options screen, a grown-up screen with no learner controls', () => {
+    const card = start({ levelOrder: 0 });
+    const change = controlsFor(card).find((c) => c.id === 'options.change')!;
+    const full = flowReducer(card, change.event);
+    expect(full.optionsLayout).toBe('full');
+    expect(controlsFor(full)).toEqual([]);
   });
 });
 
@@ -377,7 +439,20 @@ describe('runConfig', () => {
     expect(runConfig(s, ctx).revealMode).toBe('always');
     expect(runConfig(s, { ...ctx, koreanAudio: false }).audio).toBe(false);
     expect(runConfig(s, { ...ctx, screenReader: true }).visual).toBe(false);
+    expect(runConfig(s, { ...ctx, screenReader: true }).skipGates).toBeUndefined();
     expect(runConfig(ready({}, { type: 'setRevealMode', revealMode: 'tap' }), ctx).audio).toBe(false);
+  });
+
+  it('a Korean test language with a screen reader leaves the vocabulary and sentence rungs unasked (section 3.2)', () => {
+    const ko = run(
+      start({ locales: ['en', 'ko'], uiLocale: 'ko' }),
+      { type: 'confirmLanguage', capability: SOUND },
+      { type: 'setRevealMode', revealMode: 'tap' },
+      { type: 'next' },
+    );
+    expect(ko.testLocale).toBe('ko');
+    expect(runConfig(ko, { ...ctx, screenReader: true }).skipGates).toEqual(['vocab', 'sentence']);
+    expect(runConfig(ko, ctx).skipGates).toBeUndefined();
   });
 
   it('never starts a Standard or Deep run without an explicit revealMode', () => {
@@ -481,16 +556,65 @@ describe('resumableRun (section 3.1 step 8)', () => {
   const saved: SavedRun = { version: 1, savedAtMs: 1_000, testLocale: 'en', source: 'home', run: runState };
 
   it('offers a run saved within 24 hours from the same bank', () => {
-    expect(resumableRun(saved, 1_000 + RESUME_WINDOW_MS, 1)).toEqual(saved);
-    expect(resumableRun({ ...saved, motivation: 'curious' }, 2_000, 1)?.motivation).toBe('curious');
+    expect(resumableRun(saved, 1_000 + RESUME_WINDOW_MS, 1)).toEqual({ kind: 'continue', saved });
+    expect(resumableRun({ ...saved, motivation: 'curious' }, 2_000, 1)?.saved.motivation).toBe('curious');
   });
 
-  it('discards older runs, other bank versions, finished runs and anything that does not parse', () => {
+  it('discards older runs, other bank versions and anything that does not parse', () => {
     expect(resumableRun(saved, 1_001 + RESUME_WINDOW_MS, 1)).toBeNull();
     expect(resumableRun(saved, 2_000, 2)).toBeNull();
-    expect(resumableRun({ ...saved, run: { ...runState, stop: 'quit' } }, 2_000, 1)).toBeNull();
     expect(resumableRun({ ...saved, savedAtMs: 5_000 }, 2_000, 1)).toBeNull();
     expect(resumableRun(null, 2_000, 1)).toBeNull();
     expect(resumableRun({ version: 2 }, 2_000, 1)).toBeNull();
+  });
+
+  it('a stopped run with answers is offered to finish, whatever its age or bank; one with none is discarded', () => {
+    const answered = {
+      ...saved,
+      run: {
+        ...runState,
+        stop: 'quit',
+        responses: [{ questionId: 'pitem:a', outcome: 'correct', chosenOptionId: 'x', assisted: false, ms: 1 }],
+      },
+    } satisfies SavedRun;
+    expect(resumableRun(answered, 2_000, 1)).toEqual({ kind: 'finish', saved: answered });
+    expect(resumableRun(answered, 10 * RESUME_WINDOW_MS, 2)?.kind).toBe('finish');
+    expect(resumableRun({ ...saved, run: { ...runState, stop: 'quit' } }, 2_000, 1)).toBeNull();
+  });
+});
+
+describe('resumeClocks (section 3.1 steps 6 and 8)', () => {
+  const base = {
+    version: 1,
+    bankVersion: 1,
+    config: { mode: 'standard', listenFirst: false, revealMode: 'tap', audio: true, visual: true, takeMyTime: false, seed: 7, exclude: [] },
+    startedAtMs: 0,
+    deadlineMs: 600_000,
+    lastTouchMs: 100_000,
+    shownAtMs: 100_000,
+    pause: null,
+    pausedAtMs: null,
+    timeUp: false,
+    draws: {},
+    done: [],
+    current: null,
+    responses: [],
+    tags: {},
+    notSureStreak: 0,
+    rested: false,
+    stop: null,
+  } satisfies PlacementRunState;
+
+  it('moves the deadline by the time away and restarts the idle clock and the open question', () => {
+    expect(resumeClocks(base, 7_300_000)).toMatchObject({ deadlineMs: 7_800_000, lastTouchMs: 7_300_000, shownAtMs: 7_300_000 });
+    expect(resumeClocks({ ...base, deadlineMs: null }, 7_300_000).deadlineMs).toBeNull();
+    expect(resumeClocks(base, 50_000)).toMatchObject({ deadlineMs: 600_000, lastTouchMs: 50_000 });
+  });
+
+  it('leaves a paused or finished run alone (Keep going moves the deadline)', () => {
+    const paused = { ...base, pause: 'rest', pausedAtMs: 100_000 } satisfies PlacementRunState;
+    expect(resumeClocks(paused, 7_300_000)).toBe(paused);
+    const stopped = { ...base, stop: 'quit' } satisfies PlacementRunState;
+    expect(resumeClocks(stopped, 7_300_000)).toBe(stopped);
   });
 });

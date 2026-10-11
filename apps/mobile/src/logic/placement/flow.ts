@@ -10,6 +10,7 @@ import {
   type Motivation,
   type PlacementConfig,
   type PlacementEvent,
+  type PlacementGate,
   type PlacementLevel,
   type PlacementMode,
   type PlacementResult,
@@ -18,6 +19,7 @@ import {
   type UiLocale,
 } from '@hangul-route/content-schema';
 import { z } from 'zod';
+import { compareInstant } from '../sync/merge';
 import { shortHintFires } from './result-view';
 
 /**
@@ -49,6 +51,12 @@ export interface FlowCapability {
   koreanAudio: boolean;
   /** `hasVoiceFor(LOCALE_META[testLocale].speechLang)` ("unknown" counts as available). */
   instructionVoice: boolean;
+  /**
+   * `hasVoiceFor(LOCALE_META.ko.speechLang)`: Korean instructions on reading
+   * items are audio-only (section 3.2), so `ko` needs this as well as
+   * `koreanAudio` (bundled clips alone make `koreanAudio` true).
+   */
+  koreanInstructionVoice: boolean;
 }
 
 export interface FlowState {
@@ -60,6 +68,8 @@ export interface FlowState {
   /** The language of this run only; never the UI locale or a profile setting. */
   testLocale: UiLocale;
   koreanAudio: boolean;
+  /** See `FlowCapability.koreanInstructionVoice`. */
+  koreanInstructionVoice: boolean;
   effectiveLevel: PlacementLevel;
   lastResult: PlacementResult | null;
   shortAvailable: boolean;
@@ -139,16 +149,37 @@ export interface StartFlowInput {
 }
 
 function newestOf(placements: readonly PlacementResult[]): PlacementResult | null {
-  return [...placements].sort((a, b) => b.completedAt.localeCompare(a.completedAt))[0] ?? null;
+  return [...placements].sort((a, b) => compareInstant(b.completedAt, a.completedAt))[0] ?? null;
 }
+
+/** `ko` can be the test language only with a Korean voice for its audio-only instructions (section 3.1 step 2). */
+export function koreanSelectable(capability: Pick<FlowCapability, 'koreanAudio' | 'koreanInstructionVoice'>): boolean {
+  return capability.koreanAudio && capability.koreanInstructionVoice;
+}
+
+/**
+ * The test language to use: `preferred`, unless it is a `ko` that cannot be
+ * chosen on this device; then English when shipped, else the first other locale.
+ */
+export function selectableLocale(locales: readonly UiLocale[], preferred: UiLocale, koOk: boolean): UiLocale {
+  if (preferred !== 'ko' || koOk) return preferred;
+  if (locales.includes('en')) return 'en';
+  return locales.find((l) => l !== 'ko') ?? 'en';
+}
+
+const withCapability = (state: FlowState, capability: FlowCapability): FlowState => ({
+  ...state,
+  koreanAudio: capability.koreanAudio,
+  koreanInstructionVoice: capability.koreanInstructionVoice,
+  testLocale: selectableLocale(state.locales, state.testLocale, koreanSelectable(capability)),
+});
 
 function openOptions(state: FlowState, capability: FlowCapability): FlowState {
   const available = shortAvailable(capability.koreanAudio, capability.instructionVoice);
   const mode = defaultMode(state.levelOrder, state.effectiveLevel, state.lastResult, available);
   return {
-    ...state,
+    ...withCapability(state, capability),
     screen: 'options',
-    koreanAudio: capability.koreanAudio,
     shortAvailable: available,
     mode,
     optionsLayout: mode === 'short' ? 'card' : 'full',
@@ -157,14 +188,16 @@ function openOptions(state: FlowState, capability: FlowCapability): FlowState {
 }
 
 function afterFork(state: FlowState, capability: FlowCapability): FlowState {
-  if (state.locales.length > 1) return { ...state, screen: 'language', koreanAudio: capability.koreanAudio };
-  return openOptions({ ...state, testLocale: 'en' }, capability);
+  if (state.locales.length > 1) return { ...withCapability(state, capability), screen: 'language' };
+  // One shipped locale: the language screen is skipped and that locale is the test language.
+  return openOptions({ ...state, testLocale: state.locales[0] ?? 'en' }, capability);
 }
 
 export function startFlow(input: StartFlowInput): FlowState {
   // The route seed's level does not depend on the catalogue or the tier.
   const seed = effectiveRoute(input.placements, { quests: [] }, { isEntitled: () => true, completedQuestIds: new Set() });
-  const testLocale = input.locales.includes(input.uiLocale) ? input.uiLocale : (input.locales[0] ?? 'en');
+  const preferred = input.locales.includes(input.uiLocale) ? input.uiLocale : (input.locales[0] ?? 'en');
+  const testLocale = selectableLocale(input.locales, preferred, koreanSelectable(input.capability));
   const base: FlowState = {
     screen: 'invite',
     source: input.source,
@@ -172,6 +205,7 @@ export function startFlow(input: StartFlowInput): FlowState {
     locales: input.locales,
     testLocale,
     koreanAudio: input.capability.koreanAudio,
+    koreanInstructionVoice: input.capability.koreanInstructionVoice,
     effectiveLevel: seed?.level ?? STAGE1_BAND0,
     lastResult: newestOf(input.placements),
     shortAvailable: false,
@@ -212,7 +246,7 @@ export function flowReducer(state: FlowState, event: FlowEvent): FlowState {
       return state;
     case 'language':
       if (event.type === 'pickLocale') {
-        if (event.locale === 'ko' && !state.koreanAudio) return state;
+        if (event.locale === 'ko' && !koreanSelectable(state)) return state;
         return { ...state, testLocale: event.locale };
       }
       if (event.type === 'confirmLanguage') return openOptions(state, event.capability);
@@ -277,7 +311,7 @@ export function flowReducer(state: FlowState, event: FlowEvent): FlowState {
 export interface LanguageTile {
   locale: UiLocale;
   selected: boolean;
-  /** `ko` without a Korean voice: its reading instructions are audio-only. */
+  /** `ko` without a Korean voice or a Korean instruction voice: its reading instructions are audio-only. */
   disabled: boolean;
   /** `learner.placement.language.<line>`. */
   line: 'noKoreanVoice' | 'noVoice' | null;
@@ -290,22 +324,37 @@ export function languageTiles(
   hasInstructionVoice: (locale: UiLocale) => boolean,
 ): LanguageTile[] {
   return locales.map((locale) => {
-    const disabled = locale === 'ko' && !koreanAudio;
+    const disabled = locale === 'ko' && !(koreanAudio && hasInstructionVoice('ko'));
     const line = disabled ? 'noKoreanVoice' : hasInstructionVoice(locale) ? null : 'noVoice';
     return { locale, selected: locale === selected, disabled, line };
   });
 }
 
+/** One control a learner can act on: it is spoken when tapped and carries an icon, so nothing has to be read. */
+export interface FlowControl {
+  id: 'options.start' | 'options.change' | 'handoff.hoya';
+  spoken: true;
+  /** A design-system `IconName`, or `hoya` for the Hoya button itself. */
+  icon: 'play' | 'pencil' | 'hoya';
+  /** What the control sends to `flowReducer`. */
+  event: FlowEvent;
+}
+
 /**
- * The controls a Pictures first learner meets from the options card to the
- * warm-up: each has a spoken label and an icon, so nothing has to be read
- * (section 3.1 step 3a; the screens render exactly these).
+ * The controls on the screens a Pictures first learner passes from the
+ * options card (C1) to the warm-up (section 3.1 step 3a). The P-6 screens
+ * render exactly these; screens outside that path return none here (the full
+ * options screen C2 is a grown-up screen).
  */
-export function handoffControls(): readonly { id: string; spoken: true; icon: string }[] {
-  return [
-    { id: 'options.start', spoken: true, icon: 'play' },
-    { id: 'handoff.hoya', spoken: true, icon: 'hoya' },
-  ];
+export function controlsFor(state: FlowState): readonly FlowControl[] {
+  if (state.screen === 'options' && state.optionsLayout === 'card') {
+    return [
+      { id: 'options.start', spoken: true, icon: 'play', event: { type: 'next' } },
+      { id: 'options.change', spoken: true, icon: 'pencil', event: { type: 'change' } },
+    ];
+  }
+  if (state.screen === 'handoff') return [{ id: 'handoff.hoya', spoken: true, icon: 'hoya', event: { type: 'tapHoya' } }];
+  return [];
 }
 
 export interface RunConfigContext {
@@ -331,12 +380,19 @@ export function previousExclude(placements: readonly PlacementResult[]): string[
   return newestOf(placements)?.responses.map((r) => r.questionId) ?? [];
 }
 
+/** The rungs a Korean test language with a screen reader leaves unasked. */
+export const KOREAN_SCREEN_READER_SKIP: readonly PlacementGate[] = ['vocab', 'sentence'];
+
 /** The engine configuration of the flow's choices. Short runs `tap` without a reveal button (P19). */
 export function runConfig(state: FlowState, ctx: RunConfigContext): PlacementConfig {
   const revealMode = state.mode === 'short' ? 'tap' : state.revealMode;
   if (revealMode === null) throw new Error('a Standard or Deep run needs an explicit sound guide choice');
+  // Korean picture options carry no text label (it would be the answer), so a
+  // screen-reader user is not asked them: reported not-tested, never a failure (section 3.2).
+  const unlabeledPictures = state.testLocale === 'ko' && ctx.screenReader;
   return {
     mode: state.mode,
+    ...(unlabeledPictures ? { skipGates: KOREAN_SCREEN_READER_SKIP } : {}),
     listenFirst: state.listenFirst,
     avoidTags: warmupAvoidTags(ctx.warmup),
     revealMode,
@@ -443,16 +499,47 @@ export const SavedRunSchema = z.object({
 export type SavedRun = z.infer<typeof SavedRunSchema>;
 
 /**
- * A saved run that may be offered as **Continue**: saved within 24 hours,
- * from the same bank version and not finished. Anything else is discarded
- * silently.
+ * What a saved run offers on reopening (section 3.1 step 8):
+ * - `continue`: an open run saved within 24 hours from the same bank version
+ *   (**Continue** / **Start again**);
+ * - `finish`: a run that stopped but whose result was never recorded (the
+ *   app closed between the last answer and `recordPlacement`). The caller
+ *   runs `finishRun(saved.run, ...)` with `completedAt` from `saved.savedAtMs`
+ *   (when the stop was saved), then `recordPlacement`, then `discard`. It
+ *   needs neither the bank nor the clock window, so a finished check is never
+ *   lost; recording twice is harmless (the id comes from the seed and the
+ *   merge keeps one copy per id).
+ * Anything else (stale, another bank, a stop with no answer, a value that
+ * does not parse) is null and is discarded silently.
  */
-export function resumableRun(saved: unknown, nowMs: number, bankVersion: number): SavedRun | null {
+export type ResumeOffer = { kind: 'continue'; saved: SavedRun } | { kind: 'finish'; saved: SavedRun };
+
+export function resumableRun(saved: unknown, nowMs: number, bankVersion: number): ResumeOffer | null {
   const parsed = SavedRunSchema.safeParse(saved);
   if (!parsed.success) return null;
   const run = parsed.data;
+  if (run.run.stop !== null) return run.run.responses.length > 0 ? { kind: 'finish', saved: run } : null;
   const age = nowMs - run.savedAtMs;
   if (age < 0 || age > RESUME_WINDOW_MS) return null;
-  if (run.run.bankVersion !== bankVersion || run.run.stop !== null) return null;
-  return run;
+  if (run.run.bankVersion !== bankVersion) return null;
+  return { kind: 'continue', saved: run };
+}
+
+/**
+ * The clocks of a run reopened after time away. The saved times are absolute,
+ * and time away never uses up the backstop (section 3.1 step 6): the deadline
+ * moves by the time since the last touch, and the idle clock and the open
+ * question's `ms` start again now. A run saved with a pause open (three "not
+ * sure", Deep's rest card) is left as it is: **Keep going** already moves the
+ * deadline by the whole time since the pause opened.
+ */
+export function resumeClocks(run: PlacementRunState, nowMs: number): PlacementRunState {
+  if (run.stop !== null || run.pause !== null) return run;
+  const away = Math.max(0, nowMs - run.lastTouchMs);
+  return {
+    ...run,
+    deadlineMs: run.deadlineMs === null ? null : run.deadlineMs + away,
+    lastTouchMs: nowMs,
+    shownAtMs: nowMs,
+  };
 }
