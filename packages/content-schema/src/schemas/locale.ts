@@ -21,6 +21,12 @@ export const ProfileSettingsSchema = z.object({
   /** Absent = "same as this device". */
   uiLocale: UiLocaleSchema.optional(),
   romanizationMode: RomanizationModeSchema.default('always'),
+  /**
+   * Story reader "Read to me" (F-STORY-002 §3.4, PR 2.5). Additive and optional:
+   * absent means "use the level default" (`readToMeDefault`), so settings stored
+   * before this field existed keep parsing unchanged.
+   */
+  readToMe: z.boolean().optional(),
 });
 export type ProfileSettings = z.infer<typeof ProfileSettingsSchema>;
 

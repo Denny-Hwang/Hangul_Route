@@ -44,6 +44,22 @@ describe('UI locale schemas (F-I18N-001 §3.2)', () => {
     expect(ProfileSettingsSchema.safeParse('en').success).toBe(false);
   });
 
+  it('ProfileSettings.readToMe is an additive optional boolean (F-STORY-002 PR 2.5)', () => {
+    expect(ProfileSettingsSchema.parse({ readToMe: true })).toEqual({ romanizationMode: 'always', readToMe: true });
+    expect(ProfileSettingsSchema.parse({ readToMe: false }).readToMe).toBe(false);
+    // Absent stays absent: the reader falls back to the level default, the schema never invents one.
+    expect('readToMe' in ProfileSettingsSchema.parse({})).toBe(false);
+    for (const bad of ['yes', 1, null]) {
+      expect(ProfileSettingsSchema.safeParse({ readToMe: bad }).success).toBe(false);
+    }
+  });
+
+  it('settings stored before readToMe existed still parse unchanged', () => {
+    const stored = { uiLocale: 'es', romanizationMode: 'tap' };
+    expect(ProfileSettingsSchema.parse(stored)).toEqual(stored);
+    expect(ProfileSettingsSchema.parse({ uiLocale: 'ko' })).toEqual({ uiLocale: 'ko', romanizationMode: 'always' });
+  });
+
   it('DeviceSettings: locale optional (absent = never chosen), unknown rejected', () => {
     expect(DeviceSettingsSchema.parse({})).toEqual({});
     expect(DeviceSettingsSchema.parse({ uiLocale: 'es' })).toEqual({ uiLocale: 'es' });

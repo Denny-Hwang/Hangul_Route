@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { useQuestRunStore } from '../../store/quest-run-store';
-import { checkRoundKey, pairRoundKey, sequenceRoundKey } from '../round-keys';
+import { checkpointRoundKey, checkRoundKey, pairRoundKey, sequenceRoundKey } from '../round-keys';
 
 const run = (): ReturnType<typeof useQuestRunStore.getState> => useQuestRunStore.getState();
 
@@ -76,5 +76,16 @@ describe('round keys feed first-try scoring (F-001 §3.2 revised)', () => {
     run().answerRound(checkRoundKey('0'), true);
     run().answerRound(sequenceRoundKey(0), true);
     expect(run().totalCount).toBe(2);
+  });
+
+  it('Story checkpoint: cp:<id>, its own namespace next to check keys (F-STORY-002 §3.2)', () => {
+    expect(checkpointRoundKey('cp1')).toBe('cp:cp1');
+    expect(checkpointRoundKey('cp1')).not.toBe(checkRoundKey('cp1'));
+    run().answerRound(checkpointRoundKey('cp1'), false);
+    run().answerRound(checkpointRoundKey('cp1'), true);
+    run().answerRound(checkRoundKey('cp1'), true);
+    const s = run();
+    expect(s.totalCount).toBe(2);
+    expect(s.correctCount).toBe(1);
   });
 });

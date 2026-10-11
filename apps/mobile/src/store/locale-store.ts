@@ -94,8 +94,11 @@ function reportLocaleChange(
   });
 }
 
+/** The profile's settings minus the locale override; every other field (romanization, readToMe) is kept. */
 function withoutLocale(settings: ProfileSettings | undefined): ProfileSettings {
-  return { romanizationMode: settings?.romanizationMode ?? 'always' };
+  const fallback: ProfileSettings = { romanizationMode: 'always' };
+  const { uiLocale: _dropped, ...rest } = settings ?? fallback;
+  return rest;
 }
 
 export const useLocaleStore = create<State & Actions>((set, get) => ({
