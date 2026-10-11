@@ -3,7 +3,7 @@ import { HOYA_POSES } from '../hoya';
 import { SCENE_ART_REGISTRY, hasItem } from '../registry';
 import { checkItem, checkScene } from '../rules';
 
-/** PR 2.3a seeded the Hoya poses; PR 2.3b adds the first library batch; PR 2.10a the records-joseon batch. */
+/** PR 2.3a seeded the Hoya poses; PR 2.3b adds the first library batch; PR 2.10a the records-joseon batch; PR 2.10b the hangul-printing batch. */
 const SETTINGS = [
   'scene:palace-courtyard',
   'scene:palace-hall',
@@ -14,6 +14,8 @@ const SETTINGS = [
   'scene:mountains',
   'scene:mountain-stream',
   'scene:modern-room',
+  // PR 2.10b: hangul-printing cluster
+  'scene:temple',
 ];
 const PROPS = [
   'prop:fig-king',
@@ -72,6 +74,33 @@ const PROPS = [
   'prop:bead-curtain',
   'prop:silk-bolts',
   'prop:ceremony-goods',
+  // PR 2.10b: hangul-printing cluster
+  'prop:fig-monk',
+  'prop:fig-monk-seated',
+  'prop:fig-carver',
+  'prop:book-open',
+  'prop:woodblock',
+  'prop:woodblock-shelves',
+  'prop:speech-g',
+  'prop:speech-nm',
+  'prop:organ-stones',
+  'prop:ribbon-trails',
+  'prop:stick-dot',
+  'prop:stroke-sparks',
+  'prop:janggyeong-hall',
+  'prop:panjeon-plan',
+  'prop:hall-section',
+  'prop:temple-site',
+  'prop:museum-building',
+  'prop:glow-burst',
+  'prop:full-moon',
+  'prop:night-sky',
+  'prop:leafy-tree',
+  'prop:breeze',
+  'prop:museum-case',
+  'prop:calendar-page',
+  'prop:blank-sheet',
+  'prop:blank-tiles',
 ];
 
 const entries = Object.entries(SCENE_ART_REGISTRY);
@@ -160,6 +189,10 @@ describe('SCENE_ART_REGISTRY', () => {
       'prop:fig-writer-seated',
       'prop:fig-artisan',
       'prop:fig-modern',
+      'prop:fig-monk',
+      'prop:fig-monk-seated',
+      'prop:fig-carver',
+      'prop:leafy-tree',
     ]) {
       const item = SCENE_ART_REGISTRY[id]!;
       expect(item.tintable, id).toBeDefined();
@@ -172,7 +205,7 @@ describe('SCENE_ART_REGISTRY', () => {
   it('labels every figure by period, and sources every figure in historical dress', () => {
     for (const [id, item] of library.filter(([, it]) => it.kind === 'figure')) {
       if (/\bof today\b/.test(item.alt)) continue;
-      expect(item.alt, id).toMatch(/\bJoseon\b|\bhanbok\b/);
+      expect(item.alt, id).toMatch(/\bJoseon\b|\bGoryeo\b|\bhanbok\b/);
       expect(item.sourceRef, id).toBeDefined();
     }
   });
