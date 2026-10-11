@@ -1,9 +1,26 @@
-import type { ListenPickRound, MinigameKind, PicWordRound } from '@hangul-route/content-schema';
+import type {
+  ListenPickRound,
+  MinigameKind,
+  PicWordRound,
+  StoryLevel,
+} from '@hangul-route/content-schema';
+import { storyScopeFor } from './story/story-ref';
 
 /**
  * Maps a quest's minigame ref into a concrete content scope.
  * Each Stage 1 quest declares the jamo / words its minigames should target.
  */
+
+/** Which story, level and (optionally) subset a story minigame plays (F-STORY-003 §3.1). */
+export interface StoryScope {
+  /** 'story:seollal-new-year' */
+  storyId: string;
+  level: StoryLevel;
+  /** story-check: subset / order override (default: every check of the tier). */
+  checkIds?: string[];
+  /** story-sequence: override (default: tier.sequenceSceneIds). */
+  sceneIds?: string[];
+}
 
 export interface MinigameScope {
   kind: MinigameKind;
@@ -18,6 +35,8 @@ export interface MinigameScope {
     options: Array<{ ko: string; romanization?: string; en: string; isCorrect: boolean }>;
   }>;
   rounds?: number;
+  /** Story minigames (story-read / story-check / story-sequence), from `storyScopeFor`. */
+  story?: StoryScope;
   /** Listen & Pick rounds, built with `lp.*` (F-QUEST-002 §3.10). */
   listenPick?: { rounds: ListenPickRound[] };
   /** Pic-Word Match boards, built with `pw` (F-QUEST-002 §3.11). */
@@ -340,7 +359,7 @@ export const minigameScopes: Record<string, MinigameScope> = {
 };
 
 export function scopeFor(ref: string): MinigameScope | undefined {
-  return minigameScopes[ref];
+  return minigameScopes[ref] ?? storyScopeFor(ref);
 }
 
 // Suppress unused-import warning for type used in JSDoc

@@ -15,3 +15,8 @@ export function pairRoundKey(koIdx: number): string {
 export function sequenceRoundKey(placedCount: number): number {
   return placedCount;
 }
+
+/** Story Check: one key per check item, whichever option the child taps (F-STORY-003 §3.2). */
+export function checkRoundKey(checkId: string): string {
+  return `check:${checkId}`;
+}
