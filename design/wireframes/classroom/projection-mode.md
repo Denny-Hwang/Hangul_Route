@@ -1,5 +1,7 @@
 # Classroom/Projection-Mode — teacher-only display toggle (wireframe v1)
 
+> **Note (2026-10-11, F-TCH-004)**: Teacher-led classroom presentation is F-TCH-004 (`docs/specs/F-TCH-004-lecture-mode.md`, wireframe `classroom/lecture-presenter.md`). Projection Mode below remains a deferred option for a volunteer student playing the ordinary learner flow on the projected device; it needs no teacher role and is not built by F-TCH-004.
+
 Spec: `docs/specs/F-TCH-001-teacher-classroom.md` §3.4 (draft) · `docs/blueprints/02-core-feature-spec.md` §6 (Classroom / Projection)
 Audience: **teacher** (a `teacher`-role profile on a mobile device driving a classroom TV); the students watch the projected screen and are not the interacting user
 

@@ -29,11 +29,11 @@
 | `sync/save-progress.md` · `restore.md` · `join-space.md` · `merge-notice.md` | P | roadmap multi-persona §4–6 |
 | `paywall/upgrade.md` | R | F-SUB-001 · F-IAP-001 |
 | `pwa/install-guide.md` · `pwa/system-banners.md` | P | roadmap web-pwa-offline §3 |
-| `classroom/projection-mode.md` | D | F-TCH-001 §3.4 |
+| `classroom/projection-mode.md` | D | F-TCH-001 §3.4 (연기: 자원봉사 학생용 옵션; 교사 수업은 `classroom/lecture-presenter.md`, F-TCH-004) |
 | `vocab/topics.md` · `vocab/flashcards.md` · `vocab/speed-round.md` | D | F-VOC-003 · F-VOC-004 |
 | `placement/placement.md` | D | F-PLC-001 |
 | `console/curriculum-planner.md` | D | F-PLAN-002 |
-| `classroom/lecture-presenter.md` | D | F-TCH-004 |
+| `classroom/lecture-presenter.md` | R | F-TCH-004 |
 | `layout/wide.md` | D | F-LAYOUT-001 |
 | `console/class-transfer.md` | D | F-SPACE-002 |
 | `journey/my-route-overview.md` | R | F-ROUTE-001 (screens A to I; J amends `placement/placement.md` G for F-PLC-001 AM-1 / AM-14, K is F-PLAN-002's weekly plan proposal, FP-B6) |

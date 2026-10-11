@@ -112,3 +112,14 @@ Three names in the new `layout.` namespace; none collides with sections A to H. 
 | 1 | `layout.observed` | F-LAYOUT-001 §3.13 | `{ width: 'compact' \| 'regular' \| 'wide', form: 'phone' \| 'tablet', orientation: 'portrait' \| 'landscape', panes: 1 \| 2, standalone: boolean }` (once per session, when the window size is known) | PR 3 | PR 3 |
 | 2 | `layout.guard_shown` | F-LAYOUT-001 §3.13 | `{ standalone: boolean }` (each time the portrait guard appears) | PR 3 | PR 3 |
 | 3 | `layout.guard_dismissed` | F-LAYOUT-001 §3.13 | `{ via: 'rotated' \| 'keep_sideways' }` | PR 3 | PR 3 |
+
+## J. Lecture mode names (F-TCH-004; added by its PR 0 docs PR)
+
+Four names in the new `lecture.` namespace (a teacher's presenter, `/present`). Lettered J because F-LAYOUT-001 PR 3 (#203) claims section I. None collides with sections A to I (the `layout.` names of #203 included) or with the 63 names in `TELEMETRY_EVENT_NAMES` on `main` at `0f91142`, the three `route_map.` names of #210 among them (no existing name starts with `lecture.`). F-TCH-004 cites this list as `specs-out/TELEMETRY-NAMES.md`; this file is that list. Worker first: PR 1 adds all four to `TELEMETRY_EVENT_NAMES` and its exact-list test and is deployed before the presenter build that sends them (PR 6, PR 9). The presenter has no profile, so events carry **no `profileId`**; payloads never carry a name, a picker label, an id of a person or the deck title (F-TCH-004 §3.14, §3.10). Events use the existing offline queue (`platform/telemetry.ts`); the presenter calls `flushQueue` itself because `App` does not run there.
+
+| # | Name | Owning spec | Payload | Added to the list by | Emitted by |
+|---|---|---|---|---|---|
+| 1 | `lecture.start` | F-TCH-004 §3.14 | `{ source: 'console' \| 'quick' \| 'recent', blocks, slides, skipped, picker: 'none' \| 'names' \| 'initials' \| 'numbers', romanization: 'always' \| 'tap', voice: 'ready' \| 'none' \| 'unknown', offlineReady: boolean }` (the Start tap) | PR 1 | PR 6 |
+| 2 | `lecture.complete` | F-TCH-004 §3.14 | `{ slidesShown, minutes, reveals }` (Exit confirm, or the last slide then exit) | PR 1 | PR 6 |
+| 3 | `lecture.tool_used` | F-TCH-004 §3.14 | `{ tool: 'timer' \| 'picker' \| 'blank' \| 'pause' \| 'grid' \| 'fullscreen' }` (first use of each tool per lecture) | PR 1 | PR 9 |
+| 4 | `lecture.deck_rejected` | F-TCH-004 §3.14 | `{ reason: 'empty' \| 'too_large' \| 'bad_encoding' \| 'bad_json' \| 'unsupported_version' \| 'invalid' }` (the codec reasons, §3.2) | PR 1 | PR 6 |
