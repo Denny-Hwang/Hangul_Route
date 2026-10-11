@@ -32,3 +32,11 @@ export function sectionTabStyle(selected: boolean): SectionTabStyle {
     fontWeight: selected ? typography.weight.bold : typography.weight.semibold,
   };
 }
+
+/**
+ * A tab's element id when the row names its panel (`panelId`): the panel's
+ * `aria-labelledby` points at the selected tab with the same id.
+ */
+export function sectionTabId(panelId: string, id: string): string {
+  return `${panelId}-tab-${id}`;
+}

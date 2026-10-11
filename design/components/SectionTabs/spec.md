@@ -18,6 +18,8 @@ The design system has no copy: the caller passes localised labels and the row's 
 | `onChange` | `(id: T) => void` | Fires on every tap, also on the selected tab |
 | `accessibilityLabel` | `string` | Name of the `tablist` ("Library sections") |
 | `testID` | `string?` | Row id; each tab is `<testID>-<id>` |
+| `panelId` | `string?` | Id of the section body the caller draws as `role="tabpanel"`. Each tab gets `aria-controls={panelId}` and the id `sectionTabId(panelId, id)`, which the panel's `aria-labelledby` names |
+| `focusSelected` | `boolean?` | The selected tab takes keyboard focus (web) or screen-reader focus (native) when the row mounts or this turns true. For a caller whose layout remounts the row on a switch (the Library: Cards in the split pane, Story Time full width) |
 
 ## Anatomy
 
@@ -46,6 +48,8 @@ Contrast: `text.onPrimary` on `brand.primary` and `text.primary` on `surface.pap
 - The row is `accessibilityRole="tablist"` with the caller's name; each tab is `accessibilityRole="tab"` with `accessibilityState={{ selected }}` (`aria-selected` on the web).
 - Every tab is >= 64 dp tall; the row wraps instead of scrolling sideways.
 - Labels never truncate.
+- With `panelId`, the tabs and the caller's `tabpanel` are linked both ways (`aria-controls`, `aria-labelledby`).
+- Keyboard: every tab is a Tab stop and activates with Enter or Space (manual activation). Arrow-key roving between tabs is not provided in v1.
 
 ## Not this component
 

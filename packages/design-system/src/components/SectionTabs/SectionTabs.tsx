@@ -1,7 +1,7 @@
-import React from 'react';
-import { Pressable, Text, View } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { AccessibilityInfo, Platform, Pressable, Text, View, findNodeHandle } from 'react-native';
 import { colors, spacing, typography } from '../../tokens';
-import { sectionTabStyle } from './style';
+import { sectionTabId, sectionTabStyle } from './style';
 import type { SectionTabsProps } from './types';
 
 /**
@@ -11,6 +11,8 @@ import type { SectionTabsProps } from './types';
  * wraps onto a new line at 320 dp or 200 % text instead of scrolling
  * sideways. No copy: the caller passes localised labels and the row's name.
  * Pressed feedback is the focus-coloured border, instant (no motion).
+ * With `panelId` the tabs name the panel they control; with `focusSelected`
+ * the selected tab takes focus as the row mounts.
  * Spec: design/components/SectionTabs/spec.md.
  */
 export function SectionTabs<T extends string>({
@@ -19,7 +21,27 @@ export function SectionTabs<T extends string>({
   onChange,
   accessibilityLabel,
   testID,
+  panelId,
+  focusSelected = false,
 }: SectionTabsProps<T>): React.ReactElement {
+  const selectedRef = useRef<View>(null);
+  useEffect(() => {
+    if (!focusSelected) return undefined;
+    const node = selectedRef.current;
+    if (node === null) return undefined;
+    if (Platform.OS === 'web') {
+      // react-native-web renders the tab as a focusable DOM element.
+      (node as unknown as { focus?: () => void }).focus?.();
+      return undefined;
+    }
+    // Native: move the screen reader to the tab once it is laid out.
+    const timer = setTimeout(() => {
+      const tag = findNodeHandle(node);
+      if (tag !== null) AccessibilityInfo.setAccessibilityFocus(tag);
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [focusSelected]);
+
   return (
     <View
       testID={testID}
@@ -30,9 +52,14 @@ export function SectionTabs<T extends string>({
       {items.map((item) => {
         const selected = item.id === value;
         const look = sectionTabStyle(selected);
+        // Web-only ARIA link to the panel; spread so native props need no type for it.
+        const controls = panelId !== undefined ? { 'aria-controls': panelId } : {};
         return (
           <Pressable
             key={item.id}
+            ref={selected ? selectedRef : undefined}
+            id={panelId !== undefined ? sectionTabId(panelId, item.id) : undefined}
+            {...controls}
             testID={testID ? `${testID}-${item.id}` : undefined}
             accessibilityRole="tab"
             accessibilityState={{ selected }}

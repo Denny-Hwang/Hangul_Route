@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { sectionTabStyle } from '../components/SectionTabs/style';
+import { sectionTabId, sectionTabStyle } from '../components/SectionTabs/style';
 import { contrastRatio } from '../contrast';
 import { borderWidth, colors, radii, spacing, touchTarget, typography } from '../tokens';
 
@@ -52,5 +52,16 @@ describe('sectionTabStyle (F-STORY-004 PR 4.5)', () => {
     const a = sectionTabStyle(true);
     expect(sectionTabStyle(true)).toEqual(a);
     expect(sectionTabStyle(true)).not.toBe(a);
+  });
+});
+
+describe('sectionTabId (a tab\'s DOM id, named by its panel\'s aria-labelledby)', () => {
+  it('joins the panel id and the tab id', () => {
+    expect(sectionTabId('library-panel', 'story-time')).toBe('library-panel-tab-story-time');
+  });
+
+  it('differs per tab and per panel', () => {
+    expect(sectionTabId('a', 'cards')).not.toBe(sectionTabId('a', 'story-time'));
+    expect(sectionTabId('a', 'cards')).not.toBe(sectionTabId('b', 'cards'));
   });
 });
