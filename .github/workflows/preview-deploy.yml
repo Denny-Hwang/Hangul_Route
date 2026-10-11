@@ -75,6 +75,15 @@ jobs:
           retention-days: 7
           if-no-files-found: error
 
+      - name: Hidden locales are not exported (F-I18N-001 PR 11b)
+        run: |
+          test ! -e apps/web/out/es.html
+          test ! -e apps/web/out/es
+          test ! -e apps/web/out/ko.html
+          test ! -e apps/web/out/ko
+          grep -q '<html lang="en"' apps/web/out/index.html
+          grep -q '<html lang="en"' apps/web/out/404.html
+
       - name: Install Playwright Chromium
         run: pnpm --filter @hangul-route/web exec playwright install --with-deps chromium
 
@@ -83,3 +92,15 @@ jobs:
 
       - name: Validate wrangler config (dry run, no upload)
         run: pnpm --filter @hangul-route/web exec wrangler deploy --dry-run
+
+      # Last, because it replaces apps/web/out: a QA build exports every locale with its own <html lang>.
+      - name: QA build exports /es and /ko with their lang (F-I18N-001 PR 11b)
+        env:
+          NEXT_PUBLIC_SHOW_ALL_LOCALES: "1"
+        run: |
+          pnpm --filter @hangul-route/web build
+          grep -q '<html lang="es"' apps/web/out/es.html
+          grep -q '<html lang="es"' apps/web/out/es/about.html
+          grep -q '<html lang="ko"' apps/web/out/ko.html
+          grep -q '<html lang="ko"' apps/web/out/ko/privacy.html
+          grep -q '<html lang="en"' apps/web/out/index.html
