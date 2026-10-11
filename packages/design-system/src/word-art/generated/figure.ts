@@ -47,6 +47,11 @@ const EYE_Y = -80;
 const FACE_SCALE = 0.85;
 /** Highest point of each hairstyle on the canonical figure. */
 const HAIR_TOP: Readonly<Record<FigureHair, number>> = { none: -100, short: -102, grey: -102, long: -102, bun: -111 };
+/**
+ * The hands on the canonical figure: a circle on each side at (+-dx, y). Exported
+ * so the body-part ring on the hand is placed from the same numbers.
+ */
+export const FIGURE_HAND = Object.freeze({ dx: 26.5, y: -35, r: 5 });
 /** The blanket's hood, behind the head. */
 const HOOD = { x: 0, y: -80, r: 26 } as const;
 
@@ -99,7 +104,7 @@ function canonical(o: FigureOptions): WordArtShape[] {
       ),
     );
     if (o.accessory === 'cane') shapes.push(path('M 27 0 L 27 -40 A 4.5 4.5 0 0 1 36 -40', INK));
-    if (!o.compact) shapes.push(path(`${circleD(-26.5, -35, 5)} ${circleD(26.5, -35, 5)}`, PAPER));
+    if (!o.compact) shapes.push(path(`${circleD(-FIGURE_HAND.dx, FIGURE_HAND.y, FIGURE_HAND.r)} ${circleD(FIGURE_HAND.dx, FIGURE_HAND.y, FIGURE_HAND.r)}`, PAPER));
   }
   shapes.push(circle(HEAD.x, HEAD.y, HEAD.r, PAPER));
   if (o.hair !== 'none') shapes.push(path(CAP, { f: tone, ...INK }));

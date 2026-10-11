@@ -8,7 +8,7 @@
  */
 import { circle, face, path } from '../builders';
 import type { WordArtShape } from '../types';
-import { figure } from './figure';
+import { FIGURE_HAND, figure } from './figure';
 import { HALO_TONE, HALO_WIDTH } from './halo';
 
 export const BODY_PARTS = Object.freeze(['eye', 'nose', 'mouth', 'ear', 'head', 'face', 'hand', 'arm', 'leg', 'foot', 'belly', 'tooth'] as const);
@@ -35,19 +35,27 @@ const at = (cx: number, cy: number): { x: number; y: number } => ({ x: Math.roun
 
 /** The zoomed head: centre and radius. */
 const HEAD = { x: 50, y: 53, r: 29 } as const;
-const EYE_DX = 12.6;
+/** The ears: a paper circle on each side of the zoomed head. */
+const EAR = { dx: HEAD.r - 0.5, y: HEAD.y + 2, r: 7 } as const;
 const EYE_Y = 50;
+const EYE_SCALE = 1.4;
 const MOUTH = { x: 50, y: 64.5, r: 10.5 } as const;
 
+/** The eyes of `face()`: its ink-filled circles, picked by paint, not by position in the list. */
+const isEye = (s: WordArtShape): s is Extract<WordArtShape, { t: 'circle' }> => s.t === 'circle' && s.f === 'text.primary';
+const EYES = face(HEAD.x, EYE_Y, EYE_SCALE).filter(isEye);
+/** The eye on the viewer's left (the ring sits on it). */
+const LEFT_EYE = EYES.reduce((a, b) => (b.x < a.x ? b : a));
+
 export const BODY_ANCHORS: Readonly<Record<BodyPart, BodyAnchor>> = Object.freeze({
-  eye: { view: 'head', x: HEAD.x - EYE_DX, y: EYE_Y, r: 8.5 },
+  eye: { view: 'head', x: LEFT_EYE.x, y: LEFT_EYE.y, r: 8.5 },
   nose: { view: 'head', x: 50, y: 57, r: 6.5 },
   mouth: { view: 'head', x: 50, y: 68.5, r: 12.5 },
-  ear: { view: 'head', x: 21, y: 55, r: 9 },
+  ear: { view: 'head', x: HEAD.x - EAR.dx, y: EAR.y, r: 9 },
   tooth: { view: 'head', x: 50, y: 67, r: 6.5 },
   face: { view: 'head', x: 50, y: 59, r: 21 },
   head: { view: 'body', ...at(0, -82), r: 15 },
-  hand: { view: 'body', ...at(-26.5, -35), r: 7 },
+  hand: { view: 'body', ...at(-FIGURE_HAND.dx, FIGURE_HAND.y), r: 7 },
   arm: { view: 'body', ...at(-25, -50), r: 8 },
   leg: { view: 'body', ...at(8, -18), r: 9 },
   foot: { view: 'body', ...at(9, -3.5), r: 7 },
@@ -70,11 +78,12 @@ function zoomedHead(): WordArtShape[] {
   const { x, y, r } = HEAD;
   const m = MOUTH;
   return [
-    circle(x - r + 0.5, y + 2, 7, PAPER),
-    circle(x + r - 0.5, y + 2, 7, PAPER),
+    circle(x - EAR.dx, EAR.y, EAR.r, PAPER),
+    circle(x + EAR.dx, EAR.y, EAR.r, PAPER),
     circle(x, y, r, PAPER),
     path(`M ${x - r - 1.5} ${y} A ${r + 1.5} ${r + 1.5} 0 0 1 ${x + r + 1.5} ${y} Q ${x + 16} ${y - 13} ${x} ${y - 11} Q ${x - 16} ${y - 13} ${x - r - 1.5} ${y} Z`, { f: 'text.secondary', ...INK }),
-    ...face(x, EYE_Y, 1.4).slice(0, 2),
+    // the eyes of face(); the smile is drawn open below
+    ...EYES.map((eye) => ({ ...eye })),
     circle(x - 19, 60, 4, { f: 'hoya.cheek' }),
     circle(x + 19, 60, 4, { f: 'hoya.cheek' }),
     path('M 50.5 52 Q 46.5 58.5 51.5 59.5', DETAIL),
