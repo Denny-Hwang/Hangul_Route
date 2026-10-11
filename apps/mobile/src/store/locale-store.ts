@@ -38,6 +38,8 @@ interface Actions {
   setDeviceLocale: (locale: UiLocale | null, source?: LocaleChangeSource) => void;
   setProfileLocale: (profileId: string, locale: UiLocale | null, source?: LocaleChangeSource) => void;
   setRomanizationMode: (profileId: string, mode: RomanizationMode) => void;
+  /** The story reader's Read to me switch (F-STORY-002 §3.4); no telemetry. */
+  setReadToMe: (profileId: string, readToMe: boolean) => void;
   /** Profile removal: drop that profile's settings (and their stored key). */
   forgetProfile: (profileId: string) => void;
 }
@@ -149,6 +151,13 @@ export const useLocaleStore = create<State & Actions>((set, get) => ({
     if ((previous?.romanizationMode ?? 'always') !== mode) {
       void track({ name: 'romanization.mode_changed', profileId, payload: { mode } });
     }
+  },
+
+  setReadToMe: (profileId, readToMe) => {
+    const { byProfile } = get();
+    const next: ProfileSettings = { romanizationMode: 'always', ...byProfile[profileId], readToMe };
+    set({ byProfile: { ...byProfile, [profileId]: next } });
+    persist(writeJson(profileKey(profileId), next));
   },
 
   forgetProfile: (profileId) => {
