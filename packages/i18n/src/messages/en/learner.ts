@@ -672,9 +672,11 @@ export const learner = {
         moreInCultureNotes: { cta: 'More in Culture notes' },
         close: { cta: 'Close' },
       },
+      /** The inline checkpoint card (PR 2.9): "Quick question" in a quest, the unscored "Try it" in a replay. */
       checkpoint: {
         tryIt: 'Try it',
         skip: { cta: 'Skip' },
+        quickQuestion: 'Quick question',
       },
     },
     /** The reader's end page (F-STORY-002 §3.7): one primary, at most two ghosts. */
