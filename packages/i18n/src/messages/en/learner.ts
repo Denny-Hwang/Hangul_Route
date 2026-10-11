@@ -330,6 +330,28 @@ export const learner = {
         underFinal: 'The vowel goes under the first letter. The last letter sits at the bottom.',
       },
     },
+    /** Trace Stroke (F-004 to F-008): coverage passes; order and direction only surface as "next time" nudges. */
+    trace: {
+      /** `romanization` is the letter's sound value. */
+      heading: (romanization: string) => `Trace the letter ${romanization}`,
+      instruction: 'Draw the letter with your finger.',
+      showMe: { cta: 'Show me' },
+      clear: { cta: 'Clear' },
+      done: { cta: 'Done' },
+      idle: 'Slowly draw the letter. Lift your finger to finish.',
+      /** After a pass: the order nudge wins, then an open-stroke direction nudge, then a loop one, else praise. */
+      pass: {
+        order: 'You got it! Next time, try drawing the top line first.',
+        open: 'Nice! Try drawing left-to-right next time.',
+        loop: 'Nice! Next time, try going around the other way.',
+        clean: 'Beautiful! That looks like the letter.',
+      },
+      /** Before a retry: order coaching (strict mode, order the only thing off), else the standard line. */
+      retry: {
+        order: 'Almost! Try drawing the strokes in the right order. Tap Show me to see.',
+        start: 'Try again — start at the top!',
+      },
+    },
   },
 
   /**

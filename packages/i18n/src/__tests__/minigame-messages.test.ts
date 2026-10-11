@@ -63,6 +63,57 @@ describe('Build a Letter (English wording as shipped)', () => {
   });
 });
 
+describe('Trace Stroke (English wording as shipped)', () => {
+  const t = m.learner.minigame.trace;
+
+  it('keeps the prompt, the buttons and the idle line', () => {
+    expect(t.heading('g/k')).toBe('Trace the letter g/k');
+    expect(t.instruction).toBe('Draw the letter with your finger.');
+    expect(t.showMe.cta).toBe('Show me');
+    expect(t.clear.cta).toBe('Clear');
+    expect(t.done.cta).toBe('Done');
+    expect(t.idle).toBe('Slowly draw the letter. Lift your finger to finish.');
+  });
+
+  it('keeps the pass praise, the next-time nudges and the retry lines', () => {
+    expect(t.pass).toEqual({
+      order: 'You got it! Next time, try drawing the top line first.',
+      open: 'Nice! Try drawing left-to-right next time.',
+      loop: 'Nice! Next time, try going around the other way.',
+      clean: 'Beautiful! That looks like the letter.',
+    });
+    expect(t.retry).toEqual({
+      order: 'Almost! Try drawing the strokes in the right order. Tap Show me to see.',
+      start: 'Try again — start at the top!',
+    });
+  });
+
+  it('keeps the screen-reader labels of the prompt, the canvas and the stroke-order diagram', () => {
+    const a = m.a11y.minigame;
+    expect(a.traceLetter('g or k')).toBe('Trace the letter g or k');
+    expect(a.traceCanvas('g or k')).toBe('Draw the letter g or k with your finger');
+    const s = a.strokeOrder;
+    expect(s.guide).toBe('Stroke order guide');
+    expect(s.summary(['down, then right'])).toBe('Stroke order. One stroke. 1: down, then right.');
+    expect(s.summary(['right', 'down', 'right'])).toBe('Stroke order. 3 strokes. 1: right. 2: down. 3: right.');
+    expect(s.dot).toBe('a dot');
+    expect(s.loop).toBe('a loop');
+    expect(s.curving('down and right')).toBe('curving down and right');
+    expect(s.legs(['right', 'down'])).toBe('right, then down');
+    expect(Object.values(s.direction)).toEqual([
+      'right',
+      'down and right',
+      'down',
+      'down and left',
+      'left',
+      'up and left',
+      'up',
+      'up and right',
+    ]);
+    expect(s.close('Stroke order guide')).toBe('Stroke order guide Tap to close.');
+  });
+});
+
 describe('learner.audio (F-AUDIO-004 §3.7-3.8, English wording as shipped)', () => {
   const a = m.learner.audio;
 

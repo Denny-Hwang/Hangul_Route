@@ -19,14 +19,14 @@ export function jamoTileA11yLabel(romanization: string, tile: Messages['a11y']['
   return tile(a11yRomanization(romanization));
 }
 
-/** Screen-reader text of the trace prompt heading. */
-export function traceLetterA11yText(romanization: string): string {
-  return `Trace the letter ${a11yRomanization(romanization)}`;
+/** Screen-reader text of the trace prompt heading (`a11y.minigame.traceLetter`). */
+export function traceLetterA11yText(romanization: string, label: Messages['a11y']['minigame']['traceLetter']): string {
+  return label(a11yRomanization(romanization));
 }
 
-/** Screen-reader label of the trace canvas. */
-export function traceCanvasA11yLabel(romanization: string): string {
-  return `Draw the letter ${a11yRomanization(romanization)} with your finger`;
+/** Screen-reader label of the trace canvas (`a11y.minigame.traceCanvas`). */
+export function traceCanvasA11yLabel(romanization: string, label: Messages['a11y']['minigame']['traceCanvas']): string {
+  return label(a11yRomanization(romanization));
 }
 
 export interface NarrativeLine {

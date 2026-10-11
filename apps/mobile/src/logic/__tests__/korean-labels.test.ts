@@ -35,8 +35,9 @@ describe('jamo screen-reader labels (F-CNT-002 §3.3: a11yRomanization)', () => 
   });
 
   it('reads the g/k pair as "g or k" in the trace prompt and canvas', () => {
-    expect(traceLetterA11yText('g/k')).toBe('Trace the letter g or k');
-    expect(traceCanvasA11yLabel('g/k')).toBe('Draw the letter g or k with your finger');
+    const a11y = getMessages('en').a11y.minigame;
+    expect(traceLetterA11yText('g/k', a11y.traceLetter)).toBe('Trace the letter g or k');
+    expect(traceCanvasA11yLabel('g/k', a11y.traceCanvas)).toBe('Draw the letter g or k with your finger');
   });
 });
 

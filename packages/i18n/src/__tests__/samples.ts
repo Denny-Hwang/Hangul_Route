@@ -67,5 +67,12 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'a11y.minigame.hear': [['ga']],
   'a11y.minigame.finalTile': [['ng']],
   'a11y.minigame.blockShape': [['The vowel goes under the first letter.']],
+  'learner.minigame.trace.heading': [['g/k']],
+  'a11y.minigame.traceLetter': [['g or k']],
+  'a11y.minigame.traceCanvas': [['g or k']],
+  'a11y.minigame.strokeOrder.summary': [[['down, then right']], [['right', 'down', 'right']]],
+  'a11y.minigame.strokeOrder.curving': [['down and right']],
+  'a11y.minigame.strokeOrder.legs': [[['right', 'down']], [['right']]],
+  'a11y.minigame.strokeOrder.close': [['Stroke order. One stroke. 1: down.']],
   'a11y.soundSwitch': [[false, 'Korean voice ready'], [true, 'Looking for a Korean voice']],
 };

@@ -28,7 +28,9 @@
     "apps/mobile/src/screens/minigames/MatchSoundGame.tsx",
     "apps/mobile/src/components/PromptPanel.tsx",
     "apps/mobile/src/components/VoiceHelpSheet.tsx",
-    "apps/mobile/src/screens/minigames/BuildLetterGame.tsx"
+    "apps/mobile/src/screens/minigames/BuildLetterGame.tsx",
+    "apps/mobile/src/screens/minigames/TraceStrokeGame.tsx",
+    "apps/mobile/src/screens/minigames/StrokeHint.tsx"
   ],
   "pluralTernaryBaseline": {
     "apps/web/src/app/teach/space/page.tsx": 1,

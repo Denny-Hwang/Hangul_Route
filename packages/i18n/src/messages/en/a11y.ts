@@ -1,3 +1,5 @@
+import { plural } from '../../plural';
+
 /**
  * Accessibility labels (F-I18N-001 §3.4). The design system takes these as props
  * with its own English default, so it needs no i18n dependency.
@@ -47,6 +49,37 @@ export const a11y = {
     finalTile: (romanization: string) => `final ${romanization}`,
     /** The block-shape hint picture; `hint` is one of `learner.minigame.buildLetter.shape`. */
     blockShape: (hint: string) => `Block shape. ${hint}`,
+    traceLetter: (romanization: string) => `Trace the letter ${romanization}`,
+    traceCanvas: (romanization: string) => `Draw the letter ${romanization} with your finger`,
+    /** The still stroke-order diagram read aloud: "Stroke order. 1: right, then down. 2: a loop." */
+    strokeOrder: {
+      guide: 'Stroke order guide',
+      /** `strokes` are the per-stroke descriptions, in writing order. */
+      summary: (strokes: readonly string[]) =>
+        `${plural('en', strokes.length, {
+          one: 'Stroke order. One stroke',
+          other: `Stroke order. ${strokes.length} strokes`,
+        })}. ${strokes.map((stroke, i) => `${i + 1}: ${stroke}`).join('. ')}.`,
+      dot: 'a dot',
+      loop: 'a loop',
+      /** A stroke that turns too often, described by where it ends. */
+      curving: (direction: string) => `curving ${direction}`,
+      /** The legs of one stroke, in drawing order. */
+      legs: (directions: readonly string[]) => directions.join(', then '),
+      /** By octant, clockwise from right (screen y grows downward). */
+      direction: {
+        right: 'right',
+        downRight: 'down and right',
+        down: 'down',
+        downLeft: 'down and left',
+        left: 'left',
+        upLeft: 'up and left',
+        up: 'up',
+        upRight: 'up and right',
+      },
+      /** The diagram's label: its description, then how to close it. */
+      close: (description: string) => `${description} Tap to close.`,
+    },
   },
   /** A taught Korean item: Korean text, its romanization and (optionally) a gloss in the UI language. */
   koreanItem: (item: { ko: string; romanization: string; gloss?: string }) =>
