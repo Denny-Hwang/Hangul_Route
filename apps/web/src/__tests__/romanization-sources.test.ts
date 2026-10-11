@@ -5,7 +5,10 @@ import {
   extractKoreanPairs,
   formatRomanizationFinding,
 } from '@hangul-route/content-schema';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
+import { MeetHoya } from '../components/landing/MeetHoya';
 
 // F-CNT-002 PR 3, source class C: Korean written inline in pages. The scanner finds
 // `ko: '…'` … `romanization: '…'` object literals and the `한글 · romanized · gloss`
@@ -39,10 +42,13 @@ describe('inline page romanization (class C)', () => {
   });
 
   it('the Hoya landing line is the natural, encouraging 거의 다 했어!', () => {
+    // F-I18N-001 PR 11a: the sentence is a message; the taught phrase and its romanization stay in the component.
     const src = read('apps/web/src/components/landing/MeetHoya.tsx');
-    expect(src).toContain('거의 다 했어! · geoui da haesseo · almost there!');
-    expect(src).toContain('&ldquo;거의 다 했어!&rdquo;');
+    expect(src).toContain("ko: '거의 다 했어!', romanization: 'geoui da haesseo'");
     expect(src).not.toContain('geo-eui');
+    const html = renderToStaticMarkup(createElement(MeetHoya));
+    expect(html).toContain('거의 다 했어! · geoui da haesseo · almost there!');
+    expect(html).toContain('“거의 다 했어!”');
   });
 
   it('page.tsx writes only isolated jamo, no Korean word (so it needs no romanization)', () => {

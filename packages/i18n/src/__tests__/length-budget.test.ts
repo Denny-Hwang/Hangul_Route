@@ -214,6 +214,13 @@ describe('length budgets (F-I18N-001 §3.11)', () => {
     }
   });
 
+  it('covers the landing buttons (PR 11a)', () => {
+    const paths = leafPaths(getMessages('en')).filter((p) => BUDGETS[p.split('.').pop() ?? ''] !== undefined);
+    for (const expected of ['landing.nav.playNow.cta', 'landing.hero.play.cta', 'landing.hero.seeCards.cta', 'landing.get.play.cta']) {
+      expect(paths).toContain(expected);
+    }
+  });
+
   it('budgets the fixed words of the plan button, which also holds a user-entered title', () => {
     // `console.space.openPlan.label` is not a `cta` leaf because the plan title is user data;
     // its own words leave room for a short title inside the cta budget, and the button wraps.

@@ -1,6 +1,7 @@
-import { readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { KIDS_ONLY_FRAMING } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 
 /**
@@ -18,7 +19,14 @@ const landingComponents = readdirSync(join(webSrc, 'components', 'landing'))
   .filter((name) => name.endsWith('.tsx'))
   .map((name) => join('components', 'landing', name));
 
+// The site's words live in the UI dictionary (F-I18N-001 PR 11a, §3.8): every locale's landing file is a public surface.
+const messagesDir = join(webSrc, '..', '..', '..', 'packages', 'i18n', 'src', 'messages');
+const landingMessages = readdirSync(messagesDir)
+  .filter((locale) => existsSync(join(messagesDir, locale, 'landing.ts')))
+  .map((locale) => join('..', '..', '..', 'packages', 'i18n', 'src', 'messages', locale, 'landing.ts'));
+
 const PUBLIC_SURFACES = [
+  ...landingMessages,
   join('app', 'layout.tsx'),
   join('app', 'page.tsx'),
   join('app', 'about', 'page.tsx'),
@@ -28,14 +36,8 @@ const PUBLIC_SURFACES = [
   ...landingComponents,
 ];
 
-const KIDS_ONLY_FRAMING: ReadonlyArray<{ name: string; re: RegExp }> = [
-  { name: 'age range 5–11', re: /\b5\s*[–-]\s*11\b/ },
-  { name: '"for kids"', re: /\bfor kids\b/i },
-  { name: '"kids who …"', re: /\bkids who\b/i },
-  { name: '"Korean for kids"', re: /\bKorean for kids\b/i },
-  { name: '5–7 year-old reading level', re: /\b5\s*[–-]\s*7\s*(year[\s-]*old|yo)\b/i },
-  { name: '"your kid"', re: /\byour kid\b/i },
-];
+// One list, shared with the dictionary guard (packages/i18n landing-messages.test.ts), with the
+// per-locale equivalents of F-I18N-001 §3.8 for the es / ko landing overlays.
 
 function read(rel: string): string {
   return readFileSync(join(webSrc, rel), 'utf8');
@@ -44,6 +46,17 @@ function read(rel: string): string {
 describe('public surfaces speak to anyone learning Hangul (UF-01..UF-03, UF-09)', () => {
   it('scans every landing component', () => {
     expect(landingComponents.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it('scans the English landing messages, where the site copy lives', () => {
+    expect(landingMessages.some((rel) => rel.endsWith(join('en', 'landing.ts')))).toBe(true);
+    expect(read(join('..', '..', '..', 'packages', 'i18n', 'src', 'messages', 'en', 'landing.ts'))).toContain('Learn Hangul from zero');
+  });
+
+  it('the per-locale patterns catch kids-only framing and age ranges (self-check)', () => {
+    for (const sample of ['Coreano para niños', 'de 5 a 11 años', '어린이용 한글', '5~11세 어린이']) {
+      expect(KIDS_ONLY_FRAMING.some(({ re }) => re.test(sample)), sample).toBe(true);
+    }
   });
 
   for (const rel of PUBLIC_SURFACES) {

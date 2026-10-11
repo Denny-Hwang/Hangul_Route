@@ -1,6 +1,11 @@
 import { colors, radii, spacing, typography } from '@hangul-route/design-system/tokens';
+import { DEFAULT_LOCALE, getMessages, type UiLocale } from '@hangul-route/i18n';
 
-export function MeetHoya(): JSX.Element {
+/** Hoya's "almost there" — taught Korean with its romanization, shown beside the UI-language gloss. */
+const ALMOST_THERE = { ko: '거의 다 했어!', romanization: 'geoui da haesseo' } as const;
+
+export function MeetHoya({ locale = DEFAULT_LOCALE }: { locale?: UiLocale }): JSX.Element {
+  const t = getMessages(locale).landing.hoya;
   return (
     <section
       aria-labelledby="hoya-heading"
@@ -63,7 +68,7 @@ export function MeetHoya(): JSX.Element {
               border: `1px solid ${colors.border.subtle}`,
             }}
           >
-            거의 다 했어! · geoui da haesseo · almost there!
+            {t.bubble(ALMOST_THERE.ko, ALMOST_THERE.romanization)}
           </span>
         </div>
       </div>
@@ -82,7 +87,7 @@ export function MeetHoya(): JSX.Element {
             letterSpacing: 1,
           }}
         >
-          Meet Hoya
+          {t.eyebrow}
         </span>
         <h2
           id="hoya-heading"
@@ -92,7 +97,7 @@ export function MeetHoya(): JSX.Element {
             lineHeight: typography.leading.tight,
           }}
         >
-          A tiger who never says &ldquo;wrong.&rdquo;
+          {t.title}
         </h2>
         <p
           style={{
@@ -102,10 +107,7 @@ export function MeetHoya(): JSX.Element {
             lineHeight: typography.leading.relaxed,
           }}
         >
-          Hoya is a young tiger and the only voice in the app. Korean folklore
-          opens with &ldquo;Long ago, when tigers smoked tobacco…&rdquo; so the tiger is
-          Korea&rsquo;s grandparent character. Hoya is a young one — so learners meet
-          a peer, not an authority.
+          {t.body}
         </p>
         <ul
           style={{
@@ -118,16 +120,13 @@ export function MeetHoya(): JSX.Element {
           }}
         >
           <li>
-            <strong style={{ color: colors.text.primary }}>Wrong answer?</strong>{' '}
-            Hoya says &ldquo;거의 다 했어!&rdquo; (almost there) on amber — never red.
+            <strong style={{ color: colors.text.primary }}>{t.points.wrong.title}</strong> {t.points.wrong.body(ALMOST_THERE.ko)}
           </li>
           <li>
-            <strong style={{ color: colors.text.primary }}>Right answer?</strong>{' '}
-            One star, one card, one quiet cheer. No coin sounds.
+            <strong style={{ color: colors.text.primary }}>{t.points.right.title}</strong> {t.points.right.body}
           </li>
           <li>
-            <strong style={{ color: colors.text.primary }}>No streak shame.</strong>{' '}
-            Skip a day. Hoya is happy to see you when you come back.
+            <strong style={{ color: colors.text.primary }}>{t.points.streak.title}</strong> {t.points.streak.body}
           </li>
         </ul>
       </div>

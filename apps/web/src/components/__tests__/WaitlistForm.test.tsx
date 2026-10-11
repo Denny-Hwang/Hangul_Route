@@ -4,7 +4,8 @@ import { fileURLToPath } from 'node:url';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { WaitlistForm, WaitlistFormView } from '../landing/WaitlistForm';
-import { WAITLIST_COPY, type WaitlistState } from '../../lib/waitlist';
+import { WAITLIST_COPY } from '../../data/landing-copy';
+import type { WaitlistState } from '../../lib/waitlist';
 
 /**
  * The landing signup form, rendered to markup for each state (the repo's web
@@ -14,7 +15,7 @@ import { WAITLIST_COPY, type WaitlistState } from '../../lib/waitlist';
 const noop = (): void => undefined;
 
 function view(state: WaitlistState, email = ''): string {
-  return renderToStaticMarkup(<WaitlistFormView state={state} email={email} website="" onEmailChange={noop} onWebsiteChange={noop} onSubmit={noop} />);
+  return renderToStaticMarkup(<WaitlistFormView state={state} email={email} website="" onEmailChange={noop} onWebsiteChange={noop} onSubmit={noop} words={WAITLIST_COPY} />);
 }
 
 const text = (html: string): string => html.replace(/<[^>]+>/g, ' ').replace(/&#x27;/g, "'").replace(/\s+/g, ' ');
@@ -117,6 +118,11 @@ describe('WaitlistFormView · states', () => {
 
 describe('WaitlistForm (stateful wrapper)', () => {
   it('renders the idle form on first paint, same as the view', () => {
-    expect(renderToStaticMarkup(<WaitlistForm />)).toContain('Send me the invite');
+    expect(renderToStaticMarkup(<WaitlistForm words={WAITLIST_COPY} />)).toContain('Send me the invite');
+  });
+
+  it('renders the words it is given (the page passes them in its locale)', () => {
+    const words = { ...WAITLIST_COPY, submit: 'Enviarme la invitación' };
+    expect(renderToStaticMarkup(<WaitlistForm words={words} locale="es" />)).toContain('Enviarme la invitación');
   });
 });

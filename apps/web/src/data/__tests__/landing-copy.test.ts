@@ -4,6 +4,7 @@ import {
   SITE_TITLE,
   audienceBadges,
   howItWorks,
+  landingCopy,
   landingFaqs,
   pricingFootnote,
   pricingLines,
@@ -151,5 +152,13 @@ describe('cost copy says only what is true today (owner decision 2026-10-10)', (
 
   it('the pricing footnote keeps only the ads promise', () => {
     expect(pricingFootnote).toBe('No third-party ads, ever.');
+  });
+});
+
+describe('landingCopy(locale)', () => {
+  it('labels the Open Graph locale from the locale table (en_US for English, unchanged)', () => {
+    expect(siteMetadata.openGraph).toMatchObject({ locale: 'en_US' });
+    expect(landingCopy('es').metadata.openGraph).toMatchObject({ locale: 'es_419' });
+    expect(landingCopy('ko').metadata.openGraph).toMatchObject({ locale: 'ko_KR' });
   });
 });
