@@ -1,4 +1,5 @@
 import type { Quest } from '@hangul-route/content-schema';
+import { storyQuests } from './stories';
 
 /**
  * 5-step quest pattern: intro → present → practice → apply → reward.
@@ -181,7 +182,7 @@ export const stage4Quests: Quest[] = [
   },
 ];
 
-export const questsAll: Quest[] = [...stage1Quests, ...stage2Quests, ...stage4Quests];
+export const questsAll: Quest[] = [...stage1Quests, ...stage2Quests, ...stage4Quests, ...storyQuests];
 
 export function questById(id: string): Quest | undefined {
   return questsAll.find((q) => q.id === id);

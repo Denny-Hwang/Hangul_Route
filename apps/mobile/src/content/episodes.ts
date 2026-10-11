@@ -1,5 +1,6 @@
 import type { Episode } from '@hangul-route/content-schema';
 import { stages, themes } from './stages';
+import { storyEpisodes } from './stories';
 
 /**
  * Episodes: 7 stages × 5 themes = 35 cells.
@@ -203,6 +204,7 @@ export const episodesAll: Episode[] = [
   ...stage2Episodes,
   ...stage4Episodes,
   ...previewEpisodes,
+  ...storyEpisodes,
 ];
 
 export function episodeById(id: string): Episode | undefined {
