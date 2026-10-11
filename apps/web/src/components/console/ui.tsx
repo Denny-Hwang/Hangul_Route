@@ -91,7 +91,7 @@ export function ConsoleShell({ children, onSignOut, title }: { children: ReactNo
           </Link>
           {title ? <span style={{ color: colors.text.secondary }}>· {title}</span> : null}
         </div>
-        <nav style={{ display: 'flex', gap: spacing.sm, alignItems: 'center' }}>
+        <nav style={{ display: 'flex', gap: spacing.sm, alignItems: 'center', flexWrap: 'wrap' }}>
           <LanguageSelect />
           <Button disabled>Account</Button>
           <Link href="/teach/billing">

@@ -43,7 +43,7 @@ describe('console header language select (F-I18N-001 §3.3, wireframe language-p
     expect(html).toContain('<option value="ko" lang="ko">한국어</option>');
   });
 
-  it('sits first in the ConsoleShell header nav, and the default header is unchanged', () => {
+  it('sits first in the ConsoleShell header nav, which wraps on narrow screens; the default header is unchanged', () => {
     const plain = renderToStaticMarkup(
       <LocaleProvider>
         <ConsoleShell title="Class A">body</ConsoleShell>
@@ -51,6 +51,7 @@ describe('console header language select (F-I18N-001 §3.3, wireframe language-p
     );
     expect(plain).not.toContain('<select');
     expect(plain).toMatch(/<nav[^>]*><button[^>]*disabled=""[^>]*>Account<\/button>/);
+    expect(plain).toMatch(/<nav style="[^"]*flex-wrap:wrap/);
 
     const qa = renderToStaticMarkup(
       <LocaleProvider available={['en', 'es', 'ko']}>
