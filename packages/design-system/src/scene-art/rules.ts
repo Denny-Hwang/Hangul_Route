@@ -68,7 +68,7 @@ export const LIMITS = {
 
 const SHAPE_KINDS = new Set(['rect', 'circle', 'ellipse', 'line', 'path', 'poly', 'group']);
 const STROKES = new Set(['thin', 'base', 'thick']);
-const HANGUL = /[ᄀ-ᇿ㄰-㆏ꥠ-꥿가-퟿]/;
+const HANGUL = new RegExp('[\\u1100-\\u11FF\\u3130-\\u318F\\uA960-\\uA97F\\uAC00-\\uD7FF]');
 
 /** UTF-8 size of the JSON form, the unit every size budget is measured in. */
 export function serializedBytes(value: unknown): number {
