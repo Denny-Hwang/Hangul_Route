@@ -83,5 +83,13 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.minigame.picWord.wordSelected': [['bap']],
   'a11y.minigame.option.selected': [['rice']],
   'a11y.minigame.option.matched': [[1, 'rice']],
+  'learner.story.check.position.pill': [[2, 3]],
+  'learner.story.check.positionLabel': [[2, 3]],
+  'learner.story.check.pictureOptionLabel': [['Rice cake soup']],
+  'learner.story.recap.wordsLabel': [[1], [3]],
+  'learner.story.recap.hearWord': [['seollal']],
+  'learner.story.sequence.positionLabel': [[1, 4]],
+  'learner.story.sequence.slotLabel': [[2, 4], [2, 4, 'Eat']],
+  'learner.story.results.cultureNote': [['Seollal']],
   'a11y.soundSwitch': [[false, 'Korean voice ready'], [true, 'Looking for a Korean voice']],
 };

@@ -1,6 +1,12 @@
+import { getMessages, pseudoLocalize, pseudoText } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import { scanLearnerCopy } from '../../homework/banned-text';
-import { storyResultsExtras, type StoryResultsInput } from '../results-extras';
+import { storyResultsExtras as storyResultsExtrasWith, type StoryResultsInput } from '../results-extras';
+
+// The words are learner.story.results (F-I18N-001 PR 7b); these tests read the dictionary.
+const COPY = getMessages('en').learner.story.results;
+const storyResultsExtras = (input: StoryResultsInput): ReturnType<typeof storyResultsExtrasWith> =>
+  storyResultsExtrasWith(input, COPY);
 
 const base: StoryResultsInput = {
   stars: 3,
@@ -102,5 +108,16 @@ describe('storyResultsExtras: copy rules (D3)', () => {
       }
       expect(scanLearnerCopy(texts(out))).toEqual([]);
     }
+  });
+});
+
+describe('storyResultsExtras takes its words as a parameter (F-I18N-001 §3.4 rule 3)', () => {
+  it('labels the actions from the subtree it is given (en-XA)', () => {
+    const pseudo = pseudoLocalize(getMessages('en')).learner.story.results;
+    const out = storyResultsExtrasWith({ ...base, stars: 1, cultureNote: { id: 'cn', titleEn: 'Seollal' } }, pseudo);
+    expect(out.primary.label).toBe(pseudoText('Back home'));
+    expect(out.secondary.map((a) => a.label)).toEqual([pseudoText('Read it again'), pseudoText('Episode page')]);
+    expect(out.cultureNote?.label).toBe(pseudoText('Learn about Seollal'));
+    expect(out.encouragement).toBe(pseudoText('Every read helps. Want to read it again?'));
   });
 });

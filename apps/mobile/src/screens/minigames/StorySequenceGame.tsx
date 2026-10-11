@@ -21,8 +21,8 @@ import {
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Text, View, useWindowDimensions } from 'react-native';
 import { storyById } from '../../content/stories';
+import { useMessages } from '../../i18n/use-messages';
 import type { MinigameScope } from '../../logic/minigame-config';
-import { STORY_CHECK_COPY } from '../../logic/story/copy';
 import { buildSequenceCards, type SequenceCard } from '../../logic/story/sequence-cards';
 import {
   HIGHLIGHT_SLOT_AFTER_WRONG,
@@ -101,7 +101,8 @@ export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce }: P
   );
   const reducedMotion = useReducedMotion();
   const { width } = useWindowDimensions();
-  const copy = STORY_CHECK_COPY.sequence;
+  const story = useMessages().learner.story;
+  const copy = story.sequence;
 
   const finish = useCallback(
     (finalState: SequenceState, skipped: boolean): void => {
@@ -191,7 +192,7 @@ export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce }: P
       <Screen tone="canvas" scrollable>
         <Body>{copy.emptyLine}</Body>
         <Spacer size="lg" />
-        <Button label={copy.continue} tone="primary" size="lg" fullWidth onPress={() => finish(state, true)} />
+        <Button label={copy.continue.cta} tone="primary" size="lg" fullWidth onPress={() => finish(state, true)} />
       </Screen>
     );
   }
@@ -201,7 +202,7 @@ export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce }: P
       <View style={{ flex: 1 }}>
         <Progress value={placedCount} max={total} tone="primary" />
       </View>
-      <Pill label={STORY_CHECK_COPY.check.position(placedCount, total)} size="sm" />
+      <Pill label={story.check.position.pill(placedCount, total)} size="sm" />
     </View>
   );
 
@@ -214,7 +215,7 @@ export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce }: P
         <Spacer size="md" />
         <Card elevation="card" padding="lg" tone="paper" testID="story-sequence-replay-card">
           <View style={{ gap: spacing.md }}>
-            <Pill label={STORY_CHECK_COPY.check.position(state.replayIndex + 1, total)} size="sm" tone="neutral" />
+            <Pill label={story.check.position.pill(state.replayIndex + 1, total)} size="sm" tone="neutral" />
             {replayCard?.ko ? (
               <KoreanText
                 ko={replayCard.ko.ko}
@@ -240,7 +241,7 @@ export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce }: P
           <View style={{ flex: 1 }}>
             <Button
               fullWidth
-              label={copy.replay.back}
+              label={copy.replay.back.cta}
               tone="secondary"
               size="md"
               disabled={state.replayIndex === 0}
@@ -252,7 +253,7 @@ export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce }: P
             <View style={{ flex: 1 }}>
               <Button
                 fullWidth
-                label={state.paused ? copy.replay.play : copy.replay.pause}
+                label={state.paused ? copy.replay.play.cta : copy.replay.pause.cta}
                 tone="secondary"
                 size="md"
                 onPress={() => dispatch({ type: 'togglePause' })}
@@ -263,7 +264,7 @@ export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce }: P
           <View style={{ flex: 1 }}>
             <Button
               fullWidth
-              label={copy.replay.next}
+              label={copy.replay.next.cta}
               tone="secondary"
               size="md"
               disabled={state.replayIndex >= total - 1}
@@ -274,7 +275,7 @@ export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce }: P
         </View>
         <Spacer size="xl" />
         <Button
-          label={copy.replay.done}
+          label={copy.replay.done.cta}
           tone="primary"
           size="lg"
           fullWidth
@@ -283,7 +284,7 @@ export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce }: P
         />
         <Spacer size="sm" />
         <Button
-          label={copy.replay.skip}
+          label={copy.replay.skip.cta}
           tone="ghost"
           size="md"
           fullWidth
@@ -371,7 +372,7 @@ export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce }: P
                 ko={card.ko?.ko}
                 romanization={romanization}
                 label={card.caption}
-                accessibilityLabel={sequenceCardLabel(card, romanization, outcome)}
+                accessibilityLabel={sequenceCardLabel(card, romanization, outcome, copy)}
                 onPress={() => dispatch({ type: 'tap', cardId: card.id })}
               />
             </View>
@@ -386,7 +387,7 @@ export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce }: P
         )}
       </View>
       <Spacer size="xl" />
-      <Button label={copy.skip} tone="ghost" size="md" fullWidth onPress={() => finish(state, true)} />
+      <Button label={copy.skip.cta} tone="ghost" size="md" fullWidth onPress={() => finish(state, true)} />
     </Screen>
   );
 }

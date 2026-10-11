@@ -207,6 +207,74 @@ describe('Pic-Word Match (English wording as shipped)', () => {
   });
 });
 
+describe('learner.story (F-STORY-003, English wording as shipped)', () => {
+  const st = m.learner.story;
+
+  it('uses the wireframe wording for the key moments', () => {
+    expect(st.check.tryAnother).toBe('Try another');
+    expect(st.check.next.cta).toBe('Next');
+    expect(st.sequence.title).toBe('Put the story in order');
+    expect(st.sequence.skip.cta).toBe('Skip this one');
+    expect(st.recap.title).toBe('Words from this story');
+    expect(st.results.nextStory.cta).toBe('Next story');
+    expect(st.results.readAgain.cta).toBe('Read it again');
+    expect(st.results.episodePage.cta).toBe('Episode page');
+    expect(st.results.backHome.cta).toBe('Back home');
+  });
+
+  it('keeps every check, recap, sequence and results line', () => {
+    expect(st.check.correct).toBe('Correct');
+    expect(st.check.defaultHint).toBe('Not quite. Have another look.');
+    expect(st.check.lookHere).toBe('This one is worth a look.');
+    expect(st.check.speakerPrompt).toBe('Hear the question');
+    expect(st.check.speakerOptions).toBe('Hear the answers');
+    expect(st.check.speakerTarget).toBe('Hear the Korean word');
+    expect(st.check.showRomanization.cta).toBe('Show how to say it');
+    expect(st.check.pictureOptionLabel('Rice cake soup')).toBe('Picture: Rice cake soup');
+    expect(st.check.emptyLine).toBe('There are no questions for this story yet.');
+    expect(st.check.continue.cta).toBe('Continue');
+    expect(st.recap.done.cta).toBe('Done');
+    expect(st.sequence.hint).toBe('Tap each picture, starting with what happened first.');
+    expect(st.sequence.stepHint).toBe('Tap each step, starting with what happened first.');
+    expect(st.sequence.tryAnother).toBe('Try another');
+    expect(st.sequence.lookHere).toBe('This one comes next.');
+    expect(st.sequence.emptyLine).toBe('There is nothing to put in order yet.');
+    expect(st.sequence.continue.cta).toBe('Continue');
+    expect(st.sequence.replay).toEqual({
+      title: 'The story, in order',
+      pause: { cta: 'Pause' },
+      play: { cta: 'Play' },
+      back: { cta: 'Back' },
+      next: { cta: 'Next' },
+      skip: { cta: 'Skip replay' },
+      done: { cta: 'Done' },
+    });
+    expect(st.results.cultureNote('Seollal')).toBe('Learn about Seollal');
+    expect(st.results.encourage).toBe('Every read helps. Want to read it again?');
+  });
+
+  it('keeps the function messages, plurals through plural()', () => {
+    expect(st.check.position.pill(2, 3)).toBe('2 / 3');
+    expect(st.check.positionLabel(2, 3)).toBe('Question 2 of 3');
+    expect(st.sequence.positionLabel(1, 4)).toBe('Picture 1 of 4');
+    expect(st.sequence.slotLabel(2, 4)).toBe('Place 2 of 4, empty');
+    expect(st.sequence.slotLabel(2, 4, 'Eat')).toBe('Place 2 of 4: Eat');
+    expect(st.recap.wordsLabel(1)).toBe('1 word from this story');
+    expect(st.recap.wordsLabel(3)).toBe('3 words from this story');
+    expect(st.recap.hearWord('seollal')).toBe('Hear seollal');
+  });
+
+  it('never uses red-and-cross wording for a wrong tap (D3)', () => {
+    const wrongSide = [st.check.tryAnother, st.check.defaultHint, st.check.lookHere, st.sequence.tryAnother].join(' ');
+    expect(wrongSide).not.toMatch(/wrong|incorrect|error|mistake|fail/i);
+  });
+
+  it('has no age words, emoji, HTML entities or stray spaces', () => {
+    expect(JSON.stringify(st)).not.toMatch(NO_AGE_OR_FAILURE);
+    expect(JSON.stringify(st)).not.toMatch(/&[a-z]+;/);
+  });
+});
+
 describe('learner.audio (F-AUDIO-004 §3.7-3.8, English wording as shipped)', () => {
   const a = m.learner.audio;
 
@@ -284,13 +352,14 @@ describe('every locale', () => {
       expect(typeof messages.learner.minigame.notFound).toBe('string');
       expect(typeof messages.learner.minigame.progress.pill).toBe('function');
       expect(typeof messages.learner.audio.readHere).toBe('string');
+      expect(typeof messages.learner.story.sequence.title).toBe('string');
       expect(messages.learner.audio.voiceHelp.sections.apple.steps.length).toBeGreaterThan(0);
     });
   }
 });
 
 /** The subtrees this PR adds; each game's commit extends the list. */
-const NEW_PREFIXES = ['learner.minigame', 'learner.audio', 'a11y.soundSwitch', 'a11y.minigame'];
+const NEW_PREFIXES = ['learner.minigame', 'learner.audio', 'learner.story', 'a11y.soundSwitch', 'a11y.minigame'];
 
 // en-XA (F-I18N-001 §3.11): every new key, function messages and step lists included, survives pseudo-localisation.
 describe('en-XA covers the new keys', () => {

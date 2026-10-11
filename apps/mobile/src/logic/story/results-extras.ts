@@ -1,5 +1,5 @@
 import type { KoText, StoryLevel } from '@hangul-route/content-schema';
-import { STORY_CHECK_COPY } from './copy';
+import type { Messages } from '@hangul-route/i18n';
 
 /**
  * What the story variant of the Results screen adds (F-STORY-003 §3.7): the
@@ -7,8 +7,10 @@ import { STORY_CHECK_COPY } from './copy';
  * two ghost actions. Pure view-model; the screen draws it and fires
  * `story.results.action` with the `action` of the button pressed.
  * F-STORY-004 supplies `nextQuestId` (via `nextStoryAfter`), the culture note
- * and the episode page; none of them is required.
+ * and the episode page; none of them is required. The words are the
+ * `learner.story.results` subtree (F-I18N-001 PR 7b), passed in.
  */
+export type StoryResultsCopy = Messages['learner']['story']['results'];
 
 export interface StoryResultsInput {
   stars: 0 | 1 | 2 | 3;
@@ -47,19 +49,18 @@ export interface StoryResultsExtras {
   secondary: StoryResultsSecondary[];
 }
 
-export function storyResultsExtras(input: StoryResultsInput): StoryResultsExtras {
-  const copy = STORY_CHECK_COPY.results;
+export function storyResultsExtras(input: StoryResultsInput, copy: StoryResultsCopy): StoryResultsExtras {
   const primary: StoryResultsPrimary = input.nextQuestId
-    ? { action: 'next-story', label: copy.nextStory, questId: input.nextQuestId }
-    : { action: 'home', label: copy.backHome };
+    ? { action: 'next-story', label: copy.nextStory.cta, questId: input.nextQuestId }
+    : { action: 'home', label: copy.backHome.cta };
   const secondary: StoryResultsSecondary[] = [
     {
       action: 'read-again',
-      label: copy.readAgain,
+      label: copy.readAgain.cta,
       target: { storyId: input.storyId, level: input.level, mode: 'replay' },
     },
   ];
-  if (input.hasEpisodePage) secondary.push({ action: 'episode', label: copy.episodePage });
+  if (input.hasEpisodePage) secondary.push({ action: 'episode', label: copy.episodePage.cta });
   return {
     title: input.title,
     cultureNote: input.cultureNote

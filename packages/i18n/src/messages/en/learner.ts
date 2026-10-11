@@ -480,4 +480,68 @@ export const learner = {
       footer: 'You can still play: the sound is written on screen.',
     },
   },
+
+  /**
+   * The story check, Story Order, word recap and story Results (F-STORY-003 §3.4-3.7), moved from
+   * `logic/story/copy.ts` in PR 7b. Never a number-as-score, ratio or percent; never red-and-cross
+   * wording (D3). Story text itself (titles, captions, narration) is content.
+   */
+  story: {
+    check: {
+      position: { pill: (index: number, total: number) => `${index} / ${total}` },
+      positionLabel: (index: number, total: number) => `Question ${index} of ${total}`,
+      tryAnother: 'Try another',
+      correct: 'Correct',
+      next: { cta: 'Next' },
+      defaultHint: 'Not quite. Have another look.',
+      lookHere: 'This one is worth a look.',
+      speakerPrompt: 'Hear the question',
+      speakerOptions: 'Hear the answers',
+      speakerTarget: 'Hear the Korean word',
+      showRomanization: { cta: 'Show how to say it' },
+      pictureOptionLabel: (label: string) => `Picture: ${label}`,
+      emptyLine: 'There are no questions for this story yet.',
+      continue: { cta: 'Continue' },
+    },
+    recap: {
+      title: 'Words from this story',
+      done: { cta: 'Done' },
+      wordsLabel: (count: number) =>
+        plural('en', count, { one: '1 word from this story', other: `${count} words from this story` }),
+      hearWord: (romanization: string) => `Hear ${romanization}`,
+    },
+    sequence: {
+      title: 'Put the story in order',
+      hint: 'Tap each picture, starting with what happened first.',
+      /** The hint while the cards are text only (no scene art yet). */
+      stepHint: 'Tap each step, starting with what happened first.',
+      skip: { cta: 'Skip this one' },
+      positionLabel: (index: number, total: number) => `Picture ${index} of ${total}`,
+      /** A slot of the row the learner fills: its place, and the card in it when it has one. */
+      slotLabel: (index: number, total: number, caption?: string) =>
+        caption === undefined ? `Place ${index} of ${total}, empty` : `Place ${index} of ${total}: ${caption}`,
+      tryAnother: 'Try another',
+      lookHere: 'This one comes next.',
+      emptyLine: 'There is nothing to put in order yet.',
+      continue: { cta: 'Continue' },
+      replay: {
+        title: 'The story, in order',
+        pause: { cta: 'Pause' },
+        play: { cta: 'Play' },
+        back: { cta: 'Back' },
+        next: { cta: 'Next' },
+        skip: { cta: 'Skip replay' },
+        done: { cta: 'Done' },
+      },
+    },
+    results: {
+      nextStory: { cta: 'Next story' },
+      backHome: { cta: 'Back home' },
+      readAgain: { cta: 'Read it again' },
+      episodePage: { cta: 'Episode page' },
+      /** `title` is the culture note's title (content). */
+      cultureNote: (title: string) => `Learn about ${title}`,
+      encourage: 'Every read helps. Want to read it again?',
+    },
+  },
 } as const;

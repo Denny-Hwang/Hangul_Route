@@ -37,7 +37,8 @@
     "apps/mobile/src/screens/minigames/TapRespondGame.tsx",
     "apps/mobile/src/screens/minigames/VoiceEchoGame.tsx",
     "apps/mobile/src/screens/minigames/ListenPickGame.tsx",
-    "apps/mobile/src/screens/minigames/PicWordMatchGame.tsx"
+    "apps/mobile/src/screens/minigames/PicWordMatchGame.tsx",
+    "apps/mobile/src/screens/minigames/StorySequenceGame.tsx"
   ],
   "pluralTernaryBaseline": {
     "apps/web/src/app/teach/space/page.tsx": 1,
