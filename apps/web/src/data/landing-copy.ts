@@ -1,5 +1,7 @@
 import { DEFAULT_LOCALE, LOCALE_META, getMessages, type Messages, type UiLocale } from '@hangul-route/i18n';
 import type { Metadata } from 'next';
+import type { LocaleBannerOffer } from '../lib/locale-banner';
+import { sitePath } from '../lib/site-path';
 import { stage1Cards } from './stage1-cards';
 
 /**
@@ -121,3 +123,19 @@ export const pricingFootnote = english.pricingFootnote;
  * the page passes these words to the client form, which never imports the dictionary.
  */
 export const WAITLIST_COPY: Messages['landing']['waitlist'] = getMessages(DEFAULT_LOCALE).landing.waitlist;
+
+/**
+ * The "View in <language>" banner's suggestions on `/` (F-I18N-001 §3.3, PR 11c): one per shown locale other
+ * than English, worded in that locale's own dictionary so a visitor who prefers it can read it. Server-side:
+ * the client banner receives these words and never imports the dictionary.
+ */
+export function localeBannerOffers(shown: readonly UiLocale[]): Partial<Record<UiLocale, LocaleBannerOffer>> {
+  const offers: Partial<Record<UiLocale, LocaleBannerOffer>> = {};
+  for (const locale of shown) {
+    if (locale === DEFAULT_LOCALE) continue;
+    const words = getMessages(locale).landing.localeBanner;
+    const { endonym, htmlLang } = LOCALE_META[locale];
+    offers[locale] = { href: sitePath(locale, '/'), lang: htmlLang, label: words.label, text: words.viewIn(endonym), dismiss: words.dismiss, close: words.close.cta };
+  }
+  return offers;
+}

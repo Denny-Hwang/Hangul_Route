@@ -150,6 +150,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'landing.hoya.bubble': [['x', 'geoui da haesseo']],
   'landing.hoya.points.wrong.body': [['x']],
   'landing.footer.copyright': [[2026]],
+  'landing.localeBanner.viewIn': [['Español']],
   'landing.about.feedback.body': [['hello@example.com']],
   'landing.legal.privacy.sections.collect.bullets.profile': [[{ email: 'hello@example.com', levels: 'New reader / Some reading' }]],
   'landing.legal.privacy.sections.emailList.paragraphs.removal': [[{ email: 'hello@example.com', levels: 'New reader / Some reading' }]],
