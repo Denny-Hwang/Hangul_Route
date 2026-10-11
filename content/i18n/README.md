@@ -109,7 +109,7 @@ Vocabulary overlays also feed `scripts/build-vocab.mjs` (run it too, `content/vo
 | `overlay-circular-gloss`: a Korean gloss equal to the Korean it glosses | error (warning when it only wraps it) |
 | `overlay-token-mismatch`: story narration tokens differ from the English | error |
 | `banned-on-learner-surface`: a banned word of the locale | error |
-| `overlay-missing`: a translatable English field the locale lacks | warning; error for locales in `HANGUL_ROUTE_STRICT_LOCALES` |
+| `overlay-missing`: a translatable English field the locale lacks | warning; error for locales in `HANGUL_ROUTE_STRICT_LOCALES` (set in `.github/workflows/content-validation.yml` when a locale ships; `scripts/i18n-status.mjs` fails a shipped locale that is not listed) |
 
 Ids of content that is still TypeScript in `apps/mobile/src/content` (`jamo:`, `card:`,
 `episode:`, `quest:`, `minigame:`, `stage:`, `theme:` that are not in the JSON) are checked by

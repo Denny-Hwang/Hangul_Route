@@ -50,6 +50,9 @@ jobs:
       - name: Check i18n rules (F-I18N-001)
         run: node scripts/check-i18n.mjs
 
+      - name: UI translation status - fails on missing keys in a shipped locale (F-I18N-001)
+        run: node scripts/i18n-status.mjs
+
       - name: Build
         run: pnpm run build
 

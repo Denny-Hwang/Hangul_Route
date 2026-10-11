@@ -151,7 +151,7 @@ Routine 도입을 "지금 당장 전부"가 아니라 **프로젝트 성숙도�
 - PR 생성
 
 **R8. Translation Sync** (수동 또는 PR 머지 시)
-- 영어 UI 문자열이 추가되면 다국어 초안 생성 (추후)
+- 영어 UI 문자열이 추가되면 다국어 초안 생성 — F-I18N-001 PR 13 에서 활성화. 정의: `routines/R8-translation-sync.md` (입력: `node scripts/i18n-status.mjs --list`, 출력: `claude/i18n-<locale>-<namespace>` 초안 PR, 원어민 검토는 사람)
 
 이 단계부터는 Routine이 **PR을 만듭니다**. 다만:
 - 모든 PR은 본인 승인 후 merge

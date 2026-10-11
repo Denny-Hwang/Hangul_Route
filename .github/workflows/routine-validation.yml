@@ -20,13 +20,13 @@ jobs:
       - name: Check required routines exist (R5 must NOT exist)
         run: |
           set -e
-          for id in R1 R2 R3 R4 R6; do
+          for id in R1 R2 R3 R4 R6 R8; do
             test -f "routines/${id}-"*.md || { echo "missing routine ${id}"; exit 1; }
           done
           if ls routines/R5-*.md >/dev/null 2>&1; then
             echo "R5 is deprecated in v2.2 — remove it." && exit 1
           fi
-          echo "routine inventory ok: R1 R2 R3 R4 R6 (no R5)"
+          echo "routine inventory ok: R1 R2 R3 R4 R6 R8 (no R5)"
 
       - name: Lint workflow yaml
         run: |
