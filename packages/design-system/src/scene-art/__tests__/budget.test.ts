@@ -1,5 +1,6 @@
 import { gzipSync } from 'node:zlib';
 import { describe, expect, it } from 'vitest';
+import { SCENE_ART_REGISTRY } from '../registry';
 import type { Registry } from '../resolve';
 import { LIMITS, checkItem, checkScene, serializedBytes } from '../rules';
 import type { ItemDef, Shape } from '../types';
@@ -58,6 +59,20 @@ describe('registry budget', () => {
   it('would notice an oversized library', () => {
     const fat = Object.fromEntries(Array.from({ length: 80 }, (_, i) => [`prop:f${i}`, makeProp({ id: `prop:f${i}`, alt: 'x'.repeat(3000 + (i % 7)) })]));
     expect(registryBudget(fat).raw).toBeGreaterThan(REGISTRY_RAW_MAX);
+  });
+});
+
+describe('SCENE_ART_REGISTRY budget', () => {
+  it('the shipped registry stays inside 200 KB raw and 55 KB gzip', () => {
+    const { raw, gzip } = registryBudget(SCENE_ART_REGISTRY);
+    expect(raw).toBeLessThanOrEqual(REGISTRY_RAW_MAX);
+    expect(gzip).toBeLessThanOrEqual(REGISTRY_GZIP_MAX);
+  });
+
+  it('every shipped entry is within its per-item byte and shape caps', () => {
+    for (const item of Object.values(SCENE_ART_REGISTRY)) {
+      expect(checkItem(item).filter((f) => f.rule === 'I-size' || f.rule === 'I-shapes'), item.id).toEqual([]);
+    }
   });
 });
 

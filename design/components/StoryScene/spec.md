@@ -58,3 +58,19 @@ A `card:<id>` layer draws the existing `HeritageCardArt` picture in a square of 
 ## Checklist for this PR set
 
 Registry holds only Hoya in PR 2.3a, so no story picture is drawn yet and nothing is learner-visible. Settings and props arrive with PR 2.3b and the cluster batches; each is reviewed on the contact sheet (PR 2.4) against the checklist in F-STORY-002 §3.9.6.
+
+## Library batch 1 (PR 2.3b)
+
+The first settings and props, for the flagship stories (`sejong-new-letters`, `sillok-royal-historians`). Nothing is learner-visible yet: no story has an `art` description until the cluster PRs (2.10a-d).
+
+| Group | Ids |
+|---|---|
+| Settings (`settings/*.ts`) | `scene:palace-courtyard`, `scene:palace-hall` (with a simplified sun, moon and five peaks screen behind the seat), `scene:village-lane` |
+| People (`props/people.ts`) | `prop:fig-king`, `prop:fig-official`, `prop:fig-scholar`, `prop:fig-historian` (seated, writing), `prop:fig-villager`, `prop:fig-grandmother`, `prop:fig-child` |
+| Writing (`props/writing.ts`) | `prop:desk-low`, `prop:writing-set` (brush, inkstone, ink stick), `prop:writing-lines` (paper with stroke rows, no letters) |
+| Books (`props/books.ts`) | `prop:book-thread-bound` (Korean five-hole binding), `prop:books-case` (volumes stored flat), `prop:document-box` |
+
+- People are faceless (a blank `surface.paper` oval outlined in `border.strong`); hair, hats and clothing carry who they are. Six figures name a `tintable` garment colour so one figure covers many people.
+- Every item has an `accuracyNote`; every heritage artefact and every figure in historical dress has a `sourceRef` (Encyclopedia of Korean Culture, National Archives of Korea, Federation of Korean Cultural Centers), and the note says what is simplified and what the source does not show.
+- Palette headroom: `scene:palace-hall` keeps to the tokens the court figures already use, so the king, officials and historian fit the 8-token scene palette (a registry test composes that scene). Its five peaks are a muted grey rather than mineral blue-green for that reason.
+- Hoya palette exemption: Hoya is a character, not a prop. His pose palettes use 7 to 9 tokens (the shipped `Hoya.tsx` palette), over the 5-token prop cap (item rule `I-palette`); `registry.test.ts` exempts `hoya:*` from that one rule only and asserts no library item needs it. The scene-level cap (rule R-S5, 8 tokens) still counts Hoya's tokens, so a scene with Hoya currently exceeds it; that rule needs a decision before the cluster PRs compose Hoya scenes.

@@ -1,24 +1,135 @@
 import { describe, expect, it } from 'vitest';
 import { HOYA_POSES } from '../hoya';
 import { SCENE_ART_REGISTRY, hasItem } from '../registry';
-import { checkItem } from '../rules';
+import { checkItem, checkScene } from '../rules';
 
-describe('SCENE_ART_REGISTRY (PR 2.3a: Hoya only)', () => {
-  it('holds the five Hoya poses, keyed by their layer ref', () => {
-    expect(Object.keys(SCENE_ART_REGISTRY).sort()).toEqual(HOYA_POSES.map((p) => `hoya:${p}`).sort());
-    for (const [key, item] of Object.entries(SCENE_ART_REGISTRY)) expect(item.id).toBe(key);
+/** PR 2.3a seeded the Hoya poses; PR 2.3b adds the first library batch. */
+const SETTINGS = ['scene:palace-courtyard', 'scene:palace-hall', 'scene:village-lane'];
+const PROPS = [
+  'prop:fig-king',
+  'prop:fig-official',
+  'prop:fig-scholar',
+  'prop:fig-historian',
+  'prop:fig-villager',
+  'prop:fig-grandmother',
+  'prop:fig-child',
+  'prop:desk-low',
+  'prop:writing-set',
+  'prop:writing-lines',
+  'prop:book-thread-bound',
+  'prop:books-case',
+  'prop:document-box',
+];
+
+const entries = Object.entries(SCENE_ART_REGISTRY);
+const library = entries.filter(([id]) => !id.startsWith('hoya:'));
+
+describe('SCENE_ART_REGISTRY', () => {
+  it('holds the five Hoya poses and the first library batch, keyed by their layer ref', () => {
+    const expected = [...HOYA_POSES.map((p) => `hoya:${p}`), ...SETTINGS, ...PROPS].sort();
+    expect(Object.keys(SCENE_ART_REGISTRY).sort()).toEqual(expected);
+    for (const [key, item] of entries) expect(item.id).toBe(key);
   });
 
   it('is frozen', () => {
     expect(Object.isFrozen(SCENE_ART_REGISTRY)).toBe(true);
   });
 
-  it('every entry passes the item rules except the character palette cap', () => {
-    for (const item of Object.values(SCENE_ART_REGISTRY)) expect(checkItem(item).filter((f) => f.rule !== 'I-palette')).toEqual([]);
+  it('has well-formed ids: three settings as scene:, the rest as prop:, kebab-case', () => {
+    for (const [id, item] of library) {
+      expect(id).toMatch(/^(scene|prop):[a-z]+(-[a-z]+)*$/);
+      expect(id.startsWith('scene:')).toBe(item.kind === 'setting');
+    }
+    expect(library.filter(([id]) => id.startsWith('scene:'))).toHaveLength(3);
+  });
+
+  it('every library entry passes every item rule', () => {
+    for (const [, item] of library) expect(checkItem(item)).toEqual([]);
+  });
+
+  // Documented exemption: Hoya is a character, not a prop. His pose palettes use
+  // 7-9 colour tokens (the shipped Hoya.tsx palette), above the 5-colour prop cap
+  // (rule I-palette). Every other rule still applies to him.
+  it('every hoya:* entry passes the item rules except the character palette cap (I-palette)', () => {
+    for (const [id, item] of entries.filter(([k]) => k.startsWith('hoya:'))) {
+      expect(checkItem(item).filter((f) => f.rule !== 'I-palette'), id).toEqual([]);
+    }
+  });
+
+  it('exempts only hoya:* from the palette cap: no library entry exceeds it', () => {
+    for (const [, item] of library) expect(checkItem(item).filter((f) => f.rule === 'I-palette')).toEqual([]);
+  });
+
+  it('every library entry has alt text, an accuracy note and no Hangul in either', () => {
+    for (const [id, item] of library) {
+      expect(item.alt.trim().length, id).toBeGreaterThan(0);
+      expect(item.accuracyNote?.trim().length ?? 0, id).toBeGreaterThan(20);
+      expect(`${item.alt} ${item.accuracyNote}`, id).not.toMatch(/[ᄀ-ᇿ㄰-㆏가-퟿]/);
+    }
+  });
+
+  it('every heritage artefact is an object with a sourceRef and an accuracyNote', () => {
+    const heritage = library.filter(([, item]) => item.tags?.heritage);
+    expect(heritage.length).toBeGreaterThanOrEqual(3);
+    for (const [id, item] of heritage) {
+      expect(item.kind, id).toBe('object');
+      expect(item.sourceRef, id).toBeDefined();
+      expect(item.accuracyNote, id).toBeDefined();
+    }
+  });
+
+  it('every sourceRef is a complete citation to an https page accessed on a real date', () => {
+    for (const [id, item] of library.filter(([, i]) => i.sourceRef)) {
+      const ref = item.sourceRef!;
+      expect(ref.title.length, id).toBeGreaterThan(0);
+      expect(ref.publisher.length, id).toBeGreaterThan(0);
+      expect(ref.url, id).toMatch(/^https:\/\/\S+$/);
+      expect(ref.accessed, id).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect(Number.isNaN(Date.parse(ref.accessed)), id).toBe(false);
+    }
+  });
+
+  it('settings declare a horizon, props do not', () => {
+    for (const [id, item] of library) expect(item.horizonY !== undefined, id).toBe(item.kind === 'setting');
+  });
+
+  it('tintable figures name a tintable token that their nodes use', () => {
+    for (const id of ['prop:fig-official', 'prop:fig-scholar', 'prop:fig-historian', 'prop:fig-villager', 'prop:fig-grandmother', 'prop:fig-child']) {
+      const item = SCENE_ART_REGISTRY[id]!;
+      expect(item.tintable, id).toBeDefined();
+      expect(JSON.stringify(item.nodes), id).toContain(item.tintable!);
+    }
+  });
+
+  it('draws people faceless: a blank paper oval outlined with border.strong, and no figure uses a skin token', () => {
+    for (const [id, item] of library.filter(([, i]) => i.kind === 'figure')) {
+      const json = JSON.stringify(item.nodes);
+      expect(json, id).toContain('"fill":"surface.paper","stroke":"border.strong"');
+      expect(json, id).not.toMatch(/skin|hoya\./);
+    }
+  });
+
+  // The flagship court scene (sillok-royal-historians s2, the spec's worked
+  // example): the palace hall must leave room in the 8-colour scene palette for
+  // the king, his officials and the historian.
+  it('composes the flagship court scene without an error', () => {
+    const art = {
+      setting: 'scene:palace-hall',
+      altEn: 'The king on a raised seat in a palace hall, officials on both sides and a historian writing at the side',
+      layers: [
+        { ref: 'prop:fig-king', x: 200, y: 186, s: 0.9 },
+        { ref: 'prop:fig-official', x: 90, y: 256 },
+        { ref: 'prop:fig-official', x: 310, y: 256, flip: true, tint: 'text.secondary' },
+        { ref: 'prop:fig-historian', x: 330, y: 292, s: 1.1, flip: true },
+      ],
+    };
+    expect(checkScene(art, SCENE_ART_REGISTRY).filter((f) => f.severity === 'error')).toEqual([]);
   });
 
   it('answers hasItem for registered refs only', () => {
     expect(hasItem('hoya:idle')).toBe(true);
+    expect(hasItem('prop:fig-king')).toBe(true);
+    expect(hasItem('scene:palace-hall')).toBe(true);
     expect(hasItem('hoya:dancing')).toBe(false);
     expect(hasItem('prop:desk')).toBe(false);
     expect(hasItem('toString')).toBe(false);
