@@ -59,6 +59,24 @@ describe('story scene art', () => {
     }
   });
 
+  // §5: the artPending count is reported (in the test name, so it shows in every
+  // run) and per story, so a review sees which stories still wait for pictures.
+  const pending = scenes.filter((s) => s.scene.artPending === true);
+  const pendingByStory = Object.fromEntries(
+    stories.map((story) => [story.id, pending.filter((s) => s.story.id === story.id).length] as const).filter(([, n]) => n > 0),
+  );
+  it(`reports ${pending.length} artPending scenes of ${scenes.length} across ${Object.keys(pendingByStory).length} stories`, () => {
+    expect(pending.length + withArt.length).toBeLessThanOrEqual(scenes.length);
+    for (const id of RECORDS_JOSEON) expect(pendingByStory[id], id).toBeUndefined();
+    expect(Object.values(pendingByStory).reduce((a, n) => a + n, 0)).toBe(pending.length);
+  });
+
+  // F-STORY-001 §3.7: art is learner-visible content; these stories were ready
+  // on main before their art landed, so their contentVer moved past 1.
+  it('bumped contentVer on the records-joseon stories for their art', () => {
+    for (const story of stories.filter((s) => RECORDS_JOSEON.includes(s.id))) expect(story.contentVer, story.id).toBeGreaterThanOrEqual(2);
+  });
+
   it('illustrates every scene of the records-joseon cluster, with no warnings either', () => {
     const cluster = scenes.filter((s) => RECORDS_JOSEON.includes(s.story.id));
     expect(new Set(cluster.map((s) => s.story.id)).size).toBe(6);

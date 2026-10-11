@@ -4364,7 +4364,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:ilseongnok-daily-reflection",
     "state": "ready",
-    "contentVer": 1,
+    "contentVer": 2,
     "title": {
       "ko": "하루를 돌아본 정조의 일기, 일성록",
       "romanization": "Harureul dorabon Jeongjoui ilgi, Ilseongnok",
@@ -4576,32 +4576,32 @@ export const storiesAll: Story[] = [
               "layers": [
                 {
                   "ref": "prop:fig-king-seated",
-                  "x": 165,
+                  "x": 100,
                   "y": 262,
-                  "s": 1.4
+                  "s": 1.3
                 },
                 {
                   "ref": "prop:desk-low",
-                  "x": 165,
-                  "y": 294,
-                  "s": 1.5,
+                  "x": 100,
+                  "y": 292,
+                  "s": 1.4,
                   "z": "front"
                 },
                 {
                   "ref": "prop:oil-lamp",
-                  "x": 236,
-                  "y": 225,
-                  "s": 1.3,
+                  "x": 166,
+                  "y": 228,
+                  "s": 1.2,
                   "z": "front"
                 },
                 {
                   "ref": "hoya:thinking",
-                  "x": 320,
+                  "x": 306,
                   "y": 292,
                   "s": 0.85
                 }
               ],
-              "altEn": "King Jeongjo writes his diary by lamplight, and Hoya, trying it too, wonders what he did today."
+              "altEn": "King Jeongjo writes his diary by lamplight. Apart from him, Hoya tries it too and wonders what he did today."
             }
           },
           {
@@ -6962,7 +6962,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:joseon-records-today",
     "state": "ready",
-    "contentVer": 1,
+    "contentVer": 2,
     "title": {
       "ko": "오래된 기록, 새로운 발견",
       "romanization": "Oraedoen girok, saeroun balgyeon",
@@ -10943,7 +10943,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:seungjeongwon-ilgi-every-day",
     "state": "ready",
-    "contentVer": 1,
+    "contentVer": 2,
     "title": {
       "ko": "날마다 쓴 승정원 일기",
       "romanization": "Nalmada sseun Seungjeongwon Ilgi",
@@ -12467,7 +12467,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:sillok-mountain-archives",
     "state": "ready",
-    "contentVer": 1,
+    "contentVer": 2,
     "title": {
       "ko": "산으로 간 실록",
       "romanization": "Saneuro gan sillok",
@@ -13364,7 +13364,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:sillok-royal-historians",
     "state": "ready",
-    "contentVer": 1,
+    "contentVer": 2,
     "title": {
       "ko": "호야, 사관을 만나다",
       "romanization": "Hoya, sagwaneul mannada",
@@ -15375,7 +15375,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:uigwe-royal-birthday",
     "state": "ready",
-    "contentVer": 1,
+    "contentVer": 2,
     "title": {
       "ko": "왕실 잔치를 그림으로 남긴 의궤",
       "romanization": "Wangsil janchireul geurimeuro namgin uigwe",
