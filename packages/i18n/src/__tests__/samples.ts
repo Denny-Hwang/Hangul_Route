@@ -16,6 +16,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.profile.switchTo': [['Suni']],
   'learner.profile.statsTitle': [['Suni'], [null]],
   'learner.profile.plan.unlocked': [[null], ['Mrs. Kim']],
+  'learner.editProfile.a11y': [['Suni']],
   'learner.home.greeting': [['Mina'], [null]],
   'learner.home.streak.pill': [[0], [1], [5]],
   'learner.home.cards.pill': [[1], [12]],
