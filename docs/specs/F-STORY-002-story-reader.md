@@ -84,7 +84,7 @@ Component tree: `screens/story/StoryReaderView.tsx` (props: `story`, `level`, `m
 3. **Narration card** (`Card`, text `typography.size.bodyLg`): English narration with inline term chips (§3.5). With Hoya in the picture there is no `HoyaBubble` (one Hoya per screen).
 4. **Korean block** (`KoreanText`, F-I18N-001 §3.5): Korean at `title` size (a word) or `bodyLg` wrapped (a line), romanization upright >= 16 sp, gloss line, a speaker button (>= 64). Tapping the block plays the line; it is the tap target for tap-for-gloss on lines (§3.5).
 5. **Chips row** (only when present): "Did you know?" (culture note, §3.7) and "Say it yourself" (when no Korean voice).
-6. **Bottom bar** (pinned): **Read to me** toggle (a labelled switch, >= 64) · **Back** (secondary, disabled on scene 1) · **Next** (`size="hero"`, the one primary; label "Next", and "Finish" on the last scene).
+6. **Bottom bar** (pinned): **Read to me** toggle (a labelled switch, >= 64) · **Back** (secondary, disabled on scene 1) · **Next** (`size="hero"`, the one primary; label "Next", and "Finish" on the last scene). *As built (2.6a):* below `layout.compactHeight` (640) window height Next is `size="lg"` (80, still above the 64 floor) so the scrolling text keeps room on 320x568 and landscape phones.
 
 **Level differences** (the same component; `level` only changes order and emphasis):
 
@@ -96,7 +96,7 @@ Component tree: `screens/story/StoryReaderView.tsx` (props: `story`, `level`, `m
 
 Heritage launch stories are all `listen` tier. The two other layouts ship with the component so F-STORY-005's Stage 5 content needs no UI work.
 
-**Landscape / wide** (native tablets and landscape phones; width >= 700 dp and wider than tall): two columns — art left (<= 55 %), text and controls right; the top bar spans both. The web PWA keeps the 480 px column at >= 600 px (`pwa-postbuild.mjs:46-48`), so this is verified on native only.
+**Landscape / wide** (native tablets and landscape phones; width >= 700 dp and wider than tall): two columns — art left (<= 55 %), text and controls right; the top bar spans both. The web PWA keeps the 480 px column at >= 600 px (`pwa-postbuild.mjs:46-48`), so this is verified on native only. *As built (2.6a):* F-LAYOUT-001 removed that 480 px column, so the web is side by side too (`useLayoutClass().sideBySide`), and the replay e2e checks it at 844x390 and 1180x820. A page turn fades the art and the text only; the controls stay put.
 
 **Given/When/Then**
 
@@ -109,7 +109,7 @@ Heritage launch stories are all `listen` tier. The two other layouts ship with t
 
 ### 3.4 Listening: Read to me, speaker buttons and TTS
 
-The reader plays sound only through F-AUDIO-004's single entry point `playPrompt(spec)` (voice ranking, rate, mute, clips, capability and the text fallback all live there). Until its PRs A-3/A-4a land, `logic/story/audio-port.ts` implements the same `playPrompt` signature over today's `speak` (`platform/audio.ts:26-40`, English `en-US` and Korean `ko-KR`) and returns `'played'` or `'muted'` only; PR 2.6a swaps the import when A-4a merges. No reader logic changes.
+The reader plays sound only through F-AUDIO-004's single entry point `playPrompt(spec)` (voice ranking, rate, mute, clips, capability and the text fallback all live there). Until its PRs A-3/A-4a land, `logic/story/audio-port.ts` implements the same `playPrompt` signature over today's `speak` (`platform/audio.ts:26-40`, English `en-US` and Korean `ko-KR`) and returns `'played'` or `'muted'` only; PR 2.6a swaps the import when A-4a merges. No reader logic changes. *As built (2.6a):* A-4a/A-5a had merged, so there is no `audio-port.ts`: the reader calls `playPrompt`, chains steps with `createAudioRunner` and feeds Korean-bearing chains into one shared prompt slot (`usePromptSlot` / `PromptPanel`). An English-only chain (no Korean voice) does not report to that slot, and the "Say it yourself" chip follows the device capability, so hearing the English never hides the no-voice state. While the capability is still `unknown` when a chain starts, an `unavailable` Korean step is skipped (`skipUnavailableKorean`) and the English carries on.
 
 - Every piece of English narration and every Korean line has a speaker affordance: the Korean block's speaker plays the line (`audioRef` first, else TTS `ko-KR` with `spokenKo ?? ko`); the **narration speaker** (an `Icon speaker` button at the card's top-right) plays the narration then the Korean block (`planSceneAudio` with `include: ['narration', 'korean']`). A term chip plays that term only.
 - **Read to me** (a switch in the bottom bar; persisted per profile as `ProfileSettings.readToMe?: boolean`, an **additive optional field** on the schema F-I18N-001 owns — `ProfileSettingsSchema` in `schemas/locale.ts` — added in PR 2.5 with its storage test, as F-I18N-001 §3.2 requires; absent ⇒ `readToMeDefault(level)`): when on, each scene plays its narration then its Korean line **once when it opens** (not when returning with Back). Changing scenes calls `stop()`. Browsers block audio before a gesture: a scene that opens by resume (no gesture yet) does not autoplay; the first tap anywhere in the reader calls F-AUDIO-004's `unlockAudio()` and, if Read to me is on, starts the current scene — F-AUDIO-004's `blocked` result is shown as its "Tap to hear" state, never as an error.
@@ -346,7 +346,7 @@ interface StorySceneProps {
 
 ### 3.10 Accessibility, reduced motion, text size, layout
 
-- **Targets**: every control >= `touchTarget.min` 64; Next is `size="hero"`. Term chips and the Korean block have a 64 dp minimum hit area even when the glyphs are smaller.
+- **Targets**: every control >= `touchTarget.min` 64; Next is `size="hero"` (`lg` below `layout.compactHeight`, §3.3 item 6). Term chips and the Korean block have a 64 dp minimum hit area even when the glyphs are smaller.
 - **Reading order** (screen reader and keyboard): top bar → art (label = `altEn`) → traditional-tale pill → narration (chips are buttons: "Korean word sagwan, royal historian. Double tap to hear") → Korean block → chips → Read to me → Back → Next. Scene change announces "Scene N of M" then the art description (`AccessibilityInfo.announceForAccessibility`; web: the narration heading takes focus with `tabIndex=-1`).
 - **Keyboard (web)**: Right/Left arrows = Next/Back, Escape closes the gloss card or the leave sheet, Enter/Space activate buttons; visible focus ring `colors.border.focus` (>= 3:1, `tokens.ts` comment on `focus`). No key repeats advance past the last scene.
 - **Colour is never the only cue**: current scene = dots + "3 / 8"; correct/hint states of checkpoints per F-STORY-003; a highlighted fact card = outline + word.
@@ -376,7 +376,7 @@ Append to the `TELEMETRY_EVENT_NAMES` array (`packages/content-schema/src/schema
 
 | Event | Fired | Payload |
 |---|---|---|
-| `story.read.finished` | the end page is reached (once per mount) | `{ storyId, level, mode: 'quest' \| 'replay', scenes, scenesSeen, linesPlayed, termsOpened }` |
+| `story.read.finished` | the end page is reached (once per mount) | `{ storyId, level, mode: 'quest' \| 'replay', scenes, scenesSeen, linesPlayed, termsOpened }`; `scenesSeen` counts the scenes shown in that mount (lowest to furthest index), so a reader opened past scene 1 does not count the scenes before it |
 | `story.sources.opened` | Sources screen mounts | `{ storyId, from: 'reader' \| 'end' \| 'episode' \| 'notes' \| 'scene', factId? }` |
 | `story.sources.link_opened` | after the gate, on a successful hand-off | `{ storyId, factId }` |
 
@@ -438,7 +438,7 @@ TDD; mobile vitest only picks up `src/{logic,store,content,config,platform}/**/*
 | `mobile/e2e/web/story-reader.spec.ts` | e2e (Playwright) | open a story from a quest step, read all scenes with Next, Back works, dots only fill, end page, Continue returns to the quest; Read to me toggle; mute → text only (fake `speechSynthesis` from F-AUDIO-004's test support); tap a term → gloss card with romanization and gloss, Escape closes; romanization hide-until-tap setting; Sources from the top bar lists facts, sources, "Open link" asks for the gate; reduced motion; 320x568 and 844x390 CTA visible; no emoji in the DOM | — |
 | `mobile/e2e/web/story-reader-resume.spec.ts` | e2e | (after F-STORY-004 PR 4.4b) leave at scene 3, reopen at scene 3 | — |
 
-E2E content: until real `ready` stories exist, the e2e build runs `node scripts/build-stories.mjs --include-fixtures` (adds `packages/content-schema/src/__fixtures__/story/valid.ready.json` with a `shelf` block to the generated module for that build only, not committed) — this flag is added to F-STORY-001's generator in PR 2.6b (unverified wiring with the existing `build:web` script, §7).
+E2E content: until real `ready` stories exist, the e2e build runs `node scripts/build-stories.mjs --include-fixtures` (adds `packages/content-schema/src/__fixtures__/story/valid.ready.json` with a `shelf` block to the generated module for that build only, not committed) — this flag is added to F-STORY-001's generator in PR 2.6b (unverified wiring with the existing `build:web` script, §7). *As built (2.6a):* the flag and `pnpm --filter @hangul-route/mobile build:web:fixtures` shipped in 2.6a; the fixture build is written to `dist-e2e/` (never `dist/`), always restores the real bundle, and CI runs the reader e2e on it (`web-app.yml`, Build PWA job, `STORY_FIXTURES=1`).
 
 Coverage lanes (CLAUDE.md §6): `apps/mobile/src/logic` >= 90 % (this feature's `logic/story/` files at 100 %); `packages/design-system` >= 85 % (the new `scene-art/` pure code at 100 %; `components/**` is excluded by config); `packages/content-schema` 100 %. Visual regression: the contact sheet is the surface (F-VR-001); add the `StoryScene` fallback and three art sizes to `/design-preview/components`. Manual QA before ship: VoiceOver and TalkBack through three scenes, a gloss card and Sources; 200 % text; offline with no Korean voice; reduced motion; a 320 dp device.
 
