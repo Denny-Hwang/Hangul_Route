@@ -6,6 +6,8 @@
 
 /** AA minimum for body text. */
 export const WCAG_AA_NORMAL = 4.5;
+/** AAA minimum for body text; the lecture presenter's bar for projected text (F-TCH-004 §3.6). */
+export const WCAG_AAA_NORMAL = 7;
 /** AA minimum for large text (≥ 24px, or ≥ 18.66px bold) and UI graphics. */
 export const WCAG_AA_LARGE = 3;
 

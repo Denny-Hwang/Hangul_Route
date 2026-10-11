@@ -308,6 +308,21 @@ export const z = {
   hoyaBubble: 60,
 } as const;
 
+/**
+ * Lecture presenter scale (F-TCH-004 §3.6; design/tokens/presenter.v1.md).
+ * Sizes are logical stage units: a stage is 1280 units wide and 600-960 high,
+ * and `stage-scale.ts` turns a unit into window pixels. Nothing projected is
+ * smaller than `caption`, and on screen text never drops below the body floor.
+ * The presenter projects existing colours only (pairs in presenter.v1.md).
+ */
+export const presenter = {
+  stage: { width: 1280, minHeight: 600, maxHeight: 960 },
+  size: { glyph: 380, display: 140, title: 80, prompt: 56, body: 40, caption: 28 }, // stage units
+  font: 'HR Presenter KR', // family name of the bundled Hangul subset (F-TCH-004 PR 3)
+  marker: { shapes: ['circle', 'triangle', 'square', 'star'] }, // quiz options 1-4, so colour is never the only cue
+  autoHideMs: 3000, // control bar hides after this long with no pointer, touch or key
+} as const;
+
 export const tokens = {
   colors,
   spacing,
@@ -319,12 +334,14 @@ export const tokens = {
   borderWidth,
   motion,
   z,
+  presenter,
 } as const;
 
 export type Tokens = typeof tokens;
 export type ColorTokens = typeof colors;
 export type SpacingTokens = typeof spacing;
 export type LayoutTokens = typeof layout;
+export type PresenterTokens = typeof presenter;
 export type RadiiTokens = typeof radii;
 export type TypographyTokens = typeof typography;
 export type StageKey = keyof typeof colors.stage;

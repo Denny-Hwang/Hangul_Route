@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { WCAG_AA_LARGE, WCAG_AA_NORMAL, contrastRatio, relativeLuminance } from '../contrast';
+import { WCAG_AAA_NORMAL, WCAG_AA_LARGE, WCAG_AA_NORMAL, contrastRatio, relativeLuminance } from '../contrast';
+import presenterDoc from '../../../../design/tokens/presenter.v1.md?raw';
 import { HOYA_VARIANTS, colors, hoyaVariantColors } from '../tokens';
 
 describe('contrastRatio (WCAG 2.x)', () => {
@@ -184,5 +185,57 @@ describe('Hoya fur variant contrast (non-text, WCAG 1.4.11)', () => {
     for (const variant of HOYA_VARIANTS.filter((v) => v !== 'orange')) {
       expect(contrastRatio(hoyaVariantColors(variant).furDark, colors.surface.sunken)).toBeGreaterThanOrEqual(WCAG_AA_LARGE);
     }
+  });
+});
+
+/**
+ * F-TCH-004 §3.6 — the lecture presenter projects existing colour tokens, so
+ * it adds no colours; design/tokens/presenter.v1.md lists every colour pair the
+ * presenter may draw. Projected text is read from the back of a classroom
+ * through a washed-out projector, so the bar is 7:1 (WCAG AAA) for text, and
+ * 3:1 for non-text cues (quiz shape markers, the correct-option border and
+ * check, the timer ring, the focus ring). The pairs are read from the doc so a
+ * new pair cannot ship without passing here.
+ */
+describe('presenter projected colour pairs (F-TCH-004 §3.6)', () => {
+  type Kind = 'text' | 'non-text';
+  const resolve = (path: string): string => {
+    const [group, key] = path.split('.') as [string, string];
+    const value = (colors as unknown as Record<string, Record<string, string> | undefined>)[group]?.[key];
+    if (value === undefined) throw new Error(`presenter.v1.md names an unknown colour token: ${path}`);
+    return value;
+  };
+  const pairs: Array<[string, Kind, string, string]> = [];
+  for (const m of presenterDoc.matchAll(/^\|\s*(text|non-text)\s*\|\s*`([a-zA-Z]+\.[a-zA-Z0-9]+)`\s*\|\s*`([a-zA-Z]+\.[a-zA-Z0-9]+)`\s*\|\s*([^|]+?)\s*\|/gm)) {
+    pairs.push([`${m[2]} on ${m[3]} (${m[4]})`, m[1] as Kind, resolve(m[2]!), resolve(m[3]!)]);
+  }
+
+  it('reads the pair table (guards the parser itself)', () => {
+    expect(pairs.filter(([, kind]) => kind === 'text').length).toBeGreaterThanOrEqual(6);
+    expect(pairs.filter(([, kind]) => kind === 'non-text').length).toBeGreaterThanOrEqual(5);
+  });
+
+  it('projects on white paper with warm dark text (no cream canvas on a projector)', () => {
+    expect(pairs.some(([name]) => name.startsWith('text.primary on surface.paper'))).toBe(true);
+    expect(pairs.some(([, , , bg]) => bg === colors.surface.canvas)).toBe(false);
+  });
+
+  it.each(pairs.filter(([, kind]) => kind === 'text'))('%s ≥ 7:1 (text)', (_name, _kind, fg, bg) => {
+    expect(contrastRatio(fg, bg)).toBeGreaterThanOrEqual(WCAG_AAA_NORMAL);
+  });
+
+  it.each(pairs.filter(([, kind]) => kind === 'non-text'))('%s ≥ 3:1 (non-text)', (_name, _kind, fg, bg) => {
+    expect(contrastRatio(fg, bg)).toBeGreaterThanOrEqual(WCAG_AA_LARGE);
+  });
+
+  it('never projects the reserved danger colour (anti-shame quiz reveal)', () => {
+    expect(pairs.some(([, , fg, bg]) => fg === colors.feedback.danger || bg === colors.feedback.danger)).toBe(false);
+  });
+
+  // Why some tempting pairs are not in the table: they miss the projected 7:1 bar.
+  it('keeps text.muted, brand-fill labels and gloss-on-success off the projected stage (< 7:1)', () => {
+    expect(contrastRatio(colors.text.muted, colors.surface.paper)).toBeLessThan(WCAG_AAA_NORMAL);
+    expect(contrastRatio(colors.text.onPrimary, colors.brand.primary)).toBeLessThan(WCAG_AAA_NORMAL);
+    expect(contrastRatio(colors.text.secondary, colors.feedback.successLight)).toBeLessThan(WCAG_AAA_NORMAL);
   });
 });
