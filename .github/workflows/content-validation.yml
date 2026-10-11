@@ -6,6 +6,18 @@ on:
     paths:
       - "content/**"
       - "packages/content-schema/**"
+      # F-CNT-002: the romanization suites read these sources (registry: packages/content-schema/src/__tests__/helpers/romanization-registry.ts)
+      - "apps/mobile/src/content/**"
+      - "apps/mobile/src/logic/minigame-config.ts"
+      - "apps/mobile/src/logic/profiles/avatar-catalog.ts"
+      - "apps/mobile/src/screens/minigames/VoiceEchoGame.tsx"
+      - "apps/web/src/data/**"
+      - "apps/web/src/components/landing/**"
+      - "apps/web/src/app/design-preview/**"
+      - "apps/web/src/app/page.tsx"
+      - "apps/web/src/__tests__/romanization-sources.test.ts"
+      - "packages/backend/src/routes/content.ts"
+      - "packages/backend/src/__tests__/content-route.test.ts"
       - "scripts/build-stories.mjs"
       - "apps/mobile/src/content/stories.generated.ts"
       - "scripts/build-vocab.mjs"
@@ -40,6 +52,15 @@ jobs:
 
       - name: Run content-schema tests (zod fixtures)
         run: pnpm --filter @hangul-route/content-schema test
+
+      - name: Romanization suites - mobile data (F-CNT-002)
+        run: pnpm --filter @hangul-route/mobile test -t romanization
+
+      - name: Romanization suites - web data and inline pages (F-CNT-002)
+        run: pnpm --filter @hangul-route/web test -t romanization
+
+      - name: Romanization suites - backend seed (F-CNT-002)
+        run: pnpm --filter @hangul-route/backend test -t romanization
 
       - name: Validate language policy (F-CNT-001)
         run: node scripts/validate-content.mjs

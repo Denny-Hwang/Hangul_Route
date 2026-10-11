@@ -110,8 +110,13 @@ describe('checkRomanization', () => {
     expect(rules('솔잎', 'sollip', exceptions)).toEqual(['romanization-mismatch']);
   });
 
-  it('the shipped exception list is empty', () => {
-    expect(ROMANIZATION_EXCEPTIONS).toEqual([]);
+  it('every shipped exception names its limit and allows only a romanization the converter does not give', () => {
+    expect(ROMANIZATION_EXCEPTIONS.length).toBeGreaterThan(0);
+    for (const e of ROMANIZATION_EXCEPTIONS) {
+      expect(e.reason.trim(), e.ko).not.toBe('');
+      expect(rules(e.ko, e.allowed[0] ?? ''), e.ko).toEqual(['romanization-mismatch']);
+      expect(rules(e.ko, e.allowed[0] ?? '', ROMANIZATION_EXCEPTIONS), e.ko).toEqual([]);
+    }
   });
 });
 
