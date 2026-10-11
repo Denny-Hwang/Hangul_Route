@@ -103,6 +103,7 @@ test('finishing an episode shows its extra cards once, each opening its card', a
     expect(box?.width ?? 0).toBeGreaterThanOrEqual(64);
     expect(box?.height ?? 0).toBeGreaterThanOrEqual(64);
   }
+  await banner.scrollIntoViewIfNeeded();
   await shot(page, 'results-extra-cards');
 
   await banner.getByRole('button', { name: 'See my card: Songpyeon' }).click();
@@ -132,5 +133,6 @@ test('the banner wraps its thumbnails at 320 wide with no sideways scroll', asyn
   for (const box of await Promise.all((await banner.getByRole('button').all()).map((b) => b.boundingBox()))) {
     expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual((bannerBox?.x ?? 0) + (bannerBox?.width ?? 0) + 1);
   }
+  await banner.scrollIntoViewIfNeeded();
   await shot(page, 'results-extra-cards-320');
 });
