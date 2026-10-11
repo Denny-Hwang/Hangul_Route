@@ -1,0 +1,166 @@
+{
+  "schemaVersion": 1,
+  "topic": {
+    "id": "vocab-topic:colors",
+    "key": "colors",
+    "order": 3,
+    "titleEn": "Colors",
+    "titleKo": {
+      "ko": "색",
+      "romanization": "saek",
+      "en": "color"
+    },
+    "blurbEn": "Words for the colors all around us.",
+    "hoyaIntroEn": "Look around! How many colors can you spot?",
+    "tint": "stage.stage2",
+    "coverItemId": "vocab:ppalgansaek",
+    "status": "draft",
+    "fixedOrder": true
+  },
+  "items": [
+    {
+      "id": "vocab:ppalgansaek",
+      "ko": "빨간색",
+      "romanization": "ppalgansaek",
+      "en": "red",
+      "pos": "noun",
+      "topics": [
+        "colors"
+      ],
+      "level": 2,
+      "visual": "word:color-red"
+    },
+    {
+      "id": "vocab:juhwangsaek",
+      "ko": "주황색",
+      "romanization": "juhwangsaek",
+      "en": "orange",
+      "pos": "noun",
+      "topics": [
+        "colors"
+      ],
+      "level": 2,
+      "visual": "word:color-orange"
+    },
+    {
+      "id": "vocab:noransaek",
+      "ko": "노란색",
+      "romanization": "noransaek",
+      "en": "yellow",
+      "pos": "noun",
+      "topics": [
+        "colors"
+      ],
+      "level": 2,
+      "visual": "word:color-yellow"
+    },
+    {
+      "id": "vocab:choroksaek",
+      "ko": "초록색",
+      "romanization": "choroksaek",
+      "en": "green",
+      "pos": "noun",
+      "topics": [
+        "colors"
+      ],
+      "level": 2,
+      "visual": "word:color-green"
+    },
+    {
+      "id": "vocab:paransaek",
+      "ko": "파란색",
+      "romanization": "paransaek",
+      "en": "blue",
+      "pos": "noun",
+      "topics": [
+        "colors"
+      ],
+      "level": 2,
+      "visual": "word:color-blue"
+    },
+    {
+      "id": "vocab:borasaek",
+      "ko": "보라색",
+      "romanization": "borasaek",
+      "en": "purple",
+      "pos": "noun",
+      "topics": [
+        "colors"
+      ],
+      "level": 2,
+      "visual": "word:color-purple"
+    },
+    {
+      "id": "vocab:bunhongsaek",
+      "ko": "분홍색",
+      "romanization": "bunhongsaek",
+      "en": "pink",
+      "pos": "noun",
+      "topics": [
+        "colors"
+      ],
+      "level": 2,
+      "visual": "word:color-pink"
+    },
+    {
+      "id": "vocab:haneulsaek",
+      "ko": "하늘색",
+      "romanization": "haneulsaek",
+      "en": "sky blue",
+      "pos": "noun",
+      "topics": [
+        "colors"
+      ],
+      "level": 2,
+      "visual": "word:color-skyblue"
+    },
+    {
+      "id": "vocab:galsaek",
+      "ko": "갈색",
+      "romanization": "galsaek",
+      "en": "brown",
+      "pos": "noun",
+      "topics": [
+        "colors"
+      ],
+      "level": 1,
+      "visual": "word:color-brown"
+    },
+    {
+      "id": "vocab:hoesaek",
+      "ko": "회색",
+      "romanization": "hoesaek",
+      "en": "gray",
+      "pos": "noun",
+      "topics": [
+        "colors"
+      ],
+      "level": 1,
+      "visual": "word:color-gray"
+    },
+    {
+      "id": "vocab:hayansaek",
+      "ko": "하얀색",
+      "romanization": "hayansaek",
+      "en": "white",
+      "pos": "noun",
+      "topics": [
+        "colors"
+      ],
+      "level": 2,
+      "visual": "word:color-white"
+    },
+    {
+      "id": "vocab:geomeunsaek",
+      "ko": "검은색",
+      "romanization": "geomeunsaek",
+      "en": "black",
+      "pos": "noun",
+      "topics": [
+        "colors"
+      ],
+      "level": 2,
+      "visual": "word:color-black"
+    }
+  ]
+}

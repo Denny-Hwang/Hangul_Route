@@ -104,5 +104,293 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "en": "rice cake",
     "topic": "food",
     "visual": "word:food-tteok"
+  },
+  {
+    "id": "vocab:horangi",
+    "ko": "호랑이",
+    "romanization": "horangi",
+    "en": "tiger",
+    "topic": "animals",
+    "visual": "card:tiger"
+  },
+  {
+    "id": "vocab:goyangi",
+    "ko": "고양이",
+    "romanization": "goyangi",
+    "en": "cat",
+    "topic": "animals",
+    "visual": "word:animal-cat"
+  },
+  {
+    "id": "vocab:gangaji",
+    "ko": "강아지",
+    "romanization": "gangaji",
+    "en": "puppy",
+    "topic": "animals",
+    "visual": "word:animal-puppy"
+  },
+  {
+    "id": "vocab:tokki",
+    "ko": "토끼",
+    "romanization": "tokki",
+    "en": "rabbit",
+    "topic": "animals",
+    "visual": "word:animal-rabbit"
+  },
+  {
+    "id": "vocab:gom",
+    "ko": "곰",
+    "romanization": "gom",
+    "en": "bear",
+    "topic": "animals",
+    "visual": "word:animal-bear"
+  },
+  {
+    "id": "vocab:sae",
+    "ko": "새",
+    "romanization": "sae",
+    "en": "bird",
+    "topic": "animals",
+    "visual": "word:animal-bird"
+  },
+  {
+    "id": "vocab:mulgogi",
+    "ko": "물고기",
+    "romanization": "mulgogi",
+    "en": "fish",
+    "topic": "animals",
+    "visual": "word:animal-fish"
+  },
+  {
+    "id": "vocab:ori",
+    "ko": "오리",
+    "romanization": "ori",
+    "en": "duck",
+    "topic": "animals",
+    "visual": "word:animal-duck"
+  },
+  {
+    "id": "vocab:yeou",
+    "ko": "여우",
+    "romanization": "yeou",
+    "en": "fox",
+    "topic": "animals",
+    "visual": "word:animal-fox"
+  },
+  {
+    "id": "vocab:wonsungi",
+    "ko": "원숭이",
+    "romanization": "wonsungi",
+    "en": "monkey",
+    "topic": "animals",
+    "visual": "word:animal-monkey"
+  },
+  {
+    "id": "vocab:kokkiri",
+    "ko": "코끼리",
+    "romanization": "kokkiri",
+    "en": "elephant",
+    "topic": "animals",
+    "visual": "word:animal-elephant"
+  },
+  {
+    "id": "vocab:nabi",
+    "ko": "나비",
+    "romanization": "nabi",
+    "en": "butterfly",
+    "topic": "animals",
+    "visual": "word:animal-butterfly"
+  },
+  {
+    "id": "vocab:ppalgansaek",
+    "ko": "빨간색",
+    "romanization": "ppalgansaek",
+    "en": "red",
+    "topic": "colors",
+    "visual": "word:color-red"
+  },
+  {
+    "id": "vocab:juhwangsaek",
+    "ko": "주황색",
+    "romanization": "juhwangsaek",
+    "en": "orange",
+    "topic": "colors",
+    "visual": "word:color-orange"
+  },
+  {
+    "id": "vocab:noransaek",
+    "ko": "노란색",
+    "romanization": "noransaek",
+    "en": "yellow",
+    "topic": "colors",
+    "visual": "word:color-yellow"
+  },
+  {
+    "id": "vocab:choroksaek",
+    "ko": "초록색",
+    "romanization": "choroksaek",
+    "en": "green",
+    "topic": "colors",
+    "visual": "word:color-green"
+  },
+  {
+    "id": "vocab:paransaek",
+    "ko": "파란색",
+    "romanization": "paransaek",
+    "en": "blue",
+    "topic": "colors",
+    "visual": "word:color-blue"
+  },
+  {
+    "id": "vocab:borasaek",
+    "ko": "보라색",
+    "romanization": "borasaek",
+    "en": "purple",
+    "topic": "colors",
+    "visual": "word:color-purple"
+  },
+  {
+    "id": "vocab:bunhongsaek",
+    "ko": "분홍색",
+    "romanization": "bunhongsaek",
+    "en": "pink",
+    "topic": "colors",
+    "visual": "word:color-pink"
+  },
+  {
+    "id": "vocab:haneulsaek",
+    "ko": "하늘색",
+    "romanization": "haneulsaek",
+    "en": "sky blue",
+    "topic": "colors",
+    "visual": "word:color-skyblue"
+  },
+  {
+    "id": "vocab:galsaek",
+    "ko": "갈색",
+    "romanization": "galsaek",
+    "en": "brown",
+    "topic": "colors",
+    "visual": "word:color-brown"
+  },
+  {
+    "id": "vocab:hoesaek",
+    "ko": "회색",
+    "romanization": "hoesaek",
+    "en": "gray",
+    "topic": "colors",
+    "visual": "word:color-gray"
+  },
+  {
+    "id": "vocab:hayansaek",
+    "ko": "하얀색",
+    "romanization": "hayansaek",
+    "en": "white",
+    "topic": "colors",
+    "visual": "word:color-white"
+  },
+  {
+    "id": "vocab:geomeunsaek",
+    "ko": "검은색",
+    "romanization": "geomeunsaek",
+    "en": "black",
+    "topic": "colors",
+    "visual": "word:color-black"
+  },
+  {
+    "id": "vocab:hana",
+    "ko": "하나",
+    "romanization": "hana",
+    "en": "one",
+    "topic": "numbers",
+    "visual": "word:count-1"
+  },
+  {
+    "id": "vocab:dul",
+    "ko": "둘",
+    "romanization": "dul",
+    "en": "two",
+    "topic": "numbers",
+    "visual": "word:count-2"
+  },
+  {
+    "id": "vocab:set",
+    "ko": "셋",
+    "romanization": "set",
+    "en": "three",
+    "topic": "numbers",
+    "visual": "word:count-3"
+  },
+  {
+    "id": "vocab:net",
+    "ko": "넷",
+    "romanization": "net",
+    "en": "four",
+    "topic": "numbers",
+    "visual": "word:count-4"
+  },
+  {
+    "id": "vocab:daseot",
+    "ko": "다섯",
+    "romanization": "daseot",
+    "en": "five",
+    "topic": "numbers",
+    "visual": "word:count-5"
+  },
+  {
+    "id": "vocab:yeoseot",
+    "ko": "여섯",
+    "romanization": "yeoseot",
+    "en": "six",
+    "topic": "numbers",
+    "visual": "word:count-6"
+  },
+  {
+    "id": "vocab:ilgop",
+    "ko": "일곱",
+    "romanization": "ilgop",
+    "en": "seven",
+    "topic": "numbers",
+    "visual": "word:count-7"
+  },
+  {
+    "id": "vocab:yeodeol",
+    "ko": "여덟",
+    "romanization": "yeodeol",
+    "en": "eight",
+    "topic": "numbers",
+    "visual": "word:count-8"
+  },
+  {
+    "id": "vocab:ahop",
+    "ko": "아홉",
+    "romanization": "ahop",
+    "en": "nine",
+    "topic": "numbers",
+    "visual": "word:count-9"
+  },
+  {
+    "id": "vocab:yeol",
+    "ko": "열",
+    "romanization": "yeol",
+    "en": "ten",
+    "topic": "numbers",
+    "visual": "word:count-10"
+  },
+  {
+    "id": "vocab:seumul",
+    "ko": "스물",
+    "romanization": "seumul",
+    "en": "twenty",
+    "topic": "numbers",
+    "visual": "word:count-20"
+  },
+  {
+    "id": "vocab:yeong-zero",
+    "ko": "영",
+    "romanization": "yeong",
+    "en": "zero",
+    "topic": "numbers",
+    "visual": "word:count-0"
   }
 ];

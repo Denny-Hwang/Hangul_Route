@@ -18,6 +18,57 @@ export const VOCAB_TOPICS: readonly VocabTopic[] = [
     "coverItemId": "vocab:sagwa",
     "status": "draft",
     "fixedOrder": false
+  },
+  {
+    "id": "vocab-topic:animals",
+    "key": "animals",
+    "order": 2,
+    "titleEn": "Animals",
+    "titleKo": {
+      "ko": "동물",
+      "romanization": "dongmul",
+      "en": "animals"
+    },
+    "blurbEn": "Words for animals, from pets to the zoo.",
+    "hoyaIntroEn": "I am a tiger! Come and meet some animal friends.",
+    "tint": "theme.nature",
+    "coverItemId": "vocab:horangi",
+    "status": "draft",
+    "fixedOrder": false
+  },
+  {
+    "id": "vocab-topic:colors",
+    "key": "colors",
+    "order": 3,
+    "titleEn": "Colors",
+    "titleKo": {
+      "ko": "색",
+      "romanization": "saek",
+      "en": "color"
+    },
+    "blurbEn": "Words for the colors all around us.",
+    "hoyaIntroEn": "Look around! How many colors can you spot?",
+    "tint": "stage.stage2",
+    "coverItemId": "vocab:ppalgansaek",
+    "status": "draft",
+    "fixedOrder": true
+  },
+  {
+    "id": "vocab-topic:numbers",
+    "key": "numbers",
+    "order": 4,
+    "titleEn": "Numbers",
+    "titleKo": {
+      "ko": "숫자",
+      "romanization": "sutja",
+      "en": "number"
+    },
+    "blurbEn": "Counting words from one to ten, then twenty and zero.",
+    "hoyaIntroEn": "Let us count together, one by one.",
+    "tint": "stage.stage2",
+    "coverItemId": "vocab:daseot",
+    "status": "draft",
+    "fixedOrder": true
   }
 ];
 
@@ -212,6 +263,589 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "glosses": {
       "en": "rice cake",
       "es": "pastel de arroz"
+    }
+  },
+  {
+    "id": "vocab:horangi",
+    "ko": "호랑이",
+    "romanization": "horangi",
+    "en": "tiger",
+    "pos": "noun",
+    "topics": [
+      "animals"
+    ],
+    "level": 2,
+    "visual": "card:tiger",
+    "glosses": {
+      "en": "tiger",
+      "es": "tigre"
+    }
+  },
+  {
+    "id": "vocab:goyangi",
+    "ko": "고양이",
+    "romanization": "goyangi",
+    "en": "cat",
+    "pos": "noun",
+    "topics": [
+      "animals"
+    ],
+    "level": 2,
+    "visual": "word:animal-cat",
+    "glosses": {
+      "en": "cat",
+      "es": "gato"
+    }
+  },
+  {
+    "id": "vocab:gangaji",
+    "ko": "강아지",
+    "romanization": "gangaji",
+    "en": "puppy",
+    "pos": "noun",
+    "topics": [
+      "animals"
+    ],
+    "level": 2,
+    "visual": "word:animal-puppy",
+    "glosses": {
+      "en": "puppy",
+      "es": "cachorro"
+    }
+  },
+  {
+    "id": "vocab:tokki",
+    "ko": "토끼",
+    "romanization": "tokki",
+    "en": "rabbit",
+    "pos": "noun",
+    "topics": [
+      "animals"
+    ],
+    "level": 1,
+    "visual": "word:animal-rabbit",
+    "glosses": {
+      "en": "rabbit",
+      "es": "conejo"
+    }
+  },
+  {
+    "id": "vocab:gom",
+    "ko": "곰",
+    "romanization": "gom",
+    "en": "bear",
+    "pos": "noun",
+    "topics": [
+      "animals"
+    ],
+    "level": 1,
+    "visual": "word:animal-bear",
+    "glosses": {
+      "en": "bear",
+      "es": "oso"
+    }
+  },
+  {
+    "id": "vocab:sae",
+    "ko": "새",
+    "romanization": "sae",
+    "en": "bird",
+    "pos": "noun",
+    "topics": [
+      "animals"
+    ],
+    "level": 1,
+    "visual": "word:animal-bird",
+    "glosses": {
+      "en": "bird",
+      "es": "pájaro"
+    }
+  },
+  {
+    "id": "vocab:mulgogi",
+    "ko": "물고기",
+    "romanization": "mulgogi",
+    "en": "fish",
+    "pos": "noun",
+    "topics": [
+      "animals"
+    ],
+    "level": 2,
+    "visual": "word:animal-fish",
+    "glosses": {
+      "en": "fish",
+      "es": "pez"
+    }
+  },
+  {
+    "id": "vocab:ori",
+    "ko": "오리",
+    "romanization": "ori",
+    "en": "duck",
+    "pos": "noun",
+    "topics": [
+      "animals"
+    ],
+    "level": 1,
+    "visual": "word:animal-duck",
+    "glosses": {
+      "en": "duck",
+      "es": "pato"
+    }
+  },
+  {
+    "id": "vocab:yeou",
+    "ko": "여우",
+    "romanization": "yeou",
+    "en": "fox",
+    "pos": "noun",
+    "topics": [
+      "animals"
+    ],
+    "level": 1,
+    "visual": "word:animal-fox",
+    "glosses": {
+      "en": "fox",
+      "es": "zorro"
+    }
+  },
+  {
+    "id": "vocab:wonsungi",
+    "ko": "원숭이",
+    "romanization": "wonsungi",
+    "en": "monkey",
+    "pos": "noun",
+    "topics": [
+      "animals"
+    ],
+    "level": 2,
+    "visual": "word:animal-monkey",
+    "glosses": {
+      "en": "monkey",
+      "es": "mono"
+    }
+  },
+  {
+    "id": "vocab:kokkiri",
+    "ko": "코끼리",
+    "romanization": "kokkiri",
+    "en": "elephant",
+    "pos": "noun",
+    "topics": [
+      "animals"
+    ],
+    "level": 2,
+    "visual": "word:animal-elephant",
+    "glosses": {
+      "en": "elephant",
+      "es": "elefante"
+    }
+  },
+  {
+    "id": "vocab:nabi",
+    "ko": "나비",
+    "romanization": "nabi",
+    "en": "butterfly",
+    "pos": "noun",
+    "topics": [
+      "animals"
+    ],
+    "level": 1,
+    "visual": "word:animal-butterfly",
+    "glosses": {
+      "en": "butterfly",
+      "es": "mariposa"
+    }
+  },
+  {
+    "id": "vocab:ppalgansaek",
+    "ko": "빨간색",
+    "romanization": "ppalgansaek",
+    "en": "red",
+    "pos": "noun",
+    "topics": [
+      "colors"
+    ],
+    "level": 2,
+    "visual": "word:color-red",
+    "glosses": {
+      "en": "red",
+      "es": "rojo"
+    }
+  },
+  {
+    "id": "vocab:juhwangsaek",
+    "ko": "주황색",
+    "romanization": "juhwangsaek",
+    "en": "orange",
+    "pos": "noun",
+    "topics": [
+      "colors"
+    ],
+    "level": 2,
+    "visual": "word:color-orange",
+    "glosses": {
+      "en": "orange",
+      "es": "naranja"
+    }
+  },
+  {
+    "id": "vocab:noransaek",
+    "ko": "노란색",
+    "romanization": "noransaek",
+    "en": "yellow",
+    "pos": "noun",
+    "topics": [
+      "colors"
+    ],
+    "level": 2,
+    "visual": "word:color-yellow",
+    "glosses": {
+      "en": "yellow",
+      "es": "amarillo"
+    }
+  },
+  {
+    "id": "vocab:choroksaek",
+    "ko": "초록색",
+    "romanization": "choroksaek",
+    "en": "green",
+    "pos": "noun",
+    "topics": [
+      "colors"
+    ],
+    "level": 2,
+    "visual": "word:color-green",
+    "glosses": {
+      "en": "green",
+      "es": "verde"
+    }
+  },
+  {
+    "id": "vocab:paransaek",
+    "ko": "파란색",
+    "romanization": "paransaek",
+    "en": "blue",
+    "pos": "noun",
+    "topics": [
+      "colors"
+    ],
+    "level": 2,
+    "visual": "word:color-blue",
+    "glosses": {
+      "en": "blue",
+      "es": "azul"
+    }
+  },
+  {
+    "id": "vocab:borasaek",
+    "ko": "보라색",
+    "romanization": "borasaek",
+    "en": "purple",
+    "pos": "noun",
+    "topics": [
+      "colors"
+    ],
+    "level": 2,
+    "visual": "word:color-purple",
+    "glosses": {
+      "en": "purple",
+      "es": "morado"
+    }
+  },
+  {
+    "id": "vocab:bunhongsaek",
+    "ko": "분홍색",
+    "romanization": "bunhongsaek",
+    "en": "pink",
+    "pos": "noun",
+    "topics": [
+      "colors"
+    ],
+    "level": 2,
+    "visual": "word:color-pink",
+    "glosses": {
+      "en": "pink",
+      "es": "rosa"
+    }
+  },
+  {
+    "id": "vocab:haneulsaek",
+    "ko": "하늘색",
+    "romanization": "haneulsaek",
+    "en": "sky blue",
+    "pos": "noun",
+    "topics": [
+      "colors"
+    ],
+    "level": 2,
+    "visual": "word:color-skyblue",
+    "glosses": {
+      "en": "sky blue",
+      "es": "celeste"
+    }
+  },
+  {
+    "id": "vocab:galsaek",
+    "ko": "갈색",
+    "romanization": "galsaek",
+    "en": "brown",
+    "pos": "noun",
+    "topics": [
+      "colors"
+    ],
+    "level": 1,
+    "visual": "word:color-brown",
+    "glosses": {
+      "en": "brown",
+      "es": "café"
+    }
+  },
+  {
+    "id": "vocab:hoesaek",
+    "ko": "회색",
+    "romanization": "hoesaek",
+    "en": "gray",
+    "pos": "noun",
+    "topics": [
+      "colors"
+    ],
+    "level": 1,
+    "visual": "word:color-gray",
+    "glosses": {
+      "en": "gray",
+      "es": "gris"
+    }
+  },
+  {
+    "id": "vocab:hayansaek",
+    "ko": "하얀색",
+    "romanization": "hayansaek",
+    "en": "white",
+    "pos": "noun",
+    "topics": [
+      "colors"
+    ],
+    "level": 2,
+    "visual": "word:color-white",
+    "glosses": {
+      "en": "white",
+      "es": "blanco"
+    }
+  },
+  {
+    "id": "vocab:geomeunsaek",
+    "ko": "검은색",
+    "romanization": "geomeunsaek",
+    "en": "black",
+    "pos": "noun",
+    "topics": [
+      "colors"
+    ],
+    "level": 2,
+    "visual": "word:color-black",
+    "glosses": {
+      "en": "black",
+      "es": "negro"
+    }
+  },
+  {
+    "id": "vocab:hana",
+    "ko": "하나",
+    "romanization": "hana",
+    "en": "one",
+    "pos": "number",
+    "topics": [
+      "numbers"
+    ],
+    "level": 1,
+    "visual": "word:count-1",
+    "senseNote": "Before a counting word it becomes han.",
+    "glosses": {
+      "en": "one",
+      "es": "uno"
+    }
+  },
+  {
+    "id": "vocab:dul",
+    "ko": "둘",
+    "romanization": "dul",
+    "en": "two",
+    "pos": "number",
+    "topics": [
+      "numbers"
+    ],
+    "level": 1,
+    "visual": "word:count-2",
+    "senseNote": "Before a counting word it becomes du.",
+    "glosses": {
+      "en": "two",
+      "es": "dos"
+    }
+  },
+  {
+    "id": "vocab:set",
+    "ko": "셋",
+    "romanization": "set",
+    "en": "three",
+    "pos": "number",
+    "topics": [
+      "numbers"
+    ],
+    "level": 1,
+    "visual": "word:count-3",
+    "senseNote": "Before a counting word it becomes se.",
+    "glosses": {
+      "en": "three",
+      "es": "tres"
+    }
+  },
+  {
+    "id": "vocab:net",
+    "ko": "넷",
+    "romanization": "net",
+    "en": "four",
+    "pos": "number",
+    "topics": [
+      "numbers"
+    ],
+    "level": 1,
+    "visual": "word:count-4",
+    "senseNote": "Before a counting word it becomes ne.",
+    "glosses": {
+      "en": "four",
+      "es": "cuatro"
+    }
+  },
+  {
+    "id": "vocab:daseot",
+    "ko": "다섯",
+    "romanization": "daseot",
+    "en": "five",
+    "pos": "number",
+    "topics": [
+      "numbers"
+    ],
+    "level": 1,
+    "visual": "word:count-5",
+    "glosses": {
+      "en": "five",
+      "es": "cinco"
+    }
+  },
+  {
+    "id": "vocab:yeoseot",
+    "ko": "여섯",
+    "romanization": "yeoseot",
+    "en": "six",
+    "pos": "number",
+    "topics": [
+      "numbers"
+    ],
+    "level": 1,
+    "visual": "word:count-6",
+    "glosses": {
+      "en": "six",
+      "es": "seis"
+    }
+  },
+  {
+    "id": "vocab:ilgop",
+    "ko": "일곱",
+    "romanization": "ilgop",
+    "en": "seven",
+    "pos": "number",
+    "topics": [
+      "numbers"
+    ],
+    "level": 1,
+    "visual": "word:count-7",
+    "glosses": {
+      "en": "seven",
+      "es": "siete"
+    }
+  },
+  {
+    "id": "vocab:yeodeol",
+    "ko": "여덟",
+    "romanization": "yeodeol",
+    "en": "eight",
+    "pos": "number",
+    "topics": [
+      "numbers"
+    ],
+    "level": 1,
+    "visual": "word:count-8",
+    "glosses": {
+      "en": "eight",
+      "es": "ocho"
+    }
+  },
+  {
+    "id": "vocab:ahop",
+    "ko": "아홉",
+    "romanization": "ahop",
+    "en": "nine",
+    "pos": "number",
+    "topics": [
+      "numbers"
+    ],
+    "level": 1,
+    "visual": "word:count-9",
+    "glosses": {
+      "en": "nine",
+      "es": "nueve"
+    }
+  },
+  {
+    "id": "vocab:yeol",
+    "ko": "열",
+    "romanization": "yeol",
+    "en": "ten",
+    "pos": "number",
+    "topics": [
+      "numbers"
+    ],
+    "level": 1,
+    "visual": "word:count-10",
+    "glosses": {
+      "en": "ten",
+      "es": "diez"
+    }
+  },
+  {
+    "id": "vocab:seumul",
+    "ko": "스물",
+    "romanization": "seumul",
+    "en": "twenty",
+    "pos": "number",
+    "topics": [
+      "numbers"
+    ],
+    "level": 2,
+    "visual": "word:count-20",
+    "senseNote": "Before a counting word it becomes seumu.",
+    "glosses": {
+      "en": "twenty",
+      "es": "veinte"
+    }
+  },
+  {
+    "id": "vocab:yeong-zero",
+    "ko": "영",
+    "romanization": "yeong",
+    "en": "zero",
+    "pos": "number",
+    "topics": [
+      "numbers"
+    ],
+    "level": 1,
+    "visual": "word:count-0",
+    "senseNote": "Sino-Korean zero. In phone numbers people say gong.",
+    "senseGroup": "yeong",
+    "glosses": {
+      "en": "zero",
+      "es": "cero"
     }
   }
 ];

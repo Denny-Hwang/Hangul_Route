@@ -1,0 +1,166 @@
+{
+  "schemaVersion": 1,
+  "topic": {
+    "id": "vocab-topic:animals",
+    "key": "animals",
+    "order": 2,
+    "titleEn": "Animals",
+    "titleKo": {
+      "ko": "동물",
+      "romanization": "dongmul",
+      "en": "animals"
+    },
+    "blurbEn": "Words for animals, from pets to the zoo.",
+    "hoyaIntroEn": "I am a tiger! Come and meet some animal friends.",
+    "tint": "theme.nature",
+    "coverItemId": "vocab:horangi",
+    "status": "draft",
+    "fixedOrder": false
+  },
+  "items": [
+    {
+      "id": "vocab:horangi",
+      "ko": "호랑이",
+      "romanization": "horangi",
+      "en": "tiger",
+      "pos": "noun",
+      "topics": [
+        "animals"
+      ],
+      "level": 2,
+      "visual": "card:tiger"
+    },
+    {
+      "id": "vocab:goyangi",
+      "ko": "고양이",
+      "romanization": "goyangi",
+      "en": "cat",
+      "pos": "noun",
+      "topics": [
+        "animals"
+      ],
+      "level": 2,
+      "visual": "word:animal-cat"
+    },
+    {
+      "id": "vocab:gangaji",
+      "ko": "강아지",
+      "romanization": "gangaji",
+      "en": "puppy",
+      "pos": "noun",
+      "topics": [
+        "animals"
+      ],
+      "level": 2,
+      "visual": "word:animal-puppy"
+    },
+    {
+      "id": "vocab:tokki",
+      "ko": "토끼",
+      "romanization": "tokki",
+      "en": "rabbit",
+      "pos": "noun",
+      "topics": [
+        "animals"
+      ],
+      "level": 1,
+      "visual": "word:animal-rabbit"
+    },
+    {
+      "id": "vocab:gom",
+      "ko": "곰",
+      "romanization": "gom",
+      "en": "bear",
+      "pos": "noun",
+      "topics": [
+        "animals"
+      ],
+      "level": 1,
+      "visual": "word:animal-bear"
+    },
+    {
+      "id": "vocab:sae",
+      "ko": "새",
+      "romanization": "sae",
+      "en": "bird",
+      "pos": "noun",
+      "topics": [
+        "animals"
+      ],
+      "level": 1,
+      "visual": "word:animal-bird"
+    },
+    {
+      "id": "vocab:mulgogi",
+      "ko": "물고기",
+      "romanization": "mulgogi",
+      "en": "fish",
+      "pos": "noun",
+      "topics": [
+        "animals"
+      ],
+      "level": 2,
+      "visual": "word:animal-fish"
+    },
+    {
+      "id": "vocab:ori",
+      "ko": "오리",
+      "romanization": "ori",
+      "en": "duck",
+      "pos": "noun",
+      "topics": [
+        "animals"
+      ],
+      "level": 1,
+      "visual": "word:animal-duck"
+    },
+    {
+      "id": "vocab:yeou",
+      "ko": "여우",
+      "romanization": "yeou",
+      "en": "fox",
+      "pos": "noun",
+      "topics": [
+        "animals"
+      ],
+      "level": 1,
+      "visual": "word:animal-fox"
+    },
+    {
+      "id": "vocab:wonsungi",
+      "ko": "원숭이",
+      "romanization": "wonsungi",
+      "en": "monkey",
+      "pos": "noun",
+      "topics": [
+        "animals"
+      ],
+      "level": 2,
+      "visual": "word:animal-monkey"
+    },
+    {
+      "id": "vocab:kokkiri",
+      "ko": "코끼리",
+      "romanization": "kokkiri",
+      "en": "elephant",
+      "pos": "noun",
+      "topics": [
+        "animals"
+      ],
+      "level": 2,
+      "visual": "word:animal-elephant"
+    },
+    {
+      "id": "vocab:nabi",
+      "ko": "나비",
+      "romanization": "nabi",
+      "en": "butterfly",
+      "pos": "noun",
+      "topics": [
+        "animals"
+      ],
+      "level": 1,
+      "visual": "word:animal-butterfly"
+    }
+  ]
+}

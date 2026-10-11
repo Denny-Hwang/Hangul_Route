@@ -1,0 +1,173 @@
+{
+  "schemaVersion": 1,
+  "topic": {
+    "id": "vocab-topic:numbers",
+    "key": "numbers",
+    "order": 4,
+    "titleEn": "Numbers",
+    "titleKo": {
+      "ko": "숫자",
+      "romanization": "sutja",
+      "en": "number"
+    },
+    "blurbEn": "Counting words from one to ten, then twenty and zero.",
+    "hoyaIntroEn": "Let us count together, one by one.",
+    "tint": "stage.stage2",
+    "coverItemId": "vocab:daseot",
+    "status": "draft",
+    "fixedOrder": true
+  },
+  "items": [
+    {
+      "id": "vocab:hana",
+      "ko": "하나",
+      "romanization": "hana",
+      "en": "one",
+      "pos": "number",
+      "topics": [
+        "numbers"
+      ],
+      "level": 1,
+      "visual": "word:count-1",
+      "senseNote": "Before a counting word it becomes han."
+    },
+    {
+      "id": "vocab:dul",
+      "ko": "둘",
+      "romanization": "dul",
+      "en": "two",
+      "pos": "number",
+      "topics": [
+        "numbers"
+      ],
+      "level": 1,
+      "visual": "word:count-2",
+      "senseNote": "Before a counting word it becomes du."
+    },
+    {
+      "id": "vocab:set",
+      "ko": "셋",
+      "romanization": "set",
+      "en": "three",
+      "pos": "number",
+      "topics": [
+        "numbers"
+      ],
+      "level": 1,
+      "visual": "word:count-3",
+      "senseNote": "Before a counting word it becomes se."
+    },
+    {
+      "id": "vocab:net",
+      "ko": "넷",
+      "romanization": "net",
+      "en": "four",
+      "pos": "number",
+      "topics": [
+        "numbers"
+      ],
+      "level": 1,
+      "visual": "word:count-4",
+      "senseNote": "Before a counting word it becomes ne."
+    },
+    {
+      "id": "vocab:daseot",
+      "ko": "다섯",
+      "romanization": "daseot",
+      "en": "five",
+      "pos": "number",
+      "topics": [
+        "numbers"
+      ],
+      "level": 1,
+      "visual": "word:count-5"
+    },
+    {
+      "id": "vocab:yeoseot",
+      "ko": "여섯",
+      "romanization": "yeoseot",
+      "en": "six",
+      "pos": "number",
+      "topics": [
+        "numbers"
+      ],
+      "level": 1,
+      "visual": "word:count-6"
+    },
+    {
+      "id": "vocab:ilgop",
+      "ko": "일곱",
+      "romanization": "ilgop",
+      "en": "seven",
+      "pos": "number",
+      "topics": [
+        "numbers"
+      ],
+      "level": 1,
+      "visual": "word:count-7"
+    },
+    {
+      "id": "vocab:yeodeol",
+      "ko": "여덟",
+      "romanization": "yeodeol",
+      "en": "eight",
+      "pos": "number",
+      "topics": [
+        "numbers"
+      ],
+      "level": 1,
+      "visual": "word:count-8"
+    },
+    {
+      "id": "vocab:ahop",
+      "ko": "아홉",
+      "romanization": "ahop",
+      "en": "nine",
+      "pos": "number",
+      "topics": [
+        "numbers"
+      ],
+      "level": 1,
+      "visual": "word:count-9"
+    },
+    {
+      "id": "vocab:yeol",
+      "ko": "열",
+      "romanization": "yeol",
+      "en": "ten",
+      "pos": "number",
+      "topics": [
+        "numbers"
+      ],
+      "level": 1,
+      "visual": "word:count-10"
+    },
+    {
+      "id": "vocab:seumul",
+      "ko": "스물",
+      "romanization": "seumul",
+      "en": "twenty",
+      "pos": "number",
+      "topics": [
+        "numbers"
+      ],
+      "level": 2,
+      "visual": "word:count-20",
+      "senseNote": "Before a counting word it becomes seumu."
+    },
+    {
+      "id": "vocab:yeong-zero",
+      "ko": "영",
+      "romanization": "yeong",
+      "en": "zero",
+      "pos": "number",
+      "topics": [
+        "numbers"
+      ],
+      "level": 1,
+      "visual": "word:count-0",
+      "senseNote": "Sino-Korean zero. In phone numbers people say gong.",
+      "senseGroup": "yeong"
+    }
+  ]
+}
