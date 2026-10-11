@@ -21,6 +21,7 @@ export * from './romanization/compare';
 export * from './romanization/extract';
 export * from './romanization/exceptions';
 export * from './romanization/a11y';
+export * from './romanization/report';
 export * from './schemas/ko-text';
 export * from './schemas/scene-art';
 export * from './schemas/story-check';
