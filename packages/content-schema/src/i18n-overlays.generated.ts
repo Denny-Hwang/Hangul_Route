@@ -1193,23 +1193,59 @@ export const OVERLAYS: Overlays = {
       "hoyaIntro": "¡Soy un tigre! Ven a conocer a algunos amigos animales.",
       "title": "Animales"
     },
+    "vocab-topic:body": {
+      "blurb": "Partes del cuerpo que puedes señalar.",
+      "hoyaIntro": "¡Señala tu nariz! Aprendamos las palabras del cuerpo.",
+      "title": "Cuerpo"
+    },
     "vocab-topic:colors": {
       "blurb": "Palabras para los colores que nos rodean.",
       "hoyaIntro": "¡Mira a tu alrededor! ¿Cuántos colores puedes encontrar?",
       "title": "Colores"
+    },
+    "vocab-topic:family": {
+      "blurb": "Palabras para las personas de una familia.",
+      "hoyaIntro": "¿Quién hay en tu familia? Aprendamos una palabra para cada persona.",
+      "title": "Familia"
     },
     "vocab-topic:food": {
       "blurb": "Palabras para lo que comemos y bebemos.",
       "hoyaIntro": "¿Tienes hambre? Vamos a nombrar cosas ricas juntos.",
       "title": "Comida"
     },
+    "vocab-topic:nature": {
+      "blurb": "Lo que ves al aire libre, del cielo al mar.",
+      "hoyaIntro": "Salgamos a mirar el mundo que nos rodea.",
+      "title": "Naturaleza"
+    },
     "vocab-topic:numbers": {
       "blurb": "Números para contar del uno al diez, más veinte y cero.",
       "hoyaIntro": "Contemos juntos, uno por uno.",
       "title": "Números"
     },
+    "vocab-topic:school": {
+      "blurb": "Cosas del salón de clases y de la mochila.",
+      "hoyaIntro": "¡Prepara tu mochila! Busquemos las cosas del salón de clases.",
+      "title": "Escuela"
+    },
+    "vocab:agi": {
+      "gloss": "bebé"
+    },
     "vocab:ahop": {
       "gloss": "nueve"
+    },
+    "vocab:appa": {
+      "gloss": "papá",
+      "senseNote": "La palabra de todos los días. La palabra formal para padre es abeoji."
+    },
+    "vocab:bada": {
+      "gloss": "mar"
+    },
+    "vocab:bae-belly": {
+      "gloss": "barriga"
+    },
+    "vocab:bal": {
+      "gloss": "pie"
     },
     "vocab:banana": {
       "gloss": "banana"
@@ -1218,32 +1254,83 @@ export const OVERLAYS: Overlays = {
       "gloss": "arroz cocido",
       "senseNote": "También significa una comida. El arroz sin cocinar es ssal."
     },
+    "vocab:bi-rain": {
+      "gloss": "lluvia"
+    },
     "vocab:borasaek": {
       "gloss": "morado"
     },
     "vocab:bunhongsaek": {
       "gloss": "rosa"
     },
+    "vocab:byeol": {
+      "gloss": "estrella"
+    },
+    "vocab:chaek": {
+      "gloss": "libro"
+    },
+    "vocab:chaeksang": {
+      "gloss": "escritorio"
+    },
+    "vocab:chilpan": {
+      "gloss": "pizarrón"
+    },
+    "vocab:chingu": {
+      "gloss": "amigo o amiga"
+    },
     "vocab:choroksaek": {
       "gloss": "verde"
+    },
+    "vocab:dal-moon": {
+      "gloss": "luna"
     },
     "vocab:dalgyal": {
       "gloss": "huevo",
       "senseNote": "También se dice gyeran, igual de común."
     },
+    "vocab:dari-leg": {
+      "gloss": "pierna"
+    },
     "vocab:daseot": {
       "gloss": "cinco"
+    },
+    "vocab:dongsaeng": {
+      "gloss": "hermano o hermana menor",
+      "senseNote": "Lo dice cualquiera, para un hermano menor o una hermana menor."
     },
     "vocab:dul": {
       "gloss": "dos",
       "senseNote": "Delante de un contador, como en du gae (dos cosas), se dice du."
     },
+    "vocab:eolgul": {
+      "gloss": "cara"
+    },
+    "vocab:eomma": {
+      "gloss": "mamá",
+      "senseNote": "La palabra de todos los días. La palabra formal para madre es eomeoni."
+    },
+    "vocab:eonni": {
+      "gloss": "hermana mayor (lo dice una mujer o niña)",
+      "senseNote": "Así llama una mujer o niña a su hermana mayor. Un hombre o niño dice nuna."
+    },
+    "vocab:gabang": {
+      "gloss": "mochila"
+    },
+    "vocab:gajok": {
+      "gloss": "familia"
+    },
     "vocab:galsaek": {
       "gloss": "marrón"
+    },
+    "vocab:gang": {
+      "gloss": "río"
     },
     "vocab:gangaji": {
       "gloss": "perrito",
       "senseNote": "También se usa para cualquier perro de casa. La palabra general para perro es gae."
+    },
+    "vocab:gawi": {
+      "gloss": "tijeras"
     },
     "vocab:geomeunsaek": {
       "gloss": "negro"
@@ -1258,15 +1345,39 @@ export const OVERLAYS: Overlays = {
     "vocab:gom": {
       "gloss": "oso"
     },
+    "vocab:gongchaek": {
+      "gloss": "cuaderno"
+    },
     "vocab:goyangi": {
       "gloss": "gato"
+    },
+    "vocab:gureum": {
+      "gloss": "nube"
+    },
+    "vocab:gwi": {
+      "gloss": "oreja"
+    },
+    "vocab:hae-sun": {
+      "gloss": "sol"
+    },
+    "vocab:hakgyo": {
+      "gloss": "escuela"
+    },
+    "vocab:halmeoni": {
+      "gloss": "abuela"
     },
     "vocab:hana": {
       "gloss": "uno",
       "senseNote": "Delante de un contador, como en han gae (una cosa), se dice han."
     },
+    "vocab:haneul": {
+      "gloss": "cielo"
+    },
     "vocab:haneulsaek": {
       "gloss": "celeste"
+    },
+    "vocab:harabeoji": {
+      "gloss": "abuelo"
     },
     "vocab:hayansaek": {
       "gloss": "blanco"
@@ -1277,14 +1388,38 @@ export const OVERLAYS: Overlays = {
     "vocab:horangi": {
       "gloss": "tigre"
     },
+    "vocab:hyeong": {
+      "gloss": "hermano mayor (lo dice un hombre o niño)",
+      "senseNote": "Así llama un hombre o niño a su hermano mayor. Una mujer o niña dice oppa."
+    },
+    "vocab:i-tooth": {
+      "gloss": "diente",
+      "senseNote": "También se dice chia, una palabra más formal."
+    },
     "vocab:ilgop": {
       "gloss": "siete"
+    },
+    "vocab:ip": {
+      "gloss": "boca"
+    },
+    "vocab:jiugae": {
+      "gloss": "goma de borrar"
     },
     "vocab:juhwangsaek": {
       "gloss": "naranja"
     },
+    "vocab:kkot": {
+      "gloss": "flor"
+    },
+    "vocab:ko": {
+      "gloss": "nariz"
+    },
     "vocab:kokkiri": {
       "gloss": "elefante"
+    },
+    "vocab:meori": {
+      "gloss": "cabeza",
+      "senseNote": "También significa cabello."
     },
     "vocab:mul": {
       "gloss": "agua"
@@ -1292,8 +1427,15 @@ export const OVERLAYS: Overlays = {
     "vocab:mulgogi": {
       "gloss": "pez"
     },
+    "vocab:na": {
+      "gloss": "yo",
+      "senseNote": "La palabra informal. Para hablar con cortesía, se dice jeo."
+    },
     "vocab:nabi": {
       "gloss": "mariposa"
+    },
+    "vocab:namu": {
+      "gloss": "árbol"
     },
     "vocab:net": {
       "gloss": "cuatro",
@@ -1302,8 +1444,25 @@ export const OVERLAYS: Overlays = {
     "vocab:noransaek": {
       "gloss": "amarillo"
     },
+    "vocab:nun-eye": {
+      "gloss": "ojo"
+    },
+    "vocab:nun-snow": {
+      "gloss": "nieve"
+    },
+    "vocab:nuna": {
+      "gloss": "hermana mayor (lo dice un hombre o niño)",
+      "senseNote": "Así llama un hombre o niño a su hermana mayor. Una mujer o niña dice eonni."
+    },
+    "vocab:oppa": {
+      "gloss": "hermano mayor (lo dice una mujer o niña)",
+      "senseNote": "Así llama una mujer o niña a su hermano mayor. Un hombre o niño dice hyeong."
+    },
     "vocab:ori": {
       "gloss": "pato"
+    },
+    "vocab:pal-arm": {
+      "gloss": "brazo"
     },
     "vocab:paransaek": {
       "gloss": "azul"
@@ -1323,6 +1482,13 @@ export const OVERLAYS: Overlays = {
     "vocab:sagwa-apple": {
       "gloss": "manzana"
     },
+    "vocab:san": {
+      "gloss": "montaña"
+    },
+    "vocab:seonsaengnim": {
+      "gloss": "maestro o maestra",
+      "senseNote": "También se usa para dirigirse a un maestro; la terminación nim muestra respeto."
+    },
     "vocab:set": {
       "gloss": "tres",
       "senseNote": "Delante de un contador, como en se gae (tres cosas), se dice se."
@@ -1330,6 +1496,9 @@ export const OVERLAYS: Overlays = {
     "vocab:seumul": {
       "gloss": "veinte",
       "senseNote": "Delante de un contador, como en seumu gae (veinte cosas), se dice seumu."
+    },
+    "vocab:son": {
+      "gloss": "mano"
     },
     "vocab:tokki": {
       "gloss": "conejo"
@@ -1340,6 +1509,9 @@ export const OVERLAYS: Overlays = {
     "vocab:tteok": {
       "gloss": "pastel de arroz",
       "senseNote": "Comida coreana suave y masticable, hecha de arroz."
+    },
+    "vocab:uija": {
+      "gloss": "silla"
     },
     "vocab:uyu": {
       "gloss": "leche"
@@ -1356,6 +1528,9 @@ export const OVERLAYS: Overlays = {
     "vocab:yeong-zero": {
       "gloss": "cero",
       "senseNote": "El coreano nativo no tiene cero; viene del chino. En los números de teléfono se dice gong."
+    },
+    "vocab:yeonpil": {
+      "gloss": "lápiz"
     },
     "vocab:yeoseot": {
       "gloss": "seis"
