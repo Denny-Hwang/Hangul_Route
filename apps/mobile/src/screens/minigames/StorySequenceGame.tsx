@@ -31,10 +31,12 @@ import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeStory } from '../../logic/content-locale';
 import type { MinigameScope } from '../../logic/minigame-config';
 import {
+  estimateGridWidth,
   replayArtWidth,
   sequenceArtColumns,
   sequenceCardArt,
   sequenceCardArtWidth,
+  sequenceCardMetrics,
   sequenceHasArt,
   type SceneResolver,
 } from '../../logic/story/sequence-art';
@@ -84,17 +86,10 @@ const CELL_BASIS = { 1: '100%', 2: '45%', 3: '30%', 4: '22%' } as const;
 /** Story pictures resolve against the bundled scene-art registry. */
 const resolveArt: SceneResolver = (art) => resolveScene(art, SCENE_ART_REGISTRY);
 
-/** Gap between card cells. */
-const CARD_GAP = spacing.md;
-/**
- * Width a `ChoiceCard` takes around its picture: padding and border on both
- * sides, plus the outcome mark and its gap (kept free so a ring or a nudge
- * never squeezes the picture).
- */
-const CARD_CHROME = 2 * spacing.lg + 2 * borderWidth.base + spacing.xl + spacing.md;
-/** A card picture is at least a picture-option's size (F-STORY-003 §3.4) and at most twice that. */
-const CARD_ART_MIN = touchTarget.hero;
-const CARD_ART_MAX = 2 * touchTarget.hero;
+/** Card grid metrics for pictures (gap, card chrome, picture bounds), from the tokens. */
+const CARD_METRICS = sequenceCardMetrics({ spacing, borderWidth, touchTarget });
+/** The replay card's padding (`Card` padding `lg`) on both sides. */
+const REPLAY_CARD_CHROME = 2 * spacing.xl;
 
 type Note = 'hint' | 'wrong' | 'look';
 
@@ -106,8 +101,8 @@ type Note = 'hint' | 'wrong' | 'look';
  * every slot is filled the story replays in order (no scoring), then Done.
  * Serves the three legacy `storySteps` scopes and story scopes alike. A story
  * card shows its scene art (PR 3.5b) when the picture resolves, the replay
- * shows it full width; a card without art shows its words alone (the replay
- * card on the sunken surface). Design: design/wireframes/story/check.md (F, G).
+ * shows it full width; a card without art shows its words alone on the paper
+ * surface (F-STORY-003 §3.5 amendment). Design: design/wireframes/story/check.md (F, G).
  */
 export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce }: Props): React.ReactElement {
   const locale = useLocale();
@@ -142,10 +137,23 @@ export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce }: P
   const hasArt = useMemo(() => sequenceHasArt(cards, resolveArt), [cards]);
   const [gridWidth, setGridWidth] = useState(0);
   const [replayWidth, setReplayWidth] = useState(0);
-  const cardArtMax = useMediaSize(CARD_ART_MAX);
+  const cardArtMax = useMediaSize(CARD_METRICS.maxArt);
   const replayArtMax = useMediaSize(layout.maxWidth.reading * (2 / 3));
   const onGridLayout = (e: LayoutChangeEvent): void => setGridWidth(Math.round(e.nativeEvent.layout.width));
   const onReplayLayout = (e: LayoutChangeEvent): void => setReplayWidth(Math.round(e.nativeEvent.layout.width));
+  // Until onLayout measures, the grid is estimated from the window (Screen gutter, reading width), so the
+  // first frame already draws the pictures and the columns they need instead of snapping one frame later.
+  const gridEstimate = estimateGridWidth(width, lc.gutter, layout.maxWidth.reading);
+  const grid = gridWidth > 0 ? gridWidth : gridEstimate;
+  const textColumns = sequenceColumns(width, longestKoreanGlyphs(cards));
+  // The last columns drawn: hysteresis, so a scrollbar of a few dp cannot flip the picture grid back and forth.
+  const drawnColumns = useRef<number | undefined>(undefined);
+  const columns = (
+    hasArt ? sequenceArtColumns(textColumns, grid, CARD_METRICS, drawnColumns.current) : textColumns
+  ) as 1 | 2 | 3 | 4;
+  useEffect(() => {
+    drawnColumns.current = hasArt ? columns : undefined;
+  }, [hasArt, columns]);
   const story = useMessages().learner.story;
   const copy = story.sequence;
 
@@ -255,7 +263,7 @@ export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce }: P
     const replayArt = replayCard ? (artById.get(replayCard.id) ?? null) : null;
     // The measured View is inside the card padding, so its width is already the inner width.
     const replayArtSize = replayArtWidth({
-      width: replayWidth,
+      width: replayWidth > 0 ? replayWidth : Math.max(0, grid - REPLAY_CARD_CHROME),
       windowHeight: lc.windowHeight,
       chrome: 0,
       maxArt: replayArtMax,
@@ -266,12 +274,7 @@ export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce }: P
         <Spacer size="lg" />
         <Heading level="prompt">{copy.replay.title}</Heading>
         <Spacer size="md" />
-        <Card
-          elevation="card"
-          padding="lg"
-          tone={replayArt ? 'paper' : 'sunken'}
-          testID="story-sequence-replay-card"
-        >
+        <Card elevation="card" padding="lg" tone="paper" testID="story-sequence-replay-card">
           <View style={{ gap: spacing.md }} onLayout={onReplayLayout}>
             <Pill label={story.check.position.pill(state.replayIndex + 1, total)} size="sm" tone="neutral" />
             {replayArt && replayArtSize > 0 ? (
@@ -366,11 +369,7 @@ export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce }: P
   const slot = placedCount;
   const hintId =
     (state.wrongBySlot[slot] ?? 0) >= HIGHLIGHT_SLOT_AFTER_WRONG ? (state.solution[slot] ?? null) : null;
-  const textColumns = sequenceColumns(width, longestKoreanGlyphs(cards));
-  const columns = (
-    hasArt ? sequenceArtColumns(textColumns, gridWidth, CARD_GAP, CARD_CHROME, CARD_ART_MIN) : textColumns
-  ) as 1 | 2 | 3 | 4;
-  const cardArtSize = hasArt ? sequenceCardArtWidth(gridWidth, columns, CARD_GAP, CARD_CHROME, cardArtMax) : 0;
+  const cardArtSize = hasArt ? sequenceCardArtWidth(grid, columns, CARD_METRICS, cardArtMax) : 0;
   const remaining = remainingCards(state)
     .map((id) => cardById.get(id))
     .filter((c): c is SequenceCard => c !== undefined);
@@ -430,7 +429,7 @@ export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce }: P
 
       <Spacer size="lg" />
       <View
-        style={{ flexDirection: 'row', flexWrap: 'wrap', gap: CARD_GAP }}
+        style={{ flexDirection: 'row', flexWrap: 'wrap', gap: CARD_METRICS.gap }}
         onLayout={onGridLayout}
         testID="story-sequence-cards"
       >

@@ -131,7 +131,7 @@ Then: each question scores once on the first tap, a wrong tap only ever says "tr
 ```
 
 - Tap the card that comes next: it moves into the next slot. A wrong card flashes amber briefly and nothing moves; after two wrong taps on a slot the right card gets a ring.
-- Cards without art show the text block alone, never a broken image.
+- Cards without art show the text block alone on the paper surface (F-STORY-003 §3.5 amendment, PR 3.5b), never a broken image.
 
 ## G. Story Order, replay
 

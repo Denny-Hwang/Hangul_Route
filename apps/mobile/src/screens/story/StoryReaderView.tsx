@@ -37,6 +37,8 @@ import { initReader, openEffects, reduceReader, type ReaderAction, type ReaderEf
 import { STORY_READER_AUDIO_SOURCE, planSceneAudio, type SceneAudioPart } from '../../logic/story/scene-audio';
 import type { PlaySpec } from '../../logic/audio/controller';
 import { buildSceneView, type SceneBlock } from '../../logic/story/scene-view';
+// Art may take at most this share of the body height when stacked, so the text always has room (shared with Story Order's replay).
+import { STACKED_ART_SHARE } from '../../logic/story/sequence-art';
 import { subscribeReaderKeys } from '../../platform/keys';
 import { useReducedMotion } from '../../platform/motion';
 import { track } from '../../platform/telemetry';
@@ -119,8 +121,6 @@ interface Focusable {
   focus?: (options?: { preventScroll?: boolean }) => void;
 }
 
-/** Art may take at most this share of the body height when stacked, so the text always has room. */
-const STACKED_ART_SHARE = 0.42;
 /** Art column share in the side-by-side layout (§3.3: art left, at most 55 %). */
 const SIDE_ART_SHARE = 0.55;
 

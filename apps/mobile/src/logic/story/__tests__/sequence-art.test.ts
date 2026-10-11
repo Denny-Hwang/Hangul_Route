@@ -1,11 +1,14 @@
 import type { SceneArt } from '@hangul-route/content-schema';
 import { SCENE_ART_REGISTRY, resolveScene } from '@hangul-route/design-system/scene-art';
+import { borderWidth, layout, spacing, touchTarget } from '@hangul-route/design-system/tokens';
 import { describe, expect, it } from 'vitest';
 import type { SequenceCard } from '../sequence-cards';
 import {
-  REPLAY_ART_SHARE,
+  STACKED_ART_SHARE,
+  estimateGridWidth,
   replayArtWidth,
   sequenceArtColumns,
+  sequenceCardMetrics,
   sequenceCardArt,
   sequenceCardArtWidth,
   sequenceHasArt,
@@ -71,55 +74,119 @@ describe('sequenceHasArt', () => {
   });
 });
 
-// The screen passes token values; these mirror them: gap spacing.md 12; card chrome 72 (padding spacing.lg x 2,
-// border borderWidth.base x 2, the mark icon spacing.xl and its gap spacing.md); art touchTarget.hero 96 .. 2 x hero 192.
-const GAP = 12;
-const CHROME = 72;
-const MIN_ART = 96;
-const MAX_ART = 192;
+/** The metrics the screen draws with: built from the real tokens, so a token change shows up here. */
+const M = sequenceCardMetrics({ spacing, borderWidth, touchTarget });
+const MAX_ART = M.maxArt;
+
+/** The grid the screen estimates for a phone window (compact gutter, reading width cap). */
+const phoneGrid = (w: number): number => estimateGridWidth(w, layout.gutter.compact, layout.maxWidth.reading);
+
+describe('sequenceCardMetrics', () => {
+  it('reserves padding, border and the outcome mark around the picture, from the tokens', () => {
+    expect(M.gap).toBe(spacing.md);
+    expect(M.chrome).toBe(2 * spacing.lg + 2 * borderWidth.base + spacing.xl + spacing.md);
+    expect(M.minArt).toBe(touchTarget.child);
+    expect(M.maxArt).toBe(2 * touchTarget.hero);
+    expect(M.slack).toBeGreaterThan(0);
+  });
+});
+
+describe('estimateGridWidth', () => {
+  it('is the window less both gutters, capped at the content width', () => {
+    expect(estimateGridWidth(360, 16, 720)).toBe(328);
+    expect(estimateGridWidth(1024, 32, 720)).toBe(720);
+  });
+
+  it('is 0 for an unknown or tiny window', () => {
+    expect(estimateGridWidth(0, 16, 720)).toBe(0);
+    expect(estimateGridWidth(20, 16, 720)).toBe(0);
+    expect(estimateGridWidth(Number.NaN, 16, 720)).toBe(0);
+  });
+});
 
 describe('sequenceArtColumns', () => {
+  it('keeps two picture columns on every phone from 360 dp (F-STORY-003 §3.5)', () => {
+    for (const w of [360, 375, 390, 393, 412]) expect(sequenceArtColumns(2, phoneGrid(w), M), `${w} dp`).toBe(2);
+  });
+
+  it('is one column on a 320 dp phone', () => {
+    expect(sequenceArtColumns(2, phoneGrid(320), M)).toBe(1);
+  });
+
   it('keeps the columns when every cell still holds a picture of the minimum width', () => {
-    // 3 columns of a 720 grid: (720 - 24) / 3 = 232; 232 - 72 = 160 >= 96.
-    expect(sequenceArtColumns(3, 720, GAP, CHROME, MIN_ART)).toBe(3);
+    expect(sequenceArtColumns(3, 720, M)).toBe(3);
+    expect(sequenceArtColumns(4, 720, M)).toBe(4);
   });
 
   it('drops columns until a picture fits, down to one', () => {
-    // 2 columns of a 328 grid (a 360 dp phone): 158 - 72 = 86 < 96, so one column.
-    expect(sequenceArtColumns(2, 328, GAP, CHROME, MIN_ART)).toBe(1);
-    // 4 columns of a 680 grid: 161 - 72 = 89 < 96; 3 columns fit (218 - 72 = 146).
-    expect(sequenceArtColumns(4, 680, GAP, CHROME, MIN_ART)).toBe(3);
-    // 2 columns of a 361 grid (a 393 dp phone): 174 - 72 = 102 >= 96, so both stay.
-    expect(sequenceArtColumns(2, 361, GAP, CHROME, MIN_ART)).toBe(2);
+    // 4 columns of a 560 grid: cell 131 less the chrome is under the minimum; 3 columns fit.
+    expect(sequenceArtColumns(4, 560, M)).toBe(3);
+    expect(sequenceArtColumns(2, 150, M)).toBe(1);
   });
 
-  it('is one column even when a single column is narrower than the minimum picture', () => {
-    expect(sequenceArtColumns(2, 150, GAP, CHROME, MIN_ART)).toBe(1);
-  });
-
-  it('keeps the given columns while the grid width is unknown', () => {
-    expect(sequenceArtColumns(2, 0, GAP, CHROME, MIN_ART)).toBe(2);
-    expect(sequenceArtColumns(3, Number.NaN, GAP, CHROME, MIN_ART)).toBe(3);
+  it('keeps the given columns (at least one) while the grid width is unknown', () => {
+    expect(sequenceArtColumns(2, 0, M)).toBe(2);
+    expect(sequenceArtColumns(3, Number.NaN, M)).toBe(3);
+    expect(sequenceArtColumns(0, 0, M)).toBe(1);
+    expect(sequenceArtColumns(Number.NaN, 0, M)).toBe(1);
   });
 
   it('never returns fewer than one column', () => {
-    expect(sequenceArtColumns(0, 720, GAP, CHROME, MIN_ART)).toBe(1);
+    expect(sequenceArtColumns(0, 720, M)).toBe(1);
+  });
+
+  describe('hysteresis (a scrollbar of a few dp cannot flip the layout)', () => {
+    // The smallest grid where two pictures of the minimum width fit.
+    const edge = 2 * (M.minArt + M.chrome) + M.gap;
+
+    it('drops a column at the edge with no history, and keeps it within the slack', () => {
+      expect(sequenceArtColumns(2, edge, M)).toBe(2);
+      expect(sequenceArtColumns(2, edge - 2, M)).toBe(1);
+      expect(sequenceArtColumns(2, edge - 2, M, 2)).toBe(2);
+      expect(sequenceArtColumns(2, edge - 15, M, 2)).toBe(2);
+    });
+
+    it('drops the column once the picture falls more than the slack below the minimum', () => {
+      expect(sequenceArtColumns(2, edge - 2 * M.slack - 4, M, 2)).toBe(1);
+    });
+
+    it('adds a column back only when its picture clears the minimum by the slack', () => {
+      expect(sequenceArtColumns(2, edge + 15, M, 1)).toBe(1);
+      expect(sequenceArtColumns(2, edge + 2 * M.slack + 2, M, 1)).toBe(2);
+    });
+
+    it('a 15 dp scrollbar at either side of the edge settles on one layout', () => {
+      for (const w of [edge - 10, edge - 5, edge, edge + 5, edge + 10]) {
+        const first = sequenceArtColumns(2, w, M);
+        const narrower = sequenceArtColumns(2, w - 15, M, first);
+        expect(sequenceArtColumns(2, w, M, narrower), `${w}`).toBe(narrower);
+      }
+    });
+
+    it('ignores a previous count the text layout no longer allows', () => {
+      expect(sequenceArtColumns(2, 720, M, 4)).toBe(2);
+      expect(sequenceArtColumns(2, 720, M, 0)).toBe(2);
+    });
   });
 });
 
 describe('sequenceCardArtWidth', () => {
   it('fills the cell less the card chrome, capped at the maximum', () => {
-    // One column of a 288 grid (a 320 dp phone): 288 - 72 = 216, capped at 192.
-    expect(sequenceCardArtWidth(288, 1, GAP, CHROME, MAX_ART)).toBe(192);
-    // Three columns of a 720 grid: 232 - 72 = 160.
-    expect(sequenceCardArtWidth(720, 3, GAP, CHROME, MAX_ART)).toBe(160);
+    // One column of a 288 grid (a 320 dp phone): 288 - chrome, capped at the maximum.
+    expect(sequenceCardArtWidth(288, 1, M, MAX_ART)).toBe(Math.min(288 - M.chrome, MAX_ART));
+    // Three columns of a 720 grid.
+    expect(sequenceCardArtWidth(720, 3, M, MAX_ART)).toBe(Math.floor((720 - 2 * M.gap) / 3) - M.chrome);
+  });
+
+  it('is at least the minimum picture with two columns on a 360 dp phone', () => {
+    expect(sequenceCardArtWidth(phoneGrid(360), 2, M, MAX_ART)).toBeGreaterThanOrEqual(M.minArt);
   });
 
   it('is 0 (no picture yet) while the grid is unmeasured or too narrow', () => {
-    expect(sequenceCardArtWidth(0, 1, GAP, CHROME, MAX_ART)).toBe(0);
-    expect(sequenceCardArtWidth(60, 1, GAP, CHROME, MAX_ART)).toBe(0);
-    expect(sequenceCardArtWidth(Number.NaN, 1, GAP, CHROME, MAX_ART)).toBe(0);
-    expect(sequenceCardArtWidth(288, 0, GAP, CHROME, MAX_ART)).toBe(0);
+    expect(sequenceCardArtWidth(0, 1, M, MAX_ART)).toBe(0);
+    expect(sequenceCardArtWidth(60, 1, M, MAX_ART)).toBe(0);
+    expect(sequenceCardArtWidth(Number.NaN, 1, M, MAX_ART)).toBe(0);
+    expect(sequenceCardArtWidth(288, 0, M, MAX_ART)).toBe(0);
   });
 });
 
@@ -133,7 +200,7 @@ describe('replayArtWidth', () => {
   it('keeps the picture short enough on a landscape phone that the controls stay near', () => {
     // 844 x 390: the height cap wins: floor(390 * 0.42 * 4 / 3) = 218.
     expect(replayArtWidth({ width: 780, windowHeight: 390, chrome: 32, maxArt: 400 })).toBe(
-      Math.floor((390 * REPLAY_ART_SHARE * 4) / 3),
+      Math.floor((390 * STACKED_ART_SHARE * 4) / 3),
     );
   });
 

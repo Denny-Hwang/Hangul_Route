@@ -67,7 +67,6 @@ async function fullyInViewport(page: Page, target: Locator): Promise<boolean> {
   return box.y >= 0 && box.x >= 0 && box.y + box.height <= vp.height && box.x + box.width <= vp.width;
 }
 
-const SUNKEN = 'rgb(242, 235, 222)'; // colors.surface.sunken
 const PAPER = 'rgb(255, 255, 255)'; // colors.surface.paper
 
 function background(target: Locator): Promise<string> {
@@ -119,13 +118,13 @@ test('the cards never start in the right order, and every one carries its Korean
   expect(errors).toEqual([]);
 });
 
-test('the shipped steps have no art yet: no picture on a card, and the replay card sits on the sunken surface', async ({ page }) => {
+test('the shipped steps have no art yet: no picture on a card, and the replay card keeps the paper surface', async ({ page }) => {
   await openSeollalOrder(page);
   await expect(page.locator('[data-testid^="story-sequence-card-art-"]')).toHaveCount(0);
   await placeAll(page);
   await expect(page.getByTestId('story-sequence-replay-art')).toHaveCount(0);
   await expect(page.getByTestId('story-sequence-replay-caption')).toHaveText('Wear hanbok');
-  expect(await background(page.getByTestId('story-sequence-replay-card'))).toBe(SUNKEN);
+  expect(await background(page.getByTestId('story-sequence-replay-card'))).toBe(PAPER);
 });
 
 test('a wrong card is an amber nudge that moves nothing; two misses ring the right card', async ({ page }) => {
@@ -295,13 +294,24 @@ async function placeArtSteps(page: Page): Promise<void> {
   await expect(page.getByRole('heading', { name: 'The story, in order' })).toBeVisible();
 }
 
-/** The picture lies inside its card, at least a picture-option's size (96) and at most twice that. */
+/** Escapes text for a RegExp (captions and alt text hold `.` and `'`). */
+const escapeRe = (text: string): string => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/** How many of the story cards sit on each row of the grid. */
+async function cardRows(page: Page): Promise<number[]> {
+  const ys = await Promise.all(ART_STEPS.map(async (s) => Math.round((await artCard(page, s.id).boundingBox())?.y ?? -1)));
+  const counts = new Map<number, number>();
+  for (const y of ys) counts.set(y, (counts.get(y) ?? 0) + 1);
+  return [...counts.values()];
+}
+
+/** The picture lies inside its card, at least touchTarget.child (80) wide and at most 2 x touchTarget.hero (192). */
 async function expectPictureInCard(page: Page, id: string): Promise<{ x: number; y: number; width: number }> {
   const art = await cardArt(page, id).boundingBox();
   const box = await artCard(page, id).boundingBox();
   expect(art && box, `card ${id} and its picture are laid out`).toBeTruthy();
   if (!art || !box) throw new Error('no layout');
-  expect(art.width).toBeGreaterThanOrEqual(96);
+  expect(art.width).toBeGreaterThanOrEqual(80);
   expect(art.width).toBeLessThanOrEqual(192 + 0.5);
   expect(Math.abs(art.height - (art.width * 3) / 4)).toBeLessThan(1.5); // 4:3
   expect(art.x).toBeGreaterThanOrEqual(box.x);
@@ -324,14 +334,16 @@ test.describe('scene art (fixture bundle)', () => {
       await expect(cardArt(page, step.id)).toBeVisible();
       placed.push(await expectPictureInCard(page, step.id));
       // The picture is decorative on a card: the card's own words name it (the caption), not the alt text.
-      await expect(artCard(page, step.id)).toHaveAccessibleName(new RegExp(step.caption.replace(/'/g, "'")));
-      await expect(artCard(page, step.id)).not.toHaveAccessibleName(new RegExp(step.alt));
+      await expect(artCard(page, step.id)).toHaveAccessibleName(new RegExp(escapeRe(step.caption)));
+      await expect(artCard(page, step.id)).not.toHaveAccessibleName(new RegExp(escapeRe(step.alt)));
     }
     // A 393-wide phone keeps two columns: two cards share a row.
     const rows = new Set(placed.map((p) => Math.round(p.y)));
     expect(rows.size).toBeLessThan(placed.length);
 
     await placeArtSteps(page);
+    // Pause first: the replay auto-advances every 2.5 s, and the checks below read card 1.
+    await page.getByRole('button', { name: 'Pause' }).click();
     const replayArt = page.getByTestId('story-sequence-replay-art');
     await expect(replayArt).toBeVisible();
     await expect(replayArt).toHaveAttribute('aria-label', ART_STEPS[0].alt);
@@ -343,7 +355,6 @@ test.describe('scene art (fixture bundle)', () => {
     await expect(page.getByTestId('story-sequence-replay-caption')).toHaveText(ART_STEPS[0].caption);
 
     // Each card of the replay brings its own picture.
-    await page.getByRole('button', { name: 'Pause' }).click();
     await page.getByRole('button', { name: 'Next', exact: true }).click();
     await expect(replayArt).toHaveAttribute('aria-label', ART_STEPS[1].alt);
     await expect(page.getByTestId('story-sequence-replay-caption')).toHaveText(ART_STEPS[1].caption);
@@ -355,7 +366,12 @@ test.describe('scene art (fixture bundle)', () => {
 
   for (const vp of [
     { name: '320x568', width: 320, height: 568 },
+    { name: '360x740', width: 360, height: 740 },
+    { name: '375x667', width: 375, height: 667 },
     { name: '844x390', width: 844, height: 390 },
+    { name: '1024x768', width: 1024, height: 768 },
+    // 200 % text scale on a 1024x768 tablet, modelled as half the window (tablet-layout.spec.ts).
+    { name: '200 % zoom proxy of 1024x768', width: 512, height: 384 },
   ] as const) {
     test.describe(vp.name, () => {
       test.use({ viewport: { width: vp.width, height: vp.height } });
@@ -370,6 +386,12 @@ test.describe('scene art (fixture bundle)', () => {
           // Too narrow for two pictures side by side: one column.
           const xs = await Promise.all(ART_STEPS.map(async (s) => Math.round((await artCard(page, s.id).boundingBox())?.x ?? -1)));
           expect(new Set(xs).size).toBe(1);
+        } else if (vp.width === 360 || vp.width === 375) {
+          // F-STORY-003 §3.5: two columns from 360 dp, pictures included.
+          expect(Math.max(...(await cardRows(page)))).toBe(2);
+        } else if (vp.width === 1024) {
+          // Tablet width: three or four columns with pictures.
+          expect(Math.max(...(await cardRows(page)))).toBeGreaterThanOrEqual(3);
         }
 
         await placeArtSteps(page);
