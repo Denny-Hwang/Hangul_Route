@@ -2,8 +2,8 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import ChildDetailPage from '../parent/[childId]/page';
-import ParentPage from '../parent/page';
+import ChildDetailPage from '../(console)/parent/[childId]/page';
+import ParentPage from '../(console)/parent/page';
 
 /**
  * F-LEARN-001 §3.7: a level label (never an age) wherever the demo family prints one.

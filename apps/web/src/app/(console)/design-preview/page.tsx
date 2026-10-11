@@ -11,7 +11,7 @@ import {
 } from '@hangul-route/design-system/tokens';
 import Link from 'next/link';
 import React from 'react';
-import { HoyaSvg } from '../../components/design-preview/HoyaReference';
+import { HoyaSvg } from '../../../components/design-preview/HoyaReference';
 
 /**
  * /design-preview — single-URL visual identity validation surface.

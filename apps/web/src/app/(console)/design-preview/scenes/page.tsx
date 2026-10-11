@@ -2,10 +2,10 @@ import { SCENE_ART_REGISTRY } from '@hangul-route/design-system/scene-art';
 import { SceneSvg } from '@hangul-route/design-system/scene-art/dom';
 import { borderWidth, colors, radii, spacing, typography } from '@hangul-route/design-system/tokens';
 import type { Metadata } from 'next';
-import { SheetView, type ThumbStory } from '../../../components/design-preview/SheetView';
-import { FindingList, PreviewShell, ReviewChecklist, StatRow, Tag, artFrame, frame, mono, muted } from '../../../components/design-preview/sheet-ui';
-import { readStoryFiles } from '../../../lib/scene-sheet/read-stories';
-import { buildSceneSheet, type SheetScene, type SheetStory } from '../../../lib/scene-sheet/sheet';
+import { SheetView, type ThumbStory } from '../../../../components/design-preview/SheetView';
+import { FindingList, PreviewShell, ReviewChecklist, StatRow, Tag, artFrame, frame, mono, muted } from '../../../../components/design-preview/sheet-ui';
+import { readStoryFiles } from '../../../../lib/scene-sheet/read-stories';
+import { buildSceneSheet, type SheetScene, type SheetStory } from '../../../../lib/scene-sheet/sheet';
 
 /**
  * /design-preview/scenes — the story-art contact sheet (F-STORY-002 §3.9.6).

@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
-import ScenesPreviewPage from '../design-preview/scenes/page';
+import ScenesPreviewPage from '../(console)/design-preview/scenes/page';
 
 /**
  * F-STORY-002 §3.9.4: the web renderer can only mark where a `card:` layer

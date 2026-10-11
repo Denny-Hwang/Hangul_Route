@@ -44,10 +44,10 @@ async function render(path: string): Promise<string> {
 
 describe('site pages render only dictionary text (en-XA)', () => {
   for (const [name, path] of [
-    ['landing', '../page'],
-    ['about', '../about/page'],
-    ['privacy', '../privacy/page'],
-    ['terms', '../terms/page'],
+    ['landing', '../(en)/page'],
+    ['about', '../(en)/about/page'],
+    ['privacy', '../(en)/privacy/page'],
+    ['terms', '../(en)/terms/page'],
   ] as const) {
     it(name, async () => {
       const words = wordsOf(await render(path));

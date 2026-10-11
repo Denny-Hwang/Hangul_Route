@@ -2,9 +2,9 @@ import { HOYA_POSES, SCENE_ART_REGISTRY, type HoyaPose, type ItemDef } from '@ha
 import { SceneSvg } from '@hangul-route/design-system/scene-art/dom';
 import { borderWidth, colors, spacing, typography } from '@hangul-route/design-system/tokens';
 import type { Metadata } from 'next';
-import { HoyaSvg } from '../../../../components/design-preview/HoyaReference';
-import { FindingList, PreviewShell, ReviewChecklist, StatRow, Swatches, Tag, artFrame, frame, mono, muted } from '../../../../components/design-preview/sheet-ui';
-import { buildLibrary, previewScene, type LibraryEntry } from '../../../../lib/scene-sheet/library';
+import { HoyaSvg } from '../../../../../components/design-preview/HoyaReference';
+import { FindingList, PreviewShell, ReviewChecklist, StatRow, Swatches, Tag, artFrame, frame, mono, muted } from '../../../../../components/design-preview/sheet-ui';
+import { buildLibrary, previewScene, type LibraryEntry } from '../../../../../lib/scene-sheet/library';
 
 /**
  * /design-preview/scenes/library — every scene-art setting, prop and Hoya pose

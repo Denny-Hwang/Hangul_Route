@@ -1,13 +1,14 @@
 import { colors, radii, spacing, typography } from '@hangul-route/design-system/tokens';
-import { DEFAULT_LOCALE, getMessages } from '@hangul-route/i18n';
+import { DEFAULT_LOCALE, getMessages, type UiLocale } from '@hangul-route/i18n';
 import Link from 'next/link';
 import { CONTACT_EMAIL } from '../../data/contact';
+import { sitePath } from '../../lib/site-path';
 
-export default function AboutPage(): JSX.Element {
-  const t = getMessages(DEFAULT_LOCALE).landing.about;
+export function AboutPage({ locale = DEFAULT_LOCALE }: { locale?: UiLocale }): JSX.Element {
+  const t = getMessages(locale).landing.about;
   return (
     <main style={{ maxWidth: 720, margin: '0 auto', padding: `${spacing.xxl}px ${spacing.lg}px` }}>
-      <Link href="/" style={{ color: colors.brand.primary, fontWeight: 600 }}>
+      <Link href={sitePath(locale, '/')} style={{ color: colors.brand.primary, fontWeight: 600 }}>
         {t.backHome}
       </Link>
       <h1 style={{ fontSize: typography.size.display, marginTop: spacing.lg }}>{t.title}</h1>
@@ -33,11 +34,11 @@ export default function AboutPage(): JSX.Element {
       </section>
 
       <footer style={{ marginTop: spacing.jumbo, color: colors.text.muted, fontSize: typography.size.caption }}>
-        <Link href="/privacy" style={{ color: colors.text.secondary, fontWeight: 600 }}>
+        <Link href={sitePath(locale, '/privacy')} style={{ color: colors.text.secondary, fontWeight: 600 }}>
           {t.privacy}
         </Link>{' '}
         ·{' '}
-        <Link href="/terms" style={{ color: colors.text.secondary, fontWeight: 600 }}>
+        <Link href={sitePath(locale, '/terms')} style={{ color: colors.text.secondary, fontWeight: 600 }}>
           {t.terms}
         </Link>
       </footer>

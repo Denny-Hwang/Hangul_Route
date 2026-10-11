@@ -27,11 +27,15 @@ const landingMessages = readdirSync(messagesDir)
 
 const PUBLIC_SURFACES = [
   ...landingMessages,
-  join('app', 'layout.tsx'),
-  join('app', 'page.tsx'),
-  join('app', 'about', 'page.tsx'),
-  join('app', 'privacy', 'page.tsx'),
-  join('app', 'terms', 'page.tsx'),
+  // The site's route groups (F-I18N-001 PR 11b): the page bodies are components/landing/*Page.tsx, scanned below.
+  join('components', 'SiteDocument.tsx'),
+  ...['(en)', join('(loc)', '[locale]')].flatMap((group) => [
+    join('app', group, 'layout.tsx'),
+    join('app', group, 'page.tsx'),
+    join('app', group, 'about', 'page.tsx'),
+    join('app', group, 'privacy', 'page.tsx'),
+    join('app', group, 'terms', 'page.tsx'),
+  ]),
   join('data', 'landing-copy.ts'),
   ...landingComponents,
 ];
@@ -46,6 +50,12 @@ function read(rel: string): string {
 describe('public surfaces speak to anyone learning Hangul (UF-01..UF-03, UF-09)', () => {
   it('scans every landing component', () => {
     expect(landingComponents.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it('scans the shared page bodies the English and locale routes render', () => {
+    for (const body of ['LandingPage', 'AboutPage', 'PrivacyPage', 'TermsPage']) {
+      expect(PUBLIC_SURFACES).toContain(join('components', 'landing', `${body}.tsx`));
+    }
   });
 
   it('scans the English landing messages, where the site copy lives', () => {

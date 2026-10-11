@@ -12,7 +12,10 @@ import { expect, test, type Page } from '@playwright/test';
 const HEIGHT = 800;
 /** The three phone / small-tablet widths the owner named. */
 const WIDTHS = [320, 375, 768] as const;
-/** Pages whose footer or body once pushed the document wider than the screen. */
+/**
+ * Pages whose footer or body once pushed the document wider than the screen: the English site, `src/app/(en)/`
+ * (F-I18N-001 PR 11b). `/es` and `/ko` render the same bodies and are not exported until they ship.
+ */
 const PAGES = ['/', '/about', '/privacy', '/terms'] as const;
 /** The hero and Meet Hoya stack to one column below this width (globals.css). */
 const STACK_BELOW = 720;

@@ -3,8 +3,8 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { SheetView } from '../../components/design-preview/SheetView';
 import { readStoryFiles } from '../../lib/scene-sheet/read-stories';
-import ScenesPreviewPage, { metadata as scenesMeta } from '../design-preview/scenes/page';
-import SceneLibraryPage, { metadata as libraryMeta } from '../design-preview/scenes/library/page';
+import ScenesPreviewPage, { metadata as scenesMeta } from '../(console)/design-preview/scenes/page';
+import SceneLibraryPage, { metadata as libraryMeta } from '../(console)/design-preview/scenes/library/page';
 
 /**
  * F-STORY-002 §3.9.6: the contact sheet and the library page, server-rendered
