@@ -80,6 +80,7 @@ export const ROMANIZATION_SCAN_IGNORE: readonly ScanIgnore[] = [
   { path: 'apps/mobile/src/content/stories.generated.ts', reason: 'generated from content/stories/*.json (scanned as class A) by scripts/build-stories.mjs' },
   { path: 'apps/mobile/src/content/__generated__/vocab.ts', reason: 'generated from content/vocab/*.json (scanned as class A) by scripts/build-vocab.mjs' },
   { path: 'apps/web/src/data/vocab-catalog.ts', reason: 'generated from content/vocab/*.json (scanned as class A) by scripts/build-vocab.mjs' },
+  { path: 'apps/mobile/src/content/placement.generated.ts', reason: 'generated from content/placement/*.json (scanned as class A) by scripts/build-placement-bank.mjs' },
 ];
 
 /** The directories the content scan skips; kept equal to SKIPPED_DIRS in scripts/validate-content.mjs. */

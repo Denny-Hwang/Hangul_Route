@@ -38,55 +38,70 @@ export const AssessmentOptionSchema = z
   );
 export type AssessmentOption = z.infer<typeof AssessmentOptionSchema>;
 
-export const AssessmentQuestionSchema = z
-  .object({
-    /** Template id, or an item id of a review. */
-    id: z.string(),
-    format: z.enum(ASSESSMENT_FORMATS),
-    promptKo: z.string().optional(),
-    promptRomanization: z.string().optional(),
-    /** What the voice says (F-AUDIO-004: `spokenKo` wins over `promptKo`). */
-    spokenKo: z.string().optional(),
-    audioRef: z.string().optional(),
-    options: z.array(AssessmentOptionSchema).min(2).max(4),
-    tags: z.array(z.string()).max(8),
-    requires: z.object({
-      audio: z.boolean(),
-      picture: z.enum(['card', 'word']).nullable(),
-    }),
-    /** True: showing romanization or a gloss would give the answer away. */
-    leaks: z.boolean(),
-  })
-  .superRefine((q, ctx) => {
-    if (q.options.filter((o) => o.isCorrect).length !== 1) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['options'],
-        message: 'exactly one option must be correct',
-      });
-    }
-    const ids = new Set<string>();
-    const kos = new Set<string>();
-    const pictures = new Set<string>();
-    q.options.forEach((o, i) => {
-      if (ids.has(o.id)) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['options', i, 'id'], message: 'option ids must be unique' });
-      }
-      ids.add(o.id);
-      if (o.ko !== undefined) {
-        if (kos.has(o.ko)) {
-          ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['options', i, 'ko'], message: 'two options share the same Korean text' });
-        }
-        kos.add(o.ko);
-      }
-      if (o.pictureRef !== undefined) {
-        if (pictures.has(o.pictureRef)) {
-          ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['options', i, 'pictureRef'], message: 'two options share the same picture' });
-        }
-        pictures.add(o.pictureRef);
-      }
+export const AssessmentQuestionShape = z.object({
+  /** Template id, or an item id of a review. */
+  id: z.string(),
+  format: z.enum(ASSESSMENT_FORMATS),
+  promptKo: z.string().optional(),
+  promptRomanization: z.string().optional(),
+  /** What the voice says (F-AUDIO-004: `spokenKo` wins over `promptKo`). */
+  spokenKo: z.string().optional(),
+  audioRef: z.string().optional(),
+  options: z.array(AssessmentOptionSchema).min(2).max(4),
+  tags: z.array(z.string()).max(8),
+  requires: z.object({
+    audio: z.boolean(),
+    picture: z.enum(['card', 'word']).nullable(),
+  }),
+  /** True: showing romanization or a gloss would give the answer away. */
+  leaks: z.boolean(),
+});
+
+/**
+ * The cross-field rules of a built question. Exported so a bank template
+ * (whose question carries no `id` of its own) can re-apply them to
+ * `AssessmentQuestionShape.omit({ id: true })`: a `ZodEffects` has no `.omit`.
+ *
+ * Two options never share Korean text or a picture, except that the tiles of a
+ * `shape-odd-one-out` question repeat one letter by design (three show it, one
+ * differs); their ids stay unique and exactly one is correct.
+ */
+export const refineAssessmentQuestion = (
+  q: { format: (typeof ASSESSMENT_FORMATS)[number]; options: readonly AssessmentOption[] },
+  ctx: z.RefinementCtx,
+): void => {
+  const repeatsAllowed = q.format === 'shape-odd-one-out';
+  if (q.options.filter((o) => o.isCorrect).length !== 1) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['options'],
+      message: 'exactly one option must be correct',
     });
+  }
+  const ids = new Set<string>();
+  const kos = new Set<string>();
+  const pictures = new Set<string>();
+  q.options.forEach((o, i) => {
+    if (ids.has(o.id)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['options', i, 'id'], message: 'option ids must be unique' });
+    }
+    ids.add(o.id);
+    if (o.ko !== undefined) {
+      if (kos.has(o.ko) && !repeatsAllowed) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['options', i, 'ko'], message: 'two options share the same Korean text' });
+      }
+      kos.add(o.ko);
+    }
+    if (o.pictureRef !== undefined) {
+      if (pictures.has(o.pictureRef)) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['options', i, 'pictureRef'], message: 'two options share the same picture' });
+      }
+      pictures.add(o.pictureRef);
+    }
   });
+};
+
+export const AssessmentQuestionSchema = AssessmentQuestionShape.superRefine(refineAssessmentQuestion);
 export type AssessmentQuestion = z.infer<typeof AssessmentQuestionSchema>;
 
 export const AssessmentResponseSchema = z.object({

@@ -16,6 +16,7 @@
 | `build-vocab.mjs` | F-VOC-001 | `.github/workflows/content-validation.yml` | `content/vocab/<topic>.json` + `content/i18n/{es,ko}/vocab-*.json` glosses → `apps/mobile/src/content/__generated__/vocab.ts` and `apps/web/src/data/vocab-catalog.ts`; `--check` fails on drift (`pnpm run vocab:check`) |
 | `build-stories.mjs` | F-STORY-001 | `.github/workflows/content-validation.yml` | `content/stories/*.json` (ready stories) → `apps/mobile/src/content/stories.generated.ts`; `--check` fails on drift, `--report` fails over the bundle budget |
 | `check-migrations.mjs` | F-ROUTE-001 R-0 (E-1) | `.github/workflows/ci.yml` (through `pnpm run test:scripts`, whose self-test runs it on the repository) | `apps/api/migrations/*.sql`: every file is `NNNN_snake_case.sql` and no two share a prefix (wrangler and the SQLite shim apply them in sorted order) |
+| `build-placement-bank.mjs` | F-PLC-001 | `.github/workflows/content-validation.yml` | `content/placement/*.json` (index + one file per strand, drafts included with their `status`) → `apps/mobile/src/content/placement.generated.ts`; `--check` fails on drift. Structure rules for `content/placement/**` and the `pitem:` overlay fields live in `placement-rules.mjs` (called by `validate-content.mjs`) |
 | `import-heritage.mjs` | F-STORY-001 | (none: one-time, run by hand) | `content/stories/research/<cluster>.final.json` → `content/stories/<slug>.json` drafts (`--dry-run` is the default, `--write` writes, never overwrites an authored story) |
 
 Run locally:
@@ -32,6 +33,8 @@ node scripts/build-stories.mjs --check    # drift detector (CI)
 node scripts/build-stories.mjs --report   # sizes and budget (CI)
 node scripts/build-vocab.mjs              # regenerate the vocabulary modules
 node scripts/build-vocab.mjs --check      # drift detector (CI)
+node scripts/build-placement-bank.mjs     # regenerate the placement bank
+node scripts/build-placement-bank.mjs --check   # drift detector (CI)
 node scripts/import-heritage.mjs --src content/stories/research --dry-run   # report only (one-time importer)
 ```
 

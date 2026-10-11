@@ -23,6 +23,9 @@ on:
       - "scripts/build-vocab.mjs"
       - "apps/mobile/src/content/__generated__/vocab.ts"
       - "apps/web/src/data/vocab-catalog.ts"
+      - "scripts/build-placement-bank.mjs"
+      - "scripts/placement-rules.mjs"
+      - "apps/mobile/src/content/placement.generated.ts"
 
 concurrency:
   group: content-validation-${{ github.ref }}
@@ -67,6 +70,9 @@ jobs:
 
       - name: Vocabulary modules are up to date (F-VOC-001)
         run: pnpm run vocab:check
+
+      - name: Placement bank is up to date (F-PLC-001)
+        run: node scripts/build-placement-bank.mjs --check
 
       - name: Story bundle is up to date (F-STORY-001)
         run: node scripts/build-stories.mjs --check

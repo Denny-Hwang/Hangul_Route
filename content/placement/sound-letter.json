@@ -1,0 +1,971 @@
+{
+  "strand": "sound-letter",
+  "templates": [
+    {
+      "id": "pitem:sound-basic-hear-a",
+      "strand": "sound-letter",
+      "gate": "sound-basic",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear \"a\": pick the letter a",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"아","romanization":"a","en":"the sound a"},
+        "options": [
+          {"id":"a","ko":"ㅏ","romanization":"a","en":"letter a","isCorrect":true},
+          {"id":"eo","ko":"ㅓ","romanization":"eo","en":"letter eo","isCorrect":false},
+          {"id":"ya","ko":"ㅑ","romanization":"ya","en":"letter ya","isCorrect":false},
+          {"id":"i","ko":"ㅣ","romanization":"i","en":"letter i","isCorrect":false}
+        ],
+        "tags": ["sym:ㅏ","group:basic"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:sound-basic-see-a",
+      "strand": "sound-letter",
+      "gate": "sound-basic",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "See the letter a: pick \"a\"",
+      "question": {
+        "format": "see-pick-sound",
+        "prompt": {"ko":"ㅏ","romanization":"a","en":"letter a"},
+        "options": [
+          {"id":"a","sound":"a","isCorrect":true},
+          {"id":"eo","sound":"eo","isCorrect":false},
+          {"id":"ya","sound":"ya","isCorrect":false},
+          {"id":"i","sound":"i","isCorrect":false}
+        ],
+        "tags": ["sym:ㅏ","group:basic"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:sound-basic-hear-eo",
+      "strand": "sound-letter",
+      "gate": "sound-basic",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear \"eo\": pick the letter eo",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"어","romanization":"eo","en":"the sound eo"},
+        "options": [
+          {"id":"eo","ko":"ㅓ","romanization":"eo","en":"letter eo","isCorrect":true},
+          {"id":"a","ko":"ㅏ","romanization":"a","en":"letter a","isCorrect":false},
+          {"id":"yeo","ko":"ㅕ","romanization":"yeo","en":"letter yeo","isCorrect":false},
+          {"id":"o","ko":"ㅗ","romanization":"o","en":"letter o","isCorrect":false}
+        ],
+        "tags": ["sym:ㅓ","group:basic"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:sound-basic-see-eo",
+      "strand": "sound-letter",
+      "gate": "sound-basic",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "See the letter eo: pick \"eo\"",
+      "question": {
+        "format": "see-pick-sound",
+        "prompt": {"ko":"ㅓ","romanization":"eo","en":"letter eo"},
+        "options": [
+          {"id":"eo","sound":"eo","isCorrect":true},
+          {"id":"a","sound":"a","isCorrect":false},
+          {"id":"yeo","sound":"yeo","isCorrect":false},
+          {"id":"o","sound":"o","isCorrect":false}
+        ],
+        "tags": ["sym:ㅓ","group:basic"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:sound-basic-hear-giyeok",
+      "strand": "sound-letter",
+      "gate": "sound-basic",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear \"ga\": pick the letter giyeok",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"가","romanization":"ga","en":"the sound ga"},
+        "options": [
+          {"id":"giyeok","ko":"ㄱ","romanization":"g","en":"letter giyeok","isCorrect":true},
+          {"id":"kieuk","ko":"ㅋ","romanization":"k","en":"letter kieuk","isCorrect":false},
+          {"id":"nieun","ko":"ㄴ","romanization":"n","en":"letter nieun","isCorrect":false},
+          {"id":"digeut","ko":"ㄷ","romanization":"d","en":"letter digeut","isCorrect":false}
+        ],
+        "tags": ["sym:ㄱ","group:basic"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:sound-basic-see-giyeok",
+      "strand": "sound-letter",
+      "gate": "sound-basic",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "See the letter giyeok: pick \"ga\"",
+      "question": {
+        "format": "see-pick-sound",
+        "prompt": {"ko":"ㄱ","romanization":"ga","en":"letter giyeok"},
+        "options": [
+          {"id":"ga","sound":"ga","isCorrect":true},
+          {"id":"ka","sound":"ka","isCorrect":false},
+          {"id":"na","sound":"na","isCorrect":false},
+          {"id":"da","sound":"da","isCorrect":false}
+        ],
+        "tags": ["sym:ㄱ","group:basic"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:sound-basic-hear-nieun",
+      "strand": "sound-letter",
+      "gate": "sound-basic",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear \"na\": pick the letter nieun",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"나","romanization":"na","en":"the sound na"},
+        "options": [
+          {"id":"nieun","ko":"ㄴ","romanization":"n","en":"letter nieun","isCorrect":true},
+          {"id":"giyeok","ko":"ㄱ","romanization":"g","en":"letter giyeok","isCorrect":false},
+          {"id":"digeut","ko":"ㄷ","romanization":"d","en":"letter digeut","isCorrect":false},
+          {"id":"rieul","ko":"ㄹ","romanization":"r","en":"letter rieul","isCorrect":false}
+        ],
+        "tags": ["sym:ㄴ","group:basic"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:sound-basic-see-nieun",
+      "strand": "sound-letter",
+      "gate": "sound-basic",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "See the letter nieun: pick \"na\"",
+      "question": {
+        "format": "see-pick-sound",
+        "prompt": {"ko":"ㄴ","romanization":"na","en":"letter nieun"},
+        "options": [
+          {"id":"na","sound":"na","isCorrect":true},
+          {"id":"ga","sound":"ga","isCorrect":false},
+          {"id":"da","sound":"da","isCorrect":false},
+          {"id":"ra","sound":"ra","isCorrect":false}
+        ],
+        "tags": ["sym:ㄴ","group:basic"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:sound-basic-hear-o",
+      "strand": "sound-letter",
+      "gate": "sound-basic",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear \"o\": pick the letter o",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"오","romanization":"o","en":"the sound o"},
+        "options": [
+          {"id":"o","ko":"ㅗ","romanization":"o","en":"letter o","isCorrect":true},
+          {"id":"u","ko":"ㅜ","romanization":"u","en":"letter u","isCorrect":false},
+          {"id":"eo","ko":"ㅓ","romanization":"eo","en":"letter eo","isCorrect":false},
+          {"id":"yo","ko":"ㅛ","romanization":"yo","en":"letter yo","isCorrect":false}
+        ],
+        "tags": ["sym:ㅗ","group:basic"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:sound-basic-see-o",
+      "strand": "sound-letter",
+      "gate": "sound-basic",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "See the letter o: pick \"o\"",
+      "question": {
+        "format": "see-pick-sound",
+        "prompt": {"ko":"ㅗ","romanization":"o","en":"letter o"},
+        "options": [
+          {"id":"o","sound":"o","isCorrect":true},
+          {"id":"u","sound":"u","isCorrect":false},
+          {"id":"eo","sound":"eo","isCorrect":false},
+          {"id":"yo","sound":"yo","isCorrect":false}
+        ],
+        "tags": ["sym:ㅗ","group:basic"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:sound-basic-hear-u",
+      "strand": "sound-letter",
+      "gate": "sound-basic",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear \"u\": pick the letter u",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"우","romanization":"u","en":"the sound u"},
+        "options": [
+          {"id":"u","ko":"ㅜ","romanization":"u","en":"letter u","isCorrect":true},
+          {"id":"o","ko":"ㅗ","romanization":"o","en":"letter o","isCorrect":false},
+          {"id":"eu","ko":"ㅡ","romanization":"eu","en":"letter eu","isCorrect":false},
+          {"id":"yu","ko":"ㅠ","romanization":"yu","en":"letter yu","isCorrect":false}
+        ],
+        "tags": ["sym:ㅜ","group:basic"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:sound-basic-see-u",
+      "strand": "sound-letter",
+      "gate": "sound-basic",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "See the letter u: pick \"u\"",
+      "question": {
+        "format": "see-pick-sound",
+        "prompt": {"ko":"ㅜ","romanization":"u","en":"letter u"},
+        "options": [
+          {"id":"u","sound":"u","isCorrect":true},
+          {"id":"o","sound":"o","isCorrect":false},
+          {"id":"eu","sound":"eu","isCorrect":false},
+          {"id":"yu","sound":"yu","isCorrect":false}
+        ],
+        "tags": ["sym:ㅜ","group:basic"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:sound-basic-hear-mieum",
+      "strand": "sound-letter",
+      "gate": "sound-basic",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear \"ma\": pick the letter mieum",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"마","romanization":"ma","en":"the sound ma"},
+        "options": [
+          {"id":"mieum","ko":"ㅁ","romanization":"m","en":"letter mieum","isCorrect":true},
+          {"id":"bieup","ko":"ㅂ","romanization":"b","en":"letter bieup","isCorrect":false},
+          {"id":"ieung","ko":"ㅇ","romanization":"ng","en":"letter ieung","isCorrect":false},
+          {"id":"nieun","ko":"ㄴ","romanization":"n","en":"letter nieun","isCorrect":false}
+        ],
+        "tags": ["sym:ㅁ","group:basic"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:sound-basic-see-mieum",
+      "strand": "sound-letter",
+      "gate": "sound-basic",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "See the letter mieum: pick \"ma\"",
+      "question": {
+        "format": "see-pick-sound",
+        "prompt": {"ko":"ㅁ","romanization":"ma","en":"letter mieum"},
+        "options": [
+          {"id":"ma","sound":"ma","isCorrect":true},
+          {"id":"ba","sound":"ba","isCorrect":false},
+          {"id":"a","sound":"a","isCorrect":false},
+          {"id":"na","sound":"na","isCorrect":false}
+        ],
+        "tags": ["sym:ㅁ","group:basic"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:sound-basic-hear-eu",
+      "strand": "sound-letter",
+      "gate": "sound-basic",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear \"eu\": pick the letter eu",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"으","romanization":"eu","en":"the sound eu"},
+        "options": [
+          {"id":"eu","ko":"ㅡ","romanization":"eu","en":"letter eu","isCorrect":true},
+          {"id":"u","ko":"ㅜ","romanization":"u","en":"letter u","isCorrect":false},
+          {"id":"i","ko":"ㅣ","romanization":"i","en":"letter i","isCorrect":false},
+          {"id":"eo","ko":"ㅓ","romanization":"eo","en":"letter eo","isCorrect":false}
+        ],
+        "tags": ["sym:ㅡ","group:basic"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:sound-basic-see-eu",
+      "strand": "sound-letter",
+      "gate": "sound-basic",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "See the letter eu: pick \"eu\"",
+      "question": {
+        "format": "see-pick-sound",
+        "prompt": {"ko":"ㅡ","romanization":"eu","en":"letter eu"},
+        "options": [
+          {"id":"eu","sound":"eu","isCorrect":true},
+          {"id":"u","sound":"u","isCorrect":false},
+          {"id":"i","sound":"i","isCorrect":false},
+          {"id":"eo","sound":"eo","isCorrect":false}
+        ],
+        "tags": ["sym:ㅡ","group:basic"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:sound-basic-hear-i",
+      "strand": "sound-letter",
+      "gate": "sound-basic",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear \"i\": pick the letter i",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"이","romanization":"i","en":"the sound i"},
+        "options": [
+          {"id":"i","ko":"ㅣ","romanization":"i","en":"letter i","isCorrect":true},
+          {"id":"eu","ko":"ㅡ","romanization":"eu","en":"letter eu","isCorrect":false},
+          {"id":"a","ko":"ㅏ","romanization":"a","en":"letter a","isCorrect":false},
+          {"id":"eo","ko":"ㅓ","romanization":"eo","en":"letter eo","isCorrect":false}
+        ],
+        "tags": ["sym:ㅣ","group:basic"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:sound-basic-see-i",
+      "strand": "sound-letter",
+      "gate": "sound-basic",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "See the letter i: pick \"i\"",
+      "question": {
+        "format": "see-pick-sound",
+        "prompt": {"ko":"ㅣ","romanization":"i","en":"letter i"},
+        "options": [
+          {"id":"i","sound":"i","isCorrect":true},
+          {"id":"eu","sound":"eu","isCorrect":false},
+          {"id":"a","sound":"a","isCorrect":false},
+          {"id":"eo","sound":"eo","isCorrect":false}
+        ],
+        "tags": ["sym:ㅣ","group:basic"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:sound-basic-hear-digeut",
+      "strand": "sound-letter",
+      "gate": "sound-basic",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear \"da\": pick the letter digeut",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"다","romanization":"da","en":"the sound da"},
+        "options": [
+          {"id":"digeut","ko":"ㄷ","romanization":"d","en":"letter digeut","isCorrect":true},
+          {"id":"tieut","ko":"ㅌ","romanization":"t","en":"letter tieut","isCorrect":false},
+          {"id":"rieul","ko":"ㄹ","romanization":"r","en":"letter rieul","isCorrect":false},
+          {"id":"nieun","ko":"ㄴ","romanization":"n","en":"letter nieun","isCorrect":false}
+        ],
+        "tags": ["sym:ㄷ","group:basic"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:sound-basic-see-digeut",
+      "strand": "sound-letter",
+      "gate": "sound-basic",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "See the letter digeut: pick \"da\"",
+      "question": {
+        "format": "see-pick-sound",
+        "prompt": {"ko":"ㄷ","romanization":"da","en":"letter digeut"},
+        "options": [
+          {"id":"da","sound":"da","isCorrect":true},
+          {"id":"ta","sound":"ta","isCorrect":false},
+          {"id":"ra","sound":"ra","isCorrect":false},
+          {"id":"na","sound":"na","isCorrect":false}
+        ],
+        "tags": ["sym:ㄷ","group:basic"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:sound-basic-hear-rieul",
+      "strand": "sound-letter",
+      "gate": "sound-basic",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear \"ra\": pick the letter rieul",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"라","romanization":"ra","en":"the sound ra"},
+        "options": [
+          {"id":"rieul","ko":"ㄹ","romanization":"r","en":"letter rieul","isCorrect":true},
+          {"id":"digeut","ko":"ㄷ","romanization":"d","en":"letter digeut","isCorrect":false},
+          {"id":"nieun","ko":"ㄴ","romanization":"n","en":"letter nieun","isCorrect":false},
+          {"id":"mieum","ko":"ㅁ","romanization":"m","en":"letter mieum","isCorrect":false}
+        ],
+        "tags": ["sym:ㄹ","group:basic"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:sound-basic-see-rieul",
+      "strand": "sound-letter",
+      "gate": "sound-basic",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "See the letter rieul: pick \"ra\"",
+      "question": {
+        "format": "see-pick-sound",
+        "prompt": {"ko":"ㄹ","romanization":"ra","en":"letter rieul"},
+        "options": [
+          {"id":"ra","sound":"ra","isCorrect":true},
+          {"id":"da","sound":"da","isCorrect":false},
+          {"id":"na","sound":"na","isCorrect":false},
+          {"id":"ma","sound":"ma","isCorrect":false}
+        ],
+        "tags": ["sym:ㄹ","group:basic"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:sound-rest-hear-jieut",
+      "strand": "sound-letter",
+      "gate": "sound-rest",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear \"ja\": pick the letter jieut",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"자","romanization":"ja","en":"the sound ja"},
+        "options": [
+          {"id":"jieut","ko":"ㅈ","romanization":"j","en":"letter jieut","isCorrect":true},
+          {"id":"chieut","ko":"ㅊ","romanization":"ch","en":"letter chieut","isCorrect":false},
+          {"id":"siot","ko":"ㅅ","romanization":"s","en":"letter siot","isCorrect":false},
+          {"id":"giyeok","ko":"ㄱ","romanization":"g","en":"letter giyeok","isCorrect":false}
+        ],
+        "tags": ["sym:ㅈ","group:rest"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:sound-rest-see-jieut",
+      "strand": "sound-letter",
+      "gate": "sound-rest",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "See the letter jieut: pick \"ja\"",
+      "question": {
+        "format": "see-pick-sound",
+        "prompt": {"ko":"ㅈ","romanization":"ja","en":"letter jieut"},
+        "options": [
+          {"id":"ja","sound":"ja","isCorrect":true},
+          {"id":"cha","sound":"cha","isCorrect":false},
+          {"id":"sa","sound":"sa","isCorrect":false},
+          {"id":"ga","sound":"ga","isCorrect":false}
+        ],
+        "tags": ["sym:ㅈ","group:rest"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:sound-rest-hear-chieut",
+      "strand": "sound-letter",
+      "gate": "sound-rest",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear \"cha\": pick the letter chieut",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"차","romanization":"cha","en":"the sound cha"},
+        "options": [
+          {"id":"chieut","ko":"ㅊ","romanization":"ch","en":"letter chieut","isCorrect":true},
+          {"id":"jieut","ko":"ㅈ","romanization":"j","en":"letter jieut","isCorrect":false},
+          {"id":"siot","ko":"ㅅ","romanization":"s","en":"letter siot","isCorrect":false},
+          {"id":"hieut","ko":"ㅎ","romanization":"h","en":"letter hieut","isCorrect":false}
+        ],
+        "tags": ["sym:ㅊ","group:rest"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:sound-rest-see-chieut",
+      "strand": "sound-letter",
+      "gate": "sound-rest",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "See the letter chieut: pick \"cha\"",
+      "question": {
+        "format": "see-pick-sound",
+        "prompt": {"ko":"ㅊ","romanization":"cha","en":"letter chieut"},
+        "options": [
+          {"id":"cha","sound":"cha","isCorrect":true},
+          {"id":"ja","sound":"ja","isCorrect":false},
+          {"id":"sa","sound":"sa","isCorrect":false},
+          {"id":"ha","sound":"ha","isCorrect":false}
+        ],
+        "tags": ["sym:ㅊ","group:rest"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:sound-rest-hear-bieup",
+      "strand": "sound-letter",
+      "gate": "sound-rest",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear \"ba\": pick the letter bieup",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"바","romanization":"ba","en":"the sound ba"},
+        "options": [
+          {"id":"bieup","ko":"ㅂ","romanization":"b","en":"letter bieup","isCorrect":true},
+          {"id":"pieup","ko":"ㅍ","romanization":"p","en":"letter pieup","isCorrect":false},
+          {"id":"mieum","ko":"ㅁ","romanization":"m","en":"letter mieum","isCorrect":false},
+          {"id":"siot","ko":"ㅅ","romanization":"s","en":"letter siot","isCorrect":false}
+        ],
+        "tags": ["sym:ㅂ","group:rest"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:sound-rest-see-bieup",
+      "strand": "sound-letter",
+      "gate": "sound-rest",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "See the letter bieup: pick \"ba\"",
+      "question": {
+        "format": "see-pick-sound",
+        "prompt": {"ko":"ㅂ","romanization":"ba","en":"letter bieup"},
+        "options": [
+          {"id":"ba","sound":"ba","isCorrect":true},
+          {"id":"pa","sound":"pa","isCorrect":false},
+          {"id":"ma","sound":"ma","isCorrect":false},
+          {"id":"sa","sound":"sa","isCorrect":false}
+        ],
+        "tags": ["sym:ㅂ","group:rest"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:sound-rest-hear-siot",
+      "strand": "sound-letter",
+      "gate": "sound-rest",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear \"sa\": pick the letter siot",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"사","romanization":"sa","en":"the sound sa"},
+        "options": [
+          {"id":"siot","ko":"ㅅ","romanization":"s","en":"letter siot","isCorrect":true},
+          {"id":"jieut","ko":"ㅈ","romanization":"j","en":"letter jieut","isCorrect":false},
+          {"id":"chieut","ko":"ㅊ","romanization":"ch","en":"letter chieut","isCorrect":false},
+          {"id":"ieung","ko":"ㅇ","romanization":"ng","en":"letter ieung","isCorrect":false}
+        ],
+        "tags": ["sym:ㅅ","group:rest"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:sound-rest-see-siot",
+      "strand": "sound-letter",
+      "gate": "sound-rest",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "See the letter siot: pick \"sa\"",
+      "question": {
+        "format": "see-pick-sound",
+        "prompt": {"ko":"ㅅ","romanization":"sa","en":"letter siot"},
+        "options": [
+          {"id":"sa","sound":"sa","isCorrect":true},
+          {"id":"ja","sound":"ja","isCorrect":false},
+          {"id":"cha","sound":"cha","isCorrect":false},
+          {"id":"a","sound":"a","isCorrect":false}
+        ],
+        "tags": ["sym:ㅅ","group:rest"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:sound-rest-hear-kieuk",
+      "strand": "sound-letter",
+      "gate": "sound-rest",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear \"ka\": pick the letter kieuk",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"카","romanization":"ka","en":"the sound ka"},
+        "options": [
+          {"id":"kieuk","ko":"ㅋ","romanization":"k","en":"letter kieuk","isCorrect":true},
+          {"id":"giyeok","ko":"ㄱ","romanization":"g","en":"letter giyeok","isCorrect":false},
+          {"id":"tieut","ko":"ㅌ","romanization":"t","en":"letter tieut","isCorrect":false},
+          {"id":"pieup","ko":"ㅍ","romanization":"p","en":"letter pieup","isCorrect":false}
+        ],
+        "tags": ["sym:ㅋ","group:rest"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:sound-rest-see-kieuk",
+      "strand": "sound-letter",
+      "gate": "sound-rest",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "See the letter kieuk: pick \"ka\"",
+      "question": {
+        "format": "see-pick-sound",
+        "prompt": {"ko":"ㅋ","romanization":"ka","en":"letter kieuk"},
+        "options": [
+          {"id":"ka","sound":"ka","isCorrect":true},
+          {"id":"ga","sound":"ga","isCorrect":false},
+          {"id":"ta","sound":"ta","isCorrect":false},
+          {"id":"pa","sound":"pa","isCorrect":false}
+        ],
+        "tags": ["sym:ㅋ","group:rest"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:sound-rest-hear-tieut",
+      "strand": "sound-letter",
+      "gate": "sound-rest",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear \"ta\": pick the letter tieut",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"타","romanization":"ta","en":"the sound ta"},
+        "options": [
+          {"id":"tieut","ko":"ㅌ","romanization":"t","en":"letter tieut","isCorrect":true},
+          {"id":"digeut","ko":"ㄷ","romanization":"d","en":"letter digeut","isCorrect":false},
+          {"id":"kieuk","ko":"ㅋ","romanization":"k","en":"letter kieuk","isCorrect":false},
+          {"id":"pieup","ko":"ㅍ","romanization":"p","en":"letter pieup","isCorrect":false}
+        ],
+        "tags": ["sym:ㅌ","group:rest"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:sound-rest-see-tieut",
+      "strand": "sound-letter",
+      "gate": "sound-rest",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "See the letter tieut: pick \"ta\"",
+      "question": {
+        "format": "see-pick-sound",
+        "prompt": {"ko":"ㅌ","romanization":"ta","en":"letter tieut"},
+        "options": [
+          {"id":"ta","sound":"ta","isCorrect":true},
+          {"id":"da","sound":"da","isCorrect":false},
+          {"id":"ka","sound":"ka","isCorrect":false},
+          {"id":"pa","sound":"pa","isCorrect":false}
+        ],
+        "tags": ["sym:ㅌ","group:rest"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:sound-rest-hear-pieup",
+      "strand": "sound-letter",
+      "gate": "sound-rest",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear \"pa\": pick the letter pieup",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"파","romanization":"pa","en":"the sound pa"},
+        "options": [
+          {"id":"pieup","ko":"ㅍ","romanization":"p","en":"letter pieup","isCorrect":true},
+          {"id":"bieup","ko":"ㅂ","romanization":"b","en":"letter bieup","isCorrect":false},
+          {"id":"kieuk","ko":"ㅋ","romanization":"k","en":"letter kieuk","isCorrect":false},
+          {"id":"tieut","ko":"ㅌ","romanization":"t","en":"letter tieut","isCorrect":false}
+        ],
+        "tags": ["sym:ㅍ","group:rest"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:sound-rest-see-pieup",
+      "strand": "sound-letter",
+      "gate": "sound-rest",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "See the letter pieup: pick \"pa\"",
+      "question": {
+        "format": "see-pick-sound",
+        "prompt": {"ko":"ㅍ","romanization":"pa","en":"letter pieup"},
+        "options": [
+          {"id":"pa","sound":"pa","isCorrect":true},
+          {"id":"ba","sound":"ba","isCorrect":false},
+          {"id":"ka","sound":"ka","isCorrect":false},
+          {"id":"ta","sound":"ta","isCorrect":false}
+        ],
+        "tags": ["sym:ㅍ","group:rest"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:sound-rest-hear-hieut",
+      "strand": "sound-letter",
+      "gate": "sound-rest",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear \"ha\": pick the letter hieut",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"하","romanization":"ha","en":"the sound ha"},
+        "options": [
+          {"id":"hieut","ko":"ㅎ","romanization":"h","en":"letter hieut","isCorrect":true},
+          {"id":"ieung","ko":"ㅇ","romanization":"ng","en":"letter ieung","isCorrect":false},
+          {"id":"chieut","ko":"ㅊ","romanization":"ch","en":"letter chieut","isCorrect":false},
+          {"id":"siot","ko":"ㅅ","romanization":"s","en":"letter siot","isCorrect":false}
+        ],
+        "tags": ["sym:ㅎ","group:rest"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:sound-rest-see-hieut",
+      "strand": "sound-letter",
+      "gate": "sound-rest",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "See the letter hieut: pick \"ha\"",
+      "question": {
+        "format": "see-pick-sound",
+        "prompt": {"ko":"ㅎ","romanization":"ha","en":"letter hieut"},
+        "options": [
+          {"id":"ha","sound":"ha","isCorrect":true},
+          {"id":"a","sound":"a","isCorrect":false},
+          {"id":"cha","sound":"cha","isCorrect":false},
+          {"id":"sa","sound":"sa","isCorrect":false}
+        ],
+        "tags": ["sym:ㅎ","group:rest"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:sound-rest-hear-ya",
+      "strand": "sound-letter",
+      "gate": "sound-rest",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear \"ya\": pick the letter ya",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"야","romanization":"ya","en":"the sound ya"},
+        "options": [
+          {"id":"ya","ko":"ㅑ","romanization":"ya","en":"letter ya","isCorrect":true},
+          {"id":"a","ko":"ㅏ","romanization":"a","en":"letter a","isCorrect":false},
+          {"id":"yeo","ko":"ㅕ","romanization":"yeo","en":"letter yeo","isCorrect":false},
+          {"id":"yo","ko":"ㅛ","romanization":"yo","en":"letter yo","isCorrect":false}
+        ],
+        "tags": ["sym:ㅑ","group:rest"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:sound-rest-see-ya",
+      "strand": "sound-letter",
+      "gate": "sound-rest",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "See the letter ya: pick \"ya\"",
+      "question": {
+        "format": "see-pick-sound",
+        "prompt": {"ko":"ㅑ","romanization":"ya","en":"letter ya"},
+        "options": [
+          {"id":"ya","sound":"ya","isCorrect":true},
+          {"id":"a","sound":"a","isCorrect":false},
+          {"id":"yeo","sound":"yeo","isCorrect":false},
+          {"id":"yo","sound":"yo","isCorrect":false}
+        ],
+        "tags": ["sym:ㅑ","group:rest"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:sound-rest-hear-yeo",
+      "strand": "sound-letter",
+      "gate": "sound-rest",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear \"yeo\": pick the letter yeo",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"여","romanization":"yeo","en":"the sound yeo"},
+        "options": [
+          {"id":"yeo","ko":"ㅕ","romanization":"yeo","en":"letter yeo","isCorrect":true},
+          {"id":"eo","ko":"ㅓ","romanization":"eo","en":"letter eo","isCorrect":false},
+          {"id":"ya","ko":"ㅑ","romanization":"ya","en":"letter ya","isCorrect":false},
+          {"id":"yu","ko":"ㅠ","romanization":"yu","en":"letter yu","isCorrect":false}
+        ],
+        "tags": ["sym:ㅕ","group:rest"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:sound-rest-see-yeo",
+      "strand": "sound-letter",
+      "gate": "sound-rest",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "See the letter yeo: pick \"yeo\"",
+      "question": {
+        "format": "see-pick-sound",
+        "prompt": {"ko":"ㅕ","romanization":"yeo","en":"letter yeo"},
+        "options": [
+          {"id":"yeo","sound":"yeo","isCorrect":true},
+          {"id":"eo","sound":"eo","isCorrect":false},
+          {"id":"ya","sound":"ya","isCorrect":false},
+          {"id":"yu","sound":"yu","isCorrect":false}
+        ],
+        "tags": ["sym:ㅕ","group:rest"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:sound-rest-hear-yo",
+      "strand": "sound-letter",
+      "gate": "sound-rest",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear \"yo\": pick the letter yo",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"요","romanization":"yo","en":"the sound yo"},
+        "options": [
+          {"id":"yo","ko":"ㅛ","romanization":"yo","en":"letter yo","isCorrect":true},
+          {"id":"o","ko":"ㅗ","romanization":"o","en":"letter o","isCorrect":false},
+          {"id":"yu","ko":"ㅠ","romanization":"yu","en":"letter yu","isCorrect":false},
+          {"id":"ya","ko":"ㅑ","romanization":"ya","en":"letter ya","isCorrect":false}
+        ],
+        "tags": ["sym:ㅛ","group:rest"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:sound-rest-see-yo",
+      "strand": "sound-letter",
+      "gate": "sound-rest",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "See the letter yo: pick \"yo\"",
+      "question": {
+        "format": "see-pick-sound",
+        "prompt": {"ko":"ㅛ","romanization":"yo","en":"letter yo"},
+        "options": [
+          {"id":"yo","sound":"yo","isCorrect":true},
+          {"id":"o","sound":"o","isCorrect":false},
+          {"id":"yu","sound":"yu","isCorrect":false},
+          {"id":"ya","sound":"ya","isCorrect":false}
+        ],
+        "tags": ["sym:ㅛ","group:rest"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:sound-rest-hear-yu",
+      "strand": "sound-letter",
+      "gate": "sound-rest",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "Hear \"yu\": pick the letter yu",
+      "question": {
+        "format": "hear-pick-written",
+        "spoken": {"ko":"유","romanization":"yu","en":"the sound yu"},
+        "options": [
+          {"id":"yu","ko":"ㅠ","romanization":"yu","en":"letter yu","isCorrect":true},
+          {"id":"u","ko":"ㅜ","romanization":"u","en":"letter u","isCorrect":false},
+          {"id":"yo","ko":"ㅛ","romanization":"yo","en":"letter yo","isCorrect":false},
+          {"id":"yeo","ko":"ㅕ","romanization":"yeo","en":"letter yeo","isCorrect":false}
+        ],
+        "tags": ["sym:ㅠ","group:rest"],
+        "requires": {"audio":true,"picture":null},
+        "leaks": true
+      }
+    },
+    {
+      "id": "pitem:sound-rest-see-yu",
+      "strand": "sound-letter",
+      "gate": "sound-rest",
+      "form": "decode",
+      "status": "ready",
+      "glossEn": "See the letter yu: pick \"yu\"",
+      "question": {
+        "format": "see-pick-sound",
+        "prompt": {"ko":"ㅠ","romanization":"yu","en":"letter yu"},
+        "options": [
+          {"id":"yu","sound":"yu","isCorrect":true},
+          {"id":"u","sound":"u","isCorrect":false},
+          {"id":"yo","sound":"yo","isCorrect":false},
+          {"id":"yeo","sound":"yeo","isCorrect":false}
+        ],
+        "tags": ["sym:ㅠ","group:rest"],
+        "requires": {"audio":false,"picture":null},
+        "leaks": true
+      }
+    }
+  ]
+}
