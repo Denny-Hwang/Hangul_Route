@@ -1,11 +1,11 @@
 {
   "v": 1,
   "id": "story:dano-ssireum",
-  "state": "draft",
+  "state": "ready",
   "contentVer": 1,
   "title": {
-    "ko": "단오 축제와 씨름",
-    "romanization": "Dano chukjewa ssireum",
+    "ko": "단옷날의 그네, 탈, 씨름",
+    "romanization": "Danonnarui geune, tal, ssireum",
     "en": "Dano Day: Swings, Masks and Ssireum"
   },
   "summaryEn": "Hoya celebrates Dano, Korea's early-summer holiday: hair washed in changpo water, high-flying swings, ssireum wrestling, and the UNESCO-listed Gangneung Danoje with its wordless Gwanno mask drama.",
@@ -14,9 +14,9 @@
   "recommendedStage": 2,
   "minutes": 5,
   "learningGoalsEn": [
-    "Know when Dano falls (5th day of the 5th lunar month) and name two Dano customs (changpo hair-washing, swinging).",
-    "Describe how ssireum is won and what jangsa means.",
-    "Explain that Gangneung Danoje (proclaimed 2005, inscribed 2008) and ssireum (2018, joint inscription by both Koreas) are on UNESCO's Representative List.",
+    "Know when Dano falls (5th day of the 5th lunar month) and two Dano customs (changpo hair-washing, swinging).",
+    "Understand how ssireum is won and what jangsa means.",
+    "Know that Gangneung Danoje (proclaimed 2005, inscribed 2008) and ssireum (2018, joint inscription by both Koreas) are on UNESCO's Representative List.",
     "Read and recognize 단오 (dano), 그네 (geune), 씨름 (ssireum), 장사 (jangsa) and 탈 (tal)."
   ],
   "origin": {
@@ -103,7 +103,7 @@
       "id": "illyu-muhyeong-yusan",
       "ko": "인류 무형 유산",
       "romanization": "illyu muhyeong yusan",
-      "en": "Intangible Cultural Heritage of Humanity",
+      "en": "Intangible Heritage of Humanity (UNESCO list)",
       "kind": "word"
     }
   ],
@@ -152,7 +152,7 @@
         },
         {
           "id": "s3",
-          "narrationEn": "Swings hang from tall trees, and people soar into the sky! Swinging, called geunettwigi, has been a favorite Dano game since long ago.",
+          "narrationEn": "Swings, {kw:geune}, hang from tall trees, and people soar into the sky! Swinging, called geunettwigi, has been a favorite Dano game since long ago.",
           "captionEn": "Swinging high into the sky",
           "keyword": {
             "id": "geunettwigi",
@@ -210,7 +210,7 @@
         },
         {
           "id": "s6",
-          "narrationEn": "On Korea's east coast, the city of Gangneung holds a big Dano festival: Gangneung Danoje. It begins with brewing a special drink for the gods, and people hold rites praying for a peaceful village and good harvests.",
+          "narrationEn": "On Korea's east coast, the city of Gangneung holds a big Dano festival, or {kw:chukje}: Gangneung Danoje. It begins with brewing a special drink for the gods, and people hold rites praying for a peaceful village and good harvests.",
           "captionEn": "Gangneung's big Dano festival",
           "keyword": {
             "id": "gangneung-danoje",
@@ -248,13 +248,13 @@
         },
         {
           "id": "s8",
-          "narrationEn": "In 2005, UNESCO proclaimed Gangneung Danoje a masterpiece of intangible heritage; in 2008 it joined the Representative List. In 2018, ssireum was inscribed after North and South Korea merged their applications, which UNESCO called unprecedented.",
+          "narrationEn": "In 2005, UNESCO named Gangneung Danoje a masterpiece. In 2008, it went on UNESCO's heritage list. In 2018, ssireum joined the list too. North and South Korea asked for it together. UNESCO said that had never happened before.",
           "captionEn": "Danoje and ssireum on UNESCO's list",
           "keyword": {
             "id": "illyu-muhyeong-yusan",
             "ko": "인류 무형 유산",
             "romanization": "illyu muhyeong yusan",
-            "en": "Intangible Cultural Heritage of Humanity",
+            "en": "Intangible Heritage of Humanity (UNESCO list)",
             "kind": "word"
           },
           "factIds": [
@@ -280,7 +280,7 @@
             },
             {
               "id": "b",
-              "en": "The satba, a cloth belt",
+              "en": "The satba belt",
               "isCorrect": true
             },
             {
@@ -306,22 +306,22 @@
           "options": [
             {
               "id": "a",
-              "en": "The performers use only gestures, no words",
+              "en": "They use gestures, never words",
               "isCorrect": true
             },
             {
               "id": "b",
-              "en": "The performers sing every line in turn",
+              "en": "They sing every line in turn",
               "isCorrect": false
             },
             {
               "id": "c",
-              "en": "One storyteller speaks all the parts",
+              "en": "One storyteller speaks all parts",
               "isCorrect": false
             },
             {
               "id": "d",
-              "en": "The performers recite poems together",
+              "en": "They recite poems together",
               "isCorrect": false
             }
           ],
@@ -333,7 +333,7 @@
         {
           "id": "c3",
           "kind": "detail",
-          "promptEn": "Which Dano festival is on UNESCO's Representative List?",
+          "promptEn": "Which Dano festival is on UNESCO's heritage list?",
           "options": [
             {
               "id": "a",
@@ -677,6 +677,6 @@
     "scope": "cluster",
     "notes": "Third independent pass over 6 episodes / 61 facts / 161 source entries (70 unique URLs). Every URL was re-fetched with my own scripts (UNESCO pages via Wayback copies; heritage.go.kr descriptions via the portal ajax html and khs.go.kr open API; folkency via its JSON API) and each quote or locator was machine-matched to the page text; the few non-matching strings were checked by hand (portal metadata fields, hanja or footnote punctuation, label text). Corrections: (1) pansori scene 2 now gives both UNESCO steps (2003 masterpiece proclamation, 2008 Representative List); (2) pansori f11 states the Aesop title as in the cited Townsend text and the common alternate title; (3) added sources: NFM 놀보박타령 for 'greedy' (f5), 표준국어대사전 타다 for 'sawed' (f6), 한국민족문화대백과사전 선도해 for the Samguk sagi tale (f12); (4) Seollal f9/f10 designation-date locators now cite the KHS open API field. No other change. See seasons-tales.signoff.md."
   },
-  "authorNotes": "Left out on purpose: the story that Dano comes from China (Qu Yuan), folk etymology of 수릿날, the 석전 (stone fight) custom, shamanic (굿) details, the festival's deities by name (김유신, 범일국사, 정씨 처녀), and how long the festival lasts. Sources describe its length differently (UNESCO says four weeks; the 국가유산포털 says 5 days of rites at the 단오장). The 'only silent mask drama' claim comes from one official source (국가유산청 국가유산포털), so the narration hedges it as 'known as'. The knee rule describes modern competition ssireum (Encyclopedia of Korean Culture). The narration uses 'east coast' and doesn't name the sea. 단오 was also designated National Intangible Heritage on 2023-12-18. That's covered in the Seollal episode and not repeated here. The 2023 Dano designation (KHS press release) is available if wanted. Standard spelling note: 단옷날 (with 사이시옷) is the dictionary form; the title uses 단오 only. REVISION 2026-10-10: \"four great holidays\" now dated to the late-Joseon Dongguk sesigi (1518 list had three); knee rule labelled modern competition rule and phrased \"from the knee up\"; Gwanno illustration now nobleman (yangban) mask + young-lady (somae-gaksi) mask; \"only silent mask drama\" kept hedged and now has two sources (KHS portal; 국립민속박물관 한국세시풍속사전). UNESCO: Danoje proclaimed 2005, inscribed 2008 (stated both). Ox: UNESCO says ox; encykorea says 황소 (bull) - narration follows UNESCO. Check 3 changed to a question that does not rely on \"from Gangneung\". AUTHORING 2026-10-11 (F-STORY-001 PR 1.8d): title romanization, scene captions and check explanations written from the cited facts; every scene is artPending (text-only tile) until the art PRs; no claim or source changed. Korean spacing: learner terms are written 강릉 단오제 and 인류 무형 유산 (spaced by word, 한글 맞춤법 제49항/제50항) so each word lines up with Gangneung Danoje and illyu muhyeong yusan; the facts keep the official spellings.",
+  "authorNotes": "Left out on purpose: the story that Dano comes from China (Qu Yuan), folk etymology of 수릿날, the 석전 (stone fight) custom, shamanic (굿) details, the festival's deities by name (김유신, 범일국사, 정씨 처녀), and how long the festival lasts. Sources describe its length differently (UNESCO says four weeks; the 국가유산포털 says 5 days of rites at the 단오장). The 'only silent mask drama' claim comes from one official source (국가유산청 국가유산포털), so the narration hedges it as 'known as'. The knee rule describes modern competition ssireum (Encyclopedia of Korean Culture). The narration uses 'east coast' and doesn't name the sea. 단오 was also designated National Intangible Heritage on 2023-12-18. That's covered in the Seollal episode and not repeated here. The 2023 Dano designation (KHS press release) is available if wanted. Standard spelling note: 단옷날 (with 사이시옷) is the dictionary form, and the title now uses it: 단옷날의 그네, 탈, 씨름 (Danonnarui geune, tal, ssireum), matching the English title. REVISION 2026-10-10: \"four great holidays\" now dated to the late-Joseon Dongguk sesigi (1518 list had three); knee rule labelled modern competition rule and phrased \"from the knee up\"; Gwanno illustration now nobleman (yangban) mask + young-lady (somae-gaksi) mask; \"only silent mask drama\" kept hedged and now has two sources (KHS portal; 국립민속박물관 한국세시풍속사전). UNESCO: Danoje proclaimed 2005, inscribed 2008 (stated both). Ox: UNESCO says ox; encykorea says 황소 (bull) - narration follows UNESCO. Check 3 changed to a question that does not rely on \"from Gangneung\". AUTHORING 2026-10-11 (F-STORY-001 PR 1.8d): title romanization, scene captions and check explanations written from the cited facts; every scene is artPending (text-only tile) until the art PRs; no claim or source changed. Korean spacing: learner terms are written 강릉 단오제 and 인류 무형 유산 (spaced by word, 한글 맞춤법 제49항/제50항) so each word lines up with Gangneung Danoje and illyu muhyeong yusan; the facts keep the official spellings. REVIEW 2026-10-11 (PR 1.8d review fixes): the learner keyword stays 인류 무형 유산 (illyu muhyeong yusan, the Korea Heritage Service's current term, spaced by word) with the gloss 'Intangible Heritage of Humanity (UNESCO list)'; f9 and f10 keep the researched 인류무형문화유산. s8 is rewritten in short sentences with the same years; check options are of even length; geune and chukje are used as tokens; learning goals use receptive verbs.",
   "errata": []
 }
