@@ -1,4 +1,5 @@
 import { FAMILY_LIFETIME_LEARNERS, PLAN_PRICING, type Tier, type TierSource } from '@hangul-route/content-schema';
+import { NEUTRAL_COPY } from './audience-copy';
 
 /**
  * Paywall state — F-ENT-001 §3.5 (wireframe paywall/upgrade). Stage 1 is
@@ -23,7 +24,7 @@ export const LIFETIME_OFFER = {
 } as const;
 
 /** Codes are typed on the console, never in the child app (F-ENT-002 §3.4). */
-export const PROMO_HINT = 'Have a promo or referral code? A grown-up enters it on the web console.';
+export const PROMO_HINT = NEUTRAL_COPY.promoHint;
 
 const DEFAULT_CONSOLE = 'https://hangulroute.com';
 

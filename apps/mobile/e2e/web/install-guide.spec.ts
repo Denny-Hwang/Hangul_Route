@@ -20,7 +20,9 @@ test('install guide shows on the third cached open and snoozes on dismiss', asyn
   await expect(page.getByText('Hi, Mina!')).toBeVisible();
   const guide = page.getByTestId('install-guide');
   await expect(guide).toBeVisible();
-  await expect(guide.getByText('Ask a grown-up to add me to your home screen.')).toBeVisible();
+  await expect(guide.getByText('Add me to your home screen.')).toBeVisible();
+  // A child's device is a family device: the second line says an adult can help.
+  await expect(guide.getByText('A grown-up can help.')).toBeVisible();
 
   // Home stays usable underneath; "Not now" hides it for the next opens.
   await guide.getByRole('button', { name: 'Not now' }).click();

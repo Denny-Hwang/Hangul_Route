@@ -1,8 +1,8 @@
 import * as Haptics from 'expo-haptics';
 
 /**
- * Haptics wrapper — anti-startle calibrated for kids 5–11.
- * Heavy haptics never used on child failures.
+ * Haptics wrapper — anti-startle calibrated for young learners.
+ * Heavy haptics never used on a learner's miss.
  */
 
 let enabled = true;

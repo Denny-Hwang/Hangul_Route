@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { audienceCopy } from '../audience-copy';
+import { NEUTRAL_COPY, audienceCopy } from '../audience-copy';
 import type { DeviceAudience } from '../profiles/learner-type';
 
 const AUDIENCES: DeviceAudience[] = ['family', 'self'];
@@ -118,6 +118,18 @@ describe('audienceCopy: tone rules', () => {
       for (const [key, text] of allStrings(audience)) {
         expect(text, `${audience}.${key}`).not.toMatch(/\bages?\b|for kids|\d+\s*[–-]\s*\d+/i);
       }
+    }
+  });
+});
+
+describe('NEUTRAL_COPY: the audience-free strings used by logic modules', () => {
+  it('is what both audiences share', () => {
+    for (const audience of AUDIENCES) {
+      const c = audienceCopy(audience);
+      expect(c.joinCodeFull).toBe(NEUTRAL_COPY.joinCodeFull);
+      expect(c.joinCodeNotForLearners).toBe(NEUTRAL_COPY.joinCodeNotForLearners);
+      expect(c.promoHint).toBe(NEUTRAL_COPY.promoHint);
+      expect(c.restoreCardsBack).toBe(NEUTRAL_COPY.restoreCardsBack);
     }
   });
 });

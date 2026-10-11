@@ -9,6 +9,7 @@ import { planRestore, restoreNotice, type RestorePlan } from '../../logic/sync/r
 import type { RootStackParamList } from '../../navigation/types';
 import { pickTextFile } from '../../platform/file';
 import { apiBaseUrl } from '../../platform/sync-api';
+import { useAudience } from '../../store/audience';
 import { useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { useSyncStore } from '../../store/sync-store';
@@ -25,6 +26,7 @@ const CODE_LINE_HEIGHT = Math.round(typography.size.bodyLg * 1.3);
 const CODE_BORDER = 2;
 
 export function RestoreScreen({ navigation, route }: Props): React.ReactElement {
+  const { copy } = useAudience();
   const from = route.params?.from ?? 'settings';
   const profiles = useProfileStore((s) => s.profiles);
   const [showCode, setShowCode] = useState(false);
@@ -95,7 +97,7 @@ export function RestoreScreen({ navigation, route }: Props): React.ReactElement 
       <Spacer size="sm" />
       <Heading level="title">Bring back progress</Heading>
       <Spacer size="md" />
-      <HoyaBubble tone="thinking" message="Got a rescue code, a grown-up account, or a saved file?" />
+      <HoyaBubble tone="thinking" message={copy.restorePrompt} />
       <Spacer size="xl" />
 
       {done ? (
@@ -164,7 +166,7 @@ export function RestoreScreen({ navigation, route }: Props): React.ReactElement 
             </>
           ) : null}
           <Spacer size="md" />
-          <Button label="Sign in as a grown-up" tone="secondary" size="lg" fullWidth disabled onPress={() => {}} />
+          <Button label={copy.restoreSignInLabel} tone="secondary" size="lg" fullWidth disabled onPress={() => {}} />
           <Caption tone="muted" align="center">Coming soon</Caption>
           <Spacer size="md" />
           <Button label="Open a saved file" tone="secondary" size="lg" fullWidth onPress={() => void restoreFile()} />

@@ -13,6 +13,7 @@ import {
   spacing,
   touchTarget,
 } from '@hangul-route/design-system';
+import { levelLabel } from '@hangul-route/content-schema';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React from 'react';
@@ -28,6 +29,7 @@ import { useTierStore } from '../../store/tier-store';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { usePwaStore } from '../../store/pwa-store';
+import { useAudience } from '../../store/audience';
 import { useUiStore } from '../../store/ui-store';
 import { BackupCard } from '../../components/BackupCard';
 import { SpacesCard } from '../../components/SpacesCard';
@@ -48,16 +50,19 @@ export function ProfileScreen(): React.ReactElement {
   const parentGateOpenedAt = useUiStore((s) => s.parentGateOpenedAt);
   const forceInstallGuide = usePwaStore((s) => s.force);
   const installed = usePwaStore((s) => s.installed);
+  const { copy, pinSet, opensDirectly } = useAudience();
   const canOfferInstall = !installed && installGuideVariant(installEnv()) !== 'none';
 
   // A verified grown-up may add another child without re-entering the PIN
-  // inside the 15-minute session window (F-PROF-001 §3.2).
+  // inside the 15-minute session window (F-PROF-001 §3.2). A self-only device
+  // that never set a PIN has no gate to pass (F-LEARN-001 L7), so a learner
+  // is not made to invent a PIN just to reach their own settings.
   const parentSessionOpen = isParentSessionValid(
     parentGateOpenedAt === null ? null : { openedAt: parentGateOpenedAt, profileId: 'family' },
     Date.now(),
   );
   const openGrownUps = (next: 'ParentDashboard' | 'AddProfile' | 'Restore' | 'SaveProgress' | 'Paywall'): void => {
-    if (parentSessionOpen) {
+    if (opensDirectly(parentSessionOpen)) {
       if (next === 'AddProfile') {
         navigation.navigate('Onboarding', { screen: 'CreateProfile', params: { firstRun: false } });
       } else if (next === 'Restore') {
@@ -88,12 +93,13 @@ export function ProfileScreen(): React.ReactElement {
       <Spacer size="sm" />
       <Heading level="title">Profiles & settings</Heading>
       <Spacer size="xs" />
-      <Body tone="secondary">Tap a Hoya to switch.</Body>
+      <Body tone="secondary">{copy.profileSwitchHint}</Body>
 
       <Spacer size="lg" />
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md }}>
         {profiles.map((p) => {
           const isActive = p.id === active?.id;
+          const level = levelLabel(p.ageGroup);
           return (
             <Pressable
               key={p.id}
@@ -114,7 +120,7 @@ export function ProfileScreen(): React.ReactElement {
               <ProfileAvatar avatar={p.avatar} size={72} pose={isActive ? 'cheering' : 'idle'} />
               <Spacer size="xs" />
               <Body weight="semibold">{p.displayName}</Body>
-              <Caption tone="muted">Age {p.ageGroup}</Caption>
+              {level ? <Caption tone="muted">{level}</Caption> : null}
               {isActive ? <Pill label="Playing now" tone="primary" size="sm" /> : null}
             </Pressable>
           );
@@ -126,7 +132,7 @@ export function ProfileScreen(): React.ReactElement {
         label="+ Add a profile"
         tone="secondary"
         size="md"
-        accessibilityLabel="Add a profile (grown-ups only)"
+        accessibilityLabel={copy.gatedA11y('Add a profile', pinSet)}
         onPress={() => openGrownUps('AddProfile')}
       />
 
@@ -193,7 +199,7 @@ export function ProfileScreen(): React.ReactElement {
         {tier !== 'premium' ? (
           <>
             <Spacer size="sm" />
-            <Button label="Unlock the journey" tone="secondary" size="md" accessibilityLabel="Unlock the journey (grown-ups only)" onPress={() => openGrownUps('Paywall')} />
+            <Button label="Unlock the journey" tone="secondary" size="md" accessibilityLabel={copy.gatedA11y('Unlock the journey', pinSet)} onPress={() => openGrownUps('Paywall')} />
           </>
         ) : null}
       </Card>
@@ -226,10 +232,10 @@ export function ProfileScreen(): React.ReactElement {
 
       <Spacer size="lg" />
       <Button
-        label="Grown-up zone"
+        label={copy.zoneLabel}
         tone="ghost"
         size="md"
-        accessibilityLabel="Grown-up zone (PIN required)"
+        accessibilityLabel={copy.gatedA11y(copy.zoneLabel, pinSet)}
         onPress={() => openGrownUps('ParentDashboard')}
       />
       <Spacer size="xl" />

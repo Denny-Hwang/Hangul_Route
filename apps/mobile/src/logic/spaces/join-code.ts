@@ -1,4 +1,5 @@
 import { JOIN_CODE_ALPHABET, JOIN_CODE_LENGTH, normalizeJoinCode } from '@hangul-route/content-schema';
+import { NEUTRAL_COPY } from '../audience-copy';
 
 /**
  * Join-code helpers for `sync/join-space` — F-SPACE-001 §3.5. The field
@@ -29,7 +30,7 @@ export type JoinErrorCode =
   | 'unknown'
   | 'off';
 
-/** Calm copy for the child, with the grown-up named as the fix. */
+/** Calm copy for the learner; names the fix, never a person (F-LEARN-001 §3.9). */
 export function joinErrorMessage(code: JoinErrorCode): string {
   switch (code) {
     case 'code_not_found':
@@ -37,11 +38,11 @@ export function joinErrorMessage(code: JoinErrorCode): string {
     case 'code_expired':
       return 'That code is too old. Ask for a new one.';
     case 'cap_learner':
-      return "You're already in three classes. A grown-up can leave one in settings.";
+      return NEUTRAL_COPY.joinCodeFull;
     case 'cap_class':
       return 'This class is full. Ask your teacher.';
     case 'not_joinable':
-      return 'That code is for grown-ups. Ask for a class code.';
+      return NEUTRAL_COPY.joinCodeNotForLearners;
     case 'learner_not_found':
       return 'That name is not in this class anymore. Ask your teacher.';
     case 'already_bound':

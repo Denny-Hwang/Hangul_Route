@@ -30,7 +30,7 @@ test('backup file round-trips a learner between two devices', async ({ browser }
   await onboardChild(b, { name: 'Bo' });
   await b.goto('/');
   await b.getByRole('button', { name: 'Profile and settings' }).click();
-  await b.getByRole('button', { name: 'Restore from a file (grown-ups only)' }).click();
+  await b.getByRole('button', { name: 'Restore from a file (PIN required)' }).click();
   // The grown-up PIN was created in the onboarding form (F-LEARN-001 §3.3): the gate asks for it.
   await unlockWithPin(b);
   await expect(b.getByRole('heading', { name: 'Bring back progress' })).toBeVisible();
