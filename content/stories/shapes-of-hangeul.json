@@ -2,7 +2,7 @@
   "v": 1,
   "id": "story:shapes-of-hangeul",
   "state": "ready",
-  "contentVer": 2,
+  "contentVer": 3,
   "title": {
     "ko": "한글 모양의 비밀",
     "romanization": "Hangeul moyangui bimil",
@@ -233,7 +233,7 @@
         },
         {
           "id": "s2",
-          "narrationEn": "The first secret: the five basic consonants copy the shapes of the parts of the body we speak with. The old book says the letter {kw:jamo-g} copies the root of the tongue closing the throat. Hoya points at the picture.",
+          "narrationEn": "The first secret: the five basic consonants copy the shapes of the parts of the body we speak with. The old book says the letter {kw:jamo-g} copies the root of the tongue closing the throat. Hoya waves you over to look at the picture.",
           "keyword": {
             "id": "jamo-g",
             "ko": "ㄱ",
@@ -264,7 +264,7 @@
                 "s": 0.65
               }
             ],
-            "altEn": "Hoya points at a side-view picture of the mouth: the root of the tongue rises to close the throat, the shape behind the first letter."
+            "altEn": "Hoya waves beside a side-view picture of the mouth: the root of the tongue rises to close the throat, the shape behind the first letter."
           },
           "captionEn": "Giyeok: tongue root closing the throat"
         },
