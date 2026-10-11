@@ -286,3 +286,70 @@ test('a ready voice never shows the how-to link in Match Sound', async ({ page }
   await openMatchSound(page);
   await expect(page.getByTestId('prompt-panel-help')).toHaveCount(0);
 });
+
+/** F-AUDIO-004 A-5b: from the first-quest preview, past the two listening games, to Build a Letter. */
+async function openBuildLetter(page: Page): Promise<void> {
+  await page.getByRole('button', { name: 'Continue' }).click();
+  for (let i = 0; i < 2; i++) await page.getByRole('button', { name: 'Skip for now' }).click();
+  await page.getByRole('button', { name: 'Play minigame' }).click();
+  await expect(page.getByText('Build this letter')).toBeVisible();
+}
+
+const buildSpeaker = (page: Page) => page.getByTestId('build-letter-speaker');
+
+test('Build a Letter says the syllable with Yuna when it is tapped, and shows no panel while sound works', async ({ page }) => {
+  await fakeSpeech(page, 'korean');
+  await onboardChild(page, { name: 'Dami' });
+  await openBuildLetter(page);
+  // Nothing autoplays here.
+  expect(await utterances(page)).toEqual([]);
+
+  await buildSpeaker(page).click();
+  await expect.poll(async () => (await utterances(page)).length).toBe(1);
+  const [said] = await utterances(page);
+  expect(said).toMatchObject({ voice: 'Yuna', lang: 'ko-KR' });
+  expect(said!.text).toMatch(/^[가-힣]$/);
+  await expect(buildSpeaker(page)).toContainText(said!.text);
+  await expect(page.getByTestId('prompt-panel-detail')).toHaveCount(0);
+});
+
+test('Build a Letter with no Korean voice: the syllable stays on screen and a tap says why it is silent', async ({ page }) => {
+  await fakeSpeech(page, 'none');
+  await onboardChild(page, { name: 'Dami' });
+  await openBuildLetter(page);
+  // The syllable and its romanization are the text; no panel before the learner asks for the sound.
+  await expect(page.getByTestId('prompt-panel-detail')).toHaveCount(0);
+
+  await buildSpeaker(page).click();
+  await expect(page.getByTestId('prompt-panel-detail')).toHaveText('No Korean voice on this device.');
+  // The syllable is not printed a second time.
+  await expect(page.getByTestId('prompt-panel-text')).toHaveCount(0);
+  expect(await utterances(page)).toEqual([]);
+
+  await page.getByTestId('prompt-panel-help').click();
+  await expect(page.getByTestId('voice-help-sheet').getByText('Add a Korean voice')).toBeVisible();
+  await page.getByTestId('voice-help-sheet-ok').click();
+  await expect(page.getByRole('button', { name: /^Korean letter / }).first()).toBeVisible();
+});
+
+test('Build a Letter with sound off: a tap says sound is off, and Turn sound on says the syllable', async ({ page }) => {
+  await fakeSpeech(page, 'korean');
+  await onboardChild(page, { name: 'Dami', startJourney: false });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Profile and settings' }).click();
+  await page.getByRole('switch', { name: /^Sound/ }).click();
+  await expect.poll(() => savedAudioPrefs(page)).toBe(JSON.stringify({ muted: true }));
+  await page.reload();
+  await page.getByRole('button', { name: /^Meet g, n, d, l/ }).click();
+  await openBuildLetter(page);
+  await expect(page.getByTestId('prompt-panel-detail')).toHaveCount(0);
+
+  await buildSpeaker(page).click();
+  await expect(page.getByTestId('prompt-panel-detail')).toHaveText('Sound is off.');
+  expect(await utterances(page)).toEqual([]);
+
+  await page.getByTestId('prompt-panel-action').click();
+  await expect.poll(async () => (await utterances(page)).length).toBe(1);
+  expect((await utterances(page))[0]).toMatchObject({ voice: 'Yuna', lang: 'ko-KR' });
+  await expect.poll(() => savedAudioPrefs(page)).toBe(JSON.stringify({ muted: false }));
+});
