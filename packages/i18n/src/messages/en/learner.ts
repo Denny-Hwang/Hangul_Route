@@ -795,8 +795,6 @@ export const learner = {
         plural('en', choices, { one: 'Question, 1 choice', other: `Question, ${choices} choices` }),
       /** A picture option's accessible name when its meaning would be the answer (test language Korean). */
       pictureChoice: (position: number) => `Picture ${position}`,
-      /** The footstep trail: it only fills; screen readers skip it. */
-      trail: 'Footsteps',
     },
     /**
      * One short instruction per question format, written and spoken (section 3.2).

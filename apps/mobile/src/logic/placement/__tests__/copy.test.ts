@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest';
 import {
   AGE_WORDS,
   PLACEMENT_DIGIT_ALLOW_LIST,
+  PLACEMENT_FUNCTION_SAMPLES,
+  SCREEN_READER_DIGIT_ALLOW_LIST,
   SUCCESS_WORDS,
   bandLabel,
   cheerLine,
@@ -36,6 +38,24 @@ describe('placement copy scan (F-PLC-001 section 3.12)', () => {
     ]);
     expect(en.learner.placement.invite.duration).not.toMatch(/\d/);
     expect(en.learner.placement.options.mode.standard.duration).toMatch(/10/);
+  });
+
+  it('function messages are scanned with sample arguments; only the screen-reader lines may hold a digit', () => {
+    const entries = placementCopyEntries(en);
+    expect(entries).toContainEqual(['learner.placement.item.questionLabel', 'Question, 4 choices']);
+    expect(entries).toContainEqual(['learner.placement.item.questionLabel', 'Question, 1 choice']);
+    expect(entries).toContainEqual(['learner.placement.item.pictureChoice', 'Picture 2']);
+    expect([...SCREEN_READER_DIGIT_ALLOW_LIST]).toEqual(['learner.placement.item.questionLabel', 'learner.placement.item.pictureChoice']);
+    expect(Object.keys(PLACEMENT_FUNCTION_SAMPLES).sort()).toEqual([...SCREEN_READER_DIGIT_ALLOW_LIST].sort());
+    // Everything else is still scanned on those lines.
+    expect(copyProblems(en, 'en', [['learner.placement.item.questionLabel', 'You failed 2']])).toEqual([
+      'learner.placement.item.questionLabel: banned word failed',
+    ]);
+  });
+
+  it('a function message without sample arguments is reported, so none slips past the scan', () => {
+    const m = { ...en, learner: { ...en.learner, placement: { ...en.learner.placement, extra: (n: number) => `Step ${n}` } } };
+    expect(copyProblems(m as typeof en, 'en')).toEqual(['learner.placement.extra: function message without samples']);
   });
 
   it('flags each kind of problem', () => {
