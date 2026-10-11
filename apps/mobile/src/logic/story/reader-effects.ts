@@ -1,5 +1,6 @@
 import type { KoText, Story, StoryLevel, StoryTier } from '@hangul-route/content-schema';
 import type { PlaySpec } from '../audio/controller';
+import type { FallbackReason } from '../audio/prompt-state';
 import type { ReaderAction, ReaderState, SceneChangeVia } from './reader-state';
 import type { SceneView } from './scene-view';
 
@@ -79,6 +80,20 @@ export function stepsForVoice(steps: readonly PlaySpec[], canPlayKorean: boolean
   return steps.filter((s) => (s.language ?? 'ko-KR') !== 'ko-KR');
 }
 
+/** Whether a chain asks for any Korean: only such a chain reports to the Korean prompt slot (§3.4). */
+export function hasKoreanStep(steps: readonly PlaySpec[]): boolean {
+  return steps.some((s) => (s.language ?? 'ko-KR') === 'ko-KR');
+}
+
+/**
+ * The "Say it yourself" chip (§3.3 item 5, §3.4, §3.14 row 7) follows the
+ * device: it shows on a scene with Korean while there is no Korean voice, or
+ * once a play has just learned so, and an English-only play never hides it.
+ */
+export function sayItYourselfShown(input: { canPlayKorean: boolean; reason: FallbackReason | null; hasKorean: boolean }): boolean {
+  return input.hasKorean && (!input.canPlayKorean || input.reason === 'no_voice');
+}
+
 export interface ReadFinishedInput {
   storyId: string;
   level: StoryLevel;
@@ -86,6 +101,8 @@ export interface ReadFinishedInput {
   sceneCount: number;
   /** `ReaderState.furthest` (0-based). */
   furthest: number;
+  /** The lowest scene index shown in this mount (0-based; the reader may open past scene 1). Default 0. */
+  lowest?: number;
   /** Plays that were heard (speaker taps and Read to me). */
   linesPlayed: number;
   /** Gloss cards the learner opened. */
@@ -114,7 +131,8 @@ export function readFinishedPayload(input: ReadFinishedInput): ReadFinishedPaylo
     level: input.level,
     mode: input.mode,
     scenes,
-    scenesSeen: Math.min(scenes, count(input.furthest) + 1),
+    // Back and Next move one scene at a time, so the scenes shown are lowest..furthest.
+    scenesSeen: Math.min(scenes, Math.max(1, count(input.furthest) - count(input.lowest ?? 0) + 1)),
     linesPlayed: count(input.linesPlayed),
     termsOpened: count(input.termsOpened),
   };

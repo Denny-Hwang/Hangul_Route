@@ -6,11 +6,13 @@ import {
   KOREAN_BLOCK_ID,
   MIN_READER_SCENES,
   glossTarget,
+  hasKoreanStep,
   planSceneChange,
   readFinishedPayload,
   readerAvailability,
   readerCheckpoints,
   readerKeyAction,
+  sayItYourselfShown,
   stepsForVoice,
   termId,
   wordId,
@@ -102,6 +104,36 @@ describe('stepsForVoice (§3.4: no Korean voice, English narration still plays)'
   });
 });
 
+describe('hasKoreanStep (only a chain that asks for Korean reports to the Korean prompt slot)', () => {
+  it('is true when any step is Korean (ko-KR or the PlaySpec default)', () => {
+    expect(hasKoreanStep([{ text: 'a', language: 'en-US', kind: 'narration', source: 's' }, { text: '세종', kind: 'word', source: 's' }])).toBe(true);
+    expect(hasKoreanStep([{ text: '세종', language: 'ko-KR', kind: 'word', source: 's' }])).toBe(true);
+  });
+
+  it('is false for an English-only chain or nothing', () => {
+    expect(hasKoreanStep([{ text: 'a', language: 'en-US', kind: 'narration', source: 's' }])).toBe(false);
+    expect(hasKoreanStep([])).toBe(false);
+  });
+});
+
+describe('sayItYourselfShown (§3.4, §3.14 row 7: the chip follows the device, not the last play)', () => {
+  it('shows on a scene with Korean when the device has no Korean voice, whatever the last play said', () => {
+    expect(sayItYourselfShown({ canPlayKorean: false, reason: null, hasKorean: true })).toBe(true);
+    expect(sayItYourselfShown({ canPlayKorean: false, reason: 'no_voice', hasKorean: true })).toBe(true);
+  });
+
+  it('shows when a play just learned there is no Korean voice, before the check settles', () => {
+    expect(sayItYourselfShown({ canPlayKorean: true, reason: 'no_voice', hasKorean: true })).toBe(true);
+  });
+
+  it('hides with a Korean voice, for sound off or a play error, and on a scene with no Korean', () => {
+    expect(sayItYourselfShown({ canPlayKorean: true, reason: null, hasKorean: true })).toBe(false);
+    expect(sayItYourselfShown({ canPlayKorean: true, reason: 'muted', hasKorean: true })).toBe(false);
+    expect(sayItYourselfShown({ canPlayKorean: true, reason: 'error', hasKorean: true })).toBe(false);
+    expect(sayItYourselfShown({ canPlayKorean: false, reason: 'no_voice', hasKorean: false })).toBe(false);
+  });
+});
+
 describe('readFinishedPayload (§3.12: ids and counts only)', () => {
   it('reports the scenes reached and the learner-started plays and glosses', () => {
     expect(
@@ -123,6 +155,18 @@ describe('readFinishedPayload (§3.12: ids and counts only)', () => {
       linesPlayed: 3,
       termsOpened: 2,
     });
+  });
+
+  it('counts only the scenes shown when the reader opened past scene 1 (lowest index reached)', () => {
+    const base = { storyId: 's', level: 'listen' as const, mode: 'replay' as const, sceneCount: 5, linesPlayed: 0, termsOpened: 0 };
+    // Opened on scene 4 and read to the end: scenes 4 and 5.
+    expect(readFinishedPayload({ ...base, furthest: 4, lowest: 3 }).scenesSeen).toBe(2);
+    // Went back to scene 2 before finishing: scenes 2-5.
+    expect(readFinishedPayload({ ...base, furthest: 4, lowest: 1 }).scenesSeen).toBe(4);
+    // Without a lowest index the reader opened on scene 1.
+    expect(readFinishedPayload({ ...base, furthest: 4 }).scenesSeen).toBe(5);
+    // A lowest index past furthest (never happens) still reports one scene, never zero or less.
+    expect(readFinishedPayload({ ...base, furthest: 1, lowest: 3 }).scenesSeen).toBe(1);
   });
 
   it('never reports more scenes seen than the tier has, nor negative counts', () => {
