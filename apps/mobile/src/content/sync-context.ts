@@ -1,7 +1,12 @@
 import { scopeFor } from '../logic/minigame-config';
+import type { JourneyContent } from '../logic/my-route/summary';
+import { appRouteCatalog } from '../logic/placement/route-skip';
 import { questTeaches } from '../logic/stage1/curriculum';
+import { episodesAll } from './episodes';
+import { heritageCardsAll } from './heritage-cards';
 import { jamoAll } from './jamo';
-import { stage1Quests } from './quests';
+import { questsAll, stage1Quests } from './quests';
+import { stages, themes } from './stages';
 
 /**
  * Inputs for `logic/sync/summarize` derived from the bundled content:
@@ -30,3 +35,18 @@ export const questJamo: Record<string, string[]> = Object.fromEntries(
     return [q.id, [...chars]];
   }),
 );
+
+/**
+ * The bundled content My route reads, for `summary.journey` (F-ROUTE-001
+ * R-8). Every shipped stage is playable (OD-4 default), so `isEntitled` is
+ * true; the roster carries no tier.
+ */
+export const journeyContent: JourneyContent = {
+  catalog: appRouteCatalog(questsAll, episodesAll),
+  episodes: episodesAll,
+  quests: questsAll,
+  cards: heritageCardsAll,
+  stages,
+  themes,
+  isEntitled: () => true,
+};
