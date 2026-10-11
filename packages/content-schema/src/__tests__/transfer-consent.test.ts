@@ -213,6 +213,7 @@ describe('what the new teacher sees is generated from data (TEACHER_VISIBLE_SUMM
       'needsPractice',
       'placement',
       'planProgress',
+      'journey',
     ]);
     // selfRoute: the family space reads it, a class or school never does (F-PLAN-002 section 3.10).
     // vocab: hidden until F-VOC-005 P-4 adds the console line and its consent item.
@@ -224,6 +225,11 @@ describe('what the new teacher sees is generated from data (TEACHER_VISIBLE_SUMM
     const hidden: readonly string[] = TEACHER_HIDDEN_SUMMARY_KEYS;
     expect([...visible, ...hidden].sort()).toEqual(summaryKeys);
     expect(visible.filter((k) => hidden.includes(k))).toEqual([]);
+  });
+
+  it('maps summary.journey to the quests item, like stage1 (F-ROUTE-001 OD-11)', () => {
+    expect(TEACHER_VISIBLE_SUMMARY_ITEMS.journey).toBe('quests');
+    expect(TEACHER_VISIBLE_SUMMARY_ITEMS.journey).toBe(TEACHER_VISIBLE_SUMMARY_ITEMS.stage1);
   });
 
   it('gives every allow-listed key a consent item, and nothing else', () => {

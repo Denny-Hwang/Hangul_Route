@@ -122,6 +122,7 @@ export const TEACHER_VISIBLE_SUMMARY_KEYS = [
   'needsPractice',
   'placement',
   'planProgress',
+  'journey',
 ] as const;
 export type TeacherVisibleSummaryKey = Extract<(typeof TEACHER_VISIBLE_SUMMARY_KEYS)[number], keyof ProgressSummary>;
 
@@ -145,6 +146,13 @@ export const TEACHER_VISIBLE_SUMMARY_ITEMS: Readonly<Record<TeacherVisibleSummar
   needsPractice: 'cards_letters',
   placement: 'level_check',
   planProgress: 'plan_progress',
+  /**
+   * Stage-level quest counts of My route, shown like `stage1` (F-ROUTE-001 OD-11).
+   * Its `known` count and `known` state come from the level check, which is the
+   * `level_check` item; they stay 0 while sync-store passes `route: null`. R-7a,
+   * which turns known pips on, re-checks this mapping or the `quests` wording.
+   */
+  journey: 'quests',
 };
 
 /** Roster fields outside `summary` (display name per the class setting, avatar, level label, dates). */

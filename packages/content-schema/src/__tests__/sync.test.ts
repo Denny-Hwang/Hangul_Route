@@ -3,6 +3,7 @@ import {
   BACKUP_FORMAT,
   BACKUP_VERSION,
   BackupFileSchema,
+  JourneySummarySchema,
   LearnerRegisterSchema,
   ProgressSummarySchema,
   SnapshotPutSchema,
@@ -121,6 +122,72 @@ describe('sync schemas (F-SYNC-001)', () => {
     expect(BackupFileSchema.parse(file).profile.displayName).toBe('Suni');
     expect(BackupFileSchema.safeParse({ ...file, version: 2 }).success).toBe(false);
     expect(BackupFileSchema.safeParse({ ...file, format: 'other' }).success).toBe(false);
+  });
+});
+
+describe('summary.journey (F-ROUTE-001 section 3.12, R-8)', () => {
+  const journey = {
+    v: 1 as const,
+    here: 'stage1',
+    stages: [
+      { stage: 'stage1', state: 'open', done: 4, known: 0, total: 8 },
+      { stage: 'stage2', state: 'open', done: 0, known: 0, total: 2 },
+      { stage: 'stage3', state: 'later', done: 0, known: 0, total: 0 },
+    ],
+  };
+
+  it('parses a journey and keeps it on the summary, schemaVersion staying 1', () => {
+    expect(JourneySummarySchema.parse(journey)).toEqual(journey);
+    expect(ProgressSummarySchema.parse({ ...summary, journey })).toEqual({ ...summary, journey });
+    expect(JourneySummarySchema.parse({ ...journey, here: null }).here).toBeNull();
+  });
+
+  it('an old summary without journey still parses, with no journey key', () => {
+    const parsed = ProgressSummarySchema.parse(summary);
+    expect(parsed).toEqual(summary);
+    expect(parsed.journey).toBeUndefined();
+  });
+
+  it('stage and state are plain strings on the wire (validated in the web strip)', () => {
+    const later = { ...journey, here: 'stage9', stages: [{ stage: 'stage9', state: 'someday', done: 0, known: 0, total: 3 }] };
+    expect(JourneySummarySchema.parse(later)).toEqual(later);
+  });
+
+  it('a malformed journey is dropped, never fatal to the whole summary (assumption g)', () => {
+    const bad = [
+      'nope',
+      null,
+      { ...journey, v: 2 },
+      { ...journey, here: 3 },
+      { ...journey, stages: 'stage1' },
+      { ...journey, stages: [{ stage: 'stage1', state: 'open', done: -1, known: 0, total: 8 }] },
+      { ...journey, stages: [{ stage: 'stage1', state: 'open', done: 1.5, known: 0, total: 8 }] },
+      { ...journey, stages: [{ stage: 'stage1', state: 'open', done: 1, total: 8 }] },
+      // Bounded: a tampered client cannot grow every roster (16 stages, 32-character strings, counts up to 10000).
+      { ...journey, stages: Array.from({ length: 17 }, () => journey.stages[0]) },
+      { ...journey, here: 's'.repeat(33) },
+      { ...journey, stages: [{ stage: 's'.repeat(33), state: 'open', done: 1, known: 0, total: 8 }] },
+      { ...journey, stages: [{ stage: 'stage1', state: 'o'.repeat(33), done: 1, known: 0, total: 8 }] },
+      { ...journey, stages: [{ stage: 'stage1', state: 'open', done: 10001, known: 0, total: 8 }] },
+    ];
+    for (const value of bad) {
+      expect(JourneySummarySchema.safeParse(value).success).toBe(false);
+      const parsed = ProgressSummarySchema.safeParse({ ...summary, journey: value });
+      expect(parsed.success).toBe(true);
+      expect(parsed.success && parsed.data.journey).toBeUndefined();
+    }
+  });
+
+  it('strips unknown keys inside the journey and its stages', () => {
+    const parsed = JourneySummarySchema.parse({ ...journey, extra: 1, stages: [{ ...journey.stages[0], questIds: ['quest:x'] }] });
+    expect(parsed).toEqual({ ...journey, stages: [journey.stages[0]] });
+  });
+
+  it('the PUT body keeps a valid journey and drops a malformed one', () => {
+    const body = { baseRev: 0, snapshot, schemaVer: 1, contentVer: '2026.09' };
+    expect(SnapshotPutSchema.parse({ ...body, summary: { ...summary, journey } }).summary.journey).toEqual(journey);
+    const dropped = SnapshotPutSchema.safeParse({ ...body, summary: { ...summary, journey: { v: 1 } } });
+    expect(dropped.success && dropped.data.summary.journey).toBeUndefined();
   });
 });
 

@@ -25,6 +25,16 @@ function pick(source: Plain, keys: readonly string[]): Plain {
   return out;
 }
 
+type Journey = NonNullable<ProgressSummary['journey']>;
+const JOURNEY_KEYS = ['v', 'here', 'stages'] as const satisfies readonly (keyof Journey)[];
+const JOURNEY_STAGE_KEYS = ['stage', 'state', 'done', 'known', 'total'] as const satisfies readonly (keyof Journey['stages'][number])[];
+
+/** My route stage counts (F-ROUTE-001 R-8, OD-11), projected to the known keys at every level. */
+function journeyOf(value: Plain): Plain {
+  const stages = Array.isArray(value.stages) ? value.stages.filter(isPlain).map((s) => pick(s, JOURNEY_STAGE_KEYS)) : [];
+  return { ...pick(value, JOURNEY_KEYS), stages };
+}
+
 export function teacherVisibleSummary(summary: unknown, planIds: ReadonlySet<string>): TeacherVisibleSummary | null {
   if (!isPlain(summary)) return null;
   const out: Plain = {};
@@ -34,6 +44,8 @@ export function teacherVisibleSummary(summary: unknown, planIds: ReadonlySet<str
       out.planProgress = isPlain(value) ? pick(value, Object.keys(value).filter((id) => planIds.has(id))) : {};
     } else if (key === 'stage1') {
       if (isPlain(value)) out.stage1 = pick(value, STAGE1_KEYS);
+    } else if (key === 'journey') {
+      if (isPlain(value)) out.journey = journeyOf(value);
     } else if (value !== undefined) {
       out[key] = value;
     }

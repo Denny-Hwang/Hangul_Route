@@ -7,7 +7,7 @@ Status: ready
 **Scope**: `packages/content-schema` (check schema, `story-check` kind, telemetry names) · `apps/mobile` (`logic/story/`, `screens/minigames/`, `screens/results/`, `store/progress-store`, `logic/minigame-config`) · `packages/design-system` (`ChoiceCard`) · `scripts/validate-content.mjs`
 **Owner**: solo dev
 **Rollout**: Story mode phase 1, after F-STORY-001 (schema) and F-STORY-002 (reader). PR order in §6.
-**Wireframes**: `design/wireframes/story/check.md` · `story/sequence.md` · `story/word-recap.md` · `results/celebrate-story.md` — drafted in one file, `wireframes/story-checks-sequence.md` (added by the 2026-10-10 review; the original draft named a file that did not exist), promoted by PR 3.0
+**Wireframes**: `design/wireframes/story/check.md` · `story/sequence.md` · `story/word-recap.md` · `results/celebrate-story.md` — promoted by PR 3.0 from the one-file draft `design/wireframes/story/check.md` (panel letters kept: E in `word-recap.md`, F-G in `sequence.md`, H in `results/celebrate-story.md`) · briefs `design/brief/screens/22-story-check.md`, `12-minigame-story-sequence.md` (revised), `components/choice-card.md`
 
 Parent / siblings: F-STORY-001 (story schema, content pipeline) · F-STORY-002 (reader, `StoryScene`) · F-STORY-004 (shelf, Home card, bookmarks) · F-STORY-005 (grid) · F-STORY-006 (episode-completion cards) · F-AUDIO-004 (story audio) · F-I18N-001 / F-CNT-002 (locales, romanization) · F-001 §3.2 (first-try scoring) · F-MOTION-003 (card reveal) · audit PR-10 (first-try, UX-02) and PR-14 (card reveal, UX-03)
 

@@ -11,6 +11,15 @@ const placement = {
   overridden: false,
 } as unknown as NonNullable<ProgressSummary['placement']>;
 
+const journey: NonNullable<ProgressSummary['journey']> = {
+  v: 1,
+  here: 'stage1',
+  stages: [
+    { stage: 'stage1', state: 'open', done: 4, known: 2, total: 8 },
+    { stage: 'stage3', state: 'later', done: 0, known: 0, total: 0 },
+  ],
+};
+
 const full: ProgressSummary = {
   schemaVersion: 1,
   lastActiveAt: '2026-10-10T00:00:00.000Z',
@@ -27,6 +36,7 @@ const full: ProgressSummary = {
     'plan:own-2': { done: 2, total: 2, notReady: 1 },
     'plan:other-class': { done: 4, total: 9, notReady: 0 },
   },
+  journey,
 };
 
 const own = new Set(['plan:own-1', 'plan:own-2', 'plan:own-unstarted']);
@@ -45,6 +55,7 @@ describe('teacherVisibleSummary (F-SPACE-002 T-1a, section 4.11)', () => {
       needsPractice: ['ㅂ'],
       placement,
       planProgress: { 'plan:own-1': { done: 1, total: 3, notReady: 0 }, 'plan:own-2': { done: 2, total: 2, notReady: 1 } },
+      journey,
     });
     expect(JSON.stringify(out)).not.toContain('tricky');
     expect(JSON.stringify(out)).not.toContain('plan:other-class');
@@ -69,6 +80,24 @@ describe('teacherVisibleSummary (F-SPACE-002 T-1a, section 4.11)', () => {
     expect(teacherVisibleSummary({ lastActiveAt: 't' }, own)).toEqual({ lastActiveAt: 't', planProgress: {} });
   });
 
+  it('copies only the known journey keys, never what a newer writer left under it (F-ROUTE-001 R-8)', () => {
+    const stored = {
+      ...full,
+      journey: { ...journey, learnerName: 'secret-name', stages: [{ ...journey.stages[0], questIds: ['secret-quest'] }, 'secret-junk'] },
+    };
+    const out = teacherVisibleSummary(stored, own);
+    expect(out?.journey).toEqual({ v: 1, here: 'stage1', stages: [journey.stages[0]] });
+    expect(JSON.stringify(out)).not.toContain('secret');
+  });
+
+  it('leaves out a journey that is not an object, and reads malformed stages as none', () => {
+    const missing = teacherVisibleSummary({ ...full, journey: 'oops' }, own);
+    expect(missing && 'journey' in missing).toBe(false);
+    expect(teacherVisibleSummary({ ...full, journey: { v: 1, here: null, stages: 'oops' } }, own)?.journey).toEqual({ v: 1, here: null, stages: [] });
+    const legacy = teacherVisibleSummary({ lastActiveAt: 't' }, own);
+    expect(legacy && 'journey' in legacy).toBe(false);
+  });
+
   it('answers null when there is no summary object', () => {
     expect(teacherVisibleSummary(null, own)).toBeNull();
     expect(teacherVisibleSummary(undefined, own)).toBeNull();
@@ -91,6 +120,10 @@ describe('rosterSummary (F-PLAN-002 section 3.10: the self-route reaches the fam
       expect(out).toEqual(teacherVisibleSummary(withRoute, own));
       expect(out && 'selfRoute' in out).toBe(false);
     }
+  });
+
+  it('gives the journey to a class, a school and a family alike (F-ROUTE-001 OD-11)', () => {
+    for (const kind of ['class', 'school', 'family'] as const) expect(rosterSummary(full, own, kind)?.journey).toEqual(journey);
   });
 
   it('copies only the known self-route keys, never what a newer writer left under it', () => {

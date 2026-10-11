@@ -111,5 +111,12 @@ export const AssessmentResponseSchema = z.object({
   /** The sound guide was revealed before answering. */
   assisted: z.boolean().default(false),
   ms: z.number().int().nonnegative().max(600_000),
+  /**
+   * Optional, additive (F-PLC-001 section 3.11): the heard prompt could not
+   * play, so the question was skipped without the learner doing anything. It
+   * is kept out of scoring (not asked, not wrong, no symbol cut back). Old
+   * readers drop the key; absent means a normal response.
+   */
+  noSound: z.literal(true).optional(),
 });
 export type AssessmentResponse = z.infer<typeof AssessmentResponseSchema>;

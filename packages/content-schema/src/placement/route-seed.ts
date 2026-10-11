@@ -84,7 +84,8 @@ export const priorityTokensOf = (
     if (!tokens.includes(token)) tokens.push(token);
   };
   symbolsOf((r) => r.outcome === 'wrong').forEach(add);
-  symbolsOf((r) => r.outcome === 'skipped').forEach(add);
+  // A prompt that could not play is no evidence of a gap (section 3.11).
+  symbolsOf((r) => r.outcome === 'skipped' && r.noSound !== true).forEach(add);
   symbolsOf((r) => r.assisted).forEach(add);
 
   const rows = (gate: GateResult['gate']): GateResult[] => gates.filter((g) => g.gate === gate && g.form === 'decode');

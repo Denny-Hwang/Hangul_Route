@@ -1,5 +1,6 @@
 import type { Jamo } from '@hangul-route/content-schema';
 import { jamoAll, jamoBatchim, jamoConsonants, jamoVowels } from '../content/jamo';
+import { shuffle } from './shuffle';
 
 export interface MatchSoundRound {
   promptJamo: Jamo;
@@ -11,17 +12,6 @@ export interface BuildLetterRound {
   romanization: string;
   componentJamoIds: string[];
   tileJamoIds: string[];
-}
-
-function shuffle<T>(arr: readonly T[], seed?: number): T[] {
-  const a = [...arr];
-  let s = seed ?? Date.now();
-  for (let i = a.length - 1; i > 0; i--) {
-    s = (s * 9301 + 49297) % 233280;
-    const j = Math.floor((s / 233280) * (i + 1));
-    [a[i]!, a[j]!] = [a[j]!, a[i]!];
-  }
-  return a;
 }
 
 /**
