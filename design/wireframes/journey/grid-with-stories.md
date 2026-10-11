@@ -48,15 +48,15 @@ Then: they can see which cells have stories, open any story without finishing a 
 │                                  │      lib = stories-only cell (library icon, no lesson there)
 │     "Heritage stories are open   │
 │      in the cells with books."   │   <- one muted caption, shown when the row has a stories-only cell
-│ (3) Sentences            [Soon]  │
+│ (3) Sentences    [Coming later]  │
 │     [lib #2] [lib #1] [lock] [lock] [lock]
-│ (4) Dialogue             [Soon]  │
+│ (4) Dialogue     [Coming later]  │
 │     [lib #1] [lock] [H ] [lock] [lock]
-│ (5) Stories              [Soon]  │
+│ (5) Stories      [Coming later]  │
 │     [lock] [lock] [lib #1] [lock] [lock]
-│ (6) Real-use             [Soon]  │
+│ (6) Real-use     [Coming later]  │
 │     [lib #1] [lock] [lock] [lock] [lock]
-│ (7) Self-expression      [Soon]  │
+│ (7) Self-expression [Coming later]  │
 │     [lock] [lock] [lock] [lock] [lock]
 │                                  │
 │ ┌──────────────────────────────┐ │
@@ -69,7 +69,8 @@ Then: they can see which cells have stories, open any story without finishing a 
 Cell looks (5): **lesson** (theme initial, stage-tinted border; success tint when complete; `#n` mark when stories exist) · **lesson, complete** · **stories-only** (`library` icon + `#n`, subtle border, paper fill, tappable) · **book** (Stage 5, future: a grid episode of `format: story`; drawn like a lesson cell) · **placeholder** (lock, disabled, "coming soon").
 
 - `#n` is a 20 dp mark in the cell's top-right corner, not a separate target (cells are ~54 dp wide at 320 dp). It reads "5+" from 6 stories. It is inside the cell's accessibility label, not a second element.
-- The stage pill (Open / Taste / Soon) still reflects **lesson/book cells only**; stories-only cells do not change it. No cell is ever routed through the grown-up PIN for being a story cell.
+- The stage pill (Open / Taste / Coming later) still reflects **lesson/book cells only**; stories-only cells do not change it. No cell is ever routed through the grown-up PIN for being a story cell.
+- The stage pill always shows the availability word, never a commerce word: no "Premium" pill on a stage outside the learner's plan (F-ROUTE-001 R-J, OD-8). "Soon" became "Coming later", the My route word.
 - 15 of 35 cells carry stories in the launch data (7 lesson cells + 8 stories-only cells); the other 20 stay locked placeholders.
 
 ## Interaction points (A)
@@ -290,6 +291,6 @@ Earn hints by rule: episode → "Finish the episode: …" · story → "Finish t
 
 - **Tiger rarity**: keep `legendary` as authored (default) or demote the welcome card to `rare` so "legendary" stays a milestone? Wording in F already says it is a gift.
 - **Count mark size**: 20 dp inside a ~54 dp cell at 320 dp; confirm it is legible at 200 % text or move it to the cell label only on narrow widths.
-- **Stage header pill** on a stage whose only open cells are stories-only still reads "Soon"; follow audit UX-12 / F-STORY-004 §3.9 for the pill rule.
+- **Stage header pill** on a stage whose only open cells are stories-only still reads "Coming later"; follow audit UX-12 / F-STORY-004 §3.9 for the pill rule.
 - **Catch-up card placement** under the greeting vs below the three mission cards; default: under the greeting, because it is a one-time good-news message.
 - **`N/M` pill removal** (F-STORY-006 decision 3): restore as a fill-only meter if preferred.

@@ -43,16 +43,25 @@ describe('learner.home (English wording as shipped)', () => {
 });
 
 describe('learner.journey', () => {
-  it('keeps the heading, intro, notes and the premium pill', () => {
+  it('keeps the heading, intro and notes', () => {
     const j = m.learner.journey;
     expect(j.title).toBe('Heritage Journey');
     expect(j.intro).toBe('7 stages × 5 themes. Draw your own route.');
-    expect(j.premium.pill).toBe('Premium');
     expect(j.tasteNote).toBe('A taste of this stage is open now. More episodes are coming.');
     expect(j.how.title).toBe('How the journey works');
     expect(j.how.body).toBe(
       'Each cell is one episode. Finish every quest in a cell to complete it and earn its Heritage cards. More stages open as the journey grows.',
     );
+  });
+});
+
+describe('learner.journey has no commerce word (F-ROUTE-001 R-J, OD-8)', () => {
+  it('drops the Premium pill: a stage row shows its availability word instead', () => {
+    expect(Object.keys(m.learner.journey)).not.toContain('premium');
+    for (const locale of ['en', 'es', 'ko'] as const) {
+      const journey = getMessages(locale).learner.journey;
+      expect(JSON.stringify(journey)).not.toMatch(/premium|price|upgrade/i);
+    }
   });
 });
 

@@ -141,9 +141,11 @@ export const learner = {
   journey: {
     title: 'Heritage Journey',
     intro: '7 stages × 5 themes. Draw your own route.',
-    premium: { pill: 'Premium' },
-    /** Keyed by `StageAvailability`. */
-    availability: { open: { pill: 'Open' }, taste: { pill: 'Taste' }, soon: { pill: 'Soon' } },
+    /**
+     * Keyed by `StageAvailability`. Every stage row shows its availability word,
+     * never a commerce word; "Coming later" is the My route word (F-ROUTE-001 R-J, OD-8).
+     */
+    availability: { open: { pill: 'Open' }, taste: { pill: 'Taste' }, soon: { pill: 'Coming later' } },
     tasteNote: 'A taste of this stage is open now. More episodes are coming.',
     /** Landmark names of the two panes on a wide window (F-LAYOUT-001 §3.13). */
     panes: { master: 'Journey map', detail: 'Episode details' },

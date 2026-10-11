@@ -71,7 +71,7 @@ describe('stageAvailability', () => {
     const m = getMessages('en').learner.journey.availability;
     expect(stagePillLabel('open', m)).toBe('Open');
     expect(stagePillLabel('taste', m)).toBe('Taste');
-    expect(stagePillLabel('soon', m)).toBe('Soon');
+    expect(stagePillLabel('soon', m)).toBe('Coming later');
     expect(stagePillLabel('soon', { ...m, soon: { pill: 'Pronto' } })).toBe('Pronto');
   });
 });

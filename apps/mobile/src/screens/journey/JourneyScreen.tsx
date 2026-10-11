@@ -147,7 +147,7 @@ export function JourneyScreen(): React.ReactElement {
               </View>
               <Pill
                 tone={availability === 'open' ? 'success' : availability === 'taste' ? 'primary' : 'neutral'}
-                label={entitledStage ? stagePillLabel(availability, m.availability) : m.premium.pill}
+                label={stagePillLabel(availability, m.availability)}
                 size="sm"
               />
             </Pressable>
