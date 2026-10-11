@@ -45,7 +45,8 @@ function formatReadyAt(readyAt: number): string {
 }
 
 /**
- * Forgot PIN — F-LEARN-001 §3.5, L9. Two offline ways to a new PIN, both keep
+ * Forgot PIN — F-LEARN-001 §3.5, L9. Wireframe: design/wireframes/onboarding/all-ages-onboarding.md
+ * boxes F and G (and profiles/pin-entry.md). Two offline ways to a new PIN, both keep
  * the learners, cards and progress: re-enter a Rescue Code this device already
  * stores, or wait 24 hours. Adult tone, nothing here teaches a child to try.
  */
