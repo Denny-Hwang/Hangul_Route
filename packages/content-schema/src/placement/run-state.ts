@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { AssessmentQuestionSchema, AssessmentResponseSchema } from '../assessment/question';
 import { GateResultSchema, PlacementFormSchema, PlacementGateSchema, StopReasonSchema } from '../schemas/placement';
+import { PLACEMENT_MODES } from './rungs';
 
 /**
  * The persisted run (`placement-run:<profileId>`, F-PLC-001 section 3.5): a plain
@@ -9,7 +10,9 @@ import { GateResultSchema, PlacementFormSchema, PlacementGateSchema, StopReasonS
  * and needs neither the bank nor a picture resolver to continue.
  */
 export const PlacementRunConfigSchema = z.object({
-  length: z.enum(['quick', 'full']),
+  mode: z.enum(PLACEMENT_MODES),
+  /** A *Pictures first* learner: decoding items start from sound and take one tap, in every mode. */
+  listenFirst: z.boolean(),
   revealMode: z.enum(['tap', 'always']),
   audio: z.boolean(),
   visual: z.boolean(),
@@ -37,7 +40,8 @@ export const PlacementRunStateSchema = z.object({
   lastTouchMs: z.number(),
   /** When the open question appeared (for `ms`). */
   shownAtMs: z.number(),
-  pause: z.enum(['not-sure', 'idle']).nullable(),
+  /** not-sure: three in a row (not in Short); idle: 45 s untouched; rest: Deep's halfway card; exit: the exit sheet is open. */
+  pause: z.enum(['not-sure', 'idle', 'rest', 'exit']).nullable(),
   pausedAtMs: z.number().nullable(),
   /** The backstop ran out: the open question may still be answered, then the run ends. */
   timeUp: z.boolean(),

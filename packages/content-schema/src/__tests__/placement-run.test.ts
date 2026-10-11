@@ -15,9 +15,11 @@ import {
 } from '..';
 import { FULL_ROUTE, STAGE1_15, ids, q, qs } from './fixtures/stage1-15';
 import { makeBank, only, template } from './fixtures/placement-bank';
+import { PlacementResultSchemaV1 } from './fixtures/placement-result-schema-v1';
+import { modeOf, levelOf } from '..';
 
 const config = (over: Partial<PlacementConfig> = {}): PlacementConfig => ({
-  length: 'full',
+  mode: 'standard',
   revealMode: 'tap',
   audio: true,
   visual: true,
@@ -156,8 +158,9 @@ describe('the draw', () => {
     const bank = makeBank();
     const tagsOf = (id: string) => bank.templates.find((t) => t.id === id)!.question.tags;
     const group = (rung: string) => asked.filter((id) => rungOf(id) === rung);
-    expect(asked).toHaveLength(21);
-    for (const rung of ['recog', 'sound-basic', 'syl-cv', 'sound-rest', 'syl-cvc', 'vocab:read']) expect(group(rung)).toHaveLength(3);
+    expect(asked).toHaveLength(24);
+    for (const rung of ['recog', 'sound-basic', 'syl-cv', 'sound-rest', 'syl-cvc']) expect(group(rung)).toHaveLength(3);
+    expect(group('vocab:read')).toHaveLength(6); // Standard confirms a vocab read pass
     const pairs = group('recog').map((id) => tagsOf(id).filter((t) => t.startsWith('sym:')).sort().join('|'));
     expect(new Set(pairs).size).toBe(3);
     const syms = group('sound-basic').map((id) => tagsOf(id)[0]);
@@ -278,9 +281,9 @@ describe('a run end to end (the section 3.14 behaviours)', () => {
     ]);
   });
 
-  it('answers every rung through syl-cvc and reads vocabulary: 21 questions at most, stage2 band 0, all 15 placed out, none completed', () => {
+  it('answers every rung through syl-cvc and reads vocabulary twice: 24 questions at most, stage2 band 0, all 15 placed out, none completed', () => {
     const { state, asked } = play(run(), { 'sentence:read': 'wrong' });
-    expect(asked.length).toBeLessThanOrEqual(21);
+    expect(asked.length).toBeLessThanOrEqual(24);
     const r = finishRun(state, context());
     expect(r.level).toEqual({ stage: 'stage2', band: 0 });
     expect(r.placedOutQuestIds).toEqual(ids(STAGE1_15.quests));
@@ -299,9 +302,9 @@ describe('a run end to end (the section 3.14 behaviours)', () => {
     expect(r.placedOutQuestIds).toHaveLength(15);
   });
 
-  it('a learner who passes everything lands at stage3 (beyond the content), 21 questions, cap', () => {
+  it('a learner who passes everything lands at stage3 (beyond the content), 24 questions, cap', () => {
     const { state, asked } = play(run());
-    expect(asked).toHaveLength(21);
+    expect(asked).toHaveLength(24);
     const r = finishRun(state, context({ catalog: FULL_ROUTE }));
     expect(r.level).toEqual({ stage: 'stage3', band: 0 });
     expect(r.beyondContent).toBe(true);
@@ -317,19 +320,191 @@ describe('a run end to end (the section 3.14 behaviours)', () => {
     expect(r.placedOutQuestIds).toContain('quest:stage2-nature-q1');
   });
 
-  it('quick stops after syl-cv: 15 questions, band 1, oral rungs measured, stop reason cap', () => {
-    const { state, asked } = play(run({ length: 'quick' }));
-    expect(asked).toHaveLength(15);
+  it('Short stops after syl-cv: 9 questions (sounds, words, syllables), band 1, stored as quick + short, stop reason complete', () => {
+    const { state, asked } = play(run({ mode: 'short' }));
+    expect(asked).toHaveLength(9);
+    expect(asked.map(rungOf)).toEqual([
+      ...Array(3).fill('sound-basic'),
+      ...Array(3).fill('vocab:oral'),
+      ...Array(3).fill('syl-cv'),
+    ]);
     const r = finishRun(state, context());
     expect(r.level).toEqual({ stage: 'stage1', band: 1 });
     expect(r.length).toBe('quick');
-    expect(r.stopReason).toBe('cap');
+    expect(r.mode).toBe('short');
+    expect(r.stopReason).toBe('complete');
+    expect(r.oralStage).toBe('stage2');
     expect(r.placedOutQuestIds).toEqual(qs(1, 2, 3));
     expect(r.startQuestId).toBe(q(4));
   });
 
+  it('Short needs all three CV syllables: 2 of 3 is a stored fail (band 0) that adds no blending token', () => {
+    let state = run({ mode: 'short' });
+    let t = 1_000;
+    let missed = false;
+    for (let guard = 0; guard < 20 && !isFinished(state); guard += 1) {
+      const question = currentQuestion(state)!;
+      const verdict: Verdict = rungOf(question.id) === 'syl-cv' && !missed ? 'skip' : 'correct';
+      if (verdict === 'skip') missed = true;
+      t += 1_000;
+      state = apply(state, eventFor(question, verdict), t);
+    }
+    const r = finishRun(state, context());
+    expect(r.gates.find((g) => g.gate === 'syl-cv')).toMatchObject({ correct: 2, result: 'fail' });
+    expect(r.level).toEqual({ stage: 'stage1', band: 0 });
+    expect(r.priorityTokens).not.toContain('skill:blending');
+  });
+
+  it('Short has no "three not sure" sheet', () => {
+    let s = run({ mode: 'short' });
+    for (let i = 0; i < 3; i += 1) s = apply(s, { type: 'notSure' }, 2_000 + i * 1_000);
+    expect(s.pause).toBeNull();
+    expect(isFinished(s)).toBe(false);
+  });
+
+  it('Short never draws Latin sound chips or tile items; neither does any mode for a listen-first learner', () => {
+    const bank = makeBank();
+    const formatOf = (id: string) => bank.templates.find((t) => t.id === id)!.question.format;
+    for (let seed = 1; seed <= 30; seed += 1) {
+      const runs = [
+        play(run({ seed, mode: 'short' }, bank)).asked,
+        play(run({ seed, mode: 'standard', listenFirst: true }, bank)).asked,
+        play(run({ seed, mode: 'deep', listenFirst: true }, bank)).asked,
+      ];
+      for (const asked of runs) {
+        for (const id of asked) expect(['see-pick-sound', 'build-syllable']).not.toContain(formatOf(id));
+      }
+    }
+    expect(run({ mode: 'standard', listenFirst: true }).config.listenFirst).toBe(true);
+    expect(run({ mode: 'short' }).config.listenFirst).toBe(true);
+    expect(run().config.listenFirst).toBe(false);
+  });
+
+  it('Short with the sound guide shown asks shapes and words: 6 questions, band 0', () => {
+    const { state, asked } = play(run({ mode: 'short', revealMode: 'always' }));
+    expect(asked.map(rungOf)).toEqual([...Array(3).fill('vocab:oral'), ...Array(3).fill('recog')]);
+    expect(finishRun(state, context()).level).toEqual({ stage: 'stage1', band: 0 });
+  });
+
+  it('Short with no sound asks nothing (the app never starts it; a zero-question result is never stored)', () => {
+    for (const visual of [true, false]) {
+      const s = run({ mode: 'short', audio: false, visual });
+      expect(isFinished(s)).toBe(true);
+      const r = finishRun(s, context());
+      expect(r.responses).toEqual([]);
+      expect(r.stopReason).toBe('complete');
+    }
+  });
+
+  it('a listen-first learner with no sound has no decoding item in any mode (the app asks for sound first)', () => {
+    const { asked } = play(run({ mode: 'standard', listenFirst: true, audio: false }));
+    expect(asked.map(rungOf)).toEqual(Array(3).fill('recog'));
+  });
+
+  it('Standard with the sound guide shown and no screen reader is 9; with a screen reader too, 6', () => {
+    expect(play(run({ revealMode: 'always' })).asked).toHaveLength(9);
+    expect(play(run({ revealMode: 'always', visual: false })).asked).toHaveLength(6);
+  });
+
+  it('leaves out templates that share a tag with the warm-up (avoidTags)', () => {
+    for (let seed = 1; seed <= 30; seed += 1) {
+      const asked = play(run({ seed, mode: 'short', avoidTags: ['word:w0', 'word:w1'] }), FAIL_FROM('sound-basic')).asked;
+      expect(asked).not.toContain('pitem:vocab-hear-0');
+      expect(asked).not.toContain('pitem:vocab-hear-1');
+    }
+  });
+
+  it('Deep stores one row per draw and the result parses; Deep is stored as full + deep', () => {
+    const { state, asked } = play(run({ mode: 'deep' }));
+    expect(asked).toHaveLength(42);
+    const r = finishRun(state, context({ catalog: FULL_ROUTE }));
+    expect(PlacementResultSchema.parse(r)).toEqual(r);
+    expect(r.length).toBe('full');
+    expect(r.mode).toBe('deep');
+    expect(r.gates.filter((g) => g.gate === 'syl-cv')).toHaveLength(2);
+    expect(r.level).toEqual({ stage: 'stage3', band: 0 });
+    expect(r.oralStage).toBe('stage3');
+    expect(r.stopReason).toBe('cap');
+  });
+
+  it('Deep\'s confirming draw shares no template and no spread key with the first draw', () => {
+    const bank = makeBank();
+    const tmpl = (id: string) => bank.templates.find((t) => t.id === id)!;
+    const key = (id: string) => {
+      const tags = tmpl(id).question.tags;
+      return tags.find((t) => t.startsWith('syl:') || t.startsWith('word:')) ?? tags.filter((t) => t.startsWith('sym:')).sort().join('|');
+    };
+    for (let seed = 1; seed <= 40; seed += 1) {
+      const s = run({ seed, mode: 'deep' }, bank);
+      for (const rung of ['sound-basic:decode', 'syl-cv:decode', 'sound-rest:decode', 'syl-cvc:decode', 'vocab:read']) {
+        const one = (rung === 'sound-basic:decode' ? s.current!.questions : s.draws[rung]!).map((x) => x.id);
+        const two = s.draws[`${rung}:2`]!.map((x) => x.id);
+        expect(two.some((id) => one.includes(id))).toBe(false);
+        expect(two.some((id) => one.map(key).includes(key(id)))).toBe(false);
+      }
+    }
+  });
+
+  it('Deep\'s confirming syllable draw holds one tile item when one is eligible', () => {
+    const bank = makeBank();
+    for (let seed = 1; seed <= 20; seed += 1) {
+      const s = run({ seed, mode: 'deep' }, bank);
+      const formats = s.draws['syl-cv:decode:2']!.map((x) => x.format);
+      expect(formats.filter((f) => f === 'build-syllable')).toHaveLength(1);
+    }
+  });
+
+  it('a second draw falls back on templates with a used spread key, and is unavailable only when too few remain', () => {
+    const bank = makeBank();
+    // four sound-basic templates over two symbols: the second draw must reuse a symbol
+    const thin = only(bank, (t) => t.gate !== 'sound-basic' || ['pitem:sound-basic-hear-0', 'pitem:sound-basic-see-0', 'pitem:sound-basic-hear-1', 'pitem:sound-basic-see-1', 'pitem:sound-basic-hear-2', 'pitem:sound-basic-see-2'].includes(t.id));
+    const s = run({ mode: 'deep' }, thin);
+    expect(s.draws['sound-basic:decode:2']).toHaveLength(3);
+    const thinner = only(bank, (t) => t.gate !== 'sound-basic' || ['pitem:sound-basic-hear-0', 'pitem:sound-basic-see-0', 'pitem:sound-basic-hear-1', 'pitem:sound-basic-see-1'].includes(t.id));
+    expect(run({ mode: 'deep' }, thinner).draws['sound-basic:decode:2']).toBeUndefined();
+  });
+
+  it('Deep offers one rest card after 18 questions; keep going carries on, quit ends with quit', () => {
+    let s = run({ mode: 'deep' });
+    let t = 1_000;
+    let rests = 0;
+    for (let guard = 0; guard < 60 && !isFinished(s); guard += 1) {
+      if (s.pause === 'rest') {
+        rests += 1;
+        expect(s.responses).toHaveLength(18);
+        s = apply(s, { type: 'keepGoing' }, t);
+        continue;
+      }
+      t += 1_000;
+      s = apply(s, eventFor(currentQuestion(s)!, 'correct'), t);
+    }
+    expect(rests).toBe(1);
+    let q18 = run({ mode: 'deep' });
+    for (let i = 0; i < 18; i += 1) q18 = apply(q18, eventFor(currentQuestion(q18)!, 'correct'), 2_000 + i);
+    expect(q18.pause).toBe('rest');
+    expect(finishRun(apply(q18, { type: 'quit', by: 'learner' }, 9_000), context()).stopReason).toBe('quit');
+  });
+
+  it('Deep: quitting inside a confirming draw keeps the first pass (the partial row is stopped, never a fail)', () => {
+    let s = run({ mode: 'deep' });
+    let t = 1_000;
+    // recog, sound-basic, syl-cv, then the sound-basic confirmation: answer one wrong and quit
+    for (let i = 0; i < 9; i += 1) s = apply(s, eventFor(currentQuestion(s)!, 'correct'), (t += 1_000));
+    s = apply(s, eventFor(currentQuestion(s)!, 'wrong'), (t += 1_000));
+    const r = finishRun(apply(s, { type: 'quit', by: 'learner' }, (t += 1_000)), context());
+    expect(r.gates.filter((g) => g.gate === 'sound-basic').map((g) => [g.result, g.reason])).toEqual([
+      ['pass', undefined],
+      ['not-run', 'stopped'],
+    ]);
+    expect(r.level).toEqual({ stage: 'stage1', band: 1 });
+    s = apply(s, eventFor(currentQuestion(s)!, 'wrong'), (t += 1_000));
+    const two = finishRun(apply(s, { type: 'quit', by: 'learner' }, (t += 1_000)), context());
+    expect(two.gates.filter((g) => g.gate === 'sound-basic').map((g) => g.result)).toEqual(['pass', 'fail']);
+    expect(two.level).toEqual({ stage: 'stage1', band: 0 });
+  });
+
   it('a wrong symbol cuts its quest back: the band is 1 but the start is the quest that teaches it', () => {
-    let state = run({ length: 'quick' });
+    let state = run({ mode: 'short' });
     let t = 1_000;
     let target: AssessmentQuestion | null = null;
     for (let guard = 0; guard < 40 && !isFinished(state); guard += 1) {
@@ -354,7 +529,7 @@ describe('a run end to end (the section 3.14 behaviours)', () => {
   });
 
   it('assisted answers count like "not sure": no pass, no covered symbols', () => {
-    const { state } = play(run({ length: 'quick' }), { 'sound-basic': 'assisted' });
+    const { state } = play(run({ mode: 'short' }), { 'sound-basic': 'assisted' });
     const r = finishRun(state, context());
     const gate = r.gates.find((g) => g.gate === 'sound-basic')!;
     expect(gate).toMatchObject({ correct: 0, assisted: 3, result: 'fail' });
@@ -397,20 +572,20 @@ describe('a run end to end (the section 3.14 behaviours)', () => {
     expect(r.strands['hangul-recognition']).toBe('not-tested');
   });
 
-  it('never exceeds 21 questions over many seeds and verdict mixes', () => {
+  it('never exceeds 24 questions over many seeds and verdict mixes', () => {
     for (let seed = 1; seed <= 60; seed += 1) {
       const verdicts: Record<string, Verdict> = {};
       for (const rung of ['recog', 'sound-basic', 'syl-cv', 'sound-rest', 'syl-cvc', 'vocab:read', 'sentence:read', 'vocab:oral', 'sentence:oral']) {
         verdicts[rung] = (seed >> (rung.length % 5)) % 3 === 0 ? 'wrong' : 'correct';
       }
       const { asked } = play(run({ seed }), verdicts);
-      expect(asked.length).toBeLessThanOrEqual(21);
+      expect(asked.length).toBeLessThanOrEqual(24);
       expect(asked.length).toBeGreaterThanOrEqual(12);
     }
   });
 
   it('uses today\'s completed quests: the start never lands on a completed quest', () => {
-    const { state } = play(run({ length: 'quick' }));
+    const { state } = play(run({ mode: 'short' }));
     const r = finishRun(state, context({ completedQuestIds: new Set(qs(4, 5)) }));
     expect(r.startQuestId).toBe(q(6));
   });
@@ -431,6 +606,40 @@ describe('a run end to end (the section 3.14 behaviours)', () => {
 
   it('refuses to finish a run that is still going', () => {
     expect(() => finishRun(run(), context())).toThrow(/not finished/);
+  });
+});
+
+describe('stored shape: old readers (the pre-mode schema) parse what the engine writes', () => {
+  const mixes = (seed: number): Record<string, Verdict> => {
+    const verdicts: Record<string, Verdict> = {};
+    for (const rung of ['recog', 'sound-basic', 'syl-cv', 'sound-rest', 'syl-cvc', 'vocab:read', 'sentence:read', 'vocab:oral', 'sentence:oral']) {
+      verdicts[rung] = (['correct', 'wrong', 'skip', 'correct'] as const)[(seed * 7 + rung.length) % 4] as Verdict;
+    }
+    return verdicts;
+  };
+
+  it('every Short and Standard result parses with the old schema; the old reader drops mode', () => {
+    for (let seed = 1; seed <= 80; seed += 1) {
+      for (const mode of ['short', 'standard'] as const) {
+        for (const verdicts of [mixes(seed), ALL_PASS]) {
+          const r = finishRun(play(run({ seed, mode }), verdicts).state, context({ catalog: FULL_ROUTE }));
+          const old = PlacementResultSchemaV1.safeParse(r);
+          expect(old.success).toBe(true);
+          expect(old.data).not.toHaveProperty('mode');
+          expect(modeOf(old.data!)).toBe(mode);
+        }
+      }
+    }
+  });
+
+  it('a long Deep result needs the relaxed bounds; with mode stripped it reads as Standard and its rows still score', () => {
+    const r = finishRun(play(run({ mode: 'deep' })).state, context({ catalog: FULL_ROUTE }));
+    expect(PlacementResultSchemaV1.safeParse(r).success).toBe(false);
+    const { mode: _m, ...stripped } = r;
+    expect(modeOf(stripped)).toBe('standard');
+    expect(levelOf(stripped.gates)).toEqual(r.level);
+    const shortDeep = finishRun(play(run({ mode: 'deep' }), FAIL_FROM('sound-basic')).state, context());
+    expect(PlacementResultSchemaV1.safeParse(shortDeep).success).toBe(true);
   });
 });
 
@@ -625,20 +834,45 @@ describe('pauses', () => {
 describe('the backstop clock (D3)', () => {
   const answerCorrect = (s: PlacementRunState, t: number) => apply(s, eventFor(currentQuestion(s)!, 'correct'), t);
 
-  it('starts when the run starts: 6 minutes full, 4 minutes quick', () => {
-    expect(run({}, makeBank(), 1_000).deadlineMs).toBe(1_000 + 360_000);
-    expect(run({ length: 'quick' }, makeBank(), 1_000).deadlineMs).toBe(1_000 + 240_000);
+  it('starts when the run starts: 10 minutes Standard, 20 minutes Deep, none for Short', () => {
+    expect(run({}, makeBank(), 1_000).deadlineMs).toBe(1_000 + 600_000);
+    expect(run({ mode: 'deep' }, makeBank(), 1_000).deadlineMs).toBe(1_000 + 1_200_000);
+    expect(run({ mode: 'short' }, makeBank(), 1_000).deadlineMs).toBeNull();
+  });
+
+  it('stops while the exit sheet is open: the deadline shifts by the time it was open', () => {
+    let s = run({}, makeBank(), 0);
+    s = apply(s, { type: 'exit' }, 100_000);
+    expect(s.pause).toBe('exit');
+    expect(apply(s, { type: 'exit' }, 101_000)).toBe(s);
+    s = apply(s, { type: 'tick' }, 900_000);
+    expect(s.timeUp).toBe(false);
+    s = apply(s, { type: 'keepGoing' }, 1_000_000);
+    expect(s.pause).toBeNull();
+    expect(s.deadlineMs).toBe(600_000 + 900_000);
+    expect(finishRun(apply(apply(s, { type: 'exit' }, 1_000_001), { type: 'quit', by: 'learner' }, 1_000_002), context()).stopReason).toBe('quit');
+  });
+
+  it('stops while the pause sheet is open too (a family break does not end the run)', () => {
+    let s = run({}, makeBank(), 0);
+    for (let i = 0; i < 3; i += 1) s = apply(s, { type: 'notSure' }, 1_000 + i);
+    expect(s.pause).toBe('not-sure');
+    s = apply(s, { type: 'tick' }, 3_000_000);
+    expect(s.timeUp).toBe(false);
+    s = apply(s, { type: 'keepGoing' }, 3_000_000);
+    s = apply(s, { type: 'notSure' }, 3_001_000);
+    expect(isFinished(s)).toBe(false);
   });
 
   it('when it runs out the open question can still be answered, then the run ends with time', () => {
     let s = run({}, makeBank(), 0);
-    s = answerCorrect(s, 359_000);
-    s = apply(s, { type: 'tick' }, 360_000);
+    s = answerCorrect(s, 599_000);
+    s = apply(s, { type: 'tick' }, 600_000);
     expect(s.timeUp).toBe(true);
     expect(isFinished(s)).toBe(false);
     const open = currentQuestion(s);
     expect(open).not.toBeNull();
-    s = answerCorrect(s, 365_000);
+    s = answerCorrect(s, 605_000);
     expect(isFinished(s)).toBe(true);
     const r = finishRun(s, context());
     expect(r.stopReason).toBe('time');
@@ -648,7 +882,7 @@ describe('the backstop clock (D3)', () => {
 
   it('answering after the deadline without a tick ends the run too, and "not sure" is skipped, never wrong', () => {
     let s = run({}, makeBank(), 0);
-    s = apply(s, { type: 'notSure' }, 400_000);
+    s = apply(s, { type: 'notSure' }, 700_000);
     expect(isFinished(s)).toBe(true);
     const r = finishRun(s, context());
     expect(r.stopReason).toBe('time');
@@ -659,7 +893,7 @@ describe('the backstop clock (D3)', () => {
   it('a partly answered rung is scored from what was asked', () => {
     let s = run({}, makeBank(), 0);
     s = answerCorrect(s, 1_000);
-    s = answerCorrect(s, 400_000);
+    s = answerCorrect(s, 700_000);
     const r = finishRun(s, context());
     expect(r.gates).toEqual([{ gate: 'recog', form: 'decode', asked: 2, correct: 2, assisted: 0, result: 'pass' }]);
     expect(r.stopReason).toBe('time');
@@ -683,7 +917,7 @@ describe('the backstop clock (D3)', () => {
     expect(apply(s, { type: 'tick' }, 30_000)).toBe(s);
     s = apply(s, { type: 'idle' }, 20_000);
     s = apply(s, { type: 'keepGoing' }, 320_000);
-    expect(s.deadlineMs).toBe(360_000 + 300_000);
+    expect(s.deadlineMs).toBe(600_000 + 300_000);
     s = apply(s, { type: 'tick' }, 400_000);
     expect(s.timeUp).toBe(false);
   });
@@ -694,12 +928,12 @@ describe('the backstop clock (D3)', () => {
     expect(s.pause).toBe('idle');
     expect(s.pausedAtMs).toBe(45_000);
     s = apply(s, { type: 'keepGoing' }, 100_000);
-    expect(s.deadlineMs).toBe(360_000 + 55_000);
+    expect(s.deadlineMs).toBe(600_000 + 55_000);
   });
 
-  it('time does not shift when nothing is paused for a quick run with take my time off', () => {
-    const s = run({ length: 'quick' }, makeBank(), 0);
-    expect(apply(s, { type: 'keepGoing' }, 5_000).deadlineMs).toBe(240_000);
+  it('time does not shift when nothing is paused for a deep run with take my time off', () => {
+    const s = run({ mode: 'deep' }, makeBank(), 0);
+    expect(apply(s, { type: 'keepGoing' }, 5_000).deadlineMs).toBe(1_200_000);
   });
 });
 

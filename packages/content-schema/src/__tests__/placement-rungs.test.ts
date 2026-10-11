@@ -5,7 +5,16 @@ import {
   RUNG_SYMBOLS,
   RUNG_TABLE,
   STRAND_GATES,
+  DEEP_REST_AT,
+  LISTEN_FIRST_FORMATS,
+  PLACEMENT_MODES,
+  PlacementModeSchema,
   backstopMs,
+  drawsFor,
+  legacyLengthOf,
+  modeCeiling,
+  modeOf,
+  passAtFor,
   questionCap,
   strandOfGate,
   PLACEMENT_GATES,
@@ -58,12 +67,68 @@ describe('limits', () => {
     expect(IDLE_PAUSE_MS).toBe(45_000);
   });
 
-  it('quick is at most 15 questions and 4 minutes, full 21 and 6 minutes; take-my-time has no clock', () => {
-    expect(questionCap('quick')).toBe(15);
-    expect(questionCap('full')).toBe(21);
-    expect(backstopMs('quick', false)).toBe(240_000);
-    expect(backstopMs('full', false)).toBe(360_000);
-    expect(backstopMs('quick', true)).toBeNull();
-    expect(backstopMs('full', true)).toBeNull();
+  it('Short has no cap label and no clock; Standard 24 and 10 minutes; Deep 42 and 20 minutes; take-my-time has no clock', () => {
+    expect(questionCap('short')).toBeNull();
+    expect(questionCap('standard')).toBe(24);
+    expect(questionCap('deep')).toBe(42);
+    expect(backstopMs('short', false)).toBeNull();
+    expect(backstopMs('standard', false)).toBe(600_000);
+    expect(backstopMs('deep', false)).toBe(1_200_000);
+    for (const mode of PLACEMENT_MODES) expect(backstopMs(mode, true)).toBeNull();
+    expect(DEEP_REST_AT).toBe(18);
+  });
+});
+
+describe('modes', () => {
+  it('are short, standard and deep; the schema reuses the one tuple', () => {
+    expect(PLACEMENT_MODES).toEqual(['short', 'standard', 'deep']);
+    expect(PlacementModeSchema.options).toEqual([...PLACEMENT_MODES]);
+  });
+
+  it('store the legacy length: short as quick, standard and deep as full', () => {
+    expect(legacyLengthOf('short')).toBe('quick');
+    expect(legacyLengthOf('standard')).toBe('full');
+    expect(legacyLengthOf('deep')).toBe('full');
+  });
+
+  it('read a stored mode, or fall back on the legacy length when it is missing', () => {
+    expect(modeOf({ length: 'full', mode: 'deep' })).toBe('deep');
+    expect(modeOf({ length: 'quick' })).toBe('short');
+    expect(modeOf({ length: 'full' })).toBe('standard');
+  });
+
+  it('cap Short at stage1 band 1; Standard and Deep at stage3', () => {
+    expect(modeCeiling('short')).toEqual({ stage: 'stage1', band: 1 });
+    expect(modeCeiling('standard')).toEqual({ stage: 'stage3', band: 0 });
+    expect(modeCeiling('deep')).toEqual({ stage: 'stage3', band: 0 });
+  });
+
+  it('draw twice in Deep for every route-moving rung, in Standard only for vocab read', () => {
+    for (const gate of ['sound-basic', 'syl-cv', 'sound-rest', 'syl-cvc'] as const) {
+      expect(drawsFor('deep', gate, 'decode')).toBe(2);
+      expect(drawsFor('standard', gate, 'decode')).toBe(1);
+      expect(drawsFor('short', gate, 'decode')).toBe(1);
+    }
+    expect(drawsFor('deep', 'recog', 'decode')).toBe(1);
+    expect(drawsFor('deep', 'vocab', 'read')).toBe(2);
+    expect(drawsFor('deep', 'sentence', 'read')).toBe(2);
+    expect(drawsFor('deep', 'vocab', 'oral')).toBe(1);
+    expect(drawsFor('standard', 'vocab', 'read')).toBe(2);
+    expect(drawsFor('standard', 'sentence', 'read')).toBe(1);
+    expect(drawsFor('short', 'vocab', 'oral')).toBe(1);
+  });
+
+  it('ask all three CV syllables right only in Short', () => {
+    expect(passAtFor('short', 'syl-cv')).toBe(3);
+    expect(passAtFor('short', 'sound-basic')).toBe(2);
+    expect(passAtFor('standard', 'syl-cv')).toBe(2);
+    expect(passAtFor('deep', 'syl-cv')).toBe(2);
+  });
+
+  it('listen-first formats leave out Latin sound chips and tile building', () => {
+    expect(LISTEN_FIRST_FORMATS).not.toContain('see-pick-sound');
+    expect(LISTEN_FIRST_FORMATS).not.toContain('build-syllable');
+    expect(LISTEN_FIRST_FORMATS).toContain('hear-pick-written');
+    expect(LISTEN_FIRST_FORMATS).toContain('hear-pick-picture');
   });
 });

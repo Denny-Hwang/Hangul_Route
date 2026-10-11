@@ -18,22 +18,36 @@ import { QUESTIONS_PER_RUNG, STRAND_GATES } from './rungs';
 export type GateOutcome = Pick<GateResult, 'asked' | 'correct' | 'assisted' | 'result'>;
 
 /**
- * Pass on two unassisted correct answers; fail once two can no longer be
- * reached (three asked, or earlier when the rest cannot help); otherwise
- * not-run (undecided). `asked` defaults to the number of responses.
+ * Pass on `passAt` (2, or 3 for Short's `syl-cv`) unassisted correct answers;
+ * fail once that can no longer be reached (three asked, or earlier when the
+ * rest cannot help); otherwise not-run (undecided). `asked` defaults to the
+ * number of responses. The stored `result` is authoritative: consumers never
+ * recompute it from `correct`, because the bar depends on the mode.
  */
 export const gateResult = (
   responses: readonly AssessmentResponse[],
   asked: number = responses.length,
+  passAt: 2 | 3 = 2,
 ): GateOutcome => {
   const correct = responses.filter((r) => r.outcome === 'correct' && !r.assisted).length;
   const assisted = responses.filter((r) => r.assisted).length;
-  const result = correct >= 2 ? 'pass' : correct + (QUESTIONS_PER_RUNG - asked) < 2 ? 'fail' : 'not-run';
+  const result = correct >= passAt ? 'pass' : correct + (QUESTIONS_PER_RUNG - asked) < passAt ? 'fail' : 'not-run';
   return { asked, correct, assisted, result };
 };
 
+/**
+ * The rows of one gate/form passed: at least one passed and none failed. A
+ * Deep rung (and Standard's `vocab` read) has two rows, one per draw; every
+ * other rung has one, where this is the plain "pass". A not-run second draw
+ * (unavailable, or stopped mid-draw) never turns a pass into a fail.
+ */
+export const rowsPassed = (rows: readonly Pick<GateResult, 'result'>[]): boolean =>
+  rows.some((r) => r.result === 'pass') && !rows.some((r) => r.result === 'fail');
+
 const ran = (entries: readonly GateResult[]): boolean => entries.some((e) => e.result !== 'not-run');
-const passed = (entries: readonly GateResult[]): boolean => entries.some((e) => e.result === 'pass');
+/** The best form counts (vocabulary and sentences have read and oral). */
+const passed = (entries: readonly GateResult[]): boolean =>
+  (['decode', 'read', 'oral'] as const).some((form) => rowsPassed(entries.filter((e) => e.form === form)));
 
 /**
  * One status per strand. A strand's gates may have two entries (vocabulary and
@@ -60,7 +74,7 @@ export const gatePassed = (
   gates: readonly GateResult[],
   gate: PlacementGate,
   form: PlacementForm,
-): boolean => gates.some((e) => e.gate === gate && e.form === form && e.result === 'pass');
+): boolean => rowsPassed(gates.filter((e) => e.gate === gate && e.form === form));
 
 /**
  * The decoding level on the 7-stage grid: what the learner can read. With no
@@ -79,11 +93,15 @@ export const levelOf = (gates: readonly GateResult[]): PlacementLevel => {
 
 /**
  * The listening level: stage2 when vocab oral passed, stage3 when sentence oral
- * passed too, else stage1; null when no oral rung ran. Reported and used by the
- * planner; it never lowers or raises the route.
+ * passed too, else stage1; null when no oral rung ran. A Deep reader who passed
+ * `vocab` read is asked only `sentence` oral: with no `vocab` oral row, the
+ * read pass stands in for it. Reported and used by the planner; it never
+ * lowers or raises the route.
  */
 export const oralStageOf = (gates: readonly GateResult[]): StageKey | null => {
   if (!gates.some((e) => e.form === 'oral' && e.result !== 'not-run')) return null;
-  if (!gatePassed(gates, 'vocab', 'oral')) return 'stage1';
+  const vocabOralAsked = gates.some((e) => e.gate === 'vocab' && e.form === 'oral' && e.result !== 'not-run');
+  const vocabHeard = vocabOralAsked ? gatePassed(gates, 'vocab', 'oral') : gatePassed(gates, 'vocab', 'read');
+  if (!vocabHeard) return 'stage1';
   return gatePassed(gates, 'sentence', 'oral') ? 'stage3' : 'stage2';
 };

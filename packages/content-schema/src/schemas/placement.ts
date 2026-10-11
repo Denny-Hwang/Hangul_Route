@@ -5,7 +5,7 @@ import {
   refineAssessmentQuestion,
   type ASSESSMENT_FORMATS,
 } from '../assessment/question';
-import { RUNG_SYMBOLS, strandOfGate } from '../placement/rungs';
+import { PLACEMENT_MODES, RUNG_SYMBOLS, strandOfGate } from '../placement/rungs';
 import { StageKeySchema } from './heritage-card';
 import { UiLocaleSchema } from './locale';
 
@@ -49,6 +49,9 @@ export type StopReason = z.infer<typeof StopReasonSchema>;
 export const PlacementSourceSchema = z.enum(['onboarding', 'home', 'profile', 'parent']);
 export type PlacementSource = z.infer<typeof PlacementSourceSchema>;
 
+/** The check length the learner chose (F-PLC-001 P14). The tuple lives in `placement/rungs.ts`. */
+export const PlacementModeSchema = z.enum(PLACEMENT_MODES);
+
 export const MotivationSchema = z.enum(['heritage', 'kculture', 'curious', 'friends']);
 export type Motivation = z.infer<typeof MotivationSchema>;
 
@@ -66,13 +69,18 @@ export const PlacementResultSchema = z.object({
   completedAt: z.string(),
   source: PlacementSourceSchema,
   testLocale: UiLocaleSchema,
+  /** Legacy, unchanged: `legacyLengthOf(mode)` (short -> quick, standard and deep -> full). */
   length: z.enum(['quick', 'full']),
+  /** Optional: absent on results written before the three modes; read it with `modeOf`. */
+  mode: PlacementModeSchema.optional(),
   revealMode: z.enum(['tap', 'always']),
   bankVersion: z.number().int().positive(),
   contentVer: z.string(),
   motivation: MotivationSchema.optional(),
-  responses: z.array(AssessmentResponseSchema).max(24),
-  gates: z.array(GateResultSchema).max(9),
+  /** Deep asks up to 42 (two draws per route-moving rung); Short and Standard stay within 24. */
+  responses: z.array(AssessmentResponseSchema).max(48),
+  /** Deep stores one row per draw (up to 15); Short and Standard stay within 9. */
+  gates: z.array(GateResultSchema).max(16),
   strands: StrandsSchema,
   level: PlacementLevelSchema,
   oralStage: StageKeySchema.nullable(),
