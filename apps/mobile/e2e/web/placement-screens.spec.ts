@@ -70,6 +70,25 @@ async function voicedSpeech(page: Page): Promise<void> {
   });
 }
 
+/** No speech engine at all: no instruction voice (Short is unavailable) and no voice for the warm-up. */
+async function noSpeechEngine(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    Object.defineProperty(window, 'speechSynthesis', { configurable: true, value: undefined });
+  });
+}
+
+/** The open question of the saved run and the option test ids it should draw. */
+async function savedQuestion(page: Page, profileId: string): Promise<{ id: string; optionTestIds: string[] }> {
+  type Saved = { run: { responses: unknown[]; current: { start: number; questions: Array<{ id: string; options: Array<{ id: string }> }> } } };
+  const saved = await readStored<Saved>(page, `placement-run:${profileId}`);
+  const run = saved?.run;
+  const question = run?.current.questions[run.responses.length - run.current.start];
+  return { id: question?.id ?? '', optionTestIds: (question?.options ?? []).map((o) => `placement-option-${o.id}`) };
+}
+
+const drawnOptionTestIds = (page: Page): Promise<string[]> =>
+  page.locator('[data-testid^="placement-option-"]').evaluateAll((els) => els.map((el) => el.getAttribute('data-testid') ?? ''));
+
 /** "Me" path with a chosen reading level, to Home. */
 async function onboard(page: Page, level: 'Pictures first' | 'Some reading' = 'Some reading'): Promise<void> {
   await page.goto('/');
@@ -188,7 +207,7 @@ test.describe('level check screens (fixture bundle)', () => {
     // Start opens the start quest.
     await page.getByTestId('placement-result-primary').click();
     await expect(page.getByTestId('placement-result')).toHaveCount(0);
-    await expect(page).not.toHaveURL(/placement/i);
+    await expect(page.getByRole('button', { name: 'Leave quest' })).toBeVisible();
   });
 
   test('Pictures first with sound: the Short card, the hand-off, the Short item in portrait and landscape', async ({ page }) => {
@@ -252,6 +271,19 @@ test.describe('level check screens (fixture bundle)', () => {
     const first = await page.locator('[data-testid^="placement-option-"]').first().boundingBox();
     expect(first?.x ?? 0).toBeGreaterThan((exit?.x ?? 0) + (exit?.width ?? 0));
 
+    // The pause sheet fits a phone on its side: both buttons inside the window.
+    await page.getByTestId('placement-exit').click();
+    await expect(page.getByTestId('placement-pause')).toBeVisible();
+    await shot(page, 'placement-pause-568x320');
+    for (const id of ['placement-keep-going', 'placement-enough']) {
+      const b = await page.getByTestId(id).boundingBox();
+      expect(b).not.toBeNull();
+      expect(b?.y ?? -1).toBeGreaterThanOrEqual(0);
+      expect((b?.y ?? 0) + (b?.height ?? 0)).toBeLessThanOrEqual(320);
+    }
+    await page.getByTestId('placement-keep-going').click();
+    await expect(page.getByTestId('placement-pause')).toHaveCount(0);
+
     // A Short run ends on its own (at most nine questions) at a band-1 ceiling.
     await page.setViewportSize({ width: 320, height: 568 });
     await notSureToEnd(page);
@@ -264,17 +296,15 @@ test.describe('level check screens (fixture bundle)', () => {
   });
 
   test('Pictures first without sound: sound-needed, then Check without sound back to the full options', async ({ page }) => {
+    await noSpeechEngine(page);
     await onboard(page, 'Pictures first');
     await openCheck(page);
-    // Short is pre-selected (C1) while the device looks able to play sound; otherwise Standard on C2.
-    const card = page.getByTestId('placement-options-card');
-    await expect(card.or(page.getByTestId('placement-options')).first()).toBeVisible();
-    if (await card.isVisible()) {
-      await page.getByTestId('placement-start').click();
-    } else {
-      await page.getByTestId('placement-guide-always').click();
-      await page.getByTestId('placement-next').click();
-    }
+    // No instruction voice: Short is disabled, so a Pictures first learner gets Standard on C2.
+    await expect(page.getByTestId('placement-options')).toBeVisible();
+    await expect(page.getByRole('radio', { name: 'Short' })).toHaveAttribute('aria-disabled', 'true');
+    await expect(page.getByText('The short check needs sound.').first()).toBeVisible();
+    await page.getByTestId('placement-guide-always').click();
+    await page.getByTestId('placement-next').click();
     // A listen-first learner goes through the hand-off.
     await page.getByTestId('placement-hoya-start').click();
     await page.getByTestId('placement-warmup-speaker').click();
@@ -294,7 +324,45 @@ test.describe('level check screens (fixture bundle)', () => {
     await expect(page.getByTestId('placement-warmup')).toHaveCount(0);
   });
 
-  test('a run closed mid-way offers Continue on reopening, at the same question', async ({ page }) => {
+  test('a run closed mid-way offers Continue on reopening, at the same question, which plays on a tap', async ({ page }) => {
+    // Short: every question starts from a sound, so the first one after the resume has a speaker.
+    await voicedSpeech(page);
+    await page.setViewportSize({ width: 320, height: 568 });
+    await onboard(page, 'Pictures first');
+    await openCheck(page);
+    await page.getByTestId('placement-start').click();
+    await page.getByTestId('placement-hoya-start').click();
+    await page.getByTestId('placement-warmup-speaker').click();
+    await expect(page.getByTestId('placement-warmup-option-tiger')).toBeEnabled();
+    await page.getByTestId('placement-warmup-option-tiger').click();
+    await expect(page.getByTestId('placement-item')).toBeVisible();
+    await page.locator('[data-testid^="placement-option-"]').first().click();
+    const profileId = (await readStored<Array<{ id: string }>>(page, 'profiles'))?.[0]?.id ?? '';
+    await expect.poll(async () => (await readStored<{ run: { responses: unknown[] } }>(page, `placement-run:${profileId}`))?.run.responses.length).toBe(1);
+    const open = await savedQuestion(page, profileId);
+    expect(open.id).toMatch(/^pitem:/);
+    await expect.poll(() => drawnOptionTestIds(page)).toEqual(open.optionTestIds);
+
+    await page.reload();
+    await expect(page.getByText('Hi, Sam!')).toBeVisible();
+    await openCheck(page);
+    await expect(page.getByTestId('placement-resume')).toBeVisible();
+    await shot(page, 'placement-resume');
+    await page.getByTestId('placement-continue').click();
+    await expect(page.getByTestId('placement-item')).toBeVisible();
+    expect((await savedQuestion(page, profileId)).id).toBe(open.id);
+    expect(await drawnOptionTestIds(page)).toEqual(open.optionTestIds);
+
+    // The first question after a resume plays on a tap of the speaker...
+    await expect(page.getByTestId('placement-speaker')).toHaveAttribute('aria-label', 'Tap to hear it.');
+    await expect(page.getByText('Tap to hear it.').first()).toBeVisible();
+    // ...and any tap unlocks sound again: the next question plays on open.
+    await page.getByTestId('placement-not-sure').click();
+    await expect(page.getByTestId('placement-speaker')).toHaveAttribute('aria-label', 'Hear it again');
+  });
+
+  test('45 seconds untouched opens the pause; For grown-ups: finish now ends the run (no PIN on this device)', async ({ page }) => {
+    await page.clock.install();
     await onboard(page);
     await openCheck(page);
     await page.getByTestId('placement-guide-tap').click();
@@ -304,20 +372,16 @@ test.describe('level check screens (fixture bundle)', () => {
     await page.getByTestId('placement-warmup-option-rice').click();
     await page.locator('[data-testid^="placement-option-"]').first().click();
     await expect(page.getByTestId('placement-item')).toBeVisible();
-    const before = await page.locator('[data-testid^="placement-option-"]').evaluateAll((els) => els.map((el) => el.textContent));
-    const profiles = await readStored<Array<{ id: string }>>(page, 'profiles');
-    await waitForSaved(page, [`placement-run:${profiles?.[0]?.id ?? ''}`]);
+    await expect(page.getByTestId('placement-pause')).toHaveCount(0);
 
-    await page.reload();
-    await expect(page.getByText('Hi, Sam!')).toBeVisible();
-    await openCheck(page);
-    await expect(page.getByTestId('placement-resume')).toBeVisible();
-    await shot(page, 'placement-resume');
-    await page.getByTestId('placement-continue').click();
-    await expect(page.getByTestId('placement-item')).toBeVisible();
-    const after = await page.locator('[data-testid^="placement-option-"]').evaluateAll((els) => els.map((el) => el.textContent));
-    expect(after).toEqual(before);
-    // The first question after a resume plays on a tap.
-    await expect(page.getByText('Tap to hear it.').first()).toBeVisible().catch(() => undefined);
+    await page.clock.fastForward('00:46');
+    await expect(page.getByTestId('placement-pause')).toBeVisible();
+    await expect(page.getByText('Need a break?')).toBeVisible();
+    await page.getByTestId('placement-grown-up-finish').click();
+    await expect(page.getByTestId('placement-result')).toBeVisible();
+    const profileId = (await readStored<Array<{ id: string }>>(page, 'profiles'))?.[0]?.id ?? '';
+    await expect
+      .poll(async () => (await readStored<{ placements?: Array<{ stopReason: string }> }>(page, `progress:${profileId}`))?.placements?.[0]?.stopReason)
+      .toBe('grown-up');
   });
 });

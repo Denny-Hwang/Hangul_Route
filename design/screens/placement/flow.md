@@ -23,7 +23,7 @@ Screenshots: `HR_SHOTS=1 STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exe
    |                                        |
    v                                        v
  Warm-up (speaker first; the pictures wait for the sound check)                     wireframe D
-   |-- no sound, Short or listen-first --> Sound needed (Try again | Start learning | Check without sound -> C2)  wireframe L2
+   |-- no sound or sound switched off, Short or listen-first --> Sound needed (Try again | Start learning | Check without sound -> C2)  wireframe L2
    v
  Item (Standard / Deep frame, or the Short layout: 2 x 2, two columns in landscape)  wireframes E, E2
    |-- exit, 45 s idle, three "not sure", app in the background --> Pause sheet     wireframe F
@@ -37,7 +37,10 @@ Screenshots: `HR_SHOTS=1 STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exe
 - Tokens only; no emoji; every control at least `touchTarget.min`, choice cards at least `touchTarget.child`.
 - The Short item shows no written line: Hoya sits beside the speaker, the instruction and the cheers are spoken (wireframe E2). Short pictures shrink to `spacing.xxxl` in landscape so two rows and "I am not sure" fit 568 x 320; the cards keep `touchTarget.child`.
 - Mode tiles stack in one column below 480 pt of content or above font scale 1.3; side by side otherwise.
-- Focus lands on Hoya's line on each question; its label is "Question, N choices" plus the written instruction.
-- The pause sheet is a modal that hides while the PIN gate is on top ("For grown-ups: finish now") and shows again on return.
+- Focus lands on Hoya's line on each question (native: `AccessibilityInfo.setAccessibilityFocus`; web: DOM focus); its label is "Question, N choices" plus the written instruction.
+- Standard and Deep: every third answer Hoya's bubble says the cheer and the written instruction moves to a line under it, so it never disappears. "I am not sure" is the height of a choice card (`touchTarget.child`) in every mode.
+- Sound switched off (`muted`) at the warm-up counts as no sound for the draw; mid-run, a prompt that cannot play shows its words or reply as text ("No sound? Read it here.") or is skipped (a heard letter or syllable), and a skip never counts toward the three "not sure".
+- The pause sheet is a modal that hides while the PIN gate is on top ("For grown-ups: finish now") and shows again on return. It scrolls inside the window, drops Hoya below 400 pt of height (phone in landscape), keeps the bottom safe-area inset and stays at reading width on wide windows.
+- "Try it with the sound guide hidden" starts the retake at once (warm-up, or the hand-off for Pictures first) and keeps the last check's language.
 - The web cannot tell whether a screen reader is on (react-native-web always answers yes), so the web reads it as off; every control is still labelled.
 - The weekly-plan strip (P-7b), the placement report (P-8) and the entry points (P-7) are not part of these frames; "For grown-ups" opens the grown-up zone until P-8.
