@@ -233,6 +233,12 @@ function optionFor(item: RuntimeVocabItem, format: VocabFormat): VocabOption {
  * one tinted card-style tile would give the answer away (rule 5, F-VOC-002
  * §3.11). Image-to-word shows only the prompt picture, so it never does.
  */
+/** One format tried for a word, with the distractors it got. */
+interface Attempt {
+  format: VocabFormat;
+  distractors: RuntimeVocabItem[];
+}
+
 function styleGivesAway(answer: RuntimeVocabItem, format: VocabFormat, distractors: readonly RuntimeVocabItem[]): boolean {
   return format !== 'image-to-word' && pictureFamily(answer.visual) === 'card' && !distractors.some((d) => pictureFamily(d.visual) === 'card');
 }
@@ -279,8 +285,8 @@ export function buildQuestions(input: BuildInput): VocabQuestion[] {
     const seed = i.seed + index * QUESTION_SEED_STEP;
     // The box format first, then the other allowed formats this word has not had, image-to-word first.
     const others = [...VOCAB_FORMATS].reverse().filter((f) => f !== first && !used.includes(f) && allowed.includes(f));
-    let chosen: { format: VocabFormat; distractors: RuntimeVocabItem[] } | null = null;
-    let fallback: typeof chosen = null;
+    let chosen: Attempt | null = null;
+    let fallback: Attempt | null = null;
     for (const format of [first, ...others]) {
       const distractors = distractorsFor(item, format, { ...i, seed });
       if (distractors.length < i.optionCount - 1) continue;
