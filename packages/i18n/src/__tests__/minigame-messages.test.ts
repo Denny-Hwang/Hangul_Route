@@ -145,6 +145,17 @@ describe('Odd One Out (English wording as shipped)', () => {
   });
 });
 
+describe('Tap & Respond (English wording as shipped)', () => {
+  it('keeps the heading, the speaker caption and the miss line', () => {
+    expect(m.learner.minigame.tapRespond).toEqual({
+      noDialogue: 'No dialogue.',
+      heading: 'Choose your reply',
+      someoneSays: 'Someone says',
+      tryAnother: "Hmm, that doesn't fit. Try another!",
+    });
+  });
+});
+
 describe('learner.audio (F-AUDIO-004 §3.7-3.8, English wording as shipped)', () => {
   const a = m.learner.audio;
 

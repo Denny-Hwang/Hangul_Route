@@ -33,7 +33,8 @@
     "apps/mobile/src/screens/minigames/StrokeHint.tsx",
     "apps/mobile/src/screens/minigames/CardMatchGame.tsx",
     "apps/mobile/src/screens/minigames/CultureQuizGame.tsx",
-    "apps/mobile/src/screens/minigames/OddOneOutGame.tsx"
+    "apps/mobile/src/screens/minigames/OddOneOutGame.tsx",
+    "apps/mobile/src/screens/minigames/TapRespondGame.tsx"
   ],
   "pluralTernaryBaseline": {
     "apps/web/src/app/teach/space/page.tsx": 1,

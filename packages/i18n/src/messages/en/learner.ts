@@ -352,6 +352,13 @@ export const learner = {
         start: 'Try again — start at the top!',
       },
     },
+    /** Tap & Respond: someone speaks, the learner picks a reply. */
+    tapRespond: {
+      noDialogue: 'No dialogue.',
+      heading: 'Choose your reply',
+      someoneSays: 'Someone says',
+      tryAnother: "Hmm, that doesn't fit. Try another!",
+    },
     /** Odd One Out: three of a kind and one that is not. */
     oddOneOut: {
       heading: "Tap the one that doesn't belong",
