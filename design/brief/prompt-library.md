@@ -46,6 +46,7 @@ Run these once at the start. Everything else inherits.
 | P3-7 | [`components/pill.md`](./components/pill.md#5-claude-design-prompt) | Pill 6 tones × 2 sizes | `design/components/Pill/variants__v1__YYYY-MM-DD.png` |
 | P3-8 | [`components/heading.md`](./components/heading.md#6-claude-design-prompt) | Typography sheet (Heading / Body / Caption) | `design/components/Heading/type-sheet__v1__YYYY-MM-DD.png` |
 | P3-9 | [`components/screen.md`](./components/screen.md#5-claude-design-prompt) | Screen container 3-tone demo | `design/components/Screen/variants__v1__YYYY-MM-DD.png` |
+| P3-12 | [`components/choice-card.md`](./components/choice-card.md#4-claude-design-prompt) | ChoiceCard 5 states × 3 contents matrix (F-STORY-003) | `design/components/ChoiceCard/matrix__v1__YYYY-MM-DD.png` |
 | P3-10 | [`components/icon-set.md`](./components/icon-set.md#5-claude-design-prompt) | Icon set 19 glyphs | `design/components/Icon/set__v1__YYYY-MM-DD.png` |
 | P3-11 | [`components/story-scene.md`](./components/story-scene.md#5-claude-design-prompt) | StoryScene reference sheet (full + thumb, fallback panel) (F-STORY-002) | `design/components/StoryScene/reference__v1__YYYY-MM-DD.png` |
 | — | [`components/spacer.md`](./components/spacer.md) | (invisible — no prompt) | — |
@@ -88,8 +89,9 @@ Run these once at the start. Everything else inherits.
 | P4-09 | [`screens/09-minigame-build-letter.md`](./screens/09-minigame-build-letter.md#5-claude-design-prompt) | Build a Letter | `design/screens/minigames/build-letter__v1__YYYY-MM-DD.png` |
 | P4-10 | [`screens/10-minigame-trace-stroke.md`](./screens/10-minigame-trace-stroke.md#5-claude-design-prompt) | Trace Stroke | `design/screens/minigames/trace-stroke__v1__YYYY-MM-DD.png` |
 | P4-11 | [`screens/11-minigame-card-match.md`](./screens/11-minigame-card-match.md#5-claude-design-prompt) | Card Match | `design/screens/minigames/card-match__v1__YYYY-MM-DD.png` |
-| P4-12 | [`screens/12-minigame-story-sequence.md`](./screens/12-minigame-story-sequence.md#5-claude-design-prompt) | Story Sequence | `design/screens/minigames/story-sequence__v1__YYYY-MM-DD.png` |
+| P4-12 | [`screens/12-minigame-story-sequence.md`](./screens/12-minigame-story-sequence.md#5-claude-design-prompt) | Story Order v2 (ordering, wrong, hint, replay) (F-STORY-003) | `design/screens/minigames/story-sequence__v2__YYYY-MM-DD.png` |
 | P4-13 | [`screens/13-minigame-voice-echo.md`](./screens/13-minigame-voice-echo.md#5-claude-design-prompt) | Voice Echo (TTS honor system) | `design/screens/minigames/voice-echo__v1__YYYY-MM-DD.png` |
+| P4-22 | [`screens/22-story-check.md`](./screens/22-story-check.md#6-claude-design-prompt) | Story check, word recap and Results story extras (F-STORY-003) | `design/screens/story/check__v1__YYYY-MM-DD.png` + `design/screens/results/celebrate-story__v1__YYYY-MM-DD.png` |
 
 ### Library / Card detail / Parent (4)
 

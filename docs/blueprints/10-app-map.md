@@ -64,6 +64,7 @@ Hangul Route
 │   │    ├─ Stage 2·4 taste (F-011, F-012)               [S]
 │   │    └─ Stage 3·5·6·7 preview cells                  [–] blueprint only
 │   ├─ A5. Quest player (intro→present→practice→apply→reward) [S] content-skill
+│   │    ├─ Story quest steps: story check (`story-check`) · word recap · Story Order v2 (`story-sequence`) → Results story extras [S/R] F-STORY-003
 │   │    └─ Minigame shell + 13 kinds (9 구현: 8 active + voice-echo beta)  06
 │   ├─ A6. Results & celebration (stars · card unlock)   [S] F-MOTION-003/004/005
 │   ├─ A7. Library (Heritage cards 42 = 30 Stage 1 + 12 taste · detail · share) [S] F-CARD-001/002/003
@@ -152,6 +153,10 @@ Hangul Route
 | `story/sources` | StorySources | 주장마다 출처 · 인용 · 링크 · 검증 · 정정 (링크 열기는 어른 게이트) | S | F-STORY-002 §3.8 | ✓ |
 | `minigame/shell` | Minigame | 라운드 진행·피드백 공통 프레임 | S | 06, minigame-skill | NEW |
 | `minigame/families` | (appendix) | 4 family 별 박스 다이어그램 | S | 06 | NEW |
+| `story/check` | Minigame (`story-check`) | 이야기 뒤 쉬운 질문 3개+: 첫 탭만 채점, 오답은 amber "Try another", 정답 이유 항상 표시 | R | F-STORY-003 §3.4 | ✓ |
+| `story/word-recap` | (story/check 의 마지막 패널) | 이야기의 새 낱말 다시 듣기 — 채점 없음, Done 으로 끝 | R | F-STORY-003 §3.6 | ✓ |
+| `story/sequence` | Minigame (`story-sequence`) | 그림 카드를 순서대로 슬롯에 — 시작 순서는 절대 정답 아님, 다 채우면 다시 보기 | S | F-STORY-003 §3.5 | ✓ |
+| `results/celebrate-story` | (Results 의 story 변형) | 이야기 제목 · 문화 노트 링크 · Next story / Read it again — 숫자·비율 없음 | R | F-STORY-003 §3.7 | ✓ |
 | `results/celebrate` | Results | 별 + 카드 언락 + 다음 행동 1개 | S | F-MOTION-003 | NEW |
 | `library/gallery` | Main/Library | 모은 카드 보기 | S | F-CARD-001 | NEW |
 | `library/card-detail` | CardDetail (modal) | 카드 앞/뒤 + 공유 | S | F-CARD-002/003 | NEW |
@@ -238,6 +243,8 @@ quest/player ─▶ ... ─▶ results/celebrate ─(같은 route, 2번째 패�
 quest/player (story-read 단계) · "Read it again" (replay) ─▶ story/reader ─┬─▶ story/term-gloss (같은 화면, 인라인 카드)
                                                                           └─▶ story/sources ─▶ profiles/pin-entry (Open link, 게이트가 필요할 때) ─▶ 기기 브라우저
 home/todays-mission card ③ ─▶ reviews/daily-test ─▶ results/celebrate
+story/reader ─▶ story/check ─▶ story/word-recap ─▶ story/sequence ─▶ results/celebrate-story ─┬─▶ quest/player (Next story) · story/reader (Read it again, replay)
+                                                                                            └─▶ episode/detail-story · home/todays-mission
 journey/grid (stage 완료 셀) ─▶ reviews/stage-review ─▶ certificate (results 변형) ─▶ library/gallery
 
 profile/settings ─┬─▶ sync/save-progress (Rescue Code)
