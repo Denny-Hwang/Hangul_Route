@@ -28,8 +28,9 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { cardById, episodesAll, questsAll } from '../../content';
-import { useMessages } from '../../i18n/use-messages';
+import { useLocale, useMessages } from '../../i18n/use-messages';
 import { cardEarnHint } from '../../logic/card-earn';
+import { localizeCard } from '../../logic/content-locale';
 import { isStageEntitled } from '../../logic/entitlement';
 import { speak } from '../../platform/audio';
 import { useReducedMotion } from '../../platform/motion';
@@ -51,7 +52,9 @@ export interface CardDetailViewProps {
 export function CardDetailView({ cardId, onClose, showHowToEarn = false }: CardDetailViewProps): React.ReactElement {
   const messages = useMessages();
   const m = messages.learner.cardDetail;
-  const card = cardById(cardId);
+  const locale = useLocale();
+  const source = cardById(cardId);
+  const card = source && localizeCard(source, locale);
   const profile = useProfileStore(activeProfileSelector);
   const snap = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
   const unlocked = snap?.cards.some((c) => c.cardId === cardId) ?? false;

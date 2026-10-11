@@ -1,9 +1,10 @@
-import type { DiscoverItem, DiscoverPage, Jamo, KoText, RomanizationMode } from '@hangul-route/content-schema';
+import type { DiscoverItem, DiscoverPage, Jamo, KoText, Overlays, RomanizationMode, UiLocale } from '@hangul-route/content-schema';
 import { romanizationShown, type Messages } from '@hangul-route/i18n';
 import { findJamo } from '../../content/jamo';
 import type { PlayResult } from '../../platform/audio';
 import { spokenFor } from '../audio/spoken';
 import { blockShape } from '../build-letter-view';
+import { localizeJamo } from '../content-locale';
 import { decompose, symbolsOf } from './hangul';
 
 /**
@@ -180,8 +181,18 @@ function wordItem(key: string, item: Extract<DiscoverItem, { type: 'word' }>): D
   };
 }
 
-/** Turn the authored pages into view models, skipping what cannot be resolved. */
-export function buildDiscover(pages: readonly DiscoverPage[], copy: DiscoverCopy, a11y: DiscoverA11y): DiscoverModel {
+/**
+ * Turn the authored pages into view models, skipping what cannot be resolved. `locale`
+ * picks the jamo sound hint of the UI language (F-I18N-001 §3.6; the glyph and
+ * romanization never change); `overlays` defaults to the generated ones.
+ */
+export function buildDiscover(
+  pages: readonly DiscoverPage[],
+  copy: DiscoverCopy,
+  a11y: DiscoverA11y,
+  locale: UiLocale = 'en',
+  overlays?: Overlays,
+): DiscoverModel {
   const used = new Map<string, number>();
   const uniqueKey = (base: string): string => {
     const n = used.get(base) ?? 0;
@@ -197,7 +208,8 @@ export function buildDiscover(pages: readonly DiscoverPage[], copy: DiscoverCopy
         items.push(wordItem(uniqueKey(`word:${item.word.ko}`), item));
         continue;
       }
-      const jamo = findJamo(item.jamoId);
+      const found = findJamo(item.jamoId);
+      const jamo = found && localizeJamo(found, locale, overlays);
       if (jamo) items.push(symbolItem(uniqueKey(item.jamoId), item, jamo, copy, a11y));
     }
     if (items.length === 0) continue;

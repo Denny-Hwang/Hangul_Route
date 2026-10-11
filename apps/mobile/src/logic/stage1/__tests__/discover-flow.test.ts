@@ -59,6 +59,24 @@ const run = (state: DiscoverState, ...events: DiscoverEvent[]): ReturnType<typeo
   return out;
 };
 
+describe('buildDiscover: the sound hint in the UI language (F-I18N-001 §3.6)', () => {
+  const overlays = { es: { 'jamo:giyeok': { soundHint: 'como la g de gato' } }, ko: {} };
+
+  it('shows the overlay hint next to the unchanged glyph and romanization in the Spanish UI', () => {
+    const es = buildDiscoverWith([pageTwo], COPY, messages.a11y, 'es', overlays).pages[0]!.items[0]!;
+    const en = buildDiscoverWith([pageTwo], COPY, messages.a11y, 'en', overlays).pages[0]!.items[0]!;
+    expect(es.soundHint).toBe('como la g de gato');
+    expect(es.glyph).toBe(en.glyph);
+    expect(es.romanization).toBe(en.romanization);
+    expect(es.accessibilityLabel).toBe(messages.a11y.discoverLetter(en.romanization, 'como la g de gato'));
+    expect(en.soundHint).toBeUndefined();
+  });
+
+  it('defaults to English and the generated overlays', () => {
+    expect(buildDiscoverWith([pageTwo], COPY, messages.a11y)).toEqual(buildDiscover([pageTwo]));
+  });
+});
+
 describe('buildDiscover: the view model of the pages', () => {
   it('builds a symbol item with its sound, example and hear actions', () => {
     const model = buildDiscover([pageTwo]);

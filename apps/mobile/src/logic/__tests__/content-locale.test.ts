@@ -10,6 +10,7 @@ import {
   localizeScope,
   localizeStage,
   localizeTheme,
+  localizeTitle,
 } from '../content-locale';
 import type { MissionCard } from '../homework/mission-builder';
 import { scopeFor } from '../minigame-config';
@@ -97,6 +98,13 @@ describe('content-locale: one helper per kind of shipped content', () => {
     expect(localizeMissionCard(orphan, 'es', overlays)).toBe(orphan);
     expect(localizeMissionCard(questCard, 'en', overlays)).toBe(questCard);
     expect(localizeMissionCard({ ...questCard, questId: 'quest:none' }, 'es', overlays).titleEn).toBe(quest.titleEn);
+  });
+
+  it('swaps the overlay title into anything that carries an entity title (the Results teaser)', () => {
+    const teaser = { questId: quest.id, titleEn: quest.titleEn, line: 'x' };
+    expect(localizeTitle(teaser, quest.id, 'es', overlays)).toEqual({ ...teaser, titleEn: 'Primeras letras' });
+    expect(localizeTitle(teaser, quest.id, 'en', overlays)).toBe(teaser);
+    expect(localizeTitle(teaser, 'quest:none', 'es', overlays)).toBe(teaser);
   });
 
   it('defaults to the generated overlays', () => {

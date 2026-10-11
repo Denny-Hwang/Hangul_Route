@@ -17,10 +17,11 @@ import { CommonActions, useFocusEffect } from '@react-navigation/native';
 import type { QuestStepKind } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Pressable, View } from 'react-native';
 import { questById } from '../../content';
-import { useMessages } from '../../i18n/use-messages';
+import { useLocale, useMessages } from '../../i18n/use-messages';
+import { localizeQuest } from '../../logic/content-locale';
 import { narrativeLine, type NarrativeLine } from '../../logic/korean-labels';
 import { episodeReturn } from '../../logic/layout/quest-return';
 import { questOutcome } from '../../logic/quest-outcome';
@@ -48,7 +49,11 @@ export function QuestPlayerScreen({ route, navigation }: Props): React.ReactElem
   const m = useMessages();
   const q = m.learner.quest;
   const { questId, episodeId } = route.params;
-  const quest = questById(questId);
+  const locale = useLocale();
+  const quest = useMemo(() => {
+    const source = questById(questId);
+    return source && localizeQuest(source, locale);
+  }, [questId, locale]);
   const profile = useProfileStore(activeProfileSelector);
   const beginSession = useProgressStore((s) => s.beginSession);
   const endSession = useProgressStore((s) => s.endSession);

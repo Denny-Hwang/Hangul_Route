@@ -26,7 +26,8 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, Text, View, type LayoutChangeEvent, type ViewStyle } from 'react-native';
 import { heritageCardsAll, themes } from '../../content';
-import { useMessages } from '../../i18n/use-messages';
+import { useLocale, useMessages } from '../../i18n/use-messages';
+import { localizeCard, localizeTheme } from '../../logic/content-locale';
 import { initialCard, latchedSelection, reconcileSelection, type PaneLatch } from '../../logic/layout/pane-selection';
 import {
   cardGalleryColumns,
@@ -53,6 +54,7 @@ const ROW_CELL: ViewStyle = { flex: 1 };
 
 export function LibraryScreen(): React.ReactElement {
   const m = useMessages().learner.library;
+  const locale = useLocale();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const profile = useProfileStore(activeProfileSelector);
   const snap = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
@@ -121,7 +123,7 @@ export function LibraryScreen(): React.ReactElement {
       <Spacer size="md" />
       <View style={{ flexDirection: 'row', gap: spacing.xs, flexWrap: 'wrap' }}>
         <FilterChip label={m.filterAll} active={filter === 'all'} onPress={() => setFilter('all')} />
-        {themes.map((t) => (
+        {themes.map((theme) => localizeTheme(theme, locale)).map((t) => (
           <FilterChip
             key={t.key}
             label={t.titleEn.split(' ')[0] ?? t.titleEn}
@@ -189,7 +191,7 @@ function FilterChip({ label, active, onPress }: { label: string; active: boolean
 }
 
 function CardThumb({
-  card,
+  card: source,
   unlocked,
   cellStyle,
   artSize,
@@ -208,6 +210,7 @@ function CardThumb({
   selected?: boolean;
   onPress: () => void;
 }): React.ReactElement {
+  const card = localizeCard(source, useLocale());
   const messages = useMessages();
   const m = messages.learner.library;
   return (

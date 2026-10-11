@@ -1,4 +1,4 @@
-import type { HomeworkAssignment } from '@hangul-route/content-schema';
+import type { HomeworkAssignment, UiLocale } from '@hangul-route/content-schema';
 import {
   Body,
   Caption,
@@ -18,7 +18,8 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useMemo } from 'react';
 import { Pressable, View } from 'react-native';
 import { questsAll } from '../../content';
-import { useMessages } from '../../i18n/use-messages';
+import { useLocale, useMessages } from '../../i18n/use-messages';
+import { localizeQuest } from '../../logic/content-locale';
 import { assignedByLabel, dueLabel, groupAssignments } from '../../logic/homework/assignment-groups';
 import type { RootStackParamList } from '../../navigation/types';
 import { useAudience } from '../../store/audience';
@@ -31,6 +32,7 @@ import { useProgressStore } from '../../store/progress-store';
  */
 export function HomeworkScreen(): React.ReactElement {
   const messages = useMessages();
+  const locale = useLocale();
   const m = messages.learner.homework;
   const { copy } = useAudience();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -109,11 +111,11 @@ export function HomeworkScreen(): React.ReactElement {
             key={h.id}
             onPress={() => open(h)}
             accessibilityRole="button"
-            accessibilityLabel={messages.a11y.playAgainQuest(questTitle(h.questId, m.questFallback))}
+            accessibilityLabel={messages.a11y.playAgainQuest(questTitle(h.questId, m.questFallback, locale))}
             style={{ marginBottom: spacing.xs }}
           >
             <Card padding="sm" tone="success">
-              <Body size="sm">{questTitle(h.questId, m.questFallback)} ✓</Body>
+              <Body size="sm">{questTitle(h.questId, m.questFallback, locale)} ✓</Body>
             </Card>
           </Pressable>
         ))
@@ -123,8 +125,9 @@ export function HomeworkScreen(): React.ReactElement {
   );
 }
 
-function questTitle(questId: string, fallback: string): string {
-  return questsAll.find((q) => q.id === questId)?.titleEn ?? fallback;
+function questTitle(questId: string, fallback: string, locale: UiLocale): string {
+  const quest = questsAll.find((q) => q.id === questId);
+  return quest ? localizeQuest(quest, locale).titleEn : fallback;
 }
 
 function AssignmentRow({
@@ -137,8 +140,9 @@ function AssignmentRow({
   onPress: (h: HomeworkAssignment) => void;
 }): React.ReactElement {
   const messages = useMessages();
+  const locale = useLocale();
   const m = messages.learner.homework;
-  const title = questTitle(assignment.questId, m.questFallback);
+  const title = questTitle(assignment.questId, m.questFallback, locale);
   const due = dueLabel(assignment.targetDate, todayKey, m.due);
   return (
     <Pressable

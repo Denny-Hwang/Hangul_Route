@@ -42,13 +42,20 @@ export const localizeScope = (scope: MinigameScope, ref: string, locale: UiLocal
   localize(scope, ref, locale, overlays);
 
 /**
- * A mission card carries the title of its quest (replay, new, assigned) or episode
- * (story) as built; this swaps in the overlay title of that entity at render time, so a
- * plan pinned for the day still follows a language change.
+ * Something that carries the English title of a content entity as built (a mission card,
+ * the Results "Next up" teaser) with the overlay title of that entity swapped in at
+ * render time, so a value pinned earlier still follows a language change.
  */
+export function localizeTitle<T extends { titleEn: string }>(item: T, entityId: string, locale: UiLocale, overlays?: Overlays): T {
+  const { titleEn } = localize({ titleEn: item.titleEn }, entityId, locale, overlays);
+  return titleEn === item.titleEn ? item : { ...item, titleEn };
+}
+
+/** A mission card's title from its quest (replay, new, assigned), else its episode (story); the daily test names itself. */
 export function localizeMissionCard(card: MissionCard, locale: UiLocale, overlays?: Overlays): MissionCard {
   const entityId = card.questId ?? card.episodeId;
-  if (card.titleEn === null || entityId === undefined) return card;
-  const { titleEn } = localize({ titleEn: card.titleEn }, entityId, locale, overlays);
-  return titleEn === card.titleEn ? card : { ...card, titleEn };
+  const { titleEn } = card;
+  if (titleEn === null || entityId === undefined) return card;
+  const localized = localizeTitle({ titleEn }, entityId, locale, overlays).titleEn;
+  return localized === titleEn ? card : { ...card, titleEn: localized };
 }
