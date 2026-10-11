@@ -73,6 +73,8 @@ function rig(
     failCreate?: boolean;
     failMode?: number;
     holdCreate?: boolean;
+    /** createSound waits until `release()` is called on the returned gate. */
+    gateCreate?: { release?: () => void };
     holdDownload?: boolean;
     failPlay?: boolean;
     playInSilentMode?: boolean;
@@ -101,11 +103,20 @@ function rig(
       createSound: (uri, onStatus) => {
         if (opts.holdCreate) return new Promise<NativeSoundLike>(() => undefined);
         if (opts.failCreate) return Promise.reject(new Error('unsupported format'));
-        const sound = new FakeSound(uri);
-        sound.failPlay = opts.failPlay ?? false;
-        sound.setOnPlaybackStatusUpdate(onStatus);
-        sounds.push(sound);
-        return Promise.resolve(sound);
+        const make = (): FakeSound => {
+          const sound = new FakeSound(uri);
+          sound.failPlay = opts.failPlay ?? false;
+          sound.setOnPlaybackStatusUpdate(onStatus);
+          sounds.push(sound);
+          return sound;
+        };
+        const gate = opts.gateCreate;
+        if (gate !== undefined) {
+          return new Promise<NativeSoundLike>((resolve) => {
+            gate.release = () => resolve(make());
+          });
+        }
+        return Promise.resolve(make());
       },
     },
     playInSilentMode: opts.playInSilentMode ?? false,
@@ -285,6 +296,39 @@ describe('platform/audio-player (native): play, stop, unload', () => {
     player.play(GIYEOK, out.h);
     await vi.advanceTimersByTimeAsync(60);
     expect(out.errors).toEqual(['decode']);
+  });
+
+  it('a sound that arrives after its load timed out is unloaded at once and never played', async () => {
+    vi.useFakeTimers();
+    const gate: { release?: () => void } = {};
+    const r = rig({ gateCreate: gate });
+    const player = createNativeClipPlayer(r.env);
+    const out = handlers();
+    player.play(GIYEOK, out.h);
+    await vi.advanceTimersByTimeAsync(60);
+    expect(out.errors).toEqual(['decode']);
+    gate.release?.();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(r.sounds).toHaveLength(1);
+    expect(r.sounds[0]!.plays).toBe(0);
+    expect(r.sounds[0]!.unloads).toBe(1);
+  });
+
+  it('a play stopped while its sound loads unloads it on arrival and never plays it', async () => {
+    const gate: { release?: () => void } = {};
+    const r = rig({ gateCreate: gate });
+    const player = createNativeClipPlayer(r.env);
+    const out = handlers();
+    const handle = player.play(GIYEOK, out.h);
+    await flush();
+    expect(gate.release).toBeDefined();
+    handle.stop();
+    gate.release?.();
+    await flush();
+    expect(r.sounds[0]!.plays).toBe(0);
+    expect(r.sounds[0]!.unloads).toBe(1);
+    expect(r.sounds[0]!.stops).toBe(0);
+    expect(out.started + out.done + out.errors.length).toBe(0);
   });
 
   it('a started clip that never reports its end still settles after its length plus a margin', async () => {
