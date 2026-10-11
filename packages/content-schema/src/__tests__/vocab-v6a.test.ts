@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
@@ -55,16 +55,16 @@ const FAMILY: Row[] = [
   { id: 'vocab:dongsaeng', ko: '동생', romanization: 'dongsaeng', en: 'younger brother or sister', es: 'hermano o hermana menor', visual: 'word:family-dongsaeng', level: 1, note: { en: 'Anyone can say it, for a younger brother or a younger sister.', es: 'Lo dice cualquiera, para un hermano menor o una hermana menor.' } },
   { id: 'vocab:agi', ko: '아기', romanization: 'agi', en: 'baby', es: 'bebé', visual: 'word:family-baby', level: 1 },
   { id: 'vocab:gajok', ko: '가족', romanization: 'gajok', en: 'family', es: 'familia', visual: 'word:family-family', level: 1 },
-  { id: 'vocab:na', ko: '나', romanization: 'na', en: 'I, me', es: 'yo', visual: 'word:family-me', level: 1, pos: 'pronoun', note: { en: 'The casual word. To be polite, say jeo.', es: 'La palabra informal. Para hablar con cortesía, se dice jeo.' } },
+  { id: 'vocab:na', ko: '나', romanization: 'na', en: 'I, me', es: 'yo, mí', visual: 'word:family-me', level: 1, pos: 'pronoun', note: { en: 'The casual word. To be polite, say jeo.', es: 'La palabra informal. Para hablar con cortesía, se dice jeo.' } },
 ];
 
 const SCHOOL: Row[] = [
   { id: 'vocab:hakgyo', ko: '학교', romanization: 'hakgyo', en: 'school', es: 'escuela', visual: 'word:school-school', level: 1 },
-  { id: 'vocab:seonsaengnim', ko: '선생님', romanization: 'seonsaengnim', en: 'teacher', es: 'maestro o maestra', visual: 'word:school-teacher', level: 2, note: { en: 'Also how you address a teacher; the ending nim shows respect.', es: 'También se usa para dirigirse a un maestro; la terminación nim muestra respeto.' } },
+  { id: 'vocab:seonsaengnim', ko: '선생님', romanization: 'seonsaengnim', en: 'teacher', es: 'maestro o maestra', visual: 'word:school-teacher', level: 2, note: { en: 'Also how you address a teacher; the ending nim shows respect.', es: 'También se usa para dirigirse a un maestro o una maestra; el sufijo nim muestra respeto.' } },
   { id: 'vocab:chingu', ko: '친구', romanization: 'chingu', en: 'friend', es: 'amigo o amiga', visual: 'word:school-friend', level: 1 },
   { id: 'vocab:chaek', ko: '책', romanization: 'chaek', en: 'book', es: 'libro', visual: 'card:book', level: 1 },
   { id: 'vocab:yeonpil', ko: '연필', romanization: 'yeonpil', en: 'pencil', es: 'lápiz', visual: 'word:school-pencil', level: 1 },
-  { id: 'vocab:gabang', ko: '가방', romanization: 'gabang', en: 'bag', es: 'mochila', visual: 'word:school-bag', level: 1 },
+  { id: 'vocab:gabang', ko: '가방', romanization: 'gabang', en: 'bag', es: 'bolsa o mochila', visual: 'word:school-bag', level: 1 },
   { id: 'vocab:gongchaek', ko: '공책', romanization: 'gongchaek', en: 'notebook', es: 'cuaderno', visual: 'word:school-notebook', level: 1 },
   { id: 'vocab:jiugae', ko: '지우개', romanization: 'jiugae', en: 'eraser', es: 'goma de borrar', visual: 'word:school-eraser', level: 2 },
   { id: 'vocab:chaeksang', ko: '책상', romanization: 'chaeksang', en: 'desk', es: 'escritorio', visual: 'word:school-desk', level: 1 },
@@ -203,10 +203,40 @@ describe.each(TOPICS)('content/vocab/$key.json (F-VOC-001 V-6a)', (spec) => {
   });
 });
 
+/** Korean source of every romanized word the V-6a notes use. */
+const NOTE_ROMANIZATIONS = [
+  ['어머니', 'eomeoni'],
+  ['아버지', 'abeoji'],
+  ['누나', 'nuna'],
+  ['언니', 'eonni'],
+  ['형', 'hyeong'],
+  ['오빠', 'oppa'],
+  ['저', 'jeo'],
+  ['님', 'nim'],
+  ['치아', 'chia'],
+] as const;
+
+/** The romanized words each note carries; rows not listed carry none. */
+const NOTE_RR_BY_ID: Record<string, readonly string[]> = {
+  'vocab:eomma': ['eomeoni'],
+  'vocab:appa': ['abeoji'],
+  'vocab:eonni': ['nuna'],
+  'vocab:nuna': ['eonni'],
+  'vocab:oppa': ['hyeong'],
+  'vocab:hyeong': ['oppa'],
+  'vocab:na': ['jeo'],
+  'vocab:seonsaengnim': ['nim'],
+  'vocab:i-tooth': ['chia'],
+};
+
 describe('topic-specific rules', () => {
   const parse = (key: string) => VocabTopicFileSchema.parse(readJson(`vocab/${key}.json`));
   const senses = readJson('vocab/_senses.json') as { groups: { group: string; members: { id: string; state: string }[] }[] };
   const membersOf = (group: string) => senses.groups.find((g) => g.group === group)?.members;
+  const catalogItems = readdirSync(join(CONTENT, 'vocab'))
+    .filter((f) => f.endsWith('.json') && !f.startsWith('_'))
+    .flatMap((f) => VocabTopicFileSchema.parse(readJson(`vocab/${f}`)).items);
+  const catalogIds = catalogItems.map((i) => i.id);
 
   it('Family: all four older-sibling words, each pair in one sense group, registered as launch (V6)', () => {
     const file = parse('family');
@@ -241,9 +271,9 @@ describe('topic-specific rules', () => {
     expect(file.items.filter((i) => i.pos === 'pronoun').map((i) => i.id)).toEqual(['vocab:na']);
   });
 
-  it('School: 8 or more drawn or card pictures, exactly one card (the book)', () => {
+  it('School: eleven drawn school glyphs and exactly one card (the book)', () => {
     const file = parse('school');
-    expect(file.items.filter((i) => /^word:school-|^card:/.test(i.visual)).length).toBeGreaterThanOrEqual(8);
+    expect(file.items.filter((i) => i.visual.startsWith('word:school-')).length).toBe(11);
     expect(file.items.filter((i) => i.visual.startsWith('card:')).map((i) => i.visual)).toEqual(['card:book']);
     expect(file.items.every((i) => i.senseGroup === undefined)).toBe(true);
   });
@@ -294,21 +324,28 @@ describe('topic-specific rules', () => {
         expect.objectContaining({ id: reserved, state: 'reserved' }),
       ]);
     }
+    const reservedIds = senses.groups.flatMap((g) => g.members.filter((m) => m.state === 'reserved').map((m) => m.id));
+    expect(reservedIds.length).toBeGreaterThan(0);
+    for (const id of reservedIds) expect(catalogIds, id).not.toContain(id);
   });
 
-  it('every romanized word inside a note is the converter output for its Korean source', () => {
-    for (const [ko, rr] of [
-      ['어머니', 'eomeoni'],
-      ['아버지', 'abeoji'],
-      ['누나', 'nuna'],
-      ['언니', 'eonni'],
-      ['형', 'hyeong'],
-      ['오빠', 'oppa'],
-      ['저', 'jeo'],
-      ['님', 'nim'],
-      ['치아', 'chia'],
-    ] as const) {
-      expect(romanizeWord(ko), ko).toBe(rr);
+  it('every romanized word inside a note (English and Spanish) is listed and is the converter output', () => {
+    const catalogRomanizations = new Set(catalogItems.map((i) => i.romanization));
+    const tableRr = new Set<string>(NOTE_ROMANIZATIONS.map(([, rr]) => rr));
+    const romanizedIn = (text: string | undefined): string[] =>
+      [...new Set((text ?? '').match(/\p{L}+/gu) ?? [])].filter((t) => tableRr.has(t) || catalogRomanizations.has(t)).sort();
+
+    for (const [ko, rr] of NOTE_ROMANIZATIONS) expect(romanizeWord(ko), ko).toBe(rr);
+
+    const used = new Set<string>();
+    for (const spec of TOPICS) {
+      for (const row of spec.rows) {
+        const expected = [...(NOTE_RR_BY_ID[row.id] ?? [])].sort();
+        expect(romanizedIn(row.note?.en), `${row.id} en`).toEqual(expected);
+        expect(romanizedIn(row.note?.es), `${row.id} es`).toEqual(expected);
+        for (const rr of expected) used.add(rr);
+      }
     }
+    expect([...used].sort()).toEqual([...tableRr].sort());
   });
 });
