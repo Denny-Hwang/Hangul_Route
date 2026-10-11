@@ -18,6 +18,28 @@ describe('quest-run-store', () => {
     expect(s.stepIndex).toBe(0);
   });
 
+  it('beginQuest starts at a given step (F-STORY-004 §3.8 resume: the story-read step)', () => {
+    const { beginQuest, answerRound, goNextStep } = useQuestRunStore.getState();
+    beginQuest('q', 'e');
+    goNextStep();
+    answerRound(0, true);
+    beginQuest('quest:x', 'episode:y', 2);
+    const s = useQuestRunStore.getState();
+    expect(s.stepIndex).toBe(2);
+    expect(s.correctCount).toBe(0);
+    expect(s.totalCount).toBe(0);
+    expect(s.scoredRounds).toEqual([]);
+    expect(s.pendingAdvance).toBe(false);
+  });
+
+  it('beginQuest ignores a start step that is negative or not a whole number', () => {
+    const { beginQuest } = useQuestRunStore.getState();
+    for (const bad of [-1, 1.5, Number.NaN, Number.POSITIVE_INFINITY]) {
+      beginQuest('q', 'e', bad);
+      expect(useQuestRunStore.getState().stepIndex).toBe(0);
+    }
+  });
+
   it('a right first answer scores one correct round', () => {
     const { beginQuest, answerRound } = useQuestRunStore.getState();
     beginQuest('q', 'e');
