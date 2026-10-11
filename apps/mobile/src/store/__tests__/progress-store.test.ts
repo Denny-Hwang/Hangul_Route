@@ -303,3 +303,39 @@ describe('loading saved progress (audit UX-01 / L16)', () => {
     expect(stored()?.cards).toEqual([]);
   });
 });
+
+describe('stars never go down (F-STORY-003 PR 3.6, D3)', () => {
+  beforeEach(resetStore);
+
+  it('a replay with fewer stars keeps the best result and counts the attempt', () => {
+    const { recordQuestComplete } = useProgressStore.getState();
+    recordQuestComplete('p1', { questId: 'q1', episodeId: 'e1', stars: 3, accuracy: 1, attempts: 1 });
+    recordQuestComplete('p1', { questId: 'q1', episodeId: 'e1', stars: 1, accuracy: 0.3, attempts: 1 });
+    const quests = useProgressStore.getState().byProfile['p1']?.quests ?? [];
+    expect(quests).toHaveLength(1);
+    expect(quests[0]).toMatchObject({ stars: 3, accuracy: 1, attempts: 2 });
+  });
+
+  it('a replay with more stars raises the stored result', () => {
+    const { recordQuestComplete } = useProgressStore.getState();
+    recordQuestComplete('p1', { questId: 'q1', episodeId: 'e1', stars: 1, accuracy: 0.3, attempts: 1 });
+    recordQuestComplete('p1', { questId: 'q1', episodeId: 'e1', stars: 3, accuracy: 1, attempts: 1 });
+    expect(useProgressStore.getState().byProfile['p1']?.quests[0]).toMatchObject({ stars: 3, attempts: 2 });
+  });
+
+  it('a legacy saved snapshot still loads and a lower replay does not take its stars away', async () => {
+    mem.set('progress:p1', savedSnapshot());
+    await useProgressStore.getState().hydrate('p1');
+    useProgressStore.getState().recordQuestComplete('p1', { questId: 'quest:a', episodeId: 'episode:e', stars: 1, accuracy: 0.3, attempts: 1 });
+    expect(stored()?.quests).toHaveLength(1);
+    expect(stored()?.quests[0]).toMatchObject({ stars: 3, accuracy: 1, startedAt: '2026-10-01T09:00:00.000Z', attempts: 2 });
+  });
+
+  it('a lower replay finished before the saved snapshot loads does not hide the saved stars', async () => {
+    mem.set('progress:p1', savedSnapshot());
+    useProgressStore.getState().recordQuestComplete('p1', { questId: 'quest:a', episodeId: 'episode:e', stars: 1, accuracy: 0.3, attempts: 1 });
+    await useProgressStore.getState().hydrate('p1');
+    expect(useProgressStore.getState().byProfile['p1']?.quests[0]?.stars).toBe(3);
+    expect(stored()?.quests[0]?.stars).toBe(3);
+  });
+});
