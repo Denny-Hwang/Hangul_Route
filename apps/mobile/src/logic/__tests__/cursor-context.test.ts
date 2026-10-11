@@ -166,19 +166,24 @@ describe('Home, Results and My route agree on the shipped bundle (decision M4)',
 });
 
 describe('the screens build the cursor from cursorContext (wiring guard)', () => {
+  // A source-level guard (the mobile vitest lane does not render screens). It
+  // checks shape, not formatting: key order, local names and comments may change.
   const read = (rel: string): string => readFileSync(join(__dirname, '../../screens', rel), 'utf8');
+  /** The argument text of the first `...cursorContext({ ... })` inside the `callee({ ... })` call. */
+  const cursorArgsIn = (src: string, callee: string): string | undefined =>
+    new RegExp(`${callee}\\(\\{[\\s\\S]*?\\.\\.\\.cursorContext\\(\\{([\\s\\S]*?)\\}\\)`).exec(src)?.[1];
+  const importsEitherOldSource = /import\s*(?:type\s*)?\{[^}]*\b(?:isStageEntitled|placedOutSkipSet)\b[^}]*\}\s*from/;
 
-  it('Home spreads cursorContext with the learner tier and placements into the mission builder', () => {
-    const src = read('home/HomeScreen.tsx');
-    expect(src).toMatch(/buildTodaysMission\(\{[\s\S]*\.\.\.cursorContext\(\{\s*tier,\s*placements: snap\.placements,/);
+  it.each([
+    ['Home', 'home/HomeScreen.tsx', 'buildTodaysMission'],
+    ['Results', 'results/ResultsScreen.tsx', 'resultsTeaser'],
+  ])('%s spreads cursorContext with the learner tier and placements into the cursor', (_name, file, callee) => {
+    const src = read(file);
+    const args = cursorArgsIn(src, callee);
+    expect(args).toBeDefined();
+    expect(args).toMatch(/\btier\b/);
+    expect(args).toMatch(/\bplacements\b/);
     expect(src).toMatch(/useTierStore\(/);
-    expect(src).not.toMatch(/isStageEntitled|placedOutSkipSet/);
-  });
-
-  it('Results spreads cursorContext with the learner tier and placements into the teaser', () => {
-    const src = read('results/ResultsScreen.tsx');
-    expect(src).toMatch(/resultsTeaser\(\{[\s\S]*\.\.\.cursorContext\(\{\s*tier,\s*placements: snapshot\?\.placements,/);
-    expect(src).toMatch(/useTierStore\(/);
-    expect(src).not.toMatch(/isStageEntitled|placedOutSkipSet/);
+    expect(src).not.toMatch(importsEitherOldSource);
   });
 });
