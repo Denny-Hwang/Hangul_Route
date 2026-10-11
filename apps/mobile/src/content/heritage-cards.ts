@@ -31,8 +31,8 @@ export const stage1Cards: HeritageCard[] = [
   make('hanji', 'Hanji Paper', '한지', 'hanji', 'Traditional Korean paper, soft and strong.', 'Hanji is made from mulberry bark and can last over 1,000 years.', 'letters', 'stage1', 'uncommon', 'episode:stage1-letters'),
   make('brush', 'Calligraphy Brush', '붓', 'but', 'A brush that writes the most beautiful letters.', 'Korean calligraphy is called seoye (서예).', 'letters', 'stage1', 'uncommon', 'episode:stage1-letters'),
   make('ink', 'Ink Stick', '먹', 'meok', 'Black ink for writing big, bold letters.', 'You grind a meok stick with water to make ink — fresh every day.', 'letters', 'stage1', 'common', 'episode:stage1-letters'),
-  make('origami', 'Paper Folding', '종이접기', 'jong-i-jeop-gi', 'Paper folded into magical shapes.', 'A paper crane is called jong-i-hak.', 'letters', 'stage1', 'rare', 'episode:stage1-letters'),
-  make('hangul-day', 'Hangul Day', '한글날', 'hangeul-nal', 'October 9 — the birthday of Korean letters.', 'King Sejong invented Hangul in 1443 so everyone could read.', 'letters', 'stage1', 'legendary', 'stage1-complete'),
+  make('origami', 'Paper Folding', '종이접기', 'jongijeopgi', 'Paper folded into magical shapes.', 'A paper crane is called jongihak.', 'letters', 'stage1', 'rare', 'episode:stage1-letters'),
+  make('hangul-day', 'Hangul Day', '한글날', 'hangeullal', 'October 9 — the birthday of Korean letters.', 'King Sejong invented Hangul in 1443 so everyone could read.', 'letters', 'stage1', 'legendary', 'stage1-complete'),
 
   // Food & Daily Life
   make('kimchi', 'Kimchi', '김치', 'gimchi', 'Spicy red cabbage — Korea on a plate.', 'There are over 200 kinds of kimchi.', 'life', 'stage1', 'common', 'episode:stage1-life'),
@@ -40,7 +40,7 @@ export const stage1Cards: HeritageCard[] = [
   make('chopsticks', 'Chopsticks', '젓가락', 'jeotgarak', 'Slim metal chopsticks — try them with kimbap.', 'Korean chopsticks are usually flat metal, not round wood.', 'life', 'stage1', 'common', 'episode:stage1-life'),
   make('hanbok', 'Hanbok', '한복', 'hanbok', 'A beautiful traditional outfit.', 'You wear hanbok on Seollal and Chuseok.', 'life', 'stage1', 'rare', 'episode:stage1-life'),
   make('kimbap', 'Kimbap', '김밥', 'gimbap', 'Rice and veggies rolled in seaweed.', 'Kimbap means "seaweed-rice" — perfect for picnics.', 'life', 'stage1', 'uncommon', 'episode:stage1-life'),
-  make('family-table', 'Family Table', '가족식탁', 'gajok-siktak', 'Where everyone gathers to eat.', 'Koreans share many small side dishes called banchan.', 'life', 'stage1', 'uncommon', 'episode:stage1-life'),
+  make('family-table', 'Family Table', '가족 식탁', 'gajok siktak', 'Where everyone gathers to eat.', 'Koreans share many small side dishes called banchan.', 'life', 'stage1', 'uncommon', 'episode:stage1-life'),
 
   // Holidays & Traditions
   make('seollal', 'Lunar New Year', '설날', 'seollal', 'The new year — bows, hanbok, tteokguk.', 'Children bow and receive sebaetdon (lucky money).', 'rites', 'stage1', 'rare', 'episode:stage1-rites'),
@@ -59,7 +59,7 @@ export const stage1Cards: HeritageCard[] = [
   make('moon', 'Moon', '달', 'dal', 'A glowing moon over mountains.', 'A Korean folk tale says a rabbit lives in the moon.', 'nature', 'stage1', 'uncommon', 'episode:stage1-nature'),
 
   // Play & Crafts
-  make('yutnori', 'Yut Game', '윷놀이', 'yutnori', 'Throw the four sticks — yut!', 'Yutnori is played on New Year\'s Day.', 'crafts', 'stage1', 'rare', 'episode:stage1-crafts'),
+  make('yutnori', 'Yut Game', '윷놀이', 'yunnori', 'Throw the four sticks — yut!', 'Yunnori, also written yutnori, is played on New Year\'s Day.', 'crafts', 'stage1', 'rare', 'episode:stage1-crafts'),
   make('jegi', 'Foot Shuttlecock', '제기', 'jegi', 'Kick the feathered weight as many times as you can.', 'Jegichagi is a winter playground favorite.', 'crafts', 'stage1', 'uncommon', 'episode:stage1-crafts'),
   make('kite', 'Kite', '연', 'yeon', 'A diamond kite painted with a tiger\'s face.', 'Bangpaeyeon — shield kite — has a hole in the middle for steering.', 'crafts', 'stage1', 'uncommon', 'episode:stage1-crafts'),
   make('top', 'Spinning Top', '팽이', 'paengi', 'A wooden top that spins on ice.', 'Spinning tops on frozen ponds is a winter tradition.', 'crafts', 'stage1', 'common', 'episode:stage1-crafts'),

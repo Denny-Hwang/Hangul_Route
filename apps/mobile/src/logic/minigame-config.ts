@@ -123,10 +123,10 @@ export const minigameScopes: Record<string, MinigameScope> = {
   'minigame:s1-life-story-1': {
     kind: 'story-sequence',
     storySteps: [
-      { id: 'a', labelEn: 'Wash hands', labelKo: '손 씻기' },
-      { id: 'b', labelEn: 'Set the table', labelKo: '상 차리기' },
-      { id: 'c', labelEn: 'Eat with family', labelKo: '같이 먹기' },
-      { id: 'd', labelEn: 'Say thanks', labelKo: '잘 먹었습니다' },
+      { id: 'a', labelEn: 'Wash hands', labelKo: '손 씻기', romanization: 'son ssitgi' },
+      { id: 'b', labelEn: 'Set the table', labelKo: '상 차리기', romanization: 'sang charigi' },
+      { id: 'c', labelEn: 'Eat with family', labelKo: '같이 먹기', romanization: 'gachi meokgi' },
+      { id: 'd', labelEn: 'Say thanks', labelKo: '잘 먹었습니다', romanization: 'jal meogeotseumnida' },
     ],
   },
 
@@ -148,10 +148,10 @@ export const minigameScopes: Record<string, MinigameScope> = {
   'minigame:s1-rites-story-1': {
     kind: 'story-sequence',
     storySteps: [
-      { id: 'a', labelEn: 'Wear hanbok', labelKo: '한복 입기' },
-      { id: 'b', labelEn: 'Bow to elders', labelKo: '세배 드리기' },
-      { id: 'c', labelEn: 'Eat tteokguk', labelKo: '떡국 먹기' },
-      { id: 'd', labelEn: 'Receive lucky money', labelKo: '세뱃돈 받기' },
+      { id: 'a', labelEn: 'Wear hanbok', labelKo: '한복 입기', romanization: 'hanbok ipgi' },
+      { id: 'b', labelEn: 'Bow to elders', labelKo: '세배 드리기', romanization: 'sebae deurigi' },
+      { id: 'c', labelEn: 'Eat tteokguk', labelKo: '떡국 먹기', romanization: 'tteokguk meokgi' },
+      { id: 'd', labelEn: 'Receive lucky money', labelKo: '세뱃돈 받기', romanization: 'sebaetdon batgi' },
     ],
   },
 
@@ -189,10 +189,10 @@ export const minigameScopes: Record<string, MinigameScope> = {
   'minigame:s1-crafts-story-1': {
     kind: 'story-sequence',
     storySteps: [
-      { id: 'a', labelEn: 'Pick teams', labelKo: '편 가르기' },
-      { id: 'b', labelEn: 'Throw the yut', labelKo: '윷 던지기' },
-      { id: 'c', labelEn: 'Move the piece', labelKo: '말 옮기기' },
-      { id: 'd', labelEn: 'Win!', labelKo: '승리!' },
+      { id: 'a', labelEn: 'Pick teams', labelKo: '편 가르기', romanization: 'pyeon gareugi' },
+      { id: 'b', labelEn: 'Throw the yut', labelKo: '윷 던지기', romanization: 'yut deonjigi' },
+      { id: 'c', labelEn: 'Move the piece', labelKo: '말 옮기기', romanization: 'mal omgigi' },
+      { id: 'd', labelEn: 'Win!', labelKo: '승리!', romanization: 'seungni' },
     ],
   },
 
