@@ -2,7 +2,7 @@
 
 Spec: `docs/specs/F-PLAN-002-curriculum-planner.md` (section 3.3 generator, 3.4 worked examples, 3.7 re-pacing, 3.8 console wizard, 3.9 self-route, 3.10 precedence and visibility)
 Audience: **teacher** (class space) and **parent** (family space) in the console; **self-learner** (or a parent on a child's device) in the app. One flow, wording set by the space kind ("students" / "kids" comes from `memberNoun`). Learners never see the wizard; they see a week of items.
-Code (planned): `apps/web/src/app/teach/space/curriculum/page.tsx`, `apps/web/src/app/teach/space/plan/page.tsx` (week groups, readout, switcher), `apps/web/src/lib/console/curriculum.ts`; `apps/mobile/src/screens/route/{RouteSetupScreen,RoutePreviewScreen,RouteOverviewScreen}.tsx`, `screens/home/HomeScreen.tsx` (route card), `screens/homework/HomeworkScreen.tsx` (week window)
+Code (planned): `apps/web/src/app/(console)/teach/space/curriculum/page.tsx`, `apps/web/src/app/(console)/teach/space/plan/page.tsx` (week groups, readout, switcher), `apps/web/src/lib/console/curriculum.ts`; `apps/mobile/src/screens/route/{RouteSetupScreen,RoutePreviewScreen,RouteOverviewScreen}.tsx`, `screens/home/HomeScreen.tsx` (route card), `screens/homework/HomeworkScreen.tsx` (week window)
 Notation: `[[ X ]]` the one primary action, `[ X ]` secondary or ghost, `(o)` / `( )` radio, `[x]` / `[ ]` checkbox or switch, `~~ ko ~~` taught Korean drawn with `KoreanText`. No colours, fonts or pixel sizes; every sentence in a box is a placeholder that says what the sentence does.
 
 This file holds the screens in one place (house style is one file per screen; split when promoted to `design/wireframes/console/curriculum-wizard.md`, `console/plan-builder.md`, `route/setup.md`, `route/overview.md`):
