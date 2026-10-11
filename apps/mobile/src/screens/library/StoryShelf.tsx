@@ -11,6 +11,7 @@ import {
   spacing,
   useLayoutClass,
 } from '@hangul-route/design-system';
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
@@ -26,10 +27,19 @@ import { shelfCopy } from '../../logic/story/shelf-copy';
 import { shelfEntries, type ShelfCategory, type StoryIndexEntry } from '../../logic/story/story-index';
 import { pickedForYou } from '../../logic/story/story-pick';
 import { storyStatus, type StoryStatus } from '../../logic/story/story-status';
-import { heroAction, shelfViewedPayload, storyTileColumns, storyTileView, type StoryTileView } from '../../logic/story/story-tile';
-import type { RootStackParamList } from '../../navigation/types';
+import {
+  heroAction,
+  lockedStoryGate,
+  shelfViewedPayload,
+  storyTileColumns,
+  storyTileView,
+  type StoryTileView,
+} from '../../logic/story/story-tile';
+import type { MainTabParamList, RootStackParamList } from '../../navigation/types';
 import { track } from '../../platform/telemetry';
+import { useAccountStore } from '../../store/account-store';
 import { useAudience } from '../../store/audience';
+import { useLocaleStore } from '../../store/locale-store';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { useStoryStore } from '../../store/story-store';
@@ -61,13 +71,21 @@ export function StoryShelf({ category, index }: { category: ShelfCategory; index
   const copy = shelfCopy(messages);
   const locale = useLocale();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const tabNavigation = useNavigation<BottomTabNavigationProp<MainTabParamList, 'Library'>>();
   const { opensDirectly } = useAudience();
   const profile = useProfileStore(activeProfileSelector);
   const snap = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
   const bookmarks = useStoryStore((s) => (profile ? s.byProfile[profile.id] : undefined)) ?? NO_BOOKMARKS;
+  // `effectiveTier` reads both stores imperatively: subscribe to each so a change re-runs `isLocked`.
   const cachedTier = useTierStore((s) => (profile ? s.byLearner[profile.id] : undefined));
+  const subscription = useAccountStore((s) => s.subscription);
+  void cachedTier;
+  void subscription;
   const tier = effectiveTier(profile?.id ?? '', new Date()).tier;
-  void cachedTier; // re-render when the inbox changes the tier
+  // D2: hide-until-tap profiles see no romanization on the shelf (one button per tile, no reveal); the reader reveals it.
+  const romanizationShown = useLocaleStore((s) =>
+    profile ? (s.byProfile[profile.id]?.romanizationMode ?? 'always') === 'always' : true,
+  );
 
   // Nothing is locked while gating is off (D5): `isContentLocked` is false for every story then.
   const isLocked = useCallback(
@@ -92,14 +110,26 @@ export function StoryShelf({ category, index }: { category: ShelfCategory; index
     return pick ? items.find((i) => i.entry.questId === pick.entry.questId) ?? null : null;
   }, [items, snap, bookmarks, isLocked, category]);
 
-  // Once per visit: the tab gaining focus with this section shown, or switching to it.
+  // Once per visit (§3.11): switching to this section, or the Library tab gaining focus with it shown.
+  // Coming back from a screen pushed over the tabs (a story, its episode page, the paywall) is the same
+  // visit: that blur leaves Library the focused tab, so the next focus is not counted.
   const latest = useRef(items);
   latest.current = items;
+  const coveredByStack = useRef(false);
   useFocusEffect(
     useCallback(() => {
-      const payload = shelfViewedPayload(category, latest.current.map((i) => i.status));
-      void track({ name: 'story.shelf.viewed', profileId: profile?.id, payload: { ...payload } });
-    }, [category, profile?.id]),
+      if (coveredByStack.current) {
+        coveredByStack.current = false;
+      } else {
+        const payload = shelfViewedPayload(category, latest.current.map((i) => i.status));
+        void track({ name: 'story.shelf.viewed', profileId: profile?.id, payload: { ...payload } });
+      }
+      return () => {
+        if (tabNavigation.isFocused()) return; // a dependency changed, not a blur
+        const tabs = tabNavigation.getState();
+        coveredByStack.current = tabs.routes[tabs.index]?.name === 'Library';
+      };
+    }, [category, profile?.id, tabNavigation]),
   );
 
   const lc = useLayoutClass();
@@ -115,7 +145,7 @@ export function StoryShelf({ category, index }: { category: ShelfCategory; index
   const openHero = (item: ShelfItem): void => {
     const plan = planOpenStory({ entry: item.entry, status: item.status, source: 'library', mode: heroAction(item.status, copy).mode });
     void track({ name: plan.event.name, profileId: profile?.id, payload: { ...plan.event.payload } });
-    // The hero opens the story directly; `resume` takes effect once QuestPlayer reads it (PR 4.4b).
+    // The hero opens the story directly; Keep reading resumes on the story step (QuestPlayer's `questStartStep`).
     if (plan.route === 'StoryReader') navigation.navigate('StoryReader', plan.params);
     else navigation.navigate('QuestPlayer', plan.params);
   };
@@ -124,8 +154,9 @@ export function StoryShelf({ category, index }: { category: ShelfCategory; index
     if (item.view.locked) {
       void track({ name: 'story.locked.tapped', profileId: profile?.id, payload: { storyId: item.entry.storyId } });
       // The grown-up gate Journey uses for a locked stage (only reachable with gating on).
-      if (opensDirectly(false)) navigation.navigate('Paywall', undefined);
-      else navigation.navigate('PinEntry', { next: 'Paywall' });
+      const gate = lockedStoryGate(opensDirectly(false));
+      if (gate.route === 'Paywall') navigation.navigate('Paywall', gate.params);
+      else navigation.navigate('PinEntry', gate.params);
       return;
     }
     navigation.navigate('EpisodeDetail', { episodeId: item.entry.episodeId });
@@ -133,7 +164,15 @@ export function StoryShelf({ category, index }: { category: ShelfCategory; index
 
   return (
     <View testID={`library-shelf-${category}`}>
-      {hero ? <HeroTile item={hero} gridWidth={gridWidth} sideBySide={columns >= 3} onOpen={() => openHero(hero)} /> : null}
+      {hero ? (
+        <HeroTile
+          item={hero}
+          gridWidth={gridWidth}
+          sideBySide={columns >= 3}
+          romanizationShown={romanizationShown}
+          onOpen={() => openHero(hero)}
+        />
+      ) : null}
       {hero ? <Spacer size="lg" /> : null}
       <View style={{ gap: GRID_GAP }} onLayout={onGridLayout} testID={`library-shelf-${category}-grid`}>
         {gridRows(items, columns).map((row, r) => (
@@ -144,6 +183,7 @@ export function StoryShelf({ category, index }: { category: ShelfCategory; index
                   key={item.entry.questId}
                   view={item.view}
                   width={cellWidth}
+                  romanizationShown={romanizationShown}
                   onPress={() => openTile(item)}
                   testID={`story-tile-${item.entry.storyId}`}
                 />
@@ -163,12 +203,15 @@ function HeroTile({
   item,
   gridWidth,
   sideBySide,
+  romanizationShown,
   onOpen,
 }: {
   item: ShelfItem;
   gridWidth: number;
   /** Cover left, text right (3+ tile columns); stacked otherwise. */
   sideBySide: boolean;
+  /** D2, as on the tiles. */
+  romanizationShown: boolean;
   onOpen: () => void;
 }): React.ReactElement {
   const copy = shelfCopy(useMessages());
@@ -198,7 +241,7 @@ function HeroTile({
             {view.titleEn}
           </Body>
           <View style={{ alignSelf: 'flex-start', maxWidth: '100%' }}>
-            <KoreanText ko={view.ko} romanization={view.romanization} size="sm" />
+            <KoreanText ko={view.ko} romanization={view.romanization} romanizationShown={romanizationShown} size="sm" />
           </View>
           <Caption tone="muted">{view.minutesLine}</Caption>
           <Button

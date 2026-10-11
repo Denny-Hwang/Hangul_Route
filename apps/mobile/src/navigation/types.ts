@@ -48,6 +48,8 @@ export type RootStackParamList = {
     via?: PinResetMethod;
     /** `next: 'ExternalLink'`: the source link waiting on the gate (Sources holds it until the return). */
     url?: string;
+    /** `next: 'Paywall'`: the surface that opened it, passed on to the paywall (default `'journey'`). */
+    from?: 'journey' | 'library';
   };
   /** Forgot PIN: Rescue Code or a 24-hour wait, then a new PIN (F-LEARN-001 §3.5). `next` is kept for the PIN screen. */
   PinReset: { next: GrownUpDestination };
@@ -58,7 +60,7 @@ export type RootStackParamList = {
   /** sync/join-space — enter a class or family code (F-SPACE-001 §3.5). Not PIN-gated. */
   JoinSpace: undefined;
   /** paywall/upgrade — PIN-gated premium explainer (F-ENT-001 §3.5). */
-  Paywall: { from: 'journey' | 'settings' } | undefined;
+  Paywall: { from: 'journey' | 'settings' | 'library' } | undefined;
   ParentDashboard: undefined;
   Profile: undefined;
   Homework: undefined;

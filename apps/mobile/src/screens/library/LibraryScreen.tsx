@@ -9,6 +9,7 @@ import {
   Pill,
   Screen,
   SectionTabs,
+  sectionTabId,
   Spacer,
   SplitPane,
   TAB_SCREEN_EDGES,
@@ -40,7 +41,7 @@ import {
   type GalleryMode,
   gridRows,
 } from '../../logic/layout/pane-sizes';
-import { selectedSection, visibleSections, type LibrarySectionId } from '../../logic/story/library-sections';
+import { librarySectionTabs, selectedSection, type LibrarySectionId } from '../../logic/story/library-sections';
 import { sectionTitle, shelfCopy } from '../../logic/story/shelf-copy';
 import { defaultStoryIndex } from '../../logic/story/story-index';
 import type { MainTabParamList, RootStackParamList } from '../../navigation/types';
@@ -57,8 +58,8 @@ const GALLERY_GAP = spacing.sm;
 /** The phone gallery: two cards a row at 47 %, exactly as before F-LAYOUT-001. */
 const PHONE_CELL: ViewStyle = { flexBasis: '47%' };
 const ROW_CELL: ViewStyle = { flex: 1 };
-/** The sections this build can draw; Culture joins with its section (F-STORY-004 PR 4.7). */
-const DRAWN_SECTIONS: ReadonlySet<LibrarySectionId> = new Set(['cards', 'story-time']);
+/** The section body the tabs control (`role="tabpanel"`). */
+const SECTION_PANEL_ID = 'library-section-panel';
 
 export function LibraryScreen(): React.ReactElement {
   const messages = useMessages();
@@ -73,10 +74,8 @@ export function LibraryScreen(): React.ReactElement {
   // reviewed story offers Cards alone and the screen is exactly today's gallery, with no tab row.
   const copy = shelfCopy(messages);
   const storyIndex = defaultStoryIndex();
-  const sections = useMemo(
-    () => visibleSections({ entries: storyIndex }).filter((id) => DRAWN_SECTIONS.has(id)),
-    [storyIndex],
-  );
+  // Empty when only Cards is offered: no tab row at all.
+  const sections = useMemo(() => librarySectionTabs({ entries: storyIndex }), [storyIndex]);
   const requested = useRoute<RouteProp<MainTabParamList, 'Library'>>().params?.section;
   const tabNavigation = useNavigation<BottomTabNavigationProp<MainTabParamList, 'Library'>>();
   const [section, setSection] = useState<LibrarySectionId>(() => selectedSection(requested, sections));
@@ -87,17 +86,34 @@ export function LibraryScreen(): React.ReactElement {
     setSection(selectedSection(requested, sections));
     tabNavigation.setParams({ section: undefined });
   }, [requested, sections, tabNavigation]);
-  const tabsShown = sections.length >= 2;
+  const tabsShown = sections.length > 0;
   const active: LibrarySectionId = tabsShown ? section : 'cards';
+  // Cards sits in the split pane and Story Time spans the window, so a switch remounts the row: the
+  // pressed tab then takes focus again instead of dropping keyboard and screen-reader focus (§3.12).
+  const [tabFocus, setTabFocus] = useState(false);
+  const switchSection = (id: LibrarySectionId): void => {
+    setTabFocus(true);
+    setSection(id);
+  };
+  const panel = (body: React.ReactNode): React.ReactNode =>
+    tabsShown ? (
+      <View role="tabpanel" id={SECTION_PANEL_ID} aria-labelledby={sectionTabId(SECTION_PANEL_ID, active)}>
+        {body}
+      </View>
+    ) : (
+      body
+    );
   const tabs = tabsShown ? (
     <>
       <Spacer size="md" />
       <SectionTabs
         items={sections.map((id) => ({ id, label: sectionTitle(id, copy) }))}
         value={active}
-        onChange={setSection}
+        onChange={switchSection}
         accessibilityLabel={copy.sectionsLabel}
         testID="library-sections"
+        panelId={SECTION_PANEL_ID}
+        focusSelected={tabFocus}
       />
     </>
   ) : null;
@@ -162,45 +178,48 @@ export function LibraryScreen(): React.ReactElement {
         <Pill label={m.collected.pill(unlockedIds.size, heritageCardsAll.length)} tone="primary" />
       </View>
       {tabs}
+      {panel(
+        <>
+          <Spacer size="md" />
+          <View style={{ flexDirection: 'row', gap: spacing.xs, flexWrap: 'wrap' }}>
+            <FilterChip label={m.filterAll} active={filter === 'all'} onPress={() => setFilter('all')} />
+            {themes.map((theme) => localizeTheme(theme, locale)).map((t) => (
+              <FilterChip
+                key={t.key}
+                label={t.titleEn.split(' ')[0] ?? t.titleEn}
+                active={filter === t.key}
+                onPress={() => setFilter(t.key)}
+              />
+            ))}
+          </View>
 
-      <Spacer size="md" />
-      <View style={{ flexDirection: 'row', gap: spacing.xs, flexWrap: 'wrap' }}>
-        <FilterChip label={m.filterAll} active={filter === 'all'} onPress={() => setFilter('all')} />
-        {themes.map((theme) => localizeTheme(theme, locale)).map((t) => (
-          <FilterChip
-            key={t.key}
-            label={t.titleEn.split(' ')[0] ?? t.titleEn}
-            active={filter === t.key}
-            onPress={() => setFilter(t.key)}
-          />
-        ))}
-      </View>
-
-      <Spacer size="lg" />
-      {phoneGallery ? (
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: GALLERY_GAP }}>
-          {visible.map((card) => thumb(card, PHONE_CELL))}
-        </View>
-      ) : (
-        // Rows of `columns` equal cells; the last row is padded so its cards keep the same width.
-        <View style={{ gap: GALLERY_GAP }} onLayout={onGridLayout}>
-          {gridRows(visible, columns).map((row, r) => (
-            <View key={r} style={{ flexDirection: 'row', gap: GALLERY_GAP }}>
-              {row.map((card, i) => (card ? thumb(card, ROW_CELL) : <View key={`pad-${i}`} style={ROW_CELL} />))}
+          <Spacer size="lg" />
+          {phoneGallery ? (
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: GALLERY_GAP }}>
+              {visible.map((card) => thumb(card, PHONE_CELL))}
             </View>
-          ))}
-        </View>
-      )}
-      <Spacer size="xl" />
+          ) : (
+            // Rows of `columns` equal cells; the last row is padded so its cards keep the same width.
+            <View style={{ gap: GALLERY_GAP }} onLayout={onGridLayout}>
+              {gridRows(visible, columns).map((row, r) => (
+                <View key={r} style={{ flexDirection: 'row', gap: GALLERY_GAP }}>
+                  {row.map((card, i) => (card ? thumb(card, ROW_CELL) : <View key={`pad-${i}`} style={ROW_CELL} />))}
+                </View>
+              ))}
+            </View>
+          )}
+          <Spacer size="xl" />
 
-      <Card padding="md" tone="brand">
-        <Heading level="prompt">{m.how.title}</Heading>
-        <Spacer size="xs" />
-        <Body tone="secondary" size="sm">
-          {m.how.body}
-        </Body>
-      </Card>
-      <Spacer size="xl" />
+          <Card padding="md" tone="brand">
+            <Heading level="prompt">{m.how.title}</Heading>
+            <Spacer size="xs" />
+            <Body tone="secondary" size="sm">
+              {m.how.body}
+            </Body>
+          </Card>
+          <Spacer size="xl" />
+        </>,
+      )}
     </>
   );
 
@@ -213,9 +232,13 @@ export function LibraryScreen(): React.ReactElement {
       <Screen tone="canvas" edges={TAB_SCREEN_EDGES} width="full" scrollable>
         <Heading level="title">{m.title}</Heading>
         {tabs}
-        <Spacer size="lg" />
-        <StoryShelf category="story-time" index={storyIndex} />
-        <Spacer size="xl" />
+        {panel(
+          <>
+            <Spacer size="lg" />
+            <StoryShelf category="story-time" index={storyIndex} />
+            <Spacer size="xl" />
+          </>,
+        )}
       </Screen>
     );
   }
