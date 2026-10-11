@@ -284,4 +284,118 @@ export const consoleMsgs = {
   /** Price line once a promo code is applied (F-ENT-002 §3.3); `price` and `was` come from `price.*`. */
   promoPrice: (price: string, code: string, off: string, firstYear: boolean, was: string) =>
     `${price} with ${code} (${off}${firstYear ? ', first year' : ''}), was ${was}`,
+
+  /**
+   * The plan page (`/teach/space/plan`, F-I18N-001 PR 10b): the builder for a draft, the
+   * readout once published (`plans.ts readoutLine`), and the catalog labels (`catalogLabel`).
+   * Quest and episode titles are content and arrive as arguments. Kind-keyed groups take
+   * `space` where the roster has not loaded.
+   */
+  plan: {
+    title: 'Plan',
+    titleFor: (space: string) => `${space} · plan`,
+    back: (space: string | null) => `← Back to ${space ?? 'the space'}`,
+    saveInvalid: "Some learners are no longer in this space — check who it's for.",
+    saveFailed: "Didn't save. Try again.",
+    archiveFailed: "Couldn't archive it right now.",
+    readoutLabel: 'Plan readout',
+    /** "4 items · for 3 students"; `audience` is one of `audience.*`. */
+    summary: (items: number, audience: string) => `${plural('en', items, { one: `${items} item`, other: `${items} items` })} · for ${audience}`,
+    audience: {
+      everyone: { family: 'everyone in this family', class: 'everyone in this class', school: 'everyone in this school', space: 'everyone in this space' },
+      // TODO(F-I18N-001 §10, console counts): `plural()` once console text may change (§3.4 rule 1 keeps "1 learners" for now).
+      some: {
+        family: (count: number) => `${count} learners`,
+        class: (count: number) => `${count} students`,
+        school: (count: number) => `${count} members`,
+      },
+    },
+    edit: { cta: 'Edit' },
+    archive: { cta: 'Archive' },
+    newPlan: { cta: 'New plan' },
+    progressTitle: 'Progress',
+    noMembers: { family: 'No learners yet.', class: 'No students yet.', school: 'No members yet.' },
+    /** One learner's progress on the plan (`readoutLine`); counts only, never a ranking. */
+    readout: {
+      waiting: 'waiting for the next sync',
+      progress: (done: number, total: number) => `${done} / ${total}`,
+      withNotReady: (done: number, total: number, notReady: number) => `${done} / ${total} · ${notReady} not ready yet`,
+    },
+    builderLabel: 'Plan builder',
+    editTitle: 'Edit plan',
+    newTitle: 'New plan',
+    titleField: { label: 'Plan title', placeholder: 'Week 3' },
+    catalog: {
+      label: 'Catalog',
+      title: 'Catalog (Stage 1)',
+      addEpisode: { cta: '+ episode' },
+      /** A quest row; `minutes` is null for a quest the catalog does not know. */
+      questLine: (title: string, minutes: number | null) => `${title} · ${minutes ?? '?'} min`,
+      add: { cta: '+ add' },
+      added: { cta: 'added' },
+      /** An episode as a plan item (`catalogLabel`). */
+      episodeLabel: (title: string, quests: number) => `${title} (${plural('en', quests, { one: `${quests} quest`, other: `${quests} quests` })})`,
+    },
+    yours: {
+      label: 'Your plan',
+      title: (items: number) => `Your plan (${items})`,
+      empty: 'Add quests or whole episodes from the catalog.',
+      dateFor: (item: number) => `Target date for item ${item}`,
+      noteFor: (item: number) => `Note for item ${item}`,
+      notePlaceholder: 'note (optional)',
+    },
+    pace: {
+      title: 'Pace',
+      start: 'Start date',
+      perWeekLabel: 'Items per week',
+      perWeek: (items: number) => `${items} / week`,
+    },
+    who: { title: 'Who is this for', only: 'only:' },
+    noneJoined: { family: 'No learners have joined yet.', class: 'No students have joined yet.', school: 'No members have joined yet.' },
+    saving: { cta: 'Saving…' },
+    cancel: { cta: 'Cancel' },
+  },
+  /**
+   * The billing page (`/teach/billing`, `billing.ts`, F-I18N-001 PR 10b). Prices come from
+   * `price.*` and `formatUsd`; plan limits arrive as numbers from content-schema.
+   */
+  billing: {
+    title: 'Billing',
+    cantCheck: "Can't check your plan right now.",
+    checkoutFailed: "Couldn't start checkout. Try again.",
+    portalFailed: "Couldn't open the billing portal.",
+    current: {
+      title: 'Current plan',
+      freeLine: 'Stage 1, local progress, Rescue Code, file backup. Classes hold up to 20 students.',
+    },
+    yourAccount: 'your account',
+    /** How the plan was obtained (`sourceLine`) — never "paid": a 100%-off code costs nothing. */
+    source: (provider: string, code: string | null) => `via ${provider}${code ? ` · code ${code}` : ''}`,
+    provider: { stripe: 'web (Stripe)', apple: 'App Store', google: 'Google Play', manual: 'contract' },
+    // TODO(F-I18N-001 §10, console counts): `plural()` once console text may change.
+    seats: (seats: number) => `${seats} seats`,
+    manage: { cta: 'Manage subscription' },
+    planTitle: { free: 'Free', family_lifetime: 'Family Lifetime', group_license: 'Group License', school_seat: 'School Contract' },
+    includes: {
+      free: 'Stage 1, local progress, Rescue Code, file backup; classes up to 20 students',
+      family_lifetime: (learners: number) => `Every Stage, now and later, for one family: up to ${learners} learners, cloud sync, grown-up dashboard and plans`,
+      group_license: (teachers: number, students: number) =>
+        `A class or school: every student premium while enrolled, no 20-student cap; a school holds up to ${teachers} teachers / ${students} students`,
+      school_seat: (students: number, teachers: number) => `Beyond ${students} students or ${teachers} teachers — seats by contract`,
+    },
+    /** The price column of the contract row. */
+    contactPrice: 'Contact us',
+    plans: { title: 'Plans' },
+    promo: {
+      formLabel: 'Promo code',
+      placeholder: 'HOYA20',
+      apply: { cta: 'Apply code' },
+      change: { cta: 'Change code' },
+      /** `name` is the promotion's own name, when it has one. */
+      applied: (code: string, name: string | null) => `${code} applied${name ? ` · ${name}` : ''}.`,
+    },
+    choose: { cta: 'Choose' },
+    contact: { cta: 'Contact us' },
+    isCurrent: { pill: 'current' },
+  },
 } as const;
