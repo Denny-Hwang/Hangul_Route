@@ -522,7 +522,7 @@ Decisions made in this spec (each is reversible):
 | P9 | Korean test language: audio-only instructions on decoding rungs | Written Korean instructions would leak letter forms |
 | P10 | Telemetry carries `level` (the D1 id) but never `learnerType` | REVIEW-1 owner answer 2 |
 | P11 | Server first, app second for the two additive fields, plus a Worker preserve rule | Zod strips unknown keys (`schemas/sync.ts:49-56`); an old app re-uploads without the field |
-| P12 | `content/placement/` is requested as a new content directory | CLAUDE.md section 2 asks for approval; same pattern as D4's directories |
+| P12 | `content/placement/` is a new content directory — **approved by the owner on 2026-10-11** | CLAUDE.md section 2 asks for approval; same pattern as D4's directories |
 | P13 | The sampled coverage rule (untested symbols covered by their rung's pass) is accepted | The Hangul Check (F-QUEST-002 section 3.9), priority tokens and ordinary play correct gaps; the alternative is a 30-question census |
 
 ## 9. Unverified assumptions
