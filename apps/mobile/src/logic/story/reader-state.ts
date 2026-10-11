@@ -112,18 +112,17 @@ function showScene(state: ReaderState, index: number, via: SceneChangeVia): Read
   };
 }
 
-/** Leaves the current scene or checkpoint forwards: the next scene, or the end page. */
-function advance(state: ReaderState, resolved: string[]): { state: ReaderState; change: ReaderEffect | null; finished: boolean } {
+/**
+ * Leaves the current scene or checkpoint forwards. Its one effect is
+ * `scene-changed` for the next scene, or `finish-reading` on the end page.
+ */
+function advance(state: ReaderState, resolved: string[]): { state: ReaderState; effect: ReaderEffect } {
   const base: ReaderState = { ...state, resolved };
   if (state.index >= state.sceneCount - 1) {
-    return {
-      state: { ...base, phase: 'end', checkpointId: null, openTerm: null },
-      change: null,
-      finished: true,
-    };
+    return { state: { ...base, phase: 'end', checkpointId: null, openTerm: null }, effect: { type: 'finish-reading' } };
   }
-  const moved = showScene(base, state.index + 1, 'next');
-  return { state: moved.state, change: moved.effects[0] ?? null, finished: false };
+  const index = state.index + 1;
+  return { state: showScene(base, index, 'next').state, effect: { type: 'scene-changed', index, via: 'next' } };
 }
 
 function next(state: ReaderState): ReaderStep {
@@ -133,7 +132,7 @@ function next(state: ReaderState): ReaderStep {
     return { state: { ...state, phase: 'checkpoint', checkpointId, openTerm: null }, effects: [] };
   }
   const step = advance(state, state.resolved);
-  return { state: step.state, effects: step.finished ? [{ type: 'finish-reading' }] : step.change ? [step.change] : [] };
+  return { state: step.state, effects: [step.effect] };
 }
 
 function back(state: ReaderState): ReaderStep {
@@ -157,24 +156,35 @@ function restart(state: ReaderState): ReaderStep {
   return showScene({ ...state, resolved: [] }, 0, 'restart');
 }
 
-/** Finishes the open checkpoint: `scene-changed` (or `finish-reading`) with the `answer` between them. */
-function leaveCheckpoint(state: ReaderState, answer: ReaderEffect | null): ReaderStep {
-  const id = state.checkpointId;
-  const resolved = id !== null && !state.resolved.includes(id) ? [...state.resolved, id] : state.resolved;
-  const step = advance(state, resolved);
-  const effects: ReaderEffect[] = [];
-  if (step.change) effects.push(step.change);
-  if (answer) effects.push(answer);
-  if (step.finished) effects.push({ type: 'finish-reading' });
+/** The id of the open checkpoint card, else null. */
+function openCheckpoint(state: ReaderState): string | null {
+  return state.phase === 'checkpoint' ? state.checkpointId : null;
+}
+
+/**
+ * Finishes the open checkpoint (only opened while unresolved, see `next`).
+ * Effects order: `scene-changed`, then the `answer`; on the last scene the
+ * `answer`, then `finish-reading`.
+ */
+function leaveCheckpoint(state: ReaderState, id: string, answer: ReaderEffect | null): ReaderStep {
+  const step = advance(state, [...state.resolved, id]);
+  const around = answer ? [answer] : [];
+  const effects = step.effect.type === 'finish-reading' ? [...around, step.effect] : [step.effect, ...around];
   return { state: step.state, effects };
 }
 
 function resolveCheckpoint(state: ReaderState, correct: boolean): ReaderStep {
-  if (state.phase !== 'checkpoint' || state.checkpointId === null) return NO_CHANGE(state);
-  const answer: ReaderEffect = { type: 'answer', roundKey: checkpointRoundKey(state.checkpointId), correct };
+  const id = openCheckpoint(state);
+  if (id === null) return NO_CHANGE(state);
+  const answer: ReaderEffect = { type: 'answer', roundKey: checkpointRoundKey(id), correct };
   // A miss is reported (the run store keeps only the first answer) and the card stays for another try.
   if (!correct) return { state, effects: [answer] };
-  return leaveCheckpoint(state, answer);
+  return leaveCheckpoint(state, id, answer);
+}
+
+function skipCheckpoint(state: ReaderState): ReaderStep {
+  const id = openCheckpoint(state);
+  return id === null ? NO_CHANGE(state) : leaveCheckpoint(state, id, null);
 }
 
 export function reduceReader(state: ReaderState, action: ReaderAction): ReaderStep {
@@ -198,6 +208,6 @@ export function reduceReader(state: ReaderState, action: ReaderAction): ReaderSt
     case 'resolveCheckpoint':
       return resolveCheckpoint(state, action.correct);
     case 'skipCheckpoint':
-      return state.phase === 'checkpoint' ? leaveCheckpoint(state, null) : NO_CHANGE(state);
+      return skipCheckpoint(state);
   }
 }
