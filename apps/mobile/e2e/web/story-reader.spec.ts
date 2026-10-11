@@ -4,8 +4,10 @@ import { completeChildForm, keepSidewaysIfAsked, readStored, seedStored, waitFor
 
 /**
  * F-STORY-002 PR 2.6a: the story reader on its replay route (`StoryReader`,
- * unscored, writes nothing). No story is ready and no shelf exists yet, so this
- * runs against the fixture bundle only:
+ * unscored, writes nothing). No shelf exists yet (F-STORY-004), so the reader
+ * has no learner entry point: this suite opens it through the
+ * `window.__hrStoryE2E` hook and reads fixture-specific content, both of which
+ * exist only in the fixture bundle (served from dist-e2e/):
  *
  *   pnpm --filter @hangul-route/mobile build:web:fixtures
  *   STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile test:e2e:web story-reader
@@ -26,6 +28,7 @@ type E2eWindow = Window & {
   __hrStoryE2E?: {
     openReader(p: { storyId: string; level: string; sceneIndex?: number }): void;
     stories(): Array<{ id: string; levels: string[]; fixture: boolean; traditional: boolean }>;
+    events(): Array<{ name: string; profileId?: string; payload?: Record<string, unknown> }>;
   };
   __silentSpeech?: string[];
 };
@@ -40,7 +43,8 @@ async function onboard(page: Page): Promise<void> {
   await expect(page.getByText('Hi, Dami!')).toBeVisible();
 }
 
-async function openReader(page: Page, level = 'listen', sceneIndex?: number, storyId = STORY): Promise<void> {
+/** Opens the replay route without waiting for a scene (the content-error fallback has none). */
+async function navigateToReader(page: Page, level = 'listen', sceneIndex?: number, storyId = STORY): Promise<void> {
   await page.waitForFunction(() => Boolean((window as E2eWindow).__hrStoryE2E), undefined, { timeout: 10_000 });
   await page.evaluate(
     ([storyId, lvl, scene]) =>
@@ -51,7 +55,43 @@ async function openReader(page: Page, level = 'listen', sceneIndex?: number, sto
       }),
     [storyId, level, sceneIndex ?? null] as const,
   );
+}
+
+async function openReader(page: Page, level = 'listen', sceneIndex?: number, storyId = STORY): Promise<void> {
+  await navigateToReader(page, level, sceneIndex, storyId);
   await expect(page.getByTestId('story-reader-next')).toBeVisible();
+}
+
+function storyEvents(page: Page): Promise<Array<{ name: string; profileId?: string; payload?: Record<string, unknown> }>> {
+  return page.evaluate(() => (window as E2eWindow).__hrStoryE2E?.events() ?? []);
+}
+
+/**
+ * Runs `action` in the page, then samples the effective opacity of `testId` (its own times every
+ * ancestor's) on each animation frame for `ms`, and returns the lowest seen.
+ */
+async function lowestOpacityAfter(page: Page, testId: string, action: 'next', ms = 450): Promise<number> {
+  return page.evaluate(
+    async ([id, act, span]) => {
+      const target = document.querySelector(`[data-testid="${id}"]`);
+      const button = document.querySelector(`[data-testid="story-reader-${act}"]`) as HTMLElement | null;
+      if (!target || !button) return -1;
+      const effective = (): number => {
+        let o = 1;
+        for (let el: Element | null = target; el; el = el.parentElement) o *= Number(getComputedStyle(el).opacity);
+        return o;
+      };
+      button.click();
+      let lowest = effective();
+      const t0 = performance.now();
+      while (performance.now() - t0 < (span as number)) {
+        await new Promise((r) => requestAnimationFrame(r));
+        lowest = Math.min(lowest, effective());
+      }
+      return lowest;
+    },
+    [testId, action, ms] as const,
+  );
 }
 
 const position = (page: Page): Locator => page.getByTestId('story-reader-position');
@@ -61,7 +101,8 @@ const BRAND = 'rgb(178, 73, 21)'; // colors.brand.primary: a filled dot
 function filledDots(page: Page): Promise<number> {
   return page
     .getByTestId('story-reader-dots')
-    .getByRole('progressbar')
+    // The dots are hidden from screen readers (the labelled page number speaks instead).
+    .getByRole('progressbar', { includeHidden: true })
     .evaluate((bar, brand) => Array.from(bar.children).filter((d) => getComputedStyle(d).backgroundColor === brand).length, BRAND);
 }
 const next = (page: Page): Locator => page.getByTestId('story-reader-next');
@@ -90,6 +131,8 @@ test.describe('story reader, replay route (fixture bundle)', () => {
 
     // Scene 1: position, meter, Back disabled, picture, narration with its inline term, Korean block.
     await expect(position(page)).toHaveText('1 / 5');
+    // A screen reader hears "Scene 1 of 5", not "one slash five".
+    await expect(page.getByRole('group', { name: 'Scene 1 of 5' })).toBeVisible();
     await expect.poll(() => filledDots(page)).toBe(1);
     await expect(back(page)).toBeDisabled();
     await expect(next(page)).toBeEnabled();
@@ -99,6 +142,8 @@ test.describe('story reader, replay route (fixture bundle)', () => {
     await expect(page.getByTestId('story-reader-narration-text')).toContainText('wanted everyone to learn to read.');
     await expect(page.getByRole('button', { name: 'Korean word sejong, King Sejong. Double tap to hear.' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Korean: 세종, Sejong, King Sejong the Great' })).toBeAttached();
+    // The Korean block has its own 64 dp speaker (§3.3 item 4).
+    await expect(page.getByTestId('story-reader-hear-korean')).toHaveAccessibleName('Hear the Korean');
     // Sources arrives with PR 2.7: no button yet.
     await expect(page.getByTestId('story-reader-sources')).toHaveCount(0);
 
@@ -172,6 +217,8 @@ test.describe('story reader, replay route (fixture bundle)', () => {
     await expect(gloss).toContainText('세종');
     await expect(gloss).toContainText('sejong');
     await expect(gloss).toContainText('King Sejong');
+    // The gloss card has its speaker (§3.5).
+    await expect(page.getByTestId('story-reader-gloss-hear')).toHaveAccessibleName('Hear sejong');
     await page.keyboard.press('Escape');
     await expect(gloss).toHaveCount(0);
     await chip.click();
@@ -222,6 +269,16 @@ test.describe('story reader, replay route (fixture bundle)', () => {
     // The Korean is already on screen: the panel does not draw it again.
     await expect(prompt.getByTestId('story-reader-prompt-text')).toHaveCount(0);
 
+    // Hearing the scene reads the English only, and the no-voice state stays (§3.4, §3.14 row 7).
+    await page.getByTestId('story-reader-hear-scene').click();
+    await expect
+      .poll(() => page.evaluate(() => (window as E2eWindow).__silentSpeech ?? []))
+      .toContainEqual(expect.stringContaining('Long ago, King'));
+    await page.waitForTimeout(500);
+    await expect(page.getByTestId('story-reader-say-it')).toBeVisible();
+    await expect(prompt).toContainText('No Korean voice on this device.');
+    await expect(prompt.getByTestId('story-reader-prompt-help')).toBeVisible();
+
     const toggle = page.getByRole('switch', { name: 'Read to me' });
     await expect(toggle).toHaveAttribute('aria-checked', 'false');
     await toggle.click();
@@ -230,6 +287,10 @@ test.describe('story reader, replay route (fixture bundle)', () => {
     expect(await readStored(page, `settings:${id}`)).toEqual({ romanizationMode: 'always', readToMe: true });
 
     // The next scene reads itself once: the English narration, never Hangul (no Korean voice).
+    // Forget what scene 1 asked (emptied in place: the silent engine keeps this array).
+    await page.evaluate(() => {
+      (window as E2eWindow).__silentSpeech?.splice(0);
+    });
     await next(page).click();
     await expect
       .poll(() => page.evaluate(() => (window as E2eWindow).__silentSpeech ?? []))
@@ -242,6 +303,61 @@ test.describe('story reader, replay route (fixture bundle)', () => {
     await expect(position(page)).toHaveText('2 / 5');
   });
 
+  test('English voice only: hearing the scene keeps Say it yourself, the no-voice line and the help link', async ({ page }) => {
+    // A device with an English voice and no Korean one (the silent engine has no voice at all, so its
+    // English never plays): English utterances end normally, so an English-only play succeeds.
+    await page.addInitScript(() => {
+      const log: string[] = [];
+      (window as Window & { __englishOnly?: string[] }).__englishOnly = log;
+      const samantha = { name: 'Samantha', lang: 'en-US', voiceURI: 'Samantha', localService: true, default: true };
+      class Utterance {
+        lang = '';
+        rate = 1;
+        pitch = 1;
+        volume = 1;
+        voice: { name: string } | null = null;
+        onstart: (() => void) | null = null;
+        onend: (() => void) | null = null;
+        onerror: (() => void) | null = null;
+        constructor(public text: string) {}
+      }
+      Object.defineProperty(window, 'SpeechSynthesisUtterance', { configurable: true, value: Utterance });
+      Object.defineProperty(window, 'speechSynthesis', {
+        configurable: true,
+        value: {
+          speaking: false,
+          pending: false,
+          speak: (u: Utterance) => {
+            if (u.volume !== 0) log.push(u.text);
+            setTimeout(() => {
+              u.onstart?.();
+              u.onend?.();
+            }, 0);
+          },
+          cancel: () => undefined,
+          getVoices: () => [samantha],
+          addEventListener: () => undefined,
+          removeEventListener: () => undefined,
+        },
+      });
+    });
+    await onboard(page);
+    await openReader(page);
+    const prompt = page.getByTestId('story-reader-prompt');
+    await expect(page.getByTestId('story-reader-say-it')).toBeVisible();
+    await expect(prompt).toContainText('No Korean voice on this device.');
+
+    await page.getByTestId('story-reader-hear-scene').click();
+    await expect
+      .poll(() => page.evaluate(() => (window as Window & { __englishOnly?: string[] }).__englishOnly ?? []))
+      .toContainEqual(expect.stringContaining('wanted everyone to learn to read.'));
+    // The English chain has ended (played); the Korean could still not play, so nothing hides (§3.14 row 7).
+    await page.waitForTimeout(500);
+    await expect(page.getByTestId('story-reader-say-it')).toBeVisible();
+    await expect(prompt).toContainText('No Korean voice on this device.');
+    await expect(prompt.getByTestId('story-reader-prompt-help')).toBeVisible();
+  });
+
   test('sound off: text only, and the panel offers Turn sound on', async ({ page }) => {
     await onboard(page);
     await seedStored(page, 'device:audio', { muted: true });
@@ -250,7 +366,8 @@ test.describe('story reader, replay route (fixture bundle)', () => {
     const prompt = page.getByTestId('story-reader-prompt');
     await expect(prompt).toContainText('Sound is off.');
     await page.getByTestId('story-reader-hear-scene').click();
-    // Only the silent first-gesture unlock utterance, never a line.
+    // Only the silent first-gesture unlock utterance, never a line, even after the chain had time to run.
+    await page.waitForTimeout(800);
     const asked = await page.evaluate(() => (window as E2eWindow).__silentSpeech ?? []);
     expect(asked.filter((t) => t.trim() !== '')).toEqual([]);
     await prompt.getByRole('button', { name: 'Turn sound on' }).click();
@@ -271,14 +388,96 @@ test.describe('story reader, replay route (fixture bundle)', () => {
     expect(k && n && k.y < n.y).toBe(true);
   });
 
-  test('reduced motion: the page turns instantly', async ({ page }) => {
-    await page.emulateMedia({ reducedMotion: 'reduce' });
+  test('a page turn fades the scene in; with reduced motion it turns instantly', async ({ page }) => {
     await onboard(page);
     await openReader(page);
+    // Control: without reduced motion the body fades (so the check below can fail).
+    expect(await lowestOpacityAfter(page, 'story-reader-narration', 'next')).toBeLessThan(0.9);
+    await expect(position(page)).toHaveText('2 / 5');
+
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.reload();
+    await expect(page.getByText('Hi, Dami!')).toBeVisible();
+    await openReader(page);
+    expect(await lowestOpacityAfter(page, 'story-reader-narration', 'next')).toBe(1);
+    await expect(position(page)).toHaveText('2 / 5');
+  });
+
+  test('story.read.finished fires once per mount on the end page, with ids and counts only', async ({ page }) => {
+    await onboard(page);
+    const id = await profileId(page);
+    await openReader(page);
+    for (let i = 0; i < 5; i += 1) await next(page).click();
+    await expect(page.getByRole('heading', { name: 'The End' })).toBeVisible();
+    // Read again and finish a second time: still one event for this mount.
+    await page.getByTestId('story-reader-read-again').click();
+    for (let i = 0; i < 5; i += 1) await next(page).click();
+    await expect(page.getByRole('heading', { name: 'The End' })).toBeVisible();
+    await page.getByTestId('story-reader-end-primary').click();
+    await expect(page.getByText('Hi, Dami!')).toBeVisible();
+    expect(await storyEvents(page)).toEqual([
+      {
+        name: 'story.read.finished',
+        profileId: id,
+        payload: { storyId: STORY, level: 'listen', mode: 'replay', scenes: 5, scenesSeen: 5, linesPlayed: 0, termsOpened: 0 },
+      },
+    ]);
+
+    // A new mount opened on scene 4 counts only the scenes it showed (4 and 5); a gloss card counts.
+    await openReader(page, 'listen', 3);
+    await page.getByTestId('story-reader-term-hangeullal').click();
+    await expect(page.getByTestId('story-reader-gloss')).toBeVisible();
+    await next(page).click();
+    await next(page).click();
+    await expect(page.getByRole('heading', { name: 'The End' })).toBeVisible();
+    const events = await storyEvents(page);
+    expect(events).toHaveLength(2);
+    expect(events[1]?.payload).toEqual({ storyId: STORY, level: 'listen', mode: 'replay', scenes: 5, scenesSeen: 2, linesPlayed: 0, termsOpened: 1 });
+  });
+
+  test('a story that cannot open shows one line and Back; replay has no Continue', async ({ page }) => {
+    await onboard(page);
+    await navigateToReader(page, 'listen', undefined, 'story:does-not-exist');
+    const fallback = page.getByTestId('story-reader-unavailable');
+    await expect(fallback).toBeVisible();
+    await expect(fallback).toContainText('This story is not ready to read yet.');
+    await expect(page.getByTestId('story-reader-continue')).toHaveCount(0);
+    await expect(page.getByTestId('story-reader-next')).toHaveCount(0);
+    await page.getByTestId('story-reader-fallback-back').click();
+    await expect(page.getByText('Hi, Dami!')).toBeVisible();
+    await expect(page.getByTestId('story-reader')).toHaveCount(0);
+  });
+
+  test('page keys do nothing behind the voice-help sheet', async ({ page }) => {
+    await onboard(page);
+    await openReader(page);
+    await page.getByTestId('story-reader-prompt-help').click();
+    await expect(page.getByTestId('voice-help-sheet')).toBeVisible();
+    await page.keyboard.press('ArrowRight');
+    await page.waitForTimeout(300);
+    await expect(position(page)).toHaveText('1 / 5');
+    await page.getByTestId('voice-help-sheet-ok').click();
+    await expect(page.getByTestId('voice-help-sheet')).toHaveCount(0);
+    await page.keyboard.press('ArrowRight');
+    await expect(position(page)).toHaveText('2 / 5');
+  });
+
+  test('320x568: every scene opens at the top of its text', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 568 });
+    await onboard(page);
+    await openReader(page);
+    const scroll = page.getByTestId('story-reader-scroll');
+    // Scroll the text down, as a learner reading on a small phone does.
+    await scroll.evaluate((el) => {
+      el.scrollTop = el.scrollHeight;
+    });
+    expect(await scroll.evaluate((el) => el.scrollTop)).toBeGreaterThan(0);
     await next(page).click();
     await expect(position(page)).toHaveText('2 / 5');
-    const opacity = await page.getByTestId('story-reader-body').evaluate((el) => getComputedStyle(el).opacity);
-    expect(opacity).toBe('1');
+    await expect.poll(() => scroll.evaluate((el) => el.scrollTop)).toBe(0);
+    const top = await scroll.boundingBox();
+    const narration = await page.getByTestId('story-reader-narration').boundingBox();
+    expect(top && narration && narration.y >= top.y - 0.5).toBe(true);
   });
 
   test('every bundled story reads through to its end page on every tier, with no raw token or emoji', async ({ page }) => {
@@ -331,6 +530,8 @@ test.describe('story reader, replay route (fixture bundle)', () => {
         // Side by side (§3.3, F-LAYOUT-001 LD2): art left, text right.
         expect(art.x + art.width).toBeLessThanOrEqual(narration.x);
         expect(art.width).toBeLessThanOrEqual(vp.width * 0.55);
+        // The controls stay put on a page turn; only the art and the text fade (§3.10).
+        expect(await lowestOpacityAfter(page, 'story-reader-bottom-bar', 'next')).toBe(1);
       } else {
         expect(art.y + art.height).toBeLessThanOrEqual(narration.y);
       }
