@@ -1,7 +1,7 @@
 # WordArt (component spec v1)
 
 Spec: `docs/specs/F-VOC-002-wordart-svg-system.md` §3.7 (renderer, accessibility, modes) and PR W-1c in §6 · art brief: `design/brief/illustrations/word-art.md` · the screens that show it: `design/wireframes/vocab/topics.md`, `flashcards.md`, `speed-round.md` (the picture is the content of those screens, it has no wireframe of its own)
-Code: `packages/design-system/src/components/WordArt/` (`WordArt.tsx` paint, `types.ts`, `index.ts`) over the pure `packages/design-system/src/word-art/` (`model.ts`, `render.ts`, `registry.ts`); the web contact sheet draws the same render list as an svg string (`glyphToSvgString`)
+Code: `packages/design-system/src/components/WordArt/` (`WordArt.tsx` paint, `types.ts`, `index.ts`; imported from `@hangul-route/design-system/components/WordArt`, not the package root, so an app start that shows no word picture does not load the glyph registry) over the pure `packages/design-system/src/word-art/` (`model.ts`, `render.ts`, `registry.ts`); the web contact sheet draws the same render list as an svg string (`glyphToSvgString`)
 
 ## What it is
 
@@ -23,8 +23,9 @@ A vocabulary word's picture: a square, vector, drawn from data on a `0 0 100 100
 | State | Looks like | Assistive technology |
 |---|---|---|
 | Picture | the glyph, painted in order | `image`, named by `accessibilityLabel` |
-| Silhouette (`mono`) | every fill and stroke in `border.strong`; a highlight or shadow below 0.5 opacity is lifted to 0.5 so it does not vanish | as Picture or Decorative |
-| Decorative | as Picture | hidden (`accessibilityElementsHidden`, `importantForAccessibility="no-hide-descendants"`) |
+| Silhouette (`mono`) | every fill and stroke in `border.strong`; a highlight or shadow below 0.5 opacity is lifted to 0.5 so it does not vanish. The generated families are uniform in silhouette by design (one square, one frame, one head or figure): see the brief §3 | as Picture or Decorative |
+| Decorative | as Picture | hidden: `aria-hidden` (the attribute react-native-web writes on the web), `accessibilityElementsHidden` (iOS), `importantForAccessibility="no-hide-descendants"` (Android) |
+| Unlabelled (a picture that carries the meaning, given a blank label) | as Picture; in development builds a dashed `border.strong` frame, like StoryScene's | neither named nor hidden: the model sets `unlabelled`, so `PictureArt` (W-7) can show its text tile instead |
 | Unknown key | **nothing** (`null`): the caller (`PictureArt`, F-QUEST-002 §3.11) shows its text tile. Never a blank square, never the generic card fallback. The key test makes this unreachable for shipped data | the caller's tile is named |
 
 ## Tokens (no literals)
@@ -32,7 +33,7 @@ A vocabulary word's picture: a square, vector, drawn from data on a `0 0 100 100
 | Part | Token |
 |---|---|
 | Fills and strokes | the tone paths in the glyph data: any `colors.*` leaf except `feedback.danger`, `feedback.dangerLight`, `surface.overlay`, `surface.inkScrim` and `rarity.*`; `colors.vocab.*` only inside WordArt |
-| Outline | `text.primary`, 3 (silhouette) and 2 (detail); round caps and joins set by the renderer |
+| Outline | `text.primary`, 3 (main outline) and 2 (details); round caps and joins set by the renderer |
 | Silhouette | `border.strong` |
 | Background | none: the caller's tile (`surface.paper`, `border.subtle`) |
 

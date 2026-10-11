@@ -46,9 +46,11 @@ About 1 in 12 men cannot tell some colour pairs apart (red and brown, orange and
 
 These pictures are built by functions from data, so a family stays consistent and costs no drawing time. The batches register them (colours and counts in W-3, body in W-4).
 
+In silhouette a generated family is deliberately uniform: every colour swatch is the same square, every count the same frame, every body part the same head or figure (only a ring halo may show past the edge). A colour or a number has no shape of its own to hint at, so on the word wall these tiles all read as "not met yet"; the silhouette check of the review applies to hand-drawn pictures (F-VOC-002 W8).
+
 ### Colour swatches (`color-*`, 12)
 
-A rounded square in the colour (margin 6, corner 14, the 3-unit ink outline), with an **object** as a sticker in the lower right: the object's own picture at 55 %, standing on a paper halo (each shape drawn again behind itself with a wide paper stroke), so a red apple still reads on the red square. The object's ground shadow is dropped (the halo does its job). The square fills the frame, so every swatch carries the size waiver; with the object's colours a swatch may use up to 5 fill colours.
+A rounded square in the colour (margin 6, corner 14, the 3-unit ink outline), with an **object** as a sticker in the lower right: the object's own picture at 55 %, standing on a paper halo (the outline of every shape drawn again behind it with a wide paper stroke, as one path), so a red apple still reads on the red square. Because the halo is one shape, a swatch is the object's shapes plus two, and any object within the 32-shape limit makes a swatch within the 48-shape limit. The object's ground shadow is dropped (the halo does its job). The square fills the frame, so every swatch carries the size waiver; with the object's colours a swatch may use up to 5 fill colours.
 
 | Colour | Object | Colour | Object |
 |---|---|---|---|
@@ -72,7 +74,7 @@ A friendly neutral figure (paper face and limbs, a `hoya.fur` shirt, short hair,
 - Zoomed head: eye, nose, mouth, ear, tooth, face. The head has ears, a hair cap, eyes, cheeks, a nose and an open smile with the two upper front teeth.
 - Whole figure: head, hand, arm, leg, foot, belly.
 
-The ring positions are data (`BODY_ANCHORS`), worked out from the same geometry the figure is drawn from. Mouth and tooth share the open smile: the mouth ring circles the whole mouth, the tooth ring sits tight on the teeth.
+The ring positions are data (`BODY_ANCHORS`), worked out from the same geometry the figure is drawn from. Mouth and tooth share the open smile: the mouth ring circles the whole mouth, the tooth ring sits tight on the teeth. Only the ring tells them apart, so the W-4 review checks the pair side by side at 48 px, and `body-mouth` and `body-tooth` are never offered as options in the same question (F-VOC-002 §3.6.3).
 
 ### People (`figure()`, for the Family batch)
 
@@ -144,7 +146,7 @@ for Hangul Route (F-VOC-002). Brief: <the brief from design/brief/illustrations/
 
 Follow design/brief/illustrations/word-art.md §2 exactly: 100 x 100 grid, builders only
 (circle, ellipse, rect, poly, blob, curve, leaf, arc, line, drop, star, groundShadow, face),
-token paths only (no hex), ink outline 3 (silhouette) and 2 (details), at most 4 fill colours,
+token paths only (no hex), ink outline 3 (main outline) and 2 (details), at most 4 fill colours,
 subject 60-70 % of the frame and centred, at most 32 shapes, every face smiles through face(),
 no text, digits or emoji. Add `status: 'review'` to the registry meta.
 
