@@ -36,3 +36,4 @@ export * from './curriculum/dates';
 export * from './assessment';
 export * from './schemas/placement';
 export * from './placement';
+export * from './catalog';
