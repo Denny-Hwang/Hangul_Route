@@ -8,26 +8,7 @@ import { LOCALES, type UiLocale } from '../locales';
 import { getMessages } from '../resolve';
 import { isPlainObject, leafPaths, lookup } from '../tree';
 import type { DeepPartial, Messages } from '../types';
-
-/** Sample argument lists for every function message, keyed by dotted path. Add a row with each new function message. */
-const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
-  'a11y.tile': [['x']],
-  'a11y.stars': [[2]],
-  'a11y.hoya': [['waving']],
-  'a11y.cardArt': [['Book']],
-  'a11y.koreanItem': [[{ ko: 'x', romanization: 'g', gloss: 'dog' }], [{ ko: 'x', romanization: 'g' }]],
-  'learner.language.sameAsDevice': [['English']],
-  'learner.language.confirmProfile': [['English']],
-  'learner.language.confirmDevice': [['English']],
-  'learner.language.confirmUse': [['English']],
-  'learner.language.confirmBack': [['English']],
-  'learner.createProfile.nameHint.tooLong': [[12]],
-  'learner.firstQuest.summary': [[1, 1, 1], [3, 12, 2]],
-  'learner.firstQuest.questLine': [['Title', null], ['Title', 'Blurb']],
-  'learner.profile.switchTo': [['Suni']],
-  'learner.profile.statsTitle': [['Suni'], [null]],
-  'learner.profile.plan.unlocked': [[null], ['Mrs. Kim']],
-};
+import { SAMPLES } from './samples';
 
 const HANGUL = /[ᄀ-ᇿ㄰-㆏가-힯]/;
 
@@ -106,8 +87,9 @@ describe('content rules for every locale', () => {
       }
     });
 
+    // U+2605 (the black star in the Home "stars" pill) is a plain text symbol, not an emoji.
     it(`${locale}: no emoji in rendered output`, () => {
-      for (const s of strings) expect(/[\u{1F000}-\u{1FFFF}☀-➿]/u.test(s), s).toBe(false);
+      for (const s of strings) expect(/[\u{1F000}-\u{1FFFF}\u2600-\u2604\u2606-\u27BF]/u.test(s), s).toBe(false);
     });
   }
 

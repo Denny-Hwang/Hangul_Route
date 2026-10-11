@@ -268,3 +268,65 @@ describe('locale-store: profile removal', () => {
     expect(useLocaleStore.getState().byProfile[a.id]?.uiLocale).toBe('es');
   });
 });
+
+// Rollback (F-I18N-001 §6): flipping a locale back to 'hidden' ignores stored choices
+// in it without touching the stored data, so un-hiding restores them.
+describe('locale-store: a stored locale that is currently hidden is ignored', () => {
+  beforeEach(reset);
+
+  it('activeLocale skips a hidden profile override, device choice and detected locale', () => {
+    showAll(false);
+    useLocaleStore.setState({
+      detected: 'es',
+      device: 'ko',
+      byProfile: { 'profile:a': { uiLocale: 'es', romanizationMode: 'always' } },
+    });
+    const s = useLocaleStore.getState();
+    expect(activeLocale(s, 'profile:a')).toBe('en');
+    expect(activeLocale(s, null)).toBe('en');
+  });
+
+  it('a hidden override falls through to the next visible level, not straight to English', () => {
+    showAll(false);
+    useLocaleStore.setState({
+      detected: 'en',
+      device: 'en',
+      byProfile: { 'profile:a': { uiLocale: 'ko', romanizationMode: 'always' } },
+    });
+    expect(activeLocale(useLocaleStore.getState(), 'profile:a')).toBe('en');
+  });
+
+  it('un-hiding the locale brings the stored choice back (no data change)', async () => {
+    mem.set('device:settings', { uiLocale: 'ko' });
+    mem.set('settings:profile:a', { uiLocale: 'es', romanizationMode: 'tap' });
+    showAll(false);
+    await useLocaleStore.getState().hydrate(['profile:a']);
+    const hidden = useLocaleStore.getState();
+    expect(activeLocale(hidden, 'profile:a')).toBe('en');
+    expect(mem.get('device:settings')).toEqual({ uiLocale: 'ko' });
+    expect(mem.get('settings:profile:a')).toEqual({ uiLocale: 'es', romanizationMode: 'tap' });
+    expect(hidden.byProfile['profile:a']?.romanizationMode).toBe('tap');
+    showAll(true);
+    expect(activeLocale(useLocaleStore.getState(), 'profile:a')).toBe('es');
+    expect(activeLocale(useLocaleStore.getState(), null)).toBe('ko');
+  });
+
+  it('hydrate treats a hidden stored device choice as unset, so ?lang= can apply', async () => {
+    mem.set('device:settings', { uiLocale: 'ko' });
+    platform.handoff = 'en';
+    showAll(false);
+    await useLocaleStore.getState().hydrate([]);
+    expect(useLocaleStore.getState().device).toBe('en');
+    expect(mem.get('device:settings')).toEqual({ uiLocale: 'en' });
+  });
+
+  it('telemetry "from" reflects what the learner actually saw, not a hidden stored locale', () => {
+    showAll(false);
+    useLocaleStore.setState({ detected: 'en', device: 'ko' });
+    useLocaleStore.getState().setDeviceLocale('en', 'settings');
+    expect(track).not.toHaveBeenCalled();
+    useLocaleStore.setState({ detected: 'en', device: null, byProfile: { 'profile:a': { uiLocale: 'es', romanizationMode: 'always' } } });
+    useLocaleStore.getState().setProfileLocale('profile:a', null);
+    expect(track).not.toHaveBeenCalled();
+  });
+});

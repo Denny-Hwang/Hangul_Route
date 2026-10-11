@@ -2,7 +2,11 @@ import { plural } from '../../plural';
 
 /**
  * Learner-facing screens, one sub-object per screen (F-I18N-001 §3.4 rule 2).
- * PR 5 moves the first-run and settings surfaces in; the wording is unchanged.
+ * PR 5 moves the first-run and settings surfaces in, PR 6a Home, Journey, Library and
+ * CardDetail; the wording is unchanged. Strings that end up in a pill or a button are
+ * keyed `pill` / `cta` so the length budgets (§3.11) cover them.
+ * Content-derived text (stage, theme and card titles, blurbs) is not here: it comes from
+ * content and is localised by the overlay mechanism (PR 12).
  * A message never embeds taught Korean (rule 5): the endonyms in the language
  * picker are passed in as arguments (they are constants, `LOCALE_META`).
  */
@@ -92,5 +96,58 @@ export const learner = {
       on: 'On',
       off: 'Off',
     },
+  },
+
+  home: {
+    /** `null` while there is no active profile. */
+    greeting: (name: string | null) => `Hi, ${name ?? 'friend'}!`,
+    subtitle: "Ready for today's quest?",
+    /** Caption under the learner's cub, the way into profiles and settings. */
+    profileLabel: 'Profile',
+    streak: {
+      pill: (days: number) => plural('en', days, { one: 'Streak 1 day', other: `Streak ${days} days` }),
+    },
+    cards: { pill: (cards: number) => `${cards} cards` },
+    stars: { pill: (quests: number) => `${quests}★ quests` },
+    mission: { heading: 'Today with Hoya' },
+    progress: {
+      heading: 'Stage 1 progress',
+      label: (done: number, total: number) => `${done} of ${total} quests`,
+    },
+    homework: { title: 'Homework', due: (count: number) => `${count} to do today` },
+    tip: "Tip — finish today's quest to keep your streak alive!",
+    recentStars: 'Recent stars',
+  },
+
+  journey: {
+    title: 'Heritage Journey',
+    intro: '7 stages × 5 themes. Draw your own route.',
+    premium: { pill: 'Premium' },
+    tasteNote: 'A taste of this stage is open now. More episodes are coming.',
+    how: {
+      title: 'How the journey works',
+      body: 'Each cell is one episode. Finish every quest in a cell to complete it and earn its Heritage cards. More stages open as the journey grows.',
+    },
+  },
+
+  library: {
+    title: 'Heritage Library',
+    collected: {
+      line: (collected: number, total: number) => `${collected} of ${total} collected`,
+      pill: (collected: number, total: number) => `${collected}/${total}`,
+    },
+    filterAll: 'All',
+    locked: 'Locked',
+    /** Keyed by the schema's `Rarity`, so `es` and `ko` can translate each. */
+    rarity: { common: 'common', uncommon: 'uncommon', rare: 'rare', legendary: 'legendary' },
+    how: { title: 'How to collect more', body: 'Finish quests to unlock cards.' },
+  },
+
+  cardDetail: {
+    notFound: 'Card not found.',
+    /** The hint on the flip control, by the face being shown. */
+    flip: { front: 'tap to flip', back: 'tap to flip back' },
+    hear: { cta: 'Hear it' },
+    share: { cta: 'Share', error: "Couldn't make the picture this time. Try again?" },
   },
 } as const;

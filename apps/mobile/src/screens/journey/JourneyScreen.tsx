@@ -20,6 +20,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { episodeFor, episodesAll, stages, themes } from '../../content';
+import { useMessages } from '../../i18n/use-messages';
 import { isStageEntitled } from '../../logic/entitlement';
 import {
   isEpisodeComplete,
@@ -35,6 +36,7 @@ import { useAudience } from '../../store/audience';
 import { effectiveTier, useTierStore } from '../../store/tier-store';
 
 export function JourneyScreen(): React.ReactElement {
+  const m = useMessages().learner.journey;
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { copy, opensDirectly } = useAudience();
   const profile = useProfileStore(activeProfileSelector);
@@ -45,9 +47,9 @@ export function JourneyScreen(): React.ReactElement {
 
   return (
     <Screen tone="canvas" edges={TAB_SCREEN_EDGES}>
-      <Heading level="title">Heritage Journey</Heading>
+      <Heading level="title">{m.title}</Heading>
       <Spacer size="xs" />
-      <Body tone="secondary">7 stages × 5 themes. Draw your own route.</Body>
+      <Body tone="secondary">{m.intro}</Body>
 
       <Spacer size="lg" />
       {/* Same row geometry as the cells below, so each label sits over its column. */}
@@ -99,7 +101,7 @@ export function JourneyScreen(): React.ReactElement {
               </View>
               <Pill
                 tone={availability === 'open' ? 'success' : availability === 'taste' ? 'primary' : 'neutral'}
-                label={entitledStage ? stagePillLabel(availability) : 'Premium'}
+                label={entitledStage ? stagePillLabel(availability) : m.premium.pill}
                 size="sm"
               />
             </Pressable>
@@ -118,7 +120,7 @@ export function JourneyScreen(): React.ReactElement {
 
             {availability === 'taste' ? (
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginTop: spacing.xs }}>
-                <Caption tone="muted">A taste of this stage is open now. More episodes are coming.</Caption>
+                <Caption tone="muted">{m.tasteNote}</Caption>
               </View>
             ) : null}
           </View>
@@ -126,10 +128,10 @@ export function JourneyScreen(): React.ReactElement {
       })}
 
       <Card padding="md" tone="sunken">
-        <Heading level="prompt">How the journey works</Heading>
+        <Heading level="prompt">{m.how.title}</Heading>
         <Spacer size="xs" />
         <Body tone="secondary" size="sm">
-          Each cell is one episode. Finish every quest in a cell to complete it and earn its Heritage cards. More stages open as the journey grows.
+          {m.how.body}
         </Body>
       </Card>
       <Spacer size="xl" />
@@ -148,6 +150,7 @@ interface GridCellProps {
 }
 
 function GridCell({ stage, theme, onOpen, progressSnapshot }: GridCellProps): React.ReactElement {
+  const a11y = useMessages().a11y;
   const episode = episodeFor(stage, theme.key);
   const isPreview = !episode || episode.status === 'preview';
   // Complete only when every quest of the episode is done (wireframe journey/grid).
@@ -159,7 +162,7 @@ function GridCell({ stage, theme, onOpen, progressSnapshot }: GridCellProps): Re
       onPress={() => episode && !isPreview && onOpen(episode.id)}
       disabled={isPreview}
       accessibilityRole="button"
-      accessibilityLabel={`${theme.titleEn} episode for ${stage}${isPreview ? ', coming soon' : ''}`}
+      accessibilityLabel={a11y.gridCell(theme.titleEn, stage, isPreview)}
       style={{
         flex: 1,
         aspectRatio: 1,

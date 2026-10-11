@@ -5,10 +5,13 @@
     "apps/mobile/src/screens/onboarding/FirstQuestPreviewScreen.tsx",
     "apps/mobile/src/screens/profile/ProfileScreen.tsx",
     "apps/mobile/src/components/LanguageCard.tsx",
-    "apps/mobile/src/components/LanguageChips.tsx"
+    "apps/mobile/src/components/LanguageChips.tsx",
+    "apps/mobile/src/screens/home/HomeScreen.tsx",
+    "apps/mobile/src/screens/journey/JourneyScreen.tsx",
+    "apps/mobile/src/screens/library/LibraryScreen.tsx",
+    "apps/mobile/src/screens/library/CardDetailScreen.tsx"
   ],
   "pluralTernaryBaseline": {
-    "apps/mobile/src/screens/home/HomeScreen.tsx": 1,
     "apps/mobile/src/screens/homework/HomeworkScreen.tsx": 1,
     "apps/web/src/app/teach/space/page.tsx": 1,
     "apps/web/src/app/teach/space/plan/page.tsx": 1,

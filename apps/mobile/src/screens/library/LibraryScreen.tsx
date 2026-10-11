@@ -21,11 +21,13 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useMemo, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { heritageCardsAll, themes } from '../../content';
+import { useMessages } from '../../i18n/use-messages';
 import type { RootStackParamList } from '../../navigation/types';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 
 export function LibraryScreen(): React.ReactElement {
+  const m = useMessages().learner.library;
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const profile = useProfileStore(activeProfileSelector);
   const snap = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
@@ -41,15 +43,15 @@ export function LibraryScreen(): React.ReactElement {
     <Screen tone="canvas" edges={TAB_SCREEN_EDGES}>
       <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: spacing.sm }}>
         <View style={{ flex: 1 }}>
-          <Heading level="title">Heritage Library</Heading>
-          <Caption tone="muted">{unlockedIds.size} of {heritageCardsAll.length} collected</Caption>
+          <Heading level="title">{m.title}</Heading>
+          <Caption tone="muted">{m.collected.line(unlockedIds.size, heritageCardsAll.length)}</Caption>
         </View>
-        <Pill label={`${unlockedIds.size}/${heritageCardsAll.length}`} tone="primary" />
+        <Pill label={m.collected.pill(unlockedIds.size, heritageCardsAll.length)} tone="primary" />
       </View>
 
       <Spacer size="md" />
       <View style={{ flexDirection: 'row', gap: spacing.xs, flexWrap: 'wrap' }}>
-        <FilterChip label="All" active={filter === 'all'} onPress={() => setFilter('all')} />
+        <FilterChip label={m.filterAll} active={filter === 'all'} onPress={() => setFilter('all')} />
         {themes.map((t) => (
           <FilterChip
             key={t.key}
@@ -74,10 +76,10 @@ export function LibraryScreen(): React.ReactElement {
       <Spacer size="xl" />
 
       <Card padding="md" tone="brand">
-        <Heading level="prompt">How to collect more</Heading>
+        <Heading level="prompt">{m.how.title}</Heading>
         <Spacer size="xs" />
         <Body tone="secondary" size="sm">
-          Finish quests to unlock cards.
+          {m.how.body}
         </Body>
       </Card>
       <Spacer size="xl" />
@@ -113,11 +115,13 @@ function CardThumb({
   unlocked: boolean;
   onPress: () => void;
 }): React.ReactElement {
+  const messages = useMessages();
+  const m = messages.learner.library;
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={unlocked ? card.titleEn : `Locked card`}
+      accessibilityLabel={unlocked ? card.titleEn : messages.a11y.lockedCard}
       style={{
         flexBasis: '47%',
         backgroundColor: unlocked ? colors.surface.paper : colors.surface.sunken,
@@ -131,17 +135,17 @@ function CardThumb({
       {!unlocked ? (
         <View style={{ alignItems: 'center', justifyContent: 'center', flex: 1 }}>
           <Icon name="lock" size={32} color={colors.text.muted} />
-          <Caption tone="muted">Locked</Caption>
+          <Caption tone="muted">{m.locked}</Caption>
         </View>
       ) : (
         <>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <Pill tone={card.rarity === 'legendary' ? 'nudge' : card.rarity === 'rare' ? 'info' : card.rarity === 'uncommon' ? 'success' : 'neutral'} label={card.rarity} size="sm" />
+            <Pill tone={card.rarity === 'legendary' ? 'nudge' : card.rarity === 'rare' ? 'info' : card.rarity === 'uncommon' ? 'success' : 'neutral'} label={m.rarity[card.rarity]} size="sm" />
           </View>
           <Spacer size="xs" />
           {supportedCardIds.includes(card.id) ? (
             <View style={{ alignItems: 'center' }}>
-              <HeritageCardArt cardId={card.id} size={96} />
+              <HeritageCardArt cardId={card.id} size={96} accessibilityLabel={messages.a11y.cardArt(card.titleEn)} />
             </View>
           ) : null}
           <Spacer size="xs" />
