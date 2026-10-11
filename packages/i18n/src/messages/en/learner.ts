@@ -316,4 +316,76 @@ export const learner = {
     progress: { pill: (round: number, total: number) => `${round} / ${total}` },
     skip: { cta: 'Skip' },
   },
+
+  /**
+   * The audio prompt panel, its speaker button and the "Add a Korean voice" sheet (F-AUDIO-004
+   * §3.7-3.8), shared by the minigames, Discover and the Profile Sound card. Korean letters are
+   * shown by the screens as taught content, never inside these strings.
+   */
+  audio: {
+    readHere: 'No sound? Read it here.',
+    /** The Match Sound heading: listening, or reading the sound as text. */
+    heading: { listen: 'Tap the letter you hear', text: 'Tap the letter for this sound' },
+    /** Hoya after a miss; the spoken syllable and its romanization follow as taught content. */
+    listenAgain: 'Listen again. This one says',
+    hearIt: { cta: 'Hear it' },
+    tapToHear: 'Tap to hear',
+    tapToReplay: 'Tap to replay',
+    /** The panel's one button, keyed by `FallbackAction` (`none` has no button). */
+    action: {
+      turn_on: { cta: 'Turn sound on' },
+      try_again: { cta: 'Try again' },
+      tap_to_hear: { cta: 'Tap to hear' },
+    },
+    soundIsOff: 'Sound is off.',
+    noKoreanVoice: 'No Korean voice on this device',
+    /** The panel's second line, a sentence. */
+    noKoreanVoiceSentence: 'No Korean voice on this device.',
+    didNotPlay: 'The sound did not play.',
+    letterName: { cta: 'Letter name' },
+    /** Accessibility label of the speaker button; it states the state. */
+    speaker: { on: 'Play sound', off: 'Play sound, sound is off' },
+    /** The Profile Sound card's second line. */
+    voice: {
+      ready: 'Korean voice: ready',
+      needsInternet: 'Korean voice needs the internet',
+      looking: 'Looking for a Korean voice',
+    },
+    howToAddVoice: { cta: 'How to add a voice' },
+    /** Menu names follow Apple, Google and Microsoft help pages and vary by OS version, so the sheet says so. */
+    voiceHelp: {
+      title: 'Add a Korean voice',
+      note: 'Menu names can differ on your device.',
+      sections: {
+        apple: {
+          title: 'iPhone or iPad',
+          steps: [
+            'Open Settings, then Accessibility.',
+            'Tap Spoken Content, then Voices, then Korean.',
+            'Download a voice, such as Yuna. Enhanced or Premium sounds best.',
+            'Come back and reopen Hangul Route.',
+          ],
+        },
+        android: {
+          title: 'Android',
+          steps: [
+            'Open Settings, then search for Text-to-speech output.',
+            'Choose Speech Services by Google and tap the gear.',
+            'Tap Install voice data, then Korean.',
+            'Come back and reopen Hangul Route.',
+          ],
+        },
+        computer: {
+          title: 'Computer',
+          steps: [
+            'Mac: System Settings, Accessibility, Spoken Content, System Voice, Manage Voices, then Korean.',
+            'Windows: Settings, Time & language, Speech, Manage voices, then Add voices and Korean.',
+            'Chrome and Edge: some Korean voices need the internet, so check you are online.',
+            'Reload this page.',
+          ],
+        },
+      },
+      footer: 'You can still play: the sound is written on screen.',
+    },
+  },
 } as const;

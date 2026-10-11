@@ -1,8 +1,18 @@
+import { getMessages, pseudoLocalize, pseudoText } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import type { AudioCapability } from '../capability';
-import { AUDIO_COPY } from '../copy';
 import { INITIAL_PROMPT_STATE, promptReducer, type PromptEvent, type PromptState } from '../prompt-state';
-import { failureFromStore, promptPanelView, shouldAutoReplay, wrongAnswerBubble } from '../prompt-view';
+import {
+  failureFromStore,
+  promptPanelView as promptPanelViewWith,
+  shouldAutoReplay,
+  wrongAnswerBubble,
+  type PromptPanelView,
+} from '../prompt-view';
+
+const COPY = getMessages('en').learner.audio;
+const promptPanelView = (s: PromptState, cap: AudioCapability, muted: boolean, hasClip: boolean): PromptPanelView =>
+  promptPanelViewWith(s, cap, muted, hasClip, COPY);
 
 const unknownCap: AudioCapability = { tts: { state: 'unknown' }, clips: false, unlocked: false };
 const readyCap: AudioCapability = {
@@ -121,10 +131,26 @@ describe('failureFromStore', () => {
 
 describe('wrongAnswerBubble', () => {
   it('says the spoken syllable and its romanization, never the letter name', () => {
-    expect(wrongAnswerBubble({ text: '가', romanization: 'ga' })).toEqual({
-      message: AUDIO_COPY.listenAgain,
+    expect(wrongAnswerBubble({ text: '가', romanization: 'ga' }, COPY)).toEqual({
+      message: 'Listen again. This one says',
       korean: '가',
       romanization: 'ga',
     });
+  });
+});
+
+describe('promptPanelView takes its words as a parameter (F-I18N-001 §3.4 rule 3)', () => {
+  it('renders every line from the subtree it is given (en-XA)', () => {
+    const pseudo = pseudoLocalize(getMessages('en')).learner.audio;
+    const muted = promptPanelViewWith(INITIAL_PROMPT_STATE, readyCap, true, false, pseudo);
+    expect(muted.readLine).toBe(pseudoText('No sound? Read it here.'));
+    expect(muted.detail).toBe(pseudoText('Sound is off.'));
+    expect(muted.actionLabel).toBe(pseudoText('Turn sound on'));
+    expect(muted.heading).toBe(pseudoText('Tap the letter for this sound'));
+    expect(muted.speakerLabel).toBe(pseudoText('Play sound, sound is off'));
+    expect(muted.speakerCaption).toBe(pseudoText('Tap to replay'));
+    const noVoice = promptPanelViewWith(INITIAL_PROMPT_STATE, noneCap, false, false, pseudo);
+    expect(noVoice.helpLabel).toBe(pseudoText('How to add a voice'));
+    expect(wrongAnswerBubble({ text: '가', romanization: 'ga' }, pseudo).message).toBe(pseudoText('Listen again. This one says'));
   });
 });

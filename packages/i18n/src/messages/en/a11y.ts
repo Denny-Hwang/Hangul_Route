@@ -38,6 +38,8 @@ export const a11y = {
   flipToBack: 'Tap to flip card to back',
   flipToFront: 'Tap to flip card to front',
   shareCard: 'Share this card',
+  /** The Profile Sound switch, its state and the voice line read as one group (`voice` has no colon). */
+  soundSwitch: (muted: boolean, voice: string) => `Sound, ${muted ? 'off' : 'on'}. ${voice}.`,
   /** A taught Korean item: Korean text, its romanization and (optionally) a gloss in the UI language. */
   koreanItem: (item: { ko: string; romanization: string; gloss?: string }) =>
     item.gloss === undefined

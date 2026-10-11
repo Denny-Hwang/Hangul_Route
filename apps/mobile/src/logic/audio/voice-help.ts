@@ -1,11 +1,12 @@
+import type { Messages } from '@hangul-route/i18n';
 import type { KoVoiceStatus } from './capability';
-import { AUDIO_COPY, voiceStatusLine } from './copy';
+import { voiceStatusLine, type AudioCopy } from './copy';
 
 /**
  * Profile "Sound" card voice line and the "Add a Korean voice" help sheet
  * (F-AUDIO-004 §3.7, wireframe design/wireframes/minigame/audio-fallback.md
  * W7, spec design/components/VoiceHelp/spec.md). Pure: the screen renders what
- * comes back. English until F-I18N-001's catalog exists.
+ * comes back. The words are `learner.audio` (F-I18N-001 PR 7b), passed in.
  */
 export interface SoundCardView {
   /** Second line under "Sound". */
@@ -17,23 +18,29 @@ export interface SoundCardView {
   glyph: 'speaker' | 'speaker-off';
 }
 
-export function soundCardView(status: KoVoiceStatus, muted: boolean): SoundCardView {
+export function soundCardView(status: KoVoiceStatus, muted: boolean, copy: AudioCopy): SoundCardView {
   return {
-    statusLine: voiceStatusLine(status),
+    statusLine: voiceStatusLine(status, copy),
     showHowTo: status.state === 'none',
-    howToLabel: AUDIO_COPY.howToAddVoice,
+    howToLabel: copy.howToAddVoice.cta,
     glyph: muted ? 'speaker-off' : 'speaker',
   };
 }
 
 /** The switch, its state and the voice line read as one group: "Sound, on. Korean voice ready." */
-export function soundSwitchLabel(status: KoVoiceStatus, muted: boolean): string {
-  const voice = voiceStatusLine(status).replace(':', '');
-  return `Sound, ${muted ? 'off' : 'on'}. ${voice}.`;
+export function soundSwitchLabel(
+  status: KoVoiceStatus,
+  muted: boolean,
+  copy: AudioCopy,
+  label: Messages['a11y']['soundSwitch'],
+): string {
+  return label(muted, voiceStatusLine(status, copy).replace(':', ''));
 }
 
+export type VoiceHelpSectionId = 'apple' | 'android' | 'computer';
+
 export interface VoiceHelpSection {
-  id: 'apple' | 'android' | 'computer';
+  id: VoiceHelpSectionId;
   title: string;
   steps: readonly string[];
 }
@@ -43,48 +50,17 @@ export interface VoiceHelpContent {
   note: string;
   sections: readonly VoiceHelpSection[];
   footer: string;
-  closeLabel: string;
 }
 
-/**
- * Static steps per OS family. Menu names follow Apple, Google and Microsoft
- * help pages and still vary by OS version and maker, so the sheet says so.
- */
-export const VOICE_HELP: VoiceHelpContent = {
-  title: 'Add a Korean voice',
-  note: 'Menu names can differ on your device.',
-  sections: [
-    {
-      id: 'apple',
-      title: 'iPhone or iPad',
-      steps: [
-        'Open Settings, then Accessibility.',
-        'Tap Spoken Content, then Voices, then Korean.',
-        'Download a voice, such as Yuna. Enhanced or Premium sounds best.',
-        'Come back and reopen Hangul Route.',
-      ],
-    },
-    {
-      id: 'android',
-      title: 'Android',
-      steps: [
-        'Open Settings, then search for Text-to-speech output.',
-        'Choose Speech Services by Google and tap the gear.',
-        'Tap Install voice data, then Korean.',
-        'Come back and reopen Hangul Route.',
-      ],
-    },
-    {
-      id: 'computer',
-      title: 'Computer',
-      steps: [
-        'Mac: System Settings, Accessibility, Spoken Content, System Voice, Manage Voices, then Korean.',
-        'Windows: Settings, Time & language, Speech, Manage voices, then Add voices and Korean.',
-        'Chrome and Edge: some Korean voices need the internet, so check you are online.',
-        'Reload this page.',
-      ],
-    },
-  ],
-  footer: 'You can still play: the sound is written on screen.',
-  closeLabel: 'OK',
-};
+/** The OS families, in the order of the wireframe. */
+const SECTION_ORDER: readonly VoiceHelpSectionId[] = ['apple', 'android', 'computer'];
+
+/** The sheet's content from `learner.audio.voiceHelp`: static steps per OS family. */
+export function voiceHelpContent(copy: AudioCopy['voiceHelp']): VoiceHelpContent {
+  return {
+    title: copy.title,
+    note: copy.note,
+    sections: SECTION_ORDER.map((id) => ({ id, title: copy.sections[id].title, steps: copy.sections[id].steps })),
+    footer: copy.footer,
+  };
+}

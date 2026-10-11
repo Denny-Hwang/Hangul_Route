@@ -17,6 +17,7 @@ import { Pressable, View } from 'react-native';
 import { PromptPanel } from '../../components/PromptPanel';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { usePromptSlot } from '../../components/use-prompt-slot';
+import { useMessages } from '../../i18n/use-messages';
 import { wrongAnswerBubble, shouldAutoReplay } from '../../logic/audio/prompt-view';
 import { spokenFor } from '../../logic/audio/spoken';
 import { jamoTileA11yLabel } from '../../logic/korean-labels';
@@ -41,6 +42,7 @@ export function MatchSoundGame({ scope, onFinish }: Props): React.ReactElement {
     [scope],
   );
 
+  const m = useMessages();
   const answerRound = useQuestRunStore((s) => s.answerRound);
   const markStepComplete = useQuestRunStore((s) => s.markStepComplete);
 
@@ -76,7 +78,7 @@ export function MatchSoundGame({ scope, onFinish }: Props): React.ReactElement {
   if (!round) {
     return (
       <Screen>
-        <Body>No rounds.</Body>
+        <Body>{m.learner.minigame.noRounds}</Body>
       </Screen>
     );
   }
@@ -109,7 +111,7 @@ export function MatchSoundGame({ scope, onFinish }: Props): React.ReactElement {
   };
 
   const spoken = spokenFor(round.promptJamo, 'sound');
-  const bubble = wrongAnswerBubble(spoken);
+  const bubble = wrongAnswerBubble(spoken, m.learner.audio);
 
   return (
     <Screen tone="canvas">
@@ -117,7 +119,7 @@ export function MatchSoundGame({ scope, onFinish }: Props): React.ReactElement {
         <View style={{ flex: 1 }}>
           <Progress value={roundIdx + 1} max={rounds.length} tone="primary" />
         </View>
-        <Pill label={`${roundIdx + 1} / ${rounds.length}`} tone="neutral" size="sm" />
+        <Pill label={m.learner.minigame.progress.pill(roundIdx + 1, rounds.length)} tone="neutral" size="sm" />
       </View>
 
       <Spacer size="lg" />
@@ -161,7 +163,7 @@ export function MatchSoundGame({ scope, onFinish }: Props): React.ReactElement {
               romanization={j.romanization}
               state={state}
               size="lg"
-              accessibilityLabel={jamoTileA11yLabel(j.romanization)}
+              accessibilityLabel={jamoTileA11yLabel(j.romanization, m.a11y.tile)}
               onPress={() => handleTap(j.id)}
             />
           );
@@ -176,7 +178,7 @@ export function MatchSoundGame({ scope, onFinish }: Props): React.ReactElement {
             message={bubble.message}
             korean={bubble.korean}
             romanization={bubble.romanization}
-            ctaInline={<Button label="Hear it" tone="secondary" size="md" onPress={() => void hear()} />}
+            ctaInline={<Button label={m.learner.audio.hearIt.cta} tone="secondary" size="md" onPress={() => void hear()} />}
           />
         </>
       ) : null}

@@ -33,22 +33,94 @@ describe('learner.minigame shell (English wording as shipped)', () => {
   });
 });
 
+describe('learner.audio (F-AUDIO-004 §3.7-3.8, English wording as shipped)', () => {
+  const a = m.learner.audio;
+
+  it('keeps the prompt panel lines and its actions', () => {
+    expect(a.readHere).toBe('No sound? Read it here.');
+    expect(a.heading.listen).toBe('Tap the letter you hear');
+    expect(a.heading.text).toBe('Tap the letter for this sound');
+    expect(a.listenAgain).toBe('Listen again. This one says');
+    expect(a.hearIt.cta).toBe('Hear it');
+    expect(a.tapToHear).toBe('Tap to hear');
+    expect(a.tapToReplay).toBe('Tap to replay');
+    expect(a.action.turn_on.cta).toBe('Turn sound on');
+    expect(a.action.try_again.cta).toBe('Try again');
+    expect(a.action.tap_to_hear.cta).toBe('Tap to hear');
+    expect(a.letterName.cta).toBe('Letter name');
+    expect(a.howToAddVoice.cta).toBe('How to add a voice');
+  });
+
+  it('keeps the reasons, the speaker labels and the voice lines', () => {
+    expect(a.soundIsOff).toBe('Sound is off.');
+    expect(a.noKoreanVoice).toBe('No Korean voice on this device');
+    expect(a.noKoreanVoiceSentence).toBe('No Korean voice on this device.');
+    expect(a.didNotPlay).toBe('The sound did not play.');
+    expect(a.speaker).toEqual({ on: 'Play sound', off: 'Play sound, sound is off' });
+    expect(a.voice).toEqual({
+      ready: 'Korean voice: ready',
+      needsInternet: 'Korean voice needs the internet',
+      looking: 'Looking for a Korean voice',
+    });
+    expect(m.a11y.soundSwitch(false, 'Korean voice ready')).toBe('Sound, on. Korean voice ready.');
+    expect(m.a11y.soundSwitch(true, 'Korean voice needs the internet')).toBe(
+      'Sound, off. Korean voice needs the internet.',
+    );
+  });
+
+  it('keeps the voice help sheet, its three OS families and their steps', () => {
+    const h = a.voiceHelp;
+    expect(h.title).toBe('Add a Korean voice');
+    expect(h.note).toBe('Menu names can differ on your device.');
+    expect(h.footer).toBe('You can still play: the sound is written on screen.');
+    expect(Object.keys(h.sections)).toEqual(['apple', 'android', 'computer']);
+    expect(h.sections.apple.title).toBe('iPhone or iPad');
+    expect(h.sections.android.title).toBe('Android');
+    expect(h.sections.computer.title).toBe('Computer');
+    expect(h.sections.apple.steps).toEqual([
+      'Open Settings, then Accessibility.',
+      'Tap Spoken Content, then Voices, then Korean.',
+      'Download a voice, such as Yuna. Enhanced or Premium sounds best.',
+      'Come back and reopen Hangul Route.',
+    ]);
+    expect(h.sections.android.steps).toEqual([
+      'Open Settings, then search for Text-to-speech output.',
+      'Choose Speech Services by Google and tap the gear.',
+      'Tap Install voice data, then Korean.',
+      'Come back and reopen Hangul Route.',
+    ]);
+    expect(h.sections.computer.steps).toEqual([
+      'Mac: System Settings, Accessibility, Spoken Content, System Voice, Manage Voices, then Korean.',
+      'Windows: Settings, Time & language, Speech, Manage voices, then Add voices and Korean.',
+      'Chrome and Edge: some Korean voices need the internet, so check you are online.',
+      'Reload this page.',
+    ]);
+  });
+
+  it('is plain: no age words, no failure language, no emoji', () => {
+    expect(JSON.stringify(a)).not.toMatch(NO_AGE_OR_FAILURE);
+    expect(JSON.stringify(a)).not.toMatch(/\b(baby|error|red)\b/i);
+  });
+});
+
 describe('every locale', () => {
   for (const locale of LOCALES) {
     it(`${locale}: has the minigame keys`, () => {
       const messages = getMessages(locale);
       expect(typeof messages.learner.minigame.notFound).toBe('string');
       expect(typeof messages.learner.minigame.progress.pill).toBe('function');
+      expect(typeof messages.learner.audio.readHere).toBe('string');
+      expect(messages.learner.audio.voiceHelp.sections.apple.steps.length).toBeGreaterThan(0);
     });
   }
 });
 
 /** The subtrees this PR adds; each game's commit extends the list. */
-const NEW_PREFIXES = ['learner.minigame'];
+const NEW_PREFIXES = ['learner.minigame', 'learner.audio', 'a11y.soundSwitch'];
 
 // en-XA (F-I18N-001 §3.11): every new key, function messages and step lists included, survives pseudo-localisation.
 describe('en-XA covers the new keys', () => {
-  const paths = leafPaths(m).filter((p) => NEW_PREFIXES.some((x) => p.startsWith(`${x}.`)));
+  const paths = leafPaths(m).filter((p) => NEW_PREFIXES.some((x) => p === x || p.startsWith(`${x}.`)));
   const pseudo = pseudoLocalize(m);
 
   it('finds the new leaves', () => {

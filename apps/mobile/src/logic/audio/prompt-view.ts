@@ -1,5 +1,5 @@
 import type { AudioCapability } from './capability';
-import { AUDIO_COPY, matchSoundHeading, panelDetail, speakerLabel } from './copy';
+import { fallbackActionLabel, matchSoundHeading, panelDetail, speakerLabel, type AudioCopy } from './copy';
 import {
   fallbackAction,
   showText,
@@ -12,8 +12,8 @@ import type { SpokenForm } from './spoken';
 /**
  * What the shared prompt panel shows for one prompt slot (F-AUDIO-004 §3.8,
  * wireframe design/wireframes/minigame/audio-fallback.md W1-W4). Pure: the
- * hook feeds it the reducer state plus the store values and the screen only
- * renders what comes back.
+ * hook feeds it the reducer state plus the store values and the `learner.audio`
+ * messages, and the screen only renders what comes back.
  */
 export interface PromptPanelView {
   /** The text prompt (spoken syllable + romanization) is up. */
@@ -43,7 +43,13 @@ function reasonOf(s: PromptState, cap: AudioCapability, muted: boolean, hasClip:
   return null;
 }
 
-export function promptPanelView(s: PromptState, cap: AudioCapability, muted: boolean, hasClip: boolean): PromptPanelView {
+export function promptPanelView(
+  s: PromptState,
+  cap: AudioCapability,
+  muted: boolean,
+  hasClip: boolean,
+  copy: AudioCopy,
+): PromptPanelView {
   const textShown = showText(s, cap, muted, hasClip);
   const reason = textShown ? reasonOf(s, cap, muted, hasClip) : null;
   const action = fallbackAction(reason);
@@ -52,14 +58,14 @@ export function promptPanelView(s: PromptState, cap: AudioCapability, muted: boo
   return {
     textShown,
     reason,
-    readLine: AUDIO_COPY.readHere,
-    detail: panelDetail(reason),
+    readLine: copy.readHere,
+    detail: panelDetail(reason, copy),
     action,
-    actionLabel: action === 'turn_on' ? AUDIO_COPY.turnSoundOn : action === 'try_again' ? AUDIO_COPY.tryAgain : action === 'tap_to_hear' ? AUDIO_COPY.tapToHear : null,
-    helpLabel: reason === 'no_voice' ? AUDIO_COPY.howToAddVoice : null,
-    heading: matchSoundHeading(textShown && soundOffOrAbsent),
-    speakerLabel: reason === 'blocked' ? AUDIO_COPY.tapToHear : speakerLabel(muted),
-    speakerCaption: reason === 'blocked' ? AUDIO_COPY.tapToHear : AUDIO_COPY.tapToReplay,
+    actionLabel: fallbackActionLabel(action, copy),
+    helpLabel: reason === 'no_voice' ? copy.howToAddVoice.cta : null,
+    heading: matchSoundHeading(textShown && soundOffOrAbsent, copy),
+    speakerLabel: reason === 'blocked' ? copy.tapToHear : speakerLabel(muted, copy),
+    speakerCaption: reason === 'blocked' ? copy.tapToHear : copy.tapToReplay,
   };
 }
 
@@ -80,6 +86,6 @@ export interface WrongAnswerBubble {
 }
 
 /** F-001 §3.2 (revised): the bubble repeats the sound that was played, as the spoken syllable and its romanization. */
-export function wrongAnswerBubble(spoken: Pick<SpokenForm, 'text' | 'romanization'>): WrongAnswerBubble {
-  return { message: AUDIO_COPY.listenAgain, korean: spoken.text, romanization: spoken.romanization };
+export function wrongAnswerBubble(spoken: Pick<SpokenForm, 'text' | 'romanization'>, copy: AudioCopy): WrongAnswerBubble {
+  return { message: copy.listenAgain, korean: spoken.text, romanization: spoken.romanization };
 }

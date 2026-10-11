@@ -54,7 +54,7 @@ export function ProfileScreen(): React.ReactElement {
   const soundOn = useAudioStore((s) => !s.muted);
   const setMuted = useAudioStore((s) => s.setMuted);
   const voice = useAudioStore((s) => s.tts);
-  const soundCard = soundCardView(voice, !soundOn);
+  const soundCard = soundCardView(voice, !soundOn, m.learner.audio);
   const [voiceHelpOpen, setVoiceHelpOpen] = useState(false);
   const parentGateOpenedAt = useUiStore((s) => s.parentGateOpenedAt);
   const forceInstallGuide = usePwaStore((s) => s.force);
@@ -173,7 +173,7 @@ export function ProfileScreen(): React.ReactElement {
           }}
           accessibilityRole="switch"
           accessibilityState={{ checked: soundOn }}
-          accessibilityLabel={soundSwitchLabel(voice, !soundOn)}
+          accessibilityLabel={soundSwitchLabel(voice, !soundOn, m.learner.audio, m.a11y.soundSwitch)}
           style={{ minHeight: touchTarget.min, justifyContent: 'center' }}
         >
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md }}>

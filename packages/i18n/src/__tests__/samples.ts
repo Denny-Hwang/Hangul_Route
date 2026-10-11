@@ -63,4 +63,5 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'a11y.leaveSpace': [['Sunday Class A']],
   'a11y.lifetimeOffer': [['Family Lifetime', '$15.30 once']],
   'learner.minigame.progress.pill': [[1, 4], [12, 12]],
+  'a11y.soundSwitch': [[false, 'Korean voice ready'], [true, 'Looking for a Korean voice']],
 };

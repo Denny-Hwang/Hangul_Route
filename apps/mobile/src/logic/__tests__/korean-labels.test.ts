@@ -27,11 +27,11 @@ describe('replyOptionLabel (F-CNT-002 §3.5: TapRespond shows ko, romanization, 
 
 describe('jamo screen-reader labels (F-CNT-002 §3.3: a11yRomanization)', () => {
   it('reads silent/ng as "silent or ng" on a tile', () => {
-    expect(jamoTileA11yLabel('silent/ng')).toBe('Korean letter silent or ng, tap to select');
+    expect(jamoTileA11yLabel('silent/ng', getMessages('en').a11y.tile)).toBe('Korean letter silent or ng, tap to select');
   });
 
   it('leaves a plain sound value alone', () => {
-    expect(jamoTileA11yLabel('eo')).toBe('Korean letter eo, tap to select');
+    expect(jamoTileA11yLabel('eo', getMessages('en').a11y.tile)).toBe('Korean letter eo, tap to select');
   });
 
   it('reads the g/k pair as "g or k" in the trace prompt and canvas', () => {
