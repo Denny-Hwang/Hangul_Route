@@ -1,125 +1,81 @@
-# Screen 12 — Minigame · Story Sequence
+# Screen 12 — Minigame · Story Order (v2)
 
-**Discovery family ⑪.** Put the story steps in the right order.
+**Discovery family ⑪.** Put the story's pictures in order, then watch it play back.
+
+Revised by F-STORY-003 PR 3.0 (Story Order v2). The v1 brief (a list of text steps with a "Your order" pill row) is replaced: v2 adds numbered slots, picture cards, romanization under every Korean caption, a start order that is never correct, and a replay.
+
+Spec: `docs/specs/F-STORY-003-story-checks-sequence-v2.md` §3.5 · wireframe: `design/wireframes/story/sequence.md` (F, G) · code (built, PR 3.5a): `apps/mobile/src/screens/minigames/StorySequenceGame.tsx`; scene art on the cards in PR 3.5b · card: `design/brief/components/choice-card.md`
 
 ## 1. Context
 
-A short cultural story (washing hands → setting table → eating → saying thanks). Shuffled steps appear; child taps them in correct order.
+- **Who**: anyone learning Hangul, at any age.
+- **Where**: the `apply` step of a story quest (after the story and its questions), and the three Stage 1 quests that have a story-steps sequence (washing hands, setting the table, eating, saying thanks).
+- **Why**: putting events in order shows the learner followed the story, with pictures doing most of the work. Each slot scores once, on the first tap; a wrong card only nudges.
 
 ## 2. Layout
 
-```
-┌─────────────────────────────────────┐
-│ ▓▓░░     [2 / 4]                     │
-│                                      │
-│ Put the story in order               │
-│ Tap each step starting from first.   │
-│                                      │
-│ Your order:                          │
-│ [1. Wash hands]  [2. Set the table]  │
-│                                      │
-│ Steps:                               │
-│ ┌────────────────────────────────┐ │
-│ │ → Eat with family                │ │
-│ │   같이 먹기                       │ │
-│ └────────────────────────────────┘ │
-│ ┌────────────────────────────────┐ │
-│ │ → Say thanks                     │ │
-│ │   잘 먹었습니다                  │ │
-│ └────────────────────────────────┘ │
-│                                      │
-│ 🐯 Read the steps, then pick them    │
-│    in the right order.               │
-│ [Skip]                               │
-└─────────────────────────────────────┘
-```
+**Ordering** (top to bottom, scrolling): fill-only bar + position pill "2 / 4" · title "Put the story in order" and a one-line hint · a row of numbered **slots** filled left to right (a placed card shows small in its slot) · the remaining **cards** (1 column at 320 wide, 2 from 360, 3-4 at tablet width): scene picture when present, the Korean (large) with romanization upright under it, the English caption · Hoya bubble slot (a hint after two misses) · ghost **Skip this one**.
+
+**Replay** (when every slot is filled): title "The story, in order" · one card at a time, full width, picture, Korean (spoken), caption · Back, Pause/Play, Next · ghost **Skip replay** and primary **Done**.
+
+Frames to draw: ordering with two cards placed; a wrong tap (amber card with "Try another"); the hint ring after two misses; a text-only card (no art yet); the replay.
 
 ## 3. Visual style
 
-- "Your order" row: pills (success-light) of picked steps with order index
-- "Steps" list: cards stacked vertically with arrow icon left + English label + Korean label below in brand-primary
-- Used steps appear in `surface.sunken` with opacity 0.5
-- Wrong flash: card briefly turns nudge-tinted
+- Cards use `ChoiceCard` states: idle `surface.paper`; wrong `feedback.nudgeLight` / `feedback.nudge` (brief, about 0.6 s, with the words "Try another"); hint ring `border.focus`; a text-only card sits on `surface.sunken`.
+- Slots: empty slots outlined in `border.strong` with their number; filled slots `feedback.successLight` with the card's small picture or caption.
+- Korean `text.primary` at title size, romanization `text.secondary` upright, caption `text.primary` body.
+- No order numbers on cards; numbers only on slots. Never red.
 
 ## 4. Exact copy
 
+UI strings come from `packages/i18n` (`learner.story.sequence`); English shown:
+
 - Title: **"Put the story in order"**
-- Sub: **"Tap each step starting from first."**
-- Sub-label 1: **"Your order:"**
-- Sub-label 2: **"Steps:"**
-- Hoya line: **"Read the steps, then pick them in the right order."**
+- Hint: **"Tap each picture, starting with what happened first."** (text-only cards: **"Tap each step, starting with what happened first."**)
+- Wrong: **"Try another"**; after two misses: **"This one comes next."**
+- Ghost: **"Skip this one"**
+- Slot label (screen reader): **"Place 2 of 4: <caption>"** / **"Place 3 of 4, empty"**
+- Replay: **"The story, in order"**, **"Pause"**, **"Play"**, **"Back"**, **"Next"**, **"Skip replay"**, **"Done"**
+- Empty: **"There is nothing to put in order yet."**, **"Continue"**
+
+Captions and Korean come from the story or quest data (story scope: the tier's four `sequenceSceneIds`).
 
 ## 5. Claude Design prompt
 
 ```prompt
-Design the Story-Sequence minigame screen for Hangul Route. Output: 1170
-× 2532 PNG showing the IN-PROGRESS state where 2 of 4 steps are picked.
+Design the Story Order minigame (v2) for Hangul Route, a Korean-learning app for learners
+of every age. Output: one sheet of four portrait phone frames (390 x 844).
 
-Layout (top to bottom, 48px horizontal padding):
+Tokens by name: canvas surface.canvas, cards surface.paper with the "card" shadow,
+text-only cards surface.sunken, empty slots outlined in border.strong, filled slots
+feedback.successLight, wrong flash feedback.nudgeLight with feedback.nudge border, hint
+ring border.focus, primary brand.primary. Cards at least 80 tall; slots at least 64.
 
-1. 60px status bar
-2. Progress bar primary + pill "2 / 4" sm neutral
-3. 48px gap
-4. Title "Put the story in order" — 66sp weight 700 #2A1F14
-5. 12px gap
-6. Sub "Tap each step starting from first." — 42sp #8A7860
+Frame 1 (ordering, 2 of 4 placed): fill-only bar 2 of 4 and pill "2 / 4"; title "Put the
+story in order"; hint "Tap each picture, starting with what happened first."; a row of 4
+numbered slots, 1 and 2 filled with tiny pictures; below, two remaining cards in two
+columns, each with a flat 4:3 picture, Korean large (세배 / 떡국), romanization under it
+(sebae / tteokguk) and an English caption; a ghost button "Skip this one".
+Frame 2: the same with one card in the amber wrong state showing "Try another".
+Frame 3: after two misses, the right card has a focus ring and Hoya (thinking) says "This
+one comes next."
+Frame 4 (replay): title "The story, in order"; one full-width card (picture, Korean,
+romanization, caption); Back, Pause, Next controls; ghost "Skip replay" and a large
+"Done".
 
-7. 48px gap
-
-8. Sub-label "Your order:" — 42sp #8A7860
-9. 12px gap
-10. Picked steps row (horizontal, wrap if needed, 12px gutter):
-    Each pill: fill #D6EFDF (success light), 6px border #4FA871
-    (success), 48px radius (pill), 36px padding-x / 24px padding-y:
-    - "1. Wash hands" — 48sp weight 700 #2A1F14
-    - "2. Set the table" — same
-
-11. 48px gap
-
-12. Sub-label "Steps:" — 42sp #8A7860
-13. 24px gap
-
-14. Remaining step cards (vertical stack, 24px gutter):
-    Each card: full width, 48px padding, fill #FFFFFF, 6px border
-    #E8DFCD, 48px radius (lg), shadow card:
-    - Left: arrow-right icon 60sp #8A7860
-    - 36px gap
-    - Right stack:
-      • English label — 60sp weight 600 #2A1F14
-      • Korean label — 48sp #E8743B brand-primary
-
-    Two cards:
-    - "Eat with family" / "같이 먹기"
-    - "Say thanks" / "잘 먹었습니다"
-
-15. 48px gap
-
-16. HoyaBubble idle: standard layout, message "Read the steps, then
-    pick them in the right order."
-
-17. Flex space
-18. Ghost Skip CTA full-width md
-19. 72px bottom safe-area
-
-Background: warm hanji cream #FCF8F1.
-
-Anti-patterns:
-- "Your order" pills rendered as sharp rectangles (must be pills)
-- Step cards without arrow indicator
-- Korean label larger than English (English is primary UI)
-- Wrong-flash state turning cards red
-
-Deliverable: 1170 × 2532 PNG.
+Anti-patterns: order numbers printed on cards, red, an X, cards starting in the correct
+order, Korean without romanization, drag handles, emoji.
 ```
 
 ## 6. Acceptance checklist
 
-- [ ] Picked-step pills use success-light tint
-- [ ] Remaining steps in paper cards with arrow indicator
-- [ ] Korean appears below English (smaller, brand-primary)
-- [ ] Pills are actually pill-shaped
-- [ ] Skip ghost button
+- [ ] Slots carry the numbers; cards never do
+- [ ] Every Korean caption has romanization under it and an English caption
+- [ ] Wrong = amber with "Try another"; never red
+- [ ] A text-only card looks intentional (sunken surface), never a broken picture
+- [ ] Replay has visible Pause and a Done button (no timer-only ending)
 
 ## 7. Output path
 
-- `design/screens/minigames/story-sequence__v1__YYYY-MM-DD.png`
+- `design/screens/minigames/story-sequence__v2__YYYY-MM-DD.png`
