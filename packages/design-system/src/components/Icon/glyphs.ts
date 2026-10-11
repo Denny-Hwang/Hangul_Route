@@ -111,12 +111,14 @@ export const iconGlyphs: Record<IconName, readonly IconGlyphPart[]> = {
     stroke('M12 6.5 C10 5 7 4.5 3.5 5 V18.5 C7 18 10 18.5 12 20 C14 18.5 17 18 20.5 18.5 V5 C17 4.5 14 5 12 6.5 Z', 2.2),
     stroke('M12 6.5 V20', 2),
   ],
-  // Listen: an ear seen from the side (rim and inner curl) with one sound wave
-  // arriving from the left, so it never reads as a question mark.
+  // Listen: an ear seen from the side, a rim and an inner curl that closes on
+  // itself (no free hook, so it never reads as a question mark), with two
+  // sound waves beside it.
   ear: [
-    stroke('M9 9.5 A5.5 5.5 0 0 1 20 9.5 C20 13 17 14 17 17 A3.2 3.2 0 0 1 11 18.5', 2.2),
-    stroke('M12.5 9.5 A2 2 0 0 1 16.5 9.5 C16.5 11 15 11.5 15 13', 2),
-    stroke('M5.5 7.5 Q3 12 5.5 16.5', 2),
+    stroke('M9 10 A5.5 5.5 0 0 1 20 10 C20 13.5 17 14.5 17 17.5 A3 3 0 0 1 11.5 19', 2.2),
+    stroke('M12.5 13 V10.5 A2.5 2.5 0 0 1 17.5 10.5 C17.5 12 15.5 12.5 14 13.5'),
+    stroke('M6.5 8.5 Q4.5 12 6.5 15.5'),
+    stroke('M3.5 6.5 Q1 12 3.5 17.5'),
   ],
   // Write: a pencil on the diagonal with its tip and ferrule marked.
   pencil: [
