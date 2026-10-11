@@ -21,7 +21,8 @@ export type RomanizationMode = z.infer<typeof RomanizationModeSchema>;
  * 60 s x scale. Labelled "Normal / A bit longer / Twice as long" in the UI.
  */
 export const CLOCK_SCALES = [1, 1.5, 2] as const;
-export const ClockScaleSchema = z.union([z.literal(1), z.literal(1.5), z.literal(2)]);
+/** Built from `CLOCK_SCALES`, so the list and the schema cannot drift apart. */
+export const ClockScaleSchema = z.union([z.literal(CLOCK_SCALES[0]), z.literal(CLOCK_SCALES[1]), z.literal(CLOCK_SCALES[2])]);
 export type ClockScale = z.infer<typeof ClockScaleSchema>;
 /** Challenge is opt-in: off unless the learner or a caregiver turns it on (D3). */
 export const DEFAULT_CHALLENGE_MODE = false;
@@ -42,11 +43,14 @@ export const ProfileSettingsSchema = z.object({
    * Challenge mode (F-VOC-004 S8): the app's one Challenge setting, shared with
    * F-RVW-001's Daily Test. Additive and optional: absent means
    * `DEFAULT_CHALLENGE_MODE` (off), so settings stored before this field existed
-   * keep parsing and keep their stored shape.
+   * keep parsing and keep their stored shape. A value this version does not
+   * know (a later spec's scale read after a rollback, say) reads as absent
+   * instead of failing the whole record, which would reset the learner's other
+   * settings.
    */
-  challengeMode: z.boolean().optional(),
-  /** Challenge clock scale (F-VOC-004 §3.1); absent means `DEFAULT_CLOCK_SCALE`. */
-  clockScale: ClockScaleSchema.optional(),
+  challengeMode: z.boolean().optional().catch(undefined),
+  /** Challenge clock scale (F-VOC-004 §3.1); absent or unknown means `DEFAULT_CLOCK_SCALE`. */
+  clockScale: ClockScaleSchema.optional().catch(undefined),
 });
 export type ProfileSettings = z.infer<typeof ProfileSettingsSchema>;
 

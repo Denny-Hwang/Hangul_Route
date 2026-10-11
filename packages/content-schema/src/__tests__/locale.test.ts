@@ -72,8 +72,11 @@ describe('UI locale schemas (F-I18N-001 §3.2)', () => {
     expect(parsed.challengeMode ?? DEFAULT_CHALLENGE_MODE).toBe(false);
     expect(ProfileSettingsSchema.parse({ challengeMode: true }).challengeMode).toBe(true);
     expect(ProfileSettingsSchema.parse({ challengeMode: false }).challengeMode).toBe(false);
+    // Anything but a boolean reads as absent (off), and never fails the record.
     for (const bad of ['on', 1, 0, null]) {
-      expect(ProfileSettingsSchema.safeParse({ challengeMode: bad }).success).toBe(false);
+      const read = ProfileSettingsSchema.parse({ uiLocale: 'es', challengeMode: bad });
+      expect(read.challengeMode).toBeUndefined();
+      expect(read.uiLocale).toBe('es');
     }
   });
 
@@ -87,8 +90,21 @@ describe('UI locale schemas (F-I18N-001 §3.2)', () => {
     }
     for (const bad of [0, 0.5, 1.25, 3, -1, '1', '2', null, Number.NaN]) {
       expect(ClockScaleSchema.safeParse(bad).success).toBe(false);
-      expect(ProfileSettingsSchema.safeParse({ clockScale: bad }).success).toBe(false);
+      expect(ProfileSettingsSchema.parse({ clockScale: bad }).clockScale).toBeUndefined();
     }
+  });
+
+  it('ClockScaleSchema accepts exactly CLOCK_SCALES (one list, no drift)', () => {
+    expect(ClockScaleSchema.options.map((o) => o.value)).toEqual([...CLOCK_SCALES]);
+  });
+
+  it('an unknown challenge value never resets the rest of the stored settings (rollback safety)', () => {
+    // A later spec adds scale 3; an older bundle reads it after a rollback.
+    const read = ProfileSettingsSchema.parse({ uiLocale: 'ko', romanizationMode: 'tap', readToMe: true, clockScale: 3, challengeMode: true });
+    expect(read).toMatchObject({ uiLocale: 'ko', romanizationMode: 'tap', readToMe: true, challengeMode: true });
+    expect(read.clockScale ?? DEFAULT_CLOCK_SCALE).toBe(1);
+    // Written back as JSON, the unknown value is simply gone; nothing else changes.
+    expect(JSON.parse(JSON.stringify(read))).toEqual({ uiLocale: 'ko', romanizationMode: 'tap', readToMe: true, challengeMode: true });
   });
 
   it('settings stored before challengeMode and clockScale existed still parse unchanged', () => {
