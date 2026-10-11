@@ -105,14 +105,52 @@ describe('learner.delete (F-TCH-001 §10.3)', () => {
   });
 });
 
-describe('learner.transfer (F-SPACE-002 T-2: type only)', () => {
-  it('is an Action that nothing grants yet; the matrix lands with the rules (T-4b)', () => {
-    const action: Action = 'learner.transfer';
-    const teacher = account('teacher', [member('space:cls', 'teacher', 'owner')]);
+describe('learner.transfer (F-SPACE-002 §4.5, T10)', () => {
+  const classCtx = { space: klass, parent: school };
+  const familyCtx = { space: family, parent: null };
+  const schoolCtx = { space: school, parent: null };
+  const onClass = { kind: 'space' as const, ctx: classCtx };
+
+  it('class owner and teacher yes; school owner and admin on a child class yes', () => {
+    const owner = account('teacher', [member('space:cls', 'teacher', 'owner')]);
+    const coTeacher = account('t2', [member('space:cls', 't2', 'teacher')]);
     const principal = account('principal', [member('space:sch', 'principal', 'owner')]);
+    const admin = account('admin', [member('space:sch', 'admin', 'admin')]);
+    for (const actor of [owner, coTeacher, principal, admin]) expect(can(actor, 'learner.transfer', onClass)).toBe(true);
+  });
+
+  it('family roles, a school-level teacher, outsiders and learners never', () => {
     const mom = account('mom', [member('space:fam', 'mom', 'owner')]);
-    expect(can(teacher, action, { kind: 'space', ctx: { space: klass, parent: school } })).toBe(false);
-    expect(can(principal, action, { kind: 'space', ctx: { space: klass, parent: school } })).toBe(false);
-    expect(can(mom, action, { kind: 'space', ctx: { space: family, parent: null } })).toBe(false);
+    const dad = account('dad', [member('space:fam', 'dad', 'caregiver')]);
+    const schoolTeacher = account('t3', [member('space:sch', 't3', 'teacher')]);
+    const student = account('profile:a', [member('space:cls', 'profile:a', 'student', 'learner')]);
+    const learner: Actor = { kind: 'learner', learnerId: 'profile:a' };
+    for (const actor of [mom, dad]) {
+      expect(can(actor, 'learner.transfer', { kind: 'space', ctx: familyCtx })).toBe(false);
+      expect(can(actor, 'learner.transfer', onClass)).toBe(false);
+    }
+    for (const actor of [schoolTeacher, student, learner]) expect(can(actor, 'learner.transfer', onClass)).toBe(false);
+    expect(can(learner, 'learner.transfer', { kind: 'learner', learnerId: 'profile:a', spaces: [classCtx] })).toBe(false);
+  });
+
+  it('is granted on classes only: a school admin does not hold it on the school itself', () => {
+    const principal = account('principal', [member('space:sch', 'principal', 'owner')]);
+    expect(can(principal, 'learner.transfer', { kind: 'space', ctx: schoolCtx })).toBe(false);
+  });
+
+  it('no teacher role ever holds snapshot.read, with or without learner.transfer', () => {
+    const owner = account('teacher', [member('space:cls', 'teacher', 'owner')]);
+    const coTeacher = account('t2', [member('space:cls', 't2', 'teacher')]);
+    const schoolTeacher = account('t3', [member('space:sch', 't3', 'teacher')]);
+    const admin = account('admin', [member('space:sch', 'admin', 'admin')]);
+    const learnerTarget = { kind: 'learner' as const, learnerId: 'profile:a', spaces: [classCtx, schoolCtx] };
+    for (const actor of [owner, coTeacher, schoolTeacher, admin]) expect(can(actor, 'snapshot.read', learnerTarget)).toBe(false);
+  });
+
+  it('is not implied by roster.manage: a family caregiver holds roster.manage but not learner.transfer', () => {
+    const dad = account('dad', [member('space:fam', 'dad', 'caregiver')]);
+    const granted = allowedOnSpace(dad as never, familyCtx);
+    expect(granted.has('roster.manage')).toBe(true);
+    expect(granted.has('learner.transfer')).toBe(false);
   });
 });
