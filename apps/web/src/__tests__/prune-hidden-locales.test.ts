@@ -80,6 +80,22 @@ describe('pruneHiddenLocales', () => {
     expect(() => prune(out)).toThrow(/elsewhere\/es-copy\.html/);
   });
 
+  it('removes a hidden locale with a region or script tag (pt-BR, zh-Hant)', () => {
+    for (const locale of ['pt-BR', 'zh-Hant']) {
+      put(`${locale}.html`, page(locale, true));
+      put(`${locale}.txt`, 'rsc');
+      put(`${locale}/about.html`, page(locale, true));
+    }
+    expect(prune(out)).toEqual(['pt-BR', 'zh-Hant']);
+    expect(files()).toEqual(['404.html', '_next/static/chunks/app/(loc)/[locale]/page.js', 'about.html', 'index.html', 'index.txt', 'teach/space.html']);
+  });
+
+  it.each(['..', '../x', 'es/../..', 'ES', 'e', ''])('fails closed on a marker that is not a locale tag: "%s"', (bad) => {
+    put('odd.html', `<!DOCTYPE html><html lang="en" ${HIDDEN_LOCALE_ATTR}="${bad}"><body>x</body></html>`);
+    expect(() => prune(out)).toThrow(/not a locale tag/);
+    expect(files()).toContain('index.html');
+  });
+
   it('fails when the export folder is missing', () => {
     expect(() => prune(join(out, 'nope'))).toThrow(/no export folder/);
   });

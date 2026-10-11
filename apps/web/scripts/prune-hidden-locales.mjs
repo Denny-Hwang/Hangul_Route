@@ -12,7 +12,10 @@ import { pathToFileURL } from 'node:url';
 
 export const HIDDEN_LOCALE_ATTR = 'data-hr-hidden-locale';
 
-const MARKER = new RegExp(`<html[^>]*\\s${HIDDEN_LOCALE_ATTR}="([a-z]{2})"`);
+// Any value, so a marker the prune cannot read fails the build instead of slipping through. The value must
+// then be a BCP 47-style tag (`es`, `pt-BR`, `zh-Hant`): it becomes a path below, so `..` never gets there.
+const MARKER = new RegExp(`<html[^>]*\\s${HIDDEN_LOCALE_ATTR}="([^"]*)"`);
+const LOCALE_TAG = /^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$/;
 
 /** @param {string} dir @returns {string[]} */
 function htmlFiles(dir) {
@@ -25,7 +28,10 @@ function htmlFiles(dir) {
 
 /** @param {string} file @returns {string | null} */
 function hiddenLocaleOf(file) {
-  return MARKER.exec(readFileSync(file, 'utf8'))?.[1] ?? null;
+  const locale = MARKER.exec(readFileSync(file, 'utf8'))?.[1];
+  if (locale === undefined) return null;
+  if (!LOCALE_TAG.test(locale)) throw new Error(`${file} is marked hidden with "${locale}", which is not a locale tag`);
+  return locale;
 }
 
 /**
