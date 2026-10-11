@@ -1,3 +1,4 @@
+import { isStagePlayable } from '../logic/entitlement';
 import { scopeFor } from '../logic/minigame-config';
 import type { JourneyContent } from '../logic/my-route/summary';
 import { appRouteCatalog } from '../logic/placement/route-skip';
@@ -38,8 +39,8 @@ export const questJamo: Record<string, string[]> = Object.fromEntries(
 
 /**
  * The bundled content My route reads, for `summary.journey` (F-ROUTE-001
- * R-8). Every shipped stage is playable (OD-4 default), so `isEntitled` is
- * true; the roster carries no tier.
+ * R-8). `isEntitled` is the one route predicate `isStagePlayable` (OD-4
+ * default: every shipped stage is playable); the roster carries no tier.
  */
 export const journeyContent: JourneyContent = {
   catalog: appRouteCatalog(questsAll, episodesAll),
@@ -48,5 +49,5 @@ export const journeyContent: JourneyContent = {
   cards: heritageCardsAll,
   stages,
   themes,
-  isEntitled: () => true,
+  isEntitled: isStagePlayable,
 };
