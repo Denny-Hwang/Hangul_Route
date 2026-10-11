@@ -483,6 +483,33 @@ describe('a run end to end (the section 3.14 behaviours)', () => {
     for (let i = 0; i < 18; i += 1) q18 = apply(q18, eventFor(currentQuestion(q18)!, 'correct'), 2_000 + i);
     expect(q18.pause).toBe('rest');
     expect(finishRun(apply(q18, { type: 'quit', by: 'learner' }, 9_000), context()).stopReason).toBe('quit');
+    // the backstop stops while the rest card is open: keep going moves the deadline by exactly the time it was open
+    const before = q18.deadlineMs as number;
+    expect(q18.pausedAtMs).toBe(2_017);
+    const resumed = apply(q18, { type: 'keepGoing' }, 2_017 + 95_000);
+    expect(resumed.pause).toBeNull();
+    expect(resumed.deadlineMs).toBe(before + 95_000);
+  });
+
+  it('Deep: when three "not sure" at the 18th answer open the pause sheet, the rest card follows at the next rung, once', () => {
+    let s = run({ mode: 'deep' });
+    let t = 1_000;
+    for (let i = 0; i < 15; i += 1) s = apply(s, eventFor(currentQuestion(s)!, 'correct'), (t += 1_000));
+    for (let i = 0; i < 3; i += 1) s = apply(s, { type: 'notSure' }, (t += 1_000));
+    expect(s.responses).toHaveLength(18);
+    expect(s.pause).toBe('not-sure');
+    s = apply(s, { type: 'keepGoing' }, (t += 1_000));
+    const pauses: [string, number][] = [];
+    for (let guard = 0; guard < 40 && !isFinished(s); guard += 1) {
+      if (s.pause !== null) {
+        pauses.push([s.pause, s.responses.length]);
+        s = apply(s, { type: 'keepGoing' }, (t += 1_000));
+        continue;
+      }
+      s = apply(s, eventFor(currentQuestion(s)!, 'correct'), (t += 1_000));
+    }
+    expect(isFinished(s)).toBe(true);
+    expect(pauses).toEqual([['rest', 21]]);
   });
 
   /** Plays Deep to the end; `failDraws` names `<gate>:<form>#<n>` draws (n = 1 or 2) answered wrong. */

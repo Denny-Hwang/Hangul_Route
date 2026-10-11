@@ -54,6 +54,8 @@ export const PlacementRunStateSchema = z.object({
   /** Tags of every question asked, for covered symbols and priority tokens. */
   tags: z.record(z.string(), z.array(z.string())),
   notSureStreak: z.number().int().nonnegative(),
+  /** Deep's rest card has been shown (it shows once per run). */
+  rested: z.boolean(),
   stop: StopReasonSchema.nullable(),
 });
 export type PlacementRunState = z.infer<typeof PlacementRunStateSchema>;

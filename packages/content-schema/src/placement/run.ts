@@ -273,6 +273,7 @@ export const startRun = (bank: PlacementBankInput, config: PlacementConfig, nowM
     responses: [],
     tags: {},
     notSureStreak: 0,
+    rested: false,
     stop: null,
   });
 };
@@ -323,9 +324,15 @@ const record = (
   if (next.timeUp || isExpired(nowMs, next.deadlineMs)) return finish(next, 'time');
   // Short has no "three not sure" sheet: it is at most nine questions and the exit stays visible.
   if (state.config.mode !== 'short' && next.notSureStreak >= NOT_SURE_LIMIT) return { ...next, pause: 'not-sure', pausedAtMs: nowMs };
-  // Deep: one spoken, number-free rest card halfway (rungs end on multiples of three, so this fires once).
-  if (state.config.mode === 'deep' && next.current?.start === DEEP_REST_AT && next.responses.length === DEEP_REST_AT) {
-    return { ...next, pause: 'rest', pausedAtMs: nowMs };
+  // Deep: one spoken, number-free rest card after 18 answers, between two rungs, when more remain.
+  // When the "not sure" sheet took that moment, the card waits for the next rung.
+  if (
+    state.config.mode === 'deep' &&
+    !next.rested &&
+    next.responses.length >= DEEP_REST_AT &&
+    next.current?.start === next.responses.length
+  ) {
+    return { ...next, pause: 'rest', pausedAtMs: nowMs, rested: true };
   }
   return next;
 };
