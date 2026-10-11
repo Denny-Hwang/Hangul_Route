@@ -1,6 +1,7 @@
 import type { ProgressSnapshot } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
-import { planProgressOf, summarize } from '../summarize';
+import { placementResult } from '../../placement/__tests__/fixtures';
+import { placementSummaryOf, planProgressOf, summarize } from '../summarize';
 
 const NOW = new Date('2026-09-21T12:00:00.000Z');
 const snap: ProgressSnapshot = {
@@ -77,3 +78,50 @@ describe('plan progress (F-PLAN-001 §3.3)', () => {
     expect(summarize({ snapshot: snap, now: NOW, stage1QuestIds: [], questJamo: {} }).planProgress).toEqual({});
   });
 });
+
+describe('summarize: the level check (F-PLC-001 section 3.8, section 3.7 consumer 5)', () => {
+  const fresh: ProgressSnapshot = { ...snap, quests: [], sessions: [] };
+  const older = placementResult({ id: 'placement:old', completedAt: '2026-09-01T00:00:00Z', priorityTokens: ['sym:ㄱ'] });
+  const newer = placementResult({
+    id: 'placement:new',
+    completedAt: '2026-09-10T00:00:00Z',
+    level: { stage: 'stage1', band: 1 },
+    oralStage: 'stage2',
+    priorityTokens: ['sym:ㅓ', 'sym:ㄹ/final', 'skill:blending'],
+  });
+  const run = (s: ProgressSnapshot) => summarize({ snapshot: s, now: NOW, stage1QuestIds: ['q1'], questJamo: {} });
+
+  it('has no placement block without a result (a legacy snapshot too)', () => {
+    expect(run(fresh).placement).toBeUndefined();
+    expect(placementSummaryOf(undefined)).toBeUndefined();
+    expect(placementSummaryOf([])).toBeUndefined();
+  });
+
+  it('fills the block from the newest result: statuses and level only', () => {
+    const summary = run({ ...fresh, placements: [newer, older] });
+    expect(summary.placement).toEqual({
+      takenAt: '2026-09-10T00:00:00Z',
+      level: { stage: 'stage1', band: 1 },
+      oralStage: 'stage2',
+      strands: newer.strands,
+      beyondContent: false,
+      overridden: false,
+    });
+  });
+
+  it('marks an override in force on any result', () => {
+    const overridden = { ...older, override: { by: 'parent' as const, at: '2026-09-02T00:00:00Z', startQuestId: 'quest:q2' } };
+    expect(run({ ...fresh, placements: [overridden, newer] }).placement?.overridden).toBe(true);
+  });
+
+  it('seeds needsPractice with the route priority symbols until the learner has quest history', () => {
+    expect(run({ ...fresh, placements: [older, newer] }).needsPractice).toEqual(['ㅓ', 'ㄹ']);
+  });
+
+  it('keeps real practice data once a quest is complete', () => {
+    const withHistory = { ...snap, placements: [newer] };
+    const summary = summarize({ snapshot: withHistory, now: NOW, stage1QuestIds: ['q1'], questJamo: { q2: ['ㄷ'] } });
+    expect(summary.needsPractice).toEqual(['ㄷ']);
+  });
+});
+

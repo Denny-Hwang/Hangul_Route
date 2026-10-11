@@ -1,4 +1,10 @@
-import type { ProgressSnapshot, ProgressSummary } from '@hangul-route/content-schema';
+import {
+  effectiveRoute,
+  type PlacementResult,
+  type PlacementSummary,
+  type ProgressSnapshot,
+  type ProgressSummary,
+} from '@hangul-route/content-schema';
 import { planIdOf } from '../homework/plan-derivation';
 
 /**
@@ -37,6 +43,35 @@ export function planProgressOf(snapshot: ProgressSnapshot, planNotReady: Readonl
   return out;
 }
 
+/**
+ * The grown-up view of the level check (F-PLC-001 section 3.8): the newest
+ * result's statuses and level only, no per-question data and no counts.
+ * `overridden` is true while a parent override is in force on any result.
+ */
+export function placementSummaryOf(placements: readonly PlacementResult[] | undefined): PlacementSummary | undefined {
+  if (placements === undefined || placements.length === 0) return undefined;
+  const newest = [...placements].sort((a, b) => b.completedAt.localeCompare(a.completedAt))[0] as PlacementResult;
+  return {
+    takenAt: newest.completedAt,
+    level: newest.level,
+    oralStage: newest.oralStage,
+    strands: newest.strands,
+    beyondContent: newest.beyondContent,
+    overridden: placements.some((r) => r.override !== undefined),
+  };
+}
+
+/**
+ * The route's priority symbols as jamo (`sym:ㄹ/final` -> `ㄹ`), at most three.
+ * Priority tokens do not depend on the catalogue, so an empty one is enough.
+ */
+function prioritySymbols(placements: readonly PlacementResult[] | undefined): string[] {
+  const seed = effectiveRoute(placements ?? [], { quests: [] }, { isEntitled: () => true, completedQuestIds: new Set() });
+  if (seed === null) return [];
+  const symbols = seed.priorityTokens.filter((t) => t.startsWith('sym:')).map((t) => t.slice(4).split('/')[0] as string);
+  return [...new Set(symbols)].slice(0, 3);
+}
+
 const DAY_MS = 24 * 60 * 60 * 1000;
 export const RECOGNIZED_ACCURACY = 0.8;
 export const PRACTICE_ACCURACY = 0.6;
@@ -60,7 +95,14 @@ export function summarize({ snapshot, now, stage1QuestIds, questJamo, planNotRea
     if (q.accuracy >= RECOGNIZED_ACCURACY) jamo.forEach((j) => recognized.add(j));
     else if (q.accuracy < PRACTICE_ACCURACY) jamo.forEach((j) => shaky.add(j));
   }
-  const needsPractice = [...shaky].filter((j) => !recognized.has(j)).slice(0, 3);
+  // Until the learner has quest history, the level check's priority symbols
+  // make a new grown-up view meaningful (F-PLC-001 section 3.7, consumer 5).
+  const needsPractice =
+    completed.length === 0
+      ? prioritySymbols(snapshot.placements)
+      : [...shaky].filter((j) => !recognized.has(j)).slice(0, 3);
+
+  const placement = placementSummaryOf(snapshot.placements);
 
   const lastSession = snapshot.sessions[snapshot.sessions.length - 1];
   const lastActiveAt =
@@ -80,5 +122,6 @@ export function summarize({ snapshot, now, stage1QuestIds, questJamo, planNotRea
     jamoRecognized: [...recognized].sort(),
     needsPractice,
     planProgress: planProgressOf(snapshot, planNotReady),
+    ...(placement ? { placement } : {}),
   };
 }
