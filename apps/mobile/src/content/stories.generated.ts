@@ -2757,15 +2757,15 @@ export const storiesAll: Story[] = [
       "romanization": "Isunsin janggunui Nanjungilgi",
       "en": "Admiral Yi's Diary"
     },
-    "summaryEn": "Hoya opens the diary that Admiral Yi Sun-sin kept almost every day from 1592 to 1598, full of weather, feelings and everyday life, now a National Treasure and UNESCO Memory of the World.",
+    "summaryEn": "Hoya opens the diary that Admiral Yi Sunsin kept almost every day from 1592 to 1598, full of weather, feelings and everyday life, now a National Treasure and UNESCO Memory of the World.",
     "theme": "letters",
     "kind": "documentary",
     "recommendedStage": 3,
     "minutes": 4,
     "learningGoalsEn": [
-      "Recognize and say 일기 (ilgi, diary), 매일 (maeil, every day), 날씨 (nalssi, weather) and 가족 (gajok, family).",
-      "Know that Yi Sun-sin kept a diary almost every day during the Imjin War (1592–1598).",
-      "Name things he wrote about: weather, his thoughts and feelings, family visits and ordinary people's lives.",
+      "Read and recognize 일기 (ilgi, diary), 매일 (maeil, every day), 날씨 (nalssi, weather) and 가족 (gajok, family).",
+      "Know that Yi Sunsin kept a diary almost every day during the Imjin War (1592–1598).",
+      "Know what he wrote about: the weather, his thoughts and feelings, his family and the lives of ordinary people.",
       "Know that seven handwritten volumes survive, kept at Hyeonchungsa in Asan, and that the diary is a National Treasure and on UNESCO's Memory of the World Register."
     ],
     "origin": {
@@ -2792,7 +2792,7 @@ export const storiesAll: Story[] = [
         "id": "janggun",
         "ko": "장군",
         "romanization": "janggun",
-        "en": "general; commander",
+        "en": "general; commander (the title Koreans use for Admiral Yi)",
         "kind": "word"
       },
       {
@@ -2820,7 +2820,7 @@ export const storiesAll: Story[] = [
         "id": "nanjung-ilgi",
         "ko": "난중일기",
         "romanization": "Nanjungilgi",
-        "en": "War Diary (of Yi Sun-sin)",
+        "en": "War Diary (of Yi Sunsin)",
         "kind": "word"
       },
       {
@@ -2834,7 +2834,7 @@ export const storiesAll: Story[] = [
         "id": "yi-sun-sin",
         "ko": "이순신",
         "romanization": "Isunsin",
-        "en": "Yi Sun-sin, a Joseon naval commander",
+        "en": "Yi Sunsin, a Joseon naval commander",
         "kind": "term"
       }
     ],
@@ -2864,13 +2864,13 @@ export const storiesAll: Story[] = [
           },
           {
             "id": "s2",
-            "narrationEn": "Yi Sun-sin, {kw:yi-sun-sin}, lived from 1545 to 1598 and was a commander of Joseon's navy. Before war came, he built ships and prepared defenses around Yeosu.",
-            "captionEn": "Yi Sun-sin builds ships near Yeosu",
+            "narrationEn": "Yi Sunsin, {kw:yi-sun-sin}, lived from 1545 to 1598 and was a commander of Joseon's navy. Before war came, he built ships and prepared defenses around Yeosu.",
+            "captionEn": "Yi Sunsin builds ships near Yeosu",
             "keyword": {
               "id": "janggun",
               "ko": "장군",
               "romanization": "janggun",
-              "en": "general; commander",
+              "en": "general; commander (the title Koreans use for Admiral Yi)",
               "kind": "word"
             },
             "factIds": [
@@ -2946,7 +2946,7 @@ export const storiesAll: Story[] = [
               "id": "nanjung-ilgi",
               "ko": "난중일기",
               "romanization": "Nanjungilgi",
-              "en": "Nanjung Ilgi (War Diary)",
+              "en": "War Diary (the diary written in the midst of war)",
               "kind": "word"
             },
             "factIds": [
@@ -2966,7 +2966,7 @@ export const storiesAll: Story[] = [
               "ko": "오늘도 일기를 써요!",
               "romanization": "oneuldo ilgireul sseoyo!",
               "en": "I'm writing in my diary today, too!",
-              "speaker": "narrator"
+              "speaker": "hoya"
             },
             "factIds": [
               "f7",
@@ -3038,7 +3038,7 @@ export const storiesAll: Story[] = [
             "target": {
               "ko": "난중일기",
               "romanization": "Nanjungilgi",
-              "en": "War Diary (of Yi Sun-sin)"
+              "en": "War Diary (of Yi Sunsin)"
             },
             "options": [
               {
@@ -3057,7 +3057,7 @@ export const storiesAll: Story[] = [
                 "isCorrect": true
               }
             ],
-            "explainEn": "The diary had no title at first. Editors of his collected works later named it Nanjung Ilgi.",
+            "explainEn": "The diary had no title at first. Editors of his collected works later named it Nanjungilgi, the War Diary.",
             "factIds": [
               "f6"
             ]
