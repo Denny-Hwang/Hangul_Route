@@ -1131,6 +1131,43 @@ describe('F-STORY-005 §3.9: copying, designation numbers, shelf reviewers', () 
     expect(hits(lint(proseOnly), 'narration-copies-source')).toHaveLength(1);
   });
 
+  it('narration-copies-source: an exempt name inside a copy does not split it', () => {
+    const quote = 'The song was sung in the Republic of Korea by farmers who worked the fields.';
+    const spanning = withQuote(
+      (s) => (scene(s, 0).narrationEn = 'Long ago the song was sung in the Republic of Korea by farmers who worked hard.'),
+      quote,
+    );
+    expect(hits(lint(spanning), 'narration-copies-source')).toEqual([
+      expect.objectContaining({ path: 'tiers[0].scenes[0].narrationEn' }),
+    ]);
+    expect(hits(lint(spanning), 'narration-copies-source')[0]!.message).toContain('"the song was sung in the by farmers"');
+    const short = withQuote((s) => (scene(s, 0).narrationEn = 'In the Republic of Korea by farmers who worked, it was loved.'), quote);
+    expect(hits(lint(short), 'narration-copies-source')).toEqual([]);
+  });
+
+  it('narration-copies-source: when two sources share the words, the first source is named', () => {
+    const story = withQuote((s) => {
+      s.facts[1]!.sources[0]!.quoteOrLocator = QUOTE;
+      scene(s, 0).narrationEn = 'So that ordinary people could read and write, he worked.';
+    });
+    expect(hits(lint(story), 'narration-copies-source')[0]!.message).toContain('copied from facts[0].sources[0].quoteOrLocator');
+  });
+
+  it('narration-copies-source: checks every learner-facing field, not only narration and claims', () => {
+    const story = withQuote((s) => {
+      s.summaryEn = 'He made the letters so that ordinary people could read and write.';
+      scene(s, 0).captionEn = 'So that ordinary people could read and write with ease';
+      s.tiers[0]!.checks[0]!.promptEn = 'Why? So that ordinary people could read and write?';
+      s.tiers[0]!.checks[0]!.explainEn = 'So that ordinary people could read and write with ease.';
+    });
+    expect(hits(lint(story), 'narration-copies-source').map((f) => f.path)).toEqual([
+      'summaryEn',
+      'tiers[0].scenes[0].captionEn',
+      'tiers[0].checks[0].promptEn',
+      'tiers[0].checks[0].explainEn',
+    ]);
+  });
+
   it('narration-copies-source: ignores case and punctuation', () => {
     const story = withQuote(
       (s) => (scene(s, 0).narrationEn = 'SO THAT ordinary people... could read; and write, WITH ease!'),
@@ -1175,10 +1212,47 @@ describe('F-STORY-005 §3.9: copying, designation numbers, shelf reviewers', () 
     'Its book is National Treasure 70.',
     'Its book is a Treasure No. 1 of Korea.',
     'They became National Treasures No. 32 and 151.',
+    'They became National Treasures Nos. 32 and 151.',
+    'Its book is National Treasure (No. 70).',
+    'Its book is National Treasure, No. 70.',
+    'Its book is National Treasure #70.',
+    'The walls are Historic Site No. 3.',
+    'The pine is Natural Monument No. 103.',
   ])('narration-national-treasure-number flags "%s"', (text) => {
     const story = withStory((s) => (scene(s, 0).narrationEn = text));
     expect(hits(lint(story), 'narration-national-treasure-number')).toEqual([
       expect.objectContaining({ level: 'error', path: 'tiers[0].scenes[0].narrationEn' }),
+    ]);
+  });
+
+  it('narration-national-treasure-number: quotes the match and says what to write instead', () => {
+    const story = withStory((s) => (scene(s, 0).narrationEn = 'Its book is National Treasure No. 70.'));
+    expect(hits(lint(story), 'narration-national-treasure-number')[0]!.message).toBe(
+      'text carries a designation number ("National Treasure No. 70"); write the name without the number, e.g. "National Treasure" (numbers stay in source titles)',
+    );
+  });
+
+  it.each([
+    'The treasure #1 of the temple was a bell.',
+    'The fox hid treasure number 2 under a rock.',
+    'It was a treasure, not a toy.',
+    'They saw National Treasures, 3 of them in one room.',
+    'In 1962 it became a National Treasure.',
+  ])('narration-national-treasure-number passes "%s"', (text) => {
+    const story = withStory((s) => (scene(s, 0).narrationEn = text));
+    expect(hits(lint(story), 'narration-national-treasure-number')).toEqual([]);
+  });
+
+  it('narration-national-treasure-number: checks every learner-facing field except claims', () => {
+    const story = withStory((s) => {
+      scene(s, 0).captionEn = 'National Treasure No. 70';
+      s.tiers[0]!.checks[0]!.explainEn = 'It is Treasure No. 1.';
+      s.summaryEn = 'A visit to National Treasure 70.';
+    });
+    expect(hits(lint(story), 'narration-national-treasure-number').map((f) => f.path)).toEqual([
+      'summaryEn',
+      'tiers[0].scenes[0].captionEn',
+      'tiers[0].checks[0].explainEn',
     ]);
   });
 

@@ -2,7 +2,7 @@
   "v": 1,
   "id": "story:chuseok-ganggangsullae",
   "state": "ready",
-  "contentVer": 1,
+  "contentVer": 2,
   "title": {
     "ko": "추석 송편과 보름달",
     "romanization": "Chuseok songpyeongwa boreumdal",
@@ -385,9 +385,9 @@
   "facts": [
     {
       "id": "f1",
-      "rev": 1,
+      "rev": 2,
       "scope": "documented",
-      "claimEn": "Chuseok falls on the fifteenth day of the eighth lunar month, at the beginning of the harvest season, and is a time to give thanks for the year's crops.",
+      "claimEn": "Chuseok is the fifteenth day of the eighth lunar month. It comes as the harvest begins, and people use it to give thanks for the year's crops.",
       "claimKo": "추석은 음력 8월 15일로 수확기가 시작되는 명절이며, 농사가 잘되게 해준 것에 감사하는 날이다.",
       "sources": [
         {

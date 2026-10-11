@@ -1361,7 +1361,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:chuseok-ganggangsullae",
     "state": "ready",
-    "contentVer": 1,
+    "contentVer": 2,
     "title": {
       "ko": "추석 송편과 보름달",
       "romanization": "Chuseok songpyeongwa boreumdal",
@@ -1744,9 +1744,9 @@ export const storiesAll: Story[] = [
     "facts": [
       {
         "id": "f1",
-        "rev": 1,
+        "rev": 2,
         "scope": "documented",
-        "claimEn": "Chuseok falls on the fifteenth day of the eighth lunar month, at the beginning of the harvest season, and is a time to give thanks for the year's crops.",
+        "claimEn": "Chuseok is the fifteenth day of the eighth lunar month. It comes as the harvest begins, and people use it to give thanks for the year's crops.",
         "claimKo": "추석은 음력 8월 15일로 수확기가 시작되는 명절이며, 농사가 잘되게 해준 것에 감사하는 날이다.",
         "sources": [
           {
@@ -8731,7 +8731,7 @@ export const storiesAll: Story[] = [
           {
             "id": "c1",
             "kind": "detail",
-            "promptEn": "How was Suwon Hwaseong restored to its original shape?",
+            "promptEn": "How did workers rebuild Suwon Hwaseong to look as it first did?",
             "options": [
               {
                 "id": "a",
@@ -8749,7 +8749,7 @@ export const storiesAll: Story[] = [
                 "isCorrect": true
               }
             ],
-            "explainEn": "Workers followed the Hwaseong Seongyeok Uigwe to restore the fortress to its original shape, and repairs still use it.",
+            "explainEn": "Workers followed the Hwaseong Seongyeok Uigwe to rebuild the fortress as it first looked, and repairs still use it.",
             "factIds": [
               "f2"
             ]
@@ -8859,7 +8859,7 @@ export const storiesAll: Story[] = [
         "id": "f2",
         "rev": 2,
         "scope": "documented",
-        "claimEn": "After parts of Hwaseong were damaged, the fortress was restored in its original form based on the Hwaseong Seongyeok Uigwe, and repairs are still carried out based on it today.",
+        "claimEn": "After parts of Hwaseong were damaged, it was rebuilt to look as it first did, following the Hwaseong Seongyeok Uigwe, and it is still repaired from that record today.",
         "claimKo": "화성은 일부가 훼손된 뒤 『화성성역의궤』에 의거하여 축성 당시 모습대로 복원되었고, 지금도 이를 바탕으로 수리·보수가 이루어진다.",
         "sources": [
           {
@@ -17487,7 +17487,7 @@ export const storiesAll: Story[] = [
         "id": "f7",
         "rev": 2,
         "scope": "documented",
-        "claimEn": "Buddhist scholars worldwide recognize the Tripitaka Koreana for its outstanding accuracy, and its tens of millions of characters are carved so evenly that they look like the work of a single hand.",
+        "claimEn": "Buddhist scholars around the world value the Tripitaka Koreana for how accurate it is, and its tens of millions of characters are cut so evenly that they look as if one person carved them all.",
         "claimKo": "고려대장경은 뛰어난 정확성으로 세계 불교학자들에게 인정받으며, 수천만 개의 글자가 마치 한 사람이 새긴 듯 고르고 정밀하다.",
         "sources": [
           {

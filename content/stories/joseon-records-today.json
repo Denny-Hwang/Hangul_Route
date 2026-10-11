@@ -499,7 +499,7 @@
         {
           "id": "c1",
           "kind": "detail",
-          "promptEn": "How was Suwon Hwaseong restored to its original shape?",
+          "promptEn": "How did workers rebuild Suwon Hwaseong to look as it first did?",
           "options": [
             {
               "id": "a",
@@ -517,7 +517,7 @@
               "isCorrect": true
             }
           ],
-          "explainEn": "Workers followed the Hwaseong Seongyeok Uigwe to restore the fortress to its original shape, and repairs still use it.",
+          "explainEn": "Workers followed the Hwaseong Seongyeok Uigwe to rebuild the fortress as it first looked, and repairs still use it.",
           "factIds": [
             "f2"
           ]
@@ -627,7 +627,7 @@
       "id": "f2",
       "rev": 2,
       "scope": "documented",
-      "claimEn": "After parts of Hwaseong were damaged, the fortress was restored in its original form based on the Hwaseong Seongyeok Uigwe, and repairs are still carried out based on it today.",
+      "claimEn": "After parts of Hwaseong were damaged, it was rebuilt to look as it first did, following the Hwaseong Seongyeok Uigwe, and it is still repaired from that record today.",
       "claimKo": "화성은 일부가 훼손된 뒤 『화성성역의궤』에 의거하여 축성 당시 모습대로 복원되었고, 지금도 이를 바탕으로 수리·보수가 이루어진다.",
       "sources": [
         {

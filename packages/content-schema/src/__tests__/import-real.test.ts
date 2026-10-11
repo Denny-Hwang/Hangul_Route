@@ -126,13 +126,14 @@ describe.skipIf(!existsSync(RESEARCH_DIR))('import-real: the 24 research episode
     expect(errorsOf(resolved).map((f) => `${f.story} ${f.rule} ${f.path}`)).toEqual([]);
   });
 
-  it('leaves five research claims close to their excerpts, which the authored story files restate', () => {
+  it('leaves six research claims close to their excerpts, which the authored story files restate', () => {
     const copied = resolved.flatMap((m) =>
       lintAll(m)
         .filter((f) => AUTHORING_RULES.has(f.rule))
         .map((f) => `${m.story.id} ${f.path}`),
     );
     expect(copied.sort()).toEqual([
+      'story:chuseok-ganggangsullae facts[0].claimEn',
       'story:gimjang-arirang facts[1].claimEn',
       'story:janggyeong-panjeon facts[8].claimEn',
       'story:jikji-metal-type facts[7].claimEn',
