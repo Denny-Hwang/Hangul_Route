@@ -65,9 +65,16 @@ export default function HomePage(): JSX.Element {
                       </div>
                       <div style={{ color: colors.text.secondary, fontSize: typography.size.bodySm }}>{statusLine(item, locale)}</div>
                     </div>
-                    <Link href={ROUTES.space(item.space.id)}>
-                      <Button>{c.home.open.cta}</Button>
-                    </Link>
+                    <div style={{ display: 'flex', gap: spacing.sm, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                      {kind === 'family' && !item.space.archivedAt ? (
+                        <Link href={ROUTES.spaceCurriculum(item.space.id)}>
+                          <Button>{c.curriculum.entries.planTerm.cta}</Button>
+                        </Link>
+                      ) : null}
+                      <Link href={ROUTES.space(item.space.id)}>
+                        <Button>{c.home.open.cta}</Button>
+                      </Link>
+                    </div>
                   </article>
                 ))}
               </div>

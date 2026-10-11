@@ -1,4 +1,5 @@
 import type {
+  CurriculumMeta,
   Entitlement,
   LearnerLevelId,
   PlanItem,
@@ -36,7 +37,9 @@ export interface SpaceListItem {
  * A roster summary as the Worker sends it: projected to the teacher allow-list,
  * `planProgress` holding this space's plans only (F-SPACE-002 T-1a, section 4.11).
  */
-export type RosterSummary = Pick<ProgressSummary, TeacherVisibleSummaryKey>;
+export type RosterSummary = Pick<ProgressSummary, TeacherVisibleSummaryKey> &
+  /** A family space also reads the learner's own-route counts (F-PLAN-002 section 3.10); a class never receives them. */
+  Partial<Pick<ProgressSummary, 'selfRoute'>>;
 
 export interface RosterLearner {
   /** Opaque learner id: keys the row, targets plans, issues Rescue Codes. Never shown. */
@@ -75,6 +78,8 @@ export interface PlanView {
   archivedAt: string | null;
   createdAt: string;
   updatedAt: string;
+  /** A route plan's curriculum (F-PLAN-002 section 3.5); null or absent = a classic plan. */
+  meta?: CurriculumMeta | null;
 }
 
 export interface PlanSave {
@@ -83,6 +88,8 @@ export interface PlanSave {
   items: PlanItem[];
   targetLearnerIds?: string[] | null;
   publish: boolean;
+  /** Absent keeps the stored meta; the wizard sends a route's meta, a re-pace its new one. */
+  meta?: CurriculumMeta | null;
 }
 
 export interface MemberView {

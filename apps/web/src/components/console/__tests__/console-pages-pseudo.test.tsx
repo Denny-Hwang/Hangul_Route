@@ -1,5 +1,5 @@
 import { getMessages, type UiLocale } from '@hangul-route/i18n';
-import { stage1Episodes, stage1Quests } from '@/data/stage1-catalog';
+import { builderEpisodes, questsOf } from '@/data/catalog';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { expectAllPseudo } from './pseudo-text';
@@ -76,6 +76,14 @@ describe('console pages render only dictionary text (en-XA)', () => {
     expectAllPseudo(await render('@/app/(console)/teach/space/page'));
   });
 
+  it('curriculum wizard, step 1 (F-PLAN-002 section 3.8)', async () => {
+    const html = await render('@/app/(console)/teach/space/curriculum/page');
+    expect(html).toContain('role="radiogroup"');
+    expect(html).toContain('aria-checked="true"');
+    expect(html).toContain('href="/teach/space?id=space%3Ac1"');
+    expectAllPseudo(html);
+  });
+
   it('relink, loading', async () => {
     const html = await render('@/app/(console)/teach/space/relink/page');
     expect(html).toContain('href="/teach/space?id=space%3Ac1"');
@@ -86,7 +94,7 @@ describe('console pages render only dictionary text (en-XA)', () => {
     const html = await render('@/app/(console)/teach/space/plan/page');
     expect(html).toContain('href="/teach/space?id=space%3Ac1"');
     expect(html).toContain('type="date"');
-    expectAllPseudo(html, [...stage1Episodes.map((e) => e.titleEn), ...stage1Quests.map((q) => q.titleEn)]);
+    expectAllPseudo(html, builderEpisodes().flatMap((e) => [e.title, ...questsOf(e.episodeId).map((q) => q.title)]));
   });
 
   it('billing, before the plans load', async () => {
