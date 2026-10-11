@@ -24,3 +24,13 @@
 - [ ] Rolling coverage targets met (see `docs/tests/coverage-targets.md`)
 - [ ] Conventional Commit title
 - [ ] `routine-generated` label set if this PR was opened by a routine
+
+## New screen? Layout adoption checklist (F-LAYOUT-001 §3.12)
+<!-- Only for PRs that add or rebuild a screen. Delete this section otherwise. -->
+- [ ] Wrapped in `Screen` (never a raw `View` at the top), with a chosen `width`
+- [ ] No direct `useWindowDimensions`: uses `useLayoutClass()`
+- [ ] No raw sizes derived from the window: uses `useMediaSize(base)`
+- [ ] Anything with a picture and text has a `sideBySide` arrangement; stacked otherwise
+- [ ] Tappables >= 64 (no new entry in `apps/mobile/e2e/web/fixtures/touch-target-allowlist.json`; that list only shrinks); no horizontal scroll at 320 wide and at 590 wide (200 % zoom of 1180)
+- [ ] Added to the e2e reachability list for the six viewports when it has a primary CTA
+- [ ] Spanish strings (about 30 % longer) fit: no fixed-width labels, text wraps

@@ -1,0 +1,47 @@
+{
+  "locale": "es",
+  "domain": "vocab-nature",
+  "entries": {
+    "vocab-topic:nature": {
+      "title": "Naturaleza",
+      "blurb": "Lo que ves al aire libre, del cielo al mar.",
+      "hoyaIntro": "Salgamos a mirar el mundo que nos rodea."
+    },
+    "vocab:san": {
+      "gloss": "montaña"
+    },
+    "vocab:bada": {
+      "gloss": "mar"
+    },
+    "vocab:haneul": {
+      "gloss": "cielo"
+    },
+    "vocab:hae-sun": {
+      "gloss": "sol"
+    },
+    "vocab:dal-moon": {
+      "gloss": "luna"
+    },
+    "vocab:byeol": {
+      "gloss": "estrella"
+    },
+    "vocab:namu": {
+      "gloss": "árbol"
+    },
+    "vocab:kkot": {
+      "gloss": "flor"
+    },
+    "vocab:bi-rain": {
+      "gloss": "lluvia"
+    },
+    "vocab:nun-snow": {
+      "gloss": "nieve"
+    },
+    "vocab:gang": {
+      "gloss": "río"
+    },
+    "vocab:gureum": {
+      "gloss": "nube"
+    }
+  }
+}

@@ -56,6 +56,11 @@
     "apps/mobile/src/screens/placement/**",
     "apps/web/src/app/(console)/teach/space/lecture/page.tsx",
     "apps/web/src/components/console/LectureParts.tsx",
+    "apps/web/src/app/(console)/teach/space/settings/page.tsx",
+    "apps/web/src/components/console/SettingsParts.tsx",
+    "apps/web/src/components/console/SchoolAdmin.tsx",
+    "apps/web/src/app/(console)/parent/**",
+    "apps/web/src/components/parent/**",
     "apps/mobile/src/screens/library/StoryTile.tsx",
     "apps/mobile/src/screens/library/StoryShelf.tsx"
   ],

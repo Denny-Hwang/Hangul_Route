@@ -1,4 +1,4 @@
-import type { ProgressSnapshot } from '@hangul-route/content-schema';
+import { JourneySummarySchema, type ProgressSnapshot, type ProgressSummary } from '@hangul-route/content-schema';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mem = vi.hoisted(() => new Map<string, unknown>());
@@ -61,6 +61,20 @@ describe('sync-store (F-SYNC-002)', () => {
     expect(api.putSnapshot).toHaveBeenCalledWith('profile:a', expect.objectContaining({ baseRev: 0 }), { deviceId: 'device-test', secret: 'sec' });
     expect(state).toMatchObject({ status: 'synced', rev: 1, secret: 'sec' });
     expect((mem.get('sync:profile:a') as { rev: number }).rev).toBe(1);
+  });
+
+  it('uploads summary.journey computed from the stores and the bundle (F-ROUTE-001 R-8)', async () => {
+    const quest = snap(['quest:stage1-letters-q1']).quests[0];
+    useProgressStore.setState({ byProfile: { 'profile:a': { ...snap([]), quests: quest ? [{ ...quest, episodeId: 'episode:stage1-letters' }] : [] } } });
+    const putSnapshot = vi.fn(async (_id: string, _body: { summary: ProgressSummary }) => ({ status: 'ok', rev: 1 }));
+    setSyncApiForTests(fakeApi({ putSnapshot }) as never);
+    await useSyncStore.getState().syncNow('profile:a');
+    const journey = putSnapshot.mock.calls[0]?.[1].summary.journey;
+    expect(JourneySummarySchema.parse(journey)).toEqual(journey);
+    expect(journey?.here).toBe('stage1');
+    expect(journey?.stages.map((s) => s.stage)).toEqual(['stage1', 'stage2', 'stage3', 'stage4', 'stage5', 'stage6', 'stage7']);
+    expect(journey?.stages[0]?.done).toBe(1);
+    expect(journey?.stages.every((s) => s.known === 0)).toBe(true);
   });
 
   it('applies a merged snapshot back into progress on conflict', async () => {

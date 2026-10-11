@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { keepSidewaysIfAsked, onboardChild, openGrownUpZone, playCheck, readStored, seedStored, waitForSaved } from './helpers';
 import { shot, shotsEnabled } from './shots';
@@ -460,6 +460,25 @@ test('install guide sheet is a centred reading column above the tab bar at 1180x
 // page right. Phones and short windows: the 2-column gallery as before.
 
 /** Cold start of a learner who has earned Book, then Paper Folding, then Kimchi (the latest), on the Library tab. */
+/** The largest rotateY (degrees) the flip button's face reaches over the next 700 ms. */
+function maxRotation(button: Locator): Promise<number> {
+  return button.evaluate(
+    (el) =>
+      new Promise<number>((resolve) => {
+        const face = el.firstElementChild as HTMLElement | null;
+        const start = performance.now();
+        let max = 0;
+        const tick = (): void => {
+          const m = face ? /rotateY\((-?[\d.]+)deg\)/.exec(face.style.transform) : null;
+          if (m) max = Math.max(max, Math.abs(Number(m[1])));
+          if (performance.now() - start < 700) requestAnimationFrame(tick);
+          else resolve(max);
+        };
+        tick();
+      }),
+  );
+}
+
 async function openLibrary(page: Page): Promise<void> {
   await onboardChild(page, { name: 'Dani', startJourney: false });
   const profiles = await readStored<Array<{ id: string }>>(page, 'profiles');
@@ -545,6 +564,45 @@ test.describe('Library at 1180x820: two panes', () => {
     expect(page.url()).toBe(url);
     expect(await overflowsSideways(page)).toBe(false);
     expect(errors).toEqual([]);
+  });
+
+  test('the flip turns once per tap, ignores a second tap mid-turn, and a locked card does not turn (F-VOC-003 C-2)', async ({ page }) => {
+    await openLibrary(page);
+    await galleryPane(page).getByRole('button', { name: 'Book', exact: true }).click();
+    const toBack = cardPane(page).getByRole('button', { name: 'Tap to flip card to back' });
+    const toFront = cardPane(page).getByRole('button', { name: 'Tap to flip card to front' });
+    await expect(toBack).toBeVisible();
+    // Two taps inside the first 200 ms leg: the second is ignored, so the card ends on its back and stays there.
+    const turn = maxRotation(toBack);
+    const box = (await toBack.boundingBox())!;
+    await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+    expect(await turn).toBeGreaterThan(45);
+    await expect(toFront).toBeVisible();
+    await page.waitForTimeout(500);
+    await expect(toFront).toBeVisible();
+    await expect(cardPane(page).getByText('tap to flip back')).toBeVisible();
+
+    // A locked card names itself on press and shows no flip hint.
+    await thumbs(galleryPane(page)).nth(1).click();
+    const locked = cardPane(page).getByRole('button', { name: 'Locked card' });
+    await expect(locked).toBeVisible();
+    await locked.click({ force: true });
+    await page.waitForTimeout(500);
+    await expect(locked).toBeVisible();
+    await expect(cardPane(page).getByText('tap to flip', { exact: true })).toHaveCount(0);
+  });
+
+  test('under reduced motion the card swaps faces at once, with no turn', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await openLibrary(page);
+    await galleryPane(page).getByRole('button', { name: 'Book', exact: true }).click();
+    const toBack = cardPane(page).getByRole('button', { name: 'Tap to flip card to back' });
+    await expect(toBack).toBeVisible();
+    const turn = maxRotation(toBack);
+    await toBack.click();
+    expect(await turn).toBe(0);
+    await expect(cardPane(page).getByRole('button', { name: 'Tap to flip card to front' })).toBeVisible();
   });
 
   test('a locked card shows where it is earned, with no paywall', async ({ page }) => {

@@ -53,6 +53,23 @@ describe('the presenter content bundle (F-TCH-004 §3.3, §3.13)', () => {
     }
   });
 
+  it('letters quests 1-3 open on the letters their Discover step teaches, before any quiz (F-QUEST-002 §3.1)', () => {
+    for (const id of ['quest:stage1-letters-q1', 'quest:stage1-letters-q2', 'quest:stage1-letters-q3']) {
+      const quest = questsAll.find((q) => q.id === id)!;
+      const discover = quest.steps.find((s) => s.kind === 'discover')!;
+      const taughtIds = discover.discover!.pages.flatMap((p) => p.items.flatMap((item) => (item.type === 'jamo' ? [item.jamoId] : [])));
+      expect(taughtIds.length).toBeGreaterThan(0);
+      const { slides, skipped } = expandDeck(deck([{ kind: 'quest', id }]), lectureBundle('en'), { canPlayKorean: true });
+      const firstQuiz = slides.findIndex((s) => s.kind === 'quiz');
+      const before = slides.slice(1, firstQuiz);
+      expect(before.map((s) => (s.kind === 'letter' ? s.jamoId : s.kind))).toEqual(taughtIds);
+      expect(before.every((s) => s.key.startsWith(`${id}/${discover.id}/`))).toBe(true);
+      // The Check (Listen & Pick) is not a presenter slide yet (§3.3 rule 2): a counted skip, nothing else.
+      const check = quest.steps.find((s) => s.kind === 'check')!;
+      expect(skipped).toEqual([{ blockIndex: 0, ref: check.minigameRef, reason: 'unsupported-step' }]);
+    }
+  });
+
   it('localizes content text through the overlays, never the Korean or its romanization', () => {
     const overlays: Overlays = {
       es: {

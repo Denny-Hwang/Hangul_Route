@@ -1,0 +1,49 @@
+{
+  "locale": "es",
+  "domain": "vocab-body",
+  "entries": {
+    "vocab-topic:body": {
+      "title": "Cuerpo",
+      "blurb": "Partes del cuerpo que puedes señalar.",
+      "hoyaIntro": "¡Señala tu nariz! Aprendamos las palabras del cuerpo."
+    },
+    "vocab:nun-eye": {
+      "gloss": "ojo"
+    },
+    "vocab:ko": {
+      "gloss": "nariz"
+    },
+    "vocab:ip": {
+      "gloss": "boca"
+    },
+    "vocab:gwi": {
+      "gloss": "oreja"
+    },
+    "vocab:meori": {
+      "gloss": "cabeza",
+      "senseNote": "También significa cabello."
+    },
+    "vocab:eolgul": {
+      "gloss": "cara"
+    },
+    "vocab:son": {
+      "gloss": "mano"
+    },
+    "vocab:pal-arm": {
+      "gloss": "brazo"
+    },
+    "vocab:dari-leg": {
+      "gloss": "pierna"
+    },
+    "vocab:bal": {
+      "gloss": "pie"
+    },
+    "vocab:bae-belly": {
+      "gloss": "barriga"
+    },
+    "vocab:i-tooth": {
+      "gloss": "diente",
+      "senseNote": "También se dice chia, una palabra más formal."
+    }
+  }
+}
