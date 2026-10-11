@@ -18,6 +18,7 @@ import { ListenPickGame } from './ListenPickGame';
 import { MatchSoundGame } from './MatchSoundGame';
 import { OddOneOutGame } from './OddOneOutGame';
 import { PicWordMatchGame } from './PicWordMatchGame';
+import { StoryCheckGame } from './StoryCheckGame';
 import { StoryReadGame } from './StoryReadGame';
 import { StorySequenceGame } from './StorySequenceGame';
 import { TapRespondGame } from './TapRespondGame';
@@ -104,6 +105,8 @@ export function MinigameScreen({ route, navigation }: Props): React.ReactElement
       return <TapRespondGame scope={scope} onFinish={close} />;
     case 'story-read':
       return <StoryReadGame scope={scope} onFinish={close} onBack={() => navigation.goBack()} />;
+    case 'story-check':
+      return <StoryCheckGame scope={scope} onFinish={close} onBack={() => navigation.goBack()} />;
     default:
       return fallback(copy.comingSoon);
   }

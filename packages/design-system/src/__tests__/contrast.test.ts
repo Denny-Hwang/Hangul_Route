@@ -169,6 +169,15 @@ describe('token contrast contract (WCAG AA)', () => {
     expect(contrastRatio(colors.feedback.nudge, colors.surface.paper)).toBeLessThan(WCAG_AA_LARGE);
   });
 
+  // SparkMeter (F-VOC-004 S-4): a lit spark is a non-text cue on the header surfaces and on the full-meter backdrop.
+  it.each([
+    ['surface.canvas', colors.surface.canvas],
+    ['surface.paper', colors.surface.paper],
+    ['brand.primaryLight', colors.brand.primaryLight],
+  ])('SparkMeter lit spark (brand.primary) on %s ≥ 3:1 (non-text)', (_name, bg) => {
+    expect(contrastRatio(colors.brand.primary, bg)).toBeGreaterThanOrEqual(WCAG_AA_LARGE);
+  });
+
   // hoya.furDark replaces the Tile literal elsewhere; on the nudge tint it is under 3:1, so ChoiceCard does not use it there.
   it('hoya.furDark reads on surface.paper (≥ 3:1) but not on feedback.nudgeLight (< 3:1)', () => {
     expect(contrastRatio(colors.hoya.furDark, colors.surface.paper)).toBeGreaterThanOrEqual(WCAG_AA_LARGE);

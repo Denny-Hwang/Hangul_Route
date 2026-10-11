@@ -1,4 +1,8 @@
-import type { ProgressSnapshot } from '@hangul-route/content-schema';
+import type { Episode, ProgressSnapshot } from '@hangul-route/content-schema';
+import { gridEpisodes } from '../../content/episodes';
+import { isContentLocked, type FreeContentRegistry } from '../content-access';
+import { isStageEntitled, type Tier } from '../entitlement';
+import { stageAvailability } from '../journey';
 import { compareInstant } from '../sync/merge';
 import type { Bookmark, BookmarkFile } from './bookmarks';
 import { compareShelfOrder, type ShelfCategory, type StoryIndexEntry } from './story-index';
@@ -155,4 +159,23 @@ export function nextStoryAfter(questId: string, input: StoryPickInput): StoryInd
   const done = completedAtOf(input);
   const allowed = new Set(offerable(input));
   return walk.find((e) => allowed.has(e) && !done.has(e.questId)) ?? null;
+}
+
+/**
+ * The `isLocked` that Home (and later the shelf) passes in: the story lock of
+ * §3.9 (`isContentLocked`, always open while `gatingEnabled` is off), and for a
+ * book (grid) entry also the stage gate Journey applies today, which is not
+ * behind the flag: the stage must be entitled for the tier and must not be
+ * "soon" (no shipped grid cell yet).
+ */
+export function storyLockFor(ctx: {
+  tier: Tier;
+  gatingEnabled: boolean;
+  episodes: readonly Episode[];
+  registry?: FreeContentRegistry;
+}): (entry: StoryIndexEntry) => boolean {
+  const grid = gridEpisodes(ctx.episodes);
+  return (entry) =>
+    isContentLocked({ kind: 'story', id: entry.storyId, tier: ctx.tier, gatingEnabled: ctx.gatingEnabled, registry: ctx.registry }) ||
+    (entry.placement === 'grid' && (!isStageEntitled(entry.stage, ctx.tier) || stageAvailability(entry.stage, grid) === 'soon'));
 }

@@ -1,4 +1,4 @@
-import type { ProgressSnapshot } from '@hangul-route/content-schema';
+import { ProgressSummarySchema, type ProgressSnapshot } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { placementResult } from '../../placement/__tests__/fixtures';
 import { placementSummaryOf, planProgressOf, summarize } from '../summarize';
@@ -145,3 +145,18 @@ describe('summarize: the level check (F-PLC-001 section 3.8, section 3.7 consume
   });
 });
 
+
+describe('summarize: summary.journey (F-ROUTE-001 section 3.12, R-8)', () => {
+  const journey = { v: 1 as const, here: 'stage1' as const, stages: [{ stage: 'stage1' as const, state: 'open' as const, done: 4, known: 0, total: 8 }] };
+
+  it('passes the journey input through unchanged, schemaVersion staying 1', () => {
+    const out = summarize({ snapshot: snap, now: NOW, stage1QuestIds: ['q1'], questJamo: {}, journey });
+    expect(out.journey).toEqual(journey);
+    expect(out.schemaVersion).toBe(1);
+    expect(ProgressSummarySchema.parse(out).journey).toEqual(journey);
+  });
+
+  it('leaves the key out when no journey is given (summarize stays pure)', () => {
+    expect(summarize({ snapshot: snap, now: NOW, stage1QuestIds: ['q1'], questJamo: {} })).not.toHaveProperty('journey');
+  });
+});

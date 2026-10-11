@@ -49,7 +49,12 @@ Then: exactly three cards say what Hoya wants to do today, in a fixed order that
 ## Interaction points
 
 - Card ① / ② tap → `QuestPlayer` (questId, episodeId)
-- Story card tap → `EpisodeDetail` (episodeId)
+- Story card tap (F-STORY-004 §3.7, drawn in `home/story-time-card.md` F) →
+  `QuestPlayer` for "Keep reading" / "A short story"; `StoryReader` (unscored
+  replay) for "Read it again". A story card with cover art shows a 48 dp
+  cover thumbnail where the icon sits.
+- Explore card ("Take a look", the fallback when no story or replay applies)
+  tap → `EpisodeDetail` (episodeId)
 - Daily-test card tap → Daily Test surface (F-RVW-001; not built yet, so the
   builder does not emit this card — see spec §9.2)
 - A collected card stays tappable (a child may replay for fun); replaying
@@ -58,13 +63,14 @@ Then: exactly three cards say what Hoya wants to do today, in a fixed order that
 ## Navigation graph
 
 Enter from: `Main` tab bar (Home), profile switch, quest completion return
-Exit to: `QuestPlayer` · `EpisodeDetail`
+Exit to: `QuestPlayer` · `EpisodeDetail` · `StoryReader`
 
 ## States
 
 - **success**: three cards, zero or more collected.
-- **empty** (day one, no history): still three cards — slot ① becomes Story
-  Time, so the row is never short (§3.1 fallback).
+- **empty** (day one, no history): still three cards — slot ① becomes a
+  story (or the explore card when no reviewed story exists), so the row is
+  never short (§3.1 fallback, amended by F-STORY-004 §3.7).
 - **error** (content or progress unreadable): the section is omitted entirely
   rather than rendering an empty frame; the rest of home still works.
 

@@ -53,6 +53,11 @@ describe('priorityTokensOf', () => {
     expect(priorityTokensOf([], [resp('d', 'correct', true), resp('c', 'skipped')], tagsOf)).toEqual(['sym:ㅡ', 'sym:ㅣ']);
   });
 
+  it('never makes a priority of a prompt that could not play (noSound, section 3.11)', () => {
+    const silent: AssessmentResponse = { ...resp('c', 'skipped'), noSound: true };
+    expect(priorityTokensOf([], [silent, resp('a', 'wrong')], tagsOf)).toEqual(['sym:ㅓ']);
+  });
+
   it('ignores correct unassisted answers and untagged questions', () => {
     expect(priorityTokensOf([], [resp('a', 'correct'), resp('none', 'wrong'), resp('x', 'wrong')], tagsOf)).toEqual([]);
   });

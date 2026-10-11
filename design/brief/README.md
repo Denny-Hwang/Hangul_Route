@@ -86,9 +86,13 @@ design/brief/
 - [`00-visual-identity.md`](./00-visual-identity.md) — 시작점. 다른 모든 brief 가 이 문서의 palette/type 을 상속.
 - [`prompt-library.md`](./prompt-library.md) — 모든 prompt 를 한 페이지에 모은 색인.
 - [`character/hoya-character-sheet.md`](./character/hoya-character-sheet.md) — Week 1 첫 산출물 후보.
+- 지도 위의 이야기 (F-STORY-005 PR 5.0): [`screens/27-cell-stories.md`](./screens/27-cell-stories.md) · `screens/05-journey-grid.md` 와 `06-episode-detail.md` 의 §8 (이야기 셀).
 - [`illustrations/heritage-card-art.md`](./illustrations/heritage-card-art.md) — Stage 1 카드 30장.
+- 이야기 리더 (F-STORY-002 PR 2.0): [`illustrations/scene-art-style.md`](./illustrations/scene-art-style.md) (장면 그림 스타일 계약) · [`components/story-scene.md`](./components/story-scene.md) · [`screens/21-story-reader.md`](./screens/21-story-reader.md) · [`screens/26-story-sources.md`](./screens/26-story-sources.md).
 - `components/*` — Button / Card / Tile / HoyaBubble / Progress / StarRow / Pill / Heading / Screen / Icon (10개).
+- 이야기 확인 (F-STORY-003 PR 3.0): [`components/choice-card.md`](./components/choice-card.md) · [`screens/22-story-check.md`](./screens/22-story-check.md) · [`screens/12-minigame-story-sequence.md`](./screens/12-minigame-story-sequence.md) (Story Order v2 로 개정).
 - `screens/*` — onboarding 3 + main 4 + episode/quest/results 3 + minigames 6 + library/card 2 + parent 2 = 20개.
+- 이야기 선반 (F-STORY-004 PR 4.0): [`screens/23-library-stories.md`](./screens/23-library-stories.md) · [`screens/24-culture-notes.md`](./screens/24-culture-notes.md) · [`screens/25-story-episode-detail.md`](./screens/25-story-episode-detail.md).
 
 ## Out of scope (이 PR)
 
