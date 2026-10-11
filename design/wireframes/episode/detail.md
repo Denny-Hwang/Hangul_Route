@@ -46,6 +46,7 @@ Preview variant (episode.status == 'preview'):
   "Coming soon" + 1 muted line. No quest list, no card list.
 ```
 
+- **Soft prerequisite (F-QUEST-002 §3.5, no lock):** under a quest whose predecessor in Stage 1 order is not complete, a muted line "Builds on: <previous quest title>" sits under the blurb. Tapping [[ START ]] on it opens, once per quest per session, a one-line sheet pinned to the bottom: "This one uses letters from <previous>. Start there?" with [[ START THERE ]] (-> `quest/player` for the previous quest) and [ PLAY ANYWAY ] (-> `quest/player` for this quest). Both always work; nothing is locked and the stars/Start look is unchanged. Teacher plans and homework do not see it.
 - Only one [[ START ]] renders large: the first quest without stars. Others use the secondary look so the eye lands on one thing.
 - Card preview never reveals a not-yet-earned card's name or Korean word (§3.6 spirit): silhouette + rarity only.
 
