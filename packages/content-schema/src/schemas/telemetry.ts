@@ -103,6 +103,10 @@ export const TELEMETRY_EVENT_NAMES = [
   'route.proposed',
   'route.proposal_skipped',
   'route.updated',
+  // F-VOC-004 §3.10 (ids, codes and counts only; `level` is levelOrder, never an age)
+  'vocab.round.start',
+  'vocab.round.complete',
+  'vocab.challenge_toggled',
 ] as const;
 
 export const TelemetryEventNameSchema = z.enum(TELEMETRY_EVENT_NAMES);

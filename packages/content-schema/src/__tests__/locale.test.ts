@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
+  CLOCK_SCALES,
+  ClockScaleSchema,
+  DEFAULT_CHALLENGE_MODE,
+  DEFAULT_CLOCK_SCALE,
   DEFAULT_UI_LOCALE,
   DeviceSettingsSchema,
   ProfileSettingsSchema,
@@ -58,6 +62,40 @@ describe('UI locale schemas (F-I18N-001 §3.2)', () => {
     const stored = { uiLocale: 'es', romanizationMode: 'tap' };
     expect(ProfileSettingsSchema.parse(stored)).toEqual(stored);
     expect(ProfileSettingsSchema.parse({ uiLocale: 'ko' })).toEqual({ uiLocale: 'ko', romanizationMode: 'always' });
+  });
+
+  it('ProfileSettings.challengeMode is off unless chosen, and only a boolean (F-VOC-004 S8)', () => {
+    expect(DEFAULT_CHALLENGE_MODE).toBe(false);
+    // Absent stays absent so stored settings keep their shape; readers resolve it to DEFAULT_CHALLENGE_MODE.
+    const parsed = ProfileSettingsSchema.parse({});
+    expect('challengeMode' in parsed).toBe(false);
+    expect(parsed.challengeMode ?? DEFAULT_CHALLENGE_MODE).toBe(false);
+    expect(ProfileSettingsSchema.parse({ challengeMode: true }).challengeMode).toBe(true);
+    expect(ProfileSettingsSchema.parse({ challengeMode: false }).challengeMode).toBe(false);
+    for (const bad of ['on', 1, 0, null]) {
+      expect(ProfileSettingsSchema.safeParse({ challengeMode: bad }).success).toBe(false);
+    }
+  });
+
+  it('ProfileSettings.clockScale accepts only 1, 1.5 and 2, and defaults to 1 (F-VOC-004 §3.1)', () => {
+    expect([...CLOCK_SCALES]).toEqual([1, 1.5, 2]);
+    expect(DEFAULT_CLOCK_SCALE).toBe(1);
+    expect(ProfileSettingsSchema.parse({}).clockScale ?? DEFAULT_CLOCK_SCALE).toBe(1);
+    for (const scale of CLOCK_SCALES) {
+      expect(ClockScaleSchema.parse(scale)).toBe(scale);
+      expect(ProfileSettingsSchema.parse({ clockScale: scale }).clockScale).toBe(scale);
+    }
+    for (const bad of [0, 0.5, 1.25, 3, -1, '1', '2', null, Number.NaN]) {
+      expect(ClockScaleSchema.safeParse(bad).success).toBe(false);
+      expect(ProfileSettingsSchema.safeParse({ clockScale: bad }).success).toBe(false);
+    }
+  });
+
+  it('settings stored before challengeMode and clockScale existed still parse unchanged', () => {
+    const stored = { uiLocale: 'ko', romanizationMode: 'tap', readToMe: true };
+    expect(ProfileSettingsSchema.parse(stored)).toEqual(stored);
+    const withChallenge = { romanizationMode: 'always', challengeMode: true, clockScale: 1.5 };
+    expect(ProfileSettingsSchema.parse(withChallenge)).toEqual(withChallenge);
   });
 
   it('DeviceSettings: locale optional (absent = never chosen), unknown rejected', () => {
