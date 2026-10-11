@@ -1087,3 +1087,126 @@ describe('style and glosses', () => {
     ]);
   });
 });
+
+describe('F-STORY-005 §3.9: copying, designation numbers, shelf reviewers', () => {
+  const QUOTE = 'King Sejong created the letters so that ordinary people could read and write with ease.';
+  const withQuote = (mutate: (s: Story) => void, quote = QUOTE): Story =>
+    withStory((s) => {
+      s.facts[0]!.sources[0]!.quoteOrLocator = quote;
+      mutate(s);
+    });
+
+  it('narration-copies-source: 7 copied words pass, 8 fail', () => {
+    const seven = withQuote((s) => (scene(s, 0).narrationEn = 'Long ago, so that ordinary people could read and learn, he worked.'));
+    expect(hits(lint(seven), 'narration-copies-source')).toEqual([]);
+    const eight = withQuote((s) => (scene(s, 0).narrationEn = 'Long ago, so that ordinary people could read and write, he worked.'));
+    expect(hits(lint(eight), 'narration-copies-source')).toEqual([
+      expect.objectContaining({ level: 'error', path: 'tiers[0].scenes[0].narrationEn' }),
+    ]);
+    expect(hits(lint(eight), 'narration-copies-source')[0]!.message).toContain(
+      '"so that ordinary people could read and write" is copied from facts[0].sources[0].quoteOrLocator',
+    );
+  });
+
+  it('narration-copies-source: official names and lunar dates are not prose to restate', () => {
+    const named = withQuote(
+      (s) => {
+        s.facts[0]!.claimEn =
+          "It was inscribed on the Representative List of the Intangible Cultural Heritage of Humanity in 2009, with the support of the Government of the Republic of Korea.";
+        scene(s, 0).narrationEn = 'It falls on the fifteenth day of the eighth lunar month, after the Lunar New Year.';
+        scene(s, 1).narrationEn = "Arirang folk song in the Democratic People's Republic of Korea is its own entry.";
+      },
+      "Inscribed in 2009 on the Representative List of the Intangible Cultural Heritage of Humanity, with the support of the Government of the Republic of Korea; observed on the fifteenth day of the eighth lunar month; Arirang folk song in the Democratic People's Republic of Korea.",
+    );
+    expect(hits(lint(named), 'narration-copies-source')).toEqual([]);
+    const prose = withQuote(
+      (s) => (scene(s, 0).narrationEn = 'It is a Masterpiece of the Oral and Intangible Heritage of Humanity, and people sing it together at every festival.'),
+      'Masterpieces of the Oral and Intangible Heritage of Humanity: people sing it together at every festival in the village.',
+    );
+    expect(hits(lint(prose), 'narration-copies-source')).toEqual([]);
+    const proseOnly = withQuote(
+      (s) => (scene(s, 0).narrationEn = 'Today people sing it together at every festival in the village square.'),
+      'Masterpieces of the Oral and Intangible Heritage of Humanity: people sing it together at every festival in the village.',
+    );
+    expect(hits(lint(proseOnly), 'narration-copies-source')).toHaveLength(1);
+  });
+
+  it('narration-copies-source: ignores case and punctuation', () => {
+    const story = withQuote(
+      (s) => (scene(s, 0).narrationEn = 'SO THAT ordinary people... could read; and write, WITH ease!'),
+    );
+    expect(hits(lint(story), 'narration-copies-source')).toHaveLength(1);
+  });
+
+  it('narration-copies-source: checks claimEn and every tier, against any source of the story', () => {
+    const story = withQuote((s) => {
+      s.facts[2]!.claimEn = 'Sejong created the letters so that ordinary people could read.';
+      scene(s, 1, 1).narrationEn = 'He created the letters so that ordinary people could read them.';
+    });
+    expect(hits(lint(story), 'narration-copies-source').map((f) => f.path)).toEqual([
+      'tiers[1].scenes[1].narrationEn',
+      'facts[2].claimEn',
+    ]);
+  });
+
+  it('narration-copies-source: one finding per field, and a {kw:} token breaks a run', () => {
+    const twice = withQuote(
+      (s) => (scene(s, 0).narrationEn = 'King Sejong created the letters so that ordinary people could read and write.'),
+    );
+    expect(hits(lint(twice), 'narration-copies-source')).toHaveLength(1);
+    const token = withQuote(
+      (s) => (scene(s, 0).narrationEn = 'So that ordinary people {kw:sejong} could read and write with ease.'),
+    );
+    expect(hits(lint(token), 'narration-copies-source')).toEqual([]);
+  });
+
+  it('narration-copies-source: short locators and the valid fixtures pass', () => {
+    expect(hits(lint(ready()), 'narration-copies-source')).toEqual([]);
+    expect(hits(lint(draft()), 'narration-copies-source')).toEqual([]);
+    expect(hits(lint(tale()), 'narration-copies-source')).toEqual([]);
+    const short = withQuote((s) => (scene(s, 0).narrationEn = 'Read and write with ease.'), 'read and write with ease');
+    expect(hits(lint(short), 'narration-copies-source')).toEqual([]);
+  });
+
+  it.each([
+    'Its book is National Treasure No. 70.',
+    'Its book is national treasure no.70 today.',
+    'Its book is National Treasure Number 70.',
+    'Its book is National Treasure 70.',
+    'Its book is a Treasure No. 1 of Korea.',
+    'They became National Treasures No. 32 and 151.',
+  ])('narration-national-treasure-number flags "%s"', (text) => {
+    const story = withStory((s) => (scene(s, 0).narrationEn = text));
+    expect(hits(lint(story), 'narration-national-treasure-number')).toEqual([
+      expect.objectContaining({ level: 'error', path: 'tiers[0].scenes[0].narrationEn' }),
+    ]);
+  });
+
+  it('narration-national-treasure-number: "National Treasure" passes, and claims and sources may keep the number', () => {
+    const story = withStory((s) => {
+      scene(s, 0).narrationEn = 'The book is a National Treasure, a treasure of Korea.';
+      s.facts[0]!.claimEn = 'The book is National Treasure No. 70.';
+      s.facts[0]!.sources[0]!.title = 'National Treasure No. 70';
+    });
+    expect(hits(lint(story), 'narration-national-treasure-number')).toEqual([]);
+    expect(hits(lint(ready()), 'narration-national-treasure-number')).toEqual([]);
+  });
+
+  it('story-shelf-needs-reviewers: a shelf block needs both sign-offs', () => {
+    expect(hits(lint(ready()), 'story-shelf-needs-reviewers')).toEqual([]);
+    const noLanguage = withStory((s) => (s.review.language = 'draft'));
+    expect(hits(lint(noLanguage), 'story-shelf-needs-reviewers')).toEqual([
+      expect.objectContaining({ level: 'error', path: 'review' }),
+    ]);
+    expect(hits(lint(noLanguage), 'story-shelf-needs-reviewers')[0]!.message).toContain('native-reviewed');
+    const noCulture = withStory((s) => (s.review.culture = 'draft'));
+    expect(hits(lint(noCulture), 'story-shelf-needs-reviewers')).toHaveLength(1);
+    const unreviewedNoShelf = withStory((s) => {
+      s.review.language = 'draft';
+      s.review.culture = 'draft';
+      delete s.shelf;
+    });
+    expect(hits(lint(unreviewedNoShelf), 'story-shelf-needs-reviewers')).toEqual([]);
+    expect(hits(lint(draft()), 'story-shelf-needs-reviewers')).toEqual([]);
+  });
+});

@@ -631,6 +631,101 @@ function lintPillarTags(story: Story, add: Add): void {
   }
 }
 
+// ---- copying, designation numbers, shelf reviewers (F-STORY-005 §3.9) ------------------------------
+
+/** A run of this many consecutive words shared with a source excerpt counts as copied. */
+export const COPIED_RUN_WORDS = 8;
+/**
+ * Names and fixed date forms a writer cannot restate: UNESCO register and
+ * programme names, the country names in them, and lunar dates ("the fifteenth
+ * day of the eighth lunar month"). Matched on the normalized text (lower case,
+ * no apostrophes, single spaces); a match ends a run like a `{kw:}` token.
+ */
+const COPY_EXEMPT =
+  /\b(?:representative list of the intangible cultural heritage of humanity|masterpieces? of the oral and intangible heritage of humanity|(?:the )?government of the republic of korea|democratic peoples republic of korea|republic of korea|memory of the world|lunar new year|(?:the )?[a-z0-9]+ day of the [a-z0-9]+ lunar month)\b/;
+/** "National Treasure No. 70", "Treasure No. 1", "National Treasure 70": designation numbers left official names in 2021. */
+const DESIGNATION_NUMBER = /\b(?:national\s+)?treasures?\s*(?:no\.?|number|#)\s*\d|\bnational\s+treasures?\s+\d/i;
+
+/**
+ * Lower-cased word runs of `text`, case- and punctuation-insensitive. A `{kw:}`
+ * token ends a run (the learner hears a Korean word there, not the source's
+ * words), and so does a name or date of `COPY_EXEMPT`.
+ */
+function wordRuns(text: string): string[][] {
+  return text.split(TOKEN).flatMap((part) => {
+    const normalized = part
+      .toLowerCase()
+      .replace(/['\u2019]/g, '')
+      .split(/[^\p{L}\p{N}]+/u)
+      .filter((w) => w !== '')
+      .join(' ');
+    return normalized.split(new RegExp(COPY_EXEMPT.source, 'g')).map((run) => run.split(' ').filter((w) => w !== ''));
+  });
+}
+
+function wordWindows(text: string): string[] {
+  return wordRuns(text).flatMap((words) =>
+    words.slice(0, Math.max(0, words.length - COPIED_RUN_WORDS + 1)).map((_, i) =>
+      words.slice(i, i + COPIED_RUN_WORDS).join(' '),
+    ),
+  );
+}
+
+function lintCopying(story: Story, add: Add): void {
+  const excerpts = new Map<string, string>();
+  story.facts.forEach((fact, fi) =>
+    fact.sources.forEach((source, si) => {
+      for (const window of wordWindows(source.quoteOrLocator)) {
+        if (!excerpts.has(window)) excerpts.set(window, at('facts', fi, 'sources', si, 'quoteOrLocator'));
+      }
+    }),
+  );
+  if (excerpts.size === 0) return;
+  const fields: Array<[string, string]> = [];
+  story.tiers.forEach((tier, ti) =>
+    tier.scenes.forEach((scene, si) => fields.push([at('tiers', ti, 'scenes', si, 'narrationEn'), scene.narrationEn])),
+  );
+  story.facts.forEach((fact, fi) => fields.push([at('facts', fi, 'claimEn'), fact.claimEn]));
+  for (const [path, text] of fields) {
+    const copied = wordWindows(text).find((window) => excerpts.has(window));
+    if (copied) {
+      add(
+        'narration-copies-source',
+        'error',
+        path,
+        `"${copied}" is copied from ${excerpts.get(copied)}; restate the fact in your own words (${COPIED_RUN_WORDS} or more words in a row match)`,
+      );
+    }
+  }
+}
+
+function lintDesignationNumbers(story: Story, add: Add): void {
+  story.tiers.forEach((tier, ti) =>
+    tier.scenes.forEach((scene, si) => {
+      if (DESIGNATION_NUMBER.test(stripTokens(scene.narrationEn))) {
+        add(
+          'narration-national-treasure-number',
+          'error',
+          at('tiers', ti, 'scenes', si, 'narrationEn'),
+          'narration says "National Treasure" without a designation number; numbers stay in source titles',
+        );
+      }
+    }),
+  );
+}
+
+function lintShelfReviewers(story: Story, add: Add): void {
+  const { review } = story;
+  if (story.shelf && !(review.language === 'native-reviewed' && review.culture === 'culture-reviewed')) {
+    add(
+      'story-shelf-needs-reviewers',
+      'error',
+      'review',
+      `a story with a shelf block needs review.language native-reviewed and review.culture culture-reviewed (has ${review.language} and ${review.culture})`,
+    );
+  }
+}
+
 // ---- entry points -----------------------------------------------------------------------------------------------
 
 function unusedFacts(story: Story, add: Add): void {
@@ -672,5 +767,8 @@ export function lintStory(story: Story, ctx: LintContext = {}): Finding[] {
   lintText(story, add);
   lintGates(story, add);
   lintPillarTags(story, add);
+  lintCopying(story, add);
+  lintDesignationNumbers(story, add);
+  lintShelfReviewers(story, add);
   return findings;
 }
