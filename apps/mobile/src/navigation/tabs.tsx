@@ -1,11 +1,13 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Icon, colors, tabBarMetrics, typography } from '@hangul-route/design-system';
-import React from 'react';
+import { useIsFocused } from '@react-navigation/native';
+import { Icon, colors, tabBarMetrics, typography, useLayoutClass } from '@hangul-route/design-system';
+import React, { useEffect } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useMessages } from '../i18n/use-messages';
 import { HomeScreen } from '../screens/home/HomeScreen';
 import { JourneyScreen } from '../screens/journey/JourneyScreen';
 import { LibraryScreen } from '../screens/library/LibraryScreen';
+import { useUiStore } from '../store/ui-store';
 import type { MainTabParamList } from './types';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -13,8 +15,22 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
 export function MainTabs(): React.ReactElement {
   const tabs = useMessages().a11y.tabs;
   // The tab row sits above the home indicator instead of a fixed 24px pad
-  // that overlapped it (audit p2-L2).
-  const { height, paddingTop, paddingBottom } = tabBarMetrics(useSafeAreaInsets().bottom);
+  // that overlapped it (audit p2-L2), clears a landscape notch, and is centred
+  // inside `layout.maxWidth.full` on a wide window (F-LAYOUT-001 §3.2, LD6).
+  const insets = useSafeAreaInsets();
+  const { windowWidth } = useLayoutClass();
+  const { height, paddingTop, paddingBottom, paddingLeft, paddingRight } = tabBarMetrics(
+    insets.bottom,
+    { left: insets.left, right: insets.right },
+    windowWidth,
+  );
+  // PwaBanners (mounted beside the navigator) sit above the tab bar while it shows.
+  const focused = useIsFocused();
+  const setTabBarHeight = useUiStore((s) => s.setTabBarHeight);
+  useEffect(() => {
+    setTabBarHeight(focused ? height : 0);
+    return () => setTabBarHeight(0);
+  }, [focused, height, setTabBarHeight]);
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -28,6 +44,8 @@ export function MainTabs(): React.ReactElement {
           height,
           paddingTop,
           paddingBottom,
+          paddingLeft,
+          paddingRight,
         },
         tabBarIcon: ({ color, size }) => {
           const map: Record<string, 'home' | 'journey' | 'library'> = {

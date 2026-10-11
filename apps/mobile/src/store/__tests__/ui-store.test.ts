@@ -3,7 +3,7 @@ import { useUiStore } from '../ui-store';
 
 describe('ui-store', () => {
   beforeEach(() => {
-    useUiStore.setState({ hapticsOn: true, parentGateOpenedAt: null });
+    useUiStore.setState({ hapticsOn: true, parentGateOpenedAt: null, tabBarHeight: 0 });
   });
 
   it('no longer holds the sound switch: mute lives in audio-store (F-AUDIO-004 AD7)', () => {
@@ -26,5 +26,13 @@ describe('ui-store', () => {
     useUiStore.getState().openParentGate();
     useUiStore.getState().resetParentGate();
     expect(useUiStore.getState().parentGateOpenedAt).toBeNull();
+  });
+
+  it('tabBarHeight starts at 0 (no tab bar) and follows setTabBarHeight (F-LAYOUT-001 PR 2b)', () => {
+    expect(useUiStore.getState().tabBarHeight).toBe(0);
+    useUiStore.getState().setTabBarHeight(76);
+    expect(useUiStore.getState().tabBarHeight).toBe(76);
+    useUiStore.getState().setTabBarHeight(0);
+    expect(useUiStore.getState().tabBarHeight).toBe(0);
   });
 });
