@@ -103,12 +103,12 @@ export function LandingPage({ locale = DEFAULT_LOCALE }: { locale?: UiLocale }):
           <Link href="#parents" style={{ color: colors.text.secondary, fontWeight: typography.weight.semibold }}>
             {t.nav.parents}
           </Link>
-          <Link href="/parent" style={{ color: colors.text.secondary, fontWeight: typography.weight.semibold }}>
+          <a href="/parent" style={{ color: colors.text.secondary, fontWeight: typography.weight.semibold }}>
             {t.nav.dashboard}
-          </Link>
-          <Link href="/teach" style={{ color: colors.text.secondary, fontWeight: typography.weight.semibold }}>
+          </a>
+          <a href="/teach" style={{ color: colors.text.secondary, fontWeight: typography.weight.semibold }}>
             {t.nav.teachers}
-          </Link>
+          </a>
         </nav>
       </header>
 
@@ -615,14 +615,14 @@ export function LandingPage({ locale = DEFAULT_LOCALE }: { locale?: UiLocale }):
             </Link>
           </div>
           <div>
-            <Link href="/parent" style={{ color: colors.text.secondary }}>
+            <a href="/parent" style={{ color: colors.text.secondary }}>
               {t.footer.dashboard}
-            </Link>
+            </a>
           </div>
           <div>
-            <Link href="/teach" style={{ color: colors.text.secondary }}>
+            <a href="/teach" style={{ color: colors.text.secondary }}>
               {t.footer.console}
-            </Link>
+            </a>
           </div>
         </div>
         <div>

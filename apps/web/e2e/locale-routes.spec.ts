@@ -30,4 +30,35 @@ test.describe('locale routes', () => {
       expect(response?.status()).toBe(404);
     });
   }
+
+  // Each group renders its own <html>/<body> under one shared top layout, so a soft navigation between groups
+  // would replace them in place and delete what React did not render, like Next's route announcer. Links
+  // between the site and the console are plain <a>, so each crossing loads a new document.
+  const announcerConnected = (page: import('@playwright/test').Page): Promise<boolean> =>
+    page.evaluate(() => document.querySelector('next-route-announcer')?.isConnected === true);
+
+  test('crossing from the site to the console and back keeps the route announcer', async ({ page }) => {
+    await page.goto('/');
+    await expect.poll(() => announcerConnected(page)).toBe(true);
+
+    await page.locator('header a[href="/teach"]').first().click();
+    await page.waitForURL('**/teach');
+    await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+    await expect.poll(() => announcerConnected(page)).toBe(true);
+
+    await page.goto('/parent');
+    await page.locator('a[href="/"]').first().click();
+    await page.waitForURL((url) => url.pathname === '/');
+    await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+    await expect.poll(() => announcerConnected(page)).toBe(true);
+    await expect(page.locator('html')).toHaveCount(1);
+  });
+
+  test('links inside the site stay client-side and keep the route announcer', async ({ page }) => {
+    await page.goto('/');
+    await expect.poll(() => announcerConnected(page)).toBe(true);
+    await page.locator('footer a[href="/about"]').first().click();
+    await page.waitForURL('**/about');
+    await expect.poll(() => announcerConnected(page)).toBe(true);
+  });
 });

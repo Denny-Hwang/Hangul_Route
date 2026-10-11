@@ -2,7 +2,6 @@
 
 import { SignIn } from '@clerk/clerk-react';
 import { colors, spacing, typography } from '@hangul-route/design-system/tokens';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useConsoleAuth } from '@/components/console/auth-context';
@@ -88,7 +87,7 @@ export default function SignInPage(): JSX.Element {
             <>
               <p style={{ margin: 0 }}>{c.clerkPending}</p>
               <Muted>
-                <Link href="/">{c.signIn.backToSite}</Link>
+                <a href="/">{c.signIn.backToSite}</a>
               </Muted>
             </>
           )}

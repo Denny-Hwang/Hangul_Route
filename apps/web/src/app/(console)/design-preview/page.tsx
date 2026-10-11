@@ -60,9 +60,9 @@ export default function DesignPreviewPage(): JSX.Element {
 function Header(): JSX.Element {
   return (
     <header style={{ marginBottom: spacing.jumbo }}>
-      <Link href="/" style={{ color: colors.text.muted, fontSize: typography.size.caption }}>
+      <a href="/" style={{ color: colors.text.muted, fontSize: typography.size.caption }}>
         ← Hangul Route
-      </Link>
+      </a>
       <h1
         style={{
           fontSize: typography.size.hero,

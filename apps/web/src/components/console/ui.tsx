@@ -85,9 +85,9 @@ export function ConsoleShell({ children, onSignOut, title }: { children: ReactNo
     <main style={{ maxWidth: 960, margin: '0 auto', padding: `${spacing.xl}px ${spacing.lg}px` }}>
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.xl, gap: spacing.md, flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: spacing.md }}>
-          <Link href="/" style={{ color: colors.text.muted, fontSize: typography.size.caption }}>
+          <a href="/" style={{ color: colors.text.muted, fontSize: typography.size.caption }}>
             {shell.backToSite}
-          </Link>
+          </a>
           <Link href="/teach/home" style={{ fontWeight: typography.weight.bold, fontSize: typography.size.bodyLg, color: colors.text.primary }}>
             {shell.home}
           </Link>
