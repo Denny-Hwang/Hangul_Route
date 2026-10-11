@@ -47,6 +47,7 @@ export const LIMITS = {
   sceneLayers: 8,
   sceneShapes: 160,
   sceneShapesThumb: 80,
+  /** Distinct colour tokens per scene, Hoya's own palette not counted (R-S5). */
   sceneColors: 8,
   altChars: 140,
   /** A layer's bounds may overhang the canvas by this many units. */
@@ -217,6 +218,23 @@ function groundFill(scene: ResolvedScene, horizonY: number): ColorToken | undefi
   return best?.fill;
 }
 
+/**
+ * The colour tokens R-S5's cap counts: every token in the scene except those
+ * drawn only by Hoya. Owner decision 2026-10-11: Hoya's fixed character palette
+ * (7-9 tokens per pose, the shipped Hoya.tsx palette) sits outside the cap,
+ * as it sits outside the item cap; a token he shares with another item still
+ * counts through that item. Sorted.
+ */
+export function cappedPalette(scene: ResolvedScene): ColorToken[] {
+  const set = new Set<ColorToken>();
+  for (const n of scene.nodes) {
+    if (n.ref.startsWith('hoya:')) continue;
+    if (n.shape.fill && n.shape.fill !== 'none') set.add(n.shape.fill);
+    if (n.shape.stroke) set.add(n.shape.stroke);
+  }
+  return [...set].sort();
+}
+
 export function checkScene(art: SceneArtLike, registry: Registry): Finding[] {
   const out: Finding[] = [];
   const add = (severity: Finding['severity'], rule: string, message: string, layerIndex?: number, ref?: string): void => {
@@ -288,8 +306,9 @@ export function checkScene(art: SceneArtLike, registry: Registry): Finding[] {
   }
 
   // R-S5 palette
+  const capped = cappedPalette(scene);
+  if (capped.length > LIMITS.sceneColors) add('error', 'S-palette-cap', `${capped.length} colour tokens besides Hoya, at most ${LIMITS.sceneColors}`);
   const colors = scene.stats.colors;
-  if (colors.length > LIMITS.sceneColors) add('error', 'S-palette-cap', `${colors.length} colour tokens, at most ${LIMITS.sceneColors}`);
   if (colors.filter((c) => c.startsWith('surface.') || c.startsWith('text.')).length < 2) add('warning', 'S-palette-ink', 'use at least two surface or text tokens so the picture reads on the canvas');
   if (focus && setting?.horizonY !== undefined) {
     const ground = groundFill(scene, setting.horizonY);

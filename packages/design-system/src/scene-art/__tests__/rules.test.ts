@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { LIMITS, checkItem, checkScene, serializedBytes, type Finding } from '../rules';
+import { HOYA_POSES, hoyaItem } from '../hoya';
+import { resolveScene } from '../resolve';
+import { LIMITS, cappedPalette, checkItem, checkScene, serializedBytes, type Finding } from '../rules';
 import type { ColorToken, ItemDef, Shape } from '../types';
 import { makeArt, makeHoya, makeProp, makeRegistry, makeSetting } from './fixtures';
 
@@ -284,6 +286,56 @@ describe('checkScene', () => {
     ]);
     const art2 = makeArt({ layers: [{ ref: 'prop:c', x: 200, y: 220, s: 1.5 }] });
     expect(checkScene(art2, dull).find((x) => x.rule === 'S-palette-ink')).toMatchObject({ severity: 'warning' });
+  });
+
+  // Owner decision 2026-10-11 (F-STORY-002 §3.9.5 R-S5): Hoya's fixed
+  // character palette does not count toward the scene cap; the cap applies to
+  // everything else in the scene, as the item cap exempts hoya:* (registry test).
+  describe('palette cap leaves out Hoya', () => {
+    const seven = (['theme.life', 'theme.rites', 'theme.crafts', 'stage.stage1', 'stage.stage2', 'stage.stage3', 'stage.stage4'] as const).map(
+      (fill, i) => ({ t: 'rect', x: i, y: 0, w: 1, h: 1, fill }) as Shape,
+    );
+    // a two-token setting (surface.canvas, surface.sunken) and props drawing up to seven more
+    const setting = makeSetting({ nodes: [{ t: 'rect', x: 0, y: 0, w: 400, h: 180, fill: 'surface.canvas' }, { t: 'rect', x: 0, y: 180, w: 400, h: 120, fill: 'surface.sunken' }] });
+    const reg = (...items: ItemDef[]): Record<string, ItemDef> => makeRegistry([setting, ...HOYA_POSES.map(hoyaItem), ...items]);
+
+    it('does not count the tokens only Hoya draws, in every pose', () => {
+      // setting 2 + prop 5 = 7 tokens; every Hoya pose adds 7-9 tokens of his own
+      const prop = makeProp({ id: 'prop:five', nodes: seven.slice(0, 5) });
+      for (const pose of HOYA_POSES) {
+        const art = makeArt({ layers: [{ ref: 'prop:five', x: 200, y: 250, s: 3 }, { ref: `hoya:${pose}`, x: 80, y: 280, s: 0.6 }] });
+        const scene = resolveScene(art, reg(prop));
+        expect(scene.stats.colors.length, pose).toBeGreaterThan(LIMITS.sceneColors);
+        expect(cappedPalette(scene), pose).toEqual(['stage.stage1', 'stage.stage2', 'surface.canvas', 'surface.sunken', 'theme.crafts', 'theme.life', 'theme.rites']);
+        expect(ids(checkScene(art, reg(prop))), pose).not.toContain('S-palette-cap');
+      }
+    });
+
+    it('still counts a token Hoya shares with another item, through that item', () => {
+      // hoya:idle draws surface.paper; the prop drawing it too makes it count: 2 + 6 + 1 = 9
+      const prop = makeProp({ id: 'prop:six', nodes: [...seven.slice(0, 6), { t: 'rect', x: 0, y: 2, w: 1, h: 1, fill: 'surface.paper' }] });
+      const art = makeArt({ layers: [{ ref: 'prop:six', x: 200, y: 250, s: 3 }, { ref: 'hoya:idle', x: 80, y: 280, s: 0.6 }] });
+      expect(cappedPalette(resolveScene(art, reg(prop)))).toContain('surface.paper');
+      expect(checkScene(art, reg(prop)).find((x) => x.rule === 'S-palette-cap')).toMatchObject({ severity: 'error', message: '9 colour tokens besides Hoya, at most 8' });
+    });
+
+    it('applies the cap to everything else in the scene', () => {
+      // setting 2 + prop 7 = 9 tokens without Hoya: an error with or without him
+      const prop = makeProp({ id: 'prop:seven', nodes: seven });
+      for (const layers of [[{ ref: 'prop:seven', x: 200, y: 250, s: 3 }], [{ ref: 'prop:seven', x: 200, y: 250, s: 3 }, { ref: 'hoya:waving', x: 80, y: 280, s: 0.6 }]]) {
+        expect(ids(checkScene(makeArt({ layers }), reg(prop)))).toContain('S-palette-cap');
+      }
+    });
+
+    it('keeps the other palette rules on the whole scene', () => {
+      // the ink rule still reads Hoya's surface.paper: setting surface.canvas + Hoya surface.paper = 2
+      const prop = makeProp({ id: 'prop:plain', nodes: [{ t: 'rect', x: 0, y: 20, w: 100, h: 60, fill: 'theme.life' }] });
+      const dull = makeRegistry([makeSetting({ nodes: [{ t: 'rect', x: 0, y: 0, w: 400, h: 180, fill: 'surface.canvas' }, { t: 'rect', x: 0, y: 180, w: 400, h: 120, fill: 'theme.nature' }] }), hoyaItem('idle'), prop]);
+      const without = makeArt({ layers: [{ ref: 'prop:plain', x: 200, y: 250, s: 1.5 }] });
+      const withHoya = makeArt({ layers: [{ ref: 'prop:plain', x: 200, y: 250, s: 1.5 }, { ref: 'hoya:idle', x: 80, y: 280, s: 0.6 }] });
+      expect(ids(checkScene(without, dull))).toContain('S-palette-ink');
+      expect(ids(checkScene(withHoya, dull))).not.toContain('S-palette-ink');
+    });
   });
 
   it('wants the focal item to differ from the ground', () => {
