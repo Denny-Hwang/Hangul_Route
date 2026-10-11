@@ -485,6 +485,45 @@ describe('a run end to end (the section 3.14 behaviours)', () => {
     expect(finishRun(apply(q18, { type: 'quit', by: 'learner' }, 9_000), context()).stopReason).toBe('quit');
   });
 
+  /** Plays Deep to the end; `failDraws` names `<gate>:<form>#<n>` draws (n = 1 or 2) answered wrong. */
+  const playDeepFailing = (...failDraws: string[]): PlacementRunState => {
+    let s = run({ mode: 'deep' });
+    let t = 1_000;
+    const seen: Record<string, number> = {};
+    let lastStart = -1;
+    for (let guard = 0; guard < 80 && !isFinished(s); guard += 1) {
+      if (s.pause !== null) {
+        s = apply(s, { type: 'keepGoing' }, (t += 1_000));
+        continue;
+      }
+      const cur = s.current!;
+      const rung = `${cur.gate}:${cur.form}`;
+      if (cur.start !== lastStart) {
+        seen[rung] = (seen[rung] ?? 0) + 1;
+        lastStart = cur.start;
+      }
+      const verdict = failDraws.includes(`${rung}#${seen[rung]}`) ? 'wrong' : 'correct';
+      s = apply(s, eventFor(currentQuestion(s)!, verdict), (t += 1_000));
+    }
+    expect(isFinished(s)).toBe(true);
+    return s;
+  };
+
+  it('Deep: a pass left unconfirmed when an earlier confirmation fails places nothing out above the level', () => {
+    // syl-cv's confirming draw fails after sound-rest's first draw passed: band 0, nothing placed out
+    const cv = finishRun(playDeepFailing('syl-cv:decode#2'), context());
+    expect(cv.gates.filter((g) => g.gate === 'sound-rest').map((g) => g.result)).toEqual(['pass']);
+    expect(cv.level).toEqual({ stage: 'stage1', band: 0 });
+    expect(cv.placedOutQuestIds).toEqual([]);
+    expect(cv.startQuestId).toBe(q(1));
+    // sound-rest's confirming draw fails after syl-cvc's first draw passed: band 1, only q1 to q3
+    const rest = finishRun(playDeepFailing('sound-rest:decode#2'), context());
+    expect(rest.gates.filter((g) => g.gate === 'syl-cvc').map((g) => g.result)).toEqual(['pass']);
+    expect(rest.level).toEqual({ stage: 'stage1', band: 1 });
+    expect(rest.placedOutQuestIds).toEqual(qs(1, 2, 3));
+    expect(rest.startQuestId).toBe(q(4));
+  });
+
   it('Deep: quitting inside a confirming draw keeps the first pass (the partial row is stopped, never a fail)', () => {
     let s = run({ mode: 'deep' });
     let t = 1_000;

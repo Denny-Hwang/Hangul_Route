@@ -75,8 +75,16 @@ describe('coveredSymbols', () => {
   it('adds the rest symbols after sound-rest and the finals after syl-cvc', () => {
     expect(covered(REST_LADDER).size).toBe(24);
     expect(covered(FINALS_LADDER).size).toBe(30);
-    expect(covered([pass('sound-rest')]).size).toBe(12); // rest stands on its own pass
-    expect(covered([pass('syl-cvc')]).size).toBe(6);
+  });
+
+  it('credits a rung only when every earlier main rung passed (as levelOf does): a pass beyond the end of the ladder covers nothing', () => {
+    expect(covered([pass('sound-rest')]).size).toBe(0);
+    expect(covered([pass('syl-cvc')]).size).toBe(0);
+    expect(covered([...REST_LADDER.filter((g) => g.gate !== 'syl-cv'), pass('syl-cvc')]).size).toBe(0);
+    // Deep: the syl-cv confirmation failed after sound-rest's first (unconfirmed) pass
+    expect(covered([...REST_LADDER, fail('syl-cv')]).size).toBe(0);
+    // Deep: the sound-rest confirmation failed after syl-cvc's first (unconfirmed) pass
+    expect([...covered([...FINALS_LADDER, fail('sound-rest')])].sort()).toEqual([...RUNG_SYMBOLS.basic].sort());
   });
 
   it('cuts a symbol back after a wrong, skipped or assisted answer on a template tagged with it', () => {
