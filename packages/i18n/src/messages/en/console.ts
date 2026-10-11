@@ -9,6 +9,11 @@ import { plural } from '../../plural';
  * from `formatDate`, amounts from `formatUsd` and counts go through `plural`, so no date,
  * price or plural suffix is written into a message.
  *
+ * Below those, one group per console page (F-I18N-001 PR 10a): `shell` (the header of every
+ * page), `signIn`, `start`, `home`, `space` and `relink`, plus `kind` (space kinds) and `joinCode`.
+ * A sentence with a number or a name in it is one function message; the English wording is
+ * the pages' former text, byte for byte, including the old "1 cards" / "1 learners" forms.
+ *
  * Every string here is caregiver surface (no "behind", "lazy" or a learner-banned word),
  * checked per locale by console-messages.test.ts.
  */
@@ -71,6 +76,149 @@ export const consoleMsgs = {
   schoolNearLimit: 'Close to the licence limit — see billing before the next class fills up.',
   schoolAtLimit: 'At the licence limit — new students will be asked to check with their teacher.',
   schoolLicenceLapsed: 'The licence needs attention. Classes stay readable; students keep Stage 1 either way.',
+
+  /** The header of every console page (`ConsoleShell`), and the note shown when the build has no API address. */
+  shell: {
+    backToSite: '← Hangul Route',
+    home: 'Console',
+    account: { cta: 'Account' },
+    billing: { cta: 'Billing' },
+    signOut: { cta: 'Sign out' },
+    noApi: 'The console needs an API address (NEXT_PUBLIC_API_BASE_URL) on this build.',
+  },
+  /** Space kinds: a label ("Class code"), the home-page group heading, and what the members are called. */
+  kind: {
+    label: { family: 'Family', class: 'Class', school: 'School' },
+    group: { family: 'Family', class: 'Classes', school: 'School' },
+    members: { family: 'learners', class: 'students', school: 'members' },
+  },
+  /** A join code on the start and space pages. */
+  joinCode: {
+    copy: { cta: 'Copy' },
+    copied: { cta: 'Copied' },
+  },
+  /** Sign-in (`/teach`): the dev form shows only on builds without Clerk. */
+  signIn: {
+    title: 'Grown-ups sign in',
+    panelLabel: 'Sign in',
+    accountId: { label: 'Account id', placeholder: 'teacher-kim' },
+    displayName: { label: 'Your name', placeholder: 'Ms Kim' },
+    email: { label: 'Email (optional)', placeholder: 'kim@example.com' },
+    submit: { cta: 'Continue' },
+    submitting: { cta: 'Signing in…' },
+    backToSite: 'Back to Hangul Route',
+  },
+  /** New space (`/teach/start`): role, then name, then (for a class) the code. */
+  start: {
+    title: 'New space',
+    roleTitle: 'Who are you?',
+    roleLabel: 'Role',
+    roles: {
+      family: { title: 'Parent / caregiver', line: 'Home — my kids' },
+      class: { title: 'Teacher', line: 'My class' },
+      school: { title: 'School admin', line: 'Teachers and classes' },
+    },
+    continue: { cta: 'Continue' },
+    back: { cta: 'Back' },
+    nameTitle: { family: 'Name your family', class: 'Name your class', school: 'Name your school' },
+    nameLabel: 'Space name',
+    classJoinHint: 'Students join with a code — no accounts for kids.',
+    create: { cta: 'Create' },
+    creating: { cta: 'Creating…' },
+    signInAgain: 'Please sign in again.',
+    createFailed: "Couldn't create it yet.",
+    codeTitle: 'Your class code',
+    goToClass: { cta: 'Go to my class' },
+    /** The suggested space name (`prefillName`); the grown-up can change it before creating. */
+    prefill: {
+      family: (name: string) => `${name} family`,
+      familyDefault: 'Our family',
+      class: 'Class A',
+      school: (name: string) => `${name} school`,
+      schoolDefault: 'Our school',
+    },
+  },
+  /** Console home (`/teach/home`): counts only, no names, no percentages. */
+  home: {
+    title: (name: string) => `Hi, ${name}`,
+    lastList: 'Showing the last list we loaded.',
+    archived: '(archived)',
+    open: { cta: 'Open →' },
+    newSpace: { cta: '+ New space' },
+  },
+  /** A class or family roster (`/teach/space`). */
+  space: {
+    loading: 'Loading…',
+    title: {
+      family: (space: string, count: number) => `${space} · ${count} learners`,
+      class: (space: string, count: number) => `${space} · ${count} students`,
+      school: (space: string, count: number) => `${space} · ${count} members`,
+    },
+    forbidden: "This space isn't yours to view.",
+    gone: 'This space is gone.',
+    /** Followed by `oldCodeStops` in the confirm dialog. */
+    regenerateAsk: (space: string) => `Make a new code for ${space}?`,
+    regenerateFailed: "Couldn't make a new code right now.",
+    joinCodeLabel: 'Join code',
+    codeLabel: { family: 'Family code', class: 'Class code', school: 'School code' },
+    regenerate: { cta: 'Regenerate' },
+    createCode: { cta: 'Create a code' },
+    upgrade: 'Upgrade',
+    /** The class roll-up (`classRollup`); the accuracy arrives formatted, the jamo joined. */
+    week: {
+      title: 'This week',
+      practiced: (practiced: number, students: number) => `${practiced} of ${students} practiced this week`,
+      anchor: (accuracy: string) => `Stage 1 anchor: ${accuracy}`,
+      revisit: (jamo: string) => `Jamo to revisit together: ${jamo}`,
+      notSynced: (count: number) => `${count} haven't synced in a week`,
+    },
+    openPlan: { cta: (plan: string) => `Plan: ${plan}` },
+    relinkRequests: { cta: 'Re-link requests' },
+    relinkPending: {
+      cta: (count: number) => plural('en', count, { one: `${count} re-link request`, other: `${count} re-link requests` }),
+    },
+    settings: { cta: 'Settings' },
+    studentsLabel: 'Students',
+    recentFirst: 'Most recent activity first',
+    /** One student card; the day words come from `relativeDay`, the readout from `readoutLine`. */
+    learner: {
+      lastActive: (when: string) => `Last active ${when}`,
+      questsCards: (done: number, total: number, cards: number) => `Quests ${done} / ${total} · ${cards} cards`,
+      minutesThisWeek: (minutes: number) => `${minutes} min this week`,
+      revisit: (jamo: string) => `Revisit: ${jamo}`,
+      planReadout: (plan: string, readout: string) => `${plan}: ${readout}`,
+      joined: (when: string) => `joined ${when}`,
+    },
+  },
+  /** Re-link approval (`/teach/space/relink`, `relink.ts`): identity and timing only, no progress numbers. */
+  relink: {
+    title: 'Re-link requests',
+    titleFor: (space: string) => `${space} · re-link requests`,
+    back: (space: string | null) => `← Back to ${space ?? 'the space'}`,
+    approved: (name: string) => `${name} can open their new device now.`,
+    denied: (name: string) => `Closed. ${name}'s device will say "ask your teacher".`,
+    /** Followed by `oldCodeStops` in the confirm dialog. */
+    issueAsk: (name: string) => `Issue a new rescue code for ${name}?`,
+    issueFailed: "Couldn't issue a code right now.",
+    /** The page shows the name in bold (`aroundSlot`), so a translation may put it anywhere. */
+    askingToBe: (name: string) => `Someone is asking to be ${name}`,
+    /** When the request names no platform. */
+    device: 'device',
+    approve: { cta: 'Approve' },
+    deny: { cta: 'Deny' },
+    anotherWay: 'Another way',
+    done: { cta: 'Done' },
+    learnerLabel: 'Learner',
+    chooseLearner: 'Choose a learner…',
+    issue: { cta: 'Issue a new rescue code' },
+    cardsLabel: 'Cards and progress',
+    expired: 'expired',
+    expiresIn: (minutes: number) => `expires in ${minutes} min`,
+    askedJustNow: 'asked just now',
+    askedAgo: (minutes: number) => `asked ${minutes} min ago`,
+    closed: 'This request already closed — the learner can ask again.',
+    failed: "Didn't go through. Try again.",
+  },
 
   /** Header language select (`LanguageSelect`); hidden while only English ships. */
   language: {

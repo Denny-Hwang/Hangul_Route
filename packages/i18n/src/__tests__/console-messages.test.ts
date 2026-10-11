@@ -33,10 +33,13 @@ describe('console: the former COPY, keys and wording unchanged', () => {
     expect(c.schoolLicenceLapsed).toBe('The licence needs attention. Classes stay readable; students keep Stage 1 either way.');
   });
 
-  it('has exactly the 58 COPY keys plus the formatter groups', () => {
+  // PR 10a added one group per console page.
+  it('has exactly the 58 COPY keys plus the formatter and page groups', () => {
     const groups = ['language', 'codeExpiry', 'spaceCounts', 'planStatus', 'entitlementStatus', 'price', 'promoPrice'];
-    const copyKeys = Object.keys(en.console).filter((k) => !groups.includes(k));
+    const pages = ['shell', 'kind', 'joinCode', 'signIn', 'start', 'home', 'space', 'relink'];
+    const copyKeys = Object.keys(en.console).filter((k) => !groups.includes(k) && !pages.includes(k));
     expect(copyKeys).toHaveLength(58);
+    for (const g of pages) expect(Object.keys(en.console)).toContain(g);
     for (const g of groups) expect(Object.keys(en.console)).toContain(g);
   });
 });
@@ -120,7 +123,7 @@ describe('en-XA covers the console keys', () => {
   const paths = leafPaths(m).filter((p) => p.startsWith('console.'));
 
   it('finds the console leaves', () => {
-    expect(paths.length).toBeGreaterThan(80);
+    expect(paths.length).toBeGreaterThan(180);
   });
 
   for (const path of paths) {

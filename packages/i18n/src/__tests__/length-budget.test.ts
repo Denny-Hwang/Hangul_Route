@@ -213,4 +213,36 @@ describe('length budgets (F-I18N-001 §3.11)', () => {
       expect(paths).toContain(expected);
     }
   });
+
+  it('covers the console page buttons (PR 10a)', () => {
+    const paths = leafPaths(getMessages('en')).filter((p) => BUDGETS[p.split('.').pop() ?? ''] !== undefined);
+    for (const expected of [
+      'console.shell.account.cta',
+      'console.shell.billing.cta',
+      'console.shell.signOut.cta',
+      'console.joinCode.copy.cta',
+      'console.joinCode.copied.cta',
+      'console.signIn.submit.cta',
+      'console.signIn.submitting.cta',
+      'console.start.continue.cta',
+      'console.start.back.cta',
+      'console.start.create.cta',
+      'console.start.creating.cta',
+      'console.start.goToClass.cta',
+      'console.home.open.cta',
+      'console.home.newSpace.cta',
+      'console.space.regenerate.cta',
+      'console.space.createCode.cta',
+      'console.space.openPlan.cta',
+      'console.space.relinkRequests.cta',
+      'console.space.relinkPending.cta',
+      'console.space.settings.cta',
+      'console.relink.approve.cta',
+      'console.relink.deny.cta',
+      'console.relink.done.cta',
+      'console.relink.issue.cta',
+    ]) {
+      expect(paths).toContain(expected);
+    }
+  });
 });
