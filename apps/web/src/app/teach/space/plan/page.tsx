@@ -26,7 +26,7 @@ const EMPTY: Draft = { title: '', items: [], targets: null };
 /** console/plan-builder — F-PLAN-001 §3.5. Builder for drafts, readout once published. */
 function PlanInner(): JSX.Element {
   const spaceId = spaceIdFrom(useSearchParams());
-  const { ready, session, api, signOut } = useConsole();
+  const { ready, session, api, signOut, m } = useConsole();
   const [roster, setRoster] = useState<Roster | null>(null);
   const [plans, setPlans] = useState<PlanView[] | null>(null);
   const [draft, setDraft] = useState<Draft>(EMPTY);
@@ -139,7 +139,7 @@ function PlanInner(): JSX.Element {
             <span style={{ color: colors.text.muted }}>{planStatusLabel(current)}</span>
           </div>
           <Muted>
-            {current.items.length} item{current.items.length === 1 ? '' : 's'} · for {current.targetLearnerIds ? `${current.targetLearnerIds.length} ${noun}` : `everyone in this ${roster?.space.kind ?? 'space'}`}
+            {m.console.planCounts.items(current.items.length)} · for {current.targetLearnerIds ? m.console.planCounts.targets(roster?.space.kind ?? 'family', current.targetLearnerIds.length) : `everyone in this ${roster?.space.kind ?? 'space'}`}
           </Muted>
           <div style={{ display: 'flex', gap: spacing.sm, margin: `${spacing.md}px 0` }}>
             <Button onClick={() => { setDraft({ id: current.id, title: current.title, items: current.items, targets: current.targetLearnerIds }); setEditing(true); }}>Edit</Button>

@@ -1,13 +1,15 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { LOCALES } from '../locales';
 import { en } from '../messages/en';
-import { PSEUDO_LOCALE } from '../pseudo';
+import { PSEUDO_LOCALE, pseudoText } from '../pseudo';
 import { getMessages, type MessageLocale } from '../resolve';
 import type { Messages } from '../types';
 
 // F-I18N-001 PR 10a: the console pages (sign-in, start, home, space, relink) and the shell read
 // the dictionary. English is the source and must render exactly what the pages hard-coded
-// before (§3.4 rule 1), so every value below is the former literal, byte for byte.
+// before (§3.4 rule 1), so every value below is the former literal, byte for byte, except the
+// counts F-I18N-001 §10 moved to plural() ("1 learner", "1 card", "1 hasn't synced"; see the
+// block at the end).
 const c = getMessages('en').console;
 
 describe('console shell (ui.tsx)', () => {
@@ -98,10 +100,15 @@ describe('home page (teach/home/page.tsx)', () => {
 describe('space page (teach/space/page.tsx)', () => {
   const s = c.space;
 
-  it('titles the roster with the member count, worded per kind', () => {
+  it('titles the roster with the member count, worded per kind, through plural()', () => {
     expect(s.loading).toBe('Loading…');
-    expect(s.title.class('Class A', 3)).toBe('Class A · 3 students');
-    expect(s.title.family('Kim family', 1)).toBe('Kim family · 1 learners');
+    expect(s.title.family('Kim family', 1)).toBe('Kim family · 1 learner');
+    expect(s.title.family('Kim family', 2)).toBe('Kim family · 2 learners');
+    expect(s.title.class('Class A', 1)).toBe('Class A · 1 student');
+    expect(s.title.class('Class A', 2)).toBe('Class A · 2 students');
+    expect(s.title.class('Class A', 0)).toBe('Class A · 0 students');
+    expect(s.title.school('Seoul school', 1)).toBe('Seoul school · 1 member');
+    expect(s.title.school('Seoul school', 2)).toBe('Seoul school · 2 members');
     expect(s.title.school('Seoul school', 40)).toBe('Seoul school · 40 members');
   });
 
@@ -122,6 +129,7 @@ describe('space page (teach/space/page.tsx)', () => {
     expect(s.week.practiced(1, 3)).toBe('1 of 3 practiced this week');
     expect(s.week.anchor('82%')).toBe('Stage 1 anchor: 82%');
     expect(s.week.revisit('a · b')).toBe('Jamo to revisit together: a · b');
+    expect(s.week.notSynced(1)).toBe("1 hasn't synced in a week");
     expect(s.week.notSynced(2)).toBe("2 haven't synced in a week");
   });
 
@@ -137,7 +145,9 @@ describe('space page (teach/space/page.tsx)', () => {
     expect(s.studentsLabel).toBe('Students');
     expect(s.recentFirst).toBe('Most recent activity first');
     expect(s.learner.lastActive('yesterday')).toBe('Last active yesterday');
-    expect(s.learner.questsCards(3, 24, 1)).toBe('Quests 3 / 24 · 1 cards');
+    expect(s.learner.questsCards(3, 24, 1)).toBe('Quests 3 / 24 · 1 card');
+    expect(s.learner.questsCards(3, 24, 2)).toBe('Quests 3 / 24 · 2 cards');
+    expect(s.learner.questsCards(0, 24, 0)).toBe('Quests 0 / 24 · 0 cards');
     expect(s.learner.minutesThisWeek(14)).toBe('14 min this week');
     expect(s.learner.revisit('a · b')).toBe('Revisit: a · b');
     expect(s.learner.planReadout('Week 1', '1 / 3')).toBe('Week 1: 1 / 3');
@@ -218,6 +228,55 @@ describe('messages split around their argument (aroundSlot)', () => {
         const out = pick(messages)(SENTINEL);
         expect(out.split(SENTINEL).length - 1, `${locale}:${path}`).toBe(1);
       }
+    }
+  });
+});
+
+// F-I18N-001 §10 (console counts): the counts PR 10a kept byte-identical ("1 learners", "1 cards",
+// "1 haven't synced") go through plural() now. In every locale, the n = 1 and n = 2 rows show their
+// number exactly once; en, es and en-XA word them differently (ko has no grammatical plural, so its
+// two rows may match).
+const COUNTED: readonly [string, (m: Messages, n: number) => string][] = [
+  ['console.space.title.family', (m, n) => m.console.space.title.family('Kim family', n)],
+  ['console.space.title.class', (m, n) => m.console.space.title.class('Class A', n)],
+  ['console.space.title.school', (m, n) => m.console.space.title.school('Seoul school', n)],
+  ['console.space.week.notSynced', (m, n) => m.console.space.week.notSynced(n)],
+  ['console.space.learner.questsCards', (m, n) => m.console.space.learner.questsCards(7, 24, n)],
+  ['console.planCounts.items', (m, n) => m.console.planCounts.items(n)],
+  ['console.planCounts.targets (family)', (m, n) => m.console.planCounts.targets('family', n)],
+  ['console.planCounts.targets (class)', (m, n) => m.console.planCounts.targets('class', n)],
+  ['console.planCounts.targets (school)', (m, n) => m.console.planCounts.targets('school', n)],
+  ['console.spaceCounts.students', (m, n) => m.console.spaceCounts.students(n)],
+];
+
+describe('console counts use plural() in every locale (en, es, ko, en-XA)', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('n = 1 and n = 2 rows', () => {
+    vi.stubEnv('NEXT_PUBLIC_PSEUDO_LOCALE', '1');
+    const locales: readonly MessageLocale[] = [...LOCALES, PSEUDO_LOCALE];
+    for (const locale of locales) {
+      const messages = getMessages(locale);
+      if (locale === PSEUDO_LOCALE) expect(messages.console.shell.home).toMatch(/^\[/);
+      for (const [path, count] of COUNTED) {
+        const one = count(messages, 1);
+        const two = count(messages, 2);
+        // The count is the only "1" / "2" in the row (questsCards' other numbers are 7 and 24).
+        expect(one.match(/\b1\b/g), `${locale}:${path}(1) = ${one}`).toHaveLength(1);
+        expect(two.match(/\b2\b/g), `${locale}:${path}(2) = ${two}`).toHaveLength(1);
+        if (locale !== 'ko') expect(one.replace(/\b1\b/, '2'), `${locale}:${path} has a singular`).not.toBe(two);
+      }
+    }
+  });
+
+  it('en-XA wraps the plural-selected English', () => {
+    vi.stubEnv('NEXT_PUBLIC_PSEUDO_LOCALE', '1');
+    const pseudo = getMessages(PSEUDO_LOCALE);
+    for (const [path, count] of COUNTED) {
+      expect(count(pseudo, 1), path).toBe(pseudoText(count(getMessages('en'), 1)));
+      expect(count(pseudo, 2), path).toBe(pseudoText(count(getMessages('en'), 2)));
     }
   });
 });

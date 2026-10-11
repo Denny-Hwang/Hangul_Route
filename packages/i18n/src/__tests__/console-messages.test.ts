@@ -35,7 +35,7 @@ describe('console: the former COPY, keys and wording unchanged', () => {
   // PR 10a added one group per console page and retired four fragments (practicedThisWeek, anchor,
   // revisitTogether, notSyncedWeek) for whole-sentence messages under `space.week`.
   it('has exactly the 54 remaining COPY keys plus the formatter and page groups', () => {
-    const groups = ['language', 'codeExpiry', 'spaceCounts', 'planStatus', 'entitlementStatus', 'price', 'promoPrice'];
+    const groups = ['language', 'codeExpiry', 'spaceCounts', 'planCounts', 'planStatus', 'entitlementStatus', 'price', 'promoPrice'];
     const pages = ['shell', 'kind', 'joinCode', 'signIn', 'start', 'home', 'space', 'relink'];
     const copyKeys = Object.keys(en.console).filter((k) => !groups.includes(k) && !pages.includes(k));
     expect(copyKeys).toHaveLength(54);
@@ -64,6 +64,22 @@ describe('console: formatter words', () => {
     expect(c.spaceCounts.students(0)).toBe('0 students');
     expect(c.spaceCounts.classes(1)).toBe('1 class');
     expect(c.spaceCounts.classes(4)).toBe('4 classes');
+  });
+
+  it('counts plan items with plural (plan builder, SchoolAdmin uses spaceCounts.students)', () => {
+    expect(c.planCounts.items(1)).toBe('1 item');
+    expect(c.planCounts.items(2)).toBe('2 items');
+    expect(c.planCounts.items(0)).toBe('0 items');
+  });
+
+  it('counts a plan\'s targets with plural, worded per space kind', () => {
+    expect(c.planCounts.targets('family', 1)).toBe('1 learner');
+    expect(c.planCounts.targets('family', 2)).toBe('2 learners');
+    expect(c.planCounts.targets('class', 1)).toBe('1 student');
+    expect(c.planCounts.targets('class', 2)).toBe('2 students');
+    expect(c.planCounts.targets('school', 1)).toBe('1 member');
+    expect(c.planCounts.targets('school', 2)).toBe('2 members');
+    expect(c.planCounts.targets('class', 0)).toBe('0 students');
   });
 
   it('labels a plan; the date arrives formatted', () => {

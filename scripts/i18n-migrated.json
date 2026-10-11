@@ -49,8 +49,6 @@
     "apps/web/src/components/console/use-console.ts"
   ],
   "pluralTernaryBaseline": {
-    "apps/web/src/app/teach/space/plan/page.tsx": 1,
-    "apps/web/src/components/console/SchoolAdmin.tsx": 1,
     "apps/web/src/data/stage1-catalog.ts": 1,
     "packages/content-schema/src/romanization/compare.ts": 1
   }
