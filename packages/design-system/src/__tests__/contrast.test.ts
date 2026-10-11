@@ -123,6 +123,25 @@ describe('token contrast contract (WCAG AA)', () => {
     expect(contrastRatio(colors.border.focus, bg)).toBeGreaterThanOrEqual(WCAG_AA_LARGE);
   });
 
+  // F-ROUTE-001 R-2b: pip outlines, the dotted trail connector and the cursor / start
+  // markers are UI graphics: 3:1 on every surface (and on the brand tint of a hero card).
+  it.each([...Object.entries(surfaces), ['brand.primaryLight', colors.brand.primaryLight] as const])(
+    'border.shape on %s ≥ 3:1 (non-text)',
+    (_name, bg) => {
+      expect(contrastRatio(colors.border.shape, bg)).toBeGreaterThanOrEqual(WCAG_AA_LARGE);
+    },
+  );
+
+  // The pip markers are drawn in text.primary; the start pin's dot is paper on it.
+  it('PipRow markers (text.primary) on paper and its paper dot ≥ 3:1 (non-text)', () => {
+    expect(contrastRatio(colors.text.primary, colors.surface.paper)).toBeGreaterThanOrEqual(WCAG_AA_LARGE);
+  });
+
+  // border.strong stays a quiet divider: it is NOT a 3:1 graphic, which is why the pips need border.shape.
+  it('border.strong on paper < 3:1, so pips and the connector use border.shape', () => {
+    expect(contrastRatio(colors.border.strong, colors.surface.paper)).toBeLessThan(WCAG_AA_LARGE);
+  });
+
   // KoreanText target chip border and speaker icon are UI graphics: 3:1 on the surfaces they sit on.
   it.each(Object.entries(surfaces))('KoreanText chip border (brand.secondary) on %s ≥ 3:1 (non-text)', (_name, bg) => {
     expect(contrastRatio(colors.brand.secondary, bg)).toBeGreaterThanOrEqual(WCAG_AA_LARGE);
