@@ -147,11 +147,16 @@ export function mergeSnapshots(local: ProgressSnapshot, server: ProgressSnapshot
   };
 }
 
-/** True when nothing in `local` is missing from `server` (upload not needed). */
+/**
+ * True when nothing in `local` is missing from `server` (upload not needed).
+ * A card this device has seen counts as held only when the server copy is
+ * seen too (F-STORY-006 section 3.6 M3), so a cleared "New" flag still uploads.
+ */
 export function isSubsetOf(local: ProgressSnapshot, server: ProgressSnapshot): boolean {
   const has = <T>(arr: readonly T[], key: (t: T) => string) => new Set(arr.map(key));
   const q = has(server.quests, (x) => `${x.questId}:${x.stars}`);
-  const c = has(server.cards, (x) => x.cardId);
+  const c = has(server.cards, (x) => `${x.cardId}:${x.newSinceLastView ? 'new' : 'seen'}`);
+  const cardHeld = (x: CardCollectionEntry): boolean => c.has(`${x.cardId}:seen`) || (x.newSinceLastView && c.has(`${x.cardId}:new`));
   const s = has(server.sessions, (x) => x.id);
   // A latch counts as held when the server has the stage at the same or an earlier time.
   const latched = new Map(Object.entries(server.stageDoneAt ?? {}));
@@ -161,7 +166,7 @@ export function isSubsetOf(local: ProgressSnapshot, server: ProgressSnapshot): b
   };
   return (
     local.quests.every((x) => q.has(`${x.questId}:${x.stars}`)) &&
-    local.cards.every((x) => c.has(x.cardId)) &&
+    local.cards.every(cardHeld) &&
     local.sessions.every((x) => s.has(x.id)) &&
     Object.entries(local.stageDoneAt ?? {}).every(([stage, at]) => holds(stage, at))
   );

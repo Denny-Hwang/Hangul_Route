@@ -100,6 +100,14 @@ describe('mergeSnapshots (F-SYNC-001 §3.3)', () => {
     expect(isSubsetOf(base({ quests: [quest('q1', 3, 0.7)] }), server)).toBe(false);
     expect(isSubsetOf(base({ sessions: [session('s', 't')] }), server)).toBe(false);
   });
+
+  it('isSubsetOf counts a card seen only on this device as something to upload (F-STORY-006 section 3.6 M3)', () => {
+    const card = (newSinceLastView: boolean) => ({ cardId: 'c', unlockedAt: 'x', newSinceLastView });
+    expect(isSubsetOf(base({ cards: [card(false)] }), base({ cards: [card(true)] }))).toBe(false);
+    expect(isSubsetOf(base({ cards: [card(false)] }), base({ cards: [card(false)] }))).toBe(true);
+    expect(isSubsetOf(base({ cards: [card(true)] }), base({ cards: [card(false)] }))).toBe(true);
+    expect(isSubsetOf(base({ cards: [card(true)] }), base({ cards: [card(true)] }))).toBe(true);
+  });
 });
 
 describe('legacy snapshots without placements (F-PLC-001 section 3.8)', () => {
