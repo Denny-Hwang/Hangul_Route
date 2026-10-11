@@ -20,7 +20,8 @@ design/brief/
 │   └── hoya-character-sheet.md     # 호야 5 pose × 표정 × 스케일
 ├── illustrations/
 │   ├── heritage-card-art.md        # 30 Heritage 카드 일러스트 prompt
-│   └── scene-backgrounds.md        # 한지 텍스처 · 무드 배경
+│   ├── scene-backgrounds.md        # 한지 텍스처 · 무드 배경
+│   └── word-art.md                 # WordArt 단어 그림 (F-VOC-002): 스타일 계약 + 단어별 brief
 ├── components/                     # 12 컴포넌트 디자인 spec + prompt
 └── screens/                        # 20 화면 시안 brief
 ```
