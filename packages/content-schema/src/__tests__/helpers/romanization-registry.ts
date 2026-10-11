@@ -35,7 +35,6 @@ export const REGISTERED_SOURCES: readonly RegisteredSource[] = [
   { path: 'apps/mobile/src/content/quests.ts', cls: 'B1', suite: MOBILE_SUITE, needle: '../quests' },
   { path: 'apps/mobile/src/logic/minigame-config.ts', cls: 'B1', suite: MOBILE_SUITE, needle: 'logic/minigame-config' },
   { path: 'apps/mobile/src/logic/profiles/avatar-catalog.ts', cls: 'B1', suite: MOBILE_SUITE, needle: 'profiles/avatar-catalog' },
-  { path: 'apps/mobile/src/logic/stage1/spoken.ts', cls: 'B1', suite: MOBILE_SUITE, needle: 'stage1/spoken' },
   // B2. TS data, web
   { path: 'apps/web/src/data/stage1-cards.ts', cls: 'B2', suite: WEB_DATA_SUITE, needle: '../stage1-cards' },
   // B3. TS data, API (isolated jamo only: R7)
@@ -63,6 +62,7 @@ export const ROMANIZATION_SCAN_IGNORE: readonly ScanIgnore[] = [
   { path: 'packages/design-system/src/tokens.ts', reason: 'comments naming colours (단청, 한지)' },
   { path: 'packages/design-system/src/components/HeritageCardArt/HeritageCardArt.tsx', reason: 'comments on the SVG glyph paths' },
   { path: 'apps/mobile/src/content/jamo-strokes.ts', reason: 'isolated jamo and stroke coordinates, no words' },
+  { path: 'apps/mobile/src/logic/stage1/spoken.ts', reason: 'comments only since F-AUDIO-004 A-2: the spoken forms live on the jamo records, which the jamo.ts check covers (spokenKo, spokenRomanization)' },
   { path: 'apps/mobile/src/logic/audio/voice-rank.ts', reason: 'speech-synthesis voice names (유나, 프리미엄, 향상됨) matched by regex, never shown' },
   { path: 'apps/mobile/src/logic/profiles/profile-model.ts', reason: 'character-class regex and a comment for the allowed name characters' },
   { path: 'packages/content-schema/src/romanization/', reason: 'the converter: golden-vector comments and doc examples, no shipped content' },

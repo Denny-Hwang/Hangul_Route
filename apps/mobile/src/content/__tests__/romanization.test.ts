@@ -16,7 +16,6 @@ import {
 import { describe, expect, it } from 'vitest';
 import { minigameScopes } from '../../logic/minigame-config';
 import { AVATAR_PRESETS } from '../../logic/profiles/avatar-catalog';
-import { INTERIM_SPOKEN } from '../../logic/stage1/spoken';
 import { episodesAll } from '../episodes';
 import { heritageCardsAll } from '../heritage-cards';
 import { jamoAll } from '../jamo';
@@ -35,7 +34,6 @@ const F = {
   episodes: 'apps/mobile/src/content/episodes.ts',
   scopes: 'apps/mobile/src/logic/minigame-config.ts',
   avatars: 'apps/mobile/src/logic/profiles/avatar-catalog.ts',
-  spoken: 'apps/mobile/src/logic/stage1/spoken.ts',
 } as const;
 const sources = new Map<string, string>(Object.values(F).map((p) => [p, read(p)]));
 const HANGUL = /[가-힣]/;
@@ -112,13 +110,9 @@ describe('jamo romanization (B1)', () => {
     expect(found).toEqual([]);
   });
 
-  it('the interim spoken forms (logic/stage1/spoken.ts) are Revised Romanization (R1 to R4)', () => {
-    const found = Object.values(INTERIM_SPOKEN).flatMap((s) => {
-      note(F.spoken, s.ko, s.romanization);
-      return pair(F.spoken, s.ko, s.romanization);
-    });
-    expect(found).toEqual([]);
-    expect(Object.keys(INTERIM_SPOKEN)).toHaveLength(30);
+  it('all 30 symbols carry a spoken form with its romanization (they live on the records since F-AUDIO-004 A-2)', () => {
+    expect(jamoAll).toHaveLength(30);
+    expect(jamoAll.filter((j) => j.spokenKo === undefined || j.spokenRomanization === undefined)).toEqual([]);
   });
 });
 

@@ -43,7 +43,7 @@ describe('romanization coverage of Hangul-bearing files', () => {
     for (const path of [
       'apps/mobile/src/content/heritage-cards.ts',
       'apps/mobile/src/content/jamo.ts',
-      'apps/mobile/src/logic/stage1/spoken.ts',
+      'apps/mobile/src/logic/minigame-config.ts',
       'apps/web/src/data/stage1-cards.ts',
       'content/episodes/stage-1/cards.json',
     ]) {
@@ -65,13 +65,13 @@ describe('romanization coverage of Hangul-bearing files', () => {
     expect(registered.filter((p) => isClassA(p))).toEqual([]);
   });
 
-  it('registers the files added since PR 2b: the Stage 1 spoken forms', () => {
-    const paths = REGISTERED_SOURCES.map((s) => s.path);
-    expect(paths).toContain('apps/mobile/src/logic/stage1/spoken.ts');
-    // logic/audio/spoken.ts holds no Hangul syllable, so it is not Hangul-bearing; vocabulary
-    // and story JSON are class A.
+  it('handles the files added since PR 2b: spoken forms, vocabulary and story JSON', () => {
+    // logic/stage1/spoken.ts holds Hangul only in comments now (the forms are on the jamo records)
+    // and is ignored with that reason; logic/audio/spoken.ts holds none. Vocabulary and story JSON
+    // are class A, scanned by romanization-content.test.ts.
+    expect(isIgnored('apps/mobile/src/logic/stage1/spoken.ts')?.reason).toContain('jamo records');
     expect(hangulFiles()).not.toContain('apps/mobile/src/logic/audio/spoken.ts');
-    expect(isClassA('content/vocab/vocab-food.json')).toBe(true);
+    expect(isClassA('content/vocab/food.json')).toBe(true);
     expect(isClassA('content/stories/hangul-day.json')).toBe(true);
     expect(isClassA('content/stories/research/records-joseon.final.json')).toBe(false);
   });
