@@ -17,6 +17,9 @@ export * from './components/Icon';
 export * from './components/KoreanText';
 export * from './components/ChoiceCard';
 export * from './components/SyllableBlock';
+export * from './components/StoryScene';
+// Pure scene-art API (no React): the path Metro can resolve; the web app uses the ./scene-art subpaths.
+export * from './scene-art';
 export { KOREAN_LANGUAGE, KOREAN_TEXT_SIZES, koreanTextLabel, koreanTextView } from './korean-text';
 export type { KoreanTextSize, KoreanTextView, KoreanTextViewInput } from './korean-text';
 export * from './labels';
