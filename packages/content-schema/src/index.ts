@@ -29,3 +29,5 @@ export * from './narration';
 export * from './schemas/story';
 export * from './schemas/audio';
 export * from './schemas/vocab';
+export * from './story-sources';
+export * from './story-lint';

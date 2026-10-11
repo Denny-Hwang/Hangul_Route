@@ -1,0 +1,47 @@
+{
+  "note": "The four narration sentences of the heritage research set whose numbers appear in no cited fact (F-STORY-001 section 1). Narration and fact text are copied verbatim from content/stories/research/*.final.json.",
+  "cases": [
+    {
+      "episode": "story-sejong-new-letters",
+      "scene": 1,
+      "narrationEn": "Hoya the tiger opens a glowing storybook. Whoosh! We land in Joseon, Korea, almost 600 years ago. Here lived King Sejong, the fourth king of the Joseon dynasty.",
+      "facts": [
+        "King Sejong was the fourth king of the Joseon dynasty; he reigned from 1418 to 1450.",
+        "In 1443 (recorded in the 12th lunar month of Sejong's 25th year), King Sejong himself created 28 letters and called them Hunminjeongeum."
+      ],
+      "unsupported": ["600"],
+      "unmarked": true
+    },
+    {
+      "episode": "story-sillok-mountain-archives",
+      "scene": 4,
+      "narrationEn": "The finished Annals were kept in special archives called {kw:sago}. During a great war in the 1590s, the copies kept in Seoul, Chungju and Seongju were lost. Only the Jeonju copy survived.",
+      "facts": [
+        "The Annals were kept in archives (sago). In the Imjin War, which began in 1592, the copies at the Chunchugwan in Seoul and at Chungju and Seongju were lost; only the Jeonju copy survived."
+      ],
+      "unsupported": ["1590"],
+      "unmarked": false
+    },
+    {
+      "episode": "story-joseon-records-today",
+      "scene": 5,
+      "narrationEn": "Scientists can study the weather notes in the {kw:seungjeongwon-ilgi}, written day after day for nearly 300 years, to learn about nature in the past.",
+      "facts": [
+        "The Seungjeongwon Ilgi recorded the weather daily over 288 years (1623–1910), and these records can be used for natural-science research."
+      ],
+      "unsupported": ["300"],
+      "unmarked": true
+    },
+    {
+      "episode": "story-tripitaka-koreana",
+      "scene": 8,
+      "narrationEn": "Almost 800 years later, the blocks are still kept safe at Haeinsa. Hoya whispers, \"{kw:sojunghaeyo}, they're precious.\" Next time, let's find out how the buildings protect them!",
+      "facts": [
+        "The Tripitaka Koreana woodblocks are kept at Haeinsa Temple on Gayasan Mountain in Hapcheon, South Gyeongsang Province, in the halls Beopbojeon and Sudarajang.",
+        "The woodblocks were carved in Goryeo between 1237 and 1248 (the 24th to 35th years of King Gojong)."
+      ],
+      "unsupported": ["800"],
+      "unmarked": true
+    }
+  ]
+}
