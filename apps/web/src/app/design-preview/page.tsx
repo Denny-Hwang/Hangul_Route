@@ -1291,7 +1291,7 @@ const CARD_ART_CELLS: CardArtCellSpec[] = [
   { cardId: 'card:kimchi', ko: '김치', romanization: 'gimchi', titleEn: 'Kimchi', rarity: 'common' },
   { cardId: 'card:seollal', ko: '설날', romanization: 'seollal', titleEn: 'Lunar New Year', rarity: 'rare' },
   { cardId: 'card:mountain', ko: '산', romanization: 'san', titleEn: 'Mountain', rarity: 'common' },
-  { cardId: 'card:yutnori', ko: '윷놀이', romanization: 'yutnori', titleEn: 'Yut Game', rarity: 'rare' },
+  { cardId: 'card:yutnori', ko: '윷놀이', romanization: 'yunnori', titleEn: 'Yut Game', rarity: 'rare' },
 ];
 
 function HeritageCardArtSvg({ cardId, size = 200 }: { cardId: string; size?: number }): JSX.Element {

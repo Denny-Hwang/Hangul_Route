@@ -72,7 +72,7 @@ const stage1Episodes: Episode[] = [
     order: 5,
     titleEn: 'Yut, Kites & Paper',
     subtitleEn: 'Korean games and crafts to try.',
-    hoyaIntroEn: 'Let us play yutnori. Throw the sticks!',
+    hoyaIntroEn: 'Let us play yunnori. Throw the sticks!',
     questIds: ['quest:stage1-crafts-q1'],
     rewardCardIds: ['card:yutnori', 'card:jegi', 'card:kite', 'card:top', 'card:pottery'],
     estimatedMinutes: 10,

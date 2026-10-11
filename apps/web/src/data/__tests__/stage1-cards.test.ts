@@ -1,3 +1,4 @@
+import { checkProse, checkRomanization } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { cardsByRarity, stage1Cards, type CardRarity, type CardTheme } from '../stage1-cards';
 
@@ -51,6 +52,27 @@ describe('stage1Cards', () => {
   it('Hoya tiger card is the legendary anchor', () => {
     const tiger = stage1Cards.find((c) => c.id === 'card:horangi');
     expect(tiger?.rarity).toBe('legendary');
+  });
+});
+
+describe('stage1Cards romanization (F-CNT-002)', () => {
+  it('every romanization is Revised Romanization without hyphens', () => {
+    const found = stage1Cards.flatMap((c) =>
+      checkRomanization(c.ko, c.romanization).map((f) => `${c.id}: ${f.message}`),
+    );
+    expect(found).toEqual([]);
+  });
+
+  it('shows how K-pop and yutnori are said, keeping the English names', () => {
+    const byId = (id: string) => stage1Cards.find((c) => c.id === id);
+    expect(byId('card:kpop')).toMatchObject({ title: 'K-pop', en: 'K-pop music', romanization: 'keipap' });
+    expect(byId('card:yutnori')?.romanization).toBe('yunnori');
+  });
+
+  it('prose spells registered words without syllable hyphens', () => {
+    const registry = stage1Cards.map((c) => c.ko);
+    const found = stage1Cards.flatMap((c) => checkProse(`${c.blurb} ${c.en}`, registry));
+    expect(found).toEqual([]);
   });
 });
 
