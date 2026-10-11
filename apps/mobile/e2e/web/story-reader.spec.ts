@@ -391,6 +391,8 @@ test.describe('story reader, replay route (fixture bundle)', () => {
   test('a page turn fades the scene in; with reduced motion it turns instantly', async ({ page }) => {
     await onboard(page);
     await openReader(page);
+    // The opening shows at once (it is not a page turn).
+    expect(await page.getByTestId('story-reader-body').evaluate((el) => getComputedStyle(el).opacity)).toBe('1');
     // Control: without reduced motion the body fades (so the check below can fail).
     expect(await lowestOpacityAfter(page, 'story-reader-narration', 'next')).toBeLessThan(0.9);
     await expect(position(page)).toHaveText('2 / 5');
@@ -399,6 +401,8 @@ test.describe('story reader, replay route (fixture bundle)', () => {
     await page.reload();
     await expect(page.getByText('Hi, Dami!')).toBeVisible();
     await openReader(page);
+    // The opening never fades; give the reduced-motion setting its moment to load after mount.
+    await page.waitForTimeout(300);
     expect(await lowestOpacityAfter(page, 'story-reader-narration', 'next')).toBe(1);
     await expect(position(page)).toHaveText('2 / 5');
   });

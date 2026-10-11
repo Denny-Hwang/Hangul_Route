@@ -266,8 +266,14 @@ function ReaderBody({
   );
 
   // Page turn: a 200 ms fade, instant with reduced motion (§3.3, §3.10). Never an auto-advance.
+  // The opening shows at once: it is not a page turn, and `useReducedMotion` only learns the setting
+  // after mount, so a fade there would play even with reduced motion on.
+  const shownPage = useRef(`${state.index}:${state.phase}`);
   useEffect(() => {
-    if (reducedMotion) {
+    const page = `${state.index}:${state.phase}`;
+    const turned = page !== shownPage.current;
+    shownPage.current = page;
+    if (reducedMotion || !turned) {
       fade.setValue(1);
       return;
     }
