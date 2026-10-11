@@ -522,7 +522,7 @@ describe('the story card with the shared cursor context (F-ROUTE-001 R-4a)', () 
   });
 
   it('isEntitled narrows the Journey card while the story cards stay', () => {
-    const stage2 = { ...gridEpisode('episode:s2', ['quest:z']), stage: 'stage2' };
+    const stage2: Episode = { ...gridEpisode('episode:s2', ['quest:z']), stage: 'stage2' };
     const plan = build({
       quests: [quest('quest:z', 'Stage 2 quest'), ...GRID_QUESTS, ...SHELF_QUESTS],
       episodes: [stage2, ...GRID_EPISODES, ...SHELF_EPISODES],

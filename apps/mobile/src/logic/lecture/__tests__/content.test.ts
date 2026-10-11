@@ -17,10 +17,15 @@ describe('the presenter content bundle (F-TCH-004 §3.3, §3.13)', () => {
   it('looks up the bundled content', () => {
     const b = lectureBundle('en');
     expect(b.jamoAll).toBe(jamoAll);
-    expect(b.questById('quest:stage1-letters-q1')?.titleEn).toBe('Meet g, n, d, l');
-    expect(b.episodeById('episode:stage1-letters')?.titleEn).toBe('Meet the Letters');
+    // Read from the bundled content rather than copied, so a content edit to the quest does not break this test.
+    const q1 = questsAll.find((q) => q.id === 'quest:stage1-letters-q1');
+    const letters = episodesAll.find((e) => e.id === 'episode:stage1-letters');
+    expect(q1?.titleEn).toEqual(expect.any(String));
+    expect(letters?.titleEn).toEqual(expect.any(String));
+    expect(b.questById('quest:stage1-letters-q1')?.titleEn).toBe(q1?.titleEn);
+    expect(b.episodeById('episode:stage1-letters')?.titleEn).toBe(letters?.titleEn);
     expect(b.cardById('card:book')?.subtitleKo).toBe('책');
-    expect(b.scopeFor('minigame:s1-letters-recognize-1')?.kind).toBe('match-sound');
+    expect(b.scopeFor('minigame:s1-letters-q1-play')?.kind).toBe('match-sound');
     expect(b.questById('quest:nope')).toBeUndefined();
     expect(b.episodeById('episode:nope')).toBeUndefined();
     expect(b.cardById('card:nope')).toBeUndefined();
