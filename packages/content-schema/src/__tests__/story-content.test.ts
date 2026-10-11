@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { isDeepStrictEqual } from 'node:util';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
+import { checkOverlayTree } from '../../../../scripts/overlay-rules.mjs';
 import { lintStory, lintStoryCorpus, parseStory, type Finding, type Story } from '../index';
 import draftJson from '../__fixtures__/story/valid.draft.json';
 import readyJson from '../__fixtures__/story/valid.ready.json';
@@ -13,7 +14,9 @@ import taleJson from '../__fixtures__/story/valid.tale.json';
  * The CI gate for shipped story content (F-STORY-001 section 3.8): reads every
  * `content/stories/*.json` (top level only; `research/` is skipped), parses it
  * with `parseStory`, lints it, and checks file name = slug, unique ids and the
- * overlay ids. Errors fail the run; warnings print.
+ * `story:` entries of the overlays (the shared F-I18N-001 §3.7 rules of
+ * `scripts/overlay-rules.mjs`: unknown story or element ids, allowed fields,
+ * `overlay-token-mismatch`, ...). Errors fail the run; warnings print.
  * `pnpm --filter @hangul-route/content-schema test -t story-content` reproduces CI.
  */
 const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
@@ -137,19 +140,6 @@ function readOverlayFiles(): SourceFile[] {
     .flatMap((entry) => readJsonFiles(join(OVERLAYS_DIR, entry.name), `content/i18n/${entry.name}`));
 }
 
-/** Entry ids of one overlay file: `entries` is an object keyed by id, or an array of `{ id }`. */
-function overlayIds(text: string): string[] {
-  const parsed: unknown = JSON.parse(text);
-  const entries = (parsed as { entries?: unknown }).entries;
-  if (Array.isArray(entries)) {
-    return entries.flatMap((e: unknown) => {
-      const id = (e as { id?: unknown }).id;
-      return typeof id === 'string' ? [id] : [];
-    });
-  }
-  return entries && typeof entries === 'object' ? Object.keys(entries) : [];
-}
-
 function collectProblems(stories: SourceFile[], overlays: SourceFile[] = [], today?: string): Problem[] {
   const problems: Problem[] = [];
   const add = (file: SourceFile, level: Problem['level'], rule: string, message: string, path = ''): void => {
@@ -160,6 +150,7 @@ function collectProblems(stories: SourceFile[], overlays: SourceFile[] = [], tod
 
   const parsed: Array<{ file: SourceFile; story: Story }> = [];
   const idOwner = new Map<string, string>();
+  const contentTree = new Map<string, unknown>();
   for (const file of stories) {
     let json: unknown;
     try {
@@ -168,6 +159,7 @@ function collectProblems(stories: SourceFile[], overlays: SourceFile[] = [], tod
       add(file, 'error', 'invalid-json', (error as Error).message);
       continue;
     }
+    contentTree.set(file.file, json);
     let story: Story;
     try {
       story = parseStory(json);
@@ -208,17 +200,21 @@ function collectProblems(stories: SourceFile[], overlays: SourceFile[] = [], tod
       message: finding.message,
     });
   }
+  const overlayFiles = new Map<string, SourceFile>();
   for (const file of overlays) {
-    let ids: string[];
     try {
-      ids = overlayIds(file.text);
+      contentTree.set(file.file, JSON.parse(file.text));
+      overlayFiles.set(file.file, file);
     } catch (error) {
       add(file, 'error', 'overlay-invalid-json', (error as Error).message);
-      continue;
     }
-    for (const id of ids.filter((x) => x.startsWith('story:') && !idOwner.has(x))) {
-      add(file, 'error', 'overlay-unknown-id', `${id} is not a story in content/stories`);
-    }
+  }
+  // Only the story: entries are this gate's business; validate-content.mjs reports the rest.
+  for (const v of checkOverlayTree(contentTree).violations) {
+    const file = overlayFiles.get(v.file);
+    if (file === undefined || !v.path.startsWith('entries.story:')) continue;
+    const at = v.rule.indexOf(':');
+    add(file, 'error', at < 0 ? v.rule : v.rule.slice(0, at), at < 0 ? v.path : v.rule.slice(at + 1).trim(), v.path);
   }
   return problems;
 }
@@ -367,7 +363,7 @@ describe('story-content: the gate itself', () => {
     expect(problems.map((p) => p.rule)).toContain('corpus-answer-index-0-share');
   });
 
-  it('checks that overlay entries name existing stories', () => {
+  it('checks the story: entries of the overlays with the shared overlay rules', () => {
     const overlay = (entries: unknown): SourceFile => ({
       file: 'content/i18n/es/stories.json',
       name: 'stories.json',
@@ -385,6 +381,16 @@ describe('story-content: the gate itself', () => {
     ]);
     const invalid = check(stories, [{ file: 'content/i18n/ko/stories.json', name: 'stories.json', text: '[' }]);
     expect(invalid.map((p) => p.rule)).toEqual(['overlay-invalid-json']);
+    const forbidden = check(stories, [overlay({ 'story:hangul-day-draft': { romanization: 'x', 'scenes.s99.narration': 'x' } })]);
+    expect(forbidden.map((p) => p.rule).sort()).toEqual(['overlay-forbidden-field', 'overlay-unknown-id']);
+    const ko = check(stories, [
+      {
+        file: 'content/i18n/ko/stories.json',
+        name: 'stories.json',
+        text: JSON.stringify({ locale: 'ko', domain: 'stories', entries: { 'story:hangul-day-draft': { title: '한글을 기리는 날' } } }),
+      },
+    ]);
+    expect(ko).toEqual([]);
   });
 
   it('finds the line of a path, falling back to the nearest parent or line 1', () => {

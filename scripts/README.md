@@ -9,14 +9,15 @@
 | Script | F-XXX | Workflow | Source of truth |
 |---|---|---|---|
 | `coverage-gate.mjs` | F-COV-001 | `.github/workflows/coverage-gate.yml` | `docs/tests/coverage-targets.json` (mirrors `docs/tests/coverage-targets.md`) |
-| `validate-content.mjs` | F-CNT-001 | `.github/workflows/content-validation.yml` | `.claude/skills/content-skill/SKILL.md` §3.3 |
+| `validate-content.mjs` | F-CNT-001, F-I18N-001 §3.7 | `.github/workflows/content-validation.yml` | `.claude/skills/content-skill/SKILL.md` §3.3; `content/i18n/<locale>/*.json` go through the overlay rules of `overlay-rules.mjs` (allow-list in `overlay-fields.mjs`, banned words from `packages/i18n/src/banned-words.json`); `HANGUL_ROUTE_STRICT_LOCALES` makes missing translations errors |
 | `check-token-drift.mjs` | F-DES-001 | `.github/workflows/design-token-sync.yml` | `design/tokens/*.v*.md` ↔ `packages/design-system/src/tokens.ts` |
 | `check-i18n.mjs` | F-I18N-001 | `.github/workflows/ci.yml` | `docs/specs/F-I18N-001-ui-locales.md` §3.11; ratchet lists in `scripts/i18n-migrated.json` (`globs`: migrated surfaces; `pluralTernaryBaseline`: legacy plural ternaries per file, only ever lowered) |
 | `check-coverage-targets-drift.mjs` | F-COV-002 | `.github/workflows/coverage-gate.yml` | `docs/tests/coverage-targets.md` "Enforced W4 gate" 표 ↔ `docs/tests/coverage-targets.json` |
 | `build-vocab.mjs` | F-VOC-001 | `.github/workflows/content-validation.yml` | `content/vocab/<topic>.json` + `content/i18n/{es,ko}/vocab-*.json` glosses → `apps/mobile/src/content/__generated__/vocab.ts` and `apps/web/src/data/vocab-catalog.ts`; `--check` fails on drift (`pnpm run vocab:check`) |
 | `build-stories.mjs` | F-STORY-001 | `.github/workflows/content-validation.yml` | `content/stories/*.json` (ready stories) → `apps/mobile/src/content/stories.generated.ts`; `--check` fails on drift, `--report` fails over the bundle budget |
 | `check-migrations.mjs` | F-ROUTE-001 R-0 (E-1) | `.github/workflows/ci.yml` (through `pnpm run test:scripts`, whose self-test runs it on the repository) | `apps/api/migrations/*.sql`: every file is `NNNN_snake_case.sql` and no two share a prefix (wrangler and the SQLite shim apply them in sorted order) |
-| `build-placement-bank.mjs` | F-PLC-001 | `.github/workflows/content-validation.yml` | `content/placement/*.json` (index + one file per strand, drafts included with their `status`) → `apps/mobile/src/content/placement.generated.ts`; `--check` fails on drift. Structure rules for `content/placement/**` and the `pitem:` overlay fields live in `placement-rules.mjs` (called by `validate-content.mjs`) |
+| `build-placement-bank.mjs` | F-PLC-001 | `.github/workflows/content-validation.yml` | `content/placement/*.json` (index + one file per strand, drafts included with their `status`) → `apps/mobile/src/content/placement.generated.ts`; `--check` fails on drift. Structure rules for `content/placement/**` live in `placement-rules.mjs` (called by `validate-content.mjs`); the `pitem:` overlay fields are checked by the shared overlay rules |
+| `build-overlays.mjs` | F-I18N-001 §3.6 | `.github/workflows/content-validation.yml` (and `pnpm run test:scripts`, whose self-test runs `--check` on the repository) | `content/i18n/{es,ko}/*.json` → `packages/content-schema/src/i18n-overlays.generated.ts` (`OVERLAYS`, only allowed fields); `--check` fails on drift. Authoring rules: `content/i18n/README.md` |
 | `import-heritage.mjs` | F-STORY-001 | (none: one-time, run by hand) | `content/stories/research/<cluster>.final.json` → `content/stories/<slug>.json` drafts (`--dry-run` is the default, `--write` writes, never overwrites an authored story) |
 
 Run locally:
@@ -35,6 +36,8 @@ node scripts/build-vocab.mjs              # regenerate the vocabulary modules
 node scripts/build-vocab.mjs --check      # drift detector (CI)
 node scripts/build-placement-bank.mjs     # regenerate the placement bank
 node scripts/build-placement-bank.mjs --check   # drift detector (CI)
+node scripts/build-overlays.mjs           # regenerate the content overlays
+node scripts/build-overlays.mjs --check   # drift detector (CI)
 node scripts/import-heritage.mjs --src content/stories/research --dry-run   # report only (one-time importer)
 ```
 

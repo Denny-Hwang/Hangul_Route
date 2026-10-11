@@ -26,6 +26,12 @@ on:
       - "scripts/build-placement-bank.mjs"
       - "scripts/placement-rules.mjs"
       - "apps/mobile/src/content/placement.generated.ts"
+      # F-I18N-001 PR 12: content overlays (generator, allow-list, validator rules)
+      - "scripts/build-overlays.mjs"
+      - "scripts/overlay-fields.mjs"
+      - "scripts/overlay-rules.mjs"
+      - "scripts/validate-content.mjs"
+      - "packages/i18n/src/banned-words.json"
 
 concurrency:
   group: content-validation-${{ github.ref }}
@@ -73,6 +79,9 @@ jobs:
 
       - name: Placement bank is up to date (F-PLC-001)
         run: node scripts/build-placement-bank.mjs --check
+
+      - name: Content overlays are up to date (F-I18N-001)
+        run: node scripts/build-overlays.mjs --check
 
       - name: Story bundle is up to date (F-STORY-001)
         run: node scripts/build-stories.mjs --check

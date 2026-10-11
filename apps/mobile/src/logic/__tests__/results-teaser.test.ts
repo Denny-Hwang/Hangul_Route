@@ -1,4 +1,4 @@
-import type { Episode, Quest } from '@hangul-route/content-schema';
+import type { Episode, Overlays, Quest } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import { discoverQuest, episodeOf, plainQuest, snapshotWith } from '../stage1/__tests__/fixtures';
@@ -74,6 +74,30 @@ describe('resultsTeaser: every game skipped', () => {
 
   it('is undefined when the played quest is in no episode', () => {
     expect(resultsTeaser({ quests: QUESTS, episodes: [], snapshot: done(), questId: 'quest:q1', total: 0 })).toBeUndefined();
+  });
+});
+
+describe('resultsTeaser: in the UI language (F-I18N-001 §3.6)', () => {
+  const overlays: Overlays = {
+    es: {
+      'quest:q3': { title: 'Tres', teaser: 'Di m como en mamá' },
+      'quest:q4': { title: 'Cuatro', blurb: 'Una descripción sencilla.' },
+    },
+    ko: {},
+  };
+
+  it('localizes the title and the line together: a translated title never sits above an English blurb or teaser', () => {
+    const q4 = resultsTeaser({ ...base, snapshot: done('q1', 'q2'), questId: 'quest:q3', total: 5, locale: 'es', overlays });
+    expect(q4).toMatchObject({ questId: 'quest:q4', titleEn: 'Cuatro', line: { kind: 'text', text: 'Una descripción sencilla.' } });
+    const q3 = resultsTeaser({ ...base, snapshot: done('q1'), questId: 'quest:q2', total: 5, locale: 'es', overlays });
+    expect(q3).toMatchObject({ questId: 'quest:q3', titleEn: 'Tres', line: { kind: 'text', text: 'Di m como en mamá' } });
+  });
+
+  it('stays English for en and for a quest without an overlay', () => {
+    const en = resultsTeaser({ ...base, snapshot: done('q1', 'q2'), questId: 'quest:q3', total: 5, locale: 'en', overlays });
+    expect(en).toMatchObject({ titleEn: 'Title quest:q4', line: { kind: 'text', text: 'A plain blurb.' } });
+    const q2 = resultsTeaser({ ...base, snapshot: done(), questId: 'quest:q1', total: 5, locale: 'es', overlays });
+    expect(q2?.titleEn).toBe('Title quest:q2');
   });
 });
 

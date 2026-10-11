@@ -25,7 +25,7 @@ The file name is `<topic.key>.json`. A topic file is `{ schemaVersion: 1, topic,
 - **Pictures** are `card:<id>` (heritage card art) or `word:<key>` (WordArt). No `swatch:`, no emoji, no raster images. Every item needs one; at least 8 of 12 in a topic are hand-drawn or card pictures (Colors, Numbers and Body are generated and exempt).
 - **No real people, brands or artists.** Draft topics use `status: "draft"`; the picker shows only `ready` topics until the native review is applied (V12).
 - **`spokenKo` must stay absent for now.** It is Hangul in a field `validate-content.mjs` does not know (`korean-in-ui-field`); a word whose voice differs from its spelling needs the validator allow-list extended first. Launch words do not need it.
-- **Korean overlays** (`content/i18n/ko/`) hold Hangul, which `scripts/validate-content.mjs` rejects until F-I18N-001 PR 12 makes it overlay-aware. Do not commit one before that PR lands.
+- **Korean overlays** (`content/i18n/ko/vocab-<topic>.json`) hold the Korean description in `gloss`: a definition that does not contain the word (`overlay-circular-gloss` fails an echo). `scripts/validate-content.mjs` allows Hangul there and only there (F-I18N-001 §3.7; rules and file shape in `content/i18n/README.md`).
 
 ## Workflow
 
@@ -45,6 +45,6 @@ Draft topics are bundled on purpose (the picker hides them).
 
 ## What the suite checks
 
-`packages/content-schema/src/__tests__/vocab-content.test.ts` runs these rules over `content/vocab/*.json` and `content/i18n/*/vocab-*.json`: `vocab-schema`, `vocab-file-topic`, `vocab-count` (12 per launch topic), `vocab-id-format`, `vocab-duplicate-ko`, `vocab-sense-registry` (b)-(e), `vocab-romanization`, `vocab-romanization-consistent` (vocabulary files against each other until F-CNT-002 PR 2b/3), `vocab-topic-title-romanization`, `vocab-visual-grammar`, `vocab-visual-count`, `vocab-text-no-hangul`, `vocab-banned-word`, `vocab-audio-ref`, `vocab-overlay` and `vocab-generated-drift`. Each rule has a deliberately broken fixture in `packages/content-schema/src/__fixtures__/vocab/broken/`.
+`packages/content-schema/src/__tests__/vocab-content.test.ts` runs these rules over `content/vocab/*.json` and `content/i18n/*/vocab-*.json`: `vocab-schema`, `vocab-file-topic`, `vocab-count` (12 per launch topic), `vocab-id-format`, `vocab-duplicate-ko`, `vocab-sense-registry` (b)-(e), `vocab-romanization`, `vocab-romanization-consistent` (vocabulary files against each other until F-CNT-002 PR 2b/3), `vocab-topic-title-romanization`, `vocab-visual-grammar`, `vocab-visual-count`, `vocab-text-no-hangul`, `vocab-banned-word`, `vocab-audio-ref`, `vocab-overlay` (the shared F-I18N-001 overlay rules of `scripts/overlay-rules.mjs`, reported for the vocabulary overlays) and `vocab-generated-drift`. Each rule has a deliberately broken fixture in `packages/content-schema/src/__fixtures__/vocab/broken/`.
 
 Two rules wait for data: the sense-registry rule (d) ("every launch member exists as an item") switches on by itself once all twelve topic files exist, and `vocab-overlay` strictness follows `HANGUL_ROUTE_STRICT_LOCALES`.

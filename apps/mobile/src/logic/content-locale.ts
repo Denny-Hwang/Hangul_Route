@@ -1,0 +1,66 @@
+import {
+  localize,
+  type Episode,
+  type HeritageCard,
+  type Jamo,
+  type Overlays,
+  type Quest,
+  type StageDef,
+  type Story,
+  type ThemeDef,
+  type UiLocale,
+} from '@hangul-route/content-schema';
+import type { MissionCard } from './homework/mission-builder';
+import type { MinigameScope } from './minigame-config';
+
+/**
+ * Content text in the UI language (F-I18N-001 §3.6). The screens pass `useLocale()`;
+ * each helper binds one kind of shipped content to its overlay entity id and falls back
+ * to the English source field by field. Taught Korean and its romanization never change.
+ * `overlays` defaults to the generated `OVERLAYS` (tests pass their own).
+ */
+
+export const localizeCard = (card: HeritageCard, locale: UiLocale, overlays?: Overlays): HeritageCard =>
+  localize(card, card.id, locale, overlays);
+
+export const localizeEpisode = (episode: Episode, locale: UiLocale, overlays?: Overlays): Episode =>
+  localize(episode, episode.id, locale, overlays);
+
+export const localizeQuest = (quest: Quest, locale: UiLocale, overlays?: Overlays): Quest =>
+  localize(quest, quest.id, locale, overlays);
+
+export const localizeStage = (stage: StageDef, locale: UiLocale, overlays?: Overlays): StageDef =>
+  localize(stage, `stage:${stage.key}`, locale, overlays);
+
+export const localizeTheme = (theme: ThemeDef, locale: UiLocale, overlays?: Overlays): ThemeDef =>
+  localize(theme, `theme:${theme.key}`, locale, overlays);
+
+export const localizeJamo = (jamo: Jamo, locale: UiLocale, overlays?: Overlays): Jamo =>
+  localize(jamo, jamo.id, locale, overlays);
+
+/** A story's title, narration, captions and checks by its `story:<slug>` id (the story-sequence cards read it). */
+export const localizeStory = (story: Story, locale: UiLocale, overlays?: Overlays): Story =>
+  localize(story, story.id, locale, overlays);
+
+/** A minigame's pairs, step labels, dialogue lines and prompts, by its minigame ref. */
+export const localizeScope = (scope: MinigameScope, ref: string, locale: UiLocale, overlays?: Overlays): MinigameScope =>
+  localize(scope, ref, locale, overlays);
+
+/**
+ * Something that carries the English title of a content entity as built (a mission card,
+ * the Results "Next up" teaser) with the overlay title of that entity swapped in at
+ * render time, so a value pinned earlier still follows a language change.
+ */
+export function localizeTitle<T extends { titleEn: string }>(item: T, entityId: string, locale: UiLocale, overlays?: Overlays): T {
+  const { titleEn } = localize({ titleEn: item.titleEn }, entityId, locale, overlays);
+  return titleEn === item.titleEn ? item : { ...item, titleEn };
+}
+
+/** A mission card's title from its quest (replay, new, assigned), else its episode (story); the daily test names itself. */
+export function localizeMissionCard(card: MissionCard, locale: UiLocale, overlays?: Overlays): MissionCard {
+  const entityId = card.questId ?? card.episodeId;
+  const { titleEn } = card;
+  if (titleEn === null || entityId === undefined) return card;
+  const localized = localizeTitle({ titleEn }, entityId, locale, overlays).titleEn;
+  return localized === titleEn ? card : { ...card, titleEn: localized };
+}

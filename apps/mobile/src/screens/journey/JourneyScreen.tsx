@@ -22,10 +22,11 @@ import {
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { episodeById, episodeFor, episodesAll, gridEpisodes, stages, themes } from '../../content';
-import { useMessages } from '../../i18n/use-messages';
+import { useLocale, useMessages } from '../../i18n/use-messages';
+import { localizeStage, localizeTheme } from '../../logic/content-locale';
 import { isStageEntitled } from '../../logic/entitlement';
 import {
   isEpisodeComplete,
@@ -48,6 +49,9 @@ const GRID_EPISODES = gridEpisodes(episodesAll);
 
 export function JourneyScreen(): React.ReactElement {
   const m = useMessages().learner.journey;
+  const locale = useLocale();
+  const localThemes = useMemo(() => themes.map((t) => localizeTheme(t, locale)), [locale]);
+  const localStages = useMemo(() => stages.map((s) => localizeStage(s, locale)), [locale]);
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { copy, opensDirectly } = useAudience();
   const profile = useProfileStore(activeProfileSelector);
@@ -96,7 +100,7 @@ export function JourneyScreen(): React.ReactElement {
       <Spacer size="lg" />
       {/* Same row geometry as the cells below, so each label sits over its column. */}
       <View style={{ flexDirection: 'row', gap: spacing.xs, marginBottom: spacing.sm, width: '100%', maxWidth: gridMax }}>
-        {themes.map((t) => (
+        {localThemes.map((t) => (
           <View key={t.key} style={{ flex: 1, alignItems: 'center' }}>
             <Caption tone="muted" align="center">
               {themeColumnLabel(t)}
@@ -105,7 +109,7 @@ export function JourneyScreen(): React.ReactElement {
         ))}
       </View>
 
-      {stages.map((stage) => {
+      {localStages.map((stage) => {
         const availability = stageAvailability(stage.key, GRID_EPISODES);
         const isLocked = availability === 'soon';
         const entitledStage = isStageEntitled(stage.key, tier);
@@ -149,7 +153,7 @@ export function JourneyScreen(): React.ReactElement {
             </Pressable>
 
             <View style={{ flexDirection: 'row', gap: spacing.xs, width: '100%', maxWidth: gridMax }}>
-              {themes.map((theme) => (
+              {localThemes.map((theme) => (
                 <GridCell
                   key={`${stage.key}-${theme.key}`}
                   stage={stage.key}

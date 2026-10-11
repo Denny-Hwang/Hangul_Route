@@ -1,5 +1,6 @@
 // Self-tests for scripts/placement-rules.mjs (F-PLC-001 PR P-4): the plain-Node
-// validator rules for content/placement/** and the `pitem:` overlay fields.
+// validator rules for content/placement/**. The `pitem:` overlay fields are checked by
+// the shared overlay rules (scripts/__tests__/overlay-rules.test.mjs, F-I18N-001 §3.7).
 
 import { strict as assert } from "node:assert";
 import { spawnSync } from "node:child_process";
@@ -156,43 +157,11 @@ describe("placement-rules: index.json", () => {
   });
 });
 
-describe("placement-rules: overlays", () => {
-  const overlay = (entries, extra = {}) => ({ locale: "es", domain: "placement", entries, ...extra });
-  const withOverlay = (body, file = "content/i18n/es/placement.json") => tree({ [file]: body });
-
-  test("a gloss and an option gloss are allowed", () => {
-    const m = withOverlay(overlay({ "pitem:sound-basic-hear-giyeok": { gloss: "Escucha", "options.a.gloss": "x" } }));
-    assert.deepEqual(rules(m), []);
-  });
-
-  test("shape: locale must match the folder, domain placement, entries an object", () => {
-    assert.deepEqual(rules(withOverlay(overlay({}, { locale: "ko" }))), ["overlay-bad-shape"]);
-    assert.deepEqual(rules(withOverlay(overlay({}, { domain: "vocab" }))), ["overlay-bad-shape"]);
-    assert.deepEqual(rules(withOverlay({ locale: "es", domain: "placement" })), ["overlay-bad-shape"]);
-    assert.deepEqual(rules(withOverlay(overlay({ "pitem:sound-basic-hear-giyeok": 3 }))), ["overlay-bad-shape"]);
-    assert.deepEqual(rules(withOverlay(overlay({}), "content/i18n/en/placement.json")), ["overlay-bad-shape"]);
-  });
-
-  test("an entry for an id that is not in the bank is unknown", () => {
-    assert.deepEqual(rules(withOverlay(overlay({ "pitem:nope": { gloss: "x" } }))), ["overlay-unknown-id"]);
-  });
-
-  test("only gloss and options.<id>.gloss may be translated; Korean and ids never", () => {
-    const id = "pitem:sound-basic-hear-giyeok";
-    for (const field of ["ko", "romanization", "sound", "pictureRef", "options.a.ko", "options.a.sound", "title"]) {
-      assert.deepEqual(rules(withOverlay(overlay({ [id]: { [field]: "x" } }))), ["overlay-forbidden-field"], field);
-    }
-  });
-
-  test("an option gloss must name an option of the template, and the value must be a string", () => {
-    const id = "pitem:sound-basic-hear-giyeok";
-    assert.deepEqual(rules(withOverlay(overlay({ [id]: { "options.zzz.gloss": "x" } }))), ["overlay-unknown-option"]);
-    assert.deepEqual(rules(withOverlay(overlay({ [id]: { gloss: 3 } }))), ["overlay-bad-shape"]);
-  });
-
-  test("other overlay domains and ids of other prefixes are not this module's business", () => {
-    const m = tree({ "content/i18n/es/vocab-food.json": { locale: "es", domain: "vocab-food", entries: { "vocab:sagwa": { gloss: "manzana" } } } });
-    assert.deepEqual(rules(m), []);
+describe("placement-rules: overlays are delegated", () => {
+  test("content/i18n/<locale>/placement.json is the shared overlay rules' business, not this module's", () => {
+    const bad = { locale: "ko", domain: "nope", entries: { "pitem:nope": { romanization: "x" } } };
+    assert.deepEqual(rules(tree({ "content/i18n/es/placement.json": bad })), []);
+    assert.deepEqual(checkPlacementTree(new Map([["content/i18n/es/placement.json", bad]])), []);
   });
 });
 
@@ -223,16 +192,22 @@ describe("validate-content.mjs runs the placement rules", () => {
     }
   });
 
-  test("a Spanish overlay with Hangul fails the generic language rule; an unknown id fails the overlay rule", () => {
+  test("a Spanish overlay with Hangul fails the generic language rule; unknown ids and options fail the shared overlay rules", () => {
     const root = mkdtempSync(join(tmpdir(), "valplc-"));
     try {
       write(root, "placement/index.json", { version: 1, warmup: "pitem:warmup-rice", files: ["sound-letter.json"] });
       write(root, "placement/sound-letter.json", { strand: "sound-letter", templates: [hear(), hear("pitem:warmup-rice")] });
-      write(root, "i18n/es/placement.json", { locale: "es", domain: "placement", entries: { "pitem:sound-basic-hear-giyeok": { gloss: "가" }, "pitem:zzz": { gloss: "x" } } });
+      write(root, "i18n/es/placement.json", {
+        locale: "es",
+        domain: "placement",
+        entries: { "pitem:sound-basic-hear-giyeok": { gloss: "가", "options.zzz.gloss": "x", sound: "x" }, "pitem:zzz": { gloss: "x" } },
+      });
       const r = run(root);
       assert.equal(r.status, 1);
       assert.match(r.stdout, /korean-in-ui-field at \.entries/);
-      assert.match(r.stdout, /::error file=content\/i18n\/es\/placement\.json::overlay-unknown-id/);
+      assert.match(r.stdout, /::error file=content\/i18n\/es\/placement\.json::overlay-unknown-id: pitem:zzz/);
+      assert.match(r.stdout, /overlay-unknown-id: pitem:sound-basic-hear-giyeok has no options element zzz/);
+      assert.match(r.stdout, /overlay-forbidden-field: sound cannot be translated/);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }

@@ -20,7 +20,8 @@ import React, { useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { PrereqSheet } from '../../components/PrereqSheet';
 import { cardById, episodeById, episodesAll, questsAll, stageByKey, themeByKey } from '../../content';
-import { useMessages } from '../../i18n/use-messages';
+import { useLocale, useMessages } from '../../i18n/use-messages';
+import { localizeCard, localizeEpisode, localizeQuest, localizeStage, localizeTheme } from '../../logic/content-locale';
 import { buildsOnLine, prereqSheet, softPrerequisite, type PrereqSheet as PrereqSheetModel } from '../../logic/quest-flow/soft-prereq';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { usePrereqSheetStore } from '../../store/prereq-sheet-store';
@@ -38,7 +39,11 @@ export interface EpisodeDetailViewProps {
 export function EpisodeDetailView({ episodeId, onStartQuest, onOpenCard, onBack }: EpisodeDetailViewProps): React.ReactElement {
   const messages = useMessages();
   const m = messages.learner.episode;
-  const episode = episodeById(episodeId);
+  const locale = useLocale();
+  const episode = useMemo(() => {
+    const source = episodeById(episodeId);
+    return source && localizeEpisode(source, locale);
+  }, [episodeId, locale]);
   const profile = useProfileStore(activeProfileSelector);
   const snap = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
 
@@ -63,10 +68,15 @@ export function EpisodeDetailView({ episodeId, onStartQuest, onOpenCard, onBack 
     );
   }
 
-  const stage = stageByKey(episode.stage);
-  const theme = themeByKey(episode.theme);
+  const stageDef = stageByKey(episode.stage);
+  const themeDef = themeByKey(episode.theme);
+  const stage = stageDef && localizeStage(stageDef, locale);
+  const theme = themeDef && localizeTheme(themeDef, locale);
   const stageColor = colors.stage[episode.stage];
-  const quests = episode.questIds.map((id) => questsAll.find((q) => q.id === id)).filter((q): q is NonNullable<typeof q> => Boolean(q));
+  const quests = episode.questIds
+    .map((id) => questsAll.find((q) => q.id === id))
+    .filter((q): q is NonNullable<typeof q> => Boolean(q))
+    .map((q) => localizeQuest(q, locale));
   const isPreview = episode.status === 'preview';
 
   const startQuest = onStartQuest;
@@ -190,8 +200,9 @@ export function EpisodeDetailView({ episodeId, onStartQuest, onOpenCard, onBack 
             <Spacer size="sm" />
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
               {episode.rewardCardIds.map((cid) => {
-                const c = cardById(cid);
-                if (!c) return null;
+                const source = cardById(cid);
+                if (!source) return null;
+                const c = localizeCard(source, locale);
                 const earned = unlockedCardIds.has(cid);
                 return (
                   <Pressable

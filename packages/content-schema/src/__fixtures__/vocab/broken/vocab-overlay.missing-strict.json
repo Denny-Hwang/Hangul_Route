@@ -1,5 +1,5 @@
 {
-  "description": "A strict locale needs a gloss for every item.",
+  "description": "A strict locale needs a translation of every translatable field (reported at the base file when the overlay has no entry for the item).",
   "options": {
     "strictLocales": [
       "es"
@@ -9,7 +9,7 @@
   "expect": [
     {
       "rule": "vocab-overlay",
-      "file": "i18n/es/vocab-food.json",
+      "file": "vocab/food.json",
       "id": "vocab:mul",
       "includes": "overlay-missing"
     }

@@ -1,9 +1,10 @@
-import type { DiscoverItem, DiscoverPage, Jamo, KoText, RomanizationMode } from '@hangul-route/content-schema';
+import type { DiscoverItem, DiscoverPage, Jamo, KoText, Overlays, RomanizationMode, UiLocale } from '@hangul-route/content-schema';
 import { romanizationShown, type Messages } from '@hangul-route/i18n';
 import { findJamo } from '../../content/jamo';
 import type { PlayResult } from '../../platform/audio';
 import { spokenFor } from '../audio/spoken';
 import { blockShape } from '../build-letter-view';
+import { localizeJamo } from '../content-locale';
 import { decompose, symbolsOf } from './hangul';
 
 /**
@@ -135,13 +136,28 @@ function symbolLabel(jamo: Jamo, romanization: string, a11y: DiscoverA11y): stri
   return jamo.soundHint ? a11y.discoverLetter(romanization, jamo.soundHint) : a11y.discoverLetter(romanization);
 }
 
+/**
+ * The page's example word with the jamo's translated example gloss when the page shows
+ * that jamo's own example word with the same English gloss (`jamo:*.exampleWord.gloss`,
+ * F-I18N-001 §3.6). A page gloss of another sense, or one its quest overlay already
+ * translated, stays as it is.
+ */
+function exampleIn(example: KoText, source: Jamo, local: Jamo): KoText {
+  const shared = example.ko === source.exampleWordKo && example.en === source.exampleWordEn;
+  return shared && local.exampleWordEn !== undefined && local.exampleWordEn !== example.en
+    ? { ...example, en: local.exampleWordEn }
+    : example;
+}
+
 function symbolItem(
   key: string,
   item: Extract<DiscoverItem, { type: 'jamo' }>,
   jamo: Jamo,
   copy: DiscoverCopy,
   a11y: DiscoverA11y,
+  source: Jamo,
 ): DiscoverItemView {
+  const example = exampleIn(item.example, source, jamo);
   const sound = spokenFor(jamo, 'sound');
   const romanization = soundValue(jamo.romanization);
   // Vowels already are their own name and the initial ㅇ is spoken by its name, so only a
@@ -158,8 +174,8 @@ function symbolItem(
     hear: hear(`${key}|sound`, sound.text, sound.audioRef),
     spokenRomanization: sound.romanization,
     ...(name ? { letterName: { action: hear(`${key}|name`, name.text, name.audioRef), ko: name.text, romanization: name.romanization } } : {}),
-    ...(jamo.kind === 'batchim' ? { block: blockView(jamo.id, jamo, item.example), batchimLine: copy.batchimLine } : {}),
-    example: exampleView(key, jamo.id, item.example),
+    ...(jamo.kind === 'batchim' ? { block: blockView(jamo.id, jamo, example), batchimLine: copy.batchimLine } : {}),
+    example: exampleView(key, jamo.id, example),
     ...(item.picture ? { picture: item.picture } : {}),
   };
 }
@@ -180,8 +196,19 @@ function wordItem(key: string, item: Extract<DiscoverItem, { type: 'word' }>): D
   };
 }
 
-/** Turn the authored pages into view models, skipping what cannot be resolved. */
-export function buildDiscover(pages: readonly DiscoverPage[], copy: DiscoverCopy, a11y: DiscoverA11y): DiscoverModel {
+/**
+ * Turn the authored pages into view models, skipping what cannot be resolved. `locale`
+ * picks the jamo sound hint and example gloss of the UI language (F-I18N-001 §3.6; the
+ * glyph and romanization never change); `overlays` defaults to the generated ones. The
+ * pages' own glosses, caption and notes come localized with the quest (`localizeQuest`).
+ */
+export function buildDiscover(
+  pages: readonly DiscoverPage[],
+  copy: DiscoverCopy,
+  a11y: DiscoverA11y,
+  locale: UiLocale = 'en',
+  overlays?: Overlays,
+): DiscoverModel {
   const used = new Map<string, number>();
   const uniqueKey = (base: string): string => {
     const n = used.get(base) ?? 0;
@@ -197,8 +224,8 @@ export function buildDiscover(pages: readonly DiscoverPage[], copy: DiscoverCopy
         items.push(wordItem(uniqueKey(`word:${item.word.ko}`), item));
         continue;
       }
-      const jamo = findJamo(item.jamoId);
-      if (jamo) items.push(symbolItem(uniqueKey(item.jamoId), item, jamo, copy, a11y));
+      const found = findJamo(item.jamoId);
+      if (found) items.push(symbolItem(uniqueKey(item.jamoId), item, localizeJamo(found, locale, overlays), copy, a11y, found));
     }
     if (items.length === 0) continue;
     const allWords = items.every((i) => i.kind === 'word');
