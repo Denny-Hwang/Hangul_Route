@@ -603,9 +603,9 @@ export const storiesAll: Story[] = [
     "recommendedStage": 6,
     "minutes": 4,
     "learningGoalsEn": [
-      "Give at least two ways people use Joseon records today (restoring Hwaseong, recreating a procession, studying past weather, reading the Annals online).",
+      "Know at least two ways people use Joseon records today (restoring Hwaseong, recreating a procession, studying past weather, reading the Annals online).",
       "Know that the Annals, Seungjeongwon Ilgi, Uigwe and Ilseongnok are all on UNESCO's Memory of the World Register.",
-      "Say 기록은 보물이에요 and recognize 화성, 성, 행렬 and 날씨."
+      "Read and recognize 기록은 보물이에요 (girogeun bomurieyo), 화성 (Hwaseong), 성 (seong), 행렬 (haengnyeol) and 날씨 (nalssi)."
     ],
     "origin": {
       "type": "documented",
@@ -703,8 +703,8 @@ export const storiesAll: Story[] = [
       },
       {
         "id": "suwon-hwaseong-munhwaje",
-        "ko": "수원화성문화제",
-        "romanization": "Suwonhwaseongmunhwaje",
+        "ko": "수원 화성 문화제",
+        "romanization": "Suwon Hwaseong Munhwaje",
         "en": "Suwon Hwaseong Cultural Festival",
         "kind": "term"
       }
@@ -722,7 +722,7 @@ export const storiesAll: Story[] = [
               "ko": "왜 기록할까요?",
               "romanization": "Wae girokalkkayo?",
               "en": "Why do we keep records?",
-              "speaker": "narrator"
+              "speaker": "hoya"
             },
             "factIds": [],
             "framing": true,
@@ -732,8 +732,8 @@ export const storiesAll: Story[] = [
           },
           {
             "id": "s2",
-            "narrationEn": "Suwon Hwaseong fortress was finished in 1796. Every step of the building work was recorded in the Hwaseong Seongyeok Uigwe, with drawings of buildings and machines, and the sizes and amounts of materials.",
-            "captionEn": "Hwaseong fortress, recorded step by step",
+            "narrationEn": "Suwon Hwaseong Fortress was finished in 1796. Every step of the building work was recorded in the Hwaseong Seongyeok Uigwe, with drawings of buildings and machines, and the sizes and amounts of materials.",
+            "captionEn": "Hwaseong Fortress, recorded step by step",
             "keyword": {
               "id": "hwaseong",
               "ko": "화성",
@@ -788,7 +788,7 @@ export const storiesAll: Story[] = [
           },
           {
             "id": "s5",
-            "narrationEn": "Scientists can study the weather notes in the Seungjeongwon Ilgi, written day after day for nearly 300 years, to learn about nature in the past.",
+            "narrationEn": "Scientists can study the daily weather notes in the Seungjeongwon Ilgi, which covers nearly 300 years, to learn about nature in the past.",
             "captionEn": "Scientists can study old weather notes",
             "keyword": {
               "id": "nalssi-girok",
@@ -807,7 +807,7 @@ export const storiesAll: Story[] = [
                 "factIds": [
                   "f4"
                 ],
-                "rationaleEn": "The diary covers 288 years (1623-1910); narration rounds that up to nearly 300.",
+                "rationaleEn": "The surviving diaries cover 288 years (1623-1910); narration rounds that to nearly 300.",
                 "timeRelative": false
               }
             ],
@@ -868,7 +868,7 @@ export const storiesAll: Story[] = [
               "ko": "기록은 보물이에요.",
               "romanization": "Girogeun bomurieyo.",
               "en": "Records are treasures.",
-              "speaker": "narrator"
+              "speaker": "hoya"
             },
             "factIds": [],
             "framing": true,
