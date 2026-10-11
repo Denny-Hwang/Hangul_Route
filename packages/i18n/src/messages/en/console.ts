@@ -645,4 +645,19 @@ export const consoleMsgs = {
       comingSoon: (title: string) => `${title} (coming soon)`,
     },
   },
+  /**
+   * The roster's level-check line and the advisory hand-off (F-PLC-001 section 3.9, wireframe
+   * placement K). Summary only: no class average, no distribution, no ranking. The band label
+   * comes from `learner.placement.band`, the same words the learner saw.
+   */
+  placement: {
+    startingSpot: (stage: number, band: string, date: string) => `Starting spot: Stage ${stage} · ${band} · ${date}`,
+    overridden: 'Changed by a grown-up',
+    suggest: { cta: 'Suggest a different start' },
+    /** The pre-filled plan title; the builder caps it at 60 characters. */
+    suggestTitle: (name: string) => `Next step for ${name}`,
+    /** The pre-filled item note (a plan item note holds at most 80 characters). */
+    suggestNote: 'Try this next',
+    suggestFor: (name: string) => `A suggestion for ${name}. It arrives as a plan and never changes ${name}'s level check or progress.`,
+  },
 } as const;
