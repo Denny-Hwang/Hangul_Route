@@ -18,6 +18,7 @@ export * from './components/KoreanText';
 export * from './components/ChoiceCard';
 export * from './components/SyllableBlock';
 export * from './components/StoryScene';
+export * from './components/SectionTabs';
 export * from './components/SparkMeter';
 // WordArt is not in this barrel: callers import '@hangul-route/design-system/components/WordArt', so an
 // app that never shows a word picture does not load the glyph registry at start (F-VOC-002 §3.7, W7).

@@ -61,6 +61,8 @@
     "apps/web/src/components/console/SchoolAdmin.tsx",
     "apps/web/src/app/(console)/parent/**",
     "apps/web/src/components/parent/**",
+    "apps/mobile/src/screens/library/StoryTile.tsx",
+    "apps/mobile/src/screens/library/StoryShelf.tsx",
     "apps/mobile/src/screens/profile/EditProfileScreen.tsx"
   ],
   "pluralTernaryBaseline": {

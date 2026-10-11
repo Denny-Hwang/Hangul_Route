@@ -116,7 +116,7 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
     } else if (route.params.next === 'SaveProgress') {
       navigation.replace('SaveProgress');
     } else if (route.params.next === 'Paywall') {
-      navigation.replace('Paywall', { from: 'journey' });
+      navigation.replace('Paywall', { from: route.params.from ?? 'journey' });
     } else if (route.params.next === 'EditProfile') {
       const { profileId } = route.params;
       if (profileId === undefined) navigation.goBack();
