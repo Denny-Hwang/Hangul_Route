@@ -9,7 +9,7 @@ Spec: `docs/specs/F-STORY-003-story-checks-sequence-v2.md` §3.5 · wireframe: `
 ## 1. Context
 
 - **Who**: anyone learning Hangul, at any age.
-- **Where**: the `apply` step of a story quest (after the story and its questions), and the three Stage 1 quests that have a story-steps sequence (washing hands, setting the table, eating, saying thanks).
+- **Where**: the `apply` step of a story quest (after the story and its questions), and the three Stage 1 quests that have a legacy story-steps sequence: the mealtime order (Life: wash hands, set the table, eat with family, say thanks), the Seollal morning (Rites: wear hanbok, bow to elders, eat tteokguk, receive lucky money) and the yut game (Crafts: pick teams, throw the yut, move the piece, win). Those steps are text-only cards.
 - **Why**: putting events in order shows the learner followed the story, with pictures doing most of the work. Each slot scores once, on the first tap; a wrong card only nudges.
 
 ## 2. Layout
@@ -23,7 +23,7 @@ Frames to draw: ordering with two cards placed; a wrong tap (amber card with "Tr
 ## 3. Visual style
 
 - Cards use `ChoiceCard` states: idle `surface.paper`; wrong `feedback.nudgeLight` / `feedback.nudge` (brief, about 0.6 s, with the words "Try another"); hint ring `border.focus`; a text-only card sits on `surface.sunken`.
-- Slots: empty slots outlined in `border.strong` with their number; filled slots `feedback.successLight` with the card's small picture or caption.
+- Slots (as built in PR 3.5a): rounded pills; an empty slot is `surface.sunken` with a `border.subtle` outline and its number; a filled slot is `feedback.successLight` with a `feedback.success` outline, its number, a check icon and the card's caption.
 - Korean `text.primary` at title size, romanization `text.secondary` upright, caption `text.primary` body.
 - No order numbers on cards; numbers only on slots. Never red.
 
@@ -48,15 +48,18 @@ Design the Story Order minigame (v2) for Hangul Route, a Korean-learning app for
 of every age. Output: one sheet of four portrait phone frames (390 x 844).
 
 Tokens by name: canvas surface.canvas, cards surface.paper with the "card" shadow,
-text-only cards surface.sunken, empty slots outlined in border.strong, filled slots
-feedback.successLight, wrong flash feedback.nudgeLight with feedback.nudge border, hint
+text-only cards surface.sunken, empty slots as rounded pills on surface.sunken with a
+border.subtle outline, filled slots feedback.successLight with a feedback.success outline,
+a check icon and the caption, wrong flash feedback.nudgeLight with feedback.nudge border, hint
 ring border.focus, primary brand.primary. Cards at least 80 tall; slots at least 64.
 
 Frame 1 (ordering, 2 of 4 placed): fill-only bar 2 of 4 and pill "2 / 4"; title "Put the
 story in order"; hint "Tap each picture, starting with what happened first."; a row of 4
-numbered slots, 1 and 2 filled with tiny pictures; below, two remaining cards in two
-columns, each with a flat 4:3 picture, Korean large (세배 / 떡국), romanization under it
-(sebae / tteokguk) and an English caption; a ghost button "Skip this one".
+numbered slots, 1 and 2 filled (check icon and caption: "Hoya greets the Seollal morning",
+"The children bow to their grandparents"); below, two remaining cards in two columns, each
+with a flat 4:3 picture, Korean large (윷놀이 / 국가 무형 유산), romanization under it
+(yunnori / gukga muhyeong yusan) and an English caption ("Throwing the four yut sticks",
+"Two National Intangible Heritage listings"); this is the story Hoya's Seollal Morning; a ghost button "Skip this one".
 Frame 2: the same with one card in the amber wrong state showing "Try another".
 Frame 3: after two misses, the right card has a focus ring and Hoya (thinking) says "This
 one comes next."
