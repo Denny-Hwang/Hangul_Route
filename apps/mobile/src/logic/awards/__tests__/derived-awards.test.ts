@@ -182,3 +182,85 @@ describe('missingAwards', () => {
     expect(missingAwards(WORLD, s, PROFILE).map((a) => a.cardId)).toEqual(['card:tiger']);
   });
 });
+
+describe('times are compared as instants (the same rule as logic/sync/merge.ts earlierLatchTime)', () => {
+  // 12:00+09:00 is 03:00Z: earlier as an instant, later as a string.
+  const SEOUL_NOON = '2026-09-10T12:00:00.000+09:00';
+  const UTC_FIVE = '2026-09-10T05:00:00.000Z';
+
+  it('an episode completes at the latest instant, when an offset time sits next to a UTC time', () => {
+    const s = snapshot({ quests: [done('quest:l1', 1, SEOUL_NOON), done('quest:l2', 1, UTC_FIVE)] });
+    expect(completedEpisodes(WORLD, s).get('episode:stage1-letters')).toBe(UTC_FIVE);
+  });
+
+  it('the quest card keeps its earlier instant over the episode time, whatever the string order', () => {
+    // quest:l1 at 08:00+09:00 (= 23:00Z the day before) is earlier than its episode's completion at T1.
+    const early = '2026-09-10T08:00:00.000+09:00';
+    const s = snapshot({ quests: [done('quest:l1', 3, early), done('quest:l2', 1, T1)] });
+    expect(find(derivedAwards(WORLD, s, PROFILE), 'card:book')).toEqual({ cardId: 'card:book', source: 'quest', via: 'quest:l1', unlockedAt: early });
+  });
+
+  it('two forms of the same instant tie, so the quest source stays', () => {
+    const same = '2026-09-10T09:00:00.000+09:00'; // = T1
+    const s = snapshot({ quests: [done('quest:l1', 3, same), done('quest:l2', 1, T1)] });
+    expect(find(derivedAwards(WORLD, s, PROFILE), 'card:book')?.source).toBe('quest');
+  });
+
+  it('a set completes at the latest instant of its members', () => {
+    const s = snapshot({ cards: [owned('card:story-sun-and-moon', SEOUL_NOON), owned('card:rice', UTC_FIVE)] });
+    expect(find(derivedAwards(WORLD, s, PROFILE), 'card:set-tales')?.unlockedAt).toBe(UTC_FIVE);
+  });
+
+  it('an unparseable time never beats a parseable one', () => {
+    const s = snapshot({ quests: [done('quest:l1', 1, 'not-a-time'), done('quest:l2', 1, T1)] });
+    expect(completedEpisodes(WORLD, s).get('episode:stage1-letters')).toBe(T1);
+    // The quest card's unparseable time loses to its episode's parseable one.
+    const q = snapshot({ quests: [done('quest:l1', 3, 'not-a-time'), done('quest:l2', 1, T1)] });
+    expect(find(derivedAwards(WORLD, q, PROFILE), 'card:book')).toMatchObject({ source: 'episode', unlockedAt: T1 });
+  });
+
+  it('two unparseable times fall back to the string order, and the quest source stays on a tie', () => {
+    const s = snapshot({ quests: [done('quest:l1', 3, 'b-bad'), done('quest:l2', 1, 'a-bad')] });
+    expect(completedEpisodes(WORLD, s).get('episode:stage1-letters')).toBe('b-bad');
+    expect(find(derivedAwards(WORLD, s, PROFILE), 'card:book')).toMatchObject({ source: 'quest', unlockedAt: 'b-bad' });
+  });
+
+  it('the latest time does not depend on argument order', () => {
+    const pairs: [string, string, string][] = [
+      [T1, 'not-a-time', T1],
+      ['a-bad', 'b-bad', 'b-bad'],
+      ['2026-09-10T09:00:00.000+09:00', T1, '2026-09-10T09:00:00.000+09:00'], // one instant, two forms: the string order breaks the tie
+    ];
+    for (const [x, y, want] of pairs) {
+      for (const [l1, l2] of [[x, y], [y, x]] as const) {
+        const s = snapshot({ quests: [done('quest:l1', 1, l1), done('quest:l2', 1, l2)] });
+        expect(completedEpisodes(WORLD, s).get('episode:stage1-letters')).toBe(want);
+      }
+    }
+  });
+});
+
+describe('sets never count another set card derived in the same pass (§3.2)', () => {
+  const nested = (order: 'inner-first' | 'outer-first'): AwardWorld => {
+    const inner = { id: 'set:inner', cardId: 'card:set-inner', titleEn: 'Inner', memberCardIds: ['card:rice'] };
+    const outer = { id: 'set:outer', cardId: 'card:set-outer', titleEn: 'Outer', memberCardIds: ['card:set-inner', 'card:book'] };
+    return {
+      ...WORLD,
+      cards: [...WORLD.cards, { ...WORLD.cards[0]!, id: 'card:set-inner', unlockedBy: 'set:inner' }, { ...WORLD.cards[0]!, id: 'card:set-outer', unlockedBy: 'set:outer' }],
+      sets: order === 'inner-first' ? [inner, outer] : [outer, inner],
+    };
+  };
+
+  it('gives the same answer whatever the order of world.sets', () => {
+    const s = snapshot({ quests: [done('quest:f1', 3, T2)], cards: [owned('card:book', T1)] });
+    const a = derivedAwards(nested('inner-first'), s, PROFILE);
+    expect(derivedAwards(nested('outer-first'), s, PROFILE)).toEqual(a);
+    expect(ids(a)).toContain('card:set-inner');
+    expect(ids(a)).not.toContain('card:set-outer');
+  });
+
+  it('counts a set card that is already owned', () => {
+    const s = snapshot({ cards: [owned('card:book', T1), owned('card:set-inner', T3)] });
+    expect(find(derivedAwards(nested('outer-first'), s, PROFILE), 'card:set-outer')?.unlockedAt).toBe(T3);
+  });
+});

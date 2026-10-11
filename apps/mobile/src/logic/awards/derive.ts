@@ -13,14 +13,40 @@ import type { AwardWorld, DerivedAward } from './types';
 
 const isPlayable = (e: Pick<Episode, 'status'>): boolean => e.status === 'shipped' || e.status === 'ready';
 const isGrid = (e: Pick<Episode, 'placement'>): boolean => (e.placement ?? 'grid') === 'grid';
-const latest = (times: readonly string[]): string => times.reduce((a, b) => (b > a ? b : a));
+
+/**
+ * Times compare as instants (`Date.parse`), the same rule as
+ * `earlierLatchTime` in logic/sync/merge.ts: an offset form from the Worker
+ * or a restored backup can sit next to a UTC form. A value that does not
+ * parse never beats one that does (neither as the earlier nor as the later
+ * time); two unparseable values or one instant in two forms fall back to the
+ * string order, so the result never depends on argument order.
+ */
+const parses = (t: string): boolean => Number.isFinite(Date.parse(t));
+
+/** `a` is a strictly earlier instant than `b`. */
+function isBefore(a: string, b: string): boolean {
+  const pa = parses(a);
+  if (pa !== parses(b)) return pa;
+  return pa ? Date.parse(a) < Date.parse(b) : a < b;
+}
+
+function laterOf(a: string, b: string): string {
+  const pa = parses(a);
+  if (pa !== parses(b)) return pa ? a : b;
+  const diff = pa ? Date.parse(a) - Date.parse(b) : 0;
+  if (diff !== 0) return diff > 0 ? a : b;
+  return a >= b ? a : b;
+}
+
+const latest = (times: readonly string[]): string => times.reduce(laterOf);
 
 /**
  * Complete episodes and when each completed (the latest `completedAt` among
  * its quests). Grid and shelf episodes both count; a preview or draft
  * episode never completes.
  */
-export function completedEpisodes(world: AwardWorld, snapshot: Pick<ProgressSnapshot, 'quests'>): Map<string, string> {
+export function completedEpisodes(world: Pick<AwardWorld, 'episodes'>, snapshot: Pick<ProgressSnapshot, 'quests'>): Map<string, string> {
   const out = new Map<string, string>();
   for (const episode of world.episodes) {
     if (!isPlayable(episode) || !isEpisodeComplete(episode, snapshot.quests)) continue;
@@ -32,7 +58,8 @@ export function completedEpisodes(world: AwardWorld, snapshot: Pick<ProgressSnap
   return out;
 }
 
-function gridEpisodes(stage: StageKey, world: AwardWorld): Episode[] {
+/** The grid episodes of a stage, in content order (story shelves never count toward a stage). */
+export function gridEpisodes(stage: StageKey, world: Pick<AwardWorld, 'episodes'>): Episode[] {
   return world.episodes.filter((e) => e.stage === stage && isGrid(e));
 }
 
@@ -40,14 +67,14 @@ function gridEpisodes(stage: StageKey, world: AwardWorld): Episode[] {
  * A stage can complete only when every grid cell of it is shipped (the
  * Journey's "open" row); story shelves never count toward a stage.
  */
-export function stageCanComplete(stage: StageKey, world: AwardWorld): boolean {
+export function stageCanComplete(stage: StageKey, world: Pick<AwardWorld, 'episodes'>): boolean {
   return stageAvailability(stage, gridEpisodes(stage, world)) === 'open';
 }
 
 /** Every grid episode of a fully shipped stage is complete; `at` is the latest of their completion times. */
 export function isStageComplete(
   stage: StageKey,
-  world: AwardWorld,
+  world: Pick<AwardWorld, 'episodes'>,
   completed: ReadonlyMap<string, string>,
 ): { complete: boolean; at?: string } {
   if (!stageCanComplete(stage, world)) return { complete: false };
@@ -58,17 +85,20 @@ export function isStageComplete(
 
 /**
  * One card named by two rules (a quest card is also its episode's card):
- * keep the earlier time. Quest awards are collected first, so on a tie the
- * quest source stays and the result never depends on content order.
+ * keep the earlier instant. Quest awards are collected first, so on a tie
+ * (including one instant in two forms) the quest source stays and the result
+ * never depends on content order.
  */
 function better(first: DerivedAward, next: DerivedAward): DerivedAward {
-  return next.unlockedAt < first.unlockedAt ? next : first;
+  return isBefore(next.unlockedAt, first.unlockedAt) ? next : first;
 }
 
 /**
  * The full set of cards the rules say this snapshot should hold, one entry
  * per card, sorted by card id. Includes cards already owned; sets are
- * resolved last, counting members already owned or derived in this pass.
+ * resolved last, counting members already owned or derived in this pass
+ * by a non-set rule (a set card derived in the same pass never counts, so
+ * the answer does not depend on the order of `world.sets`).
  */
 export function derivedAwards(world: AwardWorld, snapshot: ProgressSnapshot, profile: { createdAt: string }): DerivedAward[] {
   const known = new Set(world.cards.map((c) => c.id));
@@ -103,10 +133,11 @@ export function derivedAwards(world: AwardWorld, snapshot: ProgressSnapshot, pro
   }
 
   const ownedAt = new Map(snapshot.cards.map((c) => [c.cardId, c.unlockedAt]));
+  const base = new Map(found);
   for (const { cardId, setId } of sets) {
     const set = world.sets.find((s) => s.id === setId);
     if (!set || set.memberCardIds.length === 0) continue;
-    const times = set.memberCardIds.map((id) => ownedAt.get(id) ?? found.get(id)?.unlockedAt);
+    const times = set.memberCardIds.map((id) => ownedAt.get(id) ?? base.get(id)?.unlockedAt);
     if (times.some((t) => t === undefined)) continue;
     add({ cardId, source: 'set', via: setId, unlockedAt: latest(times as string[]) });
   }
