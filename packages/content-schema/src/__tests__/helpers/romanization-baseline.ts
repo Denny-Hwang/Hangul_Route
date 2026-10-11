@@ -31,6 +31,5 @@ export const KNOWN_STORY_FINDINGS: readonly KnownFinding[] = [
   spacing('gimjang-arirang', '김치와 김장문화'),
   spacing('jagyeongnu-water-clock', '장영실'),
   spacing('nanjung-ilgi', '난중일기'),
-  spacing('sejong-new-letters', '세종대왕'),
   spacing('seollal-new-year', '국가무형유산'),
 ];

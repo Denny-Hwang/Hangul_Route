@@ -1,11 +1,11 @@
 {
   "v": 1,
   "id": "story:sejong-new-letters",
-  "state": "draft",
+  "state": "ready",
   "contentVer": 1,
   "title": {
     "ko": "세종대왕의 새 글자",
-    "romanization": "",
+    "romanization": "Sejongdaewangui sae geulja",
     "en": "King Sejong's New Letters"
   },
   "summaryEn": "Hoya travels back to Joseon to learn why King Sejong created 28 new letters in 1443, and how the book Hunminjeongeum explained them in 1446.",
@@ -32,7 +32,7 @@
     {
       "id": "sejong-daewang",
       "ko": "세종대왕",
-      "romanization": "Sejong Daewang",
+      "romanization": "Sejongdaewang",
       "en": "King Sejong the Great",
       "kind": "word"
     },
@@ -111,7 +111,7 @@
           "keyword": {
             "id": "sejong-daewang",
             "ko": "세종대왕",
-            "romanization": "Sejong Daewang",
+            "romanization": "Sejongdaewang",
             "en": "King Sejong the Great",
             "kind": "word"
           },
@@ -130,7 +130,9 @@
               "timeRelative": true
             }
           ],
-          "artBrief": "Hoya, a friendly young tiger, steps out of a glowing open book into a Joseon-era royal courtyard with wooden halls and curved tiled roofs; a kind king in royal robes stands on the stone steps."
+          "artBrief": "Hoya, a friendly young tiger, steps out of a glowing open book into a Joseon-era royal courtyard with wooden halls and curved tiled roofs; a kind king in royal robes stands on the stone steps.",
+          "captionEn": "Hoya meets King Sejong in Joseon",
+          "artPending": true
         },
         {
           "id": "s2",
@@ -147,7 +149,9 @@
           ],
           "framing": false,
           "approximations": [],
-          "artBrief": "A village lane: a farmer and a child look puzzled at a sheet covered with dense, abstract brush marks (unreadable squiggles, no real characters); Hoya scratches his head beside them."
+          "artBrief": "A village lane: a farmer and a child look puzzled at a sheet covered with dense, abstract brush marks (unreadable squiggles, no real characters); Hoya scratches his head beside them.",
+          "captionEn": "Chinese characters were hard to learn",
+          "artPending": true
         },
         {
           "id": "s3",
@@ -165,11 +169,13 @@
           ],
           "framing": false,
           "approximations": [],
-          "artBrief": "King Sejong at a low wooden desk by lamplight, brush in hand; simple abstract strokes, dots and circles float above the paper like sparks (no readable letters); Hoya peeks over the desk edge."
+          "artBrief": "King Sejong at a low wooden desk by lamplight, brush in hand; simple abstract strokes, dots and circles float above the paper like sparks (no readable letters); Hoya peeks over the desk edge.",
+          "captionEn": "King Sejong creates new letters",
+          "artPending": true
         },
         {
           "id": "s4",
-          "narrationEn": "He named them Hunminjeongeum, \"the proper sounds for teaching the people.\" An old-fashioned word for the people is baekseong. In his own words, he made the letters so people could learn them easily and use them every day.",
+          "narrationEn": "He named them Hunminjeongeum, \"the proper sounds for teaching the people.\" An old-fashioned word for the people is {kw:baekseong}. In his own words, he made the letters so people could learn them easily and use them every day.",
           "keyword": {
             "id": "hunminjeongeum",
             "ko": "훈민정음",
@@ -183,7 +189,9 @@
           ],
           "framing": false,
           "approximations": [],
-          "artBrief": "A sunny market street where a merchant, a grandmother and children each hold a small blank paper and smile; warm light suggests everyone can now write."
+          "artBrief": "A sunny market street where a merchant, a grandmother and children each hold a small blank paper and smile; warm light suggests everyone can now write.",
+          "captionEn": "He names them Hunminjeongeum",
+          "artPending": true
         },
         {
           "id": "s5",
@@ -200,7 +208,9 @@
           ],
           "framing": false,
           "approximations": [],
-          "artBrief": "Morning sun rising over palace roofs; Hoya sits cross-legged with a brush and blank paper, grinning proudly; a scholar in a black gat hat watches kindly."
+          "artBrief": "Morning sun rising over palace roofs; Hoya sits cross-legged with a brush and blank paper, grinning proudly; a scholar in a black gat hat watches kindly.",
+          "captionEn": "The new letters are easy to learn",
+          "artPending": true
         },
         {
           "id": "s6",
@@ -218,11 +228,13 @@
           ],
           "framing": false,
           "approximations": [],
-          "artBrief": "Several scholars in Joseon robes working at desks in a quiet wooden hall, stacks of bound books with plain covers; one scholar holds up a finished book (cover blank, no text)."
+          "artBrief": "Several scholars in Joseon robes working at desks in a quiet wooden hall, stacks of bound books with plain covers; one scholar holds up a finished book (cover blank, no text).",
+          "captionEn": "Scholars explain the letters in a book",
+          "artPending": true
         },
         {
           "id": "s7",
-          "narrationEn": "Today we call these letters Hangeul. People in Korea read and write with them every day, and now you are learning them too!",
+          "narrationEn": "Today we call these letters Hangul. People in Korea read and write with them every day, and now you are learning them too!",
           "keyword": {
             "id": "hangeul",
             "ko": "한글",
@@ -235,14 +247,16 @@
           ],
           "framing": false,
           "approximations": [],
-          "artBrief": "Present-day scene: Hoya waves beside a child holding a pencil over a notebook (blank lines), with a modern Korean street softly behind them; no signs or readable text."
+          "artBrief": "Present-day scene: Hoya waves beside a child holding a pencil over a notebook (blank lines), with a modern Korean street softly behind them; no signs or readable text.",
+          "captionEn": "Today we call them Hangul",
+          "artPending": true
         }
       ],
       "checks": [
         {
           "id": "c1",
           "kind": "detail",
-          "promptEn": "Who created Hangeul?",
+          "promptEn": "Who created Hangul?",
           "options": [
             {
               "id": "a",
@@ -267,7 +281,8 @@
           ],
           "factIds": [
             "f3"
-          ]
+          ],
+          "explainEn": "King Sejong himself created the new letters. He called them Hunminjeongeum."
         },
         {
           "id": "c2",
@@ -297,7 +312,8 @@
           ],
           "factIds": [
             "f3"
-          ]
+          ],
+          "explainEn": "King Sejong created the 28 new letters in 1443."
         },
         {
           "id": "c3",
@@ -327,7 +343,8 @@
           ],
           "factIds": [
             "f5"
-          ]
+          ],
+          "explainEn": "King Sejong felt sorry for people who could not express themselves, so he made letters that are easy to learn and use every day."
         }
       ],
       "checkpoints": [],
