@@ -2,7 +2,8 @@ import { layoutClassFor } from '@hangul-route/design-system/layout';
 import { describe, expect, it } from 'vitest';
 import { homeColumns } from '../home-columns';
 
-const at = (width: number, height: number) => homeColumns(layoutClassFor({ width, height }));
+const at = (width: number, height: number, hasMissions = true) =>
+  homeColumns(layoutClassFor({ width, height }), hasMissions);
 
 /** F-LAYOUT-001 §3.6, Home row: two columns on regular and wide, one on phones and short windows. */
 describe('homeColumns', () => {
@@ -28,5 +29,11 @@ describe('homeColumns', () => {
     expect(at(599, 900)).toBe(1);
     expect(at(590, 410)).toBe(1);
     expect(at(0, 0)).toBe(1);
+  });
+
+  it('is one column when there are no mission cards, so no empty left column (no snapshot yet, or no cards)', () => {
+    expect(at(768, 1024, false)).toBe(1);
+    expect(at(1180, 820, false)).toBe(1);
+    expect(at(390, 844, false)).toBe(1);
   });
 });

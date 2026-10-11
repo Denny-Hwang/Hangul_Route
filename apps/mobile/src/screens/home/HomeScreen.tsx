@@ -158,8 +158,7 @@ export function HomeScreen(): React.ReactElement {
     }
   };
 
-  // Regular and wide windows: two columns under the greeting; phones and short windows: one column as always.
-  const twoColumns = homeColumns(useLayoutClass()) === 2;
+  const layoutClass = useLayoutClass();
   const hoyaSize = useMediaSize(HOYA_SIZE);
 
   const missions =
@@ -167,7 +166,7 @@ export function HomeScreen(): React.ReactElement {
       <>
         <Heading level="prompt">{m.learner.home.mission.heading}</Heading>
         <Spacer size="sm" />
-        <View style={{ gap: spacing.sm }}>
+        <View testID="home-missions" style={{ gap: spacing.sm }}>
           {mission.cards.map((card) => (
             <MissionTile key={card.slot} card={card} onPress={() => openCard(card)} />
           ))}
@@ -215,6 +214,10 @@ export function HomeScreen(): React.ReactElement {
     </>
   );
 
+  // Regular and wide windows: two columns under the greeting; phones, short windows and a Home
+  // with no mission cards: one column as always.
+  const twoColumns = homeColumns(layoutClass, missions !== null) === 2;
+
   return (
     <View style={{ flex: 1 }}>
     <Screen tone="canvas" edges={TAB_SCREEN_EDGES} width={twoColumns ? 'full' : 'reading'}>
@@ -260,7 +263,6 @@ export function HomeScreen(): React.ReactElement {
               {side}
             </View>
           </View>
-          <Spacer size="xl" />
         </>
       ) : (
         <>

@@ -70,7 +70,9 @@ async function openHomeColumns(page: Page): Promise<void> {
 const greetingHoya = (page: Page) => page.getByLabel('Hoya the tiger, waving', { exact: true }).first();
 
 for (const vp of [
+  { name: 'smallest regular (tablet split screen)', width: 600, height: 900, hoya: 86 },
   { name: 'iPad portrait', width: 768, height: 1024, hoya: 86 },
+  { name: 'wide, just above the short limit', width: 960, height: 600, hoya: 101 },
   { name: 'iPad Air landscape / laptop', width: 1180, height: 820, hoya: 101 },
 ] as const) {
   test.describe(`Home at ${vp.name} ${vp.width}x${vp.height}: two columns`, () => {
@@ -89,7 +91,7 @@ for (const vp of [
       const homework = (await page.getByRole('button', { name: 'Open homework' }).boundingBox())!;
       for (const box of [progress, tip, homework]) expect(box.x).toBeGreaterThanOrEqual(side.x - 1);
       // The three mission cards keep their slot order, one under the other, in the left column.
-      const cards = await page.getByTestId('home-missions-column').getByRole('button').all();
+      const cards = await page.getByTestId('home-missions-column').getByTestId('home-missions').getByRole('button').all();
       expect(cards.length).toBe(3);
       const tops = await Promise.all(cards.map(async (c) => (await c.boundingBox())!.y));
       expect([...tops].sort((a, b) => a - b)).toEqual(tops);
@@ -112,7 +114,7 @@ for (const vp of [
     test('one column in today\'s order, Hoya at its phone size, no sideways scrolling', async ({ page }) => {
       await openHomeColumns(page);
       await expect(page.getByTestId('home-side-column')).toHaveCount(0);
-      const lastMission = (await page.getByRole('button', { name: /Around the Korean Table|Story time|Something new/ }).last().boundingBox())!;
+      const lastMission = (await page.getByTestId('home-missions').getByRole('button').last().boundingBox())!;
       const progress = (await page.getByText('Stage 1 progress').boundingBox())!;
       expect(progress.y).toBeGreaterThan(lastMission.y + lastMission.height);
       expect(Math.round((await greetingHoya(page).boundingBox())!.width)).toBe(72);
@@ -120,6 +122,28 @@ for (const vp of [
     });
   });
 }
+
+test.describe('Home at 1180x820, then 200 % zoom (590x410) live', () => {
+  test.use({ viewport: { width: 1180, height: 820 } });
+
+  test('two columns reflow to one column in the same order, with no sideways scrolling (§5)', async ({ page }) => {
+    await openHomeColumns(page);
+    await expect(page.getByTestId('home-side-column')).toBeVisible();
+    const missionNames = page.getByTestId('home-missions').getByRole('button');
+    const before = await missionNames.evaluateAll((els) => els.map((el) => el.getAttribute('aria-label')));
+    expect(before.length).toBe(3);
+
+    await page.setViewportSize({ width: 590, height: 410 });
+    await expect(page.getByTestId('home-side-column')).toHaveCount(0);
+    const after = await missionNames.evaluateAll((els) => els.map((el) => el.getAttribute('aria-label')));
+    expect(after).toEqual(before);
+    const lastMission = (await missionNames.last().boundingBox())!;
+    const progress = (await page.getByText('Stage 1 progress').boundingBox())!;
+    expect(progress.y).toBeGreaterThan(lastMission.y + lastMission.height);
+    expect(Math.round((await greetingHoya(page).boundingBox())!.width)).toBe(72);
+    expect(await overflowsSideways(page)).toBe(false);
+  });
+});
 
 // --- Part 2: the split-pane Journey (PR 5a) ---
 
