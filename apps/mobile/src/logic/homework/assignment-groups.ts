@@ -1,4 +1,5 @@
 import type { HomeworkAssignment } from '@hangul-route/content-schema';
+import type { Messages } from '@hangul-route/i18n';
 
 /**
  * Grouping for the homework list (wireframe homework/list, F-HW-001 §3.4):
@@ -44,22 +45,17 @@ export function groupAssignments(
   return { today, upcoming, done };
 }
 
-/** Child-readable relative label — never a raw ISO timestamp. */
-export function dueLabel(targetDate: string, todayKey: string): string {
+type Homework = Messages['learner']['homework'];
+
+/** Child-readable relative label — never a raw ISO timestamp. The words come from `learner.homework.due`. */
+export function dueLabel(targetDate: string, todayKey: string, m: Homework['due']): string {
   const diff = dayDiff(todayKey, targetDate);
-  if (diff <= 0) return 'Today';
-  if (diff === 1) return 'Tomorrow';
-  return `In ${diff} days`;
+  if (diff <= 0) return m.today;
+  if (diff === 1) return m.tomorrow;
+  return m.inDays(diff);
 }
 
-/** Caregiver source label for the pill — English, no role jargon. */
-export function assignedByLabel(assignedBy: HomeworkAssignment['assignedBy']): string {
-  switch (assignedBy) {
-    case 'parent':
-      return 'From home';
-    case 'teacher':
-      return 'From class';
-    default:
-      return 'From Hoya';
-  }
+/** Caregiver source label for the pill — no role jargon. The words come from `learner.homework.from`. */
+export function assignedByLabel(assignedBy: HomeworkAssignment['assignedBy'], m: Homework['from']): string {
+  return m[assignedBy];
 }

@@ -76,7 +76,7 @@ export function mergeAssignments({
               ...card,
               kind: 'new' as const,
               titleEn: title,
-              subtitleEn: 'Picked just for you',
+              subtitle: 'assigned',
               questId: winner.questId,
               episodeId: winner.episodeId,
             }

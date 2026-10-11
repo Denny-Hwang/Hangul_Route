@@ -1,14 +1,17 @@
 import type { Episode, ProgressSnapshot, Quest } from '@hangul-route/content-schema';
+import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import { scanLearnerCopy } from '../banned-text';
 import {
   buildTodaysMission,
   dayKey,
+  missionCardText,
   missionCopy,
   type BuildMissionInput,
   type MissionPlan,
 } from '../mission-builder';
 
+const mission = getMessages('en').learner.home.mission;
 const TODAY = '2026-05-20';
 const YESTERDAY = '2026-05-19';
 const TWO_DAYS_AGO = '2026-05-18';
@@ -297,11 +300,37 @@ describe('anti-shame copy (§3.3)', () => {
       snapshot(QUESTS.map((q) => done(q.id, YESTERDAY, 1))),
     ];
     for (const snap of cases) {
-      expect(scanLearnerCopy(missionCopy(build({ snapshot: snap })))).toEqual([]);
+      expect(scanLearnerCopy(missionCopy(build({ snapshot: snap }), mission))).toEqual([]);
     }
     expect(
-      scanLearnerCopy(missionCopy(build({ capabilities: { dailyTestAvailable: true } }))),
+      scanLearnerCopy(missionCopy(build({ capabilities: { dailyTestAvailable: true } }), mission)),
     ).toEqual([]);
+  });
+});
+
+describe('mission card words come from the dictionary (F-I18N-001 §3.4 rule 3)', () => {
+  it('cards carry a subtitle code, never prose', () => {
+    const cards = build({ snapshot: snapshot([done('quest:a', YESTERDAY, 0.2)]) }).cards;
+    expect(cards.map((c) => c.subtitle)).toEqual(['replay', 'new', 'story']);
+    expect(build({ capabilities: { dailyTestAvailable: true } }).cards[2]).toMatchObject({
+      kind: 'daily-test',
+      titleEn: null,
+      subtitle: 'dailyTest',
+    });
+  });
+
+  it('missionCardText renders the title and subtitle in the given message subtree', () => {
+    const cards = build({
+      snapshot: snapshot([done('quest:a', YESTERDAY, 0.2)]),
+      capabilities: { dailyTestAvailable: true },
+    }).cards;
+    expect(cards.map((c) => missionCardText(c, mission))).toEqual([
+      { title: 'Meet g, n, d', subtitle: 'One more go with Hoya' },
+      { title: 'Meet m, b, s', subtitle: 'Something new today' },
+      { title: 'Quick review', subtitle: 'About a minute with Hoya' },
+    ]);
+    expect(missionCardText({ ...cards[1]!, subtitle: 'assigned' }, mission).subtitle).toBe('Picked just for you');
+    expect(missionCardText({ ...cards[1]!, subtitle: 'story' }, mission).subtitle).toBe('Story time');
   });
 });
 

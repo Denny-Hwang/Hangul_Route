@@ -11,9 +11,9 @@ const plan: MissionPlan = {
   date: TODAY,
   profileId: PROFILE,
   cards: [
-    { slot: 1, kind: 'replay', titleEn: 'Replay me', subtitleEn: 'One more go with Hoya', questId: 'quest:a', episodeId: 'episode:one', collected: false },
-    { slot: 2, kind: 'new', titleEn: 'Next up', subtitleEn: 'Something new today', questId: 'quest:b', episodeId: 'episode:one', collected: false },
-    { slot: 3, kind: 'story', titleEn: 'A story', subtitleEn: 'Story time', episodeId: 'episode:two', collected: false },
+    { slot: 1, kind: 'replay', titleEn: 'Replay me', subtitle: 'replay', questId: 'quest:a', episodeId: 'episode:one', collected: false },
+    { slot: 2, kind: 'new', titleEn: 'Next up', subtitle: 'new', questId: 'quest:b', episodeId: 'episode:one', collected: false },
+    { slot: 3, kind: 'story', titleEn: 'A story', subtitle: 'story', episodeId: 'episode:two', collected: false },
   ],
 };
 
@@ -76,6 +76,7 @@ describe('mergeAssignments', () => {
       slot: 2,
       questId: 'quest:z',
       titleEn: 'Grown-up pick',
+      subtitle: 'assigned',
       episodeId: 'episode:three',
     });
     expect(result.plan.cards[0]).toEqual(plan.cards[0]);

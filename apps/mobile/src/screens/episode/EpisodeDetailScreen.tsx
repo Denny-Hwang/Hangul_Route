@@ -21,6 +21,7 @@ import React, { useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { PrereqSheet } from '../../components/PrereqSheet';
 import { cardById, episodeById, episodesAll, questsAll, stageByKey, themeByKey } from '../../content';
+import { useMessages } from '../../i18n/use-messages';
 import { buildsOnLine, prereqSheet, softPrerequisite, type PrereqSheet as PrereqSheetModel } from '../../logic/quest-flow/soft-prereq';
 import type { RootStackParamList } from '../../navigation/types';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
@@ -30,6 +31,8 @@ import { useProgressStore } from '../../store/progress-store';
 type Props = NativeStackScreenProps<RootStackParamList, 'EpisodeDetail'>;
 
 export function EpisodeDetailScreen({ route, navigation }: Props): React.ReactElement {
+  const messages = useMessages();
+  const m = messages.learner.episode;
   const episode = episodeById(route.params.episodeId);
   const profile = useProfileStore(activeProfileSelector);
   const snap = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
@@ -50,7 +53,7 @@ export function EpisodeDetailScreen({ route, navigation }: Props): React.ReactEl
   if (!episode) {
     return (
       <Screen>
-        <Body>Episode not found.</Body>
+        <Body>{m.notFound}</Body>
       </Screen>
     );
   }
@@ -88,7 +91,7 @@ export function EpisodeDetailScreen({ route, navigation }: Props): React.ReactEl
         <Pressable
           onPress={() => navigation.goBack()}
           hitSlop={spacing.md}
-          accessibilityLabel="Go back"
+          accessibilityLabel={messages.a11y.goBack}
           style={{ alignSelf: 'flex-start', padding: spacing.xs }}
         >
           <Icon name="arrow-left" size={28} />
@@ -98,7 +101,7 @@ export function EpisodeDetailScreen({ route, navigation }: Props): React.ReactEl
         <View style={{ flexDirection: 'row', gap: spacing.sm }}>
           <Pill tone="primary" label={stage?.titleEn ?? ''} size="sm" />
           <Pill tone="secondary" label={theme?.titleEn ?? ''} size="sm" />
-          {isPreview ? <Pill tone="neutral" label="Coming soon" size="sm" /> : null}
+          {isPreview ? <Pill tone="neutral" label={m.comingSoon.pill} size="sm" /> : null}
         </View>
 
         <Spacer size="md" />
@@ -123,11 +126,11 @@ export function EpisodeDetailScreen({ route, navigation }: Props): React.ReactEl
             <Spacer size="xl" />
             <Card padding="md" tone="sunken">
               <View style={{ alignItems: 'center' }}>
-                <Hoya pose="reading" size={96} />
+                <Hoya pose="reading" size={96} accessibilityLabel={messages.a11y.hoya('reading')} />
                 <Spacer size="md" />
-                <Body weight="semibold">Coming soon</Body>
+                <Body weight="semibold">{m.comingSoon.title}</Body>
                 <Caption tone="muted" align="center">
-                  Finish Stage 1 to help Hoya unlock this episode.
+                  {m.comingSoon.note}
                 </Caption>
               </View>
             </Card>
@@ -135,7 +138,7 @@ export function EpisodeDetailScreen({ route, navigation }: Props): React.ReactEl
         ) : (
           <>
             <Spacer size="lg" />
-            <Heading level="prompt">Quests</Heading>
+            <Heading level="prompt">{m.quests.heading}</Heading>
             <Spacer size="sm" />
             {quests.map((q, i) => {
               const stars = questProgress.get(q.id) ?? 0;
@@ -158,14 +161,14 @@ export function EpisodeDetailScreen({ route, navigation }: Props): React.ReactEl
                     <View style={{ flex: 1 }}>
                       <Body weight="semibold">{q.titleEn}</Body>
                       {q.blurbEn ? <Caption tone="muted">{q.blurbEn}</Caption> : null}
-                      {buildsOn ? <Caption tone="muted">{buildsOnLine(buildsOn)}</Caption> : null}
+                      {buildsOn ? <Caption tone="muted">{buildsOnLine(buildsOn, m)}</Caption> : null}
                       <Spacer size="xs" />
-                      <StarRow stars={stars as 0 | 1 | 2 | 3} size={18} />
+                      <StarRow stars={stars as 0 | 1 | 2 | 3} size={18} accessibilityLabel={messages.a11y.stars(stars)} />
                     </View>
                   </View>
                   <Spacer size="md" />
                   <Button
-                    label={stars > 0 ? 'Play again' : 'Start'}
+                    label={stars > 0 ? m.quests.playAgain.cta : m.quests.start.cta}
                     tone={stars > 0 ? 'secondary' : 'primary'}
                     size="md"
                     fullWidth
@@ -176,7 +179,7 @@ export function EpisodeDetailScreen({ route, navigation }: Props): React.ReactEl
             })}
 
             <Spacer size="lg" />
-            <Heading level="prompt">Cards in this episode</Heading>
+            <Heading level="prompt">{m.cards.heading}</Heading>
             <Spacer size="sm" />
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
               {episode.rewardCardIds.map((cid) => {
@@ -189,7 +192,7 @@ export function EpisodeDetailScreen({ route, navigation }: Props): React.ReactEl
                     disabled={!earned}
                     onPress={() => navigation.navigate('CardDetail', { cardId: cid })}
                     accessibilityRole="button"
-                    accessibilityLabel={earned ? `${c.titleEn} card` : 'A card still waiting to be earned'}
+                    accessibilityLabel={earned ? messages.a11y.episodeCard(c.titleEn) : messages.a11y.cardWaiting}
                     style={{
                       flexBasis: '47%',
                       padding: spacing.md,
@@ -204,12 +207,12 @@ export function EpisodeDetailScreen({ route, navigation }: Props): React.ReactEl
                       <>
                         <Body weight="semibold">{c.titleEn}</Body>
                         {c.subtitleKo ? <Caption tone="brand">{c.subtitleKo}</Caption> : null}
-                        <Pill tone="neutral" size="sm" label={c.rarity} />
+                        <Pill tone="neutral" size="sm" label={messages.learner.library.rarity[c.rarity]} />
                       </>
                     ) : (
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
                         <Icon name="lock" size={20} color={colors.text.muted} />
-                        <Caption tone="muted">Waiting for you</Caption>
+                        <Caption tone="muted">{m.cards.waiting}</Caption>
                       </View>
                     )}
                   </Pressable>

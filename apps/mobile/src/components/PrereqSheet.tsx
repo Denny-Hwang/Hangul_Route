@@ -1,7 +1,8 @@
 import { Body, Button, Card, Spacer, borderWidth, colors, radii, spacing } from '@hangul-route/design-system';
 import React from 'react';
 import { View } from 'react-native';
-import type { PrereqSheet as PrereqSheetModel } from '../logic/quest-flow/soft-prereq';
+import { useMessages } from '../i18n/use-messages';
+import { prereqSheetText, type PrereqSheet as PrereqSheetModel } from '../logic/quest-flow/soft-prereq';
 
 /**
  * One-line "Start there?" sheet — F-QUEST-002 §3.5, wireframe episode/detail
@@ -15,6 +16,7 @@ export interface PrereqSheetProps {
 }
 
 export function PrereqSheet({ sheet, onStartThere, onPlayAnyway }: PrereqSheetProps): React.ReactElement {
+  const text = prereqSheetText(sheet, useMessages().learner.episode);
   return (
     <View
       pointerEvents="box-none"
@@ -27,12 +29,12 @@ export function PrereqSheet({ sheet, onStartThere, onPlayAnyway }: PrereqSheetPr
         style={{ borderWidth: borderWidth.thin, borderColor: colors.border.subtle, borderRadius: radii.xl }}
       >
         <View accessibilityLiveRegion="polite">
-          <Body weight="semibold">{sheet.message}</Body>
+          <Body weight="semibold">{text.message}</Body>
         </View>
         <Spacer size="md" />
-        <Button label={sheet.startThereLabel} tone="primary" size="md" fullWidth onPress={onStartThere} />
+        <Button label={text.startThereLabel} tone="primary" size="md" fullWidth onPress={onStartThere} />
         <Spacer size="sm" />
-        <Button label={sheet.playAnywayLabel} tone="ghost" size="md" fullWidth onPress={onPlayAnyway} />
+        <Button label={text.playAnywayLabel} tone="ghost" size="md" fullWidth onPress={onPlayAnyway} />
       </Card>
     </View>
   );

@@ -19,6 +19,7 @@ import {
   supportedCardIds,
   touchTarget,
 } from '@hangul-route/design-system';
+import type { Messages } from '@hangul-route/i18n';
 import { CommonActions } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -35,10 +36,12 @@ import Animated, {
 import Svg, { Path } from 'react-native-svg';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
 import { cardById, episodeById, episodesAll, questById, questsAll } from '../../content';
+import { useMessages } from '../../i18n/use-messages';
 import { isStageEntitled } from '../../logic/entitlement';
 import {
   resultsActions,
   resultsTeaser,
+  teaserCtaLabel,
   teaserTappedEvent,
   type ResultsTeaser,
 } from '../../logic/quest-flow/results-teaser';
@@ -52,12 +55,16 @@ import { activeProfileSelector, useProfileStore } from '../../store/profile-stor
 import { useProgressStore } from '../../store/progress-store';
 import { effectiveTier, useTierStore } from '../../store/tier-store';
 
+type ResultsMessages = Messages['learner']['results'];
+
 /** Learner's cub in the name chip above the guide Hoya. */
 const AVATAR_SIZE = 40;
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Results'>;
 
 export function ResultsScreen({ route, navigation }: Props): React.ReactElement {
+  const messages = useMessages();
+  const m = messages.learner.results;
   const { questId, episodeId, stars, correct, total, retries = 0 } = route.params;
   const quest = questById(questId);
   const episode = episodeById(episodeId);
@@ -107,11 +114,11 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
     if (!newCardId || Platform.OS !== 'ios') return;
     const card = cardById(newCardId);
     if (!card) return;
-    AccessibilityInfo.announceForAccessibility(`New card for your library! ${card.titleEn}`);
-  }, [newCardId]);
+    AccessibilityInfo.announceForAccessibility(m.newCard.announce(card.titleEn));
+  }, [newCardId, m]);
 
   const played = total > 0;
-  const cheerMessage = resultsCheerMessage(stars, played);
+  const cheerMessage = resultsCheerMessage(stars, played, m.cheer);
   const newCard = award?.isNew ? cardById(award.cardId) : undefined;
   const showSparkles = !!newCard && stars >= 3;
 
@@ -160,11 +167,15 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
             <Body weight="semibold">{profile.displayName}</Body>
           </View>
         ) : null}
-        <Hoya pose={stars >= 2 ? 'cheering' : 'thinking'} size={140} />
+        <Hoya
+          pose={stars >= 2 ? 'cheering' : 'thinking'}
+          size={140}
+          accessibilityLabel={messages.a11y.hoya(stars >= 2 ? 'cheering' : 'thinking')}
+        />
         <Spacer size="lg" />
-        <Heading level="display">{resultsHeadline(stars, played)}</Heading>
+        <Heading level="display">{resultsHeadline(stars, played, m.headline)}</Heading>
         <Spacer size="sm" />
-        <StarRow stars={stars} size={48} />
+        <StarRow stars={stars} size={48} accessibilityLabel={messages.a11y.stars(stars)} />
       </View>
 
       <Spacer size="lg" />
@@ -176,6 +187,7 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
           <>
             <Spacer size="lg" />
             <CardUnlockBanner
+              m={m}
               card={newCard}
               showSparkles={showSparkles}
               reducedMotion={reducedMotion}
@@ -188,7 +200,7 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
       {teaser ? (
         <>
           <Spacer size="lg" />
-          <NextUpCard teaser={teaser} />
+          <NextUpCard teaser={teaser} m={m} />
         </>
       ) : null}
 
@@ -196,7 +208,7 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
       {teaser ? (
         <>
           <Button
-            label={teaser.ctaLabel}
+            label={teaserCtaLabel(teaser, m.nextUp)}
             tone="primary"
             size="hero"
             fullWidth
@@ -209,7 +221,7 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
         </>
       ) : null}
       <Button
-        label="Back home"
+        label={m.backHome.cta}
         tone={actions.backHome.tone}
         size={actions.backHome.size}
         fullWidth
@@ -225,7 +237,7 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
       <Spacer size="sm" />
       {episode ? (
         <Button
-          label="Episode page"
+          label={m.episodePage.cta}
           tone={actions.episodePage.tone}
           size={actions.episodePage.size}
           fullWidth
@@ -242,11 +254,11 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
  * The quest title and one line; letters in the line are taught content, so
  * they go through `KoreanText` with their romanization, never a plain string.
  */
-function NextUpCard({ teaser }: { teaser: ResultsTeaser }): React.ReactElement {
+function NextUpCard({ teaser, m }: { teaser: ResultsTeaser; m: ResultsMessages }): React.ReactElement {
   const { line } = teaser;
   return (
     <Card padding="md" tone="paper" testID="next-up-card">
-      <Caption tone="muted">Next up</Caption>
+      <Caption tone="muted">{m.nextUp.title}</Caption>
       <Spacer size="xs" />
       <Heading level="prompt">{teaser.titleEn}</Heading>
       {line?.kind === 'text' ? (
@@ -258,7 +270,7 @@ function NextUpCard({ teaser }: { teaser: ResultsTeaser }): React.ReactElement {
       {line?.kind === 'letters' ? (
         <>
           <Spacer size="xs" />
-          <Body tone="secondary">{line.lead}</Body>
+          <Body tone="secondary">{m.nextUp.newLetters}</Body>
           <Spacer size="sm" />
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
             {line.letters.map((letter) => (
@@ -282,11 +294,13 @@ function NextUpCard({ teaser }: { teaser: ResultsTeaser }): React.ReactElement {
  * ~600ms. Reduced motion: static.
  */
 function CardUnlockBanner({
+  m,
   card,
   showSparkles,
   reducedMotion,
   onSeeCard,
 }: {
+  m: ResultsMessages;
   card: HeritageCard;
   showSparkles: boolean;
   reducedMotion: boolean;
@@ -336,7 +350,7 @@ function CardUnlockBanner({
     <View>
       <Animated.View style={bannerStyle}>
         <Card padding="md" tone="brand">
-          <Body weight="semibold">New card for your library!</Body>
+          <Body weight="semibold">{m.newCard.title}</Body>
           <Spacer size="sm" />
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
             <CardArtThumb card={card} />
@@ -358,11 +372,11 @@ function CardUnlockBanner({
           </View>
           <Spacer size="md" />
           <Button
-            label="See my card"
+            label={m.newCard.see.cta}
             tone="secondary"
             size="md"
             fullWidth
-            accessibilityLabel={`See my card: ${card.titleEn}`}
+            accessibilityLabel={m.newCard.seeA11y(card.titleEn)}
             onPress={onSeeCard}
           />
         </Card>
