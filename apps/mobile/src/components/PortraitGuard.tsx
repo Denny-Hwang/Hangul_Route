@@ -100,7 +100,9 @@ export function PortraitGuard(): React.ReactElement | null {
           {copy.title}
         </Heading>
       </View>
-      <Button label={copy.keepSideways.cta} tone="secondary" size="md" onPress={keepSideways} testID="portrait-guard-keep-sideways" />
+      <View style={{ alignSelf: 'center' }}>
+        <Button label={copy.keepSideways.cta} tone="secondary" size="md" onPress={keepSideways} testID="portrait-guard-keep-sideways" />
+      </View>
     </View>
   );
 }

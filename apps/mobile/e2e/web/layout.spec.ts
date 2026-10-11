@@ -247,6 +247,6 @@ test.describe('iPhone 14 landscape size with a mouse 844x390', () => {
     await page.waitForTimeout(500);
     await expect(page.getByTestId('portrait-guard')).toHaveCount(0);
     await start.click();
-    await expect(page.getByPlaceholder('Type a name')).toBeVisible();
+    await expect(page.getByRole('radio', { name: /^My child or a student/ })).toBeVisible();
   });
 });
