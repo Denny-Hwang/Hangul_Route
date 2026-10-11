@@ -151,4 +151,55 @@ describe("check-token-drift.mjs", () => {
       rmSync(root, { recursive: true, force: true });
     }
   });
+
+  test("layout kind: a design file + nested non-empty export passes: exit 0", () => {
+    const root = makeRoot();
+    try {
+      writeTokenSourceMd(root, "layout", 1);
+      writeTokensTs(
+        root,
+        [
+          "export const spacing = { lg: 16 } as const;",
+          "export const layout = {",
+          "  breakpoint: { regular: 600, wide: 900 },",
+          "  gutter: { compact: spacing.lg },",
+          "} as const;",
+        ].join("\n") + "\n"
+      );
+      const r = run(root);
+      assert.equal(r.status, 0);
+      assert.match(r.stdout, /1 kind\(s\) declared/);
+      assert.match(r.stdout, /0 drift violation/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("layout kind: design file but tokens.ts has no layout export: exit 1", () => {
+    const root = makeRoot();
+    try {
+      writeTokenSourceMd(root, "layout", 1);
+      writeTokensTs(root, "export const spacing = { lg: 16 } as const;\n");
+      const r = run(root);
+      assert.equal(r.status, 1);
+      assert.match(r.stdout, /token drift — layout/);
+      assert.match(r.stdout, /no `export const layout/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("layout kind: empty layout body: exit 1", () => {
+    const root = makeRoot();
+    try {
+      writeTokenSourceMd(root, "layout", 1);
+      writeTokensTs(root, "export const layout = {} as const;\n");
+      const r = run(root);
+      assert.equal(r.status, 1);
+      assert.match(r.stdout, /token drift — layout/);
+      assert.match(r.stdout, /body is empty/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
 });
