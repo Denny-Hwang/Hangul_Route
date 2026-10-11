@@ -103,3 +103,20 @@ Settings and props for `sillok-royal-historians`, `sillok-mountain-archives`, `s
 - Palette headroom drove several choices: the countryside is two tokens, the palanquin roof is drawn near black, the procession wears the attendants' yellow, the dancer's hair is dark brown.
 - Deviations from the briefs (all in the PR): no close-up hands; the king shown front-on; the 1404 fall not drawn (advisory scene, setting and objects only, §3.9.5 R-S10); fewer people than the narration counts (the narration keeps the numbers); one palanquin (the source supports Lady Hyegyeong's); no ox cart (the sources do not say how the Annals were carried); Lady Hyegyeong behind a curtain (as the 1795 feast picture shows); the four books share one cover colour; `ilseongnok-daily-reflection` s3 (a split scene in the brief) is split by the room's centre post, the king in one bay and Hoya apart in the other, so Hoya stays beside the moment, not in it (F-STORY-002 §3.9.10).
 
+## Library batch 3: hangul-printing (PR 2.10b)
+
+Settings and props for `sejong-new-letters`, `shapes-of-hangeul`, `hangeul-day`, `jikji-metal-type`, `tripitaka-koreana` and `janggyeong-panjeon`, and the `art` of their 46 scenes: 27 items, 1 setting and 26 props. The registry now holds 10 settings, 81 props and the 5 Hoya poses, 144.8 KB raw / 34.4 KB gzip serialised (budget 200 / 55).
+
+| Group | Ids |
+|---|---|
+| Setting | `scene:temple` (a mountain temple, horizon 196) |
+| People | `prop:fig-monk`, `prop:fig-monk-seated` (Goryeo: dark robe, red gasa; nuns alike), `prop:fig-carver` (Goryeo white ramie robe, black head cloth) |
+| Books and printing | `prop:book-open` (the Haerye book), `prop:woodblock`, `prop:woodblock-shelves` |
+| Letter diagrams | `prop:speech-g`, `prop:speech-nm`, `prop:organ-stones`, `prop:ribbon-trails`, `prop:stick-dot`, `prop:stroke-sparks` |
+| Buildings | `prop:janggyeong-hall`, `prop:panjeon-plan`, `prop:hall-section`, `prop:temple-site`, `prop:museum-building` |
+| Sky, nature, objects | `prop:glow-burst`, `prop:full-moon`, `prop:night-sky`, `prop:leafy-tree` (crown tintable: blossom, summer, autumn), `prop:breeze`, `prop:museum-case`, `prop:calendar-page`, `prop:blank-sheet`, `prop:blank-tiles` (14 + 10) |
+
+- Every heritage artefact and building carries a `sourceRef` to a page that was opened for this batch (Encyclopedia of Korean Culture, National Heritage Portal) and an `accuracyNote`. Figures in Goryeo dress say `Goryeo` in `alt`; the registry test now accepts Joseon, Goryeo or hanbok as the period label.
+- The letter diagrams draw the speech organs the Haerye names (encykorea, 28 jamo) and never a glyph: the app shows the letters. The ribbon trails are the one place a letter-like shape is drawn (one, two and three strokes for n, d, t), as shapes with alt text (§3.9.5 rule 7).
+- Accuracy choices: Goryeo monks wear the black jangsam and red gasa the entry gives for Goryeo, not the later grey; the carvers are not monks, because the source does not say who they were; no pagoda at Heungdeoksa (no pagoda site was found); the woodblock shows one of its two carved faces; the windows of the hall differ in size, but which row is larger on which wall is not given, so only the difference is drawn; the floor layers name materials, not an order.
+- Deviations from the briefs (all in the PR): no close-up hands (the carver figure and the type frame carry the action); no inset in `tripitaka-koreana` s1; no fans, streamers or flag in `hangeul-day` s1 and no rope in s5; Hoya stands for bowing in `hangeul-day` s7; no globe in `jikji-metal-type` s7 and no arched windows in s6; a room of today instead of a street in `sejong-new-letters` s7; no mouse and beetle in `janggyeong-panjeon` s6; `sejong-new-letters` s5 drops the brush to keep the scene palette at 8.
