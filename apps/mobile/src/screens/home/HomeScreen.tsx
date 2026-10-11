@@ -114,11 +114,14 @@ function MissionTile({
           minHeight: touchTarget.hero,
         }}
       >
-        {cover ? (
-          <StoryScene art={cover} variant="thumb" width={COVER_THUMB} decorative testID={`home-mission-cover-${card.slot}`} />
-        ) : (
-          <Icon name={ICON_FOR[card.kind]} size={32} color={colors.text.secondary} />
-        )}
+        {/* One leading slot for the icon or the cover, so every card's title starts at the same x. */}
+        <View style={{ width: COVER_THUMB, alignItems: 'center' }}>
+          {cover ? (
+            <StoryScene art={cover} variant="thumb" width={COVER_THUMB} decorative testID={`home-mission-cover-${card.slot}`} />
+          ) : (
+            <Icon name={ICON_FOR[card.kind]} size={32} color={colors.text.secondary} />
+          )}
+        </View>
         <View style={{ flex: 1 }}>
           <Body weight="semibold" size="lg">
             {title}
