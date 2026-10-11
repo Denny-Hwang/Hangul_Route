@@ -1,4 +1,4 @@
-import { availableLocales, DEFAULT_LOCALE, LOCALES, showAllLocalesEnabled, type UiLocale } from '@hangul-route/i18n';
+import { availableLocales, DEFAULT_LOCALE, LOCALES, type UiLocale } from '@hangul-route/i18n';
 
 /**
  * The site's locale routes, `app/(loc)/[locale]` (F-I18N-001 §3.4, PR 11b). English is the default and
@@ -20,8 +20,17 @@ export function siteLocaleParams(): Array<{ locale: SiteLocale }> {
   return LOCALES.filter(isSiteLocale).map((locale) => ({ locale }));
 }
 
+/**
+ * The site's QA flag. Only the Next flag: `showAllLocalesEnabled()` also reads the learner app's
+ * `EXPO_PUBLIC_SHOW_ALL_LOCALES`, and Next prerenders with the whole `process.env`, so a stray Expo flag in
+ * the web build would otherwise publish a hidden locale.
+ */
+export function siteShowAllLocales(): boolean {
+  return process.env.NEXT_PUBLIC_SHOW_ALL_LOCALES === '1';
+}
+
 /** True once `locale` has shipped, or on a QA build (`NEXT_PUBLIC_SHOW_ALL_LOCALES=1`). */
-export function isShippedSiteLocale(locale: SiteLocale, showAll: boolean = showAllLocalesEnabled()): boolean {
+export function isShippedSiteLocale(locale: SiteLocale, showAll: boolean = siteShowAllLocales()): boolean {
   return availableLocales(showAll).includes(locale);
 }
 

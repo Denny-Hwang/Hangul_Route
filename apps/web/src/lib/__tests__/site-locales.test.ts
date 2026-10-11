@@ -1,14 +1,21 @@
 import { readFileSync } from 'node:fs';
-import { LOCALES } from '@hangul-route/i18n';
-import { describe, expect, it } from 'vitest';
+import { DEFAULT_LOCALE, LOCALES } from '@hangul-route/i18n';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { HIDDEN_LOCALE_ATTR, isShippedSiteLocale, isSiteLocale, siteLocaleParams } from '../site-locales';
-import { sitePath } from '../site-path';
+import { SITE_DEFAULT_LOCALE, sitePath } from '../site-path';
 
 /**
  * The site's locale routes — F-I18N-001 §3.4, PR 11b. English stays at `/`; `/es` and `/ko`
  * are prerendered, and a locale that has not shipped (all are shown on a QA build) is marked and
  * removed from the export, so it never reaches hangulroute.com.
  */
+// A shell that exports either QA flag (common while QA-ing the learner app) must not change these tests.
+beforeEach(() => {
+  vi.stubEnv('NEXT_PUBLIC_SHOW_ALL_LOCALES', '');
+  vi.stubEnv('EXPO_PUBLIC_SHOW_ALL_LOCALES', '');
+});
+afterEach(() => vi.unstubAllEnvs());
+
 describe('siteLocaleParams (generateStaticParams for [locale])', () => {
   it('lists every non-English locale; English lives at /', () => {
     expect(siteLocaleParams()).toEqual([{ locale: 'es' }, { locale: 'ko' }]);
@@ -26,6 +33,18 @@ describe('isShippedSiteLocale (hidden until shipped)', () => {
 
   it('reads the build flag by default (off in tests)', () => {
     expect(isShippedSiteLocale('es')).toBe(false);
+  });
+
+  it('NEXT_PUBLIC_SHOW_ALL_LOCALES=1 shows every site locale', () => {
+    vi.stubEnv('NEXT_PUBLIC_SHOW_ALL_LOCALES', '1');
+    expect(isShippedSiteLocale('es')).toBe(true);
+    expect(isShippedSiteLocale('ko')).toBe(true);
+  });
+
+  it('the learner app flag (EXPO_PUBLIC_SHOW_ALL_LOCALES=1) alone leaves the site locales hidden', () => {
+    vi.stubEnv('EXPO_PUBLIC_SHOW_ALL_LOCALES', '1');
+    expect(isShippedSiteLocale('es')).toBe(false);
+    expect(isShippedSiteLocale('ko')).toBe(false);
   });
 });
 
@@ -49,6 +68,10 @@ describe('isSiteLocale', () => {
 });
 
 describe('sitePath', () => {
+  it('spells the default locale the way the dictionary does', () => {
+    expect(SITE_DEFAULT_LOCALE).toBe(DEFAULT_LOCALE);
+  });
+
   it.each(['/', '/about', '/privacy', '/terms', '#get'])('keeps English paths as they are: %s', (path) => {
     expect(sitePath('en', path)).toBe(path);
   });

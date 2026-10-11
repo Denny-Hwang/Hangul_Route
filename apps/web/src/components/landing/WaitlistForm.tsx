@@ -8,7 +8,7 @@ import type { Messages, UiLocale } from '@hangul-route/i18n';
 import { useState, type CSSProperties, type FormEvent } from 'react';
 import { CONTACT_EMAIL } from '../../data/contact';
 import { apiBaseUrl } from '../../lib/console/config';
-import { sitePath } from '../../lib/site-path';
+import { SITE_DEFAULT_LOCALE, sitePath } from '../../lib/site-path';
 import { submitSignup, type WaitlistState } from '../../lib/waitlist';
 
 /**
@@ -56,7 +56,7 @@ export interface WaitlistFormViewProps {
   locale?: UiLocale;
 }
 
-export function WaitlistFormView({ state, email, website, onEmailChange, onWebsiteChange, onSubmit, words, locale = 'en' }: WaitlistFormViewProps): JSX.Element {
+export function WaitlistFormView({ state, email, website, onEmailChange, onWebsiteChange, onSubmit, words, locale = SITE_DEFAULT_LOCALE }: WaitlistFormViewProps): JSX.Element {
   const sending = state.kind === 'sending';
   const message = messageFor(state, words);
   const done = state.kind === 'success';
@@ -178,7 +178,7 @@ export interface WaitlistFormProps {
   locale?: UiLocale;
 }
 
-export function WaitlistForm({ words, locale = 'en' }: WaitlistFormProps): JSX.Element {
+export function WaitlistForm({ words, locale = SITE_DEFAULT_LOCALE }: WaitlistFormProps): JSX.Element {
   const [state, setState] = useState<WaitlistState>({ kind: 'idle' });
   const [email, setEmail] = useState('');
   const [website, setWebsite] = useState('');
