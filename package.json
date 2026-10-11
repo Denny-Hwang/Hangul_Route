@@ -11,7 +11,9 @@
     "test": "turbo run test",
     "test:coverage": "turbo run test:coverage",
     "test:scripts": "node --test scripts/__tests__/*.test.mjs",
-    "typecheck": "turbo run typecheck"
+    "typecheck": "turbo run typecheck",
+    "vocab:build": "node scripts/build-vocab.mjs",
+    "vocab:check": "node scripts/build-vocab.mjs --check"
   },
   "engines": {
     "node": ">=20"
