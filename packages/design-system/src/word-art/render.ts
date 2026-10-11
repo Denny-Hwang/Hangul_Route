@@ -3,6 +3,7 @@
  * the drawing defaults filled in, so the React Native component (W-1c) and the
  * web contact sheet (W-2) only map a `RenderShape` onto an element.
  */
+import { isWordArtPath } from './path';
 import { resolveTone } from './tones';
 import type { WordArtGlyph, WordArtShape, WordArtTone } from './types';
 
@@ -38,6 +39,8 @@ function geometryOf(shape: WordArtShape): Pick<RenderShape, 'tag' | 'geometry'> 
     case 'rect':
       return { tag: 'rect', geometry: { x: shape.x, y: shape.y, width: shape.w, height: shape.h, ...(shape.r === undefined ? {} : { rx: shape.r }) } };
     case 'path':
+      // the grammar admits only commands, digits, signs, dots and spaces, so `d` cannot leave its attribute
+      if (!isWordArtPath(shape.d)) throw new Error(`WordArt path outside the grammar: ${JSON.stringify(shape.d)}`);
       return { tag: 'path', geometry: { d: shape.d } };
   }
 }
@@ -74,6 +77,7 @@ function element(shape: RenderShape): string {
 
 /** A standalone `<svg>` string for the web preview, tests and golden files. */
 export function glyphToSvgString(glyph: WordArtGlyph, options: { size: number; mono?: WordArtTone }): string {
+  if (typeof options.size !== 'number' || !Number.isFinite(options.size) || options.size <= 0) throw new RangeError(`WordArt size must be a positive number: ${String(options.size)}`);
   const body = toRenderList(glyph, { mono: options.mono }).map(element).join('');
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="${options.size}" height="${options.size}">${body}</svg>`;
 }

@@ -79,6 +79,16 @@ describe('glyphToSvgString', () => {
     const values = [...glyphToSvgString(SAMPLE, { size: 32 }).matchAll(/="([^"]*)"/g)].map((m) => m[1]!);
     for (const v of values) expect(v).toMatch(/^[#0-9A-Za-z .:/-]*$/);
   });
+
+  it('refuses a hand-built path outside the grammar, so no markup can leave the d attribute', () => {
+    const hostile: WordArtGlyph = [{ t: 'path', d: 'M 0 0"/><script>alert(1)</script><path d="M 0 0', f: 'vocab.red' }];
+    expect(() => glyphToSvgString(hostile, { size: 48 })).toThrow(/grammar/);
+    expect(() => toRenderList([{ t: 'path', d: 'm 0 0 l 10 10' }])).toThrow(/grammar/);
+  });
+
+  it.each([['an attribute string', '48" onload="x'], ['NaN', Number.NaN], ['Infinity', Number.POSITIVE_INFINITY], ['zero', 0], ['a negative', -8]])('refuses %s as the size', (_name, size) => {
+    expect(() => glyphToSvgString(SAMPLE, { size: size as number })).toThrow(RangeError);
+  });
 });
 
 describe('golden svg strings (behaviour 4)', () => {

@@ -174,6 +174,14 @@ describe('arc', () => {
   it('refuses a full circle (use circle)', () => {
     expect(() => arc(50, 50, 10, 0, 360, INK)).toThrow(/circle/);
   });
+
+  it.each([
+    ['no span', 30, 30],
+    ['almost a full turn', 0, 359.99],
+    ['almost a full turn backwards', 0, -359.99],
+  ])('refuses %s: its ends coincide after rounding, so svg would draw nothing', (_name, a0, a1) => {
+    expect(() => arc(50, 50, 10, a0, a1, INK)).toThrow(/no length/);
+  });
 });
 
 describe('drop', () => {

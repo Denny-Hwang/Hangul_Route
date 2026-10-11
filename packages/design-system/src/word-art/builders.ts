@@ -108,7 +108,11 @@ export function arc(cx: number, cy: number, r: number, a0: number, a1: number, p
   if (Math.abs(span) >= 360) throw new Error('arc spans a full turn: use circle');
   const large = Math.abs(span) > 180 ? 1 : 0;
   const sweep = span > 0 ? 1 : 0;
-  return path(`M ${pt(polar(cx, cy, r, a0))} A ${n(r)} ${n(r)} 0 ${large} ${sweep} ${pt(polar(cx, cy, r, a1))}`, paint);
+  const start = pt(polar(cx, cy, r, a0));
+  const end = pt(polar(cx, cy, r, a1));
+  // an svg arc whose ends coincide after rounding draws nothing: the stroke would vanish silently
+  if (start === end) throw new Error(`arc from ${a0} to ${a1} degrees has no length after rounding: use circle, or a longer arc`);
+  return path(`M ${start} A ${n(r)} ${n(r)} 0 ${large} ${sweep} ${end}`, paint);
 }
 
 /** A water drop: tip at (cx, top), round bottom of the given width ending at `bottom`. */
