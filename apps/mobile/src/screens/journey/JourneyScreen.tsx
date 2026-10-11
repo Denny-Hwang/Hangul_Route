@@ -24,7 +24,7 @@ import { useNavigation, useRoute, type RouteProp } from '@react-navigation/nativ
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { episodeById, episodeFor, episodesAll, stages, themes } from '../../content';
+import { episodeById, episodeFor, episodesAll, gridEpisodes, stages, themes } from '../../content';
 import { useMessages } from '../../i18n/use-messages';
 import { isStageEntitled } from '../../logic/entitlement';
 import {
@@ -103,7 +103,7 @@ export function JourneyScreen(): React.ReactElement {
       </View>
 
       {stages.map((stage) => {
-        const availability = stageAvailability(stage.key, episodesAll);
+        const availability = stageAvailability(stage.key, gridEpisodes(episodesAll));
         const isLocked = availability === 'soon';
         const entitledStage = isStageEntitled(stage.key, tier);
         return (

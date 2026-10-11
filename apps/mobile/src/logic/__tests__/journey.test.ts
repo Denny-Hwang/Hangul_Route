@@ -1,7 +1,7 @@
 import type { Episode } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
-import { episodesAll, themes } from '../../content';
+import { episodesAll, gridEpisodes, themes } from '../../content';
 import {
   isEpisodeComplete,
   stageAvailability,
@@ -36,6 +36,13 @@ describe('stageAvailability', () => {
     expect(stageAvailability('stage2', eps)).toBe('taste');
     expect(stageAvailability('stage3', eps)).toBe('soon');
     expect(stageAvailability('stage7', eps)).toBe('soon');
+  });
+  it('is unchanged by shelf episodes once the grid selector runs (F-STORY-004 §3.10)', () => {
+    const cells = [ep('a', 'stage1', 'shipped'), ep('b', 'stage1', 'shipped')];
+    const shelf: Episode = { ...ep('shelf-tale', 'stage1', 'ready'), placement: 'shelf', format: 'story' };
+    expect(stageAvailability('stage1', [...cells, shelf])).toBe('taste');
+    expect(stageAvailability('stage1', gridEpisodes([...cells, shelf]))).toBe('open');
+    expect(stageAvailability('stage3', gridEpisodes([{ ...ep('shelf-x', 'stage3', 'shipped'), placement: 'shelf' }]))).toBe('soon');
   });
   it('matches the real bundle: stage1 open, stage2/4 taste, others soon', () => {
     expect(stageAvailability('stage1', episodesAll)).toBe('open');
