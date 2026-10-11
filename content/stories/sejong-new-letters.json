@@ -2,7 +2,7 @@
   "v": 1,
   "id": "story:sejong-new-letters",
   "state": "ready",
-  "contentVer": 1,
+  "contentVer": 2,
   "title": {
     "ko": "세종대왕의 새 글자",
     "romanization": "Sejongdaewangui sae geulja",
@@ -131,8 +131,37 @@
             }
           ],
           "artBrief": "Hoya, a friendly young tiger, steps out of a glowing open book into a Joseon-era royal courtyard with wooden halls and curved tiled roofs; a kind king in royal robes stands on the stone steps.",
-          "captionEn": "Hoya lands in King Sejong's Joseon",
-          "artPending": true
+          "art": {
+            "setting": "scene:palace-courtyard",
+            "layers": [
+              {
+                "ref": "prop:glow-burst",
+                "x": 110,
+                "y": 290,
+                "s": 0.8
+              },
+              {
+                "ref": "prop:book-open",
+                "x": 110,
+                "y": 288,
+                "s": 1.2
+              },
+              {
+                "ref": "hoya:waving",
+                "x": 112,
+                "y": 246,
+                "s": 0.6
+              },
+              {
+                "ref": "prop:fig-king",
+                "x": 272,
+                "y": 262,
+                "s": 1.1
+              }
+            ],
+            "altEn": "Hoya steps out of a glowing open book into a Joseon palace courtyard, where King Sejong stands in his red robe."
+          },
+          "captionEn": "Hoya lands in King Sejong's Joseon"
         },
         {
           "id": "s2",
@@ -150,8 +179,38 @@
           "framing": false,
           "approximations": [],
           "artBrief": "A village lane: a farmer and a child look puzzled at a sheet covered with dense, abstract brush marks (unreadable squiggles, no real characters); Hoya scratches his head beside them.",
-          "captionEn": "Chinese characters were hard to learn",
-          "artPending": true
+          "art": {
+            "setting": "scene:village-lane",
+            "layers": [
+              {
+                "ref": "prop:fig-villager",
+                "x": 116,
+                "y": 270,
+                "s": 1,
+                "tint": "surface.paper"
+              },
+              {
+                "ref": "prop:sheet-cursive",
+                "x": 184,
+                "y": 236,
+                "s": 0.9
+              },
+              {
+                "ref": "prop:fig-child",
+                "x": 244,
+                "y": 274,
+                "s": 0.9
+              },
+              {
+                "ref": "hoya:thinking",
+                "x": 312,
+                "y": 286,
+                "s": 0.65
+              }
+            ],
+            "altEn": "In a village lane a farmer and a child puzzle over a sheet of hard borrowed characters, and Hoya scratches his head."
+          },
+          "captionEn": "Chinese characters were hard to learn"
         },
         {
           "id": "s3",
@@ -170,8 +229,37 @@
           "framing": false,
           "approximations": [],
           "artBrief": "King Sejong at a low wooden desk by lamplight, brush in hand; simple abstract strokes, dots and circles float above the paper like sparks (no readable letters); Hoya peeks over the desk edge.",
-          "captionEn": "King Sejong creates new letters",
-          "artPending": true
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:oil-lamp",
+                "x": 86,
+                "y": 252,
+                "s": 1.2
+              },
+              {
+                "ref": "prop:stroke-sparks",
+                "x": 205,
+                "y": 150,
+                "s": 0.9
+              },
+              {
+                "ref": "prop:fig-king-seated",
+                "x": 200,
+                "y": 282,
+                "s": 1.4
+              },
+              {
+                "ref": "hoya:thinking",
+                "x": 322,
+                "y": 292,
+                "s": 0.6
+              }
+            ],
+            "altEn": "By lamplight King Sejong writes as simple dots, strokes and circles float up like sparks, and Hoya peeks in with wide eyes."
+          },
+          "captionEn": "King Sejong creates new letters"
         },
         {
           "id": "s4",
@@ -190,8 +278,50 @@
           "framing": false,
           "approximations": [],
           "artBrief": "A sunny market street where a merchant, a grandmother and children each hold a small blank paper and smile; warm light suggests everyone can now write.",
-          "captionEn": "He names them Hunminjeongeum",
-          "artPending": true
+          "art": {
+            "setting": "scene:village-lane",
+            "layers": [
+              {
+                "ref": "prop:fig-villager",
+                "x": 100,
+                "y": 268,
+                "s": 1
+              },
+              {
+                "ref": "prop:blank-sheet",
+                "x": 150,
+                "y": 214,
+                "s": 0.7
+              },
+              {
+                "ref": "prop:fig-grandmother",
+                "x": 205,
+                "y": 268,
+                "s": 1
+              },
+              {
+                "ref": "prop:blank-sheet",
+                "x": 252,
+                "y": 216,
+                "s": 0.7
+              },
+              {
+                "ref": "prop:fig-child",
+                "x": 292,
+                "y": 274,
+                "s": 0.9
+              },
+              {
+                "ref": "prop:fig-child",
+                "x": 350,
+                "y": 278,
+                "s": 0.8,
+                "tint": "theme.nature"
+              }
+            ],
+            "altEn": "On a sunny village street a merchant, a grandmother and two children gather by small blank sheets of paper they can now write on."
+          },
+          "captionEn": "He names them Hunminjeongeum"
         },
         {
           "id": "s5",
@@ -209,8 +339,37 @@
           "framing": false,
           "approximations": [],
           "artBrief": "Morning sun rising over palace roofs; Hoya sits cross-legged with a brush and blank paper, grinning proudly; a scholar in a black gat hat watches kindly.",
-          "captionEn": "The new letters are easy to learn",
-          "artPending": true
+          "art": {
+            "setting": "scene:palace-courtyard",
+            "layers": [
+              {
+                "ref": "prop:glow-burst",
+                "x": 64,
+                "y": 96,
+                "s": 0.6
+              },
+              {
+                "ref": "hoya:idle",
+                "x": 140,
+                "y": 288,
+                "s": 0.7
+              },
+              {
+                "ref": "prop:blank-sheet",
+                "x": 180,
+                "y": 290,
+                "s": 0.8
+              },
+              {
+                "ref": "prop:fig-scholar",
+                "x": 310,
+                "y": 272,
+                "s": 1
+              }
+            ],
+            "altEn": "As the morning sun rises over the palace, Hoya stands beside a blank sheet of paper while a scholar in a black gat watches kindly."
+          },
+          "captionEn": "The new letters are easy to learn"
         },
         {
           "id": "s6",
@@ -229,8 +388,44 @@
           "framing": false,
           "approximations": [],
           "artBrief": "Several scholars in Joseon robes working at desks in a quiet wooden hall, stacks of bound books with plain covers; one scholar holds up a finished book (cover blank, no text).",
-          "captionEn": "Scholars explain the letters in a book",
-          "artPending": true
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:books-stack",
+                "x": 66,
+                "y": 282,
+                "s": 1.1
+              },
+              {
+                "ref": "prop:fig-historian",
+                "x": 160,
+                "y": 282,
+                "s": 1.1
+              },
+              {
+                "ref": "prop:fig-official",
+                "x": 250,
+                "y": 252,
+                "s": 1
+              },
+              {
+                "ref": "prop:book-thread-bound",
+                "x": 290,
+                "y": 206,
+                "s": 1
+              },
+              {
+                "ref": "prop:fig-historian",
+                "x": 330,
+                "y": 292,
+                "s": 1.1,
+                "flip": true
+              }
+            ],
+            "altEn": "Scholars of the Hall of Worthies write in a quiet wooden hall beside stacks of bound books, and one holds up a finished book."
+          },
+          "captionEn": "Scholars explain the letters in a book"
         },
         {
           "id": "s7",
@@ -248,8 +443,38 @@
           "framing": false,
           "approximations": [],
           "artBrief": "Present-day scene: Hoya waves beside a child holding a pencil over a notebook (blank lines), with a modern Korean street softly behind them; no signs or readable text.",
-          "captionEn": "Today we call them Hangul",
-          "artPending": true
+          "art": {
+            "setting": "scene:modern-room",
+            "layers": [
+              {
+                "ref": "prop:fig-modern",
+                "x": 176,
+                "y": 280,
+                "s": 0.75,
+                "tint": "theme.letters"
+              },
+              {
+                "ref": "prop:desk-low",
+                "x": 256,
+                "y": 290,
+                "s": 0.75
+              },
+              {
+                "ref": "prop:writing-lines",
+                "x": 256,
+                "y": 250,
+                "s": 0.55
+              },
+              {
+                "ref": "hoya:waving",
+                "x": 92,
+                "y": 288,
+                "s": 0.5
+              }
+            ],
+            "altEn": "Today Hoya waves beside a child at a little desk with a notebook, because people in Korea read and write Hangul every day."
+          },
+          "captionEn": "Today we call them Hangul"
         }
       ],
       "checks": [

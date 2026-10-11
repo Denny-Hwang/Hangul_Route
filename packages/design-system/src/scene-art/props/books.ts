@@ -260,3 +260,22 @@ export const BOOK_BUNDLE: ItemDef = {
     { t: 'path', d: 'M35 16 V44 M8 24 Q35 30 62 24', stroke: 'text.primary', sw: 'thin', o: 0.35, det: true },
   ],
 };
+
+// --- PR 2.10b: hangul-printing cluster --------------------------------------
+
+export const BOOK_OPEN: ItemDef = {
+  id: 'prop:book-open',
+  kind: 'object',
+  box: { w: 96, h: 60 },
+  z: 'mid',
+  alt: 'An old thread-bound book lying open, its pages ruled in a frame with columns of marks (no readable text)',
+  tags: { heritage: true },
+  sourceRef: { title: '국보 훈민정음 (訓民正音)', publisher: '국가유산청 국가유산포털 (Korea Heritage Service, National Heritage Portal)', url: 'https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1111100700000', accessed: '2026-10-11' },
+  accuracyNote: 'A generic old Korean thread-bound book, not one particular volume: ruled frames and columns of marks, no character, page count or seal. Scenes use it for the Hunminjeongeum Haerye (woodblock printed, 1446; Heritage Portal) and for other old books such as Jikji; the scene alt names the book.',
+  nodes: [
+    ...openBook(96, 60),
+    { t: 'path', d: 'M8 10 H44 V48 H8 Z M52 10 H88 V48 H52 Z', stroke: 'text.secondary', sw: 'thin' },
+    { t: 'path', d: 'M82 14 V44 M76 14 V40 M70 14 V44 M64 14 V38 M58 14 V42', stroke: 'text.secondary', sw: 'base' },
+    { t: 'path', d: 'M38 14 V42 M32 14 V44 M26 14 V36 M20 14 V44 M14 14 V40', stroke: 'text.secondary', sw: 'base', det: true },
+  ],
+};
