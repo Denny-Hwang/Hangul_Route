@@ -33,10 +33,14 @@ import { useAudience } from '../../store/audience';
 import { useUiStore } from '../../store/ui-store';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { soundCardView, soundSwitchLabel } from '../../logic/audio/voice-help';
+import { LanguageCard } from '../../components/LanguageCard';
+import { useMessages } from '../../i18n/use-messages';
 import { BackupCard } from '../../components/BackupCard';
 import { SpacesCard } from '../../components/SpacesCard';
 
 export function ProfileScreen(): React.ReactElement {
+  const m = useMessages();
+  const t = m.learner.profile;
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const profiles = useProfileStore((s) => s.profiles);
   const active = useProfileStore(activeProfileSelector);
@@ -90,13 +94,13 @@ export function ProfileScreen(): React.ReactElement {
         onPress={() => navigation.goBack()}
         hitSlop={spacing.md}
         accessibilityRole="button"
-        accessibilityLabel="Go back"
+        accessibilityLabel={m.a11y.goBack}
         style={{ alignSelf: 'flex-start', padding: spacing.xs }}
       >
         <Icon name="arrow-left" size={28} />
       </Pressable>
       <Spacer size="sm" />
-      <Heading level="title">Profiles & settings</Heading>
+      <Heading level="title">{t.title}</Heading>
       <Spacer size="xs" />
       <Body tone="secondary">{copy.profileSwitchHint}</Body>
 
@@ -110,7 +114,7 @@ export function ProfileScreen(): React.ReactElement {
               key={p.id}
               onPress={() => setActive(p.id)}
               accessibilityRole="button"
-              accessibilityLabel={`Switch to ${p.displayName}`}
+              accessibilityLabel={t.switchTo(p.displayName)}
               style={{
                 flexBasis: '47%',
                 padding: spacing.md,
@@ -126,7 +130,7 @@ export function ProfileScreen(): React.ReactElement {
               <Spacer size="xs" />
               <Body weight="semibold">{p.displayName}</Body>
               {level ? <Caption tone="muted">{level}</Caption> : null}
-              {isActive ? <Pill label="Playing now" tone="primary" size="sm" /> : null}
+              {isActive ? <Pill label={t.playingNow} tone="primary" size="sm" /> : null}
             </Pressable>
           );
         })}
@@ -134,28 +138,28 @@ export function ProfileScreen(): React.ReactElement {
 
       <Spacer size="lg" />
       <Button
-        label="+ Add a profile"
+        label={t.addProfile}
         tone="secondary"
         size="md"
-        accessibilityLabel={copy.gatedA11y('Add a profile', pinSet)}
+        accessibilityLabel={copy.gatedA11y(t.addProfileName, pinSet)}
         onPress={() => openGrownUps('AddProfile')}
       />
 
       <Spacer size="xxl" />
-      <Heading level="prompt">{active?.displayName ?? 'Your'} stats</Heading>
+      <Heading level="prompt">{t.statsTitle(active?.displayName ?? null)}</Heading>
       <Spacer size="sm" />
       <Card padding="md">
         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
           <View>
-            <Caption tone="muted">Quests done</Caption>
+            <Caption tone="muted">{t.stats.quests}</Caption>
             <Heading level="prompt">{snap?.quests.filter((q) => q.completedAt).length ?? 0}</Heading>
           </View>
           <View>
-            <Caption tone="muted">Cards</Caption>
+            <Caption tone="muted">{t.stats.cards}</Caption>
             <Heading level="prompt">{snap?.cards.length ?? 0}</Heading>
           </View>
           <View>
-            <Caption tone="muted">3-star quests</Caption>
+            <Caption tone="muted">{t.stats.threeStar}</Caption>
             <Heading level="prompt">{snap?.quests.filter((q) => q.stars === 3).length ?? 0}</Heading>
           </View>
         </View>
@@ -176,11 +180,11 @@ export function ProfileScreen(): React.ReactElement {
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1 }}>
               <Icon name={soundCard.glyph} size={24} color={soundOn ? colors.brand.primary : colors.text.muted} />
               <View style={{ flex: 1 }}>
-                <Body weight="semibold">Sound</Body>
+                <Body weight="semibold">{t.sound.label}</Body>
                 <Caption tone="muted" testID="sound-voice-status">{soundCard.statusLine}</Caption>
               </View>
             </View>
-            <Pill tone={soundOn ? 'success' : 'neutral'} label={soundOn ? 'On' : 'Off'} size="sm" />
+            <Pill tone={soundOn ? 'success' : 'neutral'} label={soundOn ? t.sound.on : t.sound.off} size="sm" />
           </View>
         </Pressable>
         {soundCard.showHowTo ? (
@@ -192,29 +196,34 @@ export function ProfileScreen(): React.ReactElement {
       </Card>
       <VoiceHelpSheet visible={voiceHelpOpen} onClose={() => setVoiceHelpOpen(false)} />
 
+      {active ? (
+        <>
+          <Spacer size="lg" />
+          <LanguageCard profileId={active.id} />
+        </>
+      ) : null}
+
       <Spacer size="lg" />
       <Card padding="md" tone={tier === 'premium' ? 'success' : 'sunken'}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md }}>
           <View style={{ flex: 1 }}>
-            <Body weight="semibold">{tier === 'premium' ? 'Premium' : 'Free plan'}</Body>
+            <Body weight="semibold">{tier === 'premium' ? t.plan.premium : t.plan.free}</Body>
             <Caption tone="muted">
               {tier === 'premium'
-                ? entitled.source
-                  ? `The full journey is unlocked — covered by ${entitled.source.name}.`
-                  : 'The full journey is unlocked.'
-                : 'Stage 1 is free. More stages are on the way.'}
+                ? t.plan.unlocked(entitled.source?.name ?? null)
+                : t.plan.freeNote}
             </Caption>
           </View>
           <Pill
             tone={tier === 'premium' ? 'success' : 'neutral'}
-            label={tier === 'premium' ? 'Active' : 'Free'}
+            label={tier === 'premium' ? t.plan.pillActive : t.plan.pillFree}
             size="sm"
           />
         </View>
         {tier !== 'premium' ? (
           <>
             <Spacer size="sm" />
-            <Button label="Unlock the journey" tone="secondary" size="md" accessibilityLabel={copy.gatedA11y('Unlock the journey', pinSet)} onPress={() => openGrownUps('Paywall')} />
+            <Button label={t.plan.unlock} tone="secondary" size="md" accessibilityLabel={copy.gatedA11y(t.plan.unlock, pinSet)} onPress={() => openGrownUps('Paywall')} />
           </>
         ) : null}
       </Card>
@@ -233,10 +242,10 @@ export function ProfileScreen(): React.ReactElement {
         <>
           <Spacer size="lg" />
           <Button
-            label="Install on this device"
+            label={t.install.label}
             tone="secondary"
             size="md"
-            accessibilityLabel="Install Hangul Route on this device"
+            accessibilityLabel={t.install.a11yLabel}
             onPress={() => {
               forceInstallGuide();
               navigation.navigate('Main', { screen: 'Home' });

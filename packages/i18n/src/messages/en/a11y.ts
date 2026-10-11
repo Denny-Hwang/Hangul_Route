@@ -7,6 +7,9 @@ export const a11y = {
   stars: (earned: number) => `${earned} of 3 stars earned`,
   hoya: (pose: string) => `Hoya the tiger, ${pose}`,
   dismissHoya: 'Close Hoya message',
+  goBack: 'Go back',
+  /** Bottom tab labels. */
+  tabs: { home: 'Today', journey: 'Journey', library: 'Library' },
   cardArt: (title: string) => `Card art for ${title}`,
   /** A taught Korean item: Korean text, its romanization and (optionally) a gloss in the UI language. */
   koreanItem: (item: { ko: string; romanization: string; gloss?: string }) =>

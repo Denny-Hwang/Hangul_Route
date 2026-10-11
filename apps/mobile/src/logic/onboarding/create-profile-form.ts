@@ -1,4 +1,5 @@
 import type { LearnerType } from '@hangul-route/content-schema';
+import type { Messages } from '@hangul-route/i18n';
 import { isValidEmail } from '../email';
 import { pinRequiredForNewProfile, requiredConsent } from '../profiles/learner-type';
 import { NAME_MAX, validateDisplayName } from '../profiles/profile-model';
@@ -79,10 +80,13 @@ export function missingStep(s: FormState): MissingStep | null {
   return null;
 }
 
+/** The two hint sentences, from the dictionary (`m.learner.createProfile.nameHint`). */
+export type NameHintMessages = Messages['learner']['createProfile']['nameHint'];
+
 /** Hint under the name field. 'too-short' is an unfinished field, never scolded. */
-export function nameHint(name: string): string | null {
+export function nameHint(name: string, words: NameHintMessages): string | null {
   const error = validateDisplayName(name);
-  if (error === 'too-long') return `Names can be up to ${NAME_MAX} letters.`;
-  if (error === 'unsupported-character') return "Please use letters, numbers, spaces, ' or -.";
+  if (error === 'too-long') return words.tooLong(NAME_MAX);
+  if (error === 'unsupported-character') return words.unsupportedCharacter;
   return null;
 }

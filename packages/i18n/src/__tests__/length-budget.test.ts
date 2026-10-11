@@ -16,7 +16,8 @@ describe('length budgets (F-I18N-001 §3.11)', () => {
       const value = lookup(messages, path);
       if (typeof value !== 'string') continue;
       const last = path.split('.').pop() ?? '';
-      const budget = BUDGETS[last];
+      // Tab labels live under `a11y.tabs.*` (F-I18N-001 §3.4 rule 2) and share the `tab` budget.
+      const budget = BUDGETS[last] ?? (path.startsWith('a11y.tabs.') ? BUDGETS.tab : undefined);
       if (budget !== undefined) {
         it(`${locale}:${path} fits ${budget} characters`, () => {
           expect(value.length).toBeLessThanOrEqual(budget);

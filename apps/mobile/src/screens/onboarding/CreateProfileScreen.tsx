@@ -25,6 +25,7 @@ import {
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useRef, useState } from 'react';
 import { Linking, Pressable, TextInput, View } from 'react-native';
+import { useMessages } from '../../i18n/use-messages';
 import { OptionCard } from '../../components/OptionCard';
 import { PinSetupField } from '../../components/PinSetupField';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
@@ -77,6 +78,7 @@ const fieldStyle = (borderColor: string) =>
  * Rules and copy live in logic/onboarding (tested); this file paints them.
  */
 export function CreateProfileScreen({ navigation, route }: Props): React.ReactElement {
+  const m = useMessages().learner;
   const createProfile = useProfileStore((s) => s.createProfile);
   const guardianAcceptedAt = useAccountStore((s) => s.guardianConsentAcceptedAt);
   const selfAcceptedAt = useAccountStore((s) => s.selfConsentAcceptedAt);
@@ -116,7 +118,7 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
   const plan = formPlan(state);
   const missing = missingStep(state);
   const emailOk = email.trim() === '' || isValidEmail(email);
-  const hint = nameHint(name);
+  const hint = nameHint(name, m.createProfile.nameHint);
   const words = learnerType === null ? null : whoCopy(learnerType);
 
   const chooseWho = (next: LearnerType): void => {
@@ -276,7 +278,7 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
                   accessibilityRole="radio"
                   accessibilityState={{ checked: active }}
                   aria-checked={active}
-                  accessibilityLabel={a.label}
+                  accessibilityLabel={m.avatars[a.kind]}
                   style={{
                     flexGrow: 1,
                     flexBasis: touchTarget.hero,
@@ -291,7 +293,7 @@ export function CreateProfileScreen({ navigation, route }: Props): React.ReactEl
                   }}
                 >
                   <ProfileAvatar avatar={a.kind} size={touchTarget.min} />
-                  <Caption align="center">{a.label}</Caption>
+                  <Caption align="center">{m.avatars[a.kind]}</Caption>
                 </Pressable>
               );
             })}

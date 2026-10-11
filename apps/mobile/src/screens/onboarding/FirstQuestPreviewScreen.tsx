@@ -14,6 +14,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useMemo } from 'react';
 import { View } from 'react-native';
 import { episodesAll, questsAll } from '../../content';
+import { useMessages } from '../../i18n/use-messages';
 import { firstQuestFor } from '../../logic/onboarding/first-quest';
 import type { OnboardingStackParamList } from '../../navigation/types';
 
@@ -25,6 +26,7 @@ type Props = NativeStackScreenProps<OnboardingStackParamList, 'FirstQuestPreview
  * reset underneath so results return to Today.
  */
 export function FirstQuestPreviewScreen({ navigation }: Props): React.ReactElement {
+  const q = useMessages().learner.firstQuest;
   const target = useMemo(() => firstQuestFor(episodesAll, questsAll), []);
 
   const start = (): void => {
@@ -46,17 +48,13 @@ export function FirstQuestPreviewScreen({ navigation }: Props): React.ReactEleme
         <Hoya pose="cheering" size={120} />
         <Spacer size="md" />
         <Heading level="title" align="center">
-          Your first card is waiting.
+          {q.title}
         </Heading>
       </View>
       <Spacer size="xl" />
       <HoyaBubble
         tone="idle"
-        message={
-          target
-            ? `In your first quest you'll meet Korean letters and earn a Heritage card.`
-            : 'Let me show you around first!'
-        }
+        message={target ? q.bubble : q.bubbleNoQuest}
       />
       {target ? (
         <>
@@ -65,21 +63,16 @@ export function FirstQuestPreviewScreen({ navigation }: Props): React.ReactEleme
             <Heading level="prompt">{target.episode.titleEn}</Heading>
             <Spacer size="xs" />
             <Body tone="secondary">
-              {target.questCount} {target.questCount === 1 ? 'quest' : 'quests'} · about{' '}
-              {target.episode.estimatedMinutes} minutes · {target.cardCount}{' '}
-              {target.cardCount === 1 ? 'card' : 'cards'} waiting
+              {q.summary(target.questCount, target.episode.estimatedMinutes, target.cardCount)}
             </Body>
             <Spacer size="md" />
-            <Body weight="semibold">First up</Body>
-            <Body tone="secondary">
-              {target.quest.titleEn}
-              {target.quest.blurbEn ? ` — ${target.quest.blurbEn}` : ''}
-            </Body>
+            <Body weight="semibold">{q.firstUp}</Body>
+            <Body tone="secondary">{q.questLine(target.quest.titleEn, target.quest.blurbEn ?? null)}</Body>
           </Card>
         </>
       ) : null}
       <Spacer size="xl" />
-      <Button label="Start my journey" tone="primary" size="hero" fullWidth onPress={start} />
+      <Button label={q.cta} tone="primary" size="hero" fullWidth onPress={start} />
     </Screen>
   );
 }
