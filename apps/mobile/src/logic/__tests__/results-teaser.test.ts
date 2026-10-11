@@ -51,7 +51,7 @@ describe('resultsTeaser: which quest is next up', () => {
     expect(resultsTeaser({ ...base, snapshot: done('q1', 'q2', 'q3', 'q4', 'q5'), questId: 'quest:q5', total: 5 })).toBeUndefined();
   });
 
-  it('never teases a stage the learner cannot open (free tier)', () => {
+  it('under the OD-4 tier rule, never teases a stage the tier leaves out', () => {
     const free = (stage: string) => isStageEntitled(stage, 'free');
     const all = done('q1', 'q2', 'q3');
     expect(resultsTeaser({ ...base, snapshot: all, questId: 'quest:q4', total: 5, isEntitled: free })).toBeUndefined();

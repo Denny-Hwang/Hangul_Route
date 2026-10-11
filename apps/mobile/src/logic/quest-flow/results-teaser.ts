@@ -42,7 +42,7 @@ export interface ResultsTeaserInput {
   questId: string;
   /** Rounds scored in that run; 0 means every game was skipped and nothing completed. */
   total: number;
-  /** `isStageEntitled(stageKey, tier)` for the current learner. */
+  /** The stages the cursor may land on: the predicate from `cursorContext` (F-ROUTE-001 R-4a, OD-4). Omitted means every playable stage. */
   isEntitled?: (stageKey: string) => boolean;
   /** The UI locale: the title and the line come from the target quest's overlay (F-I18N-001 §3.6). Default `en`. */
   locale?: UiLocale;

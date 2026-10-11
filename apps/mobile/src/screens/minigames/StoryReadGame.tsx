@@ -3,6 +3,7 @@ import { useLocale } from '../../i18n/use-messages';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { readGameHandlers, readGameTarget } from '../../logic/story/read-game';
 import { readerStory } from '../../logic/story/reader-locale';
+import { sceneCountOf } from '../../logic/story/resume';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useQuestRunStore } from '../../store/quest-run-store';
 import { StoryReaderView } from '../story/StoryReaderView';
@@ -31,7 +32,7 @@ export function StoryReadGame({ scope, onFinish, onBack }: Props): React.ReactEl
   // The story in the UI language, with the voice of the narration shown in each scene (PR 2.8).
   const { story, narrationLangs } = useMemo(() => readerStory(source, level, locale), [source, level, locale]);
   const profileId = useProfileStore((s) => activeProfileSelector(s)?.id ?? null);
-  const bookmark = useReaderBookmark(profileId, story?.id ?? scope.story?.storyId ?? '', level);
+  const bookmark = useReaderBookmark(profileId, story?.id ?? scope.story?.storyId ?? '', level, sceneCountOf(story, level));
 
   // Rebuilt on every render on purpose: the shell's `onFinish` / `onBack` are new each render, and
   // the reader reads its callbacks through a live ref, so no effect re-runs on a new identity.

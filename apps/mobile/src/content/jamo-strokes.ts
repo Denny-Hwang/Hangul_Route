@@ -286,3 +286,10 @@ export const jamoStrokes: JamoStrokes[] = [
 export function strokesForJamo(jamoId: string): JamoStrokePoint[][] | undefined {
   return jamoStrokes.find((s) => s.jamoId === jamoId)?.strokes;
 }
+
+/**
+ * Jamo whose stroke skeleton a native speaker has reviewed (F-TCH-004 §3.6).
+ * Empty until a native-reviewed content PR adds ids; until then the presenter's
+ * stroke guide panel says "Simplified stroke guide".
+ */
+export const reviewedStrokeIds: readonly string[] = [];

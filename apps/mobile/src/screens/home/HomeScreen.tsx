@@ -27,6 +27,7 @@ import { ProfileAvatar } from '../../components/ProfileAvatar';
 import { episodesAll, questsAll } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeMissionCard } from '../../logic/content-locale';
+import { cursorContext } from '../../logic/cursor-context';
 import {
   buildTodaysMission,
   missionCardText,
@@ -38,13 +39,13 @@ import { dueTodayCount, showsTodayCount } from '../../logic/homework/assignment-
 import { mergeAssignments } from '../../logic/homework/assignment-merger';
 import { gridQuestProgress } from '../../logic/journey';
 import { homeColumns } from '../../logic/layout/home-columns';
-import { placedOutSkipSet } from '../../logic/placement/route-skip';
 import { DEFAULT_AVATAR } from '../../logic/profiles/avatar-catalog';
 import { computeStreak } from '../../logic/streak';
 import type { RootStackParamList } from '../../navigation/types';
 import { useAudience } from '../../store/audience';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
+import { effectiveTier, useTierStore } from '../../store/tier-store';
 
 /** Avatar circle in the Profile entry; with its label the button clears the 64pt floor. */
 const AVATAR_SIZE = 52;
@@ -111,6 +112,9 @@ export function HomeScreen(): React.ReactElement {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const ensure = useProgressStore((s) => s.ensure);
   const snap = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
+  // Re-renders Home when the inbox changes the tier, as Results does, so the
+  // cursor follows OD-4 on both (F-ROUTE-001 R-4a).
+  const cachedTier = useTierStore((s) => (profile ? s.byLearner[profile.id] : undefined));
 
   useEffect(() => {
     if (profile) ensure(profile.id);
@@ -133,6 +137,7 @@ export function HomeScreen(): React.ReactElement {
   // Today's mission — the plan is pinned for the day so finishing one card
   // never reshuffles the other two under the learner (F-HW-001 §3.2).
   const pinnedPlan = useRef<MissionPlan | null>(null);
+  const tier = profile ? effectiveTier(profile.id, new Date()).tier : 'free';
   const mission = useMemo(() => {
     if (!profile || !snap) return null;
     const today = dayKey(new Date().toISOString());
@@ -143,7 +148,13 @@ export function HomeScreen(): React.ReactElement {
       episodes: episodesAll,
       today,
       pinned: pinnedPlan.current,
-      skipQuestIds: placedOutSkipSet(snap.placements, questsAll, episodesAll),
+      // The same stages and placed-out quests as Results and My route (F-ROUTE-001 R-4a).
+      ...cursorContext({
+        tier,
+        placements: snap.placements,
+        quests: questsAll,
+        episodes: episodesAll,
+      }),
     });
     // A caregiver or class assignment for today takes card ② (F-HW-001 §3.4, F-PLAN-001 §3.4).
     const merged = mergeAssignments({
@@ -155,7 +166,9 @@ export function HomeScreen(): React.ReactElement {
     }).plan;
     pinnedPlan.current = merged;
     return merged;
-  }, [profile, snap]);
+    // `cachedTier` re-renders this screen when the inbox changes the tier.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile, snap, tier, cachedTier]);
 
   const openCard = (card: MissionCard): void => {
     if (card.questId && card.episodeId) {

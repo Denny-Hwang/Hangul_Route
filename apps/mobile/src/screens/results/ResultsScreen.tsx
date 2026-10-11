@@ -39,7 +39,7 @@ import { ProfileAvatar } from '../../components/ProfileAvatar';
 import { cardById, episodeById, episodesAll, questById, questsAll } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeCard } from '../../logic/content-locale';
-import { isStageEntitled } from '../../logic/entitlement';
+import { cursorContext } from '../../logic/cursor-context';
 import {
   resultsActions,
   resultsTeaser,
@@ -48,14 +48,15 @@ import {
   type ResultsTeaser,
 } from '../../logic/quest-flow/results-teaser';
 import { episodeReturn } from '../../logic/layout/quest-return';
-import { placedOutSkipSet } from '../../logic/placement/route-skip';
 import { applyQuestResult, type QuestResultOutcome } from '../../logic/results-award';
 import { resultsCheerMessage, resultsHeadline } from '../../logic/results-copy';
+import { bookmarkClearedByResults } from '../../logic/story/resume';
 import { useReducedMotion } from '../../platform/motion';
 import { track } from '../../platform/telemetry';
 import type { RootStackParamList } from '../../navigation/types';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
+import { useStoryStore } from '../../store/story-store';
 import { effectiveTier, useTierStore } from '../../store/tier-store';
 
 type ResultsMessages = Messages['learner']['results'];
@@ -116,6 +117,10 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
       },
     );
     setOutcome(earned);
+    // A finished story's bookmark goes with the score write (F-STORY-004 §3.8).
+    const stories = useStoryStore.getState();
+    const finishedStory = bookmarkClearedByResults(quest, total, (storyId) => stories.getBookmark(profile.id, storyId));
+    if (finishedStory) stories.clearBookmark(profile.id, finishedStory);
   }, [profile, quest, questId, episodeId, stars, correct, total, retries, recordQuestComplete, unlockCards, recordCatchUp]);
 
   // Android/web read the live region above (a second announcement would double-read);
@@ -135,9 +140,10 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
   const showSparkles = !!newCard && stars >= 3;
 
   // "Next up" (F-QUEST-002 §3.5): the Journey cursor with this quest counted as
-  // done, limited to stages this learner can open, so a free learner is never
-  // pointed at a Premium stage. Deciding it from route params (not from the
-  // snapshot the effect above is still writing) keeps it stable across the write.
+  // done, told the same stages and placed-out quests as Home and My route
+  // (`cursorContext`, F-ROUTE-001 R-4a), so the three never disagree. Deciding
+  // it from route params (not from the snapshot the effect above is still
+  // writing) keeps it stable across the write.
   const tier = effectiveTier(profile?.id ?? '', new Date()).tier;
   const teaser = useMemo(
     () =>
@@ -147,9 +153,8 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
         episodes: episodesAll,
         questId,
         total,
-        isEntitled: (stageKey) => isStageEntitled(stageKey, tier),
         locale,
-        skipQuestIds: placedOutSkipSet(snapshot?.placements, questsAll, episodesAll),
+        ...cursorContext({ tier, placements: snapshot?.placements, quests: questsAll, episodes: episodesAll }),
       }),
     // `cachedTier` re-renders this screen when the inbox changes the tier.
     // eslint-disable-next-line react-hooks/exhaustive-deps

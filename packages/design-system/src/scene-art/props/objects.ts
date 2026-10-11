@@ -232,3 +232,97 @@ export const BLANK_TILES: ItemDef = {
     { t: 'path', d: 'M89 5 H98 V14 H89 Z M113.5 17.5 H122.5 V26.5 H113.5 Z M126.5 32 H135.5 V41 H126.5 Z M140 60.5 H149 V69.5 H140 Z M143.5 82 H152.5 V91 H143.5 Z', fill: 'theme.crafts', stroke: 'text.primary', sw: 'thin' },
   ],
 };
+
+// --- PR 2.10c: science-art-life cluster -------------------------------------
+
+export const DISPLAY_CASE: ItemDef = {
+  id: 'prop:display-case',
+  kind: 'furniture',
+  box: { w: 110, h: 150 },
+  z: 'back',
+  alt: 'An empty glass museum case on a white plinth under soft light',
+  accuracyNote: 'A generic display case drawn behind the object a scene stands on its plinth (50 units above the anchor at scale 1). No label.',
+  nodes: [
+    { t: 'poly', pts: [[38, 10], [72, 10], [98, 100], [12, 100]], fill: 'feedback.nudgeLight', o: 0.35 },
+    { t: 'rect', x: 10, y: 14, w: 90, h: 86, fill: 'brand.secondaryLight', stroke: 'border.strong', sw: 'base', o: 0.2 },
+    { t: 'path', d: 'M8 10 H102 V15 H8 Z M6 100 H104 V107 H6 Z', fill: 'text.secondary' },
+    { t: 'line', x1: 18, y1: 24, x2: 28, y2: 36, stroke: 'surface.paper', sw: 'thick', det: true },
+    { t: 'rect', x: 12, y: 107, w: 86, h: 43, fill: 'surface.paper', stroke: 'border.strong', sw: 'base' },
+  ],
+};
+
+export const DRUM: ItemDef = {
+  id: 'prop:drum',
+  kind: 'object',
+  box: { w: 70, h: 56 },
+  z: 'mid',
+  alt: 'A round barrel drum (buk) resting on its side',
+  accuracyNote: 'A generic Korean barrel drum (buk): wooden body, skin head and a row of tacks; no particular paint or pattern.',
+  nodes: [
+    { t: 'path', d: 'M10 8 Q35 2 60 8 V48 Q35 54 10 48 Z', fill: 'text.secondary', stroke: 'text.primary', sw: 'base' },
+    { t: 'ellipse', cx: 10, cy: 28, rx: 6, ry: 20, fill: 'text.secondary', stroke: 'text.primary', sw: 'base' },
+    { t: 'ellipse', cx: 60, cy: 28, rx: 8, ry: 20, fill: 'surface.sunken', stroke: 'text.primary', sw: 'base' },
+    { t: 'path', d: 'M18 7 V9 M26 5.5 V7.5 M34 5 V7 M42 5 V7 M50 6 V8 M18 48 V50 M26 49.5 V51.5 M34 50 V52 M42 50 V52 M50 49 V51', stroke: 'surface.paper', sw: 'base', det: true },
+  ],
+};
+
+export const BASKET: ItemDef = {
+  id: 'prop:basket',
+  kind: 'object',
+  box: { w: 70, h: 50 },
+  z: 'mid',
+  tintable: 'theme.nature',
+  alt: 'A woven basket heaped with fresh greens',
+  accuracyNote: 'A generic woven basket; the heap on top is tintable (herbs, greens, vegetables).',
+  nodes: [
+    { t: 'path', d: 'M10 18 Q16 4 28 11 Q36 0 46 9 Q56 3 62 18 Z', fill: 'theme.nature', stroke: 'text.secondary', sw: 'thin' },
+    { t: 'path', d: 'M6 20 L64 20 L56 48 L14 48 Z', fill: 'feedback.nudge', stroke: 'text.secondary', sw: 'base' },
+    { t: 'rect', x: 4, y: 17, w: 62, h: 5, fill: 'text.secondary' },
+    { t: 'path', d: 'M8 29 H62 M10.5 38 H59.5', stroke: 'text.secondary', sw: 'thin', det: true },
+  ],
+};
+
+export const TAFFY_TRAY: ItemDef = {
+  id: 'prop:taffy-tray',
+  kind: 'object',
+  box: { w: 56, h: 22 },
+  z: 'mid',
+  alt: 'A wooden tray of taffy (yeot) sticks',
+  accuracyNote: "A plain tray of pale taffy sticks for the seller in Kim Hongdo's Ssireum; his tray is not described, so it is generic.",
+  nodes: [
+    { t: 'path', d: 'M6 6 H50 M6 10 H50 M6 14 H50', stroke: 'feedback.nudgeLight', sw: 'thick' },
+    { t: 'path', d: 'M2 4 V18 H54 V4 M2 20 H54', stroke: 'text.secondary', sw: 'thick' },
+  ],
+};
+
+export const SHOES: ItemDef = {
+  id: 'prop:shoes',
+  kind: 'object',
+  box: { w: 40, h: 14 },
+  z: 'mid',
+  alt: 'A pair of shoes taken off and left on the ground',
+  accuracyNote: "Plain low shoes, after those left at the right edge of Kim Hongdo's Ssireum; material not described.",
+  nodes: [
+    { t: 'path', d: 'M2 12 Q2 6 8 6 L18 7 Q21 12 17 13 L4 13 Z M20 10 Q20 4 26 4 L36 5 Q39 10 35 11 L22 11 Z', fill: 'feedback.nudgeLight', stroke: 'text.secondary', sw: 'base' },
+  ],
+};
+
+export const PANOKSEON: ItemDef = {
+  id: 'prop:panokseon',
+  kind: 'object',
+  box: { w: 170, h: 90 },
+  z: 'mid',
+  tags: { heritage: true },
+  alt: 'A Joseon panokseon warship: a flat-bottomed hull, a two-storey plank deckhouse, oars and a command pavilion',
+  sourceRef: { title: '판옥선', publisher: '한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)', url: 'https://encykorea.aks.ac.kr/Article/E0059680', accessed: '2026-10-11' },
+  accuracyNote:
+    'After the entry: a thick flat-bottomed hull under a plank-roofed deckhouse with shield parapets, oars below it and a two-storey command pavilion. The entry names no masts, so none are drawn; no guns, flags or crew.',
+  nodes: [
+    { t: 'path', d: 'M4 54 L166 54 L152 80 L18 80 Z', fill: 'text.secondary', stroke: 'text.primary', sw: 'thin' },
+    { t: 'path', d: 'M30 56 L22 88 M48 56 L40 88 M66 56 L58 88 M104 56 L96 88 M122 56 L114 88 M140 56 L132 88', stroke: 'border.strong', sw: 'base' },
+    { t: 'path', d: 'M16 36 H154 V54 H16 Z M70 16 H100 V28 H70 Z M78 6 H92 V14 H78 Z', fill: 'border.strong', stroke: 'text.secondary', sw: 'base' },
+    { t: 'rect', x: 20, y: 28, w: 130, h: 8, fill: 'surface.paper', stroke: 'text.secondary', sw: 'thin' },
+    { t: 'path', d: 'M36 28 V36 M52 28 V36 M68 28 V36 M102 28 V36 M118 28 V36 M134 28 V36 M16 45 H154', stroke: 'text.secondary', sw: 'thin', det: true },
+    { t: 'path', d: 'M62 18 Q85 10 108 18 L104 20 L66 20 Z M72 8 Q85 1 98 8 Z', fill: 'text.primary' },
+  ],
+};

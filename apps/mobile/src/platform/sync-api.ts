@@ -6,7 +6,8 @@ import type { PutResult } from '../logic/sync/engine';
  * the sync store decides what to do with them.
  */
 const PLACEHOLDER_ENDPOINT = 'https://api.hangulroute.example';
-const CONTENT_VERSION = '2026.09';
+/** The content version every upload and stored result carries. */
+export const CONTENT_VERSION = '2026.09';
 const SCHEMA_VERSION = 1;
 
 export function apiBaseUrl(): string | null {

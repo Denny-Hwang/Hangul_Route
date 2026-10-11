@@ -18,6 +18,9 @@ import {
   promptPlayback,
   resumableRun,
   resumeClocks,
+  resumedFlow,
+  withGuideHidden,
+  retakeFlow,
   selectableLocale,
   runConfig,
   shortAvailable,
@@ -336,11 +339,26 @@ describe('the warm-up and sound-needed (section 3.1 step 4)', () => {
     expect(item.warmupDone).toBe(true);
   });
 
-  it('a played (or muted) warm-up keeps audio on', () => {
+  it('a played warm-up keeps audio on', () => {
     const s = toWarmup({}, { type: 'setRevealMode', revealMode: 'tap' });
     expect(run(s, { type: 'warmupAudio', result: 'played' }).audio).toBe(true);
-    expect(run(s, { type: 'warmupAudio', result: 'muted' }).audio).toBe(true);
     expect(run(s, { type: 'warmupAnswer' }).audio).toBe(true);
+  });
+
+  it('sound switched off (muted) at the warm-up leaves the heard questions out of the draw (section 3.11)', () => {
+    const standard = run(toWarmup({}, { type: 'setRevealMode', revealMode: 'tap' }), { type: 'warmupAudio', result: 'muted' });
+    expect(standard.screen).toBe('warmup');
+    expect(standard.audio).toBe(false);
+    expect(standard.noSoundNote).toBe(true);
+    expect(run(standard, { type: 'warmupAnswer' }).audio).toBe(false);
+    // Short and a listen-first run need sound: "Turn on sound to play".
+    expect(run(toWarmup({ levelOrder: 0 }), { type: 'warmupAudio', result: 'muted' }).screen).toBe('sound-needed');
+    const listenFirstStandard = run(
+      toWarmup({ levelOrder: 0, capability: NO_VOICE }, { type: 'setRevealMode', revealMode: 'tap' }),
+      { type: 'warmupAudio', result: 'muted' },
+    );
+    expect(listenFirstStandard.mode).toBe('standard');
+    expect(listenFirstStandard.screen).toBe('sound-needed');
   });
 
   it('Short or a listen-first learner without sound: the run does not start', () => {
@@ -616,5 +634,120 @@ describe('resumeClocks (section 3.1 steps 6 and 8)', () => {
     expect(resumeClocks(paused, 7_300_000)).toBe(paused);
     const stopped = { ...base, stop: 'quit' } satisfies PlacementRunState;
     expect(resumeClocks(stopped, 7_300_000)).toBe(stopped);
+  });
+});
+
+describe('back on the options screen (wireframe C)', () => {
+  it('returns to the language screen when it was shown', () => {
+    const options = run(start({ locales: ['en', 'es'] }), { type: 'confirmLanguage', capability: SOUND });
+    expect(options.screen).toBe('options');
+    expect(run(options, { type: 'back' }).screen).toBe('language');
+  });
+
+  it('stays with one locale, and after "Check without sound" (the warm-up ran for this language)', () => {
+    const one = start();
+    expect(run(one, { type: 'back' })).toBe(one);
+    const withoutSound = { ...run(start({ locales: ['en', 'es'] }), { type: 'confirmLanguage', capability: SOUND }), warmupDone: true };
+    expect(run(withoutSound, { type: 'back' })).toBe(withoutSound);
+  });
+});
+
+describe('resumedFlow (section 3.1 step 8)', () => {
+  const config = { mode: 'deep' as const, listenFirst: true, revealMode: 'always' as const, audio: false, visual: true, takeMyTime: true, seed: 7, exclude: [] };
+  const savedRun = (stop: PlacementRunState['stop']): SavedRun => ({
+    version: 1,
+    savedAtMs: 1_000,
+    testLocale: 'es',
+    source: 'profile',
+    motivation: 'kculture',
+    run: {
+      version: 1,
+      bankVersion: 1,
+      config,
+      startedAtMs: 0,
+      deadlineMs: null,
+      lastTouchMs: 0,
+      shownAtMs: 0,
+      pause: null,
+      pausedAtMs: null,
+      timeUp: false,
+      draws: {},
+      done: [],
+      current: null,
+      responses: [],
+      tags: {},
+      notSureStreak: 0,
+      rested: false,
+      stop,
+    },
+  });
+
+  it('Continue opens the question the run stopped at, with the run\'s own settings', () => {
+    const state = resumedFlow(start(), { kind: 'continue', saved: savedRun(null) });
+    expect(state).toMatchObject({
+      screen: 'item',
+      source: 'profile',
+      testLocale: 'es',
+      mode: 'deep',
+      revealMode: 'always',
+      takeMyTime: true,
+      listenFirst: true,
+      motivation: 'kculture',
+      audio: false,
+      warmupDone: true,
+    });
+  });
+
+  it('a stopped run that was never recorded opens on the result', () => {
+    const saved = savedRun('quit');
+    const { motivation: _unused, ...withoutMotivation } = saved;
+    expect(resumedFlow(start(), { kind: 'finish', saved: withoutMotivation }).screen).toBe('result');
+    expect(resumedFlow(start(), { kind: 'finish', saved: withoutMotivation }).motivation).toBeNull();
+  });
+});
+
+describe('withGuideHidden (section 3.1 step 7, the one-tap retake)', () => {
+  it('opens the full screen with the same length and the guide hidden, so NEXT can start', () => {
+    const state = withGuideHidden(start(), 'deep');
+    expect(state).toMatchObject({ screen: 'options', optionsLayout: 'full', mode: 'deep', revealMode: 'tap' });
+    expect(canProceed(state)).toBe(true);
+    // From the Pictures first card too.
+    const card = start({ levelOrder: 0 });
+    expect(card.optionsLayout).toBe('card');
+    expect(withGuideHidden(card, 'standard')).toMatchObject({ optionsLayout: 'full', mode: 'standard', revealMode: 'tap' });
+  });
+
+  it('leaves Short and any other screen as they are', () => {
+    const options = start();
+    expect(withGuideHidden(options, 'short')).toBe(options);
+    const invite = start({ source: 'onboarding' });
+    expect(withGuideHidden(invite, 'standard')).toBe(invite);
+  });
+});
+
+describe('retakeFlow (section 3.1 step 7: "Try it with the sound guide hidden" is a one-tap retake)', () => {
+  const capability = () => SOUND;
+
+  it('starts at once: the warm-up, or the hand-off for a Pictures first learner', () => {
+    expect(retakeFlow(start(), 'standard', capability)).toMatchObject({ screen: 'warmup', mode: 'standard', revealMode: 'tap' });
+    expect(retakeFlow(start({ levelOrder: 0 }), 'deep', capability)).toMatchObject({ screen: 'handoff', mode: 'deep', revealMode: 'tap' });
+  });
+
+  it('with more than one shipped locale it keeps the last check\'s language instead of asking again', () => {
+    const placements = [placementResult({ testLocale: 'es' })];
+    const lang = start({ locales: ['en', 'es'], uiLocale: 'en', placements });
+    expect(lang.screen).toBe('language');
+    expect(retakeFlow(lang, 'standard', capability)).toMatchObject({ screen: 'warmup', testLocale: 'es', revealMode: 'tap' });
+    // No earlier check, or its language is no longer shipped: the current test language.
+    expect(retakeFlow(start({ locales: ['en', 'es'], uiLocale: 'es' }), 'standard', capability).testLocale).toBe('es');
+    const gone = start({ locales: ['en', 'es'], uiLocale: 'en', placements: [placementResult({ testLocale: 'ko' })] });
+    expect(retakeFlow(gone, 'standard', capability)).toMatchObject({ screen: 'warmup', testLocale: 'en' });
+  });
+
+  it('leaves Short and the invite as they are', () => {
+    const options = start();
+    expect(retakeFlow(options, 'short', capability)).toBe(options);
+    const invite = start({ source: 'onboarding' });
+    expect(retakeFlow(invite, 'standard', capability)).toBe(invite);
   });
 });

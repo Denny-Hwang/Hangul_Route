@@ -106,7 +106,10 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
 
   const proceed = (): void => {
     openParentGate();
-    if (route.params.next === 'AddProfile') {
+    if (route.params.next === 'PlacementFinish') {
+      // The level check is underneath: it sees the gate open and ends the run for the grown-up.
+      navigation.goBack();
+    } else if (route.params.next === 'AddProfile') {
       navigation.replace('Onboarding', { screen: 'CreateProfile', params: { firstRun: false } });
     } else if (route.params.next === 'Restore') {
       navigation.replace('Restore', { from: 'settings' });

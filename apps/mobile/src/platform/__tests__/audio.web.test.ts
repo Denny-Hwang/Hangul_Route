@@ -928,3 +928,21 @@ describe('platform/audio.web: the module-level API (browser globals)', () => {
     vi.doUnmock('expo-asset');
   });
 });
+
+describe('platform/audio.web: hasVoiceFor (F-PLC-001 section 3.1 step 2)', () => {
+  it('reads the voices of the asked language once the list is known', async () => {
+    const { audio } = rig({ voices: [YUNA, SAMANTHA] });
+    await flush();
+    expect(audio.hasVoiceFor('ko-KR')).toBe(true);
+    expect(audio.hasVoiceFor('en-US')).toBe(true);
+    expect(audio.hasVoiceFor('es-US')).toBe(false);
+    audio.dispose();
+  });
+
+  it('is false without speech synthesis', async () => {
+    const { audio } = rig({ noSynth: true });
+    await flush();
+    expect(audio.hasVoiceFor('en-US')).toBe(false);
+    audio.dispose();
+  });
+});

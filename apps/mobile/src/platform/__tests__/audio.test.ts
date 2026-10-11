@@ -661,3 +661,15 @@ describe('platform/audio (native): the module-level clip path', () => {
     vi.doUnmock('../../content/__generated__/audio-assets');
   });
 });
+
+describe('platform/audio (native): hasVoiceFor (F-PLC-001 section 3.1 step 2)', () => {
+  it('counts the voice list as available until it is read, then answers per language', async () => {
+    const { audio } = rig([YUNA, SAMANTHA]);
+    expect(audio.hasVoiceFor('es-US')).toBe(true);
+    await flush();
+    expect(audio.hasVoiceFor('ko-KR')).toBe(true);
+    expect(audio.hasVoiceFor('en-US')).toBe(true);
+    expect(audio.hasVoiceFor('es-US')).toBe(false);
+    audio.dispose();
+  });
+});

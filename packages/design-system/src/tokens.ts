@@ -128,6 +128,9 @@ export const colors = {
     subtle: '#E8DFCD',
     strong: '#C5B8A1',
     focus: '#3A7FB5', // ≥ 3:1 (non-text) on canvas, paper and sunken
+    // Drawn-shape outlines (My route pips, the dotted trail connector; F-ROUTE-001 R-2b):
+    // ≥ 3:1 (non-text) on canvas, paper, sunken and brand.primaryLight.
+    shape: '#857360',
   },
 } as const;
 
