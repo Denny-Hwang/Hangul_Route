@@ -11,8 +11,12 @@ import ParentPage from '../parent/page';
  * `profile%3Amina` and the lookup compared it with the raw id.
  */
 const textOf = (html: string): string => html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
-const isNotFound = (error: unknown): boolean =>
-  typeof error === 'object' && error !== null && (error as { digest?: unknown }).digest === 'NEXT_NOT_FOUND';
+/** Next 14 tags `notFound()` with digest `NEXT_NOT_FOUND`; Next 15 uses `NEXT_HTTP_ERROR_FALLBACK;404`. */
+const isNotFound = (error: unknown): boolean => {
+  if (typeof error !== 'object' || error === null) return false;
+  const digest = String((error as { digest?: unknown }).digest ?? '');
+  return digest.startsWith('NEXT_NOT_FOUND') || digest.endsWith(';404');
+};
 const render = (childId: string): string => renderToStaticMarkup(<ChildDetailPage params={{ childId }} />);
 
 describe('/parent/[childId] static export (issue #237)', () => {
@@ -45,13 +49,8 @@ describe('/parent/[childId] static export (issue #237)', () => {
     }
   });
 
-  it('decodes the old encoded profile id before the lookup (profile%3Amina renders Mina)', () => {
-    expect(textOf(render('profile%3Amina'))).toContain('Mina');
-    expect(textOf(render('profile:jun'))).toContain('Jun');
-  });
-
-  it('an unknown or malformed param is a 404, not a crash', () => {
-    for (const bad of ['nobody', '%E0%A4%A']) {
+  it('an unknown, malformed or old profile-id param is a 404, not a crash', () => {
+    for (const bad of ['nobody', '%E0%A4%A', 'profile%3Amina', 'profile:jun']) {
       let caught: unknown;
       try {
         render(bad);

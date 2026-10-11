@@ -53,10 +53,10 @@ describe('mockFamily route slugs (issue #237)', () => {
     }
   });
 
-  it('still finds a child by its old profile id, decoded or encoded (links shared before the fix)', () => {
+  it('does not match the old profile id (old /parent/profile:* URLs stay 404 on the host)', () => {
     for (const p of profiles) {
-      expect(findMockChild(p.id)?.slug).toBe(p.slug);
-      expect(findMockChild(encodeURIComponent(p.id))?.slug).toBe(p.slug);
+      expect(findMockChild(p.id)).toBeUndefined();
+      expect(findMockChild(encodeURIComponent(p.id))).toBeUndefined();
     }
   });
 

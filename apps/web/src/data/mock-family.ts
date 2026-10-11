@@ -115,13 +115,12 @@ function safeDecode(segment: string): string | undefined {
 
 /**
  * The demo child a `/parent/[childId]` segment names (issue #237). The segment is decoded
- * first, because Next and the host may hand it over percent-encoded. It matches the slug,
- * or the old profile id so a link shared before the slugs still resolves when it reaches
- * this lookup.
+ * first, because Next and the host may hand it over percent-encoded. Only the slug
+ * matches: the old `/parent/profile:*` URLs have no exported file, so the host answers
+ * them with its 404 page before this lookup could run.
  */
 export function findMockChild(segment: string): MockChildProfile | undefined {
   const decoded = safeDecode(segment);
   if (!decoded) return undefined;
-  return mockFamily().profiles.find((p) => p.slug === decoded || p.id === decoded);
+  return mockFamily().profiles.find((p) => p.slug === decoded);
 }
-
