@@ -116,10 +116,14 @@ export interface Db {
   markSourceNotRequired(id: string, now: Date): Promise<number>;
   /** `requested` -> `approved` when every slot is in. */
   promoteTransfer(id: string, now: Date): Promise<number>;
-  /** Record why an `approved` request is waiting for room. */
+  /** Record why an `approved` request is waiting for room; 0 when that reason is already recorded (one `blocked` event per reason). */
   blockTransfer(id: string, reason: TransferBlockReason, now: Date): Promise<number>;
-  /** Consent outdated: learner slot back to pending, status back to `requested`, plus a `consent_reset` event. */
-  resetLearnerConsent(id: string, why: ConsentResetReason, now: Date): Promise<number>;
+  /**
+   * Consent outdated: learner slot back to pending, status back to `requested`, plus a `consent_reset` event.
+   * With `expectedRev`, only the row version the caller decided on is reset (0 when anything wrote since,
+   * such as a reset and a new consent), so a decision taken on an older read never wipes a newer consent.
+   */
+  resetLearnerConsent(id: string, why: ConsentResetReason, now: Date, expectedRev?: number): Promise<number>;
   /** The move (section 4.6): one gate statement, then self-guarded writes, all in one transaction. */
   executeTransfer(input: ExecuteTransferInput): Promise<ExecuteTransferResult>;
   getTransfer(id: string): Promise<StoredTransfer | null>;

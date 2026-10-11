@@ -17,7 +17,7 @@ import {
   type TransferSlotConsent,
   type WaitlistEntry,
 } from './types';
-import { assertNewTransfer, assertTransferPrefKey, assertTransferSlot, finiteCap, teacherSlotsOf } from './transfer-rules';
+import { assertNewTransfer, assertTransferPrefKey, assertTransferSlot, consentedLearnerSlot, finiteCap, teacherSlotsOf } from './transfer-rules';
 import { ENDED_TRANSFER_STATUSES, OPEN_TRANSFER_STATUSES } from './transfer-types';
 
 /** What `run()` resolves to on D1 (`D1Result`): `meta.changes` is the row count the statement wrote. */
@@ -468,7 +468,7 @@ export class D1Db implements Db {
   async consentSlot(transferId: string, consent: TransferSlotConsent, now: Date): Promise<number> {
     const at = now.toISOString();
     if (consent.kind === 'learner') {
-      const record = { state: 'consented' as const, at, ...consent.record };
+      const record = consentedLearnerSlot(consent.record, at);
       const introduce = consent.introduce === undefined ? null : consent.introduce ? 1 : 0;
       return this.changes(
         `UPDATE transfer_requests SET l_state = 'consented', ${LEARNER_RECORD_COLUMNS.map((c) => `${c} = ?`).join(', ')}, introduce = COALESCE(?, introduce), execute_after = ?, updated_at = ?, rev = rev + 1 WHERE id = ? AND ${OPEN} AND l_state = 'pending'`,
@@ -524,10 +524,15 @@ export class D1Db implements Db {
   }
 
   blockTransfer(transferId: string, reason: TransferBlockReason, now: Date): Promise<number> {
-    return this.changes("UPDATE transfer_requests SET block_reason = ?, updated_at = ?, rev = rev + 1 WHERE id = ? AND status = 'approved'", [reason, now.toISOString(), transferId]);
+    return this.changes("UPDATE transfer_requests SET block_reason = ?, updated_at = ?, rev = rev + 1 WHERE id = ? AND status = 'approved' AND (block_reason IS NULL OR block_reason <> ?)", [
+      reason,
+      now.toISOString(),
+      transferId,
+      reason,
+    ]);
   }
 
-  async resetLearnerConsent(transferId: string, why: ConsentResetReason, now: Date): Promise<number> {
+  async resetLearnerConsent(transferId: string, why: ConsentResetReason, now: Date, expectedRev?: number): Promise<number> {
     const at = now.toISOString();
     // The reset and its audit row in one transaction: the UPDATE marks the row it changed with a one-off
     // token in `block_reason` (which the reset clears anyway), the event is guarded by it, and the last
@@ -535,8 +540,8 @@ export class D1Db implements Db {
     const token = `resetting:${crypto.randomUUID()}`;
     const [changed] = await this.batchChanges([
       [
-        `UPDATE transfer_requests SET l_state = 'pending', ${LEARNER_RECORD_COLUMNS.map((c) => `${c} = NULL`).join(', ')}, status = 'requested', approved_at = NULL, execute_after = NULL, block_reason = ?, updated_at = ?, rev = rev + 1 WHERE id = ? AND ${OPEN} AND l_state = 'consented'`,
-        [token, at, transferId],
+        `UPDATE transfer_requests SET l_state = 'pending', ${LEARNER_RECORD_COLUMNS.map((c) => `${c} = NULL`).join(', ')}, status = 'requested', approved_at = NULL, execute_after = NULL, block_reason = ?, updated_at = ?, rev = rev + 1 WHERE id = ? AND ${OPEN} AND l_state = 'consented'${expectedRev === undefined ? '' : ' AND rev = ?'}`,
+        expectedRev === undefined ? [token, at, transferId] : [token, at, transferId, expectedRev],
       ],
       [
         "INSERT INTO transfer_events (transfer_id, at, actor_kind, actor_ref, event, slot, detail_json) SELECT ?, ?, 'system', NULL, 'consent_reset', 'learner', ? WHERE EXISTS (SELECT 1 FROM transfer_requests WHERE id = ? AND block_reason = ?)",

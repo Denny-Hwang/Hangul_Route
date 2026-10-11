@@ -1,6 +1,6 @@
 import { TRANSFER_COOLING_OFF_MS, type Entitlement, type EntitlementApply, type MemberKind, type Membership, type Plan, type Space, type TransferBlockReason, type TransferEndReason, type TransferSlot } from '@hangul-route/content-schema';
 import { id, type Account, type Learner, type LearnerDevice, type SnapshotRecord } from '../store';
-import { allSlotsIn, assertNewTransfer, assertTransferChecks, assertTransferPrefKey, assertTransferSlot, finiteCap, isEndedTransfer, isOpenTransfer, teacherSlotsOf } from './transfer-rules';
+import { allSlotsIn, assertNewTransfer, assertTransferChecks, assertTransferPrefKey, assertTransferSlot, consentedLearnerSlot, finiteCap, isEndedTransfer, isOpenTransfer, teacherSlotsOf } from './transfer-rules';
 import {
   learnerRateKeys,
   mergeEntitlement,
@@ -222,7 +222,7 @@ export class MemoryDb implements Db {
       return this.casTransfer(
         transferId,
         (t) => isOpenTransfer(t) && t.learner.state === 'pending',
-        (t) => ({ ...t, learner: { state: 'consented', at, ...clone(consent.record) }, introduce: consent.introduce ?? t.introduce, executeAfter, updatedAt: at }),
+        (t) => ({ ...t, learner: consentedLearnerSlot(consent.record, at), introduce: consent.introduce ?? t.introduce, executeAfter, updatedAt: at }),
       );
     }
     const slots = teacherSlotsOf(consent);
@@ -274,14 +274,14 @@ export class MemoryDb implements Db {
   }
 
   async blockTransfer(transferId: string, reason: TransferBlockReason, now: Date): Promise<number> {
-    return this.casTransfer(transferId, (t) => t.status === 'approved', (t) => ({ ...t, blockReason: reason, updatedAt: now.toISOString() }));
+    return this.casTransfer(transferId, (t) => t.status === 'approved' && t.blockReason !== reason, (t) => ({ ...t, blockReason: reason, updatedAt: now.toISOString() }));
   }
 
-  async resetLearnerConsent(transferId: string, why: ConsentResetReason, now: Date): Promise<number> {
+  async resetLearnerConsent(transferId: string, why: ConsentResetReason, now: Date, expectedRev?: number): Promise<number> {
     const at = now.toISOString();
     const changed = this.casTransfer(
       transferId,
-      (t) => isOpenTransfer(t) && t.learner.state === 'consented',
+      (t) => isOpenTransfer(t) && t.learner.state === 'consented' && (expectedRev === undefined || t.rev === expectedRev),
       (t) => ({ ...t, learner: { ...EMPTY_LEARNER_SLOT }, status: 'requested', approvedAt: null, executeAfter: null, blockReason: null, updatedAt: at }),
     );
     if (changed === 1) this.pushTransferEvent({ transferId, at, actorKind: 'system', actorRef: null, event: 'consent_reset', slot: 'learner', detail: { why } });
