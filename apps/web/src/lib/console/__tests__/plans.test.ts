@@ -50,7 +50,7 @@ describe('plan helpers (F-PLAN-001 §3.5)', () => {
       lastActiveAt: 't',
       lastSyncedAt: null,
       summary: progress
-        ? { schemaVersion: 1, lastActiveAt: 't', streakDays: 0, stage1: { questsDone: 0, questsTotal: 11, anchorAccuracy: null }, cardsUnlocked: 0, minutesLast7d: 0, jamoRecognized: [], needsPractice: [], planProgress: { 'plan:w3': progress } }
+        ? { lastActiveAt: 't', streakDays: 0, stage1: { questsDone: 0, questsTotal: 11, anchorAccuracy: null }, cardsUnlocked: 0, minutesLast7d: 0, jamoRecognized: [], needsPractice: [], planProgress: { 'plan:w3': progress } }
         : null,
     });
     const rows = planReadout('plan:w3', [learner('minho', { done: 2, total: 3, notReady: 0 }), learner('suji', { done: 0, total: 2, notReady: 1 }), learner('new', null)]);
