@@ -92,6 +92,7 @@ export const ProgressSnapshotSchema = z.object({
    * first complete. A latched stage stays Complete whatever content ships later.
    * Absent in snapshots written before it; readers treat a missing value as `{}`.
    * Keys are not validated on the wire so a newer build's stage never fails a sync.
+   * Writers store `new Date().toISOString()`; mergers compare instants, not strings.
    */
   stageDoneAt: z.record(z.string(), z.string()).optional(),
 });

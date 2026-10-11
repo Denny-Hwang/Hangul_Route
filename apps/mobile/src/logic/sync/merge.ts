@@ -73,9 +73,28 @@ export function mergeReview(l: ReviewEntry, s: ReviewEntry): ReviewEntry {
 }
 
 /**
+ * The earlier of two latch times as instants (`Date.parse`), so an offset form
+ * and a UTC form compare correctly. A value that does not parse never beats one
+ * that does; two unparseable values (or a tie) fall back to the string order,
+ * so the result never depends on argument order. The Worker applies the same
+ * rule (packages/backend/src/lib/additive-fields.ts `earlierLatchTime`).
+ */
+export function earlierLatchTime(a: string, b: string): string {
+  const ta = Date.parse(a);
+  const tb = Date.parse(b);
+  const fa = Number.isFinite(ta);
+  const fb = Number.isFinite(tb);
+  if (fa && fb && ta !== tb) return ta < tb ? a : b;
+  if (fa !== fb) return fa ? a : b;
+  return a <= b ? a : b;
+}
+
+/**
  * Stage latch (F-ROUTE-001 section 3.15): key union, earliest time wins, so an
  * earned "Complete" is never removed. `undefined` when neither side holds a
- * latch, so a snapshot that predates the key keeps its shape.
+ * latch, so a snapshot that predates the key keeps its shape. The writer
+ * (R-1b) stores `new Date().toISOString()` and only ever adds keys to the
+ * hydrated snapshot; it never builds a fresh record.
  */
 export function mergeStageDoneAt(
   l: Readonly<Record<string, string>> | undefined,
@@ -85,7 +104,7 @@ export function mergeStageDoneAt(
   for (const side of [l ?? {}, s ?? {}]) {
     for (const [stage, at] of Object.entries(side)) {
       const prev = out.get(stage);
-      out.set(stage, prev !== undefined && prev < at ? prev : at);
+      out.set(stage, prev === undefined ? at : earlierLatchTime(prev, at));
     }
   }
   return out.size === 0 ? undefined : Object.fromEntries([...out.entries()].sort(([a], [b]) => a.localeCompare(b)));
@@ -124,11 +143,16 @@ export function isSubsetOf(local: ProgressSnapshot, server: ProgressSnapshot): b
   const q = has(server.quests, (x) => `${x.questId}:${x.stars}`);
   const c = has(server.cards, (x) => x.cardId);
   const s = has(server.sessions, (x) => x.id);
-  const latched = new Set(Object.keys(server.stageDoneAt ?? {}));
+  // A latch counts as held when the server has the stage at the same or an earlier time.
+  const latched = new Map(Object.entries(server.stageDoneAt ?? {}));
+  const holds = (stage: string, at: string): boolean => {
+    const theirs = latched.get(stage);
+    return theirs !== undefined && earlierLatchTime(theirs, at) === theirs;
+  };
   return (
     local.quests.every((x) => q.has(`${x.questId}:${x.stars}`)) &&
     local.cards.every((x) => c.has(x.cardId)) &&
     local.sessions.every((x) => s.has(x.id)) &&
-    Object.keys(local.stageDoneAt ?? {}).every((stage) => latched.has(stage))
+    Object.entries(local.stageDoneAt ?? {}).every(([stage, at]) => holds(stage, at))
   );
 }

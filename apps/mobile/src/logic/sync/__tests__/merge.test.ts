@@ -151,6 +151,19 @@ describe('stageDoneAt, the stage latch (F-ROUTE-001 section 3.15)', () => {
     expect(mergeSnapshots(base({ stageDoneAt: {} }), base({ stageDoneAt: latch }), { now: NOW }).stageDoneAt).toEqual(latch);
   });
 
+  it('compares instants, not strings: an offset time and a junk value never win wrongly', () => {
+    const at = (l: string, s: string) => mergeSnapshots(base({ stageDoneAt: { stage1: l } }), base({ stageDoneAt: { stage1: s } }), { now: NOW }).stageDoneAt;
+    // 08:00+09:00 is 23:00Z the day before, so it is the earlier instant
+    expect(at('2026-10-11T08:00:00+09:00', '2026-10-11T00:00:00Z')).toEqual({ stage1: '2026-10-11T08:00:00+09:00' });
+    expect(at('2026-10-11T00:00:00Z', '2026-10-11T08:00:00+09:00')).toEqual({ stage1: '2026-10-11T08:00:00+09:00' });
+    // a value that does not parse never beats a real time, whichever side holds it
+    expect(at('', '2026-10-11T00:00:00.000Z')).toEqual({ stage1: '2026-10-11T00:00:00.000Z' });
+    expect(at('2026-10-11T00:00:00.000Z', 'soon')).toEqual({ stage1: '2026-10-11T00:00:00.000Z' });
+    // two unparseable values still give one answer whatever the order
+    expect(at('b', 'a')).toEqual({ stage1: 'a' });
+    expect(at('a', 'b')).toEqual({ stage1: 'a' });
+  });
+
   it('does not add the key to snapshots that predate it (legacy shape kept)', () => {
     expect(mergeSnapshots(legacy(), legacy(), { now: NOW })).not.toHaveProperty('stageDoneAt');
     expect(mergeSnapshots(base({ stageDoneAt: {} }), legacy(), { now: NOW })).not.toHaveProperty('stageDoneAt');
@@ -159,7 +172,10 @@ describe('stageDoneAt, the stage latch (F-ROUTE-001 section 3.15)', () => {
   it('isSubsetOf asks for an upload when the local copy holds a latch the server lacks', () => {
     const latch = { stage1: '2026-10-11T10:00:00.000Z' };
     expect(isSubsetOf(base({ stageDoneAt: latch }), legacy())).toBe(false);
-    expect(isSubsetOf(base({ stageDoneAt: latch }), base({ stageDoneAt: { stage1: '2026-10-12T00:00:00.000Z' } }))).toBe(true);
+    // the server holds a later "first complete" time than the device: the earlier one must go up
+    expect(isSubsetOf(base({ stageDoneAt: latch }), base({ stageDoneAt: { stage1: '2026-10-12T00:00:00.000Z' } }))).toBe(false);
+    expect(isSubsetOf(base({ stageDoneAt: { stage1: '2026-10-12T00:00:00.000Z' } }), base({ stageDoneAt: latch }))).toBe(true);
+    expect(isSubsetOf(base({ stageDoneAt: latch }), base({ stageDoneAt: latch }))).toBe(true);
     expect(isSubsetOf(legacy(), base({ stageDoneAt: latch }))).toBe(true);
     expect(isSubsetOf(base({ stageDoneAt: {} }), legacy())).toBe(true);
     // a key that happens to name an Object.prototype member is still a missing latch
