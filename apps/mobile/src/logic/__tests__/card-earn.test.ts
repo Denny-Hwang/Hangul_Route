@@ -37,6 +37,12 @@ describe('cardEarnHint', () => {
     expect(cardEarnHint('card:soon', QUESTS, EPISODES)).toEqual({ kind: 'later' });
   });
 
+  it('never points a learner at a quest in a stage they cannot open (no implicit paywall, D5)', () => {
+    const premiumOnly = [episodeOf('episode:prem', ['quest:b', 'quest:c'], { stage: 'stage2' })];
+    expect(cardEarnHint('card:book', QUESTS, premiumOnly, (stage) => stage === 'stage1')).toEqual({ kind: 'later' });
+    expect(cardEarnHint('card:book', QUESTS, premiumOnly, () => true)).toMatchObject({ kind: 'quest', questId: 'quest:b' });
+  });
+
   it('matches the shipped content: the Book card comes from the first Letters quest', () => {
     const hint = cardEarnHint('card:book', questsAll, episodesAll);
     expect(hint).toMatchObject({ kind: 'quest', questId: 'quest:stage1-letters-q1', minStars: 2 });
