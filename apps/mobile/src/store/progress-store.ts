@@ -1,7 +1,7 @@
-import type { ProgressSnapshot } from '@hangul-route/content-schema';
+import { PlacementResultSchema, type PlacementResult, type ProgressSnapshot } from '@hangul-route/content-schema';
 import { create } from 'zustand';
 import { recordBestQuest } from '../logic/quest-progress';
-import { mergeSnapshots } from '../logic/sync/merge';
+import { mergePlacements, mergeSnapshots, withSnapshotDefaults } from '../logic/sync/merge';
 import { notifyProgressPersisted } from '../logic/sync/persist-hook';
 import { readJson, writeJson } from '../platform/storage';
 import { track } from '../platform/telemetry';
@@ -71,6 +71,14 @@ interface Actions {
   beginSession: (profileId: string) => void;
   endSession: (profileId: string) => void;
   reset: (profileId: string) => void;
+  /**
+   * Append a finished level check (F-PLC-001 section 3.8). Writes `placements`
+   * and nothing else: no quest, card, homework, session or streak. A result
+   * with zero responses, or one the Worker's schema would refuse (which would
+   * block every later sync of the learner), is never stored; returns whether
+   * it was.
+   */
+  recordPlacement: (profileId: string, result: PlacementResult) => boolean;
   /** Sync / restore hand back a merged snapshot; persisted without re-notifying sync. */
   replaceSnapshot: (profileId: string, snapshot: ProgressSnapshot) => void;
 }
@@ -258,6 +266,21 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
       profileId,
       payload: { durationSeconds, streakDays: snap.streakDays },
     });
+  },
+
+  recordPlacement: (profileId, result) => {
+    if (result.responses.length === 0) return false;
+    const parsed = PlacementResultSchema.safeParse(result);
+    if (!parsed.success) return false;
+    const snap = withSnapshotDefaults(get().byProfile[profileId] ?? blankSnapshot(profileId));
+    const updated: ProgressSnapshot = {
+      ...snap,
+      placements: mergePlacements(snap.placements, [parsed.data]),
+      updatedAt: new Date().toISOString(),
+    };
+    set((s) => ({ byProfile: { ...s.byProfile, [profileId]: updated } }));
+    persist(profileId, updated);
+    return true;
   },
 
   reset: (profileId) => {

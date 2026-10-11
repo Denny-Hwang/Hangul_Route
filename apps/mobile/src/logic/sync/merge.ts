@@ -1,11 +1,13 @@
-import type {
-  CardCollectionEntry,
-  EpisodeProgress,
-  HomeworkAssignment,
-  ProgressSnapshot,
-  QuestProgress,
-  ReviewEntry,
-  SessionLog,
+import {
+  PLACEMENT_KEEP,
+  type CardCollectionEntry,
+  type EpisodeProgress,
+  type HomeworkAssignment,
+  type PlacementResult,
+  type ProgressSnapshot,
+  type QuestProgress,
+  type ReviewEntry,
+  type SessionLog,
 } from '@hangul-route/content-schema';
 import { computeStreak } from '../streak';
 
@@ -120,6 +122,60 @@ export function mergeStageDoneAt(
   return out.size === 0 ? undefined : Object.fromEntries([...out.entries()].sort(([a], [b]) => a.localeCompare(b)));
 }
 
+/**
+ * Orders two ISO timestamps as instants (an offset and `Z`, with or without
+ * milliseconds, compare by the moment they name), like `earlierLatchTime`.
+ * An unparsable side sorts first; equal instants and unparsable pairs fall
+ * back to code-point order, so the order is the same on every engine.
+ */
+export function compareInstant(a: string, b: string): number {
+  const ta = Date.parse(a);
+  const tb = Date.parse(b);
+  const fa = Number.isFinite(ta);
+  const fb = Number.isFinite(tb);
+  if (fa && fb && ta !== tb) return ta < tb ? -1 : 1;
+  if (fa !== fb) return fa ? 1 : -1;
+  return codePointCompare(a, b);
+}
+
+/** Plain code-point order (never locale collation, which ignores '-' under ICU). */
+const codePointCompare = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
+
+/**
+ * Local copies carry no zod defaults (F-PLC-001 section 3.8): the progress store
+ * reads its own snapshot without parsing, so a snapshot saved before an
+ * additive key existed lacks it at runtime. Only `recordPlacement` applies
+ * this: `hydrate` and `replaceSnapshot` keep a stored snapshot's shape (the P-2
+ * rule, pinned by a progress-store test), and every reader treats a missing
+ * `placements` as `[]`. A server copy always carries the key (the Worker
+ * stores the zod-parsed payload), so `mergeSnapshots` writes it on the first
+ * sync. F-PLAN-002 P2-4 and F-VOC-005 P-3 add their keys here.
+ */
+export function withSnapshotDefaults(snapshot: ProgressSnapshot): ProgressSnapshot & { placements: PlacementResult[] } {
+  if (snapshot.placements !== undefined) return snapshot as ProgressSnapshot & { placements: PlacementResult[] };
+  return { ...snapshot, placements: [] };
+}
+
+/**
+ * Same id on both sides: the copy carrying a parent override wins (the later
+ * `override.at` when both do), otherwise the local copy.
+ */
+export function mergePlacement(l: PlacementResult, s: PlacementResult): PlacementResult {
+  if (l.override === undefined) return s.override === undefined ? l : s;
+  if (s.override === undefined) return l;
+  return compareInstant(s.override.at, l.override.at) > 0 ? s : l;
+}
+
+/** Union by id, oldest first, newest `PLACEMENT_KEEP` kept. A missing list is `[]`. */
+export function mergePlacements(
+  l: readonly PlacementResult[] | undefined,
+  s: readonly PlacementResult[] | undefined,
+): PlacementResult[] {
+  return unionBy(l ?? [], s ?? [], (r) => r.id, mergePlacement)
+    .sort((a, b) => compareInstant(a.completedAt, b.completedAt) || codePointCompare(a.id, b.id))
+    .slice(-PLACEMENT_KEEP);
+}
+
 export interface MergeOptions {
   /** Clock for the streak recomputation; injected for determinism. */
   now: Date;
@@ -144,6 +200,10 @@ export function mergeSnapshots(local: ProgressSnapshot, server: ProgressSnapshot
       opts.now,
     ),
     ...(stageDoneAt ? { stageDoneAt } : {}),
+    // A snapshot that predates the key keeps its shape when neither side has one.
+    ...(local.placements !== undefined || server.placements !== undefined
+      ? { placements: mergePlacements(local.placements, server.placements) }
+      : {}),
   };
 }
 
@@ -158,6 +218,14 @@ export function isSubsetOf(local: ProgressSnapshot, server: ProgressSnapshot): b
   const c = has(server.cards, (x) => `${x.cardId}:${x.newSinceLastView ? 'new' : 'seen'}`);
   const cardHeld = (x: CardCollectionEntry): boolean => c.has(`${x.cardId}:seen`) || (x.newSinceLastView && c.has(`${x.cardId}:new`));
   const s = has(server.sessions, (x) => x.id);
+  // A placement is held when the server has its id with the same or a newer override.
+  const placed = new Map((server.placements ?? []).map((x) => [x.id, x]));
+  const holdsPlacement = (x: PlacementResult): boolean => {
+    const theirs = placed.get(x.id);
+    if (theirs === undefined) return false;
+    if (x.override === undefined) return true;
+    return theirs.override !== undefined && compareInstant(theirs.override.at, x.override.at) >= 0;
+  };
   // A latch counts as held when the server has the stage at the same or an earlier time.
   const latched = new Map(Object.entries(server.stageDoneAt ?? {}));
   const holds = (stage: string, at: string): boolean => {
@@ -168,6 +236,7 @@ export function isSubsetOf(local: ProgressSnapshot, server: ProgressSnapshot): b
     local.quests.every((x) => q.has(`${x.questId}:${x.stars}`)) &&
     local.cards.every(cardHeld) &&
     local.sessions.every((x) => s.has(x.id)) &&
+    (local.placements ?? []).every(holdsPlacement) &&
     Object.entries(local.stageDoneAt ?? {}).every(([stage, at]) => holds(stage, at))
   );
 }

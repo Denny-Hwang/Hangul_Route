@@ -72,6 +72,12 @@ export interface PlacementConfig {
   audio: boolean;
   /** False with a screen reader: `recog` is not run. */
   visual: boolean;
+  /**
+   * Gates not asked in this run, recorded as not-run `unavailable` (section 3.2:
+   * `vocab` and `sentence` with a Korean test language and a screen reader on,
+   * because Korean picture options carry no text label).
+   */
+  skipGates?: readonly PlacementGate[];
   /** True: no inactivity pause, no backstop clock. */
   takeMyTime: boolean;
   /** `hashSeed([profileId, startedAt])`. */
@@ -147,6 +153,7 @@ const drawRung = (
 ): AssessmentQuestion[] | null => {
   if (form === 'oral' && !config.audio) return null;
   if (gate === 'recog' && !config.visual) return null;
+  if (config.skipGates?.includes(gate) === true) return null;
   const eligible = bank.templates.filter(
     (t) => t.status === 'ready' && t.gate === gate && t.form === form && usable(t, config),
   );
