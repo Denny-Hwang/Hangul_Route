@@ -33,7 +33,10 @@ describe('landing page · launch-invite signup', () => {
     expect(section.indexOf('</form>')).toBeLessThan(section.indexOf('We use your email only'));
   });
 
-  it('keeps the existing promise sentence unchanged (owner approval pending on its "free family code" clause)', () => {
-    expect(html.replace(/\s+/g, ' ')).toContain('Leave your email for launch news and a free family code on launch day.');
+  it('promises launch news only, with no free-code or other commercial promise', () => {
+    const text = html.replace(/&#x27;|&#39;/g, "'").replace(/\s+/g, ' ');
+    expect(text).toContain("Leave your email and we'll send you the launch news.");
+    expect(text).not.toMatch(/family code/i);
+    expect(text).not.toMatch(/launch day/i);
   });
 });

@@ -540,8 +540,8 @@ export default function HomePage(): JSX.Element {
           }}
         >
           Hangul Route runs in your browser — open it, add it to your home
-          screen, and Stage 1 plays offline. Leave your email for launch news
-          and a free family code on launch day.
+          screen, and Stage 1 plays offline. Leave your email and we&apos;ll send
+          you the launch news.
         </p>
         <a
           href={APP_URL}
