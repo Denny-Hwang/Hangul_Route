@@ -15,7 +15,7 @@
     "typecheck": "tsc --noEmit",
     "build": "echo '(no build output yet — @hangul-route/mobile)'",
     "build:web": "expo export --platform web --output-dir dist && node scripts/pwa-postbuild.mjs dist",
-    "build:web:fixtures": "node scripts/build-web-fixtures.mjs dist",
+    "build:web:fixtures": "node scripts/build-web-fixtures.mjs dist-e2e",
     "serve:web": "node scripts/serve-dist.mjs dist",
     "test:e2e:web": "playwright test"
   },

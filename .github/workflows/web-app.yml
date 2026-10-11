@@ -83,10 +83,11 @@ jobs:
         if: steps.changes.outputs.run == 'true'
         run: pnpm --filter @hangul-route/mobile test:e2e:web
 
-      # F-STORY-002 PR 2.6a: no story is ready yet, so the reader runs against a
-      # second build that holds the test fixtures (never deployed; the script
-      # restores the real story bundle). Runs after the offline e2e because it
-      # replaces dist/.
+      # F-STORY-002 PR 2.6a: the reader has no learner entry point until
+      # F-STORY-004's shelf, so its e2e opens it through the __hrStoryE2E hook
+      # and reads fixture-specific content. Both exist only in a second build
+      # that holds the test fixtures, written to dist-e2e/ (never dist/, never
+      # deployed; the script restores the real story bundle).
       - name: Story reader e2e (fixture bundle)
         if: steps.changes.outputs.run == 'true'
         run: |
