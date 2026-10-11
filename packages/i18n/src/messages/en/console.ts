@@ -97,11 +97,10 @@ export const consoleMsgs = {
     signOut: { cta: 'Sign out' },
     noApi: 'The console needs an API address (NEXT_PUBLIC_API_BASE_URL) on this build.',
   },
-  /** Space kinds: a label ("Class code"), the home-page group heading, and what the members are called. */
+  /** Space kinds: a label ("Class code") and the home-page group heading. */
   kind: {
     label: { family: 'Family', class: 'Class', school: 'School' },
     group: { family: 'Family', class: 'Classes', school: 'School' },
-    members: { family: 'learners', class: 'students', school: 'members' },
   },
   /** A join code on the start and space pages. */
   joinCode: {
@@ -258,7 +257,7 @@ export const consoleMsgs = {
     students: (n: number) => plural('en', n, { one: `${n} student`, other: `${n} students` }),
     classes: (n: number) => plural('en', n, { one: `${n} class`, other: `${n} classes` }),
   },
-  /** Plan builder counts (`teach/space/plan`): the items in a plan, and the members it targets (worded per space kind, as `kind.members`). */
+  /** Plan builder counts (`teach/space/plan`): the items in a plan, and the members it targets (worded per space kind). */
   planCounts: {
     items: planItems,
     targets: planTargets,

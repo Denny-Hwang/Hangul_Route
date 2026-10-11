@@ -23,11 +23,10 @@ describe('console shell (ui.tsx)', () => {
   });
 });
 
-describe('space kinds (routing.ts KIND_LABEL, KIND_GROUP, memberNoun)', () => {
-  it('names each kind, its home-page group and its members', () => {
+describe('space kinds (routing.ts KIND_LABEL, KIND_GROUP)', () => {
+  it('names each kind and its home-page group', () => {
     expect(c.kind.label).toEqual({ family: 'Family', class: 'Class', school: 'School' });
     expect(c.kind.group).toEqual({ family: 'Family', class: 'Classes', school: 'School' });
-    expect(c.kind.members).toEqual({ family: 'learners', class: 'students', school: 'members' });
   });
 });
 
