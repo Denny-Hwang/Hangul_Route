@@ -124,7 +124,8 @@
               {
                 "ref": "hoya:thinking",
                 "x": 105,
-                "y": 282
+                "y": 282,
+                "s": 1
               }
             ],
             "altEn": "Hoya, a curious young tiger, stands by a stack of old thread-bound books and wonders how we know the past."
@@ -159,7 +160,8 @@
               {
                 "ref": "prop:fig-officials-kneeling",
                 "x": 140,
-                "y": 248
+                "y": 248,
+                "s": 1
               },
               {
                 "ref": "prop:fig-officials-kneeling",
@@ -249,7 +251,8 @@
               {
                 "ref": "prop:fig-king",
                 "x": 270,
-                "y": 282
+                "y": 282,
+                "s": 1
               }
             ],
             "altEn": "The king walks past a closed wooden box of the historians' notes, tied with a red cord, and leaves it shut."
@@ -320,7 +323,8 @@
               {
                 "ref": "prop:fig-king",
                 "x": 210,
-                "y": 272
+                "y": 272,
+                "s": 1
               },
               {
                 "ref": "hoya:idle",

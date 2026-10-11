@@ -173,6 +173,7 @@
                 "ref": "prop:night-window",
                 "x": 302,
                 "y": 196,
+                "s": 1,
                 "z": "back"
               },
               {
@@ -264,7 +265,8 @@
               {
                 "ref": "prop:fig-historian",
                 "x": 90,
-                "y": 262
+                "y": 262,
+                "s": 1
               },
               {
                 "ref": "prop:desk-low",
@@ -358,6 +360,7 @@
                 "ref": "prop:fig-modern",
                 "x": 250,
                 "y": 282,
+                "s": 1,
                 "tint": "surface.paper"
               },
               {
@@ -394,6 +397,7 @@
                 "ref": "prop:night-window",
                 "x": 302,
                 "y": 196,
+                "s": 1,
                 "z": "back"
               },
               {
@@ -405,7 +409,8 @@
               {
                 "ref": "hoya:reading",
                 "x": 170,
-                "y": 294
+                "y": 294,
+                "s": 1
               }
             ],
             "altEn": "At night Hoya sits by a small lamp with his notebook, a crescent moon in the window, and writes one line about his day."

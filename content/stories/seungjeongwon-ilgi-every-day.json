@@ -139,7 +139,8 @@
               {
                 "ref": "prop:fig-official",
                 "x": 205,
-                "y": 262
+                "y": 262,
+                "s": 1
               },
               {
                 "ref": "prop:fig-official",
@@ -286,6 +287,7 @@
                 "ref": "prop:writing-lines",
                 "x": 262,
                 "y": 292,
+                "s": 1,
                 "z": "front"
               },
               {
@@ -376,6 +378,7 @@
                 "ref": "prop:book-thread-bound",
                 "x": 216,
                 "y": 234,
+                "s": 1,
                 "z": "front"
               },
               {
@@ -389,6 +392,7 @@
                 "ref": "prop:fig-historian",
                 "x": 310,
                 "y": 262,
+                "s": 1,
                 "flip": true
               },
               {

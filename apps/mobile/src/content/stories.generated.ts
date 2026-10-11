@@ -4535,6 +4535,7 @@ export const storiesAll: Story[] = [
                   "ref": "prop:night-window",
                   "x": 302,
                   "y": 196,
+                  "s": 1,
                   "z": "back"
                 },
                 {
@@ -4626,7 +4627,8 @@ export const storiesAll: Story[] = [
                 {
                   "ref": "prop:fig-historian",
                   "x": 90,
-                  "y": 262
+                  "y": 262,
+                  "s": 1
                 },
                 {
                   "ref": "prop:desk-low",
@@ -4720,6 +4722,7 @@ export const storiesAll: Story[] = [
                   "ref": "prop:fig-modern",
                   "x": 250,
                   "y": 282,
+                  "s": 1,
                   "tint": "surface.paper"
                 },
                 {
@@ -4756,6 +4759,7 @@ export const storiesAll: Story[] = [
                   "ref": "prop:night-window",
                   "x": 302,
                   "y": 196,
+                  "s": 1,
                   "z": "back"
                 },
                 {
@@ -4767,7 +4771,8 @@ export const storiesAll: Story[] = [
                 {
                   "ref": "hoya:reading",
                   "x": 170,
-                  "y": 294
+                  "y": 294,
+                  "s": 1
                 }
               ],
               "altEn": "At night Hoya sits by a small lamp with his notebook, a crescent moon in the window, and writes one line about his day."
@@ -7143,6 +7148,7 @@ export const storiesAll: Story[] = [
                   "ref": "prop:book-geojunggi",
                   "x": 322,
                   "y": 292,
+                  "s": 1,
                   "z": "front"
                 }
               ],
@@ -7434,12 +7440,14 @@ export const storiesAll: Story[] = [
                 {
                   "ref": "hoya:cheering",
                   "x": 160,
-                  "y": 292
+                  "y": 292,
+                  "s": 1
                 },
                 {
                   "ref": "prop:books-stack",
                   "x": 332,
                   "y": 288,
+                  "s": 1,
                   "z": "front"
                 }
               ],
@@ -11072,7 +11080,8 @@ export const storiesAll: Story[] = [
                 {
                   "ref": "prop:fig-official",
                   "x": 205,
-                  "y": 262
+                  "y": 262,
+                  "s": 1
                 },
                 {
                   "ref": "prop:fig-official",
@@ -11219,6 +11228,7 @@ export const storiesAll: Story[] = [
                   "ref": "prop:writing-lines",
                   "x": 262,
                   "y": 292,
+                  "s": 1,
                   "z": "front"
                 },
                 {
@@ -11309,6 +11319,7 @@ export const storiesAll: Story[] = [
                   "ref": "prop:book-thread-bound",
                   "x": 216,
                   "y": 234,
+                  "s": 1,
                   "z": "front"
                 },
                 {
@@ -11322,6 +11333,7 @@ export const storiesAll: Story[] = [
                   "ref": "prop:fig-historian",
                   "x": 310,
                   "y": 262,
+                  "s": 1,
                   "flip": true
                 },
                 {
@@ -12615,6 +12627,7 @@ export const storiesAll: Story[] = [
                   "ref": "prop:paper-stack",
                   "x": 70,
                   "y": 233,
+                  "s": 1,
                   "z": "front"
                 },
                 {
@@ -12635,6 +12648,7 @@ export const storiesAll: Story[] = [
                   "ref": "prop:papers-loose",
                   "x": 344,
                   "y": 233,
+                  "s": 1,
                   "z": "front"
                 }
               ],
@@ -12818,7 +12832,8 @@ export const storiesAll: Story[] = [
                 {
                   "ref": "prop:fig-scholar",
                   "x": 150,
-                  "y": 272
+                  "y": 272,
+                  "s": 1
                 },
                 {
                   "ref": "prop:fig-scholar",
@@ -12862,7 +12877,8 @@ export const storiesAll: Story[] = [
                 {
                   "ref": "prop:sago-archive",
                   "x": 200,
-                  "y": 244
+                  "y": 244,
+                  "s": 1
                 },
                 {
                   "ref": "prop:pine-tree",
@@ -13470,7 +13486,8 @@ export const storiesAll: Story[] = [
                 {
                   "ref": "hoya:thinking",
                   "x": 105,
-                  "y": 282
+                  "y": 282,
+                  "s": 1
                 }
               ],
               "altEn": "Hoya, a curious young tiger, stands by a stack of old thread-bound books and wonders how we know the past."
@@ -13505,7 +13522,8 @@ export const storiesAll: Story[] = [
                 {
                   "ref": "prop:fig-officials-kneeling",
                   "x": 140,
-                  "y": 248
+                  "y": 248,
+                  "s": 1
                 },
                 {
                   "ref": "prop:fig-officials-kneeling",
@@ -13595,7 +13613,8 @@ export const storiesAll: Story[] = [
                 {
                   "ref": "prop:fig-king",
                   "x": 270,
-                  "y": 282
+                  "y": 282,
+                  "s": 1
                 }
               ],
               "altEn": "The king walks past a closed wooden box of the historians' notes, tied with a red cord, and leaves it shut."
@@ -13666,7 +13685,8 @@ export const storiesAll: Story[] = [
                 {
                   "ref": "prop:fig-king",
                   "x": 210,
-                  "y": 272
+                  "y": 272,
+                  "s": 1
                 },
                 {
                   "ref": "hoya:idle",
@@ -15731,12 +15751,14 @@ export const storiesAll: Story[] = [
                 {
                   "ref": "prop:fig-scholar",
                   "x": 190,
-                  "y": 272
+                  "y": 272,
+                  "s": 1
                 },
                 {
                   "ref": "prop:fig-scholar",
                   "x": 108,
-                  "y": 272
+                  "y": 272,
+                  "s": 1
                 },
                 {
                   "ref": "prop:fig-official",
@@ -15749,6 +15771,7 @@ export const storiesAll: Story[] = [
                   "ref": "prop:silk-bolts",
                   "x": 250,
                   "y": 288,
+                  "s": 1,
                   "z": "front"
                 }
               ],

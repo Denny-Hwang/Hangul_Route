@@ -162,6 +162,7 @@
                 "ref": "prop:paper-stack",
                 "x": 70,
                 "y": 233,
+                "s": 1,
                 "z": "front"
               },
               {
@@ -182,6 +183,7 @@
                 "ref": "prop:papers-loose",
                 "x": 344,
                 "y": 233,
+                "s": 1,
                 "z": "front"
               }
             ],
@@ -365,7 +367,8 @@
               {
                 "ref": "prop:fig-scholar",
                 "x": 150,
-                "y": 272
+                "y": 272,
+                "s": 1
               },
               {
                 "ref": "prop:fig-scholar",
@@ -409,7 +412,8 @@
               {
                 "ref": "prop:sago-archive",
                 "x": 200,
-                "y": 244
+                "y": 244,
+                "s": 1
               },
               {
                 "ref": "prop:pine-tree",

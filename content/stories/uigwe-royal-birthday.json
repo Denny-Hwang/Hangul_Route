@@ -378,12 +378,14 @@
               {
                 "ref": "prop:fig-scholar",
                 "x": 190,
-                "y": 272
+                "y": 272,
+                "s": 1
               },
               {
                 "ref": "prop:fig-scholar",
                 "x": 108,
-                "y": 272
+                "y": 272,
+                "s": 1
               },
               {
                 "ref": "prop:fig-official",
@@ -396,6 +398,7 @@
                 "ref": "prop:silk-bolts",
                 "x": 250,
                 "y": 288,
+                "s": 1,
                 "z": "front"
               }
             ],
