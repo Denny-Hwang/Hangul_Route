@@ -1,11 +1,11 @@
 {
   "v": 1,
   "id": "story:sillok-royal-historians",
-  "state": "draft",
+  "state": "ready",
   "contentVer": 1,
   "title": {
     "ko": "호야, 사관을 만나다",
-    "romanization": "",
+    "romanization": "Hoya, sagwaneul mannada",
     "en": "Hoya Meets the Royal Historians"
   },
   "summaryEn": "Hoya learns who wrote down the words of Joseon kings and why even the king could not read their notes. A real 1404 entry from the Annals shows how faithfully they recorded.",
@@ -27,7 +27,10 @@
   "review": {
     "language": "draft",
     "culture": "draft",
-    "advisory": []
+    "advisory": [
+      "mild-peril"
+    ],
+    "advisoryNoteEn": "A king falls from his horse while hunting; he is not hurt."
   },
   "keywords": [
     {
@@ -95,6 +98,7 @@
         {
           "id": "s1",
           "narrationEn": "Hoya the little tiger has a big question: how do we know what kings said hundreds of years ago? Because people wrote it down! In the Joseon kingdom, special officials recorded the work of the royal court every day.",
+          "captionEn": "Hoya asks how we know what kings said",
           "keyword": {
             "id": "girok",
             "ko": "기록",
@@ -107,11 +111,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "A small friendly tiger cub sitting on a stack of old thread-bound books, head tilted with curiosity; warm hanji-paper background."
         },
         {
           "id": "s2",
           "narrationEn": "These officials were the {kw:sagwan}, the royal historians. Wherever the king met his officials, a historian was there, writing down what they saw and heard.",
+          "captionEn": "A historian writes beside the king",
           "keyword": {
             "id": "sagwan",
             "ko": "사관",
@@ -124,11 +130,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "A Joseon palace hall: the king on a raised seat, officials kneeling in rows, and at the side a historian in official dress and a black hat writing with a brush on paper."
         },
         {
           "id": "s3",
           "narrationEn": "Joseon had eight full-time historians, and many other officials also served as part-time historians. Their notes were called {kw:sacho}, which means 'draft history.'",
+          "captionEn": "Historians write draft notes",
           "keyword": {
             "id": "sacho",
             "ko": "사초",
@@ -142,11 +150,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Close-up of hands holding a calligraphy brush over sheets of handwritten paper, an inkstone and ink stick beside them."
         },
         {
           "id": "s4",
           "narrationEn": "The rule was strict: no one was supposed to read the {kw:sacho}, not even the king. This helped the historians write fairly and protected them.",
+          "captionEn": "Not even the king may read them",
           "line": {
             "ko": "사초는 왕도 볼 수 없어요.",
             "romanization": "Sachoneun wangdo bol su eopseoyo.",
@@ -158,11 +168,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "A closed wooden document box tied with a red cord; the king, seen from behind, walking past it without opening it."
         },
         {
           "id": "s5",
           "narrationEn": "One day in 1404, King Taejong went hunting. His horse stumbled, and he fell off. Luckily, he was not hurt!",
+          "captionEn": "King Taejong falls from his horse",
           "keyword": {
             "id": "mal",
             "ko": "말",
@@ -175,11 +187,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "A gentle countryside scene: a brown horse that has stumbled on grass, and a king in plain riding clothes sitting up on the ground, unhurt, brushing off his sleeve."
         },
         {
           "id": "s6",
           "narrationEn": "Taejong looked around and said, 'Do not let the historian know!' But that very sentence is in the Annals today. The historian wrote down even this!",
+          "captionEn": "'Do not let the historian know!'",
           "line": {
             "ko": "사관이 알게 하지 말라.",
             "romanization": "Sagwani alge haji malla.",
@@ -192,11 +206,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "The king glancing over his shoulder with a finger to his lips, while in the background a historian quietly writes; Hoya peeks from behind a tree, smiling."
         },
         {
           "id": "s7",
           "narrationEn": "The historians' notes became the most important source for the {kw:sillok}, the Annals of the Joseon Dynasty. The Annals cover 472 years and 25 kings, from Taejo to Cheoljong, and are on UNESCO's Memory of the World Register.",
+          "captionEn": "The notes help make the Annals",
           "keyword": {
             "id": "sillok",
             "ko": "실록",
@@ -211,6 +227,7 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "A long row of old thread-bound books standing in a wooden case, with Hoya proudly pointing at them."
         }
       ],
@@ -241,6 +258,7 @@
               "isCorrect": false
             }
           ],
+          "explainEn": "By rule, no one could read the draft notes, not even the king. This helped the historians write fairly.",
           "factIds": [
             "f5"
           ]
@@ -266,6 +284,7 @@
               "isCorrect": false
             }
           ],
+          "explainEn": "He said, 'Do not let the historian know.' The historian wrote that down too, and it is in the Annals today.",
           "factIds": [
             "f7"
           ]
@@ -291,6 +310,7 @@
               "isCorrect": true
             }
           ],
+          "explainEn": "The Annals cover 472 years, from 1392 to 1863, and 25 kings, from Taejo to Cheoljong.",
           "factIds": [
             "f9"
           ]

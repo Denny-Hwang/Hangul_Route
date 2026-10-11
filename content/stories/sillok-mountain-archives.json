@@ -1,11 +1,11 @@
 {
   "v": 1,
   "id": "story:sillok-mountain-archives",
-  "state": "draft",
+  "state": "ready",
   "contentVer": 1,
   "title": {
     "ko": "산으로 간 실록",
-    "romanization": "",
+    "romanization": "Saneuro gan sillok",
     "en": "The Annals Hide in the Mountains"
   },
   "summaryEn": "After a king died, officials turned the historians' notes into the Annals and guarded the books in archives far away in the mountains. Hoya follows the Annals from draft to mountain archive.",
@@ -31,7 +31,7 @@
       "war",
       "loss"
     ],
-    "advisoryNoteEn": "Briefly mentions a war from Korea's history. Briefly mentions a death or a fire, told gently."
+    "advisoryNoteEn": "Mentions a king's death and a war in which some books were lost, told briefly and with no violent detail."
   },
   "keywords": [
     {
@@ -114,8 +114,8 @@
     {
       "id": "sacho",
       "ko": "사초",
-      "romanization": "",
-      "en": "",
+      "romanization": "sacho",
+      "en": "draft history notes",
       "kind": "term"
     }
   ],
@@ -127,6 +127,7 @@
         {
           "id": "s1",
           "narrationEn": "When a king died, the next king's court set up a temporary office called the {kw:sillokcheong}. Its officials collected the historians' {kw:sacho} and other court records to write the late king's Annals.",
+          "captionEn": "An office gathers the historians' notes",
           "keyword": {
             "id": "sillokcheong",
             "ko": "실록청",
@@ -140,11 +141,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Officials in Joseon robes seated around low tables piled with papers and scrolls, sorting documents in a quiet hall."
         },
         {
           "id": "s2",
           "narrationEn": "They wrote a first draft, corrected it in a second draft, and polished a final draft. Most of the Annals were then printed with movable type.",
+          "captionEn": "Three drafts, then printing",
           "keyword": {
             "id": "chaek",
             "ko": "책",
@@ -157,11 +160,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Three stacks of paper growing neater from left to right, then a wooden tray of small type blocks and freshly printed pages drying."
         },
         {
           "id": "s3",
           "narrationEn": "And the used drafts? In early Joseon, they were soaked and washed in a stream near the government paper office. Secrets stayed safe, and the paper could be reused. This was called {kw:secho}.",
+          "captionEn": "Used drafts washed in a stream",
           "keyword": {
             "id": "secho",
             "ko": "세초",
@@ -174,11 +179,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "A clear mountain stream with flat rocks; officials gently rinsing sheets of paper as the ink swirls away, Hoya watching from a rock."
         },
         {
           "id": "s4",
           "narrationEn": "The finished Annals were kept in special archives called {kw:sago}. During a great war in the 1590s, the copies kept in Seoul, Chungju and Seongju were lost. Only the Jeonju copy survived.",
+          "captionEn": "Only the Jeonju copy survives a war",
           "keyword": {
             "id": "sago",
             "ko": "사고",
@@ -200,11 +207,13 @@
               "timeRelative": false
             }
           ],
+          "artPending": true,
           "artBrief": "A traditional archive building with a tiled roof and wooden walls; one lantern-lit doorway glowing, suggesting the one surviving copy."
         },
         {
           "id": "s5",
           "narrationEn": "Two local scholars, An Ui and Son Hong-rok, used their own money to carry the Jeonju copy and other books to Naejangsan Mountain. They took turns guarding them until the books were handed to the government the next year.",
+          "captionEn": "Scholars carry the books to a mountain",
           "keyword": {
             "id": "naejangsan",
             "ko": "내장산",
@@ -216,12 +225,23 @@
             "f6"
           ],
           "framing": false,
-          "approximations": [],
+          "approximations": [
+            {
+              "text": "Two local scholars",
+              "factIds": [
+                "f6"
+              ],
+              "rationaleEn": "f6 names the two scholars, An Ui and Son Hong-rok.",
+              "timeRelative": false
+            }
+          ],
+          "artPending": true,
           "artBrief": "Two scholars in plain traditional clothes and wide-brimmed hats leading a small ox cart loaded with wrapped book boxes along a misty mountain path."
         },
         {
           "id": "s6",
           "narrationEn": "After the war, new copies were printed from the Jeonju copy, making five sets. Most went to archives deep in the mountains or on an island, such as Odaesan and Taebaeksan, where war was less likely to reach them.",
+          "captionEn": "Copies sent far away, safer from war",
           "keyword": {
             "id": "sansogui-sago",
             "ko": "산속의 사고",
@@ -235,11 +255,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "A small walled archive compound nestled among pine-covered mountain ridges, clouds drifting below the peaks."
         },
         {
           "id": "s7",
           "narrationEn": "The books were wrapped in oiled paper and red cloth, then packed in a wooden chest with herbs called cheongung and changpo, which helped protect them from bugs and rot.",
+          "captionEn": "Books packed with herbs in a chest",
           "keyword": {
             "id": "yakcho",
             "ko": "약초",
@@ -252,11 +274,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "An open wooden chest: books wrapped in red cloth, small cloth pouches of dried herbs tucked at the bottom and on top."
         },
         {
           "id": "s8",
           "narrationEn": "Every few years, a historian traveled to each mountain archive on a clear day. The books were taken out and aired in the sun and breeze. This was called {kw:poswae}. Hoya loves sunny days, too!",
+          "captionEn": "Airing the books in the sun",
           "line": {
             "ko": "책을 햇볕에 말려요.",
             "romanization": "Chaegeul haetbyeote mallyeoyo.",
@@ -268,6 +292,7 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Books laid open on mats in a sunny courtyard of a mountain archive, a historian checking pages while a breeze lifts them; Hoya basking nearby."
         }
       ],
@@ -293,6 +318,7 @@
               "isCorrect": true
             }
           ],
+          "explainEn": "In early Joseon, used drafts were washed in a stream so secrets stayed safe and the paper could be used again.",
           "factIds": [
             "f4"
           ]
@@ -318,6 +344,7 @@
               "isCorrect": false
             }
           ],
+          "explainEn": "Local scholars An Ui and Son Hong-rok used their own money to move the Jeonju copy to Naejangsan Mountain and guard it.",
           "factIds": [
             "f6"
           ]
@@ -348,6 +375,7 @@
               "isCorrect": false
             }
           ],
+          "explainEn": "Poswae means taking the books out on a clear day, every few years, and airing them in sunlight and wind.",
           "factIds": [
             "f10"
           ]
