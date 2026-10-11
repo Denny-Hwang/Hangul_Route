@@ -81,6 +81,9 @@ export const ROMANIZATION_SCAN_IGNORE: readonly ScanIgnore[] = [
   { path: 'apps/mobile/src/content/__generated__/vocab.ts', reason: 'generated from content/vocab/*.json (scanned as class A) by scripts/build-vocab.mjs' },
   { path: 'apps/web/src/data/vocab-catalog.ts', reason: 'generated from content/vocab/*.json (scanned as class A) by scripts/build-vocab.mjs' },
   { path: 'apps/mobile/src/content/placement.generated.ts', reason: 'generated from content/placement/*.json (scanned as class A) by scripts/build-placement-bank.mjs' },
+  // Scene-art library (F-STORY-002 PR 2.3b): Korean appears only in sourceRef citations (the cited page title and publisher, as in a fact source); alt and accuracyNote are Hangul-free, enforced by packages/design-system/src/scene-art/__tests__/registry.test.ts.
+  { path: 'packages/design-system/src/scene-art/props/', reason: 'sourceRef citation titles and publishers (the cited Korean page), never drawn or taught; alt and accuracyNote stay Hangul-free (scene-art registry.test.ts)' },
+  { path: 'packages/design-system/src/scene-art/settings/', reason: 'sourceRef citation titles and publishers (the cited Korean page), never drawn or taught; alt and accuracyNote stay Hangul-free (scene-art registry.test.ts)' },
 ];
 
 /** The directories the content scan skips; kept equal to SKIPPED_DIRS in scripts/validate-content.mjs. */
