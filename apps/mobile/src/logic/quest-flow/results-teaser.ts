@@ -1,0 +1,134 @@
+import type { Episode, ProgressSnapshot, Quest } from '@hangul-route/content-schema';
+import { findJamo } from '../../content/jamo';
+import type { TelemetryEvent } from '../../platform/telemetry';
+import { nextQuestAfter } from '../next-quest';
+import { questTeaches } from '../stage1/curriculum';
+
+/**
+ * The Results "Next up" teaser (F-QUEST-002 §3.5, wireframe results/next-quest-teaser).
+ * Pure view-model: the screen only paints what it returns, so the cursor, the
+ * one-line fallbacks and the button demotion are unit-tested without a renderer.
+ * Copy is plain Pre-A1 English and never says "must" or shows a count or percent.
+ */
+
+/** Hangul inside the teaser is taught content: the screen renders it with `KoreanText`. */
+export interface TeaserLetter {
+  ko: string;
+  romanization: string;
+}
+
+export type TeaserLine =
+  | { kind: 'text'; text: string }
+  | { kind: 'letters'; lead: string; letters: TeaserLetter[] };
+
+export interface ResultsTeaser {
+  questId: string;
+  episodeId: string;
+  titleEn: string;
+  line?: TeaserLine;
+  /** `true` when every game was skipped and the same quest is offered again. */
+  again: boolean;
+  ctaLabel: string;
+}
+
+export interface ResultsTeaserInput {
+  snapshot: ProgressSnapshot | undefined;
+  quests: readonly Quest[];
+  episodes: readonly Episode[];
+  /** The quest the learner just played. */
+  questId: string;
+  /** Rounds scored in that run; 0 means every game was skipped and nothing completed. */
+  total: number;
+  /** `isStageEntitled(stageKey, tier)` for the current learner. */
+  isEntitled?: (stageKey: string) => boolean;
+}
+
+const NEXT_LABEL = 'Play next quest';
+const AGAIN_LABEL = 'Try this one again';
+const LETTERS_LEAD = 'New letters:';
+
+/** The one line under the title: `teaserEn`, else "New letters:" from Discover, else `blurbEn`. */
+function teaserLine(quest: Quest): TeaserLine | undefined {
+  if (quest.teaserEn) return { kind: 'text', text: quest.teaserEn };
+  const letters: TeaserLetter[] = [];
+  for (const id of questTeaches(quest)) {
+    const jamo = findJamo(id);
+    if (jamo) letters.push({ ko: jamo.char, romanization: jamo.romanization });
+  }
+  if (letters.length > 0) return { kind: 'letters', lead: LETTERS_LEAD, letters };
+  if (quest.blurbEn) return { kind: 'text', text: quest.blurbEn };
+  return undefined;
+}
+
+function episodeIdOf(questId: string, episodes: readonly Episode[]): string | undefined {
+  return episodes.find((e) => e.questIds.includes(questId))?.id;
+}
+
+/**
+ * The quest to tease, or `undefined` when there is none (the screen then keeps
+ * its two original buttons). The target is the Journey cursor with the quest
+ * just played counted as done, so replaying an old quest still points at the
+ * learner's real next step; when nothing was scored the quest did not
+ * complete and the same quest is offered again.
+ */
+export function resultsTeaser(input: ResultsTeaserInput): ResultsTeaser | undefined {
+  const { quests, episodes, questId, total } = input;
+  const again = total === 0;
+  const target = again
+    ? quests.find((q) => q.id === questId)
+    : nextQuestAfter({
+        snapshot: input.snapshot ?? EMPTY_SNAPSHOT,
+        quests,
+        episodes,
+        justCompleted: questId,
+        isEntitled: input.isEntitled,
+      });
+  if (!target) return undefined;
+  const episodeId = episodeIdOf(target.id, episodes);
+  if (!episodeId) return undefined;
+  return {
+    questId: target.id,
+    episodeId,
+    titleEn: target.titleEn,
+    line: teaserLine(target),
+    again,
+    ctaLabel: again ? AGAIN_LABEL : NEXT_LABEL,
+  };
+}
+
+const EMPTY_SNAPSHOT: ProgressSnapshot = {
+  profileId: '',
+  updatedAt: '',
+  episodes: [],
+  quests: [],
+  cards: [],
+  sessions: [],
+  homework: [],
+  reviews: [],
+  streakDays: 0,
+};
+
+interface ButtonLook {
+  tone: 'primary' | 'ghost';
+  size: 'hero' | 'md';
+}
+
+/** With a teaser the teaser CTA is the one primary; Back home and Episode page are both ghost. */
+export function resultsActions(teaser: ResultsTeaser | undefined): {
+  backHome: ButtonLook;
+  episodePage: ButtonLook;
+} {
+  return {
+    backHome: teaser ? { tone: 'ghost', size: 'md' } : { tone: 'primary', size: 'hero' },
+    episodePage: { tone: 'ghost', size: 'md' },
+  };
+}
+
+/** `quest.teaser_tapped { fromQuestId, toQuestId }` (spec §4). */
+export function teaserTappedEvent(profileId: string, fromQuestId: string, teaser: ResultsTeaser): TelemetryEvent {
+  return {
+    name: 'quest.teaser_tapped',
+    profileId,
+    payload: { fromQuestId, toQuestId: teaser.questId },
+  };
+}
