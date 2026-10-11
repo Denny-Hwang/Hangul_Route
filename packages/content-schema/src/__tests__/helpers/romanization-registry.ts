@@ -37,6 +37,7 @@ export const REGISTERED_SOURCES: readonly RegisteredSource[] = [
   { path: 'apps/mobile/src/logic/profiles/avatar-catalog.ts', cls: 'B1', suite: MOBILE_SUITE, needle: 'profiles/avatar-catalog' },
   // B2. TS data, web
   { path: 'apps/web/src/data/stage1-cards.ts', cls: 'B2', suite: WEB_DATA_SUITE, needle: '../stage1-cards' },
+  { path: 'apps/web/src/data/mock-family.ts', cls: 'B2', suite: WEB_DATA_SUITE, needle: '../mock-family' },
   // B3. TS data, API (isolated jamo only: R7)
   { path: 'packages/backend/src/routes/content.ts', cls: 'B3', suite: BACKEND_SUITE, needle: 'routes/content' },
   // C. Inline literals in pages

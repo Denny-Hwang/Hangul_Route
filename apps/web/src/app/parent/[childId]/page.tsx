@@ -105,6 +105,7 @@ export default function ChildDetailPage({ params }: { params: { childId: string 
                 <div lang="ko" style={{ fontSize: typography.size.title, fontWeight: typography.weight.bold, color: colors.text.primary }}>
                   {c.ko}
                 </div>
+                <div style={{ fontSize: typography.size.caption, color: colors.text.muted }}>{c.romanization}</div>
                 <div style={{ fontSize: typography.size.caption, fontWeight: 600 }}>{c.title}</div>
               </div>
             ))}

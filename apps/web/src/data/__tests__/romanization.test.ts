@@ -10,6 +10,7 @@ import {
 } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { heritageCardsAll } from '../../../../mobile/src/content/heritage-cards';
+import { mockFamily } from '../mock-family';
 import { stage1Cards } from '../stage1-cards';
 
 // F-CNT-002 PR 3, source class B2 (web landing data): the landing cards are Revised
@@ -57,5 +58,33 @@ describe('stage1Cards romanization (landing data, B2)', () => {
     const shared = new Set(stage1Cards.map((c) => c.ko));
     expect(entries.filter((e) => shared.has(e.ko)).length).toBeGreaterThan(stage1Cards.length);
     expect(checkConsistency(entries).map((i) => formatRomanizationFinding(FILE, undefined, i))).toEqual([]);
+  });
+});
+
+describe('mockFamily card words romanization (/parent demo data, B2)', () => {
+  const MOCK_FILE = 'apps/web/src/data/mock-family.ts';
+  const mockSource = readFileSync(new URL('../mock-family.ts', import.meta.url), 'utf8');
+  const cards = mockFamily().profiles.flatMap((p) => p.recentCards);
+  const mockLine = (ko: string): number | undefined => lineOfText(mockSource, `ko: '${ko}'`);
+
+  it('every card word passes R1 to R4 (Revised Romanization, no hyphens, one word per word)', () => {
+    expect(cards.length).toBeGreaterThan(0);
+    const found = cards.flatMap((c) =>
+      checkRomanization(c.ko, c.romanization, { exceptions: ROMANIZATION_EXCEPTIONS }).map((i) =>
+        formatRomanizationFinding(MOCK_FILE, mockLine(c.ko), i),
+      ),
+    );
+    expect(found).toEqual([]);
+  });
+
+  it('R5: a word shared with the landing cards or the app cards has the same spelling', () => {
+    const entries: RomanizationEntry[] = [
+      ...cards.map((c) => ({ ko: c.ko, romanization: c.romanization, where: `${MOCK_FILE}:${mockLine(c.ko) ?? 0}` })),
+      ...stage1Cards.map((c) => ({ ko: c.ko, romanization: c.romanization, where: `${FILE}:${line(c.ko) ?? 0}` })),
+      ...heritageCardsAll.flatMap((c) =>
+        c.subtitleKo === undefined ? [] : [{ ko: c.subtitleKo, romanization: c.romanization ?? '', where: `apps/mobile/src/content/heritage-cards.ts:${c.id}` }],
+      ),
+    ];
+    expect(checkConsistency(entries).map((i) => formatRomanizationFinding(MOCK_FILE, undefined, i))).toEqual([]);
   });
 });

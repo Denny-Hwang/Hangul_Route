@@ -114,10 +114,13 @@ describe('the art that replaced the emoji is drawn', () => {
     expect(html.match(/viewBox="0 0 24 24"/g) ?? []).toHaveLength(minigameCatalog.length);
   });
 
-  it('parent demo cards: each shows its Korean word', async () => {
+  it('parent demo cards: each shows its Korean word with its romanization', async () => {
     for (const profile of mockFamily().profiles) {
       const html = await render('../parent/[childId]/page', profile.id);
-      for (const card of profile.recentCards) expect(html, card.title).toContain(card.ko);
+      for (const card of profile.recentCards) {
+        expect(html, card.title).toContain(card.ko);
+        expect(html, card.title).toContain(card.romanization);
+      }
     }
   });
 });

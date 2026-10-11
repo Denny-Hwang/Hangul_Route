@@ -14,8 +14,12 @@ export interface MockChildProfile {
   streak: number;
   weekly: Array<{ day: string; minutes: number }>;
   recentQuests: Array<{ id: string; title: string; stars: number; completedAt: string }>;
-  /** A collected card: its English title and the Korean word the card teaches (drawn as text, no emoji). */
-  recentCards: Array<{ id: string; title: string; ko: string }>;
+  /**
+   * A collected card: the Korean word it teaches (drawn as text, no emoji), its Revised
+   * Romanization, and its English title as the gloss (CLAUDE.md §1: taught Korean always
+   * carries romanization and a UI-language gloss).
+   */
+  recentCards: Array<{ id: string; title: string; ko: string; romanization: string }>;
 }
 
 export interface MockFamily {
@@ -47,10 +51,10 @@ export function mockFamily(): MockFamily {
         { id: 'q3', title: 'Tiger, Magpie, Moon', stars: 3, completedAt: 'Sun, May 17' },
       ],
       recentCards: [
-        { id: 'c1', title: 'Tiger', ko: '호랑이' },
-        { id: 'c2', title: 'Kimchi', ko: '김치' },
-        { id: 'c3', title: 'Moon', ko: '달' },
-        { id: 'c4', title: 'Kite', ko: '연' },
+        { id: 'c1', title: 'Tiger', ko: '호랑이', romanization: 'horangi' },
+        { id: 'c2', title: 'Kimchi', ko: '김치', romanization: 'gimchi' },
+        { id: 'c3', title: 'Moon', ko: '달', romanization: 'dal' },
+        { id: 'c4', title: 'Kite', ko: '연', romanization: 'yeon' },
       ],
     },
     {
@@ -75,10 +79,10 @@ export function mockFamily(): MockFamily {
         { id: 'q6', title: 'Hello Kimchi & Rice', stars: 2, completedAt: 'Yesterday' },
       ],
       recentCards: [
-        { id: 'c5', title: 'Yutnori', ko: '윷놀이' },
-        { id: 'c6', title: 'Mountain', ko: '산' },
-        { id: 'c7', title: 'Seollal', ko: '설날' },
-        { id: 'c8', title: 'Rice', ko: '밥' },
+        { id: 'c5', title: 'Yutnori', ko: '윷놀이', romanization: 'yunnori' },
+        { id: 'c6', title: 'Mountain', ko: '산', romanization: 'san' },
+        { id: 'c7', title: 'Seollal', ko: '설날', romanization: 'seollal' },
+        { id: 'c8', title: 'Rice', ko: '밥', romanization: 'bap' },
       ],
     },
   ];
