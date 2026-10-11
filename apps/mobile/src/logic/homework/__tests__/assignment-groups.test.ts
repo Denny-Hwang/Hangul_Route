@@ -1,7 +1,7 @@
 import type { HomeworkAssignment } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
-import { assignedByLabel, dueLabel, groupAssignments } from '../assignment-groups';
+import { assignedByLabel, dueLabel, dueTodayCount, groupAssignments } from '../assignment-groups';
 
 const hw = (id: string, targetDate: string, extra: Partial<HomeworkAssignment> = {}): HomeworkAssignment => ({
   id,
@@ -48,6 +48,20 @@ describe('groupAssignments', () => {
   });
   it('handles an empty list', () => {
     expect(groupAssignments([], today)).toEqual({ today: [], upcoming: [], done: [] });
+  });
+});
+
+describe('dueTodayCount (the Home homework line, F-PLAN-002 section 3.6)', () => {
+  it('counts only what is due today or earlier and not done, never future items', () => {
+    const list = [
+      hw('late', '2026-09-17'),
+      hw('now', '2026-09-19'),
+      hw('soon', '2026-09-21'),
+      hw('far', '2026-12-01'),
+      hw('finished', '2026-09-18', { completedAt: '2026-09-18T10:00:00.000Z' }),
+    ];
+    expect(dueTodayCount(list, '2026-09-19')).toBe(2);
+    expect(dueTodayCount(undefined, '2026-09-19')).toBe(0);
   });
 });
 

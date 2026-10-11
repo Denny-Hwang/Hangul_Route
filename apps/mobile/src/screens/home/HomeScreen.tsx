@@ -34,6 +34,7 @@ import {
   type MissionCard,
   type MissionPlan,
 } from '../../logic/homework/mission-builder';
+import { dueTodayCount } from '../../logic/homework/assignment-groups';
 import { mergeAssignments } from '../../logic/homework/assignment-merger';
 import { gridQuestProgress } from '../../logic/journey';
 import { homeColumns } from '../../logic/layout/home-columns';
@@ -119,7 +120,8 @@ export function HomeScreen(): React.ReactElement {
   // Both sides count grid quests only: a shelf story is not a Journey quest (F-STORY-004 §3.10).
   const { completed, total: totalStage1Quests } = gridQuestProgress(episodesAll, questsAll, snap?.quests ?? []);
   const cardsUnlocked = snap?.cards.length ?? 0;
-  const homeworkDue = snap?.homework?.filter((h) => !h.completedAt).length ?? 0;
+  // Today's count only, the same number as the Homework list's Today group (F-PLAN-002 section 3.6).
+  const homeworkDue = dueTodayCount(snap?.homework, dayKey(new Date().toISOString()));
 
   const recentStars = (snap?.quests.slice(-1)[0]?.stars ?? 0) as 0 | 1 | 2 | 3;
 

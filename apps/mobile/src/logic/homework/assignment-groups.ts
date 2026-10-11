@@ -45,6 +45,15 @@ export function groupAssignments(
   return { today, upcoming, done };
 }
 
+/**
+ * How many assignments are on today's list (due today or earlier, not done):
+ * the number Home shows, the same as the Homework list's Today group, so a
+ * long plan never reads as "36 to do today" (F-PLAN-002 section 3.6).
+ */
+export function dueTodayCount(assignments: readonly HomeworkAssignment[] | undefined, todayKey: string): number {
+  return groupAssignments(assignments ?? [], todayKey).today.length;
+}
+
 type Homework = Messages['learner']['homework'];
 
 /** Child-readable relative label — never a raw ISO timestamp. The words come from `learner.homework.due`. */
