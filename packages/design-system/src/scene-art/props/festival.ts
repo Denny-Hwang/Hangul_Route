@@ -68,7 +68,7 @@ export const FEAST_TABLE: ItemDef = {
   alt: 'A low feast table set with tall stacked dishes of food in bowls',
   sourceRef: { title: '봉수당진찬도(奉壽堂進饌圖)', publisher: ENCYKOREA, url: 'https://encykorea.aks.ac.kr/Contents/Item/E0075663', accessed: ACCESSED },
   accuracyNote:
-    'The feast picture of 1795 shows tables of food set before the seats. Drawn here as one low table with high-piled dishes on footed bowls, the stacked style of Joseon court feasts; the number of dishes, their foods and colours are generic, not taken from the uigwe menu.',
+    'The entry on the 1795 feast picture describes a table of food set before the king\'s seat. Drawn here as one low table with high-piled dishes on footed bowls, the stacked style of Joseon court feasts (general knowledge, not the entry); the number of dishes, their foods and colours are generic, not taken from the uigwe menu.',
   nodes: [
     { t: 'ellipse', cx: 48, cy: 54, rx: 46, ry: 2, fill: 'text.secondary', o: 0.08, det: true },
     { t: 'path', d: 'M14 24 L24 4 L34 24 Z M40 24 L48 0 L56 24 Z M62 24 L72 6 L82 24 Z', fill: 'feedback.nudge' },

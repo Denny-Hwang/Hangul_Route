@@ -8,7 +8,6 @@ export const HANOK_ROOM: ItemDef = {
   z: 'back',
   horizonY: 196,
   alt: 'Inside a Joseon room with paper-covered lattice doors, wooden posts and a polished board floor',
-  sourceRef: { title: '한옥(韓屋)', publisher: '한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)', url: 'https://encykorea.aks.ac.kr/Article/E0061730', accessed: '2026-10-11' },
   accuracyNote:
     'A generic room of a Joseon timber house: unpainted wooden posts and a beam, plain plastered walls, two pairs of doors with a simple square lattice covered in pale paper, and a floor of wooden boards. It serves as a study, an office or a library room and copies no named building; the lattice pattern is the plainest kind, and no screen, painting, signboard or writing is drawn.',
   nodes: [
