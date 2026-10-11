@@ -316,7 +316,7 @@ Ships dark: with no reviewed story in the bundle, `visibleSections` returns `['c
 | 4.2 | `feat(mobile)`: `content-access.ts`, the two flags, `isStageEntitled` delegation, golden test | none |
 | 4.3a | `feat(content-schema)` + `feat(mobile)`: the six telemetry names (+ exact-list test), `bookmarks.ts` + `story-store` + hydrate in `bootstrap` (the `shelf` field already exists: F-STORY-001 PR 1.1b) | F-STORY-001 PR 1.1b |
 | 4.3b | `feat(mobile)`: story index / status / pick / open-story / culture-notes / library-sections / shelf-copy logic (pure, 100 %) | 4.2, 4.3a |
-| 4.4a | `feat(mobile)`: Home story card — `mission-builder` (`explore`, `pickStoryForHome` wiring), `HomeScreen`, amend F-HW-001 §3.1/§9.2 | 4.1, 4.3b |
+| 4.4a | `feat(mobile)`: Home story card — `mission-builder` (`explore`, `pickStoryForHome` wiring), `HomeScreen`, amend F-HW-001 §3.1/§9.2; also decide whether the slot 1/3 replay fallback (`replayCandidates`) may offer a completed shelf quest (after 4.1 it still reads every completed quest) | 4.1, 4.3b |
 | 4.4b | `feat(mobile)`: resume — `QuestPlayer` `resume` param + `beginQuest(…, startStepIndex)`, reader bookmark wiring (`useReaderBookmark` from F-STORY-002 PR 2.6a), Results clears the bookmark, `story.bookmark.resumed` | 4.3a, 4.3b, F-STORY-002 PR 2.6a/2.6b |
 | 4.5 | `feat(design-system)`: `SectionTabs`; `feat(mobile)`: Library sections shell + Story Time section + `StoryTile` | 4.3b, F-STORY-002 PR 2.3a (`StoryScene`), F-I18N-001 PR 4 (`KoreanText`) |
 | 4.6 | `feat(mobile)`: `StoryEpisodeDetail` and the `EpisodeDetailScreen` branch | 4.3b, 4.5 |

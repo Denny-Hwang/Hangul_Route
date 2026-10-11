@@ -16,10 +16,13 @@ import {
 } from '@hangul-route/design-system';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
+import { PromptPanel } from '../../components/PromptPanel';
+import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
+import { usePromptSlot } from '../../components/use-prompt-slot';
 import { useMessages } from '../../i18n/use-messages';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { pairRoundKey } from '../../logic/round-keys';
-import { speak } from '../../platform/audio';
+import { playPrompt } from '../../platform/audio';
 import { nudge, success } from '../../platform/haptics';
 import { useQuestRunStore } from '../../store/quest-run-store';
 
@@ -57,6 +60,19 @@ export function CardMatchGame({ scope, onFinish }: Props): React.ReactElement {
   const [wrongFlash, setWrongFlash] = useState<{ ko: number; en: number } | null>(null);
   // F-LAYOUT-001 §3.6: the cards grow with the window (their padding scales; the words keep their type size).
   const cardPadding = useMediaSize(spacing.md);
+  // Each Korean word is printed on its card; the panel only says why it is silent (F-AUDIO-004 A-5b).
+  const slot = usePromptSlot({ source: 'card-match', textOnScreen: true });
+  const [heardIdx, setHeardIdx] = useState<number | null>(null);
+  const [helpOpen, setHelpOpen] = useState(false);
+
+  const hear = (idx: number): void => {
+    const pair = pairs[idx];
+    if (!pair) return;
+    // A different word is a new prompt slot: what the last one could not play no longer applies.
+    if (idx !== heardIdx) slot.reset();
+    setHeardIdx(idx);
+    void slot.play(() => playPrompt({ text: pair.ko, kind: 'word', source: 'card-match' }));
+  };
 
   useEffect(() => {
     if (matched.size === pairs.length && pairs.length > 0) {
@@ -112,7 +128,7 @@ export function CardMatchGame({ scope, onFinish }: Props): React.ReactElement {
                 onPress={() => {
                   if (isMatched) return;
                   setSelectedKo(p.idx);
-                  speak(p.ko, { language: 'ko-KR' });
+                  hear(p.idx);
                 }}
                 accessibilityLabel={m.a11y.minigame.koreanWord(p.romanization ?? p.ko)}
                 disabled={isMatched}
@@ -184,6 +200,15 @@ export function CardMatchGame({ scope, onFinish }: Props): React.ReactElement {
           })}
         </View>
       </View>
+
+      <Spacer size="md" />
+      <PromptPanel
+        variant="status"
+        view={slot.view}
+        onAction={(action) => slot.act(action, () => (heardIdx !== null ? hear(heardIdx) : undefined))}
+        onHelp={() => setHelpOpen(true)}
+      />
+      <VoiceHelpSheet visible={helpOpen} onClose={() => setHelpOpen(false)} />
 
       {selectedKo !== null && !matched.has(selectedKo) ? (
         <>

@@ -19,12 +19,15 @@ import {
 } from '@hangul-route/design-system';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
+import { PromptPanel } from '../../components/PromptPanel';
+import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
+import { usePromptSlot } from '../../components/use-prompt-slot';
 import { jamoAll } from '../../content/jamo';
 import { useMessages } from '../../i18n/use-messages';
 import { blockShape, shapeHint, tileAccessibilityLabel } from '../../logic/build-letter-view';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { buildBuildLetterRounds, type BuildLetterRound } from '../../logic/round-builder';
-import { speak } from '../../platform/audio';
+import { playPrompt } from '../../platform/audio';
 import { nudge, success, tapLight } from '../../platform/haptics';
 import { useQuestRunStore } from '../../store/quest-run-store';
 
@@ -60,11 +63,16 @@ export function BuildLetterGame({ scope, onFinish }: Props): React.ReactElement 
   const slotGlyph = useMediaSize(typography.size.display);
   const hintCell = useMediaSize(HINT_CELL);
   const tile = useMediaSize(touchTarget.child);
+  // The syllable is printed in the box, so that is its text; the panel only says why it is silent (F-AUDIO-004 A-5b).
+  const slot = usePromptSlot({ source: 'build-letter', textOnScreen: true });
+  const { play, reset } = slot;
+  const [helpOpen, setHelpOpen] = useState(false);
 
   useEffect(() => {
     setSelected([]);
     setFeedback('idle');
-  }, [roundIdx]);
+    reset();
+  }, [roundIdx, reset]);
 
   if (!round) {
     return (
@@ -73,6 +81,10 @@ export function BuildLetterGame({ scope, onFinish }: Props): React.ReactElement 
       </Screen>
     );
   }
+
+  const hear = (): void => {
+    void play(() => playPrompt({ text: round.targetSyllable, kind: 'sound', source: 'build-letter' }));
+  };
 
   const isCorrectWhenComplete = (sel: string[]): boolean => {
     if (sel.length !== round.componentJamoIds.length) return false;
@@ -130,8 +142,10 @@ export function BuildLetterGame({ scope, onFinish }: Props): React.ReactElement 
 
       <View style={{ alignItems: 'center' }}>
         <Pressable
-          onPress={() => speak(round.targetSyllable, { language: 'ko-KR' })}
+          onPress={hear}
+          accessibilityRole="button"
           accessibilityLabel={m.a11y.minigame.hear(round.romanization)}
+          testID="build-letter-speaker"
           style={{
             width: target,
             height: target,
@@ -147,6 +161,14 @@ export function BuildLetterGame({ scope, onFinish }: Props): React.ReactElement 
           <Caption tone="secondary">{round.romanization}</Caption>
         </Pressable>
       </View>
+      <Spacer size="sm" />
+      <PromptPanel
+        variant="status"
+        view={slot.view}
+        onAction={(action) => slot.act(action, hear)}
+        onHelp={() => setHelpOpen(true)}
+      />
+      <VoiceHelpSheet visible={helpOpen} onClose={() => setHelpOpen(false)} />
 
       <Spacer size="lg" />
       <Caption tone="muted" align="center">

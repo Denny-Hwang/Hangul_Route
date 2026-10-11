@@ -87,6 +87,13 @@ export const TELEMETRY_EVENT_NAMES = [
   'lecture.complete',
   'lecture.tool_used',
   'lecture.deck_rejected',
+  // F-STORY-004 §3.11 (payloads carry ids and counts only)
+  'story.shelf.viewed',
+  'story.opened',
+  'home.story_card.shown',
+  'story.bookmark.resumed',
+  'culture.note.viewed',
+  'story.locked.tapped',
 ] as const;
 
 export const TelemetryEventNameSchema = z.enum(TELEMETRY_EVENT_NAMES);

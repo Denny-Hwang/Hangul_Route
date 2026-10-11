@@ -35,6 +35,7 @@ import {
   type MissionPlan,
 } from '../../logic/homework/mission-builder';
 import { mergeAssignments } from '../../logic/homework/assignment-merger';
+import { gridQuestProgress } from '../../logic/journey';
 import { homeColumns } from '../../logic/layout/home-columns';
 import { DEFAULT_AVATAR } from '../../logic/profiles/avatar-catalog';
 import { computeStreak } from '../../logic/streak';
@@ -114,8 +115,8 @@ export function HomeScreen(): React.ReactElement {
   }, [profile, ensure]);
 
   const stars3 = (snap?.quests.filter((q) => q.stars === 3).length ?? 0);
-  const completed = snap?.quests.filter((q) => q.completedAt).length ?? 0;
-  const totalStage1Quests = questsAll.length;
+  // Both sides count grid quests only: a shelf story is not a Journey quest (F-STORY-004 §3.10).
+  const { completed, total: totalStage1Quests } = gridQuestProgress(episodesAll, questsAll, snap?.quests ?? []);
   const cardsUnlocked = snap?.cards.length ?? 0;
   const homeworkDue = snap?.homework?.filter((h) => !h.completedAt).length ?? 0;
 

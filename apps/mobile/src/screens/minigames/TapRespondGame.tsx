@@ -1,11 +1,30 @@
-import { Body, Button, Caption, Card, Heading, HoyaBubble, Pill, Progress, Screen, Spacer, spacing } from '@hangul-route/design-system';
-import React, { useMemo, useState } from 'react';
+import {
+  Body,
+  Button,
+  Caption,
+  Card,
+  Heading,
+  HoyaBubble,
+  Icon,
+  Pill,
+  Progress,
+  Screen,
+  Spacer,
+  colors,
+  spacing,
+} from '@hangul-route/design-system';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View } from 'react-native';
+import { PromptPanel } from '../../components/PromptPanel';
+import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
+import { usePromptSlot } from '../../components/use-prompt-slot';
 import { useMessages } from '../../i18n/use-messages';
 import { replyOptionLabel } from '../../logic/korean-labels';
+import { afterReply } from '../../logic/audio/reply-advance';
 import type { MinigameScope } from '../../logic/minigame-config';
-import { speak } from '../../platform/audio';
+import { playPrompt, stop } from '../../platform/audio';
 import { nudge, success, tapLight } from '../../platform/haptics';
+import { useAudioStore } from '../../store/audio-store';
 import { useQuestRunStore } from '../../store/quest-run-store';
 
 interface Props {
@@ -14,7 +33,8 @@ interface Props {
 }
 
 export function TapRespondGame({ scope, onFinish }: Props): React.ReactElement {
-  const copy = useMessages().learner.minigame;
+  const m = useMessages();
+  const copy = m.learner.minigame;
   const turns = useMemo(() => scope.dialogue ?? [], [scope]);
 
   const answerRound = useQuestRunStore((s) => s.answerRound);
@@ -25,6 +45,35 @@ export function TapRespondGame({ scope, onFinish }: Props): React.ReactElement {
   const [lockedWrong, setLockedWrong] = useState<string[]>([]);
 
   const turn = turns[turnIdx];
+  // The NPC line and the reply are printed on screen, so they are their own text; the panel only says
+  // why they are silent (F-AUDIO-004 A-5b, audit F06 / AUD-13).
+  const slot = usePromptSlot({ source: 'tap-respond', textOnScreen: true });
+  const { play, reset } = slot;
+  const [helpOpen, setHelpOpen] = useState(false);
+  const mounted = useRef(false);
+  // While a right reply is being said, nothing may start the NPC line again (it would cut the reply off).
+  const replying = useRef(false);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+      // Leaving mid-line (Back, or the last reply's onFinish) must not leave Korean playing over the next screen.
+      stop();
+    };
+  }, []);
+
+  const hearLine = useCallback((): void => {
+    if (!turn || replying.current) return;
+    void play(() => playPrompt({ text: turn.npcKo, kind: 'sentence', source: 'tap-respond' }));
+  }, [turn, play]);
+
+  // Each turn opens with the NPC line, said once. With sound switched off it waits for a tap, as on the
+  // other A-5b screens, so a muted learner is not told "Sound is off" again on every turn.
+  useEffect(() => {
+    reset();
+    if (!useAudioStore.getState().muted) hearLine();
+  }, [hearLine, reset]);
+
   if (!turn) {
     return (
       <Screen>
@@ -40,8 +89,12 @@ export function TapRespondGame({ scope, onFinish }: Props): React.ReactElement {
       success();
       answerRound(turnIdx, true);
       setFeedback('correct');
-      speak(ko, { language: 'ko-KR' });
-      setTimeout(() => {
+      replying.current = true;
+      const reply = play(() => playPrompt({ text: ko, kind: 'sentence', source: 'tap-respond' }));
+      // The reply is said in full before the next line starts (a newer prompt would cut it off).
+      void afterReply(reply).then(() => {
+        replying.current = false;
+        if (!mounted.current) return;
         if (turnIdx >= turns.length - 1) {
           markStepComplete();
           onFinish();
@@ -50,7 +103,7 @@ export function TapRespondGame({ scope, onFinish }: Props): React.ReactElement {
           setFeedback('idle');
           setLockedWrong([]);
         }
-      }, 900);
+      });
     } else {
       nudge();
       answerRound(turnIdx, false);
@@ -79,7 +132,30 @@ export function TapRespondGame({ scope, onFinish }: Props): React.ReactElement {
         {turn.npcRomanization ? <Body tone="muted">{turn.npcRomanization}</Body> : null}
         <Spacer size="xxs" />
         <Body tone="secondary">{turn.npcEn}</Body>
+        <Spacer size="sm" />
+        <View style={{ alignSelf: 'flex-start' }}>
+          <Button
+            label={m.learner.audio.hearIt.cta}
+            tone="secondary"
+            size="md"
+            leading={<Icon name="speaker" size={20} color={colors.text.onSecondary} />}
+            accessibilityLabel={m.a11y.minigame.hear(turn.npcRomanization ?? turn.npcKo)}
+            disabled={feedback === 'correct'}
+            onPress={hearLine}
+            testID="tap-respond-hear"
+          />
+        </View>
       </Card>
+      <Spacer size="sm" />
+      <PromptPanel
+        variant="status"
+        view={slot.view}
+        onAction={(action) => {
+          if (!replying.current) slot.act(action, hearLine);
+        }}
+        onHelp={() => setHelpOpen(true)}
+      />
+      <VoiceHelpSheet visible={helpOpen} onClose={() => setHelpOpen(false)} />
 
       <Spacer size="lg" />
       <View style={{ gap: spacing.md }}>

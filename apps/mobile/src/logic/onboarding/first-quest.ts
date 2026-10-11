@@ -1,9 +1,11 @@
 import type { Episode, Quest } from '@hangul-route/content-schema';
+import { gridEpisodes } from '../../content/episodes';
 
 /**
  * The quest a brand-new learner lands in straight after onboarding
  * (wireframe onboarding/first-quest-preview): the first quest of the
- * lowest-ordered shipped episode. Content-driven so a content change can
+ * lowest-ordered shipped grid episode (a shelf story is never the first quest,
+ * F-STORY-004 §3.10). Content-driven so a content change can
  * never leave the preview copy stale.
  */
 export interface FirstQuestTarget {
@@ -18,7 +20,7 @@ export function firstQuestFor(
   episodes: readonly Episode[],
   quests: readonly Quest[],
 ): FirstQuestTarget | null {
-  const shipped = episodes
+  const shipped = gridEpisodes(episodes)
     .filter((e) => e.status === 'shipped')
     .sort((a, b) => a.order - b.order);
   for (const episode of shipped) {

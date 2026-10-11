@@ -44,7 +44,7 @@ The learner device is unauthenticated (children have no accounts), so the device
 |---|---|
 | `quests` | union by `questId`; same id → higher `stars`, tie → higher `accuracy`; `attempts` summed; earliest `startedAt`; earliest defined `completedAt` |
 | `episodes` | union by `episodeId`; `questsCompleted` / `totalQuests` max; earliest defined `completedAt` |
-| `cards` | union by `cardId`; earliest `unlockedAt`; `newSinceLastView` from local when present |
+| `cards` | union by `cardId`; earliest `unlockedAt`; `newSinceLastView` true only when both sides still have it new ("seen anywhere = seen", F-STORY-006 §3.6 M3) |
 | `sessions` | union by `id`, sorted by `startedAt` |
 | `homework` | union by `id`; a defined `completedAt` wins |
 | `reviews` | union by `id`; higher `resultStars` |

@@ -4,6 +4,7 @@ import type { AudioCapability } from '../capability';
 import { INITIAL_PROMPT_STATE, promptReducer, type PromptEvent, type PromptState } from '../prompt-state';
 import {
   failureFromStore,
+  fallbackVisible,
   promptPanelView as promptPanelViewWith,
   shouldAutoReplay,
   wrongAnswerBubble,
@@ -105,6 +106,73 @@ describe('promptPanelView', () => {
     const s = run([{ muted: true }, { muted: false }]);
     const v = promptPanelView(s, readyCap, false, false);
     expect(v).toMatchObject({ textShown: true, reason: null, action: 'none', detail: null, heading: 'Tap the letter for this sound' });
+  });
+});
+
+describe('promptPanelView.statusShown (the status-only panel, F-AUDIO-004 A-5b)', () => {
+  // Build Letter, Card Match, Tap & Respond, Culture Quiz, Voice Echo and the card detail already print
+  // the Korean next to the speaker: the panel only says why there is no sound, once the learner asked for it.
+  it('stays hidden until the slot has tried to play, even when sound is off or there is no voice', () => {
+    expect(promptPanelView(run([{ muted: true }]), readyCap, true, false).statusShown).toBe(false);
+    expect(promptPanelView(INITIAL_PROMPT_STATE, noneCap, false, false).statusShown).toBe(false);
+  });
+
+  it('after a play, says the sound is off and offers Turn sound on', () => {
+    const v = promptPanelView(run([{ muted: true }, 'play', { result: 'muted' }]), readyCap, true, false);
+    expect(v).toMatchObject({ statusShown: true, detail: 'Sound is off.', actionLabel: 'Turn sound on' });
+  });
+
+  it('after a play with no Korean voice, says so and links the how-to', () => {
+    const v = promptPanelView(run(['play', { result: 'unavailable', failure: 'no_voice' }]), noneCap, false, false);
+    expect(v).toMatchObject({ statusShown: true, detail: 'No Korean voice on this device.', actionLabel: null, helpLabel: 'How to add a voice' });
+  });
+
+  it('after a failed or blocked play, offers Try again or Tap to hear', () => {
+    expect(promptPanelView(run(['play', { result: 'unavailable', failure: 'error' }]), readyCap, false, false)).toMatchObject({
+      statusShown: true,
+      actionLabel: 'Try again',
+    });
+    expect(promptPanelView(run(['play', { result: 'unavailable', failure: 'blocked' }]), readyCap, false, false)).toMatchObject({
+      statusShown: true,
+      detail: null,
+      actionLabel: 'Tap to hear',
+    });
+  });
+
+  it('is hidden while playing, after a sound that played, and when the text only stays after sound came back', () => {
+    expect(promptPanelView(run(['play']), readyCap, false, false).statusShown).toBe(false);
+    expect(promptPanelView(run(['play']), unknownCap, false, false).statusShown).toBe(false);
+    expect(promptPanelView(run(['play', { result: 'played' }]), readyCap, false, false).statusShown).toBe(false);
+    expect(promptPanelView(run([{ muted: true }, 'play', { result: 'muted' }, { muted: false }]), readyCap, false, false).statusShown).toBe(false);
+  });
+
+  it('a new round (reset) hides it again', () => {
+    expect(promptPanelView(run(['play', { result: 'unavailable', failure: 'error' }, 'reset']), readyCap, false, false).statusShown).toBe(false);
+  });
+});
+
+describe('fallbackVisible (when audio.fallback_shown fires)', () => {
+  it('a screen that prints the Korean (textOnScreen) counts the fallback as shown only once its status panel appears', () => {
+    const mutedIdle = promptPanelView(run([{ muted: true }]), readyCap, true, false);
+    expect(mutedIdle.textShown).toBe(true);
+    expect(fallbackVisible(mutedIdle, true)).toBe(false);
+    const mutedAfterPlay = promptPanelView(run([{ muted: true }, 'play', { result: 'muted' }]), readyCap, true, false);
+    expect(fallbackVisible(mutedAfterPlay, true)).toBe(true);
+  });
+
+  it('a screen with the full text panel counts it as shown as soon as the text is up', () => {
+    const mutedIdle = promptPanelView(run([{ muted: true }]), readyCap, true, false);
+    expect(fallbackVisible(mutedIdle, false)).toBe(true);
+    expect(fallbackVisible(promptPanelView(INITIAL_PROMPT_STATE, noneCap, false, false), false)).toBe(true);
+  });
+
+  it('never counts a shown panel that has no reason (text kept after sound came back) or a sound that played', () => {
+    const back = promptPanelView(run([{ muted: true }, { muted: false }]), readyCap, false, false);
+    expect(back.textShown).toBe(true);
+    expect(fallbackVisible(back, false)).toBe(false);
+    const played = promptPanelView(run(['play', { result: 'played' }]), readyCap, false, false);
+    expect(fallbackVisible(played, true)).toBe(false);
+    expect(fallbackVisible(played, false)).toBe(false);
   });
 });
 
