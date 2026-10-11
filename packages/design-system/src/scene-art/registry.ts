@@ -3,7 +3,7 @@
  * PR 2.3a seeded it with Hoya's five poses; PR 2.3b adds the first library
  * batch (3 settings, 13 props) for the flagship stories; PR 2.10a adds the
  * records-joseon cluster batch; PR 2.10b the hangul-printing batch; PR 2.10c
- * the science-art-life batch. The last batch (PR 2.10d) adds entries here.
+ * the science-art-life batch; PR 2.10d the seasons-tales batch.
  */
 import { HOYA_POSES, hoyaItem } from './hoya';
 import {
@@ -99,6 +99,36 @@ import {
   WRITING_SET,
 } from './props/writing';
 import { BRONZE_JAR, BRONZE_MIRROR, FLOAT_VESSEL, RAIN_GAUGE, RULER, STRIKING_FIGURES, SUNDIAL, WATER_STREAM, ZODIAC_RING } from './props/science';
+import {
+  CABBAGES,
+  CHANGPO,
+  DANCE_CIRCLE,
+  FIG_BOWING,
+  FIG_ELDER_SEATED,
+  FIG_GIRL,
+  FIG_PANSORI,
+  FIG_WOMAN,
+  FIG_YANGBAN_MASK,
+  GOURDS,
+  KIMCHI_JARS,
+  LANTERNS,
+  OX,
+  PERSIMMON_TREE,
+  RABBIT,
+  RICE_FIELD,
+  SKY_ROPE,
+  SOBAN,
+  SONGPYEON,
+  SORGHUM,
+  SUN_MOON_SCREEN,
+  SWALLOW,
+  SWING,
+  TIGER_TRICKSTER,
+  TURTLE,
+  YUT_BOARD,
+  YUT_STICKS,
+  YUT_THROWS,
+} from './props/seasons';
 import type { Registry } from './resolve';
 import { COUNTRYSIDE } from './settings/countryside';
 import { HANJI_BACKDROP } from './settings/hanji-backdrop';
@@ -109,6 +139,7 @@ import { MOUNTAINS } from './settings/mountains';
 import { PALACE_COURTYARD } from './settings/palace-courtyard';
 import { PALACE_HALL } from './settings/palace-hall';
 import { SEASHORE } from './settings/seashore';
+import { SEA_PALACE } from './settings/sea-palace';
 import { TEMPLE } from './settings/temple';
 import { VILLAGE_LANE } from './settings/village-lane';
 import type { ItemDef } from './types';
@@ -235,6 +266,36 @@ export const LIBRARY: readonly ItemDef[] = [
   TAFFY_TRAY,
   SHOES,
   FIG_CHILD_BACK,
+  // PR 2.10d: seasons-tales cluster
+  SEA_PALACE,
+  FIG_WOMAN,
+  FIG_GIRL,
+  FIG_BOWING,
+  FIG_ELDER_SEATED,
+  FIG_PANSORI,
+  FIG_YANGBAN_MASK,
+  DANCE_CIRCLE,
+  SWING,
+  SOBAN,
+  YUT_STICKS,
+  YUT_BOARD,
+  YUT_THROWS,
+  SONGPYEON,
+  CABBAGES,
+  KIMCHI_JARS,
+  LANTERNS,
+  SUN_MOON_SCREEN,
+  PERSIMMON_TREE,
+  RICE_FIELD,
+  CHANGPO,
+  OX,
+  SWALLOW,
+  GOURDS,
+  TURTLE,
+  RABBIT,
+  TIGER_TRICKSTER,
+  SKY_ROPE,
+  SORGHUM,
 ];
 
 export const SCENE_ART_REGISTRY: Registry = Object.freeze({
