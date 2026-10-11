@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { useQuestRunStore } from '../../store/quest-run-store';
-import { pairRoundKey, sequenceRoundKey } from '../round-keys';
+import { checkRoundKey, pairRoundKey, sequenceRoundKey } from '../round-keys';
 
 const run = (): ReturnType<typeof useQuestRunStore.getState> => useQuestRunStore.getState();
 
@@ -57,5 +57,24 @@ describe('round keys feed first-try scoring (F-001 §3.2 revised)', () => {
     run().answerRound(0, false);
     expect(run().totalCount).toBe(2);
     expect(run().correctCount).toBe(1);
+  });
+
+  it('Story Check: one key per check id; wrong then right on an item is one round', () => {
+    expect(checkRoundKey('c1')).toBe('check:c1');
+    expect(checkRoundKey('c1')).toBe(checkRoundKey('c1'));
+    expect(checkRoundKey('c1')).not.toBe(checkRoundKey('c2'));
+    run().answerRound(checkRoundKey('c1'), false);
+    run().answerRound(checkRoundKey('c1'), true);
+    run().answerRound(checkRoundKey('c2'), true);
+    const s = run();
+    expect(s.totalCount).toBe(2);
+    expect(s.correctCount).toBe(1);
+    expect(s.retryCount).toBe(1);
+  });
+
+  it('check keys never collide with a sequence slot or checkpoint key in the same step', () => {
+    run().answerRound(checkRoundKey('0'), true);
+    run().answerRound(sequenceRoundKey(0), true);
+    expect(run().totalCount).toBe(2);
   });
 });
