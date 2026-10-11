@@ -1,11 +1,11 @@
 {
   "v": 1,
   "id": "story:pansori-tales",
-  "state": "draft",
+  "state": "ready",
   "contentVer": 1,
   "title": {
-    "ko": "판소리 이야기: 흥부와 놀부, 토끼와 자라",
-    "romanization": "Pansori iyagi: Heungbuwa Nolbu, tokkiwa jara",
+    "ko": "판소리로 듣는 흥부와 놀부, 토끼와 자라",
+    "romanization": "Pansoriro deunneun Heungbuwa Nolbu, tokkiwa jara",
     "en": "Pansori Tales: Heungbu's Swallow and the Clever Rabbit (Traditional Tales)"
   },
   "summaryEn": "Hoya visits a pansori performance (UNESCO 2003/2008) and hears two traditional stories from its five surviving works: kind Heungbu and the grateful swallow, and the clever rabbit who escapes the Dragon King's palace. This Korean rabbit-and-turtle tale is a different story from Aesop's 'The Tortoise and the Hare'.",
@@ -14,9 +14,9 @@
   "recommendedStage": 2,
   "minutes": 6,
   "learningGoalsEn": [
-    "Describe pansori: one singer, one drummer with a buk, and chuimsae cheers like 'Eolssigu!'.",
+    "Understand pansori: one singer, one drummer with a buk, and chuimsae cheers like 'Eolssigu!'.",
     "Know that five pansori works survive today, including Heungboga and Sugungga, which also exist as old novels.",
-    "Retell the main events of Heungbu and Nolbu and of the rabbit and the turtle (jara), and know that this rabbit-and-turtle tale is not Aesop's 'The Tortoise and the Hare'.",
+    "Put in order the main events of Heungbu and Nolbu and of the rabbit and the turtle (jara), and know that this tale is not Aesop's 'The Tortoise and the Hare'.",
     "Read and recognize 판소리 (pansori), 북 (buk), 추임새 (chuimsae), 얼씨구 (eolssigu), 제비 (jebi), 박 (bak), 토끼 (tokki) and 자라 (jara)."
   ],
   "origin": {
@@ -138,7 +138,7 @@
         },
         {
           "id": "s2",
-          "narrationEn": "The drummer shouts cheers called {kw:chuimsae}, like 'Eolssigu!' and 'Jota!' Long ago there were twelve pansori stories; five are still sung today. UNESCO named pansori a masterpiece in 2003 and added it to its Representative List in 2008. Let's hear two!",
+          "narrationEn": "The drummer shouts cheers called {kw:chuimsae}, like 'Eolssigu!' and 'Jota!' Long ago there were twelve pansori stories; five are still sung today. UNESCO named pansori a masterpiece in 2003 and added it to its heritage list in 2008. Let's hear two!",
           "captionEn": "Chuimsae cheers and five surviving works",
           "keyword": {
             "id": "eolssigu",
@@ -168,7 +168,7 @@
         },
         {
           "id": "s3",
-          "narrationEn": "First, Heungboga, also told as the old novel Heungbu-jeon. Nolbu, the older brother, was greedy. Heungbu, the younger, was poor but kind. One spring, Heungbu found a baby swallow with a broken leg and gently bound it up.",
+          "narrationEn": "First, Heungboga, also told as the old novel Heungbujeon. Nolbu, the older brother, was greedy. Heungbu, the younger, was poor but kind. One day, Heungbu found a baby swallow with a broken leg and gently bound it up.",
           "captionEn": "Heungbu helps a hurt swallow",
           "keyword": {
             "id": "jebi",
@@ -206,7 +206,7 @@
         },
         {
           "id": "s5",
-          "narrationEn": "Greedy Nolbu wanted treasure too, so he hurt a swallow on purpose. But his gourds brought only trouble! In well-known versions, Nolbu was sorry and became kind, and the brothers lived in peace.",
+          "narrationEn": "Greedy Nolbu wanted treasure too, so he hurt a swallow on purpose. But his gourds brought only trouble! In well-known versions, Nolbu was sorry, and the brothers made peace.",
           "captionEn": "Nolbu's gourds bring only trouble",
           "keyword": {
             "id": "hyeongje",
@@ -225,7 +225,7 @@
         },
         {
           "id": "s6",
-          "narrationEn": "Next, Sugungga, also told as the novel Tokki-jeon. It is a different story from Aesop's race! The Dragon King is sick, and a sage says a rabbit's liver can cure him. A loyal jara, a soft-shelled turtle titled Byeoljubu, volunteers to fetch one.",
+          "narrationEn": "Next, Sugungga, also told as the novel Tokkijeon. It is a different story from Aesop's race! The Dragon King was sick. A sage said a rabbit's liver could cure him. A jara, a soft-shelled turtle called by his title Byeoljubu, offered to get one.",
           "captionEn": "The sick Dragon King and the loyal turtle",
           "keyword": {
             "id": "jara",
@@ -245,7 +245,7 @@
         },
         {
           "id": "s7",
-          "narrationEn": "On land, the turtle tells the rabbit about a high post waiting for him at the sea palace. The rabbit is fooled and follows him down. But at the palace, the king demands his liver! Don't worry: clever Rabbit has a plan.",
+          "narrationEn": "On land, the turtle told the rabbit, {kw:tokki}, about an important job waiting for him at the sea palace. The rabbit was fooled and followed him down. But at the palace, the king demanded his liver! Don't worry: clever Rabbit had a plan.",
           "captionEn": "The rabbit follows the turtle to the palace",
           "keyword": {
             "id": "yonggung",
@@ -264,7 +264,7 @@
         },
         {
           "id": "s8",
-          "narrationEn": "Rabbit thinks fast: 'I left my liver back on land!' The king believes him and sends him home with the turtle. On the shore, Rabbit hops off into the forest. Eolssigu! An early form of this tale is even recorded in the Samguk sagi.",
+          "narrationEn": "Rabbit thought fast: 'I left my liver on land!' The king believed him and sent him home with the turtle. On the shore, Rabbit hopped off into the forest. Eolssigu! An early form of this tale is recorded in a book called the Samguk sagi.",
           "captionEn": "The clever rabbit escapes",
           "line": {
             "ko": "간을 육지에 두고 왔습니다",
@@ -305,7 +305,7 @@
             },
             {
               "id": "d",
-              "en": "A drummer, called a gosu",
+              "en": "A drummer, the gosu",
               "isCorrect": true
             }
           ],
@@ -317,11 +317,11 @@
         {
           "id": "c2",
           "kind": "detail",
-          "promptEn": "What did the swallow bring to Heungbu?",
+          "promptEn": "What did the swallow carry back to Heungbu the next spring?",
           "options": [
             {
               "id": "a",
-              "en": "A gold ring",
+              "en": "A pine cone",
               "isCorrect": false
             },
             {
@@ -331,12 +331,12 @@
             },
             {
               "id": "c",
-              "en": "A silver coin",
+              "en": "A shiny feather",
               "isCorrect": false
             },
             {
               "id": "d",
-              "en": "A bag of rice",
+              "en": "A red flower",
               "isCorrect": false
             }
           ],
@@ -357,12 +357,12 @@
             },
             {
               "id": "b",
-              "en": "He swam faster than the turtle",
+              "en": "He swam home faster than the turtle",
               "isCorrect": false
             },
             {
               "id": "c",
-              "en": "He found a secret tunnel",
+              "en": "He ran out through a secret tunnel",
               "isCorrect": false
             },
             {
@@ -519,7 +519,7 @@
     {
       "id": "f5",
       "rev": 1,
-      "scope": "in-the-tale",
+      "scope": "documented",
       "claimEn": "Heungboga is one of the five pansori works; the same story exists as the late-Joseon novel Heungbu-jeon (author and date unknown), in which the greedy older brother Nolbu and the poor, kind younger brother Heungbu appear, and Heungbu binds the broken leg of a fallen baby swallow.",
       "claimKo": "흥보가는 판소리 다섯 마당의 하나이며, 같은 이야기가 작자·연대 미상의 조선 후기 소설 「흥부전」으로도 전한다. 욕심 많은 형 놀부와 가난하고 착한 아우 흥부가 등장하고, 흥부는 떨어져 다리가 부러진 새끼 제비의 다리를 매어 준다.",
       "sources": [
@@ -609,7 +609,7 @@
     {
       "id": "f8",
       "rev": 1,
-      "scope": "in-the-tale",
+      "scope": "documented",
       "claimEn": "Sugungga is one of the five pansori works; the same story exists as the late-Joseon novel Tokki-jeon (also called Byeoljubu-jeon). In it the Dragon King falls ill, a sage (dosa) says a rabbit's liver will cure him, and the jara (soft-shelled turtle) called Byeoljubu volunteers to go to land. Byeoljubu (鼈主簿) is a title for the turtle (鼈 'soft-shelled turtle' + 主簿, an old official title), not a personal name.",
       "claimKo": "수궁가는 판소리 다섯 마당의 하나이며, 같은 이야기가 조선 후기 소설 「토끼전」(「별주부전」)으로도 전한다. 용왕이 병들자 도사가 토끼의 간을 먹으면 낫는다고 하고, 별주부(鼈主簿) 자라가 자원하여 육지로 간다. ‘별주부’는 자라에게 붙은 관직 이름(鼈 자라 + 主簿)으로 사람 이름이 아니다.",
       "sources": [
@@ -771,6 +771,6 @@
     "scope": "cluster",
     "notes": "Third independent pass over 6 episodes / 61 facts / 161 source entries (70 unique URLs). Every URL was re-fetched with my own scripts (UNESCO pages via Wayback copies; heritage.go.kr descriptions via the portal ajax html and khs.go.kr open API; folkency via its JSON API) and each quote or locator was machine-matched to the page text; the few non-matching strings were checked by hand (portal metadata fields, hanja or footnote punctuation, label text). Corrections: (1) pansori scene 2 now gives both UNESCO steps (2003 masterpiece proclamation, 2008 Representative List); (2) pansori f11 states the Aesop title as in the cited Townsend text and the common alternate title; (3) added sources: NFM 놀보박타령 for 'greedy' (f5), 표준국어대사전 타다 for 'sawed' (f6), 한국민족문화대백과사전 선도해 for the Samguk sagi tale (f12); (4) Seollal f9/f10 designation-date locators now cite the KHS open API field. No other change. See seasons-tales.signoff.md."
   },
-  "authorNotes": "REVISED 2026-10-10. Traditional stories: narration describes the tales' content (basic plot per the Encyclopedia of Korean Culture and the National Folk Museum's folk-literature dictionary), not history. Names: the pansori work is 흥보가 (Heungbo/Nolbo) and the novel is 흥부전 (Heungbu/Nolbu); narration uses Heungbu/Nolbu. Ending: the repentance/reconciliation is in the basic plot of the novel Heungbu-jeon (E0066012) AND in the Park Bong-sul and Jeong Gwang-su sung texts (한국민속문학사전 '놀보박타령'); the Encyclopedia's Heungboga entry itself says only that Nolbo is ruined; endings differ (e.g. the 경판본 version ends differently; 신재효's text is described as similar to Jeong Gwang-su's), so narration says 'In well-known versions'. Softened on purpose: Heungbu being beaten and his paid stand-in beatings (매품팔이); Nolbu breaking the swallow's leg is shown only as 'hurt a swallow on purpose'; harmful things from Nolbu's gourds not detailed. Rabbit tale: 'liver' kept because the plot needs it, with a reassurance line right after; the turtle's fate (dies on land or returns empty-handed; in some versions the rabbit's droppings cure the king) is left out. 별주부 (鼈主簿) is the turtle's title, not a name; the 도사 is a sage (道士: one who cultivates the Way). The Korean tale is explicitly distinguished from Aesop's race (summary, scene 6, reference_display, f11). 구토지설: 한국민속문학사전 '수궁가' says Sugungga's frame is the 구토지설 told by Seon Do-hae to Kim Chun-chu and recorded in the Samguk sagi's biographies; the Encyclopedia ('토끼전') names the 구토 tale in the Kim Yu-sin biography as a documented example - narration says only 'an early form is recorded in the Samguk sagi'. Both sources note the older Indian Buddhist (Jataka) roots; not used. 추임새 is now taught in scene 2 and added to vocab (형제 dropped from vocab; it remains the scene 5 Korean word). Combined in one episode to keep the cluster at 6; each could become its own episode. Theme 'crafts' because the app files performing arts under Play & Crafts. FINAL PASS (3rd check, 2026-10-10): scene 2 now says UNESCO named pansori a masterpiece in 2003 and added it to the Representative List in 2008 (UNESCO page: inscribed 2008, originally proclaimed 2003). f11 now gives the Aesop title as in the cited Townsend text ('The Hare and the Tortoise', also known as 'The Tortoise and the Hare'). 'Greedy' for Nolbu rests on the NFM 놀보박타령 entry, which was added to f5. AUTHORING 2026-10-11 (F-STORY-001 PR 1.8d): title romanization, scene captions and check explanations written from the cited facts; every scene is artPending (text-only tile) until the art PRs; no claim or source changed. Fact scope: f1-f3 (the art form and its works), f11 (Aesop) and f12 (Samguk sagi) are documented; f7 (Nolbu's fate) is in-the-tale. 'Let's hear two' (s2) carries an approximation entry. Advisory note now names the hurt swallow.",
+  "authorNotes": "REVISED 2026-10-10. Traditional stories: narration describes the tales' content (basic plot per the Encyclopedia of Korean Culture and the National Folk Museum's folk-literature dictionary), not history. Names: the pansori work is 흥보가 (Heungbo/Nolbo) and the novel is 흥부전 (Heungbu/Nolbu); narration uses Heungbu/Nolbu. Ending: the repentance/reconciliation is in the basic plot of the novel Heungbu-jeon (E0066012) AND in the Park Bong-sul and Jeong Gwang-su sung texts (한국민속문학사전 '놀보박타령'); the Encyclopedia's Heungboga entry itself says only that Nolbo is ruined; endings differ (e.g. the 경판본 version ends differently; 신재효's text is described as similar to Jeong Gwang-su's), so narration says 'In well-known versions'. Softened on purpose: Heungbu being beaten and his paid stand-in beatings (매품팔이); Nolbu breaking the swallow's leg is shown only as 'hurt a swallow on purpose'; harmful things from Nolbu's gourds not detailed. Rabbit tale: 'liver' kept because the plot needs it, with a reassurance line right after; the turtle's fate (dies on land or returns empty-handed; in some versions the rabbit's droppings cure the king) is left out. 별주부 (鼈主簿) is the turtle's title, not a name; the 도사 is a sage (道士: one who cultivates the Way). The Korean tale is explicitly distinguished from Aesop's race (summary, scene 6, reference_display, f11). 구토지설: 한국민속문학사전 '수궁가' says Sugungga's frame is the 구토지설 told by Seon Do-hae to Kim Chun-chu and recorded in the Samguk sagi's biographies; the Encyclopedia ('토끼전') names the 구토 tale in the Kim Yu-sin biography as a documented example - narration says only 'an early form is recorded in the Samguk sagi'. Both sources note the older Indian Buddhist (Jataka) roots; not used. 추임새 is now taught in scene 2 and added to vocab (형제 dropped from vocab; it remains the scene 5 Korean word). Combined in one episode to keep the cluster at 6; each could become its own episode. Theme 'crafts' because the app files performing arts under Play & Crafts. FINAL PASS (3rd check, 2026-10-10): scene 2 now says UNESCO named pansori a masterpiece in 2003 and added it to the Representative List in 2008 (UNESCO page: inscribed 2008, originally proclaimed 2003). f11 now gives the Aesop title as in the cited Townsend text ('The Hare and the Tortoise', also known as 'The Tortoise and the Hare'). 'Greedy' for Nolbu rests on the NFM 놀보박타령 entry, which was added to f5. AUTHORING 2026-10-11 (F-STORY-001 PR 1.8d): title romanization, scene captions and check explanations written from the cited facts; every scene is artPending (text-only tile) until the art PRs; no claim or source changed. Fact scope: f1-f3, f5, f8 (the works and novels), f11 and f12 are documented; f6, f7, f9, f10 (plot) are in-the-tale. 'Let's hear two' (s2) carries an approximation entry. Advisory note now names the hurt swallow. REVIEW 2026-10-11 (PR 1.8d): narration spells Heungbujeon, Tokkijeon; s3 'One day' (rescue undated); s5 follows f7; s6-s8 past tense.",
   "errata": []
 }
