@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test';
-import type { HomeworkAssignment, ProgressSnapshot } from '@hangul-route/content-schema';
+import type { HomeworkAssignment, ProgressSnapshot, SelfRoute } from '@hangul-route/content-schema';
 import { expect, test } from './fixtures';
 import { onboardChild, readStored, seedStored } from './helpers';
 import { shot } from './shots';
@@ -8,11 +8,14 @@ import { shot } from './shots';
  * F-PLAN-002 section 3.6 display fixes (PR P2-5): Home counts today's items
  * only; the Homework list shows at most three Today rows and one neutral line,
  * the next seven days of Coming up, then one collapsed "later" row; the
- * learner's own weekly plan reads "Your plan". Nothing says late or missed.
+ * learner's own weekly plan reads "Your plan" and is derived on the device
+ * with no network. Nothing says late or missed. The browser clock is fixed at
+ * midday UTC, so the test and the app agree on "today" whenever it runs.
  */
 
 const DAY_MS = 86_400_000;
-const dayKey = (offset: number): string => new Date(Date.now() + offset * DAY_MS).toISOString().slice(0, 10);
+const NOW = Date.parse('2026-10-14T12:00:00.000Z');
+const dayKey = (offset: number): string => new Date(NOW + offset * DAY_MS).toISOString().slice(0, 10);
 
 const assignment = (id: string, questId: string, offset: number, assignedBy: HomeworkAssignment['assignedBy'] = 'parent'): HomeworkAssignment => ({
   id,
@@ -27,15 +30,15 @@ const assignment = (id: string, questId: string, offset: number, assignedBy: Hom
 /** The install guide shows from the third cached open and covers Home (as in `openGrownUpZone`). */
 async function openHomework(page: Page): Promise<void> {
   const guide = page.getByTestId('install-guide');
-  await page.waitForTimeout(800);
+  await guide.waitFor({ state: 'visible', timeout: 1500 }).catch(() => undefined);
   if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
   await page.getByRole('button', { name: 'Open homework' }).click();
 }
 
 /** A fresh learner's record holding only `homework` (the app keeps no record until something is played). */
-const snapshotWith = (profileId: string, homework: HomeworkAssignment[]): ProgressSnapshot => ({
+const snapshotWith = (profileId: string, homework: HomeworkAssignment[], selfRoute?: SelfRoute): ProgressSnapshot => ({
   profileId,
-  updatedAt: new Date().toISOString(),
+  updatedAt: new Date(NOW).toISOString(),
   episodes: [],
   quests: [],
   cards: [],
@@ -43,11 +46,13 @@ const snapshotWith = (profileId: string, homework: HomeworkAssignment[]): Progre
   homework: homework.map((h) => ({ ...h, profileId })),
   reviews: [],
   streakDays: 0,
+  ...(selfRoute ? { selfRoute } : {}),
 });
 
 test('a long plan shows one calm week: three Today rows, the next seven days, one later row', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(String(e)));
+  await page.clock.setFixedTime(NOW);
   await onboardChild(page, { name: 'Dani', startJourney: false });
   await page.goto('/');
   await expect(page.getByText('Hi, Dani!')).toBeVisible();
@@ -68,10 +73,11 @@ test('a long plan shows one calm week: three Today rows, the next seven days, on
   ];
   await seedStored(page, `progress:${profileId}`, snapshotWith(profileId, homework));
 
-  // Home: five are due today or earlier; the four later ones are not counted.
-  await expect(page.getByText('5 to do today')).toBeVisible();
+  // Home: five are due today or earlier (more than the list shows), so the line has no number; later ones are not counted.
+  await expect(page.getByText('A few to do today')).toBeVisible();
   await openHomework(page);
   await expect(page.getByRole('heading', { name: 'Homework' })).toBeVisible();
+  await expect(page.getByText('You have a few things to do today.')).toBeVisible();
 
   // Today: three rows in precedence order (class first), then the neutral line.
   const todayRows = page.getByRole('button', { name: /, Today$/ });
@@ -84,7 +90,7 @@ test('a long plan shows one calm week: three Today rows, the next seven days, on
   await expect(page.getByRole('button', { name: /, In 7 days$/ })).toHaveCount(1);
   await expect(page.getByRole('button', { name: /, In 12 days$/ })).toHaveCount(0);
   const later = page.getByTestId('homework-later');
-  await expect(later).toContainText('Later in your plan');
+  await expect(later).toContainText('Later');
   await expect(later).not.toHaveAttribute('aria-expanded', 'true');
   await shot(page, 'homework-window-collapsed');
 
@@ -99,13 +105,25 @@ test('a long plan shows one calm week: three Today rows, the next seven days, on
   expect(errors).toEqual([]);
 });
 
-test('the own weekly plan reads "Your plan" on its row', async ({ page }) => {
+test('the own weekly plan is derived on the device with no inbox and reads "Your plan"', async ({ page }) => {
+  await page.clock.setFixedTime(NOW);
   await onboardChild(page, { name: 'Mina', startJourney: false });
   await page.goto('/');
   await expect(page.getByText('Hi, Mina!')).toBeVisible();
   const profileId = (await readStored<string>(page, 'profiles:active')) as string;
-  const homework = [assignment('route:mine#quest:stage1-letters-q2', 'quest:stage1-letters-q2', 0, 'system')];
-  await seedStored(page, `progress:${profileId}`, snapshotWith(profileId, homework));
+  // Only the fields the device reads; the route holds one item today and one past the seven-day horizon.
+  const route = {
+    id: 'route:mine',
+    createdAt: new Date(NOW).toISOString(),
+    updatedAt: new Date(NOW).toISOString(),
+    archivedAt: null,
+    meta: { kind: 'curriculum', horizonDays: 7 },
+    items: [
+      { kind: 'quest', id: 'quest:stage1-letters-q2', targetDate: dayKey(0) },
+      { kind: 'quest', id: 'quest:stage1-letters-q3', targetDate: dayKey(10) },
+    ],
+  } as unknown as SelfRoute;
+  await seedStored(page, `progress:${profileId}`, snapshotWith(profileId, [], route));
 
   await expect(page.getByText('1 to do today')).toBeVisible();
   await openHomework(page);
@@ -114,5 +132,7 @@ test('the own weekly plan reads "Your plan" on its row', async ({ page }) => {
   await expect(row).toContainText('Your plan');
   await expect(page.getByText('More are waiting. They come one at a time.')).toHaveCount(0);
   await expect(page.getByTestId('homework-later')).toHaveCount(0);
+  // Saved on the device: the derived item only, nothing past the horizon.
+  await expect.poll(async () => (await readStored<ProgressSnapshot>(page, `progress:${profileId}`))?.homework.map((h) => h.id)).toEqual(['route:mine#quest:stage1-letters-q2']);
   await shot(page, 'homework-your-plan');
 });

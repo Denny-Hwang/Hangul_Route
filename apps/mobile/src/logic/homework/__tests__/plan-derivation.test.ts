@@ -156,10 +156,20 @@ describe('horizon (F-PLAN-002 section 3.6 rule 1)', () => {
     expect(derive([], snap({ selfRoute: route })).homework.map((h) => h.id)).toEqual(['route:mine#quest:a']);
   });
 
-  it('a twelve-week plan at three a week derives at most one week on day one', () => {
-    const result = derive([plan({ items: twelveWeeks(0), meta: curriculumMeta() })], snap());
-    expect(result.homework.length).toBeLessThanOrEqual(4);
-    expect(result.homework.every((h) => h.targetDate <= '2026-09-28')).toBe(true);
+  it('a twelve-week plan at three a week derives only the items dated within seven days on day one (section 3.12)', () => {
+    // 36 distinct quests, so first-item-wins dedupe cannot hide a missing horizon.
+    const termQuests = Array.from({ length: 36 }, (_, i) => quest(`quest:t${i}`));
+    const termEpisode: Episode = { ...episodes[0]!, id: 'episode:term', questIds: termQuests.map((q) => q.id) };
+    const items = twelveWeeks(0).map((item, i) => ({ ...item, id: `quest:t${i}` }));
+    const result = derive([plan({ id: 'plan:term', items, meta: curriculumMeta() })], snap(), { quests: termQuests, episodes: [termEpisode] });
+    expect(result.homework.map((h) => [h.id, h.targetDate])).toEqual([
+      ['plan:term#quest:t0', '2026-09-21'],
+      ['plan:term#quest:t1', '2026-09-23'],
+      ['plan:term#quest:t2', '2026-09-25'],
+      ['plan:term#quest:t3', '2026-09-28'],
+    ]);
+    expect(result.notReady).toEqual({});
+    expect(result).toMatchObject({ added: 4, removed: 0, redated: 0 });
   });
 });
 
