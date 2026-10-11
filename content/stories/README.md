@@ -23,17 +23,17 @@ The directory is flat: `theme` is a field, not a folder. The file name must equa
 
 | `state` | Meaning | Bundled |
 |---|---|---|
-| `draft` | Imported or being authored. Authored-later fields may be empty (`title.romanization`, `title.en`, `keywords[].romanization` / `en`, `captionEn`, `art` / `artPending`, `explainEn`, `hoyaIntroEn`). Every fact, source, coverage, Hangul-zone and length rule applies already: a draft may be incomplete, never wrong. | No |
+| `draft` | Imported or being authored. Authored-later fields may be empty (`title.romanization`, `title.en`, `keywords[].romanization` / `en`, `captionEn`, `art` / `artPending`, `explainEn`, `hoyaIntroEn` / `hoyaOutroEn` (both required once the story has a `shelf` block)). Every fact, source, coverage, Hangul-zone and length rule applies already: a draft may be incomplete, never wrong. | No |
 | `ready` | `StoryReadySchema` passes in full. | Yes |
 
 `ready` does not mean visible. The shelf (F-STORY-004) shows a story only when `review.language` is `native-reviewed`, `review.culture` is `culture-reviewed`, and `verification.passes` is at least `MIN_VERIFICATION_PASSES` (3).
 
 ## Authoring workflow
 
-1. **Import (one time per research cluster).** `node scripts/import-heritage.mjs --src content/stories/research --dry-run` prints the report; `--write` writes `<slug>.json` drafts. The importer reads only `<cluster>.final.json` and never overwrites an authored story. Its report is the author's to-do list: undefined terms, missing title romanizations, approximations, advisories to confirm.
+1. **Import (one time per research cluster).** `node scripts/import-heritage.mjs --src content/stories/research --dry-run` prints the report; `--write` writes `<slug>.json` drafts. The importer reads only `<cluster>.final.json` and never overwrites an authored story, with two explicit exceptions: `--force-draft` replaces a story that is still a draft at `contentVer` 1 (it discards any hand edits in that file), and `--allow-unfinal` also imports a non-final research file (`.revised.json` / `.draft.json`) with `verification.passes` 0. Its report is the author's to-do list: undefined terms, missing title romanizations, approximations, advisories to confirm.
 2. **Author the draft.** Title romanization and gloss, term glosses, captions, check explanations, `approximations`, art (or `artPending: true`, only when the owner accepts a text-only tile), and the traditional-tale notes. Never retype a source: facts and sources come from the research file.
 3. **Mark it `ready`** when `StoryReadySchema` passes. Regenerate the bundle (`node scripts/build-stories.mjs`) and commit both files.
-4. **Review sign-offs** (separate PRs): a native Korean reader sets `review.language: "native-reviewed"`, a culture reviewer sets `review.culture: "culture-reviewed"`, each with `reviewedBy` (initials) and `reviewedAt`. A reviewed value without both is `review-unsigned`.
+4. **Review sign-offs** (separate PRs): a native Korean reader sets `review.language: "native-reviewed"`, a culture reviewer sets `review.culture: "culture-reviewed"`, each with `reviewedBy` (initials) and `reviewedAt`. A reviewed value without both is `review-unsigned`. The story has one `reviewedBy` / `reviewedAt` pair, so it records the most recent sign-off; each reviewer therefore also appends one line to `verification.notes` (initials, date, and which review: language or culture) and states the same in the PR description, so the earlier sign-off is never lost.
 5. **Shelf and card blocks** (`shelf`, `card`) follow F-STORY-004 and F-STORY-006 once the story is reviewed and verified.
 
 ## Rules in brief
@@ -71,7 +71,9 @@ When a fact in a shipped story turns out to be wrong, fix it in the open: a date
    - **S3**: typo or style.
 2. **Verify** against at least two authoritative sources (two different pages, not the same page twice). Decide whether to **correct** the statement, **soften** it (state only what the sources agree on, as the research files already do where sources disagree), or **remove** it.
 3. **Fix it in one content PR:**
+   - list every place that cites each changed fact id and update or remove each one: `scenes[].factIds` (and the narration of those scenes), `scenes[].approximations[].factIds`, `checks[].factIds` (prompt, options, correct answer and `explainEn`), `cultureNotes[].factIds`, `card.factId`, and `summaryEn`, `hoyaIntroEn` / `hoyaOutroEn` where they repeat the claim. A check that still grades the old value as correct is the same error as the narration;
    - edit the narration and the fact or facts;
+   - update or delete the story's translated entries (the `story:<slug>` entries in `content/i18n/es/` and `content/i18n/ko/`) for every field changed above, in the same PR. The overlay build has no staleness check, so an outdated translation keeps showing the old claim; until a translation is redone, delete the entry so the English text shows instead;
    - bump each changed fact's `rev` and the story's `contentVer`;
    - append an erratum to `errata`:
 
@@ -90,7 +92,7 @@ When a fact in a shipped story turns out to be wrong, fix it in the open: a date
      `kind` is `correction`, `clarification` or `removal`. `date` is the day the fix merges. `fixedInVer` equals the new `contentVer`. `summaryEn` uses plain words and blames no one. `detailEn` (optional, maintainers only) may hold the longer story. Set `show: false` only for a cosmetic clarification;
    - update `verification.checkedAt` and `verification.notes` if you re-read the sources;
    - regenerate the bundle (`node scripts/build-stories.mjs`);
-   - in the PR description, quote the old sentence and the new one, list the sources you checked, and tick the claims-audit box.
+   - in the PR description, quote the old sentence and the new one for the narration and for every citing check, culture note and translation you changed, list the sources you checked, and tick the claims-audit box.
 
    For S1, if the fix cannot be made right away, set `state: "draft"` in the same PR. A draft is not bundled, so the next build removes the story and the shelf hides it cleanly.
 4. **Release.** S1 ships out of band: on the web app a deploy reaches learners through the existing update banner (the service worker applies it on tap); native builds pick it up in the next store release, because there is no over-the-air content channel. S2 and S3 ride the next normal release.
