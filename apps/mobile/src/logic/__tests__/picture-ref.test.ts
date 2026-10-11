@@ -6,6 +6,7 @@ const colors = {
   theme: { letters: '#333333' },
   surface: { overlay: 'rgba(0, 0, 0, 0.4)' },
   scale: { nested: { deep: '#444444' }, count: 3 },
+  vocab: { red: '#555555', white: '#666666' },
 };
 const ctx = { supportedCardIds: ['card:kimchi', 'card:rice'], swatches: swatchColors(colors) };
 
@@ -17,6 +18,11 @@ describe('swatchColors', () => {
       'theme-letters': '#333333',
       'surface-overlay': 'rgba(0, 0, 0, 0.4)',
     });
+  });
+
+  it('leaves out the WordArt content tones: the vocab group is drawn only inside WordArt (F-VOC-002 §3.4)', () => {
+    const tokens = Object.keys(swatchColors(colors));
+    expect(tokens.filter((t) => t.startsWith('vocab-'))).toEqual([]);
   });
 });
 
@@ -36,6 +42,7 @@ describe('resolvePicture (F-QUEST-002 §3.11)', () => {
   it('falls back to the text tile for an unsupported card, an unknown swatch, a word picture or no picture', () => {
     expect(resolvePicture('card:no-art', ctx)).toEqual({ kind: 'text' });
     expect(resolvePicture('swatch:nope', ctx)).toEqual({ kind: 'text' });
+    expect(resolvePicture('swatch:vocab-red', ctx)).toEqual({ kind: 'text' });
     expect(resolvePicture('word:rock', ctx)).toEqual({ kind: 'text' });
     expect(resolvePicture(undefined, ctx)).toEqual({ kind: 'text' });
   });
