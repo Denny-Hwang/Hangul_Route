@@ -8,6 +8,7 @@ import {
   Progress,
   Screen,
   Spacer,
+  SyllableBlock,
   Tile,
   colors,
   radii,
@@ -23,7 +24,6 @@ import { buildBuildLetterRounds, type BuildLetterRound } from '../../logic/round
 import { speak } from '../../platform/audio';
 import { nudge, success, tapLight } from '../../platform/haptics';
 import { useQuestRunStore } from '../../store/quest-run-store';
-import { BlockLayout } from './BlockLayout';
 
 const SLOT = 72;
 const HINT_CELL = 40;
@@ -138,9 +138,10 @@ export function BuildLetterGame({ scope, onFinish }: Props): React.ReactElement 
         Slots:
       </Caption>
       <Spacer size="xs" />
-      <BlockLayout
-        shape={shape}
-        renderCell={(i) => {
+      <SyllableBlock
+        vowel={shape.vowel}
+        hasFinal={shape.hasFinal}
+        renderCell={({ index: i }) => {
           const filled = selected[i];
           const jamoChar = filled ? jamoAll.find((j) => j.id === filled)?.char ?? '' : '';
           return (
@@ -198,9 +199,10 @@ export function BuildLetterGame({ scope, onFinish }: Props): React.ReactElement 
             accessible
             accessibilityLabel={`Block shape. ${shapeHint(shape)}`}
           >
-            <BlockLayout
-              shape={shape}
-              renderCell={(i) => (
+            <SyllableBlock
+              vowel={shape.vowel}
+              hasFinal={shape.hasFinal}
+              renderCell={({ index: i }) => (
                 <View
                   key={i}
                   style={{
