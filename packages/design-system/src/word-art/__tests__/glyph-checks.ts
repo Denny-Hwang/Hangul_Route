@@ -8,8 +8,16 @@ import type { WordArtGlyph, WordArtShape } from '../types';
 
 export type Point = readonly [number, number];
 
-/** Outline ink: the default outline and detail colour, never counted as a fill tone (§3.3). */
+/**
+ * Outline ink: the outline and detail colour, never counted as a fill tone
+ * (§3.3). A small ink-filled detail (eyes from `face()`, pupils, wheels, a
+ * nose) is part of the ink, not a fourth tone: otherwise every face would cost
+ * a tone.
+ */
 export const INK = 'text.primary';
+
+/** The ground-shadow tone (`groundShadow()`); below SHADOW_OPACITY it is the shadow, not a tone. */
+export const SHADOW_TONE = 'hoya.furDark';
 
 /** Opacity below this is a shadow, not the subject: left out of the bbox and the tone count. */
 export const SHADOW_OPACITY = 0.5;
@@ -143,9 +151,14 @@ export function subjectBox(glyph: WordArtGlyph): Box {
   return union(glyph.filter((s) => (s.o ?? 1) >= SHADOW_OPACITY).map(shapeBox));
 }
 
-/** Distinct fill tones, without the ink and without shadows (C4, §3.3). */
+/** True for the ground shadow: the shadow tone below SHADOW_OPACITY. Any other faint fill is still a tone. */
+export function isShadow(shape: WordArtShape): boolean {
+  return shape.f === SHADOW_TONE && (shape.o ?? 1) < SHADOW_OPACITY;
+}
+
+/** Distinct fill tones, without the ink and without the ground shadow (C4, §3.3). */
 export function fillTones(glyph: WordArtGlyph): string[] {
   const tones = new Set<string>();
-  for (const s of glyph) if (s.f !== undefined && s.f !== INK && (s.o ?? 1) >= SHADOW_OPACITY) tones.add(s.f);
+  for (const s of glyph) if (s.f !== undefined && s.f !== INK && !isShadow(s)) tones.add(s.f);
   return [...tones];
 }

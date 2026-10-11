@@ -29,10 +29,24 @@ export const VOCAB_READS: readonly RegExp[] = [
   /\bcolors\s*\[\s*['"`]vocab['"`]\s*\]/,
   // a tone path string: 'vocab.red', "vocab.skyBlue", `vocab.pink`
   new RegExp(`['"\`]vocab\\.(?:${VOCAB_KEYS})['"\`]`),
+  // a tone built at runtime: `vocab.${key}`, 'vocab.' + key
+  /`vocab\.\$\{/,
+  /['"`]vocab\.['"`]\s*\+/,
+  // destructuring the group: const { vocab } = colors; const { vocab: v } = tokens.colors
+  /\{[^}]*\bvocab\b[^}]*\}\s*=\s*(?:[\w$]+\s*\.\s*)?colors\b/,
 ];
 
+/** Local names `colors` is imported under (`import { colors as c }`), so `c.vocab` is caught too. */
+function colorsAliases(source: string): string[] {
+  return [...source.matchAll(/\bcolors\s+as\s+([\w$]+)/g)].map((m) => m[1]!);
+}
+
 export function readsVocab(source: string): boolean {
-  return VOCAB_READS.some((re) => re.test(source));
+  if (VOCAB_READS.some((re) => re.test(source))) return true;
+  return colorsAliases(source).some((alias) => {
+    const name = `(?<![\\w$.])${alias.replace(/\$/g, '\\$')}`;
+    return new RegExp(`${name}\\s*\\??\\.\\s*vocab\\b|${name}\\s*\\[\\s*['"\`]vocab['"\`]`).test(source);
+  });
 }
 
 function sourceFiles(dir: string): string[] {
@@ -59,6 +73,12 @@ describe('readsVocab', () => {
     ['single-quoted tone', "fill: 'vocab.red'"],
     ['double-quoted tone', 'stroke: "vocab.skyBlue"'],
     ['template tone', 'f: `vocab.pink`'],
+    ['a tone built from a template', 'const tone = `vocab.${key}`;'],
+    ['a tone built by concatenation', "const tone = 'vocab.' + key;"],
+    ['destructuring', 'const { vocab } = colors;'],
+    ['destructuring with a rename', 'const { brand, vocab: v } = tokens.colors;'],
+    ['an aliased import', "import { colors as c } from '@hangul-route/design-system';\nconst red = c.vocab.red;"],
+    ['an aliased import, bracket', "import { colors as palette } from '../tokens';\npalette['vocab'];"],
   ])('fires on %s', (_name, source) => {
     expect(readsVocab(source)).toBe(true);
   });
@@ -69,6 +89,8 @@ describe('readsVocab', () => {
     ['an item id', "'vocab:ppalgansaek'"],
     ['a schema name', 'VocabItemSchema.parse(x); vocabulary.red'],
     ['an unknown key', "'vocab.magenta'"],
+    ['destructuring something else', 'const { brand, text } = colors; const { vocab } = content;'],
+    ['an alias reading another group', "import { colors as c } from '../tokens';\nc.brand.primary; other.vocab;"],
   ])('lets %s through', (_name, source) => {
     expect(readsVocab(source)).toBe(false);
   });
@@ -97,7 +119,8 @@ describe('the source tree (behaviour 6)', () => {
 
 /** W1 and W6: WordArt holds token paths only; no colour literal, text, raster or emoji in its source. */
 const LITERALS: ReadonlyArray<{ name: string; re: RegExp }> = [
-  { name: 'hex colour', re: /#[0-9a-fA-F]{3,8}\b/ },
+  // a quoted colour ('#D83A34', "#fff"); an issue or PR number in a comment (see #214) is not one
+  { name: 'hex colour', re: /['"`]#[0-9a-fA-F]{3,8}(?![0-9a-zA-Z_])/ },
   { name: 'rgb()', re: /\brgba?\s*\(/i },
   { name: 'hsl()', re: /\bhsla?\s*\(/i },
   { name: 'text element', re: /<text\b/i },
@@ -116,6 +139,9 @@ describe('word-art source holds no literal colour, text, raster or emoji', () =>
     expect(literalsIn('<image href="a.png" />')).toEqual(['image element']);
     expect(literalsIn('const e = "\u{1F600}";')).toEqual(['emoji']);
     expect(literalsIn("f: 'vocab.red' // see #12")).toEqual([]);
+    expect(literalsIn('// drawn in #214, reviewed in #230 (abc1234)')).toEqual([]);
+    expect(literalsIn('fill="#fff"')).toEqual(['hex colour']);
+    expect(literalsIn('const c = `#00ff00`;')).toEqual(['hex colour']);
   });
 
   const dir = join(REPO, 'packages', 'design-system', 'src', 'word-art');

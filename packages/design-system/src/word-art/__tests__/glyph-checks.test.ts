@@ -63,4 +63,13 @@ describe('boxes and tones', () => {
   it('fillTones skips ink and shadows but counts highlights', () => {
     expect(fillTones(glyph)).toEqual(['vocab.red', 'surface.paper']);
   });
+
+  it('only the ground shadow is exempt: a faint fill in any other tone still counts (§3.3)', () => {
+    const tinted = [...glyph, { t: 'circle', x: 50, y: 50, r: 5, f: 'vocab.blue', o: 0.3 }, { t: 'circle', x: 60, y: 50, r: 5, f: 'hoya.furDark', o: 0.6 }] as const;
+    expect(fillTones(tinted)).toEqual(['vocab.red', 'surface.paper', 'vocab.blue', 'hoya.furDark']);
+  });
+
+  it('ink used as a fill (eyes, wheels) belongs to the outline ink, not a tone (§3.3)', () => {
+    expect(fillTones([{ t: 'circle', x: 32, y: 76, r: 8, f: 'text.primary', s: 'text.primary', sw: 3 }])).toEqual([]);
+  });
 });

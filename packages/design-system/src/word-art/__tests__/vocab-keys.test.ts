@@ -12,23 +12,36 @@ import type { WordArtFamily } from '../types';
  * `word:` key may wait for its batch: each family below is drawn by the PR
  * named next to it, and until that PR lands its keys may be missing (the app
  * shows the text tile, F-QUEST-002 §3.11, and no topic is visible before
- * F-VOC-003 flips `flags.vocabTopicsEnabled`). Every other family must
- * resolve in full. A batch PR deletes its families from this map, which turns
- * on the full check for them.
+ * F-VOC-003 flips `flags.vocabTopicsEnabled`).
+ *
+ * For a family whose topic file has landed, `missing` pins how many of its
+ * `word:` visuals have no glyph yet. So a misspelled key in a topic file (say
+ * `word:food-aple`) fails now, as the count goes up, and is not hidden until
+ * the batch. A batch PR deletes its families from this map, which turns on
+ * the full check for them; a topic PR that serves a family here pins its count.
+ * At W-1b every served family is waiting (42 visuals: 8 food, 10 animal,
+ * 12 color, 12 count), so the full check starts with batch W-3.
  */
-const AWAITING_ART: Readonly<Partial<Record<WordArtFamily, string>>> = {
-  food: 'W-3',
-  color: 'W-3',
-  count: 'W-3',
-  animal: 'W-4',
-  body: 'W-4',
-  family: 'W-5',
-  school: 'W-5',
-  nature: 'W-5',
-  travel: 'W-6',
-  sport: 'W-6',
-  culture: 'W-6',
-  science: 'W-6',
+interface Awaiting {
+  /** The PR that draws the family (F-VOC-002 §6). */
+  batch: string;
+  /** Pinned number of the family's `word:` visuals without a glyph; only when its topic file exists. */
+  missing?: number;
+}
+
+const AWAITING_ART: Readonly<Partial<Record<WordArtFamily, Awaiting>>> = {
+  food: { batch: 'W-3', missing: 8 },
+  color: { batch: 'W-3', missing: 12 },
+  count: { batch: 'W-3', missing: 12 },
+  animal: { batch: 'W-4', missing: 10 },
+  body: { batch: 'W-4' },
+  family: { batch: 'W-5' },
+  school: { batch: 'W-5' },
+  nature: { batch: 'W-5' },
+  travel: { batch: 'W-6' },
+  sport: { batch: 'W-6' },
+  culture: { batch: 'W-6' },
+  science: { batch: 'W-6' },
 };
 
 const VOCAB_DIR = join(__dirname, '..', '..', '..', '..', '..', 'content', 'vocab');
@@ -73,11 +86,16 @@ describe('content/vocab against the registry', () => {
     expect(unexpected.map((i) => `${i.file} ${i.id} ${i.visual}`)).toEqual([]);
   });
 
-  it('a family marked as waiting really has a missing word, so a finished batch cannot stay exempt', () => {
-    for (const family of Object.keys(AWAITING_ART) as WordArtFamily[]) {
-      if (!servedFamilies.has(family)) continue; // its topic file has not landed yet: nothing to resolve
+  it('a waiting family that is served has exactly its pinned number of missing words, so a typo or a finished batch shows', () => {
+    for (const [family, awaiting] of Object.entries(AWAITING_ART) as [WordArtFamily, Awaiting][]) {
       const missing = wordRefs.filter((i) => familyOf(wordArtKeyOf(i.visual)!) === family && !WORD_ART_KEYS.includes(wordArtKeyOf(i.visual)!));
-      expect(missing.length, `${family} is complete: remove it from AWAITING_ART`).toBeGreaterThan(0);
+      if (!servedFamilies.has(family)) {
+        expect(awaiting.missing, `${family} has no topic file yet: drop its pinned count`).toBeUndefined();
+        continue;
+      }
+      expect(awaiting.missing, `${family} is served: pin its missing count in AWAITING_ART`).toBeDefined();
+      expect(awaiting.missing!, `${family} is complete: remove it from AWAITING_ART`).toBeGreaterThan(0);
+      expect(missing.map((i) => i.visual).sort(), `${family}: a misspelled key, or a glyph added or removed; update the pin only for a real change`).toHaveLength(awaiting.missing!);
     }
   });
 
@@ -99,6 +117,9 @@ describe('content/vocab against the registry', () => {
     const props = WORD_ART_KEYS.filter((k) => WORD_ART[k]!.meta.family === 'prop');
     const colorSwatches = WORD_ART_KEYS.filter((k) => WORD_ART[k]!.meta.family === 'color');
     // W-1c adds the colour generator and the props together; until then neither exists.
-    if (colorSwatches.length === 0) expect(props).toEqual([]);
+    expect(props).toEqual([]);
+    // A tripwire: when the swatches land this fails, and W-1c replaces the test with the real §3.9 check
+    // (every prop key is referenced by the colour generator's object table).
+    expect(colorSwatches, 'W-1c: replace this with the colour-generator reference check').toHaveLength(0);
   });
 });
