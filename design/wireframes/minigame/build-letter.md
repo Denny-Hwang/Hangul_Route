@@ -2,7 +2,7 @@
 
 Spec: `docs/specs/F-QUEST-002-discover-check-stage1-complete.md` §3.7 (PR Q-7a) · extends `design/wireframes/minigame/shell.md` and `families.md` (Family 2, build-letter) · related: `design/wireframes/minigame/audio-fallback.md` W6 (the `SyllableBlock` diagram on Discover)
 Audience: **any learner, any age** (CLAUDE.md §1). Wireframe level: structure, flow, interaction points. No colours, fonts or final copy; text in (parentheses) is a placeholder.
-Code: `apps/mobile/src/screens/minigames/BuildLetterGame.tsx` + `BlockLayout.tsx`; pure rules in `apps/mobile/src/logic/build-letter-view.ts` and `round-builder.ts`
+Code: `apps/mobile/src/screens/minigames/BuildLetterGame.tsx` + the design-system `SyllableBlock` (`design/components/SyllableBlock/spec.md`); pure rules in `apps/mobile/src/logic/build-letter-view.ts` and `round-builder.ts`
 Notation: `[ X ]` secondary action, `( x )` text placeholder, `<state>` a runtime state.
 
 ## Scenario (Given-When-Then)
@@ -90,4 +90,4 @@ Enter from: `quest/player` via `minigame/shell` · Exit to: `quest/player` (unch
 ## Open questions
 
 - Hear-it for a single tile is not in this PR: a tile's sound waits on F-AUDIO-004's `playPrompt`.
-- The slot boxes are plain views here; when F-QUEST-002 PR Q-5a lands `SyllableBlock`, the slots and the hint diagram can switch to it.
+- Settled in F-QUEST-002 PR Q-5a: the slots and the hint diagram are drawn by `SyllableBlock` (`renderCell`), which replaced the screen-local `BlockLayout`.
