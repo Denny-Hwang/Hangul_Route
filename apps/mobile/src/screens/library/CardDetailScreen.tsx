@@ -201,9 +201,12 @@ export function CardDetailScreen({ route, navigation }: Props): React.ReactEleme
             {card.factEn ? (
               <>
                 <Spacer size="sm" />
-                <Body tone="secondary" size="sm">
-                  💡 {card.factEn}
-                </Body>
+                <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.xs }}>
+                  <Icon name="sparkle" size={16} color={colors.text.muted} />
+                  <Body tone="secondary" size="sm" style={{ flex: 1 }}>
+                    {card.factEn}
+                  </Body>
+                </View>
               </>
             ) : null}
           </Card>
@@ -348,7 +351,7 @@ function BackFaceBody({ card }: { card: HeritageCard }): React.ReactElement {
         {card.blurbEn}
       </Body>
 
-      {/* Bottom 30% — fun fact with 💡 */}
+      {/* Bottom 30% — fun fact with a sparkle icon */}
       {card.factEn ? (
         <>
           <Spacer size="lg" />
@@ -361,9 +364,12 @@ function BackFaceBody({ card }: { card: HeritageCard }): React.ReactElement {
               alignSelf: 'stretch',
             }}
           >
-            <Body tone="secondary" size="sm" align="center" style={{ fontStyle: 'italic' }}>
-              💡 {card.factEn}
-            </Body>
+            <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'center', gap: spacing.xs }}>
+              <Icon name="sparkle" size={16} color={colors.text.muted} />
+              <Body tone="secondary" size="sm" align="center" style={{ fontStyle: 'italic', flexShrink: 1 }}>
+                {card.factEn}
+              </Body>
+            </View>
           </View>
         </>
       ) : null}

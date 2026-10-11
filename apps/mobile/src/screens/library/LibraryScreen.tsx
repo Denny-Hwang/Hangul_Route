@@ -77,7 +77,7 @@ export function LibraryScreen(): React.ReactElement {
         <Heading level="prompt">How to collect more</Heading>
         <Spacer size="xs" />
         <Body tone="secondary" size="sm">
-          Finish quests to unlock cards. Legendary cards appear when you complete a whole stage.
+          Finish quests to unlock cards.
         </Body>
       </Card>
       <Spacer size="xl" />
