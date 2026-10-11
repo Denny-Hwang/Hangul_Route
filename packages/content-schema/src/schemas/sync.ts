@@ -7,6 +7,7 @@ import { LearnerMembershipSchema } from './space';
 import { LearnerLevelIdSchema } from './learner-level';
 import { PlacementSummarySchema } from './placement';
 import { InboxTransferSchema, lenientArray } from './transfer';
+import { VocabIdSchema } from './vocab';
 
 /**
  * Sync contracts — F-SYNC-001. Shared by the Worker (validation) and the
@@ -26,6 +27,25 @@ export const SelfRouteSummarySchema = z.object({
   endsOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
 });
 export type SelfRouteSummary = z.infer<typeof SelfRouteSummarySchema>;
+
+/**
+ * Word counts for caregivers and teachers (F-VOC-005 section 3.8): counts, a
+ * first-try rate and up to three words to look at together. Never shown to the
+ * learner; no response time and no per-question history.
+ */
+export const VocabSummarySchema = z.object({
+  /** Words with a state, all topics. */
+  collected: z.number().int().nonnegative(),
+  /** `bestBox >= 3`. */
+  strong: z.number().int().nonnegative(),
+  topicsStarted: z.number().int().nonnegative(),
+  /** Topics whose `last` is within the last 7 days (topics, not rounds). */
+  topicsPracticed7d: z.number().int().nonnegative(),
+  /** sum(right) / sum(seen), rounded to 2 decimals; null when nothing was answered. */
+  firstTryRate: z.number().min(0).max(1).nullable(),
+  needsPractice: z.array(VocabIdSchema).max(3),
+});
+export type VocabSummary = z.infer<typeof VocabSummarySchema>;
 
 /** Client-computed aggregate; the only column caregivers/teachers read (roadmap §3.3). */
 export const ProgressSummarySchema = z.object({
@@ -62,6 +82,8 @@ export const ProgressSummarySchema = z.object({
   ),
   /** Self-route counts (F-PLAN-002 section 3.5); removed from every roster but a family's. Malformed counts are dropped, never fatal. */
   selfRoute: SelfRouteSummarySchema.optional().catch(undefined),
+  /** Word counts (F-VOC-005 section 3.8); omitted when the learner has no collected words. */
+  vocab: VocabSummarySchema.optional(),
 });
 export type ProgressSummary = z.infer<typeof ProgressSummarySchema>;
 

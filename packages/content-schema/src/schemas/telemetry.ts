@@ -103,6 +103,8 @@ export const TELEMETRY_EVENT_NAMES = [
   'route.proposed',
   'route.proposal_skipped',
   'route.updated',
+  // F-VOC-005 §3.9 (payload { topicKey, due }: a topic key and a count only)
+  'home.vocab_card.shown',
 ] as const;
 
 export const TelemetryEventNameSchema = z.enum(TELEMETRY_EVENT_NAMES);

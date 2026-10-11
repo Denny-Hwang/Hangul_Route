@@ -88,6 +88,7 @@ describe('telemetry event names (one list for the client type and the API whitel
         'route.proposed',
         'route.proposal_skipped',
         'route.updated',
+        'home.vocab_card.shown',
       ].sort(),
     );
     expect(new Set(TELEMETRY_EVENT_NAMES).size).toBe(TELEMETRY_EVENT_NAMES.length);
@@ -120,6 +121,12 @@ describe('telemetry event names (one list for the client type and the API whitel
       expect(isTelemetryEventName(name)).toBe(true);
     }
     expect(isTelemetryEventName('route.started')).toBe(false);
+  });
+
+  it('lists the Home vocabulary card name of F-VOC-005 section 3.9 (Worker first, P-1)', () => {
+    expect(isTelemetryEventName('home.vocab_card.shown')).toBe(true);
+    expect(TELEMETRY_EVENT_NAMES.filter((n) => n === 'home.vocab_card.shown')).toHaveLength(1);
+    expect(isTelemetryEventName('home.vocab_card.opened')).toBe(false);
   });
 
   it('narrows unknown input with isTelemetryEventName', () => {
