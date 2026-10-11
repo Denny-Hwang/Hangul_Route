@@ -243,7 +243,8 @@ export function PlacementScreen({ route, navigation }: Props): React.ReactElemen
 
   // --- Start the run when the flow reaches the first scored question --------------------
   useEffect(() => {
-    if (profile === null || flow === null || flow.screen !== 'item' || run !== null || finished !== null) return;
+    // Never again once a run has ended (a run stopped before any answer leaves with nothing recorded).
+    if (profile === null || flow === null || flow.screen !== 'item' || run !== null || finished !== null || finishing.current) return;
     const placements = useProgressStore.getState().byProfile[profile.id]?.placements ?? [];
     const now = Date.now();
     const config = runConfig(flow, {
