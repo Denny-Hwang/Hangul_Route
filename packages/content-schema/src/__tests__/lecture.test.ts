@@ -7,8 +7,15 @@ import {
   LECTURE_MAX_BLOCKS,
   LECTURE_MAX_FRAGMENT_CHARS,
   LECTURE_MAX_JSON_BYTES,
+  LECTURE_CREATED_AT_RE,
+  LECTURE_JAMO_ID_RE,
   LECTURE_MESSAGE_NS,
+  LECTURE_REVISIT_CHAR_RE,
   LECTURE_TITLE_RE,
+  LECTURE_VOCAB_TOPIC_ID_RE,
+  JamoSchema,
+  VocabIdSchema,
+  VocabTopicSchema,
   LectureBlockSchema,
   LectureCodecError,
   LectureDeckSchema,
@@ -76,8 +83,8 @@ describe('LectureBlockSchema', () => {
     expect(ok({ kind: 'quest', id: 'quest:s1-meet-1' })).toBe(true);
     expect(ok({ kind: 'jamo-set', jamoIds: ['jamo:giyeok', 'jamo:a'] })).toBe(true);
     expect(ok({ kind: 'revisit', chars: ['ㄱ', 'ㅏ'] })).toBe(true);
-    expect(ok({ kind: 'vocab', topicId: 'vocab:food' })).toBe(true);
-    expect(ok({ kind: 'vocab', topicId: 'vocab:food', wordIds: ['kimchi', 'bap'] })).toBe(true);
+    expect(ok({ kind: 'vocab', topicId: 'vocab-topic:food' })).toBe(true);
+    expect(ok({ kind: 'vocab', topicId: 'vocab-topic:k-culture', wordIds: ['vocab:sagwa-apple', 'vocab:bap'] })).toBe(true);
     expect(ok({ kind: 'story', storyId: 'story:sun-and-moon' })).toBe(true);
     expect(ok({ kind: 'story', storyId: 'story:sun-and-moon', level: 'read-along', checks: false })).toBe(true);
     expect(ok({ kind: 'cards', cardIds: ['card:hanbok'] })).toBe(true);
@@ -95,8 +102,24 @@ describe('LectureBlockSchema', () => {
   it('rejects ids of the wrong shape', () => {
     expect(ok({ kind: 'episode', id: 'quest:s1-meet-1' })).toBe(false);
     expect(ok({ kind: 'quest', id: 'quest:S1' })).toBe(false);
-    expect(ok({ kind: 'jamo-set', jamoIds: ['jamo:g1'] })).toBe(false);
+    expect(ok({ kind: 'jamo-set', jamoIds: ['giyeok'] })).toBe(false);
     expect(ok({ kind: 'vocab', topicId: 'food' })).toBe(false);
+    // F-VOC-001 grammar: topics are vocab-topic:<key>, words are vocab:<slug>; never the other way round.
+    expect(ok({ kind: 'vocab', topicId: 'vocab:food' })).toBe(false);
+    expect(ok({ kind: 'vocab', topicId: 'vocab:sagwa-apple' })).toBe(false);
+    expect(ok({ kind: 'vocab', topicId: 'vocab-topic:food', wordIds: ['vocab-topic:food'] })).toBe(false);
+    expect(ok({ kind: 'vocab', topicId: 'vocab-topic:food', wordIds: ['kimchi'] })).toBe(false);
+    expect(ok({ kind: 'vocab', topicId: 'vocab-topic:food', wordIds: ['Minho Kim'] })).toBe(false);
+    expect(ok({ kind: 'vocab', topicId: 'vocab-topic:food', wordIds: [''] })).toBe(false);
+    expect(ok({ kind: 'jamo-set', jamoIds: ['jamo:giyeok-batchim', 'jamo:ssang2'] })).toBe(true);
+    expect(ok({ kind: 'jamo-set', jamoIds: ['jamo:Giyeok'] })).toBe(false);
+    // revisit holds compatibility jamo only: no syllable, markup, control character or lone surrogate.
+    expect(ok({ kind: 'revisit', chars: ['ㄲ', 'ㅘ', 'ㅣ'] })).toBe(true);
+    expect(ok({ kind: 'revisit', chars: ['가'] })).toBe(false);
+    expect(ok({ kind: 'revisit', chars: ['<'] })).toBe(false);
+    expect(ok({ kind: 'revisit', chars: ['\u0007'] })).toBe(false);
+    expect(ok({ kind: 'revisit', chars: ['\ud800'] })).toBe(false);
+    expect(ok({ kind: 'revisit', chars: ['M'] })).toBe(false);
     expect(ok({ kind: 'story', storyId: 'story:sun--moon' })).toBe(false);
     expect(ok({ kind: 'story', storyId: 'story:-sun' })).toBe(false);
     expect(ok({ kind: 'story', storyId: 'story:sun', level: 'shout' })).toBe(false);
@@ -117,9 +140,10 @@ describe('LectureBlockSchema', () => {
     expect(ok({ kind: 'revisit', chars: ['ㄱ', 'ㄴ', 'ㄷ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅅ'] })).toBe(false);
     expect(ok({ kind: 'revisit', chars: ['ㄱㄴ'] })).toBe(false);
     expect(ok({ kind: 'revisit', chars: [''] })).toBe(false);
-    expect(ok({ kind: 'vocab', topicId: 'vocab:food', wordIds: Array.from({ length: 24 }, () => 'w') })).toBe(true);
-    expect(ok({ kind: 'vocab', topicId: 'vocab:food', wordIds: Array.from({ length: 25 }, () => 'w') })).toBe(false);
-    expect(ok({ kind: 'vocab', topicId: 'vocab:food', wordIds: ['x'.repeat(49)] })).toBe(false);
+    expect(ok({ kind: 'vocab', topicId: 'vocab-topic:food', wordIds: Array.from({ length: 24 }, () => 'vocab:w') })).toBe(true);
+    expect(ok({ kind: 'vocab', topicId: 'vocab-topic:food', wordIds: Array.from({ length: 25 }, () => 'vocab:w') })).toBe(false);
+    expect(ok({ kind: 'vocab', topicId: 'vocab-topic:food', wordIds: [`vocab:${'x'.repeat(42)}`] })).toBe(true);
+    expect(ok({ kind: 'vocab', topicId: 'vocab-topic:food', wordIds: [`vocab:${'x'.repeat(43)}`] })).toBe(false);
     expect(ok({ kind: 'cards', cardIds: [] })).toBe(false);
     expect(ok({ kind: 'cards', cardIds: Array.from({ length: 13 }, () => 'card:a') })).toBe(false);
     expect(ok({ kind: 'quiz', from: 'previous', rounds: 0 })).toBe(false);
@@ -129,6 +153,17 @@ describe('LectureBlockSchema', () => {
     expect(ok({ kind: 'activity', preset: 'pair-share', minutes: 0 })).toBe(false);
     expect(ok({ kind: 'activity', preset: 'pair-share', minutes: 15 })).toBe(true);
     expect(ok({ kind: 'activity', preset: 'pair-share', minutes: 16 })).toBe(false);
+  });
+
+  it('id grammars match the content schemas they point at (no drift)', () => {
+    for (const id of ['jamo:giyeok', 'jamo:giyeok-batchim', 'jamo:a2', 'jamo:A', 'giyeok']) {
+      expect(LECTURE_JAMO_ID_RE.test(id)).toBe(JamoSchema.innerType().shape.id.safeParse(id).success);
+    }
+    for (const id of ['vocab-topic:food', 'vocab-topic:k-culture', 'vocab:food', 'vocab-topic:-x']) {
+      expect(LECTURE_VOCAB_TOPIC_ID_RE.test(id)).toBe(VocabTopicSchema.innerType().shape.id.safeParse(id).success);
+    }
+    expect(VocabIdSchema.safeParse('vocab:sagwa-apple').success).toBe(true);
+    expect(LECTURE_REVISIT_CHAR_RE.test('ㄱ') && LECTURE_REVISIT_CHAR_RE.test('ㅣ')).toBe(true);
   });
 
   it('is strict: an unknown key in any block is an error (no free slide text)', () => {
@@ -184,6 +219,20 @@ describe('LectureDeckSchema', () => {
     expect(ok({ ...baseDeck(), v: 2 as 1 })).toBe(false);
     expect(ok(baseDeck({ id: 'lecture:abc' }))).toBe(false);
     expect(ok(baseDeck({ source: 'console' as 'plan' }))).toBe(false);
+  });
+
+  it('createdAt is an ISO date-time with a zone, never free text', () => {
+    const ok = (createdAt: string) => LectureDeckSchema.safeParse(baseDeck({ createdAt })).success;
+    expect(ok(new Date(0).toISOString())).toBe(true);
+    expect(ok('2026-10-11T09:00:00Z')).toBe(true);
+    expect(ok('2026-10-11T09:00+09:00')).toBe(true);
+    expect(ok('2026-10-11')).toBe(false);
+    expect(ok('2026-10-11T09:00:00')).toBe(false);
+    expect(ok('Minho Kim')).toBe(false);
+    expect(ok('')).toBe(false);
+    expect(ok('2026-10-11T09:00:00.000Z\u202e')).toBe(false);
+    expect(ok(`2026-10-11T09:00:00.${'1'.repeat(30)}Z`)).toBe(false);
+    expect(LECTURE_CREATED_AT_RE.test('2026-10-11T09:00:00.000Z')).toBe(true);
   });
 
   it('is strict at the top level, in options and in picker: names cannot ride in the deck', () => {
@@ -344,8 +393,8 @@ describe('deck codec', () => {
   it('refuses to encode a deck whose link would be too long', () => {
     const block = {
       kind: 'vocab' as const,
-      topicId: 'vocab:food',
-      wordIds: Array.from({ length: 24 }, (_, i) => `${'w'.repeat(44)}${String(i).padStart(4, '0')}`),
+      topicId: 'vocab-topic:food',
+      wordIds: Array.from({ length: 24 }, (_, i) => `vocab:${'w'.repeat(37)}-${String(i).padStart(4, '0')}`),
     };
     const big = baseDeck({ blocks: Array.from({ length: 30 }, () => block) });
     expect(LectureDeckSchema.safeParse(big).success).toBe(true);
@@ -403,6 +452,11 @@ describe('deck codec', () => {
       if (smuggled.ok) throw new Error('unreachable');
       expect(smuggled.reason).toBe('invalid');
       expect(smuggled.issues?.length).toBeGreaterThan(0);
+      // Issues carry the path and zod code only, never an input value (a link may hold a name).
+      expect(smuggled.issues).toEqual([{ path: ['picker'], code: 'unrecognized_keys' }]);
+      const badEnum = decodeDeck(fragmentOfJson(JSON.stringify({ ...baseDeck(), picker: { mode: 'Minho', count: 2 } })));
+      expect(badEnum).toEqual({ ok: false, reason: 'invalid', issues: [{ path: ['picker', 'mode'], code: 'invalid_enum_value' }] });
+      expect(JSON.stringify(badEnum)).not.toContain('Minho');
 
       for (const json of [
         JSON.stringify({ ...baseDeck(), labels: ['Minho'] }),

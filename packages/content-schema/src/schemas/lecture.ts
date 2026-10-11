@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { RomanizationModeSchema, UiLocaleSchema } from './locale';
 import { JOIN_CODE_RE } from './space';
 import { StoryLevelSchema } from './story';
+import { VocabIdSchema } from './vocab';
 
 /**
  * Lecture mode — F-TCH-004 §3.2. A deck is what a teacher presents on a
@@ -14,6 +15,13 @@ import { StoryLevelSchema } from './story';
  * (the two message schemas below), and live in presenter memory only (D12,
  * TD3). Every object here is `.strict()`, so a hand-built link cannot smuggle
  * a `labels` key into the fragment: an unknown key is an error, not dropped.
+ * The remaining string fields are closed grammars (ids, compatibility jamo,
+ * an ISO timestamp); only the teacher-typed title is free text (TD8, §8).
+ *
+ * The deck is a versioned URL contract and the ids are the contract: any new
+ * key, block kind or wider grammar means `v: 2`, and the presenter must accept
+ * v2 before any console emits it (a cached presenter answers
+ * `unsupported_version` for a link it cannot read, never a half-read deck).
  */
 
 export const LECTURE_DECK_VERSION = 1;
@@ -38,19 +46,30 @@ export const LECTURE_TITLE_RE = /^[A-Za-zÀ-ɏ가-힣0-9 .,!?:'’()/-]+$/;
 
 export const DECK_ID_RE = /^lecture:[a-z0-9]{6,12}$/;
 
+// The grammars the deck's string fields follow (2026-10-11 amendment to §3.2).
+
+/** = `JamoSchema.id` (`jamo.ts`). */
+export const LECTURE_JAMO_ID_RE = /^jamo:[a-z0-9-]+$/;
+/** = `VocabTopicSchema.id` (`vocab.ts`): `vocab-topic:<key>`. Word ids are `VocabIdSchema` (`vocab:<slug>`). */
+export const LECTURE_VOCAB_TOPIC_ID_RE = /^vocab-topic:[a-z0-9]+(-[a-z0-9]+)*$/;
+/** One compatibility jamo (U+3131-U+3163), the characters `ProgressSummary.needsPractice` holds. */
+export const LECTURE_REVISIT_CHAR_RE = /^[\u3131-\u3163]$/;
+/** ISO 8601 date-time with a zone, the `ISO_DATE_TIME` the telemetry route accepts (`new Date().toISOString()`). */
+export const LECTURE_CREATED_AT_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d{1,9})?)?(Z|[+-]\d{2}:\d{2})$/;
+
 export const LectureBlockSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('episode'), id: z.string().regex(/^episode:[a-z0-9-]+$/) }).strict(),
   z.object({ kind: z.literal('quest'), id: z.string().regex(/^quest:[a-z0-9-]+$/) }).strict(),
   z
-    .object({ kind: z.literal('jamo-set'), jamoIds: z.array(z.string().regex(/^jamo:[a-z-]+$/)).min(1).max(12) })
+    .object({ kind: z.literal('jamo-set'), jamoIds: z.array(z.string().regex(LECTURE_JAMO_ID_RE)).min(1).max(12) })
     .strict(),
   /** Compatibility jamo characters, from `ProgressSummary.needsPractice` via the console roll-up. */
-  z.object({ kind: z.literal('revisit'), chars: z.array(z.string().length(1)).min(1).max(6) }).strict(),
+  z.object({ kind: z.literal('revisit'), chars: z.array(z.string().regex(LECTURE_REVISIT_CHAR_RE)).min(1).max(6) }).strict(),
   z
     .object({
       kind: z.literal('vocab'),
-      topicId: z.string().regex(/^vocab:[a-z0-9-]+$/),
-      wordIds: z.array(z.string().max(48)).max(24).optional(),
+      topicId: z.string().regex(LECTURE_VOCAB_TOPIC_ID_RE),
+      wordIds: z.array(VocabIdSchema.max(48)).max(24).optional(),
     })
     .strict(),
   z
@@ -102,7 +121,7 @@ export const LectureDeckSchema = z
     v: z.literal(LECTURE_DECK_VERSION),
     id: z.string().regex(DECK_ID_RE),
     title: z.string().trim().min(1).max(60).regex(LECTURE_TITLE_RE),
-    createdAt: z.string(),
+    createdAt: z.string().max(40).regex(LECTURE_CREATED_AT_RE),
     /** Quiz content replays identically for the same seed. */
     seed: z.number().int().min(0).max(2_147_483_647),
     blocks: z.array(LectureBlockSchema).min(1).max(LECTURE_MAX_BLOCKS),

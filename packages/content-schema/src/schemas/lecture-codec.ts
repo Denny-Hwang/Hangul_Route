@@ -21,7 +21,8 @@ import {
  * and deck JSON <= 6144 UTF-8 bytes. On decode the first limit implies the
  * second (8190 base64url characters hold at most 6142 bytes; a test pins
  * that arithmetic, so raising the fragment limit fails it). `encodeDeck`
- * checks both.
+ * checks both; its byte check is implied by the fragment check today and
+ * stays as a guard in case the two limits are ever changed apart.
  */
 
 export const LECTURE_DECODE_FAILURES = [
@@ -34,9 +35,20 @@ export const LECTURE_DECODE_FAILURES = [
 ] as const;
 export type LectureDecodeFailure = (typeof LECTURE_DECODE_FAILURES)[number];
 
+/**
+ * Where and why a decoded deck failed the schema. Only the path (schema keys
+ * and array indexes) and the zod code: zod's own issues echo input values
+ * (`received`, `keys`, messages), and a hand-built link may hold a name, so
+ * those never leave the codec.
+ */
+export interface LectureDecodeIssue {
+  path: (string | number)[];
+  code: z.ZodIssueCode;
+}
+
 export type LectureDecodeResult =
   | { ok: true; deck: LectureDeck }
-  | { ok: false; reason: LectureDecodeFailure; issues?: z.ZodIssue[] };
+  | { ok: false; reason: LectureDecodeFailure; issues?: LectureDecodeIssue[] };
 
 /** Thrown by `encodeDeck` when a valid deck would not fit in a link. */
 export class LectureCodecError extends Error {
@@ -130,7 +142,10 @@ export function decodeDeck(fragment: string): LectureDecodeResult {
   }
 
   const result = LectureDeckSchema.safeParse(json);
-  if (!result.success) return { ok: false, reason: 'invalid', issues: result.error.issues };
+  if (!result.success) {
+    const issues = result.error.issues.map((issue): LectureDecodeIssue => ({ path: [...issue.path], code: issue.code }));
+    return { ok: false, reason: 'invalid', issues };
+  }
   return { ok: true, deck: result.data };
 }
 
