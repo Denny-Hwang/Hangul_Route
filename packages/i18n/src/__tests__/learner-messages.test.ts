@@ -122,6 +122,44 @@ describe('learner.profile (English wording as shipped)', () => {
   });
 });
 
+describe('learner.editProfile (F-LEARN-001 §3.11)', () => {
+  const e = en.learner.editProfile;
+  const flat = (v: unknown): string[] =>
+    typeof v === 'string' ? [v] : typeof v === 'function' ? [String((v as (x: string) => string)('Mina'))] : Object.values(v as object).flatMap(flat);
+
+  it('names the screen, the rows and Save', () => {
+    expect(e.title).toBe('Edit profile');
+    expect(e.cta).toBe('Edit');
+    expect(e.a11y('Mina')).toBe('Edit Mina');
+    expect([e.nameLabel, e.levelHeading, e.avatarHeading, e.who.heading]).toEqual([
+      'Name',
+      'Reading level',
+      'Pick a Hoya',
+      'Who is learning?',
+    ]);
+    expect(e.save.cta).toBe('Save');
+  });
+
+  it('keeps the create form’s consent wording for a change of who is learning', () => {
+    expect(e.self.agree).toBe("I'm 13 or older and I agree to the Privacy Policy.");
+    expect(e.guardian.agree).toBe(
+      "I'm a parent or guardian of this learner (or I set it up for them) and I agree to the Privacy Policy.",
+    );
+    expect(e.guardian.pinHeading).toBe('Create a grown-up PIN');
+  });
+
+  it('says where a class roster stands (the change is local until a server route exists)', () => {
+    expect(e.classNote).toBe("Changes show on your teacher's list after you join again");
+  });
+
+  it('names an age nowhere but the 13-or-older statement, and never scolds', () => {
+    for (const line of flat(e)) {
+      expect(line).not.toMatch(/\bAge\b|How old|ages? \d|for kids/i);
+      expect(line).not.toMatch(/\b(failed|missed|overdue|incomplete|wrong)\b/i);
+    }
+  });
+});
+
 describe('learner.portraitGuard (F-LAYOUT-001 §3.4)', () => {
   it('asks in one short line and offers a way out', () => {
     expect(en.learner.portraitGuard.title).toBe('Turn your phone upright');
