@@ -115,8 +115,13 @@ export const ProgressSnapshotSchema = z.object({
    * Writers store `new Date().toISOString()`; mergers compare instants, not strings.
    */
   stageDoneAt: z.record(z.string(), z.string()).optional(),
-  /** The learner's own weekly plan (F-PLAN-002 section 3.5); null when there is none. */
-  selfRoute: SelfRouteSchema.nullable().default(null),
+  /**
+   * The learner's own weekly plan (F-PLAN-002 section 3.5); null when there is
+   * none. Lenient: a malformed or newer-shaped route reads as null instead of
+   * failing the whole upload or backup restore, and the Worker's preserve rule
+   * then keeps the stored route.
+   */
+  selfRoute: SelfRouteSchema.nullable().catch(null).default(null),
 });
 /**
  * `placements` is optional in the *type* although the schema defaults it to

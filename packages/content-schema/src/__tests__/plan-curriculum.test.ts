@@ -7,6 +7,7 @@ import {
   PlanSchema,
   PlanUpsertSchema,
   StageKeySchema,
+  curriculumWeekIssue,
   SyncInboxSchema,
   generateCurriculum,
   isCurriculumPlan,
@@ -15,6 +16,7 @@ import {
   type CurriculumMeta,
   type InboxPlan,
   type Plan,
+  type SyncInbox,
   type StageKey,
 } from '../index';
 import { CATALOG_2026_10 } from './fixtures/catalog-2026-10';
@@ -119,6 +121,23 @@ describe('PlanUpsertSchema.meta (section 3.5)', () => {
     expect(PlanUpsertSchema.safeParse({ title: 'x', items: many(CURRICULUM_MAX_ITEMS + 1), meta }).success).toBe(false);
   });
 
+  it('rejects an item whose week lies past the last week of the meta (meta and items cannot drift apart)', () => {
+    const weeks = meta.weeks.length;
+    expect(PlanUpsertSchema.safeParse({ title: 'x', items: [{ ...item, week: weeks }], meta }).success).toBe(true);
+    const past = PlanUpsertSchema.safeParse({ title: 'x', items: [{ ...item, week: weeks + 1 }], meta });
+    expect(past.success).toBe(false);
+    expect(past.error?.issues[0]?.path).toEqual(['items', 0, 'week']);
+    // Without a meta in the body the route checks the week against the stored plan's meta.
+    expect(PlanUpsertSchema.safeParse({ title: 'x', items: [{ ...item, week: weeks + 1 }] }).success).toBe(true);
+  });
+
+  it('curriculumWeekIssue answers the first item past the meta, and nothing for a classic plan', () => {
+    const weeks = meta.weeks.length;
+    expect(curriculumWeekIssue([{ week: 1 }, { week: weeks + 2 }], meta)).toBe(1);
+    expect(curriculumWeekIssue([{ week: 1 }, {}], meta)).toBeNull();
+    expect(curriculumWeekIssue([{ week: 40 }], null)).toBeNull();
+  });
+
   it('lets an absent meta through up to the curriculum cap: the route checks it against the stored plan', () => {
     expect(PlanUpsertSchema.safeParse({ title: 'x', items: many(PLAN_MAX_ITEMS + 1) }).success).toBe(true);
     expect(PlanUpsertSchema.safeParse({ title: 'x', items: many(CURRICULUM_MAX_ITEMS + 1) }).success).toBe(false);
@@ -141,6 +160,12 @@ describe('InboxPlanSchema.meta (section 3.5)', () => {
     const stored: InboxPlan = { id: 'plan:abc', spaceId: 'space:c', spaceKind: 'class', spaceName: 'A', title: 'Week 3', items: [item as InboxPlan['items'][number]], publishedAt: 't', updatedAt: 't' };
     expect(isCurriculumPlan(stored)).toBe(false);
     expect(isCurriculumPlan({ ...stored, meta })).toBe(true);
+  });
+
+  it('types SyncInbox plans as InboxPlan, so every reader handles a missing meta', () => {
+    const plans: InboxPlan[] = [{ id: 'plan:abc', spaceId: 'space:c', spaceKind: 'class', spaceName: 'A', title: 'Week 3', items: [], publishedAt: 't', updatedAt: 't' }];
+    const inbox: Pick<SyncInbox, 'plans'> = { plans };
+    expect(inbox.plans[0]?.meta ?? null).toBeNull();
   });
 
   it('keeps a 52-week meta near 10 KB', () => {

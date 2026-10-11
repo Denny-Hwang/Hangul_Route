@@ -42,6 +42,8 @@ export function teacherVisibleSummary(summary: unknown, planIds: ReadonlySet<str
   return out as TeacherVisibleSummary;
 }
 
+const SELF_ROUTE_KEYS = ['done', 'total', 'notReady', 'weeks', 'endsOn'] as const satisfies readonly (keyof NonNullable<ProgressSummary['selfRoute']>)[];
+
 /** What a family space additionally reads of its learner's summary. */
 export type FamilyVisibleSummary = TeacherVisibleSummary & Pick<ProgressSummary, 'selfRoute'>;
 
@@ -54,5 +56,6 @@ export type FamilyVisibleSummary = TeacherVisibleSummary & Pick<ProgressSummary,
 export function rosterSummary(summary: unknown, planIds: ReadonlySet<string>, kind: SpaceKind): FamilyVisibleSummary | null {
   const out = teacherVisibleSummary(summary, planIds);
   if (!out || kind !== 'family' || !isPlain(summary) || !isPlain(summary.selfRoute)) return out;
-  return { ...out, selfRoute: summary.selfRoute as ProgressSummary['selfRoute'] };
+  // Projected to the known keys, like every other field here: keys a newer writer left under it never leave.
+  return { ...out, selfRoute: pick(summary.selfRoute, SELF_ROUTE_KEYS) as ProgressSummary['selfRoute'] };
 }

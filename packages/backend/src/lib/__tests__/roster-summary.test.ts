@@ -93,6 +93,11 @@ describe('rosterSummary (F-PLAN-002 section 3.10: the self-route reaches the fam
     }
   });
 
+  it('copies only the known self-route keys, never what a newer writer left under it', () => {
+    const out = rosterSummary({ ...full, selfRoute: { ...selfRoute, items: ['quest:a'], learnerName: 'Suni' } }, own, 'family');
+    expect(out?.selfRoute).toEqual(selfRoute);
+  });
+
   it('adds nothing when the summary has no route or a malformed one, and answers null without a summary', () => {
     expect(rosterSummary(full, own, 'family')).toEqual(teacherVisibleSummary(full, own));
     expect(rosterSummary({ ...full, selfRoute: 'oops' }, own, 'family')).toEqual(teacherVisibleSummary(full, own));

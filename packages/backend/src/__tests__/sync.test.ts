@@ -631,11 +631,31 @@ describe('selfRoute and summary.selfRoute (F-PLAN-002 section 3.5, the additive 
     expect(((await getStored(r.learnerId, auth)).data.snapshot.selfRoute as { archivedAt: string }).archivedAt).toBe('2026-11-01T00:00:00.000Z');
   });
 
-  it('rejects a malformed route or malformed counts with 422 and stores nothing', async () => {
+  it('drops a malformed route or malformed counts and stores the rest of the upload', async () => {
     const r = await register(DEVICE_A);
     const auth = deviceAuth(DEVICE_A, r.secret);
-    expect((await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withRoute(r.learnerId, { ...route, id: 'plan:x' }), summary })).status).toBe(422);
-    expect((await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: snapshotFor(r.learnerId), summary: { ...summary, selfRoute: { ...counts, weeks: 0 } } })).status).toBe(422);
-    expect(await db.getSnapshot(r.learnerId)).toBeNull();
+    const bad = await put(r.learnerId, auth, {
+      ...base,
+      baseRev: 0,
+      snapshot: { ...snapshotFor(r.learnerId, [{ questId: 'quest:a', stars: 3 }]), selfRoute: { ...route, id: 'plan:x' } },
+      summary: { ...summary, streakDays: 2, selfRoute: { ...counts, weeks: 0 } },
+    });
+    expect(bad.status).toBe(200);
+    const got = await getStored(r.learnerId, auth);
+    expect(got.data.rev).toBe(1);
+    expect(got.data.snapshot.selfRoute).toBeNull();
+    expect((got.data.snapshot as { quests: unknown[] }).quests).toHaveLength(1);
+    expect(got.data.summary.streakDays).toBe(2);
+    expect(got.data.summary).not.toHaveProperty('selfRoute');
+  });
+
+  it('a malformed route never replaces a stored one (the preserve rule keeps it and its counts)', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withRoute(r.learnerId, route), summary: { ...summary, selfRoute: counts } });
+    expect((await put(r.learnerId, auth, { ...base, baseRev: 1, snapshot: withRoute(r.learnerId, { ...route, items: 'none' }), summary })).status).toBe(200);
+    const got = await getStored(r.learnerId, auth);
+    expect((got.data.snapshot.selfRoute as { id: string }).id).toBe('route:abc');
+    expect(got.data.summary.selfRoute).toEqual(counts);
   });
 });

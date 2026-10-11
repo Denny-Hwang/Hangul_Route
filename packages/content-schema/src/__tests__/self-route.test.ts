@@ -91,8 +91,13 @@ describe('ProgressSnapshotSchema.selfRoute', () => {
     expect(ProgressSnapshotSchema.parse({ ...legacy, selfRoute: route }).selfRoute).toEqual(route);
   });
 
-  it('rejects a malformed route instead of dropping it', () => {
-    expect(ProgressSnapshotSchema.safeParse({ ...legacy, selfRoute: { ...route, items: 'none' } }).success).toBe(false);
+  it('drops a malformed or newer-shaped route to null and keeps the rest of the snapshot', () => {
+    for (const bad of [{ ...route, items: 'none' }, { ...route, id: 'plan:x' }, { ...route, items: [{ kind: 'quest', id: 'quest:a', week: 53 }] }, 'oops']) {
+      const parsed = ProgressSnapshotSchema.safeParse({ ...legacy, streakDays: 4, selfRoute: bad });
+      expect(parsed.success).toBe(true);
+      expect(parsed.data?.selfRoute).toBeNull();
+      expect(parsed.data?.streakDays).toBe(4);
+    }
   });
 
   it('is optional in the legacy-tolerant ProgressSnapshot type', () => {
@@ -113,6 +118,8 @@ describe('ProgressSnapshotSchema.selfRoute', () => {
     };
     expect(BackupFileSchema.parse(file).snapshot.selfRoute).toEqual(route);
     expect(BackupFileSchema.parse({ ...file, snapshot: legacy }).snapshot.selfRoute).toBeNull();
+    // A bad route never fails the restore of everything else.
+    expect(BackupFileSchema.parse({ ...file, snapshot: { ...legacy, selfRoute: { ...route, meta: null } } }).snapshot.selfRoute).toBeNull();
   });
 });
 
@@ -126,6 +133,12 @@ describe('ProgressSummarySchema.selfRoute', () => {
   it('carries counts, weeks and the end day only', () => {
     expect(ProgressSummarySchema.parse({ ...summary, selfRoute: counts }).selfRoute).toEqual(counts);
     expect(SelfRouteSummarySchema.parse({ ...counts, items: ['quest:a'] })).toEqual(counts);
+  });
+
+  it('drops malformed counts from the summary and keeps the rest', () => {
+    const parsed = ProgressSummarySchema.parse({ ...summary, streakDays: 3, selfRoute: { ...counts, weeks: 0 } });
+    expect(parsed.selfRoute).toBeUndefined();
+    expect(parsed.streakDays).toBe(3);
   });
 
   it('rejects negative counts, a week count off the plan range and a malformed day', () => {

@@ -35,6 +35,28 @@ const refineCap = (plan: { items: readonly unknown[]; meta?: CurriculumMeta | nu
   });
 };
 
+/**
+ * Index of the first item whose `week` lies past the last week of `meta`, or
+ * null when every item fits (or the plan is classic). Keeps a curriculum's
+ * items and its week list from drifting apart.
+ */
+export function curriculumWeekIssue(items: readonly { week?: number }[], meta: CurriculumMeta | null | undefined): number | null {
+  if (meta === null || meta === undefined) return null;
+  const index = items.findIndex((item) => item.week !== undefined && item.week > meta.weeks.length);
+  return index === -1 ? null : index;
+}
+
+/** The issue `curriculumWeekIssue` reports, on path `items.<index>.week`. */
+export function curriculumWeekIssueOf(index: number, meta: CurriculumMeta): { path: Array<string | number>; message: string } {
+  return { path: ['items', index, 'week'], message: `The plan has ${meta.weeks.length} weeks` };
+}
+
+const refineWeeks = (plan: { items: readonly { week?: number }[]; meta?: CurriculumMeta | null }, ctx: z.RefinementCtx): void => {
+  if (plan.meta === null || plan.meta === undefined) return;
+  const index = curriculumWeekIssue(plan.items, plan.meta);
+  if (index !== null) ctx.addIssue({ code: z.ZodIssueCode.custom, ...curriculumWeekIssueOf(index, plan.meta) });
+};
+
 const planItems = z.array(PlanItemSchema).min(1).max(CURRICULUM_MAX_ITEMS);
 
 export const PlanSchema = z
@@ -71,7 +93,11 @@ export const PlanUpsertSchema = z
     publish: z.boolean().default(false),
     meta: CurriculumMetaSchema.nullable().optional(),
   })
-  .superRefine((plan, ctx) => refineCap(plan, ctx, false));
+  .superRefine((plan, ctx) => {
+    refineCap(plan, ctx, false);
+    // A body with a meta is checked here; one without it is checked by the route against the stored meta.
+    refineWeeks(plan, ctx);
+  });
 export type PlanUpsert = z.infer<typeof PlanUpsertSchema>;
 
 /** What a learner device receives in the inbox. */

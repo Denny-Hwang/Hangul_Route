@@ -113,6 +113,43 @@ describe('plan meta (F-PLAN-002 section 3.5)', () => {
     expect((await put(cls.id, 'teacher', { id, title: 'Week 1', items: many(PLAN_MAX_ITEMS + 1) })).status).toBe(422);
   });
 
+  it('refuses to turn a published classic plan into a route: a route is a new plan id (409)', async () => {
+    const cls = await createSpace('class');
+    const id = planOf(await put(cls.id, 'teacher', { title: 'Week 3', items: [classic], publish: true })).id;
+    const r = await put(cls.id, 'teacher', { id, title: 'Term 1', items: routeItems, meta });
+    expect(r.status).toBe(409);
+    expect(r.body.error?.code).toBe('curriculum_needs_new_plan');
+    expect((await db.getPlan(id))?.meta).toBeNull();
+    // A draft that was never delivered may become a route.
+    const draftId = planOf(await put(cls.id, 'teacher', { title: 'Draft', items: [classic] })).id;
+    const upgraded = await put(cls.id, 'teacher', { id: draftId, title: 'Term 1', items: routeItems, meta });
+    expect(upgraded.status).toBe(200);
+    expect(planOf(upgraded).meta).toEqual(meta);
+  });
+
+  it('rejects an item whose week lies past the last week of the meta, sent or stored (422)', async () => {
+    const cls = await createSpace('class');
+    const past: PlanItem = { ...classic, week: meta.weeks.length + 1 };
+    const sent = await put(cls.id, 'teacher', { title: 'Term 1', items: [past], meta });
+    expect(sent.status).toBe(422);
+    expect(sent.body.error?.code).toBe('bad_request');
+    const id = planOf(await put(cls.id, 'teacher', { title: 'Term 1', items: routeItems, meta })).id;
+    const kept = await put(cls.id, 'teacher', { id, title: 'Term 1', items: [past] });
+    expect(kept.status).toBe(422);
+    expect((kept.body.error?.details as { issues: Array<{ path: unknown[] }> }).issues[0]?.path).toEqual(['items', 0, 'week']);
+  });
+
+  it('keeps the meta when a route is archived', async () => {
+    const cls = await createSpace('class');
+    const id = planOf(await put(cls.id, 'teacher', { title: 'Term 1', items: routeItems, meta, publish: true })).id;
+    expect((await call('POST', `/api/spaces/${cls.id}/plans/${id}/archive`, bearer('teacher'))).status).toBe(200);
+    const list = (await call('GET', `/api/spaces/${cls.id}/plans`, bearer('teacher'))).body.data as { plans: Array<PlanView & { archivedAt: string | null }> };
+    const archived = list.plans.find((p) => p.id === id);
+    expect(archived?.archivedAt).not.toBeNull();
+    expect(archived?.meta).toEqual(meta);
+    expect((await db.getPlan(id))?.meta).toEqual(meta);
+  });
+
   it('lets an update without meta keep more than 30 items when the stored plan is a route', async () => {
     const cls = await createSpace('class');
     const id = planOf(await put(cls.id, 'teacher', { title: 'Term 1', items: routeItems, meta })).id;
@@ -149,6 +186,32 @@ describe('the inbox capability gate (F-PLAN-002 section 3.5)', () => {
     // A list of capabilities, in either form, is read too.
     expect((await inbox('?cap=other,curriculum')).plans).toHaveLength(2);
     expect((await inbox('?cap=other&cap=curriculum')).plans).toHaveLength(2);
+  });
+
+  it('trims each capability and reads an empty cap as none', async () => {
+    const { week, inbox } = await setup();
+    expect((await inbox('?cap=%20curriculum%20')).plans).toHaveLength(2);
+    expect((await inbox('?cap=other,%20curriculum')).plans).toHaveLength(2);
+    expect((await inbox('?cap=')).plans.map((p) => p.id)).toEqual([week.id]);
+  });
+
+  it('never sends an old app a plan of more than 30 items, even when its meta reads as missing', async () => {
+    const { week, term, inbox } = await setup();
+    // A row whose meta_json could not be read comes back with meta null and keeps its long item list.
+    const stored = await db.getPlan(term.id);
+    if (!stored) throw new Error('route not stored');
+    await db.putPlan({ ...stored, meta: null });
+    expect((await inbox()).plans.map((p) => p.id)).toEqual([week.id]);
+    expect((await inbox('?cap=curriculum')).plans.map((p) => p.id)).toEqual([week.id]);
+  });
+
+  it('drops a plan whose stored meta is not a valid curriculum, so one bad row never fails the inbox parse', async () => {
+    const { week, term, inbox } = await setup();
+    const stored = await db.getPlan(term.id);
+    if (!stored) throw new Error('route not stored');
+    await db.putPlan({ ...stored, meta: {} as unknown as CurriculumMeta });
+    expect((await inbox('?cap=curriculum')).plans.map((p) => p.id)).toEqual([week.id]);
+    expect((await inbox()).plans.map((p) => p.id)).toEqual([week.id]);
   });
 
   it('still keeps family routes away from a class-scoped device', async () => {
