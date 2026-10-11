@@ -246,7 +246,8 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
           fullWidth
           onPress={() => {
             // Two panes: the episode in the Journey's right pane, selected in the grid (F-LAYOUT-001 §3.7).
-            const page = episodeReturn(panes, episode.id);
+            const state = navigation.getState();
+            const page = episodeReturn(panes, episode.id, state.routes[state.index - 1]?.name);
             if (page.to === 'journeyPane') navigation.navigate('Main', { screen: 'Journey', params: { episodeId: page.episodeId } });
             else navigation.navigate('EpisodeDetail', { episodeId: page.episodeId });
           }}

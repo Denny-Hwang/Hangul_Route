@@ -116,11 +116,13 @@ export function QuestPlayerScreen({ route, navigation }: Props): React.ReactElem
 
   // Quit control (wireframe quest/player): one-line confirm, then back to the
   // episode page with the run discarded. Progress already saved is untouched.
-  // Two panes: back to the Journey with this episode selected in its pane (F-LAYOUT-001 §3.7).
+  // Two panes: back to the Journey with this episode selected in its pane (F-LAYOUT-001 §3.7), unless
+  // the quest was opened from another screen (Homework, an episode page), which stays under it.
   const { panes } = useLayoutClass();
   const leaveQuest = (): void => {
     useQuestRunStore.getState().reset();
-    const back = episodeReturn(panes, episodeId);
+    const state = navigation.getState();
+    const back = episodeReturn(panes, episodeId, state.routes[state.index - 1]?.name);
     if (back.to === 'journeyPane') navigation.navigate('Main', { screen: 'Journey', params: { episodeId: back.episodeId } });
     else navigation.replace('EpisodeDetail', { episodeId: back.episodeId });
   };
