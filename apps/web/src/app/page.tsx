@@ -1,5 +1,6 @@
 import { colors, radii, shadows, spacing, typography } from '@hangul-route/design-system/tokens';
 import { DEFAULT_LOCALE, getMessages } from '@hangul-route/i18n';
+import { HoyaSvg } from '@hangul-route/design-system/scene-art/dom';
 import Link from 'next/link';
 import { HeritageCardsPreview } from '../components/landing/HeritageCardsPreview';
 import { MeetHoya } from '../components/landing/MeetHoya';
@@ -206,12 +207,14 @@ export default function HomePage(): JSX.Element {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: 180,
             position: 'relative',
             overflow: 'hidden',
           }}
         >
-          <span style={{ position: 'relative', zIndex: 1 }}>🐯</span>
+          {/* Hoya waves hello (design/brief/character/hoya-character-sheet.md, pose "waving"). */}
+          <div style={{ position: 'relative', zIndex: 1, width: '62%', display: 'flex' }}>
+            <HoyaSvg pose="waving" size="100%" />
+          </div>
           <div
             style={{
               position: 'absolute',

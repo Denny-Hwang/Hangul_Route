@@ -174,8 +174,8 @@ describe('landing: no emoji in any locale (en, es, ko, en-XA)', () => {
     for (const ok of ['© 2026', '™', '←', '→', '·', '—', '★', 'ㄱ']) expect(EMOJI.test(ok), ok).toBe(false);
   });
 
-  const trees: Array<[string, unknown]> = [
-    ...LOCALES.map((locale): [string, unknown] => [locale, getMessages(locale).landing]),
+  const trees: Array<[string, object]> = [
+    ...LOCALES.map((locale): [string, object] => [locale, getMessages(locale).landing]),
     ['en-XA', pseudoLocalize(getMessages('en')).landing],
   ];
   for (const [name, tree] of trees) {

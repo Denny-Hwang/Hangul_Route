@@ -1,4 +1,5 @@
 import { colors, radii, spacing, typography } from '@hangul-route/design-system/tokens';
+import { HoyaSvg } from '@hangul-route/design-system/scene-art/dom';
 import { DEFAULT_LOCALE, getMessages, type UiLocale } from '@hangul-route/i18n';
 
 /** Hoya's "almost there" — taught Korean with its romanization, shown beside the UI-language gloss. */
@@ -37,7 +38,7 @@ export function MeetHoya({ locale = DEFAULT_LOCALE }: { locale?: UiLocale }): JS
           style={{
             width: '78%',
             aspectRatio: '1 / 1',
-            backgroundColor: colors.hoya.fur,
+            backgroundColor: colors.surface.paper,
             borderRadius: '50%',
             display: 'flex',
             alignItems: 'center',
@@ -45,14 +46,10 @@ export function MeetHoya({ locale = DEFAULT_LOCALE }: { locale?: UiLocale }): JS
             position: 'relative',
           }}
         >
-          <span
-            style={{
-              fontSize: 120,
-              lineHeight: 1,
-            }}
-          >
-            🐯
-          </span>
+          {/* Hoya with his amber "almost there" (design/launch/01-hoya-three-poses.md, idle + bubble). */}
+          <div style={{ width: '80%', display: 'flex' }}>
+            <HoyaSvg pose="idle" size="100%" />
+          </div>
           <span
             style={{
               position: 'absolute',
