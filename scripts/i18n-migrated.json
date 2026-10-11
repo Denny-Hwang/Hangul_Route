@@ -55,6 +55,7 @@
     "apps/web/src/components/console/RoutePlanParts.tsx",
     "apps/mobile/src/screens/placement/**",
     "apps/web/src/components/console/PlacementParts.tsx",
+    "apps/mobile/src/screens/onboarding/PlacementInviteScreen.tsx",
     "apps/web/src/app/(console)/teach/space/lecture/page.tsx",
     "apps/web/src/components/console/LectureParts.tsx",
     "apps/web/src/app/(console)/teach/space/settings/page.tsx",

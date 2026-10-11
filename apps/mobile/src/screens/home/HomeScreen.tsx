@@ -1,5 +1,6 @@
 import {
   Body,
+  Button,
   Caption,
   Card,
   Heading,
@@ -19,15 +20,16 @@ import {
   useLayoutClass,
   useMediaSize,
 } from '@hangul-route/design-system';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { InstallGuideSheet } from '../../components/InstallGuideSheet';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
 import type { SceneArt } from '@hangul-route/content-schema';
 import { flags } from '../../config/flags';
 import { episodesAll, questsAll } from '../../content';
+import { PLACEMENT_BANK } from '../../content/placement.generated';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeMissionCard } from '../../logic/content-locale';
 import { cursorContext } from '../../logic/cursor-context';
@@ -44,6 +46,9 @@ import { dueTodayCount, showsTodayCount } from '../../logic/homework/assignment-
 import { mergeAssignments } from '../../logic/homework/assignment-merger';
 import { gridQuestProgress } from '../../logic/journey';
 import { homeColumns } from '../../logic/layout/home-columns';
+import { placementEntriesOn, questsDoneOf } from '../../logic/placement/entry';
+import { skippedEvent } from '../../logic/placement/events';
+import { homeQuietCard, levelCheckCard } from '../../logic/placement/home-card';
 import { DEFAULT_AVATAR } from '../../logic/profiles/avatar-catalog';
 import { computeStreak } from '../../logic/streak';
 import { emptyBookmarks } from '../../logic/story/bookmarks';
@@ -53,10 +58,12 @@ import { storyLockFor } from '../../logic/story/story-pick';
 import type { RootStackParamList } from '../../navigation/types';
 import { track } from '../../platform/telemetry';
 import { useAudience } from '../../store/audience';
+import { usePlacementRunStore } from '../../store/placement-run-store';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { useStoryStore } from '../../store/story-store';
 import { effectiveTier, useTierStore } from '../../store/tier-store';
+import { LinkButton } from '../placement/parts';
 
 /** Avatar circle in the Profile entry; with its label the button clears the 64pt floor. */
 const AVATAR_SIZE = 52;
@@ -242,6 +249,64 @@ export function HomeScreen(): React.ReactElement {
     }
   };
 
+  // The level check card (F-PLC-001 section 3.10): at most one quiet card below the mission cards.
+  const profileId = profile?.id ?? null;
+  const entriesOn = placementEntriesOn(flags.placementEnabled);
+  const placementUi = usePlacementRunStore((s) => (profileId === null ? undefined : s.ui[profileId]));
+  const [resumable, setResumable] = useState(false);
+  useFocusEffect(
+    useCallback(() => {
+      if (!entriesOn || profileId === null) return undefined;
+      let alive = true;
+      const store = usePlacementRunStore.getState();
+      void store.loadUi(profileId);
+      void store.peekResumable(profileId, Date.now(), PLACEMENT_BANK.version).then((kind) => {
+        if (alive) setResumable(kind !== null);
+      });
+      return () => {
+        alive = false;
+      };
+    }, [entriesOn, profileId]),
+  );
+  const levelCheck =
+    placementUi === undefined
+      ? null
+      : levelCheckCard({
+          enabled: flags.placementEnabled,
+          bankReady: entriesOn,
+          hasResult: (snap?.placements?.length ?? 0) > 0,
+          questsDone: questsDoneOf(snap?.quests),
+          dismissedAt: placementUi.dismissedAt,
+          resumable,
+        });
+  // F-PLAN-002's weekly-plan prompt joins this slot with P2-7a; until then only the level check.
+  const quiet = homeQuietCard(levelCheck, false);
+  const levelCheckCopy = m.learner.placement.homeCard;
+  const quietCard =
+    quiet === 'level-check' && profileId !== null ? (
+      <Card padding="md" tone="sunken" testID="home-level-check">
+        <Body weight="semibold">{levelCheckCopy.line}</Body>
+        <Spacer size="sm" />
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm }}>
+          <Button
+            label={levelCheck === 'continue' ? levelCheckCopy.continue : levelCheckCopy.take}
+            tone="ghost"
+            size="md"
+            onPress={() => navigation.navigate('Placement', { source: 'home' })}
+            testID="home-level-check-open"
+          />
+          <LinkButton
+            label={levelCheckCopy.notNow}
+            onPress={() => {
+              void usePlacementRunStore.getState().markDismissed(profileId, new Date().toISOString());
+              void track(skippedEvent(profileId, 'home'));
+            }}
+            testID="home-level-check-not-now"
+          />
+        </View>
+      </Card>
+    ) : null;
+
   const layoutClass = useLayoutClass();
   const hoyaSize = useMediaSize(HOYA_SIZE);
 
@@ -350,6 +415,12 @@ export function HomeScreen(): React.ReactElement {
           <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.xl }}>
             <View testID="home-missions-column" style={{ flex: MISSIONS_FLEX, minWidth: 0 }}>
               {missions}
+              {quietCard ? (
+                <>
+                  <Spacer size="lg" />
+                  {quietCard}
+                </>
+              ) : null}
             </View>
             <View testID="home-side-column" style={{ flex: SIDE_FLEX, minWidth: 0 }}>
               {side}
@@ -362,6 +433,12 @@ export function HomeScreen(): React.ReactElement {
             <>
               <Spacer size="lg" />
               {missions}
+            </>
+          ) : null}
+          {quietCard ? (
+            <>
+              <Spacer size="lg" />
+              {quietCard}
             </>
           ) : null}
 

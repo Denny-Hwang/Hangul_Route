@@ -6,9 +6,10 @@ import { addTelemetryListener, type TelemetryEvent } from '../platform/telemetry
 /**
  * End-to-end entry to the level check, for fixture builds only (the same
  * switch as `story-e2e.tsx`: only the e2e bundle has story fixture ids, so a
- * real build never renders this hook). The check has no learner entry point
- * until F-PLC-001 P-7 (and `flags.placementEnabled` stays off), so its screen
- * e2e opens it through `window.__hrPlacementE2E.open(source)`.
+ * real build never renders this hook). The learner entry points (F-PLC-001
+ * P-7: the onboarding fork, the Home card, the Profile row) stay hidden while
+ * `flags.placementEnabled` is off, so its screen e2e opens the check through
+ * `window.__hrPlacementE2E.open(source)`.
  */
 export interface PlacementE2eHandle {
   open(source: PlacementSource): void;

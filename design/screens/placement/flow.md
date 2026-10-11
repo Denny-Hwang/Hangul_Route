@@ -47,4 +47,21 @@ Screenshots: `HR_SHOTS=1 STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exe
 - The pause sheet is a modal that hides while the PIN gate is on top ("For grown-ups: finish now") and shows again on return. It scrolls inside the window, drops Hoya below 400 pt of height (phone in landscape), keeps the bottom safe-area inset and stays at reading width on wide windows.
 - "Try it with the sound guide hidden" starts the retake at once (warm-up, or the hand-off for Pictures first) and keeps the last check's language.
 - The web cannot tell whether a screen reader is on (react-native-web always answers yes), so the web reads it as off; every control is still labelled. C2 has an **I use a screen reader** switch (on when the device reports one) that drives auto-play, *Take my time* and the visual rung; a screen reader turned on or off during the check is followed for auto-play and the speaker labels.
-- The weekly-plan strip (P-7b), the placement report (P-8) and the entry points (P-7) are not part of these frames; "For grown-ups" opens the grown-up zone until P-8.
+- The weekly-plan strip (P-7b) and the placement report (P-8) are not part of these frames; "For grown-ups" opens the grown-up zone until P-8.
+
+## Entry points and the Journey look as built (F-PLC-001 P-7)
+
+Wireframe frames A (fork), H (Home card, Profile row) and I (Journey). Code: `screens/onboarding/PlacementInviteScreen.tsx`, `screens/home/HomeScreen.tsx`, `screens/profile/ProfileScreen.tsx`, `screens/journey/JourneyScreen.tsx`; logic in `logic/placement/entry.ts`, `home-card.ts` and `cell-look.ts` (100 % covered). Everything here is hidden while `flags.placementEnabled` is off or the bank fails to parse; the Journey marks read the stored results only, so a learner without one sees no change.
+
+```
+CreateProfile --(flag on)--> PlacementInvite (A) --"I am new to Korean"--> FirstQuestPreview (declinedAt, placement.skipped)
+                                   |
+                                   +--"I already know some Korean"--> Placement { source: 'onboarding' } (the fork stays underneath)
+Home (H): mission cards, then at most one quiet card: "Already know some Korean?" [ Take the level check ] / [ Continue the level check ]   Not now
+Profile (H): a row under the stats, "Find my starting spot again  >"  -> Placement { source: 'profile' } (no PIN)
+Journey (I): a dashed light outline and a small check-in-circle in the stage colour on placed-out cells; a pin in the corner of the start cell
+```
+
+- The fork has no back (the profile exists). Its two choices are the same size and weight, each with an icon (play; ear) and one line; neither is pre-selected. The question is spoken on open (not with a screen reader on) and on the small speaker beside it. One line below says it takes a few minutes and can be stopped.
+- Home: the card shows when no result is stored, fewer than three quests are complete and **Not now** was not tapped; it reads **Continue the level check** while a saved run can be resumed. **Not now** fires `placement.skipped { source: 'home' }`; the Profile row stays available. In two columns the card sits under the mission cards in the left column.
+- Journey: the pin marks where the route started (the effective route computed without completions, the same anchor as My route's "You started here"), so it does not move as quests are finished; a grown-up override or a higher retake moves it. The completed tint wins over the placed-out look. The explainer card gains one sentence about the pin and the outline once a result is stored. Each marked cell says so to a screen reader.
