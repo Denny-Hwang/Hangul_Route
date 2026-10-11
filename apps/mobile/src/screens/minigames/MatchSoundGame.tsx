@@ -15,6 +15,7 @@ import {
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { PromptPanel } from '../../components/PromptPanel';
+import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { usePromptSlot } from '../../components/use-prompt-slot';
 import { wrongAnswerBubble, shouldAutoReplay } from '../../logic/audio/prompt-view';
 import { spokenFor } from '../../logic/audio/spoken';
@@ -44,6 +45,7 @@ export function MatchSoundGame({ scope, onFinish }: Props): React.ReactElement {
   const markStepComplete = useQuestRunStore((s) => s.markStepComplete);
 
   const [roundIdx, setRoundIdx] = useState(0);
+  const [helpOpen, setHelpOpen] = useState(false);
   const [feedback, setFeedback] = useState<'idle' | 'correct' | 'wrong'>('idle');
   const [lockedWrongIds, setLockedWrongIds] = useState<string[]>([]);
   const replayTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -142,7 +144,9 @@ export function MatchSoundGame({ scope, onFinish }: Props): React.ReactElement {
         ko={spoken.text}
         romanization={spoken.romanization}
         onAction={(action) => slot.act(action, () => void hear())}
+        onHelp={() => setHelpOpen(true)}
       />
+      <VoiceHelpSheet visible={helpOpen} onClose={() => setHelpOpen(false)} />
 
       <Spacer size="xl" />
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: spacing.md }}>

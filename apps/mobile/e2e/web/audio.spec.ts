@@ -1,4 +1,5 @@
-import { expect, test, type Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
+import { expect, test } from './fixtures';
 import { jamoOfSpoken, onboardChild } from './helpers';
 
 /**
@@ -92,6 +93,33 @@ test('the Korean prompt is spoken with Yuna, the sound, never a novelty voice', 
   await expect.poll(async () => (await utterances(page)).length).toBeGreaterThan(0);
   const [first] = await utterances(page);
   expect(first).toMatchObject({ voice: 'Yuna', lang: 'ko-KR' });
+});
+
+test('an idle game speaks once when the round starts, and not again on a timer or when the tab returns', async ({ page }) => {
+  await fakeSpeech(page);
+  await onboardChild(page, { name: 'Dami' });
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await page.getByRole('button', { name: 'Play minigame' }).click();
+  await expect(page.getByText('1 / 4')).toBeVisible();
+  await expect.poll(async () => (await utterances(page)).length).toBe(1);
+
+  // No input: nothing more is said while the learner thinks (a Trace/Match idle timer must not speak).
+  await page.waitForTimeout(8000);
+  expect(await utterances(page)).toHaveLength(1);
+
+  // The tab goes to the background and comes back: still nothing.
+  await page.evaluate(() => {
+    const setState = (state: 'hidden' | 'visible'): void => {
+      Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => state });
+      document.dispatchEvent(new Event('visibilitychange'));
+    };
+    setState('hidden');
+    setState('visible');
+    window.dispatchEvent(new Event('focus'));
+    window.dispatchEvent(new Event('online'));
+  });
+  await page.waitForTimeout(3000);
+  expect(await utterances(page)).toHaveLength(1);
 });
 
 test('switching the sound off is saved on this device and still off after a reload', async ({ page }) => {
@@ -194,4 +222,67 @@ test('a wrong tap says the sound, not the letter name', async ({ page }) => {
   await page.getByRole('button', { name: 'Hear it' }).click();
   await expect.poll(async () => (await utterances(page)).length).toBeGreaterThan(before);
   expect((await utterances(page)).at(-1)!.text).toBe(first!.text);
+});
+
+/** F-AUDIO-004 A-4b: the Profile Sound card says whether the device has a Korean voice. */
+async function openProfile(page: Page): Promise<void> {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Profile and settings' }).click();
+}
+
+test('Profile Sound card with a Korean voice: says ready, offers no how-to, and the switch still works', async ({ page }) => {
+  await fakeSpeech(page, 'korean');
+  await onboardChild(page, { name: 'Dami', startJourney: false });
+  await openProfile(page);
+
+  await expect(page.getByTestId('sound-voice-status')).toHaveText('Korean voice: ready');
+  await expect(page.getByTestId('sound-how-to-add')).toHaveCount(0);
+  const sound = page.getByRole('switch', { name: 'Sound, on. Korean voice ready.' });
+  await expect(sound).toBeVisible();
+  await sound.click();
+  await expect(page.getByRole('switch', { name: 'Sound, off. Korean voice ready.' })).toContainText('Off');
+});
+
+test('Profile Sound card with no Korean voice: says so and the how-to sheet lists the steps', async ({ page }) => {
+  await fakeSpeech(page, 'none');
+  await onboardChild(page, { name: 'Dami', startJourney: false });
+  await openProfile(page);
+
+  await expect(page.getByTestId('sound-voice-status')).toHaveText('No Korean voice on this device');
+  const sound = page.getByRole('switch', { name: 'Sound, on. No Korean voice on this device.' });
+  await expect(sound).toBeVisible();
+
+  await page.getByTestId('sound-how-to-add').click();
+  const sheet = page.getByTestId('voice-help-sheet');
+  await expect(sheet.getByText('Add a Korean voice')).toBeVisible();
+  await expect(sheet.getByText('Menu names can differ on your device.')).toBeVisible();
+  for (const family of ['iPhone or iPad', 'Android', 'Computer']) await expect(sheet.getByText(family, { exact: true })).toBeVisible();
+  await expect(sheet.getByText('You can still play: the sound is written on screen.')).toBeVisible();
+
+  // Help never changes the sound switch.
+  await page.getByTestId('voice-help-sheet-ok').click();
+  await expect(page.getByTestId('voice-help-sheet')).toHaveCount(0);
+  await expect(sound).toContainText('On');
+});
+
+test('no Korean voice in Match Sound: the panel links to the same sheet and the round carries on', async ({ page }) => {
+  await fakeSpeech(page, 'none');
+  await onboardChild(page, { name: 'Dami' });
+  await openMatchSound(page);
+
+  await page.getByTestId('prompt-panel-help').click();
+  await expect(page.getByTestId('voice-help-sheet').getByText('Add a Korean voice')).toBeVisible();
+  await page.getByTestId('voice-help-sheet-ok').click();
+  await expect(page.getByTestId('voice-help-sheet')).toHaveCount(0);
+
+  await expect(page.getByText('1 / 4')).toBeVisible();
+  await tapAnswerFromText(page);
+  await expect(page.getByText('2 / 4')).toBeVisible();
+});
+
+test('a ready voice never shows the how-to link in Match Sound', async ({ page }) => {
+  await fakeSpeech(page, 'korean');
+  await onboardChild(page, { name: 'Dami' });
+  await openMatchSound(page);
+  await expect(page.getByTestId('prompt-panel-help')).toHaveCount(0);
 });
