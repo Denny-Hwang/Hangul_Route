@@ -50,8 +50,8 @@ Each entry: `id` · `ko (romanization)` · `theme` · `rarity` · 1-line visual 
 - `card:hanji` · 한지 (hanji) · letters · uncommon — A square sheet of fibrous cream paper, slightly torn corner, lit from above. Visible long mulberry fibers.
 - `card:brush` · 붓 (but) · letters · uncommon — A vertical brush with cream wooden handle, dark `text.primary` bristles, a single drop of ink suspended above an empty page.
 - `card:ink` · 먹 (meok) · letters · common — A rectangular black ink stick (`text.primary`) resting on a stone slab (`surface.sunken`), with a cream-colored grinding area.
-- `card:origami` · 종이접기 (jong-i-jeop-gi) · letters · rare — A folded paper crane in `theme.letters` orange, mid-flight, suggested wing creases.
-- `card:hangul-day` · 한글날 (hangeul-nal) · letters · legendary — A glowing "한글" character composed of generous brush strokes, surrounded by 6 small dancheong-orange sparkles (`feedback.nudge`). Hint of a calendar page in the background (faintly).
+- `card:origami` · 종이접기 (jongijeopgi) · letters · rare — A folded paper crane in `theme.letters` orange, mid-flight, suggested wing creases.
+- `card:hangul-day` · 한글날 (hangeullal) · letters · legendary — A glowing "한글" character composed of generous brush strokes, surrounded by 6 small dancheong-orange sparkles (`feedback.nudge`). Hint of a calendar page in the background (faintly).
 
 ### Food & Daily Life (6)
 - `card:kimchi` · 김치 (gimchi) · life · common — A small cream bowl with bright dancheong-red cabbage (use `theme.life` amber for warmth, NOT alarm-red), 3 visible cabbage layers, no liquid spill.
@@ -59,7 +59,7 @@ Each entry: `id` · `ko (romanization)` · `theme` · `rarity` · 1-line visual 
 - `card:chopsticks` · 젓가락 (jeotgarak) · life · common — A pair of slim flat metal chopsticks crossed at the bottom, slight metallic warm-grey, resting on a small cream chopstick holder.
 - `card:hanbok` · 한복 (hanbok) · life · rare — A child's hanbok displayed on a hanger: dancheong-orange jeogori (top) with cream collar, sky-blue chima (skirt). Two sleeve openings visible.
 - `card:kimbap` · 김밥 (gimbap) · life · uncommon — Three round kimbap slices arranged diagonally, dark seaweed exterior (`text.primary` at 80%), cream rice center with one orange (carrot) and one green (spinach) dot inside each.
-- `card:family-table` · 가족식탁 (gajok-siktak) · life · uncommon — A circular wooden table (warm `theme.life` amber) viewed top-down with 4 small bowls arranged at cardinal points and a central rice bowl.
+- `card:family-table` · 가족 식탁 (gajok siktak) · life · uncommon — A circular wooden table (warm `theme.life` amber) viewed top-down with 4 small bowls arranged at cardinal points and a central rice bowl.
 
 ### Holidays & Traditions (6)
 - `card:seollal` · 설날 (seollal) · rites · rare — Two abstract figures (one larger adult, one smaller child) bowing — represented by simple rounded shapes in `theme.rites` purple and dancheong-orange, with a cream floor and a hint of a folding screen behind.
@@ -78,7 +78,7 @@ Each entry: `id` · `ko (romanization)` · `theme` · `rarity` · 1-line visual 
 - `card:moon` · 달 (dal) · nature · uncommon — A full warm cream moon centered with 3 rounded crater shadows in `text.muted`, on a deep `theme.rites` purple night sky with 5 small pin-point stars.
 
 ### Play & Crafts (6)
-- `card:yutnori` · 윷놀이 (yutnori) · crafts · rare — Four cream wooden sticks arranged scattered, with one flat-side up showing a small dancheong-orange marking; three round-side up. Below: 4 small piece-tokens in cream.
+- `card:yutnori` · 윷놀이 (yunnori) · crafts · rare — Four cream wooden sticks arranged scattered, with one flat-side up showing a small dancheong-orange marking; three round-side up. Below: 4 small piece-tokens in cream.
 - `card:jegi` · 제기 (jegi) · crafts · uncommon — A bundled feather shuttlecock: warm-grey coin base (`text.muted`) with 4 cream feathers radiating up from a `theme.rites` purple wrap.
 - `card:kite` · 연 (yeon) · crafts · uncommon — A diamond kite in cream with a `theme.crafts` blue border, central round hole in the middle, painted with a small tiger face. Two tassels hanging.
 - `card:top` · 팽이 (paengi) · crafts · common — A wooden spinning top mid-spin (motion lines suggesting rotation), cream body with a dancheong-orange stripe band. Soft floor shadow.
