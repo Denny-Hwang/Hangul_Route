@@ -54,6 +54,23 @@ describe('gateResult', () => {
     expect(gateResult([S, W]).result).toBe('fail');
   });
 
+  it('keeps a prompt that could not play (noSound) out of asked and correct: skipped, not wrong (section 3.11)', () => {
+    const N: AssessmentResponse = { ...S, questionId: 'q-silent', noSound: true };
+    // One silent prompt and two right: a pass on the two that were heard.
+    expect(gateResult([N, C, C])).toEqual({ asked: 2, correct: 2, assisted: 0, result: 'pass' });
+    // One silent, one right, one wrong: the silent one might have been right, so undecided.
+    expect(gateResult([C, N, W])).toEqual({ asked: 2, correct: 1, assisted: 0, result: 'not-run' });
+    // Two silent: no evidence either way.
+    expect(gateResult([N, N, W]).result).toBe('not-run');
+    expect(gateResult([N, N, N])).toEqual({ asked: 0, correct: 0, assisted: 0, result: 'not-run' });
+    // Two wrong on the heard ones still fail: even a right silent one could not reach two.
+    expect(gateResult([W, N, W])).toMatchObject({ asked: 2, result: 'fail' });
+    // Short's syl-cv needs 3 of 3: a silent prompt leaves it undecided, never failed by it.
+    expect(gateResult([C, C, N], 3, 3).result).toBe('not-run');
+    // A rung cut short counts only the heard prompts as asked.
+    expect(gateResult([N, C], 2)).toEqual({ asked: 1, correct: 1, assisted: 0, result: 'not-run' });
+  });
+
   it('is not-run while undecided', () => {
     expect(gateResult([]).result).toBe('not-run');
     expect(gateResult([C]).result).toBe('not-run');

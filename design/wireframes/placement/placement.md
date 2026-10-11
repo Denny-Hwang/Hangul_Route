@@ -112,6 +112,8 @@ C2. Everyone else: Standard pre-selected (any levelOrder), after Change, or afte
 │  ( ) Show it only when I tap      │
 │  one neutral line (consequence)   │
 │ [ ] Take my time (no time limits) │  <- on by default with a screen reader
+│ [ ] I use a screen reader         │  <- on when the device reports one; the only way to say so on the web;
+│     (questions play on a tap)     │     turning it on also turns on Take my time (post-merge #258)
 │ Why Korean? (optional) [family] [K-culture] [curious] [friend] [ Skip ]
 │ [[ NEXT ]]                        │  <- disabled until the sound guide is answered (Standard, Deep)
 └──────────────────────────────────┘
@@ -128,7 +130,7 @@ C2. Everyone else: Standard pre-selected (any levelOrder), after Change, or afte
 
 ```
 ┌──────────────────────────────────┐
-│                                   │
+│ [x]                               │  <- exit icon (spoken "Let us start learning"); leaves, nothing recorded
 │        [[ (Hoya, big) ]]          │  <- the whole Hoya is the button; spoken:
 │   "Ready? Tap Hoya to start."     │     "Ready? Tap Hoya to start."
 │                                   │
@@ -145,7 +147,8 @@ C2. Everyone else: Standard pre-selected (any levelOrder), after Change, or afte
 
 ```
 ┌──────────────────────────────────┐
-│  [Hoya: "Listen, then tap the     │
+│ [x]                               │  <- exit icon, as on C3; nothing recorded (no run yet)
+│  [Hoya: "Listen, then tap the     │  <- the line is spoken on open (not with a screen reader)
 │          picture."]               │
 │        [ ( ) speaker ]            │  <- first audio needs a tap
 │ ┌────────┐ ┌────────┐             │
@@ -258,6 +261,19 @@ E2. Short items, landscape (two columns; fits 568 x 320 at the default text size
 - Nothing is lost: ending early still produces a result from the answers so far. "That is enough" (here or on F2) ends the run with the answers so far.
 - Closing the app mid-run keeps the run for 24 hours (see L).
 - The hidden backstop clock does not run while F or F2 is open (W-6).
+
+```
+F3. Sound stopped (post-merge #258): the same sheet when prompts stop playing mid-run
+┌──────────────────────────────────┐
+│ [icon: speaker off]               │
+│ "Turn on sound to play"           │  <- after the first silent prompt in Short or a listen-first run,
+│ [[ (icon) TRY AGAIN ]]            │     two in a row in Standard and Deep; Try again = Keep going
+│ [ (icon) That is enough, start learning ]
+│ [ For grown-ups: finish now ]     │
+└──────────────────────────────────┘
+```
+
+- Before a heard letter or syllable is skipped, E shows the speaker as "Tap to hear it." (written under it too); only a tap that fails again skips it, and that skip never counts as a miss.
 
 ```
 F2. Rest card (Deep, once, after 18 answers)
@@ -376,6 +392,7 @@ Choose a different start (sheet)
 
 - Bank cannot load: the Home card, the Profile row and the fork disappear; nothing else changes.
 - No sound: in Standard or Deep (not listen-first) D says so; audio-only questions are left out; the report names it. In Short or for a listen-first learner, L2 opens.
+- Sound that stops mid-run: words and replies show "No sound? Read it here." with the word (and its romanization unless it would give the answer away); a heard letter or syllable asks for a tap first, then F3 opens (see F).
 
 ```
 L2. Sound needed (a grown-up screen; W-5)

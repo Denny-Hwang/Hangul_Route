@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { entitlementTier, isStageEntitled, type SubscriptionState } from '../entitlement';
+import { entitlementTier, isStageEntitled, isStagePlayable, type SubscriptionState } from '../entitlement';
 
 const now = new Date('2026-05-22T00:00:00.000Z');
 const future = '2026-12-31T00:00:00.000Z';
@@ -53,5 +53,13 @@ describe('isStageEntitled', () => {
     expect(isStageEntitled('stage7', 'free')).toBe(false);
     expect(isStageEntitled('stage2', 'premium')).toBe(true);
     expect(isStageEntitled('stage7', 'premium')).toBe(true);
+  });
+});
+
+describe('isStagePlayable: the one route predicate (F-ROUTE-001 OD-4 default)', () => {
+  it('plays every shipped stage, the rule Journey, Home and summary.journey share until R-4a', () => {
+    for (const stage of ['stage1', 'stage2', 'stage3', 'stage4', 'stage5', 'stage6', 'stage7']) {
+      expect(isStagePlayable(stage)).toBe(true);
+    }
   });
 });

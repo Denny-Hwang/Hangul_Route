@@ -1,7 +1,8 @@
 import { normalizeRescueCode, type AvatarKind, type Profile, type ProgressSnapshot } from '@hangul-route/content-schema';
 import { create } from 'zustand';
 import { flags } from '../config/flags';
-import { questJamo, stage1QuestIds } from '../content/sync-context';
+import { journeyContent, questJamo, stage1QuestIds } from '../content/sync-context';
+import { journeySummaryOf } from '../logic/my-route/summary';
 import { syncLearner } from '../logic/sync/engine';
 import { mergeSnapshots } from '../logic/sync/merge';
 import { planRestore, type RestorePlan } from '../logic/sync/restore';
@@ -89,8 +90,18 @@ export function setSyncApiForTests(client: SyncApiClient | null): void {
   apiClient = client;
 }
 
-const summarizeFor = (snapshot: ProgressSnapshot) =>
-  summarize({ snapshot, now: new Date(), stage1QuestIds, questJamo, planNotReady: usePlanStore.getState().notReady[snapshot.profileId] ?? {} });
+const summarizeFor = (snapshot: ProgressSnapshot) => {
+  const now = new Date();
+  return summarize({
+    snapshot,
+    now,
+    stage1QuestIds,
+    questJamo,
+    planNotReady: usePlanStore.getState().notReady[snapshot.profileId] ?? {},
+    // Stage-level My route counts for the console strip (F-ROUTE-001 R-8); summarize stays pure.
+    journey: journeySummaryOf(snapshot, journeyContent, now),
+  });
+};
 
 /** Listeners run after every successful sync — the inbox refresh hangs off this (F-PLAN-001 §3.3). */
 const syncedListeners = new Set<(learnerId: string) => void>();

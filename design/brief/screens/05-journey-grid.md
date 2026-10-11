@@ -158,3 +158,24 @@ Deliverable: 1170 × 3600 PNG showing the full 7-stage grid.
 ## 7. Output path
 
 - `design/screens/journey/grid__v1__YYYY-MM-DD.png`
+
+## 8. Story cells (F-STORY-005, added by PR 5.0)
+
+Spec: `docs/specs/F-STORY-005-episode-catalogue-grid.md` §3.6 · wireframe: `design/wireframes/journey/grid-with-stories.md` A, H · the cell page is `27-cell-stories.md`.
+
+With heritage stories in the bundle the grid gains two cell looks and one mark; everything above this section is unchanged. Without a reviewed story the grid is exactly as above.
+
+- **Count mark** (`#n`): a small circle (about 20 dp) in a cell's top-right corner: `surface.sunken` fill, `border.subtle` ring, the number in caption size `text.primary`; "5+" from six stories. It is part of the cell (not a separate button) and its number is read inside the cell's label.
+- **Lesson cell with stories**: today's lesson cell (theme initial, stage-tinted border, success tint when complete) plus the count mark.
+- **Stories-only cell**: no lesson there yet, but stories: `Icon library` plus the count mark, `border.subtle` border, `surface.paper` fill, tappable. It does not change the stage pill (Open / Taste / Soon still reflects lessons and books only) and is never routed through the grown-up PIN.
+- **Book cell** (Stage 5, later): drawn like a lesson cell.
+- **Placeholder**: unchanged (lock, disabled, "coming soon").
+- One muted caption under a stage row that has a stories-only cell: **"Heritage stories are open in the cells with books."**; the explainer card adds **"Cells with books also have heritage stories."** No fractions.
+
+Prompt addition (append to the §5 prompt): "In Stage 1 add a small count mark circle (surface.sunken fill, border.subtle ring, caption-size number) to the top-right of all five cells (5, 1, 2, 1, 1). In Stage 2 draw three stories-only cells: a book icon in a paper cell with a subtle border and a count mark. Under Stage 2 add the muted caption 'Heritage stories are open in the cells with books.'"
+
+Acceptance additions:
+
+- [ ] Count marks sit inside the cell, never as a separate target; "5+" at six or more
+- [ ] Stories-only cells read as open (paper fill, library icon), not locked
+- [ ] Stage pills unchanged by story cells

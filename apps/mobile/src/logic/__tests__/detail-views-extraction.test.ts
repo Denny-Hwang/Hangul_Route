@@ -51,7 +51,8 @@ describe('CardDetailView extraction (F-LAYOUT-001 PR 4)', () => {
   });
 
   it('the view owns the flip, hear and share body', () => {
-    expect(view).toContain('useSharedValue');
+    // the flip animation itself lives in components/FlipCard.tsx since F-VOC-003 C-2
+    expect(view).toContain('<FlipCard');
     expect(view).toContain('shareSnapshot');
     expect(view).not.toContain('NativeStackScreenProps');
     expect(view).not.toContain('navigation');

@@ -296,12 +296,19 @@ export async function waitForNextListenPickRound(page: Page): Promise<void> {
 
 /**
  * Play a quest's two-question Check (F-QUEST-002 §3.3) from its launcher without
- * knowing the content: Go, then tap the options in order each round until one is marked
- * right. A wrong tap only locks that card (amber nudge); the right one ends the round.
- * The Check has no Skip.
+ * knowing the content: Go, then `answerCheckRounds`. The Check has no Skip.
  */
 export async function playCheck(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Go', exact: true }).click();
+  await answerCheckRounds(page);
+}
+
+/**
+ * Answer the two Check rounds once the game is open, without knowing the content: tap
+ * the options in order each round until one is marked right. A wrong tap only locks that
+ * card (amber nudge); the right one ends the round, and round 2 is awaited by state.
+ */
+export async function answerCheckRounds(page: Page): Promise<void> {
   for (let round = 1; round <= 2; round += 1) {
     const options = page.locator(LISTEN_PICK_OPTIONS);
     await expect(options.first()).toBeVisible();

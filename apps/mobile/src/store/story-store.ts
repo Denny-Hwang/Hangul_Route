@@ -10,6 +10,8 @@ import {
   parseBookmarkFile,
   pruneBookmarks,
   setBookmark as setIn,
+  unfinishedBookmark,
+  type FinishedCheck,
   type Bookmark,
   type BookmarkFile,
 } from '../logic/story/bookmarks';
@@ -42,6 +44,12 @@ interface Actions {
   /** Read the profile's saved bookmarks (once per profile; overlapping calls share one read). */
   hydrate: (profileId: string) => Promise<void>;
   getBookmark: (profileId: string, storyId: string) => Bookmark | undefined;
+  /**
+   * The bookmark the quest player and the reader resume from: `getBookmark`, minus one whose
+   * (story, level) is already finished (§3.8, for example on another device). Results reads
+   * `getBookmark` so it can still clear such a bookmark.
+   */
+  getResumableBookmark: (profileId: string, storyId: string) => Bookmark | undefined;
   /** The reader calls this on every scene change; only scene 1 and later is written. */
   setBookmark: (profileId: string, storyId: string, at: { level: StoryLevel; sceneIndex: number }) => void;
   /** Results (story finished) and Start over call this. */
@@ -61,10 +69,14 @@ function without(ids: Set<string>, id: string): Set<string> {
   return next;
 }
 
+/** The (story, level) pairs this profile has finished, from its progress snapshot. */
+function finishedFor(profileId: string): FinishedCheck {
+  return finishedStoryLevels(questsAll, useProgressStore.getState().byProfile[profileId]);
+}
+
 /** Bookmarks of stories this profile already finished at that level are dropped on every write (§3.8). */
 function prune(profileId: string, file: BookmarkFile): BookmarkFile {
-  const snapshot = useProgressStore.getState().byProfile[profileId];
-  return pruneBookmarks(file, { isFinished: finishedStoryLevels(questsAll, snapshot) });
+  return pruneBookmarks(file, { isFinished: finishedFor(profileId) });
 }
 
 /**
@@ -137,12 +149,14 @@ export const useStoryStore = create<State & Actions>((set, get) => {
 
     getBookmark: (profileId, storyId) => get().byProfile[profileId]?.byStory[storyId],
 
+    getResumableBookmark: (profileId, storyId) =>
+      unfinishedBookmark(storyId, get().byProfile[profileId]?.byStory[storyId], finishedFor(profileId)),
+
     setBookmark: (profileId, storyId, at) => {
       if (!isKnownProfile(profileId)) return;
       // Replaying a story already finished at this level: the bookmark would be pruned at once (§3.8),
       // so there is nothing to keep and nothing to write.
-      const snapshot = useProgressStore.getState().byProfile[profileId];
-      if (finishedStoryLevels(questsAll, snapshot)(storyId, at.level)) return;
+      if (finishedFor(profileId)(storyId, at.level)) return;
       const current = get().byProfile[profileId] ?? emptyBookmarks();
       const written = setIn(current, storyId, at, new Date().toISOString());
       if (written === current) return;

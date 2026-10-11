@@ -88,6 +88,9 @@ describe('telemetry event names (one list for the client type and the API whitel
         'route.proposed',
         'route.proposal_skipped',
         'route.updated',
+        'vocab.topic_opened',
+        'vocab.cards.start',
+        'vocab.cards.complete',
       ].sort(),
     );
     expect(new Set(TELEMETRY_EVENT_NAMES).size).toBe(TELEMETRY_EVENT_NAMES.length);
@@ -120,6 +123,14 @@ describe('telemetry event names (one list for the client type and the API whitel
       expect(isTelemetryEventName(name)).toBe(true);
     }
     expect(isTelemetryEventName('route.started')).toBe(false);
+  });
+
+  it('lists the three vocabulary names of F-VOC-003 section 3.7 (Worker first, C-1)', () => {
+    for (const name of ['vocab.topic_opened', 'vocab.cards.start', 'vocab.cards.complete']) {
+      expect(TELEMETRY_EVENT_NAMES.filter((n) => n === name)).toHaveLength(1);
+      expect(isTelemetryEventName(name)).toBe(true);
+    }
+    expect(isTelemetryEventName('vocab.cards.finished')).toBe(false);
   });
 
   it('narrows unknown input with isTelemetryEventName', () => {
