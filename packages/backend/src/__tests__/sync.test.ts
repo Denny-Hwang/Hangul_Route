@@ -470,13 +470,27 @@ describe('stageDoneAt (F-ROUTE-001 section 3.15, the stage latch and the additiv
     expect((await getStored(r.learnerId, auth)).data.snapshot.stageDoneAt).toEqual(latch);
   });
 
-  it('a client that sends a latch record replaces the stored one; the server never merges records', async () => {
+  it('a client that sends a latch record is unioned with the stored one (earliest time wins)', async () => {
     const r = await register(DEVICE_A);
     const auth = deviceAuth(DEVICE_A, r.secret);
     await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withLatch(r.learnerId, latch), summary });
-    const next = { ...latch, stage2: '2026-11-01T08:00:00.000Z' };
+    const next = { stage1: '2026-10-12T00:00:00.000Z', stage2: '2026-11-01T08:00:00.000Z' };
     expect((await put(r.learnerId, auth, { ...base, baseRev: 1, snapshot: withLatch(r.learnerId, next), summary })).status).toBe(200);
-    expect((await getStored(r.learnerId, auth)).data.snapshot.stageDoneAt).toEqual(next);
+    expect((await getStored(r.learnerId, auth)).data.snapshot.stageDoneAt).toEqual({ ...latch, stage2: next.stage2 });
+  });
+
+  it('an old build that synced without the latch and then upgraded cannot erase a latch another device earned', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    // device A (new build) latches stage2: rev 1
+    const stage2 = { stage2: '2026-10-11T09:30:00.000Z' };
+    await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withLatch(r.learnerId, stage2), summary });
+    // device B (old build) uploads without the field: the preserve rule keeps stage2, rev 2
+    expect((await put(r.learnerId, auth, { ...base, baseRev: 1, snapshot: snapshotFor(r.learnerId), summary })).status).toBe(200);
+    // device B upgrades, latches stage1 locally and uploads at its in-sync rev without ever having seen stage2
+    const stage1 = { stage1: '2026-10-12T10:00:00.000Z' };
+    expect((await put(r.learnerId, auth, { ...base, baseRev: 2, snapshot: withLatch(r.learnerId, stage1), summary })).status).toBe(200);
+    expect((await getStored(r.learnerId, auth)).data.snapshot.stageDoneAt).toEqual({ ...stage2, ...stage1 });
   });
 
   it('a 409 hands the stored latch back for the client merge', async () => {
