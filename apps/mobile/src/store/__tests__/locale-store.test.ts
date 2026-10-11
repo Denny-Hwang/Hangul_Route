@@ -113,6 +113,16 @@ describe('locale-store: hydrate', () => {
     expect(useLocaleStore.getState().byProfile['profile:a']).toEqual({ uiLocale: 'es', romanizationMode: 'always' });
   });
 
+  it('keeps a stored readToMe (F-STORY-002 PR 2.5) and parses settings saved before it existed', async () => {
+    mem.set('settings:profile:a', { uiLocale: 'es', romanizationMode: 'tap', readToMe: false });
+    mem.set('settings:profile:b', { uiLocale: 'es', romanizationMode: 'tap' });
+    await useLocaleStore.getState().hydrate(['profile:a', 'profile:b']);
+    const s = useLocaleStore.getState();
+    expect(s.byProfile['profile:a']).toEqual({ uiLocale: 'es', romanizationMode: 'tap', readToMe: false });
+    expect(s.byProfile['profile:b']).toEqual({ uiLocale: 'es', romanizationMode: 'tap' });
+    expect('readToMe' in (s.byProfile['profile:b'] ?? {})).toBe(false);
+  });
+
   it('survives storage that cannot be read (private mode): detection applies, nothing persisted', async () => {
     storage.failReads = true;
     useLocaleStore.setState({ detected: 'es' });
@@ -201,6 +211,19 @@ describe('locale-store: setters', () => {
       profileId: 'profile:a',
       payload: { from: 'es', to: 'ko', scope: 'profile', source: 'settings' },
     });
+  });
+
+  it('changing or clearing the locale override keeps the profile\'s readToMe', () => {
+    useLocaleStore.setState({
+      byProfile: { 'profile:a': { romanizationMode: 'tap', readToMe: true } },
+    });
+    useLocaleStore.getState().setProfileLocale('profile:a', 'es');
+    expect(mem.get('settings:profile:a')).toEqual({ uiLocale: 'es', romanizationMode: 'tap', readToMe: true });
+    useLocaleStore.getState().setProfileLocale('profile:a', null);
+    expect(useLocaleStore.getState().byProfile['profile:a']).toEqual({ romanizationMode: 'tap', readToMe: true });
+    expect(mem.get('settings:profile:a')).toEqual({ romanizationMode: 'tap', readToMe: true });
+    useLocaleStore.getState().setRomanizationMode('profile:a', 'always');
+    expect(mem.get('settings:profile:a')).toEqual({ romanizationMode: 'always', readToMe: true });
   });
 
   it('setRomanizationMode persists per profile, keeps the locale override, and fires its event on change only', () => {

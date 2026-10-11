@@ -20,3 +20,8 @@ export function sequenceRoundKey(placedCount: number): number {
 export function checkRoundKey(checkId: string): string {
   return `check:${checkId}`;
 }
+
+/** Story reader checkpoint: one key per checkpoint id, in its own `cp:` namespace (F-STORY-002 §3.2). */
+export function checkpointRoundKey(checkpointId: string): string {
+  return `cp:${checkpointId}`;
+}
