@@ -1,7 +1,7 @@
 # Placement: Options: length, sound guide, take my time (`placement/options`)
 
 Spec: `docs/specs/F-PLC-001-placement-test.md` (section 3.1 step 3, 3.2 (sound guide), P14 to P20)
-Audience: a grown-up (parent, caregiver or the learner's own adult self). Behind the PIN gate where marked. Every label is spoken when tapped, so a learner can follow along.
+Audience: a grown-up (parent, caregiver or the learner's own adult self). Every label is spoken when tapped, so a learner can follow along.
 Code (planned): `screens/placement/OptionsScreen.tsx`
 Notation: `[[ X ]]` the one primary action, `[ X ]` secondary or ghost, `~~ ko ~~` taught Korean drawn with `KoreanText`, `(o)` / `( )` a radio, `[x]` a switch on. No colours, no fonts, no pixel sizes, no final copy: every sentence in a box is a placeholder that says what the sentence does.
 Promoted from `placement/placement.md` section C (F-PLC-001 P-0). The flow overview, the shared states and the screens of other flows stay in [`placement.md`](placement.md).

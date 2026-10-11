@@ -53,7 +53,7 @@ F2. Rest card (Deep, once, after 18 answers)
 ## Navigation graph
 
 Enter from: `placement/item`, `placement/item-short` (exit, three "not sure", idle, app background), Deep after 18 answers (F2)
-Exit to: `placement/item` / `placement/item-short` (Keep going), `placement/result`, `parent/gate` -> `placement/result`
+Exit to: `placement/item` / `placement/item-short` (Keep going), `placement/result`, `profiles/pin-entry` (modal) -> `placement/result`
 
 ## States
 

@@ -85,7 +85,7 @@ Then: Hoya shows where their route starts, the Journey cursor skips what they kn
 
 ## Navigation graph
 
-Enter from: `onboarding/create-profile` (fork), `home/todays-mission` (card), `profile/settings` (row), `parent/placement-report` (retake), deep link `Placement { source }`
+Enter from: `profiles/create-learner` (fork), `home/todays-mission` (card), `profile/settings` (row), `parent/placement-report` (retake), deep link `Placement { source }`
 Exit to: `onboarding/first-quest-preview` (new learner, or Start learning on L2), `quest/player` (start), `journey/grid` (map), `library/gallery` (stories), `parent/placement-report` (via PIN)
 
 ## States
