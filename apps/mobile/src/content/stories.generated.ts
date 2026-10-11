@@ -1279,7 +1279,7 @@ export const storiesAll: Story[] = [
     "title": {
       "ko": "직지, 금속활자로 찍은 책",
       "romanization": "Jikji, geumsokhwaljaro jjigeun chaek",
-      "en": "Jikji: Letters Made of Metal"
+      "en": "Jikji: Printed with Metal Type"
     },
     "summaryEn": "Hoya visits Heungdeoksa Temple in Cheongju, where Jikji was printed with metal movable type in 1377. It is the world's oldest surviving book of its kind, and its one remaining volume is kept in Paris.",
     "theme": "letters",
@@ -1287,10 +1287,10 @@ export const storiesAll: Story[] = [
     "recommendedStage": 2,
     "minutes": 5,
     "learningGoalsEn": [
-      "Explain in one sentence what movable metal type is.",
+      "Understand what movable metal type is: one small piece of type for each character, lined up to print a page.",
       "Know that Jikji was printed in 1377 at Heungdeoksa Temple in Cheongju and is the world's oldest surviving book printed with movable metal type.",
       "Know where the surviving volume is kept today (the National Library of France) and that it was inscribed on UNESCO's Memory of the World Register in 2001.",
-      "Read and say 절, 스님, 제자, 활자, 금속활자 and 박물관 with romanization."
+      "Read and recognize 절 (jeol), 스님 (seunim), 제자 (jeja), 활자 (hwalja), 금속활자 (geumsokhwalja) and 박물관 (bangmulgwan)."
     ],
     "origin": {
       "type": "documented",
@@ -1366,7 +1366,7 @@ export const storiesAll: Story[] = [
         "scenes": [
           {
             "id": "s1",
-            "narrationEn": "Hoya travels to Cheongju in the time of the Goryeo kingdom. At Heungdeoksa Temple, people are busy with something amazing: printing a book with letters made of metal!",
+            "narrationEn": "Hoya travels to Cheongju in the time of the Goryeo kingdom. At Heungdeoksa Temple, people are busy with something amazing: printing a book with metal type!",
             "keyword": {
               "id": "jeol",
               "ko": "절",
@@ -1424,7 +1424,7 @@ export const storiesAll: Story[] = [
           },
           {
             "id": "s4",
-            "narrationEn": "How does it work? Each character is its own little piece of metal type. Printers line the pieces up to make a page, then print it. Metal type made printing handier and mistakes easier to fix.",
+            "narrationEn": "How does it work? Each character is its own little piece of metal type. Printers line the pieces up to make a page, then print it. Metal type made printing easier, and mistakes easier to fix.",
             "keyword": {
               "id": "hwalja",
               "ko": "활자",
@@ -1501,7 +1501,7 @@ export const storiesAll: Story[] = [
           },
           {
             "id": "s8",
-            "narrationEn": "Heungdeoksa seems to have been lost in a fire long ago. But in 1985, archaeologists digging at the site found a metal piece carved with the name Heungdeoksa, so its site was confirmed. Today the Cheongju Early Printing Museum stands beside it.",
+            "narrationEn": "Heungdeoksa seems to have closed after a fire long ago. But in 1985, archaeologists digging at the site found a metal piece carved with the name Heungdeoksa, so its site was confirmed. Today the Cheongju Early Printing Museum stands beside it.",
             "keyword": {
               "id": "bangmulgwan",
               "ko": "박물관",
@@ -1558,22 +1558,22 @@ export const storiesAll: Story[] = [
             "options": [
               {
                 "id": "a",
-                "en": "It was the first book written in Hangul",
+                "en": "The first book written in Hangul",
                 "isCorrect": false
               },
               {
                 "id": "b",
-                "en": "It was the first book ever printed with woodblocks",
+                "en": "The first book printed with woodblocks",
                 "isCorrect": false
               },
               {
                 "id": "c",
-                "en": "It was written by King Sejong",
+                "en": "A book written by King Sejong",
                 "isCorrect": false
               },
               {
                 "id": "d",
-                "en": "It is the oldest surviving book printed with movable metal type",
+                "en": "The oldest surviving metal-type book",
                 "isCorrect": true
               }
             ],
@@ -1589,22 +1589,22 @@ export const storiesAll: Story[] = [
             "options": [
               {
                 "id": "a",
-                "en": "Haeinsa Temple",
+                "en": "Haeinsa Temple in Hapcheon",
                 "isCorrect": false
               },
               {
                 "id": "b",
-                "en": "The National Library of France in Paris",
+                "en": "The National Library of France",
                 "isCorrect": true
               },
               {
                 "id": "c",
-                "en": "Kansong Art Museum",
+                "en": "The Kansong Art Museum",
                 "isCorrect": false
               },
               {
                 "id": "d",
-                "en": "Cheongju City Hall",
+                "en": "The Cheongju Early Printing Museum",
                 "isCorrect": false
               }
             ],
@@ -1897,7 +1897,7 @@ export const storiesAll: Story[] = [
       "scope": "cluster",
       "notes": "Third independent pass. Every cited URL for all 6 episodes (52 facts) was re-opened (UNESCO pages via Wayback copies when the live site resets connections) and quotes/locators were compared; the one exception is unesco.org/en/prizes/literacy (unreachable from here; its claim is now also backed by a Korean MCST press release). Eight minimal corrections were made: (1) Hangeul Day f3 no longer says 'Gregorian' (no cited source says the October 9 conversion was Gregorian; encykorea separates Julian/Gregorian only for 1932-45) and dates the October 29/28 observances; (2) f10 gains a third source (SBS 2018 with 국립한글박물관 curator); (3) Shapes scene 8, learning goal and f7 now say 'South Korea's spelling rules' count 24 (North Korea counts 40, 국립한글박물관 webzine 59); (4) Sejong scene 4/f4: 백성 is 'an old-fashioned word' with 표준국어대사전 added; (5) Jikji f8 quote no longer repeats a prize amount that differs between UNESCO page versions; (6) Tripitaka f6 wood and corner plates now have two further sources (정책브리핑; 박상진 wood-identification study); (8) Hangeul Day f9 gains a second source (문화체육관광부 press release); (7) Panjeon scene 8/f9: 'visitors cannot walk inside' replaced by 'visitor entry is restricted' because Haeinsa has run pre-booked tours inside Beopbojeon since June 2021. See hangul-printing.signoff.md."
     },
-    "authorNotes": "There is no comparison with Gutenberg because official Korean sources give different gaps: '70여년' and '80여년' on the 국가유산포털 Jikji page, and '78년' on the Heungdeoksa site signboard text. How the book reached France is left out as a sensitive topic for young learners; per 국가유산포털 it was collected by Collin de Plancy, passed to Henri Vever, and went to the BnF under his will after his death in 1950. It can be added later with that source. The 1972 'International Book Year' exhibition and the old misnomer 'Jikji Simgyeong' are also left out. The surviving volume has lost its first leaf (38 of 39 leaves remain, per 국가유산포털), which is left out too. The casting method (wax versus sand) is not described because it is debated, and earlier metal-type evidence (the 1239 colophon) is mentioned only in general terms. The full title is 백운화상초록불조직지심체요절 (Baegun Hwasang Chorok Buljo Jikji Simche Yojeol). REVISED: the names of Baegun's disciples are no longer given in the narration. 국가유산포털 writes the second disciple 달담 and the Cheongju Early Printing Museum writes 달잠 (達湛); the museum names Seokchan and Daljam as disciples and Myodeok as donor. Scene 8: 'diggers' -> 'archaeologists'; 'The temple itself disappeared long ago' -> 'seems to have been lost in a fire long ago' (encykorea: 폐사된 것으로 보이며); 'bronze piece' -> 'metal piece' because 국가유산포털 describes the 금구 as a 쇠북(금구) fragment. Vocab 종이/인쇄/금속 replaced by 제자/금속활자/직지 so that every vocab word appears in a scene. FINAL PASS (3rd check): f8 quote no longer repeats the prize amount (UNESCO page copies show US$ 30,000 and US$ 40,000 at different times). All other facts re-verified unchanged.",
+    "authorNotes": "There is no comparison with Gutenberg because official Korean sources give different gaps: '70여년' and '80여년' on the 국가유산포털 Jikji page, and '78년' on the Heungdeoksa site signboard text. How the book reached France is left out as a sensitive topic for young learners; per 국가유산포털 it was collected by Collin de Plancy, passed to Henri Vever, and went to the BnF under his will after his death in 1950. It can be added later with that source. The 1972 'International Book Year' exhibition and the old misnomer 'Jikji Simgyeong' are also left out. The surviving volume has lost its first leaf (38 of 39 leaves remain, per 국가유산포털), which is left out too. The casting method (wax versus sand) is not described because it is debated, and earlier metal-type evidence (the 1239 colophon) is mentioned only in general terms. The full title is 백운화상초록불조직지심체요절 (Baegun Hwasang Chorok Buljo Jikji Simche Yojeol). REVISED: the names of Baegun's disciples are no longer given in the narration. 국가유산포털 writes the second disciple 달담 and the Cheongju Early Printing Museum writes 달잠 (達湛); the museum names Seokchan and Daljam as disciples and Myodeok as donor. Scene 8: 'diggers' -> 'archaeologists'; 'The temple itself disappeared long ago' -> 'seems to have been lost in a fire long ago' (encykorea: 폐사된 것으로 보이며); 'bronze piece' -> 'metal piece' because 국가유산포털 describes the 금구 as a 쇠북(금구) fragment. Vocab 종이/인쇄/금속 replaced by 제자/금속활자/직지 so that every vocab word appears in a scene. FINAL PASS (3rd check): f8 quote no longer repeats the prize amount (UNESCO page copies show US$ 30,000 and US$ 40,000 at different times). All other facts re-verified unchanged. REVIEW PASS (PR 1.8b): title.en and s1 say 'metal type', not 'letters made of metal' (Jikji predates Hangul and its type pieces are characters). s8 now says the temple seems to have closed after a fire (f9: abandoned after a fire). Advisory: the fire in s8 (proposed in F-STORY-001 §3.6) was reviewed and cleared; the scene names no person, harm or danger, only that a building closed long ago.",
     "errata": []
   },
   {

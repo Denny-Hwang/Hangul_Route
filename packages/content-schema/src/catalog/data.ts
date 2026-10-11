@@ -106,7 +106,7 @@ const storyRows: StoryRow[] = [
   ['sun-and-moon', 'The Sun and the Moon (A Traditional Tale)', 1, 'nature', 5, null, true],
   ['cheugugi-rain-gauge', 'The Bowl That Measured the Rain', 1, 'crafts', 4, null, true],
   ['sillok-mountain-archives', 'The Annals Hide in the Mountains', 2, 'letters', 5],
-  ['jikji-metal-type', 'Jikji: Letters Made of Metal', 2, 'letters', 5],
+  ['jikji-metal-type', 'Jikji: Printed with Metal Type', 2, 'letters', 5],
   ['gimjang-arirang', 'Gimjang Day: Sharing Kimchi, Singing Arirang', 2, 'life', 5],
   ['dano-ssireum', 'Dano Day: Swings, Masks and Ssireum', 2, 'rites', 5],
   ['angbuilgu-sundial', 'The Sky-Facing Pot That Told the Time', 2, 'nature', 4],

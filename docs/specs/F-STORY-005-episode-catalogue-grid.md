@@ -122,7 +122,7 @@ Columns: shelf id = `episode:shelf-<slug>`; **home cell** = `<recommendedStage>-
 | 9 | sun-and-moon | The Sun and the Moon (A Traditional Tale) | stage1-nature | nature | 1 | 5 | L | story-time 3 | S | D5*, D2 | seasons-tales |
 | 10 | cheugugi-rain-gauge | The Bowl That Measured the Rain | stage1-crafts | crafts | 1 | 4 | L | culture 6 | S | E3 | science-art-life |
 | 11 | sillok-mountain-archives | The Annals Hide in the Mountains | stage2-letters | letters | 2 | 5 | – | culture 8 |  | A3 | records-joseon |
-| 12 | jikji-metal-type | Jikji: Letters Made of Metal | stage2-letters | letters | 2 | 5 | – | culture 9 |  | A5 | hangul-printing |
+| 12 | jikji-metal-type | Jikji: Printed with Metal Type | stage2-letters | letters | 2 | 5 | – | culture 9 |  | A5 | hangul-printing |
 | 13 | gimjang-arirang | Gimjang Day: Sharing Kimchi, Singing Arirang | stage2-life | life | 2 | 5 | L | story-time 5 |  | B5, C4 | seasons-tales |
 | 14 | dano-ssireum | Dano Day: Swings, Masks and Ssireum | stage2-rites | rites | 2 | 5 | – | story-time 4 |  | B5, C4 | seasons-tales |
 | 15 | angbuilgu-sundial | The Sky-Facing Pot That Told the Time | stage2-nature | nature | 2 | 4 | L | culture 11 |  | E3, E5 | science-art-life |
