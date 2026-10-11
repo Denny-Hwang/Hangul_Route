@@ -33,6 +33,7 @@ vi.mock('expo-av', () => ({
       }),
     },
   },
+  InterruptionModeIOS: { MixWithOthers: 0, DoNotMix: 1, DuckOthers: 2 }, InterruptionModeAndroid: { DoNotMix: 1, DuckOthers: 2 },
 }));
 vi.mock('expo-asset', () => ({
   Asset: {
@@ -140,8 +141,11 @@ class FakeClipPlayer implements ClipPlayer {
   readonly warmed: string[][] = [];
   unlocks = 0;
   stops = 0;
+  /** How many times each play's own handle was stopped, by play order. */
+  readonly handleStops: number[] = [];
   play(ref: string, h: { onStart(): void; onDone(): void; onError(reason: ClipFailure): void }): { stop(): void } {
     this.played.push(ref);
+    const index = this.handleStops.push(0) - 1;
     const outcome = this.next;
     queueMicrotask(() => {
       if (outcome === 'hold') return;
@@ -150,7 +154,11 @@ class FakeClipPlayer implements ClipPlayer {
         h.onDone();
       } else h.onError(outcome);
     });
-    return { stop: () => undefined };
+    return {
+      stop: () => {
+        this.handleStops[index] = (this.handleStops[index] ?? 0) + 1;
+      },
+    };
   }
   warm(refs: readonly string[]): Promise<void> {
     this.warmed.push([...refs]);
@@ -165,6 +173,7 @@ class FakeClipPlayer implements ClipPlayer {
 }
 
 const GIYEOK_CLIP = 'audio/jamo/giyeok.mp3';
+const NIEUN_CLIP = 'audio/jamo/nieun.mp3';
 
 interface ClipRigOptions {
   player: FakeClipPlayer;
@@ -563,6 +572,22 @@ describe('platform/audio (native): bundled clips (A-7, AD4: clip > voice > text)
     audio.dispose();
   });
 
+  it('a newer prompt stops the running clip through its own handle', async () => {
+    const player = new FakeClipPlayer();
+    const { audio } = rig(undefined, 'ios', { player, refs: [GIYEOK_CLIP, NIEUN_CLIP] });
+    player.next = 'hold';
+    const first = audio.playPrompt({ text: '가', audioRef: GIYEOK_CLIP });
+    await flush();
+    expect(player.handleStops).toEqual([0]);
+    player.next = 'ok';
+    const second = audio.playPrompt({ text: '나', audioRef: NIEUN_CLIP });
+    await expect(first).resolves.toBe('played');
+    await expect(second).resolves.toBe('played');
+    expect(player.played).toEqual([GIYEOK_CLIP, NIEUN_CLIP]);
+    expect(player.handleStops[0]).toBe(1);
+    audio.dispose();
+  });
+
   it('flags.audioClips off: the voice speaks, no clip is counted, nothing is warmed', async () => {
     const player = new FakeClipPlayer();
     const { speech, audio } = rig(undefined, 'ios', { player, enabled: false });
@@ -620,7 +645,17 @@ describe('platform/audio (native): the module-level clip path', () => {
     expect(mod.getCapability().clips).toBe(true);
     await mod.warmClips([GIYEOK_CLIP]);
     await expect(mod.playPrompt({ text: '가', audioRef: GIYEOK_CLIP })).resolves.toBe('played');
-    expect(av.modes).toEqual([{ playsInSilentModeIOS: false, staysActiveInBackground: false }]);
+    expect(av.modes).toEqual([
+      {
+        playsInSilentModeIOS: false,
+        staysActiveInBackground: false,
+        interruptionModeIOS: 0,
+        interruptionModeAndroid: 2,
+        shouldDuckAndroid: true,
+        playThroughEarpieceAndroid: false,
+        allowsRecordingIOS: false,
+      },
+    ]);
     expect(av.loaded).toEqual([{ uri: 'file:///bundle/clip-7.mp3' }]);
     expect(vi.mocked(Speech.speak)).not.toHaveBeenCalled();
     vi.doUnmock('../../content/__generated__/audio-assets');

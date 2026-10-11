@@ -17,7 +17,11 @@ const assets = vi.hoisted(() => ({
     }),
   })),
 }));
-vi.mock('expo-av', () => ({ Audio: { setAudioModeAsync: av.setAudioModeAsync, Sound: { createAsync: av.createAsync } } }));
+vi.mock('expo-av', () => ({
+  Audio: { setAudioModeAsync: av.setAudioModeAsync, Sound: { createAsync: av.createAsync } },
+  InterruptionModeIOS: { MixWithOthers: 0, DoNotMix: 1, DuckOthers: 2 },
+  InterruptionModeAndroid: { DoNotMix: 1, DuckOthers: 2 },
+}));
 vi.mock('expo-asset', () => ({ Asset: { fromModule: assets.fromModule } }));
 
 import {
@@ -39,10 +43,16 @@ class FakeSound implements NativeSoundLike {
   unloads = 0;
   status: ((s: NativePlaybackStatus) => void) | null = null;
   failPlay = false;
+  holdPlay = false;
+  /** Like expo-av: the play call reports a playing status (with the length) before it resolves. */
+  durationMillis: number | undefined;
   constructor(readonly uri: string) {}
   playAsync(): Promise<unknown> {
     this.plays += 1;
-    return this.failPlay ? Promise.reject(new Error('session refused')) : Promise.resolve({ isLoaded: true });
+    if (this.holdPlay) return new Promise<unknown>(() => undefined);
+    if (this.failPlay) return Promise.reject(new Error('session refused'));
+    if (this.durationMillis !== undefined) this.emit({ isLoaded: true, isPlaying: true, durationMillis: this.durationMillis, positionMillis: 0 });
+    return Promise.resolve({ isLoaded: true });
   }
   stopAsync(): Promise<unknown> {
     this.stops += 1;
@@ -77,6 +87,11 @@ function rig(
     gateCreate?: { release?: () => void };
     holdDownload?: boolean;
     failPlay?: boolean;
+    holdPlay?: boolean;
+    /** The first N session calls never answer. */
+    holdMode?: number;
+    /** expo-av ordering: createSound reports the loaded status (with this length) before it resolves. */
+    durationMillis?: number;
     playInSilentMode?: boolean;
   } = {},
 ): Rig {
@@ -84,6 +99,7 @@ function rig(
   const modes: unknown[] = [];
   const downloads: Array<number | string> = [];
   let modeFailures = opts.failMode ?? 0;
+  let modeHolds = opts.holdMode ?? 0;
   const env: NativeClipEnv = {
     source: (ref) => MODULES[ref] ?? null,
     localUri: (source) => {
@@ -94,6 +110,10 @@ function rig(
     audio: {
       setAudioModeAsync: (mode) => {
         modes.push(mode);
+        if (modeHolds > 0) {
+          modeHolds -= 1;
+          return new Promise<void>(() => undefined);
+        }
         if (modeFailures > 0) {
           modeFailures -= 1;
           return Promise.reject(new Error('session busy'));
@@ -106,8 +126,11 @@ function rig(
         const make = (): FakeSound => {
           const sound = new FakeSound(uri);
           sound.failPlay = opts.failPlay ?? false;
+          sound.holdPlay = opts.holdPlay ?? false;
+          sound.durationMillis = opts.durationMillis;
           sound.setOnPlaybackStatusUpdate(onStatus);
           sounds.push(sound);
+          if (opts.durationMillis !== undefined) onStatus({ isLoaded: true, isPlaying: false, durationMillis: opts.durationMillis, positionMillis: 0 });
           return sound;
         };
         const gate = opts.gateCreate;
@@ -157,9 +180,11 @@ afterEach(() => {
 });
 
 describe('platform/audio-player (native): play, stop, unload', () => {
-  it('sets the audio session once, respecting the silent switch, before the first sound loads', async () => {
+  it('sets the audio session once, respecting the silent switch, when the player is created', async () => {
     const r = rig();
     const player = createNativeClipPlayer(r.env);
+    // Before any prompt: the voice and the clips share one session from the first prompt.
+    expect(r.modes).toEqual([{ playsInSilentModeIOS: false, staysActiveInBackground: false }]);
     const a = handlers();
     player.play(GIYEOK, a.h);
     await flush();
@@ -221,7 +246,8 @@ describe('platform/audio-player (native): play, stop, unload', () => {
     await flush();
     expect(out.errors).toEqual(['missing']);
     expect(r.downloads).toEqual([]);
-    expect(r.modes).toEqual([]);
+    // Only the session set at creation.
+    expect(r.modes).toHaveLength(1);
   });
 
   it('a file that cannot be made local is `fetch`', async () => {
@@ -243,15 +269,32 @@ describe('platform/audio-player (native): play, stop, unload', () => {
     expect(out.errors).toEqual(['decode']);
   });
 
-  it('a load error reported after start is `decode` and the sound is unloaded', async () => {
+  it('an error after the clip was heard ends the prompt as done (the voice does not repeat it), and unloads', async () => {
     const r = rig();
     const player = createNativeClipPlayer(r.env);
     const out = handlers();
     player.play(GIYEOK, out.h);
     await flush();
+    expect(out.started).toBe(1);
     r.sounds[0]!.emit({ isLoaded: false, error: 'corrupt frame' });
+    expect(out.errors).toEqual([]);
+    expect(out.done).toBe(1);
+    expect(r.sounds[0]!.unloads).toBe(1);
+  });
+
+  it('an error reported while the sound loads, before it is heard, is `decode`', async () => {
+    const gate: { release?: () => void } = {};
+    const r = rig({ gateCreate: gate });
+    const player = createNativeClipPlayer(r.env);
+    const out = handlers();
+    player.play(GIYEOK, out.h);
+    await flush();
+    gate.release?.();
+    r.sounds[0]!.emit({ isLoaded: false, error: 'corrupt frame' });
+    await flush();
     expect(out.errors).toEqual(['decode']);
-    expect(out.done).toBe(0);
+    expect(out.started).toBe(0);
+    expect(r.sounds[0]!.plays).toBe(0);
     expect(r.sounds[0]!.unloads).toBe(1);
   });
 
@@ -374,18 +417,15 @@ describe('platform/audio-player (native): play, stop, unload', () => {
     expect(out.errors).toEqual([]);
   });
 
-  it('a play stopped while it loads unloads the sound once it arrives and never plays it', async () => {
+  it('stopped before the session is set: nothing loads and nothing is reported', async () => {
     const r = rig();
     const player = createNativeClipPlayer(r.env);
     const out = handlers();
     const handle = player.play(GIYEOK, out.h);
     handle.stop();
     await flush();
-    expect(r.sounds.length).toBeLessThanOrEqual(1);
-    for (const s of r.sounds) {
-      expect(s.plays).toBe(0);
-      expect(s.unloads).toBe(1);
-    }
+    expect(r.sounds).toHaveLength(0);
+    expect(r.downloads).toHaveLength(0);
     expect(out.started + out.done + out.errors.length).toBe(0);
   });
 
@@ -413,11 +453,143 @@ describe('platform/audio-player (native): play, stop, unload', () => {
     expect(a.done + b.done).toBe(0);
   });
 
+  it('with expo-av ordering (length reported while loading, then on play) the play settles at its length plus a margin from its start', async () => {
+    vi.useFakeTimers();
+    const r = rig({ durationMillis: 900 });
+    const player = createNativeClipPlayer(r.env);
+    const out = handlers();
+    player.play(GIYEOK, out.h);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(out.started).toBe(1);
+    await vi.advanceTimersByTimeAsync(2300);
+    expect(out.done).toBe(0);
+    await vi.advanceTimersByTimeAsync(200);
+    expect(out.done).toBe(1);
+    expect(r.sounds[0]!.unloads).toBe(1);
+  });
+
+  it('progress reports do not push the end back', async () => {
+    vi.useFakeTimers();
+    const r = rig({ durationMillis: 900 });
+    const player = createNativeClipPlayer(r.env);
+    const out = handlers();
+    player.play(GIYEOK, out.h);
+    await vi.advanceTimersByTimeAsync(0);
+    for (const at of [500, 1000, 1500, 2000]) {
+      await vi.advanceTimersByTimeAsync(500);
+      r.sounds[0]!.emit({ isLoaded: true, isPlaying: true, durationMillis: 900, positionMillis: Math.min(at, 900) });
+    }
+    expect(out.done).toBe(0);
+    await vi.advanceTimersByTimeAsync(500);
+    expect(out.done).toBe(1);
+  });
+
+  it('a length first reported mid-play counts from the reported position', async () => {
+    vi.useFakeTimers();
+    const r = rig();
+    const player = createNativeClipPlayer(r.env);
+    const out = handlers();
+    player.play(GIYEOK, out.h);
+    await vi.advanceTimersByTimeAsync(400);
+    r.sounds[0]!.emit({ isLoaded: true, isPlaying: true, durationMillis: 900, positionMillis: 400 });
+    await vi.advanceTimersByTimeAsync(1900);
+    expect(out.done).toBe(0);
+    await vi.advanceTimersByTimeAsync(200);
+    expect(out.done).toBe(1);
+  });
+
+  it('a session call that never answers does not hold the clip: it plays after the load timeout and the session is asked again next time', async () => {
+    vi.useFakeTimers();
+    const r = rig({ holdMode: 1 });
+    const player = createNativeClipPlayer(r.env);
+    const out = handlers();
+    player.play(GIYEOK, out.h);
+    await vi.advanceTimersByTimeAsync(40);
+    expect(out.started).toBe(0);
+    await vi.advanceTimersByTimeAsync(20);
+    expect(out.started).toBe(1);
+    r.sounds[0]!.emit({ isLoaded: true, didJustFinish: true });
+    const next = handlers();
+    player.play(NIEUN, next.h);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(r.modes).toHaveLength(2);
+    expect(next.started).toBe(1);
+  });
+
+  it('a session call that throws at once is a refusal, not a crash', async () => {
+    const r = rig();
+    const env: NativeClipEnv = {
+      ...r.env,
+      audio: {
+        ...r.env.audio,
+        setAudioModeAsync: () => {
+          throw new Error('no session');
+        },
+      },
+    };
+    const player = createNativeClipPlayer(env);
+    const out = handlers();
+    player.play(GIYEOK, out.h);
+    await flush();
+    expect(out.started).toBe(1);
+  });
+
+  it('a play call the session never answers is `blocked` after the start timeout, and the sound is unloaded', async () => {
+    vi.useFakeTimers();
+    const r = rig({ holdPlay: true });
+    const player = createNativeClipPlayer({ ...r.env, startTimeoutMs: 1500 });
+    const out = handlers();
+    player.play(GIYEOK, out.h);
+    await vi.advanceTimersByTimeAsync(1400);
+    expect(out.errors).toEqual([]);
+    await vi.advanceTimersByTimeAsync(200);
+    expect(out.errors).toEqual(['blocked']);
+    expect(out.started).toBe(0);
+    expect(r.sounds[0]!.unloads).toBe(1);
+  });
+
+  it('a sound whose release throws still settles the play once', async () => {
+    const r = rig();
+    const player = createNativeClipPlayer(r.env);
+    const out = handlers();
+    player.play(GIYEOK, out.h);
+    await flush();
+    const sound = r.sounds[0]!;
+    const emit = sound.status;
+    sound.setOnPlaybackStatusUpdate = () => {
+      throw new Error('already released');
+    };
+    emit?.({ isLoaded: true, didJustFinish: true });
+    expect(out.done).toBe(1);
+    expect(out.errors).toEqual([]);
+  });
+
+  it('a handler that throws inside the play still leaves it settled, with no unhandled rejection', async () => {
+    const r = rig();
+    const player = createNativeClipPlayer(r.env);
+    const out = handlers();
+    let failures = 0;
+    player.play(GIYEOK, {
+      onStart: () => {
+        throw new Error('handler bug');
+      },
+      onDone: out.h.onDone,
+      onError: (reason) => {
+        failures += 1;
+        out.h.onError(reason);
+      },
+    });
+    await flush();
+    expect(failures).toBe(1);
+    expect(out.errors).toEqual(['blocked']);
+    expect(r.sounds[0]!.unloads).toBe(1);
+  });
+
   it('unlock is a no-op on native (nothing to unlock)', () => {
     const r = rig();
     const player = createNativeClipPlayer(r.env);
     expect(player.unlock()).toBeUndefined();
-    expect(r.modes).toEqual([]);
+    expect(r.modes).toHaveLength(1);
   });
 });
 
@@ -456,7 +628,16 @@ describe('platform/audio-player (native): the expo-av environment', () => {
   it('sets the mode and loads a sound through expo-av without downloading again', async () => {
     const env = expoAvClipEnv({ [GIYEOK]: 11 });
     await env.audio.setAudioModeAsync({ playsInSilentModeIOS: false, staysActiveInBackground: false });
-    expect(av.setAudioModeAsync).toHaveBeenCalledWith({ playsInSilentModeIOS: false, staysActiveInBackground: false });
+    // The mix policy is explicit: mix with other apps on iOS, duck them on Android; never record.
+    expect(av.setAudioModeAsync).toHaveBeenCalledWith({
+      playsInSilentModeIOS: false,
+      staysActiveInBackground: false,
+      interruptionModeIOS: 0,
+      interruptionModeAndroid: 2,
+      shouldDuckAndroid: true,
+      playThroughEarpieceAndroid: false,
+      allowsRecordingIOS: false,
+    });
     const onStatus = (): void => undefined;
     const sound = await env.audio.createSound('file:///bundle/clip-11.mp3', onStatus);
     expect(av.createAsync).toHaveBeenCalledWith({ uri: 'file:///bundle/clip-11.mp3' }, { shouldPlay: false }, onStatus, false);
