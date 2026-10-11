@@ -250,8 +250,8 @@ describe('weekGroups: preview rows and the builder week groups', () => {
     expect(unscheduled).toEqual([]);
     expect(rows[0]?.endDate).toBe('2026-10-24');
     expect(rows[0]?.items.map((i) => [i.date, i.title, i.category, i.index])).toEqual([
-      ['2026-10-18', 'Meet g, n, d, l', 'lesson', 0],
-      ['2026-10-21', 'Meet m, b, s, ng', 'lesson', 1],
+      ['2026-10-18', 'Meet a, eo, g, n', 'lesson', 0],
+      ['2026-10-21', 'Meet o, u, m and the circle', 'lesson', 1],
     ]);
     expect(rows.flatMap((row) => row.items)).toHaveLength(plan.items.length);
   });
@@ -501,6 +501,44 @@ describe('re-pace from today (console mode shift, section 3.7)', () => {
     expect(isStaleCatalog(plan.meta)).toBe(false);
     expect(isStaleCatalog({ ...plan.meta, catalogVersion: 0 })).toBe(true);
     expect(isStaleCatalog(plan.meta, { ...CATALOG, version: CATALOG.version + 1 })).toBe(true);
+  });
+
+  /** The catalogue every route saved before F-QUEST-002 Q-6a was made from: version 1, no lesson teaches anything. */
+  const V1: Catalog = { ...CATALOG, version: 1, quests: CATALOG.quests.map((quest) => ({ ...quest, teaches: [] })) };
+  const LETTERS = ['quest:stage1-letters-q1', 'quest:stage1-letters-q2', 'quest:stage1-letters-q3'];
+  function v1Plan(start: WizardState['start']): { id: string; meta: CurriculumMeta; items: PlanItem[] } {
+    const params = toParams(classState({ start }), ['stage1']);
+    if (!params) throw new Error('params');
+    const draft = generateCurriculum(params, V1);
+    return { id: 'plan:route', meta: toMeta(draft), items: toPlanItems(draft) };
+  }
+
+  it('offers Refresh route on every route saved from catalogue version 1 (F-QUEST-002 Q-6a bumps it to 2)', () => {
+    expect(CATALOG.version).toBe(2);
+    expect(v1Plan('brand-new').meta.catalogVersion).toBe(1);
+    expect(isStaleCatalog(v1Plan('brand-new').meta)).toBe(true);
+    expect(isStaleCatalog(v1Plan('some-letters').meta)).toBe(true);
+  });
+
+  it('a refresh of a version-1 route keeps its past items and every letters quest it assigned, even where the level now places them out', () => {
+    for (const start of ['brand-new', 'some-letters'] as const) {
+      const plan = v1Plan(start);
+      expect(plan.items.filter((item) => LETTERS.includes(item.id)).map((item) => item.id)).toEqual(LETTERS);
+      const today = '2026-10-21';
+      const result = repacePlan(plan, today, '2026-10-21T09:00:00.000Z');
+      const past = plan.items.filter((item) => item.targetDate !== undefined && item.targetDate < today);
+      expect(past.length).toBeGreaterThan(0);
+      for (const item of past) expect(result.items).toContainEqual(expect.objectContaining({ id: item.id, targetDate: item.targetDate }));
+      expect(result.items.filter((item) => LETTERS.includes(item.id)).map((item) => item.id)).toEqual(LETTERS);
+      expect(result.meta.catalogVersion).toBe(CATALOG.version);
+      expect(isStaleCatalog(result.meta)).toBe(false);
+    }
+  });
+
+  it('a new route on the shipped catalogue places letters q1-q3 out from "Knows some letters" and keeps them for "Brand new"', () => {
+    const ids = (start: WizardState['start']): string[] => classPlan({ start }).items.map((item) => item.id);
+    expect(ids('brand-new').slice(0, 3)).toEqual(LETTERS);
+    expect(ids('some-letters').filter((id) => LETTERS.includes(id))).toEqual([]);
   });
 });
 
