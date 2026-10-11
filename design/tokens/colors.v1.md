@@ -3,7 +3,7 @@
 **Authoritative palette for Hangul Route.** Mirrors `packages/design-system/src/tokens.ts` (`colors` export).
 Drift between this document and `tokens.ts` is detected by `.github/workflows/design-token-sync.yml` (F-DES-001).
 
-Last updated: 2026-10-10 · Version: v1 (AA contrast revision, see below)
+Last updated: 2026-10-11 · Version: v1 (AA contrast revision, see below; `vocab` group added for WordArt, F-VOC-002)
 
 ---
 
@@ -116,6 +116,44 @@ Rules for the variants:
 | `rarity.uncommon` | #7BB552 |
 | `rarity.rare` | #4A9DD6 |
 | `rarity.legendary` | #E8743B |
+
+## Vocab (WordArt content colours, F-VOC-002 §3.4)
+
+The colour words the Colors topic teaches, and the content colours of word pictures (apple red,
+crow black, flower pink). They are **content, not feedback**: they are drawn only inside WordArt
+(`packages/design-system/src/word-art/` and `components/WordArt/`), and an import-guard test
+(F-VOC-002 PR W-1b) fails when any other file reads `colors.vocab` or a `'vocab.'` tone. `vocab.red`
+is never a failure colour and never stands in for `feedback.danger` or `feedback.nudge`.
+
+| Token | Hex | Notes (contrast on `surface.canvas`) |
+|---|---|---|
+| `vocab.red` | #D83A34 | Content red (apple, strawberry). 4.34:1. CIEDE2000 3.4 from `feedback.danger`, so the import guard, not the hue, keeps them apart |
+| `vocab.orange` | #F28C28 | 2.32:1, outline required |
+| `vocab.yellow` | #F6D32D | 1.39:1, outline required |
+| `vocab.green` | #3FA34D | 3.03:1 |
+| `vocab.blue` | #2F6BD0 | 4.80:1 |
+| `vocab.purple` | #8E44AD | 5.54:1 |
+| `vocab.skyBlue` | #8FD0F5 | 1.59:1, outline required |
+| `vocab.brown` | #8B5A2B | 5.52:1 |
+| `vocab.gray` | #9E9E9E | 2.53:1, outline required |
+| `vocab.white` | #FFFFFF | 1.06:1, outline required. Same value as `surface.paper`; a content white, never a surface |
+| `vocab.black` | #1F1A17 | 16.28:1. A warm black, never #000000 (rule 3) |
+| `vocab.pink` | #F58FB5 | 2.09:1, outline required |
+
+Rules for the vocab tones:
+
+- **Fills, never text.** Like the stage, theme, rarity and Hoya tints, no text is set in a vocab tone.
+- **The outline carries the edge.** Six tones are below the 3:1 non-text minimum on canvas (WCAG 1.4.11),
+  so every swatch and every word picture is outlined in `text.primary` (15.2:1 on canvas, 3 units of 100
+  for the main silhouette); a fill is never relied on for a shape's boundary.
+- **Colour is never the only cue** (WCAG 1.4.1). Measured on these values (CIE Lab, CIEDE2000; Machado
+  colour-vision simulation at severity 1.0 in linear RGB): the closest pair under normal vision is
+  skyBlue/gray at 21.2 (distinct). Under protanopia red/brown (2.4) and orange/green (5.8) collapse;
+  under deuteranopia blue/purple (5.0), red/green (6.3) and pink/gray (6.8); under tritanopia orange/pink
+  (7.6). So every colour swatch carries an object (apple, tangerine, crow, ...), and a quiz never offers
+  two of these pairs as the only difference (`COLOR_CONFUSION_PAIRS`, F-VOC-002 §3.4, recomputed by a test).
+- **One deliberate deviation** from `design/brief/illustrations/heritage-card-art.md` §3 ("no red except
+  dancheong orange"): content reds, blacks and pinks come from `colors.vocab`, and only inside WordArt.
 
 ## Borders / dividers
 
