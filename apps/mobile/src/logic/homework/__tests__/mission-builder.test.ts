@@ -364,6 +364,18 @@ describe('pinned plans keep cards from shifting (§3.2)', () => {
     expect(after.cards[1]).toMatchObject({ questId: 'quest:a', collected: true });
   });
 
+  it('keeps a pinned assigned card even when its quest is placed out (only the system "New" card re-pins)', () => {
+    const base = build();
+    const assigned: MissionPlan = {
+      ...base,
+      cards: base.cards.map((card) =>
+        card.slot === 2 ? { ...card, subtitle: 'assigned', questId: 'quest:a', episodeId: 'episode:one' } : card,
+      ),
+    };
+    const after = build({ pinned: assigned, skipQuestIds: new Set(['quest:a']) });
+    expect(after.cards[1]).toMatchObject({ slot: 2, kind: 'new', subtitle: 'assigned', questId: 'quest:a' });
+  });
+
   it('keeps the pinned "New" card when every other quest is placed out too', () => {
     const first = build();
     const after = build({ pinned: first, skipQuestIds: new Set(['quest:a', 'quest:b', 'quest:c']) });

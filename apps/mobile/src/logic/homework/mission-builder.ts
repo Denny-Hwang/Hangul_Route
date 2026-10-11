@@ -208,7 +208,9 @@ function newCard(quest: Quest, episodes: readonly Episode[]): MissionCard {
  */
 function repinPlacedOut(cards: readonly MissionCard[], input: BuildMissionInput): readonly MissionCard[] {
   const skip = input.skipQuestIds;
-  const pinnedNew = cards.find((card) => card.slot === 2 && card.kind === 'new');
+  // Only the system "New" card re-pins; a caregiver or teacher assignment
+  // (`subtitle: 'assigned'`, `mergeAssignments`) keeps its slot.
+  const pinnedNew = cards.find((card) => card.slot === 2 && card.kind === 'new' && card.subtitle === 'new');
   if (!skip || !pinnedNew?.questId || !skip.has(pinnedNew.questId)) return cards;
   if (completedToday(input.snapshot, pinnedNew.questId, input.today)) return cards;
   const upcoming = nextQuest(input);
