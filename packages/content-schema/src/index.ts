@@ -38,3 +38,4 @@ export * from './schemas/placement';
 export * from './placement';
 export * from './catalog';
 export * from './schemas/transfer';
+export * from './schemas/transfer-consent';
