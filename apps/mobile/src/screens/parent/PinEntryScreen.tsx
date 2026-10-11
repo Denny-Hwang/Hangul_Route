@@ -27,7 +27,7 @@ import {
   createPinHash,
   verifyPin,
 } from '../../logic/profiles/pin-hash';
-import { pinPadBudget, pinPadFirstWidth, pinPadLayout } from '../../logic/profiles/pin-pad-layout';
+import { pinKeyMax, pinPadBudget, pinPadFirstWidth, pinPadLayout } from '../../logic/profiles/pin-pad-layout';
 import type { RootStackParamList } from '../../navigation/types';
 import { pinHasher } from '../../platform/crypto';
 import { track } from '../../platform/telemetry';
@@ -73,7 +73,7 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
   const [busy, setBusy] = useState(false);
   const [now, setNow] = useState(() => Date.now());
   const [headerHeight, setHeaderHeight] = useState(HEADER_ESTIMATE);
-  const { windowWidth, windowHeight, gutter } = useLayoutClass();
+  const { windowWidth, windowHeight, gutter, mediaScale } = useLayoutClass();
   const insets = useSafeAreaInsets();
   // First-frame guess until the pad's box is measured: the `Screen` reading column less its gutter.
   const [padWidth, setPadWidth] = useState(() =>
@@ -89,7 +89,8 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
       chrome: PAD_CHROME,
     }),
     minKey: touchTarget.min,
-    maxKey: touchTarget.child,
+    // F-LAYOUT-001 §3.6: keys scale with the window up to touchTarget.hero (80 on a phone, as before).
+    maxKey: pinKeyMax({ base: touchTarget.child, mediaScale, ceiling: touchTarget.hero }),
     gap: PIN_PAD_GAP,
   });
 

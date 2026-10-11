@@ -12,6 +12,7 @@ import {
   radii,
   spacing,
   typography,
+  useMediaSize,
 } from '@hangul-route/design-system';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
@@ -54,6 +55,8 @@ export function CardMatchGame({ scope, onFinish }: Props): React.ReactElement {
   const [selectedKo, setSelectedKo] = useState<number | null>(null);
   const [matched, setMatched] = useState<Set<number>>(new Set());
   const [wrongFlash, setWrongFlash] = useState<{ ko: number; en: number } | null>(null);
+  // F-LAYOUT-001 §3.6: the cards grow with the window (their padding scales; the words keep their type size).
+  const cardPadding = useMediaSize(spacing.md);
 
   useEffect(() => {
     if (matched.size === pairs.length && pairs.length > 0) {
@@ -114,7 +117,7 @@ export function CardMatchGame({ scope, onFinish }: Props): React.ReactElement {
                 accessibilityLabel={m.a11y.minigame.koreanWord(p.romanization ?? p.ko)}
                 disabled={isMatched}
                 style={{
-                  padding: spacing.md,
+                  padding: cardPadding,
                   borderRadius: radii.lg,
                   backgroundColor: isMatched
                     ? colors.feedback.successLight
@@ -157,7 +160,7 @@ export function CardMatchGame({ scope, onFinish }: Props): React.ReactElement {
                 accessibilityLabel={m.a11y.minigame.meaning(p.en)}
                 disabled={isMatched}
                 style={{
-                  padding: spacing.md,
+                  padding: cardPadding,
                   borderRadius: radii.lg,
                   backgroundColor: isMatched
                     ? colors.feedback.successLight
