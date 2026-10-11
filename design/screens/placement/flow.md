@@ -51,7 +51,7 @@ Screenshots: `HR_SHOTS=1 STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exe
 
 ## Entry points and the Journey look as built (F-PLC-001 P-7)
 
-Wireframe frames A (fork), H (Home card, Profile row) and I (Journey). Code: `screens/onboarding/PlacementInviteScreen.tsx`, `screens/home/HomeScreen.tsx`, `screens/profile/ProfileScreen.tsx`, `screens/journey/JourneyScreen.tsx`; logic in `logic/placement/entry.ts`, `home-card.ts` and `cell-look.ts` (100 % covered). Everything here is hidden while `flags.placementEnabled` is off or the bank fails to parse; the Journey marks read the stored results only, so a learner without one sees no change.
+Wireframes `design/wireframes/placement/invite.md` (fork), `home-entry.md` (Home card, Profile row) and `placement.md` section I (Journey). Code: `screens/onboarding/PlacementInviteScreen.tsx`, `screens/home/HomeScreen.tsx`, `screens/profile/ProfileScreen.tsx`, `screens/journey/JourneyScreen.tsx`; logic in `logic/placement/entry.ts`, `home-card.ts` and `cell-look.ts` (100 % covered). Everything here is hidden while `flags.placementEnabled` is off or the bank fails to parse; the Journey marks read the stored results only, so a learner without one sees no change.
 
 ```
 CreateProfile --(flag on)--> PlacementInvite (A) --"I am new to Korean"--> FirstQuestPreview (declinedAt, placement.skipped)

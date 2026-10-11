@@ -31,7 +31,7 @@ const HOYA_SIZE = touchTarget.hero + spacing.xxl;
 
 /**
  * The fork after CreateProfile (F-PLC-001 section 3.1 step 1, wireframe
- * placement A): "I am new to Korean" opens the first-quest preview as today
+ * design/wireframes/placement/invite.md; as built: design/screens/placement/flow.md): "I am new to Korean" opens the first-quest preview as today
  * and only records the decline; "I already know some Korean" opens the level
  * check. Two choices of equal size and weight, neither a default; no back (the
  * profile exists). It works for a learner alone: big targets, and the
