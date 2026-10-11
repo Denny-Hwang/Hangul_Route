@@ -1,6 +1,7 @@
 import { Body, Button, Heading, HoyaBubble, Pill, Progress, Screen, Spacer, spacing } from '@hangul-route/design-system';
 import React, { useMemo, useState } from 'react';
 import { View } from 'react-native';
+import { useMessages } from '../../i18n/use-messages';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { buildCultureQuizRounds, type CultureQuizRound } from '../../logic/round-builder';
 import { nudge, success, tapLight } from '../../platform/haptics';
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export function CultureQuizGame({ scope, onFinish }: Props): React.ReactElement {
+  const copy = useMessages().learner.minigame;
   const rounds = useMemo<CultureQuizRound[]>(
     () => buildCultureQuizRounds({ cardPairs: scope.cardPairs ?? [], rounds: scope.rounds ?? 4 }),
     [scope],
@@ -28,7 +30,7 @@ export function CultureQuizGame({ scope, onFinish }: Props): React.ReactElement 
   if (!round) {
     return (
       <Screen>
-        <Body>No rounds.</Body>
+        <Body>{copy.noRounds}</Body>
       </Screen>
     );
   }
@@ -64,11 +66,11 @@ export function CultureQuizGame({ scope, onFinish }: Props): React.ReactElement 
         <View style={{ flex: 1 }}>
           <Progress value={roundIdx + 1} max={rounds.length} tone="primary" />
         </View>
-        <Pill label={`${roundIdx + 1} / ${rounds.length}`} tone="neutral" size="sm" />
+        <Pill label={copy.progress.pill(roundIdx + 1, rounds.length)} tone="neutral" size="sm" />
       </View>
 
       <Spacer size="lg" />
-      <Heading level="prompt">What does this mean?</Heading>
+      <Heading level="prompt">{copy.cultureQuiz.heading}</Heading>
       <Spacer size="md" />
       <View style={{ alignItems: 'center' }}>
         <Heading level="title">{round.promptKo}</Heading>
@@ -98,7 +100,7 @@ export function CultureQuizGame({ scope, onFinish }: Props): React.ReactElement 
       {feedback === 'wrong' ? (
         <>
           <Spacer size="lg" />
-          <HoyaBubble tone="thinking" message="Not quite — try another!" />
+          <HoyaBubble tone="thinking" message={copy.cultureQuiz.tryAnother} />
         </>
       ) : null}
       <Spacer size="xl" />

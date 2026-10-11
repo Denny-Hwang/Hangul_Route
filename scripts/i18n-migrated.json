@@ -31,7 +31,8 @@
     "apps/mobile/src/screens/minigames/BuildLetterGame.tsx",
     "apps/mobile/src/screens/minigames/TraceStrokeGame.tsx",
     "apps/mobile/src/screens/minigames/StrokeHint.tsx",
-    "apps/mobile/src/screens/minigames/CardMatchGame.tsx"
+    "apps/mobile/src/screens/minigames/CardMatchGame.tsx",
+    "apps/mobile/src/screens/minigames/CultureQuizGame.tsx"
   ],
   "pluralTernaryBaseline": {
     "apps/web/src/app/teach/space/page.tsx": 1,

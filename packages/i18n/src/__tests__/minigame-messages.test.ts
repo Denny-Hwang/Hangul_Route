@@ -126,6 +126,15 @@ describe('Card Match (English wording as shipped)', () => {
   });
 });
 
+describe('Culture Quiz (English wording as shipped)', () => {
+  it('keeps the heading and the miss line', () => {
+    expect(m.learner.minigame.cultureQuiz).toEqual({
+      heading: 'What does this mean?',
+      tryAnother: 'Not quite — try another!',
+    });
+  });
+});
+
 describe('learner.audio (F-AUDIO-004 §3.7-3.8, English wording as shipped)', () => {
   const a = m.learner.audio;
 

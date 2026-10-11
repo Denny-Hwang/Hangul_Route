@@ -352,6 +352,11 @@ export const learner = {
         start: 'Try again — start at the top!',
       },
     },
+    /** Culture Quiz: a Korean word, pick its meaning. */
+    cultureQuiz: {
+      heading: 'What does this mean?',
+      tryAnother: 'Not quite — try another!',
+    },
     /** Card Match: Korean words on the left, meanings on the right. */
     cardMatch: {
       heading: 'Match the meaning',
