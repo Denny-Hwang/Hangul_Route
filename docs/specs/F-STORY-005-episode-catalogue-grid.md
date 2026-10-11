@@ -352,7 +352,7 @@ One new name, added to `TELEMETRY_EVENT_NAMES` (`packages/content-schema/src/sch
 - Writing the `read` tiers and volume-2 books; more than one episode per cell in the UI (the selector and the constant are ready, the volume dots are PR 5.8).
 - The Library pillar filter, seasonal "this week's picks" (Hangul Day, Seollal, Chuseok dates), search.
 - Companion characters other than Hoya; an in-app error-report form; legal review of KOGL assets.
-- Changing the stage header "Premium" pill (audit UX-12 is F-STORY-004 §3.9's).
+- Changing the stage header "Premium" pill (audit UX-12 is F-STORY-004 §3.9's; F-ROUTE-001 R-J, OD-8, later removed it).
 
 ## 5. Tests
 
