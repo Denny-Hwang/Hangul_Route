@@ -18,10 +18,10 @@ export const storiesAll: Story[] = [
     "recommendedStage": 1,
     "minutes": 4,
     "learningGoalsEn": [
-      "Know that Hangeul Day (한글날) is October 9 in South Korea.",
-      "Explain that the date was set using the date written at the end of the Hunminjeongeum Haerye book (a lunar-calendar date), converted to the solar calendar.",
+      "Know that Hangul Day, 한글날 (Hangeullal), is October 9 in South Korea.",
+      "Understand that the date was set from the date written at the end of the Hunminjeongeum Haerye book (a lunar-calendar date), converted to the solar calendar.",
       "Know that the Haerye book is a National Treasure and was inscribed on UNESCO's Memory of the World Register in 1997.",
-      "Read and say 한글날, 음력, 10월 9일, 국보 and 고마워요 with romanization."
+      "Read and recognize 한글날 (Hangeullal), 음력 (eumnyeok), 10월 9일 (siwol guil), 국보 (gukbo) and 고마워요 (gomawoyo)."
     ],
     "origin": {
       "type": "documented",
@@ -104,7 +104,7 @@ export const storiesAll: Story[] = [
         "scenes": [
           {
             "id": "s1",
-            "narrationEn": "October 9 is Hangeullal, Hangul Day! South Korea celebrates King Sejong's letters on this day. It became a national day in 2005 and a public holiday again in 2013. North Korea marks its own day on January 15.",
+            "narrationEn": "October 9 is Hangeullal, Hangul Day! South Korea celebrates King Sejong's letters on this day. It has been a national day since 2005, and a day off again since 2013. North Korea marks its own day on January 15.",
             "keyword": {
               "id": "hangeullal",
               "ko": "한글날",
@@ -125,7 +125,7 @@ export const storiesAll: Story[] = [
           },
           {
             "id": "s2",
-            "narrationEn": "Why October 9? Hoya opens the Haerye book once more. At the very end, a note by Jeong In-ji gives a date: the first ten days of the ninth month of 1446, by the lunar calendar.",
+            "narrationEn": "Why October 9? Hoya opens the Haerye book once more. At the very end, a note by Jeong Inji gives a date: the first ten days of the ninth month of 1446, by the lunar calendar.",
             "keyword": {
               "id": "eumnyeok",
               "ko": "음력",
@@ -158,7 +158,7 @@ export const storiesAll: Story[] = [
             "framing": false,
             "approximations": [],
             "artBrief": "A wall calendar page with blank squares; one square gets a big orange paw print from Hoya; a moon on one side and a sun on the other suggest lunar and solar calendars. No numbers or text.",
-            "captionEn": "A lunar date becomes October 9",
+            "captionEn": "A lunar date is set as October 9",
             "artPending": true
           },
           {
@@ -203,7 +203,7 @@ export const storiesAll: Story[] = [
           },
           {
             "id": "s6",
-            "narrationEn": "The very first celebration was held in 1926. It was called Gagyanal, a name said to come from how people practiced syllables: ga, gya, geo, gyeo. In 1928, it became Hangeullal.",
+            "narrationEn": "The very first celebration was held in 1926. It was called Gagyanal, a name said to come from how people practiced syllables like ga and gya. In 1928, it became Hangeullal.",
             "keyword": {
               "id": "gagyanal",
               "ko": "가갸날",
@@ -293,14 +293,14 @@ export const storiesAll: Story[] = [
               },
               {
                 "id": "d",
-                "en": "A date in the Haerye book, converted from the lunar calendar",
+                "en": "A date in the Haerye book",
                 "isCorrect": true
               }
             ],
             "factIds": [
               "f3"
             ],
-            "explainEn": "The Haerye book ends with the first ten days of a lunar month in 1446. By the method used then, the last of those days became October 9."
+            "explainEn": "The Haerye book ends with a date: the first ten days of the 9th lunar month, 1446. When the holiday was set, the last day became October 9."
           },
           {
             "id": "c3",
@@ -633,7 +633,7 @@ export const storiesAll: Story[] = [
       "scope": "cluster",
       "notes": "Third independent pass. Every cited URL for all 6 episodes (52 facts) was re-opened (UNESCO pages via Wayback copies when the live site resets connections) and quotes/locators were compared; the one exception is unesco.org/en/prizes/literacy (unreachable from here; its claim is now also backed by a Korean MCST press release). Eight minimal corrections were made: (1) Hangeul Day f3 no longer says 'Gregorian' (no cited source says the October 9 conversion was Gregorian; encykorea separates Julian/Gregorian only for 1932-45) and dates the October 29/28 observances; (2) f10 gains a third source (SBS 2018 with 국립한글박물관 curator); (3) Shapes scene 8, learning goal and f7 now say 'South Korea's spelling rules' count 24 (North Korea counts 40, 국립한글박물관 webzine 59); (4) Sejong scene 4/f4: 백성 is 'an old-fashioned word' with 표준국어대사전 added; (5) Jikji f8 quote no longer repeats a prize amount that differs between UNESCO page versions; (6) Tripitaka f6 wood and corner plates now have two further sources (정책브리핑; 박상진 wood-identification study); (8) Hangeul Day f9 gains a second source (문화체육관광부 press release); (7) Panjeon scene 8/f9: 'visitors cannot walk inside' replaced by 'visitor entry is restricted' because Haeinsa has run pre-booked tours inside Beopbojeon since June 2021. See hangul-printing.signoff.md."
     },
-    "authorNotes": "REVISED. (1) The narration no longer says the date conversion is settled: it says People converted the last of the ten days to the solar calendar and 'by the method they used' got October 9. The conversion method is not treated as settled: earlier observances (which assumed the last day of the lunar 9th month) used Oct 29, then Oct 28, before Oct 9 was adopted (encykorea E0061511, 국립국어원 origin/001); one fact-checker also found press commentary arguing that Oct 9 does not match a strict Julian or Gregorian conversion (low-authority sources, not re-verified here). f3 records the first point and the narration says only 'by the method they used'. (2) 'Korea celebrates' -> 'South Korea celebrates'; North Korea's January 15 (조선글날) is stated in scene 1 (f10, sourced to 국립국어원 KTV programme and 서울신문 1990). Caveat: the 국립한글박물관 webzine 59 calls one theory about how that North Korean date is derived 'unconfirmed' (확인되지 않은 것), so the story states only that the day is marked on January 15, not how it was derived. (3) 'Kansong Art Museum in Seoul' -> 'kept by the Kansong Art Museum': in 2024 the book travelled to the new Kansong Art Museum in Daegu for its opening show (서울신문 2024-05-08), and UNESCO gives no city. RR would be 'Gansong'; the museum's own English spelling 'Kansong' (used by UNESCO) is kept. (4) Scene 4 no longer says 'nobody knew the exact day'. The sources disagree on when October 9 was first celebrated (1945 according to 국립한글박물관, 1946 according to 한국민족문화대백과사전), so no year is given. 'Said to' in scene 6 hedges the 'ga-gya-geo-gyeo' origin, as the museum itself reports it as hearsay. The second, privately held Haerye copy (the 'Sangju copy') is left out because its status is unresolved. The purchase by Jeon Hyeong-pil is left out for brevity. The founding year of the King Sejong Literacy Prize (1989) is on the UNESCO page only, so the narration does not give it. The UNESCO 'country overview' source in f7 was dropped because its page could not be loaded. The official title in the heritage register is simply 'Hunminjeongeum' (국보 훈민정음). Fact f3 also names the Gregorian calendar (second-checker request); the narration keeps the simpler 'solar calendar'. FINAL PASS (3rd check): f3 no longer says 'Gregorian' because no cited source states the calendar used for the October 9 conversion (encykorea: 1932-33 Julian -> Oct 29, 1934-45 Gregorian -> Oct 28; 국립국어원: Oct 9 = Oct 29 minus about 20 days). f10 now has three sources. Book location: 국가유산포털 still lists Seoul (성북동), while the book was shown at the new Kansong Art Museum in Daegu in autumn 2024; the story only says 'kept by the Kansong Art Museum' (UNESCO wording).",
+    "authorNotes": "REVISED. (1) The narration no longer says the date conversion is settled: it says People converted the last of the ten days to the solar calendar and 'by the method they used' got October 9. The conversion method is not treated as settled: earlier observances (which assumed the last day of the lunar 9th month) used Oct 29, then Oct 28, before Oct 9 was adopted (encykorea E0061511, 국립국어원 origin/001); one fact-checker also found press commentary arguing that Oct 9 does not match a strict Julian or Gregorian conversion (low-authority sources, not re-verified here). f3 records the first point and the narration says only 'by the method they used'. (2) 'Korea celebrates' -> 'South Korea celebrates'; North Korea's January 15 (조선글날) is stated in scene 1 (f10, sourced to 국립국어원 KTV programme and 서울신문 1990). Caveat: the 국립한글박물관 webzine 59 calls one theory about how that North Korean date is derived 'unconfirmed' (확인되지 않은 것), so the story states only that the day is marked on January 15, not how it was derived. (3) 'Kansong Art Museum in Seoul' -> 'kept by the Kansong Art Museum': in 2024 the book travelled to the new Kansong Art Museum in Daegu for its opening show (서울신문 2024-05-08), and UNESCO gives no city. RR would be 'Gansong'; the museum's own English spelling 'Kansong' (used by UNESCO) is kept. (4) Scene 4 no longer says 'nobody knew the exact day'. The sources disagree on when October 9 was first celebrated (1945 according to 국립한글박물관, 1946 according to 한국민족문화대백과사전), so no year is given. 'Said to' in scene 6 hedges the 'ga-gya-geo-gyeo' origin, as the museum itself reports it as hearsay. The second, privately held Haerye copy (the 'Sangju copy') is left out because its status is unresolved. The purchase by Jeon Hyeong-pil is left out for brevity. The founding year of the King Sejong Literacy Prize (1989) is on the UNESCO page only, so the narration does not give it. The UNESCO 'country overview' source in f7 was dropped because its page could not be loaded. The official title in the heritage register is simply 'Hunminjeongeum' (국보 훈민정음). Fact f3 also names the Gregorian calendar (second-checker request); the narration keeps the simpler 'solar calendar'. FINAL PASS (3rd check): f3 no longer says 'Gregorian' because no cited source states the calendar used for the October 9 conversion (encykorea: 1932-33 Julian -> Oct 29, 1934-45 Gregorian -> Oct 28; 국립국어원: Oct 9 = Oct 29 minus about 20 days). f10 now has three sources. Book location: 국가유산포털 still lists Seoul (성북동), while the book was shown at the new Kansong Art Museum in Daegu in autumn 2024; the story only says 'kept by the Kansong Art Museum' (UNESCO wording). REVIEW PASS (PR 1.8b): c2 explanation keeps the hedge (converted when the holiday was set) and names the 9th lunar month; s3 caption says the date was set, not that it simply is October 9.",
     "errata": []
   },
   {

@@ -113,7 +113,7 @@ Columns: shelf id = `episode:shelf-<slug>`; **home cell** = `<recommendedStage>-
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | 1 | sejong-new-letters | King Sejong's New Letters | stage1-letters | letters | 1 | 4 | L | culture 1 | S | A1 | hangul-printing |
 | 2 | shapes-of-hangeul | The Secret in the Shapes | stage1-letters | letters | 1 | 5 | L | culture 2 |  | A1 | hangul-printing |
-| 3 | hangeul-day | Happy Hangeul Day! | stage1-letters | letters | 1 | 4 | L | culture 3 | S | A1 | hangul-printing |
+| 3 | hangeul-day | Happy Hangul Day! | stage1-letters | letters | 1 | 4 | L | culture 3 | S | A1 | hangul-printing |
 | 4 | tripitaka-koreana | Eighty Thousand Woodblocks | stage1-letters | letters | 1 | 5 | L | culture 4 |  | A2 | hangul-printing |
 | 5 | sillok-royal-historians | Hoya Meets the Royal Historians | stage1-letters | letters | 1 | 4 | L | culture 5 |  | A3 | records-joseon |
 | 6 | kim-hongdo-genre-paintings | Kim Hong-do's Pictures of Everyday Life | stage1-life | life | 1 | 5 | L | culture 7 |  | B1 | science-art-life |
