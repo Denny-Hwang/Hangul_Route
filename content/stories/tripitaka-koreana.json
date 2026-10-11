@@ -2,7 +2,7 @@
   "v": 1,
   "id": "story:tripitaka-koreana",
   "state": "ready",
-  "contentVer": 2,
+  "contentVer": 3,
   "title": {
     "ko": "팔만대장경",
     "romanization": "Palmandaejanggyeong",
@@ -747,9 +747,9 @@
     },
     {
       "id": "f7",
-      "rev": 1,
+      "rev": 2,
       "scope": "documented",
-      "claimEn": "The Tripitaka Koreana is recognized by Buddhist scholars around the world for its outstanding accuracy, and its tens of millions of characters are carved so evenly that they look like the work of a single hand.",
+      "claimEn": "Buddhist scholars worldwide recognize the Tripitaka Koreana for its outstanding accuracy, and its tens of millions of characters are carved so evenly that they look like the work of a single hand.",
       "claimKo": "고려대장경은 뛰어난 정확성으로 세계 불교학자들에게 인정받으며, 수천만 개의 글자가 마치 한 사람이 새긴 듯 고르고 정밀하다.",
       "sources": [
         {

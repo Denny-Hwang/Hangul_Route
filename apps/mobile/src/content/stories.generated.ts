@@ -3545,7 +3545,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:gimjang-arirang",
     "state": "ready",
-    "contentVer": 1,
+    "contentVer": 2,
     "title": {
       "ko": "김장하는 날과 아리랑",
       "romanization": "Gimjanghaneun nalgwa Arirang",
@@ -3948,9 +3948,9 @@ export const storiesAll: Story[] = [
       },
       {
         "id": "f2",
-        "rev": 1,
+        "rev": 2,
         "scope": "documented",
-        "claimEn": "Gimjang preparation takes months (more than half a year, per the Encyclopedia of Korean Culture) and follows a yearly cycle: in spring households procure shrimp, anchovy and other seafood for salting, in summer they buy sea salt, and in late summer red chili peppers are dried and ground into powder.",
+        "claimEn": "Gimjang preparation takes months (more than half a year, per the Encyclopedia of Korean Culture) and runs through the year: in spring, families buy shrimp, anchovy and other seafood to salt; in summer, they buy sea salt; and in late summer, they dry red chili peppers and grind them into powder.",
         "claimKo": "김장 준비에는 반년 이상이 걸리며 1년 주기로 이어진다. 봄에는 새우·멸치 등 해산물을 구해 젓갈을 담그고, 여름에는 소금을 사며, 늦여름에는 고추를 말려 가루를 낸다.",
         "sources": [
           {
@@ -6549,7 +6549,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:janggyeong-panjeon",
     "state": "ready",
-    "contentVer": 2,
+    "contentVer": 3,
     "title": {
       "ko": "바람이 지키는 장경판전",
       "romanization": "Barami jikineun Janggyeongpanjeon",
@@ -7339,9 +7339,9 @@ export const storiesAll: Story[] = [
       },
       {
         "id": "f9",
-        "rev": 1,
+        "rev": 2,
         "scope": "documented",
-        "claimEn": "UNESCO states that, in order to control the temperature and humidity within the depositories, there are restrictions to visitor entry into the Janggyeong Panjeon. Since June 2021 Haeinsa has also offered a small, pre-booked guided tour inside Beopbojeon (10 to 20 people per session), so entry is limited rather than impossible.",
+        "claimEn": "UNESCO says visitor entry into the Janggyeong Panjeon is restricted so that the temperature and humidity inside the depositories can be controlled. Since June 2021 Haeinsa has also offered a small, pre-booked guided tour inside Beopbojeon (10 to 20 people per session), so entry is limited rather than impossible.",
         "claimKo": "유네스코는 장경판전 안의 온도와 습도를 조절하기 위해 방문객의 출입을 제한하고 있다고 밝히고 있다. 해인사는 2021년 6월부터 법보전 내부를 사전 예약자(회당 10~20명)에 한해 안내 탐방하고 있어, 출입은 '제한'될 뿐 전면 금지는 아니다.",
         "sources": [
           {
@@ -7375,7 +7375,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:jikji-metal-type",
     "state": "ready",
-    "contentVer": 2,
+    "contentVer": 3,
     "title": {
       "ko": "직지, 금속활자로 찍은 책",
       "romanization": "Jikji, geumsokhwaljaro jjigeun chaek",
@@ -8175,9 +8175,9 @@ export const storiesAll: Story[] = [
       },
       {
         "id": "f8",
-        "rev": 1,
+        "rev": 2,
         "scope": "documented",
-        "claimEn": "UNESCO has a prize carrying Jikji's name, the UNESCO/Jikji Memory of the World Prize, awarded to individuals or institutions that have made significant contributions to the preservation and accessibility of documentary heritage.",
+        "claimEn": "UNESCO has a prize carrying Jikji's name, the UNESCO/Jikji Memory of the World Prize, awarded to individuals or institutions that have contributed significantly to preserving documentary heritage and making it accessible.",
         "claimKo": "유네스코에는 '직지'의 이름을 딴 '유네스코/직지 세계기록유산상(UNESCO/Jikji Memory of the World Prize)'이 있으며, 기록유산의 보존과 접근성 향상에 크게 기여한 개인이나 기관에 수여된다.",
         "sources": [
           {
@@ -8234,7 +8234,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:joseon-records-today",
     "state": "ready",
-    "contentVer": 2,
+    "contentVer": 3,
     "title": {
       "ko": "오래된 기록, 새로운 발견",
       "romanization": "Oraedoen girok, saeroun balgyeon",
@@ -8857,9 +8857,9 @@ export const storiesAll: Story[] = [
       },
       {
         "id": "f2",
-        "rev": 1,
+        "rev": 2,
         "scope": "documented",
-        "claimEn": "After parts of Hwaseong were damaged, the fortress was restored to its original shape based on the Hwaseong Seongyeok Uigwe, and repairs are still carried out based on it today.",
+        "claimEn": "After parts of Hwaseong were damaged, the fortress was restored in its original form based on the Hwaseong Seongyeok Uigwe, and repairs are still carried out based on it today.",
         "claimKo": "화성은 일부가 훼손된 뒤 『화성성역의궤』에 의거하여 축성 당시 모습대로 복원되었고, 지금도 이를 바탕으로 수리·보수가 이루어진다.",
         "sources": [
           {
@@ -16740,7 +16740,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:tripitaka-koreana",
     "state": "ready",
-    "contentVer": 2,
+    "contentVer": 3,
     "title": {
       "ko": "팔만대장경",
       "romanization": "Palmandaejanggyeong",
@@ -17485,9 +17485,9 @@ export const storiesAll: Story[] = [
       },
       {
         "id": "f7",
-        "rev": 1,
+        "rev": 2,
         "scope": "documented",
-        "claimEn": "The Tripitaka Koreana is recognized by Buddhist scholars around the world for its outstanding accuracy, and its tens of millions of characters are carved so evenly that they look like the work of a single hand.",
+        "claimEn": "Buddhist scholars worldwide recognize the Tripitaka Koreana for its outstanding accuracy, and its tens of millions of characters are carved so evenly that they look like the work of a single hand.",
         "claimKo": "고려대장경은 뛰어난 정확성으로 세계 불교학자들에게 인정받으며, 수천만 개의 글자가 마치 한 사람이 새긴 듯 고르고 정밀하다.",
         "sources": [
           {

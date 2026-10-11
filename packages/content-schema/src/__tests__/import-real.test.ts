@@ -56,7 +56,15 @@ function mapAll(resolve: boolean): Mapped[] {
   );
 }
 
-const lint = (m: Mapped): Finding[] => lintStory(parseStory(m.story), { today: TODAY });
+/**
+ * F-STORY-005 §3.9 `narration-copies-source` is an authoring rule: research claims
+ * stay close to their excerpts (provenance), and the authored files in
+ * `content/stories/` restate them (the story-content gate enforces it there).
+ * The importer output is pinned separately below.
+ */
+const AUTHORING_RULES = new Set(['narration-copies-source']);
+const lintAll = (m: Mapped): Finding[] => lintStory(parseStory(m.story), { today: TODAY });
+const lint = (m: Mapped): Finding[] => lintAll(m).filter((f) => !AUTHORING_RULES.has(f.rule));
 const errorsOf = (list: Mapped[]): Array<Finding & { story: string }> =>
   list.flatMap((m) =>
     lint(m)
@@ -116,6 +124,21 @@ describe.skipIf(!existsSync(RESEARCH_DIR))('import-real: the 24 research episode
 
   it('lints without an error: the known classes are resolved by the importer', () => {
     expect(errorsOf(resolved).map((f) => `${f.story} ${f.rule} ${f.path}`)).toEqual([]);
+  });
+
+  it('leaves five research claims close to their excerpts, which the authored story files restate', () => {
+    const copied = resolved.flatMap((m) =>
+      lintAll(m)
+        .filter((f) => AUTHORING_RULES.has(f.rule))
+        .map((f) => `${m.story.id} ${f.path}`),
+    );
+    expect(copied.sort()).toEqual([
+      'story:gimjang-arirang facts[1].claimEn',
+      'story:janggyeong-panjeon facts[8].claimEn',
+      'story:jikji-metal-type facts[7].claimEn',
+      'story:joseon-records-today facts[1].claimEn',
+      'story:tripitaka-koreana facts[6].claimEn',
+    ]);
   });
 
   it('reproduces exactly the finding classes of section 3.14 when run raw', () => {

@@ -2,7 +2,7 @@
   "v": 1,
   "id": "story:gimjang-arirang",
   "state": "ready",
-  "contentVer": 1,
+  "contentVer": 2,
   "title": {
     "ko": "김장하는 날과 아리랑",
     "romanization": "Gimjanghaneun nalgwa Arirang",
@@ -405,9 +405,9 @@
     },
     {
       "id": "f2",
-      "rev": 1,
+      "rev": 2,
       "scope": "documented",
-      "claimEn": "Gimjang preparation takes months (more than half a year, per the Encyclopedia of Korean Culture) and follows a yearly cycle: in spring households procure shrimp, anchovy and other seafood for salting, in summer they buy sea salt, and in late summer red chili peppers are dried and ground into powder.",
+      "claimEn": "Gimjang preparation takes months (more than half a year, per the Encyclopedia of Korean Culture) and runs through the year: in spring, families buy shrimp, anchovy and other seafood to salt; in summer, they buy sea salt; and in late summer, they dry red chili peppers and grind them into powder.",
       "claimKo": "김장 준비에는 반년 이상이 걸리며 1년 주기로 이어진다. 봄에는 새우·멸치 등 해산물을 구해 젓갈을 담그고, 여름에는 소금을 사며, 늦여름에는 고추를 말려 가루를 낸다.",
       "sources": [
         {

@@ -2,7 +2,7 @@
   "v": 1,
   "id": "story:janggyeong-panjeon",
   "state": "ready",
-  "contentVer": 2,
+  "contentVer": 3,
   "title": {
     "ko": "바람이 지키는 장경판전",
     "romanization": "Barami jikineun Janggyeongpanjeon",
@@ -792,9 +792,9 @@
     },
     {
       "id": "f9",
-      "rev": 1,
+      "rev": 2,
       "scope": "documented",
-      "claimEn": "UNESCO states that, in order to control the temperature and humidity within the depositories, there are restrictions to visitor entry into the Janggyeong Panjeon. Since June 2021 Haeinsa has also offered a small, pre-booked guided tour inside Beopbojeon (10 to 20 people per session), so entry is limited rather than impossible.",
+      "claimEn": "UNESCO says visitor entry into the Janggyeong Panjeon is restricted so that the temperature and humidity inside the depositories can be controlled. Since June 2021 Haeinsa has also offered a small, pre-booked guided tour inside Beopbojeon (10 to 20 people per session), so entry is limited rather than impossible.",
       "claimKo": "유네스코는 장경판전 안의 온도와 습도를 조절하기 위해 방문객의 출입을 제한하고 있다고 밝히고 있다. 해인사는 2021년 6월부터 법보전 내부를 사전 예약자(회당 10~20명)에 한해 안내 탐방하고 있어, 출입은 '제한'될 뿐 전면 금지는 아니다.",
       "sources": [
         {
