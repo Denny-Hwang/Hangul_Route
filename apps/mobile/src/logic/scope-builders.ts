@@ -12,7 +12,7 @@ import {
 import { cardById } from '../content/heritage-cards';
 import { findJamo } from '../content/jamo';
 import { checkOptionIds } from './stage1/confusables';
-import { interimSpokenFor } from './stage1/spoken';
+import { spokenFormFor } from './stage1/spoken';
 
 /**
  * Scope builders (F-QUEST-002 §3.7): short, validated constructors for the
@@ -41,7 +41,7 @@ export const lp = {
   /** Sound -> written symbol (a consonant or vowel). Options: the symbol and its taught confusables. */
   sym(jamoId: string, taughtIds: readonly string[]): ListenPickRound {
     const jamo = findJamo(jamoId);
-    const spoken = interimSpokenFor(jamoId);
+    const spoken = jamo && spokenFormFor(jamo);
     if (!jamo || !spoken) throw new Error(`Unknown symbol ${jamoId}`);
     const options = checkOptionIds(jamoId, taughtIds).map((id) => {
       const option = findJamo(id)!;

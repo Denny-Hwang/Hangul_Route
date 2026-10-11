@@ -1,3 +1,5 @@
+import type { Jamo } from '@hangul-route/content-schema';
+
 /**
  * Interim spoken forms of the 30 symbols (F-QUEST-002 §3.12). What the voice
  * says for a symbol is its SOUND, not its letter name: a lone consonant read
@@ -61,4 +63,16 @@ export const INTERIM_SPOKEN: Readonly<Record<string, SpokenForm>> = {
 /** The interim spoken form of a symbol, or `undefined` for an unknown id. */
 export function interimSpokenFor(jamoId: string): SpokenForm | undefined {
   return INTERIM_SPOKEN[jamoId];
+}
+
+/**
+ * What the voice says for a symbol: the jamo data when it carries a spoken
+ * form (`spokenKo` with its `spokenRomanization`, F-AUDIO-004), else the
+ * interim map. F-AUDIO-004 PR A-2 replaces this with its own `spokenFor()`.
+ */
+export function spokenFormFor(jamo: Jamo): SpokenForm | undefined {
+  if (jamo.spokenKo !== undefined && jamo.spokenRomanization !== undefined) {
+    return { ko: jamo.spokenKo, romanization: jamo.spokenRomanization, kind: jamo.spokenKind };
+  }
+  return interimSpokenFor(jamo.id);
 }

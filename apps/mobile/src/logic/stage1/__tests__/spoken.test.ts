@@ -2,7 +2,7 @@ import { romanizeWord } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { jamoAll } from '../../../content/jamo';
 import { decompose } from '../hangul';
-import { INTERIM_SPOKEN, interimSpokenFor } from '../spoken';
+import { INTERIM_SPOKEN, interimSpokenFor, spokenFormFor } from '../spoken';
 
 describe('interim spoken forms (F-QUEST-002 §3.12, F-AUDIO-004 AD2)', () => {
   it('covers each of the 30 symbols exactly once', () => {
@@ -50,5 +50,26 @@ describe('interim spoken forms (F-QUEST-002 §3.12, F-AUDIO-004 AD2)', () => {
 
   it('returns undefined for an unknown id', () => {
     expect(interimSpokenFor('jamo:nope')).toBeUndefined();
+  });
+
+  it('prefers the jamo data (F-AUDIO-004) and falls back to the interim map when spokenKo is absent', () => {
+    const g = jamoAll.find((j) => j.id === 'jamo:giyeok')!;
+    expect(spokenFormFor(g)).toEqual(interimSpokenFor('jamo:giyeok'));
+    expect(spokenFormFor({ ...g, spokenKo: '그', spokenRomanization: 'geu', spokenKind: 'sound' })).toEqual({
+      ko: '그',
+      romanization: 'geu',
+      kind: 'sound',
+    });
+    expect(spokenFormFor({ ...g, spokenKo: '기역', spokenRomanization: 'giyeok', spokenKind: 'name' })?.kind).toBe('name');
+  });
+
+  it('falls back to the interim map when the data has no romanization for its spoken form', () => {
+    const g = jamoAll.find((j) => j.id === 'jamo:giyeok')!;
+    expect(spokenFormFor({ ...g, spokenKo: '그', spokenKind: 'sound' })).toEqual(interimSpokenFor('jamo:giyeok'));
+  });
+
+  it('has no form for a symbol that is neither in the data nor the map', () => {
+    const g = jamoAll[0]!;
+    expect(spokenFormFor({ ...g, id: 'jamo:nope', spokenKind: 'sound' })).toBeUndefined();
   });
 });
