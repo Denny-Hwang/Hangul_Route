@@ -25,7 +25,8 @@ import { Pressable, View } from 'react-native';
 import { InstallGuideSheet } from '../../components/InstallGuideSheet';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
 import { episodesAll, questsAll } from '../../content';
-import { useMessages } from '../../i18n/use-messages';
+import { useLocale, useMessages } from '../../i18n/use-messages';
+import { localizeMissionCard } from '../../logic/content-locale';
 import {
   buildTodaysMission,
   missionCardText,
@@ -71,7 +72,8 @@ function MissionTile({
   onPress: () => void;
 }): React.ReactElement {
   const m = useMessages();
-  const { title, subtitle } = missionCardText(card, m.learner.home.mission);
+  const locale = useLocale();
+  const { title, subtitle } = missionCardText(localizeMissionCard(card, locale), m.learner.home.mission);
   return (
     <Card
       padding="md"

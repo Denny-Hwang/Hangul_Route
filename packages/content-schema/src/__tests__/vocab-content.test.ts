@@ -276,11 +276,17 @@ describe('rule edge cases', () => {
     expect(findings.filter((f) => f.message.includes('overlay-bad-shape'))).toHaveLength(4);
   });
 
-  it('a strict locale with no overlay file for a topic reports every item missing', () => {
+  it('a strict locale with no overlay file for a topic reports every translatable field missing', () => {
     const tree = validTree();
     delete tree['i18n/es/vocab-food.json'];
     const findings = checkVocabTree(tree, { strictLocales: ['es'] }).filter((f) => f.rule === 'vocab-overlay');
-    expect(findings).toHaveLength(12);
+    expect(findings.every((f) => f.message.startsWith('overlay-missing') && f.file === 'vocab/food.json')).toBe(true);
+    // every item's gloss, the senseNotes the items carry, and the topic's title, blurb and Hoya line
+    const items = food(tree).items;
+    const glossed = new Set(findings.filter((f) => f.message.endsWith('.gloss')).map((f) => f.id));
+    expect(glossed.size).toBe(items.length);
+    const notes = items.filter((i) => typeof (i as { senseNote?: unknown }).senseNote === 'string').length;
+    expect(findings).toHaveLength(items.length + notes + 3);
   });
 
   it('overlay entries for topics (vocab-topic:) accept title, blurb and hoyaIntro only', () => {

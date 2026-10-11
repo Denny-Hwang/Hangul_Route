@@ -13,6 +13,7 @@ import {
   type RomanizationEntry,
   type RomanizationException,
 } from '../../index';
+import { checkOverlayTree } from '../../../../../scripts/overlay-rules.mjs';
 
 /**
  * Rule engine of the vocabulary content gate (F-VOC-001 §3.8). Pure over a
@@ -67,9 +68,6 @@ const GENERATED_VISUAL_RE = /^word:(color|count|body)-/;
 const EXEMPT_PICTURE_TOPICS: readonly string[] = ['colors', 'numbers', 'body'];
 const LAUNCH_ITEMS_PER_TOPIC = 12;
 const MIN_HAND_DRAWN = 8;
-const OVERLAY_LOCALES: readonly string[] = ['es', 'ko'];
-const OVERLAY_ITEM_FIELDS: readonly string[] = ['gloss', 'senseNote'];
-const OVERLAY_TOPIC_FIELDS: readonly string[] = ['title', 'blurb', 'hoyaIntro'];
 
 type Rec = Record<string, unknown>;
 const isRec = (v: unknown): v is Rec => typeof v === 'object' && v !== null && !Array.isArray(v);
@@ -126,7 +124,6 @@ export function checkVocabTree(tree: VocabTree, options: VocabCheckOptions = {})
   const consistencyEntries: RomanizationEntry[] = [];
   const idOwner = new Map<string, string>();
   const itemsByKo = new Map<string, { id: string; file: string; senseGroup?: string }[]>();
-  const allItemIds = new Set<string>();
 
   // ---- per topic file -----------------------------------------------------------
   for (const { file, topic, key, items } of topicFiles) {
@@ -152,9 +149,6 @@ export function checkVocabTree(tree: VocabTree, options: VocabCheckOptions = {})
         consistencyEntries.push({ ko, romanization: rom, where: `${file} topic title` });
       }
     }
-    const topicId = str(topic.id);
-    if (topicId !== undefined) allItemIds.add(topicId);
-
     // items
     let handDrawn = 0;
     for (const item of items) {
@@ -162,7 +156,6 @@ export function checkVocabTree(tree: VocabTree, options: VocabCheckOptions = {})
       const ko = str(item.ko);
       const rom = str(item.romanization);
       const visual = str(item.visual);
-      if (id !== undefined) allItemIds.add(id);
 
       if (id !== undefined) {
         const owner = idOwner.get(id);
@@ -244,7 +237,7 @@ export function checkVocabTree(tree: VocabTree, options: VocabCheckOptions = {})
   }
 
   checkSenses(senses, topicFiles, completeSet, add);
-  checkOverlays(tree, topicFiles, allItemIds, options.strictLocales ?? [], add);
+  checkOverlays(tree, options.strictLocales ?? [], add);
   return findings;
 }
 
@@ -312,79 +305,24 @@ function checkSenses(
   }
 }
 
-// ---- overlays (F-I18N-001 §3.7 rules, applied to the vocab domain) -----------------------
+// ---- overlays: the F-I18N-001 §3.7 rules, reused (scripts/overlay-rules.mjs) ------------
 
+/**
+ * `vocab-overlay` is not a rule of its own (F-VOC-001 §3.8): it reports what the shared
+ * overlay rules of `validate-content.mjs` find in `content/i18n/<locale>/vocab-*.json`
+ * (and, for a strict locale, the missing translations of the vocabulary entities), with
+ * the F-I18N-001 rule name at the start of the message.
+ */
 function checkOverlays(
   tree: VocabTree,
-  topicFiles: TopicFile[],
-  knownIds: Set<string>,
   strictLocales: readonly string[],
   add: (rule: VocabRuleId, file: string, message: string, id?: string) => void,
 ): void {
-  const itemKo = new Map<string, string>();
-  for (const { items } of topicFiles) {
-    for (const item of items) {
-      const id = str(item.id);
-      const ko = str(item.ko);
-      if (id !== undefined && ko !== undefined) itemKo.set(id, ko);
-    }
-  }
-  const glossed = new Map<string, Set<string>>(); // `${locale}/${topic}` -> ids with a gloss
-
-  for (const [file, value] of Object.entries(tree)) {
-    const m = /^i18n\/([^/]+)\/(vocab-[^/]+)\.json$/.exec(file);
-    if (!m) continue;
-    const locale = m[1]!;
-    const domain = m[2]!;
-    const shapeError = (why: string): void => add('vocab-overlay', file, `overlay-bad-shape: ${why}`);
-    if (!isRec(value)) {
-      shapeError('not a JSON object');
-      continue;
-    }
-    if (!OVERLAY_LOCALES.includes(locale)) shapeError(`locale directory ${locale} is not es or ko`);
-    else if (value.locale !== locale) shapeError(`locale ${JSON.stringify(value.locale)} differs from the directory ${locale}`);
-    if (value.domain !== domain) shapeError(`domain ${JSON.stringify(value.domain)} differs from the file name ${domain}`);
-    if (!isRec(value.entries)) {
-      shapeError('entries must be an object');
-      continue;
-    }
-    for (const [id, entry] of Object.entries(value.entries)) {
-      if (!knownIds.has(id)) {
-        add('vocab-overlay', file, `overlay-unknown-id: ${id} is in no content/vocab file`, id);
-        continue;
-      }
-      const allowed = id.startsWith('vocab-topic:') ? OVERLAY_TOPIC_FIELDS : OVERLAY_ITEM_FIELDS;
-      const fields = isRec(entry) ? entry : {};
-      for (const [field, text] of Object.entries(fields)) {
-        if (!allowed.includes(field)) {
-          add('vocab-overlay', file, `overlay-forbidden-field: ${field} cannot be overridden on ${id}`, id);
-        }
-        if (locale === 'es' && typeof text === 'string' && HANGUL_RE.test(text)) {
-          add('vocab-overlay', file, `korean-in-ui-field: Hangul in Spanish ${field} of ${id}`, id);
-        }
-      }
-      const gloss = str(fields.gloss);
-      if (locale === 'ko' && gloss !== undefined && gloss.trim() === itemKo.get(id)) {
-        add('vocab-overlay', file, `overlay-circular-gloss: the Korean gloss of ${id} repeats the taught word`, id);
-      }
-      if (gloss !== undefined) {
-        const set = glossed.get(`${locale}/${domain}`) ?? new Set<string>();
-        set.add(id);
-        glossed.set(`${locale}/${domain}`, set);
-      }
-    }
-  }
-
-  for (const locale of strictLocales) {
-    for (const { key, items } of topicFiles) {
-      const have = glossed.get(`${locale}/vocab-${key}`) ?? new Set<string>();
-      for (const item of items) {
-        const id = str(item.id);
-        if (id !== undefined && !have.has(id)) {
-          add('vocab-overlay', `i18n/${locale}/vocab-${key}.json`, `overlay-missing: no ${locale} gloss for ${id}`, id);
-        }
-      }
-    }
+  const map = new Map(Object.entries(tree).map(([file, value]) => [`content/${file}`, value] as [string, unknown]));
+  for (const v of checkOverlayTree(map, { strictLocales }).violations) {
+    const segments = v.path.split('.');
+    const id = segments[0] === 'entries' ? segments[1] : v.path === '(root)' ? undefined : segments[0];
+    add('vocab-overlay', v.file.replace(/^content\//, ''), v.rule, id);
   }
 }
 

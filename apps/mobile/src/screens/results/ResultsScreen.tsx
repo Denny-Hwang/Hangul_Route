@@ -37,7 +37,8 @@ import Animated, {
 import Svg, { Path } from 'react-native-svg';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
 import { cardById, episodeById, episodesAll, questById, questsAll } from '../../content';
-import { useMessages } from '../../i18n/use-messages';
+import { useLocale, useMessages } from '../../i18n/use-messages';
+import { localizeCard } from '../../logic/content-locale';
 import { isStageEntitled } from '../../logic/entitlement';
 import {
   resultsActions,
@@ -67,6 +68,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Results'>;
 export function ResultsScreen({ route, navigation }: Props): React.ReactElement {
   const messages = useMessages();
   const m = messages.learner.results;
+  const locale = useLocale();
   const { questId, episodeId, stars, correct, total, retries = 0 } = route.params;
   const quest = questById(questId);
   const episode = episodeById(episodeId);
@@ -117,12 +119,13 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
     if (!newCardId || Platform.OS !== 'ios') return;
     const card = cardById(newCardId);
     if (!card) return;
-    AccessibilityInfo.announceForAccessibility(m.newCard.announce(card.titleEn));
-  }, [newCardId, m]);
+    AccessibilityInfo.announceForAccessibility(m.newCard.announce(localizeCard(card, locale).titleEn));
+  }, [newCardId, m, locale]);
 
   const played = total > 0;
   const cheerMessage = resultsCheerMessage(stars, played, m.cheer);
-  const newCard = award?.isNew ? cardById(award.cardId) : undefined;
+  const newCardSource = award?.isNew ? cardById(award.cardId) : undefined;
+  const newCard = newCardSource && localizeCard(newCardSource, locale);
   const showSparkles = !!newCard && stars >= 3;
 
   // "Next up" (F-QUEST-002 §3.5): the Journey cursor with this quest counted as
@@ -139,10 +142,11 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
         questId,
         total,
         isEntitled: (stageKey) => isStageEntitled(stageKey, tier),
+        locale,
       }),
     // `cachedTier` re-renders this screen when the inbox changes the tier.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [snapshot, questId, total, tier, cachedTier],
+    [snapshot, questId, total, tier, cachedTier, locale],
   );
   const actions = resultsActions(teaser);
 

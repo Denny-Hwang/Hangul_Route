@@ -1,7 +1,8 @@
-import type { Episode, ProgressSnapshot, Quest } from '@hangul-route/content-schema';
+import type { Episode, Overlays, ProgressSnapshot, Quest, UiLocale } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
 import { findJamo } from '../../content/jamo';
 import type { TelemetryEvent } from '../../platform/telemetry';
+import { localizeQuest } from '../content-locale';
 import { nextQuestAfter } from '../next-quest';
 import { questTeaches } from '../stage1/curriculum';
 
@@ -43,6 +44,10 @@ export interface ResultsTeaserInput {
   total: number;
   /** `isStageEntitled(stageKey, tier)` for the current learner. */
   isEntitled?: (stageKey: string) => boolean;
+  /** The UI locale: the title and the line come from the target quest's overlay (F-I18N-001 §3.6). Default `en`. */
+  locale?: UiLocale;
+  /** Defaults to the generated overlays (tests pass their own). */
+  overlays?: Overlays;
 }
 
 /** The one line under the title: `teaserEn`, else the new letters from Discover, else `blurbEn`. */
@@ -84,11 +89,12 @@ export function resultsTeaser(input: ResultsTeaserInput): ResultsTeaser | undefi
   if (!target) return undefined;
   const episodeId = episodeIdOf(target.id, episodes);
   if (!episodeId) return undefined;
+  const local = localizeQuest(target, input.locale ?? 'en', input.overlays);
   return {
     questId: target.id,
     episodeId,
-    titleEn: target.titleEn,
-    line: teaserLine(target),
+    titleEn: local.titleEn,
+    line: teaserLine(local),
     again,
   };
 }

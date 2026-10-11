@@ -15,7 +15,8 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React from 'react';
 import { Pressable, View } from 'react-native';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
-import { useMessages } from '../../i18n/use-messages';
+import { useLocale, useMessages } from '../../i18n/use-messages';
+import { localizeQuest } from '../../logic/content-locale';
 import { questsAll } from '../../content';
 import type { RootStackParamList } from '../../navigation/types';
 import { useProfileStore } from '../../store/profile-store';
@@ -28,6 +29,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'ParentDashboard'>;
 
 export function ParentDashboardScreen({ navigation }: Props): React.ReactElement {
   const m = useMessages().caregiver.dashboard;
+  const locale = useLocale();
   const profiles = useProfileStore((s) => s.profiles);
   const byProfile = useProgressStore((s) => s.byProfile);
 
@@ -79,7 +81,8 @@ export function ParentDashboardScreen({ navigation }: Props): React.ReactElement
                   <Spacer size="md" />
                   <Caption tone="muted">{m.recent}</Caption>
                   {snap.quests.slice(-3).reverse().map((q) => {
-                    const quest = questsAll.find((x) => x.id === q.questId);
+                    const found = questsAll.find((x) => x.id === q.questId);
+                    const quest = found && localizeQuest(found, locale);
                     return (
                       <View
                         key={q.questId + (q.completedAt ?? '')}

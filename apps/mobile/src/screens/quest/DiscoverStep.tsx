@@ -25,7 +25,7 @@ import type { Messages } from '@hangul-route/i18n';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
-import { useMessages } from '../../i18n/use-messages';
+import { useLocale, useMessages } from '../../i18n/use-messages';
 import { resolvePicture, swatchColors } from '../../logic/picture-ref';
 import {
   buildDiscover,
@@ -68,7 +68,8 @@ type DiscoverMessages = Messages['learner']['quest']['discover'];
 export function DiscoverStep({ pages, hoyaLine, onDone }: Props): React.ReactElement {
   const m = useMessages();
   const copy = m.learner.quest.discover;
-  const model = useMemo(() => buildDiscover(pages, copy, m.a11y), [pages, copy, m.a11y]);
+  const locale = useLocale();
+  const model = useMemo(() => buildDiscover(pages, copy, m.a11y, locale), [pages, copy, m.a11y, locale]);
   const actions = useMemo(() => {
     const map = new Map<string, HearAction>();
     for (const page of model.pages) {

@@ -1,9 +1,10 @@
 import { Body, Button, Screen, Spacer } from '@hangul-route/design-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React from 'react';
+import React, { useMemo } from 'react';
 import { flags } from '../../config/flags';
 import { questById } from '../../content';
-import { useMessages } from '../../i18n/use-messages';
+import { useLocale, useMessages } from '../../i18n/use-messages';
+import { localizeScope } from '../../logic/content-locale';
 import { scopeFor } from '../../logic/minigame-config';
 import type { RootStackParamList } from '../../navigation/types';
 import { track } from '../../platform/telemetry';
@@ -29,7 +30,13 @@ export function MinigameScreen({ route, navigation }: Props): React.ReactElement
   const quest = questById(questId);
   const step = quest?.steps[stepIndex];
   const ref = step?.minigameRef;
-  const scope = ref ? scopeFor(ref) : undefined;
+  const locale = useLocale();
+  // Pairs, step labels and dialogue lines in the UI language (F-I18N-001 §3.6); memoised so a
+  // game's rounds are not rebuilt (and reshuffled) on every render.
+  const scope = useMemo(() => {
+    const source = ref ? scopeFor(ref) : undefined;
+    return source && ref ? localizeScope(source, ref, locale) : source;
+  }, [ref, locale]);
   const activeProfileId = useProfileStore((s) => activeProfileSelector(s)?.id);
   const copy = useMessages().learner.minigame;
 

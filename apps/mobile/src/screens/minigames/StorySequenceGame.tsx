@@ -22,7 +22,8 @@ import {
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Text, View } from 'react-native';
 import { storyById } from '../../content/stories';
-import { useMessages } from '../../i18n/use-messages';
+import { useLocale, useMessages } from '../../i18n/use-messages';
+import { localizeStory } from '../../logic/content-locale';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { buildSequenceCards, type SequenceCard } from '../../logic/story/sequence-cards';
 import {
@@ -79,10 +80,12 @@ type Note = 'hint' | 'wrong' | 'look';
  * arrives with PR 3.5b. Design: design/wireframes/story/check.md (F, G).
  */
 export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce }: Props): React.ReactElement {
-  const cards = useMemo(
-    () => buildSequenceCards(scope, scope.story ? storyById(scope.story.storyId) : undefined),
-    [scope],
-  );
+  const locale = useLocale();
+  // Captions and narration in the UI language (F-I18N-001 §3.6, `story:` overlays).
+  const cards = useMemo(() => {
+    const story = scope.story ? storyById(scope.story.storyId) : undefined;
+    return buildSequenceCards(scope, story && localizeStory(story, locale));
+  }, [scope, locale]);
   const cardById = useMemo(() => new Map(cards.map((c) => [c.id, c])), [cards]);
   const [mountNonce] = useState(() => nonce ?? Math.floor(Math.random() * 0x7fffffff));
   const [state, setState] = useState<SequenceState>(() =>

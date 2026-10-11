@@ -76,6 +76,14 @@ describe('learner.library', () => {
     expect(l.how.body).toBe('Finish quests to unlock cards.');
   });
 
+  it('says how to earn a locked card, one sentence per award rule, never how far along (F-STORY-006 §3.7)', () => {
+    expect(l.earnHint.episode('Meet the Letters')).toBe('Finish the episode: Meet the Letters');
+    expect(l.earnHint.story('The Sun and the Moon')).toBe('Finish the story: The Sun and the Moon');
+    expect(l.earnHint.stage(1)).toBe('Finish every quest in Stage 1');
+    expect(l.earnHint.welcome).toBe('A welcome gift from Hoya');
+    expect(l.earnHint.set('Seasons and Tales')).toBe('Collect every card from the Seasons and Tales stories');
+  });
+
   it('names every rarity as the app showed it, keyed by the schema enum', () => {
     expect(Object.keys(l.rarity).sort()).toEqual([...RaritySchema.options].sort());
     expect(RaritySchema.options.map((r) => l.rarity[r])).toEqual(['common', 'uncommon', 'rare', 'legendary']);

@@ -14,7 +14,8 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useMemo } from 'react';
 import { View } from 'react-native';
 import { episodesAll, questsAll } from '../../content';
-import { useMessages } from '../../i18n/use-messages';
+import { useLocale, useMessages } from '../../i18n/use-messages';
+import { localizeEpisode, localizeQuest } from '../../logic/content-locale';
 import { firstQuestFor } from '../../logic/onboarding/first-quest';
 import type { OnboardingStackParamList } from '../../navigation/types';
 
@@ -27,7 +28,11 @@ type Props = NativeStackScreenProps<OnboardingStackParamList, 'FirstQuestPreview
  */
 export function FirstQuestPreviewScreen({ navigation }: Props): React.ReactElement {
   const q = useMessages().learner.firstQuest;
-  const target = useMemo(() => firstQuestFor(episodesAll, questsAll), []);
+  const locale = useLocale();
+  const target = useMemo(() => {
+    const found = firstQuestFor(episodesAll, questsAll);
+    return found && { ...found, episode: localizeEpisode(found.episode, locale), quest: localizeQuest(found.quest, locale) };
+  }, [locale]);
 
   const start = (): void => {
     const routes = target

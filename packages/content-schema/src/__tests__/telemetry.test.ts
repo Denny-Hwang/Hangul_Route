@@ -81,6 +81,8 @@ describe('telemetry event names (one list for the client type and the API whitel
         'story.bookmark.resumed',
         'culture.note.viewed',
         'story.locked.tapped',
+        'card.catchup_granted',
+        'card_set.complete',
       ].sort(),
     );
     expect(new Set(TELEMETRY_EVENT_NAMES).size).toBe(TELEMETRY_EVENT_NAMES.length);

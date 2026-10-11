@@ -1,5 +1,5 @@
-// F-PLC-001 §3.4 — validator rules for content/placement/** and the `pitem:` overlay
-// fields (PR P-4). Pure functions over already-parsed JSON, called by
+// F-PLC-001 §3.4 — validator rules for content/placement/** (PR P-4). Pure functions
+// over already-parsed JSON, called by
 // scripts/validate-content.mjs (plain Node, no zod). The tables below mirror
 // packages/content-schema/src/schemas/placement.ts (PLACEMENT_FORMATS and friends);
 // a content-schema test compares them, so the two cannot drift.
@@ -7,6 +7,10 @@
 // The semantic rules that need the converter or the picture art (romanization against
 // the Revised Romanization converter, per-strand counts, symbol coverage, `card:` art)
 // live in packages/content-schema/src/__tests__/placement-bank.test.ts.
+//
+// The Spanish and Korean overlays (content/i18n/<locale>/placement.json) are checked by
+// the shared overlay rules (scripts/overlay-rules.mjs, F-I18N-001 §3.7): the `pitem:`
+// row of OVERLAY_FIELDS allows `gloss` and `options.<optionId>.gloss` only.
 
 /** gate -> form -> formats the gate may use. */
 const FORMATS = {
@@ -38,9 +42,7 @@ export const PLACEMENT_RULES = Object.freeze({
 });
 
 const PLACEMENT_DIR = "content/placement/";
-const OVERLAY_FILE = /^content\/i18n\/([^/]+)\/placement\.json$/;
 const TEMPLATE_ID = /^pitem:[a-z0-9-]+$/;
-const OPTION_GLOSS = /^options\.([a-z0-9-]+)\.gloss$/;
 const REVIEW_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 function isObject(value) {
@@ -128,37 +130,6 @@ function checkIndex(tree, strandFiles, ids, out) {
   }
 }
 
-function checkOverlay(rel, body, locale, templates, out) {
-  const add = (rule, path, message) => out.push({ file: rel, path, rule: `${rule}: ${message}` });
-  if (!isObject(body) || body.locale !== locale || (locale !== "es" && locale !== "ko") || body.domain !== "placement" || !isObject(body.entries)) {
-    add("overlay-bad-shape", "(root)", "an overlay is { locale (= its folder: es or ko), domain: placement, entries }");
-    return;
-  }
-  for (const [id, entry] of Object.entries(body.entries)) {
-    const at = `entries.${id}`;
-    if (!isObject(entry)) {
-      add("overlay-bad-shape", at, "an entry must be an object of translatable fields");
-      continue;
-    }
-    const template = templates.get(id);
-    if (template === undefined) {
-      add("overlay-unknown-id", at, `${id} is not a template of content/placement`);
-      continue;
-    }
-    const optionIds = new Set((template.question?.options ?? []).map((o) => o.id));
-    for (const [field, value] of Object.entries(entry)) {
-      const option = OPTION_GLOSS.exec(field);
-      if (field !== "gloss" && option === null) {
-        add("overlay-forbidden-field", `${at}.${field}`, `only gloss and options.<id>.gloss may be translated (got ${field})`);
-      } else if (typeof value !== "string") {
-        add("overlay-bad-shape", `${at}.${field}`, "a translated field must be a string");
-      } else if (option !== null && !optionIds.has(option[1])) {
-        add("overlay-unknown-option", `${at}.${field}`, `${id} has no option ${option[1]}`);
-      }
-    }
-  }
-}
-
 /**
  * tree: Map<relative path with "/", parsed JSON> of every content file.
  * Returns [{ file, path, rule }] with rule "<name>: <message>".
@@ -166,20 +137,11 @@ function checkOverlay(rel, body, locale, templates, out) {
 export function checkPlacementTree(tree) {
   const out = [];
   const strandFiles = [...tree.keys()].filter(isStrandFile).sort();
-  const overlays = [...tree.keys()].filter((rel) => OVERLAY_FILE.test(rel)).sort();
-  if (strandFiles.length === 0 && !tree.has(`${PLACEMENT_DIR}index.json`) && overlays.length === 0) return out;
+  if (strandFiles.length === 0 && !tree.has(`${PLACEMENT_DIR}index.json`)) return out;
 
   const seen = new Set();
   for (const rel of strandFiles) checkStrandFile(rel, tree.get(rel), out, seen);
   checkIndex(tree, strandFiles, seen, out);
 
-  const templates = new Map();
-  for (const rel of strandFiles) {
-    const body = tree.get(rel);
-    for (const t of isObject(body) && Array.isArray(body.templates) ? body.templates : []) {
-      if (isObject(t) && typeof t.id === "string") templates.set(t.id, t);
-    }
-  }
-  for (const rel of overlays) checkOverlay(rel, tree.get(rel), OVERLAY_FILE.exec(rel)[1], templates, out);
   return out;
 }

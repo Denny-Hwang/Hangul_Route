@@ -9,8 +9,14 @@
 //     English gloss in `gloss_en` or `en`.
 //   - Learner-facing English copy never contains a shaming word
 //     (F-HW-001 §3.3 anti-shame contract).
-//   - content/placement/** and content/i18n/<locale>/placement.json follow the
-//     placement-bank rules in scripts/placement-rules.mjs (F-PLC-001 §3.4).
+//   - content/placement/** follows the placement-bank rules in
+//     scripts/placement-rules.mjs (F-PLC-001 §3.4).
+//   - content/i18n/<locale>/*.json are locale overlays, not base content: they
+//     follow the overlay rules in scripts/overlay-rules.mjs (F-I18N-001 §3.7),
+//     where Korean overlays may hold Hangul in translatable fields (a Korean
+//     description is a gloss, not a UI field) and Spanish ones never do.
+//     HANGUL_ROUTE_STRICT_LOCALES (comma-separated) makes missing translations
+//     of those locales errors.
 //
 // Source of truth: .claude/skills/content-skill/SKILL.md §3.3,
 // docs/specs/F-HW-001-homework-page.md §3.3 / §9.5.
@@ -19,6 +25,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, extname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { checkPlacementTree } from "./placement-rules.mjs";
+import { bannedWordIn, checkOverlayTree } from "./overlay-rules.mjs";
 
 const ROOT = process.env.HANGUL_ROUTE_ROOT
   ? resolve(process.env.HANGUL_ROUTE_ROOT)
@@ -30,6 +37,9 @@ const CONTENT_DIR = join(ROOT, "content");
 // content/stories/*.json is scanned; F-STORY-001 adds its own story rules.
 const SKIPPED_DIRS = [join("content", "stories", "research")];
 
+// Locale overlays (F-I18N-001 §3.6) are checked by scripts/overlay-rules.mjs, not as base content.
+const OVERLAY_DIR_PREFIX = "content/i18n/";
+
 const KOREAN_RE = /[ㄱ-㆏가-힣]/;
 const KOREAN_TARGET_FIELDS = new Set([
   "ko",
@@ -40,18 +50,12 @@ const KOREAN_TARGET_FIELDS = new Set([
 ]);
 
 /**
- * Words a learner must never see (F-HW-001 §3.3). Matched case-insensitively
- * on word boundaries, so ordinary copy containing them as substrings
- * ("dismissed", "incompletely") does not trip the gate.
- *
- * The caregiver-surface list (F-PAR-001 §3.6) is deliberately separate and
- * lands with T-037: a word banned for a child can be necessary for an adult.
+ * Words a learner must never see (F-HW-001 §3.3): the `en` learner list of
+ * packages/i18n/src/banned-words.json (the one list, F-I18N-001 §3.1), matched on
+ * whole tokens, so ordinary copy containing them as substrings ("dismissed",
+ * "incompletely") does not trip the gate. Overlays use their own locale's list.
  */
-const BANNED_LEARNER_WORDS = ["missed", "incomplete", "failed", "overdue"];
-const BANNED_LEARNER_RE = new RegExp(
-  `\\b(${BANNED_LEARNER_WORDS.join("|")})\\b`,
-  "i"
-);
+const bannedLearnerWord = (text) => bannedWordIn(text, "en");
 
 /** English copy fields that a learner actually reads. */
 const LEARNER_TEXT_FIELDS = new Set([
@@ -159,16 +163,12 @@ function visit(value, path, file, violations, parentObj, inReferenceZone = false
           rule: "korean-in-ui-field",
         });
       }
-      if (
-        typeof v === "string" &&
-        LEARNER_TEXT_FIELDS.has(k) &&
-        BANNED_LEARNER_RE.test(v)
-      ) {
-        const hit = v.match(BANNED_LEARNER_RE);
+      const banned = typeof v === "string" && LEARNER_TEXT_FIELDS.has(k) ? bannedLearnerWord(v) : null;
+      if (banned !== null) {
         violations.push({
           file,
           path: [...path, k].join("."),
-          rule: `banned-on-learner-surface: "${hit ? hit[1] : ""}"`,
+          rule: `banned-on-learner-surface: "${banned}"`,
         });
       }
       visit(v, [...path, k], file, violations, obj, zone);
@@ -201,19 +201,34 @@ for (const file of files) {
     });
     continue;
   }
-  visit(parsed, [], relative(ROOT, file), violations);
-  parsedByRel.set(relative(ROOT, file).split(sep).join("/"), parsed);
+  const rel = relative(ROOT, file).split(sep).join("/");
+  if (!rel.startsWith(OVERLAY_DIR_PREFIX)) visit(parsed, [], relative(ROOT, file), violations);
+  parsedByRel.set(rel, parsed);
 }
 
-// F-PLC-001 §3.4: structure of content/placement/** and the `pitem:` overlay fields.
+// F-PLC-001 §3.4: structure of content/placement/**.
 violations.push(...checkPlacementTree(parsedByRel));
 
+// F-I18N-001 §3.7: content/i18n/<locale>/*.json against the base content.
+const strictLocales = (process.env.HANGUL_ROUTE_STRICT_LOCALES ?? "")
+  .split(",")
+  .map((l) => l.trim())
+  .filter(Boolean);
+const overlays = checkOverlayTree(parsedByRel, { strictLocales });
+violations.push(...overlays.violations);
+
+for (const w of overlays.warnings) {
+  console.log(`::warning file=${w.file}::${w.rule} at .${w.path}`);
+}
 for (const v of violations) {
   console.log(`::error file=${v.file}::${v.rule} at .${v.path}`);
 }
 console.log("");
+const missingSummary = Object.entries(overlays.missing)
+  .map(([locale, n]) => `${locale}: ${n} missing`)
+  .join(", ");
 console.log(
-  `Content language policy: ${files.length} file(s) scanned, ${violations.length} violation(s)`
+  `Content language policy: ${files.length} file(s) scanned, ${violations.length} violation(s); ${missingSummary}`
 );
 
 if (violations.length > 0) process.exit(1);

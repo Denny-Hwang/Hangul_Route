@@ -1,4 +1,4 @@
-import type { DiscoverPage } from '@hangul-route/content-schema';
+import { localize, type DiscoverPage, type Overlays } from '@hangul-route/content-schema';
 import { getMessages, pseudoLocalize, pseudoText } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import {
@@ -58,6 +58,67 @@ const run = (state: DiscoverState, ...events: DiscoverEvent[]): ReturnType<typeo
   for (const e of events) out = stepDiscover(out.state, e);
   return out;
 };
+
+describe('buildDiscover: the sound hint in the UI language (F-I18N-001 §3.6)', () => {
+  const overlays = { es: { 'jamo:giyeok': { soundHint: 'como la g de gato' } }, ko: {} };
+
+  it('shows the overlay hint next to the unchanged glyph and romanization in the Spanish UI', () => {
+    const es = buildDiscoverWith([pageTwo], COPY, messages.a11y, 'es', overlays).pages[0]!.items[0]!;
+    const en = buildDiscoverWith([pageTwo], COPY, messages.a11y, 'en', overlays).pages[0]!.items[0]!;
+    expect(es.soundHint).toBe('como la g de gato');
+    expect(es.glyph).toBe(en.glyph);
+    expect(es.romanization).toBe(en.romanization);
+    expect(es.accessibilityLabel).toBe(messages.a11y.discoverLetter(en.romanization, 'como la g de gato'));
+    expect(en.soundHint).toBeUndefined();
+  });
+
+  it('defaults to English and the generated overlays', () => {
+    expect(buildDiscoverWith([pageTwo], COPY, messages.a11y)).toEqual(buildDiscover([pageTwo]));
+  });
+});
+
+describe('buildDiscover: example and word glosses in the UI language (F-I18N-001 §3.5 rule 4)', () => {
+  it('shows the glosses of a localized quest step; the Korean and its romanization stay', () => {
+    const quest = { id: 'quest:discover-demo', steps: [{ id: 'discover', discover: { pages: [pageTwo, wordsPage] } }] };
+    const overlays: Overlays = {
+      es: {
+        [quest.id]: {
+          'steps.discover.discover.pages.0.caption': 'El sonido ga',
+          'steps.discover.discover.pages.0.items.0.example.gloss': 'muebles',
+          'steps.discover.discover.pages.1.items.0.word.gloss': 'padre',
+          'steps.discover.discover.pages.1.items.1.note': 'También un apodo',
+        },
+      },
+      ko: {},
+    };
+    const pages = localize(quest, quest.id, 'es', overlays).steps[0]!.discover.pages;
+    const es = buildDiscoverWith(pages, COPY, messages.a11y, 'es', overlays).pages;
+    const en = buildDiscover([pageTwo, wordsPage]).pages;
+    expect(es[0]!.title).toBe('El sonido ga');
+    expect(es[0]!.items[0]!.example).toEqual({ ...en[0]!.items[0]!.example, gloss: 'muebles' });
+    expect(es[1]!.items[0]).toMatchObject({ glyph: '아버지', romanization: en[1]!.items[0]!.romanization, gloss: 'padre' });
+    expect(es[1]!.items[0]!.accessibilityLabel).toBe('아버지, abeoji, padre');
+    expect(es[1]!.items[1]!.note).toBe('También un apodo');
+  });
+
+  it("uses the jamo's translated example gloss when the page shows that jamo's own example word", () => {
+    const overlays: Overlays = { es: { 'jamo:nieun': { 'exampleWord.gloss': 'árbol' }, 'jamo:giyeok': { 'exampleWord.gloss': 'familia' } }, ko: {} };
+    const [giyeok, nieun] = buildDiscoverWith([pageTwo], COPY, messages.a11y, 'es', overlays).pages[0]!.items;
+    // ㄴ: the page shows 나무 "tree", the jamo's own example word, so its Spanish gloss is used.
+    expect(nieun!.example).toMatchObject({ ko: '나무', romanization: 'namu', gloss: 'árbol' });
+    // ㄱ: the page shows 가구, not the jamo's 가족, so the page's gloss stays.
+    expect(giyeok!.example!.gloss).toBe('furniture');
+  });
+
+  it("keeps the page gloss when it differs from the jamo's English example gloss (another sense) or was translated itself", () => {
+    const overlays: Overlays = { es: { 'jamo:nieun': { 'exampleWord.gloss': 'árbol' } }, ko: {} };
+    const wood: DiscoverPage = { items: [{ type: 'jamo', jamoId: 'jamo:nieun', example: ko('나무', 'namu', 'wood') }] };
+    expect(buildDiscoverWith([wood], COPY, messages.a11y, 'es', overlays).pages[0]!.items[0]!.example!.gloss).toBe('wood');
+    const translated: DiscoverPage = { items: [{ type: 'jamo', jamoId: 'jamo:nieun', example: ko('나무', 'namu', 'un árbol') }] };
+    expect(buildDiscoverWith([translated], COPY, messages.a11y, 'es', overlays).pages[0]!.items[0]!.example!.gloss).toBe('un árbol');
+    expect(buildDiscoverWith([pageTwo], COPY, messages.a11y, 'en', overlays).pages[0]!.items[1]!.example!.gloss).toBe('tree');
+  });
+});
 
 describe('buildDiscover: the view model of the pages', () => {
   it('builds a symbol item with its sound, example and hear actions', () => {

@@ -5,8 +5,10 @@ import { episodeOf, snapshotWith } from './fixtures';
 const E1 = episodeOf('episode:one', ['quest:a', 'quest:b']);
 const E2 = episodeOf('episode:two', ['quest:c'], { theme: 'life' });
 const E_PREVIEW = episodeOf('episode:soon', ['quest:p'], { theme: 'rites', status: 'preview' });
+const E_SHELF = episodeOf('episode:shelf', ['quest:story'], { theme: 'nature', status: 'ready', format: 'story', placement: 'shelf' });
 const E_STAGE2 = episodeOf('episode:s2', ['quest:s2'], { stage: 'stage2', theme: 'life' });
-const EPISODES = [E1, E2, E_PREVIEW, E_STAGE2];
+const E_STAGE2_PREVIEW = episodeOf('episode:s2-soon', [], { stage: 'stage2', theme: 'nature', status: 'preview' });
+const EPISODES = [E1, E2, E_SHELF, E_STAGE2, E_STAGE2_PREVIEW];
 
 const A = { questId: 'quest:a', episodeId: 'episode:one' };
 const B = { questId: 'quest:b', episodeId: 'episode:one' };
@@ -39,8 +41,17 @@ describe('isStageComplete', () => {
     expect(isStageComplete('stage1', EPISODES, snapshotWith([A, B], [C]))).toBe(false);
   });
 
-  it('ignores preview episodes and other stages', () => {
-    expect(isStageComplete('stage1', [E1, E_PREVIEW, E_STAGE2], snapshotWith([A, B]))).toBe(true);
+  it('ignores story shelf episodes and other stages', () => {
+    expect(isStageComplete('stage1', [E1, E_SHELF, E_STAGE2], snapshotWith([A, B]))).toBe(true);
+  });
+
+  it('a stage with a preview placeholder cannot complete (F-STORY-006 §3.4: one stage rule with the award engine)', () => {
+    expect(isStageComplete('stage1', [E1, E_PREVIEW], snapshotWith([A, B]))).toBe(false);
+    const S2 = { questId: 'quest:s2', episodeId: 'episode:s2' };
+    expect(completionState('stage2', EPISODES, snapshotWith([S2]))).toEqual({
+      completedEpisodeIds: ['episode:s2'],
+      stageComplete: false,
+    });
   });
 
   it('is false for a stage with no grid episode', () => {
