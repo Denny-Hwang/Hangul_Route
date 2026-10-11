@@ -2,9 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { JamoSchema, QuestSchema, QuestStepSchema, StorySequenceRoundSchema, a11yRomanization } from '../index';
 
 /**
- * F-CNT-002 PR 2a: the additive schema fields. Nothing here is required yet
- * (the `.refine` rules arrive with the data in PR 2b), so every shipped shape
- * must keep parsing.
+ * F-CNT-002 PR 2a: the additive schema fields. PR 2b makes `exampleWordRomanization`
+ * required with `exampleWordKo` (the refinement tests live in schemas.test.ts).
  */
 const jamo = {
   id: 'jamo:ieung',
@@ -27,8 +26,8 @@ describe('JamoSchema romanization fields (F-CNT-002 §3.5)', () => {
     expect(JamoSchema.parse(withWord).exampleWordRomanization).toBe('ai');
   });
 
-  it('still parses an example word with no romanization (required only from PR 2b)', () => {
-    expect(JamoSchema.safeParse({ ...jamo, exampleWordKo: '아이', exampleWordEn: 'child' }).success).toBe(true);
+  it('rejects an example word with no romanization (required since PR 2b)', () => {
+    expect(JamoSchema.safeParse({ ...jamo, exampleWordKo: '아이', exampleWordEn: 'child' }).success).toBe(false);
   });
 
   it('rejects an empty exampleWordRomanization', () => {
