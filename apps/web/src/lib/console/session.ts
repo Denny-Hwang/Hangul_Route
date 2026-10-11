@@ -1,7 +1,9 @@
+import { browserStorage, readItem, removeItem, writeItem, type KeyValueStorage } from '../i18n/safe-storage';
+
 /**
- * Console session — F-CONSOLE-001 §3.2. Kept in sessionStorage behind this
- * wrapper (the web stand-in for `packages/hooks`): every access is guarded,
- * SSR and private windows simply see "signed out".
+ * Console session — F-CONSOLE-001 §3.2. Kept in sessionStorage behind the guarded
+ * wrapper (`lib/i18n/safe-storage`, the web stand-in for `packages/hooks`): every
+ * access is guarded, SSR and private windows simply see "signed out".
  */
 export interface ConsoleSession {
   token: string;
@@ -10,20 +12,12 @@ export interface ConsoleSession {
   email?: string;
 }
 
-export interface KeyValueStorage {
-  getItem: (key: string) => string | null;
-  setItem: (key: string, value: string) => void;
-  removeItem: (key: string) => void;
-}
+export type { KeyValueStorage };
 
 export const SESSION_KEY = 'hr:console:session';
 
 function defaultStorage(): KeyValueStorage | null {
-  try {
-    return typeof window !== 'undefined' && window.sessionStorage ? window.sessionStorage : null;
-  } catch {
-    return null;
-  }
+  return browserStorage('session');
 }
 
 function isSession(value: unknown): value is ConsoleSession {
@@ -33,10 +27,9 @@ function isSession(value: unknown): value is ConsoleSession {
 }
 
 export function readSession(storage: KeyValueStorage | null = defaultStorage()): ConsoleSession | null {
-  if (!storage) return null;
+  const raw = readItem(storage, SESSION_KEY);
+  if (!raw) return null;
   try {
-    const raw = storage.getItem(SESSION_KEY);
-    if (!raw) return null;
     const parsed: unknown = JSON.parse(raw);
     return isSession(parsed) ? parsed : null;
   } catch {
@@ -45,19 +38,9 @@ export function readSession(storage: KeyValueStorage | null = defaultStorage()):
 }
 
 export function writeSession(session: ConsoleSession, storage: KeyValueStorage | null = defaultStorage()): boolean {
-  if (!storage) return false;
-  try {
-    storage.setItem(SESSION_KEY, JSON.stringify(session));
-    return true;
-  } catch {
-    return false;
-  }
+  return writeItem(storage, SESSION_KEY, JSON.stringify(session));
 }
 
 export function clearSession(storage: KeyValueStorage | null = defaultStorage()): void {
-  try {
-    storage?.removeItem(SESSION_KEY);
-  } catch {
-    // nothing to clear
-  }
+  removeItem(storage, SESSION_KEY);
 }
