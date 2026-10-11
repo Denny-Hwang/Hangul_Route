@@ -34,7 +34,7 @@
 - [ ] Landing page (`apps/web/`) — full hero, How it works, card preview,
   mini-game gallery, FAQ, email signup, footer
 - [ ] hangulroute.com → Workers Builds `hangul-route-web` (T-052)
-- [ ] Email signup wired (ConvertKit / Buttondown / mailerlite)
+- [x] Email signup wired — first-party waitlist (`POST /api/waitlist` into D1, no third-party service; runbook `docs/launch/waitlist.md`). Re-verify on production after the deploy. Sending launch email is not built yet.
 
 ### D-9 (Sat)
 - [ ] Receive Hoya illustrations from freelancer

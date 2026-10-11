@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { HeritageCardsPreview } from '../components/landing/HeritageCardsPreview';
 import { MeetHoya } from '../components/landing/MeetHoya';
 import { MiniGamesGallery } from '../components/landing/MiniGamesGallery';
+import { WaitlistForm } from '../components/landing/WaitlistForm';
 import { CONTACT_EMAIL } from '../data/contact';
 import {
   SITE_TAGLINE,
@@ -557,57 +558,7 @@ export default function HomePage(): JSX.Element {
         >
           Play now — free
         </a>
-        <form
-          action="https://buttondown.email/api/emails/embed-subscribe/hangulroute"
-          method="post"
-          target="_blank"
-          style={{
-            display: 'flex',
-            gap: spacing.sm,
-            justifyContent: 'center',
-            flexWrap: 'wrap',
-            maxWidth: 480,
-            margin: '0 auto',
-          }}
-        >
-          <label htmlFor="email" style={{ position: 'absolute', left: -9999 }}>
-            Your email
-          </label>
-          <input
-            id="email"
-            type="email"
-            name="email"
-            required
-            placeholder="you@somewhere.com"
-            style={{
-              flex: '1 1 240px',
-              minWidth: 0,
-              minHeight: 48,
-              padding: `${spacing.sm}px ${spacing.lg}px`,
-              borderRadius: radii.pill,
-              border: 'none',
-              fontSize: typography.size.body,
-              color: colors.text.primary,
-              backgroundColor: colors.surface.paper,
-            }}
-          />
-          <button
-            type="submit"
-            style={{
-              minHeight: 48,
-              padding: `${spacing.sm}px ${spacing.xl}px`,
-              borderRadius: radii.pill,
-              border: 'none',
-              backgroundColor: colors.text.primary,
-              color: colors.text.inverse,
-              fontWeight: typography.weight.bold,
-              fontSize: typography.size.body,
-              cursor: 'pointer',
-            }}
-          >
-            Send me the invite
-          </button>
-        </form>
+        <WaitlistForm />
         <p
           style={{
             marginTop: spacing.lg,
