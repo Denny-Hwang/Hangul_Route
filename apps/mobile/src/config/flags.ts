@@ -48,6 +48,18 @@ export interface Flags {
    * sends anything once `EXPO_PUBLIC_API_BASE_URL` is configured.
    */
   syncEnabled: boolean;
+
+  /**
+   * Locks story and vocab-topic content for free-tier learners (F-STORY-004
+   * D5). OFF until payments are live; stage gating is not behind this flag.
+   */
+  contentGatingEnabled: boolean;
+
+  /**
+   * Shows stories whose `review` is not yet approved (F-STORY-004). OFF by
+   * default; set it only in dev and design-preview builds.
+   */
+  showUnreviewedStories: boolean;
 }
 
 const launchDefaults: Flags = {
@@ -55,6 +67,8 @@ const launchDefaults: Flags = {
   telemetryEnabled: true,
   telemetryNetwork: true,
   syncEnabled: true,
+  contentGatingEnabled: false,
+  showUnreviewedStories: false,
 };
 
 export const flags: Flags = {
@@ -62,6 +76,14 @@ export const flags: Flags = {
   telemetryEnabled: readBool('EXPO_PUBLIC_TELEMETRY_ENABLED', launchDefaults.telemetryEnabled),
   telemetryNetwork: readBool('EXPO_PUBLIC_TELEMETRY_NETWORK', launchDefaults.telemetryNetwork),
   syncEnabled: readBool('EXPO_PUBLIC_SYNC_ENABLED', launchDefaults.syncEnabled),
+  contentGatingEnabled: readBool(
+    'EXPO_PUBLIC_CONTENT_GATING_ENABLED',
+    launchDefaults.contentGatingEnabled,
+  ),
+  showUnreviewedStories: readBool(
+    'EXPO_PUBLIC_SHOW_UNREVIEWED_STORIES',
+    launchDefaults.showUnreviewedStories,
+  ),
 };
 
 export const launchDefaultFlags: Readonly<Flags> = launchDefaults;

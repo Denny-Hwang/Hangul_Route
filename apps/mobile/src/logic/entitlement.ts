@@ -4,6 +4,8 @@
  * the journey is premium.
  */
 
+import { isFreeContent } from './content-access';
+
 export interface SubscriptionState {
   status: 'none' | 'trial' | 'active' | 'expired' | 'cancelled';
   plan: 'monthly' | 'yearly' | null;
@@ -11,9 +13,6 @@ export interface SubscriptionState {
 }
 
 export type Tier = 'free' | 'premium';
-
-/** Stages that never require a subscription. */
-const FREE_STAGES: ReadonlySet<string> = new Set(['stage1']);
 
 export function entitlementTier(subscription: SubscriptionState | null, now: Date): Tier {
   if (!subscription) return 'free';
@@ -29,5 +28,5 @@ export function entitlementTier(subscription: SubscriptionState | null, now: Dat
 }
 
 export function isStageEntitled(stageKey: string, tier: Tier): boolean {
-  return tier === 'premium' || FREE_STAGES.has(stageKey);
+  return tier === 'premium' || isFreeContent('stage', stageKey);
 }

@@ -56,4 +56,26 @@ describe('flags', () => {
     const mod = await reload();
     expect(mod.flags.voiceEchoEnabled).toBe(false);
   });
+
+  it('content gating and unreviewed stories are OFF by default', async () => {
+    delete process.env.EXPO_PUBLIC_CONTENT_GATING_ENABLED;
+    delete process.env.EXPO_PUBLIC_SHOW_UNREVIEWED_STORIES;
+    const mod = await reload();
+    expect(mod.flags.contentGatingEnabled).toBe(false);
+    expect(mod.flags.showUnreviewedStories).toBe(false);
+    expect(mod.launchDefaultFlags.contentGatingEnabled).toBe(false);
+    expect(mod.launchDefaultFlags.showUnreviewedStories).toBe(false);
+  });
+
+  it('contentGatingEnabled flips on with "true"', async () => {
+    process.env.EXPO_PUBLIC_CONTENT_GATING_ENABLED = 'true';
+    const mod = await reload();
+    expect(mod.flags.contentGatingEnabled).toBe(true);
+  });
+
+  it('showUnreviewedStories flips on with "1"', async () => {
+    process.env.EXPO_PUBLIC_SHOW_UNREVIEWED_STORIES = '1';
+    const mod = await reload();
+    expect(mod.flags.showUnreviewedStories).toBe(true);
+  });
 });
