@@ -17,6 +17,7 @@
 | `onboarding/welcome.md` · `onboarding/first-quest-preview.md` | S | F-PROF-001 |
 | `profiles/picker.md` · `pin-entry.md` · `switch-button.md` · `create-parent.md` · `create-learner.md` | S | F-PROF-001 |
 | `home/todays-mission.md` · `homework/list.md` | S | F-HW-001 |
+| `home/story-time-card.md` · `episode/detail-story.md` | R | F-STORY-004 §3.6 · §3.7 (PR 4.0; brief `screens/25-story-episode-detail`; Home card in PR 4.4a) |
 | `journey/grid.md` · `episode/detail.md` | S | 02 §1 · 04 · 05 |
 | `quest/player.md` · `minigame/shell.md` · `minigame/families.md` | S | content-skill · 06 |
 | `minigame/build-letter.md` | R | F-QUEST-002 §3.7 (Q-7a) |
@@ -24,6 +25,7 @@
 | `minigame/pic-word-match.md` | R | F-QUEST-002 §3.11 (Q-4) |
 | `results/celebrate.md` | S | F-MOTION-003 |
 | `library/gallery.md` · `library/card-detail.md` | S | F-CARD-001/002/003 |
+| `library/stories.md` · `library/culture.md` · `story/culture-notes.md` | R | F-STORY-004 §3.3-3.5 (PR 4.0; briefs `screens/23-library-stories`, `screens/24-culture-notes`) |
 | `profile/settings.md` · `parent/gate.md` | S | F-SUB-001 · (gate 통합 대상) |
 | `reviews/daily-test.md` · `feedback-review.md` · `stage-review.md` | D | F-RVW-001 |
 | `sync/save-progress.md` · `restore.md` · `join-space.md` · `merge-notice.md` | P | roadmap multi-persona §4–6 |
