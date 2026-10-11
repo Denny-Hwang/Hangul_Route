@@ -460,6 +460,7 @@ export function ReaderEndPage({
   onPrimary,
   onReadAgain,
   onSources,
+  compact = false,
 }: {
   copy: EndCopy;
   mode: 'quest' | 'replay';
@@ -469,12 +470,17 @@ export function ReaderEndPage({
   onPrimary: () => void;
   onReadAgain: () => void;
   onSources?: () => void;
+  /** Window height < `layout.compactHeight` (landscape phones): a smaller Hoya and an lg primary keep Continue / Done on screen. */
+  compact?: boolean;
 }): React.ReactElement {
-  const hoya = useMediaSize(touchTarget.hero + spacing.xxl);
+  const hoya = useMediaSize(compact ? touchTarget.min : touchTarget.hero + spacing.xxl);
   return (
-    <View testID="story-reader-end" style={{ flexGrow: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: spacing.xl }}>
+    <View
+      testID="story-reader-end"
+      style={{ flexGrow: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: compact ? spacing.md : spacing.xl }}
+    >
       <Hoya pose="cheering" size={hoya} accessibilityLabel={hoyaLabel} />
-      <Spacer size="lg" />
+      <Spacer size={compact ? 'sm' : 'lg'} />
       <Heading level="display" align="center">
         {copy.title}
       </Heading>
@@ -486,12 +492,12 @@ export function ReaderEndPage({
           </Body>
         </>
       ) : null}
-      <Spacer size="xl" />
+      <Spacer size={compact ? 'md' : 'xl'} />
       <View style={{ alignSelf: 'stretch', gap: spacing.sm }}>
         <Button
           label={mode === 'quest' ? copy.continue.cta : copy.done.cta}
           tone="primary"
-          size="hero"
+          size={compact ? 'lg' : 'hero'}
           fullWidth
           onPress={onPrimary}
           testID="story-reader-end-primary"

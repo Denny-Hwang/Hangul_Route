@@ -844,4 +844,60 @@ export const learner = {
     },
     profileRow: 'Find my starting spot again',
   },
+
+  /**
+   * The story shelf (F-STORY-004 §3.3-3.8): Library sections, story tiles and the Picked for you
+   * hero, the story episode page, Culture notes and the Home story card. Counts, never fractions or
+   * "behind" (D3); no "Premium" anywhere (D5). Story and note text (titles, bodies, terms, sources)
+   * is content. Whole-sentence messages, never suffix concatenation (audit I18N-08).
+   */
+  storyShelf: {
+    /** Section tab labels, keyed by `LibrarySectionId` (`logic/story/library-sections.ts`). */
+    sections: { cards: 'Cards', 'story-time': 'Story Time', culture: 'Culture', 'theme-packs': 'Theme packs' },
+    /** Screen-reader name of the section tab row. */
+    sectionsLabel: 'Library sections',
+    pickedForYou: 'Picked for you',
+    start: { cta: 'Start' },
+    keepReading: { cta: 'Keep reading' },
+    readAgain: { cta: 'Read it again' },
+    playAgain: { cta: 'Play again' },
+    startOver: { cta: 'Start over' },
+    /** The state line of a tile or tale row: always words, never colour alone. */
+    state: { new: 'New', inProgress: 'Keep reading', finished: 'Finished', locked: 'Locked' },
+    minutes: { pill: (minutes: number) => `about ${minutes} min` },
+    /**
+     * The one label of a whole story tile: `title` is the story's title (content), `state` a `state`
+     * line. `stars` (a finished story with at least one star) is read out too, since the tile's
+     * StarRow sits inside the one button; a 0-star finish says nothing about stars (D3).
+     */
+    tileLabel: (title: string, state: string, minutes: number, stars = 0) =>
+      `${title}. ${state}. ${plural('en', minutes, { one: 'About 1 minute', other: `About ${minutes} minutes` })}.` +
+      (stars > 0 ? ` ${plural('en', stars, { one: '1 star', other: `${stars} stars` })}.` : ''),
+    /** The Home story card subtitle by `storyReason`, and the `explore` card that replaces the old "Story time" label. */
+    home: {
+      subtitle: { continue: 'Keep reading', next: 'A short story', again: 'Read it again' },
+      explore: 'Take a look',
+    },
+    episode: {
+      minutes: { pill: (minutes: number) => `${minutes} min` },
+      wordsTitle: 'Words in this story',
+      hearWord: (romanization: string) => `Hear ${romanization}`,
+      cultureNotes: (found: number) => `Culture notes: ${found} found`,
+    },
+    cultureNotes: {
+      title: 'Culture notes',
+      found: { pill: (found: number) => `${found} found` },
+      /** `title` is the story's title (content). */
+      fromStory: (title: string) => `From the story: ${title}`,
+      /** The collapsed sources row: the same words for every reader, whatever their age (CLAUDE.md §1). */
+      whereFrom: 'Where this comes from',
+      /** One source line, plain text (no links): the work's title and its publisher (content). */
+      source: (title: string, publisher: string) => `${title}, ${publisher}`,
+      hearTerm: (romanization: string) => `Hear ${romanization}`,
+      empty: {
+        line: 'Finish a story to find your first culture note.',
+        toStoryTime: { cta: 'Go to Story Time' },
+      },
+    },
+  },
 } as const;
