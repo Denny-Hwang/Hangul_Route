@@ -13,6 +13,8 @@ import { plural } from '../../plural';
  * page), `signIn`, `start`, `home`, `space` and `relink`, plus `kind` (space kinds) and `joinCode`.
  * A sentence with a number or a name in it is one function message; the English wording is
  * the pages' former text, byte for byte, including the old "1 cards" / "1 learners" forms.
+ * Four former COPY fragments the space page glued around numbers (practicedThisWeek, anchor,
+ * revisitTogether, notSyncedWeek) became whole sentences under `space.week`.
  *
  * Every string here is caregiver surface (no "behind", "lazy" or a learner-banned word),
  * checked per locale by console-messages.test.ts.
@@ -30,10 +32,6 @@ export const consoleMsgs = {
   writeOnBoard: 'Write it on the board. Students join from Settings → Classes & family → Join a class.',
   oldCodeStops: 'The old code stops working the moment a new one is made.',
   notSyncedYet: 'not synced yet',
-  notSyncedWeek: "haven't synced in a week",
-  revisitTogether: 'Jamo to revisit together',
-  practicedThisWeek: 'practiced this week',
-  anchor: 'Stage 1 anchor',
   comingWithPlans: 'Coming with plans',
   capWarning: (used: number, total: number) => `Free plan: ${used} / ${total} students`,
   capReached: 'This class is at the free limit — new students will be asked to check with you.',

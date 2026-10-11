@@ -9,8 +9,8 @@ import { useConsoleAuth } from '@/components/console/auth-context';
 import { Button, ConsoleShell, Field, Muted, Notice, panelStyle } from '@/components/console/ui';
 import { createConsoleApi } from '@/lib/console/api';
 import { apiBaseUrl, devAuthEnabled } from '@/lib/console/config';
-import { COPY } from '@/lib/console/copy';
 import { ROUTES, landingAfterSignIn } from '@/lib/console/routing';
+import { useMessages } from '@/lib/i18n/locale-context';
 
 /**
  * console/sign-in — F-CONSOLE-001 §3.2 · F-AUTH-002 §3.1. Clerk's widget when the
@@ -20,6 +20,7 @@ import { ROUTES, landingAfterSignIn } from '@/lib/console/routing';
 export default function SignInPage(): JSX.Element {
   const router = useRouter();
   const auth = useConsoleAuth();
+  const c = useMessages().console;
   const [accountId, setAccountId] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
@@ -42,7 +43,7 @@ export default function SignInPage(): JSX.Element {
     const spaces = await api.listSpaces();
     setBusy(false);
     if (!spaces.ok) {
-      setMessage(COPY.cantReach);
+      setMessage(c.cantReach);
       return;
     }
     auth.devSignIn({ token: id, accountId: id, displayName: name, email: email.trim() || undefined });
@@ -52,18 +53,18 @@ export default function SignInPage(): JSX.Element {
   return (
     <ConsoleShell>
       <div style={{ maxWidth: 520, margin: '0 auto' }}>
-        <h1 style={{ fontSize: typography.size.title, margin: `0 0 ${spacing.sm}px` }}>Grown-ups sign in</h1>
+        <h1 style={{ fontSize: typography.size.title, margin: `0 0 ${spacing.sm}px` }}>{c.signIn.title}</h1>
         <ul style={{ color: colors.text.secondary, paddingLeft: spacing.lg, lineHeight: typography.leading.relaxed }}>
-          {COPY.whySignIn.map((line) => (
+          {c.whySignIn.map((line) => (
             <li key={line}>{line}</li>
           ))}
         </ul>
-        <section style={{ ...panelStyle, marginTop: spacing.lg }} aria-label="Sign in">
+        <section style={{ ...panelStyle, marginTop: spacing.lg }} aria-label={c.signIn.panelLabel}>
           {!endpoint ? (
-            <Muted>The console needs an API address (NEXT_PUBLIC_API_BASE_URL) on this build.</Muted>
+            <Muted>{c.shell.noApi}</Muted>
           ) : auth.mode === 'clerk' ? (
             <>
-              <Muted>{COPY.clerkIntro}</Muted>
+              <Muted>{c.clerkIntro}</Muted>
               <SignIn routing="hash" fallbackRedirectUrl={ROUTES.home} signUpFallbackRedirectUrl={ROUTES.start} />
             </>
           ) : devAuth ? (
@@ -73,25 +74,25 @@ export default function SignInPage(): JSX.Element {
                 void submitDev();
               }}
             >
-              <Notice tone="nudge">{COPY.devSignInHint}</Notice>
-              <Field name="accountId" label="Account id" value={accountId} onChange={setAccountId} placeholder="teacher-kim" required maxLength={64} />
-              <Field name="displayName" label="Your name" value={displayName} onChange={setDisplayName} placeholder="Ms Kim" required maxLength={40} />
-              <Field name="email" label="Email (optional)" value={email} onChange={setEmail} type="email" placeholder="kim@example.com" />
+              <Notice tone="nudge">{c.devSignInHint}</Notice>
+              <Field name="accountId" label={c.signIn.accountId.label} value={accountId} onChange={setAccountId} placeholder={c.signIn.accountId.placeholder} required maxLength={64} />
+              <Field name="displayName" label={c.signIn.displayName.label} value={displayName} onChange={setDisplayName} placeholder={c.signIn.displayName.placeholder} required maxLength={40} />
+              <Field name="email" label={c.signIn.email.label} value={email} onChange={setEmail} type="email" placeholder={c.signIn.email.placeholder} />
               <Button type="submit" tone="primary" disabled={busy || !accountId.trim() || !displayName.trim()} testId="sign-in">
-                {busy ? 'Signing in…' : 'Continue'}
+                {busy ? c.signIn.submitting.cta : c.signIn.submit.cta}
               </Button>
               {message ? <Muted>{message}</Muted> : null}
             </form>
           ) : (
             <>
-              <p style={{ margin: 0 }}>{COPY.clerkPending}</p>
+              <p style={{ margin: 0 }}>{c.clerkPending}</p>
               <Muted>
-                <Link href="/">Back to Hangul Route</Link>
+                <Link href="/">{c.signIn.backToSite}</Link>
               </Muted>
             </>
           )}
         </section>
-        <Muted>{COPY.kidsNoAccount}</Muted>
+        <Muted>{c.kidsNoAccount}</Muted>
       </div>
     </ConsoleShell>
   );

@@ -6,19 +6,23 @@ import { useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useState } from 'react';
 import { Button, ConsoleShell, Muted, Notice, panelStyle } from '@/components/console/ui';
 import { useConsole } from '@/components/console/use-console';
-import type { RelinkView, Roster } from '@/lib/console/api';
-import { COPY } from '@/lib/console/copy';
+import type { ApiError, RelinkView, Roster } from '@/lib/console/api';
 import { RELINK_REFRESH_MS, canReissueRescueCode, decideFailureNote, expiresLabel, requestedLabel } from '@/lib/console/relink';
 import { ROUTES, spaceIdFrom } from '@/lib/console/routing';
+import { aroundSlot } from '@/lib/i18n/slot';
+
+/** What the page last did; worded at render time, so it follows the header language select. */
+type Note = { kind: 'approved' | 'denied'; name: string } | { kind: 'decideFailed'; result: { error: ApiError; code?: string } } | { kind: 'issueFailed' };
 
 /** console/relink-approval — F-TCH-001 §10.1. Identity and timing only; no progress numbers. */
 function RelinkInner(): JSX.Element {
   const spaceId = spaceIdFrom(useSearchParams());
-  const { ready, session, api, signOut } = useConsole();
+  const { ready, session, api, signOut, m, locale } = useConsole();
+  const c = m.console;
   const [roster, setRoster] = useState<Roster | null>(null);
   const [requests, setRequests] = useState<RelinkView[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [note, setNote] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
+  const [note, setNote] = useState<Note | null>(null);
   const [busy, setBusy] = useState(false);
   const [pick, setPick] = useState('');
   const [issued, setIssued] = useState<{ name: string; code: string } | null>(null);
@@ -28,10 +32,10 @@ function RelinkInner(): JSX.Element {
     if (!api) return;
     const [r, q] = await Promise.all([api.roster(spaceId), api.relinkRequests(spaceId)]);
     if (!r.ok || !q.ok) {
-      setError(COPY.cantReach);
+      setFailed(true);
       return;
     }
-    setError(null);
+    setFailed(false);
     setRoster(r.data);
     setRequests(q.data);
     setNow(new Date());
@@ -52,57 +56,69 @@ function RelinkInner(): JSX.Element {
     const result = await api.decideRelink(spaceId, req.id, approve);
     setBusy(false);
     if (!result.ok) {
-      setNote(decideFailureNote(result));
+      setNote({ kind: 'decideFailed', result });
     } else {
-      setNote(approve ? `${req.learnerName} can open their new device now.` : `Closed. ${req.learnerName}'s device will say "ask your teacher".`);
+      setNote({ kind: approve ? 'approved' : 'denied', name: req.learnerName });
     }
     await load();
   };
 
   const issue = async (): Promise<void> => {
     const learner = roster?.learners.find((l) => l.id === pick);
-    if (!api || !learner || !window.confirm(`Issue a new rescue code for ${learner.displayName}? ${COPY.oldCodeStops}`)) return;
+    if (!api || !learner || !window.confirm(`${c.relink.issueAsk(learner.displayName)} ${c.oldCodeStops}`)) return;
     setBusy(true);
     const result = await api.issueRescueCode(learner.id);
     setBusy(false);
     if (!result.ok) {
-      setNote("Couldn't issue a code right now.");
+      setNote({ kind: 'issueFailed' });
       return;
     }
     setIssued({ name: learner.displayName, code: result.data.code });
   };
 
+  const noteText = (n: Note): string =>
+    n.kind === 'approved'
+      ? c.relink.approved(n.name)
+      : n.kind === 'denied'
+        ? c.relink.denied(n.name)
+        : n.kind === 'decideFailed'
+          ? decideFailureNote(n.result, locale)
+          : c.relink.issueFailed;
+  const asking = aroundSlot(c.relink.askingToBe);
+
   return (
-    <ConsoleShell onSignOut={signOut} title={roster ? `${roster.space.name} · re-link requests` : 'Re-link requests'}>
+    <ConsoleShell onSignOut={signOut} title={roster ? c.relink.titleFor(roster.space.name) : c.relink.title}>
       <Muted>
-        <Link href={ROUTES.space(spaceId)}>← Back to {roster?.space.name ?? 'the space'}</Link>
+        <Link href={ROUTES.space(spaceId)}>{c.relink.back(roster?.space.name ?? null)}</Link>
       </Muted>
-      {error ? (
+      {failed ? (
         <div style={panelStyle}>
-          <p style={{ margin: 0 }}>{error}</p>
-          <Button onClick={() => void load()}>{COPY.tryAgain}</Button>
+          <p style={{ margin: 0 }}>{c.cantReach}</p>
+          <Button onClick={() => void load()}>{c.tryAgain}</Button>
         </div>
       ) : null}
-      {note ? <Notice tone="success">{note}</Notice> : null}
+      {note ? <Notice tone="success">{noteText(note)}</Notice> : null}
 
       {requests && requests.length === 0 ? (
         <div style={{ ...panelStyle, marginBottom: spacing.lg }}>
-          <p style={{ margin: 0 }}>{COPY.relinkNothing}</p>
+          <p style={{ margin: 0 }}>{c.relinkNothing}</p>
         </div>
       ) : null}
       <div style={{ display: 'grid', gap: spacing.md, marginBottom: spacing.xl }}>
         {(requests ?? []).map((req) => (
           <article key={req.id} style={panelStyle} data-testid="relink-card">
             <div style={{ fontSize: typography.size.bodyLg }}>
-              Someone is asking to be <strong>{req.learnerName}</strong>
+              {asking.before}
+              <strong>{req.learnerName}</strong>
+              {asking.after}
             </div>
             <Muted>
-              {requestedLabel(req.requestedAt, now)} · {req.platform ?? 'device'} · {expiresLabel(req.expiresAt, now)}
+              {requestedLabel(req.requestedAt, now, locale)} · {req.platform ?? c.relink.device} · {expiresLabel(req.expiresAt, now, locale)}
             </Muted>
-            <Muted>{COPY.relinkApproveHint}</Muted>
+            <Muted>{c.relinkApproveHint}</Muted>
             <div style={{ display: 'flex', gap: spacing.sm }}>
-              <Button tone="primary" disabled={busy} onClick={() => void decide(req, true)}>Approve</Button>
-              <Button disabled={busy} onClick={() => void decide(req, false)}>Deny</Button>
+              <Button tone="primary" disabled={busy} onClick={() => void decide(req, true)}>{c.relink.approve.cta}</Button>
+              <Button disabled={busy} onClick={() => void decide(req, false)}>{c.relink.deny.cta}</Button>
             </div>
           </article>
         ))}
@@ -110,31 +126,31 @@ function RelinkInner(): JSX.Element {
 
       {/* A rescue code opens the whole snapshot: only a family re-issues one (SEC-4). */}
       {roster === null ? null : canReissueRescueCode(roster.space.kind) ? (
-        <section style={panelStyle} aria-label="Another way">
-          <h2 style={{ fontSize: typography.size.bodyLg, margin: `0 0 ${spacing.xs}px` }}>Another way</h2>
-          <Muted>{COPY.relinkAnotherWay}</Muted>
+        <section style={panelStyle} aria-label={c.relink.anotherWay}>
+          <h2 style={{ fontSize: typography.size.bodyLg, margin: `0 0 ${spacing.xs}px` }}>{c.relink.anotherWay}</h2>
+          <Muted>{c.relinkAnotherWay}</Muted>
           {issued ? (
             <div style={{ margin: `${spacing.md}px 0` }}>
               <div style={{ fontSize: typography.size.caption, color: colors.text.muted }}>{issued.name}</div>
               <div data-testid="rescue-code" style={{ fontSize: typography.size.display, fontWeight: typography.weight.bold, letterSpacing: spacing.xs, fontFamily: typography.family.mono, overflowWrap: 'anywhere' }}>{issued.code}</div>
-              <Muted>{COPY.rescueIssued}</Muted>
-              <Button onClick={() => setIssued(null)}>Done</Button>
+              <Muted>{c.rescueIssued}</Muted>
+              <Button onClick={() => setIssued(null)}>{c.relink.done.cta}</Button>
             </div>
           ) : (
             <div style={{ display: 'flex', gap: spacing.sm, alignItems: 'center', flexWrap: 'wrap', marginTop: spacing.sm }}>
-              <select value={pick} onChange={(e) => setPick(e.target.value)} aria-label="Learner" style={{ padding: spacing.xs }}>
-                <option value="">Choose a learner…</option>
+              <select value={pick} onChange={(e) => setPick(e.target.value)} aria-label={c.relink.learnerLabel} style={{ padding: spacing.xs }}>
+                <option value="">{c.relink.chooseLearner}</option>
                 {(roster?.learners ?? []).map((l) => (
                   <option key={l.id} value={l.id}>{l.displayName}</option>
                 ))}
               </select>
-              <Button disabled={busy || !pick} onClick={() => void issue()}>Issue a new rescue code</Button>
+              <Button disabled={busy || !pick} onClick={() => void issue()}>{c.relink.issue.cta}</Button>
             </div>
           )}
         </section>
       ) : (
-        <section style={panelStyle} aria-label="Cards and progress">
-          <Muted>{COPY.relinkCardsComeBack}</Muted>
+        <section style={panelStyle} aria-label={c.relink.cardsLabel}>
+          <Muted>{c.relinkCardsComeBack}</Muted>
         </section>
       )}
     </ConsoleShell>

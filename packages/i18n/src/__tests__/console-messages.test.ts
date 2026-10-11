@@ -23,7 +23,6 @@ describe('console: the former COPY, keys and wording unchanged', () => {
     expect(c.tryAgain).toBe('Try again');
     expect(c.writeOnBoard).toBe('Write it on the board. Students join from Settings → Classes & family → Join a class.');
     expect(c.notSyncedYet).toBe('not synced yet');
-    expect(c.notSyncedWeek).toBe("haven't synced in a week");
     expect(c.readoutHint).toBe('Most recent activity first — not a ranking. "Not ready yet" means the learner has not unlocked that item.');
     expect(c.relinkCardsComeBack).toBe(
       "Approving brings the learner back into this class. Their cards come back with the rescue code their grown-up keeps in the app (Save my progress) — teachers can't see or reissue it.",
@@ -33,12 +32,13 @@ describe('console: the former COPY, keys and wording unchanged', () => {
     expect(c.schoolLicenceLapsed).toBe('The licence needs attention. Classes stay readable; students keep Stage 1 either way.');
   });
 
-  // PR 10a added one group per console page.
-  it('has exactly the 58 COPY keys plus the formatter and page groups', () => {
+  // PR 10a added one group per console page and retired four fragments (practicedThisWeek, anchor,
+  // revisitTogether, notSyncedWeek) for whole-sentence messages under `space.week`.
+  it('has exactly the 54 remaining COPY keys plus the formatter and page groups', () => {
     const groups = ['language', 'codeExpiry', 'spaceCounts', 'planStatus', 'entitlementStatus', 'price', 'promoPrice'];
     const pages = ['shell', 'kind', 'joinCode', 'signIn', 'start', 'home', 'space', 'relink'];
     const copyKeys = Object.keys(en.console).filter((k) => !groups.includes(k) && !pages.includes(k));
-    expect(copyKeys).toHaveLength(58);
+    expect(copyKeys).toHaveLength(54);
     for (const g of pages) expect(Object.keys(en.console)).toContain(g);
     for (const g of groups) expect(Object.keys(en.console)).toContain(g);
   });

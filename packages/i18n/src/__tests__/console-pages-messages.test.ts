@@ -181,3 +181,11 @@ describe('relink page (teach/space/relink/page.tsx, relink.ts)', () => {
     expect(r.failed).toBe("Didn't go through. Try again.");
   });
 });
+
+describe('fragments retired by whole-sentence messages', () => {
+  it('drops the COPY fragments the space page used to glue around a number', () => {
+    for (const key of ['practicedThisWeek', 'anchor', 'revisitTogether', 'notSyncedWeek']) {
+      expect(Object.keys(en.console)).not.toContain(key);
+    }
+  });
+});
