@@ -134,13 +134,18 @@ test.describe('story reader, quest step (fixture bundle)', () => {
     await expect(stepHeading(page, 'Read the story')).toBeVisible();
     await expect(page.getByText('2 / 5', { exact: true })).toBeVisible();
     expect((await storyEvents(page)).filter((e) => e.name === 'story.read.finished')).toHaveLength(0);
-    // Stub-era expectation: the bookmark seam writes nothing until F-STORY-004 PR 4.4b, which flips
-    // this to a stored bookmark at scene index 2 and a replay that opens on 3 / 5.
-    expect(await readStored(page, `story:bookmarks:${id ?? ''}`)).toBeNull();
+    // The bookmark seam (F-STORY-004 PR 4.4b) saved the scene reached: index 2, page 3 / 5.
+    await expect
+      .poll(() => readStored<{ v: number; byStory: Record<string, { level: string; sceneIndex: number }> }>(page, `story:bookmarks:${id ?? ''}`))
+      .toMatchObject({ v: 1, byStory: { 'story:hangul-day': { level: 'listen', sceneIndex: 2 } } });
+    expect((await storyEvents(page)).filter((e) => e.name === 'story.bookmark.resumed')).toHaveLength(0);
 
-    // Played again, the step opens the reader on scene 1 (no bookmark yet).
+    // Played again, the step opens the reader on the bookmarked scene and says so once.
     await page.getByRole('button', { name: 'Play minigame' }).click();
-    await expect(position(page)).toHaveText('1 / 5');
+    await expect(position(page)).toHaveText('3 / 5');
+    const resumed = (await storyEvents(page)).filter((e) => e.name === 'story.bookmark.resumed');
+    expect(resumed).toHaveLength(1);
+    expect(resumed[0]?.payload).toEqual({ storyId: 'story:hangul-day', sceneIndex: 2 });
 
     // Skip for now still moves the quest on without reading (the launcher is unchanged).
     await page.getByTestId('story-reader-close').click();
