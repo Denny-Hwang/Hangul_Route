@@ -539,17 +539,29 @@ describe('planHomeStoryOpen (a tapped Home story card, §3.2, §3.7)', () => {
     });
   });
 
-  it('"Keep reading" starts at step 0 and reports a start until the quest player can resume (PR 4.4b)', () => {
+  it('"Keep reading" resumes the quest at the bookmark and reports a `continue` (PR 4.4b resume)', () => {
     const marks = bookmarks({ 'story:sun': { sceneIndex: 3 } });
     const card = build({}, { bookmarks: marks }).cards[0]!;
     expect(card.storyReason).toBe('continue');
     const plan = planHomeStoryOpen({ card, ...world, bookmarks: marks });
     expect(plan).toEqual({
       route: 'QuestPlayer',
-      params: { questId: questId('sun'), episodeId: 'episode:shelf-sun' },
+      params: { questId: questId('sun'), episodeId: 'episode:shelf-sun', resume: true },
       clearBookmark: false,
-      event: { name: 'story.opened', payload: { storyId: 'story:sun', source: 'home', mode: 'start' } },
+      event: { name: 'story.opened', payload: { storyId: 'story:sun', source: 'home', mode: 'continue' } },
     });
+  });
+
+  it('a pinned "Keep reading" card whose bookmark is gone opens as a plain start', () => {
+    const marks = bookmarks({ 'story:sun': { sceneIndex: 3 } });
+    const card = build({}, { bookmarks: marks }).cards[0]!;
+    expect(card.storyReason).toBe('continue');
+    expect(planHomeStoryOpen({ card, ...world })).toMatchObject({
+      route: 'QuestPlayer',
+      params: { questId: questId('sun'), episodeId: 'episode:shelf-sun' },
+      event: { payload: { mode: 'start' } },
+    });
+    expect(planHomeStoryOpen({ card, ...world })?.params).not.toHaveProperty('resume');
   });
 
   it('is null for a card that is not a story in the index', () => {

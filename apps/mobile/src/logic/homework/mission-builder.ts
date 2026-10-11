@@ -442,10 +442,9 @@ export function storyCardOpenMode(card: Pick<MissionCard, 'storyMode'>, status: 
 /**
  * How Home opens a tapped story card (F-STORY-004 §3.2, §3.7): the one
  * story-open plan for its entry, or null when the card is not a story in the
- * index (Home then opens it as a quest card). Until PR 4.4b adds the
- * `QuestPlayer` `resume` param, "Keep reading" starts the quest at step 0, so
- * it opens — and reports `story.opened` — as a `start`, never a resume that
- * does not happen.
+ * index (Home then opens it as a quest card). "Keep reading" opens as a
+ * `continue` with the `QuestPlayer` `resume` param (PR 4.4b), or as a plain
+ * `start` when the bookmark is gone (`planOpenStory`).
  */
 export function planHomeStoryOpen(input: {
   card: MissionCard;
@@ -457,6 +456,5 @@ export function planHomeStoryOpen(input: {
   const entry = card.kind === 'story' && card.questId ? entryForQuest(input.entries, card.questId) : undefined;
   if (!entry) return null;
   const status = storyStatus(entry, input.snapshot, input.bookmarks);
-  const mode = storyCardOpenMode(card, status);
-  return planOpenStory({ entry, status, source: 'home', mode: mode === 'continue' ? 'start' : mode });
+  return planOpenStory({ entry, status, source: 'home', mode: storyCardOpenMode(card, status) });
 }

@@ -223,13 +223,13 @@ export function HomeScreen(): React.ReactElement {
   }, [mission]);
 
   // A story card opens through the one story-open plan (F-STORY-004 §3.2): the quest player, or the
-  // unscored reader for "Read it again". Resuming at the bookmark arrives with PR 4.4b.
+  // unscored reader for "Read it again"; "Keep reading" resumes at the bookmark (PR 4.4b).
   const openStory = (card: MissionCard): boolean => {
     const plan = planHomeStoryOpen({ card, entries: storyIndex, snapshot: snap, bookmarks });
     if (!plan) return false;
     void track({ name: plan.event.name, profileId: profile?.id, payload: plan.event.payload });
     if (plan.route === 'StoryReader') navigation.navigate('StoryReader', plan.params);
-    else navigation.navigate('QuestPlayer', { questId: plan.params.questId, episodeId: plan.params.episodeId });
+    else navigation.navigate('QuestPlayer', plan.params);
     return true;
   };
 
