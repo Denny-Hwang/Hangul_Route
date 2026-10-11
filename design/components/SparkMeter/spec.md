@@ -1,6 +1,7 @@
 # SparkMeter (component spec v1)
 
 Spec: `docs/specs/F-VOC-004-speed-round.md` §3.6 ("spark meter" in the question-screen header), §3.8 (no flashing, reduced motion), §3.9 (`SparkMeter` props, `sparkLayout`) and PR S-4 in §6 · wireframe: `design/wireframes/vocab/speed-round.md` screens B to G (notation `* * * . .`, "fill-only, single soft fade") · anti-shame rules: CLAUDE.md §1 "Feedback & motivation" (meters only fill)
+Render: `v1.png` (react-native-web at 320 wide: values 0, 1, 3, 10, 11, 29, 30, 45 on `surface.canvas`)
 Code: `packages/design-system/src/spark.ts` (pure `sparkLayout`, unit-tested and counted by design-system coverage) and `packages/design-system/src/components/SparkMeter/` (`SparkMeter.tsx` paint, `types.ts`, `index.ts`)
 
 ## What it is
@@ -65,7 +66,7 @@ No new token.
 
 ## Accessibility
 
-- One accessible element (`accessible`, `accessibilityRole="text"`) with the caller's `accessibilityLabel`; the individual slots are hidden from assistive technology.
+- One accessible element (`accessible`, `accessibilityRole="image"`, which react-native-web renders as `role="img"` so the name is read on every platform) with the caller's `accessibilityLabel`; the individual slots are hidden from assistive technology.
 - Not a live region by itself: the Speed Round announces "3 sparks" politely at most once per question (F-VOC-004 §3.8), so the component never chatters.
 - Colour is not the only cue: a lit slot changes shape (spark) as well as colour (circle to spark).
 

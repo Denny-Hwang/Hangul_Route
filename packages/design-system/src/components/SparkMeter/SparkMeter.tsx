@@ -28,7 +28,7 @@ export function SparkMeter({ value, slots, maxRows, accessibilityLabel, testID }
     <View
       testID={testID}
       accessible
-      accessibilityRole="text"
+      accessibilityRole="image"
       accessibilityLabel={accessibilityLabel}
       style={{
         alignSelf: 'flex-start',
