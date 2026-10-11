@@ -9,6 +9,12 @@ import {
 } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { minigameScopes, scopeFor, type MinigameScope } from '../../logic/minigame-config';
+import {
+  buildBuildLetterRounds,
+  buildMatchSoundRounds,
+  buildOddOneOutRounds,
+  buildTraceStrokeRounds,
+} from '../../logic/round-builder';
 import { STAGE1_QUESTS, questTeaches } from '../../logic/stage1/curriculum';
 import { symbolsOf } from '../../logic/stage1/hangul';
 import { cardById } from '../heritage-cards';
@@ -220,6 +226,45 @@ describe.each(REBUILT.map((q) => [q.id, q] as const))('%s', (_id, quest) => {
       expect(scopeRounds(scope!), `${ref} (${kind})`).toBe(ROUNDS[kind]);
     }
     expect(scopesOf(quest).find((s) => s.kind === 'check')?.scope?.kind).toBe('listen-pick');
+  });
+
+  it('T4 every practice and apply scope builds its rounds the way its game screen does, over several seeds', () => {
+    const SEEDS = [1, 7, 42, 2026, 99991];
+    for (const { kind, ref, scope } of scopesOf(quest)) {
+      if (kind !== 'practice' && kind !== 'apply') continue;
+      const s = scope!;
+      const jamoIds = s.jamoIds ?? [];
+      const rounds = s.rounds ?? 4;
+      for (const seed of SEEDS) {
+        const label = `${ref} seed ${seed}`;
+        switch (s.kind) {
+          case 'match-sound': {
+            const built = buildMatchSoundRounds({ scopeJamoIds: jamoIds, rounds, ...(s.focusJamoIds ? { focusJamoIds: s.focusJamoIds } : {}), seed });
+            expect(built, label).toHaveLength(ROUNDS[kind]!);
+            const prompted = new Set(built.map((r) => r.promptJamo.id));
+            for (const id of s.focusJamoIds ?? []) expect(prompted.has(id), `${label} asks ${id}`).toBe(true);
+            break;
+          }
+          case 'trace-stroke':
+            expect(buildTraceStrokeRounds({ scopeJamoIds: jamoIds, rounds, seed }), label).toHaveLength(ROUNDS[kind]!);
+            break;
+          case 'odd-one-out':
+            expect(buildOddOneOutRounds({ scopeJamoIds: jamoIds, rounds, seed }), label).toHaveLength(ROUNDS[kind]!);
+            break;
+          case 'build-letter':
+            expect(buildBuildLetterRounds({ syllables: s.syllables ?? [], seed }), label).toHaveLength(ROUNDS[kind]!);
+            break;
+          default:
+            break;
+        }
+      }
+    }
+  });
+
+  it('T4 the practice Match Sound focuses exactly the symbols the quest teaches', () => {
+    const practice = scopesOf(quest).find((s) => s.kind === 'practice')?.scope;
+    expect(practice?.kind).toBe('match-sound');
+    expect(practice?.focusJamoIds).toEqual(questTeaches(quest));
   });
 
   it('T5 repeats no minigame and every ref resolves to a scope of the same kind', () => {
