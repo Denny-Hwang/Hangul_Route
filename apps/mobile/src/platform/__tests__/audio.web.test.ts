@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { isMuted, pickVoice, playJamoSound, setMuted, speak, stop } from '../audio.web';
+import { isMuted, pickVoice, playJamoSound, playPrompt, setMuted, speak, stop } from '../audio.web';
 
 class FakeUtterance {
   lang = '';
@@ -7,7 +7,7 @@ class FakeUtterance {
   pitch = 1;
   voice: unknown = null;
   onend: (() => void) | null = null;
-  onerror: (() => void) | null = null;
+  onerror: ((e: { error: string }) => void) | null = null;
   constructor(public text: string) {}
 }
 
@@ -68,5 +68,97 @@ describe('platform/audio.web (speechSynthesis)', () => {
     vi.stubGlobal('speechSynthesis', s.api);
     stop();
     expect(s.api.cancel).toHaveBeenCalled();
+  });
+
+  it('routes a synthesis error to onError when given, ignoring cancel / interrupt events', () => {
+    const s = makeSynth();
+    s.api.speak.mockImplementation((u: FakeUtterance) => {
+      u.onerror?.({ error: 'interrupted' });
+      u.onerror?.({ error: 'canceled' });
+      u.onerror?.({ error: 'synthesis-failed' });
+    });
+    vi.stubGlobal('speechSynthesis', s.api);
+    const onDone = vi.fn();
+    const onError = vi.fn();
+    speak('가', { onDone, onError });
+    expect(onDone).toHaveBeenCalledTimes(1);
+    expect(onError).not.toHaveBeenCalled();
+  });
+
+  it('reports a real synthesis error through onError', () => {
+    const s = makeSynth();
+    s.api.speak.mockImplementation((u: FakeUtterance) => u.onerror?.({ error: 'synthesis-failed' }));
+    vi.stubGlobal('speechSynthesis', s.api);
+    const onDone = vi.fn();
+    const onError = vi.fn();
+    speak('가', { onDone, onError });
+    expect(onError).toHaveBeenCalledTimes(1);
+    expect(onDone).not.toHaveBeenCalled();
+  });
+
+  it('still routes a synthesis error to onDone when the caller gave no onError', () => {
+    const s = makeSynth();
+    s.api.speak.mockImplementation((u: FakeUtterance) => u.onerror?.({ error: 'synthesis-failed' }));
+    vi.stubGlobal('speechSynthesis', s.api);
+    const onDone = vi.fn();
+    speak('가', { onDone });
+    expect(onDone).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('platform/audio.web playPrompt (F-QUEST-002 §3.12)', () => {
+  beforeEach(() => {
+    setMuted(false);
+    vi.stubGlobal('SpeechSynthesisUtterance', FakeUtterance);
+  });
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('resolves played after the utterance ends', async () => {
+    const s = makeSynth([{ lang: 'ko-KR', name: 'Yuna' }]);
+    vi.stubGlobal('speechSynthesis', s.api);
+    await expect(playPrompt({ text: '가' })).resolves.toBe('played');
+    expect(s.spoken[0]?.lang).toBe('ko-KR');
+  });
+
+  it('resolves muted without speaking while muted', async () => {
+    const s = makeSynth([{ lang: 'ko-KR', name: 'Yuna' }]);
+    vi.stubGlobal('speechSynthesis', s.api);
+    setMuted(true);
+    await expect(playPrompt({ text: '가' })).resolves.toBe('muted');
+    expect(s.api.speak).not.toHaveBeenCalled();
+  });
+
+  it('resolves unavailable when the browser has no speech synthesis', async () => {
+    await expect(playPrompt({ text: '가' })).resolves.toBe('unavailable');
+    vi.stubGlobal('speechSynthesis', makeSynth().api);
+    vi.stubGlobal('SpeechSynthesisUtterance', undefined);
+    await expect(playPrompt({ text: '가' })).resolves.toBe('unavailable');
+  });
+
+  it('resolves unavailable when voices are listed but none speaks the language', async () => {
+    const s = makeSynth([{ lang: 'en-US', name: 'Sam' }]);
+    vi.stubGlobal('speechSynthesis', s.api);
+    await expect(playPrompt({ text: '가' })).resolves.toBe('unavailable');
+    expect(s.api.speak).not.toHaveBeenCalled();
+  });
+
+  it('tries to speak when the voice list has not loaded yet', async () => {
+    const s = makeSynth([]);
+    vi.stubGlobal('speechSynthesis', s.api);
+    await expect(playPrompt({ text: '가' })).resolves.toBe('played');
+  });
+
+  it('resolves unavailable when synthesis fails', async () => {
+    const s = makeSynth([{ lang: 'ko-KR', name: 'Yuna' }]);
+    s.api.speak.mockImplementation((u: FakeUtterance) => u.onerror?.({ error: 'synthesis-failed' }));
+    vi.stubGlobal('speechSynthesis', s.api);
+    await expect(playPrompt({ text: '가' })).resolves.toBe('unavailable');
+  });
+
+  it('speaks the requested language', async () => {
+    const s = makeSynth([{ lang: 'en-US', name: 'Sam' }]);
+    vi.stubGlobal('speechSynthesis', s.api);
+    await expect(playPrompt({ text: 'sun', language: 'en-US' })).resolves.toBe('played');
+    expect(s.spoken[0]?.lang).toBe('en-US');
   });
 });

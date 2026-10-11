@@ -1,4 +1,4 @@
-import type { MinigameKind } from '@hangul-route/content-schema';
+import type { ListenPickRound, MinigameKind, PicWordRound } from '@hangul-route/content-schema';
 
 /**
  * Maps a quest's minigame ref into a concrete content scope.
@@ -18,6 +18,10 @@ export interface MinigameScope {
     options: Array<{ ko: string; romanization?: string; en: string; isCorrect: boolean }>;
   }>;
   rounds?: number;
+  /** Listen & Pick rounds, built with `lp.*` (F-QUEST-002 §3.10). */
+  listenPick?: { rounds: ListenPickRound[] };
+  /** Pic-Word Match boards, built with `pw` (F-QUEST-002 §3.11). */
+  picWord?: { boards: PicWordRound[] };
 }
 
 const J = (id: string): string => `jamo:${id}`;
@@ -341,3 +345,4 @@ export function scopeFor(ref: string): MinigameScope | undefined {
 
 // Suppress unused-import warning for type used in JSDoc
 export type { MinigameKind };
+export { lp, pw } from './scope-builders';

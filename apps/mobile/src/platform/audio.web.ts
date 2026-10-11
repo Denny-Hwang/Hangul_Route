@@ -11,6 +11,11 @@ export interface SpeakOptions {
   rate?: number;
   pitch?: number;
   onDone?: () => void;
+  /**
+   * Called instead of `onDone` when synthesis fails. Without it an error still
+   * ends in `onDone`, so existing callers are unchanged.
+   */
+  onError?: () => void;
 }
 
 interface SynthLike {
@@ -62,7 +67,17 @@ export function speak(text: string, opts: SpeakOptions = {}): void {
     opts.onDone?.();
   };
   utterance.onend = done;
-  utterance.onerror = done;
+  utterance.onerror = (event) => {
+    // A newer prompt cancelling this one is a normal stop, not a failure.
+    const stopped = event?.error === 'canceled' || event?.error === 'interrupted';
+    if (opts.onError && !stopped) {
+      if (finished) return;
+      finished = true;
+      opts.onError();
+      return;
+    }
+    done();
+  };
   s.speak(utterance);
 }
 
@@ -73,5 +88,39 @@ export function stop(): void {
 export function playJamoSound(char: string, _audioRef?: string): Promise<void> {
   return new Promise((resolve) => {
     speak(char, { language: 'ko-KR', onDone: resolve });
+  });
+}
+
+/** What happened to a prompt (F-QUEST-002 §3.12): heard, switched off, or no way to say it. */
+export type PlayResult = 'played' | 'muted' | 'unavailable';
+
+export interface PromptSpec {
+  /** `item.spokenKo ?? item.ko`; for a symbol its sound, never the letter name. */
+  text: string;
+  /** MP3 path; wins over TTS once recordings are bundled (D6, F-AUDIO-004). Not played yet. */
+  audioRef?: string;
+  language?: 'ko-KR' | 'en-US';
+}
+
+/**
+ * Thin shim over `speak` for the prompt-audio contract; F-AUDIO-004 owns the
+ * real implementation and keeps this signature. `unavailable` is the cue to
+ * show the prompt as text (F-001 §3.3, D6): no speech synthesis, no voice for
+ * the language among the loaded voices, or a synthesis error. An empty voice
+ * list (browsers load voices late) proves nothing, so the error decides.
+ */
+export function playPrompt(spec: PromptSpec): Promise<PlayResult> {
+  if (muted) return Promise.resolve('muted');
+  const s = synth();
+  if (!s || typeof SpeechSynthesisUtterance === 'undefined') return Promise.resolve('unavailable');
+  const language = spec.language ?? 'ko-KR';
+  const voices = s.getVoices();
+  if (voices.length > 0 && !pickVoice(voices, language)) return Promise.resolve('unavailable');
+  return new Promise<PlayResult>((resolve) => {
+    speak(spec.text, {
+      language,
+      onDone: () => resolve('played'),
+      onError: () => resolve('unavailable'),
+    });
   });
 }
