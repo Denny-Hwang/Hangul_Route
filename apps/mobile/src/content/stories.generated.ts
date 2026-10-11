@@ -6,7 +6,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:angbuilgu-sundial",
     "state": "ready",
-    "contentVer": 1,
+    "contentVer": 2,
     "title": {
       "ko": "하늘을 바라보는 해시계, 앙부일구",
       "romanization": "Haneureul baraboneun haesigye, angbuilgu",
@@ -104,8 +104,32 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Hoya shading his eyes under a bright sun, his small shadow stretching across the stone paving of a palace courtyard."
+            "artBrief": "Hoya shading his eyes under a bright sun, his small shadow stretching across the stone paving of a palace courtyard.",
+            "art": {
+              "setting": "scene:palace-courtyard",
+              "layers": [
+                {
+                  "ref": "prop:glow-burst",
+                  "x": 330,
+                  "y": 130,
+                  "s": 0.6
+                },
+                {
+                  "ref": "prop:ground-shadow",
+                  "x": 166,
+                  "y": 291,
+                  "s": 1,
+                  "flip": true
+                },
+                {
+                  "ref": "hoya:thinking",
+                  "x": 220,
+                  "y": 290,
+                  "s": 0.9
+                }
+              ],
+              "altEn": "Hoya looks up at the bright sun in a palace courtyard, his shadow stretching across the stone paving."
+            }
           },
           {
             "id": "s2",
@@ -123,8 +147,25 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "A bronze bowl-shaped sundial on four short legs, its open side facing a clear blue sky, a slim pointer inside the bowl."
+            "artBrief": "A bronze bowl-shaped sundial on four short legs, its open side facing a clear blue sky, a slim pointer inside the bowl.",
+            "art": {
+              "setting": "scene:palace-courtyard",
+              "layers": [
+                {
+                  "ref": "prop:glow-burst",
+                  "x": 336,
+                  "y": 120,
+                  "s": 0.5
+                },
+                {
+                  "ref": "prop:sundial",
+                  "x": 200,
+                  "y": 280,
+                  "s": 2
+                }
+              ],
+              "altEn": "A bronze bowl-shaped sundial on four short legs faces the open sky, with a slim pointer set inside the bowl."
+            }
           },
           {
             "id": "s3",
@@ -143,8 +184,19 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Close-up of the inside of the sundial bowl: a thin needle casts a dark shadow across a grid of curved lines; no writing or numbers."
+            "artBrief": "Close-up of the inside of the sundial bowl: a thin needle casts a dark shadow across a grid of curved lines; no writing or numbers.",
+            "art": {
+              "setting": "scene:hanji-backdrop",
+              "layers": [
+                {
+                  "ref": "prop:sundial",
+                  "x": 200,
+                  "y": 286,
+                  "s": 3
+                }
+              ],
+              "altEn": "Close up inside the sundial's bowl, the pointer's shadow falls across curved lines that show the time of day and year."
+            }
           },
           {
             "id": "s4",
@@ -162,8 +214,39 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "A Joseon street scene: people in white clothes and a child gather around a sundial on a stone base beside a small stone bridge."
+            "artBrief": "A Joseon street scene: people in white clothes and a child gather around a sundial on a stone base beside a small stone bridge.",
+            "art": {
+              "setting": "scene:village-lane",
+              "layers": [
+                {
+                  "ref": "prop:fig-villager",
+                  "x": 96,
+                  "y": 276,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:sundial",
+                  "x": 200,
+                  "y": 272,
+                  "s": 1.3
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 278,
+                  "y": 284,
+                  "s": 0.9
+                },
+                {
+                  "ref": "prop:fig-villager",
+                  "x": 336,
+                  "y": 278,
+                  "s": 0.95,
+                  "flip": true,
+                  "tint": "surface.paper"
+                }
+              ],
+              "altEn": "On a busy Joseon street, people in white clothes and a child gather around a sundial to see what time it is."
+            }
           },
           {
             "id": "s5",
@@ -182,8 +265,25 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Twelve small, friendly zodiac animals (rat, ox, tiger, rabbit, dragon, snake, horse, sheep, monkey, rooster, dog, pig) standing together in a circle on a grassy hill; Hoya waves happily at the tiger; no letters or numbers."
+            "artBrief": "Twelve small, friendly zodiac animals (rat, ox, tiger, rabbit, dragon, snake, horse, sheep, monkey, rooster, dog, pig) standing together in a circle on a grassy hill; Hoya waves happily at the tiger; no letters or numbers.",
+            "art": {
+              "setting": "scene:countryside",
+              "layers": [
+                {
+                  "ref": "prop:zodiac-ring",
+                  "x": 196,
+                  "y": 250,
+                  "s": 1.5
+                },
+                {
+                  "ref": "hoya:waving",
+                  "x": 342,
+                  "y": 296,
+                  "s": 0.6
+                }
+              ],
+              "altEn": "The twelve zodiac animals stand in a ring on a grassy hill, and Hoya waves happily at the tiger."
+            }
           },
           {
             "id": "s6",
@@ -201,8 +301,32 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Two elegant dark bronze sundials with fine silver lines, standing on cross-shaped bases inside a museum display case."
+            "artBrief": "Two elegant dark bronze sundials with fine silver lines, standing on cross-shaped bases inside a museum display case.",
+            "art": {
+              "setting": "scene:modern-room",
+              "layers": [
+                {
+                  "ref": "prop:display-case",
+                  "x": 200,
+                  "y": 300,
+                  "s": 2
+                },
+                {
+                  "ref": "prop:sundial",
+                  "x": 152,
+                  "y": 202,
+                  "s": 0.95,
+                  "z": "back"
+                },
+                {
+                  "ref": "prop:sundial",
+                  "x": 234,
+                  "y": 214,
+                  "s": 1.2
+                }
+              ],
+              "altEn": "Two later Joseon bronze sundials on cross-shaped bases stand side by side in a museum display case."
+            }
           },
           {
             "id": "s7",
@@ -219,8 +343,37 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Hoya and a child friend in a museum gallery, looking at a sundial in a glass case; Hoya has a curious, questioning face."
+            "artBrief": "Hoya and a child friend in a museum gallery, looking at a sundial in a glass case; Hoya has a curious, questioning face.",
+            "art": {
+              "setting": "scene:modern-room",
+              "layers": [
+                {
+                  "ref": "prop:display-case",
+                  "x": 206,
+                  "y": 296,
+                  "s": 1.5
+                },
+                {
+                  "ref": "prop:sundial",
+                  "x": 206,
+                  "y": 221,
+                  "s": 1.2
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 320,
+                  "y": 290,
+                  "s": 1
+                },
+                {
+                  "ref": "hoya:thinking",
+                  "x": 92,
+                  "y": 292,
+                  "s": 0.55
+                }
+              ],
+              "altEn": "Hoya and a friend look at a sundial in a museum case, and Hoya wonders what time it is now."
+            }
           }
         ],
         "checks": [
@@ -542,7 +695,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:cheugugi-rain-gauge",
     "state": "ready",
-    "contentVer": 1,
+    "contentVer": 2,
     "title": {
       "ko": "비를 재는 그릇, 측우기",
       "romanization": "Bireul jaeneun geureut, cheugugi",
@@ -640,8 +793,25 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "A small, friendly tiger cub in a light vest stands in gentle rain holding out one paw; soft gray clouds and a tiled-roof Korean house behind him."
+            "artBrief": "A small, friendly tiger cub in a light vest stands in gentle rain holding out one paw; soft gray clouds and a tiled-roof Korean house behind him.",
+            "art": {
+              "setting": "scene:palace-courtyard",
+              "layers": [
+                {
+                  "ref": "prop:rain-cloud",
+                  "x": 200,
+                  "y": 200,
+                  "s": 1
+                },
+                {
+                  "ref": "hoya:waving",
+                  "x": 200,
+                  "y": 290,
+                  "s": 0.9
+                }
+              ],
+              "altEn": "Hoya holds out a paw to catch the falling rain in front of a palace hall with a curved tiled roof."
+            }
           },
           {
             "id": "s2",
@@ -659,8 +829,25 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "A young Joseon crown prince in a red robe kneels in a palace garden beside a small hole, looking at damp soil; a dry field in the distance."
+            "artBrief": "A young Joseon crown prince in a red robe kneels in a palace garden beside a small hole, looking at damp soil; a dry field in the distance.",
+            "art": {
+              "setting": "scene:palace-courtyard",
+              "layers": [
+                {
+                  "ref": "prop:fig-king",
+                  "x": 176,
+                  "y": 270,
+                  "s": 0.95
+                },
+                {
+                  "ref": "prop:dug-soil",
+                  "x": 268,
+                  "y": 268,
+                  "s": 1.2
+                }
+              ],
+              "altEn": "The young crown prince stands in the palace grounds beside a small hole, checking how deep the rain soaked in."
+            }
           },
           {
             "id": "s3",
@@ -679,8 +866,31 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "A plain metal cylinder standing in a palace courtyard catching rain, while the prince watches from under the wooden eaves."
+            "artBrief": "A plain metal cylinder standing in a palace courtyard catching rain, while the prince watches from under the wooden eaves.",
+            "art": {
+              "setting": "scene:palace-courtyard",
+              "layers": [
+                {
+                  "ref": "prop:rain-cloud",
+                  "x": 200,
+                  "y": 200,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:rain-gauge",
+                  "x": 190,
+                  "y": 276,
+                  "s": 1.3
+                },
+                {
+                  "ref": "prop:fig-king",
+                  "x": 320,
+                  "y": 236,
+                  "s": 0.7
+                }
+              ],
+              "altEn": "Rain falls into a plain metal vessel standing in the palace courtyard while the crown prince watches from near the hall."
+            }
           },
           {
             "id": "s4",
@@ -698,8 +908,43 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "A Joseon official in a black hat dips a slim wooden ruler into a metal rain gauge on a square stone stand; a brush and a record book lie beside him."
+            "artBrief": "A Joseon official in a black hat dips a slim wooden ruler into a metal rain gauge on a square stone stand; a brush and a record book lie beside him.",
+            "art": {
+              "setting": "scene:palace-courtyard",
+              "layers": [
+                {
+                  "ref": "prop:ruler",
+                  "x": 196,
+                  "y": 192,
+                  "s": 1.15
+                },
+                {
+                  "ref": "prop:rain-gauge",
+                  "x": 190,
+                  "y": 266,
+                  "s": 1.15
+                },
+                {
+                  "ref": "prop:fig-official",
+                  "x": 96,
+                  "y": 264,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:book-open-entry",
+                  "x": 300,
+                  "y": 282,
+                  "s": 0.75
+                },
+                {
+                  "ref": "prop:writing-set",
+                  "x": 300,
+                  "y": 238,
+                  "s": 0.6
+                }
+              ],
+              "altEn": "A Joseon official measures the rain in a metal rain gauge on a stone stand with a ruler, a record book and brush beside him."
+            }
           },
           {
             "id": "s5",
@@ -717,8 +962,39 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "A pottery rain gauge on a stone stand in a country government courtyard; a local magistrate measures with a bamboo ruler; green hills behind."
+            "artBrief": "A pottery rain gauge on a stone stand in a country government courtyard; a local magistrate measures with a bamboo ruler; green hills behind.",
+            "art": {
+              "setting": "scene:countryside",
+              "layers": [
+                {
+                  "ref": "prop:leafy-tree",
+                  "x": 352,
+                  "y": 236,
+                  "s": 0.9,
+                  "z": "back"
+                },
+                {
+                  "ref": "prop:fig-official",
+                  "x": 150,
+                  "y": 264,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:ruler",
+                  "x": 266,
+                  "y": 192,
+                  "s": 1.15
+                },
+                {
+                  "ref": "prop:rain-gauge",
+                  "x": 260,
+                  "y": 266,
+                  "s": 1.15,
+                  "tint": "feedback.nudgeLight"
+                }
+              ],
+              "altEn": "In a country town a local official measures the rain in a pottery rain gauge on a stone stand, with green hills behind."
+            }
           },
           {
             "id": "s6",
@@ -737,8 +1013,31 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "A bronze cylindrical rain gauge made of three stacked sections, displayed on a museum pedestal under a soft spotlight; Hoya gazes up in wonder."
+            "artBrief": "A bronze cylindrical rain gauge made of three stacked sections, displayed on a museum pedestal under a soft spotlight; Hoya gazes up in wonder.",
+            "art": {
+              "setting": "scene:modern-room",
+              "layers": [
+                {
+                  "ref": "prop:display-case",
+                  "x": 180,
+                  "y": 292,
+                  "s": 1.45
+                },
+                {
+                  "ref": "prop:rain-gauge",
+                  "x": 180,
+                  "y": 219.5,
+                  "s": 1.1
+                },
+                {
+                  "ref": "hoya:thinking",
+                  "x": 322,
+                  "y": 292,
+                  "s": 0.6
+                }
+              ],
+              "altEn": "The bronze rain gauge from Gongju, made in 1837, stands in a museum case, and Hoya looks up at it in wonder."
+            }
           },
           {
             "id": "s7",
@@ -756,8 +1055,31 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Hoya under a small paper umbrella, pointing happily at the rainy sky in front of a modest museum building."
+            "artBrief": "Hoya under a small paper umbrella, pointing happily at the rainy sky in front of a modest museum building.",
+            "art": {
+              "setting": "scene:countryside",
+              "layers": [
+                {
+                  "ref": "prop:rain-cloud",
+                  "x": 200,
+                  "y": 200,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:museum-building",
+                  "x": 190,
+                  "y": 224,
+                  "s": 1.3
+                },
+                {
+                  "ref": "hoya:waving",
+                  "x": 318,
+                  "y": 290,
+                  "s": 0.8
+                }
+              ],
+              "altEn": "Hoya grins and points at the rainy sky in front of the museum where the rain gauge is kept today."
+            }
           }
         ],
         "checks": [
@@ -2427,7 +2749,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:donguibogam",
     "state": "ready",
-    "contentVer": 1,
+    "contentVer": 2,
     "title": {
       "ko": "허준의 동의보감",
       "romanization": "Heojunui Donguibogam",
@@ -2543,8 +2865,25 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Hoya doing a morning stretch on the wooden floor (maru) of a hanok house, warm sunrise behind him."
+            "artBrief": "Hoya doing a morning stretch on the wooden floor (maru) of a hanok house, warm sunrise behind him.",
+            "art": {
+              "setting": "scene:hanok-room",
+              "layers": [
+                {
+                  "ref": "prop:glow-burst",
+                  "x": 200,
+                  "y": 230,
+                  "s": 1.3
+                },
+                {
+                  "ref": "hoya:cheering",
+                  "x": 200,
+                  "y": 292,
+                  "s": 1
+                }
+              ],
+              "altEn": "Hoya stretches his arms up on the wooden floor of a hanok in the warm morning sun."
+            }
           },
           {
             "id": "s2",
@@ -2562,8 +2901,31 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "A Joseon royal physician in official robes and a black hat bowing before a king seated in a palace hall; rolled papers nearby."
+            "artBrief": "A Joseon royal physician in official robes and a black hat bowing before a king seated in a palace hall; rolled papers nearby.",
+            "art": {
+              "setting": "scene:palace-hall",
+              "layers": [
+                {
+                  "ref": "prop:fig-king-seated",
+                  "x": 200,
+                  "y": 188,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:fig-officials-kneeling",
+                  "x": 196,
+                  "y": 292,
+                  "s": 1.35
+                },
+                {
+                  "ref": "prop:papers-loose",
+                  "x": 344,
+                  "y": 290,
+                  "s": 0.8
+                }
+              ],
+              "altEn": "Royal doctors in official dress kneel before King Seonjo in his palace hall as he asks for a new medical book."
+            }
           },
           {
             "id": "s3",
@@ -2581,8 +2943,38 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Heo Jun at a low desk surrounded by stacks of old thread-bound books, writing with a brush by lamplight."
+            "artBrief": "Heo Jun at a low desk surrounded by stacks of old thread-bound books, writing with a brush by lamplight.",
+            "art": {
+              "setting": "scene:hanok-room",
+              "layers": [
+                {
+                  "ref": "prop:books-stack",
+                  "x": 76,
+                  "y": 286,
+                  "s": 0.9
+                },
+                {
+                  "ref": "prop:fig-historian",
+                  "x": 200,
+                  "y": 286,
+                  "s": 1.3
+                },
+                {
+                  "ref": "prop:oil-lamp",
+                  "x": 296,
+                  "y": 278,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:books-stack",
+                  "x": 350,
+                  "y": 290,
+                  "s": 0.75,
+                  "flip": true
+                }
+              ],
+              "altEn": "At night by lamplight Heo Jun sits writing with a brush, surrounded by stacks of old thread-bound books."
+            }
           },
           {
             "id": "s4",
@@ -2601,8 +2993,25 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "A neat stack of finished book volumes tied with cord, beside a round bronze mirror that softly reflects light."
+            "artBrief": "A neat stack of finished book volumes tied with cord, beside a round bronze mirror that softly reflects light.",
+            "art": {
+              "setting": "scene:hanji-backdrop",
+              "layers": [
+                {
+                  "ref": "prop:books-stack",
+                  "x": 150,
+                  "y": 262,
+                  "s": 1.6
+                },
+                {
+                  "ref": "prop:bronze-mirror",
+                  "x": 286,
+                  "y": 262,
+                  "s": 1.6
+                }
+              ],
+              "altEn": "The finished volumes of Donguibogam lie stacked beside a round bronze mirror, since 'bogam' means a treasured mirror."
+            }
           },
           {
             "id": "s5",
@@ -2620,8 +3029,47 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Hoya and two children walking happily through a pine forest, breathing fresh air, with a picnic mat of simple healthy food."
+            "artBrief": "Hoya and two children walking happily through a pine forest, breathing fresh air, with a picnic mat of simple healthy food.",
+            "art": {
+              "setting": "scene:mountains",
+              "layers": [
+                {
+                  "ref": "prop:pine-tree",
+                  "x": 50,
+                  "y": 262,
+                  "s": 1.3,
+                  "z": "back"
+                },
+                {
+                  "ref": "prop:pine-tree",
+                  "x": 352,
+                  "y": 258,
+                  "s": 1.2,
+                  "z": "back",
+                  "flip": true
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 124,
+                  "y": 284,
+                  "s": 1
+                },
+                {
+                  "ref": "hoya:waving",
+                  "x": 206,
+                  "y": 292,
+                  "s": 0.85
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 286,
+                  "y": 284,
+                  "s": 1,
+                  "tint": "brand.secondaryLight"
+                }
+              ],
+              "altEn": "Hoya and two friends walk happily through a pine forest, breathing the fresh air to stay healthy."
+            }
           },
           {
             "id": "s6",
@@ -2639,8 +3087,25 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Gentle drawings of wild medicinal plants (bellflower, mugwort, a root plant) on a sunny hillside, with a woven basket of herbs; no writing."
+            "artBrief": "Gentle drawings of wild medicinal plants (bellflower, mugwort, a root plant) on a sunny hillside, with a woven basket of herbs; no writing.",
+            "art": {
+              "setting": "scene:mountains",
+              "layers": [
+                {
+                  "ref": "prop:herbs",
+                  "x": 180,
+                  "y": 264,
+                  "s": 2
+                },
+                {
+                  "ref": "prop:basket",
+                  "x": 330,
+                  "y": 276,
+                  "s": 1.1
+                }
+              ],
+              "altEn": "Wild medicinal herbs such as bellflower and mugwort grow on a sunny hillside beside a basket of picked greens."
+            }
           },
           {
             "id": "s7",
@@ -2659,8 +3124,19 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Rows of traditional thread-bound books on wooden shelves, with faint outlines of mountains and seas behind them suggesting the book's travels."
+            "artBrief": "Rows of traditional thread-bound books on wooden shelves, with faint outlines of mountains and seas behind them suggesting the book's travels.",
+            "art": {
+              "setting": "scene:seashore",
+              "layers": [
+                {
+                  "ref": "prop:books-case",
+                  "x": 200,
+                  "y": 270,
+                  "s": 1.8
+                }
+              ],
+              "altEn": "Rows of old thread-bound books rest in a wooden case before a sea of islands, as the book travelled abroad."
+            }
           },
           {
             "id": "s8",
@@ -2677,8 +3153,25 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Hoya hugging a soft pillow shaped like an old book, sitting beside a museum case that holds a thread-bound book under gentle light."
+            "artBrief": "Hoya hugging a soft pillow shaped like an old book, sitting beside a museum case that holds a thread-bound book under gentle light.",
+            "art": {
+              "setting": "scene:modern-room",
+              "layers": [
+                {
+                  "ref": "prop:museum-case",
+                  "x": 150,
+                  "y": 288,
+                  "s": 1.6
+                },
+                {
+                  "ref": "hoya:reading",
+                  "x": 296,
+                  "y": 292,
+                  "s": 0.8
+                }
+              ],
+              "altEn": "Hoya hugs a book beside a museum case that holds a treasured first-printing copy of Donguibogam."
+            }
           }
         ],
         "checks": [
@@ -5341,7 +5834,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:jagyeongnu-water-clock",
     "state": "ready",
-    "contentVer": 1,
+    "contentVer": 2,
     "title": {
       "ko": "장영실과 스스로 울리는 물시계, 자격루",
       "romanization": "Jangyeongsilgwa seuseuro ullineun mulsigye, jagyeongnu",
@@ -5471,8 +5964,37 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Hoya kneeling beside a large bronze jar, watching a thin stream of water trickle into a taller vessel below."
+            "artBrief": "Hoya kneeling beside a large bronze jar, watching a thin stream of water trickle into a taller vessel below.",
+            "art": {
+              "setting": "scene:hanji-backdrop",
+              "layers": [
+                {
+                  "ref": "prop:bronze-jar",
+                  "x": 140,
+                  "y": 200,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:water-stream",
+                  "x": 197,
+                  "y": 202,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:float-vessel",
+                  "x": 215,
+                  "y": 286,
+                  "s": 0.8
+                },
+                {
+                  "ref": "hoya:thinking",
+                  "x": 318,
+                  "y": 292,
+                  "s": 0.7
+                }
+              ],
+              "altEn": "Hoya watches water trickle drop by drop from a large bronze jar into a tall vessel, the heart of a water clock."
+            }
           },
           {
             "id": "s2",
@@ -5490,8 +6012,31 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "A focused Joseon craftsman in plain clothes and a headband fitting bronze parts together at a wooden workbench, tools neatly laid out."
+            "artBrief": "A focused Joseon craftsman in plain clothes and a headband fitting bronze parts together at a wooden workbench, tools neatly laid out.",
+            "art": {
+              "setting": "scene:hanok-room",
+              "layers": [
+                {
+                  "ref": "prop:fig-artisan",
+                  "x": 180,
+                  "y": 288,
+                  "s": 1.25
+                },
+                {
+                  "ref": "prop:desk-low",
+                  "x": 310,
+                  "y": 284,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:bronze-jar",
+                  "x": 310,
+                  "y": 231,
+                  "s": 0.5
+                }
+              ],
+              "altEn": "Jang Yeongsil, a skilled craftsman in plain clothes and a head cloth, works on the bronze parts of a new clock."
+            }
           },
           {
             "id": "s3",
@@ -5509,8 +6054,26 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "King Sejong in a red royal robe smiles and gestures with praise while the craftsman bows respectfully in a palace hall."
+            "artBrief": "King Sejong in a red royal robe smiles and gestures with praise while the craftsman bows respectfully in a palace hall.",
+            "art": {
+              "setting": "scene:palace-hall",
+              "layers": [
+                {
+                  "ref": "prop:fig-king",
+                  "x": 196,
+                  "y": 252,
+                  "s": 0.95
+                },
+                {
+                  "ref": "prop:fig-artisan",
+                  "x": 306,
+                  "y": 284,
+                  "s": 1,
+                  "flip": true
+                }
+              ],
+              "altEn": "In a palace hall King Sejong praises Jang Yeongsil for building the water clock, and the craftsman bows."
+            }
           },
           {
             "id": "s4",
@@ -5528,8 +6091,31 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Cutaway view: bronze jars set on steps pour water through thin pipes into a tall cylinder, where a rod floats upward."
+            "artBrief": "Cutaway view: bronze jars set on steps pour water through thin pipes into a tall cylinder, where a rod floats upward.",
+            "art": {
+              "setting": "scene:hanji-backdrop",
+              "layers": [
+                {
+                  "ref": "prop:bronze-jar",
+                  "x": 150,
+                  "y": 214,
+                  "s": 1.3
+                },
+                {
+                  "ref": "prop:water-stream",
+                  "x": 224,
+                  "y": 216.5,
+                  "s": 1.3
+                },
+                {
+                  "ref": "prop:float-vessel",
+                  "x": 247.5,
+                  "y": 296,
+                  "s": 1
+                }
+              ],
+              "altEn": "How the clock works: water pours from a bronze jar into a tall vessel, and a marked rod floats up as it fills."
+            }
           },
           {
             "id": "s5",
@@ -5547,8 +6133,19 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Three carved wooden figures in robes on a platform, one striking a bell, one a drum, one a gong; small metal balls roll down a chute behind them."
+            "artBrief": "Three carved wooden figures in robes on a platform, one striking a bell, one a drum, one a gong; small metal balls roll down a chute behind them.",
+            "art": {
+              "setting": "scene:hanji-backdrop",
+              "layers": [
+                {
+                  "ref": "prop:striking-figures",
+                  "x": 200,
+                  "y": 262,
+                  "s": 2
+                }
+              ],
+              "altEn": "Metal balls roll down a chute and three wooden figures strike a bell, a drum and a gong to tell the time."
+            }
           },
           {
             "id": "s6",
@@ -5566,8 +6163,25 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "A small palace pavilion beside a pond with a large pavilion behind it; a gate tower with a big drum in soft evening light."
+            "artBrief": "A small palace pavilion beside a pond with a large pavilion behind it; a gate tower with a big drum in soft evening light.",
+            "art": {
+              "setting": "scene:palace-courtyard",
+              "layers": [
+                {
+                  "ref": "prop:night-sky",
+                  "x": 200,
+                  "y": 196,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:drum",
+                  "x": 200,
+                  "y": 282,
+                  "s": 1.6
+                }
+              ],
+              "altEn": "Evening falls at Gyeongbokgung Palace, and a big drum stands ready to pass the clock's sound on to the city."
+            }
           },
           {
             "id": "s7",
@@ -5584,8 +6198,37 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "A huge plain bronze jar and tall bronze cylinders in a museum hall; Hoya stands small beside them, whispering with a grin."
+            "artBrief": "A huge plain bronze jar and tall bronze cylinders in a museum hall; Hoya stands small beside them, whispering with a grin.",
+            "art": {
+              "setting": "scene:modern-room",
+              "layers": [
+                {
+                  "ref": "prop:bronze-jar",
+                  "x": 170,
+                  "y": 282,
+                  "s": 1.6
+                },
+                {
+                  "ref": "prop:bronze-jar",
+                  "x": 296,
+                  "y": 286,
+                  "s": 0.8
+                },
+                {
+                  "ref": "prop:bronze-jar",
+                  "x": 360,
+                  "y": 290,
+                  "s": 0.7
+                },
+                {
+                  "ref": "hoya:idle",
+                  "x": 56,
+                  "y": 294,
+                  "s": 0.55
+                }
+              ],
+              "altEn": "The huge bronze jar and smaller jars of a 1536 water clock stand in a museum, and Hoya whispers beside them."
+            }
           }
         ],
         "checks": [
@@ -8389,7 +9032,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:kim-hongdo-genre-paintings",
     "state": "ready",
-    "contentVer": 1,
+    "contentVer": 2,
     "title": {
       "ko": "김홍도의 풍속화, 씨름과 서당",
       "romanization": "Gimhongdoui pungsokhwa, ssireumgwa seodang",
@@ -8494,8 +9137,31 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Hoya holding a brush over a sheet of plain hanji paper, an ink stone and water dropper beside him."
+            "artBrief": "Hoya holding a brush over a sheet of plain hanji paper, an ink stone and water dropper beside him.",
+            "art": {
+              "setting": "scene:hanji-backdrop",
+              "layers": [
+                {
+                  "ref": "hoya:idle",
+                  "x": 150,
+                  "y": 286,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:blank-sheet",
+                  "x": 270,
+                  "y": 276,
+                  "s": 1.4
+                },
+                {
+                  "ref": "prop:writing-set",
+                  "x": 300,
+                  "y": 294,
+                  "s": 1
+                }
+              ],
+              "altEn": "Hoya gets ready to paint, with a brush, an inkstone and a sheet of plain paper beside him."
+            }
           },
           {
             "id": "s2",
@@ -8513,8 +9179,25 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "A Joseon painter in a light robe sitting on the floor painting on paper, brushes standing in a holder beside him."
+            "artBrief": "A Joseon painter in a light robe sitting on the floor painting on paper, brushes standing in a holder beside him.",
+            "art": {
+              "setting": "scene:hanok-room",
+              "layers": [
+                {
+                  "ref": "prop:fig-writer-seated",
+                  "x": 196,
+                  "y": 288,
+                  "s": 1.5
+                },
+                {
+                  "ref": "prop:writing-set",
+                  "x": 330,
+                  "y": 290,
+                  "s": 0.9
+                }
+              ],
+              "altEn": "Kim Hongdo, a court painter in a light robe, sits on the floor painting on a sheet of paper."
+            }
           },
           {
             "id": "s3",
@@ -8532,8 +9215,25 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "An open folding album showing small paintings of people working and playing, displayed in a museum case."
+            "artBrief": "An open folding album showing small paintings of people working and playing, displayed in a museum case.",
+            "art": {
+              "setting": "scene:modern-room",
+              "layers": [
+                {
+                  "ref": "prop:display-case",
+                  "x": 200,
+                  "y": 300,
+                  "s": 1.7
+                },
+                {
+                  "ref": "prop:album-open",
+                  "x": 200,
+                  "y": 215,
+                  "s": 1.3
+                }
+              ],
+              "altEn": "Kim Hongdo's album of everyday-life paintings lies open in a case at the National Museum of Korea."
+            }
           },
           {
             "id": "s4",
@@ -8551,8 +9251,44 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Two wrestlers gripping each other in the center, with two curved groups of seated spectators in white clothes and hats, one above and one below them, with round, cheerful faces."
+            "artBrief": "Two wrestlers gripping each other in the center, with two curved groups of seated spectators in white clothes and hats, one above and one below them, with round, cheerful faces.",
+            "art": {
+              "setting": "scene:hanji-backdrop",
+              "layers": [
+                {
+                  "ref": "prop:crowd-seated",
+                  "x": 104,
+                  "y": 160,
+                  "s": 0.75,
+                  "z": "back",
+                  "tint": "surface.paper"
+                },
+                {
+                  "ref": "prop:crowd-seated",
+                  "x": 296,
+                  "y": 160,
+                  "s": 0.75,
+                  "z": "back",
+                  "tint": "surface.paper"
+                },
+                {
+                  "ref": "prop:fig-wrestlers",
+                  "x": 200,
+                  "y": 252,
+                  "s": 1.45,
+                  "tint": "surface.paper"
+                },
+                {
+                  "ref": "prop:crowd-seated",
+                  "x": 200,
+                  "y": 300,
+                  "s": 1.05,
+                  "z": "front",
+                  "tint": "surface.paper"
+                }
+              ],
+              "altEn": "In Kim Hongdo's Ssireum two wrestlers grapple in the middle while two curved rows of onlookers watch closely."
+            }
           },
           {
             "id": "s5",
@@ -8570,8 +9306,38 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Detail of the painting's edges: a smiling taffy seller with a wooden tray stands at the left edge, outside the crowd's attention; at the right edge, a pair of shoes that someone has taken off rests on the ground."
+            "artBrief": "Detail of the painting's edges: a smiling taffy seller with a wooden tray stands at the left edge, outside the crowd's attention; at the right edge, a pair of shoes that someone has taken off rests on the ground.",
+            "art": {
+              "setting": "scene:hanji-backdrop",
+              "layers": [
+                {
+                  "ref": "prop:crowd-seated",
+                  "x": 270,
+                  "y": 196,
+                  "s": 0.9,
+                  "z": "back"
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 144,
+                  "y": 276,
+                  "s": 1.3
+                },
+                {
+                  "ref": "prop:taffy-tray",
+                  "x": 70,
+                  "y": 286,
+                  "s": 1.2
+                },
+                {
+                  "ref": "prop:shoes",
+                  "x": 330,
+                  "y": 282,
+                  "s": 1.6
+                }
+              ],
+              "altEn": "At the edges of the painting a young taffy seller stands by his tray on the left, and a pair of shoes rests on the right."
+            }
           },
           {
             "id": "s6",
@@ -8589,8 +9355,39 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "A small schoolroom: a teacher in a square scholar's cap and several students gather around one boy who is crouched and turned away, wiping his eyes; some students grin, and the teacher looks puzzled."
+            "artBrief": "A small schoolroom: a teacher in a square scholar's cap and several students gather around one boy who is crouched and turned away, wiping his eyes; some students grin, and the teacher looks puzzled.",
+            "art": {
+              "setting": "scene:hanok-room",
+              "layers": [
+                {
+                  "ref": "prop:fig-child",
+                  "x": 76,
+                  "y": 276,
+                  "s": 0.9
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 126,
+                  "y": 286,
+                  "s": 0.85,
+                  "tint": "surface.sunken"
+                },
+                {
+                  "ref": "prop:fig-child-back",
+                  "x": 200,
+                  "y": 284,
+                  "s": 1.6
+                },
+                {
+                  "ref": "prop:fig-scholar",
+                  "x": 304,
+                  "y": 272,
+                  "s": 1,
+                  "tint": "surface.paper"
+                }
+              ],
+              "altEn": "In Kim Hongdo's Seodang, a teacher and his students gather around one boy who sits turned away, sniffling."
+            }
           },
           {
             "id": "s7",
@@ -8607,8 +9404,45 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Hoya and a child friend in a sand ring, playfully gripping cloth belts and smiling, with friends cheering around them."
+            "artBrief": "Hoya and a child friend in a sand ring, playfully gripping cloth belts and smiling, with friends cheering around them.",
+            "art": {
+              "setting": "scene:countryside",
+              "layers": [
+                {
+                  "ref": "prop:sand-ring",
+                  "x": 200,
+                  "y": 292,
+                  "s": 1.4
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 56,
+                  "y": 268,
+                  "s": 0.8,
+                  "tint": "feedback.nudgeLight"
+                },
+                {
+                  "ref": "hoya:cheering",
+                  "x": 168,
+                  "y": 284,
+                  "s": 0.8
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 248,
+                  "y": 280,
+                  "s": 1.05
+                },
+                {
+                  "ref": "prop:fig-child",
+                  "x": 350,
+                  "y": 268,
+                  "s": 0.8,
+                  "tint": "brand.secondaryLight"
+                }
+              ],
+              "altEn": "Today Hoya and a friend stand ready in a sand ring for a friendly round of ssireum while their friends cheer."
+            }
           }
         ],
         "checks": [
@@ -8915,7 +9749,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:nanjung-ilgi",
     "state": "ready",
-    "contentVer": 1,
+    "contentVer": 2,
     "title": {
       "ko": "이순신 장군의 난중일기",
       "romanization": "Isunsin janggunui Nanjungilgi",
@@ -9023,8 +9857,25 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Hoya sitting cross-legged on a floor cushion, holding a small notebook and a brush, smiling."
+            "artBrief": "Hoya sitting cross-legged on a floor cushion, holding a small notebook and a brush, smiling.",
+            "art": {
+              "setting": "scene:hanok-room",
+              "layers": [
+                {
+                  "ref": "hoya:reading",
+                  "x": 190,
+                  "y": 292,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:writing-set",
+                  "x": 316,
+                  "y": 288,
+                  "s": 0.9
+                }
+              ],
+              "altEn": "Hoya sits on the floor with a little notebook and a brush, ready to keep a diary."
+            }
           },
           {
             "id": "s2",
@@ -9042,8 +9893,25 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "A calm Joseon naval commander in a robe and helmet standing on a wooden dock at sunrise, wooden ships moored in a quiet harbor."
+            "artBrief": "A calm Joseon naval commander in a robe and helmet standing on a wooden dock at sunrise, wooden ships moored in a quiet harbor.",
+            "art": {
+              "setting": "scene:seashore",
+              "layers": [
+                {
+                  "ref": "prop:panokseon",
+                  "x": 160,
+                  "y": 204,
+                  "s": 1.2
+                },
+                {
+                  "ref": "prop:fig-commander",
+                  "x": 320,
+                  "y": 290,
+                  "s": 1
+                }
+              ],
+              "altEn": "A calm Joseon naval commander stands on the shore beside a wooden panokseon warship in a quiet harbour."
+            }
           },
           {
             "id": "s3",
@@ -9061,8 +9929,43 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Inside a simple wooden room at night, the commander writes with a brush by candlelight, a folded map beside him."
+            "artBrief": "Inside a simple wooden room at night, the commander writes with a brush by candlelight, a folded map beside him.",
+            "art": {
+              "setting": "scene:hanok-room",
+              "layers": [
+                {
+                  "ref": "prop:fig-commander",
+                  "x": 150,
+                  "y": 290,
+                  "s": 1.15
+                },
+                {
+                  "ref": "prop:desk-low",
+                  "x": 268,
+                  "y": 290,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:writing-lines",
+                  "x": 250,
+                  "y": 232,
+                  "s": 0.6
+                },
+                {
+                  "ref": "prop:oil-lamp",
+                  "x": 296,
+                  "y": 226,
+                  "s": 0.8
+                },
+                {
+                  "ref": "prop:paper-stack",
+                  "x": 360,
+                  "y": 292,
+                  "s": 0.7
+                }
+              ],
+              "altEn": "At night in a wooden room the commander stands at his desk by lamplight, with his diary and folded papers."
+            }
           },
           {
             "id": "s4",
@@ -9080,8 +9983,39 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Soft brush strokes on paper (no readable text) surrounded by little pictures of the sun, rain clouds, a fisherman and a farmer."
+            "artBrief": "Soft brush strokes on paper (no readable text) surrounded by little pictures of the sun, rain clouds, a fisherman and a farmer.",
+            "art": {
+              "setting": "scene:hanji-backdrop",
+              "layers": [
+                {
+                  "ref": "prop:writing-lines",
+                  "x": 200,
+                  "y": 240,
+                  "s": 2
+                },
+                {
+                  "ref": "prop:weather-signs",
+                  "x": 76,
+                  "y": 124,
+                  "s": 1,
+                  "z": "front"
+                },
+                {
+                  "ref": "prop:fig-villager",
+                  "x": 60,
+                  "y": 286,
+                  "s": 0.8
+                },
+                {
+                  "ref": "prop:fig-villager",
+                  "x": 340,
+                  "y": 286,
+                  "s": 0.8,
+                  "flip": true
+                }
+              ],
+              "altEn": "A diary page of brush strokes among small pictures of sun, rain and ordinary people, the things Admiral Yi wrote about."
+            }
           },
           {
             "id": "s5",
@@ -9099,8 +10033,26 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "A warm scene at a coastal camp gate: a young family member arrives with a bundle and is greeted by the commander."
+            "artBrief": "A warm scene at a coastal camp gate: a young family member arrives with a bundle and is greeted by the commander.",
+            "art": {
+              "setting": "scene:seashore",
+              "layers": [
+                {
+                  "ref": "prop:fig-villager",
+                  "x": 140,
+                  "y": 286,
+                  "s": 0.95,
+                  "tint": "feedback.nudgeLight"
+                },
+                {
+                  "ref": "prop:fig-commander",
+                  "x": 244,
+                  "y": 288,
+                  "s": 1.05
+                }
+              ],
+              "altEn": "On the coast a young relative arrives from home and is warmly greeted by the commander."
+            }
           },
           {
             "id": "s6",
@@ -9119,8 +10071,43 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Seven old thread-bound books with worn covers stacked neatly on a low wooden table."
+            "artBrief": "Seven old thread-bound books with worn covers stacked neatly on a low wooden table.",
+            "art": {
+              "setting": "scene:hanji-backdrop",
+              "layers": [
+                {
+                  "ref": "prop:desk-low",
+                  "x": 200,
+                  "y": 290,
+                  "s": 2
+                },
+                {
+                  "ref": "prop:books-stack",
+                  "x": 140,
+                  "y": 199,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:book-thread-bound",
+                  "x": 236,
+                  "y": 199,
+                  "s": 0.85
+                },
+                {
+                  "ref": "prop:book-thread-bound",
+                  "x": 268,
+                  "y": 199,
+                  "s": 0.85
+                },
+                {
+                  "ref": "prop:book-thread-bound",
+                  "x": 300,
+                  "y": 199,
+                  "s": 0.85
+                }
+              ],
+              "altEn": "Seven worn, handwritten volumes of the diary lie on a low wooden table."
+            }
           },
           {
             "id": "s7",
@@ -9138,8 +10125,31 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Hoya at a low desk writing in his notebook with a brush; through the window, the curved tiled roof of a traditional shrine."
+            "artBrief": "Hoya at a low desk writing in his notebook with a brush; through the window, the curved tiled roof of a traditional shrine.",
+            "art": {
+              "setting": "scene:palace-courtyard",
+              "layers": [
+                {
+                  "ref": "prop:desk-low",
+                  "x": 136,
+                  "y": 290,
+                  "s": 1.1
+                },
+                {
+                  "ref": "prop:writing-set",
+                  "x": 136,
+                  "y": 240,
+                  "s": 0.7
+                },
+                {
+                  "ref": "hoya:reading",
+                  "x": 250,
+                  "y": 292,
+                  "s": 0.9
+                }
+              ],
+              "altEn": "Hoya writes in his own diary outside a shrine with a curved tiled roof, like Hyeonchungsa where the diary is kept."
+            }
           }
         ],
         "checks": [

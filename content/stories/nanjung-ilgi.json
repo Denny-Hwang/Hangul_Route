@@ -2,7 +2,7 @@
   "v": 1,
   "id": "story:nanjung-ilgi",
   "state": "ready",
-  "contentVer": 1,
+  "contentVer": 2,
   "title": {
     "ko": "이순신 장군의 난중일기",
     "romanization": "Isunsin janggunui Nanjungilgi",
@@ -110,8 +110,25 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "Hoya sitting cross-legged on a floor cushion, holding a small notebook and a brush, smiling."
+          "artBrief": "Hoya sitting cross-legged on a floor cushion, holding a small notebook and a brush, smiling.",
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "hoya:reading",
+                "x": 190,
+                "y": 292,
+                "s": 1
+              },
+              {
+                "ref": "prop:writing-set",
+                "x": 316,
+                "y": 288,
+                "s": 0.9
+              }
+            ],
+            "altEn": "Hoya sits on the floor with a little notebook and a brush, ready to keep a diary."
+          }
         },
         {
           "id": "s2",
@@ -129,8 +146,25 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "A calm Joseon naval commander in a robe and helmet standing on a wooden dock at sunrise, wooden ships moored in a quiet harbor."
+          "artBrief": "A calm Joseon naval commander in a robe and helmet standing on a wooden dock at sunrise, wooden ships moored in a quiet harbor.",
+          "art": {
+            "setting": "scene:seashore",
+            "layers": [
+              {
+                "ref": "prop:panokseon",
+                "x": 160,
+                "y": 204,
+                "s": 1.2
+              },
+              {
+                "ref": "prop:fig-commander",
+                "x": 320,
+                "y": 290,
+                "s": 1
+              }
+            ],
+            "altEn": "A calm Joseon naval commander stands on the shore beside a wooden panokseon warship in a quiet harbour."
+          }
         },
         {
           "id": "s3",
@@ -148,8 +182,43 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "Inside a simple wooden room at night, the commander writes with a brush by candlelight, a folded map beside him."
+          "artBrief": "Inside a simple wooden room at night, the commander writes with a brush by candlelight, a folded map beside him.",
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:fig-commander",
+                "x": 150,
+                "y": 290,
+                "s": 1.15
+              },
+              {
+                "ref": "prop:desk-low",
+                "x": 268,
+                "y": 290,
+                "s": 1
+              },
+              {
+                "ref": "prop:writing-lines",
+                "x": 250,
+                "y": 232,
+                "s": 0.6
+              },
+              {
+                "ref": "prop:oil-lamp",
+                "x": 296,
+                "y": 226,
+                "s": 0.8
+              },
+              {
+                "ref": "prop:paper-stack",
+                "x": 360,
+                "y": 292,
+                "s": 0.7
+              }
+            ],
+            "altEn": "At night in a wooden room the commander stands at his desk by lamplight, with his diary and folded papers."
+          }
         },
         {
           "id": "s4",
@@ -167,8 +236,39 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "Soft brush strokes on paper (no readable text) surrounded by little pictures of the sun, rain clouds, a fisherman and a farmer."
+          "artBrief": "Soft brush strokes on paper (no readable text) surrounded by little pictures of the sun, rain clouds, a fisherman and a farmer.",
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:writing-lines",
+                "x": 200,
+                "y": 240,
+                "s": 2
+              },
+              {
+                "ref": "prop:weather-signs",
+                "x": 76,
+                "y": 124,
+                "s": 1,
+                "z": "front"
+              },
+              {
+                "ref": "prop:fig-villager",
+                "x": 60,
+                "y": 286,
+                "s": 0.8
+              },
+              {
+                "ref": "prop:fig-villager",
+                "x": 340,
+                "y": 286,
+                "s": 0.8,
+                "flip": true
+              }
+            ],
+            "altEn": "A diary page of brush strokes among small pictures of sun, rain and ordinary people, the things Admiral Yi wrote about."
+          }
         },
         {
           "id": "s5",
@@ -186,8 +286,26 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "A warm scene at a coastal camp gate: a young family member arrives with a bundle and is greeted by the commander."
+          "artBrief": "A warm scene at a coastal camp gate: a young family member arrives with a bundle and is greeted by the commander.",
+          "art": {
+            "setting": "scene:seashore",
+            "layers": [
+              {
+                "ref": "prop:fig-villager",
+                "x": 140,
+                "y": 286,
+                "s": 0.95,
+                "tint": "feedback.nudgeLight"
+              },
+              {
+                "ref": "prop:fig-commander",
+                "x": 244,
+                "y": 288,
+                "s": 1.05
+              }
+            ],
+            "altEn": "On the coast a young relative arrives from home and is warmly greeted by the commander."
+          }
         },
         {
           "id": "s6",
@@ -206,8 +324,43 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "Seven old thread-bound books with worn covers stacked neatly on a low wooden table."
+          "artBrief": "Seven old thread-bound books with worn covers stacked neatly on a low wooden table.",
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:desk-low",
+                "x": 200,
+                "y": 290,
+                "s": 2
+              },
+              {
+                "ref": "prop:books-stack",
+                "x": 140,
+                "y": 199,
+                "s": 1
+              },
+              {
+                "ref": "prop:book-thread-bound",
+                "x": 236,
+                "y": 199,
+                "s": 0.85
+              },
+              {
+                "ref": "prop:book-thread-bound",
+                "x": 268,
+                "y": 199,
+                "s": 0.85
+              },
+              {
+                "ref": "prop:book-thread-bound",
+                "x": 300,
+                "y": 199,
+                "s": 0.85
+              }
+            ],
+            "altEn": "Seven worn, handwritten volumes of the diary lie on a low wooden table."
+          }
         },
         {
           "id": "s7",
@@ -225,8 +378,31 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "Hoya at a low desk writing in his notebook with a brush; through the window, the curved tiled roof of a traditional shrine."
+          "artBrief": "Hoya at a low desk writing in his notebook with a brush; through the window, the curved tiled roof of a traditional shrine.",
+          "art": {
+            "setting": "scene:palace-courtyard",
+            "layers": [
+              {
+                "ref": "prop:desk-low",
+                "x": 136,
+                "y": 290,
+                "s": 1.1
+              },
+              {
+                "ref": "prop:writing-set",
+                "x": 136,
+                "y": 240,
+                "s": 0.7
+              },
+              {
+                "ref": "hoya:reading",
+                "x": 250,
+                "y": 292,
+                "s": 0.9
+              }
+            ],
+            "altEn": "Hoya writes in his own diary outside a shrine with a curved tiled roof, like Hyeonchungsa where the diary is kept."
+          }
         }
       ],
       "checks": [

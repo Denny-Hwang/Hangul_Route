@@ -8,9 +8,9 @@ import { describe, expect, it } from 'vitest';
  * F-STORY-002 §5 story-art integration: every scene that carries `art`, in any
  * story state, names registered items and passes the composition rules
  * (§3.9.5) with no error; ready stories have art or `artPending` on every scene
- * (F-STORY-001 lint `art-missing`). The records-joseon (PR 2.10a) and
- * hangul-printing (PR 2.10b) clusters are fully illustrated and passed review
- * with no warnings either.
+ * (F-STORY-001 lint `art-missing`). The records-joseon (PR 2.10a),
+ * hangul-printing (PR 2.10b) and science-art-life (PR 2.10c) clusters are
+ * fully illustrated and passed review with no warnings either.
  */
 const DIR = join(__dirname, '../../../../../content/stories');
 const stories: Story[] = readdirSync(DIR)
@@ -38,15 +38,25 @@ const HANGUL_PRINTING = [
   'story:janggyeong-panjeon',
 ];
 
+const SCIENCE_ART_LIFE = [
+  'story:cheugugi-rain-gauge',
+  'story:angbuilgu-sundial',
+  'story:jagyeongnu-water-clock',
+  'story:donguibogam',
+  'story:nanjung-ilgi',
+  'story:kim-hongdo-genre-paintings',
+];
+
 /** Every illustrated cluster, with its scene count (F-STORY-002 §3.9.8 cadence). */
 const CLUSTERS: ReadonlyArray<{ name: string; ids: readonly string[]; scenes: number }> = [
   { name: 'records-joseon', ids: RECORDS_JOSEON, scenes: 45 },
   { name: 'hangul-printing', ids: HANGUL_PRINTING, scenes: 46 },
+  { name: 'science-art-life', ids: SCIENCE_ART_LIFE, scenes: 43 },
 ];
 
 describe('story scene art', () => {
   it('has art to check', () => {
-    expect(withArt.length).toBeGreaterThanOrEqual(91);
+    expect(withArt.length).toBeGreaterThanOrEqual(134);
   });
 
   it('every setting and layer ref is in the registry', () => {
