@@ -125,7 +125,7 @@ export const storiesAll: Story[] = [
           },
           {
             "id": "s2",
-            "narrationEn": "Why October 9? Hoya opens the Haerye book once more. At the very end, a note by Jeong Inji gives a date: the first ten days of the ninth month of 1446, by the lunar calendar.",
+            "narrationEn": "Why October 9? Hoya opens the Haerye book. At the very end, a note by Jeong Inji gives a date: the first ten days of the ninth month of 1446, by the lunar calendar.",
             "keyword": {
               "id": "eumnyeok",
               "ko": "음력",
@@ -300,7 +300,7 @@ export const storiesAll: Story[] = [
             "factIds": [
               "f3"
             ],
-            "explainEn": "The Haerye book ends with a date: the first ten days of the 9th lunar month, 1446. When the holiday was set, the last day became October 9."
+            "explainEn": "The Haerye ends with a lunar date: the first ten days of the ninth month, 1446. In the solar calendar, the last of them became October 9."
           },
           {
             "id": "c3",
@@ -633,7 +633,7 @@ export const storiesAll: Story[] = [
       "scope": "cluster",
       "notes": "Third independent pass. Every cited URL for all 6 episodes (52 facts) was re-opened (UNESCO pages via Wayback copies when the live site resets connections) and quotes/locators were compared; the one exception is unesco.org/en/prizes/literacy (unreachable from here; its claim is now also backed by a Korean MCST press release). Eight minimal corrections were made: (1) Hangeul Day f3 no longer says 'Gregorian' (no cited source says the October 9 conversion was Gregorian; encykorea separates Julian/Gregorian only for 1932-45) and dates the October 29/28 observances; (2) f10 gains a third source (SBS 2018 with 국립한글박물관 curator); (3) Shapes scene 8, learning goal and f7 now say 'South Korea's spelling rules' count 24 (North Korea counts 40, 국립한글박물관 webzine 59); (4) Sejong scene 4/f4: 백성 is 'an old-fashioned word' with 표준국어대사전 added; (5) Jikji f8 quote no longer repeats a prize amount that differs between UNESCO page versions; (6) Tripitaka f6 wood and corner plates now have two further sources (정책브리핑; 박상진 wood-identification study); (8) Hangeul Day f9 gains a second source (문화체육관광부 press release); (7) Panjeon scene 8/f9: 'visitors cannot walk inside' replaced by 'visitor entry is restricted' because Haeinsa has run pre-booked tours inside Beopbojeon since June 2021. See hangul-printing.signoff.md."
     },
-    "authorNotes": "REVISED. (1) The narration no longer says the date conversion is settled: it says People converted the last of the ten days to the solar calendar and 'by the method they used' got October 9. The conversion method is not treated as settled: earlier observances (which assumed the last day of the lunar 9th month) used Oct 29, then Oct 28, before Oct 9 was adopted (encykorea E0061511, 국립국어원 origin/001); one fact-checker also found press commentary arguing that Oct 9 does not match a strict Julian or Gregorian conversion (low-authority sources, not re-verified here). f3 records the first point and the narration says only 'by the method they used'. (2) 'Korea celebrates' -> 'South Korea celebrates'; North Korea's January 15 (조선글날) is stated in scene 1 (f10, sourced to 국립국어원 KTV programme and 서울신문 1990). Caveat: the 국립한글박물관 webzine 59 calls one theory about how that North Korean date is derived 'unconfirmed' (확인되지 않은 것), so the story states only that the day is marked on January 15, not how it was derived. (3) 'Kansong Art Museum in Seoul' -> 'kept by the Kansong Art Museum': in 2024 the book travelled to the new Kansong Art Museum in Daegu for its opening show (서울신문 2024-05-08), and UNESCO gives no city. RR would be 'Gansong'; the museum's own English spelling 'Kansong' (used by UNESCO) is kept. (4) Scene 4 no longer says 'nobody knew the exact day'. The sources disagree on when October 9 was first celebrated (1945 according to 국립한글박물관, 1946 according to 한국민족문화대백과사전), so no year is given. 'Said to' in scene 6 hedges the 'ga-gya-geo-gyeo' origin, as the museum itself reports it as hearsay. The second, privately held Haerye copy (the 'Sangju copy') is left out because its status is unresolved. The purchase by Jeon Hyeong-pil is left out for brevity. The founding year of the King Sejong Literacy Prize (1989) is on the UNESCO page only, so the narration does not give it. The UNESCO 'country overview' source in f7 was dropped because its page could not be loaded. The official title in the heritage register is simply 'Hunminjeongeum' (국보 훈민정음). Fact f3 also names the Gregorian calendar (second-checker request); the narration keeps the simpler 'solar calendar'. FINAL PASS (3rd check): f3 no longer says 'Gregorian' because no cited source states the calendar used for the October 9 conversion (encykorea: 1932-33 Julian -> Oct 29, 1934-45 Gregorian -> Oct 28; 국립국어원: Oct 9 = Oct 29 minus about 20 days). f10 now has three sources. Book location: 국가유산포털 still lists Seoul (성북동), while the book was shown at the new Kansong Art Museum in Daegu in autumn 2024; the story only says 'kept by the Kansong Art Museum' (UNESCO wording). REVIEW PASS (PR 1.8b): c2 explanation keeps the hedge (converted when the holiday was set) and names the 9th lunar month; s3 caption says the date was set, not that it simply is October 9.",
+    "authorNotes": "REVISED. (1) The narration no longer says the date conversion is settled: it says People converted the last of the ten days to the solar calendar and 'by the method they used' got October 9. The conversion method is not treated as settled: earlier observances (which assumed the last day of the lunar 9th month) used Oct 29, then Oct 28, before Oct 9 was adopted (encykorea E0061511, 국립국어원 origin/001); one fact-checker also found press commentary arguing that Oct 9 does not match a strict Julian or Gregorian conversion (low-authority sources, not re-verified here). f3 records the first point and the narration says only 'by the method they used'. (2) 'Korea celebrates' -> 'South Korea celebrates'; North Korea's January 15 (조선글날) is stated in scene 1 (f10, sourced to 국립국어원 KTV programme and 서울신문 1990). Caveat: the 국립한글박물관 webzine 59 calls one theory about how that North Korean date is derived 'unconfirmed' (확인되지 않은 것), so the story states only that the day is marked on January 15, not how it was derived. (3) 'Kansong Art Museum in Seoul' -> 'kept by the Kansong Art Museum': in 2024 the book travelled to the new Kansong Art Museum in Daegu for its opening show (서울신문 2024-05-08), and UNESCO gives no city. RR would be 'Gansong'; the museum's own English spelling 'Kansong' (used by UNESCO) is kept. (4) Scene 4 no longer says 'nobody knew the exact day'. The sources disagree on when October 9 was first celebrated (1945 according to 국립한글박물관, 1946 according to 한국민족문화대백과사전), so no year is given. 'Said to' in scene 6 hedges the 'ga-gya-geo-gyeo' origin, as the museum itself reports it as hearsay. The second, privately held Haerye copy (the 'Sangju copy') is left out because its status is unresolved. The purchase by Jeon Hyeong-pil is left out for brevity. The founding year of the King Sejong Literacy Prize (1989) is on the UNESCO page only, so the narration does not give it. The UNESCO 'country overview' source in f7 was dropped because its page could not be loaded. The official title in the heritage register is simply 'Hunminjeongeum' (국보 훈민정음). Fact f3 also names the Gregorian calendar (second-checker request); the narration keeps the simpler 'solar calendar'. FINAL PASS (3rd check): f3 no longer says 'Gregorian' because no cited source states the calendar used for the October 9 conversion (encykorea: 1932-33 Julian -> Oct 29, 1934-45 Gregorian -> Oct 28; 국립국어원: Oct 9 = Oct 29 minus about 20 days). f10 now has three sources. Book location: 국가유산포털 still lists Seoul (성북동), while the book was shown at the new Kansong Art Museum in Daegu in autumn 2024; the story only says 'kept by the Kansong Art Museum' (UNESCO wording). REVIEW PASS (PR 1.8b): c2 explanation keeps the hedge (converted when the holiday was set) and names the 9th lunar month; s3 caption says the date was set, not that it simply is October 9. ROUND 2: s2 drops once more; c2 says the last of them (the ten days), not the last day (the superseded Oct 29/28 reading), and names both calendars.",
     "errata": []
   },
   {
@@ -853,7 +853,7 @@ export const storiesAll: Story[] = [
           },
           {
             "id": "s7",
-            "narrationEn": "In 1995, UNESCO added Janggyeong Panjeon to the World Heritage List. UNESCO says it is the oldest place built to store the Tripitaka, the Buddhist scriptures.",
+            "narrationEn": "In 1995, UNESCO added Janggyeong Panjeon to the World Heritage List. UNESCO says it is the oldest storehouse of the Tripitaka, the Buddhist scriptures.",
             "keyword": {
               "id": "segyeyusan",
               "ko": "세계유산",
@@ -872,7 +872,7 @@ export const storiesAll: Story[] = [
           },
           {
             "id": "s8",
-            "narrationEn": "To keep the heat and dampness inside steady, only a few visitors may go in. Hoya peeks through the window slats and whispers, \"Uriga jikyeoyo, we protect it together!\"",
+            "narrationEn": "To help keep the temperature and dampness inside steady, visitor entry is limited. Hoya peeks through the window slats and whispers, \"Uriga jikyeoyo, we protect it!\"",
             "keyword": {
               "id": "uriga-jikyeoyo",
               "ko": "우리가 지켜요",
@@ -886,7 +886,7 @@ export const storiesAll: Story[] = [
             "framing": false,
             "approximations": [],
             "artBrief": "Hoya and a child quietly peeking through vertical window slats from outside, careful not to touch; inside, shelves of woodblocks rest in calm shadow.",
-            "captionEn": "Few visitors, to keep heat and damp steady",
+            "captionEn": "Entry is limited to keep the air steady",
             "artPending": true
           }
         ],
@@ -898,22 +898,22 @@ export const storiesAll: Story[] = [
             "options": [
               {
                 "id": "a",
-                "en": "Make the hall darker",
+                "en": "Make the halls darker inside",
                 "isCorrect": false
               },
               {
                 "id": "b",
-                "en": "Keep visitors out",
+                "en": "Keep visitors out of the halls",
                 "isCorrect": false
               },
               {
                 "id": "c",
-                "en": "Help the wind flow through",
+                "en": "Help wind flow through the halls",
                 "isCorrect": true
               },
               {
                 "id": "d",
-                "en": "Show paintings",
+                "en": "Show paintings on the walls",
                 "isCorrect": false
               }
             ],
@@ -929,17 +929,17 @@ export const storiesAll: Story[] = [
             "options": [
               {
                 "id": "a",
-                "en": "Layers of rice straw and gravel",
+                "en": "Layers of rice straw, gravel and clay",
                 "isCorrect": false
               },
               {
                 "id": "b",
-                "en": "Rows of stone water channels",
+                "en": "Rows of stone channels filled with water",
                 "isCorrect": false
               },
               {
                 "id": "c",
-                "en": "A hollow space filled with ice",
+                "en": "A hollow space packed with blocks of ice",
                 "isCorrect": false
               },
               {
@@ -1268,7 +1268,7 @@ export const storiesAll: Story[] = [
       "scope": "cluster",
       "notes": "Third independent pass. Every cited URL for all 6 episodes (52 facts) was re-opened (UNESCO pages via Wayback copies when the live site resets connections) and quotes/locators were compared; the one exception is unesco.org/en/prizes/literacy (unreachable from here; its claim is now also backed by a Korean MCST press release). Eight minimal corrections were made: (1) Hangeul Day f3 no longer says 'Gregorian' (no cited source says the October 9 conversion was Gregorian; encykorea separates Julian/Gregorian only for 1932-45) and dates the October 29/28 observances; (2) f10 gains a third source (SBS 2018 with 국립한글박물관 curator); (3) Shapes scene 8, learning goal and f7 now say 'South Korea's spelling rules' count 24 (North Korea counts 40, 국립한글박물관 webzine 59); (4) Sejong scene 4/f4: 백성 is 'an old-fashioned word' with 표준국어대사전 added; (5) Jikji f8 quote no longer repeats a prize amount that differs between UNESCO page versions; (6) Tripitaka f6 wood and corner plates now have two further sources (정책브리핑; 박상진 wood-identification study); (8) Hangeul Day f9 gains a second source (문화체육관광부 press release); (7) Panjeon scene 8/f9: 'visitors cannot walk inside' replaced by 'visitor entry is restricted' because Haeinsa has run pre-booked tours inside Beopbojeon since June 2021. See hangul-printing.signoff.md."
     },
-    "authorNotes": "Theme is set to 'crafts' because the episode is about building and conservation design; switch it to 'letters' if the cluster should stay in one theme. The original construction date is unknown (국가유산포털), so the narration says '15th century' (UNESCO WHC, 국가유산포털). The sources consulted do not say which wall or row has the larger windows, so the narration only says the sizes differ, and illustrations should not suggest a specific pattern. 국가유산포털 also calls it the 'world's only building for storing Tripitaka woodblocks'; the narration uses UNESCO's more conservative wording, 'oldest depository of the Tripitaka', instead. The building's survival through the 1592 war is left out, because the story avoids war content. The visitor-entry restriction is as stated on the WHC page on the access date; rules may change. The official heritage name is 합천 해인사 장경판전 (National Treasure, designated 1962). REVISED: 'oldest buildings' -> 'oldest buildings still standing at Haeinsa' (국가유산포털: 해인사에 남아있는 건물 중 가장 오래 되었다; verified in the portal's description text and its UNESCO page). Visitor restriction (f9): the UNESCO WHC text, re-read on an Internet Archive snapshot, says restrictions exist 'in order to control the temperature and humidity within the depositories'; the fire-protection measures on the same page (guards, surveillance, lightning rod) are a separate sentence. Narration now says visitors 'cannot walk inside' to match the UNESCO wording, and the old 'to keep the air just right inside' phrase was replaced. Only UNESCO is cited for this restriction; no 국가유산청 page with it was found, and rules may change. Check distractors replaced with plausible wrong answers. Vocab 소금/습기 dropped (not shown in a scene) and 세계유산 added. FINAL PASS (3rd check): scene 8 now says 'visitor entry is restricted' (UNESCO wording) instead of 'visitors cannot walk inside', because Haeinsa runs pre-booked guided tours inside Beopbojeon (since 2021-06, 경향신문). Current rules should be checked on haeinsa.or.kr before any release. REVIEW PASS (PR 1.8b): s1 no longer assumes the learner read story-tripitaka-koreana; s7 narrates UNESCO's 'oldest depository' as 'the oldest place built to store the Tripitaka'; s8 says only a few visitors may go in (f9: entry restricted, small pre-booked tours), to keep heat and dampness steady.",
+    "authorNotes": "Theme is set to 'crafts' because the episode is about building and conservation design; switch it to 'letters' if the cluster should stay in one theme. The original construction date is unknown (국가유산포털), so the narration says '15th century' (UNESCO WHC, 국가유산포털). The sources consulted do not say which wall or row has the larger windows, so the narration only says the sizes differ, and illustrations should not suggest a specific pattern. 국가유산포털 also calls it the 'world's only building for storing Tripitaka woodblocks'; the narration uses UNESCO's more conservative wording, 'oldest depository of the Tripitaka', instead. The building's survival through the 1592 war is left out, because the story avoids war content. The visitor-entry restriction is as stated on the WHC page on the access date; rules may change. The official heritage name is 합천 해인사 장경판전 (National Treasure, designated 1962). REVISED: 'oldest buildings' -> 'oldest buildings still standing at Haeinsa' (국가유산포털: 해인사에 남아있는 건물 중 가장 오래 되었다; verified in the portal's description text and its UNESCO page). Visitor restriction (f9): the UNESCO WHC text, re-read on an Internet Archive snapshot, says restrictions exist 'in order to control the temperature and humidity within the depositories'; the fire-protection measures on the same page (guards, surveillance, lightning rod) are a separate sentence. Narration now says visitors 'cannot walk inside' to match the UNESCO wording, and the old 'to keep the air just right inside' phrase was replaced. Only UNESCO is cited for this restriction; no 국가유산청 page with it was found, and rules may change. Check distractors replaced with plausible wrong answers. Vocab 소금/습기 dropped (not shown in a scene) and 세계유산 added. FINAL PASS (3rd check): scene 8 now says 'visitor entry is restricted' (UNESCO wording) instead of 'visitors cannot walk inside', because Haeinsa runs pre-booked guided tours inside Beopbojeon (since 2021-06, 경향신문). Current rules should be checked on haeinsa.or.kr before any release. REVIEW PASS (PR 1.8b): s1 no longer assumes the learner read story-tripitaka-koreana; s7 narrates UNESCO's 'oldest depository' as 'the oldest place built to store the Tripitaka'; s8 says only a few visitors may go in (f9: entry restricted, small pre-booked tours), to keep heat and dampness steady. REVIEW FIX (PR 1.8b round 2): s7 renders UNESCO's 'oldest depository' as 'the oldest storehouse of the Tripitaka' (no added 'built to' inside the UNESCO attribution). s8 is back to the time-independent UNESCO wording, 'visitor entry is limited' (f9), not 'only a few visitors may go in', which leaned on the 2021 tour reports; caption to match. The gloss of 'Uriga jikyeoyo' is now 'we protect it!' (no 'together' in the Korean). c1/c2 options rebalanced for length. Release check before PR 1.9 flips the catalogue status: re-check entry rules on haeinsa.or.kr; s8 holds either way.",
     "errata": []
   },
   {
@@ -1380,7 +1380,7 @@ export const storiesAll: Story[] = [
             "framing": false,
             "approximations": [],
             "artBrief": "A peaceful Goryeo-era temple courtyard with a wooden hall and a stone pagoda; inside an open door, figures bend over a work table with small shiny pieces. Hoya peeks around a pillar.",
-            "captionEn": "Printing with metal at a temple",
+            "captionEn": "Printing with metal type at a temple",
             "artPending": true
           },
           {
@@ -2551,8 +2551,8 @@ export const storiesAll: Story[] = [
     "recommendedStage": 1,
     "minutes": 5,
     "learningGoalsEn": [
-      "Know how the five basic consonants ㄱ (g), ㄴ (n), ㅁ (m), ㅅ (s) and ㅇ (silent/ng) copy the shapes of the speech organs.",
-      "Understand that a stronger sound adds a stroke: ㄴ (n) → ㄷ (d) → ㅌ (t).",
+      "Know how the five basic consonants ㄱ (g/k), ㄴ (n), ㅁ (m), ㅅ (s) and ㅇ (silent/ng) copy the shapes of the speech organs.",
+      "Understand that a stronger sound adds a stroke: ㄴ (n) → ㄷ (d/t) → ㅌ (t).",
       "Know the three basic vowel shapes, the round dot, ㅡ (eu) and ㅣ (i), and what they copy (sky, earth, person).",
       "Know that South Korea's spelling rules today count 24 basic letters (14 consonants, 10 vowels).",
       "Read and recognize 입 (ip), 목구멍 (mokgumeong), 하늘 (haneul), 땅 (ttang), 사람 (saram), 자음 (jaeum) and 모음 (moeum)."
@@ -2626,7 +2626,7 @@ export const storiesAll: Story[] = [
       {
         "id": "jamo-g",
         "ko": "ㄱ",
-        "romanization": "g",
+        "romanization": "g/k",
         "en": "giyeok, the letter for the g/k sound",
         "kind": "jamo"
       },
@@ -2689,7 +2689,7 @@ export const storiesAll: Story[] = [
       {
         "id": "jamo-d",
         "ko": "ㄷ",
-        "romanization": "d",
+        "romanization": "d/t",
         "en": "the consonant letter digeut",
         "kind": "jamo"
       },
@@ -2745,7 +2745,7 @@ export const storiesAll: Story[] = [
             "keyword": {
               "id": "jamo-g",
               "ko": "ㄱ",
-              "romanization": "g",
+              "romanization": "g/k",
               "en": "giyeok, the letter for the g/k sound",
               "kind": "jamo"
             },
@@ -2954,7 +2954,7 @@ export const storiesAll: Story[] = [
             "promptEn": "How do you get {target} from the letter nieun?",
             "target": {
               "ko": "ㄷ",
-              "romanization": "d",
+              "romanization": "d/t",
               "en": "the consonant letter digeut"
             },
             "options": [
@@ -3213,7 +3213,7 @@ export const storiesAll: Story[] = [
       "scope": "cluster",
       "notes": "Third independent pass. Every cited URL for all 6 episodes (52 facts) was re-opened (UNESCO pages via Wayback copies when the live site resets connections) and quotes/locators were compared; the one exception is unesco.org/en/prizes/literacy (unreachable from here; its claim is now also backed by a Korean MCST press release). Eight minimal corrections were made: (1) Hangeul Day f3 no longer says 'Gregorian' (no cited source says the October 9 conversion was Gregorian; encykorea separates Julian/Gregorian only for 1932-45) and dates the October 29/28 observances; (2) f10 gains a third source (SBS 2018 with 국립한글박물관 curator); (3) Shapes scene 8, learning goal and f7 now say 'South Korea's spelling rules' count 24 (North Korea counts 40, 국립한글박물관 webzine 59); (4) Sejong scene 4/f4: 백성 is 'an old-fashioned word' with 표준국어대사전 added; (5) Jikji f8 quote no longer repeats a prize amount that differs between UNESCO page versions; (6) Tripitaka f6 wood and corner plates now have two further sources (정책브리핑; 박상진 wood-identification study); (8) Hangeul Day f9 gains a second source (문화체육관광부 press release); (7) Panjeon scene 8/f9: 'visitors cannot walk inside' replaced by 'visitor entry is restricted' because Haeinsa has run pre-booked tours inside Beopbojeon since June 2021. See hangul-printing.signoff.md."
     },
-    "authorNotes": "The letter-shape explanations follow the Haerye's 'Jejahae' (제자해) as summarized by 한국민족문화대백과사전. The Haerye's yin-yang and five-elements philosophy is left out as too advanced. The add-a-stroke rule has exceptions (ㆁ, ㄹ, ㅿ, per 한국민족문화대백과사전), so the narration gives only the ㄴ→ㄷ→ㅌ example. The narration says 'a few old ones are no longer used' rather than naming exactly four, because ㆁ merged with ㅇ rather than disappearing. The 국립국어원 essay (004d/004g) notes that a few details of the design principle are still debated among scholars; the story keeps to the consensus points. Because illustrations must contain no text, the app should overlay the jamo (ㄱ, ㄴ, ㅏ and so on) as UI text on the scene art. REVISED: the shape descriptions now follow the Haerye wording exactly (ㄱ = root of the tongue closing the throat, 象舌根閉喉之形; ㄴ = tongue touching the upper gum, 象舌附上腭之形) and no longer promise a physical sensation or add modern phonetics ('back of the tongue blocks the throat', 'ridge behind the upper teeth' removed; narration and illustration). The summary now says 'five basic consonants' (only ㄱ ㄴ ㅁ ㅅ ㅇ copy speech organs; others add strokes). Scene 2 no longer lists 'lips' (the Haerye names tongue root, tongue, mouth, tooth, throat). Vocab 혀 removed because no scene shows it. FINAL PASS (3rd check): scene 8, goal 4 and f7 now say South Korea's spelling rules count 24 (North Korea's norms count 40). The ㄴ wording follows the standard Korean rendering of 象舌附上腭之形 ('tongue touching the upper gum'); the Chinese 上腭 literally means the upper palate/jaw, so no finer anatomical claim is made. REVIEW PASS (PR 1.8b): the old vowel arae-a is named 'the round dot' in learner text, never typed as a bare middle dot (screen readers skip it); the art overlay draws it.",
+    "authorNotes": "The letter-shape explanations follow the Haerye's 'Jejahae' (제자해) as summarized by 한국민족문화대백과사전. The Haerye's yin-yang and five-elements philosophy is left out as too advanced. The add-a-stroke rule has exceptions (ㆁ, ㄹ, ㅿ, per 한국민족문화대백과사전), so the narration gives only the ㄴ→ㄷ→ㅌ example. The narration says 'a few old ones are no longer used' rather than naming exactly four, because ㆁ merged with ㅇ rather than disappearing. The 국립국어원 essay (004d/004g) notes that a few details of the design principle are still debated among scholars; the story keeps to the consensus points. Because illustrations must contain no text, the app should overlay the jamo (ㄱ, ㄴ, ㅏ and so on) as UI text on the scene art. REVISED: the shape descriptions now follow the Haerye wording exactly (ㄱ = root of the tongue closing the throat, 象舌根閉喉之形; ㄴ = tongue touching the upper gum, 象舌附上腭之形) and no longer promise a physical sensation or add modern phonetics ('back of the tongue blocks the throat', 'ridge behind the upper teeth' removed; narration and illustration). The summary now says 'five basic consonants' (only ㄱ ㄴ ㅁ ㅅ ㅇ copy speech organs; others add strokes). Scene 2 no longer lists 'lips' (the Haerye names tongue root, tongue, mouth, tooth, throat). Vocab 혀 removed because no scene shows it. FINAL PASS (3rd check): scene 8, goal 4 and f7 now say South Korea's spelling rules count 24 (North Korea's norms count 40). The ㄴ wording follows the standard Korean rendering of 象舌附上腭之形 ('tongue touching the upper gum'); the Chinese 上腭 literally means the upper palate/jaw, so no finer anatomical claim is made. REVIEW PASS (PR 1.8b): the old vowel arae-a is named 'the round dot' in learner text, never typed as a bare middle dot (screen readers skip it); the art overlay draws it. REVIEW FIX (PR 1.8b round 2): isolated jamo use the F-CNT-002 C6 sound-value table: ㄱ 'g/k' and ㄷ 'd/t' in keywords, the s2 keyword, the c3 target and the learning goals (ㅇ already 'silent/ng'). The goal glosses are modern reading aids; in the Haerye the throat letter ㅇ was the null letter and ng was written with the separate letter ㆁ, which the narration does not claim otherwise.",
     "errata": []
   },
   {
@@ -3232,7 +3232,7 @@ export const storiesAll: Story[] = [
     "recommendedStage": 1,
     "minutes": 5,
     "learningGoalsEn": [
-      "Know that the Tripitaka Koreana (Palman Daejanggyeong) is a set of more than 80,000 woodblocks of Buddhist scriptures carved in Goryeo between 1237 and 1248.",
+      "Know that the Tripitaka Koreana (Palmandaejanggyeong) is a set of more than 80,000 woodblocks of Buddhist scriptures carved in Goryeo between 1237 and 1248.",
       "Understand why the blocks were carved: a wish for the Buddha's protection during the Mongol invasions.",
       "Know that the woodblocks are kept at Haeinsa Temple and were inscribed on UNESCO's Memory of the World Register in 2007.",
       "Read and recognize 해인사 (Haeinsa), 대장경 (Daejanggyeong), 팔만 (palman), 나무 (namu), 경판 (gyeongpan) and 글자 (geulja)."
@@ -3487,16 +3487,16 @@ export const storiesAll: Story[] = [
           {
             "id": "c1",
             "kind": "detail",
-            "promptEn": "About how many woodblocks are in the Tripitaka Koreana?",
+            "promptEn": "How many woodblocks are in the Tripitaka Koreana?",
             "options": [
               {
                 "id": "a",
-                "en": "About 800",
+                "en": "More than 800",
                 "isCorrect": false
               },
               {
                 "id": "b",
-                "en": "About 8,000",
+                "en": "More than 8,000",
                 "isCorrect": false
               },
               {
@@ -3506,7 +3506,7 @@ export const storiesAll: Story[] = [
               },
               {
                 "id": "d",
-                "en": "About 800,000",
+                "en": "More than 800,000",
                 "isCorrect": false
               }
             ],
@@ -3866,7 +3866,7 @@ export const storiesAll: Story[] = [
       "scope": "cluster",
       "notes": "Third independent pass. Every cited URL for all 6 episodes (52 facts) was re-opened (UNESCO pages via Wayback copies when the live site resets connections) and quotes/locators were compared; the one exception is unesco.org/en/prizes/literacy (unreachable from here; its claim is now also backed by a Korean MCST press release). Eight minimal corrections were made: (1) Hangeul Day f3 no longer says 'Gregorian' (no cited source says the October 9 conversion was Gregorian; encykorea separates Julian/Gregorian only for 1932-45) and dates the October 29/28 observances; (2) f10 gains a third source (SBS 2018 with 국립한글박물관 curator); (3) Shapes scene 8, learning goal and f7 now say 'South Korea's spelling rules' count 24 (North Korea counts 40, 국립한글박물관 webzine 59); (4) Sejong scene 4/f4: 백성 is 'an old-fashioned word' with 표준국어대사전 added; (5) Jikji f8 quote no longer repeats a prize amount that differs between UNESCO page versions; (6) Tripitaka f6 wood and corner plates now have two further sources (정책브리핑; 박상진 wood-identification study); (8) Hangeul Day f9 gains a second source (문화체육관광부 press release); (7) Panjeon scene 8/f9: 'visitors cannot walk inside' replaced by 'visitor entry is restricted' because Haeinsa has run pre-booked tours inside Beopbojeon since June 2021. See hangul-printing.signoff.md."
     },
-    "authorNotes": "The carving period follows 국가유산포털, 한국민족문화대백과사전 and UNESCO WHC (1237–1248). Some accounts count the whole project, preparation included, as about 16 years ending in 1251, so the narration gives only 1237–1248. The count of 81,258 comes from a survey made under Japanese rule and includes some blocks re-carved in Joseon (국가유산포털), so the narration says 'more than 80,000'. Where the carving took place (Ganghwa versus Namhae) is treated differently across sources and is left out. The 1398 move to Haeinsa appears only on 국가유산포털 pages, so it is left out too. The earlier set of blocks lost to fire in 1232 is left out to keep the war content mild. UNESCO's Memory of the World page places Haeinsa in the 'southwest' of the peninsula, but Haeinsa is in South Gyeongsang Province in the southeast, so that phrase was not used. 'Almost 800 years later' is worked out from 1248. The official heritage name is 합천 해인사 대장경판 (Hapcheon Haeinsa Daejanggyeongpan). REVISED: scene 1 no longer puts Hoya 'inside' the hall (visitor entry is restricted, see story-janggyeong-panjeon). f5 attributes the exact figure 81,258 to UNESCO (verified on the Memory of the World page) and records the Korea Heritage Service caveat; other published counts (about 81,350; 81,352) were reported by one fact-checker but not verified here, so no exact number appears in the narration. Second sources added for lacquer (f6) and the tens of millions of characters (f7: 5,200여 만자, 국가유산포털). The wild-cherry wood and corner metal plates (f6) still rest on one authoritative source (한국민족문화대백과사전; spelled 산벗나무 there). The UNESCO WHC page blocks automated access; its text was re-read on an Internet Archive snapshot. Vocab 새기다 dropped and 경판 added to scene 5 so every vocab word appears in a scene. FINAL PASS (3rd check): wild cherry wood (about 64-70% of blocks) and corner metal plates (copper) now rest on three sources (한국민족문화대백과사전, 정책브리핑, 박상진 study). The purpose of the lacquer is stated by 한국민족문화대백과사전 and the 국가유산포털 MoW page (preserves the carving); 박상진 doubts its protective effect, so treat 'to protect them' as the official wording. REVIEW PASS (PR 1.8b): s8 no longer points to a 'next time' story (shelf stories open in any order).",
+    "authorNotes": "The carving period follows 국가유산포털, 한국민족문화대백과사전 and UNESCO WHC (1237–1248). Some accounts count the whole project, preparation included, as about 16 years ending in 1251, so the narration gives only 1237–1248. The count of 81,258 comes from a survey made under Japanese rule and includes some blocks re-carved in Joseon (국가유산포털), so the narration says 'more than 80,000'. Where the carving took place (Ganghwa versus Namhae) is treated differently across sources and is left out. The 1398 move to Haeinsa appears only on 국가유산포털 pages, so it is left out too. The earlier set of blocks lost to fire in 1232 is left out to keep the war content mild. UNESCO's Memory of the World page places Haeinsa in the 'southwest' of the peninsula, but Haeinsa is in South Gyeongsang Province in the southeast, so that phrase was not used. 'Almost 800 years later' is worked out from 1248. The official heritage name is 합천 해인사 대장경판 (Hapcheon Haeinsa Daejanggyeongpan). REVISED: scene 1 no longer puts Hoya 'inside' the hall (visitor entry is restricted, see story-janggyeong-panjeon). f5 attributes the exact figure 81,258 to UNESCO (verified on the Memory of the World page) and records the Korea Heritage Service caveat; other published counts (about 81,350; 81,352) were reported by one fact-checker but not verified here, so no exact number appears in the narration. Second sources added for lacquer (f6) and the tens of millions of characters (f7: 5,200여 만자, 국가유산포털). The wild-cherry wood and corner metal plates (f6) still rest on one authoritative source (한국민족문화대백과사전; spelled 산벗나무 there). The UNESCO WHC page blocks automated access; its text was re-read on an Internet Archive snapshot. Vocab 새기다 dropped and 경판 added to scene 5 so every vocab word appears in a scene. FINAL PASS (3rd check): wild cherry wood (about 64-70% of blocks) and corner metal plates (copper) now rest on three sources (한국민족문화대백과사전, 정책브리핑, 박상진 study). The purpose of the lacquer is stated by 한국민족문화대백과사전 and the 국가유산포털 MoW page (preserves the carving); 박상진 doubts its protective effect, so treat 'to protect them' as the official wording. REVIEW PASS (PR 1.8b): s8 no longer points to a 'next time' story (shelf stories open in any order). REVIEW FIX (PR 1.8b round 2): c1 options are now parallel ('More than ...') so the wording does not give the answer away. Name romanization follows the converter ('Palmandaejanggyeong') in the title and goals; s4 keeps the two-word 'Palman Daejanggyeong' on purpose, because the next sentence explains 'Palman means eighty thousand'.",
     "errata": []
   }
 ];
