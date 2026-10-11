@@ -14,8 +14,8 @@ export const AUDIO_DIR = 'assets/audio';
 export const AUDIO_REQUIRE_BASE = '../../../assets/audio';
 
 /** Test-build-only clips for the web e2e (never shipped: the generator adds them only when asked). */
-export const E2E_FIXTURE_DIR = 'e2e/web/fixtures/audio';
-export const E2E_FIXTURE_REQUIRE_BASE = '../../../e2e/web/fixtures/audio';
+export const E2E_FIXTURE_DIR = 'e2e/fixtures/audio';
+export const E2E_FIXTURE_REQUIRE_BASE = '../../../e2e/fixtures/audio';
 
 const toPosix = (p) => p.split('\\').join('/');
 

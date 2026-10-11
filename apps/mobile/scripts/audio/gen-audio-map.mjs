@@ -7,7 +7,7 @@
 //   node scripts/audio/gen-audio-map.mjs           write the map
 //   node scripts/audio/gen-audio-map.mjs --check   exit 1 if the committed map is stale
 //
-// HR_E2E_AUDIO_FIXTURES=1 also maps the clips under e2e/web/fixtures/audio, for a
+// HR_E2E_AUDIO_FIXTURES=1 also maps the clips under e2e/fixtures/audio, for a
 // local test build of the offline clip e2e only. Never set it for a deploy build,
 // and never commit the map it writes (the drift test fails on it).
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
