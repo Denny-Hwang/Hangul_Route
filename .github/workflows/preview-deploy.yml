@@ -60,13 +60,18 @@ jobs:
           test -f apps/web/out/design-preview/scenes/library.html
 
       # There is no per-PR preview URL (Workers Builds deploys main only), so the
-      # built export is attached to the run: art reviewers download it and serve
-      # it with `node apps/web/e2e/serve-out.mjs <dir>` to open /design-preview/scenes.
+      # built export is attached to the run: art reviewers download it, run
+      # `tar -xzf web-export.tgz` and `node apps/web/e2e/serve-out.mjs out`, then
+      # open /design-preview/scenes. Tarred because some exported file names hold
+      # a colon, which artifact uploads refuse.
+      - name: Pack static export
+        run: tar -czf web-export.tgz -C apps/web out
+
       - name: Upload static export (contact sheet review)
         uses: actions/upload-artifact@v4
         with:
           name: web-export
-          path: apps/web/out
+          path: web-export.tgz
           retention-days: 7
           if-no-files-found: error
 

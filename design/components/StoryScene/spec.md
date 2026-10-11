@@ -84,6 +84,6 @@ The review surface for every picture, in `apps/web` (static export, `noindex`, l
 - A `card:` layer is drawn by the web renderer only as a dashed placeholder box, so its row also says in words "card:<id> — shown in the app" under the picture.
 - At phone width nothing widens the page: the thumbnail grids wrap (from 4 or 8 cells' width up they keep the 4-up and 8-up layout) and the library's fixed-size drawings scroll inside their card.
 - `/design-preview/components` has a `StoryScene` section (F-STORY-002 §5, the F-VR-001 surface): the worked-example palace hall at full 320, full 96 and thumb 96, and the tinted fallback panel at 320 and 96.
-- Reviewers reach the sheet through the `web-export` artifact of the PR's "Web Console (static export)" run (serve it with `node apps/web/e2e/serve-out.mjs <dir>`) or a local build; there is no per-PR preview URL.
+- Reviewers reach the sheet through the `web-export` artifact of the PR's "Web Console (static export)" run (unpack `web-export.tgz`, then `node apps/web/e2e/serve-out.mjs out`) or a local build; there is no per-PR preview URL.
 - Code: pure view models in `apps/web/src/lib/scene-sheet/` (`read-stories.ts`, `sheet.ts`, `library.ts`, 100 % covered); pages `app/design-preview/scenes/page.tsx` and `scenes/library/page.tsx`; `components/design-preview/{SheetView,sheet-ui,HoyaReference}.tsx`; smoke `apps/web/e2e/scene-sheet.spec.ts`.
 
