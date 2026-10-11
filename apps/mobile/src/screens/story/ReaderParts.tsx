@@ -44,6 +44,7 @@ export function ReaderTopBar({
   furthest,
   total,
   position,
+  positionLabel,
   onClose,
   onSources,
 }: {
@@ -53,6 +54,8 @@ export function ReaderTopBar({
   total: number;
   /** "3 / 8": a page number, or null on the end page. */
   position: string | null;
+  /** What a screen reader says for the page number ("Scene 3 of 8"), not "three slash eight". */
+  positionLabel: string;
   onClose: () => void;
   onSources?: () => void;
 }): React.ReactElement {
@@ -74,12 +77,28 @@ export function ReaderTopBar({
       >
         <Icon name="close" size={spacing.xxl} color={colors.text.secondary} />
       </Pressable>
-      <View style={{ flex: 1, alignItems: 'center', minWidth: 0 }} testID="story-reader-dots">
+      {/* The dots carry no value a screen reader can say; the labelled page number does (§3.10). */}
+      <View
+        style={{ flex: 1, alignItems: 'center', minWidth: 0 }}
+        testID="story-reader-dots"
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+        aria-hidden
+      >
         <Progress variant="dots" value={furthest + 1} max={total} height={spacing.sm} tone="primary" />
       </View>
       {position !== null ? (
-        <View style={{ justifyContent: 'center' }}>
-          <Pill label={position} size="md" tone="neutral" testID="story-reader-position" />
+        <View
+          style={{ justifyContent: 'center' }}
+          accessible
+          accessibilityLabel={positionLabel}
+          aria-label={positionLabel}
+          role="group"
+          testID="story-reader-position-group"
+        >
+          <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" aria-hidden>
+            <Pill label={position} size="md" tone="neutral" testID="story-reader-position" />
+          </View>
         </View>
       ) : null}
       {onSources ? (
@@ -218,16 +237,21 @@ export function GlossCard({
     <View ref={ref} accessibilityLiveRegion="polite" testID="story-reader-gloss">
       <Card tone="paper" padding="lg" elevation="flat">
         <View style={{ alignItems: 'center', gap: spacing.sm }}>
-          <KoreanText
-            ko={text.ko}
-            romanization={text.romanization}
-            gloss={text.en}
-            size="sm"
-            romanizationShown={romanizationShown}
-            onPress={onHear}
-            accessibilityLabel={koreanItem({ ko: text.ko, romanization: text.romanization, gloss: text.en })}
-            testID="story-reader-gloss-text"
-          />
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.md }}>
+            <View style={{ flexShrink: 1, minWidth: 0 }}>
+              <KoreanText
+                ko={text.ko}
+                romanization={text.romanization}
+                gloss={text.en}
+                size="sm"
+                romanizationShown={romanizationShown}
+                onPress={onHear}
+                accessibilityLabel={koreanItem({ ko: text.ko, romanization: text.romanization, gloss: text.en })}
+                testID="story-reader-gloss-text"
+              />
+            </View>
+            <SpeakerButton label={copy.hearTerm(text.romanization)} onPress={onHear} testID="story-reader-gloss-hear" />
+          </View>
           <View style={{ alignSelf: 'center' }}>
             <Button label={copy.closeGloss.cta} tone="ghost" size="md" onPress={onClose} testID="story-reader-gloss-close" />
           </View>
@@ -262,18 +286,24 @@ export function KoreanBlock({
 }): React.ReactElement {
   const { text, words } = korean;
   if (!words || words.length === 0) {
-    // One tap target: hear the word or the whole line (and reveal its romanization in tap mode).
+    // One tap target: hear the word or the whole line (and reveal its romanization in tap mode),
+    // plus its 64 dp speaker (§3.3 item 4).
     return (
-      <KoreanText
-        ko={text.ko}
-        romanization={text.romanization}
-        gloss={text.en}
-        size={size}
-        romanizationShown={romanizationShown}
-        onPress={onHear}
-        accessibilityLabel={koreanItem({ ko: text.ko, romanization: text.romanization, gloss: text.en })}
-        testID="story-reader-korean"
-      />
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.md }}>
+        <View style={{ flexShrink: 1, minWidth: 0 }}>
+          <KoreanText
+            ko={text.ko}
+            romanization={text.romanization}
+            gloss={text.en}
+            size={size}
+            romanizationShown={romanizationShown}
+            onPress={onHear}
+            accessibilityLabel={koreanItem({ ko: text.ko, romanization: text.romanization, gloss: text.en })}
+            testID="story-reader-korean"
+          />
+        </View>
+        <SpeakerButton label={copy.hearKorean} onPress={onHear} testID="story-reader-hear-korean" />
+      </View>
     );
   }
   // Authored words: each is a chip that opens the gloss card; the whole-line gloss stays beneath.

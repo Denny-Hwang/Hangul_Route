@@ -3,7 +3,7 @@ import { usePromptSlot, type PromptSlot } from '../../components/use-prompt-slot
 import { canPlayKorean } from '../../logic/audio/capability';
 import type { PlaySpec } from '../../logic/audio/controller';
 import { createAudioRunner, type AudioRunner } from '../../logic/story/audio-runner';
-import { stepsForVoice } from '../../logic/story/reader-effects';
+import { hasKoreanStep, stepsForVoice } from '../../logic/story/reader-effects';
 import { STORY_READER_AUDIO_SOURCE } from '../../logic/story/scene-audio';
 import { playPrompt, stop as stopVoice } from '../../platform/audio';
 import { useAudioStore } from '../../store/audio-store';
@@ -40,11 +40,14 @@ export function useReaderAudio(): ReaderAudio {
   const koreanOk = useAudioStore(
     (s) => s.tts.state === 'unknown' || canPlayKorean({ tts: s.tts, clips: s.clips, unlocked: s.unlocked }),
   );
+  const checking = useAudioStore((s) => s.tts.state === 'unknown');
   const unlocked = useAudioStore((s) => s.unlocked);
   const runnerRef = useRef<AudioRunner | null>(null);
   if (runnerRef.current === null) runnerRef.current = createAudioRunner({ playPrompt, stop: stopVoice });
   const koreanRef = useRef(koreanOk);
   koreanRef.current = koreanOk;
+  const checkingRef = useRef(checking);
+  checkingRef.current = checking;
   const played = useRef(0);
   const { play: slotPlay, reset: slotReset } = slot;
 
@@ -55,8 +58,18 @@ export function useReaderAudio(): ReaderAudio {
       const spoken = stepsForVoice(steps, koreanRef.current);
       // Only Korean and no Korean voice: still ask, so the slot learns `unavailable` and shows its text.
       const chain = spoken.length > 0 ? spoken : [...steps];
+      // Voice check still running: a Korean step that turns out unavailable is skipped, not the end of the English.
+      const options = { skipUnavailableKorean: checkingRef.current };
+      if (!hasKoreanStep(chain)) {
+        // English only (no Korean voice): it says nothing about the Korean, so the slot keeps its
+        // no-voice text, detail line and help link (§3.4, §3.14 row 7).
+        void runner.play(chain, options).then((result) => {
+          if (result === 'played') played.current += 1;
+        });
+        return;
+      }
       void slotPlay(async () => {
-        const result = await runner.play(chain);
+        const result = await runner.play(chain, options);
         if (result === 'played') played.current += 1;
         // A superseded chain says nothing about the sound: the newer one reports.
         return result === 'superseded' ? 'played' : result;

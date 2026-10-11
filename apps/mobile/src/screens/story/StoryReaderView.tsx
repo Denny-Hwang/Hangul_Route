@@ -14,6 +14,7 @@ import {
 import type { KoText, Story, StoryLevel, StoryTier } from '@hangul-route/content-schema';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AccessibilityInfo, Animated, Platform, ScrollView, View, type LayoutChangeEvent } from 'react-native';
+import { useIsFocused } from '@react-navigation/native';
 import { useMessages } from '../../i18n/use-messages';
 import { romanizationShown } from '../../logic/story/romanization';
 import {
@@ -24,6 +25,7 @@ import {
   readerAvailability,
   readerCheckpoints,
   readerKeyAction,
+  sayItYourselfShown,
   termId,
   wordId,
   type ReaderMode,
@@ -109,11 +111,6 @@ interface Focusable {
 const STACKED_ART_SHARE = 0.42;
 /** Art column share in the side-by-side layout (§3.3: art left, at most 55 %). */
 const SIDE_ART_SHARE = 0.55;
-/**
- * Below this window height (small phones such as 320x568, landscape phones) Next is `lg` (80) instead of
- * `hero` (96), so the scrolling text keeps room; both are above the 64 floor (§3.10, F-LAYOUT-001 §3.6).
- */
-const COMPACT_HEIGHT = 640;
 
 function ReaderBody({
   story,
@@ -144,6 +141,7 @@ function ReaderBody({
   const readToMeOn = sessionReadToMe ?? readToMe;
 
   const audio = useReaderAudio();
+  const isFocused = useIsFocused();
   // The effect runner reads the audio through a ref so its identity (and the key listener) stays stable.
   const audioRef = useRef(audio);
   audioRef.current = audio;
@@ -162,6 +160,12 @@ function ReaderBody({
   const termsOpened = useRef(0);
   const finishedSent = useRef(false);
   const narrationRef = useRef<Focusable | null>(null);
+  const textScrollRef = useRef<ScrollView | null>(null);
+  // Page keys only while the reader is the screen in front and its voice-help sheet is closed (§3.10).
+  const keysActive = useRef(true);
+  keysActive.current = isFocused && !helpOpen;
+  // The lowest scene shown in this mount, for `scenesSeen` (the reader may open past scene 1).
+  const lowest = useRef(state.index);
   const fade = useRef(new Animated.Value(1)).current;
 
   const sceneSteps = useCallback(
@@ -179,6 +183,9 @@ function ReaderBody({
         if (effect.type === 'scene-changed') {
           audio.resetForScene();
           pendingAutoplay.current = null;
+          lowest.current = Math.min(lowest.current, effect.index);
+          // Every scene starts at the top of its text, on native too (no focus scroll there).
+          textScrollRef.current?.scrollTo({ y: 0, animated: false });
           const { readToMe: on, unlocked, mode: m0, onSceneChange: save } = live.current;
           const plan = planSceneChange({ mode: m0, index: effect.index, via: effect.via, readToMe: on, unlocked });
           if (plan.saveBookmark) save(effect.index);
@@ -203,6 +210,7 @@ function ReaderBody({
                 mode: live.current.mode,
                 sceneCount: s.sceneCount,
                 furthest: s.furthest,
+                lowest: lowest.current,
                 linesPlayed: audio.playedCount(),
                 termsOpened: termsOpened.current,
               }) },
@@ -246,6 +254,7 @@ function ReaderBody({
   useEffect(
     () =>
       subscribeReaderKeys((key) => {
+        if (!keysActive.current) return false;
         const action = readerKeyAction(key, stateRef.current);
         if (action === null) return false;
         dispatch(action);
@@ -439,7 +448,7 @@ function ReaderBody({
   };
 
   const chips =
-    reason === 'no_voice' && view.korean ? (
+    sayItYourselfShown({ canPlayKorean: audio.canPlayKorean, reason, hasKorean: view.korean !== null }) ? (
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }} testID="story-reader-chips">
         <Pill label={copy.sayItYourself.pill} tone="info" testID="story-reader-say-it" />
       </View>
@@ -459,7 +468,7 @@ function ReaderBody({
       onReadToMe={changeReadToMe}
       isFirst={view.isFirst}
       nextLabel={view.labels.next}
-      nextSize={lc.windowHeight > 0 && lc.windowHeight < COMPACT_HEIGHT ? 'lg' : 'hero'}
+      nextSize={lc.windowHeight > 0 && lc.windowHeight < layout.compactHeight ? 'lg' : 'hero'}
       onBack={() => dispatch({ type: 'back' })}
       onNext={() => dispatch({ type: 'next' })}
     />
@@ -492,31 +501,51 @@ function ReaderBody({
         furthest={state.furthest}
         total={state.sceneCount}
         position={end ? null : view.labels.position}
+        positionLabel={view.labels.scene}
         onClose={onClose}
         onSources={sources}
       />
-      <Animated.View testID="story-reader-body" style={{ flex: 1, opacity: fade, marginTop: spacing.sm }} onLayout={onBodyLayout}>
-        {end ? (
-          endPage
-        ) : side ? (
+      {side && !end ? (
+        // Side by side: the art and the text fade on a page turn; the controls under the text stay put (§3.10).
+        <View testID="story-reader-body" style={{ flex: 1, marginTop: spacing.sm }} onLayout={onBodyLayout}>
           <View style={{ flex: 1, flexDirection: 'row', gap: spacing.xl }} testID="story-reader-columns">
-            <View style={{ width: artWidth, alignItems: 'center' }}>{art}</View>
+            <Animated.View style={{ width: artWidth, alignItems: 'center', opacity: fade }}>{art}</Animated.View>
             <View style={{ flex: 1, minWidth: 0 }}>
-              <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingTop: spacing.xs }} keyboardShouldPersistTaps="handled">
-                {text}
-              </ScrollView>
+              <Animated.View style={{ flex: 1, opacity: fade }} testID="story-reader-text">
+                <ScrollView
+                  ref={textScrollRef}
+                  style={{ flex: 1 }}
+                  contentContainerStyle={{ paddingTop: spacing.xs }}
+                  keyboardShouldPersistTaps="handled"
+                  testID="story-reader-scroll"
+                >
+                  {text}
+                </ScrollView>
+              </Animated.View>
               {bottomBar}
             </View>
           </View>
-        ) : (
-          <View style={{ flex: 1, gap: spacing.md }}>
-            {art}
-            <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingTop: spacing.xs }} keyboardShouldPersistTaps="handled">
-              {text}
-            </ScrollView>
-          </View>
-        )}
-      </Animated.View>
+        </View>
+      ) : (
+        <Animated.View testID="story-reader-body" style={{ flex: 1, opacity: fade, marginTop: spacing.sm }} onLayout={onBodyLayout}>
+          {end ? (
+            endPage
+          ) : (
+            <View style={{ flex: 1, gap: spacing.md }}>
+              {art}
+              <ScrollView
+                ref={textScrollRef}
+                style={{ flex: 1 }}
+                contentContainerStyle={{ paddingTop: spacing.xs }}
+                keyboardShouldPersistTaps="handled"
+                testID="story-reader-scroll"
+              >
+                {text}
+              </ScrollView>
+            </View>
+          )}
+        </Animated.View>
+      )}
       <VoiceHelpSheet visible={helpOpen} onClose={() => setHelpOpen(false)} />
     </Screen>
   );
