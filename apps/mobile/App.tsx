@@ -3,6 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
+import { AppState } from 'react-native';
 import { ErrorBoundary } from 'react-error-boundary';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -18,7 +19,7 @@ import { useAccountStore } from './src/store/account-store';
 import { bindAudioLevelToProfiles } from './src/store/audio-store';
 import { hydrateLearnerData } from './src/store/bootstrap';
 import { usePwaStore } from './src/store/pwa-store';
-import { registerInboxRefresh } from './src/store/membership-store';
+import { rederiveAllLocal, registerInboxRefresh } from './src/store/membership-store';
 import { useSyncStore } from './src/store/sync-store';
 import { setProgressPersistListener } from './src/logic/sync/persist-hook';
 
@@ -57,11 +58,17 @@ export default function App(): React.ReactElement {
     const offInbox = registerInboxRefresh();
     void hydrateLearnerData()
       .catch(() => undefined)
-      .then(() => {
+      .then(async () => {
         if (!live) return;
         setReady(true);
+        // A curriculum's horizon moves with the calendar, network or not (F-PLAN-002 section 3.6).
+        await rederiveAllLocal().catch(() => undefined);
         void useSyncStore.getState().syncAll();
       });
+    // Back in the foreground (possibly on a new day): derive the next days from the cached plans.
+    const foreground = AppState.addEventListener('change', (state) => {
+      if (state === 'active') void rederiveAllLocal().catch(() => undefined);
+    });
     const off = subscribePwa((event) => {
       if (event === 'back-online') {
         void flushQueue();
@@ -74,6 +81,7 @@ export default function App(): React.ReactElement {
       unbindLevel();
       off();
       offInbox();
+      foreground.remove();
       setProgressPersistListener(null);
     };
   }, [hydrateAccount, countVisit]);

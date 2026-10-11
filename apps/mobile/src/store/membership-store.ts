@@ -7,6 +7,7 @@ import { readJson, writeJson } from '../platform/storage';
 import type { DeviceCredentials, RosterName, SyncApiClient } from '../platform/sync-api';
 import { track } from '../platform/telemetry';
 import { usePlanStore } from './plan-store';
+import { useProfileStore } from './profile-store';
 import { useTierStore } from './tier-store';
 import { onSynced, syncApi, useSyncStore } from './sync-store';
 
@@ -75,11 +76,16 @@ export const useMembershipStore = create<State & Actions>((set, get) => {
 
     refresh: async (learnerId) => {
       const client: SyncApiClient | null = syncApi();
-      if (!client) return null;
+      // No inbox this time: the horizon still moves with the calendar, from the cached plans (F-PLAN-002 section 3.6).
+      const offline = async (): Promise<null> => {
+        await rederiveLocal(learnerId);
+        return null;
+      };
+      if (!client) return offline();
       const creds = await credentialsFor(learnerId, false);
-      if (!creds) return null;
+      if (!creds) return offline();
       const result = await client.getInbox(learnerId, creds);
-      if (result.status !== 'ok') return null;
+      if (result.status !== 'ok') return offline();
       const rows = put(learnerId, result.inbox.memberships);
       // The server decides premium from memberships (F-ENT-001 §3.4); cache it with its grace window.
       useTierStore.getState().applyInbox(learnerId, result.inbox);
@@ -152,6 +158,25 @@ export const useMembershipStore = create<State & Actions>((set, get) => {
     },
   };
 });
+
+/**
+ * Derive a learner's homework again from the cached plans and the self-route,
+ * with no network, and push the change when there is one. The horizon of a
+ * curriculum moves with the calendar, so a device that is offline, cannot
+ * sync or has no account still gets each new week (F-PLAN-002 section 3.6
+ * rule 1, section 3.11).
+ */
+export async function rederiveLocal(learnerId: string): Promise<boolean> {
+  const outcome = await usePlanStore.getState().rederive(learnerId);
+  if (outcome?.changed) useSyncStore.getState().requestSync(learnerId);
+  return outcome?.changed ?? false;
+}
+
+/** `rederiveLocal` for every learner on the device: app start and back in the foreground. */
+export async function rederiveAllLocal(): Promise<void> {
+  const learners = useProfileStore.getState().profiles.filter((p) => p.role === 'learner');
+  for (const p of learners) await rederiveLocal(p.id);
+}
 
 /** Refresh the inbox after every successful sync (call once at app start; returns the unsubscribe). */
 export function registerInboxRefresh(): () => void {
