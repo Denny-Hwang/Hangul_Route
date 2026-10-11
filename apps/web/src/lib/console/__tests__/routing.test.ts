@@ -1,7 +1,7 @@
 import { getMessages, type UiLocale } from '@hangul-route/i18n';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { SpaceListItem } from '../api';
-import { KIND_LABEL, ROUTES, groupSpaces, landingAfterCreate, landingAfterSignIn, memberNoun, prefillName, roleCards, spaceErrorText, spaceIdFrom, statusLine } from '../routing';
+import { ROUTES, groupSpaces, isKnownSpaceKind, landingAfterCreate, landingAfterSignIn, loadErrorKey, prefillName, roleCards, spaceErrorText, spaceIdFrom, statusLine } from '../routing';
 
 const item = (id: string, kind: SpaceListItem['space']['kind'], createdAt: string, over: Partial<SpaceListItem> = {}, archivedAt: string | null = null): SpaceListItem => ({
   space: { id, kind, name: id, parentSpaceId: null, settings: { consentMode: 'parent', anonymizeRoster: false }, archivedAt, createdAt },
@@ -41,15 +41,11 @@ describe('console routing (F-CONSOLE-001)', () => {
     expect(prefillName('class', 'Kim')).toBe('Class A');
     expect(prefillName('school', 'Seoul Hangul')).toBe('Seoul Hangul school');
     expect(prefillName('school', '')).toBe('Our school');
-    expect(KIND_LABEL.class).toBe('Class');
     expect(roleCards().map((r) => r.kind)).toEqual(['family', 'class', 'school']);
     expect(roleCards()[0]).toEqual({ kind: 'family', title: 'Parent / caregiver', line: 'Home — my kids' });
-    expect(memberNoun('class')).toBe('students');
-    expect(memberNoun('family')).toBe('learners');
-    expect(memberNoun('school')).toBe('members');
   });
 
-  it('reads role cards, prefilled names and member nouns from the dictionary in every locale (F-I18N-001 PR 10a)', () => {
+  it('reads role cards, and prefilled names from the dictionary in every locale (F-I18N-001 PR 10a)', () => {
     for (const locale of ['en', 'es', 'ko'] as const) {
       const c = getMessages(locale).console;
       expect(roleCards(locale)).toEqual([
@@ -62,9 +58,7 @@ describe('console routing (F-CONSOLE-001)', () => {
       expect(prefillName('class', 'Kim', locale)).toBe(c.start.prefill.class);
       expect(prefillName('school', 'Seoul', locale)).toBe(c.start.prefill.school('Seoul'));
       expect(prefillName('school', '', locale)).toBe(c.start.prefill.schoolDefault);
-      for (const kind of ['family', 'class', 'school'] as const) expect(memberNoun(kind, locale)).toBe(c.kind.members[kind]);
     }
-    expect(KIND_LABEL).toEqual(getMessages('en').console.kind.label);
   });
 
   it('groups by kind, newest first, archived last, with count-only status lines', () => {
@@ -125,7 +119,19 @@ describe('console routing words follow the locale they are given (F-I18N-001 PR 
     expect(prefillName('family', '', PSEUDO)).toMatch(bracketed);
     expect(prefillName('class', 'Kim', PSEUDO)).toMatch(bracketed);
     expect(prefillName('school', 'Seoul', PSEUDO)).toMatch(bracketed);
-    expect(memberNoun('class', PSEUDO)).toMatch(bracketed);
     expect(statusLine(item('c', 'class', 't', { counts: { learners: 2, accounts: 1, classes: 0 } }), PSEUDO)).toMatch(bracketed);
   });
 });
+
+describe('page load errors (settings, school admin, F-I18N-001 PR 10c)', () => {
+  it('words forbidden on its own and every other error as cantReach', () => {
+    expect(loadErrorKey('forbidden')).toBe('forbidden');
+    for (const error of ['network', 'notFound', 'server', 'unauthorized', '']) expect(loadErrorKey(error)).toBe('cantReach');
+  });
+
+  it('knows the three space kinds and nothing else', () => {
+    for (const kind of ['family', 'class', 'school']) expect(isKnownSpaceKind(kind)).toBe(true);
+    for (const kind of ['district', 'Family', '', null, undefined, 3]) expect(isKnownSpaceKind(kind)).toBe(false);
+  });
+});
+
