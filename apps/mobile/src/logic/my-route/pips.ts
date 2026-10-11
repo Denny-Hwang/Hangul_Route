@@ -39,6 +39,8 @@ export interface PipContext {
   latched: ReadonlySet<StageKey>;
   isEntitled: (stage: StageKey) => boolean;
   cursorId: string | null;
+  /** The start marker's quest (R-7a); absent or null when there is none. */
+  startId?: string | null;
 }
 
 const questPip = (entry: RouteEntry, ctx: PipContext): Pip => ({
@@ -53,7 +55,7 @@ const questPip = (entry: RouteEntry, ctx: PipContext): Pip => ({
     offerable: ctx.isEntitled(entry.stage),
   }),
   isCursor: entry.questId === ctx.cursorId,
-  isStart: false,
+  isStart: ctx.startId != null && entry.questId === ctx.startId,
 });
 
 const cellPip = (key: string, episodeId: string | undefined): Pip => ({
