@@ -13,6 +13,7 @@ vi.mock('../../platform/telemetry', () => ({
   track: vi.fn(async () => true),
 }));
 
+import { episodesAll } from '../../content/episodes';
 import { setProgressPersistListener } from '../../logic/sync/persist-hook';
 import { readJson, writeJson } from '../../platform/storage';
 import { placementResult } from '../../logic/placement/__tests__/fixtures';
@@ -429,3 +430,105 @@ describe('recordPlacement (F-PLC-001 section 3.8)', () => {
   });
 });
 
+describe('stage latch writer (F-ROUTE-001 R-1b, runs with flags.myRouteEnabled off)', () => {
+  const notified: string[] = [];
+  /** The live Stage 1 grid quests; no count is pinned here. */
+  const stage1 = episodesAll
+    .filter((e) => e.stage === 'stage1' && (e.placement ?? 'grid') === 'grid' && (e.status === 'shipped' || e.status === 'ready'))
+    .flatMap((e) => e.questIds.map((questId) => ({ questId, episodeId: e.id })));
+  const finish = (profileId: string, q: { questId: string; episodeId: string }) =>
+    useProgressStore.getState().recordQuestComplete(profileId, { ...q, stars: 1, accuracy: 1, attempts: 1 });
+  const ISO = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
+  const savedWith = (done: { questId: string; episodeId: string }[], extra: Partial<ProgressSnapshot> = {}): ProgressSnapshot => ({
+    ...savedSnapshot(),
+    quests: done.map((q) => ({ ...q, startedAt: '2026-10-01T09:00:00.000Z', completedAt: '2026-10-01T09:05:00.000Z', stars: 1 as const, attempts: 1, accuracy: 1 })),
+    ...extra,
+  });
+
+  beforeEach(() => {
+    resetStore();
+    notified.length = 0;
+    setProgressPersistListener((id) => notified.push(id));
+  });
+
+  afterEach(() => {
+    setProgressPersistListener(null);
+  });
+
+  it('writes stageDoneAt once, in the same save as the quest result that completes the stage', async () => {
+    mem.set('progress:p1', savedWith(stage1.slice(0, -1)));
+    await useProgressStore.getState().hydrate('p1');
+    expect(stored()).not.toHaveProperty('stageDoneAt');
+    vi.mocked(writeJson).mockClear();
+    finish('p1', stage1[stage1.length - 1] as (typeof stage1)[number]);
+    expect(writeJson).toHaveBeenCalledTimes(1);
+    const at = stored()?.stageDoneAt?.stage1;
+    expect(at).toMatch(ISO);
+    expect(useProgressStore.getState().byProfile['p1']?.stageDoneAt).toEqual({ stage1: at });
+    expect(notified).toEqual(['p1']);
+  });
+
+  it('never moves a latch on a later write (a replay of the last quest)', async () => {
+    const latch = { stage1: '2026-10-01T09:10:00.000Z' };
+    mem.set('progress:p1', savedWith(stage1, { stageDoneAt: latch }));
+    await useProgressStore.getState().hydrate('p1');
+    finish('p1', stage1[0] as (typeof stage1)[number]);
+    expect(stored()?.stageDoneAt).toEqual(latch);
+  });
+
+  it('latches on app start (hydrate) a stage completed before the writer shipped, keeping other keys', async () => {
+    mem.set('progress:p1', savedWith(stage1, { stageDoneAt: { stage9: 'from-a-newer-build' } }));
+    await useProgressStore.getState().hydrate('p1');
+    expect(stored()?.stageDoneAt?.stage9).toBe('from-a-newer-build');
+    expect(stored()?.stageDoneAt?.stage1).toMatch(ISO);
+    expect(notified).toEqual(['p1']);
+  });
+
+  it('writes nothing on hydrate when no stage is newly complete', async () => {
+    mem.set('progress:p1', savedWith(stage1.slice(0, 2)));
+    await useProgressStore.getState().hydrate('p1');
+    expect(writeJson).not.toHaveBeenCalled();
+    expect(notified).toEqual([]);
+  });
+
+  it('does not latch on a snapshot that has not loaded yet; hydrate latches the merged copy', async () => {
+    mem.set('progress:p1', savedWith(stage1.slice(0, -1)));
+    finish('p1', stage1[stage1.length - 1] as (typeof stage1)[number]);
+    expect(useProgressStore.getState().byProfile['p1']).not.toHaveProperty('stageDoneAt');
+    await useProgressStore.getState().hydrate('p1');
+    await settle();
+    expect(stored()?.quests).toHaveLength(stage1.length);
+    expect(stored()?.stageDoneAt?.stage1).toMatch(ISO);
+  });
+
+  it('latches a completed stage that arrives by sync or restore (replaceSnapshot) and announces it so it uploads', () => {
+    useProgressStore.getState().replaceSnapshot('p1', savedWith(stage1));
+    expect(stored()?.stageDoneAt?.stage1).toMatch(ISO);
+    expect(useProgressStore.getState().byProfile['p1']?.stageDoneAt?.stage1).toMatch(ISO);
+    expect(notified).toEqual(['p1']);
+  });
+
+  it('replaceSnapshot keeps an incoming latch and does not announce when nothing is added', () => {
+    const latch = { stage1: '2026-10-01T09:10:00.000Z' };
+    useProgressStore.getState().replaceSnapshot('p1', savedWith(stage1, { stageDoneAt: latch }));
+    expect(stored()?.stageDoneAt).toEqual(latch);
+    expect(notified).toEqual([]);
+  });
+
+  it('a malformed saved snapshot (no quests) still hydrates: the latch never blocks app start', async () => {
+    mem.set('progress:p1', { ...savedSnapshot(), quests: undefined });
+    await expect(useProgressStore.getState().hydrate('p1')).resolves.toBeUndefined();
+    expect(useProgressStore.getState().hydratedFor.has('p1')).toBe(true);
+    expect(writeJson).not.toHaveBeenCalled();
+  });
+
+  it('never latches a taste stage', async () => {
+    const taste = episodesAll
+      .filter((e) => e.stage === 'stage2' && e.status === 'shipped')
+      .flatMap((e) => e.questIds.map((questId) => ({ questId, episodeId: e.id })));
+    mem.set('progress:p1', savedWith(taste));
+    await useProgressStore.getState().hydrate('p1');
+    finish('p1', taste[0] as (typeof taste)[number]);
+    expect(stored()).not.toHaveProperty('stageDoneAt');
+  });
+});

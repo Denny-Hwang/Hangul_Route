@@ -1,5 +1,7 @@
 import { PlacementResultSchema, type PlacementResult, type ProgressSnapshot } from '@hangul-route/content-schema';
 import { create } from 'zustand';
+import { episodesAll } from '../content/episodes';
+import { latchSnapshot } from '../logic/my-route/latch';
 import { recordBestQuest } from '../logic/quest-progress';
 import { mergePlacements, mergeSnapshots, withSnapshotDefaults } from '../logic/sync/merge';
 import { notifyProgressPersisted } from '../logic/sync/persist-hook';
@@ -79,7 +81,7 @@ interface Actions {
    * it was.
    */
   recordPlacement: (profileId: string, result: PlacementResult) => boolean;
-  /** Sync / restore hand back a merged snapshot; persisted without re-notifying sync. */
+  /** Sync / restore hand back a merged snapshot; persisted without re-notifying sync, unless the stage latch added a key. */
   replaceSnapshot: (profileId: string, snapshot: ProgressSnapshot) => void;
 }
 
@@ -100,6 +102,18 @@ function blankSnapshot(profileId: string): ProgressSnapshot {
 function save(profileId: string, snap: ProgressSnapshot): void {
   void writeJson(key(profileId), snap);
   notifyProgressPersisted(profileId);
+}
+
+/**
+ * The stage latch writer (F-ROUTE-001 R-1b): adds `stageDoneAt` keys for
+ * stages that are complete now, on the hydrated snapshot only, never on a
+ * blank one. Runs after each quest result, on hydrate (app start) and when
+ * sync or restore hands back a snapshot, with `flags.myRouteEnabled` off too,
+ * so a learner who finishes Stage 1 is latched before any build adds Stage 1
+ * quests. Best effort: it never throws (`latchSnapshot`).
+ */
+function withLatches(snap: ProgressSnapshot, now: Date): ProgressSnapshot {
+  return latchSnapshot(snap, episodesAll, now);
 }
 
 /** Any open assignment for the quest is done (F-HW-001 §3.4, F-PLAN-001 §3.3). */
@@ -167,16 +181,17 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
       if (get().hydratedFor.has(profileId)) return;
       const { byProfile, pendingFor } = get();
       const unsaved = pendingFor.has(profileId) ? byProfile[profileId] : undefined;
-      const snap =
+      const found =
         unsaved && loaded
           ? replayUnsaved(mergeSnapshots(unsaved, loaded, { now: new Date() }), unsaved)
           : (unsaved ?? loaded ?? byProfile[profileId]);
+      const snap = found ? withLatches(found, new Date()) : found;
       set((s) => ({
         byProfile: snap ? { ...s.byProfile, [profileId]: snap } : s.byProfile,
         hydratedFor: new Set([...s.hydratedFor, profileId]),
         pendingFor: without(s.pendingFor, profileId),
       }));
-      if (unsaved && snap) save(profileId, snap);
+      if (snap && (unsaved || snap !== found)) save(profileId, snap);
     })().finally(() => inFlight.delete(profileId));
     inFlight.set(profileId, load);
     return load;
@@ -200,7 +215,9 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
     );
     const quests = [...snap.quests.filter((q) => q.questId !== input.questId), updatedQuest];
     const homework = completeAssignments(snap.homework, input.questId, now);
-    const updated: ProgressSnapshot = { ...snap, quests, homework, updatedAt: now };
+    const result: ProgressSnapshot = { ...snap, quests, homework, updatedAt: now };
+    // Before the saved copy loads, `hydrate` latches the merged snapshot instead.
+    const updated = get().hydratedFor.has(profileId) ? withLatches(result, new Date(now)) : result;
     set((s) => ({ byProfile: { ...s.byProfile, [profileId]: updated } }));
     persist(profileId, updated);
   },
@@ -290,7 +307,11 @@ export const useProgressStore = create<State & Actions>((set, get) => ({
   },
 
   replaceSnapshot: (profileId, snapshot) => {
-    settle(profileId, snapshot);
-    void writeJson(key(profileId), snapshot);
+    // A completion that arrived by sync or restore is latched now, not at the
+    // next cold start; only an added latch is announced, so it uploads.
+    const latched = withLatches(snapshot, new Date());
+    settle(profileId, latched);
+    void writeJson(key(profileId), latched);
+    if (latched !== snapshot) notifyProgressPersisted(profileId);
   },
 }));
