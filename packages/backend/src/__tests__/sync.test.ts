@@ -217,3 +217,78 @@ describe('/api/sync (F-SYNC-001)', () => {
     expect(json.data.serverTime).toMatch(/T/);
   });
 });
+
+describe('/api/sync Hangul Check fields (F-QUEST-002 §3.9, Q-10a)', () => {
+  beforeEach(() => db.reset());
+
+  const anchor = { met: true, checkedAt: '2026-10-10T00:00:00.000Z', tricky: ['ㅌ', 'ㄴ/final'] };
+  const review = {
+    id: 'review:stage1:2026-10-10T00:00:00.000Z',
+    kind: 'stage-certificate',
+    generatedAt: '2026-10-10T00:00:00.000Z',
+    scope: 'stage1',
+    itemIds: ['jamo:giyeok', 'jamo:tieut'],
+    resultStars: 2,
+  };
+  const withReviews = (profileId: string, reviews: unknown[]) => ({ ...snapshotFor(profileId), reviews });
+  const base = { schemaVer: 1, contentVer: '2026.10' };
+
+  async function getSnapshot(learnerId: string, auth: Record<string, string>) {
+    const res = await app.request(`/api/sync/learners/${learnerId}/snapshot`, { headers: auth });
+    return (await res.json()) as { data: { snapshot: { reviews: Array<Record<string, unknown>> }; summary: Record<string, unknown> } };
+  }
+
+  it('round-trips ReviewEntry.missedItemIds and ProgressSummary.stage1Anchor', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    const res = await put(r.learnerId, auth, {
+      ...base,
+      baseRev: 0,
+      snapshot: withReviews(r.learnerId, [{ ...review, missedItemIds: ['jamo:tieut'] }, { ...review, id: 'review:stage1:clean', missedItemIds: [] }]),
+      summary: { ...summary, stage1Anchor: anchor },
+    });
+    expect(res.status).toBe(200);
+
+    const got = await getSnapshot(r.learnerId, auth);
+    expect(got.data.snapshot.reviews[0]?.missedItemIds).toEqual(['jamo:tieut']);
+    expect(got.data.snapshot.reviews[1]?.missedItemIds).toEqual([]);
+    expect(got.data.summary.stage1Anchor).toEqual(anchor);
+  });
+
+  it('an old client (neither field) still uploads and reads back without them', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    const res = await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withReviews(r.learnerId, [review]), summary });
+    expect(res.status).toBe(200);
+
+    const got = await getSnapshot(r.learnerId, auth);
+    expect(got.data.snapshot.reviews[0]).toEqual(review);
+    expect(got.data.summary).not.toHaveProperty('stage1Anchor');
+  });
+
+  it('a conflict response carries the stored fields back for the merge', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    await put(r.learnerId, auth, {
+      ...base,
+      baseRev: 0,
+      snapshot: withReviews(r.learnerId, [{ ...review, missedItemIds: ['jamo:tieut'] }]),
+      summary: { ...summary, stage1Anchor: anchor },
+    });
+    const stale = await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: snapshotFor(r.learnerId), summary });
+    expect(stale.status).toBe(409);
+    const body = stale.json as unknown as { data: { snapshot: { reviews: Array<Record<string, unknown>> }; summary: Record<string, unknown> } };
+    expect(body.data.snapshot.reviews[0]?.missedItemIds).toEqual(['jamo:tieut']);
+    expect(body.data.summary.stage1Anchor).toEqual(anchor);
+  });
+
+  it('rejects malformed values with 422 and stores nothing', async () => {
+    const r = await register(DEVICE_A);
+    const auth = deviceAuth(DEVICE_A, r.secret);
+    const badIds = await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: withReviews(r.learnerId, [{ ...review, missedItemIds: [1] }]), summary });
+    expect(badIds.status).toBe(422);
+    const badAnchor = await put(r.learnerId, auth, { ...base, baseRev: 0, snapshot: snapshotFor(r.learnerId), summary: { ...summary, stage1Anchor: { met: 'yes', checkedAt: 'x', tricky: [] } } });
+    expect(badAnchor.status).toBe(422);
+    expect(await db.getSnapshot(r.learnerId)).toBeNull();
+  });
+});
