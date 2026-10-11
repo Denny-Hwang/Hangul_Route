@@ -104,6 +104,25 @@ export const colors = {
     rare: '#4A9DD6',
     legendary: '#E8743B',
   },
+  // WordArt content colours (F-VOC-002 §3.4): the colour words a learner is
+  // taught, drawn only inside WordArt (src/word-art/, components/WordArt/).
+  // Content, never feedback: `red` is not a failure colour and never replaces
+  // feedback.danger or feedback.nudge. Every swatch is outlined in
+  // text.primary and paired with an object, so colour is never the only cue.
+  vocab: {
+    red: '#D83A34',
+    orange: '#F28C28',
+    yellow: '#F6D32D',
+    green: '#3FA34D',
+    blue: '#2F6BD0',
+    purple: '#8E44AD',
+    skyBlue: '#8FD0F5',
+    brown: '#8B5A2B',
+    gray: '#9E9E9E',
+    white: '#FFFFFF',
+    black: '#1F1A17',
+    pink: '#F58FB5',
+  },
   // Borders / dividers
   border: {
     subtle: '#E8DFCD',

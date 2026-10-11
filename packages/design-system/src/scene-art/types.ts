@@ -9,8 +9,11 @@ type Leaves<C> = { [G in keyof C & string]: `${G}.${keyof C[G] & string}` }[keyo
 /** Colour tokens a picture may not use: scrims and the reserved destructive red. */
 export type ReservedColorToken = 'surface.overlay' | 'surface.inkScrim' | 'feedback.danger';
 
-/** A path into `colors`, e.g. `'theme.rites'`, minus the reserved tokens. */
-export type ColorToken = Exclude<Leaves<typeof colors>, ReservedColorToken>;
+/** Colour groups a picture may not use at all: WordArt's content tones (F-VOC-002 §3.4). */
+export type ReservedColorGroup = 'vocab';
+
+/** A path into `colors`, e.g. `'theme.rites'`, minus the reserved tokens and groups. */
+export type ColorToken = Exclude<Leaves<typeof colors>, ReservedColorToken | `${ReservedColorGroup}.${string}`>;
 
 /** Stroke width names; `borderWidth.thin/base/thick` = 1/2/3 canvas units. */
 export type StrokeToken = 'thin' | 'base' | 'thick';

@@ -13,16 +13,17 @@ import { PLACEMENT_BANK, PLACEMENT_WARMUP } from '../placement.generated';
 const REPO_ROOT = join(__dirname, '../../../../..');
 
 /**
- * `supportedCardIds` of HeritageCardArt, read from its source: the design-system
- * entry pulls in react-native, which the node test environment cannot load.
+ * `supportedCardIds` of HeritageCardArt, read from its pure source file
+ * (`card-ids.ts`, F-VOC-002 W-1a): the design-system entry pulls in
+ * react-native, which the node test environment cannot load.
  */
 function supportedCardIds(): string[] {
   const source = readFileSync(
-    join(REPO_ROOT, 'packages/design-system/src/components/HeritageCardArt/HeritageCardArt.tsx'),
+    join(REPO_ROOT, 'packages/design-system/src/components/HeritageCardArt/card-ids.ts'),
     'utf8',
   );
   const block = /export const supportedCardIds[^=]*=\s*\[([\s\S]*?)\];/.exec(source);
-  if (block === null) throw new Error('supportedCardIds not found in HeritageCardArt.tsx');
+  if (block === null) throw new Error('supportedCardIds not found in HeritageCardArt/card-ids.ts');
   return [...(block[1] as string).matchAll(/'(card:[a-z0-9-]+)'/g)].map((m) => m[1] as string);
 }
 
