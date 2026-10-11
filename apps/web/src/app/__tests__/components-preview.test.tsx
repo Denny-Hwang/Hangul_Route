@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import ComponentsPreviewPage from '../design-preview/components/page';
+import ComponentsPreviewPage from '../(console)/design-preview/components/page';
 
 /**
  * F-STORY-002 §5 (visual regression, F-VR-001): /design-preview/components

@@ -10,9 +10,9 @@ export default function ParentPage(): JSX.Element {
     <main style={{ maxWidth: 1100, margin: '0 auto', padding: `${spacing.xl}px ${spacing.lg}px` }}>
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.xxl }}>
         <div>
-          <Link href="/" style={{ color: colors.text.muted, fontSize: typography.size.caption }}>
+          <a href="/" style={{ color: colors.text.muted, fontSize: typography.size.caption }}>
             ← Hangul Route
-          </Link>
+          </a>
           <h1 style={{ fontSize: typography.size.display, margin: `${spacing.xs}px 0 0` }}>
             Family Dashboard
           </h1>

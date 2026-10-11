@@ -4,10 +4,10 @@ import { fileURLToPath } from 'node:url';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { CONTACT_EMAIL } from '../../data/contact';
-import AboutPage from '../about/page';
-import HomePage from '../page';
-import PrivacyPage from '../privacy/page';
-import TermsPage from '../terms/page';
+import AboutPage from '../(en)/about/page';
+import HomePage from '../(en)/page';
+import PrivacyPage from '../(en)/privacy/page';
+import TermsPage from '../(en)/terms/page';
 
 /**
  * Contact address (owner decision 2026-10-10): every public page shows the one

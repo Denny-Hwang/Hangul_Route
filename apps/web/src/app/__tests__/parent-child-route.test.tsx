@@ -1,8 +1,8 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { mockFamily } from '@/data/mock-family';
-import ChildDetailPage, { dynamicParams, generateStaticParams } from '../parent/[childId]/page';
-import ParentPage from '../parent/page';
+import ChildDetailPage, { dynamicParams, generateStaticParams } from '../(console)/parent/[childId]/page';
+import ParentPage from '../(console)/parent/page';
 
 /**
  * Issue #237 (F-CONSOLE-001 §3.7): the /parent dashboard links, the statically exported

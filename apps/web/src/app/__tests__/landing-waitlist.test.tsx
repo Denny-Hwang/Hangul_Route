@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import HomePage from '../page';
+import HomePage from '../(en)/page';
 
 /**
  * The landing's email signup is first-party (docs/launch/waitlist.md): it

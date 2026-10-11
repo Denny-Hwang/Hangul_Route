@@ -13,6 +13,8 @@
 #   NEXT_PUBLIC_APP_URL               learner app URL (default https://app.hangulroute.com)
 #   NEXT_PUBLIC_CONSOLE_DEV_AUTH      "true" only on test deploys (dev sign-in until Clerk)
 #   NEXT_PUBLIC_SCHOOL_CONSENT_MODE   "enabled" only after the legal review (decision #27)
+# Never set NEXT_PUBLIC_SHOW_ALL_LOCALES (or the learner app's EXPO_PUBLIC_SHOW_ALL_LOCALES) on the production
+# build: the first publishes /es and /ko before they ship (F-I18N-001 §3.4); the site ignores the second.
 name = "hangul-route-web"
 compatibility_date = "2025-09-01"
 workers_dev = true

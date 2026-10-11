@@ -3,7 +3,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import HomePage from '../page';
+import HomePage from '../(en)/page';
 
 /**
  * Responsive landing contract (audit W1 / p2-L6, roadmap PR-21).

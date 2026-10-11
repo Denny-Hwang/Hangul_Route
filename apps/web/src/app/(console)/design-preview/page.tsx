@@ -11,7 +11,7 @@ import {
 } from '@hangul-route/design-system/tokens';
 import Link from 'next/link';
 import React from 'react';
-import { HoyaSvg } from '../../components/design-preview/HoyaReference';
+import { HoyaSvg } from '../../../components/design-preview/HoyaReference';
 
 /**
  * /design-preview — single-URL visual identity validation surface.
@@ -60,9 +60,9 @@ export default function DesignPreviewPage(): JSX.Element {
 function Header(): JSX.Element {
   return (
     <header style={{ marginBottom: spacing.jumbo }}>
-      <Link href="/" style={{ color: colors.text.muted, fontSize: typography.size.caption }}>
+      <a href="/" style={{ color: colors.text.muted, fontSize: typography.size.caption }}>
         ← Hangul Route
-      </Link>
+      </a>
       <h1
         style={{
           fontSize: typography.size.hero,

@@ -56,41 +56,41 @@ describe('console pages render only dictionary text (en-XA)', () => {
 
   it('sign-in, dev form (signed out)', async () => {
     auth.session = null;
-    const html = await render('@/app/teach/page');
+    const html = await render('@/app/(console)/teach/page');
     auth.session = { accountId: 'teacher-kim', displayName: 'Ms Kim' };
     expect(html).toContain('name="accountId"');
     expectAllPseudo(html);
   });
 
   it('start, role step', async () => {
-    const html = await render('@/app/teach/start/page');
+    const html = await render('@/app/(console)/teach/start/page');
     expect(html).toContain('role="radiogroup"');
     expectAllPseudo(html);
   });
 
   it('home, before the list loads', async () => {
-    expectAllPseudo(await render('@/app/teach/home/page'));
+    expectAllPseudo(await render('@/app/(console)/teach/home/page'));
   });
 
   it('space roster, loading', async () => {
-    expectAllPseudo(await render('@/app/teach/space/page'));
+    expectAllPseudo(await render('@/app/(console)/teach/space/page'));
   });
 
   it('relink, loading', async () => {
-    const html = await render('@/app/teach/space/relink/page');
+    const html = await render('@/app/(console)/teach/space/relink/page');
     expect(html).toContain('href="/teach/space?id=space%3Ac1"');
     expectAllPseudo(html);
   });
 
   it('plan builder, before the plans load (quest and episode titles are content)', async () => {
-    const html = await render('@/app/teach/space/plan/page');
+    const html = await render('@/app/(console)/teach/space/plan/page');
     expect(html).toContain('href="/teach/space?id=space%3Ac1"');
     expect(html).toContain('type="date"');
     expectAllPseudo(html, [...stage1Episodes.map((e) => e.titleEn), ...stage1Quests.map((q) => q.titleEn)]);
   });
 
   it('billing, before the plans load', async () => {
-    const html = await render('@/app/teach/billing/page');
+    const html = await render('@/app/(console)/teach/billing/page');
     expect(html).toContain('name="promo"');
     expectAllPseudo(html);
   });

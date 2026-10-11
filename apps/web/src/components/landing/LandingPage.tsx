@@ -1,13 +1,14 @@
 import { colors, radii, shadows, spacing, typography } from '@hangul-route/design-system/tokens';
-import { DEFAULT_LOCALE, getMessages } from '@hangul-route/i18n';
+import { DEFAULT_LOCALE, getMessages, type UiLocale } from '@hangul-route/i18n';
 import { HoyaSvg } from '@hangul-route/design-system/scene-art/dom';
 import Link from 'next/link';
-import { HeritageCardsPreview } from '../components/landing/HeritageCardsPreview';
-import { MeetHoya } from '../components/landing/MeetHoya';
-import { MiniGamesGallery } from '../components/landing/MiniGamesGallery';
-import { WaitlistForm } from '../components/landing/WaitlistForm';
-import { CONTACT_EMAIL } from '../data/contact';
-import { landingCopy } from '../data/landing-copy';
+import { CONTACT_EMAIL } from '../../data/contact';
+import { landingCopy } from '../../data/landing-copy';
+import { sitePath } from '../../lib/site-path';
+import { HeritageCardsPreview } from './HeritageCardsPreview';
+import { MeetHoya } from './MeetHoya';
+import { MiniGamesGallery } from './MiniGamesGallery';
+import { WaitlistForm } from './WaitlistForm';
 
 /** The learner web app (PWA). Overridable per deployment. */
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://app.hangulroute.com';
@@ -15,10 +16,14 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://app.hangulroute.com'
 /** The first letter Hoya introduces: taught Korean, passed into the hero sentences (never written into a message). */
 const FIRST_LETTER = 'ㄱ';
 
-export default function HomePage(): JSX.Element {
-  const t = getMessages(DEFAULT_LOCALE).landing;
-  // One landing subtree for one locale: the words and the ordered lists (11b passes its locale here).
-  const { tagline, audienceBadges, trustItems, howItWorks, faqs, pricingLines, sharedDeviceBullet, pricingFootnote } = landingCopy(DEFAULT_LOCALE);
+/**
+ * The landing page in `locale`: `app/(en)/page.tsx` renders it at `/`, `app/(loc)/[locale]/page.tsx` at `/es` and
+ * `/ko` (F-I18N-001 §3.4, PR 11b). One body, so no copy is duplicated.
+ */
+export function LandingPage({ locale = DEFAULT_LOCALE }: { locale?: UiLocale }): JSX.Element {
+  const t = getMessages(locale).landing;
+  // One landing subtree for one locale: the words and the ordered lists.
+  const { tagline, audienceBadges, trustItems, howItWorks, faqs, pricingLines, sharedDeviceBullet, pricingFootnote } = landingCopy(locale);
   return (
     <main
       style={{
@@ -98,12 +103,12 @@ export default function HomePage(): JSX.Element {
           <Link href="#parents" style={{ color: colors.text.secondary, fontWeight: typography.weight.semibold }}>
             {t.nav.parents}
           </Link>
-          <Link href="/parent" style={{ color: colors.text.secondary, fontWeight: typography.weight.semibold }}>
+          <a href="/parent" style={{ color: colors.text.secondary, fontWeight: typography.weight.semibold }}>
             {t.nav.dashboard}
-          </Link>
-          <Link href="/teach" style={{ color: colors.text.secondary, fontWeight: typography.weight.semibold }}>
+          </a>
+          <a href="/teach" style={{ color: colors.text.secondary, fontWeight: typography.weight.semibold }}>
             {t.nav.teachers}
-          </Link>
+          </a>
         </nav>
       </header>
 
@@ -339,16 +344,16 @@ export default function HomePage(): JSX.Element {
 
       {/* Cards preview */}
       <div id="cards">
-        <HeritageCardsPreview />
+        <HeritageCardsPreview locale={locale} />
       </div>
 
       {/* Games gallery */}
       <div id="games">
-        <MiniGamesGallery />
+        <MiniGamesGallery locale={locale} />
       </div>
 
       {/* Meet Hoya */}
-      <MeetHoya />
+      <MeetHoya locale={locale} />
 
       {/* For parents */}
       <section
@@ -551,7 +556,7 @@ export default function HomePage(): JSX.Element {
         >
           {t.get.play.cta}
         </a>
-        <WaitlistForm words={t.waitlist} locale={DEFAULT_LOCALE} />
+        <WaitlistForm words={t.waitlist} locale={locale} />
         <p
           style={{
             marginTop: spacing.lg,
@@ -610,14 +615,14 @@ export default function HomePage(): JSX.Element {
             </Link>
           </div>
           <div>
-            <Link href="/parent" style={{ color: colors.text.secondary }}>
+            <a href="/parent" style={{ color: colors.text.secondary }}>
               {t.footer.dashboard}
-            </Link>
+            </a>
           </div>
           <div>
-            <Link href="/teach" style={{ color: colors.text.secondary }}>
+            <a href="/teach" style={{ color: colors.text.secondary }}>
               {t.footer.console}
-            </Link>
+            </a>
           </div>
         </div>
         <div>
@@ -631,17 +636,17 @@ export default function HomePage(): JSX.Element {
             {t.footer.company}
           </div>
           <div>
-            <Link href="/about" style={{ color: colors.text.secondary }}>
+            <Link href={sitePath(locale, '/about')} style={{ color: colors.text.secondary }}>
               {t.footer.about}
             </Link>
           </div>
           <div>
-            <Link href="/privacy" style={{ color: colors.text.secondary }}>
+            <Link href={sitePath(locale, '/privacy')} style={{ color: colors.text.secondary }}>
               {t.footer.privacy}
             </Link>
           </div>
           <div>
-            <Link href="/terms" style={{ color: colors.text.secondary }}>
+            <Link href={sitePath(locale, '/terms')} style={{ color: colors.text.secondary }}>
               {t.footer.terms}
             </Link>
           </div>
