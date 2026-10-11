@@ -1,5 +1,6 @@
 import type { Episode } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
+import { gridEpisodes } from '../../../content/episodes';
 import { episodeOf, snapshotWith } from '../../stage1/__tests__/fixtures';
 import { initialCard, initialEpisode, latchedSelection, reconcileSelection, requestedSelection } from '../pane-selection';
 
@@ -120,4 +121,12 @@ describe('requestedSelection', () => {
   it('is null when nothing is requested', () => {
     expect(requestedSelection(undefined, EPISODES)).toBeNull();
   });
+
+  it('is null for a shelf episode once the Journey passes its grid episodes, so the pane keeps a grid cell (F-STORY-004 §3.10)', () => {
+    const shelf = episodeOf('episode:story-a', ['quest:s'], { placement: 'shelf' });
+    const grid = gridEpisodes([...EPISODES, shelf]);
+    expect(requestedSelection('episode:story-a', grid)).toBeNull();
+    expect(reconcileSelection('episode:story-a', grid, initialEpisode(grid, undefined))).toBe('episode:one');
+  });
 });
+

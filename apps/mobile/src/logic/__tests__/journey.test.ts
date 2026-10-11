@@ -1,8 +1,9 @@
 import type { Episode } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
-import { episodesAll, gridEpisodes, themes } from '../../content';
+import { episodesAll, gridEpisodes, questsAll, themes } from '../../content';
 import {
+  gridQuestProgress,
   isEpisodeComplete,
   stageAvailability,
   stagePillLabel,
@@ -106,5 +107,28 @@ describe('theme column labels (audit UX-11: two columns both read "L")', () => {
     expect(themeColumnLabel({ titleEn: 'Music' })).toBe('Music');
     expect(themeColumnLabel({ titleEn: '  Sea & Sky ' })).toBe('Sea');
     expect(themeCellInitial({ titleEn: 'music' })).toBe('M');
+  });
+});
+
+describe('gridQuestProgress (F-STORY-004 §3.10, behaviour #9: the Home quest total)', () => {
+  const grid = ep('grid-a', 'stage1', 'shipped', ['q1', 'q2']);
+  const shelf: Episode = { ...ep('shelf-a', 'stage1', 'shipped', ['qs']), placement: 'shelf' };
+  const quests = [{ id: 'q1' }, { id: 'q2' }, { id: 'qs' }];
+  const done = (questId: string) => ({ questId, completedAt: '2026-10-01T00:00:00.000Z' });
+
+  it('counts grid quests on both sides, so a finished shelf story never reads "3 of 2"', () => {
+    expect(gridQuestProgress([grid, shelf], quests, [done('q1'), done('q2'), done('qs')])).toEqual({ completed: 2, total: 2 });
+  });
+
+  it('leaves out started-but-unfinished quests and ids no grid episode lists', () => {
+    expect(
+      gridQuestProgress([grid, shelf], quests, [done('q1'), { questId: 'q2' }, done('retired')]),
+    ).toEqual({ completed: 1, total: 2 });
+  });
+
+  it('is 0 of the grid total with no progress, and the total stays the grid count for today\'s bundle', () => {
+    expect(gridQuestProgress([grid, shelf], quests, [])).toEqual({ completed: 0, total: 2 });
+    const gridIds = new Set(gridEpisodes(episodesAll).flatMap((e) => e.questIds));
+    expect(gridQuestProgress(episodesAll, questsAll, []).total).toBe(questsAll.filter((q) => gridIds.has(q.id)).length);
   });
 });

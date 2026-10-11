@@ -24,7 +24,7 @@ import React, { useEffect, useMemo, useRef } from 'react';
 import { Pressable, View } from 'react-native';
 import { InstallGuideSheet } from '../../components/InstallGuideSheet';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
-import { episodesAll, gridEpisodes, questsAll } from '../../content';
+import { episodesAll, questsAll } from '../../content';
 import { useMessages } from '../../i18n/use-messages';
 import {
   buildTodaysMission,
@@ -34,6 +34,7 @@ import {
   type MissionPlan,
 } from '../../logic/homework/mission-builder';
 import { mergeAssignments } from '../../logic/homework/assignment-merger';
+import { gridQuestProgress } from '../../logic/journey';
 import { homeColumns } from '../../logic/layout/home-columns';
 import { DEFAULT_AVATAR } from '../../logic/profiles/avatar-catalog';
 import { computeStreak } from '../../logic/streak';
@@ -49,10 +50,6 @@ const HOYA_SIZE = 72;
 /** Two columns: missions left (flex 3), progress / homework / tip right (flex 2), wireframe layout/wide B. */
 const MISSIONS_FLEX = 3;
 const SIDE_FLEX = 2;
-
-/** The Home progress total counts grid quests only; a shelf story is not a Journey quest (F-STORY-004 §3.10). */
-const GRID_QUEST_IDS = new Set(gridEpisodes(episodesAll).flatMap((e) => e.questIds));
-const GRID_QUEST_TOTAL = questsAll.filter((q) => GRID_QUEST_IDS.has(q.id)).length;
 
 const ICON_FOR: Record<MissionCard['kind'], 'replay' | 'play' | 'library' | 'star'> = {
   replay: 'replay',
@@ -116,8 +113,8 @@ export function HomeScreen(): React.ReactElement {
   }, [profile, ensure]);
 
   const stars3 = (snap?.quests.filter((q) => q.stars === 3).length ?? 0);
-  const completed = snap?.quests.filter((q) => q.completedAt).length ?? 0;
-  const totalStage1Quests = GRID_QUEST_TOTAL;
+  // Both sides count grid quests only: a shelf story is not a Journey quest (F-STORY-004 §3.10).
+  const { completed, total: totalStage1Quests } = gridQuestProgress(episodesAll, questsAll, snap?.quests ?? []);
   const cardsUnlocked = snap?.cards.length ?? 0;
   const homeworkDue = snap?.homework?.filter((h) => !h.completedAt).length ?? 0;
 

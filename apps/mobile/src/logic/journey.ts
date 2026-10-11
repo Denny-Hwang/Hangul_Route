@@ -1,5 +1,6 @@
-import type { Episode, QuestProgress, StageKey, ThemeDef } from '@hangul-route/content-schema';
+import type { Episode, Quest, QuestProgress, StageKey, ThemeDef } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
+import { gridEpisodes } from '../content/episodes';
 
 /**
  * Journey grid rules (wireframe journey/grid):
@@ -33,6 +34,22 @@ export function isEpisodeComplete(
     quests.filter((q) => q.episodeId === episode.id && q.completedAt).map((q) => q.questId),
   );
   return episode.questIds.every((id) => done.has(id));
+}
+
+/**
+ * The Home progress line, "completed of total" (F-STORY-004 §3.10 and behaviour #9): both sides
+ * count the quests of grid episodes only, so a finished shelf story never pushes the count past
+ * the total. A quest id that no grid episode lists (a shelf quest, retired content) is left out.
+ */
+export function gridQuestProgress(
+  episodes: readonly Pick<Episode, 'placement' | 'questIds'>[],
+  quests: readonly Pick<Quest, 'id'>[],
+  progress: readonly Pick<QuestProgress, 'questId' | 'completedAt'>[],
+): { completed: number; total: number } {
+  const gridIds = new Set(gridEpisodes(episodes).flatMap((e) => e.questIds));
+  const total = quests.filter((q) => gridIds.has(q.id)).length;
+  const done = new Set(progress.filter((q) => q.completedAt && gridIds.has(q.questId)).map((q) => q.questId));
+  return { completed: done.size, total };
 }
 
 /**
