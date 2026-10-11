@@ -28,7 +28,13 @@
     "apps/mobile/src/components/PromptPanel.tsx",
     "apps/mobile/src/components/VoiceHelpSheet.tsx",
     "apps/web/src/components/console/LanguageSelect.tsx",
-    "apps/web/src/lib/i18n/**"
+    "apps/web/src/lib/i18n/**",
+    "apps/mobile/src/screens/sync/RestoreScreen.tsx",
+    "apps/mobile/src/screens/sync/SaveProgressScreen.tsx",
+    "apps/mobile/src/screens/sync/JoinSpaceScreen.tsx",
+    "apps/mobile/src/components/InstallGuideSheet.tsx",
+    "apps/mobile/src/components/PwaBanners.tsx",
+    "apps/mobile/src/screens/system/OopsScreen.tsx"
   ],
   "pluralTernaryBaseline": {
     "apps/web/src/app/teach/space/page.tsx": 1,

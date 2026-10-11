@@ -1,6 +1,6 @@
 import type { BackupFile, Profile, ProgressSnapshot } from '@hangul-route/content-schema';
+import type { Messages } from '@hangul-route/i18n';
 import { mergeSnapshots } from './merge';
-import { NEUTRAL_COPY } from '../audience-copy';
 
 /**
  * What to do with a decoded backup file (F-SYNC-002 §3.3): merge into the
@@ -41,24 +41,23 @@ export function planRestore(
   };
 }
 
+type Caregiver = Messages['caregiver'];
+
 /**
  * Copy after a teacher approves a re-link (F-TCH-001 §10.1). The class link
  * restores the learner and the class, not the cards (SEC-4): say where they
- * come from instead of promising them.
+ * come from instead of promising them. Words: `restore.notice` and
+ * `audience.shared.restoreCardsBack` (F-I18N-001 §3.4 rule 3).
  */
-export function relinkNotice(plan: RestorePlan): string {
-  const back = `Welcome back, ${plan.profile.displayName}! You're in the class again.`;
-  return plan.action === 'create' ? `${back} ${NEUTRAL_COPY.restoreCardsBack}` : back;
+export function relinkNotice(plan: RestorePlan, m: Pick<Caregiver, 'restore' | 'audience'>): string {
+  const back = m.restore.notice.relinked(plan.profile.displayName);
+  return plan.action === 'create' ? `${back} ${m.audience.shared.restoreCardsBack}` : back;
 }
 
-/** Copy for the merge notice — English, warm, never "overwritten". */
-export function restoreNotice(plan: RestorePlan): string {
+/** Copy for the merge notice — warm, never "overwritten"; counts go through the message's plural(). */
+export function restoreNotice(plan: RestorePlan, m: Pick<Caregiver, 'restore'>): string {
   const name = plan.profile.displayName;
-  if (plan.action === 'create') return `Welcome back, ${name}! Your journey is here.`;
-  const parts: string[] = [];
-  if (plan.added.cards > 0) parts.push(`${plan.added.cards} ${plan.added.cards === 1 ? 'card' : 'cards'}`);
-  if (plan.added.quests > 0) parts.push(`${plan.added.quests} ${plan.added.quests === 1 ? 'quest' : 'quests'}`);
-  return parts.length === 0
-    ? `${name} already has everything from this file.`
-    : `We found ${name}'s progress! Added ${parts.join(' and ')}.`;
+  if (plan.action === 'create') return m.restore.notice.created(name);
+  const { cards, quests } = plan.added;
+  return cards === 0 && quests === 0 ? m.restore.notice.nothingNew(name) : m.restore.notice.added(name, cards, quests);
 }

@@ -1,5 +1,5 @@
 import { JOIN_CODE_ALPHABET, JOIN_CODE_LENGTH, normalizeJoinCode } from '@hangul-route/content-schema';
-import { NEUTRAL_COPY } from '../audience-copy';
+import type { Messages } from '@hangul-route/i18n';
 
 /**
  * Join-code helpers for `sync/join-space` — F-SPACE-001 §3.5. The field
@@ -30,33 +30,38 @@ export type JoinErrorCode =
   | 'unknown'
   | 'off';
 
-/** Calm copy for the learner; names the fix, never a person (F-LEARN-001 §3.9). */
-export function joinErrorMessage(code: JoinErrorCode): string {
+/**
+ * Calm copy for the learner; names the fix, never a person (F-LEARN-001 §3.9).
+ * The words come from the caregiver subtree the screen passes in (F-I18N-001
+ * §3.4 rule 3): `join.errors`, the `retry` lines Restore shares, and the two
+ * audience-free lines of `audience.shared`.
+ */
+export function joinErrorMessage(code: JoinErrorCode, m: Pick<Messages['caregiver'], 'join' | 'retry' | 'audience'>): string {
   switch (code) {
     case 'code_not_found':
-      return "That code didn't work. Check it with your teacher.";
+      return m.join.errors.codeNotFound;
     case 'code_expired':
-      return 'That code is too old. Ask for a new one.';
+      return m.join.errors.codeExpired;
     case 'cap_learner':
-      return NEUTRAL_COPY.joinCodeFull;
+      return m.audience.shared.joinCodeFull;
     case 'cap_class':
-      return 'This class is full. Ask your teacher.';
+      return m.join.errors.classFull;
     case 'not_joinable':
-      return NEUTRAL_COPY.joinCodeNotForLearners;
+      return m.audience.shared.joinCodeNotForLearners;
     case 'learner_not_found':
-      return 'That name is not in this class anymore. Ask your teacher.';
+      return m.join.errors.learnerGone;
     case 'already_bound':
-      return 'This device already has that learner — switch profiles instead.';
+      return m.join.errors.alreadyOnDevice;
     case 'too_many_attempts':
-      return "Let's wait a few minutes before trying again.";
+      return m.retry.tooManyAttempts;
     case 'network':
-      return 'This needs internet. Try again when you are online.';
+      return m.retry.offline;
     case 'invalid':
-      return 'A code has 6 letters or numbers.';
+      return m.join.errors.badFormat;
     case 'off':
-      return 'Joining a class is not set up on this build.';
+      return m.join.errors.off;
     default:
-      return 'Something went wrong. Try again in a moment.';
+      return m.retry.unknown;
   }
 }
 

@@ -1,6 +1,7 @@
 import { Body, Button, Heading, Hoya, HoyaBubble, Screen, Spacer, spacing } from '@hangul-route/design-system';
 import React from 'react';
 import { View } from 'react-native';
+import { useMessages } from '../../i18n/use-messages';
 
 /**
  * Top-level crash fallback (App Store readiness: a production JS error must
@@ -12,22 +13,24 @@ export interface OopsScreenProps {
 }
 
 export function OopsScreen({ onRetry }: OopsScreenProps): React.ReactElement {
+  const messages = useMessages();
+  const m = messages.learner.oops;
   return (
     <Screen tone="canvas">
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.lg }}>
         <Hoya pose="thinking" size={140} />
         <Spacer size="lg" />
         <Heading level="title" align="center">
-          Hoya tripped over a rock.
+          {m.title}
         </Heading>
         <Spacer size="sm" />
         <Body tone="secondary" align="center">
-          Your cards and stars are safe. Let&apos;s hop back in.
+          {m.body}
         </Body>
         <Spacer size="xl" />
-        <HoyaBubble tone="thinking" message="Oops! That was not your fault. Tap the button and we go again." />
+        <HoyaBubble tone="thinking" message={m.bubble} />
         <Spacer size="xl" />
-        <Button label="Try again" tone="primary" size="hero" fullWidth onPress={onRetry} />
+        <Button label={messages.common.buttons.tryAgain} tone="primary" size="hero" fullWidth onPress={onRetry} />
       </View>
     </Screen>
   );

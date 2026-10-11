@@ -1,4 +1,4 @@
-import { getMessages, type Messages } from '@hangul-route/i18n';
+import type { Messages } from '@hangul-route/i18n';
 import type { DeviceAudience } from './profiles/learner-type';
 
 /**
@@ -6,7 +6,9 @@ import type { DeviceAudience } from './profiles/learner-type';
  *
  * The words live in the dictionary (`caregiver.audience`, F-I18N-001 PR 8a); this
  * module only picks the family or self-only variant and takes the message subtree
- * as a parameter, so it stays pure and testable per locale (§3.4 rule 3). The
+ * as a parameter, so it stays pure and testable per locale (§3.4 rule 3). Logic
+ * modules with no device in hand (`join-code`, `restore`) read the audience-free
+ * lines from `caregiver.audience.shared` the same way. The
  * default is a neutral sentence; the family
  * audience adds "(a grown-up can help)" only where an adult really is needed,
  * and "Grown-up zone" stays a family caregiver surface (CLAUDE.md §1).
@@ -51,13 +53,6 @@ export interface AudienceCopy {
 }
 
 type AudienceMessages = Messages['caregiver']['audience'];
-
-/**
- * The audience-free strings for logic modules that have no device in hand yet
- * (`join-code`, `restore`). English until PR 8b gives those modules a message
- * subtree, which retires this export.
- */
-export const NEUTRAL_COPY = getMessages('en').caregiver.audience.shared;
 
 export function audienceCopy(audience: DeviceAudience, m: AudienceMessages): AudienceCopy {
   if (audience === 'family') {

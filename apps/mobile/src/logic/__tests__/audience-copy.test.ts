@@ -1,6 +1,7 @@
 import { LOCALES, findBannedWord, getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
-import { NEUTRAL_COPY, audienceCopy as audienceCopyFor } from '../audience-copy';
+import * as audienceCopyModule from '../audience-copy';
+import { audienceCopy as audienceCopyFor } from '../audience-copy';
 import type { DeviceAudience } from '../profiles/learner-type';
 
 const AUDIENCES: DeviceAudience[] = ['family', 'self'];
@@ -169,14 +170,18 @@ describe('audienceCopy: words come from the message subtree it is given (F-I18N-
   }
 });
 
-describe('NEUTRAL_COPY: the audience-free strings used by logic modules', () => {
-  it('is what both audiences share', () => {
+describe('the audience-free lines logic modules use come from the message subtree (F-I18N-001 PR 8b)', () => {
+  it('the English-only NEUTRAL_COPY alias is gone: join-code and restore take caregiver.audience.shared as a parameter', () => {
+    expect('NEUTRAL_COPY' in audienceCopyModule).toBe(false);
+  });
+
+  it('both audiences share those lines', () => {
     for (const audience of AUDIENCES) {
       const c = audienceCopy(audience);
-      expect(c.joinCodeFull).toBe(NEUTRAL_COPY.joinCodeFull);
-      expect(c.joinCodeNotForLearners).toBe(NEUTRAL_COPY.joinCodeNotForLearners);
-      expect(c.promoHint).toBe(NEUTRAL_COPY.promoHint);
-      expect(c.restoreCardsBack).toBe(NEUTRAL_COPY.restoreCardsBack);
+      expect(c.joinCodeFull).toBe(enAudience.shared.joinCodeFull);
+      expect(c.joinCodeNotForLearners).toBe(enAudience.shared.joinCodeNotForLearners);
+      expect(c.promoHint).toBe(enAudience.shared.promoHint);
+      expect(c.restoreCardsBack).toBe(enAudience.shared.restoreCardsBack);
     }
   });
 });
