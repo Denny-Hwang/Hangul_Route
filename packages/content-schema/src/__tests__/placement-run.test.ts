@@ -638,6 +638,19 @@ describe('a run end to end (the section 3.14 behaviours)', () => {
     expect(r.strands['hangul-recognition']).toBe('not-tested');
   });
 
+  it('skipGates: a Korean test language with a screen reader leaves vocabulary and sentences unasked, reported unavailable (section 3.2)', () => {
+    const { state, asked } = play(run({ visual: false, skipGates: ['vocab', 'sentence'] }));
+    expect(asked.some((id) => /^(vocab|sentence):/.test(rungOf(id)))).toBe(false);
+    const r = finishRun(state, context());
+    const skipped = r.gates.filter((g) => g.gate === 'vocab' || g.gate === 'sentence');
+    expect(skipped.length).toBeGreaterThan(0);
+    for (const g of skipped) expect(g).toMatchObject({ result: 'not-run', reason: 'unavailable', asked: 0 });
+    expect(r.strands.vocabulary).toBe('not-tested');
+    expect(r.strands.sentences).toBe('not-tested');
+    // The other rungs are drawn as before.
+    expect(asked.some((id) => rungOf(id) === 'sound-basic')).toBe(true);
+  });
+
   it('never exceeds 24 questions over many seeds and verdict mixes', () => {
     for (let seed = 1; seed <= 60; seed += 1) {
       const verdicts: Record<string, Verdict> = {};
