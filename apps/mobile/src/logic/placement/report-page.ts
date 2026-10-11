@@ -5,7 +5,9 @@ import {
   placementStageNumber,
   type PlacementGate,
   type PlacementLevel,
+  type Jamo,
   type PlacementResult,
+  type PlacementTemplate,
   type RouteCatalog,
   type RouteSeed,
   type StageKey,
@@ -32,6 +34,30 @@ export interface BankEntry {
 }
 /** Looks a response id up in the bank; an id not in the bank is skipped. */
 export type BankLookup = (questionId: string) => BankEntry | undefined;
+
+/** The report's view of the bundled bank (`placement.generated.ts`), keyed by template id. */
+export function bankLookup(bank: {
+  templates: readonly (Pick<PlacementTemplate, 'id' | 'gate'> & { question: Pick<PlacementTemplate['question'], 'format' | 'tags'> })[];
+}): BankLookup {
+  const byId = new Map<string, BankEntry>(
+    bank.templates.map((t) => [t.id, { format: t.question.format, gate: t.gate, tags: t.question.tags }]),
+  );
+  return (questionId) => byId.get(questionId);
+}
+
+/**
+ * The letter and sound value of a symbol key, for `KoreanText`: `'ㄱ'` is the
+ * consonant or vowel, `'ㄱ/final'` the final (F-QUEST-002 section 3.7).
+ */
+export function symbolText(
+  key: string,
+  jamo: readonly Pick<Jamo, 'char' | 'kind' | 'romanization'>[],
+): { ko: string; romanization: string } | undefined {
+  const final = key.endsWith('/final');
+  const char = final ? key.slice(0, -'/final'.length) : key;
+  const found = jamo.find((j) => j.char === char && (j.kind === 'batchim') === final);
+  return found === undefined ? undefined : { ko: found.char, romanization: found.romanization };
+}
 
 /** Symbol keys (`'ㄱ'`, `'ㄴ/final'`): the screen draws each with `KoreanText`. */
 export interface StrandExample {

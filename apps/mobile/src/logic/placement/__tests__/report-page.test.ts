@@ -1,7 +1,9 @@
 import type { AssessmentResponse, RouteCatalog, RouteQuest, StageKey } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import {
+  bankLookup,
   reportPage,
+  symbolText,
   startChoices,
   startingSpotRow,
   strandExamples,
@@ -254,5 +256,30 @@ describe('reportPage (section 3.9)', () => {
     const page = reportPage(input({ placements: [deep] }));
     if (page.kind !== 'report') throw new Error('expected a report');
     expect(page.view.spellingTiles).toBe('secure');
+  });
+});
+
+describe('bankLookup and symbolText (what the screen feeds the page)', () => {
+  it('looks a response id up in the bank: format, gate and tags; unknown ids are undefined', () => {
+    const template = {
+      id: 'pitem:sb-x',
+      gate: 'sound-basic' as const,
+      question: { format: 'hear-pick-written' as const, tags: ['sym:ㄱ'] },
+    };
+    const look = bankLookup({ templates: [template] });
+    expect(look('pitem:sb-x')).toEqual({ format: 'hear-pick-written', gate: 'sound-basic', tags: ['sym:ㄱ'] });
+    expect(look('pitem:none')).toBeUndefined();
+  });
+
+  it('draws a symbol key as its letter and sound value; a final uses the final sound', () => {
+    const jamo = [
+      { char: 'ㄱ', kind: 'consonant' as const, romanization: 'g/k' },
+      { char: 'ㄱ', kind: 'batchim' as const, romanization: 'k' },
+      { char: 'ㅏ', kind: 'vowel' as const, romanization: 'a' },
+    ];
+    expect(symbolText('ㄱ', jamo)).toEqual({ ko: 'ㄱ', romanization: 'g/k' });
+    expect(symbolText('ㄱ/final', jamo)).toEqual({ ko: 'ㄱ', romanization: 'k' });
+    expect(symbolText('ㅏ', jamo)).toEqual({ ko: 'ㅏ', romanization: 'a' });
+    expect(symbolText('ㅎ', jamo)).toBeUndefined();
   });
 });
