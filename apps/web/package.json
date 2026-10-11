@@ -11,7 +11,7 @@
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "typecheck": "tsc --noEmit && tsc --noEmit -p e2e/tsconfig.json",
-    "build": "next build",
+    "build": "next build && node scripts/prune-hidden-locales.mjs out",
     "deploy": "wrangler deploy"
   },
   "dependencies": {

@@ -125,4 +125,9 @@ describe('WaitlistForm (stateful wrapper)', () => {
     const words = { ...WAITLIST_COPY, submit: 'Enviarme la invitación' };
     expect(renderToStaticMarkup(<WaitlistForm words={words} locale="es" />)).toContain('Enviarme la invitación');
   });
+
+  it('links the privacy policy in the page locale (F-I18N-001 PR 11b)', () => {
+    expect(renderToStaticMarkup(<WaitlistForm words={WAITLIST_COPY} />)).toMatch(/<a[^>]*href="\/privacy"/);
+    expect(renderToStaticMarkup(<WaitlistForm words={WAITLIST_COPY} locale="es" />)).toMatch(/<a[^>]*href="\/es\/privacy"/);
+  });
 });
