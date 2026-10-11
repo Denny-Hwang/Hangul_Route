@@ -295,14 +295,14 @@ Three tiles, each an icon and an absolute number, shown only when greater than z
 // packages/content-schema/src/schemas/sync.ts
 export const JourneySummarySchema = z.object({
   v: z.literal(1),
-  here: z.string().nullable(),
+  here: z.string().max(32).nullable(),
   stages: z.array(z.object({
-    stage: z.string(),                           // validated against StageKey in the web strip, not on the wire
-    state: z.string(),                           // 'complete' | 'known' | 'explored' | 'open' | 'later', validated in the strip
-    done: z.number().int().nonnegative(),        // done grid quests in that stage
-    known: z.number().int().nonnegative(),       // placed out and not done
-    total: z.number().int().nonnegative(),       // grid quests this build offers there (sizes the segment, never shown as a goal)
-  })),
+    stage: z.string().max(32),                   // validated against StageKey in the web strip, not on the wire
+    state: z.string().max(32),                   // 'complete' | 'known' | 'explored' | 'open' | 'later', validated in the strip
+    done: z.number().int().nonnegative().max(10000),   // done grid quests in that stage
+    known: z.number().int().nonnegative().max(10000),  // placed out and not done
+    total: z.number().int().nonnegative().max(10000),  // grid quests this build offers there (sizes the segment, never shown as a goal)
+  })).max(16),                                   // bounds only stop a tampered client growing every roster; an oversized journey is dropped
 });
 // ProgressSummarySchema gains: journey: JourneySummarySchema.optional().catch(undefined)   (schemaVersion stays 1)
 ```
@@ -426,9 +426,9 @@ Coverage: `apps/mobile/src/logic` >= 90 % with `logic/my-route/` at 100 %; `pack
 | R-2a | `feat(design-system)`: icons `pin`, `check-circle`, `book`, `ear`, `pencil` (one PR; lands before F-PLC-001 P-6) | S | R-0 |
 | R-2b | `feat(design-system)`: `PipRow` (five drawn shapes, cursor and start markers), border token via `design/tokens/` + `design-token-sync` | M | design mock |
 | R-3 | `feat(mobile)`: `MyRoute` screen (phone / regular / wide single column), navigation + gate check, `learner.myRoute` / `a11y.myRoute` en strings, Journey header button, flag | L | R-1a, R-1b, R-2b, R-W1 deployed, R-4a (so Home and My route share one cursor for a placed-out learner) |
-| R-4a | `feat(mobile)`: `NextQuestInput.skipQuestIds`; Home and Results pass the same `isEntitled` / `skipQuestIds`; Home keeps its replay fallback | S | OD-4 |
+| R-4a | `feat(mobile)`: `NextQuestInput.skipQuestIds`; Home and Results pass the same `isEntitled` / `skipQuestIds`; Home keeps its replay fallback; the one predicate is `logic/entitlement.ts` `isStagePlayable`, which `content/sync-context.ts` `journeyContent` (`summary.journey`, R-8) already binds | S | OD-4 |
 | R-4b | `feat(mobile)`: Home route strip replaces the bar (`HomeScreen.tsx:199-202`) | M | R-3, OD-3, F-STORY-004 4.4a, F-LAYOUT-001 5c |
-| R-7a | `feat(mobile)`: start marker and known pips | S | F-PLC-001 P-5, F-QUEST-002 Q-6a |
+| R-7a | `feat(mobile)`: start marker and known pips; once `summary.journey` carries a non-zero `known`, re-check its consent item (`transfer-consent.ts` maps `journey` to `quests`, while `known` comes from the level check) | S | F-PLC-001 P-5, F-QUEST-002 Q-6a |
 | R-7b | `feat(mobile)`: weekly plan line | S | F-PLAN-002 P2-7a |
 | R-7c | `feat(mobile)`: letter wall + jamo-id adapter | S | Q-6a (partial), Q-8 (complete) |
 | R-8 | `feat(content-schema,mobile)`: `JourneySummarySchema`, sync-store input, backend tests | M | R-1a; deploy in D2 |
@@ -588,3 +588,5 @@ Independent review applied 2026-10-10 (`docs/roadmap/spec-review-route-001.md`, 
 | UX: Journey Open / Taste / Soon renamed to the My route set | partial | "Soon" -> "Coming later" and "Premium" removed (R-J, OD-8); "Taste" stays as availability ("A taste" on both screens) because it describes content, not the learner |
 | UX: pace "Hoya check-in after week 4" in v1 | deferred | recorded as OD-13 and placed in P2-7b, not in the one-tap path |
 | Data: R-7a after Q-6b | changed to Q-6a | Q-6a delivers quests 1-3 with the first non-empty `teaches` (`F-QUEST-002` line 454); scope finding agrees |
+| R-8 review: a device missing another device's `stageDoneAt` latch uploads a journey whose stage is not yet `complete` while the Worker keeps the latch | accepted | `summary` is the client aggregate by design (no server recompute); the stale state lasts until that device pulls the merged payload on its next conflict and re-summarizes; an old build next to a new one also makes `journey` come and go. The R-9a strip must not treat a missing journey as "no progress" |
+| R-8 review: log or count a failed `journeySummaryOf` | adapted | app code has no console or error channel (CLAUDE.md) and a telemetry name needs its own spec row; instead `content/__tests__/sync-context.test.ts` runs it over the live bundle for an empty and a full learner, so a bundle change that breaks it fails CI |
