@@ -74,6 +74,27 @@
       "members": [{ "id": "vocab:yeong-zero", "en": "zero", "state": "launch" }]
     },
     {
+      "group": "sagwa",
+      "members": [
+        { "id": "vocab:sagwa-apple", "en": "apple", "state": "launch" },
+        { "id": "vocab:sagwa-apology", "en": "apology", "state": "reserved" }
+      ]
+    },
+    {
+      "group": "sae",
+      "members": [
+        { "id": "vocab:sae-bird", "en": "bird", "state": "launch" },
+        { "id": "vocab:sae-new", "en": "new", "state": "reserved" }
+      ]
+    },
+    {
+      "group": "yeol",
+      "members": [
+        { "id": "vocab:yeol-ten", "en": "ten", "state": "launch" },
+        { "id": "vocab:yeol-fever", "en": "fever, heat", "state": "reserved" }
+      ]
+    },
+    {
       "group": "older-sister",
       "members": [
         { "id": "vocab:eonni", "en": "older sister (said by a woman or girl)", "state": "launch" },

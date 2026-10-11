@@ -20,7 +20,7 @@ Decisions taken in this spec (V = vocabulary decision):
 | # | Decision | Why |
 |---|---|---|
 | V1 | **A `VocabItem` is a flat object** `{ id, ko, romanization, en, ... }`. The brief's `rr` is stored under the key `romanization`. | `scripts/validate-content.mjs:88-108` requires `romanization` and `gloss_en` or `en` on the **same object** as a `ko` field (so **every** object in `content/vocab/**` that carries a `ko` string must also carry both, including `titleKo`, `example` and any registry file); F-CNT-002 §3.4 accepts `rr` only as a story/vocab alias, and `KoTextSchema` (F-QUEST-002 §3.1) already names it `romanization`, so a vocabulary item *is* a `KoText` plus metadata and can be handed to `KoreanText`, `playPrompt` and Listen & Pick unchanged. |
-| V2 | **One id per sense**: `vocab:<romanization without spaces>[-<sense>]`. A sense suffix is **mandatory** for every word that has a second meaning in `content/vocab/_senses.json` (§3.3) and is added pre-emptively for the launch words most likely to collide (`nun-eye`, `nun-snow`, `bae-belly`, `bae-boat`, `i-tooth`, `pal-arm`, `dari-leg`, `hae-sun`, `dal-moon`, `bi-rain`, `gong-ball`, `pyo-ticket`, `yeong-zero`). Ids are permanent: they are file names (`audio/vocab/<slug>.mp3`), progress keys (F-VOC-005) and overlay keys. | The four required homonyms (눈, 배, 이, 팔) and their next senses must never share progress or audio. |
+| V2 | **One id per sense**: `vocab:<romanization without spaces>[-<sense>]`. A sense suffix is **mandatory** for every word that has a second meaning in `content/vocab/_senses.json` (§3.3) and is added pre-emptively for the launch words most likely to collide (`nun-eye`, `nun-snow`, `bae-belly`, `bae-boat`, `i-tooth`, `pal-arm`, `dari-leg`, `hae-sun`, `dal-moon`, `bi-rain`, `gong-ball`, `pyo-ticket`, `yeong-zero`, and since the 2026-10-11 production review `sagwa-apple`, `sae-bird`, `yeol-ten`). Ids are permanent: they are file names (`audio/vocab/<slug>.mp3`), progress keys (F-VOC-005) and overlay keys. | The four required homonyms (눈, 배, 이, 팔) and their next senses must never share progress or audio. |
 | V3 | **Glosses: English lives in the item, Spanish and the Korean description live in overlays** (`content/i18n/<locale>/vocab-<topic>.json`, F-I18N-001 §3.6). The runtime `VocabItem.glosses = { en, es?, ko? }` is **assembled** by the generator; there is no second source of truth. | A Korean description is Hangul in a non-target field, which `validate-content.mjs:109-121` rejects in base files (`korean-in-ui-field`) and F-I18N-001 §3.7 allows in `ko` overlays only; and unreviewed Spanish must stay behind `LOCALE_STATUS` (F-I18N-001 PR 15/16), which an in-file `es` would bypass. |
 | V4 | **Twelve topics x twelve words = 144 launch items, all unique** (no word sits in two topics at launch). `topics[]` exists in the schema (first = primary) so a later word can serve two topics without a copy. | 3 flashcard chunks of 4 (§F-VOC-003); enough distractors for 4 options inside a topic; about 72 % of the Stage 2 goal of about 200 words (blueprint 04 / 05). Growing to 24 per topic is v1.1. |
 | V5 | **Numbers teach native Korean first** (하나 ... 열, 스물) because counting objects, ages and "how many" come first for a beginner; **Sino-Korean** (일 이 삼 ...) is a separate v1.1 topic `numbers-sino` whose ids (`vocab:i-two`, `vocab:pal-eight`) are **reserved now** in `_senses.json` so the Body words 이 (tooth) and 팔 (arm) can never collide with them. Zero (영) is in the launch deck, flagged as the Sino-Korean zero. | See §3.5. |
@@ -30,7 +30,7 @@ Decisions taken in this spec (V = vocabulary decision):
 | V9 | **Learner level never gates content.** `VocabItem.level` (1-3) orders flashcard chunks and selects distractor difficulty; the learner level (`levelOrder`, F-LEARN-001) only changes question formats, option count and defaults (F-VOC-004). | D1: no age gating, no "too hard for you". |
 | V10 | **The free set is data**: `FREE_VOCAB_TOPIC_IDS = ['food','animals','colors','numbers']` lives in F-STORY-004's `content-access.ts`; this spec only guarantees the four topic keys exist. No lock, no "Premium" pill (D5). | D5; one function (`isFreeContent('vocab-topic', key)`). |
 | V11 | **No real people, brands or artists** in the lists (K-Culture uses things, foods, places, festivals, instruments). | Impersonation / trademark risk and child safety. |
-| V12 | **Every list needs native-speaker review before reaching learners**: Korean by the owner, Spanish by the external reviewer of F-I18N-001 PR 15. Until then topics are `status: 'draft'` and the picker shows only `ready` topics. | The word choices, glosses and Korean descriptions in §3.4 are drafts. |
+| V12 | **Every list needs native-speaker review before reaching learners**: Korean by the owner, Spanish by the external reviewer of F-I18N-001 PR 15. Until then topics are `status: 'draft'` and the picker shows only `ready` topics. **2026-10-11 owner decision**: a multi-reviewer production review (Korean, romanization and gloss lenses) replaces the human native review; Food, Animals, Colors and Numbers passed it and are `ready` (the §3.4 tables below carry its fixes). | The word choices, glosses and Korean descriptions in §3.4 were drafts until that review. |
 
 ---
 
@@ -59,7 +59,7 @@ Companion stories:
 
 - As a **content author**, I want one JSON file per topic, checked by CI for correct romanization, duplicate words, missing pictures and shaming text, so that adding the next 12 words is data plus a review, not code.
 - As a **Spanish- or Korean-speaking learner**, I want the gloss in my language (a Korean *description*, not an echo) next to the Korean word, with the picture as the main clue.
-- As a **teacher**, I want the word ids stable and readable (`vocab:sagwa`) so progress and plans can name them.
+- As a **teacher**, I want the word ids stable and readable (`vocab:sagwa-apple`) so progress and plans can name them.
 - As a **developer of the quiz and review engines**, I want a pure, typed list of items with sense groups and picture refs, so distractor logic never has to guess.
 
 ## 3. Acceptance criteria
@@ -138,7 +138,7 @@ export interface RuntimeVocabItem extends VocabItem { glosses: { en: string; es?
 
 ### 3.2 Item identity and the sense registry
 
-- `id` = `vocab:` + the item's `romanization` with spaces removed and lower-cased + `-<sense>` when needed. Examples: `vocab:sagwa`, `vocab:nun-eye`, `vocab:nun-snow`, `vocab:bae-belly`, `vocab:bae-boat`, `vocab:i-tooth`, `vocab:pal-arm`, `vocab:eonni`, `vocab:yunnori` (the pronunciation form, F-CNT-002 D13).
+- `id` = `vocab:` + the item's `romanization` with spaces removed and lower-cased + `-<sense>` when needed. Examples: `vocab:sagwa-apple`, `vocab:nun-eye`, `vocab:nun-snow`, `vocab:bae-belly`, `vocab:bae-boat`, `vocab:i-tooth`, `vocab:pal-arm`, `vocab:eonni`, `vocab:yunnori` (the pronunciation form, F-CNT-002 D13).
 - The audio file for an item is `audio/vocab/<slug>.mp3` with `<slug>` = the id without `vocab:` (F-AUDIO-004 §3.10); the generated recording script (F-AUDIO-004 §3.11) lists items in topic order.
 - **`content/vocab/_senses.json`** holds every group that has more than one member, **launch and reserved**. A reserved member is a sense that is **not shipped yet** but whose id is taken so a later PR cannot reuse it:
 
@@ -155,6 +155,9 @@ export interface RuntimeVocabItem extends VocabItem { glosses: { en: string; es?
 | `gong` | 공 | `vocab:gong-ball` (Sports) | `vocab:gong-zero` (phone-number zero) |
 | `pyo` | 표 | `vocab:pyo-ticket` (Travel) | |
 | `yeong` | 영 | `vocab:yeong-zero` (Numbers) | |
+| `sagwa` | 사과 | `vocab:sagwa-apple` (Food) | `vocab:sagwa-apology` |
+| `sae` | 새 | `vocab:sae-bird` (Animals) | `vocab:sae-new` |
+| `yeol` | 열 | `vocab:yeol-ten` (Numbers) | `vocab:yeol-fever` (fever, heat) |
 | `older-sister` | | `vocab:eonni`, `vocab:nuna` | |
 | `older-brother` | | `vocab:oppa`, `vocab:hyeong` | |
 
@@ -167,7 +170,7 @@ export interface RuntimeVocabItem extends VocabItem { glosses: { en: string; es?
 
 | # | key | Title | `titleKo` (taught) | Tint | Cover item | Free set (D5, flagged off) |
 |---|---|---|---|---|---|---|
-| 1 | `food` | Food | 음식 eumsik | `theme.life` | `vocab:sagwa` | yes |
+| 1 | `food` | Food | 음식 eumsik | `theme.life` | `vocab:sagwa-apple` | yes |
 | 2 | `animals` | Animals | 동물 dongmul | `theme.nature` | `vocab:horangi` | yes |
 | 3 | `colors` | Colors | 색 saek | `stage.stage2` | `vocab:ppalgansaek` | yes |
 | 4 | `numbers` | Numbers | 숫자 sutja | `stage.stage2` | `vocab:daseot` | yes |
@@ -192,18 +195,18 @@ Conventions for every table: **ko** the taught word; **romanization** Revised Ro
 
 | id | ko | romanization | en | es | ko description (draft) | visual | L | note |
 |---|---|---|---|---|---|---|---|---|
-| `vocab:sagwa` | 사과 | sagwa | apple | manzana | 빨갛고 동그란 과일 | `word:food-apple` | 1 | 사과 also means "apology"; picture only, no sense id needed for v1 |
+| `vocab:sagwa-apple` | 사과 | sagwa | apple | manzana | 빨갛고 동그란 과일 | `word:food-apple` | 1 | 사과 also means "apology": sense group `sagwa`, `vocab:sagwa-apology` reserved |
 | `vocab:banana` | 바나나 | banana | banana | banana | 길고 노란 과일 | `word:food-banana` | 2 | loanword; written 바나나 |
 | `vocab:uyu` | 우유 | uyu | milk | leche | 소에서 얻는 하얀 마실 것 | `word:food-milk` | 1 | |
 | `vocab:ppang` | 빵 | ppang | bread | pan | 밀가루 반죽을 구워 만든 음식 | `word:food-bread` | 1 | |
-| `vocab:bap` | 밥 | bap | rice | arroz | 쌀을 익혀 만든 음식 | `card:rice` | 1 | also "a meal"; the card art is reused |
-| `vocab:gimchi` | 김치 | gimchi | kimchi | kimchi | 배추에 양념을 버무려 만든 매운 반찬 | `card:kimchi` | 1 | card art reused |
-| `vocab:gimbap` | 김밥 | gimbap | gimbap | gimbap | 김으로 밥과 채소를 돌돌 만 음식 | `card:kimbap` | 2 | card art reused |
+| `vocab:bap` | 밥 | bap | cooked rice | arroz cocido | 쌀을 익혀 만든 음식 | `card:rice` | 1 | senseNote: also "a meal", uncooked rice is ssal; the card art is reused |
+| `vocab:gimchi` | 김치 | gimchi | kimchi | kimchi | 배추에 양념을 버무려 만든 매운 반찬 | `card:kimchi` | 1 | card art reused; senseNote: a side dish of fermented vegetables |
+| `vocab:gimbap` | 김밥 | gimbap | gimbap (seaweed rice roll) | gimbap (rollo de arroz con alga) | 김으로 밥과 채소를 돌돌 만 음식 | `card:kimbap` | 2 | card art reused |
 | `vocab:ramyeon` | 라면 | ramyeon | instant noodles | fideos instantáneos | 끓는 물에 익혀 먹는 꼬불꼬불한 면 | `word:food-ramyeon` | 2 | |
 | `vocab:mul` | 물 | mul | water | agua | 마시는 맑은 액체 | `word:food-water` | 1 | |
-| `vocab:dalgyal` | 달걀 | dalgyal | egg | huevo | 닭이 낳는 타원형의 알 | `word:food-egg` | 2 | 계란 is also common; 달걀 is the native word |
+| `vocab:dalgyal` | 달걀 | dalgyal | egg | huevo | 닭이 낳는 타원형의 알 | `word:food-egg` | 2 | senseNote: also called gyeran; 계란 is also common; 달걀 is the native word |
 | `vocab:ttalgi` | 딸기 | ttalgi | strawberry | fresa | 작고 빨갛고 달콤한 과일 | `word:food-strawberry` | 2 | |
-| `vocab:tteok` | 떡 | tteok | rice cake | pastel de arroz | 쌀가루를 쪄서 만든 쫀득한 음식 | `word:food-tteok` | 1 | |
+| `vocab:tteok` | 떡 | tteok | rice cake | pastel de arroz | 쌀가루를 쪄서 만든 쫀득한 음식 | `word:food-tteok` | 1 | senseNote: soft, chewy, made from rice ("rice cake" alone suggests a puffed cracker) |
 
 #### Animals (`animals`, 12) — selection rule: animals anyone can draw and recognise in one glance, from pets to zoo animals, plus the national tiger; no insects except the butterfly; no scary animals.
 
@@ -211,10 +214,10 @@ Conventions for every table: **ko** the taught word; **romanization** Revised Ro
 |---|---|---|---|---|---|---|---|---|
 | `vocab:horangi` | 호랑이 | horangi | tiger | tigre | 줄무늬가 있는 큰 고양잇과 동물 | `card:tiger` | 2 | Hoya is a young tiger; card art reused |
 | `vocab:goyangi` | 고양이 | goyangi | cat | gato | 야옹 하고 우는 작은 동물 | `word:animal-cat` | 2 | |
-| `vocab:gangaji` | 강아지 | gangaji | puppy | cachorro | 멍멍 짖는 어린 개 | `word:animal-puppy` | 2 | `content/episodes/stage-1/cards.json:6` writes `gang-a-ji` until F-CNT-002 PR 2b; 강아지 is also the everyday word for a pet dog (the plain word 개 is v1.1), so the owner confirms "puppy" is the right launch gloss |
+| `vocab:gangaji` | 강아지 | gangaji | puppy | perrito | 멍멍 짖는 어린 개 | `word:animal-puppy` | 2 | `content/episodes/stage-1/cards.json:6` writes `gang-a-ji` until F-CNT-002 PR 2b; 강아지 is also the everyday word for a pet dog (the plain word 개 is v1.1), so "puppy" stays the launch gloss and a senseNote names the pet-dog use and gae |
 | `vocab:tokki` | 토끼 | tokki | rabbit | conejo | 귀가 길고 깡충깡충 뛰는 동물 | `word:animal-rabbit` | 1 | |
 | `vocab:gom` | 곰 | gom | bear | oso | 몸집이 크고 털이 많은 동물 | `word:animal-bear` | 1 | |
-| `vocab:sae` | 새 | sae | bird | pájaro | 날개로 하늘을 나는 동물 | `word:animal-bird` | 1 | 새 also means "new"; a picture-only context |
+| `vocab:sae-bird` | 새 | sae | bird | pájaro | 날개로 하늘을 나는 동물 | `word:animal-bird` | 1 | 새 also means "new": sense group `sae`, `vocab:sae-new` reserved |
 | `vocab:mulgogi` | 물고기 | mulgogi | fish | pez | 물속에서 헤엄치는 동물 | `word:animal-fish` | 2 | |
 | `vocab:ori` | 오리 | ori | duck | pato | 꽥꽥 울고 물에 뜨는 새 | `word:animal-duck` | 1 | |
 | `vocab:yeou` | 여우 | yeou | fox | zorro | 꼬리가 풍성하고 영리한 동물 | `word:animal-fox` | 1 | |
@@ -234,7 +237,7 @@ Conventions for every table: **ko** the taught word; **romanization** Revised Ro
 | `vocab:borasaek` | 보라색 | borasaek | purple | morado | 포도 같은 색 | `word:color-purple` | 2 | |
 | `vocab:bunhongsaek` | 분홍색 | bunhongsaek | pink | rosa | 복숭아꽃 같은 색 | `word:color-pink` | 2 | |
 | `vocab:haneulsaek` | 하늘색 | haneulsaek | sky blue | celeste | 맑은 날의 하늘 같은 색 | `word:color-skyblue` | 2 | |
-| `vocab:galsaek` | 갈색 | galsaek | brown | café | 흙과 나무 같은 색 | `word:color-brown` | 1 | |
+| `vocab:galsaek` | 갈색 | galsaek | brown | marrón | 흙과 나무 같은 색 | `word:color-brown` | 1 | |
 | `vocab:hoesaek` | 회색 | hoesaek | gray | gris | 구름 낀 날의 하늘 같은 색 | `word:color-gray` | 1 | |
 | `vocab:hayansaek` | 하얀색 | hayansaek | white | blanco | 눈과 우유 같은 색 | `word:color-white` | 2 | |
 | `vocab:geomeunsaek` | 검은색 | geomeunsaek | black | negro | 밤하늘 같은 색 | `word:color-black` | 2 | |
@@ -245,18 +248,18 @@ Conventions for every table: **ko** the taught word; **romanization** Revised Ro
 
 | id | ko | romanization | en | es | ko description (draft) | visual | L | note |
 |---|---|---|---|---|---|---|---|---|
-| `vocab:hana` | 하나 | hana | one | uno | 수 1을 우리말로 센 것 | `word:count-1` | 1 | before a counting word it becomes han |
-| `vocab:dul` | 둘 | dul | two | dos | 수 2를 우리말로 센 것 | `word:count-2` | 1 | before a counting word: du |
-| `vocab:set` | 셋 | set | three | tres | 수 3을 우리말로 센 것 | `word:count-3` | 1 | before a counting word: se |
-| `vocab:net` | 넷 | net | four | cuatro | 수 4를 우리말로 센 것 | `word:count-4` | 1 | before a counting word: ne |
+| `vocab:hana` | 하나 | hana | one | uno | 수 1을 우리말로 센 것 | `word:count-1` | 1 | before a counter word (han gae, one thing) it becomes han |
+| `vocab:dul` | 둘 | dul | two | dos | 수 2를 우리말로 센 것 | `word:count-2` | 1 | before a counter word: du |
+| `vocab:set` | 셋 | set | three | tres | 수 3을 우리말로 센 것 | `word:count-3` | 1 | before a counter word: se |
+| `vocab:net` | 넷 | net | four | cuatro | 수 4를 우리말로 센 것 | `word:count-4` | 1 | before a counter word: ne |
 | `vocab:daseot` | 다섯 | daseot | five | cinco | 수 5를 우리말로 센 것 | `word:count-5` | 1 | |
 | `vocab:yeoseot` | 여섯 | yeoseot | six | seis | 수 6을 우리말로 센 것 | `word:count-6` | 1 | |
 | `vocab:ilgop` | 일곱 | ilgop | seven | siete | 수 7을 우리말로 센 것 | `word:count-7` | 1 | |
 | `vocab:yeodeol` | 여덟 | yeodeol | eight | ocho | 수 8을 우리말로 센 것 | `word:count-8` | 1 | |
 | `vocab:ahop` | 아홉 | ahop | nine | nueve | 수 9를 우리말로 센 것 | `word:count-9` | 1 | |
-| `vocab:yeol` | 열 | yeol | ten | diez | 수 10을 우리말로 센 것 | `word:count-10` | 1 | |
-| `vocab:seumul` | 스물 | seumul | twenty | veinte | 수 20을 우리말로 센 것 | `word:count-20` | 2 | before a counting word: seumu |
-| `vocab:yeong-zero` | 영 | yeong | zero | cero | 아무것도 없음을 나타내는 수 | `word:count-0` | 1 | Sino-Korean; also said 공 in phone numbers (reserved `vocab:gong-zero`) |
+| `vocab:yeol-ten` | 열 | yeol | ten | diez | 수 10을 우리말로 센 것 | `word:count-10` | 1 | 열 also means "fever, heat": sense group `yeol`, `vocab:yeol-fever` reserved |
+| `vocab:seumul` | 스물 | seumul | twenty | veinte | 수 20을 우리말로 센 것 | `word:count-20` | 2 | before a counter word: seumu |
+| `vocab:yeong-zero` | 영 | yeong | zero | cero | 아무것도 없음을 나타내는 수 | `word:count-0` | 1 | Sino-Korean (native Korean has no zero; the senseNote says so in plain words); also said 공 in phone numbers (reserved `vocab:gong-zero`) |
 
 (The notes use romanized forms of the counting variants inside English prose, which F-CNT-002 §3.1 item 8 allows, because a note may not contain Hangul. The counting-word forms 한 두 세 네 are taught in Stage 3 counters, not here.)
 

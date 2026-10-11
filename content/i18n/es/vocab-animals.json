@@ -14,7 +14,8 @@
       "gloss": "gato"
     },
     "vocab:gangaji": {
-      "gloss": "cachorro"
+      "gloss": "perrito",
+      "senseNote": "También se usa para cualquier perro de casa. La palabra general para perro es gae."
     },
     "vocab:tokki": {
       "gloss": "conejo"
@@ -22,7 +23,7 @@
     "vocab:gom": {
       "gloss": "oso"
     },
-    "vocab:sae": {
+    "vocab:sae-bird": {
       "gloss": "pájaro"
     },
     "vocab:mulgogi": {

@@ -8,13 +8,13 @@
     "titleKo": {
       "ko": "색",
       "romanization": "saek",
-      "en": "color"
+      "en": "colors"
     },
     "blurbEn": "Words for the colors all around us.",
     "hoyaIntroEn": "Look around! How many colors can you spot?",
     "tint": "stage.stage2",
     "coverItemId": "vocab:ppalgansaek",
-    "status": "draft",
+    "status": "ready",
     "fixedOrder": true
   },
   "items": [

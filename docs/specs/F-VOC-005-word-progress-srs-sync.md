@@ -250,7 +250,7 @@ export const VocabSummarySchema = z.object({
 11. **Given** 3 or more due words and the flag on, **when** Today is built, **then** slot ③ is a "Words are ready" card for the topic with the most due words, pinned for the day; **given** fewer than 3, no such card.
 12. **Given** a learner who played Challenge twice, catching 9 then 7, **then** `bestCaught` is 9.
 13. **Given** a learner with no collected words, **then** `summarize` output has no `vocab` key.
-14. **Given** the console and a student with `needsPractice: ['vocab:sagwa','vocab:nun-eye']`, **then** the line reads `Words to revisit: 사과 sagwa (apple) · 눈 nun (eye)` with no ranking or percentile of students.
+14. **Given** the console and a student with `needsPractice: ['vocab:sagwa-apple','vocab:nun-eye']`, **then** the line reads `Words to revisit: 사과 sagwa (apple) · 눈 nun (eye)` with no ranking or percentile of students.
 15. **Given** a profile reset, **then** the local slice is the empty slice, the next upload replaces the server's slice with it (the Worker preserves only an *absent* key), and only a second device that still holds the words can bring them back through a conflict merge (the existing "collections only grow" semantics).
 
 ## 4. Out of scope

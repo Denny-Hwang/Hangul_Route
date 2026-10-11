@@ -4,24 +4,24 @@
   "entries": {
     "vocab-topic:numbers": {
       "title": "Números",
-      "blurb": "Palabras para contar del uno al diez, luego veinte y cero.",
+      "blurb": "Números para contar del uno al diez, más veinte y cero.",
       "hoyaIntro": "Contemos juntos, uno por uno."
     },
     "vocab:hana": {
       "gloss": "uno",
-      "senseNote": "Antes de una palabra de conteo se convierte en han."
+      "senseNote": "Delante de un contador, como en han gae (una cosa), se dice han."
     },
     "vocab:dul": {
       "gloss": "dos",
-      "senseNote": "Antes de una palabra de conteo se convierte en du."
+      "senseNote": "Delante de un contador, como en du gae (dos cosas), se dice du."
     },
     "vocab:set": {
       "gloss": "tres",
-      "senseNote": "Antes de una palabra de conteo se convierte en se."
+      "senseNote": "Delante de un contador, como en se gae (tres cosas), se dice se."
     },
     "vocab:net": {
       "gloss": "cuatro",
-      "senseNote": "Antes de una palabra de conteo se convierte en ne."
+      "senseNote": "Delante de un contador, como en ne gae (cuatro cosas), se dice ne."
     },
     "vocab:daseot": {
       "gloss": "cinco"
@@ -38,16 +38,16 @@
     "vocab:ahop": {
       "gloss": "nueve"
     },
-    "vocab:yeol": {
+    "vocab:yeol-ten": {
       "gloss": "diez"
     },
     "vocab:seumul": {
       "gloss": "veinte",
-      "senseNote": "Antes de una palabra de conteo se convierte en seumu."
+      "senseNote": "Delante de un contador, como en seumu gae (veinte cosas), se dice seumu."
     },
     "vocab:yeong-zero": {
       "gloss": "cero",
-      "senseNote": "Cero sinocoreano. En los números de teléfono se dice gong."
+      "senseNote": "El coreano nativo no tiene cero; viene del chino. En los números de teléfono se dice gong."
     }
   }
 }

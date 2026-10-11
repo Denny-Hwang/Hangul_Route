@@ -14,7 +14,7 @@
     "hoyaIntroEn": "I am a tiger! Come and meet some animal friends.",
     "tint": "theme.nature",
     "coverItemId": "vocab:horangi",
-    "status": "draft",
+    "status": "ready",
     "fixedOrder": false
   },
   "items": [
@@ -52,7 +52,8 @@
         "animals"
       ],
       "level": 2,
-      "visual": "word:animal-puppy"
+      "visual": "word:animal-puppy",
+      "senseNote": "Also the everyday word for a pet dog. The plain word for dog is gae."
     },
     {
       "id": "vocab:tokki",
@@ -79,7 +80,7 @@
       "visual": "word:animal-bear"
     },
     {
-      "id": "vocab:sae",
+      "id": "vocab:sae-bird",
       "ko": "새",
       "romanization": "sae",
       "en": "bird",
@@ -88,7 +89,8 @@
         "animals"
       ],
       "level": 1,
-      "visual": "word:animal-bird"
+      "visual": "word:animal-bird",
+      "senseGroup": "sae"
     },
     {
       "id": "vocab:mulgogi",
