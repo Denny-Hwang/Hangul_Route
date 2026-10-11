@@ -122,6 +122,20 @@ describe('buildSourcesView: fact cards', () => {
     expect(f2.type === 'fact' && f2.fact.scopeLabel).toBe('What the tale says');
   });
 
+  it('Open link is offered only for a link the hand-off accepts (the same isSafeHttpsUrl rule)', () => {
+    const story = readyStory();
+    const base = story.facts[0]!.sources[0]!;
+    story.facts[0]!.sources = [
+      { ...base, url: 'https://user:pw@www.heritage.go.kr/a' },
+      { ...base, url: 'https://www.heritage.go.kr/a b' },
+      { ...base, url: 'HTTPS://WWW.HERITAGE.GO.KR/A' },
+      { ...base, url: 'https://www.heritage.go.kr/a' },
+    ];
+    const card = buildSourcesView(story).sections[0]!.items[0]!;
+    if (card.type !== 'fact') throw new Error('expected a fact card');
+    expect(card.fact.sources.map((s) => s.openable)).toEqual([false, false, true, true]);
+  });
+
   it('approximations sit under their fact; time-relative ones add the today note; duplicates across tiers show once', () => {
     const story = readyStory();
     story.tiers[1]!.scenes[1]!.approximations = [...story.tiers[0]!.scenes[1]!.approximations];

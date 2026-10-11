@@ -1,5 +1,6 @@
 import type { KoText, Story, StoryFact, StorySource } from '@hangul-route/content-schema';
 import { getMessages, type Messages } from '@hangul-route/i18n';
+import { isSafeHttpsUrl } from './safe-url';
 import { isTraditionalTale, sceneCaption } from './scene-view';
 
 /**
@@ -29,7 +30,7 @@ export interface SourceView {
   quoteOrLocator: string;
   /** "Source 2 of 3: <title>, <publisher>" (the focusable group's label). */
   label: string;
-  /** Only an `https:` link may ever be handed to the browser. */
+  /** Open link is offered only for a link the hand-off would accept (`isSafeHttpsUrl`). */
   openable: boolean;
 }
 
@@ -106,7 +107,7 @@ function sourceView(copy: SourcesCopy, source: StorySource, index: number, total
     accessedLabel: copy.accessed(source.accessed),
     quoteOrLocator: source.quoteOrLocator,
     label: copy.sourceLabel(index + 1, total, source.title, source.publisher),
-    openable: source.url.startsWith('https://'),
+    openable: isSafeHttpsUrl(source.url),
   };
 }
 

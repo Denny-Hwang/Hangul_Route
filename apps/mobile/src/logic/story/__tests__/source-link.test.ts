@@ -1,10 +1,10 @@
 import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
+import { isSafeHttpsUrl } from '../safe-url';
 import { buildSourcesView } from '../sources-view';
 import {
   findSourceLink,
   hasHangul,
-  isSafeHttpsUrl,
   linkOpenedPayload,
   openLinkNote,
   openLinkStep,
@@ -78,11 +78,17 @@ describe('the gate: Open link is a grown-up action (§3.8, §3.14 #3)', () => {
     expect(openLinkStep(false)).toBe('gate');
   });
 
-  it('a link waiting on the gate opens on return only once the gate is through', () => {
-    expect(pendingLinkStep(null, true)).toBe('none');
-    expect(pendingLinkStep(null, false)).toBe('none');
-    expect(pendingLinkStep({ url: 'https://a.example', factId: 'f1' }, true)).toBe('open');
-    expect(pendingLinkStep({ url: 'https://a.example', factId: 'f1' }, false)).toBe('drop');
+  it('a link waiting on the gate opens on return only once the gate is through (native)', () => {
+    expect(pendingLinkStep(null, true, false)).toBe('none');
+    expect(pendingLinkStep(null, false, false)).toBe('none');
+    expect(pendingLinkStep({ url: 'https://a.example', factId: 'f1' }, true, false)).toBe('open');
+    expect(pendingLinkStep({ url: 'https://a.example', factId: 'f1' }, false, false)).toBe('drop');
+  });
+
+  it('web never opens after the gate by itself: it asks for one more tap, which keeps the browser gesture', () => {
+    expect(pendingLinkStep(null, true, true)).toBe('none');
+    expect(pendingLinkStep({ url: 'https://a.example', factId: 'f1' }, true, true)).toBe('tap-again');
+    expect(pendingLinkStep({ url: 'https://a.example', factId: 'f1' }, false, true)).toBe('drop');
   });
 });
 

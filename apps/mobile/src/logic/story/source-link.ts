@@ -1,4 +1,5 @@
 import type { Story } from '@hangul-route/content-schema';
+import { isSafeHttpsUrl } from './safe-url';
 import { findFactSection, findSceneSection, type SourcesCopy, type SourcesView } from './sources-view';
 
 /**
@@ -16,23 +17,15 @@ import { findFactSection, findSceneSection, type SourcesCopy, type SourcesView }
 /** Where Sources was opened from (`story.sources.opened`). */
 export type SourcesFrom = 'reader' | 'end' | 'episode' | 'notes' | 'scene';
 
-/** The route params of `StorySources` (navigation/types.ts). */
+/**
+ * The route params of `StorySources` (navigation/types.ts). `from` is required
+ * so every caller names where Sources was opened from (§3.12 attribution).
+ */
 export interface SourcesRouteParams {
   storyId: string;
   factId?: string;
   sceneIndex?: number;
-  from?: SourcesFrom;
-}
-
-/**
- * A plain absolute `https:` URL: a host, no credentials, no whitespace or
- * control characters. Written without `URL` (React Native's is partial).
- */
-const SAFE_HTTPS = /^https:\/\/[^\s/?#@\\]+(?:[/?#][^\s\\]*)?$/i;
-
-export function isSafeHttpsUrl(url: string): boolean {
-  // eslint-disable-next-line no-control-regex
-  return SAFE_HTTPS.test(url) && !/[\u0000-\u001f\u007f]/.test(url);
+  from: SourcesFrom;
 }
 
 export interface SourceLink {
@@ -54,12 +47,20 @@ export function openLinkStep(gateOpensDirectly: boolean): 'open' | 'gate' {
 }
 
 /**
- * Back on Sources after the PIN screen: a waiting link opens only when the
- * gate is now through (a grown-up session is open); a cancelled gate drops it.
+ * Back on Sources after the PIN screen: a cancelled gate drops the waiting
+ * link. Once the gate is through (a grown-up session is open) the link opens
+ * by itself where the hand-off needs no tap of its own (native), and asks for
+ * one more tap of Open link where it does (web: a browser may block a tab
+ * opened outside a tap; the session is open now, so that tap opens directly).
  */
-export function pendingLinkStep(pending: SourceLink | null, gateOpensDirectly: boolean): 'none' | 'open' | 'drop' {
+export function pendingLinkStep(
+  pending: SourceLink | null,
+  gateOpensDirectly: boolean,
+  handOffNeedsTap: boolean,
+): 'none' | 'open' | 'tap-again' | 'drop' {
   if (pending === null) return 'none';
-  return gateOpensDirectly ? 'open' : 'drop';
+  if (!gateOpensDirectly) return 'drop';
+  return handOffNeedsTap ? 'tap-again' : 'open';
 }
 
 /** What the browser hand-off reported (platform/external-link). */
