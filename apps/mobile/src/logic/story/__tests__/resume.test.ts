@@ -30,7 +30,7 @@ const LESSON: Quest = {
   estimatedMinutes: 5,
   steps: [
     { id: 'l-intro', kind: 'intro', titleEn: 'Hi' },
-    { id: 'l-game', kind: 'practice', titleEn: 'Tap', minigameKind: 'tap-match', minigameRef: 'minigame:tap-1' },
+    { id: 'l-game', kind: 'practice', titleEn: 'Tap', minigameKind: 'match-sound', minigameRef: 'minigame:match-1' },
     { id: 'l-reward', kind: 'reward', titleEn: 'Yay' },
   ],
 };
