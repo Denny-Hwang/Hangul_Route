@@ -108,6 +108,48 @@ describe('promptPanelView', () => {
   });
 });
 
+describe('promptPanelView.statusShown (the status-only panel, F-AUDIO-004 A-5b)', () => {
+  // Build Letter, Card Match, Tap & Respond, Culture Quiz, Voice Echo and the card detail already print
+  // the Korean next to the speaker: the panel only says why there is no sound, once the learner asked for it.
+  it('stays hidden until the slot has tried to play, even when sound is off or there is no voice', () => {
+    expect(promptPanelView(run([{ muted: true }]), readyCap, true, false).statusShown).toBe(false);
+    expect(promptPanelView(INITIAL_PROMPT_STATE, noneCap, false, false).statusShown).toBe(false);
+  });
+
+  it('after a play, says the sound is off and offers Turn sound on', () => {
+    const v = promptPanelView(run([{ muted: true }, 'play', { result: 'muted' }]), readyCap, true, false);
+    expect(v).toMatchObject({ statusShown: true, detail: 'Sound is off.', actionLabel: 'Turn sound on' });
+  });
+
+  it('after a play with no Korean voice, says so and links the how-to', () => {
+    const v = promptPanelView(run(['play', { result: 'unavailable', failure: 'no_voice' }]), noneCap, false, false);
+    expect(v).toMatchObject({ statusShown: true, detail: 'No Korean voice on this device.', actionLabel: null, helpLabel: 'How to add a voice' });
+  });
+
+  it('after a failed or blocked play, offers Try again or Tap to hear', () => {
+    expect(promptPanelView(run(['play', { result: 'unavailable', failure: 'error' }]), readyCap, false, false)).toMatchObject({
+      statusShown: true,
+      actionLabel: 'Try again',
+    });
+    expect(promptPanelView(run(['play', { result: 'unavailable', failure: 'blocked' }]), readyCap, false, false)).toMatchObject({
+      statusShown: true,
+      detail: null,
+      actionLabel: 'Tap to hear',
+    });
+  });
+
+  it('is hidden while playing, after a sound that played, and when the text only stays after sound came back', () => {
+    expect(promptPanelView(run(['play']), readyCap, false, false).statusShown).toBe(false);
+    expect(promptPanelView(run(['play']), unknownCap, false, false).statusShown).toBe(false);
+    expect(promptPanelView(run(['play', { result: 'played' }]), readyCap, false, false).statusShown).toBe(false);
+    expect(promptPanelView(run([{ muted: true }, 'play', { result: 'muted' }, { muted: false }]), readyCap, false, false).statusShown).toBe(false);
+  });
+
+  it('a new round (reset) hides it again', () => {
+    expect(promptPanelView(run(['play', { result: 'unavailable', failure: 'error' }, 'reset']), readyCap, false, false).statusShown).toBe(false);
+  });
+});
+
 describe('shouldAutoReplay', () => {
   it('replays after a wrong tap unless the text is up because of sound off or an unavailable sound', () => {
     expect(shouldAutoReplay(promptPanelView(INITIAL_PROMPT_STATE, readyCap, false, false))).toBe(true);

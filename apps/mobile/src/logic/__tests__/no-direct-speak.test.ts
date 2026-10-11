@@ -11,17 +11,18 @@ import { describe, expect, it } from 'vitest';
 const SCREENS = join(__dirname, '..', '..', 'screens');
 
 /**
- * PR A-5b (spec §6) migrates these. Each one already prints the Korean text and
- * its romanization next to the speaker button and is not gated on hearing, so
- * `speak()` (which goes through the same controller: muting, ranked voice, never
- * an engine call without a Korean voice) is silent but loses nothing. A-5b
- * empties this list; a file listed here that no longer imports `speak` fails.
+ * The screens PR A-5b (spec §6, the other rows of §3.9) moved to the one entry
+ * point: each plays through a prompt slot (`usePromptSlot`) and shows the
+ * slot's status (why there is no sound, and the one action) in a
+ * `PromptPanel`, because the Korean text itself is already printed next to the
+ * speaker. Culture Quiz gained its Hear-it button in the same PR.
  */
-const PENDING_A5B = [
+const SLOT_SCREENS = [
   'minigames/BuildLetterGame.tsx',
   'minigames/CardMatchGame.tsx',
   'minigames/TapRespondGame.tsx',
   'minigames/VoiceEchoGame.tsx',
+  'minigames/CultureQuizGame.tsx',
   'library/CardDetailView.tsx',
 ];
 
@@ -53,8 +54,16 @@ describe('no direct speak from screens', () => {
     expect(files.filter((f) => audioImports(f.source).includes('playJamoSound')).map((f) => f.rel)).toEqual([]);
   });
 
-  it('only the A-5b files still import speak', () => {
-    const offenders = files.filter((f) => audioImports(f.source).includes('speak')).map((f) => f.rel).sort();
-    expect(offenders).toEqual([...PENDING_A5B].sort());
+  it('no screen imports speak', () => {
+    expect(files.filter((f) => audioImports(f.source).includes('speak')).map((f) => f.rel)).toEqual([]);
+  });
+
+  it.each(SLOT_SCREENS)('%s plays through a prompt slot and shows its status panel', (rel) => {
+    const file = files.find((f) => f.rel === rel);
+    expect(file, rel).toBeDefined();
+    const source = file!.source;
+    expect(audioImports(source).some((n) => n === 'playPrompt' || n === 'playJamo')).toBe(true);
+    expect(source).toMatch(/usePromptSlot\(\{\s*source:/);
+    expect(source).toMatch(/<PromptPanel[^>]*variant="status"/);
   });
 });
