@@ -2227,9 +2227,9 @@ export const storiesAll: Story[] = [
     "state": "ready",
     "contentVer": 1,
     "title": {
-      "ko": "김홍도의 풍속화: 씨름과 서당",
-      "romanization": "Gimhongdoui pungsokhwa: ssireumgwa seodang",
-      "en": "Kim Hong-do's Pictures of Everyday Life"
+      "ko": "김홍도의 풍속화, 씨름과 서당",
+      "romanization": "Gimhongdoui pungsokhwa, ssireumgwa seodang",
+      "en": "Kim Hongdo's Pictures of Everyday Life"
     },
     "summaryEn": "Hoya looks closely at Ssireum and Seodang from Danwon's genre painting album at the National Museum of Korea, spotting a taffy seller, shoes that someone has taken off, and a sniffling schoolboy.",
     "theme": "life",
@@ -2237,9 +2237,9 @@ export const storiesAll: Story[] = [
     "recommendedStage": 1,
     "minutes": 5,
     "learningGoalsEn": [
-      "Recognize and say 그림 (geurim, picture), 화가 (hwaga, painter), 씨름 (ssireum, Korean wrestling) and 서당 (seodang, village school).",
-      "Know that Kim Hong-do (pen name Danwon, born 1745) was a Joseon court painter famous for genre paintings.",
-      "Describe what can be seen in the paintings Ssireum and Seodang.",
+      "Read and recognize 그림 (geurim, picture), 화가 (hwaga, painter), 씨름 (ssireum, Korean wrestling) and 서당 (seodang, village school).",
+      "Know that Kim Hongdo (pen name Danwon, born 1745) was a Joseon court painter famous for genre paintings.",
+      "Know what can be seen in the paintings Ssireum and Seodang.",
       "Know that the album of 25 genre paintings is a Treasure kept at the National Museum of Korea, and that ssireum is living heritage today."
     ],
     "origin": {
@@ -2295,9 +2295,9 @@ export const storiesAll: Story[] = [
         "kind": "word"
       },
       {
-        "id": "ssireum-han-pan-haeyo",
-        "ko": "씨름 한 판 해요!",
-        "romanization": "ssireum han pan haeyo!",
+        "id": "ssireum-hanpan-haeyo",
+        "ko": "씨름 한판 해요!",
+        "romanization": "ssireum hanpan haeyo!",
         "en": "Let's have a round of ssireum!",
         "kind": "phrase"
       },
@@ -2305,7 +2305,7 @@ export const storiesAll: Story[] = [
         "id": "kim-hong-do",
         "ko": "김홍도",
         "romanization": "Gimhongdo",
-        "en": "Kim Hong-do, a Joseon court painter",
+        "en": "Kim Hongdo, a Joseon court painter",
         "kind": "term"
       }
     ],
@@ -2335,8 +2335,8 @@ export const storiesAll: Story[] = [
           },
           {
             "id": "s2",
-            "narrationEn": "Kim Hong-do, {kw:kim-hong-do}, whose pen name was Danwon, was born in 1745. He was a court painter who painted many kinds of subjects, and he is especially famous for genre paintings, pictures of everyday life.",
-            "captionEn": "Kim Hong-do paints everyday life",
+            "narrationEn": "Kim Hongdo, {kw:kim-hong-do}, whose pen name was Danwon, was born in 1745. He was a court painter who painted many kinds of subjects, and he is especially famous for genre paintings, pictures of everyday life.",
+            "captionEn": "Kim Hongdo paints everyday life",
             "keyword": {
               "id": "hwaga",
               "ko": "화가",
@@ -2373,7 +2373,7 @@ export const storiesAll: Story[] = [
           },
           {
             "id": "s4",
-            "narrationEn": "Look at the painting {kw:ssireum}, Ssireum! In the middle, two wrestlers grab hold of each other and test their strength. Around them, spectators sit in two curved groups, watching closely.",
+            "narrationEn": "Look at the painting {kw:ssireum}! In the middle, two wrestlers grab hold of each other and test their strength. Around them, spectators sit in two curved groups, watching closely.",
             "captionEn": "Two wrestlers test their strength",
             "keyword": {
               "id": "ssireum",
@@ -2411,13 +2411,13 @@ export const storiesAll: Story[] = [
           },
           {
             "id": "s6",
-            "narrationEn": "Now look at {kw:seodang}, Seodang, a village school. The teacher and students are gathered around one boy, who has turned away, sniffling, while the other students grin and the teacher looks troubled.",
+            "narrationEn": "Now look at {kw:seodang}, a painting of a village school. The teacher and students are gathered around one boy, who has turned away, sniffling. The other students look amused, and the teacher looks troubled. Hoya hopes the boy feels better soon.",
             "captionEn": "A class gathers around one boy",
             "keyword": {
               "id": "seodang",
               "ko": "서당",
               "romanization": "seodang",
-              "en": "village school (Joseon era)",
+              "en": "village school",
               "kind": "word"
             },
             "factIds": [
@@ -2430,13 +2430,13 @@ export const storiesAll: Story[] = [
           },
           {
             "id": "s7",
-            "narrationEn": "Ssireum is still loved today. It is a National Intangible Heritage of Korea, and in 2018 UNESCO inscribed traditional Korean wrestling as Intangible Cultural Heritage. Hoya rolls up his sleeves: \"{kw:ssireum-han-pan-haeyo}\"",
+            "narrationEn": "Ssireum is still loved today. It is a National Intangible Heritage of Korea, and in 2018 UNESCO inscribed traditional Korean wrestling as Intangible Cultural Heritage. Hoya rolls up his sleeves: \"{kw:ssireum-hanpan-haeyo}\"",
             "captionEn": "Ssireum is still loved today",
             "line": {
-              "ko": "씨름 한 판 해요!",
-              "romanization": "ssireum han pan haeyo!",
+              "ko": "씨름 한판 해요!",
+              "romanization": "ssireum hanpan haeyo!",
               "en": "Let's have a round of ssireum!",
-              "speaker": "narrator"
+              "speaker": "hoya"
             },
             "factIds": [
               "f7"
@@ -2481,7 +2481,7 @@ export const storiesAll: Story[] = [
           },
           {
             "id": "c2",
-            "kind": "detail",
+            "kind": "pick-meaning",
             "promptEn": "What is a {target}?",
             "target": {
               "ko": "서당",
@@ -2491,21 +2491,21 @@ export const storiesAll: Story[] = [
             "options": [
               {
                 "id": "a",
-                "en": "A busy market in the village",
+                "en": "A busy village market",
                 "isCorrect": false
               },
               {
                 "id": "b",
-                "en": "A village school for children",
+                "en": "A village school",
                 "isCorrect": true
               },
               {
                 "id": "c",
-                "en": "A royal hall inside the palace",
+                "en": "A royal palace hall",
                 "isCorrect": false
               }
             ],
-            "explainEn": "A seodang was a village school. In the painting, the teacher and students are gathered around one boy.",
+            "explainEn": "A seodang is a village school. In the painting Seodang, the teacher and students are gathered around one boy.",
             "factIds": [
               "f6"
             ]
@@ -2513,27 +2513,32 @@ export const storiesAll: Story[] = [
           {
             "id": "c3",
             "kind": "detail",
-            "promptEn": "Where is the album of 25 genre paintings kept?",
+            "promptEn": "Who stands at the left of the painting {target}, away from the crowd?",
+            "target": {
+              "ko": "씨름",
+              "romanization": "ssireum",
+              "en": "Korean wrestling"
+            },
             "options": [
               {
                 "id": "a",
-                "en": "The National Palace Museum of Korea",
+                "en": "A teacher in a scholar's cap",
                 "isCorrect": false
               },
               {
                 "id": "b",
-                "en": "The National Folk Museum of Korea",
+                "en": "A boy who has turned away",
                 "isCorrect": false
               },
               {
                 "id": "c",
-                "en": "The National Museum of Korea",
+                "en": "A taffy seller",
                 "isCorrect": true
               }
             ],
-            "explainEn": "The album known as Danwon's genre painting album is a Treasure kept at the National Museum of Korea.",
+            "explainEn": "In Ssireum, a taffy seller stands at the left, away from the crowd's attention.",
             "factIds": [
-              "f3"
+              "f5"
             ]
           }
         ],
@@ -2739,7 +2744,7 @@ export const storiesAll: Story[] = [
       "scope": "cluster",
       "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted."
     },
-    "authorNotes": "Attribution caution: NMK and encykorea both report scholarly debate about the album (differences in skill between leaves, retouching, many similar copies); some scholars regard leaves such as Ssireum and Mudong as genuine and weaker leaves as copies, and one view treats the whole album as a later model book. Only 13 of the 25 leaves bear the seal 김홍도인 (encykorea). Narration therefore calls it the album 'known as' Danwon's album and describes what the paintings show; the fact claim says 'attributed to'. The KHS designation text names the school leaf 〈글방〉; NMK and encykorea use 서당. Omitted: the switch (회초리) mentioned in an encykorea media caption for 서당; the album's purchase history (1918) and the 1957 remounting that separated two 군선도 leaves (NMK); Kim Hong-do's death (c.1806 per encykorea; KHS gives '?'). The 2018 UNESCO inscription was a joint inscription by both Koreas; this is not mentioned in narration. Scene 5 claim about shoes follows NMK ('벗어 놓은 신발'), without saying whose shoes they are. REVISION: (a) 'kicked-off shoes' removed; museum text says only 벗어 놓은 신발 (shoes taken off), at the right, narrowing the open space (NMK relicId=551); seller at the left, 'outside the spectators' attention'. 우리역사넷 says the shoes are the two wrestlers' and the seller looks into the distance; NMK's curator page says the seller looks outward, but narration stays with the museum's catalog wording. (b) Seodang layout softened to 'gathered around' because NMK says 둥글게 배치 around the boy while an encykorea caption says pupils sit side by side on both sides of the teacher. (c) Ssireum crowd: NMK says two groups arranged roundly above and below; narration says 'two curved groups'. (d) Quiz distractor for museum changed to other national museums.",
+    "authorNotes": "Attribution caution: NMK and encykorea both report scholarly debate about the album (differences in skill between leaves, retouching, many similar copies); some scholars regard leaves such as Ssireum and Mudong as genuine and weaker leaves as copies, and one view treats the whole album as a later model book. Only 13 of the 25 leaves bear the seal 김홍도인 (encykorea). Narration therefore calls it the album 'known as' Danwon's album and describes what the paintings show; the fact claim says 'attributed to'. The KHS designation text names the school leaf 〈글방〉; NMK and encykorea use 서당. Omitted: the switch (회초리) mentioned in an encykorea media caption for 서당; the album's purchase history (1918) and the 1957 remounting that separated two 군선도 leaves (NMK); Kim Hong-do's death (c.1806 per encykorea; KHS gives '?'). The 2018 UNESCO inscription was a joint inscription by both Koreas; this is not mentioned in narration. Scene 5 claim about shoes follows NMK ('벗어 놓은 신발'), without saying whose shoes they are. REVISION: (a) 'kicked-off shoes' removed; museum text says only 벗어 놓은 신발 (shoes taken off), at the right, narrowing the open space (NMK relicId=551); seller at the left, 'outside the spectators' attention'. 우리역사넷 says the shoes are the two wrestlers' and the seller looks into the distance; NMK's curator page says the seller looks outward, but narration stays with the museum's catalog wording. (b) Seodang layout softened to 'gathered around' because NMK says 둥글게 배치 around the boy while an encykorea caption says pupils sit side by side on both sides of the teacher. (c) Ssireum crowd: NMK says two groups arranged roundly above and below; narration says 'two curved groups'. (d) Quiz distractor for museum changed to other national museums. PR 1.8c review: check c3 now asks who stands at the left of Ssireum (f5), because three similar museum names tested memory of a name rather than the story.",
     "errata": []
   },
   {
