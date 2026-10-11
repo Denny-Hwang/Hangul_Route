@@ -1,17 +1,19 @@
 import type { Episode, ProgressSnapshot, Quest } from '@hangul-route/content-schema';
+import { gridEpisodes } from '../content/episodes';
 
 /**
  * The Journey cursor (F-QUEST-002 §3.5): the first quest, in content order of
  * the playable grid episodes, that the learner has not completed. Home's "New"
  * card and the Results "Next up" teaser both read it, so they cannot disagree.
  *
- * F-STORY-004 PR 4.1's `gridEpisodes` becomes the single owner of the
- * grid/shelf split; until a shelf episode exists the two lists are identical.
+ * `gridEpisodes` (F-STORY-004 §3.10) owns the grid/shelf split: a shelf
+ * episode is played from the Library, never from the grid, so it is never the
+ * cursor, a Home fallback, a stage-completion input or a Journey selection.
  */
 
-/** Episodes a learner can actually open, in content order. */
+/** Grid episodes a learner can actually open, in content order. */
 export function playableEpisodes(episodes: readonly Episode[]): Episode[] {
-  return episodes.filter((e) => e.status === 'shipped' || e.status === 'ready');
+  return gridEpisodes(episodes).filter((e) => e.status === 'shipped' || e.status === 'ready');
 }
 
 /**

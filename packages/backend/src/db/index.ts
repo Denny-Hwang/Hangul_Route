@@ -4,6 +4,7 @@ import { MemoryDb } from './memory';
 import type { Db } from './types';
 
 export type { Db, StoredRelink } from './types';
+export * from './transfer-types';
 export { D1Db, MemoryDb };
 
 /** The dev / test backend when no D1 binding is present (only where dev fallbacks are opted in — lib/runtime). */

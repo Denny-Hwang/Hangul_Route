@@ -24,7 +24,7 @@ import { useNavigation, useRoute, type RouteProp } from '@react-navigation/nativ
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { episodeById, episodeFor, episodesAll, stages, themes } from '../../content';
+import { episodeById, episodeFor, episodesAll, gridEpisodes, stages, themes } from '../../content';
 import { useMessages } from '../../i18n/use-messages';
 import { isStageEntitled } from '../../logic/entitlement';
 import {
@@ -43,6 +43,9 @@ import { useAudience } from '../../store/audience';
 import { effectiveTier, useTierStore } from '../../store/tier-store';
 import { EpisodeDetailView } from '../episode/EpisodeDetailView';
 
+/** The grid's episodes: a shelf episode is never a grid cell or a pane selection (F-STORY-004 §3.10). */
+const GRID_EPISODES = gridEpisodes(episodesAll);
+
 export function JourneyScreen(): React.ReactElement {
   const m = useMessages().learner.journey;
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -58,23 +61,23 @@ export function JourneyScreen(): React.ReactElement {
   const paneMode = panes === 2;
   const ownerId = profile?.id ?? null;
   // Back from a quest or from Results on two panes, the episode arrives as a route param: select it
-  // (only when the catalogue has it), then clear the param so the same episode can be asked for
+  // (only when the grid has it), then clear the param so the same episode can be asked for
   // again later (F-LAYOUT-001 §3.7).
   const requested = useRoute<RouteProp<MainTabParamList, 'Journey'>>().params?.episodeId;
   const tabNavigation = useNavigation<BottomTabNavigationProp<MainTabParamList, 'Journey'>>();
   const [latch, setLatch] = useState<PaneLatch | null>(() => {
-    const known = requestedSelection(requested, episodesAll);
+    const known = requestedSelection(requested, GRID_EPISODES);
     return known === null ? null : { ownerId, id: known };
   });
   const selected = latchedSelection(latch, ownerId);
   const setSelected = (id: string): void => setLatch({ ownerId, id });
   useEffect(() => {
     if (requested === undefined) return;
-    const known = requestedSelection(requested, episodesAll);
+    const known = requestedSelection(requested, GRID_EPISODES);
     if (known !== null) setLatch({ ownerId, id: known });
     tabNavigation.setParams({ episodeId: undefined });
   }, [requested, tabNavigation, ownerId]);
-  const selectedId = reconcileSelection(selected, episodesAll, initialEpisode(episodesAll, snap));
+  const selectedId = reconcileSelection(selected, GRID_EPISODES, initialEpisode(GRID_EPISODES, snap));
   // Latch the first selection (the episode of the next quest) so finishing a quest does not move it:
   // back from the quest player returns to the same selection. It survives rotation as screen state.
   // The latch belongs to the profile: switching learner starts from that learner's next quest.
@@ -103,7 +106,7 @@ export function JourneyScreen(): React.ReactElement {
       </View>
 
       {stages.map((stage) => {
-        const availability = stageAvailability(stage.key, episodesAll);
+        const availability = stageAvailability(stage.key, GRID_EPISODES);
         const isLocked = availability === 'soon';
         const entitledStage = isStageEntitled(stage.key, tier);
         return (

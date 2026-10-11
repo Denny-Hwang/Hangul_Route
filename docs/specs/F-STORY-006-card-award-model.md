@@ -164,8 +164,8 @@ Contract of `mergeSnapshots` (`logic/sync/merge.ts:80-98`) for the card collecti
 | M2 | **Earliest time**: `unlockedAt = min` | already true (`:61`) |
 | M3 | **Seen anywhere = seen**: `newSinceLastView = l.newSinceLastView && s.newSinceLastView` | change `mergeCard` (`:60-62`) — replaces "local wins" |
 | M4 | **Commutative, associative, idempotent**: `merge(a,b)=merge(b,a)`, `merge(a,merge(b,c))=merge(merge(a,b),c)`, `merge(a,a)=a` for `cards` (output sorted by `cardId`, `:37`) | property test over random snapshots |
-| M5 | **Reconcile after merge, never before; reconcile is a monotone function** of the snapshot (more completed quests ⇒ superset of cards); therefore `reconcile(merge(a,b)) ⊇ merge(reconcile(a), reconcile(b))` | tested |
-| M6 | **Restore and backup** (`logic/sync/restore.ts:29` merges the file into the existing snapshot): an older backup can never reduce `cards`; `replaceSnapshot` receives the merged result | existing, add a test |
+| M5 | **Reconcile after merge, never before; reconcile is a monotone function** of the snapshot (more completed quests ⇒ superset of cards); therefore `reconcile(merge(a,b)) ⊇ merge(reconcile(a), reconcile(b))` | tested (merge half, completed quests survive at the earliest time, in 6.3 `merge.test.ts`; the full property needs the engine and ships with 6.2 `logic/awards/__tests__/reconcile-merge.test.ts`) |
+| M6 | **Restore and backup** (`logic/sync/restore.ts:29` merges the file into the existing snapshot): an older backup can never reduce `cards`; `replaceSnapshot` receives the merged result | existing, add a test (`restore.test.ts` for `planRestore`; `store/__tests__/sync-store.test.ts` for the re-link path's `replaceSnapshot`) |
 
 No server change: cards already ride in `snapshot.cards`; the Worker validates the unchanged schema. Because zod strips unknown keys, **this spec adds nothing to the snapshot**; any later "awarded sources" or "seen" metadata would need a Worker-first schema deploy. Observed, out of scope: `mergeQuest` sums `attempts` (`merge.ts:44`), so `merge(x, x)` doubles it; nothing in the award model reads `attempts`.
 
@@ -338,7 +338,7 @@ The engine can ship before any story exists: it already repairs the 31 unearnabl
 | 6.0 | `design(wireframe)`: promote `wireframes/story-catalogue.md` to `results/extra-cards`, `library/earn-hints`, `home/cards-catch-up`, `library/card-back-citation`; update `design/wireframes/README.md`, `docs/blueprints/10-app-map.md` | — |
 | 6.1 | `fix(mobile)`: remove the emoji in `CardDetailScreen` (`Icon sparkle`); correct the explainer sentence to what is true today ("Finish quests to unlock cards.") — a safe interim, no engine needed | — |
 | 6.2 | `feat(content-schema)`: `unlockedBy` grammar, optional card fields, telemetry names (`card.catchup_granted`, `card_set.complete`) — **Worker first** · `feat(mobile)`: `logic/awards/*` pure engine + `card-award-integrity.test.ts` (T-AWARD-1..5) | — |
-| 6.3 | `fix(mobile)`: `mergeCard` seen-anywhere + property tests M1-M6 | — |
+| 6.3 | `fix(mobile)`: `mergeCard` seen-anywhere + property tests M1-M6 (M5: merge half here, the full reconcile/merge property in 6.2); `isSubsetOf` counts a locally seen card as unsynced | — |
 | 6.4a | `feat(mobile)`: store wiring — `unlockCards`, `reconcileAwards`, `markCardsSeen`, `catchUp` state, hooks in `hydrate` / `replaceSnapshot` / `ensure`, `bootstrap` order; tests | 6.2, 6.3 |
 | 6.4b | `feat(mobile)`: live path — `applyQuestResult` returns `QuestResultOutcome`, `decideCardAward(welcomeCardIds)`, telemetry (`card.unlocked` source, `episode.complete`, `stage.complete`, `card_set.complete`, `card.catchup_granted`), `ResultsScreen` adapts to the new outcome (no new UI yet) | 6.4a |
 | 6.5a | `feat(mobile)`: Results — `ExtraCardsBanner`, `LIBRARY_COPY` strings for it, Episode page copy | 6.4b, design 6.0 |
@@ -348,6 +348,8 @@ The engine can ship before any story exists: it already repairs the 31 unearnabl
 | 6.7 | `feat(content-schema)` + `feat(mobile)`: the `card` lint rules (the block itself is in F-STORY-001 PR 1.1b), `content/story-cards.ts`, `story-sets.ts`, back-face citation, T-AWARD-6/7 | F-STORY-001 PR 1.1b and 1.4 (bundle), F-STORY-005 5.3, 6.6 |
 | 6.8 | `content(cards)`: `card` blocks and `rewardCardIds.listen` on the first reviewed stories (one PR per cluster); cover crops via `StoryScene` | 6.7, F-STORY-002 PR 2.3a (`StoryScene`), reviewed stories |
 | 6.9 | `test(e2e)`: `card-awards.spec.ts` | 6.5a-6.8 |
+
+Old-build window (6.4a): a device still on a build before 6.3 merges cards with "local wins", so on a sync conflict it can PUT `newSinceLastView: true` back over a server `false`, and a "New" pill can come back on another device (cosmetic; impossible before 6.4a because nothing writes `false`). The seen state is guaranteed to stick only once every syncing device runs 6.3 or later, so 6.3 ships at least one release before 6.4a.
 
 Rollback: the engine is additive and idempotent; reverting the app version leaves the extra cards in snapshots (harmless: old builds show them, the merge keeps them).
 

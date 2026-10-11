@@ -75,11 +75,25 @@ describe('telemetry event names (one list for the client type and the API whitel
         'lecture.complete',
         'lecture.tool_used',
         'lecture.deck_rejected',
+        'story.shelf.viewed',
+        'story.opened',
+        'home.story_card.shown',
+        'story.bookmark.resumed',
+        'culture.note.viewed',
+        'story.locked.tapped',
         'card.catchup_granted',
         'card_set.complete',
       ].sort(),
     );
     expect(new Set(TELEMETRY_EVENT_NAMES).size).toBe(TELEMETRY_EVENT_NAMES.length);
+  });
+
+  it('lists the six story-shelf names of F-STORY-004 §3.11 exactly once each', () => {
+    const shelf = ['story.shelf.viewed', 'story.opened', 'home.story_card.shown', 'story.bookmark.resumed', 'culture.note.viewed', 'story.locked.tapped'];
+    for (const name of shelf) {
+      expect(TELEMETRY_EVENT_NAMES.filter((n) => n === name)).toHaveLength(1);
+      expect(isTelemetryEventName(name)).toBe(true);
+    }
   });
 
   it('accepts listed names and rejects anything else', () => {

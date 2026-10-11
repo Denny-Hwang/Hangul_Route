@@ -211,6 +211,26 @@ export function episodeById(id: string): Episode | undefined {
   return episodesAll.find((e) => e.id === id);
 }
 
-export function episodeFor(stage: string, theme: string): Episode | undefined {
-  return episodesAll.find((e) => e.stage === stage && e.theme === theme);
+/**
+ * The grid/shelf split (F-STORY-004 §3.10). A shelf episode (`placement: 'shelf'`)
+ * is a one-story episode outside the 7×5 grid; an episode without the field is a
+ * grid cell, so every hand-written episode stays on the grid.
+ */
+export function isGridEpisode(episode: Pick<Episode, 'placement'>): boolean {
+  return episode.placement !== 'shelf';
+}
+
+/** The grid episodes of `list`, in content order. */
+export function gridEpisodes<E extends Pick<Episode, 'placement'>>(list: readonly E[]): E[] {
+  return list.filter(isGridEpisode);
+}
+
+/** The shelf episodes of `list`, in content order. */
+export function shelfEpisodes<E extends Pick<Episode, 'placement'>>(list: readonly E[]): E[] {
+  return list.filter((e) => !isGridEpisode(e));
+}
+
+/** The grid cell at `stage` × `theme`; a shelf episode is never a cell. */
+export function episodeFor(stage: string, theme: string, list: readonly Episode[] = episodesAll): Episode | undefined {
+  return list.find((e) => isGridEpisode(e) && e.stage === stage && e.theme === theme);
 }

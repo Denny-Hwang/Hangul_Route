@@ -87,6 +87,13 @@ export const TELEMETRY_EVENT_NAMES = [
   'lecture.complete',
   'lecture.tool_used',
   'lecture.deck_rejected',
+  // F-STORY-004 §3.11 (payloads carry ids and counts only)
+  'story.shelf.viewed',
+  'story.opened',
+  'home.story_card.shown',
+  'story.bookmark.resumed',
+  'culture.note.viewed',
+  'story.locked.tapped',
   // F-STORY-006 §3.9 (payloads carry ids and counts only)
   'card.catchup_granted',
   'card_set.complete',
