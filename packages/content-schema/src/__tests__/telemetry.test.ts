@@ -75,6 +75,8 @@ describe('telemetry event names (one list for the client type and the API whitel
         'lecture.complete',
         'lecture.tool_used',
         'lecture.deck_rejected',
+        'card.catchup_granted',
+        'card_set.complete',
       ].sort(),
     );
     expect(new Set(TELEMETRY_EVENT_NAMES).size).toBe(TELEMETRY_EVENT_NAMES.length);
