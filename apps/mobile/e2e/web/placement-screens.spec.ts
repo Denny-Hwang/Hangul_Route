@@ -29,6 +29,8 @@ type E2eWindow = Window & {
     events(): Array<{ name: string; profileId?: string; payload?: Record<string, unknown> }>;
   };
   __spoken?: string[];
+  /** Set by a test: every utterance fails from then on (an engine error, as a voice that stops working). */
+  __speechFails?: boolean;
 };
 
 async function voicedSpeech(page: Page): Promise<void> {
@@ -45,7 +47,7 @@ async function voicedSpeech(page: Page): Promise<void> {
       voice: { name: string } | null = null;
       onstart: (() => void) | null = null;
       onend: (() => void) | null = null;
-      onerror: (() => void) | null = null;
+      onerror: ((ev: { error: string }) => void) | null = null;
       constructor(public text: string) {}
     }
     Object.defineProperty(window, 'SpeechSynthesisUtterance', { configurable: true, value: Utterance });
@@ -55,6 +57,10 @@ async function voicedSpeech(page: Page): Promise<void> {
         speaking: false,
         pending: false,
         speak: (u: Utterance) => {
+          if ((window as E2eWindow).__speechFails === true) {
+            setTimeout(() => u.onerror?.({ error: 'synthesis-failed' }), 0);
+            return;
+          }
           if (u.volume !== 0) spoken.push(u.text);
           setTimeout(() => {
             u.onstart?.();
@@ -113,6 +119,18 @@ const events = (page: Page) => page.evaluate(() => (window as E2eWindow).__hrPla
 
 /** Every text node on the screen (scores, emoji). */
 const screenText = (page: Page): Promise<string> => page.evaluate(() => document.body.innerText);
+
+/**
+ * The warm-up: the speaker checks the sound, then a picture. The pictures wait
+ * for that check (with sound the speaker then reads "Hear it again"; without it
+ * the note shows), so the picture is tapped only once it is offered.
+ */
+async function warmUp(page: Page, picture: 'rice' | 'tiger', sound = true): Promise<void> {
+  await page.getByTestId('placement-warmup-speaker').click();
+  if (sound) await expect(page.getByTestId('placement-warmup-speaker')).toHaveAttribute('aria-label', 'Hear it again');
+  else await expect(page.getByTestId('placement-no-sound-note')).toBeVisible();
+  await page.getByTestId(`placement-warmup-option-${picture}`).click();
+}
 
 /** Taps "I am not sure" until the result shows (a pause sheet, if one opens, is answered with Keep going). */
 async function notSureToEnd(page: Page, max = 50): Promise<number> {
@@ -232,7 +250,7 @@ test.describe('level check screens (fixture bundle)', () => {
     // Warm-up with sound: no note; any picture opens the first question.
     await expect(page.getByTestId('placement-warmup')).toBeVisible();
     await page.getByTestId('placement-warmup-speaker').click();
-    await expect(page.getByTestId('placement-warmup-option-rice')).toBeEnabled();
+    await expect(page.getByTestId('placement-warmup-speaker')).toHaveAttribute('aria-label', 'Hear it again');
     await expect(page.getByTestId('placement-no-sound-note')).toHaveCount(0);
     await page.getByTestId('placement-warmup-option-tiger').click();
 
@@ -332,9 +350,7 @@ test.describe('level check screens (fixture bundle)', () => {
     await openCheck(page);
     await page.getByTestId('placement-start').click();
     await page.getByTestId('placement-hoya-start').click();
-    await page.getByTestId('placement-warmup-speaker').click();
-    await expect(page.getByTestId('placement-warmup-option-tiger')).toBeEnabled();
-    await page.getByTestId('placement-warmup-option-tiger').click();
+    await warmUp(page, 'tiger');
     await expect(page.getByTestId('placement-item')).toBeVisible();
     await page.locator('[data-testid^="placement-option-"]').first().click();
     const profileId = (await readStored<Array<{ id: string }>>(page, 'profiles'))?.[0]?.id ?? '';
@@ -383,5 +399,84 @@ test.describe('level check screens (fixture bundle)', () => {
     await expect
       .poll(async () => (await readStored<{ placements?: Array<{ stopReason: string }> }>(page, `progress:${profileId}`))?.placements?.[0]?.stopReason)
       .toBe('grown-up');
+  });
+  test('Short: a prompt that stops playing asks for a tap, then the sound pause; the skip is kept out of scoring', async ({ page }) => {
+    await voicedSpeech(page);
+    await page.setViewportSize({ width: 320, height: 568 });
+    await onboard(page, 'Pictures first');
+    await openCheck(page);
+    await page.getByTestId('placement-start').click();
+    await page.getByTestId('placement-hoya-start').click();
+    await warmUp(page, 'tiger');
+    await expect(page.getByTestId('placement-item')).toBeVisible();
+    await expect(page.locator('[data-testid^="placement-option-"]').first()).toBeEnabled();
+
+    // The voice stops working: the next prompt fails on open and is not skipped yet.
+    await page.evaluate(() => {
+      (window as E2eWindow).__speechFails = true;
+    });
+    await page.locator('[data-testid^="placement-option-"]').first().click();
+    await expect(page.getByTestId('placement-tap-to-hear')).toBeVisible();
+    await expect(page.getByTestId('placement-speaker')).toHaveAttribute('aria-label', 'Tap to hear it.');
+    await expect(page.getByTestId('placement-sound-pause')).toHaveCount(0);
+    await shot(page, 'placement-item-tap-to-hear');
+
+    // A tap that fails too skips the question and the run pauses: it never skips itself to the end.
+    await page.getByTestId('placement-speaker').click();
+    await expect(page.getByTestId('placement-sound-pause')).toBeVisible();
+    await expect(page.getByText('Turn on sound to play')).toBeVisible();
+    await shot(page, 'placement-sound-pause');
+    const profileId = (await readStored<Array<{ id: string }>>(page, 'profiles'))?.[0]?.id ?? '';
+    await expect
+      .poll(async () => (await readStored<{ run: { responses: Array<{ outcome: string; noSound?: boolean }> } }>(page, `placement-run:${profileId}`))?.run.responses)
+      .toEqual([expect.not.objectContaining({ noSound: true }), expect.objectContaining({ outcome: 'skipped', noSound: true })]);
+    const answered = (await events(page)).filter((e) => e.name === 'placement.item_answered');
+    expect(answered.map((e) => e.payload?.noSound)).toEqual([false, true]);
+
+    // Sound back on: Try again carries on, and the next prompt plays on open.
+    await page.evaluate(() => {
+      (window as E2eWindow).__speechFails = false;
+    });
+    await page.getByTestId('placement-keep-going').click();
+    await expect(page.getByTestId('placement-sound-pause')).toHaveCount(0);
+    await expect(page.getByTestId('placement-tap-to-hear')).toHaveCount(0);
+    await expect(page.getByTestId('placement-speaker')).toHaveAttribute('aria-label', 'Hear it again');
+  });
+
+  test('the web: "I use a screen reader" pre-sets Take my time and the run leaves out the visual rung', async ({ page }) => {
+    await onboard(page);
+    await openCheck(page);
+    await expect(page.getByTestId('placement-options')).toBeVisible();
+    await expect(page.getByText('I use a screen reader')).toBeVisible();
+    await page.getByTestId('placement-screen-reader').click();
+    await page.getByTestId('placement-guide-tap').click();
+    await page.getByTestId('placement-next').click();
+    await warmUp(page, 'rice', false);
+    await expect(page.getByTestId('placement-item')).toBeVisible();
+    const profileId = (await readStored<Array<{ id: string }>>(page, 'profiles'))?.[0]?.id ?? '';
+    type Saved = { run: { config: { visual: boolean; takeMyTime: boolean }; current: { gate: string } } };
+    await expect.poll(async () => (await readStored<Saved>(page, `placement-run:${profileId}`))?.run.config).toMatchObject({ visual: false, takeMyTime: true });
+    expect((await readStored<Saved>(page, `placement-run:${profileId}`))?.run.current.gate).not.toBe('recog');
+  });
+
+  test('the hand-off and the warm-up have an exit that leaves with nothing recorded', async ({ page }) => {
+    await voicedSpeech(page);
+    await onboard(page, 'Pictures first');
+    await openCheck(page);
+    await page.getByTestId('placement-start').click();
+    await expect(page.getByTestId('placement-handoff')).toBeVisible();
+    await page.getByTestId('placement-handoff-exit').click();
+    await expect(page.getByText('Hi, Sam!')).toBeVisible();
+
+    await openCheck(page);
+    await page.getByTestId('placement-start').click();
+    await page.getByTestId('placement-hoya-start').click();
+    await expect(page.getByTestId('placement-warmup')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Let us start learning' })).toBeVisible();
+    await page.getByTestId('placement-warmup-exit').click();
+    await expect(page.getByText('Hi, Sam!')).toBeVisible();
+    const profileId = (await readStored<Array<{ id: string }>>(page, 'profiles'))?.[0]?.id ?? '';
+    expect(await readStored(page, `placement-run:${profileId}`)).toBeNull();
+    expect((await events(page)).filter((e) => e.name.startsWith('placement.'))).toEqual([]);
   });
 });

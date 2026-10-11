@@ -87,6 +87,14 @@ export interface FlowState {
   warmupDone: boolean;
   /** Standard / Deep, not listen-first: "No sound here, so we will use pictures and reading". */
   noSoundNote: boolean;
+  /**
+   * A screen reader is on: the device's reading (`isScreenReaderEnabled`, kept
+   * up to date while the check is open) or the grown-up's "I use a screen
+   * reader" on the options screen, which is the only way to say so on the web
+   * (spec assumption 5). Nothing auto-plays, and a run started with it leaves
+   * out the visual recognition rung.
+   */
+  screenReader: boolean;
 }
 
 export type FlowEvent =
@@ -108,7 +116,13 @@ export type FlowEvent =
   | { type: 'withoutSound' }
   | { type: 'runFinished' }
   /** The options screen's back arrow: to the language screen when it was shown (wireframe C, B). */
-  | { type: 'back' };
+  | { type: 'back' }
+  /**
+   * "I use a screen reader" on the options screen, or the device reporting a
+   * screen reader turned on or off. Before a run starts, turning it on also
+   * pre-sets Take my time; a run already started keeps its own settings.
+   */
+  | { type: 'setScreenReader'; on: boolean };
 
 const STAGE1_BAND0: PlacementLevel = { stage: 'stage1', band: 0 };
 
@@ -220,6 +234,7 @@ export function startFlow(input: StartFlowInput): FlowState {
     audio: null,
     warmupDone: false,
     noSoundNote: false,
+    screenReader: input.screenReader,
   };
   return input.source === 'onboarding' ? base : afterFork(base, input.capability);
 }
@@ -241,6 +256,11 @@ const needsSound = (state: FlowState): boolean => state.mode === 'short' || stat
 const toQuestions = (state: FlowState): FlowState => ({ ...state, screen: state.warmupDone ? 'item' : 'warmup' });
 
 export function flowReducer(state: FlowState, event: FlowEvent): FlowState {
+  if (event.type === 'setScreenReader') {
+    // Take my time is pre-set while it can still change the run: up to the options screen.
+    const presets = event.on && (state.screen === 'invite' || state.screen === 'language' || state.screen === 'options');
+    return { ...state, screenReader: event.on, ...(presets ? { takeMyTime: true } : {}) };
+  }
   switch (state.screen) {
     case 'invite':
       if (event.type === 'declineFork') return { ...state, screen: 'declined' };
@@ -367,8 +387,7 @@ export function controlsFor(state: FlowState): readonly FlowControl[] {
 export interface RunConfigContext {
   profileId: string;
   startedAtMs: number;
-  screenReader: boolean;
-  /** `canPlayKorean(getCapability())` when the run starts. */
+  /** `placementKoreanAudio(getCapability(), ...)` when the run starts. */
   koreanAudio: boolean;
   /** `previousExclude(placements)`. */
   exclude: string[];
@@ -396,7 +415,7 @@ export function runConfig(state: FlowState, ctx: RunConfigContext): PlacementCon
   if (revealMode === null) throw new Error('a Standard or Deep run needs an explicit sound guide choice');
   // Korean picture options carry no text label (it would be the answer), so a
   // screen-reader user is not asked them: reported not-tested, never a failure (section 3.2).
-  const unlabeledPictures = state.testLocale === 'ko' && ctx.screenReader;
+  const unlabeledPictures = state.testLocale === 'ko' && state.screenReader;
   return {
     mode: state.mode,
     ...(unlabeledPictures ? { skipGates: KOREAN_SCREEN_READER_SKIP } : {}),
@@ -404,7 +423,7 @@ export function runConfig(state: FlowState, ctx: RunConfigContext): PlacementCon
     avoidTags: warmupAvoidTags(ctx.warmup),
     revealMode,
     audio: state.audio === true && ctx.koreanAudio,
-    visual: !ctx.screenReader,
+    visual: !state.screenReader,
     takeMyTime: state.takeMyTime,
     seed: hashSeed([ctx.profileId, String(ctx.startedAtMs)]),
     exclude: [...ctx.exclude],
@@ -424,20 +443,39 @@ export function choicesFallbackMs(estimatedPromptMs: number): number {
   return Math.min(estimatedPromptMs + FALLBACK_EXTRA_MS, FALLBACK_MAX_MS);
 }
 
+export interface ChoicesGateInput {
+  mode: PlacementMode;
+  playbackEnded: boolean;
+  /** When the item opened. */
+  shownAtMs: number;
+  /**
+   * When the Korean prompt started playing (after any cheer and instruction),
+   * or null while it has not. Absent: timed from `shownAtMs`.
+   */
+  promptStartedAtMs?: number | null;
+  estimatedPromptMs: number;
+}
+
+/**
+ * When Short's choices enable (epoch ms; `-Infinity` when they are enabled
+ * already): the prompt's estimated length plus 3 s after it started, and at
+ * most 8 s after the item opened, so a prompt that never starts or never
+ * reports its end cannot lock the screen.
+ */
+export function choicesEnableAtMs(input: ChoicesGateInput): number {
+  if (input.mode !== 'short' || input.playbackEnded) return Number.NEGATIVE_INFINITY;
+  const cap = input.shownAtMs + FALLBACK_MAX_MS;
+  const started = input.promptStartedAtMs === undefined ? input.shownAtMs : input.promptStartedAtMs;
+  return started === null ? cap : Math.min(cap, started + choicesFallbackMs(input.estimatedPromptMs));
+}
+
 /**
  * Short enables the choices when the prompt's playback ends or after the
  * fallback delay, whichever comes first; Standard and Deep at once. "I am
  * not sure" and the exit are always enabled.
  */
-export function choicesEnabled(input: {
-  mode: PlacementMode;
-  playbackEnded: boolean;
-  shownAtMs: number;
-  nowMs: number;
-  estimatedPromptMs: number;
-}): boolean {
-  if (input.mode !== 'short' || input.playbackEnded) return true;
-  return input.nowMs - input.shownAtMs >= choicesFallbackMs(input.estimatedPromptMs);
+export function choicesEnabled(input: ChoicesGateInput & { nowMs: number }): boolean {
+  return input.nowMs >= choicesEnableAtMs(input);
 }
 
 /**
@@ -474,8 +512,8 @@ export function idleTimeoutMs(takeMyTime: boolean): number | null {
 }
 
 export interface PauseSheet {
-  /** `pause`: "Need a break?"; `rest`: Deep's number-free rest card. */
-  kind: 'pause' | 'rest';
+  /** `pause`: "Need a break?"; `rest`: Deep's number-free rest card; `sound`: prompts stopped playing ("Turn on sound to play", Try again). */
+  kind: 'pause' | 'rest' | 'sound';
   /** The grown-up PIN link (stop reason `grown-up`). */
   grownUpLink: boolean;
   /** "That is enough, start learning": the engine ends with `not-sure` after three "not sure", else `quit`. */
@@ -485,7 +523,8 @@ export interface PauseSheet {
 export function pauseSheet(state: Pick<PlacementRunState, 'pause'>): PauseSheet | null {
   if (state.pause === null) return null;
   const enough: PlacementEvent = { type: 'quit', by: 'learner' };
-  return state.pause === 'rest' ? { kind: 'rest', grownUpLink: false, enough } : { kind: 'pause', grownUpLink: true, enough };
+  if (state.pause === 'rest') return { kind: 'rest', grownUpLink: false, enough };
+  return { kind: state.pause === 'no-sound' ? 'sound' : 'pause', grownUpLink: true, enough };
 }
 
 // ---------------------------------------------------------------------------
@@ -509,7 +548,7 @@ export type SavedRun = z.infer<typeof SavedRunSchema>;
  * What a saved run offers on reopening (section 3.1 step 8):
  * - `continue`: an open run saved within 24 hours from the same bank version
  *   (**Continue** / **Start again**);
- * - `finish`: a run that stopped but whose result was never recorded (the
+ * - `finish`: a run that stopped with a heard answer but whose result was never recorded (the
  *   app closed between the last answer and `recordPlacement`). The caller
  *   runs `finishRun(saved.run, ...)` with `completedAt` from `saved.savedAtMs`
  *   (when the stop was saved), then `recordPlacement`, then `discard`. It
@@ -521,11 +560,20 @@ export type SavedRun = z.infer<typeof SavedRunSchema>;
  */
 export type ResumeOffer = { kind: 'continue'; saved: SavedRun } | { kind: 'finish'; saved: SavedRun };
 
+/**
+ * Whether a run has anything to record: at least one response that was heard.
+ * A run whose only responses are prompts that could not play (`noSound`,
+ * section 3.11) says nothing about the learner and is not stored (AM-32).
+ */
+export function hasScoredAnswer(run: Pick<PlacementRunState, 'responses'>): boolean {
+  return run.responses.some((r) => r.noSound !== true);
+}
+
 export function resumableRun(saved: unknown, nowMs: number, bankVersion: number): ResumeOffer | null {
   const parsed = SavedRunSchema.safeParse(saved);
   if (!parsed.success) return null;
   const run = parsed.data;
-  if (run.run.stop !== null) return run.run.responses.length > 0 ? { kind: 'finish', saved: run } : null;
+  if (run.run.stop !== null) return hasScoredAnswer(run.run) ? { kind: 'finish', saved: run } : null;
   const age = nowMs - run.savedAtMs;
   if (age < 0 || age > RESUME_WINDOW_MS) return null;
   if (run.run.bankVersion !== bankVersion) return null;
@@ -572,6 +620,8 @@ export function resumedFlow(state: FlowState, offer: ResumeOffer): FlowState {
     motivation: saved.motivation ?? null,
     audio: config.audio,
     warmupDone: true,
+    // A run started with a screen reader left out the visual rung (`visual: false`).
+    screenReader: state.screenReader || !config.visual,
   };
 }
 
