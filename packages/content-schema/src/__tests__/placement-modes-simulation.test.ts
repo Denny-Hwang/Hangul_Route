@@ -179,6 +179,7 @@ const simulate = (learner: Learner, mode: PlacementMode, levelOrder: 0 | 1, inde
     if (isFinished(state) || state.pause !== null) continue;
     state = apply(state, event, now);
   }
+  expect(isFinished(state)).toBe(true);
   const result = finishRun(state, {
     catalog: STAGE1_15,
     isEntitled: () => true,

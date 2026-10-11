@@ -94,6 +94,7 @@ const simulate = (learner: Learner, index: number, mode: PlacementMode = 'standa
     }
     state = apply(state, event, now);
   }
+  expect(isFinished(state)).toBe(true);
   const result = finishRun(state, {
     catalog: STAGE1_15,
     isEntitled: () => true,
@@ -107,15 +108,23 @@ const simulate = (learner: Learner, index: number, mode: PlacementMode = 'standa
 };
 
 const RUNS = 1_000;
-const many = (learner: Learner, mode: PlacementMode = 'standard'): Outcome[] =>
-  Array.from({ length: RUNS }, (_, i) => simulate(learner, i, mode));
+/** Runs are seeded by index, so the first `n` of a longer list are the same runs: memoized per learner and mode. */
+const simulated = new Map<string, Outcome[]>();
+const many = (learner: Learner, mode: PlacementMode = 'standard', n = RUNS): Outcome[] => {
+  const key = `${learner.name}|${mode}`;
+  const known = simulated.get(key) ?? [];
+  for (let i = known.length; i < n; i += 1) known.push(simulate(learner, i, mode));
+  simulated.set(key, known);
+  return known.slice(0, n);
+};
 const aboveBand = (o: Outcome, band: number): boolean => o.result.level.stage !== 'stage1' || o.result.level.band > band;
 const share = (outcomes: Outcome[], test: (o: Outcome) => boolean): number => outcomes.filter(test).length / outcomes.length;
 const bandOneOrLower = (o: Outcome): boolean => o.result.level.stage === 'stage1' && o.result.level.band <= 1;
 
-describe('simulated learners, Standard (1,000 seeded runs each)', () => {
+// Synchronous and CPU-bound: an explicit budget, so a slow runner or a later vitest that times out sync tests does not flake.
+describe('simulated learners, Standard (1,000 seeded runs each)', { timeout: 60_000 }, () => {
   it('a learner with no Korean who taps "I am not sure" is asked exactly 12 questions and starts at the first quest', () => {
-    const runs = many(LEARNERS.zero as Learner).slice(0, 50);
+    const runs = many(LEARNERS.zero as Learner, 'standard', 50);
     for (const { asked, result } of runs) {
       expect(asked).toBe(12);
       expect(result.level).toEqual({ stage: 'stage1', band: 0 });
@@ -178,10 +187,10 @@ describe('simulated learners, Standard (1,000 seeded runs each)', () => {
 
 });
 
-describe('simulated learners, Short and Deep (1,000 seeded runs each)', () => {
+describe('simulated learners, Short and Deep (1,000 seeded runs each)', { timeout: 60_000 }, () => {
   it('Short asks 6 to 9 questions and never places above band 1, whoever takes it; at most q1 to q3 are placed out', () => {
     for (const learner of Object.values(LEARNERS)) {
-      for (const { asked, result } of many(learner, 'short').slice(0, 300)) {
+      for (const { asked, result } of many(learner, 'short', 300)) {
         expect(asked).toBeGreaterThanOrEqual(6);
         expect(asked).toBeLessThanOrEqual(9);
         expect(bandOneOrLower({ asked, result })).toBe(true);
@@ -199,7 +208,7 @@ describe('simulated learners, Short and Deep (1,000 seeded runs each)', () => {
   });
 
   it('Short: "not sure" on every item is 6 questions at band 0 with no pause; an advanced learner is at band 1 in most runs', () => {
-    for (const { asked, result } of many(LEARNERS.zero as Learner, 'short').slice(0, 50)) {
+    for (const { asked, result } of many(LEARNERS.zero as Learner, 'short', 50)) {
       expect(asked).toBe(6);
       expect(result.level).toEqual({ stage: 'stage1', band: 0 });
       expect(result.stopReason).toBe('complete');
@@ -224,7 +233,7 @@ describe('simulated learners, Short and Deep (1,000 seeded runs each)', () => {
 
   it('"not sure" on every item is band 0 in every mode', () => {
     for (const mode of ['short', 'standard', 'deep'] as const) {
-      for (const { result } of many(LEARNERS.zero as Learner, mode).slice(0, 50)) {
+      for (const { result } of many(LEARNERS.zero as Learner, mode, 50)) {
         expect(result.level).toEqual({ stage: 'stage1', band: 0 });
       }
     }

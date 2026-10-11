@@ -45,7 +45,12 @@ const config = (mode: PlacementMode, seed: number, over: Partial<PlacementConfig
 });
 
 /** A learner who answers right with probability `p` and otherwise taps "not sure". */
-const runOnce = (mode: PlacementMode, seed: number, p: number, over: Partial<PlacementConfig> = {}): { result: PlacementResult; formats: string[] } => {
+const runOnce = (
+  mode: PlacementMode,
+  seed: number,
+  p: number,
+  over: Partial<PlacementConfig> = {},
+): { result: PlacementResult; formats: string[]; tags: string[] } => {
   const rng = createRng(hashSeed(['bank-modes', mode, String(seed)]));
   let state = startRun(bank, config(mode, seed, over), 0);
   let t = 0;
@@ -61,6 +66,8 @@ const runOnce = (mode: PlacementMode, seed: number, p: number, over: Partial<Pla
     const right = q.options.find((o) => o.isCorrect) as { id: string };
     state = apply(state, rng() < p ? { type: 'answer', optionId: right.id } : { type: 'notSure' }, t);
   }
+  expect(isFinished(state)).toBe(true);
+  const tags = state.responses.flatMap((r) => state.tags[r.questionId] ?? []);
   const result = finishRun(state, {
     catalog: STAGE1_15,
     isEntitled: () => true,
@@ -70,7 +77,7 @@ const runOnce = (mode: PlacementMode, seed: number, p: number, over: Partial<Pla
     testLocale: 'en',
     source: 'onboarding',
   });
-  return { result, formats };
+  return { result, formats, tags };
 };
 
 describe('per-format pools the modes rely on', () => {
@@ -95,11 +102,13 @@ describe('per-format pools the modes rely on', () => {
 describe('the modes on today’s bank', () => {
   it('Short with sound and the guide hidden always asks the letter sounds, and never Latin chips or tiles', () => {
     for (let seed = 1; seed <= RUNS; seed += 1) {
-      const { result, formats } = runOnce('short', seed, 0.5);
+      const { result, formats, tags } = runOnce('short', seed, 0.5);
       expect(result.gates.find((g) => g.gate === 'sound-basic')?.result).not.toBe('not-run');
       expect(formats).not.toContain('see-pick-sound');
       expect(formats).not.toContain('build-syllable');
       expect(result.responses.map((r) => r.questionId)).not.toContain(warmup.id);
+      // avoidTags excludes by tag: no asked question carries the warm-up's word
+      expect(tags.filter((tag) => WARMUP_TAGS.includes(tag))).toEqual([]);
     }
   });
 
@@ -129,12 +138,22 @@ describe('the modes on today’s bank', () => {
     }
   });
 
-  it('Deep’s confirming syllable draw holds a tile item for a learner who is not listen-first', () => {
-    let tiles = 0;
-    for (let seed = 1; seed <= 50; seed += 1) {
-      const state = startRun(bank, config('deep', seed), 0);
-      if ((state.draws['syl-cv:decode:2'] ?? []).some((q) => q.format === 'build-syllable')) tiles += 1;
+  it('Deep’s confirming syllable draws hold a tile item for a learner who is not listen-first', () => {
+    for (const key of ['syl-cv:decode:2', 'syl-cvc:decode:2']) {
+      let tiles = 0;
+      for (let seed = 1; seed <= 50; seed += 1) {
+        const state = startRun(bank, config('deep', seed), 0);
+        if ((state.draws[key] ?? []).filter((q) => q.format === 'build-syllable').length === 1) tiles += 1;
+      }
+      expect(tiles, key).toBe(50);
     }
-    expect(tiles).toBe(50);
+  });
+
+  it('no mode asks a question that carries the warm-up’s word', () => {
+    for (const mode of ['standard', 'deep'] as const) {
+      for (let seed = 1; seed <= 50; seed += 1) {
+        expect(runOnce(mode, seed, 0.9).tags.filter((tag) => WARMUP_TAGS.includes(tag))).toEqual([]);
+      }
+    }
   });
 });
