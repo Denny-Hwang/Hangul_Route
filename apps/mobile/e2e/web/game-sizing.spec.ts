@@ -17,19 +17,21 @@ interface Case {
   scale: number;
   /** Prompt beside the tiles (wide landscape, not short). */
   side: boolean;
-  /** 2 x 2 tile grid (regular and wide). */
+  /** 2 x 2 tile grid (regular and wide, not short). */
   grid: boolean;
+  /** All four tiles on one row, as on main (a landscape phone: short, no grid cap). */
+  oneRow: boolean;
   /** Trace canvas ceiling: 320 x scale. */
   canvasMax: number;
 }
 
 const CASES: Case[] = [
-  { name: 'iPad Air landscape / laptop', width: 1180, height: 820, scale: 1.4, side: true, grid: true, canvasMax: 448 },
-  { name: 'iPad portrait', width: 768, height: 1024, scale: 1.2, side: false, grid: true, canvasMax: 384 },
-  { name: 'iPhone 14 portrait', width: 390, height: 844, scale: 1, side: false, grid: false, canvasMax: 320 },
+  { name: 'iPad Air landscape / laptop', width: 1180, height: 820, scale: 1.4, side: true, grid: true, oneRow: false, canvasMax: 448 },
+  { name: 'iPad portrait', width: 768, height: 1024, scale: 1.2, side: false, grid: true, oneRow: false, canvasMax: 384 },
+  { name: 'iPhone 14 portrait', width: 390, height: 844, scale: 1, side: false, grid: false, oneRow: false, canvasMax: 320 },
   // A short window: the games opt out of side-by-side and nothing scales (mediaScale 1).
-  { name: 'iPhone 14 landscape', width: 844, height: 390, scale: 1, side: false, grid: false, canvasMax: 320 },
-  { name: 'iPhone SE 1st gen', width: 320, height: 568, scale: 1, side: false, grid: false, canvasMax: 320 },
+  { name: 'iPhone 14 landscape', width: 844, height: 390, scale: 1, side: false, grid: false, oneRow: true, canvasMax: 320 },
+  { name: 'iPhone SE 1st gen', width: 320, height: 568, scale: 1, side: false, grid: false, oneRow: false, canvasMax: 320 },
 ];
 
 const scaled = (base: number, scale: number): number => Math.round(base * scale);
@@ -75,15 +77,15 @@ for (const c of CASES) {
         expect(t.width, 'tile width').toBeCloseTo(scaled(96, c.scale), 0);
         expect(t.height, 'tile height').toBeGreaterThanOrEqual(scaled(96, c.scale) - 1);
       }
-      if (c.grid) {
-        const rows = new Set(tileBoxes.map((t) => Math.round(t.y)));
-        expect(rows.size, 'four tiles sit 2 x 2').toBe(2);
-      }
+      const rows = new Set(tileBoxes.map((t) => Math.round(t.y)));
+      if (c.grid) expect(rows.size, 'four tiles sit 2 x 2').toBe(2);
+      if (c.oneRow) expect(rows.size, 'four tiles on one row, as on main').toBe(1);
       const speaker = await box(page.getByTestId('match-sound-speaker'));
       const grid = await box(page.getByTestId('match-sound-tiles'));
       if (c.side) {
         expect(grid.x, 'tiles right of the prompt').toBeGreaterThanOrEqual(speaker.x + speaker.width);
-        expect(grid.y, 'tiles level with the prompt').toBeLessThan(speaker.y + speaker.height + 200);
+        // The columns are top-aligned: the grid starts above the speaker's bottom edge (stacked, it starts below it).
+        expect(grid.y, 'tiles level with the prompt').toBeLessThan(speaker.y + speaker.height);
       } else {
         expect(grid.y, 'tiles under the prompt').toBeGreaterThanOrEqual(speaker.y + speaker.height);
       }
@@ -124,11 +126,14 @@ for (const c of CASES) {
       await page.getByRole('button', { name: 'Profile and settings' }).click();
       await page.getByRole('button', { name: 'Restore from a file (PIN required)' }).click();
       await expect(page.getByText('Enter your 4-digit PIN to continue.')).toBeVisible();
-      await page.waitForTimeout(500); // the measured header has settled the pad size
-      const key = await box(page.getByRole('button', { name: 'Digit 5' }));
-      expect(key.width, 'PIN key').toBeLessThanOrEqual(Math.min(96, scaled(80, c.scale)));
-      expect(key.width, 'PIN key floor').toBeGreaterThanOrEqual(64);
-      if (c.scale > 1) expect(key.width, 'tablet PIN key').toBe(96);
+      // The pad sizes itself from an estimate until the header is measured: poll until the keys settle.
+      const digit5 = page.getByRole('button', { name: 'Digit 5' });
+      await expect(async () => {
+        const key = await box(digit5);
+        expect(key.width, 'PIN key').toBeLessThanOrEqual(Math.min(96, scaled(80, c.scale)));
+        expect(key.width, 'PIN key floor').toBeGreaterThanOrEqual(64);
+        if (c.scale > 1) expect(key.width, 'tablet PIN key').toBe(96);
+      }).toPass({ timeout: 5_000 });
       await unlockWithPin(page);
     });
   });
