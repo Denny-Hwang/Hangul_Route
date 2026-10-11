@@ -4,11 +4,10 @@ import {
   NARRATION_MAX_WORDS,
   TALE_KINDS,
   type Story,
-  type StoryCheck,
   type StoryScene,
   type StoryTier,
 } from './schemas/story';
-import { HANGUL } from './schemas/story-check';
+import { HANGUL, type StoryCheck } from './schemas/story-check';
 import { isAllowlistedHost, isAuthoritativeHost } from './story-sources';
 
 /**

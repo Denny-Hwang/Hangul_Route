@@ -1,6 +1,7 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { isDeepStrictEqual } from 'node:util';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { lintStory, lintStoryCorpus, parseStory, type Finding, type Story } from '../index';
@@ -102,6 +103,20 @@ function lineOfPath(text: string, path: string): number {
   return text.slice(0, i).split('\n').length;
 }
 
+/** Path of the first difference between two JSON values, or undefined when they are equal. */
+function firstDifference(raw: unknown, parsed: unknown, path = ''): string | undefined {
+  if (isDeepStrictEqual(raw, parsed)) return undefined;
+  const isObject = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null;
+  if (!isObject(raw) || !isObject(parsed) || Array.isArray(raw) !== Array.isArray(parsed)) return path;
+  const keys = [...new Set([...Object.keys(raw), ...Object.keys(parsed)])];
+  for (const key of keys) {
+    const child = Array.isArray(raw) ? `${path}[${key}]` : path === '' ? key : `${path}.${key}`;
+    const found = firstDifference(raw[key], parsed[key], child);
+    if (found !== undefined) return found;
+  }
+  return path;
+}
+
 function readJsonFiles(dir: string, relative: string): SourceFile[] {
   if (!existsSync(dir)) return [];
   return readdirSync(dir, { withFileTypes: true })
@@ -162,6 +177,20 @@ function collectProblems(stories: SourceFile[], overlays: SourceFile[] = [], tod
       continue;
     }
     parsed.push({ file, story });
+    // The bundle copies shipped JSON as-is with no runtime parse (PR 1.4), so a ready story
+    // must already carry every defaulted field: parseStory(raw) deep-equals raw.
+    if (story.state === 'ready') {
+      const differs = firstDifference(json, story);
+      if (differs !== undefined) {
+        add(
+          file,
+          'error',
+          'defaults-not-materialized',
+          `a ready story must equal parseStory(raw): first difference at ${differs || '(root)'}; run it through parseStory and save the result`,
+          differs.replace(/\[([^\]]*)\]/g, (m, k: string) => (/^\d+$/.test(k) ? m : `.${k}`)),
+        );
+      }
+    }
     if (`${story.id.replace(/^story:/, '')}.json` !== file.name) {
       add(file, 'error', 'file-name-slug', `file name must be ${story.id.replace(/^story:/, '')}.json`, 'id');
     }
@@ -270,6 +299,40 @@ describe('story-content: the gate itself', () => {
 
   it('rethrows anything that is not a schema failure', () => {
     expect(() => check([{ file: 'f', name: 'f.json', text: 'null' }])).not.toThrow();
+  });
+
+  it('requires a ready story to equal parseStory(raw): defaulted fields are written out', () => {
+    const missing = (mutate: (raw: Record<string, unknown>) => void): Problem[] => {
+      const raw = structuredClone(readyStory()) as unknown as Record<string, unknown>;
+      mutate(raw);
+      return check([asFile(raw, 'hangul-day.json')]).filter((p) => p.rule === 'defaults-not-materialized');
+    };
+    expect(missing(() => undefined)).toEqual([]);
+    const [errata] = missing((raw) => delete raw.errata);
+    expect(errata).toMatchObject({ level: 'error', file: 'content/stories/hangul-day.json' });
+    expect(errata!.message).toContain('first difference at errata');
+    expect(missing((raw) => delete raw.pillarTags)).toHaveLength(1);
+    expect(missing((raw) => delete raw.companionId)).toHaveLength(1);
+    const nested = missing((raw) => {
+      const tiers = raw.tiers as Array<{ scenes: Array<Record<string, unknown>> }>;
+      delete tiers[0]!.scenes[0]!.framing;
+    });
+    expect(nested[0]!.message).toContain('tiers[0].scenes[0].framing');
+    expect(missing((raw) => delete (raw.keywords as Array<Record<string, unknown>>)[0]!.kind)).toHaveLength(1);
+  });
+
+  it('does not require drafts to materialise defaults (they are never bundled)', () => {
+    const raw = structuredClone(draftStory) as unknown as Record<string, unknown>;
+    delete raw.errata;
+    expect(check([asFile(raw, 'hangul-day-draft.json')])).toEqual([]);
+  });
+
+  it('finds the first difference between two JSON values', () => {
+    expect(firstDifference({ a: 1 }, { a: 1 })).toBeUndefined();
+    expect(firstDifference({ a: [1, { b: 2 }] }, { a: [1, { b: 3 }] })).toBe('a[1].b');
+    expect(firstDifference({ a: 1 }, { a: 1, b: [] })).toBe('b');
+    expect(firstDifference([1], { 0: 1 })).toBe('');
+    expect(firstDifference(1, 2)).toBe('');
   });
 
   it('requires file name = slug and unique ids', () => {
