@@ -1,14 +1,14 @@
 {
   "v": 1,
   "id": "story:shapes-of-hangeul",
-  "state": "draft",
+  "state": "ready",
   "contentVer": 1,
   "title": {
     "ko": "한글 모양의 비밀",
-    "romanization": "",
+    "romanization": "Hangeul moyangui bimil",
     "en": "The Secret in the Shapes"
   },
-  "summaryEn": "Hoya reads the 1446 Hunminjeongeum Haerye book and discovers that the five basic Hangeul consonants copy the shapes of the tongue, mouth, teeth and throat, while the basic vowels come from the sky, the earth and a person.",
+  "summaryEn": "Hoya reads the 1446 Hunminjeongeum Haerye book and discovers that the five basic Hangul consonants copy the shapes of the tongue, mouth, teeth and throat, while the basic vowels come from the sky, the earth and a person.",
   "theme": "letters",
   "kind": "documentary",
   "recommendedStage": 1,
@@ -89,7 +89,7 @@
     {
       "id": "jamo-g",
       "ko": "ㄱ",
-      "romanization": "giyeok",
+      "romanization": "g",
       "en": "giyeok, the letter for the g/k sound",
       "kind": "jamo"
     },
@@ -111,7 +111,7 @@
       "id": "jamo-a",
       "ko": "ㅏ",
       "romanization": "a",
-      "en": "the vowel a",
+      "en": "the vowel letter a",
       "kind": "jamo"
     },
     {
@@ -145,7 +145,7 @@
     {
       "id": "jamo-silent-ng",
       "ko": "ㅇ",
-      "romanization": "silent / ng",
+      "romanization": "silent/ng",
       "en": "the consonant letter ieung",
       "kind": "jamo"
     },
@@ -198,15 +198,17 @@
           ],
           "framing": false,
           "approximations": [],
-          "artBrief": "Hoya gently opens an old string-bound book with yellowed pages on a low table; soft light glows from the pages (pages shown as faint lines, no readable text)."
+          "artBrief": "Hoya gently opens an old string-bound book with yellowed pages on a low table; soft light glows from the pages (pages shown as faint lines, no readable text).",
+          "captionEn": "Hoya opens the Haerye book",
+          "artPending": true
         },
         {
           "id": "s2",
-          "narrationEn": "Secret number one: the five basic consonants copy the shapes of the parts of the body we speak with. The old book says the letter {kw:jamo-g} copies the root of the tongue closing the throat. Hoya points at the picture.",
+          "narrationEn": "The first secret: the five basic consonants copy the shapes of the parts of the body we speak with. The old book says the letter {kw:jamo-g} copies the root of the tongue closing the throat. Hoya points at the picture.",
           "keyword": {
             "id": "jamo-g",
             "ko": "ㄱ",
-            "romanization": "giyeok",
+            "romanization": "g",
             "en": "giyeok, the letter for the g/k sound",
             "kind": "jamo"
           },
@@ -216,7 +218,9 @@
           ],
           "framing": false,
           "approximations": [],
-          "artBrief": "Simple friendly side-view diagram of a head with the root of the tongue closing the throat, drawn in soft colors, as the old book describes; Hoya points at it with his tail. The app overlays the letter; no text in the image."
+          "artBrief": "Simple friendly side-view diagram of a head with the root of the tongue closing the throat, drawn in soft colors, as the old book describes; Hoya points at it with his tail. The app overlays the letter; no text in the image.",
+          "captionEn": "Giyeok copies the root of the tongue",
+          "artPending": true
         },
         {
           "id": "s3",
@@ -233,7 +237,9 @@
           ],
           "framing": false,
           "approximations": [],
-          "artBrief": "Two small side-view diagrams: a tongue touching the upper gum, and a square-ish open mouth; Hoya opens his mouth wide in a funny face. No text in the image."
+          "artBrief": "Two small side-view diagrams: a tongue touching the upper gum, and a square-ish open mouth; Hoya opens his mouth wide in a funny face. No text in the image.",
+          "captionEn": "Nieun and mieum: tongue and mouth",
+          "artPending": true
         },
         {
           "id": "s4",
@@ -251,11 +257,13 @@
           ],
           "framing": false,
           "approximations": [],
-          "artBrief": "A playful row of five simple body-part icons (tongue root, tongue tip, mouth, tooth, round throat) like stepping stones, with Hoya hopping across them. No letters drawn."
+          "artBrief": "A playful row of five simple body-part icons (tongue root, tongue tip, mouth, tooth, round throat) like stepping stones, with Hoya hopping across them. No letters drawn.",
+          "captionEn": "Siot is like a tooth, ieung the throat",
+          "artPending": true
         },
         {
           "id": "s5",
-          "narrationEn": "Secret number two: when a sound is stronger, add a stroke! {kw:jamo-n} gets one more line and becomes {kw:jamo-d}, and one more line makes {kw:jamo-t}. Hoya draws them in the air with his tail.",
+          "narrationEn": "The second secret: when a sound is stronger, add a stroke! {kw:jamo-n} gets one more line and becomes {kw:jamo-d}, and one more line makes {kw:jamo-t}. Hoya draws them in the air with his tail.",
           "keyword": {
             "id": "hoek",
             "ko": "획",
@@ -268,11 +276,13 @@
           ],
           "framing": false,
           "approximations": [],
-          "artBrief": "Hoya swishes his tail through the air leaving three glowing ribbon trails that grow from one bend to more lines (abstract ribbons; the app overlays nieun digeut tieut)."
+          "artBrief": "Hoya swishes his tail through the air leaving three glowing ribbon trails that grow from one bend to more lines (abstract ribbons; the app overlays nieun digeut tieut).",
+          "captionEn": "Add a stroke for a stronger sound",
+          "artPending": true
         },
         {
           "id": "s6",
-          "narrationEn": "Secret number three: the vowels. A round dot · copies the round sky, a flat line {kw:jamo-eu} copies the flat earth, and a standing line {kw:jamo-i} copies a person standing up.",
+          "narrationEn": "The third secret: the vowels. A round dot · copies the round sky, a flat line {kw:jamo-eu} copies the flat earth, and a standing line {kw:jamo-i} copies a person standing up.",
           "line": {
             "ko": "하늘, 땅, 사람",
             "romanization": "haneul, ttang, saram",
@@ -284,7 +294,9 @@
           ],
           "framing": false,
           "approximations": [],
-          "artBrief": "A landscape split into three: a round sun-like dot in the sky, a flat horizon of earth, and a child standing tall; Hoya stands beside the child. No text."
+          "artBrief": "A landscape split into three: a round sun-like dot in the sky, a flat horizon of earth, and a child standing tall; Hoya stands beside the child. No text.",
+          "captionEn": "Vowels: sky, earth and a person",
+          "artPending": true
         },
         {
           "id": "s7",
@@ -293,7 +305,7 @@
             "id": "jamo-a",
             "ko": "ㅏ",
             "romanization": "a",
-            "en": "the vowel a",
+            "en": "the vowel letter a",
             "kind": "jamo"
           },
           "factIds": [
@@ -301,11 +313,13 @@
           ],
           "framing": false,
           "approximations": [],
-          "artBrief": "A tall standing stick and a small round pebble slide together like puzzle pieces while Hoya claps; sparkles show they fit. The app overlays the vowel; no text in the image."
+          "artBrief": "A tall standing stick and a small round pebble slide together like puzzle pieces while Hoya claps; sparkles show they fit. The app overlays the vowel; no text in the image.",
+          "captionEn": "Shapes join to make new vowels",
+          "artPending": true
         },
         {
           "id": "s8",
-          "narrationEn": "Hangeul began with 28 letters, and a few old ones are no longer used. South Korea's spelling rules today count 24 basic letters: 14 consonants and 10 vowels. Hoya cheers: \"Jaeumgwa moeum!\"",
+          "narrationEn": "Hangul began with 28 letters, and a few old ones are no longer used. South Korea's spelling rules today count 24 basic letters: 14 consonants and 10 vowels. Hoya cheers: \"Jaeumgwa moeum!\"",
           "keyword": {
             "id": "jaeumgwa-moeum",
             "ko": "자음과 모음",
@@ -318,7 +332,9 @@
           ],
           "framing": false,
           "approximations": [],
-          "artBrief": "Hoya juggling colorful blank tiles (14 of one color, 10 of another) in a sunny classroom; tiles are plain, with no letters printed on them."
+          "artBrief": "Hoya juggling colorful blank tiles (14 of one color, 10 of another) in a sunny classroom; tiles are plain, with no letters printed on them.",
+          "captionEn": "Today: 14 consonants and 10 vowels",
+          "artPending": true
         }
       ],
       "checks": [
@@ -355,7 +371,8 @@
           ],
           "factIds": [
             "f3"
-          ]
+          ],
+          "explainEn": "The Haerye says the letter mieum copies the shape of the mouth."
         },
         {
           "id": "c2",
@@ -364,7 +381,7 @@
           "options": [
             {
               "id": "a",
-              "en": "·",
+              "en": "· (the round dot)",
               "isCorrect": false
             },
             {
@@ -391,7 +408,8 @@
           ],
           "factIds": [
             "f5"
-          ]
+          ],
+          "explainEn": "The standing line copies a person standing up. The round dot copies the sky, and the flat line copies the earth."
         },
         {
           "id": "c3",
@@ -426,7 +444,8 @@
           ],
           "factIds": [
             "f4"
-          ]
+          ],
+          "explainEn": "For a stronger sound, add a stroke: nieun gets a stroke and becomes digeut, and one more stroke makes tieut."
         }
       ],
       "checkpoints": [],
