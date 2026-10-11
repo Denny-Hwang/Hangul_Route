@@ -8,4 +8,101 @@ export interface VocabCatalogEntry {
   visual: string;
 }
 
-export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [];
+export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
+  {
+    "id": "vocab:sagwa",
+    "ko": "사과",
+    "romanization": "sagwa",
+    "en": "apple",
+    "topic": "food",
+    "visual": "word:food-apple"
+  },
+  {
+    "id": "vocab:banana",
+    "ko": "바나나",
+    "romanization": "banana",
+    "en": "banana",
+    "topic": "food",
+    "visual": "word:food-banana"
+  },
+  {
+    "id": "vocab:uyu",
+    "ko": "우유",
+    "romanization": "uyu",
+    "en": "milk",
+    "topic": "food",
+    "visual": "word:food-milk"
+  },
+  {
+    "id": "vocab:ppang",
+    "ko": "빵",
+    "romanization": "ppang",
+    "en": "bread",
+    "topic": "food",
+    "visual": "word:food-bread"
+  },
+  {
+    "id": "vocab:bap",
+    "ko": "밥",
+    "romanization": "bap",
+    "en": "rice",
+    "topic": "food",
+    "visual": "card:rice"
+  },
+  {
+    "id": "vocab:gimchi",
+    "ko": "김치",
+    "romanization": "gimchi",
+    "en": "kimchi",
+    "topic": "food",
+    "visual": "card:kimchi"
+  },
+  {
+    "id": "vocab:gimbap",
+    "ko": "김밥",
+    "romanization": "gimbap",
+    "en": "gimbap",
+    "topic": "food",
+    "visual": "card:kimbap"
+  },
+  {
+    "id": "vocab:ramyeon",
+    "ko": "라면",
+    "romanization": "ramyeon",
+    "en": "instant noodles",
+    "topic": "food",
+    "visual": "word:food-ramyeon"
+  },
+  {
+    "id": "vocab:mul",
+    "ko": "물",
+    "romanization": "mul",
+    "en": "water",
+    "topic": "food",
+    "visual": "word:food-water"
+  },
+  {
+    "id": "vocab:dalgyal",
+    "ko": "달걀",
+    "romanization": "dalgyal",
+    "en": "egg",
+    "topic": "food",
+    "visual": "word:food-egg"
+  },
+  {
+    "id": "vocab:ttalgi",
+    "ko": "딸기",
+    "romanization": "ttalgi",
+    "en": "strawberry",
+    "topic": "food",
+    "visual": "word:food-strawberry"
+  },
+  {
+    "id": "vocab:tteok",
+    "ko": "떡",
+    "romanization": "tteok",
+    "en": "rice cake",
+    "topic": "food",
+    "visual": "word:food-tteok"
+  }
+];

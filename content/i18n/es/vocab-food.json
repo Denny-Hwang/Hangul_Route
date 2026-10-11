@@ -1,0 +1,47 @@
+{
+  "locale": "es",
+  "domain": "vocab-food",
+  "entries": {
+    "vocab-topic:food": {
+      "title": "Comida",
+      "blurb": "Palabras para lo que comemos y bebemos.",
+      "hoyaIntro": "¿Tienes hambre? Vamos a nombrar cosas ricas juntos."
+    },
+    "vocab:sagwa": {
+      "gloss": "manzana"
+    },
+    "vocab:banana": {
+      "gloss": "banana"
+    },
+    "vocab:uyu": {
+      "gloss": "leche"
+    },
+    "vocab:ppang": {
+      "gloss": "pan"
+    },
+    "vocab:bap": {
+      "gloss": "arroz"
+    },
+    "vocab:gimchi": {
+      "gloss": "kimchi"
+    },
+    "vocab:gimbap": {
+      "gloss": "gimbap"
+    },
+    "vocab:ramyeon": {
+      "gloss": "fideos instantáneos"
+    },
+    "vocab:mul": {
+      "gloss": "agua"
+    },
+    "vocab:dalgyal": {
+      "gloss": "huevo"
+    },
+    "vocab:ttalgi": {
+      "gloss": "fresa"
+    },
+    "vocab:tteok": {
+      "gloss": "pastel de arroz"
+    }
+  }
+}
