@@ -12,8 +12,18 @@
 // A story is listed only when it is `ready` and both language- and
 // culture-reviewed (the F-STORY-004 production gate, D14), so the console never
 // offers a story the presenter would skip as not ready. Stories come in title
-// order, topics in their `order`. When F-PLAN-002's shared catalogue lands it
-// replaces this mirror (ids are the contract).
+// order, topics in their `order`.
+//
+// F-PLAN-002's shared catalogue (`CATALOG` in @hangul-route/content-schema) has
+// landed and replaced the Stage 1 mirror: quest and episode titles and minutes,
+// and vocabulary-topic minutes, now come from it (`apps/web/src/data/catalog.ts`).
+// This mirror stays, deliberately, for one thing `CATALOG` cannot express: the
+// Library's production gate. `CATALOG` lists all 24 shelf stories and all 12
+// topics with a `ready | draft` status and no review fields, so it would offer
+// the console stories and topics the presenter skips as not ready (D14). Its
+// topic ids are also `topic:<key>`, while the deck names them `vocab-topic:<key>`.
+// When `CATALOG` carries the review gate, this script is retired (ids are the
+// contract, so no deck changes).
 //
 // Usage:
 //   node scripts/build-lecture-catalogue.mjs            write the module
