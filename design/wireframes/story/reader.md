@@ -2,7 +2,7 @@
 
 Spec: `docs/specs/F-STORY-002-story-reader.md` (§3.3 reader, §3.4 audio, §3.5 Korean on screen, §3.6 progress, §3.7 checkpoints, culture notes, advisory and end page, §3.10 accessibility, §3.11 states), data in `F-STORY-001-story-schema-pipeline.md`
 Audience: anyone learning Hangul, any age (CLAUDE.md §1). A learner who reads little can use every screen: the picture, a speaker button and big targets carry the meaning. No kids-only or adults-only framing. Grown-ups use the same screen; their one control (Sources) sits in the top bar, away from the reading controls.
-Code: built (PRs 2.5-2.8): A, B, E, F1-F6, G1 and H in `apps/mobile/src/screens/story/StoryReaderView.tsx` (state, effects), `ReaderParts.tsx` (paint), `use-reader-audio.ts`, `use-reader-bookmark.ts`, `StoryReaderScreen.tsx` (replay route `StoryReader`), `screens/minigames/StoryReadGame.tsx` (quest host, `story-read` step); pure rules in `apps/mobile/src/logic/story/` (`reader-state`, `scene-view`, `scene-audio`, `audio-runner`, `reader-settings`, `reader-effects`, and from 2.8 `reader-extras` for the note card, the grown-up note and the end-page pictures, `reader-locale` for the story in the UI locale); picture `packages/design-system` `StoryScene`. Planned: G2 checkpoints in PR 2.9 (none of the 24 launch stories has one); the G1 "More in Culture notes" button appears once F-STORY-004 PR 4.7 passes `onOpenCultureNote`. Component spec: `design/components/StoryReaderView/spec.md`. Brief: `design/brief/screens/21-story-reader.md`.
+Code: built (PRs 2.5-2.9): A, B, E, F1-F6, G1, G2 and H in `apps/mobile/src/screens/story/StoryReaderView.tsx` (state, effects), `ReaderParts.tsx` (paint), `use-reader-audio.ts`, `use-reader-bookmark.ts`, `StoryReaderScreen.tsx` (replay route `StoryReader`), `screens/minigames/StoryReadGame.tsx` (quest host, `story-read` step); pure rules in `apps/mobile/src/logic/story/` (`reader-state`, `scene-view`, `scene-audio`, `audio-runner`, `reader-settings`, `reader-effects`, and from 2.8 `reader-extras` for the note card, the grown-up note and the end-page pictures, `reader-locale` for the story in the UI locale, and from 2.9 `reader-checkpoint` for the checkpoint card, painted by `CheckpointCard.tsx`); picture `packages/design-system` `StoryScene`. None of the 24 launch stories has a checkpoint yet; the G1 "More in Culture notes" button appears once F-STORY-004 PR 4.7 passes `onOpenCultureNote`. Component spec: `design/components/StoryReaderView/spec.md`. Brief: `design/brief/screens/21-story-reader.md`.
 Notation: `[[ X ]]` the one primary action, `[ X ]` secondary or ghost, `~~ ko / rom / gloss ~~` taught Korean drawn with `KoreanText` (Korean + romanization + gloss), `( )` switch, `o o .` fill-only dots (filled = reached), `<art>` a `StoryScene` picture (4:3), `{chip}` an inline Korean term chip.
 
 Promoted by F-STORY-002 PR 2.0 from the one-file draft. The panel letters are kept so references in code and specs still resolve:
@@ -12,7 +12,7 @@ Promoted by F-STORY-002 PR 2.0 from the one-file draft. The panel letters are ke
 - C, D. Term gloss card and Korean line with word glosses: **moved to `story/term-gloss.md`** (same letters)
 - E. Reader, landscape / wide
 - F. Reader states: grown-up note (built in 2.8), hide-romanization, muted, no Korean voice, art missing, story not found
-- G. Culture note card (G1, built in 2.8) and checkpoint (G2, **planned**, PR 2.9)
+- G. Culture note card (G1, built in 2.8) and checkpoint (G2, built in 2.9)
 - H. End page (the recap pictures built in 2.8)
 - I, J. Sources screen and the open-link gate: **moved to `story/sources.md`** (same letters)
 
@@ -144,7 +144,7 @@ F6  Story, level or tier not found, or fewer than 4 scenes
 - F3 and F4 come from the one shared sound state (F-AUDIO-004 `PromptPanel`); the reader adds no error of its own.
 - A browser that blocks sound before the first tap shows "Tap to hear" in the same panel; the first tap anywhere unlocks it.
 
-## G. Culture note card (built) and checkpoint (planned, PR 2.9)
+## G. Culture note card and checkpoint (both built)
 
 ```
 G1  Did you know?  (tapped)
@@ -158,17 +158,29 @@ G1  Did you know?  (tapped)
 │ │              [ Close ]       │
 │ └──────────────────────────────┘
 
-G2  Checkpoint question (planned, PR 2.9; 0-2 per story; none in the launch stories)
-│ Quick question
-│ "What did the historians write down?"
-│  ┌─────────────────────────┐
-│  │ ( ) option               │   <- the same ChoiceCard as the story checks (F-STORY-003)
-│  └─────────────────────────┘
-│  [ Skip ]                       <- always there; records nothing
+G2  Checkpoint question (built in 2.9; 0-2 per story; none in the launch stories)
+┌──────────────────────────────────┐
+│ [x]  o o o . .   3 / 5  [Sources] │  <- the page number stays on the scene the card follows
+│ ┌──────────────────────────────┐ │
+│ │ Quick question               │ │  <- "Try it" in a replay (unscored)
+│ │ "What did the historians   (spk)│  <- the question, its speaker 64
+│ │  write down?"                │ │
+│ │  ~~ target ~~ (when it has one) │
+│ │  ┌─────────────────────────┐ │ │
+│ │  │ option                  │ │ │  <- the same ChoiceCard as the story checks (F-STORY-003)
+│ │  └─────────────────────────┘ │ │
+│ │  Try another                 │ │  <- written under a missed card (amber, never red)
+│ └──────────────────────────────┘ │
+│  (Hoya) hint, or the explanation │  <- after a tap
+│  [ Skip ]                        │  <- always there
+│ ─────────────────────────────── pinned
+│ (o ) Read to me                   │
+│ [ Back ]  [[ Next ]]              │  <- Next waits for the right card; Back returns to the scene
+└──────────────────────────────────┘
 ```
 
 - G1 opens under the chips row (pushes content down) and scrolls into view. It shares the one inline-card slot with the gloss card: opening G1 closes a gloss card, and Close, a second chip tap, Escape, a term chip or a page turn closes G1. The open chip shows an underline and reports expanded.
-- G2 (planned, PR 2.9; until then a tier with checkpoints skips them): a wrong tap gets the amber "Try another", never red. A checkpoint scores only on the first try, in a quest, never in a replay (a replay shows "Try it" with feedback, unscored).
+- G2 (built in 2.9): Next on the scene the checkpoint follows opens the card in place of the picture and the text (one Hoya on screen: the bubble, not the art). A wrong tap gets the amber "Try another" written under the card, never red, and Hoya's hint; a second miss rings the right card; the right card shows "Correct" and the explanation, and focus moves to Next. Nothing advances by itself. A checkpoint scores only its first answer (`cp:<id>`), in a quest, never in a replay (a replay shows "Try it" with feedback, unscored). Back returns to the scene and Next reopens the card as it was left; once answered or skipped it is not asked again in that visit (Read again asks it again). Skip is always there: before the answer it records nothing, after it carries on like Next. The grown-up note and a gloss or note card close when the card opens.
 
 ## H. End page
 
@@ -230,7 +242,7 @@ Exit to: `quest/player` next step (Continue) · the previous screen (Done, Close
 ## Data needs
 
 - reads: the bundled story (`storyById`, with locale overlays applied): tier scenes, keywords, art, culture notes, checkpoints, origin, review advisory; profile settings `readToMe` (default on for the "Pictures first" level), `romanizationMode`; the bookmark (`story:bookmarks:<profileId>`, F-STORY-004) for the first scene
-- writes: the bookmark from scene 2 on, quest mode only; checkpoint answers through `answerRound` (quest mode only); `markStepComplete` on Continue; nothing in replay
+- writes: the bookmark from scene 2 on, quest mode only; checkpoint answers through `answerRound` (quest mode only: a miss at once, a right answer when the page turns; the first answer is the one that counts); `markStepComplete` on Continue; nothing in replay
 - audio: F-AUDIO-004 `playPrompt` (device speech now, bundled clips when they exist)
 - telemetry: `story.read.finished`, `story.bookmark.resumed` (ids and counts only); audio fallbacks are F-AUDIO-004's
 
