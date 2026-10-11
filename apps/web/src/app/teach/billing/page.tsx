@@ -1,13 +1,14 @@
 'use client';
 
-import { colors, spacing, typography } from '@hangul-route/design-system/tokens';
+import { spacing, typography } from '@hangul-route/design-system/tokens';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useState } from 'react';
+import { CurrentPlanList, PlanRowList } from '@/components/console/BillingParts';
 import { Button, ConsoleShell, Field, Muted, Notice, panelStyle } from '@/components/console/ui';
 import { useConsole } from '@/components/console/use-console';
 import type { Promo } from '@hangul-route/content-schema';
 import type { EntitlementView, SpaceListItem } from '@/lib/console/api';
-import { type BillingNote, type PlanRow, type PromoNote, billingNoteText, checkoutReturnNote, currentPlanCards, planRowsFor, planTitle, promoNoteText, promoPriceLine, sourceLine } from '@/lib/console/billing';
+import { type BillingNote, type PlanRow, type PromoNote, billingNoteText, checkoutReturnNote, currentPlanCards, planRowsFor, promoNoteText } from '@/lib/console/billing';
 
 /** console/billing — F-ENT-001 §3.6. Web only; one Choose per recommended row; family once, group yearly, contract beyond the caps. */
 function BillingInner(): JSX.Element {
@@ -118,29 +119,7 @@ function BillingInner(): JSX.Element {
 
       <section aria-label={b.current.title} style={{ marginBottom: spacing.xl }}>
         <h2 style={{ fontSize: typography.size.bodyLg, margin: `0 0 ${spacing.sm}px` }}>{b.current.title}</h2>
-        {entitlements && cards.length === 0 ? (
-          <div style={panelStyle}>
-            <strong>{planTitle('free', locale)}</strong>
-            <Muted>{b.current.freeLine}</Muted>
-          </div>
-        ) : null}
-        <div style={{ display: 'grid', gap: spacing.sm }}>
-          {cards.map((card) => (
-            <div key={card.entitlement.id} style={{ ...panelStyle, opacity: card.active ? 1 : 0.7 }} data-testid="plan-card">
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: spacing.md, flexWrap: 'wrap' }}>
-                <strong>
-                  {card.title} <span style={{ color: colors.text.muted, fontWeight: typography.weight.regular }}>· {card.subject}</span>
-                </strong>
-                <span style={{ color: colors.text.secondary }}>{card.status}</span>
-              </div>
-              <Muted>
-                {sourceLine(card.entitlement, locale)}
-                {card.entitlement.seats ? ` · ${b.seats(card.entitlement.seats)}` : ''}
-              </Muted>
-              {card.canManage ? <Button disabled={busy} onClick={() => void manage(card.entitlement.subjectKind, card.entitlement.subjectId)}>{b.manage.cta}</Button> : null}
-            </div>
-          ))}
-        </div>
+        <CurrentPlanList cards={cards} showFree={!!entitlements && cards.length === 0} busy={busy} onManage={(subjectKind, subjectId) => void manage(subjectKind, subjectId)} />
       </section>
 
       <section aria-label={b.plans.title} style={{ marginBottom: spacing.xl }}>
@@ -161,32 +140,7 @@ function BillingInner(): JSX.Element {
             <Muted>{promoNote ? promoNoteText(promoNote, locale) : c.promoHint}</Muted>
           </div>
         </form>
-        <div style={{ display: 'grid', gap: spacing.sm }}>
-          {rows.map((row) => (
-            <div key={`${row.planKey}:${row.subjectId ?? 'me'}`} style={{ ...panelStyle, borderColor: row.recommended ? colors.brand.primary : colors.border.subtle, display: 'flex', justifyContent: 'space-between', gap: spacing.md, flexWrap: 'wrap', alignItems: 'center' }}>
-              <div style={{ flex: 1, minWidth: 220 }}>
-                <strong>{row.title}</strong>
-                {row.subjectName ? <span style={{ color: colors.text.muted }}> · {row.subjectName}</span> : null}
-                <Muted>{row.includes}</Muted>
-                <Muted>
-                  <strong>{promoPriceLine(row.planKey, promo, locale) ?? row.price}</strong>
-                  {row.planKey === 'family_lifetime' ? ` · ${c.lifetimeLine}` : row.planKey === 'group_license' ? ` · ${c.groupLine}` : row.planKey === 'school_seat' ? ` · ${c.contactLine}` : ''}
-                </Muted>
-              </div>
-              {row.action === 'choose' ? (
-                <Button tone={row.recommended ? 'primary' : 'secondary'} disabled={busy || !api} onClick={() => void choose(row)}>
-                  {b.choose.cta}
-                </Button>
-              ) : row.action === 'contact' ? (
-                <a href="mailto:hello@hangulroute.com?subject=School%20contract" style={{ color: colors.text.secondary }}>
-                  {b.contact.cta}
-                </a>
-              ) : row.action === 'current' ? (
-                <span style={{ color: colors.feedback.success, fontWeight: typography.weight.bold }}>{b.isCurrent.pill}</span>
-              ) : null}
-            </div>
-          ))}
-        </div>
+        <PlanRowList rows={rows} promo={promo} disabled={busy || !api} onChoose={(row) => void choose(row)} />
       </section>
 
       <Muted>{c.billingKidsLine}</Muted>

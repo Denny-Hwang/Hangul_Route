@@ -7,10 +7,10 @@ import { useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useState } from 'react';
 import { Button, ConsoleShell, Field, Muted, Notice, panelStyle } from '@/components/console/ui';
 import { useConsole } from '@/components/console/use-console';
-import { catalogLabel, stage1Episodes, stage1Quests } from '@/data/stage1-catalog';
+import { PlanDraftItems, PlanReadout } from '@/components/console/PlanParts';
+import { stage1Episodes, stage1Quests } from '@/data/stage1-catalog';
 import type { PlanView, Roster } from '@/lib/console/api';
-import { type PlanError, currentPlan, dateKey, moveItem, oneExplicitPerDay, planAudience, planErrorText, planReadout, planStatusLabel, readoutLine, spreadDates } from '@/lib/console/plans';
-import { relativeDay } from '@/lib/console/rollup';
+import { type PlanError, currentPlan, dateKey, memberKind, moveItem, oneExplicitPerDay, planErrorText, planEveryone, planReadout, spreadDates } from '@/lib/console/plans';
 import { ROUTES, spaceIdFrom } from '@/lib/console/routing';
 
 interface Draft {
@@ -43,14 +43,14 @@ function PlanInner(): JSX.Element {
   const load = useCallback(async (): Promise<void> => {
     if (!api) return;
     setError(null);
-    const [r, p] = await Promise.all([api.roster(spaceId), api.listPlans(spaceId)]);
-    if (!r.ok || !p.ok) {
+    const [rosterRes, plansRes] = await Promise.all([api.roster(spaceId), api.listPlans(spaceId)]);
+    if (!rosterRes.ok || !plansRes.ok) {
       setError('cantReach');
       return;
     }
-    setRoster(r.data);
-    setPlans(p.data);
-    const current = currentPlan(p.data);
+    setRoster(rosterRes.data);
+    setPlans(plansRes.data);
+    const current = currentPlan(plansRes.data);
     if (current && !current.publishedAt) {
       setDraft({ id: current.id, title: current.title, items: current.items, targets: current.targetLearnerIds });
       setEditing(true);
@@ -69,7 +69,6 @@ function PlanInner(): JSX.Element {
   const learners = roster?.learners ?? [];
   // Before the roster loads the page says "learners" and "this space", as it always has.
   const kind = roster?.space.kind ?? null;
-  const members = kind ?? 'family';
 
   const addItem = (item: PlanItem): void => {
     setDraft((d) => (d.items.some((i) => i.kind === item.kind && i.id === item.id) ? d : { ...d, items: [...d.items, item] }));
@@ -137,44 +136,25 @@ function PlanInner(): JSX.Element {
       ) : null}
 
       {readout && current ? (
-        <section aria-label={p.readoutLabel}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: spacing.md, flexWrap: 'wrap' }}>
-            <h1 style={{ fontSize: typography.size.title, margin: 0 }}>{current.title}</h1>
-            <span style={{ color: colors.text.muted }}>{planStatusLabel(current, locale)}</span>
-          </div>
-          <Muted>{p.summary(current.items.length, planAudience(current.targetLearnerIds ? current.targetLearnerIds.length : null, kind, locale))}</Muted>
-          <div style={{ display: 'flex', gap: spacing.sm, margin: `${spacing.md}px 0` }}>
-            <Button onClick={() => { setDraft({ id: current.id, title: current.title, items: current.items, targets: current.targetLearnerIds }); setEditing(true); }}>{p.edit.cta}</Button>
-            <Button onClick={() => void archive()} disabled={busy}>{p.archive.cta}</Button>
-            <Button onClick={startNew}>{p.newPlan.cta}</Button>
-          </div>
-          <ul style={{ ...panelStyle, listStyle: 'none', margin: `0 0 ${spacing.lg}px`, padding: spacing.lg }}>
-            {current.items.map((item, k) => (
-              <li key={`${item.kind}:${item.id}`} style={{ padding: `${spacing.xs}px 0`, color: colors.text.secondary }}>
-                {k + 1}. {catalogLabel(item.kind, item.id, locale)} {item.targetDate ? `· ${item.targetDate}` : ''} {item.note ? `· ${item.note}` : ''}
-              </li>
-            ))}
-          </ul>
-          <h2 style={{ fontSize: typography.size.bodyLg, margin: `0 0 ${spacing.xs}px` }}>{p.progressTitle}</h2>
-          <Muted>{c.readoutHint}</Muted>
-          <div style={{ display: 'grid', gap: spacing.sm }}>
-            {readout.length === 0 ? <Muted>{p.noMembers[members]}</Muted> : null}
-            {readout.map((row) => (
-              <div key={row.learnerId} style={{ ...panelStyle, display: 'flex', justifyContent: 'space-between', gap: spacing.md }} data-testid="readout-row">
-                <strong>{row.name}</strong>
-                <span style={{ color: colors.text.secondary }}>
-                  {readoutLine(row, locale)} · {relativeDay(row.lastActiveAt, now, locale)}
-                </span>
-              </div>
-            ))}
-          </div>
-        </section>
+        <PlanReadout
+          plan={current}
+          rows={readout}
+          kind={kind}
+          busy={busy}
+          now={now}
+          onEdit={() => {
+            setDraft({ id: current.id, title: current.title, items: current.items, targets: current.targetLearnerIds });
+            setEditing(true);
+          }}
+          onArchive={() => void archive()}
+          onNew={startNew}
+        />
       ) : (
         <section aria-label={p.builderLabel}>
           <h1 style={{ fontSize: typography.size.title, margin: `0 0 ${spacing.sm}px` }}>{draft.id ? p.editTitle : p.newTitle}</h1>
           {plans && plans.length === 0 ? <Notice>{c.noPlanYet}</Notice> : null}
           <Field name="title" label={p.titleField.label} value={draft.title} onChange={(v) => setDraft((d) => ({ ...d, title: v }))} placeholder={p.titleField.placeholder} maxLength={60} required />
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: spacing.lg }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(300px, 100%), 1fr))', gap: spacing.lg }}>
             <div style={panelStyle} aria-label={p.catalog.label}>
               <h2 style={{ fontSize: typography.size.bodyLg, margin: `0 0 ${spacing.sm}px` }}>{p.catalog.title}</h2>
               {stage1Episodes.map((e) => (
@@ -198,23 +178,12 @@ function PlanInner(): JSX.Element {
             </div>
             <div style={panelStyle} aria-label={p.yours.label}>
               <h2 style={{ fontSize: typography.size.bodyLg, margin: `0 0 ${spacing.sm}px` }}>{p.yours.title(draft.items.length)}</h2>
-              {draft.items.length === 0 ? <Muted>{p.yours.empty}</Muted> : null}
-              {draft.items.map((item, k) => (
-                <div key={`${item.kind}:${item.id}`} style={{ borderTop: `1px solid ${colors.border.subtle}`, padding: `${spacing.sm}px 0` }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: spacing.sm }}>
-                    <span>{k + 1}. {catalogLabel(item.kind, item.id, locale)}</span>
-                    <span style={{ display: 'flex', gap: spacing.xxs }}>
-                      <Button disabled={k === 0} onClick={() => setDraft((d) => ({ ...d, items: moveItem(d.items, k, k - 1) }))}>{p.yours.moveUp.cta}</Button>
-                      <Button disabled={k === draft.items.length - 1} onClick={() => setDraft((d) => ({ ...d, items: moveItem(d.items, k, k + 1) }))}>{p.yours.moveDown.cta}</Button>
-                      <Button onClick={() => setDraft((d) => ({ ...d, items: d.items.filter((_, i) => i !== k) }))}>{p.yours.remove.cta}</Button>
-                    </span>
-                  </div>
-                  <div style={{ display: 'flex', gap: spacing.sm, marginTop: spacing.xs, flexWrap: 'wrap' }}>
-                    <input type="date" value={item.targetDate ?? ''} onChange={(e) => updateItem(k, { targetDate: e.target.value || undefined })} aria-label={p.yours.dateFor(k + 1)} style={{ padding: spacing.xs, borderRadius: radii.sm, border: `1px solid ${colors.border.strong}` }} />
-                    <input type="text" value={item.note ?? ''} placeholder={p.yours.notePlaceholder} maxLength={80} onChange={(e) => updateItem(k, { note: e.target.value || undefined })} aria-label={p.yours.noteFor(k + 1)} style={{ flex: 1, padding: spacing.xs, borderRadius: radii.sm, border: `1px solid ${colors.border.strong}` }} />
-                  </div>
-                </div>
-              ))}
+              <PlanDraftItems
+                items={draft.items}
+                onMove={(from, to) => setDraft((d) => ({ ...d, items: moveItem(d.items, from, to) }))}
+                onRemove={(index) => setDraft((d) => ({ ...d, items: d.items.filter((_, i) => i !== index) }))}
+                onUpdate={updateItem}
+              />
               <div style={{ marginTop: spacing.md, display: 'flex', gap: spacing.sm, alignItems: 'center', flexWrap: 'wrap' }}>
                 <span style={{ color: colors.text.muted, fontSize: typography.size.caption }}>{p.pace.title}</span>
                 <input type="date" value={start} onChange={(e) => setStart(e.target.value || dateKey(new Date()))} aria-label={p.pace.start} style={{ padding: spacing.xs, borderRadius: radii.sm, border: `1px solid ${colors.border.strong}` }} />
@@ -228,7 +197,7 @@ function PlanInner(): JSX.Element {
               <div style={{ marginTop: spacing.md }}>
                 <span style={{ color: colors.text.muted, fontSize: typography.size.caption }}>{p.who.title}</span>
                 <label style={{ display: 'block' }}>
-                  <input type="radio" name="targets" checked={draft.targets === null} onChange={() => setDraft((d) => ({ ...d, targets: null }))} /> {planAudience(null, kind, locale)}
+                  <input type="radio" name="targets" checked={draft.targets === null} onChange={() => setDraft((d) => ({ ...d, targets: null }))} /> {planEveryone(kind, locale)}
                 </label>
                 <label style={{ display: 'block' }}>
                   <input type="radio" name="targets" checked={draft.targets !== null} onChange={() => setDraft((d) => ({ ...d, targets: d.targets ?? [] }))} /> {p.who.only}
@@ -245,7 +214,7 @@ function PlanInner(): JSX.Element {
                       </label>
                     ))
                   : null}
-                {draft.targets !== null && learners.length === 0 ? <Muted>{p.noneJoined[members]}</Muted> : null}
+                {draft.targets !== null && learners.length === 0 ? <Muted>{p.noneJoined[memberKind(kind)]}</Muted> : null}
               </div>
             </div>
           </div>
