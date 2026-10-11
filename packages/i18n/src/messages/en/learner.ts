@@ -161,6 +161,17 @@ export const learner = {
     how: { title: 'How to collect more', body: 'Finish quests to unlock cards.' },
     /** Landmark names of the two panes on a wide window (F-LAYOUT-001 §3.13). */
     panes: { master: 'Card gallery', detail: 'Card details' },
+    /** How to earn a locked card, one line per award rule (F-STORY-006 §3.7): never how far along. */
+    earnHint: {
+      /** `title` is the episode's title (content). */
+      episode: (title: string) => `Finish the episode: ${title}`,
+      /** `title` is the story's title (content). */
+      story: (title: string) => `Finish the story: ${title}`,
+      stage: (stage: number) => `Finish every quest in Stage ${stage}`,
+      welcome: 'A welcome gift from Hoya',
+      /** `collection` is the set's name (content). */
+      set: (collection: string) => `Collect every card from the ${collection} stories`,
+    },
   },
 
   cardDetail: {
