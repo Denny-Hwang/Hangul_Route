@@ -45,3 +45,6 @@ export * from './curriculum/draft';
 export * from './curriculum/generate';
 export * from './schemas/lecture';
 export * from './schemas/lecture-codec';
+export * from './schemas/locale-overlay';
+export * from './localize';
+export { OVERLAYS } from './i18n-overlays.generated';
