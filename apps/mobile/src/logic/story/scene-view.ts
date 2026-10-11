@@ -74,7 +74,7 @@ export interface SceneView {
 }
 
 export interface SceneViewContext {
-  /** Language of the narration text as shown. Default `en-US`; see `narrationSpeechLang`. */
+  /** Language of the narration text as shown. Default `en-US`; see `narrationSpeechLang` (scene-audio.ts). */
   narrationLang?: SpeechLang;
 }
 
