@@ -60,6 +60,13 @@ export interface Flags {
    * default; set it only in dev and design-preview builds.
    */
   showUnreviewedStories: boolean;
+
+  /**
+   * The level check (F-PLC-001 section 6): hides the onboarding fork, the Home
+   * card, the Profile row and the report entry. OFF until the beta (P-10), and
+   * only after a store build carrying the P-3b schema has shipped.
+   */
+  placementEnabled: boolean;
 }
 
 const launchDefaults: Flags = {
@@ -69,6 +76,7 @@ const launchDefaults: Flags = {
   syncEnabled: true,
   contentGatingEnabled: false,
   showUnreviewedStories: false,
+  placementEnabled: false,
 };
 
 export const flags: Flags = {
@@ -84,6 +92,7 @@ export const flags: Flags = {
     'EXPO_PUBLIC_SHOW_UNREVIEWED_STORIES',
     launchDefaults.showUnreviewedStories,
   ),
+  placementEnabled: readBool('EXPO_PUBLIC_PLACEMENT_ENABLED', launchDefaults.placementEnabled),
 };
 
 export const launchDefaultFlags: Readonly<Flags> = launchDefaults;

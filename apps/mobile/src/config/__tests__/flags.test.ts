@@ -78,4 +78,17 @@ describe('flags', () => {
     const mod = await reload();
     expect(mod.flags.showUnreviewedStories).toBe(true);
   });
+
+  it('placementEnabled is OFF by default (F-PLC-001 section 6)', async () => {
+    delete process.env.EXPO_PUBLIC_PLACEMENT_ENABLED;
+    const mod = await reload();
+    expect(mod.flags.placementEnabled).toBe(false);
+    expect(mod.launchDefaultFlags.placementEnabled).toBe(false);
+  });
+
+  it('placementEnabled flips on with "true"', async () => {
+    process.env.EXPO_PUBLIC_PLACEMENT_ENABLED = 'true';
+    const mod = await reload();
+    expect(mod.flags.placementEnabled).toBe(true);
+  });
 });
