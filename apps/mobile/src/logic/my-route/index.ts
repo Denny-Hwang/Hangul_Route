@@ -13,3 +13,27 @@ export { gainsOf } from './gains';
 export { summarizeJourney, type JourneyStageSummary, type JourneySummary } from './summary';
 export { stagesToLatch, withStageLatches } from './latch';
 export { hoyaPoseFor, newQuestsLine, newlyDoneKeys, parseSeen, readSeen, seenFrom, seenKey, writeSeen, type JsonStorage } from './seen';
+export {
+  canDoCopy,
+  cellWord,
+  heroCopy,
+  newQuestsCopy,
+  skillCopy,
+  skillsNoteCopy,
+  skillsTitle,
+  stageA11yLabel,
+  stageCaptions,
+  stageStateWord,
+  stageTags,
+  tilesCopy,
+  trailEntries,
+  viewingCopy,
+  type CopyContext,
+  type GrownupJourneyMessages,
+  type HeroCopy,
+  type LearnerRouteMessages,
+  type MyRouteA11yMessages,
+  type MyRouteMessages,
+  type TrailEntry,
+  type Viewer,
+} from './copy';
