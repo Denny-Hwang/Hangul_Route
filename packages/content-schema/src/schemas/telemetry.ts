@@ -74,6 +74,10 @@ export const TELEMETRY_EVENT_NAMES = [
   'space.transfer.declined',
   'space.transfer.cancelled',
   'space.transfer.completed',
+  // F-ROUTE-001 §3.16 (payloads carry stage keys, booleans and codes only; active profile only)
+  'route_map.viewed',
+  'route_map.stage_opened',
+  'route_map.continue_tapped',
 ] as const;
 
 export const TelemetryEventNameSchema = z.enum(TELEMETRY_EVENT_NAMES);

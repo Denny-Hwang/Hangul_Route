@@ -89,3 +89,81 @@ describe('preserveAdditiveFields (the Worker preserve rule, placement entry)', (
     expect(route).toEqual({ payload: { selfRoute: { id: 'route:a' } }, summary: { a: 1 } });
   });
 });
+
+describe('preserveAdditiveFields (stage latch entry, F-ROUTE-001 section 3.15)', () => {
+  const latch = { stage1: '2026-10-11T09:30:00.000Z' };
+  const field = ADDITIVE_FIELDS.find((f) => f.payloadKey === 'stageDoneAt');
+
+  it('lists stageDoneAt with no summary counterpart, appended after placements', () => {
+    expect(field).toBeDefined();
+    expect(field?.summaryKey).toBeUndefined();
+    expect(ADDITIVE_FIELDS.map((f) => f.payloadKey).indexOf('stageDoneAt')).toBeGreaterThan(ADDITIVE_FIELDS.map((f) => f.payloadKey).indexOf('placements'));
+  });
+
+  it('treats a missing key and an empty record as unset, anything else as a value', () => {
+    expect(field?.isUnset(undefined)).toBe(true);
+    expect(field?.isUnset({})).toBe(true);
+    expect(field?.isUnset(latch)).toBe(false);
+    // values the schema rejects never reach the rule; they still are not "unset"
+    expect(field?.isUnset(null)).toBe(false);
+    expect(field?.isUnset([])).toBe(false);
+  });
+
+  it('keeps the stored latch when an old client leaves the key out, and leaves the summary alone', () => {
+    const out = preserveAdditiveFields(incoming({ quests: ['new'] }, { streakDays: 3 }), stored({ quests: ['old'], stageDoneAt: latch }, { streakDays: 1 }));
+    expect(out.payload).toEqual({ quests: ['new'], stageDoneAt: latch });
+    expect(out.summary).toEqual({ streakDays: 3 });
+  });
+
+  it('keeps the stored latch against an empty record', () => {
+    const out = preserveAdditiveFields(incoming({ stageDoneAt: {} }, {}), stored({ stageDoneAt: latch }, {}));
+    expect(out.payload).toEqual({ stageDoneAt: latch });
+  });
+
+  it('unions a sent latch with the stored one, earliest time wins, and invents nothing when none is stored', () => {
+    const next = { ...latch, stage2: '2026-11-01T08:00:00.000Z' };
+    expect(preserveAdditiveFields(incoming({ stageDoneAt: next }, {}), stored({ stageDoneAt: latch }, {})).payload).toEqual({ stageDoneAt: next });
+    // a client that never saw stage2 (old build, then upgraded) cannot erase it
+    const lagging = preserveAdditiveFields(incoming({ stageDoneAt: { stage1: '2026-10-12T00:00:00.000Z' } }, {}), stored({ stageDoneAt: next }, {}));
+    expect(lagging.payload).toEqual({ stageDoneAt: next });
+    expect(preserveAdditiveFields(incoming({ quests: [] }, {}), stored({ quests: [], stageDoneAt: {} }, {})).payload).toEqual({ quests: [] });
+    expect(preserveAdditiveFields(incoming({ quests: [] }, {}), stored({ quests: [] }, {})).payload).toEqual({ quests: [] });
+  });
+
+  it('preserves the latch and placements together for a client that predates both', () => {
+    const out = preserveAdditiveFields(incoming({ quests: [] }, {}), stored({ placements: [result], stageDoneAt: latch }, { placement }));
+    expect(out.payload).toEqual({ quests: [], placements: [result], stageDoneAt: latch });
+    expect(out.summary).toEqual({ placement });
+  });
+});
+
+describe('the stage latch merge (server-side key union, F-ROUTE-001 section 3.15)', () => {
+  const merge = ADDITIVE_FIELDS.find((f) => f.payloadKey === 'stageDoneAt')?.merge;
+
+  it('exists only for the latch; placements still replace', () => {
+    expect(merge).toBeDefined();
+    expect(ADDITIVE_FIELDS.find((f) => f.payloadKey === 'placements')?.merge).toBeUndefined();
+    const out = preserveAdditiveFields(incoming({ placements: [{ id: 'placement:b' }] }, {}), stored({ placements: [result] }, {}));
+    expect(out.payload).toEqual({ placements: [{ id: 'placement:b' }] });
+  });
+
+  it('unions keys, keeps the earliest time, and does not depend on argument order', () => {
+    const a = { stage1: '2026-10-11T10:00:00.000Z', stage2: '2026-10-20T10:00:00.000Z' };
+    const b = { stage1: '2026-10-10T10:00:00.000Z', stage4: '2026-10-15T10:00:00.000Z' };
+    const expected = { stage1: '2026-10-10T10:00:00.000Z', stage2: '2026-10-20T10:00:00.000Z', stage4: '2026-10-15T10:00:00.000Z' };
+    expect(merge?.(a, b)).toEqual(expected);
+    expect(merge?.(b, a)).toEqual(expected);
+  });
+
+  it('compares instants, not strings: an offset time and a junk value never win wrongly', () => {
+    // 08:00+09:00 is 23:00Z the day before, so it is the earlier instant
+    expect(merge?.({ stage1: '2026-10-11T08:00:00+09:00' }, { stage1: '2026-10-11T00:00:00Z' })).toEqual({ stage1: '2026-10-11T08:00:00+09:00' });
+    expect(merge?.({ stage1: '' }, { stage1: '2026-10-11T00:00:00.000Z' })).toEqual({ stage1: '2026-10-11T00:00:00.000Z' });
+    expect(merge?.({ stage1: '2026-10-11T00:00:00.000Z' }, { stage1: 'soon' })).toEqual({ stage1: '2026-10-11T00:00:00.000Z' });
+    expect(merge?.({ stage1: 'b' }, { stage1: 'a' })).toEqual({ stage1: 'a' });
+  });
+
+  it('ignores a stored value that is not a record', () => {
+    expect(merge?.({ stage1: '2026-10-11T00:00:00.000Z' }, ['stage2'])).toEqual({ stage1: '2026-10-11T00:00:00.000Z' });
+  });
+});
