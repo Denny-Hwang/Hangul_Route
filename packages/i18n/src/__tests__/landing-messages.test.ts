@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { LOCALES } from '../locales';
-import { findBannedWord } from '../banned';
+import { KIDS_ONLY_FRAMING } from '../audience';
 import { pseudoLocalize, pseudoText } from '../pseudo';
 import { getMessages } from '../resolve';
 import { leafPaths, lookup } from '../tree';
+import { landingBannedWord } from './landing-banned';
 import { SAMPLES } from './samples';
 
 // F-I18N-001 PR 11a: the site's copy (metadata, landing, about, privacy, terms, the waitlist
@@ -24,10 +25,13 @@ describe('landing: sentences that take a value render the former text', () => {
 
   it('how it works: the card count comes from the content', () => {
     expect(l.how.steps.collect.body(24)).toBe('Earn 24 Heritage Cards in Stage 1 — from kimchi to Chuseok to the gayageum.');
+    expect(l.how.steps.collect.body(1)).toBe('Earn 1 Heritage Card in Stage 1 — from kimchi to Chuseok to the gayageum.');
   });
 
   it('heritage cards: counts per rarity, and the card label', () => {
     expect(l.cards.title(24)).toBe('24 Heritage Cards. One Korea, one card at a time.');
+    expect(l.cards.title(1)).toBe('1 Heritage Card. One Korea, one card at a time.');
+    expect(l.cards.body(1, 1, 0, 0, 0)).toContain('Stage 1 ships 1 card: 1 common, 0 uncommon, 0 rare, and 0 legendary.');
     expect(l.cards.body(24, 10, 8, 4, 2)).toBe(
       'Every letter you learn earns a real piece of Korean culture — a ramyeon bowl, a Chuseok moon, a swing from a Dano painting. Stage 1 ships 24 cards: 10 common, 8 uncommon, 4 rare, and 2 legendary.',
     );
@@ -37,6 +41,8 @@ describe('landing: sentences that take a value render the former text', () => {
   it('mini-games: the beta count shows only when there is one', () => {
     expect(l.games.eyebrow(8, 1)).toBe('8 mini-games + 1 in beta');
     expect(l.games.eyebrow(9, 0)).toBe('9 mini-games');
+    expect(l.games.eyebrow(1, 0)).toBe('1 mini-game');
+    expect(l.games.eyebrow(1, 2)).toBe('1 mini-game + 2 in beta');
   });
 
   it('Meet Hoya: the Korean phrase and its romanization are passed in', () => {
@@ -91,16 +97,16 @@ describe('landing: the lines other PRs rely on stay byte-identical', () => {
 });
 
 // The landing is a public surface (CLAUDE.md §1): no kids-only framing and no age range, in any locale.
-const KIDS_ONLY: readonly RegExp[] = [
-  /\b5\s*[–-]\s*11\b/,
-  /\bfor kids\b/i,
-  /\bkids who\b/i,
-  /\byour kid\b/i,
-  /\bpara niños\b/i,
-  /\bde 5 a 11 años\b/i,
-  /어린이용/,
-  /5\s*~\s*11\s*세/,
-];
+// One list (src/audience.ts), shared with apps/web audience-copy.test.ts.
+describe('KIDS_ONLY_FRAMING catches kids-only framing and age ranges in every locale (self-check)', () => {
+  const samples = ['Korean for kids', 'ages 5-11', 'a 5–7 year-old reading level', 'Coreano para niños', 'de 5 a 11 años', '어린이용 한글', '5~11세 어린이', '5～11세'];
+  for (const sample of samples) {
+    it(sample, () => expect(KIDS_ONLY_FRAMING.some(({ re }) => re.test(sample))).toBe(true));
+  }
+  it('passes copy for anyone, at any age', () => {
+    expect(KIDS_ONLY_FRAMING.some(({ re }) => re.test('Learn Hangul from zero — at any age.'))).toBe(false);
+  });
+});
 
 function outputs(tree: unknown, path: string): string[] {
   const value = lookup(tree, path);
@@ -111,14 +117,14 @@ function outputs(tree: unknown, path: string): string[] {
 
 describe('landing: audience and anti-shame in every locale', () => {
   for (const locale of LOCALES) {
-    it(`${locale}: no kids-only framing, no age range, no learner-banned word`, () => {
+    it(`${locale}: no kids-only framing, no age range, no caregiver-banned word`, () => {
       const tree = getMessages(locale).landing;
       for (const path of leafPaths(tree)) {
         const outs = outputs(tree, path);
         expect(outs.length, `landing.${path} renders`).toBeGreaterThan(0);
         for (const out of outs) {
-          for (const re of KIDS_ONLY) expect(re.test(out), `${path}: ${out}`).toBe(false);
-          expect(findBannedWord(out, locale, 'learner'), out).toBeNull();
+          for (const { name, re } of KIDS_ONLY_FRAMING) expect(re.test(out), `${path} (${name}): ${out}`).toBe(false);
+          expect(landingBannedWord(out, locale, `landing.${path}`), out).toBeNull();
         }
       }
     });

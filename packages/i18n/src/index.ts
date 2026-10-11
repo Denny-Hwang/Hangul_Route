@@ -19,7 +19,14 @@ export {
 } from './locales';
 export { pseudoLocaleEnabled, showAllLocalesEnabled } from './env';
 export { detectLocale } from './detect';
-export { fallbackPaths, getMessages, resolveLocale, type MessageLocale } from './resolve';
+export {
+  ENGLISH_AUTHORITATIVE_PREFIXES,
+  fallbackPaths,
+  getMessages,
+  isEnglishAuthoritative,
+  resolveLocale,
+  type MessageLocale,
+} from './resolve';
 export { lookup } from './tree';
 export { plural, type PluralForms } from './plural';
 export {
@@ -41,5 +48,6 @@ export {
   scanCopy,
   type BannedSurface,
 } from './banned';
+export { KIDS_ONLY_FRAMING, type AudiencePattern } from './audience';
 export { romanizationShown, type RomanizationMode } from './romanization';
 export { PSEUDO_LOCALE, pseudoLocalize, pseudoText } from './pseudo';

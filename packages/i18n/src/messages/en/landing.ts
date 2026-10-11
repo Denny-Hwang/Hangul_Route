@@ -13,10 +13,13 @@
  *   message: the page passes it in, with its romanization (§3.4 rule 5).
  * - `legal.privacy` and `legal.terms` are English-authoritative until legal review (decision L10,
  *   §4): an `es` / `ko` overlay must not translate them before that review; until then those
- *   locales show this English text under a localized notice (PR 11b/11c).
+ *   locales show this English text under a localized notice (PR 11b/11c). Enforced by
+ *   ENGLISH_AUTHORITATIVE_PREFIXES (resolve.ts): `fallbackPaths` leaves them out and
+ *   messages.structure.test.ts fails on an overlay leaf under them.
  * - The launch-news consent line (`waitlist.consentLead` + `contactLink` + `privacyLink`) must stay
  *   in step with CONSENT_TEXT_VERSION on the API.
  */
+import { plural } from '../../plural';
 
 /** Values the legal pages pass to the few sentences that name the contact address or the level labels. */
 export interface LegalValues {
@@ -78,16 +81,21 @@ export const landing = {
       games: { title: 'Mini-games', body: 'Tap, build, trace, and match — five-minute games that fit into any day, at any age.' },
       collect: {
         title: 'Collect culture',
-        body: (cards: number) => `Earn ${cards} Heritage Cards in Stage 1 — from kimchi to Chuseok to the gayageum.`,
+        body: (cards: number) =>
+          plural('en', cards, {
+            one: `Earn ${cards} Heritage Card in Stage 1 — from kimchi to Chuseok to the gayageum.`,
+            other: `Earn ${cards} Heritage Cards in Stage 1 — from kimchi to Chuseok to the gayageum.`,
+          }),
       },
     },
   },
   /** The heritage-card preview (`HeritageCardsPreview`); card titles and blurbs are content, not messages. */
   cards: {
     eyebrow: 'The reward loop',
-    title: (cards: number) => `${cards} Heritage Cards. One Korea, one card at a time.`,
+    title: (cards: number) =>
+      plural('en', cards, { one: `${cards} Heritage Card. One Korea, one card at a time.`, other: `${cards} Heritage Cards. One Korea, one card at a time.` }),
     body: (cards: number, common: number, uncommon: number, rare: number, legendary: number) =>
-      `Every letter you learn earns a real piece of Korean culture — a ramyeon bowl, a Chuseok moon, a swing from a Dano painting. Stage 1 ships ${cards} cards: ${common} common, ${uncommon} uncommon, ${rare} rare, and ${legendary} legendary.`,
+      `Every letter you learn earns a real piece of Korean culture — a ramyeon bowl, a Chuseok moon, a swing from a Dano painting. Stage 1 ships ${plural('en', cards, { one: `${cards} card`, other: `${cards} cards` })}: ${common} common, ${uncommon} uncommon, ${rare} rare, and ${legendary} legendary.`,
     listLabel: 'Stage 1 Heritage Cards',
     rarity: { common: 'Common', uncommon: 'Uncommon', rare: 'Rare', legendary: 'Legendary' },
     /** Accessible name of a card's Korean word: its romanization and its English meaning (content). */
@@ -96,7 +104,10 @@ export const landing = {
   },
   /** The mini-game gallery (`MiniGamesGallery`); game titles and blurbs are content, not messages. */
   games: {
-    eyebrow: (shipped: number, beta: number) => (beta > 0 ? `${shipped} mini-games + ${beta} in beta` : `${shipped} mini-games`),
+    eyebrow: (shipped: number, beta: number) => {
+      const games = plural('en', shipped, { one: `${shipped} mini-game`, other: `${shipped} mini-games` });
+      return beta > 0 ? `${games} + ${beta} in beta` : games;
+    },
     title: 'None of them feel like school.',
     body: 'Four families of practice — recognition, production, application, review — wrapped in 90-second loops. Hoya never says “wrong.”',
     listLabel: 'Stage 1 mini-games',
