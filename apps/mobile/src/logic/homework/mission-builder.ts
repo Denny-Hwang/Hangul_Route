@@ -69,6 +69,11 @@ export interface BuildMissionInput {
   pinned?: MissionPlan | null;
   /** Placed-out quests of the learner's route seed (F-PLC-001 section 3.7); omitted without a level check. */
   skipQuestIds?: ReadonlySet<string>;
+  /**
+   * The stages the cursor may offer (`cursorContext`, F-ROUTE-001 R-4a): the
+   * same predicate Results and My route use. Omitted means every playable stage.
+   */
+  isEntitled?: (stageKey: string) => boolean;
 }
 
 /** How far back a Quest counts as replayable (§3.1 — days N−1, N−2). */
@@ -110,21 +115,19 @@ function replayCandidates(snapshot: ProgressSnapshot, today: string): CompletedQ
 }
 
 /**
- * The Journey cursor, shared with the Results teaser (`logic/next-quest.ts`).
- * Once every offerable quest is done Home keeps offering the last one, as it
- * always has, rather than an empty "New" slot.
+ * The Journey cursor, shared with the Results teaser and My route
+ * (`logic/next-quest.ts`, told the same `isEntitled` and `skipQuestIds` by
+ * `cursorContext`). Home keeps its own replay fallback around it: once every
+ * offerable quest is done Home keeps offering the last one, as it always has,
+ * rather than an empty "New" slot.
  */
-function nextQuest(
-  snapshot: ProgressSnapshot,
-  quests: readonly Quest[],
-  episodes: readonly Episode[],
-  skipQuestIds: ReadonlySet<string> | undefined,
-): Quest | undefined {
-  const offerable = offerableQuests(quests, episodes);
+function nextQuest(input: BuildMissionInput): Quest | undefined {
+  const { snapshot, quests, episodes, skipQuestIds, isEntitled } = input;
+  const offerable = offerableQuests(quests, episodes, isEntitled);
   // A placed-out quest never played comes before a replay of the last quest.
   return (
-    nextQuestAfter({ snapshot, quests, episodes, skipQuestIds }) ??
-    (skipQuestIds === undefined ? undefined : nextQuestAfter({ snapshot, quests, episodes })) ??
+    nextQuestAfter({ snapshot, quests, episodes, isEntitled, skipQuestIds }) ??
+    (skipQuestIds === undefined ? undefined : nextQuestAfter({ snapshot, quests, episodes, isEntitled })) ??
     offerable[offerable.length - 1]
   );
 }
@@ -184,6 +187,37 @@ function fallbackCard(
   return null;
 }
 
+function newCard(quest: Quest, episodes: readonly Episode[]): MissionCard {
+  return {
+    slot: 2,
+    kind: 'new',
+    titleEn: quest.titleEn,
+    subtitle: 'new',
+    questId: quest.id,
+    episodeId: episodeOfQuest(episodes, quest.id)?.id,
+    collected: false,
+  };
+}
+
+/**
+ * The one exception to the day pin (F-ROUTE-001 R-4a, section 3.5): when a
+ * level check places out the quest pinned on the "New" card and the learner
+ * has not played it today, card (2) moves to the cursor, so Home names the
+ * same next quest as Results and My route. Cards (1) and (3) never move, and
+ * the pin stays when the cursor has nothing else to offer.
+ */
+function repinPlacedOut(cards: readonly MissionCard[], input: BuildMissionInput): readonly MissionCard[] {
+  const skip = input.skipQuestIds;
+  // Only the system "New" card re-pins; a caregiver or teacher assignment
+  // (`subtitle: 'assigned'`, `mergeAssignments`) keeps its slot.
+  const pinnedNew = cards.find((card) => card.slot === 2 && card.kind === 'new' && card.subtitle === 'new');
+  if (!skip || !pinnedNew?.questId || !skip.has(pinnedNew.questId)) return cards;
+  if (completedToday(input.snapshot, pinnedNew.questId, input.today)) return cards;
+  const upcoming = nextQuest(input);
+  if (!upcoming || skip.has(upcoming.id) || cards.some((card) => card.questId === upcoming.id)) return cards;
+  return cards.map((card) => (card === pinnedNew ? newCard(upcoming, input.episodes) : card));
+}
+
 export function buildTodaysMission(input: BuildMissionInput): MissionPlan {
   const { profileId, snapshot, quests, episodes, today } = input;
   const capabilities = input.capabilities ?? DEFAULT_CAPABILITIES;
@@ -193,7 +227,7 @@ export function buildTodaysMission(input: BuildMissionInput): MissionPlan {
   if (input.pinned && input.pinned.date === today && input.pinned.profileId === profileId) {
     return {
       ...input.pinned,
-      cards: input.pinned.cards.map((card) => ({
+      cards: repinPlacedOut(input.pinned.cards, input).map((card) => ({
         ...card,
         collected: card.questId ? completedToday(snapshot, card.questId, today) : card.collected,
       })),
@@ -213,18 +247,10 @@ export function buildTodaysMission(input: BuildMissionInput): MissionPlan {
   }
 
   // ② New — the Journey cursor.
-  const upcoming = nextQuest(snapshot, quests, episodes, input.skipQuestIds);
+  const upcoming = nextQuest(input);
   if (upcoming) {
     usedQuestIds.add(upcoming.id);
-    cards.push({
-      slot: 2,
-      kind: 'new',
-      titleEn: upcoming.titleEn,
-      subtitle: 'new',
-      questId: upcoming.id,
-      episodeId: episodeOfQuest(episodes, upcoming.id)?.id,
-      collected: false,
-    });
+    cards.push(newCard(upcoming, episodes));
   }
 
   // ③ Daily test when available, else slot ①'s chain again.
