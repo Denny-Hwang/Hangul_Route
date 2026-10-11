@@ -27,3 +27,4 @@ export * from './schemas/story-check';
 export * from './pillars';
 export * from './narration';
 export * from './schemas/story';
+export * from './schemas/audio';

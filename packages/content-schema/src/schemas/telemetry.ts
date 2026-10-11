@@ -47,6 +47,11 @@ export const TELEMETRY_EVENT_NAMES = [
   'stage.complete',
   'review.start',
   'review.complete',
+  // F-AUDIO-004 §3.14
+  'audio.capability_checked',
+  'audio.fallback_shown',
+  'audio.mute_changed',
+  'audio.playback_failed',
 ] as const;
 
 export const TelemetryEventNameSchema = z.enum(TELEMETRY_EVENT_NAMES);
