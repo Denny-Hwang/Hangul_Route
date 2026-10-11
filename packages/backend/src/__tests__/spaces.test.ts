@@ -264,6 +264,32 @@ describe('leave, remove, roster (§3.3, §3.4)', () => {
     expect((await get('/api/spaces/space:nope/roster', bearer('teacher'))).status).toBe(404);
   });
 
+  it('roster carries summary.placement (statuses and level) and never the per-question answers (F-PLC-001)', async () => {
+    const cls = await createSpace('teacher', 'class', 'A');
+    const suni = await registerLearner('device-suni0001', 'Suni');
+    await joinAs(cls.space.id, suni.auth, { code: cls.joinCode, learnerId: suni.learnerId });
+    const strands = { 'hangul-recognition': 'secure', 'sound-letter': 'secure', 'syllable-reading': 'getting-there', vocabulary: 'not-tested', sentences: 'not-tested' };
+    const placement = { takenAt: '2026-10-10T10:05:00.000Z', level: { stage: 'stage1', band: 2 }, oralStage: null, strands, beyondContent: false, overridden: true };
+    const result = {
+      id: 'placement:secret-run', startedAt: 't', completedAt: 't', source: 'home', testLocale: 'en', length: 'quick', revealMode: 'tap', bankVersion: 1, contentVer: '2026.10',
+      responses: [{ questionId: 'pitem:secret-question', outcome: 'wrong', chosenOptionId: 'b', assisted: false, ms: 900 }],
+      gates: [], strands, level: placement.level, oralStage: null, beyondContent: false, startQuestId: null, placedOutQuestIds: [], priorityTokens: [], needsStage: null, stopReason: 'complete',
+    };
+    const upload = await call('PUT', `/api/sync/learners/${suni.learnerId}/snapshot`, suni.auth, {
+      baseRev: 0,
+      snapshot: { ...snapshotFor(suni.learnerId), placements: [result] },
+      summary: { ...summary, placement },
+      schemaVer: 1,
+      contentVer: '2026.10',
+    });
+    expect(upload.status).toBe(200);
+    const roster = await get(`/api/spaces/${cls.space.id}/roster`, bearer('teacher'));
+    const data = roster.body.data as { learners: Array<{ summary: { placement?: unknown } | null }> };
+    expect(data.learners[0]?.summary?.placement).toEqual(placement);
+    expect(JSON.stringify(roster.body)).not.toContain('secret-question');
+    expect(JSON.stringify(roster.body)).not.toContain('secret-run');
+  });
+
   it('a school admin reads a child class roster without its code; archived spaces disappear', async () => {
     const sch = await createSpace('principal', 'school', 'School');
     const schCode = await issueCode('principal', sch.space.id);

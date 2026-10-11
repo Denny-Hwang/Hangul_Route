@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   AssessmentResponseSchema,
+  BackupFileSchema,
   GateResultSchema,
+  SnapshotPutSchema,
   MotivationSchema,
   OutcomeSchema,
   PLACEMENT_GATES,
@@ -213,5 +215,26 @@ describe('ProgressSummarySchema.placement (additive, optional)', () => {
     expect(PlacementSummarySchema.safeParse({ ...placementSummary, level: { stage: 'stage1', band: 9 } }).success).toBe(false);
     expect(PlacementSummarySchema.safeParse({ ...placementSummary, oralStage: 'stage3' }).success).toBe(true);
     expect(ProgressSummarySchema.safeParse({ ...summary, placement: { ...placementSummary, strands: {} } }).success).toBe(false);
+  });
+});
+
+describe('old payloads without the new fields still parse', () => {
+  it('a backup file written before placements restores with an empty list', () => {
+    const file = {
+      format: 'hangul-route-backup',
+      version: 1,
+      exportedAt: '2026-10-10T00:00:00.000Z',
+      profile: { id: 'profile:one', displayName: 'Suni', ageGroup: '5-7', avatar: 'hoya-orange', createdAt: '2026-09-01T00:00:00.000Z' },
+      snapshot,
+    };
+    const parsed = BackupFileSchema.safeParse(file);
+    expect(parsed.success).toBe(true);
+    if (parsed.success) expect(parsed.data.snapshot.placements).toEqual([]);
+  });
+
+  it('an old upload body parses and gets the empty list the Worker then preserves against', () => {
+    const body = SnapshotPutSchema.parse({ baseRev: 0, snapshot, summary, schemaVer: 1, contentVer: '2026.10' });
+    expect(body.snapshot.placements).toEqual([]);
+    expect(body.summary).not.toHaveProperty('placement');
   });
 });

@@ -3,6 +3,7 @@ import { Hono } from 'hono';
 import { dbFor } from '../db';
 import { fail, ok } from '../envelope';
 import { authorizeDevice, hashSecret, newDeviceSecret } from '../lib/device-auth';
+import { preserveAdditiveFields } from '../lib/additive-fields';
 import { tierForLearner } from '../lib/entitlement';
 import { id, type Learner, type SnapshotRecord } from '../store';
 import { inboxPlansFor } from './plans';
@@ -67,14 +68,16 @@ syncRoutes.put('/learners/:id/snapshot', async (c) => {
   const currentRev = current?.rev ?? 0;
   if (body.baseRev !== currentRev) return conflict(current);
 
+  // An older app build re-uploads without the newer additive fields: keep what is stored (lib/additive-fields.ts).
+  const kept = preserveAdditiveFields({ payload: body.snapshot, summary: body.summary }, current && { payload: current.payload, summary: current.summary });
   const record: SnapshotRecord = {
     learnerId,
     rev: currentRev + 1,
     schemaVer: body.schemaVer,
     contentVer: body.contentVer,
     deviceId: auth,
-    summary: body.summary,
-    payload: body.snapshot,
+    summary: kept.summary,
+    payload: kept.payload,
     updatedAt: new Date().toISOString(),
   };
   // Compare-and-set: another device may have written between the read above and here (SYNC-1).
