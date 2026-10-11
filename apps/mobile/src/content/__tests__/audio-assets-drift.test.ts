@@ -88,3 +88,10 @@ describe('__generated__/audio-assets.ts', () => {
     for (const j of jamoAll) if (j.audioRef) expect(refs).toContain(j.audioRef);
   });
 });
+
+describe('public/_headers', () => {
+  it('serves recorded clips (hashed names under /assets/assets/audio/) as immutable for a year', () => {
+    const headers = readFileSync(join(APP_ROOT, 'public/_headers'), 'utf8');
+    expect(headers).toMatch(/^\/assets\/assets\/audio\/\*\n\s+Cache-Control: public, max-age=31536000, immutable$/m);
+  });
+});
