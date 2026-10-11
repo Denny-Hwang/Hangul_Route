@@ -1,4 +1,4 @@
-import { LECTURE_MAX_BLOCKS, LectureDeckSchema, decodeDeck, type LectureBlock, type PlanItem, type WeekMeta } from '@hangul-route/content-schema';
+import { CATALOG, LECTURE_MAX_BLOCKS, LectureDeckSchema, decodeDeck, type LectureBlock, type PlanItem, type WeekMeta } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import type { PlanView, Roster, RosterLearner, SpaceListItem } from '../api';
 import {
@@ -120,10 +120,17 @@ describe('deck sources (F-TCH-004 §3.11)', () => {
   });
 });
 
+/** The shared catalogue's entries, read rather than copied, so a content edit to a quest does not break these tests. */
+const Q1 = CATALOG.quests.find((q) => q.id === 'quest:stage1-letters-q1');
+const LETTERS_CELL = CATALOG.cells.find((c) => c.episodeId === 'episode:stage1-letters');
+if (Q1 === undefined || LETTERS_CELL === undefined) throw new Error('the shared catalogue lost quest:stage1-letters-q1 or episode:stage1-letters');
+
 describe('outline rows', () => {
   it('names content blocks from the catalogue mirrors; an unknown id shows itself', () => {
-    expect(catalogueTitle({ kind: 'quest', id: 'quest:stage1-letters-q1' })).toBe('Meet g, n, d, l');
-    expect(catalogueTitle({ kind: 'episode', id: 'episode:stage1-letters' })).toBe('Meet the Letters');
+    expect(catalogueTitle({ kind: 'quest', id: 'quest:stage1-letters-q1' })).toBe(Q1.title);
+    expect(Q1.title).not.toBe('quest:stage1-letters-q1');
+    expect(catalogueTitle({ kind: 'episode', id: 'episode:stage1-letters' })).toBe(LETTERS_CELL.title);
+    expect(LETTERS_CELL.title).not.toBe('episode:stage1-letters');
     expect(catalogueTitle({ kind: 'vocab', topicId: 'vocab-topic:food' })).toBe('Food');
     expect(catalogueTitle({ kind: 'story', storyId: 'story:x', checks: true }, [{ id: 'story:x', titleEn: 'X story', minutes: 5 }])).toBe('X story');
     expect(catalogueTitle({ kind: 'quest', id: 'quest:unknown' })).toBe('quest:unknown');
@@ -147,8 +154,10 @@ describe('outline rows', () => {
 
 describe('about-minutes from the catalogue (F-TCH-004 §3.11)', () => {
   it('quests and episodes from the shared catalogue (cell minutes), vocabulary topics from its topics, stories from the lecture catalogue, quiz and activity from the block', () => {
-    expect(blockMinutes({ kind: 'quest', id: 'quest:stage1-letters-q1' })).toBe(4);
-    expect(blockMinutes({ kind: 'episode', id: 'episode:stage1-letters' })).toBe(12);
+    expect(blockMinutes({ kind: 'quest', id: 'quest:stage1-letters-q1' })).toBe(Q1.minutes);
+    expect(Q1.minutes).toBeGreaterThan(0);
+    expect(blockMinutes({ kind: 'episode', id: 'episode:stage1-letters' })).toBe(LETTERS_CELL.minutes);
+    expect(LETTERS_CELL.minutes).toBeGreaterThan(0);
     expect(blockMinutes({ kind: 'quiz', from: 'previous', rounds: 5 })).toBe(5);
     expect(blockMinutes({ kind: 'activity', preset: 'air-write', minutes: 3 })).toBe(3);
     expect(blockMinutes({ kind: 'revisit', chars: ['ㄱ', 'ㄴ'] })).toBe(4);
@@ -173,7 +182,7 @@ describe('about-minutes from the catalogue (F-TCH-004 §3.11)', () => {
         { kind: 'quest', id: 'quest:unknown' },
         { kind: 'quiz', from: 'all', rounds: 2 },
       ]),
-    ).toBe(6);
+    ).toBe(Q1.minutes + 2);
   });
 });
 
