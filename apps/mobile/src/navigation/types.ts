@@ -13,7 +13,11 @@ export type RootStackParamList = {
   Onboarding: NavigatorScreenParams<OnboardingStackParamList>;
   Main: NavigatorScreenParams<MainTabParamList>;
   EpisodeDetail: { episodeId: string };
-  QuestPlayer: { questId: string; episodeId: string };
+  /**
+   * `resume`: open a story quest on its `story-read` step when the learner has a
+   * bookmark for it at the quest's level (F-STORY-004 §3.8); otherwise step 0.
+   */
+  QuestPlayer: { questId: string; episodeId: string; resume?: boolean };
   Results: {
     questId: string;
     episodeId: string;

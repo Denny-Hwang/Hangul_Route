@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { readGameHandlers, readGameTarget } from '../../logic/story/read-game';
+import { sceneCountOf } from '../../logic/story/resume';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useQuestRunStore } from '../../store/quest-run-store';
 import { StoryReaderView } from '../story/StoryReaderView';
@@ -26,7 +27,7 @@ interface Props {
 export function StoryReadGame({ scope, onFinish, onBack }: Props): React.ReactElement {
   const { story, level } = useMemo(() => readGameTarget(scope), [scope]);
   const profileId = useProfileStore((s) => activeProfileSelector(s)?.id ?? null);
-  const bookmark = useReaderBookmark(profileId, story?.id ?? scope.story?.storyId ?? '', level);
+  const bookmark = useReaderBookmark(profileId, story?.id ?? scope.story?.storyId ?? '', level, sceneCountOf(story, level));
 
   // Rebuilt on every render on purpose: the shell's `onFinish` / `onBack` are new each render, and
   // the reader reads its callbacks through a live ref, so no effect re-runs on a new identity.

@@ -50,11 +50,13 @@ import {
 import { episodeReturn } from '../../logic/layout/quest-return';
 import { applyQuestResult, type QuestResultOutcome } from '../../logic/results-award';
 import { resultsCheerMessage, resultsHeadline } from '../../logic/results-copy';
+import { bookmarkClearedByResults } from '../../logic/story/resume';
 import { useReducedMotion } from '../../platform/motion';
 import { track } from '../../platform/telemetry';
 import type { RootStackParamList } from '../../navigation/types';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
+import { useStoryStore } from '../../store/story-store';
 import { effectiveTier, useTierStore } from '../../store/tier-store';
 
 type ResultsMessages = Messages['learner']['results'];
@@ -115,6 +117,10 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
       },
     );
     setOutcome(earned);
+    // A finished story's bookmark goes with the score write (F-STORY-004 §3.8).
+    const stories = useStoryStore.getState();
+    const finishedStory = bookmarkClearedByResults(quest, total, (storyId) => stories.getBookmark(profile.id, storyId));
+    if (finishedStory) stories.clearBookmark(profile.id, finishedStory);
   }, [profile, quest, questId, episodeId, stars, correct, total, retries, recordQuestComplete, unlockCards, recordCatchUp]);
 
   // Android/web read the live region above (a second announcement would double-read);

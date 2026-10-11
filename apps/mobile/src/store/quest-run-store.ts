@@ -23,7 +23,12 @@ interface State {
 }
 
 interface Actions {
-  beginQuest: (questId: string, episodeId: string) => void;
+  /**
+   * Start a run. `startStepIndex` (default 0) lets a resumed story quest open
+   * on its `story-read` step (F-STORY-004 §3.8); anything that is not a whole
+   * number of 0 or more starts at 0.
+   */
+  beginQuest: (questId: string, episodeId: string, startStepIndex?: number) => void;
   /**
    * Report one answer in a minigame round. Games call this on every answer;
    * only the first answer for a round key (within the current step) scores.
@@ -50,7 +55,13 @@ const blankRun = {
 export const useQuestRunStore = create<State & Actions>((set, get) => ({
   ...blankRun,
 
-  beginQuest: (questId, episodeId) => set({ ...blankRun, questId, episodeId }),
+  beginQuest: (questId, episodeId, startStepIndex = 0) =>
+    set({
+      ...blankRun,
+      questId,
+      episodeId,
+      stepIndex: Number.isInteger(startStepIndex) && startStepIndex > 0 ? startStepIndex : 0,
+    }),
 
   answerRound: (roundKey, correct) =>
     set((s) => {
