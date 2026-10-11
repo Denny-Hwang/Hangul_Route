@@ -129,7 +129,7 @@ Columns: shelf id = `episode:shelf-<slug>`; **home cell** = `<recommendedStage>-
 | 16 | janggyeong-panjeon | Guarded by the Wind | stage2-crafts | crafts | 2 | 5 | – | culture 10 |  | A2, D3 | hangul-printing |
 | 17 | jagyeongnu-water-clock | Jang Yeongsil and the Clock That Rang by Itself | stage2-crafts | crafts | 2 | 5 | – | culture 12 |  | E3 | science-art-life |
 | 18 | pansori-tales | Pansori Tales: Heungbu's Swallow and the Clever Rabbit (Traditional Tales) | stage2-crafts | crafts | 2 | 6 | – | story-time 6 |  | C3, D5* | seasons-tales |
-| 19 | seungjeongwon-ilgi-every-day | The Royal Secretaries' Everyday Diary | stage3-letters | letters | 3 | 5 | – | culture 13 |  | A4 | records-joseon |
+| 19 | seungjeongwon-ilgi-every-day | The Royal Secretariat's Everyday Diary | stage3-letters | letters | 3 | 5 | – | culture 13 |  | A4 | records-joseon |
 | 20 | nanjung-ilgi | Admiral Yi's Diary | stage3-letters | letters | 3 | 4 | – | culture 14 |  | A4 | science-art-life |
 | 21 | donguibogam | Heo Jun's Treasured Mirror of Medicine | stage3-life | life | 3 | 5 | – | culture 15 |  | E4 | science-art-life |
 | 22 | ilseongnok-daily-reflection | King Jeongjo's Diary of Daily Reflection | stage4-letters | letters | 4 | 4 | – | culture 16 |  | A4 | records-joseon |

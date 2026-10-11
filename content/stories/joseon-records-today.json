@@ -1,11 +1,11 @@
 {
   "v": 1,
   "id": "story:joseon-records-today",
-  "state": "draft",
+  "state": "ready",
   "contentVer": 1,
   "title": {
     "ko": "오래된 기록, 새로운 발견",
-    "romanization": "",
+    "romanization": "Oraedoen girok, saeroun balgyeon",
     "en": "Old Records, New Discoveries"
   },
   "summaryEn": "How do Joseon records help people today? Hoya sees a fortress repaired from uigwe drawings, a festival that recreates a royal procession, scientists reading old weather notes, and the Annals open to everyone online.",
@@ -14,9 +14,9 @@
   "recommendedStage": 6,
   "minutes": 4,
   "learningGoalsEn": [
-    "Give at least two ways people use Joseon records today (restoring Hwaseong, recreating a procession, studying past weather, reading the Annals online).",
+    "Know at least two ways people use Joseon records today (restoring Hwaseong, recreating a procession, studying past weather, reading the Annals online).",
     "Know that the Annals, Seungjeongwon Ilgi, Uigwe and Ilseongnok are all on UNESCO's Memory of the World Register.",
-    "Say 기록은 보물이에요 and recognize 화성, 성, 행렬 and 날씨."
+    "Read and recognize 기록은 보물이에요 (girogeun bomurieyo), 화성 (Hwaseong), 성 (seong), 행렬 (haengnyeol) and 날씨 (nalssi)."
   ],
   "origin": {
     "type": "documented",
@@ -114,9 +114,9 @@
     },
     {
       "id": "suwon-hwaseong-munhwaje",
-      "ko": "수원화성문화제",
-      "romanization": "",
-      "en": "",
+      "ko": "수원 화성 문화제",
+      "romanization": "Suwon Hwaseong Munhwaje",
+      "en": "Suwon Hwaseong Cultural Festival",
       "kind": "term"
     }
   ],
@@ -128,20 +128,23 @@
         {
           "id": "s1",
           "narrationEn": "Hoya has one more question: what do these old records do for us today? Let's visit some places where Joseon records are still at work.",
+          "captionEn": "Hoya asks what old records do today",
           "line": {
             "ko": "왜 기록할까요?",
             "romanization": "Wae girokalkkayo?",
             "en": "Why do we keep records?",
-            "speaker": "narrator"
+            "speaker": "hoya"
           },
           "factIds": [],
           "framing": true,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Hoya with a small backpack standing at a crossroads with signposts shaped like a book, a fortress and a cloud (no text)."
         },
         {
           "id": "s2",
-          "narrationEn": "Suwon Hwaseong fortress was finished in 1796. Every step of the building work was recorded in the Hwaseong Seongyeok Uigwe, with drawings of buildings and machines, and the sizes and amounts of materials.",
+          "narrationEn": "Suwon Hwaseong Fortress was finished in 1796. Every step of the building work was recorded in the Hwaseong Seongyeok Uigwe, with drawings of buildings and machines, and the sizes and amounts of materials.",
+          "captionEn": "Hwaseong Fortress, recorded step by step",
           "keyword": {
             "id": "hwaseong",
             "ko": "화성",
@@ -154,11 +157,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "A stone-and-brick fortress wall with a gate tower; beside it, an open book showing a drawing of a lifting machine with pulleys."
         },
         {
           "id": "s3",
           "narrationEn": "Later, parts of the fortress were damaged. Workers followed the uigwe to restore it to its original shape, and repairs still rely on this record today.",
+          "captionEn": "Repairing the fortress from the uigwe",
           "line": {
             "ko": "성을 고쳐요.",
             "romanization": "Seongeul gochyeoyo.",
@@ -170,11 +175,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Modern workers in helmets fitting stones into a fortress wall while one checks a page of old drawings on a tablet."
         },
         {
           "id": "s4",
           "narrationEn": "Today, Suwon's Hwaseong Cultural Festival, the {kw:suwon-hwaseong-munhwaje}, includes a recreation of King Jeongjo's grand royal procession, based on the uigwe of his trip.",
+          "captionEn": "A festival recreates the royal procession",
           "keyword": {
             "id": "haengnyeol",
             "ko": "행렬",
@@ -187,11 +194,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "A modern street festival: people in colorful Joseon costumes marching with flags and a palanquin, families watching and waving."
         },
         {
           "id": "s5",
-          "narrationEn": "Scientists can study the weather notes in the Seungjeongwon Ilgi, written day after day for nearly 300 years, to learn about nature in the past.",
+          "narrationEn": "Scientists can study the daily weather notes in the Seungjeongwon Ilgi, which covers nearly 300 years, to learn about nature in the past.",
+          "captionEn": "Scientists can study old weather notes",
           "keyword": {
             "id": "nalssi-girok",
             "ko": "날씨 기록",
@@ -209,15 +218,17 @@
               "factIds": [
                 "f4"
               ],
-              "rationaleEn": "The diary covers 288 years (1623-1910); narration rounds that up to nearly 300.",
+              "rationaleEn": "The surviving diaries cover 288 years (1623-1910); narration rounds that to nearly 300.",
               "timeRelative": false
             }
           ],
+          "artPending": true,
           "artBrief": "A scientist at a computer showing a simple line chart, with an old diary open on the desk and a window showing rain clouds."
         },
         {
           "id": "s6",
           "narrationEn": "The Annals were written in classical Chinese, which is hard for most people today. Translators turned them into modern Korean, and now anyone can read the translation online, along with the original text.",
+          "captionEn": "Anyone can read the Annals online",
           "line": {
             "ko": "누구나 읽을 수 있어요.",
             "romanization": "Nuguna ilgeul su isseoyo.",
@@ -229,11 +240,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "A child and a grandparent looking at a tablet showing two columns of text shapes, one old style and one modern (no readable characters)."
         },
         {
           "id": "s7",
           "narrationEn": "All four records you met, the Annals, the Seungjeongwon Ilgi, the uigwe and the Ilseongnok, are on UNESCO's Memory of the World Register.",
+          "captionEn": "On UNESCO's Memory of the World",
           "keyword": {
             "id": "yuneseuko",
             "ko": "유네스코",
@@ -245,21 +258,33 @@
             "f6"
           ],
           "framing": false,
-          "approximations": [],
+          "approximations": [
+            {
+              "text": "All four records",
+              "factIds": [
+                "f6"
+              ],
+              "rationaleEn": "f6 lists four records: the Annals, the Seungjeongwon Ilgi, the Uigwe and the Ilseongnok.",
+              "timeRelative": false
+            }
+          ],
+          "artPending": true,
           "artBrief": "Four old books standing side by side on a shelf with a soft glow, each a different cover color."
         },
         {
           "id": "s8",
           "narrationEn": "Hoya smiles. Thanks to people who wrote carefully long ago, we can still learn from the past. 'Records are treasures!' What will you write down today?",
+          "captionEn": "Records are treasures",
           "line": {
             "ko": "기록은 보물이에요.",
             "romanization": "Girogeun bomurieyo.",
             "en": "Records are treasures.",
-            "speaker": "narrator"
+            "speaker": "hoya"
           },
           "factIds": [],
           "framing": true,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Hoya holding up a small notebook and brush, grinning, with the fortress, books and a sunny sky behind him."
         }
       ],
@@ -285,6 +310,7 @@
               "isCorrect": true
             }
           ],
+          "explainEn": "Workers followed the Hwaseong Seongyeok Uigwe to restore the fortress to its original shape, and repairs still use it.",
           "factIds": [
             "f2"
           ]
@@ -310,6 +336,7 @@
               "isCorrect": false
             }
           ],
+          "explainEn": "The Seungjeongwon Ilgi recorded the weather every day, so scientists can use it to study nature in the past.",
           "factIds": [
             "f4"
           ]
@@ -335,6 +362,7 @@
               "isCorrect": false
             }
           ],
+          "explainEn": "The Annals, the Seungjeongwon Ilgi, the Uigwe and the Ilseongnok are all on UNESCO's Memory of the World Register.",
           "factIds": [
             "f6"
           ]
