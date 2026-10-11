@@ -10,6 +10,8 @@ interface OptionCardProps {
   onPress: () => void;
   /** Defaults to "<label>. <description>". */
   accessibilityLabel?: string;
+  /** Language tag of the label when it is not in the UI language (an endonym), so a screen reader says it right. */
+  lang?: string;
   testID?: string;
 }
 
@@ -27,6 +29,7 @@ export function OptionCard({
   selected,
   onPress,
   accessibilityLabel,
+  lang,
   testID,
 }: OptionCardProps): React.ReactElement {
   const hasDescription = description !== undefined && description !== '';
@@ -38,6 +41,7 @@ export function OptionCard({
       accessibilityState={{ checked: selected }}
       // RN-web drops `aria-checked` for an unchecked radio; a radio must always say its state.
       aria-checked={selected}
+      {...(lang === undefined ? {} : { lang, accessibilityLanguage: lang })}
       accessibilityLabel={accessibilityLabel ?? (hasDescription ? `${label}. ${description}` : label)}
       style={{
         flexDirection: 'row',
