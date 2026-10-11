@@ -108,6 +108,29 @@ describe('classSeatCheck (F-SPACE-002 §4.3)', () => {
     expect(await classSeatCheck(db, dest, 'profile:x', now, { excludeSpaceId: 'space:c0' })).toBe('cap_class');
   });
 
+  it('checks in the /join order: the learner cap before the school cap', async () => {
+    await put(space('space:sch', 'school', 'principal'));
+    const dest = await put(space('space:dest', 'class', 't4', 'space:sch'));
+    await db.applyEntitlement({ subjectKind: 'space', subjectId: 'space:sch', planKey: 'school_seat', status: 'active', provider: 'manual', seats: 2 }, now);
+    await fill(dest.id, 2);
+    for (const [i, owner] of ['t1', 't2', 't3'].entries()) {
+      await put(space(`space:c${i}`, 'class', owner));
+      await join(`space:c${i}`, 'profile:x');
+    }
+    expect(await classSeatCheck(db, dest, 'profile:x', now)).toBe('cap_learner');
+    expect(await classSeatCheck(db, dest, 'profile:x', now, { excludeSpaceId: 'space:c0' })).toBe('cap_school');
+  });
+
+  it('a move from an archived class of the same full school takes a new school seat', async () => {
+    await put(space('space:sch', 'school', 'principal'));
+    const src = await put({ ...space('space:src', 'class', 't1', 'space:sch'), archivedAt: 't' });
+    const dest = await put(space('space:dest', 'class', 't2', 'space:sch'));
+    await db.applyEntitlement({ subjectKind: 'space', subjectId: 'space:sch', planKey: 'school_seat', status: 'active', provider: 'manual', seats: 2 }, now);
+    await join(src.id, 'profile:x');
+    await fill(dest.id, 2);
+    expect(await classSeatCheck(db, dest, 'profile:x', now, { excludeSpaceId: src.id })).toBe('cap_school');
+  });
+
   it('is skipped (null) when the learner is already a member of the destination', async () => {
     const dest = await put(space('space:dest', 'class', 't4'));
     await fill(dest.id, 19);

@@ -110,7 +110,12 @@ describe('tierFromSpaces (F-SPACE-002 §4.3, T7: one tier rule in one place)', (
     }
     return out;
   };
-  const member = (spaceId: string, learnerId: string) => db.addMembership({ spaceId, memberKind: 'learner', memberId: learnerId, role: 'student', joinedAt: 't' });
+  // Distinct, ascending joinedAt so the membership order (memory: insertion; D1: ORDER BY joined_at) is the same on both backends.
+  let joinSeq = 0;
+  const member = (spaceId: string, learnerId: string) => {
+    joinSeq += 1;
+    return db.addMembership({ spaceId, memberKind: 'learner', memberId: learnerId, role: 'student', joinedAt: new Date(Date.UTC(2026, 0, 1, 0, 0, joinSeq)).toISOString() });
+  };
 
   it('agrees with tierForLearner and the pre-extraction loop over every fixture', async () => {
     await db.putSpace(space('space:fam-free', 'family', 'mom'));

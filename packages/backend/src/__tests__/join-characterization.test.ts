@@ -122,6 +122,17 @@ const cases: Case[] = [
     },
   },
   {
+    name: 'three classes and a full school: the learner cap answers first',
+    expected: { status: 409, code: 'cap_learner' },
+    setup: async () => {
+      const l = await registerLearner();
+      const { cls } = await schoolWithSeats(2);
+      await fill(cls.id, 2);
+      await classesFor(l.learnerId, 3);
+      return { space: cls, ...l };
+    },
+  },
+  {
     name: 'a full free class',
     expected: { status: 409, code: 'cap_class' },
     setup: async () => {

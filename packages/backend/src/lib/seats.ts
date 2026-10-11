@@ -31,8 +31,12 @@ export async function activeClassesOf(db: Db, learnerId: string, excludeSpaceId?
  * `null` when there is room, when the learner is already a member (no new
  * seat), and for spaces that are not classes. For a transfer,
  * `excludeSpaceId` is the source class, so a learner in three classes can
- * swap one for another; a move inside one school takes no new school seat
- * because `schoolIsFull` already counts the learner there.
+ * swap one for another. It must be a class the learner currently belongs to:
+ * it is trusted as given (an unrelated id excludes nothing), so the caller
+ * validates the source membership first. A move from a live class of the same
+ * school takes no new school seat (`schoolIsFull` counts the learner through
+ * live sibling classes); a move from an archived class does, since archived
+ * classes hold no school seat.
  */
 export async function classSeatCheck(db: Db, cls: Space, learnerId: string, now: Date, opts?: { excludeSpaceId?: string }): Promise<SeatBlock | null> {
   if (cls.kind !== 'class') return null;
