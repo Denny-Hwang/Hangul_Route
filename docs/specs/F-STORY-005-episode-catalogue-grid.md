@@ -88,7 +88,7 @@ export const CatalogueFieldsSchema = z.object({
 // Story embeds the two fields directly, F-STORY-001 §3.2.1
 ```
 
-The generator copies `pillarTags` and `companionId` from a story to its shelf episode, so the plan catalogue (F-PLAN-002) can group episodes without loading stories. Lesson episodes carry them in `episodes.ts`; tagging the eight shipped lessons is an authoring task in PR 5.2 (default `[]`; a proposed first-pass mapping for Stage 1 is Letters A1, Life B5, Rites B5, Nature D2, Crafts E1, to be confirmed by the owner).
+The generator copies `pillarTags` and `companionId` from a story to its shelf episode, so the plan catalogue (F-PLAN-002) can group episodes without loading stories. Lesson episodes carry them in `episodes.ts`; tagging the eight shipped lessons is an authoring task in PR 5.2 (shipped mapping: Stage 1 Letters A1, Life B5, Rites B5, Nature D2, Crafts E1; `stage2-nature` D2; `stage2-life` and `stage4-rites` stay `[]` because no sub-theme fits everyday food words or greeting dialogues; frozen by `episodes.test.ts`).
 
 Rules, each with a test (lint in `story-lint.ts` for stories, `superRefine` for episodes): every tag exists in `PILLAR_TAGS`; a grid episode has `order === themes[theme].order` and `placement` absent or `'grid'`; a story episode with `placement: 'grid'` has `stage === 'stage5'` at launch and 2-3 `questIds` unless `status === 'preview'`; `volume >= 2` ⇒ `id` ends `-v<volume>`. Shelf-episode conventions (one quest, `stage1`, `order >= 100`) stay F-STORY-004's integrity tests.
 
@@ -389,7 +389,7 @@ Ships dark: with no reviewed story in the bundle `cellModel` returns the same `l
 | 5.5b | `feat(mobile)`: `CellStories` route and screen (`StoryTile` reuse), lesson-page row, "home cell" pill on `StoryEpisodeDetail`, `journey.cell_stories_opened` + e2e | 5.5a, F-STORY-004 PR 4.5 (`StoryTile`) and 4.6 |
 | 5.6 | `content`: `content/story-skeleton.ts` and the entries of `content/books.ts` (the file exists since 5.2); Stage 5 rites book first, then the other cells as their `read` tiers pass review | F-STORY-002/003, reviewed `read` tiers |
 | 5.7 | `ci`: the three lint rules of §3.9, PR-template "Image rights" line, QA-process section in `content/stories/README.md` and `docs/workflows/story-content-qa.md`, web parity test (`MIN_VERIFICATION_PASSES = 3` is already fixed in F-STORY-001 §3.6) | F-STORY-001 PR 1.2 (lint) and 1.0 (README) |
-| 5.8 | `feat(mobile)`: `MAX_EPISODES_PER_CELL = 2` path — volume dots in `GridCell`, "first incomplete volume" open rule, `isCellComplete` in the look | first volume-2 book |
+| 5.8 | `feat(mobile)`: `MAX_EPISODES_PER_CELL = 2` path — volume dots in `GridCell`, "first incomplete volume" open rule, `isCellComplete` in the look; stage completion moved to cells too (`awards/derive.ts` `isStageComplete` and `my-route/stage-rows.ts` `isDerivedComplete`/`completionState` still count grid episodes after 5.2, so a preview volume 2 would block stage completion; the `it.todo` in `journey.test.ts` becomes a real test) | first volume-2 book |
 
 ## 7. Dependencies
 

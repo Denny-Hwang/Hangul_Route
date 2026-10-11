@@ -7,6 +7,14 @@ import { storyEpisodes } from './stories';
  * Episodes: 7 stages × 5 themes = 35 cells.
  * Stage 1 episodes are fully populated. Stages 2–7 are `preview` placeholders
  * so the grid is fully navigable and shows what's coming.
+ *
+ * `pillarTags` (F-STORY-005 §3.2, §3.8) are metadata for the catalogue and
+ * analytics, never shown to learners. Each tag names the blueprint 04 sub-theme
+ * the lesson's content actually belongs to: A1 훈민정음 (the letters), B5 명절과
+ * 세시풍속 (the family table and the Seollal/Chuseok lesson), D2 산과 강 (the
+ * nature lessons), E1 한지와 붓 (paper, kites and folk play). Two lessons stay
+ * `[]` on purpose: `stage2-life` (everyday food words) and `stage4-rites`
+ * (greeting dialogues) fit no sub-theme, and a wrong tag is worse than none.
  */
 
 const stage1Episodes: Episode[] = [
@@ -25,6 +33,7 @@ const stage1Episodes: Episode[] = [
     ],
     rewardCardIds: ['card:book', 'card:hanji', 'card:brush', 'card:ink', 'card:origami'],
     estimatedMinutes: 12,
+    pillarTags: ['A1'],
     status: 'shipped',
   },
   {
@@ -38,6 +47,7 @@ const stage1Episodes: Episode[] = [
     questIds: ['quest:stage1-life-q1', 'quest:stage1-life-q2'],
     rewardCardIds: ['card:kimchi', 'card:rice', 'card:chopsticks', 'card:hanbok', 'card:kimbap', 'card:family-table'],
     estimatedMinutes: 10,
+    pillarTags: ['B5'],
     status: 'shipped',
   },
   {
@@ -51,6 +61,7 @@ const stage1Episodes: Episode[] = [
     questIds: ['quest:stage1-rites-q1'],
     rewardCardIds: ['card:seollal', 'card:chuseok', 'card:tteokguk', 'card:songpyeon', 'card:sebae'],
     estimatedMinutes: 8,
+    pillarTags: ['B5'],
     status: 'shipped',
   },
   {
@@ -64,6 +75,7 @@ const stage1Episodes: Episode[] = [
     questIds: ['quest:stage1-nature-q1'],
     rewardCardIds: ['card:magpie', 'card:mugunghwa', 'card:mountain', 'card:sea', 'card:moon'],
     estimatedMinutes: 9,
+    pillarTags: ['D2'],
     status: 'shipped',
   },
   {
@@ -77,6 +89,7 @@ const stage1Episodes: Episode[] = [
     questIds: ['quest:stage1-crafts-q1'],
     rewardCardIds: ['card:yutnori', 'card:jegi', 'card:kite', 'card:top', 'card:pottery'],
     estimatedMinutes: 10,
+    pillarTags: ['E1'],
     status: 'shipped',
   },
 ];
@@ -93,6 +106,7 @@ const stage2Episodes: Episode[] = [
     questIds: ['quest:stage2-life-q1'],
     rewardCardIds: ['card:sagwa', 'card:uyu', 'card:ppang', 'card:dosirak'],
     estimatedMinutes: 6,
+    pillarTags: [],
     status: 'shipped',
   },
   {
@@ -106,6 +120,7 @@ const stage2Episodes: Episode[] = [
     questIds: ['quest:stage2-nature-q1'],
     rewardCardIds: ['card:haneul', 'card:kkot', 'card:namu', 'card:byeol'],
     estimatedMinutes: 6,
+    pillarTags: ['D2'],
     status: 'shipped',
   },
 ];
@@ -122,6 +137,7 @@ const stage4Episodes: Episode[] = [
     questIds: ['quest:stage4-rites-q1'],
     rewardCardIds: ['card:annyeong', 'card:gamsa', 'card:chingu', 'card:insa'],
     estimatedMinutes: 5,
+    pillarTags: [],
     status: 'shipped',
   },
 ];
@@ -194,10 +210,21 @@ const upperStageTitles: Record<string, Record<string, string>> = {
  */
 export const MAX_EPISODES_PER_CELL = 1;
 
-const cellKey = (e: Pick<Episode, 'stage' | 'theme'>): string => `${e.stage}:${e.theme}`;
+/** The key of an episode's grid cell (stage × theme); the one definition every cell count uses. */
+export const cellKey = (e: Pick<Episode, 'stage' | 'theme'>): string => `${e.stage}:${e.theme}`;
 
 /** Hand-written grid episodes: the lessons and the Stage 5 books (`books.ts`). */
-const handWritten: Episode[] = [...stage1Episodes, ...stage2Episodes, ...stage4Episodes, ...bookEpisodes];
+export const handWrittenEpisodes: readonly Episode[] = [...stage1Episodes, ...stage2Episodes, ...stage4Episodes, ...bookEpisodes];
+
+/**
+ * The cells of `list` holding more grid episodes than `max` (F-STORY-005 §3.1
+ * rule 1). The bundle must return `[]`; shelf episodes never count.
+ */
+export function cellsOverCapacity(list: readonly Episode[], max: number = MAX_EPISODES_PER_CELL): string[] {
+  const counts = new Map<string, number>();
+  for (const e of gridEpisodes(list)) counts.set(cellKey(e), (counts.get(cellKey(e)) ?? 0) + 1);
+  return [...counts].filter(([, n]) => n > max).map(([key]) => key);
+}
 
 /**
  * "Coming soon" previews for every cell beyond Stage 1 that no grid episode of
@@ -215,7 +242,11 @@ export function previewEpisodesFor(claimers: readonly Episode[]): Episode[] {
 }
 
 /** `storyEpisodes`: the generated shelf episodes (F-STORY-001 §3.9). */
-export const episodesAll: Episode[] = [...handWritten, ...storyEpisodes, ...previewEpisodesFor(handWritten)];
+export const episodesAll: Episode[] = [
+  ...handWrittenEpisodes,
+  ...storyEpisodes,
+  ...previewEpisodesFor(handWrittenEpisodes),
+];
 
 export function episodeById(id: string): Episode | undefined {
   return episodesAll.find((e) => e.id === id);
@@ -242,7 +273,9 @@ export function shelfEpisodes<E extends Pick<Episode, 'placement'>>(list: readon
 
 /**
  * The grid episodes of the cell at `stage` × `theme`, sorted by volume, then
- * order (F-STORY-005 §3.5). A shelf episode is never in a cell.
+ * order (F-STORY-005 §3.5). A shelf episode is never in a cell. A grid
+ * episode's `order` equals its theme's order, so within a cell volume is the
+ * key that decides; equal volumes keep list order (the sort is stable).
  */
 export function episodesFor(stage: string, theme: string, list: readonly Episode[] = episodesAll): Episode[] {
   return list

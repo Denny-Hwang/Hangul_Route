@@ -180,4 +180,9 @@ describe('isCellComplete (F-STORY-005 §3.5)', () => {
     expect(isCellComplete([], [])).toBe(false);
     expect(isCellComplete([ep('soon', 'stage6', 'preview', [])], [])).toBe(false);
   });
+
+  // Before MAX_EPISODES_PER_CELL becomes 2 (PR 5.8): stage completion still counts
+  // grid episodes in awards/derive.ts `isStageComplete` and my-route/stage-rows.ts
+  // `isDerivedComplete`/`completionState`, while stageAvailability counts cells.
+  it.todo('a cell with a shipped volume 1 and a preview volume 2 still lets its stage complete (PR 5.8)');
 });

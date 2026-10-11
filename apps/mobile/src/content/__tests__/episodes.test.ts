@@ -1,12 +1,15 @@
-import type { Episode } from '@hangul-route/content-schema';
+import { EpisodeSchema, isPillarTag, type Episode } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { bookEpisodes } from '../books';
 import {
   MAX_EPISODES_PER_CELL,
+  cellKey,
+  cellsOverCapacity,
   episodeFor,
   episodesAll,
   episodesFor,
   gridEpisodes,
+  handWrittenEpisodes,
   isGridEpisode,
   previewEpisodesFor,
   shelfEpisodes,
@@ -93,15 +96,6 @@ describe('episodeFor', () => {
  * hand-written grid episode claims, every cell holds at most
  * `MAX_EPISODES_PER_CELL` grid episodes, and the grid is unchanged (golden).
  */
-const cellKey = (e: Pick<Episode, 'stage' | 'theme'>): string => `${e.stage}:${e.theme}`;
-
-/** Cells of `list` holding more grid episodes than `max` (the invariant the bundle must keep). */
-function overfullCells(list: readonly Episode[], max: number): string[] {
-  const counts = new Map<string, number>();
-  for (const e of gridEpisodes(list)) counts.set(cellKey(e), (counts.get(cellKey(e)) ?? 0) + 1);
-  return [...counts].filter(([, n]) => n > max).map(([key]) => key);
-}
-
 const ALL_CELLS = stages.flatMap((s) => themes.map((t) => `${s.key}:${t.key}`));
 
 describe('grid capacity (F-STORY-005 §3.5)', () => {
@@ -109,19 +103,33 @@ describe('grid capacity (F-STORY-005 §3.5)', () => {
     expect(MAX_EPISODES_PER_CELL).toBe(1);
   });
 
-  it('fills all 35 cells with exactly one grid episode each', () => {
+  it('fills all 35 cells with at least one and at most MAX_EPISODES_PER_CELL grid episodes', () => {
     expect(ALL_CELLS).toHaveLength(35);
     for (const key of ALL_CELLS) {
       const [stage, theme] = key.split(':') as [string, string];
-      expect(episodesFor(stage, theme), key).toHaveLength(1);
+      const inCell = episodesFor(stage, theme).length;
+      expect(inCell, key).toBeGreaterThanOrEqual(1);
+      expect(inCell, key).toBeLessThanOrEqual(MAX_EPISODES_PER_CELL);
     }
-    expect(gridEpisodes(episodesAll)).toHaveLength(35);
-    expect(overfullCells(episodesAll, MAX_EPISODES_PER_CELL)).toEqual([]);
+    expect(new Set(gridEpisodes(episodesAll).map(cellKey))).toEqual(new Set(ALL_CELLS));
+    expect(cellsOverCapacity(episodesAll)).toEqual([]);
   });
 
   it('fails the invariant when a test adds a second grid episode to one cell', () => {
     const extra = episode('episode:stage1-letters-extra', { stage: 'stage1', theme: 'letters' });
-    expect(overfullCells([...episodesAll, extra], MAX_EPISODES_PER_CELL)).toEqual(['stage1:letters']);
+    expect(cellsOverCapacity([...episodesAll, extra])).toEqual(['stage1:letters']);
+  });
+
+  it('never counts shelf episodes toward a cell, and honours an explicit max', () => {
+    const shelfHere = episode('episode:shelf-z', { stage: 'stage1', theme: 'letters', placement: 'shelf' });
+    expect(cellsOverCapacity([...episodesAll, shelfHere])).toEqual([]);
+    const extra = episode('episode:stage1-letters-extra', { stage: 'stage1', theme: 'letters' });
+    expect(cellsOverCapacity([...episodesAll, extra], 2)).toEqual([]);
+  });
+
+  it('builds the bundle as hand-written, then shelf stories, then previews of unclaimed cells', () => {
+    expect(episodesAll).toEqual([...handWrittenEpisodes, ...storyEpisodes, ...previewEpisodesFor(handWrittenEpisodes)]);
+    for (const b of bookEpisodes) expect(handWrittenEpisodes).toContain(b);
   });
 
   it('keeps every episode id unique', () => {
@@ -135,12 +143,12 @@ describe('grid capacity (F-STORY-005 §3.5)', () => {
 });
 
 describe('previewEpisodesFor', () => {
-  const handWritten = gridEpisodes(episodesAll).filter((e) => e.status !== 'preview');
+  const handWritten = handWrittenEpisodes;
 
   it('generates a preview for every unclaimed cell beyond Stage 1, and only those', () => {
     const previews = previewEpisodesFor(handWritten);
-    const claimed = new Set(handWritten.map(cellKey));
-    expect(previews).toHaveLength(35 - handWritten.length);
+    const claimed = new Set(gridEpisodes(handWritten).map(cellKey));
+    expect(previews).toHaveLength(ALL_CELLS.length - claimed.size);
     for (const p of previews) {
       expect(p.status).toBe('preview');
       expect(p.stage).not.toBe('stage1');
@@ -165,17 +173,38 @@ describe('previewEpisodesFor', () => {
 });
 
 describe('episodesFor', () => {
-  it('returns the grid episodes of a cell sorted by volume, then order', () => {
-    const v2 = episode('episode:book-v2', { stage: 'stage5', theme: 'rites', volume: 2, order: 3 });
-    const v1 = episode('episode:book', { stage: 'stage5', theme: 'rites', order: 3 });
-    const late = episode('episode:book-late', { stage: 'stage5', theme: 'rites', volume: 1, order: 4 });
-    const shelfHere = episode('episode:shelf-y', { stage: 'stage5', theme: 'rites', placement: 'shelf' });
-    expect(episodesFor('stage5', 'rites', [v2, late, shelfHere, v1]).map((e) => e.id)).toEqual([
+  // Schema-valid fixtures: a grid episode's order is its theme's order (rites = 3),
+  // so within a cell volume decides and equal volumes keep list order.
+  const v1 = episode('episode:book', { stage: 'stage5', theme: 'rites', order: 3 });
+  const v2 = episode('episode:book-v2', { stage: 'stage5', theme: 'rites', volume: 2, order: 3 });
+  const v3 = episode('episode:book-v3', { stage: 'stage5', theme: 'rites', volume: 3, order: 3 });
+  const twinA = episode('episode:twin-a', { stage: 'stage5', theme: 'rites', volume: 1, order: 3 });
+  const shelfHere = episode('episode:shelf-y', { stage: 'stage5', theme: 'rites', placement: 'shelf', format: 'story', order: 101 });
+
+  it('uses fixtures the episode schema accepts', () => {
+    for (const e of [v1, v2, v3, twinA]) expect(EpisodeSchema.safeParse(e).success, e.id).toBe(true);
+  });
+
+  it('returns the grid episodes of a cell sorted by volume (absent = 1)', () => {
+    expect(episodesFor('stage5', 'rites', [v3, shelfHere, v2, v1]).map((e) => e.id)).toEqual([
       'episode:book',
-      'episode:book-late',
+      'episode:book-v2',
+      'episode:book-v3',
+    ]);
+    expect(episodeFor('stage5', 'rites', [v3, shelfHere, v2, v1])?.id).toBe('episode:book');
+  });
+
+  it('keeps list order for two episodes of the same volume (stable sort)', () => {
+    expect(episodesFor('stage5', 'rites', [twinA, v2, v1]).map((e) => e.id)).toEqual([
+      'episode:twin-a',
+      'episode:book',
       'episode:book-v2',
     ]);
-    expect(episodeFor('stage5', 'rites', [v2, late, shelfHere, v1])?.id).toBe('episode:book');
+    expect(episodesFor('stage5', 'rites', [v1, v2, twinA]).map((e) => e.id)).toEqual([
+      'episode:book',
+      'episode:twin-a',
+      'episode:book-v2',
+    ]);
   });
 
   it('never returns a shelf episode and is empty for a cell with none', () => {
@@ -193,23 +222,23 @@ describe('episodesFor', () => {
 
 /**
  * Golden: the grid the learner sees is unchanged by PR 5.2. The eight shipped
- * episodes keep their ids, quest ids and status (appending a quest would
+ * episodes keep their ids, order, quest ids and status (appending a quest would
  * un-complete an episode for existing learners), and every cell keeps its id.
  */
 describe('grid golden (F-STORY-005 §3.1 rule 2)', () => {
   it('keeps the eight shipped episodes frozen', () => {
     const shipped = gridEpisodes(episodesAll)
       .filter((e) => e.status === 'shipped')
-      .map((e) => ({ id: e.id, questIds: e.questIds, status: e.status }));
+      .map((e) => ({ id: e.id, order: e.order, questIds: e.questIds, status: e.status }));
     expect(shipped).toEqual([
-      { id: 'episode:stage1-letters', questIds: ['quest:stage1-letters-q1', 'quest:stage1-letters-q2', 'quest:stage1-letters-q3'], status: 'shipped' },
-      { id: 'episode:stage1-life', questIds: ['quest:stage1-life-q1', 'quest:stage1-life-q2'], status: 'shipped' },
-      { id: 'episode:stage1-rites', questIds: ['quest:stage1-rites-q1'], status: 'shipped' },
-      { id: 'episode:stage1-nature', questIds: ['quest:stage1-nature-q1'], status: 'shipped' },
-      { id: 'episode:stage1-crafts', questIds: ['quest:stage1-crafts-q1'], status: 'shipped' },
-      { id: 'episode:stage2-life', questIds: ['quest:stage2-life-q1'], status: 'shipped' },
-      { id: 'episode:stage2-nature', questIds: ['quest:stage2-nature-q1'], status: 'shipped' },
-      { id: 'episode:stage4-rites', questIds: ['quest:stage4-rites-q1'], status: 'shipped' },
+      { id: 'episode:stage1-letters', order: 1, questIds: ['quest:stage1-letters-q1', 'quest:stage1-letters-q2', 'quest:stage1-letters-q3'], status: 'shipped' },
+      { id: 'episode:stage1-life', order: 2, questIds: ['quest:stage1-life-q1', 'quest:stage1-life-q2'], status: 'shipped' },
+      { id: 'episode:stage1-rites', order: 3, questIds: ['quest:stage1-rites-q1'], status: 'shipped' },
+      { id: 'episode:stage1-nature', order: 4, questIds: ['quest:stage1-nature-q1'], status: 'shipped' },
+      { id: 'episode:stage1-crafts', order: 5, questIds: ['quest:stage1-crafts-q1'], status: 'shipped' },
+      { id: 'episode:stage2-life', order: 2, questIds: ['quest:stage2-life-q1'], status: 'shipped' },
+      { id: 'episode:stage2-nature', order: 4, questIds: ['quest:stage2-nature-q1'], status: 'shipped' },
+      { id: 'episode:stage4-rites', order: 3, questIds: ['quest:stage4-rites-q1'], status: 'shipped' },
     ]);
   });
 
@@ -222,6 +251,33 @@ describe('grid golden (F-STORY-005 §3.1 rule 2)', () => {
       }),
     );
     expect(grid).toEqual(GRID_GOLDEN);
+  });
+});
+
+/**
+ * F-STORY-005 §3.2: the shipped lessons carry blueprint 04 pillar tags (metadata,
+ * never shown to learners). Every tag exists in `PILLAR_TAGS`; the two lessons
+ * no sub-theme fits stay `[]` on purpose (see `episodes.ts`).
+ */
+describe('pillar tags of the shipped lessons (F-STORY-005 §3.2)', () => {
+  it('freezes the tag of each hand-written lesson', () => {
+    expect(Object.fromEntries(handWrittenEpisodes.map((e) => [e.id, e.pillarTags]))).toEqual({
+      'episode:stage1-letters': ['A1'],
+      'episode:stage1-life': ['B5'],
+      'episode:stage1-rites': ['B5'],
+      'episode:stage1-nature': ['D2'],
+      'episode:stage1-crafts': ['E1'],
+      'episode:stage2-life': [],
+      'episode:stage2-nature': ['D2'],
+      'episode:stage4-rites': [],
+    });
+  });
+
+  it('uses only registered tags, and every hand-written episode passes the episode schema', () => {
+    for (const e of handWrittenEpisodes) {
+      for (const tag of e.pillarTags ?? []) expect(isPillarTag(tag), `${e.id} ${tag}`).toBe(true);
+      expect(EpisodeSchema.safeParse(e).success, e.id).toBe(true);
+    }
   });
 });
 

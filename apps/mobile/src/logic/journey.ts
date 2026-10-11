@@ -1,6 +1,6 @@
 import type { Episode, Quest, QuestProgress, StageKey, ThemeDef } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
-import { gridEpisodes } from '../content/episodes';
+import { cellKey, gridEpisodes } from '../content/episodes';
 
 /**
  * Journey grid rules (wireframe journey/grid):
@@ -9,8 +9,6 @@ import { gridEpisodes } from '../content/episodes';
  *  - an episode cell is complete only when *all* of its quests are done.
  */
 export type StageAvailability = 'open' | 'taste' | 'soon';
-
-const cellKey = (e: Pick<Episode, 'stage' | 'theme'>): string => `${e.stage}:${e.theme}`;
 
 /**
  * Counts cells, not episodes (F-STORY-005 §3.5): a cell is shipped when any of
