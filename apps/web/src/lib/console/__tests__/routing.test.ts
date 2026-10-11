@@ -1,7 +1,7 @@
 import { getMessages, type UiLocale } from '@hangul-route/i18n';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { SpaceListItem } from '../api';
-import { KIND_LABEL, ROUTES, groupSpaces, landingAfterCreate, landingAfterSignIn, memberNoun, prefillName, roleCards, spaceErrorText, spaceIdFrom, statusLine } from '../routing';
+import { ROUTES, groupSpaces, landingAfterCreate, landingAfterSignIn, memberNoun, prefillName, roleCards, spaceErrorText, spaceIdFrom, statusLine } from '../routing';
 
 const item = (id: string, kind: SpaceListItem['space']['kind'], createdAt: string, over: Partial<SpaceListItem> = {}, archivedAt: string | null = null): SpaceListItem => ({
   space: { id, kind, name: id, parentSpaceId: null, settings: { consentMode: 'parent', anonymizeRoster: false }, archivedAt, createdAt },
@@ -41,7 +41,6 @@ describe('console routing (F-CONSOLE-001)', () => {
     expect(prefillName('class', 'Kim')).toBe('Class A');
     expect(prefillName('school', 'Seoul Hangul')).toBe('Seoul Hangul school');
     expect(prefillName('school', '')).toBe('Our school');
-    expect(KIND_LABEL.class).toBe('Class');
     expect(roleCards().map((r) => r.kind)).toEqual(['family', 'class', 'school']);
     expect(roleCards()[0]).toEqual({ kind: 'family', title: 'Parent / caregiver', line: 'Home — my kids' });
     expect(memberNoun('class')).toBe('students');
@@ -64,7 +63,6 @@ describe('console routing (F-CONSOLE-001)', () => {
       expect(prefillName('school', '', locale)).toBe(c.start.prefill.schoolDefault);
       for (const kind of ['family', 'class', 'school'] as const) expect(memberNoun(kind, locale)).toBe(c.kind.members[kind]);
     }
-    expect(KIND_LABEL).toEqual(getMessages('en').console.kind.label);
   });
 
   it('groups by kind, newest first, archived last, with count-only status lines', () => {

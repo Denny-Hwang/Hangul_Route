@@ -1,12 +1,11 @@
-import { DEFAULT_LOCALE, en, getMessages, type UiLocale } from '@hangul-route/i18n';
+import { DEFAULT_LOCALE, getMessages, type UiLocale } from '@hangul-route/i18n';
 
 /**
  * Console strings that carry tone — F-CONSOLE-001, tested against the caregiver ban list.
  * They live in `@hangul-route/i18n` (`messages/en/console.ts`, F-I18N-001 PR 9) with their
- * keys unchanged; `COPY` is the English console namespace, kept so pages read it until
- * they switch to `useMessages()` (PRs 10a-10c).
+ * keys unchanged, and every page reads them through `useMessages()` (PRs 10a-10c; the
+ * English-only `COPY` alias went with PR 10c). This module collects them for the safety tests.
  */
-export const COPY = en.console;
 
 type Rendered = (...args: unknown[]) => string;
 

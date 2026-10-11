@@ -1,5 +1,5 @@
 import type { SpaceKind } from '@hangul-route/content-schema';
-import { DEFAULT_LOCALE, en, getMessages, type UiLocale } from '@hangul-route/i18n';
+import { DEFAULT_LOCALE, getMessages, type UiLocale } from '@hangul-route/i18n';
 import type { SpaceListItem } from './api';
 
 /** Where the console sends an adult — F-CONSOLE-001 §3.2–3.4. */
@@ -34,9 +34,6 @@ export function landingAfterCreate(kind: SpaceKind, spaceId: string, fromHome: b
   if (kind === 'class') return ROUTES.space(spaceId);
   return fromHome ? ROUTES.home : ROUTES.home;
 }
-
-/** English kind labels ("Class"), read by the settings page until it takes `m.console.kind.label` (PR 10c). */
-export const KIND_LABEL: Readonly<Record<SpaceKind, string>> = en.console.kind.label;
 
 export interface RoleCard {
   kind: SpaceKind;
