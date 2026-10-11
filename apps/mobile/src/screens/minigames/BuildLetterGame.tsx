@@ -18,6 +18,7 @@ import {
 import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { jamoAll } from '../../content/jamo';
+import { useMessages } from '../../i18n/use-messages';
 import { blockShape, shapeHint, tileAccessibilityLabel } from '../../logic/build-letter-view';
 import type { MinigameScope } from '../../logic/minigame-config';
 import { buildBuildLetterRounds, type BuildLetterRound } from '../../logic/round-builder';
@@ -34,6 +35,8 @@ interface Props {
 }
 
 export function BuildLetterGame({ scope, onFinish }: Props): React.ReactElement {
+  const m = useMessages();
+  const copy = m.learner.minigame;
   const rounds = useMemo<BuildLetterRound[]>(
     () => buildBuildLetterRounds({ syllables: scope.syllables ?? [] }),
     [scope],
@@ -54,7 +57,7 @@ export function BuildLetterGame({ scope, onFinish }: Props): React.ReactElement 
   if (!round) {
     return (
       <Screen>
-        <Body>No rounds.</Body>
+        <Body>{copy.noRounds}</Body>
       </Screen>
     );
   }
@@ -106,17 +109,17 @@ export function BuildLetterGame({ scope, onFinish }: Props): React.ReactElement 
         <View style={{ flex: 1 }}>
           <Progress value={roundIdx + 1} max={rounds.length} tone="primary" />
         </View>
-        <Pill label={`${roundIdx + 1} / ${rounds.length}`} size="sm" />
+        <Pill label={copy.progress.pill(roundIdx + 1, rounds.length)} size="sm" />
       </View>
 
       <Spacer size="lg" />
-      <Heading level="prompt">Build this letter</Heading>
+      <Heading level="prompt">{copy.buildLetter.heading}</Heading>
       <Spacer size="md" />
 
       <View style={{ alignItems: 'center' }}>
         <Pressable
           onPress={() => speak(round.targetSyllable, { language: 'ko-KR' })}
-          accessibilityLabel={`Hear ${round.romanization}`}
+          accessibilityLabel={m.a11y.minigame.hear(round.romanization)}
           style={{
             width: 160,
             height: 160,
@@ -135,7 +138,7 @@ export function BuildLetterGame({ scope, onFinish }: Props): React.ReactElement 
 
       <Spacer size="lg" />
       <Caption tone="muted" align="center">
-        Slots:
+        {copy.buildLetter.slots}
       </Caption>
       <Spacer size="xs" />
       <SyllableBlock
@@ -167,7 +170,7 @@ export function BuildLetterGame({ scope, onFinish }: Props): React.ReactElement 
 
       <Spacer size="lg" />
       <Caption tone="muted" align="center">
-        Tiles
+        {copy.buildLetter.tiles}
       </Caption>
       <Spacer size="xs" />
       <View style={{ flexDirection: 'row', justifyContent: 'center', flexWrap: 'wrap', gap: spacing.sm }}>
@@ -180,7 +183,7 @@ export function BuildLetterGame({ scope, onFinish }: Props): React.ReactElement 
               key={id}
               label={j.char}
               romanization={j.romanization}
-              accessibilityLabel={tileAccessibilityLabel(j)}
+              accessibilityLabel={tileAccessibilityLabel(j, m.a11y.minigame.finalTile)}
               size="md"
               state={used ? 'disabled' : 'idle'}
               onPress={() => handleTile(id)}
@@ -192,12 +195,12 @@ export function BuildLetterGame({ scope, onFinish }: Props): React.ReactElement 
       {feedback === 'wrong' ? (
         <>
           <Spacer size="lg" />
-          <HoyaBubble tone="thinking" message={`Not quite. Try again. ${shapeHint(shape)}`} />
+          <HoyaBubble tone="thinking" message={copy.buildLetter.notQuite(shapeHint(shape, copy.buildLetter.shape))} />
           <Spacer size="md" />
           <View
             style={{ alignItems: 'center' }}
             accessible
-            accessibilityLabel={`Block shape. ${shapeHint(shape)}`}
+            accessibilityLabel={m.a11y.minigame.blockShape(shapeHint(shape, copy.buildLetter.shape))}
           >
             <SyllableBlock
               vowel={shape.vowel}
@@ -224,7 +227,7 @@ export function BuildLetterGame({ scope, onFinish }: Props): React.ReactElement 
         </>
       ) : null}
       <Spacer size="xl" />
-      <Button label="Skip" tone="ghost" size="md" fullWidth onPress={() => { markStepComplete(); onFinish(); }} />
+      <Button label={copy.skip.cta} tone="ghost" size="md" fullWidth onPress={() => { markStepComplete(); onFinish(); }} />
       <Spacer size="lg" />
     </Screen>
   );

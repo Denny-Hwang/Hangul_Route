@@ -40,6 +40,14 @@ export const a11y = {
   shareCard: 'Share this card',
   /** The Profile Sound switch, its state and the voice line read as one group (`voice` has no colon). */
   soundSwitch: (muted: boolean, voice: string) => `Sound, ${muted ? 'off' : 'on'}. ${voice}.`,
+  /** The minigames' screen-reader labels (PR 7b); `romanization` is a sound value, never Hangul. */
+  minigame: {
+    hear: (romanization: string) => `Hear ${romanization}`,
+    /** A batchim tile in Build a Letter. */
+    finalTile: (romanization: string) => `final ${romanization}`,
+    /** The block-shape hint picture; `hint` is one of `learner.minigame.buildLetter.shape`. */
+    blockShape: (hint: string) => `Block shape. ${hint}`,
+  },
   /** A taught Korean item: Korean text, its romanization and (optionally) a gloss in the UI language. */
   koreanItem: (item: { ko: string; romanization: string; gloss?: string }) =>
     item.gloss === undefined

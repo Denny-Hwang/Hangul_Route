@@ -315,6 +315,21 @@ export const learner = {
     /** The round counter pill: `round` of `total`. */
     progress: { pill: (round: number, total: number) => `${round} / ${total}` },
     skip: { cta: 'Skip' },
+    /** Build a Letter (F-QUEST-002 §3.7). */
+    buildLetter: {
+      heading: 'Build this letter',
+      slots: 'Slots:',
+      tiles: 'Tiles',
+      /** Hoya after a miss; `hint` is one of `shape`. */
+      notQuite: (hint: string) => `Not quite. Try again. ${hint}`,
+      /** Where the letters of the block go, keyed by the block shape: whole sentences, never "left to right". */
+      shape: {
+        beside: 'The vowel goes beside the first letter.',
+        under: 'The vowel goes under the first letter.',
+        besideFinal: 'The vowel goes beside the first letter. The last letter sits at the bottom.',
+        underFinal: 'The vowel goes under the first letter. The last letter sits at the bottom.',
+      },
+    },
   },
 
   /**

@@ -1,9 +1,11 @@
 import type { Jamo } from '@hangul-route/content-schema';
+import type { Messages } from '@hangul-route/i18n';
 import { findJamo } from '../content/jamo';
 
 /**
  * View rules for Build a Letter (F-QUEST-002 §3.7): how the block's slots are
- * laid out and how a batchim tile is announced. Pure.
+ * laid out and how a batchim tile is announced. Pure: the words are
+ * `learner.minigame.buildLetter` and `a11y.minigame`, passed in.
  */
 
 /** Vowels written under the consonant; every other Stage 1 vowel sits beside it. */
@@ -27,12 +29,15 @@ export function blockShape(componentJamoIds: readonly string[]): BlockShape {
 }
 
 /** Accessibility label for a tile: a batchim says it is a final; others keep the default. */
-export function tileAccessibilityLabel(jamo: Pick<Jamo, 'kind' | 'romanization'>): string | undefined {
-  return jamo.kind === 'batchim' ? `final ${jamo.romanization}` : undefined;
+export function tileAccessibilityLabel(
+  jamo: Pick<Jamo, 'kind' | 'romanization'>,
+  finalTile: Messages['a11y']['minigame']['finalTile'],
+): string | undefined {
+  return jamo.kind === 'batchim' ? finalTile(jamo.romanization) : undefined;
 }
 
 /** The wrong-answer hint for a block shape (replaces "letters go left to right"). */
-export function shapeHint(shape: BlockShape): string {
-  const vowel = `The vowel goes ${shape.vowel} the first letter.`;
-  return shape.hasFinal ? `${vowel} The last letter sits at the bottom.` : vowel;
+export function shapeHint(shape: BlockShape, copy: Messages['learner']['minigame']['buildLetter']['shape']): string {
+  if (shape.vowel === 'under') return shape.hasFinal ? copy.underFinal : copy.under;
+  return shape.hasFinal ? copy.besideFinal : copy.beside;
 }

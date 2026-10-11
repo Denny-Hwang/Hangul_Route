@@ -33,6 +33,36 @@ describe('learner.minigame shell (English wording as shipped)', () => {
   });
 });
 
+describe('Build a Letter (English wording as shipped)', () => {
+  const b = m.learner.minigame.buildLetter;
+
+  it('keeps the heading, the row captions and the miss bubble', () => {
+    expect(b.heading).toBe('Build this letter');
+    expect(b.slots).toBe('Slots:');
+    expect(b.tiles).toBe('Tiles');
+    expect(b.notQuite('The vowel goes beside the first letter.')).toBe(
+      'Not quite. Try again. The vowel goes beside the first letter.',
+    );
+  });
+
+  it('keeps one whole hint per block shape', () => {
+    expect(b.shape).toEqual({
+      beside: 'The vowel goes beside the first letter.',
+      under: 'The vowel goes under the first letter.',
+      besideFinal: 'The vowel goes beside the first letter. The last letter sits at the bottom.',
+      underFinal: 'The vowel goes under the first letter. The last letter sits at the bottom.',
+    });
+  });
+
+  it('keeps its screen-reader labels', () => {
+    expect(m.a11y.minigame.hear('ga')).toBe('Hear ga');
+    expect(m.a11y.minigame.finalTile('ng')).toBe('final ng');
+    expect(m.a11y.minigame.blockShape('The vowel goes under the first letter.')).toBe(
+      'Block shape. The vowel goes under the first letter.',
+    );
+  });
+});
+
 describe('learner.audio (F-AUDIO-004 §3.7-3.8, English wording as shipped)', () => {
   const a = m.learner.audio;
 
@@ -116,7 +146,7 @@ describe('every locale', () => {
 });
 
 /** The subtrees this PR adds; each game's commit extends the list. */
-const NEW_PREFIXES = ['learner.minigame', 'learner.audio', 'a11y.soundSwitch'];
+const NEW_PREFIXES = ['learner.minigame', 'learner.audio', 'a11y.soundSwitch', 'a11y.minigame'];
 
 // en-XA (F-I18N-001 §3.11): every new key, function messages and step lists included, survives pseudo-localisation.
 describe('en-XA covers the new keys', () => {
