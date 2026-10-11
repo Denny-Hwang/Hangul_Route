@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   RECAP_SCENES,
   advisoryAfter,
+  advisoryInPhase,
   advisoryNote,
   cultureNoteView,
   noteItemId,
@@ -111,6 +112,20 @@ describe('advisoryAfter: the row never shows again in that visit', () => {
   });
 });
 
+describe('advisoryInPhase: the row belongs to the scene page only', () => {
+  const row = 'A note';
+
+  it('stays on the scene page', () => {
+    expect(advisoryInPhase(row, 'scene')).toBe(row);
+  });
+
+  it('goes when a checkpoint opens or the end page shows (a page turn without a scene change, §3.7)', () => {
+    expect(advisoryInPhase(row, 'checkpoint')).toBeNull();
+    expect(advisoryInPhase(row, 'end')).toBeNull();
+    expect(advisoryInPhase(null, 'scene')).toBeNull();
+  });
+});
+
 describe('recapScenes (§3.7 end page)', () => {
   const story = readyStory();
 
@@ -165,6 +180,14 @@ describe('recapLayout: the recap fits the end page at any window', () => {
 
   it('a landscape window that is not short stacks as usual', () => {
     expect(recapLayout({ ...base, width: 900, compact: false, landscape: true, count: 4 }).inline).toBe(false);
+  });
+
+  it('hides the row rather than draw pictures smaller than the floor', () => {
+    // 100 wide: (100 - 3 * 8) / 4 = 19, under a 32 floor.
+    expect(recapLayout({ ...base, minThumb: 32, width: 100, compact: false, landscape: false, count: 4 }).thumbWidth).toBe(0);
+    expect(recapLayout({ ...base, minThumb: 32, width: 288, compact: true, landscape: false, count: 4 }).thumbWidth).toBe(66);
+    // Exactly the floor still draws.
+    expect(recapLayout({ ...base, minThumb: 19, width: 100, compact: false, landscape: false, count: 4 }).thumbWidth).toBe(19);
   });
 
   it('is zero wide with nothing to show or no room yet', () => {

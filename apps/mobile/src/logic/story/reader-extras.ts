@@ -1,6 +1,6 @@
 import type { CultureNote, KoText, SceneArt, Story, StoryLevel } from '@hangul-route/content-schema';
 import type { ReaderMode } from './reader-effects';
-import type { ReaderEffect } from './reader-state';
+import type { ReaderEffect, ReaderPhase } from './reader-state';
 
 /**
  * The reader's extras (F-STORY-002 §3.7, PR 2.8): the "Did you know?" culture
@@ -82,6 +82,15 @@ export function advisoryAfter(note: string | null, effect: ReaderEffect): string
   return null;
 }
 
+/**
+ * The row on a reader phase: only on the scene page. Opening a checkpoint is a
+ * page turn with no `scene-changed` effect, so the row goes there too and does
+ * not come back (§3.7 "goes on the first page turn").
+ */
+export function advisoryInPhase(note: string | null, phase: ReaderPhase): string | null {
+  return phase === 'scene' ? note : null;
+}
+
 // ---------------------------------------------------------------------------
 // End page recap
 // ---------------------------------------------------------------------------
@@ -123,6 +132,8 @@ export interface RecapLayoutInput {
   hoya: number;
   /** The largest thumbnail width. */
   maxThumb: number;
+  /** The smallest thumbnail worth drawing; a narrower share hides the row (default 0). */
+  minThumb?: number;
   gap: number;
 }
 
@@ -137,5 +148,6 @@ export function recapLayout(input: RecapLayoutInput): RecapLayout {
   const room = inline ? input.width - input.hoya - input.gap : input.width;
   if (input.count <= 0 || room <= 0) return { inline, thumbWidth: 0 };
   const share = (room - input.gap * (input.count - 1)) / input.count;
-  return { inline, thumbWidth: Math.max(0, Math.floor(Math.min(input.maxThumb, share))) };
+  const thumbWidth = Math.max(0, Math.floor(Math.min(input.maxThumb, share)));
+  return { inline, thumbWidth: thumbWidth < (input.minThumb ?? 0) ? 0 : thumbWidth };
 }

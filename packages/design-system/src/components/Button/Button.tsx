@@ -65,6 +65,7 @@ export function Button({
   leading,
   trailing,
   accessibilityLabel,
+  expanded,
   testID,
 }: ButtonProps): React.ReactElement {
   return (
@@ -73,7 +74,8 @@ export function Button({
       disabled={disabled}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? label}
-      accessibilityState={{ disabled }}
+      accessibilityState={expanded === undefined ? { disabled } : { disabled, expanded }}
+      aria-expanded={expanded}
       testID={testID}
       hitSlop={spacing.sm}
       style={({ pressed }) => ({

@@ -31,7 +31,7 @@ import {
   wordId,
   type ReaderMode,
 } from '../../logic/story/reader-effects';
-import { advisoryAfter, advisoryNote, cultureNoteView, noteOpen, recapScenes } from '../../logic/story/reader-extras';
+import { advisoryAfter, advisoryInPhase, advisoryNote, cultureNoteView, noteOpen, recapScenes } from '../../logic/story/reader-extras';
 import { effectiveReadToMe } from '../../logic/story/reader-settings';
 import { initReader, openEffects, reduceReader, type ReaderAction, type ReaderEffect, type ReaderState } from '../../logic/story/reader-state';
 import { STORY_READER_AUDIO_SOURCE, planSceneAudio, type SceneAudioPart } from '../../logic/story/scene-audio';
@@ -311,6 +311,11 @@ function ReaderBody({
     return () => anim.stop();
   }, [state.index, state.phase, reducedMotion, fade]);
 
+  // Opening a checkpoint or the end page is a page turn too: the grown-up note goes and does not come back.
+  useEffect(() => {
+    setAdvisory((row) => advisoryInPhase(row, state.phase));
+  }, [state.phase]);
+
   // --- interactions ---------------------------------------------------------
 
   const shown = (id: string): boolean => romanizationShown(romanizationMode, state.revealed.includes(id));
@@ -337,6 +342,12 @@ function ReaderBody({
     dispatch({ type: 'reveal', id });
     const target = glossTarget(view ?? { narrationParts: [], korean: null }, id);
     if (target) audio.play(termSteps(target.text));
+  };
+
+  // Dismiss unmounts the focused control: put a keyboard or screen-reader user back on the scene text (web).
+  const dismissAdvisory = (): void => {
+    setAdvisory(null);
+    if (Platform.OS === 'web') setTimeout(() => narrationRef.current?.focus?.({ preventScroll: true }), 0);
   };
 
   // The note card shares the one inline-card slot with the gloss card; a second tap of its chip closes it.
@@ -369,6 +380,8 @@ function ReaderBody({
   if (!view) return <Screen tone="canvas">{null}</Screen>;
 
   const end = state.phase === 'end';
+  // The grown-up note is drawn on the scene page only (never over a checkpoint or the end page).
+  const advisoryRow = advisoryInPhase(advisory, state.phase);
   const sources = onOpenSources ? () => onOpenSources(end ? 'end' : 'reader', state.index) : undefined;
   const gloss = glossTarget(view, state.openTerm);
   const reason = audio.slot.view.reason;
@@ -572,8 +585,13 @@ function ReaderBody({
         onClose={onClose}
         onSources={sources}
       />
-      {advisory !== null && !end ? (
-        <AdvisoryRow text={copy.advisory(advisory)} dismissLabel={copy.dismiss.cta} onDismiss={() => setAdvisory(null)} />
+      {advisoryRow !== null ? (
+        <AdvisoryRow
+          text={copy.advisory(advisoryRow)}
+          dismissLabel={copy.dismiss.cta}
+          onDismiss={dismissAdvisory}
+          compact={compactHeight}
+        />
       ) : null}
       {side && !end ? (
         // Side by side: the art and the text fade on a page turn; the controls under the text stay put (§3.10).

@@ -18,6 +18,7 @@ import {
   spacing,
   touchTarget,
   typography,
+  useLayoutClass,
   useMediaSize,
 } from '@hangul-route/design-system';
 import type { KoText, ThemeKey } from '@hangul-route/content-schema';
@@ -375,6 +376,7 @@ export function CultureNoteChip({
         size="md"
         leading={<Icon name="sparkle" size={spacing.xl} color={colors.text.onSecondary} />}
         onPress={onPress}
+        expanded={open}
         testID="story-reader-did-you-know"
       />
     </View>
@@ -470,6 +472,8 @@ export function CultureNoteCard({
   );
 }
 
+const ADVISORY_COMPACT_LINES = 2;
+
 /**
  * "A note for grown-ups: ..." (wireframe F1): one quiet row above the art on a
  * fresh quest-mode open of scene 1, with Dismiss. It never blocks reading.
@@ -478,10 +482,17 @@ export function AdvisoryRow({
   text,
   dismissLabel,
   onDismiss,
+  compact = false,
 }: {
   text: string;
   dismissLabel: string;
   onDismiss: () => void;
+  /**
+   * Window height < `layout.compactHeight` (320x568, landscape phones): the row is clamped to two lines so a
+   * long note (up to 140 characters) leaves the art and the text room. The full note stays in the text a
+   * screen reader reads, and Sources always shows it (§3.7).
+   */
+  compact?: boolean;
 }): React.ReactElement {
   return (
     <View testID="story-reader-advisory" style={{ marginTop: spacing.xs }}>
@@ -489,9 +500,17 @@ export function AdvisoryRow({
         {/* A 64 dp Dismiss (close icon, labelled "Dismiss") beside the text keeps the row short on a narrow phone. */}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
           <View style={{ flex: 1, minWidth: 0, paddingLeft: spacing.xs }}>
-            <Body tone="secondary" testID="story-reader-advisory-text">
+            <Text
+              numberOfLines={compact ? ADVISORY_COMPACT_LINES : undefined}
+              style={{
+                fontSize: typography.size.body,
+                lineHeight: typography.size.body * typography.leading.normal,
+                color: colors.text.secondary,
+              }}
+              testID="story-reader-advisory-text"
+            >
               {text}
-            </Body>
+            </Text>
           </View>
           <Pressable
             onPress={onDismiss}
@@ -649,13 +668,18 @@ export function ReaderEndPage({
 }): React.ReactElement {
   const hoya = useMediaSize(compact ? touchTarget.min : touchTarget.hero + spacing.xxl);
   const maxThumb = useMediaSize(compact ? touchTarget.min : touchTarget.hero + spacing.xl);
-  const [width, setWidth] = useState(0);
+  // Start from the window width (the reading column is never wider), so the pictures are drawn on the first
+  // frame and the centred column does not jump once it is measured.
+  const { windowWidth } = useLayoutClass();
+  const [width, setWidth] = useState(windowWidth);
   const onLayout = (e: LayoutChangeEvent): void => {
     const next = Math.round(e.nativeEvent.layout.width);
     setWidth((prev) => (prev === next ? prev : next));
   };
   const gap = spacing.sm;
-  const { inline, thumbWidth } = recapLayout({ width, compact, landscape, count: recap.length, hoya, maxThumb, gap });
+  // A picture under half a touch target recaps nothing: the row is hidden instead.
+  const minThumb = touchTarget.min / 2;
+  const { inline, thumbWidth } = recapLayout({ width, compact, landscape, count: recap.length, hoya, maxThumb, minThumb, gap });
   const hoyaNode = <Hoya pose="cheering" size={hoya} accessibilityLabel={hoyaLabel} />;
   // Decorative: the pictures recap what was read; a screen reader skips them (§3.7).
   const pictures =
