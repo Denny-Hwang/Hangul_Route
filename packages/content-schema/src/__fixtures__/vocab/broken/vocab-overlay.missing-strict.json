@@ -1,0 +1,17 @@
+{
+  "description": "A strict locale needs a gloss for every item.",
+  "options": {
+    "strictLocales": [
+      "es"
+    ]
+  },
+  "ops": [],
+  "expect": [
+    {
+      "rule": "vocab-overlay",
+      "file": "i18n/es/vocab-food.json",
+      "id": "vocab:mul",
+      "includes": "overlay-missing"
+    }
+  ]
+}

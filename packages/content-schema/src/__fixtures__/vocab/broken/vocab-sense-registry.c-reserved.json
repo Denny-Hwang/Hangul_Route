@@ -1,0 +1,19 @@
+{
+  "description": "An item that uses a reserved id fails (c).",
+  "ops": [
+    {
+      "op": "set",
+      "file": "vocab/_senses.json",
+      "path": "groups.0.members.0.state",
+      "value": "reserved"
+    }
+  ],
+  "expect": [
+    {
+      "rule": "vocab-sense-registry",
+      "file": "vocab/food.json",
+      "id": "vocab:bae-pear",
+      "includes": "(c)"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "description": "An id that is not vocab:<romanization>[-sense] fails.",
+  "ops": [
+    {
+      "op": "set",
+      "file": "vocab/food.json",
+      "path": "items.1.id",
+      "value": "vocab:milk"
+    }
+  ],
+  "expect": [
+    {
+      "rule": "vocab-id-format",
+      "file": "vocab/food.json",
+      "id": "vocab:milk"
+    }
+  ]
+}

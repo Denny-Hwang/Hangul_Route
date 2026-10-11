@@ -1,0 +1,17 @@
+{
+  "description": "A topic title romanization is checked too.",
+  "ops": [
+    {
+      "op": "set",
+      "file": "vocab/food.json",
+      "path": "topic.titleKo.romanization",
+      "value": "eum-sik"
+    }
+  ],
+  "expect": [
+    {
+      "rule": "vocab-topic-title-romanization",
+      "file": "vocab/food.json"
+    }
+  ]
+}

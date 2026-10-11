@@ -1,0 +1,30 @@
+{
+  "description": "The same Korean word with two romanizations fails.",
+  "ops": [
+    {
+      "op": "set",
+      "file": "vocab/food.json",
+      "path": "items.1.id",
+      "value": "vocab:sakwa"
+    },
+    {
+      "op": "set",
+      "file": "vocab/food.json",
+      "path": "items.1.ko",
+      "value": "사과"
+    },
+    {
+      "op": "set",
+      "file": "vocab/food.json",
+      "path": "items.1.romanization",
+      "value": "sakwa"
+    }
+  ],
+  "expect": [
+    {
+      "rule": "vocab-romanization-consistent",
+      "file": "vocab/food.json",
+      "includes": "사과"
+    }
+  ]
+}

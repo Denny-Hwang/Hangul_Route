@@ -1,0 +1,19 @@
+{
+  "description": "A banned learner word fails.",
+  "ops": [
+    {
+      "op": "set",
+      "file": "vocab/food.json",
+      "path": "items.0.senseNote",
+      "value": "This word was missed."
+    }
+  ],
+  "expect": [
+    {
+      "rule": "vocab-banned-word",
+      "file": "vocab/food.json",
+      "id": "vocab:sagwa",
+      "includes": "missed"
+    }
+  ]
+}

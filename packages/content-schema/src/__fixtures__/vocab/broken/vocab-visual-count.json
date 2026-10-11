@@ -1,0 +1,42 @@
+{
+  "description": "A non-exempt topic needs 8 hand-drawn or card pictures.",
+  "ops": [
+    {
+      "op": "set",
+      "file": "vocab/food.json",
+      "path": "items.0.visual",
+      "value": "word:color-red"
+    },
+    {
+      "op": "set",
+      "file": "vocab/food.json",
+      "path": "items.1.visual",
+      "value": "word:color-blue"
+    },
+    {
+      "op": "set",
+      "file": "vocab/food.json",
+      "path": "items.2.visual",
+      "value": "word:count-one"
+    },
+    {
+      "op": "set",
+      "file": "vocab/food.json",
+      "path": "items.3.visual",
+      "value": "word:count-two"
+    },
+    {
+      "op": "set",
+      "file": "vocab/food.json",
+      "path": "items.4.visual",
+      "value": "word:body-head"
+    }
+  ],
+  "expect": [
+    {
+      "rule": "vocab-visual-count",
+      "file": "vocab/food.json",
+      "includes": "7"
+    }
+  ]
+}

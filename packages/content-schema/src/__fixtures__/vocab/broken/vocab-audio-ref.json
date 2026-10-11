@@ -1,0 +1,18 @@
+{
+  "description": "An audioRef for another slug fails.",
+  "ops": [
+    {
+      "op": "set",
+      "file": "vocab/food.json",
+      "path": "items.0.audioRef",
+      "value": "audio/vocab/apple.mp3"
+    }
+  ],
+  "expect": [
+    {
+      "rule": "vocab-audio-ref",
+      "file": "vocab/food.json",
+      "id": "vocab:sagwa"
+    }
+  ]
+}

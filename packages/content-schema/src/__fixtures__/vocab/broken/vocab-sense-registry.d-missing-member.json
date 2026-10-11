@@ -1,0 +1,26 @@
+{
+  "description": "A launch member with no item fails once the full set of topics exists (d).",
+  "options": {
+    "requireCompleteSet": true
+  },
+  "ops": [
+    {
+      "op": "set",
+      "file": "vocab/_senses.json",
+      "path": "groups.0.members.2",
+      "value": {
+        "id": "vocab:bae-belly",
+        "en": "belly",
+        "state": "launch"
+      }
+    }
+  ],
+  "expect": [
+    {
+      "rule": "vocab-sense-registry",
+      "file": "vocab/_senses.json",
+      "id": "vocab:bae-belly",
+      "includes": "(d)"
+    }
+  ]
+}

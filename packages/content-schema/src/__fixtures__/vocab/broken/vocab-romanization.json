@@ -1,0 +1,19 @@
+{
+  "description": "A spelling that is not Revised Romanization fails.",
+  "ops": [
+    {
+      "op": "set",
+      "file": "vocab/food.json",
+      "path": "items.5.romanization",
+      "value": "kimchi"
+    }
+  ],
+  "expect": [
+    {
+      "rule": "vocab-romanization",
+      "file": "vocab/food.json",
+      "id": "vocab:gimchi",
+      "includes": "Revised Romanization"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "locale": "ko",
+  "domain": "vocab-food",
+  "entries": {
+    "vocab:sagwa": {
+      "gloss": "빨갛고 동그란 과일"
+    },
+    "vocab:uyu": {
+      "gloss": "소에서 얻는 하얀 마실 것"
+    }
+  }
+}

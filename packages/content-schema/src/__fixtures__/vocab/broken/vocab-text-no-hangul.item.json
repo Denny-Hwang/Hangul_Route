@@ -1,0 +1,18 @@
+{
+  "description": "Hangul in an English gloss fails.",
+  "ops": [
+    {
+      "op": "set",
+      "file": "vocab/food.json",
+      "path": "items.0.en",
+      "value": "apple 사과"
+    }
+  ],
+  "expect": [
+    {
+      "rule": "vocab-text-no-hangul",
+      "file": "vocab/food.json",
+      "id": "vocab:sagwa"
+    }
+  ]
+}

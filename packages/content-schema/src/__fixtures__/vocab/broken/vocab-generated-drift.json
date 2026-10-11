@@ -1,0 +1,11 @@
+{
+  "description": "The generated modules are missing or stale.",
+  "drift": true,
+  "ops": [],
+  "expect": [
+    {
+      "rule": "vocab-generated-drift",
+      "includes": "vocab.ts"
+    }
+  ]
+}

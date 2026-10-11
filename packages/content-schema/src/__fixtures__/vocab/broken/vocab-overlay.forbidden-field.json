@@ -1,0 +1,19 @@
+{
+  "description": "An overlay may not set romanization.",
+  "ops": [
+    {
+      "op": "set",
+      "file": "i18n/es/vocab-food.json",
+      "path": "entries.vocab:sagwa.romanization",
+      "value": "sakwa"
+    }
+  ],
+  "expect": [
+    {
+      "rule": "vocab-overlay",
+      "file": "i18n/es/vocab-food.json",
+      "id": "vocab:sagwa",
+      "includes": "overlay-forbidden-field"
+    }
+  ]
+}

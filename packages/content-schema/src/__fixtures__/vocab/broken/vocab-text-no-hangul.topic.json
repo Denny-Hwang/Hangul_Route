@@ -1,0 +1,18 @@
+{
+  "description": "Hangul in a topic blurb fails.",
+  "ops": [
+    {
+      "op": "set",
+      "file": "vocab/food.json",
+      "path": "topic.blurbEn",
+      "value": "음식 words"
+    }
+  ],
+  "expect": [
+    {
+      "rule": "vocab-text-no-hangul",
+      "file": "vocab/food.json",
+      "includes": "blurbEn"
+    }
+  ]
+}

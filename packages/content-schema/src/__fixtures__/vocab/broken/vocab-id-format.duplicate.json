@@ -1,0 +1,17 @@
+{
+  "description": "The same id in two files fails.",
+  "ops": [
+    {
+      "op": "copy",
+      "file": "vocab/food.json",
+      "to": "vocab/animals.json"
+    }
+  ],
+  "expect": [
+    {
+      "rule": "vocab-id-format",
+      "file": "vocab/animals.json",
+      "includes": "duplicate"
+    }
+  ]
+}

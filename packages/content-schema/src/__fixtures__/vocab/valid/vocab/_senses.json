@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "groups": [
+    {
+      "group": "bae",
+      "members": [
+        {
+          "id": "vocab:bae-pear",
+          "en": "pear",
+          "state": "launch"
+        },
+        {
+          "id": "vocab:bae-boat",
+          "en": "boat",
+          "state": "reserved"
+        }
+      ]
+    }
+  ]
+}
