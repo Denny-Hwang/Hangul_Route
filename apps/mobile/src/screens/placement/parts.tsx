@@ -111,6 +111,24 @@ export function LinkButton({
   );
 }
 
+/**
+ * The quiet exit at the top of a learner screen (an icon with a spoken label,
+ * at least `touchTarget.min`): the Short item, the hand-off and the warm-up.
+ */
+export function ExitButton({ onPress, label, testID }: { onPress: () => void; label: string; testID: string }): React.ReactElement {
+  return (
+    <Pressable
+      testID={testID}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      style={{ width: touchTarget.min, height: touchTarget.min, alignItems: 'center', justifyContent: 'center' }}
+    >
+      <Icon name="close" size={spacing.xl} color={colors.text.secondary} />
+    </Pressable>
+  );
+}
+
 /** The back arrow at the top of a grown-up screen. */
 export function BackArrow({ onPress, label }: { onPress: () => void; label: string }): React.ReactElement {
   return (

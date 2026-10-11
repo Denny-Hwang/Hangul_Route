@@ -103,6 +103,10 @@ export const TELEMETRY_EVENT_NAMES = [
   'route.proposed',
   'route.proposal_skipped',
   'route.updated',
+  // F-VOC-003 §3.7 (topic keys, levels and counts only; never a word, a name or free text)
+  'vocab.topic_opened',
+  'vocab.cards.start',
+  'vocab.cards.complete',
   // F-VOC-004 §3.10 (ids, codes and counts only; `level` is levelOrder, never an age)
   'vocab.round.start',
   'vocab.round.complete',

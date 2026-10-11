@@ -76,6 +76,23 @@ async function leaveAtSceneThree(page: Page, id: string): Promise<void> {
   await expect(stepHeading(page, 'Read the story')).toBeVisible();
 }
 
+/** From the reader at its last scene: finish reading, skip the check and either order the story or skip it, then see results. */
+async function finishFromLastScene(page: Page, order: boolean): Promise<void> {
+  await next(page).click();
+  await page.getByTestId('story-reader-end-primary').click();
+  await expect(stepHeading(page, 'A few questions')).toBeVisible();
+  await page.getByRole('button', { name: 'Skip for now' }).click();
+  await expect(page.getByText('4 / 5', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Play minigame' }).click();
+  if (order) {
+    for (const scene of ['s1', 's2', 's4', 's5']) await page.getByTestId(`story-sequence-card-${scene}`).click();
+    await page.getByRole('button', { name: 'Skip replay' }).click();
+  } else {
+    await page.getByRole('button', { name: 'Skip this one' }).click();
+  }
+  await page.getByRole('button', { name: 'See results' }).click();
+}
+
 test.describe('story resume (fixture bundle)', () => {
   test.skip(!FIXTURE_BUILD, 'needs the fixture bundle: build:web:fixtures, then STORY_FIXTURES=1');
 
@@ -166,5 +183,77 @@ test.describe('story resume (fixture bundle)', () => {
     await expect.poll(async () => (await bookmarksOf(page, id))?.byStory[STORY]).toMatchObject({ level: 'listen' });
     await page.getByRole('button', { name: 'See results' }).click();
     await expect.poll(async () => (await bookmarksOf(page, id))?.byStory).toEqual({});
+  });
+
+  test('a bookmark past the end of the tier is kept inside the story: the reader opens on the last scene', async ({ page }) => {
+    const id = await onboard(page);
+    await seedStored(page, `story:bookmarks:${id}`, {
+      v: 1,
+      byStory: { [STORY]: { level: 'listen', sceneIndex: 9, updatedAt: '2026-10-11T09:00:00.000Z' } },
+    });
+    await expect(page.getByText('Hi, Dami!')).toBeVisible();
+
+    // The same seeding at the quest's level is loaded and used (the other-level case above is ignored, not unloaded).
+    await openQuest(page, true);
+    await expect(stepHeading(page, 'Read the story')).toBeVisible();
+    await expect(page.getByText('2 / 5', { exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'Play minigame' }).click();
+    await expect(position(page)).toHaveText('5 / 5');
+    const resumed = await resumedEvents(page);
+    expect(resumed).toHaveLength(1);
+    expect(resumed[0]?.payload).toEqual({ storyId: STORY, sceneIndex: 4 });
+  });
+
+  test('a run with every game skipped writes no score, so Results keeps the bookmark', async ({ page }) => {
+    const id = await onboard(page);
+    await seedStored(page, `story:bookmarks:${id}`, {
+      v: 1,
+      byStory: { [STORY]: { level: 'listen', sceneIndex: 4, updatedAt: '2026-10-11T09:00:00.000Z' } },
+    });
+    await expect(page.getByText('Hi, Dami!')).toBeVisible();
+
+    await openQuest(page, true);
+    await page.getByRole('button', { name: 'Play minigame' }).click();
+    await expect(position(page)).toHaveText('5 / 5');
+    await finishFromLastScene(page, false);
+    // Results is on screen with 0 / 0 (its clear runs in the same effect as the score write).
+    await expect(page.getByText('Play the games next time to earn stars and a card!')).toBeVisible();
+
+    await expect.poll(async () => (await readStored<{ quests: Array<{ questId: string; completedAt?: string }> }>(page, `progress:${id}`))?.quests ?? []).not.toContainEqual(
+      expect.objectContaining({ questId: QUEST, completedAt: expect.any(String) }),
+    );
+    expect((await bookmarksOf(page, id))?.byStory[STORY]).toMatchObject({ level: 'listen', sceneIndex: 4 });
+  });
+
+  test('a bookmark of a story already finished at that level (another device) is ignored: step 0 and scene 1, nothing resumed', async ({ page }) => {
+    const id = await onboard(page);
+    // Finish the quest on this device: its completion is in the progress snapshot, as a synced one would be.
+    await openQuest(page, false);
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await page.getByRole('button', { name: 'Play minigame' }).click();
+    for (const n of [2, 3, 4, 5]) {
+      await next(page).click();
+      await expect(position(page)).toHaveText(`${n} / 5`);
+    }
+    await finishFromLastScene(page, true);
+    await expect
+      .poll(async () => (await readStored<{ quests: Array<{ questId: string; completedAt?: string }> }>(page, `progress:${id}`))?.quests ?? [])
+      .toContainEqual(expect.objectContaining({ questId: QUEST, completedAt: expect.any(String) }));
+
+    // Another device left a bookmark at scene 3 of the same level before the finish synced here.
+    await seedStored(page, `story:bookmarks:${id}`, {
+      v: 1,
+      byStory: { [STORY]: { level: 'listen', sceneIndex: 2, updatedAt: '2026-10-11T09:00:00.000Z' } },
+    });
+    await expect(page.getByText('Hi, Dami!')).toBeVisible();
+    await expect.poll(async () => (await bookmarksOf(page, id))?.byStory[STORY]).toMatchObject({ level: 'listen', sceneIndex: 2 });
+
+    await openQuest(page, true);
+    await expect(page.getByRole('heading', { name: 'Story time' })).toBeVisible();
+    await expect(page.getByText('1 / 5', { exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await page.getByRole('button', { name: 'Play minigame' }).click();
+    await expect(position(page)).toHaveText('1 / 5');
+    expect(await resumedEvents(page)).toHaveLength(0);
   });
 });

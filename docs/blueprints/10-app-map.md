@@ -49,6 +49,7 @@ status: reference (living — 화면·기능이 추가되면 이 문서를 먼�
 Hangul Route
 │
 ├─ A. Learner App ──────────────────────────────────────────────── 아이
+│   ├─ A0. Layout (모든 화면 공통): compact · regular · wide · short 클래스 · regular 는 가운데 읽기 칼럼 · wide 는 Journey/Library 두 pane · 폰 가로는 부드러운 세로 안내 ("Keep sideways") · 터치 64 하한 불변 [S] F-LAYOUT-001
 │   ├─ A1. Onboarding                                   [S] F-PROF-001
 │   │    ├─ Welcome (value-first, 계정 없음)
 │   │    ├─ Create parent (PIN)  →  Create learner (name·age·avatar)
@@ -57,16 +58,22 @@ Hangul Route
 │   │    ├─ Picker · PIN entry · Switch button
 │   │    └─ role: learner | parent  (+ teacher | admin 예약)   [P]
 │   ├─ A3. Today (홈 = 3-card mission)                  [S] F-HW-001
+│   │    ├─ Story time card (① continue · next · again → explore 순서, 하루 고정) [S] F-STORY-004 §3.7 (PR 4.4a)
 │   │    ├─ ① Continue · ② New/Assigned · ③ Story/Review
 │   │    └─ Homework list (배정 큐)                       [S]
 │   ├─ A4. Journey (격자 7 Stage × 5 Theme)              [S] 02 §1
 │   │    ├─ Stage 1 = 5 episodes / 11 quests (shipped)
 │   │    ├─ Stage 2·4 taste (F-011, F-012)               [S]
+│   │    ├─ Heritage stories on the grid (24편 · 15 셀: count mark · stories-only 셀 · Cell page · lesson page 의 stories row) [R] F-STORY-005
 │   │    └─ Stage 3·5·6·7 preview cells                  [–] blueprint only
 │   ├─ A5. Quest player (intro→present→practice→apply→reward) [S] content-skill
+│   │    ├─ Story quest steps: story check (`story-check`) · word recap · Story Order v2 (`story-sequence`) → Results story extras [S/R] F-STORY-003
 │   │    └─ Minigame shell + 13 kinds (9 구현: 8 active + voice-echo beta)  06
 │   ├─ A6. Results & celebration (stars · card unlock)   [S] F-MOTION-003/004/005
+│   │    └─ Card award model: episode · stage · welcome · set · story 카드, Results extra cards, Today 의 1회 catch-up 카드, Library earn hints, story 카드 뒷면 출처 [S 엔진 / R 화면] F-STORY-006
 │   ├─ A7. Library (Heritage cards 42 = 30 Stage 1 + 12 taste · detail · share) [S] F-CARD-001/002/003
+│   │    ├─ Sections: Cards · Story Time · Culture (`SectionTabs`, 이야기가 있을 때만) · Picked for you · 고정 순서 선반 [R] F-STORY-004 §3.3-3.4
+│   │    └─ Culture notes (찾은 노트만, 테마별) · story episode page (Start · Keep reading · Read it again) [R] F-STORY-004 §3.5-3.6
 │   ├─ A8. Reviews (Daily test · Feedback · Stage review · Certificate) [D] F-RVW-001
 │   ├─ A9. Hoya companion (5 poses · bubble · lines)     [S] F-HOYA-001, F-002
 │   ├─ A10. Settings / Profile page (plan status · mute · switch · grown-ups) [S]
@@ -74,8 +81,9 @@ Hangul Route
 │   ├─ A12. Join a space (class / family code)          [S] F-SPACE-001 §3.5 (PIN 없음, §7 #21) · "I was already in this class" 재연결 요청 [S] F-TCH-001 §10.1
 │   ├─ A13. Paywall / Upgrade (parent-gated)            [S] F-ENT-001 §3.5 (covered / premium / free 상태; 구매는 웹 콘솔로 — 스토어 IAP 는 F-IAP-002)
 │   ├─ A14. PWA shell (offline-ready · update banners · offline chip · install guide) [S] roadmap P2 · F-PWA-001
-│   └─ A15. Lecture presenter (`/present`, 교사·어른이 TV·프로젝터로 하는 수업 · 로그인·프로필 없음 · 진도 기록 없음) [R] F-TCH-004
-│        └─ Projection mode (자원봉사 학생이 학습자 화면을 그대로 띄우는 옵션 · 교사 역할 불필요) [D] 연기 F-TCH-001 §3.4
+│   ├─ A15. Lecture presenter (`/present`, 교사·어른이 TV·프로젝터로 하는 수업 · 로그인·프로필 없음 · 진도 기록 없음) [R] F-TCH-004
+│   │    └─ Projection mode (자원봉사 학생이 학습자 화면을 그대로 띄우는 옵션 · 교사 역할 불필요) [D] 연기 F-TCH-001 §3.4
+│   └─ A16. Story reader & Sources (퀘스트의 `story-read` 단계 · "Read it again" replay · 어른용 Sources · SVG 장면 그림) [S] F-STORY-002 (장면 사이 checkpoint 질문만 [R], PR 2.9)
 │
 ├─ B. Caregiver Console ─────────────────────────────────────────── 부모
 │   ├─ B1. Parent gate (PIN)                             [S] F-PROF-001
@@ -142,15 +150,34 @@ Hangul Route
 | `profiles/pin-entry` | (modal) | 부모 확인 | S | F-PROF-001 | ✓ |
 | `profiles/switch-button` | (component) | 세션 중 전환 | S | F-PROF-001 | ✓ |
 | `home/todays-mission` (alias `home/home`) | Main/Home | 오늘 할 3가지 | S | F-HW-001 | ✓ |
+| `home/story-time-card` | Main/Home (mission card ①/③) | 읽던 이야기 이어 읽기 · 다음 이야기 · 다시 읽기 — 하루 고정, 이야기 없으면 explore 카드 | S | F-STORY-004 §3.7 | ✓ |
 | `homework/list` | Homework | 배정된 숙제 큐 | S | F-HW-001 | NEW |
+| `home/cards-catch-up` | Main/Home (인사말 아래 1회) | "Hoya found N cards you already earned!" — 세션당 1회, 타이머·남은 개수 없음 | R | F-STORY-006 §3.5 | ✓ |
 | `journey/grid` | Main/Journey | 격자에서 에피소드 고르기 | S | 02 §1, 04 | NEW |
+| `journey/grid-with-stories` | Main/Journey | 이야기가 있는 셀 표시 (count mark · stories-only 셀) — PIN 없음, 스테이지 pill 불변 | R | F-STORY-005 §3.6 | ✓ |
+| `story/cell-stories` | CellStories | 한 셀의 이야기 선반 (그 셀의 lesson 이 먼저) — 남은 개수·순위·타이머 없음 | R | F-STORY-005 §3.6 | ✓ |
+| `episode/detail-cell-stories-row` | (EpisodeDetail 의 한 줄) | lesson 페이지에 "Heritage stories for this cell" 행 (이야기 0 이면 숨김) | R | F-STORY-005 §3.6 | ✓ |
 | `episode/detail` | EpisodeDetail | 퀘스트 목록 + 보상 카드 미리보기 | S | 05 | NEW |
+| `episode/detail-story` | EpisodeDetail (`format: story`) | 이야기 1편 (또는 책 에피소드) — 큰 버튼 1개, 낱말, 문화 노트, 스포일러 없는 보상 카드, Sources | R | F-STORY-004 §3.6 | ✓ |
 | `quest/player` | QuestPlayer | 5-step 진행 셸 | S | content-skill | NEW |
+| `story/reader` | Minigame (`story-read` 단계) · StoryReader (replay) | 장면 하나씩: 그림 · 내레이션 · 한국어 + 로마자 + 뜻 — 점수·타이머·자동 넘김 없음, 읽던 장면 기억 | S | F-STORY-002 §3.3-3.7 | ✓ |
+| `story/term-gloss` | (story/reader 안의 인라인 카드) | 낱말 칩 탭 → 듣기 + 한국어·로마자·뜻 카드 (팝오버 아님) | S | F-STORY-002 §3.5 | ✓ |
+| `story/sources` | StorySources | 주장마다 출처 · 인용 · 링크 · 검증 · 정정 (링크 열기는 어른 게이트) | S | F-STORY-002 §3.8 | ✓ |
 | `minigame/shell` | Minigame | 라운드 진행·피드백 공통 프레임 | S | 06, minigame-skill | NEW |
 | `minigame/families` | (appendix) | 4 family 별 박스 다이어그램 | S | 06 | NEW |
+| `story/check` | Minigame (`story-check`) | 이야기 뒤 쉬운 질문 3개+: 첫 탭만 채점, 오답은 amber "Try another", 정답 이유 항상 표시 | R | F-STORY-003 §3.4 | ✓ |
+| `story/word-recap` | (story/check 의 마지막 패널) | 이야기의 새 낱말 다시 듣기 — 채점 없음, Done 으로 끝 | R | F-STORY-003 §3.6 | ✓ |
+| `story/sequence` | Minigame (`story-sequence`) | 그림 카드를 순서대로 슬롯에 — 시작 순서는 절대 정답 아님, 다 채우면 다시 보기 | S | F-STORY-003 §3.5 | ✓ |
+| `results/celebrate-story` | (Results 의 story 변형) | 이야기 제목 · 문화 노트 링크 · Next story / Read it again — 숫자·비율 없음 | R | F-STORY-003 §3.7 | ✓ |
 | `results/celebrate` | Results | 별 + 카드 언락 + 다음 행동 1개 | S | F-MOTION-003 | NEW |
+| `results/extra-cards` | (Results 의 배너) | 에피소드·스테이지·세트를 끝낸 그 런에서만 "N more cards joined your Library!" + 썸네일 | R | F-STORY-006 §3.3, §3.7 | ✓ |
+| `library/earn-hints` | Main/Library (Cards) · CardDetail | 잠긴 카드마다 얻는 방법 1-2줄 · New pill · 정직한 explainer · N/M pill 없음 | R | F-STORY-006 §3.7 | ✓ |
+| `library/card-back-citation` | CardDetail (뒷면) | 이야기 카드 뒷면: 검증된 사실 원문 + 출처 한 줄 (링크 없음) | R | F-STORY-006 §3.8 | ✓ |
 | `library/gallery` | Main/Library | 모은 카드 보기 | S | F-CARD-001 | NEW |
 | `library/card-detail` | CardDetail (modal) | 카드 앞/뒤 + 공유 | S | F-CARD-002/003 | NEW |
+| `library/stories` | Main/Library `{ section: 'story-time' }` | Picked for you + 고정 순서 이야기 선반 (진도로 재정렬 안 함) | R | F-STORY-004 §3.3-3.4 | ✓ |
+| `library/culture` | Main/Library `{ section: 'culture' }` | 찾은 문화 노트 카드 (개수만) + culture 이야기 타일 | R | F-STORY-004 §3.5 | ✓ |
+| `story/culture-notes` | CultureNotes | 찾은 노트를 테마별로 — 용어 듣기 · 출처는 링크 없는 텍스트 · 잠긴 자리 없음 | R | F-STORY-004 §3.5 | ✓ |
 | `profile/settings` | Profile | 플랜 상태 · 소리 · 전환 · Grown-ups | S | F-SUB-001 | NEW |
 | `parent/gate` | ~~ParentGate~~ → PinEntry (modal) | **retired** — `profiles/pin-entry` 로 통합 (§7 결정) | S→PIN | F-PROF-001 §10 | ✓ (기록용) |
 | `reviews/daily-test` | (신규) | 하루 1회 간격 반복 테스트 | D | F-RVW-001 §3.2 | NEW |
@@ -163,6 +190,7 @@ Hangul Route
 | `paywall/upgrade` | Paywall (PIN 뒤) | Stage 2+ 잠금 해제 · "covered by <class>" 상태 · 웹 콘솔로 안내 (가격은 placeholder) | S | F-ENT-001 §3.5 | ✓ |
 | `pwa/install-guide` | InstallGuide sheet (web only) | 홈 화면 추가 안내 (iOS/Android/PC), 3회째 열 때 · 5회 스누즈 | S | F-PWA-001 | ✓ |
 | `pwa/system-banners` | (신규, web only) | 오프라인 준비됨 · 업데이트 · 오프라인 상태 | P | roadmap P2 | NEW |
+| `layout/wide` | (모든 화면, `useLayoutClass`) | 넓은 창은 그림·두 화면 동시 보기에 쓰고 타깃은 작게 하지 않음: 클래스 4 · Home 2열 · Journey/Library 두 pane · 폰 가로 안내 · pane 상태 | S | F-LAYOUT-001 §3.1-3.8 | ✓ |
 | `classroom/lecture-presenter` | PresenterApp (`/present`, 별도 root, 웹 전용) | 교사가 TV·프로젝터로 하는 슬라이드 수업 — 점수·순위 없음, 이름은 피커에만 (URL 에 없음), 학습자 진도 기록 없음 | R | F-TCH-004 | ✓ |
 | `classroom/projection-mode` | (연기, 자원봉사 학생용 — 교사 수업은 `classroom/lecture-presenter`) | 학습자 화면을 교실 TV 에 그대로 표시 | D | F-TCH-001 §3.4 | NEW |
 
@@ -231,8 +259,15 @@ profile/settings ─┬─▶ profiles/pin-entry (modal; 첫 진입 시 PIN 설�
 
 ```
 quest/player ─▶ ... ─▶ results/celebrate ─(같은 route, 2번째 패널)─▶ reviews/feedback-review (새 요소 ≥1 이면) ─▶ Main tabs
+quest/player (story-read 단계) · "Read it again" (replay) ─▶ story/reader ─┬─▶ story/term-gloss (같은 화면, 인라인 카드)
+                                                                          └─▶ story/sources ─▶ profiles/pin-entry (Open link, 게이트가 필요할 때) ─▶ 기기 브라우저
 home/todays-mission card ③ ─▶ reviews/daily-test ─▶ results/celebrate
+story/reader ─▶ story/check ─▶ story/word-recap ─▶ story/sequence ─▶ results/celebrate-story ─┬─▶ quest/player (Next story) · story/reader (Read it again, replay)
+                                                                                            └─▶ episode/detail-story · home/todays-mission
 journey/grid (stage 완료 셀) ─▶ reviews/stage-review ─▶ certificate (results 변형) ─▶ library/gallery
+library/stories · library/culture ─▶ episode/detail-story ─┬─▶ quest/player (Start · Keep reading = resume) · story/reader (Read it again)
+                                                           └─▶ story/culture-notes · story/sources · library/card-detail
+home/story-time-card ─▶ quest/player (continue = resume · next) | story/reader (again) | episode/detail (explore)
 
 profile/settings ─┬─▶ sync/save-progress (Rescue Code)
                   ├─▶ sync/join-space
@@ -240,9 +275,14 @@ profile/settings ─┬─▶ sync/save-progress (Rescue Code)
                   └─▶ console/account  (parent-gated)
 onboarding/welcome ─▶ sync/restore ("I already have progress") ─┬─▶ profiles/picker
                                                                 └─▶ sync/merge-notice (로컬 진도 있을 때)
+(앱 업데이트 후 첫 세션, reconcile 이 카드를 더했을 때) home/todays-mission ─▶ home/cards-catch-up ─▶ library/earn-hints (New pill)
+results/celebrate (에피소드·스테이지·세트 완료 런) ─▶ results/extra-cards ─▶ library/card-detail (뒷면: library/card-back-citation)
 journey/grid (잠긴 Stage 셀) ─▶ paywall/upgrade (parent-gated)
+journey/grid-with-stories ─┬─ (lesson 셀) ─▶ episode/detail ─▶ episode/detail-cell-stories-row ─▶ story/cell-stories
+                           └─ (stories-only 셀) ─▶ story/cell-stories ─▶ episode/detail-story ─▶ quest/player
 
 [web only] 첫 방문 ─▶ pwa/system-banners (offline-ready) ; 설치 안 됨 + 3회 방문 ─▶ pwa/install-guide
+[모든 채널] 창 크기·회전 ─▶ layout/wide (클래스 재계산) ; wide: journey/grid · library/gallery 의 셀/카드 탭 ─▶ 오른쪽 pane (이동 없음) ; 폰 가로 ─▶ 세로 안내 ─▶ "Keep sideways" 또는 회전
 [web, 로그인 없음] /present ─▶ classroom/lecture-presenter (A home: Recent · Quick lesson ─▶ B start ─▶ C stage) — 프로필·진도를 읽거나 쓰지 않음 (F-TCH-004 §3.9)
 [연기] 자원봉사 학생 ─▶ classroom/projection-mode (F-TCH-001 §3.4)
 ```

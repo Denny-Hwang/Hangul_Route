@@ -69,6 +69,74 @@ export const VOCAB_TOPICS: readonly VocabTopic[] = [
     "coverItemId": "vocab:daseot",
     "status": "ready",
     "fixedOrder": true
+  },
+  {
+    "id": "vocab-topic:family",
+    "key": "family",
+    "order": 5,
+    "titleEn": "Family",
+    "titleKo": {
+      "ko": "가족",
+      "romanization": "gajok",
+      "en": "family"
+    },
+    "blurbEn": "Words for the people in a family.",
+    "hoyaIntroEn": "Who is in your family? Let's learn a word for each person.",
+    "tint": "theme.rites",
+    "coverItemId": "vocab:gajok",
+    "status": "draft",
+    "fixedOrder": false
+  },
+  {
+    "id": "vocab-topic:school",
+    "key": "school",
+    "order": 6,
+    "titleEn": "School",
+    "titleKo": {
+      "ko": "학교",
+      "romanization": "hakgyo",
+      "en": "school"
+    },
+    "blurbEn": "Things in a classroom and in a school bag.",
+    "hoyaIntroEn": "Pack your bag! Let's find the things in a classroom.",
+    "tint": "theme.letters",
+    "coverItemId": "vocab:yeonpil",
+    "status": "draft",
+    "fixedOrder": false
+  },
+  {
+    "id": "vocab-topic:body",
+    "key": "body",
+    "order": 7,
+    "titleEn": "Body",
+    "titleKo": {
+      "ko": "몸",
+      "romanization": "mom",
+      "en": "body"
+    },
+    "blurbEn": "Parts of the body you can point to.",
+    "hoyaIntroEn": "Point to your nose! Let's learn the words for the body.",
+    "tint": "stage.stage2",
+    "coverItemId": "vocab:meori",
+    "status": "draft",
+    "fixedOrder": false
+  },
+  {
+    "id": "vocab-topic:nature",
+    "key": "nature",
+    "order": 8,
+    "titleEn": "Nature",
+    "titleKo": {
+      "ko": "자연",
+      "romanization": "jayeon",
+      "en": "nature"
+    },
+    "blurbEn": "Things you see outdoors, from the sky to the sea.",
+    "hoyaIntroEn": "Let's step outside and look at the world around us.",
+    "tint": "theme.nature",
+    "coverItemId": "vocab:san",
+    "status": "draft",
+    "fixedOrder": false
   }
 ];
 
@@ -854,6 +922,798 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "glosses": {
       "en": "zero",
       "es": "cero"
+    }
+  },
+  {
+    "id": "vocab:eomma",
+    "ko": "엄마",
+    "romanization": "eomma",
+    "en": "mom",
+    "pos": "noun",
+    "topics": [
+      "family"
+    ],
+    "level": 1,
+    "visual": "word:family-mom",
+    "senseNote": "The everyday word. The formal word for mother is eomeoni.",
+    "glosses": {
+      "en": "mom",
+      "es": "mamá"
+    }
+  },
+  {
+    "id": "vocab:appa",
+    "ko": "아빠",
+    "romanization": "appa",
+    "en": "dad",
+    "pos": "noun",
+    "topics": [
+      "family"
+    ],
+    "level": 1,
+    "visual": "word:family-dad",
+    "senseNote": "The everyday word. The formal word for father is abeoji.",
+    "glosses": {
+      "en": "dad",
+      "es": "papá"
+    }
+  },
+  {
+    "id": "vocab:halmeoni",
+    "ko": "할머니",
+    "romanization": "halmeoni",
+    "en": "grandmother",
+    "pos": "noun",
+    "topics": [
+      "family"
+    ],
+    "level": 2,
+    "visual": "word:family-grandma",
+    "glosses": {
+      "en": "grandmother",
+      "es": "abuela"
+    }
+  },
+  {
+    "id": "vocab:harabeoji",
+    "ko": "할아버지",
+    "romanization": "harabeoji",
+    "en": "grandfather",
+    "pos": "noun",
+    "topics": [
+      "family"
+    ],
+    "level": 3,
+    "visual": "word:family-grandpa",
+    "glosses": {
+      "en": "grandfather",
+      "es": "abuelo"
+    }
+  },
+  {
+    "id": "vocab:eonni",
+    "ko": "언니",
+    "romanization": "eonni",
+    "en": "older sister (said by a woman or girl)",
+    "pos": "noun",
+    "topics": [
+      "family"
+    ],
+    "level": 1,
+    "visual": "word:family-eonni",
+    "senseNote": "A woman or girl calls her older sister this. A man or boy says nuna.",
+    "senseGroup": "older-sister",
+    "glosses": {
+      "en": "older sister (said by a woman or girl)",
+      "es": "hermana mayor (lo dice una mujer o niña)"
+    }
+  },
+  {
+    "id": "vocab:nuna",
+    "ko": "누나",
+    "romanization": "nuna",
+    "en": "older sister (said by a man or boy)",
+    "pos": "noun",
+    "topics": [
+      "family"
+    ],
+    "level": 1,
+    "visual": "word:family-nuna",
+    "senseNote": "A man or boy calls his older sister this. A woman or girl says eonni.",
+    "senseGroup": "older-sister",
+    "glosses": {
+      "en": "older sister (said by a man or boy)",
+      "es": "hermana mayor (lo dice un hombre o niño)"
+    }
+  },
+  {
+    "id": "vocab:oppa",
+    "ko": "오빠",
+    "romanization": "oppa",
+    "en": "older brother (said by a woman or girl)",
+    "pos": "noun",
+    "topics": [
+      "family"
+    ],
+    "level": 1,
+    "visual": "word:family-oppa",
+    "senseNote": "A woman or girl calls her older brother this. A man or boy says hyeong.",
+    "senseGroup": "older-brother",
+    "glosses": {
+      "en": "older brother (said by a woman or girl)",
+      "es": "hermano mayor (lo dice una mujer o niña)"
+    }
+  },
+  {
+    "id": "vocab:hyeong",
+    "ko": "형",
+    "romanization": "hyeong",
+    "en": "older brother (said by a man or boy)",
+    "pos": "noun",
+    "topics": [
+      "family"
+    ],
+    "level": 1,
+    "visual": "word:family-hyeong",
+    "senseNote": "A man or boy calls his older brother this. A woman or girl says oppa.",
+    "senseGroup": "older-brother",
+    "glosses": {
+      "en": "older brother (said by a man or boy)",
+      "es": "hermano mayor (lo dice un hombre o niño)"
+    }
+  },
+  {
+    "id": "vocab:dongsaeng",
+    "ko": "동생",
+    "romanization": "dongsaeng",
+    "en": "younger brother or sister",
+    "pos": "noun",
+    "topics": [
+      "family"
+    ],
+    "level": 1,
+    "visual": "word:family-dongsaeng",
+    "senseNote": "Anyone can say it, for a younger brother or a younger sister.",
+    "glosses": {
+      "en": "younger brother or sister",
+      "es": "hermano o hermana menor"
+    }
+  },
+  {
+    "id": "vocab:agi",
+    "ko": "아기",
+    "romanization": "agi",
+    "en": "baby",
+    "pos": "noun",
+    "topics": [
+      "family"
+    ],
+    "level": 1,
+    "visual": "word:family-baby",
+    "glosses": {
+      "en": "baby",
+      "es": "bebé"
+    }
+  },
+  {
+    "id": "vocab:gajok",
+    "ko": "가족",
+    "romanization": "gajok",
+    "en": "family",
+    "pos": "noun",
+    "topics": [
+      "family"
+    ],
+    "level": 1,
+    "visual": "word:family-family",
+    "glosses": {
+      "en": "family",
+      "es": "familia"
+    }
+  },
+  {
+    "id": "vocab:na",
+    "ko": "나",
+    "romanization": "na",
+    "en": "I, me",
+    "pos": "pronoun",
+    "topics": [
+      "family"
+    ],
+    "level": 1,
+    "visual": "word:family-me",
+    "senseNote": "The casual word. To be polite, say jeo.",
+    "glosses": {
+      "en": "I, me",
+      "es": "yo, mí"
+    }
+  },
+  {
+    "id": "vocab:hakgyo",
+    "ko": "학교",
+    "romanization": "hakgyo",
+    "en": "school",
+    "pos": "noun",
+    "topics": [
+      "school"
+    ],
+    "level": 1,
+    "visual": "word:school-school",
+    "glosses": {
+      "en": "school",
+      "es": "escuela"
+    }
+  },
+  {
+    "id": "vocab:seonsaengnim",
+    "ko": "선생님",
+    "romanization": "seonsaengnim",
+    "en": "teacher",
+    "pos": "noun",
+    "topics": [
+      "school"
+    ],
+    "level": 2,
+    "visual": "word:school-teacher",
+    "senseNote": "Also how you address a teacher; the ending nim shows respect.",
+    "glosses": {
+      "en": "teacher",
+      "es": "maestro o maestra"
+    }
+  },
+  {
+    "id": "vocab:chingu",
+    "ko": "친구",
+    "romanization": "chingu",
+    "en": "friend",
+    "pos": "noun",
+    "topics": [
+      "school"
+    ],
+    "level": 1,
+    "visual": "word:school-friend",
+    "glosses": {
+      "en": "friend",
+      "es": "amigo o amiga"
+    }
+  },
+  {
+    "id": "vocab:chaek",
+    "ko": "책",
+    "romanization": "chaek",
+    "en": "book",
+    "pos": "noun",
+    "topics": [
+      "school"
+    ],
+    "level": 1,
+    "visual": "card:book",
+    "glosses": {
+      "en": "book",
+      "es": "libro"
+    }
+  },
+  {
+    "id": "vocab:yeonpil",
+    "ko": "연필",
+    "romanization": "yeonpil",
+    "en": "pencil",
+    "pos": "noun",
+    "topics": [
+      "school"
+    ],
+    "level": 1,
+    "visual": "word:school-pencil",
+    "glosses": {
+      "en": "pencil",
+      "es": "lápiz"
+    }
+  },
+  {
+    "id": "vocab:gabang",
+    "ko": "가방",
+    "romanization": "gabang",
+    "en": "bag",
+    "pos": "noun",
+    "topics": [
+      "school"
+    ],
+    "level": 1,
+    "visual": "word:school-bag",
+    "glosses": {
+      "en": "bag",
+      "es": "bolsa o mochila"
+    }
+  },
+  {
+    "id": "vocab:gongchaek",
+    "ko": "공책",
+    "romanization": "gongchaek",
+    "en": "notebook",
+    "pos": "noun",
+    "topics": [
+      "school"
+    ],
+    "level": 1,
+    "visual": "word:school-notebook",
+    "glosses": {
+      "en": "notebook",
+      "es": "cuaderno"
+    }
+  },
+  {
+    "id": "vocab:jiugae",
+    "ko": "지우개",
+    "romanization": "jiugae",
+    "en": "eraser",
+    "pos": "noun",
+    "topics": [
+      "school"
+    ],
+    "level": 2,
+    "visual": "word:school-eraser",
+    "glosses": {
+      "en": "eraser",
+      "es": "goma de borrar"
+    }
+  },
+  {
+    "id": "vocab:chaeksang",
+    "ko": "책상",
+    "romanization": "chaeksang",
+    "en": "desk",
+    "pos": "noun",
+    "topics": [
+      "school"
+    ],
+    "level": 1,
+    "visual": "word:school-desk",
+    "glosses": {
+      "en": "desk",
+      "es": "escritorio"
+    }
+  },
+  {
+    "id": "vocab:uija",
+    "ko": "의자",
+    "romanization": "uija",
+    "en": "chair",
+    "pos": "noun",
+    "topics": [
+      "school"
+    ],
+    "level": 1,
+    "visual": "word:school-chair",
+    "glosses": {
+      "en": "chair",
+      "es": "silla"
+    }
+  },
+  {
+    "id": "vocab:gawi",
+    "ko": "가위",
+    "romanization": "gawi",
+    "en": "scissors",
+    "pos": "noun",
+    "topics": [
+      "school"
+    ],
+    "level": 1,
+    "visual": "word:school-scissors",
+    "glosses": {
+      "en": "scissors",
+      "es": "tijeras"
+    }
+  },
+  {
+    "id": "vocab:chilpan",
+    "ko": "칠판",
+    "romanization": "chilpan",
+    "en": "blackboard",
+    "pos": "noun",
+    "topics": [
+      "school"
+    ],
+    "level": 1,
+    "visual": "word:school-board",
+    "glosses": {
+      "en": "blackboard",
+      "es": "pizarrón"
+    }
+  },
+  {
+    "id": "vocab:nun-eye",
+    "ko": "눈",
+    "romanization": "nun",
+    "en": "eye",
+    "pos": "noun",
+    "topics": [
+      "body"
+    ],
+    "level": 1,
+    "visual": "word:body-eye",
+    "senseGroup": "nun",
+    "glosses": {
+      "en": "eye",
+      "es": "ojo"
+    }
+  },
+  {
+    "id": "vocab:ko",
+    "ko": "코",
+    "romanization": "ko",
+    "en": "nose",
+    "pos": "noun",
+    "topics": [
+      "body"
+    ],
+    "level": 1,
+    "visual": "word:body-nose",
+    "glosses": {
+      "en": "nose",
+      "es": "nariz"
+    }
+  },
+  {
+    "id": "vocab:ip",
+    "ko": "입",
+    "romanization": "ip",
+    "en": "mouth",
+    "pos": "noun",
+    "topics": [
+      "body"
+    ],
+    "level": 1,
+    "visual": "word:body-mouth",
+    "glosses": {
+      "en": "mouth",
+      "es": "boca"
+    }
+  },
+  {
+    "id": "vocab:gwi",
+    "ko": "귀",
+    "romanization": "gwi",
+    "en": "ear",
+    "pos": "noun",
+    "topics": [
+      "body"
+    ],
+    "level": 1,
+    "visual": "word:body-ear",
+    "glosses": {
+      "en": "ear",
+      "es": "oreja"
+    }
+  },
+  {
+    "id": "vocab:meori",
+    "ko": "머리",
+    "romanization": "meori",
+    "en": "head",
+    "pos": "noun",
+    "topics": [
+      "body"
+    ],
+    "level": 1,
+    "visual": "word:body-head",
+    "senseNote": "It also means hair.",
+    "glosses": {
+      "en": "head",
+      "es": "cabeza"
+    }
+  },
+  {
+    "id": "vocab:eolgul",
+    "ko": "얼굴",
+    "romanization": "eolgul",
+    "en": "face",
+    "pos": "noun",
+    "topics": [
+      "body"
+    ],
+    "level": 1,
+    "visual": "word:body-face",
+    "glosses": {
+      "en": "face",
+      "es": "cara"
+    }
+  },
+  {
+    "id": "vocab:son",
+    "ko": "손",
+    "romanization": "son",
+    "en": "hand",
+    "pos": "noun",
+    "topics": [
+      "body"
+    ],
+    "level": 1,
+    "visual": "word:body-hand",
+    "glosses": {
+      "en": "hand",
+      "es": "mano"
+    }
+  },
+  {
+    "id": "vocab:pal-arm",
+    "ko": "팔",
+    "romanization": "pal",
+    "en": "arm",
+    "pos": "noun",
+    "topics": [
+      "body"
+    ],
+    "level": 1,
+    "visual": "word:body-arm",
+    "senseGroup": "pal",
+    "glosses": {
+      "en": "arm",
+      "es": "brazo"
+    }
+  },
+  {
+    "id": "vocab:dari-leg",
+    "ko": "다리",
+    "romanization": "dari",
+    "en": "leg",
+    "pos": "noun",
+    "topics": [
+      "body"
+    ],
+    "level": 1,
+    "visual": "word:body-leg",
+    "senseGroup": "dari",
+    "glosses": {
+      "en": "leg",
+      "es": "pierna"
+    }
+  },
+  {
+    "id": "vocab:bal",
+    "ko": "발",
+    "romanization": "bal",
+    "en": "foot",
+    "pos": "noun",
+    "topics": [
+      "body"
+    ],
+    "level": 1,
+    "visual": "word:body-foot",
+    "glosses": {
+      "en": "foot",
+      "es": "pie"
+    }
+  },
+  {
+    "id": "vocab:bae-belly",
+    "ko": "배",
+    "romanization": "bae",
+    "en": "belly",
+    "pos": "noun",
+    "topics": [
+      "body"
+    ],
+    "level": 1,
+    "visual": "word:body-belly",
+    "senseGroup": "bae",
+    "glosses": {
+      "en": "belly",
+      "es": "barriga"
+    }
+  },
+  {
+    "id": "vocab:i-tooth",
+    "ko": "이",
+    "romanization": "i",
+    "en": "tooth",
+    "pos": "noun",
+    "topics": [
+      "body"
+    ],
+    "level": 1,
+    "visual": "word:body-tooth",
+    "senseNote": "Also called chia, a more formal word.",
+    "senseGroup": "i",
+    "glosses": {
+      "en": "tooth",
+      "es": "diente"
+    }
+  },
+  {
+    "id": "vocab:san",
+    "ko": "산",
+    "romanization": "san",
+    "en": "mountain",
+    "pos": "noun",
+    "topics": [
+      "nature"
+    ],
+    "level": 1,
+    "visual": "card:mountain",
+    "glosses": {
+      "en": "mountain",
+      "es": "montaña"
+    }
+  },
+  {
+    "id": "vocab:bada",
+    "ko": "바다",
+    "romanization": "bada",
+    "en": "sea",
+    "pos": "noun",
+    "topics": [
+      "nature"
+    ],
+    "level": 1,
+    "visual": "card:sea",
+    "glosses": {
+      "en": "sea",
+      "es": "mar"
+    }
+  },
+  {
+    "id": "vocab:haneul",
+    "ko": "하늘",
+    "romanization": "haneul",
+    "en": "sky",
+    "pos": "noun",
+    "topics": [
+      "nature"
+    ],
+    "level": 1,
+    "visual": "word:nature-sky",
+    "glosses": {
+      "en": "sky",
+      "es": "cielo"
+    }
+  },
+  {
+    "id": "vocab:hae-sun",
+    "ko": "해",
+    "romanization": "hae",
+    "en": "sun",
+    "pos": "noun",
+    "topics": [
+      "nature"
+    ],
+    "level": 1,
+    "visual": "word:nature-sun",
+    "senseGroup": "hae",
+    "glosses": {
+      "en": "sun",
+      "es": "sol"
+    }
+  },
+  {
+    "id": "vocab:dal-moon",
+    "ko": "달",
+    "romanization": "dal",
+    "en": "moon",
+    "pos": "noun",
+    "topics": [
+      "nature"
+    ],
+    "level": 1,
+    "visual": "card:moon",
+    "senseGroup": "dal",
+    "glosses": {
+      "en": "moon",
+      "es": "luna"
+    }
+  },
+  {
+    "id": "vocab:byeol",
+    "ko": "별",
+    "romanization": "byeol",
+    "en": "star",
+    "pos": "noun",
+    "topics": [
+      "nature"
+    ],
+    "level": 1,
+    "visual": "word:nature-star",
+    "glosses": {
+      "en": "star",
+      "es": "estrella"
+    }
+  },
+  {
+    "id": "vocab:namu",
+    "ko": "나무",
+    "romanization": "namu",
+    "en": "tree",
+    "pos": "noun",
+    "topics": [
+      "nature"
+    ],
+    "level": 1,
+    "visual": "word:nature-tree",
+    "glosses": {
+      "en": "tree",
+      "es": "árbol"
+    }
+  },
+  {
+    "id": "vocab:kkot",
+    "ko": "꽃",
+    "romanization": "kkot",
+    "en": "flower",
+    "pos": "noun",
+    "topics": [
+      "nature"
+    ],
+    "level": 1,
+    "visual": "word:nature-flower",
+    "glosses": {
+      "en": "flower",
+      "es": "flor"
+    }
+  },
+  {
+    "id": "vocab:bi-rain",
+    "ko": "비",
+    "romanization": "bi",
+    "en": "rain",
+    "pos": "noun",
+    "topics": [
+      "nature"
+    ],
+    "level": 1,
+    "visual": "word:nature-rain",
+    "senseGroup": "bi",
+    "glosses": {
+      "en": "rain",
+      "es": "lluvia"
+    }
+  },
+  {
+    "id": "vocab:nun-snow",
+    "ko": "눈",
+    "romanization": "nun",
+    "en": "snow",
+    "pos": "noun",
+    "topics": [
+      "nature"
+    ],
+    "level": 1,
+    "visual": "word:nature-snow",
+    "senseGroup": "nun",
+    "glosses": {
+      "en": "snow",
+      "es": "nieve"
+    }
+  },
+  {
+    "id": "vocab:gang",
+    "ko": "강",
+    "romanization": "gang",
+    "en": "river",
+    "pos": "noun",
+    "topics": [
+      "nature"
+    ],
+    "level": 1,
+    "visual": "word:nature-river",
+    "glosses": {
+      "en": "river",
+      "es": "río"
+    }
+  },
+  {
+    "id": "vocab:gureum",
+    "ko": "구름",
+    "romanization": "gureum",
+    "en": "cloud",
+    "pos": "noun",
+    "topics": [
+      "nature"
+    ],
+    "level": 1,
+    "visual": "word:nature-cloud",
+    "glosses": {
+      "en": "cloud",
+      "es": "nube"
     }
   }
 ];
