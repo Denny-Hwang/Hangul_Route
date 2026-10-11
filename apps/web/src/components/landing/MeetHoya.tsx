@@ -38,7 +38,7 @@ export function MeetHoya({ locale = DEFAULT_LOCALE }: { locale?: UiLocale }): JS
           style={{
             width: '78%',
             aspectRatio: '1 / 1',
-            backgroundColor: colors.surface.paper,
+            backgroundColor: colors.brand.primaryLight,
             borderRadius: '50%',
             display: 'flex',
             alignItems: 'center',
@@ -46,8 +46,9 @@ export function MeetHoya({ locale = DEFAULT_LOCALE }: { locale?: UiLocale }): JS
             position: 'relative',
           }}
         >
-          {/* Hoya with his amber "almost there" (design/launch/01-hoya-three-poses.md, idle + bubble). */}
-          <div style={{ width: '80%', display: 'flex' }}>
+          {/* Hoya with his amber "almost there" (design/launch/01-hoya-three-poses.md, idle + bubble), on the
+              peach brand tint (the hero's backdrop): gold fur reads against it, and it shows against the cream box. */}
+          <div style={{ width: '80%', aspectRatio: '1 / 1', display: 'flex' }}>
             <HoyaSvg pose="idle" size="100%" />
           </div>
           <span

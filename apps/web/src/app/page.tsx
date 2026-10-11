@@ -211,8 +211,10 @@ export default function HomePage(): JSX.Element {
             overflow: 'hidden',
           }}
         >
-          {/* Hoya waves hello (design/brief/character/hoya-character-sheet.md, pose "waving"). */}
-          <div style={{ position: 'relative', zIndex: 1, width: '62%', display: 'flex' }}>
+          {/* Hoya waves hello (design/brief/character/hoya-character-sheet.md, pose "waving").
+              In flow and unpositioned, so the absolutely placed bubble below paints over him if its copy wraps.
+              A square box gives the svg's 100% height a definite base. */}
+          <div style={{ width: '62%', aspectRatio: '1 / 1', display: 'flex' }}>
             <HoyaSvg pose="waving" size="100%" />
           </div>
           <div
