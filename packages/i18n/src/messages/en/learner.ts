@@ -3,7 +3,7 @@ import { plural } from '../../plural';
 /**
  * Learner-facing screens, one sub-object per screen (F-I18N-001 §3.4 rule 2).
  * PR 5 moves the first-run and settings surfaces in, PR 6a Home, Journey, Library and
- * CardDetail; the wording is unchanged. Strings that end up in a pill or a button are
+ * CardDetail, PR 6b Episode, Results and Homework; the wording is unchanged. Strings that end up in a pill or a button are
  * keyed `pill` / `cta` so the length budgets (§3.11) cover them.
  * Content-derived text (stage, theme and card titles, blurbs) is not here: it comes from
  * content and is localised by the overlay mechanism (PR 12).
@@ -109,7 +109,19 @@ export const learner = {
     },
     cards: { pill: (cards: number) => `${cards} cards` },
     stars: { pill: (quests: number) => `${quests}★ quests` },
-    mission: { heading: 'Today with Hoya' },
+    mission: {
+      heading: 'Today with Hoya',
+      /** The daily-test card names itself; every other card is titled by its quest or episode (content). */
+      dailyTest: { title: 'Quick review' },
+      /** Keyed by `MissionSubtitle`, the code a mission card carries instead of prose. */
+      subtitle: {
+        replay: 'One more go with Hoya',
+        story: 'Story time',
+        new: 'Something new today',
+        assigned: 'Picked just for you',
+        dailyTest: 'About a minute with Hoya',
+      },
+    },
     progress: {
       heading: 'Stage 1 progress',
       label: (done: number, total: number) => `${done} of ${total} quests`,
@@ -123,6 +135,8 @@ export const learner = {
     title: 'Heritage Journey',
     intro: '7 stages × 5 themes. Draw your own route.',
     premium: { pill: 'Premium' },
+    /** Keyed by `StageAvailability`. */
+    availability: { open: { pill: 'Open' }, taste: { pill: 'Taste' }, soon: { pill: 'Soon' } },
     tasteNote: 'A taste of this stage is open now. More episodes are coming.',
     how: {
       title: 'How the journey works',
@@ -149,5 +163,85 @@ export const learner = {
     flip: { front: 'tap to flip', back: 'tap to flip back' },
     hear: { cta: 'Hear it' },
     share: { cta: 'Share', error: "Couldn't make the picture this time. Try again?" },
+  },
+
+  episode: {
+    notFound: 'Episode not found.',
+    comingSoon: {
+      pill: 'Coming soon',
+      title: 'Coming soon',
+      note: 'Finish Stage 1 to help Hoya unlock this episode.',
+    },
+    quests: {
+      heading: 'Quests',
+      start: { cta: 'Start' },
+      playAgain: { cta: 'Play again' },
+    },
+    /** `title` is the previous quest's title (content). */
+    buildsOn: (title: string) => `Builds on: ${title}`,
+    cards: { heading: 'Cards in this episode', waiting: 'Waiting for you' },
+    /** The soft-prerequisite sheet (F-QUEST-002 §3.5): a note and a one-line offer, never a lock. */
+    prereq: {
+      message: (title: string) => `This one uses letters from ${title}. Start there?`,
+      startThere: { cta: 'Start there' },
+      playAnyway: { cta: 'Play anyway' },
+    },
+  },
+
+  results: {
+    /** One word per tier, never a number or a percent (F-RVW-001 §3.1). */
+    headline: {
+      allDone: 'All done!',
+      wonderful: 'Wonderful!',
+      great: 'Great!',
+      tried: 'You tried!',
+    },
+    cheer: {
+      noGames: 'Play the games next time to earn stars and a card!',
+      perfect: 'Perfect! You got every one!',
+      nice: 'Nice work! Try one more for three stars.',
+      goodStart: 'Good start. Want to play it again?',
+      brave: "Brave try! Let's do it together.",
+    },
+    backHome: { cta: 'Back home' },
+    episodePage: { cta: 'Episode page' },
+    /** The "Next up" teaser (F-QUEST-002 §3.5); the letters after `newLetters` are taught content. */
+    nextUp: {
+      title: 'Next up',
+      next: { cta: 'Play next quest' },
+      again: { cta: 'Try this one again' },
+      newLetters: 'New letters:',
+    },
+    newCard: {
+      title: 'New card for your library!',
+      announce: (title: string) => `New card for your library! ${title}`,
+      see: { cta: 'See my card' },
+      seeA11y: (title: string) => `See my card: ${title}`,
+    },
+  },
+
+  homework: {
+    title: 'Homework',
+    section: { today: 'Today', comingUp: 'Coming up', recentlyDone: 'Recently done' },
+    bubble: {
+      none: 'Nothing waiting today! Want to play a quest anyway?',
+      some: (n: number) =>
+        plural('en', n, { one: 'You have 1 thing to do today.', other: `You have ${n} things to do today.` }),
+    },
+    allClear: {
+      title: 'All clear!',
+      played: 'Hoya suggests a quick review from Today.',
+      fresh: 'Try your first quest from Today.',
+    },
+    doneEmpty: 'Finished homework shows up here.',
+    /** Shown for an assignment whose quest this build does not know. */
+    questFallback: 'Quest',
+    due: {
+      today: 'Today',
+      tomorrow: 'Tomorrow',
+      inDays: (n: number) => plural('en', n, { one: 'In 1 day', other: `In ${n} days` }),
+    },
+    /** Who set it, keyed by the schema's `assignedBy`: no role jargon. */
+    from: { parent: 'From home', teacher: 'From class', system: 'From Hoya' },
   },
 } as const;

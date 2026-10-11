@@ -20,6 +20,12 @@ export const a11y = {
   /** A Journey grid cell: the theme's episode for a stage; a preview cell is not open yet. */
   gridCell: (themeTitle: string, stage: string, comingSoon: boolean) =>
     `${themeTitle} episode for ${stage}${comingSoon ? ', coming soon' : ''}`,
+  /** An earned card on the Episode page, and the placeholder for one not yet earned. */
+  episodeCard: (title: string) => `${title} card`,
+  cardWaiting: 'A card still waiting to be earned',
+  /** A finished homework row, and an open one with its due word. */
+  playAgainQuest: (title: string) => `Play again: ${title}`,
+  homeworkRow: (title: string, due: string) => `${title}, ${due}`,
   lockedCard: 'Locked card',
   flipToBack: 'Tap to flip card to back',
   flipToFront: 'Tap to flip card to front',

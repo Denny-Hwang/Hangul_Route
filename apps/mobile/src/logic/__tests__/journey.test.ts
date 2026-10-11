@@ -1,4 +1,5 @@
 import type { Episode } from '@hangul-route/content-schema';
+import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import { episodesAll, themes } from '../../content';
 import {
@@ -42,10 +43,12 @@ describe('stageAvailability', () => {
     expect(stageAvailability('stage4', episodesAll)).toBe('taste');
     expect(stageAvailability('stage3', episodesAll)).toBe('soon');
   });
-  it('labels are short and English', () => {
-    expect(stagePillLabel('open')).toBe('Open');
-    expect(stagePillLabel('taste')).toBe('Taste');
-    expect(stagePillLabel('soon')).toBe('Soon');
+  it('labels are short and come from the message subtree it is given (F-I18N-001 PR 6b)', () => {
+    const m = getMessages('en').learner.journey.availability;
+    expect(stagePillLabel('open', m)).toBe('Open');
+    expect(stagePillLabel('taste', m)).toBe('Taste');
+    expect(stagePillLabel('soon', m)).toBe('Soon');
+    expect(stagePillLabel('soon', { ...m, soon: { pill: 'Pronto' } })).toBe('Pronto');
   });
 });
 

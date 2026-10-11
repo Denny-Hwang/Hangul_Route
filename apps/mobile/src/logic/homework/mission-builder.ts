@@ -1,4 +1,5 @@
 import type { Episode, ProgressSnapshot, Quest } from '@hangul-route/content-schema';
+import type { Messages } from '@hangul-route/i18n';
 import { nextQuestAfter, offerableQuests, playableEpisodes } from '../next-quest';
 
 /**
@@ -13,15 +14,23 @@ import { nextQuestAfter, offerableQuests, playableEpisodes } from '../next-quest
  * slot falls back down slot ①'s preference chain rather than rendering a card
  * that navigates nowhere (F-HW-001 §9.2). The child-facing invariant is
  * "exactly three live cards", not which engine backs each one.
+ *
+ * A card carries a subtitle *code*, never prose (F-I18N-001 §3.4 rule 3): the
+ * plan is pinned for the day, so it must not freeze a language into it. The
+ * words come from the dictionary through `missionCardText`.
  */
 
 export type MissionCardKind = 'replay' | 'new' | 'daily-test' | 'story';
 
+/** Keys of `learner.home.mission.subtitle`. */
+export type MissionSubtitle = 'replay' | 'story' | 'new' | 'assigned' | 'dailyTest';
+
 export interface MissionCard {
   slot: 1 | 2 | 3;
   kind: MissionCardKind;
-  titleEn: string;
-  subtitleEn: string;
+  /** The quest or episode title (content); `null` on the daily-test card, which names itself. */
+  titleEn: string | null;
+  subtitle: MissionSubtitle;
   /** Present for replay / new cards. */
   questId?: string;
   /** Present for replay / new / story cards. */
@@ -122,7 +131,7 @@ function replayCard(slot: 1 | 3, quest: Quest, episodeId: string | undefined): M
     slot,
     kind: 'replay',
     titleEn: quest.titleEn,
-    subtitleEn: 'One more go with Hoya',
+    subtitle: 'replay',
     questId: quest.id,
     episodeId,
     collected: false,
@@ -134,7 +143,7 @@ function storyCard(slot: 1 | 3, episode: Episode): MissionCard {
     slot,
     kind: 'story',
     titleEn: episode.titleEn,
-    subtitleEn: 'Story time',
+    subtitle: 'story',
     episodeId: episode.id,
     collected: false,
   };
@@ -203,7 +212,7 @@ export function buildTodaysMission(input: BuildMissionInput): MissionPlan {
       slot: 2,
       kind: 'new',
       titleEn: upcoming.titleEn,
-      subtitleEn: 'Something new today',
+      subtitle: 'new',
       questId: upcoming.id,
       episodeId: episodeOfQuest(episodes, upcoming.id)?.id,
       collected: false,
@@ -215,8 +224,8 @@ export function buildTodaysMission(input: BuildMissionInput): MissionPlan {
     cards.push({
       slot: 3,
       kind: 'daily-test',
-      titleEn: 'Quick review',
-      subtitleEn: 'About a minute with Hoya',
+      titleEn: null,
+      subtitle: 'dailyTest',
       collected: false,
     });
   } else {
@@ -234,7 +243,17 @@ export function buildTodaysMission(input: BuildMissionInput): MissionPlan {
   };
 }
 
+type MissionMessages = Messages['learner']['home']['mission'];
+
+/** A card's title and subtitle in the UI language (`m` is `learner.home.mission`). */
+export function missionCardText(card: MissionCard, m: MissionMessages): { title: string; subtitle: string } {
+  return { title: card.titleEn ?? m.dailyTest.title, subtitle: m.subtitle[card.subtitle] };
+}
+
 /** Every learner-visible string in a plan — asserted against banned-text. */
-export function missionCopy(plan: MissionPlan): string[] {
-  return plan.cards.flatMap((c) => [c.titleEn, c.subtitleEn]);
+export function missionCopy(plan: MissionPlan, m: MissionMessages): string[] {
+  return plan.cards.flatMap((c) => {
+    const { title, subtitle } = missionCardText(c, m);
+    return [title, subtitle];
+  });
 }

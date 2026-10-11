@@ -26,6 +26,7 @@ import { episodesAll, questsAll } from '../../content';
 import { useMessages } from '../../i18n/use-messages';
 import {
   buildTodaysMission,
+  missionCardText,
   dayKey,
   type MissionCard,
   type MissionPlan,
@@ -60,13 +61,14 @@ function MissionTile({
   card: MissionCard;
   onPress: () => void;
 }): React.ReactElement {
-  const a11y = useMessages().a11y;
+  const m = useMessages();
+  const { title, subtitle } = missionCardText(card, m.learner.home.mission);
   return (
     <Card
       padding="md"
       tone={card.collected ? 'success' : 'paper'}
       onPress={onPress}
-      accessibilityLabel={a11y.missionCard(card.titleEn, card.subtitleEn, card.collected)}
+      accessibilityLabel={m.a11y.missionCard(title, subtitle, card.collected)}
     >
       <View
         style={{
@@ -79,9 +81,9 @@ function MissionTile({
         <Icon name={ICON_FOR[card.kind]} size={32} color={colors.text.secondary} />
         <View style={{ flex: 1 }}>
           <Body weight="semibold" size="lg">
-            {card.titleEn}
+            {title}
           </Body>
-          <Caption tone="muted">{card.subtitleEn}</Caption>
+          <Caption tone="muted">{subtitle}</Caption>
         </View>
         {card.collected ? <Icon name="sparkle" size={28} color={colors.brand.primary} /> : null}
       </View>

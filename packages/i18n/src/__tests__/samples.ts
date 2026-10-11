@@ -26,4 +26,13 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.library.collected.pill': [[1, 24]],
   'a11y.missionCard': [['Meet Hoya', 'Say hello', false], ['Meet Hoya', 'Say hello', true]],
   'a11y.gridCell': [['Letters', 'hangul', false], ['Letters', 'hangul', true]],
+  'learner.episode.buildsOn': [['Meet g, n, d']],
+  'learner.episode.prereq.message': [['Meet g, n, d']],
+  'learner.results.newCard.announce': [['Hanbok']],
+  'learner.results.newCard.seeA11y': [['Hanbok']],
+  'learner.homework.bubble.some': [[1], [3]],
+  'learner.homework.due.inDays': [[1], [3]],
+  'a11y.episodeCard': [['Hanbok']],
+  'a11y.playAgainQuest': [['Meet Hoya']],
+  'a11y.homeworkRow': [['Meet Hoya', 'Today']],
 };

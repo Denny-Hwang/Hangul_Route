@@ -1,4 +1,5 @@
 import type { Episode, ProgressSnapshot, Quest } from '@hangul-route/content-schema';
+import type { Messages } from '@hangul-route/i18n';
 import { stage1QuestsFrom } from '../stage1/curriculum';
 
 /**
@@ -33,16 +34,15 @@ export function softPrerequisite(input: SoftPrereqInput): Quest | undefined {
 }
 
 /** "Builds on: <previous quest title>", shown under a quest whose predecessor is not complete. */
-export function buildsOnLine(previous: Quest): string {
-  return `Builds on: ${previous.titleEn}`;
+export function buildsOnLine(previous: Quest, m: Messages['learner']['episode']): string {
+  return m.buildsOn(previous.titleEn);
 }
 
 export interface PrereqSheet {
   previousQuestId: string;
   previousEpisodeId: string;
-  message: string;
-  startThereLabel: string;
-  playAnywayLabel: string;
+  /** The previous quest's title (content); the sheet's own words come from `prereqSheetText`. */
+  previousTitleEn: string;
 }
 
 /**
@@ -58,8 +58,18 @@ export function prereqSheet(input: SoftPrereqInput & { shownQuestIds: ReadonlySe
   return {
     previousQuestId: previous.id,
     previousEpisodeId: episode.id,
-    message: `This one uses letters from ${previous.titleEn}. Start there?`,
-    startThereLabel: 'Start there',
-    playAnywayLabel: 'Play anyway',
+    previousTitleEn: previous.titleEn,
+  };
+}
+
+/** The sheet's words in the UI language: kept out of the model so a language change never leaves stale prose. */
+export function prereqSheetText(
+  sheet: PrereqSheet,
+  m: Messages['learner']['episode'],
+): { message: string; startThereLabel: string; playAnywayLabel: string } {
+  return {
+    message: m.prereq.message(sheet.previousTitleEn),
+    startThereLabel: m.prereq.startThere.cta,
+    playAnywayLabel: m.prereq.playAnyway.cta,
   };
 }

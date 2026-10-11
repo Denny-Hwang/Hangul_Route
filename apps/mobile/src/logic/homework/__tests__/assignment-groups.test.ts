@@ -1,4 +1,5 @@
 import type { HomeworkAssignment } from '@hangul-route/content-schema';
+import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import { assignedByLabel, dueLabel, groupAssignments } from '../assignment-groups';
 
@@ -50,19 +51,27 @@ describe('groupAssignments', () => {
   });
 });
 
+const homeworkMessages = getMessages('en').learner.homework;
+
 describe('dueLabel', () => {
+  const due = homeworkMessages.due;
   it('reads Today / Tomorrow / In N days, never a raw date', () => {
-    expect(dueLabel('2026-09-19', '2026-09-19')).toBe('Today');
-    expect(dueLabel('2026-09-17', '2026-09-19')).toBe('Today');
-    expect(dueLabel('2026-09-20', '2026-09-19')).toBe('Tomorrow');
-    expect(dueLabel('2026-09-22', '2026-09-19')).toBe('In 3 days');
+    expect(dueLabel('2026-09-19', '2026-09-19', due)).toBe('Today');
+    expect(dueLabel('2026-09-17', '2026-09-19', due)).toBe('Today');
+    expect(dueLabel('2026-09-20', '2026-09-19', due)).toBe('Tomorrow');
+    expect(dueLabel('2026-09-22', '2026-09-19', due)).toBe('In 3 days');
+  });
+  it('takes its words from the message subtree it is given', () => {
+    const es = { today: 'Hoy', tomorrow: 'Mañana', inDays: (n: number) => `En ${n} días` };
+    expect(dueLabel('2026-09-19', '2026-09-19', es)).toBe('Hoy');
+    expect(dueLabel('2026-09-22', '2026-09-19', es)).toBe('En 3 días');
   });
 });
 
 describe('assignedByLabel', () => {
   it('maps every source to child-readable English', () => {
-    expect(assignedByLabel('parent')).toBe('From home');
-    expect(assignedByLabel('teacher')).toBe('From class');
-    expect(assignedByLabel('system')).toBe('From Hoya');
+    expect(assignedByLabel('parent', homeworkMessages.from)).toBe('From home');
+    expect(assignedByLabel('teacher', homeworkMessages.from)).toBe('From class');
+    expect(assignedByLabel('system', homeworkMessages.from)).toBe('From Hoya');
   });
 });

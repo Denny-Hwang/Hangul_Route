@@ -1,4 +1,5 @@
 import type { Episode, QuestProgress, StageKey, ThemeDef } from '@hangul-route/content-schema';
+import type { Messages } from '@hangul-route/i18n';
 
 /**
  * Journey grid rules (wireframe journey/grid):
@@ -15,15 +16,12 @@ export function stageAvailability(stage: StageKey, episodes: readonly Episode[])
   return shipped === cells.length ? 'open' : 'taste';
 }
 
-export function stagePillLabel(availability: StageAvailability): string {
-  switch (availability) {
-    case 'open':
-      return 'Open';
-    case 'taste':
-      return 'Taste';
-    default:
-      return 'Soon';
-  }
+/** The pill words come from the dictionary (`learner.journey.availability`), passed in as a message subtree. */
+export function stagePillLabel(
+  availability: StageAvailability,
+  m: Messages['learner']['journey']['availability'],
+): string {
+  return m[availability].pill;
 }
 
 export function isEpisodeComplete(

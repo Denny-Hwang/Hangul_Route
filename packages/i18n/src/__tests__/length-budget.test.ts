@@ -72,4 +72,25 @@ describe('length budgets (F-I18N-001 §3.11)', () => {
       expect(paths).toContain(expected);
     }
   });
+
+  it('covers the Episode, Results and Homework pills and CTAs (PR 6b)', () => {
+    const paths = leafPaths(getMessages('en')).filter((p) => BUDGETS[p.split('.').pop() ?? ''] !== undefined);
+    for (const expected of [
+      'learner.episode.comingSoon.pill',
+      'learner.episode.quests.start.cta',
+      'learner.episode.quests.playAgain.cta',
+      'learner.episode.prereq.startThere.cta',
+      'learner.episode.prereq.playAnyway.cta',
+      'learner.results.backHome.cta',
+      'learner.results.episodePage.cta',
+      'learner.results.nextUp.next.cta',
+      'learner.results.nextUp.again.cta',
+      'learner.results.newCard.see.cta',
+      'learner.journey.availability.open.pill',
+      'learner.journey.availability.taste.pill',
+      'learner.journey.availability.soon.pill',
+    ]) {
+      expect(paths).toContain(expected);
+    }
+  });
 });

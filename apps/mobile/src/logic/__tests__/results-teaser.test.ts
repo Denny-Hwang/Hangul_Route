@@ -1,14 +1,17 @@
 import type { Episode, Quest } from '@hangul-route/content-schema';
+import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import { discoverQuest, episodeOf, plainQuest, snapshotWith } from '../stage1/__tests__/fixtures';
 import { isStageEntitled } from '../entitlement';
 import {
   resultsActions,
   resultsTeaser,
+  teaserCtaLabel,
   teaserTappedEvent,
   type ResultsTeaser,
 } from '../quest-flow/results-teaser';
 
+const nextUp = getMessages('en').learner.results.nextUp;
 const Q1 = discoverQuest('quest:q1', ['jamo:giyeok', 'jamo:nieun']);
 const Q2 = discoverQuest('quest:q2', ['jamo:jieut', 'jamo:chieut']);
 const Q3 = discoverQuest('quest:q3', ['jamo:mieum'], { teaserEn: 'Say m like mom' });
@@ -60,7 +63,8 @@ describe('resultsTeaser: which quest is next up', () => {
 describe('resultsTeaser: every game skipped', () => {
   it('offers the same quest again and says so', () => {
     const t = resultsTeaser({ ...base, snapshot: done(), questId: 'quest:q1', total: 0 });
-    expect(t).toMatchObject({ questId: 'quest:q1', episodeId: 'episode:one', again: true, ctaLabel: 'Try this one again' });
+    expect(t).toMatchObject({ questId: 'quest:q1', episodeId: 'episode:one', again: true });
+    expect(teaserCtaLabel(t!, nextUp)).toBe('Try this one again');
   });
 
   it('does not count the skipped quest as done even when the cursor is elsewhere', () => {
@@ -83,7 +87,6 @@ describe('resultsTeaser: the one line', () => {
     const t = resultsTeaser({ ...base, snapshot: done(), questId: 'quest:q1', total: 5 });
     expect(t?.line).toEqual({
       kind: 'letters',
-      lead: 'New letters:',
       letters: [
         { ko: 'ㅈ', romanization: 'j' },
         { ko: 'ㅊ', romanization: 'ch' },
@@ -110,7 +113,7 @@ describe('resultsTeaser: the one line', () => {
       questId: 'quest:q1',
       total: 5,
     });
-    expect(t?.line).toEqual({ kind: 'letters', lead: 'New letters:', letters: [{ ko: 'ㅁ', romanization: 'm' }] });
+    expect(t?.line).toEqual({ kind: 'letters', letters: [{ ko: 'ㅁ', romanization: 'm' }] });
   });
 
   it('uses the "word" Discover pages as no letters and falls to the blurb', () => {
@@ -128,7 +131,20 @@ describe('resultsTeaser: the one line', () => {
   it('never carries a count, a percent or "must"', () => {
     const t = resultsTeaser({ ...base, snapshot: done(), questId: 'quest:q1', total: 5 });
     expect(JSON.stringify(t)).not.toMatch(/%|must|\d+ of \d+/i);
-    expect(t?.ctaLabel).toBe('Play next quest');
+    expect(teaserCtaLabel(t!, nextUp)).toBe('Play next quest');
+    expect(JSON.stringify(t)).not.toMatch(/Play next quest|Try this one again|New letters/);
+  });
+});
+
+describe('teaserCtaLabel: the words come from the message subtree', () => {
+  it('picks "next" or "again" by the teaser, in the given language', () => {
+    const next = { questId: 'quest:q2', again: false } as ResultsTeaser;
+    const again = { questId: 'quest:q1', again: true } as ResultsTeaser;
+    expect(teaserCtaLabel(next, nextUp)).toBe('Play next quest');
+    expect(teaserCtaLabel(again, nextUp)).toBe('Try this one again');
+    const es = { ...nextUp, next: { cta: 'Jugar la siguiente' }, again: { cta: 'Probar otra vez' } };
+    expect(teaserCtaLabel(next, es)).toBe('Jugar la siguiente');
+    expect(teaserCtaLabel(again, es)).toBe('Probar otra vez');
   });
 });
 

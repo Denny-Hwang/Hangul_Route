@@ -1,4 +1,5 @@
 import type { Episode, ProgressSnapshot, Quest } from '@hangul-route/content-schema';
+import type { Messages } from '@hangul-route/i18n';
 import { findJamo } from '../../content/jamo';
 import type { TelemetryEvent } from '../../platform/telemetry';
 import { nextQuestAfter } from '../next-quest';
@@ -8,7 +9,9 @@ import { questTeaches } from '../stage1/curriculum';
  * The Results "Next up" teaser (F-QUEST-002 §3.5, wireframe results/next-quest-teaser).
  * Pure view-model: the screen only paints what it returns, so the cursor, the
  * one-line fallbacks and the button demotion are unit-tested without a renderer.
- * Copy is plain Pre-A1 English and never says "must" or shows a count or percent.
+ * Copy is plain Pre-A1 English and never says "must" or shows a count or percent;
+ * its words ("Play next quest", "New letters:") live in `learner.results.nextUp` and
+ * the screen renders them, so this model carries data only (F-I18N-001 §3.4 rule 3).
  */
 
 /** Hangul inside the teaser is taught content: the screen renders it with `KoreanText`. */
@@ -19,7 +22,7 @@ export interface TeaserLetter {
 
 export type TeaserLine =
   | { kind: 'text'; text: string }
-  | { kind: 'letters'; lead: string; letters: TeaserLetter[] };
+  | { kind: 'letters'; letters: TeaserLetter[] };
 
 export interface ResultsTeaser {
   questId: string;
@@ -28,7 +31,6 @@ export interface ResultsTeaser {
   line?: TeaserLine;
   /** `true` when every game was skipped and the same quest is offered again. */
   again: boolean;
-  ctaLabel: string;
 }
 
 export interface ResultsTeaserInput {
@@ -43,11 +45,7 @@ export interface ResultsTeaserInput {
   isEntitled?: (stageKey: string) => boolean;
 }
 
-const NEXT_LABEL = 'Play next quest';
-const AGAIN_LABEL = 'Try this one again';
-const LETTERS_LEAD = 'New letters:';
-
-/** The one line under the title: `teaserEn`, else "New letters:" from Discover, else `blurbEn`. */
+/** The one line under the title: `teaserEn`, else the new letters from Discover, else `blurbEn`. */
 function teaserLine(quest: Quest): TeaserLine | undefined {
   if (quest.teaserEn) return { kind: 'text', text: quest.teaserEn };
   const letters: TeaserLetter[] = [];
@@ -55,7 +53,7 @@ function teaserLine(quest: Quest): TeaserLine | undefined {
     const jamo = findJamo(id);
     if (jamo) letters.push({ ko: jamo.char, romanization: jamo.romanization });
   }
-  if (letters.length > 0) return { kind: 'letters', lead: LETTERS_LEAD, letters };
+  if (letters.length > 0) return { kind: 'letters', letters };
   if (quest.blurbEn) return { kind: 'text', text: quest.blurbEn };
   return undefined;
 }
@@ -92,8 +90,12 @@ export function resultsTeaser(input: ResultsTeaserInput): ResultsTeaser | undefi
     titleEn: target.titleEn,
     line: teaserLine(target),
     again,
-    ctaLabel: again ? AGAIN_LABEL : NEXT_LABEL,
   };
+}
+
+/** The teaser button's words: "Try this one again" when every game was skipped, else "Play next quest". */
+export function teaserCtaLabel(teaser: Pick<ResultsTeaser, 'again'>, m: Messages['learner']['results']['nextUp']): string {
+  return teaser.again ? m.again.cta : m.next.cta;
 }
 
 const EMPTY_SNAPSHOT: ProgressSnapshot = {

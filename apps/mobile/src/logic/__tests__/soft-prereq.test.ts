@@ -1,9 +1,11 @@
 import type { Episode, Quest } from '@hangul-route/content-schema';
+import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import { episodeOf, plainQuest, snapshotWith } from '../stage1/__tests__/fixtures';
 import {
   buildsOnLine,
   prereqSheet,
+  prereqSheetText,
   previousStage1Quest,
   softPrerequisite,
 } from '../quest-flow/soft-prereq';
@@ -18,6 +20,7 @@ const EPISODES: Episode[] = [
 const done = (...ids: string[]) =>
   snapshotWith(ids.map((id) => ({ questId: `quest:${id}`, episodeId: EPISODES.find((e) => e.questIds.includes(`quest:${id}`))!.id })));
 const base = { quests: QUESTS, episodes: EPISODES };
+const episodeMessages = getMessages('en').learner.episode;
 
 describe('previousStage1Quest', () => {
   it('is the quest before it in Stage 1 order, across episodes', () => {
@@ -57,7 +60,8 @@ describe('softPrerequisite', () => {
 
 describe('buildsOnLine', () => {
   it('reads "Builds on: <title>"', () => {
-    expect(buildsOnLine(QUESTS[0]!)).toBe('Builds on: Title quest:a');
+    expect(buildsOnLine(QUESTS[0]!, episodeMessages)).toBe('Builds on: Title quest:a');
+    expect(buildsOnLine(QUESTS[0]!, { ...episodeMessages, buildsOn: (t: string) => `Sigue: ${t}` })).toBe('Sigue: Title quest:a');
   });
 });
 
@@ -67,6 +71,14 @@ describe('prereqSheet (once per quest per session)', () => {
     expect(sheet).toEqual({
       previousQuestId: 'quest:a',
       previousEpisodeId: 'episode:one',
+      previousTitleEn: 'Title quest:a',
+    });
+  });
+
+  it('carries no prose: the words come from prereqSheetText and the message subtree', () => {
+    const sheet = prereqSheet({ ...base, snapshot: done(), questId: 'quest:b', shownQuestIds: new Set() })!;
+    expect(JSON.stringify(sheet)).not.toMatch(/Start there|Play anyway|uses letters/);
+    expect(prereqSheetText(sheet, episodeMessages)).toEqual({
       message: 'This one uses letters from Title quest:a. Start there?',
       startThereLabel: 'Start there',
       playAnywayLabel: 'Play anyway',
