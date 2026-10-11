@@ -2512,9 +2512,9 @@ export const storiesAll: Story[] = [
     "learningGoalsEn": [
       "Know that 사관 (sagwan) were royal historians who recorded what the king and officials said and did.",
       "Know that the historians' draft notes, 사초 (sacho), were supposed to be kept secret, even from the king.",
-      "Retell the 1404 entry in which King Taejong asked that the historian not be told of his fall, and the historian recorded it anyway.",
+      "Understand the 1404 entry in which King Taejong asked that the historian not be told of his fall, and the historian recorded it anyway.",
       "Know that the Annals (실록, sillok) cover 472 years and 25 kings, from Taejo to Cheoljong.",
-      "Recognize and read 기록, 사관, 사초, 말 and 실록 with romanization."
+      "Read and recognize 기록 (girok), 사관 (sagwan), 사초 (sacho), 말 (mal) and 실록 (sillok)."
     ],
     "origin": {
       "type": "documented",
@@ -2561,7 +2561,7 @@ export const storiesAll: Story[] = [
         "id": "mal",
         "ko": "말",
         "romanization": "mal",
-        "en": "horse; also 'words'",
+        "en": "horse (the same spelling also means 'words')",
         "kind": "word"
       },
       {
@@ -2572,10 +2572,10 @@ export const storiesAll: Story[] = [
         "kind": "word"
       },
       {
-        "id": "sachoneun-wangdo-bol-su-eopseoyo",
-        "ko": "사초는 왕도 볼 수 없어요.",
-        "romanization": "Sachoneun wangdo bol su eopseoyo.",
-        "en": "Even the king cannot see the sacho.",
+        "id": "sachoneun-wangdo-bol-su-eopseosseoyo",
+        "ko": "사초는 왕도 볼 수 없었어요.",
+        "romanization": "Sachoneun wangdo bol su eopseosseoyo.",
+        "en": "Even the king could not read the sacho.",
         "kind": "phrase"
       },
       {
@@ -2593,7 +2593,7 @@ export const storiesAll: Story[] = [
         "scenes": [
           {
             "id": "s1",
-            "narrationEn": "Hoya the little tiger has a big question: how do we know what kings said hundreds of years ago? Because people wrote it down! In the Joseon kingdom, special officials recorded the work of the royal court every day.",
+            "narrationEn": "Hoya the young tiger has a big question: how do we know what kings said hundreds of years ago? Because people wrote it down! In the Joseon kingdom, special officials recorded the work of the royal court every day.",
             "captionEn": "Hoya asks how we know what kings said",
             "keyword": {
               "id": "girok",
@@ -2651,12 +2651,12 @@ export const storiesAll: Story[] = [
           },
           {
             "id": "s4",
-            "narrationEn": "The rule was strict: no one was supposed to read the {kw:sacho}, not even the king. This helped the historians write fairly and protected them.",
+            "narrationEn": "The rule was strict: no one was supposed to read the {kw:sacho}, not even the king. This helped the historians write fairly and protected their position.",
             "captionEn": "Not even the king may read them",
             "line": {
-              "ko": "사초는 왕도 볼 수 없어요.",
-              "romanization": "Sachoneun wangdo bol su eopseoyo.",
-              "en": "Even the king cannot see the sacho.",
+              "ko": "사초는 왕도 볼 수 없었어요.",
+              "romanization": "Sachoneun wangdo bol su eopseosseoyo.",
+              "en": "Even the king could not read the sacho.",
               "speaker": "narrator"
             },
             "factIds": [
@@ -2675,7 +2675,7 @@ export const storiesAll: Story[] = [
               "id": "mal",
               "ko": "말",
               "romanization": "mal",
-              "en": "horse; also 'words'",
+              "en": "horse",
               "kind": "word"
             },
             "factIds": [
@@ -2694,7 +2694,7 @@ export const storiesAll: Story[] = [
               "ko": "사관이 알게 하지 말라.",
               "romanization": "Sagwani alge haji malla.",
               "en": "Do not let the historian know.",
-              "speaker": "narrator"
+              "speaker": "character"
             },
             "factIds": [
               "f6",
