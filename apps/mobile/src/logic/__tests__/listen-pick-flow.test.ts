@@ -431,6 +431,11 @@ describe('optionColumns', () => {
     expect(optionColumns(eight, 390)).toBe(2);
   });
 
+  it('treats an option with no text as short (a bad round is skipped elsewhere)', () => {
+    const bare: ListenPickRound = { ...textRound, options: [{ id: 'a' }, { id: 'b' }] };
+    expect(optionColumns(bare, 390)).toBe(2);
+  });
+
   it('uses one column on a narrow screen', () => {
     expect(optionColumns(textRound, 339)).toBe(1);
     expect(optionColumns(pictureRound, 320)).toBe(1);
