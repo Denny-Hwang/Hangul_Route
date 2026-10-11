@@ -429,6 +429,27 @@ describe('content/i18n/es/placement.json: the Spanish overlay skeleton', () => {
   });
 });
 
+describe('content/i18n/ko/placement.json: the Korean overlay skeleton', () => {
+  /**
+   * Korean glosses wait for the locale-aware validator of F-I18N-001 section 3.7 (today the
+   * base rule rejects Hangul in a gloss) and for native review, so the skeleton has no entries
+   * yet; every template falls back to English until then.
+   */
+  it('exists with the overlay shape and holds only known ids and allowed fields', () => {
+    const overlay = JSON.parse(readFileSync(join(REPO_ROOT, 'content/i18n/ko/placement.json'), 'utf8')) as {
+      locale: string;
+      domain: string;
+      entries: Record<string, Record<string, string>>;
+    };
+    expect(overlay).toMatchObject({ locale: 'ko', domain: 'placement' });
+    const ids = new Set([...all, warmup].map((t) => t.id));
+    for (const [id, entry] of Object.entries(overlay.entries)) {
+      expect(ids.has(id), id).toBe(true);
+      for (const field of Object.keys(entry)) expect(field, id).toMatch(/^(gloss|options\.[a-z0-9-]+\.gloss)$/);
+    }
+  });
+});
+
 describe('the validator and the schema agree on the gate table', () => {
   it('placement-rules.mjs mirrors PLACEMENT_FORMATS and the audio and leak lists', () => {
     const rules = PLACEMENT_RULES as { formats: unknown; strandOfGate: Record<string, string>; audioFormats: string[]; noLeakFormats: string[] };
