@@ -17,6 +17,7 @@ import { hydrateLearnerData } from '../bootstrap';
 import { useLocaleStore } from '../locale-store';
 import { useProfileStore } from '../profile-store';
 import { useProgressStore } from '../progress-store';
+import { useStoryStore } from '../story-store';
 
 const profile = (id: string, displayName: string): Profile => ({ id, displayName, ageGroup: '5-7', avatar: 'hoya-orange', role: 'learner', createdAt: 't' });
 
@@ -40,6 +41,7 @@ describe('cold start (audit UX-01 / L16)', () => {
     useLocaleStore.setState({ detected: 'en', device: null, byProfile: {}, hydrated: false });
     useAudioStore.setState({ muted: false, hydrated: false });
     useLayoutStore.setState({ allowedSideways: false, hydrated: false });
+    useStoryStore.setState({ byProfile: {}, hydratedFor: new Set(), pendingFor: new Set(), clearedFor: {} });
   });
 
   it("loads the profiles, then every profile's saved progress, before resolving", async () => {
@@ -55,6 +57,18 @@ describe('cold start (audit UX-01 / L16)', () => {
     expect([...progress.hydratedFor].sort()).toEqual(['profile:a', 'profile:b']);
     expect(progress.byProfile['profile:a']?.cards.map((c) => c.cardId)).toEqual(['card:book']);
     expect(progress.byProfile['profile:b']?.cards.map((c) => c.cardId)).toEqual(['card:hanji']);
+  });
+
+  it("loads every profile's story bookmarks with its progress, so Home never renders without them (F-STORY-004 §3.2)", async () => {
+    mem.set('profiles', [profile('profile:a', 'Suni'), profile('profile:b', 'Bo')]);
+    mem.set('story:bookmarks:profile:a', { v: 1, byStory: { 'story:sun-and-moon': { level: 'listen', sceneIndex: 3, updatedAt: '2026-10-01T09:05:00.000Z' } } });
+
+    await hydrateLearnerData();
+
+    const stories = useStoryStore.getState();
+    expect([...stories.hydratedFor].sort()).toEqual(['profile:a', 'profile:b']);
+    expect(stories.getBookmark('profile:a', 'story:sun-and-moon')?.sceneIndex).toBe(3);
+    expect(stories.getBookmark('profile:b', 'story:sun-and-moon')).toBeUndefined();
   });
 
   it('the first write after start keeps what was saved', async () => {

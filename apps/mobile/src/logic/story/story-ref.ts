@@ -75,9 +75,16 @@ export function storyScopeFor(ref: string, find: StoryLookup = storyById): Minig
   };
 }
 
+/** A quest's `story-read` step: its index in `steps` and its parsed ref; null for any other quest. */
+export function storyReadStep(quest: Pick<Quest, 'steps'>): { index: number; ref: StoryRef } | null {
+  const index = quest.steps.findIndex((s) => s.minigameKind === 'story-read');
+  const minigameRef = index === -1 ? undefined : quest.steps[index]?.minigameRef;
+  const ref = minigameRef ? parseStoryMinigameRef(minigameRef) : null;
+  return ref ? { index, ref } : null;
+}
+
 function storyReadRef(quest: Pick<Quest, 'steps'>): StoryRef | null {
-  const step = quest.steps.find((s) => s.minigameKind === 'story-read');
-  return step?.minigameRef ? parseStoryMinigameRef(step.minigameRef) : null;
+  return storyReadStep(quest)?.ref ?? null;
 }
 
 /** The story a quest plays, read from its `story-read` step ref. */
