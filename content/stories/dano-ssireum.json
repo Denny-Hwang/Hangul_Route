@@ -5,7 +5,7 @@
   "contentVer": 1,
   "title": {
     "ko": "단오 축제와 씨름",
-    "romanization": "",
+    "romanization": "Dano chukjewa ssireum",
     "en": "Dano Day: Swings, Masks and Ssireum"
   },
   "summaryEn": "Hoya celebrates Dano, Korea's early-summer holiday: hair washed in changpo water, high-flying swings, ssireum wrestling, and the UNESCO-listed Gangneung Danoje with its wordless Gwanno mask drama.",
@@ -14,10 +14,10 @@
   "recommendedStage": 2,
   "minutes": 5,
   "learningGoalsEn": [
-    "Say when Dano falls (5th day of the 5th lunar month) and name two Dano customs (changpo hair-washing, swinging).",
+    "Know when Dano falls (5th day of the 5th lunar month) and name two Dano customs (changpo hair-washing, swinging).",
     "Describe how ssireum is won and what jangsa means.",
     "Explain that Gangneung Danoje (proclaimed 2005, inscribed 2008) and ssireum (2018, joint inscription by both Koreas) are on UNESCO's Representative List.",
-    "Recognize and say 단오, 그네, 씨름, 장사 and 탈."
+    "Read and recognize 단오 (dano), 그네 (geune), 씨름 (ssireum), 장사 (jangsa) and 탈 (tal)."
   ],
   "origin": {
     "type": "documented",
@@ -94,14 +94,14 @@
     },
     {
       "id": "gangneung-danoje",
-      "ko": "강릉단오제",
+      "ko": "강릉 단오제",
       "romanization": "Gangneung Danoje",
       "en": "Gangneung Dano Festival",
       "kind": "word"
     },
     {
       "id": "illyu-muhyeong-yusan",
-      "ko": "인류무형유산",
+      "ko": "인류 무형 유산",
       "romanization": "illyu muhyeong yusan",
       "en": "Intangible Cultural Heritage of Humanity",
       "kind": "word"
@@ -115,6 +115,7 @@
         {
           "id": "s1",
           "narrationEn": "Summer is almost here! Today is Dano, the fifth day of the fifth lunar month. A late-Joseon book, Dongguk sesigi, counted it among Korea's four great holidays, with lots of games and fun.",
+          "captionEn": "Dano, the fifth day of the fifth lunar month",
           "keyword": {
             "id": "dano",
             "ko": "단오",
@@ -127,11 +128,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Hoya in a light summer hanbok on a green hillside in early summer, rice paddies freshly planted below."
         },
         {
           "id": "s2",
           "narrationEn": "Long ago on Dano, people washed their hair in water boiled with changpo, a fragrant plant called sweet flag. They said it made hair thick and shiny.",
+          "captionEn": "Washing hair in changpo water",
           "keyword": {
             "id": "changpo",
             "ko": "창포",
@@ -144,11 +147,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Women by a stream rinsing long hair in a wooden basin; tall sword-shaped sweet-flag leaves at the water's edge; Hoya sniffing a leaf."
         },
         {
           "id": "s3",
           "narrationEn": "Swings hang from tall trees, and people soar into the sky! Swinging, called geunettwigi, has been a favorite Dano game since long ago.",
+          "captionEn": "Swinging high into the sky",
           "keyword": {
             "id": "geunettwigi",
             "ko": "그네뛰기",
@@ -161,11 +166,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "A person in hanbok standing on a long rope swing hung from a big old tree, flying high; Hoya cheering below."
         },
         {
           "id": "s4",
-          "narrationEn": "Another Dano favorite is ssireum, Korean wrestling. Two wrestlers grip each other's satba, a cloth belt around the waist and thigh. In a modern match, whoever first touches the ground with any part of the body from the knee up loses!",
+          "narrationEn": "Another Dano favorite is ssireum, Korean wrestling. Two wrestlers grip each other's {kw:satba}, a cloth belt around the waist and thigh. In a modern match, whoever first touches the ground with any part of the body from the knee up loses!",
+          "captionEn": "Two wrestlers grip each other's satba",
           "keyword": {
             "id": "ssireum",
             "ko": "씨름",
@@ -179,11 +186,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Two wrestlers crouched shoulder to shoulder in a sand ring, each gripping the other's cloth thigh belt; Hoya as a referee."
         },
         {
           "id": "s5",
           "narrationEn": "The champion is called jangsa, meaning 'a very strong person.' Traditionally the winner received an ox, a symbol of plenty in a farming village!",
+          "captionEn": "The jangsa champion and the prize ox",
           "keyword": {
             "id": "jangsa",
             "ko": "장사",
@@ -196,14 +205,16 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "A smiling champion riding a calm brown ox around the sand ring while villagers clap; Hoya leading the ox by a rope."
         },
         {
           "id": "s6",
           "narrationEn": "On Korea's east coast, the city of Gangneung holds a big Dano festival: Gangneung Danoje. It begins with brewing a special drink for the gods, and people hold rites praying for a peaceful village and good harvests.",
+          "captionEn": "Gangneung's big Dano festival",
           "keyword": {
             "id": "gangneung-danoje",
-            "ko": "강릉단오제",
+            "ko": "강릉 단오제",
             "romanization": "Gangneung Danoje",
             "en": "Gangneung Dano Festival",
             "kind": "word"
@@ -213,11 +224,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "A riverside festival ground with colorful paper lanterns and banners, a ritual table with offerings, mountains in the distance; Hoya in the crowd."
         },
         {
           "id": "s7",
           "narrationEn": "Look, masks! In the Gwanno mask drama, performers make the audience laugh using only gestures. They never say a word! It is known as Korea's only mask drama with no spoken lines.",
+          "captionEn": "The Gwanno mask drama, with no words",
           "keyword": {
             "id": "tal",
             "ko": "탈",
@@ -230,14 +243,16 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Masked performers in a playful pose on an open-air stage: a long-bearded nobleman (yangban) mask and a white-faced young-lady (somae-gaksi) mask; the audience laughing, Hoya giggling."
         },
         {
           "id": "s8",
           "narrationEn": "In 2005, UNESCO proclaimed Gangneung Danoje a masterpiece of intangible heritage; in 2008 it joined the Representative List. In 2018, ssireum was inscribed after North and South Korea merged their applications, which UNESCO called unprecedented.",
+          "captionEn": "Danoje and ssireum on UNESCO's list",
           "keyword": {
             "id": "illyu-muhyeong-yusan",
-            "ko": "인류무형유산",
+            "ko": "인류 무형 유산",
             "romanization": "illyu muhyeong yusan",
             "en": "Intangible Cultural Heritage of Humanity",
             "kind": "word"
@@ -248,6 +263,7 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Hoya holding a glowing heritage card with a swing, a mask and two wrestlers on it, standing under festival lanterns."
         }
       ],
@@ -278,6 +294,7 @@
               "isCorrect": false
             }
           ],
+          "explainEn": "Ssireum wrestlers grip each other's satba, a cloth belt worn around the waist and thigh.",
           "factIds": [
             "f5"
           ]
@@ -308,6 +325,7 @@
               "isCorrect": false
             }
           ],
+          "explainEn": "The Gwanno mask drama has no spoken lines. Masked performers amuse the audience with gestures alone.",
           "factIds": [
             "f8"
           ]
@@ -333,6 +351,7 @@
               "isCorrect": true
             }
           ],
+          "explainEn": "Gangneung Danoje joined UNESCO's Representative List in 2008. It is the only Korean Dano festival on that list.",
           "factIds": [
             "f9"
           ]
@@ -658,6 +677,6 @@
     "scope": "cluster",
     "notes": "Third independent pass over 6 episodes / 61 facts / 161 source entries (70 unique URLs). Every URL was re-fetched with my own scripts (UNESCO pages via Wayback copies; heritage.go.kr descriptions via the portal ajax html and khs.go.kr open API; folkency via its JSON API) and each quote or locator was machine-matched to the page text; the few non-matching strings were checked by hand (portal metadata fields, hanja or footnote punctuation, label text). Corrections: (1) pansori scene 2 now gives both UNESCO steps (2003 masterpiece proclamation, 2008 Representative List); (2) pansori f11 states the Aesop title as in the cited Townsend text and the common alternate title; (3) added sources: NFM 놀보박타령 for 'greedy' (f5), 표준국어대사전 타다 for 'sawed' (f6), 한국민족문화대백과사전 선도해 for the Samguk sagi tale (f12); (4) Seollal f9/f10 designation-date locators now cite the KHS open API field. No other change. See seasons-tales.signoff.md."
   },
-  "authorNotes": "Left out on purpose: the story that Dano comes from China (Qu Yuan), folk etymology of 수릿날, the 석전 (stone fight) custom, shamanic (굿) details, the festival's deities by name (김유신, 범일국사, 정씨 처녀), and how long the festival lasts. Sources describe its length differently (UNESCO says four weeks; the 국가유산포털 says 5 days of rites at the 단오장). The 'only silent mask drama' claim comes from one official source (국가유산청 국가유산포털), so the narration hedges it as 'known as'. The knee rule describes modern competition ssireum (Encyclopedia of Korean Culture). The narration uses 'east coast' and doesn't name the sea. 단오 was also designated National Intangible Heritage on 2023-12-18. That's covered in the Seollal episode and not repeated here. The 2023 Dano designation (KHS press release) is available if wanted. Standard spelling note: 단옷날 (with 사이시옷) is the dictionary form; the title uses 단오 only. REVISION 2026-10-10: \"four great holidays\" now dated to the late-Joseon Dongguk sesigi (1518 list had three); knee rule labelled modern competition rule and phrased \"from the knee up\"; Gwanno illustration now nobleman (yangban) mask + young-lady (somae-gaksi) mask; \"only silent mask drama\" kept hedged and now has two sources (KHS portal; 국립민속박물관 한국세시풍속사전). UNESCO: Danoje proclaimed 2005, inscribed 2008 (stated both). Ox: UNESCO says ox; encykorea says 황소 (bull) - narration follows UNESCO. Check 3 changed to a question that does not rely on \"from Gangneung\".",
+  "authorNotes": "Left out on purpose: the story that Dano comes from China (Qu Yuan), folk etymology of 수릿날, the 석전 (stone fight) custom, shamanic (굿) details, the festival's deities by name (김유신, 범일국사, 정씨 처녀), and how long the festival lasts. Sources describe its length differently (UNESCO says four weeks; the 국가유산포털 says 5 days of rites at the 단오장). The 'only silent mask drama' claim comes from one official source (국가유산청 국가유산포털), so the narration hedges it as 'known as'. The knee rule describes modern competition ssireum (Encyclopedia of Korean Culture). The narration uses 'east coast' and doesn't name the sea. 단오 was also designated National Intangible Heritage on 2023-12-18. That's covered in the Seollal episode and not repeated here. The 2023 Dano designation (KHS press release) is available if wanted. Standard spelling note: 단옷날 (with 사이시옷) is the dictionary form; the title uses 단오 only. REVISION 2026-10-10: \"four great holidays\" now dated to the late-Joseon Dongguk sesigi (1518 list had three); knee rule labelled modern competition rule and phrased \"from the knee up\"; Gwanno illustration now nobleman (yangban) mask + young-lady (somae-gaksi) mask; \"only silent mask drama\" kept hedged and now has two sources (KHS portal; 국립민속박물관 한국세시풍속사전). UNESCO: Danoje proclaimed 2005, inscribed 2008 (stated both). Ox: UNESCO says ox; encykorea says 황소 (bull) - narration follows UNESCO. Check 3 changed to a question that does not rely on \"from Gangneung\". AUTHORING 2026-10-11 (F-STORY-001 PR 1.8d): title romanization, scene captions and check explanations written from the cited facts; every scene is artPending (text-only tile) until the art PRs; no claim or source changed. Korean spacing: learner terms are written 강릉 단오제 and 인류 무형 유산 (spaced by word, 한글 맞춤법 제49항/제50항) so each word lines up with Gangneung Danoje and illyu muhyeong yusan; the facts keep the official spellings.",
   "errata": []
 }
