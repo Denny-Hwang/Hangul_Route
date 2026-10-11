@@ -18,7 +18,12 @@ export type IconName =
   | 'settings'
   | 'profile'
   | 'plus'
-  | 'sparkle';
+  | 'sparkle'
+  | 'pin'
+  | 'check-circle'
+  | 'book'
+  | 'ear'
+  | 'pencil';
 
 export interface IconProps {
   name: IconName;
