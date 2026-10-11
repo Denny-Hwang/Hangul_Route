@@ -1,4 +1,6 @@
 import { expect, type Page } from '@playwright/test';
+import { layoutClassFor } from '@hangul-route/design-system/layout';
+import { isDeviceLandscape, isPhoneDevice } from '../../src/logic/layout/orientation-guard';
 
 /**
  * Shared onboarding for the web e2e specs (F-LEARN-001 §5). Every spec that
@@ -114,17 +116,25 @@ export async function completeSelfForm(page: Page, o: OnboardOptions): Promise<v
 
 /**
  * A touch phone held sideways is asked to turn upright (F-LAYOUT-001 §3.4). Specs that run at a
- * landscape phone size (844x390, the 590x410 zoom proxy) answer "Keep sideways" once, right after
- * the first `goto`; the choice is saved on the device, so later opens in the same test skip it.
- * A no-op at every other size and with a mouse.
+ * landscape phone size (844x390) answer "Keep sideways" once, right after the first `goto`; the
+ * choice is saved on the device, so later opens in the same test skip it. Decided with the guard's
+ * own rules (`isPhoneDevice` / `isDeviceLandscape` on the emulated screen), so a token change
+ * cannot make the helper drift from the guard. A no-op at every other size, on a tablet screen
+ * and with a mouse.
  */
 export async function keepSidewaysIfAsked(page: Page): Promise<void> {
   const vp = page.viewportSize();
   if (!vp) return;
-  const phoneOnItsSide = vp.width > vp.height && Math.min(vp.width, vp.height) < 600 && Math.max(vp.width, vp.height) <= 1000;
-  if (!phoneOnItsSide) return;
-  const touch = await page.evaluate(() => window.matchMedia('(pointer: coarse)').matches);
-  if (!touch) return;
+  const device = await page.evaluate(() => {
+    const type = typeof screen.orientation?.type === 'string' ? screen.orientation.type : '';
+    return {
+      coarse: window.matchMedia('(pointer: coarse)').matches,
+      screen: { width: screen.width, height: screen.height },
+      orientation: type.startsWith('landscape') ? ('landscape' as const) : type.startsWith('portrait') ? ('portrait' as const) : null,
+    };
+  });
+  const l = layoutClassFor(vp);
+  if (!device.coarse || !isPhoneDevice(l, layoutClassFor(device.screen).form) || !isDeviceLandscape(l, device.orientation)) return;
   const keep = page.getByRole('button', { name: 'Keep sideways' });
   await expect(keep).toBeVisible();
   await keep.click();

@@ -1,6 +1,15 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import * as native from '../orientation';
-import { coarsePointer, currentPath, tryLockPortrait, unlock } from '../orientation.web';
+import {
+  coarsePointer,
+  currentPath,
+  deviceOrientation,
+  deviceScreen,
+  editingText,
+  subscribeDeviceOrientation,
+  tryLockPortrait,
+  unlock,
+} from '../orientation.web';
 
 /** Stubs the window bits the wrapper reads: matchMedia (standalone + pointer), screen.orientation, location. */
 function stubWindow(o: { coarse?: boolean; standalone?: boolean; lock?: () => Promise<void>; unlock?: () => void; path?: string }): void {
@@ -21,6 +30,14 @@ describe('platform/orientation (native stub)', () => {
     await expect(native.tryLockPortrait('phone')).resolves.toBeUndefined();
     expect(() => native.unlock()).not.toThrow();
     expect(native.currentPath()).toBeNull();
+  });
+
+  it('knows nothing about the device (the app is portrait-locked by app.json) and never sees typing', () => {
+    expect(native.deviceOrientation()).toBeNull();
+    expect(native.deviceScreen()).toBeNull();
+    expect(native.editingText()).toBe(false);
+    const off = native.subscribeDeviceOrientation(() => undefined);
+    expect(() => off()).not.toThrow();
   });
 });
 
@@ -91,5 +108,93 @@ describe('platform/orientation.web', () => {
     expect(currentPath()).toBe('/present/abc');
     vi.stubGlobal('location', undefined);
     expect(currentPath()).toBeNull();
+  });
+
+  it('deviceOrientation reads screen.orientation.type first', () => {
+    vi.stubGlobal('screen', { orientation: { type: 'landscape-primary' } });
+    expect(deviceOrientation()).toBe('landscape');
+    vi.stubGlobal('screen', { orientation: { type: 'portrait-secondary' } });
+    expect(deviceOrientation()).toBe('portrait');
+  });
+
+  it('deviceOrientation falls back to window.orientation, then the orientation media query, then null', () => {
+    vi.stubGlobal('screen', {});
+    vi.stubGlobal('orientation', -90);
+    expect(deviceOrientation()).toBe('landscape');
+    vi.stubGlobal('orientation', 180);
+    expect(deviceOrientation()).toBe('portrait');
+    vi.stubGlobal('orientation', undefined);
+    vi.stubGlobal('matchMedia', vi.fn((q: string) => ({ matches: q === '(orientation: landscape)' })));
+    expect(deviceOrientation()).toBe('landscape');
+    vi.stubGlobal('matchMedia', vi.fn(() => ({ matches: false })));
+    expect(deviceOrientation()).toBe('portrait');
+    vi.stubGlobal('screen', { orientation: { type: 'weird' } });
+    vi.stubGlobal('matchMedia', undefined);
+    expect(deviceOrientation()).toBeNull();
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn(() => {
+        throw new Error('no');
+      }),
+    );
+    expect(deviceOrientation()).toBeNull();
+  });
+
+  it('deviceScreen reads screen.width / height, null when missing or zero', () => {
+    vi.stubGlobal('screen', { width: 820, height: 1180 });
+    expect(deviceScreen()).toEqual({ width: 820, height: 1180 });
+    vi.stubGlobal('screen', { width: 0, height: 0 });
+    expect(deviceScreen()).toBeNull();
+    vi.stubGlobal('screen', {});
+    expect(deviceScreen()).toBeNull();
+    vi.stubGlobal('screen', undefined);
+    expect(deviceScreen()).toBeNull();
+  });
+
+  it('editingText is true only for a focused text field', () => {
+    const doc = (el: unknown) => vi.stubGlobal('document', { activeElement: el });
+    doc({ tagName: 'INPUT', type: 'text' });
+    expect(editingText()).toBe(true);
+    doc({ tagName: 'INPUT', type: 'email' });
+    expect(editingText()).toBe(true);
+    doc({ tagName: 'TEXTAREA' });
+    expect(editingText()).toBe(true);
+    doc({ tagName: 'DIV', isContentEditable: true });
+    expect(editingText()).toBe(true);
+    doc({ tagName: 'INPUT', type: 'checkbox' });
+    expect(editingText()).toBe(false);
+    doc({ tagName: 'BUTTON' });
+    expect(editingText()).toBe(false);
+    doc(null);
+    expect(editingText()).toBe(false);
+    vi.stubGlobal('document', undefined);
+    expect(editingText()).toBe(false);
+  });
+
+  it('subscribeDeviceOrientation listens to screen.orientation change and unsubscribes', () => {
+    const add = vi.fn();
+    const remove = vi.fn();
+    vi.stubGlobal('screen', { orientation: { addEventListener: add, removeEventListener: remove } });
+    const cb = vi.fn();
+    const off = subscribeDeviceOrientation(cb);
+    expect(add).toHaveBeenCalledWith('change', cb);
+    off();
+    expect(remove).toHaveBeenCalledWith('change', cb);
+  });
+
+  it('subscribeDeviceOrientation falls back to orientationchange, and is a no-op without either', () => {
+    const add = vi.fn();
+    const remove = vi.fn();
+    vi.stubGlobal('screen', {});
+    vi.stubGlobal('addEventListener', add);
+    vi.stubGlobal('removeEventListener', remove);
+    const cb = vi.fn();
+    const off = subscribeDeviceOrientation(cb);
+    expect(add).toHaveBeenCalledWith('orientationchange', cb);
+    off();
+    expect(remove).toHaveBeenCalledWith('orientationchange', cb);
+    vi.stubGlobal('screen', undefined);
+    vi.stubGlobal('addEventListener', undefined);
+    expect(() => subscribeDeviceOrientation(cb)()).not.toThrow();
   });
 });

@@ -1,6 +1,6 @@
 import type { LayoutClass } from '@hangul-route/design-system';
 import { useEffect } from 'react';
-import { layoutObservedPayload } from '../logic/layout/orientation-guard';
+import { layoutObservedPayload, shouldEmitObserved } from '../logic/layout/orientation-guard';
 import { isStandalone } from '../platform/pwa';
 import { track } from '../platform/telemetry';
 
@@ -15,7 +15,7 @@ let observed = false;
 export function useLayoutObserved(layout: LayoutClass): void {
   const known = layout.windowWidth > 0 && layout.windowHeight > 0;
   useEffect(() => {
-    if (observed || !known) return;
+    if (!shouldEmitObserved(observed, layout)) return;
     observed = true;
     void track({ name: 'layout.observed', payload: { ...layoutObservedPayload(layout, isStandalone()) } });
     // Only the first known size counts; later resizes are not re-reported.

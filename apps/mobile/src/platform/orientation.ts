@@ -24,3 +24,24 @@ export function unlock(): void {}
 export function currentPath(): string | null {
   return null;
 }
+
+/** The device orientation: unknown here (the app is portrait-locked by `app.json`), so the window decides. */
+export function deviceOrientation(): 'portrait' | 'landscape' | null {
+  return null;
+}
+
+/** The physical screen: unknown here, so the window decides. */
+export function deviceScreen(): { width: number; height: number } | null {
+  return null;
+}
+
+/** A focused text field; the native guard never needs it (no landscape on native). */
+export function editingText(): boolean {
+  return false;
+}
+
+/** Device turns; nothing to listen to here. */
+export function subscribeDeviceOrientation(_callback: () => void): () => void {
+  return () => undefined;
+}
+
