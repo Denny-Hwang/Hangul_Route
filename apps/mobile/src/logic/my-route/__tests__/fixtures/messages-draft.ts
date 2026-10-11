@@ -40,7 +40,7 @@ export const DRAFT_EN: MyRouteMessages = {
         4: 'Follow a short greeting conversation and pick a reply.',
         5: 'Read a short story from start to end.',
         6: 'Read menus, signs and short messages.',
-        7: 'Write a few sentences about yourself.',
+        7: 'Write a few sentences about daily life and favorite things.',
       },
     },
     laterGroup: (from, to) => `Stages ${from} to ${to}`,
@@ -50,6 +50,8 @@ export const DRAFT_EN: MyRouteMessages = {
   },
   grownup: {
     here: (name, n, title) => `${name} is on Stage ${n}: ${title}.`,
+    next: (title) => `Next: ${title}`,
+    canDoLead: (name) => `By the end of this stage, ${name} can:`,
     started: (name) => `${name} started here.`,
     known: (name) => `${name} already knew this.`,
     quests: (name, n) => `In ${quests(n)} ${name} finished`,

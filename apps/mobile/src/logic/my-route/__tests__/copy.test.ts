@@ -135,8 +135,19 @@ describe('stage words, captions and tags (sections 3.3, 3.11)', () => {
     expect(row(m, 'stage3').cells.map((c) => cellWord(c, self))).toEqual(Array(5).fill('Coming later'));
   });
 
-  it('the can-do line of the expanded stage', () => {
+  it('the can-do line of the expanded stage, for the learner and about the child', () => {
     expect(canDoCopy(row(model([]), 'stage1'), self)).toEqual({ lead: 'By the end of this stage you can:', line: 'Read any Hangul letter and syllable and know its sound.' });
+    expect(canDoCopy(row(model([]), 'stage7'), grownup)).toEqual({ lead: 'By the end of this stage, Sam can:', line: 'Write a few sentences about daily life and favorite things.' });
+  });
+
+  it('a stage that is later only because it is not entitled reads "Not open yet", never "Coming later" (OD-4 other branch)', () => {
+    const m = model([], { isEntitled: (s) => s === 'stage1' });
+    expect(row(m, 'stage2').state).toBe('later');
+    expect(stageStateWord(row(m, 'stage2'), self)).toBe('Not open yet');
+    expect(stageCaptions(row(m, 'stage2'), self)).toEqual(['Read everyday words and know what they mean.', 'Not open yet']);
+    expect(row(m, 'stage2').cells.map((c) => cellWord(c, self))).toEqual(['Coming later', 'Not open yet', 'Coming later', 'Not open yet', 'Coming later']);
+    expect(stageStateWord(row(m, 'stage3'), self)).toBe('Coming later');
+    expect(stageA11yLabel(row(m, 'stage4'), self)).toBe('Stage 4, Dialogue. Not open yet.');
   });
 
   it('the row label reads the row for a screen reader', () => {
@@ -158,10 +169,20 @@ describe('trailEntries (section 3.11: consecutive coming-later stages merge)', (
     ]);
   });
 
-  it('every stage coming later merges into one row', () => {
-    const entries = trailEntries(model([], { isEntitled: () => false }), self);
-    expect(entries).toHaveLength(1);
-    expect(entries[0]).toMatchObject({ kind: 'later', label: 'Stages 1 to 7' });
+  it('consecutive coming-later stages merge into one row', () => {
+    const entries = trailEntries(model([], {}, { episodes: BUNDLE_8.episodes.filter((e) => e.stage !== 'stage2' && e.stage !== 'stage4'), quests: BUNDLE_8.quests }), self);
+    expect(entries.map((e) => (e.kind === 'stage' ? e.row.stage : e.label))).toEqual(['stage1', 'Stages 2 to 7']);
+  });
+
+  it('a not-open-yet stage keeps its own row and never joins a coming-later run', () => {
+    const entries = trailEntries(model([], { isEntitled: (s) => s === 'stage1' }), self);
+    expect(entries.map((e) => (e.kind === 'stage' ? e.row.stage : `${e.stages.join('+')}: ${e.label}`))).toEqual([
+      'stage1',
+      'stage2',
+      'stage3: Coming later',
+      'stage4',
+      'stage5+stage6+stage7: Stages 5 to 7',
+    ]);
   });
 });
 
@@ -200,35 +221,81 @@ describe('the other lines', () => {
   });
 });
 
-/** Every string the drafts can render, with the arguments it was called with. */
-function renderAll(m: MyRouteMessages): Array<{ path: string; text: string; surface: Surface; args: unknown[] }> {
-  const out: Array<{ path: string; text: string; surface: Surface; args: unknown[] }> = [];
+type Rendered = { path: string; text: string; surface: Surface; args: unknown[] };
+
+/**
+ * Realistic arguments for every message that takes some, keyed by its path:
+ * counts in {1, 2, 7}, real stage titles and orders, a real name. A message
+ * missing here fails the "every message has samples" test, so a new key must
+ * add its own.
+ */
+const N = [1, 2, 7];
+const NAMES = ['Sam', 'Alex'];
+const TITLES: Array<[number, string]> = [
+  [1, 'Hangul'],
+  [2, 'Words'],
+  [7, 'Self-expression'],
+];
+const QUEST_TITLES = ['Family at the Table', 'Meet the First Letters'];
+const STATE_WORDS = ['Open', 'Complete', 'Coming later'];
+const SAMPLES: Record<string, unknown[][]> = {
+  'learner.myRoute.hero.here': TITLES,
+  'learner.myRoute.hero.next': QUEST_TITLES.map((t) => [t]),
+  'learner.myRoute.caption.played': N.map((n) => [n]),
+  'learner.myRoute.laterGroup': [
+    [5, 7],
+    [2, 3],
+  ],
+  'learner.myRoute.newQuests': N.map((n) => [n, 1]),
+  'learner.myRoute.skill.quests': N.map((n) => [n]),
+  'caregiver.journey.here': NAMES.flatMap((name) => TITLES.map(([n, t]) => [name, n, t])),
+  'caregiver.journey.next': QUEST_TITLES.map((t) => [t]),
+  'caregiver.journey.canDoLead': NAMES.map((n) => [n]),
+  'caregiver.journey.started': NAMES.map((n) => [n]),
+  'caregiver.journey.known': NAMES.map((n) => [n]),
+  'caregiver.journey.quests': NAMES.flatMap((name) => N.map((n) => [name, n])),
+  'caregiver.journey.viewing': NAMES.map((n) => [n]),
+  'caregiver.journey.tiles': N.map((n) => [n]),
+  'caregiver.journey.start': NAMES.map((n) => [n]),
+  'caregiver.journey.rest': NAMES.map((n) => [n]),
+  'caregiver.journey.beyond': NAMES.map((n) => [n]),
+  'caregiver.journey.hereTag': NAMES.map((n) => [n]),
+  'caregiver.journey.ready': NAMES.map((n) => [n]),
+  'caregiver.journey.explored': NAMES.map((n) => [n]),
+  'caregiver.journey.skillsTitle': NAMES.map((n) => [n]),
+  'a11y.myRoute.stage': TITLES.flatMap(([n, t]) => STATE_WORDS.map((w, i) => [n, t, w, i === 0, i === 1, N[i]])),
+  'a11y.myRoute.stageGrownup': TITLES.flatMap(([n, t]) => STATE_WORDS.map((w, i) => ['Sam', n, t, w, i === 0, i === 1, N[i]])),
+};
+
+/** Every string the drafts can render, with the realistic arguments it was called with. */
+function renderAll(m: MyRouteMessages): { rendered: Rendered[]; unsampled: string[] } {
+  const rendered: Rendered[] = [];
+  const unsampled: string[] = [];
   const walk = (node: unknown, path: string, surface: Surface): void => {
-    if (typeof node === 'string') out.push({ path, text: node, surface, args: [] });
+    if (typeof node === 'string') rendered.push({ path, text: node, surface, args: [] });
     else if (typeof node === 'function') {
-      for (const args of SAMPLE_ARGS(node.length)) out.push({ path, text: (node as (...a: unknown[]) => string)(...args), surface, args });
+      const samples = SAMPLES[path];
+      if (samples === undefined) unsampled.push(path);
+      for (const args of samples ?? []) rendered.push({ path, text: (node as (...a: unknown[]) => string)(...args), surface, args });
     } else if (node !== null && typeof node === 'object') for (const [k, v] of Object.entries(node)) walk(v, `${path}.${k}`, surface);
   };
   walk(m.learner, 'learner.myRoute', 'learner');
   walk(m.grownup, 'caregiver.journey', 'caregiver');
   walk(m.skillsNote, 'caregiver.skillsNote', 'caregiver');
   walk(m.a11y, 'a11y.myRoute', 'a11y');
-  return out;
+  return { rendered, unsampled };
 }
-const SAMPLE_ARGS = (arity: number): unknown[][] => {
-  const pools: unknown[][] = [
-    [1, 'Sam', 'Hangul', 'Open', true, false, 1],
-    [7, 'Alex', 'Words', 'Complete', false, true, 4],
-    ['Sam', 3, 'Hangul', 'Open', true, true, 0],
-  ];
-  return pools.map((p) => p.slice(0, Math.max(arity, 1)));
-};
+
+/** Second person, in any form. */
+const YOU = /\byou(r|rs|rself|'re|'ve|'ll)?\b/i;
 
 describe('copy rules on the Appendix B drafts (section 3.13)', () => {
-  const rendered = renderAll(DRAFT_EN);
+  const { rendered, unsampled } = renderAll(DRAFT_EN);
 
-  it('renders every string', () => {
+  it('renders every string, every message with realistic samples', () => {
+    expect(unsampled).toEqual([]);
     expect(rendered.length).toBeGreaterThan(60);
+    expect(rendered.find((r) => r.path === 'learner.myRoute.hero.here')?.text).toBe('You are on Stage 1: Hangul.');
   });
 
   for (const { path, text, surface, args } of rendered) {
@@ -237,10 +304,11 @@ describe('copy rules on the Appendix B drafts (section 3.13)', () => {
     });
   }
 
-  it('grown-up copy is written about the child, never to them', () => {
+  it('the grown-up dictionary slice is written about the child, never to them', () => {
     for (const { text } of rendered.filter((r) => r.path.startsWith('caregiver.journey') || r.path === 'a11y.myRoute.stageGrownup'))
-      expect(text).not.toMatch(/\byou(r)?\b/i);
+      expect(text).not.toMatch(YOU);
   });
+
 });
 
 describe('copyViolations catches each rule', () => {
@@ -271,5 +339,49 @@ describe('copyViolations catches each rule', () => {
     expect(copyViolations('Tu nivel', 'es', 'caregiver')).toEqual([]);
     expect(copyViolations('남은 퀘스트', 'ko', 'learner')).toContain('banned "남은"');
     expect(copyViolations('발음해 보세요', 'ko', 'learner')).toContain('speaking word "발음"');
+  });
+});
+
+describe('viewer grownup: every selector output is third person (section 3.12)', () => {
+  const ENTITLEMENTS: Array<MyRouteInput['isEntitled']> = [() => true, (s) => s === 'stage1'];
+  const latched = { stageDoneAt: { stage1: '2026-10-01T00:00:00.000Z' } };
+  const models: MyRouteModel[] = [
+    ...ENTITLEMENTS.flatMap((isEntitled) => [
+      model([], { isEntitled }),
+      model(APPENDIX_C, { isEntitled }),
+      model(ALL_8, { isEntitled }),
+      model([], { isEntitled, route: seed(STAGE1_8) }),
+      model(['quest:stage2-life-q1', 'quest:stage2-nature-q1'], { isEntitled }),
+      model(ALL_8, { isEntitled, route: seed([], { beyondContent: true }) }),
+      model(STAGE1_8, { isEntitled }, BUNDLE_15, latched),
+    ]),
+  ];
+  const outputs = (m: MyRouteModel): string[] => {
+    const out: string[] = [];
+    for (const nextTitle of [null, 'Family at the Table'])
+      for (const hasStories of [true, false]) {
+        const hero = heroCopy(m, grownup, { nextTitle, hasStories });
+        out.push(...hero.lines);
+        expect(hero.cta).toBeNull();
+      }
+    for (const r of m.stages) {
+      out.push(stageStateWord(r, grownup), ...stageCaptions(r, grownup), ...stageTags({ ...r, isStart: true }, grownup), stageA11yLabel(r, grownup));
+      const can = canDoCopy(r, grownup);
+      out.push(can.lead, can.line, ...r.cells.map((c) => cellWord(c, grownup)));
+    }
+    for (const e of trailEntries(m, grownup)) if (e.kind === 'later') out.push(e.label);
+    for (const sk of m.skills) {
+      const c = skillCopy(sk, grownup);
+      out.push(c.label, c.detail);
+    }
+    out.push(skillsTitle(grownup), skillsNoteCopy(grownup) ?? '', tilesCopy(m, grownup) ?? '', viewingCopy(grownup) ?? '', newQuestsCopy(m, grownup) ?? '');
+    return out;
+  };
+
+  it('never says "you" in any form, across heroes, states, entitlements and latches', () => {
+    expect(new Set(models.map((m) => m.hero))).toEqual(new Set(['start', 'continue', 'rest', 'beyond']));
+    const states = new Set(models.flatMap((m) => m.stages.map((r) => r.state)));
+    expect(states).toEqual(new Set(['complete', 'known', 'explored', 'open', 'later']));
+    for (const m of models) for (const text of outputs(m)) expect(text, text).not.toMatch(YOU);
   });
 });

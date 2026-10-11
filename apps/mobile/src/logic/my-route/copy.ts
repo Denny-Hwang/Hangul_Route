@@ -46,6 +46,8 @@ export interface LearnerRouteMessages {
 /** `caregiver.journey`: the same sentences about the child. */
 export interface GrownupJourneyMessages {
   here: (name: string, n: number, title: string) => string;
+  next: (title: string) => string;
+  canDoLead: (name: string) => string;
   started: (name: string) => string;
   known: (name: string) => string;
   quests: (name: string, n: number) => string;
@@ -104,7 +106,7 @@ export function heroCopy(model: MyRouteModel, ctx: CopyContext, extra: { nextTit
     case 'continue': {
       const here = model.stages.find((s) => s.here) as StageRow;
       lines = [g ? grownup.here(ctx.name, here.order, here.title) : learner.hero.here(here.order, here.title)];
-      if (extra.nextTitle !== null) lines.push(learner.hero.next(extra.nextTitle));
+      if (extra.nextTitle !== null) lines.push(g ? grownup.next(extra.nextTitle) : learner.hero.next(extra.nextTitle));
       cta = { action: 'quest', label: learner.hero.cta.continue };
       break;
     }
@@ -120,6 +122,16 @@ export function heroCopy(model: MyRouteModel, ctx: CopyContext, extra: { nextTit
   return { lines, cta: g ? null : cta };
 }
 
+/**
+ * A `later` stage or cell that has playable quests is `later` only because the
+ * learner is not entitled to it (OD-4's other branch): it reads the neutral
+ * "Not open yet", never "Coming later", which would be false for shipped
+ * content (section 3.3).
+ */
+const hasQuestPips = (pips: readonly { kind: 'quest' | 'cell' }[]): boolean => pips.some((p) => p.kind === 'quest');
+const isNotOpenYet = (row: StageRow): boolean => row.state === 'later' && row.cells.some((c) => hasQuestPips(c.pips));
+const laterWord = (row: StageRow, ctx: CopyContext): string => (isNotOpenYet(row) ? ctx.m.learner.state.notOpen : ctx.m.learner.state.later);
+
 const knownWord = (ctx: CopyContext): string => (isGrownup(ctx) ? ctx.m.grownup.known(ctx.name) : ctx.m.learner.state.known);
 
 /** The state word shown as the row's pill. */
@@ -133,7 +145,7 @@ export function stageStateWord(row: StageRow, ctx: CopyContext): string {
     case 'explored':
       return state.explored;
     case 'later':
-      return state.later;
+      return laterWord(row, ctx);
     case 'open':
       return row.availability === 'taste' ? state.taste : state.open;
   }
@@ -144,7 +156,7 @@ export function stageCaptions(row: StageRow, ctx: CopyContext): string[] {
   const { learner, grownup } = ctx.m;
   const g = isGrownup(ctx);
   let lines: string[];
-  if (row.state === 'later') lines = [learner.stage.canDo[row.order], learner.state.later];
+  if (row.state === 'later') lines = [learner.stage.canDo[row.order], laterWord(row, ctx)];
   else if (row.state === 'known') lines = [knownWord(ctx)];
   else if (row.state === 'explored') lines = [g ? grownup.explored(ctx.name) : learner.caption.explored];
   else if (row.done > 0) lines = [learner.caption.played(row.done)];
@@ -162,9 +174,14 @@ export function stageTags(row: StageRow, ctx: CopyContext): string[] {
   return tags;
 }
 
-/** "By the end of this stage you can: ..." in the expanded stage. */
+/**
+ * "By the end of this stage you can: ..." in the expanded stage; "By the end
+ * of this stage, Sam can:" in read-only mode. The can-do lines themselves are
+ * written for both viewers (no "you").
+ */
 export function canDoCopy(row: StageRow, ctx: CopyContext): { lead: string; line: string } {
-  return { lead: ctx.m.learner.canDoLead, line: ctx.m.learner.stage.canDo[row.order] };
+  const lead = isGrownup(ctx) ? ctx.m.grownup.canDoLead(ctx.name) : ctx.m.learner.canDoLead;
+  return { lead, line: ctx.m.learner.stage.canDo[row.order] };
 }
 
 export function cellWord(cell: CellRow, ctx: CopyContext): string {
@@ -179,7 +196,7 @@ export function cellWord(cell: CellRow, ctx: CopyContext): string {
     case 'open':
       return state.open;
     case 'later':
-      return state.later;
+      return hasQuestPips(cell.pips) ? state.notOpen : state.later;
   }
 }
 
@@ -197,7 +214,9 @@ export type TrailEntry =
 
 /**
  * The trail in order: one entry per stage, except that a coming-later stage is
- * a compact row and consecutive ones merge into one ("Stages 5 to 7").
+ * a compact row and consecutive ones merge into one ("Stages 5 to 7"). A
+ * not-open-yet stage (playable content, not entitled) keeps its full row and
+ * never merges into a coming-later run.
  */
 export function trailEntries(model: MyRouteModel, ctx: CopyContext): TrailEntry[] {
   const out: TrailEntry[] = [];
@@ -212,7 +231,7 @@ export function trailEntries(model: MyRouteModel, ctx: CopyContext): TrailEntry[
     run = [];
   };
   for (const row of model.stages) {
-    if (row.state === 'later') run.push(row);
+    if (row.state === 'later' && !isNotOpenYet(row)) run.push(row);
     else {
       flush();
       out.push({ kind: 'stage', row });
