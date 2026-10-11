@@ -21,6 +21,9 @@ import { plural } from '../../plural';
  * Every string here is caregiver surface (no "behind", "lazy" or a learner-banned word),
  * checked per locale by console-messages.test.ts.
  */
+/** "1 item" / "4 items": the plan item count inside `plan.summary.*`. */
+const planItems = (items: number): string => plural('en', items, { one: `${items} item`, other: `${items} items` });
+
 export const consoleMsgs = {
   whySignIn: ['Keep progress safe across devices', 'Bring cards back after a reinstall', 'Manage plans and billing'],
   kidsNoAccount: "Kids don't need an account — they join with a code.",
@@ -300,15 +303,23 @@ export const consoleMsgs = {
     saveFailed: "Didn't save. Try again.",
     archiveFailed: "Couldn't archive it right now.",
     readoutLabel: 'Plan readout',
-    /** "4 items · for 3 students"; `audience` is one of `audience.*`. */
-    summary: (items: number, audience: string) => `${plural('en', items, { one: `${items} item`, other: `${items} items` })} · for ${audience}`,
-    audience: {
-      everyone: { family: 'everyone in this family', class: 'everyone in this class', school: 'everyone in this school', space: 'everyone in this space' },
-      // TODO(F-I18N-001 §10, console counts): `plural()` once console text may change (§3.4 rule 1 keeps "1 learners" for now).
+    /**
+     * The readout's one-line summary (`plans.ts planSummary`): "4 items · for everyone in this
+     * class" · "4 items · for 3 students". One whole sentence per audience (§3.1), so a locale
+     * words "for" together with its noun instead of gluing a phrase after it.
+     */
+    summary: {
+      everyone: {
+        family: (items: number) => `${planItems(items)} · for everyone in this family`,
+        class: (items: number) => `${planItems(items)} · for everyone in this class`,
+        school: (items: number) => `${planItems(items)} · for everyone in this school`,
+        space: (items: number) => `${planItems(items)} · for everyone in this space`,
+      },
+      // TODO(F-I18N-001 §10, console counts): `plural()` for `count` once console text may change (§3.4 rule 1 keeps "1 learners" for now).
       some: {
-        family: (count: number) => `${count} learners`,
-        class: (count: number) => `${count} students`,
-        school: (count: number) => `${count} members`,
+        family: (items: number, count: number) => `${planItems(items)} · for ${count} learners`,
+        class: (items: number, count: number) => `${planItems(items)} · for ${count} students`,
+        school: (items: number, count: number) => `${planItems(items)} · for ${count} members`,
       },
     },
     edit: { cta: 'Edit' },
@@ -355,14 +366,20 @@ export const consoleMsgs = {
       perWeekLabel: 'Items per week',
       perWeek: (items: number) => `${items} / week`,
     },
-    who: { title: 'Who is this for', only: 'only:' },
+    /** The audience choice; `everyone` is a stand-alone radio label (`planEveryone`). */
+    who: {
+      title: 'Who is this for',
+      everyone: { family: 'everyone in this family', class: 'everyone in this class', school: 'everyone in this school', space: 'everyone in this space' },
+      only: 'only:',
+    },
     noneJoined: { family: 'No learners have joined yet.', class: 'No students have joined yet.', school: 'No members have joined yet.' },
     saving: { cta: 'Saving…' },
     cancel: { cta: 'Cancel' },
   },
   /**
    * The billing page (`/teach/billing`, `billing.ts`, F-I18N-001 PR 10b). Prices come from
-   * `price.*` and `formatUsd`; plan limits arrive as numbers from content-schema.
+   * `price.*` and `formatUsd`; plan limits, the free-class cap among them, arrive as numbers
+   * from content-schema, so no locale types a limit into its copy.
    */
   billing: {
     title: 'Billing',
@@ -371,21 +388,26 @@ export const consoleMsgs = {
     portalFailed: "Couldn't open the billing portal.",
     current: {
       title: 'Current plan',
-      freeLine: 'Stage 1, local progress, Rescue Code, file backup. Classes hold up to 20 students.',
+      /** `cap` is content-schema `FREE_CLASS_STUDENT_CAP` (`billing.ts freePlanLine`). */
+      freeLine: (cap: number) => `Stage 1, local progress, Rescue Code, file backup. Classes hold up to ${cap} students.`,
     },
     yourAccount: 'your account',
-    /** How the plan was obtained (`sourceLine`) — never "paid": a 100%-off code costs nothing. */
-    source: (provider: string, code: string | null) => `via ${provider}${code ? ` · code ${code}` : ''}`,
-    provider: { stripe: 'web (Stripe)', apple: 'App Store', google: 'Google Play', manual: 'contract' },
+    /**
+     * How the plan was obtained (`sourceLine`) — never "paid": a 100%-off code costs nothing.
+     * One whole sentence per provider (§3.1); the provider names live inside it.
+     */
+    source: (provider: 'stripe' | 'apple' | 'google' | 'manual', code: string | null) =>
+      `via ${{ stripe: 'web (Stripe)', apple: 'App Store', google: 'Google Play', manual: 'contract' }[provider]}${code ? ` · code ${code}` : ''}`,
     // TODO(F-I18N-001 §10, console counts): `plural()` once console text may change.
     seats: (seats: number) => `${seats} seats`,
     manage: { cta: 'Manage subscription' },
     planTitle: { free: 'Free', family_lifetime: 'Family Lifetime', group_license: 'Group License', school_seat: 'School Contract' },
     includes: {
-      free: 'Stage 1, local progress, Rescue Code, file backup; classes up to 20 students',
+      /** `cap` / `freeCap` are content-schema `FREE_CLASS_STUDENT_CAP`. */
+      free: (cap: number) => `Stage 1, local progress, Rescue Code, file backup; classes up to ${cap} students`,
       family_lifetime: (learners: number) => `Every Stage, now and later, for one family: up to ${learners} learners, cloud sync, grown-up dashboard and plans`,
-      group_license: (teachers: number, students: number) =>
-        `A class or school: every student premium while enrolled, no 20-student cap; a school holds up to ${teachers} teachers / ${students} students`,
+      group_license: (teachers: number, students: number, freeCap: number) =>
+        `A class or school: every student premium while enrolled, no ${freeCap}-student cap; a school holds up to ${teachers} teachers / ${students} students`,
       school_seat: (students: number, teachers: number) => `Beyond ${students} students or ${teachers} teachers — seats by contract`,
     },
     /** The price column of the contract row. */

@@ -22,12 +22,14 @@ describe('plan page (teach/space/plan/page.tsx)', () => {
 
   it('keeps the readout: summary, buttons, progress list', () => {
     expect(p.readoutLabel).toBe('Plan readout');
-    expect(p.summary(1, 'everyone in this class')).toBe('1 item · for everyone in this class');
-    expect(p.summary(4, '3 students')).toBe('4 items · for 3 students');
-    expect(p.audience.everyone).toEqual({ family: 'everyone in this family', class: 'everyone in this class', school: 'everyone in this school', space: 'everyone in this space' });
-    expect(p.audience.some.family(2)).toBe('2 learners');
-    expect(p.audience.some.class(3)).toBe('3 students');
-    expect(p.audience.some.school(1)).toBe('1 members');
+    // One whole sentence per audience (§3.1): no noun phrase is glued after "for".
+    expect(p.summary.everyone.class(1)).toBe('1 item · for everyone in this class');
+    expect(p.summary.everyone.family(2)).toBe('2 items · for everyone in this family');
+    expect(p.summary.everyone.school(3)).toBe('3 items · for everyone in this school');
+    expect(p.summary.everyone.space(4)).toBe('4 items · for everyone in this space');
+    expect(p.summary.some.class(4, 3)).toBe('4 items · for 3 students');
+    expect(p.summary.some.family(1, 2)).toBe('1 item · for 2 learners');
+    expect(p.summary.some.school(2, 1)).toBe('2 items · for 1 members');
     expect(p.edit.cta).toBe('Edit');
     expect(p.archive.cta).toBe('Archive');
     expect(p.newPlan.cta).toBe('New plan');
@@ -70,6 +72,7 @@ describe('plan page (teach/space/plan/page.tsx)', () => {
     expect(p.pace.perWeekLabel).toBe('Items per week');
     expect(p.pace.perWeek(2)).toBe('2 / week');
     expect(p.who.title).toBe('Who is this for');
+    expect(p.who.everyone).toEqual({ family: 'everyone in this family', class: 'everyone in this class', school: 'everyone in this school', space: 'everyone in this space' });
     expect(p.who.only).toBe('only:');
     expect(p.noneJoined).toEqual({ family: 'No learners have joined yet.', class: 'No students have joined yet.', school: 'No members have joined yet.' });
     expect(p.saving.cta).toBe('Saving…');
@@ -89,20 +92,27 @@ describe('billing page (teach/billing/page.tsx, billing.ts)', () => {
 
   it('keeps the current-plan section', () => {
     expect(b.current.title).toBe('Current plan');
-    expect(b.current.freeLine).toBe('Stage 1, local progress, Rescue Code, file backup. Classes hold up to 20 students.');
+    // The free-class cap arrives as a number (content-schema FREE_CLASS_STUDENT_CAP).
+    expect(b.current.freeLine(20)).toBe('Stage 1, local progress, Rescue Code, file backup. Classes hold up to 20 students.');
+    expect(b.current.freeLine(25)).toBe('Stage 1, local progress, Rescue Code, file backup. Classes hold up to 25 students.');
     expect(b.yourAccount).toBe('your account');
-    expect(b.source('web (Stripe)', null)).toBe('via web (Stripe)');
-    expect(b.source('web (Stripe)', 'KPCCW2026')).toBe('via web (Stripe) · code KPCCW2026');
-    expect(b.provider).toEqual({ stripe: 'web (Stripe)', apple: 'App Store', google: 'Google Play', manual: 'contract' });
+    // One whole sentence per provider (§3.1): the provider name is not glued after "via".
+    expect(b.source('stripe', null)).toBe('via web (Stripe)');
+    expect(b.source('stripe', 'KPCCW2026')).toBe('via web (Stripe) · code KPCCW2026');
+    expect(b.source('apple', null)).toBe('via App Store');
+    expect(b.source('google', null)).toBe('via Google Play');
+    expect(b.source('manual', null)).toBe('via contract');
     expect(b.seats(300)).toBe('300 seats');
     expect(b.manage.cta).toBe('Manage subscription');
   });
 
   it('keeps the plan names, what each includes and the contract price', () => {
     expect(b.planTitle).toEqual({ free: 'Free', family_lifetime: 'Family Lifetime', group_license: 'Group License', school_seat: 'School Contract' });
-    expect(b.includes.free).toBe('Stage 1, local progress, Rescue Code, file backup; classes up to 20 students');
+    expect(b.includes.free(20)).toBe('Stage 1, local progress, Rescue Code, file backup; classes up to 20 students');
+    expect(b.includes.free(25)).toBe('Stage 1, local progress, Rescue Code, file backup; classes up to 25 students');
     expect(b.includes.family_lifetime(5)).toBe('Every Stage, now and later, for one family: up to 5 learners, cloud sync, grown-up dashboard and plans');
-    expect(b.includes.group_license(10, 300)).toBe('A class or school: every student premium while enrolled, no 20-student cap; a school holds up to 10 teachers / 300 students');
+    expect(b.includes.group_license(10, 300, 20)).toBe('A class or school: every student premium while enrolled, no 20-student cap; a school holds up to 10 teachers / 300 students');
+    expect(b.includes.group_license(10, 300, 25)).toContain('no 25-student cap');
     expect(b.includes.school_seat(300, 10)).toBe('Beyond 300 students or 10 teachers — seats by contract');
     expect(b.contactPrice).toBe('Contact us');
   });
