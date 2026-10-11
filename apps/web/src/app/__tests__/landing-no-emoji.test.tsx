@@ -51,7 +51,7 @@ const SITE_PAGES = [
 /** The /parent demo dashboard (English-only sample data), one click from the landing nav; statically exported per child. */
 const PARENT_PAGES = [
   ['parent', '../parent/page', undefined],
-  ...mockFamily().profiles.map((p) => [`parent/${p.id}`, '../parent/[childId]/page', p.id] as const),
+  ...mockFamily().profiles.map((p) => [`parent/${p.slug}`, '../parent/[childId]/page', p.slug] as const),
 ] as const;
 
 const PAGES: ReadonlyArray<readonly [string, string, string?]> = [...SITE_PAGES, ...PARENT_PAGES];
@@ -116,7 +116,7 @@ describe('the art that replaced the emoji is drawn', () => {
 
   it('parent demo cards: each shows its Korean word with its romanization', async () => {
     for (const profile of mockFamily().profiles) {
-      const html = await render('../parent/[childId]/page', profile.id);
+      const html = await render('../parent/[childId]/page', profile.slug);
       for (const card of profile.recentCards) {
         expect(html, card.title).toContain(card.ko);
         expect(html, card.title).toContain(card.romanization);

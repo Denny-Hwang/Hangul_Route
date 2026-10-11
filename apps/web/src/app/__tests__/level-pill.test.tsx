@@ -20,7 +20,7 @@ describe('parent demo pages', () => {
   });
 
   it('a learner page leads with the level label, not an age', () => {
-    const text = textOf(renderToStaticMarkup(<ChildDetailPage params={{ childId: 'profile:mina' }} />));
+    const text = textOf(renderToStaticMarkup(<ChildDetailPage params={{ childId: 'mina' }} />));
     expect(text).toContain('Pictures first · 9 quests · 14 cards');
     expect(text).not.toMatch(/\bAge\b/);
   });

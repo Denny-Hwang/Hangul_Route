@@ -59,10 +59,10 @@ A teacher needs one place to make a class, read the code aloud, and see who prac
 ### 3.7 Deployment — static export on one Worker (2026-10-06, app-map decision #29)
 
 - `apps/web` builds with Next `output: 'export'` into `apps/web/out`; `apps/web/wrangler.toml` serves it as an **assets-only Cloudflare Worker** `hangul-route-web` (same shape as the learner app). No server runtime, no adapter, free plan allows commercial use.
-- Consequence: no dynamic segments. A space is addressed by **`?id=`** — `/teach/space?id=`, `/teach/space/plan?id=`, `/teach/space/relink?id=`, `/teach/space/settings?id=` (`ROUTES.space*` in `lib/console/routing.ts`, `spaceIdFrom(searchParams)`); pages wrap their body in `Suspense` because `useSearchParams` requires it at export time. `/parent/[childId]` pre-renders the demo ids via `generateStaticParams`.
+- Consequence: no dynamic segments. A space is addressed by **`?id=`** — `/teach/space?id=`, `/teach/space/plan?id=`, `/teach/space/relink?id=`, `/teach/space/settings?id=` (`ROUTES.space*` in `lib/console/routing.ts`, `spaceIdFrom(searchParams)`); pages wrap their body in `Suspense` because `useSearchParams` requires it at export time. `/parent/[childId]` pre-renders the demo children via `generateStaticParams`, each under a colon-free slug (`/parent/mina`, `/parent/jun`; `MockChildProfile.slug`), and the page decodes the segment before the lookup (`findMockChild`, slug only; the old `/parent/profile:*` URLs stay 404 on the host). A colon in an exported file name made the Worker redirect to `%3A` and serve the 404 page (issue #237). Only demo names go into these URLs.
 - Build-time variables (Workers Builds → Variables): `NEXT_PUBLIC_API_BASE_URL`, `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_CONSOLE_DEV_AUTH` (test deploys only), `NEXT_PUBLIC_SCHOOL_CONSENT_MODE`.
 - F-AUTH-002 note: with no server, the Clerk integration uses the client SDK (`@clerk/clerk-react`); the Worker verifies the bearer, not Next middleware.
-- Merge gate: `.github/workflows/preview-deploy.yml` builds the export, runs the landing layout e2e over it (Playwright, `apps/web/e2e/`, §5) and runs `wrangler deploy --dry-run`.
+- Merge gate: `.github/workflows/preview-deploy.yml` builds the export, runs the web e2e over it (landing layout, parent demo; Playwright, `apps/web/e2e/`, §5) and runs `wrangler deploy --dry-run`.
 
 ## 4. Out of scope
 
@@ -81,3 +81,5 @@ A teacher needs one place to make a class, read the code aloud, and see who prac
 | `web/src/lib/console/__tests__/routing.test.ts` | landing after sign-in / create, grouping + ordering + archived last, status lines, prefills |
 | `web/src/lib/console/__tests__/copy.test.ts` | every console string is caregiver-safe; `devAuthEnabled` matrix |
 | `web/e2e/landing-layout.spec.ts` (Playwright, Chromium, over `apps/web/out`; `pnpm --filter @hangul-route/web test:e2e` after a build) | landing + About / privacy / terms at 320 / 375 / 768: no sideways scroll; "Play now" visible; Tab order = visual order; hero and Meet Hoya art capped and centred when stacked |
+| `web/e2e/parent-demo.spec.ts` (Playwright, Chromium, over `apps/web/out`) | no exported path holds a colon or a percent-escape; the `out/parent` child files are URL-safe and hold real pages (not the 404 page); each "View progress" link on `/parent` reaches its child's page with a 200 (issue #237) |
+| `web/src/app/__tests__/parent-child-route.test.tsx` · `web/src/data/__tests__/mock-family.test.ts` | `generateStaticParams` gives one unique URL-safe slug per demo child; the dashboard hrefs equal the exported params; raw and percent-encoded slugs render the child; an unknown, malformed or old `profile:*` param ends in `notFound()` |

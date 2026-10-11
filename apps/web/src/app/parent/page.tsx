@@ -93,7 +93,7 @@ export default function ParentPage(): JSX.Element {
               {p.questsCompleted} quests · {p.cards} cards · {p.streak}-day streak
             </p>
             <Link
-              href={`/parent/${p.id}`}
+              href={`/parent/${p.slug}`}
               style={{
                 display: 'inline-block',
                 marginTop: spacing.sm,
