@@ -88,11 +88,13 @@ jobs:
       # and reads fixture-specific content. Both exist only in a second build
       # that holds the test fixtures, written to dist-e2e/ (never dist/, never
       # deployed; the script restores the real story bundle).
+      # F-PLC-001 P-6: the level check has no entry point until P-7 either; its
+      # screen e2e opens it through the __hrPlacementE2E hook of the same bundle.
       - name: Story reader e2e (fixture bundle)
         if: steps.changes.outputs.run == 'true'
         run: |
           pnpm --filter @hangul-route/mobile build:web:fixtures
-          STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test story-reader
+          STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test story-reader placement-screens
           # F-AUDIO-004 A-6: the clip path (precache, runtime cache, offline clip, clip > voice) on
           # the fixture tones; only that group, since the voice tests expect the regular build.
           STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test audio -g "bundled clips"

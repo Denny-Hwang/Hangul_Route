@@ -16,6 +16,26 @@ export const PLACEMENT_DIGIT_ALLOW_LIST = [
   'learner.placement.options.mode.deep.duration',
 ] as const;
 
+/**
+ * Screen-reader lines that name a count or a position ("Question, 4 choices",
+ * "Picture 2", section 3.12): spoken by assistive tech, never drawn, and not
+ * a score, so they may hold a digit.
+ */
+export const SCREEN_READER_DIGIT_ALLOW_LIST = ['learner.placement.item.questionLabel', 'learner.placement.item.pictureChoice'] as const;
+
+/**
+ * The arguments each function message of `learner.placement` is scanned
+ * with. A function message missing here is reported by the scan, so none
+ * bypasses it.
+ */
+export const PLACEMENT_FUNCTION_SAMPLES: Readonly<Record<string, ReadonlyArray<readonly number[]>>> = {
+  'learner.placement.item.questionLabel': [[4], [1]],
+  'learner.placement.item.pictureChoice': [[2]],
+};
+
+/** Stands for a function message with no samples (a control character no copy holds). */
+const NO_SAMPLES = '\u0000';
+
 /** Hangul jamo, compatibility jamo and syllables (escaped, so this file holds no Hangul). */
 const HANGUL = /[\u1100-\u11FF\u3130-\u318F\uAC00-\uD7AF]/;
 const RATIO = /\d\s*\/\s*\d|\b\w+\s+\/\s+\w+\b/;
@@ -29,13 +49,21 @@ export type CopyEntry = readonly [path: string, text: string];
 
 function walk(node: unknown, path: string, out: CopyEntry[]): void {
   if (typeof node === 'string') out.push([path, node]);
+  else if (typeof node === 'function') {
+    const samples = PLACEMENT_FUNCTION_SAMPLES[path];
+    if (samples === undefined) out.push([path, NO_SAMPLES]);
+    else for (const args of samples) out.push([path, String((node as (...a: readonly number[]) => unknown)(...args))]);
+  }
   else if (Array.isArray(node)) for (const item of node) walk(item, path, out);
   else if (node !== null && typeof node === 'object') {
     for (const [key, value] of Object.entries(node)) walk(value, `${path}.${key}`, out);
   }
 }
 
-/** Every string under `learner.placement`, with its dotted path; arrays give one entry per line. */
+/**
+ * Every string under `learner.placement`, with its dotted path; arrays give one
+ * entry per line, function messages one per sample (`PLACEMENT_FUNCTION_SAMPLES`).
+ */
 export function placementCopyEntries(m: Messages): CopyEntry[] {
   const out: CopyEntry[] = [];
   walk(m.learner.placement, 'learner.placement', out);
@@ -43,12 +71,14 @@ export function placementCopyEntries(m: Messages): CopyEntry[] {
 }
 
 function problemsOf(path: string, text: string, locale: UiLocale): string[] {
+  if (text === NO_SAMPLES) return [`${path}: function message without samples`];
   const out: string[] = [];
   const banned = findBannedWord(text, locale, 'learner') ?? (locale === 'en' ? findHomeworkBannedWord(text) : null);
   if (banned !== null) out.push(`banned word ${banned}`);
   if (text.includes('%')) out.push('percent');
   if (RATIO.test(text)) out.push('ratio');
-  if (/\d/.test(text) && !(PLACEMENT_DIGIT_ALLOW_LIST as readonly string[]).includes(path)) out.push('digit');
+  const digitsAllowed = [...PLACEMENT_DIGIT_ALLOW_LIST, ...SCREEN_READER_DIGIT_ALLOW_LIST] as readonly string[];
+  if (/\d/.test(text) && !digitsAllowed.includes(path)) out.push('digit');
   if (/\btests?\b/i.test(text)) out.push('the word test');
   if (locale !== 'ko' && HANGUL.test(text)) out.push('Hangul');
   if (path.startsWith('learner.placement.options.mode.') && AGE_WORDS.test(text)) out.push('age word');

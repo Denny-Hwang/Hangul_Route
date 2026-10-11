@@ -11,6 +11,7 @@ import {
   describeKoVoice,
   nativeVoiceToCandidate,
   readNativeVoices,
+  voiceAvailable,
   webVoiceToCandidate,
   whenVoicesReady,
   type AudioCapability,
@@ -500,5 +501,29 @@ describe('capabilityTelemetry', () => {
       koVoice: 'none',
       reason: 'no_engine',
     });
+  });
+});
+
+describe('voiceAvailable (F-PLC-001 section 3.1 step 2: the instruction voice of a test language)', () => {
+  const ready: AudioCapability = {
+    tts: { state: 'ready', voiceId: 'y', voiceName: 'Yuna', local: true, quality: 'standard' },
+    clips: false,
+    unlocked: true,
+  };
+  const samantha = cand({ id: 's', name: 'Samantha', lang: 'en-US' });
+
+  it('counts an unknown voice list as available, so it never blocks by mistake', () => {
+    expect(voiceAvailable(UNKNOWN_CAPABILITY, [])).toBe(true);
+  });
+
+  it('is false without any speech engine', () => {
+    expect(voiceAvailable({ ...ready, tts: { state: 'none', reason: 'no_engine' } }, [samantha])).toBe(false);
+  });
+
+  it('is true when an eligible voice for the language exists, false when none does', () => {
+    expect(voiceAvailable(ready, [samantha])).toBe(true);
+    expect(voiceAvailable(ready, [])).toBe(false);
+    // No Korean voice says nothing about an English one.
+    expect(voiceAvailable({ ...ready, tts: { state: 'none', reason: 'no_korean_voice' } }, [samantha])).toBe(true);
   });
 });

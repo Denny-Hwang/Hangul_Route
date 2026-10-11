@@ -5,6 +5,7 @@ import { AUDIO_ASSETS } from '../content/__generated__/audio-assets';
 import {
   attachWebVoices,
   createCapabilityTracker,
+  voiceAvailable,
   webVoiceToCandidate,
   type AudioCapability,
   type NetworkLike,
@@ -329,6 +330,8 @@ export function createWebAudio(env: WebAudioEnv) {
     setMuted: (muted: boolean): void => store.getState().setMuted(muted, 'profile'),
     isMuted: (): boolean => store.getState().muted,
     getCapability: (): AudioCapability => tracker.get(),
+    /** A voice for `lang` (the level check's instruction voice); an unknown voice list counts as available. */
+    hasVoiceFor: (lang: SpeechLang): boolean => voiceAvailable(tracker.get(), tracker.ranked(lang)),
     refreshCapability: (): Promise<void> => {
       if (voiceEvents === null) tracker.setVoices('no_engine');
       else tracker.setVoices(voiceEvents.getVoices().map(webVoiceToCandidate));
@@ -387,6 +390,9 @@ export function isMuted(): boolean {
 }
 export function getCapability(): AudioCapability {
   return audio().getCapability();
+}
+export function hasVoiceFor(lang: SpeechLang): boolean {
+  return audio().hasVoiceFor(lang);
 }
 export function refreshCapability(): Promise<void> {
   return audio().refreshCapability();

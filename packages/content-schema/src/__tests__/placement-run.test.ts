@@ -837,6 +837,21 @@ describe('pauses', () => {
     expect(s.pause).toBeNull();
   });
 
+  it('a prompt that cannot play is recorded skipped but is not a "not sure" of the learner (section 3.11)', () => {
+    let s = run();
+    for (let i = 0; i < 3; i += 1) s = apply(s, { type: 'notSure', cause: 'no-sound' }, 2_000 + i * 1_000);
+    expect(s.responses.map((r) => r.outcome)).toEqual(['skipped', 'skipped', 'skipped']);
+    expect(s.pause).toBeNull();
+    expect(s.notSureStreak).toBe(0);
+    // It neither adds to nor breaks a streak the learner is on.
+    s = apply(s, { type: 'notSure' }, 6_000);
+    s = apply(s, { type: 'notSure' }, 7_000);
+    s = apply(s, { type: 'notSure', cause: 'no-sound' }, 8_000);
+    expect(s.notSureStreak).toBe(2);
+    s = apply(s, { type: 'notSure' }, 9_000);
+    expect(s.pause).toBe('not-sure');
+  });
+
   it('no pause opens when the third "not sure" ends the run', () => {
     const { state } = play(run(), {}, 'correct');
     expect(state.pause).toBeNull();

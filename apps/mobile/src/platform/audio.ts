@@ -7,6 +7,7 @@ import {
   attachNativeVoices,
   createCapabilityTracker,
   readNativeVoices,
+  voiceAvailable,
   type AudioCapability,
   type NativeVoiceLike,
   type NetworkLike,
@@ -188,6 +189,8 @@ export function createNativeAudio(env: NativeAudioEnv) {
     setMuted: (muted: boolean): void => store.getState().setMuted(muted, 'profile'),
     isMuted: (): boolean => store.getState().muted,
     getCapability: (): AudioCapability => tracker.get(),
+    /** A voice for `lang` (the level check's instruction voice); an unknown voice list counts as available. */
+    hasVoiceFor: (lang: SpeechLang): boolean => voiceAvailable(tracker.get(), tracker.ranked(lang)),
     refreshCapability: async (): Promise<void> => {
       const result = await readNativeVoices(readVoices, platform);
       tracker.setVoices(result.kind === 'voices' ? result.voices : 'no_engine');
@@ -249,6 +252,9 @@ export function isMuted(): boolean {
 }
 export function getCapability(): AudioCapability {
   return audio().getCapability();
+}
+export function hasVoiceFor(lang: SpeechLang): boolean {
+  return audio().hasVoiceFor(lang);
 }
 export function refreshCapability(): Promise<void> {
   return audio().refreshCapability();
