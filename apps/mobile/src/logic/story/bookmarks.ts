@@ -148,6 +148,21 @@ export function finishedStoryLevels(
 }
 
 /**
+ * The bookmark a resume may use: none when its (story, level) is already
+ * finished (§3.8, "ignored"), for example finished on another device while
+ * this device still holds the bookmark. Completions sync but bookmarks do
+ * not, and `setBookmark` never rewrites a finished pair, so such a bookmark
+ * stays in memory until the next write prunes it.
+ */
+export function unfinishedBookmark(
+  storyId: string,
+  bookmark: Bookmark | undefined,
+  isFinished: FinishedCheck,
+): Bookmark | undefined {
+  return bookmark && !isFinished(storyId, bookmark.level) ? bookmark : undefined;
+}
+
+/**
  * Where a resumed quest starts (§3.8): its `story-read` step, skipping the
  * intro, when the bookmark is for the quest's level; otherwise step 0.
  */

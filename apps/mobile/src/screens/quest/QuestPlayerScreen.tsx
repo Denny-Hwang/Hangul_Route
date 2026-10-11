@@ -65,11 +65,12 @@ export function QuestPlayerScreen({ route, navigation }: Props): React.ReactElem
   const stepIndex = useQuestRunStore((s) => s.stepIndex);
 
   // Initialize quest run state once per mount. A resumed story quest opens on its story-read step
-  // (F-STORY-004 §3.8); without a usable bookmark it starts at step 0 like any other.
+  // (F-STORY-004 §3.8); without a usable bookmark (none, another level, or a story already finished at
+  // this level, for example on another device) it starts at step 0 like any other.
   useEffect(() => {
     if (!profile) return;
     const startStep = questStartStep(questById(questId), resume, (storyId) =>
-      useStoryStore.getState().getBookmark(profile.id, storyId),
+      useStoryStore.getState().getResumableBookmark(profile.id, storyId),
     );
     begin(questId, episodeId, startStep);
     beginSession(profile.id);
