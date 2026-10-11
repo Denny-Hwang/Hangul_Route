@@ -16,7 +16,8 @@
 // Usage:
 //   node scripts/build-stories.mjs                      write the bundle
 //   node scripts/build-stories.mjs --check              fail if the checked-in bundle differs (CI)
-//   node scripts/build-stories.mjs --report             print sizes, fail over budget (CI)
+//   node scripts/build-stories.mjs --report             print sizes (bundle, per story, scene art),
+//                                                       fail over budget (CI)
 //   node scripts/build-stories.mjs --include-drafts --out <path>
 //                                                       preview bundle with drafts (never under apps/)
 //
@@ -34,12 +35,14 @@ export const GENERATED_HEADER =
 
 /**
  * Bundle budget (F-STORY-001 §3.9): the launch set of 24 stories. Raising a
- * ceiling is a reviewed one-line change.
+ * ceiling is a reviewed one-line change. `artRaw` is the scene-art share
+ * (F-STORY-002 §3.9.7): the compact JSON of every bundled scene's `art`.
  */
 export const BUDGET = Object.freeze({
   totalRaw: 1_000_000,
   totalGzip: 260_000,
   perStoryRaw: 60_000,
+  artRaw: 130_000,
 });
 
 // Quest copy owned by the generator (F-STORY-001 §3.9). The twin in
@@ -181,8 +184,27 @@ export function renderBundle({ stories, episodes, quests }) {
   );
 }
 
+/**
+ * Pure: bytes of every scene's `art` as compact JSON (the measure `checkScene`
+ * caps at 700 per scene) and how many scenes carry art.
+ */
+export function artBytes(stories) {
+  let raw = 0;
+  let scenes = 0;
+  for (const story of stories) {
+    for (const tier of story.tiers ?? []) {
+      for (const scene of tier.scenes ?? []) {
+        if (!scene.art) continue;
+        raw += Buffer.byteLength(JSON.stringify(scene.art), "utf8");
+        scenes += 1;
+      }
+    }
+  }
+  return { raw, scenes };
+}
+
 /** Pure: size problems as human-readable strings (empty = within budget). */
-export function checkBudget({ perStory, total }) {
+export function checkBudget({ perStory, total, art }) {
   const problems = [];
   for (const s of perStory) {
     if (s.raw > BUDGET.perStoryRaw) {
@@ -195,6 +217,9 @@ export function checkBudget({ perStory, total }) {
   if (total.gzip > BUDGET.totalGzip) {
     problems.push(`stories.generated.ts is ${total.gzip} B gzip, over the ceiling of ${BUDGET.totalGzip} B`);
   }
+  if (art && art.raw > BUDGET.artRaw) {
+    problems.push(`scene art is ${art.raw} B raw over ${art.scenes} scenes, over the ceiling of ${BUDGET.artRaw} B`);
+  }
   return problems;
 }
 
@@ -206,6 +231,7 @@ function sizes(stories, source) {
       return { id: s.id, raw: bytes(text), gzip: gzipSync(text).length };
     }),
     total: { raw: bytes(source), gzip: gzipSync(source).length },
+    art: artBytes(stories),
   };
 }
 
@@ -314,6 +340,7 @@ export function main(argv, root) {
       process.stdout.write(`  ${s.id}  ${s.raw} B raw  ${s.gzip} B gzip\n`);
     }
     process.stdout.write(`  total  ${report.total.raw} B raw  ${report.total.gzip} B gzip\n`);
+    process.stdout.write(`  scene art  ${report.art.raw} B raw over ${report.art.scenes} scenes (budget ${BUDGET.artRaw} B)\n`);
     process.stdout.write(
       `Budget: ${BUDGET.totalRaw} B raw, ${BUDGET.totalGzip} B gzip in total, ${BUDGET.perStoryRaw} B raw per story\n`
     );

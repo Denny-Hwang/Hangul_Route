@@ -2,7 +2,7 @@
   "v": 1,
   "id": "story:sillok-mountain-archives",
   "state": "ready",
-  "contentVer": 1,
+  "contentVer": 2,
   "title": {
     "ko": "산으로 간 실록",
     "romanization": "Saneuro gan sillok",
@@ -141,8 +141,54 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "Officials in Joseon robes seated around low tables piled with papers and scrolls, sorting documents in a quiet hall."
+          "artBrief": "Officials in Joseon robes seated around low tables piled with papers and scrolls, sorting documents in a quiet hall.",
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:fig-historian",
+                "x": 120,
+                "y": 262,
+                "s": 1.1
+              },
+              {
+                "ref": "prop:desk-low",
+                "x": 120,
+                "y": 292,
+                "s": 1.3,
+                "z": "front"
+              },
+              {
+                "ref": "prop:paper-stack",
+                "x": 70,
+                "y": 233,
+                "s": 1,
+                "z": "front"
+              },
+              {
+                "ref": "prop:fig-historian",
+                "x": 290,
+                "y": 262,
+                "s": 1.1,
+                "flip": true
+              },
+              {
+                "ref": "prop:desk-low",
+                "x": 290,
+                "y": 292,
+                "s": 1.3,
+                "z": "front"
+              },
+              {
+                "ref": "prop:papers-loose",
+                "x": 344,
+                "y": 233,
+                "s": 1,
+                "z": "front"
+              }
+            ],
+            "altEn": "Officials at low desks sort piles of court records in a quiet office set up to write a late king's Annals."
+          }
         },
         {
           "id": "s2",
@@ -160,8 +206,38 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "Three stacks of paper growing neater from left to right, then a wooden tray of small type blocks and freshly printed pages drying."
+          "artBrief": "Three stacks of paper growing neater from left to right, then a wooden tray of small type blocks and freshly printed pages drying.",
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:papers-loose",
+                "x": 62,
+                "y": 250,
+                "s": 1.5
+              },
+              {
+                "ref": "prop:paper-stack",
+                "x": 160,
+                "y": 250,
+                "s": 1.5
+              },
+              {
+                "ref": "prop:type-tray",
+                "x": 292,
+                "y": 256,
+                "s": 2.3
+              },
+              {
+                "ref": "prop:writing-lines",
+                "x": 352,
+                "y": 296,
+                "s": 0.9,
+                "z": "front"
+              }
+            ],
+            "altEn": "Messy drafts become a neat stack, and a frame of movable type stands ready to print the final Annals."
+          }
         },
         {
           "id": "s3",
@@ -179,8 +255,45 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "A clear mountain stream with flat rocks; officials gently rinsing sheets of paper as the ink swirls away, Hoya watching from a rock."
+          "artBrief": "A clear mountain stream with flat rocks; officials gently rinsing sheets of paper as the ink swirls away, Hoya watching from a rock.",
+          "art": {
+            "setting": "scene:mountain-stream",
+            "layers": [
+              {
+                "ref": "prop:flat-rock",
+                "x": 172,
+                "y": 262,
+                "s": 1.6
+              },
+              {
+                "ref": "prop:writing-lines",
+                "x": 172,
+                "y": 236,
+                "s": 0.7
+              },
+              {
+                "ref": "prop:fig-official",
+                "x": 262,
+                "y": 290,
+                "s": 0.9,
+                "flip": true
+              },
+              {
+                "ref": "hoya:thinking",
+                "x": 72,
+                "y": 262,
+                "s": 0.6
+              },
+              {
+                "ref": "prop:flat-rock",
+                "x": 72,
+                "y": 288,
+                "s": 1.2,
+                "z": "front"
+              }
+            ],
+            "altEn": "By a clear stream used draft sheets are washed on a flat rock so no one can read them, while an official and Hoya watch."
+          }
         },
         {
           "id": "s4",
@@ -207,8 +320,20 @@
               "timeRelative": false
             }
           ],
-          "artPending": true,
-          "artBrief": "A traditional archive building with a tiled roof and wooden walls; one lantern-lit doorway glowing, suggesting the one surviving copy."
+          "artBrief": "A traditional archive building with a tiled roof and wooden walls; one lantern-lit doorway glowing, suggesting the one surviving copy.",
+          "art": {
+            "setting": "scene:countryside",
+            "layers": [
+              {
+                "ref": "prop:sago-archive",
+                "x": 200,
+                "y": 252,
+                "s": 1.4,
+                "tint": "feedback.nudge"
+              }
+            ],
+            "altEn": "An archive of tiled-roof storehouses where the Annals were kept, its doorways glowing like the one copy that survived."
+          }
         },
         {
           "id": "s5",
@@ -235,8 +360,33 @@
               "timeRelative": false
             }
           ],
-          "artPending": true,
-          "artBrief": "Two scholars in plain traditional clothes and wide-brimmed hats leading a small ox cart loaded with wrapped book boxes along a misty mountain path."
+          "artBrief": "Two scholars in plain traditional clothes and wide-brimmed hats leading a small ox cart loaded with wrapped book boxes along a misty mountain path.",
+          "art": {
+            "setting": "scene:mountains",
+            "layers": [
+              {
+                "ref": "prop:fig-scholar",
+                "x": 150,
+                "y": 272,
+                "s": 1
+              },
+              {
+                "ref": "prop:fig-scholar",
+                "x": 272,
+                "y": 262,
+                "s": 0.95,
+                "flip": true
+              },
+              {
+                "ref": "prop:book-bundle",
+                "x": 212,
+                "y": 286,
+                "s": 1.2,
+                "z": "front"
+              }
+            ],
+            "altEn": "Two scholars in wide-brimmed hats guard a bundle of the Annals wrapped in red cloth on a misty mountain path."
+          }
         },
         {
           "id": "s6",
@@ -255,8 +405,26 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "A small walled archive compound nestled among pine-covered mountain ridges, clouds drifting below the peaks."
+          "artBrief": "A small walled archive compound nestled among pine-covered mountain ridges, clouds drifting below the peaks.",
+          "art": {
+            "setting": "scene:mountains",
+            "layers": [
+              {
+                "ref": "prop:sago-archive",
+                "x": 200,
+                "y": 244,
+                "s": 1
+              },
+              {
+                "ref": "prop:pine-tree",
+                "x": 52,
+                "y": 292,
+                "s": 1.1,
+                "z": "front"
+              }
+            ],
+            "altEn": "A small walled archive sits among pine-covered mountain ridges, with clouds drifting below the peaks."
+          }
         },
         {
           "id": "s7",
@@ -274,8 +442,19 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "An open wooden chest: books wrapped in red cloth, small cloth pouches of dried herbs tucked at the bottom and on top."
+          "artBrief": "An open wooden chest: books wrapped in red cloth, small cloth pouches of dried herbs tucked at the bottom and on top.",
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:book-chest-open",
+                "x": 200,
+                "y": 272,
+                "s": 2.6
+              }
+            ],
+            "altEn": "An open wooden chest holds books wrapped in red cloth, with pouches of herbs tucked in to keep insects away."
+          }
         },
         {
           "id": "s8",
@@ -292,8 +471,41 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "Books laid open on mats in a sunny courtyard of a mountain archive, a historian checking pages while a breeze lifts them; Hoya basking nearby."
+          "artBrief": "Books laid open on mats in a sunny courtyard of a mountain archive, a historian checking pages while a breeze lifts them; Hoya basking nearby.",
+          "art": {
+            "setting": "scene:mountains",
+            "layers": [
+              {
+                "ref": "prop:sago-archive",
+                "x": 250,
+                "y": 214,
+                "s": 0.8,
+                "z": "back",
+                "tint": "feedback.nudgeLight"
+              },
+              {
+                "ref": "prop:fig-historian",
+                "x": 246,
+                "y": 256,
+                "s": 1.15,
+                "flip": true
+              },
+              {
+                "ref": "prop:books-airing",
+                "x": 166,
+                "y": 292,
+                "s": 1.5,
+                "z": "front"
+              },
+              {
+                "ref": "hoya:idle",
+                "x": 56,
+                "y": 292,
+                "s": 0.6
+              }
+            ],
+            "altEn": "At a mountain archive old books lie open in the sun to air while a historian checks them and Hoya basks nearby."
+          }
         }
       ],
       "checks": [

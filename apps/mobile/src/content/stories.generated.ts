@@ -4364,7 +4364,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:ilseongnok-daily-reflection",
     "state": "ready",
-    "contentVer": 1,
+    "contentVer": 2,
     "title": {
       "ko": "하루를 돌아본 정조의 일기, 일성록",
       "romanization": "Harureul dorabon Jeongjoui ilgi, Ilseongnok",
@@ -4476,8 +4476,40 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "A young royal heir in plain traditional clothes writing in a small book at a low desk by lamplight; Hoya reading a book about him in the foreground."
+            "artBrief": "A young royal heir in plain traditional clothes writing in a small book at a low desk by lamplight; Hoya reading a book about him in the foreground.",
+            "art": {
+              "setting": "scene:hanok-room",
+              "layers": [
+                {
+                  "ref": "prop:fig-writer-seated",
+                  "x": 222,
+                  "y": 262,
+                  "s": 1.4
+                },
+                {
+                  "ref": "prop:desk-low",
+                  "x": 222,
+                  "y": 294,
+                  "s": 1.5,
+                  "z": "front"
+                },
+                {
+                  "ref": "prop:oil-lamp",
+                  "x": 296,
+                  "y": 225,
+                  "s": 1.3,
+                  "z": "front"
+                },
+                {
+                  "ref": "hoya:reading",
+                  "x": 72,
+                  "y": 294,
+                  "s": 0.8,
+                  "z": "front"
+                }
+              ],
+              "altEn": "A young royal heir writes his diary at a low desk by lamplight, while Hoya reads a book about him."
+            }
           },
           {
             "id": "s2",
@@ -4495,8 +4527,33 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "The prince pausing with brush raised, looking thoughtfully out of a window at an evening sky."
+            "artBrief": "The prince pausing with brush raised, looking thoughtfully out of a window at an evening sky.",
+            "art": {
+              "setting": "scene:hanok-room",
+              "layers": [
+                {
+                  "ref": "prop:night-window",
+                  "x": 302,
+                  "y": 196,
+                  "s": 1,
+                  "z": "back"
+                },
+                {
+                  "ref": "prop:fig-writer-seated",
+                  "x": 180,
+                  "y": 262,
+                  "s": 1.4
+                },
+                {
+                  "ref": "prop:desk-low",
+                  "x": 180,
+                  "y": 294,
+                  "s": 1.5,
+                  "z": "front"
+                }
+              ],
+              "altEn": "The young prince pauses with his brush raised and gazes out of the window at the evening sky, thinking."
+            }
           },
           {
             "id": "s3",
@@ -4513,8 +4570,39 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Split scene: King Jeongjo in royal dress writing at night; Hoya in his den with a tiny notebook, scratching his head."
+            "artBrief": "Split scene: King Jeongjo in royal dress writing at night; Hoya in his den with a tiny notebook, scratching his head.",
+            "art": {
+              "setting": "scene:hanok-room",
+              "layers": [
+                {
+                  "ref": "prop:fig-king-seated",
+                  "x": 100,
+                  "y": 262,
+                  "s": 1.3
+                },
+                {
+                  "ref": "prop:desk-low",
+                  "x": 100,
+                  "y": 292,
+                  "s": 1.4,
+                  "z": "front"
+                },
+                {
+                  "ref": "prop:oil-lamp",
+                  "x": 166,
+                  "y": 228,
+                  "s": 1.2,
+                  "z": "front"
+                },
+                {
+                  "ref": "hoya:thinking",
+                  "x": 306,
+                  "y": 292,
+                  "s": 0.85
+                }
+              ],
+              "altEn": "King Jeongjo writes his diary by lamplight. Apart from him, Hoya tries it too and wonders what he did today."
+            }
           },
           {
             "id": "s4",
@@ -4532,8 +4620,46 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Scholars at the Gyujanggak library writing at desks, then presenting a bound book to the king, who reads it carefully."
+            "artBrief": "Scholars at the Gyujanggak library writing at desks, then presenting a bound book to the king, who reads it carefully.",
+            "art": {
+              "setting": "scene:hanok-room",
+              "layers": [
+                {
+                  "ref": "prop:fig-historian",
+                  "x": 90,
+                  "y": 262,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:desk-low",
+                  "x": 90,
+                  "y": 292,
+                  "s": 1.2,
+                  "z": "front"
+                },
+                {
+                  "ref": "prop:fig-official",
+                  "x": 218,
+                  "y": 272,
+                  "s": 0.95
+                },
+                {
+                  "ref": "prop:fig-king-seated",
+                  "x": 322,
+                  "y": 264,
+                  "s": 1.1,
+                  "flip": true
+                },
+                {
+                  "ref": "prop:book-thread-bound",
+                  "x": 264,
+                  "y": 268,
+                  "s": 0.8,
+                  "z": "front"
+                }
+              ],
+              "altEn": "A royal library scholar writes the diary at a desk, and an official presents the bound book to the king to approve."
+            }
           },
           {
             "id": "s5",
@@ -4552,8 +4678,19 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "An open book page drawn with one bold line of strokes at top and smaller lines below (no readable text), a finger tracing the bold line."
+            "artBrief": "An open book page drawn with one bold line of strokes at top and smaller lines below (no readable text), a finger tracing the bold line.",
+            "art": {
+              "setting": "scene:hanji-backdrop",
+              "layers": [
+                {
+                  "ref": "prop:book-open-entry",
+                  "x": 200,
+                  "y": 272,
+                  "s": 3
+                }
+              ],
+              "altEn": "An open diary page starts each entry with one bold headline line, with smaller lines of detail after it."
+            }
           },
           {
             "id": "s6",
@@ -4571,8 +4708,33 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "A modern library stack with rows of old thread-bound books in protective cases, a curator in gloves checking one."
+            "artBrief": "A modern library stack with rows of old thread-bound books in protective cases, a curator in gloves checking one.",
+            "art": {
+              "setting": "scene:modern-room",
+              "layers": [
+                {
+                  "ref": "prop:archive-shelf",
+                  "x": 110,
+                  "y": 282,
+                  "s": 1.2
+                },
+                {
+                  "ref": "prop:fig-modern",
+                  "x": 250,
+                  "y": 282,
+                  "s": 1,
+                  "tint": "surface.paper"
+                },
+                {
+                  "ref": "prop:book-thread-bound",
+                  "x": 292,
+                  "y": 290,
+                  "s": 0.9,
+                  "z": "front"
+                }
+              ],
+              "altEn": "In a modern archive, a curator in a white coat checks one of the old thread-bound books kept in protective boxes."
+            }
           },
           {
             "id": "s7",
@@ -4589,8 +4751,32 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Hoya at night writing in a notebook by a small lamp, a crescent moon in the window, smiling."
+            "artBrief": "Hoya at night writing in a notebook by a small lamp, a crescent moon in the window, smiling.",
+            "art": {
+              "setting": "scene:hanok-room",
+              "layers": [
+                {
+                  "ref": "prop:night-window",
+                  "x": 302,
+                  "y": 196,
+                  "s": 1,
+                  "z": "back"
+                },
+                {
+                  "ref": "prop:oil-lamp",
+                  "x": 256,
+                  "y": 292,
+                  "s": 1.5
+                },
+                {
+                  "ref": "hoya:reading",
+                  "x": 170,
+                  "y": 294,
+                  "s": 1
+                }
+              ],
+              "altEn": "At night Hoya sits by a small lamp with his notebook, a crescent moon in the window, and writes one line about his day."
+            }
           }
         ],
         "checks": [
@@ -6776,7 +6962,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:joseon-records-today",
     "state": "ready",
-    "contentVer": 1,
+    "contentVer": 2,
     "title": {
       "ko": "오래된 기록, 새로운 발견",
       "romanization": "Oraedoen girok, saeroun balgyeon",
@@ -6912,8 +7098,25 @@ export const storiesAll: Story[] = [
             "factIds": [],
             "framing": true,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Hoya with a small backpack standing at a crossroads with signposts shaped like a book, a fortress and a cloud (no text)."
+            "artBrief": "Hoya with a small backpack standing at a crossroads with signposts shaped like a book, a fortress and a cloud (no text).",
+            "art": {
+              "setting": "scene:countryside",
+              "layers": [
+                {
+                  "ref": "prop:signpost",
+                  "x": 232,
+                  "y": 272,
+                  "s": 1.4
+                },
+                {
+                  "ref": "hoya:waving",
+                  "x": 108,
+                  "y": 290,
+                  "s": 0.9
+                }
+              ],
+              "altEn": "Hoya stands at a crossroads where a signpost points three ways, marked with a book, a fortress and a cloud."
+            }
           },
           {
             "id": "s2",
@@ -6931,8 +7134,26 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "A stone-and-brick fortress wall with a gate tower; beside it, an open book showing a drawing of a lifting machine with pulleys."
+            "artBrief": "A stone-and-brick fortress wall with a gate tower; beside it, an open book showing a drawing of a lifting machine with pulleys.",
+            "art": {
+              "setting": "scene:countryside",
+              "layers": [
+                {
+                  "ref": "prop:fortress-gate",
+                  "x": 150,
+                  "y": 252,
+                  "s": 1.1
+                },
+                {
+                  "ref": "prop:book-geojunggi",
+                  "x": 322,
+                  "y": 292,
+                  "s": 1,
+                  "z": "front"
+                }
+              ],
+              "altEn": "A gate of Hwaseong Fortress stands over its stone walls, beside an open book with a drawing of a pulley lifting machine."
+            }
           },
           {
             "id": "s3",
@@ -6949,8 +7170,40 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Modern workers in helmets fitting stones into a fortress wall while one checks a page of old drawings on a tablet."
+            "artBrief": "Modern workers in helmets fitting stones into a fortress wall while one checks a page of old drawings on a tablet.",
+            "art": {
+              "setting": "scene:countryside",
+              "layers": [
+                {
+                  "ref": "prop:fortress-wall",
+                  "x": 200,
+                  "y": 230,
+                  "s": 1.6
+                },
+                {
+                  "ref": "prop:fig-worker",
+                  "x": 140,
+                  "y": 292,
+                  "s": 0.9,
+                  "z": "front"
+                },
+                {
+                  "ref": "prop:fig-worker",
+                  "x": 290,
+                  "y": 294,
+                  "s": 0.9,
+                  "z": "front",
+                  "flip": true
+                },
+                {
+                  "ref": "prop:tablet",
+                  "x": 332,
+                  "y": 298,
+                  "s": 0.8
+                }
+              ],
+              "altEn": "Workers in hard hats fit a stone back into the fortress wall, checking the old uigwe drawings on a tablet."
+            }
           },
           {
             "id": "s4",
@@ -6968,8 +7221,39 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "A modern street festival: people in colorful Joseon costumes marching with flags and a palanquin, families watching and waving."
+            "artBrief": "A modern street festival: people in colorful Joseon costumes marching with flags and a palanquin, families watching and waving.",
+            "art": {
+              "setting": "scene:countryside",
+              "layers": [
+                {
+                  "ref": "prop:palanquin",
+                  "x": 200,
+                  "y": 234,
+                  "s": 1.1
+                },
+                {
+                  "ref": "prop:procession-row",
+                  "x": 200,
+                  "y": 272,
+                  "s": 1.6
+                },
+                {
+                  "ref": "prop:fig-modern",
+                  "x": 50,
+                  "y": 292,
+                  "s": 0.9,
+                  "tint": "brand.primary"
+                },
+                {
+                  "ref": "prop:fig-modern",
+                  "x": 352,
+                  "y": 294,
+                  "s": 0.6,
+                  "tint": "feedback.nudge"
+                }
+              ],
+              "altEn": "At Suwon's festival today, people in Joseon costumes march with flags and a palanquin while families watch."
+            }
           },
           {
             "id": "s5",
@@ -6996,8 +7280,33 @@ export const storiesAll: Story[] = [
                 "timeRelative": false
               }
             ],
-            "artPending": true,
-            "artBrief": "A scientist at a computer showing a simple line chart, with an old diary open on the desk and a window showing rain clouds."
+            "artBrief": "A scientist at a computer showing a simple line chart, with an old diary open on the desk and a window showing rain clouds.",
+            "art": {
+              "setting": "scene:modern-room",
+              "layers": [
+                {
+                  "ref": "prop:weather-signs",
+                  "x": 292,
+                  "y": 124,
+                  "s": 0.9,
+                  "flip": true
+                },
+                {
+                  "ref": "prop:fig-researcher",
+                  "x": 160,
+                  "y": 284,
+                  "s": 1.4
+                },
+                {
+                  "ref": "prop:book-open-entry",
+                  "x": 318,
+                  "y": 282,
+                  "s": 0.9,
+                  "z": "front"
+                }
+              ],
+              "altEn": "A scientist studies a weather chart on a computer beside an old diary, with rain clouds outside the window."
+            }
           },
           {
             "id": "s6",
@@ -7014,8 +7323,32 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "A child and a grandparent looking at a tablet showing two columns of text shapes, one old style and one modern (no readable characters)."
+            "artBrief": "A child and a grandparent looking at a tablet showing two columns of text shapes, one old style and one modern (no readable characters).",
+            "art": {
+              "setting": "scene:modern-room",
+              "layers": [
+                {
+                  "ref": "prop:fig-modern",
+                  "x": 160,
+                  "y": 290,
+                  "s": 1.3
+                },
+                {
+                  "ref": "prop:fig-modern",
+                  "x": 262,
+                  "y": 290,
+                  "s": 0.9,
+                  "tint": "feedback.nudge"
+                },
+                {
+                  "ref": "prop:tablet",
+                  "x": 212,
+                  "y": 236,
+                  "s": 1.5
+                }
+              ],
+              "altEn": "A grandparent and a child read the Annals together on a tablet, the old text beside a modern translation."
+            }
           },
           {
             "id": "s7",
@@ -7042,8 +7375,43 @@ export const storiesAll: Story[] = [
                 "timeRelative": false
               }
             ],
-            "artPending": true,
-            "artBrief": "Four old books standing side by side on a shelf with a soft glow, each a different cover color."
+            "artBrief": "Four old books standing side by side on a shelf with a soft glow, each a different cover color.",
+            "art": {
+              "setting": "scene:hanji-backdrop",
+              "layers": [
+                {
+                  "ref": "prop:desk-low",
+                  "x": 200,
+                  "y": 296,
+                  "s": 2.2
+                },
+                {
+                  "ref": "prop:book-thread-bound",
+                  "x": 128,
+                  "y": 196,
+                  "s": 1.3
+                },
+                {
+                  "ref": "prop:book-thread-bound",
+                  "x": 176,
+                  "y": 196,
+                  "s": 1.3
+                },
+                {
+                  "ref": "prop:book-thread-bound",
+                  "x": 224,
+                  "y": 196,
+                  "s": 1.3
+                },
+                {
+                  "ref": "prop:book-thread-bound",
+                  "x": 272,
+                  "y": 196,
+                  "s": 1.3
+                }
+              ],
+              "altEn": "Four old books stand side by side: the Annals, the Royal Secretariat's diaries, the uigwe and the Ilseongnok."
+            }
           },
           {
             "id": "s8",
@@ -7058,8 +7426,33 @@ export const storiesAll: Story[] = [
             "factIds": [],
             "framing": true,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Hoya holding up a small notebook and brush, grinning, with the fortress, books and a sunny sky behind him."
+            "artBrief": "Hoya holding up a small notebook and brush, grinning, with the fortress, books and a sunny sky behind him.",
+            "art": {
+              "setting": "scene:countryside",
+              "layers": [
+                {
+                  "ref": "prop:fortress-gate",
+                  "x": 280,
+                  "y": 212,
+                  "s": 0.8,
+                  "z": "back"
+                },
+                {
+                  "ref": "hoya:cheering",
+                  "x": 160,
+                  "y": 292,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:books-stack",
+                  "x": 332,
+                  "y": 288,
+                  "s": 1,
+                  "z": "front"
+                }
+              ],
+              "altEn": "Hoya cheers in front of the fortress and a stack of old books: records are treasures!"
+            }
           }
         ],
         "checks": [
@@ -10550,7 +10943,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:seungjeongwon-ilgi-every-day",
     "state": "ready",
-    "contentVer": 1,
+    "contentVer": 2,
     "title": {
       "ko": "날마다 쓴 승정원 일기",
       "romanization": "Nalmada sseun Seungjeongwon Ilgi",
@@ -10680,8 +11073,32 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Hoya stepping through a palace gate into a courtyard where officials carry folded documents to and from a hall."
+            "artBrief": "Hoya stepping through a palace gate into a courtyard where officials carry folded documents to and from a hall.",
+            "art": {
+              "setting": "scene:palace-courtyard",
+              "layers": [
+                {
+                  "ref": "prop:fig-official",
+                  "x": 205,
+                  "y": 262,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:fig-official",
+                  "x": 312,
+                  "y": 246,
+                  "s": 0.85,
+                  "flip": true
+                },
+                {
+                  "ref": "hoya:waving",
+                  "x": 80,
+                  "y": 292,
+                  "s": 0.7
+                }
+              ],
+              "altEn": "Hoya steps into a palace courtyard where officials of the Royal Secretariat come and go with the king's orders."
+            }
           },
           {
             "id": "s2",
@@ -10699,8 +11116,39 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "A row of six senior officials and two junior officials in formal court dress and black hats; the two junior ones hold brushes and paper."
+            "artBrief": "A row of six senior officials and two junior officials in formal court dress and black hats; the two junior ones hold brushes and paper.",
+            "art": {
+              "setting": "scene:palace-courtyard",
+              "layers": [
+                {
+                  "ref": "prop:fig-official",
+                  "x": 200,
+                  "y": 258,
+                  "s": 0.95
+                },
+                {
+                  "ref": "prop:fig-official",
+                  "x": 118,
+                  "y": 258,
+                  "s": 0.95
+                },
+                {
+                  "ref": "prop:fig-official",
+                  "x": 282,
+                  "y": 258,
+                  "s": 0.95,
+                  "flip": true
+                },
+                {
+                  "ref": "prop:fig-historian",
+                  "x": 200,
+                  "y": 294,
+                  "s": 0.9,
+                  "z": "front"
+                }
+              ],
+              "altEn": "Royal secretaries in court robes and winged caps stand in a row while a scribe kneels in front, writing with a brush."
+            }
           },
           {
             "id": "s3",
@@ -10718,8 +11166,38 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "A scribe and a historian kneeling side by side, writing fast while the king talks with ministers; in the corner, a finished thread-bound book."
+            "artBrief": "A scribe and a historian kneeling side by side, writing fast while the king talks with ministers; in the corner, a finished thread-bound book.",
+            "art": {
+              "setting": "scene:palace-hall",
+              "layers": [
+                {
+                  "ref": "prop:fig-king",
+                  "x": 200,
+                  "y": 186,
+                  "s": 0.9
+                },
+                {
+                  "ref": "prop:fig-official",
+                  "x": 92,
+                  "y": 266,
+                  "s": 0.9
+                },
+                {
+                  "ref": "prop:fig-historian",
+                  "x": 250,
+                  "y": 294,
+                  "s": 0.9
+                },
+                {
+                  "ref": "prop:fig-historian",
+                  "x": 342,
+                  "y": 294,
+                  "s": 0.9,
+                  "flip": true
+                }
+              ],
+              "altEn": "A scribe and a historian kneel side by side, writing fast while the king talks with a minister in the palace hall."
+            }
           },
           {
             "id": "s4",
@@ -10736,8 +11214,32 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "A diary page drawn as simple brush lines beside a small sun symbol and a rain-cloud symbol; a modern researcher with a laptop comparing notes."
+            "artBrief": "A diary page drawn as simple brush lines beside a small sun symbol and a rain-cloud symbol; a modern researcher with a laptop comparing notes.",
+            "art": {
+              "setting": "scene:modern-room",
+              "layers": [
+                {
+                  "ref": "prop:fig-researcher",
+                  "x": 128,
+                  "y": 288,
+                  "s": 1.5
+                },
+                {
+                  "ref": "prop:writing-lines",
+                  "x": 262,
+                  "y": 292,
+                  "s": 1,
+                  "z": "front"
+                },
+                {
+                  "ref": "prop:weather-signs",
+                  "x": 336,
+                  "y": 244,
+                  "s": 0.8
+                }
+              ],
+              "altEn": "A researcher today turns the weather notes of an old diary, sunshine and rain, into a chart on a computer."
+            }
           },
           {
             "id": "s5",
@@ -10755,8 +11257,31 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Two sheets side by side: one with loose, swirling brush strokes, the other with tidy, upright brush strokes (no readable characters)."
+            "artBrief": "Two sheets side by side: one with loose, swirling brush strokes, the other with tidy, upright brush strokes (no readable characters).",
+            "art": {
+              "setting": "scene:hanji-backdrop",
+              "layers": [
+                {
+                  "ref": "prop:desk-low",
+                  "x": 200,
+                  "y": 296,
+                  "s": 2.2
+                },
+                {
+                  "ref": "prop:sheet-cursive",
+                  "x": 150,
+                  "y": 196,
+                  "s": 1.5
+                },
+                {
+                  "ref": "prop:writing-lines",
+                  "x": 252,
+                  "y": 196,
+                  "s": 1.5
+                }
+              ],
+              "altEn": "Two sheets on a desk: one in flowing cursive brush strokes that are hard to read, one rewritten in neat upright strokes."
+            }
           },
           {
             "id": "s6",
@@ -10773,8 +11298,54 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Officials at desks surrounded by stacks of other records, carefully copying entries into new blank books; a calm scene with no flames."
+            "artBrief": "Officials at desks surrounded by stacks of other records, carefully copying entries into new blank books; a calm scene with no flames.",
+            "art": {
+              "setting": "scene:hanok-room",
+              "layers": [
+                {
+                  "ref": "prop:fig-historian",
+                  "x": 150,
+                  "y": 262,
+                  "s": 1.1
+                },
+                {
+                  "ref": "prop:desk-low",
+                  "x": 150,
+                  "y": 292,
+                  "s": 1.3,
+                  "z": "front"
+                },
+                {
+                  "ref": "prop:book-thread-bound",
+                  "x": 216,
+                  "y": 234,
+                  "s": 1,
+                  "z": "front"
+                },
+                {
+                  "ref": "prop:paper-stack",
+                  "x": 58,
+                  "y": 292,
+                  "s": 1.3,
+                  "z": "front"
+                },
+                {
+                  "ref": "prop:fig-historian",
+                  "x": 310,
+                  "y": 262,
+                  "s": 1,
+                  "flip": true
+                },
+                {
+                  "ref": "prop:paper-stack",
+                  "x": 335,
+                  "y": 294,
+                  "s": 1.2,
+                  "z": "front"
+                }
+              ],
+              "altEn": "Officials work calmly at low desks, copying entries from other records into new blank books to rebuild lost diaries."
+            }
           },
           {
             "id": "s7",
@@ -10794,8 +11365,31 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Long wooden shelves filled with tall old books in a quiet modern archive, soft light, Hoya gazing up in wonder."
+            "artBrief": "Long wooden shelves filled with tall old books in a quiet modern archive, soft light, Hoya gazing up in wonder.",
+            "art": {
+              "setting": "scene:modern-room",
+              "layers": [
+                {
+                  "ref": "prop:archive-shelf",
+                  "x": 130,
+                  "y": 272,
+                  "s": 1.2
+                },
+                {
+                  "ref": "prop:archive-shelf",
+                  "x": 300,
+                  "y": 272,
+                  "s": 1.2
+                },
+                {
+                  "ref": "hoya:thinking",
+                  "x": 212,
+                  "y": 294,
+                  "s": 0.75
+                }
+              ],
+              "altEn": "Hoya gazes up in wonder at tall archive shelves where the surviving diary books are kept safe today."
+            }
           }
         ],
         "checks": [
@@ -11873,7 +12467,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:sillok-mountain-archives",
     "state": "ready",
-    "contentVer": 1,
+    "contentVer": 2,
     "title": {
       "ko": "산으로 간 실록",
       "romanization": "Saneuro gan sillok",
@@ -12012,8 +12606,54 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Officials in Joseon robes seated around low tables piled with papers and scrolls, sorting documents in a quiet hall."
+            "artBrief": "Officials in Joseon robes seated around low tables piled with papers and scrolls, sorting documents in a quiet hall.",
+            "art": {
+              "setting": "scene:hanok-room",
+              "layers": [
+                {
+                  "ref": "prop:fig-historian",
+                  "x": 120,
+                  "y": 262,
+                  "s": 1.1
+                },
+                {
+                  "ref": "prop:desk-low",
+                  "x": 120,
+                  "y": 292,
+                  "s": 1.3,
+                  "z": "front"
+                },
+                {
+                  "ref": "prop:paper-stack",
+                  "x": 70,
+                  "y": 233,
+                  "s": 1,
+                  "z": "front"
+                },
+                {
+                  "ref": "prop:fig-historian",
+                  "x": 290,
+                  "y": 262,
+                  "s": 1.1,
+                  "flip": true
+                },
+                {
+                  "ref": "prop:desk-low",
+                  "x": 290,
+                  "y": 292,
+                  "s": 1.3,
+                  "z": "front"
+                },
+                {
+                  "ref": "prop:papers-loose",
+                  "x": 344,
+                  "y": 233,
+                  "s": 1,
+                  "z": "front"
+                }
+              ],
+              "altEn": "Officials at low desks sort piles of court records in a quiet office set up to write a late king's Annals."
+            }
           },
           {
             "id": "s2",
@@ -12031,8 +12671,38 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Three stacks of paper growing neater from left to right, then a wooden tray of small type blocks and freshly printed pages drying."
+            "artBrief": "Three stacks of paper growing neater from left to right, then a wooden tray of small type blocks and freshly printed pages drying.",
+            "art": {
+              "setting": "scene:hanji-backdrop",
+              "layers": [
+                {
+                  "ref": "prop:papers-loose",
+                  "x": 62,
+                  "y": 250,
+                  "s": 1.5
+                },
+                {
+                  "ref": "prop:paper-stack",
+                  "x": 160,
+                  "y": 250,
+                  "s": 1.5
+                },
+                {
+                  "ref": "prop:type-tray",
+                  "x": 292,
+                  "y": 256,
+                  "s": 2.3
+                },
+                {
+                  "ref": "prop:writing-lines",
+                  "x": 352,
+                  "y": 296,
+                  "s": 0.9,
+                  "z": "front"
+                }
+              ],
+              "altEn": "Messy drafts become a neat stack, and a frame of movable type stands ready to print the final Annals."
+            }
           },
           {
             "id": "s3",
@@ -12050,8 +12720,45 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "A clear mountain stream with flat rocks; officials gently rinsing sheets of paper as the ink swirls away, Hoya watching from a rock."
+            "artBrief": "A clear mountain stream with flat rocks; officials gently rinsing sheets of paper as the ink swirls away, Hoya watching from a rock.",
+            "art": {
+              "setting": "scene:mountain-stream",
+              "layers": [
+                {
+                  "ref": "prop:flat-rock",
+                  "x": 172,
+                  "y": 262,
+                  "s": 1.6
+                },
+                {
+                  "ref": "prop:writing-lines",
+                  "x": 172,
+                  "y": 236,
+                  "s": 0.7
+                },
+                {
+                  "ref": "prop:fig-official",
+                  "x": 262,
+                  "y": 290,
+                  "s": 0.9,
+                  "flip": true
+                },
+                {
+                  "ref": "hoya:thinking",
+                  "x": 72,
+                  "y": 262,
+                  "s": 0.6
+                },
+                {
+                  "ref": "prop:flat-rock",
+                  "x": 72,
+                  "y": 288,
+                  "s": 1.2,
+                  "z": "front"
+                }
+              ],
+              "altEn": "By a clear stream used draft sheets are washed on a flat rock so no one can read them, while an official and Hoya watch."
+            }
           },
           {
             "id": "s4",
@@ -12078,8 +12785,20 @@ export const storiesAll: Story[] = [
                 "timeRelative": false
               }
             ],
-            "artPending": true,
-            "artBrief": "A traditional archive building with a tiled roof and wooden walls; one lantern-lit doorway glowing, suggesting the one surviving copy."
+            "artBrief": "A traditional archive building with a tiled roof and wooden walls; one lantern-lit doorway glowing, suggesting the one surviving copy.",
+            "art": {
+              "setting": "scene:countryside",
+              "layers": [
+                {
+                  "ref": "prop:sago-archive",
+                  "x": 200,
+                  "y": 252,
+                  "s": 1.4,
+                  "tint": "feedback.nudge"
+                }
+              ],
+              "altEn": "An archive of tiled-roof storehouses where the Annals were kept, its doorways glowing like the one copy that survived."
+            }
           },
           {
             "id": "s5",
@@ -12106,8 +12825,33 @@ export const storiesAll: Story[] = [
                 "timeRelative": false
               }
             ],
-            "artPending": true,
-            "artBrief": "Two scholars in plain traditional clothes and wide-brimmed hats leading a small ox cart loaded with wrapped book boxes along a misty mountain path."
+            "artBrief": "Two scholars in plain traditional clothes and wide-brimmed hats leading a small ox cart loaded with wrapped book boxes along a misty mountain path.",
+            "art": {
+              "setting": "scene:mountains",
+              "layers": [
+                {
+                  "ref": "prop:fig-scholar",
+                  "x": 150,
+                  "y": 272,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:fig-scholar",
+                  "x": 272,
+                  "y": 262,
+                  "s": 0.95,
+                  "flip": true
+                },
+                {
+                  "ref": "prop:book-bundle",
+                  "x": 212,
+                  "y": 286,
+                  "s": 1.2,
+                  "z": "front"
+                }
+              ],
+              "altEn": "Two scholars in wide-brimmed hats guard a bundle of the Annals wrapped in red cloth on a misty mountain path."
+            }
           },
           {
             "id": "s6",
@@ -12126,8 +12870,26 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "A small walled archive compound nestled among pine-covered mountain ridges, clouds drifting below the peaks."
+            "artBrief": "A small walled archive compound nestled among pine-covered mountain ridges, clouds drifting below the peaks.",
+            "art": {
+              "setting": "scene:mountains",
+              "layers": [
+                {
+                  "ref": "prop:sago-archive",
+                  "x": 200,
+                  "y": 244,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:pine-tree",
+                  "x": 52,
+                  "y": 292,
+                  "s": 1.1,
+                  "z": "front"
+                }
+              ],
+              "altEn": "A small walled archive sits among pine-covered mountain ridges, with clouds drifting below the peaks."
+            }
           },
           {
             "id": "s7",
@@ -12145,8 +12907,19 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "An open wooden chest: books wrapped in red cloth, small cloth pouches of dried herbs tucked at the bottom and on top."
+            "artBrief": "An open wooden chest: books wrapped in red cloth, small cloth pouches of dried herbs tucked at the bottom and on top.",
+            "art": {
+              "setting": "scene:hanji-backdrop",
+              "layers": [
+                {
+                  "ref": "prop:book-chest-open",
+                  "x": 200,
+                  "y": 272,
+                  "s": 2.6
+                }
+              ],
+              "altEn": "An open wooden chest holds books wrapped in red cloth, with pouches of herbs tucked in to keep insects away."
+            }
           },
           {
             "id": "s8",
@@ -12163,8 +12936,41 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Books laid open on mats in a sunny courtyard of a mountain archive, a historian checking pages while a breeze lifts them; Hoya basking nearby."
+            "artBrief": "Books laid open on mats in a sunny courtyard of a mountain archive, a historian checking pages while a breeze lifts them; Hoya basking nearby.",
+            "art": {
+              "setting": "scene:mountains",
+              "layers": [
+                {
+                  "ref": "prop:sago-archive",
+                  "x": 250,
+                  "y": 214,
+                  "s": 0.8,
+                  "z": "back",
+                  "tint": "feedback.nudgeLight"
+                },
+                {
+                  "ref": "prop:fig-historian",
+                  "x": 246,
+                  "y": 256,
+                  "s": 1.15,
+                  "flip": true
+                },
+                {
+                  "ref": "prop:books-airing",
+                  "x": 166,
+                  "y": 292,
+                  "s": 1.5,
+                  "z": "front"
+                },
+                {
+                  "ref": "hoya:idle",
+                  "x": 56,
+                  "y": 292,
+                  "s": 0.6
+                }
+              ],
+              "altEn": "At a mountain archive old books lie open in the sun to air while a historian checks them and Hoya basks nearby."
+            }
           }
         ],
         "checks": [
@@ -12558,7 +13364,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:sillok-royal-historians",
     "state": "ready",
-    "contentVer": 1,
+    "contentVer": 2,
     "title": {
       "ko": "호야, 사관을 만나다",
       "romanization": "Hoya, sagwaneul mannada",
@@ -12667,8 +13473,25 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "A small friendly tiger cub sitting on a stack of old thread-bound books, head tilted with curiosity; warm hanji-paper background."
+            "artBrief": "A small friendly tiger cub sitting on a stack of old thread-bound books, head tilted with curiosity; warm hanji-paper background.",
+            "art": {
+              "setting": "scene:hanji-backdrop",
+              "layers": [
+                {
+                  "ref": "prop:books-stack",
+                  "x": 258,
+                  "y": 262,
+                  "s": 2.2
+                },
+                {
+                  "ref": "hoya:thinking",
+                  "x": 105,
+                  "y": 282,
+                  "s": 1
+                }
+              ],
+              "altEn": "Hoya, a curious young tiger, stands by a stack of old thread-bound books and wonders how we know the past."
+            }
           },
           {
             "id": "s2",
@@ -12686,8 +13509,38 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "A Joseon palace hall: the king on a raised seat, officials kneeling in rows, and at the side a historian in official dress and a black hat writing with a brush on paper."
+            "artBrief": "A Joseon palace hall: the king on a raised seat, officials kneeling in rows, and at the side a historian in official dress and a black hat writing with a brush on paper.",
+            "art": {
+              "setting": "scene:palace-hall",
+              "layers": [
+                {
+                  "ref": "prop:fig-king",
+                  "x": 200,
+                  "y": 186,
+                  "s": 0.9
+                },
+                {
+                  "ref": "prop:fig-officials-kneeling",
+                  "x": 140,
+                  "y": 248,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:fig-officials-kneeling",
+                  "x": 170,
+                  "y": 298,
+                  "s": 1.35
+                },
+                {
+                  "ref": "prop:fig-historian",
+                  "x": 335,
+                  "y": 292,
+                  "s": 1.1,
+                  "flip": true
+                }
+              ],
+              "altEn": "In a palace hall the king sits on a raised seat, officials kneel in rows and a historian at the side writes with a brush."
+            }
           },
           {
             "id": "s3",
@@ -12706,8 +13559,31 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Close-up of hands holding a calligraphy brush over sheets of handwritten paper, an inkstone and ink stick beside them."
+            "artBrief": "Close-up of hands holding a calligraphy brush over sheets of handwritten paper, an inkstone and ink stick beside them.",
+            "art": {
+              "setting": "scene:hanok-room",
+              "layers": [
+                {
+                  "ref": "prop:desk-low",
+                  "x": 200,
+                  "y": 296,
+                  "s": 1.9
+                },
+                {
+                  "ref": "prop:writing-lines",
+                  "x": 160,
+                  "y": 211,
+                  "s": 1.5
+                },
+                {
+                  "ref": "prop:writing-set",
+                  "x": 272,
+                  "y": 211,
+                  "s": 1.5
+                }
+              ],
+              "altEn": "A low desk holds a historian's handwritten draft notes beside an inkstone, an ink stick and a brush."
+            }
           },
           {
             "id": "s4",
@@ -12724,8 +13600,25 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "A closed wooden document box tied with a red cord; the king, seen from behind, walking past it without opening it."
+            "artBrief": "A closed wooden document box tied with a red cord; the king, seen from behind, walking past it without opening it.",
+            "art": {
+              "setting": "scene:palace-hall",
+              "layers": [
+                {
+                  "ref": "prop:document-box",
+                  "x": 130,
+                  "y": 250,
+                  "s": 1.5
+                },
+                {
+                  "ref": "prop:fig-king",
+                  "x": 270,
+                  "y": 282,
+                  "s": 1
+                }
+              ],
+              "altEn": "The king walks past a closed wooden box of the historians' notes, tied with a red cord, and leaves it shut."
+            }
           },
           {
             "id": "s5",
@@ -12743,8 +13636,25 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "A gentle countryside scene: a brown horse that has stumbled on grass, and a king in plain riding clothes sitting up on the ground, unhurt, brushing off his sleeve."
+            "artBrief": "A gentle countryside scene: a brown horse that has stumbled on grass, and a king in plain riding clothes sitting up on the ground, unhurt, brushing off his sleeve.",
+            "art": {
+              "setting": "scene:countryside",
+              "layers": [
+                {
+                  "ref": "prop:pine-tree",
+                  "x": 64,
+                  "y": 232,
+                  "s": 0.8
+                },
+                {
+                  "ref": "prop:horse",
+                  "x": 220,
+                  "y": 258,
+                  "s": 1.7
+                }
+              ],
+              "altEn": "A brown horse grazes calmly in the green countryside where King Taejong went hunting in 1404."
+            }
           },
           {
             "id": "s6",
@@ -12762,8 +13672,38 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "The king glancing over his shoulder with a finger to his lips, while in the background a historian quietly writes; Hoya peeks from behind a tree, smiling."
+            "artBrief": "The king glancing over his shoulder with a finger to his lips, while in the background a historian quietly writes; Hoya peeks from behind a tree, smiling.",
+            "art": {
+              "setting": "scene:countryside",
+              "layers": [
+                {
+                  "ref": "prop:fig-historian",
+                  "x": 330,
+                  "y": 214,
+                  "s": 0.7
+                },
+                {
+                  "ref": "prop:fig-king",
+                  "x": 210,
+                  "y": 272,
+                  "s": 1
+                },
+                {
+                  "ref": "hoya:idle",
+                  "x": 140,
+                  "y": 286,
+                  "s": 0.6
+                },
+                {
+                  "ref": "prop:pine-tree",
+                  "x": 80,
+                  "y": 284,
+                  "s": 1.2,
+                  "z": "front"
+                }
+              ],
+              "altEn": "The king looks around while a historian writes quietly in the distance, and Hoya peeks out from behind a pine tree."
+            }
           },
           {
             "id": "s7",
@@ -12783,8 +13723,25 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "A long row of old thread-bound books standing in a wooden case, with Hoya proudly pointing at them."
+            "artBrief": "A long row of old thread-bound books standing in a wooden case, with Hoya proudly pointing at them.",
+            "art": {
+              "setting": "scene:hanji-backdrop",
+              "layers": [
+                {
+                  "ref": "prop:books-case",
+                  "x": 245,
+                  "y": 272,
+                  "s": 2.2
+                },
+                {
+                  "ref": "hoya:waving",
+                  "x": 80,
+                  "y": 286,
+                  "s": 0.95
+                }
+              ],
+              "altEn": "Hoya proudly points at a wooden case full of old books: the Annals, which record 472 years of Joseon kings."
+            }
           }
         ],
         "checks": [
@@ -14418,7 +15375,7 @@ export const storiesAll: Story[] = [
     "v": 1,
     "id": "story:uigwe-royal-birthday",
     "state": "ready",
-    "contentVer": 1,
+    "contentVer": 2,
     "title": {
       "ko": "왕실 잔치를 그림으로 남긴 의궤",
       "romanization": "Wangsil janchireul geurimeuro namgin uigwe",
@@ -14552,8 +15509,25 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "An open old book with a colorful painted page of a ceremony beside a page of neat brush writing (no readable text); Hoya leaning in to look."
+            "artBrief": "An open old book with a colorful painted page of a ceremony beside a page of neat brush writing (no readable text); Hoya leaning in to look.",
+            "art": {
+              "setting": "scene:hanji-backdrop",
+              "layers": [
+                {
+                  "ref": "prop:uigwe-open",
+                  "x": 238,
+                  "y": 268,
+                  "s": 2.5
+                },
+                {
+                  "ref": "hoya:thinking",
+                  "x": 70,
+                  "y": 292,
+                  "s": 0.85
+                }
+              ],
+              "altEn": "Hoya leans in to look at an open uigwe: a painted picture of a royal event beside pages of neat brush writing."
+            }
           },
           {
             "id": "s2",
@@ -14570,8 +15544,33 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Officials checking items off against an open uigwe: bolts of cloth, bowls, flags and lanterns laid out in a courtyard."
+            "artBrief": "Officials checking items off against an open uigwe: bolts of cloth, bowls, flags and lanterns laid out in a courtyard.",
+            "art": {
+              "setting": "scene:palace-courtyard",
+              "layers": [
+                {
+                  "ref": "prop:ceremony-goods",
+                  "x": 150,
+                  "y": 276,
+                  "s": 1.8
+                },
+                {
+                  "ref": "prop:fig-official",
+                  "x": 312,
+                  "y": 262,
+                  "s": 0.95,
+                  "flip": true
+                },
+                {
+                  "ref": "prop:book-thread-bound",
+                  "x": 270,
+                  "y": 292,
+                  "s": 0.8,
+                  "z": "front"
+                }
+              ],
+              "altEn": "An official checks cloth, bowls, a flag and a lantern laid out in a courtyard against the written record."
+            }
           },
           {
             "id": "s3",
@@ -14589,8 +15588,51 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "A carpenter, a painter and an embroiderer at work in a palace workshop, each proud of their craft."
+            "artBrief": "A carpenter, a painter and an embroiderer at work in a palace workshop, each proud of their craft.",
+            "art": {
+              "setting": "scene:hanok-room",
+              "layers": [
+                {
+                  "ref": "prop:fig-artisan",
+                  "x": 200,
+                  "y": 262,
+                  "s": 1.2
+                },
+                {
+                  "ref": "prop:fig-artisan",
+                  "x": 76,
+                  "y": 272,
+                  "s": 1.2
+                },
+                {
+                  "ref": "prop:fig-artisan",
+                  "x": 324,
+                  "y": 272,
+                  "s": 1.2,
+                  "flip": true,
+                  "tint": "feedback.nudgeLight"
+                },
+                {
+                  "ref": "prop:craft-wood",
+                  "x": 76,
+                  "y": 300,
+                  "s": 1.3
+                },
+                {
+                  "ref": "prop:craft-painting",
+                  "x": 200,
+                  "y": 300,
+                  "s": 1.3
+                },
+                {
+                  "ref": "prop:craft-embroidery",
+                  "x": 324,
+                  "y": 300,
+                  "s": 1.3
+                }
+              ],
+              "altEn": "In a palace workshop a carpenter, a painter and an embroiderer each work carefully at their own craft."
+            }
           },
           {
             "id": "s4",
@@ -14608,8 +15650,33 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "A long, colorful royal procession winding along a road toward a fortress city; two ornate palanquins at the center."
+            "artBrief": "A long, colorful royal procession winding along a road toward a fortress city; two ornate palanquins at the center.",
+            "art": {
+              "setting": "scene:countryside",
+              "layers": [
+                {
+                  "ref": "prop:fortress-gate",
+                  "x": 310,
+                  "y": 196,
+                  "s": 0.6,
+                  "z": "back"
+                },
+                {
+                  "ref": "prop:palanquin",
+                  "x": 190,
+                  "y": 262,
+                  "s": 1.2
+                },
+                {
+                  "ref": "prop:procession-row",
+                  "x": 200,
+                  "y": 296,
+                  "s": 1.4,
+                  "z": "front"
+                }
+              ],
+              "altEn": "A long royal procession with a red palanquin between two horses travels toward the walled city of Hwaseong."
+            }
           },
           {
             "id": "s5",
@@ -14627,8 +15694,39 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "A festive palace hall with tables of food, musicians and dancers in bright costumes, and an honored elderly lady seated under a canopy."
+            "artBrief": "A festive palace hall with tables of food, musicians and dancers in bright costumes, and an honored elderly lady seated under a canopy.",
+            "art": {
+              "setting": "scene:hanok-room",
+              "layers": [
+                {
+                  "ref": "prop:bead-curtain",
+                  "x": 200,
+                  "y": 196,
+                  "s": 1.3,
+                  "z": "back"
+                },
+                {
+                  "ref": "prop:feast-table",
+                  "x": 200,
+                  "y": 262,
+                  "s": 1.4
+                },
+                {
+                  "ref": "prop:fig-dancer",
+                  "x": 86,
+                  "y": 290,
+                  "s": 0.9
+                },
+                {
+                  "ref": "prop:fig-dancer",
+                  "x": 314,
+                  "y": 290,
+                  "s": 0.9,
+                  "flip": true
+                }
+              ],
+              "altEn": "Court dancers perform beside a feast table, and a fine curtain screens the seat of Lady Hyegyeong, the guest of honour."
+            }
           },
           {
             "id": "s6",
@@ -14646,8 +15744,39 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Smiling elderly men in plain traditional clothes receiving folded bolts of silk in a sunny courtyard."
+            "artBrief": "Smiling elderly men in plain traditional clothes receiving folded bolts of silk in a sunny courtyard.",
+            "art": {
+              "setting": "scene:palace-courtyard",
+              "layers": [
+                {
+                  "ref": "prop:fig-scholar",
+                  "x": 190,
+                  "y": 272,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:fig-scholar",
+                  "x": 108,
+                  "y": 272,
+                  "s": 1
+                },
+                {
+                  "ref": "prop:fig-official",
+                  "x": 302,
+                  "y": 262,
+                  "s": 0.95,
+                  "flip": true
+                },
+                {
+                  "ref": "prop:silk-bolts",
+                  "x": 250,
+                  "y": 288,
+                  "s": 1,
+                  "z": "front"
+                }
+              ],
+              "altEn": "Elderly guests of the 1795 celebration each receive a folded bolt of silk, a gift from the king."
+            }
           },
           {
             "id": "s7",
@@ -14665,8 +15794,25 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "A bird's-eye view of a long procession: rows of tiny figures, horses, flags and palanquins arranged neatly along a path."
+            "artBrief": "A bird's-eye view of a long procession: rows of tiny figures, horses, flags and palanquins arranged neatly along a path.",
+            "art": {
+              "setting": "scene:hanji-backdrop",
+              "layers": [
+                {
+                  "ref": "prop:banchado-strip",
+                  "x": 200,
+                  "y": 212,
+                  "s": 1.9
+                },
+                {
+                  "ref": "hoya:reading",
+                  "x": 318,
+                  "y": 296,
+                  "s": 0.65
+                }
+              ],
+              "altEn": "Hoya studies printed procession pages, drawn as if from high above, with rows of tiny figures, horses and a palanquin."
+            }
           },
           {
             "id": "s8",
@@ -14685,8 +15831,25 @@ export const storiesAll: Story[] = [
             ],
             "framing": false,
             "approximations": [],
-            "artPending": true,
-            "artBrief": "Small metal type pieces in a tray next to a freshly printed picture page and the printing tools beside it."
+            "artBrief": "Small metal type pieces in a tray next to a freshly printed picture page and the printing tools beside it.",
+            "art": {
+              "setting": "scene:hanji-backdrop",
+              "layers": [
+                {
+                  "ref": "prop:type-tray",
+                  "x": 140,
+                  "y": 262,
+                  "s": 2.5
+                },
+                {
+                  "ref": "prop:print-sheet",
+                  "x": 312,
+                  "y": 262,
+                  "s": 1.8
+                }
+              ],
+              "altEn": "A frame of small metal type sits beside a freshly printed picture page: this uigwe was printed with metal type."
+            }
           }
         ],
         "checks": [

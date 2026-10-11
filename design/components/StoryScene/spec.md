@@ -87,3 +87,19 @@ The review surface for every picture, in `apps/web` (static export, `noindex`, l
 - Reviewers reach the sheet through the `web-export` artifact of the PR's "Web Console (static export)" run (unpack `web-export.tgz`, then `node apps/web/e2e/serve-out.mjs out`) or a local build; there is no per-PR preview URL.
 - Code: pure view models in `apps/web/src/lib/scene-sheet/` (`read-stories.ts`, `sheet.ts`, `library.ts`, 100 % covered); pages `app/design-preview/scenes/page.tsx` and `scenes/library/page.tsx`; `components/design-preview/{SheetView,sheet-ui,HoyaReference}.tsx`; smoke `apps/web/e2e/scene-sheet.spec.ts`.
 
+## Library batch 2: records-joseon (PR 2.10a)
+
+Settings and props for `sillok-royal-historians`, `sillok-mountain-archives`, `seungjeongwon-ilgi-every-day`, `ilseongnok-daily-reflection`, `uigwe-royal-birthday` and `joseon-records-today`, and the `art` of their 45 scenes: 48 items, 6 settings and 42 props. With batch 1 the registry holds 9 settings, 55 props and the 5 Hoya poses, 108.7 KB raw / 25.7 KB gzip serialised (budget 200 / 55).
+
+| Group | Ids |
+|---|---|
+| Settings | `scene:hanji-backdrop` (close-ups, horizon 152), `scene:hanok-room`, `scene:countryside` (two colours, to leave palette room), `scene:mountains`, `scene:mountain-stream`, `scene:modern-room` |
+| People | `prop:fig-officials-kneeling` (seen from behind), `prop:fig-king-seated`, `prop:fig-writer-seated`, `prop:fig-artisan`, `prop:fig-dancer`, `prop:fig-modern`, `prop:fig-worker`, `prop:fig-researcher` |
+| Books and records | `prop:books-stack`, `prop:book-bundle`, `prop:book-chest-open`, `prop:books-airing`, `prop:book-open-entry`, `prop:uigwe-open`, `prop:book-geojunggi`, `prop:banchado-strip`, `prop:paper-stack`, `prop:papers-loose`, `prop:sheet-cursive`, `prop:print-sheet`, `prop:type-tray` |
+| Nature, buildings | `prop:horse`, `prop:pine-tree`, `prop:flat-rock`, `prop:sago-archive` (door tintable), `prop:fortress-gate`, `prop:fortress-wall`, `prop:night-window` |
+| Objects, ceremony | `prop:oil-lamp`, `prop:tablet`, `prop:weather-signs`, `prop:signpost`, `prop:archive-shelf`, `prop:craft-wood`, `prop:craft-embroidery`, `prop:craft-painting`, `prop:palanquin` (the 1795 gagyo), `prop:procession-row`, `prop:feast-table`, `prop:bead-curtain`, `prop:silk-bolts`, `prop:ceremony-goods` |
+
+- Heritage artefacts and buildings carry a `sourceRef` to the page that shows them (Encyclopedia of Korean Culture, National Archives, National Heritage Portal, Annals DB); every item has an `accuracyNote` saying what is simplified. `checkItem` rule `I-heritage` holds heritage objects and buildings (§3.9.10) to both. Every figure in historical dress has a `sourceRef` and says `Joseon` in its `alt`; people of today say `of today` (a registry test checks both).
+- Palette headroom drove several choices: the countryside is two tokens, the palanquin roof is drawn near black, the procession wears the attendants' yellow, the dancer's hair is dark brown.
+- Deviations from the briefs (all in the PR): no close-up hands; the king shown front-on; the 1404 fall not drawn (advisory scene, setting and objects only, §3.9.5 R-S10); fewer people than the narration counts (the narration keeps the numbers); one palanquin (the source supports Lady Hyegyeong's); no ox cart (the sources do not say how the Annals were carried); Lady Hyegyeong behind a curtain (as the 1795 feast picture shows); the four books share one cover colour; `ilseongnok-daily-reflection` s3 (a split scene in the brief) is split by the room's centre post, the king in one bay and Hoya apart in the other, so Hoya stays beside the moment, not in it (F-STORY-002 §3.9.10).
+

@@ -3,7 +3,7 @@
  * covers are blank, stored books lie flat, and pages show only as edges,
  * never as text.
  */
-import type { ItemDef } from '../types';
+import type { ItemDef, Shape } from '../types';
 
 export const BOOK_THREAD_BOUND: ItemDef = {
   id: 'prop:book-thread-bound',
@@ -74,5 +74,189 @@ export const DOCUMENT_BOX: ItemDef = {
     { t: 'line', x1: 4, y1: 33, x2: 60, y2: 33, stroke: 'border.strong', sw: 'thin', o: 0.35, det: true },
     { t: 'path', d: 'M26 4 V42 M38 4 V42 M32 10 Q22 0 24 8 Q26 12 32 10 Q42 0 40 8 Q38 12 32 10', stroke: 'brand.primary', sw: 'base' },
     { t: 'rect', x: 28, y: 22, w: 8, h: 8, r: 1, fill: 'feedback.nudge' },
+  ],
+};
+
+// --- PR 2.10a: records-joseon cluster -------------------------------------
+
+const ENCYKOREA = '한국학중앙연구원 한국민족문화대백과사전 (encykorea.aks.ac.kr)';
+const BINDING_REF = { title: '사침안정법 (四針眼訂法)', publisher: ENCYKOREA, url: 'https://encykorea.aks.ac.kr/Article/E0080104', accessed: '2026-10-11' } as const;
+const POSWAE_REF = { title: '포쇄(曝曬)', publisher: ENCYKOREA, url: 'https://encykorea.aks.ac.kr/Article/E0060156', accessed: '2026-10-11' } as const;
+
+export const BOOKS_STACK: ItemDef = {
+  id: 'prop:books-stack',
+  kind: 'object',
+  box: { w: 92, h: 60 },
+  z: 'mid',
+  alt: 'A stack of four old thread-bound books lying flat, red binding thread at their edges',
+  tags: { heritage: true },
+  sourceRef: BINDING_REF,
+  accuracyNote:
+    'Four closed thread-bound books lying flat, the way such soft-covered books were kept, seen from the side so their bound edges and red five-hole stitching show at the right. Covers are the pale yellow of the gardenia-dyed paper the entry names, and blank. Sizes and the number of volumes are generic; no title slip, seal or writing is drawn.',
+  nodes: [
+    { t: 'ellipse', cx: 46, cy: 58, rx: 44, ry: 2, fill: 'text.secondary', o: 0.08, det: true },
+    { t: 'rect', x: 4, y: 45, w: 82, h: 12, r: 1, fill: 'feedback.nudgeLight', stroke: 'text.secondary', sw: 'base' },
+    { t: 'rect', x: 8, y: 33, w: 80, h: 12, r: 1, fill: 'feedback.nudgeLight', stroke: 'text.secondary', sw: 'base' },
+    { t: 'rect', x: 2, y: 21, w: 82, h: 12, r: 1, fill: 'feedback.nudgeLight', stroke: 'text.secondary', sw: 'base' },
+    { t: 'rect', x: 7, y: 9, w: 78, h: 12, r: 1, fill: 'feedback.nudgeLight', stroke: 'text.secondary', sw: 'base' },
+    { t: 'path', d: 'M8 51 H76 M12 39 H78 M6 27 H74 M11 15 H75', stroke: 'surface.paper', sw: 'base', det: true },
+    { t: 'path', d: 'M80 46 V56 M84 46 V56 M82 34 V44 M86 34 V44 M78 22 V32 M82 22 V32 M79 10 V20 M83 10 V20', stroke: 'brand.primary', sw: 'base' },
+  ],
+};
+
+export const BOOK_CHEST_OPEN: ItemDef = {
+  id: 'prop:book-chest-open',
+  kind: 'object',
+  box: { w: 96, h: 74 },
+  z: 'mid',
+  alt: 'An open wooden chest holding books wrapped in red cloth, with small pouches of dried herbs tucked beside them',
+  tags: { heritage: true },
+  sourceRef: POSWAE_REF,
+  accuracyNote:
+    'The entry describes the Annals wrapped in oiled paper and then a red cloth wrapper (hongbo) and laid in a chest with the herbs cheongung and changpo against insects and rot; the National Archives adds that the chests were of linden wood. Here the lid stands open, two wrapped bundles show the red cloth (the oiled paper beneath is not visible) and the herbs are three small pale pouches. Chest size, hardware and the number of bundles are generic; the seal and any label are left out.',
+  nodes: [
+    { t: 'ellipse', cx: 48, cy: 72, rx: 46, ry: 2, fill: 'text.primary', o: 0.08, det: true },
+    // lid standing open behind
+    { t: 'poly', pts: [[10, 30], [86, 30], [80, 4], [16, 4]], fill: 'text.secondary', stroke: 'text.primary', sw: 'thin' },
+    { t: 'rect', x: 6, y: 30, w: 84, h: 40, r: 2, fill: 'text.secondary', stroke: 'text.primary', sw: 'thin' },
+    { t: 'rect', x: 11, y: 30, w: 74, h: 10, fill: 'text.primary', o: 0.6 },
+    // two bundles wrapped in red cloth, drawn as one shape
+    { t: 'path', d: 'M14 26 Q14 22 18 22 L44 22 Q48 22 48 26 L48 38 L14 38 Z M50 24 Q50 20 54 20 L78 20 Q82 20 82 24 L82 38 L50 38 Z', fill: 'brand.primary', stroke: 'text.primary', sw: 'thin' },
+    { t: 'path', d: 'M31 22 V38 M66 20 V38', stroke: 'text.primary', sw: 'thin', o: 0.35, det: true },
+    // herb pouches
+    { t: 'ellipse', cx: 20, cy: 40, rx: 6, ry: 4, fill: 'feedback.nudgeLight', stroke: 'text.primary', sw: 'thin' },
+    { t: 'ellipse', cx: 49, cy: 41, rx: 5, ry: 3.5, fill: 'feedback.nudgeLight', stroke: 'text.primary', sw: 'thin' },
+    { t: 'ellipse', cx: 76, cy: 40, rx: 6, ry: 4, fill: 'feedback.nudgeLight', stroke: 'text.primary', sw: 'thin' },
+    { t: 'path', d: 'M10 54 H86', stroke: 'border.strong', sw: 'thin', o: 0.35, det: true },
+    { t: 'rect', x: 43, y: 46, w: 10, h: 8, r: 1, fill: 'border.strong' },
+  ],
+};
+
+export const BOOKS_AIRING: ItemDef = {
+  id: 'prop:books-airing',
+  kind: 'object',
+  box: { w: 150, h: 44 },
+  z: 'mid',
+  alt: 'Old books spread open on a straw mat to air',
+  tags: { heritage: true },
+  sourceRef: POSWAE_REF,
+  accuracyNote:
+    "Poswae, the airing of the stored Annals: the entry says the historian took the books out of the chest and aired them on a clear spring or autumn day, at the archive's airing hall, before dusting them and laying paper between the volumes. Here three volumes lie open on a straw mat, their pages shown only as faint rows of strokes (no text). Mat, number of books and their size are generic.",
+  nodes: [
+    { t: 'poly', pts: [[14, 16], [136, 16], [150, 42], [0, 42]], fill: 'feedback.nudgeLight', stroke: 'border.strong', sw: 'base' },
+    { t: 'path', d: 'M10 24 H140 M5 33 H145', stroke: 'border.strong', sw: 'thin', det: true },
+    { t: 'poly', pts: [[16, 22], [58, 22], [56, 36], [12, 36]], fill: 'surface.paper', stroke: 'text.secondary', sw: 'thin' },
+    { t: 'poly', pts: [[56, 20], [96, 20], [96, 34], [54, 34]], fill: 'surface.paper', stroke: 'text.secondary', sw: 'thin' },
+    { t: 'poly', pts: [[96, 24], [136, 24], [140, 38], [96, 38]], fill: 'surface.paper', stroke: 'text.secondary', sw: 'thin' },
+    { t: 'path', d: 'M35 22 L34 36 M75 20 V34 M117 24 L118 38', stroke: 'text.secondary', sw: 'base' },
+    { t: 'path', d: 'M20 26 V32 M25 26 V33 M29 26 V31 M41 26 V32 M46 26 V31 M61 24 V31 M66 24 V30 M83 24 V31 M88 24 V30 M101 28 V34 M106 28 V35 M124 28 V34 M129 28 V33', stroke: 'text.secondary', sw: 'thin', det: true },
+  ],
+};
+
+/** An open book: two pale pages over a dark cover edge, a gutter between. */
+const openBook = (w: number, h: number): Shape[] => [
+  { t: 'ellipse', cx: w / 2, cy: h - 2, rx: w / 2 - 2, ry: 2, fill: 'text.secondary', o: 0.08, det: true },
+  { t: 'path', d: `M2 6 Q${w / 4} 2 ${w / 2} 6 Q${(3 * w) / 4} 2 ${w - 2} 6 L${w - 2} ${h - 4} Q${(3 * w) / 4} ${h - 8} ${w / 2} ${h - 4} Q${w / 4} ${h - 8} 2 ${h - 4} Z`, fill: 'surface.paper', stroke: 'text.secondary', sw: 'base' },
+  { t: 'line', x1: w / 2, y1: 6, x2: w / 2, y2: h - 4, stroke: 'text.secondary', sw: 'base' },
+];
+
+export const BOOK_OPEN_ENTRY: ItemDef = {
+  id: 'prop:book-open-entry',
+  kind: 'object',
+  box: { w: 96, h: 60 },
+  z: 'mid',
+  alt: 'An open diary book whose entry begins with one bold headline stroke and smaller lines of detail below (no readable text)',
+  tags: { heritage: true },
+  sourceRef: { title: '일성록(日省錄)', publisher: ENCYKOREA, url: 'https://encykorea.aks.ac.kr/Article/E0047238', accessed: '2026-10-11' },
+  accuracyNote:
+    "The entry says each Ilseongnok entry has a headline (gang) taken from its main point, with detail items (mok) under it. Here the right-hand page shows that layout as marks only: a short bold column at the top right for the headline and thinner, lower-starting columns for the details, read right to left as in the original. No character is drawn; ruling, margins and page count are simplified.",
+  nodes: [
+    ...openBook(96, 60),
+    { t: 'line', x1: 86, y1: 12, x2: 86, y2: 26, stroke: 'text.primary', sw: 'thick' },
+    { t: 'path', d: 'M79 18 V48 M73 18 V44 M67 18 V50 M61 18 V40 M55 18 V46', stroke: 'text.secondary', sw: 'base' },
+    { t: 'path', d: 'M40 12 V44 M34 12 V48 M28 12 V40 M22 12 V46 M16 12 V42 M10 12 V36', stroke: 'text.secondary', sw: 'thin', det: true },
+  ],
+};
+
+export const UIGWE_OPEN: ItemDef = {
+  id: 'prop:uigwe-open',
+  kind: 'object',
+  box: { w: 108, h: 66 },
+  z: 'mid',
+  alt: 'An open uigwe: a painted page of a royal ceremony beside a page of brush-written columns (no readable text)',
+  tags: { heritage: true },
+  sourceRef: { title: '의궤란 무엇인가 (국가유산이야기 > 의궤정보)', publisher: '국가유산청 국가유산포털 (Korea Heritage Service, National Heritage Portal)', url: 'https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=/mem/uigweInfo.jsp&pageNo=3_4_1_0', accessed: '2026-10-11' },
+  accuracyNote:
+    "A uigwe holds written records and pictures (diagrams and procession pictures), as the portal page explains. Here the left page is a simplified painted ceremony seen from above (a hall roof, rows of small figures in colour, flags) and the right page has columns of brush marks between ruled lines; the page says distribution copies had black printed ruling, the king's copy red lines drawn by painters. No character, label or particular event is drawn.",
+  nodes: [
+    ...openBook(108, 66),
+    { t: 'poly', pts: [[14, 12], [42, 12], [46, 20], [10, 20]], fill: 'text.secondary' },
+    { t: 'path', d: 'M12 28 H18 V32 H12 Z M22 28 H28 V32 H22 Z M32 28 H38 V32 H32 Z M42 28 H48 V32 H42 Z M12 40 H18 V44 H12 Z M22 40 H28 V44 H22 Z M32 40 H38 V44 H32 Z M42 40 H48 V44 H42 Z', fill: 'brand.primary' },
+    { t: 'path', d: 'M14 50 V58 L20 54 Z M44 50 V58 L50 54 Z', fill: 'feedback.nudge' },
+    { t: 'path', d: 'M8 36 H50', stroke: 'border.strong', sw: 'base', det: true },
+    { t: 'path', d: 'M96 10 V58 M88 10 V58 M80 10 V58 M72 10 V58 M64 10 V58', stroke: 'text.secondary', sw: 'thin', o: 0.35, det: true },
+    { t: 'path', d: 'M92 14 V44 M84 14 V50 M76 14 V38 M68 14 V48 M60 14 V42', stroke: 'text.secondary', sw: 'base' },
+  ],
+};
+
+export const BOOK_GEOJUNGGI: ItemDef = {
+  id: 'prop:book-geojunggi',
+  kind: 'object',
+  box: { w: 108, h: 66 },
+  z: 'mid',
+  alt: 'An open book with a drawing of a wooden lifting machine with pulleys and ropes, beside columns of brush writing (no readable text)',
+  tags: { heritage: true },
+  sourceRef: { title: '화성성역의궤(華城城役儀軌)', publisher: ENCYKOREA, url: 'https://encykorea.aks.ac.kr/Article/E0064682', accessed: '2026-10-11' },
+  accuracyNote:
+    "The entry says the Hwaseong Seongyeok Uigwe carries drawings with explanations of the fortress, its buildings and the machines and tools used to build it; the geojunggi, a lifting machine that works by pulleys, is pictured in Jeong Yak-yong's Gijung doseol (encykorea, geojunggi). The drawing here is a schematic of such a machine (a frame, a top beam, a pulley block, ropes and a stone block), not a copy of the printed plate, so the number of pulleys and the winding gear are not shown. No caption or character is drawn.",
+  nodes: [
+    ...openBook(108, 66),
+    { t: 'path', d: 'M10 56 L20 14 H38 L48 56 M20 14 L16 56 M38 14 L42 56', stroke: 'text.primary', sw: 'base' },
+    { t: 'circle', cx: 29, cy: 20, r: 3, fill: 'surface.paper', stroke: 'text.primary', sw: 'base' },
+    { t: 'circle', cx: 29, cy: 34, r: 3, fill: 'surface.paper', stroke: 'text.primary', sw: 'base' },
+    { t: 'path', d: 'M27 20 V34 M31 20 V34 M29 37 V44 M32 20 Q44 24 46 50', stroke: 'text.primary', sw: 'thin' },
+    { t: 'rect', x: 23, y: 44, w: 12, h: 8, fill: 'border.strong', stroke: 'text.primary', sw: 'thin' },
+    { t: 'path', d: 'M96 10 V58 M88 10 V58 M80 10 V58 M72 10 V58 M64 10 V58', stroke: 'text.secondary', sw: 'thin', o: 0.35, det: true },
+    { t: 'path', d: 'M92 14 V44 M84 14 V50 M76 14 V38 M68 14 V48 M60 14 V42', stroke: 'text.secondary', sw: 'base' },
+  ],
+};
+
+export const BANCHADO_STRIP: ItemDef = {
+  id: 'prop:banchado-strip',
+  kind: 'object',
+  box: { w: 200, h: 56 },
+  z: 'mid',
+  alt: 'Printed procession pages laid out in a long strip: rows of tiny figures, horses, flags and a palanquin seen from above, in black ink',
+  tags: { heritage: true },
+  sourceRef: { title: '원행을묘정리의궤(園幸乙卯整理儀軌)', publisher: ENCYKOREA, url: 'https://encykorea.aks.ac.kr/Article/E0040890', accessed: '2026-10-11' },
+  accuracyNote:
+    "The entry says this uigwe's pictures include 63 pages of banchado (procession pictures), all made as prints; the National Heritage Portal adds that banchado are usually drawn from a high viewpoint looking down. Here four facing pages are laid side by side as a strip of black-ink marks: a road, rows of tiny figures and horses, flags and one covered palanquin in the middle. The order of the real procession is not copied and no caption is drawn.",
+  nodes: [
+    { t: 'ellipse', cx: 100, cy: 54, rx: 98, ry: 2, fill: 'text.secondary', o: 0.08, det: true },
+    { t: 'rect', x: 2, y: 4, w: 196, h: 48, fill: 'surface.paper', stroke: 'text.secondary', sw: 'base' },
+    { t: 'path', d: 'M51 4 V52 M100 4 V52 M149 4 V52', stroke: 'border.strong', sw: 'base' },
+    { t: 'rect', x: 6, y: 22, w: 188, h: 12, fill: 'border.strong', o: 0.35 },
+    { t: 'path', d: 'M10 18 H46 M56 18 H92 M108 18 H144 M154 18 H190 M10 38 H46 M56 38 H92 M108 38 H144 M154 38 H190', stroke: 'text.primary', sw: 'thick', o: 0.6 },
+    { t: 'path', d: 'M14 28 H20 M28 28 H34 M62 28 H68 M76 28 H82 M114 28 H120 M128 28 H134 M160 28 H166 M174 28 H180', stroke: 'text.secondary', sw: 'thick' },
+    { t: 'rect', x: 92, y: 24, w: 16, h: 8, fill: 'text.primary' },
+    { t: 'path', d: 'M40 10 V16 L46 13 Z M140 10 V16 L146 13 Z M66 42 V48 L72 45 Z M168 42 V48 L174 45 Z', fill: 'text.primary' },
+  ],
+};
+
+export const BOOK_BUNDLE: ItemDef = {
+  id: 'prop:book-bundle',
+  kind: 'object',
+  box: { w: 70, h: 46 },
+  z: 'mid',
+  alt: 'A bundle of books wrapped in dark red cloth and tied with a knot on top',
+  tags: { heritage: true },
+  sourceRef: POSWAE_REF,
+  accuracyNote:
+    'The Annals were wrapped in oiled paper and then in a red cloth wrapper (hongbo) before they went into their chests, as the entry describes. Here one such bundle is drawn on its own, as it would be carried: a block wrapped in dark red cloth with the corners knotted on top. The red is the darker brand tone so the bundle reads as cloth in shade; size and the number of books inside are not shown.',
+  nodes: [
+    { t: 'ellipse', cx: 35, cy: 44, rx: 33, ry: 2, fill: 'text.primary', o: 0.08, det: true },
+    { t: 'rect', x: 4, y: 16, w: 62, h: 28, r: 5, fill: 'brand.primaryDark', stroke: 'text.primary', sw: 'thin' },
+    { t: 'path', d: 'M35 16 L22 6 Q30 2 35 10 Q40 2 48 6 Z', fill: 'brand.primaryDark', stroke: 'text.primary', sw: 'thin' },
+    { t: 'path', d: 'M35 16 V44 M8 24 Q35 30 62 24', stroke: 'text.primary', sw: 'thin', o: 0.35, det: true },
   ],
 };

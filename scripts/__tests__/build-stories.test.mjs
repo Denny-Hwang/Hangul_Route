@@ -31,6 +31,7 @@ const GENERATED_REL = join("apps", "mobile", "src", "content", "stories.generate
 const {
   GENERATED_HEADER,
   BUDGET,
+  artBytes,
   buildBundle,
   checkBudget,
   levelCode,
@@ -451,10 +452,36 @@ describe("build-stories.mjs: --report and the bundle budget", () => {
     assert.ok(problems.some((p) => /gzip/.test(p)));
   });
 
-  test("the launch budget matches the spec (1.0 MB raw, 260 KB gzip, 60 KB per story)", () => {
+  test("the launch budget matches the spec (1.0 MB raw, 260 KB gzip, 60 KB per story, 130 KB scene art)", () => {
     assert.equal(BUDGET.totalRaw, 1_000_000);
     assert.equal(BUDGET.totalGzip, 260_000);
     assert.equal(BUDGET.perStoryRaw, 60_000);
+    assert.equal(BUDGET.artRaw, 130_000);
+  });
+
+  test("artBytes: compact JSON bytes of every scene's art, and the scenes that have it", () => {
+    const art = { setting: "scene:hanji-backdrop", layers: [{ ref: "prop:pine", x: 1, y: 2, s: 1 }], altEn: "A pine — on hanji." };
+    const story = { id: "story:a", tiers: [{ scenes: [{ id: "s1", art }, { id: "s2", artPending: true }] }, { scenes: [{ id: "s1", art }] }] };
+    const one = Buffer.byteLength(JSON.stringify(art), "utf8");
+    assert.deepEqual(artBytes([story, { id: "story:b", tiers: [] }]), { raw: 2 * one, scenes: 2 });
+    assert.deepEqual(artBytes([]), { raw: 0, scenes: 0 });
+  });
+
+  test("checkBudget: scene art over 130 KB raw fails, equal passes, absent is not checked", () => {
+    const base = { perStory: [], total: { raw: 1, gzip: 1 } };
+    assert.deepEqual(checkBudget(base), []);
+    assert.deepEqual(checkBudget({ ...base, art: { raw: BUDGET.artRaw, scenes: 1 } }), []);
+    const problems = checkBudget({ ...base, art: { raw: BUDGET.artRaw + 1, scenes: 1 } });
+    assert.equal(problems.length, 1);
+    assert.match(problems[0], /scene art/);
+  });
+
+  test("--report prints the scene-art total of the bundled stories", () => {
+    const root = makeRoot();
+    putStory(root, ready());
+    const r = run(root, ["--report"]);
+    assert.equal(r.status, 0, r.stderr + r.stdout);
+    assert.match(r.stdout, /scene art\s+\d+ B raw over 7 scenes \(budget 130000 B\)/);
   });
 });
 

@@ -178,7 +178,11 @@ export function checkItem(item: ItemDef): Finding[] {
   const red = leaves.filter(({ shape }) => shape.fill === 'brand.primary' || shape.stroke === 'brand.primary').length;
   if (red * 100 > total * LIMITS.redPercent) err('I-red', `${red} of ${total} shapes use brand.primary, at most ${LIMITS.redPercent}%`);
 
-  if (item.kind === 'object' && item.tags?.heritage && !item.sourceRef) err('I-heritage', 'a heritage artefact needs a sourceRef');
+  // §3.9.10: heritage artefacts and buildings carry a source and say what is simplified
+  if ((item.kind === 'object' || item.kind === 'architecture') && item.tags?.heritage) {
+    if (!item.sourceRef) err('I-heritage', `a heritage ${item.kind === 'object' ? 'artefact' : 'building'} needs a sourceRef`);
+    if (!item.accuracyNote?.trim()) err('I-heritage', `a heritage ${item.kind === 'object' ? 'artefact' : 'building'} needs an accuracyNote`);
+  }
 
   const bytes = serializedBytes(item);
   const maxBytes = setting ? LIMITS.settingBytes : LIMITS.propBytes;
