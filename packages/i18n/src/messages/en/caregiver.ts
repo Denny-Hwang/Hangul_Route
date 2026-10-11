@@ -384,4 +384,48 @@ export const caregiver = {
     linkCopied: { cta: 'Link copied' },
     notNow: { cta: 'Not now' },
   },
+
+  /**
+   * The level-check report (F-PLC-001 section 3.9, wireframe placement J): status words, never a
+   * comparison with other learners. Counts are framed as growth for Short and Standard only; a
+   * Deep rung shows a status word and "checked twice" or "not finished".
+   */
+  placementReport: {
+    title: 'Starting spot',
+    whatWeSaw: 'What we saw',
+    strand: {
+      'hangul-recognition': 'Letters (shapes)',
+      'sound-letter': 'Sounds of letters',
+      'syllable-reading': 'Reading syllables',
+      vocabulary: 'Words',
+      sentences: 'Sentences',
+    },
+    status: { secure: 'secure', gettingThere: 'getting there', notYet: 'not yet', notTested: 'not tested' },
+    rung: {
+      recog: 'Letter shapes',
+      'sound-basic': 'First letter sounds',
+      'syl-cv': 'Simple syllables',
+      'sound-rest': 'More letter sounds',
+      'syl-cvc': 'Syllables with a final',
+      vocab: 'Words',
+      sentence: 'Sentences',
+    },
+    form: { decode: 'reading', read: 'reading', oral: 'listening' },
+    /** One rung of three questions, framed as growth (Short and Standard only). */
+    count: (correct: number) => `${correct} of 3`,
+    notTestedReason: {
+      noSound: 'Listening was not checked: no sound on this device.',
+      soundGuide: 'Reading was not checked: the sound guide was set to always show.',
+      screenReader: 'Letter shapes were not checked: a screen reader was on.',
+      endedEarly: 'The check ended early, so some parts were not reached.',
+    },
+    shortNotTested: 'Shapes of letters and sentences are not part of the short check.',
+    notTestedShort: 'not tested (short check)',
+    shortHint: 'The short check looks at the first letters only. The standard check can find a later starting spot.',
+    tryStandard: 'Try the standard check',
+    checkedTwice: 'checked twice',
+    notFinished: 'not finished',
+    spellingTiles: 'Spelling with tiles',
+    onlyForward: 'A new check can only move the route forward.',
+  },
 } as const;

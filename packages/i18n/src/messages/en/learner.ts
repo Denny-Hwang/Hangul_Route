@@ -652,4 +652,150 @@ export const learner = {
     title: 'Turn your phone upright',
     keepSideways: { cta: 'Keep sideways' },
   },
+
+  /**
+   * The level check (F-PLC-001 sections 3.1 and 3.12, wireframe placement). Every screen of the
+   * flow lives here, the grown-up options and sound-needed screens included, so one copy scan
+   * covers them: no digit except the two allow-listed duration lines, no percent, no ratio, no
+   * age words, no score words and never "test" in the learner-facing name. Hoya's cheers are
+   * effort-only and never say whether an answer was right.
+   */
+  placement: {
+    invite: {
+      title: 'Where should we start?',
+      newToKorean: 'I am new to Korean',
+      knowSome: 'I already know some Korean',
+      duration: 'It takes a few minutes. You can stop at any time.',
+    },
+    language: {
+      title: 'Pick the language for the check',
+      note: 'This does not change the app language.',
+      noKoreanVoice: 'No Korean voice on this device',
+      noVoice: 'No voice for this language here',
+      continue: { cta: 'Continue' },
+    },
+    options: {
+      cardTitle: 'Set up the check',
+      title: 'A few choices',
+      howLong: 'How long?',
+      change: 'Change',
+      start: { cta: 'Start' },
+      next: { cta: 'Next' },
+      mode: {
+        short: {
+          label: 'Short',
+          help: 'A few picture and sound questions.',
+          duration: 'Just a few minutes.',
+          needsSound: 'The short check needs sound.',
+        },
+        standard: {
+          label: 'Standard',
+          help: 'Letters, sounds, words and sentences.',
+          duration: 'Usually under 10 minutes.',
+        },
+        deep: {
+          label: 'Deep',
+          help: 'More questions, to be extra sure. Hoya takes a break halfway.',
+          duration: 'Usually under 20 minutes.',
+        },
+      },
+      soundGuide: {
+        title: 'Sound guide',
+        always: 'Always show it',
+        tap: 'Show it only when I tap',
+        consequence:
+          'With the guide shown, the check looks at shapes and listening. With it hidden until you tap, it can also look at reading. Your own setting is not changed.',
+      },
+      takeMyTime: { label: 'Take my time', help: 'No time limits.' },
+      why: {
+        title: 'Why Korean?',
+        heritage: 'My family',
+        kculture: 'K-culture',
+        curious: 'Just curious',
+        friends: 'A Korean friend',
+        skip: 'Skip',
+      },
+      limited: 'This device cannot play Korean sound, so we will use pictures and reading.',
+    },
+    handoff: {
+      ready: 'Ready? Tap Hoya to start.',
+      helper: 'Helping? Let them choose. "Not sure" is a fine answer.',
+    },
+    warmup: {
+      line: 'Listen, then tap the picture.',
+      noSound: 'No sound here, so we will use pictures and reading.',
+    },
+    item: {
+      tapToHear: 'Tap to hear it.',
+      hearAgain: 'Hear it again',
+      showSound: 'Show how it sounds',
+      notSure: 'I am not sure',
+      exit: 'Let us start learning',
+      gotIt: 'Got it',
+      noSoundFallback: 'No sound? Read it here.',
+    },
+    /** Every third answer in Standard and Deep, whatever the answers were. */
+    cheer: ['You are doing fine. Keep going!', 'Hoya likes how you try.', 'Nice and calm. On we go!'],
+    /** Every second answer in Short: effort only, never a word about being right. */
+    cheerShort: ['Thanks for listening!', 'Nice and steady.', 'Hoya likes your listening.'],
+    pause: {
+      title: 'Need a break?',
+      keepGoing: 'Keep going',
+      enough: 'That is enough, start learning',
+      grownUp: 'For grown-ups: finish now',
+    },
+    rest: { line: 'Hoya is stretching. Keep going?' },
+    soundNeeded: {
+      title: 'Turn on sound to play',
+      tryAgain: 'Try again',
+      startLearning: 'Start learning',
+      withoutSound: 'Check without sound',
+    },
+    resume: { continue: 'Continue', startAgain: 'Start again' },
+    /** Band labels: the only words about level on a learner screen (section 3.6). */
+    band: {
+      beginning: 'At the beginning',
+      lettersAndSounds: 'Letters and sounds',
+      everyLetter: 'Every letter',
+      readingWords: 'Reading words',
+      firstWords: 'First words',
+      firstSentences: 'First sentences',
+    },
+    result: {
+      found: 'Hoya found your starting spot!',
+      goodPlace: 'Here is a good place to start',
+      notTestedLine: 'We checked listening and shapes. To find where to start reading, try the check with the sound guide hidden.',
+      retryHidden: 'Try it with the sound guide hidden',
+      startHere: 'Start here',
+      next: 'Next',
+      later: 'Later',
+      start: { cta: 'Start' },
+      seeMyRoute: 'See my route',
+      seeMap: 'See the whole map',
+      forGrownUps: 'For grown-ups',
+      forGrownUpsPlan: 'For grown-ups: set up a weekly plan',
+      knowALot: 'You know a lot! More adventures are coming.',
+      openStories: 'Open stories',
+      routeStays: 'Your route stays right where it is.',
+      planStays: 'Your plan stays right where it is.',
+      laterStart: 'Hoya found a later place to start.',
+      planCanMove: 'Your weekly plan can move ahead and keep the same end date.',
+      updatePlan: 'Update my plan',
+      keepPlan: 'Keep my plan',
+      tryStandard: 'Try the standard check',
+      strip: {
+        title: 'Hoya made a weekly plan for you',
+        usePlan: 'Use this plan',
+        change: 'Change',
+        justStart: 'Just start',
+      },
+    },
+    homeCard: {
+      line: 'Already know some Korean?',
+      take: 'Take the level check',
+      continue: 'Continue the level check',
+      notNow: 'Not now',
+    },
+    profileRow: 'Find my starting spot again',
+  },
 } as const;
