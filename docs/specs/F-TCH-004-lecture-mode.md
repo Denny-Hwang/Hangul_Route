@@ -241,10 +241,13 @@ export const presenter = {
   font: 'HR Presenter KR',                                                              // family name of the bundled subset (below)
   marker: { shapes: ['circle', 'triangle', 'square', 'star'] },
   autoHideMs: 3000,
+  dimOpacity: 0.8,                                                                      // amendment 2026-10-11, below
 } as const;
 ```
 
 Projected colours reuse existing tokens: `colors.surface.paper` background with `colors.text.primary` (no cream canvas on a projector); a contrast test (`contrast.test.ts`) pins every presenter text / surface pair to >= 7:1 and every non-text marker to >= 3:1.
+
+- **Amendment 2026-10-11 (PR 2 review).** (1) `presenter.dimOpacity` (0.8) is the opacity of the non-correct quiz options at the reveal (§3.10); a dimmed option sets every line (Korean, romanization, gloss, shape marker) in `text.primary`, which stays at 8.4:1 on paper, because `text.secondary` at that opacity is 4.9:1. `presenter.v1.md` lists the dimmed pair as `text-dimmed`, and `contrast.test.ts` composites it over its background (`compositeOver`) before checking 7:1. (2) The blank and pause overlays (§3.5) draw on `surface.paper` like the stage, not the cream canvas. (3) The pair table also lists the timer ring fill on its `surface.sunken` track and the `KoreanText` chip border and speaker icon, and the contrast test fails if it cannot read any row of the table.
 
 **Hangul glyphs (TD4).** Large Korean (letter glyph, syllable, vocab word, story keyword, quiz option) uses **`HR Presenter KR`**: a subset of Noto Sans KR Bold (SIL Open Font License 1.1; `apps/mobile/public/fonts/OFL.txt` ships beside it), file `apps/mobile/public/fonts/hr-presenter-kr.woff2`.
 - Built by `scripts/build-presenter-font.mjs` (`pyftsubset`, a dev-time tool; the output is committed) from a glyph list the script **derives from shipped content**: the 30 compatibility jamo, every `syllables[].ko`, `exampleWordKo`, `cardPairs[].ko`, `storySteps[].labelKo`, vocab words, story keywords and titles. The glyph list used for each build is committed beside the font as `hr-presenter-kr.glyphs.txt`; `--check` re-derives the list from content and fails CI if it differs from the sidecar (a plain-text comparison, so CI needs neither Python nor a font parser; `pyftsubset` is only needed to rebuild); `--report` prints bytes. **Budget: <= 150 KB**; if exceeded, story body lines (40-unit text) fall back to the system font and only display-size strings use the subset.
