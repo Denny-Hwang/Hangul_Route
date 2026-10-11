@@ -14,7 +14,6 @@ on:
       - "apps/web/src/data/**"
       - "apps/web/src/components/landing/**"
       - "apps/web/src/app/(console)/design-preview/**"
-      - "apps/web/src/components/landing/LandingPage.tsx"
       - "apps/web/src/__tests__/romanization-sources.test.ts"
       - "packages/backend/src/routes/content.ts"
       - "packages/backend/src/__tests__/content-route.test.ts"
