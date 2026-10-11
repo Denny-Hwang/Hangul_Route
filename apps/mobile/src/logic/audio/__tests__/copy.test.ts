@@ -70,3 +70,15 @@ describe('audio copy (English until F-I18N-001 ships the catalog)', () => {
     }
   });
 });
+
+describe('panelDetail', () => {
+  it('gives the reason line, none for blocked and none', async () => {
+    const { panelDetail } = await import('../copy');
+    expect(panelDetail('muted')).toBe('Sound is off.');
+    expect(panelDetail('no_voice')).toBe('No Korean voice on this device.');
+    expect(panelDetail('error')).toBe('The sound did not play.');
+    expect(panelDetail('blocked')).toBeNull();
+    expect(panelDetail(null)).toBeNull();
+    expect(AUDIO_COPY.tapToReplay).toBe('Tap to replay');
+  });
+});

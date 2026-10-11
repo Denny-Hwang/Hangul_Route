@@ -14,9 +14,11 @@ export const AUDIO_COPY = {
   listenAgain: 'Listen again. This one says',
   hearIt: 'Hear it',
   tapToHear: 'Tap to hear',
+  tapToReplay: 'Tap to replay',
   turnSoundOn: 'Turn sound on',
   tryAgain: 'Try again',
   noKoreanVoice: 'No Korean voice on this device',
+  noKoreanVoiceSentence: 'No Korean voice on this device.',
   soundIsOff: 'Sound is off.',
   didNotPlay: 'The sound did not play.',
   letterName: 'Letter name',
@@ -70,4 +72,22 @@ export function voiceStatusLine(status: KoVoiceStatus): string {
   if (status.state === 'unknown') return AUDIO_COPY.voiceLooking;
   if (status.reason === 'offline_network_only') return AUDIO_COPY.voiceNeedsInternet;
   return AUDIO_COPY.noKoreanVoice;
+}
+
+/**
+ * The second line of the fallback panel (§3.8): why the text is up. A blocked
+ * sound has no line, because the speaker button itself reads "Tap to hear".
+ */
+export function panelDetail(reason: FallbackReason | null): string | null {
+  switch (reason) {
+    case 'muted':
+      return AUDIO_COPY.soundIsOff;
+    case 'no_voice':
+      return AUDIO_COPY.noKoreanVoiceSentence;
+    case 'error':
+      return AUDIO_COPY.didNotPlay;
+    case 'blocked':
+    case null:
+      return null;
+  }
 }

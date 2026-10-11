@@ -151,3 +151,22 @@ export async function forgetPin(page: Page): Promise<void> {
   );
   await page.goto('/');
 }
+
+const INITIALS = 'ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ';
+const VOWELS = 'ㅏㅐㅑㅒㅓㅔㅕㅖㅗㅘㅙㅚㅛㅜㅝㅞㅟㅠㅡㅢㅣ';
+const FINALS = ['', ...'ㄱㄲㄳㄴㄵㄶㄷㄹㄺㄻㄼㄽㄾㄿㅀㅁㅂㅄㅅㅆㅇㅈㅊㅋㅌㅍㅎ'];
+
+/**
+ * The letter a Match Sound prompt is the sound of. The app says the sound of a
+ * letter as a syllable (F-AUDIO-004 AD2): 가 is ㄱ, 아 is ㅏ, 악 is the final ㄱ,
+ * and the silent ㅇ is said by its name 이응.
+ */
+export function jamoOfSpoken(spoken: string): string {
+  if (spoken === '이응') return 'ㅇ';
+  const code = spoken.charCodeAt(0) - 0xac00;
+  const initial = Math.floor(code / 588);
+  const vowel = Math.floor((code % 588) / 28);
+  const final = code % 28;
+  if (final > 0) return FINALS[final]!;
+  return initial === 11 ? VOWELS[vowel]! : INITIALS[initial]!;
+}

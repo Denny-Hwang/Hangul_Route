@@ -378,7 +378,7 @@ describe('platform/audio (native): capability, unlock, telemetry', () => {
 });
 
 describe('platform/audio (native): the module-level API', () => {
-  it('uses expo-speech on the default instance and keeps playJamoSound', async () => {
+  it('uses expo-speech on the default instance and plays the jamo sound', async () => {
     vi.resetModules();
     vi.mocked(Speech.getAvailableVoicesAsync).mockResolvedValue([YUNA] as never);
     vi.mocked(Speech.speak).mockImplementation(((_t: string, opts?: Opts) => {
@@ -390,7 +390,8 @@ describe('platform/audio (native): the module-level API', () => {
     const mod = await import('../audio');
     await expect(mod.playPrompt({ text: '가' })).resolves.toBe('played');
     expect(vi.mocked(Speech.speak).mock.calls[0]?.[1]).toMatchObject({ voice: YUNA.identifier });
-    await expect(mod.playJamoSound('ㄷ')).resolves.toBeUndefined();
+    await expect(mod.playJamo({ char: 'ㄷ', romanization: 'd/t', nameEn: 'digeut', spokenKo: '다', spokenKind: 'sound' }, 'sound')).resolves.toBe('played');
+    expect(vi.mocked(Speech.speak).mock.calls.map((c) => c[0])).toContain('다');
     mod.speak('나');
     mod.stop();
     mod.setMuted(true);
