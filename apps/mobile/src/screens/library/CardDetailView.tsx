@@ -12,21 +12,13 @@ import {
   Screen,
   Spacer,
   colors,
-  motion,
   radii,
   spacing,
   supportedCardIds,
 } from '@hangul-route/design-system';
 import React, { useEffect, useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import Animated, {
-  Easing,
-  interpolate,
-  runOnJS,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
+import { FlipCard } from '../../components/FlipCard';
 import { PromptPanel } from '../../components/PromptPanel';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { usePromptSlot } from '../../components/use-prompt-slot';
@@ -35,14 +27,12 @@ import { useLocale, useMessages } from '../../i18n/use-messages';
 import { cardEarnHint } from '../../logic/card-earn';
 import { localizeCard, localizeTitle } from '../../logic/content-locale';
 import { isStageEntitled } from '../../logic/entitlement';
+import { nextFace, type FlipFace } from '../../logic/flip';
 import { playPrompt, stop } from '../../platform/audio';
-import { useReducedMotion } from '../../platform/motion';
 import { isShareAvailable, shareSnapshot } from '../../platform/sharing';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { effectiveTier, useTierStore } from '../../store/tier-store';
-
-type CardFace = 'front' | 'back';
 
 export interface CardDetailViewProps {
   cardId: string;
@@ -61,8 +51,7 @@ export function CardDetailView({ cardId, onClose, showHowToEarn = false }: CardD
   const profile = useProfileStore(activeProfileSelector);
   const snap = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
   const unlocked = snap?.cards.some((c) => c.cardId === cardId) ?? false;
-  const [face, setFace] = useState<CardFace>('front');
-  const reducedMotion = useReducedMotion();
+  const [face, setFace] = useState<FlipFace>('front');
   const [shareAvailable, setShareAvailable] = useState(false);
   const [shareError, setShareError] = useState<string | null>(null);
   const captureRef = useRef<View>(null);
@@ -82,23 +71,8 @@ export function CardDetailView({ cardId, onClose, showHowToEarn = false }: CardD
     };
   }, []);
 
-  // F-MOTION-002 rotateY flip animation.
-  // `progress` runs 0 (flat showing current face) → 1 (edge-on at 90°, content swaps) → 0 (flat showing new face).
-  const progress = useSharedValue(0);
-  const flippingRef = useRef(false);
-  // Mirrors flippingRef for rendering: Share is gated mid-flip (F-CARD-003 §8).
+  // F-MOTION-002 flip (components/FlipCard.tsx); Share is gated mid-flip (F-CARD-003 §8).
   const [isFlipping, setIsFlipping] = useState(false);
-
-  const swapFace = (next: CardFace): void => {
-    setFace(next);
-  };
-
-  const flipAnimatedStyle = useAnimatedStyle(() => {
-    const deg = interpolate(progress.value, [0, 1], [0, 90]);
-    return {
-      transform: [{ perspective: 1000 }, { rotateY: `${deg}deg` }],
-    };
-  });
 
   if (!card) {
     return (
@@ -108,55 +82,14 @@ export function CardDetailView({ cardId, onClose, showHowToEarn = false }: CardD
     );
   }
 
-  const rarityTone =
-    card.rarity === 'legendary'
-      ? 'nudge'
-      : card.rarity === 'rare'
-        ? 'info'
-        : card.rarity === 'uncommon'
-          ? 'success'
-          : 'neutral';
-
   const canFlip = unlocked;
-  const toggleFace = (): void => {
-    if (!canFlip) return;
-    if (flippingRef.current) return; // ignore taps mid-flip (F-MOTION-002 §3.3)
-    const next: CardFace = face === 'front' ? 'back' : 'front';
-    if (reducedMotion) {
-      // Reduced-motion path: instant swap, no rotation (F-MOTION-002 §3.2)
-      setFace(next);
-      return;
-    }
-    flippingRef.current = true;
-    setIsFlipping(true);
-    const legMs = motion.duration.base; // 200ms each leg → ~400ms total
-    progress.value = withTiming(
-      1,
-      { duration: legMs, easing: Easing.bezier(0.2, 0, 0, 1) },
-      () => {
-        // Midpoint — card is edge-on. Swap content, then rotate back.
-        runOnJS(swapFace)(next);
-        progress.value = withTiming(
-          0,
-          { duration: legMs, easing: Easing.bezier(0.2, 0, 0, 1) },
-          () => {
-            runOnJS(setFlipping)(false);
-          },
-        );
-      },
-    );
-  };
+  const flip = (): void => setFace((current) => nextFace(current));
 
   // `audioRef` joins the card schema with F-CNT-002 / F-VOC (spec §3.9); until then the device voice says the name.
   const hear = (): void => {
     const ko = card.subtitleKo;
     if (ko) void slot.play(() => playPrompt({ text: ko, kind: 'word', source: 'card-detail' }));
   };
-
-  function setFlipping(value: boolean): void {
-    flippingRef.current = value;
-    setIsFlipping(value);
-  }
 
   return (
     <Screen tone="canvas">
@@ -173,58 +106,26 @@ export function CardDetailView({ cardId, onClose, showHowToEarn = false }: CardD
         </>
       ) : null}
 
-      <Pressable
-        onPress={toggleFace}
-        disabled={!canFlip}
-        accessibilityRole="button"
-        accessibilityLabel={
-          canFlip
-            ? face === 'front'
-              ? messages.a11y.flipToBack
-              : messages.a11y.flipToFront
-            : messages.a11y.lockedCard
-        }
-      >
-        <View ref={captureRef} collapsable={false}>
-          <Animated.View style={flipAnimatedStyle}>
-            <Card
-            padding="lg"
-            tone="paper"
-            style={{ borderWidth: 4, borderColor: colors.rarity[card.rarity], borderRadius: radii.xl }}
-          >
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <Pill tone={rarityTone} label={messages.learner.library.rarity[card.rarity]} />
-              {canFlip ? (
-                <View
-                  style={{
-                    paddingHorizontal: spacing.sm,
-                    paddingVertical: spacing.xxs,
-                    backgroundColor: colors.surface.sunken,
-                    borderRadius: radii.pill,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: spacing.xxs,
-                  }}
-                >
-                  <Icon name="replay" size={14} color={colors.text.muted} />
-                  <Caption tone="muted">
-                    {face === 'front' ? m.flip.front : m.flip.back}
-                  </Caption>
-                </View>
-              ) : null}
-            </View>
-
-            <Spacer size="md" />
-
-              {face === 'front' ? (
-                <FrontFaceBody card={card} unlocked={unlocked} />
-              ) : (
-                <BackFaceBody card={card} />
-              )}
-            </Card>
-          </Animated.View>
-        </View>
-      </Pressable>
+      <View ref={captureRef} collapsable={false}>
+        <FlipCard
+          face={face}
+          onFlip={flip}
+          disabled={!canFlip}
+          onFlippingChange={setIsFlipping}
+          accessibilityLabelFront={canFlip ? messages.a11y.flipToBack : messages.a11y.lockedCard}
+          accessibilityLabelBack={messages.a11y.flipToFront}
+          front={
+            <CardShell card={card} rarityLabel={messages.learner.library.rarity[card.rarity]} flipHint={canFlip ? m.flip.front : null}>
+              <FrontFaceBody card={card} unlocked={unlocked} />
+            </CardShell>
+          }
+          back={
+            <CardShell card={card} rarityLabel={messages.learner.library.rarity[card.rarity]} flipHint={m.flip.back}>
+              <BackFaceBody card={card} />
+            </CardShell>
+          }
+        />
+      </View>
 
       {showHowToEarn && !unlocked ? <HowToEarn cardId={card.id} /> : null}
 
@@ -307,6 +208,53 @@ export function CardDetailView({ cardId, onClose, showHowToEarn = false }: CardD
       ) : null}
       <Spacer size="xl" />
     </Screen>
+  );
+}
+
+/** The card frame both faces share: the rarity border, the rarity pill and the flip hint (none on a locked card). */
+function CardShell({
+  card,
+  rarityLabel,
+  flipHint,
+  children,
+}: {
+  card: HeritageCard;
+  rarityLabel: string;
+  flipHint: string | null;
+  children: React.ReactNode;
+}): React.ReactElement {
+  const rarityTone =
+    card.rarity === 'legendary'
+      ? 'nudge'
+      : card.rarity === 'rare'
+        ? 'info'
+        : card.rarity === 'uncommon'
+          ? 'success'
+          : 'neutral';
+  return (
+    <Card padding="lg" tone="paper" style={{ borderWidth: 4, borderColor: colors.rarity[card.rarity], borderRadius: radii.xl }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <Pill tone={rarityTone} label={rarityLabel} />
+        {flipHint ? (
+          <View
+            style={{
+              paddingHorizontal: spacing.sm,
+              paddingVertical: spacing.xxs,
+              backgroundColor: colors.surface.sunken,
+              borderRadius: radii.pill,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: spacing.xxs,
+            }}
+          >
+            <Icon name="replay" size={14} color={colors.text.muted} />
+            <Caption tone="muted">{flipHint}</Caption>
+          </View>
+        ) : null}
+      </View>
+      <Spacer size="md" />
+      {children}
+    </Card>
   );
 }
 
