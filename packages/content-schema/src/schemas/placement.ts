@@ -147,6 +147,9 @@ const PlacementTemplateShape = z.object({
   /** For reports and the result; never shown on the item. Overlay field `gloss`. */
   glossEn: z.string().max(60),
   status: z.enum(['draft', 'ready']),
+  /** Who signed the language review of a sentence template (section 9), and on which day (YYYY-MM-DD). */
+  reviewedBy: z.string().trim().min(1).max(16).optional(),
+  reviewedAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   /** Authoring record of `reply-pick`: rows whose natural answer must not appear as a distractor here. */
   incompatibleWith: z.array(TemplateIdSchema).optional(),
 });
@@ -245,7 +248,9 @@ function templateIssues(t: TemplateShape): Found[] {
   }
   found.push(...gateTagIssues(t));
 
-  if (t.status === 'ready' && t.strand === 'sentences') add(['status'], 'a sentence cannot be ready until the reviewedBy ledger exists (F-CNT-002); keep it draft');
+  if (t.status === 'ready' && t.strand === 'sentences' && (t.reviewedBy === undefined || t.reviewedAt === undefined)) {
+    add(['status'], 'a ready sentence needs its language review record (reviewedBy and reviewedAt); keep it draft until then');
+  }
   return found;
 }
 

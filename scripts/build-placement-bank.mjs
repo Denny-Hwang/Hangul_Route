@@ -150,6 +150,10 @@ export function shapeTemplate(template, where, fileStrand) {
     glossEn: str(template, "glossEn", at),
     status,
   };
+  for (const field of ["reviewedBy", "reviewedAt"]) {
+    const value = optStr(template, field, at);
+    if (value !== undefined) out[field] = value;
+  }
   if (template.incompatibleWith !== undefined) out.incompatibleWith = strings(template.incompatibleWith, "incompatibleWith", at);
   return out;
 }
