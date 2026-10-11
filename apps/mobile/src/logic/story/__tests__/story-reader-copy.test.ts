@@ -30,7 +30,7 @@ describe('STORY_READER_COPY', () => {
   const strings = allStrings();
 
   it('has strings to scan', () => {
-    expect(strings.length).toBeGreaterThan(60);
+    expect(strings.length).toBeGreaterThan(40);
   });
 
   it('passes the anti-shame banned-word scan', () => {
@@ -55,38 +55,16 @@ describe('STORY_READER_COPY', () => {
     walk(STORY_READER_COPY);
   });
 
-  it('uses the wireframe wording for the key moments (§3.3-3.8)', () => {
+  // The reader and end-page words live in packages/i18n since PR 2.6a
+  // (learner.story.reader / learner.story.end, story-reader-messages.test.ts there).
+  it('uses the wireframe wording for the key moments of Sources (§3.8)', () => {
     const c = STORY_READER_COPY;
-    expect(c.reader.next).toBe('Next');
-    expect(c.reader.finish).toBe('Finish');
-    expect(c.reader.back).toBe('Back');
-    expect(c.reader.readToMe).toBe('Read to me');
-    expect(c.reader.sources).toBe('Sources');
-    expect(c.reader.traditionalTale).toBe('Traditional tale');
-    expect(c.reader.didYouKnow).toBe('Did you know?');
-    expect(c.reader.sayItYourself).toBe('Say it yourself');
-    expect(c.end.title).toBe('The End');
-    expect(c.end.continue).toBe('Continue');
-    expect(c.end.done).toBe('Done');
-    expect(c.end.readAgain).toBe('Read again');
     expect(c.sources.scope.documented).toBe('What we know');
     expect(c.sources.scope.inTheTale).toBe('What the tale says');
     expect(c.sources.usedInQuestions).toBe('Used in questions and notes');
     expect(c.sources.openLink).toBe('Open link');
     expect(c.sources.copyLink).toBe('Copy link');
     expect(c.sources.noSources).toBe('No sources are listed for this story.');
-  });
-
-  it('reads like the spec for position, announcements and the gloss chip', () => {
-    const c = STORY_READER_COPY;
-    expect(c.reader.position(3, 8)).toBe('3 / 8');
-    expect(c.reader.sceneOf(3, 8)).toBe('Scene 3 of 8');
-    expect(c.reader.announce(1, 8, 'A king sits.')).toBe('Scene 1 of 8. A king sits.');
-    expect(c.reader.termLabel('sagwan', 'royal historian')).toBe(
-      'Korean word sagwan, royal historian. Double tap to hear.',
-    );
-    expect(c.reader.hearTerm('sagwan')).toBe('Hear sagwan');
-    expect(c.reader.advisory('Mentions a war.')).toBe('A note for grown-ups: Mentions a war.');
   });
 
   it('pluralises the checked line and the counts', () => {

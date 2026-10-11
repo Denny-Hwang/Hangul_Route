@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseStory, type Story } from '@hangul-route/content-schema';
+import { getMessages, pseudoLocalize } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import { buildSceneView, isTraditionalTale, sceneCaption } from '../scene-view';
 import { readyStory } from './story-fixture';
@@ -32,6 +33,17 @@ describe('buildSceneView: position, art and labels', () => {
       announcement: 'Scene 1 of 5. King Sejong sits in a palace hall while Hoya waves.',
       next: 'Next',
     });
+  });
+
+  it('takes its words from the dictionary passed in (F-I18N-001), English by default', () => {
+    const copy = pseudoLocalize(getMessages('en')).learner.story.reader;
+    const v = buildSceneView(story, 'listen', 4, { copy })!;
+    expect(v.labels.next).toBe(copy.finish.cta);
+    expect(v.labels.position).toBe(copy.position.pill(5, 5));
+    expect(v.labels.scene).toBe(copy.sceneOf(5, 5));
+    expect(v.labels.announcement).toBe(copy.announce(5, 5, v.altEn));
+    expect(buildSceneView(story, 'listen', 0, { copy })!.labels.next).toBe(copy.next.cta);
+    expect(v.labels.next).not.toBe('Finish');
   });
 
   it('the last scene says Finish and is last', () => {

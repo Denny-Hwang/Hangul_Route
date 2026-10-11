@@ -572,6 +572,58 @@ export const learner = {
       cultureNote: (title: string) => `Learn about ${title}`,
       encourage: 'Every read helps. Want to read it again?',
     },
+    /**
+     * The story reader (F-STORY-002 §3.3-3.7), moved unchanged from `logic/story/story-reader-copy.ts`
+     * in PR 2.6a. Never a number-as-score, never an age (D1, D3). Taught Korean is never here: the
+     * reader draws it with `KoreanText` from the story data.
+     */
+    reader: {
+      close: 'Close',
+      back: { cta: 'Back' },
+      next: { cta: 'Next' },
+      finish: { cta: 'Finish' },
+      sources: { cta: 'Sources' },
+      readToMe: 'Read to me',
+      /** A page number, not a meter: it may go down on Back. */
+      position: { pill: (index: number, total: number) => `${index} / ${total}` },
+      sceneOf: (index: number, total: number) => `Scene ${index} of ${total}`,
+      /** Announced when a scene opens: position, then the picture. */
+      announce: (index: number, total: number, artDescription: string) =>
+        `Scene ${index} of ${total}. ${artDescription}`,
+      traditionalTale: { pill: 'Traditional tale' },
+      inEnglish: 'In English',
+      didYouKnow: { cta: 'Did you know?' },
+      sayItYourself: { pill: 'Say it yourself' },
+      tapToHear: 'Tap to hear',
+      hearStory: 'Hear this scene',
+      hearKorean: 'Hear the Korean',
+      hearTerm: (romanization: string) => `Hear ${romanization}`,
+      /** Screen-reader label of an inline term chip. */
+      termLabel: (romanization: string, gloss: string) => `Korean word ${romanization}, ${gloss}. Double tap to hear.`,
+      showRomanization: { cta: 'Show how to say it' },
+      closeGloss: { cta: 'Close' },
+      /** One line, then Back and (quest mode) Continue: a content problem never traps a quest. */
+      unavailable: 'This story is not ready to read yet.',
+      continue: { cta: 'Continue' },
+      advisory: (note: string) => `A note for grown-ups: ${note}`,
+      dismiss: { cta: 'Dismiss' },
+      cultureNote: {
+        moreInCultureNotes: { cta: 'More in Culture notes' },
+        close: { cta: 'Close' },
+      },
+      checkpoint: {
+        tryIt: 'Try it',
+        skip: { cta: 'Skip' },
+      },
+    },
+    /** The reader's end page (F-STORY-002 §3.7): one primary, at most two ghosts. */
+    end: {
+      title: 'The End',
+      continue: { cta: 'Continue' },
+      done: { cta: 'Done' },
+      readAgain: { cta: 'Read again' },
+      sources: { cta: 'Sources' },
+    },
   },
 
   /**
