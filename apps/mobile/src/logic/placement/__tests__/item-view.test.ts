@@ -32,7 +32,7 @@ const BUILD = question('pitem:syl-cv-build-ga');
 const READ_WORD = question('pitem:vocab-read-gimchi');
 const REPLY = question('pitem:sent-reply-1');
 const HEAR_WORD = PLACEMENT_BANK.templates.find((t) => t.question.format === 'hear-pick-picture');
-const HEAR_PICTURE: AssessmentQuestion = { id: HEAR_WORD?.id ?? '', ...(HEAR_WORD?.question as AssessmentQuestion) };
+const HEAR_PICTURE: AssessmentQuestion = { ...(HEAR_WORD?.question as Omit<AssessmentQuestion, 'id'>), id: HEAR_WORD?.id ?? '' };
 
 const ALL_FORMATS: AssessmentFormat[] = [
   'shape-odd-one-out',
@@ -134,7 +134,7 @@ describe('optionViews', () => {
 
   it('a picture reads its meaning in the test language, never in Korean', () => {
     expect(optionViews(READ_WORD, base).map((o) => [o.kind, o.pictureRef, o.label])[0]).toEqual(['picture', 'card:kimchi', 'Kimchi']);
-    const overlays: Overlays = { en: {}, es: { [READ_WORD.id]: { 'options.kimchi.gloss': 'Kimchi (es)' } }, ko: {} };
+    const overlays: Overlays = { es: { [READ_WORD.id]: { 'options.kimchi.gloss': 'Kimchi (es)' } }, ko: {} };
     const es = optionViews(READ_WORD, { ...base, testLocale: 'es', m: getMessages('es'), overlays });
     expect(es[0]?.label).toBe('Kimchi (es)');
     const ko = optionViews(READ_WORD, { ...base, testLocale: 'ko', m: getMessages('ko') });

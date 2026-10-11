@@ -1,4 +1,4 @@
-import type { StoryLevel } from '@hangul-route/content-schema';
+import type { PlacementSource, StoryLevel } from '@hangul-route/content-schema';
 import type { NavigatorScreenParams } from '@react-navigation/native';
 import type { PinResetMethod } from '../logic/profiles/pin-flow';
 import type { SourcesRouteParams } from '../logic/story/source-link';
@@ -6,8 +6,17 @@ import type { SourcesRouteParams } from '../logic/story/source-link';
 /**
  * Where a grown-up action continues once the gate (or a new PIN) is through. `ExternalLink`
  * (F-STORY-002 §3.1, §3.8): back to Sources, which opens the waiting source link (native) or asks for one more tap (web).
+ * `PlacementFinish`: back to the level check, which then ends the run for the grown-up (F-PLC-001
+ * section 3.1 step 6, stop reason `grown-up`).
  */
-export type GrownUpDestination = 'ParentDashboard' | 'AddProfile' | 'Restore' | 'SaveProgress' | 'Paywall' | 'ExternalLink';
+export type GrownUpDestination =
+  | 'ParentDashboard'
+  | 'AddProfile'
+  | 'Restore'
+  | 'SaveProgress'
+  | 'Paywall'
+  | 'ExternalLink'
+  | 'PlacementFinish';
 
 export type RootStackParamList = {
   Onboarding: NavigatorScreenParams<OnboardingStackParamList>;
@@ -63,6 +72,25 @@ export type RootStackParamList = {
    * highlights that card, `sceneIndex` scrolls to that scene; `from` is for telemetry only.
    */
   StorySources: SourcesRouteParams;
+  /**
+   * The level check (F-PLC-001 section 3.10): a nested stack of its screens.
+   * `retakeMode`: "Try it with the sound guide hidden" on the result opens the
+   * options with that length and the guide hidden.
+   */
+  Placement: { source: PlacementSource; retakeMode?: 'standard' | 'deep' };
+};
+
+/** The level check's screens (F-PLC-001 section 3.1); the flow state machine decides which one shows. */
+export type PlacementStackParamList = {
+  PlacementBoot: undefined;
+  PlacementResume: undefined;
+  PlacementLanguage: undefined;
+  PlacementOptions: undefined;
+  PlacementHandoff: undefined;
+  PlacementWarmup: undefined;
+  PlacementSoundNeeded: undefined;
+  PlacementItem: undefined;
+  PlacementResult: undefined;
 };
 
 export type OnboardingStackParamList = {
