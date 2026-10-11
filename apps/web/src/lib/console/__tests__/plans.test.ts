@@ -106,7 +106,10 @@ describe('plan page words (F-I18N-001 PR 10b)', () => {
     expect(planSummary(4, null, null)).toBe('4 items · for everyone in this space');
     expect(planSummary(4, 3, 'class')).toBe('4 items · for 3 students');
     expect(planSummary(2, 2, 'family')).toBe('2 items · for 2 learners');
-    expect(planSummary(2, 1, 'school')).toBe('2 items · for 1 members');
+    expect(planSummary(2, 1, 'school')).toBe('2 items · for 1 member');
+    expect(planSummary(1, 1, 'family')).toBe('1 item · for 1 learner');
+    expect(planSummary(3, 1, 'class')).toBe('3 items · for 1 student');
+    expect(planSummary(3, 1, null)).toBe('3 items · for 1 learner');
     expect(planSummary(2, 2, null)).toBe('2 items · for 2 learners'); // before the roster loads, as before
     expect(planEveryone('class')).toBe('everyone in this class');
     expect(planEveryone(null)).toBe('everyone in this space');

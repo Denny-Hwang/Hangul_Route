@@ -4,7 +4,8 @@ import { getMessages } from '../resolve';
 // F-I18N-001 PR 10b: the plan page (teach/space/plan), the billing page (teach/billing) and
 // the helpers they render (plans.ts readoutLine, billing.ts, stage1-catalog catalogLabel) read
 // the dictionary. English is the source and must render exactly what they hard-coded before
-// (§3.4 rule 1), so every value below is the former literal, byte for byte.
+// (§3.4 rule 1), so every value below is the former literal, byte for byte, except that counts
+// go through plural() (F-I18N-001 §10, console counts, closed): "for 1 learner", "1 seat".
 const c = getMessages('en').console;
 
 describe('plan page (teach/space/plan/page.tsx)', () => {
@@ -29,7 +30,10 @@ describe('plan page (teach/space/plan/page.tsx)', () => {
     expect(p.summary.everyone.space(4)).toBe('4 items · for everyone in this space');
     expect(p.summary.some.class(4, 3)).toBe('4 items · for 3 students');
     expect(p.summary.some.family(1, 2)).toBe('1 item · for 2 learners');
-    expect(p.summary.some.school(2, 1)).toBe('2 items · for 1 members');
+    // Target counts go through plural() like console.planCounts.targets (F-I18N-001 §10, console counts).
+    expect(p.summary.some.school(2, 1)).toBe('2 items · for 1 member');
+    expect(p.summary.some.family(1, 1)).toBe('1 item · for 1 learner');
+    expect(p.summary.some.class(3, 1)).toBe('3 items · for 1 student');
     expect(p.edit.cta).toBe('Edit');
     expect(p.archive.cta).toBe('Archive');
     expect(p.newPlan.cta).toBe('New plan');
@@ -103,6 +107,7 @@ describe('billing page (teach/billing/page.tsx, billing.ts)', () => {
     expect(b.source('google', null)).toBe('via Google Play');
     expect(b.source('manual', null)).toBe('via contract');
     expect(b.seats(300)).toBe('300 seats');
+    expect(b.seats(1)).toBe('1 seat');
     expect(b.manage.cta).toBe('Manage subscription');
   });
 

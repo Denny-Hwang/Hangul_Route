@@ -21,8 +21,15 @@ import { plural } from '../../plural';
  * Every string here is caregiver surface (no "behind", "lazy" or a learner-banned word),
  * checked per locale by console-messages.test.ts.
  */
-/** "1 item" / "4 items": the plan item count inside `plan.summary.*`. */
+/** "1 item" / "4 items": `planCounts.items`, also the plan item count inside `plan.summary.*`. */
 const planItems = (items: number): string => plural('en', items, { one: `${items} item`, other: `${items} items` });
+/** "1 learner" / "3 students": `planCounts.targets`, also the target count inside `plan.summary.some.*`. */
+const planTargets = (kind: 'family' | 'class' | 'school', n: number): string =>
+  kind === 'family'
+    ? plural('en', n, { one: `${n} learner`, other: `${n} learners` })
+    : kind === 'class'
+      ? plural('en', n, { one: `${n} student`, other: `${n} students` })
+      : plural('en', n, { one: `${n} member`, other: `${n} members` });
 
 export const consoleMsgs = {
   whySignIn: ['Keep progress safe across devices', 'Bring cards back after a reinstall', 'Manage plans and billing'],
@@ -252,13 +259,8 @@ export const consoleMsgs = {
   },
   /** Plan builder counts (`teach/space/plan`): the items in a plan, and the members it targets (worded per space kind, as `kind.members`). */
   planCounts: {
-    items: (n: number) => plural('en', n, { one: `${n} item`, other: `${n} items` }),
-    targets: (kind: 'family' | 'class' | 'school', n: number) =>
-      kind === 'family'
-        ? plural('en', n, { one: `${n} learner`, other: `${n} learners` })
-        : kind === 'class'
-          ? plural('en', n, { one: `${n} student`, other: `${n} students` })
-          : plural('en', n, { one: `${n} member`, other: `${n} members` }),
+    items: planItems,
+    targets: planTargets,
   },
   /** Plan builder status (`planStatusLabel`); the date arrives formatted. */
   planStatus: {
@@ -315,11 +317,11 @@ export const consoleMsgs = {
         school: (items: number) => `${planItems(items)} · for everyone in this school`,
         space: (items: number) => `${planItems(items)} · for everyone in this space`,
       },
-      // TODO(F-I18N-001 §10, console counts): `plural()` for `count` once console text may change (§3.4 rule 1 keeps "1 learners" for now).
+      /** The target count reads `planCounts.targets` ("for 1 learner", F-I18N-001 §10 console counts, closed). */
       some: {
-        family: (items: number, count: number) => `${planItems(items)} · for ${count} learners`,
-        class: (items: number, count: number) => `${planItems(items)} · for ${count} students`,
-        school: (items: number, count: number) => `${planItems(items)} · for ${count} members`,
+        family: (items: number, count: number) => `${planItems(items)} · for ${planTargets('family', count)}`,
+        class: (items: number, count: number) => `${planItems(items)} · for ${planTargets('class', count)}`,
+        school: (items: number, count: number) => `${planItems(items)} · for ${planTargets('school', count)}`,
       },
     },
     edit: { cta: 'Edit' },
@@ -398,8 +400,7 @@ export const consoleMsgs = {
      */
     source: (provider: 'stripe' | 'apple' | 'google' | 'manual', code: string | null) =>
       `via ${{ stripe: 'web (Stripe)', apple: 'App Store', google: 'Google Play', manual: 'contract' }[provider]}${code ? ` · code ${code}` : ''}`,
-    // TODO(F-I18N-001 §10, console counts): `plural()` once console text may change.
-    seats: (seats: number) => `${seats} seats`,
+    seats: (seats: number) => plural('en', seats, { one: `${seats} seat`, other: `${seats} seats` }),
     manage: { cta: 'Manage subscription' },
     planTitle: { free: 'Free', family_lifetime: 'Family Lifetime', group_license: 'Group License', school_seat: 'School Contract' },
     includes: {

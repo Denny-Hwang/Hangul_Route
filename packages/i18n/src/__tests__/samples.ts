@@ -198,7 +198,7 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'console.plan.pace.perWeek': [[1], [7]],
   'console.billing.current.freeLine': [[20]],
   'console.billing.source': [['stripe', null], ['stripe', 'KPCCW2026'], ['apple', null], ['google', null], ['manual', null]],
-  'console.billing.seats': [[300]],
+  'console.billing.seats': [[300], [1]],
   'console.billing.includes.free': [[20]],
   'console.billing.includes.family_lifetime': [[5]],
   'console.billing.includes.group_license': [[10, 300, 20]],
