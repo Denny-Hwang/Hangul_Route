@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { CurrentPlanList, PlanRowList } from '@/components/console/BillingParts';
 import { PlanDraftItems, PlanReadout } from '@/components/console/PlanParts';
-import { stage1Episodes, stage1Quests } from '@/data/stage1-catalog';
+import { builderEpisodes, questsOf } from '@/data/catalog';
 import type { EntitlementView, PlanView, SpaceListItem } from '@/lib/console/api';
 import { currentPlanCards, planRowsFor } from '@/lib/console/billing';
 import type { ReadoutRow } from '@/lib/console/plans';
@@ -37,9 +37,9 @@ afterAll(() => {
 });
 
 const now = new Date('2026-10-11T12:00:00.000Z');
-const contentTitles = [...stage1Episodes.map((e) => e.titleEn), ...stage1Quests.map((q) => q.titleEn)];
-const episode = stage1Episodes[0]!;
-const quest = stage1Quests[0]!;
+const contentTitles = builderEpisodes().flatMap((e) => [e.title, ...questsOf(e.episodeId).map((q) => q.title)]);
+const episode = builderEpisodes()[0]!;
+const quest = questsOf(episode.episodeId)[0]!;
 
 const plan = (over: Partial<PlanView>): PlanView => ({
   id: 'plan:1',
@@ -47,7 +47,7 @@ const plan = (over: Partial<PlanView>): PlanView => ({
   authorAccountId: 'teacher-kim',
   title: 'Week three',
   items: [
-    { kind: 'episode', id: episode.id, targetDate: '2026-10-12', note: 'warm up' },
+    { kind: 'episode', id: episode.episodeId, targetDate: '2026-10-12', note: 'warm up' },
     { kind: 'quest', id: quest.id },
   ],
   targetLearnerIds: null,

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { getMessages } from '../resolve';
 
 // F-I18N-001 PR 10b: the plan page (teach/space/plan), the billing page (teach/billing) and
-// the helpers they render (plans.ts readoutLine, billing.ts, stage1-catalog catalogLabel) read
+// the helpers they render (plans.ts readoutLine, billing.ts, data/catalog catalogLabel) read
 // the dictionary. English is the source and must render exactly what they hard-coded before
 // (§3.4 rule 1), so every value below is the former literal, byte for byte, except that counts
 // go through plural() (F-I18N-001 §10, console counts, closed): "for 1 learner", "1 seat".

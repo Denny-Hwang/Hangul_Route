@@ -11,6 +11,7 @@ import { useConsole } from '@/components/console/use-console';
 import type { PlanView, Roster } from '@/lib/console/api';
 import { levelPillLabel } from '@/lib/console/level-label';
 import { capState, classRollup, codeExpiry, percent, relativeDay } from '@/lib/console/rollup';
+import { ownRouteLine, readoutLine as routeReadoutLine } from '@/lib/console/curriculum';
 import { latestPublished, planReadout, readoutLine } from '@/lib/console/plans';
 import { ROUTES, type SpaceError, spaceErrorText, spaceIdFrom } from '@/lib/console/routing';
 import { aroundSlot } from '@/lib/i18n/slot';
@@ -133,6 +134,9 @@ function SpaceInner(): JSX.Element {
             <Link href={ROUTES.spacePlan(spaceId)}>
               <Button tone="primary">{latestPlan ? c.space.openPlan.label(latestPlan.title) : c.planThisWeek}</Button>
             </Link>
+            <Link href={ROUTES.spaceCurriculum(spaceId)}>
+              <Button testId="plan-term">{c.curriculum.entries.planTerm.cta}</Button>
+            </Link>
             <Link href={ROUTES.spaceRelink(spaceId)}>
               <Button>{pendingRelinks > 0 ? c.space.relinkPending.cta(pendingRelinks) : c.space.relinkRequests.cta}</Button>
             </Link>
@@ -170,7 +174,17 @@ function SpaceInner(): JSX.Element {
                             {learnerRevisit.after}
                           </div>
                         ) : null}
-                        {latestPlan && readout ? <div>{c.space.learner.planReadout(latestPlan.title, readoutLine(readout.get(l.id) as NonNullable<ReturnType<typeof readout.get>>, locale))}</div> : null}
+                        {latestPlan && readout ? (
+                          <div>
+                            {c.space.learner.planReadout(
+                              latestPlan.title,
+                              latestPlan.meta
+                                ? routeReadoutLine(readout.get(l.id) as NonNullable<ReturnType<typeof readout.get>>, latestPlan.items.length, locale)
+                                : readoutLine(readout.get(l.id) as NonNullable<ReturnType<typeof readout.get>>, locale),
+                            )}
+                          </div>
+                        ) : null}
+                        {ownRouteLine(roster.space.kind, l.summary.selfRoute, locale) ? <div data-testid="own-route">{ownRouteLine(roster.space.kind, l.summary.selfRoute, locale)}</div> : null}
                       </div>
                     ) : (
                       <Muted>

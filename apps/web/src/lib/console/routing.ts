@@ -8,7 +8,9 @@ export const ROUTES = {
   start: '/teach/start',
   home: '/teach/home',
   space: (id: string) => `/teach/space?id=${encodeURIComponent(id)}`,
-  spacePlan: (id: string) => `/teach/space/plan?id=${encodeURIComponent(id)}`,
+  /** With `planId` the builder opens that plan (the curriculum wizard's draft, F-PLAN-002 section 3.8). */
+  spacePlan: (id: string, planId?: string) => `/teach/space/plan?id=${encodeURIComponent(id)}${planId ? `&plan=${encodeURIComponent(planId)}` : ''}`,
+  spaceCurriculum: (id: string) => `/teach/space/curriculum?id=${encodeURIComponent(id)}`,
   spaceRelink: (id: string) => `/teach/space/relink?id=${encodeURIComponent(id)}`,
   spaceSettings: (id: string) => `/teach/space/settings?id=${encodeURIComponent(id)}`,
 } as const;

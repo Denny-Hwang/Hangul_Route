@@ -49,7 +49,10 @@
     "apps/web/src/app/(console)/teach/space/plan/page.tsx",
     "apps/web/src/app/(console)/teach/billing/page.tsx",
     "apps/web/src/components/console/PlanParts.tsx",
-    "apps/web/src/components/console/BillingParts.tsx"
+    "apps/web/src/components/console/BillingParts.tsx",
+    "apps/web/src/app/(console)/teach/space/curriculum/page.tsx",
+    "apps/web/src/components/console/CurriculumParts.tsx",
+    "apps/web/src/components/console/RoutePlanParts.tsx"
   ],
   "pluralTernaryBaseline": {
     "packages/content-schema/src/romanization/compare.ts": 1
