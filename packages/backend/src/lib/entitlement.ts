@@ -112,3 +112,26 @@ export async function tierForLearner(db: Db, learnerId: string, now: Date): Prom
   }
   return tierFromSpaces(db, spaces, now);
 }
+
+/**
+ * The tier the learner would have after a class move (F-SPACE-002 §4.3, T6b):
+ * the same rule over the learner's spaces with `fromSpaceId` taken out and
+ * `toSpaceId` added. The destination goes last, where the move puts it (its
+ * membership is the newest), so the reported source matches what
+ * `tierForLearner` says once the move is done. Reads only.
+ */
+export async function tierAfterMove(db: Db, learnerId: string, fromSpaceId: string, toSpaceId: string, now: Date): Promise<{ tier: Tier; source: TierSource | null }> {
+  const spaces: Space[] = [];
+  let hasDestination = false;
+  for (const m of await db.membershipsOf('learner', learnerId)) {
+    if (m.spaceId === fromSpaceId) continue;
+    if (m.spaceId === toSpaceId) hasDestination = true;
+    const space = await db.getSpace(m.spaceId);
+    if (space) spaces.push(space);
+  }
+  if (!hasDestination) {
+    const destination = await db.getSpace(toSpaceId);
+    if (destination) spaces.push(destination);
+  }
+  return tierFromSpaces(db, spaces, now);
+}
