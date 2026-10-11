@@ -638,6 +638,641 @@ export const storiesAll: Story[] = [
   },
   {
     "v": 1,
+    "id": "story:janggyeong-panjeon",
+    "state": "ready",
+    "contentVer": 1,
+    "title": {
+      "ko": "바람이 지키는 장경판전",
+      "romanization": "Barami jikineun Janggyeongpanjeon",
+      "en": "Guarded by the Wind"
+    },
+    "summaryEn": "Hoya explores Janggyeong Panjeon, the 15th-century halls at Haeinsa whose clever windows and layered floors have protected the Tripitaka Koreana woodblocks for some 500 years.",
+    "theme": "crafts",
+    "kind": "site",
+    "recommendedStage": 2,
+    "minutes": 5,
+    "learningGoalsEn": [
+      "Know that Janggyeong Panjeon at Haeinsa Temple was built to store the Tripitaka Koreana woodblocks and dates from the 15th century.",
+      "Explain two design features that protect the woodblocks: windows of different sizes for airflow, and a floor layered with charcoal, lime, salt and sand to control moisture.",
+      "Know that Janggyeong Panjeon was inscribed on the UNESCO World Heritage List in 1995.",
+      "Read and say 건물, 창문, 숯, 바람 and 지켜요 with romanization."
+    ],
+    "origin": {
+      "type": "documented",
+      "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
+    },
+    "review": {
+      "language": "draft",
+      "culture": "draft",
+      "advisory": []
+    },
+    "keywords": [
+      {
+        "id": "geonmul",
+        "ko": "건물",
+        "romanization": "geonmul",
+        "en": "building",
+        "kind": "word"
+      },
+      {
+        "id": "changmun",
+        "ko": "창문",
+        "romanization": "changmun",
+        "en": "window",
+        "kind": "word"
+      },
+      {
+        "id": "baram",
+        "ko": "바람",
+        "romanization": "baram",
+        "en": "wind",
+        "kind": "word"
+      },
+      {
+        "id": "sut",
+        "ko": "숯",
+        "romanization": "sut",
+        "en": "charcoal",
+        "kind": "word"
+      },
+      {
+        "id": "segyeyusan",
+        "ko": "세계유산",
+        "romanization": "segyeyusan",
+        "en": "World Heritage",
+        "kind": "word"
+      },
+      {
+        "id": "jikyeoyo",
+        "ko": "지켜요",
+        "romanization": "jikyeoyo",
+        "en": "(we) protect; guard",
+        "kind": "word"
+      },
+      {
+        "id": "janggyeongpanjeon",
+        "ko": "장경판전",
+        "romanization": "Janggyeongpanjeon",
+        "en": "Janggyeong Panjeon, the woodblock storage halls at Haeinsa",
+        "kind": "word"
+      },
+      {
+        "id": "joseon",
+        "ko": "조선",
+        "romanization": "Joseon",
+        "en": "Joseon, the Korean dynasty of that time",
+        "kind": "word"
+      },
+      {
+        "id": "uriga-jikyeoyo",
+        "ko": "우리가 지켜요",
+        "romanization": "uriga jikyeoyo",
+        "en": "We protect it.",
+        "kind": "word"
+      }
+    ],
+    "cultureNotes": [],
+    "tiers": [
+      {
+        "level": "listen",
+        "scenes": [
+          {
+            "id": "s1",
+            "narrationEn": "Hoya returns to Haeinsa and climbs to the highest part of the temple grounds. Here stand the Janggyeong Panjeon, the halls made to store the woodblocks. They are the oldest buildings still standing at Haeinsa.",
+            "keyword": {
+              "id": "janggyeongpanjeon",
+              "ko": "장경판전",
+              "romanization": "Janggyeongpanjeon",
+              "en": "Janggyeong Panjeon, the woodblock storage halls at Haeinsa",
+              "kind": "word"
+            },
+            "factIds": [
+              "f1",
+              "f2"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "Hoya climbing stone stairs to a terrace at the top of a mountain temple; two long, plain wooden halls with tiled roofs stand side by side above the other temple roofs.",
+            "captionEn": "The oldest halls at Haeinsa",
+            "artPending": true
+          },
+          {
+            "id": "s2",
+            "narrationEn": "Two long halls stand side by side: Sudarajang in the south and Beopbojeon in the north. Two small buildings sit at the ends, so together they form a rectangle around a courtyard.",
+            "keyword": {
+              "id": "geonmul",
+              "ko": "건물",
+              "romanization": "geonmul",
+              "en": "building",
+              "kind": "word"
+            },
+            "factIds": [
+              "f3"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "Bird's-eye view of four plain wooden buildings forming a rectangle around a sandy courtyard, two long and two short; Hoya waves from the courtyard.",
+            "captionEn": "Four buildings around a courtyard",
+            "artPending": true
+          },
+          {
+            "id": "s3",
+            "narrationEn": "These halls were built in the 15th century, during the Joseon dynasty. There are no fancy decorations. Every part was designed for one job: keeping the woodblocks safe.",
+            "keyword": {
+              "id": "joseon",
+              "ko": "조선",
+              "romanization": "Joseon",
+              "en": "Joseon, the Korean dynasty of that time",
+              "kind": "word"
+            },
+            "factIds": [
+              "f4"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "Front view of a long, simple wooden hall with unpainted pillars and rows of slatted windows; Hoya points out how plain and tidy it looks.",
+            "captionEn": "Plain halls built for one job",
+            "artPending": true
+          },
+          {
+            "id": "s4",
+            "narrationEn": "Look at the windows! The windows on the front and back walls are different sizes, and the upper and lower windows differ too. This helps the wind flow through the halls.",
+            "keyword": {
+              "id": "changmun",
+              "ko": "창문",
+              "romanization": "changmun",
+              "en": "window",
+              "kind": "word"
+            },
+            "factIds": [
+              "f5"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "Cutaway side view of a hall: slatted windows of different sizes high and low on opposite walls, with gentle curved arrows of breeze flowing through past the shelves; Hoya's fur ruffles in the wind.",
+            "captionEn": "Windows of different sizes",
+            "artPending": true
+          },
+          {
+            "id": "s5",
+            "narrationEn": "Now look down. Under the earthen floor are layers of charcoal, lime and salt with sand. They soak up extra moisture when the air is damp and give it back when it is dry.",
+            "keyword": {
+              "id": "sut",
+              "ko": "숯",
+              "romanization": "sut",
+              "en": "charcoal",
+              "kind": "word"
+            },
+            "factIds": [
+              "f6"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "Cross-section of the ground under a hall showing simple colored layers (black charcoal, white lime, pale salt, tan sand) beneath an earthen floor; Hoya kneels, peering at the layers.",
+            "captionEn": "Charcoal, lime and salt under the floor",
+            "artPending": true
+          },
+          {
+            "id": "s6",
+            "narrationEn": "Wind, sunlight and earth work together. Thanks to this natural design, the woodblocks have stayed safe from damp, mice and insects for some 500 years.",
+            "keyword": {
+              "id": "baram",
+              "ko": "바람",
+              "romanization": "baram",
+              "en": "wind",
+              "kind": "word"
+            },
+            "factIds": [
+              "f7"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "Sunlight streaming through slatted windows onto rows of woodblocks; a small mouse and a beetle turn away outside the wall while a breeze swirls leaves; Hoya smiles.",
+            "captionEn": "Wind, sun and earth keep blocks safe",
+            "artPending": true
+          },
+          {
+            "id": "s7",
+            "narrationEn": "In 1995, UNESCO added Janggyeong Panjeon to the World Heritage List. UNESCO calls it the oldest depository of the Tripitaka, the Buddhist scriptures.",
+            "keyword": {
+              "id": "segyeyusan",
+              "ko": "세계유산",
+              "romanization": "segyeyusan",
+              "en": "World Heritage",
+              "kind": "word"
+            },
+            "factIds": [
+              "f8"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "The two long halls under a clear autumn sky with colorful maple leaves on the mountain; a soft glowing outline around the buildings suggests special recognition. No logos or text.",
+            "captionEn": "A UNESCO World Heritage site",
+            "artPending": true
+          },
+          {
+            "id": "s8",
+            "narrationEn": "To help keep the temperature and humidity steady, visitor entry is restricted. Hoya peeks through the window slats and whispers, \"Uriga jikyeoyo, we protect it together!\"",
+            "keyword": {
+              "id": "uriga-jikyeoyo",
+              "ko": "우리가 지켜요",
+              "romanization": "uriga jikyeoyo",
+              "en": "We protect it.",
+              "kind": "word"
+            },
+            "factIds": [
+              "f9"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "Hoya and a child quietly peeking through vertical window slats from outside, careful not to touch; inside, shelves of woodblocks rest in calm shadow.",
+            "captionEn": "Entry is limited to keep humidity steady",
+            "artPending": true
+          }
+        ],
+        "checks": [
+          {
+            "id": "c1",
+            "kind": "detail",
+            "promptEn": "What do the different-sized windows do?",
+            "options": [
+              {
+                "id": "a",
+                "en": "Make the hall darker",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "Keep visitors out",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "Help the wind flow through",
+                "isCorrect": true
+              },
+              {
+                "id": "d",
+                "en": "Show paintings",
+                "isCorrect": false
+              }
+            ],
+            "factIds": [
+              "f5"
+            ],
+            "explainEn": "The windows differ in size on the front and back walls, and the upper and lower ones differ too. This helps air flow through."
+          },
+          {
+            "id": "c2",
+            "kind": "detail",
+            "promptEn": "What is under the floor of Janggyeong Panjeon?",
+            "options": [
+              {
+                "id": "a",
+                "en": "Layers of rice straw and gravel",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "Rows of stone water channels",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "A hollow space filled with ice",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "Layers of charcoal, lime, salt and sand",
+                "isCorrect": true
+              }
+            ],
+            "factIds": [
+              "f6"
+            ],
+            "explainEn": "Under the earthen floor are layers of charcoal, lime and salt with sand. They help control the moisture in the air."
+          },
+          {
+            "id": "c3",
+            "kind": "detail",
+            "promptEn": "When did Janggyeong Panjeon join the UNESCO World Heritage List?",
+            "options": [
+              {
+                "id": "a",
+                "en": "1446",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "2007",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "1995",
+                "isCorrect": true
+              },
+              {
+                "id": "d",
+                "en": "1377",
+                "isCorrect": false
+              }
+            ],
+            "factIds": [
+              "f8"
+            ],
+            "explainEn": "UNESCO added Janggyeong Panjeon to the World Heritage List in 1995."
+          }
+        ],
+        "checkpoints": [],
+        "sequenceSceneIds": [
+          "s1",
+          "s3",
+          "s6",
+          "s8"
+        ],
+        "newKeywordIds": [
+          "geonmul",
+          "changmun",
+          "sut",
+          "baram"
+        ]
+      }
+    ],
+    "coverSceneId": "s1",
+    "pillarTags": [],
+    "companionId": "hoya",
+    "facts": [
+      {
+        "id": "f1",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Janggyeong Panjeon are the buildings at Haeinsa built to store the Tripitaka Koreana woodblocks. They stand at the highest part of the temple grounds, above the hall of the main Buddha.",
+        "claimKo": "장경판전은 해인사에서 대장경판을 보관하기 위해 지은 건물로, 해인사 경내에서 가장 높은 곳, 본존불을 모신 법당보다 높은 곳에 있다.",
+        "sources": [
+          {
+            "title": "Haeinsa Temple Janggyeong Panjeon, the Depositories for the Tripitaka Koreana Woodblocks",
+            "publisher": "UNESCO World Heritage Centre",
+            "url": "https://whc.unesco.org/en/list/737/",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"The buildings of Janggyeong Panjeon, which date from the 15th century, were constructed to house the woodblocks\"; \"they are located at a higher level than the hall housing the main Buddha of the complex\" [text re-read on an Internet Archive snapshot of this UNESCO page; the live page blocks automated requests]"
+          },
+          {
+            "title": "유네스코 등재유산 소개 — 세계유산 「해인사 장경판전」",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FHeritage%2FHeritage_02.jsp&pageNo=5_1_1_0",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "영상 해설: \"해인사경내에서 가장 높은 곳에 서남 향으로 위치하고 있어 햇살을 충분히 받아\""
+          },
+          {
+            "title": "국보 합천 해인사 장경판전 (陜川 海印寺 藏經板殿) — 국가유산 상세 정보 및 국가유산 설명",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1113800520000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"장경판전은 고려시대에 만들어진 8만여장의 대장경판을 보관하고 있는 건물로\""
+          },
+          {
+            "title": "유네스코 등재유산 소개 — 세계기록유산 「고려대장경판 및 제(諸)경판」",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FMemHeritage%2FMemHeritage_06.jsp&pageNo=5_4_2_0",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "영상 해설: \"해인사에 가장 오래된 현존 건물인 장경판전 … 해인사경내에서 가장 높은 곳에\""
+          }
+        ]
+      },
+      {
+        "id": "f2",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "The Janggyeong Panjeon are the oldest surviving buildings at Haeinsa.",
+        "claimKo": "장경판전은 해인사에 남아 있는 건물 가운데 가장 오래되었다.",
+        "sources": [
+          {
+            "title": "국보 합천 해인사 장경판전 (陜川 海印寺 藏經板殿) — 국가유산 설명",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1113800520000",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "\"장경판전은 … 해인사에 남아있는 건물 중 가장 오래 되었다.\" (English text: \"known to be the oldest of all the buildings currently standing in the temple\")"
+          },
+          {
+            "title": "유네스코 등재유산 소개 — 세계유산 「해인사 장경판전」",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FHeritage%2FHeritage_02.jsp&pageNo=5_1_1_0",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "\"해인사의 현존 건물 중 가장 오래된 건물이다.\""
+          },
+          {
+            "title": "합천 해인사 장경판전 — 한국민족문화대백과사전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0062725",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"해인사 경내에는 많은 법당이 있으나 대부분 근세에 건립된 것이고 이 장경판고만이 조선 전기에 만들어진 것이다.\" (supports: the other halls are mostly recent)"
+          }
+        ]
+      },
+      {
+        "id": "f3",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Two long buildings, each 15 bays wide, stand side by side: Sudarajang to the south and Beopbojeon to the north. With two small buildings at the east and west, they form a rectangle around a courtyard.",
+        "claimKo": "정면 15칸의 긴 건물 두 동이 남북으로 나란히 서 있는데, 남쪽은 수다라장, 북쪽은 법보전이며, 동·서쪽의 작은 건물 두 동과 함께 긴 네모꼴로 배치되어 있다.",
+        "sources": [
+          {
+            "title": "국보 합천 해인사 장경판전 (陜川 海印寺 藏經板殿) — 국가유산 상세 정보 및 국가유산 설명",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1113800520000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"앞면 15칸·옆면 2칸 크기의 두 건물을 나란히 배치하였는데, 남쪽 건물은 '수다라장'이라 하고 북쪽의 건물은 '법보전'이라 한다. 서쪽과 동쪽에는 … 작은 서고가 있어서, 전체적으로는 긴 네모형으로 배치되어 있다.\""
+          },
+          {
+            "title": "Haeinsa Temple Janggyeong Panjeon, the Depositories for the Tripitaka Koreana Woodblocks",
+            "publisher": "UNESCO World Heritage Centre",
+            "url": "https://whc.unesco.org/en/list/737/",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"The Janggyeong Panjeon depositories comprise two long and two smaller buildings, which are arranged in a rectangle around a courtyard.\" [text re-read on an Internet Archive snapshot of this UNESCO page; the live page blocks automated requests]"
+          },
+          {
+            "title": "합천 해인사 장경판전 — 한국민족문화대백과사전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0062725",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"정면 15칸, 측면 2칸의 우진각지붕건물이다. … 남쪽 건물은 수다라장(修多羅藏), 북쪽 건물은 법보전(法寶殿)이다.\""
+          }
+        ]
+      },
+      {
+        "id": "f4",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "The depositories date from the 15th century (early Joseon). The date of first construction is unknown; rebuilding is recorded in 1488. They were built simply, without decoration, to serve their purpose.",
+        "claimKo": "장경판전은 15세기(조선 전기) 건물로, 처음 지은 연대는 정확히 알 수 없으나 1488년에 다시 지은 기록이 있으며, 장식 없이 간결하게 지었다.",
+        "sources": [
+          {
+            "title": "Haeinsa Temple Janggyeong Panjeon, the Depositories for the Tripitaka Koreana Woodblocks",
+            "publisher": "UNESCO World Heritage Centre",
+            "url": "https://whc.unesco.org/en/list/737/",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"Constructed in the 15th century in the traditional style of the early Joseon period, their design is characterized by its simplicity of detailing\" [text re-read on an Internet Archive snapshot of this UNESCO page; the live page blocks automated requests]"
+          },
+          {
+            "title": "국보 합천 해인사 장경판전 (陜川 海印寺 藏經板殿) — 국가유산 상세 정보 및 국가유산 설명",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1113800520000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"처음 지은 연대는 정확히 알지 못하지만 … 성종 19년(1488)에 학조대사가 왕실의 후원으로 다시 지어 '보안당'이라고 했다는 기록이 있다.\"; \"장식 요소는 두지 않았으며\""
+          },
+          {
+            "title": "합천 해인사 장경판전 — 한국민족문화대백과사전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0062725",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"'弘治元年(홍치원년)'이라는 각명(刻名)으로 건립연대를 1488년(성종 19)으로 추정하고 있다.\""
+          }
+        ]
+      },
+      {
+        "id": "f5",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "For ventilation, the windows differ in size between the south and north (front and back) walls, and the upper and lower windows also differ in size.",
+        "claimKo": "통풍을 위해 앞뒤(남북) 벽의 창 크기를 서로 다르게 하고, 위아래 창의 크기도 달리하였다.",
+        "sources": [
+          {
+            "title": "국보 합천 해인사 장경판전 (陜川 海印寺 藏經板殿) — 국가유산 상세 정보 및 국가유산 설명",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1113800520000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"통풍을 위하여 창의 크기를 남쪽과 북쪽을 서로 다르게 하고 각 칸마다 창을 내었다.\" / EN: \"Each depository has two rows of windows in different sizes -- one on the front and the other on the rear -- designed to ensure effective natural ventilation.\""
+          },
+          {
+            "title": "유네스코 등재유산 소개 — 세계유산 「해인사 장경판전」",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FHeritage%2FHeritage_02.jsp&pageNo=5_1_1_0",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"전·후면 창호의 위치와 크기가 서로 다르다.\"; 영상 해설: \"아래위로 크기를 달리한 창은 통풍과 환기의 효과를 극대화 했다.\""
+          },
+          {
+            "title": "Haeinsa Temple Janggyeong Panjeon, the Depositories for the Tripitaka Koreana Woodblocks",
+            "publisher": "UNESCO World Heritage Centre",
+            "url": "https://whc.unesco.org/en/list/737/",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"They were specially designed to provide natural ventilation and to modulate temperature and humidity\" [text re-read on an Internet Archive snapshot of this UNESCO page; the live page blocks automated requests]"
+          }
+        ]
+      },
+      {
+        "id": "f6",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Beneath the earthen floor are layers of charcoal, lime and salt laid with sand, which help regulate humidity by absorbing excess moisture and releasing it when the air is dry.",
+        "claimKo": "흙바닥 속에 숯, 횟가루(석회), 소금을 모래와 함께 차례로 넣어 습도를 조절하도록 하였다. 습기가 많으면 빨아들이고 건조하면 내뿜는다.",
+        "sources": [
+          {
+            "title": "국보 합천 해인사 장경판전 (陜川 海印寺 藏經板殿) — 국가유산 상세 정보 및 국가유산 설명",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1113800520000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"안쪽 흙바닥 속에 숯과 횟가루, 소금을 모래와 함께 차례로 넣음으로써 습도를 조절하도록 하였다.\" / EN: \"The earthen floor is laid over layers of powdered charcoal, lime, salt, and sand\""
+          },
+          {
+            "title": "유네스코 등재유산 소개 — 세계유산 「해인사 장경판전」",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FHeritage%2FHeritage_02.jsp&pageNo=5_1_1_0",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "영상 해설: \"많은 양의 숯과 소금 석회를 이용해 기초를 다졌다. 이로써 과도한 습기는 흡수하고 건조 할 때는 머금었던 습기를 내뿜어 항상 일정한 습도를 유지하게 했다.\""
+          }
+        ]
+      },
+      {
+        "id": "f7",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Because the design makes use of natural conditions (sunlight, ventilation, and control of temperature and humidity), the woodblocks have been preserved for some 500 years, safe from rodents and insects.",
+        "claimKo": "햇빛과 환기, 온습도 조절 등 자연환경을 이용한 설계 덕분에 경판이 약 500년 동안 쥐나 벌레의 피해 없이 보존되었다.",
+        "sources": [
+          {
+            "title": "Haeinsa Temple Janggyeong Panjeon, the Depositories for the Tripitaka Koreana Woodblocks",
+            "publisher": "UNESCO World Heritage Centre",
+            "url": "https://whc.unesco.org/en/list/737/",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"adapted to climatic conditions, thus preserving the woodblocks for some 500 years from rodent and insect infestation\" [text re-read on an Internet Archive snapshot of this UNESCO page; the live page blocks automated requests]"
+          },
+          {
+            "title": "유네스코 등재유산 소개 — 세계유산 「해인사 장경판전」",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FHeritage%2FHeritage_02.jsp&pageNo=5_1_1_0",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"건물 내의 환기, 온습도 조절 등 자연 기상에 적응하도록 설계되어 500년 간 깨끗하고 안전하게 경판을 보존할 수 있었음.\"; 영상 해설: \"햇살을 충분히 받아 나무가 눅눅해지거나 썩는 일이 없다.\""
+          }
+        ]
+      },
+      {
+        "id": "f8",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Haeinsa Temple Janggyeong Panjeon was inscribed on the UNESCO World Heritage List in 1995, and UNESCO describes it as the oldest depository of the Tripitaka.",
+        "claimKo": "해인사 장경판전은 1995년 유네스코 세계유산에 등재되었으며, 유네스코는 이를 가장 오래된 대장경 보관 건물로 평가한다.",
+        "sources": [
+          {
+            "title": "Haeinsa Temple Janggyeong Panjeon, the Depositories for the Tripitaka Koreana Woodblocks",
+            "publisher": "UNESCO World Heritage Centre",
+            "url": "https://whc.unesco.org/en/list/737/",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"Date of Inscription: 1995\"; \"As the oldest depository of the Tripitaka, they reveal an astonishing mastery of the invention and implementation of the conservation techniques\" [text re-read on an Internet Archive snapshot of this UNESCO page; the live page blocks automated requests]"
+          },
+          {
+            "title": "국보 합천 해인사 장경판전 (陜川 海印寺 藏經板殿) — 국가유산 상세 정보 및 국가유산 설명",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1113800520000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"합천 해인사 장경판전은 15세기 건축물로서 세계 유일의 대장경판 보관용 건물이며, 1995년 12월 유네스코 세계문화유산으로 등재되었다.\""
+          },
+          {
+            "title": "합천 해인사 장경판전 — 한국민족문화대백과사전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0062725",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"1995년 12월 '세계문화유산'으로 지정되었다.\""
+          }
+        ]
+      },
+      {
+        "id": "f9",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "UNESCO states that, in order to control the temperature and humidity within the depositories, there are restrictions to visitor entry into the Janggyeong Panjeon. Since June 2021 Haeinsa has also offered a small, pre-booked guided tour inside Beopbojeon (10 to 20 people per session), so entry is limited rather than impossible.",
+        "claimKo": "유네스코는 장경판전 안의 온도와 습도를 조절하기 위해 방문객의 출입을 제한하고 있다고 밝히고 있다. 해인사는 2021년 6월부터 법보전 내부를 사전 예약자(회당 10~20명)에 한해 안내 탐방하고 있어, 출입은 '제한'될 뿐 전면 금지는 아니다.",
+        "sources": [
+          {
+            "title": "Haeinsa Temple Janggyeong Panjeon, the Depositories for the Tripitaka Koreana",
+            "publisher": "UNESCO World Heritage Centre",
+            "url": "https://whc.unesco.org/en/list/737/",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "In the protection and management section: \"In order to control the temperature and humidity within the depositories, there are restrictions to visitor entry into the Janggyeong Panjeon.\" [text re-read on an Internet Archive snapshot of this UNESCO page; the live page blocks automated requests]"
+          },
+          {
+            "title": "해인사 팔만대장경 더 가까이서 보세요",
+            "publisher": "경향신문 (2021-06-03, 이혜인 기자; reports Haeinsa press conference)",
+            "url": "https://www.khan.co.kr/article/202106031544001",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "\"현재는 팔만대장경이 보관된 건물인 장경판전의 창 사이로 멀리서 관람하는 것만 가능하나, 앞으로는 사전 예약 시 건물 안에 들어가서 관람하는 것이 가능해진다.\"; \"탐방 프로그램은 장경판전 중 법보전 내부에서만 운영된다.\"; \"한 회당 입장 인원은 10~20명으로 제한된다.\""
+          }
+        ]
+      }
+    ],
+    "referenceDisplay": "Sources: 국가유산청 국가유산포털; UNESCO World Heritage Centre; 한국민족문화대백과사전",
+    "verification": {
+      "passes": 3,
+      "checkedAt": "2026-10-10",
+      "scope": "cluster",
+      "notes": "Third independent pass. Every cited URL for all 6 episodes (52 facts) was re-opened (UNESCO pages via Wayback copies when the live site resets connections) and quotes/locators were compared; the one exception is unesco.org/en/prizes/literacy (unreachable from here; its claim is now also backed by a Korean MCST press release). Eight minimal corrections were made: (1) Hangeul Day f3 no longer says 'Gregorian' (no cited source says the October 9 conversion was Gregorian; encykorea separates Julian/Gregorian only for 1932-45) and dates the October 29/28 observances; (2) f10 gains a third source (SBS 2018 with 국립한글박물관 curator); (3) Shapes scene 8, learning goal and f7 now say 'South Korea's spelling rules' count 24 (North Korea counts 40, 국립한글박물관 webzine 59); (4) Sejong scene 4/f4: 백성 is 'an old-fashioned word' with 표준국어대사전 added; (5) Jikji f8 quote no longer repeats a prize amount that differs between UNESCO page versions; (6) Tripitaka f6 wood and corner plates now have two further sources (정책브리핑; 박상진 wood-identification study); (8) Hangeul Day f9 gains a second source (문화체육관광부 press release); (7) Panjeon scene 8/f9: 'visitors cannot walk inside' replaced by 'visitor entry is restricted' because Haeinsa has run pre-booked tours inside Beopbojeon since June 2021. See hangul-printing.signoff.md."
+    },
+    "authorNotes": "Theme is set to 'crafts' because the episode is about building and conservation design; switch it to 'letters' if the cluster should stay in one theme. The original construction date is unknown (국가유산포털), so the narration says '15th century' (UNESCO WHC, 국가유산포털). The sources consulted do not say which wall or row has the larger windows, so the narration only says the sizes differ, and illustrations should not suggest a specific pattern. 국가유산포털 also calls it the 'world's only building for storing Tripitaka woodblocks'; the narration uses UNESCO's more conservative wording, 'oldest depository of the Tripitaka', instead. The building's survival through the 1592 war is left out, because the story avoids war content. The visitor-entry restriction is as stated on the WHC page on the access date; rules may change. The official heritage name is 합천 해인사 장경판전 (National Treasure, designated 1962). REVISED: 'oldest buildings' -> 'oldest buildings still standing at Haeinsa' (국가유산포털: 해인사에 남아있는 건물 중 가장 오래 되었다; verified in the portal's description text and its UNESCO page). Visitor restriction (f9): the UNESCO WHC text, re-read on an Internet Archive snapshot, says restrictions exist 'in order to control the temperature and humidity within the depositories'; the fire-protection measures on the same page (guards, surveillance, lightning rod) are a separate sentence. Narration now says visitors 'cannot walk inside' to match the UNESCO wording, and the old 'to keep the air just right inside' phrase was replaced. Only UNESCO is cited for this restriction; no 국가유산청 page with it was found, and rules may change. Check distractors replaced with plausible wrong answers. Vocab 소금/습기 dropped (not shown in a scene) and 세계유산 added. FINAL PASS (3rd check): scene 8 now says 'visitor entry is restricted' (UNESCO wording) instead of 'visitors cannot walk inside', because Haeinsa runs pre-booked guided tours inside Beopbojeon (since 2021-06, 경향신문). Current rules should be checked on haeinsa.or.kr before any release.",
+    "errata": []
+  },
+  {
+    "v": 1,
     "id": "story:jikji-metal-type",
     "state": "ready",
     "contentVer": 1,

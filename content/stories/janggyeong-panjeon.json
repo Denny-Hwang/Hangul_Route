@@ -1,11 +1,11 @@
 {
   "v": 1,
   "id": "story:janggyeong-panjeon",
-  "state": "draft",
+  "state": "ready",
   "contentVer": 1,
   "title": {
     "ko": "바람이 지키는 장경판전",
-    "romanization": "",
+    "romanization": "Barami jikineun Janggyeongpanjeon",
     "en": "Guarded by the Wind"
   },
   "summaryEn": "Hoya explores Janggyeong Panjeon, the 15th-century halls at Haeinsa whose clever windows and layered floors have protected the Tripitaka Koreana woodblocks for some 500 years.",
@@ -114,7 +114,9 @@
           ],
           "framing": false,
           "approximations": [],
-          "artBrief": "Hoya climbing stone stairs to a terrace at the top of a mountain temple; two long, plain wooden halls with tiled roofs stand side by side above the other temple roofs."
+          "artBrief": "Hoya climbing stone stairs to a terrace at the top of a mountain temple; two long, plain wooden halls with tiled roofs stand side by side above the other temple roofs.",
+          "captionEn": "The oldest halls at Haeinsa",
+          "artPending": true
         },
         {
           "id": "s2",
@@ -131,7 +133,9 @@
           ],
           "framing": false,
           "approximations": [],
-          "artBrief": "Bird's-eye view of four plain wooden buildings forming a rectangle around a sandy courtyard, two long and two short; Hoya waves from the courtyard."
+          "artBrief": "Bird's-eye view of four plain wooden buildings forming a rectangle around a sandy courtyard, two long and two short; Hoya waves from the courtyard.",
+          "captionEn": "Four buildings around a courtyard",
+          "artPending": true
         },
         {
           "id": "s3",
@@ -148,7 +152,9 @@
           ],
           "framing": false,
           "approximations": [],
-          "artBrief": "Front view of a long, simple wooden hall with unpainted pillars and rows of slatted windows; Hoya points out how plain and tidy it looks."
+          "artBrief": "Front view of a long, simple wooden hall with unpainted pillars and rows of slatted windows; Hoya points out how plain and tidy it looks.",
+          "captionEn": "Plain halls built for one job",
+          "artPending": true
         },
         {
           "id": "s4",
@@ -165,7 +171,9 @@
           ],
           "framing": false,
           "approximations": [],
-          "artBrief": "Cutaway side view of a hall: slatted windows of different sizes high and low on opposite walls, with gentle curved arrows of breeze flowing through past the shelves; Hoya's fur ruffles in the wind."
+          "artBrief": "Cutaway side view of a hall: slatted windows of different sizes high and low on opposite walls, with gentle curved arrows of breeze flowing through past the shelves; Hoya's fur ruffles in the wind.",
+          "captionEn": "Windows of different sizes",
+          "artPending": true
         },
         {
           "id": "s5",
@@ -182,7 +190,9 @@
           ],
           "framing": false,
           "approximations": [],
-          "artBrief": "Cross-section of the ground under a hall showing simple colored layers (black charcoal, white lime, pale salt, tan sand) beneath an earthen floor; Hoya kneels, peering at the layers."
+          "artBrief": "Cross-section of the ground under a hall showing simple colored layers (black charcoal, white lime, pale salt, tan sand) beneath an earthen floor; Hoya kneels, peering at the layers.",
+          "captionEn": "Charcoal, lime and salt under the floor",
+          "artPending": true
         },
         {
           "id": "s6",
@@ -199,7 +209,9 @@
           ],
           "framing": false,
           "approximations": [],
-          "artBrief": "Sunlight streaming through slatted windows onto rows of woodblocks; a small mouse and a beetle turn away outside the wall while a breeze swirls leaves; Hoya smiles."
+          "artBrief": "Sunlight streaming through slatted windows onto rows of woodblocks; a small mouse and a beetle turn away outside the wall while a breeze swirls leaves; Hoya smiles.",
+          "captionEn": "Wind, sun and earth keep blocks safe",
+          "artPending": true
         },
         {
           "id": "s7",
@@ -216,7 +228,9 @@
           ],
           "framing": false,
           "approximations": [],
-          "artBrief": "The two long halls under a clear autumn sky with colorful maple leaves on the mountain; a soft glowing outline around the buildings suggests special recognition. No logos or text."
+          "artBrief": "The two long halls under a clear autumn sky with colorful maple leaves on the mountain; a soft glowing outline around the buildings suggests special recognition. No logos or text.",
+          "captionEn": "A UNESCO World Heritage site",
+          "artPending": true
         },
         {
           "id": "s8",
@@ -233,7 +247,9 @@
           ],
           "framing": false,
           "approximations": [],
-          "artBrief": "Hoya and a child quietly peeking through vertical window slats from outside, careful not to touch; inside, shelves of woodblocks rest in calm shadow."
+          "artBrief": "Hoya and a child quietly peeking through vertical window slats from outside, careful not to touch; inside, shelves of woodblocks rest in calm shadow.",
+          "captionEn": "Entry is limited to keep humidity steady",
+          "artPending": true
         }
       ],
       "checks": [
@@ -265,7 +281,8 @@
           ],
           "factIds": [
             "f5"
-          ]
+          ],
+          "explainEn": "The windows differ in size on the front and back walls, and the upper and lower ones differ too. This helps air flow through."
         },
         {
           "id": "c2",
@@ -295,7 +312,8 @@
           ],
           "factIds": [
             "f6"
-          ]
+          ],
+          "explainEn": "Under the earthen floor are layers of charcoal, lime and salt with sand. They help control the moisture in the air."
         },
         {
           "id": "c3",
@@ -325,7 +343,8 @@
           ],
           "factIds": [
             "f8"
-          ]
+          ],
+          "explainEn": "UNESCO added Janggyeong Panjeon to the World Heritage List in 1995."
         }
       ],
       "checkpoints": [],
