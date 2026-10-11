@@ -33,7 +33,7 @@
 | `vocab/topics.md` · `vocab/flashcards.md` · `vocab/speed-round.md` | D | F-VOC-003 · F-VOC-004 |
 | `placement/placement.md` | D | F-PLC-001 |
 | `console/curriculum-planner.md` | D | F-PLAN-002 |
-| `classroom/lecture-presenter.md` | D | F-TCH-004 |
+| `classroom/lecture-presenter.md` | R | F-TCH-004 |
 | `layout/wide.md` | D | F-LAYOUT-001 |
 | `console/class-transfer.md` | D | F-SPACE-002 |
 | `journey/my-route-overview.md` | R | F-ROUTE-001 (screens A to I; J amends `placement/placement.md` G for F-PLC-001 AM-1 / AM-14, K is F-PLAN-002's weekly plan proposal, FP-B6) |

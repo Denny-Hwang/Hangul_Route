@@ -117,7 +117,7 @@ Hangul Route
 | 페르소나 (roadmap §1) | A Learner | B Caregiver | C Teacher/School | 결제 |
 |---|---|---|---|---|
 | P-A 개인 학습 (어른 없음) | ✓ 전부 (Stage 1) + Rescue Code | – | – | Free |
-| P-B 가정 | ✓ | ✓ 앱+웹 | – | family_lifetime ($15.30 once) |
+| P-B 가정 | ✓ · Lecture presenter (A15, `/present`, 가족 TV, 프로필 없음) | ✓ 앱+웹 | C10 만 (가족 공간 `caregiver`; `plan.write` 와 같은 조건, F-TCH-004 §3.11) | family_lifetime ($15.30 once) |
 | P-C 학급 학생 | ✓ + Join code | (부모가 있으면 ✓) | – | 교사가 지불 |
 | P-C 교사 | Lecture presenter 만 (A15, `/present`, 프로필 없음) | – | ✓ C1–C6, C8, C10 | 학생 ≤ 20 무료 → group_license ($153/yr) |
 | P-D 학교 관리자 | – | – | ✓ C7, C8 | group_license ($153/yr) / 상한 초과 seat 계약 |
