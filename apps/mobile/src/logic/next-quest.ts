@@ -38,7 +38,7 @@ export interface NextQuestInput {
   episodes: readonly Episode[];
   /** A quest completed by the write being shown; counted as done before the snapshot has it. */
   justCompleted?: string;
-  /** `isStageEntitled(stageKey, tier)` for the current learner. */
+  /** The stages the cursor may land on: the predicate from `cursorContext` (F-ROUTE-001 R-4a, OD-4). Omitted means every playable stage. */
   isEntitled?: (stageKey: string) => boolean;
   /**
    * Placed-out quests of the route seed (F-PLC-001 section 3.7, consumer 1;

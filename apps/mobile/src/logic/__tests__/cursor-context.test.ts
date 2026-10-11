@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import type { Episode, ProgressSnapshot, Quest } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { episodesAll, questsAll } from '../../content';
@@ -118,14 +120,65 @@ describe('Home, Results and My route agree on the shipped bundle (decision M4)',
         expect(homeNext(snapshot, ctx)).toBe(cursor);
         expect(resultsNext(snapshot, ctx, c.done[0]!)).toBe(cursor);
         expect(routeCursor({ snapshot, quests: questsAll, episodes: episodesAll, ...ctx })?.id).toBe(cursor);
+        // The placed-out set really reaches the cursor on the shipped bundle.
+        if (c.placedOut.length > 0) expect(cursor).toBe(offerable[3]);
       }
     });
+
+    if (c.name !== 'all of Stage 1 done (a free learner crosses into the next shipped stage)') {
+      it(`${c.name}: one next quest on every surface under the OD-4 tier rule (free learner)`, () => {
+        const snapshot = doneSnapshot(c.done);
+        const placements = c.placedOut.length > 0 ? [placementResult({ placedOutQuestIds: [...c.placedOut] })] : undefined;
+        const ctx = cursorContext({ tier: 'free', placements, quests: questsAll, episodes: episodesAll, rule: 'tier' });
+        const cursor = nextQuestAfter({ snapshot, quests: questsAll, episodes: episodesAll, ...ctx })?.id;
+        expect(stage1.some((q) => q.id === cursor)).toBe(true);
+        expect(homeNext(snapshot, ctx)).toBe(cursor);
+        expect(resultsNext(snapshot, ctx, c.done[0]!)).toBe(cursor);
+        expect(routeCursor({ snapshot, quests: questsAll, episodes: episodesAll, ...ctx })?.id).toBe(cursor);
+      });
+    }
   }
+
+  it('under the OD-4 tier rule, a free learner past Stage 1 has no cursor; Home keeps its replay', () => {
+    const snapshot = doneSnapshot(stage1.map((q) => q.id));
+    const ctx = cursorContext({ tier: 'free', placements: undefined, quests: questsAll, episodes: episodesAll, rule: 'tier' });
+    expect(resultsNext(snapshot, ctx, stage1[0]!.id)).toBeUndefined();
+    expect(routeCursor({ snapshot, quests: questsAll, episodes: episodesAll, ...ctx })).toBeUndefined();
+    expect(homeNext(snapshot, ctx)).toBe(stage1[stage1.length - 1]!.id);
+  });
+
+  it('accepted exception (section 3.5): with only placed-out quests left, Home and Results offer one; My route is at rest', () => {
+    const placedOut = offerable.slice(0, 2);
+    const snapshot = doneSnapshot(offerable.slice(2));
+    const ctx = cursorContext({ tier: 'free', placements: [placementResult({ placedOutQuestIds: placedOut })], quests: questsAll, episodes: episodesAll });
+    expect(homeNext(snapshot, ctx)).toBe(offerable[0]);
+    expect(resultsNext(snapshot, ctx, offerable[2]!)).toBe(offerable[0]);
+    expect(routeCursor({ snapshot, quests: questsAll, episodes: episodesAll, ...ctx })).toBeUndefined();
+  });
 
   it('after all of Stage 1, the next quest is in a later stage for a free learner too (OD-4 default)', () => {
     const snapshot = doneSnapshot(stage1.map((q) => q.id));
     const ctx = cursorContext({ tier: 'free', placements: undefined, quests: questsAll, episodes: episodesAll });
     const next = nextQuestAfter({ snapshot, quests: questsAll, episodes: episodesAll, ...ctx });
+    expect(next).toBeDefined();
     expect(stage1.some((q) => q.id === next?.id)).toBe(false);
+  });
+});
+
+describe('the screens build the cursor from cursorContext (wiring guard)', () => {
+  const read = (rel: string): string => readFileSync(join(__dirname, '../../screens', rel), 'utf8');
+
+  it('Home spreads cursorContext with the learner tier and placements into the mission builder', () => {
+    const src = read('home/HomeScreen.tsx');
+    expect(src).toMatch(/buildTodaysMission\(\{[\s\S]*\.\.\.cursorContext\(\{\s*tier,\s*placements: snap\.placements,/);
+    expect(src).toMatch(/useTierStore\(/);
+    expect(src).not.toMatch(/isStageEntitled|placedOutSkipSet/);
+  });
+
+  it('Results spreads cursorContext with the learner tier and placements into the teaser', () => {
+    const src = read('results/ResultsScreen.tsx');
+    expect(src).toMatch(/resultsTeaser\(\{[\s\S]*\.\.\.cursorContext\(\{\s*tier,\s*placements: snapshot\?\.placements,/);
+    expect(src).toMatch(/useTierStore\(/);
+    expect(src).not.toMatch(/isStageEntitled|placedOutSkipSet/);
   });
 });

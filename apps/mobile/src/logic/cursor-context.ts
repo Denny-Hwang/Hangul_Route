@@ -20,7 +20,13 @@ import { placedOutSkipSet } from './placement/route-skip';
  */
 export type CursorStageRule = 'shipped' | 'tier';
 
-/** OD-4 default. Switching it changes Home, Results and My route together. */
+/**
+ * OD-4 default. Switching it changes Home, Results and My route together (Home
+ * and Results both re-render on a tier change). One limit stays: Home's plan
+ * is pinned for the day (F-HW-001 section 3.2), so under `'tier'` a tier that
+ * changes mid-day moves Home's "New" card only the next day; a switch to
+ * `'tier'` should also re-pin card (2) when the tier changes.
+ */
 export const CURSOR_STAGE_RULE: CursorStageRule = 'shipped';
 
 /** The stage predicate the cursor is given, for a learner's tier under a rule. */

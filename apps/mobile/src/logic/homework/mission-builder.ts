@@ -187,6 +187,35 @@ function fallbackCard(
   return null;
 }
 
+function newCard(quest: Quest, episodes: readonly Episode[]): MissionCard {
+  return {
+    slot: 2,
+    kind: 'new',
+    titleEn: quest.titleEn,
+    subtitle: 'new',
+    questId: quest.id,
+    episodeId: episodeOfQuest(episodes, quest.id)?.id,
+    collected: false,
+  };
+}
+
+/**
+ * The one exception to the day pin (F-ROUTE-001 R-4a, section 3.5): when a
+ * level check places out the quest pinned on the "New" card and the learner
+ * has not played it today, card (2) moves to the cursor, so Home names the
+ * same next quest as Results and My route. Cards (1) and (3) never move, and
+ * the pin stays when the cursor has nothing else to offer.
+ */
+function repinPlacedOut(cards: readonly MissionCard[], input: BuildMissionInput): readonly MissionCard[] {
+  const skip = input.skipQuestIds;
+  const pinnedNew = cards.find((card) => card.slot === 2 && card.kind === 'new');
+  if (!skip || !pinnedNew?.questId || !skip.has(pinnedNew.questId)) return cards;
+  if (completedToday(input.snapshot, pinnedNew.questId, input.today)) return cards;
+  const upcoming = nextQuest(input);
+  if (!upcoming || skip.has(upcoming.id) || cards.some((card) => card.questId === upcoming.id)) return cards;
+  return cards.map((card) => (card === pinnedNew ? newCard(upcoming, input.episodes) : card));
+}
+
 export function buildTodaysMission(input: BuildMissionInput): MissionPlan {
   const { profileId, snapshot, quests, episodes, today } = input;
   const capabilities = input.capabilities ?? DEFAULT_CAPABILITIES;
@@ -196,7 +225,7 @@ export function buildTodaysMission(input: BuildMissionInput): MissionPlan {
   if (input.pinned && input.pinned.date === today && input.pinned.profileId === profileId) {
     return {
       ...input.pinned,
-      cards: input.pinned.cards.map((card) => ({
+      cards: repinPlacedOut(input.pinned.cards, input).map((card) => ({
         ...card,
         collected: card.questId ? completedToday(snapshot, card.questId, today) : card.collected,
       })),
@@ -219,15 +248,7 @@ export function buildTodaysMission(input: BuildMissionInput): MissionPlan {
   const upcoming = nextQuest(input);
   if (upcoming) {
     usedQuestIds.add(upcoming.id);
-    cards.push({
-      slot: 2,
-      kind: 'new',
-      titleEn: upcoming.titleEn,
-      subtitle: 'new',
-      questId: upcoming.id,
-      episodeId: episodeOfQuest(episodes, upcoming.id)?.id,
-      collected: false,
-    });
+    cards.push(newCard(upcoming, episodes));
   }
 
   // ③ Daily test when available, else slot ①'s chain again.

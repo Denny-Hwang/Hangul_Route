@@ -350,6 +350,26 @@ describe('pinned plans keep cards from shifting (§3.2)', () => {
     expect(after.cards[0]?.collected).toBe(true);
   });
 
+  it('moves the "New" card off a quest the level check placed out after the plan was pinned (F-ROUTE-001 R-4a)', () => {
+    const first = build();
+    expect(first.cards[1]?.questId).toBe('quest:a');
+    const after = build({ pinned: first, skipQuestIds: new Set(['quest:a']) });
+    expect(after.cards[1]).toMatchObject({ slot: 2, kind: 'new', questId: 'quest:b', episodeId: 'episode:one', collected: false });
+    expect([after.cards[0], after.cards[2]]).toEqual([first.cards[0], first.cards[2]]);
+  });
+
+  it('keeps a placed-out "New" card the learner already played today', () => {
+    const first = build();
+    const after = build({ snapshot: snapshot([done('quest:a', TODAY, 1)]), pinned: first, skipQuestIds: new Set(['quest:a']) });
+    expect(after.cards[1]).toMatchObject({ questId: 'quest:a', collected: true });
+  });
+
+  it('keeps the pinned "New" card when every other quest is placed out too', () => {
+    const first = build();
+    const after = build({ pinned: first, skipQuestIds: new Set(['quest:a', 'quest:b', 'quest:c']) });
+    expect(after.cards[1]?.questId).toBe('quest:a');
+  });
+
   it('ignores a plan pinned for a different day', () => {
     const stale: MissionPlan = { ...build(), date: YESTERDAY };
     const fresh = build({ pinned: stale });
