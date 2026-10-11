@@ -37,12 +37,16 @@ export interface NarrativeLine {
   glossEn?: string;
 }
 
-/** What a narrative (no minigame) quest step shows. */
+/**
+ * What a narrative (no minigame) quest step shows. `fallback` is Hoya's line for a step that
+ * authored none (`learner.quest.keepGoing`).
+ */
 export function narrativeLine(
   step: Pick<QuestStep, 'hoyaLineEn' | 'bodyEn' | 'hoyaLineKo'>,
+  fallback: string,
 ): NarrativeLine {
   const { hoyaLineKo } = step;
-  const message = step.hoyaLineEn ?? step.bodyEn ?? hoyaLineKo?.en ?? "Let's keep going!";
+  const message = step.hoyaLineEn ?? step.bodyEn ?? hoyaLineKo?.en ?? fallback;
   if (!hoyaLineKo) return { message };
   const line = { message, korean: hoyaLineKo.ko, romanization: hoyaLineKo.romanization };
   // The gloss is not repeated when it already is the message.

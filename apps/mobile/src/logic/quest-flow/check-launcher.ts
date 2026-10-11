@@ -1,9 +1,10 @@
 import type { QuestStepKind } from '@hangul-route/content-schema';
-import { QUEST_FLOW_COPY } from './copy';
+import type { Messages } from '@hangul-route/i18n';
 
 /**
  * The game launcher card and the Check's telemetry (F-QUEST-002 §3.3, §3.13).
- * Pure: `QuestPlayerScreen` renders what this returns and calls `track`.
+ * Pure: `QuestPlayerScreen` renders what this returns and calls `track`. The words come from
+ * the dictionary (`learner.quest.launcher`), passed in.
  */
 
 export interface LauncherView {
@@ -17,22 +18,22 @@ export interface LauncherView {
   hoya: boolean;
 }
 
-export function launcherView(kind: QuestStepKind): LauncherView {
+export function launcherView(kind: QuestStepKind, copy: Messages['learner']['quest']['launcher']): LauncherView {
   if (kind === 'check') {
     return {
-      heading: QUEST_FLOW_COPY.check.heading,
-      primaryLabel: QUEST_FLOW_COPY.check.go,
+      heading: copy.check.heading,
+      primaryLabel: copy.check.go.cta,
       showSkip: false,
-      skipLabel: QUEST_FLOW_COPY.game.skip,
+      skipLabel: copy.game.skip.cta,
       hoya: true,
     };
   }
   return {
-    heading: QUEST_FLOW_COPY.game.heading,
-    body: QUEST_FLOW_COPY.game.body,
-    primaryLabel: QUEST_FLOW_COPY.game.play,
+    heading: copy.game.heading,
+    body: copy.game.body,
+    primaryLabel: copy.game.play.cta,
     showSkip: true,
-    skipLabel: QUEST_FLOW_COPY.game.skip,
+    skipLabel: copy.game.skip.cta,
     hoya: false,
   };
 }

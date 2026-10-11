@@ -1,7 +1,11 @@
 import { QuestStepKindSchema } from '@hangul-route/content-schema';
+import { getMessages, pseudoLocalize } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import { questsAll } from '../../content';
-import { questStepLabel } from '../quest-steps';
+import { questStepLabel as label } from '../quest-steps';
+
+const step = getMessages('en').learner.quest.step;
+const questStepLabel = (kind: Parameters<typeof label>[0]): string => label(kind, step);
 
 describe('questStepLabel (audit UX-17: raw step kinds on the quest player)', () => {
   const kinds = QuestStepKindSchema.options;
@@ -35,6 +39,16 @@ describe('questStepLabel (audit UX-17: raw step kinds on the quest player)', () 
       for (const step of q.steps) {
         expect(questStepLabel(step.kind), `${q.id}/${step.id}`).toBeTruthy();
       }
+    }
+  });
+});
+
+describe('questStepLabel reads the subtree it is given', () => {
+  it('returns the pseudo-localised word for every kind', () => {
+    const pseudo = pseudoLocalize(getMessages('en')).learner.quest.step;
+    for (const kind of QuestStepKindSchema.options) {
+      expect(label(kind, pseudo)).toBe(pseudo[kind].pill);
+      expect(label(kind, pseudo)).not.toBe(questStepLabel(kind));
     }
   });
 });

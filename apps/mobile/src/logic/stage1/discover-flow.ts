@@ -1,5 +1,5 @@
 import type { DiscoverItem, DiscoverPage, Jamo, KoText, RomanizationMode } from '@hangul-route/content-schema';
-import { romanizationShown } from '@hangul-route/i18n';
+import { romanizationShown, type Messages } from '@hangul-route/i18n';
 import { findJamo } from '../../content/jamo';
 import type { PlayResult } from '../../platform/audio';
 import { spokenFor } from '../audio/spoken';
@@ -19,22 +19,11 @@ import { decompose, symbolsOf } from './hangul';
  * a step with nothing left still has a Continue.
  */
 
-/**
- * English copy until the quest-flow messages move into the F-I18N-001 catalog
- * (spec §3.1: one module, no strings inline in the screen).
- */
-export const DISCOVER_COPY = {
-  hearIt: 'Hear it',
-  letterName: 'Letter name',
-  sayItOutLoud: 'Say it out loud:',
-  showHowToSay: 'Show how to say it',
-  heard: 'Heard',
-  continue: 'Continue',
-  wordsTitle: 'Words you can read now',
-  batchimLine: 'Sits at the bottom of the block',
-  empty: 'Nothing to look at here. Tap Continue.',
-  pageLabel: (page: number, count: number): string => `Page ${page} of ${count}`,
-} as const;
+/** The Discover words (`learner.quest.discover`), passed in so the flow stays pure and testable per locale. */
+export type DiscoverCopy = Messages['learner']['quest']['discover'];
+
+/** The screen-reader labels of a symbol (`a11y.discoverLetter`, `a11y.discoverFinal`). */
+export type DiscoverA11y = Pick<Messages['a11y'], 'discoverLetter' | 'discoverFinal'>;
 
 /** What a Hear it button says: `text` is what the voice speaks, `audioRef` wins once a recording exists. */
 export interface HearAction {
@@ -141,12 +130,18 @@ function blockView(jamoId: string, final: Jamo, example: KoText): DiscoverBlockV
   return { vowel: 'beside', hasFinal: true, highlight: 'final', parts: ['ㅇ', 'ㅏ', final.char] };
 }
 
-function symbolLabel(jamo: Jamo, romanization: string): string {
-  if (jamo.kind === 'batchim') return `Korean final consonant ${romanization}`;
-  return jamo.soundHint ? `Korean letter ${romanization}. ${jamo.soundHint}` : `Korean letter ${romanization}`;
+function symbolLabel(jamo: Jamo, romanization: string, a11y: DiscoverA11y): string {
+  if (jamo.kind === 'batchim') return a11y.discoverFinal(romanization);
+  return jamo.soundHint ? a11y.discoverLetter(romanization, jamo.soundHint) : a11y.discoverLetter(romanization);
 }
 
-function symbolItem(key: string, item: Extract<DiscoverItem, { type: 'jamo' }>, jamo: Jamo): DiscoverItemView {
+function symbolItem(
+  key: string,
+  item: Extract<DiscoverItem, { type: 'jamo' }>,
+  jamo: Jamo,
+  copy: DiscoverCopy,
+  a11y: DiscoverA11y,
+): DiscoverItemView {
   const sound = spokenFor(jamo, 'sound');
   const romanization = soundValue(jamo.romanization);
   // Vowels already are their own name and the initial ㅇ is spoken by its name, so only a
@@ -158,12 +153,12 @@ function symbolItem(key: string, item: Extract<DiscoverItem, { type: 'jamo' }>, 
     kind: 'symbol',
     glyph: jamo.char,
     romanization,
-    accessibilityLabel: symbolLabel(jamo, romanization),
+    accessibilityLabel: symbolLabel(jamo, romanization, a11y),
     ...(jamo.soundHint ? { soundHint: jamo.soundHint } : {}),
     hear: hear(`${key}|sound`, sound.text, sound.audioRef),
     spokenRomanization: sound.romanization,
     ...(name ? { letterName: { action: hear(`${key}|name`, name.text, name.audioRef), ko: name.text, romanization: name.romanization } } : {}),
-    ...(jamo.kind === 'batchim' ? { block: blockView(jamo.id, jamo, item.example), batchimLine: DISCOVER_COPY.batchimLine } : {}),
+    ...(jamo.kind === 'batchim' ? { block: blockView(jamo.id, jamo, item.example), batchimLine: copy.batchimLine } : {}),
     example: exampleView(key, jamo.id, item.example),
     ...(item.picture ? { picture: item.picture } : {}),
   };
@@ -186,7 +181,7 @@ function wordItem(key: string, item: Extract<DiscoverItem, { type: 'word' }>): D
 }
 
 /** Turn the authored pages into view models, skipping what cannot be resolved. */
-export function buildDiscover(pages: readonly DiscoverPage[]): DiscoverModel {
+export function buildDiscover(pages: readonly DiscoverPage[], copy: DiscoverCopy, a11y: DiscoverA11y): DiscoverModel {
   const used = new Map<string, number>();
   const uniqueKey = (base: string): string => {
     const n = used.get(base) ?? 0;
@@ -203,11 +198,11 @@ export function buildDiscover(pages: readonly DiscoverPage[]): DiscoverModel {
         continue;
       }
       const jamo = findJamo(item.jamoId);
-      if (jamo) items.push(symbolItem(uniqueKey(item.jamoId), item, jamo));
+      if (jamo) items.push(symbolItem(uniqueKey(item.jamoId), item, jamo, copy, a11y));
     }
     if (items.length === 0) continue;
     const allWords = items.every((i) => i.kind === 'word');
-    const title = page.captionEn ?? (allWords ? DISCOVER_COPY.wordsTitle : undefined);
+    const title = page.captionEn ?? (allWords ? copy.wordsTitle : undefined);
     built.push(title === undefined ? { items } : { title, items });
   }
   return { pages: built };
@@ -295,17 +290,22 @@ export interface DiscoverPageRender {
   continueEnabled: true;
 }
 
-export function pageRender(model: DiscoverModel, state: DiscoverState, mode: RomanizationMode): DiscoverPageRender {
+export function pageRender(
+  model: DiscoverModel,
+  state: DiscoverState,
+  mode: RomanizationMode,
+  copy: DiscoverCopy,
+): DiscoverPageRender {
   const page = model.pages[state.page];
   if (!page) {
-    return { empty: true, emptyLine: DISCOVER_COPY.empty, items: [], dots: { value: 0, max: 0 }, isLast: true, continueEnabled: true };
+    return { empty: true, emptyLine: copy.empty, items: [], dots: { value: 0, max: 0 }, isLast: true, continueEnabled: true };
   }
   const items = page.items.map((item, index): DiscoverItemRender => {
     const ids = [item.hear.id, item.letterName?.action.id, item.example?.hear.id];
     const sayLines: string[] = [];
-    if (state.text.includes(item.hear.id)) sayLines.push(`${DISCOVER_COPY.sayItOutLoud} ${item.spokenRomanization}`);
+    if (state.text.includes(item.hear.id)) sayLines.push(copy.sayLine(item.spokenRomanization));
     if (item.example && state.text.includes(item.example.hear.id)) {
-      sayLines.push(`${DISCOVER_COPY.sayItOutLoud} ${item.example.spokenRomanization}`);
+      sayLines.push(copy.sayLine(item.example.spokenRomanization));
     }
     const shown = romanizationShown(mode, state.revealed.includes(item.key));
     return {

@@ -3,7 +3,7 @@ import { plural } from '../../plural';
 /**
  * Learner-facing screens, one sub-object per screen (F-I18N-001 §3.4 rule 2).
  * PR 5 moves the first-run and settings surfaces in, PR 6a Home, Journey, Library and
- * CardDetail, PR 6b Episode, Results and Homework; the wording is unchanged. Strings that end up in a pill or a button are
+ * CardDetail, PR 6b Episode, Results and Homework, PR 7a the Quest player; the wording is unchanged. Strings that end up in a pill or a button are
  * keyed `pill` / `cta` so the length budgets (§3.11) cover them.
  * Content-derived text (stage, theme and card titles, blurbs) is not here: it comes from
  * content and is localised by the overlay mechanism (PR 12).
@@ -243,5 +243,61 @@ export const learner = {
     },
     /** Who set it, keyed by the schema's `assignedBy`: no role jargon. */
     from: { parent: 'From home', teacher: 'From class', system: 'From Hoya' },
+  },
+
+  /** The Quest player (QuestPlayerScreen, its game launcher cards and the Discover step), F-QUEST-002. */
+  quest: {
+    notFound: 'Quest not found.',
+    goBack: { cta: 'Go back' },
+    /** The confirm shown by the close control; stars already saved are untouched. */
+    leave: {
+      title: 'Leave this quest?',
+      message: 'Stars from this try will not be saved.',
+      confirm: { cta: 'Leave' },
+      keep: { cta: 'Keep playing' },
+    },
+    /** The step counter pill: `step` of `total`. */
+    progress: (step: number, total: number) => `${step} / ${total}`,
+    /** Plain Pre-A1 words for the step kinds, not the authoring terms (audit UX-17). */
+    step: {
+      intro: { pill: 'Hello' },
+      present: { pill: 'Look and listen' },
+      discover: { pill: 'Look and learn' },
+      practice: { pill: 'Practice' },
+      apply: { pill: 'Try it' },
+      check: { pill: 'Quick check' },
+      reward: { pill: 'Finish' },
+    },
+    continue: { cta: 'Continue' },
+    seeResults: { cta: 'See results' },
+    /** Hoya's line when a narrative step authored none. */
+    keepGoing: "Let's keep going!",
+    /** The card before a minigame: the generic game card and the Check's own variant (F-QUEST-002 §3.3). */
+    launcher: {
+      game: {
+        heading: 'Ready for a quick game?',
+        body: "Tap to play. When the game is done you'll come right back.",
+        play: { cta: 'Play minigame' },
+        skip: { cta: 'Skip for now' },
+      },
+      check: {
+        heading: 'Two quick ones',
+        go: { cta: 'Go' },
+      },
+    },
+    /** Discover (F-QUEST-002 §3.2); the symbols, sounds and words on the pages are taught content. */
+    discover: {
+      hearIt: { cta: 'Hear it' },
+      letterName: { cta: 'Letter name' },
+      /** Shown for a button whose audio could not play; `spoken` is a romanization. */
+      sayLine: (spoken: string) => `Say it out loud: ${spoken}`,
+      showHowToSay: { cta: 'Show how to say it' },
+      heard: { pill: 'Heard' },
+      continue: { cta: 'Continue' },
+      wordsTitle: 'Words you can read now',
+      batchimLine: 'Sits at the bottom of the block',
+      empty: 'Nothing to look at here. Tap Continue.',
+      pageLabel: (page: number, count: number) => `Page ${page} of ${count}`,
+    },
   },
 } as const;

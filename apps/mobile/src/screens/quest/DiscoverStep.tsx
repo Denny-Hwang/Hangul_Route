@@ -21,12 +21,13 @@ import {
   touchTarget,
   typography,
 } from '@hangul-route/design-system';
+import type { Messages } from '@hangul-route/i18n';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
+import { useMessages } from '../../i18n/use-messages';
 import { resolvePicture, swatchColors } from '../../logic/picture-ref';
 import {
-  DISCOVER_COPY,
   buildDiscover,
   pageRender,
   startDiscover,
@@ -62,8 +63,12 @@ interface Props {
 
 const SWATCHES = swatchColors(colors);
 
+type DiscoverMessages = Messages['learner']['quest']['discover'];
+
 export function DiscoverStep({ pages, hoyaLine, onDone }: Props): React.ReactElement {
-  const model = useMemo(() => buildDiscover(pages), [pages]);
+  const m = useMessages();
+  const copy = m.learner.quest.discover;
+  const model = useMemo(() => buildDiscover(pages, copy, m.a11y), [pages, copy, m.a11y]);
   const actions = useMemo(() => {
     const map = new Map<string, HearAction>();
     for (const page of model.pages) {
@@ -117,7 +122,7 @@ export function DiscoverStep({ pages, hoyaLine, onDone }: Props): React.ReactEle
     scrollRef.current?.scrollTo({ y: 0, animated: false });
   }, [state.page]);
 
-  const render = pageRender(model, state, romanizationMode);
+  const render = pageRender(model, state, romanizationMode, copy);
 
   return (
     <View style={{ flex: 1 }}>
@@ -144,7 +149,7 @@ export function DiscoverStep({ pages, hoyaLine, onDone }: Props): React.ReactEle
         ) : (
           <>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
-              <Caption tone="secondary">{DISCOVER_COPY.pageLabel(render.dots.value, render.dots.max)}</Caption>
+              <Caption tone="secondary">{copy.pageLabel(render.dots.value, render.dots.max)}</Caption>
               <View style={{ flex: 1 }}>
                 <Progress variant="dots" value={render.dots.value} max={render.dots.max} tone="primary" />
               </View>
@@ -158,7 +163,7 @@ export function DiscoverStep({ pages, hoyaLine, onDone }: Props): React.ReactEle
             <Spacer size="md" />
             <View key={state.page} style={{ gap: spacing.lg }}>
               {render.items.map((r) => (
-                <DiscoverItemCard key={r.item.key} render={r} dispatch={dispatch} />
+                <DiscoverItemCard key={r.item.key} render={r} dispatch={dispatch} copy={copy} a11y={m.a11y} />
               ))}
             </View>
           </>
@@ -166,7 +171,7 @@ export function DiscoverStep({ pages, hoyaLine, onDone }: Props): React.ReactEle
       </ScrollView>
       <View style={{ paddingTop: spacing.md }}>
         <Button
-          label={DISCOVER_COPY.continue}
+          label={copy.continue.cta}
           tone="primary"
           size="lg"
           fullWidth
@@ -226,9 +231,13 @@ function HearButton({
 function DiscoverItemCard({
   render,
   dispatch,
+  copy,
+  a11y,
 }: {
   render: DiscoverItemRender;
   dispatch: (event: DiscoverEvent) => void;
+  copy: DiscoverMessages;
+  a11y: Messages['a11y'];
 }): React.ReactElement {
   const { item } = render;
   const picture = resolvePicture(item.picture, { supportedCardIds, swatches: SWATCHES });
@@ -237,7 +246,7 @@ function DiscoverItemCard({
   return (
     <Card padding="lg" tone="paper" testID={`discover-item-${item.key}`}>
       <View style={{ alignItems: 'center', gap: spacing.md }}>
-        {render.heard ? <Pill tone="success" size="sm" label={DISCOVER_COPY.heard} /> : null}
+        {render.heard ? <Pill tone="success" size="sm" label={copy.heard.pill} /> : null}
 
         <KoreanText
           ko={item.glyph}
@@ -262,8 +271,8 @@ function DiscoverItemCard({
 
         <HearButton
           action={item.hear}
-          label={DISCOVER_COPY.hearIt}
-          accessibilityLabel={`${DISCOVER_COPY.hearIt}. ${item.accessibilityLabel}`}
+          label={copy.hearIt.cta}
+          accessibilityLabel={a11y.hearItLabel(item.accessibilityLabel)}
           size="lg"
           tone="secondary"
           pulse={render.pulse}
@@ -274,8 +283,8 @@ function DiscoverItemCard({
           <View style={{ alignItems: 'center', gap: spacing.sm }}>
             <HearButton
               action={item.letterName.action}
-              label={DISCOVER_COPY.letterName}
-              accessibilityLabel={DISCOVER_COPY.letterName}
+              label={copy.letterName.cta}
+              accessibilityLabel={copy.letterName.cta}
               size="md"
               tone="ghost"
               dispatch={dispatch}
@@ -332,11 +341,11 @@ function DiscoverItemCard({
               size="sm"
               romanizationShown={render.exampleRomanizationShown}
               onPress={() => dispatch({ type: 'hear', id: example.hear.id })}
-              accessibilityLabel={
+              accessibilityLabel={a11y.hearExample(
                 render.exampleRomanizationShown
-                  ? `${DISCOVER_COPY.hearIt}: ${example.ko}, ${example.romanization}, ${example.gloss}`
-                  : `${DISCOVER_COPY.hearIt}: ${example.ko}, ${example.gloss}`
-              }
+                  ? `${example.ko}, ${example.romanization}, ${example.gloss}`
+                  : `${example.ko}, ${example.gloss}`,
+              )}
               testID={`discover-hear-${example.hear.id}`}
             />
             {picture.kind !== 'text' ? (
@@ -344,7 +353,7 @@ function DiscoverItemCard({
             ) : null}
             {render.showReveal ? (
               <Button
-                label={DISCOVER_COPY.showHowToSay}
+                label={copy.showHowToSay.cta}
                 tone="ghost"
                 size="md"
                 onPress={() => dispatch({ type: 'reveal', key: item.key })}

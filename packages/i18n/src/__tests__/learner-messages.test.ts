@@ -123,7 +123,7 @@ describe('learner.profile (English wording as shipped)', () => {
 });
 
 describe('the dictionary is wired', () => {
-  it('exposes learner next to common and a11y', () => {
-    expect(Object.keys(en).sort()).toEqual(['a11y', 'common', 'learner']);
+  it('exposes learner and caregiver next to common and a11y', () => {
+    expect(Object.keys(en).sort()).toEqual(['a11y', 'caregiver', 'common', 'learner']);
   });
 });
