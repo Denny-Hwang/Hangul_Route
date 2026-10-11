@@ -17,8 +17,10 @@ type SpokenKind = Jamo['spokenKind'];
  * English sound hints, one per symbol (F-QUEST-002 Appendix A), shown under the glyph on
  * a Discover page and read in its screen-reader label. Wording rule (audit F15): the soft
  * stops ㄱ ㄷ ㅂ ㅈ are "soft and light", the aspirated ㅋ ㅌ ㅍ ㅊ come "with a puff of air";
- * no "voiced English" claims. Spanish and Korean readers get their own hint from the
- * F-I18N-001 overlay (`jamo:*.soundHint`), never a translation of these English sound-alikes.
+ * no "voiced English" claims. Spanish and Korean readers need their own hint, a
+ * F-I18N-001 overlay (`jamo:*.soundHint`, PR 15, not written yet), never a translation of
+ * these English sound-alikes; until then `localize` falls back to English, so es and ko must
+ * stay hidden (the release guard in `__tests__/overlays.test.ts`).
  */
 const SOUND_HINTS: Readonly<Record<string, string>> = {
   'jamo:giyeok': 'a soft, light g (between g and k)',

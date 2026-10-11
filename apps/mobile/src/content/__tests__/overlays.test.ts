@@ -7,6 +7,7 @@ import {
   overlayTargets,
   type Overlays,
 } from '@hangul-route/content-schema';
+import { LOCALE_STATUS, type LocaleStatus } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import { lp, minigameScopes, type MinigameScope } from '../../logic/minigame-config';
 import { episodesAll } from '../episodes';
@@ -199,5 +200,30 @@ describe('content overlays for TypeScript-resident content (F-I18N-001 §3.6)', 
       'es minigame:s1-life-card-1.cardPairs.nothing.gloss: lands on no English source',
       'ko theme:nope: not in the shipped content modules',
     ]);
+  });
+});
+
+/**
+ * The English sound hints are English sound-alikes (F-QUEST-002 Appendix A), wrong for a
+ * Spanish or Korean reader (F-I18N-001 §3.5.6). Until every symbol has its own
+ * `jamo:*.soundHint` overlay (F-I18N-001 PR 15), a locale must not ship: Discover and its
+ * screen-reader label would fall back to the English hint.
+ */
+describe('release guard: no es/ko ship without their jamo sound-hint overlays', () => {
+  const missingSoundHints = (locale: 'es' | 'ko'): string[] =>
+    jamoAll.filter((j) => j.soundHint !== undefined && OVERLAYS[locale]?.[j.id]?.soundHint === undefined).map((j) => j.id);
+  const blockers = (status: Readonly<Record<'es' | 'ko', LocaleStatus>>): string[] =>
+    (['es', 'ko'] as const).filter((locale) => status[locale] === 'shipped' && missingSoundHints(locale).length > 0);
+
+  it('holds for the current LOCALE_STATUS', () => {
+    expect(blockers(LOCALE_STATUS)).toEqual([]);
+  });
+
+  it('would stop a locale flipped to shipped while a sound hint overlay is missing', () => {
+    for (const locale of ['es', 'ko'] as const) {
+      if (missingSoundHints(locale).length === 0) continue;
+      expect(blockers({ es: 'hidden', ko: 'hidden', [locale]: 'shipped' })).toEqual([locale]);
+    }
+    expect(jamoAll.filter((j) => j.soundHint !== undefined)).toHaveLength(30);
   });
 });
