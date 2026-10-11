@@ -33,6 +33,7 @@ import { mergeAssignments } from '../../logic/homework/assignment-merger';
 import { DEFAULT_AVATAR } from '../../logic/profiles/avatar-catalog';
 import { computeStreak } from '../../logic/streak';
 import type { RootStackParamList } from '../../navigation/types';
+import { useAudience } from '../../store/audience';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 
@@ -89,6 +90,7 @@ function MissionTile({
 }
 
 export function HomeScreen(): React.ReactElement {
+  const { copy } = useAudience();
   const profile = useProfileStore(activeProfileSelector);
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const ensure = useProgressStore((s) => s.ensure);
@@ -205,7 +207,7 @@ export function HomeScreen(): React.ReactElement {
             <View style={{ flex: 1 }}>
               <Body weight="semibold">Homework</Body>
               <Caption tone="muted">
-                {homeworkDue > 0 ? `${homeworkDue} to do today` : 'Reviews from your grown-up'}
+                {homeworkDue > 0 ? `${homeworkDue} to do today` : copy.homeReviewsIdle}
               </Caption>
             </View>
             <Icon name="card" size={24} color={colors.text.muted} />

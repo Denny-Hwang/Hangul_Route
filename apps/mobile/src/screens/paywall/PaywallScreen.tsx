@@ -5,6 +5,7 @@ import { Linking, Platform, Pressable, View } from 'react-native';
 import { LIFETIME_OFFER, PREMIUM_BULLETS, PROMO_HINT, consoleBillingUrl, paywallState } from '../../logic/paywall';
 import type { RootStackParamList } from '../../navigation/types';
 import { track } from '../../platform/telemetry';
+import { useAudience } from '../../store/audience';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { effectiveTier, useTierStore } from '../../store/tier-store';
 
@@ -15,6 +16,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Paywall'>;
  * Stage 1 free comes first; "covered by your class" shows no prices at all.
  */
 export function PaywallScreen({ navigation, route }: Props): React.ReactElement {
+  const { copy } = useAudience();
   const profile = useProfileStore(activeProfileSelector);
   const cached = useTierStore((s) => (profile ? s.byLearner[profile.id] : undefined));
   const entitled = effectiveTier(profile?.id ?? '', new Date());
@@ -111,9 +113,7 @@ export function PaywallScreen({ navigation, route }: Props): React.ReactElement 
           <Spacer size="lg" />
           <Card padding="md" tone="sunken">
             <Caption tone="secondary">
-              {Platform.OS === 'web'
-                ? 'Grown-ups buy it once on the web console, so no store fees reach your family. Sign in there and come back — this device updates on its next sync.'
-                : 'Buying inside this app arrives with the store update. Until then, a grown-up can buy it once on the web console.'}
+              {Platform.OS === 'web' ? copy.paywallBuyOnWeb : copy.paywallBuyLater}
             </Caption>
           </Card>
           <Spacer size="md" />

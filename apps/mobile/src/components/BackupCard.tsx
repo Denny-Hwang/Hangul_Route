@@ -5,6 +5,7 @@ import { View } from 'react-native';
 import { backupFileName, encodeBackup } from '../logic/sync/backup';
 import { cloudStatusLine } from '../logic/sync/status-line';
 import { saveTextFile } from '../platform/file';
+import { useAudience } from '../store/audience';
 import { useProgressStore } from '../store/progress-store';
 import { useSyncStore, type LearnerSyncState } from '../store/sync-store';
 
@@ -23,6 +24,7 @@ export function statusLine(state: LearnerSyncState | undefined, now: Date): stri
 }
 
 export function BackupCard({ profile, onRestore, onSaveProgress }: BackupCardProps): React.ReactElement {
+  const { copy, pinSet } = useAudience();
   const snap = useProgressStore((s) => s.byProfile[profile.id]);
   const syncState = useSyncStore((s) => s.byLearner[profile.id]);
   const hydrateSync = useSyncStore((s) => s.hydrate);
@@ -45,9 +47,9 @@ export function BackupCard({ profile, onRestore, onSaveProgress }: BackupCardPro
       <Caption tone="muted">{statusLine(syncState, new Date())}</Caption>
       <Spacer size="md" />
       <View style={{ gap: spacing.sm }}>
-        <Button label="Save my progress" tone="primary" size="md" accessibilityLabel="Save my progress (rescue code, grown-ups only)" onPress={onSaveProgress} />
+        <Button label="Save my progress" tone="primary" size="md" accessibilityLabel={copy.gatedA11y('Save my progress', pinSet, 'rescue code')} onPress={onSaveProgress} />
         <Button label="Back up to a file" tone="secondary" size="md" onPress={() => void exportFile()} />
-        <Button label="Restore from a file" tone="ghost" size="md" accessibilityLabel="Restore from a file (grown-ups only)" onPress={onRestore} />
+        <Button label="Restore from a file" tone="ghost" size="md" accessibilityLabel={copy.gatedA11y('Restore from a file', pinSet)} onPress={onRestore} />
       </View>
       {note ? (
         <>

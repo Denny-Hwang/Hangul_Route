@@ -10,6 +10,7 @@ import {
   colors,
   spacing,
 } from '@hangul-route/design-system';
+import { levelLabel } from '@hangul-route/content-schema';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React from 'react';
 import { Pressable, View } from 'react-native';
@@ -46,6 +47,7 @@ export function ParentDashboardScreen({ navigation }: Props): React.ReactElement
       ) : (
         profiles.map((p) => {
           const snap = byProfile[p.id];
+          const level = levelLabel(p.ageGroup);
           const completed = snap?.quests.filter((q) => q.completedAt).length ?? 0;
           const cards = snap?.cards.length ?? 0;
           const sessions = snap?.sessions.length ?? 0;
@@ -61,7 +63,7 @@ export function ParentDashboardScreen({ navigation }: Props): React.ReactElement
                     {p.displayName}
                   </Body>
                 </View>
-                <Pill tone="neutral" label={`Age ${p.ageGroup}`} size="sm" />
+                {level ? <Pill tone="neutral" label={level} size="sm" /> : null}
               </View>
               <Spacer size="sm" />
               <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>

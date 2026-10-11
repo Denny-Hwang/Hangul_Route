@@ -31,10 +31,12 @@ import {
 import type { RootStackParamList } from '../../navigation/types';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
+import { useAudience } from '../../store/audience';
 import { effectiveTier, useTierStore } from '../../store/tier-store';
 
 export function JourneyScreen(): React.ReactElement {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { copy, opensDirectly } = useAudience();
   const profile = useProfileStore(activeProfileSelector);
   const snap = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
   const cachedTier = useTierStore((s) => (profile ? s.byLearner[profile.id] : undefined));
@@ -67,9 +69,9 @@ export function JourneyScreen(): React.ReactElement {
           <View key={stage.key} style={{ marginBottom: spacing.lg }}>
             <Pressable
               disabled={entitledStage}
-              onPress={() => navigation.navigate('PinEntry', { next: 'Paywall' })}
+              onPress={() => (opensDirectly(false) ? navigation.navigate('Paywall', { from: 'journey' }) : navigation.navigate('PinEntry', { next: 'Paywall' }))}
               accessibilityRole={entitledStage ? undefined : 'button'}
-              accessibilityLabel={entitledStage ? undefined : `${stage.titleEn}: ask a grown-up to unlock`}
+              accessibilityLabel={entitledStage ? undefined : copy.journeyLockedA11y(stage.titleEn)}
               style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.sm }}
             >
               <View

@@ -20,6 +20,7 @@ import { Pressable, View } from 'react-native';
 import { questsAll } from '../../content';
 import { assignedByLabel, dueLabel, groupAssignments } from '../../logic/homework/assignment-groups';
 import type { RootStackParamList } from '../../navigation/types';
+import { useAudience } from '../../store/audience';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 
@@ -28,6 +29,7 @@ import { useProgressStore } from '../../store/progress-store';
  * queue behind Today's mission. Rows open the quest; nothing here scolds.
  */
 export function HomeworkScreen(): React.ReactElement {
+  const { copy } = useAudience();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const profile = useProfileStore(activeProfileSelector);
   const snap = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
@@ -53,7 +55,7 @@ export function HomeworkScreen(): React.ReactElement {
       <Spacer size="sm" />
       <Heading level="title">Homework</Heading>
       <Spacer size="xs" />
-      <Body tone="secondary">Picked by your grown-ups. Hoya sometimes adds a review.</Body>
+      <Body tone="secondary">{copy.homeworkIntro}</Body>
 
       <Spacer size="lg" />
       <HoyaBubble

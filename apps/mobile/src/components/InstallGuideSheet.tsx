@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { installGuideVariant, shouldShowInstallGuide, type InstallGuideVariant } from '../logic/pwa/install-guide';
 import { appUrl, copyText, installEnv, isOfflineReady, promptInstall } from '../platform/pwa';
+import { useAudience } from '../store/audience';
 import { usePwaStore } from '../store/pwa-store';
 
 /**
@@ -16,6 +17,7 @@ export interface InstallGuideSheetProps {
 }
 
 export function InstallGuideSheet({ shareUrl }: InstallGuideSheetProps): React.ReactElement | null {
+  const { copy } = useAudience();
   const visits = usePwaStore((s) => s.visits);
   const snoozedUntilVisit = usePwaStore((s) => s.snoozedUntilVisit);
   const installed = usePwaStore((s) => s.installed);
@@ -69,7 +71,8 @@ export function InstallGuideSheet({ shareUrl }: InstallGuideSheetProps): React.R
         <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md }}>
           <Hoya pose="waving" size={56} />
           <View style={{ flex: 1 }}>
-            <Heading level="prompt">Ask a grown-up to add me to your home screen.</Heading>
+            <Heading level="prompt">{copy.installGuideLine}</Heading>
+            {copy.installGuideHelp ? <Caption tone="secondary">{copy.installGuideHelp}</Caption> : null}
             <Caption tone="muted">Then Hangul Route opens like an app and your cards stay safe, even without Wi-Fi.</Caption>
           </View>
           <Pressable
