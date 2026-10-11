@@ -28,7 +28,7 @@ The learner device is unauthenticated (children have no accounts), so the device
 
 ### 3.2 Routes (`/api/sync`)
 
-- `POST /learners` `{ deviceId, learner: { id?, displayName, ageGroup, avatar } }` → 201 `{ learner, device: { deviceId, secret } }`. A client-supplied id (`profile:…`) is kept when unused so a learner keeps its local id.
+- `POST /learners` `{ deviceId, learner: { id?, displayName, ageGroup, avatar } }` → 201 `{ learner, device: { deviceId, secret } }`. A client-supplied id (`profile:…`) is kept when unused so a learner keeps its local id. `ageGroup` is an **opaque level id** (`LearnerLevelId`: `5-7`, `8-9`, `10-11`), not an age; display it with `levelLabel()` from `@hangul-route/content-schema`. The learner's `learnerType` (who is learning) stays on the device and is not part of this contract (F-LEARN-001 §3.1, L2).
 - `PUT /learners/:id/snapshot` (`Authorization: Device <deviceId>:<secret>`) `{ baseRev, snapshot, summary, schemaVer, contentVer }`
   - `baseRev` equals the stored rev (or 0 with no row) → store, `rev + 1`, 200 `{ rev, updatedAt }`
   - otherwise → **409** `{ rev, snapshot, summary }` so the client merges and retries

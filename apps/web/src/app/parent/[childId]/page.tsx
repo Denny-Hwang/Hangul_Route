@@ -1,6 +1,7 @@
 import { colors, radii, spacing, typography } from '@hangul-route/design-system/tokens';
 import Link from 'next/link';
 import { mockFamily } from '@/data/mock-family';
+import { levelPillLabel } from '@/lib/console/level-label';
 import { notFound } from 'next/navigation';
 
 /** Static export (F-CONSOLE-001 §3.6): the demo family is the only data, so its ids are the only pages. */
@@ -23,7 +24,7 @@ export default function ChildDetailPage({ params }: { params: { childId: string 
       <header style={{ marginTop: spacing.lg, marginBottom: spacing.xxl }}>
         <h1 style={{ fontSize: typography.size.display, margin: 0 }}>{child.displayName}</h1>
         <p style={{ color: colors.text.secondary, margin: `${spacing.xs}px 0 0` }}>
-          Age {child.ageGroup} · {child.questsCompleted} quests · {child.cards} cards
+          {[levelPillLabel(child.ageGroup), `${child.questsCompleted} quests`, `${child.cards} cards`].filter(Boolean).join(' · ')}
         </p>
         <p style={{ color: colors.text.muted, fontSize: typography.size.caption, margin: `${spacing.xs}px 0 0` }}>
           Demo preview — sample data.

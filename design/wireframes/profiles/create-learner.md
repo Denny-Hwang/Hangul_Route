@@ -69,5 +69,5 @@ Exit to:    `home/home` (new learner active) · self (add another) · `profiles/
 
 ## Open questions
 
-- ageGroup (5–7 / 8–11) asked here or inferred later from minigame pacing? (currently in onboarding flow — confirm merge or keep separate step)
+- ~~ageGroup (5–7 / 8–11) asked here or inferred later from minigame pacing?~~ Resolved by F-LEARN-001 §3.2: asked here, after "Who is learning?" and the name, as "How do you like to learn?" with three level cards (Pictures first, Some reading, Reads easily; default Some reading), never as an age. Flow and boxes: `design/wireframes/onboarding/all-ages-onboarding.md`.
 - Avatar duplicated across siblings allowed? (default: allowed — restricting invites comparison/conflict; verify in beta)

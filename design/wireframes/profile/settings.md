@@ -23,7 +23,7 @@ Then: a child can switch to their own tiger tile or mute the sound in one tap; e
 |  switch"                         |
 |  +----------+  +----------+      |
 |  | [HOYA]   |  | [HOYA]   |      |  <- profile tiles, active one highlighted
-|  |  Suni    |  |  Minho   |      |     + "playing now" pill; age group caption
+|  |  Suni    |  |  Minho   |      |     + "playing now" pill; level label caption (e.g. "Some reading"), never an age
 |  +----------+  +----------+      |
 |  [ + Add a profile ]             |  -> profiles/create-learner
 |                                  |

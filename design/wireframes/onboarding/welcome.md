@@ -1,7 +1,7 @@
 # Onboarding/Welcome — value-first landing, no account (wireframe v1)
 
 Spec: `docs/specs/F-PROF-001-device-profiles.md` §3.2 (first run creates the parent profile first) · `docs/blueprints/10-app-map.md` §3.1, §4.1
-Audience: **learner (P4/P5 child, 5–11)** primary · parent secondary (an adult usually holds the device at this moment)
+Audience: **anyone learning Hangul, any age (the learner, or the adult setting up)** - no kids-only or adults-only framing (CLAUDE.md §1)
 Code (back-filled): `apps/mobile/src/screens/onboarding/WelcomeScreen.tsx` — route `Onboarding/Welcome`
 
 ## Scenario (Given-When-Then)
@@ -30,7 +30,7 @@ Then: in one glance the child meets Hoya and the adult sees one big button; no a
 |                                  |
 |   [ I already have progress ]    |  <- secondary text-style -> sync/restore (shipped, F-RESTORE-001)
 |                                  |
-|   1 muted trust line             |  <- "made for kids 5-11" placeholder
+|   1 muted trust line             |  <- placeholder trust line; no age range, never "for kids"
 +----------------------------------+
 ```
 

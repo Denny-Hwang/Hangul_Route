@@ -23,7 +23,7 @@ function readBool(name: string, fallback: boolean): boolean {
 
 export interface Flags {
   /**
-   * VoiceEcho mini-game. STT accuracy on 5–11 yo Korean voices is
+   * VoiceEcho mini-game. STT accuracy on young learners' Korean voices is
    * unverified — the PH launch ships with this OFF and gates it behind a
    * beta opt-in once we have hands-on user data.
    */

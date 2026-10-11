@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitest/config';
 
 /**
@@ -12,6 +13,8 @@ import { defineConfig } from 'vitest/config';
  * Per docs/tests/coverage-targets.md §"측정 제외".
  */
 export default defineConfig({
+  // Same `@/` alias as tsconfig, so tests can server-render pages that import `@/data/...`.
+  resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
   // tsconfig keeps `jsx: preserve` for Next; tests that server-render a page
   // (src/app/__tests__/*.test.tsx) need esbuild to compile JSX itself.
   esbuild: { jsx: 'automatic' },
