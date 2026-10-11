@@ -181,7 +181,7 @@ describe('nothing forces horizontal scroll', () => {
   });
 
   it('the email input may shrink below its intrinsic width', () => {
-    const input = /<input[^>]*id="email"[^>]*>/.exec(html)?.[0] ?? '';
+    const input = /<input[^>]*id="waitlist-email"[^>]*>/.exec(html)?.[0] ?? '';
     expect(inlineStyle(input)).toContain('min-width:0');
   });
 
