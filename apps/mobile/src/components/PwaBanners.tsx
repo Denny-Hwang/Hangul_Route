@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useMessages } from '../i18n/use-messages';
-import { overlayFrame } from '../logic/layout/overlay-frame';
+import { bannerFrame } from '../logic/layout/overlay-frame';
 import { applyUpdate, subscribePwa, type PwaEvent } from '../platform/pwa';
 import { useUiStore } from '../store/ui-store';
 
@@ -13,8 +13,9 @@ import { useUiStore } from '../store/ui-store';
  * events, so this renders nothing there. Copy is Hoya-toned and never
  * interrupts a quest — the update only applies when the child taps.
  * They sit in a centred `maxWidth.reading` column, clear the side insets, and
- * sit above the home indicator, or above the tab bar when it shows
- * (F-LAYOUT-001 §3.3, audit UX-26).
+ * sit above the tab bar when it shows (F-LAYOUT-001 §3.3, audit UX-26). A screen
+ * with no tab bar keeps its primary action at the bottom, so there they hang
+ * from the top instead and never cover that CTA (`bannerFrame`).
  */
 type Banner = 'offline-ready' | 'update-ready' | null;
 
@@ -24,7 +25,7 @@ export function PwaBanners(): React.ReactElement | null {
   const [offline, setOffline] = useState(false);
   const insets = useSafeAreaInsets();
   const tabBarHeight = useUiStore((s) => s.tabBarHeight);
-  const frame = overlayFrame({ insets, tabBarHeight, gap: spacing.md, bottomGap: spacing.xl });
+  const frame = bannerFrame({ insets, tabBarHeight, gap: spacing.md, bottomGap: spacing.xl });
 
   useEffect(() => {
     const off = subscribePwa((event: PwaEvent) => {
@@ -47,7 +48,7 @@ export function PwaBanners(): React.ReactElement | null {
   return (
     <View
       pointerEvents="box-none"
-      style={{ position: 'absolute', left: frame.left, right: frame.right, bottom: frame.bottom, alignItems: 'center' }}
+      style={{ position: 'absolute', left: frame.left, right: frame.right, [frame.edge]: frame.offset, alignItems: 'center' }}
     >
       <View
         pointerEvents="box-none"

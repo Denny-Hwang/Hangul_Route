@@ -1,6 +1,6 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { completeChildForm, forgetPin, typeDigits, unlockWithPin } from './helpers';
+import { completeChildForm, forgetPin, keepSidewaysIfAsked, typeDigits, unlockWithPin } from './helpers';
 
 /**
  * Short-phone and phone-landscape layout (audit p1-L1..L4, p2-L1..L3, UX-09):
@@ -51,9 +51,13 @@ async function expectNoHorizontalOverflow(page: Page): Promise<void> {
   expect(scrollWidth, 'horizontal overflow').toBeLessThanOrEqual(innerWidth);
 }
 
-/** Onboard through the real form: "My child or a student" creates the grown-up PIN in the form, so the gate later asks for it. */
+/**
+ * Onboard through the real form: "My child or a student" creates the grown-up PIN in the form, so the gate later asks for it.
+ * At 844x390 (a touch phone on its side) the portrait guard asks first; "Keep sideways" answers it once (F-LAYOUT-001 PR 3).
+ */
 async function onboard(page: Page, name: string): Promise<void> {
   await page.goto('/');
+  await keepSidewaysIfAsked(page);
   const start = page.getByRole('button', { name: "Let's start" });
   await expectReachable(page, start);
   await start.click();
@@ -231,3 +235,18 @@ for (const vp of VIEWPORTS) {
     });
   });
 }
+
+// F-LAYOUT-001 §3.4 / §5: the guard needs touch input. The same landscape phone size with a mouse never shows it.
+test.describe('iPhone 14 landscape size with a mouse 844x390', () => {
+  test.use({ viewport: { width: 844, height: 390 }, isMobile: false, hasTouch: false });
+
+  test('no portrait guard: the Welcome screen is usable at once', async ({ page }) => {
+    await page.goto('/');
+    const start = page.getByRole('button', { name: "Let's start" });
+    await expectReachable(page, start);
+    await page.waitForTimeout(500);
+    await expect(page.getByTestId('portrait-guard')).toHaveCount(0);
+    await start.click();
+    await expect(page.getByPlaceholder('Type a name')).toBeVisible();
+  });
+});

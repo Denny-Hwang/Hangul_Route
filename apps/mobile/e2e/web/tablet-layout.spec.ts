@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { onboardChild, readStored, seedStored } from './helpers';
+import { keepSidewaysIfAsked, onboardChild, readStored, seedStored, waitForSaved } from './helpers';
 
 /**
  * Tablet / desktop web shell (F-LAYOUT-001 §3.3, PR 2a): the window is the
@@ -609,5 +609,91 @@ for (const vp of [
       expect(await firstRowColumns(page)).toBe(2);
       expect(await overflowsSideways(page)).toBe(false);
     });
+  });
+}
+
+// --- Part 5: the soft portrait guard and the banner slot on screens without a tab bar (PR 3) ---
+
+test.describe('portrait guard on a touch phone held sideways 844x390', () => {
+  test.use({ viewport: { width: 844, height: 390 } });
+
+  test('appears with Hoya and one line; "Keep sideways" removes it and a reload keeps it away', async ({ page }) => {
+    await page.goto('/');
+    const guard = page.getByTestId('portrait-guard');
+    await expect(guard).toBeVisible();
+    await expect(guard.getByText('Turn your phone upright')).toBeVisible();
+    const keep = page.getByRole('button', { name: 'Keep sideways' });
+    const b = await keep.boundingBox();
+    expect(b!.height, 'button meets the touch floor').toBeGreaterThanOrEqual(64);
+    expect(b!.y + b!.height, 'button fits the short window').toBeLessThanOrEqual(390);
+    await keep.click();
+    await expect(guard).toHaveCount(0);
+    await expect(page.getByRole('button', { name: "Let's start" })).toBeVisible();
+    await waitForSaved(page, ['device:layout']);
+
+    await page.reload();
+    await expect(page.getByRole('button', { name: "Let's start" })).toBeVisible();
+    await page.waitForTimeout(600);
+    await expect(guard).toHaveCount(0);
+  });
+
+  test('turning the phone upright removes it, and it does not ask again this session', async ({ page }) => {
+    await page.goto('/');
+    const guard = page.getByTestId('portrait-guard');
+    await expect(guard).toBeVisible();
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect(guard).toHaveCount(0);
+    await expect(page.getByRole('button', { name: "Let's start" })).toBeVisible();
+    await page.setViewportSize({ width: 844, height: 390 });
+    await page.waitForTimeout(600);
+    await expect(guard).toHaveCount(0);
+  });
+});
+
+for (const vp of [
+  { name: 'iPad portrait', width: 768, height: 1024 },
+  { name: 'iPad landscape', width: 1180, height: 820 },
+] as const) {
+  test(`no portrait guard on a touch tablet at ${vp.name} ${vp.width}x${vp.height}`, async ({ page }) => {
+    await page.setViewportSize({ width: vp.width, height: vp.height });
+    await page.goto('/');
+    await expect(page.getByRole('button', { name: "Let's start" })).toBeVisible();
+    await page.waitForTimeout(600);
+    await expect(page.getByTestId('portrait-guard')).toHaveCount(0);
+  });
+}
+
+/** Two boxes share no pixel. */
+function apart(a: { x: number; y: number; width: number; height: number }, b: { x: number; y: number; width: number; height: number }): boolean {
+  return a.x + a.width <= b.x || b.x + b.width <= a.x || a.y + a.height <= b.y || b.y + b.height <= a.y;
+}
+
+for (const vp of [
+  { width: 390, height: 844 },
+  { width: 320, height: 568 },
+  { width: 844, height: 390 },
+  { width: 768, height: 1024 },
+  { width: 1180, height: 820 },
+] as const) {
+  test(`with no tab bar the offline-ready toast sits at the top and never covers the CTA at ${vp.width}x${vp.height}`, async ({ page }) => {
+    await page.setViewportSize({ width: vp.width, height: vp.height });
+    await page.goto('/');
+    await keepSidewaysIfAsked(page);
+    const start = page.getByRole('button', { name: "Let's start" });
+    await expect(start).toBeVisible();
+    await page.evaluate(() => window.dispatchEvent(new Event('hr:offline-ready')));
+    await expect(page.getByText('All set! You can play without Wi-Fi now.')).toBeVisible();
+    const banner = await box(page, 'pwa-banners');
+    expect(banner.y, 'toast hangs from the top').toBeLessThan(vp.height / 2);
+    expect(banner.width).toBeLessThanOrEqual(MAX_READING);
+    expect(Math.abs(banner.x - (vp.width - banner.x - banner.width))).toBeLessThanOrEqual(1);
+    expect(apart(banner, (await start.boundingBox())!), "toast clear of Let's start").toBe(true);
+
+    // The form's Continue sits in the sticky footer at the bottom: the toast stays clear of it too.
+    await start.click();
+    const cont = page.getByRole('button', { name: 'Continue' });
+    await expect(cont).toBeVisible();
+    await expect(page.getByText('All set! You can play without Wi-Fi now.')).toBeVisible();
+    expect(apart(await box(page, 'pwa-banners'), (await cont.boundingBox())!), 'toast clear of Continue').toBe(true);
   });
 }
