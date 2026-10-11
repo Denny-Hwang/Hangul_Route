@@ -484,11 +484,14 @@ test('Culture Quiz: Hear it says the prompt word, and nothing plays before the t
 /**
  * F-AUDIO-004 A-6: bundled clips on the web (§3.10). Letter clips are precached; vocabulary,
  * story, card and dialogue clips are runtime-cached. Real letter clips arrive with A-9 (T-017);
- * until then the offline clip test runs only against a test build made with
- * `HR_E2E_AUDIO_FIXTURES=1 pnpm --filter @hangul-route/mobile build:web` (fixture tones for
- * g, n, d, l from e2e/fixtures/audio; never deploy that build or commit its clip map).
+ * until then the offline clip test runs only on the e2e fixture build, which maps fixture tones
+ * for g, n, d, l from e2e/fixtures/audio:
+ *   pnpm --filter @hangul-route/mobile build:web:fixtures
+ *   STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile test:e2e:web audio -g "offline after one visit"
+ * (Only that test: in the fixture build those four letters play a tone, not the voice, so the
+ * voice tests above expect the regular build.)
  */
-const DIST = join(__dirname, '..', '..', 'dist');
+const DIST = join(__dirname, '..', '..', process.env.STORY_FIXTURES === '1' ? 'dist-e2e' : 'dist');
 
 /** Built .mp3 files, relative to dist (dot folders included). */
 function builtClips(): string[] {
@@ -537,7 +540,7 @@ async function recordClipStarts(page: Page): Promise<void> {
 }
 
 test('offline after one visit, Match Sound plays the letter clip and the device voice stays silent', async ({ page, context }) => {
-  test.skip(letterClips.length === 0, 'No letter clips in this build: real ones arrive with A-9 (T-017); see the note above for the fixture build.');
+  test.skip(letterClips.length === 0, 'No letter clips in this build: real ones arrive with A-9 (T-017); the fixture build (see above) has four.');
   await fakeSpeech(page, 'none');
   await recordClipStarts(page);
   await onboardChild(page, { name: 'Dami', startJourney: false });

@@ -4,12 +4,14 @@
 // src/content/__tests__/audio-assets-drift.test.ts. Runs from `audio:map` and
 // before every `build:web`.
 //
-//   node scripts/audio/gen-audio-map.mjs           write the map
-//   node scripts/audio/gen-audio-map.mjs --check   exit 1 if the committed map is stale
+//   node scripts/audio/gen-audio-map.mjs                       write the map
+//   node scripts/audio/gen-audio-map.mjs --check               exit 1 if the committed map is stale
+//   node scripts/audio/gen-audio-map.mjs --with-e2e-fixtures   also map e2e/fixtures/audio
 //
-// HR_E2E_AUDIO_FIXTURES=1 also maps the clips under e2e/fixtures/audio, for a
-// local test build of the offline clip e2e only. Never set it for a deploy build,
-// and never commit the map it writes (the drift test fails on it).
+// --with-e2e-fixtures is for the e2e-only fixture build (build:web:fixtures,
+// which restores the plain map afterwards); a real recording wins over a
+// fixture for the same ref. The drift test fails if that map is ever committed,
+// and build:web always regenerates the plain map first.
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -41,7 +43,7 @@ function listFiles(dir) {
   return out;
 }
 
-const withFixtures = process.env.HR_E2E_AUDIO_FIXTURES === '1';
+const withFixtures = process.argv.includes('--with-e2e-fixtures');
 const shipped = buildAssetMap(listFiles(join(appRoot, AUDIO_DIR)), AUDIO_REQUIRE_BASE);
 const shippedRefs = new Set(shipped.map((e) => e.ref));
 // A real recording always wins over a fixture for the same ref.
@@ -62,6 +64,6 @@ if (process.argv.includes('--check')) {
   writeFileSync(target, source);
   process.stdout.write(`audio:map wrote ${shipped.length} clips to ${ASSET_MAP_FILE}\n`);
   if (withFixtures) {
-    process.stdout.write(`audio:map TEST BUILD: added ${fixtures.length} e2e fixture clips. Do not deploy this build or commit the map.\n`);
+    process.stdout.write(`audio:map e2e fixture build: added ${fixtures.length} fixture clips (never commit this map).\n`);
   }
 }
