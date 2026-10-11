@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   ProgressSummarySchema,
   TEACHER_HIDDEN_SUMMARY_KEYS,
+  TEACHER_ROSTER_ADDRESS_FIELDS,
   TEACHER_VISIBLE_ITEM_IDS,
   TEACHER_VISIBLE_ROSTER_FIELDS,
   TEACHER_VISIBLE_SUMMARY_ITEMS,
@@ -237,6 +238,15 @@ describe('what the new teacher sees is generated from data (TEACHER_VISIBLE_SUMM
       lastActiveAt: 'activity',
       lastSyncedAt: 'sync_time',
     });
+  });
+
+  it('classifies the roster row id as an address field: never shown, no consent item (T-1a)', () => {
+    expect([...TEACHER_ROSTER_ADDRESS_FIELDS]).toEqual(['id']);
+    const shown = new Set(Object.keys(TEACHER_VISIBLE_ROSTER_FIELDS));
+    for (const field of TEACHER_ROSTER_ADDRESS_FIELDS) {
+      expect(shown.has(field)).toBe(false);
+      expect(field).not.toBe('summary');
+    }
   });
 
   it('uses every consent item for at least one field, so the list never shows an empty promise', () => {
