@@ -1036,6 +1036,1395 @@ export const storiesAll: Story[] = [
   },
   {
     "v": 1,
+    "id": "story:chuseok-ganggangsullae",
+    "state": "ready",
+    "contentVer": 1,
+    "title": {
+      "ko": "추석 송편과 보름달",
+      "romanization": "Chuseok songpyeongwa boreumdal",
+      "en": "Chuseok: Songpyeon and the Full Moon"
+    },
+    "summaryEn": "At Chuseok (Hangawi), Hoya joins a family going back to their hometown, makes songpyeon steamed on pine needles, and watches women dance Ganggangsullae hand in hand under the full moon.",
+    "theme": "rites",
+    "kind": "intangible",
+    "recommendedStage": 1,
+    "minutes": 5,
+    "learningGoalsEn": [
+      "Know when Chuseok falls (15th day of the 8th lunar month) and that its native name is Hangawi.",
+      "Understand what songpyeon are and how they are made (fillings; steamed on pine needles).",
+      "Understand Ganggangsullae (women in a circle, call-and-response singing) and know that UNESCO inscribed it in 2009.",
+      "Read and recognize 추석 (chuseok), 한가위 (hangawi), 송편 (songpyeon), 보름달 (boreumdal) and 강강술래 (ganggangsullae)."
+    ],
+    "origin": {
+      "type": "documented",
+      "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
+    },
+    "review": {
+      "language": "draft",
+      "culture": "draft",
+      "advisory": []
+    },
+    "keywords": [
+      {
+        "id": "chuseok",
+        "ko": "추석",
+        "romanization": "chuseok",
+        "en": "Chuseok (harvest holiday)",
+        "kind": "word"
+      },
+      {
+        "id": "hangawi",
+        "ko": "한가위",
+        "romanization": "hangawi",
+        "en": "Hangawi (native name for Chuseok)",
+        "kind": "word"
+      },
+      {
+        "id": "gohyang",
+        "ko": "고향",
+        "romanization": "gohyang",
+        "en": "hometown",
+        "kind": "word"
+      },
+      {
+        "id": "songpyeon",
+        "ko": "송편",
+        "romanization": "songpyeon",
+        "en": "Chuseok rice cakes",
+        "kind": "word"
+      },
+      {
+        "id": "sollip",
+        "ko": "솔잎",
+        "romanization": "sollip",
+        "en": "pine needles",
+        "kind": "word"
+      },
+      {
+        "id": "boreumdal",
+        "ko": "보름달",
+        "romanization": "boreumdal",
+        "en": "full moon",
+        "kind": "word"
+      },
+      {
+        "id": "ganggangsullae",
+        "ko": "강강술래",
+        "romanization": "ganggangsullae",
+        "en": "Ganggangsullae circle dance",
+        "kind": "word"
+      },
+      {
+        "id": "dal",
+        "ko": "달",
+        "romanization": "dal",
+        "en": "moon",
+        "kind": "word"
+      },
+      {
+        "id": "charye",
+        "ko": "차례",
+        "romanization": "charye",
+        "en": "ancestral rite at home",
+        "kind": "word"
+      },
+      {
+        "id": "nori",
+        "ko": "놀이",
+        "romanization": "nori",
+        "en": "game; play",
+        "kind": "word"
+      },
+      {
+        "id": "deodo-malgo-deoldo-malgo-hangawiman-gatara",
+        "ko": "더도 말고 덜도 말고 한가위만 같아라",
+        "romanization": "Deodo malgo deoldo malgo hangawiman gatara",
+        "en": "No more, no less: may it always be like Hangawi. (the familiar modern wording)",
+        "kind": "phrase"
+      }
+    ],
+    "cultureNotes": [],
+    "tiers": [
+      {
+        "level": "listen",
+        "scenes": [
+          {
+            "id": "s1",
+            "narrationEn": "It's {kw:chuseok}, also called Hangawi! It falls on the fifteenth day of the eighth lunar month, just as the harvest begins. Families give thanks for the year's crops.",
+            "captionEn": "Chuseok, the harvest holiday",
+            "keyword": {
+              "id": "hangawi",
+              "ko": "한가위",
+              "romanization": "Hangawi",
+              "en": "Chuseok (its native Korean name)",
+              "kind": "word"
+            },
+            "factIds": [
+              "f1",
+              "f2"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "Golden rice fields under an autumn sky, persimmon trees heavy with orange fruit; Hoya stretching happily at the edge of the field."
+          },
+          {
+            "id": "s2",
+            "narrationEn": "Many people travel back to their hometowns, {kw:gohyang}. In the morning, families honor their ancestors with a table of food, called charye, and then visit their ancestors' graves, called seongmyo.",
+            "captionEn": "Charye and a visit to ancestors' graves",
+            "keyword": {
+              "id": "charye",
+              "ko": "차례",
+              "romanization": "charye",
+              "en": "ancestral rite at home",
+              "kind": "word"
+            },
+            "factIds": [
+              "f3"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "A family in hanbok standing respectfully before a low table set with fruit and dishes; later a grassy hillside path; Hoya walking quietly with them."
+          },
+          {
+            "id": "s3",
+            "narrationEn": "On the night before Chuseok, under the bright moon, {kw:dal}, the family makes songpyeon together. They wrap rice dough around fillings like sesame, beans or chestnuts. Rice from the new harvest makes them extra tasty!",
+            "captionEn": "Making songpyeon under the moon",
+            "keyword": {
+              "id": "songpyeon",
+              "ko": "송편",
+              "romanization": "songpyeon",
+              "en": "small filled rice cakes for Chuseok",
+              "kind": "word"
+            },
+            "factIds": [
+              "f4"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "Family members around a low table shaping small white, green and pink rice cakes; bowls of sesame, beans and chestnuts; Hoya pinching one closed."
+          },
+          {
+            "id": "s4",
+            "narrationEn": "Many songpyeon are shaped like little half-moons. They are steamed on a bed of pine needles. Mmm, smell the fresh pine! Hoya tries one. Yum!",
+            "captionEn": "Songpyeon steamed on pine needles",
+            "keyword": {
+              "id": "sollip",
+              "ko": "솔잎",
+              "romanization": "sollip",
+              "en": "pine needles",
+              "kind": "word"
+            },
+            "factIds": [
+              "f5"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "A bamboo steamer opened to reveal glossy rice cakes resting on green pine needles, wisps of steam; Hoya sniffing with closed eyes."
+          },
+          {
+            "id": "s5",
+            "narrationEn": "On Chuseok night, a big round full moon rises. In old farming villages the full moon meant plenty, and Chuseok was even called 'the holiday of the moon.'",
+            "captionEn": "A big round full moon rises",
+            "keyword": {
+              "id": "boreumdal",
+              "ko": "보름달",
+              "romanization": "boreumdal",
+              "en": "full moon",
+              "kind": "word"
+            },
+            "factIds": [
+              "f6",
+              "f1"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "A huge glowing full moon rising over a quiet village of thatched and tiled roofs; Hoya sitting on a stone wall gazing up."
+          },
+          {
+            "id": "s6",
+            "narrationEn": "Under the moon, women join hands in a circle for Ganggangsullae. A lead singer calls out a line, and everyone answers, 'Ganggangsullae!' The song starts slow, then gets faster and faster until they are almost running.",
+            "captionEn": "Dancing Ganggangsullae hand in hand",
+            "keyword": {
+              "id": "ganggangsullae",
+              "ko": "강강술래",
+              "romanization": "Ganggangsullae",
+              "en": "Ganggangsullae circle dance",
+              "kind": "word"
+            },
+            "factIds": [
+              "f7"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "Women in hanbok holding hands in a wide circle on a moonlit field, skirts swirling, one singer at the front; Hoya clapping along outside the circle."
+          },
+          {
+            "id": "s7",
+            "narrationEn": "Between dances they play games with fun names, like 'fern picking' and 'herring tying.' The dance has long been done along Korea's southwestern coast. And no one knows exactly what the word 'ganggangsullae' means!",
+            "captionEn": "Games between the dances",
+            "keyword": {
+              "id": "nori",
+              "ko": "놀이",
+              "romanization": "nori",
+              "en": "game; play",
+              "kind": "word"
+            },
+            "factIds": [
+              "f8",
+              "f9",
+              "f10"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "Dancers crouched in a line like ferns while a leader 'picks' them one by one; a coastline with small islands in the moonlight behind; Hoya scratching his head curiously."
+          },
+          {
+            "id": "s8",
+            "narrationEn": "In 2009, UNESCO added Ganggangsullae to its heritage list. The Joseon-era book Yeoryang sesigi records an old saying like this: 'No more, no less, may it always be like Hangawi!'",
+            "captionEn": "UNESCO's list and an old Hangawi saying",
+            "line": {
+              "ko": "더도 말고 덜도 말고 한가위만 같아라",
+              "romanization": "Deodo malgo deoldo malgo hangawiman gatara",
+              "en": "No more, no less: may it always be like Hangawi. (the familiar modern wording)",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f11",
+              "f12"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "Hoya and the family sharing songpyeon and fruit on a wooden porch under the full moon, the dance circle glowing in the distance."
+          }
+        ],
+        "checks": [
+          {
+            "id": "c1",
+            "kind": "detail",
+            "promptEn": "What are songpyeon steamed on?",
+            "options": [
+              {
+                "id": "a",
+                "en": "Banana leaves",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "Lotus leaves",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "Paper sheets",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "Pine needles",
+                "isCorrect": true
+              }
+            ],
+            "explainEn": "Songpyeon are steamed on a layer of pine needles. The pine scent is said to make them taste better.",
+            "factIds": [
+              "f5"
+            ]
+          },
+          {
+            "id": "c2",
+            "kind": "detail",
+            "promptEn": "In the Ganggangsullae dance, how do the women move?",
+            "options": [
+              {
+                "id": "a",
+                "en": "In two straight lines, facing each other",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "One at a time, alone in the middle",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "Hand in hand in a circle",
+                "isCorrect": true
+              },
+              {
+                "id": "d",
+                "en": "Sitting in rows, clapping along",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "In Ganggangsullae, women join hands and move in a circle while they sing.",
+            "factIds": [
+              "f7"
+            ]
+          },
+          {
+            "id": "c3",
+            "kind": "detail",
+            "promptEn": "What is the native Korean name for Chuseok?",
+            "options": [
+              {
+                "id": "a",
+                "en": "Hangawi",
+                "isCorrect": true
+              },
+              {
+                "id": "b",
+                "en": "Songpyeon",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "Boreumdal",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "Charye",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "Hangawi is the native Korean name for Chuseok.",
+            "factIds": [
+              "f2"
+            ]
+          }
+        ],
+        "checkpoints": [],
+        "sequenceSceneIds": [
+          "s1",
+          "s3",
+          "s6",
+          "s8"
+        ],
+        "newKeywordIds": [
+          "hangawi",
+          "songpyeon",
+          "sollip",
+          "boreumdal"
+        ]
+      }
+    ],
+    "coverSceneId": "s1",
+    "pillarTags": [],
+    "companionId": "hoya",
+    "facts": [
+      {
+        "id": "f1",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Chuseok falls on the fifteenth day of the eighth lunar month, at the beginning of the harvest season, and is a time to give thanks for the year's crops.",
+        "claimKo": "추석은 음력 8월 15일로 수확기가 시작되는 명절이며, 농사가 잘되게 해준 것에 감사하는 날이다.",
+        "sources": [
+          {
+            "title": "국가무형유산 추석 (The Traditional Holiday of Chuseok)",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0001530000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01530000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘Chuseok is observed on the fifteenth day of the eighth lunar month at the beginning of the harvest season.’ / ‘an opportunity to express gratitude for the crops to be reaped’"
+          },
+          {
+            "title": "추석",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0057862",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "정의: ‘음력 8월 15일로 가배·가위·한가위·중추절 등으로 불리는 우리나라의 명절.’"
+          },
+          {
+            "title": "5개 명절(설과 대보름, 한식, 단오, 추석, 동지) 국가무형유산 신규종목 지정 (2023-12-18)",
+            "publisher": "국가유산청 (당시 문화재청) 보도자료",
+            "url": "https://www.khs.go.kr/newsBbz/selectNewsBbzView.do?newsItemId=155704541&sectionId=b_sec_1&mn=NS_01_02_02",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘음력 팔월 보름인 날로 강강술래부터 송편까지 다양한 세시풍속을 보유한 ‘추석’’"
+          }
+        ]
+      },
+      {
+        "id": "f2",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Hangawi is the native (pure) Korean name for Chuseok.",
+        "claimKo": "추석은 순우리말로 ‘한가위’라고 부른다.",
+        "sources": [
+          {
+            "title": "국가무형유산 추석",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0001530000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01530000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘추석은 순수한 우리말로 ‘한가위’라고 부르며’"
+          },
+          {
+            "title": "추석",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0057862",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘가배·가위·한가위·중추절 등으로 불리는’"
+          }
+        ]
+      },
+      {
+        "id": "f3",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Many Koreans return to their hometowns for Chuseok; ancestral rites at home (charye) and visits to ancestors' graves (seongmyo) are the two defining Chuseok customs.",
+        "claimKo": "추석에는 많은 사람이 고향을 찾으며, 차례와 성묘가 추석의 대표 의례이다.",
+        "sources": [
+          {
+            "title": "국가무형유산 추석",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0001530000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01530000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘Ancestral rites at home (charye) and at the graveyard (seongmyo) are the two definitive customs of Chuseok.’ / ‘many Koreans still return to their hometowns on Chuseok’"
+          },
+          {
+            "title": "추석",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0057862",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘추석날 아침 일찍 일어나 첫 번째 일은 차례를 지내는 일이다.’ / ‘아침식사를 마치고 조상의 산소에 가서 성묘를 하는데’"
+          }
+        ]
+      },
+      {
+        "id": "f4",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "On the evening before Chuseok (the 14th), families gather under the bright moon to make songpyeon, rice-dough cakes filled with fillings such as beans, sesame or chestnuts; made from newly harvested grain, they taste especially good.",
+        "claimKo": "추석 전날(열나흗날) 저녁 밝은 달을 보며 가족이 모여 콩·깨·밤 등을 소로 넣은 송편을 빚으며, 햇곡식으로 만들어 더욱 맛이 있다.",
+        "sources": [
+          {
+            "title": "추석",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0057862",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘열 나흗날 저녁 밝은 달을 보면서 가족들이 모여 송편을 만든다.’ / ‘송편 속에도 콩 · 팥 · 밤 · 대추 등을 넣는데, 모두 햇것으로 한다. 모두 햇곡식이기 때문에 더욱 맛이 있다.’"
+          },
+          {
+            "title": "송편",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0031123",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘팔월 추석에는 햅쌀로 송편을 빚어 차례를 지내고’ / ‘팥송편·깨송편·대추송편·잣송편’"
+          }
+        ]
+      },
+      {
+        "id": "f5",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Songpyeon are often shaped like a half-moon and are steamed on a layer of pine needles; the scent of pine is said to make the rice cake taste better.",
+        "claimKo": "송편은 흔히 반달 모양으로 빚어 솔잎을 깔고 찌며, 솔잎의 소나무 향이 떡의 맛을 좋게 한다고 한다.",
+        "sources": [
+          {
+            "title": "송편",
+            "publisher": "국립민속박물관 (National Folk Museum of Korea) — 어린이민속사전",
+            "url": "https://www.nfm.go.kr/kids/elecontents/view.do?topic=84",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "‘송편은 멥쌀가루 반죽에 팥, 콩, 밤, 대추, 깨 등을 넣고 반달이나 모시조개 모양으로 만들어서 솔잎을 깔고 찐 떡입니다. … 솔잎에서 나오는 소나무 향은 떡의 맛을 좋게 합니다.’"
+          },
+          {
+            "title": "송편 (한국세시풍속사전)",
+            "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+            "url": "https://folkency.nfm.go.kr/kr/topic/detail/4337",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "‘멥쌀가루를 익반죽하고 풋콩, 깨, 밤 같은 소를 넣어 반달 모양으로 빚어서 시루에 솔잎을 켜켜로 놓고 찐 떡.’"
+          },
+          {
+            "title": "송편 (미디어 설명)",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0031123",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "미디어 캡션: ‘멥쌀가루를 뜨거운 물로 반죽하여 소를 넣고 모양을 만들어 솔잎을 깔고 찐 떡이다. 추석에 먹는 음식이다.’"
+          }
+        ]
+      },
+      {
+        "id": "f6",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "In traditional farming life the Chuseok full moon was a symbol of plenty, and Chuseok was even called 'the holiday of the moon'.",
+        "claimKo": "전통 농경사회에서 추석 보름달은 풍요를 상징했으며, 추석을 ‘달의 명절’이라 부르기도 했다.",
+        "sources": [
+          {
+            "title": "국가무형유산 추석",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0001530000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01530000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘The full moon on Chuseok is understood as a symbol of prosperity, fecundity, and a bountiful crop.’ / ‘추석을 ‘달의 명절’이라 이르기도 하였다.’"
+          }
+        ]
+      },
+      {
+        "id": "f7",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "In Ganggangsullae, performed on moonlit nights around Chuseok, women join hands and move in a circle; a lead singer sings a line and the others answer 'Ganggangsullae', and the song and dance start slow and grow faster until the dancers are almost running.",
+        "claimKo": "강강술래는 추석 무렵 달밤에 여인들이 손에 손을 잡고 원을 그리며, 앞소리꾼이 메기면 나머지가 ‘강강술래’로 받는다. 처음엔 느리다가 점점 빨라져 나중에는 뛰는 듯하다.",
+        "sources": [
+          {
+            "title": "국가무형유산 강강술래 (Ganggangsullae)",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0000080000000&ccbaCtcd=52&ccbaCpno=1273600080000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘여인들은 손에 손을 잡고 오른쪽으로 돌며 둥근 원을 그려나간다. 목청 좋고 소리 잘하는 사람이 맨 앞에 서서 메기는 소리를 하면 나머지 사람들은 ‘강강술래’하며 받는 소리를 한다. 처음에는 늦은 가락으로 나아가다 … 나중에는 뛰는 것처럼 동작이 빨라진다.’"
+          },
+          {
+            "title": "Ganggangsullae",
+            "publisher": "UNESCO Intangible Cultural Heritage (ich.unesco.org)",
+            "url": "https://ich.unesco.org/en/RL/ganggangsullae-00188",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘Under a bright full moon, dozens of young, unmarried village women gather in a circle, join hands’ / ‘sing and dance all night under the direction of a lead singer.’"
+          },
+          {
+            "title": "강강술래 (한국세시풍속사전)",
+            "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+            "url": "https://folkency.nfm.go.kr/kr/topic/detail/3145",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "‘동산에 보름달이 떠오르면 마을의 넓은 마당으로 모인 여자들이 느린 가락에 맞춰 늦은강강술래를 추다가 흥이 점점 더해감에 따라 속도가 빨라져서 마침내 잦은강강술래로 이어진다.’ / ‘한 사람이 설소리(앞소리)를 하면, 나머지 사람이 매김소리(뒷소리)를 받는’"
+          }
+        ]
+      },
+      {
+        "id": "f8",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Ganggangsullae includes accompanying folk games such as 'bracken picking' (gosari-kkeokgi) and 'herring tying' (cheongeo-yeokgi).",
+        "claimKo": "강강술래에는 고사리꺾기, 청어엮기 등의 놀이가 곁들여진다.",
+        "sources": [
+          {
+            "title": "국가무형유산 강강술래",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0000080000000&ccbaCtcd=52&ccbaCpno=1273600080000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘남생이놀이를 비롯해서 고사리꺾기, 청어엮기, 기와밟기, 꼬리따기 …’ / English: ‘folk games such as “bracken picking,” “herring tying,” “tile treading,”’"
+          },
+          {
+            "title": "고사리타령",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0003632",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘고사리꺾기 놀이는 강강술래 여흥 놀이의 하나로도 포함되어 있으나 독립적인 놀이로도 행해졌다.’"
+          },
+          {
+            "title": "강강술래 (한국세시풍속사전)",
+            "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+            "url": "https://folkency.nfm.go.kr/kr/topic/detail/3145",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "‘남생이놀이, 고사리꺾기, 청어엮기, 지와밟기, 꼬리따기, 덕석말이 … 같은 여성들이 하는 놀이’"
+          }
+        ]
+      },
+      {
+        "id": "f9",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Ganggangsullae has traditionally been performed mainly along the southwestern coast of Korea (the coast of Jeollanam-do). Its exact origin is uncertain; the Korea Heritage Service considers an origin in ancient moonlit-night festivals more plausible than the popular Admiral Yi Sun-sin story.",
+        "claimKo": "강강술래는 전통적으로 주로 한반도 서남 해안 지방(전라남도 해안)에서 행해졌다. 정확한 기원은 확실하지 않으며, 국가유산청은 이순신 장군 유래설보다 달 밝은 밤의 고대 축제에서 비롯되었다고 보는 것이 타당하다고 설명한다.",
+        "sources": [
+          {
+            "title": "국가무형유산 강강술래",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0000080000000&ccbaCtcd=52&ccbaCpno=1273600080000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘주로 전라남도 해안지방에서 추석을 전후하여 달밤에 행해졌다.’ / ‘임진왜란 때 이순신 장군이 … 비롯되었다는 설이 있으나, 원시시대부터 1년중 가장 달이 밝은 밤에 축제를 벌여 노래하고 춤추던 풍습에서 비롯된 민속놀이라고 보는 것이 타당하다.’"
+          },
+          {
+            "title": "Ganggangsullae",
+            "publisher": "UNESCO Intangible Cultural Heritage (ich.unesco.org)",
+            "url": "https://ich.unesco.org/en/RL/ganggangsullae-00188",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘a seasonal harvest and fertility ritual popular in the south-western part of the Republic of Korea’"
+          },
+          {
+            "title": "강강술래",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0000958",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "정의: ‘추석날 밤이나 정월 대보름날 밤에 … 서남 해안지방에서 행하는 노래와 무용과 놀이가 혼합된 성인여자놀이.’"
+          },
+          {
+            "title": "강강술래 (한국세시풍속사전)",
+            "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+            "url": "https://folkency.nfm.go.kr/kr/topic/detail/3145",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "‘강강술래의 유래는 확실하지 않다.’ / ‘전승 지역으로 보면 호남 일원이요, 연행 시기로 보면 8월 한가위가 일반적이며, 연행 주체는 주로 마을의 여자들이다.’"
+          }
+        ]
+      },
+      {
+        "id": "f10",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "The dance is named after its refrain, but the exact meaning of the word 'ganggangsullae' is unknown.",
+        "claimKo": "강강술래라는 이름은 후렴에서 왔지만 그 말의 정확한 뜻은 알려져 있지 않다.",
+        "sources": [
+          {
+            "title": "Ganggangsullae",
+            "publisher": "UNESCO Intangible Cultural Heritage (ich.unesco.org)",
+            "url": "https://ich.unesco.org/en/RL/ganggangsullae-00188",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘The dance takes its name from the refrain repeated after each verse, although the exact meaning of the word is unknown.’"
+          }
+        ]
+      },
+      {
+        "id": "f11",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Ganggangsullae was inscribed on UNESCO's Representative List of the Intangible Cultural Heritage of Humanity in 2009.",
+        "claimKo": "강강술래는 2009년 유네스코 인류무형문화유산 대표목록에 등재되었다.",
+        "sources": [
+          {
+            "title": "Ganggangsullae",
+            "publisher": "UNESCO Intangible Cultural Heritage (ich.unesco.org)",
+            "url": "https://ich.unesco.org/en/RL/ganggangsullae-00188",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘Inscribed in 2009 (4.COM) on the Representative List of the Intangible Cultural Heritage of Humanity’"
+          },
+          {
+            "title": "한국의 인류무형유산 (23건) 목록",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FkorInCulHeritage.jsp&pageNo=5_3_2_0",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘강강술래 (2009)’"
+          }
+        ]
+      },
+      {
+        "id": "f12",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "The Joseon-era book Yeoryang sesigi (by Gim Mae-sun) records people saying, in Chinese characters, 'No more, no less, may it always be like Hangawi'; the familiar modern Korean wording is 'Deodo malgo deoldo malgo hangawiman gatara'.",
+        "claimKo": "조선시대 김매순의 『열양세시기(洌陽歲時記)』에는 ‘더도 말고 덜도 말고 늘 한가위 같기만 바란다’는 뜻의 말이 한자로 실려 있으며, 오늘날 널리 쓰이는 표현은 “더도 말고 덜도 말고 한가위만 같아라”이다.",
+        "sources": [
+          {
+            "title": "국가무형유산 추석",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0001530000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01530000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘조선시대 『열양세시기(冽陽歲時記)』에는 4대 명절이었던 추석을 중히 여겨 … 이런 의미로 “더도 말고 덜도 말고 한가위만 같아라”는 말이 수록되어 있다.’ (KHS gives the modern wording; the Hanja form is in the Folk Encyclopedia entry below)"
+          },
+          {
+            "title": "더도 말고 덜도 말고 늘 가윗날만 같아라 (한국세시풍속사전)",
+            "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+            "url": "https://folkency.nfm.go.kr/kr/topic/detail/3591",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "‘김매순(金邁淳)의 『열양세시기(冽陽歲時記)』 8월 중추(中秋)에 보면 … 그래서 말하기를 ‘더도 말고 덜도 말고 늘 한가위 같기만 바란다(加也勿 減夜勿 但願長似嘉俳日)’라고 한다.’라고 기록되어 있다.’ (the dictionary prints 減夜勿)"
+          },
+          {
+            "title": "열양세시기 (한국민속예술사전)",
+            "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+            "url": "https://folkency.nfm.go.kr/kr/topic/detail/1580",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "‘조선 순조 때 김매순이 열양, 즉 한양의 연중행사를 편찬한 세시 풍속 자료집.’ / ‘1819년 기묘년 유두일에 열양외사가 썼다는 기문에 서울의 풍속 80여 가지를 수록하였다’"
+          }
+        ]
+      }
+    ],
+    "referenceDisplay": "Sources: 국가유산청 국가유산포털(추석·강강술래·인류무형유산 목록); UNESCO Intangible Cultural Heritage; 한국민족문화대백과사전; 한국민속대백과사전(국립민속박물관); 국립민속박물관 어린이민속사전; 국가유산청 보도자료",
+    "verification": {
+      "passes": 3,
+      "checkedAt": "2026-10-10",
+      "scope": "cluster",
+      "notes": "Third independent pass over 6 episodes / 61 facts / 161 source entries (70 unique URLs). Every URL was re-fetched with my own scripts (UNESCO pages via Wayback copies; heritage.go.kr descriptions via the portal ajax html and khs.go.kr open API; folkency via its JSON API) and each quote or locator was machine-matched to the page text; the few non-matching strings were checked by hand (portal metadata fields, hanja or footnote punctuation, label text). Corrections: (1) pansori scene 2 now gives both UNESCO steps (2003 masterpiece proclamation, 2008 Representative List); (2) pansori f11 states the Aesop title as in the cited Townsend text and the common alternate title; (3) added sources: NFM 놀보박타령 for 'greedy' (f5), 표준국어대사전 타다 for 'sawed' (f6), 한국민족문화대백과사전 선도해 for the Samguk sagi tale (f12); (4) Seollal f9/f10 designation-date locators now cite the KHS open API field. No other change. See seasons-tales.signoff.md."
+    },
+    "authorNotes": "Left out on purpose: the popular claim that Ganggangsullae began as Admiral Yi Sun-sin's military trick. The 국가유산포털 mentions it only as one theory and says an origin in ancient moonlit-night festivals is more plausible, so it isn't used. Also left out are folk etymologies of 'ganggangsullae' (UNESCO says the meaning is unknown), songpyeon fortune-telling beliefs (spouse looks, pregnancy divination), and specific 차례 table rules. Songpyeon shape symbolism (half-moon) isn't claimed because the sources don't support it. The 국가유산포털 actually links songpyeon to the full moon in general terms. The existing heritage-cards.ts text 'half-moon rice cakes' and 'steamed on pine needles for fragrance' is only partly supported: pine-needle steaming is supported, but the shape and fragrance claims weren't verified. UNESCO describes the original dancers as young unmarried village women; today mostly middle-aged women in cities keep it alive. The narration says 'women'. 'Tile treading' was skipped because explaining it (walking on bent backs) needs care for young children. REVISION 2026-10-10: \"comes from the southwest coast\" -> \"has long been done along the southwestern coast\" (origin is uncertain per KHS and 한국세시풍속사전). Yeoryang sesigi saying: verified in the text quoted by 한국세시풍속사전 (Gim Mae-sun, 8th month entry; the Hanja there is printed 減夜勿, apparently a typo for 減也勿) - narration says the book \"records an old saying like this\" and gives the modern wording. Songpyeon: half-moon shape and pine scent are supported by the National Folk Museum (어린이민속사전; 한국세시풍속사전); the older note saying shape/fragrance were unverified is superseded. \"warm and chewy\" removed (not sourced). AUTHORING 2026-10-11 (F-STORY-001 PR 1.8d): title romanization, scene captions and check explanations written from the cited facts; every scene is artPending (text-only tile) until the art PRs; no claim or source changed. REVIEW 2026-10-11 (PR 1.8d review fixes): title is now 'Chuseok: Songpyeon and the Full Moon' (추석 송편과 보름달), because songpyeon are made on the evening before Chuseok under 'the bright moon' (f4) and the full moon belongs to Chuseok night (f1, f6); the catalogue row and F-STORY-005 table follow. s3 and s5 name their nights; s4 says 'many' songpyeon are half-moons (f5 'often'); s7 and s8 use plainer words; checks 2 and 3 have one clearly correct answer and only taught distractors; the gohyang and dal keywords are used as tokens; learning goals use receptive verbs. PR #208 REVIEW FIXES 2026-10-11: s7 names the games 'fern picking' and 'herring tying' (f8: bracken picking, herring tying; bracken is a fern); check 1 distractor 'Bamboo mats' replaced by 'Paper sheets' because songpyeon steam over a bamboo steamer base.",
+    "errata": []
+  },
+  {
+    "v": 1,
+    "id": "story:dano-ssireum",
+    "state": "ready",
+    "contentVer": 1,
+    "title": {
+      "ko": "단옷날의 그네, 탈, 씨름",
+      "romanization": "Danonnarui geune, tal, ssireum",
+      "en": "Dano Day: Swings, Masks and Ssireum"
+    },
+    "summaryEn": "Hoya celebrates Dano, Korea's early-summer holiday: hair washed in changpo water, high-flying swings, ssireum wrestling, and the UNESCO-listed Gangneung Danoje with its wordless Gwanno mask drama.",
+    "theme": "rites",
+    "kind": "intangible",
+    "recommendedStage": 2,
+    "minutes": 5,
+    "learningGoalsEn": [
+      "Know when Dano falls (5th day of the 5th lunar month) and two Dano customs (changpo hair-washing, swinging).",
+      "Understand how ssireum is won and what jangsa means.",
+      "Know that Gangneung Danoje (proclaimed 2005, inscribed 2008) and ssireum (2018, joint inscription by both Koreas) are on UNESCO's Representative List.",
+      "Read and recognize 단오 (dano), 그네 (geune), 씨름 (ssireum), 장사 (jangsa) and 탈 (tal)."
+    ],
+    "origin": {
+      "type": "documented",
+      "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
+    },
+    "review": {
+      "language": "draft",
+      "culture": "draft",
+      "advisory": []
+    },
+    "keywords": [
+      {
+        "id": "dano",
+        "ko": "단오",
+        "romanization": "dano",
+        "en": "Dano holiday",
+        "kind": "word"
+      },
+      {
+        "id": "changpo",
+        "ko": "창포",
+        "romanization": "changpo",
+        "en": "sweet flag (plant)",
+        "kind": "word"
+      },
+      {
+        "id": "geune",
+        "ko": "그네",
+        "romanization": "geune",
+        "en": "swing",
+        "kind": "word"
+      },
+      {
+        "id": "ssireum",
+        "ko": "씨름",
+        "romanization": "ssireum",
+        "en": "Korean wrestling",
+        "kind": "word"
+      },
+      {
+        "id": "satba",
+        "ko": "샅바",
+        "romanization": "satba",
+        "en": "ssireum cloth belt",
+        "kind": "word"
+      },
+      {
+        "id": "jangsa",
+        "ko": "장사",
+        "romanization": "jangsa",
+        "en": "champion; very strong person",
+        "kind": "word"
+      },
+      {
+        "id": "tal",
+        "ko": "탈",
+        "romanization": "tal",
+        "en": "mask",
+        "kind": "word"
+      },
+      {
+        "id": "chukje",
+        "ko": "축제",
+        "romanization": "chukje",
+        "en": "festival",
+        "kind": "word"
+      },
+      {
+        "id": "geunettwigi",
+        "ko": "그네뛰기",
+        "romanization": "geunettwigi",
+        "en": "swinging (on a swing)",
+        "kind": "word"
+      },
+      {
+        "id": "gangneung-danoje",
+        "ko": "강릉 단오제",
+        "romanization": "Gangneung Danoje",
+        "en": "Gangneung Dano Festival",
+        "kind": "word"
+      },
+      {
+        "id": "illyu-muhyeong-yusan",
+        "ko": "인류 무형 유산",
+        "romanization": "illyu muhyeong yusan",
+        "en": "Intangible Heritage of Humanity (UNESCO list)",
+        "kind": "word"
+      }
+    ],
+    "cultureNotes": [],
+    "tiers": [
+      {
+        "level": "listen",
+        "scenes": [
+          {
+            "id": "s1",
+            "narrationEn": "Summer is almost here! Today is Dano, the fifth day of the fifth lunar month. A late-Joseon book, Dongguk sesigi, counted it among Korea's four great holidays, with lots of games and fun.",
+            "captionEn": "Dano, the fifth day of the fifth lunar month",
+            "keyword": {
+              "id": "dano",
+              "ko": "단오",
+              "romanization": "Dano",
+              "en": "Dano (5th day of the 5th lunar month)",
+              "kind": "word"
+            },
+            "factIds": [
+              "f1"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "Hoya in a light summer hanbok on a green hillside in early summer, rice paddies freshly planted below."
+          },
+          {
+            "id": "s2",
+            "narrationEn": "Long ago on Dano, people washed their hair in water boiled with changpo, a fragrant plant called sweet flag. They said it made hair thick and shiny.",
+            "captionEn": "Washing hair in changpo water",
+            "keyword": {
+              "id": "changpo",
+              "ko": "창포",
+              "romanization": "changpo",
+              "en": "sweet flag (a fragrant water plant)",
+              "kind": "word"
+            },
+            "factIds": [
+              "f2"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "Women by a stream rinsing long hair in a wooden basin; tall sword-shaped sweet-flag leaves at the water's edge; Hoya sniffing a leaf."
+          },
+          {
+            "id": "s3",
+            "narrationEn": "Swings, {kw:geune}, hang from tall trees, and people soar into the sky! Swinging, called geunettwigi, has been a favorite Dano game since long ago.",
+            "captionEn": "Swinging high into the sky",
+            "keyword": {
+              "id": "geunettwigi",
+              "ko": "그네뛰기",
+              "romanization": "geunettwigi",
+              "en": "swinging (on a swing)",
+              "kind": "word"
+            },
+            "factIds": [
+              "f3"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "A person in hanbok standing on a long rope swing hung from a big old tree, flying high; Hoya cheering below."
+          },
+          {
+            "id": "s4",
+            "narrationEn": "Another Dano favorite is ssireum, Korean wrestling. Two wrestlers grip each other's {kw:satba}, a cloth belt around the waist and thigh. In a modern match, whoever first touches the ground with any part of the body from the knee up loses!",
+            "captionEn": "Two wrestlers grip each other's satba",
+            "keyword": {
+              "id": "ssireum",
+              "ko": "씨름",
+              "romanization": "ssireum",
+              "en": "Korean wrestling",
+              "kind": "word"
+            },
+            "factIds": [
+              "f4",
+              "f5"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "Two wrestlers crouched shoulder to shoulder in a sand ring, each gripping the other's cloth thigh belt; Hoya as a referee."
+          },
+          {
+            "id": "s5",
+            "narrationEn": "The champion is called jangsa, meaning 'a very strong person.' Traditionally the winner received an ox, a symbol of plenty in a farming village!",
+            "captionEn": "The jangsa champion and the prize ox",
+            "keyword": {
+              "id": "jangsa",
+              "ko": "장사",
+              "romanization": "jangsa",
+              "en": "champion; a very strong person",
+              "kind": "word"
+            },
+            "factIds": [
+              "f6"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "A smiling champion riding a calm brown ox around the sand ring while villagers clap; Hoya leading the ox by a rope."
+          },
+          {
+            "id": "s6",
+            "narrationEn": "On Korea's east coast, the city of Gangneung holds a big Dano festival, or {kw:chukje}: Gangneung Danoje. It begins with brewing a special drink for the gods, and people hold rites praying for a peaceful village and good harvests.",
+            "captionEn": "Gangneung's big Dano festival",
+            "keyword": {
+              "id": "gangneung-danoje",
+              "ko": "강릉 단오제",
+              "romanization": "Gangneung Danoje",
+              "en": "Gangneung Dano Festival",
+              "kind": "word"
+            },
+            "factIds": [
+              "f7"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "A riverside festival ground with colorful paper lanterns and banners, a ritual table with offerings, mountains in the distance; Hoya in the crowd."
+          },
+          {
+            "id": "s7",
+            "narrationEn": "Look, masks! In the Gwanno mask drama, performers make the audience laugh using only gestures. They never say a word! It is known as Korea's only mask drama with no spoken lines.",
+            "captionEn": "The Gwanno mask drama, with no words",
+            "keyword": {
+              "id": "tal",
+              "ko": "탈",
+              "romanization": "tal",
+              "en": "mask",
+              "kind": "word"
+            },
+            "factIds": [
+              "f8"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "Masked performers in a playful pose on an open-air stage: a long-bearded nobleman (yangban) mask and a white-faced young-lady (somae-gaksi) mask; the audience laughing, Hoya giggling."
+          },
+          {
+            "id": "s8",
+            "narrationEn": "In 2005, UNESCO named Gangneung Danoje a masterpiece. In 2008, it went on UNESCO's heritage list. In 2018, ssireum joined the list too. North and South Korea asked for it together. UNESCO said that had never happened before.",
+            "captionEn": "Danoje and ssireum on UNESCO's list",
+            "keyword": {
+              "id": "illyu-muhyeong-yusan",
+              "ko": "인류 무형 유산",
+              "romanization": "illyu muhyeong yusan",
+              "en": "Intangible Heritage of Humanity (UNESCO list)",
+              "kind": "word"
+            },
+            "factIds": [
+              "f9",
+              "f10"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "Hoya holding a glowing heritage card with a swing, a mask and two wrestlers on it, standing under festival lanterns."
+          }
+        ],
+        "checks": [
+          {
+            "id": "c1",
+            "kind": "detail",
+            "promptEn": "In ssireum, what do the wrestlers grab hold of?",
+            "options": [
+              {
+                "id": "a",
+                "en": "Each other's sleeves",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "The satba belt",
+                "isCorrect": true
+              },
+              {
+                "id": "c",
+                "en": "A wooden pole",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "Each other's collars",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "Ssireum wrestlers grip each other's satba, a cloth belt worn around the waist and thigh.",
+            "factIds": [
+              "f5"
+            ]
+          },
+          {
+            "id": "c2",
+            "kind": "detail",
+            "promptEn": "What is special about the Gwanno mask drama?",
+            "options": [
+              {
+                "id": "a",
+                "en": "They use gestures, never words",
+                "isCorrect": true
+              },
+              {
+                "id": "b",
+                "en": "They sing every line in turn",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "One storyteller speaks all parts",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "They recite poems together",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "The Gwanno mask drama has no spoken lines. Masked performers amuse the audience with gestures alone.",
+            "factIds": [
+              "f8"
+            ]
+          },
+          {
+            "id": "c3",
+            "kind": "detail",
+            "promptEn": "Which Dano festival is on UNESCO's heritage list?",
+            "options": [
+              {
+                "id": "a",
+                "en": "Beopseongpo Danoje",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "Gyeongsan Jain Danoje",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "Gangneung Danoje",
+                "isCorrect": true
+              }
+            ],
+            "explainEn": "Gangneung Danoje joined UNESCO's Representative List in 2008. It is the only Korean Dano festival on that list.",
+            "factIds": [
+              "f9"
+            ]
+          }
+        ],
+        "checkpoints": [],
+        "sequenceSceneIds": [
+          "s1",
+          "s3",
+          "s6",
+          "s8"
+        ],
+        "newKeywordIds": [
+          "dano",
+          "changpo",
+          "ssireum",
+          "jangsa"
+        ]
+      }
+    ],
+    "coverSceneId": "s1",
+    "pillarTags": [],
+    "companionId": "hoya",
+    "facts": [
+      {
+        "id": "f1",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Dano falls on the fifth day of the fifth lunar month and is a representative summer holiday rich in games and customs. In 1518 it was counted among three great holidays (with Seollal and Chuseok); in the late Joseon era the book Dongguk sesigi counted it among four (Seol, Hansik, Dano, Chuseok).",
+        "claimKo": "단오는 음력 5월 5일로 여름의 대표 명절이며 다양한 놀이와 풍속이 전승되어 왔다. 1518년(중종 13)에는 설·추석과 함께 3대 명절로 꼽혔고, 조선 후기 『동국세시기』는 설·한식·단오·추석을 4대 명절로 꼽았다.",
+        "sources": [
+          {
+            "title": "국가무형유산 단오 (The Traditional Holiday of Dano)",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0001520000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01520000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘단오는 음력 5월 5일로 … 여름의 대표 명절이다.’ / ‘단오는 조선시대 4대 명절이었던 설, 한식, 추석에 비해 향유 집단의 폭이 넓은 명절이었다.’ (this sentence alone names three other holidays, so the four-holiday count is sourced from the two entries below)"
+          },
+          {
+            "title": "국가무형유산 설과 대보름 (The Traditional Holidays of Seol and Daeboreum)",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0001500000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01500000",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "‘조선시대 설은 중종 13년(1518년) 단오·추석과 함께 3대 명절로 꼽았고, 조선 후기 간행된 『동국세시기』에 따르면 한식·단오·추석과 더불어 4대 명절로 손꼽았다.’"
+          },
+          {
+            "title": "단오",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0013638",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "정의: ‘1년 중에서 양기가 가장 왕성한 날이라 하여 음력 5월 5일에 지내는 우리나라의 명절.’ / ‘단오는 더운 여름을 맞기 전의 초하(初夏)의 계절이며’ / ‘단오는 1518년(중종 13) 설날·추석과 함께 삼대 …’"
+          },
+          {
+            "title": "설",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0028997",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "‘조선시대는 원단·한식·단오·추석을 4대 명절이라 했지만’"
+          },
+          {
+            "title": "5개 명절(설과 대보름, 한식, 단오, 추석, 동지) 국가무형유산 신규종목 지정 (2023-12-18)",
+            "publisher": "국가유산청 (당시 문화재청) 보도자료",
+            "url": "https://www.khs.go.kr/newsBbz/selectNewsBbzView.do?newsItemId=155704541&sectionId=b_sec_1&mn=NS_01_02_02",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘음력 5월 5일로 다양한 놀이와 풍속이 전승되어온 ‘단오’’"
+          }
+        ]
+      },
+      {
+        "id": "f2",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "On Dano people washed their hair in water boiled with changpo (sweet flag, a fragrant plant), believing it made hair thick and glossy.",
+        "claimKo": "단오에는 창포를 삶은 물로 머리를 감았으며, 그러면 머리카락이 소담하고 윤기가 난다고 여겼다.",
+        "sources": [
+          {
+            "title": "단오",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0013638",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘창포를 삶아 창포탕(菖蒲湯)을 만들어 그 물로 머리를 감기도 한다. 그러면 머리카락이 소담하고 윤기가 있으며, 빠지지 않는다고 한다.’"
+          },
+          {
+            "title": "창포",
+            "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+            "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%B0%BD%ED%8F%AC",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘온몸에 향기가 있다.’ … ‘단오에 창포물을 만들어 머리를 감거나 술을 빚는다.’"
+          }
+        ]
+      },
+      {
+        "id": "f3",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Swinging (geunettwigi) is a long-recorded Dano custom and folk game.",
+        "claimKo": "그네뛰기는 고려·조선 기록에서도 확인되는 단오의 대표적인 놀이이다.",
+        "sources": [
+          {
+            "title": "국가무형유산 단오",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0001520000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01520000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "English: ‘Records from the Goryeo and Joseon eras offer accounts of Dano customs such as holding community festivals, swinging, and making hand-held fans.’"
+          },
+          {
+            "title": "단오",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0013638",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘민속놀이로는 그네뛰기와 씨름 등이 있다.’ / 『동국세시기』 ‘항간에서는 남녀들이 그네뛰기를 많이 한다.’"
+          }
+        ]
+      },
+      {
+        "id": "f4",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Ssireum (Korean wrestling) has long been a popular Dano game.",
+        "claimKo": "씨름은 예로부터 단오의 대표적인 놀이였다.",
+        "sources": [
+          {
+            "title": "단오",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0013638",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘민속놀이로는 그네뛰기와 씨름 등이 있다.’"
+          },
+          {
+            "title": "씨름",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0034198",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "『동국세시기』 단오 대목 인용: ‘단오날의 행사로서 이 씨름은 매우 성하여 서울을 비롯하여 각 고을마다 크게 벌인다.’"
+          }
+        ]
+      },
+      {
+        "id": "f5",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "In ssireum two wrestlers grip each other's satba (a cloth belt worn around the waist and thigh) and try to bring the other down; under modern competition rules, the wrestler whose body from the knee up touches the ground first loses.",
+        "claimKo": "씨름은 두 사람이 샅바(허리와 허벅지에 매는 천 띠)를 맞잡고 상대를 넘어뜨리는 경기이며, 현대 경기 규칙에서는 무릎 이상의 몸이 먼저 땅에 닿는 쪽이 진다.",
+        "sources": [
+          {
+            "title": "국가무형유산 씨름 (Ssireum)",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0001310000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01310000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘「씨름」은 두 사람이 샅바를 맞잡고 힘과 기술을 이용해 상대를 넘어뜨려 승부를 겨루는 경기로서’"
+          },
+          {
+            "title": "Traditional Korean wrestling (Ssirum/Ssireum)",
+            "publisher": "UNESCO Intangible Cultural Heritage (ich.unesco.org)",
+            "url": "https://ich.unesco.org/en/RL/traditional-korean-wrestling-ssirum-ssireum-01533",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "ROK description: two players wearing ‘long fabric belts around their waists’ (and one thigh) grip each other's belt"
+          },
+          {
+            "title": "씨름",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0034198",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "경기 판정: ‘경기진행중 무릎 이상의 어느 부분이든 몸체가 지면에 먼저 닿는 선수가 패자가 되고’ (modern competition rules) / ‘왼손으로는 상대방의 허벅지에 끼운 샅바를 잡고’"
+          }
+        ]
+      },
+      {
+        "id": "f6",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "The ssireum champion is called jangsa (a very strong person); traditionally the winner was awarded an ox, a symbol of agricultural abundance.",
+        "claimKo": "씨름 우승자는 ‘장사’라 불리며, 전통적으로 우승자에게 상으로 황소(UNESCO 영문: ox, 농경의 풍요를 상징)를 주었다.",
+        "sources": [
+          {
+            "title": "Traditional Korean wrestling (Ssirum/Ssireum)",
+            "publisher": "UNESCO Intangible Cultural Heritage (ich.unesco.org)",
+            "url": "https://ich.unesco.org/en/RL/traditional-korean-wrestling-ssirum-ssireum-01533",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘The winner of the final game for adults is awarded an ox, symbolizing agricultural abundance, and the title of ‘Jangsa’.’"
+          },
+          {
+            "title": "씨름",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0034198",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘전통적으로 씨름에서 이긴 장사에게는 황소 한 마리를 주는 것이 상례로 되어 있었다.’"
+          },
+          {
+            "title": "장사(壯士)",
+            "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+            "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%9E%A5%EC%82%AC",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘몸이 우람하고 힘이 아주 센 사람.’"
+          }
+        ]
+      },
+      {
+        "id": "f7",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Gangneung Danoje, held in Gangneung on Korea's east coast, begins with brewing liquor for the deities; rites are held praying for the village's peace and a good harvest, and it is the largest village festival on the east coast.",
+        "claimKo": "강릉단오제는 신에게 드릴 술을 담그면서 시작되며, 제를 올려 마을의 평안과 풍년을 기원한다. 동해안에서 가장 규모가 큰 마을축제이다.",
+        "sources": [
+          {
+            "title": "국가무형유산 강릉단오제 (Gangneung Danoje)",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0000130000000&ccbaCtcd=51&ccbaCpno=1273200130000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘단오제는 신에게 드릴 술을 담그면서 시작된다.’ / ‘농사의 번영과 마을의 평안을 기원하며’ / ‘동해안에서 가장 규모가 큰 마을축제’"
+          },
+          {
+            "title": "Gangneung Danoje festival",
+            "publisher": "UNESCO Intangible Cultural Heritage (ich.unesco.org)",
+            "url": "https://ich.unesco.org/en/RL/00114",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘The annual Gangneung Danoje Festival takes place in the town of Gangneung and its surroundings’ / ‘The four-week long festival begins with the brewing of a sacred liquor’"
+          }
+        ]
+      },
+      {
+        "id": "f8",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "The Gwanno mask drama, performed at Gangneung Danoje, has no spoken lines: masked performers (the yangban, the young lady somae-gaksi, and others) amuse the audience with gestures alone. The Korea Heritage Service calls it Korea's only wordless drama, and the National Folk Museum's dictionary calls it the only silent mask drama in Korea.",
+        "claimKo": "강릉단오제의 관노가면극은 양반광대·소매각시 등이 가면을 쓰고 대사 없이 몸짓으로 관객을 웃기는 놀이로, 국가유산청은 우리나라에서 유일한 무언극이라 설명하고 국립민속박물관 사전은 한국 가면극 중 유일한 무언극이라 설명한다.",
+        "sources": [
+          {
+            "title": "국가무형유산 강릉단오제",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0000130000000&ccbaCtcd=51&ccbaCpno=1273200130000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘특히 관노가면극은 우리나라에서 유일한 무언극으로 대사없이 몸짓으로 관객을 웃기고 즐겁게 한다.’"
+          },
+          {
+            "title": "Gangneung Danoje festival",
+            "publisher": "UNESCO Intangible Cultural Heritage (ich.unesco.org)",
+            "url": "https://ich.unesco.org/en/RL/00114",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘It encompasses traditional music and Odokddegi folk songs, the Gwanno mask drama,’"
+          },
+          {
+            "title": "강릉관노가면극 (한국세시풍속사전)",
+            "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+            "url": "https://folkency.nfm.go.kr/kr/topic/detail/3149",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "‘강릉단오제 때 펼쳐지는 탈놀이로 춤과 동작을 위주로 한 국내 유일의 무언(無言) 가면극.’ / ‘등장인물은 양반광대, 소매각시, 장자마리 2명, 시시딱딱이 2명이다.’ / ‘한국 가면극 중에서는 유일한 무언극으로 춤과 몸짓언어(마임)로 전체를 표현하는 묵극(黙劇)양식이다.’"
+          }
+        ]
+      },
+      {
+        "id": "f9",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Gangneung Danoje was proclaimed a UNESCO Masterpiece of the Oral and Intangible Heritage of Humanity in 2005 and, when that programme was merged into the Representative List, was inscribed on the Representative List in 2008. Of Korea's Dano festivals, only Gangneung Danoje is on UNESCO's list.",
+        "claimKo": "강릉단오제는 2005년 유네스코 ‘인류구전 및 무형유산 걸작’으로 선정되었고, 2008년 인류무형문화유산 대표목록에 통합 등재되었다. 한국의 단오제 가운데 유네스코 목록에 오른 것은 강릉단오제이다.",
+        "sources": [
+          {
+            "title": "Gangneung Danoje festival",
+            "publisher": "UNESCO Intangible Cultural Heritage (ich.unesco.org)",
+            "url": "https://ich.unesco.org/en/RL/00114",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘Inscribed in 2008 (3.COM) on the Representative List of the Intangible Cultural Heritage of Humanity (originally proclaimed in 2005)’"
+          },
+          {
+            "title": "한국의 인류무형유산 (23건) 목록",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FkorInCulHeritage.jsp&pageNo=5_3_2_0",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘강릉단오제 (2005/2008)’"
+          },
+          {
+            "title": "국가무형유산 강릉단오제",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0000130000000&ccbaCtcd=51&ccbaCpno=1273200130000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘In November 2005, it was designated as UNESCO Masterpieces of the Oral and Intangible Heritage of Humanity’"
+          },
+          {
+            "title": "국가무형유산 단오",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0001520000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01520000",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "‘특히 현재 대규모 축제 및 의례·제의의 형태로 단오제의 자생성이 살아있는 강릉단오제·경산자인단오제·법성포단오제가 전승되고 있다.’ (the KHS list of Korea's 23 UNESCO elements, cited above, includes 강릉단오제 only)"
+          }
+        ]
+      },
+      {
+        "id": "f10",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "In 2018 ssireum was inscribed on UNESCO's Representative List as a joint inscription by the Republic of Korea and the DPRK; UNESCO's Director-General called the two Koreas joining their applications unprecedented.",
+        "claimKo": "씨름은 2018년 남북한 공동 등재로 유네스코 인류무형문화유산 대표목록에 올랐으며, 유네스코 사무총장은 남북이 신청서를 합친 것을 전례 없는 일이라고 평가했다.",
+        "sources": [
+          {
+            "title": "Decision of the Intergovernmental Committee: 13.COM 10.B.41",
+            "publisher": "UNESCO Intangible Cultural Heritage (ich.unesco.org)",
+            "url": "https://ich.unesco.org/en/decisions/13.COM/10.B.41",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘Inscribes Traditional Korean wrestling (Ssirum/Ssireum) on the Representative List of the Intangible Cultural Heritage of Humanity as a joint inscription.’"
+          },
+          {
+            "title": "Traditional Korean wrestling listed as Intangible Cultural Heritage following unprecedented merged application from both Koreas (26 Nov 2018)",
+            "publisher": "UNESCO Intangible Cultural Heritage (ich.unesco.org)",
+            "url": "https://ich.unesco.org/en/news/traditional-korean-wrestling-listed-as-intangible-cultural-heritage-following-unprecedented-merged-application-from-both-koreas-00325",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘The fact that both Koreas accepted to join their respective applications is unprecedented,’"
+          },
+          {
+            "title": "한국의 인류무형유산 (23건) 목록",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FkorInCulHeritage.jsp&pageNo=5_3_2_0",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘씨름(2018)’"
+          }
+        ]
+      }
+    ],
+    "referenceDisplay": "Sources: 국가유산청 국가유산포털(단오·강릉단오제·씨름·인류무형유산 목록); UNESCO Intangible Cultural Heritage; 한국민족문화대백과사전; 한국민속대백과사전(국립민속박물관); 국립국어원 표준국어대사전",
+    "verification": {
+      "passes": 3,
+      "checkedAt": "2026-10-10",
+      "scope": "cluster",
+      "notes": "Third independent pass over 6 episodes / 61 facts / 161 source entries (70 unique URLs). Every URL was re-fetched with my own scripts (UNESCO pages via Wayback copies; heritage.go.kr descriptions via the portal ajax html and khs.go.kr open API; folkency via its JSON API) and each quote or locator was machine-matched to the page text; the few non-matching strings were checked by hand (portal metadata fields, hanja or footnote punctuation, label text). Corrections: (1) pansori scene 2 now gives both UNESCO steps (2003 masterpiece proclamation, 2008 Representative List); (2) pansori f11 states the Aesop title as in the cited Townsend text and the common alternate title; (3) added sources: NFM 놀보박타령 for 'greedy' (f5), 표준국어대사전 타다 for 'sawed' (f6), 한국민족문화대백과사전 선도해 for the Samguk sagi tale (f12); (4) Seollal f9/f10 designation-date locators now cite the KHS open API field. No other change. See seasons-tales.signoff.md."
+    },
+    "authorNotes": "Left out on purpose: the story that Dano comes from China (Qu Yuan), folk etymology of 수릿날, the 석전 (stone fight) custom, shamanic (굿) details, the festival's deities by name (김유신, 범일국사, 정씨 처녀), and how long the festival lasts. Sources describe its length differently (UNESCO says four weeks; the 국가유산포털 says 5 days of rites at the 단오장). The 'only silent mask drama' claim comes from one official source (국가유산청 국가유산포털), so the narration hedges it as 'known as'. The knee rule describes modern competition ssireum (Encyclopedia of Korean Culture). The narration uses 'east coast' and doesn't name the sea. 단오 was also designated National Intangible Heritage on 2023-12-18. That's covered in the Seollal episode and not repeated here. The 2023 Dano designation (KHS press release) is available if wanted. Standard spelling note: 단옷날 (with 사이시옷) is the dictionary form, and the title now uses it: 단옷날의 그네, 탈, 씨름 (Danonnarui geune, tal, ssireum), matching the English title. REVISION 2026-10-10: \"four great holidays\" now dated to the late-Joseon Dongguk sesigi (1518 list had three); knee rule labelled modern competition rule and phrased \"from the knee up\"; Gwanno illustration now nobleman (yangban) mask + young-lady (somae-gaksi) mask; \"only silent mask drama\" kept hedged and now has two sources (KHS portal; 국립민속박물관 한국세시풍속사전). UNESCO: Danoje proclaimed 2005, inscribed 2008 (stated both). Ox: UNESCO says ox; encykorea says 황소 (bull) - narration follows UNESCO. Check 3 changed to a question that does not rely on \"from Gangneung\". AUTHORING 2026-10-11 (F-STORY-001 PR 1.8d): title romanization, scene captions and check explanations written from the cited facts; every scene is artPending (text-only tile) until the art PRs; no claim or source changed. Korean spacing: learner terms are written 강릉 단오제 and 인류 무형 유산 (spaced by word, 한글 맞춤법 제49항/제50항) so each word lines up with Gangneung Danoje and illyu muhyeong yusan; the facts keep the official spellings. REVIEW 2026-10-11 (PR 1.8d review fixes): the learner keyword stays 인류 무형 유산 (illyu muhyeong yusan, the Korea Heritage Service's current term, spaced by word) with the gloss 'Intangible Heritage of Humanity (UNESCO list)'; f9 and f10 keep the researched 인류무형문화유산. s8 is rewritten in short sentences with the same years; check options are of even length; geune and chukje are used as tokens; learning goals use receptive verbs.",
+    "errata": []
+  },
+  {
+    "v": 1,
     "id": "story:donguibogam",
     "state": "ready",
     "contentVer": 1,
@@ -1660,6 +3049,1319 @@ export const storiesAll: Story[] = [
   },
   {
     "v": 1,
+    "id": "story:gimjang-arirang",
+    "state": "ready",
+    "contentVer": 1,
+    "title": {
+      "ko": "김장하는 날과 아리랑",
+      "romanization": "Gimjanghaneun nalgwa Arirang",
+      "en": "Gimjang Day: Sharing Kimchi, Singing Arirang"
+    },
+    "summaryEn": "As winter comes, Hoya helps relatives and neighbors make and share kimchi for gimjang (UNESCO 2013), then hears Arirang, the folk song shared across Korea (South Korea's UNESCO entry, 2012).",
+    "theme": "life",
+    "kind": "intangible",
+    "recommendedStage": 2,
+    "minutes": 5,
+    "learningGoalsEn": [
+      "Understand why families made gimjang kimchi and that sharing is at its heart.",
+      "Know the yearly preparation for gimjang and the main ingredients (napa cabbage, chili powder, garlic, ginger, green onions).",
+      "Know that Arirang is a folk song with many regional versions, and that UNESCO inscribed gimjang (2013) and South Korea's Arirang (2012); North Korea's Arirang has its own separate listing.",
+      "Read and recognize 김장 (gimjang), 김치 (gimchi), 배추 (baechu), 고춧가루 (gochutgaru), 나눔 (nanum) and 아리랑 (arirang)."
+    ],
+    "origin": {
+      "type": "documented",
+      "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
+    },
+    "review": {
+      "language": "draft",
+      "culture": "draft",
+      "advisory": []
+    },
+    "keywords": [
+      {
+        "id": "gimjang",
+        "ko": "김장",
+        "romanization": "gimjang",
+        "en": "making winter kimchi",
+        "kind": "word"
+      },
+      {
+        "id": "gimchi",
+        "ko": "김치",
+        "romanization": "gimchi",
+        "en": "kimchi",
+        "kind": "word"
+      },
+      {
+        "id": "baechu",
+        "ko": "배추",
+        "romanization": "baechu",
+        "en": "napa cabbage",
+        "kind": "word"
+      },
+      {
+        "id": "gochutgaru",
+        "ko": "고춧가루",
+        "romanization": "gochutgaru",
+        "en": "red chili powder",
+        "kind": "word"
+      },
+      {
+        "id": "iut",
+        "ko": "이웃",
+        "romanization": "iut",
+        "en": "neighbor",
+        "kind": "word"
+      },
+      {
+        "id": "nanum",
+        "ko": "나눔",
+        "romanization": "nanum",
+        "en": "sharing",
+        "kind": "word"
+      },
+      {
+        "id": "gyeoul",
+        "ko": "겨울",
+        "romanization": "gyeoul",
+        "en": "winter",
+        "kind": "word"
+      },
+      {
+        "id": "arirang",
+        "ko": "아리랑",
+        "romanization": "arirang",
+        "en": "Arirang (folk song)",
+        "kind": "word"
+      },
+      {
+        "id": "gimchiwa-gimjangmunhwa",
+        "ko": "김치와 김장문화",
+        "romanization": "gimchiwa gimjangmunhwa",
+        "en": "Kimchi and Gimjang Culture (the Korea Heritage Service's name for the UNESCO listing)",
+        "kind": "word"
+      },
+      {
+        "id": "arirang-arirang-arariyo",
+        "ko": "아리랑 아리랑 아라리요",
+        "romanization": "Arirang arirang arariyo",
+        "en": "the Arirang refrain (sung syllables)",
+        "kind": "phrase"
+      }
+    ],
+    "cultureNotes": [],
+    "tiers": [
+      {
+        "level": "listen",
+        "scenes": [
+          {
+            "id": "s1",
+            "narrationEn": "Brrr! Late autumn is turning to winter, {kw:gyeoul}. Hoya visits a busy yard. Long ago, fresh vegetables were hard to find in winter, so families made lots of kimchi at once. This is called gimjang.",
+            "captionEn": "Making lots of kimchi before winter",
+            "keyword": {
+              "id": "gimjang",
+              "ko": "김장",
+              "romanization": "gimjang",
+              "en": "making winter kimchi together",
+              "kind": "word"
+            },
+            "factIds": [
+              "f1"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "A hanok courtyard in late autumn with bare trees, stacks of napa cabbages and big clay jars; Hoya in a warm vest arriving with a basket."
+          },
+          {
+            "id": "s2",
+            "narrationEn": "Gimjang takes months of preparation! In spring, families get shrimp and anchovies for salting. In summer, they buy sea salt. In late summer, red chili peppers are dried and ground into chili powder.",
+            "captionEn": "Months of getting ready",
+            "keyword": {
+              "id": "gochutgaru",
+              "ko": "고춧가루",
+              "romanization": "gochutgaru",
+              "en": "red chili powder",
+              "kind": "word"
+            },
+            "factIds": [
+              "f2"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "Three small seasonal panels: spring jars of salted tiny shrimp, summer sacks of white sea salt, late-summer red chili peppers drying on mats in the sun."
+          },
+          {
+            "id": "s3",
+            "narrationEn": "On gimjang day, relatives and neighbors, {kw:iut}, come to help. They salt napa cabbages, then rub in a seasoning made with chili powder, garlic, ginger and green onions.",
+            "captionEn": "Salting and seasoning napa cabbages",
+            "keyword": {
+              "id": "baechu",
+              "ko": "배추",
+              "romanization": "baechu",
+              "en": "napa cabbage",
+              "kind": "word"
+            },
+            "factIds": [
+              "f3"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "Neighbors in aprons and rubber gloves around big basins, rubbing red seasoning between cabbage leaves; garlic, ginger and green onions nearby; Hoya helping."
+          },
+          {
+            "id": "s4",
+            "narrationEn": "Every region makes kimchi its own way. In the cold north it is often milder and less salty; in the south it is saltier, with a redder, richer seasoning. So there are countless kinds of kimchi!",
+            "captionEn": "Every region's own kimchi",
+            "keyword": {
+              "id": "gimchi",
+              "ko": "김치",
+              "romanization": "gimchi",
+              "en": "kimchi",
+              "kind": "word"
+            },
+            "factIds": [
+              "f4"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "A simple map-shaped table runner (no labels) with bowls of pale and deep-red kimchi placed from top to bottom; Hoya comparing two bowls."
+          },
+          {
+            "id": "s5",
+            "narrationEn": "On gimjang day, the host family traditionally serves the helpers boiled pork with the cabbage's yellow inner leaves. Many families give kimchi to neighbors, too. Working together and sharing are the heart of gimjang.",
+            "captionEn": "Sharing pork, kimchi and help",
+            "keyword": {
+              "id": "nanum",
+              "ko": "나눔",
+              "romanization": "nanum",
+              "en": "sharing",
+              "kind": "word"
+            },
+            "factIds": [
+              "f5"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "Helpers seated around a low table with sliced boiled pork and pale yellow cabbage leaves; a child carrying a covered dish of kimchi to the house next door; Hoya waving."
+          },
+          {
+            "id": "s6",
+            "narrationEn": "In 2013, UNESCO added gimjang, making and sharing kimchi, to its heritage list. In Korean, the Heritage Service calls this listing {kw:gimchiwa-gimjangmunhwa}.",
+            "captionEn": "Gimjang on UNESCO's list",
+            "keyword": {
+              "id": "gimchiwa-gimjangmunhwa",
+              "ko": "김치와 김장문화",
+              "romanization": "gimchiwa gimjangmunhwa",
+              "en": "Kimchi and Gimjang Culture (the Korea Heritage Service's name for the UNESCO listing)",
+              "kind": "word"
+            },
+            "factIds": [
+              "f6"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "Rows of filled clay kimchi jars glowing in late-afternoon light, with Hoya proudly holding a heritage card showing cabbage and hands."
+          },
+          {
+            "id": "s7",
+            "narrationEn": "As the day ends, Grandma hums a song known all over Korea: 'Arirang, arirang, arariyo…' Arirang is a folk song made and passed down by ordinary people over many generations.",
+            "captionEn": "Grandma hums Arirang",
+            "line": {
+              "ko": "아리랑 아리랑 아라리요",
+              "romanization": "Arirang arirang arariyo",
+              "en": "the Arirang refrain (sung syllables)",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f7"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "Grandma resting on the wooden porch at dusk, humming with eyes closed, musical notes drifting toward mountain ridges; Hoya leaning on her shoulder."
+          },
+          {
+            "id": "s8",
+            "narrationEn": "Arirang has many versions. Regions have their own, like Jeongseon, Jindo and Miryang Arirang, and anyone can make up new verses! In 2012, UNESCO added South Korea's Arirang to its heritage list. North Korea's Arirang is listed separately.",
+            "captionEn": "Arirang's many regional versions",
+            "keyword": {
+              "id": "arirang",
+              "ko": "아리랑",
+              "romanization": "Arirang",
+              "en": "Arirang (Korean folk song)",
+              "kind": "word"
+            },
+            "factIds": [
+              "f8",
+              "f9",
+              "f10"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "A winding mountain pass with three small scenes along it (mountain valley, island coast, river town), each with people singing; Hoya walking the path."
+          }
+        ],
+        "checks": [
+          {
+            "id": "c1",
+            "kind": "detail",
+            "promptEn": "Why did families make lots of kimchi at once for gimjang?",
+            "options": [
+              {
+                "id": "a",
+                "en": "Fresh vegetables were hard to find in winter",
+                "isCorrect": true
+              },
+              {
+                "id": "b",
+                "en": "Cabbage only grows in the cold north",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "Kimchi had to be ready before the new year",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "Kimchi jars were needed for a holiday feast",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "Fresh vegetables were hard to get in winter, so families made lots of kimchi at once to last through the winter.",
+            "factIds": [
+              "f1"
+            ]
+          },
+          {
+            "id": "c2",
+            "kind": "detail",
+            "promptEn": "What is at the heart of gimjang?",
+            "options": [
+              {
+                "id": "a",
+                "en": "Making kimchi as fast as possible",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "Working together and sharing",
+                "isCorrect": true
+              },
+              {
+                "id": "c",
+                "en": "Choosing the best cabbage alone",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "Competing for the saltiest kimchi",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "Cooperation and sharing are the spirit of gimjang. Homes even exchange kimchi with each other.",
+            "factIds": [
+              "f5"
+            ]
+          },
+          {
+            "id": "c3",
+            "kind": "detail",
+            "promptEn": "Which statement about Arirang is true?",
+            "options": [
+              {
+                "id": "a",
+                "en": "It has only one version everywhere",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "It was written by one famous composer",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "It has many regional versions",
+                "isCorrect": true
+              },
+              {
+                "id": "d",
+                "en": "It is sung only in winter",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "Arirang has many regional versions, like Jeongseon, Jindo and Miryang Arirang, and anyone can make new lyrics.",
+            "factIds": [
+              "f8"
+            ]
+          }
+        ],
+        "checkpoints": [],
+        "sequenceSceneIds": [
+          "s1",
+          "s3",
+          "s6",
+          "s8"
+        ],
+        "newKeywordIds": [
+          "gimjang",
+          "gochutgaru",
+          "baechu",
+          "gimchi"
+        ]
+      }
+    ],
+    "coverSceneId": "s1",
+    "pillarTags": [],
+    "companionId": "hoya",
+    "facts": [
+      {
+        "id": "f1",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Because fresh vegetables were hard to get in winter, families made a large amount of kimchi at once in late autumn to early winter to last through the winter; this custom is gimjang (UNESCO: Kimjang).",
+        "claimKo": "겨울철에는 신선한 채소를 구하기 어려워 늦가을·초겨울에 겨우내 먹을 김치를 한꺼번에 많이 담갔으며, 이를 김장이라 한다.",
+        "sources": [
+          {
+            "title": "김장",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0010314",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "정의: ‘겨우내 먹을 김치를 한목에 담가두는 풍습.’ / ‘겨울철에는 신선한 채소를 구하기 어려웠으므로, 초겨울에 김치를 많이 담가서 저장하는 풍습이 발달하게 되었다.’"
+          },
+          {
+            "title": "Kimjang, making and sharing kimchi in the Republic of Korea",
+            "publisher": "UNESCO Intangible Cultural Heritage (ich.unesco.org)",
+            "url": "https://ich.unesco.org/en/RL/00881",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘Late autumn is Kimjang season, when communities collectively make and share large quantities of kimchi’ … ‘to sustain it through the long, harsh winter.’"
+          },
+          {
+            "title": "국가무형유산 김치 담그기 (Kimchi Making)",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0001330000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01330000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘Kimchi making takes place on a large scale in early winter. This seasonal kimchi-making practice, or kimjang’"
+          }
+        ]
+      },
+      {
+        "id": "f2",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Gimjang preparation takes months (more than half a year, per the Encyclopedia of Korean Culture) and follows a yearly cycle: in spring households procure shrimp, anchovy and other seafood for salting, in summer they buy sea salt, and in late summer red chili peppers are dried and ground into powder.",
+        "claimKo": "김장 준비에는 반년 이상이 걸리며 1년 주기로 이어진다. 봄에는 새우·멸치 등 해산물을 구해 젓갈을 담그고, 여름에는 소금을 사며, 늦여름에는 고추를 말려 가루를 낸다.",
+        "sources": [
+          {
+            "title": "Kimjang, making and sharing kimchi in the Republic of Korea",
+            "publisher": "UNESCO Intangible Cultural Heritage (ich.unesco.org)",
+            "url": "https://ich.unesco.org/en/RL/00881",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘Preparation follows a yearly cycle.’ / ‘In spring, households procure shrimp, anchovy and other seafood for salting and fermenting.’ / ‘In summer, they buy sea salt for the brine.’ / ‘In late summer, red chilli peppers are dried and ground into powder.’"
+          },
+          {
+            "title": "김장",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0010314",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘김장은 봄철의 젓갈담그기에서 초가을의 고추·마늘의 준비, 김장용 채소의 재배 등 준비하는 데에 반년 이상이 걸리는 한 가정의 큰 행사이었다.’"
+          }
+        ]
+      },
+      {
+        "id": "f3",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Relatives and neighbors help one another with gimjang: vegetables such as napa cabbage are salted, then mixed with a seasoning that includes chili powder, garlic, ginger and green onions.",
+        "claimKo": "김장은 서로 도와가며 했으며, 배추 등 채소를 소금에 절인 뒤 고춧가루·마늘·생강·파 등이 든 양념을 버무린다.",
+        "sources": [
+          {
+            "title": "김장",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0010314",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘서로 도와가며 김장을 하는 풍속이 있었다.’ / ‘미나리·갓·마늘·파·생강·고춧가루와 같은 향미가 있는 채소가 부재료로 이용되고, 소금·젓갈이 간을 맞추기 위하여 사용된다.’"
+          },
+          {
+            "title": "김치 담그기",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0076960",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "정의: ‘무 · 배추 ‧ 오이 등의 채소를 소금에 절이고, 젓갈 ‧ 고추 ‧ 파 ‧ 마늘 ‧ 생강 등의 양념을 넣어 발효시켜 김치를 만드는 일.’"
+          },
+          {
+            "title": "국가무형유산 김치 담그기",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0001330000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01330000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘협동과 나눔이라는 공동체 정신이 담겨진 문화로’"
+          }
+        ]
+      },
+      {
+        "id": "f4",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Kimchi differs by region: in the cold north it is typically less salty with milder seasoning, while in the south it is saltier with a redder, stronger seasoning; there are countless local varieties.",
+        "claimKo": "김치는 지역마다 달라, 추운 북쪽은 싱겁고 담백하게, 남쪽은 짜고 빨갛고 진한 양념으로 담그며, 지역별 종류가 매우 많다.",
+        "sources": [
+          {
+            "title": "김장",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0010314",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘추운 북쪽지방은 … 소금간을 싱겁게 하고 양념도 담백하게 하여 … 남쪽지방은 소금간을 세게 하고 빨갛고 진한 맛의 양념을 하며 국물을 적게 만든다.’"
+          },
+          {
+            "title": "국가무형유산 김치 담그기",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0001330000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01330000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘the countless local varieties of kimchi are a stellar example of cultural diversity.’"
+          }
+        ]
+      },
+      {
+        "id": "f5",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "On gimjang day the host family traditionally boiled pork and served it with the cabbage's yellow inner leaves and seasoning to the helpers (a custom the Encyclopedia says is still kept as a fond tradition); kimchi is also exchanged among households, and cooperation and sharing are the spirit of gimjang.",
+        "claimKo": "김장하는 날 집주인은 전통적으로 돼지고기를 삶아 배추의 노란 속잎과 양념을 일하는 사람들에게 내었고(속대쌈, 지금도 미풍으로 전해진다), 김치를 서로 나누기도 한다. 협동과 나눔이 김장 문화의 핵심이다.",
+        "sources": [
+          {
+            "title": "김장",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0010314",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘돼지고기를 두어근 사다가 삶아놓고 배추의 노란 속잎과 양념을 준비하여 일하는 사람들이 먹도록 하였다.’ / ‘김장담그기가 끝나면 절인 배추나 남은 소를 나누어주고’"
+          },
+          {
+            "title": "Kimjang, making and sharing kimchi in the Republic of Korea",
+            "publisher": "UNESCO Intangible Cultural Heritage (ich.unesco.org)",
+            "url": "https://ich.unesco.org/en/RL/00881",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘the custom of exchanging kimchi among households.’"
+          },
+          {
+            "title": "국가무형유산 김치 담그기",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0001330000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01330000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘협동과 나눔이라는 공동체 정신이 담겨진 문화로’"
+          }
+        ]
+      },
+      {
+        "id": "f6",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "'Kimjang, making and sharing kimchi in the Republic of Korea' (Korean name used by the Korea Heritage Service: 김치와 김장문화) was inscribed on UNESCO's Representative List of the Intangible Cultural Heritage of Humanity in 2013.",
+        "claimKo": "‘김치와 김장문화’(UNESCO 영문명: Kimjang, making and sharing kimchi in the Republic of Korea)는 2013년 유네스코 인류무형문화유산 대표목록에 등재되었다.",
+        "sources": [
+          {
+            "title": "Kimjang, making and sharing kimchi in the Republic of Korea",
+            "publisher": "UNESCO Intangible Cultural Heritage (ich.unesco.org)",
+            "url": "https://ich.unesco.org/en/RL/00881",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘Inscribed in 2013’ on the Representative List of the Intangible Cultural Heritage of Humanity (8.COM)"
+          },
+          {
+            "title": "한국의 인류무형유산 (23건) 목록",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FkorInCulHeritage.jsp&pageNo=5_3_2_0",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘김치와 김장문화 (2013)’"
+          },
+          {
+            "title": "국가무형유산 김치 담그기",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0001330000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01330000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘* Kimchi making was inscribed on the UNESCO Representative List of the Intangible Cultural Heritage of Humanity in 2013.’"
+          }
+        ]
+      },
+      {
+        "id": "f7",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Arirang is a widely shared Korean folk song, created and passed down orally by ordinary people over generations, built around a sung refrain such as 'Arirang, arirang, arariyo'; scholars offer several theories about where the refrain word comes from, but the refrain itself is treated as sung syllables that lift the mood and fill out the melody.",
+        "claimKo": "아리랑은 구전으로 전승·재창조되어 온 한국의 대표 민요로, ‘아리랑 아리랑 아라리요’ 같은 후렴(여음)을 지닌다. 후렴어의 어원에는 여러 설이 있으나, 후렴은 흥을 돕고 음조를 메워 나가는 사설로 본다.",
+        "sources": [
+          {
+            "title": "Arirang, lyrical folk song in the Republic of Korea",
+            "publisher": "UNESCO Intangible Cultural Heritage (ich.unesco.org)",
+            "url": "https://ich.unesco.org/en/RL/00445",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘a popular form of Korean folk song and the outcome of collective contributions made by ordinary Koreans’ / ‘Essentially a simple song, it consists of the refrain …’ (description, sentences 1–2)"
+          },
+          {
+            "title": "아리랑 (민요)",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0034277",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "정의: ‘구전으로 전승되고 재창조되어 온 한국의 전통 민요.’ / 아리랑의 어원 및 구조: ‘아리랑의 어원에 대해서는 … 설이 있으나 의미 없는 사설(nonsence verse)로 흥을 돕고 음조를 메워 나가는 구실을 할 뿐이다.’ (the entry lists several theories of the word's origin and calls them folk etymology)"
+          },
+          {
+            "title": "아리랑",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0077500",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "대표 사설: ‘“아리랑 아리랑 아라리요 / 아리랑 고개를 넘어간다 …”’"
+          },
+          {
+            "title": "국가무형유산 아리랑",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0001290000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01290000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘The well-known and widely shared Korean folk song Arirang, which has been handed down through the generations and exists in many variations’"
+          },
+          {
+            "title": "아리랑 (한국민속문학사전)",
+            "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+            "url": "https://folkency.nfm.go.kr/kr/topic/detail/869",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "정의: ‘‘아리’, ‘아라리’, ‘아라성’, ‘아리랑’이라는 입타령으로 된 후렴이 딸리는 장절 형식이며 … 우리나라의 민요군.’"
+          }
+        ]
+      },
+      {
+        "id": "f8",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Arirang exists in many regional versions, such as Jeongseon Arirang, Jindo Arirang and Miryang Arirang, and anyone can create new lyrics.",
+        "claimKo": "아리랑은 정선아리랑·진도아리랑·밀양아리랑 등 지역마다 다양하며, 누구나 새 노랫말을 지어 부를 수 있다.",
+        "sources": [
+          {
+            "title": "아리랑 (민요)",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0034277",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘강원도 일대에 널리 분포되어 있는 「정선아리랑」, 호남지역의 「진도아리랑」, 그리고 경상남도 일원의 「밀양아리랑」을 묶어서 삼대아리랑이라고 부르고 있다.’"
+          },
+          {
+            "title": "Arirang, lyrical folk song in the Republic of Korea",
+            "publisher": "UNESCO Intangible Cultural Heritage (ich.unesco.org)",
+            "url": "https://ich.unesco.org/en/RL/00445",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘Everyone can create new lyrics, adding to the song's regional, historical and genre variations, and cultural diversity.’"
+          },
+          {
+            "title": "아리랑",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0077500",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘「경기 아리랑」 「밀양 아리랑」 「진도 아리랑」 「정선 아리랑」 등 전국적으로 다양하며’"
+          }
+        ]
+      },
+      {
+        "id": "f9",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "'Arirang, lyrical folk song in the Republic of Korea' (South Korea's entry) was inscribed on UNESCO's Representative List in 2012.",
+        "claimKo": "‘아리랑’(UNESCO 영문명: Arirang, lyrical folk song in the Republic of Korea, 대한민국의 등재 종목)은 2012년 유네스코 인류무형문화유산 대표목록에 등재되었다.",
+        "sources": [
+          {
+            "title": "Arirang, lyrical folk song in the Republic of Korea",
+            "publisher": "UNESCO Intangible Cultural Heritage (ich.unesco.org)",
+            "url": "https://ich.unesco.org/en/RL/00445",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘Inscribed in 2012 (7.COM) on the Representative List of the Intangible Cultural Heritage of Humanity’"
+          },
+          {
+            "title": "한국의 인류무형유산 (23건) 목록",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FkorInCulHeritage.jsp&pageNo=5_3_2_0",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘아리랑 (2012)’"
+          },
+          {
+            "title": "아리랑",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0077500",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘2012년 12월 5일 인류무형문화유산으로 등재되었다.’"
+          }
+        ]
+      },
+      {
+        "id": "f10",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "North Korea's Arirang is a separate UNESCO entry, 'Arirang folk song in the Democratic People's Republic of Korea', inscribed in 2014; it is distinct from South Korea's 2012 entry.",
+        "claimKo": "북한의 ‘아리랑’(Arirang folk song in the Democratic People's Republic of Korea)은 2014년에 별도 종목으로 등재되었으며, 2012년 대한민국의 아리랑 등재와는 별개이다.",
+        "sources": [
+          {
+            "title": "Arirang folk song in the Democratic People's Republic of Korea",
+            "publisher": "UNESCO Intangible Cultural Heritage (ich.unesco.org)",
+            "url": "https://ich.unesco.org/en/RL/arirang-folk-song-in-the-democratic-people-s-republic-of-korea-00914",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "Inscribed in 2014 (9.COM) on the Representative List of the Intangible Cultural Heritage of Humanity"
+          },
+          {
+            "title": "Decision of the Intergovernmental Committee: 9.COM 10.14",
+            "publisher": "UNESCO Intangible Cultural Heritage (ich.unesco.org)",
+            "url": "https://ich.unesco.org/en/decisions/9.COM/10.14",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "Decision on the nomination of Arirang folk song in the Democratic People's Republic of Korea (No. 00914) for the Representative List"
+          }
+        ]
+      }
+    ],
+    "referenceDisplay": "Sources: UNESCO Intangible Cultural Heritage (Kimjang, 2013; Arirang in the Republic of Korea, 2012 - North Korea's Arirang is a separate 2014 entry); 국가유산청 국가유산포털(김치 담그기·아리랑·인류무형유산 목록); 한국민족문화대백과사전; 한국민속대백과사전(국립민속박물관)",
+    "verification": {
+      "passes": 3,
+      "checkedAt": "2026-10-10",
+      "scope": "cluster",
+      "notes": "Third independent pass over 6 episodes / 61 facts / 161 source entries (70 unique URLs). Every URL was re-fetched with my own scripts (UNESCO pages via Wayback copies; heritage.go.kr descriptions via the portal ajax html and khs.go.kr open API; folkency via its JSON API) and each quote or locator was machine-matched to the page text; the few non-matching strings were checked by hand (portal metadata fields, hanja or footnote punctuation, label text). Corrections: (1) pansori scene 2 now gives both UNESCO steps (2003 masterpiece proclamation, 2008 Representative List); (2) pansori f11 states the Aesop title as in the cited Townsend text and the common alternate title; (3) added sources: NFM 놀보박타령 for 'greedy' (f5), 표준국어대사전 타다 for 'sawed' (f6), 한국민족문화대백과사전 선도해 for the Samguk sagi tale (f12); (4) Seollal f9/f10 designation-date locators now cite the KHS open API field. No other change. See seasons-tales.signoff.md."
+    },
+    "authorNotes": "Spelling: RR for 김장/김치 is gimjang/gimchi. UNESCO's official title uses 'Kimjang', and 'kimchi' is the usual English word. The narration uses 'gimjang' and 'kimchi'; UNESCO's spelling 'Kimjang' stays in f1, f6 and the Sources screen (review 2026-10-11: the spoken aside was removed). Grandma humming Arirang at the end of the day is a story moment. The narration does not claim Arirang is a gimjang work song. The sources don't link the two, though some Arirang types are work songs (Encyclopedia of Korean Culture). The refrain quoted is the widely known one. The Encyclopedia notes the best-known 'Arirang' (경기/본조 아리랑) is a new folk-song (신민요) form; traditional regional ones include Jeongseon, Jindo and Miryang. Left out on purpose: UNESCO's estimate of 'some 3,600 variations'. Only one authoritative source for it was found, so it isn't in the narration. Also left out: theories about what 'Arirang' means (folk etymology), the DPRK listings (Arirang 2014; kimchi-making 2015), and the old practice of burying kimchi jars in the ground. National designations: 아리랑 (2015-09-22) and 김치 담그기 (2017-11-15) are National Intangible Heritage per the 국가유산포털. They aren't used in the narration. REVISION 2026-10-10: 'takes all year' -> 'takes months' (Encyclopedia: more than half a year; UNESCO: yearly cycle); 'sweet' and 'everyone' removed from scene 5; UNESCO title 'Kimjang, making and sharing kimchi in the Republic of Korea' (2013) and the Korea Heritage Service's Korean name 김치와 김장문화 now used; Arirang 2012 labelled South Korea's entry and the separate DPRK entry (2014) added as f10 (narration mentions 'separate listing' only; the 2014 year lives in f10); 'no exact translation' replaced by 'sung syllables' (encykorea: meaningless refrain, origin theories = folk etymology; 한국민속문학사전: 입타령 refrain). AUTHORING 2026-10-11 (F-STORY-001 PR 1.8d): title romanization, scene captions and check explanations written from the cited facts; every scene is artPending (text-only tile) until the art PRs; no claim or source changed. Korean name (review 2026-10-11): the learner term shows the Korea Heritage Service's official form 김치와 김장문화 (gimchiwa gimjangmunhwa, keyword id gimchiwa-gimjangmunhwa), the same spelling as f6. REVIEW 2026-10-11 (PR 1.8d review fixes): s5 follows f5 (on gimjang day the host family serves the helpers); s6 and s8 say 'added to its heritage list' in plain words, and the exact UNESCO titles stay in f6, f9, f10; the iut and gyeoul keywords are used as tokens; learning goals use receptive verbs. PR #208 REVIEW FIXES 2026-10-11: s6 says the Heritage Service calls this listing 김치와 김장문화 (f6), so the Korean name is not read as gimjang's own name (김장, s1).",
+    "errata": []
+  },
+  {
+    "v": 1,
+    "id": "story:hangeul-day",
+    "state": "ready",
+    "contentVer": 1,
+    "title": {
+      "ko": "한글날을 축하해요!",
+      "romanization": "Hangeullareul chukhahaeyo!",
+      "en": "Happy Hangul Day!"
+    },
+    "summaryEn": "Hoya finds out why South Korea celebrates Hangul Day on October 9: it is based on a date written at the end of the 1446 Haerye book, which was found around 1940. The day began as 'Gagyanal' in 1926.",
+    "theme": "letters",
+    "kind": "documentary",
+    "recommendedStage": 1,
+    "minutes": 4,
+    "learningGoalsEn": [
+      "Know that Hangul Day, 한글날 (Hangeullal), is October 9 in South Korea.",
+      "Understand that the date was set from the date written at the end of the Hunminjeongeum Haerye book (a lunar-calendar date), converted to the solar calendar.",
+      "Know that the Haerye book is a National Treasure and was inscribed on UNESCO's Memory of the World Register in 1997.",
+      "Read and recognize 한글날 (Hangeullal), 음력 (eumnyeok), 10월 9일 (siwol guil), 국보 (gukbo) and 고마워요 (gomawoyo)."
+    ],
+    "origin": {
+      "type": "documented",
+      "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
+    },
+    "review": {
+      "language": "draft",
+      "culture": "draft",
+      "advisory": []
+    },
+    "keywords": [
+      {
+        "id": "hangeullal",
+        "ko": "한글날",
+        "romanization": "Hangeullal",
+        "en": "Hangul Day (October 9)",
+        "kind": "word"
+      },
+      {
+        "id": "eumnyeok",
+        "ko": "음력",
+        "romanization": "eumnyeok",
+        "en": "lunar calendar",
+        "kind": "word"
+      },
+      {
+        "id": "siwol",
+        "ko": "시월",
+        "romanization": "siwol",
+        "en": "October",
+        "kind": "word"
+      },
+      {
+        "id": "chaek",
+        "ko": "책",
+        "romanization": "chaek",
+        "en": "book",
+        "kind": "word"
+      },
+      {
+        "id": "gukbo",
+        "ko": "국보",
+        "romanization": "gukbo",
+        "en": "National Treasure",
+        "kind": "word"
+      },
+      {
+        "id": "gomawoyo",
+        "ko": "고마워요",
+        "romanization": "gomawoyo",
+        "en": "thank you (polite, friendly)",
+        "kind": "word"
+      },
+      {
+        "id": "siwol-guil",
+        "ko": "10월 9일",
+        "romanization": "siwol guil",
+        "en": "October 9",
+        "kind": "word"
+      },
+      {
+        "id": "gagyanal",
+        "ko": "가갸날",
+        "romanization": "Gagyanal",
+        "en": "Gagya Day (the first name of Hangul Day)",
+        "kind": "word"
+      },
+      {
+        "id": "gomawoyo-sejong-daewangnim",
+        "ko": "고마워요, 세종대왕님!",
+        "romanization": "Gomawoyo, Sejongdaewangnim!",
+        "en": "Thank you, King Sejong!",
+        "kind": "phrase"
+      }
+    ],
+    "cultureNotes": [],
+    "tiers": [
+      {
+        "level": "listen",
+        "scenes": [
+          {
+            "id": "s1",
+            "narrationEn": "October 9 is Hangeullal, Hangul Day! South Korea celebrates King Sejong's letters on this day. It has been a national day since 2005, and a day off again since 2013. North Korea marks its own day on January 15.",
+            "keyword": {
+              "id": "hangeullal",
+              "ko": "한글날",
+              "romanization": "Hangeullal",
+              "en": "Hangul Day",
+              "kind": "word"
+            },
+            "factIds": [
+              "f1",
+              "f2",
+              "f10"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "A bright autumn day: families in a park, children holding blank paper fans and colorful streamers; Hoya waves a small flag with only a simple circle pattern. No text or signs.",
+            "captionEn": "South Korea celebrates Hangul Day",
+            "artPending": true
+          },
+          {
+            "id": "s2",
+            "narrationEn": "Why October 9? Hoya opens the Haerye book. At the very end, a note by Jeong Inji gives a date: the first ten days of the ninth month of 1446, by the lunar calendar.",
+            "keyword": {
+              "id": "eumnyeok",
+              "ko": "음력",
+              "romanization": "eumnyeok",
+              "en": "the lunar calendar",
+              "kind": "word"
+            },
+            "factIds": [
+              "f3"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "Close-up of Hoya's paw beside the last page of an old string-bound book (lines only, no readable text); a crescent moon glows softly in the window.",
+            "captionEn": "Hoya finds a date in the old book",
+            "artPending": true
+          },
+          {
+            "id": "s3",
+            "narrationEn": "People took the last of those ten days and converted it to the solar calendar. By the method they used, that gave October 9! Hoya stamps the date on his calendar with a paw print.",
+            "keyword": {
+              "id": "siwol-guil",
+              "ko": "10월 9일",
+              "romanization": "siwol guil",
+              "en": "October 9",
+              "kind": "word"
+            },
+            "factIds": [
+              "f3"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "A wall calendar page with blank squares; one square gets a big orange paw print from Hoya; a moon on one side and a sun on the other suggest lunar and solar calendars. No numbers or text.",
+            "captionEn": "A lunar date is set as October 9",
+            "artPending": true
+          },
+          {
+            "id": "s4",
+            "narrationEn": "Around 1940, an original copy of this book was found in an old house in Andong. The old royal records had only said the book was finished \"this month\". Today the book is kept by the Kansong Art Museum.",
+            "keyword": {
+              "id": "chaek",
+              "ko": "책",
+              "romanization": "chaek",
+              "en": "book",
+              "kind": "word"
+            },
+            "factIds": [
+              "f4",
+              "f5",
+              "f6"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "An old wooden hanok room with a carefully wrapped bundle of silk and paper being opened by gentle hands, revealing an old book; Hoya watches with wide eyes.",
+            "captionEn": "An original copy is found in Andong",
+            "artPending": true
+          },
+          {
+            "id": "s5",
+            "narrationEn": "This book is a National Treasure of Korea. In 1997, UNESCO added it to the Memory of the World Register, which honors documents that matter to the whole world.",
+            "keyword": {
+              "id": "gukbo",
+              "ko": "국보",
+              "romanization": "gukbo",
+              "en": "National Treasure",
+              "kind": "word"
+            },
+            "factIds": [
+              "f7"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "The old book resting in a glass museum case under soft light; Hoya and a child look at it respectfully from behind a low rope. No labels or text.",
+            "captionEn": "A National Treasure, honored by UNESCO",
+            "artPending": true
+          },
+          {
+            "id": "s6",
+            "narrationEn": "The very first celebration was held in 1926. It was called Gagyanal, a name said to come from how people practiced syllables like ga and gya. In 1928, it became Hangeullal.",
+            "keyword": {
+              "id": "gagyanal",
+              "ko": "가갸날",
+              "romanization": "Gagyanal",
+              "en": "Gagya Day (the first name of Hangul Day)",
+              "kind": "word"
+            },
+            "factIds": [
+              "f8"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "A 1920s-style gathering in a simple hall: people in hanbok and early modern clothes clapping; Hoya in the front row, smiling. No banners or text.",
+            "captionEn": "The first celebration: Gagyanal",
+            "artPending": true
+          },
+          {
+            "id": "s7",
+            "narrationEn": "Hangul's story reaches the whole world. UNESCO even gives a literacy prize named after King Sejong. Hoya bows deeply: \"Gomawoyo, Sejongdaewangnim! Thank you, King Sejong!\"",
+            "line": {
+              "ko": "고마워요, 세종대왕님!",
+              "romanization": "Gomawoyo, Sejongdaewangnim!",
+              "en": "Thank you, King Sejong!",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f9"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "Hoya bowing politely toward a warm sunrise, with children from many backgrounds holding open books with blank pages around him.",
+            "captionEn": "Hoya thanks King Sejong",
+            "artPending": true
+          }
+        ],
+        "checks": [
+          {
+            "id": "c1",
+            "kind": "detail",
+            "promptEn": "On what date is Hangul Day in South Korea?",
+            "options": [
+              {
+                "id": "a",
+                "en": "January 1",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "March 1",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "October 9",
+                "isCorrect": true
+              },
+              {
+                "id": "d",
+                "en": "December 25",
+                "isCorrect": false
+              }
+            ],
+            "factIds": [
+              "f1"
+            ],
+            "explainEn": "Hangul Day, Hangeullal, is on October 9 in South Korea."
+          },
+          {
+            "id": "c2",
+            "kind": "detail",
+            "promptEn": "What was used to set the date of Hangul Day?",
+            "options": [
+              {
+                "id": "a",
+                "en": "King Sejong's birthday",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "A weather record",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "A harvest festival date",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "A date in the Haerye book",
+                "isCorrect": true
+              }
+            ],
+            "factIds": [
+              "f3"
+            ],
+            "explainEn": "The Haerye ends with a lunar date: the first ten days of the ninth month, 1446. In the solar calendar, the last of them became October 9."
+          },
+          {
+            "id": "c3",
+            "kind": "detail",
+            "promptEn": "What was Hangul Day called at its first celebration in 1926?",
+            "options": [
+              {
+                "id": "a",
+                "en": "Seollal",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "Dano",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "Gagyanal",
+                "isCorrect": true
+              },
+              {
+                "id": "d",
+                "en": "Chuseok",
+                "isCorrect": false
+              }
+            ],
+            "factIds": [
+              "f8"
+            ],
+            "explainEn": "The first celebration, in 1926, was called Gagyanal. It was renamed Hangeullal in 1928."
+          }
+        ],
+        "checkpoints": [],
+        "sequenceSceneIds": [
+          "s1",
+          "s3",
+          "s5",
+          "s7"
+        ],
+        "newKeywordIds": [
+          "hangeullal",
+          "eumnyeok",
+          "chaek",
+          "gukbo"
+        ]
+      }
+    ],
+    "coverSceneId": "s1",
+    "pillarTags": [],
+    "companionId": "hoya",
+    "facts": [
+      {
+        "id": "f1",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Hangeul Day (Hangeullal) is October 9 in South Korea.",
+        "claimKo": "대한민국의 한글날은 10월 9일이다.",
+        "sources": [
+          {
+            "title": "한글날 — 한국민족문화대백과사전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0061511",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"10월 9일. 세종대왕의 성덕과 위업을 추모하고 한글의 우수성을 선양하기 위하여 지정되었다.\""
+          },
+          {
+            "title": "한글날의 어제와 오늘 그리고 내일 - 1926년의 '가갸날'에서 2016년의 '한글날'까지 (새소식)",
+            "publisher": "국립한글박물관 (National Hangeul Museum)",
+            "url": "https://www.hangeul.go.kr/news/newsDetail.do?pageIndex=45&bbs_id=1&bbs_no=777&curr_menu_cd=0106010100",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"이에 따라 1945년부터는 10월 9일에 기념식을 거행하게 되었다.\""
+          }
+        ]
+      },
+      {
+        "id": "f2",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Hangeul Day became a national day (gukgyeongil) in 2005 and has again been a public holiday since 2013.",
+        "claimKo": "한글날은 2005년에 국경일로 지정되었고, 2013년부터 다시 공휴일이 되었다.",
+        "sources": [
+          {
+            "title": "한글날 — 한국민족문화대백과사전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0061511",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"2005년에 국경일로 지정되었다. 2013년부터 다시 공휴일로 지정되었다.\""
+          },
+          {
+            "title": "한글날의 어제와 오늘 그리고 내일 - 1926년의 '가갸날'에서 2016년의 '한글날'까지 (새소식)",
+            "publisher": "국립한글박물관 (National Hangeul Museum)",
+            "url": "https://www.hangeul.go.kr/news/newsDetail.do?pageIndex=45&bbs_id=1&bbs_no=777&curr_menu_cd=0106010100",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"2005년: 국경일로 격상(국경일에 관한 법률 일부개정)되었으나, 공휴일에서 제외\"; \"2012년: 공휴일로 재지정 결정, 2013년 한글날부터 공휴일 적용\""
+          }
+        ]
+      },
+      {
+        "id": "f3",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "The end of the Haerye book carries Jeong In-ji's date: the first ten days (sanghan) of the 9th month of 1446, by the lunar calendar. Hangeul Day was set by taking the last of those days, the 10th day of the 9th lunar month, and converting it to the solar (yangnyeok) calendar; by the method used when the day was set, this gives October 9. (From 1932 to 1945, observances that assumed the end of the 9th lunar month fell on October 29 and then October 28, before the day was moved to October 9.)",
+        "claimKo": "해례본 끝 정인지의 글에는 '정통 11년(1446) 9월 상한'이라는 날짜가 적혀 있다. 한글날은 상한(초하루~초열흘)의 마지막 날인 음력 9월 10일을 양력으로 환산하여 정해졌으며, 한글날을 정할 때 쓴 방법으로는 10월 9일이 된다. (1932년부터 1945년까지는 음력 9월 그믐으로 가정하여 양력 10월 29일, 이어서 10월 28일에 기념하다가 10월 9일로 바뀌었다.)",
+        "sources": [
+          {
+            "title": "한글날 — 한국민족문화대백과사전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0061511",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"≪훈민정음≫ 원본의 말문(末文)에 적힌 '정통(正統) 11년 9월 상한(上澣)-세종 28년 9월'을 양력으로 환산하면 10월 9일이 되어, 이 날을 한글날로 정하였다.\""
+          },
+          {
+            "title": "한글날의 어제와 오늘 그리고 내일 - 1926년의 '가갸날'에서 2016년의 '한글날'까지 (새소식)",
+            "publisher": "국립한글박물관 (National Hangeul Museum)",
+            "url": "https://www.hangeul.go.kr/news/newsDetail.do?pageIndex=45&bbs_id=1&bbs_no=777&curr_menu_cd=0106010100",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"9월 상한, 즉 상순(上旬)에 《훈민정음》이 반포된 것으로 보고, 9월 상한의 마지막 날인 9월 10일을 양력으로 계산하여 '한글날'로 삼게 된다.\""
+          },
+          {
+            "title": "훈민정음 — 한국민족문화대백과사전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0065805",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"1446년 9월 상한(上澣：초하루에서 초열흘까지의 기간)에 완성되었다.\"; \"이 서문을 쓴 날이 1446년 9월 상한이므로, 이 책의 완성일을 알려준 데도 이 서문의 가치가 있다.\""
+          },
+          {
+            "title": "알고 싶은 한글 — 한글날 날짜와 『세종실록』 기록에 관한 글 (hangeul/origin/001)",
+            "publisher": "국립국어원 (National Institute of Korean Language)",
+            "url": "https://www.korean.go.kr/hangeul/origin/001.html",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "실록에 날짜가 없어 \"그냥 9월 그믐날로 가정하고 양력으로 환산하여 10월 29일을 한글날로 정하게 되었다.\"; 이후 해례본 정인지 서문의 \"세종 28년 9월 상순\"에 따라 \"10월 9일을 한글날로 정하게 되었다.\""
+          },
+          {
+            "title": "한글날 — 한국민족문화대백과사전 (환산 경과)",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0061511",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "\"…세종 28년 음력 9월 10일을 양력으로 환산하여 10월 9일을 한글날로 확정하고 1946년부터 이 날에 행사를 거행하여 오고 있다.\"; \"1934년부터 1945년까지는 그레고리오역서에 의하여 양력으로 환산한 10월 28일에 행사를 거행하였다.\""
+          }
+        ]
+      },
+      {
+        "id": "f4",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "An original copy of the Hunminjeongeum Haerye book was found around 1940 in an old house in Andong, North Gyeongsang Province.",
+        "claimKo": "『훈민정음』 해례본 원본은 1940년경 경상북도 안동의 한 고가에서 발견되었다.",
+        "sources": [
+          {
+            "title": "훈민정음 — 한국민족문화대백과사전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0065805",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"현존본은 1940년경 경상북도 안동 어느 고가에서 발견된 것으로\""
+          },
+          {
+            "title": "한글날의 어제와 오늘 그리고 내일 - 1926년의 '가갸날'에서 2016년의 '한글날'까지 (새소식)",
+            "publisher": "국립한글박물관 (National Hangeul Museum)",
+            "url": "https://www.hangeul.go.kr/news/newsDetail.do?pageIndex=45&bbs_id=1&bbs_no=777&curr_menu_cd=0106010100",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"1940년 안동에서 발견된 《훈민정음》(해례본) 원본에 적힌 정인지 후서에는\""
+          },
+          {
+            "title": "한글날 — 한국민족문화대백과사전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0061511",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"1940년에 경상북도 안동에서 발견된 ≪훈민정음≫ 원본의 말문에 해당하는 날을 추정한 결과\""
+          }
+        ]
+      },
+      {
+        "id": "f5",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "The Sejong Annals (Sillok) entry for the 9th month of 1446 names no specific day, only 'this month'. The Haerye copy found around 1940 gives 'the first ten days of the 9th month'.",
+        "claimKo": "『세종실록』 1446년 9월 기록에는 구체적인 날짜가 없고 '이달'이라고만 되어 있다. 1940년경 발견된 해례본에는 '9월 상한'이라고 적혀 있다.",
+        "sources": [
+          {
+            "title": "알고 싶은 한글 — 한글날 날짜와 『세종실록』 기록에 관한 글 (hangeul/origin/001)",
+            "publisher": "국립국어원 (National Institute of Korean Language)",
+            "url": "https://www.korean.go.kr/hangeul/origin/001.html",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"1446년(세종 28) 9월 조의 맨 끝에 역시 날짜를 명시하지 않고서 … 그런데 실록에 9월 며칠인지 날짜가 명시되어 있지 않으니 그냥 9월 그믐날로 가정하고\""
+          },
+          {
+            "title": "한글날의 어제와 오늘 그리고 내일 - 1926년의 '가갸날'에서 2016년의 '한글날'까지 (새소식)",
+            "publisher": "국립한글박물관 (National Hangeul Museum)",
+            "url": "https://www.hangeul.go.kr/news/newsDetail.do?pageIndex=45&bbs_id=1&bbs_no=777&curr_menu_cd=0106010100",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "\"1940년 안동에서 발견된 《훈민정음》(해례본) 원본에 적힌 정인지 후서에는 《훈민정음》이 '정통 11년 9월 상한(上澣)'에 이루어졌다고 기록되어 있다.\""
+          }
+        ]
+      },
+      {
+        "id": "f6",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "The Hunminjeongeum Haerye copy is kept by the Kansong Art Museum (UNESCO); 국가유산포털 lists the museum as its manager.",
+        "claimKo": "『훈민정음』 해례본은 간송미술관이 소장·관리하고 있다.",
+        "sources": [
+          {
+            "title": "Hunminjeongum Manuscript",
+            "publisher": "UNESCO — Memory of the World",
+            "url": "https://www.unesco.org/en/memory-world/hunminjeongum-manuscript",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"It is kept by the Kansong Art Museum.\""
+          },
+          {
+            "title": "국보 훈민정음 (訓民正音) — 국가유산 상세 정보",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1111100700000",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "관리자: 간송미술관"
+          }
+        ]
+      },
+      {
+        "id": "f7",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "The book is a National Treasure of Korea (designated in 1962) and was inscribed on UNESCO's Memory of the World Register in 1997. The Register lists documentary heritage of world significance.",
+        "claimKo": "이 책은 국보(1962년 지정)이며, 1997년 유네스코 세계기록유산에 등재되었다. 세계기록유산 목록은 세계적 의의를 지닌 기록유산을 등재한다.",
+        "sources": [
+          {
+            "title": "국보 훈민정음 (訓民正音) — 국가유산 상세 정보 및 국가유산 설명",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1111100700000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"국보 훈민정음\"; 지정(등록)일 1962.12.20; 분류 기록유산"
+          },
+          {
+            "title": "Hunminjeongum Manuscript",
+            "publisher": "UNESCO — Memory of the World",
+            "url": "https://www.unesco.org/en/memory-world/hunminjeongum-manuscript",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"Registration Year: 1997\""
+          },
+          {
+            "title": "UNESCO/Jikji Memory of the World Prize — About the Prize",
+            "publisher": "UNESCO",
+            "url": "https://www.unesco.org/en/prizes/jikji/about",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"Its Register lists documentary heritage that has been endorsed by the Director-General as corresponding to the selection criteria for world significance.\""
+          }
+        ]
+      },
+      {
+        "id": "f8",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "The first Hangeul Day celebration was held in 1926 under the name Gagyanal; the name is said to come from learning Hangeul by chanting 'ga-gya-geo-gyeo'. It was renamed Hangeullal in 1928.",
+        "claimKo": "1926년 '가갸날'이라는 이름으로 첫 기념식이 열렸고, 이 이름은 '가갸거겨' 하며 한글을 배우던 데서 착안한 것이라고 한다. 1928년에 이름을 '한글날'로 바꾸었다.",
+        "sources": [
+          {
+            "title": "한글날의 어제와 오늘 그리고 내일 - 1926년의 '가갸날'에서 2016년의 '한글날'까지 (새소식)",
+            "publisher": "국립한글박물관 (National Hangeul Museum)",
+            "url": "https://www.hangeul.go.kr/news/newsDetail.do?pageIndex=45&bbs_id=1&bbs_no=777&curr_menu_cd=0106010100",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"1926년 11월 4일 최초의 '한글날'인 '가갸날'이 탄생하다\"; \"당시 한글을 배울 때 '가갸거겨' 하면서 배운 것에 착안한 것이라고 한다.\"; \"1928년: 명칭을 '한글날'로 변경\""
+          },
+          {
+            "title": "한글날 — 한국민족문화대백과사전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0061511",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"1926년 11월 4일조선어연구회(한글학회 전신)가 주축이 되어 매년 음력 9월 29일을 '가갸날'로 정하여 행사를 거행하였고, 1928년 명칭을 '한글날'로 바꾸었다.\""
+          }
+        ]
+      },
+      {
+        "id": "f9",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "UNESCO awards the UNESCO King Sejong Literacy Prize, set up with the support of the Government of the Republic of Korea, which gives special consideration to literacy in people's mother languages.",
+        "claimKo": "유네스코는 대한민국 정부의 지원으로 만들어진 '유네스코 세종대왕 문해상'을 시상하며, 모어 기반 문해 교육을 특히 고려한다.",
+        "sources": [
+          {
+            "title": "UNESCO Literacy Prizes — The UNESCO King Sejong Literacy Prize",
+            "publisher": "UNESCO",
+            "url": "https://www.unesco.org/en/prizes/literacy",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"The UNESCO King Sejong Literacy Prize (3 awards)\"; established \"with the support of the Government of the Republic of Korea\"; \"special consideration to mother language-based literacy development\""
+          },
+          {
+            "title": "UNESCO King Sejong Literacy Prize Winners for 2021 (press release)",
+            "publisher": "문화체육관광부 (Ministry of Culture, Sports and Tourism, Korea)",
+            "url": "https://www.mcst.go.kr/english/policy/pressView.jsp?pSeq=56",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "\"The purpose of the UNESCO King Sejong Literacy Prize is to award the efforts of institutions, organizations, or individuals for their contribution to the fight against illiteracy in commemoration of King Sejong, who invented the Korean alphabet, Hangeul, in 1443.\"; \"The Prize gives special consideration to mother-tongue based literacy development.\""
+          }
+        ]
+      },
+      {
+        "id": "f10",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "North Korea marks a Hangeul day of its own on January 15, called Joseon-geul-nal (조선글날), as the anniversary of the creation of Hunminjeongeum.",
+        "claimKo": "북한은 1월 15일을 훈민정음 창제 기념일로 하여 '조선글날'로 기념한다.",
+        "sources": [
+          {
+            "title": "우리말 하나되기 9회-KTV (홍보 및 방송 자료)",
+            "publisher": "국립국어원 (National Institute of Korean Language)",
+            "url": "https://korean.go.kr/front/board/boardMovieView.do?b_movie_type=1&b_seq=136&board_id=14&mn_id=&pageIndex=1&searchCondition=&searchKeyword=",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "학예연구관 이대성: \"북한에서는 훈민정음이 창제된 때인 1월 15일을 훈민정음 창제 기념일이다라고 하고 이날을 '조선글날'이라고 합니다.\" (2014-10-13)"
+          },
+          {
+            "title": "북한,언어도 사상교육에 활용 / 한글날을 계기로 본 평양의 이질화 실태",
+            "publisher": "서울신문 (1990-10-07)",
+            "url": "https://www.seoul.co.kr/news/1990/10/07/19901007002008",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "\"한글날도 우리와 달리 1월15일을 「훈민정음 창제일」로 기념하고 있다.\""
+          },
+          {
+            "title": "한글날, 북한선 15일 '조선글날'…남북 다른 이유는?",
+            "publisher": "SBS 뉴스 (2018-10-09, 심우섭 기자; includes 국립한글박물관 학예연구사 인터뷰)",
+            "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1004964480",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "\"한글날은 반포일, 북한의 한글날은 글을 만든 창제일입니다. 이름도 북한에선 '조선글날'입니다.\"; 前 북한 아나운서: \"1월 15일 한글 창제 일을 조선글날이라고 해서 달력에만 표기해놓고 쉬지는 않거든요.\""
+          }
+        ]
+      }
+    ],
+    "referenceDisplay": "Sources: 한국민족문화대백과사전(한글날, 훈민정음); 국립한글박물관; 국가유산청 국가유산포털; 국립국어원; UNESCO Memory of the World; UNESCO King Sejong Literacy Prize",
+    "verification": {
+      "passes": 3,
+      "checkedAt": "2026-10-10",
+      "scope": "cluster",
+      "notes": "Third independent pass. Every cited URL for all 6 episodes (52 facts) was re-opened (UNESCO pages via Wayback copies when the live site resets connections) and quotes/locators were compared; the one exception is unesco.org/en/prizes/literacy (unreachable from here; its claim is now also backed by a Korean MCST press release). Eight minimal corrections were made: (1) Hangeul Day f3 no longer says 'Gregorian' (no cited source says the October 9 conversion was Gregorian; encykorea separates Julian/Gregorian only for 1932-45) and dates the October 29/28 observances; (2) f10 gains a third source (SBS 2018 with 국립한글박물관 curator); (3) Shapes scene 8, learning goal and f7 now say 'South Korea's spelling rules' count 24 (North Korea counts 40, 국립한글박물관 webzine 59); (4) Sejong scene 4/f4: 백성 is 'an old-fashioned word' with 표준국어대사전 added; (5) Jikji f8 quote no longer repeats a prize amount that differs between UNESCO page versions; (6) Tripitaka f6 wood and corner plates now have two further sources (정책브리핑; 박상진 wood-identification study); (8) Hangeul Day f9 gains a second source (문화체육관광부 press release); (7) Panjeon scene 8/f9: 'visitors cannot walk inside' replaced by 'visitor entry is restricted' because Haeinsa has run pre-booked tours inside Beopbojeon since June 2021. See hangul-printing.signoff.md."
+    },
+    "authorNotes": "REVISED. (1) The narration no longer says the date conversion is settled: it says People converted the last of the ten days to the solar calendar and 'by the method they used' got October 9. The conversion method is not treated as settled: earlier observances (which assumed the last day of the lunar 9th month) used Oct 29, then Oct 28, before Oct 9 was adopted (encykorea E0061511, 국립국어원 origin/001); one fact-checker also found press commentary arguing that Oct 9 does not match a strict Julian or Gregorian conversion (low-authority sources, not re-verified here). f3 records the first point and the narration says only 'by the method they used'. (2) 'Korea celebrates' -> 'South Korea celebrates'; North Korea's January 15 (조선글날) is stated in scene 1 (f10, sourced to 국립국어원 KTV programme and 서울신문 1990). Caveat: the 국립한글박물관 webzine 59 calls one theory about how that North Korean date is derived 'unconfirmed' (확인되지 않은 것), so the story states only that the day is marked on January 15, not how it was derived. (3) 'Kansong Art Museum in Seoul' -> 'kept by the Kansong Art Museum': in 2024 the book travelled to the new Kansong Art Museum in Daegu for its opening show (서울신문 2024-05-08), and UNESCO gives no city. RR would be 'Gansong'; the museum's own English spelling 'Kansong' (used by UNESCO) is kept. (4) Scene 4 no longer says 'nobody knew the exact day'. The sources disagree on when October 9 was first celebrated (1945 according to 국립한글박물관, 1946 according to 한국민족문화대백과사전), so no year is given. 'Said to' in scene 6 hedges the 'ga-gya-geo-gyeo' origin, as the museum itself reports it as hearsay. The second, privately held Haerye copy (the 'Sangju copy') is left out because its status is unresolved. The purchase by Jeon Hyeong-pil is left out for brevity. The founding year of the King Sejong Literacy Prize (1989) is on the UNESCO page only, so the narration does not give it. The UNESCO 'country overview' source in f7 was dropped because its page could not be loaded. The official title in the heritage register is simply 'Hunminjeongeum' (국보 훈민정음). Fact f3 also names the Gregorian calendar (second-checker request); the narration keeps the simpler 'solar calendar'. FINAL PASS (3rd check): f3 no longer says 'Gregorian' because no cited source states the calendar used for the October 9 conversion (encykorea: 1932-33 Julian -> Oct 29, 1934-45 Gregorian -> Oct 28; 국립국어원: Oct 9 = Oct 29 minus about 20 days). f10 now has three sources. Book location: 국가유산포털 still lists Seoul (성북동), while the book was shown at the new Kansong Art Museum in Daegu in autumn 2024; the story only says 'kept by the Kansong Art Museum' (UNESCO wording). REVIEW PASS (PR 1.8b): c2 explanation keeps the hedge (converted when the holiday was set) and names the 9th lunar month; s3 caption says the date was set, not that it simply is October 9. ROUND 2: s2 drops once more; c2 says the last of them (the ten days), not the last day (the superseded Oct 29/28 reading), and names both calendars.",
+    "errata": []
+  },
+  {
+    "v": 1,
     "id": "story:jagyeongnu-water-clock",
     "state": "ready",
     "contentVer": 1,
@@ -2219,6 +4921,1270 @@ export const storiesAll: Story[] = [
       "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted."
     },
     "authorNotes": "Dating: the Sillok entry in which Sejong praises Jang and grants the rank 호군 is dated 1433-09-16 (lunar), while KHS and encykorea give 1434 as the year the clock was made/completed; narration avoids a making year and gives only the start of use (1434-07-01 lunar), on which the Sillok and encykorea agree. Other makers: encykorea's 자격루 entry lists 장영실·이천·김조 and its 장영실 entry mentions 김빈; the story names only Jang Yeong-sil, whom the Sillok (1433, 1434) and KHS credit. Location: encykorea says the 1536 vessels are at Deoksugung (outdated); KHS lists the National Palace Museum of Korea. Simplified mechanism: the Sillok distinguishes small copper balls and large iron balls and also describes 12 zodiac figures holding time plaques; narration says 'metal balls'. Jang Yeong-sil's later career and other instruments (e.g., 옥루, 혼천의) omitted.  REVISION: 관노 is described as a government-owned servant (Sillok 1434: 동래현 관노), worded neutrally; encykorea adds he was later freed and given a court post, so narration says 'first a servant owned by the government'. Illustration of the 1536 vessels no longer shows dragons: KHS describes plain bronze vessels, and the only decoration mention found is an encykorea image caption ('수수통의 용문양'), which is not in the KHS text, so decoration is left out entirely. PASS 3: scene 3/f3 now say the king 'decided to give' the rank (Sillok 1433-09-16: 'I wish to add the post of hogun'; Hwang Hui and others agreed and 'the king followed'). PR 1.8c: s2 now says 'first a servant owned by the government in Dongnae' and adds the encykorea ending from f2 ('Later he was freed and given a post at court'); the bare romanized 'gwanno' was removed; advisory 'historical-hardship' added. s6 says the gate drums and bells 'repeated the sound' (f6: relayed). s1 now tokens 시간 so the s7 line builds on a known word.",
+    "errata": []
+  },
+  {
+    "v": 1,
+    "id": "story:janggyeong-panjeon",
+    "state": "ready",
+    "contentVer": 1,
+    "title": {
+      "ko": "바람이 지키는 장경판전",
+      "romanization": "Barami jikineun Janggyeongpanjeon",
+      "en": "Guarded by the Wind"
+    },
+    "summaryEn": "Hoya explores Janggyeong Panjeon, the 15th-century halls at Haeinsa whose clever windows and layered floors have protected the Tripitaka Koreana woodblocks for some 500 years.",
+    "theme": "crafts",
+    "kind": "site",
+    "recommendedStage": 2,
+    "minutes": 5,
+    "learningGoalsEn": [
+      "Know that Janggyeong Panjeon at Haeinsa Temple was built to store the Tripitaka Koreana woodblocks and dates from the 15th century.",
+      "Understand two design features that protect the woodblocks: windows of different sizes for airflow, and a floor layered with charcoal, lime, salt and sand to control moisture.",
+      "Know that Janggyeong Panjeon was inscribed on the UNESCO World Heritage List in 1995.",
+      "Read and recognize 건물 (geonmul), 창문 (changmun), 숯 (sut), 바람 (baram) and 지켜요 (jikyeoyo)."
+    ],
+    "origin": {
+      "type": "documented",
+      "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
+    },
+    "review": {
+      "language": "draft",
+      "culture": "draft",
+      "advisory": []
+    },
+    "keywords": [
+      {
+        "id": "geonmul",
+        "ko": "건물",
+        "romanization": "geonmul",
+        "en": "building",
+        "kind": "word"
+      },
+      {
+        "id": "changmun",
+        "ko": "창문",
+        "romanization": "changmun",
+        "en": "window",
+        "kind": "word"
+      },
+      {
+        "id": "baram",
+        "ko": "바람",
+        "romanization": "baram",
+        "en": "wind",
+        "kind": "word"
+      },
+      {
+        "id": "sut",
+        "ko": "숯",
+        "romanization": "sut",
+        "en": "charcoal",
+        "kind": "word"
+      },
+      {
+        "id": "segyeyusan",
+        "ko": "세계유산",
+        "romanization": "segyeyusan",
+        "en": "World Heritage",
+        "kind": "word"
+      },
+      {
+        "id": "jikyeoyo",
+        "ko": "지켜요",
+        "romanization": "jikyeoyo",
+        "en": "(we) protect; guard",
+        "kind": "word"
+      },
+      {
+        "id": "janggyeongpanjeon",
+        "ko": "장경판전",
+        "romanization": "Janggyeongpanjeon",
+        "en": "Janggyeong Panjeon, the woodblock storage halls at Haeinsa",
+        "kind": "word"
+      },
+      {
+        "id": "joseon",
+        "ko": "조선",
+        "romanization": "Joseon",
+        "en": "Joseon, the Korean dynasty of that time",
+        "kind": "word"
+      },
+      {
+        "id": "uriga-jikyeoyo",
+        "ko": "우리가 지켜요",
+        "romanization": "uriga jikyeoyo",
+        "en": "We protect it.",
+        "kind": "word"
+      }
+    ],
+    "cultureNotes": [],
+    "tiers": [
+      {
+        "level": "listen",
+        "scenes": [
+          {
+            "id": "s1",
+            "narrationEn": "Hoya visits Haeinsa Temple and climbs to the highest part of the temple grounds. Here stand the Janggyeong Panjeon, the halls made to store the woodblocks. They are the oldest buildings still standing at Haeinsa.",
+            "keyword": {
+              "id": "janggyeongpanjeon",
+              "ko": "장경판전",
+              "romanization": "Janggyeongpanjeon",
+              "en": "Janggyeong Panjeon, the woodblock storage halls at Haeinsa",
+              "kind": "word"
+            },
+            "factIds": [
+              "f1",
+              "f2"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "Hoya climbing stone stairs to a terrace at the top of a mountain temple; two long, plain wooden halls with tiled roofs stand side by side above the other temple roofs.",
+            "captionEn": "The oldest halls still standing at Haeinsa",
+            "artPending": true
+          },
+          {
+            "id": "s2",
+            "narrationEn": "Two long halls stand side by side: Sudarajang in the south and Beopbojeon in the north. Two small buildings sit at the ends, so together they form a rectangle around a courtyard.",
+            "keyword": {
+              "id": "geonmul",
+              "ko": "건물",
+              "romanization": "geonmul",
+              "en": "building",
+              "kind": "word"
+            },
+            "factIds": [
+              "f3"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "Bird's-eye view of four plain wooden buildings forming a rectangle around a sandy courtyard, two long and two short; Hoya waves from the courtyard.",
+            "captionEn": "Four buildings around a courtyard",
+            "artPending": true
+          },
+          {
+            "id": "s3",
+            "narrationEn": "These halls were built in the 15th century, during the Joseon dynasty. There are no fancy decorations. Every part was designed for one job: keeping the woodblocks safe.",
+            "keyword": {
+              "id": "joseon",
+              "ko": "조선",
+              "romanization": "Joseon",
+              "en": "Joseon, the Korean dynasty of that time",
+              "kind": "word"
+            },
+            "factIds": [
+              "f4"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "Front view of a long, simple wooden hall with unpainted pillars and rows of slatted windows; Hoya points out how plain and tidy it looks.",
+            "captionEn": "Plain halls built for one job",
+            "artPending": true
+          },
+          {
+            "id": "s4",
+            "narrationEn": "Look at the windows! The windows on the front and back walls are different sizes, and the upper and lower windows differ too. This helps the wind flow through the halls.",
+            "keyword": {
+              "id": "changmun",
+              "ko": "창문",
+              "romanization": "changmun",
+              "en": "window",
+              "kind": "word"
+            },
+            "factIds": [
+              "f5"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "Cutaway side view of a hall: slatted windows of different sizes high and low on opposite walls, with gentle curved arrows of breeze flowing through past the shelves; Hoya's fur ruffles in the wind.",
+            "captionEn": "Windows of different sizes",
+            "artPending": true
+          },
+          {
+            "id": "s5",
+            "narrationEn": "Now look down. Under the earthen floor are layers of charcoal, lime and salt with sand. They soak up extra moisture when the air is damp and give it back when it is dry.",
+            "keyword": {
+              "id": "sut",
+              "ko": "숯",
+              "romanization": "sut",
+              "en": "charcoal",
+              "kind": "word"
+            },
+            "factIds": [
+              "f6"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "Cross-section of the ground under a hall showing simple colored layers (black charcoal, white lime, pale salt, tan sand) beneath an earthen floor; Hoya kneels, peering at the layers.",
+            "captionEn": "Charcoal, lime and salt under the floor",
+            "artPending": true
+          },
+          {
+            "id": "s6",
+            "narrationEn": "Wind, sunlight and earth work together. Thanks to this natural design, the woodblocks have stayed safe from damp, mice and insects for some 500 years.",
+            "keyword": {
+              "id": "baram",
+              "ko": "바람",
+              "romanization": "baram",
+              "en": "wind",
+              "kind": "word"
+            },
+            "factIds": [
+              "f7"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "Sunlight streaming through slatted windows onto rows of woodblocks; a small mouse and a beetle turn away outside the wall while a breeze swirls leaves; Hoya smiles.",
+            "captionEn": "Wind, sun and earth keep blocks safe",
+            "artPending": true
+          },
+          {
+            "id": "s7",
+            "narrationEn": "In 1995, UNESCO added Janggyeong Panjeon to the World Heritage List. UNESCO says it is the oldest storehouse of the Tripitaka, the Buddhist scriptures.",
+            "keyword": {
+              "id": "segyeyusan",
+              "ko": "세계유산",
+              "romanization": "segyeyusan",
+              "en": "World Heritage",
+              "kind": "word"
+            },
+            "factIds": [
+              "f8"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "The two long halls under a clear autumn sky with colorful maple leaves on the mountain; a soft glowing outline around the buildings suggests special recognition. No logos or text.",
+            "captionEn": "A UNESCO World Heritage site",
+            "artPending": true
+          },
+          {
+            "id": "s8",
+            "narrationEn": "To help keep the temperature and dampness inside steady, visitor entry is limited. Hoya peeks through the window slats and whispers, \"Uriga jikyeoyo, we protect it!\"",
+            "keyword": {
+              "id": "uriga-jikyeoyo",
+              "ko": "우리가 지켜요",
+              "romanization": "uriga jikyeoyo",
+              "en": "We protect it.",
+              "kind": "word"
+            },
+            "factIds": [
+              "f9"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "Hoya and a child quietly peeking through vertical window slats from outside, careful not to touch; inside, shelves of woodblocks rest in calm shadow.",
+            "captionEn": "Entry is limited to keep the air steady",
+            "artPending": true
+          }
+        ],
+        "checks": [
+          {
+            "id": "c1",
+            "kind": "detail",
+            "promptEn": "What do the different-sized windows do?",
+            "options": [
+              {
+                "id": "a",
+                "en": "Make the halls darker inside",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "Keep visitors out of the halls",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "Help wind flow through the halls",
+                "isCorrect": true
+              },
+              {
+                "id": "d",
+                "en": "Show paintings on the walls",
+                "isCorrect": false
+              }
+            ],
+            "factIds": [
+              "f5"
+            ],
+            "explainEn": "The windows differ in size on the front and back walls, and the upper and lower ones differ too. This helps air flow through."
+          },
+          {
+            "id": "c2",
+            "kind": "detail",
+            "promptEn": "What is under the floor of Janggyeong Panjeon?",
+            "options": [
+              {
+                "id": "a",
+                "en": "Layers of rice straw, gravel and clay",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "Rows of stone channels filled with water",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "A hollow space packed with blocks of ice",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "Layers of charcoal, lime, salt and sand",
+                "isCorrect": true
+              }
+            ],
+            "factIds": [
+              "f6"
+            ],
+            "explainEn": "Under the earthen floor are layers of charcoal, lime and salt with sand. They help control the moisture in the air."
+          },
+          {
+            "id": "c3",
+            "kind": "detail",
+            "promptEn": "When did Janggyeong Panjeon join the UNESCO World Heritage List?",
+            "options": [
+              {
+                "id": "a",
+                "en": "1446",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "2007",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "1995",
+                "isCorrect": true
+              },
+              {
+                "id": "d",
+                "en": "1377",
+                "isCorrect": false
+              }
+            ],
+            "factIds": [
+              "f8"
+            ],
+            "explainEn": "UNESCO added Janggyeong Panjeon to the World Heritage List in 1995."
+          }
+        ],
+        "checkpoints": [],
+        "sequenceSceneIds": [
+          "s1",
+          "s3",
+          "s6",
+          "s8"
+        ],
+        "newKeywordIds": [
+          "geonmul",
+          "changmun",
+          "sut",
+          "baram"
+        ]
+      }
+    ],
+    "coverSceneId": "s1",
+    "pillarTags": [],
+    "companionId": "hoya",
+    "facts": [
+      {
+        "id": "f1",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Janggyeong Panjeon are the buildings at Haeinsa built to store the Tripitaka Koreana woodblocks. They stand at the highest part of the temple grounds, above the hall of the main Buddha.",
+        "claimKo": "장경판전은 해인사에서 대장경판을 보관하기 위해 지은 건물로, 해인사 경내에서 가장 높은 곳, 본존불을 모신 법당보다 높은 곳에 있다.",
+        "sources": [
+          {
+            "title": "Haeinsa Temple Janggyeong Panjeon, the Depositories for the Tripitaka Koreana Woodblocks",
+            "publisher": "UNESCO World Heritage Centre",
+            "url": "https://whc.unesco.org/en/list/737/",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"The buildings of Janggyeong Panjeon, which date from the 15th century, were constructed to house the woodblocks\"; \"they are located at a higher level than the hall housing the main Buddha of the complex\" [text re-read on an Internet Archive snapshot of this UNESCO page; the live page blocks automated requests]"
+          },
+          {
+            "title": "유네스코 등재유산 소개 — 세계유산 「해인사 장경판전」",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FHeritage%2FHeritage_02.jsp&pageNo=5_1_1_0",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "영상 해설: \"해인사경내에서 가장 높은 곳에 서남 향으로 위치하고 있어 햇살을 충분히 받아\""
+          },
+          {
+            "title": "국보 합천 해인사 장경판전 (陜川 海印寺 藏經板殿) — 국가유산 상세 정보 및 국가유산 설명",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1113800520000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"장경판전은 고려시대에 만들어진 8만여장의 대장경판을 보관하고 있는 건물로\""
+          },
+          {
+            "title": "유네스코 등재유산 소개 — 세계기록유산 「고려대장경판 및 제(諸)경판」",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FMemHeritage%2FMemHeritage_06.jsp&pageNo=5_4_2_0",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "영상 해설: \"해인사에 가장 오래된 현존 건물인 장경판전 … 해인사경내에서 가장 높은 곳에\""
+          }
+        ]
+      },
+      {
+        "id": "f2",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "The Janggyeong Panjeon are the oldest surviving buildings at Haeinsa.",
+        "claimKo": "장경판전은 해인사에 남아 있는 건물 가운데 가장 오래되었다.",
+        "sources": [
+          {
+            "title": "국보 합천 해인사 장경판전 (陜川 海印寺 藏經板殿) — 국가유산 설명",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1113800520000",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "\"장경판전은 … 해인사에 남아있는 건물 중 가장 오래 되었다.\" (English text: \"known to be the oldest of all the buildings currently standing in the temple\")"
+          },
+          {
+            "title": "유네스코 등재유산 소개 — 세계유산 「해인사 장경판전」",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FHeritage%2FHeritage_02.jsp&pageNo=5_1_1_0",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "\"해인사의 현존 건물 중 가장 오래된 건물이다.\""
+          },
+          {
+            "title": "합천 해인사 장경판전 — 한국민족문화대백과사전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0062725",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"해인사 경내에는 많은 법당이 있으나 대부분 근세에 건립된 것이고 이 장경판고만이 조선 전기에 만들어진 것이다.\" (supports: the other halls are mostly recent)"
+          }
+        ]
+      },
+      {
+        "id": "f3",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Two long buildings, each 15 bays wide, stand side by side: Sudarajang to the south and Beopbojeon to the north. With two small buildings at the east and west, they form a rectangle around a courtyard.",
+        "claimKo": "정면 15칸의 긴 건물 두 동이 남북으로 나란히 서 있는데, 남쪽은 수다라장, 북쪽은 법보전이며, 동·서쪽의 작은 건물 두 동과 함께 긴 네모꼴로 배치되어 있다.",
+        "sources": [
+          {
+            "title": "국보 합천 해인사 장경판전 (陜川 海印寺 藏經板殿) — 국가유산 상세 정보 및 국가유산 설명",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1113800520000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"앞면 15칸·옆면 2칸 크기의 두 건물을 나란히 배치하였는데, 남쪽 건물은 '수다라장'이라 하고 북쪽의 건물은 '법보전'이라 한다. 서쪽과 동쪽에는 … 작은 서고가 있어서, 전체적으로는 긴 네모형으로 배치되어 있다.\""
+          },
+          {
+            "title": "Haeinsa Temple Janggyeong Panjeon, the Depositories for the Tripitaka Koreana Woodblocks",
+            "publisher": "UNESCO World Heritage Centre",
+            "url": "https://whc.unesco.org/en/list/737/",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"The Janggyeong Panjeon depositories comprise two long and two smaller buildings, which are arranged in a rectangle around a courtyard.\" [text re-read on an Internet Archive snapshot of this UNESCO page; the live page blocks automated requests]"
+          },
+          {
+            "title": "합천 해인사 장경판전 — 한국민족문화대백과사전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0062725",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"정면 15칸, 측면 2칸의 우진각지붕건물이다. … 남쪽 건물은 수다라장(修多羅藏), 북쪽 건물은 법보전(法寶殿)이다.\""
+          }
+        ]
+      },
+      {
+        "id": "f4",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "The depositories date from the 15th century (early Joseon). The date of first construction is unknown; rebuilding is recorded in 1488. They were built simply, without decoration, to serve their purpose.",
+        "claimKo": "장경판전은 15세기(조선 전기) 건물로, 처음 지은 연대는 정확히 알 수 없으나 1488년에 다시 지은 기록이 있으며, 장식 없이 간결하게 지었다.",
+        "sources": [
+          {
+            "title": "Haeinsa Temple Janggyeong Panjeon, the Depositories for the Tripitaka Koreana Woodblocks",
+            "publisher": "UNESCO World Heritage Centre",
+            "url": "https://whc.unesco.org/en/list/737/",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"Constructed in the 15th century in the traditional style of the early Joseon period, their design is characterized by its simplicity of detailing\" [text re-read on an Internet Archive snapshot of this UNESCO page; the live page blocks automated requests]"
+          },
+          {
+            "title": "국보 합천 해인사 장경판전 (陜川 海印寺 藏經板殿) — 국가유산 상세 정보 및 국가유산 설명",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1113800520000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"처음 지은 연대는 정확히 알지 못하지만 … 성종 19년(1488)에 학조대사가 왕실의 후원으로 다시 지어 '보안당'이라고 했다는 기록이 있다.\"; \"장식 요소는 두지 않았으며\""
+          },
+          {
+            "title": "합천 해인사 장경판전 — 한국민족문화대백과사전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0062725",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"'弘治元年(홍치원년)'이라는 각명(刻名)으로 건립연대를 1488년(성종 19)으로 추정하고 있다.\""
+          }
+        ]
+      },
+      {
+        "id": "f5",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "For ventilation, the windows differ in size between the south and north (front and back) walls, and the upper and lower windows also differ in size.",
+        "claimKo": "통풍을 위해 앞뒤(남북) 벽의 창 크기를 서로 다르게 하고, 위아래 창의 크기도 달리하였다.",
+        "sources": [
+          {
+            "title": "국보 합천 해인사 장경판전 (陜川 海印寺 藏經板殿) — 국가유산 상세 정보 및 국가유산 설명",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1113800520000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"통풍을 위하여 창의 크기를 남쪽과 북쪽을 서로 다르게 하고 각 칸마다 창을 내었다.\" / EN: \"Each depository has two rows of windows in different sizes -- one on the front and the other on the rear -- designed to ensure effective natural ventilation.\""
+          },
+          {
+            "title": "유네스코 등재유산 소개 — 세계유산 「해인사 장경판전」",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FHeritage%2FHeritage_02.jsp&pageNo=5_1_1_0",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"전·후면 창호의 위치와 크기가 서로 다르다.\"; 영상 해설: \"아래위로 크기를 달리한 창은 통풍과 환기의 효과를 극대화 했다.\""
+          },
+          {
+            "title": "Haeinsa Temple Janggyeong Panjeon, the Depositories for the Tripitaka Koreana Woodblocks",
+            "publisher": "UNESCO World Heritage Centre",
+            "url": "https://whc.unesco.org/en/list/737/",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"They were specially designed to provide natural ventilation and to modulate temperature and humidity\" [text re-read on an Internet Archive snapshot of this UNESCO page; the live page blocks automated requests]"
+          }
+        ]
+      },
+      {
+        "id": "f6",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Beneath the earthen floor are layers of charcoal, lime and salt laid with sand, which help regulate humidity by absorbing excess moisture and releasing it when the air is dry.",
+        "claimKo": "흙바닥 속에 숯, 횟가루(석회), 소금을 모래와 함께 차례로 넣어 습도를 조절하도록 하였다. 습기가 많으면 빨아들이고 건조하면 내뿜는다.",
+        "sources": [
+          {
+            "title": "국보 합천 해인사 장경판전 (陜川 海印寺 藏經板殿) — 국가유산 상세 정보 및 국가유산 설명",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1113800520000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"안쪽 흙바닥 속에 숯과 횟가루, 소금을 모래와 함께 차례로 넣음으로써 습도를 조절하도록 하였다.\" / EN: \"The earthen floor is laid over layers of powdered charcoal, lime, salt, and sand\""
+          },
+          {
+            "title": "유네스코 등재유산 소개 — 세계유산 「해인사 장경판전」",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FHeritage%2FHeritage_02.jsp&pageNo=5_1_1_0",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "영상 해설: \"많은 양의 숯과 소금 석회를 이용해 기초를 다졌다. 이로써 과도한 습기는 흡수하고 건조 할 때는 머금었던 습기를 내뿜어 항상 일정한 습도를 유지하게 했다.\""
+          }
+        ]
+      },
+      {
+        "id": "f7",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Because the design makes use of natural conditions (sunlight, ventilation, and control of temperature and humidity), the woodblocks have been preserved for some 500 years, safe from rodents and insects.",
+        "claimKo": "햇빛과 환기, 온습도 조절 등 자연환경을 이용한 설계 덕분에 경판이 약 500년 동안 쥐나 벌레의 피해 없이 보존되었다.",
+        "sources": [
+          {
+            "title": "Haeinsa Temple Janggyeong Panjeon, the Depositories for the Tripitaka Koreana Woodblocks",
+            "publisher": "UNESCO World Heritage Centre",
+            "url": "https://whc.unesco.org/en/list/737/",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"adapted to climatic conditions, thus preserving the woodblocks for some 500 years from rodent and insect infestation\" [text re-read on an Internet Archive snapshot of this UNESCO page; the live page blocks automated requests]"
+          },
+          {
+            "title": "유네스코 등재유산 소개 — 세계유산 「해인사 장경판전」",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FHeritage%2FHeritage_02.jsp&pageNo=5_1_1_0",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"건물 내의 환기, 온습도 조절 등 자연 기상에 적응하도록 설계되어 500년 간 깨끗하고 안전하게 경판을 보존할 수 있었음.\"; 영상 해설: \"햇살을 충분히 받아 나무가 눅눅해지거나 썩는 일이 없다.\""
+          }
+        ]
+      },
+      {
+        "id": "f8",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Haeinsa Temple Janggyeong Panjeon was inscribed on the UNESCO World Heritage List in 1995, and UNESCO describes it as the oldest depository of the Tripitaka.",
+        "claimKo": "해인사 장경판전은 1995년 유네스코 세계유산에 등재되었으며, 유네스코는 이를 가장 오래된 대장경 보관 건물로 평가한다.",
+        "sources": [
+          {
+            "title": "Haeinsa Temple Janggyeong Panjeon, the Depositories for the Tripitaka Koreana Woodblocks",
+            "publisher": "UNESCO World Heritage Centre",
+            "url": "https://whc.unesco.org/en/list/737/",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"Date of Inscription: 1995\"; \"As the oldest depository of the Tripitaka, they reveal an astonishing mastery of the invention and implementation of the conservation techniques\" [text re-read on an Internet Archive snapshot of this UNESCO page; the live page blocks automated requests]"
+          },
+          {
+            "title": "국보 합천 해인사 장경판전 (陜川 海印寺 藏經板殿) — 국가유산 상세 정보 및 국가유산 설명",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1113800520000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"합천 해인사 장경판전은 15세기 건축물로서 세계 유일의 대장경판 보관용 건물이며, 1995년 12월 유네스코 세계문화유산으로 등재되었다.\""
+          },
+          {
+            "title": "합천 해인사 장경판전 — 한국민족문화대백과사전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0062725",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"1995년 12월 '세계문화유산'으로 지정되었다.\""
+          }
+        ]
+      },
+      {
+        "id": "f9",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "UNESCO states that, in order to control the temperature and humidity within the depositories, there are restrictions to visitor entry into the Janggyeong Panjeon. Since June 2021 Haeinsa has also offered a small, pre-booked guided tour inside Beopbojeon (10 to 20 people per session), so entry is limited rather than impossible.",
+        "claimKo": "유네스코는 장경판전 안의 온도와 습도를 조절하기 위해 방문객의 출입을 제한하고 있다고 밝히고 있다. 해인사는 2021년 6월부터 법보전 내부를 사전 예약자(회당 10~20명)에 한해 안내 탐방하고 있어, 출입은 '제한'될 뿐 전면 금지는 아니다.",
+        "sources": [
+          {
+            "title": "Haeinsa Temple Janggyeong Panjeon, the Depositories for the Tripitaka Koreana",
+            "publisher": "UNESCO World Heritage Centre",
+            "url": "https://whc.unesco.org/en/list/737/",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "In the protection and management section: \"In order to control the temperature and humidity within the depositories, there are restrictions to visitor entry into the Janggyeong Panjeon.\" [text re-read on an Internet Archive snapshot of this UNESCO page; the live page blocks automated requests]"
+          },
+          {
+            "title": "해인사 팔만대장경 더 가까이서 보세요",
+            "publisher": "경향신문 (2021-06-03, 이혜인 기자; reports Haeinsa press conference)",
+            "url": "https://www.khan.co.kr/article/202106031544001",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "\"현재는 팔만대장경이 보관된 건물인 장경판전의 창 사이로 멀리서 관람하는 것만 가능하나, 앞으로는 사전 예약 시 건물 안에 들어가서 관람하는 것이 가능해진다.\"; \"탐방 프로그램은 장경판전 중 법보전 내부에서만 운영된다.\"; \"한 회당 입장 인원은 10~20명으로 제한된다.\""
+          }
+        ]
+      }
+    ],
+    "referenceDisplay": "Sources: 국가유산청 국가유산포털; UNESCO World Heritage Centre; 한국민족문화대백과사전",
+    "verification": {
+      "passes": 3,
+      "checkedAt": "2026-10-10",
+      "scope": "cluster",
+      "notes": "Third independent pass. Every cited URL for all 6 episodes (52 facts) was re-opened (UNESCO pages via Wayback copies when the live site resets connections) and quotes/locators were compared; the one exception is unesco.org/en/prizes/literacy (unreachable from here; its claim is now also backed by a Korean MCST press release). Eight minimal corrections were made: (1) Hangeul Day f3 no longer says 'Gregorian' (no cited source says the October 9 conversion was Gregorian; encykorea separates Julian/Gregorian only for 1932-45) and dates the October 29/28 observances; (2) f10 gains a third source (SBS 2018 with 국립한글박물관 curator); (3) Shapes scene 8, learning goal and f7 now say 'South Korea's spelling rules' count 24 (North Korea counts 40, 국립한글박물관 webzine 59); (4) Sejong scene 4/f4: 백성 is 'an old-fashioned word' with 표준국어대사전 added; (5) Jikji f8 quote no longer repeats a prize amount that differs between UNESCO page versions; (6) Tripitaka f6 wood and corner plates now have two further sources (정책브리핑; 박상진 wood-identification study); (8) Hangeul Day f9 gains a second source (문화체육관광부 press release); (7) Panjeon scene 8/f9: 'visitors cannot walk inside' replaced by 'visitor entry is restricted' because Haeinsa has run pre-booked tours inside Beopbojeon since June 2021. See hangul-printing.signoff.md."
+    },
+    "authorNotes": "Theme is set to 'crafts' because the episode is about building and conservation design; switch it to 'letters' if the cluster should stay in one theme. The original construction date is unknown (국가유산포털), so the narration says '15th century' (UNESCO WHC, 국가유산포털). The sources consulted do not say which wall or row has the larger windows, so the narration only says the sizes differ, and illustrations should not suggest a specific pattern. 국가유산포털 also calls it the 'world's only building for storing Tripitaka woodblocks'; the narration uses UNESCO's more conservative wording, 'oldest depository of the Tripitaka', instead. The building's survival through the 1592 war is left out, because the story avoids war content. The visitor-entry restriction is as stated on the WHC page on the access date; rules may change. The official heritage name is 합천 해인사 장경판전 (National Treasure, designated 1962). REVISED: 'oldest buildings' -> 'oldest buildings still standing at Haeinsa' (국가유산포털: 해인사에 남아있는 건물 중 가장 오래 되었다; verified in the portal's description text and its UNESCO page). Visitor restriction (f9): the UNESCO WHC text, re-read on an Internet Archive snapshot, says restrictions exist 'in order to control the temperature and humidity within the depositories'; the fire-protection measures on the same page (guards, surveillance, lightning rod) are a separate sentence. Narration now says visitors 'cannot walk inside' to match the UNESCO wording, and the old 'to keep the air just right inside' phrase was replaced. Only UNESCO is cited for this restriction; no 국가유산청 page with it was found, and rules may change. Check distractors replaced with plausible wrong answers. Vocab 소금/습기 dropped (not shown in a scene) and 세계유산 added. FINAL PASS (3rd check): scene 8 now says 'visitor entry is restricted' (UNESCO wording) instead of 'visitors cannot walk inside', because Haeinsa runs pre-booked guided tours inside Beopbojeon (since 2021-06, 경향신문). Current rules should be checked on haeinsa.or.kr before any release. REVIEW PASS (PR 1.8b): s1 no longer assumes the learner read story-tripitaka-koreana; s7 narrates UNESCO's 'oldest depository' as 'the oldest place built to store the Tripitaka'; s8 says only a few visitors may go in (f9: entry restricted, small pre-booked tours), to keep heat and dampness steady. REVIEW FIX (PR 1.8b round 2): s7 renders UNESCO's 'oldest depository' as 'the oldest storehouse of the Tripitaka' (no added 'built to' inside the UNESCO attribution). s8 is back to the time-independent UNESCO wording, 'visitor entry is limited' (f9), not 'only a few visitors may go in', which leaned on the 2021 tour reports; caption to match. The gloss of 'Uriga jikyeoyo' is now 'we protect it!' (no 'together' in the Korean). c1/c2 options rebalanced for length. Release check before PR 1.9 flips the catalogue status: re-check entry rules on haeinsa.or.kr; s8 holds either way.",
+    "errata": []
+  },
+  {
+    "v": 1,
+    "id": "story:jikji-metal-type",
+    "state": "ready",
+    "contentVer": 1,
+    "title": {
+      "ko": "직지, 금속활자로 찍은 책",
+      "romanization": "Jikji, geumsokhwaljaro jjigeun chaek",
+      "en": "Jikji: Printed with Metal Type"
+    },
+    "summaryEn": "Hoya visits Heungdeoksa Temple in Cheongju, where Jikji was printed with metal movable type in 1377. It is the world's oldest surviving book of its kind, and its one remaining volume is kept in Paris.",
+    "theme": "letters",
+    "kind": "documentary",
+    "recommendedStage": 2,
+    "minutes": 5,
+    "learningGoalsEn": [
+      "Understand what movable metal type is: one small piece of type for each character, lined up to print a page.",
+      "Know that Jikji was printed in 1377 at Heungdeoksa Temple in Cheongju and is the world's oldest surviving book printed with movable metal type.",
+      "Know where the surviving volume is kept today (the National Library of France) and that it was inscribed on UNESCO's Memory of the World Register in 2001.",
+      "Read and recognize 절 (jeol), 스님 (seunim), 제자 (jeja), 활자 (hwalja), 금속활자 (geumsokhwalja) and 박물관 (bangmulgwan)."
+    ],
+    "origin": {
+      "type": "documented",
+      "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
+    },
+    "review": {
+      "language": "draft",
+      "culture": "draft",
+      "advisory": []
+    },
+    "keywords": [
+      {
+        "id": "jeol",
+        "ko": "절",
+        "romanization": "jeol",
+        "en": "Buddhist temple",
+        "kind": "word"
+      },
+      {
+        "id": "seunim",
+        "ko": "스님",
+        "romanization": "seunim",
+        "en": "Buddhist monk (respectful)",
+        "kind": "word"
+      },
+      {
+        "id": "jeja",
+        "ko": "제자",
+        "romanization": "jeja",
+        "en": "student; disciple",
+        "kind": "word"
+      },
+      {
+        "id": "hwalja",
+        "ko": "활자",
+        "romanization": "hwalja",
+        "en": "printing type (one piece for each character)",
+        "kind": "word"
+      },
+      {
+        "id": "geumsokhwalja",
+        "ko": "금속활자",
+        "romanization": "geumsokhwalja",
+        "en": "metal movable type",
+        "kind": "word"
+      },
+      {
+        "id": "jikji",
+        "ko": "직지",
+        "romanization": "Jikji",
+        "en": "Jikji (short name of the book)",
+        "kind": "word"
+      },
+      {
+        "id": "bangmulgwan",
+        "ko": "박물관",
+        "romanization": "bangmulgwan",
+        "en": "museum",
+        "kind": "word"
+      },
+      {
+        "id": "hagwon",
+        "ko": "하권",
+        "romanization": "hagwon",
+        "en": "the second (last) volume of a set",
+        "kind": "word"
+      }
+    ],
+    "cultureNotes": [],
+    "tiers": [
+      {
+        "level": "listen",
+        "scenes": [
+          {
+            "id": "s1",
+            "narrationEn": "Hoya travels to Cheongju in the time of the Goryeo kingdom. At Heungdeoksa Temple, people are busy with something amazing: printing a book with metal type!",
+            "keyword": {
+              "id": "jeol",
+              "ko": "절",
+              "romanization": "jeol",
+              "en": "Buddhist temple",
+              "kind": "word"
+            },
+            "factIds": [
+              "f1"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "A peaceful Goryeo-era temple courtyard with a wooden hall and a stone pagoda; inside an open door, figures bend over a work table with small shiny pieces. Hoya peeks around a pillar.",
+            "captionEn": "Printing with metal type at a temple",
+            "artPending": true
+          },
+          {
+            "id": "s2",
+            "narrationEn": "The book is called Jikji. In 1372, a wise old monk named Baegun, then 75 years old, gathered important teachings of the Buddha and great teachers into it.",
+            "keyword": {
+              "id": "seunim",
+              "ko": "스님",
+              "romanization": "seunim",
+              "en": "Buddhist monk (respectful)",
+              "kind": "word"
+            },
+            "factIds": [
+              "f2"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "An elderly monk in gray robes writing calmly with a brush at a low desk by a paper window; mountains outside. No readable text on the paper.",
+            "captionEn": "Monk Baegun gathers the teachings",
+            "artPending": true
+          },
+          {
+            "id": "s3",
+            "narrationEn": "In 1377, Baegun's students printed the book here, with support from a Buddhist nun named Myodeok.",
+            "keyword": {
+              "id": "jeja",
+              "ko": "제자",
+              "romanization": "jeja",
+              "en": "student; disciple",
+              "kind": "word"
+            },
+            "factIds": [
+              "f1",
+              "f3"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "Two younger monks carefully lifting a freshly printed sheet (shown as soft gray lines, no readable text) while a nun in robes watches kindly.",
+            "captionEn": "His students print the book",
+            "artPending": true
+          },
+          {
+            "id": "s4",
+            "narrationEn": "How does it work? Each character is its own little piece of metal type. Printers line the pieces up to make a page, then print it. Metal type made printing easier, and mistakes easier to fix.",
+            "keyword": {
+              "id": "hwalja",
+              "ko": "활자",
+              "romanization": "hwalja",
+              "en": "printing type (one piece for each character)",
+              "kind": "word"
+            },
+            "factIds": [
+              "f4"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "Close-up of hands placing tiny metal blocks into a tray frame in neat rows (block faces shown blank or as abstract bumps); Hoya holds one tiny block up to the light.",
+            "captionEn": "One piece of type for each character",
+            "artPending": true
+          },
+          {
+            "id": "s5",
+            "narrationEn": "Jikji is the oldest surviving book in the world printed with movable metal type. Old records show metal type was used in Goryeo even earlier, but Jikji is the oldest such book that still exists.",
+            "keyword": {
+              "id": "geumsokhwalja",
+              "ko": "금속활자",
+              "romanization": "geumsokhwalja",
+              "en": "metal movable type",
+              "kind": "word"
+            },
+            "factIds": [
+              "f5"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "Hoya proudly holds up an old bound book like a trophy on a small hill, with a gentle golden glow behind him; the cover is plain.",
+            "captionEn": "The oldest surviving metal-type book",
+            "artPending": true
+          },
+          {
+            "id": "s6",
+            "narrationEn": "The book had two volumes. Only the second volume survives today, and it is kept at the National Library of France in Paris.",
+            "keyword": {
+              "id": "hagwon",
+              "ko": "하권",
+              "romanization": "hagwon",
+              "en": "the second (last) volume of a set",
+              "kind": "word"
+            },
+            "factIds": [
+              "f6"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "A quiet, grand library reading room with tall shelves and arched windows; one old book rests safely in a protective case. No signs, no flags, no text.",
+            "captionEn": "One volume survives, in Paris",
+            "artPending": true
+          },
+          {
+            "id": "s7",
+            "narrationEn": "In 2001, UNESCO added Jikji to the Memory of the World Register. UNESCO also has a prize carrying its name, for people who help protect old documents and share them.",
+            "keyword": {
+              "id": "jikji",
+              "ko": "직지",
+              "romanization": "Jikji",
+              "en": "Jikji (short name of the book)",
+              "kind": "word"
+            },
+            "factIds": [
+              "f7",
+              "f8"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "Hoya and children around the world holding hands in a circle around a glowing old book floating above a globe. No text.",
+            "captionEn": "UNESCO honors Jikji",
+            "artPending": true
+          },
+          {
+            "id": "s8",
+            "narrationEn": "Heungdeoksa seems to have closed after a fire long ago. But in 1985, archaeologists digging at the site found a metal piece carved with the name Heungdeoksa, so its site was confirmed. Today the Cheongju Early Printing Museum stands beside it.",
+            "keyword": {
+              "id": "bangmulgwan",
+              "ko": "박물관",
+              "romanization": "bangmulgwan",
+              "en": "museum",
+              "kind": "word"
+            },
+            "factIds": [
+              "f9"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "Present day: a grassy temple site with stone foundations and a rebuilt hall, and a modern museum building nearby; Hoya waves to visiting families. No signs or text.",
+            "captionEn": "A museum stands by the temple site",
+            "artPending": true
+          }
+        ],
+        "checks": [
+          {
+            "id": "c1",
+            "kind": "detail",
+            "promptEn": "In what year was Jikji printed?",
+            "options": [
+              {
+                "id": "a",
+                "en": "1443",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "1995",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "1377",
+                "isCorrect": true
+              },
+              {
+                "id": "d",
+                "en": "2001",
+                "isCorrect": false
+              }
+            ],
+            "factIds": [
+              "f1"
+            ],
+            "explainEn": "Jikji was printed with metal type at Heungdeoksa Temple in 1377."
+          },
+          {
+            "id": "c2",
+            "kind": "detail",
+            "promptEn": "What makes Jikji special?",
+            "options": [
+              {
+                "id": "a",
+                "en": "The first book written in Hangul",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "The first book printed with woodblocks",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "A book written by King Sejong",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "The oldest surviving metal-type book",
+                "isCorrect": true
+              }
+            ],
+            "factIds": [
+              "f5"
+            ],
+            "explainEn": "Jikji is the world's oldest surviving book printed with movable metal type. Old Korean records mention even earlier metal type."
+          },
+          {
+            "id": "c3",
+            "kind": "detail",
+            "promptEn": "Where is the surviving volume of Jikji kept today?",
+            "options": [
+              {
+                "id": "a",
+                "en": "Haeinsa Temple in Hapcheon",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "The National Library of France",
+                "isCorrect": true
+              },
+              {
+                "id": "c",
+                "en": "The Kansong Art Museum",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "The Cheongju Early Printing Museum",
+                "isCorrect": false
+              }
+            ],
+            "factIds": [
+              "f6"
+            ],
+            "explainEn": "Only the second volume survives. It is kept at the National Library of France in Paris."
+          }
+        ],
+        "checkpoints": [],
+        "sequenceSceneIds": [
+          "s1",
+          "s3",
+          "s6",
+          "s8"
+        ],
+        "newKeywordIds": [
+          "jeol",
+          "seunim",
+          "jeja",
+          "hwalja"
+        ]
+      }
+    ],
+    "coverSceneId": "s1",
+    "pillarTags": [],
+    "companionId": "hoya",
+    "facts": [
+      {
+        "id": "f1",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Jikji was printed with metal movable type at Heungdeoksa Temple, outside Cheongju, in the 7th month of 1377 (the 3rd year of King U of Goryeo).",
+        "claimKo": "『직지』는 고려 우왕 3년(1377) 7월 청주목 밖 흥덕사에서 금속활자로 인쇄되었다.",
+        "sources": [
+          {
+            "title": "Baegun hwasang chorok buljo jikji simche yojeol (vol.II), the second volume of \"Anthology of Great Buddhist Priests' Zen Teachings\"",
+            "publisher": "UNESCO — Memory of the World",
+            "url": "https://www.unesco.org/en/memory-world/baegun-hwasang-chorok-buljo-jikji-simche-yojeol-volii-second-volume-anthology-great-buddhist-priests",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"printed the old Heungdeok-sa temple in Cheongju city, using movable metal types in July 1377\""
+          },
+          {
+            "title": "유네스코 등재유산 소개 — 세계기록유산 「직지심체요절」",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FMemHeritage%2FMemHeritage_03.jsp&pageNo=5_4_2_0",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"청주 흥덕사에서 1377년 7월에 금속활자로 인쇄하였다.\"; 하권 간기 \"宣光七年丁巳七月 日 淸州牧外興德寺鑄字印施\""
+          },
+          {
+            "title": "직지란?",
+            "publisher": "청주고인쇄박물관 (Cheongju Early Printing Museum), 청주시",
+            "url": "https://www.cheongju.go.kr/jikjiworld/contents.do?key=17509",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"「직지」를 1377년에 청주목(淸州牧) 밖에 있는 흥덕사에서 금속활자로 인쇄하여 배포하는데\""
+          },
+          {
+            "title": "활자본 — 한국민족문화대백과사전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0065041",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"1377년(우왕 3) 7월에 주자로 찍은 「불조직지심체요절」\""
+          }
+        ]
+      },
+      {
+        "id": "f2",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "The monk Baegun compiled Jikji in 1372, at the age of 75, choosing important passages from the teachings, dialogues and letters of the Buddha and eminent monks.",
+        "claimKo": "백운화상은 75세이던 1372년(공민왕 21)에 부처와 고승들의 법어, 대화, 편지 등에서 중요한 내용을 뽑아 『직지』를 엮었다.",
+        "sources": [
+          {
+            "title": "유네스코 등재유산 소개 — 세계기록유산 「직지심체요절」",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FMemHeritage%2FMemHeritage_03.jsp&pageNo=5_4_2_0",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"백운화상이 75세였던 고려 공민왕 21년(1372)에 … 저술한 것으로서\""
+          },
+          {
+            "title": "직지란?",
+            "publisher": "청주고인쇄박물관 (Cheongju Early Printing Museum), 청주시",
+            "url": "https://www.cheongju.go.kr/jikjiworld/contents.do?key=17509",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"1372년(공민왕 21, 75세)에 성불산 성불사에서 145가(家)의 법어를 가려\""
+          },
+          {
+            "title": "사적 청주 흥덕사지 (淸州 興德寺址) — 안내판 설명 및 국가유산 설명",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1333303150000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "안내판: \"『직지』는 백운화상(白雲和尙)이 고려 공민왕 21년(1372)에 부처와 고승들의 법어, 대화, 편지 등에서 중요한 내용을 뽑아 엮은 책으로\""
+          }
+        ]
+      },
+      {
+        "id": "f3",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Baegun's disciples, including Seokchan, printed it with donations from the Buddhist nun Myodeok. The second disciple's name is written Daldam (달담) on 국가유산포털 and Daljam (달잠) on the Cheongju Early Printing Museum page, so the story does not name him.",
+        "claimKo": "백운화상의 제자 석찬 등이 비구니 묘덕의 시주를 받아 인쇄하였다. 둘째 제자의 이름은 국가유산포털에는 '달담', 청주고인쇄박물관에는 '달잠'으로 적혀 있어 이야기에서는 이름을 밝히지 않는다.",
+        "sources": [
+          {
+            "title": "유네스코 등재유산 소개 — 세계기록유산 「직지심체요절」",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FMemHeritage%2FMemHeritage_03.jsp&pageNo=5_4_2_0",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"그 제자 석찬과 달담이 비구니 묘덕의 시주를 받아 청주 흥덕사에서 1377년 7월에 금속활자로 인쇄하였다.\""
+          },
+          {
+            "title": "직지란? (직지를 간행한 사람)",
+            "publisher": "청주고인쇄박물관 (Cheongju Early Printing Museum)",
+            "url": "https://www.cheongju.go.kr/jikjiworld/contents.do?key=17509",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "\"연화문인(緣化門人) 석찬(釋璨), 달잠(達湛), 시주 비구니 묘덕(妙德)이라는 간행 기록이 있다. … 석찬과 달잠은 모두 백운화상의 제자로서 … 묘덕의 시주를 받아 흥덕사에서 금속활자로 「직지」를 간행하게 되었다.\""
+          }
+        ]
+      },
+      {
+        "id": "f4",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "In movable-type printing, separate pieces of type are arranged (typeset) into a plate to print pages. Metal type made printing more convenient and economical, and it made corrections easier.",
+        "claimKo": "활자 인쇄는 낱낱의 활자를 원고에 따라 배열(조판)해 판을 만들어 찍는 방식이며, 금속활자는 인쇄를 더 편리하고 경제적으로 만들고 교정을 쉽게 해 주었다.",
+        "sources": [
+          {
+            "title": "활자본 — 한국민족문화대백과사전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0065041",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"활자본은 활자를 조판하여 찍어낸 책이다.\""
+          },
+          {
+            "title": "동인찰 — 한국민족문화대백과사전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0080087",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"균자장은 원고에 따라 활자를 배열하여 높이와 간격을 맞추고 활자가 움직이지 않도록 고정시켜 인쇄할 때 쓰는 판을 만드는 장인이다.\""
+          },
+          {
+            "title": "유네스코 등재유산 소개 — 세계기록유산 「직지심체요절」",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FMemHeritage%2FMemHeritage_03.jsp&pageNo=5_4_2_0",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"이 책은 금속활자를 이용하여 인쇄하였는데, 인쇄술을 보다 편리하고 경제적이며 교정을 쉽게 하여 주었고\""
+          }
+        ]
+      },
+      {
+        "id": "f5",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Jikji is the world's oldest surviving book printed with movable metal type, although old Korean records mention earlier metal-type printing.",
+        "claimKo": "『직지』는 현존하는 세계에서 가장 오래된 금속활자본이며, 그보다 앞선 금속활자 인쇄는 옛 기록으로만 전한다.",
+        "sources": [
+          {
+            "title": "Baegun hwasang chorok buljo jikji simche yojeol (vol.II), the second volume of \"Anthology of Great Buddhist Priests' Zen Teachings\"",
+            "publisher": "UNESCO — Memory of the World",
+            "url": "https://www.unesco.org/en/memory-world/baegun-hwasang-chorok-buljo-jikji-simche-yojeol-volii-second-volume-anthology-great-buddhist-priests",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"While some earlier metal type printings were mentioned in the old Korean books, this book is the world's oldest movable metal type printing evidence available\""
+          },
+          {
+            "title": "사적 청주 흥덕사지 (淸州 興德寺址) — 안내판 설명 및 국가유산 설명",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1333303150000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "안내판: \"흥덕사는 현존하는 세계에서 가장 오래된 금속활자본인 『백운화상초록불조직지심체요절』 … 을 간행한 곳이다.\""
+          },
+          {
+            "title": "금속활자 — 한국민족문화대백과사전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0007871",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "1239년 『남명천화상송증도가』 중조본 지(誌): \"주자본(鑄字本)에 의거하여 1239년(고종 26) 다시 새겨\" → \"금속활자가 1232년 강화로 천도하기 이전인 13세기 초기 개경에서 이미 만들어져 사용되었음을 알 수 있다.\""
+          }
+        ]
+      },
+      {
+        "id": "f6",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Jikji was made in two volumes; only the second volume survives, and it is kept at the National Library of France (Bibliothèque nationale de France) in Paris.",
+        "claimKo": "『직지』는 상·하 2권이었으나 하권만 남아 있으며, 프랑스 국립도서관에 소장되어 있다.",
+        "sources": [
+          {
+            "title": "유네스코 등재유산 소개 — 세계기록유산 「직지심체요절」",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FMemHeritage%2FMemHeritage_03.jsp&pageNo=5_4_2_0",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"이 책은 상·하 2권으로 되어 있으나, 현재 하권만이 유일하게 프랑스에 소장되어 있다.\" / \"프랑스국립도서관으로 이관되어 오늘에 이르고 있다.\""
+          },
+          {
+            "title": "직지란?",
+            "publisher": "청주고인쇄박물관 (Cheongju Early Printing Museum), 청주시",
+            "url": "https://www.cheongju.go.kr/jikjiworld/contents.do?key=17509",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"「직지」의 체제는 상·하 2권으로 구성되어 있다.\"; \"하권 1책(총 38장)만이 프랑스 국립도서관 동양문헌실에 전하고 있다.\""
+          },
+          {
+            "title": "UNESCO/Jikji Memory of the World Prize — About the Prize",
+            "publisher": "UNESCO",
+            "url": "https://www.unesco.org/en/prizes/jikji/about",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"The book was printed in two volumes. The first volume is still missing and the second volume is kept in the Bibliothèque nationale of France.\""
+          }
+        ]
+      },
+      {
+        "id": "f7",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Jikji (vol. II) was inscribed on UNESCO's Memory of the World Register in 2001.",
+        "claimKo": "『직지』(하권)는 2001년 유네스코 세계기록유산에 등재되었다.",
+        "sources": [
+          {
+            "title": "Baegun hwasang chorok buljo jikji simche yojeol (vol.II), the second volume of \"Anthology of Great Buddhist Priests' Zen Teachings\"",
+            "publisher": "UNESCO — Memory of the World",
+            "url": "https://www.unesco.org/en/memory-world/baegun-hwasang-chorok-buljo-jikji-simche-yojeol-volii-second-volume-anthology-great-buddhist-priests",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "Registration Year: 2001 (submitted 2000 by the Republic of Korea)"
+          },
+          {
+            "title": "유네스코 등재유산 소개 — 세계기록유산 「직지심체요절」",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FMemHeritage%2FMemHeritage_03.jsp&pageNo=5_4_2_0",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"이 책은 이러한 가치를 인정받아 2001년 9월 유네스코세계기록유산으로 등재되었다.\""
+          },
+          {
+            "title": "직지란?",
+            "publisher": "청주고인쇄박물관 (Cheongju Early Printing Museum), 청주시",
+            "url": "https://www.cheongju.go.kr/jikjiworld/contents.do?key=17509",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"2001년에는 유네스코 세계기록유산에 「직지」를 등재시킴으로써\""
+          }
+        ]
+      },
+      {
+        "id": "f8",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "UNESCO has a prize carrying Jikji's name, the UNESCO/Jikji Memory of the World Prize, awarded to individuals or institutions that have made significant contributions to the preservation and accessibility of documentary heritage.",
+        "claimKo": "유네스코에는 '직지'의 이름을 딴 '유네스코/직지 세계기록유산상(UNESCO/Jikji Memory of the World Prize)'이 있으며, 기록유산의 보존과 접근성 향상에 크게 기여한 개인이나 기관에 수여된다.",
+        "sources": [
+          {
+            "title": "UNESCO/Jikji Memory of the World Prize — About the Prize",
+            "publisher": "UNESCO",
+            "url": "https://www.unesco.org/en/prizes/jikji/about",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"The Prize consists of a biennial award of US$ [amount differs between page versions; not used in the story] to individuals or institutions that have made significant contributions to the preservation and accessibility of documentary heritage.\""
+          }
+        ]
+      },
+      {
+        "id": "f9",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Heungdeoksa appears to have been abandoned after a fire in late Goryeo. Its site was confirmed in 1985, when an archaeological excavation found a metal piece (geumgu) inscribed 'Heungdeoksa'. The Cheongju Early Printing Museum stands beside the site today.",
+        "claimKo": "흥덕사는 고려 말에 화재로 폐사된 것으로 보인다. 1985년 발굴조사에서 '흥덕사'라는 글씨가 새겨진 금구 조각이 출토되어 흥덕사 터임이 확인되었으며, 현재 흥덕사지 옆에는 청주고인쇄박물관이 있다.",
+        "sources": [
+          {
+            "title": "사적 청주 흥덕사지 (淸州 興德寺址) — 안내판 설명 및 국가유산 설명",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1333303150000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "안내판: \"1985년 발굴조사 중 이곳에서 '흥덕사'라는 글씨가 새겨진 금구*가 나와 이곳이 당시의 흥덕사였음을 확인하였다.\"; \"현재 흥덕사지 옆에는 청주고인쇄박물관이 있으며\""
+          },
+          {
+            "title": "청주 흥덕사지 — 한국민족문화대백과사전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0056767",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"청주대학교의 주관하에 1985년 발굴을 할 때 출토된 '興德寺'라는 글씨가 새겨진 금구(禁口)조각과 청동불발(靑銅佛鉢) 뚜껑으로 이 절터가 흥덕사지임을 확인하게 되었다.\"; \"흥덕사는 늦어도 9세기에 창건되고 고려 말에 화재로 폐사된 것으로 보이며\""
+          },
+          {
+            "title": "국가유산 설명 — 사적 청주 흥덕사지 (淸州 興德寺址)",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1333303150000",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "\"1985년 발굴조사 때 … ‘흥덕사’라고 새겨진 쇠북(금구)조각이 나와 절의 이름이 흥덕사였음을 알 수 있었다. … 고려 후기까지 그 명맥을 유지하였던 것으로 보인다.\" (English text: \"burnt down at the end of Goryeo\")"
+          }
+        ]
+      }
+    ],
+    "referenceDisplay": "Sources: 국가유산청 국가유산포털; 청주고인쇄박물관; 한국민족문화대백과사전; UNESCO Memory of the World",
+    "verification": {
+      "passes": 3,
+      "checkedAt": "2026-10-10",
+      "scope": "cluster",
+      "notes": "Third independent pass. Every cited URL for all 6 episodes (52 facts) was re-opened (UNESCO pages via Wayback copies when the live site resets connections) and quotes/locators were compared; the one exception is unesco.org/en/prizes/literacy (unreachable from here; its claim is now also backed by a Korean MCST press release). Eight minimal corrections were made: (1) Hangeul Day f3 no longer says 'Gregorian' (no cited source says the October 9 conversion was Gregorian; encykorea separates Julian/Gregorian only for 1932-45) and dates the October 29/28 observances; (2) f10 gains a third source (SBS 2018 with 국립한글박물관 curator); (3) Shapes scene 8, learning goal and f7 now say 'South Korea's spelling rules' count 24 (North Korea counts 40, 국립한글박물관 webzine 59); (4) Sejong scene 4/f4: 백성 is 'an old-fashioned word' with 표준국어대사전 added; (5) Jikji f8 quote no longer repeats a prize amount that differs between UNESCO page versions; (6) Tripitaka f6 wood and corner plates now have two further sources (정책브리핑; 박상진 wood-identification study); (8) Hangeul Day f9 gains a second source (문화체육관광부 press release); (7) Panjeon scene 8/f9: 'visitors cannot walk inside' replaced by 'visitor entry is restricted' because Haeinsa has run pre-booked tours inside Beopbojeon since June 2021. See hangul-printing.signoff.md."
+    },
+    "authorNotes": "There is no comparison with Gutenberg because official Korean sources give different gaps: '70여년' and '80여년' on the 국가유산포털 Jikji page, and '78년' on the Heungdeoksa site signboard text. How the book reached France is left out as a sensitive topic for young learners; per 국가유산포털 it was collected by Collin de Plancy, passed to Henri Vever, and went to the BnF under his will after his death in 1950. It can be added later with that source. The 1972 'International Book Year' exhibition and the old misnomer 'Jikji Simgyeong' are also left out. The surviving volume has lost its first leaf (38 of 39 leaves remain, per 국가유산포털), which is left out too. The casting method (wax versus sand) is not described because it is debated, and earlier metal-type evidence (the 1239 colophon) is mentioned only in general terms. The full title is 백운화상초록불조직지심체요절 (Baegun Hwasang Chorok Buljo Jikji Simche Yojeol). REVISED: the names of Baegun's disciples are no longer given in the narration. 국가유산포털 writes the second disciple 달담 and the Cheongju Early Printing Museum writes 달잠 (達湛); the museum names Seokchan and Daljam as disciples and Myodeok as donor. Scene 8: 'diggers' -> 'archaeologists'; 'The temple itself disappeared long ago' -> 'seems to have been lost in a fire long ago' (encykorea: 폐사된 것으로 보이며); 'bronze piece' -> 'metal piece' because 국가유산포털 describes the 금구 as a 쇠북(금구) fragment. Vocab 종이/인쇄/금속 replaced by 제자/금속활자/직지 so that every vocab word appears in a scene. FINAL PASS (3rd check): f8 quote no longer repeats the prize amount (UNESCO page copies show US$ 30,000 and US$ 40,000 at different times). All other facts re-verified unchanged. REVIEW PASS (PR 1.8b): title.en and s1 say 'metal type', not 'letters made of metal' (Jikji predates Hangul and its type pieces are characters). s8 now says the temple seems to have closed after a fire (f9: abandoned after a fire). Advisory: the fire in s8 (proposed in F-STORY-001 §3.6) was reviewed and cleared; the scene names no person, harm or danger, only that a building closed long ago.",
     "errata": []
   },
   {
@@ -3324,6 +7290,3996 @@ export const storiesAll: Story[] = [
       "notes": "Third independent pass. All quotes re-checked programmatically against fetched pages (Sillok, encykorea, 우리역사넷, NMK, KMA; KHS descriptions via the khs.go.kr open API SearchKindOpenapiDt.do?ccbaCpno=...). unesco.org/ich.unesco.org pages could not be fetched directly (connection reset); UNESCO wording and years (2009, 2013, 2018) confirmed from search excerpts of the UNESCO pages and KHS lists. Corrections: Heo Jun birth year dropped from narration/fact (sources conflict: 1539 vs 1546, encykorea internally inconsistent); Jang Yeong-sil rank sentence softened to match the Sillok ('decided to give'); 우리역사넷 added as second source for Donguibogam f4/f5; Ssirum UNESCO locator de-quoted."
     },
     "authorNotes": "Kept gentle on purpose: battles, the turtle ship (거북선), and Admiral Yi's death in the final battle of 1598 are omitted to keep the story gentle; the war is only named. Coverage dates differ by source (handwritten volumes: 1592-05-01 to 1598-10-07 lunar per encykorea; UNESCO and the KHS portal give January 1592 to November 1598, which includes passages known only from the printed 이충무공전서), so narration says only '1592 to 1598'. The KHS portal MoW page notes an eighth volume (1595, 을미일기) is lost; narration says seven volumes survive. The naming year (1795, 이충무공전서) comes from encykorea only, so no year is given. The National Treasure designation covers the diary together with letters (서간첩) and war-report drafts (임진장초). Romanization: surname written 'Yi' as in KHS and UNESCO usage (strict RR would give 'I'). 장군 is glossed as the customary Korean title for him; his posts were naval commands (수군절도사, later 삼도수군통제사). REVISION: removed 'even in very hard times' (not in any source); kept UNESCO's hedge 'almost daily' because the surviving volumes have gaps (the 1595 volume is lost). Scene 5 now says he 'wrote about' family, relatives and subordinates (two sources) instead of 'visits'. Second sources added for f3, f4, f5, f6 from 우리역사넷 (국사편찬위원회) and the KHS MoW page. The identity of the person who chose the title is not stated; only 'editors of 이충무공전서' is claimed. PR 1.8c: keyword 난중일기 is kind 'term', matching the book title 동의보감.",
+    "errata": []
+  },
+  {
+    "v": 1,
+    "id": "story:pansori-tales",
+    "state": "ready",
+    "contentVer": 1,
+    "title": {
+      "ko": "판소리로 듣는 흥부와 놀부, 토끼와 자라",
+      "romanization": "Pansoriro deunneun Heungbuwa Nolbu, tokkiwa jara",
+      "en": "Pansori Tales: Heungbu's Swallow and the Clever Rabbit (Traditional Tales)"
+    },
+    "summaryEn": "Hoya visits a pansori performance (UNESCO 2003/2008) and hears two traditional stories from its five surviving works: kind Heungbu and the grateful swallow, and the clever rabbit who escapes the Dragon King's palace. This Korean rabbit-and-turtle tale is a different story from Aesop's 'The Tortoise and the Hare'.",
+    "theme": "crafts",
+    "kind": "folk-tale",
+    "recommendedStage": 2,
+    "minutes": 6,
+    "learningGoalsEn": [
+      "Understand pansori: one singer, one drummer with a buk, and chuimsae cheers like 'Eolssigu!'.",
+      "Know that five pansori works survive today, including Heungboga and Sugungga, which also exist as old novels.",
+      "Put in order the main events of Heungbu and Nolbu and of the rabbit and the turtle (jara), and know that this tale is not Aesop's 'The Tortoise and the Hare'.",
+      "Read and recognize 판소리 (pansori), 북 (buk), 추임새 (chuimsae), 얼씨구 (eolssigu), 제비 (jebi), 박 (bak), 토끼 (tokki) and 자라 (jara)."
+    ],
+    "origin": {
+      "type": "traditional",
+      "noteEn": "One version of a traditional tale; the Sources screen lists the versions this retelling follows.",
+      "retellingNoteEn": "Shortened and made gentler; versions differ."
+    },
+    "review": {
+      "language": "draft",
+      "culture": "draft",
+      "advisory": [
+        "mild-peril",
+        "trickery"
+      ],
+      "advisoryNoteEn": "Tricksters, a swallow hurt on purpose and a moment of danger, told gently; the harshest parts are left out."
+    },
+    "keywords": [
+      {
+        "id": "pansori",
+        "ko": "판소리",
+        "romanization": "pansori",
+        "en": "pansori (musical storytelling)",
+        "kind": "word"
+      },
+      {
+        "id": "buk",
+        "ko": "북",
+        "romanization": "buk",
+        "en": "barrel drum",
+        "kind": "word"
+      },
+      {
+        "id": "chuimsae",
+        "ko": "추임새",
+        "romanization": "chuimsae",
+        "en": "a cheer shouted by the drummer",
+        "kind": "word"
+      },
+      {
+        "id": "eolssigu",
+        "ko": "얼씨구",
+        "romanization": "eolssigu",
+        "en": "a joyful cheer",
+        "kind": "word"
+      },
+      {
+        "id": "jebi",
+        "ko": "제비",
+        "romanization": "jebi",
+        "en": "swallow (bird)",
+        "kind": "word"
+      },
+      {
+        "id": "bak",
+        "ko": "박",
+        "romanization": "bak",
+        "en": "gourd",
+        "kind": "word"
+      },
+      {
+        "id": "tokki",
+        "ko": "토끼",
+        "romanization": "tokki",
+        "en": "rabbit",
+        "kind": "word"
+      },
+      {
+        "id": "jara",
+        "ko": "자라",
+        "romanization": "jara",
+        "en": "soft-shelled turtle",
+        "kind": "word"
+      },
+      {
+        "id": "hyeongje",
+        "ko": "형제",
+        "romanization": "hyeongje",
+        "en": "brothers",
+        "kind": "word"
+      },
+      {
+        "id": "yonggung",
+        "ko": "용궁",
+        "romanization": "yonggung",
+        "en": "the Dragon King's undersea palace",
+        "kind": "word"
+      },
+      {
+        "id": "ganeul-yukjie-dugo-watseumnida",
+        "ko": "간을 육지에 두고 왔습니다",
+        "romanization": "Ganeul yukjie dugo watseumnida",
+        "en": "I left my liver on land.",
+        "kind": "phrase"
+      }
+    ],
+    "cultureNotes": [],
+    "tiers": [
+      {
+        "level": "listen",
+        "scenes": [
+          {
+            "id": "s1",
+            "narrationEn": "Hoya takes a seat for pansori! One singer, the sorikkun, tells a long story by singing, speaking and acting. A drummer, the gosu, keeps the rhythm on a barrel drum called a {kw:buk}.",
+            "captionEn": "One singer and one drummer",
+            "keyword": {
+              "id": "pansori",
+              "ko": "판소리",
+              "romanization": "pansori",
+              "en": "pansori (musical storytelling)",
+              "kind": "word"
+            },
+            "factIds": [
+              "f1"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "A singer in a white hanbok holding a folding fan, standing on a straw mat; a seated drummer with a round barrel drum beside her; Hoya in the audience."
+          },
+          {
+            "id": "s2",
+            "narrationEn": "The drummer shouts cheers called {kw:chuimsae}, like 'Eolssigu!' and 'Jota!' Long ago there were twelve pansori stories; five are still sung today. UNESCO named pansori a masterpiece in 2003 and added it to its heritage list in 2008. Let's hear two!",
+            "captionEn": "Chuimsae cheers and five surviving works",
+            "keyword": {
+              "id": "eolssigu",
+              "ko": "얼씨구",
+              "romanization": "eolssigu",
+              "en": "a joyful cheer (a chuimsae, like \"Yeah!\")",
+              "kind": "word"
+            },
+            "factIds": [
+              "f2",
+              "f3",
+              "f4"
+            ],
+            "framing": false,
+            "approximations": [
+              {
+                "text": "Let's hear two",
+                "factIds": [
+                  "f3"
+                ],
+                "rationaleEn": "Hoya picks two of the five surviving works named in f3 (Heungboga and Sugungga); a story choice, not a sourced number.",
+                "timeRelative": false
+              }
+            ],
+            "artPending": true,
+            "artBrief": "The drummer mid-shout with one hand raised, the singer opening her fan; five small scroll shapes floating above, two of them glowing."
+          },
+          {
+            "id": "s3",
+            "narrationEn": "First, Heungboga, also told as the old novel Heungbujeon. Nolbu, the older brother, was greedy. Heungbu, the younger, was poor but kind. One day, Heungbu found a baby swallow with a broken leg and gently bound it up.",
+            "captionEn": "Heungbu helps a hurt swallow",
+            "keyword": {
+              "id": "jebi",
+              "ko": "제비",
+              "romanization": "jebi",
+              "en": "swallow (bird)",
+              "kind": "word"
+            },
+            "factIds": [
+              "f5"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "A kind man in patched clothes cupping a baby swallow and tying a tiny strip of cloth around its leg outside a humble straw hut."
+          },
+          {
+            "id": "s4",
+            "narrationEn": "The next spring, the swallow returned with a gourd seed. Heungbu planted it, and huge gourds grew. When his family sawed them open, out poured money, rice and treasures!",
+            "captionEn": "Treasure pours out of the gourds",
+            "keyword": {
+              "id": "bak",
+              "ko": "박",
+              "romanization": "bak",
+              "en": "gourd",
+              "kind": "word"
+            },
+            "factIds": [
+              "f6"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "Huge round white gourds on a thatched roof; a family sawing one open with a two-person saw as rice and shining treasures spill out; a swallow circling."
+          },
+          {
+            "id": "s5",
+            "narrationEn": "Greedy Nolbu wanted treasure too, so he hurt a swallow on purpose. But his gourds brought only trouble! In well-known versions, Nolbu was sorry, and the brothers made peace.",
+            "captionEn": "Nolbu's gourds bring only trouble",
+            "keyword": {
+              "id": "hyeongje",
+              "ko": "형제",
+              "romanization": "hyeongje",
+              "en": "brothers",
+              "kind": "word"
+            },
+            "factIds": [
+              "f7"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "Two brothers in hanbok embracing in front of a modest house, one looking ashamed and grateful; a swallow perched on the eaves."
+          },
+          {
+            "id": "s6",
+            "narrationEn": "Next, Sugungga, also told as the novel Tokkijeon. It is a different story from Aesop's race! The Dragon King was sick. A sage said a rabbit's liver could cure him. A jara, a soft-shelled turtle called by his title Byeoljubu, offered to get one.",
+            "captionEn": "The sick Dragon King and the turtle",
+            "keyword": {
+              "id": "jara",
+              "ko": "자라",
+              "romanization": "jara",
+              "en": "soft-shelled turtle",
+              "kind": "word"
+            },
+            "factIds": [
+              "f8",
+              "f11"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "An undersea palace of coral and seaweed; a dragon king resting on a cushion; a small soft-shelled turtle in an official's hat bowing and volunteering."
+          },
+          {
+            "id": "s7",
+            "narrationEn": "On land, the turtle told the rabbit, {kw:tokki}, about an important job waiting for him at the sea palace. The rabbit was fooled and followed him down. But at the palace, the king demanded his liver! Don't worry: the clever rabbit had a plan.",
+            "captionEn": "The rabbit follows the turtle to the palace",
+            "keyword": {
+              "id": "yonggung",
+              "ko": "용궁",
+              "romanization": "yonggung",
+              "en": "the Dragon King's undersea palace",
+              "kind": "word"
+            },
+            "factIds": [
+              "f9"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "The rabbit arriving wide-eyed in the undersea palace beside the turtle, fish courtiers watching; the king pointing; bubbles everywhere, nothing frightening."
+          },
+          {
+            "id": "s8",
+            "narrationEn": "The rabbit thought fast: 'I left my liver on land!' The king believed him and sent him home with the turtle. On the shore, the rabbit hopped into the forest. Eolssigu! An early form of this tale appears in a book called the Samguk sagi.",
+            "captionEn": "The clever rabbit escapes",
+            "line": {
+              "ko": "간을 육지에 두고 왔습니다",
+              "romanization": "Ganeul yukjie dugo watseumnida",
+              "en": "I left my liver on land.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f10",
+              "f12"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "A rabbit bounding happily into a green forest from a sandy shore while the turtle watches from the waves; Hoya in the audience cheering with raised paws."
+          }
+        ],
+        "checks": [
+          {
+            "id": "c1",
+            "kind": "detail",
+            "promptEn": "Who keeps the rhythm in pansori?",
+            "options": [
+              {
+                "id": "a",
+                "en": "A small orchestra",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "A dancer with a fan",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "A choir of singers",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "A drummer, the gosu",
+                "isCorrect": true
+              }
+            ],
+            "explainEn": "In pansori, a drummer called the gosu keeps the rhythm on a barrel drum, the buk, while one singer tells the story.",
+            "factIds": [
+              "f1"
+            ]
+          },
+          {
+            "id": "c2",
+            "kind": "detail",
+            "promptEn": "What did the swallow carry back to Heungbu the next spring?",
+            "options": [
+              {
+                "id": "a",
+                "en": "A pine cone",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "A gourd seed",
+                "isCorrect": true
+              },
+              {
+                "id": "c",
+                "en": "A shiny feather",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "A red flower",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "In the story, the swallow comes back the next spring with a gourd seed for Heungbu.",
+            "factIds": [
+              "f6"
+            ]
+          },
+          {
+            "id": "c3",
+            "kind": "detail",
+            "promptEn": "How did the rabbit escape from the palace?",
+            "options": [
+              {
+                "id": "a",
+                "en": "He said he had left his liver on land",
+                "isCorrect": true
+              },
+              {
+                "id": "b",
+                "en": "He swam home faster than the turtle",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "He ran out through a secret tunnel",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "He promised the king a gift of gold",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "In the story, the rabbit says he left his liver on land, so the king sends him back, and he escapes.",
+            "factIds": [
+              "f10"
+            ]
+          }
+        ],
+        "checkpoints": [],
+        "sequenceSceneIds": [
+          "s1",
+          "s3",
+          "s6",
+          "s8"
+        ],
+        "newKeywordIds": [
+          "pansori",
+          "eolssigu",
+          "jebi",
+          "bak"
+        ]
+      }
+    ],
+    "coverSceneId": "s1",
+    "pillarTags": [],
+    "companionId": "hoya",
+    "facts": [
+      {
+        "id": "f1",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "In pansori, one singer (sorikkun) tells a long story by singing, speaking and gesturing, accompanied by a drummer (gosu) who keeps the rhythm on a barrel drum (buk).",
+        "claimKo": "판소리는 한 명의 소리꾼이 고수(북치는 사람)의 장단에 맞추어 창·아니리·너름새를 섞어가며 긴 이야기를 엮어가는 공연이다.",
+        "sources": [
+          {
+            "title": "국가무형유산 판소리 (Pansori)",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0000050000000&ccbaCtcd=ZZ&ccbaCpno=1279900050000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘판소리는 한 명의 소리꾼이 고수(북치는 사람)의 장단에 맞추어 창(소리), 말(아니리), 몸짓(너름새)을 섞어가며 긴 이야기를 엮어가는 것을 말한다.’"
+          },
+          {
+            "title": "Pansori epic chant",
+            "publisher": "UNESCO Intangible Cultural Heritage (ich.unesco.org)",
+            "url": "https://ich.unesco.org/en/RL/00070",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘Pansori is a genre of musical storytelling performed by a vocalist and a drummer.’"
+          },
+          {
+            "title": "판소리",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0059663",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "정의: ‘한 명의 창자(唱者)가 고수(鼓手)의 북장단에 맞추어 서사적인 이야기를 소리와 아니리로 엮어 발림을 곁들이며 구연하는 전통 공연 예술.’"
+          },
+          {
+            "title": "판소리 (한국민속문학사전)",
+            "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+            "url": "https://folkency.nfm.go.kr/kr/topic/detail/1226",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "정의: ‘줄거리가 있는 이야기를 한 사람의 연창자가 고수의 장단에 맞추어 창(唱)과 아니리를 교체하면서 연행하는 전통 공연 예술의 하나.’"
+          }
+        ]
+      },
+      {
+        "id": "f2",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "The drummer calls out exclamations such as 'Eolssigu!' and 'Jota!' to lift the performance; these are called chuimsae.",
+        "claimKo": "고수는 “얼씨구”, “좋다” 같은 감탄사로 흥을 돋우는데, 이를 추임새라고 한다.",
+        "sources": [
+          {
+            "title": "국가무형유산 판소리",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0000050000000&ccbaCtcd=ZZ&ccbaCpno=1279900050000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘고수의 반주는 … “얼씨구”, “좋다”, “으이”, “그렇지” 등의 감탄사를 내는데, 이를 추임새라고 한다.’"
+          },
+          {
+            "title": "추임새",
+            "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+            "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%B6%94%EC%9E%84%EC%83%88",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘판소리에서, 장단을 짚는 고수(鼓手)가 창(唱)의 사이사이에 흥을 돋우기 위하여 삽입하는 소리. ‘좋지’, ‘얼씨구’, ‘흥’ 따위이다.’"
+          },
+          {
+            "title": "추임새 (한국민속문학사전)",
+            "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+            "url": "https://folkency.nfm.go.kr/kr/topic/detail/1224",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "정의: ‘판소리 공연 중에 고수와 청관중이 … ‘얼씨구·좋다·어이·그렇지·잘 헌다·하아’ 등의 감탄사를 발하여 메꾸어 나아가는 공연 행위.’"
+          }
+        ]
+      },
+      {
+        "id": "f3",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Pansori once had twelve works (madang); five are still performed today: Chunhyangga, Simcheongga, Sugungga, Heungboga and Jeokbyeokga.",
+        "claimKo": "판소리는 한때 열두 마당이 있었으나, 오늘날 춘향가·심청가·수궁가·흥보가·적벽가 다섯 마당이 전승된다.",
+        "sources": [
+          {
+            "title": "국가무형유산 판소리",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0000050000000&ccbaCtcd=ZZ&ccbaCpno=1279900050000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘판소리 열두 마당이라 하여 … 그 수가 많았다.’ / ‘춘향가, 심청가, 수궁가, 흥보가, 적벽가만이 보다 예술적인 음악으로 가다듬어져 판소리 다섯마당으로 정착되었다.’"
+          },
+          {
+            "title": "판소리",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0059663",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘판소리는 현재 전승되는 다섯 바탕 외에도 … 『관우희(觀優戱)』에는 … 열두 바탕이 기록되어 있고’"
+          }
+        ]
+      },
+      {
+        "id": "f4",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Pansori was proclaimed a UNESCO Masterpiece of the Oral and Intangible Heritage of Humanity in 2003 and incorporated into the Representative List in 2008.",
+        "claimKo": "판소리는 2003년 유네스코 걸작으로 선정되고 2008년 인류무형문화유산 대표목록에 통합 등재되었다.",
+        "sources": [
+          {
+            "title": "Pansori epic chant",
+            "publisher": "UNESCO Intangible Cultural Heritage (ich.unesco.org)",
+            "url": "https://ich.unesco.org/en/RL/00070",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘Inscribed in 2008 (3.COM) on the Representative List of the Intangible Cultural Heritage of Humanity (originally proclaimed in 2003)’"
+          },
+          {
+            "title": "한국의 인류무형유산 (23건) 목록",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FkorInCulHeritage.jsp&pageNo=5_3_2_0",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘판소리 (2003/2008)’"
+          },
+          {
+            "title": "판소리",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0059663",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘2003년에는 판소리가 유네스코 인류 무형 문화유산에 등재되었다.’"
+          }
+        ]
+      },
+      {
+        "id": "f5",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Heungboga is one of the five pansori works; the same story exists as the late-Joseon novel Heungbu-jeon (author and date unknown), in which the greedy older brother Nolbu and the poor, kind younger brother Heungbu appear, and Heungbu binds the broken leg of a fallen baby swallow.",
+        "claimKo": "흥보가는 판소리 다섯 마당의 하나이며, 같은 이야기가 작자·연대 미상의 조선 후기 소설 「흥부전」으로도 전한다. 욕심 많은 형 놀부와 가난하고 착한 아우 흥부가 등장하고, 흥부는 떨어져 다리가 부러진 새끼 제비의 다리를 매어 준다.",
+        "sources": [
+          {
+            "title": "흥보가",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0066005",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "정의: ‘판소리 다섯마당 가운데 하나.’ / ‘가난하고 착한 아우 흥보는 부러진 제비다리를 고쳐주고’"
+          },
+          {
+            "title": "흥부전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0066012",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘작자·연대 미상의 고전소설.’ ‘조선 후기 판소리계 소설로’ / ‘악하고 사나운 형 놀부와 순하고 착한 아우 흥부가 살았는데’ / ‘새끼 한 마리가 땅에 떨어져 다리가 부러졌다. 흥부가 새끼 제비를 불쌍히 여겨 그 다리를 매어 주니’"
+          },
+          {
+            "title": "놀보박타령 (한국민속문학사전)",
+            "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+            "url": "https://folkency.nfm.go.kr/kr/topic/detail/1117",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "내용: ‘<놀보박타령>은 놀보가 자신의 욕심을 못 이겨 박을 타다 결국 박 속에서 등장한 군상들에 의해 몰락하기에 이른다는 내용’ / ‘놀보의 끝없는 물욕’ (supports calling Nolbu greedy)"
+          }
+        ]
+      },
+      {
+        "id": "f6",
+        "rev": 1,
+        "scope": "in-the-tale",
+        "claimEn": "In the story, the swallow returns the next spring with a gourd seed; Heungbu plants it, grows large gourds, and when they are sawn open, money, rice and treasures pour out.",
+        "claimKo": "이듬해 봄 제비가 박씨를 물어다 주고, 흥부가 심어 큰 박을 타자 돈과 쌀, 금은보화가 나온다.",
+        "sources": [
+          {
+            "title": "흥부전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0066012",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘제비는 그 이듬해 봄에 돌아올 때 박의 씨 하나를 물어다 주었다. 흥부는 그 박의 씨를 심어 가을에 큰 박을 많이 땄다. 그런데 박 속에서 금은보화가 나와 흥부는 큰 부자가 되었다.’"
+          },
+          {
+            "title": "흥보가",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0066005",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘‘박타령’이라고도 한다.’ / ‘‘박통 속에서 돈과 쌀을 정신없이 퍼내는 휘모리 대목’’"
+          },
+          {
+            "title": "타다 (표제어, 「5」)",
+            "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+            "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%ED%83%80%EB%8B%A4",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "타다 5 「동사」 「1」 ‘박 따위를 톱 같은 기구를 써서 밀었다 당겼다 하여 갈라지게 하다.’ (supports ‘sawed/sawn open’ for 박을 타다)"
+          }
+        ]
+      },
+      {
+        "id": "f7",
+        "rev": 1,
+        "scope": "in-the-tale",
+        "claimEn": "In the story, Nolbu deliberately hurts a swallow and his gourds release only harmful things and ruin him. Endings differ between versions: in the basic plot of the novel Heungbu-jeon (Encyclopedia of Korean Culture) and in well-known sung versions of Heungboga (the Park Bong-sul and Jeong Gwang-su texts described by the National Folk Museum's folk-literature dictionary), Nolbu repents and the brothers are reconciled.",
+        "claimKo": "이야기에서 놀부는 일부러 제비 다리를 부러뜨리고, 그 박에서 몹쓸 것들이 나와 망한다. 결말은 이본마다 다르며, 소설 「흥부전」의 기본 줄거리(한국민족문화대백과사전)와 박봉술·정광수 창본 등 널리 알려진 흥보가 창본(국립민속박물관 한국민속문학사전)에서는 놀부가 잘못을 뉘우치고 형제가 화해한다.",
+        "sources": [
+          {
+            "title": "흥부전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0066012",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘놀부가 이 소식을 듣고 제비 새끼의 다리를 일부러 부러뜨려 날려 보냈다.’ / ‘그 속에서 온갖 몹쓸 것이 나와 놀부의 집안이 망하게 되었다. 흥부는 이 소식을 듣고 놀부에게 재물을 주어 살게 하고, 그 뒤 놀부도 잘못을 뉘우치고 착한 사람이 되었으며 형제가 화목하게 살게 되었다.’ (basic plot of the novel; about 120 variant texts exist)"
+          },
+          {
+            "title": "흥보가",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0066005",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "‘형 놀보는 제비다리를 부러뜨리고 그 제비가 물어다 준 박씨를 심어 박을 타서 괴물들이 나와 망한다는 이야기를 판소리로 엮은 것이다.’ (this entry does not mention the repentance)"
+          },
+          {
+            "title": "놀보박타령 (한국민속문학사전)",
+            "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+            "url": "https://folkency.nfm.go.kr/kr/topic/detail/1117",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "정의: ‘<흥보가> 중 … 박 속에서 나온 것들로 인해 놀보가 몰락하거나 마지막 박에서 나온 장비를 매개로 하여 개과천선하여 흥보와 화해하는 데까지의 소리 대목.’ / 내용: 박봉술 창본·정광수 창본의 제5박에서 ‘놀보는 개과천선하고 형제간의 우애도 회복하는 것으로 끝이 난다.’ / ‘이본마다 그 양상은 조금씩 차이를 보인다.’"
+          }
+        ]
+      },
+      {
+        "id": "f8",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Sugungga is one of the five pansori works; the same story exists as the late-Joseon novel Tokki-jeon (also called Byeoljubu-jeon). In it the Dragon King falls ill, a sage (dosa) says a rabbit's liver will cure him, and the jara (soft-shelled turtle) called Byeoljubu volunteers to go to land. Byeoljubu (鼈主簿) is a title for the turtle (鼈 'soft-shelled turtle' + 主簿, an old official title), not a personal name.",
+        "claimKo": "수궁가는 판소리 다섯 마당의 하나이며, 같은 이야기가 조선 후기 소설 「토끼전」(「별주부전」)으로도 전한다. 용왕이 병들자 도사가 토끼의 간을 먹으면 낫는다고 하고, 별주부(鼈主簿) 자라가 자원하여 육지로 간다. ‘별주부’는 자라에게 붙은 관직 이름(鼈 자라 + 主簿)으로 사람 이름이 아니다.",
+        "sources": [
+          {
+            "title": "수궁가",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0031241",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "정의: ‘판소리 다섯마당 가운데 하나.’ / ‘용왕(龍王)이 병이 들자 약에 쓸 토끼의 간을 구하기 위하여 자라는 세상에 나와 토끼를 꾀어 용궁으로 데리고 간다.’"
+          },
+          {
+            "title": "토끼전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0059167",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘조선 후기, 작자·연대 미상의 고전 소설.’ / 명칭: ‘‘토끼전’ 외에 별주부전(鼈主簿傳) · 토별가(兎鼈歌) · 수궁가(水宮歌) …’ / ‘용왕이 병이 나자 도사가 나타나 육지에 있는 토끼의 간을 먹으면 낫는다고 한다.’ … ‘이 때 별주부 자라가 나타나 자원하여 허락을 받는다.’"
+          },
+          {
+            "title": "자라",
+            "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+            "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%9E%90%EB%9D%BC",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘거북과 비슷하나 등딱지의 중앙선 부분만 단단하고, 다른 부분은 부드러운 피부로 덮였으며’"
+          },
+          {
+            "title": "수궁가 (한국민속문학사전)",
+            "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+            "url": "https://folkency.nfm.go.kr/kr/topic/detail/1118",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "내용: ‘남해 용왕이 갑자기 병이 나 … 도사가 나타나 토끼의 간을 먹으면 낫는다고 일러준다. … 이때 별주부 자라가 나타나 자원하여 별주부는 토끼화상을 가지고 육지에 이르게 된다.’"
+          },
+          {
+            "title": "별주부전 (표제어)",
+            "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+            "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EB%B3%84%EC%A3%BC%EB%B6%80%EC%A0%84",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "별주부-전(鼈主簿傳): ‘토끼의 간을 먹어야 병이 낫는 용왕을 위하여 육지로 나간 별주부 곧 자라가 토끼를 용궁에 데려오는 데는 성공하지만 …’ ≒토끼전"
+          },
+          {
+            "title": "주부 (표제어, 主簿)",
+            "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+            "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%A3%BC%EB%B6%80",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "‘주부(主簿)’ 「명사」 『역사』 고구려 때의 십사 관등 가운데 셋째 등급 … (shows 主簿 as an old official title)"
+          },
+          {
+            "title": "도사 (표제어, 道士)",
+            "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+            "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EB%8F%84%EC%82%AC",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "도사(道士): ‘도를 갈고닦는 사람.’"
+          }
+        ]
+      },
+      {
+        "id": "f9",
+        "rev": 1,
+        "scope": "in-the-tale",
+        "claimEn": "In the story, the turtle lures the rabbit by promising a high official post at the undersea palace; the rabbit is fooled and follows him to the Dragon King's palace, where the king demands his liver.",
+        "claimKo": "자라는 수궁에 가면 높은 벼슬을 준다고 토끼를 꾀고, 속은 토끼는 용궁에 이르러 간을 내놓으라는 용왕 앞에 선다.",
+        "sources": [
+          {
+            "title": "토끼전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0059167",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘토끼를 만나 수궁에 가면 높은 벼슬을 준다고 유혹하면서 지상의 어려움을 말한다. 이에 속은 토끼는 자라를 따라 용궁에 이른다. 간을 내라는 용왕 앞에서 …’"
+          }
+        ]
+      },
+      {
+        "id": "f10",
+        "rev": 1,
+        "scope": "in-the-tale",
+        "claimEn": "In the story, the rabbit claims he left his liver on land; the king sends him back with the turtle, and on land the rabbit escapes into the forest.",
+        "claimKo": "토끼는 간을 육지에 두고 왔다고 꾀를 내고, 용왕은 그를 자라와 함께 육지로 돌려보내며, 토끼는 숲속으로 도망간다.",
+        "sources": [
+          {
+            "title": "토끼전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0059167",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘속은 것을 안 토끼는 꾀를 내어 간을 육지에 두고 왔다고 한다. 이에 용왕은 크게 토끼를 환대하면서 다시 육지에 가서 간을 가져오라고 한다. 자라와 함께 육지에 이른 토끼는 … 숲 속으로 도망가 버린다.’"
+          },
+          {
+            "title": "수궁가",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0031241",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘그러나 토끼는 꾀를 내어 용왕을 속이고 살아 돌아온다는 이야기를 판소리로 짠 것이다.’"
+          }
+        ]
+      },
+      {
+        "id": "f11",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Korea's rabbit-and-turtle tale (Sugungga / Tokki-jeon) is a different story from Aesop's fable of the hare and the tortoise (titled 'The Hare and the Tortoise' in the Townsend translation cited here, and also known as 'The Tortoise and the Hare'): in Aesop's fable a hare and a tortoise run a race, while in the Korean tale a turtle is sent to bring a rabbit's liver to the sick Dragon King.",
+        "claimKo": "한국의 토끼와 자라 이야기(수궁가·토끼전)는 토끼와 거북이 달리기를 하는 이솝 우화 「토끼와 거북이」와 다른 이야기이다. 한국 이야기에서는 병든 용왕을 위해 자라가 토끼의 간을 구하러 육지로 간다.",
+        "sources": [
+          {
+            "title": "토끼전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0059167",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "내용: ‘용왕이 병이 나자 도사가 나타나 육지에 있는 토끼의 간을 먹으면 낫는다고 한다. … 별주부 자라가 나타나 자원하여 허락을 받는다.’ (no race in the plot)"
+          },
+          {
+            "title": "수궁가 (한국민속문학사전)",
+            "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+            "url": "https://folkency.nfm.go.kr/kr/topic/detail/1118",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "내용: ‘남해 용왕이 갑자기 병이 나 백약이 무효하여 … 도사가 나타나 토끼의 간을 먹으면 낫는다고 일러준다.’"
+          },
+          {
+            "title": "Aesop's Fables (trans. G. F. Townsend), 'The Hare and the Tortoise'",
+            "publisher": "Project Gutenberg",
+            "url": "https://www.gutenberg.org/ebooks/21",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "‘“Though you be swift as the wind, I will beat you in a race.” … On the day appointed for the race the two started together.’"
+          }
+        ]
+      },
+      {
+        "id": "f12",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "An early short form of the rabbit-and-turtle tale, called Gutojiseol (龜兎之說), is recorded in the Samguk sagi, in the biographies (yeoljeon); the pansori Sugungga is built on it as its basic frame.",
+        "claimKo": "토끼와 자라 이야기의 이른 형태인 「구토지설(龜兎之說)」이 『삼국사기』 열전에 기록되어 있으며, 판소리 수궁가는 이를 기본 골격으로 삼았다.",
+        "sources": [
+          {
+            "title": "수궁가 (한국민속문학사전)",
+            "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+            "url": "https://folkency.nfm.go.kr/kr/topic/detail/1118",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "개관: ‘<수궁가>는 <구토지설(龜兎之說)>을 기본 골격으로 하고 있다. 『삼국사기(三國史記)』 「열전(列傳)」 기록에 의하면 … 선도해가 김춘추에게 해준 이야기가 바로 <구토지설>이다.’"
+          },
+          {
+            "title": "토끼전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0059167",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "‘『삼국사기』 김유신 열전에 나타나는 구토 설화(龜兎說話)가 문헌 설화의 예’ (the entry traces the tale from Indian Buddhist tales via the Samguk sagi to the Joseon pansori and novel)"
+          },
+          {
+            "title": "선도해(先道解)",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0028663",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "정의: ‘삼국시대 고구려에 투옥된 김춘추의 탈옥을 도와준 관리.’ / ‘선도해는 주안상을 차려 옥중으로 김춘추를 찾아가 함께 술을 마시면서 다음과 같은 이야기를 들려주었다. “그대도 일찍이 거북과 토끼의 이야기를 들었는가. … 토끼의 간으로 약을 지으면 치료할 수 있다고 …”’ (the early form has a turtle (거북) and the sea king's daughter; the narration says only ‘an early form’)"
+          }
+        ]
+      }
+    ],
+    "referenceDisplay": "Traditional tales (retold gently). Korea's rabbit-and-turtle tale (Sugungga / Tokki-jeon) is a different story from Aesop's 'The Tortoise and the Hare'. Sources: 국가유산청 국가유산포털(판소리·인류무형유산 목록); UNESCO Intangible Cultural Heritage; 한국민족문화대백과사전; 한국민속대백과사전(국립민속박물관); 국립국어원 표준국어대사전",
+    "verification": {
+      "passes": 3,
+      "checkedAt": "2026-10-10",
+      "scope": "cluster",
+      "notes": "Third independent pass over 6 episodes / 61 facts / 161 source entries (70 unique URLs). Every URL was re-fetched with my own scripts (UNESCO pages via Wayback copies; heritage.go.kr descriptions via the portal ajax html and khs.go.kr open API; folkency via its JSON API) and each quote or locator was machine-matched to the page text; the few non-matching strings were checked by hand (portal metadata fields, hanja or footnote punctuation, label text). Corrections: (1) pansori scene 2 now gives both UNESCO steps (2003 masterpiece proclamation, 2008 Representative List); (2) pansori f11 states the Aesop title as in the cited Townsend text and the common alternate title; (3) added sources: NFM 놀보박타령 for 'greedy' (f5), 표준국어대사전 타다 for 'sawed' (f6), 한국민족문화대백과사전 선도해 for the Samguk sagi tale (f12); (4) Seollal f9/f10 designation-date locators now cite the KHS open API field. No other change. See seasons-tales.signoff.md."
+    },
+    "authorNotes": "REVISED 2026-10-10. Traditional stories: narration describes the tales' content (basic plot per the Encyclopedia of Korean Culture and the National Folk Museum's folk-literature dictionary), not history. Names: the pansori work is 흥보가 (Heungbo/Nolbo) and the novel is 흥부전 (Heungbu/Nolbu); narration uses Heungbu/Nolbu. Ending: the repentance/reconciliation is in the basic plot of the novel Heungbu-jeon (E0066012) AND in the Park Bong-sul and Jeong Gwang-su sung texts (한국민속문학사전 '놀보박타령'); the Encyclopedia's Heungboga entry itself says only that Nolbo is ruined; endings differ (e.g. the 경판본 version ends differently; 신재효's text is described as similar to Jeong Gwang-su's), so narration says 'In well-known versions'. Softened on purpose: Heungbu being beaten and his paid stand-in beatings (매품팔이); Nolbu breaking the swallow's leg is shown only as 'hurt a swallow on purpose'; harmful things from Nolbu's gourds not detailed. Rabbit tale: 'liver' kept because the plot needs it, with a reassurance line right after; the turtle's fate (dies on land or returns empty-handed; in some versions the rabbit's droppings cure the king) is left out. 별주부 (鼈主簿) is the turtle's title, not a name; the 도사 is a sage (道士: one who cultivates the Way). The Korean tale is explicitly distinguished from Aesop's race (summary, scene 6, reference_display, f11). 구토지설: 한국민속문학사전 '수궁가' says Sugungga's frame is the 구토지설 told by Seon Do-hae to Kim Chun-chu and recorded in the Samguk sagi's biographies; the Encyclopedia ('토끼전') names the 구토 tale in the Kim Yu-sin biography as a documented example - narration says only 'an early form is recorded in the Samguk sagi'. Both sources note the older Indian Buddhist (Jataka) roots; not used. 추임새 is now taught in scene 2 and added to vocab (형제 dropped from vocab; it remains the scene 5 Korean word). Combined in one episode to keep the cluster at 6. Theme 'crafts' because the app files performing arts under Play & Crafts. FINAL PASS (3rd check, 2026-10-10): scene 2 now says UNESCO named pansori a masterpiece in 2003 and added it to the Representative List in 2008 (UNESCO page: inscribed 2008, originally proclaimed 2003). f11 now gives the Aesop title as in the cited Townsend text ('The Hare and the Tortoise', also known as 'The Tortoise and the Hare'). 'Greedy' for Nolbu rests on the NFM 놀보박타령 entry, which was added to f5. AUTHORING 2026-10-11 (F-STORY-001 PR 1.8d): title romanization, scene captions and check explanations written from the cited facts; every scene is artPending (text-only tile) until the art PRs; no claim or source changed. Fact scope: f1-f3, f5, f8 (the works and novels), f11 and f12 are documented; f6, f7, f9, f10 (plot) are in-the-tale. 'Let's hear two' (s2) carries an approximation entry. Advisory note now names the hurt swallow. REVIEW 2026-10-11 (PR 1.8d): narration spells Heungbujeon, Tokkijeon; s3 'One day' (rescue undated); s5 follows f7; s6-s8 past tense; PR #208 fixes: s6 caption drops 'loyal' (f8); 'the rabbit' in s7-s8.",
+    "errata": []
+  },
+  {
+    "v": 1,
+    "id": "story:sejong-new-letters",
+    "state": "ready",
+    "contentVer": 1,
+    "title": {
+      "ko": "세종대왕의 새 글자",
+      "romanization": "Sejongdaewangui sae geulja",
+      "en": "King Sejong's New Letters"
+    },
+    "summaryEn": "Hoya travels back to Joseon to learn why King Sejong created 28 new letters in 1443, and how the book Hunminjeongeum explained them in 1446.",
+    "theme": "letters",
+    "kind": "documentary",
+    "recommendedStage": 1,
+    "minutes": 4,
+    "learningGoalsEn": [
+      "Know who created Hangul (King Sejong, the fourth king of Joseon) and when (1443).",
+      "Understand why King Sejong made new letters: so ordinary people could learn them easily and write what they wanted to say.",
+      "Know that the book Hunminjeongeum (1446) explained the new letters, with explanations written by Jiphyeonjeon scholars.",
+      "Read and recognize 세종대왕 (Sejongdaewang), 한자 (hanja), 훈민정음 (Hunminjeongeum), 백성 (baekseong), 집현전 (Jiphyeonjeon) and 한글 (Hangeul)."
+    ],
+    "origin": {
+      "type": "documented",
+      "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
+    },
+    "review": {
+      "language": "draft",
+      "culture": "draft",
+      "advisory": []
+    },
+    "keywords": [
+      {
+        "id": "sejong-daewang",
+        "ko": "세종대왕",
+        "romanization": "Sejongdaewang",
+        "en": "King Sejong the Great",
+        "kind": "word"
+      },
+      {
+        "id": "hangeul",
+        "ko": "한글",
+        "romanization": "Hangeul",
+        "en": "the Korean alphabet",
+        "kind": "word"
+      },
+      {
+        "id": "geulja",
+        "ko": "글자",
+        "romanization": "geulja",
+        "en": "letter; written character",
+        "kind": "word"
+      },
+      {
+        "id": "hanja",
+        "ko": "한자",
+        "romanization": "hanja",
+        "en": "Chinese characters (as used in Korea)",
+        "kind": "word"
+      },
+      {
+        "id": "baekseong",
+        "ko": "백성",
+        "romanization": "baekseong",
+        "en": "the common people (historical)",
+        "kind": "word"
+      },
+      {
+        "id": "swiwoyo",
+        "ko": "쉬워요",
+        "romanization": "swiwoyo",
+        "en": "(it) is easy",
+        "kind": "word"
+      },
+      {
+        "id": "jiphyeonjeon",
+        "ko": "집현전",
+        "romanization": "Jiphyeonjeon",
+        "en": "the Hall of Worthies (the king's hall of scholars)",
+        "kind": "word"
+      },
+      {
+        "id": "sae-geulja",
+        "ko": "새 글자",
+        "romanization": "sae geulja",
+        "en": "new letters",
+        "kind": "word"
+      },
+      {
+        "id": "hunminjeongeum",
+        "ko": "훈민정음",
+        "romanization": "Hunminjeongeum",
+        "en": "\"the proper sounds for teaching the people\"",
+        "kind": "word"
+      },
+      {
+        "id": "baeugi-swiwoyo",
+        "ko": "배우기 쉬워요",
+        "romanization": "baeugi swiwoyo",
+        "en": "It's easy to learn!",
+        "kind": "word"
+      }
+    ],
+    "cultureNotes": [],
+    "tiers": [
+      {
+        "level": "listen",
+        "scenes": [
+          {
+            "id": "s1",
+            "narrationEn": "Hoya the tiger opens a glowing storybook. Whoosh! We land in Joseon, Korea, almost 600 years ago. Here lived King Sejong, the fourth king of the Joseon dynasty.",
+            "keyword": {
+              "id": "sejong-daewang",
+              "ko": "세종대왕",
+              "romanization": "Sejongdaewang",
+              "en": "King Sejong the Great",
+              "kind": "word"
+            },
+            "factIds": [
+              "f1",
+              "f3"
+            ],
+            "framing": false,
+            "approximations": [
+              {
+                "text": "almost 600 years",
+                "factIds": [
+                  "f3"
+                ],
+                "rationaleEn": "King Sejong made the letters in 1443; 1443 to 2026 is 583 years, so narration rounds it to almost 600.",
+                "timeRelative": true
+              }
+            ],
+            "artBrief": "Hoya, a friendly young tiger, steps out of a glowing open book into a Joseon-era royal courtyard with wooden halls and curved tiled roofs; a kind king in royal robes stands on the stone steps.",
+            "captionEn": "Hoya lands in King Sejong's Joseon",
+            "artPending": true
+          },
+          {
+            "id": "s2",
+            "narrationEn": "In those days, people spoke Korean, but they wrote with Chinese characters. Korean is different from Chinese, and the characters were hard to learn, so many ordinary people could not write down what they wanted to say.",
+            "keyword": {
+              "id": "hanja",
+              "ko": "한자",
+              "romanization": "hanja",
+              "en": "Chinese characters (as used in Korea)",
+              "kind": "word"
+            },
+            "factIds": [
+              "f2"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "A village lane: a farmer and a child look puzzled at a sheet covered with dense, abstract brush marks (unreadable squiggles, no real characters); Hoya scratches his head beside them.",
+            "captionEn": "Chinese characters were hard to learn",
+            "artPending": true
+          },
+          {
+            "id": "s3",
+            "narrationEn": "King Sejong felt sorry for them. So, in 1443, he himself created 28 new letters. Hoya's eyes go wide. \"Brand-new letters for the sounds of Korean!\"",
+            "keyword": {
+              "id": "sae-geulja",
+              "ko": "새 글자",
+              "romanization": "sae geulja",
+              "en": "new letters",
+              "kind": "word"
+            },
+            "factIds": [
+              "f3",
+              "f5"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "King Sejong at a low wooden desk by lamplight, brush in hand; simple abstract strokes, dots and circles float above the paper like sparks (no readable letters); Hoya peeks over the desk edge.",
+            "captionEn": "King Sejong creates new letters",
+            "artPending": true
+          },
+          {
+            "id": "s4",
+            "narrationEn": "He named them Hunminjeongeum, \"the proper sounds for teaching the people.\" An old-fashioned word for the people is {kw:baekseong}. In his own words, he made the letters so people could learn them easily and use them every day.",
+            "keyword": {
+              "id": "hunminjeongeum",
+              "ko": "훈민정음",
+              "romanization": "Hunminjeongeum",
+              "en": "\"the proper sounds for teaching the people\"",
+              "kind": "word"
+            },
+            "factIds": [
+              "f4",
+              "f5"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "A sunny market street where a merchant, a grandmother and children each hold a small blank paper and smile; warm light suggests everyone can now write.",
+            "captionEn": "He names them Hunminjeongeum",
+            "artPending": true
+          },
+          {
+            "id": "s5",
+            "narrationEn": "Hoya practices a new phrase: \"Baeugi swiwoyo, it's easy to learn!\" Later, the scholar Jeong Inji wrote that a wise person could understand the letters before a single morning was over.",
+            "keyword": {
+              "id": "baeugi-swiwoyo",
+              "ko": "배우기 쉬워요",
+              "romanization": "baeugi swiwoyo",
+              "en": "It's easy to learn!",
+              "kind": "word"
+            },
+            "factIds": [
+              "f6"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "Morning sun rising over palace roofs; Hoya sits cross-legged with a brush and blank paper, grinning proudly; a scholar in a black gat hat watches kindly.",
+            "captionEn": "The new letters are easy to learn",
+            "artPending": true
+          },
+          {
+            "id": "s6",
+            "narrationEn": "In 1446, a book named Hunminjeongeum was finished to explain the new letters. Scholars of the royal Hall of Worthies, Jiphyeonjeon, wrote its explanations and examples.",
+            "keyword": {
+              "id": "jiphyeonjeon",
+              "ko": "집현전",
+              "romanization": "Jiphyeonjeon",
+              "en": "the Hall of Worthies (the king's hall of scholars)",
+              "kind": "word"
+            },
+            "factIds": [
+              "f7",
+              "f8"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "Several scholars in Joseon robes working at desks in a quiet wooden hall, stacks of bound books with plain covers; one scholar holds up a finished book (cover blank, no text).",
+            "captionEn": "Scholars explain the letters in a book",
+            "artPending": true
+          },
+          {
+            "id": "s7",
+            "narrationEn": "Today we call these letters Hangul. People in Korea read and write with them every day, and now you are learning them too!",
+            "keyword": {
+              "id": "hangeul",
+              "ko": "한글",
+              "romanization": "Hangeul",
+              "en": "the Korean alphabet",
+              "kind": "word"
+            },
+            "factIds": [
+              "f9"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "Present-day scene: Hoya waves beside a child holding a pencil over a notebook (blank lines), with a modern Korean street softly behind them; no signs or readable text.",
+            "captionEn": "Today we call them Hangul",
+            "artPending": true
+          }
+        ],
+        "checks": [
+          {
+            "id": "c1",
+            "kind": "detail",
+            "promptEn": "Who created Hangul?",
+            "options": [
+              {
+                "id": "a",
+                "en": "Baegun the monk",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "King Sejong",
+                "isCorrect": true
+              },
+              {
+                "id": "c",
+                "en": "Jeong Inji",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "A market seller",
+                "isCorrect": false
+              }
+            ],
+            "factIds": [
+              "f3"
+            ],
+            "explainEn": "King Sejong himself created the new letters. He called them Hunminjeongeum."
+          },
+          {
+            "id": "c2",
+            "kind": "detail",
+            "promptEn": "In which year did King Sejong create the 28 letters?",
+            "options": [
+              {
+                "id": "a",
+                "en": "1377",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "1446",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "1443",
+                "isCorrect": true
+              },
+              {
+                "id": "d",
+                "en": "1940",
+                "isCorrect": false
+              }
+            ],
+            "factIds": [
+              "f3"
+            ],
+            "explainEn": "King Sejong created the 28 new letters in 1443."
+          },
+          {
+            "id": "c3",
+            "kind": "detail",
+            "promptEn": "Why did King Sejong make new letters?",
+            "options": [
+              {
+                "id": "a",
+                "en": "To keep palace secrets",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "So only scholars could read the king's orders",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "To replace the king's seal",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "So people could learn letters easily",
+                "isCorrect": true
+              }
+            ],
+            "factIds": [
+              "f5"
+            ],
+            "explainEn": "King Sejong felt sorry for people who could not express themselves, so he made letters that are easy to learn and use every day."
+          }
+        ],
+        "checkpoints": [],
+        "sequenceSceneIds": [
+          "s1",
+          "s3",
+          "s5",
+          "s7"
+        ],
+        "newKeywordIds": [
+          "sejong-daewang",
+          "hanja",
+          "jiphyeonjeon",
+          "hangeul"
+        ]
+      }
+    ],
+    "coverSceneId": "s1",
+    "pillarTags": [],
+    "companionId": "hoya",
+    "facts": [
+      {
+        "id": "f1",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "King Sejong was the fourth king of the Joseon dynasty; he reigned from 1418 to 1450.",
+        "claimKo": "세종은 조선의 제4대 왕으로, 1418년부터 1450년까지 재위하였다.",
+        "sources": [
+          {
+            "title": "세종 — 한국민족문화대백과사전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0029857",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"조선의 제4대(재위: 1418년~1450년) 왕.\" / \"세종은 조선의 제4대 왕이다. 재위 기간은 1418~1450년이며\""
+          },
+          {
+            "title": "한글 — 한국민족문화대백과사전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0061508",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"조선의 제4대 임금인 세종대왕이 훈민정음이라는 이름으로 창제하여\""
+          },
+          {
+            "title": "국보 훈민정음 (訓民正音) — 국가유산 상세 정보 및 국가유산 설명",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1111100700000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "English description: \"a royal edict issued by King Sejong (r. 1418-1450)\""
+          },
+          {
+            "title": "Hunminjeongum Manuscript",
+            "publisher": "UNESCO — Memory of the World",
+            "url": "https://www.unesco.org/en/memory-world/hunminjeongum-manuscript",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "Description: \"Sejong the Great, the fourth king of the Choson Dynasty (reigned 1418-1450)\""
+          }
+        ]
+      },
+      {
+        "id": "f2",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Before Hangeul, Korean was written with borrowed Chinese characters. Because Korean differs from Chinese and the characters were hard to learn, many ordinary people could not write down what they wanted to say.",
+        "claimKo": "한글이 만들어지기 전에는 중국과 말이 다른 우리말을 배우기 어려운 한자를 빌려 적었기 때문에, 많은 백성이 하고 싶은 말을 글로 적지 못하였다.",
+        "sources": [
+          {
+            "title": "세종실록 113권, 세종 28년 9월 29일 갑오 4번째 기사 「《훈민정음》이 이루어지다. 어제와 예조 판서 정인지의 서문」 (1446, 명 정통 11년)",
+            "publisher": "국사편찬위원회 (National Institute of Korean History) — 조선왕조실록",
+            "url": "https://sillok.history.go.kr/id/kda_12809029_004",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "어제(御製) 국역: \"나랏말이 중국과 달라 문자와 서로 통하지 아니하므로, 우매한 백성들이 말하고 싶은 것이 있어도 마침내 제 뜻을 잘 표현하지 못하는 사람이 많다.\""
+          },
+          {
+            "title": "한글 — 한국민족문화대백과사전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0061508",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"어려운 한자를 빌려 문자로 사용할 경우 … 일반 민중은 말 이외에 의사를 기록하고 전달할 방법이 없게 된다. 이러한 문제의식에서 한글이 만들어지게 되었다.\""
+          }
+        ]
+      },
+      {
+        "id": "f3",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "In 1443 (recorded in the 12th lunar month of Sejong's 25th year), King Sejong himself created 28 letters and called them Hunminjeongeum.",
+        "claimKo": "1443년(세종 25년 음력 12월 조 기록)에 세종이 친히 언문 28자를 만들고, 이를 훈민정음이라 하였다.",
+        "sources": [
+          {
+            "title": "세종실록 102권, 세종 25년 12월 30일 경술 2번째 기사 「훈민정음을 창제하다」 (1443, 명 정통 8년)",
+            "publisher": "국사편찬위원회 (National Institute of Korean History) — 조선왕조실록",
+            "url": "https://sillok.history.go.kr/id/kda_12512030_002",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "원문 \"是月, 上親制諺文二十八字 … 是謂訓民正音\"; 국역 \"이달에 임금이 친히 언문(諺文) 28자(字)를 지었는데 …\""
+          },
+          {
+            "title": "알고 싶은 한글 — 한글날 날짜와 『세종실록』 기록에 관한 글 (hangeul/origin/001)",
+            "publisher": "국립국어원 (National Institute of Korean Language)",
+            "url": "https://www.korean.go.kr/hangeul/origin/001.html",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"1443년(세종 25) 12월 조의 맨 끝에 날짜를 명시하지 않고서 그냥 '이번 달에 왕이 언문 28자를 만들었다'는 기록이 나온다.\""
+          },
+          {
+            "title": "한글 — 한국민족문화대백과사전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0061508",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"즉 훈민정음이라는 이름으로 한글이 만들어진 것은 1443년 음력 12월이다.\""
+          },
+          {
+            "title": "Hunminjeongum Manuscript",
+            "publisher": "UNESCO — Memory of the World",
+            "url": "https://www.unesco.org/en/memory-world/hunminjeongum-manuscript",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "Description: Hangul, \"the development of which he completed in 1443\""
+          }
+        ]
+      },
+      {
+        "id": "f4",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Hunminjeongeum means 'the proper (correct) sounds for teaching the people (baekseong, an old-fashioned word for the common people).'",
+        "claimKo": "'훈민정음'은 '백성을 가르치는 바른 소리'라는 뜻이다. 여기서 '백성'은 일반 사람들을 예스럽게 이르는 말이다.",
+        "sources": [
+          {
+            "title": "한글 — 한국민족문화대백과사전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0061508",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"세종이 한글을 만들 당시에는 '훈민정음'이라 불렀는데, 이는 '백성을 가르치는 바른 소리'라는 뜻이다.\""
+          },
+          {
+            "title": "국보 훈민정음 (訓民正音) — 국가유산 상세 정보 및 국가유산 설명",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1111100700000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "영문명: \"Hunminjeongeum (The Proper Sounds for the Instruction of the People)\""
+          },
+          {
+            "title": "표준국어대사전 — 표제어 '백성(百姓)'",
+            "publisher": "국립국어원 (National Institute of Korean Language)",
+            "url": "https://stdict.korean.go.kr/search/searchResult.do?pageSize=10&searchKeyword=%EB%B0%B1%EC%84%B1",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "백성 (百姓) 「명사」 「1」 \"나라의 근본을 이루는 일반 국민을 예스럽게 이르는 말.\""
+          }
+        ]
+      },
+      {
+        "id": "f5",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "In his preface, King Sejong wrote that he felt sorry for people who could not express themselves, and that he made 28 new letters so people could learn them easily and use them conveniently every day.",
+        "claimKo": "세종은 서문에서 제 뜻을 펴지 못하는 백성을 딱하게 여겨 새로 28자를 만들었으며, 사람들이 쉽게 익혀 날마다 편하게 쓰게 하려는 것이라고 밝혔다.",
+        "sources": [
+          {
+            "title": "세종실록 113권, 세종 28년 9월 29일 갑오 4번째 기사 「《훈민정음》이 이루어지다. 어제와 예조 판서 정인지의 서문」 (1446, 명 정통 11년)",
+            "publisher": "국사편찬위원회 (National Institute of Korean History) — 조선왕조실록",
+            "url": "https://sillok.history.go.kr/id/kda_12809029_004",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "어제 국역: \"내 이를 딱하게 여기어 새로 28자(字)를 만들었으니, 사람들로 하여금 쉬 익히어 날마다 쓰는 데 편하게 할 뿐이다.\" 원문: \"予爲此憫然, 新制二十八字, 欲使人(昜)〔易〕習, 便於日用耳。\""
+          },
+          {
+            "title": "한글날의 어제와 오늘 그리고 내일 - 1926년의 '가갸날'에서 2016년의 '한글날'까지 (새소식)",
+            "publisher": "국립한글박물관 (National Hangeul Museum)",
+            "url": "https://www.hangeul.go.kr/news/newsDetail.do?pageIndex=45&bbs_id=1&bbs_no=777&curr_menu_cd=0106010100",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "\"말과 글이 달라 전하고자하는 바가 있어도 제 뜻을 펴지 못하는 백성을 가엾게 여긴 세종대왕.\"; \"어진 임금 세종은 백성을 사랑하는 마음을 담아 친히 28글자를 만들었고\""
+          }
+        ]
+      },
+      {
+        "id": "f6",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Jeong In-ji's preface to Hunminjeongeum says that a wise person can understand the letters before a morning is over.",
+        "claimKo": "정인지는 『훈민정음』 서문에서 지혜로운 사람은 아침나절이 되기 전에 이 글자를 깨칠 수 있다고 썼다.",
+        "sources": [
+          {
+            "title": "세종실록 113권, 세종 28년 9월 29일 갑오 4번째 기사 「《훈민정음》이 이루어지다. 어제와 예조 판서 정인지의 서문」 (1446, 명 정통 11년)",
+            "publisher": "국사편찬위원회 (National Institute of Korean History) — 조선왕조실록",
+            "url": "https://sillok.history.go.kr/id/kda_12809029_004",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "정인지 서문 국역: \"그런 까닭으로 지혜로운 사람은 아침나절이 되기 전에 이를 이해하고, 어리석은 사람도 열흘 만에 배울 수 있게 된다.\" 원문: \"故智者不崇朝而會, 愚者可浹旬而學.\""
+          }
+        ]
+      },
+      {
+        "id": "f7",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "In the 9th lunar month of 1446, the book Hunminjeongeum, which explains the new letters, was completed. UNESCO and the Korea Heritage Service describe it as published (promulgated) in 1446, but no formal promulgation ceremony is recorded.",
+        "claimKo": "1446년(세종 28년) 음력 9월에 새 글자를 풀이한 책 『훈민정음』이 완성되었다. 유네스코와 국가유산청은 이를 1446년에 반포한 것으로 설명하지만, 공식적인 반포 행사를 열었다는 기록은 없다.",
+        "sources": [
+          {
+            "title": "세종실록 113권, 세종 28년 9월 29일 갑오 4번째 기사 「《훈민정음》이 이루어지다. 어제와 예조 판서 정인지의 서문」 (1446, 명 정통 11년)",
+            "publisher": "국사편찬위원회 (National Institute of Korean History) — 조선왕조실록",
+            "url": "https://sillok.history.go.kr/id/kda_12809029_004",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "원문 \"是月, 訓民正音成。\"; 국역 \"이달에 《훈민정음(訓民正音)》이 이루어졌다.\""
+          },
+          {
+            "title": "국보 훈민정음 (訓民正音) — 국가유산 상세 정보 및 국가유산 설명",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1111100700000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "국가유산 설명: \"『세종실록』에 의하면 훈민정음은 세종 25년(1443)에 왕이 직접 만들었으며, 세종 28년(1446)에 반포한 것으로 되어있는데\""
+          },
+          {
+            "title": "Hunminjeongum Manuscript",
+            "publisher": "UNESCO — Memory of the World",
+            "url": "https://www.unesco.org/en/memory-world/hunminjeongum-manuscript",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "Description: \"The manuscript published in the ninth lunar month of 1446\""
+          },
+          {
+            "title": "알고 싶은 한글 — 한글날 날짜와 『세종실록』 기록에 관한 글 (hangeul/origin/001)",
+            "publisher": "국립국어원 (National Institute of Korean Language)",
+            "url": "https://www.korean.go.kr/hangeul/origin/001.html",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "\"당시에 세종이 훈민정음을 반포하는 어떤 공식 행사를 열었다는 기록도 없다.\"; \"실록의 1446년 9월 조 기사는 훈민정음 해례본의 원고가 완성된 것을 세종에게 보고하는 내용이다.\""
+          }
+        ]
+      },
+      {
+        "id": "f8",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Scholars of the Jiphyeonjeon (Hall of Worthies), led by Jeong In-ji, wrote the book's Haerye (explanations and examples).",
+        "claimKo": "『훈민정음』의 해례(풀이와 용례)는 정인지 등 집현전 학사들이 중심이 되어 지었다.",
+        "sources": [
+          {
+            "title": "국보 훈민정음 (訓民正音) — 국가유산 상세 정보 및 국가유산 설명",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1111100700000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "국가유산 설명: \"새로 창제된 훈민정음을 왕의 명령으로 정인지 등 집현전 학사들이 중심이 되어 세종 28년(1446)에 만든 한문해설서이다.\""
+          },
+          {
+            "title": "Hunminjeongum Manuscript",
+            "publisher": "UNESCO — Memory of the World",
+            "url": "https://www.unesco.org/en/memory-world/hunminjeongum-manuscript",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "Description: \"It also contains the Haerye, or Commentaries, later explanations and examples by scholars of the Hall of Worthies\""
+          },
+          {
+            "title": "세종실록 113권, 세종 28년 9월 29일 갑오 4번째 기사 「《훈민정음》이 이루어지다. 어제와 예조 판서 정인지의 서문」 (1446, 명 정통 11년)",
+            "publisher": "국사편찬위원회 (National Institute of Korean History) — 조선왕조실록",
+            "url": "https://sillok.history.go.kr/id/kda_12809029_004",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "정인지 서문: 집현전 응교 최항, 부교리 박팽년·신숙주, 수찬 성삼문 등과 함께 \"모든 해석과 범례(凡例)를 지어\""
+          }
+        ]
+      },
+      {
+        "id": "f9",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Hangeul is today's name for Korea's own script, which King Sejong created under the name Hunminjeongeum.",
+        "claimKo": "오늘날 '한글'은 세종이 '훈민정음'이라는 이름으로 창제한 우리 고유 문자를 가리키는 이름이다.",
+        "sources": [
+          {
+            "title": "한글 — 한국민족문화대백과사전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0061508",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"한글은 조선의 제4대 임금인 세종대왕이 훈민정음이라는 이름으로 창제하여 1446년(세종 28년)에 반포한 우리나라 고유의 문자이다.\""
+          },
+          {
+            "title": "Hunminjeongum Manuscript",
+            "publisher": "UNESCO — Memory of the World",
+            "url": "https://www.unesco.org/en/memory-world/hunminjeongum-manuscript",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "Description: \"the Korean alphabet of the same name, now called han-gul, the development of which he completed in 1443\""
+          }
+        ]
+      }
+    ],
+    "referenceDisplay": "Sources: 국사편찬위원회 조선왕조실록(세종실록); 국가유산청 국가유산포털; 한국민족문화대백과사전; UNESCO Memory of the World; 국립국어원; 국립한글박물관",
+    "verification": {
+      "passes": 3,
+      "checkedAt": "2026-10-10",
+      "scope": "cluster",
+      "notes": "Third independent pass. Every cited URL for all 6 episodes (52 facts) was re-opened (UNESCO pages via Wayback copies when the live site resets connections) and quotes/locators were compared; the one exception is unesco.org/en/prizes/literacy (unreachable from here; its claim is now also backed by a Korean MCST press release). Eight minimal corrections were made: (1) Hangeul Day f3 no longer says 'Gregorian' (no cited source says the October 9 conversion was Gregorian; encykorea separates Julian/Gregorian only for 1932-45) and dates the October 29/28 observances; (2) f10 gains a third source (SBS 2018 with 국립한글박물관 curator); (3) Shapes scene 8, learning goal and f7 now say 'South Korea's spelling rules' count 24 (North Korea counts 40, 국립한글박물관 webzine 59); (4) Sejong scene 4/f4: 백성 is 'an old-fashioned word' with 표준국어대사전 added; (5) Jikji f8 quote no longer repeats a prize amount that differs between UNESCO page versions; (6) Tripitaka f6 wood and corner plates now have two further sources (정책브리핑; 박상진 wood-identification study); (8) Hangeul Day f9 gains a second source (문화체육관광부 press release); (7) Panjeon scene 8/f9: 'visitors cannot walk inside' replaced by 'visitor entry is restricted' because Haeinsa has run pre-booked tours inside Beopbojeon since June 2021. See hangul-printing.signoff.md."
+    },
+    "authorNotes": "Revised after two independent checks. 'Promulgation' wording removed from the narration and summary: the Sillok 1446/9 entry only records that Hunminjeongeum was completed ('是月, 訓民正音成'), and 국립국어원 says no official promulgation ceremony is recorded and that a September 1446 promulgation is unsupported; UNESCO, 국가유산포털 and 국립한글박물관 do use 'published/promulgated 1446', so f7 states both. Scene 2 now gives both reasons from Sejong's preface (Korean differs from Chinese; the characters were hard to learn). Scene 5 phrase fixed to 배우기 쉬워요 (baeugi swiwoyo, 'it's easy to learn'). The word 백성 now appears in scene 4 narration; scene 6 key word is 집현전. The 1443 and 1446 Sillok entries are month-end entries in the lunar calendar with no specific day (the 12th lunar month of Sejong 25 falls in early 1444 in the Gregorian calendar, but UNESCO, 국가유산포털 and encykorea all say 1443, so the story follows that convention). Scene 5 quotes only the first half of Jeong In-ji's line. The 'almost 600 years ago' wording is worked out from 1443. The companion 훈이 ('Sejong's cat' in BP04) was deliberately not used. Illustrations must not show a proclamation ceremony. Do not name a specific palace or a royal robe colour. f9: the 표준국어대사전 quotation could not be read (dynamic page) and was replaced by the UNESCO wording ('now called han-gul'); the 한국민족문화대백과사전 한글 entry also states the point. The 국가유산포털 description text quoted in f1, f7, f8 was re-read from the portal's description fragment (hub_img/html/cul_1111100700000) in the research folder. FINAL PASS (3rd check): scene 4 now says 'An old-fashioned word for the people is baekseong' and f4 cites 표준국어대사전 for 백성. All other facts re-verified unchanged. REVIEW PASS (PR 1.8b): learner prose writes the scholar's name Jeong Inji (F-CNT-002 rule 8); f6 and f8 keep the researched spelling Jeong In-ji. Check c3 options rebalanced so the answer is not the longest.",
+    "errata": []
+  },
+  {
+    "v": 1,
+    "id": "story:seollal-new-year",
+    "state": "ready",
+    "contentVer": 1,
+    "title": {
+      "ko": "호야의 설날 아침",
+      "romanization": "Hoyaui Seollal achim",
+      "en": "Hoya's Seollal Morning"
+    },
+    "summaryEn": "Hoya spends Seollal, the Lunar New Year, with a family: new seolbim clothes, a New Year bow (sebae), a warm bowl of tteokguk, and a lively game of yunnori.",
+    "theme": "rites",
+    "kind": "intangible",
+    "recommendedStage": 1,
+    "minutes": 4,
+    "learningGoalsEn": [
+      "Know that Seollal is the first day of the first lunar month and one of Korea's biggest traditional holidays.",
+      "Read and recognize 설날 (seollal), 세배 (sebae), 떡국 (tteokguk) and 윷놀이 (yunnori), and the greeting 새해 복 많이 받으세요 (saehae bok mani badeuseyo).",
+      "Understand sebae (the New Year bow) and deokdam (words of blessing from elders).",
+      "Know the five yut throws (do, gae, geol, yut, mo) and how many spaces each one moves."
+    ],
+    "origin": {
+      "type": "documented",
+      "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
+    },
+    "review": {
+      "language": "draft",
+      "culture": "draft",
+      "advisory": []
+    },
+    "keywords": [
+      {
+        "id": "seollal",
+        "ko": "설날",
+        "romanization": "seollal",
+        "en": "Lunar New Year's Day",
+        "kind": "word"
+      },
+      {
+        "id": "seolbim",
+        "ko": "설빔",
+        "romanization": "seolbim",
+        "en": "new clothes for Seollal",
+        "kind": "word"
+      },
+      {
+        "id": "sebae",
+        "ko": "세배",
+        "romanization": "sebae",
+        "en": "New Year bow to elders",
+        "kind": "word"
+      },
+      {
+        "id": "deokdam",
+        "ko": "덕담",
+        "romanization": "deokdam",
+        "en": "words of blessing",
+        "kind": "word"
+      },
+      {
+        "id": "tteokguk",
+        "ko": "떡국",
+        "romanization": "tteokguk",
+        "en": "rice cake soup",
+        "kind": "word"
+      },
+      {
+        "id": "yunnori",
+        "ko": "윷놀이",
+        "romanization": "yunnori",
+        "en": "yut stick game",
+        "kind": "word"
+      },
+      {
+        "id": "yut",
+        "ko": "윷",
+        "romanization": "yut",
+        "en": "yut sticks; the 4-space throw",
+        "kind": "word"
+      },
+      {
+        "id": "halmeoni",
+        "ko": "할머니",
+        "romanization": "halmeoni",
+        "en": "grandmother",
+        "kind": "word"
+      },
+      {
+        "id": "saehae-bok-mani-badeuseyo",
+        "ko": "새해 복 많이 받으세요",
+        "romanization": "Saehae bok mani badeuseyo",
+        "en": "Happy New Year! (literally: Receive many blessings in the new year)",
+        "kind": "phrase"
+      },
+      {
+        "id": "do-gae-geol-yut-mo",
+        "ko": "도, 개, 걸, 윷, 모",
+        "romanization": "do, gae, geol, yut, mo",
+        "en": "the five throws: 1, 2, 3, 4 and 5 spaces",
+        "kind": "phrase"
+      },
+      {
+        "id": "gukga-muhyeong-yusan",
+        "ko": "국가 무형 유산",
+        "romanization": "gukga muhyeong yusan",
+        "en": "National Intangible Heritage",
+        "kind": "word"
+      }
+    ],
+    "cultureNotes": [],
+    "tiers": [
+      {
+        "level": "listen",
+        "scenes": [
+          {
+            "id": "s1",
+            "narrationEn": "Good morning! I'm Hoya. Today is Seollal, the Lunar New Year. It falls on the first day of the first month of the lunar calendar, and it is one of Korea's biggest traditional holidays.",
+            "captionEn": "Hoya greets the Seollal morning",
+            "keyword": {
+              "id": "seollal",
+              "ko": "설날",
+              "romanization": "Seollal",
+              "en": "Lunar New Year's Day",
+              "kind": "word"
+            },
+            "factIds": [
+              "f1"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "Hoya the young tiger waving at the gate of a traditional hanok house on a crisp winter morning, a pale sunrise over snowy roof tiles."
+          },
+          {
+            "id": "s2",
+            "narrationEn": "People dress in new clothes for the new year. New Seollal clothes are called seolbim. Young girls traditionally wear saekdong jeogori, a jacket with rainbow-striped sleeves.",
+            "captionEn": "New seolbim clothes with rainbow sleeves",
+            "keyword": {
+              "id": "seolbim",
+              "ko": "설빔",
+              "romanization": "seolbim",
+              "en": "new clothes for Seollal",
+              "kind": "word"
+            },
+            "factIds": [
+              "f2"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "A family in bright hanbok; a girl spreads her arms to show rainbow-striped saekdong sleeves while Hoya admires them."
+          },
+          {
+            "id": "s3",
+            "narrationEn": "After the morning rites for the family's ancestors, the children bow deeply to Grandma and Grandpa. This New Year bow is called sebae, the first greeting of the year.",
+            "captionEn": "The children bow to their grandparents",
+            "keyword": {
+              "id": "sebae",
+              "ko": "세배",
+              "romanization": "sebae",
+              "en": "New Year bow to elders",
+              "kind": "word"
+            },
+            "factIds": [
+              "f3"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "Two children bowing deeply on a heated wooden floor before smiling grandparents seated on cushions; Hoya bows beside them."
+          },
+          {
+            "id": "s4",
+            "narrationEn": "After bowing, Hoya says, 'Saehae bok mani badeuseyo!' Grandma, {kw:halmeoni}, answers with kind wishes for the year, called {kw:deokdam}. Children may get a little money, or rice cakes and fruit.",
+            "captionEn": "New Year wishes and kind blessings",
+            "line": {
+              "ko": "새해 복 많이 받으세요",
+              "romanization": "Saehae bok mani badeuseyo",
+              "en": "Happy New Year! (literally: Receive many blessings in the new year)",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f4",
+              "f5"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "Grandma smiling and handing a small envelope to a child; a plate of rice cakes and tangerines on a low table; Hoya beaming."
+          },
+          {
+            "id": "s5",
+            "narrationEn": "Breakfast is tteokguk: a clear soup with thin slices of white rice cake. People have long said that you grow one year older when you eat your bowl of tteokguk on Seollal!",
+            "captionEn": "A warm bowl of tteokguk for breakfast",
+            "keyword": {
+              "id": "tteokguk",
+              "ko": "떡국",
+              "romanization": "tteokguk",
+              "en": "rice cake soup",
+              "kind": "word"
+            },
+            "factIds": [
+              "f6"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "Steaming bowls of clear soup with oval white rice-cake slices and egg garnish on a low table; Hoya holding a spoon happily."
+          },
+          {
+            "id": "s6",
+            "narrationEn": "Now for a game of yunnori! Two teams take turns throwing four wooden {kw:yut} sticks. Depending on how the sticks land, a team moves its pieces around the board.",
+            "captionEn": "Throwing the four yut sticks",
+            "keyword": {
+              "id": "yunnori",
+              "ko": "윷놀이",
+              "romanization": "yunnori",
+              "en": "the yut stick game",
+              "kind": "word"
+            },
+            "factIds": [
+              "f7"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "Four wooden yut sticks tumbling in mid-air above a cloth game board with a circle-and-cross pattern; two teams cheering, Hoya on one team."
+          },
+          {
+            "id": "s7",
+            "narrationEn": "Do moves one space, gae two, geol three, yut four, and mo five! Throw a yut or a mo and you throw again. The first team to bring all its pieces home wins.",
+            "captionEn": "Do, gae, geol, yut, mo: one to five spaces",
+            "line": {
+              "ko": "도, 개, 걸, 윷, 모",
+              "romanization": "do, gae, geol, yut, mo",
+              "en": "the five throws: 1, 2, 3, 4 and 5 spaces",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f8",
+              "f7"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "Five small panels in a row showing yut sticks landing in five different patterns, each with a matching number of footprints (1 to 5), no letters."
+          },
+          {
+            "id": "s8",
+            "narrationEn": "In 2023, Korea listed five traditional holidays as National Intangible Heritage. One is Seol and Daeboreum: the New Year and the first full moon. Yunnori was listed in 2022. Hoya bows: 'Saehae bok mani badeuseyo!'",
+            "captionEn": "Two National Intangible Heritage listings",
+            "keyword": {
+              "id": "gukga-muhyeong-yusan",
+              "ko": "국가 무형 유산",
+              "romanization": "gukga muhyeong yusan",
+              "en": "National Intangible Heritage",
+              "kind": "word"
+            },
+            "factIds": [
+              "f9",
+              "f10"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "Night scene of a big round full moon over a village, with Hoya bowing toward the viewer and a yut board resting nearby."
+          }
+        ],
+        "checks": [
+          {
+            "id": "c1",
+            "kind": "detail",
+            "promptEn": "What is the New Year bow to elders called?",
+            "options": [
+              {
+                "id": "a",
+                "en": "Seolbim",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "Deokdam",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "Sebae",
+                "isCorrect": true
+              },
+              {
+                "id": "d",
+                "en": "Tteokguk",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "Sebae is the New Year bow to elders. It is the first greeting of the year.",
+            "factIds": [
+              "f3"
+            ]
+          },
+          {
+            "id": "c2",
+            "kind": "detail",
+            "promptEn": "In yunnori, how many spaces does 'mo' move?",
+            "options": [
+              {
+                "id": "a",
+                "en": "Two",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "Three",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "Four",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "Five",
+                "isCorrect": true
+              }
+            ],
+            "explainEn": "Do moves 1 space, gae 2, geol 3, yut 4 and mo 5. A yut or a mo earns another throw.",
+            "factIds": [
+              "f8"
+            ]
+          },
+          {
+            "id": "c3",
+            "kind": "detail",
+            "promptEn": "In the story, which soup does the family eat for Seollal breakfast?",
+            "options": [
+              {
+                "id": "a",
+                "en": "Miyeokguk (seaweed soup)",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "Tteokguk (rice cake soup)",
+                "isCorrect": true
+              },
+              {
+                "id": "c",
+                "en": "Samgyetang (chicken ginseng soup)",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "Seolleongtang (ox bone soup)",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "Tteokguk, a clear soup with thin slices of white rice cake, is the classic Seollal food.",
+            "factIds": [
+              "f6"
+            ]
+          }
+        ],
+        "checkpoints": [],
+        "sequenceSceneIds": [
+          "s1",
+          "s3",
+          "s6",
+          "s8"
+        ],
+        "newKeywordIds": [
+          "seollal",
+          "seolbim",
+          "sebae",
+          "tteokguk"
+        ]
+      }
+    ],
+    "coverSceneId": "s1",
+    "pillarTags": [],
+    "companionId": "hoya",
+    "facts": [
+      {
+        "id": "f1",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Seollal (Seol) is the first day of the first month of the lunar calendar and one of Korea's major traditional holidays; in the late Joseon era the book Dongguk sesigi counted Seol, Hansik, Dano and Chuseok as the four great holidays.",
+        "claimKo": "설(설날)은 음력 정월 초하루로 우리나라의 대표 명절이며, 조선 후기 『동국세시기』는 설·한식·단오·추석을 4대 명절로 꼽았다.",
+        "sources": [
+          {
+            "title": "국가무형유산 설과 대보름 (The Traditional Holidays of Seol and Daeboreum)",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0001500000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01500000",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "‘설과 대보름은 음력 정월 초하루에서 보름까지 해당하며, 한 해의 시작을 기념하는 인류 보편적 ‘신년맞이 명절’이다.’ / ‘조선시대 설은 중종 13년(1518년) 단오·추석과 함께 3대 명절로 꼽았고, 조선 후기 간행된 『동국세시기』에 따르면 한식·단오·추석과 더불어 4대 명절로 손꼽았다.’"
+          },
+          {
+            "title": "설",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0028997",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "정의: ‘한 해의 시작인 음력 1월 1일을 일컫는 말로 설날이라는 말과 같은 우리나라의 명절.’ / ‘조선시대는 원단·한식·단오·추석을 4대 명절이라 했지만’"
+          }
+        ]
+      },
+      {
+        "id": "f2",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "New clothes for Seollal are called seolbim; young girls in particular traditionally wear saekdong jeogori (a jacket with rainbow-striped sleeves).",
+        "claimKo": "설을 맞아 새로 장만해 입는 옷을 설빔이라 하며, 특히 여자 어린이들은 색동저고리를 입는다.",
+        "sources": [
+          {
+            "title": "설",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0028997",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘설날에 입는 옷을 설빔이라 한다.’ … ‘설날에 색깔이 있는 옷을 입는데 특히 여자 어린이들은 색동저고리를 입는다.’"
+          },
+          {
+            "title": "설빔",
+            "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+            "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EC%84%A4%EB%B9%94",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘설을 맞이하여 새로 장만하여 입거나 신는 옷, 신발 따위를 이르는 말.’"
+          }
+        ]
+      },
+      {
+        "id": "f3",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Sebae is the New Year bow to elders, the first greeting of the year; after the ancestral rites (charye), children bow first to grandparents and parents.",
+        "claimKo": "세배는 정월 초하룻날 윗사람에게 절을 하는 새해의 첫인사로, 차례를 지낸 뒤 조부모·부모에게 먼저 절한다.",
+        "sources": [
+          {
+            "title": "세배",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0029802",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "정의: ‘정월 초하룻날 윗사람에게 절을 하는 새해의 첫인사.’ 내용: ‘차례를 지낸 뒤에 자리를 정리하여 앉는다. 그리고는 조부모·부모에게 먼저 절하고’"
+          },
+          {
+            "title": "국가무형유산 설과 대보름",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0001500000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01500000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "English description: ‘Seol customs such as observing ancestral rites at home (charye), bowing to elder kin (sebae), and eating a bowl of tteokguk’"
+          }
+        ]
+      },
+      {
+        "id": "f4",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "When bowing, people say New Year wishes such as “Saehae bok mani badeuseyo” (Receive lots of blessings in the new year); this greeting is a modern-era form of New Year wish.",
+        "claimKo": "세배 때 ‘새해 복 많이 받으세요’와 같은 새해 인사말을 하며, 이 인사말은 현대에 널리 쓰이게 된 덕담이다.",
+        "sources": [
+          {
+            "title": "세배",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0029802",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘웃어른에게 세배를 할 때는 절을 하고 나서 “새해에는 더욱 건강하시기를 빕니다.”, “새해에는 복 많이 받으시고 오래오래 사십시오.” 등의 새해 인사말을 한다.’"
+          },
+          {
+            "title": "설",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0028997",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘실상 “새해 복 많이 받으십시오”라는 신년 인사말은 전통적인 덕담이 아니라 새로 생긴 현대판 덕담이다.’"
+          }
+        ]
+      },
+      {
+        "id": "f5",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Elders who receive sebae answer with words of blessing (deokdam); children who come to bow are given a little money, or rice cakes and fruit.",
+        "claimKo": "세배를 받는 어른은 덕담을 하고, 아이들에게는 약간의 돈 또는 떡과 과일을 준다.",
+        "sources": [
+          {
+            "title": "세배",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0029802",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘세배를 받는 이도 … 한마디씩 덕담을 한다.’ / ‘아이들에게는 술은 주지 않고 약간의 돈, 또는 떡과 과일을 준다.’"
+          },
+          {
+            "title": "덕담",
+            "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+            "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EB%8D%95%EB%8B%B4",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘남이 잘되기를 비는 말. 주로 새해에 많이 나누는 말이다.’"
+          }
+        ]
+      },
+      {
+        "id": "f6",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Tteokguk, a clear broth with thinly sliced white rice cake (garaetteok), is the representative Seollal food, and there is a long-standing saying that you become one year older by eating tteokguk.",
+        "claimKo": "떡국은 맑은 장국에 가래떡을 얇게 썰어 넣고 끓인 설날 음식이며, 떡국을 먹어야 나이 한 살을 먹는다는 말이 전한다.",
+        "sources": [
+          {
+            "title": "떡국",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0017198",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "정의: ‘맑은 장국에 가래떡을 얇게 썰어넣고 끓인 음식.’ 내용: ‘설날에 먹는 절식(節食)의 하나이다.’"
+          },
+          {
+            "title": "설",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0028997",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘세찬의 대표적인 음식인 떡국을 먹어야 나이 한 살을 먹는다고 했다.’"
+          },
+          {
+            "title": "국가무형유산 설과 대보름",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0001500000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01500000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘설의 핵심 요소인 설 차례, 새배, 떡국을 먹는 풍속이 확인된다.’ (원문 표기 그대로)"
+          },
+          {
+            "title": "떡국 (한국세시풍속사전)",
+            "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+            "url": "https://folkency.nfm.go.kr/kr/topic/detail/3690",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "‘멥쌀을 가루내어 떡메로 친 후, 손으로 길게 만든 흰 가래떡을 썰어서 맑은 장국에 넣고 끓인 음식으로 정조차례(正朝茶禮)시에 세찬(歲饌)으로 먹는 시절음식.’"
+          }
+        ]
+      },
+      {
+        "id": "f7",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "In yunnori (yut game) two sides take turns throwing four wooden yut sticks; depending on how the sticks land, they move their pieces on the board, and the side that first brings all its pieces to the goal wins. It is played from New Year's Day to Jeongwol Daeboreum.",
+        "claimKo": "윷놀이는 양편으로 나뉘어 윷가락 4개를 던져, 엎어지고 젖혀진 상태에 따라 윷판의 모든 말을 목적지에 먼저 도달시키는 편이 이기는 놀이로, 정초부터 정월대보름까지 즐긴다.",
+        "sources": [
+          {
+            "title": "국가무형유산 윷놀이 (Yut nori)",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0001490000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01490000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘‘윷놀이’는 양편으로 나뉘어 윷가락 4개를 던져, 윷가락이 엎어지고 젖혀진 상태에 따라 윷판의 모든 말을 목적지에 먼저 도달시키는 편이 이기는 놀이로, 정초(正初)부터 정월대보름까지 …’"
+          },
+          {
+            "title": "‘윷놀이’ 무형문화재 됐다…“민족 정체성 담은 전통 놀이” (2022.11.11)",
+            "publisher": "대한민국 정책브리핑 (korea.kr), 문화재청 보도자료 기반",
+            "url": "https://www.korea.kr/news/policyNewsView.do?newsId=148908175",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘윷놀이는 윷가락 4개를 던져 윷판의 모든 말을 목적지에 먼저 도달시키는 편이 이기는 놀이로’"
+          },
+          {
+            "title": "윷놀이",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0042794",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "정의: ‘정월 초하루부터 대보름까지 즐기며, 4개의 윷가락을 던지고 그 결과에 따라 말[馬]을 사용하여 승부를 겨루는 민속놀이.’"
+          }
+        ]
+      },
+      {
+        "id": "f8",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "The five throws move a piece as follows: do 1 space, gae 2, geol 3, yut 4, mo 5; throwing yut or mo earns another throw.",
+        "claimKo": "도는 한 발, 개는 두 발, 걸은 세 발, 윷은 네 발, 모는 다섯 발을 가며, 윷이나 모가 나오면 한 번 더 던진다.",
+        "sources": [
+          {
+            "title": "윷놀이",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0042794",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘도는 한 발, 개는 두 발, 걸은 세 발, 윷은 네 발, 모는 다섯 발을 간다.’ / ‘모나 윷이 나오면 한번 더 할 수가 있으며’"
+          },
+          {
+            "title": "도 / 개 / 걸 / 모 (표제어)",
+            "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+            "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EB%AA%A8",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘모’: ‘윷놀이에서, 윷짝의 네 개가 다 엎어진 경우를 이르는 말. 끗수는 다섯 끗으로 친다.’ (같은 사전 ‘도’ 한 끗, ‘개’ 두 끗, ‘걸’ 세 끗)"
+          }
+        ]
+      },
+      {
+        "id": "f9",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "On 18 December 2023, Korea designated five traditional holidays — Seol and Daeboreum, Hansik, Dano, Chuseok and Dongji — as National Intangible Heritage. Daeboreum (the 15th day of the first lunar month) celebrates the first full moon after the Lunar New Year.",
+        "claimKo": "2023년 12월 18일 ‘설과 대보름’, ‘한식’, ‘단오’, ‘추석’, ‘동지’ 5개 명절이 국가무형유산으로 지정되었다. 정월대보름(음력 1월 15일)은 새해 첫 보름달을 맞는 명절이다.",
+        "sources": [
+          {
+            "title": "5개 명절(설과 대보름, 한식, 단오, 추석, 동지) 국가무형유산 신규종목 지정 (2023-12-18)",
+            "publisher": "국가유산청 (당시 문화재청) 보도자료",
+            "url": "https://www.khs.go.kr/newsBbz/selectNewsBbzView.do?newsItemId=155704541&sectionId=b_sec_1&mn=NS_01_02_02",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘문화재청(청장 최응천)은 우리 민족의 5개 대표 명절 ‘설과 대보름’, ‘한식’, ‘단오’, ‘추석’, ‘동지’를 신규 국가무형유산으로 지정한다.’"
+          },
+          {
+            "title": "설·대보름 등 우리 민족 5대 명절, 국가무형유산으로 지정 (2023.12.18)",
+            "publisher": "대한민국 정책브리핑 (korea.kr), 문화재청 보도자료 기반",
+            "url": "https://www.korea.kr/news/policyNewsView.do?newsId=148923903",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘문화재청은 18일 우리 민족의 5개 대표 명절 설과 대보름, 한식, 단오, 추석, 동지를 신규 국가무형유산으로 지정한다고 밝혔다.’"
+          },
+          {
+            "title": "국가무형유산 설과 대보름",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0001500000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01500000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "기본 정보: 지정(등록)일 2023.12.18 (portal field; re-checked 2026-10-10 against the Korea Heritage Service open API field ccbaAsdt=20231218)"
+          },
+          {
+            "title": "국가무형유산 윷놀이",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0001490000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01490000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "English description: ‘Jeongwol Daeboreum (a traditional holiday celebrating the first full moon after the Lunar New Year)’"
+          }
+        ]
+      },
+      {
+        "id": "f10",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Yunnori was designated a National Intangible Heritage (community-based item) on 11 November 2022.",
+        "claimKo": "윷놀이는 2022년 11월 11일 국가무형유산(공동체종목)으로 지정되었다.",
+        "sources": [
+          {
+            "title": "국가무형유산 윷놀이",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?pageNo=1_1_1_0&ccbaKdcd=17&ccbaAsno=0001490000000&ccbaCtcd=ZZ&ccbaCpno=127ZZ01490000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "기본 정보: 지정(등록)일 2022.11.11 (portal field; re-checked 2026-10-10 against the Korea Heritage Service open API field ccbaAsdt=20221111)"
+          },
+          {
+            "title": "(국영문 동시배포) ‘윷놀이’ 국가무형문화재 신규종목 지정 (2022-11-11)",
+            "publisher": "국가유산청 (당시 문화재청) 보도자료",
+            "url": "https://www.khs.go.kr/newsBbz/selectNewsBbzView.do?newsItemId=155703746&sectionId=b_sec_1&mn=NS_01_02_02",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘문화재청(청장 최응천)은 ‘윷놀이’를 신규 국가무형문화재로 지정하였다.’"
+          },
+          {
+            "title": "‘윷놀이’ 무형문화재 됐다…“민족 정체성 담은 전통 놀이” (2022.11.11)",
+            "publisher": "대한민국 정책브리핑 (korea.kr), 문화재청 보도자료 기반",
+            "url": "https://www.korea.kr/news/policyNewsView.do?newsId=148908175",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘우리 민족 대표 전통 놀이문화 ‘윷놀이’가 신규 국가무형문화재로 지정됐다.’"
+          }
+        ]
+      }
+    ],
+    "referenceDisplay": "Sources: 국가유산청 국가유산포털(설과 대보름·윷놀이); 국가유산청 보도자료; 한국민족문화대백과사전; 한국민속대백과사전(국립민속박물관); 국립국어원 표준국어대사전; 대한민국 정책브리핑",
+    "verification": {
+      "passes": 3,
+      "checkedAt": "2026-10-10",
+      "scope": "cluster",
+      "notes": "Third independent pass over 6 episodes / 61 facts / 161 source entries (70 unique URLs). Every URL was re-fetched with my own scripts (UNESCO pages via Wayback copies; heritage.go.kr descriptions via the portal ajax html and khs.go.kr open API; folkency via its JSON API) and each quote or locator was machine-matched to the page text; the few non-matching strings were checked by hand (portal metadata fields, hanja or footnote punctuation, label text). Corrections: (1) pansori scene 2 now gives both UNESCO steps (2003 masterpiece proclamation, 2008 Representative List); (2) pansori f11 states the Aesop title as in the cited Townsend text and the common alternate title; (3) added sources: NFM 놀보박타령 for 'greedy' (f5), 표준국어대사전 타다 for 'sawed' (f6), 한국민족문화대백과사전 선도해 for the Samguk sagi tale (f12); (4) Seollal f9/f10 designation-date locators now cite the KHS open API field. No other change. See seasons-tales.signoff.md."
+    },
+    "authorNotes": "Romanization: 윷놀이 is pronounced [윤노리], so RR (the repo converter) gives 'yunnori', and yunnori is the app-wide romanization (the yut heritage card also stores yunnori). 'Yut nori' (Korea Heritage Service) and 'yutnori' appear only as alternate English spellings. 'Saehae bok mani badeuseyo' is the greeting most people use today, but the Encyclopedia of Korean Culture calls it a modern greeting (older ones include '과세 안녕히 하셨습니까'). The narration keeps that in facts and doesn't call it ancient. The tteokguk age saying is presented only as a saying. Sebae money (세뱃돈) is described the way the Encyclopedia does: 'a little money, or rice cakes and fruit'. Left out on purpose: the sources don't explain which way up the yut sticks count for each throw (엎어지다/젖혀지다), so the narration doesn't say. Also left out are 차례 table details, 복조리, and 안택 rites. Note for existing content: heritage-cards.ts says tteokguk slices 'look like coins for good luck'. None of the sources checked here supports that, so it's not used here; please review it. REVISION 2026-10-10: \"four great holidays\" now stated as the late-Joseon Dongguk sesigi listing (the 1518 list had three: Seol, Dano, Chuseok, per the KHS portal). Check 3 reworded to an in-story question; \"Everyone\" softened to \"People\". AUTHORING 2026-10-11 (F-STORY-001 PR 1.8d): title romanization, scene captions and check explanations written from the cited facts; every scene is artPending (text-only tile) until the art PRs; no claim or source changed. Korean spacing: the learner term is written 국가 무형 유산 (spaced by word, 한글 맞춤법 제50항) so each word lines up with gukga muhyeong yusan; the facts keep the official 국가무형유산. REVIEW 2026-10-11 (PR 1.8d review fixes): s7 also cites f7 (the winning rule); s8 says 'listed' in short sentences; check 1 uses only words this story teaches; s4 now uses the halmeoni keyword as a token; learning goals use receptive verbs (Know, Understand, Read and recognize). PR #208 REVIEW FIXES 2026-10-11: s8 caption 'Two National Intangible Heritage listings' (f9's item is Seol and Daeboreum, not Seol alone; the full name exceeds the 48-character caption cap).",
+    "errata": []
+  },
+  {
+    "v": 1,
+    "id": "story:shapes-of-hangeul",
+    "state": "ready",
+    "contentVer": 1,
+    "title": {
+      "ko": "한글 모양의 비밀",
+      "romanization": "Hangeul moyangui bimil",
+      "en": "The Secret in the Shapes"
+    },
+    "summaryEn": "Hoya reads the 1446 Hunminjeongeum Haerye book and discovers that the five basic Hangul consonants copy the shapes of the tongue, mouth, teeth and throat, while the basic vowels come from the sky, the earth and a person.",
+    "theme": "letters",
+    "kind": "documentary",
+    "recommendedStage": 1,
+    "minutes": 5,
+    "learningGoalsEn": [
+      "Know how the five basic consonants ㄱ (g/k), ㄴ (n), ㅁ (m), ㅅ (s) and ㅇ (silent/ng) copy the shapes of the speech organs.",
+      "Understand that a stronger sound adds a stroke: ㄴ (n) → ㄷ (d/t) → ㅌ (t).",
+      "Know the three basic vowel shapes, the round dot, ㅡ (eu) and ㅣ (i), and what they copy (sky, earth, person).",
+      "Know that South Korea's spelling rules today count 24 basic letters (14 consonants, 10 vowels).",
+      "Read and recognize 입 (ip), 목구멍 (mokgumeong), 하늘 (haneul), 땅 (ttang), 사람 (saram), 자음 (jaeum) and 모음 (moeum)."
+    ],
+    "origin": {
+      "type": "documented",
+      "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
+    },
+    "review": {
+      "language": "draft",
+      "culture": "draft",
+      "advisory": []
+    },
+    "keywords": [
+      {
+        "id": "ip",
+        "ko": "입",
+        "romanization": "ip",
+        "en": "mouth",
+        "kind": "word"
+      },
+      {
+        "id": "mokgumeong",
+        "ko": "목구멍",
+        "romanization": "mokgumeong",
+        "en": "throat",
+        "kind": "word"
+      },
+      {
+        "id": "haneul",
+        "ko": "하늘",
+        "romanization": "haneul",
+        "en": "sky; heaven",
+        "kind": "word"
+      },
+      {
+        "id": "ttang",
+        "ko": "땅",
+        "romanization": "ttang",
+        "en": "earth; ground",
+        "kind": "word"
+      },
+      {
+        "id": "saram",
+        "ko": "사람",
+        "romanization": "saram",
+        "en": "person",
+        "kind": "word"
+      },
+      {
+        "id": "jaeum",
+        "ko": "자음",
+        "romanization": "jaeum",
+        "en": "consonant",
+        "kind": "word"
+      },
+      {
+        "id": "moeum",
+        "ko": "모음",
+        "romanization": "moeum",
+        "en": "vowel",
+        "kind": "word"
+      },
+      {
+        "id": "haeryebon",
+        "ko": "해례본",
+        "romanization": "Haeryebon",
+        "en": "the Haerye edition (the book with explanations and examples)",
+        "kind": "word"
+      },
+      {
+        "id": "jamo-g",
+        "ko": "ㄱ",
+        "romanization": "g/k",
+        "en": "giyeok, the letter for the g/k sound",
+        "kind": "jamo"
+      },
+      {
+        "id": "hoek",
+        "ko": "획",
+        "romanization": "hoek",
+        "en": "a stroke (of a letter)",
+        "kind": "word"
+      },
+      {
+        "id": "haneul-ttang-saram",
+        "ko": "하늘, 땅, 사람",
+        "romanization": "haneul, ttang, saram",
+        "en": "sky, earth, person",
+        "kind": "phrase"
+      },
+      {
+        "id": "jamo-a",
+        "ko": "ㅏ",
+        "romanization": "a",
+        "en": "the vowel letter a",
+        "kind": "jamo"
+      },
+      {
+        "id": "jaeumgwa-moeum",
+        "ko": "자음과 모음",
+        "romanization": "jaeumgwa moeum",
+        "en": "consonants and vowels",
+        "kind": "word"
+      },
+      {
+        "id": "jamo-n",
+        "ko": "ㄴ",
+        "romanization": "n",
+        "en": "the consonant letter nieun",
+        "kind": "jamo"
+      },
+      {
+        "id": "jamo-m",
+        "ko": "ㅁ",
+        "romanization": "m",
+        "en": "the consonant letter mieum",
+        "kind": "jamo"
+      },
+      {
+        "id": "jamo-s",
+        "ko": "ㅅ",
+        "romanization": "s",
+        "en": "the consonant letter siot",
+        "kind": "jamo"
+      },
+      {
+        "id": "jamo-silent-ng",
+        "ko": "ㅇ",
+        "romanization": "silent/ng",
+        "en": "the consonant letter ieung",
+        "kind": "jamo"
+      },
+      {
+        "id": "jamo-d",
+        "ko": "ㄷ",
+        "romanization": "d/t",
+        "en": "the consonant letter digeut",
+        "kind": "jamo"
+      },
+      {
+        "id": "jamo-t",
+        "ko": "ㅌ",
+        "romanization": "t",
+        "en": "the consonant letter tieut",
+        "kind": "jamo"
+      },
+      {
+        "id": "jamo-eu",
+        "ko": "ㅡ",
+        "romanization": "eu",
+        "en": "the vowel letter eu",
+        "kind": "jamo"
+      },
+      {
+        "id": "jamo-i",
+        "ko": "ㅣ",
+        "romanization": "i",
+        "en": "the vowel letter i",
+        "kind": "jamo"
+      }
+    ],
+    "cultureNotes": [],
+    "tiers": [
+      {
+        "level": "listen",
+        "scenes": [
+          {
+            "id": "s1",
+            "narrationEn": "Hoya finds a very special old book: the Hunminjeongeum Haerye edition from 1446. Haerye means explanations and examples. Inside, scholars explained how the letters were designed!",
+            "keyword": {
+              "id": "haeryebon",
+              "ko": "해례본",
+              "romanization": "Haeryebon",
+              "en": "the Haerye edition (the book with explanations and examples)",
+              "kind": "word"
+            },
+            "factIds": [
+              "f1"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "Hoya gently opens an old string-bound book with yellowed pages on a low table; soft light glows from the pages (pages shown as faint lines, no readable text).",
+            "captionEn": "Hoya opens the Haerye book",
+            "artPending": true
+          },
+          {
+            "id": "s2",
+            "narrationEn": "The first secret: the five basic consonants copy the shapes of the parts of the body we speak with. The old book says the letter {kw:jamo-g} copies the root of the tongue closing the throat. Hoya points at the picture.",
+            "keyword": {
+              "id": "jamo-g",
+              "ko": "ㄱ",
+              "romanization": "g/k",
+              "en": "giyeok, the letter for the g/k sound",
+              "kind": "jamo"
+            },
+            "factIds": [
+              "f2",
+              "f3"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "Simple friendly side-view diagram of a head with the root of the tongue closing the throat, drawn in soft colors, as the old book describes; Hoya points at it with his tail. The app overlays the letter; no text in the image.",
+            "captionEn": "Giyeok: tongue root closing the throat",
+            "artPending": true
+          },
+          {
+            "id": "s3",
+            "narrationEn": "Now {kw:jamo-n}. The old book says it copies the tongue touching the upper gum. And {kw:jamo-m} copies the shape of the mouth. Hoya opens wide: \"Ip!\" That means mouth.",
+            "keyword": {
+              "id": "ip",
+              "ko": "입",
+              "romanization": "ip",
+              "en": "mouth",
+              "kind": "word"
+            },
+            "factIds": [
+              "f3"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "Two small side-view diagrams: a tongue touching the upper gum, and a square-ish open mouth; Hoya opens his mouth wide in a funny face. No text in the image.",
+            "captionEn": "Nieun and mieum: tongue and mouth",
+            "artPending": true
+          },
+          {
+            "id": "s4",
+            "narrationEn": "{kw:jamo-s} is shaped like a tooth, and {kw:jamo-silent-ng} is shaped like the throat. So the five basic consonants, {kw:jamo-g} {kw:jamo-n} {kw:jamo-m} {kw:jamo-s} {kw:jamo-silent-ng}, each copy a part of the body that makes the sound.",
+            "keyword": {
+              "id": "mokgumeong",
+              "ko": "목구멍",
+              "romanization": "mokgumeong",
+              "en": "throat",
+              "kind": "word"
+            },
+            "factIds": [
+              "f2",
+              "f3"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "A playful row of five simple body-part icons (tongue root, tongue tip, mouth, tooth, round throat) like stepping stones, with Hoya hopping across them. No letters drawn.",
+            "captionEn": "Siot is like a tooth, ieung the throat",
+            "artPending": true
+          },
+          {
+            "id": "s5",
+            "narrationEn": "The second secret: when a sound is stronger, add a stroke! {kw:jamo-n} gets one more line and becomes {kw:jamo-d}, and one more line makes {kw:jamo-t}. Hoya draws them in the air with his tail.",
+            "keyword": {
+              "id": "hoek",
+              "ko": "획",
+              "romanization": "hoek",
+              "en": "a stroke (of a letter)",
+              "kind": "word"
+            },
+            "factIds": [
+              "f4"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "Hoya swishes his tail through the air leaving three glowing ribbon trails that grow from one bend to more lines (abstract ribbons; the app overlays nieun digeut tieut).",
+            "captionEn": "Add a stroke for a stronger sound",
+            "artPending": true
+          },
+          {
+            "id": "s6",
+            "narrationEn": "The third secret: the vowels. A round dot copies the round sky, a flat line {kw:jamo-eu} copies the flat earth, and a standing line {kw:jamo-i} copies a person standing up.",
+            "line": {
+              "ko": "하늘, 땅, 사람",
+              "romanization": "haneul, ttang, saram",
+              "en": "sky, earth, person",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f5"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "A landscape split into three: a round sun-like dot in the sky, a flat horizon of earth, and a child standing tall; Hoya stands beside the child. No text.",
+            "captionEn": "Vowels: sky, earth and a person",
+            "artPending": true
+          },
+          {
+            "id": "s7",
+            "narrationEn": "Put them together to make more vowels! {kw:jamo-i} and a dot join to make {kw:jamo-a}. With a few clever ideas, a handful of simple shapes grew into a whole set of letters.",
+            "keyword": {
+              "id": "jamo-a",
+              "ko": "ㅏ",
+              "romanization": "a",
+              "en": "the vowel letter a",
+              "kind": "jamo"
+            },
+            "factIds": [
+              "f6"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "A tall standing stick and a small round pebble slide together like puzzle pieces while Hoya claps; sparkles show they fit. The app overlays the vowel; no text in the image.",
+            "captionEn": "Shapes join to make new vowels",
+            "artPending": true
+          },
+          {
+            "id": "s8",
+            "narrationEn": "Hangul began with 28 letters, and a few old ones are no longer used. South Korea's spelling rules today count 24 basic letters: 14 consonants and 10 vowels. Hoya cheers: \"Jaeumgwa moeum, consonants and vowels!\"",
+            "keyword": {
+              "id": "jaeumgwa-moeum",
+              "ko": "자음과 모음",
+              "romanization": "jaeumgwa moeum",
+              "en": "consonants and vowels",
+              "kind": "word"
+            },
+            "factIds": [
+              "f7"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "Hoya juggling colorful blank tiles (14 of one color, 10 of another) in a sunny classroom; tiles are plain, with no letters printed on them.",
+            "captionEn": "South Korea's rules: 14 consonants, 10 vowels",
+            "artPending": true
+          }
+        ],
+        "checks": [
+          {
+            "id": "c1",
+            "kind": "detail",
+            "promptEn": "What does the shape of {target} copy?",
+            "target": {
+              "ko": "ㅁ",
+              "romanization": "m",
+              "en": "the consonant letter mieum"
+            },
+            "options": [
+              {
+                "id": "a",
+                "en": "The throat",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "A tooth",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "The mouth",
+                "isCorrect": true
+              },
+              {
+                "id": "d",
+                "en": "The sky",
+                "isCorrect": false
+              }
+            ],
+            "factIds": [
+              "f3"
+            ],
+            "explainEn": "The Haerye says the letter mieum copies the shape of the mouth."
+          },
+          {
+            "id": "c2",
+            "kind": "detail",
+            "promptEn": "Which vowel shape copies a person standing up?",
+            "options": [
+              {
+                "id": "a",
+                "en": "The round dot",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "ko": "ㅣ",
+                "romanization": "i",
+                "en": "the vowel letter i",
+                "isCorrect": true
+              },
+              {
+                "id": "c",
+                "ko": "ㅡ",
+                "romanization": "eu",
+                "en": "the vowel letter eu",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "ko": "ㅏ",
+                "romanization": "a",
+                "en": "the vowel letter a",
+                "isCorrect": false
+              }
+            ],
+            "factIds": [
+              "f5"
+            ],
+            "explainEn": "The standing line copies a person standing up. The round dot copies the sky, and the flat line copies the earth."
+          },
+          {
+            "id": "c3",
+            "kind": "detail",
+            "promptEn": "How do you get {target} from the letter nieun?",
+            "target": {
+              "ko": "ㄷ",
+              "romanization": "d/t",
+              "en": "the consonant letter digeut"
+            },
+            "options": [
+              {
+                "id": "a",
+                "en": "Turn it upside down",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "Draw a circle around it",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "Erase a line",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "Add a stroke",
+                "isCorrect": true
+              }
+            ],
+            "factIds": [
+              "f4"
+            ],
+            "explainEn": "For a stronger sound, add a stroke: nieun gets a stroke and becomes digeut, and one more stroke makes tieut."
+          }
+        ],
+        "checkpoints": [],
+        "sequenceSceneIds": [
+          "s1",
+          "s3",
+          "s6",
+          "s8"
+        ],
+        "newKeywordIds": [
+          "ip",
+          "mokgumeong"
+        ]
+      }
+    ],
+    "coverSceneId": "s1",
+    "pillarTags": [],
+    "companionId": "hoya",
+    "facts": [
+      {
+        "id": "f1",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "The Hunminjeongeum Haerye edition (1446) contains the Haerye, explanations and examples written by scholars, which reveal the principles used to make the letters.",
+        "claimKo": "1446년에 만든 『훈민정음』 해례본에는 학자들이 쓴 해례(풀이와 용례)가 실려 있으며, 여기에 글자를 만든 원리가 밝혀져 있다.",
+        "sources": [
+          {
+            "title": "Hunminjeongum Manuscript",
+            "publisher": "UNESCO — Memory of the World",
+            "url": "https://www.unesco.org/en/memory-world/hunminjeongum-manuscript",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"The manuscript published in the ninth lunar month of 1446\"; \"It also contains the Haerye, or Commentaries, later explanations and examples by scholars of the Hall of Worthies\""
+          },
+          {
+            "title": "국보 훈민정음 (訓民正音) — 국가유산 상세 정보 및 국가유산 설명",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1111100700000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "국가유산 설명: \"세종 28년(1446)에 만든 한문해설서 … 또한 한글의 제작원리도 확연하게 드러났다.\""
+          },
+          {
+            "title": "훈민정음 — 한국민족문화대백과사전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0065805",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"해례편은 새로 만든 글자의 제자원리를 주로 밝히고, 그 음가 · 운용법 … 등을 자세히 설명한 부분이다.\""
+          }
+        ]
+      },
+      {
+        "id": "f2",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "The five basic consonant letters ㄱ, ㄴ, ㅁ, ㅅ, ㅇ were made by copying the shapes of the speech organs used to pronounce each sound.",
+        "claimKo": "자음의 기본 글자 ㄱ, ㄴ, ㅁ, ㅅ, ㅇ 다섯 자는 각 소리를 낼 때의 발음 기관 모양을 본떠 만들었다.",
+        "sources": [
+          {
+            "title": "훈민정음 28자모 — 한국민족문화대백과사전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0074518",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"초성의 기본 문자인 'ㄱ, ㄴ, ㅁ, ㅅ, ㅇ'의 다섯 문자는 각 문자가 발음될 때의 발음 기관의 모양을 본떠 만들고\""
+          },
+          {
+            "title": "알고 싶은 한글 — 강창석, 「제자 원리의 주요 특성과 배경」 (hangeul/short/004d)",
+            "publisher": "국립국어원 (National Institute of Korean Language)",
+            "url": "https://www.korean.go.kr/hangeul/short/004d.html",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"초성의 기본자는 발음 기관의 모양을 본따 만들고, 중성의 기본자는 천, 지, 인을 상형(象形)하였다.\""
+          },
+          {
+            "title": "한글 — 한국민족문화대백과사전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0061508",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"이리하여 'ㄱ ㄴ ㅁ ㅅ ㅇ'의 다섯 글자를 만들어내고\""
+          }
+        ]
+      },
+      {
+        "id": "f3",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "According to the Haerye, ㄱ copies the root of the tongue closing the throat, ㄴ the tongue touching the upper gum (Haerye wording: 象舌附上腭之形), ㅁ the shape of the mouth, ㅅ the shape of a tooth, and ㅇ the shape of the throat.",
+        "claimKo": "해례에 따르면 ㄱ은 혀뿌리가 목구멍을 막는 모양(象舌根閉喉之形), ㄴ은 혀가 윗잇몸에 붙는 모양(象舌附上腭之形), ㅁ은 입 모양, ㅅ은 이 모양, ㅇ은 목구멍 모양을 본떴다.",
+        "sources": [
+          {
+            "title": "훈민정음 28자모 — 한국민족문화대백과사전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0074518",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"아음 ㄱ은 혀뿌리가 목구멍을 닫는 모양을 본뜬 것이고, 설음 ㄴ은 혀가 윗잇몸에 붙는 모양, 순음 ㅁ은 입의 모양, 치음 ㅅ은 이의 모양, 후음 ㅇ은 목구멍의 모양을 따른 것이다.\""
+          },
+          {
+            "title": "아음 — 한국민족문화대백과사전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0034383",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"『훈민정음』 제자해에서는 'ㄱ'에 대하여 '혀뿌리가 목구멍을 막는 모양을 본떴다(象舌根閉喉之形).'라 하고\""
+          },
+          {
+            "title": "ㄴ (니은) — 한국민족문화대백과사전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0011294",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "제자해: \"혀끝이 윗 잇몸에 붙은 모양을 본떠서 ㄴ자를 만들었다(ㄴ 象舌附上腭之形).\""
+          }
+        ]
+      },
+      {
+        "id": "f4",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "For sounds pronounced more strongly, a stroke was added to the basic letter, for example ㄴ → ㄷ → ㅌ.",
+        "claimKo": "소리가 세게 나는 정도에 따라 기본 글자에 획을 더하였다. 예: ㄴ → ㄷ → ㅌ.",
+        "sources": [
+          {
+            "title": "훈민정음 — 한국민족문화대백과사전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0065805",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "제자해: \"그 발음이 세게 나는('厲'로 표현) 정도에 따라 이 기본문자에 획을 더하여 제자한다고 하였다(보기, ㄴ→ㄷ→ㅌ).\""
+          },
+          {
+            "title": "훈민정음 28자모 — 한국민족문화대백과사전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0074518",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"나머지 9개의 글자는 기본 문자에 획을 한 번 또는 두 번 더하여 만들었으나\""
+          },
+          {
+            "title": "알고 싶은 한글 — 강창석, 「제자 원리의 주요 특성과 배경」 (hangeul/short/004d)",
+            "publisher": "국립국어원 (National Institute of Korean Language)",
+            "url": "https://www.korean.go.kr/hangeul/short/004d.html",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"초성의 경우, 각 발음 위치별로 가장 약한 소리를 기본자의 대상으로 삼고, 나머지는 센 정도에 따라 거기에 획을 더하였다.\""
+          }
+        ]
+      },
+      {
+        "id": "f5",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "The three basic vowel letters copy heaven, earth and a person: · is round like heaven (the sky), ㅡ is flat like the earth, and ㅣ stands upright like a person.",
+        "claimKo": "모음의 기본 글자 ·, ㅡ, ㅣ는 각각 하늘, 땅, 사람을 본떴다. ·는 둥근 하늘, ㅡ는 평평한 땅, ㅣ는 서 있는 사람의 모양이다.",
+        "sources": [
+          {
+            "title": "훈민정음 28자모 — 한국민족문화대백과사전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0074518",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"'ㆍ'는 하늘의 둥근 모양을 본뜬 것이고, 'ㅡ'는 땅의 평평한 모양, 'ㅣ'는 사람이 서 있는 모양을 따른 것이다.\""
+          },
+          {
+            "title": "훈민정음 — 한국민족문화대백과사전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0065805",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "〈표 4〉 기본모음자: \"· 天圓 / ㅡ 地平 / ㅣ 人立\"; \"천(天) · 지(地) · 인(人) 삼재를 상형하여 기본모음자 'ㆍ · ㅡ · ㅣ'를 제자\""
+          },
+          {
+            "title": "알고 싶은 한글 — 강창석, 「제자 원리의 주요 특성과 배경」 (hangeul/short/004d)",
+            "publisher": "국립국어원 (National Institute of Korean Language)",
+            "url": "https://www.korean.go.kr/hangeul/short/004d.html",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"중성의 기본자는 천, 지, 인을 상형(象形)하였다.\""
+          }
+        ]
+      },
+      {
+        "id": "f6",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "The other vowels were made by combining the basic vowels; for example, ㅏ is made from ㅣ and ·.",
+        "claimKo": "나머지 모음은 기본 모음을 어울러 만들었다. 예를 들어 ㅏ는 ㅣ와 ·가 어울린 것이다.",
+        "sources": [
+          {
+            "title": "훈민정음 28자모 — 한국민족문화대백과사전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0074518",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"'ㅗ'는 'ㆍ'와 'ㅡ'가 어울려서 이루어진 모양이며, 'ㅏ'는 'ㅣ'와 'ㆍ' … 가 어울려서 이루어진 것이다.\""
+          }
+        ]
+      },
+      {
+        "id": "f7",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Hunminjeongeum began with 28 letters. Some of them, such as ㆆ, ㅿ and ·, are no longer used, and the current South Korean spelling rules (Hangeul Matchumbeop) set 24 basic letters: 14 consonants and 10 vowels. (North Korea's norms count 40 letters, because they also count double consonants and compound vowels.)",
+        "claimKo": "훈민정음은 28자로 시작하였으나 ㆆ, ㅿ, · 등은 오늘날 쓰이지 않으며, 남한의 현행 한글 맞춤법은 한글 자모를 자음 14자와 모음 10자, 모두 24자로 정하고 있다. (북한의 규범은 겹자모까지 세어 40자이다.)",
+        "sources": [
+          {
+            "title": "한국어 어문 규범 — 한글 맞춤법 (문화체육관광부 고시 제2017-12호) 제2장 제4항",
+            "publisher": "국립국어원 (National Institute of Korean Language)",
+            "url": "https://korean.go.kr/kornorms/regltn/regltnView.do?regltn_code=0001&regltn_no=158",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "제4항: \"한글 자모의 수는 스물넉 자로 하고, 그 순서와 이름은 다음과 같이 정한다.\" (ㄱ~ㅎ 14자, ㅏ~ㅣ 10자 나열)"
+          },
+          {
+            "title": "표준국어대사전 — 표제어 '한글'",
+            "publisher": "국립국어원 (National Institute of Korean Language)",
+            "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%ED%95%9C%EA%B8%80",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"1446년 반포될 당시에는 28자모(字母)였지만, 현행 한글 맞춤법에서는 24자모만 쓴다.\""
+          },
+          {
+            "title": "한글 사용에 남북한은 어떠한 차이가 있을까? (국립한글박물관 소식지 2018년 6월 제59호, 한글나누기1)",
+            "publisher": "국립한글박물관 (National Hangeul Museum)",
+            "url": "https://www.hangeul.go.kr/webzine/201806/sub1_1.html",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"남한은 기본 자모로 자음 'ㄱ, ㄴ, … ㅎ'의 14자와 모음 'ㅏ, ㅑ, … ㅣ'의 10자를 합쳐서 24자이다.\""
+          },
+          {
+            "title": "한글 — 한국민족문화대백과사전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0061508",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"훈민정음 창제 당시의 28글자 가운데 지금 쓰이지 않는 'ㆆ, ㅿ, · (ᄋᆞ)'의 이름은 지어지지 않았고, 'ㅇ'과 'ㆁ'의 구별이 없어짐에 따라\""
+          }
+        ]
+      }
+    ],
+    "referenceDisplay": "Sources: 한국민족문화대백과사전(훈민정음, 훈민정음 28자모); 국가유산청 국가유산포털; UNESCO Memory of the World; 국립국어원(한글 맞춤법, 표준국어대사전); 국립한글박물관",
+    "verification": {
+      "passes": 3,
+      "checkedAt": "2026-10-10",
+      "scope": "cluster",
+      "notes": "Third independent pass. Every cited URL for all 6 episodes (52 facts) was re-opened (UNESCO pages via Wayback copies when the live site resets connections) and quotes/locators were compared; the one exception is unesco.org/en/prizes/literacy (unreachable from here; its claim is now also backed by a Korean MCST press release). Eight minimal corrections were made: (1) Hangeul Day f3 no longer says 'Gregorian' (no cited source says the October 9 conversion was Gregorian; encykorea separates Julian/Gregorian only for 1932-45) and dates the October 29/28 observances; (2) f10 gains a third source (SBS 2018 with 국립한글박물관 curator); (3) Shapes scene 8, learning goal and f7 now say 'South Korea's spelling rules' count 24 (North Korea counts 40, 국립한글박물관 webzine 59); (4) Sejong scene 4/f4: 백성 is 'an old-fashioned word' with 표준국어대사전 added; (5) Jikji f8 quote no longer repeats a prize amount that differs between UNESCO page versions; (6) Tripitaka f6 wood and corner plates now have two further sources (정책브리핑; 박상진 wood-identification study); (8) Hangeul Day f9 gains a second source (문화체육관광부 press release); (7) Panjeon scene 8/f9: 'visitors cannot walk inside' replaced by 'visitor entry is restricted' because Haeinsa has run pre-booked tours inside Beopbojeon since June 2021. See hangul-printing.signoff.md."
+    },
+    "authorNotes": "The letter-shape explanations follow the Haerye's 'Jejahae' (제자해) as summarized by 한국민족문화대백과사전. The Haerye's yin-yang and five-elements philosophy is left out as too advanced. The add-a-stroke rule has exceptions (ㆁ, ㄹ, ㅿ, per 한국민족문화대백과사전), so the narration gives only the ㄴ→ㄷ→ㅌ example. The narration says 'a few old ones are no longer used' rather than naming exactly four, because ㆁ merged with ㅇ rather than disappearing. The 국립국어원 essay (004d/004g) notes that a few details of the design principle are still debated among scholars; the story keeps to the consensus points. Because illustrations must contain no text, the app should overlay the jamo (ㄱ, ㄴ, ㅏ and so on) as UI text on the scene art. REVISED: the shape descriptions now follow the Haerye wording exactly (ㄱ = root of the tongue closing the throat, 象舌根閉喉之形; ㄴ = tongue touching the upper gum, 象舌附上腭之形) and no longer promise a physical sensation or add modern phonetics ('back of the tongue blocks the throat', 'ridge behind the upper teeth' removed; narration and illustration). The summary now says 'five basic consonants' (only ㄱ ㄴ ㅁ ㅅ ㅇ copy speech organs; others add strokes). Scene 2 no longer lists 'lips' (the Haerye names tongue root, tongue, mouth, tooth, throat). Vocab 혀 removed because no scene shows it. FINAL PASS (3rd check): scene 8, goal 4 and f7 now say South Korea's spelling rules count 24 (North Korea's norms count 40). The ㄴ wording follows the standard Korean rendering of 象舌附上腭之形 ('tongue touching the upper gum'); the Chinese 上腭 literally means the upper palate/jaw, so no finer anatomical claim is made. REVIEW PASS (PR 1.8b): the old vowel arae-a is named 'the round dot' in learner text, never typed as a bare middle dot (screen readers skip it); the art overlay draws it. REVIEW FIX (PR 1.8b round 2): isolated jamo use the F-CNT-002 C6 sound-value table: ㄱ 'g/k' and ㄷ 'd/t' in keywords, the s2 keyword, the c3 target and the learning goals (ㅇ already 'silent/ng'). The goal glosses are modern reading aids; in the Haerye the throat letter ㅇ was the null letter and ng was written with the separate letter ㆁ, which the narration does not claim otherwise.",
+    "errata": []
+  },
+  {
+    "v": 1,
+    "id": "story:sun-and-moon",
+    "state": "ready",
+    "contentVer": 1,
+    "title": {
+      "ko": "해님 달님",
+      "romanization": "Haenim Dallim",
+      "en": "The Sun and the Moon (A Traditional Tale)"
+    },
+    "summaryEn": "A gentle, simplified retelling of the traditional Korean folk tale Haenim Dallim: a brother and sister outwit a tricky tiger, climb a rope into the sky, and become the sun and the moon.",
+    "theme": "nature",
+    "kind": "folk-tale",
+    "recommendedStage": 1,
+    "minutes": 5,
+    "learningGoalsEn": [
+      "Know that Haenim Dallim is a traditional Korean folk tale told in many versions, and that this retelling is a simplified one.",
+      "Put the main events in order: the tricky tiger, the tree, the rope from the sky, the sun and the moon.",
+      "Read and recognize 해 (hae), 달 (dal), 호랑이 (horangi), 떡 (tteok) and 동아줄 (dongajul).",
+      "Understand that folk tales sometimes 'explain' nature (why sorghum stalks are red) as part of the story, not as science."
+    ],
+    "origin": {
+      "type": "traditional",
+      "noteEn": "One version of a traditional tale; the Sources screen lists the versions this retelling follows.",
+      "retellingNoteEn": "Shortened and made gentler; versions differ."
+    },
+    "review": {
+      "language": "draft",
+      "culture": "draft",
+      "advisory": [
+        "mild-peril",
+        "loss",
+        "trickery"
+      ],
+      "advisoryNoteEn": "A tricky tiger and a moment of danger, told gently. In the traditional tale the mother does not come home; this retelling leaves it out."
+    },
+    "keywords": [
+      {
+        "id": "hae",
+        "ko": "해",
+        "romanization": "hae",
+        "en": "sun",
+        "kind": "word"
+      },
+      {
+        "id": "dal",
+        "ko": "달",
+        "romanization": "dal",
+        "en": "moon",
+        "kind": "word"
+      },
+      {
+        "id": "horangi",
+        "ko": "호랑이",
+        "romanization": "horangi",
+        "en": "tiger",
+        "kind": "word"
+      },
+      {
+        "id": "tteok",
+        "ko": "떡",
+        "romanization": "tteok",
+        "en": "rice cake",
+        "kind": "word"
+      },
+      {
+        "id": "onui",
+        "ko": "오누이",
+        "romanization": "onui",
+        "en": "brother and sister",
+        "kind": "word"
+      },
+      {
+        "id": "dongajul",
+        "ko": "동아줄",
+        "romanization": "dongajul",
+        "en": "thick, strong rope",
+        "kind": "word"
+      },
+      {
+        "id": "namu",
+        "ko": "나무",
+        "romanization": "namu",
+        "en": "tree",
+        "kind": "word"
+      },
+      {
+        "id": "susu",
+        "ko": "수수",
+        "romanization": "susu",
+        "en": "sorghum",
+        "kind": "word"
+      },
+      {
+        "id": "haenim-dallim",
+        "ko": "해님 달님",
+        "romanization": "Haenim Dallim",
+        "en": "the Sun and the Moon (with the honorific suffix -nim; the tale's title)",
+        "kind": "word"
+      },
+      {
+        "id": "mun",
+        "ko": "문",
+        "romanization": "mun",
+        "en": "door",
+        "kind": "word"
+      },
+      {
+        "id": "chamgireum",
+        "ko": "참기름",
+        "romanization": "chamgireum",
+        "en": "sesame oil",
+        "kind": "word"
+      },
+      {
+        "id": "sae-dongajureul-naeryeo-juseyo",
+        "ko": "새 동아줄을 내려 주세요",
+        "romanization": "Sae dongajureul naeryeo juseyo",
+        "en": "Please send down a new rope.",
+        "kind": "phrase"
+      },
+      {
+        "id": "haewa-dal",
+        "ko": "해와 달",
+        "romanization": "haewa dal",
+        "en": "the sun and the moon",
+        "kind": "word"
+      }
+    ],
+    "cultureNotes": [],
+    "tiers": [
+      {
+        "level": "listen",
+        "scenes": [
+          {
+            "id": "s1",
+            "narrationEn": "Story time with Hoya! This is an old Korean folk tale, told in many versions. It is called Haenim Dallim, The Sun and the Moon. Our retelling is simplified and gentler than the old tellings. And the tiger is a trickster, not like me!",
+            "captionEn": "Hoya begins an old folk tale",
+            "keyword": {
+              "id": "haenim-dallim",
+              "ko": "해님 달님",
+              "romanization": "Haenim Dallim",
+              "en": "the Sun and the Moon (with the honorific suffix -nim; the tale's title)",
+              "kind": "word"
+            },
+            "factIds": [
+              "f1"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "Hoya sitting cross-legged with an open folding screen behind him painted with a sun, a moon and mountains, winking at the viewer."
+          },
+          {
+            "id": "s2",
+            "narrationEn": "Long ago, a mother went out to work. On her way home with rice cakes, she met a tiger at a hill pass. 'Give me your rice cakes!' it said. In the old tale it asks again at every hill. We keep it short.",
+            "captionEn": "A tiger asks the mother for rice cakes",
+            "keyword": {
+              "id": "tteok",
+              "ko": "떡",
+              "romanization": "tteok",
+              "en": "rice cake",
+              "kind": "word"
+            },
+            "factIds": [
+              "f2"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "A winding hilltop path at sunset; a mother in hanbok with a covered bundle of rice cakes, and a comical roly-poly tiger with no scary teeth peeking from behind a boulder; a thatched cottage far below."
+          },
+          {
+            "id": "s3",
+            "narrationEn": "The tiger went to the house of a brother and sister, {kw:onui}, pretending to be their mother. 'Open the door!' The children said, 'Your voice and hand are not Mother's!' But the tiger played a clever trick, and at last they opened the door.",
+            "captionEn": "The tiger pretends to be Mother",
+            "keyword": {
+              "id": "mun",
+              "ko": "문",
+              "romanization": "mun",
+              "en": "door",
+              "kind": "word"
+            },
+            "factIds": [
+              "f3"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "A cottage door slightly ajar at dusk, two children peeking out with wide eyes; only a fuzzy striped paw and a shawl are visible outside, drawn comically rather than scary."
+          },
+          {
+            "id": "s4",
+            "narrationEn": "Then the children realized it was the tiger, and they climbed a tall tree, {kw:namu}, beside the well. Hoya whispers: 'Don't worry, it's only a story, and these two are clever!'",
+            "captionEn": "The children climb a tall tree",
+            "keyword": {
+              "id": "horangi",
+              "ko": "호랑이",
+              "romanization": "horangi",
+              "en": "tiger",
+              "kind": "word"
+            },
+            "factIds": [
+              "f3"
+            ],
+            "framing": false,
+            "approximations": [
+              {
+                "text": "these two",
+                "factIds": [
+                  "f3"
+                ],
+                "rationaleEn": "The retelling's brother and sister, the siblings who flee up the tree in f3; a count of the story's two heroes, not a sourced number.",
+                "timeRelative": false
+              }
+            ],
+            "artPending": true,
+            "artBrief": "Two children perched high in a big tree beside a stone well under starlight, looking down calmly; a striped tail just visible behind the cottage; Hoya in a corner of the frame giving a thumbs-up."
+          },
+          {
+            "id": "s5",
+            "narrationEn": "'How did you get up there?' asked the tiger. The clever brother said, 'Rub on some sesame oil!' Slip, slide, bump! The tiger couldn't climb. But soon it found another way up.",
+            "captionEn": "The tiger slips on sesame oil",
+            "keyword": {
+              "id": "chamgireum",
+              "ko": "참기름",
+              "romanization": "chamgireum",
+              "en": "sesame oil",
+              "kind": "word"
+            },
+            "factIds": [
+              "f4"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "The tiger sliding comically down a shiny tree trunk with a little oil bottle beside it, the children giggling behind their hands."
+          },
+          {
+            "id": "s6",
+            "narrationEn": "The children prayed to the sky: 'Please send down a new rope!' A strong new rope, {kw:dongajul}, came down, and up they climbed. The tiger tried a rope too, but it was old and rotten. Snap!",
+            "captionEn": "A strong new rope comes down",
+            "line": {
+              "ko": "새 동아줄을 내려 주세요",
+              "romanization": "Sae dongajureul naeryeo juseyo",
+              "en": "Please send down a new rope.",
+              "speaker": "narrator"
+            },
+            "factIds": [
+              "f5"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "A thick golden rope descending from glowing clouds as the two children climb it; far below, a frayed grey rope snapping near the treetops."
+          },
+          {
+            "id": "s7",
+            "narrationEn": "Down tumbled the tiger into a field of sorghum, and that was the end of its tricks. Storytellers say that is why sorghum stalks are red! The tale even has another name: 'Why Sorghum Stalks Are Red.'",
+            "captionEn": "The tiger falls into the sorghum field",
+            "keyword": {
+              "id": "susu",
+              "ko": "수수",
+              "romanization": "susu",
+              "en": "sorghum",
+              "kind": "word"
+            },
+            "factIds": [
+              "f6"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "A field of tall reddish sorghum stalks swaying, with only the tip of a striped tail sticking out among them; soft, funny mood."
+          },
+          {
+            "id": "s8",
+            "narrationEn": "In the sky, the brother became the sun, {kw:hae}, and the sister the moon, {kw:dal}. She was scared of the night, so they swapped. She is shy, so she shines so brightly that no one can look straight at her. They are safe and sound!",
+            "captionEn": "The children become the sun and the moon",
+            "keyword": {
+              "id": "haewa-dal",
+              "ko": "해와 달",
+              "romanization": "haewa dal",
+              "en": "the sun and the moon",
+              "kind": "word"
+            },
+            "factIds": [
+              "f7"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artPending": true,
+            "artBrief": "A split sky: a warm smiling sun with the sister's face on one side and a gentle moon with the brother's face on the other, over sleeping mountains; Hoya waving goodbye."
+          }
+        ],
+        "checks": [
+          {
+            "id": "c1",
+            "kind": "detail",
+            "promptEn": "At the first hill pass, what did the tiger ask the mother for?",
+            "options": [
+              {
+                "id": "a",
+                "en": "Her shoes",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "Her water jar",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "Her rice cakes",
+                "isCorrect": true
+              },
+              {
+                "id": "d",
+                "en": "Her walking stick",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "In the tale, the tiger meets the mother on her way home and asks for her rice cakes first.",
+            "factIds": [
+              "f2"
+            ]
+          },
+          {
+            "id": "c2",
+            "kind": "detail",
+            "promptEn": "What came down from the sky to help the children?",
+            "options": [
+              {
+                "id": "a",
+                "en": "A new, strong rope",
+                "isCorrect": true
+              },
+              {
+                "id": "b",
+                "en": "A wooden ladder",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "A bridge of clouds",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "A long silk cloth",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "In the tale, the children pray to the sky, and a new, strong rope comes down for them to climb.",
+            "factIds": [
+              "f5"
+            ]
+          },
+          {
+            "id": "c3",
+            "kind": "detail",
+            "promptEn": "Why did the sister and brother swap places in the sky?",
+            "options": [
+              {
+                "id": "a",
+                "en": "She wanted to see the sunrise",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "She was afraid of the dark night",
+                "isCorrect": true
+              },
+              {
+                "id": "c",
+                "en": "She felt the sun was too hot",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "Her brother asked to shine first",
+                "isCorrect": false
+              }
+            ],
+            "explainEn": "In the tale, the sister is afraid of the night, so she and her brother swap and she becomes the sun.",
+            "factIds": [
+              "f7"
+            ]
+          }
+        ],
+        "checkpoints": [],
+        "sequenceSceneIds": [
+          "s1",
+          "s3",
+          "s6",
+          "s8"
+        ],
+        "newKeywordIds": [
+          "tteok",
+          "horangi",
+          "susu"
+        ]
+      }
+    ],
+    "coverSceneId": "s1",
+    "pillarTags": [],
+    "companionId": "hoya",
+    "facts": [
+      {
+        "id": "f1",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "'The Brother and Sister Who Became the Sun and the Moon' (also called Haenim Dallim) is a traditional Korean folk tale (mindam) told widely across the country, with many variant versions.",
+        "claimKo": "「해와 달이 된 오누이」(｢해님달님｣)는 전국적으로 널리 전승되는 민담이며 여러 변이형이 있다.",
+        "sources": [
+          {
+            "title": "해와 달이 된 오누이",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0062663",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "정의: ‘남매가 호랑이의 위협을 피하여 하늘로 올라가 해와 달이 된 내용의 민담.’ / 개설: ‘전국적으로 널리 전승되며, ｢해님달님｣ · ｢일월전설(日月傳說)｣ · ｢수숫대가 빨간 이유｣라고도 부른다.’ / 현황: ‘각편의 여러 변이형 가운데에는 …’"
+          },
+          {
+            "title": "해와 달이 된 오누이 (한국민속문학사전)",
+            "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+            "url": "https://folkency.nfm.go.kr/kr/topic/detail/6006",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "분석: ‘한국에서는 ‘해와 달이 된 오누이’ 또는 ‘해님 달님’ 등의 제목으로 널리 구전되어 왔다.’ / 변이: ‘민담화되면서 이 이야기에는 많은 변이들이 발생한다.’"
+          }
+        ]
+      },
+      {
+        "id": "f2",
+        "rev": 1,
+        "scope": "in-the-tale",
+        "claimEn": "In the tale, a mother who has been out working meets a tiger on her way home. In the Encyclopedia of Korean Culture's basic version the tiger appears at one hill pass after another and makes demands in turn, rice cakes first and then more; this retelling keeps only the rice cakes and leaves out the rest.",
+        "claimKo": "이야기에서 품일을 나갔던 어머니가 돌아오는 길에 호랑이를 만난다. 대백과사전의 기본형에서는 호랑이가 고개마다 나타나 떡을 시작으로 차례로 여러 가지를 요구하는데, 이 재구성은 첫 번째인 떡만 남기고 나머지는 줄였다.",
+        "sources": [
+          {
+            "title": "해와 달이 된 오누이",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0062663",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "내용: ‘옛날에 한 어머니가 삼 남매를 집에 두고 품일을 나갔다가 돌아오는 길에 호랑이를 만났다. 호랑이는 고개마다 나타나서 어머니에게 떡, 옷, 팔, 다리, 몸통을 차례로 요구한 뒤 …’"
+          },
+          {
+            "title": "해와 달이 된 오누이 (한국민속문학사전)",
+            "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+            "url": "https://folkency.nfm.go.kr/kr/topic/detail/6006",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "줄거리: ‘호랑이가 이웃 부잣집에 품일을 갔다 오던 늙은 어머니를 잡아먹고는 …’ (a shorter version of the same opening: the mother is returning from working at a neighbor's house)"
+          }
+        ]
+      },
+      {
+        "id": "f3",
+        "rev": 1,
+        "scope": "in-the-tale",
+        "claimEn": "In the Encyclopedia's basic version, the tiger goes to the children's house pretending to be their mother; the children say the voice and hand are not their mother's and refuse to open the door, but open it when the tiger says it must nurse the crying baby; the siblings then realize who it is and flee up a big tree beside the well. Other versions differ (in the National Folk Museum's summary the children look through a hole in the door, see the tiger, and escape by the back door to a tree). This retelling is simplified.",
+        "claimKo": "대백과사전의 기본형에서 호랑이는 어머니인 척 아이들의 집에 찾아간다. 아이들은 목소리와 손바닥이 어머니와 다르다며 문을 열어 주지 않다가 호랑이가 우는 젖먹이에게 젖을 먹여야 한다고 하자 문을 열어 주고, 곧 호랑이의 정체를 알아차려 우물가 큰 나무 위로 피한다. 각편에 따라 다르며(국립민속박물관 줄거리에서는 문구멍으로 내다보고 호랑이인 줄 알아 뒷문으로 도망쳐 나무 위로 피한다), 이 재구성은 단순화한 것이다.",
+        "sources": [
+          {
+            "title": "해와 달이 된 오누이",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0062663",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘아이들은 호랑이의 목소리와 손바닥이 어머니와 다르다고 문을 열어 주지 않았으나, 호랑이가 우는 젖먹이에게 젖을 먹여야 한다고 하자 문을 열어 주었다. 호랑이가 젖먹이를 잡아먹자 남매는 호랑이 정체를 알아차리고 겨우 도망하여 우물가 큰 나무 위로 피신했다.’"
+          },
+          {
+            "title": "해와 달이 된 오누이 (한국민속문학사전)",
+            "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+            "url": "https://folkency.nfm.go.kr/kr/topic/detail/6006",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "줄거리: ‘오누이는 문구멍으로 내다보고는 호랑이인 줄 알고 뒷문으로 도망쳐 나무 위로 피한다.’"
+          }
+        ]
+      },
+      {
+        "id": "f4",
+        "rev": 1,
+        "scope": "in-the-tale",
+        "claimEn": "In the Encyclopedia's basic version, following the brother's advice the tiger rubs on sesame oil and fails to climb the tree, then finds another way up (the sister's advice).",
+        "claimKo": "대백과사전의 기본형에서 호랑이는 오빠의 말대로 참기름을 바르고 나무에 오르려다 실패하고, 이후 누이가 일러 준 다른 방법으로 올라간다.",
+        "sources": [
+          {
+            "title": "해와 달이 된 오누이",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0062663",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘처음에는 오빠의 말대로 참기름을 바르고 나무에 오르려다 실패하고, 그 다음에는 누이가 일러 준 대로 도끼로 나무를 찍으며 올라갔다.’ (the axe detail is left out of this retelling)"
+          }
+        ]
+      },
+      {
+        "id": "f5",
+        "rev": 1,
+        "scope": "in-the-tale",
+        "claimEn": "In the tale, the siblings pray to the sky for a rope; a new, strong rope (dongajul) comes down and they climb up, while the tiger takes a rotten rope that breaks.",
+        "claimKo": "남매가 하늘에 동아줄을 내려 달라고 빌자 새 동아줄이 내려와 하늘로 오르고, 호랑이가 잡은 썩은 동아줄은 끊어진다.",
+        "sources": [
+          {
+            "title": "해와 달이 된 오누이",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0062663",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘남매는 하늘에 동아줄을 내려 달라고 기원하여 하늘에서 내려온 새 동아줄을 타고 하늘로 올라갔고, 호랑이는 하늘에서 내려온 썩은 동아줄을 잡고 하늘로 오르다가 동아줄이 끊어져 수수밭에 떨어졌다.’"
+          },
+          {
+            "title": "해와 달이 된 오누이 (한국민속문학사전)",
+            "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+            "url": "https://folkency.nfm.go.kr/kr/topic/detail/6006",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "줄거리: ‘오누이는 하늘에 빌어 하늘에서 내려준 쇠줄을 타고 올라가 … 호랑이도 오누이를 쫓아 썩은 동아줄을 타고 하늘에 오르다가 줄이 끊어져 …’ / 변이: ‘“살려주시려면 굵은 동아줄을, 죽이시려면 썩은 동아줄을 내려주세요.”라는 오누이의 기원’"
+          },
+          {
+            "title": "동아줄",
+            "publisher": "국립국어원 (National Institute of Korean Language) — 표준국어대사전",
+            "url": "https://stdict.korean.go.kr/search/searchResult.do?searchKeyword=%EB%8F%99%EC%95%84%EC%A4%84",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘굵고 튼튼하게 꼰 줄.’"
+          }
+        ]
+      },
+      {
+        "id": "f6",
+        "rev": 1,
+        "scope": "in-the-tale",
+        "claimEn": "In the tale, the tiger falls from the rotten rope into a sorghum field, and storytellers use this to explain why sorghum stalks are red; some versions keep only the red-sorghum explanation, and the tale is also known as 'Why Sorghum Stalks Are Red'.",
+        "claimKo": "호랑이는 썩은 줄이 끊어져 수수밭에 떨어지고, 이야기는 이것으로 수숫대가 붉은 까닭을 설명한다. 수숫대가 붉어진 유래만 이야기하는 각편도 있으며, 이 설화는 ｢수숫대가 빨간 이유｣라고도 불린다.",
+        "sources": [
+          {
+            "title": "해와 달이 된 오누이",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0062663",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘동아줄이 끊어져 수수밭에 떨어졌다.’ / ‘수수가 붉게 되었다.’ / 개설: ‘｢수숫대가 빨간 이유｣라고도 부른다.’"
+          },
+          {
+            "title": "해와 달이 된 오누이 (한국민속문학사전)",
+            "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+            "url": "https://folkency.nfm.go.kr/kr/topic/detail/6006",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "변이: ‘호랑이의 추락과 죽음으로 인해 수숫대가 붉어진 유래담도 형성되었다.’ / ‘해와 달에 관한 기원담은 생략되고 수숫대가 붉게 된 유래만 내용으로 삼는 유형도 있다.’"
+          }
+        ]
+      },
+      {
+        "id": "f7",
+        "rev": 1,
+        "scope": "in-the-tale",
+        "claimEn": "In the basic version, the brother first becomes the sun and the sister the moon, but because the sister is afraid of the night they swap. The sister, now the sun, is shy of people looking at her: the Encyclopedia says she pricks at people's eyes with needles so they cannot look straight at the sun, while the National Folk Museum's summary says she gives off a strong light. This retelling uses only the gentler 'too bright to look at' version. Versions differ (in some, the brother stays the sun).",
+        "claimKo": "기본형에서 오빠는 해, 누이는 달이 되었으나 누이가 밤을 무서워해 서로 바꾸었고, 해가 된 누이는 사람들이 쳐다보는 것이 부끄러워 사람들이 해를 똑바로 볼 수 없게 되었다. 대백과사전은 누이가 바늘로 눈을 콕콕 찌른다고 설명하고, 국립민속박물관 줄거리는 강력한 빛을 뿜는다고 설명하는데, 이 재구성은 순한 쪽(너무 밝아서 볼 수 없음)만 따랐다. 각편마다 다르다(오빠가 그대로 해가 되는 유형도 있다).",
+        "sources": [
+          {
+            "title": "해와 달이 된 오누이",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0062663",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "‘오빠는 해가 되고 누이는 달이 되었다. 그런데 누이가 밤이 무섭다고 하여 오빠가 바꿔 주어 누이는 해가 되고 오빠는 달이 되었다. 해가 된 누이는 낮에 사람들이 쳐다보는 것이 부끄러워 자신을 못 보게 바늘로 콕콕 찔러서 사람들이 해를 똑바로 쳐다볼 수 없게 되었다.’"
+          },
+          {
+            "title": "해와 달이 된 오누이 (한국민속문학사전)",
+            "publisher": "국립민속박물관 (National Folk Museum of Korea) — 한국민속대백과사전",
+            "url": "https://folkency.nfm.go.kr/kr/topic/detail/6006",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "줄거리: ‘하느님이 오빠는 해, 동생은 달이 되게 하였지만 동생이 밤이 무섭다고 하여 역할을 바꾸어 오빠는 달, 여동생은 해가 된다. 여동생은 낮에 사람들이 쳐다보는 것이 부끄러워 강력한 빛을 뿜어낸다.’ / 변이: ‘누이가 무섭다고 해도 오빠가 한 번 정해진 것을 바꿀 수가 없다고 하여 오빠가 해가 되는 유형도 있다.’"
+          }
+        ]
+      }
+    ],
+    "referenceDisplay": "Traditional folk tale, one version retold gently and simplified (versions differ). As told in: 한국민족문화대백과사전 「해와 달이 된 오누이」 (한국학중앙연구원) and 한국민속문학사전 「해와 달이 된 오누이」 (국립민속박물관); 국립국어원 표준국어대사전. Not history.",
+    "verification": {
+      "passes": 3,
+      "checkedAt": "2026-10-10",
+      "scope": "cluster",
+      "notes": "Third independent pass over 6 episodes / 61 facts / 161 source entries (70 unique URLs). Every URL was re-fetched with my own scripts (UNESCO pages via Wayback copies; heritage.go.kr descriptions via the portal ajax html and khs.go.kr open API; folkency via its JSON API) and each quote or locator was machine-matched to the page text; the few non-matching strings were checked by hand (portal metadata fields, hanja or footnote punctuation, label text). Corrections: (1) pansori scene 2 now gives both UNESCO steps (2003 masterpiece proclamation, 2008 Representative List); (2) pansori f11 states the Aesop title as in the cited Townsend text and the common alternate title; (3) added sources: NFM 놀보박타령 for 'greedy' (f5), 표준국어대사전 타다 for 'sawed' (f6), 한국민족문화대백과사전 선도해 for the Samguk sagi tale (f12); (4) Seollal f9/f10 designation-date locators now cite the KHS open API field. No other change. See seasons-tales.signoff.md."
+    },
+    "authorNotes": "REVISED 2026-10-10. Traditional tale: narration describes what happens in the tale, not history. Two authoritative sources now: the Encyclopedia of Korean Culture (E0062663; basic version with three siblings) and the National Folk Museum's 한국민속문학사전 entry by 조현설 (topic 6006; summary with two children, whose folk-literature dictionary cites 한국구비문학대계 1-4, 811; 1-5, 308; 2-6, 473; 2-7, 513 as its sources - the 구비문학대계 recordings themselves could not be opened with the tools used, gubi.aks.ac.kr returned nothing). The sesame-oil episode (f4) rests on the Encyclopedia only (the NFM summary does not mention it); claims kept minimal. Differences between sources, stated openly in the facts: Encyclopedia - mother met at successive hill passes with demands rice cake, clothes, arms, legs, torso; children open the door when the tiger says it must nurse the baby; the sun-sister pricks people's eyes with needles. NFM - children see the tiger through a hole in the door and flee by the back door; the sun-sister gives off a strong light. This retelling follows the gentler options where they exist. Softened on purpose: the tiger eating the mother and the baby; the demands for clothes, arms, legs and torso; the axe; the tiger's death on the sorghum stalks (told as 'the end of its tricks'); the needles. Three siblings (삼 남매) in the Encyclopedia vs. two (오누이) in the NFM summary: narration says 'the children' (s3: 'a brother and sister') and does not mention the baby (review 2026-10-11: naming the baby made listeners ask what happened to it). 님 is a gender-neutral respectful suffix; in this retelling the sun is the sister and the moon the brother, so the 'Mr. Sun, Ms. Moon' gloss was removed. Reassurance beats added in scenes 4, 7 and 8. The line '떡 하나 주면 안 잡아먹지' is not used (not in the sources; too scary for young children). Hoya's 'not like me!' is character banter. Stage 5 'Tiger Folktales' is a natural placement, but the language is at Listen level, hence recommended_stage 1. AUTHORING 2026-10-11 (F-STORY-001 PR 1.8d): title romanization, scene captions and check explanations written from the cited facts; every scene is artPending (text-only tile) until the art PRs; no claim or source changed. Fact scope: f1 (the tale exists and is told widely) is documented; f3 and f7 (what happens in the tale) are in-the-tale. Title: 해님 달님 (Haenim Dallim); the 'traditional tale' label lives in title.en and origin, not in brackets in the Korean title. 'these two' (s4) carries an approximation entry. REVIEW 2026-10-11 (PR 1.8d review fixes): advisory adds 'loss' and the note names the mother's fate as left out; s2 and s8 in plainer sentences; the hae, dal, onui, namu and dongajul keywords appear as tokens; -nim glossed as an honorific suffix; learning goals use receptive verbs. PR #208 fixes: s3 'played a clever trick' generalises f3's nursing excuse (baby kept out, no invented cause); the advisory gives the mother's fate as the traditional tale's, not 'older versions'.",
+    "errata": []
+  },
+  {
+    "v": 1,
+    "id": "story:tripitaka-koreana",
+    "state": "ready",
+    "contentVer": 1,
+    "title": {
+      "ko": "팔만대장경",
+      "romanization": "Palmandaejanggyeong",
+      "en": "Eighty Thousand Woodblocks"
+    },
+    "summaryEn": "At Haeinsa Temple, Hoya discovers the Tripitaka Koreana: more than 80,000 woodblocks of Buddhist scriptures carved between 1237 and 1248, still kept safe today.",
+    "theme": "letters",
+    "kind": "documentary",
+    "recommendedStage": 1,
+    "minutes": 5,
+    "learningGoalsEn": [
+      "Know that the Tripitaka Koreana (Palmandaejanggyeong) is a set of more than 80,000 woodblocks of Buddhist scriptures carved in Goryeo between 1237 and 1248.",
+      "Understand why the blocks were carved: a wish for the Buddha's protection during the Mongol invasions.",
+      "Know that the woodblocks are kept at Haeinsa Temple and were inscribed on UNESCO's Memory of the World Register in 2007.",
+      "Read and recognize 해인사 (Haeinsa), 대장경 (Daejanggyeong), 팔만 (palman), 나무 (namu), 경판 (gyeongpan) and 글자 (geulja)."
+    ],
+    "origin": {
+      "type": "documented",
+      "noteEn": "Heritage history, researched from the sources listed on the Sources screen."
+    },
+    "review": {
+      "language": "draft",
+      "culture": "draft",
+      "advisory": [
+        "war"
+      ],
+      "advisoryNoteEn": "Mentions that Mongol armies invaded Korea long ago. No fighting is shown."
+    },
+    "keywords": [
+      {
+        "id": "haeinsa",
+        "ko": "해인사",
+        "romanization": "Haeinsa",
+        "en": "Haeinsa Temple",
+        "kind": "word"
+      },
+      {
+        "id": "daejanggyeong",
+        "ko": "대장경",
+        "romanization": "Daejanggyeong",
+        "en": "complete collection of Buddhist scriptures (Tripitaka)",
+        "kind": "word"
+      },
+      {
+        "id": "palman",
+        "ko": "팔만",
+        "romanization": "palman",
+        "en": "eighty thousand",
+        "kind": "word"
+      },
+      {
+        "id": "namu",
+        "ko": "나무",
+        "romanization": "namu",
+        "en": "tree; wood",
+        "kind": "word"
+      },
+      {
+        "id": "geulja",
+        "ko": "글자",
+        "romanization": "geulja",
+        "en": "letter; written character",
+        "kind": "word"
+      },
+      {
+        "id": "gyeongpan",
+        "ko": "경판",
+        "romanization": "gyeongpan",
+        "en": "scripture woodblock",
+        "kind": "word"
+      },
+      {
+        "id": "goryeo",
+        "ko": "고려",
+        "romanization": "Goryeo",
+        "en": "Goryeo, the Korean kingdom of that time",
+        "kind": "word"
+      },
+      {
+        "id": "yuneseuko",
+        "ko": "유네스코",
+        "romanization": "Yuneseuko",
+        "en": "UNESCO",
+        "kind": "word"
+      },
+      {
+        "id": "sojunghaeyo",
+        "ko": "소중해요",
+        "romanization": "sojunghaeyo",
+        "en": "(It's) precious.",
+        "kind": "word"
+      }
+    ],
+    "cultureNotes": [],
+    "tiers": [
+      {
+        "level": "listen",
+        "scenes": [
+          {
+            "id": "s1",
+            "narrationEn": "Hoya climbs Gayasan Mountain to Haeinsa Temple in Hapcheon. Peeking through the slats of a long wooden hall, he gasps. Shelves of carved wooden blocks stretch on, row after row!",
+            "keyword": {
+              "id": "haeinsa",
+              "ko": "해인사",
+              "romanization": "Haeinsa",
+              "en": "Haeinsa Temple",
+              "kind": "word"
+            },
+            "factIds": [
+              "f1"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "Hoya on a forest path up a green mountain toward a temple with tiled roofs; inset: a long dim hall with tall wooden shelves packed with dark wooden blocks seen through vertical window slats.",
+            "captionEn": "Hoya climbs to Haeinsa Temple",
+            "artPending": true
+          },
+          {
+            "id": "s2",
+            "narrationEn": "These are the Tripitaka Koreana woodblocks. In Korean they are called Daejanggyeong, which means a complete collection of Buddhist scriptures.",
+            "keyword": {
+              "id": "daejanggyeong",
+              "ko": "대장경",
+              "romanization": "Daejanggyeong",
+              "en": "the complete collection of Buddhist scriptures (Tripitaka)",
+              "kind": "word"
+            },
+            "factIds": [
+              "f2"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "Rows of wooden printing blocks on shelves, each with small end pieces; warm light falls across them; Hoya stands small and amazed in the aisle. Block faces shown as texture, no readable characters.",
+            "captionEn": "The Tripitaka Koreana woodblocks",
+            "artPending": true
+          },
+          {
+            "id": "s3",
+            "narrationEn": "They were carved in the Goryeo kingdom, from 1237 to 1248. Mongol armies had invaded the land, and people carved the scriptures hoping the Buddha's power would protect their country.",
+            "keyword": {
+              "id": "goryeo",
+              "ko": "고려",
+              "romanization": "Goryeo",
+              "en": "Goryeo, the Korean kingdom of that time",
+              "kind": "word"
+            },
+            "factIds": [
+              "f3",
+              "f4"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "Calm workshop scene: carvers in Goryeo clothing bent over wooden boards with small knives, focused and peaceful; distant mountains outside. No fighting, no soldiers.",
+            "captionEn": "Carved in Goryeo, hoping for protection",
+            "artPending": true
+          },
+          {
+            "id": "s4",
+            "narrationEn": "There are more than 80,000 blocks, which is one reason people call them Palman Daejanggyeong. Palman means eighty thousand! Hoya starts counting, then laughs. \"That would take me all year!\"",
+            "keyword": {
+              "id": "palman",
+              "ko": "팔만",
+              "romanization": "palman",
+              "en": "eighty thousand",
+              "kind": "word"
+            },
+            "factIds": [
+              "f5"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "Hoya sitting on the floor counting on his paws, dizzy little stars circling his head, with endless shelves of blocks behind him.",
+            "captionEn": "More than 80,000 blocks!",
+            "artPending": true
+          },
+          {
+            "id": "s5",
+            "narrationEn": "Each block, a {kw:gyeongpan}, is carved on both sides. Most are made of wild cherry wood, coated with lacquer to protect them, and fitted with metal plates at the corners.",
+            "keyword": {
+              "id": "namu",
+              "ko": "나무",
+              "romanization": "namu",
+              "en": "tree; wood",
+              "kind": "word"
+            },
+            "factIds": [
+              "f6"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "A single woodblock shown large, tilted to reveal both carved faces as abstract texture, dark lacquer sheen, and small metal plates at the four corners; a cherry tree in blossom behind it.",
+            "captionEn": "Each block is carved on both sides",
+            "artPending": true
+          },
+          {
+            "id": "s6",
+            "narrationEn": "Carvers cut tens of millions of characters into the wood, all neat and even, as if one hand had carved them all. Scholars around the world praise how accurate they are.",
+            "keyword": {
+              "id": "geulja",
+              "ko": "글자",
+              "romanization": "geulja",
+              "en": "letter; written character",
+              "kind": "word"
+            },
+            "factIds": [
+              "f7"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "Close-up of a carver's steady hands and a small knife over a board covered in tiny, even raised marks (abstract pattern, not real characters); Hoya watches, holding his breath.",
+            "captionEn": "Tens of millions of neat characters",
+            "artPending": true
+          },
+          {
+            "id": "s7",
+            "narrationEn": "Today the woodblocks are a National Treasure of Korea. In 2007, UNESCO added them to the Memory of the World Register.",
+            "keyword": {
+              "id": "yuneseuko",
+              "ko": "유네스코",
+              "romanization": "Yuneseuko",
+              "en": "UNESCO",
+              "kind": "word"
+            },
+            "factIds": [
+              "f8"
+            ],
+            "framing": false,
+            "approximations": [],
+            "artBrief": "Hoya proudly standing beside a single woodblock displayed on a cushion, with a soft starburst behind it suggesting world recognition. No logos or text.",
+            "captionEn": "A National Treasure, honored by UNESCO",
+            "artPending": true
+          },
+          {
+            "id": "s8",
+            "narrationEn": "Almost 800 years later, the blocks are still kept safe at Haeinsa. Hoya whispers, \"Sojunghaeyo, they're precious.\"",
+            "keyword": {
+              "id": "sojunghaeyo",
+              "ko": "소중해요",
+              "romanization": "sojunghaeyo",
+              "en": "(It's) precious.",
+              "kind": "word"
+            },
+            "factIds": [
+              "f1",
+              "f3"
+            ],
+            "framing": false,
+            "approximations": [
+              {
+                "text": "Almost 800 years",
+                "factIds": [
+                  "f3"
+                ],
+                "rationaleEn": "The blocks were finished in 1248; 1248 to 2026 is 778 years, so narration rounds it to almost 800.",
+                "timeRelative": true
+              }
+            ],
+            "artBrief": "Evening at Haeinsa: the long storage halls glowing softly at the top of the temple grounds under a starry sky; Hoya sits quietly on the steps.",
+            "captionEn": "Still kept safe at Haeinsa",
+            "artPending": true
+          }
+        ],
+        "checks": [
+          {
+            "id": "c1",
+            "kind": "detail",
+            "promptEn": "How many woodblocks are in the Tripitaka Koreana?",
+            "options": [
+              {
+                "id": "a",
+                "en": "More than 800",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "More than 8,000",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "More than 80,000",
+                "isCorrect": true
+              },
+              {
+                "id": "d",
+                "en": "More than 800,000",
+                "isCorrect": false
+              }
+            ],
+            "factIds": [
+              "f5"
+            ],
+            "explainEn": "There are more than 80,000 woodblocks. Palman, in their Korean name, means eighty thousand."
+          },
+          {
+            "id": "c2",
+            "kind": "detail",
+            "promptEn": "Where are the woodblocks kept?",
+            "options": [
+              {
+                "id": "a",
+                "en": "The National Library of France",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "Haeinsa Temple",
+                "isCorrect": true
+              },
+              {
+                "id": "c",
+                "en": "Heungdeoksa Temple",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "Kansong Art Museum",
+                "isCorrect": false
+              }
+            ],
+            "factIds": [
+              "f1"
+            ],
+            "explainEn": "The woodblocks are kept at Haeinsa Temple on Gayasan Mountain, in the halls Beopbojeon and Sudarajang."
+          },
+          {
+            "id": "c3",
+            "kind": "detail",
+            "promptEn": "Why did people carve the woodblocks in the 1200s?",
+            "options": [
+              {
+                "id": "a",
+                "en": "To record the king's laws for the future",
+                "isCorrect": false
+              },
+              {
+                "id": "b",
+                "en": "To sell them at the market",
+                "isCorrect": false
+              },
+              {
+                "id": "c",
+                "en": "To make a school book for children",
+                "isCorrect": false
+              },
+              {
+                "id": "d",
+                "en": "To ask the Buddha to protect the land",
+                "isCorrect": true
+              }
+            ],
+            "factIds": [
+              "f4"
+            ],
+            "explainEn": "People carved the woodblocks hoping the Buddha's power would drive back the Mongol invasions."
+          }
+        ],
+        "checkpoints": [],
+        "sequenceSceneIds": [
+          "s1",
+          "s3",
+          "s6",
+          "s8"
+        ],
+        "newKeywordIds": [
+          "haeinsa",
+          "daejanggyeong",
+          "palman",
+          "namu"
+        ]
+      }
+    ],
+    "coverSceneId": "s1",
+    "pillarTags": [],
+    "companionId": "hoya",
+    "facts": [
+      {
+        "id": "f1",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "The Tripitaka Koreana woodblocks are kept at Haeinsa Temple on Gayasan Mountain in Hapcheon, South Gyeongsang Province, in the halls Beopbojeon and Sudarajang.",
+        "claimKo": "고려대장경판은 경상남도 합천 가야산의 해인사에 있으며, 법보전과 수다라장에 보관되어 있다.",
+        "sources": [
+          {
+            "title": "국보 합천 해인사 대장경판 (陜川 海印寺 大藏經板) — 국가유산 상세 정보 및 국가유산 설명",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1113800320000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "소재지: \"경남 합천군 가야면 해인사길 122, 해인사 (치인리)\"; 설명: \"현재 해인사 법보전과 수다라장에 보관되어 있는데\""
+          },
+          {
+            "title": "Haeinsa Temple Janggyeong Panjeon, the Depositories for the Tripitaka Koreana Woodblocks",
+            "publisher": "UNESCO World Heritage Centre",
+            "url": "https://whc.unesco.org/en/list/737/",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"The Temple of Haeinsa, on Mount Gaya, is home to the Tripitaka Koreana\" [text re-read on an Internet Archive snapshot of this UNESCO page; the live page blocks automated requests]"
+          },
+          {
+            "title": "합천 해인사 대장경판 — 한국민족문화대백과사전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0062711",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"경상남도 합천 해인사가 소장하고 있다.\""
+          },
+          {
+            "title": "유네스코 등재유산 소개 — 세계기록유산 「고려대장경판 및 제(諸)경판」",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FMemHeritage%2FMemHeritage_06.jsp&pageNo=5_4_2_0",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "\"해인사에 소장되고 있는 고려대장경판과 제 경판 87,000여장의 목판\"; 영상 해설: \"가야산 자락에 위치한 해인사에는 … 고려 대장경판을 보존하는 창고인 장경판전이 바로 그 곳이다.\""
+          }
+        ]
+      },
+      {
+        "id": "f2",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "Daejanggyeong (Tripitaka) means the complete collection of Buddhist scriptures.",
+        "claimKo": "대장경은 경·율·논의 삼장, 곧 불교 경전의 총서를 가리킨다.",
+        "sources": [
+          {
+            "title": "국보 합천 해인사 대장경판 (陜川 海印寺 大藏經板) — 국가유산 상세 정보 및 국가유산 설명",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1113800320000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"대장경은 경(經)·율(律)·논(論)의 삼장(三藏)을 말하며, 불교경전의 총서를 가리킨다.\""
+          },
+          {
+            "title": "유네스코 등재유산 소개 — 세계유산 「해인사 장경판전」",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FHeritage%2FHeritage_02.jsp&pageNo=5_1_1_0",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"대장경은 경(經)·율(律)·논(論)의 삼장(三藏)으로서 불교경전의 총서를 가리키는 말이다.\""
+          }
+        ]
+      },
+      {
+        "id": "f3",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "The woodblocks were carved in Goryeo between 1237 and 1248 (the 24th to 35th years of King Gojong).",
+        "claimKo": "대장경판은 고려 고종 24년~35년(1237~1248)에 새겼다.",
+        "sources": [
+          {
+            "title": "국보 합천 해인사 대장경판 (陜川 海印寺 大藏經板) — 국가유산 상세 정보 및 국가유산 설명",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1113800320000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"이 대장경은 고려 고종 24∼35년(1237∼1248)에 걸쳐 간행되었다.\""
+          },
+          {
+            "title": "합천 해인사 대장경판 — 한국민족문화대백과사전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0062711",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"1237년 판각을 시작하여 1248년에 대장 목록을 마지막으로 새겼다.\""
+          },
+          {
+            "title": "Haeinsa Temple Janggyeong Panjeon, the Depositories for the Tripitaka Koreana Woodblocks",
+            "publisher": "UNESCO World Heritage Centre",
+            "url": "https://whc.unesco.org/en/list/737/",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"engraved on 80,000 woodblocks between 1237 and 1248\" [text re-read on an Internet Archive snapshot of this UNESCO page; the live page blocks automated requests]"
+          }
+        ]
+      },
+      {
+        "id": "f4",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "The state set up a special office (Daejang Dogam) and carved the woodblocks in the hope that the Buddha's power would drive back the Mongol invasions.",
+        "claimKo": "나라에서 대장도감을 설치하여, 몽골군의 침입을 부처의 힘으로 물리치고자 하는 염원으로 대장경판을 새겼다.",
+        "sources": [
+          {
+            "title": "국보 합천 해인사 대장경판 (陜川 海印寺 大藏經板) — 국가유산 상세 정보 및 국가유산 설명",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1113800320000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"몽고군의 침입을 불교의 힘으로 막아보고자 하는 뜻으로 국가적인 차원에서 대장도감이라는 임시기구를 설치하여 새긴 것이다.\""
+          },
+          {
+            "title": "합천 해인사 대장경판 — 한국민족문화대백과사전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0062711",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"몽골의 침입을 부처님의 힘으로 물리치고자 하는 염원에서 대장경판을 새기게 되었다.\""
+          },
+          {
+            "title": "Haeinsa Temple Janggyeong Panjeon, the Depositories for the Tripitaka Koreana Woodblocks",
+            "publisher": "UNESCO World Heritage Centre",
+            "url": "https://whc.unesco.org/en/list/737/",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"The Haeinsa Tripitaka woodblocks were carved in an appeal to the authority of the Buddha in the defense of Korea against the Mongol invasions.\" [text re-read on an Internet Archive snapshot of this UNESCO page; the live page blocks automated requests]"
+          }
+        ]
+      },
+      {
+        "id": "f5",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "There are more than 80,000 blocks. UNESCO's Memory of the World record gives 81,258; the Korea Heritage Service notes that this figure comes from a survey made under Japanese rule and includes some blocks re-carved in Joseon. This is one reason the set is called Palman ('eighty thousand') Daejanggyeong; the name is also linked to the 84,000 teachings (beopmun) the blocks are said to contain.",
+        "claimKo": "경판 수는 8만여 판이다(유네스코 기록은 81,258판이며, 이 숫자는 일제강점기 조사에 따른 것으로 조선시대에 다시 새긴 판도 포함한다). 이 때문에, 또 8만 4천 법문을 실었다고 하여 '팔만대장경'이라고도 부른다.",
+        "sources": [
+          {
+            "title": "국보 합천 해인사 대장경판 (陜川 海印寺 大藏經板) — 국가유산 상세 정보 및 국가유산 설명",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1113800320000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"판수가 8만여 개에 달하고 8만 4천 번뇌에 해당하는 8만 4천 법문을 실었다고 하여 8만대장경이라고도 부른다.\"; \"일제시대에 조사한 숫자를 보면 81,258장이지만 여기에는 조선시대에 다시 새긴 것도 포함되어 있다.\""
+          },
+          {
+            "title": "합천 해인사 대장경판 — 한국민족문화대백과사전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0062711",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"판각의 매수가 8만여 판에 달하고, 8만 4천 번뇌에 해당하는 8만 4천 법문을 수록하여 '팔만대장경'이라고도 한다.\""
+          },
+          {
+            "title": "Printing woodblocks of the Tripitaka Koreana and miscellaneous Buddhist scriptures",
+            "publisher": "UNESCO — Memory of the World",
+            "url": "https://www.unesco.org/en/memory-world/printing-woodblocks-tripitaka-koreana-and-miscellaneous-buddhist-scriptures",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"81,258 wooden printing blocks\""
+          },
+          {
+            "title": "유네스코 등재유산 소개 — 세계기록유산 「고려대장경판 및 제(諸)경판」",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FMemHeritage%2FMemHeritage_06.jsp&pageNo=5_4_2_0",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "\"고려대장경판 81,258판 그외 1098년부터 1958년까지 … 5,987판\" — 국가제작판은 \"고려대장경으로 81,258판 5,200여 만자에 달하고\""
+          }
+        ]
+      },
+      {
+        "id": "f6",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "The blocks have text carved on both sides, are made mainly of wild cherry wood (about two thirds of the blocks sampled in a wood-identification study), are lacquered for preservation, and have metal plates attached at the four corners.",
+        "claimKo": "경판은 양면에 모두 경문이 새겨져 있고, 주로 산벚나무로 만들었고(표본 조사에서 약 3분의 2), 보존을 위해 옻칠을 하고 네 귀퉁이에 금속판을 붙였다.",
+        "sources": [
+          {
+            "title": "합천 해인사 대장경판 — 한국민족문화대백과사전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0062711",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"대장경판의 재질은 산벗나무가 주종을 이루고\"; \"경판은 양면 모두 경판의 보존을 위해 옻칠이 되어 있고, 경판의 양쪽에 마구리를 하고 있는데 경판과 잇는 네 귀퉁이에 금속판을 부착하였다. 양쪽 면에는 모두 경문이 새겨져 있는데\""
+          },
+          {
+            "title": "유네스코 등재유산 소개 — 세계기록유산 「고려대장경판 및 제(諸)경판」",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FMemHeritage%2FMemHeritage_06.jsp&pageNo=5_4_2_0",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "\"경판 표면에는 옻칠을 하여 글자의 새김이 760년이 지나도록 생생한 상태로 남아 현재까지 인쇄할 수 있을 정도이다.\""
+          },
+          {
+            "title": "팔만대장경과 해인사 장경각 ①",
+            "publisher": "대한민국 정책브리핑 (korea.kr, 정책뉴스, 2005-04-08)",
+            "url": "https://www.korea.kr/news/policyNewsView.do?newsId=70086712",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "\"주로 산벗나무(70%), 동백나무(13%)를 사용하였으나 …\"; \"불경을 각인한 후에 그 위에도 옻칠을 하였다. 양끝이 뒤틀리지 않게 각목을 붙이고 네 귀는 구리로 장식하였다.\""
+          },
+          {
+            "title": "팔만대장경판의 제작과 보존 (국가기록원 대전시민강좌 원고)",
+            "publisher": "박상진 경북대 명예교수, 「박상진 교수의 나무세상」 (treestory.forest.or.kr)",
+            "url": "https://treestory.forest.or.kr/v1/bbs/bbs.php?cmd=view&board_name=b44&bid=672&curpage=1&count=y",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "경판 새김에 쓰인 나무: 산벚나무 135장(64%), 돌배나무 32장(15%) 등 (표본 209장); \"팔만대장경판에 쓰인 나무의 약 2/3는 산벚나무다.\"; \"네 귀퉁이에는 99.6%의 높은 순도를 가진 구리 장식을 달았다.\""
+          }
+        ]
+      },
+      {
+        "id": "f7",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "The Tripitaka Koreana is recognized by Buddhist scholars around the world for its outstanding accuracy, and its tens of millions of characters are carved so evenly that they look like the work of a single hand.",
+        "claimKo": "고려대장경은 뛰어난 정확성으로 세계 불교학자들에게 인정받으며, 수천만 개의 글자가 마치 한 사람이 새긴 듯 고르고 정밀하다.",
+        "sources": [
+          {
+            "title": "Haeinsa Temple Janggyeong Panjeon, the Depositories for the Tripitaka Koreana",
+            "publisher": "UNESCO World Heritage Centre",
+            "url": "https://whc.unesco.org/en/list/737/",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "\"They are recognized by Buddhist scholars around the world for their outstanding accuracy and superior quality. The woodblocks are also valuable for the delicate carvings of the Chinese characters, so regular as to suggest that they are the work of a single hand.\" [text re-read on an Internet Archive snapshot of this UNESCO page; the live page blocks automated requests]"
+          },
+          {
+            "title": "Printing woodblocks of the Tripitaka Koreana and miscellaneous Buddhist scriptures",
+            "publisher": "UNESCO — Memory of the World",
+            "url": "https://www.unesco.org/en/memory-world/printing-woodblocks-tripitaka-koreana-and-miscellaneous-buddhist-scriptures",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "the Tripitaka Koreana is \"known as the most accurate of the Tripitakas written in classical Chinese\""
+          },
+          {
+            "title": "국보 합천 해인사 대장경판 (陜川 海印寺 大藏經板) — 국가유산 상세 정보 및 국가유산 설명",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1113800320000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"수천만 개의 글자 하나 하나가 오자·탈자없이 모두 고르고 정밀하다는 점에서 그 보존가치가 매우 크며\""
+          },
+          {
+            "title": "유네스코 등재유산 소개 — 세계기록유산 「고려대장경판 및 제(諸)경판」",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/html/HtmlPage.do?pg=%2Funesco%2FMemHeritage%2FMemHeritage_06.jsp&pageNo=5_4_2_0",
+            "accessed": "2026-10-10",
+            "quoteOrLocator": "\"국가제작판은 고려대장경으로 81,258판 5,200여 만자에 달하고\"; \"불교 대장경 가운데 가장 정확한 대장경으로 널리 알려져 있다.\""
+          }
+        ]
+      },
+      {
+        "id": "f8",
+        "rev": 1,
+        "scope": "documented",
+        "claimEn": "The woodblocks are a National Treasure (designated 1962) and were inscribed on UNESCO's Memory of the World Register in 2007, together with miscellaneous Buddhist scripture woodblocks.",
+        "claimKo": "대장경판은 국보(1962년 지정)이며, 2007년 '고려대장경판 및 제경판'으로 유네스코 세계기록유산에 등재되었다.",
+        "sources": [
+          {
+            "title": "국보 합천 해인사 대장경판 (陜川 海印寺 大藏經板) — 국가유산 상세 정보 및 국가유산 설명",
+            "publisher": "국가유산청 (Korea Heritage Service) — 국가유산포털",
+            "url": "https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1113800320000",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"국보 합천 해인사 대장경판\"; 지정(등록)일 1962.12.20; \"또한 2007년 세계기록유산에 등재되었다.\""
+          },
+          {
+            "title": "Printing woodblocks of the Tripitaka Koreana and miscellaneous Buddhist scriptures",
+            "publisher": "UNESCO — Memory of the World",
+            "url": "https://www.unesco.org/en/memory-world/printing-woodblocks-tripitaka-koreana-and-miscellaneous-buddhist-scriptures",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "Registration Year: 2007 (submitted 2006 by the Republic of Korea)"
+          },
+          {
+            "title": "합천 해인사 대장경판 — 한국민족문화대백과사전",
+            "publisher": "한국학중앙연구원 (Academy of Korean Studies) — 한국민족문화대백과사전",
+            "url": "https://encykorea.aks.ac.kr/Article/E0062711",
+            "accessed": "2026-10-09",
+            "quoteOrLocator": "\"1962년 국보로 지정되었으며, … 해인사 고려대장경판과 제(諸)경판이 2007년에 유네스코 세계기록유산으로 등재되었다.\""
+          }
+        ]
+      }
+    ],
+    "referenceDisplay": "Sources: 국가유산청 국가유산포털; 한국민족문화대백과사전; UNESCO Memory of the World; UNESCO World Heritage Centre",
+    "verification": {
+      "passes": 3,
+      "checkedAt": "2026-10-10",
+      "scope": "cluster",
+      "notes": "Third independent pass. Every cited URL for all 6 episodes (52 facts) was re-opened (UNESCO pages via Wayback copies when the live site resets connections) and quotes/locators were compared; the one exception is unesco.org/en/prizes/literacy (unreachable from here; its claim is now also backed by a Korean MCST press release). Eight minimal corrections were made: (1) Hangeul Day f3 no longer says 'Gregorian' (no cited source says the October 9 conversion was Gregorian; encykorea separates Julian/Gregorian only for 1932-45) and dates the October 29/28 observances; (2) f10 gains a third source (SBS 2018 with 국립한글박물관 curator); (3) Shapes scene 8, learning goal and f7 now say 'South Korea's spelling rules' count 24 (North Korea counts 40, 국립한글박물관 webzine 59); (4) Sejong scene 4/f4: 백성 is 'an old-fashioned word' with 표준국어대사전 added; (5) Jikji f8 quote no longer repeats a prize amount that differs between UNESCO page versions; (6) Tripitaka f6 wood and corner plates now have two further sources (정책브리핑; 박상진 wood-identification study); (8) Hangeul Day f9 gains a second source (문화체육관광부 press release); (7) Panjeon scene 8/f9: 'visitors cannot walk inside' replaced by 'visitor entry is restricted' because Haeinsa has run pre-booked tours inside Beopbojeon since June 2021. See hangul-printing.signoff.md."
+    },
+    "authorNotes": "The carving period follows 국가유산포털, 한국민족문화대백과사전 and UNESCO WHC (1237–1248). Some accounts count the whole project, preparation included, as about 16 years ending in 1251, so the narration gives only 1237–1248. The count of 81,258 comes from a survey made under Japanese rule and includes some blocks re-carved in Joseon (국가유산포털), so the narration says 'more than 80,000'. Where the carving took place (Ganghwa versus Namhae) is treated differently across sources and is left out. The 1398 move to Haeinsa appears only on 국가유산포털 pages, so it is left out too. The earlier set of blocks lost to fire in 1232 is left out to keep the war content mild. UNESCO's Memory of the World page places Haeinsa in the 'southwest' of the peninsula, but Haeinsa is in South Gyeongsang Province in the southeast, so that phrase was not used. 'Almost 800 years later' is worked out from 1248. The official heritage name is 합천 해인사 대장경판 (Hapcheon Haeinsa Daejanggyeongpan). REVISED: scene 1 no longer puts Hoya 'inside' the hall (visitor entry is restricted, see story-janggyeong-panjeon). f5 attributes the exact figure 81,258 to UNESCO (verified on the Memory of the World page) and records the Korea Heritage Service caveat; other published counts (about 81,350; 81,352) were reported by one fact-checker but not verified here, so no exact number appears in the narration. Second sources added for lacquer (f6) and the tens of millions of characters (f7: 5,200여 만자, 국가유산포털). The wild-cherry wood and corner metal plates (f6) still rest on one authoritative source (한국민족문화대백과사전; spelled 산벗나무 there). The UNESCO WHC page blocks automated access; its text was re-read on an Internet Archive snapshot. Vocab 새기다 dropped and 경판 added to scene 5 so every vocab word appears in a scene. FINAL PASS (3rd check): wild cherry wood (about 64-70% of blocks) and corner metal plates (copper) now rest on three sources (한국민족문화대백과사전, 정책브리핑, 박상진 study). The purpose of the lacquer is stated by 한국민족문화대백과사전 and the 국가유산포털 MoW page (preserves the carving); 박상진 doubts its protective effect, so treat 'to protect them' as the official wording. REVIEW PASS (PR 1.8b): s8 no longer points to a 'next time' story (shelf stories open in any order). REVIEW FIX (PR 1.8b round 2): c1 options are now parallel ('More than ...') so the wording does not give the answer away. Name romanization follows the converter ('Palmandaejanggyeong') in the title and goals; s4 keeps the two-word 'Palman Daejanggyeong' on purpose, because the next sentence explains 'Palman means eighty thousand'.",
     "errata": []
   }
 ];

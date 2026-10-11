@@ -18,6 +18,7 @@ import {
   spacing,
   supportedCardIds,
   touchTarget,
+  useLayoutClass,
 } from '@hangul-route/design-system';
 import type { Messages } from '@hangul-route/i18n';
 import { CommonActions } from '@react-navigation/native';
@@ -45,6 +46,7 @@ import {
   teaserTappedEvent,
   type ResultsTeaser,
 } from '../../logic/quest-flow/results-teaser';
+import { episodeReturn } from '../../logic/layout/quest-return';
 import { applyQuestResult } from '../../logic/results-award';
 import type { CardAward } from '../../logic/reward';
 import { resultsCheerMessage, resultsHeadline } from '../../logic/results-copy';
@@ -74,6 +76,7 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
   const snapshot = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
   const cachedTier = useTierStore((s) => (profile ? s.byLearner[profile.id] : undefined));
   const reducedMotion = useReducedMotion();
+  const { panes } = useLayoutClass();
   // What this run earned, decided once when the score is written.
   const [award, setAward] = useState<CardAward | null>(null);
   const recordedRef = useRef(false);
@@ -241,7 +244,13 @@ export function ResultsScreen({ route, navigation }: Props): React.ReactElement 
           tone={actions.episodePage.tone}
           size={actions.episodePage.size}
           fullWidth
-          onPress={() => navigation.navigate('EpisodeDetail', { episodeId: episode.id })}
+          onPress={() => {
+            // Two panes: the episode in the Journey's right pane, selected in the grid (F-LAYOUT-001 §3.7).
+            const state = navigation.getState();
+            const page = episodeReturn(panes, episode.id, state.routes[state.index - 1]?.name);
+            if (page.to === 'journeyPane') navigation.navigate('Main', { screen: 'Journey', params: { episodeId: page.episodeId } });
+            else navigation.navigate('EpisodeDetail', { episodeId: page.episodeId });
+          }}
         />
       ) : null}
       <Spacer size="lg" />
