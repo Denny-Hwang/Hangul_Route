@@ -514,9 +514,9 @@ Fake speech engine (new, shared): `apps/mobile/src/test-support/fake-speech-synt
 |---|---|
 | iPhone Safari, installed PWA, iOS 17/18 | first prompt after Welcome tap is audible (unlock); Yuna (or Enhanced/Premium if installed) chosen; silent-switch behaviour of TTS and of clips; offline clip playback via the service worker; 악 안 알 암 압 앙 audible and distinct |
 | iPad Safari | same; novelty voices not chosen |
-| iOS native build (Xcode) | explicit voice id; silent switch with `playsInSilentModeIOS`; archive validates with no microphone string |
+| iOS native build (Xcode) | explicit voice id; silent switch with `playsInSilentModeIOS` (clips and voice alike: the session is set once when the player is created); archive validates with no microphone string (ITMS-90683); music playing in another app keeps playing under a prompt (mix); a clip that fails to decode falls through to the voice with no gap; a call or alarm mid-clip, the app sent to the background mid-clip, rapid taps across prompts |
 | Android Chrome PWA | `ko_KR` voice found (underscore normalised); network vs local voice offline; Google Korean voice data missing => text fallback |
-| Android native (Xcode-equivalent: Android Studio) | voice list non-empty after init retry; `Locale("ko-KR")` resolution with and without an explicit voice id |
+| Android native (Xcode-equivalent: Android Studio) | voice list non-empty after init retry; `Locale("ko-KR")` resolution with and without an explicit voice id; clip playback at media volume; music in another app ducks under a prompt; a clip that fails to decode falls through to the voice |
 | Desktop Chrome / Edge / Safari / Firefox | voice list async; `Google 한국의` (network) excluded offline; Edge `Microsoft SunHi/InJoon` (names unverified); Firefox/Linux without voices => text fallback |
 | Classroom Chromebook / Windows | lecture "Check this device" shows the voice status |
 
@@ -534,7 +534,7 @@ Order is dependency order; each PR is a test + implementation commit set (CLAUDE
 | A-5a | `feat(mobile)`: sound-first core and text fallback | Match Sound fallback zone and bubble, Trace (`playJamo`), the shared prompt-state component and its copy module, grep test (`no-direct-speak`); amend F-001 §3.2/§3.3 and F-009 §3.1 (dated "Revised" notes, as the first-try scoring note does); promote `wireframes/audio-fallback.md` to `design/wireframes/minigame/audio-fallback.md` | M | A-4a (F-QUEST-002 Q-3a consumes `playPrompt` from here) |
 | A-5b | `feat(mobile)`: remaining call sites | the other rows of §3.9: BuildLetter, CardMatch, VoiceEcho, CardDetail, TapRespond NPC line, CultureQuiz Hear-it | S | A-5a |
 | A-6 | `feat(mobile)`: clip path on the web | `audio-player.web.ts`, `__generated__/audio-assets.ts` + generator + drift test, `expo-asset` dependency, `flags.audioClips`, `pwa-postbuild.mjs` (assertion, `globIgnores`, runtime cache rule), `_headers`, e2e with a fixture clip | M | A-4a |
-| A-7 | `feat(mobile)`: clip path on native | `audio-player.ts` (expo-av), audio session, `app.json` plugin entry, `.mp3` module declaration, Xcode archive/validate result | M | A-6 |
+| A-7 | `feat(mobile)`: clip path on native | `audio-player.ts` (expo-av), audio session, `app.json` plugin entry, `.mp3` module declaration, Xcode archive/validate result (#257: prebuild shows no microphone string; the archive is blocked by expo-localization on Xcode 26, #263; Validate App and the native rows of the §5 matrix are the owner task #264, which gates A-9) | M | A-6 |
 | A-8 | `docs(launch)`: recording pipeline and copy | `apps/mobile/scripts/audio/*` (the map generator lands with A-6), generated `audio-recording-script.md`, runbook Step 12 rewrite + `:141` row, `assets-license.csv` header, landing/maker-comment qualifiers (§3.12), T-017 note in `docs/tasks/INBOX.md` | S | A-2 |
 | A-9 | `content(audio)`: 30 jamo clips | processed MP3s + `audio:map`; offline e2e un-skipped; restore the offline claim (§3.12) | S | A-6, owner delivery of T-017 |
 | A-10 | `content(audio)`: consonant names, then vocabulary topics | batch 2 and F-VOC lists | S each | A-9, F-VOC |
@@ -546,7 +546,7 @@ Rollout: PWA ships at A-5b/A-6 with TTS only (every prompt now sound-first, rank
 - **Upstream**: F-001 (§3.2-§3.4 amended here), F-009 (amended), F-CNT-002 (`romanize` converter, `∅/ng` fix, `KoText` / `JAMO_SOUND_VALUES`), F-I18N-001 (`speechLang`, catalog; interim `logic/audio/copy.ts` until PR 3 of that spec), F-LEARN-001 (`levelOrder`; interim map above), F-QUEST-002 (Discover, Listen & Pick: consume this API; Q-3a interim shim).
 - **Downstream**: F-QUEST-002 Q-3a/Q-5 (`playPrompt`, `spokenKo`), F-STORY-002/003 (reader audio, Say-it-yourself, `narration` kind), F-VOC-001..005 (audio-to-picture, word clips), F-PLC-001 (`canPlayKorean`), lecture mode (voice status row, `setMuted`), F-TCH-004.
 - **Libraries**: `expo-asset ~11.0.5` (direct), `expo-av ~15.0.x` (A-7; or `expo-audio` if stable for the SDK in use); `ffmpeg` locally for the recording pipeline only.
-- **Owner tasks**: T-017 recordings (30 clips; Step 12 rewritten); identify the speaker and a release; Xcode archive check for A-7.
+- **Owner tasks**: T-017 recordings (30 clips; Step 12 rewritten); identify the speaker and a release; Xcode archive check for A-7 (pending: #264, after #263; A-9 and any store submission wait for it).
 
 ## 8. Open questions, risks and unverified assumptions
 

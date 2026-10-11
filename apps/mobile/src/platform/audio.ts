@@ -1,6 +1,8 @@
 import type { SpeechLang } from '@hangul-route/content-schema';
 import { Platform } from 'react-native';
 import * as Speech from 'expo-speech';
+import { flags } from '../config/flags';
+import { AUDIO_ASSETS } from '../content/__generated__/audio-assets';
 import {
   attachNativeVoices,
   createCapabilityTracker,
@@ -12,6 +14,7 @@ import {
 import {
   createAudioController,
   type AudioController,
+  type ClipPlayer,
   type PlayResult,
   type PlaySpec,
   type TtsEngine,
@@ -22,6 +25,7 @@ import type { FallbackReason } from '../logic/audio/prompt-state';
 import { speakCompat, type SpeakOptions } from '../logic/audio/speak-compat';
 import type { SpokenJamo } from '../logic/audio/spoken';
 import { useAudioStore } from '../store/audio-store';
+import { createNativeClipPlayer, expoAvClipEnv } from './audio-player';
 import { track } from './telemetry';
 
 /**
@@ -34,9 +38,12 @@ import { track } from './telemetry';
  * otherwise fall back to the default locale).
  *
  * Metro picks `audio.web.ts` for the web build; the surface is identical.
- * The clip path (expo-av) lands in A-7; the silent-switch decision it reads is
- * `PLAY_IN_SILENT_MODE` in `config/audio.ts`. Speech itself follows the
- * system audio session (expo-speech has no option for it).
+ * Bundled recordings (`__generated__/audio-assets.ts`) play first through the
+ * expo-av clip player (`audio-player.ts`, A-7), which sets the audio session
+ * from `PLAY_IN_SILENT_MODE` (`config/audio.ts`) once, when it is created
+ * with the adapter (before the first prompt); a clip that fails falls through
+ * to the voice. Speech has no session option of its own and follows that app
+ * session, so the voice and the clips behave the same from the first prompt.
  */
 
 export type { PlayResult, PlaySpec, SpeakOptions };
@@ -66,6 +73,26 @@ export interface NativeSpeechApi {
 export interface NativeAudioEnv {
   speech: NativeSpeechApi;
   platform: 'ios' | 'android';
+  /** Bundled recordings (A-7). Absent = no clip path: every prompt uses the voice. */
+  clips?: NativeClipSetup;
+}
+
+export interface NativeClipSetup {
+  player: ClipPlayer;
+  /** The bundled asset map: `has(ref)` and how many clips it holds. */
+  assets: { has(ref: string): boolean; readonly size: number };
+  /** `flags.audioClips`: off switches every clip off without a code change. */
+  enabled(): boolean;
+}
+
+/** The generated map, played through expo-av. */
+function bundledClips(): NativeClipSetup {
+  const has = (ref: string): boolean => Object.prototype.hasOwnProperty.call(AUDIO_ASSETS, ref);
+  return {
+    player: createNativeClipPlayer(expoAvClipEnv(AUDIO_ASSETS)),
+    assets: { has, size: Object.keys(AUDIO_ASSETS).length },
+    enabled: () => flags.audioClips,
+  };
 }
 
 // --- The adapter -------------------------------------------------------------
@@ -79,7 +106,12 @@ const ASSUME_ONLINE: NetworkLike = { isOnline: () => true, subscribe: () => () =
 
 export function createNativeAudio(env: NativeAudioEnv) {
   const { speech, platform } = env;
-  const tracker = createCapabilityTracker({ online: true, clips: false });
+  const clipSetup = env.clips ?? null;
+  const clipsOn = (): boolean => clipSetup !== null && clipSetup.enabled();
+  /** Clips are on and the build holds at least one. */
+  const clipsLive = (): boolean => clipsOn() && (clipSetup?.assets.size ?? 0) > 0;
+  const hasClip = (ref: string | undefined): boolean => ref !== undefined && clipsOn() && (clipSetup?.assets.has(ref) ?? false);
+  const tracker = createCapabilityTracker({ online: true, clips: clipsLive() });
 
   // Utterances between `speak` and their first terminal callback.
   const live = new Set<object>();
@@ -120,9 +152,9 @@ export function createNativeAudio(env: NativeAudioEnv) {
   const store = useAudioStore;
   const controller: AudioController = createAudioController({
     engine,
-    clips: null,
-    assets: { has: () => false },
-    clipsEnabled: () => false,
+    clips: clipSetup?.player ?? null,
+    assets: { has: (ref) => clipSetup?.assets.has(ref) ?? false },
+    clipsEnabled: clipsOn,
     voices: tracker,
     isMuted: () => store.getState().muted,
     levelOrder: () => store.getState().levelOrder,
@@ -164,10 +196,14 @@ export function createNativeAudio(env: NativeAudioEnv) {
     /** Nothing to unlock on native. */
     unlockAudio: (): void => undefined,
     installGestureUnlock: (): (() => void) => () => undefined,
-    /** Clip pre-decode arrives with the clip player (A-7); nothing to warm yet. */
-    warmClips: (_refs: readonly string[]): Promise<void> => Promise.resolve(),
-    /** No native clip player before A-7: every prompt uses the voice. */
-    hasClip: (_ref: string | undefined): boolean => false,
+    /** Make a round's clips local files ahead of time (§3.10); refs with no bundled file are skipped. */
+    warmClips: (refs: readonly string[]): Promise<void> => {
+      const wanted = refs.filter((ref) => hasClip(ref));
+      if (clipSetup === null || wanted.length === 0) return Promise.resolve();
+      return clipSetup.player.warm(wanted);
+    },
+    /** The ref has a bundled recording that will be tried first (the prompt slot's `hasClip`). */
+    hasClip,
     noteFallbackShown: (source: string, reason: FallbackReason): void => controller.noteFallbackShown(source, reason),
     dispose: (): void => {
       detachVoices();
@@ -188,6 +224,7 @@ function audio(): NativeAudio {
   instance ??= createNativeAudio({
     speech: Speech as unknown as NativeSpeechApi,
     platform: Platform.OS === 'ios' ? 'ios' : 'android',
+    clips: bundledClips(),
   });
   return instance;
 }
