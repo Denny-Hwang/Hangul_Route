@@ -302,7 +302,7 @@ describe("validate-content.mjs", () => {
   });
 
   test("story reference zone applies only under content/stories/: the same keys elsewhere still fail", () => {
-    for (const rel of ["episodes/x.json", "other/x.json", "storiesx/x.json", "i18n/es/x.json"]) {
+    for (const rel of ["episodes/x.json", "other/x.json", "storiesx/x.json"]) {
       const root = makeRoot();
       try {
         writeContent(root, rel, {
@@ -318,6 +318,16 @@ describe("validate-content.mjs", () => {
       } finally {
         rmSync(root, { recursive: true, force: true });
       }
+    }
+    // Under content/i18n/ the same object is not an overlay at all (F-I18N-001 §3.7).
+    const root = makeRoot();
+    try {
+      writeContent(root, "i18n/es/x.json", { facts: [{ claimKo: "세종대왕이 반포했다" }], referenceDisplay: "Sources: 국가유산청" });
+      const r = run(root);
+      assert.equal(r.status, 1, r.stdout);
+      assert.match(r.stdout, /content\/i18n\/es\/x\.json::overlay-bad-shape/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
     }
   });
 
@@ -426,6 +436,94 @@ describe("validate-content.mjs", () => {
       const r = run(root);
       assert.equal(r.status, 0, r.stdout);
       assert.match(r.stdout, /1 file\(s\) scanned, 0 violation/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+});
+
+describe("validate-content.mjs: locale overlays (F-I18N-001 §3.7)", () => {
+  const vocab = {
+    topic: { id: "vocab-topic:food", key: "food", titleEn: "Food" },
+    items: [{ id: "vocab:sagwa", ko: "사과", romanization: "sagwa", en: "apple" }],
+  };
+  const overlay = (locale, entries, domain = "vocab-food") => ({ locale, domain, entries });
+  const runEnv = (root, env) =>
+    spawnSync("node", [SCRIPT], { env: { ...process.env, HANGUL_ROUTE_ROOT: root, ...env }, encoding: "utf8" });
+
+  test("a Korean overlay may hold Hangul in a gloss (it is a Korean description, not a UI field)", () => {
+    const root = makeRoot();
+    try {
+      writeContent(root, "vocab/food.json", vocab);
+      writeContent(root, "i18n/ko/vocab-food.json", overlay("ko", { "vocab:sagwa": { gloss: "빨갛고 동그란 과일" } }));
+      writeContent(root, "i18n/es/vocab-food.json", overlay("es", { "vocab:sagwa": { gloss: "manzana" }, "vocab-topic:food": { title: "Comida" } }));
+      const r = run(root);
+      assert.equal(r.status, 0, r.stdout);
+      assert.match(r.stdout, /3 file\(s\) scanned, 0 violation\(s\); es: 0 missing, ko: 1 missing/);
+      assert.match(r.stdout, /::warning file=content\/vocab\/food\.json::overlay-missing: ko lacks 1 translatable field/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("Hangul in a Spanish overlay, or in a forbidden field of a Korean one, fails with korean-in-ui-field", () => {
+    const root = makeRoot();
+    try {
+      writeContent(root, "vocab/food.json", vocab);
+      writeContent(root, "i18n/es/vocab-food.json", overlay("es", { "vocab:sagwa": { gloss: "manzana 사과" } }));
+      writeContent(root, "i18n/ko/vocab-food.json", overlay("ko", { "vocab:sagwa": { romanization: "사과" } }));
+      const r = run(root);
+      assert.equal(r.status, 1);
+      assert.match(r.stdout, /::error file=content\/i18n\/es\/vocab-food\.json::korean-in-ui-field at \.entries\.vocab:sagwa\.gloss/);
+      assert.match(r.stdout, /::error file=content\/i18n\/ko\/vocab-food\.json::overlay-forbidden-field: romanization cannot be translated/);
+      assert.match(r.stdout, /::error file=content\/i18n\/ko\/vocab-food\.json::korean-in-ui-field at \.entries\.vocab:sagwa\.romanization/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("the other overlay rules reach the output: bad shape, unknown id, circular gloss, banned word", () => {
+    const root = makeRoot();
+    try {
+      writeContent(root, "vocab/food.json", vocab);
+      writeContent(root, "i18n/en/vocab-food.json", overlay("en", {}));
+      writeContent(root, "i18n/ko/vocab-food.json", overlay("ko", { "vocab:sagwa": { gloss: "사과" }, "vocab:nope": { gloss: "x" } }));
+      writeContent(root, "i18n/es/vocab-food.json", overlay("es", { "vocab:sagwa": { gloss: "fallaste" } }));
+      const r = run(root);
+      assert.equal(r.status, 1);
+      assert.match(r.stdout, /content\/i18n\/en\/vocab-food\.json::overlay-bad-shape: English is the source language/);
+      assert.match(r.stdout, /overlay-unknown-id: vocab:nope/);
+      assert.match(r.stdout, /overlay-circular-gloss/);
+      assert.match(r.stdout, /banned-on-learner-surface: "fallaste"/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("HANGUL_ROUTE_STRICT_LOCALES turns overlay-missing into errors for the listed locales", () => {
+    const root = makeRoot();
+    try {
+      writeContent(root, "vocab/food.json", vocab);
+      writeContent(root, "i18n/es/vocab-food.json", overlay("es", { "vocab:sagwa": { gloss: "manzana" } }));
+      assert.equal(runEnv(root, {}).status, 0);
+      const r = runEnv(root, { HANGUL_ROUTE_STRICT_LOCALES: "es" });
+      assert.equal(r.status, 1);
+      assert.match(r.stdout, /::error file=content\/vocab\/food\.json::overlay-missing: no es translation of vocab-topic:food\.title/);
+      assert.equal(runEnv(root, { HANGUL_ROUTE_STRICT_LOCALES: " ko , fr" }).status, 1);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test("overlay files are not scanned as base content: Spanish copy needs no romanization, en fields keep their rules", () => {
+    const root = makeRoot();
+    try {
+      writeContent(root, "vocab/food.json", { ...vocab, items: [{ ...vocab.items[0], en: "You missed it" }] });
+      writeContent(root, "i18n/es/vocab-food.json", overlay("es", { "vocab:sagwa": { gloss: "manzana" } }));
+      const r = run(root);
+      assert.equal(r.status, 1);
+      assert.match(r.stdout, /content\/vocab\/food\.json::banned-on-learner-surface: "missed" at \.items\.0\.en/);
+      assert.doesNotMatch(r.stdout, /i18n\/es.*::error/);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
