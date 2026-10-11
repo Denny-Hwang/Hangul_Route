@@ -47,6 +47,23 @@ describe('sync schemas (F-SYNC-001)', () => {
     expect(SnapshotPutSchema.safeParse({ ...body, contentVer: '' }).success).toBe(false);
   });
 
+  it('accepts and keeps a vocab slice and summary.vocab (F-VOC-005 section 3.1, 3.8); both stay optional', () => {
+    const vocab = {
+      v: 1 as const,
+      items: [{ id: 'vocab:sagwa-apple', first: '2026-10-10', seen: 1, right: 1, bestBox: 2, last: '2026-10-11', box: 2, due: '2026-10-14', at: '2026-10-11T09:00:00.000Z' }],
+      topics: [{ topic: 'food', bestStars: 0, sessions: 1, last: '2026-10-11', bestCaught: 0 }],
+    };
+    const vocabSummary = { collected: 1, strong: 0, topicsStarted: 1, topicsPracticed7d: 1, firstTryRate: 1, needsPractice: [] };
+    const body = { baseRev: 0, snapshot: { ...snapshot, vocab }, summary: { ...summary, vocab: vocabSummary }, schemaVer: 1, contentVer: '2026.10' };
+    const parsed = SnapshotPutSchema.parse(body);
+    expect(parsed.snapshot.vocab).toEqual(vocab);
+    expect(parsed.summary.vocab).toEqual(vocabSummary);
+    const old = SnapshotPutSchema.parse({ ...body, snapshot, summary });
+    expect(old.snapshot).not.toHaveProperty('vocab');
+    expect(old.summary).not.toHaveProperty('vocab');
+    expect(SnapshotPutSchema.safeParse({ ...body, snapshot: { ...snapshot, vocab: { ...vocab, v: 2 } } }).success).toBe(false);
+  });
+
   it('validates learner registration and the optional client id', () => {
     const ok = LearnerRegisterSchema.parse({
       deviceId: 'device-12345678',

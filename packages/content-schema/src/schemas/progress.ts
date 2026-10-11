@@ -3,6 +3,7 @@ import { CurriculumMetaSchema } from '../curriculum/draft';
 import { CURRICULUM_MAX_ITEMS } from '../curriculum/presets';
 import { PlacementResultSchema } from './placement';
 import { PlanItemSchema } from './plan-item';
+import { VocabProgressSchema } from './vocab-progress';
 
 /**
  * Progress — per-profile snapshot of learning state.
@@ -122,6 +123,13 @@ export const ProgressSnapshotSchema = z.object({
    * then keeps the stored route.
    */
   selfRoute: SelfRouteSchema.nullable().catch(null).default(null),
+  /**
+   * Word progress (F-VOC-005 section 3.1). Optional, not defaulted: snapshots,
+   * backups and server rows written before it parse unchanged, and readers go
+   * through `vocabOf(snapshot)`. Strict on purpose: a malformed slice is a 422,
+   * and the Worker's preserve rule keeps a stored slice when the key is absent.
+   */
+  vocab: VocabProgressSchema.optional(),
 });
 /**
  * `placements` is optional in the *type* although the schema defaults it to

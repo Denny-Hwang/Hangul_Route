@@ -62,7 +62,8 @@ Companion stories:
 ### 3.1 Data (`packages/content-schema/src/schemas/vocab-progress.ts`, exported from `src/index.ts`, 100 % covered)
 
 ```ts
-const DaySchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);               // local calendar day (P5)
+const DaySchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(isRealDay); // local calendar day (P5) that exists (no 2026-13-45)
+const AtSchema = z.string().max(40).regex(ISO_DATE_TIME).refine(parses);   // UTC or offset; bounded, so no string outsorts every real time
 const BoxSchema = z.number().int().min(0).max(5);
 
 export const VocabItemStateSchema = z.object({
@@ -75,7 +76,7 @@ export const VocabItemStateSchema = z.object({
   // the schedule (the only part that can go down) — merge: last writer wins on `at`
   box: BoxSchema,
   due: DaySchema.nullable(),              // null = not scheduled
-  at: z.string(),                         // ISO timestamp of the last schedule change
+  at: AtSchema,                           // ISO timestamp of the last schedule change
 }).refine((s) => s.right <= s.seen && s.bestBox >= s.box, 'right <= seen and bestBox >= box');
 
 export const VocabTopicProgressSchema = z.object({
@@ -90,7 +91,7 @@ export const VocabProgressSchema = z.object({
   v: z.literal(1),
   items: z.array(VocabItemStateSchema).max(1000),
   topics: z.array(VocabTopicProgressSchema).max(100),
-});
+}).superRefine(noDuplicateIdsOrTopics);  // one state per word, one row per topic
 export type VocabProgress = z.infer<typeof VocabProgressSchema>;
 ```
 
@@ -149,7 +150,7 @@ export function applyVocabEvents(v: VocabProgress, events: readonly VocabEvent[]
 **Server first (P6).**
 1. **PR P-1** (content-schema + backend, no client change): `schemas/vocab-progress.ts`, `ProgressSnapshotSchema.vocab`, `ProgressSummarySchema.vocab` (§3.8), exports, 100 % tests; in `packages/backend/src/routes/sync.ts` the **preserve rule**: after the compare-and-set read, when `body.snapshot.vocab === undefined` (**the key is absent**; an explicit empty slice `{ v: 1, items: [], topics: [] }` is a value and replaces) and the stored `current?.payload` is an object with a `vocab`, the stored record's payload is `{ ...body.snapshot, vocab: current.payload.vocab }` — an old app build (which re-uploads without the slice after a conflict merge) can never erase it. `summary.vocab` is kept from `current.summary` **only in that same case** (when the payload's slice was preserved), so a summary never describes a slice the payload no longer has. `SnapshotRecord.payload` and `.summary` are typed `unknown` (`store.ts:85-94`), so the rule reads them as plain objects and guards for `null`. A new build that has ever held a slice always sends one (a reset sends the empty slice, §3.10), so the rule protects old builds only. **Deploy the Worker** and verify with the checklist in §6 **before** merging P-3.
 2. **Backend tests** (`packages/backend/src/__tests__/sync.test.ts`, the existing sync suite): a `PUT` snapshot containing `vocab` returns 200 and a `GET` returns it intact; a `PUT` without `vocab` after one with it keeps the stored `vocab` (the preserve rule); a body with `vocab.items[0].box = 9`, with more than 1,000 items, or with `first: 'yesterday'` is 422 `bad_request`; an old-shaped snapshot (no `vocab`) is accepted exactly as today; a 409 response returns the stored `vocab`.
-3. **Client**: the first screen PR that records events (F-VOC-003 C-5, F-VOC-004 S-5, P-3 here) merges only after the Worker with P-1 is deployed (P-2 adds `recordVocab` but nothing calls it from a screen). Independently, **no release build enables `vocabTopicsEnabled`** until then (F-VOC-003 C-7's dependency); with the flag off no `vocab` data exists, so nothing is emitted. A restore from a **backup file** (`BackupFileSchema` embeds `ProgressSnapshotSchema`, `schemas/sync.ts:88-94`) round-trips the slice; an older app restoring a newer backup simply parses without it (the field is optional; a zod object strips it).
+3. **Client**: the first screen PR that records events (F-VOC-003 C-5, F-VOC-004 S-5, P-3 here) merges only after the Worker with P-1 is deployed (P-2 adds `recordVocab` but nothing calls it from a screen). Independently, **no release build enables `vocabTopicsEnabled`** until then (F-VOC-003 C-7's dependency); with the flag off no `vocab` data exists, so nothing is emitted. A restore from a **backup file** (`BackupFileSchema` embeds `ProgressSnapshotSchema`, `schemas/sync.ts:88-94`) round-trips the slice; an older app restoring a newer backup simply parses without it (the field is optional; a zod object strips it). `BackupFileSchema` parses the slice leniently (`.catch(undefined)`): a malformed or newer-version slice in a file is dropped and the rest of the file still restores, while `SnapshotPutSchema` stays strict (422). `ProgressSummary.vocab` is likewise dropped when malformed, never fatal (as `selfRoute`), so a bad derived summary cannot stop a learner's sync.
 4. **What if an old Worker were hit anyway**: the slice is stripped on the way in, the app keeps its own copy locally (no data loss on the device), and the next restore from the server would lack it — this is the exposure the PR order and the deploy checklist exist to close.
 
 ### 3.4 The Leitner schedule
@@ -296,7 +297,7 @@ Coverage targets (CLAUDE.md §6): `packages/content-schema` **100 %**; `packages
 | P-2a | `feat(mobile)`: the core — `logic/vocab/{progress,srs}.ts`, `merge.ts` (`mergeVocab`) / `isSubsetOf` changes, `progress-store.recordVocab` with the pre-hydration queue and the reset slice, tests | M | P-1 |
 | P-2b | `feat(mobile)`: `logic/vocab/{select-words,review-pools,nudge}.ts`, `summarize.ts` (`vocabSummaryOf`), tests | M | P-2a |
 | P-3 | `feat(mobile)`: Home vocabulary card (`mission-builder.ts`, `HomeScreen`), parent dashboard row | M | P-2b, F-VOC-003 C-4, F-VOC-004 S-5 (the card opens `VocabSpeedRound`; the Worker deploy must have happened) |
-| P-4 | `feat(web)`: console student line and `vocabRevisit`, `vocab-catalog.ts` consumption | S | P-1, F-VOC-001 V-2b |
+| P-4 | `feat(web)`: console student line and `vocabRevisit`, `vocab-catalog.ts` consumption. P-1 lists `vocab` in `TEACHER_HIDDEN_SUMMARY_KEYS`, so no roster carries `summary.vocab` yet; P-4 moves it to `TEACHER_VISIBLE_SUMMARY_KEYS` together with a consent item (F-SPACE-002 T-1a), or the line stays empty | S | P-1, F-VOC-001 V-2b |
 | P-5 | `test`: the 14-day and 30-day simulations and the two-device merge test as an integration suite (can sit in P-2a/P-2b if small) | S | P-2b |
 
 **Deploy checklist** (in the P-1 PR description, ticked by the owner before P-3 merges and before `vocabTopicsEnabled` is flipped): (1) the Worker deploy of P-1 is live; (2) a test learner `PUT` with a `vocab` block returns 200 and the following `GET` returns the block; (3) a second `PUT` without `vocab` leaves it in place; (4) the Rescue Code restore of that learner returns the block. (I could not run any of this against production from here; it is a checklist, not a result.)

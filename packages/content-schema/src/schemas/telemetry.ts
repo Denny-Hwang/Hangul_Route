@@ -107,6 +107,8 @@ export const TELEMETRY_EVENT_NAMES = [
   'vocab.topic_opened',
   'vocab.cards.start',
   'vocab.cards.complete',
+  // F-VOC-005 §3.9 (payload { topicKey, due }: a topic key and a count only)
+  'home.vocab_card.shown',
 ] as const;
 
 export const TelemetryEventNameSchema = z.enum(TELEMETRY_EVENT_NAMES);

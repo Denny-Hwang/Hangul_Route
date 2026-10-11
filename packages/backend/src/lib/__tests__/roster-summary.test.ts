@@ -137,3 +137,16 @@ describe('rosterSummary (F-PLAN-002 section 3.10: the self-route reaches the fam
     expect(rosterSummary(null, own, 'family')).toBeNull();
   });
 });
+
+describe('summary.vocab never reaches a roster yet (F-VOC-005 section 3.8; the console line is P-4)', () => {
+  const own = new Set(['plan:own-1']);
+  const vocab = { collected: 12, strong: 4, topicsStarted: 2, topicsPracticed7d: 1, firstTryRate: 0.75, needsPractice: ['vocab:sagwa-apple'] };
+
+  it('drops vocab for a class, a school and a family space', () => {
+    for (const kind of ['class', 'school', 'family'] as const) {
+      const out = rosterSummary({ ...full, vocab }, own, kind);
+      expect(out && 'vocab' in out).toBe(false);
+      expect(out).toEqual(rosterSummary(full, own, kind));
+    }
+  });
+});
