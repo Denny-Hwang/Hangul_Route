@@ -4,6 +4,7 @@ vi.mock('expo-speech', () => ({ speak: vi.fn(), stop: vi.fn(), getAvailableVoice
 vi.mock('react-native', () => ({ Platform: { OS: 'ios' } }));
 vi.mock('../storage', () => ({ readJson: vi.fn(async () => null), writeJson: vi.fn(async () => undefined) }));
 vi.mock('../telemetry', () => ({ track: vi.fn(async () => true) }));
+vi.mock('expo-asset', () => ({ Asset: { fromModule: () => ({ uri: '' }) } }));
 
 import * as native from '../audio';
 import * as web from '../audio.web';
@@ -21,6 +22,7 @@ describe('audio.ts and audio.web.ts are one surface (Metro picks one per platfor
     expect(functionNames(native)).toEqual(
       [
         'getCapability',
+        'hasClip',
         'installGestureUnlock',
         'isMuted',
         'noteFallbackShown',

@@ -5,12 +5,15 @@
 // content (`story:hangul-day`), so it runs against a bundle that holds the
 // test fixtures. This script:
 //   1. regenerates apps/mobile/src/content/stories.generated.ts with
-//      `build-stories.mjs --include-fixtures`,
+//      `build-stories.mjs --include-fixtures`, and the clip map with the
+//      fixture tones of e2e/fixtures/audio (`gen-audio-map.mjs
+//      --with-e2e-fixtures`, F-AUDIO-004 A-6: the offline clip e2e),
 //   2. exports the web app into its OWN directory (default dist-e2e/, never
 //      dist/, which build:web, serve:web and wrangler use) and runs the PWA
 //      post-build (the fixture ids in that bundle switch on the
 //      `window.__hrStoryE2E` entry, navigation/story-e2e.tsx),
-//   3. ALWAYS restores the real bundle (plain `build-stories.mjs`), even when
+//   3. ALWAYS restores the real bundle (plain `build-stories.mjs`) and the
+//      real clip map (plain `gen-audio-map.mjs`), even when
 //      the export fails or the build is interrupted (Ctrl-C), so the fixture
 //      bundle is never left for a commit.
 // Nothing is keyed on an environment variable, so the Metro cache cannot
@@ -27,6 +30,7 @@ import { fileURLToPath } from 'node:url';
 
 const app = join(dirname(fileURLToPath(import.meta.url)), '..');
 const generator = join(app, '..', '..', 'scripts', 'build-stories.mjs');
+const audioMap = join(app, 'scripts', 'audio', 'gen-audio-map.mjs');
 const out = process.argv[2] ?? 'dist-e2e';
 if (out === 'dist' || out === './dist') {
   console.error('build-web-fixtures: refusing to write the fixture build into dist/ (build:web, serve:web and wrangler use it).');
@@ -50,6 +54,7 @@ function run(command, args) {
 
 let status = run(process.execPath, [generator, '--include-fixtures']);
 try {
+  if (status === 0 && interrupted === null) status = run(process.execPath, [audioMap, '--with-e2e-fixtures']);
   if (status === 0 && interrupted === null) {
     status = run('expo', ['export', '--platform', 'web', '--output-dir', out]);
   }
@@ -57,5 +62,7 @@ try {
 } finally {
   const restored = spawnSync(process.execPath, [generator], { cwd: app, stdio: 'inherit' }).status ?? 1;
   if (restored !== 0) status = restored;
+  const mapRestored = spawnSync(process.execPath, [audioMap], { cwd: app, stdio: 'inherit' }).status ?? 1;
+  if (mapRestored !== 0) status = mapRestored;
 }
 process.exitCode = interrupted !== null ? 130 : status;

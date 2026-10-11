@@ -21,13 +21,14 @@ import { PromptPanel } from '../../components/PromptPanel';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { usePromptSlot } from '../../components/use-prompt-slot';
 import { useMessages } from '../../i18n/use-messages';
+import { clipRefsOf } from '../../logic/audio/clip-refs';
 import { wrongAnswerBubble, shouldAutoReplay } from '../../logic/audio/prompt-view';
 import { spokenFor } from '../../logic/audio/spoken';
 import { jamoTileA11yLabel } from '../../logic/korean-labels';
 import { gameArrangement, tileGridWidth } from '../../logic/layout/game-layout';
 import { buildMatchSoundRounds, type MatchSoundRound } from '../../logic/round-builder';
 import type { MinigameScope } from '../../logic/minigame-config';
-import { playJamo } from '../../platform/audio';
+import { hasClip, playJamo, warmClips } from '../../platform/audio';
 import { nudge, success, tapLight } from '../../platform/haptics';
 import { useQuestRunStore } from '../../store/quest-run-store';
 import { GameColumns } from './GameColumns';
@@ -63,7 +64,7 @@ export function MatchSoundGame({ scope, onFinish }: Props): React.ReactElement {
 
   const round = rounds[roundIdx];
   // The sound of the letter (ga, never gi-yeok), or the same sound as text (F-AUDIO-004 AD1, §3.8).
-  const slot = usePromptSlot({ source: 'match-sound' });
+  const slot = usePromptSlot({ source: 'match-sound', hasClip: hasClip(round?.promptJamo.audioRef) });
   const { view, play, reset } = slot;
   const viewRef = useRef(view);
   viewRef.current = view;
@@ -77,6 +78,11 @@ export function MatchSoundGame({ scope, onFinish }: Props): React.ReactElement {
     reset();
     void play(() => playJamo(round.promptJamo, 'sound'));
   }, [roundIdx, round, play, reset]);
+
+  // Recordings for this game's letters are fetched and decoded before their round (§3.10).
+  useEffect(() => {
+    void warmClips(clipRefsOf(rounds.map((r) => r.promptJamo)));
+  }, [rounds]);
 
   useEffect(() => {
     return () => {

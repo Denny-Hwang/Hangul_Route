@@ -14,7 +14,14 @@
  */
 
 function readBool(name: string, fallback: boolean): boolean {
-  const raw = process.env[name];
+  return parseBool(process.env[name], fallback);
+}
+
+/**
+ * For a flag whose override must work in the web bundle: Expo inlines
+ * `process.env.EXPO_PUBLIC_*` only where the name is written out in full.
+ */
+function parseBool(raw: string | undefined, fallback: boolean): boolean {
   if (raw === undefined) return fallback;
   if (raw === 'true' || raw === '1') return true;
   if (raw === 'false' || raw === '0') return false;
@@ -67,6 +74,13 @@ export interface Flags {
    * only after a store build carrying the P-3b schema has shipped.
    */
   placementEnabled: boolean;
+
+  /**
+   * Bundled recordings play before the device voice (F-AUDIO-004 §3.10, AD4).
+   * ON by default; `EXPO_PUBLIC_AUDIO_CLIPS=false` in a build switches a bad
+   * batch of clips off without a code change (prompts then use the voice).
+   */
+  audioClips: boolean;
 }
 
 const launchDefaults: Flags = {
@@ -77,6 +91,7 @@ const launchDefaults: Flags = {
   contentGatingEnabled: false,
   showUnreviewedStories: false,
   placementEnabled: false,
+  audioClips: true,
 };
 
 export const flags: Flags = {
@@ -93,6 +108,7 @@ export const flags: Flags = {
     launchDefaults.showUnreviewedStories,
   ),
   placementEnabled: readBool('EXPO_PUBLIC_PLACEMENT_ENABLED', launchDefaults.placementEnabled),
+  audioClips: parseBool(process.env.EXPO_PUBLIC_AUDIO_CLIPS, launchDefaults.audioClips),
 };
 
 export const launchDefaultFlags: Readonly<Flags> = launchDefaults;

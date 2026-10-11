@@ -38,7 +38,8 @@ import {
   type DiscoverState,
   type HearAction,
 } from '../../logic/stage1/discover-flow';
-import { playPrompt } from '../../platform/audio';
+import { clipRefsOf } from '../../logic/audio/clip-refs';
+import { playPrompt, warmClips } from '../../platform/audio';
 import { useReducedMotion } from '../../platform/motion';
 import { useLocaleStore } from '../../store/locale-store';
 import { useProfileStore } from '../../store/profile-store';
@@ -81,6 +82,11 @@ export function DiscoverStep({ pages, hoyaLine, onDone }: Props): React.ReactEle
     }
     return map;
   }, [model]);
+
+  // Recordings for every Hear it on these pages are fetched and decoded ahead (§3.10).
+  useEffect(() => {
+    void warmClips(clipRefsOf([...actions.values()].map((a) => a.spec)));
+  }, [actions]);
 
   const activeProfileId = useProfileStore((s) => s.activeId);
   const romanizationMode = useLocaleStore((s) =>
