@@ -48,7 +48,7 @@ const CODE_BORDER = 2;
  * stores, or wait 24 hours. Adult tone, nothing here teaches a child to try.
  */
 export function PinResetScreen({ route, navigation }: Props): React.ReactElement {
-  const { next } = route.params;
+  const { next, profileId } = route.params;
   const locale = useLocale();
   const messages = useMessages();
   const m = messages.caregiver.pin;
@@ -96,7 +96,7 @@ export function PinResetScreen({ route, navigation }: Props): React.ReactElement
   }, [locked, wait.status]);
 
   const goToSetup = (via: PinResetMethod): void => {
-    navigation.replace('PinEntry', { next, mode: 'setup', via });
+    navigation.replace('PinEntry', { next, profileId, mode: 'setup', via });
   };
 
   const submitCode = (): void => {
@@ -132,7 +132,7 @@ export function PinResetScreen({ route, navigation }: Props): React.ReactElement
   return (
     <Screen tone="canvas">
       <Pressable
-        onPress={() => navigation.replace('PinEntry', { next })}
+        onPress={() => navigation.replace('PinEntry', { next, profileId })}
         hitSlop={spacing.md}
         accessibilityRole="button"
         accessibilityLabel={messages.a11y.goBack}
