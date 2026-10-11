@@ -9,6 +9,8 @@
 //     English gloss in `gloss_en` or `en`.
 //   - Learner-facing English copy never contains a shaming word
 //     (F-HW-001 §3.3 anti-shame contract).
+//   - content/placement/** and content/i18n/<locale>/placement.json follow the
+//     placement-bank rules in scripts/placement-rules.mjs (F-PLC-001 §3.4).
 //
 // Source of truth: .claude/skills/content-skill/SKILL.md §3.3,
 // docs/specs/F-HW-001-homework-page.md §3.3 / §9.5.
@@ -16,6 +18,7 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, extname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+import { checkPlacementTree } from "./placement-rules.mjs";
 
 const ROOT = process.env.HANGUL_ROUTE_ROOT
   ? resolve(process.env.HANGUL_ROUTE_ROOT)
@@ -185,6 +188,7 @@ if (files.length === 0) {
 }
 
 const violations = [];
+const parsedByRel = new Map();
 for (const file of files) {
   let parsed;
   try {
@@ -198,7 +202,11 @@ for (const file of files) {
     continue;
   }
   visit(parsed, [], relative(ROOT, file), violations);
+  parsedByRel.set(relative(ROOT, file).split(sep).join("/"), parsed);
 }
+
+// F-PLC-001 §3.4: structure of content/placement/** and the `pitem:` overlay fields.
+violations.push(...checkPlacementTree(parsedByRel));
 
 for (const v of violations) {
   console.log(`::error file=${v.file}::${v.rule} at .${v.path}`);
