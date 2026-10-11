@@ -92,7 +92,15 @@ describe('learner.homework (English wording as shipped)', () => {
     expect(h.due.tomorrow).toBe('Tomorrow');
     expect(h.due.inDays(1)).toBe('In 1 day');
     expect(h.due.inDays(3)).toBe('In 3 days');
-    expect(h.from).toEqual({ parent: 'From home', teacher: 'From class', system: 'From Hoya' });
+    expect(h.from).toEqual({ parent: 'From home', teacher: 'From class', system: 'From Hoya', route: 'Your plan' });
+  });
+
+  it('words the week window of a long plan without a number (F-PLAN-002 section 3.6)', () => {
+    expect(h.moreToday).toBe('More are waiting. They come one at a time.');
+    expect(h.later).toBe('Later');
+    expect(h.bubble.aFew).toBe('You have a few things to do today.');
+    expect(m.learner.home.homework.dueMany).toBe('A few to do today');
+    for (const line of [h.moreToday, h.later, h.from.route, h.bubble.aFew, m.learner.home.homework.dueMany]) expect(line).not.toMatch(/\d/);
   });
 });
 

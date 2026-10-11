@@ -38,13 +38,21 @@ export interface NextQuestInput {
   episodes: readonly Episode[];
   /** A quest completed by the write being shown; counted as done before the snapshot has it. */
   justCompleted?: string;
-  /** `isStageEntitled(stageKey, tier)` for the current learner. */
+  /** The stages the cursor may land on: the predicate from `cursorContext` (F-ROUTE-001 R-4a, OD-4). Omitted means every playable stage. */
   isEntitled?: (stageKey: string) => boolean;
+  /**
+   * Placed-out quests of the route seed (F-PLC-001 section 3.7, consumer 1;
+   * F-ROUTE-001 R-4a): skipped by the cursor, never marked done, still playable.
+   */
+  skipQuestIds?: ReadonlySet<string>;
 }
 
 /** The next incomplete offerable quest, or `undefined` when none is left. */
 export function nextQuestAfter(input: NextQuestInput): Quest | undefined {
   const done = new Set(input.snapshot.quests.filter((q) => q.completedAt).map((q) => q.questId));
   if (input.justCompleted) done.add(input.justCompleted);
-  return offerableQuests(input.quests, input.episodes, input.isEntitled).find((q) => !done.has(q.id));
+  const skip = input.skipQuestIds;
+  return offerableQuests(input.quests, input.episodes, input.isEntitled).find(
+    (q) => !done.has(q.id) && !(skip?.has(q.id) ?? false),
+  );
 }

@@ -18,6 +18,8 @@ describe('console routing (F-CONSOLE-001)', () => {
     expect(landingAfterSignIn(2)).toBe(ROUTES.home);
     expect(landingAfterCreate('class', 'space:c', false)).toBe('/teach/space?id=space%3Ac');
     expect(ROUTES.spacePlan('space:c')).toBe('/teach/space/plan?id=space%3Ac');
+    expect(ROUTES.spacePlan('space:c', 'plan:r1')).toBe('/teach/space/plan?id=space%3Ac&plan=plan%3Ar1');
+    expect(ROUTES.spaceCurriculum('space:c')).toBe('/teach/space/curriculum?id=space%3Ac');
     expect(ROUTES.spaceRelink('space:c')).toBe('/teach/space/relink?id=space%3Ac');
     expect(ROUTES.spaceSettings('space:c')).toBe('/teach/space/settings?id=space%3Ac');
     expect(spaceIdFrom(new URLSearchParams('id=space%3Ac'))).toBe('space:c');

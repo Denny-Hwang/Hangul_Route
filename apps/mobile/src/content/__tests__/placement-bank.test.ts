@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { PlacementBankSchema, PlacementTemplateSchema } from '@hangul-route/content-schema';
+import { LISTEN_FIRST_FORMATS, PlacementBankSchema, PlacementTemplateSchema } from '@hangul-route/content-schema';
 import { loadModel, renderBank } from '../../../../../scripts/build-placement-bank.mjs';
 import { PLACEMENT_BANK, PLACEMENT_WARMUP } from '../placement.generated';
 
@@ -51,6 +51,19 @@ describe('placement.generated.ts (F-PLC-001 P-4)', () => {
     expect(PLACEMENT_BANK.templates.filter((t) => t.status !== 'ready').map((t) => t.id)).toEqual([]);
     for (const t of [...PLACEMENT_BANK.templates, PLACEMENT_WARMUP]) {
       for (const ref of pictures(t.question.options)) expect(art, `${t.id} ${ref}`).toContain(ref);
+    }
+  });
+});
+
+describe('recognition templates (the report reads a screen reader from them)', () => {
+  it('need no sound, no picture, never leak and are listen-first formats, so only a screen reader makes the rung unavailable', () => {
+    const recog = PLACEMENT_BANK.templates.filter((t) => t.gate === 'recog' && t.status === 'ready');
+    expect(recog.length).toBeGreaterThanOrEqual(3);
+    for (const t of recog) {
+      expect(t.question.requires, t.id).toEqual({ audio: false, picture: null });
+      expect(t.question.leaks, t.id).toBe(false);
+      expect(LISTEN_FIRST_FORMATS, t.id).toContain(t.question.format);
+      expect(t.question.tags.some((tag) => tag.startsWith('word:')), t.id).toBe(false);
     }
   });
 });

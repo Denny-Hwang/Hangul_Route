@@ -12,7 +12,7 @@ import {
 import { placementStageNumber, questsPlacedOutAtLevel } from '../placement/level-map';
 import { themeOrderFor } from '../placement/route-seed';
 import { StageKeySchema, ThemeKeySchema, type StageKey, type ThemeKey } from '../schemas/heritage-card';
-import type { PlanItem } from '../schemas/plan';
+import type { PlanItem } from '../schemas/plan-item';
 import { addDays, daysBetween, isDateKey, spreadDates, weekdayOf } from './dates';
 import {
   WARNING_CODES,

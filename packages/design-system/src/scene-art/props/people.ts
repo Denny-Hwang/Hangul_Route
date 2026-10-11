@@ -406,3 +406,162 @@ export const FIG_RESEARCHER: ItemDef = {
     { t: 'path', d: 'M6 70 H12 V98 H6 Z M118 70 H124 V98 H118 Z', fill: 'text.secondary' },
   ],
 };
+
+// --- PR 2.10b: hangul-printing cluster --------------------------------------
+
+const MONK_REF = { title: '승복 (僧服)', publisher: PUBLISHER, url: 'https://encykorea.aks.ac.kr/Article/E0032200', accessed: ACCESSED } as const;
+const MONK_NOTE =
+  'Goryeo monks wore mainly the gasa and pyeonsam, taking up the black jangsam and red gasa from China; grey robes came later (encykorea). So the robe is dark (tintable) with a deep red gasa. The shaved head is general knowledge, not the entry. Nuns dressed alike. The face is blank on purpose.';
+
+export const FIG_MONK: ItemDef = {
+  id: 'prop:fig-monk',
+  kind: 'figure',
+  box: { w: 70, h: 124 },
+  z: 'mid',
+  tintable: 'text.primary',
+  alt: 'A Goryeo Buddhist monk or nun with a shaved head, in a long dark robe with a deep red gasa over one shoulder',
+  sourceRef: MONK_REF,
+  accuracyNote: MONK_NOTE,
+  nodes: [
+    { t: 'rect', x: 31, y: 34, w: 8, h: 8, fill: 'surface.paper', stroke: 'border.strong', sw: 'thin' },
+    { t: 'path', d: 'M24 40 L46 40 L54 50 L64 96 L54 100 L52 76 L58 118 L12 118 L18 76 L16 100 L6 96 L16 50 Z', fill: 'text.primary', stroke: 'border.strong', sw: 'thin' },
+    { t: 'poly', pts: [[17, 47], [27, 41], [57, 104], [49, 112], [42, 100]], fill: 'brand.primaryDark' },
+    { t: 'path', d: 'M27 42 Q35 50 43 42', stroke: 'border.strong', sw: 'thin', det: true },
+    { t: 'circle', cx: 35, cy: 64, r: 4.5, fill: 'surface.paper', stroke: 'border.strong', sw: 'thin' },
+    face(35, 22, 12, 14),
+    { t: 'path', d: 'M18 118 H32 V124 H18 Z M38 118 H52 V124 H38 Z', fill: 'text.primary' },
+  ],
+};
+
+export const FIG_MONK_SEATED: ItemDef = {
+  id: 'prop:fig-monk-seated',
+  kind: 'figure',
+  box: { w: 100, h: 90 },
+  z: 'mid',
+  tintable: 'text.primary',
+  alt: 'An elderly Goryeo Buddhist monk with a shaved head, seated in a dark robe and red gasa, writing with a brush on a sheet of paper',
+  sourceRef: MONK_REF,
+  accuracyNote: `${MONK_NOTE} Seated with the sheet on the lap; the writing is plain strokes, never letters.`,
+  nodes: [
+    { t: 'rect', x: 46, y: 28, w: 8, h: 9, fill: 'surface.paper', stroke: 'border.strong', sw: 'thin' },
+    { t: 'path', d: 'M8 88 Q8 64 30 58 L70 58 Q92 64 92 88 Z', fill: 'text.primary', stroke: 'border.strong', sw: 'thin' },
+    { t: 'path', d: 'M34 60 L28 36 Q50 30 72 36 L66 60 Z', fill: 'text.primary', stroke: 'border.strong', sw: 'thin' },
+    { t: 'poly', pts: [[30, 38], [40, 33], [70, 60], [58, 62]], fill: 'brand.primaryDark' },
+    face(50, 20, 11, 13),
+    { t: 'poly', pts: [[28, 80], [72, 80], [67, 66], [33, 66]], fill: 'surface.paper', stroke: 'border.strong', sw: 'base' },
+    { t: 'path', d: 'M40 69 V76 M46 69 V74 M52 69 V77', stroke: 'text.primary', sw: 'thin', det: true },
+    { t: 'path', d: 'M32 38 Q18 52 26 66 L40 66 Q36 52 38 44 Z', fill: 'text.primary', stroke: 'border.strong', sw: 'thin' },
+    { t: 'path', d: 'M68 38 Q82 52 74 64 L60 64 Q64 52 62 44 Z', fill: 'text.primary', stroke: 'border.strong', sw: 'thin' },
+    { t: 'line', x1: 62, y1: 50, x2: 62, y2: 70, stroke: 'border.strong', sw: 'base' },
+    { t: 'circle', cx: 62, cy: 62, r: 3.5, fill: 'surface.paper', stroke: 'border.strong', sw: 'thin' },
+  ],
+};
+
+export const FIG_CARVER: ItemDef = {
+  id: 'prop:fig-carver',
+  kind: 'figure',
+  box: { w: 110, h: 86 },
+  z: 'mid',
+  tintable: 'surface.sunken',
+  alt: 'A Goryeo woodblock carver in a white ramie robe and black head cloth, an early form of hanbok, kneeling over a board with a small knife',
+  sourceRef: { title: '포 (袍)', publisher: PUBLISHER, url: 'https://encykorea.aks.ac.kr/Article/E0060121', accessed: ACCESSED },
+  accuracyNote: 'In Goryeo even the king at leisure wore a black head cloth and a white ramie robe like commoners (encykorea, from the Goryeo dogyeong). Who the carvers were is not described, so no monk dress is given. Robe tintable; the face is blank on purpose.',
+  nodes: [
+    { t: 'path', d: 'M14 82 Q14 58 34 52 L76 52 Q96 58 96 82 Z', fill: 'surface.sunken', stroke: 'border.strong', sw: 'thin' },
+    { t: 'path', d: 'M38 54 L34 30 Q55 24 76 30 L72 54 Z', fill: 'surface.sunken', stroke: 'border.strong', sw: 'thin' },
+    face(55, 18, 10, 12),
+    { t: 'path', d: 'M44 15 Q44 2 55 2 Q66 2 66 15 Q55 10 44 15 Z', fill: 'text.primary' },
+    { t: 'path', d: 'M64 12 Q70 18 72 26 M66 10 Q74 14 78 20', stroke: 'text.primary', sw: 'thin', det: true },
+    { t: 'poly', pts: [[22, 86], [88, 86], [82, 68], [28, 68]], fill: 'border.strong', stroke: 'text.primary', sw: 'thin' },
+    { t: 'path', d: 'M36 74 H40 M44 74 H48 M52 74 H56 M60 74 H64 M68 74 H72 M34 80 H38 M42 80 H46 M50 80 H54 M58 80 H62 M66 80 H70 M74 80 H78', stroke: 'text.primary', sw: 'thin', det: true },
+    { t: 'path', d: 'M36 32 Q24 48 40 66 L50 64 Q42 50 44 40 Z', fill: 'surface.sunken', stroke: 'border.strong', sw: 'thin' },
+    { t: 'path', d: 'M74 32 Q86 48 70 66 L60 64 Q68 50 66 40 Z', fill: 'surface.sunken', stroke: 'border.strong', sw: 'thin' },
+    { t: 'circle', cx: 46, cy: 66, r: 4, fill: 'surface.paper', stroke: 'border.strong', sw: 'thin' },
+    { t: 'circle', cx: 64, cy: 66, r: 4, fill: 'surface.paper', stroke: 'border.strong', sw: 'thin' },
+    { t: 'line', x1: 64, y1: 66, x2: 70, y2: 74, stroke: 'text.primary', sw: 'base' },
+  ],
+};
+
+// --- PR 2.10c: science-art-life cluster -------------------------------------
+
+const SSIREUM_REF = { title: '씨름, 《단원 풍속도첩》 (본관6504-22)', publisher: '국립중앙박물관 (National Museum of Korea, museum.go.kr)', url: 'https://www.museum.go.kr/site/main/relic/treasure/view?relicId=551', accessed: ACCESSED } as const;
+
+export const FIG_COMMANDER: ItemDef = {
+  id: 'prop:fig-commander',
+  kind: 'figure',
+  box: { w: 80, h: 130 },
+  z: 'mid',
+  tintable: 'text.secondary',
+  alt: 'Joseon military commander in a dark cheollik robe, a red sash belt and a black felt jeollip hat',
+  sourceRef: { title: '융복 (戎服)', publisher: PUBLISHER, url: 'https://encykorea.aks.ac.kr/Article/E0042783', accessed: ACCESSED },
+  accuracyNote:
+    'Military dress per the entry: a pleated cheollik robe (worn for military duty from the Imjin War on), a red silk belt and a jeollip hat. Rank colours came later, so the robe is a plain dark tone, tintable. No sword or armour; faceless.',
+  nodes: [
+    { t: 'rect', x: 36, y: 40, w: 8, h: 10, fill: 'surface.paper', stroke: 'border.strong', sw: 'thin' },
+    { t: 'path', d: 'M30 48 L50 48 L58 56 L68 100 L60 104 L57 82 L68 122 L12 122 L23 82 L20 104 L12 100 L22 56 Z', fill: 'text.secondary', stroke: 'text.primary', sw: 'thin' },
+    face(40, 30, 11, 13),
+    { t: 'path', d: 'M18 18 Q18 14 30 14 Q30 3 40 3 Q50 3 50 14 Q62 14 62 18 Q62 22 40 22 Q18 22 18 18 Z M22 122 H38 V130 H22 Z M42 122 H58 V130 H42 Z', fill: 'text.primary' },
+    { t: 'path', d: 'M32 48 Q40 56 48 48 M30 92 L27 120 M37 92 L36 120 M43 92 L44 120 M50 92 L53 120', stroke: 'text.primary', sw: 'thin', det: true },
+    { t: 'rect', x: 22, y: 84, w: 36, h: 4, fill: 'brand.primary' },
+    { t: 'line', x1: 30, y1: 18, x2: 50, y2: 18, stroke: 'text.secondary', sw: 'thin' },
+  ],
+};
+
+export const FIG_WRESTLERS: ItemDef = {
+  id: 'prop:fig-wrestlers',
+  kind: 'figure',
+  box: { w: 130, h: 90 },
+  z: 'mid',
+  tintable: 'surface.sunken',
+  alt: 'Two Joseon wrestlers in plain cotton hanbok crouched shoulder to shoulder, cloth belts at waist and thigh',
+  sourceRef: SSIREUM_REF,
+  accuracyNote: "After the centre of Kim Hongdo's Ssireum: two men in plain cotton grappling. The waist and thigh belts (satba) follow ssireum today; grips simplified. Clothes tintable, faces blank.",
+  nodes: [
+    { t: 'path', d: 'M10 88 L20 62 L42 56 L50 74 L42 88 L33 88 L37 74 L28 70 L19 88 Z M120 88 L110 62 L88 56 L80 74 L88 88 L97 88 L93 74 L102 70 L111 88 Z', fill: 'surface.sunken', stroke: 'border.strong', sw: 'base' },
+    { t: 'path', d: 'M20 63 L43 57 L67 38 L58 27 L38 33 Z M110 63 L87 57 L63 38 L72 27 L92 33 Z', fill: 'surface.sunken', stroke: 'border.strong', sw: 'base' },
+    { t: 'path', d: 'M21 63 L43 57 M37 74 L46 70 M109 63 L87 57 M93 74 L84 70', stroke: 'feedback.nudge', sw: 'thick' },
+    { t: 'path', d: 'M64 35 Q80 42 88 56 M66 35 Q50 42 42 56', stroke: 'border.strong', sw: 'thick' },
+    face(56, 20, 8, 9),
+    face(74, 20, 8, 9),
+    { t: 'path', d: 'M48 19 Q48 10 56 10 Q64 10 64 19 Q56 15 48 19 Z M82 19 Q82 10 74 10 Q66 10 66 19 Q74 15 82 19 Z M53 8 A3 3 0 1 0 59 8 A3 3 0 1 0 53 8 Z M71 8 A3 3 0 1 0 77 8 A3 3 0 1 0 71 8 Z', fill: 'text.primary' },
+  ],
+};
+
+export const CROWD_SEATED: ItemDef = {
+  id: 'prop:crowd-seated',
+  kind: 'figure',
+  box: { w: 160, h: 66 },
+  z: 'mid',
+  tintable: 'surface.sunken',
+  alt: 'Four Joseon onlookers in plain cotton hanbok seated in a curved row, three in black gat hats',
+  sourceRef: SSIREUM_REF,
+  accuracyNote: "After the curved groups of onlookers in plain cotton in Kim Hongdo's Ssireum. Their hats are not described, so three wear the everyday gat and one a bare topknot. Clothes tintable, faces blank.",
+  nodes: [
+    { t: 'path', d: 'M5 66 Q5 46 22 44 Q39 46 39 66 Z M45 66 Q45 40 62 38 Q79 40 79 66 Z M83 66 Q83 40 100 38 Q117 40 117 66 Z M121 66 Q121 46 138 44 Q155 46 155 66 Z', fill: 'surface.sunken', stroke: 'border.strong', sw: 'base' },
+    face(22, 34, 7, 8),
+    { t: 'path', d: 'M55 28 A7 8 0 1 0 69 28 A7 8 0 1 0 55 28 Z M93 28 A7 8 0 1 0 107 28 A7 8 0 1 0 93 28 Z M131 34 A7 8 0 1 0 145 34 A7 8 0 1 0 131 34 Z', fill: 'surface.paper', stroke: 'border.strong', sw: 'base' },
+    { t: 'path', d: 'M16 27 L28 27 L27 17 L17 17 Z M56 21 L68 21 L67 11 L57 11 Z M132 27 L144 27 L143 17 L133 17 Z M8 28 Q22 23 36 28 Q22 31 8 28 Z M48 22 Q62 17 76 22 Q62 25 48 22 Z M124 28 Q138 23 152 28 Q138 31 124 28 Z', fill: 'text.primary' },
+    { t: 'path', d: 'M93 26 Q93 19 100 19 Q107 19 107 26 Q100 23 93 26 Z M97 17 A3 3 0 1 0 103 17 A3 3 0 1 0 97 17 Z', fill: 'text.primary' },
+    { t: 'path', d: 'M16 50 L22 56 L28 50 M56 44 L62 50 L68 44 M94 44 L100 50 L106 44 M132 50 L138 56 L144 50', stroke: 'border.strong', sw: 'thin', det: true },
+  ],
+};
+
+export const FIG_CHILD_BACK: ItemDef = {
+  id: 'prop:fig-child-back',
+  kind: 'figure',
+  box: { w: 52, h: 60 },
+  z: 'mid',
+  tintable: 'feedback.nudge',
+  alt: 'A Joseon schoolboy in hanbok crouched and turned away, a long braid down his back',
+  sourceRef: { title: '서당, 《단원 풍속도첩》 (본관6504-23)', publisher: '국립중앙박물관 (National Museum of Korea, museum.go.kr)', url: 'https://www.museum.go.kr/site/main/relic/treasure/view?relicId=552', accessed: ACCESSED },
+  accuracyNote: "After the boy at the centre of Kim Hongdo's Seodang, crouched and turned away, so only an edge of his blank face shows. The long braid with a ribbon follows unmarried boys' hair. Jacket tintable.",
+  nodes: [
+    { t: 'path', d: 'M4 60 Q4 50 26 50 Q48 50 48 60 Z', fill: 'surface.paper', stroke: 'border.strong', sw: 'base' },
+    { t: 'path', d: 'M8 56 Q4 32 26 26 Q46 28 46 56 Z M36 32 Q46 30 42 20 L38 22 Q40 28 33 28 Z', fill: 'feedback.nudge', stroke: 'text.primary', sw: 'thin' },
+    face(34, 16, 9, 10),
+    { t: 'path', d: 'M17 17 Q17 4 30 5 Q40 6 41 12 Q34 13 33 25 Q21 28 17 17 Z', fill: 'text.primary' },
+    { t: 'path', d: 'M24 24 Q21 34 25 44', stroke: 'text.primary', sw: 'thick' },
+    { t: 'path', d: 'M22 44 L28 44 L27 49 L23 49 Z', fill: 'brand.primary', det: true },
+    { t: 'line', x1: 8, y1: 56, x2: 46, y2: 56, stroke: 'text.primary', sw: 'thin', o: 0.35 },
+  ],
+};

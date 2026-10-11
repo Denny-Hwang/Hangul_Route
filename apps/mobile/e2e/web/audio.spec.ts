@@ -1,3 +1,5 @@
+import { existsSync, readdirSync } from 'node:fs';
+import { join, relative } from 'node:path';
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { jamoOfSpoken, keepSidewaysIfAsked, onboardChild } from './helpers';
@@ -477,4 +479,144 @@ test('Culture Quiz: Hear it says the prompt word, and nothing plays before the t
   // The word that was said is the one printed above the button.
   await expect(page.getByRole('heading', { name: said!.text, exact: true })).toBeVisible();
   await expect(page.getByTestId('prompt-panel-detail')).toHaveCount(0);
+});
+
+/**
+ * F-AUDIO-004 A-6: bundled clips on the web (§3.10). Letter clips are precached; vocabulary,
+ * story, card and dialogue clips are runtime-cached. Real letter clips arrive with A-9 (T-017);
+ * until then these tests run on the e2e fixture build, which maps fixture tones for g, n, d, l
+ * and one vocabulary tone from e2e/fixtures/audio (CI: the "Story reader e2e (fixture bundle)" step):
+ *   pnpm --filter @hangul-route/mobile build:web:fixtures
+ *   STORY_FIXTURES=1 pnpm --filter @hangul-route/mobile exec playwright test audio -g "bundled clips"
+ * (Only this group: in the fixture build those four letters play a tone, not the voice, so the
+ * voice tests above expect the regular build.)
+ */
+const FIXTURE_BUILD = process.env.STORY_FIXTURES === '1';
+const DIST = join(__dirname, '..', '..', FIXTURE_BUILD ? 'dist-e2e' : 'dist');
+
+/** Built .mp3 files, relative to dist (dot folders included). */
+function builtClips(): string[] {
+  if (!existsSync(DIST)) return [];
+  const out: string[] = [];
+  const walk = (dir: string): void => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const full = join(dir, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (entry.name.endsWith('.mp3')) out.push(relative(DIST, full).split('\\').join('/'));
+    }
+  };
+  walk(DIST);
+  return out;
+}
+
+const RUNTIME_CLIP = /(^|\/)audio\/(vocab|story|card|dialogue)\//;
+const letterClips = builtClips().filter((p) => /\/audio\/jamo\//.test(p));
+const runtimeClips = builtClips().filter((p) => RUNTIME_CLIP.test(p));
+// The fixture build must hold its clips: a silent skip there would leave the clip path unchecked in CI.
+const NO_CLIPS = 'No letter clips in this build: real ones arrive with A-9 (T-017); the fixture build (see above) has four.';
+
+type ClipWindow = Window & { __clipStarts?: number[] };
+
+/** Records every Web Audio buffer that starts (its duration), so a played clip is visible. */
+async function recordClipStarts(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    const starts: number[] = [];
+    (window as ClipWindow).__clipStarts = starts;
+    const proto = window.AudioBufferSourceNode?.prototype;
+    if (!proto) return;
+    const start = proto.start;
+    proto.start = function (this: AudioBufferSourceNode, ...args: Parameters<AudioBufferSourceNode['start']>) {
+      starts.push(this.buffer?.duration ?? 0);
+      return start.apply(this, args);
+    };
+  });
+}
+
+/** Clips (not the one-sample unlock buffer) that have started. */
+const clipStarts = async (page: Page): Promise<number> =>
+  (await page.evaluate(() => (window as ClipWindow).__clipStarts ?? [])).filter((d) => d > 0.1).length;
+
+/** One online visit until the service worker controls the page. */
+async function controlledBySw(page: Page): Promise<void> {
+  await page.waitForFunction(async () => {
+    const reg = await navigator.serviceWorker.getRegistration();
+    return !!reg?.active && !!navigator.serviceWorker.controller;
+  });
+}
+
+test.describe('bundled clips (A-6)', () => {
+  test('the service worker precaches every letter clip and runtime-caches the other clip groups', async ({ page }) => {
+    if (FIXTURE_BUILD) {
+      expect(letterClips.length, 'fixture letter clips').toBeGreaterThan(0);
+      expect(runtimeClips.length, 'fixture vocabulary clip').toBeGreaterThan(0);
+    }
+    const res = await page.request.get('/sw.js');
+    expect(res.ok()).toBe(true);
+    const sw = await res.text();
+    for (const clip of letterClips) expect(sw, clip).toContain(clip);
+    for (const clip of runtimeClips) expect(sw, clip).not.toContain(clip);
+    // The cache-first rule for vocabulary / story / card / dialogue clips.
+    expect(sw).toContain('hr-audio-v1');
+    expect(sw).toContain('CacheFirst');
+  });
+
+  test('a vocabulary clip is cached on its first online fetch and then served offline', async ({ page, context }) => {
+    test.skip(runtimeClips.length === 0 && !FIXTURE_BUILD, 'No runtime-cached clips in this build; the fixture build has one.');
+    const url = `/${runtimeClips[0]}`;
+    await fakeSpeech(page, 'none');
+    await onboardChild(page, { name: 'Dami', startJourney: false });
+    await page.goto('/');
+    await controlledBySw(page);
+    const online = await page.evaluate(async (u) => {
+      const res = await fetch(u);
+      return { ok: res.ok, type: res.headers.get('content-type') };
+    }, url);
+    expect(online).toEqual({ ok: true, type: 'audio/mpeg' });
+    await expect
+      .poll(() => page.evaluate(async (u) => !!(await (await caches.open('hr-audio-v1')).match(u)), url))
+      .toBe(true);
+    await context.setOffline(true);
+    const offline = await page.evaluate(async (u) => {
+      const res = await fetch(u);
+      return { ok: res.ok, bytes: (await res.arrayBuffer()).byteLength };
+    }, url);
+    expect(offline.ok).toBe(true);
+    expect(offline.bytes).toBeGreaterThan(0);
+  });
+
+  test('offline after one visit, Match Sound plays the letter clip and the "no voice" text stays away', async ({ page, context }) => {
+    test.skip(letterClips.length === 0 && !FIXTURE_BUILD, NO_CLIPS);
+    await fakeSpeech(page, 'none');
+    await recordClipStarts(page);
+    await onboardChild(page, { name: 'Dami', startJourney: false });
+    await page.goto('/');
+    await controlledBySw(page);
+    await page.reload();
+    await page.waitForFunction(() => !!navigator.serviceWorker.controller);
+    await context.setOffline(true);
+    await page.reload();
+    await expect(page.getByText('Hi, Dami!')).toBeVisible();
+
+    await page.getByRole('button', { name: /^Meet g, n, d, l/ }).click();
+    await openMatchSound(page);
+
+    // A clip started, served by the service worker.
+    await expect.poll(() => clipStarts(page)).toBeGreaterThan(0);
+    // A recording plays, so the round is not switched to the "no Korean voice" text prompt.
+    await expect(page.getByText('No Korean voice on this device.')).toHaveCount(0);
+    await expect(page.getByText('Tap the letter you hear')).toBeVisible();
+  });
+
+  test('with a Korean voice on the device the recording still wins (clip > voice, AD4)', async ({ page }) => {
+    test.skip(letterClips.length === 0 && !FIXTURE_BUILD, NO_CLIPS);
+    await fakeSpeech(page, 'korean');
+    await recordClipStarts(page);
+    await onboardChild(page, { name: 'Dami' });
+    await openMatchSound(page);
+
+    await expect.poll(() => clipStarts(page)).toBeGreaterThan(0);
+    // The clip played to its end: the Korean voice never spoke the letter.
+    await page.waitForTimeout(1500);
+    expect((await utterances(page)).filter((u) => u.lang === 'ko-KR')).toEqual([]);
+  });
 });

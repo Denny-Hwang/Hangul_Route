@@ -3,7 +3,7 @@
 **Authoritative palette for Hangul Route.** Mirrors `packages/design-system/src/tokens.ts` (`colors` export).
 Drift between this document and `tokens.ts` is detected by `.github/workflows/design-token-sync.yml` (F-DES-001).
 
-Last updated: 2026-10-11 · Version: v1 (AA contrast revision, see below; `vocab` group added for WordArt, F-VOC-002)
+Last updated: 2026-10-11 · Version: v1 (AA contrast revision, see below; `vocab` group added for WordArt, F-VOC-002; `border.shape` added for My route pips, F-ROUTE-001 R-2b)
 
 ---
 
@@ -162,6 +162,7 @@ Rules for the vocab tones:
 | `border.subtle` | #E8DFCD | Default card borders |
 | `border.strong` | #C5B8A1 | Emphasis borders |
 | `border.focus` | #3A7FB5 | Keyboard focus ring. 4.06:1 on canvas, 3.63:1 on sunken, 4.30:1 on paper (3:1 non-text minimum) |
+| `border.shape` | #857360 | Outlines of drawn shapes that carry meaning: My route pips (open, known, new, later rings and the edge of a done disc), the dotted trail connector (F-ROUTE-001 R-2b, `design/components/PipRow/spec.md`). 4.55:1 on paper, 4.29:1 on canvas, 3.84:1 on sunken, 3.42:1 on `brand.primaryLight` (3:1 non-text minimum). `border.strong` (1.9:1) stays a quiet divider |
 
 ---
 

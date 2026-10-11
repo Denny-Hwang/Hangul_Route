@@ -48,6 +48,7 @@ Tab "Homework." Shows assigned quests (by parent / teacher / system) split into 
 - Title: **"Homework"**
 - Sub: **"Set by your grown-up — or Hoya if you have a streak."**
 - Hoya (count > 0): **"You have {n} thing(s) to do today."**
+- Hoya (count > 3, F-PLAN-002 section 3.6): **"You have a few things to do today."** (no number)
 - Hoya (count = 0): **"No homework today! Want to do a quick review?"**
 - Section: **"Today"** · **"Recently done"**
 - Empty state: **"All clear!"** + **"Hoya suggests a 3-minute review."**

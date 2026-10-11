@@ -103,6 +103,11 @@ syncRoutes.get('/learners/:id/snapshot', async (c) => {
   });
 });
 
+/** Capabilities an app declares on the inbox read: `?cap=a,b` or `?cap=a&cap=b`. */
+export function acceptsCurriculum(caps: readonly string[] | undefined): boolean {
+  return (caps ?? []).some((value) => value.split(',').some((cap) => cap.trim() === 'curriculum'));
+}
+
 syncRoutes.get('/learners/:id/inbox', async (c) => {
   const learnerId = c.req.param('id');
   const auth = await authorizeDevice(c, learnerId, { allowClassScope: true });
@@ -112,7 +117,8 @@ syncRoutes.get('/learners/:id/inbox', async (c) => {
   const { tier, source } = await tierForLearner(db, learnerId, now);
   // A class-approved device sees class and school spaces only — family plans stay with the family (SEC-4).
   const classScoped = (await db.getDevice(learnerId, auth))?.scope === 'class';
-  const plans = await inboxPlansFor(db, learnerId);
+  // F-PLAN-002 section 3.5: a curriculum reaches only an app that derives with a horizon (`?cap=curriculum`).
+  const plans = (await inboxPlansFor(db, learnerId)).filter((p) => p.meta === null || acceptsCurriculum(c.req.queries('cap')));
   const memberships = await learnerMembershipRows(db, learnerId);
   return ok(c, {
     rev: (await db.getSnapshot(learnerId))?.rev ?? 0,

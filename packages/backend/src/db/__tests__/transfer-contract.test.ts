@@ -4,6 +4,7 @@ import { openSqliteD1 } from '../../__tests__/helpers/sqlite';
 import { D1Db } from '../d1';
 import { MemoryDb } from '../memory';
 import type { Db } from '../types';
+import type { LearnerConsentRecord } from '../transfer-types';
 import { transferRateKey } from '../transfer-types';
 import {
   approvedRequest,
@@ -311,6 +312,34 @@ function transferContract(name: string, make: () => Db, dropLearnerRowOnly: Drop
         expect(await db.getTransfer(ID)).toMatchObject({ status: 'approved', blockReason: 'cap_class', updatedAt: iso(2 * HOUR) });
         expect(await db.blockTransfer(ID, 'cap_learner', at(3 * HOUR))).toBe(1);
         expect((await db.getTransfer(ID))?.blockReason).toBe('cap_learner');
+      });
+
+      it('blockTransfer changes nothing when the reason is already recorded (one blocked event per reason, even across racing settles)', async () => {
+        await approvedRequest(db);
+        expect(await db.blockTransfer(ID, 'cap_class', at(2 * HOUR))).toBe(1);
+        const once = await db.getTransfer(ID);
+        expect(await db.blockTransfer(ID, 'cap_class', at(3 * HOUR))).toBe(0);
+        expect(await db.getTransfer(ID)).toEqual(once);
+        expect(await db.blockTransfer(ID, 'cap_school', at(3 * HOUR))).toBe(1);
+      });
+
+      it('resetLearnerConsent with an expected rev resets only the row version it was decided on', async () => {
+        await approvedRequest(db);
+        const seen = await db.getTransfer(ID);
+        await db.blockTransfer(ID, 'cap_class', at(2 * HOUR));
+        expect(await db.resetLearnerConsent(ID, 'terms_changed', at(3 * HOUR), seen?.rev)).toBe(0);
+        expect((await db.getTransfer(ID))?.learner.state).toBe('consented');
+        expect((await db.transferEvents(ID)).filter((e) => e.event === 'consent_reset')).toEqual([]);
+        const now = await db.getTransfer(ID);
+        expect(await db.resetLearnerConsent(ID, 'terms_changed', at(3 * HOUR), now?.rev)).toBe(1);
+        expect((await db.getTransfer(ID))?.learner.state).toBe('pending');
+      });
+
+      it('consentSlot stores only the record fields: a wider runtime object cannot override state or at', async () => {
+        await db.createTransfer(sourceRow(), created);
+        const wider = { ...consentRecord(), state: 'pending', at: 'not-a-time', extra: 'dropped' } as unknown as LearnerConsentRecord;
+        expect(await db.consentSlot(ID, { kind: 'learner', record: wider }, at(HOUR))).toBe(1);
+        expect((await db.getTransfer(ID))?.learner).toEqual({ state: 'consented', at: iso(HOUR), ...consentRecord() });
       });
 
       it('resetLearnerConsent sends an approved request back to requested, clears the record and logs consent_reset once', async () => {

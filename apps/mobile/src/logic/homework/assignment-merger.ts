@@ -28,9 +28,22 @@ export interface MergeResult {
   deferred: HomeworkAssignment[];
 }
 
+/** Section 3.10 of F-PLAN-002: class (teacher) first, then family (parent), then the learner's own plan (system). */
+const SOURCE_RANK: Record<HomeworkAssignment['assignedBy'], number> = { teacher: 0, parent: 1, system: 2 };
+
+/** The precedence order of outstanding assignments: source rank, then the earlier `targetDate`, then the earlier `assignedAt`. */
+export function compareAssignments(a: HomeworkAssignment, b: HomeworkAssignment): number {
+  return (
+    SOURCE_RANK[a.assignedBy] - SOURCE_RANK[b.assignedBy] ||
+    a.targetDate.localeCompare(b.targetDate) ||
+    a.assignedAt.localeCompare(b.assignedAt)
+  );
+}
+
 /**
- * Assignments for this learner targeting today that are still outstanding,
- * earliest `assignedAt` first (§3.4 tie-break).
+ * Assignments for this learner due today or earlier that are still
+ * outstanding (an unfinished item carries over and is never shown as late),
+ * in precedence order (F-PLAN-002 sections 3.6 and 3.10).
  */
 export function assignmentsForToday(
   assignments: readonly HomeworkAssignment[],
@@ -38,10 +51,8 @@ export function assignmentsForToday(
   today: string,
 ): HomeworkAssignment[] {
   return assignments
-    .filter(
-      (a) => a.profileId === profileId && a.targetDate === today && a.completedAt === undefined,
-    )
-    .sort((a, b) => a.assignedAt.localeCompare(b.assignedAt));
+    .filter((a) => a.profileId === profileId && a.targetDate <= today && a.completedAt === undefined)
+    .sort(compareAssignments);
 }
 
 export function mergeAssignments({
@@ -59,13 +70,18 @@ export function mergeAssignments({
     return { plan, deferred: [] };
   }
 
-  const [winner, ...rest] = queue as [HomeworkAssignment, ...HomeworkAssignment[]];
-  const title = titleOf(winner.questId);
-  if (title === undefined) {
-    // An assignment pointing at a quest this build does not know about is not
-    // rendered — gating (§3.4) should have refused it at create time.
+  // An assignment pointing at a quest this build does not know about is not
+  // rendered — gating (§3.4) should have refused it at create time. It stays
+  // queued, and the next known one takes the card, so a carried-over unknown
+  // item never holds card ② for good.
+  const pick = queue
+    .map((assignment) => ({ assignment, title: titleOf(assignment.questId) }))
+    .find((x): x is { assignment: HomeworkAssignment; title: string } => x.title !== undefined);
+  if (pick === undefined) {
     return { plan, deferred: [...queue] };
   }
+  const { assignment: winner, title } = pick;
+  const rest = queue.filter((a) => a !== winner);
 
   return {
     plan: {

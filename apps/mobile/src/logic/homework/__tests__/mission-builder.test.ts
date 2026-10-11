@@ -182,6 +182,64 @@ describe('slot ② — the Journey cursor', () => {
     });
     expect(plan.cards[1]?.questId).toBe('quest:c');
   });
+
+  it('skips placed-out quests when a route seed is given (F-PLC-001 section 3.7)', () => {
+    const plan = build({ snapshot: snapshot([]), skipQuestIds: new Set(['quest:a']) });
+    expect(plan.cards[1]).toMatchObject({ slot: 2, kind: 'new', questId: 'quest:b' });
+  });
+
+  it('a placed-out quest stays playable: once every other quest is done it is offered before any replay', () => {
+    const plan = build({
+      snapshot: snapshot([done('quest:b', YESTERDAY, 1), done('quest:c', YESTERDAY, 1)]),
+      skipQuestIds: new Set(['quest:a']),
+    });
+    expect(plan.cards[1]?.questId).toBe('quest:a');
+  });
+
+  it('with every quest done, placed out or not, it falls back to the last quest as before', () => {
+    const plan = build({
+      snapshot: snapshot([done('quest:a', YESTERDAY, 1), done('quest:b', YESTERDAY, 1), done('quest:c', YESTERDAY, 1)]),
+      skipQuestIds: new Set(['quest:a']),
+    });
+    expect(plan.cards[1]?.questId).toBe('quest:c');
+  });
+
+  it('without a route seed the cursor is unchanged', () => {
+    expect(build({ snapshot: snapshot([]) }).cards[1]?.questId).toBe('quest:a');
+    expect(build({ snapshot: snapshot([]), skipQuestIds: new Set() }).cards[1]?.questId).toBe('quest:a');
+  });
+});
+
+describe('slot ② — the same stages as Results and My route (F-ROUTE-001 R-4a)', () => {
+  const S2_QUESTS = [...QUESTS, quest('quest:s2', 'Words at home')];
+  const S2_EPISODES: Episode[] = [...EPISODES, { ...episode('episode:s2', ['quest:s2']), stage: 'stage2', theme: 'life' }];
+  const stage1Only = (stageKey: string): boolean => stageKey === 'stage1';
+  const allStage1 = (): ProgressSnapshot => snapshot(QUESTS.map((q) => done(q.id, YESTERDAY, 1)));
+
+  it('offers a later stage when the predicate opens it', () => {
+    const plan = build({ snapshot: allStage1(), quests: S2_QUESTS, episodes: S2_EPISODES, isEntitled: () => true });
+    expect(plan.cards[1]?.questId).toBe('quest:s2');
+  });
+
+  it('never offers a stage the predicate leaves out, even as the replay fallback', () => {
+    const plan = build({ snapshot: allStage1(), quests: S2_QUESTS, episodes: S2_EPISODES, isEntitled: stage1Only });
+    expect(plan.cards[1]?.questId).toBe('quest:c');
+  });
+
+  it('applies the predicate and the placed-out set together', () => {
+    const plan = build({
+      snapshot: snapshot([done('quest:b', YESTERDAY, 1), done('quest:c', YESTERDAY, 1)]),
+      quests: S2_QUESTS,
+      episodes: S2_EPISODES,
+      isEntitled: stage1Only,
+      skipQuestIds: new Set(['quest:a']),
+    });
+    expect(plan.cards[1]?.questId).toBe('quest:a');
+  });
+
+  it('without a predicate every playable stage is open, as before', () => {
+    expect(build({ snapshot: allStage1(), quests: S2_QUESTS, episodes: S2_EPISODES }).cards[1]?.questId).toBe('quest:s2');
+  });
 });
 
 describe('slot ③ — daily test capability gate (§9.2)', () => {
@@ -290,6 +348,38 @@ describe('pinned plans keep cards from shifting (§3.2)', () => {
     });
     expect(after.cards.map((c) => c.questId)).toEqual(first.cards.map((c) => c.questId));
     expect(after.cards[0]?.collected).toBe(true);
+  });
+
+  it('moves the "New" card off a quest the level check placed out after the plan was pinned (F-ROUTE-001 R-4a)', () => {
+    const first = build();
+    expect(first.cards[1]?.questId).toBe('quest:a');
+    const after = build({ pinned: first, skipQuestIds: new Set(['quest:a']) });
+    expect(after.cards[1]).toMatchObject({ slot: 2, kind: 'new', questId: 'quest:b', episodeId: 'episode:one', collected: false });
+    expect([after.cards[0], after.cards[2]]).toEqual([first.cards[0], first.cards[2]]);
+  });
+
+  it('keeps a placed-out "New" card the learner already played today', () => {
+    const first = build();
+    const after = build({ snapshot: snapshot([done('quest:a', TODAY, 1)]), pinned: first, skipQuestIds: new Set(['quest:a']) });
+    expect(after.cards[1]).toMatchObject({ questId: 'quest:a', collected: true });
+  });
+
+  it('keeps a pinned assigned card even when its quest is placed out (only the system "New" card re-pins)', () => {
+    const base = build();
+    const assigned: MissionPlan = {
+      ...base,
+      cards: base.cards.map((card) =>
+        card.slot === 2 ? { ...card, subtitle: 'assigned', questId: 'quest:a', episodeId: 'episode:one' } : card,
+      ),
+    };
+    const after = build({ pinned: assigned, skipQuestIds: new Set(['quest:a']) });
+    expect(after.cards[1]).toMatchObject({ slot: 2, kind: 'new', subtitle: 'assigned', questId: 'quest:a' });
+  });
+
+  it('keeps the pinned "New" card when every other quest is placed out too', () => {
+    const first = build();
+    const after = build({ pinned: first, skipQuestIds: new Set(['quest:a', 'quest:b', 'quest:c']) });
+    expect(after.cards[1]?.questId).toBe('quest:a');
   });
 
   it('ignores a plan pinned for a different day', () => {

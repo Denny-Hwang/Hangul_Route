@@ -16,6 +16,12 @@ import { useStoryStore } from './story-store';
  * flashes for a learner who already said no.
  * Story bookmarks load with each profile's progress (F-STORY-004 §3.2), so
  * Home never builds a story card before they are in memory.
+ * Each progress hydrate ends with a card reconcile (F-STORY-006 §3.5), so
+ * cards a learner already earned arrive once, after the saved copy is in
+ * memory. Nothing is written here for a profile with nothing saved: a read
+ * that failed looks the same, and a blank record would replace real
+ * progress. Its welcome card arrives with Home's `ensure` (§3.3), in memory,
+ * and is saved by the learner's first real write.
  * App.tsx mounts the navigator and runs the start-up sync
  * (F-SYNC-002 §3.2, "after hydration") only once this resolves.
  */

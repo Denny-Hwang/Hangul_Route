@@ -72,6 +72,12 @@ export interface PlacementConfig {
   audio: boolean;
   /** False with a screen reader: `recog` is not run. */
   visual: boolean;
+  /**
+   * Gates not asked in this run, recorded as not-run `unavailable` (section 3.2:
+   * `vocab` and `sentence` with a Korean test language and a screen reader on,
+   * because Korean picture options carry no text label).
+   */
+  skipGates?: readonly PlacementGate[];
   /** True: no inactivity pause, no backstop clock. */
   takeMyTime: boolean;
   /** `hashSeed([profileId, startedAt])`. */
@@ -83,7 +89,12 @@ export interface PlacementConfig {
 
 export type PlacementEvent =
   | { type: 'answer'; optionId: string; assisted?: boolean }
-  | { type: 'notSure' }
+  /**
+   * "I am not sure". With `cause: 'no-sound'` the caller records a prompt that
+   * could not play (section 3.11): skipped, not wrong, and not a "not sure" of
+   * the learner, so it neither adds to nor breaks the three-in-a-row streak.
+   */
+  | { type: 'notSure'; cause?: 'no-sound' }
   /** The caller's own 45-second inactivity timer fired. */
   | { type: 'idle' }
   /** The caller's periodic check of both clocks. */
@@ -147,6 +158,7 @@ const drawRung = (
 ): AssessmentQuestion[] | null => {
   if (form === 'oral' && !config.audio) return null;
   if (gate === 'recog' && !config.visual) return null;
+  if (config.skipGates?.includes(gate) === true) return null;
   const eligible = bank.templates.filter(
     (t) => t.status === 'ready' && t.gate === gate && t.form === form && usable(t, config),
   );
@@ -292,6 +304,7 @@ const record = (
   chosenOptionId: string | null,
   assisted: boolean,
   nowMs: number,
+  noSound = false,
 ): PlacementRunState => {
   const rung = state.current as NonNullable<PlacementRunState['current']>;
   const question = currentQuestion(state) as AssessmentQuestion;
@@ -306,7 +319,7 @@ const record = (
     ...state,
     responses: [...state.responses, response],
     tags: { ...state.tags, [question.id]: question.tags },
-    notSureStreak: outcome === 'skipped' ? state.notSureStreak + 1 : 0,
+    notSureStreak: noSound ? state.notSureStreak : outcome === 'skipped' ? state.notSureStreak + 1 : 0,
     lastTouchMs: nowMs,
     shownAtMs: nowMs,
   };
@@ -376,7 +389,7 @@ export const apply = (state: PlacementRunState, event: PlacementEvent, nowMs: nu
 
   // answer | notSure
   if (state.pause !== null) return state;
-  if (event.type === 'notSure') return record(state, 'skipped', null, false, nowMs);
+  if (event.type === 'notSure') return record(state, 'skipped', null, false, nowMs, event.cause === 'no-sound');
   const question = currentQuestion(state) as AssessmentQuestion;
   const chosen = question.options.find((o) => o.id === event.optionId);
   if (chosen === undefined) throw new Error(`option ${event.optionId} is not an option of question ${question.id}`);

@@ -15,11 +15,22 @@ import { plural } from '../../plural';
  * the pages' former text, byte for byte, except that counts now go through `plural()`
  * (F-I18N-001 §10, closed): "1 learner", "1 card", "1 hasn't synced".
  * Four former COPY fragments the space page glued around numbers (practicedThisWeek, anchor,
- * revisitTogether, notSyncedWeek) became whole sentences under `space.week`.
+ * revisitTogether, notSyncedWeek) became whole sentences under `space.week`. PR 10b added
+ * `plan` and `billing` (at the end of this object) the same way.
  *
  * Every string here is caregiver surface (no "behind", "lazy" or a learner-banned word),
  * checked per locale by console-messages.test.ts.
  */
+/** "1 item" / "4 items": `planCounts.items`, also the plan item count inside `plan.summary.*`. */
+const planItems = (items: number): string => plural('en', items, { one: `${items} item`, other: `${items} items` });
+/** "1 learner" / "3 students": `planCounts.targets`, also the target count inside `plan.summary.some.*`. */
+const planTargets = (kind: 'family' | 'class' | 'school', n: number): string =>
+  kind === 'family'
+    ? plural('en', n, { one: `${n} learner`, other: `${n} learners` })
+    : kind === 'class'
+      ? plural('en', n, { one: `${n} student`, other: `${n} students` })
+      : plural('en', n, { one: `${n} member`, other: `${n} members` });
+
 export const consoleMsgs = {
   whySignIn: ['Keep progress safe across devices', 'Bring cards back after a reinstall', 'Manage plans and billing'],
   kidsNoAccount: "Kids don't need an account — they join with a code.",
@@ -186,8 +197,8 @@ export const consoleMsgs = {
     recentFirst: 'Most recent activity first',
     /**
      * One student card; the day words come from `relativeDay`, the readout from `readoutLine`
-     * (still English until plans.ts moves in PR 10b). `revisit` takes taught Korean, rendered
-     * by the page through `aroundSlot` like `week.revisit`.
+     * (`plan.readout`). `revisit` takes taught Korean, rendered by the page through `aroundSlot`
+     * like `week.revisit`.
      */
     learner: {
       lastActive: (when: string) => `Last active ${when}`,
@@ -248,13 +259,8 @@ export const consoleMsgs = {
   },
   /** Plan builder counts (`teach/space/plan`): the items in a plan, and the members it targets (worded per space kind, as `kind.members`). */
   planCounts: {
-    items: (n: number) => plural('en', n, { one: `${n} item`, other: `${n} items` }),
-    targets: (kind: 'family' | 'class' | 'school', n: number) =>
-      kind === 'family'
-        ? plural('en', n, { one: `${n} learner`, other: `${n} learners` })
-        : kind === 'class'
-          ? plural('en', n, { one: `${n} student`, other: `${n} students` })
-          : plural('en', n, { one: `${n} member`, other: `${n} members` }),
+    items: planItems,
+    targets: planTargets,
   },
   /** Plan builder status (`planStatusLabel`); the date arrives formatted. */
   planStatus: {
@@ -284,4 +290,359 @@ export const consoleMsgs = {
   /** Price line once a promo code is applied (F-ENT-002 §3.3); `price` and `was` come from `price.*`. */
   promoPrice: (price: string, code: string, off: string, firstYear: boolean, was: string) =>
     `${price} with ${code} (${off}${firstYear ? ', first year' : ''}), was ${was}`,
+
+  /**
+   * The plan page (`/teach/space/plan`, F-I18N-001 PR 10b): the builder for a draft, the
+   * readout once published (`plans.ts readoutLine`), and the catalog labels (`catalogLabel`).
+   * Quest and episode titles are content and arrive as arguments. Kind-keyed groups take
+   * `space` where the roster has not loaded.
+   */
+  plan: {
+    title: 'Plan',
+    titleFor: (space: string) => `${space} · plan`,
+    back: (space: string | null) => `← Back to ${space ?? 'the space'}`,
+    saveInvalid: "Some learners are no longer in this space — check who it's for.",
+    saveFailed: "Didn't save. Try again.",
+    archiveFailed: "Couldn't archive it right now.",
+    readoutLabel: 'Plan readout',
+    /**
+     * The readout's one-line summary (`plans.ts planSummary`): "4 items · for everyone in this
+     * class" · "4 items · for 3 students". One whole sentence per audience (§3.1), so a locale
+     * words "for" together with its noun instead of gluing a phrase after it.
+     */
+    summary: {
+      everyone: {
+        family: (items: number) => `${planItems(items)} · for everyone in this family`,
+        class: (items: number) => `${planItems(items)} · for everyone in this class`,
+        school: (items: number) => `${planItems(items)} · for everyone in this school`,
+        space: (items: number) => `${planItems(items)} · for everyone in this space`,
+      },
+      /** The target count reads `planCounts.targets` ("for 1 learner", F-I18N-001 §10 console counts, closed). */
+      some: {
+        family: (items: number, count: number) => `${planItems(items)} · for ${planTargets('family', count)}`,
+        class: (items: number, count: number) => `${planItems(items)} · for ${planTargets('class', count)}`,
+        school: (items: number, count: number) => `${planItems(items)} · for ${planTargets('school', count)}`,
+      },
+    },
+    edit: { cta: 'Edit' },
+    archive: { cta: 'Archive' },
+    newPlan: { cta: 'New plan' },
+    progressTitle: 'Progress',
+    noMembers: { family: 'No learners yet.', class: 'No students yet.', school: 'No members yet.' },
+    /** One learner's progress on the plan (`readoutLine`); counts only, never a ranking. */
+    readout: {
+      waiting: 'waiting for the next sync',
+      progress: (done: number, total: number) => `${done} / ${total}`,
+      withNotReady: (done: number, total: number, notReady: number) => `${done} / ${total} · ${notReady} not ready yet`,
+    },
+    builderLabel: 'Plan builder',
+    editTitle: 'Edit plan',
+    newTitle: 'New plan',
+    titleField: { label: 'Plan title', placeholder: 'Week 3' },
+    catalog: {
+      label: 'Catalog',
+      title: 'Catalog (Stage 1)',
+      addEpisode: { cta: '+ episode' },
+      /** A quest row; `minutes` is null for a quest the catalog does not know. */
+      questLine: (title: string, minutes: number | null) => `${title} · ${minutes ?? '?'} min`,
+      add: { cta: '+ add' },
+      added: { cta: 'added' },
+      /** An episode as a plan item (`catalogLabel`). */
+      episodeLabel: (title: string, quests: number) => `${title} (${plural('en', quests, { one: `${quests} quest`, other: `${quests} quests` })})`,
+    },
+    yours: {
+      label: 'Your plan',
+      title: (items: number) => `Your plan (${items})`,
+      empty: 'Add quests or whole episodes from the catalog.',
+      /** The reorder and remove buttons on each item (glyphs; a locale may swap them). */
+      moveUp: { cta: '↑' },
+      moveDown: { cta: '↓' },
+      remove: { cta: '×' },
+      dateFor: (item: number) => `Target date for item ${item}`,
+      noteFor: (item: number) => `Note for item ${item}`,
+      notePlaceholder: 'note (optional)',
+    },
+    pace: {
+      title: 'Pace',
+      start: 'Start date',
+      perWeekLabel: 'Items per week',
+      perWeek: (items: number) => `${items} / week`,
+    },
+    /** The audience choice; `everyone` is a stand-alone radio label (`planEveryone`). */
+    who: {
+      title: 'Who is this for',
+      everyone: { family: 'everyone in this family', class: 'everyone in this class', school: 'everyone in this school', space: 'everyone in this space' },
+      only: 'only:',
+    },
+    noneJoined: { family: 'No learners have joined yet.', class: 'No students have joined yet.', school: 'No members have joined yet.' },
+    saving: { cta: 'Saving…' },
+    cancel: { cta: 'Cancel' },
+  },
+  /**
+   * The billing page (`/teach/billing`, `billing.ts`, F-I18N-001 PR 10b). Prices come from
+   * `price.*` and `formatUsd`; plan limits, the free-class cap among them, arrive as numbers
+   * from content-schema, so no locale types a limit into its copy.
+   */
+  billing: {
+    title: 'Billing',
+    cantCheck: "Can't check your plan right now.",
+    checkoutFailed: "Couldn't start checkout. Try again.",
+    portalFailed: "Couldn't open the billing portal.",
+    current: {
+      title: 'Current plan',
+      /** `cap` is content-schema `FREE_CLASS_STUDENT_CAP` (`billing.ts freePlanLine`). */
+      freeLine: (cap: number) => `Stage 1, local progress, Rescue Code, file backup. Classes hold up to ${cap} students.`,
+    },
+    yourAccount: 'your account',
+    /**
+     * How the plan was obtained (`sourceLine`) — never "paid": a 100%-off code costs nothing.
+     * One whole sentence per provider (§3.1); the provider names live inside it.
+     */
+    source: (provider: 'stripe' | 'apple' | 'google' | 'manual', code: string | null) =>
+      `via ${{ stripe: 'web (Stripe)', apple: 'App Store', google: 'Google Play', manual: 'contract' }[provider]}${code ? ` · code ${code}` : ''}`,
+    seats: (seats: number) => plural('en', seats, { one: `${seats} seat`, other: `${seats} seats` }),
+    manage: { cta: 'Manage subscription' },
+    planTitle: { free: 'Free', family_lifetime: 'Family Lifetime', group_license: 'Group License', school_seat: 'School Contract' },
+    includes: {
+      /** `cap` / `freeCap` are content-schema `FREE_CLASS_STUDENT_CAP`. */
+      free: (cap: number) => `Stage 1, local progress, Rescue Code, file backup; classes up to ${cap} students`,
+      family_lifetime: (learners: number) => `Every Stage, now and later, for one family: up to ${learners} learners, cloud sync, grown-up dashboard and plans`,
+      group_license: (teachers: number, students: number, freeCap: number) =>
+        `A class or school: every student premium while enrolled, no ${freeCap}-student cap; a school holds up to ${teachers} teachers / ${students} students`,
+      school_seat: (students: number, teachers: number) => `Beyond ${students} students or ${teachers} teachers — seats by contract`,
+    },
+    /** The price column of the contract row. */
+    contactPrice: 'Contact us',
+    plans: { title: 'Plans' },
+    promo: {
+      formLabel: 'Promo code',
+      placeholder: 'HOYA20',
+      apply: { cta: 'Apply code' },
+      change: { cta: 'Change code' },
+      /** `name` is the promotion's own name, when it has one. */
+      applied: (code: string, name: string | null) => `${code} applied${name ? ` · ${name}` : ''}.`,
+    },
+    choose: { cta: 'Choose' },
+    contact: { cta: 'Contact us' },
+    isCurrent: { pill: 'current' },
+  },
+
+  /**
+   * The curriculum planner (F-PLAN-002 section 3.8, wireframe console/curriculum-planner): the
+   * wizard at `teach/space/curriculum`, the week groups, readout and re-pace of a route plan on
+   * the plan page, the roster and home entries, and the shared-catalogue item labels. The
+   * generator emits codes and ids only; every word it implies is here. Caregiver surface:
+   * never "behind", "late", "missed", "overdue" or a comparison; warnings are invitations.
+   * Quest, story and episode titles are content and arrive as arguments.
+   */
+  curriculum: {
+    title: 'Plan a term',
+    pageTitle: (space: string) => `${space} · plan a term`,
+    back: (space: string | null) => `← Back to ${space ?? 'the space'}`,
+    step: (step: number, total: number) => `Step ${step} of ${total}`,
+    next: { cta: 'Next' },
+    previous: { cta: 'Back' },
+    learner: {
+      label: 'For',
+      choose: 'Choose a learner…',
+      required: 'Choose who this route is for to go on.',
+    },
+    start: {
+      title: 'Where do they start?',
+      label: 'Starting point',
+      points: {
+        'brand-new': { title: 'Brand new', line: 'Has not met Hangul yet.' },
+        'some-letters': { title: 'Knows some letters', line: 'Knows a few letters and their sounds.' },
+        'all-letters': { title: 'Knows all the letters', line: 'Knows the letters; syllables still take time.' },
+        'reads-words': { title: 'Reads words', line: 'Reads syllables, final letters too.' },
+        'first-words': { title: 'Reads first words', line: 'Ready for everyday words.' },
+        'first-sentences': { title: 'Reads first sentences', line: 'Ready for short sentences.' },
+      },
+      /** One line, a pre-selection, never a list or a ranking (section 3.8 step 1). */
+      hint: {
+        class: (point: string) => `Most of your students start here: ${point}`,
+        family: (point: string) => `Most of your learners start here: ${point}`,
+      },
+    },
+    rhythm: {
+      title: 'How long and how often?',
+      length: 'How long?',
+      lengths: {
+        '4-week': { cta: '4 weeks' },
+        '12-week': { cta: '12 weeks' },
+        '6-month': { cta: '6 months' },
+        custom: { cta: 'Choose weeks' },
+      },
+      weeks: 'Number of weeks (1 to 52)',
+      chooseLength: 'Choose a length to go on.',
+      badWeeks: 'Choose between 1 and 52 weeks.',
+      startDate: 'Starts',
+      startPast: 'Pick today or a later day.',
+      sessions: 'Sessions a week',
+      sessionsOption: (n: number) => `${n} a week`,
+      days: 'Days they learn (optional)',
+      daysHint: {
+        class: 'Pick a class day and a homework day.',
+        family: 'Leave them all off to spread the sessions over the week.',
+      },
+      daysChosen: (n: number) => plural('en', n, { one: `${n} day a week`, other: `${n} days a week` }),
+      minutes: 'Minutes a session',
+      minutesOption: (n: number) => `${n} min`,
+      daysOff: 'Days off',
+      daysOffHint: 'No sessions on these days. The route simply goes on after them.',
+      addBreak: { cta: '+ Add a break' },
+      breakFrom: 'From',
+      breakTo: 'To',
+      removeBreak: (n: number) => `Remove break ${n}`,
+      remove: { cta: 'Remove' },
+      breakMissing: 'Pick both dates for each break.',
+      breakReversed: 'A break ends before it starts. Check its dates.',
+      tooManyBreaks: 'A route holds up to 12 breaks.',
+      sessionsNote: (sessions: number, weeks: number) =>
+        `That is ${plural('en', sessions, { one: `${sessions} session`, other: `${sessions} sessions` })} in ${plural('en', weeks, { one: `${weeks} week`, other: `${weeks} weeks` })}.`,
+      tooMany: 'That is more than a plan can hold. Choose fewer weeks or sessions.',
+    },
+    goals: {
+      title: 'What matters most?',
+      focusLabel: 'Focus',
+      focus: {
+        balanced: 'A bit of everything',
+        reading: 'Read Hangul',
+        words: 'First words',
+        culture: 'Culture and stories',
+      },
+      themes: 'Themes to start with (tap them in order)',
+      themesHint: 'Stage 1 keeps its own order. The themes decide what comes after it.',
+      themeNames: {
+        letters: 'Letters',
+        life: 'Food & Daily Life',
+        rites: 'Holidays',
+        nature: 'Nature',
+        crafts: 'Play & Crafts',
+      },
+      themeChosen: (n: number, theme: string) => `${n}. ${theme}`,
+      anchors: 'Mark Korean holidays (Hangeul Day, Seollal, Chuseok)',
+      comingSoon: 'Include lessons that are not released yet',
+      comingSoonLine: 'New episodes appear as they are released.',
+      see: { cta: 'See the route' },
+    },
+    preview: {
+      title: 'Your route',
+      stats: (items: number, minutes: number, stage: number) =>
+        `${plural('en', items, { one: `${items} lesson or story`, other: `${items} lessons and stories` })} · about ${minutes} minutes · ends in Stage ${stage}`,
+      empty: 'Nothing is ready to plan for this starting point yet. Change something to try another range.',
+      table: {
+        label: 'The weeks of the route',
+        week: 'Week',
+        dates: 'Dates',
+        kind: 'Kind',
+        what: 'What',
+        items: 'Items',
+        extras: 'Extras',
+      },
+      dateRange: (from: string, to: string) => `${from} – ${to}`,
+      kind: { learn: 'Learn', culture: 'Culture', review: 'Review', break: 'Days off' },
+      label: {
+        review: 'Review and collect',
+        break: 'Days off',
+        culture: (story: string) => `Culture week: ${story}`,
+        cultureNoStory: 'Culture week',
+        stories: 'Heritage stories',
+        comingSoon: 'New episodes are on the way',
+        freePractice: 'Free practice',
+      },
+      itemTag: { story: 'story', comingSoon: 'coming soon' },
+      taggedItem: (title: string, tag: string) => `${title} (${tag})`,
+      itemLine: (date: string, title: string) => `${date} · ${title}`,
+      noItems: 'No items',
+      extras: {
+        vocab: (topic: string) => `Words: ${topic} (optional)`,
+        hangulCheck: 'Hangul Check',
+      },
+      warnings: {
+        contentRunsOut: (week: number) => `No new episodes yet from week ${week}. Free practice and word topics fill those weeks.`,
+        comingSoon: (count: number) =>
+          plural('en', count, {
+            one: '1 episode is not released yet. It is in the plan and starts on its date once it is.',
+            other: `${count} episodes are not released yet. They are in the plan and start on their dates once they are.`,
+          }),
+        premium: (count: number) =>
+          plural('en', count, {
+            one: '1 lesson needs Premium and is not in the plan.',
+            other: `${count} lessons need Premium and are not in the plan.`,
+          }),
+        seePlans: { cta: 'See plans' },
+        didNotFit: (count: number) =>
+          plural('en', count, {
+            one: '1 lesson or story did not fit. Add a week or a session to include it.',
+            other: `${count} lessons and stories did not fit. Add a week or a session to include them.`,
+          }),
+        tooShort: (count: number) =>
+          plural('en', count, {
+            one: '1 item may take longer than one session.',
+            other: `${count} items may take longer than one session.`,
+          }),
+        alreadyDone: (count: number) =>
+          plural('en', count, {
+            one: '1 lesson is left out because the starting point is past it.',
+            other: `${count} lessons are left out because the starting point is past them.`,
+          }),
+      },
+      change: { cta: 'Change something' },
+      use: { cta: 'Use this route' },
+      saving: { cta: 'Saving…' },
+      draftNote: 'Using it saves a draft. Nothing reaches a learner until you publish it.',
+      saveFailed: "Didn't save. Try again.",
+      defaultTitle: (weeks: number) => plural('en', weeks, { one: `Route · ${weeks} week`, other: `Route · ${weeks} weeks` }),
+    },
+    builder: {
+      fromTemplate: { cta: 'Start from a template' },
+      plans: 'Plans',
+      planChip: (title: string, status: string) => `${title} · ${status}`,
+      activeRoute: 'active route',
+      weekHeader: (week: number, dates: string, kind: string) => `Week ${week} · ${dates} · ${kind}`,
+      reviewWeek: 'No items: a week to catch up or replay.',
+      breakWeek: 'Days off: no sessions this week.',
+      emptyWeek: 'No items this week: free practice.',
+      unscheduled: 'Not in a week yet',
+      discardEdits: 'Open another plan? The changes you have not saved here will be lost.',
+      datesFromCalendar: 'Dates come from the route calendar. You can still change one date; a re-pace lays them out again.',
+    },
+    readout: {
+      thisWeek: (week: number) => `This week (week ${week})`,
+      notStarted: (date: string) => `The route starts ${date}.`,
+      ended: 'The route has ended. Everything finished stays finished.',
+      allWeeks: 'All weeks',
+      line: (done: number, total: number, planned: number) => `${done} / ${total} so far · ${planned} planned`,
+      lineNotReady: (done: number, total: number, planned: number, notReady: number) =>
+        `${done} / ${total} so far · ${planned} planned · ${notReady} not ready yet`,
+      waiting: 'waiting for the next sync',
+      repace: { cta: 'Re-pace from today' },
+      repaceHint: 'Keeps what is done and lays the rest from the next session.',
+      repaceAsk: (date: string) => `Re-pace from today? What is done stays done. The rest moves to the next sessions, from ${date}.`,
+      repaceNoSessions: 'No sessions are left before the route ends. Add weeks to keep going.',
+      repaceLeftOver: (count: number, end: string) =>
+        plural('en', count, {
+          one: `1 item no longer fits before the route ends on ${end}.`,
+          other: `${count} items no longer fit before the route ends on ${end}.`,
+        }),
+      repaceConfirm: { cta: 'Re-pace' },
+      addWeeks: { cta: (n: number) => plural('en', n, { one: 'Add 1 week and re-pace', other: `Add ${n} weeks and re-pace` }) },
+      cancel: { cta: 'Cancel' },
+      repaced: 'Re-paced. Devices pick up the new dates on their next sync.',
+      repaceFailed: "Couldn't re-pace right now. Try again.",
+      refresh: { cta: 'Refresh route' },
+      refreshLine: 'The catalogue has changed since this route was made. Refresh lays the rest of the route out again from today.',
+      refreshAsk: (date: string) => `Refresh the route? What is done stays done. The rest is laid out again on the current catalogue, from ${date}.`,
+    },
+    entries: {
+      planTerm: { cta: 'Plan this term' },
+      ownRoute: (done: number, total: number, weeks: number) =>
+        `Own route: ${done} / ${total} so far · ${plural('en', weeks, { one: `${weeks} week`, other: `${weeks} weeks` })}`,
+    },
+    /** An episode that is not released yet; a ready one uses `plan.catalog.episodeLabel`. */
+    catalog: {
+      comingSoon: (title: string) => `${title} (coming soon)`,
+    },
+  },
 } as const;

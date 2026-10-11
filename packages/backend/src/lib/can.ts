@@ -17,7 +17,7 @@ export type Action =
   | 'teacher.invite'
   | 'entitlement.manage'
   | 'learner.delete'
-  /** Fill a class slot of a class move (F-SPACE-002 T10). Granted with the rules (T-4b); never implied by `roster.manage`. */
+  /** Fill a class slot (source or destination) of a class move (F-SPACE-002 T10, §4.5). Never implied by `roster.manage`, never the learner slot. */
   | 'learner.transfer';
 
 export type Actor =
@@ -36,7 +36,7 @@ export type Target = { kind: 'space'; ctx: SpaceContext } | { kind: 'learner'; l
 
 const BASE: Record<SpaceKind, Partial<Record<SpaceRole, readonly Action[]>>> = {
   family: { caregiver: ['summary.read', 'snapshot.read', 'plan.write', 'roster.manage'] },
-  class: { teacher: ['summary.read', 'plan.write', 'roster.manage'] },
+  class: { teacher: ['summary.read', 'plan.write', 'roster.manage', 'learner.transfer'] },
   school: {
     admin: ['summary.read', 'roster.manage', 'space.manage', 'class.create', 'teacher.invite', 'entitlement.manage'],
     teacher: ['class.create'],
@@ -66,6 +66,7 @@ export function allowedOnSpace(actor: AccountActor, ctx: SpaceContext): Set<Acti
     if (above === 'owner' || above === 'admin') {
       out.add('summary.read');
       out.add('roster.manage');
+      out.add('learner.transfer');
     }
   }
   return out;

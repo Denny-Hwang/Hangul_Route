@@ -83,7 +83,20 @@ const STAGE_DONE_AT: AdditiveField = {
   },
 };
 
-export const ADDITIVE_FIELDS: readonly AdditiveField[] = [PLACEMENTS, STAGE_DONE_AT];
+/**
+ * `selfRoute` (F-PLAN-002 section 3.5) defaults to null after the zod parse. A
+ * stopped route is archived (`archivedAt`), never set to null, so an incoming
+ * null next to a stored route can only come from a client that predates the
+ * field: the stored route and `summary.selfRoute` are kept. A sent route
+ * replaces the stored one (the device keeps the newest `updatedAt`).
+ */
+const SELF_ROUTE: AdditiveField = {
+  payloadKey: 'selfRoute',
+  summaryKey: 'selfRoute',
+  isUnset: (value) => value === undefined || value === null,
+};
+
+export const ADDITIVE_FIELDS: readonly AdditiveField[] = [PLACEMENTS, STAGE_DONE_AT, SELF_ROUTE];
 
 export interface SnapshotParts<P, S> {
   payload: P;

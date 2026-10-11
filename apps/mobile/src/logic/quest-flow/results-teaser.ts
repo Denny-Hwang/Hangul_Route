@@ -42,12 +42,14 @@ export interface ResultsTeaserInput {
   questId: string;
   /** Rounds scored in that run; 0 means every game was skipped and nothing completed. */
   total: number;
-  /** `isStageEntitled(stageKey, tier)` for the current learner. */
+  /** The stages the cursor may land on: the predicate from `cursorContext` (F-ROUTE-001 R-4a, OD-4). Omitted means every playable stage. */
   isEntitled?: (stageKey: string) => boolean;
   /** The UI locale: the title and the line come from the target quest's overlay (F-I18N-001 §3.6). Default `en`. */
   locale?: UiLocale;
   /** Defaults to the generated overlays (tests pass their own). */
   overlays?: Overlays;
+  /** Placed-out quests of the level check (`placedOutSkipSet`, F-PLC-001 section 3.7); omitted without a result. */
+  skipQuestIds?: ReadonlySet<string>;
 }
 
 /** The one line under the title: `teaserEn`, else the new letters from Discover, else `blurbEn`. */
@@ -77,15 +79,18 @@ function episodeIdOf(questId: string, episodes: readonly Episode[]): string | un
 export function resultsTeaser(input: ResultsTeaserInput): ResultsTeaser | undefined {
   const { quests, episodes, questId, total } = input;
   const again = total === 0;
+  const cursor = {
+    snapshot: input.snapshot ?? EMPTY_SNAPSHOT,
+    quests,
+    episodes,
+    justCompleted: questId,
+    isEntitled: input.isEntitled,
+  };
+  // A placed-out quest never played still comes before "nothing next".
   const target = again
     ? quests.find((q) => q.id === questId)
-    : nextQuestAfter({
-        snapshot: input.snapshot ?? EMPTY_SNAPSHOT,
-        quests,
-        episodes,
-        justCompleted: questId,
-        isEntitled: input.isEntitled,
-      });
+    : (nextQuestAfter({ ...cursor, skipQuestIds: input.skipQuestIds }) ??
+      (input.skipQuestIds === undefined ? undefined : nextQuestAfter(cursor)));
   if (!target) return undefined;
   const episodeId = episodeIdOf(target.id, episodes);
   if (!episodeId) return undefined;

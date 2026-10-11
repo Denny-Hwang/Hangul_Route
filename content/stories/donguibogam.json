@@ -2,7 +2,7 @@
   "v": 1,
   "id": "story:donguibogam",
   "state": "ready",
-  "contentVer": 1,
+  "contentVer": 2,
   "title": {
     "ko": "허준의 동의보감",
     "romanization": "Heojunui Donguibogam",
@@ -118,8 +118,25 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "Hoya doing a morning stretch on the wooden floor (maru) of a hanok house, warm sunrise behind him."
+          "artBrief": "Hoya doing a morning stretch on the wooden floor (maru) of a hanok house, warm sunrise behind him.",
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:glow-burst",
+                "x": 200,
+                "y": 230,
+                "s": 1.3
+              },
+              {
+                "ref": "hoya:cheering",
+                "x": 200,
+                "y": 292,
+                "s": 1
+              }
+            ],
+            "altEn": "Hoya stretches his arms up on the wooden floor of a hanok in the warm morning sun."
+          }
         },
         {
           "id": "s2",
@@ -137,8 +154,31 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "A Joseon royal physician in official robes and a black hat bowing before a king seated in a palace hall; rolled papers nearby."
+          "artBrief": "A Joseon royal physician in official robes and a black hat bowing before a king seated in a palace hall; rolled papers nearby.",
+          "art": {
+            "setting": "scene:palace-hall",
+            "layers": [
+              {
+                "ref": "prop:fig-king-seated",
+                "x": 200,
+                "y": 188,
+                "s": 1
+              },
+              {
+                "ref": "prop:fig-officials-kneeling",
+                "x": 196,
+                "y": 292,
+                "s": 1.35
+              },
+              {
+                "ref": "prop:papers-loose",
+                "x": 344,
+                "y": 290,
+                "s": 0.8
+              }
+            ],
+            "altEn": "Royal doctors in official dress kneel before King Seonjo in his palace hall as he asks for a new medical book."
+          }
         },
         {
           "id": "s3",
@@ -156,8 +196,38 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "Heo Jun at a low desk surrounded by stacks of old thread-bound books, writing with a brush by lamplight."
+          "artBrief": "Heo Jun at a low desk surrounded by stacks of old thread-bound books, writing with a brush by lamplight.",
+          "art": {
+            "setting": "scene:hanok-room",
+            "layers": [
+              {
+                "ref": "prop:books-stack",
+                "x": 76,
+                "y": 286,
+                "s": 0.9
+              },
+              {
+                "ref": "prop:fig-historian",
+                "x": 200,
+                "y": 286,
+                "s": 1.3
+              },
+              {
+                "ref": "prop:oil-lamp",
+                "x": 296,
+                "y": 278,
+                "s": 1
+              },
+              {
+                "ref": "prop:books-stack",
+                "x": 350,
+                "y": 290,
+                "s": 0.75,
+                "flip": true
+              }
+            ],
+            "altEn": "At night by lamplight Heo Jun sits writing with a brush, surrounded by stacks of old thread-bound books."
+          }
         },
         {
           "id": "s4",
@@ -176,8 +246,25 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "A neat stack of finished book volumes tied with cord, beside a round bronze mirror that softly reflects light."
+          "artBrief": "A neat stack of finished book volumes tied with cord, beside a round bronze mirror that softly reflects light.",
+          "art": {
+            "setting": "scene:hanji-backdrop",
+            "layers": [
+              {
+                "ref": "prop:books-stack",
+                "x": 150,
+                "y": 262,
+                "s": 1.6
+              },
+              {
+                "ref": "prop:bronze-mirror",
+                "x": 286,
+                "y": 262,
+                "s": 1.6
+              }
+            ],
+            "altEn": "The finished volumes of Donguibogam lie stacked beside a round bronze mirror, since 'bogam' means a treasured mirror."
+          }
         },
         {
           "id": "s5",
@@ -195,8 +282,47 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "Hoya and two children walking happily through a pine forest, breathing fresh air, with a picnic mat of simple healthy food."
+          "artBrief": "Hoya and two children walking happily through a pine forest, breathing fresh air, with a picnic mat of simple healthy food.",
+          "art": {
+            "setting": "scene:mountains",
+            "layers": [
+              {
+                "ref": "prop:pine-tree",
+                "x": 50,
+                "y": 262,
+                "s": 1.3,
+                "z": "back"
+              },
+              {
+                "ref": "prop:pine-tree",
+                "x": 352,
+                "y": 258,
+                "s": 1.2,
+                "z": "back",
+                "flip": true
+              },
+              {
+                "ref": "prop:fig-child",
+                "x": 124,
+                "y": 284,
+                "s": 1
+              },
+              {
+                "ref": "hoya:waving",
+                "x": 206,
+                "y": 292,
+                "s": 0.85
+              },
+              {
+                "ref": "prop:fig-child",
+                "x": 286,
+                "y": 284,
+                "s": 1,
+                "tint": "brand.secondaryLight"
+              }
+            ],
+            "altEn": "Hoya and two friends walk happily through a pine forest, breathing the fresh air to stay healthy."
+          }
         },
         {
           "id": "s6",
@@ -214,8 +340,25 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "Gentle drawings of wild medicinal plants (bellflower, mugwort, a root plant) on a sunny hillside, with a woven basket of herbs; no writing."
+          "artBrief": "Gentle drawings of wild medicinal plants (bellflower, mugwort, a root plant) on a sunny hillside, with a woven basket of herbs; no writing.",
+          "art": {
+            "setting": "scene:mountains",
+            "layers": [
+              {
+                "ref": "prop:herbs",
+                "x": 180,
+                "y": 264,
+                "s": 2
+              },
+              {
+                "ref": "prop:basket",
+                "x": 330,
+                "y": 276,
+                "s": 1.1
+              }
+            ],
+            "altEn": "Wild medicinal herbs such as bellflower and mugwort grow on a sunny hillside beside a basket of picked greens."
+          }
         },
         {
           "id": "s7",
@@ -234,8 +377,19 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "Rows of traditional thread-bound books on wooden shelves, with faint outlines of mountains and seas behind them suggesting the book's travels."
+          "artBrief": "Rows of traditional thread-bound books on wooden shelves, with faint outlines of mountains and seas behind them suggesting the book's travels.",
+          "art": {
+            "setting": "scene:seashore",
+            "layers": [
+              {
+                "ref": "prop:books-case",
+                "x": 200,
+                "y": 270,
+                "s": 1.8
+              }
+            ],
+            "altEn": "Rows of old thread-bound books rest in a wooden case before a sea of islands, as the book travelled abroad."
+          }
         },
         {
           "id": "s8",
@@ -252,8 +406,25 @@
           ],
           "framing": false,
           "approximations": [],
-          "artPending": true,
-          "artBrief": "Hoya hugging a soft pillow shaped like an old book, sitting beside a museum case that holds a thread-bound book under gentle light."
+          "artBrief": "Hoya hugging a soft pillow shaped like an old book, sitting beside a museum case that holds a thread-bound book under gentle light.",
+          "art": {
+            "setting": "scene:modern-room",
+            "layers": [
+              {
+                "ref": "prop:museum-case",
+                "x": 150,
+                "y": 288,
+                "s": 1.6
+              },
+              {
+                "ref": "hoya:reading",
+                "x": 296,
+                "y": 292,
+                "s": 0.8
+              }
+            ],
+            "altEn": "Hoya holds a book close beside a museum case that keeps a treasured first-printing copy of Donguibogam."
+          }
         }
       ],
       "checks": [

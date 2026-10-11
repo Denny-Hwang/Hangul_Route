@@ -1,13 +1,16 @@
 import { getMessages, type UiLocale } from '@hangul-route/i18n';
+import { builderEpisodes, questsOf } from '@/data/catalog';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { expectAllPseudo } from './pseudo-text';
 
 /**
- * F-I18N-001 PR 10a, §3.11: the migrated console pages take every word from the
+ * F-I18N-001 PRs 10a and 10b, §3.11: the migrated console pages take every word from the
  * dictionary. Rendered in the pseudo-locale (en-XA), every text node and every
  * labelled attribute is bracketed pseudo text; an English literal left in a page
  * would show up unbracketed here. Effects do not run in a server render, so this
- * covers each page's first paint; the dictionary tests cover the rest.
+ * covers each page's first paint; console-parts-pseudo.test.tsx renders the loaded
+ * plan and billing states, and the dictionary tests cover the rest.
  */
 const PSEUDO = 'en-XA' as UiLocale;
 
@@ -40,27 +43,6 @@ afterAll(() => {
   vi.unstubAllEnvs();
 });
 
-const decode = (s: string): string =>
-  s.replace(/&#x27;|&#39;/g, "'").replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
-
-/** Text nodes and labelled attribute values that contain a letter, data removed and edge punctuation (· ←) trimmed. */
-function wordsOf(html: string, data: readonly string[]): string[] {
-  const texts = html
-    .replace(/<!-- -->/g, '')
-    .split(/<[^>]+>/)
-    .map(decode);
-  const attrs = [...html.matchAll(/ (?:aria-label|placeholder|title|alt)="([^"]*)"/g)].map((match) => decode(match[1] ?? ''));
-  return [...texts, ...attrs]
-    .map((t) => data.reduce((acc, d) => acc.split(d).join(''), t).replace(/^[^[A-Za-z]+|[^\]A-Za-z]+$/g, ''))
-    .filter((t) => /[A-Za-z]/.test(t));
-}
-
-function expectAllPseudo(html: string, data: readonly string[] = []): void {
-  const words = wordsOf(html, data);
-  expect(words.length).toBeGreaterThan(3);
-  for (const w of words) expect(w, `"${w}" is not from the dictionary`).toMatch(/^\[[^\]]*\]$/);
-}
-
 async function render(path: string): Promise<string> {
   const mod = (await import(path)) as { default: () => JSX.Element };
   const Page = mod.default;
@@ -74,29 +56,50 @@ describe('console pages render only dictionary text (en-XA)', () => {
 
   it('sign-in, dev form (signed out)', async () => {
     auth.session = null;
-    const html = await render('@/app/teach/page');
+    const html = await render('@/app/(console)/teach/page');
     auth.session = { accountId: 'teacher-kim', displayName: 'Ms Kim' };
     expect(html).toContain('name="accountId"');
     expectAllPseudo(html);
   });
 
   it('start, role step', async () => {
-    const html = await render('@/app/teach/start/page');
+    const html = await render('@/app/(console)/teach/start/page');
     expect(html).toContain('role="radiogroup"');
     expectAllPseudo(html);
   });
 
   it('home, before the list loads', async () => {
-    expectAllPseudo(await render('@/app/teach/home/page'));
+    expectAllPseudo(await render('@/app/(console)/teach/home/page'));
   });
 
   it('space roster, loading', async () => {
-    expectAllPseudo(await render('@/app/teach/space/page'));
+    expectAllPseudo(await render('@/app/(console)/teach/space/page'));
+  });
+
+  it('curriculum wizard, step 1 (F-PLAN-002 section 3.8)', async () => {
+    const html = await render('@/app/(console)/teach/space/curriculum/page');
+    expect(html).toContain('role="radiogroup"');
+    expect(html).toContain('aria-checked="true"');
+    expect(html).toContain('href="/teach/space?id=space%3Ac1"');
+    expectAllPseudo(html);
   });
 
   it('relink, loading', async () => {
-    const html = await render('@/app/teach/space/relink/page');
+    const html = await render('@/app/(console)/teach/space/relink/page');
     expect(html).toContain('href="/teach/space?id=space%3Ac1"');
+    expectAllPseudo(html);
+  });
+
+  it('plan builder, before the plans load (quest and episode titles are content)', async () => {
+    const html = await render('@/app/(console)/teach/space/plan/page');
+    expect(html).toContain('href="/teach/space?id=space%3Ac1"');
+    expect(html).toContain('type="date"');
+    expectAllPseudo(html, builderEpisodes().flatMap((e) => [e.title, ...questsOf(e.episodeId).map((q) => q.title)]));
+  });
+
+  it('billing, before the plans load', async () => {
+    const html = await render('@/app/(console)/teach/billing/page');
+    expect(html).toContain('name="promo"');
     expectAllPseudo(html);
   });
 });

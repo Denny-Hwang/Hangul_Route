@@ -128,6 +128,9 @@ export const colors = {
     subtle: '#E8DFCD',
     strong: '#C5B8A1',
     focus: '#3A7FB5', // ≥ 3:1 (non-text) on canvas, paper and sunken
+    // Drawn-shape outlines (My route pips, the dotted trail connector; F-ROUTE-001 R-2b):
+    // ≥ 3:1 (non-text) on canvas, paper, sunken and brand.primaryLight.
+    shape: '#857360',
   },
 } as const;
 
@@ -308,6 +311,22 @@ export const z = {
   hoyaBubble: 60,
 } as const;
 
+/**
+ * Lecture presenter scale (F-TCH-004 §3.6; design/tokens/presenter.v1.md).
+ * Sizes are logical stage units: a stage is 1280 units wide and 600-960 high,
+ * and `stage-scale.ts` turns a unit into window pixels. Nothing projected is
+ * smaller than `caption`, and on screen text never drops below the body floor.
+ * The presenter projects existing colours only (pairs in presenter.v1.md).
+ */
+export const presenter = {
+  stage: { width: 1280, minHeight: 600, maxHeight: 960 },
+  size: { glyph: 380, display: 140, title: 80, prompt: 56, body: 40, caption: 28 }, // stage units
+  font: 'HR Presenter KR', // family name of the bundled Hangul subset (F-TCH-004 PR 3)
+  marker: { shapes: ['circle', 'triangle', 'square', 'star'] }, // quiz options 1-4, so colour is never the only cue
+  autoHideMs: 3000, // control bar hides after this long with no pointer, touch or key
+  dimOpacity: 0.8, // non-correct quiz options after the reveal; text.primary only (8.4:1 on paper; text.secondary would fall to 4.9:1)
+} as const;
+
 export const tokens = {
   colors,
   spacing,
@@ -319,12 +338,14 @@ export const tokens = {
   borderWidth,
   motion,
   z,
+  presenter,
 } as const;
 
 export type Tokens = typeof tokens;
 export type ColorTokens = typeof colors;
 export type SpacingTokens = typeof spacing;
 export type LayoutTokens = typeof layout;
+export type PresenterTokens = typeof presenter;
 export type RadiiTokens = typeof radii;
 export type TypographyTokens = typeof typography;
 export type StageKey = keyof typeof colors.stage;

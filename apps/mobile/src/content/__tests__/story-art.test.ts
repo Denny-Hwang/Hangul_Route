@@ -8,7 +8,8 @@ import { describe, expect, it } from 'vitest';
  * F-STORY-002 §5 story-art integration: every scene that carries `art`, in any
  * story state, names registered items and passes the composition rules
  * (§3.9.5) with no error; ready stories have art or `artPending` on every scene
- * (F-STORY-001 lint `art-missing`). The records-joseon cluster (PR 2.10a) is
+ * (F-STORY-001 lint `art-missing`). The records-joseon (PR 2.10a),
+ * hangul-printing (PR 2.10b) and science-art-life (PR 2.10c) clusters are
  * fully illustrated and passed review with no warnings either.
  */
 const DIR = join(__dirname, '../../../../../content/stories');
@@ -28,9 +29,34 @@ const RECORDS_JOSEON = [
   'story:joseon-records-today',
 ];
 
+const HANGUL_PRINTING = [
+  'story:sejong-new-letters',
+  'story:shapes-of-hangeul',
+  'story:hangeul-day',
+  'story:jikji-metal-type',
+  'story:tripitaka-koreana',
+  'story:janggyeong-panjeon',
+];
+
+const SCIENCE_ART_LIFE = [
+  'story:cheugugi-rain-gauge',
+  'story:angbuilgu-sundial',
+  'story:jagyeongnu-water-clock',
+  'story:donguibogam',
+  'story:nanjung-ilgi',
+  'story:kim-hongdo-genre-paintings',
+];
+
+/** Every illustrated cluster, with its scene count (F-STORY-002 §3.9.8 cadence). */
+const CLUSTERS: ReadonlyArray<{ name: string; ids: readonly string[]; scenes: number }> = [
+  { name: 'records-joseon', ids: RECORDS_JOSEON, scenes: 45 },
+  { name: 'hangul-printing', ids: HANGUL_PRINTING, scenes: 46 },
+  { name: 'science-art-life', ids: SCIENCE_ART_LIFE, scenes: 43 },
+];
+
 describe('story scene art', () => {
   it('has art to check', () => {
-    expect(withArt.length).toBeGreaterThanOrEqual(45);
+    expect(withArt.length).toBeGreaterThanOrEqual(134);
   });
 
   it('every setting and layer ref is in the registry', () => {
@@ -67,20 +93,41 @@ describe('story scene art', () => {
   );
   it(`reports ${pending.length} artPending scenes of ${scenes.length} across ${Object.keys(pendingByStory).length} stories`, () => {
     expect(pending.length + withArt.length).toBeLessThanOrEqual(scenes.length);
-    for (const id of RECORDS_JOSEON) expect(pendingByStory[id], id).toBeUndefined();
+    for (const id of CLUSTERS.flatMap((c) => c.ids)) expect(pendingByStory[id], id).toBeUndefined();
     expect(Object.values(pendingByStory).reduce((a, n) => a + n, 0)).toBe(pending.length);
   });
 
   // F-STORY-001 §3.7: art is learner-visible content; these stories were ready
   // on main before their art landed, so their contentVer moved past 1.
-  it('bumped contentVer on the records-joseon stories for their art', () => {
-    for (const story of stories.filter((s) => RECORDS_JOSEON.includes(s.id))) expect(story.contentVer, story.id).toBeGreaterThanOrEqual(2);
+  it.each(CLUSTERS)('bumped contentVer on the $name stories for their art', ({ ids }) => {
+    for (const story of stories.filter((s) => ids.includes(s.id))) expect(story.contentVer, story.id).toBeGreaterThanOrEqual(2);
   });
 
-  it('illustrates every scene of the records-joseon cluster, with no warnings either', () => {
-    const cluster = scenes.filter((s) => RECORDS_JOSEON.includes(s.story.id));
+  // §3.9.5 rule 9: the alt states what is drawn. Hoya has five poses
+  // (idle, cheering, thinking, reading, waving); none points, grips, kneels,
+  // holds a paw out or stands in a ready stance, so the alt may not say so.
+  it('science-art-life alt text names only gestures Hoya is drawn in', () => {
+    const undrawn = /\bHoya\b[^.;:]*?\b(points?|pointing|holds out|stands? ready|grips?|gripping|kneels?)\b/i;
+    for (const { story, scene } of scenes.filter((s) => SCIENCE_ART_LIFE.includes(s.story.id) && s.scene.art)) {
+      if (!scene.art!.layers.some((l) => l.ref.startsWith('hoya:'))) continue;
+      expect(scene.art!.altEn, `${story.id} ${scene.id}`).not.toMatch(undrawn);
+    }
+  });
+
+  // §3.9.10: a detail the sources do not support is left out. The museum's
+  // Seodang shows the teacher in a square indoor cap, never an outdoor gat.
+  it('draws the Seodang teacher without a gat', () => {
+    const seodang = scenes.find((s) => s.story.id === 'story:kim-hongdo-genre-paintings' && s.scene.id === 's6');
+    expect(seodang?.scene.art).toBeDefined();
+    for (const layer of seodang!.scene.art!.layers) {
+      expect(SCENE_ART_REGISTRY[layer.ref]?.alt ?? '', layer.ref).not.toMatch(/\bgat\b/);
+    }
+  });
+
+  it.each(CLUSTERS)('illustrates every scene of the $name cluster, with no warnings either', ({ ids, scenes: count }) => {
+    const cluster = scenes.filter((s) => ids.includes(s.story.id));
     expect(new Set(cluster.map((s) => s.story.id)).size).toBe(6);
-    expect(cluster.length).toBe(45);
+    expect(cluster.length).toBe(count);
     for (const { story, scene } of cluster) {
       expect(scene.art, `${story.id} ${scene.id}`).toBeDefined();
       expect(checkScene(scene.art!, SCENE_ART_REGISTRY), `${story.id} ${scene.id}`).toEqual([]);

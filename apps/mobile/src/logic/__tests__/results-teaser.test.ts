@@ -51,12 +51,26 @@ describe('resultsTeaser: which quest is next up', () => {
     expect(resultsTeaser({ ...base, snapshot: done('q1', 'q2', 'q3', 'q4', 'q5'), questId: 'quest:q5', total: 5 })).toBeUndefined();
   });
 
-  it('never teases a stage the learner cannot open (free tier)', () => {
+  it('under the OD-4 tier rule, never teases a stage the tier leaves out', () => {
     const free = (stage: string) => isStageEntitled(stage, 'free');
     const all = done('q1', 'q2', 'q3');
     expect(resultsTeaser({ ...base, snapshot: all, questId: 'quest:q4', total: 5, isEntitled: free })).toBeUndefined();
     const premium = (stage: string) => isStageEntitled(stage, 'premium');
     expect(resultsTeaser({ ...base, snapshot: all, questId: 'quest:q4', total: 5, isEntitled: premium })?.questId).toBe('quest:q5');
+  });
+});
+
+describe('resultsTeaser: placed-out quests (F-PLC-001 section 3.7, consumer 1)', () => {
+  it('skips quests the level check placed out', () => {
+    const skip = new Set(['quest:q2', 'quest:q3']);
+    expect(resultsTeaser({ ...base, snapshot: done(), questId: 'quest:q1', total: 5, skipQuestIds: skip })?.questId).toBe('quest:q4');
+  });
+
+  it('offers a placed-out quest never played before nothing at all', () => {
+    const skip = new Set(['quest:q2']);
+    const t = resultsTeaser({ ...base, snapshot: done('q1', 'q3', 'q4'), questId: 'quest:q5', total: 5, skipQuestIds: skip });
+    expect(t?.questId).toBe('quest:q2');
+    expect(resultsTeaser({ ...base, snapshot: done('q1', 'q2', 'q3', 'q4'), questId: 'quest:q5', total: 5, skipQuestIds: skip })).toBeUndefined();
   });
 });
 

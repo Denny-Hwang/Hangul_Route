@@ -24,7 +24,7 @@ Binding owner decisions this spec implements: **D1** (any age: the art is friend
 | W5 | **Reuse HeritageCardArt where it fits** — 13 launch words use `card:*` art (F-VOC-001 §3.4); the rule and its exit are in §3.11. | 13 fewer drawings; the card art is already reviewed; no copy. |
 | W6 | **No text inside art**: no Hangul, no Latin letters, no digits (counting is dots), no emoji. | A letter in a picture can give away or contradict the word and breaks the romanization checks; digits break the "no numbers" rule for pre-readers. |
 | W7 | **Budget**: all WordArt source (`src/word-art/**`, tests excluded) is at most **120 KB raw and 30 KB gzipped**, enforced by a test. | The JS bundle is about 2.0 MB raw today (`apps/mobile/dist` index bundle, 1,987,079 bytes per the design input); extrapolating the prototype gives about 80 KB raw and 20 KB gzipped, so the budget leaves 50 % headroom. |
-| W8 | **Silhouette mode is part of the contract** (`mono` tone): the same data drawn in one tone, used for "not collected yet" tiles and as a contrast check in review. | The word wall (F-VOC-003) shows a soft silhouette for words not yet met; no second asset. |
+| W8 | **Silhouette mode is part of the contract** (`mono` tone): the same data drawn in one tone, used for "not collected yet" tiles and as a contrast check in review. (Amended at W-1c: the generated families are uniform in silhouette by design, one square for every colour, one frame for every count, one head or figure for every body part; a colour or a number has no shape to hint at, so these tiles read as "not met yet", and the review's silhouette check applies to hand glyphs.) | The word wall (F-VOC-003) shows a soft silhouette for words not yet met; no second asset. |
 
 ---
 
@@ -69,12 +69,19 @@ export type WordArtShape =
 
 export type WordArtGlyph = readonly WordArtShape[];                 // painted in order, viewBox 0 0 100 100
 
-export interface WordArtMeta { maxTones?: number; family: WordArtFamily; reserved?: boolean }  // reserved: key exists for v1.1, unused at launch
+export type WordArtStatus = 'draft' | 'review' | 'approved';     // §3.10 contact-sheet state; the owner marks 'approved'
+export interface WordArtMeta {
+  family: WordArtFamily; status: WordArtStatus;
+  maxTones?: number;      // allowlist above 4 fill tones (§3.3); needs `reason`
+  bboxWaived?: boolean;   // C2 waiver; needs `reason`
+  reason?: string;        // why a waiver is granted (a test requires it with either waiver)
+  reserved?: boolean;     // key exists for v1.1, unused at launch
+}
 export type WordArtFamily = 'food'|'animal'|'family'|'school'|'nature'|'travel'|'sport'|'culture'|'science'|'color'|'count'|'body'|'prop';
 ```
 
 - Short field names (`f`, `s`, `sw`, `o`) are deliberate (W2): the data is expanded in memory, never shipped as JSON, so size is the builders' source size.
-- **Path grammar**: absolute commands `M L H V C Q A Z` only, numbers with at most one decimal, no relative commands, no `S`/`T`. (A pure `placePath` can then translate and scale any glyph, which composed glyphs use, §3.6; a test parses every path against this grammar.)
+- **Path grammar** (`word-art/path.ts`: `parsePath`, `isWordArtPath`, `formatNumber`, shared by the `path()` builder, the renderer and the tests): absolute commands `M L H V C Q A Z` only, numbers with at most one decimal, no relative commands, no `S`/`T`. (A pure `placePath` can then translate and scale any glyph, which composed glyphs use, §3.6; a test parses every path against this grammar.)
 - **Stroke and corners**: strokes use round caps and joins (the renderer sets them; the data cannot override); the data carries `sw` only.
 - **Opacity** `o` is 0.1-1; opacity is for shadows and highlights only (a 0.18 ground shadow, a 0.55 highlight), never to build a colour (no mixing by overlay).
 - **No gradients, no filters, no clip paths, no masks, no text, no images, no `<use>`**: the shape union cannot express them (compile-time) and the test suite re-checks the data.
@@ -102,7 +109,7 @@ Every builder returns a `WordArtShape` (or a list) and rounds coordinates to one
 
 ### 3.3 Tones and colours
 
-**Tone vocabulary.** `WordArtTone` is the union of `'<group>.<key>'` for every key of `colors` (`tokens.ts:21-103`) in the groups **brand, surface (canvas, paper, sunken), text, feedback (success, nudge, info and their Light variants), theme, stage, hoya, border, vocab** — and **not** `feedback.danger`, `feedback.dangerLight`, `surface.overlay`, `surface.inkScrim`, or any `rarity.*` (rarity colours carry card-rarity meaning). `word-art/tones.ts` exports:
+**Tone vocabulary.** `WordArtTone` is the union of `'<group>.<key>'` for every key of `colors` (`tokens.ts:21-103`) in the groups **brand, surface (canvas, paper, sunken), text, feedback (success, `successDark`, nudge, info and their Light variants), theme, stage, hoya, border, vocab** (the list is generated from `colors` minus the exclusions, so a token added later joins it) — and **not** `feedback.danger`, `feedback.dangerLight`, `surface.overlay`, `surface.inkScrim`, or any `rarity.*` (rarity colours carry card-rarity meaning). `word-art/tones.ts` exports:
 
 ```ts
 export const WORD_ART_TONES: readonly WordArtTone[]            // generated from `colors` at module load, minus the exclusions
@@ -112,9 +119,9 @@ export function isWordArtTone(s: string): s is WordArtTone
 
 A glyph fails the tone test when any `f` or `s` is not in `WORD_ART_TONES`.
 
-**Outline rule.** The default outline is `text.primary` at `sw` 3 (main outline) or 2 (detail). It is *not* counted as a tone.
+**Outline rule.** The default outline is `text.primary` at `sw` 3 (main outline) or 2 (detail). It is *not* counted as a tone. A small detail **filled** with `text.primary` (the eyes `face()` draws, pupils, wheels, a nose) is part of the same ink and is not counted either; otherwise every face would cost a tone.
 
-**Tone budget.** At most **4 fill tones** per glyph (plus the outline and the optional ground shadow), per heritage-card-art.md §3 ("3-5 colours"). The registry may allowlist a higher number per key with `maxTones` and a reason (the rainbow needs 6; a swatch with a sticker needs 5).
+**Tone budget.** At most **4 fill tones** per glyph (plus the outline ink and the optional ground shadow; only the shadow tone `hoya.furDark` below opacity 0.5 is exempt as the shadow, and a faint fill in any other tone still counts), per heritage-card-art.md §3 ("3-5 colours"). The registry may allowlist a higher number per key with `maxTones` and a reason (the rainbow needs 6; a swatch with a sticker needs 5).
 
 ### 3.4 The twelve `colors.vocab.*` tokens (`tokens.ts`, `design/tokens/colors.v1.md`)
 
@@ -151,9 +158,9 @@ export const COLOR_CONFUSION_PAIRS: readonly (readonly [string, string])[] = [
 |---|---|---|
 | C1 | ViewBox `0 0 100 100`; shape coordinates within `-6..106` (strokes may touch the edge); nothing is clipped | test: coordinates, path parse |
 | C2 | The subject's bounding box covers **60-70 %** of the width or height, centred (heritage-card-art.md §3) | test: bbox from shapes (paths use their control points, an upper bound), tolerance +-10 %, per-key waiver with a reason |
-| C3 | Rounded geometric primitives; outline 3 for the main silhouette, 2 for details; **no outline thinner than 2** | test: `sw` in {2, 3} (generated families may use 1.5 for dots) |
+| C3 | Rounded geometric primitives; outline 3 for the main silhouette, 2 for details; **no outline thinner than 2** | test: `sw` in {2, 3} (generated families may use 1.5 for dots; amended at W-1c: and the paper halo of §3.6, a `surface.paper` stroke of `HALO_WIDTH` 7 with no fill) |
 | C4 | At most 4 fill tones (§3.3) | test |
-| C5 | A face always smiles; use `face()` | test (builder) + review |
+| C5 | A face always smiles; use `face()` (amended at W-1c: a profile, a bird or a fish seen from the side, shows one eye and its smile is the mouth line turned up, as `prop-crow`; the zoomed head of §3.6.3 takes the eyes of `face()` and draws an open smile with teeth, which `tooth` needs) | test (builder; the generator tests check that every figure and head smiles, by the direction of the arc) + review |
 | C6 | A standing object has a `groundShadow` | review |
 | C7 | A shape count of at most **32** (hand glyphs) / **48** (generated) | test |
 | C8 | Distinct: no two keys have identical data | test (like `glyphs.test.ts`'s "glyphs differ") |
@@ -164,9 +171,9 @@ export const COLOR_CONFUSION_PAIRS: readonly (readonly [string, string])[] = [
 
 ### 3.6 Generated families
 
-All are pure functions in `word-art/generated/*.ts`, return a `WordArtGlyph`, and register under their keys.
+All are pure functions in `word-art/generated/*.ts`, return a `WordArtGlyph`, and register under their keys. (Amended at W-1c: the generators land in W-1c and their output is held to the §3.5 rules by `generated.test.ts`; the keys are registered by the batches, colours and counts in W-3 and body in W-4, as §6 orders them.)
 
-**3.6.1 Colour swatches with an object cue** — `word:color-red` ... `word:color-black` (12). `swatch(colorKey, objectGlyph)`: a rounded square (`rect`, radius 14, fill `vocab.<colour>`, outline `text.primary` 3) filling the viewBox with margin 6, plus the **object** drawn as a sticker (the object's own glyph scaled to 55 % and translated to the lower right, with a `surface.paper` halo made by drawing each shape again behind with a wide paper stroke). Objects (source: existing glyphs or props):
+**3.6.1 Colour swatches with an object cue** — `word:color-red` ... `word:color-black` (12). `swatch(colorKey, objectGlyph)`: a rounded square (`rect`, radius 14, fill `vocab.<colour>`, outline `text.primary` 3) filling the viewBox with margin 6, plus the **object** drawn as a sticker (the object's own glyph scaled to 55 % and translated to the lower right, with a `surface.paper` halo made by drawing each shape again behind with a wide paper stroke; amended at W-1c: the halo is one compound path of every opaque shape's outline, so a swatch is the object's shapes plus two and any hand glyph within 32 shapes gives a swatch within 48). Objects (source: existing glyphs or props):
 
 | Colour | Object (key) | Colour | Object (key) |
 |---|---|---|---|
@@ -181,15 +188,15 @@ All are pure functions in `word-art/generated/*.ts`, return a `WordArtGlyph`, an
 
 **3.6.2 Counts** — `word:count-0, 1..10, 20` (12). `count(n)`: a **ten-frame** (a 2 x 5 grid of cells, `rect` cells with a `border.strong` outline) with `n` filled dots (`circle`, first five `brand.primary`, next five `brand.secondary`, the convention of ten-frames); 20 draws two frames; 0 draws one empty frame. No numerals (W6). Dot positions fill left to right, top row first, so `7` is five and two. 1.1-3.9 KB measured (`count(20)` is 42 shapes, hence the 48-shape limit).
 
-**3.6.3 Body parts** — `word:body-eye, nose, mouth, ear, head, face, hand, arm, leg, foot, belly, tooth` (12). `bodyPart(part)`: a friendly **neutral figure** (a round head, simple torso and limbs in `hoya.fur` and `surface.paper`, smiling, **not** the Hoya component, which is JSX) plus a highlight ring (`ring(cx, cy, r)`: a `brand.secondary` stroked circle with a paper halo) at a fixed anchor: head/face views (eye, nose, mouth, ear, tooth, face) zoom on the head, whole-body views (head, hand, arm, leg, foot, belly) show the full figure. Anchors are data (`BODY_ANCHORS`), tested for being inside the viewBox. 1.1-1.7 KB each measured.
+**3.6.3 Body parts** — `word:body-eye, nose, mouth, ear, head, face, hand, arm, leg, foot, belly, tooth` (12). `bodyPart(part)`: a friendly **neutral figure** (a round head, simple torso and limbs in `hoya.fur` and `surface.paper`, smiling, **not** the Hoya component, which is JSX) plus a highlight ring (`ring(cx, cy, r)`: a `brand.secondary` stroked circle with a paper halo) at a fixed anchor: head/face views (eye, nose, mouth, ear, tooth, face) zoom on the head, whole-body views (head, hand, arm, leg, foot, belly) show the full figure. Anchors are data (`BODY_ANCHORS`), tested for being inside the viewBox. 1.1-1.7 KB each measured. (Amended at W-1c: the eye, ear and hand anchors are derived from the shapes they ring, and a test checks each against its shape. `body-mouth` and `body-tooth` share the zoomed head and differ only by the ring, so the W-4 review compares them side by side at 48 px, and F-VOC-004 never offers the two as options in the same question.)
 
-**3.6.4 People (Family)** — `figure(options)`: `{ height, hair: 'long'|'short'|'bun'|'none'|'grey', clothes: WordArtTone, accessory?: 'glasses'|'cane'|'blanket' }`, returning shapes for a neutral standing figure (C12). The 12 Family glyphs are compositions of one or more figures; **sibling words** show the speaker (smaller, with a `marker`: a small `brand.secondary` dot above the head) next to the older sibling; hair length distinguishes the speaker's side (long vs short), a convention noted on the card back (F-VOC-001 §3.6). The four sibling glyphs differ by figure pair, which the distinctness test (C8) checks.
+**3.6.4 People (Family)** — `figure(options)`: `{ height, hair: 'long'|'short'|'bun'|'none'|'grey', clothes: WordArtTone, accessory?: 'glasses'|'cane'|'blanket' }`, returning shapes for a neutral standing figure (C12). (Amended at W-1c: also `x?` and `ground?`, the centre and the ground line, default 50 and 88, for compositions; `hairTone?` for long, short and bun hair, default `text.secondary`; `compact?`, no hands or shoes, so four figures fit 32 shapes; `figureTop(options)` for placing the marker; and `siblings(older, speaker)` for the four sibling glyphs.) The 12 Family glyphs are compositions of one or more figures; **sibling words** show the speaker (smaller, with a `marker`: a small `brand.secondary` dot above the head) next to the older sibling; hair length distinguishes the speaker's side (long vs short), a convention noted on the card back (F-VOC-001 §3.6). The four sibling glyphs differ by figure pair, which the distinctness test (C8) checks.
 
 ### 3.7 Renderer, accessibility and modes
 
 **Pure render list** (`word-art/render.ts`, 100 % covered): `toRenderList(glyph, { mono?: WordArtTone }): RenderShape[]` resolves every tone to a value and fills the defaults (`strokeWidth`, `linecap: 'round'`, `linejoin: 'round'`, `opacity`); `mono` paints every fill **and** stroke in that one tone (silhouette, W8) and drops `o` below 0.5 (so a highlight does not vanish). `glyphToSvgString(glyph, { size, mono? }): string` builds a standalone `<svg viewBox="0 0 100 100" ...>` string for the web preview, tests and golden files.
 
-**React Native component** `components/WordArt/WordArt.tsx` (+ `types.ts`, `index.ts`, exported from `src/index.ts`; excluded from coverage like every component, so it only maps `toRenderList` output onto `react-native-svg` `<Svg>`, `<Circle>`, `<Ellipse>`, `<Rect>`, `<Path>`):
+**React Native component** `components/WordArt/WordArt.tsx` (+ `types.ts`, `index.ts`, exported from `src/index.ts`; amended at W-1c: imported from the `@hangul-route/design-system/components/WordArt` subpath instead, so an app start that shows no word picture does not evaluate the glyph registry; a decorative picture also sets `aria-hidden`, which react-native-web writes to the DOM; a picture that carries the meaning but was given a blank label is `unlabelled` in the model, framed in development and left to `PictureArt` to replace with its text tile; excluded from coverage like every component, so it only maps `toRenderList` output onto `react-native-svg` `<Svg>`, `<Circle>`, `<Ellipse>`, `<Rect>`, `<Path>`):
 
 ```ts
 export interface WordArtProps {
@@ -229,7 +236,7 @@ export function wordArtKeyOf(ref: string): string | null        // 'word:food-ap
 
 Key grammar: `^(food|animal|family|school|nature|travel|sport|culture|science|color|count|body|prop)-[a-z0-9-]+$`.
 
-Files: `glyphs/{food,animal,family,school,nature,travel,sport,culture,science,prop}.ts` (hand glyphs, `Record<string, WordArtGlyph>` each), `generated/{color,count,body,figure}.ts`, `registry.ts` (merges them, builds the meta, throws at import on a duplicate key — a unit test imports it).
+Files: `glyphs/{food,animal,family,school,nature,travel,sport,culture,science,prop}.ts` (hand glyphs, `Record<string, WordArtGlyph>` each), `generated/{color,count,body,figure}.ts`, `color-confusion.ts` (`COLOR_CONFUSION_PAIRS`, exported for F-VOC-004), `registry.ts` (merges them, builds the meta, throws at import on a duplicate or malformed key, on a key filed under another family's source — `buildRegistry` takes `[family, glyphs]` pairs — and on meta for a key with no glyph — a unit test imports it). The registry is deeply frozen, every shape included, so no caller can repaint the shared data. `color-science.ts` is test-only and is not exported from the entry.
 
 `packages/design-system/package.json` `exports` gains `"./word-art": "./src/word-art/index.ts"` (a pure entry with **no** React or react-native import) so logic and tests in other packages can use the data without pulling `react-native-svg`.
 
@@ -241,6 +248,7 @@ Files: `glyphs/{food,animal,family,school,nature,travel,sport,culture,science,pr
 - every item `visual` of the form `card:<id>` is in `supportedCardIds`;
 - every `WORD_ART_KEYS` entry of family other than `prop` is used by exactly one item, or is flagged `meta.reserved` — **checked per topic file that exists**: while a topic's JSON has not been merged (F-VOC-001 V-2b..V-6b), the glyphs of its families are checked for validity only (tones, grammar, bbox), so the system PRs W-1b/W-1c and the art batches may land before the data they will serve;
 - every `prop` key is referenced by a colour generator;
+- **while the art lags the data** (amended at W-1b: F-VOC-001 merged `food`, `animals`, `colors` and `numbers` before any batch, leaving 42 `word:` visuals without a glyph): the test keeps an `AWAITING_ART` map from each family to the PR that draws it (W-3 food, color, count; W-4 animal, body; W-5 family, school, nature; W-6 travel, sport, culture, science). For a served family it pins how many visuals are still missing, so a misspelled key in a topic file raises the count and fails at once; a family whose count reaches 0 must leave the map. A batch PR deletes its families from the map, which turns on the full first rule for them; a topic PR that serves a family in the map pins its count. Until the last batch, behaviour 1 holds for every family outside the map;
 - the `COLOR_CONFUSION_PAIRS` constant matches the recomputed list (§3.4).
 
 ### 3.10 The contact-sheet review surface (`/design-preview/word-art`)
@@ -302,7 +310,7 @@ New server-rendered page `apps/web/src/app/design-preview/word-art/page.tsx` (F-
 
 ### 3.13 Behaviours (Given / When / Then)
 
-1. **Given** the registry, **when** `vocab-keys.test.ts` runs, **then** every `word:*` visual in `content/vocab/*.json` resolves and every non-prop, non-reserved glyph is used once.
+1. **Given** the registry, **when** `vocab-keys.test.ts` runs, **then** every `word:*` visual in `content/vocab/*.json` resolves and every non-prop, non-reserved glyph is used once (for a family still in `AWAITING_ART`, §3.9: exactly its pinned number of visuals is missing).
 2. **Given** a glyph with a hex colour `'#ff0000'` as a fill, **when** the tone test runs, **then** it fails (`isWordArtTone` is false); **given** `'feedback.danger'`, it fails.
 3. **Given** `toRenderList(glyph, { mono: 'border.strong' })`, **then** every fill and stroke resolves to the `border.strong` value and shapes with opacity below 0.5 get 0.5.
 4. **Given** the key `food-apple` at 48 px, **when** rendered, **then** the outline is 3 units of 100 (1.4 px) and the SVG has viewBox `0 0 100 100` (a golden `glyphToSvgString` test).
@@ -328,13 +336,14 @@ New server-rendered page `apps/web/src/app/design-preview/word-art/page.tsx` (F-
 |---|---|---|
 | `design-system/src/word-art/__tests__/builders.test.ts` | unit, 100 % | each builder's output; one-decimal rounding; `face()` always smiles; `blob`/`curve` pass through the points; `poly` rounding; deterministic |
 | `.../tones.test.ts` | unit, 100 % | `WORD_ART_TONES` excludes danger, overlay, inkScrim and `rarity.*`; `resolveTone` on every tone equals `colors`; unknown throws |
-| `.../glyphs.test.ts` | unit | for **every registry glyph**: tones valid, at most `maxTones` fill tones, path grammar, coordinates in range, shape count limits, `sw` in {2,3} (generated 1.5 allowed), bbox 60-70 % (waivers listed), distinct data, no `text`/`image` kinds |
+| `.../glyphs.test.ts` | unit | for **every registry glyph**: tones valid, at most `maxTones` fill tones, path grammar, coordinates in range, shape count limits, `sw` in {2,3} (generated 1.5 and the paper halo of width 7 allowed, amended at W-1c), bbox 60-70 % (waivers listed), distinct data, no `text`/`image` kinds |
 | `.../render.test.ts` | unit, 100 % | `toRenderList` defaults, `mono`, opacity floor; `glyphToSvgString` golden strings for 3 glyphs |
 | `.../generated.test.ts` | unit, 100 % | `swatch` places the sticker in the lower right and keeps 9+ shapes; `count(n)` has n dots for 0..10 and 20, left-to-right; `bodyPart` anchors inside the viewBox; `figure` variants differ; the four sibling glyphs differ |
-| `.../registry.test.ts` | unit | no duplicate keys; key grammar; every family has the planned count (food 9, animal 11, family 12, school 11, nature 9, travel 12, sport 12, culture 7, science 12, color 12, count 12, body 12, prop 4); `getWordArt`, `wordArtKeyOf` |
+| `.../registry.test.ts` | unit | no duplicate keys; key grammar; family matches its source; deep freeze; every family has the planned count (food 9, animal 11, family 12, school 11, nature 9, travel 12, sport 12, culture 7, science 12, color 12, count 12, body 12, prop 4) — at most the plan until its batch lists it in `COMPLETE_FAMILIES`, exactly the plan after, and a family that reaches the plan must be listed; `getWordArt`, `wordArtKeyOf` |
 | `.../color-science.test.ts` | unit | the Lab / Machado helpers on known reference colours; `COLOR_CONFUSION_PAIRS` matches the recomputed list; non-text contrast of the outline on canvas is at least 3:1 |
 | `.../import-guard.test.ts` | integration (source scan) | `colors.vocab` / `'vocab.'` tones appear only under `src/word-art/` and `components/WordArt/` |
 | `.../budget.test.ts` | integration | raw and gzip size limits (W7) |
+| `design-system/src/components/WordArt/__tests__/view.test.tsx` (added at W-1c) | unit | the paint layer with react-native and react-native-svg mocked: one element per shape, geometry and paint passed through, the named picture's role and label, the decorative picture hidden on the web and natively, the development frame of an unlabelled picture |
 | `.../vocab-keys.test.ts` | integration over `content/vocab` | §3.9 |
 | `design-system/src/__tests__/tokens-parity.test.ts` (existing) | integration | stays green with the 12 new rows in `colors.v1.md` |
 | `apps/web/src/app/design-preview/word-art/__tests__/page.test.tsx` | unit | the page renders one card per key and the totals line (server component rendered to a string, the pattern of the existing web tests) |
@@ -369,6 +378,7 @@ Estimated effort: system PR about 3 days; art batches about 20 hours of authorin
 ## 8. Unverified assumptions and open items
 
 1. **The prototype is not in the repo.** Its numbers (914 B per glyph expanded, 600 B source, 4.7 KB gzip for the core with generators) are measured on 25 + 19 glyphs; the 99-glyph extrapolation (about 85 KB raw, 20 KB gzip) has not been built. The budget test (W7) is the guard.
+   **Measured at W-1c:** all WordArt source is 69.2 KB raw and 21.3 KB gzipped, of which the 10 hand glyphs are 13.3 KB raw and 3.4 KB gzipped (about 1.0-1.3 KB raw and 0.35 KB gzipped per glyph, against the 600 B estimate) and the core with the four generators is about 56 KB raw. Extrapolated to 99 hand glyphs that is about 155-185 KB raw and 45-50 KB gzipped, **past W7**. The plan, in order: (a) W-3 reports its measured per-glyph cost and draws with denser data (builders for repeated parts, fewer points per outline), and shared helpers move into the builders rather than being repeated per glyph; (b) if the projection after W-3 is still past W7, the owner decides before W-4 between raising W7 to the measured numbers and measuring it per lazily loaded topic chunk (the split of §3.8), which changes `budget.test.ts` but not the data model. Since W-1c the component is not in the package root, so the registry is evaluated only by a screen that imports WordArt (W-7), not at app start.
 2. **The candidate hex values** of `colors.vocab` are the prototype's, not a design decision; the colour-vision numbers (§3.4) were computed with a simple Machado simulation and CIEDE2000 on those values, not with a calibrated device test.
 3. **react-native-svg draw time and memory** for 12-48 glyphs on a low-end phone is unmeasured; the shape limits (32/48) and memoisation are the mitigations.
 4. **Card art at 64 px** (13 words) is unverified, as F-QUEST-002 §9.4 already notes; the exit in §3.11 is the fallback.

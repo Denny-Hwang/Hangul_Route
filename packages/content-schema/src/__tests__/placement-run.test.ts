@@ -638,6 +638,19 @@ describe('a run end to end (the section 3.14 behaviours)', () => {
     expect(r.strands['hangul-recognition']).toBe('not-tested');
   });
 
+  it('skipGates: a Korean test language with a screen reader leaves vocabulary and sentences unasked, reported unavailable (section 3.2)', () => {
+    const { state, asked } = play(run({ visual: false, skipGates: ['vocab', 'sentence'] }));
+    expect(asked.some((id) => /^(vocab|sentence):/.test(rungOf(id)))).toBe(false);
+    const r = finishRun(state, context());
+    const skipped = r.gates.filter((g) => g.gate === 'vocab' || g.gate === 'sentence');
+    expect(skipped.length).toBeGreaterThan(0);
+    for (const g of skipped) expect(g).toMatchObject({ result: 'not-run', reason: 'unavailable', asked: 0 });
+    expect(r.strands.vocabulary).toBe('not-tested');
+    expect(r.strands.sentences).toBe('not-tested');
+    // The other rungs are drawn as before.
+    expect(asked.some((id) => rungOf(id) === 'sound-basic')).toBe(true);
+  });
+
   it('never exceeds 24 questions over many seeds and verdict mixes', () => {
     for (let seed = 1; seed <= 60; seed += 1) {
       const verdicts: Record<string, Verdict> = {};
@@ -822,6 +835,21 @@ describe('pauses', () => {
     s = apply(s, eventFor(currentQuestion(s)!, 'correct'), 4_000);
     s = apply(s, { type: 'notSure' }, 5_000);
     expect(s.pause).toBeNull();
+  });
+
+  it('a prompt that cannot play is recorded skipped but is not a "not sure" of the learner (section 3.11)', () => {
+    let s = run();
+    for (let i = 0; i < 3; i += 1) s = apply(s, { type: 'notSure', cause: 'no-sound' }, 2_000 + i * 1_000);
+    expect(s.responses.map((r) => r.outcome)).toEqual(['skipped', 'skipped', 'skipped']);
+    expect(s.pause).toBeNull();
+    expect(s.notSureStreak).toBe(0);
+    // It neither adds to nor breaks a streak the learner is on.
+    s = apply(s, { type: 'notSure' }, 6_000);
+    s = apply(s, { type: 'notSure' }, 7_000);
+    s = apply(s, { type: 'notSure', cause: 'no-sound' }, 8_000);
+    expect(s.notSureStreak).toBe(2);
+    s = apply(s, { type: 'notSure' }, 9_000);
+    expect(s.pause).toBe('not-sure');
   });
 
   it('no pause opens when the third "not sure" ends the run', () => {

@@ -1,6 +1,7 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import { keepSidewaysIfAsked, onboardChild, openGrownUpZone, readStored, seedStored, waitForSaved } from './helpers';
+import { shot, shotsEnabled } from './shots';
 
 /**
  * Tablet / desktop web shell (F-LAYOUT-001 §3.3, PR 2a): the window is the
@@ -471,6 +472,8 @@ async function openLibrary(page: Page): Promise<void> {
       card('card:book', '2026-10-08T09:00:00.000Z'),
       card('card:kimchi', '2026-10-10T09:00:00.000Z'),
       card('card:origami', '2026-10-09T09:00:00.000Z'),
+      // Hoya's welcome card, held by every profile (F-STORY-006 §3.3); earlier, so Kimchi stays the latest.
+      card('card:tiger', '2026-10-07T09:00:00.000Z'),
     ],
     sessions: [],
     homework: [],
@@ -480,7 +483,7 @@ async function openLibrary(page: Page): Promise<void> {
   await expect(page.getByText('Hi, Dani!')).toBeVisible();
   await page.getByText('Library', { exact: true }).last().click();
   await expect(page.getByRole('heading', { name: 'Heritage Library' })).toBeVisible();
-  await expect(page.getByText('3 of 42 collected')).toBeVisible();
+  await expect(page.getByText('4 of 42 collected')).toBeVisible();
 }
 
 const galleryPane = (page: Page) => page.getByRole('region', { name: 'Card gallery' });
@@ -804,3 +807,32 @@ test('the queued update bar shows once a tab screen is open at 390x844', async (
   await expect(page.getByRole('button', { name: 'Refresh' })).toBeVisible();
 });
 
+
+// --- Screenshots for the pull request (§5; not a test gate) ---
+// Home, Journey and Library of a learner with three cards, at a phone, an upright tablet and a wide window.
+// Skipped unless HR_SHOTS=1; the PNGs land in e2e/web/__shots__/ (git-ignored).
+
+const SHOT_VIEWPORTS = [
+  { width: 375, height: 667 },
+  { width: 768, height: 1024 },
+  { width: 1180, height: 820 },
+] as const;
+
+for (const vp of SHOT_VIEWPORTS) {
+  test.describe(`screenshots at ${vp.width}x${vp.height}`, () => {
+    test.use({ viewport: { width: vp.width, height: vp.height } });
+    test.skip(!shotsEnabled(), 'screenshots only with HR_SHOTS=1');
+
+    test('Home, Journey and Library', async ({ page }) => {
+      const size = `${vp.width}x${vp.height}`;
+      await openLibrary(page);
+      await shot(page, `library-${size}`);
+      await tab(page, 'Today').click();
+      await expect(page.getByText('Today with Hoya')).toBeVisible();
+      await shot(page, `home-${size}`);
+      await tab(page, 'Journey').click();
+      await expect(page.getByRole('heading', { name: 'Heritage Journey' })).toBeVisible();
+      await shot(page, `journey-${size}`);
+    });
+  });
+}

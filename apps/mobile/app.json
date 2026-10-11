@@ -83,7 +83,14 @@
       "output": "single",
       "favicon": "./assets/icon.png"
     },
-    "plugins": [],
+    "plugins": [
+      [
+        "expo-av",
+        {
+          "microphonePermission": false
+        }
+      ]
+    ],
     "extra": {
       "eas": {
         "projectId": "REPLACE_WITH_EAS_PROJECT_ID"

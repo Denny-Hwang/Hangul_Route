@@ -2,6 +2,7 @@ import type { StoryLevel } from '@hangul-route/content-schema';
 import { useNavigation } from '@react-navigation/native';
 import { useEffect } from 'react';
 import { storiesAll, storyFixtureIds } from '../content/stories';
+import type { SourcesRouteParams } from '../logic/story/source-link';
 import { addTelemetryListener, type TelemetryEvent } from '../platform/telemetry';
 
 /**
@@ -19,6 +20,13 @@ export const STORY_FIXTURES_BUILD = storyFixtureIds.length > 0;
 
 export interface StoryE2eHandle {
   openReader(params: { storyId: string; level: StoryLevel; sceneIndex?: number }): void;
+  /** Sources with its deep-link params (F-STORY-002 PR 2.7; F-STORY-004 adds the episode and notes links). */
+  openSources(params: SourcesRouteParams): void;
+  /**
+   * Opens a story's shelf quest (F-STORY-002 PR 2.6b: the reader as a quest step) until the shelf can;
+   * `resume` as a Keep reading card passes it (F-STORY-004 PR 4.4b).
+   */
+  openQuest(params: { questId: string; episodeId: string; resume?: boolean }): void;
   /** Every bundled story with its tiers, so the e2e can smoke-read the real content too. */
   stories(): Array<{ id: string; levels: StoryLevel[]; fixture: boolean; traditional: boolean }>;
   /** `story.*` telemetry events `track()` accepted since the hook mounted (the e2e build sends none). */
@@ -37,6 +45,9 @@ export function StoryE2eHook(): null {
       events: () => events.map((e) => ({ ...e })),
       openReader: ({ storyId, level, sceneIndex }) =>
         navigation.navigate('StoryReader', { storyId, level, mode: 'replay', ...(sceneIndex === undefined ? {} : { sceneIndex }) }),
+      openSources: (params) => navigation.navigate('StorySources', params),
+      openQuest: ({ questId, episodeId, resume }) =>
+        navigation.navigate('QuestPlayer', { questId, episodeId, ...(resume ? { resume: true } : {}) }),
       stories: () =>
         storiesAll.map((s) => ({
           id: s.id,

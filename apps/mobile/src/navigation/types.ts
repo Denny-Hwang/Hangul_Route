@@ -1,15 +1,32 @@
-import type { StoryLevel } from '@hangul-route/content-schema';
+import type { PlacementSource, StoryLevel } from '@hangul-route/content-schema';
 import type { NavigatorScreenParams } from '@react-navigation/native';
 import type { PinResetMethod } from '../logic/profiles/pin-flow';
+import type { SourcesRouteParams } from '../logic/story/source-link';
 
-/** Where a grown-up action continues once the gate (or a new PIN) is through. */
-export type GrownUpDestination = 'ParentDashboard' | 'AddProfile' | 'Restore' | 'SaveProgress' | 'Paywall';
+/**
+ * Where a grown-up action continues once the gate (or a new PIN) is through. `ExternalLink`
+ * (F-STORY-002 §3.1, §3.8): back to Sources, which opens the waiting source link (native) or asks for one more tap (web).
+ * `PlacementFinish`: back to the level check, which then ends the run for the grown-up (F-PLC-001
+ * section 3.1 step 6, stop reason `grown-up`).
+ */
+export type GrownUpDestination =
+  | 'ParentDashboard'
+  | 'AddProfile'
+  | 'Restore'
+  | 'SaveProgress'
+  | 'Paywall'
+  | 'ExternalLink'
+  | 'PlacementFinish';
 
 export type RootStackParamList = {
   Onboarding: NavigatorScreenParams<OnboardingStackParamList>;
   Main: NavigatorScreenParams<MainTabParamList>;
   EpisodeDetail: { episodeId: string };
-  QuestPlayer: { questId: string; episodeId: string };
+  /**
+   * `resume`: open a story quest on its `story-read` step when the learner has a
+   * bookmark for it at the quest's level (F-STORY-004 §3.8); otherwise step 0.
+   */
+  QuestPlayer: { questId: string; episodeId: string; resume?: boolean };
   Results: {
     questId: string;
     episodeId: string;
@@ -28,6 +45,8 @@ export type RootStackParamList = {
     mode?: 'setup';
     /** Which Forgot PIN path led here (telemetry only). */
     via?: PinResetMethod;
+    /** `next: 'ExternalLink'`: the source link waiting on the gate (Sources holds it until the return). */
+    url?: string;
   };
   /** Forgot PIN: Rescue Code or a 24-hour wait, then a new PIN (F-LEARN-001 §3.5). `next` is kept for the PIN screen. */
   PinReset: { next: GrownUpDestination };
@@ -52,6 +71,30 @@ export type RootStackParamList = {
    * from Results (F-STORY-003) and the shelf / episode page (F-STORY-004) open it.
    */
   StoryReader: { storyId: string; level: StoryLevel; mode: 'replay'; sceneIndex?: number };
+  /**
+   * Sources (F-STORY-002 §3.8): every fact of a story with its citations. `factId` scrolls to and
+   * highlights that card, `sceneIndex` scrolls to that scene; `from` is for telemetry only.
+   */
+  StorySources: SourcesRouteParams;
+  /**
+   * The level check (F-PLC-001 section 3.10): a nested stack of its screens.
+   * `retakeMode`: "Try it with the sound guide hidden" on the result opens the
+   * options with that length and the guide hidden.
+   */
+  Placement: { source: PlacementSource; retakeMode?: 'standard' | 'deep' };
+};
+
+/** The level check's screens (F-PLC-001 section 3.1); the flow state machine decides which one shows. */
+export type PlacementStackParamList = {
+  PlacementBoot: undefined;
+  PlacementResume: undefined;
+  PlacementLanguage: undefined;
+  PlacementOptions: undefined;
+  PlacementHandoff: undefined;
+  PlacementWarmup: undefined;
+  PlacementSoundNeeded: undefined;
+  PlacementItem: undefined;
+  PlacementResult: undefined;
 };
 
 export type OnboardingStackParamList = {

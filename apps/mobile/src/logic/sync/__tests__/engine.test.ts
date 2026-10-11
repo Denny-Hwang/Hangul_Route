@@ -61,6 +61,17 @@ describe('syncLearner (F-SYNC-001 §3.5)', () => {
     expect(put.mock.calls[1]?.[1]).toMatchObject({ baseRev: 7, snapshot: { stageDoneAt: latch } });
   });
 
+  it('reconciles the merged snapshot before the retried upload, so derived homework a plan dropped never comes back (F-PLAN-002 section 3.6)', async () => {
+    const stale = { id: 'plan:term#q9', profileId: 'profile:a', questId: 'q9', episodeId: 'e', assignedBy: 'teacher' as const, assignedAt: 't', targetDate: '2026-09-20' };
+    const { api, put } = apiWith([{ status: 'conflict', rev: 7, snapshot: { ...snap([]), homework: [stale] } }, { status: 'ok', rev: 8 }]);
+    const reconcile = vi.fn((s: ProgressSnapshot) => ({ ...s, homework: s.homework.filter((h) => h.id !== stale.id) }));
+    const out = await syncLearner({ learnerId: 'profile:a', local: snap(['q1']), localRev: 3, api, now: NOW, summarize, reconcile });
+    expect(reconcile).toHaveBeenCalledTimes(1);
+    expect(put.mock.calls[1]?.[1].snapshot.homework).toEqual([]);
+    expect(out).toMatchObject({ status: 'synced', merged: true });
+    if (out.status === 'synced') expect(out.snapshot.homework).toEqual([]);
+  });
+
   it('gives up after a second conflict, handing back the merged snapshot and server rev', async () => {
     const { api } = apiWith([
       { status: 'conflict', rev: 7, snapshot: snap(['q2']) },

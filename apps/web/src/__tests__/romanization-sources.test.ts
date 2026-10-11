@@ -20,10 +20,10 @@ const read = (rel: string): string => readFileSync(new URL(rel, REPO), 'utf8');
 /** Files with the least number of pairs the scanner must find in them (0: Korean without a paired romanization). */
 const FILES: ReadonlyArray<{ path: string; minPairs: number }> = [
   { path: 'apps/web/src/components/landing/MeetHoya.tsx', minPairs: 1 },
-  { path: 'apps/web/src/app/design-preview/page.tsx', minPairs: 6 },
-  { path: 'apps/web/src/app/design-preview/cards/page.tsx', minPairs: 30 },
-  { path: 'apps/web/src/app/design-preview/components/page.tsx', minPairs: 0 },
-  { path: 'apps/web/src/app/page.tsx', minPairs: 0 },
+  { path: 'apps/web/src/app/(console)/design-preview/page.tsx', minPairs: 6 },
+  { path: 'apps/web/src/app/(console)/design-preview/cards/page.tsx', minPairs: 30 },
+  { path: 'apps/web/src/app/(console)/design-preview/components/page.tsx', minPairs: 0 },
+  { path: 'apps/web/src/components/landing/LandingPage.tsx', minPairs: 0 },
   { path: 'apps/mobile/src/screens/minigames/VoiceEchoGame.tsx', minPairs: 0 },
 ];
 
@@ -51,8 +51,8 @@ describe('inline page romanization (class C)', () => {
     expect(html).toContain('“거의 다 했어!”');
   });
 
-  it('page.tsx writes only isolated jamo, no Korean word (so it needs no romanization)', () => {
-    expect(/[가-힣]/.test(read('apps/web/src/app/page.tsx'))).toBe(false);
+  it('the landing page writes only isolated jamo, no Korean word (so it needs no romanization)', () => {
+    expect(/[가-힣]/.test(read('apps/web/src/components/landing/LandingPage.tsx'))).toBe(false);
   });
 
   it('a wrong inline pair would fail, naming file and line', () => {

@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { HOYA_POSES } from '../hoya';
-import { SCENE_ART_REGISTRY, hasItem } from '../registry';
+import { LIBRARY, SCENE_ART_REGISTRY, hasItem } from '../registry';
 import { checkItem, checkScene } from '../rules';
 
-/** PR 2.3a seeded the Hoya poses; PR 2.3b adds the first library batch; PR 2.10a the records-joseon batch. */
+/** PR 2.3a seeded the Hoya poses; PR 2.3b adds the first library batch; PR 2.10a the records-joseon batch; PR 2.10b the hangul-printing batch; PR 2.10c the science-art-life batch. */
 const SETTINGS = [
   'scene:palace-courtyard',
   'scene:palace-hall',
@@ -14,6 +14,10 @@ const SETTINGS = [
   'scene:mountains',
   'scene:mountain-stream',
   'scene:modern-room',
+  // PR 2.10b: hangul-printing cluster
+  'scene:temple',
+  // PR 2.10c: science-art-life cluster
+  'scene:seashore',
 ];
 const PROPS = [
   'prop:fig-king',
@@ -72,6 +76,59 @@ const PROPS = [
   'prop:bead-curtain',
   'prop:silk-bolts',
   'prop:ceremony-goods',
+  // PR 2.10b: hangul-printing cluster
+  'prop:fig-monk',
+  'prop:fig-monk-seated',
+  'prop:fig-carver',
+  'prop:book-open',
+  'prop:woodblock',
+  'prop:woodblock-shelves',
+  'prop:speech-g',
+  'prop:speech-nm',
+  'prop:organ-stones',
+  'prop:ribbon-trails',
+  'prop:stick-dot',
+  'prop:stroke-sparks',
+  'prop:janggyeong-hall',
+  'prop:panjeon-plan',
+  'prop:hall-section',
+  'prop:temple-site',
+  'prop:museum-building',
+  'prop:glow-burst',
+  'prop:full-moon',
+  'prop:night-sky',
+  'prop:leafy-tree',
+  'prop:breeze',
+  'prop:museum-case',
+  'prop:calendar-page',
+  'prop:blank-sheet',
+  'prop:blank-tiles',
+  // PR 2.10c: science-art-life cluster
+  'prop:rain-cloud',
+  'prop:rain-gauge',
+  'prop:ruler',
+  'prop:dug-soil',
+  'prop:ground-shadow',
+  'prop:sundial',
+  'prop:zodiac-ring',
+  'prop:display-case',
+  'prop:bronze-jar',
+  'prop:float-vessel',
+  'prop:water-stream',
+  'prop:striking-figures',
+  'prop:drum',
+  'prop:bronze-mirror',
+  'prop:herbs',
+  'prop:basket',
+  'prop:panokseon',
+  'prop:fig-commander',
+  'prop:album-open',
+  'prop:fig-wrestlers',
+  'prop:crowd-seated',
+  'prop:sand-ring',
+  'prop:taffy-tray',
+  'prop:shoes',
+  'prop:fig-child-back',
 ];
 
 const entries = Object.entries(SCENE_ART_REGISTRY);
@@ -82,6 +139,12 @@ describe('SCENE_ART_REGISTRY', () => {
     const expected = [...HOYA_POSES.map((p) => `hoya:${p}`), ...SETTINGS, ...PROPS].sort();
     expect(Object.keys(SCENE_ART_REGISTRY).sort()).toEqual(expected);
     for (const [key, item] of entries) expect(item.id).toBe(key);
+  });
+
+  it('lists each library item once, so a reused id cannot silently replace an earlier item', () => {
+    const ids = LIBRARY.map((item) => item.id);
+    expect(ids.filter((id, i) => ids.indexOf(id) !== i)).toEqual([]);
+    expect(LIBRARY.length).toBe(SETTINGS.length + PROPS.length);
   });
 
   it('is frozen', () => {
@@ -160,6 +223,16 @@ describe('SCENE_ART_REGISTRY', () => {
       'prop:fig-writer-seated',
       'prop:fig-artisan',
       'prop:fig-modern',
+      'prop:fig-monk',
+      'prop:fig-monk-seated',
+      'prop:fig-carver',
+      'prop:leafy-tree',
+      'prop:fig-commander',
+      'prop:fig-wrestlers',
+      'prop:crowd-seated',
+      'prop:fig-child-back',
+      'prop:rain-gauge',
+      'prop:basket',
     ]) {
       const item = SCENE_ART_REGISTRY[id]!;
       expect(item.tintable, id).toBeDefined();
@@ -172,7 +245,7 @@ describe('SCENE_ART_REGISTRY', () => {
   it('labels every figure by period, and sources every figure in historical dress', () => {
     for (const [id, item] of library.filter(([, it]) => it.kind === 'figure')) {
       if (/\bof today\b/.test(item.alt)) continue;
-      expect(item.alt, id).toMatch(/\bJoseon\b|\bhanbok\b/);
+      expect(item.alt, id).toMatch(/\bJoseon\b|\bGoryeo\b|\bhanbok\b/);
       expect(item.sourceRef, id).toBeDefined();
     }
   });

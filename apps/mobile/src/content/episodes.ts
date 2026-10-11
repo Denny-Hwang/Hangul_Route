@@ -1,4 +1,5 @@
 import type { Episode } from '@hangul-route/content-schema';
+import { bookEpisodes } from './books';
 import { stages, themes } from './stages';
 import { storyEpisodes } from './stories';
 
@@ -6,6 +7,15 @@ import { storyEpisodes } from './stories';
  * Episodes: 7 stages × 5 themes = 35 cells.
  * Stage 1 episodes are fully populated. Stages 2–7 are `preview` placeholders
  * so the grid is fully navigable and shows what's coming.
+ *
+ * `pillarTags` (F-STORY-005 §3.2, §3.8) are metadata for the catalogue and
+ * analytics, never shown to learners. Each tag names the blueprint 04 sub-theme
+ * the lesson's content actually belongs to: A1 Hunminjeongeum (the letters), B5
+ * festivals and seasonal customs (the family table and the Seollal/Chuseok
+ * lesson), D2 mountains and rivers (the nature lessons), E1 hanji and brush
+ * (paper, kites and folk play). Two lessons stay `[]` on purpose: `stage2-life`
+ * (everyday food words) and `stage4-rites` (greeting dialogues) fit no
+ * sub-theme, and a wrong tag is worse than none.
  */
 
 const stage1Episodes: Episode[] = [
@@ -24,6 +34,7 @@ const stage1Episodes: Episode[] = [
     ],
     rewardCardIds: ['card:book', 'card:hanji', 'card:brush', 'card:ink', 'card:origami'],
     estimatedMinutes: 12,
+    pillarTags: ['A1'],
     status: 'shipped',
   },
   {
@@ -37,6 +48,7 @@ const stage1Episodes: Episode[] = [
     questIds: ['quest:stage1-life-q1', 'quest:stage1-life-q2'],
     rewardCardIds: ['card:kimchi', 'card:rice', 'card:chopsticks', 'card:hanbok', 'card:kimbap', 'card:family-table'],
     estimatedMinutes: 10,
+    pillarTags: ['B5'],
     status: 'shipped',
   },
   {
@@ -50,6 +62,7 @@ const stage1Episodes: Episode[] = [
     questIds: ['quest:stage1-rites-q1'],
     rewardCardIds: ['card:seollal', 'card:chuseok', 'card:tteokguk', 'card:songpyeon', 'card:sebae'],
     estimatedMinutes: 8,
+    pillarTags: ['B5'],
     status: 'shipped',
   },
   {
@@ -63,6 +76,7 @@ const stage1Episodes: Episode[] = [
     questIds: ['quest:stage1-nature-q1'],
     rewardCardIds: ['card:magpie', 'card:mugunghwa', 'card:mountain', 'card:sea', 'card:moon'],
     estimatedMinutes: 9,
+    pillarTags: ['D2'],
     status: 'shipped',
   },
   {
@@ -76,6 +90,7 @@ const stage1Episodes: Episode[] = [
     questIds: ['quest:stage1-crafts-q1'],
     rewardCardIds: ['card:yutnori', 'card:jegi', 'card:kite', 'card:top', 'card:pottery'],
     estimatedMinutes: 10,
+    pillarTags: ['E1'],
     status: 'shipped',
   },
 ];
@@ -92,6 +107,7 @@ const stage2Episodes: Episode[] = [
     questIds: ['quest:stage2-life-q1'],
     rewardCardIds: ['card:sagwa', 'card:uyu', 'card:ppang', 'card:dosirak'],
     estimatedMinutes: 6,
+    pillarTags: [],
     status: 'shipped',
   },
   {
@@ -105,6 +121,7 @@ const stage2Episodes: Episode[] = [
     questIds: ['quest:stage2-nature-q1'],
     rewardCardIds: ['card:haneul', 'card:kkot', 'card:namu', 'card:byeol'],
     estimatedMinutes: 6,
+    pillarTags: ['D2'],
     status: 'shipped',
   },
 ];
@@ -121,6 +138,7 @@ const stage4Episodes: Episode[] = [
     questIds: ['quest:stage4-rites-q1'],
     rewardCardIds: ['card:annyeong', 'card:gamsa', 'card:chingu', 'card:insa'],
     estimatedMinutes: 5,
+    pillarTags: [],
     status: 'shipped',
   },
 ];
@@ -186,25 +204,49 @@ const upperStageTitles: Record<string, Record<string, string>> = {
   },
 };
 
-const shippedBeyondStage1 = new Set<string>([
-  'episode:stage2-life',
-  'episode:stage2-nature',
-  'episode:stage4-rites',
-]);
-const previewEpisodes: Episode[] = stages
-  .filter((s) => s.key !== 'stage1')
-  .flatMap((s) =>
-    themes
-      .map((t, i) => makePreviewEpisode(s.key, t.key, i + 1, upperStageTitles[s.key]?.[t.key] ?? 'Coming soon'))
-      .filter((e) => !shippedBeyondStage1.has(e.id)),
-  );
+/**
+ * Grid capacity (F-STORY-005 §3.1 rule 1, D9): at launch a cell (stage × theme)
+ * holds at most one grid episode. Shelf episodes never count. Raising this to 2
+ * is the "volumes later" switch (PR 5.8).
+ */
+export const MAX_EPISODES_PER_CELL = 1;
 
+/** The key of an episode's grid cell (stage × theme); the one definition every cell count uses. */
+export const cellKey = (e: Pick<Episode, 'stage' | 'theme'>): string => `${e.stage}:${e.theme}`;
+
+/** Hand-written grid episodes: the lessons and the Stage 5 books (`books.ts`). */
+export const handWrittenEpisodes: readonly Episode[] = [...stage1Episodes, ...stage2Episodes, ...stage4Episodes, ...bookEpisodes];
+
+/**
+ * The cells of `list` holding more grid episodes than `max` (F-STORY-005 §3.1
+ * rule 1). The bundle must return `[]`; shelf episodes never count.
+ */
+export function cellsOverCapacity(list: readonly Episode[], max: number = MAX_EPISODES_PER_CELL): string[] {
+  const counts = new Map<string, number>();
+  for (const e of gridEpisodes(list)) counts.set(cellKey(e), (counts.get(cellKey(e)) ?? 0) + 1);
+  return [...counts].filter(([, n]) => n > max).map(([key]) => key);
+}
+
+/**
+ * "Coming soon" previews for every cell beyond Stage 1 that no grid episode of
+ * `claimers` claims, so a new hand-written episode replaces its preview with no
+ * exclusion list to edit (F-STORY-005 §3.5). Ids stay `episode:<stage>-<theme>`.
+ */
+export function previewEpisodesFor(claimers: readonly Episode[]): Episode[] {
+  const claimed = new Set(gridEpisodes(claimers).map(cellKey));
+  return stages
+    .filter((s) => s.key !== 'stage1')
+    .flatMap((s) =>
+      themes.map((t, i) => makePreviewEpisode(s.key, t.key, i + 1, upperStageTitles[s.key]?.[t.key] ?? 'Coming soon')),
+    )
+    .filter((e) => !claimed.has(cellKey(e)));
+}
+
+/** `storyEpisodes`: the generated shelf episodes (F-STORY-001 §3.9). */
 export const episodesAll: Episode[] = [
-  ...stage1Episodes,
-  ...stage2Episodes,
-  ...stage4Episodes,
-  ...previewEpisodes,
+  ...handWrittenEpisodes,
   ...storyEpisodes,
+  ...previewEpisodesFor(handWrittenEpisodes),
 ];
 
 export function episodeById(id: string): Episode | undefined {
@@ -230,7 +272,19 @@ export function shelfEpisodes<E extends Pick<Episode, 'placement'>>(list: readon
   return list.filter((e) => !isGridEpisode(e));
 }
 
-/** The grid cell at `stage` × `theme`; a shelf episode is never a cell. */
+/**
+ * The grid episodes of the cell at `stage` × `theme`, sorted by volume, then
+ * order (F-STORY-005 §3.5). A shelf episode is never in a cell. A grid
+ * episode's `order` equals its theme's order, so within a cell volume is the
+ * key that decides; equal volumes keep list order (the sort is stable).
+ */
+export function episodesFor(stage: string, theme: string, list: readonly Episode[] = episodesAll): Episode[] {
+  return list
+    .filter((e) => isGridEpisode(e) && e.stage === stage && e.theme === theme)
+    .sort((a, b) => (a.volume ?? 1) - (b.volume ?? 1) || a.order - b.order);
+}
+
+/** The cell's first grid episode; unchanged for every cell that holds one. */
 export function episodeFor(stage: string, theme: string, list: readonly Episode[] = episodesAll): Episode | undefined {
-  return list.find((e) => isGridEpisode(e) && e.stage === stage && e.theme === theme);
+  return episodesFor(stage, theme, list)[0];
 }

@@ -260,3 +260,43 @@ export const BOOK_BUNDLE: ItemDef = {
     { t: 'path', d: 'M35 16 V44 M8 24 Q35 30 62 24', stroke: 'text.primary', sw: 'thin', o: 0.35, det: true },
   ],
 };
+
+// --- PR 2.10b: hangul-printing cluster --------------------------------------
+
+export const BOOK_OPEN: ItemDef = {
+  id: 'prop:book-open',
+  kind: 'object',
+  box: { w: 96, h: 60 },
+  z: 'mid',
+  alt: 'An old thread-bound book lying open, its pages ruled in a frame with columns of marks (no readable text)',
+  tags: { heritage: true },
+  sourceRef: { title: '국보 훈민정음 (訓民正音)', publisher: '국가유산청 국가유산포털 (Korea Heritage Service, National Heritage Portal)', url: 'https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=1111100700000', accessed: '2026-10-11' },
+  accuracyNote: 'A generic old Korean thread-bound book, not one particular volume: ruled frames and columns of marks, no character, page count or seal. Scenes use it for the Hunminjeongeum Haerye (woodblock printed, 1446; Heritage Portal) and for other old books such as Jikji; the scene alt names the book.',
+  nodes: [
+    ...openBook(96, 60),
+    { t: 'path', d: 'M8 10 H44 V48 H8 Z M52 10 H88 V48 H52 Z', stroke: 'text.secondary', sw: 'thin' },
+    { t: 'path', d: 'M82 14 V44 M76 14 V40 M70 14 V44 M64 14 V38 M58 14 V42', stroke: 'text.secondary', sw: 'base' },
+    { t: 'path', d: 'M38 14 V42 M32 14 V44 M26 14 V36 M20 14 V44 M14 14 V40', stroke: 'text.secondary', sw: 'base', det: true },
+  ],
+};
+
+// --- PR 2.10c: science-art-life cluster -------------------------------------
+
+export const ALBUM_OPEN: ItemDef = {
+  id: 'prop:album-open',
+  kind: 'object',
+  box: { w: 110, h: 70 },
+  z: 'mid',
+  tags: { heritage: true },
+  alt: 'An open album of small ink paintings of people at work and play',
+  sourceRef: { title: '《단원 풍속도첩》 (본관6504)', publisher: '국립중앙박물관 (National Museum of Korea, museum.go.kr)', url: 'https://www.museum.go.kr/site/main/relic/treasure/view?relicId=3799', accessed: '2026-10-11' },
+  accuracyNote: "After Kim Hongdo's album of 25 genre paintings (rebound in 1957). The open leaves show tiny generic figures in ink and light colour, not copies of a leaf; no seal or writing.",
+  nodes: [
+    { t: 'rect', x: 2, y: 6, w: 106, h: 62, r: 2, fill: 'text.secondary' },
+    { t: 'path', d: 'M6 10 H53 V64 H6 Z M57 10 H104 V64 H57 Z', fill: 'surface.paper', stroke: 'border.strong', sw: 'thin' },
+    { t: 'path', d: 'M12.5 40 A17 12 0 1 0 46.5 40 A17 12 0 1 0 12.5 40 Z M62.5 44 A18 10 0 1 0 98.5 44 A18 10 0 1 0 62.5 44 Z', fill: 'feedback.nudgeLight' },
+    { t: 'path', d: 'M22 34 A3 3 0 1 0 28 34 A3 3 0 1 0 22 34 Z M31 34 A3 3 0 1 0 37 34 A3 3 0 1 0 31 34 Z M75 36 A3 3 0 1 0 81 36 A3 3 0 1 0 75 36 Z', fill: 'surface.paper', stroke: 'text.primary', sw: 'thin' },
+    { t: 'path', d: 'M25 37 L22 48 M34 37 L37 48 M26 42 L33 42 M78 39 V48 M70 50 H92', stroke: 'text.primary', sw: 'base' },
+    { t: 'path', d: 'M14 22 H18 M20 20 H24 M40 22 H44 M66 26 H70 M88 24 H92 M94 30 H98 M12 56 H16 M42 56 H46', stroke: 'text.primary', sw: 'thick', det: true },
+  ],
+};

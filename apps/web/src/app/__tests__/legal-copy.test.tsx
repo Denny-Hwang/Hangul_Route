@@ -2,8 +2,8 @@ import { LEARNER_LEVELS } from '@hangul-route/content-schema';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { CONTACT_EMAIL } from '../../data/contact';
-import PrivacyPage from '../privacy/page';
-import TermsPage from '../terms/page';
+import PrivacyPage from '../(en)/privacy/page';
+import TermsPage from '../(en)/terms/page';
 
 /**
  * Privacy & terms audience copy (audit UF-09, copy only — pending legal review).

@@ -13,6 +13,7 @@ import { apiBaseUrl } from '../../platform/sync-api';
 import { useAudience } from '../../store/audience';
 import { useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
+import { rederiveLocal } from '../../store/membership-store';
 import { useSyncStore } from '../../store/sync-store';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Restore'>;
@@ -80,6 +81,8 @@ export function RestoreScreen({ navigation, route }: Props): React.ReactElement 
     const plan = planRestore(file, existingProfile ? { profile: existingProfile, snapshot: progress.ensure(existingProfile.id) } : null, new Date());
     if (plan.action === 'create') useProfileStore.getState().adoptProfile(plan.profile);
     progress.replaceSnapshot(plan.profile.id, plan.snapshot);
+    // The merge is a union: put the cached plans' answer back on derived homework (F-PLAN-002 section 3.6).
+    await rederiveLocal(plan.profile.id);
     useSyncStore.getState().requestSync(plan.profile.id);
     finish(plan);
   };

@@ -117,6 +117,10 @@ function deriveShelf(story) {
     status: "ready",
     format: "story",
     placement: "shelf",
+    // F-STORY-005 §3.2: the plan catalogue groups episodes without loading stories.
+    // The defaults are the schema's (CatalogueFieldsSchema), for a file that omits them.
+    pillarTags: Array.isArray(story.pillarTags) ? [...story.pillarTags] : [],
+    companionId: story.companionId ?? "hoya",
   };
 
   const quest = {

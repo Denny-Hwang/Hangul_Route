@@ -6,7 +6,8 @@ import type { PutResult } from '../logic/sync/engine';
  * the sync store decides what to do with them.
  */
 const PLACEHOLDER_ENDPOINT = 'https://api.hangulroute.example';
-const CONTENT_VERSION = '2026.09';
+/** The content version every upload and stored result carries. */
+export const CONTENT_VERSION = '2026.09';
 const SCHEMA_VERSION = 1;
 
 export function apiBaseUrl(): string | null {
@@ -233,7 +234,7 @@ export function createSyncApi(opts: SyncApiOptions) {
     },
 
     async getInbox(learnerId: string, creds: DeviceCredentials): Promise<InboxResult> {
-      const r = await call(fetchImpl, `${base}/learners/${encodeURIComponent(learnerId)}/inbox`, { headers: authHeader(creds) });
+      const r = await call(fetchImpl, `${base}/learners/${encodeURIComponent(learnerId)}/inbox?cap=curriculum`, { headers: authHeader(creds) });
       if (r.status === -1) return { status: 'error', code: 'network' };
       if (r.status !== 200) return { status: 'error', code: `http_${r.status}` };
       const parsed = SyncInboxSchema.safeParse(r.body.data);

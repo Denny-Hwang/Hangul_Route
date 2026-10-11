@@ -2,8 +2,8 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import ChildDetailPage from '../parent/[childId]/page';
-import ParentPage from '../parent/page';
+import ChildDetailPage from '../(console)/parent/[childId]/page';
+import ParentPage from '../(console)/parent/page';
 
 /**
  * F-LEARN-001 §3.7: a level label (never an age) wherever the demo family prints one.
@@ -20,7 +20,7 @@ describe('parent demo pages', () => {
   });
 
   it('a learner page leads with the level label, not an age', () => {
-    const text = textOf(renderToStaticMarkup(<ChildDetailPage params={{ childId: 'profile:mina' }} />));
+    const text = textOf(renderToStaticMarkup(<ChildDetailPage params={{ childId: 'mina' }} />));
     expect(text).toContain('Pictures first · 9 quests · 14 cards');
     expect(text).not.toMatch(/\bAge\b/);
   });

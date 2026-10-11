@@ -18,6 +18,7 @@ vi.mock('../../config/flags', () => ({ flags: { syncEnabled: true, telemetryEnab
 import { apiBaseUrl } from '../../platform/sync-api';
 import { useProfileStore } from '../profile-store';
 import { useProgressStore } from '../progress-store';
+import { usePlanStore } from '../plan-store';
 import { onSynced, setSyncApiForTests, useSyncStore } from '../sync-store';
 
 const snap = (quests: string[]): ProgressSnapshot => ({
@@ -74,6 +75,19 @@ describe('sync-store (F-SYNC-002)', () => {
     expect(state).toMatchObject({ status: 'synced', rev: 8 });
     expect(useProgressStore.getState().byProfile['profile:a']?.quests.map((q) => q.questId)).toEqual(['q1', 'q2']);
     expect(api.register).not.toHaveBeenCalled();
+  });
+
+  it('drops a pending plan item the cached plans no longer hold when a conflict merge brings it back (F-PLAN-002 section 3.6)', async () => {
+    mem.set('sync:profile:a', { secret: 'sec', rev: 3, lastSyncedAt: null });
+    usePlanStore.setState({ byLearner: { 'profile:a': [] }, notReady: {} });
+    const stale = { id: 'plan:gone#quest:stage1-letters-q1', profileId: 'profile:a', questId: 'quest:stage1-letters-q1', episodeId: 'episode:stage1-letters', assignedBy: 'teacher' as const, assignedAt: 't', targetDate: '2026-09-20' };
+    const putSnapshot = vi.fn()
+      .mockResolvedValueOnce({ status: 'conflict', rev: 7, snapshot: { ...snap(['q2']), homework: [stale] } })
+      .mockResolvedValueOnce({ status: 'ok', rev: 8 });
+    setSyncApiForTests(fakeApi({ putSnapshot }) as never);
+    await useSyncStore.getState().syncNow('profile:a');
+    expect(putSnapshot.mock.calls[1]?.[1]).toMatchObject({ snapshot: { homework: [] } });
+    expect(useProgressStore.getState().byProfile['profile:a']?.homework).toEqual([]);
   });
 
   it('keeps local data and records the error when the transport fails; off when no API', async () => {

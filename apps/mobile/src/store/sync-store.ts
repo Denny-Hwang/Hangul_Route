@@ -168,6 +168,8 @@ export const useSyncStore = create<State & Actions>((set, get) => {
         localRev: registered.rev,
         now: new Date(),
         summarize: summarizeFor,
+        // A merged copy is reconciled with the cached plans before it goes up (F-PLAN-002 section 3.6).
+        reconcile: (merged) => usePlanStore.getState().reconcile(learnerId, merged),
         api: { putSnapshot: (id, body) => client.putSnapshot(id, body, creds) },
       });
 

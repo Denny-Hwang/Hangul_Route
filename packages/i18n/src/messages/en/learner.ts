@@ -128,7 +128,12 @@ export const learner = {
       heading: 'Stage 1 progress',
       label: (done: number, total: number) => `${done} of ${total} quests`,
     },
-    homework: { title: 'Homework', due: (count: number) => `${count} to do today` },
+    homework: {
+      title: 'Homework',
+      due: (count: number) => `${count} to do today`,
+      /** More due than the Homework list shows (F-PLAN-002 section 3.6): words, no number. */
+      dueMany: 'A few to do today',
+    },
     tip: "Tip — finish today's quest to keep your streak alive!",
     recentStars: 'Recent stars',
   },
@@ -257,6 +262,8 @@ export const learner = {
       none: 'Nothing waiting today! Want to play a quest anyway?',
       some: (n: number) =>
         plural('en', n, { one: 'You have 1 thing to do today.', other: `You have ${n} things to do today.` }),
+      /** More due than the list shows (F-PLAN-002 section 3.6): words, no number. */
+      aFew: 'You have a few things to do today.',
     },
     allClear: {
       title: 'All clear!',
@@ -271,8 +278,12 @@ export const learner = {
       tomorrow: 'Tomorrow',
       inDays: (n: number) => plural('en', n, { one: 'In 1 day', other: `In ${n} days` }),
     },
-    /** Who set it, keyed by the schema's `assignedBy`: no role jargon. */
-    from: { parent: 'From home', teacher: 'From class', system: 'From Hoya' },
+    /** Who set it, keyed by the schema's `assignedBy`: no role jargon. `route` is the learner's own weekly plan (F-PLAN-002). */
+    from: { parent: 'From home', teacher: 'From class', system: 'From Hoya', route: 'Your plan' },
+    /** Under the first three Today rows when more are due (F-PLAN-002 section 3.6): never a number. */
+    moreToday: 'More are waiting. They come one at a time.',
+    /** The one collapsed row after the next seven days of Coming up: it can hold any source, so it names none. */
+    later: 'Later',
   },
 
   /** The Quest player (QuestPlayerScreen, its game launcher cards and the Discover step), F-QUEST-002. */
@@ -624,6 +635,52 @@ export const learner = {
       readAgain: { cta: 'Read again' },
       sources: { cta: 'Sources' },
     },
+    /**
+     * The Sources screen (F-STORY-002 §3.8), moved unchanged from `logic/story/story-reader-copy.ts`
+     * in PR 2.7. Counts are allowed here (not a learner result); never an age (D1). Titles,
+     * publishers, quotes and the Korean claim are citations from the story data, never here.
+     */
+    sources: {
+      title: 'Sources',
+      back: 'Back',
+      traditionalTale: { pill: 'Traditional tale' },
+      traditionalNote: 'One version of a story told in many versions',
+      checked: (passes: number, date: string, contentVer: number) =>
+        `Checked in ${count(passes, 'independent pass', 'independent passes')} · last checked ${date} · story version ${contentVer}`,
+      /** A `scope: 'cluster'` verification record: say only what the record says. */
+      clusterChecked: 'These checks covered a group of related stories, not this story alone.',
+      howChecked: { cta: 'How it was checked' },
+      advisoryHeading: 'A gentle note for grown-ups',
+      corrections: 'Corrections',
+      sceneHeading: (sceneNumber: number) => `Scene ${sceneNumber}`,
+      seeFact: (factId: string) => `See fact ${factId}`,
+      korean: { cta: 'Korean' },
+      scope: {
+        documented: 'What we know',
+        inTheTale: 'What the tale says',
+      },
+      updated: { pill: 'Updated' },
+      updatedOn: { pill: (date: string) => `Updated ${date}` },
+      sourcesHeading: (n: number) => `Sources (${n})`,
+      accessed: (date: string) => `accessed ${date}`,
+      sourceLabel: (index: number, total: number, title: string, publisher: string) =>
+        `Source ${index} of ${total}: ${title}, ${publisher}`,
+      approximation: (text: string, rationale: string) => `About “${text}”: ${rationale}`,
+      dependsOnToday: 'This depends on today’s date.',
+      usedInQuestions: 'Used in questions and notes',
+      highlighted: { pill: 'Highlighted' },
+      /** A grown-up action: the link is opened only after the gate. */
+      openLink: { cta: 'Open link' },
+      copyLink: { cta: 'Copy link' },
+      linkCopied: 'Link copied',
+      copyUnavailable: 'Copying is not available here. The link is above.',
+      openFailed: (url: string) => `Open this link in a browser: ${url}`,
+      needsConnection: 'Opening a link needs a connection.',
+      /** Web, back from the grown-up gate: the browser needs a tap of its own to open a tab. */
+      gateDone: 'Grown-up check done. Tap Open link to open it.',
+      counts: (facts: number, sources: number) => `${count(facts, 'fact', 'facts')} · ${count(sources, 'source', 'sources')}`,
+      noSources: 'No sources are listed for this story.',
+    },
   },
 
   /**
@@ -651,5 +708,228 @@ export const learner = {
   portraitGuard: {
     title: 'Turn your phone upright',
     keepSideways: { cta: 'Keep sideways' },
+  },
+
+  /**
+   * The level check (F-PLC-001 sections 3.1 and 3.12, wireframe placement). Every screen of the
+   * flow lives here, the grown-up options and sound-needed screens included, so one copy scan
+   * covers them: no digit except the two allow-listed duration lines, no percent, no ratio, no
+   * age words, no score words and never "test" in the learner-facing name. Hoya's cheers are
+   * effort-only and never say whether an answer was right.
+   */
+  placement: {
+    invite: {
+      title: 'Where should we start?',
+      newToKorean: 'I am new to Korean',
+      knowSome: 'I already know some Korean',
+      duration: 'It takes a few minutes. You can stop at any time.',
+    },
+    language: {
+      title: 'Pick the language for the check',
+      note: 'This does not change the app language.',
+      noKoreanVoice: 'No Korean voice on this device',
+      noVoice: 'No voice for this language here',
+      continue: { cta: 'Continue' },
+    },
+    options: {
+      cardTitle: 'Set up the check',
+      title: 'A few choices',
+      howLong: 'How long?',
+      change: 'Change',
+      start: { cta: 'Start' },
+      next: { cta: 'Next' },
+      mode: {
+        short: {
+          label: 'Short',
+          help: 'A few picture and sound questions.',
+          duration: 'Just a few minutes.',
+          needsSound: 'The short check needs sound.',
+        },
+        standard: {
+          label: 'Standard',
+          help: 'Letters, sounds, words and sentences.',
+          duration: 'Usually under 10 minutes.',
+        },
+        deep: {
+          label: 'Deep',
+          help: 'More questions, to be extra sure. Hoya takes a break halfway.',
+          duration: 'Usually under 20 minutes.',
+        },
+      },
+      soundGuide: {
+        title: 'Sound guide',
+        always: 'Always show it',
+        tap: 'Show it only when I tap',
+        consequence:
+          'With the guide shown, the check looks at shapes and listening. With it hidden until you tap, it can also look at reading. Your own setting is not changed.',
+      },
+      takeMyTime: { label: 'Take my time', help: 'No time limits.' },
+      why: {
+        title: 'Why Korean?',
+        heritage: 'My family',
+        kculture: 'K-culture',
+        curious: 'Just curious',
+        friends: 'A Korean friend',
+        skip: 'Skip',
+      },
+      limited: 'This device cannot play Korean sound, so we will use pictures and reading.',
+    },
+    handoff: {
+      ready: 'Ready? Tap Hoya to start.',
+      helper: 'Helping? Let them choose. "Not sure" is a fine answer.',
+    },
+    warmup: {
+      line: 'Listen, then tap the picture.',
+      noSound: 'No sound here, so we will use pictures and reading.',
+    },
+    item: {
+      tapToHear: 'Tap to hear it.',
+      hearAgain: 'Hear it again',
+      showSound: 'Show how it sounds',
+      notSure: 'I am not sure',
+      exit: 'Let us start learning',
+      gotIt: 'Got it',
+      noSoundFallback: 'No sound? Read it here.',
+      /** Screen readers, on each question: "Question, 4 choices". */
+      questionLabel: (choices: number) =>
+        plural('en', choices, { one: 'Question, 1 choice', other: `Question, ${choices} choices` }),
+      /** A picture option's accessible name when its meaning would be the answer (test language Korean). */
+      pictureChoice: (position: number) => `Picture ${position}`,
+    },
+    /**
+     * One short instruction per question format, written and spoken (section 3.2).
+     * It never names the answer, a letter or a Korean word. With Korean as the test
+     * language the four letter formats are spoken only (the screen hides the line).
+     */
+    instruction: {
+      shapeOddOneOut: 'Which one is different?',
+      hearPickWritten: 'Listen. Tap what you hear.',
+      seePickSound: 'Look. Tap how it sounds.',
+      buildSyllable: 'Listen. Tap the block you hear.',
+      hearPickPicture: 'Listen. Tap the picture.',
+      readPickPicture: 'Read it. Tap the picture.',
+      replyPick: 'Listen. Tap a good answer.',
+    },
+    /** Every third answer in Standard and Deep, whatever the answers were. */
+    cheer: ['You are doing fine. Keep going!', 'Hoya likes how you try.', 'Nice and calm. On we go!'],
+    /** Every second answer in Short: effort only, never a word about being right. */
+    cheerShort: ['Thanks for listening!', 'Nice and steady.', 'Hoya likes your listening.'],
+    pause: {
+      title: 'Need a break?',
+      keepGoing: 'Keep going',
+      enough: 'That is enough, start learning',
+      grownUp: 'For grown-ups: finish now',
+    },
+    rest: { line: 'Hoya is stretching. Keep going?' },
+    soundNeeded: {
+      title: 'Turn on sound to play',
+      tryAgain: 'Try again',
+      startLearning: 'Start learning',
+      withoutSound: 'Check without sound',
+    },
+    resume: { title: 'Pick up where you left off?', continue: 'Continue', startAgain: 'Start again' },
+    /** Band labels: the only words about level on a learner screen (section 3.6). */
+    band: {
+      beginning: 'At the beginning',
+      lettersAndSounds: 'Letters and sounds',
+      everyLetter: 'Every letter',
+      readingWords: 'Reading words',
+      firstWords: 'First words',
+      firstSentences: 'First sentences',
+    },
+    result: {
+      found: 'Hoya found your starting spot!',
+      goodPlace: 'Here is a good place to start',
+      notTestedLine: 'We checked listening and shapes. To find where to start reading, try the check with the sound guide hidden.',
+      retryHidden: 'Try it with the sound guide hidden',
+      startHere: 'Start here',
+      next: 'Next',
+      later: 'Later',
+      start: { cta: 'Start' },
+      seeMyRoute: 'See my route',
+      seeMap: 'See the whole map',
+      forGrownUps: 'For grown-ups',
+      forGrownUpsPlan: 'For grown-ups: set up a weekly plan',
+      knowALot: 'You know a lot! More adventures are coming.',
+      openStories: 'Open stories',
+      routeStays: 'Your route stays right where it is.',
+      planStays: 'Your plan stays right where it is.',
+      laterStart: 'Hoya found a later place to start.',
+      planCanMove: 'Your weekly plan can move ahead and keep the same end date.',
+      updatePlan: 'Update my plan',
+      keepPlan: 'Keep my plan',
+      tryStandard: 'Try the standard check',
+      /** The mini map's accessible name: the start cell has a pin, cells to skip ahead of a light outline. */
+      map: 'Your route on the map. The pin is where you start.',
+      strip: {
+        title: 'Hoya made a weekly plan for you',
+        usePlan: 'Use this plan',
+        change: 'Change',
+        justStart: 'Just start',
+      },
+    },
+    homeCard: {
+      line: 'Already know some Korean?',
+      take: 'Take the level check',
+      continue: 'Continue the level check',
+      notNow: 'Not now',
+    },
+    profileRow: 'Find my starting spot again',
+  },
+
+  /**
+   * The story shelf (F-STORY-004 §3.3-3.8): Library sections, story tiles and the Picked for you
+   * hero, the story episode page, Culture notes and the Home story card. Counts, never fractions or
+   * "behind" (D3); no "Premium" anywhere (D5). Story and note text (titles, bodies, terms, sources)
+   * is content. Whole-sentence messages, never suffix concatenation (audit I18N-08).
+   */
+  storyShelf: {
+    /** Section tab labels, keyed by `LibrarySectionId` (`logic/story/library-sections.ts`). */
+    sections: { cards: 'Cards', 'story-time': 'Story Time', culture: 'Culture', 'theme-packs': 'Theme packs' },
+    /** Screen-reader name of the section tab row. */
+    sectionsLabel: 'Library sections',
+    pickedForYou: 'Picked for you',
+    start: { cta: 'Start' },
+    keepReading: { cta: 'Keep reading' },
+    readAgain: { cta: 'Read it again' },
+    playAgain: { cta: 'Play again' },
+    startOver: { cta: 'Start over' },
+    /** The state line of a tile or tale row: always words, never colour alone. */
+    state: { new: 'New', inProgress: 'Keep reading', finished: 'Finished', locked: 'Locked' },
+    minutes: { pill: (minutes: number) => `about ${minutes} min` },
+    /**
+     * The one label of a whole story tile: `title` is the story's title (content), `state` a `state`
+     * line. `stars` (a finished story with at least one star) is read out too, since the tile's
+     * StarRow sits inside the one button; a 0-star finish says nothing about stars (D3).
+     */
+    tileLabel: (title: string, state: string, minutes: number, stars = 0) =>
+      `${title}. ${state}. ${plural('en', minutes, { one: 'About 1 minute', other: `About ${minutes} minutes` })}.` +
+      (stars > 0 ? ` ${plural('en', stars, { one: '1 star', other: `${stars} stars` })}.` : ''),
+    /** The Home story card subtitle by `storyReason`, and the `explore` card that replaces the old "Story time" label. */
+    home: {
+      subtitle: { continue: 'Keep reading', next: 'A short story', again: 'Read it again' },
+      explore: 'Take a look',
+    },
+    episode: {
+      minutes: { pill: (minutes: number) => `${minutes} min` },
+      wordsTitle: 'Words in this story',
+      hearWord: (romanization: string) => `Hear ${romanization}`,
+      cultureNotes: (found: number) => `Culture notes: ${found} found`,
+    },
+    cultureNotes: {
+      title: 'Culture notes',
+      found: { pill: (found: number) => `${found} found` },
+      /** `title` is the story's title (content). */
+      fromStory: (title: string) => `From the story: ${title}`,
+      /** The collapsed sources row: the same words for every reader, whatever their age (CLAUDE.md §1). */
+      whereFrom: 'Where this comes from',
+      /** One source line, plain text (no links): the work's title and its publisher (content). */
+      source: (title: string, publisher: string) => `${title}, ${publisher}`,
+      hearTerm: (romanization: string) => `Hear ${romanization}`,
+      empty: {
+        line: 'Finish a story to find your first culture note.',
+        toStoryTime: { cta: 'Go to Story Time' },
+      },
+    },
   },
 } as const;

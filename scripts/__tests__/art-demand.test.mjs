@@ -181,12 +181,15 @@ describe("the shipped lexicon", () => {
       for (const id of e.ids) assert.match(id, /^(scene|prop):[a-z]+(-[a-z]+)*$|^hoya:\*$/);
     }
   });
-  test("every id the lexicon names for the records-joseon cluster is in the registry", () => {
-    const ids = registryIds(REPO);
-    // later clusters may name ids before their batch exists; this cluster's must exist
-    const cluster = JSON.parse(readFileSync(LEXICON, "utf8")).clusters["records-joseon"];
-    assert.deepEqual(cluster.filter((id) => !ids.has(id)), []);
-  });
+  // later clusters may name ids before their batch exists; a built cluster's must exist
+  for (const name of ["records-joseon", "hangul-printing", "science-art-life"]) {
+    test(`every id the lexicon names for the ${name} cluster is in the registry`, () => {
+      const ids = registryIds(REPO);
+      const cluster = JSON.parse(readFileSync(LEXICON, "utf8")).clusters[name];
+      assert.ok(Array.isArray(cluster) && cluster.length > 0, name);
+      assert.deepEqual(cluster.filter((id) => !ids.has(id)), []);
+    });
+  }
 });
 
 describe("cli", () => {

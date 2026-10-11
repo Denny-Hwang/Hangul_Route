@@ -6,6 +6,44 @@ vi.mock('expo-speech', () => ({
   getAvailableVoicesAsync: vi.fn(async () => []),
 }));
 vi.mock('react-native', () => ({ Platform: { OS: 'ios' } }));
+// The clip player (A-7) loads expo-av and expo-asset: native module trees vitest cannot load.
+const av = vi.hoisted(() => ({
+  modes: [] as unknown[],
+  loaded: [] as unknown[],
+}));
+vi.mock('expo-av', () => ({
+  Audio: {
+    setAudioModeAsync: vi.fn(async (mode: unknown) => {
+      av.modes.push(mode);
+    }),
+    Sound: {
+      createAsync: vi.fn(async (source: unknown, _initial: unknown, onStatus: (s: { isLoaded: boolean; didJustFinish?: boolean }) => void) => {
+        av.loaded.push(source);
+        return {
+          sound: {
+            playAsync: vi.fn(async () => {
+              queueMicrotask(() => onStatus({ isLoaded: true, didJustFinish: true }));
+              return { isLoaded: true };
+            }),
+            stopAsync: vi.fn(async () => ({ isLoaded: true })),
+            unloadAsync: vi.fn(async () => ({ isLoaded: false })),
+            setOnPlaybackStatusUpdate: vi.fn(),
+          },
+        };
+      }),
+    },
+  },
+  InterruptionModeIOS: { MixWithOthers: 0, DoNotMix: 1, DuckOthers: 2 }, InterruptionModeAndroid: { DoNotMix: 1, DuckOthers: 2 },
+}));
+vi.mock('expo-asset', () => ({
+  Asset: {
+    fromModule: (id: number | string) => ({
+      uri: `asset:/clip-${String(id)}.mp3`,
+      localUri: `file:///bundle/clip-${String(id)}.mp3`,
+      downloadAsync: async () => undefined,
+    }),
+  },
+}));
 
 const mem = vi.hoisted(() => new Map<string, unknown>());
 const tracked = vi.hoisted(() => [] as Array<{ name: string; payload?: Record<string, unknown> }>);
@@ -24,7 +62,8 @@ vi.mock('../telemetry', () => ({
 
 import * as Speech from 'expo-speech';
 import { useAudioStore } from '../../store/audio-store';
-import { createNativeAudio, type NativeSpeechApi } from '../audio';
+import type { ClipFailure, ClipPlayer } from '../../logic/audio/controller';
+import { createNativeAudio, type NativeClipSetup, type NativeSpeechApi } from '../audio';
 
 interface NativeVoice {
   identifier: string;
@@ -95,10 +134,63 @@ class FakeSpeech implements NativeSpeechApi {
   }
 }
 
-function rig(voices: NativeVoice[] = [...NOVELTY, YUNA, SAMANTHA], platform: 'ios' | 'android' = 'ios') {
+/** A clip player double: each play settles as `next` says ('ok' = played to the end). */
+class FakeClipPlayer implements ClipPlayer {
+  next: 'ok' | ClipFailure | 'hold' = 'ok';
+  readonly played: string[] = [];
+  readonly warmed: string[][] = [];
+  unlocks = 0;
+  stops = 0;
+  /** How many times each play's own handle was stopped, by play order. */
+  readonly handleStops: number[] = [];
+  play(ref: string, h: { onStart(): void; onDone(): void; onError(reason: ClipFailure): void }): { stop(): void } {
+    this.played.push(ref);
+    const index = this.handleStops.push(0) - 1;
+    const outcome = this.next;
+    queueMicrotask(() => {
+      if (outcome === 'hold') return;
+      if (outcome === 'ok') {
+        h.onStart();
+        h.onDone();
+      } else h.onError(outcome);
+    });
+    return {
+      stop: () => {
+        this.handleStops[index] = (this.handleStops[index] ?? 0) + 1;
+      },
+    };
+  }
+  warm(refs: readonly string[]): Promise<void> {
+    this.warmed.push([...refs]);
+    return Promise.resolve();
+  }
+  unlock(): void {
+    this.unlocks += 1;
+  }
+  stopAll(): void {
+    this.stops += 1;
+  }
+}
+
+const GIYEOK_CLIP = 'audio/jamo/giyeok.mp3';
+const NIEUN_CLIP = 'audio/jamo/nieun.mp3';
+
+interface ClipRigOptions {
+  player: FakeClipPlayer;
+  refs?: string[];
+  enabled?: boolean;
+}
+
+function clipSetup(opts: ClipRigOptions): NativeClipSetup {
+  const refs = new Set(opts.refs ?? [GIYEOK_CLIP]);
+  const enabled = opts.enabled ?? true;
+  return { player: opts.player, assets: { has: (ref) => refs.has(ref), size: refs.size }, enabled: () => enabled };
+}
+
+function rig(voices: NativeVoice[] = [...NOVELTY, YUNA, SAMANTHA], platform: 'ios' | 'android' = 'ios', clips?: ClipRigOptions) {
   const speech = new FakeSpeech();
   speech.voices = voices;
-  const audio = createNativeAudio({ speech, platform });
+  const audio = createNativeAudio({ speech, platform, ...(clips === undefined ? {} : { clips: clipSetup(clips) }) });
   return { speech, audio };
 }
 
@@ -350,6 +442,8 @@ describe('platform/audio (native): capability, unlock, telemetry', () => {
     audio.unlockAudio();
     audio.installGestureUnlock()();
     await expect(audio.warmClips(['audio/jamo/giyeok.mp3'])).resolves.toBeUndefined();
+    // The native clip path lands in A-7: no ref has a clip yet, so the voice is always used.
+    expect(audio.hasClip('audio/jamo/giyeok.mp3')).toBe(false);
     audio.dispose();
   });
 
@@ -404,6 +498,178 @@ describe('platform/audio (native): the module-level API', () => {
     mod.installGestureUnlock()();
     await mod.warmClips([]);
     mod.noteFallbackShown('x', 'muted');
+    expect(mod.hasClip('audio/jamo/giyeok.mp3')).toBe(false);
     await expect(mod.playJamo({ char: 'ㅏ', romanization: 'a', nameEn: 'a', spokenKo: '아', spokenKind: 'sound' })).resolves.toBe('played');
+  });
+});
+
+describe('platform/audio (native): bundled clips (A-7, AD4: clip > voice > text)', () => {
+  it('a ref with a bundled clip plays the clip and the voice stays silent', async () => {
+    const player = new FakeClipPlayer();
+    const { speech, audio } = rig(undefined, 'ios', { player });
+    await expect(audio.playPrompt({ text: '가', audioRef: GIYEOK_CLIP, kind: 'sound' })).resolves.toBe('played');
+    expect(player.played).toEqual([GIYEOK_CLIP]);
+    expect(speech.calls).toHaveLength(0);
+    audio.dispose();
+  });
+
+  it('playJamo uses the jamo audioRef', async () => {
+    const player = new FakeClipPlayer();
+    const { speech, audio } = rig(undefined, 'ios', { player });
+    const giyeok = { char: 'ㄱ', romanization: 'g/k', nameEn: 'giyeok', spokenKo: '가', spokenKind: 'sound' as const, audioRef: GIYEOK_CLIP };
+    await expect(audio.playJamo(giyeok, 'sound')).resolves.toBe('played');
+    expect(player.played).toEqual([GIYEOK_CLIP]);
+    expect(speech.calls).toHaveLength(0);
+    audio.dispose();
+  });
+
+  it('a clip that fails to decode falls through to the voice and is reported', async () => {
+    const player = new FakeClipPlayer();
+    player.next = 'decode';
+    const { speech, audio } = rig(undefined, 'ios', { player });
+    await expect(audio.playPrompt({ text: '가', audioRef: GIYEOK_CLIP })).resolves.toBe('played');
+    expect(speech.calls.map((c) => c.text)).toEqual(['가']);
+    expect(tracked.filter((e) => e.name === 'audio.playback_failed')).toEqual([
+      { name: 'audio.playback_failed', payload: { kind: 'clip', reason: 'decode' } },
+    ]);
+    audio.dispose();
+  });
+
+  it('a ref with no bundled file goes straight to the voice', async () => {
+    const player = new FakeClipPlayer();
+    const { speech, audio } = rig(undefined, 'ios', { player });
+    await audio.playPrompt({ text: '나', audioRef: 'audio/jamo/nieun.mp3' });
+    expect(player.played).toEqual([]);
+    expect(speech.calls.map((c) => c.text)).toEqual(['나']);
+    audio.dispose();
+  });
+
+  it('a clip plays on a device with no Korean voice, and the capability counts clips', async () => {
+    const player = new FakeClipPlayer();
+    const { speech, audio } = rig([SAMANTHA], 'android', { player });
+    await expect(audio.playPrompt({ text: '가', audioRef: GIYEOK_CLIP })).resolves.toBe('played');
+    expect(speech.calls).toHaveLength(0);
+    expect(audio.getCapability().clips).toBe(true);
+    expect(useAudioStore.getState().clips).toBe(true);
+    audio.dispose();
+  });
+
+  it('muted never touches the clip player; switching the sound off and stop() stop clips', async () => {
+    const player = new FakeClipPlayer();
+    const { audio } = rig(undefined, 'ios', { player });
+    player.next = 'hold';
+    const pending = audio.playPrompt({ text: '가', audioRef: GIYEOK_CLIP });
+    await flush();
+    audio.stop();
+    await expect(pending).resolves.toBe('played');
+    const afterStop = player.stops;
+    expect(afterStop).toBeGreaterThan(0);
+    useAudioStore.getState().setMuted(true, 'profile');
+    expect(player.stops).toBeGreaterThan(afterStop);
+    player.next = 'ok';
+    await expect(audio.playPrompt({ text: '가', audioRef: GIYEOK_CLIP })).resolves.toBe('muted');
+    expect(player.played).toEqual([GIYEOK_CLIP]);
+    audio.dispose();
+  });
+
+  it('a newer prompt stops the running clip through its own handle', async () => {
+    const player = new FakeClipPlayer();
+    const { audio } = rig(undefined, 'ios', { player, refs: [GIYEOK_CLIP, NIEUN_CLIP] });
+    player.next = 'hold';
+    const first = audio.playPrompt({ text: '가', audioRef: GIYEOK_CLIP });
+    await flush();
+    expect(player.handleStops).toEqual([0]);
+    player.next = 'ok';
+    const second = audio.playPrompt({ text: '나', audioRef: NIEUN_CLIP });
+    await expect(first).resolves.toBe('played');
+    await expect(second).resolves.toBe('played');
+    expect(player.played).toEqual([GIYEOK_CLIP, NIEUN_CLIP]);
+    expect(player.handleStops[0]).toBe(1);
+    audio.dispose();
+  });
+
+  it('flags.audioClips off: the voice speaks, no clip is counted, nothing is warmed', async () => {
+    const player = new FakeClipPlayer();
+    const { speech, audio } = rig(undefined, 'ios', { player, enabled: false });
+    await audio.playPrompt({ text: '가', audioRef: GIYEOK_CLIP });
+    expect(player.played).toEqual([]);
+    expect(speech.calls.map((c) => c.text)).toEqual(['가']);
+    expect(audio.getCapability().clips).toBe(false);
+    expect(audio.hasClip(GIYEOK_CLIP)).toBe(false);
+    await audio.warmClips([GIYEOK_CLIP]);
+    expect(player.warmed).toEqual([]);
+    audio.dispose();
+  });
+
+  it('an empty clip map counts as no clips', () => {
+    const { audio } = rig(undefined, 'ios', { player: new FakeClipPlayer(), refs: [] });
+    expect(audio.getCapability().clips).toBe(false);
+    audio.dispose();
+  });
+
+  it('hasClip is true only for a bundled ref; warmClips loads only bundled refs', async () => {
+    const player = new FakeClipPlayer();
+    const { audio } = rig(undefined, 'ios', { player });
+    expect(audio.hasClip(GIYEOK_CLIP)).toBe(true);
+    expect(audio.hasClip('audio/jamo/nieun.mp3')).toBe(false);
+    expect(audio.hasClip(undefined)).toBe(false);
+    await audio.warmClips([GIYEOK_CLIP, 'audio/jamo/nieun.mp3']);
+    expect(player.warmed).toEqual([[GIYEOK_CLIP]]);
+    await audio.warmClips(['audio/jamo/nieun.mp3']);
+    expect(player.warmed).toHaveLength(1);
+    audio.dispose();
+  });
+
+  it('the unlock calls stay no-ops on native even with clips', () => {
+    const player = new FakeClipPlayer();
+    const { audio } = rig(undefined, 'ios', { player });
+    audio.unlockAudio();
+    audio.installGestureUnlock()();
+    expect(player.unlocks).toBe(0);
+    audio.dispose();
+  });
+});
+
+describe('platform/audio (native): the module-level clip path', () => {
+  it('resolves a bundled clip through expo-asset and plays it with expo-av, once the session is set', async () => {
+    vi.resetModules();
+    av.modes.length = 0;
+    av.loaded.length = 0;
+    vi.doMock('../../content/__generated__/audio-assets', () => ({ AUDIO_ASSETS: { [GIYEOK_CLIP]: 7 } }));
+    vi.mocked(Speech.getAvailableVoicesAsync).mockResolvedValue([YUNA] as never);
+    vi.mocked(Speech.speak).mockReset();
+    const store = await import('../../store/audio-store');
+    store.useAudioStore.setState({ muted: false, hydrated: true, levelOrder: null, lastFailure: null });
+    const mod = await import('../audio');
+    expect(mod.hasClip(GIYEOK_CLIP)).toBe(true);
+    expect(mod.getCapability().clips).toBe(true);
+    await mod.warmClips([GIYEOK_CLIP]);
+    await expect(mod.playPrompt({ text: '가', audioRef: GIYEOK_CLIP })).resolves.toBe('played');
+    expect(av.modes).toEqual([
+      {
+        playsInSilentModeIOS: false,
+        staysActiveInBackground: false,
+        interruptionModeIOS: 0,
+        interruptionModeAndroid: 2,
+        shouldDuckAndroid: true,
+        playThroughEarpieceAndroid: false,
+        allowsRecordingIOS: false,
+      },
+    ]);
+    expect(av.loaded).toEqual([{ uri: 'file:///bundle/clip-7.mp3' }]);
+    expect(vi.mocked(Speech.speak)).not.toHaveBeenCalled();
+    vi.doUnmock('../../content/__generated__/audio-assets');
+  });
+});
+
+describe('platform/audio (native): hasVoiceFor (F-PLC-001 section 3.1 step 2)', () => {
+  it('counts the voice list as available until it is read, then answers per language', async () => {
+    const { audio } = rig([YUNA, SAMANTHA]);
+    expect(audio.hasVoiceFor('es-US')).toBe(true);
+    await flush();
+    expect(audio.hasVoiceFor('ko-KR')).toBe(true);
+    expect(audio.hasVoiceFor('en-US')).toBe(true);
+    expect(audio.hasVoiceFor('es-US')).toBe(false);
+    audio.dispose();
   });
 });

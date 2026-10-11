@@ -469,6 +469,8 @@ function ReaderBody({
     </View>
   );
 
+  // Window height < layout.compactHeight (320x568, landscape phones): hero CTAs step down to lg.
+  const compactHeight = lc.windowHeight > 0 && lc.windowHeight < layout.compactHeight;
   const bottomBar = (
     <ReaderBottomBar
       copy={copy}
@@ -476,7 +478,7 @@ function ReaderBody({
       onReadToMe={changeReadToMe}
       isFirst={view.isFirst}
       nextLabel={view.labels.next}
-      nextSize={lc.windowHeight > 0 && lc.windowHeight < layout.compactHeight ? 'lg' : 'hero'}
+      nextSize={compactHeight ? 'lg' : 'hero'}
       onBack={() => dispatch({ type: 'back' })}
       onNext={() => dispatch({ type: 'next' })}
     />
@@ -492,6 +494,7 @@ function ReaderBody({
         onPrimary={onFinish}
         onReadAgain={() => dispatch({ type: 'restart' })}
         onSources={sources}
+        compact={compactHeight}
       />
     </ScrollView>
   );

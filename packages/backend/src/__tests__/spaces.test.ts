@@ -345,6 +345,32 @@ describe('leave, remove, roster (§3.3, §3.4)', () => {
     expect(famRow.summary).not.toHaveProperty('stage1Anchor');
   });
 
+  it('returns the self-route counts to the family roster only, never to a class or a school admin (F-PLAN-002 section 3.10)', async () => {
+    const sch = await createSpace('principal', 'school', 'School');
+    const schCode = await issueCode('principal', sch.space.id);
+    await joinAs(sch.space.id, bearer('teacher'), { code: schCode });
+    const cls = await createSpace('teacher', 'class', 'A', { parentSpaceId: sch.space.id });
+    const fam = await createSpace('mom', 'family', 'Kim family');
+    const famCode = await issueCode('mom', fam.space.id);
+    const suni = await registerLearner('device-suni0001', 'Suni');
+    expect((await joinAs(cls.space.id, suni.auth, { code: cls.joinCode, learnerId: suni.learnerId })).status).toBe(201);
+    expect((await joinAs(fam.space.id, suni.auth, { code: famCode, learnerId: suni.learnerId })).status).toBe(201);
+    const selfRoute = { done: 7, total: 9, notReady: 0, weeks: 12, endsOn: '2027-01-09' };
+    const upload = await call('PUT', `/api/sync/learners/${suni.learnerId}/snapshot`, suni.auth, { baseRev: 0, snapshot: snapshotFor(suni.learnerId), summary: { ...summary, selfRoute }, schemaVer: 1, contentVer: '2026.10' });
+    expect(upload.status).toBe(200);
+
+    const summaryOf = async (spaceId: string, user: string): Promise<Record<string, unknown>> => {
+      const r = await get(`/api/spaces/${spaceId}/roster`, bearer(user));
+      expect(r.status).toBe(200);
+      return ((r.body.data as { learners: Array<{ summary: Record<string, unknown> }> }).learners[0] as { summary: Record<string, unknown> }).summary;
+    };
+    expect((await summaryOf(fam.space.id, 'mom')).selfRoute).toEqual(selfRoute);
+    const classView = await summaryOf(cls.space.id, 'teacher');
+    expect(classView).not.toHaveProperty('selfRoute');
+    expect(classView).toMatchObject({ cardsUnlocked: 2 });
+    expect(await summaryOf(cls.space.id, 'principal')).not.toHaveProperty('selfRoute');
+  });
+
   it('a school admin reads a child class roster without its code; archived spaces disappear', async () => {
     const sch = await createSpace('principal', 'school', 'School');
     const schCode = await issueCode('principal', sch.space.id);

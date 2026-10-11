@@ -11,6 +11,7 @@ import { defineConfig } from 'vitest/config';
  *     no executable branches; mapped by minigame ref → content scope).
  *   - src/platform/motion.ts — React hook over AccessibilityInfo events;
  *     needs a renderer harness, covered by Detox nightly instead.
+ *   - every __generated__ folder under src — generated files (the clip map, F-AUDIO-004 §3.10).
  *
  * RN component tests go through Detox in a separate nightly job once the
  * device matrix is wired.
@@ -36,6 +37,7 @@ export default defineConfig({
         'src/**/*.test.ts',
         'src/logic/minigame-config.ts',
         'src/platform/motion.ts',
+        'src/**/__generated__/**',
       ],
     },
   },

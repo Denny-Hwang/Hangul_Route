@@ -4,7 +4,7 @@
 // the exported objects in packages/design-system/src/tokens.ts.
 //
 // V1 contract: structural presence. For each `<kind>.v<N>.md` found in
-// design/tokens/ (where kind ∈ colors|typography|spacing|radii|shadows|motion|layout),
+// design/tokens/ (where kind ∈ colors|typography|spacing|radii|shadows|motion|layout|presenter),
 // tokens.ts MUST export `<kind>` as a non-empty `{ ... } as const`. Detail-
 // level value drift (hex literal vs token value) is deferred to F-DES-002.
 //
@@ -34,6 +34,7 @@ const KNOWN_KINDS = [
   "shadows",
   "motion",
   "layout",
+  "presenter",
 ];
 
 if (!existsSync(TOKENS_DIR)) {

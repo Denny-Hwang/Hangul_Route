@@ -1,4 +1,4 @@
-import type { PlanItem } from '../schemas/plan';
+import type { PlanItem } from '../schemas/plan-item';
 
 /**
  * Pure date helpers shared by the console plan builder and the curriculum

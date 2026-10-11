@@ -1,7 +1,10 @@
 import type { ProgressSnapshot } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
+import { PLACEMENT_KEEP } from '@hangul-route/content-schema';
 import { seededRandom } from '../../listen-pick';
-import { isSubsetOf, mergeCard, mergeSnapshots } from '../merge';
+import { placementResult } from '../../placement/__tests__/fixtures';
+import { selfRoute } from '../../homework/__tests__/curriculum-fixture';
+import { compareInstant, isSubsetOf, mergeCard, mergeSnapshots, withSnapshotDefaults } from '../merge';
 
 const NOW = new Date('2026-09-21T12:00:00.000Z');
 const base = (over: Partial<ProgressSnapshot> = {}): ProgressSnapshot => ({
@@ -326,5 +329,167 @@ describe('mergeSnapshots card properties (F-STORY-006 §3.6)', () => {
         expect((at ?? '') <= q.completedAt, `seed ${seed}`).toBe(true);
       }
     });
+  });
+});
+
+describe('placements (F-PLC-001 section 3.8)', () => {
+  const p = (id: string, completedAt: string, over: Parameters<typeof placementResult>[0] = {}) =>
+    placementResult({ id, completedAt, ...over });
+
+  it('withSnapshotDefaults gives a legacy snapshot an empty list and keeps an existing one', () => {
+    const legacy = base();
+    expect('placements' in legacy).toBe(false);
+    expect(withSnapshotDefaults(legacy).placements).toEqual([]);
+    const held = base({ placements: [p('placement:a', '2026-10-01T00:00:00Z')], selfRoute: null });
+    expect(withSnapshotDefaults(held)).toBe(held);
+    const partial = base({ placements: held.placements });
+    expect(withSnapshotDefaults(partial).placements).toBe(held.placements);
+  });
+
+  it('keeps the snapshot shape when neither side has placements', () => {
+    const m = mergeSnapshots(base(), base(), { now: NOW });
+    expect('placements' in m).toBe(false);
+  });
+
+  it('unions by id, sorted by completedAt, with a legacy side read as empty', () => {
+    const local = base({ placements: [p('placement:b', '2026-10-02T00:00:00Z')] });
+    const server = base({ placements: [p('placement:a', '2026-10-01T00:00:00Z')] });
+    expect(mergeSnapshots(local, server, { now: NOW }).placements?.map((r) => r.id)).toEqual(['placement:a', 'placement:b']);
+    expect(mergeSnapshots(base(), server, { now: NOW }).placements?.map((r) => r.id)).toEqual(['placement:a']);
+    expect(mergeSnapshots(local, base(), { now: NOW }).placements?.map((r) => r.id)).toEqual(['placement:b']);
+  });
+
+  it('for the same id the copy with an override wins, the later override.at when both carry one, else local', () => {
+    const at = '2026-10-01T00:00:00Z';
+    const plain = p('placement:a', at, { contentVer: 'local' });
+    const serverPlain = p('placement:a', at, { contentVer: 'server' });
+    const early = p('placement:a', at, { contentVer: 'early', override: { by: 'parent', at: '2026-10-03T00:00:00Z', startQuestId: 'quest:q2' } });
+    const late = p('placement:a', at, { contentVer: 'late', override: { by: 'parent', at: '2026-10-04T00:00:00Z', startQuestId: 'quest:q3' } });
+    const pick = (l: typeof plain, s: typeof plain) =>
+      mergeSnapshots(base({ placements: [l] }), base({ placements: [s] }), { now: NOW }).placements?.[0]?.contentVer;
+    expect(pick(plain, serverPlain)).toBe('local');
+    expect(pick(plain, early)).toBe('early');
+    expect(pick(early, plain)).toBe('early');
+    expect(pick(early, late)).toBe('late');
+    expect(pick(late, early)).toBe('late');
+  });
+
+  it('keeps only the newest PLACEMENT_KEEP results', () => {
+    const many = Array.from({ length: PLACEMENT_KEEP + 2 }, (_, i) =>
+      p(`placement:r${String(i).padStart(2, '0')}`, `2026-10-${String(i + 1).padStart(2, '0')}T00:00:00Z`),
+    );
+    const m = mergeSnapshots(base({ placements: many.slice(0, 6) }), base({ placements: many.slice(6) }), { now: NOW });
+    expect(m.placements).toHaveLength(PLACEMENT_KEEP);
+    expect(m.placements?.[0]?.id).toBe('placement:r02');
+    expect(m.placements?.[PLACEMENT_KEEP - 1]?.id).toBe(`placement:r${PLACEMENT_KEEP + 1}`);
+  });
+
+  it('isSubsetOf compares placement ids, treating a missing list as empty', () => {
+    const one = base({ placements: [p('placement:a', '2026-10-01T00:00:00Z')] });
+    expect(isSubsetOf(one, base())).toBe(false);
+    expect(isSubsetOf(base(), one)).toBe(true);
+    expect(isSubsetOf(one, one)).toBe(true);
+    expect(isSubsetOf(base(), base())).toBe(true);
+  });
+
+  it('isSubsetOf needs an upload when the local copy carries a newer override than the server', () => {
+    const at = '2026-10-01T00:00:00Z';
+    const plain = base({ placements: [p('placement:a', at)] });
+    const overridden = base({
+      placements: [p('placement:a', at, { override: { by: 'parent', at: '2026-10-05T00:00:00Z', startQuestId: 'quest:q2' } })],
+    });
+    expect(isSubsetOf(overridden, plain)).toBe(false);
+    expect(isSubsetOf(plain, overridden)).toBe(true);
+    expect(isSubsetOf(overridden, overridden)).toBe(true);
+  });
+
+  it('orders results and overrides as instants, not strings (offset and Z forms, with or without milliseconds)', () => {
+    // 01:30+02:00 is 23:30Z the day before: earlier than 00:00Z, though it sorts later as a string.
+    const offset = p('placement:b', '2026-10-02T01:30:00+02:00');
+    const zulu = p('placement:a', '2026-10-02T00:00:00.000Z');
+    expect(mergeSnapshots(base({ placements: [zulu] }), base({ placements: [offset] }), { now: NOW }).placements?.map((r) => r.id)).toEqual([
+      'placement:b',
+      'placement:a',
+    ]);
+    const at = '2026-10-01T00:00:00Z';
+    const localLater = p('placement:a', at, { contentVer: 'local', override: { by: 'parent', at: '2026-10-05T00:00:00Z', startQuestId: 'quest:q2' } });
+    const serverEarlier = p('placement:a', at, { contentVer: 'server', override: { by: 'parent', at: '2026-10-05T01:00:00+02:00', startQuestId: 'quest:q3' } });
+    expect(mergeSnapshots(base({ placements: [localLater] }), base({ placements: [serverEarlier] }), { now: NOW }).placements?.[0]?.contentVer).toBe('local');
+    expect(isSubsetOf(base({ placements: [localLater] }), base({ placements: [serverEarlier] }))).toBe(false);
+    expect(isSubsetOf(base({ placements: [serverEarlier] }), base({ placements: [localLater] }))).toBe(true);
+  });
+
+  it('breaks a completedAt tie by id in code-point order', () => {
+    const at = '2026-10-01T00:00:00Z';
+    const m = mergeSnapshots(base({ placements: [p('placement:a-b', at)] }), base({ placements: [p('placement:ab', at)] }), { now: NOW });
+    expect(m.placements?.map((r) => r.id)).toEqual(['placement:a-b', 'placement:ab']);
+  });
+});
+
+describe('compareInstant', () => {
+  it('compares instants, then code points; an unparsable side sorts first', () => {
+    expect(compareInstant('2026-10-01T00:00:00Z', '2026-10-01T00:00:01Z')).toBe(-1);
+    expect(compareInstant('2026-10-01T02:00:00+02:00', '2026-10-01T00:00:00.500Z')).toBe(-1);
+    expect(compareInstant('2026-10-01T00:00:00.000Z', '2026-10-01T00:00:00Z')).toBe(-1);
+    expect(compareInstant('2026-10-01T00:00:00Z', '2026-10-01T00:00:00Z')).toBe(0);
+    expect(compareInstant('garbage', '2026-10-01T00:00:00Z')).toBe(-1);
+    expect(compareInstant('2026-10-01T00:00:00Z', 'garbage')).toBe(1);
+    expect(compareInstant('b', 'a')).toBe(1);
+  });
+});
+
+describe('selfRoute, the learner weekly plan (F-PLAN-002 section 3.5)', () => {
+  const legacy = (over: Record<string, unknown> = {}): ProgressSnapshot => {
+    const snapshot: Record<string, unknown> = { ...base(), ...over };
+    delete snapshot['selfRoute'];
+    return snapshot as unknown as ProgressSnapshot;
+  };
+
+  it('withSnapshotDefaults fills a missing selfRoute with null and keeps a held one', () => {
+    const filled = withSnapshotDefaults(legacy());
+    expect(filled.selfRoute).toBeNull();
+    expect(filled.placements).toEqual([]);
+    const route = selfRoute();
+    const held = base({ placements: [], selfRoute: route });
+    expect(withSnapshotDefaults(held)).toBe(held);
+    expect(withSnapshotDefaults(base({ placements: [] })).selfRoute).toBeNull();
+    expect(withSnapshotDefaults(base({ selfRoute: route })).selfRoute).toBe(route);
+  });
+
+  it('keeps the snapshot shape when neither side has the key', () => {
+    expect('selfRoute' in mergeSnapshots(legacy(), legacy(), { now: NOW })).toBe(false);
+  });
+
+  it('a missing or null side never replaces a held route', () => {
+    const route = selfRoute();
+    expect(mergeSnapshots(legacy(), base({ selfRoute: route }), { now: NOW }).selfRoute).toEqual(route);
+    expect(mergeSnapshots(base({ selfRoute: route }), base({ selfRoute: null }), { now: NOW }).selfRoute).toEqual(route);
+    expect(mergeSnapshots(base({ selfRoute: null }), legacy(), { now: NOW }).selfRoute).toBeNull();
+  });
+
+  it('keeps the route with the newest updatedAt as an instant; a tie keeps the local copy', () => {
+    const older = selfRoute({ id: 'route:old', updatedAt: '2026-09-20T00:00:00.000Z' });
+    const newer = selfRoute({ id: 'route:new', updatedAt: '2026-09-21T00:00:00.000Z' });
+    expect(mergeSnapshots(base({ selfRoute: older }), base({ selfRoute: newer }), { now: NOW }).selfRoute?.id).toBe('route:new');
+    expect(mergeSnapshots(base({ selfRoute: newer }), base({ selfRoute: older }), { now: NOW }).selfRoute?.id).toBe('route:new');
+    const tieServer = selfRoute({ id: 'route:server', updatedAt: older.updatedAt });
+    expect(mergeSnapshots(base({ selfRoute: older }), base({ selfRoute: tieServer }), { now: NOW }).selfRoute?.id).toBe('route:old');
+    // 01:00+02:00 is 23:00Z the day before, so the Z form is newer although it sorts first as a string.
+    const offset = selfRoute({ id: 'route:offset', updatedAt: '2026-09-21T01:00:00+02:00' });
+    const zulu = selfRoute({ id: 'route:zulu', updatedAt: '2026-09-21T00:00:00.000Z' });
+    expect(mergeSnapshots(base({ selfRoute: offset }), base({ selfRoute: zulu }), { now: NOW }).selfRoute?.id).toBe('route:zulu');
+  });
+
+  it('isSubsetOf compares id and updatedAt, treating a missing key as null', () => {
+    const route = selfRoute();
+    const edited = selfRoute({ updatedAt: '2026-09-22T00:00:00.000Z' });
+    expect(isSubsetOf(base({ selfRoute: route }), legacy())).toBe(false);
+    expect(isSubsetOf(base({ selfRoute: route }), base({ selfRoute: null }))).toBe(false);
+    expect(isSubsetOf(base({ selfRoute: route }), base({ selfRoute: route }))).toBe(true);
+    expect(isSubsetOf(base({ selfRoute: route }), base({ selfRoute: edited }))).toBe(true);
+    expect(isSubsetOf(base({ selfRoute: edited }), base({ selfRoute: route }))).toBe(false);
+    expect(isSubsetOf(base({ selfRoute: route }), base({ selfRoute: selfRoute({ id: 'route:other', updatedAt: edited.updatedAt }) }))).toBe(false);
+    expect(isSubsetOf(legacy(), base({ selfRoute: route }))).toBe(true);
+    expect(isSubsetOf(base({ selfRoute: null }), legacy())).toBe(true);
   });
 });

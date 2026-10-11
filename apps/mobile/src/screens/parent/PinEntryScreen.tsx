@@ -106,7 +106,10 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
 
   const proceed = (): void => {
     openParentGate();
-    if (route.params.next === 'AddProfile') {
+    if (route.params.next === 'PlacementFinish') {
+      // The level check is underneath: it sees the gate open and ends the run for the grown-up.
+      navigation.goBack();
+    } else if (route.params.next === 'AddProfile') {
       navigation.replace('Onboarding', { screen: 'CreateProfile', params: { firstRun: false } });
     } else if (route.params.next === 'Restore') {
       navigation.replace('Restore', { from: 'settings' });
@@ -114,6 +117,9 @@ export function PinEntryScreen({ route, navigation }: Props): React.ReactElement
       navigation.replace('SaveProgress');
     } else if (route.params.next === 'Paywall') {
       navigation.replace('Paywall', { from: 'journey' });
+    } else if (route.params.next === 'ExternalLink') {
+      // Back to Sources with the gate open: native opens the waiting link, the web asks for one more tap (F-STORY-002 §3.8).
+      navigation.goBack();
     } else {
       navigation.replace('ParentDashboard');
     }

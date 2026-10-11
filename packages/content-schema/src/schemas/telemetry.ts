@@ -97,6 +97,12 @@ export const TELEMETRY_EVENT_NAMES = [
   // F-STORY-006 §3.9 (payloads carry ids and counts only)
   'card.catchup_granted',
   'card_set.complete',
+  // F-PLAN-002 §3.11 incl. FP-B7 (codes and counts only; app only, the console has no telemetry client)
+  'route.created',
+  'route.repaced',
+  'route.proposed',
+  'route.proposal_skipped',
+  'route.updated',
 ] as const;
 
 export const TelemetryEventNameSchema = z.enum(TELEMETRY_EVENT_NAMES);

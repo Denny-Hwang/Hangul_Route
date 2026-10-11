@@ -1,5 +1,5 @@
 import type { InboxPlan } from '@hangul-route/content-schema';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mem = vi.hoisted(() => new Map<string, unknown>());
 vi.mock('../../platform/storage', () => ({
@@ -9,6 +9,7 @@ vi.mock('../../platform/storage', () => ({
   }),
 }));
 
+import { curriculumMeta, selfRoute } from '../../logic/homework/__tests__/curriculum-fixture';
 import { useAccountStore } from '../account-store';
 import { usePlanStore, unlockedStagesFor } from '../plan-store';
 import { useProfileStore } from '../profile-store';
@@ -40,7 +41,7 @@ describe('plan-store (F-PLAN-001 §3.3)', () => {
 
   it('applies inbox plans: derives homework, persists plans, records not-ready, syncs only on change', async () => {
     const first = await usePlanStore.getState().applyPlans('profile:a', [plan]);
-    expect(first).toEqual({ changed: true, added: 1, notReady: { 'plan:w3': 1 } });
+    expect(first).toEqual({ changed: true, added: 1, removed: 0, redated: 0, notReady: { 'plan:w3': 1 } });
     const homework = useProgressStore.getState().byProfile['profile:a']?.homework ?? [];
     expect(homework).toHaveLength(1);
     expect(homework[0]).toMatchObject({ id: 'plan:w3#quest:stage1-letters-q1', assignedBy: 'teacher', targetDate: '2026-09-28', episodeId: 'episode:stage1-letters' });
@@ -60,5 +61,91 @@ describe('plan-store (F-PLAN-001 §3.3)', () => {
     mem.set('plans:profile:a', [plan]);
     expect(await usePlanStore.getState().hydrate('profile:a')).toEqual([plan]);
     expect(await usePlanStore.getState().hydrate('profile:a')).toEqual([plan]);
+  });
+
+  it('derives the active self-route beside the inbox plans (F-PLAN-002 section 3.6)', async () => {
+    const route = selfRoute({ items: [{ kind: 'quest', id: 'quest:stage1-letters-q2' }] });
+    useProgressStore.getState().ensure('profile:a');
+    const snapshot = useProgressStore.getState().byProfile['profile:a']!;
+    useProgressStore.getState().replaceSnapshot('profile:a', { ...snapshot, selfRoute: route });
+    const outcome = await usePlanStore.getState().applyPlans('profile:a', [plan]);
+    expect(outcome.added).toBe(2);
+    const homework = useProgressStore.getState().byProfile['profile:a']?.homework ?? [];
+    expect(homework.map((h) => [h.id, h.assignedBy])).toEqual([
+      ['plan:w3#quest:stage1-letters-q1', 'teacher'],
+      ['route:mine#quest:stage1-letters-q2', 'system'],
+    ]);
+    expect(useProgressStore.getState().byProfile['profile:a']?.selfRoute).toEqual(route);
+  });
+
+  it('persists a redate-only change and reports it (F-PLAN-002 section 3.6 rule 2)', async () => {
+    await usePlanStore.getState().applyPlans('profile:a', [plan]);
+    const moved: InboxPlan = { ...plan, items: [{ kind: 'quest', id: 'quest:stage1-letters-q1', targetDate: '2026-09-30' }] };
+    const outcome = await usePlanStore.getState().applyPlans('profile:a', [moved]);
+    expect(outcome).toMatchObject({ changed: true, added: 0, removed: 0, redated: 1 });
+    expect(useProgressStore.getState().byProfile['profile:a']?.homework.map((h) => h.targetDate)).toEqual(['2026-09-30']);
+  });
+});
+
+describe('plan-store with no network (F-PLAN-002 section 3.6 rule 1, section 3.11)', () => {
+  const at = (iso: string): void => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date(iso));
+  };
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+  const weekly = (): InboxPlan => ({
+    ...plan,
+    id: 'plan:term',
+    items: [
+      { kind: 'quest', id: 'quest:stage1-letters-q1', targetDate: '2026-09-22' },
+      { kind: 'quest', id: 'quest:stage1-letters-q2', targetDate: '2026-09-30' },
+    ],
+    meta: curriculumMeta(),
+  });
+
+  it('rederives the cached curriculum on a later day with no inbox call: next week arrives', async () => {
+    at('2026-09-21T09:00:00.000Z');
+    await usePlanStore.getState().applyPlans('profile:a', [weekly()]);
+    expect(useProgressStore.getState().byProfile['profile:a']?.homework.map((h) => h.questId)).toEqual(['quest:stage1-letters-q1']);
+    // A cold start nine days later, offline: only storage is there.
+    usePlanStore.setState({ byLearner: {}, notReady: {} });
+    at('2026-09-30T09:00:00.000Z');
+    const outcome = await usePlanStore.getState().rederive('profile:a');
+    expect(outcome).toMatchObject({ changed: true, added: 1 });
+    expect(useProgressStore.getState().byProfile['profile:a']?.homework.map((h) => h.questId)).toEqual(['quest:stage1-letters-q1', 'quest:stage1-letters-q2']);
+    expect(usePlanStore.getState().byLearner['profile:a']).toEqual([weekly()]);
+  });
+
+  it('advances a self-route with no inbox ever received', async () => {
+    at('2026-09-21T09:00:00.000Z');
+    const route = selfRoute({ items: [{ kind: 'quest', id: 'quest:stage1-letters-q1', targetDate: '2026-09-21' }, { kind: 'quest', id: 'quest:stage1-letters-q2', targetDate: '2026-10-01' }] });
+    useProgressStore.getState().ensure('profile:a');
+    useProgressStore.getState().replaceSnapshot('profile:a', { ...useProgressStore.getState().byProfile['profile:a']!, selfRoute: route });
+    expect(await usePlanStore.getState().rederive('profile:a')).toMatchObject({ added: 1 });
+    at('2026-09-25T09:00:00.000Z');
+    expect(await usePlanStore.getState().rederive('profile:a')).toMatchObject({ added: 1 });
+    expect(useProgressStore.getState().byProfile['profile:a']?.homework.map((h) => h.id)).toEqual(['route:mine#quest:stage1-letters-q1', 'route:mine#quest:stage1-letters-q2']);
+  });
+
+  it('leaves pending plan homework alone when no plan was ever cached on this device', async () => {
+    useProgressStore.getState().ensure('profile:a');
+    const pending = { id: 'plan:w3#quest:stage1-letters-q1', profileId: 'profile:a', questId: 'quest:stage1-letters-q1', episodeId: 'episode:stage1-letters', assignedBy: 'teacher' as const, assignedAt: 't', targetDate: '2026-09-28' };
+    useProgressStore.getState().replaceSnapshot('profile:a', { ...useProgressStore.getState().byProfile['profile:a']!, homework: [pending] });
+    expect(await usePlanStore.getState().rederive('profile:a')).toBeNull();
+    expect(usePlanStore.getState().reconcile('profile:a', useProgressStore.getState().byProfile['profile:a']!).homework).toEqual([pending]);
+  });
+
+  it('reconciles a merged snapshot against the plans in memory: a dropped pending item stays dropped, a new date holds', async () => {
+    at('2026-09-21T09:00:00.000Z');
+    const moved: InboxPlan = { ...weekly(), items: [{ kind: 'quest', id: 'quest:stage1-letters-q1', targetDate: '2026-09-23' }] };
+    await usePlanStore.getState().applyPlans('profile:a', [moved]);
+    const local = useProgressStore.getState().byProfile['profile:a']!;
+    const stale = { id: 'plan:term#quest:stage1-letters-q2', profileId: 'profile:a', questId: 'quest:stage1-letters-q2', episodeId: 'episode:stage1-letters', assignedBy: 'teacher' as const, assignedAt: 't', targetDate: '2026-09-21' };
+    const merged = { ...local, homework: [{ ...local.homework[0]!, targetDate: '2026-09-22' }, stale] };
+    const reconciled = usePlanStore.getState().reconcile('profile:a', merged);
+    expect(reconciled.homework.map((h) => [h.id, h.targetDate])).toEqual([['plan:term#quest:stage1-letters-q1', '2026-09-23']]);
+    expect(usePlanStore.getState().reconcile('profile:a', reconciled)).toBe(reconciled);
   });
 });

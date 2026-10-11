@@ -11,6 +11,7 @@ vi.mock('../../platform/storage', () => ({
 vi.mock('../../platform/telemetry', () => ({ track: vi.fn(async () => true) }));
 vi.mock('../../platform/locale', () => ({ deviceLanguages: () => [], takeLangHandoff: () => null, setDocumentLang: () => {} }));
 
+import { readJson, writeJson } from '../../platform/storage';
 import { useAudioStore } from '../audio-store';
 import { useLayoutStore } from '../layout-store';
 import { hydrateLearnerData } from '../bootstrap';
@@ -36,8 +37,10 @@ const saved = (profileId: string, cardId: string): ProgressSnapshot => ({
 describe('cold start (audit UX-01 / L16)', () => {
   beforeEach(() => {
     mem.clear();
+    vi.mocked(readJson).mockReset().mockImplementation(async (k: string) => (mem.get(k) ?? null) as never);
+    vi.mocked(writeJson).mockClear();
     useProfileStore.setState({ profiles: [], activeId: null, hydrated: false });
-    useProgressStore.setState({ byProfile: {}, hydratedFor: new Set(), pendingFor: new Set() });
+    useProgressStore.setState({ byProfile: {}, hydratedFor: new Set(), pendingFor: new Set(), catchUp: {} });
     useLocaleStore.setState({ detected: 'en', device: null, byProfile: {}, hydrated: false });
     useAudioStore.setState({ muted: false, hydrated: false });
     useLayoutStore.setState({ allowedSideways: false, hydrated: false });
@@ -55,8 +58,54 @@ describe('cold start (audit UX-01 / L16)', () => {
     expect(useProfileStore.getState()).toMatchObject({ hydrated: true, activeId: 'profile:b' });
     const progress = useProgressStore.getState();
     expect([...progress.hydratedFor].sort()).toEqual(['profile:a', 'profile:b']);
-    expect(progress.byProfile['profile:a']?.cards.map((c) => c.cardId)).toEqual(['card:book']);
-    expect(progress.byProfile['profile:b']?.cards.map((c) => c.cardId)).toEqual(['card:hanji']);
+    // Each saved copy is reconciled after it loads: the welcome card joins (F-STORY-006 §3.5).
+    expect(progress.byProfile['profile:a']?.cards.map((c) => c.cardId)).toEqual(['card:book', 'card:tiger']);
+    expect(progress.byProfile['profile:b']?.cards.map((c) => c.cardId)).toEqual(['card:hanji', 'card:tiger']);
+  });
+
+  it('reconciles each profile after its saved progress loads, so cards it already earned arrive (F-STORY-006 §3.5)', async () => {
+    const at = '2026-10-01T09:05:00.000Z';
+    mem.set('profiles', [profile('profile:a', 'Suni')]);
+    mem.set('progress:profile:a', {
+      ...saved('profile:a', 'card:book'),
+      quests: [{ questId: 'quest:stage1-rites-q1', episodeId: 'episode:stage1-rites', startedAt: at, completedAt: at, stars: 1, attempts: 1, accuracy: 1 }],
+    });
+
+    await hydrateLearnerData();
+
+    const stored = mem.get('progress:profile:a') as ProgressSnapshot;
+    const rites = ['card:chuseok', 'card:sebae', 'card:seollal', 'card:songpyeon', 'card:tteokguk'];
+    expect(stored.cards.map((c) => c.cardId).sort()).toEqual(['card:book', ...rites, 'card:tiger'].sort());
+    expect(useProgressStore.getState().catchUp['profile:a']).toEqual(expect.arrayContaining(rites));
+  });
+
+  it("writes nothing at launch for a profile with no saved progress; Home's ensure then shows the welcome card (F-STORY-006 §3.3)", async () => {
+    mem.set('profiles', [{ ...profile('profile:a', 'Suni'), createdAt: '2026-09-01T08:00:00.000Z' }]);
+
+    await hydrateLearnerData();
+
+    expect(mem.has('progress:profile:a')).toBe(false);
+    expect(writeJson).not.toHaveBeenCalledWith('progress:profile:a', expect.anything());
+    const snap = useProgressStore.getState().ensure('profile:a');
+    expect(snap.cards).toEqual([{ cardId: 'card:tiger', unlockedAt: '2026-09-01T08:00:00.000Z', newSinceLastView: true }]);
+    expect(mem.has('progress:profile:a')).toBe(false);
+    expect(useProgressStore.getState().catchUp['profile:a']).toBeUndefined();
+  });
+
+  it('a saved record whose read fails at launch is never written over, for any profile', async () => {
+    const original = saved('profile:a', 'card:book');
+    mem.set('profiles', [profile('profile:a', 'Suni'), profile('profile:b', 'Minho')]);
+    mem.set('progress:profile:a', original);
+    // readJson turns a storage or parse error into null: the same answer as "nothing saved".
+    vi.mocked(readJson).mockImplementation(async (k: string) => (k === 'progress:profile:a' ? null : ((mem.get(k) ?? null) as never)));
+
+    await hydrateLearnerData();
+    useProgressStore.getState().ensure('profile:a');
+    useProgressStore.getState().ensure('profile:b');
+
+    expect(mem.get('progress:profile:a')).toEqual(original);
+    expect(writeJson).not.toHaveBeenCalledWith('progress:profile:a', expect.anything());
+    expect(writeJson).not.toHaveBeenCalledWith('progress:profile:b', expect.anything());
   });
 
   it("loads every profile's story bookmarks with its progress, so Home never renders without them (F-STORY-004 §3.2)", async () => {
@@ -79,7 +128,7 @@ describe('cold start (audit UX-01 / L16)', () => {
     useProgressStore.getState().beginSession('profile:a');
 
     const stored = mem.get('progress:profile:a') as ProgressSnapshot;
-    expect(stored.cards.map((c) => c.cardId)).toEqual(['card:book']);
+    expect(stored.cards.map((c) => c.cardId)).toEqual(['card:book', 'card:tiger']);
     expect(stored.quests.map((q) => q.questId)).toEqual(['quest:a']);
     expect(stored.sessions).toHaveLength(1);
   });

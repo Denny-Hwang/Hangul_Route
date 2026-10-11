@@ -27,9 +27,17 @@ export function decideCardAward(input: {
   rewardCardId: string | undefined;
   stars: 0 | 1 | 2 | 3;
   ownedCardIds: readonly string[];
+  /**
+   * Cards every profile is given rather than earns (`unlockedBy:
+   * 'first-launch'`, F-STORY-006 §3.4): they do not count towards the first
+   * card, so `card.first_earned` still fires for the first card a learner earns.
+   */
+  welcomeCardIds?: readonly string[];
 }): CardAward | null {
   const { rewardCardId, stars, ownedCardIds } = input;
   if (!rewardCardId || !shouldUnlockCard(stars)) return null;
   const isNew = !ownedCardIds.includes(rewardCardId);
-  return { cardId: rewardCardId, isNew, isFirstCard: isNew && ownedCardIds.length === 0 };
+  const welcome = new Set(input.welcomeCardIds ?? []);
+  const earned = ownedCardIds.filter((id) => !welcome.has(id));
+  return { cardId: rewardCardId, isNew, isFirstCard: isNew && earned.length === 0 };
 }
