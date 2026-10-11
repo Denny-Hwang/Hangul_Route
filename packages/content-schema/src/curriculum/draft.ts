@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { FestivalAnchorSchema } from '../catalog/schema';
 import { StageKeySchema } from '../schemas/heritage-card';
-import { PlanItemSchema } from '../schemas/plan';
+import { PlanItemSchema } from '../schemas/plan-item';
 import { CurriculumParamsSchema, DateKeySchema, StoredCurriculumParamsSchema } from './params';
 import { HORIZON_DAYS } from './presets';
 

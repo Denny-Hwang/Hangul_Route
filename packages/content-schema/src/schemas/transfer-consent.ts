@@ -125,8 +125,11 @@ export const TEACHER_VISIBLE_SUMMARY_KEYS = [
 ] as const;
 export type TeacherVisibleSummaryKey = Extract<(typeof TEACHER_VISIBLE_SUMMARY_KEYS)[number], keyof ProgressSummary>;
 
-/** Summary keys a teacher never receives. */
-export const TEACHER_HIDDEN_SUMMARY_KEYS = ['schemaVersion', 'stage1Anchor'] as const;
+/**
+ * Summary keys a teacher never receives. `selfRoute` (F-PLAN-002 section 3.10)
+ * is read by the learner's family space only, never by a class or school.
+ */
+export const TEACHER_HIDDEN_SUMMARY_KEYS = ['schemaVersion', 'stage1Anchor', 'selfRoute'] as const;
 export type TeacherHiddenSummaryKey = Extract<(typeof TEACHER_HIDDEN_SUMMARY_KEYS)[number], keyof ProgressSummary>;
 
 export const TEACHER_VISIBLE_SUMMARY_ITEMS: Readonly<Record<TeacherVisibleSummaryKey, TeacherVisibleItemId>> = {

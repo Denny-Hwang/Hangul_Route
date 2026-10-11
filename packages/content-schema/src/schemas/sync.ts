@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { ProfileSchema } from './profile';
 import { ProgressSnapshotSchema, type ProgressSnapshot } from './progress';
 import { TierSourceSchema } from './entitlement';
-import { InboxPlanSchema } from './plan';
+import { InboxPlanSchema, type InboxPlan } from './plan';
 import { LearnerMembershipSchema } from './space';
 import { LearnerLevelIdSchema } from './learner-level';
 import { PlacementSummarySchema } from './placement';
@@ -12,6 +12,20 @@ import { InboxTransferSchema, lenientArray } from './transfer';
  * Sync contracts — F-SYNC-001. Shared by the Worker (validation) and the
  * apps (typing), so the wire format has exactly one definition.
  */
+
+/**
+ * Counts of the learner's self-route (F-PLAN-002 section 3.6 / 3.10): `total`
+ * means "scheduled so far" (the device's one-week horizon), `weeks` and
+ * `endsOn` give the full length. Read by the family space only.
+ */
+export const SelfRouteSummarySchema = z.object({
+  done: z.number().int().nonnegative(),
+  total: z.number().int().nonnegative(),
+  notReady: z.number().int().nonnegative(),
+  weeks: z.number().int().min(1).max(52),
+  endsOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+});
+export type SelfRouteSummary = z.infer<typeof SelfRouteSummarySchema>;
 
 /** Client-computed aggregate; the only column caregivers/teachers read (roadmap §3.3). */
 export const ProgressSummarySchema = z.object({
@@ -46,6 +60,8 @@ export const ProgressSummarySchema = z.object({
       notReady: z.number().int().nonnegative().default(0),
     }),
   ),
+  /** Self-route counts (F-PLAN-002 section 3.5); removed from every roster but a family's. Malformed counts are dropped, never fatal. */
+  selfRoute: SelfRouteSummarySchema.optional().catch(undefined),
 });
 export type ProgressSummary = z.infer<typeof ProgressSummarySchema>;
 
@@ -93,7 +109,11 @@ export const SyncInboxSchema = z.object({
   selfManaged: z.boolean().default(false),
   transfers: lenientArray(InboxTransferSchema).default([]),
 });
-export type SyncInbox = z.infer<typeof SyncInboxSchema>;
+/**
+ * Plans are typed as `InboxPlan` (meta optional) so a parsed inbox and the
+ * stored, unparsed copy have one shape and every reader handles a missing meta.
+ */
+export type SyncInbox = Omit<z.infer<typeof SyncInboxSchema>, 'plans'> & { plans: InboxPlan[] };
 
 /** Server-less restore path: a JSON file a parent can keep (F-SYNC-001 §3.6). */
 export const BACKUP_FORMAT = 'hangul-route-backup' as const;

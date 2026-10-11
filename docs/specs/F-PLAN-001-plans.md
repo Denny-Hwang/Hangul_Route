@@ -7,6 +7,8 @@
 
 Parent: F-SPACE-001 (spaces, `can()`), F-HW-001 §3.4 (assignment merge, gating ruling), F-TCH-001 §3.3 (class plan semantics), roadmap §2 `plans`, §3.3 `planProgress`, §4 (inbox) · wireframes `console/plan-builder.md`, `homework/list.md`, `home/todays-mission.md`
 
+**Amended by F-PLAN-002** (curriculum planner, sections 3.5 to 3.8; applied in its PR P2-4): sections 3.1, 3.2, 3.3 and 3.5 below carry an *F-PLAN-002* note. Everything else in this spec is unchanged, and a plan without a curriculum `meta` behaves exactly as described here.
+
 ---
 
 ## 1. Context
@@ -24,6 +26,7 @@ A teacher lays out next week once; thirty children each get their own homework w
 - `plans` row (roadmap §2): `id`, `spaceId`, `authorAccountId`, `title` (≤ 60), `items` (1–30, ordered: `{ kind: 'quest' | 'episode', id, targetDate?, note? }`), `targetLearnerIds` (null = everyone in the space), `publishedAt` (null = draft, never reaches a learner), `archivedAt`, `createdAt`, `updatedAt`. Mirrored in `schema-v2.sql`.
 - Inbox row (`InboxPlanSchema`): `{ id, spaceId, spaceKind, spaceName, title, items, publishedAt, updatedAt }`.
 - `ProgressSummary.planProgress[planId]` = `{ done, total, notReady }` (`notReady` defaults to 0 so older summaries still parse). `total` counts items the device could assign; `notReady` counts items skipped by gating.
+- *F-PLAN-002 (additive).* An item may carry `week` (1 to 52). A plan may carry `meta` (`CurriculumMetaSchema`: generator and catalogue versions, the params without the learner's completions, the week list, `horizonDays` default 7, `repacedAt`), stored in `plans.meta_json` (migration `0006_plan_meta.sql`, NULL = a classic plan). Only a plan with `meta` may hold more than 30 items, up to `CURRICULUM_MAX_ITEMS` = 260; a classic plan keeps 1 to 30. The inbox row gains `meta` (null for a classic plan). For a curriculum, `planProgress.total` means "scheduled so far" (the device's one-week horizon); the console knows the full length from `items.length`.
 
 ### 3.2 Routes (`/api/spaces/:id/plans`, actor via `can()`)
 
@@ -34,6 +37,8 @@ A teacher lays out next week once; thirty children each get their own homework w
 | `POST /:planId/archive` | `plan.write` | `{ plan }` with `archivedAt` |
 | `GET /api/sync/learners/:id/inbox` | learner device | `plans` = published, non-archived plans of the learner's non-archived spaces where `targetLearnerIds` is null or contains the learner, oldest `publishedAt` first |
 
+*F-PLAN-002 (additive).* `PUT /` also takes `meta`: absent on an update keeps the stored meta (an older console cannot strip a route), `null` turns the plan into a classic one; more than 30 items without an effective meta is 422 `bad_request` (issue code `classic-plan-too-long` on `items`). The inbox returns a plan with `meta` **only** when the app sends `?cap=curriculum` (an app without the horizon would derive every dated item at once); without it the curriculum plan is simply absent and classic plans are unchanged. The roster's summary carries `selfRoute` for a family space only.
+
 ### 3.3 Device derivation — `logic/homework/plan-derivation.ts` (pure, 100 %)
 
 - For each inbox plan item: `quest` → that quest; `episode` → the episode's quests in content order. Each quest passes `canAssignQuest` (F-HW-001 gating, `unlockedStages` from the learner's tier); a locked or unknown quest is **skipped silently** and counted in `notReady[planId]` (ruling in F-HW-001 §3.4 / app map §7 #4).
@@ -41,6 +46,7 @@ A teacher lays out next week once; thirty children each get their own homework w
 - A quest the learner already completed (before or after publishing) is derived as done — the goal is the skill, not repetition. Completing a quest marks every open assignment for that quest done (`progress-store.recordQuestComplete`).
 - Pending assignments of a plan that left the inbox (archived, retargeted) are dropped; completed ones stay as history. Non-plan assignments are untouched.
 - Runs on every inbox refresh (`membership-store.refresh`, now also triggered after each successful sync); when anything changed the snapshot is replaced and a sync is requested so the author sees progress on the next roster read. `notReady` per plan is kept locally for the summary.
+- *F-PLAN-002 section 3.6 (device PR P2-5).* For a plan with `meta`, items dated more than `horizonDays` ahead are not derived and not counted; pending assignments are re-dated or removed when their item moves, leaves the plan, leaves the horizon or becomes locked (completed ones are never touched); precedence class > family > self; the self-route is a source of kind `self` (`route:<id>#<questId>`, `assignedBy: 'system'`).
 
 ### 3.4 Learner surfaces
 
@@ -52,6 +58,7 @@ A teacher lays out next week once; thirty children each get their own homework w
 
 - `/teach/space/:id/plan`: catalog (Stage 1 episodes → quests, from `apps/web/src/data/stage1-catalog.ts`, a hand-kept mirror), ordered items (↑ ↓ ×, date, note), **Spread dates** (`spreadDates(start, perWeek, n)`, never two on one day; colliding manual dates slide on save with a notice), everyone / only these learners, Publish / Save draft / Archive (confirm), published readout from roster summaries (`done / total`, `n not ready yet`, "waiting for the next sync", last active; roster order, no ranking). Roster's "Plan this week" is live and each student card shows the latest published plan's line.
 - Deviations from the wireframe, on purpose: no drag handle (buttons), no client-side gating warning (every catalog item is Stage 1, which every learner has; `notReady` in the readout covers older apps and future premium stages), no "send to ready learners only", no daily-test / story items yet.
+- *F-PLAN-002 section 3.8 (console PR P2-6).* The catalogue comes from the shared `packages/content-schema` catalogue (the `stage1-catalog.ts` mirror is retired); a plan with `meta` is grouped under week headers, **Spread dates** is hidden for it, a plan switcher replaces "newest only", and the readout reads "4 / 6 so far - 36 planned" with **Re-pace from today**.
 
 ## 4. Out of scope
 

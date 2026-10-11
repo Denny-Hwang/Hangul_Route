@@ -69,6 +69,15 @@ const toSpace = (r: Row): Space => ({
   createdAt: str(r.created_at),
 });
 const toMembership = (r: Row): Membership => ({ spaceId: str(r.space_id), memberKind: str(r.member_kind) as MemberKind, memberId: str(r.member_id), role: str(r.role) as Membership['role'], joinedAt: str(r.joined_at) });
+/** `meta_json` (migration 0006): NULL, or unreadable JSON, is a classic plan; a bad row never fails its space. */
+const planMeta = (v: unknown): Plan['meta'] => {
+  try {
+    const parsed = json(v);
+    return typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed) ? (parsed as Plan['meta']) : null;
+  } catch {
+    return null;
+  }
+};
 const toPlan = (r: Row): Plan => ({
   id: str(r.id),
   spaceId: str(r.space_id),
@@ -80,6 +89,7 @@ const toPlan = (r: Row): Plan => ({
   archivedAt: nstr(r.archived_at),
   createdAt: str(r.created_at),
   updatedAt: str(r.updated_at),
+  meta: planMeta(r.meta_json),
 });
 const toRelink = (r: Row): StoredRelink => ({
   id: str(r.id),
@@ -386,8 +396,8 @@ export class D1Db implements Db {
   }
   putPlan(p: Plan): Promise<void> {
     return this.run(
-      'INSERT INTO plans (id, space_id, author_account_id, title, items_json, target_learner_ids_json, published_at, archived_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET title = excluded.title, items_json = excluded.items_json, target_learner_ids_json = excluded.target_learner_ids_json, published_at = excluded.published_at, archived_at = excluded.archived_at, updated_at = excluded.updated_at',
-      [p.id, p.spaceId, p.authorAccountId, p.title, JSON.stringify(p.items), p.targetLearnerIds === null ? null : JSON.stringify(p.targetLearnerIds), p.publishedAt, p.archivedAt, p.createdAt, p.updatedAt],
+      'INSERT INTO plans (id, space_id, author_account_id, title, items_json, target_learner_ids_json, published_at, archived_at, created_at, updated_at, meta_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET title = excluded.title, items_json = excluded.items_json, target_learner_ids_json = excluded.target_learner_ids_json, published_at = excluded.published_at, archived_at = excluded.archived_at, updated_at = excluded.updated_at, meta_json = excluded.meta_json',
+      [p.id, p.spaceId, p.authorAccountId, p.title, JSON.stringify(p.items), p.targetLearnerIds === null ? null : JSON.stringify(p.targetLearnerIds), p.publishedAt, p.archivedAt, p.createdAt, p.updatedAt, p.meta === null ? null : JSON.stringify(p.meta)],
     );
   }
   plansOf(spaceId: string): Promise<Plan[]> {

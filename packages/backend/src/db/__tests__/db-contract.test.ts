@@ -1,4 +1,4 @@
-import type { Entitlement, Plan, Space } from '@hangul-route/content-schema';
+import type { CurriculumMeta, Entitlement, Plan, Space } from '@hangul-route/content-schema';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { openSqliteD1 } from '../../__tests__/helpers/sqlite';
 import { D1Db } from '../d1';
@@ -136,7 +136,7 @@ function contract(name: string, make: () => Db): void {
     it('plans: items and targets round-trip as JSON, null targets stay null', async () => {
       await db.putAccount({ id: 't', email: null, displayName: null, consent: null, createdAt: T });
       await db.putSpace(space('space:c', 'class', 't'));
-      const plan: Plan = { id: 'plan:1', spaceId: 'space:c', authorAccountId: 't', title: 'Week 1', items: [{ kind: 'quest', id: 'quest:a', targetDate: '2026-10-10', note: 'warm up' }], targetLearnerIds: null, publishedAt: null, archivedAt: null, createdAt: T, updatedAt: T };
+      const plan: Plan = { id: 'plan:1', spaceId: 'space:c', authorAccountId: 't', title: 'Week 1', items: [{ kind: 'quest', id: 'quest:a', targetDate: '2026-10-10', note: 'warm up' }], targetLearnerIds: null, publishedAt: null, archivedAt: null, createdAt: T, updatedAt: T, meta: null };
       await db.putPlan(plan);
       expect(await db.getPlan('plan:1')).toEqual(plan);
       await db.putPlan({ ...plan, targetLearnerIds: ['profile:a'], publishedAt: T, updatedAt: '2026-10-08T00:00:00.000Z' });
@@ -145,6 +145,29 @@ function contract(name: string, make: () => Db): void {
       await db.putPlan({ ...plan, id: 'plan:2' });
       expect((await db.plansOf('space:c')).map((p) => p.id).sort()).toEqual(['plan:1', 'plan:2']);
       expect(await db.plansOf('space:other')).toEqual([]);
+    });
+
+    it('plans: a curriculum meta round-trips, updates on conflict and can be cleared (F-PLAN-002 section 3.5)', async () => {
+      await db.putAccount({ id: 't', email: null, displayName: null, consent: null, createdAt: T });
+      await db.putSpace(space('space:c', 'class', 't'));
+      const meta: CurriculumMeta = {
+        kind: 'curriculum',
+        generatorVersion: 1,
+        catalogVersion: 1,
+        params: { audience: 'class', level: { stage: 'stage1', band: 0 }, startDate: '2026-10-18', weeks: 1, sessionsPerWeek: 2, minutesPerSession: 10, daysOff: [], goals: { focus: 'balanced' }, includeComingSoon: true, culturalAnchors: true, unlockedStages: ['stage1'] },
+        weeks: [{ index: 1, startDate: '2026-10-18', kind: 'learn', focus: { episodeId: 'episode:stage1-letters', storyIds: [], festival: null }, extras: [] }],
+        horizonDays: 7,
+        repacedAt: null,
+      };
+      const plan: Plan = { id: 'plan:r', spaceId: 'space:c', authorAccountId: 't', title: 'Term', items: [{ kind: 'quest', id: 'quest:a', targetDate: '2026-10-18', week: 1 }], targetLearnerIds: null, publishedAt: T, archivedAt: null, createdAt: T, updatedAt: T, meta };
+      await db.putPlan(plan);
+      expect(await db.getPlan('plan:r')).toEqual(plan);
+      const repaced = { ...meta, repacedAt: '2026-10-25T00:00:00.000Z' };
+      await db.putPlan({ ...plan, meta: repaced });
+      expect((await db.getPlan('plan:r'))?.meta).toEqual(repaced);
+      expect((await db.plansOf('space:c'))[0]?.meta).toEqual(repaced);
+      await db.putPlan({ ...plan, meta: null });
+      expect((await db.getPlan('plan:r'))?.meta).toBeNull();
     });
 
     it('relink requests: status, decidedAt and the one-time secret are updatable', async () => {

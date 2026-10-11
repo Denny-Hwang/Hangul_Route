@@ -83,6 +83,11 @@ describe('telemetry event names (one list for the client type and the API whitel
         'story.locked.tapped',
         'card.catchup_granted',
         'card_set.complete',
+        'route.created',
+        'route.repaced',
+        'route.proposed',
+        'route.proposal_skipped',
+        'route.updated',
       ].sort(),
     );
     expect(new Set(TELEMETRY_EVENT_NAMES).size).toBe(TELEMETRY_EVENT_NAMES.length);
@@ -108,6 +113,13 @@ describe('telemetry event names (one list for the client type and the API whitel
       expect(isTelemetryEventName(name)).toBe(true);
     }
     expect(isTelemetryEventName('route_map.opened')).toBe(false);
+  });
+
+  it('lists the five route names of F-PLAN-002 section 3.11 (FP-B7; Worker first, P2-4)', () => {
+    for (const name of ['route.created', 'route.repaced', 'route.proposed', 'route.proposal_skipped', 'route.updated']) {
+      expect(isTelemetryEventName(name)).toBe(true);
+    }
+    expect(isTelemetryEventName('route.started')).toBe(false);
   });
 
   it('narrows unknown input with isTelemetryEventName', () => {

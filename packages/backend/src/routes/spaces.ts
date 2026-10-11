@@ -19,7 +19,7 @@ import { authorizeDevice, parseDeviceHeader } from '../lib/device-auth';
 import { classCap, schoolIsFull } from '../lib/entitlement';
 import { generateJoinCode, isJoinCodeLive, joinCodeExpiry } from '../lib/join-code';
 import { clientKey, createRateLimiter } from '../lib/rate-limit';
-import { teacherVisibleSummary } from '../lib/roster-summary';
+import { rosterSummary } from '../lib/roster-summary';
 import { classSeatCheck, studentsIn, type SeatBlock } from '../lib/seats';
 import { id, type Account } from '../store';
 
@@ -370,7 +370,8 @@ spacesRoutes.get('/:id/roster', async (c) => {
       avatar: learner.avatar,
       joinedAt: m.joinedAt,
       lastActiveAt: learner.lastActiveAt,
-      summary: teacherVisibleSummary(snapshot?.summary, planIds),
+      // selfRoute reaches a family space only (F-PLAN-002 section 3.10).
+      summary: rosterSummary(snapshot?.summary, planIds, space.kind),
       lastSyncedAt: snapshot?.updatedAt ?? null,
     });
   }
