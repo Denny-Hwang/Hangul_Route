@@ -340,7 +340,8 @@
                 "ref": "hoya:thinking",
                 "x": 322,
                 "y": 292,
-                "s": 0.6
+                "s": 0.6,
+                "flip": true
               }
             ],
             "altEn": "The bronze rain gauge from Gongju, made in 1837, stands in a museum case, and Hoya looks up at it in wonder."

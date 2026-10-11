@@ -1033,7 +1033,8 @@ export const storiesAll: Story[] = [
                   "ref": "hoya:thinking",
                   "x": 322,
                   "y": 292,
-                  "s": 0.6
+                  "s": 0.6,
+                  "flip": true
                 }
               ],
               "altEn": "The bronze rain gauge from Gongju, made in 1837, stands in a museum case, and Hoya looks up at it in wonder."
@@ -3170,7 +3171,7 @@ export const storiesAll: Story[] = [
                   "s": 0.8
                 }
               ],
-              "altEn": "Hoya hugs a book beside a museum case that holds a treasured first-printing copy of Donguibogam."
+              "altEn": "Hoya holds a book close beside a museum case that keeps a treasured first-printing copy of Donguibogam."
             }
           }
         ],
@@ -5990,7 +5991,8 @@ export const storiesAll: Story[] = [
                   "ref": "hoya:thinking",
                   "x": 318,
                   "y": 292,
-                  "s": 0.7
+                  "s": 0.7,
+                  "flip": true
                 }
               ],
               "altEn": "Hoya watches water trickle drop by drop from a large bronze jar into a tall vessel, the heart of a water clock."
@@ -10148,7 +10150,7 @@ export const storiesAll: Story[] = [
                   "s": 0.9
                 }
               ],
-              "altEn": "Hoya writes in his own diary outside a shrine with a curved tiled roof, like Hyeonchungsa where the diary is kept."
+              "altEn": "Hoya holds his own diary by a low desk outside a shrine with a curved tiled roof, like Hyeonchungsa where the diary is kept."
             }
           }
         ],

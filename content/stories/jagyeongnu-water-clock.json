@@ -158,7 +158,8 @@
                 "ref": "hoya:thinking",
                 "x": 318,
                 "y": 292,
-                "s": 0.7
+                "s": 0.7,
+                "flip": true
               }
             ],
             "altEn": "Hoya watches water trickle drop by drop from a large bronze jar into a tall vessel, the heart of a water clock."
