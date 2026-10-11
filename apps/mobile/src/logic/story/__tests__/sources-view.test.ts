@@ -1,5 +1,7 @@
 import type { Story, StoryErratum, StoryFact } from '@hangul-route/content-schema';
+import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
+import { scanLearnerCopy } from '../../homework/banned-text';
 import { buildSourcesView, findFactSection, findSceneSection, type SourcesSection } from '../sources-view';
 import { readyStory } from './story-fixture';
 
@@ -244,6 +246,63 @@ describe('buildSourcesView: header, corrections, counts', () => {
 
   it('is deterministic', () => {
     expect(buildSourcesView(readyStory())).toEqual(buildSourcesView(readyStory()));
+  });
+});
+
+describe('buildSourcesView: words from the UI locale (learner.story.sources, PR 2.7)', () => {
+  it('draws every label from the copy it is given; English by default', () => {
+    const en = getMessages('en').learner.story.sources;
+    const tagged = {
+      ...en,
+      sceneHeading: (n: number) => `S${n}`,
+      seeFact: (id: string) => `->${id}`,
+      usedInQuestions: 'UQ',
+      counts: (f: number, s: number) => `${f}/${s}`,
+      checked: (p: number, d: string, v: number) => `${p}|${d}|${v}`,
+      sourcesHeading: (n: number) => `N${n}`,
+      sourceLabel: (i: number, t: number) => `${i}of${t}`,
+      accessed: (d: string) => `@${d}`,
+      scope: { documented: 'DOC', inTheTale: 'TALE' },
+      noSources: 'NONE',
+    };
+    const story = readyStory();
+    story.facts.push(fact('f4'));
+    const v = buildSourcesView(story, tagged);
+    expect(v.sections.map((s) => s.heading)).toEqual(['S1', 'S2', 'S3', 'S4', 'UQ']);
+    expect(v.sections[1]!.items[0]).toEqual({ type: 'see', factId: 'f1', label: '->f1' });
+    expect(v.counts.label).toBe('4/6');
+    expect(v.checked.label).toBe(`3|2026-10-10|${story.contentVer}`);
+    const card = v.sections[0]!.items[0]!;
+    expect(card.type === 'fact' && [card.fact.scopeLabel, card.fact.sourcesHeading, card.fact.sources[0]!.label, card.fact.sources[0]!.accessedLabel]).toEqual([
+      'DOC',
+      'N1',
+      '1of1',
+      '@2026-10-09',
+    ]);
+    expect(v.emptyLabel).toBe('NONE');
+    expect(buildSourcesView(readyStory()).sections[0]!.heading).toBe('Scene 1');
+  });
+
+  it('renders no banned learner word for a real-shaped story (anti-shame scan)', () => {
+    const story = readyStory();
+    story.facts[0] = { ...story.facts[0]!, rev: 2 };
+    story.errata.push(erratum('e2', '2026-10-11', [story.facts[0]!.id]));
+    const v = buildSourcesView(story);
+    const texts = [
+      v.checked.label,
+      v.counts.label,
+      v.emptyLabel,
+      ...v.sections.flatMap((s) => [
+        s.heading,
+        ...s.items.flatMap((i) =>
+          i.type === 'see'
+            ? [i.label]
+            : [i.fact.scopeLabel, i.fact.sourcesHeading, i.fact.updatedLabel ?? '', ...i.fact.sources.flatMap((x) => [x.label, x.accessedLabel])],
+        ),
+      ]),
+    ];
+    expect(texts.length).toBeGreaterThan(10);
+    expect(scanLearnerCopy(texts)).toEqual([]);
   });
 });
 

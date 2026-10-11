@@ -1,6 +1,6 @@
 import type { KoText, Story, StoryFact, StorySource } from '@hangul-route/content-schema';
+import { getMessages, type Messages } from '@hangul-route/i18n';
 import { isTraditionalTale, sceneCaption } from './scene-view';
-import { STORY_READER_COPY } from './story-reader-copy';
 
 /**
  * The Sources screen as a pure view model (F-STORY-002 §3.8, §3.14 #1-2).
@@ -13,7 +13,12 @@ import { STORY_READER_COPY } from './story-reader-copy';
  * position, and the caption is the first tier's. A fact cited again later is
  * a "See fact" row; a fact no scene cites (used only by checks or culture
  * notes) goes in the final bucket.
+ *
+ * The words come from `learner.story.sources` in the UI locale (the screen
+ * passes `useMessages()`'s subtree); English by default.
  */
+
+export type SourcesCopy = Messages['learner']['story']['sources'];
 
 export interface SourceView {
   title: string;
@@ -92,9 +97,7 @@ export interface SourcesView {
   emptyLabel: string;
 }
 
-const copy = STORY_READER_COPY.sources;
-
-function sourceView(source: StorySource, index: number, total: number): SourceView {
+function sourceView(copy: SourcesCopy, source: StorySource, index: number, total: number): SourceView {
   return {
     title: source.title,
     publisher: source.publisher,
@@ -107,7 +110,7 @@ function sourceView(source: StorySource, index: number, total: number): SourceVi
   };
 }
 
-function approximationsOf(story: Story, factId: string): ApproximationView[] {
+function approximationsOf(copy: SourcesCopy, story: Story, factId: string): ApproximationView[] {
   const seen = new Set<string>();
   const views: ApproximationView[] = [];
   for (const tier of story.tiers) {
@@ -138,7 +141,7 @@ function visibleErrata(story: Story) {
     .map(({ e }) => e);
 }
 
-function factCard(story: Story, fact: StoryFact, errata: ReturnType<typeof visibleErrata>): FactCardView {
+function factCard(copy: SourcesCopy, story: Story, fact: StoryFact, errata: ReturnType<typeof visibleErrata>): FactCardView {
   const updated = fact.rev > 1;
   const erratum = errata.find((e) => e.factIds.includes(fact.id));
   return {
@@ -149,14 +152,14 @@ function factCard(story: Story, fact: StoryFact, errata: ReturnType<typeof visib
     scopeLabel: fact.scope === 'documented' ? copy.scope.documented : copy.scope.inTheTale,
     rev: fact.rev,
     updated,
-    updatedLabel: !updated ? null : erratum ? copy.updatedOn(erratum.date) : copy.updated,
+    updatedLabel: !updated ? null : erratum ? copy.updatedOn.pill(erratum.date) : copy.updated.pill,
     sourcesHeading: copy.sourcesHeading(fact.sources.length),
-    sources: fact.sources.map((s, i) => sourceView(s, i, fact.sources.length)),
-    approximations: approximationsOf(story, fact.id),
+    sources: fact.sources.map((s, i) => sourceView(copy, s, i, fact.sources.length)),
+    approximations: approximationsOf(copy, story, fact.id),
   };
 }
 
-function sectionsOf(story: Story, errata: ReturnType<typeof visibleErrata>): SourcesSection[] {
+function sectionsOf(copy: SourcesCopy, story: Story, errata: ReturnType<typeof visibleErrata>): SourcesSection[] {
   const factById = new Map(story.facts.map((f) => [f.id, f]));
   const shown = new Set<string>();
   const sections: SourcesSection[] = [];
@@ -176,7 +179,7 @@ function sectionsOf(story: Story, errata: ReturnType<typeof visibleErrata>): Sou
           items.push({ type: 'see', factId: id, label: copy.seeFact(id) });
         } else {
           shown.add(id);
-          items.push({ type: 'fact', fact: factCard(story, fact, errata) });
+          items.push({ type: 'fact', fact: factCard(copy, story, fact, errata) });
         }
       }
     }
@@ -192,13 +195,13 @@ function sectionsOf(story: Story, errata: ReturnType<typeof visibleErrata>): Sou
     sections.push({
       kind: 'used',
       heading: copy.usedInQuestions,
-      items: uncited.map((f) => ({ type: 'fact', fact: factCard(story, f, errata) })),
+      items: uncited.map((f) => ({ type: 'fact', fact: factCard(copy, story, f, errata) })),
     });
   }
   return sections;
 }
 
-export function buildSourcesView(story: Story): SourcesView {
+export function buildSourcesView(story: Story, copy: SourcesCopy = getMessages('en').learner.story.sources): SourcesView {
   const traditional = isTraditionalTale(story);
   const errata = visibleErrata(story);
   const factById = new Map(story.facts.map((f) => [f.id, f]));
@@ -231,7 +234,7 @@ export function buildSourcesView(story: Story): SourcesView {
         return fact ? [{ id, claimEn: fact.claimEn }] : [];
       }),
     })),
-    sections: sectionsOf(story, errata),
+    sections: sectionsOf(copy, story, errata),
     counts: { facts: story.facts.length, sources: sourceCount, label: copy.counts(story.facts.length, sourceCount) },
     empty: story.facts.length === 0,
     emptyLabel: copy.noSources,
