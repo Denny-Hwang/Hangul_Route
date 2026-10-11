@@ -1,6 +1,6 @@
 import type { Quest, Story, StoryLevel } from '@hangul-route/content-schema';
 import { clampScene, resumeStepIndex, type Bookmark } from './bookmarks';
-import { storyIdOfQuest, storyReadStep } from './story-ref';
+import { levelOfQuest, storyIdOfQuest, storyReadStep } from './story-ref';
 
 /**
  * Continue where you left off (F-STORY-004 §3.8, PR 4.4b): the rules the
@@ -38,7 +38,9 @@ export interface ReaderStart {
 /**
  * The scene a quest-mode reader opens on: the bookmark's, kept inside a story
  * that may have got shorter (`clampScene`). A bookmark for another level is
- * ignored (§7 scenario 3).
+ * ignored (§7 scenario 3). It does not depend on how the quest was started:
+ * a plain start (no `resume`) still opens on a same-level bookmark, as
+ * F-STORY-002 §3.6 and F-STORY-004 §3.8 ("reads getBookmark on mount") say.
  */
 export function readerStart(bookmark: Bookmark | undefined, level: StoryLevel, sceneCount: number): ReaderStart {
   const initialIndex = clampScene(bookmark?.level === level ? bookmark : undefined, sceneCount);
@@ -54,15 +56,44 @@ export function bookmarkResumedPayload(
   return { storyId, sceneIndex: start.initialIndex };
 }
 
+/** The `story.bookmark.resumed` event, with the profile when there is one; null when nothing was restored. */
+export function bookmarkResumedEvent(
+  profileId: string | null,
+  storyId: string,
+  start: ReaderStart,
+): { name: 'story.bookmark.resumed'; profileId?: string; payload: { storyId: string; sceneIndex: number } } | null {
+  const payload = bookmarkResumedPayload(storyId, start);
+  if (!payload) return null;
+  return { name: 'story.bookmark.resumed', ...(profileId === null ? {} : { profileId }), payload };
+}
+
+/** Whose bookmark of which story the reader reads and writes; null (nothing read or written) with no profile or no story. */
+export function bookmarkTarget(
+  profileId: string | null,
+  storyId: string,
+): { profileId: string; storyId: string } | null {
+  if (profileId === null || storyId === '') return null;
+  return { profileId, storyId };
+}
+
 /**
  * The story whose bookmark Results clears, right after the single score write
- * (§3.8): a story quest with a score written (`total > 0`). A run with every
- * game skipped writes no score, so the story stays unfinished and keeps its
- * bookmark.
+ * (§3.8): a story quest with a score written (`total > 0`) whose stored
+ * bookmark is for the quest's level. A run with every game skipped writes no
+ * score, so the story stays unfinished and keeps its bookmark. A bookmark for
+ * another level of the story is kept too: only that (story, level) is
+ * finished, the rule `pruneBookmarks` follows.
  */
-export function bookmarkClearedByResults(quest: Pick<Quest, 'steps'>, total: number): string | null {
+export function bookmarkClearedByResults(
+  quest: Pick<Quest, 'steps'>,
+  total: number,
+  bookmarkOf: BookmarkOf,
+): string | null {
   if (total <= 0) return null;
-  return storyIdOfQuest(quest);
+  const storyId = storyIdOfQuest(quest);
+  if (storyId === null) return null;
+  const bookmark = bookmarkOf(storyId);
+  return bookmark !== undefined && bookmark.level === levelOfQuest(quest) ? storyId : null;
 }
 
 /** Scenes of the tier the reader plays; 0 for an unknown story or a missing level (the reader's fallback). */

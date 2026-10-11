@@ -1,7 +1,15 @@
 import type { Quest } from '@hangul-route/content-schema';
 import { describe, expect, it, vi } from 'vitest';
 import type { Bookmark } from '../bookmarks';
-import { bookmarkClearedByResults, bookmarkResumedPayload, questStartStep, readerStart, sceneCountOf } from '../resume';
+import {
+  bookmarkClearedByResults,
+  bookmarkResumedEvent,
+  bookmarkResumedPayload,
+  bookmarkTarget,
+  questStartStep,
+  readerStart,
+  sceneCountOf,
+} from '../resume';
 import { readyStory } from './story-fixture';
 
 /** F-STORY-004 §3.8 (continue where you left off), PR 4.4b; F-STORY-002 §3.6 (the reader's bookmark seam). */
@@ -77,6 +85,11 @@ describe('readerStart', () => {
     expect(readerStart(mark(3), 'listen', 0)).toEqual({ initialIndex: 0, resumed: false });
   });
 
+  it('does not depend on how the quest was started: a plain start still opens on a same-level bookmark (F-STORY-002 §3.6)', () => {
+    // readerStart takes no resume flag; only QuestPlayer's start step reads it.
+    expect(readerStart(mark(3), 'listen', 5)).toEqual({ initialIndex: 3, resumed: true });
+  });
+
   it('a bookmark at scene 0 is not a resume', () => {
     expect(readerStart(mark(0), 'listen', 5)).toEqual({ initialIndex: 0, resumed: false });
   });
@@ -97,16 +110,59 @@ describe('bookmarkResumedPayload', () => {
 });
 
 describe('bookmarkClearedByResults', () => {
-  it('a story quest whose score was written clears its story bookmark', () => {
-    expect(bookmarkClearedByResults(LISTEN_SUN, 3)).toBe('story:sun-and-moon');
+  const bookmarkOf = (b: Bookmark | undefined) => (storyId: string) => (storyId === 'story:sun-and-moon' ? b : undefined);
+
+  it('a story quest whose score was written clears its story bookmark of the same level', () => {
+    expect(bookmarkClearedByResults(LISTEN_SUN, 3, bookmarkOf(mark(4)))).toBe('story:sun-and-moon');
   });
 
   it('nothing is cleared when every game was skipped (no score written, the story is not finished)', () => {
-    expect(bookmarkClearedByResults(LISTEN_SUN, 0)).toBeNull();
+    expect(bookmarkClearedByResults(LISTEN_SUN, 0, bookmarkOf(mark(4)))).toBeNull();
   });
 
   it('nothing is cleared for a quest that is not a story quest', () => {
-    expect(bookmarkClearedByResults(LESSON, 3)).toBeNull();
+    expect(bookmarkClearedByResults(LESSON, 3, () => mark(4))).toBeNull();
+  });
+
+  it('keeps a bookmark for another level of the story: only that (story, level) is finished', () => {
+    expect(bookmarkClearedByResults(LISTEN_SUN, 3, bookmarkOf(mark(4, 'read-along')))).toBeNull();
+  });
+
+  it('nothing to clear when the story has no bookmark', () => {
+    expect(bookmarkClearedByResults(LISTEN_SUN, 3, bookmarkOf(undefined))).toBeNull();
+  });
+});
+
+describe('bookmarkTarget', () => {
+  it('is the profile and story the reader reads and writes', () => {
+    expect(bookmarkTarget('p1', 'story:sun-and-moon')).toEqual({ profileId: 'p1', storyId: 'story:sun-and-moon' });
+  });
+
+  it('is null with no active profile or no story: nothing is read or written', () => {
+    expect(bookmarkTarget(null, 'story:sun-and-moon')).toBeNull();
+    expect(bookmarkTarget('p1', '')).toBeNull();
+  });
+});
+
+describe('bookmarkResumedEvent', () => {
+  const resumed = { initialIndex: 2, resumed: true };
+
+  it('names story.bookmark.resumed with the profile and the ids-only payload', () => {
+    expect(bookmarkResumedEvent('p1', 'story:sun-and-moon', resumed)).toEqual({
+      name: 'story.bookmark.resumed',
+      profileId: 'p1',
+      payload: { storyId: 'story:sun-and-moon', sceneIndex: 2 },
+    });
+  });
+
+  it('leaves the profile out when there is none', () => {
+    const event = bookmarkResumedEvent(null, 'story:sun-and-moon', resumed);
+    expect(event).toEqual({ name: 'story.bookmark.resumed', payload: { storyId: 'story:sun-and-moon', sceneIndex: 2 } });
+    expect(event && 'profileId' in event).toBe(false);
+  });
+
+  it('is null when nothing was restored', () => {
+    expect(bookmarkResumedEvent('p1', 'story:sun-and-moon', { initialIndex: 0, resumed: false })).toBeNull();
   });
 });
 

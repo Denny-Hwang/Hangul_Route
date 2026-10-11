@@ -1,6 +1,6 @@
 import type { StoryLevel } from '@hangul-route/content-schema';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { bookmarkResumedPayload, readerStart } from '../../logic/story/resume';
+import { bookmarkResumedEvent, bookmarkTarget, readerStart } from '../../logic/story/resume';
 import { track } from '../../platform/telemetry';
 import { useStoryStore } from '../../store/story-store';
 
@@ -26,26 +26,25 @@ export function useReaderBookmark(
   sceneCount: number,
 ): ReaderBookmark {
   // Read once per mount: the reader takes its first scene from it only when it mounts.
-  const [start] = useState(() =>
-    readerStart(
-      profileId === null || storyId === '' ? undefined : useStoryStore.getState().getBookmark(profileId, storyId),
-      level,
-      sceneCount,
-    ),
-  );
+  const [start] = useState(() => {
+    const target = bookmarkTarget(profileId, storyId);
+    const bookmark = target ? useStoryStore.getState().getBookmark(target.profileId, target.storyId) : undefined;
+    return readerStart(bookmark, level, sceneCount);
+  });
 
   const resumedSent = useRef(false);
   useEffect(() => {
-    const payload = bookmarkResumedPayload(storyId, start);
-    if (!payload || resumedSent.current) return;
+    const event = bookmarkResumedEvent(profileId, storyId, start);
+    if (!event || resumedSent.current) return;
     resumedSent.current = true;
-    void track({ name: 'story.bookmark.resumed', ...(profileId === null ? {} : { profileId }), payload });
+    void track(event);
   }, [profileId, storyId, start]);
 
   const save = useCallback(
     (index: number): void => {
-      if (profileId === null || storyId === '') return;
-      useStoryStore.getState().setBookmark(profileId, storyId, { level, sceneIndex: index });
+      const target = bookmarkTarget(profileId, storyId);
+      if (!target) return;
+      useStoryStore.getState().setBookmark(target.profileId, target.storyId, { level, sceneIndex: index });
     },
     [profileId, storyId, level],
   );
