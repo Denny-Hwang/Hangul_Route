@@ -24,15 +24,17 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Pressable, Text, View, type ViewStyle } from 'react-native';
+import { Pressable, Text, View, type LayoutChangeEvent, type ViewStyle } from 'react-native';
 import { heritageCardsAll, themes } from '../../content';
 import { useMessages } from '../../i18n/use-messages';
-import { initialCard, reconcileSelection } from '../../logic/layout/pane-selection';
+import { initialCard, latchedSelection, reconcileSelection, type PaneLatch } from '../../logic/layout/pane-selection';
 import {
   cardGalleryColumns,
   cardThumbArtSize,
   contentWidth,
+  galleryGridWidth,
   gridCellWidth,
+  type GalleryMode,
   gridRows,
 } from '../../logic/layout/pane-sizes';
 import type { RootStackParamList } from '../../navigation/types';
@@ -68,16 +70,29 @@ export function LibraryScreen(): React.ReactElement {
   const paneMode = lc.panes === 2;
   const columns = cardGalleryColumns(lc, layout.columns.cards.compact);
   const phoneGallery = columns === layout.columns.cards.compact;
-  const [selected, setSelected] = useState<string | null>(null);
+  const ownerId = profile?.id ?? null;
+  const [latch, setLatch] = useState<PaneLatch | null>(null);
+  const selected = latchedSelection(latch, ownerId);
+  const setSelected = (id: string): void => setLatch({ ownerId, id });
   const selectedId = reconcileSelection(selected, visible, initialCard(visible, snap?.cards ?? []));
   // Latch the first selection (the latest earned card) so earning another one does not move it; it
   // survives rotation as screen state. A filter that hides it shows another card without forgetting it.
+  // The latch belongs to the profile: switching learner starts from that learner's latest card.
   useEffect(() => {
-    if (paneMode && selected === null && selectedId !== null) setSelected(selectedId);
-  }, [paneMode, selected, selectedId]);
+    if (paneMode && selected === null && selectedId !== null) setLatch({ ownerId, id: selectedId });
+  }, [paneMode, selected, selectedId, ownerId]);
 
   const screenWidth = phoneGallery ? 'reading' : 'full';
-  const gridWidth = paneMode ? layout.pane.master : contentWidth(lc.windowWidth, lc.gutter, lc.maxWidth[screenWidth]);
+  // The grid's measured width (a classic scrollbar narrows the master pane; a notch narrows a window),
+  // falling back to the computed width on the first frame.
+  const galleryMode: GalleryMode = paneMode ? 'pane' : 'row';
+  const [measured, setMeasured] = useState<{ mode: GalleryMode; width: number } | null>(null);
+  const onGridLayout = (e: LayoutChangeEvent): void => {
+    const width = e.nativeEvent.layout.width;
+    setMeasured((prev) => (prev?.mode === galleryMode && prev.width === width ? prev : { mode: galleryMode, width }));
+  };
+  const fallbackWidth = paneMode ? layout.pane.master : contentWidth(lc.windowWidth, lc.gutter, lc.maxWidth[screenWidth]);
+  const gridWidth = phoneGallery ? fallbackWidth : galleryGridWidth(measured, galleryMode, fallbackWidth);
   const artSize = cardThumbArtSize(useMediaSize(THUMB_ART), gridCellWidth(gridWidth, columns, GALLERY_GAP), THUMB_CHROME);
 
   const thumb = (card: HeritageCard, cellStyle: ViewStyle): React.ReactElement => (
@@ -123,7 +138,7 @@ export function LibraryScreen(): React.ReactElement {
         </View>
       ) : (
         // Rows of `columns` equal cells; the last row is padded so its cards keep the same width.
-        <View style={{ gap: GALLERY_GAP }}>
+        <View style={{ gap: GALLERY_GAP }} onLayout={onGridLayout}>
           {gridRows(visible, columns).map((row, r) => (
             <View key={r} style={{ flexDirection: 'row', gap: GALLERY_GAP }}>
               {row.map((card, i) => (card ? thumb(card, ROW_CELL) : <View key={`pad-${i}`} style={ROW_CELL} />))}

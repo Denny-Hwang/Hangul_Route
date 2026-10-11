@@ -44,6 +44,22 @@ export function contentWidth(windowWidth: number, gutter: number, maxWidth: numb
   return Math.max(0, Math.min(w - 2 * gutter, maxWidth));
 }
 
+/** Which multi-column gallery a width was measured for: the master pane, or the rows of a one-pane window. */
+export type GalleryMode = 'pane' | 'row';
+
+/**
+ * The gallery grid width: the measured width (`onLayout`) when it was measured for the current
+ * gallery, else `fallback` (the 400 master pane or the computed content width). The measurement
+ * catches what the fallback cannot know: a classic scrollbar in the master pane, a landscape notch.
+ */
+export function galleryGridWidth(
+  measured: { mode: GalleryMode; width: number } | null,
+  mode: GalleryMode,
+  fallback: number,
+): number {
+  return measured !== null && measured.mode === mode && Number.isFinite(measured.width) ? measured.width : fallback;
+}
+
 /** Card art in a gallery cell: the scaled size (`useMediaSize`), shrunk to fit the cell less its padding and border (`chrome`). */
 export function cardThumbArtSize(scaled: number, cellWidth: number, chrome: number): number {
   return Math.max(0, Math.min(scaled, cellWidth - chrome));

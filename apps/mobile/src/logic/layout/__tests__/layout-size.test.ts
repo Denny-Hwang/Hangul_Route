@@ -6,6 +6,7 @@ import {
   cardGalleryColumns,
   cardThumbArtSize,
   contentWidth,
+  galleryGridWidth,
   gridCellWidth,
   gridRows,
   journeyCellSize,
@@ -95,6 +96,20 @@ describe('card gallery', () => {
     // Regular (96 x 1.2 = 115) in a 229 cell: fits as scaled.
     expect(cardThumbArtSize(115, 229, 30)).toBe(115);
     expect(cardThumbArtSize(96, 10, 30)).toBe(0);
+  });
+
+  it('a master pane narrowed by a classic scrollbar (383 measured) shrinks the art to fit: 122 cell, 92 art', () => {
+    const cellWidth = gridCellWidth(383, 3, spacing.sm);
+    expect(cellWidth).toBe(122);
+    expect(cardThumbArtSize(134, cellWidth, 30)).toBe(92);
+  });
+
+  it('the grid width is the measured one for the current gallery, else the computed fallback', () => {
+    expect(galleryGridWidth({ mode: 'pane', width: 383 }, 'pane', 400)).toBe(383);
+    // A measurement from the other gallery (before a rotation) is stale until the new one is measured.
+    expect(galleryGridWidth({ mode: 'row', width: 720 }, 'pane', 400)).toBe(400);
+    expect(galleryGridWidth(null, 'row', 720)).toBe(720);
+    expect(galleryGridWidth({ mode: 'row', width: Number.NaN }, 'row', 720)).toBe(720);
   });
 });
 
