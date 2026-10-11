@@ -30,7 +30,7 @@ import Animated, {
 import { cardById, episodesAll, questsAll } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { cardEarnHint } from '../../logic/card-earn';
-import { localizeCard } from '../../logic/content-locale';
+import { localizeCard, localizeTitle } from '../../logic/content-locale';
 import { isStageEntitled } from '../../logic/entitlement';
 import { speak } from '../../platform/audio';
 import { useReducedMotion } from '../../platform/motion';
@@ -295,7 +295,13 @@ function HowToEarn({ cardId }: { cardId: string }): React.ReactElement {
   void cachedTier; // re-render when the inbox changes the tier
   const tier = effectiveTier(profile?.id ?? '', new Date()).tier;
   // Only quests the learner can open: a card awarded in a stage they cannot play reads "later".
-  const hint = cardEarnHint(cardId, questsAll, episodesAll, (stage) => isStageEntitled(stage, tier));
+  const locale = useLocale();
+  const earned = cardEarnHint(cardId, questsAll, episodesAll, (stage) => isStageEntitled(stage, tier));
+  // The quest title in the UI language (F-I18N-001 §3.6).
+  const hint =
+    earned.kind === 'quest'
+      ? { ...earned, questTitle: localizeTitle({ titleEn: earned.questTitle }, earned.questId, locale).titleEn }
+      : earned;
   return (
     <>
       <Spacer size="lg" />
