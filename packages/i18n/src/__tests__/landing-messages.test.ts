@@ -75,7 +75,7 @@ describe('landing: sentences that take a value render the former text', () => {
 describe('landing: the lines other PRs rely on stay byte-identical', () => {
   it('keeps the launch-news line of #get and the waitlist copy (#146)', () => {
     expect(l.get.body).toBe(
-      "Hangul Route runs in your browser — open it, add it to your home screen, and Stage 1 plays offline. Leave your email and we'll send you the launch news.",
+      "Hangul Route runs in your browser — open it, add it to your home screen, and it works offline. Leave your email and we'll send you the launch news.",
     );
     expect(l.waitlist.submit).toBe('Send me the invite');
     expect(l.waitlist.consentLead).toBe(
@@ -187,4 +187,20 @@ describe('landing: no emoji in any locale (en, es, ko, en-XA)', () => {
       }
     });
   }
+});
+
+describe('landing: offline claims stay qualified until the recordings ship (F-AUDIO-004 §3.12)', () => {
+  it('says the app works offline and that letter sounds need a device voice for now', () => {
+    expect(l.hero.facts).toBe('Nothing to download · No ads · Works offline after your first visit');
+    expect(l.trust.items.offline).toEqual({
+      title: 'Works offline',
+      body: 'After your first visit the app opens without a connection. Letter sounds need a Korean voice on your device until our own recordings arrive.',
+    });
+    expect(l.parents.body).toContain('Bring it on a long flight — the app works offline after your first visit.');
+  });
+
+  it('never claims that sound plays offline', () => {
+    const text = JSON.stringify({ hero: l.hero.facts, trust: l.trust, parents: l.parents.body, get: l.get.body });
+    expect(text).not.toMatch(/plays offline|plays without a connection/i);
+  });
 });
