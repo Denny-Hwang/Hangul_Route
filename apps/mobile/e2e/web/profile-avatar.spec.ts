@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { completeChildForm } from './helpers';
 
 /**
  * F-LEARN-001 §3.6 (L10, L11): the learner's own cub is drawn in the colour
@@ -14,13 +15,8 @@ const THEME_LIFE_RGB = 'rgb(242, 179, 61)'; // theme.life, what the ring used to
 async function onboardWithBlueCub(page: Page): Promise<void> {
   await page.goto('/');
   await page.getByRole('button', { name: "Let's start" }).click();
-  await page.getByPlaceholder('Type your name').fill('Dani');
-  await page.getByLabel(/hoya-blue|Home Tiger/).click();
-  await page.getByRole('checkbox').click();
-  await page.getByRole('button', { name: 'Continue' }).click();
-  await page.getByRole('button', { name: 'Start my journey' }).click();
-  // The profile is saved; a fresh load opens Home for it.
-  await page.waitForTimeout(500);
+  await completeChildForm(page, { name: 'Dani', avatar: 'Home Tiger' });
+  // The helper waits until the profile is saved; a fresh load opens Home for it.
   await page.goto('/');
 }
 

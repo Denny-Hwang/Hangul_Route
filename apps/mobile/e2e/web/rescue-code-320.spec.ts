@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { onboardChild, unlockWithPin } from './helpers';
 
 /**
  * SEC-5: Rescue Codes grew from two words + four digits to four words + six
@@ -11,23 +12,9 @@ test.use({ viewport: { width: 320, height: 640 } });
 const LONGEST = 'LIGHTHOUSE-SUNFLOWER-LIGHTHOUSE-SUNFLOWER-482139';
 
 async function onboard(page: Page, name: string): Promise<void> {
-  await page.goto('/');
-  await page.getByRole('button', { name: "Let's start" }).click();
-  await page.getByPlaceholder('Type your name').fill(name);
-  await page.getByRole('checkbox').click();
-  await page.getByRole('button', { name: 'Continue' }).click();
-  await page.getByRole('button', { name: 'Start my journey' }).click();
+  await onboardChild(page, { name });
   await page.goto('/');
   await expect(page.getByText(`Hi, ${name}!`)).toBeVisible();
-}
-
-/** First grown-up entry creates the PIN (F-PROF-001 §10): 1234, twice. */
-async function createPin(page: Page): Promise<void> {
-  for (const round of [0, 1]) {
-    for (const d of ['1', '2', '3', '4']) await page.getByRole('button', { name: `Digit ${d}` }).click();
-    await page.getByRole('button', { name: 'Next' }).click();
-    if (round === 0) await expect(page.getByText('Enter it once more')).toBeVisible();
-  }
 }
 
 /** What a device looks like after its first cloud save: the sync record (idb-keyval) carries the code. */
@@ -61,7 +48,7 @@ test('sync/restore: the whole longest code is visible in the field, wrapped, wit
   await onboard(page, 'Dami');
   await page.getByRole('button', { name: 'Profile and settings' }).click();
   await page.getByRole('button', { name: 'Restore from a file (grown-ups only)' }).click();
-  await createPin(page);
+  await unlockWithPin(page);
   await page.getByRole('button', { name: 'I have a rescue code' }).click();
 
   // Fonts differ per OS (CI is Linux); force a wide one (one word per row) so the check holds for the worst case everywhere.
@@ -90,7 +77,7 @@ test('sync/save-progress: a code is shown one word per row — no word breaks mi
   await expect(page.getByText('Hi, Dami!')).toBeVisible();
   await page.getByRole('button', { name: 'Profile and settings' }).click();
   await page.getByRole('button', { name: /Save my progress/ }).click();
-  await createPin(page);
+  await unlockWithPin(page);
 
   const card = page.getByTestId('rescue-code');
   await expect(card).toBeVisible();

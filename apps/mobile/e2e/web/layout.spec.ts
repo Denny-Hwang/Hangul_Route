@@ -1,4 +1,5 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
+import { completeChildForm, completeSelfForm, typeDigits, unlockWithPin } from './helpers';
 
 /**
  * Short-phone and phone-landscape layout (audit p1-L1..L4, p2-L1..L3, UX-09):
@@ -36,15 +37,17 @@ async function expectReachable(page: Page, target: Locator): Promise<void> {
   await expect(target).toBeInViewport({ ratio: 1 });
 }
 
-async function onboard(page: Page, name: string): Promise<void> {
+/**
+ * Onboard through the real form. `child` (the default) creates the grown-up PIN in the form, so
+ * the gate later asks for it; `self` sets none, so the first grown-up action still shows the PIN
+ * setup screen (the legacy first-gate path, F-LEARN-001 L8) that the PIN pad guard below needs.
+ */
+async function onboard(page: Page, name: string, who: 'child' | 'self' = 'child'): Promise<void> {
   await page.goto('/');
   const start = page.getByRole('button', { name: "Let's start" });
   await expectReachable(page, start);
   await start.click();
-  await page.getByPlaceholder('Type your name').fill(name);
-  await page.getByRole('checkbox').click();
-  await page.getByRole('button', { name: 'Continue' }).click();
-  await page.getByRole('button', { name: 'Start my journey' }).click();
+  await (who === 'child' ? completeChildForm : completeSelfForm)(page, { name });
 }
 
 for (const vp of VIEWPORTS) {
@@ -89,7 +92,7 @@ for (const vp of VIEWPORTS) {
     });
 
     test('Profile entry is labelled, the PIN pad fits, and rescue-code field stays on screen', async ({ page }) => {
-      await onboard(page, 'Rio');
+      await onboard(page, 'Rio', 'self');
       await page.goto('/');
       await expect(page.getByText('Hi, Rio!')).toBeVisible();
 
@@ -112,7 +115,7 @@ for (const vp of VIEWPORTS) {
       }
       await expect(page.getByRole('button', { name: 'Delete last digit' })).toBeInViewport({ ratio: 1 });
       for (const round of [0, 1]) {
-        for (const d of ['1', '2', '3', '4']) await page.getByRole('button', { name: `Digit ${d}` }).click();
+        await typeDigits(page);
         await expectReachable(page, next);
         await next.click();
         if (round === 0) await expect(page.getByText('Enter it once more')).toBeVisible();
@@ -177,15 +180,18 @@ for (const vp of VIEWPORTS) {
       await expect(page.getByText('Hi, Pia!')).toBeVisible();
       await page.getByRole('button', { name: 'Profile and settings' }).click();
       await page.getByRole('button', { name: 'Restore from a file (grown-ups only)' }).click();
-      for (const round of [0, 1]) {
-        for (const d of ['1', '2', '3', '4']) await page.getByRole('button', { name: `Digit ${d}` }).click();
-        await page.getByRole('button', { name: 'Next' }).click();
-        if (round === 0) await expect(page.getByText('Enter it once more')).toBeVisible();
+
+      // The grown-up PIN was created in the onboarding form, so the gate is already in verify mode
+      // (the keypad and Unlock must fit as the setup screen's did), and the right PIN opens it.
+      await expect(page.getByText('Enter your 4-digit PIN to continue.')).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Unlock' })).toBeInViewport({ ratio: 1 });
+      for (const d of ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']) {
+        await expect(page.getByRole('button', { name: `Digit ${d}` })).toBeInViewport({ ratio: 1 });
       }
+      await unlockWithPin(page);
       await expect(page.getByRole('heading', { name: 'Bring back progress' })).toBeVisible();
 
-      // Second visit asks for the PIN (verify mode): a wrong one shows a hint.
-      await page.waitForTimeout(1000); // the PIN hash is persisted to IndexedDB asynchronously
+      // A later visit asks for the PIN again: a wrong one shows a hint.
       await page.goto('/');
       await expect(page.getByText('Hi, Pia!')).toBeVisible();
       // The install guide shows from the third cached open and covers the Home tabs.
