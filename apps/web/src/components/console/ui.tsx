@@ -3,6 +3,7 @@
 import { colors, radii, spacing, typography } from '@hangul-route/design-system/tokens';
 import Link from 'next/link';
 import type { CSSProperties, ReactNode } from 'react';
+import type { LoadError } from '@/lib/console/routing';
 import { useMessages } from '@/lib/i18n/locale-context';
 import { LanguageSelect } from './LanguageSelect';
 
@@ -105,5 +106,20 @@ export function ConsoleShell({ children, onSignOut, title }: { children: ReactNo
       </header>
       {children}
     </main>
+  );
+}
+
+/**
+ * The panel a console page shows when its data did not load (settings, school admin): the page's
+ * own `forbidden` words, or "can't reach" for anything else, and Try again. `error` is a key, so the
+ * words follow the header language select.
+ */
+export function LoadErrorPanel({ error, forbidden, onRetry }: { error: LoadError; forbidden: string; onRetry: () => void }): JSX.Element {
+  const c = useMessages().console;
+  return (
+    <div style={panelStyle}>
+      <p style={{ margin: 0 }}>{error === 'forbidden' ? forbidden : c.cantReach}</p>
+      <Button onClick={onRetry}>{c.tryAgain}</Button>
+    </div>
   );
 }

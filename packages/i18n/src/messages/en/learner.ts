@@ -764,6 +764,8 @@ export const learner = {
           'With the guide shown, the check looks at shapes and listening. With it hidden until you tap, it can also look at reading. Your own setting is not changed.',
       },
       takeMyTime: { label: 'Take my time', help: 'No time limits.' },
+      /** Section 3.12: the web cannot tell whether a screen reader is on (spec assumption 5), so the grown-up says so here. */
+      screenReader: { label: 'I use a screen reader', help: 'Questions play when you tap them, with no time limits.' },
       why: {
         title: 'Why Korean?',
         heritage: 'My family',

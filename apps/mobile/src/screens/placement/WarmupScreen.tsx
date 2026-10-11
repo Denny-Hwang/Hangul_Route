@@ -1,12 +1,12 @@
 import { Body, ChoiceCard, HoyaBubble, Screen, Spacer, touchTarget, useMediaSize } from '@hangul-route/design-system';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { PLACEMENT_WARMUP } from '../../content/placement.generated';
 import { optionViews, promptView } from '../../logic/placement/item-view';
 import { playPrompt } from '../../platform/audio';
 import { PictureArt } from '../minigames/PictureArt';
 import { usePlacement } from './context';
-import { ChoiceGrid, FootstepTrail, SpeakerButton } from './parts';
+import { ChoiceGrid, ExitButton, FootstepTrail, SpeakerButton } from './parts';
 
 const WARMUP_QUESTION = { id: PLACEMENT_WARMUP.id, ...PLACEMENT_WARMUP.question };
 
@@ -17,10 +17,12 @@ const WARMUP_QUESTION = { id: PLACEMENT_WARMUP.id, ...PLACEMENT_WARMUP.question 
  * whole run, and Short or a listen-first learner then sees the grown-up
  * sound-needed screen instead; sound switched off (`muted`) counts the same
  * for the draw. The pictures wait for that check; any answer
- * opens the first scored question. Nothing here is recorded.
+ * opens the first scored question. Hoya's line is spoken on open (the
+ * hand-off tap unlocked audio), never over a screen reader. The exit leaves
+ * with nothing recorded (no run has begun). Nothing here is recorded.
  */
 export function WarmupScreen(): React.ReactElement {
-  const { m, flow, dispatch, markGesture } = usePlacement();
+  const { m, flow, dispatch, markGesture, say, screenReader, leave } = usePlacement();
   const copy = m.learner.placement;
   const [busy, setBusy] = useState(false);
   const pictureSize = useMediaSize(touchTarget.hero);
@@ -28,11 +30,20 @@ export function WarmupScreen(): React.ReactElement {
   const options = optionViews(WARMUP_QUESTION, { revealed: false, mode: flow.mode, testLocale: flow.testLocale, m });
   const checked = flow.audio !== null;
 
+  useEffect(() => {
+    if (!screenReader) void say(copy.warmup.line);
+  }, [screenReader, say, copy.warmup.line]);
+
   const hear = (): void => {
     if (busy || prompt.kind !== 'speaker') return;
     setBusy(true);
     markGesture();
-    void playPrompt({ text: prompt.text, kind: 'word', source: 'placement' }).then((result) => {
+    void playPrompt({
+      text: prompt.text,
+      ...(prompt.audioRef === undefined ? {} : { audioRef: prompt.audioRef }),
+      kind: 'word',
+      source: 'placement',
+    }).then((result) => {
       setBusy(false);
       dispatch({ type: 'warmupAudio', result });
     });
@@ -40,6 +51,7 @@ export function WarmupScreen(): React.ReactElement {
 
   return (
     <Screen tone="canvas" testID="placement-warmup">
+      <ExitButton onPress={leave} label={copy.item.exit} testID="placement-warmup-exit" />
       <HoyaBubble tone="idle" message={copy.warmup.line} />
       <Spacer size="lg" />
       <View style={{ alignItems: 'center' }}>

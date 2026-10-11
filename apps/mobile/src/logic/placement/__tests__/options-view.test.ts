@@ -1,12 +1,15 @@
 import type { SpeechLang } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
+import { PLACEMENT_BANK, PLACEMENT_WARMUP } from '../../../content/placement.generated';
 import {
   MODE_TILES_ROW_MAX_FONT_SCALE,
   MODE_TILES_ROW_MIN_WIDTH,
   MOTIVATION_CHOICES,
+  bankHasClips,
   flowCapability,
   modeTiles,
+  placementKoreanAudio,
   modeTilesSideBySide,
   speechLangOf,
 } from '../options-view';
@@ -42,6 +45,28 @@ describe('modeTiles', () => {
 describe('MOTIVATION_CHOICES', () => {
   it('four icon choices, one per motivation', () => {
     expect(MOTIVATION_CHOICES.map((c) => c.motivation)).toEqual(['heritage', 'kculture', 'curious', 'friends']);
+  });
+});
+
+describe('placementKoreanAudio (section 3.1 steps 2 and 3, 3.11)', () => {
+  const ready = { state: 'ready', voiceId: 'v', voiceName: 'Yuna', local: true, quality: 'enhanced' } as const;
+  const none = { state: 'none', reason: 'no_korean_voice' } as const;
+
+  it('a Korean voice plays every prompt', () => {
+    expect(placementKoreanAudio({ tts: ready, clips: false, unlocked: true }, false)).toBe(true);
+  });
+
+  it('bundled clips count only when the placement bank carries clips: a bank without them needs a voice', () => {
+    expect(placementKoreanAudio({ tts: none, clips: true, unlocked: true }, false)).toBe(false);
+    expect(placementKoreanAudio({ tts: none, clips: true, unlocked: true }, true)).toBe(true);
+    expect(placementKoreanAudio({ tts: { state: 'unknown' }, clips: false, unlocked: false }, true)).toBe(false);
+  });
+
+  it('the shipped bank has no clips yet', () => {
+    expect(bankHasClips(PLACEMENT_BANK, PLACEMENT_WARMUP)).toBe(false);
+    const withClip = { templates: [{ question: { audioRef: 'a7:clip' } }] };
+    expect(bankHasClips(withClip, PLACEMENT_WARMUP)).toBe(true);
+    expect(bankHasClips({ templates: [] }, { question: { audioRef: 'a7:warm' } })).toBe(true);
   });
 });
 

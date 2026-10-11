@@ -1,29 +1,49 @@
 import type { Episode, ProgressSnapshot, Quest } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
 import { nextQuestAfter, offerableQuests, playableEpisodes } from '../next-quest';
+import type { BookmarkFile } from '../story/bookmarks';
+import { entryForQuest, type StoryIndexEntry } from '../story/story-index';
+import { planOpenStory, type OpenStoryMode, type OpenStoryPlan } from '../story/open-story';
+import { pickStoryForHome, type StoryPick, type StoryReason } from '../story/story-pick';
+import { storyStatus, type StoryStatus } from '../story/story-status';
 
 /**
- * Today's mission — F-HW-001 §3.1, §3.2.
+ * Today's mission — F-HW-001 §3.1, §3.2, with the story card of F-STORY-004 §3.7.
  *
- * Exactly three cards, in fixed slot order:
- *   ① Replay      — a recent Quest the learner got something wrong on
- *   ② New         — the next Quest on the Journey cursor
- *   ③ Daily test  — a short review (F-RVW-001)
+ * Exactly three cards, in fixed slot order, each the first card its chain finds:
+ *   ① continue story → best replay → next story → again story → explore
+ *   ② New — the next Quest on the Journey cursor (grid episodes only)
+ *   ③ Daily test (F-RVW-001) when available, else
+ *      next story → best remaining replay → again story → explore
+ *
+ * An unfinished story is a stronger signal than a replay, so it takes slot ①
+ * first; otherwise replays (there is one almost every day for an active
+ * learner) would hide stories. A replay is a *grid* quest: a shelf story the
+ * learner finished below full accuracy comes back only as the unscored
+ * `again` card, never as a scored replay (decision of F-STORY-004 §3.7, PR
+ * 4.4a). `explore` (a playable grid episode, "Take a look") replaces the old
+ * fallback that labelled any episode "Story time" (audit UX-19), so the row
+ * keeps three cards when no story exists — as in production while every
+ * bundled story is still a draft (the story index holds reviewed stories only).
  *
  * Slot ③ is capability-gated: F-RVW-001 has not shipped, so until it does the
- * slot falls back down slot ①'s preference chain rather than rendering a card
- * that navigates nowhere (F-HW-001 §9.2). The child-facing invariant is
- * "exactly three live cards", not which engine backs each one.
+ * slot falls back down its own chain rather than rendering a card that
+ * navigates nowhere (F-HW-001 §9.2). The learner-facing invariant is "exactly
+ * three live cards", not which engine backs each one.
  *
  * A card carries a subtitle *code*, never prose (F-I18N-001 §3.4 rule 3): the
  * plan is pinned for the day, so it must not freeze a language into it. The
  * words come from the dictionary through `missionCardText`.
  */
 
-export type MissionCardKind = 'replay' | 'new' | 'daily-test' | 'story';
+export type MissionCardKind = 'replay' | 'new' | 'daily-test' | 'story' | 'explore';
 
-/** Keys of `learner.home.mission.subtitle`. */
-export type MissionSubtitle = 'replay' | 'story' | 'new' | 'assigned' | 'dailyTest';
+/**
+ * Keys of `learner.home.mission.subtitle`, plus `explore`, whose words are
+ * `learner.storyShelf.home.explore`. A `story` card with a `storyReason` reads
+ * `learner.storyShelf.home.subtitle[storyReason]` (`missionCardText`).
+ */
+export type MissionSubtitle = 'replay' | 'story' | 'new' | 'assigned' | 'dailyTest' | 'explore';
 
 export interface MissionCard {
   slot: 1 | 2 | 3;
@@ -31,12 +51,18 @@ export interface MissionCard {
   /** The quest or episode title (content); `null` on the daily-test card, which names itself. */
   titleEn: string | null;
   subtitle: MissionSubtitle;
-  /** Present for replay / new cards. */
-  questId?: string;
   /** Present for replay / new / story cards. */
+  questId?: string;
+  /** Present for replay / new / story / explore cards. */
   episodeId?: string;
-  /** True once the underlying Quest was completed today. */
+  /** True once the underlying Quest was completed today; never on an `again` (replay-mode) story card. */
   collected: boolean;
+  /** Story cards only (F-STORY-004 §3.7): the story the card opens. */
+  storyId?: string;
+  /** Story cards only: why this story — the subtitle follows it and may refresh from the bookmark. */
+  storyReason?: StoryReason;
+  /** Story cards only: `replay` opens the unscored reader (`again`), `play` the scored quest. */
+  storyMode?: 'play' | 'replay';
 }
 
 export interface MissionPlan {
@@ -74,6 +100,15 @@ export interface BuildMissionInput {
    * same predicate Results and My route use. Omitted means every playable stage.
    */
   isEntitled?: (stageKey: string) => boolean;
+  /**
+   * The story card's world (F-STORY-004 §3.7): the story index, the profile's
+   * bookmarks and the lock (`storyLockFor`). Absent → no story cards.
+   */
+  stories?: {
+    entries: readonly StoryIndexEntry[];
+    bookmarks: BookmarkFile;
+    isLocked: (entry: StoryIndexEntry) => boolean;
+  };
 }
 
 /** How far back a Quest counts as replayable (§3.1 — days N−1, N−2). */
@@ -100,10 +135,12 @@ function episodeOfQuest(episodes: readonly Episode[], questId: string): Episode 
  */
 type CompletedQuest = ProgressSnapshot['quests'][number] & { completedAt: string };
 
-function replayCandidates(snapshot: ProgressSnapshot, today: string): CompletedQuest[] {
+function replayCandidates(snapshot: ProgressSnapshot, episodes: readonly Episode[], today: string): CompletedQuest[] {
   return snapshot.quests
     .filter((q): q is CompletedQuest => {
       if (!q.completedAt) return false;
+      // A shelf story is never a replay card: it returns as the unscored `again` card (F-STORY-004 §3.7).
+      if (episodeOfQuest(episodes, q.questId)?.placement === 'shelf') return false;
       if (q.accuracy >= 1) return false;
       const age = daysBefore(dayKey(q.completedAt), today);
       return age >= 1 && age <= REPLAY_WINDOW_DAYS;
@@ -149,40 +186,83 @@ function replayCard(slot: 1 | 3, quest: Quest, episodeId: string | undefined): M
   };
 }
 
-function storyCard(slot: 1 | 3, episode: Episode): MissionCard {
+function storyCard(slot: 1 | 3, pick: StoryPick): MissionCard {
   return {
     slot,
     kind: 'story',
-    titleEn: episode.titleEn,
+    titleEn: pick.entry.story.title.en,
     subtitle: 'story',
+    questId: pick.entry.questId,
+    episodeId: pick.entry.episodeId,
+    storyId: pick.entry.storyId,
+    storyReason: pick.reason,
+    storyMode: pick.mode,
+    collected: false,
+  };
+}
+
+function exploreCard(slot: 1 | 3, episode: Episode): MissionCard {
+  return {
+    slot,
+    kind: 'explore',
+    titleEn: episode.titleEn,
+    subtitle: 'explore',
     episodeId: episode.id,
     collected: false,
   };
 }
 
-/**
- * Slot ①'s preference chain, also used by slot ③ when the daily test is not
- * available: best replay first, else a Story Time episode the learner has
- * already opened, else the first playable episode.
- */
-function fallbackCard(
-  slot: 1 | 3,
-  input: BuildMissionInput,
-  usedQuestIds: Set<string>,
-  usedEpisodeIds: Set<string>,
-): MissionCard | null {
-  const { snapshot, quests, episodes, today } = input;
+/** What the plan already holds, so no card repeats a quest, an episode or a story. */
+interface Used {
+  quests: Set<string>;
+  episodes: Set<string>;
+  stories: Set<string>;
+}
 
-  for (const candidate of replayCandidates(snapshot, today)) {
-    if (usedQuestIds.has(candidate.questId)) continue;
+type Link = (slot: 1 | 3, input: BuildMissionInput, used: Used) => MissionCard | null;
+
+/** One stage of the story chain (`pickStoryForHome` limited to `reasons`). */
+function storyLink(...reasons: StoryReason[]): Link {
+  return (slot, input, used) => {
+    if (!input.stories) return null;
+    const pick = pickStoryForHome({
+      entries: input.stories.entries,
+      snapshot: input.snapshot,
+      bookmarks: input.stories.bookmarks,
+      isLocked: input.stories.isLocked,
+      excludeStoryIds: [...used.stories],
+      excludeQuestIds: [...used.quests],
+      reasons,
+    });
+    return pick ? storyCard(slot, pick) : null;
+  };
+}
+
+/** The best replay not on the plan yet (grid quests only). */
+const replayLink: Link = (slot, input, used) => {
+  const { snapshot, quests, episodes, today } = input;
+  for (const candidate of replayCandidates(snapshot, episodes, today)) {
+    if (used.quests.has(candidate.questId)) continue;
     const quest = quests.find((q) => q.id === candidate.questId);
     if (!quest) continue;
     return replayCard(slot, quest, episodeOfQuest(episodes, quest.id)?.id);
   }
+  return null;
+};
 
-  for (const episode of playableEpisodes(episodes)) {
-    if (usedEpisodeIds.has(episode.id)) continue;
-    return storyCard(slot, episode);
+/** The first playable grid episode not on the plan yet. */
+const exploreLink: Link = (slot, input, used) => {
+  const episode = playableEpisodes(input.episodes).find((e) => !used.episodes.has(e.id));
+  return episode ? exploreCard(slot, episode) : null;
+};
+
+const SLOT_1_CHAIN: readonly Link[] = [storyLink('continue'), replayLink, storyLink('next'), storyLink('again'), exploreLink];
+const SLOT_3_CHAIN: readonly Link[] = [storyLink('next'), replayLink, storyLink('again'), exploreLink];
+
+function firstOf(chain: readonly Link[], slot: 1 | 3, input: BuildMissionInput, used: Used): MissionCard | null {
+  for (const link of chain) {
+    const card = link(slot, input, used);
+    if (card) return card;
   }
   return null;
 }
@@ -218,42 +298,71 @@ function repinPlacedOut(cards: readonly MissionCard[], input: BuildMissionInput)
   return cards.map((card) => (card === pinnedNew ? newCard(upcoming, input.episodes) : card));
 }
 
+/** Records a card on the plan; a replay of a book story quest also takes its story. */
+function use(used: Used, card: MissionCard, input: BuildMissionInput): void {
+  if (card.questId) used.quests.add(card.questId);
+  if (card.episodeId) used.episodes.add(card.episodeId);
+  const storyId = card.storyId ?? input.stories?.entries.find((e) => e.questId === card.questId)?.storyId;
+  if (storyId) used.stories.add(storyId);
+}
+
+/** An `again` card opens the unscored reader, so it is never collected (§3.7). */
+function isCollected(card: MissionCard, snapshot: ProgressSnapshot, today: string, fallback: boolean): boolean {
+  if (card.storyMode === 'replay') return false;
+  return card.questId ? completedToday(snapshot, card.questId, today) : fallback;
+}
+
+/**
+ * A pinned story card keeps its story all day; only its reason line may
+ * refresh from the story's status: a `next` story the learner left mid-way
+ * now reads "Keep reading", and a "Keep reading" story finished today (or
+ * whose bookmark is gone) reads "A short story" again, like a collected
+ * `next` card. An `again` card keeps its reason.
+ */
+function refreshedReason(card: MissionCard, input: BuildMissionInput): StoryReason | undefined {
+  if (card.storyReason === 'again' || !input.stories) return card.storyReason;
+  const entry = input.stories.entries.find((e) => e.questId === card.questId);
+  if (!entry) return card.storyReason;
+  return storyStatus(entry, input.snapshot, input.stories.bookmarks).state === 'in-progress' ? 'continue' : 'next';
+}
+
 export function buildTodaysMission(input: BuildMissionInput): MissionPlan {
   const { profileId, snapshot, quests, episodes, today } = input;
   const capabilities = input.capabilities ?? DEFAULT_CAPABILITIES;
 
   // §3.2 — reuse today's existing slot targets so nothing shifts under the
-  // learner; only completion state is refreshed.
+  // learner; only completion state (and a story card's reason line) is refreshed.
   if (input.pinned && input.pinned.date === today && input.pinned.profileId === profileId) {
     return {
       ...input.pinned,
-      cards: repinPlacedOut(input.pinned.cards, input).map((card) => ({
-        ...card,
-        collected: card.questId ? completedToday(snapshot, card.questId, today) : card.collected,
-      })),
+      cards: repinPlacedOut(input.pinned.cards, input).map((card) => {
+        const refreshed: MissionCard = { ...card, collected: isCollected(card, snapshot, today, card.collected) };
+        if (card.kind === 'story') refreshed.storyReason = refreshedReason(card, input);
+        return refreshed;
+      }),
     };
   }
 
-  const usedQuestIds = new Set<string>();
-  const usedEpisodeIds = new Set<string>();
+  const used: Used = { quests: new Set(), episodes: new Set(), stories: new Set() };
   const cards: MissionCard[] = [];
 
-  // ① Replay, else Story Time.
-  const first = fallbackCard(1, input, usedQuestIds, usedEpisodeIds);
+  // ② New — the Journey cursor. Chosen first so slot ①'s story never repeats its quest.
+  const upcoming = nextQuest(input);
+  const second: MissionCard | null = upcoming ? newCard(upcoming, episodes) : null;
+  // It takes its quest and, for a book story quest, its story, so no other card offers that story. Not its
+  // episode: the explore card may still name the learner's current episode, so the row keeps three cards.
+  if (second) use(used, { ...second, episodeId: undefined }, input);
+
+  // ① continue story → replay → next story → again story → explore.
+  const first = firstOf(SLOT_1_CHAIN, 1, input, used);
   if (first) {
-    if (first.questId) usedQuestIds.add(first.questId);
-    if (first.episodeId) usedEpisodeIds.add(first.episodeId);
+    use(used, first, input);
     cards.push(first);
   }
 
-  // ② New — the Journey cursor.
-  const upcoming = nextQuest(input);
-  if (upcoming) {
-    usedQuestIds.add(upcoming.id);
-    cards.push(newCard(upcoming, episodes));
-  }
+  if (second) cards.push(second);
 
-  // ③ Daily test when available, else slot ①'s chain again.
+  // ③ Daily test when available, else next story → replay → again story → explore.
   if (capabilities.dailyTestAvailable) {
     cards.push({
       slot: 3,
@@ -263,25 +372,31 @@ export function buildTodaysMission(input: BuildMissionInput): MissionPlan {
       collected: false,
     });
   } else {
-    const third = fallbackCard(3, input, usedQuestIds, usedEpisodeIds);
+    const third = firstOf(SLOT_3_CHAIN, 3, input, used);
     if (third) cards.push(third);
   }
 
   return {
     date: today,
     profileId,
-    cards: cards.map((card) => ({
-      ...card,
-      collected: card.questId ? completedToday(snapshot, card.questId, today) : false,
-    })),
+    cards: cards.map((card) => ({ ...card, collected: isCollected(card, snapshot, today, false) })),
   };
 }
 
-type MissionMessages = Messages['learner']['home']['mission'];
+/** The two dictionary subtrees a card reads: `learner.home.mission` and `learner.storyShelf.home`. */
+type MissionMessages = {
+  home: Pick<Messages['learner']['home'], 'mission'>;
+  storyShelf: Pick<Messages['learner']['storyShelf'], 'home'>;
+};
 
-/** A card's title and subtitle in the UI language (`m` is `learner.home.mission`). */
+/** A card's title and subtitle in the UI language (`m` is `messages.learner`). */
 export function missionCardText(card: MissionCard, m: MissionMessages): { title: string; subtitle: string } {
-  return { title: card.titleEn ?? m.dailyTest.title, subtitle: m.subtitle[card.subtitle] };
+  const mission = m.home.mission;
+  const storyHome = m.storyShelf.home;
+  const title = card.titleEn ?? mission.dailyTest.title;
+  if (card.subtitle === 'explore') return { title, subtitle: storyHome.explore };
+  if (card.subtitle === 'story' && card.storyReason) return { title, subtitle: storyHome.subtitle[card.storyReason] };
+  return { title, subtitle: mission.subtitle[card.subtitle] };
 }
 
 /** Every learner-visible string in a plan — asserted against banned-text. */
@@ -290,4 +405,56 @@ export function missionCopy(plan: MissionPlan, m: MissionMessages): string[] {
     const { title, subtitle } = missionCardText(c, m);
     return [title, subtitle];
   });
+}
+
+export interface StoryCardShownEvent {
+  name: 'home.story_card.shown';
+  /** Ids and codes only (F-STORY-004 §3.11). */
+  payload: { storyId: string; reason: StoryReason };
+}
+
+/**
+ * `home.story_card.shown` for a plan's first story card (slot order), or null
+ * when the plan has none. Home sends it once per profile and day, when the
+ * plan is first pinned.
+ */
+export function storyCardShownEvent(plan: MissionPlan): StoryCardShownEvent | null {
+  for (const card of plan.cards) {
+    if (card.kind === 'story' && card.storyId && card.storyReason) {
+      return { name: 'home.story_card.shown', payload: { storyId: card.storyId, reason: card.storyReason } };
+    }
+  }
+  return null;
+}
+
+/**
+ * How a tapped story card opens (`planOpenStory` mode): an `again` card reads
+ * the story again unscored; otherwise the story's current status decides —
+ * finished plays again (scored, as any collected card), a bookmark at its
+ * level continues, else it starts.
+ */
+export function storyCardOpenMode(card: Pick<MissionCard, 'storyMode'>, status: Pick<StoryStatus, 'state'>): OpenStoryMode {
+  if (card.storyMode === 'replay') return 'read-again';
+  if (status.state === 'finished') return 'play-again';
+  return status.state === 'in-progress' ? 'continue' : 'start';
+}
+
+/**
+ * How Home opens a tapped story card (F-STORY-004 §3.2, §3.7): the one
+ * story-open plan for its entry, or null when the card is not a story in the
+ * index (Home then opens it as a quest card). "Keep reading" opens as a
+ * `continue` with the `QuestPlayer` `resume` param (PR 4.4b), or as a plain
+ * `start` when the bookmark is gone (`planOpenStory`).
+ */
+export function planHomeStoryOpen(input: {
+  card: MissionCard;
+  entries: readonly StoryIndexEntry[];
+  snapshot: Pick<ProgressSnapshot, 'quests'> | undefined;
+  bookmarks: BookmarkFile;
+}): OpenStoryPlan | null {
+  const { card } = input;
+  const entry = card.kind === 'story' && card.questId ? entryForQuest(input.entries, card.questId) : undefined;
+  if (!entry) return null;
+  const status = storyStatus(entry, input.snapshot, input.bookmarks);
+  return planOpenStory({ entry, status, source: 'home', mode: storyCardOpenMode(card, status) });
 }

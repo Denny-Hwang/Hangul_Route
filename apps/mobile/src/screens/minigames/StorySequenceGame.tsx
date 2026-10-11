@@ -77,7 +77,7 @@ type Note = 'hint' | 'wrong' | 'look';
  * scored once, first try); after two misses the right card gets a ring. When
  * every slot is filled the story replays in order (no scoring), then Done.
  * Serves the three legacy `storySteps` scopes and story scopes alike; scene art
- * arrives with PR 3.5b. Design: design/wireframes/story/check.md (F, G).
+ * arrives with PR 3.5b. Design: design/wireframes/story/sequence.md (F, G).
  */
 export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce }: Props): React.ReactElement {
   const locale = useLocale();

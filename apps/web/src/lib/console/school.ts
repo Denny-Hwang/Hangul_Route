@@ -1,13 +1,14 @@
+import { DEFAULT_LOCALE, getMessages, type UiLocale } from '@hangul-route/i18n';
 import type { SchoolView } from './api';
-import { COPY } from './copy';
 
-/** School admin view models — F-SCHOOL-001 §3.3 (wireframe console/school-admin). Aggregates only. */
+/**
+ * School admin view models — F-SCHOOL-001 §3.3 (wireframe console/school-admin). Aggregates only.
+ * The words come from `console.school` in `locale` (F-I18N-001 PR 10c).
+ */
 export const NEAR_LIMIT_RATIO = 0.9;
 
-export function usageLine(usage: SchoolView['usage'], limits: SchoolView['limits']): string {
-  const students = limits.students === null ? `students ${usage.students}` : `students ${usage.students} / ${limits.students}`;
-  const teachers = limits.teachers === null ? `teachers ${usage.teachers}` : `teachers ${usage.teachers} / ${limits.teachers}`;
-  return `${students} · ${teachers}`;
+export function usageLine(usage: SchoolView['usage'], limits: SchoolView['limits'], locale: UiLocale = DEFAULT_LOCALE): string {
+  return getMessages(locale).console.school.licence.usage(usage.students, limits.students, usage.teachers, limits.teachers);
 }
 
 export type LimitState = 'unlicensed' | 'ok' | 'near' | 'at';
@@ -21,21 +22,22 @@ export function limitState(usage: SchoolView['usage'], limits: SchoolView['limit
   return 'ok';
 }
 
-export function limitNote(state: LimitState): string | null {
+export function limitNote(state: LimitState, locale: UiLocale = DEFAULT_LOCALE): string | null {
+  const c = getMessages(locale).console;
   switch (state) {
     case 'unlicensed':
-      return COPY.schoolNoLicence;
+      return c.schoolNoLicence;
     case 'near':
-      return COPY.schoolNearLimit;
+      return c.schoolNearLimit;
     case 'at':
-      return COPY.schoolAtLimit;
+      return c.schoolAtLimit;
     default:
       return null;
   }
 }
 
-export function weekLine(week: SchoolView['thisWeek']): string {
-  return `${week.practiced} of ${week.students} students practiced · ${week.classesWithPlan} of ${week.classes} classes have a published plan`;
+export function weekLine(week: SchoolView['thisWeek'], locale: UiLocale = DEFAULT_LOCALE): string {
+  return getMessages(locale).console.school.week.line(week.practiced, week.students, week.classesWithPlan, week.classes);
 }
 
 /** Teachers who joined the school and can be assigned to a class. */

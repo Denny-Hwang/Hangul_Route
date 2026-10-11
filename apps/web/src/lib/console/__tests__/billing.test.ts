@@ -2,7 +2,7 @@ import { FREE_CLASS_STUDENT_CAP, PLAN_PRICING } from '@hangul-route/content-sche
 import { formatDate, formatUsd, getMessages, type UiLocale } from '@hangul-route/i18n';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { EntitlementView, SpaceListItem } from '../api';
-import { PLAN_TITLES, billingNoteText, checkoutReturnNote, currentPlanCards, freePlanLine, isActive, planIncludes, planPrice, planRowsFor, planTitle, promoNoteText, promoPriceLine, rowPrice, sourceLine, statusLine } from '../billing';
+import { billingNoteText, checkoutReturnNote, currentPlanCards, freePlanLine, isActive, planIncludes, planPrice, planRowsFor, planTitle, promoNoteText, promoPriceLine, rowPrice, sourceLine, statusLine } from '../billing';
 
 const now = new Date('2026-09-21T12:00:00.000Z');
 const ent = (over: Partial<EntitlementView>): EntitlementView => ({ id: 'ent:1', subjectKind: 'space', subjectId: 'space:fam', planKey: 'group_license', status: 'active', provider: 'stripe', providerRef: 'sub', customerRef: 'cus', seats: null, expiresAt: '2026-10-21T00:00:00.000Z', promoCode: null, updatedAt: '2026-09-20T00:00:00.000Z', subjectName: 'Kim family', ...over });
@@ -140,8 +140,8 @@ describe('billing page words per locale (F-I18N-001 PR 10b)', () => {
     vi.unstubAllEnvs();
   });
 
-  it('keeps the English plan names, includes lines and the SchoolAdmin alias', () => {
-    expect(PLAN_TITLES).toEqual({ free: 'Free', family_lifetime: 'Family Lifetime', group_license: 'Group License', school_seat: 'School Contract' });
+  it('keeps the English plan names and includes lines', () => {
+    expect((['free', 'family_lifetime', 'group_license', 'school_seat'] as const).map((k) => planTitle(k))).toEqual(['Free', 'Family Lifetime', 'Group License', 'School Contract']);
     expect(planTitle('group_license')).toBe('Group License');
     expect(planIncludes('free')).toBe('Stage 1, local progress, Rescue Code, file backup; classes up to 20 students');
     expect(planIncludes('family_lifetime')).toBe('Every Stage, now and later, for one family: up to 5 learners, cloud sync, grown-up dashboard and plans');

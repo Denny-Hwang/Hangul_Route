@@ -3,27 +3,35 @@ import { DEFAULT_LOCALE, getMessages, type UiLocale } from '@hangul-route/i18n';
 import { HoyaSvg } from '@hangul-route/design-system/scene-art/dom';
 import Link from 'next/link';
 import { CONTACT_EMAIL } from '../../data/contact';
-import { landingCopy } from '../../data/landing-copy';
-import { sitePath } from '../../lib/site-path';
+import { landingCopy, localeBannerOffers } from '../../data/landing-copy';
+import { appUrl } from '../../lib/console/config';
+import { shownSiteLocales } from '../../lib/site-metadata';
+import { appEntryUrl, sitePath } from '../../lib/site-path';
 import { HeritageCardsPreview } from './HeritageCardsPreview';
+import { LocaleBanner } from './LocaleBanner';
+import { LocaleSwitcher } from './LocaleSwitcher';
 import { MeetHoya } from './MeetHoya';
 import { MiniGamesGallery } from './MiniGamesGallery';
 import { WaitlistForm } from './WaitlistForm';
 
-/** The learner web app (PWA). Overridable per deployment. */
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://app.hangulroute.com';
+/** The learner web app (PWA). Overridable per deployment (`NEXT_PUBLIC_APP_URL`, read in one place: console config). */
+const APP_URL = appUrl();
 
 /** The first letter Hoya introduces: taught Korean, passed into the hero sentences (never written into a message). */
 const FIRST_LETTER = 'ㄱ';
 
 /**
  * The landing page in `locale`: `app/(en)/page.tsx` renders it at `/`, `app/(loc)/[locale]/page.tsx` at `/es` and
- * `/ko` (F-I18N-001 §3.4, PR 11b). One body, so no copy is duplicated.
+ * `/ko` (F-I18N-001 §3.4, PR 11b). One body, so no copy is duplicated. Once a second locale ships (PR 11c), `/`
+ * may suggest it ("View in …"), the footer links every locale, and "Play now" from `/es` or `/ko` carries the
+ * locale to the app (`?lang=`).
  */
 export function LandingPage({ locale = DEFAULT_LOCALE }: { locale?: UiLocale }): JSX.Element {
   const t = getMessages(locale).landing;
   // One landing subtree for one locale: the words and the ordered lists.
   const { tagline, audienceBadges, trustItems, howItWorks, faqs, pricingLines, sharedDeviceBullet, pricingFootnote } = landingCopy(locale);
+  const shown = shownSiteLocales();
+  const playHref = appEntryUrl(APP_URL, locale);
   return (
     <main
       style={{
@@ -33,6 +41,9 @@ export function LandingPage({ locale = DEFAULT_LOCALE }: { locale?: UiLocale }):
         padding: `${spacing.xxl}px ${spacing.lg}px`,
       }}
     >
+      {/* "View in …" on `/` only, once a second locale ships; client-only, so the static HTML is unchanged. */}
+      {locale === DEFAULT_LOCALE && shown.length > 1 ? <LocaleBanner offers={localeBannerOffers(shown)} /> : null}
+
       {/* Top nav */}
       <header
         className="hr-landing-header"
@@ -70,7 +81,7 @@ export function LandingPage({ locale = DEFAULT_LOCALE }: { locale?: UiLocale }):
         {/* DOM order is visual order at every width (WCAG 2.4.3 / 1.3.2): brand,
             "Play now", then the section links. globals.css never uses `order`. */}
         <a
-          href={APP_URL}
+          href={playHref}
           className="hr-landing-cta"
           style={{
             padding: `${spacing.sm}px ${spacing.lg}px`,
@@ -166,7 +177,7 @@ export function LandingPage({ locale = DEFAULT_LOCALE }: { locale?: UiLocale }):
           </p>
           <div style={{ display: 'flex', gap: spacing.md, marginTop: spacing.xl, flexWrap: 'wrap' }}>
             <a
-              href={APP_URL}
+              href={playHref}
               style={{
                 padding: `${spacing.md}px ${spacing.xl}px`,
                 backgroundColor: colors.brand.primary,
@@ -542,7 +553,7 @@ export function LandingPage({ locale = DEFAULT_LOCALE }: { locale?: UiLocale }):
           {t.get.body}
         </p>
         <a
-          href={APP_URL}
+          href={playHref}
           style={{
             display: 'inline-block',
             marginBottom: spacing.xl,
@@ -668,6 +679,7 @@ export function LandingPage({ locale = DEFAULT_LOCALE }: { locale?: UiLocale }):
             {t.footer.copyright(new Date().getFullYear())}
           </div>
         </div>
+        <LocaleSwitcher locale={locale} page="/" label={t.footer.language} shown={shown} />
       </footer>
     </main>
   );

@@ -52,7 +52,15 @@ export function itemAnsweredEvent(profileId: string, response: AssessmentRespons
   return {
     name: 'placement.item_answered',
     profileId,
-    payload: { itemId: response.questionId, gate, outcome: response.outcome, assisted: response.assisted, ms: response.ms },
+    payload: {
+      itemId: response.questionId,
+      gate,
+      outcome: response.outcome,
+      assisted: response.assisted,
+      ms: response.ms,
+      // A prompt that could not play (section 3.11), told apart from the learner's own "not sure".
+      noSound: response.noSound === true,
+    },
   } satisfies PlacementTelemetryEvent<Record<string, unknown>>;
 }
 
