@@ -102,7 +102,7 @@ const storyRows: StoryRow[] = [
   ['sillok-royal-historians', 'Hoya Meets the Royal Historians', 1, 'letters', 4],
   ['kim-hongdo-genre-paintings', "Kim Hong-do's Pictures of Everyday Life", 1, 'life', 5],
   ['seollal-new-year', "Hoya's Seollal Morning", 1, 'rites', 4, 'seollal', true],
-  ['chuseok-ganggangsullae', 'Chuseok: Songpyeon Under the Full Moon', 1, 'rites', 5, 'chuseok', true],
+  ['chuseok-ganggangsullae', 'Chuseok: Songpyeon and the Full Moon', 1, 'rites', 5, 'chuseok', true],
   ['sun-and-moon', 'The Sun and the Moon (A Traditional Tale)', 1, 'nature', 5, null, true],
   ['cheugugi-rain-gauge', 'The Bowl That Measured the Rain', 1, 'crafts', 4, null, true],
   ['sillok-mountain-archives', 'The Annals Hide in the Mountains', 2, 'letters', 5],

@@ -1,11 +1,11 @@
 {
   "v": 1,
   "id": "story:seollal-new-year",
-  "state": "draft",
+  "state": "ready",
   "contentVer": 1,
   "title": {
     "ko": "호야의 설날 아침",
-    "romanization": "",
+    "romanization": "Hoyaui Seollal achim",
     "en": "Hoya's Seollal Morning"
   },
   "summaryEn": "Hoya spends Seollal, the Lunar New Year, with a family: new seolbim clothes, a New Year bow (sebae), a warm bowl of tteokguk, and a lively game of yunnori.",
@@ -14,10 +14,10 @@
   "recommendedStage": 1,
   "minutes": 4,
   "learningGoalsEn": [
-    "Explain that Seollal is the first day of the first lunar month and one of Korea's biggest traditional holidays.",
-    "Recognize and say 설날, 세배, 떡국 and 윷놀이, and the greeting 새해 복 많이 받으세요.",
-    "Describe sebae (the New Year bow) and deokdam (words of blessing from elders).",
-    "Name the five yut throws (do, gae, geol, yut, mo) and how many spaces each one moves."
+    "Know that Seollal is the first day of the first lunar month and one of Korea's biggest traditional holidays.",
+    "Read and recognize 설날 (seollal), 세배 (sebae), 떡국 (tteokguk) and 윷놀이 (yunnori), and the greeting 새해 복 많이 받으세요 (saehae bok mani badeuseyo).",
+    "Understand sebae (the New Year bow) and deokdam (words of blessing from elders).",
+    "Know the five yut throws (do, gae, geol, yut, mo) and how many spaces each one moves."
   ],
   "origin": {
     "type": "documented",
@@ -101,7 +101,7 @@
     },
     {
       "id": "gukga-muhyeong-yusan",
-      "ko": "국가무형유산",
+      "ko": "국가 무형 유산",
       "romanization": "gukga muhyeong yusan",
       "en": "National Intangible Heritage",
       "kind": "word"
@@ -115,6 +115,7 @@
         {
           "id": "s1",
           "narrationEn": "Good morning! I'm Hoya. Today is Seollal, the Lunar New Year. It falls on the first day of the first month of the lunar calendar, and it is one of Korea's biggest traditional holidays.",
+          "captionEn": "Hoya greets the Seollal morning",
           "keyword": {
             "id": "seollal",
             "ko": "설날",
@@ -127,11 +128,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Hoya the young tiger waving at the gate of a traditional hanok house on a crisp winter morning, a pale sunrise over snowy roof tiles."
         },
         {
           "id": "s2",
           "narrationEn": "People dress in new clothes for the new year. New Seollal clothes are called seolbim. Young girls traditionally wear saekdong jeogori, a jacket with rainbow-striped sleeves.",
+          "captionEn": "New seolbim clothes with rainbow sleeves",
           "keyword": {
             "id": "seolbim",
             "ko": "설빔",
@@ -144,11 +147,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "A family in bright hanbok; a girl spreads her arms to show rainbow-striped saekdong sleeves while Hoya admires them."
         },
         {
           "id": "s3",
           "narrationEn": "After the morning rites for the family's ancestors, the children bow deeply to Grandma and Grandpa. This New Year bow is called sebae, the first greeting of the year.",
+          "captionEn": "The children bow to their grandparents",
           "keyword": {
             "id": "sebae",
             "ko": "세배",
@@ -161,11 +166,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Two children bowing deeply on a heated wooden floor before smiling grandparents seated on cushions; Hoya bows beside them."
         },
         {
           "id": "s4",
-          "narrationEn": "After bowing, Hoya says, 'Saehae bok mani badeuseyo!' Grandma answers with kind wishes for the year, called deokdam. Children may get a little money, or rice cakes and fruit.",
+          "narrationEn": "After bowing, Hoya says, 'Saehae bok mani badeuseyo!' Grandma, {kw:halmeoni}, answers with kind wishes for the year, called {kw:deokdam}. Children may get a little money, or rice cakes and fruit.",
+          "captionEn": "New Year wishes and kind blessings",
           "line": {
             "ko": "새해 복 많이 받으세요",
             "romanization": "Saehae bok mani badeuseyo",
@@ -178,11 +185,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Grandma smiling and handing a small envelope to a child; a plate of rice cakes and tangerines on a low table; Hoya beaming."
         },
         {
           "id": "s5",
           "narrationEn": "Breakfast is tteokguk: a clear soup with thin slices of white rice cake. People have long said that you grow one year older when you eat your bowl of tteokguk on Seollal!",
+          "captionEn": "A warm bowl of tteokguk for breakfast",
           "keyword": {
             "id": "tteokguk",
             "ko": "떡국",
@@ -195,11 +204,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Steaming bowls of clear soup with oval white rice-cake slices and egg garnish on a low table; Hoya holding a spoon happily."
         },
         {
           "id": "s6",
-          "narrationEn": "Now for a game of yunnori! Two teams take turns throwing four wooden yut sticks. Depending on how the sticks land, a team moves its pieces around the board.",
+          "narrationEn": "Now for a game of yunnori! Two teams take turns throwing four wooden {kw:yut} sticks. Depending on how the sticks land, a team moves its pieces around the board.",
+          "captionEn": "Throwing the four yut sticks",
           "keyword": {
             "id": "yunnori",
             "ko": "윷놀이",
@@ -212,11 +223,13 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Four wooden yut sticks tumbling in mid-air above a cloth game board with a circle-and-cross pattern; two teams cheering, Hoya on one team."
         },
         {
           "id": "s7",
           "narrationEn": "Do moves one space, gae two, geol three, yut four, and mo five! Throw a yut or a mo and you throw again. The first team to bring all its pieces home wins.",
+          "captionEn": "Do, gae, geol, yut, mo: one to five spaces",
           "line": {
             "ko": "도, 개, 걸, 윷, 모",
             "romanization": "do, gae, geol, yut, mo",
@@ -224,18 +237,21 @@
             "speaker": "narrator"
           },
           "factIds": [
-            "f8"
+            "f8",
+            "f7"
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Five small panels in a row showing yut sticks landing in five different patterns, each with a matching number of footprints (1 to 5), no letters."
         },
         {
           "id": "s8",
-          "narrationEn": "In 2023, Korea named five traditional holidays, including Seol and Daeboreum (New Year through the first full moon), as National Intangible Heritage. Yunnori was named in 2022. Hoya bows: 'Saehae bok mani badeuseyo!'",
+          "narrationEn": "In 2023, Korea listed five traditional holidays as National Intangible Heritage. One is Seol and Daeboreum: the New Year and the first full moon. Yunnori was listed in 2022. Hoya bows: 'Saehae bok mani badeuseyo!'",
+          "captionEn": "Two National Intangible Heritage listings",
           "keyword": {
             "id": "gukga-muhyeong-yusan",
-            "ko": "국가무형유산",
+            "ko": "국가 무형 유산",
             "romanization": "gukga muhyeong yusan",
             "en": "National Intangible Heritage",
             "kind": "word"
@@ -246,6 +262,7 @@
           ],
           "framing": false,
           "approximations": [],
+          "artPending": true,
           "artBrief": "Night scene of a big round full moon over a village, with Hoya bowing toward the viewer and a yut board resting nearby."
         }
       ],
@@ -272,10 +289,11 @@
             },
             {
               "id": "d",
-              "en": "Charye",
+              "en": "Tteokguk",
               "isCorrect": false
             }
           ],
+          "explainEn": "Sebae is the New Year bow to elders. It is the first greeting of the year.",
           "factIds": [
             "f3"
           ]
@@ -306,6 +324,7 @@
               "isCorrect": true
             }
           ],
+          "explainEn": "Do moves 1 space, gae 2, geol 3, yut 4 and mo 5. A yut or a mo earns another throw.",
           "factIds": [
             "f8"
           ]
@@ -336,6 +355,7 @@
               "isCorrect": false
             }
           ],
+          "explainEn": "Tteokguk, a clear soup with thin slices of white rice cake, is the classic Seollal food.",
           "factIds": [
             "f6"
           ]
@@ -640,6 +660,6 @@
     "scope": "cluster",
     "notes": "Third independent pass over 6 episodes / 61 facts / 161 source entries (70 unique URLs). Every URL was re-fetched with my own scripts (UNESCO pages via Wayback copies; heritage.go.kr descriptions via the portal ajax html and khs.go.kr open API; folkency via its JSON API) and each quote or locator was machine-matched to the page text; the few non-matching strings were checked by hand (portal metadata fields, hanja or footnote punctuation, label text). Corrections: (1) pansori scene 2 now gives both UNESCO steps (2003 masterpiece proclamation, 2008 Representative List); (2) pansori f11 states the Aesop title as in the cited Townsend text and the common alternate title; (3) added sources: NFM 놀보박타령 for 'greedy' (f5), 표준국어대사전 타다 for 'sawed' (f6), 한국민족문화대백과사전 선도해 for the Samguk sagi tale (f12); (4) Seollal f9/f10 designation-date locators now cite the KHS open API field. No other change. See seasons-tales.signoff.md."
   },
-  "authorNotes": "Romanization: 윷놀이 is pronounced [윤노리], so RR gives 'yunnori'; the Korea Heritage Service's English name is 'Yut nori' and the app's existing card uses 'yutnori'. Pick one spelling app-wide. 'Saehae bok mani badeuseyo' is the greeting most people use today, but the Encyclopedia of Korean Culture calls it a modern greeting (older ones include '과세 안녕히 하셨습니까'). The narration keeps that in facts and doesn't call it ancient. The tteokguk age saying is presented only as a saying. Sebae money (세뱃돈) is described the way the Encyclopedia does: 'a little money, or rice cakes and fruit'. Left out on purpose: the sources don't explain which way up the yut sticks count for each throw (엎어지다/젖혀지다), so the narration doesn't say. Also left out are 차례 table details, 복조리, and 안택 rites. Note for existing content: heritage-cards.ts says tteokguk slices 'look like coins for good luck'. None of the sources checked here supports that, so it's not used here; please review it. REVISION 2026-10-10: \"four great holidays\" now stated as the late-Joseon Dongguk sesigi listing (the 1518 list had three: Seol, Dano, Chuseok, per the KHS portal). Check 3 reworded to an in-story question; \"Everyone\" softened to \"People\".",
+  "authorNotes": "Romanization: 윷놀이 is pronounced [윤노리], so RR (the repo converter) gives 'yunnori', and yunnori is the app-wide romanization (the yut heritage card also stores yunnori). 'Yut nori' (Korea Heritage Service) and 'yutnori' appear only as alternate English spellings. 'Saehae bok mani badeuseyo' is the greeting most people use today, but the Encyclopedia of Korean Culture calls it a modern greeting (older ones include '과세 안녕히 하셨습니까'). The narration keeps that in facts and doesn't call it ancient. The tteokguk age saying is presented only as a saying. Sebae money (세뱃돈) is described the way the Encyclopedia does: 'a little money, or rice cakes and fruit'. Left out on purpose: the sources don't explain which way up the yut sticks count for each throw (엎어지다/젖혀지다), so the narration doesn't say. Also left out are 차례 table details, 복조리, and 안택 rites. Note for existing content: heritage-cards.ts says tteokguk slices 'look like coins for good luck'. None of the sources checked here supports that, so it's not used here; please review it. REVISION 2026-10-10: \"four great holidays\" now stated as the late-Joseon Dongguk sesigi listing (the 1518 list had three: Seol, Dano, Chuseok, per the KHS portal). Check 3 reworded to an in-story question; \"Everyone\" softened to \"People\". AUTHORING 2026-10-11 (F-STORY-001 PR 1.8d): title romanization, scene captions and check explanations written from the cited facts; every scene is artPending (text-only tile) until the art PRs; no claim or source changed. Korean spacing: the learner term is written 국가 무형 유산 (spaced by word, 한글 맞춤법 제50항) so each word lines up with gukga muhyeong yusan; the facts keep the official 국가무형유산. REVIEW 2026-10-11 (PR 1.8d review fixes): s7 also cites f7 (the winning rule); s8 says 'listed' in short sentences; check 1 uses only words this story teaches; s4 now uses the halmeoni keyword as a token; learning goals use receptive verbs (Know, Understand, Read and recognize). PR #208 REVIEW FIXES 2026-10-11: s8 caption 'Two National Intangible Heritage listings' (f9's item is Seol and Daeboreum, not Seol alone; the full name exceeds the 48-character caption cap).",
   "errata": []
 }
