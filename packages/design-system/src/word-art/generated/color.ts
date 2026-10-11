@@ -2,6 +2,8 @@
  * Colour swatches with an object cue (F-VOC-002 §3.6.1): `word:color-*`.
  * A rounded square in the colour, outlined in ink, with an object drawn as a
  * sticker in the lower right: the object's own glyph at 55 % on a paper halo.
+ * The halo is one compound path, so a swatch is the object's shapes plus two
+ * (the square and the halo) and always fits the 48-shape limit (C7).
  * Colour is never the only cue (W4): under a colour-vision deficiency the
  * object, not the fill, tells red (apple) from brown (bear).
  *
@@ -14,7 +16,7 @@ import { rect } from '../builders';
 import { placeGlyph } from '../place';
 import type { Placement } from '../place';
 import type { WordArtGlyph, WordArtShape, WordArtTone } from '../types';
-import { haloOf } from './halo';
+import { haloPath } from './halo';
 
 /** A content colour: one of the twelve `colors.vocab` tokens. */
 export type SwatchTone = Extract<WordArtTone, `vocab.${string}`>;
@@ -48,15 +50,15 @@ export const COLOR_SWATCHES: Readonly<Record<string, { tone: SwatchTone; object:
   'color-pink': { tone: 'vocab.pink', object: 'nature-flower' },
 });
 
-/** The swatch of `tone` with `object` as its sticker: the square, every halo, then the object. */
+/** The swatch of `tone` with `object` as its sticker: the square, the halo of every opaque shape, then the object. */
 export function swatch(tone: SwatchTone, object: WordArtGlyph): WordArtShape[] {
   const { x, y, size, radius } = SWATCH_RECT;
   const sticker = placeGlyph(
     object.filter((s) => (s.o ?? 1) >= SHADOW_OPACITY),
     STICKER,
   );
-  const haloes = sticker.filter((s) => (s.o ?? 1) >= 1).map(haloOf);
-  return [rect(x, y, size, size, radius, { f: tone, s: 'text.primary', sw: 3 }), ...haloes, ...sticker];
+  const halo = haloPath(sticker.filter((s) => (s.o ?? 1) >= 1));
+  return [rect(x, y, size, size, radius, { f: tone, s: 'text.primary', sw: 3 }), ...(halo ? [halo] : []), ...sticker];
 }
 
 /** Every colour glyph by key; throws naming each colour whose object has no glyph yet. */
