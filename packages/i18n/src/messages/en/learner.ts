@@ -819,9 +819,14 @@ export const learner = {
     /** The state line of a tile or tale row: always words, never colour alone. */
     state: { new: 'New', inProgress: 'Keep reading', finished: 'Finished', locked: 'Locked' },
     minutes: { pill: (minutes: number) => `about ${minutes} min` },
-    /** The one label of a whole story tile: `title` is the story's title (content), `state` a `state` line. */
-    tileLabel: (title: string, state: string, minutes: number) =>
-      `${title}. ${state}. ${plural('en', minutes, { one: 'About 1 minute', other: `About ${minutes} minutes` })}.`,
+    /**
+     * The one label of a whole story tile: `title` is the story's title (content), `state` a `state`
+     * line. `stars` (a finished story with at least one star) is read out too, since the tile's
+     * StarRow sits inside the one button; a 0-star finish says nothing about stars (D3).
+     */
+    tileLabel: (title: string, state: string, minutes: number, stars = 0) =>
+      `${title}. ${state}. ${plural('en', minutes, { one: 'About 1 minute', other: `About ${minutes} minutes` })}.` +
+      (stars > 0 ? ` ${plural('en', stars, { one: '1 star', other: `${stars} stars` })}.` : ''),
     /** The Home story card subtitle by `storyReason`, and the `explore` card that replaces the old "Story time" label. */
     home: {
       subtitle: { continue: 'Keep reading', next: 'A short story', again: 'Read it again' },
@@ -838,7 +843,8 @@ export const learner = {
       found: { pill: (found: number) => `${found} found` },
       /** `title` is the story's title (content). */
       fromStory: (title: string) => `From the story: ${title}`,
-      grownUps: 'For grown-ups: where this comes from',
+      /** The collapsed sources row: the same words for every reader, whatever their age (CLAUDE.md §1). */
+      whereFrom: 'Where this comes from',
       /** One source line, plain text (no links): the work's title and its publisher (content). */
       source: (title: string, publisher: string) => `${title}, ${publisher}`,
       hearTerm: (romanization: string) => `Hear ${romanization}`,

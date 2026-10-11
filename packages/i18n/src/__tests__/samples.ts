@@ -180,7 +180,12 @@ export const SAMPLES: Record<string, readonly (readonly unknown[])[]> = {
   'learner.library.earnHint.set': [['Seasons and Tales']],
   'caregiver.placementReport.count': [[0, 3], [1, 1]],
   'learner.storyShelf.minutes.pill': [[2], [10]],
-  'learner.storyShelf.tileLabel': [['The Sun and the Moon', 'New', 1], ['The Sun and the Moon', 'Keep reading', 5]],
+  'learner.storyShelf.tileLabel': [
+    ['The Sun and the Moon', 'New', 1],
+    ['The Sun and the Moon', 'Keep reading', 5],
+    ['The Sun and the Moon', 'Finished', 5, 1],
+    ['The Sun and the Moon', 'Finished', 10, 3],
+  ],
   'learner.storyShelf.episode.minutes.pill': [[2], [10]],
   'learner.storyShelf.episode.hearWord': [['hae']],
   'learner.storyShelf.episode.cultureNotes': [[1], [3]],
