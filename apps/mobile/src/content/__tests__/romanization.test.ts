@@ -1,0 +1,275 @@
+import { readFileSync } from 'node:fs';
+import {
+  HeritageCardSchema,
+  JamoSchema,
+  QuestSchema,
+  ROMANIZATION_EXCEPTIONS,
+  checkConsistency,
+  checkJamoRomanization,
+  checkProse,
+  checkRomanization,
+  formatRomanizationFinding,
+  lineOfText,
+  type RomanizationEntry,
+  type RomanizationIssue,
+} from '@hangul-route/content-schema';
+import { describe, expect, it } from 'vitest';
+import { minigameScopes } from '../../logic/minigame-config';
+import { AVATAR_PRESETS } from '../../logic/profiles/avatar-catalog';
+import { INTERIM_SPOKEN } from '../../logic/stage1/spoken';
+import { episodesAll } from '../episodes';
+import { heritageCardsAll } from '../heritage-cards';
+import { jamoAll } from '../jamo';
+import { questsAll } from '../quests';
+
+// F-CNT-002 PR 3, source class B1 (mobile TS data): the romanization that ships in the app is
+// Revised Romanization, unhyphenated, and every taught Korean string carries one (R1 to R7).
+// Findings print as `::error file=<path>,line=<n>::<rule>: <message>`.
+
+const REPO = new URL('../../../../../', import.meta.url);
+const read = (rel: string): string => readFileSync(new URL(rel, REPO), 'utf8');
+const F = {
+  cards: 'apps/mobile/src/content/heritage-cards.ts',
+  jamo: 'apps/mobile/src/content/jamo.ts',
+  quests: 'apps/mobile/src/content/quests.ts',
+  episodes: 'apps/mobile/src/content/episodes.ts',
+  scopes: 'apps/mobile/src/logic/minigame-config.ts',
+  avatars: 'apps/mobile/src/logic/profiles/avatar-catalog.ts',
+  spoken: 'apps/mobile/src/logic/stage1/spoken.ts',
+} as const;
+const sources = new Map<string, string>(Object.values(F).map((p) => [p, read(p)]));
+const HANGUL = /[가-힣]/;
+const ctx = { exceptions: ROMANIZATION_EXCEPTIONS };
+
+const out = (file: string, ko: string, issues: RomanizationIssue[]): string[] =>
+  issues.map((i) => formatRomanizationFinding(file, lineOfText(sources.get(file) ?? '', ko), i));
+
+/** R1 to R4 for one pair; an absent or empty romanization is R4. */
+function pair(file: string, ko: string, given: string | undefined): string[] {
+  return out(file, ko, checkRomanization(ko, given ?? '', ctx));
+}
+
+const entries: RomanizationEntry[] = [];
+const koWords = new Set<string>();
+function note(file: string, ko: string, romanization: string | undefined): void {
+  if (HANGUL.test(ko)) koWords.add(ko);
+  if (romanization !== undefined && romanization !== '' && HANGUL.test(ko)) {
+    entries.push({ ko, romanization, where: `${file}:${lineOfText(sources.get(file) ?? '', ko) ?? 0}` });
+  }
+}
+
+describe('heritage cards romanization (B1)', () => {
+  it('every subtitleKo has a Revised Romanization without hyphens (R1 to R4)', () => {
+    const found = heritageCardsAll.flatMap((c) => {
+      if (c.subtitleKo === undefined) return [];
+      note(F.cards, c.subtitleKo, c.romanization);
+      return pair(F.cards, c.subtitleKo, c.romanization);
+    });
+    expect(found).toEqual([]);
+  });
+
+  it('parses with HeritageCardSchema (subtitleKo requires romanization)', () => {
+    for (const c of heritageCardsAll) {
+      expect(HeritageCardSchema.safeParse(c).success, c.id).toBe(true);
+    }
+  });
+
+  it('spells the audit words the way they are said', () => {
+    const ro = (id: string) => heritageCardsAll.find((c) => c.id === id)?.romanization;
+    expect(ro('card:hangul-day')).toBe('hangeullal');
+    expect(ro('card:yutnori')).toBe('yunnori');
+    expect(ro('card:origami')).toBe('jongijeopgi');
+    expect(heritageCardsAll.find((c) => c.id === 'card:family-table')?.subtitleKo).toBe('가족 식탁');
+    expect(ro('card:family-table')).toBe('gajok siktak');
+  });
+});
+
+describe('jamo romanization (B1)', () => {
+  it('every jamo parses, and its sound value is a listed value with a standard letter name (R7)', () => {
+    const found: string[] = [];
+    for (const j of jamoAll) {
+      expect(JamoSchema.safeParse(j).success, j.id).toBe(true);
+      found.push(...out(F.jamo, `'${j.char}'`, checkJamoRomanization(j.char, j.romanization)));
+    }
+    expect(found).toEqual([]);
+    expect(jamoAll.find((j) => j.id === 'jamo:ieung')?.romanization).toBe('silent/ng');
+  });
+
+  it('every example word carries its Revised Romanization (R1 to R4)', () => {
+    const found = jamoAll.flatMap((j) => {
+      if (j.exampleWordKo === undefined) return [];
+      note(F.jamo, j.exampleWordKo, j.exampleWordRomanization);
+      return pair(F.jamo, j.exampleWordKo, j.exampleWordRomanization);
+    });
+    expect(found).toEqual([]);
+  });
+
+  it('every spoken form and letter name is romanized the way it is said', () => {
+    const found = jamoAll.flatMap((j) => [
+      ...(j.spokenKo === undefined ? [] : pair(F.jamo, j.spokenKo, j.spokenRomanization)),
+      ...(j.nameKo === undefined ? [] : pair(F.jamo, j.nameKo, j.nameEn)),
+    ]);
+    expect(found).toEqual([]);
+  });
+
+  it('the interim spoken forms (logic/stage1/spoken.ts) are Revised Romanization (R1 to R4)', () => {
+    const found = Object.values(INTERIM_SPOKEN).flatMap((s) => {
+      note(F.spoken, s.ko, s.romanization);
+      return pair(F.spoken, s.ko, s.romanization);
+    });
+    expect(found).toEqual([]);
+    expect(Object.keys(INTERIM_SPOKEN)).toHaveLength(30);
+  });
+});
+
+describe('minigame scopes romanization (B1)', () => {
+  it('every taught Korean string has a Revised Romanization (R1 to R4)', () => {
+    const found: string[] = [];
+    const check = (ref: string, ko: string, given: string | undefined): void => {
+      note(F.scopes, ko, given);
+      found.push(...pair(F.scopes, ko, given).map((m) => `${ref}: ${m}`));
+    };
+    for (const [ref, s] of Object.entries(minigameScopes)) {
+      for (const p of s.cardPairs ?? []) check(ref, p.ko, p.romanization);
+      for (const p of s.syllables ?? []) check(ref, p.ko, p.romanization);
+      for (const p of s.storySteps ?? []) {
+        if (p.labelKo !== undefined) check(ref, p.labelKo, p.romanization);
+      }
+      for (const d of s.dialogue ?? []) {
+        check(ref, d.npcKo, d.npcRomanization);
+        for (const o of d.options) check(ref, o.ko, o.romanization);
+      }
+    }
+    expect(found).toEqual([]);
+  });
+
+  it('every storySteps label has a romanization that passes R1 (a rule, not a table of values)', () => {
+    const steps = Object.values(minigameScopes).flatMap((s) => s.storySteps ?? []);
+    expect(steps.length).toBeGreaterThanOrEqual(12);
+    for (const p of steps) {
+      expect(p.labelKo, p.id).toBeDefined();
+      expect(checkRomanization(p.labelKo ?? '', p.romanization ?? '', ctx), p.labelKo).toEqual([]);
+    }
+  });
+
+  it('declares no Hangul outside the checked fields', () => {
+    const checked = new Set(['ko', 'labelKo', 'npcKo', 'jamoChars']);
+    const stray: string[] = [];
+    const walk = (value: unknown, path: string): void => {
+      if (typeof value === 'string') {
+        if (HANGUL.test(value)) stray.push(`${path}: ${value}`);
+      } else if (Array.isArray(value)) {
+        value.forEach((v, i) => walk(v, `${path}[${i}]`));
+      } else if (value !== null && typeof value === 'object') {
+        for (const [k, v] of Object.entries(value)) if (!checked.has(k)) walk(v, `${path}.${k}`);
+      }
+    };
+    walk(minigameScopes, 'minigameScopes');
+    expect(stray).toEqual([]);
+  });
+});
+
+describe('quests, episodes and avatars romanization (B1)', () => {
+  /** Hangul allowed in an English field: an isolated syllable in a title (F-CNT-002 §3.4 ignore table). */
+  const ENGLISH_HANGUL_ALLOWED: ReadonlyArray<{ questId: string; stepId: string; field: 'titleEn'; text: string }> = [
+    { questId: 'quest:stage1-letters-q3', stepId: 's4', field: 'titleEn', text: 'Build "가"' },
+  ];
+
+  it('Korean Hoya lines live in hoyaLineKo with romanization and gloss, never in an English field', () => {
+    const found: string[] = [];
+    for (const q of questsAll) {
+      expect(QuestSchema.safeParse(q).success, q.id).toBe(true);
+      for (const s of q.steps) {
+        for (const field of ['hoyaLineEn', 'bodyEn', 'titleEn'] as const) {
+          const text = s[field];
+          if (text === undefined || !HANGUL.test(text)) continue;
+          const allowed = ENGLISH_HANGUL_ALLOWED.some(
+            (a) => a.questId === q.id && a.stepId === s.id && a.field === field && a.text === text,
+          );
+          if (!allowed) found.push(formatRomanizationFinding(F.quests, lineOfText(sources.get(F.quests) ?? '', text), {
+            rule: 'romanization-prose', severity: 'error', message: `${q.id}/${s.id}.${field}: Korean in an English field (${text})`,
+          }));
+        }
+        if (s.hoyaLineKo !== undefined) {
+          note(F.quests, s.hoyaLineKo.ko, s.hoyaLineKo.romanization);
+          found.push(...pair(F.quests, s.hoyaLineKo.ko, s.hoyaLineKo.romanization));
+        }
+      }
+    }
+    expect(found).toEqual([]);
+  });
+
+  it('the allowed English-field Korean is still present (the table cannot rot)', () => {
+    for (const a of ENGLISH_HANGUL_ALLOWED) {
+      const step = questsAll.find((q) => q.id === a.questId)?.steps.find((s) => s.id === a.stepId);
+      expect(step?.[a.field], `${a.questId}/${a.stepId}`).toBe(a.text);
+    }
+  });
+
+  it('the Seollal greeting is a hoyaLineKo with romanization and gloss', () => {
+    const step = questsAll.find((q) => q.id === 'quest:stage1-rites-q1')?.steps[0];
+    expect(step?.hoyaLineKo).toEqual({
+      ko: '새해 복 많이 받으세요.',
+      romanization: 'saehae bok mani badeuseyo',
+      en: 'Happy New Year!',
+    });
+    expect(step?.hoyaLineEn).toBe("Happy New Year! Let's learn the greeting.");
+  });
+
+  it('avatar names romanize correctly (예리 is Yeri)', () => {
+    const found = AVATAR_PRESETS.flatMap((a) => {
+      note(F.avatars, a.pillarName, a.romanization);
+      return pair(F.avatars, a.pillarName, a.romanization);
+    });
+    expect(found).toEqual([]);
+    expect(AVATAR_PRESETS.find((a) => a.kind === 'hoya-green')).toMatchObject({ pillarName: '예리', romanization: 'Yeri' });
+  });
+
+  it('English prose spells registered words without syllable hyphens and in Revised Romanization (R6)', () => {
+    const registry = [...koWords];
+    const prose: Array<{ file: string; where: string; text: string }> = [
+      ...heritageCardsAll.flatMap((c) =>
+        [c.blurbEn, c.factEn ?? ''].map((text) => ({ file: F.cards, where: c.id, text })),
+      ),
+      ...episodesAll.flatMap((e) =>
+        [e.titleEn ?? '', e.subtitleEn ?? '', e.hoyaIntroEn ?? ''].map((text) => ({ file: F.episodes as string, where: e.id, text })),
+      ),
+      ...questsAll.flatMap((q) =>
+        q.steps.flatMap((s) => [s.titleEn ?? '', s.hoyaLineEn ?? '', s.bodyEn ?? ''].map((text) => ({ file: F.quests, where: `${q.id}/${s.id}`, text }))),
+      ),
+    ];
+    const found = prose.flatMap((p) =>
+      checkProse(p.text, registry).map((i) => `${formatRomanizationFinding(p.file, lineOfText(sources.get(p.file) ?? '', p.text.slice(0, 24)), i)} (${p.where})`),
+    );
+    expect(found).toEqual([]);
+    expect(heritageCardsAll.find((c) => c.id === 'card:origami')?.factEn).toContain('jongihak');
+    expect(episodesAll.find((e) => e.id === 'episode:stage1-crafts')?.hoyaIntroEn).toBe('Let us play yunnori. Throw the sticks!');
+  });
+});
+
+describe('romanization is consistent across sources (R5)', () => {
+  /** The Stage 1 JSON pairs, read as data the way scripts/validate-content.mjs reads them. */
+  const jsonEntries = (name: string): RomanizationEntry[] => {
+    const rel = `content/episodes/stage-1/${name}`;
+    const out: RomanizationEntry[] = [];
+    const walk = (value: unknown): void => {
+      if (Array.isArray(value)) value.forEach(walk);
+      else if (value !== null && typeof value === 'object') {
+        const o = value as Record<string, unknown>;
+        if (typeof o.ko === 'string' && typeof o.romanization === 'string' && HANGUL.test(o.ko)) {
+          out.push({ ko: o.ko, romanization: o.romanization, where: `${rel}:${lineOfText(read(rel), JSON.stringify(o.ko)) ?? 0}` });
+        }
+        Object.values(o).forEach(walk);
+      }
+    };
+    walk(JSON.parse(read(rel)));
+    return out;
+  };
+
+  it('one Korean string has one spelling in the app data and in content/episodes/stage-1', () => {
+    const all = [...entries, ...jsonEntries('cards.json'), ...jsonEntries('jamo.json')];
+    expect(all.length).toBeGreaterThan(100);
+    const found = checkConsistency(all).map((i) => formatRomanizationFinding('apps/mobile/src/content', undefined, i));
+    expect(found).toEqual([]);
+  });
+});
