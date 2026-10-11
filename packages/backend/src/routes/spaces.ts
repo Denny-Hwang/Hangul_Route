@@ -19,6 +19,7 @@ import { authorizeDevice, parseDeviceHeader } from '../lib/device-auth';
 import { classCap, schoolIsFull } from '../lib/entitlement';
 import { generateJoinCode, isJoinCodeLive, joinCodeExpiry } from '../lib/join-code';
 import { clientKey, createRateLimiter } from '../lib/rate-limit';
+import { teacherVisibleSummary } from '../lib/roster-summary';
 import { id, type Account } from '../store';
 
 /**
@@ -365,13 +366,15 @@ spacesRoutes.get('/:id/roster', async (c) => {
   const account = await requireCan(c, db, space, 'summary.read');
   if (!('id' in account)) return account;
   const now = new Date();
+  // planProgress is filtered to this space's own plans (archived ones included): F-SPACE-002 T-1a.
+  const planIds = new Set((await db.plansOf(space.id)).map((p) => p.id));
   const learners = [];
   for (const m of await db.membersOf(space.id)) {
     if (m.memberKind !== 'learner') continue;
     const learner = await db.getLearner(m.memberId);
     if (!learner) continue;
     const snapshot = await db.getSnapshot(learner.id);
-    // summary only — payload_json never leaves through this route (roadmap §3.1).
+    // The allow-listed summary only (F-SPACE-002 section 4.11); payload_json never leaves through this route (roadmap §3.1).
     learners.push({
       id: learner.id,
       displayName: rosterName(space, learner.displayName),
@@ -379,7 +382,7 @@ spacesRoutes.get('/:id/roster', async (c) => {
       avatar: learner.avatar,
       joinedAt: m.joinedAt,
       lastActiveAt: learner.lastActiveAt,
-      summary: snapshot?.summary ?? null,
+      summary: teacherVisibleSummary(snapshot?.summary, planIds),
       lastSyncedAt: snapshot?.updatedAt ?? null,
     });
   }

@@ -1,4 +1,4 @@
-import { JOIN_CODE_RE } from '@hangul-route/content-schema';
+import { JOIN_CODE_RE, TEACHER_ROSTER_ADDRESS_FIELDS, TEACHER_VISIBLE_ROSTER_FIELDS, TEACHER_VISIBLE_SUMMARY_KEYS } from '@hangul-route/content-schema';
 import { beforeEach, describe, expect, it } from 'vitest';
 import app from '../index';
 import { LOOKUP_LIMIT, lookupLimiter } from '../routes/spaces';
@@ -288,6 +288,61 @@ describe('leave, remove, roster (§3.3, §3.4)', () => {
     expect(data.learners[0]?.summary?.placement).toEqual(placement);
     expect(JSON.stringify(roster.body)).not.toContain('secret-question');
     expect(JSON.stringify(roster.body)).not.toContain('secret-run');
+  });
+
+  it("projects each summary to the teacher allow-list and filters planProgress to the viewing space's plans (F-SPACE-002 T-1a)", async () => {
+    const a = await createSpace('teacher', 'class', 'A');
+    const b = await createSpace('teacher-b', 'class', 'B');
+    const fam = await createSpace('mom', 'family', 'Kim family');
+    const famCode = await issueCode('mom', fam.space.id);
+    const suni = await registerLearner('device-suni0001', 'Suni');
+    for (const [space, code] of [[a.space.id, a.joinCode], [b.space.id, b.joinCode], [fam.space.id, famCode]] as const) {
+      expect((await joinAs(space, suni.auth, { code, learnerId: suni.learnerId })).status).toBe(201);
+    }
+    const planIn = async (spaceId: string, user: string, title: string) => {
+      const r = await call('PUT', `/api/spaces/${spaceId}/plans`, bearer(user), { title, items: [{ kind: 'quest', id: 'quest:stage1-letters-q1' }], publish: true });
+      expect(r.status).toBe(201);
+      return (r.body.data as { plan: { id: string } }).plan.id;
+    };
+    const planA = await planIn(a.space.id, 'teacher', 'Week A');
+    const planAOld = await planIn(a.space.id, 'teacher', 'Week A old');
+    expect((await post(`/api/spaces/${a.space.id}/plans/${planAOld}/archive`, bearer('teacher'))).status).toBe(200);
+    const planB = await planIn(b.space.id, 'teacher-b', 'Week B');
+    const planFam = await planIn(fam.space.id, 'mom', 'Home');
+    const progress = (done: number) => ({ done, total: 3, notReady: 0 });
+    const full = {
+      ...summary,
+      stage1Anchor: { met: false, checkedAt: '2026-10-09T00:00:00.000Z', tricky: ['secret-tricky'] },
+      planProgress: { [planA]: progress(1), [planAOld]: progress(3), [planB]: progress(2), [planFam]: progress(0), 'plan:gone': progress(1) },
+    };
+    const upload = await call('PUT', `/api/sync/learners/${suni.learnerId}/snapshot`, suni.auth, { baseRev: 0, snapshot: snapshotFor(suni.learnerId), summary: full, schemaVer: 1, contentVer: '2026.10' });
+    expect(upload.status).toBe(200);
+
+    type Row = Record<string, unknown> & { summary: Record<string, unknown> & { planProgress: Record<string, unknown> } };
+    const rowOf = async (spaceId: string, user: string): Promise<Row> => {
+      const r = await get(`/api/spaces/${spaceId}/roster`, bearer(user));
+      expect(r.status).toBe(200);
+      const rows = (r.body.data as { learners: Row[] }).learners;
+      expect(rows).toHaveLength(1);
+      return rows[0] as Row;
+    };
+    const allowedRowKeys = new Set<string>([...Object.keys(TEACHER_VISIBLE_ROSTER_FIELDS), ...TEACHER_ROSTER_ADDRESS_FIELDS, 'summary']);
+    const allowedSummaryKeys: readonly string[] = TEACHER_VISIBLE_SUMMARY_KEYS;
+
+    const rowA = await rowOf(a.space.id, 'teacher');
+    for (const key of Object.keys(rowA)) expect(allowedRowKeys.has(key), `roster key ${key}`).toBe(true);
+    for (const key of Object.keys(rowA.summary)) expect(allowedSummaryKeys, `summary key ${key}`).toContain(key);
+    expect(rowA.summary).not.toHaveProperty('stage1Anchor');
+    expect(rowA.summary).not.toHaveProperty('schemaVersion');
+    expect(rowA.summary).toMatchObject({ lastActiveAt: summary.lastActiveAt, stage1: summary.stage1, cardsUnlocked: 2, minutesLast7d: 5 });
+    expect(rowA.summary.planProgress).toEqual({ [planA]: progress(1), [planAOld]: progress(3) });
+    expect(JSON.stringify(rowA)).not.toContain('secret-tricky');
+
+    expect((await rowOf(b.space.id, 'teacher-b')).summary.planProgress).toEqual({ [planB]: progress(2) });
+    // The family roster goes through the same route and the same projection.
+    const famRow = await rowOf(fam.space.id, 'mom');
+    expect(famRow.summary.planProgress).toEqual({ [planFam]: progress(0) });
+    expect(famRow.summary).not.toHaveProperty('stage1Anchor');
   });
 
   it('a school admin reads a child class roster without its code; archived spaces disappear', async () => {

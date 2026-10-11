@@ -1,0 +1,43 @@
+import { TEACHER_VISIBLE_SUMMARY_KEYS, type ProgressSummary, type TeacherVisibleSummaryKey } from '@hangul-route/content-schema';
+
+/**
+ * What a roster reader receives of a learner's summary — F-SPACE-002 T-1a
+ * (T16a, section 4.11). The stored summary is projected to the allow-list the
+ * consent text is generated from, so `nothing_else` stays true: keys on no
+ * list (`stage1Anchor`, `schemaVersion`, anything an older or newer writer
+ * left behind) never leave, and `planProgress` keeps only the viewing space's
+ * own plans, never another class's or a family's.
+ *
+ * A key missing from a legacy summary stays missing; `planProgress` is always
+ * an object (empty when missing or malformed) because readers index into it.
+ */
+export type TeacherVisibleSummary = Pick<ProgressSummary, TeacherVisibleSummaryKey>;
+
+type Plain = Record<string, unknown>;
+const isPlain = (v: unknown): v is Plain => typeof v === 'object' && v !== null && !Array.isArray(v);
+
+/** The three Hangul-stage figures the consent item `quests` names. */
+const STAGE1_KEYS = ['questsDone', 'questsTotal', 'anchorAccuracy'] as const satisfies readonly (keyof ProgressSummary['stage1'])[];
+
+function pick(source: Plain, keys: readonly string[]): Plain {
+  const out: Plain = {};
+  for (const key of keys) if (source[key] !== undefined) out[key] = source[key];
+  return out;
+}
+
+export function teacherVisibleSummary(summary: unknown, planIds: ReadonlySet<string>): TeacherVisibleSummary | null {
+  if (!isPlain(summary)) return null;
+  const out: Plain = {};
+  for (const key of TEACHER_VISIBLE_SUMMARY_KEYS) {
+    const value = summary[key];
+    if (key === 'planProgress') {
+      out.planProgress = isPlain(value) ? pick(value, Object.keys(value).filter((id) => planIds.has(id))) : {};
+    } else if (key === 'stage1') {
+      if (isPlain(value)) out.stage1 = pick(value, STAGE1_KEYS);
+    } else if (value !== undefined) {
+      out[key] = value;
+    }
+  }
+  // Stored summaries were validated by ProgressSummarySchema on write (routes/sync.ts); this only removes keys.
+  return out as TeacherVisibleSummary;
+}
