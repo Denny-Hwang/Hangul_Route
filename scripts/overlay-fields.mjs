@@ -104,6 +104,8 @@ export function isOverlayFieldAllowed(entityId, field) {
 
 const isRec = (v) => typeof v === "object" && v !== null && !Array.isArray(v);
 const COLLECTION_ALIASES = { checks: ["checks", "checkpoints"] };
+/** Top-level hints an overlay may add although the English base has none (§3.5.6). */
+const ADDITIVE_FIELDS = ["soundHint", "nameHint"];
 
 export function overlayElementKey(element, index) {
   if (isRec(element)) {
@@ -160,7 +162,10 @@ function resolve(node, segs, at) {
   if (!isRec(node)) return [];
   const [head, ...rest] = segs;
   if (head === undefined) return typeof node.en === "string" ? [[...at, "en"]] : [];
-  if (rest.length === 0) return leafTargets(node, head, at);
+  if (rest.length === 0) {
+    const targets = leafTargets(node, head, at);
+    return targets.length === 0 && at.length === 0 && ADDITIVE_FIELDS.includes(head) && node[head] === undefined ? [[head]] : targets;
+  }
   const child = node[head];
   if (isRec(child)) return resolve(child, rest, [...at, head]);
   if (child === undefined && rest.length === 1 && rest[0] === "gloss" && typeof node[`${head}En`] === "string") {

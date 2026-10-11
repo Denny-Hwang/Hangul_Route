@@ -14,7 +14,8 @@ import type { UiLocale } from './schemas/locale';
  * - `list.<key>.rest` picks the array element whose `overlayElementKey` is `<key>`
  *   (an array that is not a direct child is found by name anywhere below, so story
  *   `scenes.<id>` reaches `tiers[].scenes[]`; `checks` also covers `checkpoints`);
- * - a path that ends on an element lands on its `en`.
+ * - a path that ends on an element lands on its `en`;
+ * - the jamo hints `soundHint` / `nameHint` are set even when the base has none.
  * Anything that resolves to nothing is ignored: the English stays (§3.13, never a
  * blank and never the key).
  *
@@ -26,6 +27,13 @@ type Path = (string | number)[];
 type Rec = Record<string, unknown>;
 
 const isRec = (v: unknown): v is Rec => typeof v === 'object' && v !== null && !Array.isArray(v);
+
+/**
+ * Hints a locale may add although the English base has none (§3.5.6: a Spanish sound
+ * hint is authored fresh for Spanish readers). Only these top-level fields are created
+ * by an overlay; every other field only replaces an existing English source.
+ */
+const ADDITIVE_FIELDS: readonly string[] = ['soundHint', 'nameHint'];
 
 /** Collections reached by another name too. */
 const COLLECTION_ALIASES: Readonly<Record<string, readonly string[]>> = { checks: ['checks', 'checkpoints'] };
@@ -87,7 +95,10 @@ function resolve(node: unknown, segs: readonly string[], at: Path): Path[] {
   if (!isRec(node)) return [];
   const [head, ...rest] = segs;
   if (head === undefined) return typeof node.en === 'string' ? [[...at, 'en']] : [];
-  if (rest.length === 0) return leafTargets(node, head, at);
+  if (rest.length === 0) {
+    const targets = leafTargets(node, head, at);
+    return targets.length === 0 && at.length === 0 && ADDITIVE_FIELDS.includes(head) && node[head] === undefined ? [[head]] : targets;
+  }
   const child = node[head];
   if (isRec(child)) return resolve(child, rest, [...at, head]);
   if (child === undefined && rest.length === 1 && rest[0] === 'gloss' && typeof node[`${head}En`] === 'string') {

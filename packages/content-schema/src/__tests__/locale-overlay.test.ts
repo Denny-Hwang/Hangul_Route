@@ -213,6 +213,18 @@ describe('localize (F-I18N-001 §3.6 runtime)', () => {
     expect(localize(tsJamo, tsJamo.id, 'es', overlays)).toEqual({ ...tsJamo, exampleWordEn: 'cachorro', soundHint: 'como la g de gato' });
   });
 
+  it('adds a jamo sound hint the English base does not have yet (hints are authored per language), nothing else', () => {
+    const bare = { id: 'jamo:giyeok', char: 'ㄱ', romanization: 'g/k', nameEn: 'giyeok' };
+    const es = localize(bare, bare.id, 'es', overlays);
+    expect(es).toEqual({ ...bare, soundHint: 'como la g de gato' });
+    expect(Object.keys(es)).not.toContain('gloss');
+    expect(overlayTargets(bare, 'nameHint')).toEqual([['nameHint']]);
+    expect(overlayTargets(bare, 'title')).toEqual([]);
+    expect(overlayTargets({ nested: {} }, 'nested.soundHint')).toEqual([]);
+    expect(overlayTargets({ soundHint: 3 }, 'soundHint')).toEqual([]);
+    expect(translatableFields('jamo:giyeok', bare)).toEqual([]);
+  });
+
   it('addresses array elements by id and ignores paths that resolve to nothing', () => {
     const quest = {
       id: 'quest:s1-letters-1',
