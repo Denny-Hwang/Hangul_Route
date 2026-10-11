@@ -1,4 +1,4 @@
-import type { StoredTransfer, TransferSlotConsent } from './transfer-types';
+import { ENDED_TRANSFER_STATUSES, OPEN_TRANSFER_STATUSES, type StoredTransfer, type TransferSlotConsent } from './transfer-types';
 
 /*
  * Rules both Db backends share for the class-transfer rows (F-SPACE-002
@@ -24,13 +24,20 @@ export function teacherSlotsOf(consent: Extract<TransferSlotConsent, { kind: 'te
  * backends.
  */
 export function assertTransferChecks(t: StoredTransfer): void {
-  const allIn = t.learner.state === 'consented' && (t.source.state === 'consented' || t.source.state === 'not_required') && t.destination.state === 'consented';
   const failed =
-    ((t.status === 'approved' || t.status === 'executed') && !allIn) ||
+    ((t.status === 'approved' || t.status === 'executed') && !allSlotsIn(t)) ||
     (t.status === 'executed' && t.executedAt === null) ||
-    ((t.status === 'declined' || t.status === 'cancelled' || t.status === 'expired') && (t.endReason === null || t.endedAt === null)) ||
+    (isEndedTransfer(t) && (t.endReason === null || t.endedAt === null)) ||
     (t.learner.state === 'consented' && (t.learner.at === null || t.learner.basis === null || t.learner.textVersion === null || t.learner.locale === null || t.learner.evidence === null));
   if (failed) throw new Error(`CHECK constraint failed: transfer_requests (${t.id})`);
 }
 
-export const isOpenTransfer = (t: Pick<StoredTransfer, 'status'>): boolean => t.status === 'requested' || t.status === 'approved';
+/** `requested` or `approved`: the request can still change. */
+export const isOpenTransfer = (t: Pick<StoredTransfer, 'status'>): boolean => (OPEN_TRANSFER_STATUSES as readonly string[]).includes(t.status);
+/** `declined`, `cancelled` or `expired`: ended without a move. */
+export const isEndedTransfer = (t: Pick<StoredTransfer, 'status'>): boolean => (ENDED_TRANSFER_STATUSES as readonly string[]).includes(t.status);
+/** Every slot is in: learner and destination consented, source consented or not required. */
+export const allSlotsIn = (t: Pick<StoredTransfer, 'learner' | 'source' | 'destination'>): boolean =>
+  t.learner.state === 'consented' && (t.source.state === 'consented' || t.source.state === 'not_required') && t.destination.state === 'consented';
+/** An unlimited cap (`Number.POSITIVE_INFINITY`, a Pro class) as the finite number SQL compares against. */
+export const finiteCap = (cap: number): number => (Number.isFinite(cap) ? cap : 1e9);

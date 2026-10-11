@@ -141,7 +141,10 @@ export type NewTransferEvent = Omit<TransferEvent, 'id'>;
 /**
  * A consent for one or more slots. The learner slot is always alone; the two
  * teacher slots may come together (T11: one account answering for both
- * classes), which is one UPDATE that sets both or neither.
+ * classes), which is one UPDATE that sets both or neither. Name only slots
+ * that are still pending: a slot that is already consented makes the whole
+ * call change nothing, so the caller strips it first (approve is idempotent
+ * at the route, section 4.4).
  */
 export type TransferSlotConsent =
   | { kind: 'learner'; record: LearnerConsentRecord }
@@ -154,7 +157,7 @@ export interface ExecuteTransferInput {
   sourceSpaceId: string;
   destSpaceId: string;
   now: Date;
-  /** The destination's class cap (`Number.POSITIVE_INFINITY` passed as 1e9). */
+  /** The destination's class cap; `Number.POSITIVE_INFINITY` (unlimited) is compared as 1e9. */
   destCap: number;
   /** How many other live classes the learner may be in (LEARNER_CLASS_CAP). */
   learnerCap: number;

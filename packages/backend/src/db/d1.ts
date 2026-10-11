@@ -17,7 +17,8 @@ import {
   type TransferSlotConsent,
   type WaitlistEntry,
 } from './types';
-import { teacherSlotsOf } from './transfer-rules';
+import { finiteCap, teacherSlotsOf } from './transfer-rules';
+import { ENDED_TRANSFER_STATUSES, OPEN_TRANSFER_STATUSES } from './transfer-types';
 
 /** What `run()` resolves to on D1 (`D1Result`): `meta.changes` is the row count the statement wrote. */
 export interface D1RunResultLike {
@@ -133,7 +134,7 @@ const toTransfer = (r: Row): StoredTransfer => ({
     locale: nstr(r.l_locale),
     shown: json(r.l_shown_json) as StoredTransfer['learner']['shown'],
     terms:
-      r.l_at === null || r.l_at === undefined
+      [r.l_dest_name_hash, r.l_dest_consent_mode, r.l_dest_anonymize, r.l_dest_owner_id, r.l_source_name_hash, r.l_premium_change].some((v) => v === null || v === undefined)
         ? null
         : {
             destNameHash: str(r.l_dest_name_hash),
@@ -198,8 +199,16 @@ const transferValues = (t: StoredTransfer): unknown[] => [
 /** Column of each slot's state; a fixed map, never caller text in SQL. */
 const SLOT_STATE_COLUMN: Record<TransferSlot, string> = { learner: 'l_state', source: 's_state', destination: 'd_state' };
 const PREF_COLUMN: Record<TransferPrefKey, string> = { selfManaged: 'self_managed', blockTeacherRequests: 'block_teacher_requests' };
-const OPEN = "status IN ('requested','approved')";
+const sqlList = (values: readonly string[]): string => values.map((v) => `'${v}'`).join(',');
+const OPEN = `status IN (${sqlList(OPEN_TRANSFER_STATUSES)})`;
+const ENDED = `status IN (${sqlList(ENDED_TRANSFER_STATUSES)})`;
 const ALL_SLOTS_IN = "l_state = 'consented' AND s_state IN ('consented','not_required') AND d_state = 'consented'";
+/** The row count a write reports; a binding that does not say is an error, never zero. */
+const readChanges = (result: D1RunResultLike | undefined): number => {
+  const changed = result?.meta?.changes;
+  if (typeof changed !== 'number') throw new Error('D1 did not report meta.changes for a compare-and-set write');
+  return changed;
+};
 /** D1 binds at most 100 parameters per statement. */
 const IN_CHUNK = 90;
 
@@ -245,10 +254,7 @@ export class D1Db implements Db {
    * every time would answer 409 to every upload without a trace.
    */
   private async changes(sql: string, params: unknown[]): Promise<number> {
-    const result = await this.d1.prepare(sql).bind(...params).run();
-    const changed = result?.meta?.changes;
-    if (typeof changed !== 'number') throw new Error('D1 did not report meta.changes for a compare-and-set write');
-    return changed;
+    return readChanges(await this.d1.prepare(sql).bind(...params).run());
   }
 
   getAccount(accountId: string): Promise<Account | null> {
@@ -276,17 +282,21 @@ export class D1Db implements Db {
   async deleteLearner(learnerId: string): Promise<boolean> {
     const existed = !!(await this.getLearner(learnerId));
     // learner_devices, snapshots, relink_requests and the transfer tables cascade from learners; memberships and
-    // rate_hits hold a plain id. Each is deleted explicitly anyway, children first (F-SPACE-002 section 4.7).
-    await this.run('DELETE FROM transfer_events WHERE transfer_id IN (SELECT id FROM transfer_requests WHERE learner_id = ?)', [learnerId]);
-    await this.run('DELETE FROM transfer_requests WHERE learner_id = ?', [learnerId]);
-    await this.run('DELETE FROM learner_transfer_prefs WHERE learner_id = ?', [learnerId]);
+    // rate_hits hold a plain id. Each is deleted explicitly anyway, children first, in one transaction
+    // (F-SPACE-002 section 4.7).
     const rateKeys = learnerRateKeys(learnerId);
-    await this.run(`DELETE FROM rate_hits WHERE key IN (${rateKeys.map(() => '?').join(', ')})`, rateKeys);
-    await this.run("DELETE FROM memberships WHERE member_kind = 'learner' AND member_id = ?", [learnerId]);
-    await this.run('DELETE FROM relink_requests WHERE learner_id = ?', [learnerId]);
-    await this.run('DELETE FROM learner_devices WHERE learner_id = ?', [learnerId]);
-    await this.run('DELETE FROM snapshots WHERE learner_id = ?', [learnerId]);
-    await this.run('DELETE FROM learners WHERE id = ?', [learnerId]);
+    const statements: Array<[string, unknown[]]> = [
+      ['DELETE FROM transfer_events WHERE transfer_id IN (SELECT id FROM transfer_requests WHERE learner_id = ?)', [learnerId]],
+      ['DELETE FROM transfer_requests WHERE learner_id = ?', [learnerId]],
+      ['DELETE FROM learner_transfer_prefs WHERE learner_id = ?', [learnerId]],
+      [`DELETE FROM rate_hits WHERE key IN (${rateKeys.map(() => '?').join(', ')})`, rateKeys],
+      ["DELETE FROM memberships WHERE member_kind = 'learner' AND member_id = ?", [learnerId]],
+      ['DELETE FROM relink_requests WHERE learner_id = ?', [learnerId]],
+      ['DELETE FROM learner_devices WHERE learner_id = ?', [learnerId]],
+      ['DELETE FROM snapshots WHERE learner_id = ?', [learnerId]],
+      ['DELETE FROM learners WHERE id = ?', [learnerId]],
+    ];
+    await this.d1.batch(statements.map(([sql, params]) => this.d1.prepare(sql).bind(...params)));
     return existed;
   }
   getDevice(learnerId: string, deviceId: string): Promise<LearnerDevice | null> {
@@ -415,11 +425,7 @@ export class D1Db implements Db {
   /** One batch's results as row counts; a binding that does not report `meta.changes` is an error, never zero. */
   private async batchChanges(statements: Array<[string, unknown[]]>): Promise<number[]> {
     const results = await this.d1.batch(statements.map(([sql, params]) => this.d1.prepare(sql).bind(...params)));
-    return results.map((result) => {
-      const changed = result?.meta?.changes;
-      if (typeof changed !== 'number') throw new Error('D1 did not report meta.changes for a batch statement');
-      return changed;
-    });
+    return results.map(readChanges);
   }
 
   async createTransfer(row: StoredTransfer, event: Omit<NewTransferEvent, 'transferId'>): Promise<'created' | 'already_open'> {
@@ -500,13 +506,22 @@ export class D1Db implements Db {
 
   async resetLearnerConsent(transferId: string, why: ConsentResetReason, now: Date): Promise<number> {
     const at = now.toISOString();
-    const changed = await this.changes(
-      `UPDATE transfer_requests SET l_state = 'pending', ${LEARNER_RECORD_COLUMNS.map((c) => `${c} = NULL`).join(', ')}, status = 'requested', approved_at = NULL, execute_after = NULL, block_reason = NULL, updated_at = ?, rev = rev + 1 WHERE id = ? AND ${OPEN} AND l_state = 'consented'`,
-      [at, transferId],
-    );
-    // The audit row follows the write that won; a crash in between loses an event, never a state change.
-    if (changed === 1) await this.addTransferEvent({ transferId, at, actorKind: 'system', actorRef: null, event: 'consent_reset', slot: 'learner', detail: { why } });
-    return changed;
+    // The reset and its audit row in one transaction: the UPDATE marks the row it changed with a one-off
+    // token in `block_reason` (which the reset clears anyway), the event is guarded by it, and the last
+    // statement clears it (the same pattern as executeTransfer).
+    const token = `resetting:${crypto.randomUUID()}`;
+    const [changed] = await this.batchChanges([
+      [
+        `UPDATE transfer_requests SET l_state = 'pending', ${LEARNER_RECORD_COLUMNS.map((c) => `${c} = NULL`).join(', ')}, status = 'requested', approved_at = NULL, execute_after = NULL, block_reason = ?, updated_at = ?, rev = rev + 1 WHERE id = ? AND ${OPEN} AND l_state = 'consented'`,
+        [token, at, transferId],
+      ],
+      [
+        "INSERT INTO transfer_events (transfer_id, at, actor_kind, actor_ref, event, slot, detail_json) SELECT ?, ?, 'system', NULL, 'consent_reset', 'learner', ? WHERE EXISTS (SELECT 1 FROM transfer_requests WHERE id = ? AND block_reason = ?)",
+        [transferId, at, JSON.stringify({ why }), transferId, token],
+      ],
+      ['UPDATE transfer_requests SET block_reason = NULL WHERE id = ? AND block_reason = ?', [transferId, token]],
+    ]);
+    return changed ?? 0;
   }
 
   async executeTransfer(input: ExecuteTransferInput): Promise<ExecuteTransferResult> {
@@ -531,7 +546,7 @@ export class D1Db implements Db {
                  OR ( (SELECT COUNT(*) FROM memberships WHERE space_id = ? AND member_kind = 'learner') < ?
                       AND (SELECT COUNT(*) FROM memberships m JOIN spaces s ON s.id = m.space_id
                            WHERE m.member_kind = 'learner' AND m.member_id = ? AND s.kind = 'class' AND s.archived_at IS NULL AND m.space_id <> ?) < ? ) )`,
-        [at, token, at, transferId, learnerId, source, dest, at, at, learnerId, source, learnerId, dest, dest, learnerId, dest, input.destCap, learnerId, source, input.learnerCap],
+        [at, token, at, transferId, learnerId, source, dest, at, at, learnerId, source, learnerId, dest, dest, learnerId, dest, finiteCap(input.destCap), learnerId, source, input.learnerCap],
       ],
       [`INSERT INTO memberships (space_id, member_kind, member_id, role, joined_at) SELECT ?, 'learner', ?, 'student', ? WHERE ${guard} ON CONFLICT(space_id, member_kind, member_id) DO NOTHING`, [dest, learnerId, at, ...g]],
       [`DELETE FROM memberships WHERE space_id = ? AND member_kind = 'learner' AND member_id = ? AND ${guard}`, [source, learnerId, ...g]],
@@ -571,7 +586,7 @@ export class D1Db implements Db {
   }
   lastEndedForPair(learnerId: string, destSpaceId: string): Promise<StoredTransfer | null> {
     return this.one(
-      "SELECT * FROM transfer_requests WHERE learner_id = ? AND dest_space_id = ? AND status IN ('declined','cancelled','expired') ORDER BY ended_at DESC, id DESC LIMIT 1",
+      `SELECT * FROM transfer_requests WHERE learner_id = ? AND dest_space_id = ? AND ${ENDED} ORDER BY ended_at DESC, id DESC LIMIT 1`,
       [learnerId, destSpaceId],
       toTransfer,
     );
@@ -617,19 +632,15 @@ export class D1Db implements Db {
   getSpaces(ids: readonly string[]): Promise<Space[]> {
     return this.byIds('spaces', ids, toSpace);
   }
-  async purgeTransfers(endedBefore: Date, executedBefore: Date, limit: number): Promise<number> {
-    // The same bounded, ordered selection twice in one transaction: events first, then their rows
-    // (the foreign key cascades too; this does not rely on it).
-    const pick = `SELECT id FROM transfer_requests t
-      WHERE (t.status IN ('declined','cancelled','expired') AND t.ended_at < ?)
-         OR (t.status = 'executed' AND t.executed_at < ? AND NOT EXISTS (SELECT 1 FROM memberships m WHERE m.space_id = t.dest_space_id AND m.member_kind = 'learner' AND m.member_id = t.learner_id))
-      ORDER BY t.id LIMIT ?`;
-    const params = [endedBefore.toISOString(), executedBefore.toISOString(), limit];
-    const [, purged] = await this.batchChanges([
-      [`DELETE FROM transfer_events WHERE transfer_id IN (${pick})`, params],
-      [`DELETE FROM transfer_requests WHERE id IN (${pick})`, params],
-    ]);
-    return purged ?? 0;
+  purgeTransfers(endedBefore: Date, executedBefore: Date, limit: number): Promise<number> {
+    // One bounded statement (section 4.1); the events go with their rows through ON DELETE CASCADE.
+    return this.changes(
+      `DELETE FROM transfer_requests WHERE id IN (SELECT t.id FROM transfer_requests t
+         WHERE (t.${ENDED} AND t.ended_at < ?)
+            OR (t.status = 'executed' AND t.executed_at < ? AND NOT EXISTS (SELECT 1 FROM memberships m WHERE m.space_id = t.dest_space_id AND m.member_kind = 'learner' AND m.member_id = t.learner_id))
+         ORDER BY t.id LIMIT ?)`,
+      [endedBefore.toISOString(), executedBefore.toISOString(), limit],
+    );
   }
   recordRateHit(key: string, at: Date): Promise<void> {
     return this.run('INSERT INTO rate_hits (key, at) VALUES (?, ?)', [key, at.toISOString()]);

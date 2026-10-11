@@ -1,6 +1,6 @@
 import { TRANSFER_COOLING_OFF_MS, type Entitlement, type EntitlementApply, type MemberKind, type Membership, type Plan, type Space, type TransferBlockReason, type TransferEndReason, type TransferSlot } from '@hangul-route/content-schema';
 import { id, type Account, type Learner, type LearnerDevice, type SnapshotRecord } from '../store';
-import { assertTransferChecks, isOpenTransfer, teacherSlotsOf } from './transfer-rules';
+import { allSlotsIn, assertTransferChecks, finiteCap, isEndedTransfer, isOpenTransfer, teacherSlotsOf } from './transfer-rules';
 import {
   learnerRateKeys,
   mergeEntitlement,
@@ -27,7 +27,6 @@ function clone<T>(value: T): T {
   return structuredClone(value);
 }
 
-const allSlotsIn = (t: StoredTransfer): boolean => t.learner.state === 'consented' && (t.source.state === 'consented' || t.source.state === 'not_required') && t.destination.state === 'consented';
 /** Newest first, ties by id descending (`ORDER BY created_at DESC, id DESC`). */
 const newestFirst = (a: StoredTransfer, b: StoredTransfer): number => (a.createdAt === b.createdAt ? (a.id < b.id ? 1 : a.id > b.id ? -1 : 0) : a.createdAt < b.createdAt ? 1 : -1);
 /** Latest `endedAt` first, ties by id descending. */
@@ -313,7 +312,7 @@ export class MemoryDb implements Db {
       isMember(source) &&
       !!destSpace &&
       destSpace.archivedAt === null &&
-      (isMember(dest) || (learnersIn(dest) < input.destCap && otherLiveClasses < input.learnerCap));
+      (isMember(dest) || (learnersIn(dest) < finiteCap(input.destCap) && otherLiveClasses < input.learnerCap));
     if (!gate || !row) return { executed: false, devicesRevoked: 0, relinksClosed: 0 };
 
     this.transfers.set(transferId, { ...row, status: 'executed', executedAt: at, blockReason: null, updatedAt: at, rev: row.rev + 1 });
@@ -359,7 +358,7 @@ export class MemoryDb implements Db {
     return clone(rows.sort(latestEnded)[0] ?? null);
   }
   async lastEndedForPair(learnerId: string, destSpaceId: string): Promise<StoredTransfer | null> {
-    const rows = [...this.transfers.values()].filter((t) => t.learnerId === learnerId && t.destSpaceId === destSpaceId && (t.status === 'declined' || t.status === 'cancelled' || t.status === 'expired'));
+    const rows = [...this.transfers.values()].filter((t) => t.learnerId === learnerId && t.destSpaceId === destSpaceId && isEndedTransfer(t));
     return clone(rows.sort(latestEnded)[0] ?? null);
   }
   async countTransfersCreatedBy(accountId: string, since: Date): Promise<number> {
@@ -392,7 +391,7 @@ export class MemoryDb implements Db {
     const doomed = [...this.transfers.values()]
       .filter(
         (t) =>
-          ((t.status === 'declined' || t.status === 'cancelled' || t.status === 'expired') && t.endedAt !== null && t.endedAt < ended) ||
+          (isEndedTransfer(t) && t.endedAt !== null && t.endedAt < ended) ||
           (t.status === 'executed' && t.executedAt !== null && t.executedAt < executed && !this.memberships.has(membershipKey(t.destSpaceId, 'learner', t.learnerId))),
       )
       .map((t) => t.id)

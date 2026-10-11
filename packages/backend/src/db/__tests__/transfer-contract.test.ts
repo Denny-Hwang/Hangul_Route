@@ -288,6 +288,13 @@ function transferContract(name: string, make: () => Db): void {
         expect((await db.executeTransfer(executeInput(due, { destCap: 2 }))).executed).toBe(true);
       });
 
+      it('an unlimited destination cap (a Pro class, Number.POSITIVE_INFINITY) never blocks the move', async () => {
+        await approvedRequest(db);
+        await fillClass(db, DEST, 3);
+        expect((await db.executeTransfer(executeInput(due, { destCap: Number.POSITIVE_INFINITY }))).executed).toBe(true);
+        expect(await db.membership(DEST, 'learner', LEARNER)).not.toBeNull();
+      });
+
       it('counts the learner classes as current minus source; archived classes do not count', async () => {
         await approvedRequest(db);
         for (const id of ['space:class-c', 'space:class-d', 'space:class-e']) await db.addMembership({ spaceId: id, memberKind: 'learner', memberId: LEARNER, role: 'student', joinedAt: T0 });

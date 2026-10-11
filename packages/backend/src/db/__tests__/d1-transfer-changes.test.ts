@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { openSqliteD1 } from '../../__tests__/helpers/sqlite';
 import { D1Db, type D1Like, type D1PreparedLike, type D1RunResultLike } from '../d1';
-import { at, created, executeInput, learnerSideRow } from './transfer-fixtures';
+import { at, created, executeInput, learnerSideRow, T0 } from './transfer-fixtures';
 
 /** A D1 whose run() and batch() answer with whatever `answer` returns, recording the batch sizes. */
 function d1Answering(answer: () => unknown): { d1: D1Like; batches: number[] } {
@@ -38,17 +39,35 @@ describe('D1Db transfer writes read meta.changes', () => {
     await expect(new D1Db(d1Answering(() => undefined).d1).markSourceNotRequired('transfer:1', at(0))).rejects.toThrow(/meta\.changes/);
   });
 
-  it('createTransfer, executeTransfer and purgeTransfers each run as one batch and throw on a missing count', async () => {
+  it('createTransfer, resetLearnerConsent, executeTransfer and deleteLearner each run as one batch; a missing count throws', async () => {
     const counted = d1Answering(() => ({ meta: { changes: 1 } }));
     const db = new D1Db(counted.d1);
     expect(await db.createTransfer(learnerSideRow(), created)).toBe('created');
+    expect(await db.resetLearnerConsent('transfer:1', 'lapsed', at(0))).toBe(1);
     expect(await db.executeTransfer(executeInput(at(0)))).toEqual({ executed: true, devicesRevoked: 1, relinksClosed: 1 });
+    await db.deleteLearner('profile:suni');
     expect(await db.purgeTransfers(at(0), at(0), 50)).toBe(1);
-    expect(counted.batches).toEqual([2, 7, 2]);
+    expect(counted.batches).toEqual([2, 3, 7, 9]);
 
     const silent = new D1Db(d1Answering(() => ({ meta: {} })).d1);
     await expect(silent.createTransfer(learnerSideRow(), created)).rejects.toThrow(/meta\.changes/);
+    await expect(silent.resetLearnerConsent('transfer:1', 'lapsed', at(0))).rejects.toThrow(/meta\.changes/);
     await expect(silent.executeTransfer(executeInput(at(0)))).rejects.toThrow(/meta\.changes/);
+    await expect(silent.purgeTransfers(at(0), at(0), 50)).rejects.toThrow(/meta\.changes/);
+  });
+
+  it('a row whose consent-time terms are incomplete reads with terms null, never empty strings', async () => {
+    const d1 = openSqliteD1();
+    await d1.prepare("INSERT INTO accounts (id, created_at) VALUES ('t', ?)").bind(T0).run();
+    for (const id of ['space:a', 'space:b']) await d1.prepare("INSERT INTO spaces (id, kind, name, owner_account_id, created_at) VALUES (?, 'class', ?, 't', ?)").bind(id, id, T0).run();
+    await d1.prepare("INSERT INTO learners (id, display_name, age_group, avatar, created_at, last_active_at) VALUES ('profile:a', 'A', '8-9', 'x', ?, ?)").bind(T0, T0).run();
+    await d1
+      .prepare("INSERT INTO transfer_requests (id, learner_id, source_space_id, dest_space_id, initiator, status, l_state, l_at, l_basis, l_text_version, l_locale, l_evidence, l_dest_name_hash, created_at, updated_at, expires_at) VALUES ('transfer:1', 'profile:a', 'space:a', 'space:b', 'learner_side', 'requested', 'consented', ?, 'caregiver', 'v', 'en', 'mom', 'abc', ?, ?, ?)")
+      .bind(T0, T0, T0, T0)
+      .run();
+    const read = await new D1Db(d1).getTransfer('transfer:1');
+    expect(read?.learner).toMatchObject({ state: 'consented', evidence: 'mom', terms: null, shown: null });
+    d1.close();
   });
 
   it('a gate that changed nothing reports no move, whatever the guarded statements say', async () => {
