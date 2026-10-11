@@ -1,153 +1,392 @@
 import {
   Body,
   Button,
-  Caption,
+  Card,
+  ChoiceCard,
   Heading,
   HoyaBubble,
   Icon,
+  KoreanText,
   Pill,
   Progress,
   Screen,
   Spacer,
+  borderWidth,
   colors,
   radii,
   spacing,
+  touchTarget,
   typography,
 } from '@hangul-route/design-system';
-import React, { useEffect, useMemo, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Text, View, useWindowDimensions } from 'react-native';
+import { storyById } from '../../content/stories';
 import type { MinigameScope } from '../../logic/minigame-config';
-import { sequenceRoundKey } from '../../logic/round-keys';
+import { STORY_CHECK_COPY } from '../../logic/story/copy';
+import { buildSequenceCards, type SequenceCard } from '../../logic/story/sequence-cards';
+import {
+  HIGHLIGHT_SLOT_AFTER_WRONG,
+  initSequenceState,
+  reduceSequence,
+  remainingCards,
+  type SequenceAction,
+  type SequenceEffect,
+  type SequenceState,
+} from '../../logic/story/sequence-player';
+import {
+  SEQUENCE_REPLAY_MS,
+  SEQUENCE_WRONG_FLASH_MS,
+  autoAdvanceDue,
+  longestKoreanGlyphs,
+  sequenceCardLabel,
+  sequenceCardRomanization,
+  sequenceColumns,
+  sequenceFinishedPayload,
+  sequenceSeed,
+  sequenceSummary,
+  slotViews,
+} from '../../logic/story/sequence-view';
+import { playPrompt, stop } from '../../platform/audio';
 import { nudge, success } from '../../platform/haptics';
+import { useReducedMotion } from '../../platform/motion';
+import { track } from '../../platform/telemetry';
+import { useLocaleStore } from '../../store/locale-store';
+import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useQuestRunStore } from '../../store/quest-run-store';
 
 interface Props {
   scope: MinigameScope;
   onFinish: () => void;
+  /** The minigame ref; seeds the start order and names the sequence in telemetry. */
+  sequenceId?: string;
+  /** Per-mount random nonce for the start order; tests inject a fixed one. */
+  nonce?: number;
 }
 
+/** Column share of one card cell, by column count. */
+const CELL_BASIS = { 1: '100%', 2: '45%', 3: '30%', 4: '22%' } as const;
+
+type Note = 'hint' | 'wrong' | 'look';
+
 /**
- * StorySequence — present story steps in shuffled order, child taps
- * them in the correct order.
+ * Story Order v2 (F-STORY-003 §3.5). The cards start in a derangement of the
+ * correct order; the learner taps the one that comes next and it moves into
+ * the next slot. A wrong card flashes amber and nothing moves (the slot is
+ * scored once, first try); after two misses the right card gets a ring. When
+ * every slot is filled the story replays in order (no scoring), then Done.
+ * Serves the three legacy `storySteps` scopes and story scopes alike; scene art
+ * arrives with PR 3.5b. Design: design/wireframes/story/check.md (F, G).
  */
-export function StorySequenceGame({ scope, onFinish }: Props): React.ReactElement {
-  const correctOrder = useMemo(() => scope.storySteps ?? [], [scope]);
-  const shuffled = useMemo(() => [...correctOrder].sort(() => Math.random() - 0.5), [correctOrder]);
-  const [picked, setPicked] = useState<string[]>([]);
+export function StorySequenceGame({ scope, onFinish, sequenceId = '', nonce }: Props): React.ReactElement {
+  const cards = useMemo(
+    () => buildSequenceCards(scope, scope.story ? storyById(scope.story.storyId) : undefined),
+    [scope],
+  );
+  const cardById = useMemo(() => new Map(cards.map((c) => [c.id, c])), [cards]);
+  const [mountNonce] = useState(() => nonce ?? Math.floor(Math.random() * 0x7fffffff));
+  const [state, setState] = useState<SequenceState>(() =>
+    initSequenceState(cards, sequenceSeed(sequenceId, mountNonce)),
+  );
+  const stateRef = useRef(state);
   const [wrongFlash, setWrongFlash] = useState<string | null>(null);
+  const [revealed, setRevealed] = useState<ReadonlySet<string>>(() => new Set());
+  const [note, setNote] = useState<Note>('hint');
+  const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const answerRound = useQuestRunStore((s) => s.answerRound);
   const markStepComplete = useQuestRunStore((s) => s.markStepComplete);
+  const activeProfileId = useProfileStore((s) => activeProfileSelector(s)?.id);
+  const romanizationMode = useLocaleStore((s) =>
+    s.byProfile[activeProfileId ?? '']?.romanizationMode ?? 'always',
+  );
+  const reducedMotion = useReducedMotion();
+  const { width } = useWindowDimensions();
+  const copy = STORY_CHECK_COPY.sequence;
 
+  const finish = useCallback(
+    (finalState: SequenceState, skipped: boolean): void => {
+      void track({
+        name: 'story.sequence.finished',
+        profileId: activeProfileId,
+        payload: sequenceFinishedPayload(
+          { storyId: scope.story?.storyId ?? null, sequenceId },
+          sequenceSummary(finalState),
+          skipped,
+        ),
+      });
+      stop();
+      markStepComplete();
+      onFinish();
+    },
+    [activeProfileId, scope.story?.storyId, sequenceId, markStepComplete, onFinish],
+  );
+
+  const dispatch = useCallback(
+    (action: SequenceAction): void => {
+      const previous = stateRef.current;
+      const out = reduceSequence(previous, action);
+      stateRef.current = out.state;
+      setState(out.state);
+      const run = (effect: SequenceEffect): void => {
+        if (effect.type === 'answer') {
+          if (effect.correct) {
+            success();
+            setNote('hint');
+            setWrongFlash(null); // a card that just missed may be the next right one: never leave it locked
+          } else {
+            nudge();
+            setNote('wrong');
+          }
+          answerRound(effect.roundKey, effect.correct);
+        } else if (effect.type === 'highlight') {
+          setNote('look');
+        } else {
+          finish(out.state, false);
+        }
+      };
+      out.effects.forEach(run);
+      if (action.type === 'tap' && out.state.wrongBySlot !== previous.wrongBySlot) {
+        // A miss: the card flashes amber for a moment and its romanization is shown (D2).
+        setRevealed((prev) => new Set(prev).add(action.cardId));
+        setWrongFlash(action.cardId);
+        if (flashTimer.current) clearTimeout(flashTimer.current);
+        flashTimer.current = setTimeout(() => setWrongFlash(null), SEQUENCE_WRONG_FLASH_MS);
+      }
+    },
+    [answerRound, finish],
+  );
+
+  useEffect(
+    () => () => {
+      if (flashTimer.current) clearTimeout(flashTimer.current);
+      stop();
+    },
+    [],
+  );
+
+  // Replay: speak the line of each card as it comes up (the text is always visible, so a silent browser loses nothing).
+  const replayCard = state.phase === 'replay' ? cardById.get(state.solution[state.replayIndex] ?? '') : undefined;
   useEffect(() => {
-    if (picked.length === correctOrder.length && correctOrder.length > 0) {
-      setTimeout(() => {
-        markStepComplete();
-        onFinish();
-      }, 600);
-    }
-  }, [picked, correctOrder.length, markStepComplete, onFinish]);
+    if (!replayCard?.ko) return;
+    void playPrompt({
+      text: replayCard.ko.spokenKo ?? replayCard.ko.ko,
+      audioRef: replayCard.ko.audioRef,
+      source: 'story-sequence',
+    });
+  }, [replayCard]);
 
-  const handleTap = (id: string): void => {
-    if (picked.includes(id)) return;
-    const expectedId = correctOrder[picked.length]?.id;
-    if (id === expectedId) {
-      success();
-      answerRound(sequenceRoundKey(picked.length), true);
-      setPicked([...picked, id]);
-    } else {
-      nudge();
-      answerRound(sequenceRoundKey(picked.length), false);
-      setWrongFlash(id);
-      setTimeout(() => setWrongFlash(null), 500);
-    }
-  };
+  // Replay: move on by itself about every 2.5 s unless paused (never with reduced motion).
+  const advance = autoAdvanceDue(state, reducedMotion);
+  useEffect(() => {
+    if (!advance) return undefined;
+    const timer = setTimeout(() => dispatch({ type: 'replayNext' }), SEQUENCE_REPLAY_MS);
+    return () => clearTimeout(timer);
+  }, [advance, state.replayIndex, dispatch]);
+
+  const total = state.solution.length;
+  const placedCount = state.placed.length;
+
+  if (total === 0) {
+    return (
+      <Screen tone="canvas" scrollable>
+        <Body>{copy.emptyLine}</Body>
+        <Spacer size="lg" />
+        <Button label={copy.continue} tone="primary" size="lg" fullWidth onPress={() => finish(state, true)} />
+      </Screen>
+    );
+  }
+
+  const header = (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+      <View style={{ flex: 1 }}>
+        <Progress value={placedCount} max={total} tone="primary" />
+      </View>
+      <Pill label={STORY_CHECK_COPY.check.position(placedCount, total)} size="sm" />
+    </View>
+  );
+
+  if (state.phase !== 'ordering') {
+    return (
+      <Screen tone="canvas" scrollable>
+        {header}
+        <Spacer size="lg" />
+        <Heading level="prompt">{copy.replay.title}</Heading>
+        <Spacer size="md" />
+        <Card elevation="card" padding="lg" tone="paper" testID="story-sequence-replay-card">
+          <View style={{ gap: spacing.md }}>
+            <Pill label={STORY_CHECK_COPY.check.position(state.replayIndex + 1, total)} size="sm" tone="neutral" />
+            {replayCard?.ko ? (
+              <KoreanText
+                ko={replayCard.ko.ko}
+                romanization={sequenceCardRomanization(replayCard, romanizationMode, true)}
+                size="md"
+                testID="story-sequence-replay-ko"
+                onPress={() =>
+                  void playPrompt({
+                    text: replayCard.ko?.spokenKo ?? replayCard.ko?.ko ?? '',
+                    audioRef: replayCard.ko?.audioRef,
+                    source: 'story-sequence',
+                  })
+                }
+              />
+            ) : null}
+            <Body weight="semibold" testID="story-sequence-replay-caption">
+              {replayCard?.caption ?? ''}
+            </Body>
+          </View>
+        </Card>
+        <Spacer size="lg" />
+        <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+          <View style={{ flex: 1 }}>
+            <Button
+              fullWidth
+              label={copy.replay.back}
+              tone="secondary"
+              size="md"
+              disabled={state.replayIndex === 0}
+              onPress={() => dispatch({ type: 'replayBack' })}
+              testID="story-sequence-replay-back"
+            />
+          </View>
+          {reducedMotion ? null : (
+            <View style={{ flex: 1 }}>
+              <Button
+                fullWidth
+                label={state.paused ? copy.replay.play : copy.replay.pause}
+                tone="secondary"
+                size="md"
+                onPress={() => dispatch({ type: 'togglePause' })}
+                testID="story-sequence-replay-pause"
+              />
+            </View>
+          )}
+          <View style={{ flex: 1 }}>
+            <Button
+              fullWidth
+              label={copy.replay.next}
+              tone="secondary"
+              size="md"
+              disabled={state.replayIndex >= total - 1}
+              onPress={() => dispatch({ type: 'replayNext' })}
+              testID="story-sequence-replay-next"
+            />
+          </View>
+        </View>
+        <Spacer size="xl" />
+        <Button
+          label={copy.replay.done}
+          tone="primary"
+          size="lg"
+          fullWidth
+          onPress={() => dispatch({ type: 'finish' })}
+          testID="story-sequence-done"
+        />
+        <Spacer size="sm" />
+        <Button
+          label={copy.replay.skip}
+          tone="ghost"
+          size="md"
+          fullWidth
+          onPress={() => dispatch({ type: 'skipReplay' })}
+          testID="story-sequence-skip-replay"
+        />
+      </Screen>
+    );
+  }
+
+  const slot = placedCount;
+  const hintId =
+    (state.wrongBySlot[slot] ?? 0) >= HIGHLIGHT_SLOT_AFTER_WRONG ? (state.solution[slot] ?? null) : null;
+  const columns = sequenceColumns(width, longestKoreanGlyphs(cards));
+  const remaining = remainingCards(state)
+    .map((id) => cardById.get(id))
+    .filter((c): c is SequenceCard => c !== undefined);
 
   return (
     <Screen tone="canvas" scrollable>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
-        <View style={{ flex: 1 }}>
-          <Progress value={picked.length} max={correctOrder.length} tone="primary" />
-        </View>
-        <Pill label={`${picked.length} / ${correctOrder.length}`} size="sm" />
-      </View>
+      {header}
 
       <Spacer size="lg" />
-      <Heading level="prompt">Put the story in order</Heading>
-      <Caption tone="muted">Tap each step starting from first.</Caption>
+      <Heading level="prompt">{copy.title}</Heading>
+      <Body tone="muted">{copy.stepHint}</Body>
 
       <Spacer size="lg" />
-      <Caption tone="muted">Your order:</Caption>
-      <Spacer size="xs" />
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs, minHeight: 56 }}>
-        {picked.map((id, i) => {
-          const step = correctOrder.find((s) => s.id === id);
+      <View
+        testID="story-sequence-slots"
+        style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, minHeight: touchTarget.min }}
+      >
+        {slotViews(state).map((s) => {
+          const card = s.cardId ? cardById.get(s.cardId) : undefined;
           return (
             <View
-              key={i}
+              key={s.number}
+              testID={`story-sequence-slot-${s.number}`}
+              accessible
+              accessibilityLabel={copy.slotLabel(s.number, total, card?.caption)}
               style={{
-                paddingHorizontal: spacing.md,
-                paddingVertical: spacing.sm,
-                backgroundColor: colors.feedback.successLight,
-                borderRadius: radii.pill,
-                borderWidth: 1,
-                borderColor: colors.feedback.success,
                 flexDirection: 'row',
                 alignItems: 'center',
                 gap: spacing.xs,
+                paddingHorizontal: spacing.md,
+                paddingVertical: spacing.sm,
+                borderRadius: radii.pill,
+                borderWidth: borderWidth.base,
+                borderColor: card ? colors.feedback.success : colors.border.subtle,
+                backgroundColor: card ? colors.feedback.successLight : colors.surface.sunken,
               }}
             >
-              <Text style={{ fontWeight: '700' }}>{i + 1}.</Text>
-              <Text style={{ fontSize: typography.size.bodySm }}>{step?.labelEn}</Text>
+              <Text
+                style={{
+                  fontSize: typography.size.bodySm,
+                  fontWeight: typography.weight.bold,
+                  color: colors.text.primary,
+                }}
+              >
+                {s.number}
+              </Text>
+              {card ? (
+                <>
+                  <Icon name="check" size={spacing.lg} color={colors.feedback.success} />
+                  <Text style={{ fontSize: typography.size.bodySm, color: colors.text.primary }}>{card.caption}</Text>
+                </>
+              ) : null}
             </View>
           );
         })}
       </View>
 
       <Spacer size="lg" />
-      <Caption tone="muted">Steps:</Caption>
-      <Spacer size="sm" />
-      <View style={{ gap: spacing.sm }}>
-        {shuffled.map((s) => {
-          const used = picked.includes(s.id);
-          const isWrong = wrongFlash === s.id;
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md }}>
+        {remaining.map((card) => {
+          const outcome = wrongFlash === card.id ? 'wrong' : hintId === card.id ? 'hint' : null;
+          const romanization = sequenceCardRomanization(card, romanizationMode, revealed.has(card.id));
           return (
-            <Pressable
-              key={s.id}
-              onPress={() => handleTap(s.id)}
-              disabled={used}
-              accessibilityRole="button"
-              accessibilityLabel={s.labelEn}
-              style={{
-                padding: spacing.md,
-                borderRadius: radii.lg,
-                backgroundColor: used
-                  ? colors.surface.sunken
-                  : isWrong
-                    ? colors.feedback.nudgeLight
-                    : colors.surface.paper,
-                borderWidth: 2,
-                borderColor: used ? colors.border.subtle : isWrong ? colors.feedback.nudge : colors.border.subtle,
-                opacity: used ? 0.5 : 1,
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: spacing.md,
-              }}
+            <View
+              key={card.id}
+              style={{ flexGrow: 1, flexBasis: CELL_BASIS[columns], minWidth: touchTarget.hero }}
             >
-              <Icon name="arrow-right" size={20} color={colors.text.muted} />
-              <View style={{ flex: 1 }}>
-                <Body weight="semibold">{s.labelEn}</Body>
-                {s.labelKo ? <Caption tone="brand">{s.labelKo}</Caption> : null}
-              </View>
-            </Pressable>
+              <ChoiceCard
+                testID={`story-sequence-card-${card.id}`}
+                state={outcome ?? 'idle'}
+                ko={card.ko?.ko}
+                romanization={romanization}
+                label={card.caption}
+                accessibilityLabel={sequenceCardLabel(card, romanization, outcome)}
+                onPress={() => dispatch({ type: 'tap', cardId: card.id })}
+              />
+            </View>
           );
         })}
       </View>
 
       <Spacer size="lg" />
-      <HoyaBubble tone="idle" message="Read the steps, then pick them in the right order." />
+      <View accessibilityLiveRegion="polite">
+        {note === 'hint' ? null : (
+          <HoyaBubble tone="thinking" message={note === 'wrong' ? copy.tryAnother : copy.lookHere} />
+        )}
+      </View>
       <Spacer size="xl" />
-      <Button label="Skip" tone="ghost" size="md" fullWidth onPress={() => { markStepComplete(); onFinish(); }} />
+      <Button label={copy.skip} tone="ghost" size="md" fullWidth onPress={() => finish(state, true)} />
     </Screen>
   );
 }
