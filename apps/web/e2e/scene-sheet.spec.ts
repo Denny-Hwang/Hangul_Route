@@ -99,7 +99,7 @@ test('wide screens keep the 4-up thumbnail grid and 8-up sequence cards', async 
   const firstRow = async (): Promise<{ row: number; size: number }> =>
     page.locator('[data-testid="thumb-grid"]').evaluateAll((grids) => {
       const grid = grids.reduce((a, b) => (b.children.length > a.children.length ? b : a));
-      const tops = [...grid.children].map((c) => (c as HTMLElement).offsetTop);
+      const tops = Array.from(grid.children, (c) => (c as HTMLElement).offsetTop);
       return { row: tops.filter((t) => t === tops[0]).length, size: tops.length };
     });
   await page.getByRole('button', { name: 'Thumbnails 160' }).click();
