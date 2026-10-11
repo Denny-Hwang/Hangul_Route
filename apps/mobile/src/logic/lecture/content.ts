@@ -1,0 +1,50 @@
+import type { Overlays, UiLocale } from '@hangul-route/content-schema';
+import { cardById, episodeById, jamoAll, questById } from '../../content';
+import { reviewedStrokeIds, strokesForJamo } from '../../content/jamo-strokes';
+import { localizeCard, localizeEpisode, localizeJamo, localizeQuest, localizeScope } from '../content-locale';
+import { scopeFor } from '../minigame-config';
+import type { LectureBundle } from './deck-builder';
+
+/**
+ * The presenter's content (F-TCH-004 §3.3, §3.13).
+ *
+ * Korean the presenter shows outside a deck's own content lives here as
+ * taught content (with romanization and a gloss), never in a UI message: no
+ * Hangul is allowed in an `en` or `es` message (F-I18N-001 §3.4 rule 5).
+ *
+ * `lectureBundle(locale)` is the deck builder's view of the bundled content,
+ * with content text in the presenter's language (overlays, F-I18N-001 §3.6);
+ * taught Korean and its romanization never change. Stories join when the
+ * story slides land (PR 11, through the Library's review gate) and
+ * vocabulary topics with their adapter (PR 12); until then those blocks are
+ * counted as not ready.
+ */
+
+/** The Pause overlay word: 잠깐, "wait a moment" (drawn with `KoreanText`). */
+export const PAUSE_WORD = { ko: '잠깐', romanization: 'jamkkan', en: 'wait a moment' } as const;
+
+export function lectureBundle(locale: UiLocale, overlays?: Overlays): LectureBundle {
+  const reviewed = new Set(reviewedStrokeIds);
+  const localizedJamo = locale === 'en' ? jamoAll : jamoAll.map((j) => localizeJamo(j, locale, overlays));
+  return {
+    jamoAll: localizedJamo,
+    scopeFor: (ref) => {
+      const scope = scopeFor(ref);
+      return scope && localizeScope(scope, ref, locale, overlays);
+    },
+    questById: (id) => {
+      const quest = questById(id);
+      return quest && localizeQuest(quest, locale, overlays);
+    },
+    episodeById: (id) => {
+      const episode = episodeById(id);
+      return episode && localizeEpisode(episode, locale, overlays);
+    },
+    cardById: (id) => {
+      const card = cardById(id);
+      return card && localizeCard(card, locale, overlays);
+    },
+    hasStrokes: (id) => strokesForJamo(id) !== undefined,
+    strokeReviewed: (id) => reviewed.has(id),
+  };
+}
