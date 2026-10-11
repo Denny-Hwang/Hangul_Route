@@ -27,6 +27,31 @@ export const SelfRouteSummarySchema = z.object({
 });
 export type SelfRouteSummary = z.infer<typeof SelfRouteSummarySchema>;
 
+/**
+ * Stage-level counts of My route for the console strip (F-ROUTE-001 section
+ * 3.12), about 300 bytes. `stage` and `state` stay plain strings on the wire
+ * (the web strip validates them and ignores what it does not know); `total`
+ * sizes a segment and is never shown as a goal. No per-quest detail.
+ */
+export const JourneySummarySchema = z.object({
+  v: z.literal(1),
+  here: z.string().nullable(),
+  stages: z.array(
+    z.object({
+      stage: z.string(),
+      /** 'complete' | 'known' | 'explored' | 'open' | 'later' */
+      state: z.string(),
+      /** Done grid quests in that stage. */
+      done: z.number().int().nonnegative(),
+      /** Placed out and not done. */
+      known: z.number().int().nonnegative(),
+      /** Grid quests this build offers there. */
+      total: z.number().int().nonnegative(),
+    }),
+  ),
+});
+export type JourneySummary = z.infer<typeof JourneySummarySchema>;
+
 /** Client-computed aggregate; the only column caregivers/teachers read (roadmap §3.3). */
 export const ProgressSummarySchema = z.object({
   schemaVersion: z.literal(1),
@@ -62,6 +87,8 @@ export const ProgressSummarySchema = z.object({
   ),
   /** Self-route counts (F-PLAN-002 section 3.5); removed from every roster but a family's. Malformed counts are dropped, never fatal. */
   selfRoute: SelfRouteSummarySchema.optional().catch(undefined),
+  /** My route stage counts (F-ROUTE-001 R-8); class and family rosters read it. Malformed is dropped, never fatal. */
+  journey: JourneySummarySchema.optional().catch(undefined),
 });
 export type ProgressSummary = z.infer<typeof ProgressSummarySchema>;
 
