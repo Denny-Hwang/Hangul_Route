@@ -1,4 +1,4 @@
-import type { RouteCatalog, RouteQuest, RouteSeed } from '@hangul-route/content-schema';
+import type { PlacementResult, RouteCatalog, RouteQuest, RouteSeed } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import { stripCopyProblems } from '../copy';
@@ -68,7 +68,7 @@ const input = (over: Partial<ResultViewInput> = {}): ResultViewInput => ({
 });
 
 describe('shortHintFires (section 3.9)', () => {
-  const short = (gates: Parameters<typeof placementResult>[0]['gates']) =>
+  const short = (gates: PlacementResult['gates']) =>
     placementResult({ mode: 'short', length: 'quick', gates });
 
   it('fires after a Short with sound-basic passed and syl-cv at least 2 correct', () => {
@@ -219,7 +219,7 @@ describe('resultView: the weekly-plan strip matrix (AM-9)', () => {
         expect(view.secondary).toBe(expected ? 'justStart' : null);
         const plan = cell.profileType === 'child' && cell.routeEnabled && cell.proposalAvailable;
         expect(view.links).toContain(plan ? 'forGrownUpsPlan' : 'forGrownUps');
-        expect(view.links.filter((l) => l === 'usePlan')).toEqual([]);
+        expect(view.links).not.toContain(view.primary);
       }
     });
   }
