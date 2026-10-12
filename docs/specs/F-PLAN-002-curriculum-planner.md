@@ -76,7 +76,7 @@ export const CurriculumParamsSchema = z.object({
 }).superRefine(/* sessionDays unique; weeks * sessions <= 260; each daysOff.from <= to; startDate valid */);
 ```
 
-Presets and defaults (`curriculum/presets.ts`, exported constants, one test each). Length presets are **choices**; `generateCurriculum` pre-selects none. The **recommended** length comes from `proposeRoute` (section 3.1a): `DEFAULT_SHORT_MAX = 4`, `DEFAULT_TERM_MAX = 16`. **Pace presets** `PACES = { gentle: 2, steady: 3, brisk: 4 }` sessions a week; the default pace is `gentle` for levelOrder 0 and for classes, `steady` otherwise (OD-13). The audience rhythm row of the defaults table changes accordingly (self 4 -> steady 3). (FP-B2)
+Presets and defaults (`curriculum/presets.ts`, exported constants, one test each). Length presets are **choices**; `generateCurriculum` pre-selects none. The **recommended** length comes from `proposeRoute` (section 3.1a): `DEFAULT_SHORT_MAX = 4`, `DEFAULT_TERM_MAX = 16`. **Pace presets** `PACES = { gentle: 2, steady: 3, brisk: 4 }` sessions a week; the default pace is `gentle` for levelOrder 0 and for classes, `steady` otherwise (OD-13, decided 2026-10-12). The audience rhythm row of the defaults table changes accordingly (self 4 -> steady 3). (FP-B2)
 
 | Preset | `weeks` | Meaning |
 |---|---|---|
@@ -293,7 +293,7 @@ Display fixes (three commits inside PR P2-5):
 - **New content.** A coming-soon episode that ships needs no regeneration: its `episode` item expands to the new quests at derivation (`plan-derivation.ts:72`). The wizard offers **Refresh route** (a normal `regenerateFrom` with `mode: 'shift'` and the current catalogue) when `catalogVersion` is older than the app's.
 - **Per-learner overrides** inside a class plan stay out of scope (F-PLAN-001 section 4).
 
-**Hoya check-in** (P2-7b, OD-13): once, at the start of week 5 of an active self plan, a positive card offers a pace change computed from sessions actually finished in weeks 1-4: fewer than half -> "Want a lighter week?" (Gentle); every session -> "Want to go a bit faster?" (one step up). It never names a missed or late session, can be closed with **Not now**, and applies through `regenerateFrom(..., 'shift')` with the new sessions a week. (FP-B14)
+**Hoya check-in** (P2-7b, OD-13, decided 2026-10-12): once, at the start of week 5 of an active self plan, a positive card offers a pace change computed from sessions actually finished in weeks 1-4: fewer than half -> "Want a lighter week?" (Gentle); every session -> "Want to go a bit faster?" (one step up). It never names a missed or late session, can be closed with **Not now**, and applies through `regenerateFrom(..., 'shift')` with the new sessions a week. (FP-B14)
 
 ### 3.8 Console wizard (class and family): `/teach/space/curriculum?id=`
 
@@ -408,11 +408,11 @@ Coverage: `packages/content-schema` 100 % (including `curriculum/` and `catalog/
 | P2-0 | `docs`: `AMENDMENTS-PLC-PLAN-HANDOFF.md` applied (FP-B1 to FP-B15, errata E-1 to E-5); the same PR is F-ROUTE-001 R-0 and F-PLC-001 P-0b | S | — |
 | P2-2 | `feat(content-schema)`: `catalog/` (schema, data, `routeCatalogOf`), mobile parity test, frozen fixture | M | merged (#175) with the 8 shipped quests and a parity test (`catalog/data.ts:9-12`); Q-6a and Q-6b grow `catalog/data.ts` through that test. The F-QUEST-002 dependency for `teaches` is Q-6a (quests 1-3), not Q-6b (E-5) |
 | P2-3a | `feat(content-schema)`: generator, presets incl. `PACES`, `toPlanItems`, the existing goldens (FP-B11) | L | P2-1, P2-2, F-PLC-001 P-3 (`questsPlacedOutAtLevel`; the PR adds the same function if absent) |
-| P2-3b | `feat(content-schema)`: `propose.ts`, `regenerateFrom` `reseed`, the 1.2 goldens, the benchmark gate (FP-B11) | M | P2-3a, OD-12, OD-13 |
+| P2-3b | `feat(content-schema)`: `propose.ts`, `regenerateFrom` `reseed`, the 1.2 goldens, the benchmark gate (FP-B11) | M | P2-3a (OD-12 and OD-13 decided by the owner 2026-10-12: accepted as proposed) |
 | P2-4 | `feat(content-schema,backend,api)`: `PlanItem.week`, `meta`, cap, snapshot / summary `selfRoute`, the Worker preserve rule for `selfRoute` (shared helper with F-VOC-005 P-1 / F-PLC-001 P-2), telemetry names (+ rows in `docs/roadmap/TELEMETRY-NAMES-2.md`), migration `0006` (E-1: or the next free number when opened), inbox `?cap=`, roster redaction; `docs`: the F-PLAN-001 amendments of this spec's header (sections 3.1, 3.2, 3.3, 3.5). **Deploy (migration, then Worker) before any app or console build** | M | P2-3a |
 | P2-5 | `feat(mobile)`: `withSnapshotDefaults`, derivation (horizon, reconcile, precedence, sources), display fixes (merger, Home count, Homework list), `cap=curriculum` in `getInbox` | M | P2-4 |
 | P2-6 | `feat(web)`: shared catalogue adapter (retires `stage1-catalog.ts`), wizard page (no length pre-selected; the rhythm starts from the audience table of section 3.1), builder week grouping, readout, plan switcher, re-pace (`shift`), entries | L | P2-4 |
-| P2-6b | `feat(web)`: the wizard pre-selects pace and length with a *Suggested* tag and a per-length preview line, pace chips, themes / focus / motivation prefilled from `proposeRoute` (section 3.8 steps 1, 2 and 4); family learner card 'Update the plan' (`reseed`); the `curriculum.test.ts (extend)` row of section 5 (FP-B11). Split from P2-6 because it needs `proposeRoute` and the owner decisions | S-M | P2-6, P2-3b, OD-12, OD-13 |
+| P2-6b | `feat(web)`: the wizard pre-selects pace and length with a *Suggested* tag and a per-length preview line, pace chips, themes / focus / motivation prefilled from `proposeRoute` (section 3.8 steps 1, 2 and 4); family learner card 'Update the plan' (`reseed`); the `curriculum.test.ts (extend)` row of section 5 (FP-B11). Split from P2-6 because it needs `proposeRoute` and the owner decisions (OD-12, OD-13 decided 2026-10-12) | S-M | P2-6, P2-3b |
 | P2-7a | `feat(mobile)`: `route-store`, `RouteProposalScreen`, Home prompt with eligibility and dismissal, Profile row, flag (FP-B11). **Lands before F-PLC-001 P-7b**, so the one-tap default plan exists for learners without a level check first | M-L | P2-5, P2-3b |
 | P2-7b | `feat(mobile)`: setup steps, preview, overview, auto re-pace, Hoya check-in (FP-B11) | M | P2-7a |
 | P2-8 | `test(e2e)` + wireframes promoted + flag flip for beta | S | P2-6, P2-6b, P2-7a, P2-7b |
@@ -456,7 +456,7 @@ Binding owner decisions applied (not re-opened): **D1** audience any age (`level
 8. Home dots for the week assume the existing `Progress`/fill components can render dots without a numeric label; if not, a small design-system addition is needed (flagged for the design step).
 9. The entitlement lookup assumes `EntitlementView` identifies its subject space (the billing page already labels cards per space, `lib/console/billing.ts:11-20`); the exact field names were not read here.
 10. The inbox `?cap=curriculum` approach assumes every shipped app version that can parse `meta` also sends the parameter; an app that parses `meta` without the horizon logic must not ship.
-11. **Default length rule and pace chips** — owner decisions OD-12 and OD-13 (F-ROUTE-001 section 9); the 1.2 table is hand-estimated and pinned by the P2-3b goldens. (FP-B12)
+11. **Default length rule and pace chips** — owner decisions OD-12 and OD-13 (F-ROUTE-001 section 9), **decided 2026-10-12: accepted as proposed** (thresholds 4 and 16 weeks; Gentle 2 / Steady 3 / Brisk 4, default Gentle for "Pictures first" and for classes, Steady otherwise; Hoya check-in after week 4); the 1.2 table is hand-estimated and pinned by the P2-3b goldens. (FP-B12)
 12. **One-tap plan for a self profile on any device** — OD-14.
 
 ---

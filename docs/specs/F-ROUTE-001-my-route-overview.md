@@ -71,7 +71,7 @@ Terms. **Pip**: one drawn shape for one grid quest (or one not-yet-shipped cell)
 |---|---|---|
 | "where they are in the whole journey, at a glance" | M1: the page, Home strip, Journey entry | — |
 | "starts at any level" | M2: the level-check result proposes a weekly plan; M3: start marker on the page | Stage 1 placement only works after F-QUEST-002 Q-6a fills `teaches` |
-| "a default curriculum after the level test" | M2 (amendments) | OD-1 (sound guide), OD-12 (length rule), OD-13 (pace) |
+| "a default curriculum after the level test" | M2 (amendments) | OD-1 (sound guide); OD-12 (length rule) and OD-13 (pace) decided 2026-10-12 |
 | "a pace that suits their level and growth" | M2: three pace chips; later a week-4 check-in | growth-based re-pacing is a later spec (gap G9) |
 | "a defined level of reading, listening, writing" | v1 goal line "Finish Stage 1"; can-do line per stage | OD-9 defines the end state per skill |
 
@@ -518,6 +518,8 @@ Spec decisions (reversible, engineering only; product calls are in section 9):
 
 **Owner decisions** (one list for this spec and the amendments; each has a default that applies if unanswered, and gates only the named PRs):
 
+**Answered 2026-10-12 (owner):** OD-12 and OD-13 are accepted as proposed (rows below). Their gates on F-PLAN-002 P2-3b, P2-6b and P2-7b and on the amendments are lifted; those rows now wait only for their code dependencies.
+
 | Id | Question | Default | What it changes | Gates | Reversible |
 |---|---|---|---|---|---|
 | OD-1 | Sound-guide default before the level check (F-PLC-001 assumption 11; gap G6) | (c) hiding the guide is an explicit first choice with no pre-selection, plus honest result copy for not-tested runs (AM-14) | whether most learners get a real reading level | F-PLC-001 P-6 (and P-4 only if (b) is chosen: an amendment PR to merged `assessment/select.ts` / `placement/rungs.ts` plus a bank change, about 1 M PR) | yes |
@@ -531,8 +533,8 @@ Spec decisions (reversible, engineering only; product calls are in section 9):
 | OD-9 | The defined level per skill | v1: reading and listening = Stage 1 complete (Hangul Check met); writing = the Stage 1 trace games; speaking = not in this version (roadmap) | goal line, can-do lines | R-3 goal line | yes |
 | OD-10 | Stage 2 anchor (60 or 200 words) | no number shown anywhere | nothing in v1 | — | yes |
 | OD-11 | `summary.journey` visible to class teachers (not only family organizers); skills stay local | yes, like `stage1` | console | R-8, R-9a | yes |
-| OD-12 | Default plan length rule (thresholds 4 and 16 weeks) | the rule | proposal | F-PLAN-002 P2-3b | yes |
-| OD-13 | Pace: three chips (Gentle 2 / Steady 3 / Brisk 4); default Gentle for "Pictures first" and for classes, Steady otherwise (self moves from 4 to 3); a positive "Hoya check-in" after week 4 | yes | proposal, presets | P2-3b (chips), P2-7b (check-in) | yes |
+| OD-12 | Default plan length rule (thresholds 4 and 16 weeks) | **Decided by the owner (2026-10-12): accepted as proposed.** The length rule of `AMENDMENTS-PLC-PLAN-HANDOFF.md` section 1 applies with `DEFAULT_SHORT_MAX = 4` and `DEFAULT_TERM_MAX = 16` weeks (recommended 4 / 12 / 26 weeks) | proposal | F-PLAN-002 P2-3b, P2-6b (no longer gated) | yes |
+| OD-13 | Pace: three chips (Gentle 2 / Steady 3 / Brisk 4); default Gentle for "Pictures first" and for classes, Steady otherwise (self moves from 4 to 3); a positive "Hoya check-in" after week 4 | **Decided by the owner (2026-10-12): accepted as proposed.** `PACES = { gentle: 2, steady: 3, brisk: 4 }` sessions a week; default `gentle` for "Pictures first" (levelOrder 0) and for classes, `steady` otherwise (self moves from 4 to 3); the positive Hoya check-in once at the start of week 5 (`AMENDMENTS-PLC-PLAN-HANDOFF.md` section 1.1, F-PLAN-002 section 3.9) | proposal, presets | P2-3b (chips), P2-6b, P2-7b (check-in) (no longer gated) | yes |
 | OD-14 | One-tap plan for a **self** profile on any device (also a family or PIN device); a child profile only through the grown-up | yes | result strip visibility | F-PLC-001 P-7b | yes |
 | OD-15 | Start day "Today" for self and family | yes | proposal | P2-7a | yes |
 | OD-16 | After "Not now" / "Just start", hide the plan prompt until the next placement result or 14 days | 14 days | Home card, strip | P2-7a | yes |
@@ -615,7 +617,7 @@ Independent review applied 2026-10-10 (`docs/roadmap/spec-review-route-001.md`, 
 | UX: Journey Open / Taste / Soon renamed to the My route set | partial | "Soon" -> "Coming later" and "Premium" removed (R-J, OD-8); "Taste" stays as availability ("A taste" on both screens) because it describes content, not the learner |
 | R-J review: unentitled stage header still a button announced "locked. Opens the unlock page." that opened PIN then Paywall | fixed in R-J | with the Premium pill gone it was an invisible lock-for-payment door (section 3.3); the header is a plain row on the learner Journey, plans stay reachable from the grown-up area (Profile) |
 | R-J review: episode-level "Coming soon" (episode page, its pane, the grid cell label, preview subtitles) | deferred | R-J and OD-8 cover the stage pill only; the episode-level words are F-STORY-005 content and change in one sweep with their tests |
-| UX: pace "Hoya check-in after week 4" in v1 | deferred | recorded as OD-13 and placed in P2-7b, not in the one-tap path |
+| UX: pace "Hoya check-in after week 4" in v1 | deferred | recorded as OD-13 (accepted by the owner 2026-10-12) and placed in P2-7b, not in the one-tap path |
 | Data: R-7a after Q-6b | changed to Q-6a | Q-6a delivers quests 1-3 with the first non-empty `teaches` (`F-QUEST-002` line 454); scope finding agrees |
 | R-8 review: a device missing another device's `stageDoneAt` latch uploads a journey whose stage is not yet `complete` while the Worker keeps the latch | accepted | `summary` is the client aggregate by design (no server recompute); the stale state lasts until that device pulls the merged payload on its next conflict and re-summarizes; an old build next to a new one also makes `journey` come and go. The R-9a strip must not treat a missing journey as "no progress" |
 | R-8 review: log or count a failed `journeySummaryOf` | adapted | app code has no console or error channel (CLAUDE.md) and a telemetry name needs its own spec row; instead `content/__tests__/sync-context.test.ts` runs it over the live bundle for an empty and a full learner, so a bundle change that breaks it fails CI |
