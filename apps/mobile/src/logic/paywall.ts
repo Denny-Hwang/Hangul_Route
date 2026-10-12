@@ -37,7 +37,7 @@ export interface PlanView {
    * is free list and at most one situation line (`planFreeLines`, row E3-8).
    */
   freeSlot: FreeSlot | null;
-  /** The guidance slot under the full-route lines: F-ENT-003's no-plan line while its switch is on, else empty. */
+  /** The guidance slot under the full-route lines: F-ENT-003's no-plan line (item 10, any switch) when the learner has no plan, else empty. */
   guidance: readonly string[];
   /**
    * Web only: the caption, the Open billing button, its hint and the line shown back from a correct

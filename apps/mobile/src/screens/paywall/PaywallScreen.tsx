@@ -11,9 +11,8 @@ import { vocabTopics } from '../../content/vocab';
 import { useMessages } from '../../i18n/use-messages';
 import { freeExtrasCount } from '../../logic/content-access';
 import { cursorContext } from '../../logic/cursor-context';
-import { sourcesOf } from '../../logic/homework/plan-derivation';
 import { billingNote, billingOpenedEvent, billingPressStep, pendingBillingStep, planView } from '../../logic/paywall';
-import { classOnlyMember, freeEndOnCursor, readFreeFacts, type FreePlanContext } from '../../logic/plan-free-lines';
+import { classOnlyMember, freeEndOnCursor, hasPlanNow, readFreeFacts, type FreePlanContext } from '../../logic/plan-free-lines';
 import { grownUpEntriesOn, planOpenBlocked } from '../../logic/shell/entry-points';
 import type { RootStackParamList } from '../../navigation/types';
 import { openBilling } from '../../platform/billing-handoff';
@@ -57,7 +56,8 @@ export function PaywallScreen({ navigation, route }: Props): React.ReactElement 
   const entitled = effectiveTier(profile?.id ?? '', new Date());
   void cached; // re-render when the inbox updates the tier
 
-  // F-ENT-003 section 3.9.1 (E3-8): the slots' data, read only while the effective switch is on.
+  // F-ENT-003 section 3.9.1 (E3-8): the slots' data. The free slot's data is read only while the
+  // effective switch is on; whether a plan exists feeds the premium no-plan line (item 10, any switch).
   const gating = gatingActive(flags, bundleOs());
   const learnerId = profile?.id ?? '';
   const accessTier = useAccessTier(learnerId);
@@ -66,10 +66,11 @@ export function PaywallScreen({ navigation, route }: Props): React.ReactElement 
   const memberships = useMembershipStore((s) => (profile ? s.byLearner[profile.id] : undefined));
   const plans = usePlanStore((s) => (profile ? s.byLearner[profile.id] : undefined));
   useEffect(() => {
-    if (gating && learnerId) void usePlanStore.getState().hydrate(learnerId);
-  }, [gating, learnerId]);
-  const freePlan = useMemo((): FreePlanContext | null => {
-    if (!gating) return null;
+    if (learnerId) void usePlanStore.getState().hydrate(learnerId);
+  }, [learnerId]);
+  const freePlan = useMemo((): FreePlanContext => {
+    const hasPlan = hasPlanNow(plans, snap);
+    if (!gating) return { gatingActive: false, facts: null, stories: 0, topics: 0, classOnly: false, freeEnd: false, hasPlan };
     const freeEnd =
       snap !== undefined &&
       freeEndOnCursor({
@@ -80,14 +81,7 @@ export function PaywallScreen({ navigation, route }: Props): React.ReactElement 
         episodes: episodesAll,
         cursor: cursorContext({ tier: accessTier, placements: snap.placements, quests: questsAll, episodes: episodesAll, isQuestOpen: questOpen }),
       });
-    return {
-      gatingActive: gating,
-      ...freeBundleFacts(),
-      classOnly: classOnlyMember(memberships),
-      freeEnd,
-      // Plans not read yet count as a plan, so the no-plan line never flashes before they load.
-      hasPlan: plans === undefined || sourcesOf(plans, snap?.selfRoute).length > 0,
-    };
+    return { gatingActive: gating, ...freeBundleFacts(), classOnly: classOnlyMember(memberships), freeEnd, hasPlan };
   }, [gating, accessTier, questOpen, snap, memberships, plans]);
 
   const view = planView(

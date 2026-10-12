@@ -44,7 +44,7 @@ export function FreePlanLines({ slot }: { slot: FreeSlot }): React.ReactElement 
   );
 }
 
-/** Under the full-route lines: F-ENT-003's "Set a plan to guide what comes next." (and on the web the grown-up page line) while its switch is on and no plan exists. */
+/** Under the full-route lines: F-ENT-003's "Set a plan to guide what comes next." (and on the web the grown-up page line) when no plan exists, whatever the switch (item 10). */
 export function PlanGuidanceLine({ lines }: { lines: readonly string[] }): React.ReactElement | null {
   if (lines.length === 0) return null;
   return (

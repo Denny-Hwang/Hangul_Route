@@ -44,11 +44,12 @@ describe('Plan screen (screens/paywall/PaywallScreen.tsx)', () => {
     expect(plan).toContain('<PlanGuidanceLine');
   });
 
-  it('F-ENT-003 E3-8: fills the slots from the view, with data read only while the effective switch is on', () => {
+  it('F-ENT-003 E3-8: fills the slots from the view; free-slot data only while the switch is on, the plan check always', () => {
     expect(plan).toContain('<FreePlanLines slot={view.freeSlot}');
     expect(plan).toContain('<PlanGuidanceLine lines={view.guidance}');
     expect(plan).toContain('gatingActive(flags, bundleOs())');
-    expect(plan).toMatch(/if \(!gating\) return null;/);
+    expect(plan).toMatch(/if \(!gating\) return \{ gatingActive: false, facts: null, stories: 0, topics: 0, classOnly: false, freeEnd: false, hasPlan \};/);
+    expect(plan).toContain('hasPlanNow(plans, snap)');
     expect(plan).toContain('freeLessonsFacts(CATALOG)');
     expect(plan).toContain('freeEndOnCursor(');
     expect(plan).toContain('classOnlyMember(');

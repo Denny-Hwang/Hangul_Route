@@ -1,7 +1,8 @@
-import type { Episode, FreeLessonsFacts, LearnerMembership, ProgressSnapshot, Quest } from '@hangul-route/content-schema';
+import type { Episode, FreeLessonsFacts, InboxPlan, LearnerMembership, ProgressSnapshot, Quest } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
 import type { CursorContext } from './cursor-context';
 import type { Tier } from './entitlement';
+import { sourcesOf } from './homework/plan-derivation';
 import { nextQuestAfter, offerableQuests } from './next-quest';
 import type { PaywallState } from './paywall';
 import type { DeviceAudience } from './profiles/learner-type';
@@ -9,12 +10,17 @@ import type { DeviceAudience } from './profiles/learner-type';
 /**
  * The lines F-ENT-003 adds to F-BILL-002's learner Plan screen (F-ENT-003 section 3.9.1, row E3-8;
  * wireframe billing/plan-status-free-lessons; slots of design/screens/billing/plan-status.md).
- * Words only: no price, no offer, no button, no link. Everything here shows only while the
- * effective switch (`gatingActive`) is on; with it off the screen is F-BILL-002's, unchanged
- * (OD-2, D5). Every figure comes from `freeLessonsFacts` and the build's bundle, never typed.
+ * Words only: no price, no offer, no button, no link. The free slot's lines show only while the
+ * effective switch (`gatingActive`) is on; with it off the free slot is F-BILL-002's, unchanged
+ * (OD-2, D5). The premium no-plan line is plan guidance (item 10, section 3.9.4), not the free
+ * boundary, so it shows whatever the switch. Every figure comes from `freeLessonsFacts` and the
+ * build's bundle, never typed.
  */
 
-/** What the screen reads for these lines, gathered by the screen from the stores. */
+/**
+ * What the screen reads for these lines, gathered by the screen from the stores. With the switch
+ * off the screen still passes `hasPlan`; the free-slot fields are then unused.
+ */
 export interface FreePlanContext {
   /** `gatingActive(flags, bundleOs())`: the web app with the switch on. */
   gatingActive: boolean;
@@ -28,7 +34,7 @@ export interface FreePlanContext {
   classOnly: boolean;
   /** The learner finished everything open on the free plan (`freeEndOnCursor`). */
   freeEnd: boolean;
-  /** The learner has a plan to follow: an inbox plan or an active self plan (`sourcesOf`). */
+  /** The learner has a plan to follow: an inbox plan or an active self plan (`hasPlanNow`). */
   hasPlan: boolean;
 }
 
@@ -53,7 +59,7 @@ export interface FreeSlot {
 export interface PlanFreeLines {
   /** Null outside the free state. */
   free: FreeSlot | null;
-  /** The guidance slot under the full-route lines; empty unless the switch is on and no plan exists. */
+  /** The guidance slot under the full-route lines; empty unless the learner has no plan (any switch). */
   guidance: readonly string[];
 }
 
@@ -62,7 +68,7 @@ export function planFreeLines(input: PlanFreeLinesInput, m: Messages['caregiver'
   const on = ctx !== null && ctx.gatingActive;
   const family = input.audience === 'family';
   const guidance =
-    on && input.state === 'premium' && !ctx.hasPlan ? [m.freePlan.setPlan, ...(input.platform === 'web' ? [m.freePlan.setPlanWeb] : [])] : [];
+    ctx !== null && input.state === 'premium' && !ctx.hasPlan ? [m.freePlan.setPlan, ...(input.platform === 'web' ? [m.freePlan.setPlanWeb] : [])] : [];
   if (input.state !== 'free') return { free: null, guidance };
   if (!on) return { free: { line: m.free.open, list: [], extra: null }, guidance };
 
@@ -93,6 +99,14 @@ export function readFreeFacts(read: () => FreeLessonsFacts): FreeLessonsFacts | 
   } catch {
     return null;
   }
+}
+
+/**
+ * The learner has a plan to follow (an inbox plan or an active self plan, `sourcesOf`). Plans or
+ * progress not read yet count as a plan, so the no-plan line never flashes before they load.
+ */
+export function hasPlanNow(plans: readonly InboxPlan[] | undefined, snapshot: ProgressSnapshot | undefined): boolean {
+  return plans === undefined || snapshot === undefined || sourcesOf(plans, snapshot.selfRoute).length > 0;
 }
 
 /** The learner's only space memberships are classes or schools (no family space, at least one space). */

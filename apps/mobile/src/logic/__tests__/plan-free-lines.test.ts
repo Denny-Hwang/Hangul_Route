@@ -1,13 +1,13 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { CATALOG, freeLessonsFacts, freeRouteQuestIds, type FreeLessonsFacts, type ProgressSnapshot } from '@hangul-route/content-schema';
+import { CATALOG, freeLessonsFacts, freeRouteQuestIds, type FreeLessonsFacts, type ProgressSnapshot, type SelfRoute } from '@hangul-route/content-schema';
 import { LOCALES, getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
 import { episodesAll, questsAll } from '../../content';
 import { FREE_VOCAB_TOPIC_IDS, freeExtrasCount, questOpenPredicate } from '../content-access';
 import { cursorContext } from '../cursor-context';
 import { emptySnapshot } from '../my-route/view';
-import { classOnlyMember, freeEndOnCursor, planFreeLines, readFreeFacts, type FreePlanContext, type PlanFreeLinesInput } from '../plan-free-lines';
+import { classOnlyMember, freeEndOnCursor, hasPlanNow, planFreeLines, readFreeFacts, type FreePlanContext, type PlanFreeLinesInput } from '../plan-free-lines';
 import { placementResult } from '../placement/__tests__/fixtures';
 
 /**
@@ -75,9 +75,22 @@ describe('planFreeLines: the switch off keeps the view unchanged (OD-2, D5)', ()
     expect(lines({}, { gatingActive: false, classOnly: true, freeEnd: true, stories: 6 }).free).toEqual(today);
   });
 
-  it('the full route shows no guidance line, plan or not', () => {
+  it('without plan data (no context) the full route shows no guidance line', () => {
     expect(lines({ state: 'premium' }, null).guidance).toEqual([]);
-    expect(lines({ state: 'premium' }, { gatingActive: false, hasPlan: false }).guidance).toEqual([]);
+  });
+});
+
+describe('planFreeLines: the guidance line is item 10, not the free boundary (sections 3.9.1, 3.9.4; rollout)', () => {
+  it('the full route with no plan shows it with the switch off too, on native and on the web', () => {
+    expect(lines({ state: 'premium', platform: 'ios' }, { gatingActive: false }).guidance).toEqual(['Set a plan to guide what comes next.']);
+    expect(lines({ state: 'premium' }, { gatingActive: false }).guidance).toEqual([
+      'Set a plan to guide what comes next.',
+      'Plans are made in the grown-up area: Plan the term.',
+    ]);
+  });
+
+  it('nothing once a plan exists, switch on or off', () => {
+    expect(lines({ state: 'premium' }, { gatingActive: false, hasPlan: true }).guidance).toEqual([]);
   });
 });
 
@@ -143,6 +156,25 @@ describe('readFreeFacts, freeExtrasCount and classOnlyMember: the data the lines
     expect(classOnlyMember([{ kind: 'family' }])).toBe(false);
     expect(classOnlyMember([])).toBe(false);
     expect(classOnlyMember(undefined)).toBe(false);
+  });
+});
+
+describe('hasPlanNow: the no-plan line never shows before the plans and the progress are read', () => {
+  const snap = (selfRoute?: ProgressSnapshot['selfRoute']): ProgressSnapshot => ({ ...emptySnapshot('p1'), ...(selfRoute ? { selfRoute } : {}) });
+
+  it('plans or progress not read yet count as a plan', () => {
+    expect(hasPlanNow(undefined, snap())).toBe(true);
+    expect(hasPlanNow([], undefined)).toBe(true);
+  });
+
+  it('no inbox plan and no self plan: no plan', () => {
+    expect(hasPlanNow([], snap())).toBe(false);
+  });
+
+  it('an active self plan is a plan; an archived one is not', () => {
+    const route = { id: 'route:mine', createdAt: '2026-10-01', updatedAt: '2026-10-01', archivedAt: null, meta: {} as SelfRoute['meta'], items: [] };
+    expect(hasPlanNow([], snap(route))).toBe(true);
+    expect(hasPlanNow([], snap({ ...route, archivedAt: '2026-10-02' }))).toBe(false);
   });
 });
 

@@ -207,10 +207,15 @@ describe('F-ENT-003 E3-8: the free-plan lines in the slots (F-ENT-003 section 3.
     expect(web('premium', klass, ON).guidance).toEqual([]);
   });
 
-  it('switch off: the view is exactly the one without F-ENT-003 data (OD-2)', () => {
+  it('switch off, full route with no plan: the guidance lines show anyway (item 10 ships on merge)', () => {
+    expect(web('premium', family, { ...ON, gatingActive: false }).guidance).toEqual(['Set a plan to guide what comes next.', 'Plans are made in the grown-up area: Plan the term.']);
+    expect(web('premium', klass, { ...ON, gatingActive: false }).guidance).toEqual([]);
+  });
+
+  it('switch off with a plan: the view is exactly the one without F-ENT-003 data (OD-2)', () => {
     for (const { tier, source } of TIERS) {
       for (const audience of AUDIENCES) {
-        const off = web(tier, source, { ...ON, gatingActive: false, classOnly: true, freeEnd: true, stories: 3 }, audience);
+        const off = web(tier, source, { ...ON, gatingActive: false, classOnly: true, freeEnd: true, stories: 3, hasPlan: true }, audience);
         expect(off).toEqual(web(tier, source, null, audience));
       }
     }
