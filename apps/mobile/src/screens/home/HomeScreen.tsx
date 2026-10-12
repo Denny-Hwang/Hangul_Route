@@ -56,6 +56,7 @@ import { computeStreak } from '../../logic/streak';
 import { emptyBookmarks } from '../../logic/story/bookmarks';
 import { storyCoverArt } from '../../logic/story/scene-view';
 import { defaultStoryIndex, entryForQuest } from '../../logic/story/story-index';
+import { storyFitsForSnapshot } from '../../logic/story/story-fit';
 import { storyLockFor } from '../../logic/story/story-pick';
 import type { RootStackParamList } from '../../navigation/types';
 import { track } from '../../platform/telemetry';
@@ -249,6 +250,8 @@ export function HomeScreen(): React.ReactElement {
           gatingEnabled: flags.contentGatingEnabled,
           episodes: episodesAll,
         }),
+        // F-STORY-005 §3.4: stories near the learner's stage come first; it only orders, never hides.
+        fits: storyFitsForSnapshot(snap),
       },
     });
     // A caregiver or class assignment for today takes card ② (F-HW-001 §3.4, F-PLAN-001 §3.4).
