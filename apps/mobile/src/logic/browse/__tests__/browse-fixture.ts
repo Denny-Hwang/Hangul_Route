@@ -27,8 +27,8 @@ export function fixtureStories(): Story[] {
   ];
 }
 
-export function fixtureInput(): BrowseBundleInput {
-  const stories = fixtureStories();
+/** The fixture input; `stories` replaces the fixture stories (each still gets its shelf episode and listen quest). */
+export function fixtureInput(stories: Story[] = fixtureStories()): BrowseBundleInput {
   const storyQuests: Quest[] = stories.map((s) => ({ ...storyQuest(s.id.replace(/^story:/, '')), titleEn: s.title.en, estimatedMinutes: 5 }));
   return {
     stages,

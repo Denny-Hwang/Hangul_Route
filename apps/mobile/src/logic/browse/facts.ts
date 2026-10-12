@@ -19,7 +19,7 @@ import type { Skill } from '../my-route/types';
 import { questTeaches } from '../stage1/curriculum';
 import { homeCellOf } from '../story/home-cell';
 import { recapWords } from '../story/recap';
-import { entryForStory, type StoryIndexEntry } from '../story/story-index';
+import { entryForQuest, entryForStory, type StoryIndexEntry } from '../story/story-index';
 import { parseStoryMinigameRef, type StoryRef } from '../story/story-ref';
 import { localizedGloss } from '../vocab/catalog';
 import { episodeOfQuest, isOpenableEpisode, vocabTopicKey, type BrowseBundle } from './bundle';
@@ -50,14 +50,16 @@ export interface SyllableFact {
   romanization: string;
 }
 
-/** "Stage 1 · Letters · lesson 2 of 3". */
-export interface QuestPlace {
-  stage: StageKey;
-  theme: ThemeKey;
-  episodeId: string;
-  position: number;
-  count: number;
-}
+/**
+ * "Where it sits". A lesson (or a book's story quest) sits in its grid cell's
+ * episode: "Stage 1 · Letters · lesson 2 of 3". A shelf story's own quest
+ * sits where its story does, the story's home cell (F-STORY-005 section 3.2),
+ * with no lesson position: its shelf episode is not a grid cell, so it never
+ * names the place, and [ See on the Journey ] goes where the story page goes.
+ */
+export type QuestPlace =
+  | { kind: 'episode'; stage: StageKey; theme: ThemeKey; episodeId: string; position: number; count: number }
+  | { kind: 'story-home'; stage: StageKey; theme: ThemeKey; storyId: string };
 
 export interface QuestFacts {
   kind: 'quest';
@@ -226,9 +228,18 @@ function skillsOf(quest: Pick<Quest, 'steps'>): Skill[] {
 }
 
 function placeOf(questId: string, bundle: BrowseBundle): QuestPlace | null {
+  const story = entryForQuest(bundle.storyIndex, questId);
+  if (story?.placement === 'shelf') return { kind: 'story-home', ...homeCellOf(story.story), storyId: story.storyId };
   const episode = episodeOfQuest(bundle, questId);
   if (!episode) return null;
-  return { stage: episode.stage, theme: episode.theme, episodeId: episode.id, position: episode.questIds.indexOf(questId) + 1, count: episode.questIds.length };
+  return {
+    kind: 'episode',
+    stage: episode.stage,
+    theme: episode.theme,
+    episodeId: episode.id,
+    position: episode.questIds.indexOf(questId) + 1,
+    count: episode.questIds.length,
+  };
 }
 
 function questFacts(quest: Quest, bundle: BrowseBundle, locale: UiLocale, focusJamoId: string | undefined): QuestFacts {

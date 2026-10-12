@@ -6,8 +6,11 @@ import { recapWords } from '../../story/recap';
 import { storyMinigameRef } from '../../story/story-ref';
 import { localizedGloss } from '../../vocab/catalog';
 import { questTeaches } from '../../stage1/curriculum';
-import { episodeOutline, itemFacts, type QuestFacts, type StoryFacts, type TopicFacts } from '../facts';
-import { CULTURE_ID, DRAFT_ID, TALE_ID, fixtureBundle } from './browse-fixture';
+import { bookEpisode, story, storyQuest } from '../../story/__tests__/shelf-fixture';
+import type { StoryIndexEntry } from '../../story/story-index';
+import { buildBrowseBundle, isOpenableEpisode } from '../bundle';
+import { episodeOutline, itemFacts, type QuestFacts, type QuestPlace, type StoryFacts, type TopicFacts } from '../facts';
+import { CULTURE_ID, DRAFT_ID, TALE_ID, fixtureBundle, fixtureInput, fixtureStories } from './browse-fixture';
 
 /**
  * F-BROWSE-001 §4.6 (BR-4): "what this teaches" for a lesson, a story and a
@@ -217,9 +220,42 @@ describe('itemFacts: quest', () => {
     }
   });
 
-  it('where it sits: stage, theme and its place in the episode', () => {
-    expect(questFacts('quest:stage1-letters-q2').where).toEqual({ stage: 'stage1', theme: 'letters', episodeId: 'episode:stage1-letters', position: 2, count: 3 });
-    expect(questFacts('quest:stage4-rites-q1').where).toEqual({ stage: 'stage4', theme: 'rites', episodeId: 'episode:stage4-rites', position: 1, count: 1 });
+  it("where it sits: a lesson's stage, theme and its place in the episode", () => {
+    for (const episode of bundle.episodes.filter((e) => e.placement !== 'shelf' && isOpenableEpisode(e))) {
+      episode.questIds.forEach((id, i) => {
+        expect(questFacts(id).where, id).toEqual({ kind: 'episode', stage: episode.stage, theme: episode.theme, episodeId: episode.id, position: i + 1, count: episode.questIds.length });
+      });
+    }
+  });
+
+  it("a shelf story's own quest sits where its story does: the home cell, with no lesson position", () => {
+    const far = story('river-day', { recommendedStage: 3, theme: 'life' });
+    const withFar = buildBrowseBundle(fixtureInput([...fixtureStories(), far]));
+    const entry = withFar.storyIndex.find((e) => e.storyId === far.id) as StoryIndexEntry;
+    // the shelf episode a story quest lives in is not a grid cell, so it never names the place
+    expect(withFar.episodes.find((e) => e.id === entry.episodeId)).toMatchObject({ placement: 'shelf', stage: 'stage1' });
+    const facts = itemFacts({ kind: 'quest', id: entry.questId }, withFar) as QuestFacts;
+    expect(facts.where).toEqual({ kind: 'story-home', stage: 'stage3', theme: 'life', storyId: far.id });
+    const storyWhere = (itemFacts({ kind: 'story', id: far.id }, withFar) as StoryFacts).where;
+    expect({ stage: facts.where?.stage, theme: facts.where?.theme }).toEqual(storyWhere);
+    for (const shelf of bundle.storyIndex) expect((questFacts(shelf.questId).where as QuestPlace).kind, shelf.questId).toBe('story-home');
+  });
+
+  it("a book story's quest sits in its book, the grid cell, with its place there", () => {
+    const tale = fixtureStories()[0] as Story;
+    const bookQuest = { ...storyQuest('hangul-day', 'read-along'), titleEn: 'Read along', estimatedMinutes: 5 } as Quest;
+    const book = bookEpisode('episode:stage5-letters', [bookQuest.id]);
+    const input = fixtureInput([tale]);
+    const withBook = buildBrowseBundle({ ...input, episodes: [...input.episodes.filter((e) => e.id !== book.id), book], quests: [...input.quests, bookQuest] });
+    expect(withBook.storyIndex.find((e) => e.questId === bookQuest.id)?.placement).toBe('grid');
+    expect((itemFacts({ kind: 'quest', id: bookQuest.id }, withBook) as QuestFacts).where).toEqual({
+      kind: 'episode',
+      stage: 'stage5',
+      theme: 'letters',
+      episodeId: book.id,
+      position: 1,
+      count: 1,
+    });
   });
 
   it('a taste quest that introduces no letter shows its first three words, glossed in the UI language', () => {
