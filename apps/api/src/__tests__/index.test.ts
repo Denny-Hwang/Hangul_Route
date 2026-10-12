@@ -48,4 +48,15 @@ describe("apps/api router", () => {
       expect(await res.json()).toMatchObject({ ok: false, error: { code: "transfers_locked" } });
     }
   });
+
+  it("mounts the note send routes switched off: 404 not_found without NOTES_SEND, before any binding is needed (F-FEEDBACK-001 FB-3a)", async () => {
+    for (const [method, path] of [
+      ["POST", "/api/spaces/space:a/notes"],
+      ["GET", "/api/spaces/space:a/notes/recipients"],
+    ]) {
+      const res = await app.request(path, { method });
+      expect(res.status, `${method} ${path}`).toBe(404);
+      expect(await res.json()).toMatchObject({ ok: false, error: { code: "not_found" } });
+    }
+  });
 });

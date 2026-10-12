@@ -728,7 +728,7 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:family-me",
     "glosses": {
       "en": "I, me",
-      "es": "yo, mí"
+      "es": "yo"
     }
   },
   {
@@ -1400,7 +1400,7 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:sport-running",
     "glosses": {
       "en": "running",
-      "es": "correr"
+      "es": "carrera"
     }
   },
   {
@@ -1412,7 +1412,7 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:sport-jumprope",
     "glosses": {
       "en": "jump rope",
-      "es": "saltar la cuerda"
+      "es": "salto de cuerda"
     }
   },
   {
@@ -1496,7 +1496,7 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     "visual": "word:culture-bibimbap",
     "glosses": {
       "en": "bibimbap (mixed rice bowl)",
-      "es": "bibimbap (tazón de arroz mixto)"
+      "es": "bibimbap (tazón de arroz mezclado)"
     }
   },
   {
@@ -1620,7 +1620,7 @@ export const VOCAB_CATALOG: readonly VocabCatalogEntry[] = [
     }
   },
   {
-    "id": "vocab:dol",
+    "id": "vocab:dol-stone",
     "ko": "돌",
     "romanization": "dol",
     "en": "stone",

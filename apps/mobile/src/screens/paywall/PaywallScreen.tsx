@@ -11,12 +11,14 @@ import { vocabTopics } from '../../content/vocab';
 import { useMessages } from '../../i18n/use-messages';
 import { freeExtrasCount } from '../../logic/content-access';
 import { dayKey } from '../../logic/homework/mission-builder';
-import { billingNote, billingOpenedEvent, billingPressStep, pendingBillingStep, planView } from '../../logic/paywall';
+import { billingHandOffStep, billingPressStep, pendingBillingStep, planView } from '../../logic/paywall';
 import { classOnlyMember, freeEndNow, hasPlanNow, readFreeFacts, type FreePlanContext } from '../../logic/plan-free-lines';
-import { grownUpEntriesOn, planOpenBlocked } from '../../logic/shell/entry-points';
+import { planOpenBlocked } from '../../logic/shell/entry-points';
+import { grownUpPinParams } from '../../logic/shell/handoff-rules';
 import type { RootStackParamList } from '../../navigation/types';
-import { openBilling } from '../../platform/billing-handoff';
+import { BILLING_HANDOFF, billingOpensSameTab, openBilling } from '../../platform/billing-handoff';
 import { HAND_OFF_NEEDS_TAP } from '../../platform/external-link';
+import { isOnline } from '../../platform/online';
 import { focusForScreenReader } from '../../platform/screen-reader';
 import { track } from '../../platform/telemetry';
 import { useAudience } from '../../store/audience';
@@ -46,7 +48,10 @@ function freeBundleFacts(): { facts: FreePlanContext['facts']; stories: number; 
  * (a browser may block a tab opened outside a tap); the session is open then, so that tap opens it.
  * F-APP-001 A-7 (sections 3.6, 3.12, 3.19; mock app-shell/learner-entry.md): with the grown-up home
  * flag on (web) and the browser offline, Open billing is disabled with "Needs the internet" under it
- * as its description, and re-enables on `online`. The same-tab hand-off is F-BILL-002 B-9b.
+ * as its description, and re-enables on `online`.
+ * B-9b: with the grown-up home flag on (web), billing opens in this tab through F-APP-001's
+ * grown-up hand-off (no new tab, so no extra tap after the PIN); a PIN older than 2 minutes opens the
+ * grown-up area's own PIN screen first, which hands off after a correct PIN.
  */
 export function PaywallScreen({ navigation, route }: Props): React.ReactElement {
   const { audience } = useAudience();
@@ -95,37 +100,52 @@ export function PaywallScreen({ navigation, route }: Props): React.ReactElement 
   const [note, setNote] = useState<string | null>(null);
   const from = route.params?.from ?? 'settings';
   const profileId = profile?.id;
+  const sameTab = billingOpensSameTab();
   const online = useOnline();
-  const offline = planOpenBlocked(grownUpEntriesOn(flags.grownUpHomeEnabled, bundleOs()), online);
+  const offline = planOpenBlocked(sameTab, online);
   const needsInternet = messages.learner.welcome.grownUps.needsInternet;
 
   useEffect(() => {
     void track({ name: 'paywall.viewed', profileId, payload: { state, from } });
   }, [state, from, profileId]);
 
+  // One hand-off at a time: the same-tab hand-off waits up to a second for its event before it
+  // leaves, and a second press in that window would run it twice (B-9b review). Cleared after each
+  // run, so a page restored from the back/forward cache can open billing again.
+  const busy = useRef(false);
   const handOff = useCallback(async (): Promise<void> => {
-    const { outcome, url } = await openBilling();
-    setNote(billingNote(outcome, url, messages));
-    const event = billingOpenedEvent(outcome, state);
-    if (event) void track({ ...event, profileId });
-  }, [messages, profileId, state]);
+    // Back from the gate while offline with the flag on, no hand-off starts either (the live
+    // network state, not the last render's): the button is disabled with "Needs the internet".
+    if (planOpenBlocked(sameTab, isOnline())) return;
+    if (busy.current) return;
+    busy.current = true;
+    try {
+      const step = billingHandOffStep(await openBilling(sameTab), state, messages);
+      setNote(step.note);
+      if (step.event) void track({ ...step.event, profileId });
+      if (step.askPin) navigation.navigate('PinEntry', grownUpPinParams(BILLING_HANDOFF));
+    } finally {
+      busy.current = false;
+    }
+  }, [messages, navigation, profileId, sameTab, state]);
 
   // A press waiting on the gate, back here: dropped when the gate was cancelled. Once the PIN is
   // through, native opens billing; the web asks for one more tap (a tab opened outside a tap may be
   // blocked) and moves focus to Open billing, and with the session open that tap opens it directly.
+  // The same-tab hand-off (B-9b) opens no tab, so it goes on by itself.
   const pending = useRef(false);
   const openRef = useRef<View>(null);
   const gateDone = view.billing?.gateDone ?? null;
   useFocusEffect(
     useCallback(() => {
-      const step = pendingBillingStep(pending.current, gateOpensDirectlyNow(), HAND_OFF_NEEDS_TAP);
+      const step = pendingBillingStep(pending.current, gateOpensDirectlyNow(), HAND_OFF_NEEDS_TAP && !sameTab);
       pending.current = false;
       if (step === 'open') void handOff();
       else if (step === 'tap-again' && gateDone !== null) {
         setNote(gateDone);
         focusForScreenReader(openRef.current);
       }
-    }, [handOff, gateDone]),
+    }, [handOff, gateDone, sameTab]),
   );
 
   const onOpenBilling = (): void => {

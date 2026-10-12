@@ -84,7 +84,7 @@ export const VOCAB_TOPICS: readonly VocabTopic[] = [
     "hoyaIntroEn": "Who is in your family? Let's learn a word for each person.",
     "tint": "theme.rites",
     "coverItemId": "vocab:gajok",
-    "status": "draft",
+    "status": "ready",
     "fixedOrder": false
   },
   {
@@ -97,11 +97,11 @@ export const VOCAB_TOPICS: readonly VocabTopic[] = [
       "romanization": "hakgyo",
       "en": "school"
     },
-    "blurbEn": "Things in a classroom and in a school bag.",
+    "blurbEn": "Words for school: the people, the classroom and your bag.",
     "hoyaIntroEn": "Pack your bag! Let's find the things in a classroom.",
     "tint": "theme.letters",
     "coverItemId": "vocab:yeonpil",
-    "status": "draft",
+    "status": "ready",
     "fixedOrder": false
   },
   {
@@ -118,7 +118,7 @@ export const VOCAB_TOPICS: readonly VocabTopic[] = [
     "hoyaIntroEn": "Point to your nose! Let's learn the words for the body.",
     "tint": "stage.stage2",
     "coverItemId": "vocab:meori",
-    "status": "draft",
+    "status": "ready",
     "fixedOrder": false
   },
   {
@@ -135,7 +135,7 @@ export const VOCAB_TOPICS: readonly VocabTopic[] = [
     "hoyaIntroEn": "Let's step outside and look at the world around us.",
     "tint": "theme.nature",
     "coverItemId": "vocab:san",
-    "status": "draft",
+    "status": "ready",
     "fixedOrder": false
   },
   {
@@ -152,7 +152,7 @@ export const VOCAB_TOPICS: readonly VocabTopic[] = [
     "hoyaIntroEn": "Where shall we go today? Let's learn the words for a trip.",
     "tint": "theme.crafts",
     "coverItemId": "vocab:bihaenggi",
-    "status": "draft",
+    "status": "ready",
     "fixedOrder": false
   },
   {
@@ -169,7 +169,7 @@ export const VOCAB_TOPICS: readonly VocabTopic[] = [
     "hoyaIntroEn": "Ready, set, go! Let's learn the words for sports.",
     "tint": "theme.crafts",
     "coverItemId": "vocab:chukgu",
-    "status": "draft",
+    "status": "ready",
     "fixedOrder": false
   },
   {
@@ -182,11 +182,11 @@ export const VOCAB_TOPICS: readonly VocabTopic[] = [
       "romanization": "hanguk munhwa",
       "en": "Korean culture"
     },
-    "blurbEn": "Korean clothes, food, holidays, games and music.",
+    "blurbEn": "Korean clothes, homes, food, holidays, games, music and more.",
     "hoyaIntroEn": "Come and explore the clothes, food, holidays and music of Korea.",
     "tint": "theme.rites",
     "coverItemId": "vocab:hanbok",
-    "status": "draft",
+    "status": "ready",
     "fixedOrder": false
   },
   {
@@ -203,7 +203,7 @@ export const VOCAB_TOPICS: readonly VocabTopic[] = [
     "hoyaIntroEn": "Let's look closely and wonder how the world works.",
     "tint": "theme.nature",
     "coverItemId": "vocab:jigu",
-    "status": "draft",
+    "status": "ready",
     "fixedOrder": false
   }
 ];
@@ -1193,7 +1193,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "senseNote": "The casual word. To be polite, say jeo.",
     "glosses": {
       "en": "I, me",
-      "es": "yo, mí"
+      "es": "yo"
     }
   },
   {
@@ -2106,7 +2106,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "visual": "word:sport-running",
     "glosses": {
       "en": "running",
-      "es": "correr"
+      "es": "carrera"
     }
   },
   {
@@ -2122,7 +2122,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "visual": "word:sport-jumprope",
     "glosses": {
       "en": "jump rope",
-      "es": "saltar la cuerda"
+      "es": "salto de cuerda"
     }
   },
   {
@@ -2238,7 +2238,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     "senseNote": "Rice topped with vegetables, mixed together before you eat.",
     "glosses": {
       "en": "bibimbap (mixed rice bowl)",
-      "es": "bibimbap (tazón de arroz mixto)"
+      "es": "bibimbap (tazón de arroz mezclado)"
     }
   },
   {
@@ -2268,7 +2268,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "card:seollal",
-    "senseNote": "People wear hanbok and bow to their elders.",
+    "senseNote": "Many people wear hanbok and bow to their elders.",
     "glosses": {
       "en": "Lunar New Year",
       "es": "Año Nuevo lunar"
@@ -2407,7 +2407,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     }
   },
   {
-    "id": "vocab:dol",
+    "id": "vocab:dol-stone",
     "ko": "돌",
     "romanization": "dol",
     "en": "stone",
@@ -2417,6 +2417,7 @@ export const VOCAB_ITEMS: readonly RuntimeVocabItem[] = [
     ],
     "level": 1,
     "visual": "word:science-stone",
+    "senseGroup": "dol",
     "glosses": {
       "en": "stone",
       "es": "piedra"
@@ -2772,6 +2773,21 @@ export const VOCAB_SENSES: VocabSensesFile['groups'] = [
       {
         "id": "vocab:yeol-fever",
         "en": "fever, heat",
+        "state": "reserved"
+      }
+    ]
+  },
+  {
+    "group": "dol",
+    "members": [
+      {
+        "id": "vocab:dol-stone",
+        "en": "stone",
+        "state": "launch"
+      },
+      {
+        "id": "vocab:dol-birthday",
+        "en": "first birthday",
         "state": "reserved"
       }
     ]

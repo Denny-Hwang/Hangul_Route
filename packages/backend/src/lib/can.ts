@@ -18,7 +18,15 @@ export type Action =
   | 'entitlement.manage'
   | 'learner.delete'
   /** Fill a class slot (source or destination) of a class move (F-SPACE-002 T10, §4.5). Never implied by `roster.manage`, never the learner slot. */
-  | 'learner.transfer';
+  | 'learner.transfer'
+  /**
+   * Send a note to the space's students (F-FEEDBACK-001 section 6.1): the family owner, a family caregiver
+   * only with the owner's grant (`ctx.sendGrant`, OD-17), a class teacher or owner. Never cascaded from a
+   * school and never a school-level role (OD-6).
+   */
+  | 'feedback.send'
+  /** Read, hide, report and block every note to a learner of the family: the family owner and every caregiver, granted or not. */
+  | 'feedback.oversee';
 
 export type Actor =
   | { kind: 'learner'; learnerId: string }
@@ -30,6 +38,11 @@ export type AccountActor = Extract<Actor, { kind: 'account' }>;
 export interface SpaceContext {
   space: Space;
   parent: Space | null;
+  /**
+   * Whether the family owner granted the acting account the right to send notes (a `feedback_send_grants`
+   * row, F-FEEDBACK-001 OD-17). The route loads it with the membership so `can()` stays pure; absent = no grant.
+   */
+  sendGrant?: boolean;
 }
 
 export type Target = { kind: 'space'; ctx: SpaceContext } | { kind: 'learner'; learnerId: string; spaces: SpaceContext[] };
@@ -60,6 +73,12 @@ export function allowedOnSpace(actor: AccountActor, ctx: SpaceContext): Set<Acti
     // Deletion rights (F-TCH-001 §10.3): caregivers always; teachers only under school consent.
     if (ctx.space.kind === 'family' && effective === 'caregiver') out.add('learner.delete');
     if (ctx.space.kind === 'class' && effective === 'teacher' && ctx.space.settings.consentMode === 'school') out.add('learner.delete');
+    // Notes from grown-ups (F-FEEDBACK-001 section 6.1). Not added through the school cascade below.
+    if (ctx.space.kind === 'family' && effective === 'caregiver') {
+      out.add('feedback.oversee');
+      if (role === 'owner' || ctx.sendGrant === true) out.add('feedback.send');
+    }
+    if (ctx.space.kind === 'class' && effective === 'teacher') out.add('feedback.send');
   }
   if (ctx.parent?.kind === 'school') {
     const above = roleIn(actor, ctx.parent.id);

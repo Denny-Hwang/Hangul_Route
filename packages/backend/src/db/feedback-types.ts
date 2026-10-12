@@ -116,6 +116,17 @@ export interface RateHitRow {
   at: string;
 }
 
+/** One student of a space as a sender's composer sees them (GET recipients, F-FEEDBACK-001 section 7.2, PR FB-3a). */
+export interface NoteRecipientRow {
+  learnerId: string;
+  /** The learner's display name; the route anonymizes it per the space's roster setting. */
+  displayName: string;
+  /** The learner's class-notes mode (`all` without a prefs row, OD-3). */
+  classes: NotesMode;
+  /** The learner's family stopped this sender (never shown as such: it reads like `off`). */
+  blocked: boolean;
+}
+
 /** What the inbox query answers: the delivered notes and the learner's prefs row (null without one). */
 export interface LearnerNotesInbox {
   notes: DeliveredNote[];

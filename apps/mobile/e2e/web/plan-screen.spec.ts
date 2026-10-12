@@ -19,6 +19,9 @@ const VIEWPORTS = [
 
 const BILLING_URL = 'https://hangulroute.com/teach/billing';
 
+/** A build with F-APP-001's grown-up home flag on hands off in the same tab instead (plan-screen-same-tab.spec.ts). */
+const ON = process.env.E2E_GROWN_UP_HOME === '1';
+
 const screenText = (page: Page): Promise<string> =>
   page.evaluate(() => (document.body.innerText || '').replace(/\s+/g, ' '));
 
@@ -104,6 +107,7 @@ async function expectStatusOnly(page: Page): Promise<void> {
 for (const vp of VIEWPORTS) {
   test.describe(`${vp.width}x${vp.height}`, () => {
     test.use({ viewport: vp });
+    test.skip(ON, 'the B-9 new-tab hand-off runs on the default build');
 
     test('self-only device without a PIN: Plan details, status only, Open billing opens the billing page', async ({ page, context }) => {
       await stubConsole(context);

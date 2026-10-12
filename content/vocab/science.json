@@ -14,7 +14,7 @@
     "hoyaIntroEn": "Let's look closely and wonder how the world works.",
     "tint": "theme.nature",
     "coverItemId": "vocab:jigu",
-    "status": "draft",
+    "status": "ready",
     "fixedOrder": false
   },
   "items": [
@@ -44,7 +44,7 @@
       "visual": "word:science-ice"
     },
     {
-      "id": "vocab:dol",
+      "id": "vocab:dol-stone",
       "ko": "돌",
       "romanization": "dol",
       "en": "stone",
@@ -53,7 +53,8 @@
         "science"
       ],
       "level": 1,
-      "visual": "word:science-stone"
+      "visual": "word:science-stone",
+      "senseGroup": "dol"
     },
     {
       "id": "vocab:jaseok",

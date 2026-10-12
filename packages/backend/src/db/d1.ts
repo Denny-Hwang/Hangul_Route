@@ -32,6 +32,7 @@ import {
   type NewNote,
   type NoteActVia,
   type NoteDeviceScope,
+  type NoteRecipientRow,
   type RateHitRow,
   type StoredNote,
   type StoredNotePrefs,
@@ -1020,6 +1021,19 @@ export class D1Db implements Db {
   notePrefsFor(learnerIds: readonly string[]): Promise<StoredNotePrefs[]> {
     if (learnerIds.length === 0) return Promise.resolve([]);
     return this.many('SELECT * FROM learner_note_prefs WHERE learner_id IN (SELECT value FROM json_each(?))', [JSON.stringify(learnerIds)], (r) => toNotePrefs(r));
+  }
+  noteRecipients(spaceId: string, senderAccountId: string): Promise<NoteRecipientRow[]> {
+    return this.many(
+      `SELECT m.member_id AS learner_id, l.display_name AS display_name, COALESCE(p.classes, 'all') AS classes,
+         EXISTS (SELECT 1 FROM feedback_sender_blocks b WHERE b.learner_id = m.member_id AND b.sender_account_id = ?) AS blocked
+       FROM memberships m
+       JOIN learners l ON l.id = m.member_id
+       LEFT JOIN learner_note_prefs p ON p.learner_id = m.member_id
+       WHERE m.space_id = ? AND m.member_kind = 'learner' AND m.role = 'student'
+       ORDER BY m.joined_at, m.member_id`,
+      [senderAccountId, spaceId],
+      (r): NoteRecipientRow => ({ learnerId: str(r.learner_id), displayName: str(r.display_name), classes: str(r.classes) as NoteRecipientRow['classes'], blocked: bool(r.blocked) }),
+    );
   }
   blocksFor(learnerIds: readonly string[], senderAccountId: string): Promise<string[]> {
     if (learnerIds.length === 0) return Promise.resolve([]);

@@ -2,7 +2,11 @@ import type { Episode } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { isFreeContent } from '../../content-access';
 import { storyReadStep } from '../../story/story-ref';
-import { buildBrowseBundle } from '../bundle';
+import { visibleItems, vocabTopics } from '../../../content/vocab';
+import { canDrawPicture } from '../../__tests__/drawn-pictures';
+import { wordsOfTopic } from '../../vocab/topic-view';
+import { visibleTopics } from '../../vocab/topics';
+import { buildBrowseBundle, defaultBrowseBundle } from '../bundle';
 import { CULTURE_ID, DRAFT_ID, TALE_ID, fixtureBundle, fixtureInput } from './browse-fixture';
 
 /**
@@ -87,5 +91,21 @@ describe('buildBrowseBundle: word topics (F-VOC-003 T8)', () => {
     const untouched = bundle.vocabTopics.filter((t) => bundle.topicItems(t.key).every((i) => i.visual !== blocked));
     expect(untouched.length).toBeGreaterThan(0);
     expect(built.vocabTopics.map((t) => t.key)).toEqual(untouched.map((t) => t.key));
+  });
+});
+
+describe('defaultBrowseBundle: the topics of the learner picker, exactly (F-VOC-001 V-7)', () => {
+  it('lists the word topics the Words picker lists, so a ready topic with undrawn art stays out of both', () => {
+    const wordsOf = (key: string) => wordsOfTopic(visibleItems, key);
+    const picker = visibleTopics(vocabTopics, wordsOf, canDrawPicture, { drafts: false, preview: false });
+    const production = defaultBrowseBundle(canDrawPicture);
+    expect(production.vocabTopics.map((t) => t.key)).toEqual(picker.map((t) => t.key));
+    for (const topic of production.vocabTopics) {
+      for (const item of production.topicItems(topic.key)) expect(canDrawPicture(item.visual), item.id).toBe(true);
+    }
+  });
+
+  it('is built once per picture check', () => {
+    expect(defaultBrowseBundle(canDrawPicture)).toBe(defaultBrowseBundle(canDrawPicture));
   });
 });
