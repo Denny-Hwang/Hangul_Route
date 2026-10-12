@@ -541,4 +541,25 @@ describe('rebaseSnapshot (issue #262: a write that lands while a sync is in flig
     const ours = base({ quests: [quest('q1', 2, 0.7, 4)] });
     expect(rebaseSnapshot(sent, ours, base(), { now: NOW }).quests[0]?.attempts).toBe(4);
   });
+
+  it('a quest replayed during the request keeps its new completedAt; a merge between devices still keeps the earliest', () => {
+    const sent = base({ quests: [quest('q1', 2, 0.7, 1, '2026-09-18T09:00:00.000Z')] });
+    const theirs = base({ quests: [quest('q1', 2, 0.7, 1, '2026-09-18T09:00:00.000Z'), quest('q2', 1, 0.5, 1, '2026-09-17T09:00:00.000Z')] });
+    // Replayed today while the request was in flight (recordBestQuest moves completedAt to the latest finish).
+    const ours = base({ quests: [quest('q1', 2, 0.8, 2, '2026-10-11T10:00:00.000Z')] });
+    const m = rebaseSnapshot(sent, ours, theirs, { now: NOW });
+    expect(m.quests.find((q) => q.questId === 'q1')?.completedAt).toBe('2026-10-11T10:00:00.000Z');
+    // Untouched by the write: the server's dates stand.
+    expect(m.quests.find((q) => q.questId === 'q2')?.completedAt).toBe('2026-09-17T09:00:00.000Z');
+    // No write in between: theirs' date stands even when it is earlier than base's.
+    const older = base({ quests: [quest('q1', 2, 0.7, 2, '2026-09-10T09:00:00.000Z')] });
+    expect(rebaseSnapshot(sent, sent, older, { now: NOW }).quests[0]?.completedAt).toBe('2026-09-10T09:00:00.000Z');
+  });
+
+  it('a quest first finished during the request keeps its completedAt over an earlier one from another device', () => {
+    const sent = base();
+    const theirs = base({ quests: [quest('q5', 1, 0.5, 1, '2026-09-15T09:00:00.000Z')] });
+    const ours = base({ quests: [quest('q5', 3, 1, 1, '2026-10-11T10:00:00.000Z')] });
+    expect(rebaseSnapshot(sent, ours, theirs, { now: NOW }).quests[0]).toMatchObject({ completedAt: '2026-10-11T10:00:00.000Z', attempts: 2, stars: 3 });
+  });
 });
