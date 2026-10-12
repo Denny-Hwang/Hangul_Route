@@ -213,7 +213,7 @@ describe('no price is written into a message (F-I18N-001 §3.1: amounts come fro
 
 describe('the dictionary is wired', () => {
   it('exposes caregiver next to common, a11y and learner', () => {
-    expect(Object.keys(en).sort()).toEqual(['a11y', 'caregiver', 'common', 'console', 'landing', 'learner']);
+    expect(Object.keys(en).sort()).toEqual(['a11y', 'caregiver', 'common', 'console', 'landing', 'learner', 'report']);
   });
 });
 

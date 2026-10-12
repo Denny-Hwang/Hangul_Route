@@ -45,6 +45,7 @@ export {
   BANNED_WORDS,
   bannedWordsFor,
   findBannedWord,
+  findWord,
   isCopySafe,
   scanCopy,
   type BannedSurface,
