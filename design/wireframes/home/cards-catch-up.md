@@ -2,7 +2,7 @@
 
 Spec: `docs/specs/F-STORY-006-card-award-model.md` §3.5 (catch-up for existing learners), §3.7 (Home surface), §3.10; base screen `home/todays-mission.md`
 Audience: anyone learning Hangul, any age (CLAUDE.md §1). Existing learners who earned cards before the award model existed get them once, as good news; no timer, no counter.
-Code: reconcile and the session-only `catchUp` state built (`apps/mobile/src/logic/awards/catch-up.ts`, store `reconcileAwards` / `markCardsSeen`, PR 6.4a; telemetry in 6.4b); the card is planned in PR 6.5c inside `screens/home/HomeScreen.tsx`.
+Code: reconcile and the session-only `catchUp` state built (`apps/mobile/src/logic/awards/catch-up.ts`, store `reconcileAwards` / `markCardsSeen`, PR 6.4a; telemetry in 6.4b); the card is built in PR 6.5c (HomeScreen `CatchUpCard`, `logic/awards/catch-up.ts` `catchUpCard`; count frozen by the session-only `catchUpFound`, review follow-up).
 Notation: `[[ X ]]` the one primary action, `(n)` a mission slot.
 
 Promoted by F-STORY-006 PR 6.0 from panel E of the one-file draft (`journey/grid-with-stories.md`).
@@ -41,7 +41,8 @@ One primary action on this card: **See my cards**. The mission cards keep their 
 
 - No dismiss timer, no remaining counter. If the app closes first, the Library "New" pills remain, so nothing is lost.
 - The count is the number of cards found ("22 cards"), never a fraction of the collection.
-- One Hoya on the screen: this card's Hoya replaces the greeting's Hoya while it shows.
+- This card's Hoya replaces the greeting's Hoya while it shows; it adds no Hoya of its own. On regular and wide windows the side column's tip bubble keeps its Hoya, as Home always has.
+- The number is fixed while the card shows: cards opened in the Library leave the list but never count it down.
 
 ---
 
@@ -69,7 +70,7 @@ Exit to: `library/gallery` (See my cards) · the existing Today exits
 
 ## Data needs
 
-- reads: the session-only `catchUp[profileId]` in the progress store (the card ids a reconcile added this app session; the count is its length; empty when the reconcile added only the welcome card), set by `reconcileAwards` at start
+- reads: the session-only `catchUp[profileId]` in the progress store (the card ids a reconcile added this app session and not yet seen; empty when the reconcile added only the welcome card), set by `reconcileAwards` at start, and `catchUpFound[profileId]` (every card listed since the list was last empty), whose length is the count
 - writes: `markCardsSeen(cardIds)` on See my cards
 - telemetry: `card.catchup_granted` `{ count, episode, stage, welcome, quest, set }` once per reconcile that adds more than the welcome card (sent by the reconcile, PR 6.4b)
 

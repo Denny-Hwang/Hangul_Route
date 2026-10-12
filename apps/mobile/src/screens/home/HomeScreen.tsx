@@ -23,7 +23,7 @@ import {
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { AccessibilityInfo, Platform, Pressable, View } from 'react-native';
 import { InstallGuideSheet } from '../../components/InstallGuideSheet';
 import { ProfileAvatar } from '../../components/ProfileAvatar';
 import type { SceneArt } from '@hangul-route/content-schema';
@@ -32,7 +32,7 @@ import { flags } from '../../config/flags';
 import { episodesAll, questsAll } from '../../content';
 import { PLACEMENT_BANK } from '../../content/placement.generated';
 import { useLocale, useMessages } from '../../i18n/use-messages';
-import { catchUpCard } from '../../logic/awards/catch-up';
+import { catchUpCard, takeCatchUpAnnouncement } from '../../logic/awards/catch-up';
 import { localizeMissionCard } from '../../logic/content-locale';
 import { cursorContext } from '../../logic/cursor-context';
 import {
@@ -90,6 +90,8 @@ const NO_BOOKMARKS = emptyBookmarks();
  * first pinned — the plan itself is pinned per session too (F-STORY-004 §3.7, §3.11).
  */
 const storyCardShownSent = new Set<string>();
+/** Catch-up lines already announced this app session (`<profileId>|<line>`), so a tab switch never repeats one (F-STORY-006 §3.10). */
+const catchUpAnnounced = new Set<string>();
 
 /**
  * One of the three Today's mission cards (F-HW-001 §3.1).
@@ -187,7 +189,10 @@ export function HomeScreen(): React.ReactElement {
   const markCardsSeen = useProgressStore((s) => s.markCardsSeen);
   // Session-only (F-STORY-006 §3.5): the cards a reconcile added this app session.
   const catchUpListed = useProgressStore((s) => (profile ? s.catchUp[profile.id] : undefined));
-  const catchUp = useMemo(() => catchUpCard(catchUpListed, welcomeCardIds), [catchUpListed]);
+  const catchUpFound = useProgressStore((s) => (profile ? s.catchUpFound[profile.id] : undefined));
+  // The number is the cards found this session; cards opened in the Library never count it down (D3).
+  const catchUp = useMemo(() => catchUpCard(catchUpListed, welcomeCardIds, catchUpFound), [catchUpListed, catchUpFound]);
+  const catchUpLine = catchUp ? m.learner.home.catchUp.line(catchUp.count) : null;
   const snap = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
   // Re-renders Home when the inbox changes the tier, as Results does, so the
   // cursor follows OD-4 on both (F-ROUTE-001 R-4a).
@@ -259,6 +264,15 @@ export function HomeScreen(): React.ReactElement {
     // `cachedTier` re-renders this screen when the inbox changes the tier.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile, snap, tier, cachedTier, bookmarks, storyIndex]);
+
+  // Native screen readers hear the catch-up line once (F-STORY-006 §3.10): the card is usually on
+  // the first render, where a live region says nothing, and iOS has no live regions. The web reads
+  // it in order under the greeting, and from the polite region below when a sync adds it later.
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+    const line = takeCatchUpAnnouncement(catchUpAnnounced, profile?.id, catchUpLine);
+    if (line !== null) AccessibilityInfo.announceForAccessibility(line);
+  }, [profile?.id, catchUpLine]);
 
   useEffect(() => {
     if (!mission) return;
@@ -356,15 +370,14 @@ export function HomeScreen(): React.ReactElement {
     navigation.navigate('Main', { screen: 'Library' });
   };
 
-  // Always mounted, so assistive tech is watching when the card arrives with the reconcile.
+  // Always mounted, so the web's assistive tech is watching when a later sync adds the card. A live
+  // region on the web only: native announces the line itself (one announcement, no overlap).
   const catchUpView = (
-    <View accessibilityLiveRegion="polite" aria-live="polite">
-      {catchUp ? (
-        <>
-          <CatchUpCard count={catchUp.count} hoyaSize={hoyaSize} onSeeCards={seeCaughtUpCards} />
-          <Spacer size="lg" />
-        </>
-      ) : null}
+    <View
+      accessibilityLiveRegion={Platform.OS === 'web' ? 'polite' : 'none'}
+      aria-live={Platform.OS === 'web' ? 'polite' : undefined}
+    >
+      {catchUp ? <CatchUpCard count={catchUp.count} hoyaSize={hoyaSize} onSeeCards={seeCaughtUpCards} /> : null}
     </View>
   );
 
@@ -388,6 +401,9 @@ export function HomeScreen(): React.ReactElement {
         </View>
       </>
     ) : null;
+
+  // The gap under the card only when mission cards follow it; the side block brings its own.
+  const catchUpGap = catchUp && missions ? <Spacer size="lg" /> : null;
 
   const side = (
     <>
@@ -437,7 +453,7 @@ export function HomeScreen(): React.ReactElement {
     <View style={{ flex: 1 }}>
     <Screen tone="canvas" edges={TAB_SCREEN_EDGES} width={twoColumns ? 'full' : 'reading'}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
-        {/* One Hoya on the screen: the catch-up card's cheering Hoya stands in while it shows. */}
+        {/* The catch-up card's cheering Hoya stands in for the greeting's while it shows. */}
         {catchUp ? null : <Hoya pose="waving" size={hoyaSize} accessibilityLabel={m.a11y.hoya('waving')} />}
         <View style={{ flex: 1 }}>
           <Heading level="title">{m.learner.home.greeting(profile?.displayName ?? null)}</Heading>
@@ -475,6 +491,7 @@ export function HomeScreen(): React.ReactElement {
             <View testID="home-missions-column" style={{ flex: MISSIONS_FLEX, minWidth: 0 }}>
               {/* Under the greeting, spanning the mission column; never between the mission cards. */}
               {catchUpView}
+              {catchUpGap}
               {missions}
               {quietCard ? (
                 <>
@@ -492,6 +509,7 @@ export function HomeScreen(): React.ReactElement {
         <>
           {catchUp || missions ? <Spacer size="lg" /> : null}
           {catchUpView}
+          {catchUpGap}
           {missions}
           {quietCard ? (
             <>
