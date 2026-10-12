@@ -68,6 +68,11 @@ describe('todayFor: the learner-local day of the viewer clock', () => {
     // Across a year end.
     expect(todayFor(new Date('2026-12-31T20:00:00.000Z'), 300)).toBe('2027-01-01');
   });
+
+  it('throws on an invalid Date: a caller checks an untrusted clock first (learnerReport does)', () => {
+    expect(() => todayFor(new Date(Number.NaN), 0)).toThrow(RangeError);
+    expect(() => todayFor(new Date('not a time'), 540)).toThrow(RangeError);
+  });
 });
 
 describe('monthOf and rowsFromOf', () => {
@@ -143,8 +148,10 @@ describe('windowOf: the four periods', () => {
     expect(windowOf('all', today, undefined, since('2026-03-04'))).toEqual({ period: 'all', from: '2026-03-04', to: today, totalsOnly: false });
     expect(windowOf('all', today, '2026-09-01', since(null))).toEqual({ period: 'all', from: today, to: today, totalsOnly: false });
     expect(windowOf('all', today).from).toBe(today);
-    // A class copy (no since): the first day it holds anything.
-    expect(windowOf('all', today, undefined, activity({ days: [day('2026-10-12')], total: { since: null, min: 5, q: 0, c: 0, w: 0, days: 9 } })).from).toBe('2026-10-12');
+    // A class view: the first day its copy holds anything, never since (it may lie before the learner joined).
+    expect(windowOf('all', today, undefined, activity({ days: [day('2026-10-12')], total: { since: null, min: 5, q: 0, c: 0, w: 0, days: 9 } }), true).from).toBe('2026-10-12');
+    expect(windowOf('all', today, undefined, activity({ days: [day('2026-10-12')], total: { since: '2026-03-04', min: 5, q: 0, c: 0, w: 0, days: 9 } }), true).from).toBe('2026-10-12');
+    expect(windowOf('all', today, undefined, since('2026-03-04'), true).from).toBe(today);
     // A first day after today (a device clock ahead) never makes the window run backwards.
     expect(windowOf('all', today, undefined, since('2026-10-20')).from).toBe(today);
   });
@@ -152,10 +159,10 @@ describe('windowOf: the four periods', () => {
   it('month: a class draws the month it joined in day by day while the rows cover the days it sees', () => {
     // A class that sees the learner from 10 October; on 3 November the rows reach back to 30 September.
     const joined = activity({ asOf: '2026-11-03', days: [day('2026-10-12'), day('2026-11-02')], total: { since: null, min: 9, q: 1, c: 0, w: 0, days: 30 } });
-    expect(windowOf('month', '2026-11-03', '2026-10-15', joined).totalsOnly).toBe(false);
+    expect(windowOf('month', '2026-11-03', '2026-10-15', joined, true).totalsOnly).toBe(false);
     // On 20 November the rows start on 17 October, after the first day the class sees: totals only (and no row).
     const later = { ...joined, asOf: '2026-11-20' };
-    expect(windowOf('month', '2026-11-20', '2026-10-15', later).totalsOnly).toBe(true);
+    expect(windowOf('month', '2026-11-20', '2026-10-15', later, true).totalsOnly).toBe(true);
   });
 
   it('an at that is malformed, not a real day or after today reads as the current window', () => {
@@ -188,11 +195,18 @@ describe('firstDayOf and shownFromOf: where a report may start', () => {
   it('the first of the 35 day rows, or for a class copy the first day it shows anything', () => {
     expect(shownFromOf(activity({ total: { since: '2026-03-04', min: 9, q: 1, c: 0, w: 0, days: 3 } }), today)).toBe('2026-09-11');
     // A class that sees the learner from 12 October on.
-    expect(shownFromOf(activity({ days: [day('2026-10-12')], total: { since: null, min: 90, q: 9, c: 3, w: 0, days: 20 } }), today)).toBe('2026-10-12');
+    expect(shownFromOf(activity({ days: [day('2026-10-12')], total: { since: null, min: 90, q: 9, c: 3, w: 0, days: 20 } }), today, true)).toBe('2026-10-12');
     // A class that has seen the learner for months: the day rows bound it.
-    expect(shownFromOf(activity({ months: [{ m: '2026-05', min: 9, q: 1, c: 0, w: 0, days: 1 }], total: { since: null, min: 9, q: 1, c: 0, w: 0, days: 1 } }), today)).toBe('2026-09-11');
+    expect(shownFromOf(activity({ months: [{ m: '2026-05', min: 9, q: 1, c: 0, w: 0, days: 1 }], total: { since: null, min: 9, q: 1, c: 0, w: 0, days: 1 } }), today, true)).toBe('2026-09-11');
     // A class that sees nothing yet: today.
-    expect(shownFromOf(activity({ total: { since: null, min: 90, q: 9, c: 3, w: 0, days: 20 } }), today)).toBe(today);
+    expect(shownFromOf(activity({ total: { since: null, min: 90, q: 9, c: 3, w: 0, days: 20 } }), today, true)).toBe(today);
+  });
+
+  it('the floor follows who is viewing, never the shape of the data', () => {
+    // A class copy that carries since (an older projection): still floored at the first day it holds.
+    expect(shownFromOf(activity({ days: [day('2026-10-12')], total: { since: '2026-03-04', min: 90, q: 9, c: 3, w: 0, days: 20 } }), today, true)).toBe('2026-10-12');
+    // A family copy without since (a device that never wrote it) but with day rows: never floored.
+    expect(shownFromOf(activity({ days: [day('2026-10-12')], total: { since: null, min: 90, q: 9, c: 3, w: 0, days: 20 } }), today)).toBe('2026-09-11');
   });
 });
 
@@ -231,12 +245,16 @@ describe('clampAt: looking back stays within the saved 35 days and 24 months (OD
 
   it('a class never steps into days before it sees the learner', () => {
     const clipped = activity({ asOf: today, days: [day('2026-10-12')], total: { since: null, min: 90, q: 9, c: 3, w: 0, days: 20 } });
-    expect(clampAt('day', today, '2026-10-12', clipped)).toBe('2026-10-12');
-    expect(clampAt('day', today, '2026-10-11', clipped)).toBeNull();
-    expect(clampAt('week', today, '2026-10-08', clipped)).toBeNull();
-    expect(stepOf('day', today, '2026-10-12', 'prev', clipped)).toBeNull();
-    expect(stepOf('day', today, '2026-10-13', 'prev', clipped)).toEqual({ at: '2026-10-12' });
-    expect(stepOf('week', today, null, 'prev', clipped)).toBeNull();
+    expect(clampAt('day', today, '2026-10-12', clipped, true)).toBe('2026-10-12');
+    expect(clampAt('day', today, '2026-10-11', clipped, true)).toBeNull();
+    expect(clampAt('week', today, '2026-10-08', clipped, true)).toBeNull();
+    expect(stepOf('day', today, '2026-10-12', 'prev', clipped, true)).toBeNull();
+    expect(stepOf('day', today, '2026-10-13', 'prev', clipped, true)).toEqual({ at: '2026-10-12' });
+    expect(stepOf('week', today, null, 'prev', clipped, true)).toBeNull();
+    // The same copy read by a family (no since, rows): the whole 35 days stay reachable.
+    expect(clampAt('day', today, '2026-10-11', clipped)).toBe('2026-10-11');
+    expect(clampAt('week', today, '2026-10-08', clipped)).toBe('2026-10-08');
+    expect(stepOf('week', today, null, 'prev', clipped)).toEqual({ at: '2026-10-08' });
   });
 
   it('month: a month with no row is reachable while the day rows draw it whole', () => {
@@ -252,9 +270,9 @@ describe('clampAt: looking back stays within the saved 35 days and 24 months (OD
 
   it('month: a class reaches the month it joined in while the rows cover it, though the class copy has no row for it', () => {
     const joined = activity({ asOf: '2026-11-03', days: [day('2026-10-12'), day('2026-11-02')], months: [{ m: '2026-11', min: 9, q: 1, c: 0, w: 0, days: 1 }], total: { since: null, min: 9, q: 1, c: 0, w: 0, days: 30 } });
-    expect(stepOf('month', '2026-11-03', null, 'prev', joined)).toEqual({ at: '2026-10-01' });
-    expect(stepOf('month', '2026-11-03', '2026-10-01', 'prev', joined)).toBeNull();
-    expect(clampAt('month', '2026-11-03', '2026-10-20', joined)).toBe('2026-10-01');
+    expect(stepOf('month', '2026-11-03', null, 'prev', joined, true)).toEqual({ at: '2026-10-01' });
+    expect(stepOf('month', '2026-11-03', '2026-10-01', 'prev', joined, true)).toBeNull();
+    expect(clampAt('month', '2026-11-03', '2026-10-20', joined, true)).toBe('2026-10-01');
   });
 
   it('all has no stepper; a malformed at is the current window', () => {

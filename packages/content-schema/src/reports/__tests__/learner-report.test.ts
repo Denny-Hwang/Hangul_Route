@@ -448,8 +448,12 @@ describe('a class reads only what it may (behaviour 15)', () => {
     const all = report({ summary: STEADY_FOR_CLASS, viewer: 'class', period: 'all' });
     expect(all.figures).toMatchObject({ days: { count: 11 }, quests: { count: 7 } });
     expect(all.window).toMatchObject({ from: '2026-10-12' });
-    // No "since" for a class: the first practice day may lie before the learner joined.
+    // No "since" for a class: the first practice day may lie before the learner joined. The figures are lifetime
+    // (11 days) while window.from is the first day the class sees, so "since" is only ever growth.since.
     expect(all.growth).toEqual({ since: null, baseline: { quests: 7, cards: 5 }, months: [] });
+    expect(all.figures?.days.count).toBeGreaterThan(
+      STEADY_FOR_CLASS.activity?.days.filter((row) => row.d >= (all.window?.from ?? '')).length ?? 0,
+    );
   });
 
   it('a class that sees no day, month or milestone yet starts the all window today', () => {
@@ -470,6 +474,19 @@ describe('a class reads only what it may (behaviour 15)', () => {
     expect(report({ summary: joinedMonday, viewer: 'class', at: '2026-10-01' }).window).toMatchObject({ at: null });
     // A family reads the same weeks whole, and compares them.
     expect(report({ summary: STEADY }).figures?.days).toEqual({ count: 3, up: true });
+  });
+
+  it('the floor follows the viewer, never the shape of the copy', () => {
+    const joinedMonday = withActivity(STEADY_FOR_CLASS, { days: STEADY.activity.days.filter((row) => row.d >= '2026-10-05') });
+    // A class copy that still carries since (an older projection): floored all the same.
+    const withSince = withActivity(joinedMonday, { total: { ...STEADY.activity.total } });
+    expect(report({ summary: withSince, viewer: 'class' }).figures?.days).toEqual({ count: 3 });
+    expect(report({ summary: withSince, viewer: 'class', at: '2026-10-08' }).window).toMatchObject({ at: '2026-10-08', prev: null });
+    expect(report({ summary: withSince, viewer: 'class', period: 'all' }).window).toMatchObject({ from: '2026-10-06' });
+    expect(report({ summary: withSince, viewer: 'class', period: 'all' }).growth?.since).toBeNull();
+    // A family copy without since but with day rows: never floored, so its weeks compare and step back.
+    expect(report({ summary: joinedMonday }).figures?.days).toEqual({ count: 3, up: true });
+    expect(report({ summary: joinedMonday, at: '2026-10-08' }).window).toMatchObject({ at: '2026-10-08', prev: { at: '2026-10-01' } });
   });
 
   it('the plan block holds this class\'s plans only, never a self-route', () => {

@@ -125,6 +125,11 @@ export interface LearnerReport {
   glance: { nowOn: ReportStage | null; lastPractice: string | null } | null;
   window: {
     period: ReportPeriod;
+    /**
+     * For `all`, the figures are lifetime totals (a class's include practice before the learner joined) while
+     * `from` is the first day the viewer's copy holds, so a renderer never prints `from` / `to` for `all`: "since"
+     * comes only from `growth.since`, null for a class.
+     */
     from: string;
     to: string;
     /** The `at` for the URL; null on the current window. */
@@ -270,11 +275,11 @@ const monthSums = (activity: ActivitySummary, month: string): DaySums | null => 
  * all of it is shown (`shownFromOf`: saved, and for a class after the learner joined), a month from its month row
  * (a class has no row for its join month or before).
  */
-function previousOf(activity: ActivitySummary, window: ReportWindow, today: string): (DaySums & { letters: number | null }) | null {
+function previousOf(activity: ActivitySummary, window: ReportWindow, today: string, classView: boolean): (DaySums & { letters: number | null }) | null {
   const { prevFrom, prevTo } = window;
   if (prevFrom === undefined || prevTo === undefined) return null;
   if (window.period === 'week') {
-    if (prevFrom < shownFromOf(activity, today)) return null;
+    if (prevFrom < shownFromOf(activity, today, classView)) return null;
     return { ...sumDays(activity.days, prevFrom, prevTo), letters: lettersIn(activity.days, prevFrom, prevTo).length };
   }
   const row = monthSums(activity, monthOf(prevFrom));
@@ -299,8 +304,9 @@ function calendarOf(activity: ActivitySummary, window: ReportWindow): ReportCale
   return cells;
 }
 
-function growthOf(activity: ActivitySummary): NonNullable<LearnerReport['growth']> {
-  const since = activity.total.since;
+function growthOf(activity: ActivitySummary, classView: boolean): NonNullable<LearnerReport['growth']> {
+  // Never a "since" for a class, whatever its copy carries: the first practice day may lie before it joined.
+  const since = classView ? null : activity.total.since;
   // A class reads lifetime totals with the months before it joined removed: they fold into the baseline.
   let quests = Math.max(0, activity.total.q - sum(activity.months.map((row) => row.q)));
   let cards = Math.max(0, activity.total.c - sum(activity.months.map((row) => row.c)));
@@ -348,8 +354,10 @@ export function learnerReport(input: LearnerReportInput): LearnerReport {
   }
 
   const today = clock ? todayFor(clock, activity.tz) : activity.asOf;
-  const at = clampAt(period, today, input.at, activity);
-  const window = windowOf(period, today, at, activity);
+  // The class floor follows who is viewing, never the data's shape (a family copy is never clipped).
+  const classView = viewer === 'class';
+  const at = clampAt(period, today, input.at, activity, classView);
+  const window = windowOf(period, today, at, activity, classView);
   const horizon = horizonOf(window, activity.asOf);
   const all = period === 'all';
   const lettersNew = all || window.totalsOnly ? null : lettersIn(activity.days, window.from, horizon.upTo);
@@ -360,7 +368,7 @@ export function learnerReport(input: LearnerReportInput): LearnerReport {
   const current: DaySums = all
     ? { days: activity.total.days, min: activity.total.min, q: activity.total.q, c: activity.total.c, w: activity.total.w }
     : (monthRow ?? (window.totalsOnly ? { days: 0, min: 0, q: 0, c: 0, w: 0 } : sumDays(activity.days, window.from, horizon.upTo)));
-  const prev = previousOf(activity, window, today);
+  const prev = previousOf(activity, window, today, classView);
   const milestones = milestonesOf(activity).filter((row) => all || (row.on >= window.from && row.on <= horizon.upTo));
   const newest = milestones[milestones.length - 1];
 
@@ -375,8 +383,8 @@ export function learnerReport(input: LearnerReportInput): LearnerReport {
     at,
     step: stepLabel(period, today, at),
     totalsOnly: window.totalsOnly,
-    prev: stepOf(period, today, at, 'prev', activity),
-    next: stepOf(period, today, at, 'next', activity),
+    prev: stepOf(period, today, at, 'prev', activity, classView),
+    next: stepOf(period, today, at, 'next', activity, classView),
   };
   base.headline = { code, days: current.days, quests: current.q, stage: newest ? { stage: newest.stage, n: newest.n } : null };
   base.figures = {
@@ -389,7 +397,7 @@ export function learnerReport(input: LearnerReportInput): LearnerReport {
     words: REPORT_WORDS_VISIBLE ? figure(current.w, prev?.w ?? null) : null,
   };
   base.calendar = calendarOf(activity, window);
-  base.growth = all ? growthOf(activity) : null;
+  base.growth = all ? growthOf(activity, classView) : null;
   base.detail = detailOf(summary, viewer, catalog, { lettersNew, milestones });
   return base;
 }
