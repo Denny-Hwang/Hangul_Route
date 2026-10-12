@@ -8,7 +8,7 @@ import { VOCAB_CATALOG, type VocabCatalogEntry } from '../../data/vocab-catalog'
  * A word on a teacher or family surface always travels with its romanization and its gloss in
  * the UI language (CLAUDE.md section 1), looked up in the generated catalogue
  * (`data/vocab-catalog.ts`, F-VOC-001 section 3.7), so the web app needs no vocabulary logic.
- * The gloss also tells the two senses of a homonym apart (눈 nun (eye) / 눈 nun (snow)).
+ * The gloss also tells the two senses of a homonym apart (`vocab:nun-eye` reads nun (eye), `vocab:nun-snow` nun (snow)).
  */
 
 export interface ConsoleWord {

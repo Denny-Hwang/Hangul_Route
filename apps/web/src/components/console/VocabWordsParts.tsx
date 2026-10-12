@@ -9,13 +9,13 @@ import { aroundSlot } from '@/lib/i18n/slot';
  * The word lines of the console roster (F-VOC-005 P-4, section 3.8, behaviour 14; wireframe
  * `design/wireframes/console/roster.md` "Words lines"): a student card reads
  * "Words: N collected · M strong" and, when the learner's device sent any,
- * "Words to revisit: 사과 sagwa (apple) · 눈 nun (eye)"; the week reads the class's words to
+ * "Words to revisit: <Hangul> sagwa (apple) · <Hangul> nun (eye)"; the week reads the class's words to
  * revisit together. Plain text in the card's existing type, no chart, no rate, no ranking. The
  * Hangul stays outside the message and is marked `lang="ko"`; its romanization and its gloss in
  * the UI language travel with it (CLAUDE.md section 1). Every other word comes from the dictionary.
  */
 
-/** One word kept on one line, so a gloss never wraps away from its Hangul ("눈 nun / (eye)"); the list wraps between words. */
+/** One word kept on one line, so a gloss never wraps away from its Hangul ("nun" on one line, "(eye)" on the next); the list wraps between words. */
 const WORD_STYLE = { whiteSpace: 'nowrap' } as const;
 
 function Word({ word }: { word: ConsoleWord }): JSX.Element {
