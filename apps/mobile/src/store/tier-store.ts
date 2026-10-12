@@ -1,4 +1,4 @@
-import type { SyncInbox, Tier, TierSource } from '@hangul-route/content-schema';
+import type { ProgressSnapshot, SyncInbox, Tier, TierSource } from '@hangul-route/content-schema';
 import { useSyncExternalStore } from 'react';
 import { create } from 'zustand';
 import { bundleOs, flags, gatingActive } from '../config/flags';
@@ -101,10 +101,13 @@ export function accessTier(learnerId: string, now: Date): Tier {
 /**
  * "May this learner start this quest?" for store actions and any non-React
  * caller: the access tier, the effective switch and the learner's finished
- * quests (kept for good, from any device once synced).
+ * quests (kept for good, from any device once synced). The finished quests
+ * come from `snapshot` when given (plan reconcile passes the merged copy a sync
+ * is about to save, which may hold a quest finished on another device), else
+ * from the learner's snapshot in `progress-store`.
  */
-export function questOpenFor(learnerId: string, now: Date): (questId: string) => boolean {
-  const quests = useProgressStore.getState().byProfile[learnerId]?.quests ?? [];
+export function questOpenFor(learnerId: string, now: Date, snapshot?: Pick<ProgressSnapshot, 'quests'>): (questId: string) => boolean {
+  const quests = (snapshot ?? useProgressStore.getState().byProfile[learnerId])?.quests ?? [];
   return questOpenPredicate({
     tier: accessTier(learnerId, now),
     gatingEnabled: gatingActive(flags, bundleOs()),

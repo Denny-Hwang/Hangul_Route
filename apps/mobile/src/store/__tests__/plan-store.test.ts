@@ -193,7 +193,8 @@ describe('plan-store and quest access (F-ENT-003 section 3.6)', () => {
   it('deriveFor asks questOpenFor for the learner at the derivation time; a closed item waits as not ready', async () => {
     vi.mocked(questOpenFor).mockImplementation(closing('quest:stage1-letters-q2'));
     const outcome = await usePlanStore.getState().applyPlans('profile:a', [twoStage1]);
-    expect(questOpenFor).toHaveBeenCalledWith('profile:a', expect.any(Date));
+    // The learner, the derivation time and the snapshot derived from (its finished quests are kept).
+    expect(questOpenFor).toHaveBeenCalledWith('profile:a', expect.any(Date), expect.objectContaining({ profileId: 'profile:a', quests: [] }));
     expect(outcome).toMatchObject({ added: 1, notReady: { 'plan:w3': 1 } });
     expect(useProgressStore.getState().byProfile['profile:a']?.homework.map((h) => h.questId)).toEqual(['quest:stage1-letters-q1']);
     expect(usePlanStore.getState().notReady['profile:a']).toEqual({ 'plan:w3': 1 });
@@ -214,16 +215,14 @@ describe('plan-store and quest access (F-ENT-003 section 3.6)', () => {
     vi.mocked(questOpenFor).mockClear();
     vi.mocked(questOpenFor).mockImplementation(closing('quest:stage1-letters-q2'));
     const reconciled = usePlanStore.getState().reconcile('profile:a', merged);
-    expect(questOpenFor).toHaveBeenCalledWith('profile:a', expect.any(Date));
+    expect(questOpenFor).toHaveBeenCalledWith('profile:a', expect.any(Date), merged);
     expect(reconciled.homework.map((h) => h.questId)).toEqual(['quest:stage1-letters-q1']);
   });
 
-  it('reconcile counts a quest the merged snapshot finished as kept, before the store holds it (section 3.2)', async () => {
-    vi.mocked(questOpenFor).mockImplementation(closing('quest:stage1-letters-q2'));
+  it('reconcile asks with the merged snapshot, so a quest finished on another device is kept (section 3.2)', async () => {
     await usePlanStore.getState().applyPlans('profile:a', [twoStage1]);
     const local = useProgressStore.getState().byProfile['profile:a']!;
-    expect(local.homework.map((h) => h.questId)).toEqual(['quest:stage1-letters-q1']);
-    // Finished on another device: the union of the sync merge brings it in.
+    // Finished on another device: the union of the sync merge brings it in before the store holds it.
     const finishedElsewhere = {
       questId: 'quest:stage1-letters-q2',
       episodeId: 'episode:stage1-letters',
@@ -234,7 +233,9 @@ describe('plan-store and quest access (F-ENT-003 section 3.6)', () => {
       accuracy: 1,
     };
     const merged = { ...local, quests: [...local.quests, finishedElsewhere] };
+    vi.mocked(questOpenFor).mockClear();
     const reconciled = usePlanStore.getState().reconcile('profile:a', merged);
+    expect(questOpenFor).toHaveBeenCalledWith('profile:a', expect.any(Date), merged);
     expect(reconciled.homework.find((h) => h.questId === 'quest:stage1-letters-q2')).toMatchObject({
       id: 'plan:w3#quest:stage1-letters-q2',
       completedAt: '2026-09-29T08:05:00.000Z',
