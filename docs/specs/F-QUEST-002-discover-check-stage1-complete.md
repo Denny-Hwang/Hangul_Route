@@ -61,7 +61,7 @@ export const KoTextSchema = z.object({
   syllables: z.array(z.string().min(1)).optional(), // teaching-UI split, e.g. ['a','beo','ji']; join('') must equal `romanization`
 });
 export const PictureRefSchema = z.string().regex(/^(card|word|swatch):[a-z0-9-]+$/);
-// `card:<id>` -> HeritageCardArt; `word:<id>` -> WordArt (F-VOC); `swatch:<token>` -> colour chip. Unresolved -> text fallback (§3.11).
+// `card:<id>` -> HeritageCardArt; `word:<key>` -> WordArt when the key is in WORD_ART_KEYS (F-VOC-002 W-7); `swatch:<token>` -> colour chip. Unresolved, or a word picture with a blank gloss -> text fallback (§3.11).
 ```
 
 **`schemas/quest.ts`**:
@@ -318,7 +318,7 @@ export const PicWordRoundSchema = z.object({ pairs: z.array(PicWordPairSchema).m
 
 `MinigameScope.picWord?: { boards: PicWordRound[] }`; `rounds` = number of boards (Stage 1: 1 board, 4 pairs -> 4 scored rounds).
 
-**Picture resolution** (`screens/minigames/PictureArt.tsx`, one place for all games): `card:<id>` -> `HeritageCardArt` when the id is in `supportedCardIds` (`packages/design-system/src/components/HeritageCardArt/HeritageCardArt.tsx:21-57`); `word:<id>` -> `WordArt` once F-VOC ships (D7: hand-authored SVG, tokens only, no emoji, no raster); `swatch:<token>` -> a colour chip from `colors.*`. **Unresolved or absent -> the tile shows the pair's English gloss** in a plain card (the board then plays like Card Match) — never a blank tile. All art is SVG from the design system (D7); this spec adds none.
+**Picture resolution** (`screens/minigames/PictureArt.tsx`, one place for all games): `card:<id>` -> `HeritageCardArt` when the id is in `supportedCardIds` (`packages/design-system/src/components/HeritageCardArt/HeritageCardArt.tsx:21-57`); `word:<key>` -> `WordArt` when the key is in `WORD_ART_KEYS` (F-VOC-002 W-7; D7: hand-authored SVG, tokens only, no emoji, no raster); `swatch:<token>` -> a colour chip from `colors.*`. Card art and WordArt sit in the same neutral tile (`surface.paper`, `border.subtle`, padding `spacing.xs`), so a style difference never identifies an answer (F-VOC-002 §3.11); the art in it is never drawn below 48 dp (the tile grows outward instead). **Unresolved or absent, or a word picture with a blank gloss -> the tile shows the pair's English gloss** in a plain card (the board then plays like Card Match), or the localized "Picture" when the gloss is blank — never a blank tile. (Amended in the review follow-up to #320.) All art is SVG from the design system (D7); this spec adds none.
 
 **Board behaviour** (`screens/minigames/PicWordMatchGame.tsx`, props `{ scope, host }`):
 

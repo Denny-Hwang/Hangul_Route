@@ -61,9 +61,45 @@ export function resolvePicture(ref: string | undefined, ctx: PictureContext): Re
  * What `PictureArt` draws for a ref and its gloss. A word picture is the only
  * carrier of meaning where it is shown, so it must be named: with a blank
  * gloss it would be neither named nor hidden (WordArt's `unlabelled`), and the
- * text tile is shown instead (F-VOC-002 §3.7).
+ * text tile is shown instead (F-VOC-002 §3.7), named by `pictureName` so it is
+ * never empty.
  */
 export function resolvePictureArt(ref: string | undefined, gloss: string, ctx: PictureContext): ResolvedPicture {
   const picture = resolvePicture(ref, ctx);
   return picture.kind === 'word' && gloss.trim() === '' ? { kind: 'text' } : picture;
+}
+
+/**
+ * Whether `PictureArt`, given this ref and gloss, draws a picture rather than
+ * its text tile. Screens that show a picture only when there is one ask this,
+ * with the gloss they will pass, so the answer matches what is drawn.
+ */
+export function hasPicture(ref: string | undefined, gloss: string, ctx: PictureContext): boolean {
+  return resolvePictureArt(ref, gloss, ctx).kind !== 'text';
+}
+
+/**
+ * The name of a picture and the text of its text tile: the gloss, or
+ * `fallback` (the localized "Picture") when the gloss is blank, so a tile is
+ * never empty and a picture is never unnamed.
+ */
+export function pictureName(gloss: string, fallback: string): string {
+  return gloss.trim() === '' ? fallback : gloss;
+}
+
+export interface PictureTileMetrics {
+  /** Padding plus border of the neutral tile, per side. */
+  inset: number;
+  /** The smallest the art is drawn: 48, the tested minimum (F-VOC-002 §3.7). */
+  minArt: number;
+}
+
+/**
+ * The neutral tile round card art and WordArt. The art sits inside the
+ * requested side; when that would draw it below `minArt`, the art stays at
+ * `minArt` and the tile grows outward instead.
+ */
+export function pictureTile(size: number, metrics: PictureTileMetrics): { tile: number; art: number } {
+  const art = Math.max(size - 2 * metrics.inset, metrics.minArt);
+  return { tile: art + 2 * metrics.inset, art };
 }

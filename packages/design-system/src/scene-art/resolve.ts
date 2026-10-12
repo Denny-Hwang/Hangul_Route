@@ -135,7 +135,7 @@ export function parsePath(d: string): PathSegment[] | null {
     const ch = d[i]!;
     if (ch === ' ' || ch === '\t' || ch === '\n') {
       i += 1;
-    } else if (Object.hasOwn(ARITY, ch)) {
+    } else if (Object.prototype.hasOwnProperty.call(ARITY, ch)) {
       groups.push({ cmd: ch as Cmd, nums: [] });
       i += 1;
     } else {
@@ -366,7 +366,7 @@ function flatten(shapes: readonly Shape[], m: Matrix, base: Omit<ResolvedNode, '
 }
 
 function lookup(registry: Registry, ref: string, setting: boolean): ItemDef | undefined {
-  if (!Object.hasOwn(registry, ref)) return undefined;
+  if (!Object.prototype.hasOwnProperty.call(registry, ref)) return undefined;
   const def = registry[ref]!;
   return (def.kind === 'setting') === setting ? def : undefined;
 }
