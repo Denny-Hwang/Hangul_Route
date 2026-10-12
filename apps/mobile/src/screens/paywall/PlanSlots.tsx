@@ -1,4 +1,4 @@
-import { Body, Spacer } from '@hangul-route/design-system';
+import { Body, Spacer, spacing } from '@hangul-route/design-system';
 import React from 'react';
 import { View } from 'react-native';
 import type { FreeSlot } from '../../logic/plan-free-lines';
@@ -22,7 +22,7 @@ export function FreePlanLines({ slot }: { slot: FreeSlot }): React.ReactElement 
         </Body>
       ) : null}
       {slot.list.length > 0 ? (
-        <View role="list" testID="plan-free-list">
+        <View role="list" testID="plan-free-list" style={{ marginTop: slot.line !== null ? spacing.xs : 0 }}>
           {slot.list.map((item) => (
             <View key={item} role="listitem">
               <Body tone="secondary" align="center">

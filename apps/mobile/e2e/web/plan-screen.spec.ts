@@ -92,6 +92,9 @@ async function openPlanDetails(page: Page, name: string, card = 'Free plan'): Pr
 
 async function expectStatusOnly(page: Page): Promise<void> {
   await expect(page.getByText('Stage 1 is always free.')).toBeVisible();
+  // F-ENT-003 E3-8: the release build's switch is off, so the free slot holds only that line.
+  await expect(page.getByTestId('plan-free-list')).toHaveCount(0);
+  await expect(page.getByText(/^Stage 1 is free:/)).toHaveCount(0);
   const text = await screenText(page);
   expect(text).not.toMatch(/\$|\d+\.\d{2}|\/ year|lifetime|premium|unlock|\bbuy\b|promo|terms|web console/i);
   // Status, caption and both buttons fit the width: no sideways scroll at 320 px either.
@@ -188,6 +191,8 @@ test.describe('full route', () => {
       await expect(page.getByText(row.title)).toBeVisible();
       await expect(page.getByText(row.line)).toBeVisible();
       await expect(page.getByText('Stage 1 is always free.')).toHaveCount(0);
+      // F-ENT-003 E3-8: no guidance line while the switch is off.
+      await expect(page.getByTestId('plan-guidance')).toHaveCount(0);
       await expect(page.getByRole('button', { name: 'Open billing' })).toBeVisible();
       const text = await screenText(page);
       expect(text).not.toMatch(/\$|\d+\.\d{2}|\/ year|lifetime|premium|unlock|\bbuy\b|promo|terms|web console/i);
