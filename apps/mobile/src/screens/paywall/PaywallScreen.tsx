@@ -1,12 +1,19 @@
+import { CATALOG, freeLessonsFacts } from '@hangul-route/content-schema';
 import { Body, Button, Caption, Heading, Hoya, Icon, Screen, Spacer, colors, spacing, touchTarget, typography } from '@hangul-route/design-system';
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, Pressable, Text, View } from 'react-native';
 import { useOnline } from '../../components/use-online';
-import { bundleOs, flags } from '../../config/flags';
+import { bundleOs, flags, gatingActive } from '../../config/flags';
+import { episodesAll, questsAll } from '../../content';
+import { vocabTopics } from '../../content/vocab';
 import { useMessages } from '../../i18n/use-messages';
+import { freeExtrasCount } from '../../logic/content-access';
+import { cursorContext } from '../../logic/cursor-context';
+import { sourcesOf } from '../../logic/homework/plan-derivation';
 import { billingNote, billingOpenedEvent, billingPressStep, pendingBillingStep, planView } from '../../logic/paywall';
+import { classOnlyMember, freeEndOnCursor, readFreeFacts, type FreePlanContext } from '../../logic/plan-free-lines';
 import { grownUpEntriesOn, planOpenBlocked } from '../../logic/shell/entry-points';
 import type { RootStackParamList } from '../../navigation/types';
 import { openBilling } from '../../platform/billing-handoff';
@@ -15,11 +22,21 @@ import { focusForScreenReader } from '../../platform/screen-reader';
 import { track } from '../../platform/telemetry';
 import { useAudience } from '../../store/audience';
 import { gateOpensDirectlyNow } from '../../store/gate-now';
+import { useMembershipStore } from '../../store/membership-store';
+import { usePlanStore } from '../../store/plan-store';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
-import { effectiveTier, useTierStore } from '../../store/tier-store';
+import { useProgressStore } from '../../store/progress-store';
+import { effectiveTier, useAccessTier, useQuestAccess, useTierStore } from '../../store/tier-store';
 import { FreePlanLines, PlanGuidanceLine } from './PlanSlots';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Paywall'>;
+
+/** What is free in this build: read once (F-ENT-003 section 3.9.1; numbers from data, never typed). */
+let bundleFacts: { facts: FreePlanContext['facts']; stories: number; topics: number } | null = null;
+function freeBundleFacts(): { facts: FreePlanContext['facts']; stories: number; topics: number } {
+  bundleFacts ??= { facts: readFreeFacts(() => freeLessonsFacts(CATALOG)), ...freeExtrasCount(vocabTopics.map((t) => t.key)) };
+  return bundleFacts;
+}
 
 /**
  * The learner Plan screen — F-BILL-002 B-9 (§4.7, §4.8; wireframe billing/plan-status; mock
@@ -39,8 +56,42 @@ export function PaywallScreen({ navigation, route }: Props): React.ReactElement 
   const cached = useTierStore((s) => (profile ? s.byLearner[profile.id] : undefined));
   const entitled = effectiveTier(profile?.id ?? '', new Date());
   void cached; // re-render when the inbox updates the tier
+
+  // F-ENT-003 section 3.9.1 (E3-8): the slots' data, read only while the effective switch is on.
+  const gating = gatingActive(flags, bundleOs());
+  const learnerId = profile?.id ?? '';
+  const accessTier = useAccessTier(learnerId);
+  const questOpen = useQuestAccess();
+  const snap = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
+  const memberships = useMembershipStore((s) => (profile ? s.byLearner[profile.id] : undefined));
+  const plans = usePlanStore((s) => (profile ? s.byLearner[profile.id] : undefined));
+  useEffect(() => {
+    if (gating && learnerId) void usePlanStore.getState().hydrate(learnerId);
+  }, [gating, learnerId]);
+  const freePlan = useMemo((): FreePlanContext | null => {
+    if (!gating) return null;
+    const freeEnd =
+      snap !== undefined &&
+      freeEndOnCursor({
+        gatingActive: gating,
+        tier: accessTier,
+        snapshot: snap,
+        quests: questsAll,
+        episodes: episodesAll,
+        cursor: cursorContext({ tier: accessTier, placements: snap.placements, quests: questsAll, episodes: episodesAll, isQuestOpen: questOpen }),
+      });
+    return {
+      gatingActive: gating,
+      ...freeBundleFacts(),
+      classOnly: classOnlyMember(memberships),
+      freeEnd,
+      // Plans not read yet count as a plan, so the no-plan line never flashes before they load.
+      hasPlan: plans === undefined || sourcesOf(plans, snap?.selfRoute).length > 0,
+    };
+  }, [gating, accessTier, questOpen, snap, memberships, plans]);
+
   const view = planView(
-    { tier: entitled.tier, source: entitled.source, audience, name: profile?.displayName ?? null, platform: Platform.OS },
+    { tier: entitled.tier, source: entitled.source, audience, name: profile?.displayName ?? null, platform: Platform.OS, freePlan },
     messages,
   );
   const { state } = view;
@@ -138,8 +189,8 @@ export function PaywallScreen({ navigation, route }: Props): React.ReactElement 
           {line}
         </Body>
       ))}
-      {view.freeSlotLine !== null ? <FreePlanLines line={view.freeSlotLine} /> : null}
-      {view.guidanceSlot ? <PlanGuidanceLine /> : null}
+      {view.freeSlot !== null ? <FreePlanLines slot={view.freeSlot} /> : null}
+      <PlanGuidanceLine lines={view.guidance} />
       {view.billing ? (
         <>
           <Spacer size="xl" />

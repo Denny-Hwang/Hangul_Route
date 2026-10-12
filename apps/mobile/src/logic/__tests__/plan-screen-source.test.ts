@@ -44,6 +44,24 @@ describe('Plan screen (screens/paywall/PaywallScreen.tsx)', () => {
     expect(plan).toContain('<PlanGuidanceLine');
   });
 
+  it('F-ENT-003 E3-8: fills the slots from the view, with data read only while the effective switch is on', () => {
+    expect(plan).toContain('<FreePlanLines slot={view.freeSlot}');
+    expect(plan).toContain('<PlanGuidanceLine lines={view.guidance}');
+    expect(plan).toContain('gatingActive(flags, bundleOs())');
+    expect(plan).toMatch(/if \(!gating\) return null;/);
+    expect(plan).toContain('freeLessonsFacts(CATALOG)');
+    expect(plan).toContain('freeEndOnCursor(');
+    expect(plan).toContain('classOnlyMember(');
+    // Figures come from data: no count is typed on the screen.
+    expect(plan).not.toMatch(/\b(11|15|24|50|65) (lessons|letters|minutes)\b/);
+  });
+
+  it('F-ENT-003 E3-8: the slots render words only, no button, link or URL', () => {
+    const slots = src('screens/paywall/PlanSlots.tsx');
+    expect(slots).not.toMatch(/\bButton\b|Pressable|Linking|openExternalUrl|href|onPress/);
+    expect(slots).toContain('role="list"');
+  });
+
   it('Open billing asks the gate with destination Billing unless it opens directly', () => {
     expect(plan).toMatch(nav('PinEntry', "next:\\s*'Billing'"));
     expect(plan).toMatch(/billingPressStep\(/);
