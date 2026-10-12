@@ -1,6 +1,6 @@
 import type { LearnerReportResponse } from '@hangul-route/content-schema';
 import { describe, expect, expectTypeOf, it, vi } from 'vitest';
-import { createConsoleApi } from '../api';
+import { createConsoleApi, type ApiResult } from '../api';
 
 /** F-REPORT-001 section 3.8 (RP-7a1): the console client of `GET /api/spaces/:id/learners/:learnerId/report`. */
 
@@ -42,7 +42,7 @@ describe('getLearnerReport', () => {
     const api = createConsoleApi({ endpoint: 'https://api.example.com', token: 't', fetchImpl });
     const res = await api.getLearnerReport('space:c', 'profile:mina', 'week');
     expect(res).toEqual({ ok: true, data: body });
-    expectTypeOf(res).toEqualTypeOf<{ ok: true; data: LearnerReportResponse } | { ok: false; error: import('../api').ApiError; status: number; code?: string }>();
+    expectTypeOf(res).toEqualTypeOf<ApiResult<LearnerReportResponse>>();
   });
 
   it('reads a malformed `activity` as absent (the legacy state), never as a failure', async () => {

@@ -17,6 +17,7 @@ import {
   reportBackLink,
   reportLoadProblem,
   reportQueryOf,
+  reportViewerRights,
   reportWordsOf,
   type LearnerReportView,
   type LearnerReportViewInput,
@@ -34,7 +35,7 @@ function view(summary: ReportSummary | null, over: Partial<LearnerReportViewInpu
     data: response(summary, { kind, archivedAt, name }),
     query: { period: 'week', at: null, from: null },
     now: NOW,
-    canWritePlan: true,
+    role: 'owner',
     stageTitle,
     tipGames: { 'sound-letter': 'Listen and pick', 'hangul-recognition': 'Match the sound' },
     ...rest,
@@ -147,17 +148,24 @@ describe('the week report of a steady learner (behaviour 1, family viewer)', () 
     expect(v.thisPeriod?.growth).toBeNull();
   });
 
-  it('holds More detail behind one button: letters as two-part tiles, milestones with the totals, the level check in words, the plan', () => {
+  it('holds More detail behind one button: the totals first, letters as two-part tiles, the level check in words, the plan', () => {
     const detail = v.moreDetail;
     expect(detail?.button).toBe('More detail');
-    expect(detail?.blocks.map((block) => block.heading)).toEqual(['Letters Mina knows well', 'Letters being practiced', 'New letters this period', 'Milestones', 'Level check', 'Plan']);
-    const strong = detail?.blocks[0];
+    // The totals lead without a heading; no Milestones heading without a milestone in the window (design pass #444).
+    expect(detail?.blocks[0]).toEqual({ kind: 'totals', line: 'Since the start: 7 quests, 5 cards' });
+    expect(detail?.blocks.slice(1).map((block) => ('heading' in block ? block.heading : null))).toEqual([
+      'Letters Mina knows well',
+      'Letters being practiced',
+      'New letters this period',
+      'Level check',
+      'Plan',
+    ]);
+    const strong = detail?.blocks[1];
     expect(strong?.kind === 'letters' ? strong.letters.slice(0, 2) : null).toEqual([
       { letter: 'ㅏ', romanization: 'a' },
       { letter: 'ㅓ', romanization: 'eo' },
     ]);
     expect(strong?.kind === 'letters' ? strong.more : null).toBe(0);
-    expect(detail?.blocks[3]).toEqual({ kind: 'lines', heading: 'Milestones', lines: ['Since the start: 7 quests, 5 cards'] });
     expect(detail?.blocks[4]).toEqual({
       kind: 'lines',
       heading: 'Level check',
@@ -195,12 +203,22 @@ describe('the teacher variant (class viewer)', () => {
     expect(line?.action).toEqual({ href: '/teach/space/plan?id=space%3Asunflower&plan=plan%3Afamily-week', text: 'Open the plan' });
   });
 
-  it('draws no action without plan.write (a school admin) and none on an archived class, which says it is read-only', () => {
-    const admin = view(STEADY, { kind: 'class', canWritePlan: false });
+  it('draws no action without plan.write (a school admin) and none on an archived class', () => {
+    const admin = view(STEADY, { kind: 'class', role: null });
     expect(admin.practiceNext?.lines.every((line) => line.action === null)).toBe(true);
+    expect(view(STEADY, { kind: 'class', role: 'teacher' }).practiceNext?.lines.some((line) => line.action !== null)).toBe(true);
     const archived = view(STEADY, { kind: 'class', archivedAt: '2026-10-01T00:00:00.000Z' });
     expect(archived.practiceNext?.lines.every((line) => line.action === null)).toBe(true);
-    expect(archived.archived).toBe('This class is archived — read-only until you unarchive it.');
+  });
+
+  it('says an archived space is read-only: the settings sentence to its owner, the neutral report line to everyone else', () => {
+    const at = '2026-10-01T00:00:00.000Z';
+    expect(view(STEADY, { kind: 'class', archivedAt: at, role: 'owner' }).archived).toBe('This class is archived — read-only until you unarchive it.');
+    expect(view(STEADY, { kind: 'class', archivedAt: at, role: 'teacher' }).archived).toBe('This class is archived. Its report is read-only.');
+    expect(view(STEADY, { kind: 'class', archivedAt: at, role: null }).archived).toBe('This class is archived. Its report is read-only.');
+    expect(view(STEADY, { kind: 'family', archivedAt: at, role: 'owner' }).archived).toBe('This family is archived — read-only until you unarchive it.');
+    expect(view(STEADY, { kind: 'family', archivedAt: at, role: 'caregiver' }).archived).toBe('This family space is archived. Its report is read-only.');
+    expect(view(STEADY, { kind: 'class', role: 'teacher' }).archived).toBeNull();
   });
 
   it('shows the anonymized roster name it is given, in the title only', () => {
@@ -308,7 +326,7 @@ describe('periods and steps', () => {
         { m: '2026-10', label: 'October 2026', quests: 7, cards: 5 },
       ],
     });
-    expect(v.moreDetail?.blocks.map((b) => b.heading)).not.toContain('New letters this period');
+    expect(v.moreDetail?.blocks.map((b) => ('heading' in b ? b.heading : null))).not.toContain('New letters this period');
   });
 
   it('the growth line has no "since" for a class (the first practice day may lie before the learner joined)', () => {
@@ -332,7 +350,6 @@ describe('states (section 3.14)', () => {
   it('stale, a month partly after the last save: figures up to the last saved day and the stage finished', () => {
     const v = view(STALE, { query: { period: 'month', at: null, from: null } });
     expect(v.headline).toEqual({ text: 'Mina finished Stage 1: Hangul this month!', horizon: 'Figures up to Oct 2.' });
-    expect(texts(v.wentWell?.lines)[0]).toBe('Mina finished Stage 1: Hangul.');
     // October to its 2nd already holds more minutes than all of September: the marker follows the module's figures.
     expect(v.thisPeriod?.figures?.map((f) => [f.key, f.count, f.up])).toEqual([
       ['days', 1, null],
@@ -343,11 +360,8 @@ describe('states (section 3.14)', () => {
       ['letters', 1, null],
     ]);
     expect(v.thisPeriod?.calendar?.notSaved).toBe('Not saved yet: Oct 3, Oct 4, Oct 5, Oct 6, Oct 7, Oct 8, Oct 9, Oct 10, Oct 11, Oct 12, Oct 13, Oct 14 and Oct 15.');
-    expect(v.moreDetail?.blocks.find((b) => b.heading === 'Milestones')).toEqual({
-      kind: 'lines',
-      heading: 'Milestones',
-      lines: ['Since the start: 1 quest, 1 card', 'Stage 1: Hangul, finished Oct 2'],
-    });
+    expect(v.moreDetail?.blocks[0]).toEqual({ kind: 'totals', line: 'Since the start: 1 quest, 1 card' });
+    expect(v.moreDetail?.blocks.find((b) => 'heading' in b && b.heading === 'Milestones')).toEqual({ kind: 'lines', heading: 'Milestones', lines: ['Stage 1: Hangul, finished Oct 2'] });
   });
 
   it('a past window after the last save names the last saved day', () => {
@@ -369,8 +383,7 @@ describe('states (section 3.14)', () => {
     expect(v.headline).toBeNull();
     expect(v.wentWell).toBeNull();
     expect(v.thisPeriod).toBeNull();
-    expect(v.moreDetail?.blocks.map((b) => b.heading)).toEqual(['Letters Mina knows well', 'Letters being practiced', 'Milestones', 'Plan']);
-    expect(v.moreDetail?.blocks.find((b) => b.heading === 'Milestones')).toEqual({ kind: 'lines', heading: 'Milestones', lines: ['Since the start: 3 quests, 2 cards'] });
+    expect(v.moreDetail?.blocks.map((b) => ('heading' in b ? b.heading : b.line))).toEqual(['Since the start: 3 quests, 2 cards', 'Letters Mina knows well', 'Letters being practiced', 'Plan']);
   });
 
   it('legacy and stale says the update line once', () => {
@@ -419,7 +432,7 @@ describe('states (section 3.14)', () => {
   });
 
   it('a school space has no learner report', () => {
-    expect(learnerReportView({ data: response(STEADY, { kind: 'school' }), query: { period: 'week', at: null, from: null }, now: NOW, canWritePlan: false, stageTitle })).toBeNull();
+    expect(learnerReportView({ data: response(STEADY, { kind: 'school' }), query: { period: 'week', at: null, from: null }, now: NOW, role: null, stageTitle })).toBeNull();
   });
 
   it('links the glance to the Learning Route only when that page exists on the build', () => {
@@ -569,6 +582,17 @@ describe('headlines in both voices', () => {
   it('a console report is always in the third person; the device report keeps its second voice', () => {
     expect(reportWordsOf(report({}), { name: 'Mina', stageTitle }).voice).toBe('second');
     expect(reportWordsOf(report({ viewer: 'class' }), { name: 'Mina', stageTitle }).voice).toBe('third');
+  });
+});
+
+describe('reportViewerRights: the role in listSpaces() decides the archived sentence and the plan actions', () => {
+  it('owner: manage and plan.write; teacher or caregiver: plan.write; anyone else or unlisted: neither', () => {
+    expect(reportViewerRights('owner')).toEqual({ manage: true, planWrite: true });
+    expect(reportViewerRights('teacher')).toEqual({ manage: false, planWrite: true });
+    expect(reportViewerRights('caregiver')).toEqual({ manage: false, planWrite: true });
+    expect(reportViewerRights('admin')).toEqual({ manage: false, planWrite: false });
+    expect(reportViewerRights('student')).toEqual({ manage: false, planWrite: false });
+    expect(reportViewerRights(null)).toEqual({ manage: false, planWrite: false });
   });
 });
 

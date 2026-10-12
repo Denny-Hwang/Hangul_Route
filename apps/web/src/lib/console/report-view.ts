@@ -23,6 +23,7 @@ import {
   type ReportSummary,
   type ReportVoice,
   type SpaceKind,
+  type SpaceRole,
   type StageKey,
 } from '@hangul-route/content-schema';
 import { DEFAULT_LOCALE, formatDate, getMessages, type UiLocale } from '@hangul-route/i18n';
@@ -528,6 +529,8 @@ export interface ReportThisPeriod {
 
 /** A More detail block under its `h3`: letter tiles, or lines. */
 export type ReportDetailBlock =
+  /** "Since the start: 6 quests, 5 cards": leads the panel with no heading of its own (design pass #444). */
+  | { kind: 'totals'; line: string }
   | { kind: 'letters'; heading: string; letters: ReportLetter[]; more: number }
   | { kind: 'lines'; heading: string; lines: string[] };
 
@@ -543,7 +546,10 @@ export interface LearnerReportView {
   title: string;
   back: ReportLink;
   state: LearnerReportState;
-  /** `console.settings.archived.<kind>` on an archived space (read-only: no line actions). */
+  /**
+   * An archived space (read-only: no line actions): the settings sentence `console.settings.archived.<kind>` for a
+   * viewer who can unarchive it (`space.manage`), the neutral `report.state.archived.<kind>` for everyone else.
+   */
   archived: string | null;
   glance: ReportGlance | null;
   /** One neutral block (stale, legacy, no_data, empty): no warning colour, no icon. */
@@ -570,8 +576,11 @@ export interface LearnerReportViewInput {
   query: Pick<ReportQuery, 'period' | 'at' | 'from'>;
   /** The viewer's clock: today for the learner is computed from it and the learner's offset (section 3.2). */
   now: Date;
-  /** `plan.write` in this space (a class teacher, a family caregiver, or the owner; never a school admin). */
-  canWritePlan: boolean;
+  /**
+   * The viewer's role in this space, from `listSpaces()` (the report body carries no viewer field); null when the
+   * account's spaces do not list it (a school admin reading through the school). See `reportViewerRights`.
+   */
+  role: SpaceRole | null;
   stageTitle: (stage: StageKey) => string;
   /** The game titles of the strand tips; a tip whose game is not given is left out. */
   tipGames?: ReportTipGames;
@@ -579,6 +588,24 @@ export interface LearnerReportViewInput {
   learningRoute?: boolean;
   catalog?: Catalog;
   locale?: UiLocale;
+}
+
+/** What the viewer may do on a report page, by its role in the space (`can.ts`). */
+export interface ReportViewerRights {
+  /** `space.manage`: the owner, who can unarchive the space (and reads the settings sentence when it is archived). */
+  manage: boolean;
+  /** `plan.write`: **Add to a plan** and **Open the plan**. */
+  planWrite: boolean;
+}
+
+/**
+ * The viewer's rights from its `listSpaces()` role (design pass #444, the `can.ts` rule): `owner` -> both; a class
+ * `teacher` or a family `caregiver` -> `plan.write`; anyone else, or a viewer whose spaces do not list the space (a
+ * school admin reading through the school) -> neither.
+ */
+export function reportViewerRights(role: SpaceRole | null): ReportViewerRights {
+  if (role === 'owner') return { manage: true, planWrite: true };
+  return { manage: false, planWrite: role === 'teacher' || role === 'caregiver' };
 }
 
 /** A space kind with a learner report: a school has none (its admin opens the class's). */
@@ -655,18 +682,17 @@ function detailView(report: LearnerReport, summary: ReportSummary, w: ReportWord
   if (detail === null) return null;
   const { m } = w;
   const d = m.report.detail;
-  const blocks: ReportDetailBlock[] = [];
+  const blocks: ReportDetailBlock[] = [{ kind: 'totals', line: d.totals(detail.totals.quests, detail.totals.cards) }];
   const letters = (heading: string, list: readonly string[], more = 0): void => {
     if (list.length) blocks.push({ kind: 'letters', heading, letters: list.map(letterLabel), more });
   };
   letters(d.lettersStrong(w.name), detail.lettersStrong, detail.lettersStrongMore);
   letters(d.lettersPractising, detail.lettersPractising);
   letters(d.lettersNew, detail.lettersNew ?? []);
-  blocks.push({
-    kind: 'lines',
-    heading: d.milestones,
-    lines: [d.totals(detail.totals.quests, detail.totals.cards), ...detail.milestones.map((row) => d.milestone(row.n, w.stageTitle(row.stage), dayText(row.on, w)))],
-  });
+  // The Milestones `h3` shows only over a milestone (every one on All time); the totals never sit under it.
+  if (detail.milestones.length) {
+    blocks.push({ kind: 'lines', heading: d.milestones, lines: detail.milestones.map((row) => d.milestone(row.n, w.stageTitle(row.stage), dayText(row.on, w))) });
+  }
   if (detail.levelCheck !== null) {
     const spot = startingSpotLine(summary, w.locale);
     const statuses = m.report.strand.status;
@@ -725,6 +751,7 @@ export function learnerReportView(input: LearnerReportViewInput): LearnerReportV
   const w = reportWordsOf(report, { name, stageTitle: input.stageTitle, tipGames: input.tipGames, catalog, locale, summary, now });
   const space = { id: data.space.id, kind: data.space.kind, name: data.space.name };
   const archived = data.space.archivedAt !== null;
+  const rights = reportViewerRights(input.role);
   const href = (period: ReportPeriod, at: string | null): string =>
     ROUTES.learnerReport({ spaceId: space.id, learnerId: data.learner.id, kind: space.kind, period, at, from: query.from });
 
@@ -733,7 +760,7 @@ export function learnerReportView(input: LearnerReportViewInput): LearnerReportV
     if (out === null) return null;
     const links = 'links' in line ? line.links : undefined;
     let action: ReportLink | null = null;
-    if (input.canWritePlan && !archived && links) {
+    if (rights.planWrite && !archived && links) {
       if ('addToPlan' in links) action = { href: `${ROUTES.spacePlan(space.id)}&add=${encodeURIComponent(links.addToPlan)}`, text: m.report.action.addToPlan };
       else action = { href: ROUTES.spacePlan(space.id, links.openPlan), text: m.report.action.openPlan };
     }
@@ -780,7 +807,7 @@ export function learnerReportView(input: LearnerReportViewInput): LearnerReportV
     title: m.report.title.learner(name),
     back: reportBackLink(query.from, space, locale),
     state: report.state,
-    archived: archived ? m.console.settings.archived[space.kind] : null,
+    archived: archived ? (rights.manage ? m.console.settings.archived[space.kind] : m.report.state.archived[viewer]) : null,
     glance: glanceOf(),
     notices: noticesOf(report, w),
     tabsLabel: m.a11y.report.periods,
