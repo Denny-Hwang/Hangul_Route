@@ -69,8 +69,8 @@ The shots `route-card-three-tags-320.png` and `-320-text200.png` show one stage 
 
 | Key | Draft | Why |
 |---|---|---|
-| `learner.myRoute.goal.exploreInGoal(n, title)` (LR-3b) | "Explore Stage {n} · {title}: you are in your goal stage" | the collapsed taste line of E. Section 4.3 says "or collapsed" for a default taste goal but names no key |
-| `learner.myRoute.hero.error` (LR-3b) | "Hoya could not open your Learning Route." | the J state. F-ROUTE-001 section 3.17 asks for "hero and an inline retry" but names no words; this is the wireframe's J line. The button reuses `common.buttons.tryAgain` |
+| `learner.myRoute.goal.exploreInGoal(n, title)` (LR-3b) | "Explore Stage {n} · {title}: you are in your goal stage" | the collapsed taste line of E. Section 4.3's rule collapses Now and Goal when they are the same stage, and wireframe E's note gives these words (`journey/learning-route.md`, "When Now is also Stage 2"), but no key existed. **Added to section 11.1 by this PR**, with the grown-up twin `caregiver.journey.goal.exploreInGoal(name, n, title)`, and section 4.3's taste row now says "(or collapsed)" |
+| `learner.myRoute.hero.error` (LR-3b) | "Hoya could not open your Learning Route." | the J state. F-ROUTE-001 section 3.17 asks for "hero and an inline retry" but names no words; this is the wireframe's J line. The button reuses `common.buttons.tryAgain`. **Added to section 11.1 by this PR**, with the grown-up twin `caregiver.journey.error(name)` "Hoya could not open {name}'s Learning Route." |
 | `caregiver.journey.goal.from.family` (LR-3b) | "From the family's weekly plan" | already in 11.1; listed because L1 uses it |
 
 **F-ENT-003's words, not yet on main.** These are drawn from F-ENT-003's drafts (its section 3.11 and Appendix A). They arrive with F-ENT-003's string PRs (`learner.routeNext` in E3-4, `learner.access` in E3-6), and LR-5a and LR-5b use them through their keys, never as copies:

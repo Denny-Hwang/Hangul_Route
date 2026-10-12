@@ -31,7 +31,7 @@ The report line and the stage list card always show the same case. LR-7 computes
 | Case | When | Goal line | Glyph |
 |---|---|---|---|
 | 1 | Family viewer, `summary.routeGoal` present (the goal the learner's device shows) | "Sam's goal: Stage 2 · Words" (`learnerGoal`) | flag |
-| 1, reached | as 1, and the goal stage is complete or known | "Sam reached the goal: Stage 1 · Hangul." (`reached`) | flag |
+| 1, reached | as 1, and the goal stage is complete or known, or explored when its availability is `taste` (section 4.1 rule 6, the device's own rule) | "Sam reached the goal: Stage 1 · Hangul." (`reached`) | flag |
 | 2 | No `routeGoal`, and this space has a live curriculum plan that targets the learner (the newest `publishedAt` wins) | "Your family's weekly plan reaches Stage 1 · Hangul" or "Your class's weekly plan reaches Stage 1 · Hangul" (`planReaches.*`) | flag |
 | 3 | Neither | "Next open stage: Stage {n} · {title}" (`nextOpen`), also when that stage is the Now stage (below) | none |
 | No goal | `pickGoal` returns null: every stage is complete, known, explored or later | "Sam reached the end of the open road. More is coming." (`endOfRoad`) | none |
@@ -70,6 +70,7 @@ Last practice: Monday               report.glance.lastPractice
   - It is `touchTarget.min` tall: a quiet outline pill (`border.strong` on `surface.paper`, `text.primary`, bold).
   - F-REPORT-001's own wireframe puts the link at the end of the "Now on" line. When the goal line arrives, the PR that adds it (LR-8 or RP-7a2) moves the link under it, so "Now" and the goal line stay together.
 - **Never on this line:** a source line, a date, "behind", "late", or "N stages to go".
+- **The wireframe's "Goal line by case" table** (`parent/learning-route.md`, R) has a "Source / extra" column: the source line, "Plan ends {date}" and "{name} reached this stage.". Those belong to the full card on the stage list page, not to the report. The report shows the goal line alone (section 2, F-REPORT-001 row: "one goal line"), as `mock/report.html` draws it.
 - **In-app report (RP-9).** Its **Open Learning Route** opens the local read-only page L1 (`route-card.md`), which shows the device's own goal with its source and plan end. This board draws the console report, the one the summary cases above apply to.
 - **Screen readers.** The section adds a landmark but no heading, so the report's heading order (F-REPORT-001) does not change. The reading order is "Sam: report", then the "Learning Route" region with "Now on Stage 1: Hangul", "Sam's goal: Stage 2 · Words" and the link, then "Last practice".
 
@@ -83,7 +84,7 @@ There is one reading column (`layout.maxWidth.reading`, centred). The gutter is 
 2. **Back link**: "Back to the report". Until F-REPORT-001's page exists, it reads "Back to the family" or "Back to the class". It is `touchTarget.min` tall, with an `arrow-left` glyph and underlined `brand.secondaryDark` text.
 3. **Heading**: `h1` "{name}'s Learning Route" at `title` size, then "Updated {date}" (`bodySm`, muted).
 4. **The grown-up route card**: a panel (`surface.paper`, `border.subtle`, `radii.lg`, padding `spacing.lg`).
-5. **"Stages"** (`h2`), then an `ol`.
+5. **"Stages"** (`h2`, `console.learningRoute.stagesTitle`, a key this PR adds to section 11.1 for LR-7), then an `ol`.
 
 ### The grown-up route card
 

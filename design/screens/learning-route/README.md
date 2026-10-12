@@ -36,7 +36,7 @@ Built by:
   - F-REPORT-001's `report.*` drafts;
   - F-ENT-003's `learner.access` and `learner.routeNext` drafts.
 
-  Two exceptions need new keys: the collapsed taste line of E and the J error line. `route-card.md` ("Strings the mocks need beyond section 11.1") lists them with the PR that adds each.
+  Three strings had no key: the collapsed taste line of E, the J error line and the "Stages" heading of the stage list page. This PR adds their drafts to section 11.1 (with the grown-up twins of the first two); `route-card.md` and `stage-list.md` list them with the PR that adds each.
 - **Annotations.** Grey dashed boxes and monospace labels are design-board notes, not UI. They mark the adult shell header, the F-BROWSE-001 slot and the unchanged skills card.
 
 Open any file in a browser (`design/screens/learning-route/mock/route-tab.html`). Links are placeholders.
@@ -55,6 +55,10 @@ Values that are not tokens. Each one derives from code or a token, and LR-4, LR-
 | "In your plan" ring | 16 px, `borderWidth.base` | placeholder for F-ENT-003 E3-D, which owns the ring at pip and cell size |
 | Card shadow | `0 2 8` at 0.06 | `shadows.card` (shadowColor `text.primary`) |
 | App breakpoints | 600 px, 900 px | `layout.breakpoint` (window classes, F-LAYOUT-001); written in px because the app's classes follow the window in dp, not the text size |
+| Font stack | the system stack (`-apple-system`, `Segoe UI`, `Roboto`, ...) | `typography.family.sans` is `'System'`, which the app's web build renders as this stack |
+| Board column | 22rem | design board only, not UI: one card per row at 375, two side by side at 1280 |
+
+The board labels use `typography.family.mono`, and the badge and the sticky tab bar use `z.raised` and `z.sticky`, all as tokens.
 
 ## Screens
 
