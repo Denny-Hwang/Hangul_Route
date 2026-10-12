@@ -18,10 +18,17 @@
 //     - erratum-removed /       errata are append-only: an existing erratum id
 //       erratum-changed         stays, with the same date, kind and factIds
 //     - new-story-content-ver   a file not on the base starts at contentVer 1
+//     - story-removed           a ready story file on the base is gone (a
+//                               shipped story is held with state 'draft', never
+//                               deleted; a rename counts as a deletion)
 //
 // `state` is exempt because a hold (an S1 correction that cannot be made yet)
 // changes only state from 'ready' to 'draft' (content/stories/README.md), and a
-// draft turning ready keeps its contentVer.
+// draft turning ready keeps its contentVer. So that a hold cannot become a
+// silent edit (ready vN -> draft vN -> edited as a draft -> ready vN), a story
+// that turns ready is also compared, with the same rules, against the last
+// version of the file on the base ref's history that was ready
+// (`git log <base> -- <path>`). A story that never shipped has none.
 //
 // Plain Node over JSON: the story schema is not imported, so this check runs
 // without `pnpm install`; validate-content and the content-schema suite own the
@@ -156,17 +163,56 @@ function readyRules(path, base, head) {
   return findings;
 }
 
+const LAST_READY_NOTE = " (compared with the last version that was ready, before the story was held)";
+
+/** The ready rules and errata rules against the last ready version, each message marked as such. */
+function lastReadyRules(path, lastReady, head) {
+  return [...errataRules(path, lastReady, head), ...readyRules(path, lastReady, head)].map((f) => ({
+    ...f,
+    message: `${f.message}${LAST_READY_NOTE}`,
+  }));
+}
+
+/** Drop a finding whose code and subject already appear (the same erratum reported against two versions). */
+function dedupe(findings) {
+  const seen = new Set();
+  return findings.filter((f) => {
+    const key = `${f.code}|${f.message.replace(LAST_READY_NOTE, "")}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+/**
+ * True when the comparison needs the last ready version from history: the
+ * story turns (or comes back) ready and the base is not a ready version.
+ */
+export function needsLastReady({ baseText, headText }) {
+  const head = parse(headText);
+  if (!head || head.state !== "ready") return false;
+  if (baseText === null) return true;
+  const base = parse(baseText);
+  return Boolean(base) && base.state !== "ready";
+}
+
 /**
  * The version findings for one story file.
- * @param {{ path: string, baseText: string | null, headText: string }} input
+ * @param {{ path: string, baseText: string | null, headText: string, lastReadyText?: string | null }} input
  *   baseText is null when the file is not on the base ref (a new story).
+ *   lastReadyText is the newest version of the file on the base ref's history
+ *   whose state was 'ready' (null when it never shipped); the CLI supplies it
+ *   when needsLastReady() says so.
  * @returns {Array<{ path: string, code: string, message: string }>}
  */
-export function checkStoryVersions({ path, baseText, headText }) {
+export function checkStoryVersions({ path, baseText, headText, lastReadyText = null }) {
   const head = parse(headText);
   if (!head) return [{ path, code: "invalid-json", message: "the story file is not a JSON object" }];
+  const lastReady = lastReadyText === null ? null : parse(lastReadyText);
 
   if (baseText === null) {
+    // A file re-added after a deletion keeps the history it shipped with.
+    if (lastReady) return head.state === "ready" ? lastReadyRules(path, lastReady, head) : [];
     return head.contentVer === 1
       ? []
       : [{ path, code: "new-story-content-ver", message: `a new story file starts at contentVer: 1 (found ${JSON.stringify(head.contentVer)})` }];
@@ -178,7 +224,24 @@ export function checkStoryVersions({ path, baseText, headText }) {
 
   const findings = errataRules(path, base, head);
   if (base.state === "ready") findings.push(...readyRules(path, base, head));
-  return findings;
+  else if (head.state === "ready" && lastReady) findings.push(...lastReadyRules(path, lastReady, head));
+  return dedupe(findings);
+}
+
+/**
+ * The finding for a story file that is on the base ref and gone from the tree.
+ * @param {{ path: string, baseText: string }} input
+ */
+export function checkRemovedStory({ path, baseText }) {
+  const base = parse(baseText);
+  if (!base || base.state !== "ready") return [];
+  return [
+    {
+      path,
+      code: "story-removed",
+      message: 'a ready story file was deleted or renamed; a shipped story is held with state: "draft" and keeps its file, id, facts and errata',
+    },
+  ];
 }
 
 // ---- CLI ---------------------------------------------------------------------
@@ -193,6 +256,21 @@ function baseTextOf(ref, relPath) {
   } catch {
     return null; // not on the base: a new file
   }
+}
+
+/** The newest version of relPath on ref's history whose state was 'ready', or null. */
+function lastReadyTextOf(ref, relPath) {
+  let shas;
+  try {
+    shas = git(["log", "--format=%H", ref, "--", relPath]).split("\n").filter(Boolean);
+  } catch {
+    return null;
+  }
+  for (const sha of shas) {
+    const text = baseTextOf(sha, relPath); // null at the commit that deleted it
+    if (text !== null && parse(text)?.state === "ready") return text;
+  }
+  return null;
 }
 
 function parseArgs(argv) {
@@ -233,7 +311,16 @@ function main() {
     const headText = readFileSync(join(ROOT, rel), "utf8");
     const baseText = baseTextOf(base, rel);
     if (baseText !== null && baseText === headText) continue;
-    findings.push(...checkStoryVersions({ path: rel, baseText, headText }));
+    const lastReadyText = needsLastReady({ baseText, headText }) ? lastReadyTextOf(base, rel) : null;
+    findings.push(...checkStoryVersions({ path: rel, baseText, headText, lastReadyText }));
+  }
+
+  const present = new Set(files);
+  const baseFiles = git(["ls-tree", "--name-only", base, "--", `${STORY_DIR}/`]).split("\n").filter(isStoryFile).sort();
+  for (const rel of baseFiles) {
+    if (present.has(rel)) continue;
+    const baseText = baseTextOf(base, rel);
+    if (baseText !== null) findings.push(...checkRemovedStory({ path: rel, baseText }));
   }
 
   for (const f of findings) process.stdout.write(`::error file=${f.path}::${f.code}: ${f.message}\n`);

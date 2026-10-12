@@ -30,21 +30,25 @@ const FIXTURE_ROOT = join(HERE, "__fixtures__", "source-links");
 const WORKFLOW = join(REPO_ROOT, ".github", "workflows", "source-links.yml");
 
 /** A minimal Response stand-in: what checkUrl reads. */
-function response(status, url) {
-  return { status, ok: status >= 200 && status < 300, url };
+function response(status, url, location) {
+  return { status, ok: status >= 200 && status < 300, url, headers: { get: (name) => (name.toLowerCase() === "location" ? location ?? null : null) } };
 }
 
 function fetchError(code) {
   return Object.assign(new TypeError("fetch failed"), { cause: Object.assign(new Error(code), { code }) });
 }
 
-/** A fake fetch from a table: `${method} ${url}` -> status | [status, finalUrl] | Error. */
+/**
+ * A fake fetch from a table: `${method} ${url}` -> status | [status, finalUrl]
+ * | { status, location } (a redirect answer) | Error.
+ */
 function fakeFetch(table, calls = []) {
   return async (url, init) => {
     calls.push({ url, method: init.method, headers: init.headers, hasSignal: Boolean(init.signal), redirect: init.redirect });
     const hit = table[`${init.method} ${url}`];
     if (hit === undefined) throw new Error(`unexpected request ${init.method} ${url}`);
     if (hit instanceof Error) throw hit;
+    if (!Array.isArray(hit) && typeof hit === "object") return response(hit.status, url, hit.location);
     const [status, finalUrl] = Array.isArray(hit) ? hit : [hit, url];
     return response(status, finalUrl);
   };
@@ -110,7 +114,7 @@ describe("ignore list", () => {
 describe("checkUrl", () => {
   const url = "https://good.example/page";
 
-  test("HEAD ok: one request, polite User-Agent, a timeout signal, redirects followed", async () => {
+  test("HEAD ok: one request, polite User-Agent, a timeout signal, redirects followed by hand", async () => {
     const calls = [];
     const r = await checkUrl(url, { fetchImpl: fakeFetch({ [`HEAD ${url}`]: 200 }, calls), limiter: noWait });
     assert.equal(r.kind, "ok");
@@ -119,7 +123,7 @@ describe("checkUrl", () => {
     assert.match(USER_AGENT, /Hangul.?Route/);
     assert.match(USER_AGENT, /github\.com\/Denny-Hwang\/Hangul_Route/);
     assert.equal(calls[0].hasSignal, true);
-    assert.equal(calls[0].redirect, "follow");
+    assert.equal(calls[0].redirect, "manual");
   });
 
   test("HEAD refused (405), GET ok: ok", async () => {
@@ -166,6 +170,38 @@ describe("checkUrl", () => {
   test("HEAD throws but GET answers: the GET answer counts", async () => {
     const r = await checkUrl(url, { fetchImpl: fakeFetch({ [`HEAD ${url}`]: fetchError("ECONNRESET"), [`GET ${url}`]: 200 }), limiter: noWait });
     assert.equal(r.kind, "ok");
+  });
+
+  test("each redirect hop is its own request and waits for its host's turn", async () => {
+    const waited = [];
+    const calls = [];
+    const limiter = { wait: async (host) => { waited.push(host); } };
+    const r = await checkUrl(url, {
+      fetchImpl: fakeFetch({ [`HEAD ${url}`]: { status: 301, location: "/page/" }, [`HEAD ${url}/`]: 200 }, calls),
+      limiter,
+    });
+    assert.equal(r.kind, "ok");
+    assert.deepEqual(calls.map((c) => `${c.method} ${c.url}`), [`HEAD ${url}`, `HEAD ${url}/`]);
+    assert.deepEqual(waited, ["good.example", "good.example"]);
+  });
+
+  test("a redirect hop to another host waits for that host and is reported as a cross-host redirect", async () => {
+    const waited = [];
+    const limiter = { wait: async (host) => { waited.push(host); } };
+    const r = await checkUrl(url, {
+      fetchImpl: fakeFetch({ [`HEAD ${url}`]: { status: 302, location: "https://elsewhere.example/x" }, ["HEAD https://elsewhere.example/x"]: 200 }),
+      limiter,
+    });
+    assert.deepEqual({ kind: r.kind, finalUrl: r.finalUrl }, { kind: "redirect", finalUrl: "https://elsewhere.example/x" });
+    assert.deepEqual(waited, ["good.example", "elsewhere.example"]);
+  });
+
+  test("a redirect loop stops after 5 hops and is unreachable", async () => {
+    const loop = { status: 302, location: url };
+    const calls = [];
+    const r = await checkUrl(url, { fetchImpl: fakeFetch({ [`HEAD ${url}`]: loop, [`GET ${url}`]: loop }, calls), limiter: noWait });
+    assert.deepEqual({ kind: r.kind, detail: r.detail }, { kind: "unreachable", detail: "too many redirects" });
+    assert.equal(calls.length, 12); // HEAD and GET, each the first request plus 5 hops
   });
 
   test("every request waits for its host's turn", async () => {
@@ -294,6 +330,14 @@ describe("source-links.yml", () => {
     assert.match(yml, /if: steps\.links\.outputs\.problems != '0'/);
     assert.equal(yml.match(/gh issue create/g)?.length, 1);
     assert.match(yml, /--body-file "\$RUNNER_TEMP\/source-links\.md"/);
+  });
+
+  test("a link that stays broken updates the open source-links issue instead of opening a new one each month", () => {
+    assert.match(yml, /gh label create source-links [^\n]*--force/);
+    assert.match(yml, /gh issue list --label source-links --state open/);
+    assert.match(yml, /gh issue edit "\$existing"[^\n]*--body-file "\$RUNNER_TEMP\/source-links\.md"/);
+    assert.match(yml, /gh issue comment "\$existing"/);
+    assert.match(yml, /gh issue create [^\n]*--label source-links/);
   });
 
   test("the token can read the code and write issues, nothing else", () => {

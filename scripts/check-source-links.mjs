@@ -5,8 +5,9 @@
 // (facts[].sources[].url; the research files under content/stories/research/
 // are not read) and asks each one: HEAD first, then GET when HEAD fails or
 // answers with an error status. 10 s timeout per request, at most 2 requests
-// per host per second (one host at a time, hosts in parallel), and a
-// User-Agent that names the project.
+// per host per second (one host at a time, hosts in parallel; redirects are
+// followed by hand, up to 5 hops, and each hop counts as a request to its
+// host), and a User-Agent that names the project.
 //
 // Problems: a 4xx/5xx status, a redirect that ends on another host, a TLS
 // failure, and (listed separately) a URL that could not be reached at all.
@@ -39,6 +40,7 @@ export const USER_AGENT =
   "HangulRoute-SourceLinkCheck/1.0 (+https://github.com/Denny-Hwang/Hangul_Route; monthly check of the sources our stories cite)";
 const TIMEOUT_MS = 10_000;
 const PER_HOST_PER_SECOND = 2;
+const MAX_REDIRECTS = 5;
 /** GitHub caps an issue body at 65 536 characters. */
 const REPORT_LIMIT = 60_000;
 
@@ -133,20 +135,35 @@ function classifyError(error, timeoutMs) {
   return { kind: "unreachable", detail: String(code) };
 }
 
+/**
+ * One request, following redirects by hand so that every hop (http to https, a
+ * trailing slash, another host) waits for its own host's turn in the limiter.
+ */
 async function request(url, method, { fetchImpl, limiter, timeoutMs }) {
-  await limiter.wait(hostOf(url));
-  try {
-    const res = await fetchImpl(url, {
-      method,
-      redirect: "follow",
-      headers: { "User-Agent": USER_AGENT, Accept: "text/html,application/xhtml+xml,*/*;q=0.8" },
-      signal: AbortSignal.timeout(timeoutMs),
-    });
-    // Free the socket: only the status and the final URL matter.
+  let current = url;
+  for (let hop = 0; ; hop++) {
+    await limiter.wait(hostOf(current));
+    let res;
+    try {
+      res = await fetchImpl(current, {
+        method,
+        redirect: "manual",
+        headers: { "User-Agent": USER_AGENT, Accept: "text/html,application/xhtml+xml,*/*;q=0.8" },
+        signal: AbortSignal.timeout(timeoutMs),
+      });
+    } catch (error) {
+      return { error };
+    }
+    // Free the socket: only the status, the Location and the final URL matter.
     if (res.body && typeof res.body.cancel === "function") await res.body.cancel().catch(() => {});
-    return { status: res.status, finalUrl: res.url || url };
-  } catch (error) {
-    return { error };
+    const location = res.status >= 300 && res.status < 400 ? res.headers?.get?.("location") : null;
+    if (!location) return { status: res.status, finalUrl: res.url || current };
+    if (hop >= MAX_REDIRECTS) return { error: new Error("too many redirects") };
+    try {
+      current = new URL(location, current).href;
+    } catch {
+      return { error: new Error("bad redirect location") };
+    }
   }
 }
 

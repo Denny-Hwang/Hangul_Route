@@ -108,4 +108,6 @@ jobs:
         run: node scripts/build-lecture-catalogue.mjs --check
 
       - name: Story versions are raised (F-STORY-001 §3.7)
+        # Plain Node, no install needed: report even when an earlier step failed.
+        if: ${{ !cancelled() }}
         run: node scripts/check-story-versions.mjs --base origin/main
