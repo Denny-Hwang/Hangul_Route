@@ -576,7 +576,7 @@ describe('checkout and portal hardening (F-BILL-002 B-5)', () => {
         expect(refused.body.error?.code).toBe('live_not_enabled');
       }
       expect(fetchImpl).not.toHaveBeenCalled();
-      expect(billingEvents()[0]).toEqual({ name: 'billing.checkout_refused', payload: { planKey: 'family_lifetime', reason: 'live_not_enabled' } });
+      expect(billingEvents()).toEqual(Array.from({ length: 4 }, () => ({ name: 'billing.checkout_refused', payload: { planKey: 'family_lifetime', reason: 'live_not_enabled' } })));
 
       store.reset();
       const allowed = await call('POST', '/api/entitlements/stripe/checkout', bearer('mom'), checkoutBody(fam), { ...LIVE_ENV, BILLING_LIVE_ALLOWED: 'true' });
@@ -640,6 +640,7 @@ describe('checkout and portal hardening (F-BILL-002 B-5)', () => {
           clerk_error: { type: 'forbidden', reason: 'reverification-error', metadata: { reverification: { level: 'first_factor', afterMinutes: 10 } } },
           ok: false,
           error: { code: 'reverify_required', message: 'Confirm it is you to continue' },
+          meta: { serverTime: expect.any(String), version: expect.any(String) },
         });
       }
       expect(fetchImpl).not.toHaveBeenCalled();

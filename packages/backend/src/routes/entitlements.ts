@@ -9,8 +9,9 @@ import { isDuplicateCompletion, recordBillingHistory, stripeModeOf, type StripeW
 import { accountBrowseScope, isEntitlementActive } from '../lib/entitlement';
 import { clientKey, createRateLimiter } from '../lib/rate-limit';
 import { recordServerEvent } from '../lib/server-events';
+import { liveRefusal } from '../lib/live-guard';
 import { requireStepUp } from '../lib/step-up';
-import { billingLiveAllowed, checkoutForm, checkoutSuccessSuffix, createCheckoutSession, createPortalSession, entitlementFromStripeEvent, freshStripeEvent, lookupPromotionCode, mergeForStripeEvent, priceIdFor, stripeMode, verifyStripeSignature, type StripeEnv } from '../lib/stripe';
+import { checkoutForm, checkoutSuccessSuffix, createCheckoutSession, createPortalSession, entitlementFromStripeEvent, freshStripeEvent, lookupPromotionCode, mergeForStripeEvent, priceIdFor, stripeMode, verifyStripeSignature, type StripeEnv } from '../lib/stripe';
 
 /** Promo lookups are guessable strings: 20 per minute per client (F-ENT-002 §3.2). */
 export const PROMO_LIMIT = 20;
@@ -68,21 +69,6 @@ async function ownedSpace(c: Context, db: Db, account: Account, spaceId: string,
   return space;
 }
 
-/**
- * App Store / Play receipts (F-IAP-001/002). Nothing verifies them yet, so this
- * grants nothing: 501 until real store-server verification is wired (audit
- * SEC-1 — the old dev stub accepted any JSON blob as a family purchase).
- */
-/**
- * Live guard (F-BILL-002 section 4.9): with a live key bound, money calls answer
- * 503 `live_not_enabled` until the owner sets `BILLING_LIVE_ALLOWED=true` (OD-12).
- * Runs before any Stripe call. The webhook is never guarded, so nothing paid is lost.
- */
-function liveRefusal(c: Context, env: StripeEnv): Response | null {
-  if (stripeMode(env) !== 'live' || billingLiveAllowed(env)) return null;
-  return fail(c, 'live_not_enabled', 'Live payments are not open on this deployment', 503);
-}
-
 type CheckoutRefusal = 'reverify_required' | 'already_active' | 'live_not_enabled' | 'not_configured';
 
 /** `billing.checkout_refused` (F-BILL-002 section 10): codes only; the response goes out unchanged. */
@@ -91,6 +77,11 @@ function refusedCheckout(planKey: PurchasablePlanKey, reason: CheckoutRefusal, r
   return res;
 }
 
+/**
+ * App Store / Play receipts (F-IAP-001/002). Nothing verifies them yet, so this
+ * grants nothing: 501 until real store-server verification is wired (audit
+ * SEC-1 — the old dev stub accepted any JSON blob as a family purchase).
+ */
 entitlementRoutes.post('/verify', (c) => fail(c, 'receipt_verification_not_configured', 'receipt verification not configured', 501));
 
 entitlementRoutes.post('/stripe/checkout', async (c) => {
