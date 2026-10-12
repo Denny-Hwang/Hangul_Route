@@ -270,8 +270,7 @@ const replayLink: Link = (slot, input, used) => {
 
 /** The first playable grid episode not on the plan yet, with at least one open quest. */
 const exploreLink: Link = (slot, input, used) => {
-  const open = input.isQuestOpen;
-  const episode = playableEpisodes(input.episodes).find((e) => !used.episodes.has(e.id) && (!open || e.questIds.some((id) => open(id))));
+  const episode = playableEpisodes(input.episodes).find((e) => !used.episodes.has(e.id) && e.questIds.some((id) => isOpen(input, id)));
   return episode ? exploreCard(slot, episode) : null;
 };
 
