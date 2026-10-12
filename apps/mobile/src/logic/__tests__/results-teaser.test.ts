@@ -60,6 +60,28 @@ describe('resultsTeaser: which quest is next up', () => {
   });
 });
 
+describe('resultsTeaser: quest access (F-ENT-003 section 3.5)', () => {
+  const closed = (...ids: string[]) => (questId: string): boolean => !ids.includes(questId);
+
+  it('omitted: the same teaser as before', () => {
+    const input = { ...base, snapshot: done('q1'), questId: 'quest:q2', total: 5 };
+    expect(resultsTeaser({ ...input, isQuestOpen: undefined })).toEqual(resultsTeaser(input));
+    expect(resultsTeaser({ ...input, isQuestOpen: () => true })).toEqual(resultsTeaser(input));
+  });
+
+  it('never teases a closed quest; the next open one comes instead', () => {
+    expect(resultsTeaser({ ...base, snapshot: done('q1', 'q2'), questId: 'quest:q3', total: 5, isQuestOpen: closed('quest:q4') })?.questId).toBe('quest:q5');
+  });
+
+  it('is undefined when every quest left is closed', () => {
+    expect(resultsTeaser({ ...base, snapshot: done('q1', 'q2', 'q3'), questId: 'quest:q3', total: 5, isQuestOpen: closed('quest:q4', 'quest:q5') })).toBeUndefined();
+  });
+
+  it('still offers the same quest again when every game was skipped', () => {
+    expect(resultsTeaser({ ...base, snapshot: done(), questId: 'quest:q1', total: 0, isQuestOpen: closed('quest:q2') })).toMatchObject({ questId: 'quest:q1', again: true });
+  });
+});
+
 describe('resultsTeaser: placed-out quests (F-PLC-001 section 3.7, consumer 1)', () => {
   it('skips quests the level check placed out', () => {
     const skip = new Set(['quest:q2', 'quest:q3']);

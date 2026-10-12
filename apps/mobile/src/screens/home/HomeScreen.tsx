@@ -69,7 +69,7 @@ import { usePlacementRunStore } from '../../store/placement-run-store';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
 import { useStoryStore } from '../../store/story-store';
-import { useAccessTier } from '../../store/tier-store';
+import { useAccessTier, useQuestAccess } from '../../store/tier-store';
 import { LinkButton } from '../placement/parts';
 import { RouteStrip } from './RouteStrip';
 
@@ -204,6 +204,8 @@ export function HomeScreen(): React.ReactElement {
   // The access tier (F-ENT-003 section 3.4): re-renders Home when the inbox, the spaces or the
   // subscription change it, as Results does, so the cursor follows OD-4 on both (F-ROUTE-001 R-4a).
   const tier = useAccessTier(profile?.id ?? '');
+  // May the active learner start a quest (F-ENT-003 section 3.6): every card is chosen among open quests.
+  const questOpen = useQuestAccess();
   const bookmarks = useStoryStore((s) => (profile ? s.byProfile[profile.id] : undefined)) ?? NO_BOOKMARKS;
   // Reviewed stories only (D14): empty in production while every bundled story is still a draft.
   const storyIndex = defaultStoryIndex();
@@ -245,6 +247,7 @@ export function HomeScreen(): React.ReactElement {
         placements: snap.placements,
         quests: questsAll,
         episodes: episodesAll,
+        isQuestOpen: questOpen,
       }),
       // The story card (F-STORY-004 §3.7): never a locked story; nothing is locked while gating is off.
       stories: {
@@ -254,6 +257,7 @@ export function HomeScreen(): React.ReactElement {
           tier,
           gatingEnabled: gatingActive(flags, bundleOs()),
           episodes: episodesAll,
+          isQuestOpen: questOpen,
         }),
         // F-STORY-005 §3.4: stories near the learner's stage come first; it only orders, never hides.
         fits: storyFitsForSnapshot(snap),
@@ -270,7 +274,7 @@ export function HomeScreen(): React.ReactElement {
     pinnedPlan.current = merged;
     return merged;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile, snap, tier, bookmarks, storyIndex]);
+  }, [profile, snap, tier, questOpen, bookmarks, storyIndex]);
 
   // The route strip (F-ROUTE-001 R-4b, OD-3): built from `routeModelInput`, the same input as the
   // Learning Route page, so the strip and the page always name the same stage and pips.

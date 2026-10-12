@@ -1,6 +1,9 @@
 import type { Episode, ProgressSnapshot, Quest } from '@hangul-route/content-schema';
 import { getMessages } from '@hangul-route/i18n';
 import { describe, expect, it } from 'vitest';
+import { episodesAll, questsAll } from '../../../content';
+import { questOpenPredicate } from '../../content-access';
+import { offerableQuests } from '../../next-quest';
 import { scanLearnerCopy } from '../banned-text';
 import {
   buildTodaysMission,
@@ -474,5 +477,131 @@ describe('"New" card = the shared Journey cursor (F-QUEST-002 §3.5)', () => {
   it('offers no New card when no episode is playable', () => {
     const plan = build({ quests, episodes: [episode('episode:soon', ['quest:p'], 'preview')] });
     expect(plan.cards.find((c) => c.kind === 'new')).toBeUndefined();
+  });
+});
+
+describe('quest access: Home offers open quests only (F-ENT-003 section 3.6)', () => {
+  const S2_QUESTS = [...QUESTS, quest('quest:s2', 'Words at home')];
+  const S2_EPISODES: Episode[] = [...EPISODES, { ...episode('episode:s2', ['quest:s2']), stage: 'stage2', theme: 'life' }];
+  const closed = (...ids: string[]) => {
+    const shut = new Set(ids);
+    return (questId: string): boolean => !shut.has(questId);
+  };
+
+  it('omitted: the plan is the same as before', () => {
+    const snap = snapshot([done('quest:a', YESTERDAY, 0.5)]);
+    expect(build({ snapshot: snap, isQuestOpen: undefined })).toEqual(build({ snapshot: snap }));
+    expect(build({ snapshot: snap, isQuestOpen: () => true })).toEqual(build({ snapshot: snap }));
+  });
+
+  it('slot ②: the cursor skips a closed quest', () => {
+    const plan = build({ quests: S2_QUESTS, episodes: S2_EPISODES, isQuestOpen: closed('quest:a') });
+    expect(plan.cards[1]).toMatchObject({ kind: 'new', questId: 'quest:b' });
+  });
+
+  it('slot ②: once every open quest is done, the replay fallback is the last open quest, never a closed one', () => {
+    const allStage1 = snapshot(QUESTS.map((q) => done(q.id, FOUR_DAYS_AGO, 1)));
+    const plan = build({ snapshot: allStage1, quests: S2_QUESTS, episodes: S2_EPISODES, isQuestOpen: closed('quest:s2') });
+    expect(plan.cards[1]).toMatchObject({ kind: 'new', questId: 'quest:c' });
+    for (const card of plan.cards) expect(card.questId).not.toBe('quest:s2');
+  });
+
+  it('slot ①: a replay is offered only when its quest is open', () => {
+    const snap = snapshot([done('quest:a', YESTERDAY, 0.4), done('quest:b', YESTERDAY, 0.6)]);
+    expect(build({ snapshot: snap }).cards[0]?.questId).toBe('quest:a');
+    expect(build({ snapshot: snap, isQuestOpen: closed('quest:a') }).cards[0]).toMatchObject({ kind: 'replay', questId: 'quest:b' });
+  });
+
+  it('a replay is always kept: with the real predicate and the switch on, a free learner keeps a finished later-stage replay', () => {
+    const snap = snapshot([{ ...done('quest:s2', YESTERDAY, 0.5), episodeId: 'episode:s2' }]);
+    const isQuestOpen = questOpenPredicate({
+      tier: 'free',
+      gatingEnabled: true,
+      completedQuestIds: new Set(['quest:s2']),
+      registry: { stages: new Set(['stage1']), vocabTopics: new Set(), samplerStories: new Set(), freeQuests: new Set(['quest:a', 'quest:b', 'quest:c']), gridLessons: new Set(['quest:a', 'quest:b', 'quest:c', 'quest:s2']) },
+    });
+    const plan = build({ snapshot: snap, quests: S2_QUESTS, episodes: S2_EPISODES, isQuestOpen });
+    expect(plan.cards[0]).toMatchObject({ kind: 'replay', questId: 'quest:s2' });
+  });
+
+  it('explore: never an episode whose every quest is closed', () => {
+    const plan = build({ snapshot: snapshot(), isQuestOpen: closed('quest:a', 'quest:b') });
+    for (const card of plan.cards) expect(card.episodeId === 'episode:one' && card.kind === 'explore').toBe(false);
+    expect(plan.cards.some((c) => c.kind === 'explore' && c.episodeId === 'episode:two')).toBe(true);
+  });
+
+  it('explore: an episode with one open quest still counts', () => {
+    const plan = build({ snapshot: snapshot(), episodes: [episode('episode:one', ['quest:a', 'quest:b'])], isQuestOpen: closed('quest:a') });
+    expect(plan.cards[0]).toMatchObject({ kind: 'explore', episodeId: 'episode:one' });
+  });
+
+  it('the pinned "New" card re-pins to an open quest only (F-ROUTE-001 R-4a)', () => {
+    const pinned = build();
+    expect(pinned.cards[1]?.questId).toBe('quest:a');
+    const plan = build({ pinned, skipQuestIds: new Set(['quest:a']), isQuestOpen: closed('quest:b') });
+    expect(plan.cards[1]).toMatchObject({ kind: 'new', questId: 'quest:c' });
+  });
+
+  it('a pinned "New" card whose quest closed after the pin moves to an open quest (access changed mid-day)', () => {
+    const pinned = build({ isQuestOpen: () => true });
+    expect(pinned.cards[1]?.questId).toBe('quest:a');
+    const plan = build({ pinned, isQuestOpen: closed('quest:a') });
+    expect(plan.cards[1]).toMatchObject({ kind: 'new', subtitle: 'new', questId: 'quest:b' });
+    expect(plan.cards[0]).toEqual(pinned.cards[0]);
+    expect(plan.cards[2]).toEqual(pinned.cards[2]);
+  });
+
+  it('a pinned "New" card stays when its quest is still open, or was finished today', () => {
+    const pinned = build({ isQuestOpen: () => true });
+    expect(build({ pinned, isQuestOpen: closed('quest:b') }).cards[1]?.questId).toBe('quest:a');
+    const doneToday = build({ snapshot: snapshot([done('quest:a', TODAY, 1)]), pinned, isQuestOpen: closed('quest:a') });
+    expect(doneToday.cards[1]).toMatchObject({ questId: 'quest:a', collected: true });
+  });
+
+  it('a pinned assigned card keeps its slot even when its quest closes', () => {
+    const first = build();
+    const assigned: MissionPlan = { ...first, cards: first.cards.map((c) => (c.slot === 2 ? { ...c, subtitle: 'assigned' as const } : c)) };
+    expect(build({ pinned: assigned, isQuestOpen: closed('quest:a') }).cards[1]).toMatchObject({ questId: 'quest:a', subtitle: 'assigned' });
+  });
+
+  it('a pinned "New" card stays when every other quest is closed too', () => {
+    const pinned = build();
+    expect(build({ pinned, isQuestOpen: closed('quest:a', 'quest:b', 'quest:c') }).cards[1]?.questId).toBe('quest:a');
+  });
+
+  describe('on the shipped bundle', () => {
+    const offerable = offerableQuests(questsAll, episodesAll).map((q) => q.id);
+    const stage1 = offerable.filter((id) => episodesAll.some((e) => e.stage === 'stage1' && e.questIds.includes(id)));
+    const finished = (ids: readonly string[], day: string, accuracy: number): ProgressSnapshot =>
+      snapshot(ids.map((id) => ({ ...done(id, day, accuracy), episodeId: episodesAll.find((e) => e.questIds.includes(id))?.id ?? '' })));
+    const live = (snap: ProgressSnapshot, isQuestOpen?: (questId: string) => boolean): MissionPlan =>
+      buildTodaysMission({ profileId: 'profile:kid1', snapshot: snap, quests: questsAll, episodes: episodesAll, today: TODAY, isQuestOpen });
+    const predicate = (tier: 'free' | 'premium', gatingEnabled: boolean, snap: ProgressSnapshot) =>
+      questOpenPredicate({ tier, gatingEnabled, completedQuestIds: new Set(snap.quests.filter((q) => q.completedAt).map((q) => q.questId)) });
+
+    it('golden, switch off: every card is unchanged for every prefix of the route, free and premium', () => {
+      for (let n = 0; n <= offerable.length; n++) {
+        for (const [day, accuracy] of [[YESTERDAY, 0.5], [FOUR_DAYS_AGO, 1]] as const) {
+          const snap = finished(offerable.slice(0, n), day, accuracy);
+          const today = live(snap);
+          for (const tier of ['free', 'premium'] as const) {
+            expect(live(snap, predicate(tier, false, snap)), `${tier}, ${n} done ${day}`).toEqual(today);
+          }
+        }
+      }
+    });
+
+    it('switch on, free: three cards every day, none of them a closed lesson', () => {
+      for (let n = 0; n <= stage1.length; n++) {
+        const snap = finished(stage1.slice(0, n), YESTERDAY, 0.5);
+        const isQuestOpen = predicate('free', true, snap);
+        const plan = live(snap, isQuestOpen);
+        expect(plan.cards, `${n} done`).toHaveLength(3);
+        for (const card of plan.cards) {
+          if (card.questId) expect(isQuestOpen(card.questId), `${n} done: ${card.questId}`).toBe(true);
+          if (card.kind === 'explore') expect(episodesAll.find((e) => e.id === card.episodeId)?.questIds.some(isQuestOpen)).toBe(true);
+        }
+      }
+    });
   });
 });

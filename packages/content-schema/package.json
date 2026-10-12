@@ -6,7 +6,8 @@
   "type": "module",
   "main": "./src/index.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./testing/catalog-2026-10": "./src/__tests__/fixtures/catalog-2026-10.ts"
   },
   "scripts": {
     "lint": "echo '(no lint yet — @hangul-route/content-schema)'",

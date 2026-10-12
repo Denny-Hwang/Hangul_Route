@@ -1,12 +1,14 @@
 import {
   AUDIENCE_DEFAULTS,
   CATALOG,
+  FREE_ROUTE_STAGES,
   CURRICULUM_MAX_ITEMS,
   LENGTH_PRESETS,
   PICTURES_FIRST_MINUTES,
   StageKeySchema,
   WEEKDAYS,
   addDays,
+  generateCurriculum,
   isDateKey,
   levelOrder,
   regenerateFrom,
@@ -25,6 +27,7 @@ import {
   type LengthPresetId,
   type PlacementLevel,
   type PlanItem,
+  type SpaceRole,
   type StageKey,
   type ThemeKey,
   type WeekExtra,
@@ -224,15 +227,133 @@ export function learnerProblem(state: Pick<WizardState, 'audience' | 'learnerId'
   return state.audience === 'family' && learnerCount > 0 && state.learnerId === null ? 'no-learner' : null;
 }
 
+/** An active entitlement (a Family Plan or a Group License) covers the space or its school. */
+export function spaceCovered(entitlements: readonly Entitlement[], space: { id: string; parentSpaceId: string | null }, now: Date): boolean {
+  const subjects = new Set([space.id, ...(space.parentSpaceId ? [space.parentSpaceId] : [])]);
+  return entitlements.some((e) => e.subjectKind === 'space' && subjects.has(e.subjectId) && isActive(e, now));
+}
+
 /**
  * Stages the generator may schedule for this space (assumption 9a): every stage when an
  * active entitlement covers the space or its school, else Stage 1. Locked lessons are
  * listed by the generator, never scheduled.
  */
 export function unlockedStagesForSpace(entitlements: readonly Entitlement[], space: { id: string; parentSpaceId: string | null }, now: Date): StageKey[] {
-  const subjects = new Set([space.id, ...(space.parentSpaceId ? [space.parentSpaceId] : [])]);
-  const covered = entitlements.some((e) => e.subjectKind === 'space' && subjects.has(e.subjectId) && isActive(e, now));
-  return covered ? [...StageKeySchema.options] : ['stage1'];
+  return spaceCovered(entitlements, space, now) ? [...StageKeySchema.options] : ['stage1'];
+}
+
+export type SpaceCoverage = 'covered' | 'uncovered' | 'unknown';
+
+/**
+ * Whether a Family Plan or a Group License covers the space, as far as this viewer can tell
+ * (F-ENT-003 sections 3.9.2 and 3.9.3). `GET /api/entitlements` lists the account's own rows and
+ * the rows of the spaces it owns, so "uncovered" is only answered for the owner of the space,
+ * and for a class inside a school only when the viewer owns the school too. Anything else (a
+ * co-teacher, a co-caregiver, a class in a school someone else owns, a failed read, a list not
+ * loaded yet) is "unknown": no free-plan words and no billing link, never a claimed limit.
+ */
+export function spaceCoverage(
+  entitlements: readonly Entitlement[] | null,
+  memberships: readonly { space: { id: string }; role: SpaceRole }[] | null,
+  space: { id: string; parentSpaceId: string | null },
+  now: Date,
+): SpaceCoverage {
+  if (entitlements === null) return 'unknown';
+  if (spaceCovered(entitlements, space, now)) return 'covered';
+  const owns = (id: string): boolean => memberships?.some((m) => m.space.id === id && m.role === 'owner') ?? false;
+  return owns(space.id) && (space.parentSpaceId === null || owns(space.parentSpaceId)) ? 'uncovered' : 'unknown';
+}
+
+/**
+ * The free-plan view of a wizard preview (F-ENT-003 section 3.9.3; wireframe
+ * console/curriculum-free-days): only for a space this viewer knows no plan covers
+ * (`spaceCoverage` is "uncovered") while the console's free-plan switch is on. The generator
+ * already plans Stage 1 only for such a space (`unlockedStages`, section 3.1 golden), so nothing
+ * here changes its input (OD-1).
+ */
+export interface FreeDaysView {
+  /** Names the product: a family space -> the Family Plan, a class or school -> a Group License. */
+  kind: WizardAudience;
+  /** The first and the last week of the draft that hold a lesson; null when it holds none. */
+  firstWeek: number | null;
+  lastWeek: number | null;
+  /** The plan runs on after its last lesson week: the preview says so above **Use this route**. */
+  short: boolean;
+  /** Whether the weeks after the last lesson hold stories (else only practice, review or days off). */
+  storiesAfter: boolean;
+  /** The shortest length preset, shorter than the plan, that still holds every lesson of it; null when none does. */
+  shorter: { length: LengthPresetId; weeks: number } | null;
+  /**
+   * The draft's coming-soon episodes past the free stages: once released they open with the
+   * product, not on their dates (the generator places coming-soon episodes of every stage, OD-1
+   * keeps its input). The coming-soon line says so instead of "start on their dates".
+   */
+  comingSoonClosed: number;
+  /** Whether coming-soon episodes sit after the last lesson week (the short-plan line lists them). */
+  soonAfter: boolean;
+}
+
+const isLesson = (item: CurriculumItem, source: Catalog): boolean => item.kind === 'quest' && itemCategory(item.kind, item.id, source) === 'lesson';
+
+/** The first and the last week of a draft that hold a lesson (a lesson quest; stories and coming-soon episodes do not count), or null when none does. */
+export function lessonWeeks(items: readonly CurriculumItem[], source: Catalog = CATALOG): { first: number; last: number } | null {
+  const weeks = items.filter((item) => isLesson(item, source)).map((item) => item.week);
+  return weeks.length > 0 ? { first: Math.min(...weeks), last: Math.max(...weeks) } : null;
+}
+
+/** A coming-soon episode of the draft whose cell is past the free stages (Stage 1, OD-1): it never opens on the free plan. */
+const isClosedSoon = (item: CurriculumItem, source: Catalog): boolean =>
+  item.kind === 'episode' &&
+  itemCategory(item.kind, item.id, source) === 'coming-soon' &&
+  !FREE_ROUTE_STAGES.includes(source.cells.find((cell) => cell.episodeId === item.id)?.stage ?? 'stage1');
+
+/** The length presets shorter than `weeks`, shortest first (the order of the wizard's chips). */
+const shorterPresets = (weeks: number): LengthPresetId[] =>
+  LENGTH_CHOICES.filter((choice): choice is LengthPresetId => choice !== 'custom' && LENGTH_PRESETS[choice].weeks < weeks);
+
+/**
+ * The shortest preset, shorter than the draft, whose plan holds every lesson the draft holds:
+ * the same params with only the length and its review rhythm changed. The generator lays
+ * lessons in queue order, so the shorter plan holds them all exactly when it schedules as many.
+ */
+function shorterPreset(draft: CurriculumDraft, source: Catalog): FreeDaysView['shorter'] {
+  for (const length of shorterPresets(draft.params.weeks)) {
+    const { weeks, reviewEvery } = LENGTH_PRESETS[length];
+    if (generateCurriculum({ ...draft.params, weeks, reviewEvery }, source).stats.lessons >= draft.stats.lessons) return { length, weeks };
+  }
+  return null;
+}
+
+/**
+ * The free-plan view of a preview, or null with the switch off (`contentGatingEnabled()`) or
+ * unless this viewer knows the space is uncovered (`spaceCoverage`): then the wizard keeps
+ * today's wording.
+ */
+export function freeDaysView(draft: CurriculumDraft, coverage: SpaceCoverage, gating: boolean, source: Catalog = CATALOG): FreeDaysView | null {
+  if (!gating || coverage !== 'uncovered') return null;
+  const weeks = lessonWeeks(draft.items, source);
+  const short = weeks !== null && weeks.last < draft.params.weeks;
+  const after = (category: ItemCategory): boolean => short && draft.items.some((item) => item.week > (weeks?.last ?? 0) && itemCategory(item.kind, item.id, source) === category);
+  return {
+    kind: draft.params.audience === 'family' ? 'family' : 'class',
+    firstWeek: weeks?.first ?? null,
+    lastWeek: weeks?.last ?? null,
+    short,
+    storiesAfter: after('story'),
+    shorter: short ? shorterPreset(draft, source) : null,
+    comingSoonClosed: draft.items.filter((item) => isClosedSoon(item, source)).length,
+    soonAfter: after('coming-soon'),
+  };
+}
+
+/**
+ * The free-plan switch is on but this viewer cannot tell whether a plan covers the space (a
+ * co-teacher, a co-caregiver, a class in a school someone else owns, a failed read): the
+ * left-out line uses the glossary's neutral words (F-ENT-003 section 3.11: "the Family Plan or a
+ * Group License"), never "Premium", and carries no billing link.
+ */
+export function leftOutNeutral(coverage: SpaceCoverage, gating: boolean): boolean {
+  return gating && coverage !== 'uncovered';
 }
 
 export interface WeekItem {
@@ -348,10 +469,31 @@ export function weekdayLabel(day: Weekday, locale: UiLocale = DEFAULT_LOCALE): s
   return formatDate(locale, addDays('2026-10-11', WEEKDAYS.indexOf(day)), 'weekday', { utc: true });
 }
 
-/** A generator warning in plain, invitational words (section 3.8 step 4). */
-export function warningText(warning: CurriculumWarning, locale: UiLocale = DEFAULT_LOCALE): string {
+/** What the free-plan wording of the left-out warning needs (F-ENT-003 section 3.9.3): the space kind and the weeks that hold lessons. */
+export type FreePlanWording = Pick<FreeDaysView, 'kind' | 'firstWeek' | 'lastWeek'> & Partial<Pick<FreeDaysView, 'comingSoonClosed'>>;
+
+/**
+ * A generator warning in plain, invitational words (section 3.8 step 4). With `free` (an
+ * unlicensed space while the free-plan switch is on, `freeDaysView`) the left-out line names the
+ * free plan, the weeks that hold its lessons and the product that opens the rest, by space kind,
+ * and the coming-soon line says which episodes open with that product once released (F-ENT-003
+ * section 3.9.3). With `neutral` (`leftOutNeutral`) the left-out line names both products and
+ * never "Premium". Without either, every line keeps its wording.
+ */
+export function warningText(warning: CurriculumWarning, locale: UiLocale = DEFAULT_LOCALE, free: FreePlanWording | null = null, neutral = false): string {
   const words = getMessages(locale).console.curriculum.preview.warnings;
+  const freeDays = getMessages(locale).console.curriculum.freeDays;
   const count = warning.count ?? 0;
+  if (warning.code === 'premium-needed' && free) {
+    const product = getMessages(locale).console.access.product[free.kind];
+    const { firstWeek, lastWeek } = free;
+    return firstWeek === null || lastWeek === null ? freeDays.warningNoLessons(count, product) : freeDays.warning(firstWeek, lastWeek, count, product);
+  }
+  if (warning.code === 'premium-needed' && neutral) return freeDays.warningNeutral(count);
+  // Coming-soon episodes past Stage 1 open with the product once released, not on their dates.
+  if (warning.code === 'coming-soon-included' && free && (free.comingSoonClosed ?? 0) > 0) {
+    return freeDays.comingSoon(count, Math.min(free.comingSoonClosed ?? 0, count), getMessages(locale).console.access.product[free.kind]);
+  }
   switch (warning.code) {
     case 'content-runs-out':
       return words.contentRunsOut(warning.week ?? 1);

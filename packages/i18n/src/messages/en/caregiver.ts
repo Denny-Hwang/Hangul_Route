@@ -21,6 +21,8 @@ export const caregiver = {
     'unknown-quest': (_learnerName: string) => 'That quest is not available yet.',
     'episode-not-shipped': (_learnerName: string) => 'That episode is still being built.',
     'stage-locked': (learnerName: string) => `${learnerName} hasn't reached this quest yet.`,
+    /** A closed lesson (F-ENT-003 section 3.6): the products that open it, never a price. */
+    'quest-closed': (learnerName: string) => `${learnerName} can play this lesson with the Family Plan or a Group License.`,
   },
   /** `audienceCopy(audience, m.caregiver.audience)` picks `shared` plus one variant. */
   audience: {
@@ -169,6 +171,43 @@ export const caregiver = {
       line: 'Renews every year. Cancel any time.',
       price: { once: (amount: string) => `${amount} once`, year: (amount: string) => `${amount} / year` },
     },
+  },
+
+  /**
+   * The learner Plan screen (F-BILL-002 §4.7, §6.2, wireframe billing/plan-status): status only, no
+   * PIN, never a price, an offer or a purchase word. One variant per audience (`family` names the
+   * learner, `self` speaks to them). `openBilling` and `openFailed` are web only; a native build
+   * renders none of them (§4.8). F-ENT-003 E3-8 adds `freePlan` here.
+   */
+  plan: {
+    title: 'Plan',
+    /** The learner's name when there is no active profile. */
+    learnerFallback: 'Your learner',
+    covered: {
+      title: {
+        family: (name: string, source: string) => `${name} is covered by ${source}.`,
+        self: (source: string) => `You're covered by ${source}.`,
+      },
+      note: { family: 'Everything is open while they are in it.', self: 'Everything is open while you are in it.' },
+      sourceFallback: 'the class',
+    },
+    full: {
+      title: { family: (name: string) => `${name} has the full route.`, self: 'You have the full route.' },
+      fromFamily: { family: "From your family's Family Plan.", self: 'From your Family Plan.' },
+      noSource: 'Everything is open.',
+    },
+    free: {
+      title: { family: (name: string) => `${name} is on the free plan.`, self: "You're on the free plan." },
+      /** The free slot while F-ENT-003's switch is off (moved from `paywall.free.bubble`, same words). */
+      open: 'Stage 1 is always free.',
+    },
+    openBilling: {
+      cta: 'Open billing',
+      caption: { family: 'Plans and receipts are on the billing page for grown-ups.', self: 'Your plan and receipts are on the billing page.' },
+      a11yHint: 'Opens the billing page',
+    },
+    openFailed: (url: string) => `Open ${url} in a browser.`,
+    backToJourney: { cta: 'Back to journey' },
   },
 
   /** Settings card: the learner's classes and family. */
@@ -497,4 +536,14 @@ export const caregiver = {
   /** One wording everywhere (F-ROUTE-001 section 3.12): the placement report and My route's skills rows. */
   skillsNote:
     'The level check looks at reading and listening. Writing is practiced with tracing games and is not scored. The rows count finished quests that include these games; a game skipped inside a quest still counts.',
+  /**
+   * The way from the learner app to the grown-up area on the app host (F-APP-001 sections 3.6 and
+   * 3.9). A-6: the PIN screen opened for the grown-up area on a device with no PIN stored never
+   * offers to make one; it sends the grown-up to sign in instead (wireframe
+   * `parent/grown-up-home-card.md` Panel D). A-7 adds the Profile row and dashboard card strings.
+   */
+  grownUpHome: {
+    noPin: 'This device has no grown-up PIN. Sign in on the grown-up page instead.',
+    continue: { cta: 'Continue' },
+  },
 } as const;

@@ -1,4 +1,4 @@
-import type { SyncInbox, Tier, TierSource } from '@hangul-route/content-schema';
+import type { ProgressSnapshot, SyncInbox, Tier, TierSource } from '@hangul-route/content-schema';
 import { useSyncExternalStore } from 'react';
 import { create } from 'zustand';
 import { bundleOs, flags, gatingActive } from '../config/flags';
@@ -98,17 +98,25 @@ export function accessTier(learnerId: string, now: Date): Tier {
   return spaceMembers[learnerId] === true ? 'premium' : 'free';
 }
 
+/** The ids of the quests a snapshot has finished: kept for good (F-ENT-003 section 3.2). */
+function finishedQuestIds(quests: ProgressSnapshot['quests']): string[] {
+  return quests.filter((q) => q.completedAt).map((q) => q.questId);
+}
+
 /**
  * "May this learner start this quest?" for store actions and any non-React
  * caller: the access tier, the effective switch and the learner's finished
- * quests (kept for good, from any device once synced).
+ * quests (kept for good, from any device once synced), read from the
+ * learner's snapshot in `progress-store` plus `snapshot` when given (plan
+ * reconcile passes the merged copy a sync is about to save, which may hold a
+ * quest finished on another device). Kept only grows, so the two add up.
  */
-export function questOpenFor(learnerId: string, now: Date): (questId: string) => boolean {
-  const quests = useProgressStore.getState().byProfile[learnerId]?.quests ?? [];
+export function questOpenFor(learnerId: string, now: Date, snapshot?: Pick<ProgressSnapshot, 'quests'>): (questId: string) => boolean {
+  const stored = useProgressStore.getState().byProfile[learnerId]?.quests ?? [];
   return questOpenPredicate({
     tier: accessTier(learnerId, now),
     gatingEnabled: gatingActive(flags, bundleOs()),
-    completedQuestIds: new Set(quests.filter((q) => q.completedAt).map((q) => q.questId)),
+    completedQuestIds: new Set([...finishedQuestIds(stored), ...finishedQuestIds(snapshot?.quests ?? [])]),
   });
 }
 
@@ -123,7 +131,7 @@ function activeAccessKey(): { key: string; tier: Tier; gatingEnabled: boolean; k
   const tier = accessTier(id, new Date());
   const gatingEnabled = gatingActive(flags, bundleOs());
   const quests = useProgressStore.getState().byProfile[id]?.quests ?? [];
-  const kept = [...new Set(quests.filter((q) => q.completedAt).map((q) => q.questId))].sort();
+  const kept = [...new Set(finishedQuestIds(quests))].sort();
   return { key: JSON.stringify([id, tier, gatingEnabled, kept]), tier, gatingEnabled, kept };
 }
 

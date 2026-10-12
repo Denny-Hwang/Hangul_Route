@@ -20,16 +20,19 @@ export function playableEpisodes(episodes: readonly Episode[]): Episode[] {
  * Quests inside a playable episode, in quest order. A quest whose episode is
  * still a preview placeholder would route the learner into an unshipped
  * screen. `isEntitled(stageKey)` leaves out stages the learner cannot open;
- * omitted means every stage is open.
+ * omitted means every stage is open. `isQuestOpen(questId)` then leaves out
+ * quests the learner may not start (F-ENT-003 section 3.5); omitted means
+ * every quest is open.
  */
 export function offerableQuests(
   quests: readonly Quest[],
   episodes: readonly Episode[],
   isEntitled?: (stageKey: string) => boolean,
+  isQuestOpen?: (questId: string) => boolean,
 ): Quest[] {
   const open = playableEpisodes(episodes).filter((e) => !isEntitled || isEntitled(e.stage));
   const openIds = new Set(open.flatMap((e) => e.questIds));
-  return quests.filter((q) => openIds.has(q.id));
+  return quests.filter((q) => openIds.has(q.id) && (!isQuestOpen || isQuestOpen(q.id)));
 }
 
 export interface NextQuestInput {
@@ -45,6 +48,12 @@ export interface NextQuestInput {
    * F-ROUTE-001 R-4a): skipped by the cursor, never marked done, still playable.
    */
   skipQuestIds?: ReadonlySet<string>;
+  /**
+   * May the learner start this quest (`questOpenFor` / `useQuestAccess`, through
+   * `cursorContext`; F-ENT-003 section 3.5)? A closed quest is skipped, never
+   * marked done. Omitted means every quest is open.
+   */
+  isQuestOpen?: (questId: string) => boolean;
 }
 
 /** The next incomplete offerable quest, or `undefined` when none is left. */
@@ -52,7 +61,7 @@ export function nextQuestAfter(input: NextQuestInput): Quest | undefined {
   const done = new Set(input.snapshot.quests.filter((q) => q.completedAt).map((q) => q.questId));
   if (input.justCompleted) done.add(input.justCompleted);
   const skip = input.skipQuestIds;
-  return offerableQuests(input.quests, input.episodes, input.isEntitled).find(
+  return offerableQuests(input.quests, input.episodes, input.isEntitled, input.isQuestOpen).find(
     (q) => !done.has(q.id) && !(skip?.has(q.id) ?? false),
   );
 }

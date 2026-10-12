@@ -101,8 +101,17 @@ export interface BuildMissionInput {
    */
   isEntitled?: (stageKey: string) => boolean;
   /**
+   * May the learner start this quest (`cursorContext` from `useQuestAccess`,
+   * F-ENT-003 section 3.6)? The cursor, replays (a finished quest is kept, so a
+   * replay always stays) and the explore episode (one open quest at least) are
+   * chosen among open quests; story cards follow `stories.isLocked`, which Home
+   * builds with `storyLockFor` and the same predicate. Omitted means every
+   * quest is open.
+   */
+  isQuestOpen?: (questId: string) => boolean;
+  /**
    * The story card's world (F-STORY-004 §3.7): the story index, the profile's
-   * bookmarks, the lock (`storyLockFor`) and the fit (`storyFitsFor`,
+   * bookmarks, the lock (`storyLockFor`, with `isQuestOpen` for book stories) and the fit (`storyFitsFor`,
    * F-STORY-005 §3.4: fitting stories come first among `next`; it only
    * orders). Absent → no story cards.
    */
@@ -162,14 +171,19 @@ function replayCandidates(snapshot: ProgressSnapshot, episodes: readonly Episode
  * rather than an empty "New" slot.
  */
 function nextQuest(input: BuildMissionInput): Quest | undefined {
-  const { snapshot, quests, episodes, skipQuestIds, isEntitled } = input;
-  const offerable = offerableQuests(quests, episodes, isEntitled);
+  const { snapshot, quests, episodes, skipQuestIds, isEntitled, isQuestOpen } = input;
+  const offerable = offerableQuests(quests, episodes, isEntitled, isQuestOpen);
   // A placed-out quest never played comes before a replay of the last quest.
   return (
-    nextQuestAfter({ snapshot, quests, episodes, isEntitled, skipQuestIds }) ??
-    (skipQuestIds === undefined ? undefined : nextQuestAfter({ snapshot, quests, episodes, isEntitled })) ??
+    nextQuestAfter({ snapshot, quests, episodes, isEntitled, isQuestOpen, skipQuestIds }) ??
+    (skipQuestIds === undefined ? undefined : nextQuestAfter({ snapshot, quests, episodes, isEntitled, isQuestOpen })) ??
     offerable[offerable.length - 1]
   );
+}
+
+/** `input.isQuestOpen`, or every quest open when the caller gave none. */
+function isOpen(input: BuildMissionInput, questId: string): boolean {
+  return !input.isQuestOpen || input.isQuestOpen(questId);
 }
 
 function completedToday(snapshot: ProgressSnapshot, questId: string, today: string): boolean {
@@ -242,11 +256,11 @@ function storyLink(...reasons: StoryReason[]): Link {
   };
 }
 
-/** The best replay not on the plan yet (grid quests only). */
+/** The best replay not on the plan yet (grid quests only; open ones, and a finished quest is kept, so open). */
 const replayLink: Link = (slot, input, used) => {
   const { snapshot, quests, episodes, today } = input;
   for (const candidate of replayCandidates(snapshot, episodes, today)) {
-    if (used.quests.has(candidate.questId)) continue;
+    if (used.quests.has(candidate.questId) || !isOpen(input, candidate.questId)) continue;
     const quest = quests.find((q) => q.id === candidate.questId);
     if (!quest) continue;
     return replayCard(slot, quest, episodeOfQuest(episodes, quest.id)?.id);
@@ -254,9 +268,9 @@ const replayLink: Link = (slot, input, used) => {
   return null;
 };
 
-/** The first playable grid episode not on the plan yet. */
+/** The first playable grid episode not on the plan yet, with at least one open quest. */
 const exploreLink: Link = (slot, input, used) => {
-  const episode = playableEpisodes(input.episodes).find((e) => !used.episodes.has(e.id));
+  const episode = playableEpisodes(input.episodes).find((e) => !used.episodes.has(e.id) && e.questIds.some((id) => isOpen(input, id)));
   return episode ? exploreCard(slot, episode) : null;
 };
 
@@ -284,21 +298,26 @@ function newCard(quest: Quest, episodes: readonly Episode[]): MissionCard {
 }
 
 /**
- * The one exception to the day pin (F-ROUTE-001 R-4a, section 3.5): when a
- * level check places out the quest pinned on the "New" card and the learner
- * has not played it today, card (2) moves to the cursor, so Home names the
- * same next quest as Results and My route. Cards (1) and (3) never move, and
- * the pin stays when the cursor has nothing else to offer.
+ * The exceptions to the day pin (F-ROUTE-001 R-4a, section 3.5; F-ENT-003
+ * section 3.6): when a level check places out the quest pinned on the "New"
+ * card, or that quest is no longer open (the access tier changed after the
+ * pin), and the learner has not played it today, card (2) moves to the
+ * cursor, so Home names the same next quest as Results and My route. Cards (1)
+ * and (3) never move, and the pin stays when the cursor has nothing else to
+ * offer.
  */
 function repinPlacedOut(cards: readonly MissionCard[], input: BuildMissionInput): readonly MissionCard[] {
   const skip = input.skipQuestIds;
   // Only the system "New" card re-pins; a caregiver or teacher assignment
   // (`subtitle: 'assigned'`, `mergeAssignments`) keeps its slot.
   const pinnedNew = cards.find((card) => card.slot === 2 && card.kind === 'new' && card.subtitle === 'new');
-  if (!skip || !pinnedNew?.questId || !skip.has(pinnedNew.questId)) return cards;
+  if (!pinnedNew?.questId) return cards;
+  const placedOut = skip?.has(pinnedNew.questId) ?? false;
+  if (!placedOut && isOpen(input, pinnedNew.questId)) return cards;
   if (completedToday(input.snapshot, pinnedNew.questId, input.today)) return cards;
   const upcoming = nextQuest(input);
-  if (!upcoming || skip.has(upcoming.id) || cards.some((card) => card.questId === upcoming.id)) return cards;
+  // `nextQuest` offers open quests only, so the new card is open too.
+  if (!upcoming || skip?.has(upcoming.id) || cards.some((card) => card.questId === upcoming.id)) return cards;
   return cards.map((card) => (card === pinnedNew ? newCard(upcoming, input.episodes) : card));
 }
 

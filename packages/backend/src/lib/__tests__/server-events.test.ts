@@ -139,6 +139,38 @@ describe('keptEventFields (the codes-only filter shared with POST /api/telemetry
   });
 });
 
+describe('billing events (F-BILL-002 section 10: recorded by the Worker only, codes only)', () => {
+  it('records the three webhook names with their codes and no profile id', () => {
+    expect(recordServerEvent('billing.checkout_completed', { planKey: 'family_lifetime', mode: 'test', duplicate: false })?.payload).toEqual({ planKey: 'family_lifetime', mode: 'test', duplicate: false });
+    expect(recordServerEvent('billing.payment_failed', { planKey: 'group_license', mode: 'live' })?.payload).toEqual({ planKey: 'group_license', mode: 'live' });
+    expect(recordServerEvent('billing.refund_recorded', { planKey: 'family_lifetime', full: true, mode: 'test' })?.payload).toEqual({ planKey: 'family_lifetime', full: true, mode: 'test' });
+    expect(store.events.every((e) => e.profileId === undefined)).toBe(true);
+  });
+
+  it('drops ids, amounts, currencies, codes, URLs and values off the lists, whatever a caller passes', () => {
+    const smuggled = {
+      accountId: 'acct:1',
+      spaceId: 'space:fam',
+      learnerId: 'profile:suni',
+      profileId: 'profile:suni',
+      amountCents: 1530,
+      currency: 'usd',
+      promoCode: 'HOYA20',
+      url: 'https://pay.stripe.com/receipts/x',
+      invoice: 'in_1',
+    };
+    expect(keptEventFields('billing.checkout_completed', { ...smuggled, planKey: 'group_license', mode: 'test', duplicate: true }, 'profile:a')).toEqual({
+      profileId: undefined,
+      payload: { planKey: 'group_license', mode: 'test', duplicate: true },
+    });
+    expect(keptEventFields('billing.payment_failed', { planKey: 'gold', mode: 'prod', duplicate: true }, undefined).payload).toBeUndefined();
+    expect(keptEventFields('billing.refund_recorded', { planKey: 'school_seat', full: 'yes', mode: 'none' }, undefined).payload).toEqual({ planKey: 'school_seat', mode: 'none' });
+    // `duplicate` belongs to the completion only, `full` to the refund only.
+    expect(keptEventFields('billing.payment_failed', { planKey: 'family_lifetime', mode: 'test', full: true, duplicate: false }, undefined).payload).toEqual({ planKey: 'family_lifetime', mode: 'test' });
+    expect(keptEventFields('billing.unlisted' as TelemetryEventName, { planKey: 'family_lifetime' }, 'profile:a')).toEqual({ profileId: undefined, payload: undefined });
+  });
+});
+
 describe('appendEvent', () => {
   it('pushes and trims from the front once past the cap', () => {
     store.events = Array.from({ length: MAX_EVENTS }, (_, i) => ({ id: `event:${i}`, name: 'session.start', at: NOW.toISOString() }));

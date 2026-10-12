@@ -50,6 +50,8 @@ export interface ResultsTeaserInput {
   overlays?: Overlays;
   /** Placed-out quests of the level check (`placedOutSkipSet`, F-PLC-001 section 3.7); omitted without a result. */
   skipQuestIds?: ReadonlySet<string>;
+  /** May the learner start this quest: from `cursorContext`, as on Home (F-ENT-003 section 3.5). Omitted means every quest is open. */
+  isQuestOpen?: (questId: string) => boolean;
 }
 
 /** The one line under the title: `teaserEn`, else the new letters from Discover, else `blurbEn`. */
@@ -85,6 +87,7 @@ export function resultsTeaser(input: ResultsTeaserInput): ResultsTeaser | undefi
     episodes,
     justCompleted: questId,
     isEntitled: input.isEntitled,
+    isQuestOpen: input.isQuestOpen,
   };
   // A placed-out quest never played still comes before "nothing next".
   const target = again

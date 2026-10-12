@@ -15,11 +15,12 @@ import { canAssignQuest } from './gating';
 /**
  * Plan → homework on the learner device — F-PLAN-001 §3.3, extended by
  * F-PLAN-002 section 3.6. Idempotent: assignment ids are `<sourceId>#<questId>`,
- * so re-applying the same inbox adds nothing. Locked or unknown items are
- * skipped silently and counted as not ready (F-HW-001 §3.4 ruling for class
- * plans). A curriculum derives one horizon of days at a time, and every pass
- * reconciles pending assignments with the current plan (new dates, removed or
- * locked items); finished assignments are never touched.
+ * so re-applying the same inbox adds nothing. Locked, closed (F-ENT-003
+ * section 3.6) or unknown items are skipped silently and counted as not ready
+ * (F-HW-001 §3.4 ruling for class plans). A curriculum derives one horizon of
+ * days at a time, and every pass reconciles pending assignments with the
+ * current plan (new dates, removed, locked or closed items); finished
+ * assignments are never touched.
  */
 export const PLAN_ID_SEPARATOR = '#';
 
@@ -83,6 +84,13 @@ export interface DeriveInput {
   /** YYYY-MM-DD — the default target date and the start of the horizon. */
   today: string;
   learnerName: string;
+  /**
+   * May the learner start this quest (`questOpenFor`, F-ENT-003 section 3.6)?
+   * A closed item is treated exactly like a stage-locked one: not derived,
+   * counted in `notReady`, and a pending assignment for it is removed. Omitted
+   * means every quest is open.
+   */
+  isQuestOpen?: (questId: string) => boolean;
 }
 
 export interface DeriveResult {
@@ -105,7 +113,7 @@ interface Wanted {
 }
 
 export function deriveAssignments(input: DeriveInput): DeriveResult {
-  const { sources, snapshot, profileId, quests, episodes, unlockedStages, today, learnerName } = input;
+  const { sources, snapshot, profileId, quests, episodes, unlockedStages, today, learnerName, isQuestOpen } = input;
   const questIds = new Set(quests.map((q) => q.id));
   const episodeById = new Map(episodes.map((e) => [e.id, e]));
   const episodeOfQuest = (questId: string): Episode | undefined => episodes.find((e) => e.questIds.includes(questId));
@@ -130,7 +138,7 @@ export function deriveAssignments(input: DeriveInput): DeriveResult {
       }
       for (const questId of targets) {
         const episode = episodeOfQuest(questId);
-        if (!episode || !questIds.has(questId) || !canAssignQuest({ questId, episodes, unlockedStages, learnerName }).allowed) {
+        if (!episode || !questIds.has(questId) || !canAssignQuest({ questId, episodes, unlockedStages, learnerName, isQuestOpen }).allowed) {
           bump(source.id);
           continue;
         }
@@ -155,7 +163,7 @@ export function deriveAssignments(input: DeriveInput): DeriveResult {
     }
     const want = activeSourceIds.has(sourceId) ? wanted.get(h.id) : undefined;
     if (!want) {
-      // The source left the inbox, or its item left the plan, the horizon or the unlocked stages.
+      // The source left the inbox, or its item left the plan, the horizon, the unlocked stages or the open quests.
       removed += 1;
       continue;
     }

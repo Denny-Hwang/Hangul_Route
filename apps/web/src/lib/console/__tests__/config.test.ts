@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { DEFAULT_APP_URL, apiBaseUrl, appUrl, buildEnv, clerkPublishableKey, devAuthEnabled, lectureModeEnabled, schoolConsentModeEnabled } from '../config';
+import { DEFAULT_APP_URL, apiBaseUrl, appUrl, buildEnv, clerkPublishableKey, contentGatingEnabled, devAuthEnabled, lectureModeEnabled, schoolConsentModeEnabled } from '../config';
 
 describe('console config (F-CONSOLE-001 §3.2)', () => {
   it('apiBaseUrl trims and rejects the placeholder', () => {
@@ -54,6 +54,16 @@ describe('console config (F-CONSOLE-001 §3.2)', () => {
     expect(typeof lectureModeEnabled()).toBe('boolean');
   });
 
+  it('the free-plan switch is off unless the build sets it, parsed like the learner app (F-ENT-003 section 3.4)', () => {
+    expect(contentGatingEnabled({})).toBe(false);
+    expect(contentGatingEnabled({ NEXT_PUBLIC_CONTENT_GATING_ENABLED: 'true' })).toBe(true);
+    expect(contentGatingEnabled({ NEXT_PUBLIC_CONTENT_GATING_ENABLED: '1' })).toBe(true);
+    for (const off of ['false', '0', '', 'TRUE', 'yes', 'enabled', ' true']) {
+      expect(contentGatingEnabled({ NEXT_PUBLIC_CONTENT_GATING_ENABLED: off }), off).toBe(false);
+    }
+    expect(typeof contentGatingEnabled()).toBe('boolean');
+  });
+
   describe('build env', () => {
     afterEach(() => vi.unstubAllEnvs());
 
@@ -65,6 +75,9 @@ describe('console config (F-CONSOLE-001 §3.2)', () => {
       expect(buildEnv().NEXT_PUBLIC_API_BASE_URL).toBe('https://hangul-route-api.example.workers.dev/');
       vi.stubEnv('NEXT_PUBLIC_APP_URL', 'https://app.preview.example.com');
       expect(appUrl()).toBe('https://app.preview.example.com');
+      vi.stubEnv('NEXT_PUBLIC_CONTENT_GATING_ENABLED', 'true');
+      expect(buildEnv().NEXT_PUBLIC_CONTENT_GATING_ENABLED).toBe('true');
+      expect(contentGatingEnabled()).toBe(true);
     });
 
     it('never hands process.env around as an object (the browser bundle would see {})', () => {

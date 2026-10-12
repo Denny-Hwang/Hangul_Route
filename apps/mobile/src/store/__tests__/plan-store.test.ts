@@ -9,12 +9,19 @@ vi.mock('../../platform/storage', () => ({
   }),
 }));
 
+// The real tier store, with `questOpenFor` observable (F-ENT-003 section 3.6).
+vi.mock('../tier-store', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../tier-store')>();
+  return { ...actual, questOpenFor: vi.fn(actual.questOpenFor) };
+});
+
+import { flags } from '../../config/flags';
 import { curriculumMeta, selfRoute } from '../../logic/homework/__tests__/curriculum-fixture';
 import { useAccountStore } from '../account-store';
 import { usePlanStore, unlockedStagesFor } from '../plan-store';
 import { useProfileStore } from '../profile-store';
 import { useProgressStore } from '../progress-store';
-import { useTierStore } from '../tier-store';
+import { questOpenFor, useTierStore } from '../tier-store';
 
 const plan: InboxPlan = {
   id: 'plan:w3',
@@ -164,5 +171,108 @@ describe('plan-store with no network (F-PLAN-002 section 3.6 rule 1, section 3.1
     const reconciled = usePlanStore.getState().reconcile('profile:a', merged);
     expect(reconciled.homework.map((h) => [h.id, h.targetDate])).toEqual([['plan:term#quest:stage1-letters-q1', '2026-09-23']]);
     expect(usePlanStore.getState().reconcile('profile:a', reconciled)).toBe(reconciled);
+  });
+});
+
+describe('plan-store and quest access (F-ENT-003 section 3.6)', () => {
+  const realQuestOpenFor = vi.mocked(questOpenFor).getMockImplementation();
+  afterEach(() => {
+    if (realQuestOpenFor) vi.mocked(questOpenFor).mockImplementation(realQuestOpenFor);
+    vi.mocked(questOpenFor).mockClear();
+  });
+
+  const twoStage1: InboxPlan = {
+    ...plan,
+    items: [
+      { kind: 'quest', id: 'quest:stage1-letters-q1', targetDate: '2026-09-28' },
+      { kind: 'quest', id: 'quest:stage1-letters-q2', targetDate: '2026-09-29' },
+    ],
+  };
+  const closing = (shut: string) => () => (questId: string) => questId !== shut;
+
+  it('deriveFor asks questOpenFor for the learner at the derivation time; a closed item waits as not ready', async () => {
+    vi.mocked(questOpenFor).mockImplementation(closing('quest:stage1-letters-q2'));
+    const outcome = await usePlanStore.getState().applyPlans('profile:a', [twoStage1]);
+    // The learner, the derivation time and the snapshot derived from (its finished quests are kept).
+    expect(questOpenFor).toHaveBeenCalledWith('profile:a', expect.any(Date), expect.objectContaining({ profileId: 'profile:a', quests: [] }));
+    expect(outcome).toMatchObject({ added: 1, notReady: { 'plan:w3': 1 } });
+    expect(useProgressStore.getState().byProfile['profile:a']?.homework.map((h) => h.questId)).toEqual(['quest:stage1-letters-q1']);
+    expect(usePlanStore.getState().notReady['profile:a']).toEqual({ 'plan:w3': 1 });
+  });
+
+  it('rederive uses it too, and adds the item once it opens', async () => {
+    vi.mocked(questOpenFor).mockImplementation(closing('quest:stage1-letters-q2'));
+    await usePlanStore.getState().applyPlans('profile:a', [twoStage1]);
+    vi.mocked(questOpenFor).mockImplementation(() => () => true);
+    expect(await usePlanStore.getState().rederive('profile:a')).toMatchObject({ added: 1, notReady: {} });
+    expect(useProgressStore.getState().byProfile['profile:a']?.homework).toHaveLength(2);
+  });
+
+  it('reconcile drops a pending item of a merged snapshot whose quest is closed', async () => {
+    await usePlanStore.getState().applyPlans('profile:a', [twoStage1]);
+    const merged = useProgressStore.getState().byProfile['profile:a']!;
+    expect(merged.homework).toHaveLength(2);
+    vi.mocked(questOpenFor).mockClear();
+    vi.mocked(questOpenFor).mockImplementation(closing('quest:stage1-letters-q2'));
+    const reconciled = usePlanStore.getState().reconcile('profile:a', merged);
+    expect(questOpenFor).toHaveBeenCalledWith('profile:a', expect.any(Date), merged);
+    expect(reconciled.homework.map((h) => h.questId)).toEqual(['quest:stage1-letters-q1']);
+  });
+
+  it('reconcile asks with the merged snapshot, so a quest finished on another device is kept (section 3.2)', async () => {
+    await usePlanStore.getState().applyPlans('profile:a', [twoStage1]);
+    const local = useProgressStore.getState().byProfile['profile:a']!;
+    // Finished on another device: the union of the sync merge brings it in before the store holds it.
+    const finishedElsewhere = {
+      questId: 'quest:stage1-letters-q2',
+      episodeId: 'episode:stage1-letters',
+      startedAt: '2026-09-29T08:00:00.000Z',
+      completedAt: '2026-09-29T08:05:00.000Z',
+      stars: 3 as const,
+      attempts: 1,
+      accuracy: 1,
+    };
+    const merged = { ...local, quests: [...local.quests, finishedElsewhere] };
+    vi.mocked(questOpenFor).mockClear();
+    const reconciled = usePlanStore.getState().reconcile('profile:a', merged);
+    expect(questOpenFor).toHaveBeenCalledWith('profile:a', expect.any(Date), merged);
+    expect(reconciled.homework.find((h) => h.questId === 'quest:stage1-letters-q2')).toMatchObject({
+      id: 'plan:w3#quest:stage1-letters-q2',
+      completedAt: '2026-09-29T08:05:00.000Z',
+    });
+  });
+
+  describe('with the real predicate and the switch on (web)', () => {
+    const savedOs = process.env.EXPO_OS;
+    beforeEach(() => {
+      flags.contentGatingEnabled = true;
+      process.env.EXPO_OS = 'web';
+    });
+    afterEach(() => {
+      flags.contentGatingEnabled = false;
+      if (savedOs === undefined) delete process.env.EXPO_OS;
+      else process.env.EXPO_OS = savedOs;
+    });
+
+    it('a free learner keeps every Stage 1 item (all of Stage 1 is free, OD-1); a later stage waits', async () => {
+      const mixed: InboxPlan = { ...twoStage1, items: [...twoStage1.items, { kind: 'quest', id: 'quest:stage2-life-q1', targetDate: '2026-09-30' }] };
+      vi.mocked(questOpenFor).mockClear();
+      const outcome = await usePlanStore.getState().applyPlans('profile:a', [mixed]);
+      expect(outcome).toMatchObject({ added: 2, notReady: { 'plan:w3': 1 } });
+      // With today's registry (free = all of Stage 1) the stage lock already holds the Stage 2 item back, so the
+      // outcome alone cannot tell the two rules apart: check the real predicate deriveFor received agrees with it.
+      const received = vi.mocked(questOpenFor).mock.results[0];
+      expect(received?.type).toBe('return');
+      const isOpen = received?.value as (questId: string) => boolean;
+      expect(isOpen('quest:stage1-letters-q1')).toBe(true);
+      expect(isOpen('quest:stage1-letters-q2')).toBe(true);
+      expect(isOpen('quest:stage2-life-q1')).toBe(false);
+    });
+
+    it('a premium learner derives every item', async () => {
+      useTierStore.setState({ byLearner: { 'profile:a': { tier: 'premium', source: null, validUntil: null, fetchedAt: 't' } } });
+      const mixed: InboxPlan = { ...twoStage1, items: [...twoStage1.items, { kind: 'quest', id: 'quest:stage2-life-q1', targetDate: '2026-09-30' }] };
+      expect(await usePlanStore.getState().applyPlans('profile:a', [mixed])).toMatchObject({ added: 3, notReady: {} });
+    });
   });
 });

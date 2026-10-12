@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import type { Episode, ProgressSnapshot, Quest } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
 import { episodesAll, questsAll } from '../../content';
+import { questOpenPredicate } from '../content-access';
 import { CURSOR_STAGE_RULE, cursorContext, cursorEntitlement } from '../cursor-context';
 import { buildTodaysMission } from '../homework/mission-builder';
 import { routeCursor } from '../my-route/cursor';
@@ -59,6 +60,23 @@ describe('cursorContext', () => {
     const placements = [placementResult({ placedOutQuestIds: ['quest:a', 'quest:b'] })];
     const ctx = cursorContext({ tier: 'free', placements, quests: QUESTS, episodes: EPISODES });
     expect([...(ctx.skipQuestIds ?? [])].sort()).toEqual(['quest:a', 'quest:b']);
+  });
+
+  it('has no quest predicate when the caller gives none: every quest open, as before (F-ENT-003 section 3.5)', () => {
+    const ctx = cursorContext({ tier: 'free', placements: undefined, quests: QUESTS, episodes: EPISODES });
+    expect(ctx.isQuestOpen).toBeUndefined();
+    expect(nextQuestAfter({ snapshot: snapshotWith([]), quests: QUESTS, episodes: EPISODES, ...ctx })?.id).toBe('quest:a');
+  });
+
+  it('carries the quest predicate to the cursor, which skips closed quests (F-ENT-003 section 3.5)', () => {
+    const isQuestOpen = (questId: string): boolean => questId !== 'quest:a';
+    const ctx = cursorContext({ tier: 'free', placements: undefined, quests: QUESTS, episodes: EPISODES, isQuestOpen });
+    expect(ctx.isQuestOpen).toBe(isQuestOpen);
+    expect(nextQuestAfter({ snapshot: snapshotWith([]), quests: QUESTS, episodes: EPISODES, ...ctx })?.id).toBe('quest:b');
+    // Home's "New" card is told the same predicate through the spread.
+    const first = offerableQuests(questsAll, episodesAll)[0]!.id;
+    const live = cursorContext({ tier: 'free', placements: undefined, quests: questsAll, episodes: episodesAll, isQuestOpen: (id) => id !== first });
+    expect(homeNext(snapshotWith([]), live)).toBe(offerableQuests(questsAll, episodesAll)[1]!.id);
   });
 
   it('passes the rule through (OD-4 alternative)', () => {
@@ -147,6 +165,26 @@ describe('Home, Results and My route agree on the shipped bundle (decision M4)',
     expect(homeNext(snapshot, ctx)).toBe(stage1[stage1.length - 1]!.id);
   });
 
+  it('with the quest predicate (switch on, free), Home and Results still name one next quest (F-ENT-003 section 3.5)', () => {
+    const stage1Ids = stage1.map((q) => q.id);
+    for (let n = 1; n < stage1Ids.length; n++) {
+      const doneIds = stage1Ids.slice(0, n);
+      const snapshot = doneSnapshot(doneIds);
+      const isQuestOpen = questOpenPredicate({ tier: 'free', gatingEnabled: true, completedQuestIds: new Set(doneIds) });
+      const ctx = cursorContext({ tier: 'free', placements: undefined, quests: questsAll, episodes: episodesAll, isQuestOpen });
+      const cursor = nextQuestAfter({ snapshot, quests: questsAll, episodes: episodesAll, ...ctx })?.id;
+      expect(cursor).toBe(stage1Ids[n]);
+      expect(homeNext(snapshot, ctx)).toBe(cursor);
+      expect(resultsNext(snapshot, ctx, doneIds[0]!)).toBe(cursor);
+    }
+    // Past the free lessons there is no new open quest: Results has no teaser, Home keeps a replay of an open quest.
+    const all = doneSnapshot(stage1Ids);
+    const isQuestOpen = questOpenPredicate({ tier: 'free', gatingEnabled: true, completedQuestIds: new Set(stage1Ids) });
+    const ctx = cursorContext({ tier: 'free', placements: undefined, quests: questsAll, episodes: episodesAll, isQuestOpen });
+    expect(resultsNext(all, ctx, stage1Ids[0]!)).toBeUndefined();
+    expect(homeNext(all, ctx)).toBe(stage1Ids[stage1Ids.length - 1]);
+  });
+
   it('accepted exception (section 3.5): with only placed-out quests left, Home and Results offer one; My route is at rest', () => {
     const placedOut = offerable.slice(0, 2);
     const snapshot = doneSnapshot(offerable.slice(2));
@@ -186,5 +224,14 @@ describe('the screens build the cursor from cursorContext (wiring guard)', () =>
     // The access tier through its hook, so the screen re-renders when the tier changes (F-ENT-003 section 3.4).
     expect(src).toMatch(/\buseAccessTier\(/);
     expect(src).not.toMatch(importsEitherOldSource);
+  });
+
+  it.each([
+    ['Home', 'home/HomeScreen.tsx', 'buildTodaysMission'],
+    ['Results', 'results/ResultsScreen.tsx', 'resultsTeaser'],
+  ])('%s gives the cursor the quest predicate of the active learner (F-ENT-003 section 3.5)', (_name, file, callee) => {
+    const src = read(file);
+    expect(cursorArgsIn(src, callee)).toMatch(/\bisQuestOpen\b/);
+    expect(src).toMatch(/\buseQuestAccess\(\)/);
   });
 });

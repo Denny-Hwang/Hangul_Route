@@ -68,6 +68,7 @@ describe('Trace Stroke (English wording as shipped)', () => {
 
   it('keeps the prompt, the buttons and the idle line', () => {
     expect(t.heading('g/k')).toBe('Trace the letter g/k');
+    expect(t.headingFinal('m')).toBe('Trace the final m');
     expect(t.instruction).toBe('Draw the letter with your finger.');
     expect(t.showMe.cta).toBe('Show me');
     expect(t.clear.cta).toBe('Clear');
@@ -91,6 +92,7 @@ describe('Trace Stroke (English wording as shipped)', () => {
   it('keeps the screen-reader labels of the prompt, the canvas and the stroke-order diagram', () => {
     const a = m.a11y.minigame;
     expect(a.traceLetter('g or k')).toBe('Trace the letter g or k');
+    expect(a.traceFinal('p')).toBe('Trace the final p');
     expect(a.traceCanvas('g or k')).toBe('Draw the letter g or k with your finger');
     const s = a.strokeOrder;
     expect(s.guide).toBe('Stroke order guide');

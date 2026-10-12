@@ -11,7 +11,12 @@ vi.mock('../../platform/storage', () => ({
 vi.mock('../../platform/device', () => ({ getDeviceId: vi.fn(async () => 'device-test') }));
 vi.mock('../../platform/sync-api', () => ({ apiBaseUrl: vi.fn(() => 'https://api.example.com'), createSyncApi: vi.fn() }));
 vi.mock('../../platform/telemetry', () => ({ track: vi.fn(async () => undefined) }));
-vi.mock('../../config/flags', () => ({ flags: { syncEnabled: true, telemetryEnabled: false, telemetryNetwork: false, voiceEchoEnabled: false } }));
+// The free-tier switch stays off, as in the node lane (plan derivation reads quest access, F-ENT-003 section 3.6).
+vi.mock('../../config/flags', () => ({
+  flags: { syncEnabled: true, telemetryEnabled: false, telemetryNetwork: false, voiceEchoEnabled: false, contentGatingEnabled: false },
+  bundleOs: () => undefined,
+  gatingActive: () => false,
+}));
 
 import { readJson } from '../../platform/storage';
 import { apiBaseUrl } from '../../platform/sync-api';
@@ -105,6 +110,26 @@ describe('membership-store (F-SPACE-001 §3.5)', () => {
     requestSync.mockClear();
     await useMembershipStore.getState().refresh('profile:a');
     expect(requestSync).not.toHaveBeenCalled();
+    requestSync.mockRestore();
+  });
+
+  it('asks for a sync when the first inbox or a goal-only plan change can move summary.routeGoal (Learning Route LR-6)', async () => {
+    useSyncStore.getState().adoptCredentials('profile:a', 'sec', 1);
+    const plan = (items: { kind: 'quest'; id: string }[]) => ({ id: 'plan:w3', spaceId: 'space:cls', spaceKind: 'class', spaceName: 'Sunday Class A', title: 'Week 3', items, publishedAt: 't', updatedAt: 't' });
+    const inbox = (plans: unknown[]) => ({ status: 'ok', inbox: { rev: 1, plans, memberships: [classRow], tier: 'free', serverTime: 't' } });
+    const getInbox = vi.fn().mockResolvedValueOnce(inbox([])).mockResolvedValueOnce(inbox([])).mockResolvedValueOnce(inbox([plan([])]));
+    setSyncApiForTests(fakeApi({ getInbox }) as never);
+    const requestSync = vi.spyOn(useSyncStore.getState(), 'requestSync');
+    // The first inbox, even an empty one, changes no homework but lets the upload name the goal.
+    await useMembershipStore.getState().refresh('profile:a');
+    expect(requestSync).toHaveBeenCalledWith('profile:a');
+    requestSync.mockClear();
+    await useMembershipStore.getState().refresh('profile:a');
+    expect(requestSync).not.toHaveBeenCalled();
+    // A plan with no homework to derive still moves what the goal reads.
+    await useMembershipStore.getState().refresh('profile:a');
+    expect(useProgressStore.getState().byProfile['profile:a']?.homework).toEqual([]);
+    expect(requestSync).toHaveBeenCalledWith('profile:a');
     requestSync.mockRestore();
   });
 

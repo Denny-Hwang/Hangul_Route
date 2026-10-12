@@ -251,4 +251,25 @@ describe('flags', () => {
     expect(src).toContain('process.env.EXPO_PUBLIC_VOCAB_TOPICS_ENABLED');
     expect(src).toContain('process.env.EXPO_PUBLIC_VOCAB_SHOW_DRAFTS');
   });
+
+  it('grownUpHomeEnabled (F-APP-001 rollout) is OFF by default and flips on with "true" or "1"', async () => {
+    delete process.env.EXPO_PUBLIC_GROWN_UP_HOME;
+    let mod = await reload();
+    expect(mod.flags.grownUpHomeEnabled).toBe(false);
+    expect(mod.launchDefaultFlags.grownUpHomeEnabled).toBe(false);
+    process.env.EXPO_PUBLIC_GROWN_UP_HOME = 'true';
+    mod = await reload();
+    expect(mod.flags.grownUpHomeEnabled).toBe(true);
+    process.env.EXPO_PUBLIC_GROWN_UP_HOME = '1';
+    mod = await reload();
+    expect(mod.flags.grownUpHomeEnabled).toBe(true);
+    process.env.EXPO_PUBLIC_GROWN_UP_HOME = 'maybe';
+    mod = await reload();
+    expect(mod.flags.grownUpHomeEnabled).toBe(false);
+  });
+
+  it('grownUpHomeEnabled is read by its literal name, so the owner step S-3 can turn it on in a web build', () => {
+    const src = readFileSync(join(__dirname, '../flags.ts'), 'utf8');
+    expect(src).toContain('process.env.EXPO_PUBLIC_GROWN_UP_HOME');
+  });
 });

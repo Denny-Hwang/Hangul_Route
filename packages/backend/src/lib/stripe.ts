@@ -85,7 +85,8 @@ export interface StripeEventLike {
   data: { object: Record<string, unknown> };
 }
 
-function subjectFrom(meta: unknown): Pick<EntitlementApply, 'subjectKind' | 'subjectId' | 'planKey'> | null {
+/** The subject our checkout wrote into Stripe `metadata` (session, subscription, invoice parent), or null. */
+export function subjectFrom(meta: unknown): Pick<EntitlementApply, 'subjectKind' | 'subjectId' | 'planKey'> | null {
   if (!meta || typeof meta !== 'object') return null;
   const m = meta as Record<string, unknown>;
   const kind = m.subjectKind === 'account' || m.subjectKind === 'space' ? m.subjectKind : null;

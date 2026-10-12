@@ -4,7 +4,7 @@ import { PLACEMENT_KEEP } from '@hangul-route/content-schema';
 import { seededRandom } from '../../listen-pick';
 import { placementResult } from '../../placement/__tests__/fixtures';
 import { selfRoute } from '../../homework/__tests__/curriculum-fixture';
-import { compareInstant, isSubsetOf, mergeCard, mergeSnapshots, mergeVocab, rebaseSnapshot, withSnapshotDefaults } from '../merge';
+import { compareInstant, isSubsetOf, mergeCard, mergeQuestDoneAt, mergeSnapshots, mergeVocab, rebaseSnapshot, withSnapshotDefaults } from '../merge';
 
 const NOW = new Date('2026-09-21T12:00:00.000Z');
 const base = (over: Partial<ProgressSnapshot> = {}): ProgressSnapshot => ({
@@ -192,6 +192,85 @@ describe('stageDoneAt, the stage latch (F-ROUTE-001 section 3.15)', () => {
     expect(isSubsetOf(base({ stageDoneAt: {} }), legacy())).toBe(true);
     // a key that happens to name an Object.prototype member is still a missing latch
     expect(isSubsetOf(base({ stageDoneAt: { constructor: '2026-10-11T10:00:00.000Z' } }), legacy())).toBe(false);
+  });
+});
+
+describe('questDoneAt, the quest latch (F-REPORT-001 section 3.3.1, M5)', () => {
+  const legacy = (over: Record<string, unknown> = {}): ProgressSnapshot => {
+    const snapshot: Record<string, unknown> = { ...base(), ...over };
+    delete snapshot['questDoneAt'];
+    return snapshot as unknown as ProgressSnapshot;
+  };
+
+  it('unions the keys and keeps the earliest time per quest, whatever the argument order', () => {
+    const local = { 'quest:a': '2026-10-11T10:00:00.000Z', 'quest:b': '2026-10-20T10:00:00.000Z' };
+    const server = { 'quest:a': '2026-10-10T10:00:00.000Z', 'quest:c': '2026-10-15T10:00:00.000Z' };
+    const expected = { 'quest:a': '2026-10-10T10:00:00.000Z', 'quest:b': '2026-10-20T10:00:00.000Z', 'quest:c': '2026-10-15T10:00:00.000Z' };
+    expect(mergeQuestDoneAt(local, server)).toEqual(expected);
+    expect(mergeQuestDoneAt(server, local)).toEqual(expected);
+    expect(mergeSnapshots(base({ questDoneAt: local }), base({ questDoneAt: server }), { now: NOW }).questDoneAt).toEqual(expected);
+  });
+
+  it('never drops an entry either side holds (a first finish is never lost)', () => {
+    const latch = { 'quest:a': '2026-10-11T10:00:00.000Z' };
+    expect(mergeSnapshots(base({ questDoneAt: latch }), legacy(), { now: NOW }).questDoneAt).toEqual(latch);
+    expect(mergeSnapshots(legacy(), base({ questDoneAt: latch }), { now: NOW }).questDoneAt).toEqual(latch);
+    expect(mergeSnapshots(base({ questDoneAt: {} }), base({ questDoneAt: latch }), { now: NOW }).questDoneAt).toEqual(latch);
+  });
+
+  it('compares instants, not strings: an offset time and an unparseable value never win wrongly', () => {
+    const at = (l: string, s: string) => mergeQuestDoneAt({ 'quest:a': l }, { 'quest:a': s });
+    // 08:00+09:00 is 23:00Z the day before, so it is the earlier instant
+    expect(at('2026-10-11T08:00:00+09:00', '2026-10-11T00:00:00Z')).toEqual({ 'quest:a': '2026-10-11T08:00:00+09:00' });
+    expect(at('2026-10-11T00:00:00Z', '2026-10-11T08:00:00+09:00')).toEqual({ 'quest:a': '2026-10-11T08:00:00+09:00' });
+    // a value that does not parse never beats a real time, whichever side holds it
+    expect(at('', '2026-10-11T00:00:00.000Z')).toEqual({ 'quest:a': '2026-10-11T00:00:00.000Z' });
+    expect(at('2026-10-11T00:00:00.000Z', 'soon')).toEqual({ 'quest:a': '2026-10-11T00:00:00.000Z' });
+    // two unparseable values still give one answer whatever the order
+    expect(at('b', 'a')).toEqual({ 'quest:a': 'a' });
+    expect(at('a', 'b')).toEqual({ 'quest:a': 'a' });
+  });
+
+  it('an empty record is a value: kept when either side holds the key, absent only when neither does', () => {
+    expect(mergeQuestDoneAt(undefined, undefined)).toBeUndefined();
+    expect(mergeQuestDoneAt({}, undefined)).toEqual({});
+    expect(mergeQuestDoneAt(undefined, {})).toEqual({});
+    expect(mergeSnapshots(legacy(), legacy(), { now: NOW })).not.toHaveProperty('questDoneAt');
+    expect(mergeSnapshots(base({ questDoneAt: {} }), legacy(), { now: NOW }).questDoneAt).toEqual({});
+    expect(mergeSnapshots(legacy(), base({ questDoneAt: {} }), { now: NOW }).questDoneAt).toEqual({});
+  });
+
+  it('is commutative, associative and idempotent', () => {
+    const a = { 'quest:a': '2026-10-11T10:00:00.000Z', 'quest:b': 'junk' };
+    const b = { 'quest:a': '2026-10-11T19:00:00+09:00', 'quest:c': '2026-10-01T00:00:00.000Z' };
+    const c = { 'quest:b': '2026-10-02T00:00:00.000Z', 'quest:c': '2026-10-03T00:00:00.000Z' };
+    expect(mergeQuestDoneAt(a, b)).toEqual(mergeQuestDoneAt(b, a));
+    expect(mergeQuestDoneAt(a, mergeQuestDoneAt(b, c))).toEqual(mergeQuestDoneAt(mergeQuestDoneAt(a, b), c));
+    expect(mergeQuestDoneAt(a, a)).toEqual(a);
+    expect(Object.keys(mergeQuestDoneAt(c, a) ?? {})).toEqual(['quest:a', 'quest:b', 'quest:c']);
+  });
+
+  it('a key that names an Object.prototype member is merged like any other', () => {
+    expect(mergeQuestDoneAt({ constructor: '2026-10-11T10:00:00.000Z' }, {})).toEqual({ constructor: '2026-10-11T10:00:00.000Z' });
+  });
+
+  it('isSubsetOf asks for an upload when the local copy holds an entry the server lacks or holds later', () => {
+    const latch = { 'quest:a': '2026-10-11T10:00:00.000Z' };
+    expect(isSubsetOf(base({ questDoneAt: latch }), legacy())).toBe(false);
+    expect(isSubsetOf(base({ questDoneAt: latch }), base({ questDoneAt: { 'quest:a': '2026-10-12T00:00:00.000Z' } }))).toBe(false);
+    expect(isSubsetOf(base({ questDoneAt: { 'quest:a': '2026-10-12T00:00:00.000Z' } }), base({ questDoneAt: latch }))).toBe(true);
+    expect(isSubsetOf(base({ questDoneAt: latch }), base({ questDoneAt: latch }))).toBe(true);
+    expect(isSubsetOf(legacy(), base({ questDoneAt: latch }))).toBe(true);
+    // an empty local record adds nothing the server needs
+    expect(isSubsetOf(base({ questDoneAt: {} }), legacy())).toBe(true);
+    expect(isSubsetOf(base({ questDoneAt: { constructor: '2026-10-11T10:00:00.000Z' } }), legacy())).toBe(false);
+  });
+
+  it('rebaseSnapshot keeps a first finish written while the request was in flight', () => {
+    const sent = base({ questDoneAt: {} });
+    const ours = base({ quests: [quest('q1', 2, 0.8, 1, '2026-09-21T10:00:00.000Z')], questDoneAt: { q1: '2026-09-21T10:00:00.000Z' } });
+    const theirs = base({ questDoneAt: { q0: '2026-09-20T10:00:00.000Z' } });
+    expect(rebaseSnapshot(sent, ours, theirs, { now: NOW }).questDoneAt).toEqual({ q0: '2026-09-20T10:00:00.000Z', q1: '2026-09-21T10:00:00.000Z' });
   });
 });
 

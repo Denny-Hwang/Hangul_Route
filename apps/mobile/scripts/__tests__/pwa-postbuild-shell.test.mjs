@@ -354,8 +354,9 @@ describe('the offline page picks its locale from navigator.languages (section 3.
 describe('public/_headers', () => {
   const headers = readFileSync(join(here, '..', '..', 'public', '_headers'), 'utf8');
 
-  it('marks the console chunks immutable (inert until A-3, which keeps a /_next/ miss off the single-page fallback)', () => {
-    expect(headers).toMatch(/^\/_next\/static\/\*\n  Cache-Control: public, max-age=31536000, immutable$/m);
+  it('gives the console chunks no year-long rule: the single-page fallback answers a missing chunk with index.html (A-3, section 3.3)', () => {
+    expect(headers).not.toMatch(/^\/_next\//m);
+    expect(headers).not.toMatch(/^\/\*$/m);
   });
 
   it('keeps the learner rules (the worker and the shell are never served stale)', () => {

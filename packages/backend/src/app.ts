@@ -10,6 +10,7 @@ import { relinkRoutes } from './routes/relink';
 import { schoolRoutes } from './routes/school';
 import { plansRoutes } from './routes/plans';
 import { spacesRoutes } from './routes/spaces';
+import { spaceReportRoutes } from './routes/space-reports';
 import { syncRoutes } from './routes/sync';
 import { telemetryRoutes } from './routes/telemetry';
 import { transferSpaceRoutes } from './routes/transfers';
@@ -64,6 +65,8 @@ app.route('/api/spaces', transferSpaceRoutes);
 app.route('/api/entitlements', entitlementRoutes);
 // School admin (F-SCHOOL-001): class tree, teacher invites, seats — aggregates only.
 app.route('/api/spaces', schoolRoutes);
+// Progress reports (F-REPORT-001 section 3.8): one learner's report from the roster's projection; read-only, archived spaces included.
+app.route('/api/spaces', spaceReportRoutes);
 // Launch-invite waitlist: public, first-party, no auth. POST only (no read route).
 app.route('/api/waitlist', waitlistRoutes);
 

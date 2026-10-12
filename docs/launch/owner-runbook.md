@@ -102,7 +102,7 @@ https://dashboard.stripe.com → **Test mode**
    - 지금 필요한 4개: `checkout.session.completed` · `customer.subscription.created` · `customer.subscription.updated` · `customer.subscription.deleted`
    - 영수증·결제 기록용 3개 (F-BILL-002 B-3 배포 전에는 Worker 가 `applied: false` 로 200 응답): `invoice.paid` · `invoice.payment_failed` · `charge.refunded`
    - 새로 만들었다면 Signing secret (`whsec_…`) → Type **Secret** 으로 `STRIPE_WEBHOOK_SECRET` → Deploy. (기존 엔드포인트에 이벤트만 추가하면 secret 은 그대로다.)
-   - 엔드포인트의 **API version** 을 여기에 적어 둔다: `____________`
+   - 엔드포인트의 **API version** 을 여기에 적어 둔다: `____________` (Developers → Webhooks → 그 엔드포인트 → 상단의 *API version*). Worker 는 2025-03-31.basil 이전 형식과 그 이후 형식 (새 샌드박스 기본값 2025-09-30.clover 포함) 을 모두 읽는다 (F-BILL-002 B-3). 버전을 바꿀 필요는 없다. 나중에 이 값이 바뀌면 여기 다시 적는다.
 7. **Customer portal** — Settings → Billing → **Customer portal**:
    - **Cancel subscriptions** 켜기 → 방식 **Cancel at end of billing period** (즉시 해지 아님)
    - **Update payment methods** 켜기 · **Invoice history** 켜기
@@ -119,7 +119,20 @@ https://dashboard.stripe.com → **Test mode**
 - (선택) Developers → **Test clocks** 로 구독을 1년 앞으로 돌려 갱신이 되는지 본다.
 - Live mode 는 오너가 켤 때 1, 2, 3, 4, 6, 7, 8 을 Live 에서 한 번 더 한다 (Live 는 상품·가격·키·웹훅·포털 설정이 모두 따로다).
 - **Live 전 필수**: 이용약관 (`/terms`) 에 연간 자동 갱신·해지 방법 (Billing → Manage subscription)·남은 기간까지 이용·갱신 사전 고지 기간이 들어가야 한다 (F-SITE-002 S-7, 법률 검토 OD-13). 포털이 `/terms` 를 링크하므로 그 전에는 Live 를 켜지 않는다.
-- **중복 구독**: 한 space 에 구독이 두 개 보이면 (두 탭에서 거의 동시에 결제), 새 것의 인보이스를 환불하고 Customers → 해당 고객 → Subscriptions 에서 **즉시 해지** 한다. space 는 남은 구독으로 계속 열려 있다.
+- **중복 구독**: 한 space 에 구독이 두 개 보이면 (두 탭에서 거의 동시에 결제), 새 것의 인보이스를 환불하고 Customers → 해당 고객 → Subscriptions 에서 **즉시 해지** 한다.
+  - **해지 직후 확인**: 한 space 의 플랜 행은 하나라서, 그 행이 마침 방금 해지한 구독을 가리키고 있었다면 남은 구독이 있어도 space 가 무료로 바뀔 수 있다. 결제 화면에서 그 space 가 "active · renews …" 가 아니라 Free 나 ended 로 보이면, Developers → Webhooks → 엔드포인트 → *Event deliveries* 에서 **남은 구독**의 가장 최근 `customer.subscription.updated` (없으면 `customer.subscription.created`) 를 열어 **Resend** 한다. Worker 가 그 구독을 Stripe 에서 다시 읽어 space 를 다시 연다 (BY-D5). 학습자의 별·카드·진도는 그 사이에도 그대로다.
+  - B-3 배포 후에는 두 결제가 모두 결제 기록 (`billing_events`; B-8c 이후 결제 화면의 Receipts) 에 남고, 환불하면 **Refund** 행이 하나 더 생긴다. 환불만 하고 해지하지 않으면 그 구독은 내년에 다시 갱신되니, **환불과 즉시 해지를 함께** 한다.
+  - 진단용 이벤트 `billing.checkout_completed { duplicate: true }` 가 Worker 에 남는다 (메모리에만, 조회 경로 없음). 중복은 Stripe 대시보드에서 찾는다.
+
+**결제 기록 (F-BILL-002 B-3 배포 후)**:
+- 6번의 이벤트 3개 (`invoice.paid` · `invoice.payment_failed` · `charge.refunded`) 를 Worker 가 D1 `billing_events` 에 기록한다. 금액·날짜·Stripe id 만 저장하고, 카드·이름·이메일·주소·영수증 URL 은 저장하지 않는다.
+- **확인**: 위의 테스트 결제 뒤 Developers → Webhooks → 엔드포인트 → *Event deliveries* 에서 `invoice.paid` 가 **200** 이고 응답에 `"recorded":true` 가 있으면 된다. `"applied":false` 이면 그 인보이스가 어느 space 의 것인지 찾지 못한 것이다 (대시보드에서 직접 만든 구독처럼 우리 결제 화면을 거치지 않은 결제). 기록되지 않을 뿐, 이용 기간에는 영향이 없다.
+- **환불은 기록만 한다** (OD-6, BY-D8): 환불해도 Family Plan / Group License 의 이용 기간은 바뀌지 않는다. 기간은 Stripe 의 구독 이벤트만 정한다. 환불한 플랜을 **바로** 끝내려면 Customers → 해당 고객 → Subscriptions → **Cancel subscription → Immediately** (기간 끝이 아니라 즉시). `customer.subscription.deleted` 가 오면 학습자는 무료 범위로 돌아가고, 이미 얻은 별·카드·진도는 그대로 남는다.
+- 같은 결제를 여러 번 나눠 부분 환불하면, 환불할 때마다 **새로 환불된 금액만** 한 행씩 기록된다. 같은 웹훅이 다시 와도 행이 늘지 않는다.
+- `charge.refunded` 가 *Event deliveries* 에 **503** 으로 보이면, Stripe 가 알아서 다시 보내고 성공하면 200 이 된다. 응답의 `code` 로 이유를 본다:
+  - `stripe_unavailable`: 환불을 결제에 맞추려고 Stripe 를 조회하다 실패했다. 보통은 잠시 후 저절로 풀린다. **한 시간 넘게** 계속되면 Worker 의 `STRIPE_SECRET_KEY` 를 확인한다 (키를 바꿨거나 폐기했거나, 인보이스 읽기 권한이 없는 제한 키). 키를 고치면 다음 재전송에서 기록된다.
+  - `payment_not_recorded`: 그 결제의 `invoice.paid` 가 아직 기록되지 않았다 (Stripe 는 이벤트 순서를 보장하지 않는다). `invoice.paid` 가 들어오면 다음 재전송에서 기록된다. 환불 후 **72시간**이 지나면 더 기다리지 않고 200 (`"applied":false`) 으로 받는다. 그래서 이 엔드포인트가 `invoice.paid` 를 받기 **전에** 결제된 건의 환불은 결제 기록에 남지 않는다 (Stripe 대시보드에는 그대로 있다).
+- 분쟁 (`charge.dispute.*`) 은 기록하지 않는다. Stripe 대시보드에서 처리한다.
 
 ### Step 9. 프로모·레퍼럴 코드 (15분, 배포 불필요)
 Stripe → Product catalog → **Coupons** → New: 퍼센트 또는 정액 · Duration (`once` = Family Plan 과 라이선스 모두 **첫 해만**, `forever` = 매년 갱신까지, `repeating` = 지정한 개월 수) · 선택: 총 사용 횟수, 만료 → 그 쿠폰에서 **Add promotion code** → 고객이 입력할 문자열 (런치용 `HOYA20`, 추천 교사별 `MSPARK`) · 코드별 최대 사용 / 만료 / 첫 구매만 / 최소 금액. 끄기 = inactive.
@@ -178,7 +191,7 @@ Rescue Code 는 서버에 해시로만 저장된다. 이 키를 넣으면 **새�
 
 | 변수 | 값 | 언제 | 없으면 |
 |---|---|---|---|
-| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | `hangul-route-web` 과 **같은** `pk_live_…` | S-1 (A-3 머지 후) | 앱 호스트의 어른 페이지가 "sign-in is not set up on this build" 한 줄만 보여 준다 (아무 데서도 링크하지 않으므로 무해) |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | `hangul-route-web` 과 **같은** `pk_live_…` | S-1 (A-4b 머지 후) | 앱 호스트의 어른 페이지가 "sign-in is not set up on this build" 한 줄만 보여 준다 (아무 데서도 링크하지 않으므로 무해) |
 | `NEXT_PUBLIC_LECTURE_MODE` · `NEXT_PUBLIC_SCHOOL_CONSENT_MODE` | (선택) `hangul-route-web` 과 같은 값 | S-1 | 해당 콘솔 기능이 앱 호스트에서 꺼진 채로 |
 | 형제 스펙의 콘솔 플래그 (`NEXT_PUBLIC_REPORTS_ENABLED` · `NEXT_PUBLIC_NOTES_ENABLED` · `NEXT_PUBLIC_BROWSE_ENABLED` · `NEXT_PUBLIC_LEARNING_ROUTE_ENABLED`) | 각 스펙이 켤 때 `true` | 각 형제 스펙의 단계 | 해당 메뉴·카드가 숨겨진다 |
 | `EXPO_PUBLIC_GROWN_UP_HOME` | `true` | S-3 (M3) | 학습자 앱에 어른 진입점 (Welcome 페르소나 행 · Profile "Grown-up home" · 대시보드 카드) 이 보이지 않는다 |
@@ -187,8 +200,9 @@ Rescue Code 는 서버에 해시로만 저장된다. 이 키를 넣으면 **새�
 
 `NEXT_PUBLIC_API_BASE_URL` 은 넣지 않아도 된다: 빌드가 `EXPO_PUBLIC_API_BASE_URL` 을 넘겨 준다 (A-3). 변수를 바꾸면 **Retry deployment**.
 
-### S-1. 앱 호스트 빌드에 Clerk 키 (5분, A-3 머지 후)
-`hangul-route-app` → Settings → Build → Variables → `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` = `hangul-route-web` 의 것과 같은 `pk_live_…` (Secret key 가 아니라 publishable key). 선택: 위 표의 콘솔 플래그를 사이트와 같은 값으로. → **Retry deployment**.
+### S-1. 앱 호스트 빌드에 Clerk 키 (5분, A-4b 머지 후)
+A-3 이 아니라 **A-4b 머지 후**에 한다: A-4b 의 공통 어른 레이아웃이 모든 어른 페이지에 잠금 (`GrownUpLock`) 을 씌우고, 아래 확인에 쓰는 `/signin` 도 A-4b 와 함께 생긴다.
+`hangul-route-app` → Settings → Build → Variables → `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` = `hangul-route-web` 의 것과 같은 `pk_live_…` (Secret key 가 아니라 publishable key). 선택: 위 표의 콘솔 플래그를 사이트와 같은 값으로. `NEXT_PUBLIC_CONSOLE_DEV_AUTH` 는 **복사하지 않는다** (앱 호스트 빌드는 이 값을 항상 끈다). → **Retry deployment**.
 **확인**: https://app.hangulroute.com/signin 에 Clerk 로그인 위젯이 뜬다. https://app.hangulroute.com 의 학습자 앱은 그대로다 (아직 어디서도 어른 페이지로 링크하지 않는다).
 
 ### S-2. Clerk Production 확인 + M2 실기기 로그인 (30분, A-4b 와 A-5c 가 앱 호스트에 배포된 뒤)

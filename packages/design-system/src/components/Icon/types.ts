@@ -24,7 +24,9 @@ export type IconName =
   | 'book'
   | 'ear'
   | 'pencil'
-  | 'dash';
+  | 'dash'
+  | 'note'
+  | 'heart';
 
 export interface IconProps {
   name: IconName;

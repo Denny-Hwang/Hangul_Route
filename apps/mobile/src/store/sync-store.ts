@@ -2,7 +2,7 @@ import { normalizeRescueCode, type AvatarKind, type Profile, type ProgressSnapsh
 import { create } from 'zustand';
 import { flags } from '../config/flags';
 import { journeyContent, questJamo, stage1QuestIds } from '../content/sync-context';
-import { journeySummaryOf } from '../logic/my-route/summary';
+import { journeySummaryOf, routeGoalSummaryOf } from '../logic/my-route/summary';
 import { syncLearner } from '../logic/sync/engine';
 import { mergeSnapshots, rebaseSnapshot } from '../logic/sync/merge';
 import { planRestore, type RestorePlan } from '../logic/sync/restore';
@@ -92,14 +92,20 @@ export function setSyncApiForTests(client: SyncApiClient | null): void {
 
 const summarizeFor = (snapshot: ProgressSnapshot) => {
   const now = new Date();
+  const plans = usePlanStore.getState();
+  const inbox = plans.byLearner[snapshot.profileId];
+  // Stage-level My route counts for the console strip (F-ROUTE-001 R-8); summarize stays pure.
+  const journey = journeySummaryOf(snapshot, journeyContent, now);
   return summarize({
     snapshot,
     now,
     stage1QuestIds,
     questJamo,
-    planNotReady: usePlanStore.getState().notReady[snapshot.profileId] ?? {},
-    // Stage-level My route counts for the console strip (F-ROUTE-001 R-8); summarize stays pure.
-    journey: journeySummaryOf(snapshot, journeyContent, now),
+    planNotReady: plans.notReady[snapshot.profileId] ?? {},
+    journey,
+    // The goal the Learning Route shows, for the family space only (Learning Route LR-6, LR-OD-12). Left out while
+    // this device does not know the learner's plans (no inbox yet, or not loaded): a plan may lead, so no goal is guessed.
+    routeGoal: inbox === undefined ? undefined : routeGoalSummaryOf({ snapshot, plans: inbox, journey, content: journeyContent, now }),
   });
 };
 

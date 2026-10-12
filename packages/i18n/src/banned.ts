@@ -37,15 +37,21 @@ function tokens(text: string): string[] {
 }
 
 /**
- * The first banned word found in `text`, or null. `en` and `es` match whole
- * tokens ("dismissed" is fine, "vencidos" is not "vencido"); `ko` matches
- * substrings because particles attach to the stem (`실패했어요`).
+ * The first of `words` found in `text`, or null. `en` and `es` match whole
+ * tokens ("dismissed" is fine, "vencidos" is not "vencido"; a phrase matches
+ * its tokens in a row); `ko` matches substrings because particles attach to
+ * the stem (`실패했어요`). Shared by the banned lists and the copy tests that
+ * keep their own word lists (F-REPORT-001 section 3.11).
  */
-export function findBannedWord(text: string, locale: UiLocale, surface: BannedSurface): string | null {
-  const words = BANNED_WORDS[locale][surface];
+export function findWord(text: string, words: readonly string[], locale: UiLocale): string | null {
   if (locale === 'ko') return words.find((word) => text.includes(word)) ?? null;
   const haystack = ` ${tokens(text).join(' ')} `;
   return words.find((word) => haystack.includes(` ${tokens(word).join(' ')} `)) ?? null;
+}
+
+/** The first banned word found in `text`, or null (`findWord` on the locale's list for `surface`). */
+export function findBannedWord(text: string, locale: UiLocale, surface: BannedSurface): string | null {
+  return findWord(text, BANNED_WORDS[locale][surface], locale);
 }
 
 export function isCopySafe(text: string, locale: UiLocale, surface: BannedSurface): boolean {

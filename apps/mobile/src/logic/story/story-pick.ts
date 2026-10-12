@@ -42,8 +42,9 @@ export interface StoryPickInput {
    * True when the learner may not open this entry. Callers combine
    * `isContentLocked({ kind: 'story', id: entry.storyId, ... })` (always false
    * while gating is off) with, for a book (grid) entry, the stage gate that
-   * Journey applies today: `!isStageEntitled(entry.stage, tier)` and the
-   * stage's availability. Keyed by entry, so a story's free shelf entry can
+   * Journey applies today: `!isStageEntitled(entry.stage, tier)`, the
+   * stage's availability and `!isQuestOpen(entry.questId)` (`storyLockFor`,
+   * F-ENT-003 section 3.6). Keyed by entry, so a story's free shelf entry can
    * stay open while its book entry in a stage the learner has not reached is
    * locked.
    */
@@ -166,16 +167,28 @@ export function nextStoryAfter(questId: string, input: StoryPickInput): StoryInd
  * §3.9 (`isContentLocked`, always open while `gatingEnabled` is off), and for a
  * book (grid) entry also the stage gate Journey applies today, which is not
  * behind the flag: the stage must be entitled for the tier and must not be
- * "soon" (no shipped grid cell yet).
+ * "soon" (no shipped grid cell yet). A book entry also needs its quest open
+ * when `isQuestOpen` is given (F-ENT-003 section 3.6). With today's
+ * `questOpenPredicate` this never closes a book: cells never list story
+ * quests, so a story quest reads as `open-not-a-lesson`, and the stage gate
+ * above is what locks a later stage's book. The rule is a hook for a
+ * predicate that can close a book's quest (Stage 5 books); shelf entries keep
+ * the story lock alone.
  */
 export function storyLockFor(ctx: {
   tier: Tier;
   gatingEnabled: boolean;
   episodes: readonly Episode[];
   registry?: FreeContentRegistry;
+  /** `questOpenFor` / `useQuestAccess` (F-ENT-003 section 3.4); omitted means every quest is open. */
+  isQuestOpen?: (questId: string) => boolean;
 }): (entry: StoryIndexEntry) => boolean {
   const grid = gridEpisodes(ctx.episodes);
+  const isQuestOpen = ctx.isQuestOpen;
   return (entry) =>
     isContentLocked({ kind: 'story', id: entry.storyId, tier: ctx.tier, gatingEnabled: ctx.gatingEnabled, registry: ctx.registry }) ||
-    (entry.placement === 'grid' && (!isStageEntitled(entry.stage, ctx.tier) || stageAvailability(entry.stage, grid) === 'soon'));
+    (entry.placement === 'grid' &&
+      (!isStageEntitled(entry.stage, ctx.tier) ||
+        stageAvailability(entry.stage, grid) === 'soon' ||
+        (isQuestOpen !== undefined && !isQuestOpen(entry.questId))));
 }

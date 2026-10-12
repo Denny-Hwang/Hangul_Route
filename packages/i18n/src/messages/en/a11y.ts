@@ -57,6 +57,8 @@ export const a11y = {
     /** The block-shape hint picture; `hint` is one of `learner.minigame.buildLetter.shape`. */
     blockShape: (hint: string) => `Block shape. ${hint}`,
     traceLetter: (romanization: string) => `Trace the letter ${romanization}`,
+    /** The trace heading over a final consonant (a `*-batchim` jamo). */
+    traceFinal: (romanization: string) => `Trace the final ${romanization}`,
     traceCanvas: (romanization: string) => `Draw the letter ${romanization} with your finger`,
     /** The still stroke-order diagram read aloud: "Stroke order. 1: right, then down. 2: a loop." */
     strokeOrder: {
@@ -119,6 +121,8 @@ export const a11y = {
   leaveSpace: (name: string) => `Leave ${name}`,
   /** The paywall offer card: its name, then the already-formatted price. */
   familyOffer: (name: string, price: string) => `${name}, ${price}`,
+  /** The learner Plan screen's summary heading, its first accessible element (F-BILL-002 §8). */
+  planStatus: (name: string, state: string) => `${name}: ${state}.`,
 
   /** Learning Route (F-ROUTE-001 section 3.14): each row label reads the row; the pips are hidden. */
   myRoute: {
@@ -177,5 +181,23 @@ export const a11y = {
       rightPlain: 'Right.',
       revealPlain: 'Not this one.',
     },
+  },
+  /**
+   * Progress reports (F-REPORT-001 section 3.12, RP-6): the period tabs and stepper, the live region, and the
+   * text alternatives of the calendar and the growth line. `days` is a list of formatted days (`report.list`).
+   * `window` names a window: `report.when.day` / `week` / `month` ("this week"), `prevDay` / `prevWeek` /
+   * `prevMonth` ("last week"), or for an older window its formatted date or dates (`report.step.range`).
+   */
+  report: {
+    periods: 'Report period',
+    periodChanged: (window: string) => `Showing ${window}`,
+    periodChangedAll: 'Showing all time',
+    /** The Previous and Next buttons, each naming the window it opens ("Show last week", "Show this week"). */
+    step: (window: string) => `Show ${window}`,
+    calendar: (days: string) => `Practiced on ${days}.`,
+    calendarNone: 'No practice days in this period.',
+    notSaved: (days: string) => `Not saved yet: ${days}.`,
+    growthTable: 'Quests and cards by month',
+    loading: 'Loading the report',
   },
 } as const;

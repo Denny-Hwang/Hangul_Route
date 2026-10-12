@@ -95,7 +95,8 @@ describe('teachingQuestFor', () => {
     expect(teachingQuestFor('jamo:rieul')?.id).toBe('quest:stage1-letters-q3');
     expect(teachingQuestFor('jamo:hieut')?.id).toBe('quest:stage1-rites-q3'); // F-QUEST-002 Q-7b
     expect(teachingQuestFor('jamo:nieun-batchim')?.id).toBe('quest:stage1-rites-q1');
-    expect(teachingQuestFor('jamo:mieum-batchim')).toBeUndefined(); // nature q1, not rebuilt yet (Q-8)
+    expect(teachingQuestFor('jamo:mieum-batchim')?.id).toBe('quest:stage1-nature-q1'); // F-QUEST-002 Q-8
+    expect(teachingQuestFor('jamo:bieup-batchim')?.id).toBe('quest:stage1-nature-q1');
   });
 });
 
