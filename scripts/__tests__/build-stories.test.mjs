@@ -175,7 +175,7 @@ describe("build-stories.mjs: shelf episodes and quests", () => {
       titleEn: story.title.en,
       hoyaIntroEn: story.hoyaIntroEn,
       questIds: ["quest:story-hangul-day-listen"],
-      rewardCardIds: ["card:hanji"],
+      rewardCardIds: ["card:story-hangul-day"],
       estimatedMinutes: Math.max(3, story.minutes),
       status: "ready",
       format: "story",
@@ -189,7 +189,7 @@ describe("build-stories.mjs: shelf episodes and quests", () => {
     assert.equal(q.id, "quest:story-hangul-day-listen");
     assert.equal(q.titleEn, story.title.en);
     assert.equal(q.estimatedMinutes, Math.max(3, story.minutes));
-    assert.equal(q.rewardCardId, "card:hanji");
+    assert.equal(q.rewardCardId, "card:story-hangul-day");
     assert.deepEqual(
       q.steps.map((s) => [s.id, s.kind]),
       [

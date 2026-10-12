@@ -9,6 +9,7 @@ import {
   type StoryTier,
 } from './schemas/story';
 import { HANGUL, type StoryCheck } from './schemas/story-check';
+import { STORY_CARD_FACT_MAX_CHARS, STORY_CARD_MIN_SOURCES, storyCardId } from './story-card';
 import { isAllowlistedHost, isAuthoritativeHost } from './story-sources';
 
 /**
@@ -370,11 +371,23 @@ function lintAnswerPositions(tier: StoryTier, ti: number, add: Add): void {
   }
 }
 
-/** The corpus rule: across all `ready` stories at most half the checks have the correct option first. */
-export function lintStoryCorpus(stories: readonly Story[]): Finding[] {
-  const checks = stories
-    .filter((s) => s.state === 'ready')
-    .flatMap((s) => s.tiers.flatMap((t) => t.checks));
+/** The cards outside the stories that a story card's Korean word must not repeat (F-STORY-006 §3.8). */
+export interface CorpusContext {
+  cards?: ReadonlyArray<{ id: string; subtitleKo?: string }>;
+}
+
+/**
+ * The corpus rules over all `ready` stories: at most half the checks have the
+ * correct option first, and no two cards (story cards and `ctx.cards`) share
+ * a Korean word (`card-korean-duplicate`, F-STORY-006 §3.8).
+ */
+export function lintStoryCorpus(stories: readonly Story[], ctx: CorpusContext = {}): Finding[] {
+  const ready = stories.filter((s) => s.state === 'ready');
+  return [...lintAnswerShare(ready), ...lintCardKorean(ready, ctx.cards ?? [])];
+}
+
+function lintAnswerShare(ready: readonly Story[]): Finding[] {
+  const checks = ready.flatMap((s) => s.tiers.flatMap((t) => t.checks));
   const first = checks.filter((c) => correctIndex(c) === 0).length;
   if (checks.length === 0 || first / checks.length <= CORPUS_FIRST_OPTION_MAX_SHARE) return [];
   return [
@@ -385,6 +398,33 @@ export function lintStoryCorpus(stories: readonly Story[]): Finding[] {
       message: `${first} of ${checks.length} checks have the correct option first (more than 50 %)`,
     },
   ];
+}
+
+function lintCardKorean(ready: readonly Story[], cards: NonNullable<CorpusContext['cards']>): Finding[] {
+  const owner = new Map<string, string>();
+  for (const card of cards) {
+    if (card.subtitleKo !== undefined && !owner.has(card.subtitleKo)) owner.set(card.subtitleKo, card.id);
+  }
+  const findings: Finding[] = [];
+  for (const story of ready) {
+    const keywordId = story.card?.keywordId;
+    const ko = story.keywords.find((k) => k.id === keywordId)?.ko;
+    if (ko === undefined) continue; // card-keyword-unknown reports it
+    const id = storyCardId(story.id);
+    const first = owner.get(ko);
+    if (first === undefined) {
+      owner.set(ko, id);
+      continue;
+    }
+    if (first === id) continue; // the same story twice is story-id-duplicate, not a second card
+    findings.push({
+      rule: 'card-korean-duplicate',
+      level: 'error',
+      path: '',
+      message: `${id} repeats ${ko}, the Korean word of ${first}; choose another keyword for its card`,
+    });
+  }
+  return findings;
 }
 
 // ---- keywords --------------------------------------------------------------------------------
@@ -761,6 +801,47 @@ function unusedFacts(story: Story, add: Add): void {
   });
 }
 
+/** The `card` block (F-STORY-006 §3.8): its headword and fact resolve, the fact fits the back face, the listen reward is the card. */
+function lintCard(story: Story, add: Add): void {
+  const { card } = story;
+  if (!card) return;
+  if (!story.keywords.some((k) => k.id === card.keywordId)) {
+    add('card-keyword-unknown', 'error', 'card.keywordId', `${card.keywordId} is not in keywords[]`);
+  }
+  const fi = story.facts.findIndex((f) => f.id === card.factId);
+  const fact = story.facts[fi];
+  if (!fact) {
+    add('card-fact-unknown', 'error', 'card.factId', `${card.factId} is not in facts[]`);
+  } else {
+    if (fact.claimEn.length > STORY_CARD_FACT_MAX_CHARS) {
+      add(
+        'card-fact-too-long',
+        'error',
+        at('facts', fi, 'claimEn'),
+        `${fact.id} is the card fact and has ${fact.claimEn.length} characters (at most ${STORY_CARD_FACT_MAX_CHARS}); choose a shorter fact`,
+      );
+    }
+    if (fact.sources.length < STORY_CARD_MIN_SOURCES) {
+      add(
+        'card-fact-single-source',
+        'error',
+        at('facts', fi, 'sources'),
+        `${fact.id} is the card fact and needs at least ${STORY_CARD_MIN_SOURCES} sources (has ${fact.sources.length})`,
+      );
+    }
+  }
+  const expected = storyCardId(story.id);
+  const listen = story.rewardCardIds?.listen;
+  if (listen !== expected) {
+    add(
+      'card-reward-mismatch',
+      'error',
+      'rewardCardIds.listen',
+      `a story with a card block rewards its own card: rewardCardIds.listen must be ${expected} (has ${listen ?? 'none'})`,
+    );
+  }
+}
+
 function lintCultureNotes(story: Story, add: Add): void {
   const factIds = new Set(story.facts.map((f) => f.id));
   story.cultureNotes.forEach((note, ni) =>
@@ -787,5 +868,6 @@ export function lintStory(story: Story, ctx: LintContext = {}): Finding[] {
   lintCopying(story, add);
   lintDesignationNumbers(story, add);
   lintShelfReviewers(story, add);
+  lintCard(story, add);
   return findings;
 }

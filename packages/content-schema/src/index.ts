@@ -57,3 +57,4 @@ export * from './schemas/billing';
 export * from './route/goal';
 export * from './schemas/feedback';
 export * from './reports';
+export * from './story-card';
