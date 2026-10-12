@@ -147,6 +147,8 @@ export const useSyncStore = create<State & Actions>((set, get) => {
    * because the server does not hold it yet (issue #262).
    */
   function applyServerSnapshot(learnerId: string, sent: ProgressSnapshot, incoming: ProgressSnapshot): void {
+    // A learner removed while the request was in flight stays removed: its progress is not written back.
+    if (!useProfileStore.getState().profiles.some((p) => p.id === learnerId)) return;
     const progress = useProgressStore.getState();
     const current = progress.byProfile[learnerId];
     if (!current || current === sent) {
@@ -157,6 +159,49 @@ export const useSyncStore = create<State & Actions>((set, get) => {
     const folded = usePlanStore.getState().reconcile(learnerId, rebaseSnapshot(sent, current, incoming, { now: new Date() }));
     progress.replaceSnapshot(learnerId, folded);
     get().requestSync(learnerId);
+  }
+
+  const inflight = new Map<string, Promise<LearnerSyncState>>();
+  const rerun = new Set<string>();
+
+  async function runSync(learnerId: string): Promise<LearnerSyncState> {
+    const client = api();
+    const state = await get().hydrate(learnerId);
+    if (!client) return update(learnerId, { status: 'off' });
+    const profile = useProfileStore.getState().profiles.find((p) => p.id === learnerId);
+    // Never upload what is in memory before the saved snapshot has loaded:
+    // a blank record there would replace the server copy (audit UX-01).
+    await useProgressStore.getState().hydrate(learnerId);
+    const local = useProgressStore.getState().byProfile[learnerId];
+    if (!profile || !local) return state;
+
+    update(learnerId, { status: 'syncing' });
+    const registered = await ensureRegistered(profile, state, client);
+    if (!registered?.secret) return get().byLearner[learnerId] ?? state;
+    const creds = { deviceId: await getDeviceId(), secret: registered.secret };
+
+    const outcome = await syncLearner({
+      learnerId,
+      local,
+      localRev: registered.rev,
+      now: new Date(),
+      summarize: summarizeFor,
+      // A merged copy is reconciled with the cached plans before it goes up (F-PLAN-002 section 3.6).
+      reconcile: (merged) => usePlanStore.getState().reconcile(learnerId, merged),
+      api: { putSnapshot: (id, body) => client.putSnapshot(id, body, creds) },
+    });
+
+    if (outcome.status === 'error') return update(learnerId, { status: 'error', lastError: outcome.code });
+    if (outcome.status === 'retry-later') {
+      applyServerSnapshot(learnerId, local, outcome.snapshot);
+      return update(learnerId, { status: 'idle', rev: outcome.rev, lastError: 'conflict' });
+    }
+    if (outcome.merged) applyServerSnapshot(learnerId, local, outcome.snapshot);
+    const synced = update(learnerId, { status: 'synced', rev: outcome.rev, lastSyncedAt: new Date().toISOString(), lastError: null });
+    // Owner decision 2026-09-20: every learner gets a Rescue Code after the first cloud save.
+    if (!synced.rescueCode) await get().issueRescueCode(learnerId);
+    for (const listener of syncedListeners) listener(learnerId);
+    return get().byLearner[learnerId] ?? synced;
   }
 
   return {
@@ -176,51 +221,30 @@ export const useSyncStore = create<State & Actions>((set, get) => {
       scheduler.request(learnerId);
     },
 
-    syncNow: async (learnerId) => {
-      const client = api();
-      const state = await get().hydrate(learnerId);
-      if (!client) return update(learnerId, { status: 'off' });
-      const profile = useProfileStore.getState().profiles.find((p) => p.id === learnerId);
-      // Never upload what is in memory before the saved snapshot has loaded:
-      // a blank record there would replace the server copy (audit UX-01).
-      await useProgressStore.getState().hydrate(learnerId);
-      const local = useProgressStore.getState().byProfile[learnerId];
-      if (!profile || !local) return state;
-
-      update(learnerId, { status: 'syncing' });
-      const registered = await ensureRegistered(profile, state, client);
-      if (!registered?.secret) return get().byLearner[learnerId] ?? state;
-      const creds = { deviceId: await getDeviceId(), secret: registered.secret };
-
-      const outcome = await syncLearner({
-        learnerId,
-        local,
-        localRev: registered.rev,
-        now: new Date(),
-        summarize: summarizeFor,
-        // A merged copy is reconciled with the cached plans before it goes up (F-PLAN-002 section 3.6).
-        reconcile: (merged) => usePlanStore.getState().reconcile(learnerId, merged),
-        api: { putSnapshot: (id, body) => client.putSnapshot(id, body, creds) },
-      });
-
-      if (outcome.status === 'error') return update(learnerId, { status: 'error', lastError: outcome.code });
-      if (outcome.status === 'retry-later') {
-        applyServerSnapshot(learnerId, local, outcome.snapshot);
-        return update(learnerId, { status: 'idle', rev: outcome.rev, lastError: 'conflict' });
+    syncNow: (learnerId) => {
+      // One request per learner at a time: `applyServerSnapshot` folds against
+      // the copy that went up, which only holds while no other sync replaces
+      // the snapshot underneath it. A call made meanwhile joins the running
+      // one, and one more run follows so nothing it would have sent is missed.
+      const running = inflight.get(learnerId);
+      if (running) {
+        rerun.add(learnerId);
+        return running;
       }
-      if (outcome.merged) applyServerSnapshot(learnerId, local, outcome.snapshot);
-      const synced = update(learnerId, { status: 'synced', rev: outcome.rev, lastSyncedAt: new Date().toISOString(), lastError: null });
-      // Owner decision 2026-09-20: every learner gets a Rescue Code after the first cloud save.
-      if (!synced.rescueCode) await get().issueRescueCode(learnerId);
-      for (const listener of syncedListeners) listener(learnerId);
-      return get().byLearner[learnerId] ?? synced;
+      const run = runSync(learnerId).finally(() => {
+        inflight.delete(learnerId);
+        if (rerun.delete(learnerId)) void get().syncNow(learnerId);
+      });
+      inflight.set(learnerId, run);
+      return run;
     },
 
     syncAll: async () => {
       if (!api()) return;
       scheduler.flush();
       const learners = useProfileStore.getState().profiles.filter((p) => p.role === 'learner');
-      for (const p of learners) await get().syncNow(p.id);
+      // A learner the flush just started is awaited, not synced a second time.
+      for (const p of learners) await (inflight.get(p.id) ?? get().syncNow(p.id));
     },
 
     adoptCredentials: (learnerId, secret, rev) => {
@@ -252,6 +276,8 @@ export const useSyncStore = create<State & Actions>((set, get) => {
 
     adoptServerLearner: async ({ learner, secret, snapshot: server, rescueCode }) => {
       const learnerId = learner.id;
+      // Let a running sync finish first: its fold would read the restored copy as a local write.
+      await inflight.get(learnerId);
       const profiles = useProfileStore.getState();
       const existingProfile = profiles.profiles.find((p) => p.id === learnerId) ?? null;
       const profile: Profile = existingProfile ?? {
