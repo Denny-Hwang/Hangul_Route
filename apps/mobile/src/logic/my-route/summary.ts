@@ -92,6 +92,9 @@ export interface RouteGoalSummaryInput {
  * no plan id, no date, no name. Undefined when there is no goal (the end of
  * the open road), so the key is left out. Best effort, as `journeySummaryOf`:
  * a stored plan it cannot read gives no goal and the upload goes on without it.
+ * LR-5a's tab must name its goal from the same inputs (the same sources, the
+ * journey's stage rows, the bundle's availability and this UTC day), so the
+ * family card and the child's tab never disagree (LR-OD-12).
  */
 export function routeGoalSummaryOf(input: RouteGoalSummaryInput): ProgressSummary['routeGoal'] {
   try {
@@ -109,4 +112,19 @@ export function routeGoalSummaryOf(input: RouteGoalSummaryInput): ProgressSummar
   } catch {
     return undefined;
   }
+}
+
+/** What `routeGoalSummaryOf` reads from one inbox plan; a plan's title, name and space id never move the goal. */
+const goalInputOf = (plan: InboxPlan): string => JSON.stringify([plan.id, plan.spaceKind, plan.publishedAt, plan.items, plan.meta ?? null]);
+const goalInputsOf = (plans: readonly InboxPlan[]): string => plans.map(goalInputOf).sort().join('\n');
+
+/**
+ * Whether an inbox can move `summary.routeGoal` although it changed no homework
+ * (Learning Route LR-6): the device learns the learner's plans for the first time
+ * (`before` undefined: until then the upload leaves the goal out), or a plan the
+ * goal reads came, went or changed. The inbox refresh then asks for one sync, so
+ * the family card does not wait for the learner's next activity.
+ */
+export function routeGoalInputsChanged(before: readonly InboxPlan[] | undefined, after: readonly InboxPlan[]): boolean {
+  return before === undefined || goalInputsOf(before) !== goalInputsOf(after);
 }

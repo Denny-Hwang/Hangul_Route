@@ -13,7 +13,7 @@ import { describe, expect, it } from 'vitest';
 import { stageAvailability } from '../../journey';
 import { buildMyRoute } from '../model';
 import { gridEpisodesOf } from '../order';
-import { journeySummaryOf, routeGoalSummaryOf, summarizeJourney, type JourneyContent } from '../summary';
+import { journeySummaryOf, routeGoalInputsChanged, routeGoalSummaryOf, summarizeJourney, type JourneyContent } from '../summary';
 import { BUNDLE_15, BUNDLE_8, STAGE1_8, STAGE_DEFS, THEME_DEFS, catalogOf, snapshotWith, type Bundle } from './fixtures/bundle-2026-10';
 import { seed } from './fixtures/route';
 
@@ -173,13 +173,13 @@ describe('routeGoalSummaryOf: summary.routeGoal for the family space (Learning R
     items: [quest('quest:stage4-rites-q1')],
     ...o,
   });
-  const goalOf = (o: { plans?: InboxPlan[]; self?: SelfRoute; done?: string[]; journey?: ReturnType<typeof journeyOf> | null } = {}) =>
+  const goalOf = (o: { plans?: InboxPlan[]; self?: SelfRoute; done?: string[]; journey?: ReturnType<typeof journeyOf> | null; at?: Date } = {}) =>
     routeGoalSummaryOf({
       snapshot: snapshotWith(o.done ?? [], o.self ? { selfRoute: o.self } : {}),
       plans: o.plans ?? [],
       journey: o.journey === null ? undefined : (o.journey ?? journeyOf(o.done)),
       content,
-      now,
+      now: o.at ?? now,
     });
 
   it("with no plan sends Hoya's default: the first open stage", () => {
@@ -213,6 +213,13 @@ describe('routeGoalSummaryOf: summary.routeGoal for the family space (Learning R
     // Four weeks from Sep 14: the last day is Oct 11, today.
     expect(goalOf({ plans: [plan({ id: 'plan:c', spaceKind: 'class', meta: meta('2026-09-14') })] })).toEqual({ stage: 'stage2', from: 'class' });
     expect(goalOf({ plans: [plan({ id: 'plan:c', spaceKind: 'class', meta: meta('2026-09-13') })] })).toEqual({ stage: 'stage1', from: 'default' });
+  });
+
+  it('counts the day in UTC, as the plan derivation does: a local evening past UTC midnight is already the next day', () => {
+    // Four weeks from Sep 14: the last day is Oct 11. 02:00 UTC on Oct 12 is the evening of Oct 11 in the Americas.
+    const lastDay = [plan({ id: 'plan:c', spaceKind: 'class', meta: meta('2026-09-14') })];
+    expect(goalOf({ plans: lastDay, at: new Date('2026-10-11T23:59:00.000Z') })).toEqual({ stage: 'stage2', from: 'class' });
+    expect(goalOf({ plans: lastDay, at: new Date('2026-10-12T02:00:00.000Z') })).toEqual({ stage: 'stage1', from: 'default' });
   });
 
   it('is the goal pickGoal gives the page over the same sources, stage rows and bundle, reduced to stage and source', () => {
@@ -253,5 +260,42 @@ describe('routeGoalSummaryOf: summary.routeGoal for the family space (Learning R
   it('never throws: a stored plan it cannot read gives no goal, so the upload goes on without it', () => {
     const broken = plan({ id: 'plan:c', spaceKind: 'class', meta: { ...meta(), weeks: null } as unknown as CurriculumMeta });
     expect(goalOf({ plans: [broken] })).toBeUndefined();
+  });
+});
+
+describe('routeGoalInputsChanged: when an inbox can move summary.routeGoal without moving homework (LR-6)', () => {
+  const plan = (o: Partial<InboxPlan> = {}): InboxPlan => ({
+    id: 'plan:c',
+    spaceId: 'space:cls',
+    spaceKind: 'class',
+    spaceName: 'Space',
+    title: 'Weekly plan',
+    items: [{ kind: 'quest', id: 'quest:stage2-life-q1' }],
+    publishedAt: '2026-10-05T09:00:00.000Z',
+    updatedAt: '2026-10-05T09:00:00.000Z',
+    meta: null,
+    ...o,
+  });
+
+  it('is true for the first inbox the device learns, even an empty one (until then the goal is left out)', () => {
+    expect(routeGoalInputsChanged(undefined, [])).toBe(true);
+    expect(routeGoalInputsChanged(undefined, [plan()])).toBe(true);
+  });
+
+  it('is true when a plan the goal reads comes, goes or changes its kind, publish time, items or meta', () => {
+    expect(routeGoalInputsChanged([], [plan()])).toBe(true);
+    expect(routeGoalInputsChanged([plan()], [])).toBe(true);
+    expect(routeGoalInputsChanged([plan()], [plan({ spaceKind: 'family' })])).toBe(true);
+    expect(routeGoalInputsChanged([plan()], [plan({ publishedAt: '2026-10-06T09:00:00.000Z' })])).toBe(true);
+    expect(routeGoalInputsChanged([plan()], [plan({ items: [{ kind: 'quest', id: 'quest:stage4-rites-q1' }] })])).toBe(true);
+  });
+
+  it('is false for the same plans in another order, or a change the goal never reads (title, space name, stored without meta)', () => {
+    const other = plan({ id: 'plan:f', spaceKind: 'family' });
+    expect(routeGoalInputsChanged([plan(), other], [other, plan()])).toBe(false);
+    expect(routeGoalInputsChanged([plan()], [plan({ title: 'Week 4', spaceName: 'Renamed', updatedAt: '2026-10-09T09:00:00.000Z' })])).toBe(false);
+    const stored = plan();
+    delete stored.meta;
+    expect(routeGoalInputsChanged([stored], [plan()])).toBe(false);
   });
 });
