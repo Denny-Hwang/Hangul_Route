@@ -15,13 +15,16 @@ import { aroundSlot } from '@/lib/i18n/slot';
  * the UI language travel with it (CLAUDE.md section 1). Every other word comes from the dictionary.
  */
 
+/** One word kept on one line, so a gloss never wraps away from its Hangul ("눈 nun / (eye)"); the list wraps between words. */
+const WORD_STYLE = { whiteSpace: 'nowrap' } as const;
+
 function Word({ word }: { word: ConsoleWord }): JSX.Element {
   const { messages: m } = useConsoleLocale();
-  if (word.ko === null || word.gloss === null) return <>{word.romanization}</>;
+  if (word.ko === null || word.gloss === null) return <span style={WORD_STYLE}>{word.romanization}</span>;
   return (
-    <>
+    <span style={WORD_STYLE}>
       <span lang="ko">{word.ko}</span> {m.console.space.wordGloss(word.romanization, word.gloss)}
-    </>
+    </span>
   );
 }
 

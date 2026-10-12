@@ -36,6 +36,9 @@ describe('StudentWordsLines', () => {
     expect(html).toContain('<span lang="ko">사과</span>');
     expect(html).toContain('<span lang="ko">눈</span>');
     expect(html).not.toMatch(/lang="ko">[^<]*[A-Za-z]/);
+    // Each word stays on one line; the list wraps between words.
+    expect(html.match(/<span style="white-space:nowrap">/g)).toHaveLength(2);
+    expect(html).toContain('<span style="white-space:nowrap"><span lang="ko">사과</span> sagwa (apple)</span>');
     // No rate, percent or ranking word reaches the card.
     expect(textOf(html)).not.toMatch(/%|0\.75|rank|weak|fail|behind/i);
   });
