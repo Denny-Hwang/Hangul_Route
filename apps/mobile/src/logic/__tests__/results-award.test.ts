@@ -378,10 +378,12 @@ describe('applyQuestResult (Results award effect, F-STORY-006 §3.3)', () => {
     });
 
     it('uses the shipped bundle when no world is passed', () => {
-      const d = makeDeps(snapshot({ cards: [owned('card:tiger', PROFILE.createdAt)] }));
+      // Holidays has three quests since F-QUEST-002 Q-7b: q1 and q2 are done (1 star, no card), q3 finishes the episode.
+      const rites = (questId: string) => ({ ...done(questId, 1, T1), episodeId: 'episode:stage1-rites' });
+      const d = makeDeps(snapshot({ quests: [rites('quest:stage1-rites-q1'), rites('quest:stage1-rites-q2')], cards: [owned('card:tiger', PROFILE.createdAt)] }));
       delete d.world;
       const outcome = applyQuestResult(
-        { ...base, questId: 'quest:stage1-rites-q1', episodeId: 'episode:stage1-rites', rewardCardId: 'card:seollal', stars: 1, correct: 1 },
+        { ...base, questId: 'quest:stage1-rites-q3', episodeId: 'episode:stage1-rites', rewardCardId: 'card:sebae', stars: 1, correct: 1 },
         d,
       );
       expect(outcome.episodeCompleted).toBe('episode:stage1-rites');

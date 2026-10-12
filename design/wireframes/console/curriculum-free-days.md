@@ -25,26 +25,27 @@ Then: the plan holds only lessons that will open for these learners (all of Stag
 | Week 3  Around the Korean... Sun life-q2 ...         |
 | Week 4  Review                                       |
 | Week 5  New Year & Festi...  Sun rites-q1 ...        |
-| Week 6  Yut, Kites & Paper   Sun crafts-q1 ...       |
-| Week 7  Stories and practice                         |
+| Week 6  New Year & Festi...  Sun rites-q3 ...        |
+| Week 7  Yut, Kites & Paper   Sun crafts-q1 ...       |
+| Week 8  Review                                       |
 | ...                                                  |
 |                                                      |
 | +--------------------------------------------------+ |
 | | (i) The free plan covers Stage 1 (lessons in     | |  <- warning `premium-needed` (new
-| |     weeks 1 to 6). 3 more lessons open with a    | |     wording), product by space kind:
+| |     weeks 1 to 7). 3 more lessons open with a    | |     wording), product by space kind:
 | |     Group License. They are left out of this     | |     class/school: a Group License
 | |     plan.                     [ Open billing -> ] | |     family: Family Lifetime
 | +--------------------------------------------------+ |
 |                                                      |
-| This plan has lessons until week 6. After that it    |  <- short-plan line (only when the
+| This plan has lessons until week 7. After that it    |  <- short-plan line (only when the
 | has stories and practice.   ( [ Use {weeks} weeks ] )|     plan runs longer than its lessons)
 |                                                      |
 | [[ PUBLISH ]]                  [ Save draft ]        |
 +------------------------------------------------------+
 ```
 
-- Drawn: a free class, 12 weeks, 2 sessions a week, today's catalogue (9 Stage 1 lessons; `stage2-life`, `stage2-nature` and `stage4-rites` left out). Numbers come from the draft (the `premium-needed` count, the last week with a lesson); never typed.
-- `( [ Use {weeks} weeks ] )` shows only when a shorter length preset holds every lesson: not for this class today (4 weeks at 2 sessions hold 8 of the 9 lessons); 4 weeks for a family at 3 sessions a week.
+- Drawn: a free class, 12 weeks, 2 sessions a week, today's catalogue (11 Stage 1 lessons; `stage2-life`, `stage2-nature` and `stage4-rites` left out). Numbers come from the draft (the `premium-needed` count, the last week with a lesson); never typed.
+- `( [ Use {weeks} weeks ] )` shows only when a shorter length preset holds every lesson: not for this class today (4 weeks at 2 sessions hold 8 of the 11 lessons); 4 weeks for a family at 3 sessions a week.
 - A licensed space never sees the warning (nothing is left out).
 - With the console switch off, the wizard behaves as today (Stage 1 for an unlicensed space, the existing warning wording).
 - No learner name, no ranking, no per-learner list, no price, no "day" in the warning.

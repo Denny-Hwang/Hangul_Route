@@ -46,7 +46,7 @@ Then: a learner who has done everything open sees one calm line saying so and na
 Practice next
  - Revisit these letters: [ko] [ko]               <- existing rows
  - On the free plan, all of Stage 1 is open        <- free-plan line (neutral), or plan-waiting;
-   (9 lessons). Stage 2 and later open with           the count is freeLessonsFacts().lessons
+   (11 lessons). Stage 2 and later open with          the count is freeLessonsFacts().lessons
    Family Lifetime.                                   (all of Stage 1, F-ENT-003 OD-1)
    Open billing
 ```

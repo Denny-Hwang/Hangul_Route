@@ -1,44 +1,29 @@
-import type { StageKey, ThemeDef } from '@hangul-route/content-schema';
 import {
   Body,
   Button,
   Caption,
   Card,
   Heading,
-  Icon,
-  Pill,
   Hoya,
   Screen,
   Spacer,
   SplitPane,
   TAB_SCREEN_EDGES,
-  borderWidth,
-  colors,
-  layout,
-  radii,
-  spacing,
-  typography,
   useLayoutClass,
 } from '@hangul-route/design-system';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
-import { episodeById, episodeFor, episodesAll, gridEpisodes, questsAll, stages, themes } from '../../content';
+import { View } from 'react-native';
+import { JourneyGrid } from '../../components/JourneyGrid';
+import { episodeById, episodesAll, gridEpisodes, questsAll, stages, themes } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeStage, localizeTheme } from '../../logic/content-locale';
 import { cursorEntitlement } from '../../logic/cursor-context';
-import {
-  isEpisodeComplete,
-  stageAvailability,
-  stagePillLabel,
-  themeCellInitial,
-  themeColumnLabel,
-} from '../../logic/journey';
+import { learnerCellMarks } from '../../logic/journey-grid';
 import { initialEpisode, latchedSelection, reconcileSelection, requestedSelection, type PaneLatch } from '../../logic/layout/pane-selection';
-import { journeyGridMaxWidth } from '../../logic/layout/pane-sizes';
-import { cellLook, journeyMarks, type JourneyMarks } from '../../logic/placement/cell-look';
+import { journeyMarks } from '../../logic/placement/cell-look';
 import { appRouteCatalog } from '../../logic/placement/route-skip';
 import type { MainTabParamList, RootStackParamList } from '../../navigation/types';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
@@ -51,8 +36,6 @@ import { flags } from '../../config/flags';
 const GRID_EPISODES = gridEpisodes(episodesAll);
 /** The app's quests in the cursor's order, as the level check's route catalogue (F-PLC-001 section 3.7). */
 const ROUTE_CATALOG = appRouteCatalog(questsAll, episodesAll);
-/** The start pin and the placed-out check sit in the cell's corners. */
-const MARK_SIZE = spacing.lg;
 const NO_IDS: ReadonlySet<string> = new Set();
 
 export function JourneyScreen(): React.ReactElement {
@@ -111,8 +94,10 @@ export function JourneyScreen(): React.ReactElement {
     () => (snapQuests === undefined ? NO_IDS : new Set(snapQuests.filter((q) => q.completedAt).map((q) => q.questId))),
     [snapQuests],
   );
-
-  const gridMax = journeyGridMaxWidth(spacing.xs, layout.columns.journeyCellMax);
+  const marksOf = useMemo(
+    () => learnerCellMarks({ quests: snapQuests ?? [], marks, catalog: ROUTE_CATALOG, completedIds }),
+    [snapQuests, marks, completedIds],
+  );
 
   const grid = (
     <>
@@ -136,82 +121,15 @@ export function JourneyScreen(): React.ReactElement {
       ) : null}
 
       <Spacer size="lg" />
-      {/* Same row geometry as the cells below, so each label sits over its column. */}
-      <View style={{ flexDirection: 'row', gap: spacing.xs, marginBottom: spacing.sm, width: '100%', maxWidth: gridMax }}>
-        {localThemes.map((t) => (
-          <View key={t.key} style={{ flex: 1, alignItems: 'center' }}>
-            <Caption tone="muted" align="center">
-              {themeColumnLabel(t)}
-            </Caption>
-          </View>
-        ))}
-      </View>
-
-      {localStages.map((stage) => {
-        const availability = stageAvailability(stage.key, GRID_EPISODES);
-        const isLocked = availability === 'soon';
-        return (
-          <View key={stage.key} style={{ marginBottom: spacing.lg }}>
-            {/*
-              The stage header is a plain row, never a button: no lock, no door to the unlock page on a
-              learner screen (F-ROUTE-001 R-J, OD-8; section 3.3). A screen reader reads the title, the
-              one-liner and the same availability word the pill shows. Plans live in the grown-up area.
-            */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.sm }}>
-              <View
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: radii.circle,
-                  // The stage colour is the ring; the number stays text.primary / text.muted on a light fill.
-                  backgroundColor: isLocked ? colors.surface.sunken : colors.surface.paper,
-                  borderWidth: borderWidth.thick,
-                  borderColor: isLocked ? colors.border.subtle : colors.stage[stage.key],
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <Text style={{ color: isLocked ? colors.text.muted : colors.text.primary, fontWeight: '700' }}>
-                  {stage.order}
-                </Text>
-              </View>
-              <View style={{ flex: 1 }}>
-                <Body weight="bold" tone={isLocked ? 'secondary' : 'primary'}>
-                  {stage.titleEn}
-                </Body>
-                <Caption tone="muted">{stage.oneLinerEn}</Caption>
-              </View>
-              <Pill
-                tone={availability === 'open' ? 'success' : availability === 'taste' ? 'primary' : 'neutral'}
-                label={stagePillLabel(availability, m.availability)}
-                size="sm"
-              />
-            </View>
-
-            <View style={{ flexDirection: 'row', gap: spacing.xs, width: '100%', maxWidth: gridMax }}>
-              {localThemes.map((theme) => (
-                <GridCell
-                  key={`${stage.key}-${theme.key}`}
-                  stage={stage.key}
-                  theme={theme}
-                  paneMode={paneMode}
-                  selectedId={selectedId}
-                  onOpen={(episodeId) => (paneMode ? setSelected(episodeId) : navigation.navigate('EpisodeDetail', { episodeId }))}
-                  progressSnapshot={snap}
-                  marks={marks}
-                  completedIds={completedIds}
-                />
-              ))}
-            </View>
-
-            {availability === 'taste' ? (
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginTop: spacing.xs }}>
-                <Caption tone="muted">{m.tasteNote}</Caption>
-              </View>
-            ) : null}
-          </View>
-        );
-      })}
+      <JourneyGrid
+        stages={localStages}
+        themes={localThemes}
+        gridEpisodes={GRID_EPISODES}
+        paneMode={paneMode}
+        selectedId={selectedId}
+        onOpen={(episodeId) => (paneMode ? setSelected(episodeId) : navigation.navigate('EpisodeDetail', { episodeId }))}
+        marksOf={marksOf}
+      />
 
       <Card padding="md" tone="sunken">
         <Heading level="prompt">{m.how.title}</Heading>
@@ -267,88 +185,5 @@ function ComingSoonPane(): React.ReactElement {
         </Caption>
       </View>
     </Screen>
-  );
-}
-
-interface GridCellProps {
-  stage: StageKey;
-  theme: ThemeDef;
-  /** Two panes: a preview cell can be selected too, and the selected cell shows it. */
-  paneMode: boolean;
-  selectedId: string | null;
-  onOpen: (episodeId: string) => void;
-  progressSnapshot?: {
-    episodes: Array<{ episodeId: string; completedAt?: string }>;
-    quests: Array<{ questId: string; episodeId: string; completedAt?: string }>;
-  };
-  /** The level check's marks, or null without a stored result (F-PLC-001 section 3.7). */
-  marks: JourneyMarks | null;
-  completedIds: ReadonlySet<string>;
-}
-
-function GridCell({ stage, theme, paneMode, selectedId, onOpen, progressSnapshot, marks, completedIds }: GridCellProps): React.ReactElement {
-  const a11y = useMessages().a11y;
-  const episode = episodeFor(stage, theme.key);
-  const isPreview = !episode || episode.status === 'preview';
-  // Complete only when every quest of the episode is done (wireframe journey/grid).
-  const completed = !!episode && isEpisodeComplete(episode, progressSnapshot?.quests ?? []);
-  // Placed out (wireframe placement I): every quest done or placed out, not all done. A dashed light
-  // outline and a small check, never the completed tint; the cell stays tappable and awards as any.
-  const placedOut =
-    !!episode && !isPreview && !completed && marks !== null && cellLook(episode.id, ROUTE_CATALOG, marks.placedOut, completedIds) === 'placed-out';
-  const start = marks === null ? null : marks.start;
-  const isStart = start !== null && start.stage === stage && start.theme === theme.key;
-  const tone = colors.stage[stage];
-  const isSelected = paneMode && !!episode && episode.id === selectedId;
-  // One pane: a preview cell does nothing, as today. Two panes: it is selectable (its page says "coming soon").
-  const disabled = !episode || (isPreview && !paneMode);
-
-  return (
-    <Pressable
-      onPress={() => episode && !disabled && onOpen(episode.id)}
-      disabled={disabled}
-      accessibilityRole="button"
-      aria-selected={paneMode ? isSelected : undefined}
-      accessibilityLabel={
-        isStart || placedOut ? a11y.gridCellMarked(theme.titleEn, stage, isStart, placedOut) : a11y.gridCell(theme.titleEn, stage, isPreview)
-      }
-      testID={isStart ? 'journey-cell-start' : placedOut ? 'journey-cell-placed-out' : undefined}
-      style={{
-        flex: 1,
-        aspectRatio: 1,
-        borderRadius: radii.md,
-        backgroundColor: isPreview ? colors.surface.sunken : completed ? colors.feedback.successLight : colors.surface.paper,
-        borderStyle: placedOut && !isSelected ? 'dashed' : 'solid',
-        borderWidth: isSelected ? borderWidth.thick : 2,
-        borderColor: isSelected
-          ? colors.border.focus
-          : isPreview
-            ? colors.border.subtle
-            : completed
-              ? colors.feedback.success
-              : tone,
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: spacing.xs,
-      }}
-    >
-      {isPreview ? (
-        <Icon name="lock" size={20} color={colors.text.muted} />
-      ) : (
-        <Text style={{ fontSize: typography.size.title, fontWeight: '700', color: colors.text.primary }}>
-          {themeCellInitial(theme)}
-        </Text>
-      )}
-      {isStart ? (
-        <View pointerEvents="none" style={{ position: 'absolute', top: spacing.xxs, left: spacing.xxs }}>
-          <Icon name="pin" size={MARK_SIZE} color={colors.brand.primary} />
-        </View>
-      ) : null}
-      {placedOut ? (
-        <View pointerEvents="none" style={{ position: 'absolute', top: spacing.xxs, right: spacing.xxs }}>
-          <Icon name="check-circle" size={MARK_SIZE} color={tone} />
-        </View>
-      ) : null}
-    </Pressable>
   );
 }

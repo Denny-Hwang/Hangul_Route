@@ -23,8 +23,8 @@ Then: the adult reads, in one line built from data, exactly what is free and tha
 | [<- back]          Plan                    |  <- F-BILL-002
 |                                            |
 | [ Mina is on the free plan. ]              |  <- F-BILL-002 title (self: "You're on the free plan.")
-| Stage 1 is free: 9 lessons, 18 letters,    |  <- freePlan.line (numbers from data; all of
-| about 40 minutes. Everything finished      |     Stage 1, F-ENT-003 OD-1; 15 lessons once
+| Stage 1 is free: 11 lessons, 24 letters,   |  <- freePlan.line (numbers from data; all of
+| about 50 minutes. Everything finished      |     Stage 1, F-ENT-003 OD-1; 15 lessons once
 | stays.                                     |     Stage 1 is complete)
 |   - 4 word topics                          |  <- What is free list; 0-count lines hidden
 |                                            |     (no story bundled today: no stories line)

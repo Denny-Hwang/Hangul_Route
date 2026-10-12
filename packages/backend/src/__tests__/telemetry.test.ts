@@ -103,6 +103,22 @@ describe('POST /api/telemetry', () => {
     expect((await post({ name: 'space.join.failed', profileId: 'profile:suni', payload: { code: 'x' } })).body.data?.event).toMatchObject({ profileId: 'profile:suni', payload: { code: 'x' } });
   });
 
+  it('F-APP-001 3.18: shell.* keep only their documented codes, and never a profile id', async () => {
+    const chosen = await post({ name: 'shell.persona_chosen', profileId: 'profile:suni', payload: { persona: 'parent', from: 'welcome-continue', learnerId: 'profile:suni' } });
+    expect(chosen.status).toBe(201);
+    expect(chosen.body.data?.event.profileId).toBeUndefined();
+    expect(chosen.body.data?.event.payload).toEqual({ persona: 'parent', from: 'welcome-continue' });
+    const handoff = await post({ name: 'shell.grown_up_handoff', payload: { via: 'lock', target: 'next', next: '/teach/space?id=space:a' } });
+    expect(handoff.body.data?.event.payload).toEqual({ via: 'lock', target: 'next' });
+    const bounced = await post({ name: 'shell.path_bounced', profileId: 'profile:suni', payload: { prefix: 'teach' } });
+    expect(bounced.body.data?.event).toMatchObject({ payload: { prefix: 'teach' } });
+    expect(bounced.body.data?.event.profileId).toBeUndefined();
+    // an identifier smuggled into an allowed key is dropped too
+    const smuggled = await post({ name: 'shell.path_bounced', payload: { prefix: '/teach/space?id=space:a', persona: 'parent' } });
+    expect(smuggled.status).toBe(201);
+    expect(smuggled.body.data?.event.payload).toBeUndefined();
+  });
+
   it('caps the in-memory log at 10k events', async () => {
     store.events = Array.from({ length: 10_000 }, (_, i) => ({ id: `event:${i}`, name: 'session.start', at: NOW.toISOString() }));
     await post({ name: 'session.end' });

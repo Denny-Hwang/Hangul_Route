@@ -63,6 +63,14 @@ const THRU_L3 = [...L1, ...L2, ...L3];
 const THRU_F1 = [...THRU_L3, ...F1];
 const THRU_F2 = [...THRU_F1, ...F2];
 const THRU_F3 = [...THRU_F2, ...F3];
+/** The symbols the Holidays quests teach: quest 7 (the first finals), 8 and 9. */
+const R1 = [Jb('nieun'), Jb('rieul')];
+const R2 = [J('ya'), J('yeo'), J('pieup'), Jb('ieung')];
+const R3 = [J('yo'), J('yu'), J('hieut'), Jb('giyeok')];
+/** Everything taught through quest 9 (the "taught" list of its practice and Check). */
+const THRU_R1 = [...THRU_F3, ...R1];
+const THRU_R2 = [...THRU_R1, ...R2];
+const THRU_R3 = [...THRU_R2, ...R3];
 
 const word = (ko: string, romanization: string, en: string, syllables?: string[]): KoText =>
   syllables ? { ko, romanization, en, syllables } : { ko, romanization, en };
@@ -94,6 +102,20 @@ const W = {
   kokoa: word('코코아', 'kokoa', 'cocoa', ['ko', 'ko', 'a']),
   kuki: word('쿠키', 'kuki', 'cookie', ['ku', 'ki']),
   toseuteu: word('토스트', 'toseuteu', 'toast', ['to', 'seu', 'teu']),
+  // Holidays (quests 7-9)
+  dal: word('달', 'dal', 'moon'),
+  mun: word('문', 'mun', 'door'),
+  seol: word('설', 'seol', 'New Year (short for seollal)'),
+  nal: word('날', 'nal', 'day'),
+  seollal: word('설날', 'seollal', 'Lunar New Year', ['seol', 'lal']),
+  songpyeon: word('송편', 'songpyeon', 'half-moon rice cake', ['song', 'pyeon']),
+  podo: word('포도', 'podo', 'grape', ['po', 'do']),
+  yagu: word('야구', 'yagu', 'baseball', ['ya', 'gu']),
+  yeou: word('여우', 'yeou', 'fox', ['yeo', 'u']),
+  hanbok: word('한복', 'hanbok', 'hanbok, traditional clothes', ['han', 'bok']),
+  hanguk: word('한국', 'hanguk', 'Korea', ['han', 'guk']),
+  hyodo: word('효도', 'hyodo', 'respect for parents', ['hyo', 'do']),
+  uyu: word('우유', 'uyu', 'milk', ['u', 'yu']),
 } as const;
 
 /** Theme words (pictured culture words, exposure only, R3): they may hold symbols not taught yet. */
@@ -255,22 +277,78 @@ export const minigameScopes: Record<string, MinigameScope> = {
     },
   },
 
-  // Stage 1 / Rites
-  'minigame:s1-rites-card-1': {
-    kind: 'card-match',
-    cardPairs: [
-      { ko: '설날', en: 'Lunar New Year', romanization: 'seollal' },
-      { ko: '떡국', en: 'Rice cake soup', romanization: 'tteokguk' },
-      { ko: '한복', en: 'Hanbok', romanization: 'hanbok' },
-      { ko: '세배', en: 'New Year bow', romanization: 'sebae' },
+  // Stage 1 / Holidays / Q7 — final ㄴ and final ㄹ, reviewing ㅁ ㅇ ㄷ ㅅ (quest 7)
+  'minigame:s1-rites-q1-play': {
+    kind: 'listen-pick',
+    listenPick: {
+      // Hear a syllable, pick it among the same block with no final, final n and final l.
+      rounds: [
+        lp.syl('달', ['다', '단'], W.dal.en),
+        lp.syl('단', ['다', '달']),
+        lp.syl('물', ['무', '문'], 'water'),
+        lp.syl('문', ['무', '물'], W.mun.en),
+        lp.syl('산', ['사', '살'], 'mountain'),
+        lp.syl('살', ['사', '산']),
+      ],
+    },
+  },
+  'minigame:s1-rites-q1-apply': {
+    kind: 'build-letter',
+    syllables: [
+      { ko: '달', romanization: 'dal', jamoChars: ['ㄷ', 'ㅏ', 'ㄹ'], jamoIds: [J('digeut'), J('a'), Jb('rieul')] },
+      { ko: '물', romanization: 'mul', jamoChars: ['ㅁ', 'ㅜ', 'ㄹ'], jamoIds: [J('mieum'), J('u'), Jb('rieul')] },
+      { ko: '문', romanization: 'mun', jamoChars: ['ㅁ', 'ㅜ', 'ㄴ'], jamoIds: [J('mieum'), J('u'), Jb('nieun')] },
+      { ko: '산', romanization: 'san', jamoChars: ['ㅅ', 'ㅏ', 'ㄴ'], jamoIds: [J('siot'), J('a'), Jb('nieun')] },
     ],
   },
-  'minigame:s1-rites-match-1': {
-    kind: 'match-sound',
-    jamoIds: [J('siot'), J('digeut'), J('rieul'), J('hieut')],
-    rounds: 4,
+  'minigame:s1-rites-q1-check': {
+    kind: 'listen-pick',
+    listenPick: {
+      rounds: [lp.syl('달', ['다', '단'], W.dal.en), lp.word(W.seollal, [W.seol, W.nal, W.dal])],
+    },
   },
-  'minigame:s1-rites-story-1': {
+
+  // Stage 1 / Holidays / Q8 — ㅑ ㅕ ㅍ and final ㅇ, reviewing ㅂ ㅋ ㅏ ㅓ (quest 8)
+  'minigame:s1-rites-q2-play': {
+    kind: 'match-sound',
+    // ㅍ next to ㅂ ㅋ ㅌ (its confusables), ㅑ ㅕ next to ㅏ ㅓ.
+    jamoIds: [J('ya'), J('yeo'), J('pieup'), J('a'), J('eo'), J('bieup'), J('kieuk'), J('tieut')],
+    focusJamoIds: [J('ya'), J('yeo'), J('pieup')],
+    rounds: 6,
+  },
+  'minigame:s1-rites-q2-apply': {
+    kind: 'build-letter',
+    syllables: [
+      { ko: '송', romanization: 'song', jamoChars: ['ㅅ', 'ㅗ', 'ㅇ'], jamoIds: [J('siot'), J('o'), Jb('ieung')] },
+      { ko: '편', romanization: 'pyeon', jamoChars: ['ㅍ', 'ㅕ', 'ㄴ'], jamoIds: [J('pieup'), J('yeo'), Jb('nieun')] },
+      { ko: '야', romanization: 'ya', jamoChars: ['ㅇ', 'ㅑ'], jamoIds: [J('ieung'), J('ya')] },
+      { ko: '여', romanization: 'yeo', jamoChars: ['ㅇ', 'ㅕ'], jamoIds: [J('ieung'), J('yeo')] },
+    ],
+  },
+  'minigame:s1-rites-q2-check': {
+    kind: 'listen-pick',
+    listenPick: {
+      rounds: [lp.syl('송', ['소', '손']), lp.word(W.songpyeon, [W.podo, W.yagu, W.yeou])],
+    },
+  },
+
+  // Stage 1 / Holidays / Q9 — ㅛ ㅠ ㅎ and final ㄱ, reviewing ㅇ ㅗ ㅜ and final ㄴ (quest 9)
+  'minigame:s1-rites-q3-play': {
+    kind: 'listen-pick',
+    listenPick: {
+      rounds: [
+        lp.sym(J('hieut'), THRU_R3),
+        lp.sym(J('yo'), THRU_R3),
+        lp.sym(J('yu'), THRU_R3),
+        // Final ㄱ next to no final and the finals taught before it.
+        lp.syl('복', ['보', '봉'], 'luck'),
+        lp.syl('한', ['하', '학']),
+        lp.syl('학', ['하', '항']),
+      ],
+    },
+  },
+  // "New Year Order": the four steps of the old rites story scope, with their romanization (F-CNT-002 PR 2b).
+  'minigame:s1-rites-q3-apply': {
     kind: 'story-sequence',
     storySteps: [
       { id: 'a', labelEn: 'Wear hanbok', labelKo: '한복 입기', romanization: 'hanbok ipgi' },
@@ -278,6 +356,15 @@ export const minigameScopes: Record<string, MinigameScope> = {
       { id: 'c', labelEn: 'Eat tteokguk', labelKo: '떡국 먹기', romanization: 'tteokguk meokgi' },
       { id: 'd', labelEn: 'Receive lucky money', labelKo: '세뱃돈 받기', romanization: 'sebaetdon batgi' },
     ],
+  },
+  'minigame:s1-rites-q3-check': {
+    kind: 'listen-pick',
+    listenPick: {
+      rounds: [
+        lp.sym(J('yo'), THRU_R3, { optionIds: [J('yo'), J('o'), J('yu'), J('yeo')] }),
+        lp.word(W.hanbok, [W.hanguk, W.hyodo, W.uyu]),
+      ],
+    },
   },
 
   // Stage 1 / Nature

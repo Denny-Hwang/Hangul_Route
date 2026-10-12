@@ -27,6 +27,8 @@ Decisions taken in this spec (TD = teaching decision):
 | TD7 | **No teacher notes on the projected screen in the MVP.** Plan item notes (`PlanItem.note`, `plan.ts:12`) stay in the console outline. | On one mirrored screen anything displayed is projected. Private notes need the dual-screen mode (§3.15). |
 | TD8 | **Teacher-typed text is limited to the deck title (<= 60).** Activities are presets; there is no free slide text. The title is user data like a learner name (`profile-model.ts:35-41`): Latin letters with accents, Hangul syllables, digits, spaces and `. , ! ? : ' ’ ( ) - /` only; it is shown on the start screen and the title slide, never spoken, never treated as taught Korean, and the console refuses a title that contains a roster first name or alias (§3.10), because the title travels in the URL. | Free slide text would bypass the F-CNT-001 / F-CNT-002 validators and the romanization rule; a Korean weekend-school teacher can still title a lesson in Korean; presets are translated once in the message catalogue. |
 
+> **D12 note, F-APP-001 (2026-10-11).** From F-APP-001 A-3 the console is also served on `app.hangulroute.com`, so the console setup page and the presenter share **one origin**. `LECTURE_CONSOLE_ORIGINS` gains `'https://app.hangulroute.com'` (F-APP-001 A-1, appended) and keeps the site entries, so a console still open on hangulroute.com during the move keeps working. The roster still travels only by `postMessage` from the opener window (TD3); same origin changes nothing about the opener and deck checks. The presenter stays a learner-bundle root (TD1) and is never listed in the grown-up service-worker denylist.
+
 ---
 
 ## 1. Context
