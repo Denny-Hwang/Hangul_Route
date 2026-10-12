@@ -35,6 +35,16 @@ export type BillingEventInput = Omit<BillingEvent, 'id' | 'createdAt'>;
 export type StoredRelink = RelinkRequest & { secret: string | null };
 
 /**
+ * A learner's stored summary without the rest of the snapshot row (F-REPORT-001
+ * section 3.8): what a grown-up's report reads. `updatedAt` is the last sync.
+ */
+export interface StoredSummary {
+  learnerId: string;
+  summary: unknown;
+  updatedAt: string;
+}
+
+/**
  * Persistence for schema v2 — F-INFRA-003. Every route and rule talks to this
  * interface; `D1Db` is the Worker's binding, `MemoryDb` the test / dev stand-in.
  * Reads return copies: mutate, then `put` — nothing is saved by reference.
@@ -63,6 +73,12 @@ export interface Db {
    * whether it wrote; `false` means another device got there first.
    */
   putSnapshot(record: SnapshotRecord, baseRev: number): Promise<boolean>;
+  /**
+   * The summary and its sync time only (F-REPORT-001 section 3.8): selects
+   * `learner_id, summary_json, updated_at`, never `payload_json`, so a report
+   * route never loads a learner's device state. Null when no row exists.
+   */
+  summaryOf(learnerId: string): Promise<StoredSummary | null>;
 
   // spaces + memberships (F-SPACE-001)
   getSpace(id: string): Promise<Space | null>;
