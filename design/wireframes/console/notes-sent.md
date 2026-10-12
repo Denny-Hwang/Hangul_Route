@@ -1,8 +1,8 @@
-# Console / Notes sent: what this space sent and whether it arrived (wireframe v1)
+# Console / Notes sent: what this space sent and how it was answered (wireframe v2)
 
-Spec: `docs/specs/F-FEEDBACK-001-adult-feedback-channel.md` §7.2 (list, withdraw, statuses), §7.7, §9
-Audience: **teacher** (class space) · **family caregiver** (family space; the family page adds `console/family-notes.md`).
-Code: none yet. The list part of `/teach/space/notes?id=<spaceId>` (FB-11), behind `NEXT_PUBLIC_NOTES_ENABLED`. URL carries the space id and, when filtered, an opaque learner id; never a name.
+Spec: `docs/specs/F-FEEDBACK-001-adult-feedback-channel.md` §6.13, §7.2 (list, take back, statuses), §7.7, §8.3, §9
+Audience: **teacher** (class space) · **family caregiver** (family space: the **Sent** tab of `console/family-notes.md`).
+Code: none yet. The class notes page `/teach/space/notes?id=<classId>` and the family page's Sent tab `/parent/space/notes?id=<familyId>&tab=sent` on app.hangulroute.com (FB-11a), behind `NEXT_PUBLIC_NOTES_ENABLED`. URL carries the space id and, when filtered, an opaque learner id; never a name.
 Notation: `[[ X ]]` the one primary action, `<...>` live data.
 
 All copy in boxes is placeholder (`console.notes`, FB-5).
@@ -11,22 +11,25 @@ All copy in boxes is placeholder (`console.notes`, FB-5).
 
 Given: a teacher sent notes this week
 When: they open Notes for the class
-Then: they see each sent note newest first with a neutral status and any thank-you the learner picked, and can take back a note they regret; nothing ranks or counts learners
+Then: they see each sent note newest first with a neutral status and any answer the learner picked, and can take back a note they regret; nothing ranks or counts learners
 
 ## Screen goal
 
 "See what I sent and take one back if I need to."
 
-Primary action of the page: **New note** (opens the composer).
+Primary action of the page: **New note** (opens the composer sub-view).
 
 ## Box diagram
 
-### A. Sent list
+### A. Sent list (class page)
 
 ```
 +--------------------------------------------------------------+
-| [< back to class]   "Notes · <class name>"     [[ New note ]]|  -> console/note-composer
+| [frame: Teacher · nav (Classes, Notes, ...) · Back to learning]|  <- F-APP-001 AdultFrame
+| [< back to class]   "Notes · <class name>"     [[ New note ]]|  -> console/note-composer (sub-view)
 |                                                              |
+|  "Teachers see the answer a student picks. They do not see   |  <- disclosure (§7.7), one line
+|   when a note was read."                                     |
 |  Show: [ Everyone v ]                                        |  <- filter by one learner (opaque id in URL)
 |                                                              |
 |  +--------------------------------------------------------+  |
@@ -34,27 +37,27 @@ Primary action of the page: **New note** (opens the composer).
 |  | To everyone (18 students)                              |  |  <- a batch to the whole class: one row
 |  | "You keep trying. That is how we learn."               |  |
 |  | "Great work on ㄱ and ㄴ today"                         |  |
-|  | Sent                                     [ Take back ] |  |  <- no per-learner open list for a batch
+|  | Sent                                     [ Take back ] |  |  <- no per-learner list for a batch
 |  +--------------------------------------------------------+  |
 |  | Yesterday                                              |  |
 |  | To <display name>                                      |  |
 |  | "Your reading is getting stronger."                    |  |
-|  | Opened · [heart] Thank you                             |  |  <- reaction as icon + label
+|  | Sent · [heart] Thank you                               |  |  <- the answer as icon + label; never "Opened"
 |  |                                          [ Take back ] |  |
 |  +--------------------------------------------------------+  |
 |  | Mon 12 Oct                                             |  |
 |  | To <display name>                                      |  |
 |  | "See you in class soon."                               |  |
-|  | Not shown                                              |  |  <- hidden, reported or notes off; no reason given
+|  | Not shown                                              |  |  <- hidden, reported, notes off, stopped; no reason given
+|  +--------------------------------------------------------+  |
+|  | Sun 11 Oct                                             |  |
+|  | To <display name>                                      |  |
+|  | "..."                                                  |  |
+|  | Taken back                                             |  |  <- stays in the list; the family still sees it
 |  +--------------------------------------------------------+  |
 |  [ Show older ]                                             |
 +--------------------------------------------------------------+
 ```
-
-- Sorted by send time only. No filter or sort by status; no counts of "opened"; no open rate (spec §9).
-- A batch row shows one status line: "Sent" (never "12 of 18 opened"). Filtering by one learner shows that learner's row of the batch with its own status.
-- Rows sent by a co-adult of the same space carry "Sent by another grown-up of this space" and no Take back.
-- "Not shown" never says why.
 
 ### B. Take back confirm
 
@@ -62,23 +65,34 @@ Primary action of the page: **New note** (opens the composer).
 +-----------------------------------------------+
 | "Take back this note?"                        |
 | "It goes away from <display name / everyone>'s|
-|  app at the next sync."                       |
+|  app at the next sync. The family can still   |
+|  see that it was sent."                       |
 | [[ Take back ]]          [ Cancel ]           |
 +-----------------------------------------------+
 ```
+
+### C. Family Sent tab (inside `console/family-notes.md`)
+
+Same rows as A, with "To <display name>", "Signed <label>" and "Sent by <account name>" (adult to adult inside the family), and status words that include **Opened** (the family sees its own learner's reading, spec §7.2).
+
+- Sorted by send time only. No filter or sort by status; no counts; no open rate (spec §9).
+- A batch row shows one status line: "Sent" or "Taken back" (never "12 of 18 answered"). Filtering by one learner shows that learner's row of the batch with its own status and answer.
+- A class sender never sees "Opened" (OD-8). The answer shows only while the learner's notes mode is "All notes"; otherwise the row shows no answer, the same as a note before any answer.
+- Rows sent by a co-adult of the same space carry "Sent by another grown-up of this space" and no Take back.
+- "Not shown" never says why.
 
 ## Interaction points
 
 | Where | Tap / key | Result |
 |---|---|---|
-| New note | click | `console/note-composer` |
+| New note | click | `console/note-composer` sub-view (`&compose=1`) |
 | Show filter | select | reloads with `&learner=<id>` |
-| Take back | click | sheet B; confirm -> `POST /api/spaces/:id/notes/:noteId/withdraw` (a batch row withdraws each note of the batch); row removed |
+| Take back | click | sheet B; confirm -> `POST /api/spaces/:id/notes/:noteId/withdraw` (a batch row sends `batch: true`); row status becomes "Taken back" |
 | Show older | click | next page (`before=`) |
 
 ## Navigation graph
 
-Enter from: `console/roster` action row **Notes** · `console/note-composer` result **See sent notes** · family space page **Notes**
+Enter from: adult nav **Notes** (`console/notes-hub`) · `console/roster` header **Notes** · `console/note-composer` **Done** · family page tab **Sent**
 Exit to: `console/note-composer` · back to `console/roster`
 
 ## States
@@ -89,15 +103,16 @@ Exit to: `console/note-composer` · back to `console/roster`
 - **error**: "Notes could not load. Try again." [ Try again ].
 - **take back of a reported note**: `409 note_reported`: the row stays and reads "Not shown"; the sheet closes with "This note can no longer be changed."
 - **anonymized class**: names follow the class setting everywhere on the page.
-- **flag off**: page renders the console's not-found panel; the roster has no Notes action.
+- **sending switched off** (Worker `NOTES_SEND` unset): the list works; New note opens the composer, which says "Sending notes is not open yet."
+- **flag off**: page renders the console's not-found panel; no entry anywhere.
 - **narrow window**: one column, Take back under the status; no sideways scroll.
 
 ## Data needs
 
-- reads: `GET /api/spaces/:id/notes?before=&learner=` (status `sent` / `opened` / `not_shown`, reaction, `mine`, batch info)
+- reads: `GET /api/spaces/:id/notes?before=&learner=` (status `sent` / `withdrawn` / `not_shown`, plus `opened` in a family space; reaction; `mine`; batch info)
 - writes: `POST /api/spaces/:id/notes/:noteId/withdraw`
 - telemetry: none (console)
 
 ## Open questions
 
-1. Should the teacher see reactions to a batch per learner? Default: no on the batch row (avoids a who-did-not-answer list); yes on each learner's own filtered view.
+1. Should the teacher see answers to a batch per learner? Default: no on the batch row (avoids a who-did-not-answer list); yes on each learner's own filtered view.

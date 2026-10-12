@@ -57,7 +57,7 @@
 | `console/school-admin.md` | P | roadmap S7 |
 | `console/account.md` · `console/billing.md` | P | roadmap §5.3 · §7 |
 | `parent/notes.md` · `parent/note-report.md` | R | F-FEEDBACK-001 §6.10 (FB-0; built in FB-9) |
-| `console/note-composer.md` · `console/notes-sent.md` · `console/family-notes.md` | R | F-FEEDBACK-001 §7.2, §9 (FB-0; built in FB-11, FB-12) |
+| `console/note-composer.md` · `console/notes-sent.md` · `console/family-notes.md` · `console/notes-hub.md` | R | F-FEEDBACK-001 §6.13, §7.2, §9 (FB-0; built in FB-11a, FB-11b, FB-12; console pages on app.hangulroute.com per F-APP-001) |
 
 ## 다음 단계
 1. Open questions 의 코드-스펙 불일치를 스펙에 반영 (특히 `parent/gate` ↔ `profiles/pin-entry` 통합, 계획 gating 규칙 F-HW-001 §3.4 vs F-TCH-001 §3.3).

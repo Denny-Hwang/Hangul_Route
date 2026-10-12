@@ -138,14 +138,14 @@ Five names in the `route.` namespace (F-PLAN-002's dated weekly plan; F-ROUTE-00
 
 ## L. Notes from grown-ups names (F-FEEDBACK-001; added by its FB-0 docs PR)
 
-Seven names in the new `notes.` namespace (the learner side of the adult-to-learner feedback channel). None collides with sections A to K or with `TELEMETRY_EVENT_NAMES` on `main` at `ea9049e4` (no existing name starts with `notes.`). If another spec's docs PR claims letter L first, this section is relettered on rebase; the names do not change. Worker first: FB-1 adds all seven to `TELEMETRY_EVENT_NAMES` and its exact-list test, and the API Worker is deployed with FB-1 before the app builds that send them (FB-8, FB-9). App only (the console has no telemetry client). Payloads never carry note text, a note or batch id, a sender label, a space name or id, an account id or a learner name; `notes.report_sent` and `notes.prefs_changed` are sent **without `profileId`**.
+Seven names in the new `notes.` namespace (the learner side of the adult-to-learner feedback channel). None collides with sections A to K or with `TELEMETRY_EVENT_NAMES` on `main` at `ea9049e4` (no existing name starts with `notes.`). If another spec's docs PR claims letter L first, this section is relettered on rebase; the names do not change. Worker first: FB-1 adds all seven to `TELEMETRY_EVENT_NAMES` and its exact-list test, and the API Worker is deployed with FB-1 before the app builds that send them (FB-8, FB-9). App only (the console has no telemetry client). Payloads never carry note text, a note or batch id, a sender label, a space name or id, an account id or a learner name; **every** `notes.*` event is sent **without `profileId`**, so the server holds no per-learner log of opened notes.
 
 | # | Name | Owning spec | Payload | Added to the list by | Emitted by |
 |---|---|---|---|---|---|
 | 1 | `notes.card_shown` | F-FEEDBACK-001 §10 | `{ unread }` (once per app session, when the Home card first shows) | FB-1 | FB-8 |
 | 2 | `notes.list_viewed` | F-FEEDBACK-001 §10 | `{ notes, unread }` | FB-1 | FB-8 |
-| 3 | `notes.note_opened` | F-FEEDBACK-001 §10 | `{ presetId, fromRole: 'teacher' \| 'family', hasText, hasSuggest, firstOpen }` | FB-1 | FB-8 |
+| 3 | `notes.note_opened` | F-FEEDBACK-001 §10 | `{ presetId, fromRole: 'teacher' \| 'family', hasText, hasSuggest, suggestOpen }` | FB-1 | FB-8 |
 | 4 | `notes.reaction_picked` | F-FEEDBACK-001 §10 | `{ reaction: 'thanks' \| 'will_try' \| 'did_it' \| 'happy', fromRole, changed }` | FB-1 | FB-8 |
 | 5 | `notes.suggest_started` | F-FEEDBACK-001 §10 | `{ fromRole }` (Start on a suggested quest) | FB-1 | FB-8 |
-| 6 | `notes.report_sent` | F-FEEDBACK-001 §10 | `{ reason: 'unkind' \| 'unsafe' \| 'not_for_me' \| 'other', via: 'note_page' \| 'grown_up_zone' }` (no profileId) | FB-1 | FB-9 |
-| 7 | `notes.prefs_changed` | F-FEEDBACK-001 §10 | `{ classes: 'all' \| 'presets' \| 'off' }` (no profileId) | FB-1 | FB-9 |
+| 6 | `notes.report_sent` | F-FEEDBACK-001 §10 | `{ reason: 'unkind' \| 'unsafe' \| 'not_for_me' \| 'other', via: 'note_page' \| 'grown_up_zone' }` | FB-1 | FB-9 |
+| 7 | `notes.prefs_changed` | F-FEEDBACK-001 §10 | `{ classes: 'all' \| 'presets' \| 'off' }` | FB-1 | FB-9 |

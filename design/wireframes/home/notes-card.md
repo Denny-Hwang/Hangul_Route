@@ -1,4 +1,4 @@
-# Home / Notes card: a new note from your teacher or family (wireframe v1)
+# Home / Notes card: a new note from your teacher or family (wireframe v2)
 
 Spec: `docs/specs/F-FEEDBACK-001-adult-feedback-channel.md` §6.5 item 1, §6.11, §6.12; base screen `home/todays-mission.md`; Home stack order F-ROUTE-001 §6.4 (row **2a**, added by F-FEEDBACK-001 FB-0)
 Audience: **learner**, any age (CLAUDE.md §1). Same card for a child and an adult self-learner.
@@ -9,7 +9,7 @@ All copy in boxes is placeholder; final strings land in `packages/i18n` (`learne
 
 ## Scenario (Given-When-Then)
 
-Given: the active learner has at least one live note they have not opened (sent by their teacher or family)
+Given: the active learner has at least one live note they have not opened and not put away (sent by their teacher or family)
 When: Today (Home) opens
 Then: one calm card after the three mission cards shows who wrote and the encouragement line, with one button to read it; the missions stay first and are never interrupted
 
@@ -81,7 +81,7 @@ Exit to: `notes/detail` (A) · `notes/list` (B) · the existing Today exits
 
 - reads: `notes-store` for the active profile: live notes, `readAt` (selector `homeNotesCard` in `logic/notes/view.ts`: newest unread note, unread count); memberships (class name for the teacher label)
 - writes: none (opening the note page marks it read)
-- telemetry: `notes.card_shown { unread }` once per app session when the card first shows
+- telemetry: `notes.card_shown { unread }` once per app session when the card first shows (no profileId)
 
 ## Open questions
 

@@ -1,4 +1,4 @@
-# Notes / List: every note for me, newest first (wireframe v1)
+# Notes / List: every note for me, newest first (wireframe v2)
 
 Spec: `docs/specs/F-FEEDBACK-001-adult-feedback-channel.md` §6.5 item 2, §6.9, §6.11, §6.12
 Audience: **learner**, any age.
@@ -11,7 +11,7 @@ All copy in boxes is placeholder (`learner.notes`, FB-5).
 
 Given: a learner has notes from their teacher and/or family
 When: they open My notes from Profile or Read from the Home card with several new notes
-Then: they see new notes first, then earlier ones, each with who sent it and the encouragement line, and open any note with one tap
+Then: they see new notes first, then earlier ones (except notes they put away on this device), each with who sent it and the encouragement line, and open any note with one tap
 
 ## Screen goal
 
@@ -50,7 +50,8 @@ Then: they see new notes first, then earlier ones, each with who sent it and the
 - Order: New (unread) newest first, then Earlier (read) newest first. Never sorted by sender.
 - Dates: "Today", "Yesterday", else a short date.
 - No counters of "unread" in the title; the New group heading is enough.
-- No delete, no archive (spec §6.5 item 6).
+- No delete, no archive (spec §6.5 item 6). A note the learner put away on this device (`notes/detail` E) is not listed here; a grown-up still sees it in `parent/notes`.
+- The **My notes** row on Profile is shown only when the flag is on and the profile has at least one class or family membership or at least one cached note (spec §6.5 item 2).
 
 ## Interaction points
 
@@ -67,17 +68,17 @@ Exit to: `notes/detail` · back to `profile/settings` or `home/todays-mission`
 ## States
 
 - **success**: A as drawn (either group may be absent).
-- **empty**: Hoya `idle`, one line "No notes yet. Notes from your teacher or family will show here." No button. (A learner in no class and no family space still sees this; the line does not push them to join anything.)
+- **empty**: Hoya `idle`, one line "No notes yet. Notes from your teacher or family will show here." No button. (Reached only by a learner with a class or family membership, because the Profile row is hidden otherwise; the line does not push anyone to join anything.)
 - **error**: the store cannot be read: the empty layout with "Your notes could not open. Try again later." and a [ Try again ] button that re-reads the store.
 - **offline**: the cached notes show; nothing is greyed out.
-- **a note disappears** after an inbox (hidden, reported, withdrawn, expired, learner left the class): the row is gone at the next render; no message.
+- **a note disappears** after an inbox (hidden, reported, withdrawn, expired, blocked, the sender lost the right, learner left the class) or after Put this note away: the row is gone at the next render; no message.
 - **wide window**: the list on the left pane and the open note on the right (`layout/wide.md` split pane), when F-LAYOUT-001 5a `SplitPane` is available; else full width.
 
 ## Data needs
 
-- reads: `notes-store` (live notes, `readAt`, `reaction`) through `logic/notes/view.ts` `notesList` (grouping, sender labels from memberships, unknown preset fallback "A note for you")
+- reads: `notes-store` (live notes, `readAt`, `reaction`, `putAway`) through `logic/notes/view.ts` `notesList` (grouping, put-away notes left out, sender labels from memberships, unknown preset fallback "A note for you")
 - writes: none
-- telemetry: `notes.list_viewed { notes, unread }` on open
+- telemetry: `notes.list_viewed { notes, unread }` on open (no profileId)
 
 ## Open questions
 
