@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { DEFAULT_APP_URL, apiBaseUrl, appUrl, buildEnv, clerkPublishableKey, contentGatingEnabled, devAuthEnabled, lectureModeEnabled, schoolConsentModeEnabled } from '../config';
+import { DEFAULT_APP_URL, apiBaseUrl, appUrl, buildEnv, clerkPublishableKey, contentGatingEnabled, devAuthEnabled, lectureModeEnabled, notesEnabled, schoolConsentModeEnabled } from '../config';
 
 describe('console config (F-CONSOLE-001 §3.2)', () => {
   it('apiBaseUrl trims and rejects the placeholder', () => {
@@ -84,5 +84,26 @@ describe('console config (F-CONSOLE-001 §3.2)', () => {
       const source = readFileSync(new URL('../config.ts', import.meta.url), 'utf8');
       expect(source).not.toMatch(/process\.env(?!\.[A-Z_]+)/);
     });
+  });
+});
+
+/** F-FEEDBACK-001 FB-10: the console notes switch, the twin of the learner app's `EXPO_PUBLIC_NOTES_ENABLED`. */
+describe('notesEnabled', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('is off unless NEXT_PUBLIC_NOTES_ENABLED is "true" or "1"', () => {
+    expect(notesEnabled({})).toBe(false);
+    expect(notesEnabled({ NEXT_PUBLIC_NOTES_ENABLED: 'true' })).toBe(true);
+    expect(notesEnabled({ NEXT_PUBLIC_NOTES_ENABLED: '1' })).toBe(true);
+    for (const off of ['false', '0', 'enabled', 'TRUE', '', ' true']) expect(notesEnabled({ NEXT_PUBLIC_NOTES_ENABLED: off }), off).toBe(false);
+    expect(typeof notesEnabled()).toBe('boolean');
+  });
+
+  it('reads the build value by its literal name', () => {
+    vi.stubEnv('NEXT_PUBLIC_NOTES_ENABLED', 'true');
+    expect(buildEnv().NEXT_PUBLIC_NOTES_ENABLED).toBe('true');
+    expect(notesEnabled()).toBe(true);
   });
 });

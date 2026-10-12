@@ -173,3 +173,21 @@ describe("one learner's Learning Route page (Learning Route amendment section 6.
     }
   });
 });
+
+/** F-FEEDBACK-001 section 6.13 (FB-10): the notes page under the persona prefix, ids only in the URL. */
+describe('ROUTES.spaceNotes', () => {
+  it('puts a family under /parent and a class or school under /teach', () => {
+    expect(ROUTES.spaceNotes('space:f', 'family')).toBe('/parent/space/notes?id=space%3Af');
+    expect(ROUTES.spaceNotes('space:c', 'class')).toBe('/teach/space/notes?id=space%3Ac');
+    expect(ROUTES.spaceNotes('space:s', 'school')).toBe('/teach/space/notes?id=space%3As');
+  });
+
+  it('adds the composer, the preselected learner, the prefilled quest and the family tab, in that order', () => {
+    expect(ROUTES.spaceNotes('space:f', 'family', { compose: true, learner: 'profile:a1', quest: 'quest:stage1-letters-q1', tab: 'sent' })).toBe(
+      '/parent/space/notes?id=space%3Af&compose=1&learner=profile%3Aa1&quest=quest%3Astage1-letters-q1&tab=sent',
+    );
+    expect(ROUTES.spaceNotes('space:c', 'class', { learner: 'profile:a1' })).toBe('/teach/space/notes?id=space%3Ac&learner=profile%3Aa1');
+    expect(ROUTES.spaceNotes('space:f', 'family', { tab: 'received' })).toBe('/parent/space/notes?id=space%3Af&tab=received');
+    expect(ROUTES.spaceNotes('space:c', 'class', { compose: false })).toBe('/teach/space/notes?id=space%3Ac');
+  });
+});
