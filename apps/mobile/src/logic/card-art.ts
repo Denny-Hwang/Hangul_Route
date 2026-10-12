@@ -1,4 +1,5 @@
 import type { HeritageCard, SceneArt, ThemeKey } from '@hangul-route/content-schema';
+import type { AwardWorld } from './awards/types';
 
 /**
  * What a card's face shows (F-STORY-006 §3.8 Art, D7), decided once for every
@@ -7,7 +8,8 @@ import type { HeritageCard, SceneArt, ThemeKey } from '@hangul-route/content-sch
  *
  *   1. the design system's `HeritageCardArt`, when it can draw the id;
  *   2. a story card's cover scene (its story's `coverSceneId`), cropped to a square;
- *   3. a set card's collection plate: its member cards, at most six, 3 x 2;
+ *   3. a set card's collection plate: its member cards, at most six, 3 x 2,
+ *      read from the same set list that awards the card (`AwardWorld.sets`);
  *   4. the Korean word on the card's theme tint (the first letter of the
  *      English title for a card with no Korean word, as the screens did).
  *
@@ -24,17 +26,28 @@ export interface CardArtDeps {
   drawnCardIds: readonly string[];
   /** The art of a story's cover scene; null when the story is not bundled or its cover art is pending. */
   storyCover: (storyId: string) => SceneArt | null;
-  /** The card catalogue, in order: where a set card finds its members. */
-  cardsAll: readonly HeritageCard[];
+  /**
+   * The award engine's catalogue and card sets (`awardWorld`): a set card's
+   * plate shows the members of the set whose rule unlocks it, so the plate and
+   * the award never disagree on which cards make the set.
+   */
+  world: Pick<AwardWorld, 'cards' | 'sets'>;
 }
 
 /** A collection plate holds six member cards, three across and two down. */
 export const CARD_PLATE_SLOTS = 6;
 export const CARD_PLATE_COLUMNS = 3;
 
-/** The word a card shows when it has no picture. */
+/** Last resort for a card with neither a Korean word nor an English title: a face is never blank. */
+const WORD_PLACEHOLDER = '?';
+
+/**
+ * The word a card shows when it has no picture: its Korean word, else the
+ * first letter of its English title. Blank strings count as missing, so an
+ * owned card never shows an empty tint.
+ */
 export function cardWord(card: Pick<HeritageCard, 'subtitleKo' | 'titleEn'>): string {
-  return card.subtitleKo ?? card.titleEn.charAt(0);
+  return card.subtitleKo?.trim() || Array.from(card.titleEn.trim())[0] || WORD_PLACEHOLDER;
 }
 
 const SET_RULE = /^set:/;
@@ -47,8 +60,10 @@ export function cardArtSource(card: HeritageCard, deps: CardArtDeps): CardArtSou
     if (art !== null) return { kind: 'cover', art, theme: card.theme, word };
   }
   if (SET_RULE.test(card.unlockedBy)) {
-    const members = deps.cardsAll
-      .filter((c) => c.id !== card.id && c.setId === card.unlockedBy && !SET_RULE.test(c.unlockedBy))
+    const set = deps.world.sets.find((s) => s.id === card.unlockedBy);
+    const members = (set?.memberCardIds ?? [])
+      .map((id) => deps.world.cards.find((c) => c.id === id))
+      .filter((c): c is HeritageCard => c !== undefined && c.id !== card.id && !SET_RULE.test(c.unlockedBy))
       .slice(0, CARD_PLATE_SLOTS);
     if (members.length > 0) return { kind: 'plate', members };
   }

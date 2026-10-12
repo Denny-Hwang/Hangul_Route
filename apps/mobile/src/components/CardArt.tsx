@@ -10,12 +10,20 @@ import {
   typography,
 } from '@hangul-route/design-system';
 import React, { useMemo } from 'react';
-import { Text, View, type StyleProp, type ViewStyle } from 'react-native';
-import { heritageCardsAll } from '../content';
+import { Text, View, type ViewStyle } from 'react-native';
+import { awardWorld } from '../content/award-world';
 import { storyById } from '../content/stories';
 import { cardArtSource, cardCoverCrop, cardPlateLayout, cardWordFontSize, type CardArtDeps } from '../logic/card-art';
 import { storyCoverArt } from '../logic/story/scene-view';
 import { storyCoverVariant } from '../logic/story/story-tile';
+
+/**
+ * What a screen may set on the face: corner radius and placement only. A
+ * border or padding would shrink the content box that the cover crop and the
+ * plate lay out in, so a frame goes on a wrapper around the face
+ * (see `CardArtThumb`), never on the face itself.
+ */
+export type CardArtStyle = Pick<ViewStyle, 'borderRadius' | 'position' | 'top' | 'left'>;
 
 const DEPS: CardArtDeps = {
   drawnCardIds: supportedCardIds,
@@ -23,7 +31,7 @@ const DEPS: CardArtDeps = {
     const story = storyById(storyId);
     return story ? storyCoverArt(story) : null;
   },
-  cardsAll: heritageCardsAll,
+  world: awardWorld,
 };
 
 // Speech language for the Korean word; `lang` is forwarded to the DOM on the web.
@@ -36,6 +44,9 @@ function CardWord({ word, size }: { word: string; size: number }): React.ReactEl
       {...koreanSpeech}
       numberOfLines={1}
       maxFontSizeMultiplier={1}
+      // Native only: a long word shrinks to fit rather than being cut (the full word is printed beside the face).
+      adjustsFontSizeToFit
+      minimumFontScale={0.5}
       style={{
         fontFamily: typography.family.sansKr,
         fontSize,
@@ -55,8 +66,11 @@ function CardWord({ word, size }: { word: string; size: number }): React.ReactEl
  * drawing, a story card's cover scene cropped to a square, a set card's
  * collection plate, or the Korean word on the theme tint. Which one is decided
  * by `logic/card-art.ts`, so screens never test `supportedCardIds` themselves.
- * With `accessibilityLabel` the face is one image; without it, it is hidden
- * from assistive technology (the screen around it names the card).
+ * With `accessibilityLabel` the face is a named image (on the web an `img`
+ * with that name); it is never its own focus stop, because every labelled call
+ * site sits inside a button that already names the card (the Library tile,
+ * the card page's flip button), and a nested focusable view would add a second
+ * TalkBack stop. Without a label it is hidden from assistive technology.
  * Design: design/components/CardArt/spec.md.
  */
 export function CardArt({
@@ -69,8 +83,8 @@ export function CardArt({
   card: HeritageCard;
   size: number;
   accessibilityLabel?: string;
-  /** Corner radius, borders or margins from the screen; size and background stay the face's own. */
-  style?: StyleProp<ViewStyle>;
+  /** Corner radius and placement from the screen; size, background and clipping always stay the face's own. */
+  style?: CardArtStyle;
   testID?: string;
 }): React.ReactElement {
   const source = useMemo(() => cardArtSource(card, DEPS), [card]);
@@ -80,12 +94,12 @@ export function CardArt({
   return (
     <View
       testID={testID}
-      accessible={labelled}
       accessibilityRole={labelled ? 'image' : undefined}
       accessibilityLabel={accessibilityLabel}
       accessibilityElementsHidden={!labelled}
       importantForAccessibility={labelled ? undefined : 'no-hide-descendants'}
       style={[
+        style,
         {
           width: size,
           height: size,
@@ -94,7 +108,6 @@ export function CardArt({
           justifyContent: 'center',
           overflow: 'hidden',
         },
-        style,
       ]}
     >
       {source.kind === 'heritage' ? <HeritageCardArt cardId={source.cardId} size={size} accessibilityLabel="" /> : null}

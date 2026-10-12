@@ -1,30 +1,18 @@
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import type { HeritageCard, SceneArt } from '@hangul-route/content-schema';
-import { typography } from '@hangul-route/design-system/tokens';
+import { supportedCardIds } from '@hangul-route/design-system/heritage-card-ids';
+import { borderWidth, typography } from '@hangul-route/design-system/tokens';
 import { describe, expect, it } from 'vitest';
-import { heritageCardsAll } from '../../content';
+import { awardWorld } from '../../content/award-world';
 import {
   CARD_PLATE_COLUMNS,
   CARD_PLATE_SLOTS,
   cardArtSource,
   cardCoverCrop,
   cardPlateLayout,
+  cardWord,
   cardWordFontSize,
   type CardArtDeps,
 } from '../card-art';
-
-/**
- * `supportedCardIds` of HeritageCardArt, read from its pure source file: the
- * design-system entry pulls in react-native, which node tests cannot load.
- */
-function readSupportedCardIds(): string[] {
-  const source = readFileSync(join(__dirname, '../../../../../packages/design-system/src/components/HeritageCardArt/card-ids.ts'), 'utf8');
-  const block = /export const supportedCardIds[^=]*=\s*\[([\s\S]*?)\];/.exec(source);
-  if (block === null) throw new Error('supportedCardIds not found in HeritageCardArt/card-ids.ts');
-  return [...(block[1] as string).matchAll(/'(card:[a-z0-9-]+)'/g)].map((m) => m[1] as string);
-}
-const supportedCardIds = readSupportedCardIds();
 
 const card = (over: Partial<HeritageCard> = {}): HeritageCard => ({
   id: 'card:test',
@@ -44,7 +32,7 @@ const art = { setting: 'courtyard', altEn: 'A courtyard.' } as unknown as SceneA
 const deps = (over: Partial<CardArtDeps> = {}): CardArtDeps => ({
   drawnCardIds: ['card:kimchi'],
   storyCover: (id) => (id === 'story:with-art' ? art : null),
-  cardsAll: [],
+  world: { cards: [], sets: [] },
   ...over,
 });
 
@@ -71,32 +59,54 @@ describe('cardArtSource (F-STORY-006 §3.8 Art, D7)', () => {
     });
   });
 
-  it('draws a set card as the collection plate of its member cards, at most six, in catalogue order', () => {
+  it('never shows a blank word: an empty or blank Korean word falls back to the title letter, then a placeholder', () => {
+    expect(cardWord({ subtitleKo: '', titleEn: 'Hoya' })).toBe('H');
+    expect(cardWord({ subtitleKo: '   ', titleEn: ' Hoya' })).toBe('H');
+    expect(cardWord({ subtitleKo: ' 김치 ', titleEn: 'Kimchi' })).toBe('김치');
+    expect(cardWord({ subtitleKo: undefined, titleEn: '' })).toBe('?');
+    expect(cardArtSource(card({ subtitleKo: '', titleEn: 'Hoya' }), deps())).toEqual({ kind: 'word', word: 'H', theme: 'letters' });
+  });
+
+  const cardSet = (id: string, memberCardIds: string[]) => ({ id, cardId: `card:${id}`, titleEn: id, memberCardIds });
+
+  it("draws a set card as the plate of the members its award set lists, at most six, in the set's order", () => {
     const members = Array.from({ length: 7 }, (_, i) => card({ id: `card:story-m${i}`, storyId: `story:m${i}`, setId: 'set:cluster' }));
     const other = card({ id: 'card:story-other', storyId: 'story:other', setId: 'set:elsewhere' });
     const set = card({ id: 'card:set-cluster', unlockedBy: 'set:cluster', rarity: 'legendary' });
-    const source = cardArtSource(set, deps({ cardsAll: [members[0]!, other, ...members.slice(1), set] }));
+    const order = [...members].reverse().map((m) => m.id);
+    const world = { cards: [members[0]!, other, ...members.slice(1), set], sets: [cardSet('set:cluster', order), cardSet('set:elsewhere', [other.id])] };
+    const source = cardArtSource(set, deps({ world }));
     expect(source.kind).toBe('plate');
     if (source.kind !== 'plate') return;
-    expect(source.members.map((m) => m.id)).toEqual(members.slice(0, CARD_PLATE_SLOTS).map((m) => m.id));
+    expect(source.members.map((m) => m.id)).toEqual(order.slice(0, CARD_PLATE_SLOTS));
   });
 
-  it('never puts the set card itself or another set card on its plate', () => {
+  it("follows the award set's member list, not the cards' setId, so the plate shows the cards that earn it", () => {
+    const listed = card({ id: 'card:story-listed', storyId: 'story:listed' });
+    const tagged = card({ id: 'card:story-tagged', storyId: 'story:tagged', setId: 'set:a' });
+    const set = card({ id: 'card:set-a', unlockedBy: 'set:a' });
+    const source = cardArtSource(set, deps({ world: { cards: [listed, tagged, set], sets: [cardSet('set:a', [listed.id])] } }));
+    expect(source).toEqual({ kind: 'plate', members: [listed] });
+  });
+
+  it('never puts the set card itself or another set card on its plate, and skips members not bundled', () => {
     const set = card({ id: 'card:set-a', unlockedBy: 'set:a', setId: 'set:a' });
     const nested = card({ id: 'card:set-b', unlockedBy: 'set:b', setId: 'set:a' });
     const member = card({ id: 'card:story-m', storyId: 'story:m', setId: 'set:a' });
-    const source = cardArtSource(set, deps({ cardsAll: [set, nested, member] }));
-    expect(source).toEqual({ kind: 'plate', members: [member] });
+    const world = { cards: [set, nested, member], sets: [cardSet('set:a', [set.id, nested.id, 'card:story-missing', member.id])] };
+    expect(cardArtSource(set, deps({ world }))).toEqual({ kind: 'plate', members: [member] });
   });
 
-  it('shows the word for a set card whose members are not bundled yet', () => {
+  it('shows the word for a set card whose set or members are not bundled yet', () => {
     const set = card({ id: 'card:set-empty', unlockedBy: 'set:empty', theme: 'rites' });
-    expect(cardArtSource(set, deps({ cardsAll: [set] }))).toEqual({ kind: 'word', word: '시험', theme: 'rites' });
+    const word = { kind: 'word', word: '시험', theme: 'rites' };
+    expect(cardArtSource(set, deps({ world: { cards: [set], sets: [] } }))).toEqual(word);
+    expect(cardArtSource(set, deps({ world: { cards: [set], sets: [cardSet('set:empty', ['card:story-missing'])] } }))).toEqual(word);
   });
 
   it('gives every card in the catalogue a face, and draws exactly the ids the design system can draw', () => {
-    const real: CardArtDeps = { drawnCardIds: supportedCardIds, storyCover: () => null, cardsAll: heritageCardsAll };
-    for (const c of heritageCardsAll) {
+    const real: CardArtDeps = { drawnCardIds: supportedCardIds, storyCover: () => null, world: awardWorld };
+    for (const c of awardWorld.cards) {
       const source = cardArtSource(c, real);
       expect(source.kind === 'heritage', c.id).toBe(supportedCardIds.includes(c.id));
       if (source.kind === 'word') expect(source.word.length, c.id).toBeGreaterThan(0);
@@ -129,6 +139,19 @@ describe('cardPlateLayout', () => {
         expect(cell.y).toBeGreaterThanOrEqual(plate.inset);
         expect(cell.x + plate.cell).toBeLessThanOrEqual(size - plate.inset);
         expect(cell.y + plate.cell).toBeLessThanOrEqual(size - plate.inset);
+      }
+    }
+  });
+
+  it("keeps every cell inside the framed plate's border (frame at half the margin, borderWidth.base wide)", () => {
+    for (const size of [90, 96, 120, 200]) {
+      const plate = cardPlateLayout(size);
+      const innerEdge = plate.inset / 2 + borderWidth.base;
+      for (const cell of plate.cells) {
+        expect(cell.x).toBeGreaterThanOrEqual(innerEdge);
+        expect(cell.y).toBeGreaterThanOrEqual(innerEdge);
+        expect(cell.x + plate.cell).toBeLessThanOrEqual(size - innerEdge);
+        expect(cell.y + plate.cell).toBeLessThanOrEqual(size - innerEdge);
       }
     }
   });
