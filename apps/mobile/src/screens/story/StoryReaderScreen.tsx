@@ -67,6 +67,7 @@ export function StoryReaderScreen({ route, navigation, onOpenSources, ...exitPro
       onFinish={leave}
       onClose={leave}
       onOpenSources={openSources}
+      onOpenCultureNote={(noteId) => navigation.navigate('CultureNotes', { noteId })}
       narrationLangs={narrationLangs}
       sourceStory={source}
     />

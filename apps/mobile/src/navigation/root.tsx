@@ -25,6 +25,7 @@ import { ResultsScreen } from '../screens/results/ResultsScreen';
 import { MinigameScreen } from '../screens/minigames/MinigameScreen';
 import { StoryReaderScreen } from '../screens/story/StoryReaderScreen';
 import { StorySourcesScreen } from '../screens/story/StorySourcesScreen';
+import { CultureNotesScreen } from '../screens/story/CultureNotesScreen';
 import { PlacementScreen } from '../screens/placement/PlacementScreen';
 import { STORY_FIXTURES_BUILD, StoryE2eHook } from './story-e2e';
 import { PlacementE2eHook } from './placement-e2e';
@@ -77,6 +78,7 @@ export function RootNavigator(): React.ReactElement {
         <Stack.Screen name="Paywall" component={PaywallScreen} />
         <Stack.Screen name="StoryReader" component={StoryReaderScreen} />
         <Stack.Screen name="StorySources" component={StorySourcesScreen} />
+        <Stack.Screen name="CultureNotes" component={CultureNotesScreen} />
         <Stack.Screen name="Placement" component={PlacementScreen} options={{ gestureEnabled: false }} />
         <Stack.Screen name="PlacementReport" component={PlacementReportScreen} />
       </Stack.Navigator>

@@ -155,9 +155,8 @@ test.describe('story reader extras (fixture bundle)', () => {
     // Card art for card:hanji, hidden from screen readers (the title and term say what it shows).
     await expect(page.getByTestId('story-reader-note-art')).toBeVisible();
     await expect(page.getByTestId('story-reader-note-art')).toHaveAttribute('aria-hidden', 'true');
-    // The Culture notes screen does not exist yet (F-STORY-004 PR 4.7): no link to it.
-    await expect(page.getByTestId('story-reader-note-more')).toHaveCount(0);
-    await expect(page.getByText('More in Culture notes')).toHaveCount(0);
+    // "More in Culture notes" (F-STORY-004 PR 4.7): a ghost button beside Close.
+    await expect(page.getByTestId('story-reader-note-more')).toHaveText('More in Culture notes');
     // The note card adds no primary button.
     expect(await primaryButtons(page)).toEqual(['story-reader-next']);
     expect(await page.locator('body').innerText()).not.toMatch(EMOJI);
@@ -165,6 +164,11 @@ test.describe('story reader extras (fixture bundle)', () => {
     await page.getByTestId('story-reader-note-close').click();
     await expect(note(page)).toHaveCount(0);
     await expect(chip(page)).toHaveAttribute('aria-expanded', 'false');
+
+    // More in Culture notes opens the Culture notes screen (`CultureNotes { noteId }`).
+    await chip(page).click();
+    await page.getByTestId('story-reader-note-more').click();
+    await expect(page.getByTestId('culture-notes')).toBeVisible();
   });
 
   test('the note card closes on a second tap, Escape, a term chip and a page turn; scenes without a note have no chip', async ({ page }) => {

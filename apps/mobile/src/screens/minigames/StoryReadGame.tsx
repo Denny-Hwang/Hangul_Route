@@ -1,3 +1,4 @@
+import { useNavigation } from '@react-navigation/native';
 import React, { useMemo } from 'react';
 import { useLocale } from '../../i18n/use-messages';
 import type { MinigameScope } from '../../logic/minigame-config';
@@ -28,6 +29,7 @@ interface Props {
  */
 export function StoryReadGame({ scope, onFinish, onBack }: Props): React.ReactElement {
   const locale = useLocale();
+  const navigation = useNavigation();
   const { story: source, level } = useMemo(() => readGameTarget(scope), [scope]);
   // The story in the UI language, with the voice of the narration shown in each scene (PR 2.8).
   const { story, narrationLangs } = useMemo(() => readerStory(source, level, locale), [source, level, locale]);
@@ -54,6 +56,7 @@ export function StoryReadGame({ scope, onFinish, onBack }: Props): React.ReactEl
       onAnswer={handlers.onAnswer}
       onFinish={handlers.onFinish}
       onClose={handlers.onClose}
+      onOpenCultureNote={(noteId) => navigation.navigate('CultureNotes', { noteId })}
       narrationLangs={narrationLangs}
       sourceStory={source}
     />
