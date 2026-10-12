@@ -9,6 +9,8 @@ export interface ConsoleEnv {
   NEXT_PUBLIC_LECTURE_MODE?: string;
   /** The free-plan switch (F-ENT-003 section 3.4), the console twin of the learner app's `EXPO_PUBLIC_CONTENT_GATING_ENABLED`. */
   NEXT_PUBLIC_CONTENT_GATING_ENABLED?: string;
+  /** Notes from grown-ups (F-FEEDBACK-001), the console twin of the learner app's `EXPO_PUBLIC_NOTES_ENABLED`. */
+  NEXT_PUBLIC_NOTES_ENABLED?: string;
   NODE_ENV?: string;
 }
 
@@ -28,6 +30,7 @@ export function buildEnv(): ConsoleEnv {
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
     NEXT_PUBLIC_LECTURE_MODE: process.env.NEXT_PUBLIC_LECTURE_MODE,
     NEXT_PUBLIC_CONTENT_GATING_ENABLED: process.env.NEXT_PUBLIC_CONTENT_GATING_ENABLED,
+    NEXT_PUBLIC_NOTES_ENABLED: process.env.NEXT_PUBLIC_NOTES_ENABLED,
     NODE_ENV: process.env.NODE_ENV,
   };
 }
@@ -78,6 +81,17 @@ export function lectureModeEnabled(env: ConsoleEnv = buildEnv()): boolean {
  */
 export function contentGatingEnabled(env: ConsoleEnv = buildEnv()): boolean {
   const raw = env.NEXT_PUBLIC_CONTENT_GATING_ENABLED;
+  return raw === 'true' || raw === '1';
+}
+
+/**
+ * Notes from grown-ups (F-FEEDBACK-001 section 6.13): the notes pages, the composer and every entry
+ * (adult nav, roster card, parent home, report slot) render only with `NEXT_PUBLIC_NOTES_ENABLED`
+ * set to `'true'` or `'1'`, parsed like the learner app's flag. Off by default; FB-14 turns it on.
+ * Sending also needs the Worker switch `NOTES_SEND` (section 7.8), which this flag never changes.
+ */
+export function notesEnabled(env: ConsoleEnv = buildEnv()): boolean {
+  const raw = env.NEXT_PUBLIC_NOTES_ENABLED;
   return raw === 'true' || raw === '1';
 }
 
