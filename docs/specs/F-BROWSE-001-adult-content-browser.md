@@ -504,7 +504,7 @@ BR-1, BR-3, BR-4, BR-5a, BR-5b and BR-5c can run in parallel. Merge BR-1's `tele
 - Listen & Pick rounds are read by their builder first (`lp:sym` a letter, `lp:syl` a syllable or, when built with a meaning, that word with its gloss, `lp:word` and `lp:pic` a word); only hand-written rounds fall back to their shape.
 - `passActive` also bounds a gate pass's `seen` (at most a minute ahead of the clock), so a clock that ran ahead cannot switch off the idle rule.
 - The isolation test also walks the import graph from `logic/browse/*` and `platform/browse*`: neither reaches `store/`, `screens/`, `components/` or `navigation/` through any chain. Its direct scan resolves each relative import against the importing file and reads the whole source, and also forbids `vocab-run-store`, `placement-run-store` and `profile-removal` (§4.10). BR-3 adds a scan that no module outside browse code sets a fence or the queue key.
-- Sizes: BR-2 about 630, BR-3 about 920 and BR-4 about 2,150 changed lines, over this table's S and M budgets; tests are about 70 %, 70 % and 58 % of them (a fixture for every coverage case, every target kind, both switch states). Recorded for the owner; no split was made.
+- Sizes: BR-2 about 630, BR-3 about 920 and BR-4 about 2,490 changed lines (after its second review), over this table's S and M budgets; tests are about 70 %, 70 % and 61 % of them (a fixture for every coverage case, every target kind, both switch states). Recorded for the owner; no split was made.
 
 ## 12. Dependencies
 
