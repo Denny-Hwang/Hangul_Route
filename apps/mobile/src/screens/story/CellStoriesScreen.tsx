@@ -5,7 +5,7 @@ import { Pressable, View } from 'react-native';
 import { episodeById, episodesAll, stageByKey, themeByKey } from '../../content';
 import { useLocale, useMessages } from '../../i18n/use-messages';
 import { localizeEpisode, localizeStage, localizeTheme } from '../../logic/content-locale';
-import { cellStoriesOpenedEvent, cellStoriesView, episodeOpenFromCellPage } from '../../logic/story/cell-stories';
+import { cellStoriesOpenKey, cellStoriesOpenedEvent, cellStoriesView, episodeOpenFromCellPage } from '../../logic/story/cell-stories';
 import { defaultStoryIndex } from '../../logic/story/story-index';
 import type { RootStackParamList } from '../../navigation/types';
 import { track } from '../../platform/telemetry';
@@ -46,8 +46,11 @@ export function CellStoriesScreen({ route, navigation }: Props): React.ReactElem
 
   const stageDef = stageByKey(stage);
   const themeDef = themeByKey(theme);
-  const stageTitle = stageDef ? localizeStage(stageDef, locale).titleEn : '';
-  const themeTitle = themeDef ? localizeTheme(themeDef, locale).titleEn : '';
+  // A link with a stage or theme the bundle does not know (only ever a stale or hand-made one) shows
+  // the calm empty card with no "<Stage> · <Theme>" header and sends no event (§3.11: known keys only).
+  const header =
+    stageDef && themeDef ? m.title(localizeStage(stageDef, locale).titleEn, localizeTheme(themeDef, locale).titleEn) : null;
+  const known = header !== null;
   const lessonSource = view.lessonEpisodeId ? episodeById(view.lessonEpisodeId) : undefined;
   const lesson = lessonSource ? localizeEpisode(lessonSource, locale) : undefined;
 
@@ -55,8 +58,15 @@ export function CellStoriesScreen({ route, navigation }: Props): React.ReactElem
   const profileIdRef = useRef(tiles.profileId);
   profileIdRef.current = tiles.profileId;
   // Once per open: on mount, and when a door brings this cell's page back with new params (`getId`
-  // returns to it), never on a progress change or on Back from a story opened here.
+  // returns to it), never on a progress change or on Back from a story opened here. A second tap on a
+  // door before the page has left (same cell, same door) only swaps in equal params: not a second open.
+  const lastOpenRef = useRef<string | null>(null);
+  useEffect(() => navigation.addListener('blur', () => (lastOpenRef.current = null)), [navigation]);
   useEffect(() => {
+    if (!known) return;
+    const key = cellStoriesOpenKey({ stage, theme, source });
+    if (lastOpenRef.current === key) return;
+    lastOpenRef.current = key;
     const opened = cellStoriesOpenedEvent(view, source);
     void track({ name: opened.name, profileId: profileIdRef.current, payload: { ...opened.payload } });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- keyed on the open (the params object), see above
@@ -78,20 +88,28 @@ export function CellStoriesScreen({ route, navigation }: Props): React.ReactElem
         </Pressable>
         <Spacer size="sm" />
 
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-          <View
-            aria-hidden
-            importantForAccessibility="no"
-            style={{ width: ACCENT, height: ACCENT, borderRadius: radii.circle, backgroundColor: colors.theme[theme] }}
-          />
-          <View style={{ flex: 1 }}>
-            <Heading level="title" testID="cell-stories-title">
-              {m.title(stageTitle, themeTitle)}
-            </Heading>
-          </View>
-        </View>
-        <Spacer size="xs" />
-        <Body tone="secondary">{m.subtitle}</Body>
+        {header !== null ? (
+          <>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+              <View
+                aria-hidden
+                importantForAccessibility="no"
+                style={{ width: ACCENT, height: ACCENT, borderRadius: radii.circle, backgroundColor: colors.theme[theme] }}
+              />
+              <View style={{ flex: 1 }}>
+                <Heading level="title" testID="cell-stories-title">
+                  {header}
+                </Heading>
+              </View>
+            </View>
+            <Spacer size="xs" />
+            <Body tone="secondary">{m.subtitle}</Body>
+          </>
+        ) : (
+          <Heading level="title" testID="cell-stories-title-unknown">
+            {m.subtitle}
+          </Heading>
+        )}
 
         {lesson ? (
           <>

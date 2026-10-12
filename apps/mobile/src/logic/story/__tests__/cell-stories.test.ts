@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import type { Episode } from '@hangul-route/content-schema';
 import { TELEMETRY_EVENT_NAMES } from '@hangul-route/content-schema';
 import { describe, expect, it } from 'vitest';
-import { cellStoriesOpenedEvent, cellStoriesRouteId, cellStoriesView, episodeOpenFromCellPage, homeCellLink, lessonRowCount } from '../cell-stories';
+import { cellStoriesOpenKey, cellStoriesOpenedEvent, cellStoriesRouteId, cellStoriesView, episodeOpenFromCellPage, homeCellLink, lessonRowCount } from '../cell-stories';
 import { buildStoryIndex } from '../story-index';
 import { bookEpisode, questId, shelfEpisode, shelfIndex, story, storyQuest } from './shelf-fixture';
 
@@ -73,6 +73,22 @@ describe('cellStoriesOpenedEvent', () => {
 
   it('is a listed telemetry name', () => {
     expect(TELEMETRY_EVENT_NAMES).toContain(cellStoriesOpenedEvent(cellStoriesView({ stage: 'stage1', theme: 'life', episodes: [], index: [] }), 'cell').name);
+  });
+});
+
+describe('cellStoriesOpenKey', () => {
+  it('one key per cell and door, so a second tap on the same door is not a second open (review of PR 5.5b)', () => {
+    const lessonRow = cellStoriesOpenKey({ stage: 'stage1', theme: 'letters', source: 'lesson-row' });
+    expect(cellStoriesOpenKey({ stage: 'stage1', theme: 'letters', source: 'lesson-row' })).toBe(lessonRow);
+    expect(cellStoriesOpenKey({ stage: 'stage1', theme: 'letters', source: 'story-pill' })).not.toBe(lessonRow);
+    expect(cellStoriesOpenKey({ stage: 'stage2', theme: 'letters', source: 'lesson-row' })).not.toBe(lessonRow);
+    expect(cellStoriesOpenKey({ stage: 'stage1', theme: 'food', source: 'lesson-row' })).not.toBe(lessonRow);
+  });
+
+  it('a cell the bundle does not know is an empty view, never a throw', () => {
+    const view = cellStoriesView({ stage: 'stage99' as Episode['stage'], theme: 'nope' as Episode['theme'], episodes: EPISODES, index: INDEX });
+    expect(view.lessonEpisodeId).toBeNull();
+    expect(view.entries).toEqual([]);
   });
 });
 
@@ -256,6 +272,8 @@ describe('the back history through the cell page', () => {
   });
 });
 
+// Lint-style guards on the screens' source text, not behaviour and not counted as coverage: the behaviour
+// (one event per open, Back, the doors) is pinned by e2e/web/journey-stories.spec.ts on the fixture bundle.
 describe('cell page sources (screens are covered by Playwright; these pin the wiring)', () => {
   const SRC = join(__dirname, '..', '..', '..');
   const read = (rel: string): string => readFileSync(join(SRC, rel), 'utf8');
@@ -295,6 +313,9 @@ describe('cell page sources (screens are covered by Playwright; these pin the wi
     const deps = /\}, \[([^\]]*)\]\);/.exec(effect)?.[1] ?? '';
     expect(deps).toBe('route.params');
     expect(screen).toContain('profileIdRef.current');
+    // A second tap on the same door is not a second open; leaving the page clears that (review of PR 5.5b).
+    expect(screen).toContain('cellStoriesOpenKey({ stage, theme, source })');
+    expect(screen).toMatch(/addListener\('blur'/);
   });
 
   it('the Library sections and the cell page share one tile grid', () => {

@@ -63,6 +63,16 @@ export function episodeOpenFromCellPage(
   return under?.name === 'EpisodeDetail' && params?.episodeId === episodeId ? 'back' : 'push';
 }
 
+/**
+ * What makes one open of the cell page: the cell and the door. A door tapped again while its cell page
+ * is still on top (a double tap before the transition ends) brings equal params, the same key, and no
+ * second `journey.cell_stories_opened`. The page clears its last key when it loses focus, so a later
+ * return through a door (a story's pill) is a new open.
+ */
+export function cellStoriesOpenKey(params: { stage: string; theme: string; source: CellStoriesSource }): string {
+  return `${params.stage}:${params.theme}:${params.source}`;
+}
+
 /** Sent once each time the cell page opens: ids and counts only (§3.11). */
 export function cellStoriesOpenedEvent(
   view: Pick<CellStoriesView, 'stage' | 'theme' | 'entries'>,
