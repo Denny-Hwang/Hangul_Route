@@ -1,5 +1,6 @@
 import type { LearnerMembership } from '@hangul-route/content-schema';
 import { create } from 'zustand';
+import { routeGoalInputsChanged } from '../logic/my-route/summary';
 import type { JoinErrorCode } from '../logic/spaces/join-code';
 import type { RestorePlan } from '../logic/sync/restore';
 import { getDeviceId } from '../platform/device';
@@ -96,8 +97,10 @@ export const useMembershipStore = create<State & Actions>((set, get) => {
       // The server decides premium from memberships (F-ENT-001 §3.4); cache it with its grace window.
       useTierStore.getState().applyInbox(learnerId, result.inbox);
       // Plans ride the same inbox (F-PLAN-001 §3.3): derive homework, then push the change back.
+      const before = usePlanStore.getState().byLearner[learnerId];
       const applied = await usePlanStore.getState().applyPlans(learnerId, result.inbox.plans);
-      if (applied.changed) useSyncStore.getState().requestSync(learnerId);
+      // A plan change that moves only the Learning Route goal (or the first inbox, before which the goal is left out) is sent too.
+      if (applied.changed || routeGoalInputsChanged(before, result.inbox.plans)) useSyncStore.getState().requestSync(learnerId);
       return rows;
     },
 

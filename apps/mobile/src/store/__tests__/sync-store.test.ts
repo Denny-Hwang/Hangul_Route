@@ -1,4 +1,4 @@
-import { JourneySummarySchema, type ProgressSnapshot, type ProgressSummary } from '@hangul-route/content-schema';
+import { JourneySummarySchema, ProgressSummarySchema, type CurriculumMeta, type ProgressSnapshot, type ProgressSummary } from '@hangul-route/content-schema';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mem = vi.hoisted(() => new Map<string, unknown>());
@@ -56,6 +56,8 @@ describe('sync-store (F-SYNC-002)', () => {
     useSyncStore.setState({ byLearner: {} });
     useProfileStore.setState({ profiles: [{ id: 'profile:a', displayName: 'Suni', ageGroup: '5-7', avatar: 'hoya-orange', role: 'learner', createdAt: 't' }], activeId: 'profile:a', hydrated: true });
     useProgressStore.setState({ byProfile: { 'profile:a': snap(['q1']) }, hydratedFor: new Set(['profile:a']) });
+    // No inbox plans loaded unless a test sets them, so a failed test never leaks plans into the next one.
+    usePlanStore.setState({ byLearner: {}, notReady: {} });
     vi.mocked(apiBaseUrl).mockReturnValue('https://api.example.com');
   });
 
@@ -93,6 +95,81 @@ describe('sync-store (F-SYNC-002)', () => {
     expect(JourneySummarySchema.parse(journey)).toEqual(journey);
     expect(journey?.stages[0]).toMatchObject({ stage: 'stage1', done: 0, known: 3 });
     expect(journey?.stages.slice(1).every((s) => s.known === 0)).toBe(true);
+  });
+
+  it("uploads summary.routeGoal from the inbox plans and the bundle, Hoya's default with an empty inbox (Learning Route LR-6)", async () => {
+    usePlanStore.setState({ byLearner: { 'profile:a': [] }, notReady: {} });
+    const putSnapshot = vi.fn(async (_id: string, _body: { summary: ProgressSummary }) => ({ status: 'ok', rev: 1 }));
+    setSyncApiForTests(fakeApi({ putSnapshot }) as never);
+    await useSyncStore.getState().syncNow('profile:a');
+    expect(putSnapshot.mock.calls[0]?.[1].summary.routeGoal).toEqual({ stage: 'stage1', from: 'default' });
+  });
+
+  it('leaves summary.routeGoal out while this device does not know the learner\'s plans yet, never a guessed default (Learning Route LR-6)', async () => {
+    // No inbox has reached this device (or its plans are not loaded): a class plan may still lead, so no goal is claimed.
+    const putSnapshot = vi.fn(async (_id: string, _body: { summary: ProgressSummary }) => ({ status: 'ok', rev: 1 }));
+    setSyncApiForTests(fakeApi({ putSnapshot }) as never);
+    await useSyncStore.getState().syncNow('profile:a');
+    const summary = putSnapshot.mock.calls[0]?.[1].summary;
+    expect(summary).not.toHaveProperty('routeGoal');
+    // Everything else still goes up.
+    expect(summary?.journey?.v).toBe(1);
+  });
+
+  it('summary.routeGoal follows a live class curriculum plan in the inbox to the stage it reaches (Learning Route LR-6)', async () => {
+    const today = new Date().toISOString().slice(0, 10);
+    const startDate = new Date(Date.parse(`${today}T00:00:00.000Z`) - 7 * 86_400_000).toISOString().slice(0, 10);
+    const meta: CurriculumMeta = {
+      kind: 'curriculum',
+      generatorVersion: 1,
+      catalogVersion: 4,
+      params: {
+        audience: 'class',
+        level: { stage: 'stage1', band: 0 },
+        startDate,
+        weeks: 4,
+        sessionsPerWeek: 2,
+        minutesPerSession: 10,
+        daysOff: [],
+        goals: { focus: 'balanced' },
+        includeComingSoon: true,
+        culturalAnchors: true,
+        unlockedStages: ['stage1'],
+      },
+      weeks: [0, 1, 2, 3].map((i) => ({
+        index: i + 1,
+        startDate: new Date(Date.parse(`${startDate}T00:00:00.000Z`) + 7 * i * 86_400_000).toISOString().slice(0, 10),
+        kind: 'learn' as const,
+        focus: { episodeId: null, storyIds: [], festival: null },
+        extras: [],
+      })),
+      horizonDays: 7,
+      repacedAt: null,
+    };
+    usePlanStore.setState({
+      byLearner: {
+        'profile:a': [
+          {
+            id: 'plan:c',
+            spaceId: 'space:c',
+            spaceKind: 'class',
+            spaceName: 'Class',
+            title: 'Weekly plan',
+            items: [{ kind: 'quest', id: 'quest:stage2-life-q1' }],
+            publishedAt: '2026-10-01T09:00:00.000Z',
+            updatedAt: '2026-10-01T09:00:00.000Z',
+            meta,
+          },
+        ],
+      },
+      notReady: {},
+    });
+    const putSnapshot = vi.fn(async (_id: string, _body: { summary: ProgressSummary }) => ({ status: 'ok', rev: 1 }));
+    setSyncApiForTests(fakeApi({ putSnapshot }) as never);
+    await useSyncStore.getState().syncNow('profile:a');
+    const summary = putSnapshot.mock.calls[0]?.[1].summary;
+    expect(summary?.routeGoal).toEqual({ stage: 'stage2', from: 'class' });
+    expect(ProgressSummarySchema.parse(summary).routeGoal).toEqual({ stage: 'stage2', from: 'class' });
   });
 
   it('applies a merged snapshot back into progress on conflict', async () => {
@@ -411,6 +488,8 @@ describe('rescue code lifecycle (F-RESTORE-001)', () => {
     useSyncStore.setState({ byLearner: {} });
     useProfileStore.setState({ profiles: [{ id: 'profile:a', displayName: 'Suni', ageGroup: '5-7', avatar: 'hoya-orange', role: 'learner', createdAt: 't' }], activeId: 'profile:a', hydrated: true });
     useProgressStore.setState({ byProfile: { 'profile:a': snap(['q1']) }, hydratedFor: new Set(['profile:a']) });
+    // No inbox plans loaded unless a test sets them, so a failed test never leaks plans into the next one.
+    usePlanStore.setState({ byLearner: {}, notReady: {} });
     vi.mocked(apiBaseUrl).mockReturnValue('https://api.example.com');
   });
 

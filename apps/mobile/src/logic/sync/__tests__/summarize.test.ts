@@ -172,6 +172,20 @@ describe('summarize: summary.journey (F-ROUTE-001 section 3.12, R-8)', () => {
   });
 });
 
+describe('summarize: summary.routeGoal (Learning Route section 9, LR-6)', () => {
+  it('passes the goal input through unchanged, next to the journey, schemaVersion staying 1', () => {
+    const out = summarize({ snapshot: snap, now: NOW, stage1QuestIds: ['q1'], questJamo: {}, routeGoal: { stage: 'stage2', from: 'class' } });
+    expect(out.routeGoal).toEqual({ stage: 'stage2', from: 'class' });
+    expect(out.schemaVersion).toBe(1);
+    expect(ProgressSummarySchema.parse(out).routeGoal).toEqual({ stage: 'stage2', from: 'class' });
+  });
+
+  it('leaves the key out when no goal is given (summarize stays pure)', () => {
+    expect(summarize({ snapshot: snap, now: NOW, stage1QuestIds: ['q1'], questJamo: {} })).not.toHaveProperty('routeGoal');
+    expect(summarize({ snapshot: snap, now: NOW, stage1QuestIds: ['q1'], questJamo: {}, routeGoal: undefined })).not.toHaveProperty('routeGoal');
+  });
+});
+
 describe('vocabSummaryOf (F-VOC-005 section 3.8)', () => {
   const TODAY = '2026-10-20';
   const w = (slug: string, over: Partial<VocabItemState> = {}): VocabItemState => ({

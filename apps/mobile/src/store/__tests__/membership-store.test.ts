@@ -113,6 +113,26 @@ describe('membership-store (F-SPACE-001 §3.5)', () => {
     requestSync.mockRestore();
   });
 
+  it('asks for a sync when the first inbox or a goal-only plan change can move summary.routeGoal (Learning Route LR-6)', async () => {
+    useSyncStore.getState().adoptCredentials('profile:a', 'sec', 1);
+    const plan = (items: { kind: 'quest'; id: string }[]) => ({ id: 'plan:w3', spaceId: 'space:cls', spaceKind: 'class', spaceName: 'Sunday Class A', title: 'Week 3', items, publishedAt: 't', updatedAt: 't' });
+    const inbox = (plans: unknown[]) => ({ status: 'ok', inbox: { rev: 1, plans, memberships: [classRow], tier: 'free', serverTime: 't' } });
+    const getInbox = vi.fn().mockResolvedValueOnce(inbox([])).mockResolvedValueOnce(inbox([])).mockResolvedValueOnce(inbox([plan([])]));
+    setSyncApiForTests(fakeApi({ getInbox }) as never);
+    const requestSync = vi.spyOn(useSyncStore.getState(), 'requestSync');
+    // The first inbox, even an empty one, changes no homework but lets the upload name the goal.
+    await useMembershipStore.getState().refresh('profile:a');
+    expect(requestSync).toHaveBeenCalledWith('profile:a');
+    requestSync.mockClear();
+    await useMembershipStore.getState().refresh('profile:a');
+    expect(requestSync).not.toHaveBeenCalled();
+    // A plan with no homework to derive still moves what the goal reads.
+    await useMembershipStore.getState().refresh('profile:a');
+    expect(useProgressStore.getState().byProfile['profile:a']?.homework).toEqual([]);
+    expect(requestSync).toHaveBeenCalledWith('profile:a');
+    requestSync.mockRestore();
+  });
+
   it('asks for a sync when a refresh only moves a pending item to a new date (F-PLAN-002 section 3.6 rule 2)', async () => {
     useSyncStore.getState().adoptCredentials('profile:a', 'sec', 1);
     const plan = (targetDate: string) => ({ id: 'plan:w3', spaceId: 'space:cls', spaceKind: 'class', spaceName: 'Sunday Class A', title: 'Week 3', items: [{ kind: 'quest', id: 'quest:stage1-letters-q1', targetDate }], publishedAt: 't', updatedAt: 't' });

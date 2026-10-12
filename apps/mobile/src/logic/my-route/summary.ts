@@ -1,5 +1,9 @@
-import type { ProgressSnapshot, StageKey } from '@hangul-route/content-schema';
+import { pickGoal, type InboxPlan, type ProgressSnapshot, type ProgressSummary, type StageKey } from '@hangul-route/content-schema';
+import { dayKey } from '../homework/mission-builder';
+import { sourcesOf } from '../homework/plan-derivation';
+import { stageAvailability } from '../journey';
 import { buildMyRoute } from './model';
+import { gridEpisodesOf } from './order';
 import { startRouteOf } from './start-marker';
 import type { MyRouteInput, MyRouteModel, StageState } from './types';
 
@@ -66,4 +70,61 @@ export function journeySummaryOf(snapshot: ProgressSnapshot, content: JourneyCon
   } catch {
     return undefined;
   }
+}
+
+export interface RouteGoalSummaryInput {
+  snapshot: ProgressSnapshot;
+  /** The learner's inbox plans as the plan store holds them (published, unarchived, targeting this learner). */
+  plans: readonly InboxPlan[];
+  /** The stage rows of the same upload (`journeySummaryOf`); without them only a plan goal can be named. */
+  journey: Pick<JourneySummary, 'stages'> | undefined;
+  content: Pick<JourneyContent, 'catalog' | 'episodes'>;
+  now: Date;
+}
+
+/**
+ * `summary.routeGoal` (Learning Route amendment section 9, LR-6; LR-OD-12):
+ * the goal the learner's Learning Route shows, so the family space names the
+ * same goal as the child's tab. It is `pickGoal` over the sources Home and
+ * Homework derive from (`sourcesOf(inboxPlans, snapshot.selfRoute)`), the
+ * journey's stage rows and the bundle's stage availability, on the day the
+ * plan derivation uses. Only the stage and the source code leave the device:
+ * no plan id, no date, no name. Undefined when there is no goal (the end of
+ * the open road), so the key is left out. Best effort, as `journeySummaryOf`:
+ * a stored plan it cannot read gives no goal and the upload goes on without it.
+ * LR-5a's tab must name its goal from the same inputs (the same sources, the
+ * journey's stage rows, the bundle's availability and this UTC day), so the
+ * family card and the child's tab never disagree (LR-OD-12).
+ */
+export function routeGoalSummaryOf(input: RouteGoalSummaryInput): ProgressSummary['routeGoal'] {
+  try {
+    const { snapshot, plans, journey, content, now } = input;
+    const grid = gridEpisodesOf(content.episodes);
+    const goal = pickGoal({
+      sources: sourcesOf(plans, snapshot.selfRoute).map((source) => ({ ...source, meta: source.meta ?? null })),
+      catalog: content.catalog,
+      stages: journey?.stages ?? [],
+      availability: (stage) => stageAvailability(stage, grid),
+      // The day the plan derivation uses (plan-store), so a plan sets the goal exactly while it derives homework.
+      today: dayKey(now.toISOString()),
+    });
+    return goal === null ? undefined : { stage: goal.stage, from: goal.from };
+  } catch {
+    return undefined;
+  }
+}
+
+/** What `routeGoalSummaryOf` reads from one inbox plan; a plan's title, name and space id never move the goal. */
+const goalInputOf = (plan: InboxPlan): string => JSON.stringify([plan.id, plan.spaceKind, plan.publishedAt, plan.items, plan.meta ?? null]);
+const goalInputsOf = (plans: readonly InboxPlan[]): string => plans.map(goalInputOf).sort().join('\n');
+
+/**
+ * Whether an inbox can move `summary.routeGoal` although it changed no homework
+ * (Learning Route LR-6): the device learns the learner's plans for the first time
+ * (`before` undefined: until then the upload leaves the goal out), or a plan the
+ * goal reads came, went or changed. The inbox refresh then asks for one sync, so
+ * the family card does not wait for the learner's next activity.
+ */
+export function routeGoalInputsChanged(before: readonly InboxPlan[] | undefined, after: readonly InboxPlan[]): boolean {
+  return before === undefined || goalInputsOf(before) !== goalInputsOf(after);
 }
