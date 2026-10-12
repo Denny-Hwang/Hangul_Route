@@ -150,6 +150,8 @@ export const TELEMETRY_EVENT_NAMES = [
   'billing.checkout_started',
   'billing.checkout_refused',
   'billing.portal_opened',
+  // F-STORY-005 §3.11 (payload { stageKey, themeKey, stories, source }: keys, a count and a code only)
+  'journey.cell_stories_opened',
 ] as const;
 
 export const TelemetryEventNameSchema = z.enum(TELEMETRY_EVENT_NAMES);

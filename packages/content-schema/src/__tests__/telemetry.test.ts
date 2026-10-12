@@ -123,6 +123,7 @@ describe('telemetry event names (one list for the client type and the API whitel
         'billing.checkout_started',
         'billing.checkout_refused',
         'billing.portal_opened',
+        'journey.cell_stories_opened',
       ].sort(),
     );
     expect(new Set(TELEMETRY_EVENT_NAMES).size).toBe(TELEMETRY_EVENT_NAMES.length);
@@ -134,6 +135,11 @@ describe('telemetry event names (one list for the client type and the API whitel
       expect(TELEMETRY_EVENT_NAMES.filter((n) => n === name)).toHaveLength(1);
       expect(isTelemetryEventName(name)).toBe(true);
     }
+  });
+
+  it('lists the F-STORY-005 map event once, in the journey namespace', () => {
+    expect(TELEMETRY_EVENT_NAMES.filter((n) => n === 'journey.cell_stories_opened')).toHaveLength(1);
+    expect(isTelemetryEventName('journey.cell_stories_opened')).toBe(true);
   });
 
   it('accepts listed names and rejects anything else', () => {

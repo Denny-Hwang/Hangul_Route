@@ -349,3 +349,12 @@ export async function playCheckByIds(page: Page, rounds: readonly [CheckAnswer, 
     if (i === 0) await waitForNextListenPickRound(page);
   }
 }
+
+/**
+ * A Journey cell's accessible name (F-STORY-005 §3.12): "Stage 1 Hangul, Letters & Books: lesson",
+ * "Stage 2 Words, Letters & Books, coming soon". Matches the stage number and the start of the theme
+ * title, so a complete look, a story count or a level-check mark later in the label still matches.
+ */
+export function journeyCellName(stage: number, theme: string): RegExp {
+  return new RegExp(`^Stage ${stage} [^,]+, ${theme.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`);
+}

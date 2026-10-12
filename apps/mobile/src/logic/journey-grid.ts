@@ -1,7 +1,9 @@
 import type { Episode, QuestProgress, RouteCatalog, StageDef, StageKey, ThemeDef, ThemeKey } from '@hangul-route/content-schema';
 import { episodeFor } from '../content/episodes';
 import { isEpisodeComplete, stageAvailability, type StageAvailability } from './journey';
+import { cellModel, isPlayable, type CellModel } from './journey-cells';
 import { cellLook, type JourneyMarks } from './placement/cell-look';
+import type { StoryIndexEntry } from './story/story-index';
 
 /**
  * The Journey grid as plain data (wireframe journey/grid; F-BROWSE-001 BR-5b). `JourneyGrid` draws it
@@ -12,7 +14,7 @@ import { cellLook, type JourneyMarks } from './placement/cell-look';
  * `JourneyCellState` when that glyph ships; until then no closed cell can exist.
  */
 
-/** `open`: a playable episode. `later`: no episode, or a preview one ("coming soon"). */
+/** `open`: a playable (shipped or ready) episode. `later`: no episode, or a draft or preview one ("coming soon"). */
 export type JourneyCellState = 'open' | 'later';
 
 /** One learner's look of a cell: the completed tint, the placed-out outline, the start pin. */
@@ -36,9 +38,11 @@ export interface JourneyCellView {
   state: JourneyCellState;
   /** Two panes only: this cell's episode is the one the right pane shows. */
   selected: boolean;
-  /** Not a working button: an empty cell, or a later cell on one pane. */
+  /** Not a working button: an empty cell, or a later cell on one pane; a stories-only cell is always a button. */
   disabled: boolean;
   marks: JourneyCellMarks;
+  /** What the cell holds and its heritage stories (F-STORY-005 §3.5): its look and its label. */
+  model: CellModel;
 }
 
 export interface JourneyStageView {
@@ -48,7 +52,7 @@ export interface JourneyStageView {
 }
 
 export function journeyCellState(episode: Pick<Episode, 'status'> | undefined): JourneyCellState {
-  return !episode || episode.status === 'preview' ? 'later' : 'open';
+  return episode && isPlayable(episode) ? 'open' : 'later';
 }
 
 export interface JourneyCellInput {
@@ -60,21 +64,35 @@ export interface JourneyCellInput {
   paneMode: boolean;
   selectedId: string | null;
   marksOf?: JourneyMarksOf;
+  /** The story index (F-STORY-005 §3.6); omitted: no cell has stories (the map as before stories). */
+  storyEntries?: readonly StoryIndexEntry[];
+  /** The learner's quest progress, for the model's complete look and finished stories; omitted: nothing done. */
+  quests?: readonly Pick<QuestProgress, 'questId' | 'episodeId' | 'completedAt'>[];
 }
 
 export function journeyCell(i: JourneyCellInput): JourneyCellView {
   const episode = episodeFor(i.stage, i.theme, i.gridEpisodes);
   const state = journeyCellState(episode);
+  const model = cellModel({
+    stage: i.stage,
+    theme: i.theme,
+    episodes: i.gridEpisodes,
+    storyEntries: i.storyEntries ?? [],
+    quests: i.quests ?? [],
+  });
+  // A stories-only cell opens its cell page on one pane and on two (it has no detail view to select).
+  const storiesOnly = model.kind === 'stories-only';
   return {
     key: `${i.stage}-${i.theme}`,
     stage: i.stage,
     theme: i.theme,
     episodeId: episode?.id ?? null,
     state,
-    selected: i.paneMode && !!episode && episode.id === i.selectedId,
+    selected: i.paneMode && !storiesOnly && !!episode && episode.id === i.selectedId,
     // One pane: a later cell does nothing. Two panes: it is selectable (its page says "coming soon").
-    disabled: !episode || (state === 'later' && !i.paneMode),
+    disabled: !storiesOnly && (!episode || (state === 'later' && !i.paneMode)),
     marks: i.marksOf ? i.marksOf(i.stage, i.theme, episode) : NO_CELL_MARKS,
+    model,
   };
 }
 

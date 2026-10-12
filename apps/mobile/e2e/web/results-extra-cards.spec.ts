@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
 import type { ProgressSnapshot } from '@hangul-route/content-schema';
-import { completeChildForm, passDiscover, playCheckByIds, readStored, seedStored } from './helpers';
+import { completeChildForm, journeyCellName, passDiscover, playCheckByIds, readStored, seedStored } from './helpers';
 import { shot } from './shots';
 
 /**
@@ -87,7 +87,7 @@ async function newLearnerAtHome(page: Page): Promise<void> {
  */
 async function playRitesQuest(page: Page, firstTime: boolean, miss = false): Promise<void> {
   await page.getByText('Journey', { exact: true }).last().click();
-  await page.getByRole('button', { name: /^Holidays.* episode for stage1$/ }).click();
+  await page.getByRole('button', { name: journeyCellName(1, 'Holidays') }).click();
   // Quests 1-2 are done (Play again); the third is Start the first time and Play again after.
   await page.getByRole('button', { name: firstTime ? 'Start' : 'Play again', exact: true }).nth(firstTime ? 0 : 2).click();
   await page.getByRole('button', { name: 'Continue' }).click();
@@ -234,7 +234,7 @@ test('an unfinished episode names how to earn its cards at 320 wide, inside each
   await page.setViewportSize({ width: 320, height: 720 });
   await newLearnerAtHome(page);
   await page.getByText('Journey', { exact: true }).last().click();
-  await page.getByRole('button', { name: /^Holidays.* episode for stage1$/ }).click();
+  await page.getByRole('button', { name: journeyCellName(1, 'Holidays') }).click();
   const lines = page.getByText('Finish every quest to earn it', { exact: true });
   await expect(lines.first()).toBeVisible();
   for (const line of await lines.all()) {

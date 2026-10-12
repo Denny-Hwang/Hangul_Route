@@ -2,7 +2,7 @@
 
 **The stories of one grid cell, on a stable shelf, with the cell's lesson first.**
 
-Spec: `docs/specs/F-STORY-005-episode-catalogue-grid.md` §3.6 · wireframe: `design/wireframes/story/cell-stories.md` (B) · tile: `23-library-stories.md` (the same `StoryTile`) · map: `05-journey-grid.md` §8 · code: `screens/story/CellStoriesScreen.tsx` (planned, PR 5.5b)
+Spec: `docs/specs/F-STORY-005-episode-catalogue-grid.md` §3.6 · wireframe: `design/wireframes/story/cell-stories.md` (B) · tile: `23-library-stories.md` (the same `StoryTile`) · map: `05-journey-grid.md` §8 · code: `screens/story/CellStoriesScreen.tsx`, `screens/story/CellLinkRow.tsx`, `screens/library/StoryTileGrid.tsx`, `logic/story/cell-stories.ts` (built, PR 5.5b)
 
 ## 1. Context
 

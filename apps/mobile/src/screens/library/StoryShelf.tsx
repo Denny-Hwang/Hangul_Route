@@ -1,63 +1,25 @@
-import {
-  Body,
-  Button,
-  Caption,
-  Card,
-  Heading,
-  KoreanText,
-  Spacer,
-  StoryScene,
-  layout,
-  spacing,
-  useLayoutClass,
-} from '@hangul-route/design-system';
+import { Body, Button, Caption, Card, Heading, KoreanText, Spacer, StoryScene, spacing } from '@hangul-route/design-system';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
-import { View, type LayoutChangeEvent } from 'react-native';
-import { bundleOs, flags, gatingActive } from '../../config/flags';
-import { useLocale, useMessages } from '../../i18n/use-messages';
-import { useRomanizationMode } from '../../i18n/use-romanization-mode';
-import { isContentLocked } from '../../logic/content-access';
-import { localizeStory } from '../../logic/content-locale';
-import { contentWidth, gridCellWidth, gridRows } from '../../logic/layout/pane-sizes';
-import { emptyBookmarks } from '../../logic/story/bookmarks';
+import React, { useCallback, useMemo, useRef } from 'react';
+import { View } from 'react-native';
+import { useMessages } from '../../i18n/use-messages';
 import { planOpenStory } from '../../logic/story/open-story';
 import { shelfCopy } from '../../logic/story/shelf-copy';
 import { shelfEntries, type ShelfCategory, type StoryIndexEntry } from '../../logic/story/story-index';
 import { storyFitsForSnapshot } from '../../logic/story/story-fit';
 import { pickedForYou } from '../../logic/story/story-pick';
-import { storyStatus, type StoryStatus } from '../../logic/story/story-status';
-import {
-  heroAction,
-  lockedStoryGate,
-  shelfViewedPayload,
-  storyTileColumns,
-  storyTileView,
-  type StoryTileView,
-} from '../../logic/story/story-tile';
+import { heroAction, shelfViewedPayload } from '../../logic/story/story-tile';
 import type { MainTabParamList, RootStackParamList } from '../../navigation/types';
 import { track } from '../../platform/telemetry';
-import { useAudience } from '../../store/audience';
-import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
-import { useProgressStore } from '../../store/progress-store';
-import { useStoryStore } from '../../store/story-store';
-import { useAccessTier } from '../../store/tier-store';
-import { CoverFallback, StoryTile } from './StoryTile';
+import { CoverFallback } from './StoryTile';
+import { StoryTileGrid, useStoryTiles, useTileGridWidth, type StoryTileItem } from './StoryTileGrid';
 
-const GRID_GAP = spacing.sm;
 /** The hero cover never grows past this on a wide window; the text sits beside it from `sideBySide` widths. */
 const HERO_COVER_MAX = 360;
 /** `Card padding="md"` (spacing.lg on each side). */
 const HERO_PADDING = spacing.lg;
-const NO_BOOKMARKS = emptyBookmarks();
-
-interface ShelfItem {
-  entry: StoryIndexEntry;
-  status: StoryStatus;
-  view: StoryTileView;
-}
 
 /**
  * One story section of the Library (F-STORY-004 §3.4): a "Picked for you"
@@ -77,37 +39,11 @@ export function StoryShelf({
   /** The "Picked for you" hero; `false` draws the tiles only. */
   hero?: boolean;
 }): React.ReactElement {
-  const messages = useMessages();
-  const copy = shelfCopy(messages);
-  const locale = useLocale();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const tabNavigation = useNavigation<BottomTabNavigationProp<MainTabParamList, 'Library'>>();
-  const { opensDirectly } = useAudience();
-  const profile = useProfileStore(activeProfileSelector);
-  const snap = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
-  const bookmarks = useStoryStore((s) => (profile ? s.byProfile[profile.id] : undefined)) ?? NO_BOOKMARKS;
-  // The access tier (F-ENT-003 section 3.4): a change in the inbox, the spaces or the subscription re-runs `isLocked`.
-  const tier = useAccessTier(profile?.id ?? '');
-  // D2: hide-until-tap profiles see no romanization on the shelf (one button per tile, no reveal); the reader reveals it.
-  const romanizationShown = useRomanizationMode() === 'always';
-
-  // Nothing is locked while gating is off (D5): `isContentLocked` is false for every story then.
-  const isLocked = useCallback(
-    (entry: StoryIndexEntry): boolean =>
-      isContentLocked({ kind: 'story', id: entry.storyId, tier, gatingEnabled: gatingActive(flags, bundleOs()) }),
-    [tier],
-  );
-
-  const items: ShelfItem[] = useMemo(
-    () =>
-      shelfEntries(index, category).map((source) => {
-        // Story text in the UI language (F-CNT-002 overlay); taught Korean never changes.
-        const entry = { ...source, story: localizeStory(source.story, locale) };
-        const status = storyStatus(entry, snap, bookmarks);
-        return { entry, status, view: storyTileView({ entry, status, locked: isLocked(entry), copy }) };
-      }),
-    [index, category, locale, snap, bookmarks, isLocked, copy],
-  );
+  const entries = useMemo(() => shelfEntries(index, category), [index, category]);
+  const tiles = useStoryTiles(entries);
+  const { items, snap, bookmarks, isLocked, copy, romanizationShown, profileId } = tiles;
 
   const hero = useMemo(() => {
     if (!withHero) return null;
@@ -129,44 +65,24 @@ export function StoryShelf({
         coveredByStack.current = false;
       } else {
         const payload = shelfViewedPayload(category, latest.current.map((i) => i.status));
-        void track({ name: 'story.shelf.viewed', profileId: profile?.id, payload: { ...payload } });
+        void track({ name: 'story.shelf.viewed', profileId, payload: { ...payload } });
       }
       return () => {
         if (tabNavigation.isFocused()) return; // a dependency changed, not a blur
         const tabs = tabNavigation.getState();
         coveredByStack.current = tabs.routes[tabs.index]?.name === 'Library';
       };
-    }, [category, profile?.id, tabNavigation]),
+    }, [category, profileId, tabNavigation]),
   );
 
-  const lc = useLayoutClass();
-  const columns = storyTileColumns(lc.windowWidth);
-  const [measured, setMeasured] = useState<number | null>(null);
-  const onGridLayout = (e: LayoutChangeEvent): void => {
-    const width = Math.round(e.nativeEvent.layout.width);
-    setMeasured((prev) => (prev === width ? prev : width));
-  };
-  const gridWidth = measured ?? contentWidth(lc.windowWidth, lc.gutter, layout.maxWidth.full);
-  const cellWidth = gridCellWidth(gridWidth, columns, GRID_GAP);
+  const grid = useTileGridWidth();
 
-  const openHero = (item: ShelfItem): void => {
+  const openHero = (item: StoryTileItem): void => {
     const plan = planOpenStory({ entry: item.entry, status: item.status, source: 'library', mode: heroAction(item.status, copy).mode });
-    void track({ name: plan.event.name, profileId: profile?.id, payload: { ...plan.event.payload } });
+    void track({ name: plan.event.name, profileId, payload: { ...plan.event.payload } });
     // The hero opens the story directly; Keep reading resumes on the story step (QuestPlayer's `questStartStep`).
     if (plan.route === 'StoryReader') navigation.navigate('StoryReader', plan.params);
     else navigation.navigate('QuestPlayer', plan.params);
-  };
-
-  const openTile = (item: ShelfItem): void => {
-    if (item.view.locked) {
-      void track({ name: 'story.locked.tapped', profileId: profile?.id, payload: { storyId: item.entry.storyId } });
-      // The grown-up gate Journey uses for a locked stage (only reachable with gating on).
-      const gate = lockedStoryGate(opensDirectly(false));
-      if (gate.route === 'Paywall') navigation.navigate('Paywall', gate.params);
-      else navigation.navigate('PinEntry', gate.params);
-      return;
-    }
-    navigation.navigate('EpisodeDetail', { episodeId: item.entry.episodeId });
   };
 
   return (
@@ -174,33 +90,14 @@ export function StoryShelf({
       {hero ? (
         <HeroTile
           item={hero}
-          gridWidth={gridWidth}
-          sideBySide={columns >= 3}
+          gridWidth={grid.gridWidth}
+          sideBySide={grid.columns >= 3}
           romanizationShown={romanizationShown}
           onOpen={() => openHero(hero)}
         />
       ) : null}
       {hero ? <Spacer size="lg" /> : null}
-      <View style={{ gap: GRID_GAP }} onLayout={onGridLayout} testID={`library-shelf-${category}-grid`}>
-        {gridRows(items, columns).map((row, r) => (
-          <View key={r} style={{ flexDirection: 'row', gap: GRID_GAP, alignItems: 'stretch' }}>
-            {row.map((item, i) =>
-              item ? (
-                <StoryTile
-                  key={item.entry.questId}
-                  view={item.view}
-                  width={cellWidth}
-                  romanizationShown={romanizationShown}
-                  onPress={() => openTile(item)}
-                  testID={`story-tile-${item.entry.storyId}`}
-                />
-              ) : (
-                <View key={`pad-${i}`} style={{ width: cellWidth }} />
-              ),
-            )}
-          </View>
-        ))}
-      </View>
+      <StoryTileGrid tiles={tiles} grid={grid} testID={`library-shelf-${category}-grid`} />
     </View>
   );
 }
@@ -213,7 +110,7 @@ function HeroTile({
   romanizationShown,
   onOpen,
 }: {
-  item: ShelfItem;
+  item: StoryTileItem;
   gridWidth: number;
   /** Cover left, text right (3+ tile columns); stacked otherwise. */
   sideBySide: boolean;

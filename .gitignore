@@ -62,6 +62,11 @@ apps/mobile/google-play-service-account.json
 test-results/
 playwright-report/
 apps/mobile/e2e/web/__shots__/
+# throwaway configs for a spare port stay local (scripts/__tests__/temp-configs.test.mjs)
+pw.tmp*.config.*
+pw-tmp*.config.*
+playwright.tmp*.config.*
+playwright-tmp*.config.*
 
 # Raw voice recordings stay local (public repo; F-AUDIO-004 §3.11)
 apps/mobile/recordings/

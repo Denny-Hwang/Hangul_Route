@@ -47,7 +47,8 @@ const CALL_SITES = [
   'screens/story/StoryReaderView.tsx',
   'screens/story/CheckpointCard.tsx',
   'screens/story/StoryWordRecap.tsx',
-  'screens/library/StoryShelf.tsx',
+  // The Library sections and the cell page share the tile hook (F-STORY-005 PR 5.5b).
+  'screens/library/StoryTileGrid.tsx',
   'screens/episode/StoryEpisodeDetail.tsx',
   'screens/story/CultureNotesScreen.tsx',
 ];

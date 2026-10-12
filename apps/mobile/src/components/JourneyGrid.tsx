@@ -1,4 +1,4 @@
-import type { Episode, StageDef, StageKey, ThemeDef } from '@hangul-route/content-schema';
+import type { Episode, QuestProgress, StageDef, StageKey, ThemeDef, ThemeKey } from '@hangul-route/content-schema';
 import {
   Body,
   Caption,
@@ -15,19 +15,26 @@ import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useMessages } from '../i18n/use-messages';
 import { stagePillLabel, themeCellInitial, themeColumnLabel } from '../logic/journey';
+import { cellLabel, cellTestId, countMarkOf } from '../logic/journey-cells';
 import { journeyGridRows, type JourneyCellView, type JourneyMarksOf } from '../logic/journey-grid';
 import { journeyGridMaxWidth } from '../logic/layout/pane-sizes';
+import type { StoryIndexEntry } from '../logic/story/story-index';
 
 /**
  * The Journey grid: theme column labels, then per stage its header row (number ring, title, one-liner,
  * availability pill), its five cells and the taste note. Wireframes `design/wireframes/journey/grid.md`
- * (the learner Journey) and `design/wireframes/browse/home.md` B (All lessons, F-BROWSE-001 BR-5b).
- * It reads no learner store and no navigation: what a learner has done arrives through `marksOf`
- * (none: nothing done), and a tap goes to `onOpen`.
+ * (the learner Journey), `design/wireframes/journey/grid-with-stories.md` A (heritage stories on the
+ * map, F-STORY-005 PR 5.5a) and `design/wireframes/browse/home.md` B (All lessons, F-BROWSE-001 BR-5b).
+ * It reads no learner store and no navigation: what a learner has done arrives through `marksOf` and
+ * `quests` (none: nothing done), a tap goes to `onOpen`, and a stories-only cell to `onOpenStories`.
  */
 
 /** The start pin and the placed-out check sit in the cell's corners. */
 const MARK_SIZE = spacing.lg;
+/** The story count mark: a 20 dp circle in the top-right corner (F-STORY-005 §3.6). */
+const COUNT_MARK = spacing.lg + spacing.xs;
+/** The glyph a stories-only or not-yet-open cell draws in place of its letter (books, lock). */
+const CELL_GLYPH = spacing.lg + spacing.xs;
 const STAGE_RING = 32;
 
 export interface JourneyGridProps {
@@ -45,6 +52,12 @@ export interface JourneyGridProps {
   marksOf?: JourneyMarksOf;
   /** Where each stage row sits in the grid, for scrolling to a stage (All lessons); omitted: not measured. */
   onStageLayout?: (stage: StageKey, y: number) => void;
+  /** The story index (F-STORY-005 §3.6): count marks and stories-only cells; omitted: no cell has stories. */
+  storyEntries?: readonly StoryIndexEntry[];
+  /** The learner's quest progress, for the cell labels (complete, finished stories); omitted: nothing done. */
+  quests?: readonly Pick<QuestProgress, 'questId' | 'episodeId' | 'completedAt'>[];
+  /** A stories-only cell's tap (`CellStories`); omitted: such a cell is drawn but not a button. */
+  onOpenStories?: (stage: StageKey, theme: ThemeKey) => void;
 }
 
 export function JourneyGrid({
@@ -56,10 +69,13 @@ export function JourneyGrid({
   onOpen,
   marksOf,
   onStageLayout,
+  storyEntries,
+  quests,
+  onOpenStories,
 }: JourneyGridProps): React.ReactElement {
   const m = useMessages().learner.journey;
   const gridMax = journeyGridMaxWidth(spacing.xs, layout.columns.journeyCellMax);
-  const rows = journeyGridRows({ stages, themes, gridEpisodes, paneMode, selectedId, marksOf });
+  const rows = journeyGridRows({ stages, themes, gridEpisodes, paneMode, selectedId, marksOf, storyEntries, quests });
   const themeOf = new Map(themes.map((t) => [t.key, t]));
 
   return (
@@ -121,13 +137,32 @@ export function JourneyGrid({
 
             <View style={{ flexDirection: 'row', gap: spacing.xs, width: '100%', maxWidth: gridMax }}>
               {row.cells.map((cell) => (
-                <GridCell key={cell.key} cell={cell} theme={themeOf.get(cell.theme) as ThemeDef} paneMode={paneMode} onOpen={onOpen} />
+                <GridCell
+                  key={cell.key}
+                  cell={cell}
+                  stage={stage}
+                  theme={themeOf.get(cell.theme) as ThemeDef}
+                  paneMode={paneMode}
+                  onOpen={onOpen}
+                  onOpenStories={onOpenStories}
+                />
               ))}
             </View>
 
             {row.availability === 'taste' ? (
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginTop: spacing.xs }}>
                 <Caption tone="muted">{m.tasteNote}</Caption>
+              </View>
+            ) : null}
+            {row.cells.some((c) => c.model.kind === 'stories-only') ? (
+              <View
+                testID={`journey-stories-note-${row.stage}`}
+                style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginTop: spacing.xs }}
+              >
+                <Icon name="library" size={MARK_SIZE} color={colors.text.muted} />
+                <View style={{ flex: 1 }}>
+                  <Caption tone="muted">{m.storiesNote}</Caption>
+                </View>
               </View>
             ) : null}
           </View>
@@ -139,29 +174,39 @@ export function JourneyGrid({
 
 interface GridCellProps {
   cell: JourneyCellView;
+  /** The stage and theme in the UI locale, for the label. */
+  stage: StageDef;
   theme: ThemeDef;
   paneMode: boolean;
   onOpen: (episodeId: string) => void;
+  onOpenStories?: (stage: StageKey, theme: ThemeKey) => void;
 }
 
-function GridCell({ cell, theme, paneMode, onOpen }: GridCellProps): React.ReactElement {
-  const a11y = useMessages().a11y;
+function GridCell({ cell, stage, theme, paneMode, onOpen, onOpenStories }: GridCellProps): React.ReactElement {
+  const messages = useMessages();
   const { completed, placedOut, isStart } = cell.marks;
-  const isLater = cell.state === 'later';
-  const stage: StageKey = cell.stage;
-  const tone = colors.stage[stage];
+  const { model } = cell;
+  const storiesOnly = model.kind === 'stories-only';
+  const isLater = cell.state === 'later' && !storiesOnly;
+  const tone = colors.stage[cell.stage];
   const episodeId = cell.episodeId;
+  const disabled = cell.disabled || (storiesOnly && !onOpenStories);
+  const count = countMarkOf(model.storyCount);
+
+  const press = (): void => {
+    if (disabled) return;
+    if (storiesOnly) onOpenStories?.(cell.stage, cell.theme);
+    else if (episodeId !== null) onOpen(episodeId);
+  };
 
   return (
     <Pressable
-      onPress={() => episodeId !== null && !cell.disabled && onOpen(episodeId)}
-      disabled={cell.disabled}
+      onPress={press}
+      disabled={disabled}
       accessibilityRole="button"
-      aria-selected={paneMode ? cell.selected : undefined}
-      accessibilityLabel={
-        isStart || placedOut ? a11y.gridCellMarked(theme.titleEn, stage, isStart, placedOut) : a11y.gridCell(theme.titleEn, stage, isLater)
-      }
-      testID={isStart ? 'journey-cell-start' : placedOut ? 'journey-cell-placed-out' : undefined}
+      aria-selected={paneMode && !storiesOnly ? cell.selected : undefined}
+      accessibilityLabel={cellLabel(model, stage, theme, messages.a11y.journeyCell, cell.marks)}
+      testID={cellTestId(model.kind, cell.stage, cell.theme, cell.marks)}
       style={{
         flex: 1,
         aspectRatio: 1,
@@ -169,14 +214,22 @@ function GridCell({ cell, theme, paneMode, onOpen }: GridCellProps): React.React
         backgroundColor: isLater ? colors.surface.sunken : completed ? colors.feedback.successLight : colors.surface.paper,
         borderStyle: placedOut && !cell.selected ? 'dashed' : 'solid',
         borderWidth: cell.selected ? borderWidth.thick : 2,
-        borderColor: cell.selected ? colors.border.focus : isLater ? colors.border.subtle : completed ? colors.feedback.success : tone,
+        borderColor: cell.selected
+          ? colors.border.focus
+          : isLater || storiesOnly
+            ? colors.border.subtle
+            : completed
+              ? colors.feedback.success
+              : tone,
         alignItems: 'center',
         justifyContent: 'center',
         padding: spacing.xs,
       }}
     >
-      {isLater ? (
-        <Icon name="lock" size={20} color={colors.text.muted} />
+      {storiesOnly ? (
+        <Icon name="library" size={CELL_GLYPH} color={colors.text.secondary} />
+      ) : isLater ? (
+        <Icon name="lock" size={CELL_GLYPH} color={colors.text.muted} />
       ) : (
         <Text style={{ fontSize: typography.size.title, fontWeight: '700', color: colors.text.primary }}>{themeCellInitial(theme)}</Text>
       )}
@@ -188,6 +241,36 @@ function GridCell({ cell, theme, paneMode, onOpen }: GridCellProps): React.React
       {placedOut ? (
         <View pointerEvents="none" style={{ position: 'absolute', top: spacing.xxs, right: spacing.xxs }}>
           <Icon name="check-circle" size={MARK_SIZE} color={tone} />
+        </View>
+      ) : null}
+      {count !== null ? (
+        // Not a target and not read on its own: the number is in the cell's label (F-STORY-005 §3.6).
+        // The placed-out check owns the top-right corner, so the mark moves down when both are drawn.
+        <View
+          pointerEvents="none"
+          aria-hidden
+          importantForAccessibility="no-hide-descendants"
+          accessibilityElementsHidden
+          testID={`journey-count-${cell.stage}-${cell.theme}`}
+          style={{
+            position: 'absolute',
+            ...(placedOut ? { bottom: spacing.xxs } : { top: spacing.xxs }),
+            right: spacing.xxs,
+            minWidth: COUNT_MARK,
+            minHeight: COUNT_MARK,
+            paddingHorizontal: spacing.xxs,
+            borderRadius: radii.pill,
+            backgroundColor: colors.surface.sunken,
+            borderWidth: borderWidth.thin,
+            borderColor: colors.border.subtle,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          {/* Decorative (the number is in the label), so it keeps its size at large text and stays in its circle. */}
+          <Text maxFontSizeMultiplier={1} style={{ fontSize: typography.size.caption, fontWeight: '700', color: colors.text.primary }}>
+            {messages.learner.journey.countMark(count.value, count.more)}
+          </Text>
         </View>
       ) : null}
     </Pressable>

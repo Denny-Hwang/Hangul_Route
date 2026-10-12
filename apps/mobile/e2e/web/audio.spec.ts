@@ -2,7 +2,7 @@ import { existsSync, readdirSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures';
-import { jamoOfSpoken, keepSidewaysIfAsked, onboardChild, passDiscover } from './helpers';
+import { jamoOfSpoken, journeyCellName, keepSidewaysIfAsked, onboardChild, passDiscover } from './helpers';
 
 /**
  * F-AUDIO-004 A-4a: one persisted sound switch (AD7) and a ranked Korean voice
@@ -374,7 +374,7 @@ async function openGreetingQuest(page: Page, name: string, skips: number): Promi
   await page.waitForTimeout(800);
   if (await guide.isVisible()) await guide.getByRole('button', { name: 'Not now' }).click();
   await page.getByText('Journey', { exact: true }).last().click();
-  await page.getByRole('button', { name: 'Holidays & Traditions episode for stage4' }).click();
+  await page.getByRole('button', { name: journeyCellName(4, 'Holidays & Traditions') }).click();
   await page.getByRole('button', { name: 'Start', exact: true }).click();
   const anyway = page.getByRole('button', { name: 'Play anyway' });
   if (await anyway.isVisible()) await anyway.click();

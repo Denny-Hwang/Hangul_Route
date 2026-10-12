@@ -205,6 +205,10 @@ export const learner = {
      */
     availability: { open: { pill: 'Open' }, taste: { pill: 'A taste' }, soon: { pill: 'Coming later' } },
     tasteNote: 'A taste of this stage is open now. More episodes are coming.',
+    /** Under a stage row with a stories-only cell (F-STORY-005 §3.5); the books are the `library` glyph. */
+    storiesNote: 'Heritage stories are open in the cells with the books icon.',
+    /** The count mark in a cell's corner: how many heritage stories call the cell home, "5+" from 6 (F-STORY-005 §3.6). */
+    countMark: (value: number, more: boolean) => (more ? `${value}+` : `${value}`),
     /** Landmark names of the two panes on a wide window (F-LAYOUT-001 §3.13). */
     panes: { master: 'Journey map', detail: 'Episode details' },
     how: {
@@ -212,6 +216,30 @@ export const learner = {
       body: 'Each cell is one episode. Finish every quest in a cell to complete it and earn its Heritage cards. More stages open as the journey grows.',
       /** Shown under `body` once the learner has a level-check result (F-PLC-001 section 3.7, wireframe placement I). */
       placement: 'The pin shows where you started. A cell with a light outline and a check is one you can skip ahead of. You can still play it any time.',
+      /** Shown under `body` once any cell has heritage stories (F-STORY-005 §3.5); still no fractions. */
+      stories: "A number in a cell's corner says how many heritage stories it has. A cell with the books icon has heritage stories to read.",
+    },
+    /** The cell page and its two doors (F-STORY-005 §3.6; wireframes story/cell-stories, episode/detail-cell-stories-row). */
+    cellStories: {
+      /** The page header: stage and theme titles in the UI locale, on one line. */
+      title: (stageTitle: string, themeTitle: string) => `${stageTitle} · ${themeTitle}`,
+      subtitle: 'Heritage stories for this cell',
+      /** The secondary row to the cell's lesson or book, listed before the stories. */
+      lessonRow: (title: string) => `${title} — the lesson for this cell`,
+      /** Only through a stale link: the map never opens an empty cell. */
+      empty: 'Nothing here yet',
+      /** The lesson page row: a plain count of the cell's stories, never "N of M". */
+      row: 'Heritage stories for this cell',
+      rowLabel: (count: number) =>
+        plural('en', count, {
+          one: 'Heritage stories for this cell, 1 heritage story',
+          other: `Heritage stories for this cell, ${count} heritage stories`,
+        }),
+      /** A story page's home cell: a plain pill, never a lock. */
+      homePill: (stage: number, themeTitle: string) => `Stage ${stage} · ${themeTitle}`,
+      /** Starts with the pill's visible words (WCAG 2.5.3 label in name), then says where it goes. */
+      homePillLabel: (stage: number, stageTitle: string, themeTitle: string) =>
+        `Stage ${stage} · ${themeTitle}. Heritage stories for this cell in Stage ${stage} ${stageTitle}`,
     },
   },
 
