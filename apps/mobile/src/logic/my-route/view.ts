@@ -258,7 +258,8 @@ function stageRowView(row: StageRow, ctx: CopyContext, i: MyRouteViewInput, fres
         title: cell.title,
         word,
         pips: cell.pips,
-        episodeId: cell.state === 'later' ? null : cell.episodeId,
+        // A grown-up never opens an episode from here: EpisodeDetail plays as the device's active learner (amendment 5.1, 6.2).
+        episodeId: cell.state === 'later' || ctx.viewer === 'grownup' ? null : cell.episodeId,
         a11yLabel: i.messages.a11y.myRoute.cell(themeLabel, cell.title, word),
       };
     }),
@@ -299,7 +300,8 @@ export function withConnectors(rows: TrailRowView[], model: Pick<MyRouteModel, '
   });
 }
 
-function skillRowView(row: MyRouteModel['skills'][number], ctx: CopyContext, m: Messages): SkillRowView {
+/** One skill row: the word, an absolute count and its earned marks (also the parent dashboard's mini rows, R-9b). */
+export function skillRowView(row: MyRouteModel['skills'][number], ctx: CopyContext, m: Messages): SkillRowView {
   const { label, detail } = skillCopy(row, ctx);
   const marks: Pip[] = Array.from({ length: row.marks }, (_, k) => ({ key: `${row.skill}-mark-${k}`, kind: 'quest', state: 'done', isCursor: false, isStart: false }));
   if (row.quests > 0 && row.nextReachable) marks.push({ key: `${row.skill}-next`, kind: 'quest', state: 'open', isCursor: false, isStart: false });
@@ -315,14 +317,17 @@ function skillRowView(row: MyRouteModel['skills'][number], ctx: CopyContext, m: 
   };
 }
 
-function gainTiles(model: MyRouteModel, m: Messages): GainTileView[] {
+/** Cards and stories open the Library on the learner's own page; never for a grown-up (the Library runs as the active learner). */
+function gainTiles(model: MyRouteModel, m: Messages, viewer: CopyContext['viewer']): GainTileView[] {
   const words = m.learner.myRoute.gains;
   const tiles: GainTileView[] = [
     { key: 'stars', icon: 'star', value: model.gains.stars, label: words.stars, a11yLabel: '', opensLibrary: false },
     { key: 'cards', icon: 'card', value: model.gains.cards, label: words.cards, a11yLabel: '', opensLibrary: true },
     { key: 'stories', icon: 'book', value: model.gains.storiesRead, label: words.stories, a11yLabel: '', opensLibrary: true },
   ];
-  return tiles.filter((t) => t.value > 0).map((t) => ({ ...t, a11yLabel: m.a11y.myRoute.gain(t.label, t.value) }));
+  return tiles
+    .filter((t) => t.value > 0)
+    .map((t) => ({ ...t, opensLibrary: t.opensLibrary && viewer === 'self', a11yLabel: m.a11y.myRoute.gain(t.label, t.value) }));
 }
 
 /** Pip keys done since the last open; nothing on the very first open (section 3.10). */
@@ -352,7 +357,8 @@ export function myRouteView(i: MyRouteViewInput): MyRouteView {
     skills: model.skills.map((row) => skillRowView(row, ctx, messages)),
     skillsNote: skillsNoteCopy(ctx),
     tiles: tilesCopy(model, ctx),
-    gains: gainTiles(model, messages),
-    storiesNote: i.hasStories ? messages.learner.myRoute.storiesNote : null,
+    gains: gainTiles(model, messages, i.viewer),
+    // The note is the learner's link to the Library: not on a grown-up's read-only page.
+    storiesNote: i.hasStories && i.viewer === 'self' ? messages.learner.myRoute.storiesNote : null,
   };
 }

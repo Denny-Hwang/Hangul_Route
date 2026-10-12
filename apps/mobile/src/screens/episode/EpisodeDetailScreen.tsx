@@ -11,6 +11,8 @@ export function EpisodeDetailScreen({ route, navigation }: Props): React.ReactEl
       episodeId={route.params.episodeId}
       onStartQuest={(questId, episodeId) => navigation.navigate('QuestPlayer', { questId, episodeId })}
       onOpenCard={(cardId) => navigation.navigate('CardDetail', { cardId })}
+      onOpenStory={(t) => (t.route === 'StoryReader' ? navigation.navigate('StoryReader', t.params) : navigation.navigate('QuestPlayer', t.params))}
+      onOpenSources={(storyId) => navigation.navigate('StorySources', { storyId, from: 'episode' })}
       onBack={() => navigation.goBack()}
     />
   );

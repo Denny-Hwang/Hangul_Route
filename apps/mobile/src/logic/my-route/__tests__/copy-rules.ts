@@ -22,7 +22,8 @@ const has = (text: string, word: string, locale: UiLocale): boolean =>
 /**
  * Violations for one rendered string. `args` are the values the message was
  * called with: digits may appear only where an argument put them (plural
- * counts, Stage {n}, Week {n}, dates); a11y strings may carry digits.
+ * counts, Stage {n}, Week {n}, a formatted date passed as a string); a11y
+ * strings may carry digits.
  */
 export function copyViolations(text: string, locale: UiLocale, surface: Surface, args: readonly unknown[] = []): string[] {
   const out: string[] = [];
@@ -38,7 +39,9 @@ export function copyViolations(text: string, locale: UiLocale, surface: Surface,
   if (RATIO.test(text)) out.push('ratio');
   if (surface !== 'a11y') {
     let rest = text;
-    for (const arg of args) if (typeof arg === 'number') rest = rest.split(String(arg)).join('');
+    // Longest first, so a number never eats the digits of a longer argument ("2" inside "Dec 20").
+    const values = args.filter((arg) => typeof arg === 'number' || typeof arg === 'string').map(String);
+    for (const value of values.sort((a, b) => b.length - a.length)) rest = rest.split(value).join('');
     if (/\d/.test(rest)) out.push('digit not from an argument');
   }
   return out;

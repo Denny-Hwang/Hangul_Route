@@ -476,6 +476,15 @@ export const caregiver = {
     ready: (name: string) => `Ready when ${name} is`,
     explored: (name: string) => `${name} explored everything that is open right now`,
     skillsTitle: (name: string) => `What ${name}'s quests practice`,
+    /** The Learning Route row on each profile card of the in-app parent dashboard (R-9b, amendment LR-A6). */
+    row: {
+      title: 'Learning Route',
+      now: (n: number, title: string) => `Now: Stage ${n} · ${title}`,
+      goal: (n: number, title: string) => `Goal: Stage ${n} · ${title}`,
+      /** From the newest level check: its stage, band label and date. */
+      started: (n: number, band: string, date: string) => `Started: Stage ${n} · ${band} · ${date}`,
+      cta: 'See Learning Route',
+    },
   },
   /** One wording everywhere (F-ROUTE-001 section 3.12): the placement report and My route's skills rows. */
   skillsNote:
