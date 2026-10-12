@@ -58,7 +58,26 @@ const REPORT_ONLY: Readonly<Record<UiLocale, readonly string[]>> = {
     'lowest',
     'last place',
   ],
-  es: [],
+  // F-I18N-001 PR 15: the Spanish equivalents (whole words).
+  es: [
+    'débil',
+    'débiles',
+    'debilidad',
+    'pobre',
+    'peor',
+    'ranking',
+    'clasificación',
+    'tabla de posiciones',
+    'mejor que',
+    'por debajo',
+    'promedio',
+    'comparado',
+    'comparada',
+    'debería haber',
+    'le cuesta',
+    'último lugar',
+    'el más bajo',
+  ],
   ko: [],
 };
 
@@ -109,14 +128,17 @@ describe('report namespace registration', () => {
     expect(en.a11y.report.periods).toBe('Report period');
   });
 
-  it('keeps es and ko empty for report until the native review, so they fall back to English', () => {
-    for (const overlay of [es, ko]) {
-      expect(leafPaths(overlay).filter((path) => REPORT_ROOTS.some((root) => path === root || path.startsWith(`${root}.`)))).toEqual([]);
-    }
-    for (const locale of ['es', 'ko'] as const) {
-      expect(getMessages(locale).report.headline.practiced('Mina', 3, 'this week')).toBe(en.report.headline.practiced('Mina', 3, 'this week'));
-      expect(getMessages(locale).a11y.report.loading).toBe(en.a11y.report.loading);
-    }
+  it('keeps ko empty for report until its review, so it falls back to English; es is translated (F-I18N-001 PR 15)', () => {
+    expect(leafPaths(ko).filter((path) => REPORT_ROOTS.some((root) => path === root || path.startsWith(`${root}.`)))).toEqual([]);
+    expect(getMessages('ko').report.headline.practiced('Mina', 3, 'this week')).toBe(en.report.headline.practiced('Mina', 3, 'this week'));
+    expect(getMessages('ko').a11y.report.loading).toBe(en.a11y.report.loading);
+    const r = getMessages('es').report;
+    expect(r.headline.practiced('Mina', 1, r.when.week)).toBe('Mina practicó 1 día esta semana.');
+    expect(r.headline.practiced('Mina', 3, r.when.prevWeek)).toBe('Mina practicó 3 días la semana pasada.');
+    expect(r.class.headline(1, 12, r.when.week)).toBe('1 de 12 estudiantes practicó esta semana.');
+    expect(r.class.headline(2, 12, r.when.week)).toBe('2 de 12 estudiantes practicaron esta semana.');
+    expect(r.list(['a', 'b', 'c'])).toBe('a, b y c');
+    expect(getMessages('es').a11y.report.loading).toBe('Cargando el informe');
   });
 });
 

@@ -1,12 +1,14 @@
 import type { DeepPartial, Messages } from '../../types';
 import { a11y } from './a11y';
 import { caregiver } from './caregiver';
+import { common } from './common';
 import { consoleMsgs } from './console';
+import { landing } from './landing';
 import { learner } from './learner';
+import { report } from './report';
 
 /**
- * Spanish overlay: drafts of the F-BILL-002 B-6 billing and Plan screen keys only; the rest falls back
- * to English. `es` stays hidden until the F-I18N-001 translation PR (PR 15) passes the multi-agent ko/es
- * review and records the namespaces in the review ledger.
+ * Spanish overlay (F-I18N-001 PR 15): neutral Latin-American Spanish, informal "tú", for any age. The
+ * Privacy Policy and Terms stay English-authoritative (decision L10); every other key is translated.
  */
-export const es = { a11y, learner, caregiver, console: consoleMsgs } satisfies DeepPartial<Messages>;
+export const es = { common, a11y, learner, caregiver, console: consoleMsgs, landing, report } satisfies DeepPartial<Messages>;

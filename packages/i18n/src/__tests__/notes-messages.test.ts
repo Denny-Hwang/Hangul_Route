@@ -334,15 +334,19 @@ describe('grown-up notes strings (section 6.10, 6.13, 7.7, 8.2, 9)', () => {
 });
 
 describe('ko / es follow the F-I18N-001 review process (OD-15)', () => {
-  it('adds no ko / es notes entries yet, so every notes string falls back to English', () => {
-    const ns = ['common.notes', 'learner.notes', 'caregiver.notes', 'console.notes', 'a11y.notes'];
-    for (const overlay of [es, ko]) {
-      for (const path of leafPaths(overlay)) {
-        expect(ns.some((n) => path.startsWith(`${n}.`)) || path === 'console.shell.nav.notes', path).toBe(false);
-      }
-    }
-    for (const locale of ['es', 'ko'] as const) {
-      expect(getMessages(locale).common.notes.presets.effort_proud).toBe(en.common.notes.presets.effort_proud);
-    }
+  const ns = ['common.notes', 'learner.notes', 'caregiver.notes', 'console.notes', 'a11y.notes'];
+  const isNotes = (path: string): boolean => ns.some((n) => path.startsWith(`${n}.`)) || path === 'console.shell.nav.notes';
+
+  it('adds no ko notes entries yet (FB-5b), so every ko notes string falls back to English', () => {
+    expect(leafPaths(ko).filter(isNotes)).toEqual([]);
+    expect(getMessages('ko').common.notes.presets.effort_proud).toBe(en.common.notes.presets.effort_proud);
+  });
+
+  it('translates every es notes string (F-I18N-001 PR 15, the es half of FB-5b), so the rules above run on Spanish', () => {
+    const esNotes = new Set(leafPaths(es).filter(isNotes));
+    const enNotes = leafPaths(en).filter(isNotes);
+    expect(enNotes.length).toBeGreaterThan(40);
+    expect(enNotes.filter((path) => !esNotes.has(path))).toEqual([]);
+    expect(getMessages('es').common.notes.presets.effort_proud).not.toBe(en.common.notes.presets.effort_proud);
   });
 });
