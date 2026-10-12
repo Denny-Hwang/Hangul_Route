@@ -143,6 +143,17 @@ describe('exported content-id regexes', () => {
     expect(regexOf(objectShape(HeritageCardSchema).id)).toBe(CARD_ID_RE);
   });
 
+  it('accepts and rejects ids through the schemas exactly as the exported regexes do', () => {
+    const cases: [ZodTypeAny, RegExp, string[]][] = [
+      [objectShape(EpisodeObjectSchema).id, EPISODE_ID_RE, ['episode:stage1-letters', 'episode:A', 'quest:x', '']],
+      [objectShape(QuestSchema).id, QUEST_ID_RE, ['quest:stage1-letters-q1', 'quest:', 'quest:a b', 'card:x']],
+      [objectShape(HeritageCardSchema).id, CARD_ID_RE, ['card:hangul-day', 'card:Hangul', 'card:', 'episode:x']],
+    ];
+    for (const [schema, re, ids] of cases) {
+      for (const id of ids) expect(schema.safeParse(id).success, `${re.source} on ${JSON.stringify(id)}`).toBe(re.test(id));
+    }
+  });
+
   it('is the regex the lecture blocks use, so each grammar exists once', () => {
     const options = LectureBlockSchema.options as unknown as ZodTypeAny[];
     const byKind = (kind: string) =>
@@ -261,6 +272,27 @@ describe('buildBrowseUrl', () => {
       buildBrowseUrl('http://localhost:8081', { target: { kind: 'jamo', id: 'jamo:nieun' }, source: 'report' }),
     ).toBe('http://localhost:8081/browse#t=jamo:nieun&s=report');
   });
+
+  it('never throws: a runtime without URL.origin reads the scheme and host, and a non-URL gives the same-origin path', () => {
+    const RealURL = globalThis.URL;
+    class NoOriginURL {
+      constructor(_: string) {}
+      get origin(): string {
+        throw new Error('not implemented');
+      }
+    }
+    globalThis.URL = NoOriginURL as unknown as typeof URL;
+    try {
+      expect(buildBrowseUrl('https://app.hangulroute.com/teach?x=1', { source: 'nav' })).toBe(
+        'https://app.hangulroute.com/browse#s=nav',
+      );
+    } finally {
+      globalThis.URL = RealURL;
+    }
+    expect(buildBrowseUrl('not a url', { source: 'gate' })).toBe('/browse#s=gate');
+    expect(buildBrowseUrl('app.hangulroute.com', { source: 'gate' })).toBe('/browse#s=gate');
+    expect(buildBrowseUrl('', { source: 'nav' })).toBe('/browse#s=nav');
+  });
 });
 
 describe('BrowsePassSchema (§4.3)', () => {
@@ -289,6 +321,7 @@ describe('BrowsePassSchema (§4.3)', () => {
     [{ seen: 0.25 }],
     [{ fallback: false }],
     [{ uiLocale: 'fr' }],
+    [{ issuedAt: 1000, seen: 999 }],
   ])('rejects %j', (over) => {
     expect(BrowsePassSchema.safeParse(pass(over)).success).toBe(false);
   });

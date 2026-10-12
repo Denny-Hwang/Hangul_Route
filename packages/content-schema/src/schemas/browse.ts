@@ -78,7 +78,10 @@ export const BrowsePassSchema = z
     fallback: z.literal(true).optional(),
     uiLocale: UiLocaleSchema.optional(),
   })
-  .strict();
+  .strict()
+  // `seen` only ever moves forward from `issuedAt`; a pass edited to say otherwise is not a pass.
+  // A future `issuedAt` is the resolver's to reject (`passActive`, at most 1 minute ahead, §4.3).
+  .refine((p) => p.seen >= p.issuedAt, { message: 'seen must not be before issuedAt', path: ['seen'] });
 export type BrowsePass = z.infer<typeof BrowsePassSchema>;
 
 /** IndexedDB `browse:pass`, written only while the keep switch is on (§4.3, §5.3). */
@@ -141,7 +144,10 @@ function parseTarget(value: string): BrowseTarget | null {
  * `t=<target>&s=<source>`, without the `#`. Total: a target that is not valid
  * (or would push the fragment past `BROWSE_FRAGMENT_MAX`) is left out, so the
  * link opens home, and an unknown source is written as `direct`. A link can
- * therefore never carry anything but a content id.
+ * therefore never carry anything but a content id. The home fallback is the
+ * intended behaviour for every entry (§4.4: a bad link is never a dead end); a
+ * caller that must know whether its target survived checks it first with
+ * `BrowseTargetSchema.safeParse`.
  */
 export function encodeBrowseFragment(f: BrowseFragment): string {
   const sourceParsed = BrowseSourceSchema.safeParse(f.source);
@@ -188,7 +194,24 @@ export function decodeBrowseFragment(raw: string): BrowseFragmentResult {
   return { ok: true, target, source: source.data };
 }
 
-/** `${origin}/browse#…`: only the origin of the given URL is kept (a path, query or hash is dropped). */
+const ORIGIN_RE = /^(https?:\/\/[^/?#\s]+)/i;
+
+/** The origin of `url` without throwing: `URL.origin` where the runtime has it, else the scheme and host. */
+function originOf(url: string): string {
+  try {
+    const origin = new URL(url).origin;
+    if (origin !== 'null') return origin;
+  } catch {
+    // Not a URL, or a runtime whose `URL` has no `origin` getter (React Native): read it by hand.
+  }
+  return ORIGIN_RE.exec(url)?.[1] ?? '';
+}
+
+/**
+ * `${origin}/browse#…`: only the origin of the given URL is kept (a path, query
+ * or hash is dropped). Total: a value with no http(s) origin gives the
+ * same-origin path `/browse#…`.
+ */
 export function buildBrowseUrl(origin: string, f: BrowseFragment): string {
-  return `${new URL(origin).origin}/browse#${encodeBrowseFragment(f)}`;
+  return `${originOf(origin)}/browse#${encodeBrowseFragment(f)}`;
 }
