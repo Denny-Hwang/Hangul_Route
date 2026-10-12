@@ -19,7 +19,7 @@ Built by:
 | `stage-list.md` | the grown-up summary views: the goal cases 1 to 3 shared by both views, the one goal line under the report's "Now on Stage" line, and the stage list page (`/parent/space/route`, `/teach/space/route`) at 320 and 1280 with its grown-up card and its states |
 | `tab-bar.md` | the four-tab bar (flag on) next to today's three, the two purpose lines, and large text |
 | `mock/` | a static HTML mock on one stylesheet, `learning-route.css`: `route-tab.html`, `route-card.html`, `report.html`, `stage-list-family.html`, `stage-list-class.html`, `stage-list-states.html`, `tab-bar.html` |
-| `shots/` | the mock rendered in Chromium at 2x (file names give the page and the viewport width; `-text200` = the browser text size at 200 %) |
+| `shots/` | the mock rendered in Chromium at 2x (file names give the page and the viewport width; `-text200` = the browser text size at 200 %, which models the native text size: the text grows and the layout width stays. The app's web build sets text in px, so on web it does not follow this setting; see `tab-bar.md`) |
 
 **The mock is a design reference, not shipped code.**
 
@@ -50,8 +50,8 @@ Values that are not tokens. Each one derives from code or a token. LR-4, LR-5a a
 | Stage badge | 40 px, inner known disc 20 px | `BADGE_SIZE` in `screens/my-route/StageBadge.tsx` (unchanged) |
 | Route card padding below 360 px wide | `spacing.md` instead of `spacing.lg` | `PIP_ROW_MIN_WIDTH` (360, `logic/my-route/view.ts`): the 11 Stage 1 pips (11 x 20 + 10 x `spacing.xs` = 260) fit the 264 px inner width on one line |
 | Trail rows below 360 px wide | a fill bar instead of pips on every stage row | `stageRowLook` (R-3, unchanged): `PIP_ROW_MIN_WIDTH`; the route card's goal pips are not a trail row and stay pips |
-| Hoya in the card | 64 beside a Hoya line, 48 beside the Next line | `useMediaSize(72)` today in `HeroCard`; 48 keeps the Next row at 48 px so the button stays on the first screen at 320 x 568 |
-| Tab label growth cap | 1.3 x `typography.size.caption` (18.2 px) | measured: four labels fit 80 dp at 320 up to that size ("Journey" 69 px at the cap); LR-4 sets `maxFontSizeMultiplier` 1.3 on the label (see `tab-bar.md`) |
+| Hoya in the card | 64 beside a Hoya line, 48 beside the Next line | `useMediaSize(72)` today in `HeroCard`; 48 keeps the Next row at 48 px, which is what keeps the button on the first screen at 320 x 568 (the budget is in the checks below). LR-5a names it next to that budget |
+| Tab label growth cap | 1.3 x `typography.size.caption` (18.2 px), four-tab bar only | measured: the English labels fit 80 dp at 320 up to that size ("Journey" 69 px at the cap). LR-4 sets `maxFontSizeMultiplier` 1.3 with `numberOfLines` 1 and `adjustsFontSizeToFit` on the native label while the flag is on, so a longer ES or KO label ("Biblioteca" 84 px at the cap) shrinks to fit instead of being cut off. React Native Web ignores both props; the web label stays 14 px (see `tab-bar.md`) |
 | "In your plan" ring | 16 px, `borderWidth.base` | placeholder for F-ENT-003 E3-D, which owns the ring at pip and cell size |
 | Card shadow | `0 2 8` at 0.06 | `shadows.card` (shadowColor `text.primary`) |
 | App breakpoints | 600 px, 900 px | `layout.breakpoint` (window classes, F-LAYOUT-001); written in px because the app's classes follow the window in dp, not the text size |
@@ -81,9 +81,9 @@ The board labels use `typography.family.mono`, and the badge and the sticky tab 
 | Check | Target (spec) | Mock |
 |---|---|---|
 | Sideways scroll | none at 320, 375 and 1280, and at 320 with 200 % text (section 10) | none on any page (`scrollWidth` equals the viewport on all 20 page and board shots) |
-| Primary action on the first screen at 320 x 568 | one tap away (G2) | Continue ends at 478 px. The tab bar starts at 491 px. With a native 20 pt status bar, the button's top 73 of its 80 px are still on the first screen |
+| Primary action on the first screen at 320 x 568 | one tap away (G2) | **Tight.** Continue ends at 478 px and the tab bar starts at 491 px, so in the browser the button is fully visible with 13 px to spare. With a native 20 pt status bar, 73 of its 80 px are visible and the bottom 7 px sit under the bar: still one tap away, but with no margin. A longer inset or a Next title on two lines takes more of it. **For LR-5a:** the web e2e at 320 x 568 asserts that Continue's box is fully above the tab bar's top edge, with a fixture whose Next title is the longest Stage 1 quest title; LR-10 repeats the check on a device with real insets |
 | Tab items at 320 | at least `touchTarget.min` (section 5.1) | four items of 80 x 64 |
-| Tab labels at 320 with 200 % text | "Route" on one line (assumption a) | every label on one line at the cap (Today 51, Route 50, Journey 69, Library 60 px of 80); **without a cap, "Journey" and "Library" overflow their 80 px items**, see `tab-bar.md` |
+| Tab labels at 320 with 200 % text | "Route" on one line (assumption a, met with the native 1.3 x label cap) | every English label on one line at the cap (Today 51, Route 50, Journey 69, Library 60 px of 80); **without a cap, "Journey" and "Library" overflow their 80 px items**. ES and KO drafts measured too; see `tab-bar.md` |
 | Three tags on one stage row at 320 (assumption f, as revised by this PR) | at most two rows at the default text size; one row each at 200 %, nothing cut off | **Met** in the order here, goal, start. The tag row is 236 px. At 100 %, "You are here" (100) and "Your goal" (97) share the first row (201 px with the gap), and "You started here" (145) takes the second. With Verdana as a wide fallback font the first row is 230 px; it stays two rows up to 120 % text. At 200 % each tag takes its own row and "You started here" wraps inside its chip. The old order (here, start, goal) took three rows even at 100 %. See `route-card.md` |
 | Adult page targets | at least 44 px (section 10) | back link, Open Learning Route, Try again and the reserved slot are 64 px tall (`touchTarget.min`) |
 | Adult page at 320 and 1280 | one reading column, reflows at 200 % (section 10) | one column at both sizes; no sideways scroll at 320 with 200 % text |

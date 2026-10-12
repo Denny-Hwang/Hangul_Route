@@ -302,6 +302,6 @@ ol, ul { padding: var(--spacing-none); list-style: none; }
   .fill-bar { display: none; }
 }
 .board-title, .board-label { overflow-wrap: anywhere; }
-/* Tab labels grow with the text size up to 1.3 x caption (LR-4: maxFontSizeMultiplier 1.3 on the label), so four labels fit 80 dp at 320; the icon and the accessibility label carry the rest. */
-.tab span { font-size: min(var(--size-caption), var(--tab-label-cap)); }
+/* Four-tab bar only (flag on): labels grow with the text size up to 1.3 x caption (LR-4: maxFontSizeMultiplier 1.3 on the native label), so four labels fit 80 dp at 320; the icon and the accessibility label carry the rest. Today's three-tab bar keeps its uncapped labels. */
+.tab-bar-four .tab span { font-size: min(var(--size-caption), var(--tab-label-cap)); }
 .reading.flush { width: 100%; margin: 0; padding: 0; }
