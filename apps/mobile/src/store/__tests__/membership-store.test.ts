@@ -13,6 +13,7 @@ vi.mock('../../platform/sync-api', () => ({ apiBaseUrl: vi.fn(() => 'https://api
 vi.mock('../../platform/telemetry', () => ({ track: vi.fn(async () => undefined) }));
 vi.mock('../../config/flags', () => ({ flags: { syncEnabled: true, telemetryEnabled: false, telemetryNetwork: false, voiceEchoEnabled: false } }));
 
+import { readJson } from '../../platform/storage';
 import { apiBaseUrl } from '../../platform/sync-api';
 import { track } from '../../platform/telemetry';
 import { rederiveAllLocal, useMembershipStore } from '../membership-store';
@@ -147,8 +148,46 @@ describe('membership-store (F-SPACE-001 §3.5)', () => {
     expect(await useMembershipStore.getState().leave('profile:a', 'space:cls')).toBe(false);
   });
 
+  it('a saved copy read while a refresh lands does not replace the newer rows', async () => {
+    let release: (value: unknown) => void = () => undefined;
+    vi.mocked(readJson).mockImplementationOnce(() => new Promise((resolve) => (release = resolve)));
+    const pending = useMembershipStore.getState().hydrate('profile:a');
+    setSyncApiForTests(fakeApi() as never);
+    useSyncStore.getState().adoptCredentials('profile:a', 'sec', 1);
+    const fresh = await useMembershipStore.getState().refresh('profile:a');
+    release([]);
+    expect(await pending).toEqual(fresh);
+    expect(useMembershipStore.getState().byLearner['profile:a']).toEqual(fresh);
+    expect(useTierStore.getState().spaceMembers['profile:a']).toBe(true);
+  });
+
+  it('a join reads the inbox at once, so the new tier and plans arrive before the next sync (F-ENT-003 section 3.4)', async () => {
+    // The learner was free before joining: a cached free tier, so the no-cache rule cannot open anything.
+    useTierStore.getState().applyInbox('profile:a', { tier: 'free', tierSource: null, tierValidUntil: null, serverTime: 'before' });
+    useSyncStore.getState().adoptCredentials('profile:a', 'sec', 1);
+    const plan = { id: 'plan:w1', spaceId: 'space:cls', spaceKind: 'class', spaceName: 'Sunday Class A', title: 'Week 1', items: [{ kind: 'quest', id: 'quest:stage1-letters-q1' }], publishedAt: 't', updatedAt: 't' };
+    const api = fakeApi({
+      getInbox: vi.fn(async () => ({ status: 'ok', inbox: { rev: 1, plans: [plan], memberships: [classRow], tier: 'premium', tierSource: { kind: 'class', spaceId: 'space:cls', name: 'Sunday Class A' }, tierValidUntil: '2099-01-01T00:00:00.000Z', serverTime: 'after' } })),
+    });
+    setSyncApiForTests(api as never);
+    const result = await useMembershipStore.getState().join('profile:a', 'space:cls', 'K7M2X9');
+    expect(result.ok).toBe(true);
+    expect(api.getInbox).toHaveBeenCalledTimes(1);
+    expect(useTierStore.getState().byLearner['profile:a']).toMatchObject({ tier: 'premium', fetchedAt: 'after' });
+    expect(usePlanStore.getState().byLearner['profile:a']?.map((p) => p.id)).toEqual(['plan:w1']);
+    expect(useMembershipStore.getState().byLearner['profile:a']).toEqual([classRow]);
+  });
+
+  it('a join still succeeds when the inbox read after it fails', async () => {
+    useSyncStore.getState().adoptCredentials('profile:a', 'sec', 1);
+    setSyncApiForTests(fakeApi({ getInbox: vi.fn(async () => ({ status: 'error', code: 'network' })) }) as never);
+    expect(await useMembershipStore.getState().join('profile:a', 'space:cls', 'K7M2X9')).toEqual({ ok: true, alreadyMember: false, membership: classRow });
+    expect(useMembershipStore.getState().byLearner['profile:a']).toEqual([classRow]);
+  });
+
   it('registers a never-synced learner first, then joins and caches the membership', async () => {
-    const api = fakeApi();
+    // After the join the server lists the new class; the inbox read right after it says so.
+    const api = fakeApi({ getInbox: vi.fn(async () => ({ status: 'ok', inbox: { rev: 1, plans: [], memberships: [classRow], tier: 'free', serverTime: 't' } })) });
     setSyncApiForTests(api as never);
     const result = await useMembershipStore.getState().join('profile:a', 'space:cls', 'K7M2X9', 'Suni K');
     expect(api.register).toHaveBeenCalledTimes(1);
