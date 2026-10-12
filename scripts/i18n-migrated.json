@@ -69,7 +69,8 @@
     "apps/mobile/src/screens/my-route/**",
     "apps/web/src/components/console/JourneyParts.tsx",
     "apps/mobile/src/screens/parent/PlacementReportScreen.tsx",
-    "apps/mobile/src/screens/results/**"
+    "apps/mobile/src/screens/results/**",
+    "apps/mobile/src/components/JourneyGrid.tsx"
   ],
   "pluralTernaryBaseline": {
     "packages/content-schema/src/romanization/compare.ts": 1
