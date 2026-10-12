@@ -63,7 +63,7 @@ export interface QuestFacts {
   letters: LetterFact[];
   /** Words met in Discover and in the game scopes, once each. */
   words: WordFact[];
-  /** Syllables its games build, once each (a syllable has no gloss). */
+  /** Syllables its games build, once each and none already in `words` (a syllable has no gloss). */
   syllables: SyllableFact[];
   /** A lesson that introduces no letter (a taste quest) shows its first three words instead. */
   tasteWords: WordFact[];
@@ -142,7 +142,10 @@ function wordsOf(quest: Quest, bundle: BrowseBundle, locale: UiLocale): { words:
     }
     for (const s of localScope.syllables ?? []) syllables.push({ ko: s.ko, romanization: s.romanization });
   }
-  return { words: uniqueByKo(words), syllables: uniqueByKo(syllables) };
+  const uniqueWords = uniqueByKo(words);
+  // A syllable that is also a word ("가", "the sound ga") is listed once, as the word.
+  const wordKo = new Set(uniqueWords.map((w) => w.ko));
+  return { words: uniqueWords, syllables: uniqueByKo(syllables).filter((s) => !wordKo.has(s.ko)) };
 }
 
 function skillsOf(quest: Pick<Quest, 'steps'>): Skill[] {

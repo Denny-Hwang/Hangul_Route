@@ -54,6 +54,17 @@ describe('itemFacts: quest', () => {
     expect(new Set(q1.syllables.map((s) => s.ko)).size).toBe(q1.syllables.length);
   });
 
+  it('a syllable that is also a word is listed once, as the word (never twice under "What this teaches")', () => {
+    expect(q1.words.map((w) => w.ko)).toContain('가');
+    expect(q1.syllables.map((s) => s.ko)).not.toContain('가');
+    for (const q of bundle.quests) {
+      const facts = itemFacts({ kind: 'quest', id: q.id }, bundle) as QuestFacts | null;
+      if (!facts) continue;
+      const words = new Set(facts.words.map((w) => w.ko));
+      expect(facts.syllables.filter((s) => words.has(s.ko)), q.id).toEqual([]);
+    }
+  });
+
   it('glosses follow the UI language; the Korean and its romanization never change', () => {
     const es = questFacts('quest:stage1-letters-q1', 'es');
     const localized = localizeQuest(quest('quest:stage1-letters-q1'), 'es');
@@ -187,6 +198,9 @@ describe('episodeOutline', () => {
     const preview = bundle.episodes.find((e) => e.status === 'preview');
     expect(episodeOutline(preview?.id ?? '', bundle)).toMatchObject({ comingLater: true, quests: [], stories: [], rewardCardIds: [], minutes: 0 });
     expect(episodeOutline('episode:nope', bundle)).toBeNull();
+    // an unreviewed story's shelf episode is not in this bundle: no title, no minutes
+    expect(episodeOutline('episode:shelf-draft-tale', bundle)).toBeNull();
+    expect(itemFacts({ kind: 'quest', id: 'quest:story-draft-tale-listen' }, bundle)).toBeNull();
   });
 
   it('titles follow the UI language', () => {
