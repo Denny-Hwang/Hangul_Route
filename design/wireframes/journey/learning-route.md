@@ -75,7 +75,7 @@ Today's bundle. The class weekly plan reaches Stage 1. Done: `letters-q1..q3` an
 │  (1)━━ Hangul             [Open] │   stage row, unchanged
 │   ┃   4 quests played            │
 │   ┃   (D)(D)(D)(D)(O)(O)(O)(O)(O)│
-│   ┃   [You are here] [flag Your goal]   here, start and goal tags: at most two lines
+│   ┃   [You are here] [flag Your goal]   here, goal and start tags (in that order): two rows at the default text size, one row each at 200 % (assumption f, revised by LR-D)
 │  (2)┄┄ Words           [A taste] │
 │   ┆   (O)(O) (L)(L)(L)           │
 │  (3)┄┄ Sentences · Coming later  │
