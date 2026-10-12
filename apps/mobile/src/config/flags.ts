@@ -67,8 +67,11 @@ export interface Flags {
   syncEnabled: boolean;
 
   /**
-   * Locks story and vocab-topic content for free-tier learners (F-STORY-004
-   * D5). OFF until payments are live; stage gating is not behind this flag.
+   * Turns on every free-tier limit on the web app: grid lessons past the free
+   * ones (F-ENT-003), non-sampler stories and word topics past the free four
+   * (F-STORY-004 D5). Off in production until the owner turns on Stripe Live.
+   * Has no effect in native store builds until F-IAP-002 ships. Callers read
+   * `gatingActive(flags, bundleOs())`, never this value directly.
    */
   contentGatingEnabled: boolean;
 
@@ -134,8 +137,8 @@ export const flags: Flags = {
   telemetryEnabled: readBool('EXPO_PUBLIC_TELEMETRY_ENABLED', launchDefaults.telemetryEnabled),
   telemetryNetwork: readBool('EXPO_PUBLIC_TELEMETRY_NETWORK', launchDefaults.telemetryNetwork),
   syncEnabled: readBool('EXPO_PUBLIC_SYNC_ENABLED', launchDefaults.syncEnabled),
-  contentGatingEnabled: readBool(
-    'EXPO_PUBLIC_CONTENT_GATING_ENABLED',
+  contentGatingEnabled: parseBool(
+    process.env.EXPO_PUBLIC_CONTENT_GATING_ENABLED,
     launchDefaults.contentGatingEnabled,
   ),
   showUnreviewedStories: readBool(
@@ -151,3 +154,24 @@ export const flags: Flags = {
 };
 
 export const launchDefaultFlags: Readonly<Flags> = launchDefaults;
+
+/**
+ * The platform this bundle was built for: 'ios', 'android' or 'web'.
+ * babel-preset-expo inlines `process.env.EXPO_OS` at build time, so stores and
+ * logic read it here instead of importing react-native; tests and scripts read
+ * `undefined`.
+ */
+export function bundleOs(): string | undefined {
+  return process.env.EXPO_OS;
+}
+
+/**
+ * The effective free-tier switch (F-ENT-003 section 3.4): the flag counts on
+ * the web app only. Native builds answer false whatever the env says (App Review
+ * Guidelines 3.1.1 and 3.1.3(b), F-BILL-002 OD-5) until F-IAP-002 sells the plan
+ * in the app; an unknown platform fails open the same way. Every access caller
+ * (`questAccess`, `isContentLocked`) reads this, never the raw flag.
+ */
+export function gatingActive(f: Pick<Flags, 'contentGatingEnabled'>, platformOs: string | undefined): boolean {
+  return f.contentGatingEnabled && platformOs === 'web';
+}

@@ -75,6 +75,41 @@ describe('flags', () => {
     expect(mod.flags.contentGatingEnabled).toBe(true);
   });
 
+  it('contentGatingEnabled is read by its literal name, so the web build can carry the switch (F-ENT-003 section 3.4)', async () => {
+    const src = readFileSync(join(__dirname, '../flags.ts'), 'utf8');
+    expect(src).toContain('process.env.EXPO_PUBLIC_CONTENT_GATING_ENABLED');
+    process.env.EXPO_PUBLIC_CONTENT_GATING_ENABLED = '1';
+    let mod = await reload();
+    expect(mod.flags.contentGatingEnabled).toBe(true);
+    process.env.EXPO_PUBLIC_CONTENT_GATING_ENABLED = 'maybe';
+    mod = await reload();
+    expect(mod.flags.contentGatingEnabled).toBe(false);
+  });
+
+  it('gatingActive: the switch counts on the web only; ios and android are always off (F-ENT-003 section 3.4, OD-13)', async () => {
+    const { gatingActive } = await reload();
+    expect(gatingActive({ contentGatingEnabled: true }, 'web')).toBe(true);
+    expect(gatingActive({ contentGatingEnabled: false }, 'web')).toBe(false);
+    expect(gatingActive({ contentGatingEnabled: true }, 'ios')).toBe(false);
+    expect(gatingActive({ contentGatingEnabled: true }, 'android')).toBe(false);
+    expect(gatingActive({ contentGatingEnabled: false }, 'ios')).toBe(false);
+    expect(gatingActive({ contentGatingEnabled: false }, 'android')).toBe(false);
+    // An unknown bundle (tests, scripts) fails open, like the switch off.
+    expect(gatingActive({ contentGatingEnabled: true }, undefined)).toBe(false);
+  });
+
+  it('bundleOs reads the platform the bundler inlines, by its literal name', async () => {
+    const src = readFileSync(join(__dirname, '../flags.ts'), 'utf8');
+    expect(src).toContain('process.env.EXPO_OS');
+    const { bundleOs } = await reload();
+    process.env.EXPO_OS = 'web';
+    expect(bundleOs()).toBe('web');
+    process.env.EXPO_OS = 'ios';
+    expect(bundleOs()).toBe('ios');
+    delete process.env.EXPO_OS;
+    expect(bundleOs()).toBeUndefined();
+  });
+
   it('showUnreviewedStories flips on with "1"', async () => {
     process.env.EXPO_PUBLIC_SHOW_UNREVIEWED_STORIES = '1';
     const mod = await reload();
