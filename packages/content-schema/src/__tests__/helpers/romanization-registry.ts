@@ -80,6 +80,7 @@ export const ROMANIZATION_SCAN_IGNORE: readonly ScanIgnore[] = [
   { path: 'packages/i18n/src/format.ts', reason: 'Korean UI locale date words (일, 월, 년); the Korean UI locale is F-I18N-001, not taught Korean' },
   { path: 'packages/i18n/src/locales.ts', reason: 'the Korean locale endonym (한국어) in the locale table (F-I18N-001)' },
   { path: 'packages/i18n/src/note-text.ts', reason: 'the NOTE_TONE_ALLOW word (뒤처리) and comments of the note text guard (F-FEEDBACK-001 §6.4), not taught content' },
+  { path: 'packages/i18n/src/messages/ko/', reason: 'the Korean UI locale overlay (F-I18N-001 §3.10): menu and grown-up words of the Korean UI, not taught Korean; taught Korean is drawn from content with romanization' },
   { path: 'content/stories/research/', reason: 'provenance data: `rr` keys and a hyphenated romanization R2 would reject (same skip as SKIPPED_DIRS in scripts/validate-content.mjs)' },
   { path: '*.md', reason: 'documentation, not shipped content' },
   // Generated from class A JSON; listed so they do not trip the check when stories and vocabulary ship.
