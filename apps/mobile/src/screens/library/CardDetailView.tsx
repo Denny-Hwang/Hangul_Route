@@ -16,29 +16,28 @@ import {
   spacing,
   supportedCardIds,
 } from '@hangul-route/design-system';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { FlipCard } from '../../components/FlipCard';
 import { PromptPanel } from '../../components/PromptPanel';
 import { VoiceHelpSheet } from '../../components/VoiceHelpSheet';
 import { usePromptSlot } from '../../components/use-prompt-slot';
-import { cardById, episodesAll, questsAll } from '../../content';
+import { cardById } from '../../content';
+import { awardWorld } from '../../content/award-world';
 import { useLocale, useMessages } from '../../i18n/use-messages';
-import { cardEarnHint } from '../../logic/card-earn';
-import { localizeCard, localizeTitle } from '../../logic/content-locale';
-import { isStageEntitled } from '../../logic/entitlement';
+import { earnHint } from '../../logic/awards/earn-hint';
+import { localizeCard, localizeEpisode } from '../../logic/content-locale';
 import { nextFace, type FlipFace } from '../../logic/flip';
 import { playPrompt, stop } from '../../platform/audio';
 import { isShareAvailable, shareSnapshot } from '../../platform/sharing';
 import { activeProfileSelector, useProfileStore } from '../../store/profile-store';
 import { useProgressStore } from '../../store/progress-store';
-import { effectiveTier, useTierStore } from '../../store/tier-store';
 
 export interface CardDetailViewProps {
   cardId: string;
   /** Renders the close button when given (the modal screen passes it; a split pane does not). */
   onClose?: () => void;
-  /** A locked card says how it is earned (the Library pane, F-LAYOUT-001 §3.6); the stack screen leaves it out. */
+  /** A locked card says how it is earned (F-LAYOUT-001 §3.6, F-STORY-006 §3.7): the Library pane and the stack screen pass it. */
   showHowToEarn?: boolean;
 }
 
@@ -51,6 +50,13 @@ export function CardDetailView({ cardId, onClose, showHowToEarn = false }: CardD
   const profile = useProfileStore(activeProfileSelector);
   const snap = useProgressStore((s) => (profile ? s.byProfile[profile.id] : undefined));
   const unlocked = snap?.cards.some((c) => c.cardId === cardId) ?? false;
+  // How a locked card is earned, from its award rule, with the episode title in the UI language (F-STORY-006 §3.7).
+  const hint = useMemo(() => {
+    if (!source) return null;
+    const world = { ...awardWorld, episodes: awardWorld.episodes.map((e) => localizeEpisode(e, locale)) };
+    return earnHint(source, world, messages.learner.library.earnHint)?.text ?? null;
+  }, [source, locale, messages]);
+  const lockedLabel = hint ? messages.a11y.lockedCardHint(hint) : messages.a11y.lockedCard;
   const [face, setFace] = useState<FlipFace>('front');
   const [shareAvailable, setShareAvailable] = useState(false);
   const [shareError, setShareError] = useState<string | null>(null);
@@ -116,8 +122,8 @@ export function CardDetailView({ cardId, onClose, showHowToEarn = false }: CardD
           onFlip={flip}
           disabled={!canFlip}
           onFlippingChange={setIsFlipping}
-          accessibilityLabelFront={canFlip ? messages.a11y.flipToBack : messages.a11y.lockedCard}
-          accessibilityLabelBack={canFlip ? messages.a11y.flipToFront : messages.a11y.lockedCard}
+          accessibilityLabelFront={canFlip ? messages.a11y.flipToBack : lockedLabel}
+          accessibilityLabelBack={canFlip ? messages.a11y.flipToFront : lockedLabel}
           front={
             <CardShell card={card} rarityLabel={messages.learner.library.rarity[card.rarity]} flipHint={canFlip ? m.flip.front : null}>
               <FrontFaceBody card={card} unlocked={unlocked} />
@@ -131,7 +137,7 @@ export function CardDetailView({ cardId, onClose, showHowToEarn = false }: CardD
         />
       </View>
 
-      {showHowToEarn && !unlocked ? <HowToEarn cardId={card.id} /> : null}
+      {showHowToEarn && !unlocked ? <HowToEarn hint={hint} /> : null}
 
       {/* The blurb + fact card is shown only on the front face (the back face
           already contains this content). Keeps the back face from duplicating. */}
@@ -262,28 +268,20 @@ function CardShell({
   );
 }
 
-/** Where a locked card is earned: the quest and the stars it takes, or "later" (no paywall, no Premium pill; D5). */
-function HowToEarn({ cardId }: { cardId: string }): React.ReactElement {
+/**
+ * How a locked card is earned (wireframe library/earn-hints F2): the earn hint of its award rule
+ * (F-STORY-006 §3.7), or "later" for a rule this build cannot explain. Never how far along; no
+ * paywall, no Premium pill (D5).
+ */
+function HowToEarn({ hint }: { hint: string | null }): React.ReactElement {
   const m = useMessages().learner.cardDetail.earn;
-  const profile = useProfileStore(activeProfileSelector);
-  const cachedTier = useTierStore((s) => (profile ? s.byLearner[profile.id] : undefined));
-  void cachedTier; // re-render when the inbox changes the tier
-  const tier = effectiveTier(profile?.id ?? '', new Date()).tier;
-  // Only quests the learner can open: a card awarded in a stage they cannot play reads "later".
-  const locale = useLocale();
-  const earned = cardEarnHint(cardId, questsAll, episodesAll, (stage) => isStageEntitled(stage, tier));
-  // The quest title in the UI language (F-I18N-001 §3.6).
-  const hint =
-    earned.kind === 'quest'
-      ? { ...earned, questTitle: localizeTitle({ titleEn: earned.questTitle }, earned.questId, locale).titleEn }
-      : earned;
   return (
     <>
       <Spacer size="lg" />
       <Card padding="md" tone="sunken">
         <Heading level="prompt">{m.title}</Heading>
         <Spacer size="xs" />
-        <Body tone="secondary">{hint.kind === 'quest' ? m.quest(hint.questTitle, hint.minStars) : m.later}</Body>
+        <Body tone="secondary">{hint ?? m.later}</Body>
       </Card>
     </>
   );

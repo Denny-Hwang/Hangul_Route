@@ -1,5 +1,7 @@
-import type { KoText, StoryLevel } from '@hangul-route/content-schema';
+import type { KoText, Quest, Story, StoryLevel } from '@hangul-route/content-schema';
 import type { Messages } from '@hangul-route/i18n';
+import type { TelemetryEvent } from '../../platform/telemetry';
+import { levelOfQuest, storyIdOfQuest } from './story-ref';
 
 /**
  * What the story variant of the Results screen adds (F-STORY-003 §3.7): the
@@ -71,4 +73,43 @@ export function storyResultsExtras(input: StoryResultsInput, copy: StoryResultsC
     primary,
     secondary,
   };
+}
+
+/** The story a Results visit is about (title in Korean, romanization and the UI language). */
+export interface ResultsStory {
+  storyId: string;
+  level: StoryLevel;
+  title: KoText;
+}
+
+/**
+ * The story of the quest just finished, read from its `story-read` step
+ * (`storyIdOfQuest`, `levelOfQuest`), or null: not a story quest, an unknown
+ * quest, or a story (or level) the bundle does not hold. Null keeps Results
+ * exactly `results/celebrate` (wireframe `results/celebrate-story` error
+ * state). `findStory` returns the story as shown (UI-language overlay).
+ */
+export function resultsStoryOf(
+  quest: Pick<Quest, 'steps'> | undefined,
+  findStory: (storyId: string) => Story | undefined,
+): ResultsStory | null {
+  if (!quest) return null;
+  const storyId = storyIdOfQuest(quest);
+  const level = levelOfQuest(quest);
+  const story = storyId === null ? undefined : findStory(storyId);
+  if (!story || level === null || !story.tiers.some((t) => t.level === level)) return null;
+  const { ko, romanization, en } = story.title;
+  return { storyId: story.id, level, title: { ko, romanization, en } };
+}
+
+export type StoryResultsAction = 'next-story' | 'read-again' | 'episode' | 'home' | 'culture-note';
+
+/** `story.results.action` when a Results action is chosen: ids and the action only (spec §3.9). */
+export function storyResultsActionEvent(
+  profileId: string | undefined,
+  questId: string,
+  storyId: string,
+  action: StoryResultsAction,
+): TelemetryEvent {
+  return { name: 'story.results.action', profileId, payload: { questId, storyId, action } };
 }
