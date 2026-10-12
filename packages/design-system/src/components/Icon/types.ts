@@ -26,7 +26,9 @@ export type IconName =
   | 'pencil'
   | 'dash'
   | 'note'
-  | 'heart';
+  | 'heart'
+  | 'route'
+  | 'flag';
 
 export interface IconProps {
   name: IconName;

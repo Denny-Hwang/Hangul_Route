@@ -142,6 +142,20 @@ export const iconGlyphs: Record<IconName, readonly IconGlyphPart[]> = {
   heart: [
     stroke('M12 20.5 C9 17.5 3.5 13.5 3.5 8.75 A4.25 4.25 0 0 1 12 8.75 A4.25 4.25 0 0 1 20.5 8.75 C20.5 13.5 15 17.5 12 20.5 Z', 2.2),
   ],
+  // AMENDMENTS-ROUTE-LEARNING-ROUTE LR-2 (design/components/Icon/learning-route-glyphs.md). The Route
+  // tab: a road from a start dot that bends back up to a solid map pin. The pin's hole is a second
+  // subpath drawn the other way round, so the default nonzero fill rule leaves it open.
+  route: [
+    fill(circle(5, 20, 2.2)),
+    stroke('M5 20 H15.75 A3.25 3.25 0 0 0 15.75 13.5 H11.5', 2.2),
+    fill(
+      'M8.5 14.6 C6.4 12.4 3.4 9.6 3.4 6.8 A5.1 5.1 0 0 1 13.6 6.8 C13.6 9.6 10.6 12.4 8.5 14.6 Z ' +
+        'M6.7 6.8 A1.8 1.8 0 1 0 10.3 6.8 A1.8 1.8 0 1 0 6.7 6.8 Z',
+    ),
+  ],
+  // The goal stage: a pole with a solid swallow-tail pennant. A destination, never a warning: callers
+  // draw it in text.primary, never feedback.danger or feedback.nudge.
+  flag: [stroke('M6 21.5 V3', 2.2), fill('M6 3.5 H18.5 L15.5 8 L18.5 12.5 H6 Z')],
 };
 
 export const iconNames = Object.keys(iconGlyphs) as readonly IconName[];

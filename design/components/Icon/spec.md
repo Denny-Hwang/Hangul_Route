@@ -1,6 +1,6 @@
 # Icon: My route glyphs `pin`, `check-circle`, `book`, `ear`, `pencil` (component spec v1)
 
-Sections on this sheet: the My route glyphs (R-2a, below) · [`dash`](#dash-the-miss-mark-of-a-locked-answer-f-voc-004-s-4b) (F-VOC-004 S-4b) · [`note` and `heart`](#note-and-heart-notes-from-grown-ups-f-feedback-001-fb-6) (F-FEEDBACK-001 FB-6)
+Sections on this sheet: the My route glyphs (R-2a, below) · [`dash`](#dash-the-miss-mark-of-a-locked-answer-f-voc-004-s-4b) (F-VOC-004 S-4b) · [`note` and `heart`](#note-and-heart-notes-from-grown-ups-f-feedback-001-fb-6) (F-FEEDBACK-001 FB-6) · [`route` and `flag`](#route-and-flag-the-learning-route-amendments-route-learning-route-lr-2) (Learning Route LR-2)
 
 Spec: `docs/specs/F-ROUTE-001-my-route-overview.md` §3.3 (stage badges), §3.6 (start marker), §3.7 (skill rows), §3.14 (no colour-only meaning), PR R-2a in §6.1 · wireframe: `design/wireframes/journey/my-route-overview.md` (legend `pin`; screens A, B and C1 to C5: stage badges, tags and the practice rows) · also needed by F-PLC-001 P-7 (start pin and placed-out look, amendment AM-10)
 Code: `packages/design-system/src/components/Icon/glyphs.ts` (geometry, pure data) · `types.ts` (`IconName`) · tests `Icon/__tests__/glyphs.test.ts`
@@ -72,3 +72,30 @@ heart:  stroke M12 20.5 C9 17.5 3.5 13.5 3.5 8.75 A4.25 4.25 0 0 1 12 8.75 A4.25
 - **Sizes.** Minimum 20 dp (list rows, the reaction chips); 24 dp on the Home card and the dashboard rows. Checked at 20 and 24 dp in the preview: the note stays apart from `card` (landscape, with a band) and `book`; the heart from `pin` (a round head with a solid dot), `star` and `sparkle`.
 - **Accessibility.** Decorative, as for the glyphs above: the row, card or radio label carries the words (`a11y.notes.card` on the Home card, the reaction's label in the radio group), and the console's `IconSvg` is `aria-hidden`.
 - **Tests.** The "notes glyphs" block in `Icon/__tests__/glyphs.test.ts` checks that both names exist and that every part is exactly a `stroke(d)` or `stroke(d, width)` value at width 2 to 2.6 with no fill. For the heart it checks one closed outline, mirror-symmetric on x 12, with two level half-circle lobes drawn left to right over the top that meet on x 12, and the tip as its one lowest point on x 12. For the note it checks a portrait sheet centred on x 12 with one diagonal edge (the 45-degree cut at the top right), a fold from the cut's start to its end through the inside corner, and two level lines inside the sheet and below the fold, each at least 1 unit clear of every other part on the 24 grid (about 0.8 dp at 20 dp). The set-wide tests (every name drawn, valid paths, all glyphs distinct, inside the 24 x 24 box, stroke band 1.5 to 3) cover both as well.
+
+## `route` and `flag`: the Learning Route (AMENDMENTS-ROUTE-LEARNING-ROUTE LR-2)
+
+Spec: `docs/specs/AMENDMENTS-ROUTE-LEARNING-ROUTE.md` section 4.3 (the goal tag and the route card lines), section 5.1 (the Route tab icon), section 10 (glyphs hidden, words carry the meaning), assumption b, PR LR-2 in section 13 · design sheet: `learning-route-glyphs.md` (the full rationale and the assumption b checks) · wireframes: `design/wireframes/journey/learning-route.md` A, A2, G, `parent/learning-route.md` R and L2, `console/learning-route.md` T3 · screens: `design/screens/learning-route/` (`route-card.md`, `stage-list.md`, `tab-bar.md`)
+Code: `packages/design-system/src/components/Icon/glyphs.ts` · `types.ts` · tests `Icon/__tests__/glyphs.test.ts` (block "Learning Route glyphs")
+Preview: `learning-route-glyphs-v1.png`, rendered from `learning-route-glyphs.html` (20, 24, 48 and 96 dp next to `journey`, `pin`, `home`, `library` and `check-circle`, the same grid in greyscale, and each glyph in context)
+
+| Glyph | Meaning | Where | Geometry |
+|---|---|---|---|
+| `route` | The Learning Route page | the Route tab icon (LR-4), 24 dp; selected `brand.primary`, else `text.muted` | a solid start dot r 2.2 at (5, 20); a road at stroke 2.2 that runs right and bends back up (r 3.25) to end 0.3 short of the pin; a solid map pin (head r 5.1 at (8.5, 6.8), tip at (8.5, 14.6)) with a round hole r 1.8 drawn as a second subpath the other way round |
+| `flag` | The goal stage | the route card's Goal line, 20 dp (LR-5a); the "Your goal", "{name}'s goal" and "Plan goal" tags, 16 dp (LR-5a, LR-8); the report's goal line, 20 dp (LR-8) | a pole at stroke 2.2 from y 21.5 up to y 3; a solid swallow-tail pennant from the pole to x 18.5, notched at (15.5, 8) |
+
+```
+route:  fill circle(5, 20, 2.2)
+        + stroke M5 20 H15.75 A3.25 3.25 0 0 0 15.75 13.5 H11.5 (2.2)
+        + fill M8.5 14.6 C6.4 12.4 3.4 9.6 3.4 6.8 A5.1 5.1 0 0 1 13.6 6.8 C13.6 9.6 10.6 12.4 8.5 14.6 Z
+               M6.7 6.8 A1.8 1.8 0 1 0 10.3 6.8 A1.8 1.8 0 1 0 6.7 6.8 Z
+flag:   stroke M6 21.5 V3 (2.2) + fill M6 3.5 H18.5 L15.5 8 L18.5 12.5 H6 Z
+```
+
+- **Tokens only.** Callers pass a colour token: `text.primary` on the route card and the tags; `brand.primary` or `text.muted` in the tab bar (the bar's existing tints). `flag` is a destination, never a warning: never `feedback.danger` or `feedback.nudge`.
+- **Filled, like the tab icons.** `route` is solid so the bar keeps one weight with `home` and `library`. Its solid pin is not the outlined `pin` ("You started here"); the two never sit side by side. `route` differs from `journey` (a winding line between two equal dots) in outline at 20 and 24 dp, also in greyscale.
+- **The hole without a prop.** `react-native-svg` and the DOM both fill with the `nonzero` rule by default; the hole is drawn in the opposite direction to the drop, so it stays open and `Icon` needs no `fillRule` prop.
+- **Never alone.** Every use sits next to its words: the tab label "Route" with the accessibility label "Learning Route"; "Goal", "Your goal", "{name}'s goal", "Plan goal". Colour is never the only cue. No number, lock, star or trophy is drawn on either glyph.
+- **Sizes.** 24 dp in the tab, 20 dp on the route card and report lines, 16 dp in the stage-row tags (the size `TrailRow` uses for `pin`).
+- **Accessibility.** Decorative, as for the glyphs above: the navigator labels the tab, and elsewhere the glyph sits inside a labelled row or a hidden wrapper.
+- **Tests.** The "Learning Route glyphs" block in `Icon/__tests__/glyphs.test.ts` checks: both names in `IconName` and apart from `journey` and `pin`; `route` has one road at stroke 2.2 that starts at the centre of a filled start dot and ends outside the pin, its round cap within 0.5 of the drop; the pin is two subpaths whose shoelace sums (over the sampled curves and arcs) have opposite signs, with the hole wholly inside the drop and the tip as its one lowest point; `route` stays inside the 24 x 24 box with its stroke caps; `flag` has one vertical pole at stroke 2.2 and one closed pennant hung from the pole whose only point inside its own bounding box is the notch `L15.5 8`. The set-wide tests cover both as well.
