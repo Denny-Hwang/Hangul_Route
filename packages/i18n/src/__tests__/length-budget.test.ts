@@ -9,6 +9,15 @@ const ES_LENGTH_ALLOW_LIST: Readonly<Record<string, string>> = {};
 
 const BUDGETS: Readonly<Record<string, number>> = { tab: 12, pill: 24, cta: 28 };
 
+/**
+ * Screen-reader labels whose key name happens to match a budget word: they are read aloud, never
+ * drawn, so no visible budget applies. Each with a reason.
+ */
+const NOT_DRAWN: Readonly<Record<string, string>> = {
+  'a11y.myRoute.tab':
+    'the Route tab read aloud as the full page name "Learning Route" (AMENDMENTS-ROUTE-LEARNING-ROUTE LR-OD-1); the drawn label a11y.tabs.route keeps the tab budget',
+};
+
 type Message = (...args: unknown[]) => string;
 
 /** What a message renders: the string itself, or one output per sample argument list for a function message. */
@@ -28,7 +37,7 @@ describe('length budgets (F-I18N-001 §3.11)', () => {
       const value = lookup(messages, path);
       const last = path.split('.').pop() ?? '';
       // Tab labels live under `a11y.tabs.*` (F-I18N-001 §3.4 rule 2) and share the `tab` budget.
-      const budget = BUDGETS[last] ?? (path.startsWith('a11y.tabs.') ? BUDGETS.tab : undefined);
+      const budget = NOT_DRAWN[path] !== undefined ? undefined : (BUDGETS[last] ?? (path.startsWith('a11y.tabs.') ? BUDGETS.tab : undefined));
       if (budget !== undefined) {
         it(`${locale}:${path} fits ${budget} characters`, () => {
           const outputs = renderings(value, path);
@@ -51,7 +60,7 @@ describe('length budgets (F-I18N-001 §3.11)', () => {
 
   it('the allow-list names only real paths and gives a reason', () => {
     const en = getMessages('en');
-    for (const [path, reason] of Object.entries(ES_LENGTH_ALLOW_LIST)) {
+    for (const [path, reason] of Object.entries({ ...ES_LENGTH_ALLOW_LIST, ...NOT_DRAWN })) {
       expect(lookup(en, path)).toBeDefined();
       expect(reason.length).toBeGreaterThan(0);
     }

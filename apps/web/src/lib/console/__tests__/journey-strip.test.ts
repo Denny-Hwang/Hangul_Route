@@ -119,7 +119,7 @@ describe('journeyStrip: unknown entries from a newer build are ignored (section 
 describe('journeyStrip: "On Stage N" and the stage lines', () => {
   it('Appendix C: "On Stage 1" and "4 quests done"; Stage 3 and Stages 5 to 7 read coming later', () => {
     const strip = journeyStrip('class', appendixC());
-    expect(strip?.title).toBe('Journey');
+    expect(strip?.title).toBe('Learning Route');
     expect(strip?.onStage).toBe('On Stage 1');
     expect(strip?.details).toBe('Stage by stage');
     expect(strip?.lines).toEqual([

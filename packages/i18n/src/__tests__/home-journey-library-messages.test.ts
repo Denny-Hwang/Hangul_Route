@@ -67,7 +67,8 @@ describe('learner.journey', () => {
   it('keeps the heading, intro and notes', () => {
     const j = m.learner.journey;
     expect(j.title).toBe('Heritage Journey');
-    expect(j.intro).toBe('7 stages × 5 themes. Draw your own route.');
+    // AMENDMENTS-ROUTE-LEARNING-ROUTE section 7.2 (LR-1, LR-OD-3): the Journey purpose line, without the word "route".
+    expect(j.intro).toBe('Every lesson, by stage and theme.');
     expect(j.tasteNote).toBe('A taste of this stage is open now. More episodes are coming.');
     expect(j.how.title).toBe('How the journey works');
     expect(j.how.body).toBe(
