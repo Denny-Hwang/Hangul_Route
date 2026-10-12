@@ -13,7 +13,9 @@ describe('entitlement schemas (F-ENT-001 §3.1)', () => {
     expect(CheckoutCreateSchema.parse({ planKey: 'group_license', subjectKind: 'space', subjectId: 'space:cls' })).toEqual({ planKey: 'group_license', subjectKind: 'space', subjectId: 'space:cls' });
     expect(CheckoutCreateSchema.safeParse({ planKey: 'family_lifetime', subjectKind: 'account', subjectId: 'me' }).success).toBe(false);
     expect(CheckoutCreateSchema.safeParse({ planKey: 'school_seat', subjectKind: 'space', subjectId: 'space:s' }).success).toBe(false);
-    expect(PLAN_PRICING.family_lifetime).toEqual({ amountUsd: 15.3, per: 'once', label: '$15.30 once' });
+    // The Family Plan renews yearly at the same price (owner decision 2026-10-11, AMENDMENTS-BILLING-FAMILY-YEARLY).
+    expect(PLAN_PRICING.family_lifetime).toEqual({ amountUsd: 15.3, per: 'year', label: '$15.30 / year' });
+    expect(Object.values(PLAN_PRICING).every((p) => p.per === 'year')).toBe(true);
     expect(PLAN_PRICING.group_license).toEqual({ amountUsd: 153, per: 'year', label: '$153 / year' });
     expect(FAMILY_LIFETIME_LEARNERS).toBe(5);
     expect(EntitlementSchema.parse(row).promoCode).toBeNull();

@@ -67,7 +67,9 @@ describe('entitlements (F-ENT-001 §3.3)', () => {
     expect((await call('POST', '/api/entitlements/stripe/checkout', bearer('principal'), { planKey: 'group_license', subjectKind: 'space', subjectId: inSchool.space.id })).status).toBe(422); // covered by the school
     const unconfigured = await call('POST', '/api/entitlements/stripe/checkout', bearer('teacher'), { planKey: 'group_license', subjectKind: 'space', subjectId: cls });
     expect(unconfigured.body.error?.code).toBe('stripe_not_configured');
-    expect((await call('POST', '/api/entitlements/stripe/checkout', bearer('mom'), { planKey: 'family_lifetime', subjectKind: 'space', subjectId: fam }, STRIPE_ENV)).body.error?.code).toBe('stripe_not_configured'); // no lifetime price bound
+    expect((await call('POST', '/api/entitlements/stripe/checkout', bearer('mom'), { planKey: 'family_lifetime', subjectKind: 'space', subjectId: fam }, STRIPE_ENV)).body.error?.code).toBe('stripe_not_configured'); // no Family Plan price bound
+    // The old one-off price variable is ignored (BY-D3).
+    expect((await call('POST', '/api/entitlements/stripe/checkout', bearer('mom'), { planKey: 'family_lifetime', subjectKind: 'space', subjectId: fam }, { ...STRIPE_ENV, STRIPE_PRICE_FAMILY_LIFETIME: 'price_fl' })).body.error?.code).toBe('stripe_not_configured');
 
     const fetchImpl = vi.fn<typeof fetch>().mockResolvedValueOnce(new Response(JSON.stringify({ url: 'https://checkout.stripe.com/c/1' }), { status: 200 }));
     setStripeFetchForTests(fetchImpl);
@@ -79,15 +81,21 @@ describe('entitlements (F-ENT-001 §3.3)', () => {
     expect(posted).toContain('success_url=https%3A%2F%2Fhangulroute.com%2Fteach%2Fbilling%3Fcheckout%3Dsuccess');
     const once = vi.fn<typeof fetch>().mockResolvedValueOnce(new Response(JSON.stringify({ url: 'https://checkout.stripe.com/c/2' }), { status: 200 }));
     setStripeFetchForTests(once);
-    expect((await call('POST', '/api/entitlements/stripe/checkout', bearer('mom'), { planKey: 'family_lifetime', subjectKind: 'space', subjectId: fam }, { ...STRIPE_ENV, STRIPE_PRICE_FAMILY_LIFETIME: 'price_fl' })).body.data).toEqual({ url: 'https://checkout.stripe.com/c/2' });
-    expect(String((once.mock.calls[0]?.[1] as RequestInit).body)).toContain('mode=payment');
+    expect((await call('POST', '/api/entitlements/stripe/checkout', bearer('mom'), { planKey: 'family_lifetime', subjectKind: 'space', subjectId: fam }, { ...STRIPE_ENV, STRIPE_PRICE_FAMILY_YEARLY: 'price_fy' })).body.data).toEqual({ url: 'https://checkout.stripe.com/c/2' });
+    // The Family Plan renews yearly: a subscription on the yearly price, its subject on the subscription too.
+    const familyPosted = String((once.mock.calls[0]?.[1] as RequestInit).body);
+    expect(familyPosted).toContain('mode=subscription');
+    expect(familyPosted).toContain('line_items%5B0%5D%5Bprice%5D=price_fy');
+    expect(familyPosted).toContain(`subscription_data%5Bmetadata%5D%5BsubjectId%5D=${encodeURIComponent(fam)}`);
+    expect(familyPosted).toContain('subscription_data%5Bmetadata%5D%5BplanKey%5D=family_lifetime');
+    expect(familyPosted).not.toContain('customer_creation');
     setStripeFetchForTests(vi.fn<typeof fetch>().mockResolvedValueOnce(new Response('{}', { status: 500 })));
     expect((await call('POST', '/api/entitlements/stripe/checkout', bearer('principal'), { planKey: 'group_license', subjectKind: 'space', subjectId: sch }, STRIPE_ENV)).body.error?.code).toBe('stripe_error');
   });
 
   it('checks promotion codes against Stripe and applies them at checkout (F-ENT-002)', async () => {
     const fam = await createSpace('mom', 'family', 'Kim family');
-    const env = { ...STRIPE_ENV, STRIPE_PRICE_FAMILY_LIFETIME: 'price_fl' };
+    const env = { ...STRIPE_ENV, STRIPE_PRICE_FAMILY_YEARLY: 'price_fy' };
     expect((await call('POST', '/api/entitlements/stripe/promo', json, { code: 'HOYA20', planKey: 'family_lifetime' })).status).toBe(401);
     expect((await call('POST', '/api/entitlements/stripe/promo', bearer('mom'), { code: '!', planKey: 'family_lifetime' })).body.error?.code).toBe('promo_invalid');
     expect((await call('POST', '/api/entitlements/stripe/promo', bearer('mom'), { code: 'HOYA20', planKey: 'family_lifetime' })).body.error?.code).toBe('stripe_not_configured');
@@ -111,9 +119,9 @@ describe('entitlements (F-ENT-001 §3.3)', () => {
 
     // the webhook keeps the code on the entitlement for attribution
     const ts = Math.floor(Date.now() / 1000);
-    const event = JSON.stringify({ id: 'evt_p', type: 'checkout.session.completed', data: { object: { id: 'cs_9', payment_intent: 'pi_9', customer: 'cus_9', metadata: { subjectKind: 'space', subjectId: fam, planKey: 'family_lifetime', promoCode: 'HOYA20' } } } });
+    const event = JSON.stringify({ id: 'evt_p', type: 'checkout.session.completed', data: { object: { id: 'cs_9', mode: 'subscription', subscription: 'sub_9', customer: 'cus_9', metadata: { subjectKind: 'space', subjectId: fam, planKey: 'family_lifetime', promoCode: 'HOYA20' } } } });
     const applied = await call('POST', '/api/entitlements/stripe/webhook', { ...json, 'stripe-signature': await signStripePayload('whsec_test', event, ts) }, event, env);
-    expect(applied.body.data).toMatchObject({ applied: true, entitlement: { planKey: 'family_lifetime', promoCode: 'HOYA20', providerRef: 'pi_9', expiresAt: null } });
+    expect(applied.body.data).toMatchObject({ applied: true, entitlement: { planKey: 'family_lifetime', promoCode: 'HOYA20', providerRef: 'sub_9', expiresAt: null } });
 
     // guessing is rate-limited per client
     setStripeFetchForTests(vi.fn<typeof fetch>().mockImplementation(async () => promoResponse([])));
@@ -164,6 +172,56 @@ describe('entitlements (F-ENT-001 §3.3)', () => {
     expect((await call('POST', '/api/entitlements/stripe/portal', bearer('teacher'), { subjectKind: 'space', subjectId: cls })).body.error?.code).toBe('stripe_not_configured');
     const fam = await createSpace('mom', 'family', 'Kim family');
     await db.applyEntitlement({ subjectKind: 'space', subjectId: fam, planKey: 'family_lifetime', status: 'active', provider: 'stripe', customerRef: 'cus_fam', providerRef: 'pi_1' }, new Date());
-    expect((await call('POST', '/api/entitlements/stripe/portal', bearer('mom'), { subjectKind: 'space', subjectId: fam }, STRIPE_ENV)).status).toBe(404); // lifetime has nothing to manage
+    expect((await call('POST', '/api/entitlements/stripe/portal', bearer('mom'), { subjectKind: 'space', subjectId: fam }, STRIPE_ENV)).status).toBe(404); // a legacy one-time row has nothing to manage (BY-D2)
+  });
+
+  it('the Family Plan renews yearly: period end from Stripe, cancel keeps it to the end, deletion ends it; the portal manages it (BY-D5, BY-D6)', async () => {
+    const fam = await createSpace('mom', 'family', 'Kim family');
+    const reg = (await call('POST', '/api/sync/learners', json, { deviceId: 'device-mina0001', learner: { displayName: 'Mina', ageGroup: '5-7', avatar: 'hoya-orange' } })).body.data as { learner: { id: string }; device: { secret: string } };
+    const auth = { ...json, authorization: `Device device-mina0001:${reg.device.secret}` };
+    // A family has no join code until the grown-up makes one; the membership is what matters here.
+    await db.addMembership({ spaceId: fam, memberKind: 'learner', memberId: reg.learner.id, role: 'student', joinedAt: new Date().toISOString() });
+    const tier = async (): Promise<string> => ((await call('GET', `/api/sync/learners/${reg.learner.id}/inbox`, auth)).body.data as { tier: string }).tier;
+    const ts = Math.floor(Date.now() / 1000);
+    const send = async (type: string, object: Record<string, unknown>) => {
+      const event = JSON.stringify({ id: `evt_${type}`, type, data: { object: { customer: 'cus_fam', metadata: { subjectKind: 'space', subjectId: fam, planKey: 'family_lifetime' }, ...object } } });
+      return (await call('POST', '/api/entitlements/stripe/webhook', { ...json, 'stripe-signature': await signStripePayload('whsec_test', event, ts) }, event, STRIPE_ENV)).body.data as { entitlement: Record<string, unknown> };
+    };
+    expect(await tier()).toBe('free');
+
+    // Stripe may send the subscription before the checkout completion; the completion must not erase the end.
+    const yearEnd = ts + 365 * 86_400;
+    const created = await send('customer.subscription.created', { id: 'sub_fam', status: 'active', items: { data: [{ current_period_end: yearEnd }] } });
+    expect(created.entitlement).toMatchObject({ status: 'active', providerRef: 'sub_fam', expiresAt: new Date(yearEnd * 1000).toISOString() });
+    const completed = await send('checkout.session.completed', { id: 'cs_fam', mode: 'subscription', subscription: 'sub_fam' });
+    expect(completed.entitlement).toMatchObject({ status: 'active', providerRef: 'sub_fam', expiresAt: new Date(yearEnd * 1000).toISOString() });
+    expect(await tier()).toBe('premium');
+
+    // Cancelled in the portal: covered until the end of the paid year.
+    const cancelled = await send('customer.subscription.updated', { id: 'sub_fam', status: 'active', cancel_at_period_end: true, items: { data: [{ current_period_end: yearEnd }] } });
+    expect(cancelled.entitlement).toMatchObject({ status: 'cancelled', expiresAt: new Date(yearEnd * 1000).toISOString() });
+    expect(await tier()).toBe('premium');
+
+    // The family manages it in the portal like a licence.
+    setStripeFetchForTests(vi.fn<typeof fetch>().mockResolvedValueOnce(new Response(JSON.stringify({ url: 'https://billing.stripe.com/p/fam' }), { status: 200 })));
+    expect((await call('POST', '/api/entitlements/stripe/portal', bearer('mom'), { subjectKind: 'space', subjectId: fam }, STRIPE_ENV)).body.data).toEqual({ url: 'https://billing.stripe.com/p/fam' });
+
+    // A renewal moves the end forward one year.
+    const nextEnd = yearEnd + 365 * 86_400;
+    const renewed = await send('customer.subscription.updated', { id: 'sub_fam', status: 'active', cancel_at_period_end: false, current_period_end: nextEnd });
+    expect(renewed.entitlement).toMatchObject({ status: 'active', expiresAt: new Date(nextEnd * 1000).toISOString() });
+
+    // The year ran out after a cancel: the plan ends, nothing earned is touched here.
+    await send('customer.subscription.deleted', { id: 'sub_fam', status: 'canceled', current_period_end: nextEnd });
+    expect(await tier()).toBe('free');
+  });
+
+  it('a family row from the old one-time sandbox checkout still covers its learners (BY-D2)', async () => {
+    const fam = await createSpace('mom', 'family', 'Kim family');
+    const reg = (await call('POST', '/api/sync/learners', json, { deviceId: 'device-mina0002', learner: { displayName: 'Mina', ageGroup: '5-7', avatar: 'hoya-orange' } })).body.data as { learner: { id: string }; device: { secret: string } };
+    const auth = { ...json, authorization: `Device device-mina0002:${reg.device.secret}` };
+    await db.addMembership({ spaceId: fam, memberKind: 'learner', memberId: reg.learner.id, role: 'student', joinedAt: new Date().toISOString() });
+    await db.applyEntitlement({ subjectKind: 'space', subjectId: fam, planKey: 'family_lifetime', status: 'active', provider: 'stripe', customerRef: 'cus_old', providerRef: 'pi_old', expiresAt: null }, new Date());
+    expect(((await call('GET', `/api/sync/learners/${reg.learner.id}/inbox`, auth)).body.data as { tier: string }).tier).toBe('premium');
   });
 });

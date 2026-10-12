@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { checkoutForm, checkoutMode, createCheckoutSession, createPortalSession, entitlementFromStripeEvent, lookupPromotionCode, mapStripeStatus, parseStripeSignature, priceIdFor, promoFromStripe, signStripePayload, verifyStripeSignature } from '../stripe';
+import { checkoutForm, checkoutMode, createCheckoutSession, createPortalSession, entitlementFromStripeEvent, isSubscriptionRef, lookupPromotionCode, mapStripeStatus, parseStripeSignature, priceIdFor, promoFromStripe, signStripePayload, verifyStripeSignature } from '../stripe';
 
 const secret = 'whsec_test';
 const body = '{"id":"evt_1","type":"customer.subscription.updated"}';
@@ -28,8 +28,12 @@ describe('stripe helpers (F-ENT-001 §3.3)', () => {
     expect(mapStripeStatus('unpaid')).toBe('expired');
     expect(mapStripeStatus('incomplete')).toBeNull();
     const meta = { subjectKind: 'space', subjectId: 'space:fam', planKey: 'family_lifetime' };
-    expect(entitlementFromStripeEvent({ type: 'checkout.session.completed', data: { object: { id: 'cs_1', subscription: 'sub_1', customer: 'cus_1', metadata: meta } } })).toEqual({ ...meta, promoCode: null, status: 'active', provider: 'stripe', providerRef: 'sub_1', customerRef: 'cus_1', expiresAt: null });
-    expect(entitlementFromStripeEvent({ type: 'checkout.session.completed', data: { object: { id: 'cs_2', payment_intent: 'pi_1', customer: 'cus_2', metadata: meta } } })).toMatchObject({ providerRef: 'pi_1', customerRef: 'cus_2', expiresAt: null }); // one-time payment
+    // A subscription completion leaves expiresAt to the subscription events, which may arrive first (BY-D5).
+    const subscribed = entitlementFromStripeEvent({ type: 'checkout.session.completed', data: { object: { id: 'cs_1', mode: 'subscription', subscription: 'sub_1', customer: 'cus_1', metadata: meta } } });
+    expect(subscribed).toStrictEqual({ ...meta, promoCode: null, status: 'active', provider: 'stripe', providerRef: 'sub_1', customerRef: 'cus_1' });
+    expect(entitlementFromStripeEvent({ type: 'checkout.session.completed', data: { object: { id: 'cs_6', subscription: 'sub_6', metadata: meta } } })).not.toHaveProperty('expiresAt'); // no mode field: the subscription id decides
+    expect(entitlementFromStripeEvent({ type: 'checkout.session.completed', data: { object: { id: 'cs_7', mode: 'subscription', metadata: meta } } })).not.toHaveProperty('expiresAt');
+    expect(entitlementFromStripeEvent({ type: 'checkout.session.completed', data: { object: { id: 'cs_2', mode: 'payment', payment_intent: 'pi_1', customer: 'cus_2', metadata: meta } } })).toMatchObject({ providerRef: 'pi_1', customerRef: 'cus_2', expiresAt: null }); // legacy one-time payment (BY-D2)
     expect(entitlementFromStripeEvent({ type: 'checkout.session.completed', data: { object: { id: 'cs_3', metadata: meta } } })).toMatchObject({ providerRef: 'cs_3', customerRef: null });
     expect(entitlementFromStripeEvent({ type: 'checkout.session.completed', data: { object: { id: 'cs_4', metadata: { ...meta, planKey: 'teacher_pro' } } } })).toBeNull(); // retired plan
     expect(entitlementFromStripeEvent({ type: 'checkout.session.completed', data: { object: { id: 'cs_5', metadata: { ...meta, promoCode: 'HOYA20' } } } })).toMatchObject({ promoCode: 'HOYA20' });
@@ -43,27 +47,71 @@ describe('stripe helpers (F-ENT-001 §3.3)', () => {
     expect(entitlementFromStripeEvent({ type: 'invoice.paid', data: { object: { metadata: meta } } })).toBeNull();
   });
 
+  it('yearly plans: cancel at period end keeps access to the period end; the period end is read from both API shapes (BY-D5)', () => {
+    const meta = { subjectKind: 'space', subjectId: 'space:fam', planKey: 'family_lifetime' };
+    const end = 1_800_000_000; // 2027-01-15T08:00:00.000Z
+    const iso = (sec: number): string => new Date(sec * 1000).toISOString();
+    const sub = (object: Record<string, unknown>, type = 'customer.subscription.updated') => entitlementFromStripeEvent({ type, data: { object: { id: 'sub_f', customer: 'cus_f', metadata: meta, ...object } } });
+
+    // Renewing normally.
+    expect(sub({ status: 'active', current_period_end: end, cancel_at_period_end: false, cancel_at: null })).toMatchObject({ status: 'active', expiresAt: iso(end) });
+    // Cancelled in the portal: still active at Stripe until the period end, `cancelled` here with that end.
+    expect(sub({ status: 'active', current_period_end: end, cancel_at_period_end: true, cancel_at: end })).toMatchObject({ status: 'cancelled', expiresAt: iso(end) });
+    expect(sub({ status: 'trialing', current_period_end: end, cancel_at: end })).toMatchObject({ status: 'cancelled', expiresAt: iso(end) });
+    // A cancel date before the period end wins.
+    expect(sub({ status: 'active', current_period_end: end, cancel_at: end - 86_400 })).toMatchObject({ status: 'cancelled', expiresAt: iso(end - 86_400) });
+    // Undoing the cancel returns the row to active.
+    expect(sub({ status: 'active', current_period_end: end, cancel_at_period_end: false })).toMatchObject({ status: 'active' });
+    // Other statuses are not rewritten by the cancel flag.
+    expect(sub({ status: 'past_due', current_period_end: end, cancel_at_period_end: true })).toMatchObject({ status: 'past_due', expiresAt: iso(end) });
+    expect(sub({ status: 'canceled', current_period_end: end, cancel_at_period_end: true }, 'customer.subscription.deleted')).toMatchObject({ status: 'expired' });
+
+    // 2025-03-31.basil and later: the period end lives on the items; the latest one is the plan's end.
+    expect(sub({ status: 'active', items: { data: [{ current_period_end: end - 10 }, { current_period_end: end }, { current_period_end: 'soon' }] } })).toMatchObject({ status: 'active', expiresAt: iso(end) });
+    expect(sub({ status: 'active', items: { data: [{ current_period_end: end }] }, cancel_at_period_end: true })).toMatchObject({ status: 'cancelled', expiresAt: iso(end) });
+    // The top level wins when both are present (older versions); nothing readable leaves the end unknown.
+    expect(sub({ status: 'active', current_period_end: end, items: { data: [{ current_period_end: end + 99 }] } })).toMatchObject({ expiresAt: iso(end) });
+    expect(sub({ status: 'active', items: { data: 'nope' } })).toMatchObject({ expiresAt: null });
+    expect(sub({ status: 'active', items: { data: [null, 7] } })).toMatchObject({ expiresAt: null });
+    expect(sub({ status: 'active', items: null })).toMatchObject({ expiresAt: null });
+  });
+
   it('builds checkout forms, resolves price ids, and posts sessions', async () => {
     const env = { STRIPE_SECRET_KEY: 'sk_test', STRIPE_PRICE_GROUP_LICENSE_YEARLY: 'price_gl_y' };
     expect(priceIdFor(env, 'group_license')).toBe('price_gl_y');
     expect(priceIdFor(env, 'family_lifetime')).toBeNull();
-    expect(priceIdFor({ ...env, STRIPE_PRICE_FAMILY_LIFETIME: 'price_fl' }, 'family_lifetime')).toBe('price_fl');
-    expect(checkoutMode('family_lifetime')).toBe('payment');
+    expect(priceIdFor({ ...env, STRIPE_PRICE_FAMILY_YEARLY: 'price_fy' }, 'family_lifetime')).toBe('price_fy');
+    // The old one-off price variable is ignored: a one-off price cannot run in subscription mode (BY-D3).
+    const oldOnly: Record<string, string> = { ...env, STRIPE_PRICE_FAMILY_LIFETIME: 'price_fl' };
+    expect(priceIdFor(oldOnly, 'family_lifetime')).toBeNull();
+    // Both products renew yearly (owner decision 2026-10-11).
+    expect(checkoutMode('family_lifetime')).toBe('subscription');
     expect(checkoutMode('group_license')).toBe('subscription');
+    // The portal manages subscriptions only; a legacy one-time payment or session ref has nothing to manage.
+    expect(isSubscriptionRef('sub_1')).toBe(true);
+    expect([isSubscriptionRef('pi_1'), isSubscriptionRef('cs_1'), isSubscriptionRef(null), isSubscriptionRef(undefined)]).toEqual([false, false, false, false]);
     const form = checkoutForm({ priceId: 'price_gl_y', subjectKind: 'space', subjectId: 'space:cls', planKey: 'group_license', successUrl: 's', cancelUrl: 'c', customerEmail: 'kim@example.com' });
     expect(form).toMatchObject({ mode: 'subscription', 'line_items[0][price]': 'price_gl_y', 'metadata[planKey]': 'group_license', 'subscription_data[metadata][subjectId]': 'space:cls', customer_email: 'kim@example.com' });
     expect(form).not.toHaveProperty('customer_creation');
     expect(form.payment_method_collection).toBe('if_required'); // $0 after a 100%-off code → no card
-    const once = checkoutForm({ priceId: 'p', subjectKind: 'space', subjectId: 's', planKey: 'family_lifetime', successUrl: 's', cancelUrl: 'c' });
-    expect(once).toMatchObject({ mode: 'payment', customer_creation: 'always', 'metadata[planKey]': 'family_lifetime' });
-    expect(once).not.toHaveProperty('customer_email');
-    expect(once).not.toHaveProperty('subscription_data[metadata][planKey]');
-    expect(once).not.toHaveProperty('payment_method_collection');
-    expect(once.allow_promotion_codes).toBe('true'); // no code → Stripe's own box
+    const family = checkoutForm({ priceId: 'price_fy', subjectKind: 'space', subjectId: 'space:fam', planKey: 'family_lifetime', successUrl: 's', cancelUrl: 'c' });
+    expect(family).toMatchObject({
+      mode: 'subscription',
+      'line_items[0][price]': 'price_fy',
+      'metadata[planKey]': 'family_lifetime',
+      'subscription_data[metadata][subjectKind]': 'space',
+      'subscription_data[metadata][subjectId]': 'space:fam',
+      'subscription_data[metadata][planKey]': 'family_lifetime',
+      payment_method_collection: 'if_required',
+    });
+    expect(family).not.toHaveProperty('customer_creation'); // Stripe refuses it in subscription mode
+    expect(family).not.toHaveProperty('customer_email');
+    expect(family.allow_promotion_codes).toBe('true'); // no code → Stripe's own box
     const promo = { id: 'promo_1', code: 'HOYA20', name: 'Launch', percentOff: 20, amountOffCents: null, duration: 'once' as const };
     const withPromo = checkoutForm({ priceId: 'p', subjectKind: 'space', subjectId: 's', planKey: 'family_lifetime', successUrl: 's', cancelUrl: 'c', promo });
     expect(withPromo).toMatchObject({ 'discounts[0][promotion_code]': 'promo_1', 'metadata[promoCode]': 'HOYA20' });
     expect(withPromo).not.toHaveProperty('allow_promotion_codes');
+    expect(withPromo['subscription_data[metadata][promoCode]']).toBe('HOYA20');
     expect(checkoutForm({ priceId: 'p', subjectKind: 'space', subjectId: 's', planKey: 'group_license', successUrl: 's', cancelUrl: 'c', promo })).toMatchObject({ 'subscription_data[metadata][promoCode]': 'HOYA20' });
 
     const fetchImpl = vi.fn<typeof fetch>()

@@ -6,7 +6,7 @@ import { fail, ok } from '../envelope';
 import { accountActor, requireAccount, spaceContext } from '../lib/access';
 import { can } from '../lib/can';
 import { clientKey, createRateLimiter } from '../lib/rate-limit';
-import { checkoutForm, createCheckoutSession, createPortalSession, entitlementFromStripeEvent, lookupPromotionCode, priceIdFor, verifyStripeSignature, type StripeEnv, type StripeEventLike } from '../lib/stripe';
+import { checkoutForm, createCheckoutSession, createPortalSession, entitlementFromStripeEvent, isSubscriptionRef, lookupPromotionCode, priceIdFor, verifyStripeSignature, type StripeEnv, type StripeEventLike } from '../lib/stripe';
 
 /** Promo lookups are guessable strings: 20 per minute per client (F-ENT-002 §3.2). */
 export const PROMO_LIMIT = 20;
@@ -55,7 +55,7 @@ async function ownedSpace(c: Context, db: Db, account: Account, spaceId: string,
 /**
  * App Store / Play receipts (F-IAP-001/002). Nothing verifies them yet, so this
  * grants nothing: 501 until real store-server verification is wired (audit
- * SEC-1 — the old dev stub accepted any JSON blob as a lifetime purchase).
+ * SEC-1 — the old dev stub accepted any JSON blob as a family purchase).
  */
 entitlementRoutes.post('/verify', (c) => fail(c, 'receipt_verification_not_configured', 'receipt verification not configured', 501));
 
@@ -120,7 +120,9 @@ entitlementRoutes.post('/stripe/portal', async (c) => {
     const space = await ownedSpace(c, db, account, subjectId, ['family', 'school', 'class']);
     if (!('id' in space)) return space;
   }
-  const customer = (await db.entitlementsFor(subjectKind, subjectId)).find((e) => e.provider === 'stripe' && e.customerRef && e.planKey !== 'family_lifetime')?.customerRef;
+  // Any Stripe subscription can be managed: the Family Plan and the Group License both renew
+  // yearly (BY-D6). A legacy one-time sandbox row (payment intent or session ref) has nothing to manage.
+  const customer = (await db.entitlementsFor(subjectKind, subjectId)).find((e) => e.provider === 'stripe' && e.customerRef && isSubscriptionRef(e.providerRef))?.customerRef;
   if (!customer) return fail(c, 'not_found', 'No Stripe subscription for this subject', 404);
   const env = c.env ?? {};
   if (!env.STRIPE_SECRET_KEY) return fail(c, 'stripe_not_configured', 'Billing portal is not set up on this deployment yet', 500);

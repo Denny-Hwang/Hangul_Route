@@ -42,7 +42,9 @@ keep_vars = true
 # ALLOWED_ORIGINS                    comma-separated browser origins allowed on /api/*
 #                                    (F-CONSOLE-001). Unset = hangulroute.com / www / app
 #                                    + localhost + *.workers.dev previews.
-# STRIPE_PRICE_FAMILY_LIFETIME       Stripe price id — $15.30 one-off (decision #30)
+# STRIPE_PRICE_FAMILY_YEARLY         Stripe price id — Family Plan, $15.30 / year, recurring
+#                                    (owner decision 2026-10-11). The old
+#                                    STRIPE_PRICE_FAMILY_LIFETIME (one-off) is not read; delete it.
 # STRIPE_PRICE_GROUP_LICENSE_YEARLY  Stripe price id — $153 / year, recurring
 # CONSOLE_URL                        checkout success / cancel return, e.g. https://hangulroute.com
 # SCHOOL_CONSENT_MODE                "enabled" only after the legal review (decision #27)

@@ -7,9 +7,13 @@ import { PromoSchema, type EntitlementApply, type EntitlementStatus, type Promo,
 export interface StripeEnv {
   STRIPE_SECRET_KEY?: string;
   STRIPE_WEBHOOK_SECRET?: string;
-  /** One-time price ($15.30). */
-  STRIPE_PRICE_FAMILY_LIFETIME?: string;
-  /** Recurring yearly price ($153 / year). */
+  /**
+   * Family Plan: recurring yearly price ($15.30 / year). Owner decision 2026-10-11
+   * (AMENDMENTS-BILLING-FAMILY-YEARLY BY-D3); the old one-off `STRIPE_PRICE_FAMILY_LIFETIME`
+   * is not read, because a one-off price cannot run in subscription mode.
+   */
+  STRIPE_PRICE_FAMILY_YEARLY?: string;
+  /** Group License: recurring yearly price ($153 / year). */
   STRIPE_PRICE_GROUP_LICENSE_YEARLY?: string;
 }
 
@@ -92,6 +96,41 @@ function isoFromUnix(value: unknown): string | null {
   return typeof value === 'number' && Number.isFinite(value) ? new Date(value * 1000).toISOString() : null;
 }
 
+function unixOrNull(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) ? value : null;
+}
+
+/**
+ * The subscription's current period end, in Unix seconds: the top-level field on
+ * API versions before 2025-03-31.basil, else the latest `items.data[].current_period_end`.
+ */
+function periodEndOf(sub: Record<string, unknown>): number | null {
+  const top = unixOrNull(sub.current_period_end);
+  if (top !== null) return top;
+  const items = sub.items && typeof sub.items === 'object' ? (sub.items as Record<string, unknown>).data : null;
+  if (!Array.isArray(items)) return null;
+  let latest: number | null = null;
+  for (const item of items) {
+    const end = item && typeof item === 'object' ? unixOrNull((item as Record<string, unknown>).current_period_end) : null;
+    if (end !== null && (latest === null || end > latest)) latest = end;
+  }
+  return latest;
+}
+
+/**
+ * Subscription status and end: a subscription set to cancel (`cancel_at_period_end`, or a
+ * `cancel_at` date) that Stripe still calls active or trialing is `cancelled` here, so it
+ * keeps covering until its end and is never shown as renewing (BY-D5, F-BILL-002 §4.6).
+ */
+function subscriptionState(sub: Record<string, unknown>, status: EntitlementStatus): { status: EntitlementStatus; endSec: number | null } {
+  const periodEnd = periodEndOf(sub);
+  const cancelAt = unixOrNull(sub.cancel_at);
+  const ending = sub.cancel_at_period_end === true || cancelAt !== null;
+  if (!ending || (status !== 'active' && status !== 'trial')) return { status, endSec: periodEnd };
+  const endSec = cancelAt !== null && (periodEnd === null || cancelAt < periodEnd) ? cancelAt : periodEnd;
+  return { status: 'cancelled', endSec };
+}
+
 function promoFromMeta(meta: unknown): string | null {
   const code = meta && typeof meta === 'object' ? (meta as Record<string, unknown>).promoCode : null;
   return typeof code === 'string' && code.length > 0 ? code : null;
@@ -104,19 +143,23 @@ export function entitlementFromStripeEvent(event: StripeEventLike): EntitlementA
   if (!subject) return null;
   const promoCode = promoFromMeta(obj.metadata);
   if (event.type === 'checkout.session.completed') {
-    return {
+    const completed: EntitlementApply = {
       ...subject,
       promoCode,
       status: 'active',
       provider: 'stripe',
       providerRef: typeof obj.subscription === 'string' ? obj.subscription : typeof obj.payment_intent === 'string' ? obj.payment_intent : typeof obj.id === 'string' ? obj.id : null,
       customerRef: typeof obj.customer === 'string' ? obj.customer : null,
-      expiresAt: null,
     };
+    // A subscription's end belongs to its own events, which Stripe may deliver first: leave it
+    // untouched here. Only a legacy one-time payment (BY-D2) is written without an end.
+    const subscription = obj.mode === 'subscription' || typeof obj.subscription === 'string';
+    return subscription ? completed : { ...completed, expiresAt: null };
   }
   if (event.type === 'customer.subscription.created' || event.type === 'customer.subscription.updated' || event.type === 'customer.subscription.deleted') {
-    const status = event.type === 'customer.subscription.deleted' ? 'expired' : mapStripeStatus(obj.status);
-    if (!status) return null;
+    const mapped = event.type === 'customer.subscription.deleted' ? 'expired' : mapStripeStatus(obj.status);
+    if (!mapped) return null;
+    const { status, endSec } = subscriptionState(obj, mapped);
     return {
       ...subject,
       promoCode,
@@ -124,19 +167,27 @@ export function entitlementFromStripeEvent(event: StripeEventLike): EntitlementA
       provider: 'stripe',
       providerRef: typeof obj.id === 'string' ? obj.id : null,
       customerRef: typeof obj.customer === 'string' ? obj.customer : null,
-      expiresAt: isoFromUnix(obj.current_period_end),
+      expiresAt: isoFromUnix(endSec),
     };
   }
   return null;
 }
 
-export function priceIdFor(env: StripeEnv, planKey: PurchasablePlanKey): string | null {
-  return (planKey === 'family_lifetime' ? env.STRIPE_PRICE_FAMILY_LIFETIME : env.STRIPE_PRICE_GROUP_LICENSE_YEARLY) ?? null;
+/** A Stripe subscription id (`sub_…`): what the Billing Portal can manage. */
+export function isSubscriptionRef(ref: string | null | undefined): boolean {
+  return typeof ref === 'string' && ref.startsWith('sub_');
 }
 
-/** Lifetime is a one-time payment; the group licence is a yearly subscription. */
-export function checkoutMode(planKey: PurchasablePlanKey): 'payment' | 'subscription' {
-  return planKey === 'family_lifetime' ? 'payment' : 'subscription';
+export function priceIdFor(env: StripeEnv, planKey: PurchasablePlanKey): string | null {
+  return (planKey === 'family_lifetime' ? env.STRIPE_PRICE_FAMILY_YEARLY : env.STRIPE_PRICE_GROUP_LICENSE_YEARLY) ?? null;
+}
+
+/**
+ * Both products are yearly subscriptions: the Family Plan (key `family_lifetime`, a
+ * historical name kept because D1's CHECK fixes the keys, BY-D1) and the Group License.
+ */
+export function checkoutMode(_planKey: PurchasablePlanKey): 'subscription' {
+  return 'subscription';
 }
 
 export interface StripeSessionResult {
@@ -178,18 +229,14 @@ export function checkoutForm(input: { priceId: string; subjectKind: string; subj
   } else {
     form.allow_promotion_codes = 'true';
   }
-  if (mode === 'subscription') {
-    // A 100%-off code (e.g. a sponsored class) makes the total $0 — no card needed then.
-    form.payment_method_collection = 'if_required';
-    // Subscription events carry their own metadata; the session's does not propagate.
-    form['subscription_data[metadata][subjectKind]'] = input.subjectKind;
-    form['subscription_data[metadata][subjectId]'] = input.subjectId;
-    form['subscription_data[metadata][planKey]'] = input.planKey;
-    if (input.promo) form['subscription_data[metadata][promoCode]'] = input.promo.code;
-  } else {
-    // One-time: keep a customer record so receipts and support have something to find.
-    form.customer_creation = 'always';
-  }
+  // Subscription mode creates the customer itself (Stripe refuses `customer_creation` here).
+  // A 100%-off code (e.g. a sponsored class) makes the total $0 — no card needed then.
+  form.payment_method_collection = 'if_required';
+  // Subscription events carry their own metadata; the session's does not propagate.
+  form['subscription_data[metadata][subjectKind]'] = input.subjectKind;
+  form['subscription_data[metadata][subjectId]'] = input.subjectId;
+  form['subscription_data[metadata][planKey]'] = input.planKey;
+  if (input.promo) form['subscription_data[metadata][promoCode]'] = input.promo.code;
   if (input.customerEmail) form.customer_email = input.customerEmail;
   return form;
 }
