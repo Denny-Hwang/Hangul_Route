@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import * as stripModule from '../journey-strip';
-import { journeyStrip, JOURNEY_STATES } from '../journey-strip';
+import { journeyStrip, JOURNEY_STATES, readJourney } from '../journey-strip';
 
 /**
  * F-ROUTE-001 R-9a (section 3.12, wireframe console/roster "Journey strip"): the roster card's
@@ -160,6 +160,25 @@ describe('journeyStrip: "On Stage N" and the stage lines', () => {
 
 describe('journeyStrip: hard rules', () => {
   it('exports no aggregate, sort or filter: one strip per learner from that learner only', () => {
-    expect(Object.keys(stripModule).sort()).toEqual(['JOURNEY_STATES', 'journeyStrip']);
+    // `readJourney` reads one learner's journey; the Learning Route stage list (LR-7) shares it.
+    expect(Object.keys(stripModule).sort()).toEqual(['JOURNEY_STATES', 'journeyStrip', 'readJourney']);
+  });
+});
+
+describe('readJourney: the tolerant reader the strip and the Learning Route stage list share (LR-7)', () => {
+  it('reads the entries in stage order with their counts, leaves total behind and points at the here entry', () => {
+    const read = readJourney(appendixC({ stage1: { done: 2, known: 4 } }, 'stage2'));
+    expect(read?.entries.map((e) => e.stage)).toEqual(STAGES);
+    expect(read?.entries[0]).toEqual({ stage: 'stage1', order: 1, state: 'open', done: 2, known: 4 });
+    expect(read?.here).toBe(read?.entries[1]);
+    expect(JSON.stringify(read)).not.toContain('total');
+  });
+
+  it('gives no here entry when here names no readable stage, and null when nothing is readable', () => {
+    expect(readJourney(appendixC({}, 'stage9'))?.here).toBeNull();
+    expect(readJourney(appendixC({}, null))?.here).toBeNull();
+    for (const journey of [undefined, null, 'journey', { v: 2, here: 'stage1', stages: [] }, { v: 1, here: 'stage1', stages: 'x' }, { v: 1, here: 'stage1', stages: [{ stage: 'stage9', state: 'open', done: 1, known: 0 }] }]) {
+      expect(readJourney(journey)).toBeNull();
+    }
   });
 });

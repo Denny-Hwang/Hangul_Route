@@ -6,9 +6,11 @@ const json = (status: number, body: unknown) => new Response(JSON.stringify(body
 const space = { id: 'space:c', kind: 'class', name: 'A', parentSpaceId: null, settings: { consentMode: 'parent', anonymizeRoster: false }, archivedAt: null, createdAt: 't' };
 
 describe('console api (F-CONSOLE-001)', () => {
-  it('types roster summaries as the teacher allow-list plus a family\'s own-route counts: no stage1Anchor, no schemaVersion (F-SPACE-002 T-1a, F-PLAN-002 section 3.10)', () => {
-    expectTypeOf<keyof NonNullable<RosterLearner['summary']>>().toEqualTypeOf<TeacherVisibleSummaryKey | 'selfRoute'>();
+  it('types roster summaries as the teacher allow-list plus a family\'s own-route counts and Learning Route goal: no stage1Anchor, no schemaVersion (F-SPACE-002 T-1a, F-PLAN-002 section 3.10, Learning Route LR-W1)', () => {
+    expectTypeOf<keyof NonNullable<RosterLearner['summary']>>().toEqualTypeOf<TeacherVisibleSummaryKey | 'selfRoute' | 'routeGoal'>();
     expectTypeOf<NonNullable<RosterLearner['summary']>['selfRoute']>().toEqualTypeOf<{ done: number; total: number; notReady: number; weeks: number; endsOn: string } | undefined>();
+    // Optional: only a family roster carries it, and only from a device on a build that writes it (LR-6).
+    expectTypeOf<NonNullable<RosterLearner['summary']>['routeGoal']>().toEqualTypeOf<{ stage: string; from: 'class' | 'school' | 'family' | 'self' | 'default' } | undefined>();
     expectTypeOf<NonNullable<RosterLearner['summary']>>().not.toHaveProperty('stage1Anchor');
     expectTypeOf<NonNullable<RosterLearner['summary']>>().not.toHaveProperty('schemaVersion');
   });

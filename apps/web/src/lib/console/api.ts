@@ -38,8 +38,11 @@ export interface SpaceListItem {
  * `planProgress` holding this space's plans only (F-SPACE-002 T-1a, section 4.11).
  */
 export type RosterSummary = Pick<ProgressSummary, TeacherVisibleSummaryKey> &
-  /** A family space also reads the learner's own-route counts (F-PLAN-002 section 3.10); a class never receives them. */
-  Partial<Pick<ProgressSummary, 'selfRoute'>>;
+  /**
+   * A family space also reads the learner's own-route counts (F-PLAN-002 section 3.10) and the goal the
+   * learner's Learning Route shows (Learning Route LR-W1, LR-OD-12); a class never receives them.
+   */
+  Partial<Pick<ProgressSummary, 'selfRoute' | 'routeGoal'>>;
 
 export interface RosterLearner {
   /** Opaque learner id: keys the row, targets plans, issues Rescue Codes. Never shown. */
