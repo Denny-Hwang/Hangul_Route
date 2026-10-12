@@ -1,4 +1,15 @@
-import { SyncInboxSchema, type LearnerLevelId, type LearnerMembership, type ProgressSnapshot, type ProgressSummary, type SpaceKind, type SyncInbox } from '@hangul-route/content-schema';
+import {
+  SyncInboxSchema,
+  type LearnerLevelId,
+  type LearnerMembership,
+  type NoteDevicePrefsPut,
+  type NoteReport,
+  type NoteStatePut,
+  type ProgressSnapshot,
+  type ProgressSummary,
+  type SpaceKind,
+  type SyncInbox,
+} from '@hangul-route/content-schema';
 import type { PutResult } from '../logic/sync/engine';
 
 /**
@@ -78,6 +89,13 @@ export type GetResult =
   | { status: 'none' }
   | { status: 'error'; code: string };
 
+/**
+ * A device note route's answer (F-FEEDBACK-001 section 7.6). `http` is the status (-1 = no network),
+ * which the notes queue maps to done, drop, retry or limited (`logic/notes/queue.ts` `outcomeOf`).
+ */
+export type NoteWriteResult = { status: 'ok'; http: number } | { status: 'error'; http: number; code: string };
+export type NoteStateResult = { status: 'ok'; http: number; readAt: string | null; reaction: string | null } | { status: 'error'; http: number; code: string };
+
 function authHeader(c: DeviceCredentials): Record<string, string> {
   return { 'Content-Type': 'application/json', Authorization: `Device ${c.deviceId}:${c.secret}` };
 }
@@ -100,6 +118,11 @@ async function call(
   } catch {
     return { status: -1, body: {} }; // network failure; callers check status first
   }
+}
+
+function noteError(r: { status: number; body: Record<string, unknown> }): { status: 'error'; http: number; code: string } {
+  if (r.status === -1) return { status: 'error', http: -1, code: 'network' };
+  return { status: 'error', http: r.status, code: errorCode(r.body) ?? `http_${r.status}` };
 }
 
 export function createSyncApi(opts: SyncApiOptions) {
@@ -239,6 +262,52 @@ export function createSyncApi(opts: SyncApiOptions) {
       if (r.status !== 200) return { status: 'error', code: `http_${r.status}` };
       const parsed = SyncInboxSchema.safeParse(r.body.data);
       return parsed.success ? { status: 'ok', inbox: parsed.data } : { status: 'error', code: 'invalid' };
+    },
+
+    /** PUT /learners/:id/notes/:noteId/state: read once, last reaction wins (idempotent). */
+    async putNoteState(learnerId: string, noteId: string, body: NoteStatePut, creds: DeviceCredentials): Promise<NoteStateResult> {
+      const r = await call(fetchImpl, `${base}/learners/${encodeURIComponent(learnerId)}/notes/${encodeURIComponent(noteId)}/state`, {
+        method: 'PUT',
+        headers: authHeader(creds),
+        body: JSON.stringify(body),
+      });
+      if (r.status !== 200) return noteError(r);
+      const data = (r.body.data ?? {}) as { readAt?: unknown; reaction?: unknown };
+      return {
+        status: 'ok',
+        http: r.status,
+        readAt: typeof data.readAt === 'string' ? data.readAt : null,
+        reaction: typeof data.reaction === 'string' ? data.reaction : null,
+      };
+    },
+
+    /** POST /learners/:id/notes/:noteId/report: allowed from a class-scoped device too. */
+    async reportNote(learnerId: string, noteId: string, body: NoteReport, creds: DeviceCredentials): Promise<NoteWriteResult> {
+      const r = await call(fetchImpl, `${base}/learners/${encodeURIComponent(learnerId)}/notes/${encodeURIComponent(noteId)}/report`, {
+        method: 'POST',
+        headers: authHeader(creds),
+        body: JSON.stringify(body),
+      });
+      return r.status === 201 || r.status === 200 ? { status: 'ok', http: r.status } : noteError(r);
+    },
+
+    /** POST /learners/:id/notes/:noteId/hide: full-scope devices, online only (never queued). */
+    async hideNote(learnerId: string, noteId: string, creds: DeviceCredentials): Promise<NoteWriteResult> {
+      const r = await call(fetchImpl, `${base}/learners/${encodeURIComponent(learnerId)}/notes/${encodeURIComponent(noteId)}/hide`, {
+        method: 'POST',
+        headers: authHeader(creds),
+      });
+      return r.status === 200 ? { status: 'ok', http: r.status } : noteError(r);
+    },
+
+    /** PUT /learners/:id/note-prefs: the class-notes mode, full-scope devices only (never queued). */
+    async putNotePrefs(learnerId: string, body: NoteDevicePrefsPut, creds: DeviceCredentials): Promise<NoteWriteResult> {
+      const r = await call(fetchImpl, `${base}/learners/${encodeURIComponent(learnerId)}/note-prefs`, {
+        method: 'PUT',
+        headers: authHeader(creds),
+        body: JSON.stringify(body),
+      });
+      return r.status === 200 ? { status: 'ok', http: r.status } : noteError(r);
     },
 
     async getSnapshot(learnerId: string, creds: DeviceCredentials): Promise<GetResult> {
