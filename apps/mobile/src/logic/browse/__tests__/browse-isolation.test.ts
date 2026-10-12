@@ -1,5 +1,5 @@
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { dirname, join, relative, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 /**
@@ -80,12 +80,65 @@ function browseFiles(): string[] {
   ];
 }
 
+/**
+ * Every app module a file reaches through relative imports (type imports
+ * included, the stricter reading), with the chain that reaches it. A
+ * specifier that names a platform module reaches both variants
+ * (`storage.ts` and `storage.web.ts`).
+ */
+export function reachable(starts: readonly string[]): Map<string, string[]> {
+  const chains = new Map<string, string[]>();
+  const queue: [string, string[]][] = starts.map((file) => [file, [file]]);
+  while (queue.length > 0) {
+    const [file, chain] = queue.shift() as [string, string[]];
+    if (chains.has(file)) continue;
+    chains.set(file, chain);
+    for (const match of readFileSync(file, 'utf8').matchAll(IMPORT_SPECIFIER)) {
+      const specifier = match[1] as string;
+      if (!specifier.startsWith('.')) continue;
+      const base = resolve(dirname(file), specifier);
+      for (const candidate of [base, `${base}.ts`, `${base}.tsx`, `${base}.web.ts`, `${base}.web.tsx`, join(base, 'index.ts'), join(base, 'index.tsx')]) {
+        if (/\.tsx?$/.test(candidate) && existsSync(candidate) && statSync(candidate).isFile()) queue.push([candidate, [...chain, candidate]]);
+      }
+    }
+  }
+  return chains;
+}
+
+/** Pure browse logic and the browse platform modules reach no store, screen, component, navigator or app root, however indirectly. */
+function forbiddenReach(file: string): boolean {
+  return /^(store|screens|components|navigation)\//.test(relative(SRC, file)) || /^(App|BrowseApp)\.tsx$/.test(relative(SRC, file));
+}
+
+function pureBrowseFiles(): string[] {
+  return browseFiles().filter((file) => file.includes(join('logic', 'browse')) || file.includes(join('src', 'platform')));
+}
+
 describe('browse isolation (F-BROWSE-001 section 4.10)', () => {
   it('no browse file imports a learner store, the learner boot, Results or the learner quest player', () => {
     const files = browseFiles();
     expect(files.some((f) => f.includes(join('logic', 'browse')))).toBe(true);
     const hits = files.flatMap((file) => scanSource(relative(APP_ROOT, file), readFileSync(file, 'utf8')));
     expect(hits, hits.join('\n')).toEqual([]);
+  });
+
+  it('logic/browse and platform/browse* reach no store, screen, component or navigator through any chain of imports', () => {
+    const chains = reachable(pureBrowseFiles());
+    expect(chains.size).toBeGreaterThan(pureBrowseFiles().length); // the walk follows imports
+    const hits = [...chains].filter(([file]) => forbiddenReach(file)).map(([, chain]) => chain.map((f) => relative(APP_ROOT, f)).join(' -> '));
+    expect(hits, hits.join('\n')).toEqual([]);
+  });
+
+  it('the import walk names the chain that reaches a forbidden module', () => {
+    const fixtureRoot = join(SRC, 'logic', 'browse', '__tests__');
+    const chains = reachable([join(fixtureRoot, 'browse-fixture.ts')]);
+    const story = [...chains.keys()].find((f) => f.endsWith(join('story', 'story-index.ts')));
+    expect(story).toBeDefined();
+    expect(chains.get(story as string)?.[0]).toBe(join(fixtureRoot, 'browse-fixture.ts'));
+    expect(forbiddenReach(join(SRC, 'store', 'progress-store.ts'))).toBe(true);
+    expect(forbiddenReach(join(SRC, 'screens', 'quest', 'QuestPlayerScreen.tsx'))).toBe(true);
+    expect(forbiddenReach(join(SRC, 'navigation', 'browse.tsx'))).toBe(true);
+    expect(forbiddenReach(join(SRC, 'logic', 'story', 'story-index.ts'))).toBe(false);
   });
 
   it('flags every forbidden import, with file and line', () => {

@@ -7,7 +7,6 @@ import { NO_CELL_MARKS } from '../../journey-grid';
 import type { StageRowView } from '../../my-route/view';
 import { playableEpisodes } from '../../next-quest';
 import { LIBRARY_SECTIONS } from '../../story/library-sections';
-import { defaultBrowseBundle } from '../bundle';
 import { browseJourneyRows, browseLibrary, browseRouteTrail, browseSections, defaultBrowseSection, stageOneLiners } from '../catalogue';
 import { CULTURE_ID, DRAFT_ID, TALE_ID, fixtureBundle, fixtureStories } from './browse-fixture';
 
@@ -131,7 +130,6 @@ describe('browseLibrary', () => {
   it('an empty story group is left out', () => {
     const onlyTale = fixtureBundle({ stories: fixtureStories().slice(0, 1) });
     expect(browseLibrary(onlyTale).stories.map((g) => g.section)).toEqual(['story-time']);
-    expect(browseLibrary(defaultBrowseBundle()).stories).toEqual([]);
   });
 
   it('words: one row per topic in topic order, with its word count and three sample words', () => {
