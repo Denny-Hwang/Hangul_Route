@@ -52,12 +52,36 @@ const LIVE_ROUTE_DAYS: Partial<Record<number, readonly (readonly [string, number
     ['episode:stage2-nature', 5],
     ['episode:stage4-rites', 4],
   ],
+  // F-QUEST-002 Q-7b (#365): rites q2-q3 join, the rites day grows to 14 minutes.
+  4: [
+    ['episode:stage1-letters', 15],
+    ['episode:stage1-life', 12],
+    ['episode:stage1-rites', 14],
+    ['episode:stage1-nature', 5],
+    ['episode:stage1-crafts', 5],
+    ['episode:stage2-life', 5],
+    ['episode:stage2-nature', 5],
+    ['episode:stage4-rites', 4],
+  ],
 };
 const LIVE_FREE_FACTS: Partial<Record<number, FreeLessonsFacts>> = {
   3: {
     lessons: 9,
     letters: 18,
     minutes: 40,
+    days: 5,
+    episodeIds: [
+      'episode:stage1-letters',
+      'episode:stage1-life',
+      'episode:stage1-rites',
+      'episode:stage1-nature',
+      'episode:stage1-crafts',
+    ],
+  },
+  4: {
+    lessons: 11,
+    letters: 24,
+    minutes: 50,
     days: 5,
     episodeIds: [
       'episode:stage1-letters',
@@ -242,7 +266,7 @@ describe('freeLessonsFacts', () => {
     });
   });
 
-  it('live catalogue: the free figures are pinned for this CATALOG_VERSION (9 lessons, 18 letters, about 40 minutes, 5 days at version 3)', () => {
+  it('live catalogue: the free figures are pinned for this CATALOG_VERSION (11 lessons, 24 letters, about 50 minutes, 5 days at version 4)', () => {
     const expected = LIVE_FREE_FACTS[CATALOG_VERSION];
     expect(expected, MISSING).toBeDefined();
     expect(freeLessonsFacts(CATALOG), CHANGED).toEqual(expected);
