@@ -173,6 +173,19 @@ describe('notes-store (F-FEEDBACK-001 section 6.9)', () => {
     expect(data?.putAway).toEqual(['note:cccccccc']);
   });
 
+  it('sends at most ten writes in one flush and leaves the rest for the next sync', async () => {
+    const ids = Array.from({ length: 12 }, (_, i) => `${String(i).padStart(8, 'a')}`);
+    await useNotesStore.getState().applyInbox('profile:a', { notes: ids.map((id) => note(id)), notePrefs: prefs });
+    for (const id of ids) await useNotesStore.getState().markRead('profile:a', `note:${id}`);
+    const api = client();
+    await useNotesStore.getState().flush('profile:a', api, creds);
+    expect(api.putNoteState).toHaveBeenCalledTimes(10);
+    expect(useNotesStore.getState().byProfile['profile:a']?.queue).toHaveLength(2);
+    await useNotesStore.getState().flush('profile:a', api, creds);
+    expect(api.putNoteState).toHaveBeenCalledTimes(12);
+    expect(useNotesStore.getState().byProfile['profile:a']?.queue).toEqual([]);
+  });
+
   it('runs one flush per profile at a time', async () => {
     await useNotesStore.getState().applyInbox('profile:a', { notes: [note('aaaaaaaa')], notePrefs: prefs });
     await useNotesStore.getState().markRead('profile:a', 'note:aaaaaaaa');

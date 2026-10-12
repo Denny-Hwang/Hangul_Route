@@ -42,7 +42,7 @@ interface Actions {
   queueReport: (profileId: string, noteId: string, reason: NoteReportReason, attest?: NoteAttest, now?: Date) => Promise<void>;
   /** The grown-up answered the one-time class-notes card on this device. */
   markClassNotesCardSeen: (profileId: string) => Promise<void>;
-  /** Send the queued writes, reports first; stops at the first write that has to wait (offline, 5xx, 401, a limited state write). */
+  /** Send the queued writes, reports first, at most `FLUSH_MAX_WRITES`; stops at the first write that has to wait (offline, 5xx, 401, a limited state write). */
   flush: (profileId: string, client: NotesClient, creds: DeviceCredentials) => Promise<void>;
   /** Drop a removed profile's notes from memory and storage. */
   forgetProfile: (profileId: string) => void;

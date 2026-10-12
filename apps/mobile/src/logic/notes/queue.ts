@@ -31,9 +31,12 @@ export function pendingReportIds(queue: readonly PendingWrite[]): Set<string> {
   return new Set(queue.filter((w) => w.kind === 'report').map((w) => w.noteId));
 }
 
-/** The order of one flush: reports first (they get a note away), then state writes, each oldest first. */
+/** The most writes one flush sends; the rest wait for the next sync, so a long offline queue never holds up the inbox. */
+export const FLUSH_MAX_WRITES = 10;
+
+/** The order of one flush: reports first (they get a note away), then state writes, each oldest first, at most `FLUSH_MAX_WRITES`. */
 export function flushOrder(queue: readonly PendingWrite[]): PendingWrite[] {
-  return [...queue.filter((w) => w.kind === 'report'), ...queue.filter((w) => w.kind === 'state')];
+  return [...queue.filter((w) => w.kind === 'report'), ...queue.filter((w) => w.kind === 'state')].slice(0, FLUSH_MAX_WRITES);
 }
 
 /** What a device route's answer means for the write: `-1` is no network. */

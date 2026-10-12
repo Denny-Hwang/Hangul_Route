@@ -54,6 +54,16 @@ describe('readStoredNotes', () => {
     ]);
   });
 
+  it('keeps the read of a stored write whose reaction this build does not know', () => {
+    const out = readStoredNotes({
+      queue: [
+        { kind: 'state', noteId: 'note:aaaaaaaa', read: true, reaction: 'wave', at: 't1' },
+        { kind: 'state', noteId: 'note:bbbbbbbb', read: false, reaction: 'wave', at: 't2' },
+      ],
+    });
+    expect(out.queue).toEqual([{ kind: 'state', noteId: 'note:aaaaaaaa', read: true, at: 't1' }]);
+  });
+
   it('reads stored prefs through the inbox rules (an unknown mode is null, never a looser one)', () => {
     expect(readStoredNotes({ prefs: { classes: 'friends', acknowledged: false } }).prefs).toEqual({ classes: null, acknowledged: false });
     expect(readStoredNotes({ prefs: null }).prefs).toBeNull();

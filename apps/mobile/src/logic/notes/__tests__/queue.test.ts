@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { enqueueReport, enqueueState, flushOrder, outcomeOf, pendingReportIds, settleWrite, staysQueued } from '../queue';
+import { FLUSH_MAX_WRITES, enqueueReport, enqueueState, flushOrder, outcomeOf, pendingReportIds, settleWrite, staysQueued } from '../queue';
 import type { PendingWrite } from '../types';
 import { data, note } from './fixtures';
 
@@ -64,6 +64,19 @@ describe('flushOrder', () => {
       'state:note:cccccccc',
     ]);
     expect(q[0]?.noteId).toBe('note:aaaaaaaa'); // not changed in place
+  });
+
+  it('sends at most FLUSH_MAX_WRITES in one flush, reports first, so a long queue never holds up the inbox', () => {
+    expect(FLUSH_MAX_WRITES).toBe(10);
+    const id = (i: number) => `note:${String(i).padStart(8, '0')}`;
+    const q: PendingWrite[] = [
+      ...Array.from({ length: 12 }, (_, i): PendingWrite => ({ kind: 'state', noteId: id(i), read: true, at: `t${i}` })),
+      { kind: 'report', noteId: id(99), reason: 'unsafe', at: 't99' },
+    ];
+    const order = flushOrder(q);
+    expect(order).toHaveLength(FLUSH_MAX_WRITES);
+    expect(order[0]).toMatchObject({ kind: 'report', noteId: id(99) });
+    expect(order.at(-1)?.noteId).toBe(id(8));
   });
 });
 

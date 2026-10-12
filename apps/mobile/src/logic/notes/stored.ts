@@ -2,6 +2,7 @@ import {
   InboxNoteSchema,
   NOTE_REACTION_IDS,
   NOTE_REPORT_REASONS,
+  NoteAttestSchema,
   NotePrefsSchema,
   type InboxNote,
   type NotePrefs,
@@ -24,7 +25,7 @@ export const notesKey = (profileId: string): string => `notes:${profileId}`;
 const isObject = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
 const REACTIONS: ReadonlySet<string> = new Set(NOTE_REACTION_IDS);
 const REASONS: ReadonlySet<string> = new Set(NOTE_REPORT_REASONS);
-const ATTESTS: ReadonlySet<string> = new Set<NoteAttest>(['grown_up_pin', 'self']);
+const ATTESTS: ReadonlySet<string> = new Set<NoteAttest>(NoteAttestSchema.options);
 
 const isReaction = (v: unknown): v is NoteReactionId => typeof v === 'string' && REACTIONS.has(v);
 const isReason = (v: unknown): v is NoteReportReason => typeof v === 'string' && REASONS.has(v);
@@ -38,7 +39,8 @@ function readWrite(raw: unknown): PendingWrite | null {
     return { kind: 'report', noteId, reason: raw.reason, ...(isAttest(raw.attest) ? { attest: raw.attest } : {}), at };
   }
   if (raw.kind !== 'state') return null;
-  if (raw.reaction !== undefined && !isReaction(raw.reaction)) return null;
+  // A reaction this build does not know (a newer build, or a downgrade) is dropped, but the read stays,
+  // so the Worker still learns the note was opened; a write left with neither is dropped.
   const read = raw.read === true;
   const reaction = isReaction(raw.reaction) ? raw.reaction : undefined;
   if (!read && reaction === undefined) return null;

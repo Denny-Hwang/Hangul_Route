@@ -1,12 +1,12 @@
-import type { InboxNote, NotePrefs, NoteReactionId, NoteReportReason } from '@hangul-route/content-schema';
+import type { InboxNote, NoteAttest, NotePrefs, NoteReactionId, NoteReportReason } from '@hangul-route/content-schema';
 
 /**
  * Notes from grown-ups on the learner device (F-FEEDBACK-001 section 6.9). Pure types: the
  * notes store keeps one `NotesData` per learner profile under `notes:<profileId>`.
  */
 
-/** How the device says a grown-up acted: the grown-up PIN, or a self-managed learner (a client claim). */
-export type NoteAttest = 'grown_up_pin' | 'self';
+/** How the device says a grown-up acted: the grown-up PIN, or a self-managed learner (a client claim; content-schema `NoteAttestSchema`). */
+export type { NoteAttest };
 
 /** A read or a reaction not yet acknowledged by the Worker: at most one per note (the newest pick wins). */
 export interface PendingState {
